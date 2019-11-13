@@ -2,92 +2,122 @@ Return-Path: <SRS0=u7li=ZF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0645C47425
-	for <linux-pci@archiver.kernel.org>; Wed, 13 Nov 2019 16:16:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C808C432C3
+	for <linux-pci@archiver.kernel.org>; Wed, 13 Nov 2019 16:51:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5096B224F2
-	for <linux-pci@archiver.kernel.org>; Wed, 13 Nov 2019 15:41:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E7C27206CC
+	for <linux-pci@archiver.kernel.org>; Wed, 13 Nov 2019 16:51:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727677AbfKMPl0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 13 Nov 2019 10:41:26 -0500
-Received: from mga09.intel.com ([134.134.136.24]:14518 "EHLO mga09.intel.com"
+        id S1728604AbfKMQvD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 13 Nov 2019 11:51:03 -0500
+Received: from ale.deltatee.com ([207.54.116.67]:38646 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726957AbfKMPl0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 13 Nov 2019 10:41:26 -0500
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by orsmga102.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 13 Nov 2019 07:41:25 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.68,300,1569308400"; 
-   d="scan'208";a="194705733"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by orsmga007.jf.intel.com with ESMTP; 13 Nov 2019 07:41:24 -0800
-Received: by black.fi.intel.com (Postfix, from userid 1001)
-        id 33DD5FD; Wed, 13 Nov 2019 17:41:23 +0200 (EET)
-From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Len Brown <lenb@kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH] ACPI / hotplug / PCI: Take runtime PM autosuspend into account
-Date:   Wed, 13 Nov 2019 18:41:23 +0300
-Message-Id: <20191113154123.75345-1-mika.westerberg@linux.intel.com>
-X-Mailer: git-send-email 2.24.0
+        id S1726755AbfKMQvC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 13 Nov 2019 11:51:02 -0500
+Received: from s0106ac1f6bb1ecac.cg.shawcable.net ([70.73.163.230] helo=[192.168.11.155])
+        by ale.deltatee.com with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.92)
+        (envelope-from <logang@deltatee.com>)
+        id 1iUvr5-0004JU-OS; Wed, 13 Nov 2019 09:50:56 -0700
+To:     Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>,
+        "corbet@lwn.net" <corbet@lwn.net>,
+        "benh@kernel.crashing.org" <benh@kernel.crashing.org>
+References: <PS2P216MB075563AA6AD242AA666EDC6A80760@PS2P216MB0755.KORP216.PROD.OUTLOOK.COM>
+From:   Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <7f824f5f-ee0f-0591-9170-1433c0813857@deltatee.com>
+Date:   Wed, 13 Nov 2019 09:50:50 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <PS2P216MB075563AA6AD242AA666EDC6A80760@PS2P216MB0755.KORP216.PROD.OUTLOOK.COM>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 70.73.163.230
+X-SA-Exim-Rcpt-To: benh@kernel.crashing.org, corbet@lwn.net, mika.westerberg@linux.intel.com, bhelgaas@google.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, nicholas.johnson-opensource@outlook.com.au
+X-SA-Exim-Mail-From: logang@deltatee.com
+Subject: Re: [PATCH v3 1/1] PCI: Fix bug resulting in double hpmemsize being
+ assigned to MMIO window
+X-SA-Exim-Version: 4.2.1 (built Wed, 08 May 2019 21:11:16 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PCIe ports (the only ones we do runtime PM) are using runtime PM
-autosuspend to keep the port powered on for a while after it becomes
-idle. However, ACPI hotplug does not take this into account so if we get
-multiple hotplug events in a short period of time we may be powering
-ports on and off and then back on unnecessarily.
 
-For this reason call pm_runtime_put_autosuspend() for them (with the
-accompanying pm_runtime_mark_last_busy()).
 
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+On 2019-11-13 8:25 a.m., Nicholas Johnson wrote:
+> Currently, the kernel can sometimes assign the MMIO_PREF window
+> additional size into the MMIO window, resulting in extra MMIO additional
+> size, despite the MMIO_PREF additional size being assigned successfully
+> into the MMIO_PREF window.
+> 
+> This happens if in the first pass, the MMIO_PREF succeeds but the MMIO
+> fails. In the next pass, because MMIO_PREF is already assigned, the
+> attempt to assign MMIO_PREF returns an error code instead of success
+> (nothing more to do, already allocated). Hence, the size which is
+> actually allocated, but thought to have failed, is placed in the MMIO
+> window.
+> 
+> Example of problem (more context can be found in the bug report URL):
+> 
+> Mainline kernel:
+> pci 0000:06:01.0: BAR 14: assigned [mem 0x90100000-0xa00fffff] = 256M
+> pci 0000:06:04.0: BAR 14: assigned [mem 0xa0200000-0xb01fffff] = 256M
+> 
+> Patched kernel:
+> pci 0000:06:01.0: BAR 14: assigned [mem 0x90100000-0x980fffff] = 128M
+> pci 0000:06:04.0: BAR 14: assigned [mem 0x98200000-0xa01fffff] = 128M
+> 
+> This was using pci=realloc,hpmemsize=128M,nocrs - on the same machine
+> with the same configuration, with a Ubuntu mainline kernel and a kernel
+> patched with this patch.
+> 
+> The bug results in the MMIO_PREF being added to the MMIO window, which
+> means doubling if MMIO_PREF size = MMIO size. With a large MMIO_PREF,
+> the MMIO window will likely fail to be assigned altogether due to lack
+> of 32-bit address space.
+> 
+> Change find_free_bus_resource() to do the following:
+> - Return first unassigned resource of the correct type.
+> - If none of the above, return first assigned resource of the correct type.
+> - If none of the above, return NULL.
+> 
+> Returning an assigned resource of the correct type allows the caller to
+> distinguish between already assigned and no resource of the correct type.
+> 
+> Rename find_free_bus_resource to find_bus_resource_of_type().
+> 
+> Add checks in pbus_size_io() and pbus_size_mem() to return success if
+> resource returned from find_free_bus_resource() is already allocated.
+> 
+> This avoids pbus_size_io() and pbus_size_mem() returning error code to
+> __pci_bus_size_bridges() when a resource has been successfully assigned
+> in a previous pass. This fixes the existing behaviour where space for a
+> resource could be reserved multiple times in different parent bridge
+> windows.
+> 
+> Link: https://lore.kernel.org/lkml/20190531171216.20532-2-logang@deltatee.com/T/#u
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=203243
+> 
+> Reported-by: Kit Chow <kchow@gigaio.com>
+> Reported-by: Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>
+> Signed-off-by: Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>
+> Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index b3869951c0eb..c8264af40643 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -672,7 +672,8 @@ static void trim_stale_devices(struct pci_dev *dev)
- 		list_for_each_entry_safe_reverse(child, tmp, &bus->devices, bus_list)
- 			trim_stale_devices(child);
- 
--		pm_runtime_put(&dev->dev);
-+		pm_runtime_mark_last_busy(&dev->dev);
-+		pm_runtime_put_autosuspend(&dev->dev);
- 	}
- }
- 
-@@ -714,8 +715,10 @@ static void acpiphp_check_bridge(struct acpiphp_bridge *bridge)
- 		}
- 	}
- 
--	if (bridge->pci_dev)
--		pm_runtime_put(&bridge->pci_dev->dev);
-+	if (bridge->pci_dev) {
-+		pm_runtime_mark_last_busy(&bridge->pci_dev->dev);
-+		pm_runtime_put_autosuspend(&bridge->pci_dev->dev);
-+	}
- }
- 
- /*
--- 
-2.24.0
+You can add mine as well:
 
+Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
+
+Thanks,
+
+Logan
