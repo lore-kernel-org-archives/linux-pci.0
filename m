@@ -2,102 +2,108 @@ Return-Path: <SRS0=u7li=ZF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16EF4C43331
-	for <linux-pci@archiver.kernel.org>; Wed, 13 Nov 2019 02:25:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 012E9C17440
+	for <linux-pci@archiver.kernel.org>; Wed, 13 Nov 2019 02:39:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D6ECE222D0
-	for <linux-pci@archiver.kernel.org>; Wed, 13 Nov 2019 02:25:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573611934;
-	bh=OpXDIx5xOYY97zeVa/FNBxT/29iZH3I1AKxSms1pfW8=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=AFH+rho9VtGchQdxMg1ZkIUtvMWZTf0ROzt8hsir2JKEtWYK5vYCuQBSNaZahVhD9
-	 0CxnDiHogQwj2NSQNuMIkmHh6ygxvpE5nfsN5KX0GB6OnZiAoJo3du38O0snhRYnIM
-	 oI0xDfbIry6NPz3ejVt3V1xEd2Pe14PjvVaHFpWo=
+	by mail.kernel.org (Postfix) with ESMTP id D8D84222CA
+	for <linux-pci@archiver.kernel.org>; Wed, 13 Nov 2019 02:39:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727905AbfKMBvg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 12 Nov 2019 20:51:36 -0500
-Received: from mail.kernel.org ([198.145.29.99]:39518 "EHLO mail.kernel.org"
+        id S1727124AbfKMCjr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 12 Nov 2019 21:39:47 -0500
+Received: from mga01.intel.com ([192.55.52.88]:43956 "EHLO mga01.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727904AbfKMBvg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 12 Nov 2019 20:51:36 -0500
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id F21B422470;
-        Wed, 13 Nov 2019 01:51:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573609895;
-        bh=OpXDIx5xOYY97zeVa/FNBxT/29iZH3I1AKxSms1pfW8=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=kQQN30IX0DSAHnBchsug33lSvHn9jL4DC8LZcNlHXO4DPTh5R85t9/MHtzzAoYn4a
-         5V/cRPdorAr16kw0CPFF8kglXDFIe/AWKf5Lor9UQszLt/zkPbzzNKiKtsisUBSl8V
-         YfMigkPMpNmhGnj0CsC5QxBo4LO6/2IlgsBO5DMk=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Jon Derrick <jonathan.derrick@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 051/209] x86/PCI: Apply VMD's AERSID fixup generically
-Date:   Tue, 12 Nov 2019 20:47:47 -0500
-Message-Id: <20191113015025.9685-51-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191113015025.9685-1-sashal@kernel.org>
-References: <20191113015025.9685-1-sashal@kernel.org>
+        id S1727058AbfKMCjr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 12 Nov 2019 21:39:47 -0500
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 12 Nov 2019 18:39:46 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.68,298,1569308400"; 
+   d="scan'208";a="216241266"
+Received: from linux.intel.com ([10.54.29.200])
+  by orsmga002.jf.intel.com with ESMTP; 12 Nov 2019 18:39:46 -0800
+Received: from [10.226.39.46] (unknown [10.226.39.46])
+        by linux.intel.com (Postfix) with ESMTP id 3CF1E580372;
+        Tue, 12 Nov 2019 18:39:43 -0800 (PST)
+Subject: Re: [PATCH v5 1/3] dt-bindings: PCI: intel: Add YAML schemas for the
+ PCIe RC controller
+To:     Rob Herring <robh@kernel.org>
+Cc:     gustavo.pimentel@synopsys.com, lorenzo.pieralisi@arm.com,
+        andrew.murray@arm.com, helgaas@kernel.org, jingoohan1@gmail.com,
+        martin.blumenstingl@googlemail.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        andriy.shevchenko@intel.com, cheol.yong.kim@intel.com,
+        chuanhua.lei@linux.intel.com, qi-ming.wu@intel.com
+References: <cover.1572950559.git.eswara.kota@linux.intel.com>
+ <73655e49e80ac08826ad2d470e1387ba1b662d83.1572950559.git.eswara.kota@linux.intel.com>
+ <20191112191727.GA31422@bogus>
+From:   Dilip Kota <eswara.kota@linux.intel.com>
+Message-ID: <29a5797b-f65c-ba87-0a45-ff5815bf9fd3@linux.intel.com>
+Date:   Wed, 13 Nov 2019 10:39:42 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20191112191727.GA31422@bogus>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Jon Derrick <jonathan.derrick@intel.com>
 
-[ Upstream commit 4f475e8e0a6d4f5d430350d1f74f7e4899fb1692 ]
+On 11/13/2019 3:17 AM, Rob Herring wrote:
+> On Wed, Nov 06, 2019 at 11:44:01AM +0800, Dilip Kota wrote:
+>> Add YAML schemas for PCIe RC controller on Intel Gateway SoCs
+>> which is Synopsys DesignWare based PCIe core.
+>>
+>> Signed-off-by: Dilip Kota <eswara.kota@linux.intel.com>
+>> Reviewed-by: Andrew Murray <andrew.murray@arm.com>
+>> ---
+>> Changes on v5:
+>> 	Add Reviewed-by Andrew Murray.
+>> 	Add possible values and default value for max-link-speed.
+>> 	Remove $ref and add maximum and default for reset-assert-ms.
+>> 	Set true flag for linux,pci-domain.
+>> 	Define maxItems for ranges and clock.
+>> 	Define maximum for num-lanes.
+>> 	Update required list:
+>> 	  Add #address-cells, #size-cells, #interrupt-cells.
+>> 	  Remove num-lanes and linux,pci-domain.
+>> 	Add required header files in example.
+>> 	Remove status entry in example.
+>>
+>> changes on v4:
+>> 	Add "snps,dw-pcie" compatible.
+>> 	Rename phy-names property value to pcie.
+>> 	And maximum and minimum values to num-lanes.
+>> 	Add ref for reset-assert-ms entry and update the
+>> 	 description for easy understanding.
+>> 	Remove PCIe core interrupt entry.
+>>
+>> changes on v3:
+>>          Add the appropriate License-Identifier
+>>          Rename intel,rst-interval to 'reset-assert-us'
+>>          Add additionalProperties: false
+>>          Rename phy-names to 'pciephy'
+>>          Remove the dtsi node split of SoC and board in the example
+>>          Add #interrupt-cells = <1>; or else interrupt parsing will fail
+>>          Name yaml file with compatible name
+>>
+>>   .../devicetree/bindings/pci/intel-gw-pcie.yaml     | 138 +++++++++++++++++++++
+>>   1 file changed, 138 insertions(+)
+>>   create mode 100644 Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml
+> I'm working on a common PCI schema which will shrink this, but in the
+> meantime:
+>
+> Reviewed-by: Rob Herring <robh@kernel.org>
+Sure, Thanks for reviewing the patch.
 
-A root port Device ID changed between simulation and production.  Rather
-than match Device IDs which may not be future-proof if left unmaintained,
-match all root ports which exist in a VMD domain.
-
-Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- arch/x86/pci/fixup.c | 12 +++---------
- 1 file changed, 3 insertions(+), 9 deletions(-)
-
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index bd372e8965571..527e69b120025 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -629,17 +629,11 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x8c10, quirk_apple_mbp_poweroff);
- static void quirk_no_aersid(struct pci_dev *pdev)
- {
- 	/* VMD Domain */
--	if (is_vmd(pdev->bus))
-+	if (is_vmd(pdev->bus) && pci_is_root_bus(pdev->bus))
- 		pdev->bus->bus_flags |= PCI_BUS_FLAGS_NO_AERSID;
- }
--DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2030, quirk_no_aersid);
--DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2031, quirk_no_aersid);
--DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2032, quirk_no_aersid);
--DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2033, quirk_no_aersid);
--DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x334a, quirk_no_aersid);
--DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x334b, quirk_no_aersid);
--DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x334c, quirk_no_aersid);
--DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x334d, quirk_no_aersid);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
-+			      PCI_CLASS_BRIDGE_PCI, 8, quirk_no_aersid);
- 
- static void quirk_intel_th_dnv(struct pci_dev *dev)
- {
--- 
-2.20.1
-
+Regards,
+Dilip
