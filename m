@@ -2,112 +2,177 @@ Return-Path: <SRS0=4lLw=ZH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E6EBC432C3
-	for <linux-pci@archiver.kernel.org>; Fri, 15 Nov 2019 14:19:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51FB8C432C3
+	for <linux-pci@archiver.kernel.org>; Fri, 15 Nov 2019 20:41:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 036D020730
-	for <linux-pci@archiver.kernel.org>; Fri, 15 Nov 2019 14:19:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 19D4A20733
+	for <linux-pci@archiver.kernel.org>; Fri, 15 Nov 2019 20:41:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="ZRQ0W+ep"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KEFLQjC6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727406AbfKOOTH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 15 Nov 2019 09:19:07 -0500
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:51886 "EHLO
-        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727380AbfKOOTH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Nov 2019 09:19:07 -0500
-Received: from lelv0266.itg.ti.com ([10.180.67.225])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id xAFEJ4Yi021401;
-        Fri, 15 Nov 2019 08:19:04 -0600
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1573827544;
-        bh=/I9akdfvAxhab1mEMnAaKGhtLpVhL7/9dVBnUFiHXUc=;
-        h=Subject:To:CC:References:From:Date:In-Reply-To;
-        b=ZRQ0W+epok3dkm982yZP4ZWC7c3pd4mFVDv3Zz0aGhNeyE+U1bzKRl9JW6/0LSbEq
-         EhYGfrajjq19QKJKL49Y79ltFwGVkHFgYcp9VsJQW0O7Q4DyUIpifeQ9+HhqESurMo
-         rjAd94kEidyHri/MicS0APCgzy8OC6D1nQi6iAsk=
-Received: from DFLE108.ent.ti.com (dfle108.ent.ti.com [10.64.6.29])
-        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id xAFEJ35Q002103
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 15 Nov 2019 08:19:04 -0600
-Received: from DFLE114.ent.ti.com (10.64.6.35) by DFLE108.ent.ti.com
- (10.64.6.29) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Fri, 15
- Nov 2019 08:19:03 -0600
-Received: from fllv0039.itg.ti.com (10.64.41.19) by DFLE114.ent.ti.com
- (10.64.6.35) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
- Frontend Transport; Fri, 15 Nov 2019 08:19:03 -0600
-Received: from [172.24.190.233] (ileax41-snat.itg.ti.com [10.172.224.153])
-        by fllv0039.itg.ti.com (8.15.2/8.15.2) with ESMTP id xAFEJ1aJ041847;
-        Fri, 15 Nov 2019 08:19:02 -0600
-Subject: Re: pci-usb/pci-sata broken with LPAE config after "reduce use of
- block bounce buffers"
-To:     Christoph Hellwig <hch@lst.de>
-CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <120f7c3e-363d-deb0-a347-782ac869ee0d@ti.com>
- <20191115130654.GA3414@lst.de>
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <cf530590-26a4-22c6-c3ca-685fad7fd075@ti.com>
-Date:   Fri, 15 Nov 2019 19:48:23 +0530
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
-MIME-Version: 1.0
-In-Reply-To: <20191115130654.GA3414@lst.de>
-Content-Type: text/plain; charset="utf-8"
+        id S1726550AbfKOUlA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 15 Nov 2019 15:41:00 -0500
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:45821 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726549AbfKOUlA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Nov 2019 15:41:00 -0500
+Received: by mail-pf1-f193.google.com with SMTP id z4so7200591pfn.12;
+        Fri, 15 Nov 2019 12:40:58 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:thread-topic:thread-index:date:message-id
+         :references:in-reply-to:accept-language:content-language
+         :content-transfer-encoding:mime-version;
+        bh=/eNCiZb2B70OcvEG4CFJpEsh/64tl0xUputhGCMOUYk=;
+        b=KEFLQjC68s5hcGa6HKaiZ36mHeZpBcRX+uss4WLCl0rPqOYZ4dh//08RCSMKEXvuE3
+         j9DDSyJ5+tjD3/fi5VQiUzPpZ6+PelhIpMzTDq0xlJ5uqwNa4odNBXz17oVt7sCpDWai
+         aTGOjT4INKJniDU8CLFuk8UjPBplWMDbnhaO83Uy4ctCQNgeVYq7Mbpa4tnvmSbx/ZmP
+         hlLbrg8t6Xr+QQoEAMpRQsnzAabIy45HqpZ3mrX2RX+h8KVY3nKdDURlH3ICnnQaWoo0
+         5NMK5qixklNzxtQgbjktf9GMjf/jvvmXj2eX/kylQht65vYStMwmFEbo1Lgcp0ww6NB9
+         6r+Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:thread-topic:thread-index
+         :date:message-id:references:in-reply-to:accept-language
+         :content-language:content-transfer-encoding:mime-version;
+        bh=/eNCiZb2B70OcvEG4CFJpEsh/64tl0xUputhGCMOUYk=;
+        b=EPhI+mNHJtt3Vad3yW+nxIXxfL/SDpMqDwDh0WPLTdwO2weBBgNrK7q7j/k3LNK8Xv
+         WJSLtkCKUslI4SmmtUjauZPzqWzbtFgJb9SX8Emp861MsX9JL2JOwkl6e70mEG5b9H54
+         D/wWiPDDs1XK+6WxJBohsDi0KzURhQC0hwP2C5SN1I5sVSHVQPxUb+WUVjXJM5W6awsZ
+         fggv3GOlj7gU/tgGovdg0BwOP8tLoXwMKFk9vlhM98GByJmr+bRMrzK3iSihXckDROFZ
+         9Bdp9KUukuWwa5ly3m7sLeO+/v2x3EAF1M21TnSaQVxOo+rWSObm2M8TQnl7ZKCb4P+0
+         FBrQ==
+X-Gm-Message-State: APjAAAVD0S9nNKx8kiT9ygfiUzDgx4ZCdq5N0lz8BWWNe6hBETvWmw57
+        FCdzmqSiUxLjjYs95yrh+bU=
+X-Google-Smtp-Source: APXvYqy74GmqDuG9mHumRBh3b9gvQ06iG7nb1jxhEOnmmOgripvzWoZiWV+GTyyrtTmTBC6fGimcow==
+X-Received: by 2002:a63:1e1f:: with SMTP id e31mr18356918pge.303.1573850457702;
+        Fri, 15 Nov 2019 12:40:57 -0800 (PST)
+Received: from SL2P216MB0105.KORP216.PROD.OUTLOOK.COM ([2603:1046:100:22::5])
+        by smtp.gmail.com with ESMTPSA id b82sm11511061pfb.33.2019.11.15.12.40.53
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 15 Nov 2019 12:40:56 -0800 (PST)
+From:   Jingoo Han <jingoohan1@gmail.com>
+To:     Dilip Kota <eswara.kota@linux.intel.com>,
+        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "andrew.murray@arm.com" <andrew.murray@arm.com>,
+        "helgaas@kernel.org" <helgaas@kernel.org>,
+        "robh@kernel.org" <robh@kernel.org>,
+        "martin.blumenstingl@googlemail.com" 
+        <martin.blumenstingl@googlemail.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "andriy.shevchenko@intel.com" <andriy.shevchenko@intel.com>
+CC:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "cheol.yong.kim@intel.com" <cheol.yong.kim@intel.com>,
+        "chuanhua.lei@linux.intel.com" <chuanhua.lei@linux.intel.com>,
+        "qi-ming.wu@intel.com" <qi-ming.wu@intel.com>,
+        Han Jingoo <jingoohan1@gmail.com>
+Subject: Re: [PATCH v7 2/3] dwc: PCI: intel: PCIe RC controller driver
+Thread-Topic: [PATCH v7 2/3] dwc: PCI: intel: PCIe RC controller driver
+Thread-Index: AQHVm1y/foErHfC6cU+1DW6VLv0AgqeMszGN
+X-MS-Exchange-MessageSentRepresentingType: 1
+Date:   Fri, 15 Nov 2019 20:40:51 +0000
+Message-ID: <SL2P216MB01056231B6036941BEF71738AA700@SL2P216MB0105.KORP216.PROD.OUTLOOK.COM>
+References: <cover.1573784557.git.eswara.kota@linux.intel.com>
+ <99a29f5a4ce18df26bd300ac6728433ec025631b.1573784557.git.eswara.kota@linux.intel.com>
+In-Reply-To: <99a29f5a4ce18df26bd300ac6728433ec025631b.1573784557.git.eswara.kota@linux.intel.com>
+Accept-Language: ko-KR, en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+X-MS-Has-Attach: 
+X-MS-Exchange-Organization-SCL: -1
+X-MS-TNEF-Correlator: 
+X-MS-Exchange-Organization-RecordReviewCfmType: 0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Christoph,
+On 11/14/19, 9:31 PM, Dilip Kota wrote:
 
-On 15/11/19 6:36 PM, Christoph Hellwig wrote:
-> On Fri, Nov 15, 2019 at 04:29:31PM +0530, Kishon Vijay Abraham I wrote:
->> Hi Christoph,
->>
->> I think we are encountering a case where the connected PCIe card (like PCIe USB
->> card) supports 64-bit addressing and the ARM core supports 64-bit addressing
->> but the PCIe controller in the SoC to which PCIe card is connected supports
->> only 32-bits.
->>
->> Here dma APIs can provide an address above the 32 bit region to the PCIe card.
->> However this will fail when the card tries to access the provided address via
->> the PCIe controller.
-> 
-> What kernel version did you see your problems with?
-> 
-> Linux 5.3 added swiotlb to arm LPAE configs for exactly that case.
+> Add support to PCIe RC controller on Intel Gateway SoCs.
+> PCIe controller is based of Synopsys DesignWare PCIe core.
+>
+> Intel PCIe driver requires Upconfigure support, Fast Training
+> Sequence and link speed configurations. So adding the respective
+> helper functions in the PCIe DesignWare framework.
+> It also programs hardware autonomous speed during speed
+> configuration so defining it in pci_regs.h.
+>
+> Signed-off-by: Dilip Kota <eswara.kota@linux.intel.com>
+> Reviewed-by: Andrew Murray <andrew.murray@arm.com>
+> Acked-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> ---
 
-I'm using the latest kernel
-commit 96b95eff4a591dbac582c2590d067e356a18aacb (HEAD, origin/master, origin/HEAD)
-Merge: 4e84608c7836 80591e61a0f7
-Author: Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Thu Nov 14 08:48:10 2019 -0800
+[.....]
 
-    Merge tag 'kbuild-fixes-v5.4-3' of
-git://git.kernel.org/pub/scm/linux/kernel/git/masahiroy/linux-kbuild
+>  drivers/pci/controller/dwc/Kconfig           |  10 +
+>  drivers/pci/controller/dwc/Makefile          |   1 +
+>  drivers/pci/controller/dwc/pcie-designware.c |  57 +++
+>  drivers/pci/controller/dwc/pcie-designware.h |  12 +
+>  drivers/pci/controller/dwc/pcie-intel-gw.c   | 542 +++++++++++++++++++++=
+++++++
+>  include/uapi/linux/pci_regs.h                |   1 +
+>  6 files changed, 623 insertions(+)
+>  create mode 100644 drivers/pci/controller/dwc/pcie-intel-gw.c
+>
+> diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/=
+dwc/Kconfig
+> index 0ba988b5b5bc..fb6d474477df 100644
+> --- a/drivers/pci/controller/dwc/Kconfig
+> +++ b/drivers/pci/controller/dwc/Kconfig
+> @@ -82,6 +82,16 @@ config PCIE_DW_PLAT_EP
+>  	  order to enable device-specific features PCI_DW_PLAT_EP must be
+>  	  selected.
+> =20
+> +config PCIE_INTEL_GW
+> +	bool "Intel Gateway PCIe host controller support"
+> +	depends on OF && (X86 || COMPILE_TEST)
+> +	select PCIE_DW_HOST
+> +	help
+> +	  Say 'Y' here to enable PCIe Host controller support on Intel
+> +	  Gateway SoCs.
+> +	  The PCIe controller uses the DesignWare core plus Intel-specific
+> +	  hardware wrappers.
+> +
 
-I think the fix on 5.3 was useful for platform drivers (where the platform
-driver will set dma_set_mask as 32bits) even when the system itself supports LPAE.
+Please add this config alphabetical order!
+So, this config should be after 'config PCI_IMX6'.
+There is no reason to put this config at the first place.
 
-Here the pci_driver will set dma_set_mask as 64 bits, since the PCI device as
-such is capable of addressing 64 bits. The pci_driver doesn't know if the PCI
-controller to which the PCI device is connected is capable of addressing 64 bits.
+>  config PCI_EXYNOS
+>  	bool "Samsung Exynos PCIe controller"
+>  	depends on SOC_EXYNOS5440 || COMPILE_TEST
+> diff --git a/drivers/pci/controller/dwc/Makefile b/drivers/pci/controller=
+/dwc/Makefile
+> index b30336181d46..99db83cd2f35 100644
+> --- a/drivers/pci/controller/dwc/Makefile
+> +++ b/drivers/pci/controller/dwc/Makefile
+> @@ -3,6 +3,7 @@ obj-$(CONFIG_PCIE_DW) +=3D pcie-designware.o
+>  obj-$(CONFIG_PCIE_DW_HOST) +=3D pcie-designware-host.o
+>  obj-$(CONFIG_PCIE_DW_EP) +=3D pcie-designware-ep.o
+>  obj-$(CONFIG_PCIE_DW_PLAT) +=3D pcie-designware-plat.o
+> +obj-$(CONFIG_PCIE_INTEL_GW) +=3D pcie-intel-gw.o
 
-We should find a way to set the DMA mask of of the PCI device based on the DMA
-mask of the PCI controller in the SoC. One option would be to change the
-pci_drivers all over the kernel to set DMA mask to be based on the DMA mask of
-the PCI controller (the PCI device hierarchy should get a reference to the
-device pointer of the PCI controller). Or is there a better way to handle this?
+Ditto.
 
-Thanks
-Kishon
+Best regards,
+Jingoo Han
+
+>  obj-$(CONFIG_PCI_DRA7XX) +=3D pci-dra7xx.o
+>  obj-$(CONFIG_PCI_EXYNOS) +=3D pci-exynos.o
+>  obj-$(CONFIG_PCI_IMX6) +=3D pci-imx6.o
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/c=
+ontroller/dwc/pcie-designware.c
+> index 820488dfeaed..479e250695a0 100644
+
+[.....]
