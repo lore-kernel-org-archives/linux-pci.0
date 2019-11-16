@@ -2,105 +2,98 @@ Return-Path: <SRS0=cs2W=ZI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CDE5C43141
-	for <linux-pci@archiver.kernel.org>; Sat, 16 Nov 2019 16:01:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7481CC43215
+	for <linux-pci@archiver.kernel.org>; Sat, 16 Nov 2019 16:06:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 55CD9206C0
-	for <linux-pci@archiver.kernel.org>; Sat, 16 Nov 2019 16:01:46 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SAsKMweY"
+	by mail.kernel.org (Postfix) with ESMTP id 4342321847
+	for <linux-pci@archiver.kernel.org>; Sat, 16 Nov 2019 16:06:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1573920388;
+	bh=hZs1P9plDIJ8W2ENJ7RonhFFJIGU5K6ekGDrHHqkUQw=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=c0d+jvO6vHmPEqP2bSaSxGF1bFOvKwm/TLCF9z93Cjqr9OSPX5H2bBk91bf1Q6qL/
+	 Lu8TkULmFwf9XFaxWJyQ5gY69SPF2MW6ASwb//8Uw5ygpKTl42jnV09H1VKkmmYzvP
+	 62YqeE60Q16sWZk7pZDOLsAblzka9FSEEugdhPeY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730231AbfKPQBp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 16 Nov 2019 11:01:45 -0500
-Received: from mail-pf1-f176.google.com ([209.85.210.176]:38921 "EHLO
-        mail-pf1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731665AbfKPQBh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 16 Nov 2019 11:01:37 -0500
-Received: by mail-pf1-f176.google.com with SMTP id x28so8136899pfo.6;
-        Sat, 16 Nov 2019 08:01:37 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=ImMHYp4zTlOUHYAqsqImkf8coYQfcp0IIx0sbh2J3bw=;
-        b=SAsKMweYXW0CCqvNkzFbjLnjCqujIpHB2VzDgxC6936OxxZlIjOZAvekgWC4vv9CJb
-         or+5CRAMBxvnTIZ+/R2OrPLuPJiZKRKxVUNWewKwm/TPwiZwgjP7f6Lo3bK7+p5YuERP
-         vAJEg9Y78IK0J8I0qN3NXDDgNDxRt0aBxYJ1pIKrzVMsi84HfucHlztiwzZiaKE74ftl
-         2RMHPkrIRzLHue+EjgMlOVy4HVSGwLTHNXIgXdRCQ5q7mgWRvWwesvr0pnN2doypF3a/
-         DdAJbVQ/tdocF5VulM93T3r8/VKC7Oxq6Kd850mmeHPwEaPDXkz/8NpKJaJmctyq0xNZ
-         /yWg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
-         :date:user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=ImMHYp4zTlOUHYAqsqImkf8coYQfcp0IIx0sbh2J3bw=;
-        b=Nhx3onMGXemR4ip3yAw4QUUSG/EDQaG2zCtFvMf52qL7LlVDMynbxkmb1o4xHQVR84
-         7JfDcy56J8ts2rJrwoNKq2naYo5A6UYsmDlZUlJbMA4qChJsE1O9BpmzkYziqUWsNSnV
-         ArrUPDa3deCUdm6W/xzuteKmbGSTv2JyHrXpYmWXTzAgDqVeNfrlFg47F5hgYu7GcL08
-         Twj1qU/y3Em+g9xxoLTLzjQESrXUPmnBr5k8tYpJqePlC7KSzTyAJYpHbtW+6hX6V5CK
-         w77jdc8ppfOoC4cAE7E+/0hDtP/FRHp1/9kJO/9E23I+O9ghJKT1UtkLy7RuPm/j03B/
-         Ax7A==
-X-Gm-Message-State: APjAAAUf6+qldNteV+GBNMvJairEojyX4i2KSyzQPmEOSUSAo43JpbKn
-        f8FVXalatzfaA/KAXN0z2HI=
-X-Google-Smtp-Source: APXvYqzyJg08yhSqb2Fi0yAPx4xYveG1rHUfokzUkXpSa+mg1Y1pmVoa49gBm/3xJzZlH4PWsYl5BQ==
-X-Received: by 2002:aa7:980c:: with SMTP id e12mr24474265pfl.165.1573920096947;
-        Sat, 16 Nov 2019 08:01:36 -0800 (PST)
-Received: from server.roeck-us.net ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
-        by smtp.gmail.com with ESMTPSA id x21sm13814389pfi.122.2019.11.16.08.01.35
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sat, 16 Nov 2019 08:01:36 -0800 (PST)
-Subject: Re: watchdog: how to enable?
-To:     Muni Sekhar <munisekharrms@gmail.com>
-Cc:     linux-watchdog@vger.kernel.org, linux-pci@vger.kernel.org,
-        wim@linux-watchdog.org
-References: <CAHhAz+h6SuGKWn0qNqsCdNjDks_vHuJW-KfiQja_b3x8x=vq_A@mail.gmail.com>
- <0d5c20b1-6b0f-430b-17b0-d3624062020d@roeck-us.net>
- <CAHhAz+iSXZSY012-jNx_wmNmgx_UiHZ4rjxkCUcHk3CjLc9gDg@mail.gmail.com>
-From:   Guenter Roeck <linux@roeck-us.net>
-Message-ID: <e5b24949-5215-9d3d-ca45-cab221d4f58a@roeck-us.net>
-Date:   Sat, 16 Nov 2019 08:01:35 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+        id S1730631AbfKPPut (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 16 Nov 2019 10:50:49 -0500
+Received: from mail.kernel.org ([198.145.29.99]:59126 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730624AbfKPPus (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 16 Nov 2019 10:50:48 -0500
+Received: from sasha-vm.mshome.net (unknown [50.234.116.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 4705120891;
+        Sat, 16 Nov 2019 15:50:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1573919447;
+        bh=hZs1P9plDIJ8W2ENJ7RonhFFJIGU5K6ekGDrHHqkUQw=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=SRayVvUSTCxczMo+kdZRUht1u6fh42BviXqFflJWEsxIZ2G8mLSp7L759bz7rO+D2
+         H7DxXLWTd3qK/ySUiSSh0YYXfS85JKDgsfzOCzSxbYUx7CTbt/dmTTAq83yjdV4gag
+         PBsZfLMRXhwM0gxCmRTstS4Gck+SBIq0/r7qYdaY=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 145/150] PCI: keystone: Use quirk to limit MRRS for K2G
+Date:   Sat, 16 Nov 2019 10:47:23 -0500
+Message-Id: <20191116154729.9573-145-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20191116154729.9573-1-sashal@kernel.org>
+References: <20191116154729.9573-1-sashal@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAHhAz+iSXZSY012-jNx_wmNmgx_UiHZ4rjxkCUcHk3CjLc9gDg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 11/15/19 7:03 PM, Muni Sekhar wrote:
-[ ... ]
->>
->> Another possibility, of course, might be to enable a hardware watchdog
->> in your system (assuming it supports one). I personally would not trust
->> the NMI watchdog because to detect a system hang, after all, there are
->> situations where even NMIs no longer work.
-> 
->>From dmesg , Is it possible to know whether my system supports
-> hardware watchdog or not?
-> I assume that my system supports the hardware watchdog , then how to
-> enable the hardware watchdog to debug the system freeze issues?
-> 
+From: Kishon Vijay Abraham I <kishon@ti.com>
 
-Hardware watchdog support really depends on the board type. Most PC
-mainboards support a watchdog in the Super-IO chip, but on some it is
-not wired correctly. On embedded boards it is often built into the SoC.
-The easiest way to see if you have a watchdog would be to check for the
-existence of /dev/watchdog. However, on a PC that would most likely
-not be there because the necessary module is not auto-loaded.
-If you tell us your board type, or better the Super-IO chip on the board,
-we might be able to help.
+[ Upstream commit 148e340c0696369fadbbddc8f4bef801ed247d71 ]
 
-Note though that this won't help to debug the problem. A hardware
-watchdog resets the system. It helps to recover, but it is not intended
-to help with debugging.
+PCI controller in K2G also has a limitation that memory read request
+size (MRRS) must not exceed 256 bytes. Use the quirk to limit MRRS
+(added for K2HK, K2L and K2E) for K2G as well.
 
-Guenter
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/pci/dwc/pci-keystone.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/pci/dwc/pci-keystone.c b/drivers/pci/dwc/pci-keystone.c
+index 9bc52e4cf52a0..3ea8288c16053 100644
+--- a/drivers/pci/dwc/pci-keystone.c
++++ b/drivers/pci/dwc/pci-keystone.c
+@@ -39,6 +39,7 @@
+ #define PCIE_RC_K2HK		0xb008
+ #define PCIE_RC_K2E		0xb009
+ #define PCIE_RC_K2L		0xb00a
++#define PCIE_RC_K2G		0xb00b
+ 
+ #define to_keystone_pcie(x)	dev_get_drvdata((x)->dev)
+ 
+@@ -53,6 +54,8 @@ static void quirk_limit_mrrs(struct pci_dev *dev)
+ 		 .class = PCI_CLASS_BRIDGE_PCI << 8, .class_mask = ~0, },
+ 		{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCIE_RC_K2L),
+ 		 .class = PCI_CLASS_BRIDGE_PCI << 8, .class_mask = ~0, },
++		{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCIE_RC_K2G),
++		 .class = PCI_CLASS_BRIDGE_PCI << 8, .class_mask = ~0, },
+ 		{ 0, },
+ 	};
+ 
+-- 
+2.20.1
+
