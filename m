@@ -2,91 +2,57 @@ Return-Path: <SRS0=cs2W=ZI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 247D3C43141
-	for <linux-pci@archiver.kernel.org>; Sat, 16 Nov 2019 16:28:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79CF9C432C3
+	for <linux-pci@archiver.kernel.org>; Sat, 16 Nov 2019 16:35:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F1A7F21844
-	for <linux-pci@archiver.kernel.org>; Sat, 16 Nov 2019 16:28:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573921722;
-	bh=mdj7XPfQr7aTT3QJ1EjZS6B280N60fbSQCKhLUyoZvw=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=P8nLiblX1EjE2CbugxrgvRjztIC9gr2PiupekYlpn7IBVvEsn66x8+cDeCmaRkxeV
-	 jXiR3xph1AG6ePaKj3RSWqG1fvzrzTwK94odgn6CG9r1ql8IT/jBzKIafDDgvMhmnZ
-	 NzF7pwOYGgg84CnMD0LmnhRz5M6rdZTo8MYF7s/0=
+	by mail.kernel.org (Postfix) with ESMTP id 58593208CE
+	for <linux-pci@archiver.kernel.org>; Sat, 16 Nov 2019 16:35:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727787AbfKPQ2h (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 16 Nov 2019 11:28:37 -0500
-Received: from mail.kernel.org ([198.145.29.99]:44266 "EHLO mail.kernel.org"
+        id S1727804AbfKPQfa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 16 Nov 2019 11:35:30 -0500
+Received: from verein.lst.de ([213.95.11.211]:49403 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727606AbfKPPlR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 16 Nov 2019 10:41:17 -0500
-Received: from sasha-vm.mshome.net (unknown [50.234.116.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4509720748;
-        Sat, 16 Nov 2019 15:41:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573918877;
-        bh=mdj7XPfQr7aTT3QJ1EjZS6B280N60fbSQCKhLUyoZvw=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=aG/v/k37iHYzY2OMgE/sUOUGiftiT+KbvfL6/4i7YL5fDv2TvCG1kT28AhiQicBd4
-         gaZQfb4Lci9ttdYY6D1sbx25lYNikNKj5Elt8KwkbZWztJerIX1EIytIdnBZLBL5Ky
-         jNS35FJf+xIb8S7s13nMjtnHEMCX/6bLdpLiTTDw=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Alan Douglas <adouglas@cadence.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 006/237] PCI: cadence: Write MSI data with 32bits
-Date:   Sat, 16 Nov 2019 10:37:21 -0500
-Message-Id: <20191116154113.7417-6-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191116154113.7417-1-sashal@kernel.org>
-References: <20191116154113.7417-1-sashal@kernel.org>
+        id S1727551AbfKPQfa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 16 Nov 2019 11:35:30 -0500
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 579D968BE1; Sat, 16 Nov 2019 17:35:28 +0100 (CET)
+Date:   Sat, 16 Nov 2019 17:35:28 +0100
+From:   Christoph Hellwig <hch@lst.de>
+To:     Kishon Vijay Abraham I <kishon@ti.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Robin Murphy <robin.murphy@arm.com>
+Subject: Re: pci-usb/pci-sata broken with LPAE config after "reduce use of
+ block bounce buffers"
+Message-ID: <20191116163528.GE23951@lst.de>
+References: <120f7c3e-363d-deb0-a347-782ac869ee0d@ti.com> <20191115130654.GA3414@lst.de> <cf530590-26a4-22c6-c3ca-685fad7fd075@ti.com>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <cf530590-26a4-22c6-c3ca-685fad7fd075@ti.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Alan Douglas <adouglas@cadence.com>
+On Fri, Nov 15, 2019 at 07:48:23PM +0530, Kishon Vijay Abraham I wrote:
+> I think the fix on 5.3 was useful for platform drivers (where the platform
+> driver will set dma_set_mask as 32bits) even when the system itself supports LPAE.
 
-[ Upstream commit e81e36a96bb56f243b5ac1d114c37c086761595b ]
+Well, we can also use the bus_dma_mask for PCI(e) root port quirks,
+as we do that for the VIA ones on x86.  But I think the OF parsing code
+is missing something here, and Robin did plan to look into that.
 
-According to the PCIe specification, although the MSI data is only
-16bits, the upper 16bits should be written as 0. Use writel
-instead of writew when writing the MSI data to the host.
+> We should find a way to set the DMA mask of of the PCI device based on the DMA
+> mask of the PCI controller in the SoC. One option would be to change the
+> pci_drivers all over the kernel to set DMA mask to be based on the DMA mask of
+> the PCI controller (the PCI device hierarchy should get a reference to the
+> device pointer of the PCI controller). Or is there a better way to handle this?
 
-Fixes: 37dddf14f1ae ("PCI: cadence: Add EndPoint Controller driver for Cadence PCIe controller")
-Signed-off-by: Alan Douglas <adouglas@cadence.com>
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/pci/controller/pcie-cadence-ep.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/controller/pcie-cadence-ep.c b/drivers/pci/controller/pcie-cadence-ep.c
-index 6692654798d44..c3a088910f48d 100644
---- a/drivers/pci/controller/pcie-cadence-ep.c
-+++ b/drivers/pci/controller/pcie-cadence-ep.c
-@@ -355,7 +355,7 @@ static int cdns_pcie_ep_send_msi_irq(struct cdns_pcie_ep *ep, u8 fn,
- 		ep->irq_pci_addr = (pci_addr & ~pci_addr_mask);
- 		ep->irq_pci_fn = fn;
- 	}
--	writew(data, ep->irq_cpu_addr + (pci_addr & pci_addr_mask));
-+	writel(data, ep->irq_cpu_addr + (pci_addr & pci_addr_mask));
- 
- 	return 0;
- }
--- 
-2.20.1
-
+No.  The driver sets the device capabilities.  bus_dma_mask handles
+the system limitations.
