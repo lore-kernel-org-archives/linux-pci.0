@@ -2,138 +2,98 @@ Return-Path: <SRS0=cs2W=ZI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07284C43141
-	for <linux-pci@archiver.kernel.org>; Sat, 16 Nov 2019 12:54:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B508C432C3
+	for <linux-pci@archiver.kernel.org>; Sat, 16 Nov 2019 15:55:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DEA7620718
-	for <linux-pci@archiver.kernel.org>; Sat, 16 Nov 2019 12:54:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4A9B02168B
+	for <linux-pci@archiver.kernel.org>; Sat, 16 Nov 2019 15:55:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1573919748;
+	bh=I0rchmJGs8cAxxh9kh0r3kMYrLFrSYXfgcupkO1Fj4E=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=zXxhyN3/9Tv001ycaMhYHgARIfidUzjS/8b7zypf+1vKq7rFlr95GUADj+LIR2u3n
+	 2S+wJiwjMCn4xE6LpAgFw6i5qA4MikPowWHUYuv15KCE3pzhUYO5wkLIcbauZIuw1M
+	 YdFvvJQWbYe/osdXo2/8dT1DWy0v/lCQyxU3scVU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727510AbfKPMye (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 16 Nov 2019 07:54:34 -0500
-Received: from foss.arm.com ([217.140.110.172]:42758 "EHLO foss.arm.com"
+        id S1730431AbfKPPzq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 16 Nov 2019 10:55:46 -0500
+Received: from mail.kernel.org ([198.145.29.99]:37782 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727437AbfKPMye (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 16 Nov 2019 07:54:34 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id AC8F1C86;
-        Sat, 16 Nov 2019 04:54:33 -0800 (PST)
-Received: from DESKTOP-VLO843J.lan (unknown [172.31.20.19])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPA id 2FFBB3F534;
-        Sat, 16 Nov 2019 04:54:32 -0800 (PST)
-From:   Robin Murphy <robin.murphy@arm.com>
-To:     shawn.lin@rock-chips.com, lorenzo.pieralisi@arm.com,
-        andrew.murray@arm.com
-Cc:     bhelgaas@google.com, heiko@sntech.de, lgirdwood@gmail.com,
-        broonie@kernel.org, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 2/2] PCI: rockchip: Simplify optional regulator handling
-Date:   Sat, 16 Nov 2019 12:54:20 +0000
-Message-Id: <347bc3ef8399577e4cef3fdbf3af34d20b4ad27e.1573908530.git.robin.murphy@arm.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <1eebc002101931012d337cda23d18f85b0326361.1573908530.git.robin.murphy@arm.com>
-References: <1eebc002101931012d337cda23d18f85b0326361.1573908530.git.robin.murphy@arm.com>
+        id S1731638AbfKPPzg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 16 Nov 2019 10:55:36 -0500
+Received: from sasha-vm.mshome.net (unknown [50.234.116.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 80A8F21843;
+        Sat, 16 Nov 2019 15:55:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1573919735;
+        bh=I0rchmJGs8cAxxh9kh0r3kMYrLFrSYXfgcupkO1Fj4E=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=kQ2RMRi2WwzqdjHhUK75snqGPSsxXZSJfjc/1FJY1sKUvxw+ydNxwOn9d+kwhXuc2
+         c2mpfaTF7TvNAVB2jHLLx+KOE7IgfOxIEPGZdj8t14OZnhXfp7Pcp3zZ4Bt6jDpqlH
+         Rqa/knRR6TcP5M4EYNsSvsXFkOgkXNMvOX/C4WlM=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.4 76/77] PCI: keystone: Use quirk to limit MRRS for K2G
+Date:   Sat, 16 Nov 2019 10:53:38 -0500
+Message-Id: <20191116155339.11909-76-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20191116155339.11909-1-sashal@kernel.org>
+References: <20191116155339.11909-1-sashal@kernel.org>
+MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Null checks are both cheaper and more readable than having !IS_ERR()
-splattered everywhere.
+From: Kishon Vijay Abraham I <kishon@ti.com>
 
-Signed-off-by: Robin Murphy <robin.murphy@arm.com>
+[ Upstream commit 148e340c0696369fadbbddc8f4bef801ed247d71 ]
+
+PCI controller in K2G also has a limitation that memory read request
+size (MRRS) must not exceed 256 bytes. Use the quirk to limit MRRS
+(added for K2HK, K2L and K2E) for K2G as well.
+
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/controller/pcie-rockchip-host.c | 20 +++++++++++---------
- 1 file changed, 11 insertions(+), 9 deletions(-)
+ drivers/pci/host/pci-keystone.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/pci/controller/pcie-rockchip-host.c b/drivers/pci/controller/pcie-rockchip-host.c
-index 68525f8ac4d9..a61819efc0c1 100644
---- a/drivers/pci/controller/pcie-rockchip-host.c
-+++ b/drivers/pci/controller/pcie-rockchip-host.c
-@@ -262,7 +262,7 @@ static void rockchip_pcie_set_power_limit(struct rockchip_pcie *rockchip)
- 	int curr;
- 	u32 status, scale, power;
+diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
+index fb682e8af74d5..bdb808ba90d2a 100644
+--- a/drivers/pci/host/pci-keystone.c
++++ b/drivers/pci/host/pci-keystone.c
+@@ -42,6 +42,7 @@
+ #define PCIE_RC_K2HK		0xb008
+ #define PCIE_RC_K2E		0xb009
+ #define PCIE_RC_K2L		0xb00a
++#define PCIE_RC_K2G		0xb00b
  
--	if (IS_ERR(rockchip->vpcie3v3))
-+	if (!rockchip->vpcie3v3)
- 		return;
+ #define to_keystone_pcie(x)	container_of(x, struct keystone_pcie, pp)
  
- 	/*
-@@ -611,6 +611,7 @@ static int rockchip_pcie_parse_host_dt(struct rockchip_pcie *rockchip)
- 		if (PTR_ERR(rockchip->vpcie12v) != -ENODEV)
- 			return PTR_ERR(rockchip->vpcie12v);
- 		dev_info(dev, "no vpcie12v regulator found\n");
-+		rockchip->vpcie12v = NULL;
- 	}
+@@ -56,6 +57,8 @@ static void quirk_limit_mrrs(struct pci_dev *dev)
+ 		 .class = PCI_CLASS_BRIDGE_PCI << 8, .class_mask = ~0, },
+ 		{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCIE_RC_K2L),
+ 		 .class = PCI_CLASS_BRIDGE_PCI << 8, .class_mask = ~0, },
++		{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCIE_RC_K2G),
++		 .class = PCI_CLASS_BRIDGE_PCI << 8, .class_mask = ~0, },
+ 		{ 0, },
+ 	};
  
- 	rockchip->vpcie3v3 = devm_regulator_get_optional(dev, "vpcie3v3");
-@@ -618,6 +619,7 @@ static int rockchip_pcie_parse_host_dt(struct rockchip_pcie *rockchip)
- 		if (PTR_ERR(rockchip->vpcie3v3) != -ENODEV)
- 			return PTR_ERR(rockchip->vpcie3v3);
- 		dev_info(dev, "no vpcie3v3 regulator found\n");
-+		rockchip->vpcie3v3 = NULL;
- 	}
- 
- 	rockchip->vpcie1v8 = devm_regulator_get(dev, "vpcie1v8");
-@@ -636,7 +638,7 @@ static int rockchip_pcie_set_vpcie(struct rockchip_pcie *rockchip)
- 	struct device *dev = rockchip->dev;
- 	int err;
- 
--	if (!IS_ERR(rockchip->vpcie12v)) {
-+	if (rockchip->vpcie12v) {
- 		err = regulator_enable(rockchip->vpcie12v);
- 		if (err) {
- 			dev_err(dev, "fail to enable vpcie12v regulator\n");
-@@ -644,7 +646,7 @@ static int rockchip_pcie_set_vpcie(struct rockchip_pcie *rockchip)
- 		}
- 	}
- 
--	if (!IS_ERR(rockchip->vpcie3v3)) {
-+	if (rockchip->vpcie3v3) {
- 		err = regulator_enable(rockchip->vpcie3v3);
- 		if (err) {
- 			dev_err(dev, "fail to enable vpcie3v3 regulator\n");
-@@ -669,10 +671,10 @@ static int rockchip_pcie_set_vpcie(struct rockchip_pcie *rockchip)
- err_disable_1v8:
- 	regulator_disable(rockchip->vpcie1v8);
- err_disable_3v3:
--	if (!IS_ERR(rockchip->vpcie3v3))
-+	if (rockchip->vpcie3v3)
- 		regulator_disable(rockchip->vpcie3v3);
- err_disable_12v:
--	if (!IS_ERR(rockchip->vpcie12v))
-+	if (rockchip->vpcie12v)
- 		regulator_disable(rockchip->vpcie12v);
- err_out:
- 	return err;
-@@ -1062,9 +1064,9 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- err_deinit_port:
- 	rockchip_pcie_deinit_phys(rockchip);
- err_vpcie:
--	if (!IS_ERR(rockchip->vpcie12v))
-+	if (rockchip->vpcie12v)
- 		regulator_disable(rockchip->vpcie12v);
--	if (!IS_ERR(rockchip->vpcie3v3))
-+	if (rockchip->vpcie3v3)
- 		regulator_disable(rockchip->vpcie3v3);
- 	regulator_disable(rockchip->vpcie1v8);
- 	regulator_disable(rockchip->vpcie0v9);
-@@ -1087,9 +1089,9 @@ static int rockchip_pcie_remove(struct platform_device *pdev)
- 
- 	rockchip_pcie_disable_clocks(rockchip);
- 
--	if (!IS_ERR(rockchip->vpcie12v))
-+	if (rockchip->vpcie12v)
- 		regulator_disable(rockchip->vpcie12v);
--	if (!IS_ERR(rockchip->vpcie3v3))
-+	if (rockchip->vpcie3v3)
- 		regulator_disable(rockchip->vpcie3v3);
- 	regulator_disable(rockchip->vpcie1v8);
- 	regulator_disable(rockchip->vpcie0v9);
 -- 
-2.17.1
+2.20.1
 
