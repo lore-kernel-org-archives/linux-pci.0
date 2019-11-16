@@ -2,261 +2,121 @@ Return-Path: <SRS0=cs2W=ZI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05148C432C3
-	for <linux-pci@archiver.kernel.org>; Sat, 16 Nov 2019 00:52:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCB97C43141
+	for <linux-pci@archiver.kernel.org>; Sat, 16 Nov 2019 01:04:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C57AB20733
-	for <linux-pci@archiver.kernel.org>; Sat, 16 Nov 2019 00:52:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573865576;
-	bh=ONcyJ//SGD1mZoiN15ibjsK1Ny7X1eS1qAreB943Snw=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=aJ9FlEpxoKEEpLQUYfS4iWNXBlhHLORMaozhb+n2bhCr8M+DLybzKLWiyaOpweLWJ
-	 gwCw/JCceqoe/Db0C9dGyFsji2CBv6uLzikJaciNNZktllfqvb/oeiXh5S8Jozx7KZ
-	 eiHX9SPBU5ThjTyL4kt0BXIc8TaxYOhIWElAlVwk=
+	by mail.kernel.org (Postfix) with ESMTP id 92FEC20715
+	for <linux-pci@archiver.kernel.org>; Sat, 16 Nov 2019 01:04:55 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AobSiE0L"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727275AbfKPAwn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 15 Nov 2019 19:52:43 -0500
-Received: from mail-oi1-f196.google.com ([209.85.167.196]:45062 "EHLO
-        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727112AbfKPAwn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Nov 2019 19:52:43 -0500
-Received: by mail-oi1-f196.google.com with SMTP id 14so10233900oir.12;
-        Fri, 15 Nov 2019 16:52:42 -0800 (PST)
+        id S1727181AbfKPBEz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 15 Nov 2019 20:04:55 -0500
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:38700 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727128AbfKPBEy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Nov 2019 20:04:54 -0500
+Received: by mail-pg1-f196.google.com with SMTP id 15so6752799pgh.5;
+        Fri, 15 Nov 2019 17:04:53 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:subject:to:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=yZhSkrRRzDytu7r6HNwWF41M3n4sS03b4RCMRMevkbs=;
+        b=AobSiE0L7QCk9OQy0CTVdmRyPDV6J5QvDRQSJ8WtZfN9x8sf4rUP08anVz+gYEQK7h
+         YpPRqgS1k9T0efw8pW+DOv7zsNIvUO9bDLg8YM/eB8k9gZEXpXvrGxLrW1kAnMSPVe/V
+         jwIH0O+64kZOulso/izGLVlKpfqmVxokA38TLuBYpLezBicehyWEk18SQ6C/WDtUdbUx
+         R/F/0jAZ4Kfe05Db7e+NXHsUhbQMkblGRfZ9tMIMIXROikEh8TMyq2fFN3lE6Gky6XMS
+         Tg3rBn5ZVfNPXcH4tllPj5g5wCHQlQU2T4PkVDZfwVaKXu9aTGa2efbmfNcd7tIiZSDR
+         wHdg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+        h=x-gm-message-state:sender:subject:to:references:from:message-id
+         :date:user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=nWoMQ0paWOmaUsqalpGTNE9kf3zkQUzvDJAB/ODhtQI=;
-        b=pWcYfcHehFfatfjpzjUhwdXkxX1SkDub3jrhghsQXkvRkodcXyv5A1ysH2nC3Di/09
-         PhI36FAfOFWmIYnSXmiyPfo/8vZsVseFOZdMChvAQccvlTSzA+H1gM6SU8YMm1fZaJee
-         H9cbPEb9f7s0+BoANrB5syW3wPkLmziUs5ZWoheS3F8BCdQSfV09spGvnPDhuQyGkLlK
-         0b/orE0Ng51P/d13aeZxktQGrTBS8/FsZjdpoDJbVKxhkO5gr98FDmO4YkFzUUQdnWhq
-         wmeI8mSSqFW6OIc5+etMa0hqO91VQj0G5f3GoddPCj9dgSSRghH7ybTl2oqgVCKTysli
-         H9eQ==
-X-Gm-Message-State: APjAAAUyUivQiCEoRV1Lx/DlDZgjPs6TankHicUfTe5arPxcV7iSZiuD
-        p943rUFs6W9LAtY6mB05pq7JRFc=
-X-Google-Smtp-Source: APXvYqxDPJ1BWP4pTS1D7z522kFc2WMxm7LqVnyyAdUsHtniQgmyyWk+hP4cf0Wf7J1GjpqUXNM68g==
-X-Received: by 2002:a05:6808:b1c:: with SMTP id s28mr9147959oij.12.1573865561362;
-        Fri, 15 Nov 2019 16:52:41 -0800 (PST)
-Received: from xps15.herring.priv (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.googlemail.com with ESMTPSA id g18sm3525680otg.50.2019.11.15.16.52.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 15 Nov 2019 16:52:40 -0800 (PST)
-From:   Rob Herring <robh@kernel.org>
-To:     devicetree@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Andrew Murray <andrew.murray@arm.com>
-Subject: [PATCH 1/3] dt-bindings: PCI: Convert Arm Versatile binding to DT schema
-Date:   Fri, 15 Nov 2019 18:52:38 -0600
-Message-Id: <20191116005240.15722-1-robh@kernel.org>
-X-Mailer: git-send-email 2.20.1
+        bh=yZhSkrRRzDytu7r6HNwWF41M3n4sS03b4RCMRMevkbs=;
+        b=XUm6vIZWoHznHjD12WnDp3OziljRhmsr6cUOKlIEiSYJynjqR8v2efQ8Lw4c8/9B6J
+         mxouL9sVcekiAErIo4r9v+JEFNHTR+FHK8n7iljWrKzqbSmPWDgW4MRqxSMqS7mCmwS5
+         N/IFmq7m0ZSWtnLJprupVXvgtbq0WdUHEaOFfnp6Mnr44qc08dpmDwrxE1h8nNcq5YyD
+         pkZBwbO40BP/1Rhu+Wou7Q5pLCm6NIGCtmd9m36gX9QDMH9k+CUqg2FT8x6E8MZdLych
+         xVWB+9yBkDi9BqsevXUteFozPPDinX/Mce9YNkTa/xZ91w/xOLSK2C/0hevvPqFIpOLG
+         W46w==
+X-Gm-Message-State: APjAAAXeDwHLp1v9iPitergwVSFkVFAC+CEbajDNB3mAS0/Z5mRieZux
+        SHD98DfTmaIZYbIV6OyjfmA=
+X-Google-Smtp-Source: APXvYqzZ0xkLydv05JhM34QIDe+zViYkPJDOfTzPMjgKmRPw46e7L+h4xTQzRWam3Qcr25F0o9ZRNA==
+X-Received: by 2002:a63:e608:: with SMTP id g8mr19096736pgh.448.1573866292765;
+        Fri, 15 Nov 2019 17:04:52 -0800 (PST)
+Received: from server.roeck-us.net ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
+        by smtp.gmail.com with ESMTPSA id 10sm10903380pgs.11.2019.11.15.17.04.51
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 15 Nov 2019 17:04:51 -0800 (PST)
+Subject: Re: watchdog: how to enable?
+To:     Muni Sekhar <munisekharrms@gmail.com>,
+        linux-watchdog@vger.kernel.org, linux-pci@vger.kernel.org,
+        wim@linux-watchdog.org
+References: <CAHhAz+h6SuGKWn0qNqsCdNjDks_vHuJW-KfiQja_b3x8x=vq_A@mail.gmail.com>
+From:   Guenter Roeck <linux@roeck-us.net>
+Message-ID: <0d5c20b1-6b0f-430b-17b0-d3624062020d@roeck-us.net>
+Date:   Fri, 15 Nov 2019 17:04:50 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAHhAz+h6SuGKWn0qNqsCdNjDks_vHuJW-KfiQja_b3x8x=vq_A@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Convert the Arm Versatile PCI host binding to a DT schema.
+On 11/15/19 4:35 PM, Muni Sekhar wrote:
+> [ Please keep me in CC as I'm not subscribed to the list]
+> 
+> Hi All,
+> 
+> My kernel is built with the following options:
+> 
+> $ cat /boot/config-5.0.1 | grep NO_HZ
+> CONFIG_NO_HZ_COMMON=y
+> CONFIG_NO_HZ_IDLE=y
+> # CONFIG_NO_HZ_FULL is not set
+> CONFIG_NO_HZ=y
+> CONFIG_RCU_FAST_NO_HZ=y
+> 
+> I booted with watchdog enabled(nmi_watchdog=1) as given below:
+> 
+> BOOT_IMAGE=/boot/vmlinuz-5.0.1
+> root=UUID=f65454ae-3f1d-4b9e-b4be-74a29becbe1e ro debug
+> ignore_loglevel console=ttyUSB0,115200 console=tty0 console=tty1
+> console=ttyS2,115200 memmap=1M!1023M nmi_watchdog=1
+> crashkernel=384M-:128M
+> 
+> When the system is frozen or the kernel is locked up(I noticed that in
+> this state kernel is not responding for ALT-SysRq-<command key>) but
+> watchdog is not triggered. So I want to understand how to enable the
+> watchdog timer and how to verify the basic watchdog functionality
+> behavior?
+>  > Any pointers on this will be greatly appreciated.
+> 
+Sorry, I do not have an answer. Please note that you are talking about
+the NMI watchdog, which is completely unrelated to hardware watchdogs
+and not handled by the watchdog subsystem. I would suggest to send
+your question to the Linux kernel mailing list and clearly state
+that you are talking about the NMI watchdog.
 
-Cc: Linus Walleij <linus.walleij@linaro.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Andrew Murray <andrew.murray@arm.com>
-Signed-off-by: Rob Herring <robh@kernel.org>
----
- .../devicetree/bindings/pci/versatile.txt     | 59 ------------
- .../devicetree/bindings/pci/versatile.yaml    | 92 +++++++++++++++++++
- MAINTAINERS                                   |  2 +-
- 3 files changed, 93 insertions(+), 60 deletions(-)
- delete mode 100644 Documentation/devicetree/bindings/pci/versatile.txt
- create mode 100644 Documentation/devicetree/bindings/pci/versatile.yaml
+Please note that, for the NMI watchdog to do anything, you must have
+CONFIG_HARDLOCKUP_DETECTOR enabled in your kernel configuration. I don't
+know what if anything the configuration options you listed above have
+to do with the NMI watchdog.
 
-diff --git a/Documentation/devicetree/bindings/pci/versatile.txt b/Documentation/devicetree/bindings/pci/versatile.txt
-deleted file mode 100644
-index 0a702b13d2ac..000000000000
---- a/Documentation/devicetree/bindings/pci/versatile.txt
-+++ /dev/null
-@@ -1,59 +0,0 @@
--* ARM Versatile Platform Baseboard PCI interface
--
--PCI host controller found on the ARM Versatile PB board's FPGA.
--
--Required properties:
--- compatible: should contain "arm,versatile-pci" to identify the Versatile PCI
--  controller.
--- reg: base addresses and lengths of the PCI controller. There must be 3
--  entries:
--	- Versatile-specific registers
--	- Self Config space
--	- Config space
--- #address-cells: set to <3>
--- #size-cells: set to <2>
--- device_type: set to "pci"
--- bus-range: set to <0 0xff>
--- ranges: ranges for the PCI memory and I/O regions
--- #interrupt-cells: set to <1>
--- interrupt-map-mask and interrupt-map: standard PCI properties to define
--	the mapping of the PCI interface to interrupt numbers.
--
--Example:
--
--pci-controller@10001000 {
--	compatible = "arm,versatile-pci";
--	device_type = "pci";
--	reg = <0x10001000 0x1000
--	       0x41000000 0x10000
--	       0x42000000 0x100000>;
--	bus-range = <0 0xff>;
--	#address-cells = <3>;
--	#size-cells = <2>;
--	#interrupt-cells = <1>;
--
--	ranges = <0x01000000 0 0x00000000 0x43000000 0 0x00010000   /* downstream I/O */
--		  0x02000000 0 0x50000000 0x50000000 0 0x10000000   /* non-prefetchable memory */
--		  0x42000000 0 0x60000000 0x60000000 0 0x10000000>; /* prefetchable memory */
--
--	interrupt-map-mask = <0x1800 0 0 7>;
--	interrupt-map = <0x1800 0 0 1 &sic 28
--			 0x1800 0 0 2 &sic 29
--			 0x1800 0 0 3 &sic 30
--			 0x1800 0 0 4 &sic 27
--
--			 0x1000 0 0 1 &sic 27
--			 0x1000 0 0 2 &sic 28
--			 0x1000 0 0 3 &sic 29
--			 0x1000 0 0 4 &sic 30
--
--			 0x0800 0 0 1 &sic 30
--			 0x0800 0 0 2 &sic 27
--			 0x0800 0 0 3 &sic 28
--			 0x0800 0 0 4 &sic 29
--
--			 0x0000 0 0 1 &sic 29
--			 0x0000 0 0 2 &sic 30
--			 0x0000 0 0 3 &sic 27
--			 0x0000 0 0 4 &sic 28>;
--};
-diff --git a/Documentation/devicetree/bindings/pci/versatile.yaml b/Documentation/devicetree/bindings/pci/versatile.yaml
-new file mode 100644
-index 000000000000..07a48c27db1f
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/versatile.yaml
-@@ -0,0 +1,92 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/pci/versatile.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: ARM Versatile Platform Baseboard PCI interface
-+
-+maintainers:
-+  - Rob Herring <robh@kernel.org>
-+
-+description: |+
-+  PCI host controller found on the ARM Versatile PB board's FPGA.
-+
-+allOf:
-+  - $ref: /schemas/pci/pci-bus.yaml#
-+
-+properties:
-+  compatible:
-+    const: arm,versatile-pci
-+
-+  reg:
-+    items:
-+      - description: Versatile-specific registers
-+      - description: Self Config space
-+      - description: Config space
-+
-+  ranges:
-+    maxItems: 3
-+
-+  "#interrupt-cells": true
-+
-+  interrupt-map:
-+    maxItems: 16
-+
-+  interrupt-map-mask:
-+    items:
-+      - const: 0x1800
-+      - const: 0
-+      - const: 0
-+      - const: 7
-+
-+required:
-+  - compatible
-+  - reg
-+  - ranges
-+  - "#interrupt-cells"
-+  - interrupt-map
-+  - interrupt-map-mask
-+
-+examples:
-+  - |
-+    pci@10001000 {
-+      compatible = "arm,versatile-pci";
-+      device_type = "pci";
-+      reg = <0x10001000 0x1000>,
-+            <0x41000000 0x10000>,
-+            <0x42000000 0x100000>;
-+      bus-range = <0 0xff>;
-+      #address-cells = <3>;
-+      #size-cells = <2>;
-+      #interrupt-cells = <1>;
-+
-+      ranges =
-+          <0x01000000 0 0x00000000 0x43000000 0 0x00010000>,  /* downstream I/O */
-+          <0x02000000 0 0x50000000 0x50000000 0 0x10000000>,  /* non-prefetchable memory */
-+          <0x42000000 0 0x60000000 0x60000000 0 0x10000000>;  /* prefetchable memory */
-+
-+      interrupt-map-mask = <0x1800 0 0 7>;
-+      interrupt-map = <0x1800 0 0 1 &sic 28>,
-+          <0x1800 0 0 2 &sic 29>,
-+          <0x1800 0 0 3 &sic 30>,
-+          <0x1800 0 0 4 &sic 27>,
-+
-+          <0x1000 0 0 1 &sic 27>,
-+          <0x1000 0 0 2 &sic 28>,
-+          <0x1000 0 0 3 &sic 29>,
-+          <0x1000 0 0 4 &sic 30>,
-+
-+          <0x0800 0 0 1 &sic 30>,
-+          <0x0800 0 0 2 &sic 27>,
-+          <0x0800 0 0 3 &sic 28>,
-+          <0x0800 0 0 4 &sic 29>,
-+
-+          <0x0000 0 0 1 &sic 29>,
-+          <0x0000 0 0 2 &sic 30>,
-+          <0x0000 0 0 3 &sic 27>,
-+          <0x0000 0 0 4 &sic 28>;
-+    };
-+
-+
-+...
-diff --git a/MAINTAINERS b/MAINTAINERS
-index c6c34d04ce95..48a90f0833b8 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -12401,7 +12401,7 @@ M:	Rob Herring <robh@kernel.org>
- L:	linux-pci@vger.kernel.org
- L:	linux-arm-kernel@lists.infradead.org
- S:	Maintained
--F:	Documentation/devicetree/bindings/pci/versatile.txt
-+F:	Documentation/devicetree/bindings/pci/versatile.yaml
- F:	drivers/pci/controller/pci-versatile.c
- 
- PCI DRIVER FOR ARMADA 8K
--- 
-2.20.1
+Another possibility, of course, might be to enable a hardware watchdog
+in your system (assuming it supports one). I personally would not trust
+the NMI watchdog because to detect a system hang, after all, there are
+situations where even NMIs no longer work.
 
+Guenter
