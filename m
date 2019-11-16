@@ -7,47 +7,45 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CD7EC43215
-	for <linux-pci@archiver.kernel.org>; Sat, 16 Nov 2019 16:27:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 247D3C43141
+	for <linux-pci@archiver.kernel.org>; Sat, 16 Nov 2019 16:28:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2750F21847
-	for <linux-pci@archiver.kernel.org>; Sat, 16 Nov 2019 16:27:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F1A7F21844
+	for <linux-pci@archiver.kernel.org>; Sat, 16 Nov 2019 16:28:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573921639;
-	bh=UO3XCC42t0obPxpUMFWs3bkB7qRjPJ5pyIs/hvKqYnY=;
+	s=default; t=1573921722;
+	bh=mdj7XPfQr7aTT3QJ1EjZS6B280N60fbSQCKhLUyoZvw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=IOmxvsnnyQyUfXwWbqcWWjQfN3F+/IeeTD2sLdgFn3riHLeCNZidVJiXTV5ZaHB+7
-	 +bwt/mL456TrGVlUYczBDbvzx0GRfQRshtdRbetYsZECaXh+1DTYMAK0bplGAJl3TK
-	 GFXVkNOyrLVwUBzacP7R6jNSTP8Z3yy2/HgUWltA=
+	b=P8nLiblX1EjE2CbugxrgvRjztIC9gr2PiupekYlpn7IBVvEsn66x8+cDeCmaRkxeV
+	 jXiR3xph1AG6ePaKj3RSWqG1fvzrzTwK94odgn6CG9r1ql8IT/jBzKIafDDgvMhmnZ
+	 NzF7pwOYGgg84CnMD0LmnhRz5M6rdZTo8MYF7s/0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728466AbfKPQ1P (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 16 Nov 2019 11:27:15 -0500
-Received: from mail.kernel.org ([198.145.29.99]:44872 "EHLO mail.kernel.org"
+        id S1727787AbfKPQ2h (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 16 Nov 2019 11:28:37 -0500
+Received: from mail.kernel.org ([198.145.29.99]:44266 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727958AbfKPPlj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 16 Nov 2019 10:41:39 -0500
+        id S1727606AbfKPPlR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 16 Nov 2019 10:41:17 -0500
 Received: from sasha-vm.mshome.net (unknown [50.234.116.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 77BEC207DD;
-        Sat, 16 Nov 2019 15:41:38 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 4509720748;
+        Sat, 16 Nov 2019 15:41:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573918898;
-        bh=UO3XCC42t0obPxpUMFWs3bkB7qRjPJ5pyIs/hvKqYnY=;
+        s=default; t=1573918877;
+        bh=mdj7XPfQr7aTT3QJ1EjZS6B280N60fbSQCKhLUyoZvw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=eaUvNw3DnqYaGrVa1BUAq+bmllDgryEb8i3ElSHsFgXYS64R8ehJ9kVwLUdBljVmR
-         htc0M8d65fIa3buSHa4T5IrJUiozRw5dANK6Wsfsya7QTVdfvVWLHQ6l2dtFMvHSHs
-         i+aEO0wA+NnDkuDrJGITHGXikaIRzcG585me9k0I=
+        b=aG/v/k37iHYzY2OMgE/sUOUGiftiT+KbvfL6/4i7YL5fDv2TvCG1kT28AhiQicBd4
+         gaZQfb4Lci9ttdYY6D1sbx25lYNikNKj5Elt8KwkbZWztJerIX1EIytIdnBZLBL5Ky
+         jNS35FJf+xIb8S7s13nMjtnHEMCX/6bLdpLiTTDw=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Honghui Zhang <honghui.zhang@mediatek.com>,
+Cc:     Alan Douglas <adouglas@cadence.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 4.19 026/237] PCI: mediatek: Fix class type for MT7622 to PCI_CLASS_BRIDGE_PCI
-Date:   Sat, 16 Nov 2019 10:37:41 -0500
-Message-Id: <20191116154113.7417-26-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 006/237] PCI: cadence: Write MSI data with 32bits
+Date:   Sat, 16 Nov 2019 10:37:21 -0500
+Message-Id: <20191116154113.7417-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191116154113.7417-1-sashal@kernel.org>
 References: <20191116154113.7417-1-sashal@kernel.org>
@@ -60,45 +58,35 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Honghui Zhang <honghui.zhang@mediatek.com>
+From: Alan Douglas <adouglas@cadence.com>
 
-[ Upstream commit a7f172ab6a8e755e60311f27512034b0441ef421 ]
+[ Upstream commit e81e36a96bb56f243b5ac1d114c37c086761595b ]
 
-commit 101c92dc80c8 ("PCI: mediatek: Set up vendor ID and class
-type for MT7622") erroneously set the class type for MT7622 to
-PCI_CLASS_BRIDGE_HOST.
+According to the PCIe specification, although the MSI data is only
+16bits, the upper 16bits should be written as 0. Use writel
+instead of writew when writing the MSI data to the host.
 
-The PCIe controller of MT7622 integrates a Root Port that has type 1
-configuration space header and related bridge windows.
-
-The HW default value of this bridge's class type is invalid.
-
-Fix its class type and set it to PCI_CLASS_BRIDGE_PCI to
-match the hardware implementation.
-
-Fixes: 101c92dc80c8 ("PCI: mediatek: Set up vendor ID and class type for MT7622")
-Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
-[lorenzo.pieralisi@arm.com: reworked the commit log]
+Fixes: 37dddf14f1ae ("PCI: cadence: Add EndPoint Controller driver for Cadence PCIe controller")
+Signed-off-by: Alan Douglas <adouglas@cadence.com>
 Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Acked-by: Ryder Lee <ryder.lee@mediatek.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/controller/pcie-mediatek.c | 2 +-
+ drivers/pci/controller/pcie-cadence-ep.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-index c5ff6ca65eab2..abedf8ec11bba 100644
---- a/drivers/pci/controller/pcie-mediatek.c
-+++ b/drivers/pci/controller/pcie-mediatek.c
-@@ -432,7 +432,7 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
- 		val = PCI_VENDOR_ID_MEDIATEK;
- 		writew(val, port->base + PCIE_CONF_VEND_ID);
- 
--		val = PCI_CLASS_BRIDGE_HOST;
-+		val = PCI_CLASS_BRIDGE_PCI;
- 		writew(val, port->base + PCIE_CONF_CLASS_ID);
+diff --git a/drivers/pci/controller/pcie-cadence-ep.c b/drivers/pci/controller/pcie-cadence-ep.c
+index 6692654798d44..c3a088910f48d 100644
+--- a/drivers/pci/controller/pcie-cadence-ep.c
++++ b/drivers/pci/controller/pcie-cadence-ep.c
+@@ -355,7 +355,7 @@ static int cdns_pcie_ep_send_msi_irq(struct cdns_pcie_ep *ep, u8 fn,
+ 		ep->irq_pci_addr = (pci_addr & ~pci_addr_mask);
+ 		ep->irq_pci_fn = fn;
  	}
+-	writew(data, ep->irq_cpu_addr + (pci_addr & pci_addr_mask));
++	writel(data, ep->irq_cpu_addr + (pci_addr & pci_addr_mask));
  
+ 	return 0;
+ }
 -- 
 2.20.1
 
