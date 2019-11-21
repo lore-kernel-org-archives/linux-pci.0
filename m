@@ -2,202 +2,79 @@ Return-Path: <SRS0=LcfH=ZN=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C13A4C432C0
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Nov 2019 03:21:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7748AC43215
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Nov 2019 07:32:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8CD572075A
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Nov 2019 03:21:33 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="FEB9UpPF"
+	by mail.kernel.org (Postfix) with ESMTP id 550DA20855
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Nov 2019 07:32:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727534AbfKUDUl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 20 Nov 2019 22:20:41 -0500
-Received: from mailout2.samsung.com ([203.254.224.25]:18898 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727515AbfKUDUk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Nov 2019 22:20:40 -0500
-Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20191121032037epoutp024d8ceb166ae8837f5126b41136c4d501~ZD10zmBX61527615276epoutp02K
-        for <linux-pci@vger.kernel.org>; Thu, 21 Nov 2019 03:20:37 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20191121032037epoutp024d8ceb166ae8837f5126b41136c4d501~ZD10zmBX61527615276epoutp02K
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1574306437;
-        bh=2YYXgjCg4OpFQwaAFuEh8nJn991F2oDFmVnHATA+nac=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=FEB9UpPFZhYng4mlH7+JmmA4+9WAEmATwrm1V9uar9+YkEP/iDEr5/X6K40TTKrOG
-         IpMtyEGGVpryE2CSjytC59DN1dtTfAM0gSYjmrgxv6n4GyVDMr+79qg9ZcYpCGcs5d
-         13mMnzq1yvBTGcEpjFoUQuDp0VBYNQA72sgDiBzo=
-Received: from epsmges5p2new.samsung.com (unknown [182.195.42.74]) by
-        epcas5p2.samsung.com (KnoxPortal) with ESMTP id
-        20191121032037epcas5p28c24613dedc01675ea87f0c899e8b5fb~ZD10ZQUaC0606906069epcas5p2p;
-        Thu, 21 Nov 2019 03:20:37 +0000 (GMT)
-Received: from epcas5p2.samsung.com ( [182.195.41.40]) by
-        epsmges5p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        AA.9F.04403.58206DD5; Thu, 21 Nov 2019 12:20:37 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
-        20191121032036epcas5p1ec12cabed1104c131a3cab202a180c21~ZD1z1c92w2857128571epcas5p1J;
-        Thu, 21 Nov 2019 03:20:36 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20191121032036epsmtrp1a6336e44477a887e1a22d9c76edaada5~ZD1z0sUHs0943209432epsmtrp1C;
-        Thu, 21 Nov 2019 03:20:36 +0000 (GMT)
-X-AuditID: b6c32a4a-3cbff70000001133-5c-5dd60285df84
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        16.1C.03654.48206DD5; Thu, 21 Nov 2019 12:20:36 +0900 (KST)
-Received: from ubuntu.sa.corp.samsungelectronics.net (unknown
-        [107.108.83.125]) by epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20191121032034epsmtip25a429275ad648a37efb20d8c671e49c8~ZD1yLlJ3H2680226802epsmtip2X;
-        Thu, 21 Nov 2019 03:20:34 +0000 (GMT)
-From:   Anvesh Salveru <anvesh.s@samsung.com>
-To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Cc:     jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
-        pankaj.dubey@samsung.com, lorenzo.pieralisi@arm.com,
-        andrew.murray@arm.com, bhelgaas@google.com, kishon@ti.com,
-        robh+dt@kernel.org, mark.rutland@arm.com,
-        Anvesh Salveru <anvesh.s@samsung.com>
-Subject: [PATCH v4 1/2] phy: core: add phy_property_present method
-Date:   Thu, 21 Nov 2019 08:50:07 +0530
-Message-Id: <1574306408-4360-2-git-send-email-anvesh.s@samsung.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1574306408-4360-1-git-send-email-anvesh.s@samsung.com>
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFupileLIzCtJLcpLzFFi42LZdlhTQ7eV6Vqswb7lfBbN/7ezWpzdtZDV
-        YklThsWuux3sFiu+zGS3uPC0h83i8q45bBZn5x1ns3jz+wW7xdLrF5ksFm39wm7RuvcIuwOP
-        x5p5axg9ds66y+6xYFOpx6ZVnWwefVtWMXps2f+Z0eP4je1MHp83yQVwRHHZpKTmZJalFunb
-        JXBl/L93lbHgiETFgnnaDYzdIl2MHBwSAiYSax9pdjFycQgJ7GaUeL72EyOE84lR4lfbT3YI
-        5xujRNfZ2cxdjJxgHW/OvGGCSOxllGj5thzKaWGS+LW4lRGkik1AW+Ln0b3sILaIgLXE4fYt
-        bCBFzAL/GCWufpkHViQs4CTxfd4isLEsAqoSp79PYAKxeQWcJXYcXccOsU5O4ua5TrAaTgEX
-        iaZb28G2SQhcZ5O49fooG0SRi8Tuib9YIWxhiVfHt0A1S0m87G+DsvMleu8uhbJrJKbc7WCE
-        sO0lDlyZwwIKDWYBTYn1u/RBwswCfBK9v58wQQKJV6KjTQjCVJJom1kN0SghsXj+TWigeEhc
-        OfebGRIO0xklTr56wDqBUXYWwtAFjIyrGCVTC4pz01OLTQuM8lLL9YoTc4tL89L1kvNzNzGC
-        U4iW1w7GZed8DjEKcDAq8fBmaFyNFWJNLCuuzD3EKMHBrCTCu+f6lVgh3pTEyqrUovz4otKc
-        1OJDjNIcLErivJNYr8YICaQnlqRmp6YWpBbBZJk4OKUaGLeK6vMzyMxqr+bozD/QFjx7Xav+
-        k23x2uZqZYnNHbs2pVRHm5c1z+yMUitlCEt62vpS3Xm982GBosvWB38WNE1bMv2l25ymyT57
-        L+2NdTi1wviIi2sf98lfckqsjW8sHRIs1QzecT+9uYJX+tjxZTcnpLc+T3n6uvzAsr2im7Yo
-        i5W8XD3zthJLcUaioRZzUXEiAI+ob8UdAwAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrFLMWRmVeSWpSXmKPExsWy7bCSvG4L07VYg5ufVCya/29ntTi7ayGr
-        xZKmDItddzvYLVZ8mcluceFpD5vF5V1z2CzOzjvOZvHm9wt2i6XXLzJZLNr6hd2ide8Rdgce
-        jzXz1jB67Jx1l91jwaZSj02rOtk8+rasYvTYsv8zo8fxG9uZPD5vkgvgiOKySUnNySxLLdK3
-        S+DK+H/vKmPBEYmKBfO0Gxi7RboYOTkkBEwk3px5w9TFyMUhJLCbUeLYnUWMEAkJiS97v7JB
-        2MISK/89Z4coamKS+LJgIhNIgk1AW+Ln0b3sILaIgK3E/UeTWUGKmAW6mCTWnt4ClhAWcJL4
-        Pm8RM4jNIqAqcfr7BLBmXgFniR1H17FDbJCTuHmuE6yGU8BFounWdrAaIaCa3Vdusk5g5FvA
-        yLCKUTK1oDg3PbfYsMAwL7Vcrzgxt7g0L10vOT93EyM4hLU0dzBeXhJ/iFGAg1GJhzdD42qs
-        EGtiWXFl7iFGCQ5mJRHePdevxArxpiRWVqUW5ccXleakFh9ilOZgURLnfZp3LFJIID2xJDU7
-        NbUgtQgmy8TBKdXAKPE0atG+vUq2HXO+xbJeUrjkYHc2Nedm776oLguhT56xjzkqdVTnWe9I
-        NWuXLFm26JLcrqVHb67l8ZDtYDjw4Pe0D2f+R2b9NBFSZjf4yfyqVrN6T+tR5l9MXdZnJ1tw
-        7Gg+GPIv/+O1U5/nCVSKs805H/1g9dbJcd85e0N17rvqTNY86VlYqMRSnJFoqMVcVJwIAFhr
-        3ihdAgAA
-X-CMS-MailID: 20191121032036epcas5p1ec12cabed1104c131a3cab202a180c21
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-X-CMS-RootMailID: 20191121032036epcas5p1ec12cabed1104c131a3cab202a180c21
-References: <1574306408-4360-1-git-send-email-anvesh.s@samsung.com>
-        <CGME20191121032036epcas5p1ec12cabed1104c131a3cab202a180c21@epcas5p1.samsung.com>
+        id S1726522AbfKUHcA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 Nov 2019 02:32:00 -0500
+Received: from verein.lst.de ([213.95.11.211]:44458 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726230AbfKUHb7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 21 Nov 2019 02:31:59 -0500
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 0FAB768B05; Thu, 21 Nov 2019 08:31:53 +0100 (CET)
+Date:   Thu, 21 Nov 2019 08:31:52 +0100
+From:   Christoph Hellwig <hch@lst.de>
+To:     Robin Murphy <robin.murphy@arm.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
+        Dave Hansen <dave.hansen@linux.intel.com>,
+        Andy Lutomirski <luto@kernel.org>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Hanjun Guo <guohanjun@huawei.com>,
+        Sudeep Holla <sudeep.holla@arm.com>,
+        Jens Axboe <axboe@kernel.dk>, Joerg Roedel <joro@8bytes.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org, Paul Mackerras <paulus@samba.org>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        Paul Burton <paulburton@kernel.org>,
+        Michael Ellerman <mpe@ellerman.id.au>, x86@kernel.org,
+        phil@raspberrypi.org, linux-acpi@vger.kernel.org,
+        Ingo Molnar <mingo@redhat.com>,
+        James Hogan <jhogan@kernel.org>, Len Brown <lenb@kernel.org>,
+        devicetree@vger.kernel.org, Borislav Petkov <bp@alien8.de>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        linux-arm-kernel@lists.infradead.org,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        linux-mips@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
+        iommu@lists.linux-foundation.org, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH] dma-mapping: treat dev->bus_dma_mask as a DMA limit
+Message-ID: <20191121073152.GB24024@lst.de>
+References: <20191113161340.27228-1-nsaenzjulienne@suse.de> <dd074ef5c23ba56598e92be19e8e25ae31b75f93.camel@suse.de> <20191119170006.GA19569@lst.de> <7609007d-52f5-bb10-e8d5-96fadbfab46d@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <7609007d-52f5-bb10-e8d5-96fadbfab46d@arm.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In some platforms, we need information of phy properties in
-the controller drivers. This patch adds a new phy_property_present()
-method which can be used to check if some property exists in PHY
-or not.
+On Tue, Nov 19, 2019 at 05:17:03PM +0000, Robin Murphy wrote:
+> TBH I can't see it being a massive problem even if the DMA patch, driver 
+> and DTS patch went entirely separately via the respective DMA, PCI, and 
+> arm-soc trees in the same cycle. Bisecting over a merge window is a big 
+> enough pain in the bum as it is, and if the worst case is that someone 
+> trying to do that on a Pi4 has a wonky PCI controller appear for a couple 
+> of commits, they may as well just disable that driver for their bisection, 
+> because it wasn't there at the start so can't possibly be the thing they're 
+> looking for regressions in ;)
 
-In case of DesignWare PCIe controller, we need to write into controller
-register to specify about ZRX-DC compliance property of the PHY, which
-reduces the power consumption during lower power states.
+Agreed.
 
-Signed-off-by: Anvesh Salveru <anvesh.s@samsung.com>
-Signed-off-by: Pankaj Dubey <pankaj.dubey@samsung.com>
----
- drivers/phy/phy-core.c  | 26 ++++++++++++++++++++++++++
- include/linux/phy/phy.h |  8 ++++++++
- 2 files changed, 34 insertions(+)
-
-diff --git a/drivers/phy/phy-core.c b/drivers/phy/phy-core.c
-index b04f4fe..0a62eca 100644
---- a/drivers/phy/phy-core.c
-+++ b/drivers/phy/phy-core.c
-@@ -420,6 +420,32 @@ int phy_calibrate(struct phy *phy)
- EXPORT_SYMBOL_GPL(phy_calibrate);
- 
- /**
-+ * phy_property_present() - checks if the property is present in PHY
-+ * @phy: the phy returned by phy_get()
-+ * @property: name of the property to check
-+ *
-+ * Used to check if the given property is present in PHY. PHY drivers
-+ * can implement this callback function to expose PHY properties to
-+ * controller drivers.
-+ *
-+ * Returns: true if property exists, false otherwise
-+ */
-+bool phy_property_present(struct phy *phy, const char *property)
-+{
-+	bool ret;
-+
-+	if (!phy || !phy->ops->property_present)
-+		return false;
-+
-+	mutex_lock(&phy->mutex);
-+	ret = phy->ops->property_present(phy, property);
-+	mutex_unlock(&phy->mutex);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(phy_property_present);
-+
-+/**
-  * phy_configure() - Changes the phy parameters
-  * @phy: the phy returned by phy_get()
-  * @opts: New configuration to apply
-diff --git a/include/linux/phy/phy.h b/include/linux/phy/phy.h
-index 15032f14..3dd8f3c 100644
---- a/include/linux/phy/phy.h
-+++ b/include/linux/phy/phy.h
-@@ -61,6 +61,7 @@ union phy_configure_opts {
-  * @reset: resetting the phy
-  * @calibrate: calibrate the phy
-  * @release: ops to be performed while the consumer relinquishes the PHY
-+ * @property_present: check if some property is present in PHY
-  * @owner: the module owner containing the ops
-  */
- struct phy_ops {
-@@ -103,6 +104,7 @@ struct phy_ops {
- 	int	(*reset)(struct phy *phy);
- 	int	(*calibrate)(struct phy *phy);
- 	void	(*release)(struct phy *phy);
-+	bool	(*property_present)(struct phy *phy, const char *property);
- 	struct module *owner;
- };
- 
-@@ -217,6 +219,7 @@ static inline enum phy_mode phy_get_mode(struct phy *phy)
- }
- int phy_reset(struct phy *phy);
- int phy_calibrate(struct phy *phy);
-+bool phy_property_present(struct phy *phy, const char *property);
- static inline int phy_get_bus_width(struct phy *phy)
- {
- 	return phy->attrs.bus_width;
-@@ -354,6 +357,11 @@ static inline int phy_calibrate(struct phy *phy)
- 	return -ENOSYS;
- }
- 
-+static inline bool phy_property_present(struct phy *phy, const char *property)
-+{
-+	return false;
-+}
-+
- static inline int phy_configure(struct phy *phy,
- 				union phy_configure_opts *opts)
- {
--- 
-2.7.4
-
+Nicolas, can you send a respin?  That way I can still queue it up
+for 5.5.
