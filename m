@@ -2,205 +2,143 @@ Return-Path: <SRS0=vAAV=ZO=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F85CC43141
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Nov 2019 10:51:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6878FC43215
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Nov 2019 11:15:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5C57120730
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Nov 2019 10:51:15 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="RzMiAchI"
+	by mail.kernel.org (Postfix) with ESMTP id 41DA920721
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Nov 2019 11:15:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1574421347;
+	bh=n5Tj7+vySHNtfOYaPZa8PHZ4JUxOfxEeh1VYkp2jr0I=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=sgQUKuAlLWuWWXL0BrprHfny8lYIXzREzcCrZuXw7JNhmMhTgxL5RZX6+1k7dC47t
+	 5Kq9yrpb0sBiVwwsfFvzuxuDXOeiJdDuwQjTApHRZBtIcXCuseXu3mIPW94DEHpflu
+	 TfCg95QYX36Bi4DUAJKtohdMx6IzwMvmLSk4qwKE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729619AbfKVKvO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 22 Nov 2019 05:51:14 -0500
-Received: from mail-wm1-f65.google.com ([209.85.128.65]:56065 "EHLO
-        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728503AbfKVKvI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Nov 2019 05:51:08 -0500
-Received: by mail-wm1-f65.google.com with SMTP id b11so6914074wmb.5
-        for <linux-pci@vger.kernel.org>; Fri, 22 Nov 2019 02:51:07 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=vx4Rp2JWxTpwjHbsPUwQOJio9qv2Si3UTdoXXTOJ6hw=;
-        b=RzMiAchIN0a1MA2agzsMmmUVN/NACrbKmeQxW9OYLy/xyPd/+bdzJ3ZJ1a0SCZIMfi
-         1opvf0yvvJPDEs69SqH0j0177JHM9wAcPvQa0Gx7Qfznl9EMxk1LCPjTfQ/rzrY99sa9
-         tj6hbbskL7HY5QzmcYnpJ7i7eRhpYkp7Wf4Uk4wk9S0J4GIQIVqnSyoESgxWxPktMOyg
-         tzoZBhV6FQMgH8nP/3g1GYHXT/3k1thAdNwX9RVy6NoGRBnSI0wWuQUkd+LZicHh7Mrp
-         w2x3EEBfT7ZqyQsIs5utEfoIRm2rYkYWXLhhZn6cJ8ThHpUuu7kXjmE83dXpl6mgyUgR
-         1HUw==
+        id S1729185AbfKVLPp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 22 Nov 2019 06:15:45 -0500
+Received: from mail-ot1-f65.google.com ([209.85.210.65]:45382 "EHLO
+        mail-ot1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726977AbfKVLPo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Nov 2019 06:15:44 -0500
+Received: by mail-ot1-f65.google.com with SMTP id r24so5801118otk.12;
+        Fri, 22 Nov 2019 03:15:44 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=vx4Rp2JWxTpwjHbsPUwQOJio9qv2Si3UTdoXXTOJ6hw=;
-        b=IExtsTz+RVARjWpOi4PdyhSgt8jL5Z/l7FNrNZ3A0AFv1eqfMdbK8rjbhierPcMO4C
-         /JrbNw0XVGBvlKxUUBhq0JeB0zqcJvbutPvGSsz3Lnty+eVluyf9qjTmFySVofGzIetD
-         FYgwcbbak86RZvGth4oWjvX53luNifCS2QWAUySjOmscadzVBaZL00noECQt7++k9LLE
-         Vz28b9M7TY2trsxT6nw63Ehys6Xz1kZoU/ySCx5q528tB+EVfpusFU8PnHTWJa6Mmq8z
-         ZPs4mLmHlIIpCYkTVJEaOtd6u5wdjKY+HpE0c/xsc+cnd1ysyYDV7r/iKJ7SfV+laEnz
-         tjHw==
-X-Gm-Message-State: APjAAAX2q5Zi7aBB59ByE+615e+rDe3LTVcIz/leBYIC9lmtdx47MgmJ
-        GgYd/O8q+1Srl55g8FI1wUy63Q==
-X-Google-Smtp-Source: APXvYqyZxbgndRY6b3Fh3ipFtYb3tNJ6jmpmtk3V3fd+ZYBSzCjLSNTlmzWGkB0HHefvBHwBmcEmHA==
-X-Received: by 2002:a1c:7c18:: with SMTP id x24mr16254886wmc.130.1574419867091;
-        Fri, 22 Nov 2019 02:51:07 -0800 (PST)
-Received: from localhost.localdomain (xdsl-188-155-204-106.adslplus.ch. [188.155.204.106])
-        by smtp.gmail.com with ESMTPSA id o133sm2088197wmb.4.2019.11.22.02.51.05
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 22 Nov 2019 02:51:06 -0800 (PST)
-From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
-To:     linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        iommu@lists.linux-foundation.org,
-        virtualization@lists.linux-foundation.org,
-        linux-pci@vger.kernel.org, virtio-dev@lists.oasis-open.org
-Cc:     rjw@rjwysocki.net, lenb@kernel.org, lorenzo.pieralisi@arm.com,
-        guohanjun@huawei.com, sudeep.holla@arm.com,
-        gregkh@linuxfoundation.org, joro@8bytes.org, bhelgaas@google.com,
-        mst@redhat.com, jasowang@redhat.com, jacob.jun.pan@intel.com,
-        eric.auger@redhat.com, sebastien.boeuf@intel.com,
-        kevin.tian@intel.com
-Subject: [RFC virtio 12/13] virtio-iommu: Add built-in topology description
-Date:   Fri, 22 Nov 2019 11:49:59 +0100
-Message-Id: <20191122105000.800410-13-jean-philippe@linaro.org>
-X-Mailer: git-send-email 2.24.0
-In-Reply-To: <20191122105000.800410-1-jean-philippe@linaro.org>
-References: <20191122105000.800410-1-jean-philippe@linaro.org>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=nNKtVKyyjIN7C8LjAkItasX2zQVTgor2/9I8mXAyorg=;
+        b=fCZm79oJVZkKo5JwWGeYhhF8pGwccbVhp5WC/Byqz+WEsWkxGMunQ7A5X4/A1Q3Pdd
+         T+n5qEDRoeKXpwAp/dgCRhsvzXuMA9GSRMSv5CLEYOgkQy2F1glD9oW9V/ngiDMRY4/d
+         PcgF5ssHOUGN2+cDPBg139T5AlRqLk65iUME/FwNNKLNCKlIn6MPo7410/bTl6z1oVBr
+         tpBTCMimRzVbuLGw7DGMuqI0K0v9b+R4wf1QplrH9QykFBja4GV/7bkd4GTPFPBVnQ9j
+         QFO12fDViDEot4PkdXi4zQGqbHXbVI+nG/08egbOiPlnxCVc3NiNb4pJkDvh6IcsKWdt
+         2PdQ==
+X-Gm-Message-State: APjAAAW0L4zA4Y5cSnxefVhevisnUs8O5rV3sW9eAPUiZZ6D5AgRXrsh
+        xNsVrtzGfuPSLqafSXIYEu3fI7hBtoQ+BNXMf/U=
+X-Google-Smtp-Source: APXvYqw6rx/VUVi1y7XpMTeo1Luu8jyyvaYJR9fSFz7IDXuJ6jQyoL6CF4Qr1VL30IGVHRJWFqxlQHiVA51h8tuH9ZI=
+X-Received: by 2002:a9d:6b91:: with SMTP id b17mr10084485otq.189.1574421343635;
+ Fri, 22 Nov 2019 03:15:43 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20191120002836.GA247344@google.com> <20191121181500.GA55996@google.com>
+ <CAD8Lp47o6PqKnQYBba0o_8LSGhd3_APhVuXAVsJRT7TedeqXDg@mail.gmail.com>
+In-Reply-To: <CAD8Lp47o6PqKnQYBba0o_8LSGhd3_APhVuXAVsJRT7TedeqXDg@mail.gmail.com>
+From:   "Rafael J. Wysocki" <rafael@kernel.org>
+Date:   Fri, 22 Nov 2019 12:15:32 +0100
+Message-ID: <CAJZ5v0hxa9OGF-w82ZkQ0n_p5VM7uOdKD_UrdGVoz0MAfeqy0w@mail.gmail.com>
+Subject: Re: [PATCH] PCI: increase D3 delay for AMD Ryzen5/7 XHCI controllers
+To:     Daniel Drake <drake@endlessm.com>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        "Wysocki, Rafael J" <rafael.j.wysocki@intel.com>,
+        Linux Upstreaming Team <linux@endlessm.com>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Linux USB Mailing List <linux-usb@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add a lightweight method to describe the IOMMU topology in the config
-space, guarded by a new feature bit. A list of capabilities in the
-config space describes the devices managed by the IOMMU and their
-endpoint IDs.
+On Fri, Nov 22, 2019 at 4:00 AM Daniel Drake <drake@endlessm.com> wrote:
+>
+> On Fri, Nov 22, 2019 at 2:15 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > I definitely was not understanding this correctly.  There is no path
+> > for a D3cold -> D3hot transition.  Per spec (PCIe r5.0, sec 5.8), the
+> > only legal exit from D3cold is to D0uninitialized.
+>
+> I'm also learning these details as we go.
+>
+> During runtime suspend, the ACPI _PS3 method (which does exist on this
+> device) is called, then _PR3 resources are turned off, which (I think)
+> means that the state should now be D3cold.
 
-Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
----
- virtio-iommu.tex | 88 ++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 88 insertions(+)
+Correct.
 
-diff --git a/virtio-iommu.tex b/virtio-iommu.tex
-index 28c562b..2b29873 100644
---- a/virtio-iommu.tex
-+++ b/virtio-iommu.tex
-@@ -67,6 +67,9 @@ \subsection{Feature bits}\label{sec:Device Types / IOMMU Device / Feature bits}
- 
- \item[VIRTIO_IOMMU_F_MMIO (5)]
-   The VIRTIO_IOMMU_MAP_F_MMIO flag is available.
-+
-+\item[VIRTIO_IOMMU_F_TOPOLOGY (6)]
-+  Topology description is available at \field{topo_offset}.
- \end{description}
- 
- \drivernormative{\subsubsection}{Feature bits}{Device Types / IOMMU Device / Feature bits}
-@@ -97,6 +100,7 @@ \subsection{Device configuration layout}\label{sec:Device Types / IOMMU Device /
-     le32 end;
-   } domain_range;
-   le32 probe_size;
-+  le16 topo_offset;
- };
- \end{lstlisting}
- 
-@@ -141,6 +145,90 @@ \subsection{Device initialization}\label{sec:Device Types / IOMMU Device / Devic
- If the driver does not accept the VIRTIO_IOMMU_F_BYPASS feature, the
- device SHOULD NOT let endpoints access the guest-physical address space.
- 
-+\subsubsection{Built-in topology description}\label{sec:Device Types / IOMMU Device / Device initialization / topology}
-+
-+The device manages memory accesses from endpoints, identified by endpoint
-+IDs. The driver can discover which endpoint ID corresponds to an endpoint
-+using several methods, depending on the platform. Platforms described
-+with device tree use the \texttt{iommus} and \texttt{iommu-map} properties
-+embedded into device nodes for this purpose. Platforms described with
-+ACPI use a table such as the Virtual I/O Table. Platforms that do not
-+support either device tree or ACPI may embed a minimalistic description
-+in the device configuration space.
-+
-+An important disadvantage of describing the topology from within the
-+device is the lack of initialization ordering information. Out-of-band
-+descriptions such as device tree and ACPI let the operating system know
-+about device dependencies so that it can initialize supplier devices
-+(IOMMUs) before their consumers (endpoints). Platforms using the
-+VIRTIO_IOMMU_F_TOPOLOGY feature have to communicate the device dependency
-+in another way.
-+
-+If the VIRTIO_IOMMU_F_TOPOLOGY feature is negotiated, \field{topo_offset}
-+is the offset between the beginning of the device-specific configuration
-+space (virtio_iommu_config) and the first topology structure header. A
-+topology structures defines the endpoint ID of one or more endpoints
-+managed by the virtio-iommu device.
-+
-+\begin{lstlisting}
-+struct virtio_iommu_topo_head {
-+  le16 type;
-+  le16 next;
-+};
-+\end{lstlisting}
-+
-+\field{next} is the offset between the beginning of the device-specific
-+configuration space and the next topology structure header. When
-+\field{next} is zero, this is the last structure.
-+
-+\field{type} describes the type of structure:
-+\begin{description}
-+  \item[VIRTIO_IOMMU_TOPO_PCI_RANGE (0)] struct virtio_iommu_topo_pci_range
-+  \item[VIRTIO_IOMMU_TOPO_ENDPOINT (1)] struct virtio_iommu_topo_endpoint
-+\end{description}
-+
-+\paragraph{PCI range}\label{sec:Device Types / IOMMU Device / Device initialization / topology / PCI range}
-+
-+\begin{lstlisting}
-+struct virtio_iommu_topo_pci_range {
-+  struct virtio_iommu_topo_head head;
-+  le32 endpoint_start;
-+  le16 hierarchy;
-+  le16 requester_start;
-+  le16 requester_end;
-+  le16 reserved;
-+};
-+\end{lstlisting}
-+
-+The PCI range structure describes the endpoint IDs of a series of PCI
-+devices.
-+
-+\begin{description}
-+  \item[\field{hierarchy}] Identifier of the PCI hierarchy. Sometimes
-+    called PCI segment or domain number.
-+  \item[\field{requester_start}] First requester ID in the range.
-+  \item[\field{requester_end}] Last requester ID in the range.
-+  \item[\field{endpoint_start}] First endpoint ID.
-+\end{description}
-+
-+The correspondence between a PCI requester ID in the range
-+[ requester_start; requester_end ] and its endpoint IDs is a linear
-+transformation: endpoint_id = requester_id - requester_start +
-+endpoint_start.
-+
-+\paragraph{Single endpoint}\label{sec:Device Types / IOMMU Device / Device initialization / topology / Single endpoint}
-+
-+\begin{lstlisting}
-+struct virtio_iommu_topo_endpoint {
-+  struct virtio_iommu_topo_head head;
-+  le32 endpoint;
-+  le64 address;
-+};
-+\end{lstlisting}
-+
-+\field{endpoint} is the ID of a single endpoint, identified by its first
-+MMIO address in the physical address space.
-+
- \subsection{Device operations}\label{sec:Device Types / IOMMU Device / Device operations}
- 
- Driver send requests on the request virtqueue, notifies the device and
--- 
-2.24.0
+> During runtime resume, the ACPI _PR0 resources are turned on, then
+> ACPI _PS0 method is called (and does exist on this device), and my
+> reading is that this should put the device in D0.
 
+That should be something like D0uninitialized.
+
+> But then when pci_update_current_state() is called, it reads pmcsr as
+> 3 (D3hot). That's not what I would expect. I guess this means that
+> this platform's _PR3/_PS3 do not actually allow us to put the device
+> into D3cold,
+
+That you can't really say.
+
+Anyway, it is not guaranteed to do that.  For example, the power
+resource(s) listed by _PR3 for the device may be referenced by
+something else too which prevents them from being turned off.
+
+> and/or the _PR0/_PS0 transition does not actually transition the device to D0.
+
+Yes.
+
+Which may be the case if the power resource(s) in _PR3 have not been
+turned off really.
+
+[To debug this a bit more, you can enable dynamic debug in
+drivers/acpi/device_pm.c.]
+
+> While there is some ACPI strangeness here, the D3hot vs D3cold thing
+> is perhaps not the most relevant point. If I hack the code to avoid
+> D3cold altogether, just trying to do D0->D3hot->D0, it fails in the
+> same way.
+
+OK, but then you don't really flip the power resource(s), so that only
+means that _PS0 does not restore D0, but in general it only is valid
+to execute _PS0 after _PS3 (if both are present which is the case
+here), so this is not conclusive again.
+
+> > I know you tried a debug patch to call pci_dev_wait(), and it didn't
+> > work, but I'm not sure exactly where it was called.  I have these
+> > patches on my pci/pm branch for v5.5:
+> >
+> >   bae26849372b ("PCI/PM: Move pci_dev_wait() definition earlier")
+> >   395f121e6199 ("PCI/PM: Wait for device to become ready after power-on")
+> >
+> > The latter adds the wait just before we call
+> > pci_raw_set_power_state().  If the device is responding with CRS
+> > status, that should be the point where we'd see it.  If you have a
+> > chance to try it, I'd be interested in the results.
+>
+> pci_dev_wait() doesn't have any effect no matter where you put it
+> because we have yet to observe this device presenting a CRS-like
+> condition. According to our earlier experiments, PCI_VENDOR_ID and
+> PCI_COMMAND never return the ~0 value that would be needed for
+> pci_dev_wait() to have any effect.
+>
+> I tried the branch anyway and it doesn't solve the issue.
+>
+> I haven't finished gathering all the logs you asked for, but I tried
+> to summarize my current understanding at
+> https://bugzilla.kernel.org/show_bug.cgi?id=205587 - hopefully that
+> helps.
+
+OK, thanks for that!
