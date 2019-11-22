@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4734CC432C0
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Nov 2019 06:00:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95824C43215
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Nov 2019 06:20:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 205542070E
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Nov 2019 06:00:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6E4BC2068F
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Nov 2019 06:20:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1574402418;
-	bh=zBPDCyY6Vpcz+D96PO12iW3TKeVfwHVznMWy6CktHIo=;
+	s=default; t=1574403654;
+	bh=wmuwLo9bIBTT0JivJn4LAhmhc3tLHqU1eGFflp9iTqU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=UOpHSV045SN82QlwCSZOkWv/TpDhIVQq+SRuYLHJhhAno2cbjIvXNeBz1PRgoqyCO
-	 t0wWMAtMVW8J/ujWZM5sUF2Kh73/mJfzu0e76b1CtqIC9zNI8r+gUUTNFIpDn6Vlyf
-	 Laojd7CDjbKYhC3puhKsnS/3iLVgoyKgcDU1iilw=
+	b=Mt5rRaShuRtw+s+HC1qF8hO+BsrLaR+49g3B/nPhuFoHj2vSNz0Se79rJhhfwoa0j
+	 gW3NobnVgqFNyk55FFb1Uv/tMO1LT2ftO0H3wjH8kAQSJkCefriP48y9Yq8bu5wnn8
+	 iGp3eGC6Q92MlbMr3FlDY9CpLDJtCh6r1KTpEUXg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727903AbfKVGAN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 22 Nov 2019 01:00:13 -0500
-Received: from mail.kernel.org ([198.145.29.99]:36166 "EHLO mail.kernel.org"
+        id S1728562AbfKVFwc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 22 Nov 2019 00:52:32 -0500
+Received: from mail.kernel.org ([198.145.29.99]:58274 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728924AbfKVF5l (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 22 Nov 2019 00:57:41 -0500
+        id S1728557AbfKVFwb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 22 Nov 2019 00:52:31 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 873B02071B;
-        Fri, 22 Nov 2019 05:57:39 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 719512082F;
+        Fri, 22 Nov 2019 05:52:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1574402260;
-        bh=zBPDCyY6Vpcz+D96PO12iW3TKeVfwHVznMWy6CktHIo=;
+        s=default; t=1574401950;
+        bh=wmuwLo9bIBTT0JivJn4LAhmhc3tLHqU1eGFflp9iTqU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=q4DvIK3J+FiUjUcA5AxLs5M9mTd+ppTwSlPnbdyS6nGJKeJ1S+jmG3Vh1lQhGd/0T
-         loulnfx79HTuWwQnUvdehKKkdr3xm0/5bi6QYk149LFI6+e09TnXNF3pcay3csAjRl
-         NV86oQzUoXSgMjFq5t3Y8Y7CMnDJM+8uh+A6ODLo=
+        b=kVx1yzm6Vb9RQEiXh8i/igmvIx5AffzfG5XAXA6GjU4WSpUHvMgWK1V1gFeM55hCM
+         5iLkIOPa2OpiKj63CWODMXil6U2+wikLvrGmBv7vESdwkiZpFmmS/pTUooOGPxnS/x
+         Bn7i538ltLPDQTmuUo3oi+NVVUszsTUrYDH4qykc=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Ming Lei <ming.lei@redhat.com>,
@@ -45,12 +45,12 @@ Cc:     Ming Lei <ming.lei@redhat.com>,
         Keith Busch <keith.busch@intel.com>,
         Christoph Hellwig <hch@lst.de>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 101/127] PCI/MSI: Return -ENOSPC from pci_alloc_irq_vectors_affinity()
-Date:   Fri, 22 Nov 2019 00:55:19 -0500
-Message-Id: <20191122055544.3299-100-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 173/219] PCI/MSI: Return -ENOSPC from pci_alloc_irq_vectors_affinity()
+Date:   Fri, 22 Nov 2019 00:48:25 -0500
+Message-Id: <20191122054911.1750-166-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191122055544.3299-1-sashal@kernel.org>
-References: <20191122055544.3299-1-sashal@kernel.org>
+In-Reply-To: <20191122054911.1750-1-sashal@kernel.org>
+References: <20191122054911.1750-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -100,10 +100,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 13 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 536e9a5cd2b14..d66ef88e13cf1 100644
+index af24ed50a2452..971dddf62374f 100644
 --- a/drivers/pci/msi.c
 +++ b/drivers/pci/msi.c
-@@ -1156,7 +1156,8 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
+@@ -1155,7 +1155,8 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
  				   const struct irq_affinity *affd)
  {
  	static const struct irq_affinity msi_default_affd;
@@ -113,7 +113,7 @@ index 536e9a5cd2b14..d66ef88e13cf1 100644
  
  	if (flags & PCI_IRQ_AFFINITY) {
  		if (!affd)
-@@ -1167,16 +1168,17 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
+@@ -1166,16 +1167,17 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
  	}
  
  	if (flags & PCI_IRQ_MSIX) {
@@ -138,7 +138,7 @@ index 536e9a5cd2b14..d66ef88e13cf1 100644
  	}
  
  	/* use legacy irq if allowed */
-@@ -1187,7 +1189,9 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
+@@ -1186,7 +1188,9 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
  		}
  	}
  
