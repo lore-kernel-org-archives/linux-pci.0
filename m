@@ -7,53 +7,53 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CDA5C43215
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8653C432C0
 	for <linux-pci@archiver.kernel.org>; Fri, 22 Nov 2019 11:16:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D4F562070E
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Nov 2019 11:16:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A09CF2070E
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Nov 2019 11:16:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="KGaaTyS3"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Bn+Nr/yt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728445AbfKVLQQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 22 Nov 2019 06:16:16 -0500
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:36150 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728254AbfKVKu6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Nov 2019 05:50:58 -0500
-Received: by mail-wr1-f65.google.com with SMTP id z3so8056119wru.3
-        for <linux-pci@vger.kernel.org>; Fri, 22 Nov 2019 02:50:57 -0800 (PST)
+        id S1728682AbfKVKuz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 22 Nov 2019 05:50:55 -0500
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:40342 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727702AbfKVKuy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Nov 2019 05:50:54 -0500
+Received: by mail-wr1-f66.google.com with SMTP id 4so4724922wro.7
+        for <linux-pci@vger.kernel.org>; Fri, 22 Nov 2019 02:50:53 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=MfTtXiG/W/rObmsyirkEQ0i6+kv30tKWKHAFlzXsK50=;
-        b=KGaaTyS3Lc/ef+t1SZuZlTE1UsU+JnOw0CHre56ANUeiS1fG2WU5O/YFQcBx5DFQ+g
-         C3eEzhT3EtsVVDaPXc0JJnwFtgO1xkFqrrE6GycrJ2S4YEKOcx4s42s4o+D2QSUmsenY
-         giJa7ayJtTWwW60SOcSL7s5TyIuTMeag5BlKYTNd2Vpv5b3Ku4VoOfgVTWmpiuNgZfga
-         0U9jEO3Ob60MHJopefjx77FsOCYeO+1ZpoKfR2ZI8XHgbGZFlpcgyTQN/mBvo0haJZcQ
-         4WN5cxwZz8VzF5n+E1gDTt+EyPoR0GPG3uAOf5O3TZXJzM8psHGvEWv0Dabay2iZKY72
-         vmuQ==
+        bh=GnM7tdmIuTsFG/gPDSUiRJmc1F37mgdxvtHO3FtFylE=;
+        b=Bn+Nr/ytUk5YMVm1sQH/UVWhb/mMA2dE72H0//SsVqGsJ9g8ztbjNMl03n+vqtDgX1
+         BVKT3vkBXC/ScqOu1f0iF7XkX6lsqaoR5LUZxq0mZatIZOz7WNO1g8raGl67VngxgyW9
+         Zn2kqX9vdxYlDvCmxLBCm2xmeGhSiwiljE+9lmgXsFsgUPRpHuMCsvvuNYY6NigcTHtB
+         6RIo/Qb2nm8M3urPlnZCBvaTaniwiuU4Ty9DcH8MlFxUi10bX7AZqP19/YZ8ro/tJBja
+         iDFhce9IQReQ91LQ4rr7HwA94Ofb7+RxgCw7sMyVwzrXEjrM0k5Wqz6UJ8AMXLdvEArk
+         /QLQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=MfTtXiG/W/rObmsyirkEQ0i6+kv30tKWKHAFlzXsK50=;
-        b=mvWbVlmXJGErk38SCd2GRDMoXlRdX7nMTgTjdTgd6AcTOfrUWo+YxQ2vIIwJNzMruS
-         a6x9hJ/cSmrcgYeZYCP0Hw+SBVyXkHKBNB9DLbPiSJZ7c1NCBwfr6KkAxR3ztnt9PGeU
-         Ozz+ARLunquSYgUElIeOX2RYVkcA8G32T+bMUxUKjPuHtBd6oOc06hLvomMuVai/+mDW
-         Omgd+tT9qq15LzVv/uaEN/nffHZ6YCJIWl53BbNjrwLSGS5p9XO4DKyUkxm9mEr2s4hk
-         beTd1G37dSYmhbEg/RjXXpoeFxeOwklEq5pU3cvzBZZndPpAY/qo/lopTShFDDk77J1L
-         BRKQ==
-X-Gm-Message-State: APjAAAVBK1z2+wQQtd3YAnM5VR++s6KfBUn7EwZVRxuAMPKRSOo89Seb
-        qDV9WC+Nr5aLybXoRv9TvVl05w==
-X-Google-Smtp-Source: APXvYqzYWFFlrhHka1Vw/6sChVYtvTiOJin0SbfQOyNoZG5nnElEymYjGNuUm72JutIfgIh/3EoY2g==
-X-Received: by 2002:adf:e885:: with SMTP id d5mr17167901wrm.117.1574419856320;
-        Fri, 22 Nov 2019 02:50:56 -0800 (PST)
+        bh=GnM7tdmIuTsFG/gPDSUiRJmc1F37mgdxvtHO3FtFylE=;
+        b=i3Rkn/kc8kfBGzXwe9cZ9mNmEOIy7ikg5clRbSjhgDnEZUrUpRJPHbnU61YtOkduMh
+         B7of9oN35Ca233MTvtClqKL0v2vyLGB6HUG6vFlFxJjdoB0s9BgqNRVgzTnarNx/l2vl
+         nnhbRERS2DsODJcIEMdnDmwlmBzZrpp2KilLW6P/ERpFepDjRcx+rNW+Y/i1/bRTtmSM
+         z5qJB5wHJ1VoeJ+TGGhll5f+QATpncBHyuqK0u2t3lxHAz6x+zfd/UgAkaGuvfaYUE91
+         nPB3mwsqYkNJoRWwEFhHWuJ2AFlrP4vTmpcVZRWB/gh/g7Wrip3wcPVWLD4mPkKGsM+6
+         Adhg==
+X-Gm-Message-State: APjAAAVNu8/L5eU6tv+8NcNwLfLc2cNux++C4ceDD1EdrgIi0mH0I+gK
+        +e6EuDFDjShxRotVLu+yWCq9qQ==
+X-Google-Smtp-Source: APXvYqwkrBA1P0X6qMijtc1m/IkH374uodkpj4sCzTHsq7FVgmjD/iynOAUZy7h3h+1OHmfVUN05+Q==
+X-Received: by 2002:adf:c611:: with SMTP id n17mr17357418wrg.317.1574419852465;
+        Fri, 22 Nov 2019 02:50:52 -0800 (PST)
 Received: from localhost.localdomain (xdsl-188-155-204-106.adslplus.ch. [188.155.204.106])
-        by smtp.gmail.com with ESMTPSA id o133sm2088197wmb.4.2019.11.22.02.50.55
+        by smtp.gmail.com with ESMTPSA id o133sm2088197wmb.4.2019.11.22.02.50.51
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 22 Nov 2019 02:50:55 -0800 (PST)
+        Fri, 22 Nov 2019 02:50:52 -0800 (PST)
 From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
 To:     linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         iommu@lists.linux-foundation.org,
@@ -65,9 +65,9 @@ Cc:     rjw@rjwysocki.net, lenb@kernel.org, lorenzo.pieralisi@arm.com,
         mst@redhat.com, jasowang@redhat.com, jacob.jun.pan@intel.com,
         eric.auger@redhat.com, sebastien.boeuf@intel.com,
         kevin.tian@intel.com
-Subject: [RFC 04/13] ACPI/IORT: Add node categories
-Date:   Fri, 22 Nov 2019 11:49:51 +0100
-Message-Id: <20191122105000.800410-5-jean-philippe@linaro.org>
+Subject: [RFC 01/13] ACPI/IORT: Move IORT to the ACPI folder
+Date:   Fri, 22 Nov 2019 11:49:48 +0100
+Message-Id: <20191122105000.800410-2-jean-philippe@linaro.org>
 X-Mailer: git-send-email 2.24.0
 In-Reply-To: <20191122105000.800410-1-jean-philippe@linaro.org>
 References: <20191122105000.800410-1-jean-philippe@linaro.org>
@@ -78,95 +78,92 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The current node filtering won't work when introducing node types
-greater than 63 (such as the virtio-iommu nodes). Add
-node_type_matches() to filter nodes by category.
+IORT can be used (by QEMU) to describe a virtual topology containing an
+architecture-agnostic paravirtualized device.
 
-Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
+In order to build IORT for x86 systems, the driver has to be moved outside
+of arm64/. Since there is nothing specific to arm64 in the driver, it
+simply requires moving Makefile and Kconfig entries.
+
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
 ---
- drivers/acpi/iort.c | 34 ++++++++++++++++++++++++----------
- 1 file changed, 24 insertions(+), 10 deletions(-)
+ MAINTAINERS                     | 9 +++++++++
+ drivers/acpi/Kconfig            | 3 +++
+ drivers/acpi/Makefile           | 1 +
+ drivers/acpi/arm64/Kconfig      | 3 ---
+ drivers/acpi/arm64/Makefile     | 1 -
+ drivers/acpi/{arm64 => }/iort.c | 0
+ 6 files changed, 13 insertions(+), 4 deletions(-)
+ rename drivers/acpi/{arm64 => }/iort.c (100%)
 
-diff --git a/drivers/acpi/iort.c b/drivers/acpi/iort.c
-index 9c6c91e06f8f..1d43fbc0001f 100644
---- a/drivers/acpi/iort.c
-+++ b/drivers/acpi/iort.c
-@@ -18,10 +18,10 @@
- #include <linux/platform_device.h>
- #include <linux/slab.h>
+diff --git a/MAINTAINERS b/MAINTAINERS
+index eb19fad370d7..9153d278f67e 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -377,6 +377,15 @@ L:	platform-driver-x86@vger.kernel.org
+ S:	Maintained
+ F:	drivers/platform/x86/i2c-multi-instantiate.c
  
--#define IORT_TYPE_MASK(type)	(1 << (type))
--#define IORT_MSI_TYPE		(1 << ACPI_IORT_NODE_ITS_GROUP)
--#define IORT_IOMMU_TYPE		((1 << ACPI_IORT_NODE_SMMU) |	\
--				(1 << ACPI_IORT_NODE_SMMU_V3))
-+enum iort_node_category {
-+	IORT_MSI_TYPE,
-+	IORT_IOMMU_TYPE,
-+};
- 
- struct iort_its_msi_chip {
- 	struct list_head	list;
-@@ -38,6 +38,20 @@ struct iort_fwnode {
- static LIST_HEAD(iort_fwnode_list);
- static DEFINE_SPINLOCK(iort_fwnode_lock);
- 
-+static bool iort_type_matches(u8 type, enum iort_node_category category)
-+{
-+	switch (category) {
-+	case IORT_IOMMU_TYPE:
-+		return type == ACPI_IORT_NODE_SMMU ||
-+		       type == ACPI_IORT_NODE_SMMU_V3;
-+	case IORT_MSI_TYPE:
-+		return type == ACPI_IORT_NODE_ITS_GROUP;
-+	default:
-+		WARN_ON(1);
-+		return false;
-+	}
-+}
++ACPI IORT DRIVER
++M:	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
++M:	Hanjun Guo <guohanjun@huawei.com>
++M:	Sudeep Holla <sudeep.holla@arm.com>
++L:	linux-acpi@vger.kernel.org
++L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
++S:	Maintained
++F:	drivers/acpi/iort.c
 +
- /**
-  * iort_set_fwnode() - Create iort_fwnode and use it to register
-  *		       iommu data in the iort_fwnode_list
-@@ -397,7 +411,7 @@ static int iort_get_id_mapping_index(struct acpi_iort_node *node)
+ ACPI PMIC DRIVERS
+ M:	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+ M:	Len Brown <lenb@kernel.org>
+diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
+index ebe1e9e5fd81..548976c8b2b0 100644
+--- a/drivers/acpi/Kconfig
++++ b/drivers/acpi/Kconfig
+@@ -576,6 +576,9 @@ config TPS68470_PMIC_OPREGION
+ 	  region, which must be available before any of the devices
+ 	  using this, are probed.
  
- static struct acpi_iort_node *iort_node_map_id(struct acpi_iort_node *node,
- 					       u32 id_in, u32 *id_out,
--					       u8 type_mask)
-+					       enum iort_node_category category)
- {
- 	u32 id = id_in;
++config ACPI_IORT
++	bool
++
+ endif	# ACPI
  
-@@ -406,7 +420,7 @@ static struct acpi_iort_node *iort_node_map_id(struct acpi_iort_node *node,
- 		struct acpi_iort_id_mapping *map;
- 		int i, index;
+ config X86_PM_TIMER
+diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
+index 5d361e4e3405..9d1792165713 100644
+--- a/drivers/acpi/Makefile
++++ b/drivers/acpi/Makefile
+@@ -123,3 +123,4 @@ video-objs			+= acpi_video.o video_detect.o
+ obj-y				+= dptf/
  
--		if (IORT_TYPE_MASK(node->type) & type_mask) {
-+		if (iort_type_matches(node->type, category)) {
- 			if (id_out)
- 				*id_out = id;
- 			return node;
-@@ -458,8 +472,8 @@ static struct acpi_iort_node *iort_node_map_id(struct acpi_iort_node *node,
- }
+ obj-$(CONFIG_ARM64)		+= arm64/
++obj-$(CONFIG_ACPI_IORT) 	+= iort.o
+diff --git a/drivers/acpi/arm64/Kconfig b/drivers/acpi/arm64/Kconfig
+index 6dba187f4f2e..d0902c85d46e 100644
+--- a/drivers/acpi/arm64/Kconfig
++++ b/drivers/acpi/arm64/Kconfig
+@@ -3,8 +3,5 @@
+ # ACPI Configuration for ARM64
+ #
  
- static struct acpi_iort_node *iort_node_map_platform_id(
--		struct acpi_iort_node *node, u32 *id_out, u8 type_mask,
--		int index)
-+		struct acpi_iort_node *node, u32 *id_out,
-+		enum iort_node_category category, int index)
- {
- 	struct acpi_iort_node *parent;
- 	u32 id;
-@@ -475,8 +489,8 @@ static struct acpi_iort_node *iort_node_map_platform_id(
- 	 * as NC (named component) -> SMMU -> ITS. If the type is matched,
- 	 * return the initial dev id and its parent pointer directly.
- 	 */
--	if (!(IORT_TYPE_MASK(parent->type) & type_mask))
--		parent = iort_node_map_id(parent, id, id_out, type_mask);
-+	if (!iort_type_matches(parent->type, category))
-+		parent = iort_node_map_id(parent, id, id_out, category);
- 	else
- 		if (id_out)
- 			*id_out = id;
+-config ACPI_IORT
+-	bool
+-
+ config ACPI_GTDT
+ 	bool
+diff --git a/drivers/acpi/arm64/Makefile b/drivers/acpi/arm64/Makefile
+index 6ff50f4ed947..38771a816caf 100644
+--- a/drivers/acpi/arm64/Makefile
++++ b/drivers/acpi/arm64/Makefile
+@@ -1,3 +1,2 @@
+ # SPDX-License-Identifier: GPL-2.0-only
+-obj-$(CONFIG_ACPI_IORT) 	+= iort.o
+ obj-$(CONFIG_ACPI_GTDT) 	+= gtdt.o
+diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/iort.c
+similarity index 100%
+rename from drivers/acpi/arm64/iort.c
+rename to drivers/acpi/iort.c
 -- 
 2.24.0
 
