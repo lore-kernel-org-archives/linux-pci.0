@@ -2,143 +2,245 @@ Return-Path: <SRS0=vAAV=ZO=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6878FC43215
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Nov 2019 11:15:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 070A6C33C9A
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Nov 2019 11:16:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 41DA920721
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Nov 2019 11:15:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1574421347;
-	bh=n5Tj7+vySHNtfOYaPZa8PHZ4JUxOfxEeh1VYkp2jr0I=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=sgQUKuAlLWuWWXL0BrprHfny8lYIXzREzcCrZuXw7JNhmMhTgxL5RZX6+1k7dC47t
-	 5Kq9yrpb0sBiVwwsfFvzuxuDXOeiJdDuwQjTApHRZBtIcXCuseXu3mIPW94DEHpflu
-	 TfCg95QYX36Bi4DUAJKtohdMx6IzwMvmLSk4qwKE=
+	by mail.kernel.org (Postfix) with ESMTP id CE80420718
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Nov 2019 11:16:06 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="SOMWRl5M"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729185AbfKVLPp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 22 Nov 2019 06:15:45 -0500
-Received: from mail-ot1-f65.google.com ([209.85.210.65]:45382 "EHLO
-        mail-ot1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726977AbfKVLPo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Nov 2019 06:15:44 -0500
-Received: by mail-ot1-f65.google.com with SMTP id r24so5801118otk.12;
-        Fri, 22 Nov 2019 03:15:44 -0800 (PST)
+        id S1728864AbfKVKvI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 22 Nov 2019 05:51:08 -0500
+Received: from mail-wm1-f65.google.com ([209.85.128.65]:34868 "EHLO
+        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729701AbfKVKvH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Nov 2019 05:51:07 -0500
+Received: by mail-wm1-f65.google.com with SMTP id 8so7081565wmo.0
+        for <linux-pci@vger.kernel.org>; Fri, 22 Nov 2019 02:51:06 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=X6qGp2c7p8L2l1s7Du/UosUTRGtm9jAQFCi+oOptldg=;
+        b=SOMWRl5MASeOm4GNtX9OArMbaILwLPRIzg8o5jQFJjlDJs7o7+6TRqRDRJJlcZKv1S
+         C2wRUga0S929l8ZmubuZMrj4IpG5Fa2Nqe1Nopf/OfaG7JXzleQDTj1N8JFM+wM4dxkw
+         a0IPZK9nsydiR7+ZaHFq8+zB4Kl+q/5r1Xtc5efWJGgpcICIwIevEVheIsqYwHeQbybW
+         cC1h0KeLL/1CSa0gL5NCQZiIo97Dk5CcMapCj8Pt35ahMGhjHVVuLINva1JbNz3+Gk7f
+         HvHGhikrvzqw3GWpjHonq28nTbE1JPkhrHfsEMIPgU0/NbAlKrRBh/66q3xFCw04rAqj
+         UPvA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=nNKtVKyyjIN7C8LjAkItasX2zQVTgor2/9I8mXAyorg=;
-        b=fCZm79oJVZkKo5JwWGeYhhF8pGwccbVhp5WC/Byqz+WEsWkxGMunQ7A5X4/A1Q3Pdd
-         T+n5qEDRoeKXpwAp/dgCRhsvzXuMA9GSRMSv5CLEYOgkQy2F1glD9oW9V/ngiDMRY4/d
-         PcgF5ssHOUGN2+cDPBg139T5AlRqLk65iUME/FwNNKLNCKlIn6MPo7410/bTl6z1oVBr
-         tpBTCMimRzVbuLGw7DGMuqI0K0v9b+R4wf1QplrH9QykFBja4GV/7bkd4GTPFPBVnQ9j
-         QFO12fDViDEot4PkdXi4zQGqbHXbVI+nG/08egbOiPlnxCVc3NiNb4pJkDvh6IcsKWdt
-         2PdQ==
-X-Gm-Message-State: APjAAAW0L4zA4Y5cSnxefVhevisnUs8O5rV3sW9eAPUiZZ6D5AgRXrsh
-        xNsVrtzGfuPSLqafSXIYEu3fI7hBtoQ+BNXMf/U=
-X-Google-Smtp-Source: APXvYqw6rx/VUVi1y7XpMTeo1Luu8jyyvaYJR9fSFz7IDXuJ6jQyoL6CF4Qr1VL30IGVHRJWFqxlQHiVA51h8tuH9ZI=
-X-Received: by 2002:a9d:6b91:: with SMTP id b17mr10084485otq.189.1574421343635;
- Fri, 22 Nov 2019 03:15:43 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=X6qGp2c7p8L2l1s7Du/UosUTRGtm9jAQFCi+oOptldg=;
+        b=VpAi4bYA00k5BVnFqVVFokltmuXus61Jp+rcKfWnu28x+a0v35JWWAGa9EH2AVLEPE
+         wtkf4bpa4kVYi0wabG2YY3MJ5kVcw+1O3eTfFuonebOeYmjHXb0m1uOpd7gH7C/pmZAH
+         mE2z+WMnA6ZiB6a3bYMhqlghQ5D7b/r/+k7TTtJPr4rJCgE8CRP19Vm2QOfmgMiUvtwR
+         UsH1t4fwjrMndI2zvv6tCA7+8nk9ZnNF9/bv36ppjyI1RH6NAgOWIqGgeEme3UENAi1v
+         oYSZkI2MZJRg37d4TWeXqxqQDgx3P5tX61C0O9FsdKX/u0tS0eMqy6U2LMC1QrR1oKK4
+         t9sw==
+X-Gm-Message-State: APjAAAVm/nlH87T0cwvq9hLUml3kO1njoPQeTQJdHR/cWVIi0w7Q4CkS
+        mhFY5//f6bai8WsDwBmv8I36xg==
+X-Google-Smtp-Source: APXvYqyUulc/cLM8hB09K3/hFqAi2tZ8CaZnvvhDeSgluvoZSIPS68UGsollQ+F3ni0gC6lT6Ek3Mw==
+X-Received: by 2002:a1c:2d49:: with SMTP id t70mr15677618wmt.131.1574419865443;
+        Fri, 22 Nov 2019 02:51:05 -0800 (PST)
+Received: from localhost.localdomain (xdsl-188-155-204-106.adslplus.ch. [188.155.204.106])
+        by smtp.gmail.com with ESMTPSA id o133sm2088197wmb.4.2019.11.22.02.51.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 22 Nov 2019 02:51:05 -0800 (PST)
+From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
+To:     linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        iommu@lists.linux-foundation.org,
+        virtualization@lists.linux-foundation.org,
+        linux-pci@vger.kernel.org, virtio-dev@lists.oasis-open.org
+Cc:     rjw@rjwysocki.net, lenb@kernel.org, lorenzo.pieralisi@arm.com,
+        guohanjun@huawei.com, sudeep.holla@arm.com,
+        gregkh@linuxfoundation.org, joro@8bytes.org, bhelgaas@google.com,
+        mst@redhat.com, jasowang@redhat.com, jacob.jun.pan@intel.com,
+        eric.auger@redhat.com, sebastien.boeuf@intel.com,
+        kevin.tian@intel.com
+Subject: [RFC 11/13] ACPI: Add VIOT table
+Date:   Fri, 22 Nov 2019 11:49:58 +0100
+Message-Id: <20191122105000.800410-12-jean-philippe@linaro.org>
+X-Mailer: git-send-email 2.24.0
+In-Reply-To: <20191122105000.800410-1-jean-philippe@linaro.org>
+References: <20191122105000.800410-1-jean-philippe@linaro.org>
 MIME-Version: 1.0
-References: <20191120002836.GA247344@google.com> <20191121181500.GA55996@google.com>
- <CAD8Lp47o6PqKnQYBba0o_8LSGhd3_APhVuXAVsJRT7TedeqXDg@mail.gmail.com>
-In-Reply-To: <CAD8Lp47o6PqKnQYBba0o_8LSGhd3_APhVuXAVsJRT7TedeqXDg@mail.gmail.com>
-From:   "Rafael J. Wysocki" <rafael@kernel.org>
-Date:   Fri, 22 Nov 2019 12:15:32 +0100
-Message-ID: <CAJZ5v0hxa9OGF-w82ZkQ0n_p5VM7uOdKD_UrdGVoz0MAfeqy0w@mail.gmail.com>
-Subject: Re: [PATCH] PCI: increase D3 delay for AMD Ryzen5/7 XHCI controllers
-To:     Daniel Drake <drake@endlessm.com>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        "Wysocki, Rafael J" <rafael.j.wysocki@intel.com>,
-        Linux Upstreaming Team <linux@endlessm.com>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Linux USB Mailing List <linux-usb@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Nov 22, 2019 at 4:00 AM Daniel Drake <drake@endlessm.com> wrote:
->
-> On Fri, Nov 22, 2019 at 2:15 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > I definitely was not understanding this correctly.  There is no path
-> > for a D3cold -> D3hot transition.  Per spec (PCIe r5.0, sec 5.8), the
-> > only legal exit from D3cold is to D0uninitialized.
->
-> I'm also learning these details as we go.
->
-> During runtime suspend, the ACPI _PS3 method (which does exist on this
-> device) is called, then _PR3 resources are turned off, which (I think)
-> means that the state should now be D3cold.
+Add support for a new ACPI table that embeds other tables describing a
+platform's IOMMU topology. Currently the only supported base table is
+IORT. The VIOT contains an IORT with additional node types, that
+describe a virtio-iommu.
 
-Correct.
+Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
+---
+ drivers/acpi/Kconfig      |  4 ++++
+ drivers/acpi/Makefile     |  1 +
+ drivers/acpi/bus.c        |  2 ++
+ drivers/acpi/tables.c     |  2 +-
+ drivers/acpi/viot.c       | 44 +++++++++++++++++++++++++++++++++++++++
+ drivers/iommu/Kconfig     |  1 +
+ include/linux/acpi_viot.h | 20 ++++++++++++++++++
+ 7 files changed, 73 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/acpi/viot.c
+ create mode 100644 include/linux/acpi_viot.h
 
-> During runtime resume, the ACPI _PR0 resources are turned on, then
-> ACPI _PS0 method is called (and does exist on this device), and my
-> reading is that this should put the device in D0.
+diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
+index 548976c8b2b0..513a5e4d3526 100644
+--- a/drivers/acpi/Kconfig
++++ b/drivers/acpi/Kconfig
+@@ -579,6 +579,10 @@ config TPS68470_PMIC_OPREGION
+ config ACPI_IORT
+ 	bool
+ 
++config ACPI_VIOT
++	bool
++	select ACPI_IORT
++
+ endif	# ACPI
+ 
+ config X86_PM_TIMER
+diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
+index 9d1792165713..6abdc6cc32c7 100644
+--- a/drivers/acpi/Makefile
++++ b/drivers/acpi/Makefile
+@@ -124,3 +124,4 @@ obj-y				+= dptf/
+ 
+ obj-$(CONFIG_ARM64)		+= arm64/
+ obj-$(CONFIG_ACPI_IORT) 	+= iort.o
++obj-$(CONFIG_ACPI_VIOT)		+= viot.o
+diff --git a/drivers/acpi/bus.c b/drivers/acpi/bus.c
+index 48bc96d45bab..6f364e0c9240 100644
+--- a/drivers/acpi/bus.c
++++ b/drivers/acpi/bus.c
+@@ -25,6 +25,7 @@
+ #include <linux/dmi.h>
+ #endif
+ #include <linux/acpi_iort.h>
++#include <linux/acpi_viot.h>
+ #include <linux/pci.h>
+ #include <acpi/apei.h>
+ #include <linux/suspend.h>
+@@ -1246,6 +1247,7 @@ static int __init acpi_init(void)
+ 
+ 	pci_mmcfg_late_init();
+ 	acpi_iort_init();
++	acpi_viot_init();
+ 	acpi_scan_init();
+ 	acpi_ec_init();
+ 	acpi_debugfs_init();
+diff --git a/drivers/acpi/tables.c b/drivers/acpi/tables.c
+index 180ac4329763..9662ea5e1064 100644
+--- a/drivers/acpi/tables.c
++++ b/drivers/acpi/tables.c
+@@ -501,7 +501,7 @@ static const char * const table_sigs[] = {
+ 	ACPI_SIG_WDDT, ACPI_SIG_WDRT, ACPI_SIG_DSDT, ACPI_SIG_FADT,
+ 	ACPI_SIG_PSDT, ACPI_SIG_RSDT, ACPI_SIG_XSDT, ACPI_SIG_SSDT,
+ 	ACPI_SIG_IORT, ACPI_SIG_NFIT, ACPI_SIG_HMAT, ACPI_SIG_PPTT,
+-	NULL };
++	ACPI_SIG_VIOT, NULL };
+ 
+ #define ACPI_HEADER_SIZE sizeof(struct acpi_table_header)
+ 
+diff --git a/drivers/acpi/viot.c b/drivers/acpi/viot.c
+new file mode 100644
+index 000000000000..ab9a6e43ad9b
+--- /dev/null
++++ b/drivers/acpi/viot.c
+@@ -0,0 +1,44 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Copyright (C) 2019 Linaro
++ *
++ * Virtual IOMMU table
++ */
++#define pr_fmt(fmt)	"ACPI: VIOT: " fmt
++
++#include <linux/acpi.h>
++#include <linux/acpi_iort.h>
++#include <linux/acpi_viot.h>
++
++int __init acpi_viot_init(void)
++{
++	struct acpi_table_viot *viot;
++	struct acpi_table_header *acpi_header;
++	acpi_status status;
++
++	status = acpi_get_table(ACPI_SIG_VIOT, 0, &acpi_header);
++	if (ACPI_FAILURE(status)) {
++		if (status != AE_NOT_FOUND) {
++			const char *msg = acpi_format_exception(status);
++
++			pr_err("Failed to get table, %s\n", msg);
++			return -EINVAL;
++		}
++
++		return 0;
++	}
++
++	if (acpi_header->length < sizeof(*viot)) {
++		pr_err("VIOT table overflow, bad table!\n");
++		return -EINVAL;
++	}
++
++	viot = (struct acpi_table_viot *)acpi_header;
++	if (ACPI_COMPARE_NAMESEG(viot->base_table.signature, ACPI_SIG_IORT)) {
++		acpi_iort_register_table(&viot->base_table, IORT_SOURCE_VIOT);
++		return 0;
++	}
++
++	pr_err("Unknown base table header\n");
++	return -EINVAL;
++}
+diff --git a/drivers/iommu/Kconfig b/drivers/iommu/Kconfig
+index e3842eabcfdd..e6eb4f238d1a 100644
+--- a/drivers/iommu/Kconfig
++++ b/drivers/iommu/Kconfig
+@@ -480,6 +480,7 @@ config VIRTIO_IOMMU
+ 	depends on ARM64
+ 	select IOMMU_API
+ 	select INTERVAL_TREE
++	select ACPI_VIOT if ACPI
+ 	help
+ 	  Para-virtualised IOMMU driver with virtio.
+ 
+diff --git a/include/linux/acpi_viot.h b/include/linux/acpi_viot.h
+new file mode 100644
+index 000000000000..6c282d5eb793
+--- /dev/null
++++ b/include/linux/acpi_viot.h
+@@ -0,0 +1,20 @@
++/* SPDX-License-Identifier: GPL-2.0-only */
++/*
++ * Copyright (C) 2019 Linaro
++ */
++
++#ifndef __ACPI_VIOT_H__
++#define __ACPI_VIOT_H__
++
++#ifdef CONFIG_ACPI_VIOT
++
++int acpi_viot_init(void);
++
++#else /* !CONFIG_ACPI_VIOT */
++
++static inline int acpi_viot_init(void)
++{}
++
++#endif /* !CONFIG_ACPI_VIOT */
++
++#endif /* __ACPI_VIOT_H__ */
+-- 
+2.24.0
 
-That should be something like D0uninitialized.
-
-> But then when pci_update_current_state() is called, it reads pmcsr as
-> 3 (D3hot). That's not what I would expect. I guess this means that
-> this platform's _PR3/_PS3 do not actually allow us to put the device
-> into D3cold,
-
-That you can't really say.
-
-Anyway, it is not guaranteed to do that.  For example, the power
-resource(s) listed by _PR3 for the device may be referenced by
-something else too which prevents them from being turned off.
-
-> and/or the _PR0/_PS0 transition does not actually transition the device to D0.
-
-Yes.
-
-Which may be the case if the power resource(s) in _PR3 have not been
-turned off really.
-
-[To debug this a bit more, you can enable dynamic debug in
-drivers/acpi/device_pm.c.]
-
-> While there is some ACPI strangeness here, the D3hot vs D3cold thing
-> is perhaps not the most relevant point. If I hack the code to avoid
-> D3cold altogether, just trying to do D0->D3hot->D0, it fails in the
-> same way.
-
-OK, but then you don't really flip the power resource(s), so that only
-means that _PS0 does not restore D0, but in general it only is valid
-to execute _PS0 after _PS3 (if both are present which is the case
-here), so this is not conclusive again.
-
-> > I know you tried a debug patch to call pci_dev_wait(), and it didn't
-> > work, but I'm not sure exactly where it was called.  I have these
-> > patches on my pci/pm branch for v5.5:
-> >
-> >   bae26849372b ("PCI/PM: Move pci_dev_wait() definition earlier")
-> >   395f121e6199 ("PCI/PM: Wait for device to become ready after power-on")
-> >
-> > The latter adds the wait just before we call
-> > pci_raw_set_power_state().  If the device is responding with CRS
-> > status, that should be the point where we'd see it.  If you have a
-> > chance to try it, I'd be interested in the results.
->
-> pci_dev_wait() doesn't have any effect no matter where you put it
-> because we have yet to observe this device presenting a CRS-like
-> condition. According to our earlier experiments, PCI_VENDOR_ID and
-> PCI_COMMAND never return the ~0 value that would be needed for
-> pci_dev_wait() to have any effect.
->
-> I tried the branch anyway and it doesn't solve the issue.
->
-> I haven't finished gathering all the logs you asked for, but I tried
-> to summarize my current understanding at
-> https://bugzilla.kernel.org/show_bug.cgi?id=205587 - hopefully that
-> helps.
-
-OK, thanks for that!
