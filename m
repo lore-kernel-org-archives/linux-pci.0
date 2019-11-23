@@ -2,246 +2,94 @@ Return-Path: <SRS0=6jiw=ZP=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.2 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D50A7C43215
-	for <linux-pci@archiver.kernel.org>; Sat, 23 Nov 2019 01:57:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D70DDC432C0
+	for <linux-pci@archiver.kernel.org>; Sat, 23 Nov 2019 14:07:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ABB002073B
-	for <linux-pci@archiver.kernel.org>; Sat, 23 Nov 2019 01:57:30 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxonhyperv.com header.i=@linuxonhyperv.com header.b="XMVUICti"
+	by mail.kernel.org (Postfix) with ESMTP id A9BD620714
+	for <linux-pci@archiver.kernel.org>; Sat, 23 Nov 2019 14:07:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726759AbfKWB5X (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 22 Nov 2019 20:57:23 -0500
-Received: from linux.microsoft.com ([13.77.154.182]:49204 "EHLO
-        linux.microsoft.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725962AbfKWB5X (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Nov 2019 20:57:23 -0500
-Received: by linux.microsoft.com (Postfix, from userid 1004)
-        id 066ED20B7185; Fri, 22 Nov 2019 17:57:21 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 066ED20B7185
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linuxonhyperv.com;
-        s=default; t=1574474241;
-        bh=gIJrJeTFvzjeq3cv8GeCLZf+wvNgSkRxnNYZKGHyJpU=;
-        h=From:To:Cc:Subject:Date:From;
-        b=XMVUICtieloUm4YeD6VnMvEzTnz+KDVpcinp5XeXxLvL39SPDpwly3xWXqjQyU3IF
-         84ry6fAzR5L+xE/xfX15F+nWBvBfCUXfC/W4F8C9B1hxMgNXw/4UieBrahipb3awei
-         OcW6+nOFhZRNwacOzrYrogPAx9WU+rRG9P+dNCUc=
-From:   longli@linuxonhyperv.com
-To:     "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Sasha Levin <sashal@kernel.org>,
+        id S1726634AbfKWOHz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 23 Nov 2019 09:07:55 -0500
+Received: from mga14.intel.com ([192.55.52.115]:52704 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726524AbfKWOHy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 23 Nov 2019 09:07:54 -0500
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 23 Nov 2019 06:07:54 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.69,233,1571727600"; 
+   d="scan'208";a="290904619"
+Received: from lkp-server01.sh.intel.com (HELO lkp-server01) ([10.239.97.150])
+  by orsmga001.jf.intel.com with ESMTP; 23 Nov 2019 06:07:50 -0800
+Received: from kbuild by lkp-server01 with local (Exim 4.89)
+        (envelope-from <lkp@intel.com>)
+        id 1iYW4l-000HU4-AT; Sat, 23 Nov 2019 22:07:51 +0800
+Date:   Sat, 23 Nov 2019 22:06:56 +0800
+From:   kbuild test robot <lkp@intel.com>
+To:     Robin Murphy <robin.murphy@arm.com>
+Cc:     kbuild-all@lists.01.org,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Mark Brown <broonie@kernel.org>,
         Andrew Murray <andrew.murray@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     Long Li <longli@microsoft.com>
-Subject: [PATCH 1/2] PCI: hv: decouple the func definition in hv_dr_state from VSP message
-Date:   Fri, 22 Nov 2019 17:57:08 -0800
-Message-Id: <1574474229-44840-1-git-send-email-longli@linuxonhyperv.com>
-X-Mailer: git-send-email 1.8.3.1
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH] PCI: rockchip: fix ptr_ret.cocci warnings
+Message-ID: <20191123140656.4gozqld7yiqbcqft@4978f4969bb8>
+References: <201911232241.hpfCGEx5%lkp@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <201911232241.hpfCGEx5%lkp@intel.com>
+X-Patchwork-Hint: ignore
+User-Agent: NeoMutt/20170113 (1.7.2)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Long Li <longli@microsoft.com>
+From: kbuild test robot <lkp@intel.com>
 
-hv_dr_state is used to find present PCI devices on the bus. The structure
-reuses struct pci_function_description from VSP message to describe a device.
+drivers/pci/controller/pcie-rockchip-host.c:628:1-3: WARNING: PTR_ERR_OR_ZERO can be used
 
-To prepare support for pci_function_description v2, we need to decouple this
-dependence in hv_dr_state so it can work with both v1 and v2 VSP messages.
 
-There is no functionality change.
+ Use PTR_ERR_OR_ZERO rather than if(IS_ERR(...)) + PTR_ERR
 
-Signed-off-by: Long Li <longli@microsoft.com>
+Generated by: scripts/coccinelle/api/ptr_ret.cocci
+
+Fixes: 1e4d40186026 ("PCI: rockchip: Make some regulators non-optional")
+CC: Robin Murphy <robin.murphy@arm.com>
+Signed-off-by: kbuild test robot <lkp@intel.com>
 ---
- drivers/pci/controller/pci-hyperv.c | 100 +++++++++++++++++++---------
- 1 file changed, 69 insertions(+), 31 deletions(-)
 
-diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
-index f1f300218fab..f2e028cfa7cd 100644
---- a/drivers/pci/controller/pci-hyperv.c
-+++ b/drivers/pci/controller/pci-hyperv.c
-@@ -507,10 +507,24 @@ struct hv_dr_work {
- 	struct hv_pcibus_device *bus;
- };
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
+head:   b9d3d01405061bb42358fe53f824e894a1922ced
+commit: 1e4d401860268bbed124eb93a0010237bd8ed26c [12858/13503] PCI: rockchip: Make some regulators non-optional
+
+ pcie-rockchip-host.c |    5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+--- a/drivers/pci/controller/pcie-rockchip-host.c
++++ b/drivers/pci/controller/pcie-rockchip-host.c
+@@ -625,10 +625,7 @@ static int rockchip_pcie_parse_host_dt(s
+ 		return PTR_ERR(rockchip->vpcie1v8);
  
-+struct hv_pcidev_description {
-+	u16	v_id;	/* vendor ID */
-+	u16	d_id;	/* device ID */
-+	u8	rev;
-+	u8	prog_intf;
-+	u8	subclass;
-+	u8	base_class;
-+	u32	subsystem_id;
-+	union win_slot_encoding win_slot;
-+	u32	ser;	/* serial number */
-+	u32	flags;
-+	u16	virtual_numa_node;
-+};
-+
- struct hv_dr_state {
- 	struct list_head list_entry;
- 	u32 device_count;
--	struct pci_function_description func[0];
-+	struct hv_pcidev_description func[0];
- };
- 
- enum hv_pcichild_state {
-@@ -527,7 +541,7 @@ struct hv_pci_dev {
- 	refcount_t refs;
- 	enum hv_pcichild_state state;
- 	struct pci_slot *pci_slot;
--	struct pci_function_description desc;
-+	struct hv_pcidev_description desc;
- 	bool reported_missing;
- 	struct hv_pcibus_device *hbus;
- 	struct work_struct wrk;
-@@ -1862,7 +1876,7 @@ static void q_resource_requirements(void *context, struct pci_response *resp,
-  * Return: Pointer to the new tracking struct
-  */
- static struct hv_pci_dev *new_pcichild_device(struct hv_pcibus_device *hbus,
--		struct pci_function_description *desc)
-+		struct hv_pcidev_description *desc)
- {
- 	struct hv_pci_dev *hpdev;
- 	struct pci_child_message *res_req;
-@@ -1973,7 +1987,7 @@ static void pci_devices_present_work(struct work_struct *work)
- {
- 	u32 child_no;
- 	bool found;
--	struct pci_function_description *new_desc;
-+	struct hv_pcidev_description *new_desc;
- 	struct hv_pci_dev *hpdev;
- 	struct hv_pcibus_device *hbus;
- 	struct list_head removed;
-@@ -2090,43 +2104,26 @@ static void pci_devices_present_work(struct work_struct *work)
- 	put_hvpcibus(hbus);
- 	kfree(dr);
- }
+ 	rockchip->vpcie0v9 = devm_regulator_get(dev, "vpcie0v9");
+-	if (IS_ERR(rockchip->vpcie0v9))
+-		return PTR_ERR(rockchip->vpcie0v9);
 -
- /**
-- * hv_pci_devices_present() - Handles list of new children
-+ * hv_pci_start_relations_work() - Queue work to start device discovery
-  * @hbus:	Root PCI bus, as understood by this driver
-- * @relations:	Packet from host listing children
-+ * @dr:		The list of children returned from host
-  *
-- * This function is invoked whenever a new list of devices for
-- * this bus appears.
-+ * Return:  0 on success, 1 on failure
-  */
--static void hv_pci_devices_present(struct hv_pcibus_device *hbus,
--				   struct pci_bus_relations *relations)
-+static int hv_pci_start_relations_work(struct hv_pcibus_device *hbus,
-+				       struct hv_dr_state *dr)
- {
--	struct hv_dr_state *dr;
- 	struct hv_dr_work *dr_wrk;
--	unsigned long flags;
- 	bool pending_dr;
-+	unsigned long flags;
- 
- 	dr_wrk = kzalloc(sizeof(*dr_wrk), GFP_NOWAIT);
- 	if (!dr_wrk)
--		return;
--
--	dr = kzalloc(offsetof(struct hv_dr_state, func) +
--		     (sizeof(struct pci_function_description) *
--		      (relations->device_count)), GFP_NOWAIT);
--	if (!dr)  {
--		kfree(dr_wrk);
--		return;
--	}
-+		return 1;
- 
- 	INIT_WORK(&dr_wrk->wrk, pci_devices_present_work);
- 	dr_wrk->bus = hbus;
--	dr->device_count = relations->device_count;
--	if (dr->device_count != 0) {
--		memcpy(dr->func, relations->func,
--		       sizeof(struct pci_function_description) *
--		       dr->device_count);
--	}
- 
- 	spin_lock_irqsave(&hbus->device_list_lock, flags);
- 	/*
-@@ -2144,6 +2141,46 @@ static void hv_pci_devices_present(struct hv_pcibus_device *hbus,
- 		get_hvpcibus(hbus);
- 		queue_work(hbus->wq, &dr_wrk->wrk);
- 	}
-+
-+	return 0;
-+}
-+
-+/**
-+ * hv_pci_devices_present() - Handles list of new children
-+ * @hbus:	Root PCI bus, as understood by this driver
-+ * @relations:	Packet from host listing children
-+ *
-+ * This function is invoked whenever a new list of devices for
-+ * this bus appears.
-+ */
-+static void hv_pci_devices_present(struct hv_pcibus_device *hbus,
-+				   struct pci_bus_relations *relations)
-+{
-+	struct hv_dr_state *dr;
-+	int i;
-+
-+	dr = kzalloc(offsetof(struct hv_dr_state, func) +
-+		     (sizeof(struct hv_pcidev_description) *
-+		      (relations->device_count)), GFP_NOWAIT);
-+
-+	if (!dr)
-+		return;
-+
-+	dr->device_count = relations->device_count;
-+	for (i = 0; i < dr->device_count; i++) {
-+		dr->func[i].v_id = relations->func[i].v_id;
-+		dr->func[i].d_id = relations->func[i].d_id;
-+		dr->func[i].rev = relations->func[i].rev;
-+		dr->func[i].prog_intf = relations->func[i].prog_intf;
-+		dr->func[i].subclass = relations->func[i].subclass;
-+		dr->func[i].base_class = relations->func[i].base_class;
-+		dr->func[i].subsystem_id = relations->func[i].subsystem_id;
-+		dr->func[i].win_slot = relations->func[i].win_slot;
-+		dr->func[i].ser = relations->func[i].ser;
-+	}
-+
-+	if (hv_pci_start_relations_work(hbus, dr))
-+		kfree(dr);
+-	return 0;
++	return PTR_ERR_OR_ZERO(rockchip->vpcie0v9);
  }
  
- /**
-@@ -3018,7 +3055,7 @@ static void hv_pci_bus_exit(struct hv_device *hdev)
- 		struct pci_packet teardown_packet;
- 		u8 buffer[sizeof(struct pci_message)];
- 	} pkt;
--	struct pci_bus_relations relations;
-+	struct hv_dr_state *dr;
- 	struct hv_pci_compl comp_pkt;
- 	int ret;
- 
-@@ -3030,8 +3067,9 @@ static void hv_pci_bus_exit(struct hv_device *hdev)
- 		return;
- 
- 	/* Delete any children which might still exist. */
--	memset(&relations, 0, sizeof(relations));
--	hv_pci_devices_present(hbus, &relations);
-+	dr = kzalloc(sizeof(*dr), GFP_ATOMIC);
-+	if (dr && hv_pci_start_relations_work(hbus, dr))
-+		kfree(dr);
- 
- 	ret = hv_send_resources_released(hdev);
- 	if (ret)
--- 
-2.17.1
-
+ static int rockchip_pcie_set_vpcie(struct rockchip_pcie *rockchip)
