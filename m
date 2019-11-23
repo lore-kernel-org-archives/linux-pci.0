@@ -2,205 +2,266 @@ Return-Path: <SRS0=6jiw=ZP=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_2 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E521BC43215
-	for <linux-pci@archiver.kernel.org>; Sat, 23 Nov 2019 00:01:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFAECC432C0
+	for <linux-pci@archiver.kernel.org>; Sat, 23 Nov 2019 01:57:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C42AB2071F
-	for <linux-pci@archiver.kernel.org>; Sat, 23 Nov 2019 00:01:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A89B20707
+	for <linux-pci@archiver.kernel.org>; Sat, 23 Nov 2019 01:57:30 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=linuxonhyperv.com header.i=@linuxonhyperv.com header.b="pfr9OsyS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726686AbfKWABF convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 22 Nov 2019 19:01:05 -0500
-Received: from mga07.intel.com ([134.134.136.100]:12973 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726666AbfKWABF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 22 Nov 2019 19:01:05 -0500
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga105.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 22 Nov 2019 16:01:04 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.69,231,1571727600"; 
-   d="scan'208";a="290792434"
-Received: from jpan9-mobl2.amr.corp.intel.com (HELO localhost) ([10.254.71.164])
-  by orsmga001.jf.intel.com with ESMTP; 22 Nov 2019 16:01:03 -0800
-Date:   Fri, 22 Nov 2019 16:01:02 -0800
-From:   "Jacob Pan (Jun)" <jacob.jun.pan@intel.com>
-To:     Jean-Philippe Brucker <jean-philippe@linaro.org>
-Cc:     <linux-acpi@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <iommu@lists.linux-foundation.org>,
-        <virtualization@lists.linux-foundation.org>,
-        <linux-pci@vger.kernel.org>, <virtio-dev@lists.oasis-open.org>,
-        <rjw@rjwysocki.net>, <lenb@kernel.org>,
-        <lorenzo.pieralisi@arm.com>, <guohanjun@huawei.com>,
-        <sudeep.holla@arm.com>, <gregkh@linuxfoundation.org>,
-        <joro@8bytes.org>, <bhelgaas@google.com>, <mst@redhat.com>,
-        <jasowang@redhat.com>, <eric.auger@redhat.com>,
-        <sebastien.boeuf@intel.com>, <kevin.tian@intel.com>,
-        jacob.jun.pan@intel.com
-Subject: Re: [RFC 00/13] virtio-iommu on non-devicetree platforms
-Message-ID: <20191122160102.00004489@intel.com>
-In-Reply-To: <20191122105000.800410-1-jean-philippe@linaro.org>
-References: <20191122105000.800410-1-jean-philippe@linaro.org>
-Organization: intel
-X-Mailer: Claws Mail 3.17.3 (GTK+ 2.24.32; i686-w64-mingw32)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 8BIT
+        id S1726744AbfKWB50 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 22 Nov 2019 20:57:26 -0500
+Received: from linux.microsoft.com ([13.77.154.182]:49234 "EHLO
+        linux.microsoft.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725962AbfKWB5Z (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Nov 2019 20:57:25 -0500
+Received: by linux.microsoft.com (Postfix, from userid 1004)
+        id 0A16C20B7185; Fri, 22 Nov 2019 17:57:25 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 0A16C20B7185
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linuxonhyperv.com;
+        s=default; t=1574474245;
+        bh=k5DecXeY7B/HloVG4kw+Eo7utly4mbWEKzaJFXDhGqs=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=pfr9OsyS6yEjMPsOK4fGA8HT4iOoPE+PwMyc3IyXG/FD6zS1twkPvXKY6gi1aUVce
+         RAB+cZJevtiIT7FYBqhNQUCg3MqOI39dBJKiYwdLupC8R2ojdtk+7beV+JbUsZlDM3
+         5gUhBgW6dV0IrYvoexl50GKP4yQVFqwfnW3X5wvc=
+From:   longli@linuxonhyperv.com
+To:     "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Sasha Levin <sashal@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Andrew Murray <andrew.murray@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     Long Li <longli@microsoft.com>
+Subject: [PATCH 2/2] PCI: hv: Add support for protocol 1.3 and support PCI_BUS_RELATIONS2
+Date:   Fri, 22 Nov 2019 17:57:09 -0800
+Message-Id: <1574474229-44840-2-git-send-email-longli@linuxonhyperv.com>
+X-Mailer: git-send-email 1.8.3.1
+In-Reply-To: <1574474229-44840-1-git-send-email-longli@linuxonhyperv.com>
+References: <1574474229-44840-1-git-send-email-longli@linuxonhyperv.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, 22 Nov 2019 11:49:47 +0100
-Jean-Philippe Brucker <jean-philippe@linaro.org> wrote:
+From: Long Li <longli@microsoft.com>
 
-> I'm seeking feedback on multi-platform support for virtio-iommu. At
-> the moment only devicetree (DT) is supported and we don't have a
-> pleasant solution for other platforms. Once we figure out the topology
-> description, x86 support is trivial.
-> 
-> Since the IOMMU manages memory accesses from other devices, the guest
-> kernel needs to initialize the IOMMU before endpoints start issuing
-> DMA. It's a solved problem: firmware or hypervisor describes through
-> DT or ACPI tables the device dependencies, and probe of endpoints is
-> deferred until the IOMMU is probed. But:
-> 
-> (1) ACPI has one table per vendor (DMAR for Intel, IVRS for AMD and
-> IORT for Arm). From my point of view IORT is easier to extend, since
-> we just need to introduce a new node type. There are no dependencies
-> to Arm in the Linux IORT driver, so it works well with CONFIG_X86.
-> 
-From my limited understanding, IORT and VIOT is to solve device topology
-enumeration only? I am not sure how it can be expanded to cover
-information beyond device topology. e.g. DMAR has NUMA information and
-root port ATS, I guess they are not used today in the guest but might
-be additions in the future.
+Starting with Hyper-V PCI protocol version 1.3, the host VSP can send
+PCI_BUS_RELATIONS2 and pass the vNUMA node information for devices on the bus.
+The vNUMA node tells which guest NUMA node this device is on based on guest
+VM configuration topology and physical device inforamtion.
 
->     However, there are concerns about other OS vendors feeling
-> obligated to implement this new node, so Arm proposed introducing
-> another ACPI table, that can wrap any of DMAR, IVRS and IORT to
-> extend it with new virtual nodes. A draft of this VIOT table
-> specification is available at
-> http://jpbrucker.net/virtio-iommu/viot/viot-v5.pdf
-> 
->     I'm afraid this could increase fragmentation as guests would need
-> to implement or modify their support for all of DMAR, IVRS and IORT.
-> If we end up doing VIOT, I suggest limiting it to IORT.
-> 
-> (2) In addition, there are some concerns about having virtio depend on
->     ACPI or DT. Some hypervisors (Firecracker, QEMU microvm, kvmtool
-> x86 [1]) don't currently implement those methods.
-> 
->     It was suggested to embed the topology description into the
-> device. It can work, as demonstrated at the end of this RFC, with the
->     following limitations:
-> 
->     - The topology description must be read before any endpoint
-> managed by the IOMMU is probed, and even before the virtio module is
->       loaded. This RFC uses a PCI quirk to manually parse the virtio
->       configuration. It assumes that all endpoints managed by the
-> IOMMU are under this same PCI host.
-> 
+The patch adds code to negotiate v1.3 and process PCI_BUS_RELATIONS2.
 
->     - I don't have a solution for the virtio-mmio transport at the
->       moment, because I haven't had time to modify a host to test it.
-> I think it could either use a notifier on the platform bus, or
->       better, a new 'iommu' command-line argument to the virtio-mmio
->       driver. So the current prototype doesn't work for firecracker
-> and microvm, which rely on virtio-mmio.
-> 
->     - For Arm, if the platform has an ITS, the hypervisor needs IORT
-> or DT to describe it anyway. More generally, not using either ACPI or
->       DT might prevent from supporting other features as well. I
-> suspect the above users will have to implement a standard method
-> sooner or later.
-> 
->     - Even when reusing as much existing code as possible, guest
-> support is still going to be around a few hundred lines since we can't
->       rely on the normal virtio infrastructure to be loaded at that
->       point. As you can see below, the diffstat for the incomplete
->       topology implementation is already bigger than the exhaustive
-> IORT support, even when jumping through the VIOT hoop.
-> 
->     So it's a lightweight solution for very specific use-cases, and we
->     should still support ACPI for the general case. Multi-platform
->     guests such as Linux will then need to support three topology
->     descriptions instead of two.
-> 
-> In this RFC I present both solutions, but I'd rather not keep all of
-> it. Please see the individual patches for details:
-> 
-> (1) Patches 1, 3-10 add support for virtio-iommu to the Linux IORT
->     driver and patches 2, 11 add the VIOT glue.
-> 
-> (2) Patch 12 adds the built-in topology description to the
-> virtio-iommu specification. Patch 13 is a partial implementation for
-> the Linux virtio-iommu driver. It only supports PCI, not platform
-> devices.
-> 
-> You can find Linux and QEMU code on my virtio-iommu/devel branches at
-> http://jpbrucker.net/git/linux and http://jpbrucker.net/git/qemu
-> 
-> 
-> I split the diffstat since there are two independent features. The
-> first one is for patches 1-11, and the second one for patch 13.
-> 
-> Jean-Philippe Brucker (11):
->   ACPI/IORT: Move IORT to the ACPI folder
->   ACPI: Add VIOT definitions
->   ACPI/IORT: Allow registration of external tables
->   ACPI/IORT: Add node categories
->   ACPI/IORT: Support VIOT virtio-mmio node
->   ACPI/IORT: Support VIOT virtio-pci node
->   ACPI/IORT: Defer probe until virtio-iommu-pci has registered a
-> fwnode ACPI/IORT: Add callback to update a device's fwnode
->   iommu/virtio: Create fwnode if necessary
->   iommu/virtio: Update IORT fwnode
->   ACPI: Add VIOT table
-> 
->  MAINTAINERS                     |   9 +
->  drivers/acpi/Kconfig            |   7 +
->  drivers/acpi/Makefile           |   2 +
->  drivers/acpi/arm64/Kconfig      |   3 -
->  drivers/acpi/arm64/Makefile     |   1 -
->  drivers/acpi/bus.c              |   2 +
->  drivers/acpi/{arm64 => }/iort.c | 317
-> ++++++++++++++++++++++++++------ drivers/acpi/tables.c           |
-> 2 +- drivers/acpi/viot.c             |  44 +++++
->  drivers/iommu/Kconfig           |   1 +
->  drivers/iommu/virtio-iommu.c    |  61 +++++-
->  include/acpi/actbl2.h           |  31 ++++
->  include/linux/acpi_iort.h       |  14 ++
->  include/linux/acpi_viot.h       |  20 ++
->  14 files changed, 448 insertions(+), 66 deletions(-)
->  rename drivers/acpi/{arm64 => }/iort.c (86%)
->  create mode 100644 drivers/acpi/viot.c
->  create mode 100644 include/linux/acpi_viot.h
-> 
-> Jean-Philippe Brucker (1):
->   iommu/virtio: Add topology description to virtio-iommu config space
-> 
->  drivers/base/platform.c               |   3 +
->  drivers/iommu/Kconfig                 |   9 +
->  drivers/iommu/Makefile                |   1 +
->  drivers/iommu/virtio-iommu-topology.c | 410
-> ++++++++++++++++++++++++++ drivers/iommu/virtio-iommu.c          |
-> 3 + drivers/pci/pci-driver.c              |   3 +
->  include/linux/virtio_iommu.h          |  18 ++
->  include/uapi/linux/virtio_iommu.h     |  26 ++
->  8 files changed, 473 insertions(+)
->  create mode 100644 drivers/iommu/virtio-iommu-topology.c
->  create mode 100644 include/linux/virtio_iommu.h
-> 
-> 
-> [1] firecracker: https://github.com/firecracker-microvm/firecracker
->     microvm: https://github.com/qemu/qemu/blob/master/docs/microvm.rst
->     kvmtool:
-> https://git.kernel.org/pub/scm/linux/kernel/git/will/kvmtool.git/
+Signed-off-by: Long Li <longli@microsoft.com>
+---
+ drivers/pci/controller/pci-hyperv.c | 107 ++++++++++++++++++++++++++++
+ 1 file changed, 107 insertions(+)
+
+diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+index f2e028cfa7cd..488235563c7d 100644
+--- a/drivers/pci/controller/pci-hyperv.c
++++ b/drivers/pci/controller/pci-hyperv.c
+@@ -63,6 +63,7 @@
+ enum pci_protocol_version_t {
+ 	PCI_PROTOCOL_VERSION_1_1 = PCI_MAKE_VERSION(1, 1),	/* Win10 */
+ 	PCI_PROTOCOL_VERSION_1_2 = PCI_MAKE_VERSION(1, 2),	/* RS1 */
++	PCI_PROTOCOL_VERSION_1_3 = PCI_MAKE_VERSION(1, 3),	/* VB */
+ };
+ 
+ #define CPU_AFFINITY_ALL	-1ULL
+@@ -72,6 +73,7 @@ enum pci_protocol_version_t {
+  * first.
+  */
+ static enum pci_protocol_version_t pci_protocol_versions[] = {
++	PCI_PROTOCOL_VERSION_1_3,
+ 	PCI_PROTOCOL_VERSION_1_2,
+ 	PCI_PROTOCOL_VERSION_1_1,
+ };
+@@ -124,6 +126,7 @@ enum pci_message_type {
+ 	PCI_RESOURCES_ASSIGNED2		= PCI_MESSAGE_BASE + 0x16,
+ 	PCI_CREATE_INTERRUPT_MESSAGE2	= PCI_MESSAGE_BASE + 0x17,
+ 	PCI_DELETE_INTERRUPT_MESSAGE2	= PCI_MESSAGE_BASE + 0x18, /* unused */
++	PCI_BUS_RELATIONS2		= PCI_MESSAGE_BASE + 0x19,
+ 	PCI_MESSAGE_MAXIMUM
+ };
+ 
+@@ -169,6 +172,26 @@ struct pci_function_description {
+ 	u32	ser;	/* serial number */
+ } __packed;
+ 
++enum pci_device_description_flags {
++	HV_PCI_DEVICE_FLAG_NONE			= 0x0,
++	HV_PCI_DEVICE_FLAG_NUMA_AFFINITY	= 0x1,
++};
++
++struct pci_function_description2 {
++	u16	v_id;	/* vendor ID */
++	u16	d_id;	/* device ID */
++	u8	rev;
++	u8	prog_intf;
++	u8	subclass;
++	u8	base_class;
++	u32	subsystem_id;
++	union win_slot_encoding win_slot;
++	u32	ser;	/* serial number */
++	u32	flags;
++	u16	virtual_numa_node;
++	u16	reserved;
++} __packed;
++
+ /**
+  * struct hv_msi_desc
+  * @vector:		IDT entry
+@@ -304,6 +327,12 @@ struct pci_bus_relations {
+ 	struct pci_function_description func[0];
+ } __packed;
+ 
++struct pci_bus_relations2 {
++	struct pci_incoming_message incoming;
++	u32 device_count;
++	struct pci_function_description2 func[0];
++} __packed;
++
+ struct pci_q_res_req_response {
+ 	struct vmpacket_descriptor hdr;
+ 	s32 status;			/* negative values are failures */
+@@ -1417,6 +1446,7 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+ 		break;
+ 
+ 	case PCI_PROTOCOL_VERSION_1_2:
++	case PCI_PROTOCOL_VERSION_1_3:
+ 		size = hv_compose_msi_req_v2(&ctxt.int_pkts.v2,
+ 					dest,
+ 					hpdev->desc.win_slot.slot,
+@@ -1798,6 +1828,25 @@ static void hv_pci_remove_slots(struct hv_pcibus_device *hbus)
+ 	}
+ }
+ 
++/*
++ * Set NUMA node for the devices on the bus
++ */
++static void pci_assign_numa_node(struct hv_pcibus_device *hbus)
++{
++	struct pci_dev *dev;
++	struct pci_bus *bus = hbus->pci_bus;
++	struct hv_pci_dev *hv_dev;
++
++	list_for_each_entry(dev, &bus->devices, bus_list) {
++		hv_dev = get_pcichild_wslot(hbus, devfn_to_wslot(dev->devfn));
++		if (!hv_dev)
++			continue;
++
++		if (hv_dev->desc.flags & HV_PCI_DEVICE_FLAG_NUMA_AFFINITY)
++			set_dev_node(&dev->dev, hv_dev->desc.virtual_numa_node);
++	}
++}
++
+ /**
+  * create_root_hv_pci_bus() - Expose a new root PCI bus
+  * @hbus:	Root PCI bus, as understood by this driver
+@@ -1820,6 +1869,7 @@ static int create_root_hv_pci_bus(struct hv_pcibus_device *hbus)
+ 
+ 	pci_lock_rescan_remove();
+ 	pci_scan_child_bus(hbus->pci_bus);
++	pci_assign_numa_node(hbus);
+ 	pci_bus_assign_resources(hbus->pci_bus);
+ 	hv_pci_assign_slots(hbus);
+ 	pci_bus_add_devices(hbus->pci_bus);
+@@ -2088,6 +2138,7 @@ static void pci_devices_present_work(struct work_struct *work)
+ 		 */
+ 		pci_lock_rescan_remove();
+ 		pci_scan_child_bus(hbus->pci_bus);
++		pci_assign_numa_node(hbus);
+ 		hv_pci_assign_slots(hbus);
+ 		pci_unlock_rescan_remove();
+ 		break;
+@@ -2183,6 +2234,46 @@ static void hv_pci_devices_present(struct hv_pcibus_device *hbus,
+ 		kfree(dr);
+ }
+ 
++/**
++ * hv_pci_devices_present2() - Handles list of new children
++ * @hbus:	Root PCI bus, as understood by this driver
++ * @relations2:	Packet from host listing children
++ *
++ * This function is the v2 version of hv_pci_devices_present()
++ */
++static void hv_pci_devices_present2(struct hv_pcibus_device *hbus,
++				    struct pci_bus_relations2 *relations)
++{
++	struct hv_dr_state *dr;
++	int i;
++
++	dr = kzalloc(offsetof(struct hv_dr_state, func) +
++		     (sizeof(struct hv_pcidev_description) *
++		      (relations->device_count)), GFP_NOWAIT);
++
++	if (!dr)
++		return;
++
++	dr->device_count = relations->device_count;
++	for (i = 0; i < dr->device_count; i++) {
++		dr->func[i].v_id = relations->func[i].v_id;
++		dr->func[i].d_id = relations->func[i].d_id;
++		dr->func[i].rev = relations->func[i].rev;
++		dr->func[i].prog_intf = relations->func[i].prog_intf;
++		dr->func[i].subclass = relations->func[i].subclass;
++		dr->func[i].base_class = relations->func[i].base_class;
++		dr->func[i].subsystem_id = relations->func[i].subsystem_id;
++		dr->func[i].win_slot = relations->func[i].win_slot;
++		dr->func[i].ser = relations->func[i].ser;
++		dr->func[i].flags = relations->func[i].flags;
++		dr->func[i].virtual_numa_node =
++			relations->func[i].virtual_numa_node;
++	}
++
++	if (hv_pci_start_relations_work(hbus, dr))
++		kfree(dr);
++}
++
+ /**
+  * hv_eject_device_work() - Asynchronously handles ejection
+  * @work:	Work struct embedded in internal device struct
+@@ -2288,6 +2379,7 @@ static void hv_pci_onchannelcallback(void *context)
+ 	struct pci_response *response;
+ 	struct pci_incoming_message *new_message;
+ 	struct pci_bus_relations *bus_rel;
++	struct pci_bus_relations2 *bus_rel2;
+ 	struct pci_dev_inval_block *inval;
+ 	struct pci_dev_incoming *dev_message;
+ 	struct hv_pci_dev *hpdev;
+@@ -2355,6 +2447,21 @@ static void hv_pci_onchannelcallback(void *context)
+ 				hv_pci_devices_present(hbus, bus_rel);
+ 				break;
+ 
++			case PCI_BUS_RELATIONS2:
++
++				bus_rel2 = (struct pci_bus_relations2 *)buffer;
++				if (bytes_recvd <
++				    offsetof(struct pci_bus_relations2, func) +
++				    (sizeof(struct pci_function_description2) *
++				     (bus_rel2->device_count))) {
++					dev_err(&hbus->hdev->device,
++						"bus relations v2 too small\n");
++					break;
++				}
++
++				hv_pci_devices_present2(hbus, bus_rel2);
++				break;
++
+ 			case PCI_EJECT:
+ 
+ 				dev_message = (struct pci_dev_incoming *)buffer;
+-- 
+2.17.1
 
