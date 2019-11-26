@@ -2,193 +2,354 @@ Return-Path: <SRS0=NgYY=ZS=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75A46C432C0
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Nov 2019 09:44:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48FC1C43215
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Nov 2019 09:59:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 39A30207DD
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Nov 2019 09:44:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2123A2080F
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Nov 2019 09:59:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=raspberrypi.org header.i=@raspberrypi.org header.b="yj/42p8M";
-	dkim=pass (2048-bit key) header.d=raspberrypi.org header.i=@raspberrypi.org header.b="UM3FQllS"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="PSJRQkHe"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727556AbfKZJod (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 26 Nov 2019 04:44:33 -0500
-Received: from mx08-00252a01.pphosted.com ([91.207.212.211]:37858 "EHLO
-        mx08-00252a01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727400AbfKZJod (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2019 04:44:33 -0500
-X-Greylist: delayed 441 seconds by postgrey-1.27 at vger.kernel.org; Tue, 26 Nov 2019 04:44:31 EST
-Received: from pps.filterd (m0102629.ppops.net [127.0.0.1])
-        by mx08-00252a01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id xAQ9X8SE024208
-        for <linux-pci@vger.kernel.org>; Tue, 26 Nov 2019 09:37:09 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=raspberrypi.org; h=subject : to :
- cc : references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=pp;
- bh=od7NtWv8A1ft46ESIAn5eCrlELpL9JojAJd+KINECi4=;
- b=yj/42p8M5m7IE8Ht/7o0/YFharUMGlOYox7IFIQoFEp+X0CJKnG6o7cszwmadDYA+gBI
- NaezpF3RrC+VBxFBOuhSX3zMBUm192U7kmMPxO8RKjuHAK2asOaOAVTJeSwGfbRXtSXc
- NW9eZkhwWmF3e6914M2B745l0ybdIHZZNL+vWWVUD+D7geHfL7Ox3jKf+61xpSryRn+I
- is7l8ZgXclE9+jxA4zJ1w3xi5DAfJYLucdrQj0y6Q+0ot8pcDJj1VLe73AfXUtsUweE+
- lNv9yXNw3q2tXzXlix8BsUBbJwya9M8NOg03ODuXEHFQ86mdKaQaT4pNkKZw3YIAuHiR Jw== 
-Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com [209.85.128.70])
-        by mx08-00252a01.pphosted.com with ESMTP id 2wgna0r7w6-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK)
-        for <linux-pci@vger.kernel.org>; Tue, 26 Nov 2019 09:37:09 +0000
-Received: by mail-wm1-f70.google.com with SMTP id t203so872935wmt.7
-        for <linux-pci@vger.kernel.org>; Tue, 26 Nov 2019 01:37:09 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=raspberrypi.org; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=od7NtWv8A1ft46ESIAn5eCrlELpL9JojAJd+KINECi4=;
-        b=UM3FQllSTPplmabTC7jU+LvD7cb2Fa240ifZRDTJXFxChlEsJNHcaR/AfbBSmXRdnz
-         2eiiq9qJPnT7Bm3WqcNbdo8c4vDT5hRaMcQ8ASCvNqNXVLwg/s1NqhwXvB53f2NG9AmT
-         lVVGP/N/bHbHh3OgwN8MRxsK7oMBDUm+LtHpx8j3LDajq+Xk2K7AjT8aqk6HZn0WacaN
-         56T4do1RvngA5k9avohIS2oeWpX1pZvBfn7UJ00yurrTqZ7o88io8MPygmKqimVdQo0y
-         OtpPjyMbh16nPQzTN8uBuuXF+zqug9rEoU7H0q3piiYbiYM4EcyUjpEUGzCPnfstzE5E
-         0+BA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=od7NtWv8A1ft46ESIAn5eCrlELpL9JojAJd+KINECi4=;
-        b=QqP9EWsttxJSpyVY0PI+7qOdDeIYbSLPbpotk/bZShkk9bGncXu1FtjZwOEIIfVCpi
-         ReVxhXcQl0HCIy4pNVgSGHZBSEESQbJt8tQQbxz4aAVSg5WWgwn8lPdvL/dmJzcPvwNW
-         sfLiG93mqjhqOkUIZ+159bioUEOc/DowwIoFnWuBPRcx2d3C4ybdBcsWriz7AJBl/kTU
-         2KA4Z9E3HGijhwLiX3Cjxx+RNPHEvO3Q3iKan2LNFf1vOI35wG+1mYmvB140iOIZyq0w
-         uY/wjBh8jI1VkbrLOXKZVvcr5S3qWgwSS+UQMCx+B5Q2LmXOK40ZP2OuSPrFzuZtpCou
-         eJ2Q==
-X-Gm-Message-State: APjAAAVpvXKQI4/Urbp3Yn0aDpz6pr4FlXO0qCKDy5apQMCAoDlqByBv
-        GAs0ZdtbyQA/kqaVuvs1WPTcZJGtn7KbcvWEfpuCZPiBoXz1lqem40m4S+RAkD/X0L2VkTdiKbx
-        Xs8hBwR9uy1Nqndqg4zPJ
-X-Received: by 2002:a5d:4946:: with SMTP id r6mr28487129wrs.155.1574761028346;
-        Tue, 26 Nov 2019 01:37:08 -0800 (PST)
-X-Google-Smtp-Source: APXvYqwBt2FmyEREb7ZvdP/DpQYA/wjkntFQB86TPOEh4oNOeIIRXcU33m0OX9mwck9d8Gn6k8YdQg==
-X-Received: by 2002:a5d:4946:: with SMTP id r6mr28487093wrs.155.1574761027986;
-        Tue, 26 Nov 2019 01:37:07 -0800 (PST)
-Received: from ?IPv6:2a00:1098:3142:14:f57f:65b0:b998:e2ca? ([2a00:1098:3142:14:f57f:65b0:b998:e2ca])
-        by smtp.gmail.com with ESMTPSA id e16sm2372706wme.35.2019.11.26.01.37.07
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 26 Nov 2019 01:37:07 -0800 (PST)
-Subject: Re: [PATCH v3 3/7] ARM: dts: bcm2711: Enable PCIe controller
-To:     Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
-        andrew.murray@arm.com, maz@kernel.org,
-        linux-kernel@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Eric Anholt <eric@anholt.net>, Stefan Wahren <wahrenst@gmx.net>
-Cc:     james.quinlan@broadcom.com, mbrugger@suse.com,
-        f.fainelli@gmail.com, jeremy.linton@arm.com,
-        linux-pci@vger.kernel.org, linux-rpi-kernel@lists.infradead.org,
-        devicetree@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
-        linux-arm-kernel@lists.infradead.org
-References: <20191126091946.7970-1-nsaenzjulienne@suse.de>
- <20191126091946.7970-4-nsaenzjulienne@suse.de>
-From:   Phil Elwell <phil@raspberrypi.org>
-Message-ID: <ede90a60-8194-4035-01c2-2673f4a8cfe7@raspberrypi.org>
-Date:   Tue, 26 Nov 2019 09:37:08 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.2.2
+        id S1727724AbfKZJ7F (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 26 Nov 2019 04:59:05 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:31555 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727687AbfKZJ7F (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2019 04:59:05 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1574762343;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=ERKqMrCg9g6ht1S3vcoxPOIWk/iSi4tl+wRpifcMM3Y=;
+        b=PSJRQkHefSpx14WIBbpC547R6+7Ncpy/VBwGK4avby2ZFb/q2lNFreLzJgn0fBu1ES7OfI
+        2AHgeXW3fy5HysD4KxWKq5P0kjVRAn9kLmnlNzeRBP8mI9ARVfLpjtCkd7QO00790cOemO
+        ZurLG4XkzFN9oygqWsI4SXLBd8Q8UAY=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-320-f5jEAjP0O6WBtPbyECMUyQ-1; Tue, 26 Nov 2019 04:58:58 -0500
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 15D54101F4E5;
+        Tue, 26 Nov 2019 09:58:57 +0000 (UTC)
+Received: from [10.72.12.241] (ovpn-12-241.pek2.redhat.com [10.72.12.241])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 2D44519C70;
+        Tue, 26 Nov 2019 09:58:49 +0000 (UTC)
+Subject: Re: [PATCH] pci: endpoint: functions: Add a virtnet EP function
+To:     Kishon Vijay Abraham I <kishon@ti.com>,
+        Haotian Wang <haotian.wang@sifive.com>, mst@redhat.com,
+        lorenzo.pieralisi@arm.com, bhelgaas@google.com,
+        Alan Mikhak <alan.mikhak@sifive.com>
+Cc:     linux-pci@vger.kernel.org, haotian.wang@duke.edu,
+        Jon Mason <jdmason@kudzu.us>, KVM list <kvm@vger.kernel.org>
+References: <7067e657-5c8e-b724-fa6a-086fece6e6c3@redhat.com>
+ <20190904215801.2971-1-haotian.wang@sifive.com>
+ <59982499-0fc1-2e39-9ff9-993fb4dd7dcc@redhat.com>
+ <2cf00ec4-1ed6-f66e-6897-006d1a5b6390@ti.com>
+From:   Jason Wang <jasowang@redhat.com>
+Message-ID: <d87fbe2f-b3ae-5cb1-448a-41335febc460@redhat.com>
+Date:   Tue, 26 Nov 2019 17:58:48 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <20191126091946.7970-4-nsaenzjulienne@suse.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <2cf00ec4-1ed6-f66e-6897-006d1a5b6390@ti.com>
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.95,18.0.572
- definitions=2019-11-26_01:2019-11-26,2019-11-26 signatures=0
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+X-MC-Unique: f5jEAjP0O6WBtPbyECMUyQ-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Nicolas,
 
-On 26/11/2019 09:19, Nicolas Saenz Julienne wrote:
-> This enables bcm2711's PCIe bus, which is hardwired to a VIA
-> Technologies XHCI USB 3.0 controller.
-> 
-> Signed-off-by: Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-> 
-> ---
-> 
-> This will likely need a rebase once the RPi GENET patches land.
-> 
-> Changes since v2:
->    - Remove unused interrupt-map
->    - correct dma-ranges to it's full size, non power of 2 bus DMA
->      constraints now supported in linux-next[1]
->    - add device_type
->    - rename alias from pcie_0 to pcie0
-> 
-> Changes since v1:
->    - remove linux,pci-domain
-> 
-> [1] https://lkml.org/lkml/2019/11/21/235
-> 
->   arch/arm/boot/dts/bcm2711.dtsi | 41 ++++++++++++++++++++++++++++++++++
->   1 file changed, 41 insertions(+)
-> 
-> diff --git a/arch/arm/boot/dts/bcm2711.dtsi b/arch/arm/boot/dts/bcm2711.dtsi
-> index 667658497898..2e121fc8b3d0 100644
-> --- a/arch/arm/boot/dts/bcm2711.dtsi
-> +++ b/arch/arm/boot/dts/bcm2711.dtsi
-> @@ -288,6 +288,47 @@ IRQ_TYPE_LEVEL_LOW)>,
->   		arm,cpu-registers-not-fw-configured;
->   	};
->   
-> +	scb {
-> +		compatible = "simple-bus";
-> +		#address-cells = <2>;
-> +		#size-cells = <1>;
-> +
-> +		ranges = <0x0 0x7c000000  0x0 0xfc000000  0x03800000>,
-> +			 <0x6 0x00000000  0x6 0x00000000  0x40000000>;
-> +
-> +		pcie0: pcie@7d500000 {
-> +			compatible = "brcm,bcm2711-pcie";
-> +			reg = <0x0 0x7d500000 0x9310>;
-> +			device_type = "pci";
-> +			#address-cells = <3>;
-> +			#interrupt-cells = <1>;
-> +			#size-cells = <2>;
-> +			interrupts = <GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>,
-> +				     <GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>;
-> +			interrupt-names = "pcie", "msi";
-> +			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-> +			interrupt-map = <0 0 0 1 &gicv2 GIC_SPI 143
-> +							IRQ_TYPE_LEVEL_HIGH>;
-> +			msi-controller;
-> +			msi-parent = <&pcie0>;
-> +
-> +			ranges = <0x02000000 0x0 0xf8000000 0x6 0x00000000
-> +				  0x0 0x04000000>;
-> +			/*
-> +			 * The wrapper around the PCIe block has a bug
-> +			 * preventing it from accessing beyond the first 3GB of
-> +			 * memory. As the bus DMA mask is rounded up to the
-> +			 * closest power of two of the dma-range size, we're
-> +			 * forced to set the limit at 2GB. This can be
-> +			 * harmlessly changed in the future once the DMA code
-> +			 * handles non power of two DMA limits.
-> +			 */
-> +			dma-ranges = <0x02000000 0x0 0x00000000 0x0 0x00000000
-> +				      0x0 0xc0000000>;
+On 2019/11/25 =E4=B8=8B=E5=8D=888:49, Kishon Vijay Abraham I wrote:
+> +Alan, Jon
+>
+> Hi Jason, Haotian, Alan,
+>
+> On 05/09/19 8:26 AM, Jason Wang wrote:
+>> On 2019/9/5 =E4=B8=8A=E5=8D=885:58, Haotian Wang wrote:
+>>> Hi Jason,
+>>>
+>>> I have an additional comment regarding using vring.
+>>>
+>>> On Tue, Sep 3, 2019 at 6:42 AM Jason Wang <jasowang@redhat.com> wrote:
+>>>> Kind of, in order to address the above limitation, you probably want t=
+o
+>>>> implement a vringh based netdevice and driver. It will work like,
+>>>> instead of trying to represent a virtio-net device to endpoint,
+>>>> represent a new type of network device, it uses two vringh ring instea=
+d
+>>>> virtio ring. The vringh ring is usually used to implement the
+>>>> counterpart of virtio driver. The advantages are obvious:
+>>>>
+>>>> - no need to deal with two sets of features, config space etc.
+>>>> - network specific, from the point of endpoint linux, it's not a virti=
+o
+>>>> device, no need to care about transport stuffs or embedding internal
+>>>> virtio-net specific data structures
+>>>> - reuse the exist codes (vringh) to avoid duplicated bugs, implementin=
+g
+>>>> a virtqueue is kind of challenge
+>>> With vringh.c, there is no easy way to interface with virtio_net.c.
+>>>
+>>> vringh.c is linked with vhost/net.c nicely
+>>
+>> Let me clarify, vhost_net doesn't use vringh at all (though there's a
+>> plan to switch to use vringh).
+>>
+>>
+>>> but again it's not easy to
+>>> interface vhost/net.c with the network stack of endpoint kernel. The
+>>> vhost drivers are not designed with the purpose of creating another
+>>> suite of virtual devices in the host kernel in the first place. If I tr=
+y
+>>> to manually write code for this interfacing, it seems that I will do
+>>> duplicate work that virtio_net.c does.
+>>
+>> Let me explain:
+>>
+>> - I'm not suggesting to use vhost_net since it can only deal with
+>> userspace virtio rings.
+>> - I suggest to introduce netdev that has vringh vring assoticated.
+>> Vringh was designed to deal with virtio ring located at different types
+>> of memory. It supports userspace vring and kernel vring currently, but
+>> it should not be too hard to add support for e.g endpoint device that
+>> requires DMA or whatever other method to access the vring. So it was by
+>> design to talk directly with e.g kernel virtio device.
+>> - In your case, you can read vring address from virtio config space
+>> through endpoint framework and then create vringh. It's as simple as:
+>> creating a netdev, read vring address, and initialize vringh. Then you
+>> can use vringh helper to get iov and build skb etc (similar to caif_virt=
+io).
+>  From the discussions above and from looking at Jason's mdev patches [1],=
+ I've
+> created the block diagram below.
+>
+> While this patch (from Haotian) deals with RC<->EP connection, I'd also l=
+ike
+> this to be extended for NTB (using multiple EP instances. RC<->EP<->EP<->=
+RC)
+> [2][3].
+>
+> +-----------------------------------+   +--------------------------------=
+-----+
+> |                                   |   |                                =
+     |
+> |  +------------+  +--------------+ |   | +------------+  +--------------=
++    |
+> |  | vringh_net |  | vringh_rpmsg | |   | | virtio_net |  | virtio_rpmsg =
+|    |
+> |  +------------+  +--------------+ |   | +------------+  +--------------=
++    |
+> |                                   |   |                                =
+     |
+> |          +---------------+        |   |          +---------------+     =
+     |
+> |          |  vringh_mdev  |        |   |          |  virtio_mdev  |     =
+     |
+> |          +---------------+        |   |          +---------------+     =
+     |
+> |                                   |   |                                =
+     |
+> |  +------------+   +------------+  |   | +-------------------+ +--------=
+----+|
+> |  | vringh_epf |   | vringh_ntb |  |   | | virtio_pci_common | | virtio_=
+ntb ||
+> |  +------------+   +------------+  |   | +-------------------+ +--------=
+----+|
+> | (PCI EP Device)   (NTB Secondary  |   |        (PCI RC)       (NTB Prim=
+ary  |
+> |                       Device)     |   |                          Device=
+)    |
+> |                                   |   |                                =
+     |
+> |                                   |   |                                =
+     |
+> |             (A)                   |   |              (B)               =
+     |
+> +-----------------------------------+   +--------------------------------=
+-----+
+>
+> GUEST SIDE (B):
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> In the virtualization terminology, the side labeled (B) will be the guest=
+ side.
+> Here it will be the place where PCIe host (RC) side SW will execute (Igno=
+re NTB
+> for this discussion since PCIe host side SW will execute on both ends of =
+the
+> link in the case of NTB. However I've included in the block diagram since=
+ the
+> design we adopt should be able to be extended for NTB as well).
+>
+> Most of the pieces in (B) already exists.
+> 1) virtio_net and virtio_rpmsg: No modifications needed and can be used a=
+s it
+>     is.
+> 2) virtio_mdev: Jason has sent this [1]. This could be used as it is for =
+EP
+>     usecases as well. Jason has created mvnet based on virtio_mdev, but f=
+or EP
+>     usecases virtio_pci_common and virtio_ntb should use it.
 
-The comment doesn't match the data here - I think for now the size field 
-needs to be reduced to 2GB to match the comment.
 
-Phil
+Can we implement NTB as a transport for virtio, then there's no need for=20
+virtio_mdev?
 
-> +			brcm,enable-ssc;
-> +		};
-> +	};
-> +
->   	cpus: cpus {
->   		#address-cells = <1>;
->   		#size-cells = <0>;
-> 
+
+> 3) virtio_pci_common: This should be used when a PCIe EPF is connected. T=
+his
+>     should be modified to create virtio_mdev instead of directly creating=
+ virtio
+>     device.
+> 4) virtio_ntb: This is used for NTB where one end of the link should use
+>     virtio_ntb. This should create virtio_mdev.
+>
+> With this virtio_mdev can abstract virtio_pci_common and virtio_ntb and i=
+deally
+> any virtio drivers can be used for EP or NTB (In the block diagram above
+> virtio_net and virtio_rpmsg can be used).
+>
+> HOST SIDE (A):
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> In the virtualization terminology, the side labeled (A) will be the host =
+side.
+> Here it will be the place where PCIe device (Endpoint) side SW will execu=
+te.
+>
+> Bits and pieces of (A) should exist but there should be considerable work=
+ in this.
+> 1) vringh_net: There should be vringh drivers corresponding to
+>     the virtio drivers on the guest side (B). vringh_net should register =
+with
+>     the net core. The vringh_net device should be created by vringh_mdev.=
+ This
+>     should be new development.
+> 2) vringh_rpmsg: vringh_rpmsg should register with the rpmsg core. The
+>     vringh_rpmsg device should be created by vringh_mdev.
+> 3) vringh_mdev: This layer should define ops specific to vringh (e.g
+>     get_desc_addr() should give vring descriptor address and will depend =
+on
+>     either EP device or NTB device). I haven't looked further on what oth=
+er ops
+>     will be needed. IMO this layer should also decide whether _kern() or =
+_user()
+>     vringh helpers should be invoked.
+
+
+Right, but probably not necessary called "mdev", it could just some=20
+abstraction as a set of callbacks.
+
+
+> 4) vringh_epf: This will be used for PCIe endpoint. This will implement o=
+ps to
+>     get the vring descriptor address.
+> 5) vringh_ntb: Similar to vringh_epf but will interface with NTB device i=
+nstead
+>     of EPF device.
+>
+> Jason,
+>
+> Can you give your comments on the above design? Do you see any flaws/issu=
+es
+> with the above approach?
+
+
+Looks good overall, see questions above.
+
+Thanks
+
+
+>
+> Thanks
+> Kishon
+>
+> [1] -> https://lkml.org/lkml/2019/11/18/261
+> [2] -> https://lkml.org/lkml/2019/9/26/291
+> [3] ->
+> https://www.linuxplumbersconf.org/event/4/contributions/395/attachments/2=
+84/481/Implementing_NTB_Controller_Using_PCIe_Endpoint_-_final.pdf
+>>
+>>> There will be two more main disadvantages probably.
+>>>
+>>> Firstly, there will be two layers of overheads. vhost/net.c uses
+>>> vringh.c to channel data buffers into some struct sockets. This is the
+>>> first layer of overhead. That the virtual network device will have to
+>>> use these sockets somehow adds another layer of overhead.
+>>
+>> As I said, it doesn't work like vhost and no socket is needed at all.
+>>
+>>
+>>> Secondly, probing, intialization and de-initialization of the virtual
+>>> network_device are already non-trivial. I'll likely copy this part
+>>> almost verbatim from virtio_net.c in the end. So in the end, there will
+>>> be more duplicate code.
+>>
+>> It will be a new type of network device instead of virtio, you don't
+>> need to care any virtio stuffs but vringh in your codes. So it looks to
+>> me it would be much simpler and compact.
+>>
+>> But I'm not saying your method is no way to go, but you should deal with
+>> lots of other issues like I've replied in the previous mail. What you
+>> want to achieve is
+>>
+>> 1) Host (virtio-pci) <-> virtio ring <-> virtual eth device <-> virtio
+>> ring <-> Endpoint (virtio with customized config_ops).
+>>
+>> But I suggest is
+>>
+>> 2) Host (virtio-pci) <-> virtio ring <-> virtual eth device <-> vringh
+>> vring (virtio ring in the Host) <-> network device
+>>
+>> The differences is.
+>> - Complexity: In your proposal, there will be two virtio devices and 4
+>> virtqueues. It means you need to prepare two sets of features, config
+>> ops etc. And dealing with inconsistent feature will be a pain. It may
+>> work for simple case like a virtio-net device with only _F_MAC, but it
+>> would be hard to be expanded. If we decide to go for vringh, there will
+>> be a single virtio device and 2 virtqueues. In the endpoint part, it
+>> will be 2 vringh vring (which is actually point the same virtqueue from
+>> Host side) and a normal network device. There's no need for dealing with
+>> inconsistency, since vringh basically sever as a a device
+>> implementation, the feature negotiation is just between device (network
+>> device with vringh) and driver (virtito-pci) from the view of Linux
+>> running on the PCI Host.
+>> - Maintainability: A third path for dealing virtio ring. We've already
+>> had vhost and vringh, a third path will add a lot of overhead when
+>> trying to maintaining them. My proposal will try to reuse vringh,
+>> there's no need a new path.
+>> - Layer violation: We want to hide the transport details from the device
+>> and make virito-net device can be used without modification. But your
+>> codes try to poke information like virtnet_info. My proposal is to just
+>> have a new networking device that won't need to care virtio at all. It's
+>> not that hard as you imagine to have a new type of netdev, I suggest to
+>> take a look at how caif_virtio is done, it would be helpful.
+>>
+>> If you still decide to go with two two virtio device model, you need
+>> probably:
+>> - Proving two sets of config and features, and deal with inconsistency
+>> - Try to reuse the vringh codes
+>> - Do not refer internal structures from virtio-net.c
+>>
+>> But I recommend to take a step of trying vringh method which should be
+>> much simpler.
+>>
+>> Thanks
+>>
+>>
+>>> Thank you for your patience!
+>>>
+>>> Best,
+>>> Haotian
+
