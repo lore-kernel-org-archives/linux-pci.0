@@ -2,82 +2,128 @@ Return-Path: <SRS0=rPsZ=ZV=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FAKE_REPLY_C,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D112CC432C0
-	for <linux-pci@archiver.kernel.org>; Fri, 29 Nov 2019 14:58:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D46CC432C3
+	for <linux-pci@archiver.kernel.org>; Fri, 29 Nov 2019 15:46:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 946D1217BA
-	for <linux-pci@archiver.kernel.org>; Fri, 29 Nov 2019 14:58:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1575039532;
-	bh=sXa4biqXFrdIASdos+I8wNXn3kPutmv7T3yShrfLJYc=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=QRGYXB758xgbcFQiL7H0Be7agFqUtSs7X6mS4120r3/LUz+Y2n2/C3Akt+LZII4fx
-	 LoqfzOBdOp1fw0eZsb67+lq4cQbZSRliKYrgzQAYCjfnY0N9N4+7HlT0t6k0q65EsT
-	 7vnbG5hm/Tp6ZgyNtyrpiP0k4k0OQbrLqMncq2x4=
+	by mail.kernel.org (Postfix) with ESMTP id 599CC2075C
+	for <linux-pci@archiver.kernel.org>; Fri, 29 Nov 2019 15:46:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726903AbfK2O6w (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 29 Nov 2019 09:58:52 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33518 "EHLO mail.kernel.org"
+        id S1726928AbfK2Pqd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 29 Nov 2019 10:46:33 -0500
+Received: from foss.arm.com ([217.140.110.172]:49556 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726843AbfK2O6w (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 29 Nov 2019 09:58:52 -0500
-Received: from localhost (173-25-83-245.client.mchsi.com [173.25.83.245])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 48F572070B;
-        Fri, 29 Nov 2019 14:58:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1575039531;
-        bh=sXa4biqXFrdIASdos+I8wNXn3kPutmv7T3yShrfLJYc=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=ePCl2vGvwf25XknBMUXShUiD5Dm4gh3ukeu0fzByCh5QCk/bltf7zbb8Y+Kdq9OAV
-         eo6vGyjzZYCm0U+IqCYpqz2xzBLm+69qzeilJwbmFzvclzsbO9HQdqj+MWW0lzBgp7
-         rRFyv8u0ARhObnGiEDlkaH5i8p67GSUaklhu2EPI=
-Date:   Fri, 29 Nov 2019 08:58:49 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     ranshalit@gmail.com
-Cc:     bjorn@helgaas.com, linux-pci@vger.kernel.org
-Subject: Re: [Bug 205701] New: Can't access RAM from PCIe
-Message-ID: <20191129145849.GA203450@google.com>
+        id S1726808AbfK2Pqd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 29 Nov 2019 10:46:33 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id A832C30E;
+        Fri, 29 Nov 2019 07:46:32 -0800 (PST)
+Received: from localhost (unknown [10.37.6.20])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 214B93F68E;
+        Fri, 29 Nov 2019 07:46:31 -0800 (PST)
+Date:   Fri, 29 Nov 2019 15:46:30 +0000
+From:   Andrew Murray <andrew.murray@arm.com>
+To:     Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
+Cc:     maz@kernel.org, linux-kernel@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Eric Anholt <eric@anholt.net>,
+        Stefan Wahren <wahrenst@gmx.net>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com,
+        mbrugger@suse.com, phil@raspberrypi.org, jeremy.linton@arm.com,
+        linux-pci@vger.kernel.org, linux-rpi-kernel@lists.infradead.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v3 5/7] PCI: brcmstb: add MSI capability
+Message-ID: <20191129154629.GF43905@e119886-lin.cambridge.arm.com>
+References: <20191126091946.7970-1-nsaenzjulienne@suse.de>
+ <20191126091946.7970-6-nsaenzjulienne@suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <bug-205701-41252@https.bugzilla.kernel.org/>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20191126091946.7970-6-nsaenzjulienne@suse.de>
+User-Agent: Mutt/1.10.1+81 (426a6c1) (2018-08-26)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Nov 29, 2019 at 06:59:48AM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=205701
-> ...
+On Tue, Nov 26, 2019 at 10:19:43AM +0100, Nicolas Saenz Julienne wrote:
+> From: Jim Quinlan <james.quinlan@broadcom.com>
 > 
-> Using Intel Xeon computer with linux kernel 4.18.0 centos8.
-> Trying to access RAM (with DMA) using FPGA  fails in this computer.
+> This adds MSI support to the Broadcom STB PCIe host controller. The MSI
+> controller is physically located within the PCIe block, however, there
+> is no reason why the MSI controller could not be moved elsewhere in the
+> future. MSIX is not supported by the HW.
 > 
-> 1. I tried to add intel_iommu=off - it did not help.
+> Since the internal Brcmstb MSI controller is intertwined with the PCIe
+> controller, it is not its own platform device but rather part of the
+> PCIe platform device.
 > 
-> 2. Installing windows on same PC - FPGA can access RAM using DMA without
-> issues.
+> Signed-off-by: Jim Quinlan <james.quinlan@broadcom.com>
+> Co-developed-by: Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
+> Signed-off-by: Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
+> Reviewed-by: Marc Zyngier <maz@kernel.org>
 > 
-> 3. using another PC (Intel Duo) with same linux and OS - FPGA access works.  
+> ---
 > 
-> FPGA access the RAM using a physical address provided by a kernel module which
-> allocates physical continuous memory in PC. (the module works perfectly with
-> Intel Duo on exactly same OS and kernel).
+> Changes since v2 (kept Marc's Reviewed-by as changes didn't affect irq
+> subsystem stuff or seem petty enough):
+>   - Use standard APIs on register operations
+>   - Get rid of revision code
 
-Hi, thanks for the report!  Can you please attach the complete dmesg
-and "sudo lspci -vv" output for the working and non-working v4.18
-kernels to the bugzilla?
+Do any RPI4's have a HW revision of less than 33?
 
-Then please try to reproduce the problem on the current v5.4 kernel
-and attach the v5.4 dmesg log.  If v5.4 fails, we'll have to debug it.
-If v5.4 works, figure out what fixed it (by comparing dmesg logs or by
-bisection) and backport it to v4.18.
 
-Bjorn
+>   - Update rules to msi_target_addr selection
+>   - Remove unwarranted MSI_FLAG_PCI_MSIX
+>   - Small cosmetic changes
+> 
+> Changes since v1:
+>   - Move revision code and some registers to this patch
+>   - Use PCIE_MSI_IRQ_DOMAIN in Kconfig
+>   - Remove redundant register read from ISR
+>   - Fail probe on MSI init error
+>   - Get rid of msi_internal
+>   - Use bitmap family of functions
+>   - Use edge triggered setup
+>   - Add comment regarding MultiMSI
+>   - Simplify compose_msi_msg to avoid reg read
+> 
+> This is based on Jim's original submission[1] with some slight changes
+> regarding how pcie->msi_target_addr is decided.
+> 
+> [1] https://patchwork.kernel.org/patch/10605955/
+> 
+>  drivers/pci/controller/Kconfig        |   1 +
+>  drivers/pci/controller/pcie-brcmstb.c | 261 +++++++++++++++++++++++++-
+>  2 files changed, 261 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+> index 27504f108ee5..918e283bbff1 100644
+
+
+> +
+> +static void brcm_msi_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+> +{
+> +	struct brcm_msi *msi = irq_data_get_irq_chip_data(data);
+> +
+> +	msg->address_lo = lower_32_bits(msi->target_addr);
+> +	msg->address_hi = upper_32_bits(msi->target_addr);
+> +	msg->data = 0x6540 | data->hwirq;
+
+NIT: Perhaps this 0x6540 can be a define - just in the same way we have a define
+for PCIE_MISC_MSI_DATA_CONFIG_VAL.
+
+Thanks,
+
+Andrew Murray
+
+> +}
+> +
+> -- 
+> 2.24.0
+> 
