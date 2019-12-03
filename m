@@ -5,51 +5,51 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8501EC432C0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D032EC43215
 	for <linux-pci@archiver.kernel.org>; Tue,  3 Dec 2019 04:57:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5C5272073C
+	by mail.kernel.org (Postfix) with ESMTP id A882A2073C
 	for <linux-pci@archiver.kernel.org>; Tue,  3 Dec 2019 04:57:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="AWQOz60q"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="NC7qCtI/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727205AbfLCE5x (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 2 Dec 2019 23:57:53 -0500
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:38594 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727200AbfLCE5x (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Dec 2019 23:57:53 -0500
-Received: by mail-wr1-f66.google.com with SMTP id y17so1977947wrh.5
-        for <linux-pci@vger.kernel.org>; Mon, 02 Dec 2019 20:57:52 -0800 (PST)
+        id S1727123AbfLCE5n (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 2 Dec 2019 23:57:43 -0500
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:38581 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727111AbfLCE5m (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Dec 2019 23:57:42 -0500
+Received: by mail-wr1-f68.google.com with SMTP id y17so1977672wrh.5
+        for <linux-pci@vger.kernel.org>; Mon, 02 Dec 2019 20:57:41 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=HjO9w3K+DhLv6DGPP4CnPl74iRTy3HmYOjIjOtLnJCY=;
-        b=AWQOz60qWcCWEkaMeyRO8A5AxxeLAoQZP6hAGBtxSHWoN4lNdoXqrgR07FDW4e+fnb
-         sFmpDEYQCRONOLhzXuOyu7ExgpFBOozVR9P5M3xr1xogB/2GY53RENN8cQQZ0P347FxF
-         zwWeoCAEg27FgXzw14RiJoJbq2kc2KZ4BX6aw=
+        bh=nXvG0R/mHJhZtvaHjI5Fz8SYCNjqnqabYZE/lb6D4Xc=;
+        b=NC7qCtI/0/BtCxnhKEq1obTz/hQ+EygYwJfBd+NV3lUcEmxrvwuZnpHFO0Zy51lsbD
+         Qrc8q3e6bMJ6yRU7sNgwEX8INATHGLW5UjPuQljT7xsY6uRulblnbYayh9gdg+YHAHpY
+         XCOPSobaJZajoLV7U37DXSil9mh8zBs41FljI=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=HjO9w3K+DhLv6DGPP4CnPl74iRTy3HmYOjIjOtLnJCY=;
-        b=EAQGv8/fKQVcSmZKWNowhZqnL7p1BgbClrsQLmdTw3iahFq1DV/lPpjfFbYpJHb7rW
-         QJUxJvi02VNc+KSOeMObHtDUh5BrD98g7SEI9gU8xPoJvmu2eLmYxKagyMQXQrkcadWi
-         XsZ0OReIcWJvqTBSsxnjEIwQ85FMBsBwMOJ8NezeyIIcK2fVLOd1RHrbQ3LBef/3Laz8
-         F++lUbQr8i8cXl/uCLzWYPpn73tRDlgtN1FG3qKQg0garHwMuXR1IncfnBry5XxNulKZ
-         NrfruAuZQQGXCskaN8fodXH7REOTa6vT8Uy1SZyomEm+VP5ah6BAn2wZWeIEw/UyEKPb
-         Rx0Q==
-X-Gm-Message-State: APjAAAUWK1rN7cQefP1lOBntaMCwDryewzTGZhlql9mDqyPJw+S/dnU0
-        im6ggykiPxMp23DgB9WH1kD8rg==
-X-Google-Smtp-Source: APXvYqxxiInqCFAKGleXoy0QGPccOagSHyxip9EJUh3/UhqlN+wzKeT3tfaAlOULlO9vlMPvbZeU3w==
-X-Received: by 2002:adf:e78b:: with SMTP id n11mr2819529wrm.10.1575349071509;
-        Mon, 02 Dec 2019 20:57:51 -0800 (PST)
+        bh=nXvG0R/mHJhZtvaHjI5Fz8SYCNjqnqabYZE/lb6D4Xc=;
+        b=NOL/BTYyBZKOgJavMotvsKqIR74bWdU8wMdtsajG2nJRriarQMpfcdVzggST6uR65P
+         oxuIBxtJBNAVoqBMPCU4FPPqMM+TdnW+qlAXx5MstYUzqrFxXT4QGHI+ZqNYe4q5RXzx
+         yysESBzE1zBsvIUZ4GkUN5ArHFgrr9IS/+jGbRG7F+Ao9jVOqMiKwrekATpcuOASjJjN
+         KLSJiOoDEQKrPzmBJGOVLcujIo05VS3n/0jZLWm1KAQbmiD7cQWjNTpDmZ4sxK1HdGYU
+         H1nDKIZSr2t3CzxFmgWTxd/4+SuYnOnGbJmkxbkfvULXiagCDcI3DXgoMsewD7PwroNZ
+         9CDg==
+X-Gm-Message-State: APjAAAW9j43RqK5QhfEUS0K0crzApeI0HL98Pm+xt1whGK0OmQjxpgwX
+        Px50JV63BNDmWP761fQ7PWuUxA==
+X-Google-Smtp-Source: APXvYqyeyhxkt64OSEDDMxPNkKbsKaW8g2BtcAUQCCwGuP7l2XKASAjsKBoPheHZqt+DSpNftSYo3g==
+X-Received: by 2002:adf:eb89:: with SMTP id t9mr2839721wrn.5.1575349060655;
+        Mon, 02 Dec 2019 20:57:40 -0800 (PST)
 Received: from mannams-OptiPlex-7010.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id k4sm1667807wmk.26.2019.12.02.20.57.46
+        by smtp.gmail.com with ESMTPSA id k4sm1667807wmk.26.2019.12.02.20.57.35
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Mon, 02 Dec 2019 20:57:50 -0800 (PST)
+        Mon, 02 Dec 2019 20:57:40 -0800 (PST)
 From:   Srinath Mannam <srinath.mannam@broadcom.com>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -62,9 +62,9 @@ Cc:     bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-kernel@vger.kernel.org, Ray Jui <ray.jui@broadcom.com>,
         Srinath Mannam <srinath.mannam@broadcom.com>
-Subject: [PATCH v3 4/6] arm: dts: Change PCIe INTx mapping for NSP
-Date:   Tue,  3 Dec 2019 10:27:04 +0530
-Message-Id: <1575349026-8743-5-git-send-email-srinath.mannam@broadcom.com>
+Subject: [PATCH v3 2/6] PCI: iproc: Add INTx support with better modeling
+Date:   Tue,  3 Dec 2019 10:27:02 +0530
+Message-Id: <1575349026-8743-3-git-send-email-srinath.mannam@broadcom.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1575349026-8743-1-git-send-email-srinath.mannam@broadcom.com>
 References: <1575349026-8743-1-git-send-email-srinath.mannam@broadcom.com>
@@ -75,106 +75,205 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Ray Jui <ray.jui@broadcom.com>
 
-Change the PCIe INTx mapping to model the 4 INTx interrupts in the
-IRQ domain of the iProc PCIe controller itself
+Add PCIe legacy interrupt INTx support to the iProc PCIe driver by
+modeling it with its own IRQ domain. All 4 interrupts INTA, INTB, INTC,
+INTD share the same interrupt line connected to the GIC in the system,
+while the status of each INTx can be obtained through the INTX CSR
+register
 
 Signed-off-by: Ray Jui <ray.jui@broadcom.com>
 Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
 ---
- arch/arm/boot/dts/bcm-nsp.dtsi | 45 ++++++++++++++++++++++++++++++++++++------
- 1 file changed, 39 insertions(+), 6 deletions(-)
+ drivers/pci/controller/pcie-iproc.c | 100 +++++++++++++++++++++++++++++++++++-
+ drivers/pci/controller/pcie-iproc.h |   6 +++
+ 2 files changed, 104 insertions(+), 2 deletions(-)
 
-diff --git a/arch/arm/boot/dts/bcm-nsp.dtsi b/arch/arm/boot/dts/bcm-nsp.dtsi
-index da6d70f..6d73221 100644
---- a/arch/arm/boot/dts/bcm-nsp.dtsi
-+++ b/arch/arm/boot/dts/bcm-nsp.dtsi
-@@ -529,8 +529,11 @@
- 		reg = <0x18012000 0x1000>;
+diff --git a/drivers/pci/controller/pcie-iproc.c b/drivers/pci/controller/pcie-iproc.c
+index 2d457bf..e90c22e 100644
+--- a/drivers/pci/controller/pcie-iproc.c
++++ b/drivers/pci/controller/pcie-iproc.c
+@@ -14,6 +14,7 @@
+ #include <linux/delay.h>
+ #include <linux/interrupt.h>
+ #include <linux/irqchip/arm-gic-v3.h>
++#include <linux/irqchip/chained_irq.h>
+ #include <linux/platform_device.h>
+ #include <linux/of_address.h>
+ #include <linux/of_pci.h>
+@@ -270,6 +271,7 @@ enum iproc_pcie_reg {
  
- 		#interrupt-cells = <1>;
--		interrupt-map-mask = <0 0 0 0>;
--		interrupt-map = <0 0 0 0 &gic GIC_SPI 131 IRQ_TYPE_LEVEL_HIGH>;
-+		interrupt-map-mask = <0 0 0 7>;
-+		interrupt-map = <0 0 0 1 &pcie0_intc 0>,
-+				<0 0 0 2 &pcie0_intc 1>,
-+				<0 0 0 3 &pcie0_intc 2>,
-+				<0 0 0 4 &pcie0_intc 3>;
+ 	/* enable INTx */
+ 	IPROC_PCIE_INTX_EN,
++	IPROC_PCIE_INTX_CSR,
  
- 		linux,pci-domain = <0>;
+ 	/* outbound address mapping */
+ 	IPROC_PCIE_OARR0,
+@@ -314,6 +316,7 @@ static const u16 iproc_pcie_reg_paxb_bcma[] = {
+ 	[IPROC_PCIE_CFG_ADDR]		= 0x1f8,
+ 	[IPROC_PCIE_CFG_DATA]		= 0x1fc,
+ 	[IPROC_PCIE_INTX_EN]		= 0x330,
++	[IPROC_PCIE_INTX_CSR]		= 0x334,
+ 	[IPROC_PCIE_LINK_STATUS]	= 0xf0c,
+ };
  
-@@ -559,6 +562,14 @@
- 				     <GIC_SPI 130 IRQ_TYPE_LEVEL_HIGH>;
- 			brcm,pcie-msi-inten;
- 		};
+@@ -325,6 +328,7 @@ static const u16 iproc_pcie_reg_paxb[] = {
+ 	[IPROC_PCIE_CFG_ADDR]		= 0x1f8,
+ 	[IPROC_PCIE_CFG_DATA]		= 0x1fc,
+ 	[IPROC_PCIE_INTX_EN]		= 0x330,
++	[IPROC_PCIE_INTX_CSR]		= 0x334,
+ 	[IPROC_PCIE_OARR0]		= 0xd20,
+ 	[IPROC_PCIE_OMAP0]		= 0xd40,
+ 	[IPROC_PCIE_OARR1]		= 0xd28,
+@@ -341,6 +345,7 @@ static const u16 iproc_pcie_reg_paxb_v2[] = {
+ 	[IPROC_PCIE_CFG_ADDR]		= 0x1f8,
+ 	[IPROC_PCIE_CFG_DATA]		= 0x1fc,
+ 	[IPROC_PCIE_INTX_EN]		= 0x330,
++	[IPROC_PCIE_INTX_CSR]		= 0x334,
+ 	[IPROC_PCIE_OARR0]		= 0xd20,
+ 	[IPROC_PCIE_OMAP0]		= 0xd40,
+ 	[IPROC_PCIE_OARR1]		= 0xd28,
+@@ -846,9 +851,95 @@ static int iproc_pcie_check_link(struct iproc_pcie *pcie)
+ 	return link_is_active ? 0 : -ENODEV;
+ }
+ 
+-static void iproc_pcie_enable(struct iproc_pcie *pcie)
++static int iproc_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
++			       irq_hw_number_t hwirq)
+ {
++	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
++	irq_set_chip_data(irq, domain->host_data);
 +
-+		pcie0_intc: interrupt-controller {
-+			compatible = "brcm,iproc-intc";
-+			interrupt-controller;
-+			#interrupt-cells = <1>;
-+			interrupt-parent = <&gic>;
-+			interrupts = <GIC_SPI 131 IRQ_TYPE_LEVEL_HIGH>;
-+		};
- 	};
- 
- 	pcie1: pcie@18013000 {
-@@ -566,8 +577,11 @@
- 		reg = <0x18013000 0x1000>;
- 
- 		#interrupt-cells = <1>;
--		interrupt-map-mask = <0 0 0 0>;
--		interrupt-map = <0 0 0 0 &gic GIC_SPI 137 IRQ_TYPE_LEVEL_HIGH>;
-+		interrupt-map-mask = <0 0 0 7>;
-+		interrupt-map = <0 0 0 1 &pcie1_intc 0>,
-+				<0 0 0 2 &pcie1_intc 1>,
-+				<0 0 0 3 &pcie1_intc 2>,
-+				<0 0 0 4 &pcie1_intc 3>;
- 
- 		linux,pci-domain = <1>;
- 
-@@ -596,6 +610,14 @@
- 				     <GIC_SPI 136 IRQ_TYPE_LEVEL_HIGH>;
- 			brcm,pcie-msi-inten;
- 		};
++	return 0;
++}
 +
-+		pcie1_intc: interrupt-controller {
-+			compatible = "brcm,iproc-intc";
-+			interrupt-controller;
-+			#interrupt-cells = <1>;
-+			interrupt-parent = <&gic>;
-+			interrupts = <GIC_SPI 137 IRQ_TYPE_LEVEL_HIGH>;
-+		};
- 	};
- 
- 	pcie2: pcie@18014000 {
-@@ -603,8 +625,11 @@
- 		reg = <0x18014000 0x1000>;
- 
- 		#interrupt-cells = <1>;
--		interrupt-map-mask = <0 0 0 0>;
--		interrupt-map = <0 0 0 0 &gic GIC_SPI 143 IRQ_TYPE_LEVEL_HIGH>;
-+		interrupt-map-mask = <0 0 0 7>;
-+		interrupt-map = <0 0 0 1 &pcie2_intc 0>,
-+				<0 0 0 2 &pcie2_intc 1>,
-+				<0 0 0 3 &pcie2_intc 2>,
-+				<0 0 0 4 &pcie2_intc 3>;
- 
- 		linux,pci-domain = <2>;
- 
-@@ -633,6 +658,14 @@
- 				     <GIC_SPI 142 IRQ_TYPE_LEVEL_HIGH>;
- 			brcm,pcie-msi-inten;
- 		};
++static const struct irq_domain_ops intx_domain_ops = {
++	.map = iproc_pcie_intx_map,
++};
 +
-+		pcie2_intc: interrupt-controller {
-+			compatible = "brcm,iproc-intc";
-+			interrupt-controller;
-+			#interrupt-cells = <1>;
-+			interrupt-parent = <&gic>;
-+			interrupts = <GIC_SPI 143 IRQ_TYPE_LEVEL_HIGH>;
-+		};
- 	};
++static void iproc_pcie_isr(struct irq_desc *desc)
++{
++	struct irq_chip *chip = irq_desc_get_chip(desc);
++	struct iproc_pcie *pcie;
++	struct device *dev;
++	unsigned long status;
++	u32 bit, virq;
++
++	chained_irq_enter(chip, desc);
++	pcie = irq_desc_get_handler_data(desc);
++	dev = pcie->dev;
++
++	/* go through INTx A, B, C, D until all interrupts are handled */
++	do {
++		status = iproc_pcie_read_reg(pcie, IPROC_PCIE_INTX_CSR);
++		for_each_set_bit(bit, &status, PCI_NUM_INTX) {
++			virq = irq_find_mapping(pcie->irq_domain, bit);
++			if (virq)
++				generic_handle_irq(virq);
++			else
++				dev_err(dev, "unexpected INTx%u\n", bit);
++		}
++	} while ((status & SYS_RC_INTX_MASK) != 0);
++
++	chained_irq_exit(chip, desc);
++}
++
++static int iproc_pcie_intx_enable(struct iproc_pcie *pcie)
++{
++	struct device *dev = pcie->dev;
++	struct device_node *node;
++	int ret;
++
+ 	iproc_pcie_write_reg(pcie, IPROC_PCIE_INTX_EN, SYS_RC_INTX_MASK);
++	/*
++	 * BCMA devices do not map INTx the same way as platform devices. All
++	 * BCMA needs is the above code to enable INTx
++	 */
++
++	node = of_get_compatible_child(dev->of_node, "brcm,iproc-intc");
++	if (node)
++		pcie->irq = of_irq_get(node, 0);
++
++	if (!node || pcie->irq <= 0)
++		return 0;
++
++	/* set IRQ handler */
++	irq_set_chained_handler_and_data(pcie->irq, iproc_pcie_isr, pcie);
++
++	/* add IRQ domain for INTx */
++	pcie->irq_domain = irq_domain_add_linear(node, PCI_NUM_INTX,
++						 &intx_domain_ops, pcie);
++	if (!pcie->irq_domain) {
++		dev_err(dev, "failed to add INTx IRQ domain\n");
++		ret = -ENOMEM;
++		goto err_rm_handler_data;
++	}
++
++	return 0;
++
++err_rm_handler_data:
++	of_node_put(node);
++	irq_set_chained_handler_and_data(pcie->irq, NULL, NULL);
++
++	return ret;
++}
++
++static void iproc_pcie_intx_disable(struct iproc_pcie *pcie)
++{
++	iproc_pcie_write_reg(pcie, IPROC_PCIE_INTX_EN, 0x0);
++
++	if (pcie->irq <= 0)
++		return;
++
++	irq_domain_remove(pcie->irq_domain);
++	irq_set_chained_handler_and_data(pcie->irq, NULL, NULL);
+ }
  
- 	thermal-zones {
+ static inline bool iproc_pcie_ob_is_valid(struct iproc_pcie *pcie,
+@@ -1537,7 +1628,11 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+ 		goto err_power_off_phy;
+ 	}
+ 
+-	iproc_pcie_enable(pcie);
++	ret = iproc_pcie_intx_enable(pcie);
++	if (ret) {
++		dev_err(dev, "failed to enable INTx\n");
++		goto err_power_off_phy;
++	}
+ 
+ 	if (IS_ENABLED(CONFIG_PCI_MSI))
+ 		if (iproc_pcie_msi_enable(pcie))
+@@ -1582,6 +1677,7 @@ int iproc_pcie_remove(struct iproc_pcie *pcie)
+ 	pci_remove_root_bus(pcie->root_bus);
+ 
+ 	iproc_pcie_msi_disable(pcie);
++	iproc_pcie_intx_disable(pcie);
+ 
+ 	phy_power_off(pcie->phy);
+ 	phy_exit(pcie->phy);
+diff --git a/drivers/pci/controller/pcie-iproc.h b/drivers/pci/controller/pcie-iproc.h
+index 4f03ea5..103e568 100644
+--- a/drivers/pci/controller/pcie-iproc.h
++++ b/drivers/pci/controller/pcie-iproc.h
+@@ -74,6 +74,9 @@ struct iproc_msi;
+  * @ib: inbound mapping related parameters
+  * @ib_map: outbound mapping region related parameters
+  *
++ * @irq: interrupt line wired to the generic GIC for INTx
++ * @irq_domain: IRQ domain for INTx
++ *
+  * @need_msi_steer: indicates additional configuration of the iProc PCIe
+  * controller is required to steer MSI writes to external interrupt controller
+  * @msi: MSI data
+@@ -102,6 +105,9 @@ struct iproc_pcie {
+ 	struct iproc_pcie_ib ib;
+ 	const struct iproc_pcie_ib_map *ib_map;
+ 
++	int irq;
++	struct irq_domain *irq_domain;
++
+ 	bool need_msi_steer;
+ 	struct iproc_msi *msi;
+ };
 -- 
 2.7.4
 
