@@ -2,213 +2,124 @@ Return-Path: <SRS0=0eF7=Z2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BEE9FC43603
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Dec 2019 11:59:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C33DEC43603
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Dec 2019 16:07:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 957B720863
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Dec 2019 11:59:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A3F8F2077B
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Dec 2019 16:07:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727703AbfLDL7S (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 4 Dec 2019 06:59:18 -0500
-Received: from foss.arm.com ([217.140.110.172]:55140 "EHLO foss.arm.com"
+        id S1728203AbfLDQHe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 4 Dec 2019 11:07:34 -0500
+Received: from foss.arm.com ([217.140.110.172]:58154 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727469AbfLDL7S (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 4 Dec 2019 06:59:18 -0500
+        id S1727878AbfLDQHe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 4 Dec 2019 11:07:34 -0500
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 0F59931B;
-        Wed,  4 Dec 2019 03:59:17 -0800 (PST)
-Received: from [192.168.1.124] (unknown [172.31.20.19])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 9F8593F68E;
-        Wed,  4 Dec 2019 03:59:14 -0800 (PST)
-Subject: Re: [PATCH] PCI: layerscape: Add the SRIOV support in host side
-To:     Xiaowei Bao <xiaowei.bao@nxp.com>, Marc Zyngier <maz@kernel.org>
-Cc:     Roy Zang <roy.zang@nxp.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Z.q. Hou" <zhiqiang.hou@nxp.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "M.h. Lian" <minghuan.lian@nxp.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "andrew.murray@arm.com" <andrew.murray@arm.com>,
-        "frowand.list@gmail.com" <frowand.list@gmail.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>
-References: <20191202104506.27916-1-xiaowei.bao@nxp.com>
- <606a00a2edcf077aa868319e0daa4dbc@www.loen.fr>
- <AM5PR04MB3299A5A504DEFEF3E137A27CF5420@AM5PR04MB3299.eurprd04.prod.outlook.com>
- <3dcdf44eb76390730658e3f4d932620c@www.loen.fr>
- <8f56c2d9-ab01-a91e-902f-a61def0e8ce8@arm.com>
- <AM5PR04MB3299BFC34A4666B7A9C12B13F55D0@AM5PR04MB3299.eurprd04.prod.outlook.com>
-From:   Robin Murphy <robin.murphy@arm.com>
-Message-ID: <12545949-74bb-214f-0803-248ebd509765@arm.com>
-Date:   Wed, 4 Dec 2019 11:59:16 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; rv:68.0) Gecko/20100101
- Thunderbird/68.2.2
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id D0A7831B;
+        Wed,  4 Dec 2019 08:07:32 -0800 (PST)
+Received: from localhost (unknown [10.37.6.20])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 3FA3A3F52E;
+        Wed,  4 Dec 2019 08:07:32 -0800 (PST)
+Date:   Wed, 4 Dec 2019 16:07:30 +0000
+From:   Andrew Murray <andrew.murray@arm.com>
+To:     Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc:     Ray Jui <ray.jui@broadcom.com>,
+        Srinath Mannam <srinath.mannam@broadcom.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Ray Jui <rjui@broadcom.com>, Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
+        linux-pci@vger.kernel.org, devicetree <devicetree@vger.kernel.org>,
+        linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3 2/6] PCI: iproc: Add INTx support with better modeling
+Message-ID: <20191204160729.GJ18399@e119886-lin.cambridge.arm.com>
+References: <1575349026-8743-1-git-send-email-srinath.mannam@broadcom.com>
+ <1575349026-8743-3-git-send-email-srinath.mannam@broadcom.com>
+ <20191203155514.GE18399@e119886-lin.cambridge.arm.com>
+ <CAHp75Vf7d=Gw24MTq2q3BKspkLEDDM24GVK4Zh_4zfZEzVuZjw@mail.gmail.com>
+ <40fffa66-4b06-a851-84c2-4de36d5c6777@broadcom.com>
+ <CAHp75VfyKAg4OhzUa4swGXOGTvJ5fVO8mhGSG=5HAUP__M-URQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <AM5PR04MB3299BFC34A4666B7A9C12B13F55D0@AM5PR04MB3299.eurprd04.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-GB
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAHp75VfyKAg4OhzUa4swGXOGTvJ5fVO8mhGSG=5HAUP__M-URQ@mail.gmail.com>
+User-Agent: Mutt/1.10.1+81 (426a6c1) (2018-08-26)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 2019-12-04 4:34 am, Xiaowei Bao wrote:
+On Wed, Dec 04, 2019 at 10:29:51AM +0200, Andy Shevchenko wrote:
+> On Wed, Dec 4, 2019 at 12:09 AM Ray Jui <ray.jui@broadcom.com> wrote:
+> > On 12/3/19 11:27 AM, Andy Shevchenko wrote:
+> > > On Tue, Dec 3, 2019 at 5:55 PM Andrew Murray <andrew.murray@arm.com> wrote:
+> > >> On Tue, Dec 03, 2019 at 10:27:02AM +0530, Srinath Mannam wrote:
+> > >
+> > >>> +     /* go through INTx A, B, C, D until all interrupts are handled */
+> > >>> +     do {
+> > >>> +             status = iproc_pcie_read_reg(pcie, IPROC_PCIE_INTX_CSR);
+> > >>
+> > >> By performing this read once and outside of the do/while loop you may improve
+> > >> performance. I wonder how probable it is to get another INTx whilst handling
+> > >> one?
+> > >
+> > > May I ask how it can be improved?
+> > > One read will be needed any way, and so does this code.
+> > >
+> >
+> > I guess the current code will cause the IPROC_PCIE_INTX_CSR register to
+> > be read TWICE, if it's ever set to start with.
+> >
+> > But then if we do it outside of the while loop, if we ever receive an
+> > interrupt while servicing one, the interrupt will still need to be
+> > serviced, and in this case, it will cause additional context switch
+> > overhead by going out and back in the interrupt context.
+
+Yes it's a trade off - if you dropped the do/while loop and thus had a single
+read you'd reduce the overhead on interrupt handling in every case except
+where another INTx is received whilst in this function. But as you point out
+each time that does happen you'll pay the penalty of a context switch.
+
+I don't have any knowledge of this platform so I have no idea if such a change
+would be good/bad or material. However I thought I'd point it out. Looking at
+the other controller drivers, some handle in a loop and some don't.
+
+
+> >
+> > My take is that it's probably more ideal to leave this portion of code
+> > as it is.
+> 
+> Can't we simple drop a do-while completely and leave only
+> for_each_set_bit() loop?
+> 
+
+I'm happy either way.
+
+Thanks,
+
+Andrew Murray
+
+> >
+> > >>> +             for_each_set_bit(bit, &status, PCI_NUM_INTX) {
+> > >>> +                     virq = irq_find_mapping(pcie->irq_domain, bit);
+> > >>> +                     if (virq)
+> > >>> +                             generic_handle_irq(virq);
+> > >>> +                     else
+> > >>> +                             dev_err(dev, "unexpected INTx%u\n", bit);
+> > >>> +             }
+> > >>> +     } while ((status & SYS_RC_INTX_MASK) != 0);
+> > >
 > 
 > 
->> -----Original Message-----
->> From: Robin Murphy <robin.murphy@arm.com>
->> Sent: 2019年12月3日 23:20
->> To: Marc Zyngier <maz@kernel.org>; Xiaowei Bao <xiaowei.bao@nxp.com>
->> Cc: Roy Zang <roy.zang@nxp.com>; lorenzo.pieralisi@arm.com;
->> devicetree@vger.kernel.org; linux-pci@vger.kernel.org; Z.q. Hou
->> <zhiqiang.hou@nxp.com>; linux-kernel@vger.kernel.org; M.h. Lian
->> <minghuan.lian@nxp.com>; robh+dt@kernel.org;
->> linux-arm-kernel@lists.infradead.org; bhelgaas@google.com;
->> andrew.murray@arm.com; frowand.list@gmail.com; Mingkai Hu
->> <mingkai.hu@nxp.com>
->> Subject: Re: [PATCH] PCI: layerscape: Add the SRIOV support in host side
->>
->> On 03/12/2019 11:51 am, Marc Zyngier wrote:
->>> On 2019-12-03 01:42, Xiaowei Bao wrote:
->>>>> -----Original Message-----
->>>>> From: Marc Zyngier <maz@misterjones.org>
->>>>> Sent: 2019年12月2日 20:48
->>>>> To: Xiaowei Bao <xiaowei.bao@nxp.com>
->>>>> Cc: robh+dt@kernel.org; frowand.list@gmail.com; M.h. Lian
->>>>> <minghuan.lian@nxp.com>; Mingkai Hu <mingkai.hu@nxp.com>; Roy
->> Zang
->>>>> <roy.zang@nxp.com>; lorenzo.pieralisi@arm.com;
->>>>> andrew.murray@arm.com; bhelgaas@google.com;
->>>>> devicetree@vger.kernel.org; linux-kernel@vger.kernel.org;
->>>>> linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
->>>>> Z.q. Hou <zhiqiang.hou@nxp.com>
->>>>> Subject: Re: [PATCH] PCI: layerscape: Add the SRIOV support in host
->>>>> side
->>>>>
->>>>> On 2019-12-02 10:45, Xiaowei Bao wrote:
->>>>>> GIC get the map relations of devid and stream id from the msi-map
->>>>>> property of DTS, our platform add this property in u-boot base on
->>>>>> the PCIe device in the bus, but if enable the vf device in kernel,
->>>>>> the vf device msi-map will not set, so the vf device can't work,
->>>>>> this patch purpose is that manage the stream id and device id map
->>>>>> relations dynamically in kernel, and make the new PCIe device work in
->> kernel.
->>>>>>
->>>>>> Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
->>>>>> ---
->>>>>>    drivers/of/irq.c                            |  9 +++
->>>>>>    drivers/pci/controller/dwc/pci-layerscape.c | 94
->>>>>> +++++++++++++++++++++++++++++
->>>>>>    drivers/pci/probe.c                         |  6 ++
->>>>>>    drivers/pci/remove.c                        |  6 ++
->>>>>>    4 files changed, 115 insertions(+)
->>>>>>
->>>>>> diff --git a/drivers/of/irq.c b/drivers/of/irq.c index
->>>>>> a296eaf..791e609 100644
->>>>>> --- a/drivers/of/irq.c
->>>>>> +++ b/drivers/of/irq.c
->>>>>> @@ -576,6 +576,11 @@ void __init of_irq_init(const struct
->>>>>> of_device_id
->>>>>> *matches)
->>>>>>        }
->>>>>>    }
->>>>>>
->>>>>> +u32 __weak ls_pcie_streamid_fix(struct device *dev, u32 rid) {
->>>>>> +    return rid;
->>>>>> +}
->>>>>> +
->>>>>>    static u32 __of_msi_map_rid(struct device *dev, struct
->>>>>> device_node  **np,
->>>>>>                    u32 rid_in)
->>>>>>    {
->>>>>> @@ -590,6 +595,10 @@ static u32 __of_msi_map_rid(struct device
->>>>>> *dev,  struct device_node **np,
->>>>>>            if (!of_map_rid(parent_dev->of_node, rid_in, "msi-map",
->>>>>>                    "msi-map-mask", np, &rid_out))
->>>>>>                break;
->>>>>> +
->>>>>> +    if (rid_out == rid_in)
->>>>>> +        rid_out = ls_pcie_streamid_fix(parent_dev, rid_in);
->>>>>
->>>>> Over my dead body. Get your firmware to properly program the LUT so
->>>>> that it presents the ITS with a reasonable topology. There is
->>>>> absolutely no way this kind of change makes it into the kernel.
->>>>
->>>> Sorry for this, I know it is not reasonable, but I have no other way,
->>>> as I know, ARM get the mapping of stream ID to request ID from the
->>>> msi-map property of DTS, if add a new device which need the stream ID
->>>> and try to get it from the msi-map of DTS, it will failed and not
->>>> work, yes? So could you give me a better advice to fix this issue, I
->>>> would really appreciate any comments or suggestions, thanks a lot.
->>>
->>> Why can't firmware expose an msi-map/msi-map-mask that has a large
->>> enough range to ensure mapping of VFs? What are the limitations of the
->>> LUT that would prevent this from being configured before the kernel
->>> boots?
 > 
-> Thanks for your comments, yes, this is the root cause, we only have 16 stream
-> IDs for PCIe domain, this is the hardware limitation, if there have enough stream
-> IDs, we can expose an msi-map/msi-map-mask for all PCIe devices in system,
-> unfortunately, the stream IDs is not enough, I think other ARM vendor have same
-> issue that they don't have enough stream IDs.
-
-Some SMMUv2 configurations may have an uncomfortably limited number of 
-context banks, but they almost always have more than enough stream ID 
-bits. Your ICID allocation policy is most certainly an issue unique to 
-Layerscape platforms.
-
-Furthermore, that argument doesn't make a whole lot of sense anyway - if 
-you don't have enough stream IDs for all possible VFs at boot time, then 
-you still won't have enough later, so pretending to support SR-IOV, only 
-for things to start subtly going wrong if the user has too many 
-endpoints active at once, isn't going to cut it.
-
->> Furthermore, note that this attempt isn't doing anything for the SMMU
->> Stream IDs, so the moment anyone tries to assign those VFs they're still going
->> to go bang anyway. Any firmware-based fixup for ID mappings, config space
->> addresses, etc. needs to be SR-IOV-aware and account for all *possible*
->> BDFs.
->>
->> On LS2085 at least, IIRC you can configure a single LUT entry to just translate
->> the Bus:Device identifier and pass some or all of the Function bits straight
->> through as the LSBs of the Stream ID, so I don't believe the relatively limited
->> number of LUT registers should be too much of an issue. For example, last
->> time I hacked on that I apparently had it set up statically like this:
->>
->> &pcie3 {
->> 	/* Squash 8:5:3 BDF down to 2:2:3 */
->> 	msi-map-mask = <0x031f>;
->> 	msi-map = <0x000 &its 0x00 0x20>,
->> 		  <0x100 &its 0x20 0x20>,
->> 		  <0x200 &its 0x40 0x20>,
->> 		  <0x300 &its 0x60 0x20>;
->> };
-> 
-> Thanks Robin, this is a effective way, but we only have total 16 stream IDs for PCIe domain,
-> and only assign 4 stream IDs for each PCIe controller if the board have 4 PCIe controllers,
-> this is the root cause, I submitted this patch to dynamically manage these stream IDs,
-> so that it looks like each PCIe controller has 16 stream IDs. I can dynamically allocate and
-> release these stream IDs based on the PCIe devices in the current system. If use your method,
-> we support up to 4 PCIe devices(2 PFs and 2 VFs), it will not achieve our purpose.
-
-Sure, that was just an example to illustrate that you don't need a 
-separate msi-map entry (and corresponding LUT entry) for each individual 
-PCI RID - that dates from before U-Boot had ICID support, so I had hacks 
-all over various kernel drivers to set them arbitrarily when I was 
-playing with the SMMU.
-
-Realistically, at this point your options are a) reserve more ICIDs for 
-PCIe and allocate them in a way that accounts for the present endpoints' 
-SR-IOV capabilities, or b) don't expose SR-IOV functionality at all on 
-the root complex if it can't be guaranteed to work properly.
-
-Robin.
+> -- 
+> With Best Regards,
+> Andy Shevchenko
