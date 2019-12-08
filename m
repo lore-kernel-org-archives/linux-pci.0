@@ -2,86 +2,101 @@ Return-Path: <SRS0=9bpa=Z6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D1E1C2D0BF
-	for <linux-pci@archiver.kernel.org>; Sun,  8 Dec 2019 20:55:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96A22C2D0BF
+	for <linux-pci@archiver.kernel.org>; Sun,  8 Dec 2019 22:08:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 45E05206D6
-	for <linux-pci@archiver.kernel.org>; Sun,  8 Dec 2019 20:55:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6F03D206D5
+	for <linux-pci@archiver.kernel.org>; Sun,  8 Dec 2019 22:08:10 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=googlemail.com header.i=@googlemail.com header.b="JiUPaF+a"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726707AbfLHUz0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 8 Dec 2019 15:55:26 -0500
-Received: from relay6-d.mail.gandi.net ([217.70.183.198]:55441 "EHLO
-        relay6-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726513AbfLHUz0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 8 Dec 2019 15:55:26 -0500
-X-Originating-IP: 88.190.179.123
-Received: from localhost (unknown [88.190.179.123])
-        (Authenticated sender: repk@triplefau.lt)
-        by relay6-d.mail.gandi.net (Postfix) with ESMTPSA id DE367C0003;
-        Sun,  8 Dec 2019 20:55:22 +0000 (UTC)
-From:   Remi Pommarel <repk@triplefau.lt>
-To:     Neil Armstrong <narmstrong@baylibre.com>,
+        id S1726684AbfLHWIJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 8 Dec 2019 17:08:09 -0500
+Received: from mail-oi1-f194.google.com ([209.85.167.194]:43689 "EHLO
+        mail-oi1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726665AbfLHWIJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 8 Dec 2019 17:08:09 -0500
+Received: by mail-oi1-f194.google.com with SMTP id x14so4635240oic.10;
+        Sun, 08 Dec 2019 14:08:09 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=googlemail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=6LcpecxJCuptWnky/wBInRHW7dBWZyoNDO8ejqGqya4=;
+        b=JiUPaF+aLz6TU175q9IIuAWCfbj1Dp34A44ajwK6wWjJuU4qAW6BB4WFznxCnlrz+m
+         11aV+yzG5hho4KnFOHqZ4MdNh0vO5men3cU1qp5cZ4yKlf8NYCo/WlL3zH/9Us1l56E2
+         zaiUI5IFBXi84lF7T6fkfCSTwUxRB+6DMpcPrFgw+839cVtn7VvEd/tz1YJlMGKUMrFv
+         cMVvpXHbsEhI+l1VNNoyP/3w2xVFStHfFJ1IDsQzMBaQj74boPcUBmJpW+MuWdDWAp4S
+         z91RVykEF70X975kRocmzBBOXgC3eOuH0yxBwNCsUrxB0bkqd2TIjaIXJztFPi8M4KID
+         6zPQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=6LcpecxJCuptWnky/wBInRHW7dBWZyoNDO8ejqGqya4=;
+        b=RFKfF3+N3VgeXEAJWocg22vGGkANgCW6zk3A93KeUHfbeZ/OFd5ZUbH45i9Q0oNybe
+         SM6A9TKT3/heLEn5KVBG6bu74Jw+HHe7KY3TaFP/AQUks97W3EeMWtWSlzLM0A8DI+xF
+         GVSxDILmZAciC4J2vkMKcpv/OfEK6XBdlzRozZ0sQ8yOYasnyFq/F215R6cm6z890Lu6
+         eG/5Tkj0qKBz5tfZS0vL5jPhaZY2ccA/aHRZVB4J7HkYQZ+8mCDynIU6fxgd8/oLzX+l
+         q84o85GFm+R1mxAMiqpjsDkSRLtP5mBw19m4SNYPu4Imxb0m5HKSoA97u6J64CuwbC8y
+         OMsA==
+X-Gm-Message-State: APjAAAWMJoo2W9LAGWfV6bui17gBqhmP/zf2IKD07K2a0CaQPSOWJJyS
+        VcjB+l4bRf+NdU8gUMLIiPRGklF6qLc+zl7mZQQ=
+X-Google-Smtp-Source: APXvYqyhNhm0JNicy/loq8RdAT4DHahKdfAG1UNTU2pTEGoRTXZgPhgK9yLqIJ8epqm1nERlorhDJkru2+6iVkzYho0=
+X-Received: by 2002:a54:401a:: with SMTP id x26mr21795889oie.15.1575842888488;
+ Sun, 08 Dec 2019 14:08:08 -0800 (PST)
+MIME-Version: 1.0
+References: <20191208210320.15539-1-repk@triplefau.lt> <20191208210320.15539-2-repk@triplefau.lt>
+In-Reply-To: <20191208210320.15539-2-repk@triplefau.lt>
+From:   Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Date:   Sun, 8 Dec 2019 23:07:57 +0100
+Message-ID: <CAFBinCA7Tnc2M=4jxYYS_RuoLnGNprUOFDrZG_G6fhQCyb3Cig@mail.gmail.com>
+Subject: Re: [PATCH 1/2] clk: meson: axg: add pcie pll cml gating
+To:     Remi Pommarel <repk@triplefau.lt>
+Cc:     Neil Armstrong <narmstrong@baylibre.com>,
         Jerome Brunet <jbrunet@baylibre.com>,
         Kevin Hilman <khilman@baylibre.com>,
-        Yue Wang <yue.wang@Amlogic.com>
-Cc:     Michael Turquette <mturquette@baylibre.com>,
-        Stephen Boyd <sboyd@kernel.org>,
+        Yue Wang <yue.wang@amlogic.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-amlogic@lists.infradead.org, linux-clk@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, Remi Pommarel <repk@triplefau.lt>
-Subject: [PATCH 2/2] PCI: amlogic: Use PCIe pll gate when available
-Date:   Sun,  8 Dec 2019 22:03:20 +0100
-Message-Id: <20191208210320.15539-3-repk@triplefau.lt>
-X-Mailer: git-send-email 2.24.0
-In-Reply-To: <20191208210320.15539-1-repk@triplefau.lt>
-References: <20191208210320.15539-1-repk@triplefau.lt>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        Stephen Boyd <sboyd@kernel.org>, linux-pci@vger.kernel.org,
+        Michael Turquette <mturquette@baylibre.com>,
+        linux-kernel@vger.kernel.org, linux-amlogic@lists.infradead.org,
+        linux-clk@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In order to get PCIe working reliably on some AXG platforms, PCIe pll
-cml needs to be enabled. This is done by using the PCIE_PLL_CML_ENABLE
-clock gate.
+Hi Remi,
 
-This clock gate is optional, so do not fail if it is missing in the
-devicetree.
+On Sun, Dec 8, 2019 at 9:56 PM Remi Pommarel <repk@triplefau.lt> wrote:
+[...]
+> +static MESON_GATE(axg_pcie_pll_cml_enable, HHI_MIPI_CNTL0, 26);
+we already have CLKID_PCIE_CML_EN0
+do you know how this new one is related (in terms of clock hierarchy)
+to the existing one?
 
-Signed-off-by: Remi Pommarel <repk@triplefau.lt>
----
- drivers/pci/controller/dwc/pci-meson.c | 5 +++++
- 1 file changed, 5 insertions(+)
+[...]
+> --- a/include/dt-bindings/clock/axg-clkc.h
+> +++ b/include/dt-bindings/clock/axg-clkc.h
+> @@ -72,5 +72,6 @@
+>  #define CLKID_PCIE_CML_EN1                     80
+>  #define CLKID_MIPI_ENABLE                      81
+>  #define CLKID_GEN_CLK                          84
+> +#define CLKID_PCIE_PLL_CML_ENABLE              91
+this has to be a separate patch if you want the .dts patch to go into
+the same cycle
+the .dts change depends on this one. what we typically do is to apply
+the dt-bindings patches to a separate clock branch, create an
+immutable tag and then Kevin pulls that into his dt64 branch.
+the clock controller changes go into a separate patch in the
+clk-meson/drivers branch to avoid conflicts with other driver changes
 
-diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/controller/dwc/pci-meson.c
-index 3772b02a5c55..32b70ea9a426 100644
---- a/drivers/pci/controller/dwc/pci-meson.c
-+++ b/drivers/pci/controller/dwc/pci-meson.c
-@@ -89,6 +89,7 @@ struct meson_pcie_clk_res {
- 	struct clk *mipi_gate;
- 	struct clk *port_clk;
- 	struct clk *general_clk;
-+	struct clk *pll_cml_gate;
- };
- 
- struct meson_pcie_rc_reset {
-@@ -300,6 +301,10 @@ static int meson_pcie_probe_clocks(struct meson_pcie *mp)
- 	if (IS_ERR(res->clk))
- 		return PTR_ERR(res->clk);
- 
-+	res->pll_cml_gate = meson_pcie_probe_clock(dev, "pll_cml_en", 0);
-+	if (IS_ERR(res->pll_cml_gate))
-+		res->pll_cml_gate = NULL;
-+
- 	return 0;
- }
- 
--- 
-2.24.0
 
+Martin
