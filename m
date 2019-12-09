@@ -2,112 +2,83 @@ Return-Path: <SRS0=OOKX=Z7=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54F95C2D0C0
-	for <linux-pci@archiver.kernel.org>; Mon,  9 Dec 2019 09:21:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 521FBC43603
+	for <linux-pci@archiver.kernel.org>; Mon,  9 Dec 2019 10:27:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2AD56207FD
-	for <linux-pci@archiver.kernel.org>; Mon,  9 Dec 2019 09:21:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 182C020836
+	for <linux-pci@archiver.kernel.org>; Mon,  9 Dec 2019 10:27:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="oGNJxuWx"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rQTIghiX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727548AbfLIJUz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 9 Dec 2019 04:20:55 -0500
-Received: from lelv0143.ext.ti.com ([198.47.23.248]:49456 "EHLO
-        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726377AbfLIJUz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2019 04:20:55 -0500
-Received: from fllv0034.itg.ti.com ([10.64.40.246])
-        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id xB99Kjdq025907;
-        Mon, 9 Dec 2019 03:20:45 -0600
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1575883245;
-        bh=62DDuOo04TbPHTLK9JrEpoRquiITZMIbCCFCFJ1RQQY=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=oGNJxuWxlJcrpHirekmw8baxM8dsTpm6PIFpTWEjjXFR264jSha0vgPsUBB2J1QVi
-         ZTKnY8N6Dm+SEUPVAdYdLNQy8+ffHCnndTI+0J4xOUb8pDx+tV3zU5izjD1Dt97xqH
-         kAfEWj3Z89HI8y3ng21NM4XfZ0RAzweFn2QRRpXQ=
-Received: from DFLE103.ent.ti.com (dfle103.ent.ti.com [10.64.6.24])
-        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id xB99KjoV062979
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 9 Dec 2019 03:20:45 -0600
-Received: from DFLE111.ent.ti.com (10.64.6.32) by DFLE103.ent.ti.com
- (10.64.6.24) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Mon, 9 Dec
- 2019 03:20:45 -0600
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DFLE111.ent.ti.com
- (10.64.6.32) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
- Frontend Transport; Mon, 9 Dec 2019 03:20:45 -0600
-Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id xB99Kccx087697;
-        Mon, 9 Dec 2019 03:20:42 -0600
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Andrew Murray <andrew.murray@arm.com>
-CC:     <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>
-Subject: [PATCH 01/13] PCI: cadence: Remove stray "pm_runtime_put_sync()" in error path
-Date:   Mon, 9 Dec 2019 14:51:35 +0530
-Message-ID: <20191209092147.22901-2-kishon@ti.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20191209092147.22901-1-kishon@ti.com>
-References: <20191209092147.22901-1-kishon@ti.com>
+        id S1727346AbfLIK1e (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 9 Dec 2019 05:27:34 -0500
+Received: from mail-oi1-f194.google.com ([209.85.167.194]:42009 "EHLO
+        mail-oi1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727143AbfLIK1e (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2019 05:27:34 -0500
+Received: by mail-oi1-f194.google.com with SMTP id j22so5824231oij.9;
+        Mon, 09 Dec 2019 02:27:33 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:from:date:message-id:subject:to:cc;
+        bh=BOldAukWPGvCMXmrQf1gXfFA50h3n/TlEcM4kvZn67k=;
+        b=rQTIghiXGjKRvew8550rzD8nED93vGsH14VPT8ZowwJxJypGj2JJCg4WG4ssPyBNCf
+         7AioaFOakr1OXnFH2APWquuBYj6k2M1STa28v+zYnYWoMRmGaP8zAMXT3SVf+AXcYIwr
+         BTwyBMl1tA7VkeJugpV5ONPFZFSIVCu6C4u0tknGcMz1MVNnD/d2IAtzw99l4dsLE/zG
+         yXt7bRCLP7uXqhS+t9gq7Li6CbWyKF96EI0DHohtIMqimRAeMcSTt+D/VNjHAod5KmQE
+         huGVspqbi2GnMm7xUjE/tUgYEDZ8FSBdfRwz8GBw0BWGLhMsBD6KMvk8QEig6bDvH3Sa
+         ilBQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
+        bh=BOldAukWPGvCMXmrQf1gXfFA50h3n/TlEcM4kvZn67k=;
+        b=BpkT7ZTpw+sjJucDSipFBH22IJiUKkkl6+pHz9vJt+CuUAQejCnFIKVhKoakxxCdNP
+         mgMbYDMCFKei9qJ3Z1vIVWIi2djhM71mvj6WXQO1jGK6gQz4NGCUKrhjsJwQLCoWa+tB
+         BD/xml2cmpg8EFWiLYk7twHaxqvnxMGwj4a7JG82vyMf0Xj/BTJ7B75toQdfM7sPJRje
+         FaXMQXL3CEwhckozJ+ZxayvLmGAbYvxD6YclLWT2Y6O8eU/vYe8do9qHPDzwAkoDO7FP
+         8/7IuLPLN8LjJTNBkohfhdzjfIQZwjEJ8KVwttMGiRm1mtTC+gmrqTl5kEN4Xe4SkzIv
+         xPLA==
+X-Gm-Message-State: APjAAAUE3TtVARL2elxZ9fnYmA2U0ePpU2vQhC4CCClGkBLcpuB95K9k
+        qAsRiT9g13qOrbq9n+PFE39ErwCGuEbeLyNB+VA=
+X-Google-Smtp-Source: APXvYqzDel7dxaZdi9R+PP3cUE6cZO9V1PUkCfBzoSIrbf9sruiYhOkZPeAeUMFEIJQXv+PVS7LJNIyxKg/RZuXISF0=
+X-Received: by 2002:aca:f445:: with SMTP id s66mr22398129oih.95.1575887253334;
+ Mon, 09 Dec 2019 02:27:33 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+From:   Ramon Fried <rfried.dev@gmail.com>
+Date:   Mon, 9 Dec 2019 12:27:22 +0200
+Message-ID: <CAGi-RUJvqJoCXWN2YugRn=WYEk9yzt7m3OPfX_o++PmJWQ3woQ@mail.gmail.com>
+Subject: MSI irqchip configured as IRQCHIP_ONESHOT_SAFE causes spurious IRQs
+To:     hkallweit1@gmail.com, bhelgaas@google.com, marc.zyngier@arm.com,
+        tglx@linutronix.de, lorenzo.pieralisi@arm.com
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-commit bd22885aa188f135fd9 ("PCI: cadence: Refactor driver to use
-as a core library") while refactoring the Cadence PCIe driver to be
-used as library, removed pm_runtime_get_sync() from cdns_pcie_ep_setup()
-and cdns_pcie_host_setup() but missed to remove the corresponding
-pm_runtime_put_sync() in the error path. Fix it here.
+Hi,
+While debugging the root cause of spurious IRQ's on my PCIe MSI line it appears
+that because of the line:
+    info->chip->flags |= IRQCHIP_ONESHOT_SAFE;
+in pci_msi_create_irq_domain()
+The IRQF_ONESHOT is ignored, especially when requesting IRQ through
+pci_request_threaded_irq() where handler is NULL.
 
-Fixes: commit bd22885aa188f135fd9 ("PCI: cadence: Refactor driver to use
-as a core library")
+The problem is that the MSI masking now only surrounds the HW handler,
+and all additional MSI that occur before the threaded handler is
+complete are considered by the note_interrupt() as spurious.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/controller/cadence/pcie-cadence-ep.c   | 2 --
- drivers/pci/controller/cadence/pcie-cadence-host.c | 2 --
- 2 files changed, 4 deletions(-)
+Besides the side effect of that, I don't really understand the logic
+of not masking the MSI until the threaded handler is complete,
+especially when there's no HW handler and only threaded handler.
 
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-ep.c b/drivers/pci/controller/cadence/pcie-cadence-ep.c
-index 1c173dad67d1..560f22b4d165 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-ep.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence-ep.c
-@@ -473,7 +473,5 @@ int cdns_pcie_ep_setup(struct cdns_pcie_ep *ep)
- 	pci_epc_mem_exit(epc);
- 
-  err_init:
--	pm_runtime_put_sync(dev);
--
- 	return ret;
- }
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-host.c b/drivers/pci/controller/cadence/pcie-cadence-host.c
-index 9b1c3966414b..ccf55e143e1d 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-host.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence-host.c
-@@ -275,7 +275,5 @@ int cdns_pcie_host_setup(struct cdns_pcie_rc *rc)
- 	pci_free_resource_list(&resources);
- 
-  err_init:
--	pm_runtime_put_sync(dev);
--
- 	return ret;
- }
--- 
-2.17.1
+Your thoughts?
 
+Thank,
+Ramon.
