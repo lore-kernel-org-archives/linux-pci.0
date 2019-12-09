@@ -5,47 +5,47 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A774BC2D0C0
-	for <linux-pci@archiver.kernel.org>; Mon,  9 Dec 2019 09:21:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95EFBC2D0C2
+	for <linux-pci@archiver.kernel.org>; Mon,  9 Dec 2019 09:21:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7FC9B21569
-	for <linux-pci@archiver.kernel.org>; Mon,  9 Dec 2019 09:21:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6C3292072D
+	for <linux-pci@archiver.kernel.org>; Mon,  9 Dec 2019 09:21:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="GCpEm5+D"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="tBlKps1/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727603AbfLIJVH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 9 Dec 2019 04:21:07 -0500
-Received: from lelv0142.ext.ti.com ([198.47.23.249]:59884 "EHLO
-        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727598AbfLIJVG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2019 04:21:06 -0500
-Received: from lelv0265.itg.ti.com ([10.180.67.224])
-        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id xB99Kxfc046007;
-        Mon, 9 Dec 2019 03:20:59 -0600
+        id S1727637AbfLIJVQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 9 Dec 2019 04:21:16 -0500
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:49928 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727619AbfLIJVQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2019 04:21:16 -0500
+Received: from lelv0266.itg.ti.com ([10.180.67.225])
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id xB99L6FI080929;
+        Mon, 9 Dec 2019 03:21:06 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1575883259;
-        bh=6XFbTAUZNjwfB+XXzjz0shhOgKng/V2zDEQmkwRYYTY=;
+        s=ti-com-17Q1; t=1575883266;
+        bh=VZbwOGovQ4NFoflgIXWD16/wHBPSJqutZdf3/MJ6Owc=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=GCpEm5+DP1Fjc4PrP2sa17KpQEPowhR1kSN+uDmICrxU64tQje2IY/y7SGqmSlOm9
-         36yAPuJNyrfk4o9kxfin5pN+Nz2xJt9scWhzQgrmd0E7oE1L856+uhWxMQ71u6x7fo
-         1jKcP8V1HbY+B6nP6+CX4zVQS5gMVT6REi9fBlmY=
-Received: from DFLE101.ent.ti.com (dfle101.ent.ti.com [10.64.6.22])
-        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id xB99KxfV042447
+        b=tBlKps1/rXdvKaWuN4kH+4hRxEb3a/RBfvX1CpXla6e6TjLL99B4KeXV3CMRCVOFN
+         KZh2RFMZWkvcIQWVEZWViqkbR7agu87lOHIIw6LHzDWOiqobttHcdh8HOiLhCf5mlr
+         dlwIs+DEsE3sWhDy3ZCZ88ljSGbzJNqAoh+fLUgs=
+Received: from DLEE103.ent.ti.com (dlee103.ent.ti.com [157.170.170.33])
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id xB99L6H7005774
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 9 Dec 2019 03:20:59 -0600
-Received: from DFLE100.ent.ti.com (10.64.6.21) by DFLE101.ent.ti.com
- (10.64.6.22) with Microsoft SMTP Server (version=TLS1_2,
+        Mon, 9 Dec 2019 03:21:06 -0600
+Received: from DLEE105.ent.ti.com (157.170.170.35) by DLEE103.ent.ti.com
+ (157.170.170.33) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Mon, 9 Dec
- 2019 03:20:58 -0600
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DFLE100.ent.ti.com
- (10.64.6.21) with Microsoft SMTP Server (version=TLS1_2,
+ 2019 03:21:05 -0600
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE105.ent.ti.com
+ (157.170.170.35) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
- Frontend Transport; Mon, 9 Dec 2019 03:20:58 -0600
+ Frontend Transport; Mon, 9 Dec 2019 03:21:05 -0600
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id xB99Kcd3087697;
-        Mon, 9 Dec 2019 03:20:56 -0600
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id xB99Kcd5087697;
+        Mon, 9 Dec 2019 03:21:02 -0600
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -55,9 +55,9 @@ To:     Bjorn Helgaas <bhelgaas@google.com>,
 CC:     <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
         Kishon Vijay Abraham I <kishon@ti.com>
-Subject: [PATCH 05/13] PCI: cadence: Add read and write accessors to perform only 32-bit accesses
-Date:   Mon, 9 Dec 2019 14:51:39 +0530
-Message-ID: <20191209092147.22901-6-kishon@ti.com>
+Subject: [PATCH 07/13] PCI: cadence: Add new *ops* for CPU addr fixup
+Date:   Mon, 9 Dec 2019 14:51:41 +0530
+Message-ID: <20191209092147.22901-8-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20191209092147.22901-1-kishon@ti.com>
 References: <20191209092147.22901-1-kishon@ti.com>
@@ -69,80 +69,111 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Certain platforms like TI's J721E allow only 32-bit register accesses.
-Add read and write accessors to perform only 32-bit accesses in order to
-support platfroms like TI's J721E.
+Cadence driver uses "mem" memory resource to obtain the offset of
+configuration space address region, memory space address region and
+message space address region. The obtained offset is used to program
+the Address Translation Unit (ATU). However certain platforms like TI's
+J721E SoC require the absolute address to be programmed in the ATU and not
+just the offset.
+
+The same problem was solved in designware driver using a platform specific
+ops for CPU addr fixup in commit a660083eb06c5bb0 ("PCI: dwc: designware:
+Add new *ops* for CPU addr fixup"). Follow a similar mechanism in
+Cadence too instead of directly using "mem" memory resource in Cadence
+PCIe core.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/controller/cadence/pcie-cadence.c | 40 +++++++++++++++++++
- drivers/pci/controller/cadence/pcie-cadence.h |  2 +
- 2 files changed, 42 insertions(+)
+ .../pci/controller/cadence/pcie-cadence-host.c    | 15 ++++-----------
+ drivers/pci/controller/cadence/pcie-cadence.c     |  8 ++++++--
+ drivers/pci/controller/cadence/pcie-cadence.h     |  1 +
+ 3 files changed, 11 insertions(+), 13 deletions(-)
 
+diff --git a/drivers/pci/controller/cadence/pcie-cadence-host.c b/drivers/pci/controller/cadence/pcie-cadence-host.c
+index 2efc33b1cade..cf817be237af 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence-host.c
++++ b/drivers/pci/controller/cadence/pcie-cadence-host.c
+@@ -105,15 +105,14 @@ static int cdns_pcie_host_init_root_port(struct cdns_pcie_rc *rc)
+ static int cdns_pcie_host_init_address_translation(struct cdns_pcie_rc *rc)
+ {
+ 	struct cdns_pcie *pcie = &rc->pcie;
+-	struct resource *mem_res = pcie->mem_res;
+ 	struct resource *bus_range = rc->bus_range;
+ 	struct resource *cfg_res = rc->cfg_res;
+ 	struct device *dev = pcie->dev;
+ 	struct device_node *np = dev->of_node;
+ 	struct of_pci_range_parser parser;
++	u64 cpu_addr = cfg_res->start;
+ 	struct of_pci_range range;
+ 	u32 addr0, addr1, desc1;
+-	u64 cpu_addr;
+ 	int r, err;
+ 
+ 	/*
+@@ -126,7 +125,9 @@ static int cdns_pcie_host_init_address_translation(struct cdns_pcie_rc *rc)
+ 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_PCI_ADDR1(0), addr1);
+ 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_DESC1(0), desc1);
+ 
+-	cpu_addr = cfg_res->start - mem_res->start;
++	if (pcie->ops->cpu_addr_fixup)
++		cpu_addr = pcie->ops->cpu_addr_fixup(pcie, cpu_addr);
++
+ 	addr0 = CDNS_PCIE_AT_OB_REGION_CPU_ADDR0_NBITS(12) |
+ 		(lower_32_bits(cpu_addr) & GENMASK(31, 8));
+ 	addr1 = upper_32_bits(cpu_addr);
+@@ -264,14 +265,6 @@ int cdns_pcie_host_setup(struct cdns_pcie_rc *rc)
+ 	}
+ 	rc->cfg_res = res;
+ 
+-	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "mem");
+-	if (!res) {
+-		dev_err(dev, "missing \"mem\"\n");
+-		return -EINVAL;
+-	}
+-
+-	pcie->mem_res = res;
+-
+ 	ret = cdns_pcie_start_link(pcie, true);
+ 	if (ret) {
+ 		dev_err(dev, "Failed to start link\n");
 diff --git a/drivers/pci/controller/cadence/pcie-cadence.c b/drivers/pci/controller/cadence/pcie-cadence.c
-index cd795f6fc1e2..de5b3b06f2d0 100644
+index de5b3b06f2d0..bd93d0f92f55 100644
 --- a/drivers/pci/controller/cadence/pcie-cadence.c
 +++ b/drivers/pci/controller/cadence/pcie-cadence.c
-@@ -7,6 +7,46 @@
+@@ -113,7 +113,9 @@ void cdns_pcie_set_outbound_region(struct cdns_pcie *pcie, u8 fn,
+ 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_DESC1(r), desc1);
  
- #include "pcie-cadence.h"
+ 	/* Set the CPU address */
+-	cpu_addr -= pcie->mem_res->start;
++	if (pcie->ops->cpu_addr_fixup)
++		cpu_addr = pcie->ops->cpu_addr_fixup(pcie, cpu_addr);
++
+ 	addr0 = CDNS_PCIE_AT_OB_REGION_CPU_ADDR0_NBITS(nbits) |
+ 		(lower_32_bits(cpu_addr) & GENMASK(31, 8));
+ 	addr1 = upper_32_bits(cpu_addr);
+@@ -140,7 +142,9 @@ void cdns_pcie_set_outbound_region_for_normal_msg(struct cdns_pcie *pcie, u8 fn,
+ 	}
  
-+u32 cdns_pcie_read32(void __iomem *addr, int size)
-+{
-+	void __iomem *aligned_addr = PTR_ALIGN_DOWN(addr, 0x4);
-+	unsigned int offset = (unsigned long)addr & 0x3;
-+	u32 val = readl(aligned_addr);
+ 	/* Set the CPU address */
+-	cpu_addr -= pcie->mem_res->start;
++	if (pcie->ops->cpu_addr_fixup)
++		cpu_addr = pcie->ops->cpu_addr_fixup(pcie, cpu_addr);
 +
-+	if (!IS_ALIGNED((uintptr_t)addr, size)) {
-+		pr_err("Invalid Address in function:%s\n", __func__);
-+		return 0;
-+	}
-+
-+	if (size > 2)
-+		return val;
-+
-+	return (val >> (8 * offset)) & ((1 << (size * 8)) - 1);
-+}
-+
-+void cdns_pcie_write32(void __iomem *addr, int size, u32 value)
-+{
-+	void __iomem *aligned_addr = PTR_ALIGN_DOWN(addr, 0x4);
-+	unsigned int offset = (unsigned long)addr & 0x3;
-+	u32 mask;
-+	u32 val;
-+
-+	if (!IS_ALIGNED((uintptr_t)addr, size)) {
-+		pr_err("Invalid Address in function:%s\n", __func__);
-+		return;
-+	}
-+
-+	if (size > 2) {
-+		writel(value, addr);
-+		return;
-+	}
-+
-+	mask = ~(((1 << (size * 8)) - 1) << (offset * 8));
-+	val = readl(aligned_addr) & mask;
-+	val |= value << (offset * 8);
-+	writel(val, aligned_addr);
-+}
-+
- void cdns_pcie_set_outbound_region(struct cdns_pcie *pcie, u8 fn,
- 				   u32 r, bool is_io,
- 				   u64 cpu_addr, u64 pci_addr, size_t size)
+ 	addr0 = CDNS_PCIE_AT_OB_REGION_CPU_ADDR0_NBITS(17) |
+ 		(lower_32_bits(cpu_addr) & GENMASK(31, 8));
+ 	addr1 = upper_32_bits(cpu_addr);
 diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
-index f0395eaf9df5..5171d0da37da 100644
+index c879dd3d2893..ffa8b9f78ff8 100644
 --- a/drivers/pci/controller/cadence/pcie-cadence.h
 +++ b/drivers/pci/controller/cadence/pcie-cadence.h
-@@ -498,6 +498,8 @@ void cdns_pcie_reset_outbound_region(struct cdns_pcie *pcie, u32 r);
- void cdns_pcie_disable_phy(struct cdns_pcie *pcie);
- int cdns_pcie_enable_phy(struct cdns_pcie *pcie);
- int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie);
-+u32 cdns_pcie_read32(void __iomem *addr, int size);
-+void cdns_pcie_write32(void __iomem *addr, int size, u32 value);
- extern const struct dev_pm_ops cdns_pcie_pm_ops;
+@@ -233,6 +233,7 @@ struct cdns_pcie_ops {
+ 	void	(*write)(void __iomem *addr, int size, u32 value);
+ 	int	(*start_link)(struct cdns_pcie *pcie, bool start);
+ 	bool	(*is_link_up)(struct cdns_pcie *pcie);
++	u64     (*cpu_addr_fixup)(struct cdns_pcie *pcie, u64 cpu_addr);
+ };
  
- #endif /* _PCIE_CADENCE_H */
+ /**
 -- 
 2.17.1
 
