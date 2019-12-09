@@ -2,49 +2,51 @@ Return-Path: <SRS0=OOKX=Z7=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79605C2D0C0
-	for <linux-pci@archiver.kernel.org>; Mon,  9 Dec 2019 09:21:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FC51C43603
+	for <linux-pci@archiver.kernel.org>; Mon,  9 Dec 2019 09:21:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4AFD7207FD
-	for <linux-pci@archiver.kernel.org>; Mon,  9 Dec 2019 09:21:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 76B2F2073D
+	for <linux-pci@archiver.kernel.org>; Mon,  9 Dec 2019 09:21:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="AkG+v2Ub"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="pSdh0Hcw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727685AbfLIJVZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 9 Dec 2019 04:21:25 -0500
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:54462 "EHLO
-        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727680AbfLIJVY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2019 04:21:24 -0500
-Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id xB99LHTi100989;
-        Mon, 9 Dec 2019 03:21:17 -0600
+        id S1727717AbfLIJVb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 9 Dec 2019 04:21:31 -0500
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:49978 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727706AbfLIJVa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2019 04:21:30 -0500
+Received: from lelv0266.itg.ti.com ([10.180.67.225])
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id xB99LMCJ080999;
+        Mon, 9 Dec 2019 03:21:22 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1575883277;
-        bh=TuZ57XKo41i7btprk/EutM6dRU+uO6XJ5X6yFXEDUbE=;
+        s=ti-com-17Q1; t=1575883282;
+        bh=OE+CQaY8YINUAl14yThoqiQN60PdlpJALyII5dYryI0=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=AkG+v2UbtWswA0hBjZjeJyZbpKQrEUMIYDSv9q75fzjjFsu1YgDmHDxmt7l42lEn4
-         9sigJahY3daiYmLUTwszZRlMP+QQd0gmFV4mJ3tOC77dCY8X18nUOlk0YUaTTzshiU
-         tGNnwhCo/kamfCld4nFbqNMZOUozub3Ws2fDioAI=
-Received: from DFLE104.ent.ti.com (dfle104.ent.ti.com [10.64.6.25])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id xB99LHWH127889;
-        Mon, 9 Dec 2019 03:21:17 -0600
-Received: from DFLE106.ent.ti.com (10.64.6.27) by DFLE104.ent.ti.com
- (10.64.6.25) with Microsoft SMTP Server (version=TLS1_2,
+        b=pSdh0HcwFe5UPzyR7XLR935NQiaefE9pxrgC7ov4I7AJP2++kvpTtY5jjClpvWc1z
+         1E05v/KVDYPevpFv4WEPkzBxfeuJO/dCL6Ugtm83IMPVemXMPod1wGrrizXRhUcTg1
+         0/ZlOmZsEZK+tRzZQs/iEbdkGWnPNfOVjRi2N+ic=
+Received: from DLEE100.ent.ti.com (dlee100.ent.ti.com [157.170.170.30])
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id xB99LM8E006138
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 9 Dec 2019 03:21:22 -0600
+Received: from DLEE104.ent.ti.com (157.170.170.34) by DLEE100.ent.ti.com
+ (157.170.170.30) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Mon, 9 Dec
- 2019 03:21:15 -0600
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DFLE106.ent.ti.com
- (10.64.6.27) with Microsoft SMTP Server (version=TLS1_2,
+ 2019 03:21:22 -0600
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE104.ent.ti.com
+ (157.170.170.34) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
- Frontend Transport; Mon, 9 Dec 2019 03:21:15 -0600
+ Frontend Transport; Mon, 9 Dec 2019 03:21:22 -0600
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id xB99Kcd8087697;
-        Mon, 9 Dec 2019 03:21:12 -0600
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id xB99KcdA087697;
+        Mon, 9 Dec 2019 03:21:19 -0600
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -54,9 +56,9 @@ To:     Bjorn Helgaas <bhelgaas@google.com>,
 CC:     <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
         Kishon Vijay Abraham I <kishon@ti.com>
-Subject: [PATCH 10/13] dt-bindings: PCI: Add EP mode dt-bindings for TI's J721E SoC
-Date:   Mon, 9 Dec 2019 14:51:44 +0530
-Message-ID: <20191209092147.22901-11-kishon@ti.com>
+Subject: [PATCH 12/13] misc: pci_endpoint_test: Add J721E in pci_device_id table
+Date:   Mon, 9 Dec 2019 14:51:46 +0530
+Message-ID: <20191209092147.22901-13-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20191209092147.22901-1-kishon@ti.com>
 References: <20191209092147.22901-1-kishon@ti.com>
@@ -68,134 +70,48 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add PCIe EP mode dt-bindings for TI's J721E SoC.
+Add J721E in pci_device_id table so that pci-epf-test can be used
+for testing PCIe EP in J721E.
 
-Cc: Rob Herring <robh+dt@kernel.org>
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- .../bindings/pci/ti,j721e-pci-ep.yaml         | 113 ++++++++++++++++++
- 1 file changed, 113 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
+ drivers/misc/pci_endpoint_test.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml b/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
-new file mode 100644
-index 000000000000..4e2af4733998
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
-@@ -0,0 +1,113 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+# Copyright (C) 2019 Texas Instruments Incorporated - http://www.ti.com/
-+%YAML 1.2
-+---
-+$id: "http://devicetree.org/schemas/pci/ti,j721e-pci-ep.yaml#"
-+$schema: "http://devicetree.org/meta-schemas/core.yaml#"
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index a5e317073d95..215f9b8432a3 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -64,6 +64,7 @@
+ #define PCI_ENDPOINT_TEST_IRQ_TYPE		0x24
+ #define PCI_ENDPOINT_TEST_IRQ_NUMBER		0x28
+ 
++#define PCI_DEVICE_ID_TI_J721E			0xb00d
+ #define PCI_DEVICE_ID_TI_AM654			0xb00c
+ 
+ #define is_am654_pci_dev(pdev)		\
+@@ -789,6 +790,11 @@ static const struct pci_endpoint_test_data am654_data = {
+ 	.irq_type = IRQ_TYPE_MSI,
+ };
+ 
++static const struct pci_endpoint_test_data j721e_data = {
++	.alignment = 256,
++	.irq_type = IRQ_TYPE_MSI,
++};
 +
-+title: TI J721E PCI EP (PCIe Wrapper)
-+
-+maintainers:
-+  - Kishon Vijay Abraham I <kishon@ti.com>
-+
-+properties:
-+  compatible:
-+      enum:
-+          - ti,j721e-pcie-ep
-+
-+  reg:
-+    maxItems: 4
-+
-+  reg-names:
-+    items:
-+      - const: intd_cfg
-+      - const: user_cfg
-+      - const: reg
-+      - const: mem
-+
-+  ti,syscon-pcie-ctrl:
-+    description: Phandle to the SYSCON entry required for configuring PCIe mode
-+                 and link speed.
-+    allOf:
-+      - $ref: /schemas/types.yaml#/definitions/phandle
-+
-+  max-link-speed:
-+    minimum: 1
-+    maximum: 3
-+
-+  num-lanes:
-+    minimum: 1
-+    maximum: 2
-+
-+  power-domains:
-+    maxItems: 1
-+
-+  clocks:
-+    maxItems: 1
-+    description: clock-specifier to represent input to the PCIe
-+
-+  clock-names:
-+    items:
-+      - const: fck
-+
-+  cdns,max-outbound-regions:
-+    description: As defined in
-+                 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
-+    allOf:
-+      - $ref: /schemas/types.yaml#/definitions/int32
-+      - enum: [16]
-+
-+  max-functions:
-+    minimum: 1
-+    maximum: 6
-+
-+  dma-coherent:
-+    description: Indicates that the PCIe IP block can ensure the coherency
-+
-+  phys:
-+    description: As defined in
-+                 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
-+
-+  phy-names:
-+    description: As defined in
-+                 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
-+
-+required:
-+  - compatible
-+  - reg
-+  - reg-names
-+  - ti,syscon-pcie-ctrl
-+  - max-link-speed
-+  - num-lanes
-+  - power-domains
-+  - clocks
-+  - clock-names
-+  - cdns,max-outbound-regions
-+  - dma-coherent
-+  - max-functions
-+  - phys
-+  - phy-names
-+
-+examples:
-+  - |
-+    #include <dt-bindings/soc/ti,sci_pm_domain.h>
-+
-+     pcie0_ep: pcie-ep@d000000 {
-+            compatible = "ti,j721e-pcie-ep";
-+            reg = <0x00 0x02900000 0x00 0x1000>,
-+                  <0x00 0x02907000 0x00 0x400>,
-+                  <0x00 0x0d000000 0x00 0x00800000>,
-+                  <0x00 0x10000000 0x00 0x08000000>;
-+            reg-names = "intd_cfg", "user_cfg", "reg", "mem";
-+            ti,syscon-pcie-ctrl = <&pcie0_ctrl>;
-+            max-link-speed = <3>;
-+            num-lanes = <2>;
-+            power-domains = <&k3_pds 239 TI_SCI_PD_EXCLUSIVE>;
-+            clocks = <&k3_clks 239 1>;
-+            clock-names = "fck";
-+            cdns,max-outbound-regions = <16>;
-+            max-functions = /bits/ 8 <6>;
-+            dma-coherent;
-+            phys = <&serdes0_pcie_link>;
-+            phy-names = "pcie_phy";
-+    };
+ static const struct pci_device_id pci_endpoint_test_tbl[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA74x) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA72x) },
+@@ -797,6 +803,9 @@ static const struct pci_device_id pci_endpoint_test_tbl[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_AM654),
+ 	  .driver_data = (kernel_ulong_t)&am654_data
+ 	},
++	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_J721E),
++	  .driver_data = (kernel_ulong_t)&j721e_data,
++	},
+ 	{ }
+ };
+ MODULE_DEVICE_TABLE(pci, pci_endpoint_test_tbl);
 -- 
 2.17.1
 
