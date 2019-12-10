@@ -2,109 +2,136 @@ Return-Path: <SRS0=zPYp=2A=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FAKE_REPLY_C,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90DD2C2D0C4
-	for <linux-pci@archiver.kernel.org>; Tue, 10 Dec 2019 21:49:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68A30C00454
+	for <linux-pci@archiver.kernel.org>; Tue, 10 Dec 2019 22:37:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6EE1820836
-	for <linux-pci@archiver.kernel.org>; Tue, 10 Dec 2019 21:49:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3E4AF20836
+	for <linux-pci@archiver.kernel.org>; Tue, 10 Dec 2019 22:37:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1576017470;
+	bh=pmltaW9LsjEuTpeKbuA3I4m6I9tXYKuy+WxPnOiBySg=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=uqr2Ep71aKlfHTcWhrxkz12w+2rPUv8ZQP761jji3qJ1gfuqAjMGcU8JV6HrFvo6M
+	 PFud2FriNSuM/OJdUqp98WgWEZaLL8W+uIFCAIHTvmnt+23m0t6fbpfEe+xugXppb9
+	 QSVyxs+DPWeIBBM+ebiUXDnbCFS1PVm5pnDm5yYY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727443AbfLJVtD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 10 Dec 2019 16:49:03 -0500
-Received: from ale.deltatee.com ([207.54.116.67]:43196 "EHLO ale.deltatee.com"
+        id S1729757AbfLJWht (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 10 Dec 2019 17:37:49 -0500
+Received: from mail.kernel.org ([198.145.29.99]:59282 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729798AbfLJVtD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 10 Dec 2019 16:49:03 -0500
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-        by ale.deltatee.com with esmtp (Exim 4.92)
-        (envelope-from <logang@deltatee.com>)
-        id 1ienNM-000409-QV; Tue, 10 Dec 2019 14:49:01 -0700
-To:     Bjorn Helgaas <helgaas@kernel.org>,
-        Armen Baloyan <abaloyan@gigaio.com>
-Cc:     armbaloyan@gmail.com, epilmore@gigaio.com,
-        linux-pci@vger.kernel.org
-References: <20191210212258.GA144914@google.com>
-From:   Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <2070c4d6-cfe8-4d81-6f23-99d05b3bd3a5@deltatee.com>
-Date:   Tue, 10 Dec 2019 14:49:00 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+        id S1730355AbfLJWhr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 10 Dec 2019 17:37:47 -0500
+Received: from localhost (mobile-166-170-223-177.mycingular.net [166.170.223.177])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id B6617214D8;
+        Tue, 10 Dec 2019 22:37:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1576017467;
+        bh=pmltaW9LsjEuTpeKbuA3I4m6I9tXYKuy+WxPnOiBySg=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=GpF77bDRMYOZMzZUsc1xfZBNt0grHZ4wf9ahTXpwyB/3gWFtElsyCOKqPj3U1bJFM
+         F12G87CHzuPAb/bUPdSWsiVx1FaP+i8FGPXzpLIMlG9rGYgTSbaTbyG8VW14eyc8d+
+         yP9jUwAsNzCNQ3sJ/NVKANDpE4MxAYItUWmqRpYM=
+Date:   Tue, 10 Dec 2019 16:37:45 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     James Sewart <jamessewart@arista.com>
+Cc:     linux-pci@vger.kernel.org, Logan Gunthorpe <logang@deltatee.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Dmitry Safonov <0x7f454c46@gmail.com>,
+        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+        Dmitry Safonov <dima@arista.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Joerg Roedel <joro@8bytes.org>
+Subject: Re: [PATCH v6 2/3] PCI: Add parameter nr_devfns to pci_add_dma_alias
+Message-ID: <20191210223745.GA167002@google.com>
 MIME-Version: 1.0
-In-Reply-To: <20191210212258.GA144914@google.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-CA
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: linux-pci@vger.kernel.org, epilmore@gigaio.com, armbaloyan@gmail.com, abaloyan@gigaio.com, helgaas@kernel.org
-X-SA-Exim-Mail-From: logang@deltatee.com
-Subject: Re: [PATCH] PCI/P2PDMA: Add Intel SkyLake-E to the whitelist
-X-SA-Exim-Version: 4.2.1 (built Wed, 08 May 2019 21:11:16 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <D4C7374E-4DFE-4024-8E76-9F54BF421B62@arista.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+[+cc Joerg]
 
-
-On 2019-12-10 2:22 p.m., Bjorn Helgaas wrote:
-> On Fri, Dec 06, 2019 at 01:52:45PM -0800, Armen Baloyan wrote:
->> Intel SkyLake-E was successfully tested for p2pdma
->> transactions spanning over a host bridge and PCI
->> bridge with IOMMU on.
->>
->> Signed-off-by: Armen Baloyan <abaloyan@gigaio.com>
+On Tue, Dec 03, 2019 at 03:43:53PM +0000, James Sewart wrote:
+> pci_add_dma_alias can now be used to create a dma alias for a range of
+> devfns.
 > 
-> Applied with Logan's reviewed-by to pci/p2pdma for v5.6, thanks!
-> 
-> Logan, the commit log for 494d63b0d5d0 ("PCI/P2PDMA: Whitelist some
-> Intel host bridges") says:
-> 
->     Intel devices do not have good support for P2P requests that span different
->     host bridges as the transactions will cross the QPI/UPI bus and this does
->     not perform well.
-> 
->     Therefore, enable support for these devices only if the host bridges match.
-> 
->     Add Intel devices that have been tested and are known to work. There are
->     likely many others out there that will need to be tested and added.
-> 
-> That suggests it's possible that P2P DMA may actually work but with
-> poor performance, and that you only want to add host bridges that work
-> with good performance to the whitelist.
-> 
-> Armen found that it *works*, but I have no idea what the performance
-> was.  Do you care about the performance, or is this a simple "works /
-> doesn't work" test?
+> Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
+> Signed-off-by: James Sewart <jamessewart@arista.com>
+> ---
+>  drivers/pci/pci.c    | 22 +++++++++++++++++-----
+>  drivers/pci/quirks.c | 14 +++++++-------
+>  include/linux/pci.h  |  2 +-
+>  3 files changed, 25 insertions(+), 13 deletions(-)
 
-Armen and I discussed this off list and things are a bit more
-complicated than I'd like but I think this is still the right way to go
-until we have more evidence:
+Heads up Joerg: I also updated drivers/iommu/amd_iommu.c (this is the
+one reported by the kbuild test robot) and removed the printk there
+that prints the same thing as the one in pci_add_dma_alias(), and I
+updated a PCI quirk that was merged after this patch was posted.
 
-With older SandyBridge devices, I know that if a P2P transaction crosses
-the QPI bus between sockets the performance will be unacceptable. Which
-is why I added the current check so P2P transactions will not cross
-between host bridges.
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index d3c83248f3ce..dbb01aceafda 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -5857,7 +5857,8 @@ int pci_set_vga_state(struct pci_dev *dev, bool decode,
+>  /**
+>   * pci_add_dma_alias - Add a DMA devfn alias for a device
+>   * @dev: the PCI device for which alias is added
+> - * @devfn: alias slot and function
+> + * @devfn_from: alias slot and function
+> + * @nr_devfns: Number of subsequent devfns to alias
+>   *
+>   * This helper encodes an 8-bit devfn as a bit number in dma_alias_mask
+>   * which is used to program permissible bus-devfn source addresses for DMA
+> @@ -5873,8 +5874,13 @@ int pci_set_vga_state(struct pci_dev *dev, bool decode,
+>   * cannot be left as a userspace activity).  DMA aliases should therefore
+>   * be configured via quirks, such as the PCI fixup header quirk.
+>   */
+> -void pci_add_dma_alias(struct pci_dev *dev, u8 devfn)
+> +void pci_add_dma_alias(struct pci_dev *dev, u8 devfn_from, unsigned nr_devfns)
+>  {
+> +	int devfn_to;
+> +
+> +	nr_devfns = min(nr_devfns, (unsigned)MAX_NR_DEVFNS);
+> +	devfn_to = devfn_from + nr_devfns - 1;
 
-With the SkyLake device Armen tested with: it is not a multi-socket
-configuration but the device, internally, has multiple host bridges.
-Armen tested the performance across two of these host bridges and is
-relying on that working so cannot set that flag.
+I made this look like:
 
-What we don't know is whether P2P transactions across a multi-socket
-SkyLake platforms will perform well. And, if it doesn't, I don't at this
-time know how we can differentiate between the host bridges on the same
-socket and those on other sockets.
++       devfn_to = min(devfn_from + nr_devfns - 1,
++                      (unsigned) MAX_NR_DEVFNS - 1);
 
-So IMO, until someone comes forward saying that a particular SkyLake
-platform doesn't work well and informing us how to differentiate them,
-Armen's patch is the best we can do.
+so devfn_from=0xf0, nr_devfns=0x20 doesn't cause devfn_to to wrap
+around.
 
-Logan
+I did keep Logan's reviewed-by, so let me know if I broke something.
 
-
-
-
+>  	if (!dev->dma_alias_mask)
+>  		dev->dma_alias_mask = bitmap_zalloc(MAX_NR_DEVFNS, GFP_KERNEL);
+>  	if (!dev->dma_alias_mask) {
+> @@ -5882,9 +5888,15 @@ void pci_add_dma_alias(struct pci_dev *dev, u8 devfn)
+>  		return;
+>  	}
+>  
+> -	set_bit(devfn, dev->dma_alias_mask);
+> -	pci_info(dev, "Enabling fixed DMA alias to %02x.%d\n",
+> -		 PCI_SLOT(devfn), PCI_FUNC(devfn));
+> +	bitmap_set(dev->dma_alias_mask, devfn_from, nr_devfns);
+> +
+> +	if (nr_devfns == 1)
+> +		pci_info(dev, "Enabling fixed DMA alias to %02x.%d\n",
+> +				PCI_SLOT(devfn_from), PCI_FUNC(devfn_from));
+> +	else if(nr_devfns > 1)
+> +		pci_info(dev, "Enabling fixed DMA alias for devfn range from %02x.%d to %02x.%d\n",
+> +				PCI_SLOT(devfn_from), PCI_FUNC(devfn_from),
+> +				PCI_SLOT(devfn_to), PCI_FUNC(devfn_to));
+>  }
