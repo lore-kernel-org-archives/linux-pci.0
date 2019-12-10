@@ -7,119 +7,198 @@ X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75F66C47409
-	for <linux-pci@archiver.kernel.org>; Tue, 10 Dec 2019 22:41:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15B06C43603
+	for <linux-pci@archiver.kernel.org>; Tue, 10 Dec 2019 23:25:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4A3BD2053B
-	for <linux-pci@archiver.kernel.org>; Tue, 10 Dec 2019 22:41:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D0A19206D9
+	for <linux-pci@archiver.kernel.org>; Tue, 10 Dec 2019 23:25:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576017685;
-	bh=OWeDD1ggaI7KtD7dXyfUWEhw8ibkokJLLFnshu+t8Bs=;
+	s=default; t=1576020337;
+	bh=ZFu4Hwm9TXqLd33Z1de6lnSizTJgOLyN8HGrecf9HLY=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=TUw/PJ1815cjB9FdXGsuleDGv820C17rbd+6y2WOKy+o/nllk4UO3YEnBkC9lFo0T
-	 9BpmTWKluBPHU8c9IX+05YKmpxfOFgjLZrNmIpm2U/lxYS5pgIPstGoZ7Z4b2wyZv7
-	 FjDYvxsznCmJm4dQcZ64yELvVaxyjKc1DKGBA8ik=
+	b=KSjqMzBNpoW0bKb0BK+I2Ltq4HB7bznp+ZHJ31rqb/vlggzuxxkY5csDsrbnNyQOu
+	 yx5pCwes8cd9Kf6Xe7U5hIa4NLh3Qib5sv0tHARZ1ud16sqXMEM3kJsbCHDWzN9FR7
+	 QFxslnlX7qvyHAgS35c38MHiRNbwE+j6PIumSXqs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727940AbfLJWlR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 10 Dec 2019 17:41:17 -0500
-Received: from mail.kernel.org ([198.145.29.99]:51994 "EHLO mail.kernel.org"
+        id S1727499AbfLJXZd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 10 Dec 2019 18:25:33 -0500
+Received: from mail.kernel.org ([198.145.29.99]:58370 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728904AbfLJWbu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 10 Dec 2019 17:31:50 -0500
+        id S1726930AbfLJXZd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 10 Dec 2019 18:25:33 -0500
 Received: from localhost (mobile-166-170-223-177.mycingular.net [166.170.223.177])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9EDE5206EC;
-        Tue, 10 Dec 2019 22:31:49 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id EEC0B20663;
+        Tue, 10 Dec 2019 23:25:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576017110;
-        bh=OWeDD1ggaI7KtD7dXyfUWEhw8ibkokJLLFnshu+t8Bs=;
+        s=default; t=1576020332;
+        bh=ZFu4Hwm9TXqLd33Z1de6lnSizTJgOLyN8HGrecf9HLY=;
         h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=jx/aoNNd4yeJQOJni2d8Jm2bVglXRvoz4EFeLcuMkv+4rwBBQgDPc8e0091THiWqv
-         ByDPON5LbCRk5pfsGKnre0V6A3u0AVAS3HCh4SvEgK46AtHn1Lj4VDYvmleLkrwvjW
-         e7Rs9VJEMWlZSW72/q1C36bfYYi7lcjJcJDvAF2c=
-Date:   Tue, 10 Dec 2019 16:31:48 -0600
+        b=X4udzvXQ7snjmIabgtXdmw+W789EOtzVGrt2DaBfrBK0qaF4Wr94f9MMFJh+3xzvx
+         +qQ8ecyou8iYR2vXOI5MxMI+Ryr8L3bTtQ83PA7j8M6JolUcxsGbNtz120G2bswz+g
+         meHCfapKZI2D3fn5ZQLjpvlegaqmwITN38H8if4A=
+Date:   Tue, 10 Dec 2019 17:25:29 -0600
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     James Sewart <jamessewart@arista.com>
-Cc:     linux-pci@vger.kernel.org, Logan Gunthorpe <logang@deltatee.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Dmitry Safonov <0x7f454c46@gmail.com>,
-        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-        Dmitry Safonov <dima@arista.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Joerg Roedel <joro@8bytes.org>
-Subject: Re: [PATCH v6 1/3] PCI: Fix off by one in dma_alias_mask allocation
- size
-Message-ID: <20191210223148.GA166696@google.com>
+To:     Guenter Roeck <linux@roeck-us.net>
+Cc:     "Enrico Weigelt, metux IT consult" <info@metux.net>,
+        linux-kernel@vger.kernel.org, tim@buttersideup.com,
+        james.morse@arm.com, rrichter@marvell.com, jdelvare@suse.com,
+        miquel.raynal@bootlin.com, richard@nod.at, vigneshr@ti.com,
+        linux-crypto@vger.kernel.org, linux-edac@vger.kernel.org,
+        linux-hwmon@vger.kernel.org, linux-mtd@lists.infradead.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH 6/6] (v3) drivers: hwmon: i5k_amb: simplify probing /
+ device identification
+Message-ID: <20191210232529.GA171629@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <910070E3-7964-4549-B77F-EC7FC6144503@arista.com>
+In-Reply-To: <bee7ba11-6b4a-1cc7-ee8c-ddf17cb8daca@roeck-us.net>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc Joerg]
-
-On Tue, Dec 03, 2019 at 03:43:22PM +0000, James Sewart wrote:
-> The number of possible devfns is 256, add def and correct uses.
+On Thu, Nov 28, 2019 at 06:21:31AM -0800, Guenter Roeck wrote:
+> On 11/28/19 4:54 AM, Enrico Weigelt, metux IT consult wrote:
+> > Simpilify the probing by putting all chip-specific data directly
+> > into the pci match table, removing the redundant chipset_ids table.
+> > 
+> > Changes v3:
+> >      * use pci_get_device_by_id() introduces by a previous patch
+> >        of this queue
+> > 
+> > Changes v2:
+> >      * use PCI_DEVICE_DATA() macro in the pci match table
+> >      * directly pass the pci device id to i5k_channel_probe(),
+> >        instead of computing it internally by extra offset parameter
+> > 
+> > Submitted: 2019-06-06
+> > Signed-off-by: Enrico Weigelt <info@metux.net>
 > 
-> Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
-> Signed-off-by: James Sewart <jamessewart@arista.com>
+> I don't immediately see how this is better. I am not even sure if it
+> is correct.
 
-I applied these three patches to pci/virtualization for v5.6, thanks!
+I don't mind this, but:
 
-I moved the MAX_NR_DEVFNS from include/linux/pci.h to
-drivers/pci/pci.h since nobody outside drivers/pci needs it.
+  1) I don't maintain this file, so my opinion doesn't count much.
 
-> ---
->  drivers/pci/pci.c    | 2 +-
->  drivers/pci/search.c | 2 +-
->  include/linux/pci.h  | 2 ++
->  3 files changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index a97e2571a527..d3c83248f3ce 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -5876,7 +5876,7 @@ int pci_set_vga_state(struct pci_dev *dev, bool decode,
->  void pci_add_dma_alias(struct pci_dev *dev, u8 devfn)
->  {
->  	if (!dev->dma_alias_mask)
-> -		dev->dma_alias_mask = bitmap_zalloc(U8_MAX, GFP_KERNEL);
-> +		dev->dma_alias_mask = bitmap_zalloc(MAX_NR_DEVFNS, GFP_KERNEL);
->  	if (!dev->dma_alias_mask) {
->  		pci_warn(dev, "Unable to allocate DMA alias mask\n");
->  		return;
-> diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-> index bade14002fd8..9e4dfae47252 100644
-> --- a/drivers/pci/search.c
-> +++ b/drivers/pci/search.c
-> @@ -43,7 +43,7 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
->  	if (unlikely(pdev->dma_alias_mask)) {
->  		u8 devfn;
->  
-> -		for_each_set_bit(devfn, pdev->dma_alias_mask, U8_MAX) {
-> +		for_each_set_bit(devfn, pdev->dma_alias_mask, MAX_NR_DEVFNS) {
->  			ret = fn(pdev, PCI_DEVID(pdev->bus->number, devfn),
->  				 data);
->  			if (ret)
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 1a6cf19eac2d..6481da29d667 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -57,6 +57,8 @@
->  #define PCI_DEVID(bus, devfn)	((((u16)(bus)) << 8) | (devfn))
->  /* return bus from PCI devid = ((u16)bus_number) << 8) | devfn */
->  #define PCI_BUS_NUM(x) (((x) >> 8) & 0xff)
-> +/* Number of possible devfns. devfns can be from 0.0 to 1f.7 inclusive */
-> +#define MAX_NR_DEVFNS 256
->  
->  /* pci_slot represents a physical slot */
->  struct pci_slot {
-> -- 
-> 2.24.0
-> 
+  2) I despise the pci_get_device() interfaces because they're
+  inefficient, not hotplug-safe, they circumvent the device model
+  claim mechanism, and it's hard to do the reference counting
+  correctly.
+
+  3) There are several things going on in this patch and it would be
+  easier to read if you could split them into separate patches:
+
+    - Removing the redundancy between chipset_ids[] and i5k_amb_ids[].
+      This seems like a nice change.
+
+    - The "chipset_ids[i].fbd0 + 1" thing was weird and the new
+      ".driver_data + 1" is still weird.  Those are PCI device IDs,
+      and addition is not a valid operation on those IDs.  IMHO both
+      PCI_DEVICE_ID_INTEL_5000_FBD0 and PCI_DEVICE_ID_INTEL_5000_FBD1
+      should be listed explicitly in the driver instead of trying to
+      compute PCI_DEVICE_ID_INTEL_5000_FBD1.
+
+    - Replacing the hard-coding of PCI_VENDOR_ID_INTEL with the vendor
+      ID from i5k_amb_ids[] seems worthwhile and should be its own
+      separate patch (if possible).
+
+    - Changing to use pci_get_device_by_id().  This should be trivial
+      to verify, like the other patches.
+
+> > ---
+> >   drivers/hwmon/i5k_amb.c | 38 +++++++++++++++-----------------------
+> >   1 file changed, 15 insertions(+), 23 deletions(-)
+> > 
+> > diff --git a/drivers/hwmon/i5k_amb.c b/drivers/hwmon/i5k_amb.c
+> > index b09c39abd3a8..cb85607d104f 100644
+> > --- a/drivers/hwmon/i5k_amb.c
+> > +++ b/drivers/hwmon/i5k_amb.c
+> > @@ -414,16 +414,14 @@ static int i5k_amb_add(void)
+> >   }
+> >   static int i5k_find_amb_registers(struct i5k_amb_data *data,
+> > -					    unsigned long devid)
+> > +				  const struct pci_device_id *devid)
+> >   {
+> >   	struct pci_dev *pcidev;
+> >   	u32 val32;
+> >   	int res = -ENODEV;
+> >   	/* Find AMB register memory space */
+> > -	pcidev = pci_get_device(PCI_VENDOR_ID_INTEL,
+> > -				devid,
+> > -				NULL);
+> > +	pcidev = pci_get_device_by_id(devid);
+> >   	if (!pcidev)
+> >   		return -ENODEV;
+> > @@ -447,14 +445,15 @@ static int i5k_find_amb_registers(struct i5k_amb_data *data,
+> >   	return res;
+> >   }
+> > -static int i5k_channel_probe(u16 *amb_present, unsigned long dev_id)
+> > +static int i5k_channel_probe(u16 *amb_present, unsigned int vendor,
+> > +			     unsigned int device)
+> >   {
+> >   	struct pci_dev *pcidev;
+> >   	u16 val16;
+> >   	int res = -ENODEV;
+> >   	/* Copy the DIMM presence map for these two channels */
+> > -	pcidev = pci_get_device(PCI_VENDOR_ID_INTEL, dev_id, NULL);
+> > +	pcidev = pci_get_device(vendor, device, NULL);
+> >   	if (!pcidev)
+> >   		return -ENODEV;
+> > @@ -473,23 +472,12 @@ static int i5k_channel_probe(u16 *amb_present, unsigned long dev_id)
+> >   	return res;
+> >   }
+> > -static struct {
+> > -	unsigned long err;
+> > -	unsigned long fbd0;
+> > -} chipset_ids[]  = {
+> > -	{ PCI_DEVICE_ID_INTEL_5000_ERR, PCI_DEVICE_ID_INTEL_5000_FBD0 },
+> > -	{ PCI_DEVICE_ID_INTEL_5400_ERR, PCI_DEVICE_ID_INTEL_5400_FBD0 },
+> > -	{ 0, 0 }
+> > -};
+> > -
+> > -#ifdef MODULE
+> >   static const struct pci_device_id i5k_amb_ids[] = {
+> > -	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_5000_ERR) },
+> > -	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_5400_ERR) },
+> > +	{ PCI_DEVICE_DATA(INTEL, 5000_ERR, PCI_DEVICE_ID_INTEL_5000_FBD0) },
+> > +	{ PCI_DEVICE_DATA(INTEL, 5400_ERR, PCI_DEVICE_ID_INTEL_5400_FBD0) },
+> >   	{ 0, }
+> >   };
+> >   MODULE_DEVICE_TABLE(pci, i5k_amb_ids);
+> > -#endif
+> >   static int i5k_amb_probe(struct platform_device *pdev)
+> >   {
+> > @@ -504,22 +492,26 @@ static int i5k_amb_probe(struct platform_device *pdev)
+> >   	/* Figure out where the AMB registers live */
+> >   	i = 0;
+> >   	do {
+> > -		res = i5k_find_amb_registers(data, chipset_ids[i].err);
+> > +		res = i5k_find_amb_registers(data, &i5k_amb_ids[i]);
+> >   		if (res == 0)
+> >   			break;
+> >   		i++;
+> > -	} while (chipset_ids[i].err);
+> > +	} while (i5k_amb_ids[i].device);
+> >   	if (res)
+> >   		goto err;
+> >   	/* Copy the DIMM presence map for the first two channels */
+> > -	res = i5k_channel_probe(&data->amb_present[0], chipset_ids[i].fbd0);
+> > +	res = i5k_channel_probe(&data->amb_present[0],
+> > +				i5k_amb_ids[i].vendor,
+> > +				i5k_amb_ids[i].driver_data);
+> >   	if (res)
+> >   		goto err;
+> >   	/* Copy the DIMM presence map for the optional second two channels */
+> > -	i5k_channel_probe(&data->amb_present[2], chipset_ids[i].fbd0 + 1);
+> > +	i5k_channel_probe(&data->amb_present[2],
+> > +			  i5k_amb_ids[i].vendor,
+> > +			  i5k_amb_ids[i].driver_data+1);
+> >   	/* Set up resource regions */
+> >   	reso = request_mem_region(data->amb_base, data->amb_len, DRVNAME);
+> > 
 > 
