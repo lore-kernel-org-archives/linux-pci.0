@@ -2,49 +2,50 @@ Return-Path: <SRS0=OWH4=2B=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27FA0C00454
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Dec 2019 12:45:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6749EC3F68F
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Dec 2019 12:45:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EFCE422464
+	by mail.kernel.org (Postfix) with ESMTP id 3E4D924653
 	for <linux-pci@archiver.kernel.org>; Wed, 11 Dec 2019 12:45:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="oJoyfKk6"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="s07zZQl/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729332AbfLKMpV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 11 Dec 2019 07:45:21 -0500
-Received: from lelv0142.ext.ti.com ([198.47.23.249]:42480 "EHLO
-        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729318AbfLKMpU (ORCPT
+        id S1729337AbfLKMpW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 11 Dec 2019 07:45:22 -0500
+Received: from lelv0143.ext.ti.com ([198.47.23.248]:35786 "EHLO
+        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727402AbfLKMpU (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2019 07:45:20 -0500
-Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id xBBCj8sH012121;
-        Wed, 11 Dec 2019 06:45:08 -0600
+Received: from lelv0266.itg.ti.com ([10.180.67.225])
+        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id xBBCiwt2089410;
+        Wed, 11 Dec 2019 06:44:58 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1576068308;
-        bh=2tvalbS51NRH72d/eck6wNFaarOFGq+9ECr88otyLfI=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=oJoyfKk6hUmwxuhwQ/RokizqaBg9NBAcGl9+qwYGDaqe1sSsGOrG+WiciI9ONFbkr
-         Bz3gEngOMeo5KhbEQHQaHxgjShp/7vSFd8AzunP9rgSEWgmM1rohvLM8LCO65FGwKS
-         FSKTy0WdR71YZY7bjeOxjSpB7tGSewdOJDlBQUWI=
-Received: from DLEE106.ent.ti.com (dlee106.ent.ti.com [157.170.170.36])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id xBBCj8RM105562;
-        Wed, 11 Dec 2019 06:45:08 -0600
-Received: from DLEE113.ent.ti.com (157.170.170.24) by DLEE106.ent.ti.com
- (157.170.170.36) with Microsoft SMTP Server (version=TLS1_2,
+        s=ti-com-17Q1; t=1576068298;
+        bh=OE99JeSd1ur9H7sMDQrhfvYhHqNRrzL04S/LysYScMs=;
+        h=From:To:CC:Subject:Date;
+        b=s07zZQl/I/+upfp1a7uutKA1zM3iv8WSqmOTUtUpQx0CK20B+5bGr46hmHV2ZSnE6
+         XNLM1KaMG8zFIt31uDaFA65zxpRPZpjQNluH1519lWYkrlhvk8X2+yjO98+9mCwugA
+         asgJA0BPjbwUb6XDcu3Gk7oBnBu0vSpzJ0wyz5BQ=
+Received: from DFLE107.ent.ti.com (dfle107.ent.ti.com [10.64.6.28])
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id xBBCivUQ108608
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 11 Dec 2019 06:44:57 -0600
+Received: from DFLE100.ent.ti.com (10.64.6.21) by DFLE107.ent.ti.com
+ (10.64.6.28) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Wed, 11
- Dec 2019 06:45:08 -0600
-Received: from fllv0040.itg.ti.com (10.64.41.20) by DLEE113.ent.ti.com
- (157.170.170.24) with Microsoft SMTP Server (version=TLS1_2,
+ Dec 2019 06:44:57 -0600
+Received: from fllv0040.itg.ti.com (10.64.41.20) by DFLE100.ent.ti.com
+ (10.64.6.21) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
- Frontend Transport; Wed, 11 Dec 2019 06:45:08 -0600
+ Frontend Transport; Wed, 11 Dec 2019 06:44:57 -0600
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id xBBCirfk125451;
-        Wed, 11 Dec 2019 06:45:05 -0600
+        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id xBBCirfh125451;
+        Wed, 11 Dec 2019 06:44:54 -0600
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Andrew Murray <andrew.murray@arm.com>,
@@ -56,12 +57,10 @@ CC:     Murali Karicheri <m-karicheri2@ti.com>,
         <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>,
         Xiaowei Bao <xiaowei.bao@nxp.com>
-Subject: [PATCH 3/4] PCI: keystone: Allow AM654 PCIe Endpoint to raise MSIX interrupt
-Date:   Wed, 11 Dec 2019 18:16:07 +0530
-Message-ID: <20191211124608.887-4-kishon@ti.com>
+Subject: [PATCH 0/4] Redesign MSI-X support in PCIe Endpoint Core
+Date:   Wed, 11 Dec 2019 18:16:04 +0530
+Message-ID: <20191211124608.887-1-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20191211124608.887-1-kishon@ti.com>
-References: <20191211124608.887-1-kishon@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
@@ -70,38 +69,46 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-AM654 PCIe EP controller has MSIX capability register and has the
-ability to raise MSIX interrupt. Add support in pci-keystone.c
-for PCIe endpoint controller in AM654 to raise MSIX interrupts.
+Existing MSI-X support in Endpoint core has limitations:
+ 1) MSIX table (which is mapped to a BAR) is not allocated by
+    anyone. Ideally this should be allocated by endpoint
+    function driver.
+ 2) Endpoint controller can choose any random BARs for MSIX
+    table (irrespective of whether the endpoint function driver
+    has allocated memory for it or not)
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/controller/dwc/pci-keystone.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+In order to avoid these limitations, pci_epc_set_msix() is
+modified to include BAR Indicator register (BIR) configuration
+and MSIX table offset as arguments. This series also fixed MSIX
+support in dwc driver and add MSI-X support in Cadence PCIe driver.
 
-diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
-index af677254a072..dbe31589eb61 100644
---- a/drivers/pci/controller/dwc/pci-keystone.c
-+++ b/drivers/pci/controller/dwc/pci-keystone.c
-@@ -959,6 +959,9 @@ static int ks_pcie_am654_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
- 	case PCI_EPC_IRQ_MSI:
- 		dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
- 		break;
-+	case PCI_EPC_IRQ_MSIX:
-+		dw_pcie_ep_raise_msix_irq(ep, func_no, interrupt_num);
-+		break;
- 	default:
- 		dev_err(pci->dev, "UNKNOWN IRQ type\n");
- 		return -EINVAL;
-@@ -970,7 +973,7 @@ static int ks_pcie_am654_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
- static const struct pci_epc_features ks_pcie_am654_epc_features = {
- 	.linkup_notifier = false,
- 	.msi_capable = true,
--	.msix_capable = false,
-+	.msix_capable = true,
- 	.reserved_bar = 1 << BAR_0 | 1 << BAR_1,
- 	.bar_fixed_64bit = 1 << BAR_0,
- 	.bar_fixed_size[2] = SZ_1M,
+The previous version of Cadence EP MSI-X support is @ [1].
+This series is created on top of [2]
+
+[1] -> https://patchwork.ozlabs.org/patch/971160/
+[2] -> http://lore.kernel.org/r/20191209092147.22901-1-kishon@ti.com
+
+Alan Douglas (1):
+  PCI: cadence: Add MSI-X support to Endpoint driver
+
+Kishon Vijay Abraham I (3):
+  PCI: endpoint: Fix ->set_msix() to take BIR and offset as arguments
+  PCI: dwc: Fix dw_pcie_ep_raise_msix_irq() to get correct MSIX table
+    address
+  PCI: keystone: Add AM654 PCIe Endpoint to raise MSIX interrupt
+
+ .../pci/controller/cadence/pcie-cadence-ep.c  | 112 +++++++++++++++++-
+ drivers/pci/controller/cadence/pcie-cadence.h |  10 ++
+ drivers/pci/controller/dwc/pci-keystone.c     |   5 +-
+ .../pci/controller/dwc/pcie-designware-ep.c   |  61 +++++-----
+ drivers/pci/controller/dwc/pcie-designware.h  |   1 +
+ drivers/pci/endpoint/functions/pci-epf-test.c |  31 ++++-
+ drivers/pci/endpoint/pci-epc-core.c           |   7 +-
+ drivers/pci/endpoint/pci-epf-core.c           |   2 +
+ include/linux/pci-epc.h                       |   6 +-
+ include/linux/pci-epf.h                       |  15 +++
+ 10 files changed, 207 insertions(+), 43 deletions(-)
+
 -- 
 2.17.1
 
