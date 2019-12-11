@@ -2,113 +2,115 @@ Return-Path: <SRS0=OWH4=2B=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=no
+X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FAKE_REPLY_C,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6749EC3F68F
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Dec 2019 12:45:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 765D3C43603
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Dec 2019 14:20:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3E4D924653
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Dec 2019 12:45:41 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="s07zZQl/"
+	by mail.kernel.org (Postfix) with ESMTP id 3C3B5222C4
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Dec 2019 14:20:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1576074025;
+	bh=2112vcRvffbbbfNLim0Vo0faBMt99YUI8qgiqHAGLqk=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=MqoeopAe8fr5mHFoSfTtOIxEd+90TNvs86xuFrgBVZ2suWvXPPzUDVr1LwtDQEP/3
+	 H34IOyuuKoQqqm1mD3BDQtc8ctyTe7k4NLeBUgkry/AIbC4e3nfclSb9y392DyYVFh
+	 CMs+YjB0KstJi+EZJ5i3d3XF/Z2M6ivCeXHxx5OY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729337AbfLKMpW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 11 Dec 2019 07:45:22 -0500
-Received: from lelv0143.ext.ti.com ([198.47.23.248]:35786 "EHLO
-        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727402AbfLKMpU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2019 07:45:20 -0500
-Received: from lelv0266.itg.ti.com ([10.180.67.225])
-        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id xBBCiwt2089410;
-        Wed, 11 Dec 2019 06:44:58 -0600
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1576068298;
-        bh=OE99JeSd1ur9H7sMDQrhfvYhHqNRrzL04S/LysYScMs=;
-        h=From:To:CC:Subject:Date;
-        b=s07zZQl/I/+upfp1a7uutKA1zM3iv8WSqmOTUtUpQx0CK20B+5bGr46hmHV2ZSnE6
-         XNLM1KaMG8zFIt31uDaFA65zxpRPZpjQNluH1519lWYkrlhvk8X2+yjO98+9mCwugA
-         asgJA0BPjbwUb6XDcu3Gk7oBnBu0vSpzJ0wyz5BQ=
-Received: from DFLE107.ent.ti.com (dfle107.ent.ti.com [10.64.6.28])
-        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id xBBCivUQ108608
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 11 Dec 2019 06:44:57 -0600
-Received: from DFLE100.ent.ti.com (10.64.6.21) by DFLE107.ent.ti.com
- (10.64.6.28) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Wed, 11
- Dec 2019 06:44:57 -0600
-Received: from fllv0040.itg.ti.com (10.64.41.20) by DFLE100.ent.ti.com
- (10.64.6.21) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
- Frontend Transport; Wed, 11 Dec 2019 06:44:57 -0600
-Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id xBBCirfh125451;
-        Wed, 11 Dec 2019 06:44:54 -0600
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Andrew Murray <andrew.murray@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-CC:     Murali Karicheri <m-karicheri2@ti.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        Xiaowei Bao <xiaowei.bao@nxp.com>
-Subject: [PATCH 0/4] Redesign MSI-X support in PCIe Endpoint Core
-Date:   Wed, 11 Dec 2019 18:16:04 +0530
-Message-ID: <20191211124608.887-1-kishon@ti.com>
-X-Mailer: git-send-email 2.17.1
+        id S1729750AbfLKOUY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 11 Dec 2019 09:20:24 -0500
+Received: from mail.kernel.org ([198.145.29.99]:57762 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727554AbfLKOUY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 11 Dec 2019 09:20:24 -0500
+Received: from localhost (173-25-83-245.client.mchsi.com [173.25.83.245])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id CAF6D214AF;
+        Wed, 11 Dec 2019 14:20:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1576074024;
+        bh=2112vcRvffbbbfNLim0Vo0faBMt99YUI8qgiqHAGLqk=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=nu8bvQlOLmTPRsrn+c+H1hyBH50QH6IXCOetMbMqKW5Y7S5UXeh13ojI5cLmBF6wt
+         cSgcERk+vhQAE5dvLKeKLAt7lHT+zKNjsG/Cizxwdod0woiuW52sQ4dBNq1BjavF1y
+         +6fvpZq9547S28MAHy9ZyEhc1aKFDFu2Ma/pXsfM=
+Date:   Wed, 11 Dec 2019 08:20:22 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Dilip Kota <eswara.kota@linux.intel.com>
+Cc:     lorenzo.pieralisi@arm.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, andriy.shevchenko@intel.com,
+        gustavo.pimentel@synopsys.com, andrew.murray@arm.com,
+        robh@kernel.org, linux-kernel@vger.kernel.org,
+        cheol.yong.kim@intel.com, chuanhua.lei@linux.intel.com,
+        qi-ming.wu@intel.com
+Subject: Re: [PATCH v10 2/3] PCI: dwc: intel: PCIe RC controller driver
+Message-ID: <20191211142022.GA26342@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <7f5f0eec-465e-9c21-35ac-b6906119ed5e@linux.intel.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Existing MSI-X support in Endpoint core has limitations:
- 1) MSIX table (which is mapped to a BAR) is not allocated by
-    anyone. Ideally this should be allocated by endpoint
-    function driver.
- 2) Endpoint controller can choose any random BARs for MSIX
-    table (irrespective of whether the endpoint function driver
-    has allocated memory for it or not)
+On Wed, Dec 11, 2019 at 05:59:58PM +0800, Dilip Kota wrote:
+> 
+> On 12/11/2019 7:49 AM, Bjorn Helgaas wrote:
+> > On Fri, Dec 06, 2019 at 03:27:49PM +0800, Dilip Kota wrote:
+> > > Add support to PCIe RC controller on Intel Gateway SoCs.
+> > > PCIe controller is based of Synopsys DesignWare PCIe core.
+> > > 
+> > > Intel PCIe driver requires Upconfigure support, Fast Training
+> > > Sequence and link speed configurations. So adding the respective
+> > > helper functions in the PCIe DesignWare framework.
+> > > It also programs hardware autonomous speed during speed
+> > > configuration so defining it in pci_regs.h.
+> > > 
+> > > Also, mark Intel PCIe driver depends on MSI IRQ Domain
+> > > as Synopsys DesignWare framework depends on the
+> > > PCI_MSI_IRQ_DOMAIN.
+> > > 
+> > > Signed-off-by: Dilip Kota <eswara.kota@linux.intel.com>
+> > > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > > Reviewed-by: Andrew Murray <andrew.murray@arm.com>
+> > > Reviewed-by: Andy Shevchenko <andriy.shevchenko@intel.com>
+> > > Acked-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 
-In order to avoid these limitations, pci_epc_set_msix() is
-modified to include BAR Indicator register (BIR) configuration
-and MSIX table offset as arguments. This series also fixed MSIX
-support in dwc driver and add MSI-X support in Cadence PCIe driver.
+> > > +static void pcie_update_bits(void __iomem *base, u32 ofs, u32 mask, u32 val)
+> > > +{
+> > > +	u32 old;
+> > > +
+> > > +	old = readl(base + ofs);
+> > > +	val = (old & ~mask) | (val & mask);
+> > > +
+> > > +	if (val != old)
+> > > +		writel(val, base + ofs);
+> > I assume this is never used on registers where the "old & ~mask" part
+> > contains RW1C bits?  If there are RW1C bits in that part, this will
+> > corrupt them.
+> There is no impact because RW1C bits of respective registers are 0s at the
+> time of this function call.
 
-The previous version of Cadence EP MSI-X support is @ [1].
-This series is created on top of [2]
+Sounds ... dangerous, but I'll take your word for it.
 
-[1] -> https://patchwork.ozlabs.org/patch/971160/
-[2] -> http://lore.kernel.org/r/20191209092147.22901-1-kishon@ti.com
+> I see, this patch series is merged in the maintainer tree.
+> Should i need to submit as a separate patch on top of maintainer tree or
+> submit the new version of whole patch series?
+> Please let me know the best practice.
 
-Alan Douglas (1):
-  PCI: cadence: Add MSI-X support to Endpoint driver
+Sorry, I didn't realize this had already been merged to Lorenzo's
+tree.  But it's not upstream (in Linus' tree) yet.  I don't know how
+Andrew and Lorenzo want to handle this.  None of these are important,
+so you could just ignore these comments.
 
-Kishon Vijay Abraham I (3):
-  PCI: endpoint: Fix ->set_msix() to take BIR and offset as arguments
-  PCI: dwc: Fix dw_pcie_ep_raise_msix_irq() to get correct MSIX table
-    address
-  PCI: keystone: Add AM654 PCIe Endpoint to raise MSIX interrupt
+What I personally would do is rebase the branch, e.g.,
+lpieralisi/pci/dwc, and apply an incremental patch.  But it's up to
+Andrew and Lorenzo whether they want to do anything.
 
- .../pci/controller/cadence/pcie-cadence-ep.c  | 112 +++++++++++++++++-
- drivers/pci/controller/cadence/pcie-cadence.h |  10 ++
- drivers/pci/controller/dwc/pci-keystone.c     |   5 +-
- .../pci/controller/dwc/pcie-designware-ep.c   |  61 +++++-----
- drivers/pci/controller/dwc/pcie-designware.h  |   1 +
- drivers/pci/endpoint/functions/pci-epf-test.c |  31 ++++-
- drivers/pci/endpoint/pci-epc-core.c           |   7 +-
- drivers/pci/endpoint/pci-epf-core.c           |   2 +
- include/linux/pci-epc.h                       |   6 +-
- include/linux/pci-epf.h                       |  15 +++
- 10 files changed, 207 insertions(+), 43 deletions(-)
-
--- 
-2.17.1
-
+Bjorn
