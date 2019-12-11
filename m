@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09BF1C43603
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Dec 2019 16:03:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69B73C47409
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Dec 2019 16:04:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D56A220836
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Dec 2019 16:03:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 34EB12464B
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Dec 2019 16:04:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576080203;
-	bh=fnyJKczM5o9gX2QSlRYeZOJCIgFxy+pPik7ScKtRtIw=;
+	s=default; t=1576080262;
+	bh=3iC+18TvAnQn3O8cFqW+/Dl+rOgTPGJCJH7ffZJuQTI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=e4ipeJ6FHj9GzVurhtcCu0LvCPnkyVCJmIbjJ+2OFWrBXSZ90XFpfw2LAF0tNV9Yf
-	 52Gl6waoKI1eQhgCQsVhddFYDVboxZpDF6Zb1uTk3y+F+VLFdXxZmx92MpjbjCe2U9
-	 zgAPUhgXZnWGJuqJMZBWkj5kKin2heEluHrWtJW8=
+	b=Ej5GMSzWQgcd8HKW20c1LTR2n9GpI8uFWSMISbYyyInSVnE8mIaxspRRSSMggRvWX
+	 sEG3xm56OTORMtWXVBjSKSVEV/wUJWdqLfyj8KtbgUhpJtf+zjT3wH+SEJHqV66g32
+	 yODwhK4qEbbIpMzwA+HKoeVScI6Q/jSNN+1EeGT8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731527AbfLKQDM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 11 Dec 2019 11:03:12 -0500
-Received: from mail.kernel.org ([198.145.29.99]:35870 "EHLO mail.kernel.org"
+        id S1733038AbfLKQDX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 11 Dec 2019 11:03:23 -0500
+Received: from mail.kernel.org ([198.145.29.99]:35828 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731322AbfLKPNE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 11 Dec 2019 10:13:04 -0500
+        id S1730850AbfLKPND (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 11 Dec 2019 10:13:03 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id CFA222467C;
-        Wed, 11 Dec 2019 15:13:02 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id C0DFA24688;
+        Wed, 11 Dec 2019 15:13:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576077183;
-        bh=fnyJKczM5o9gX2QSlRYeZOJCIgFxy+pPik7ScKtRtIw=;
+        s=default; t=1576077182;
+        bh=3iC+18TvAnQn3O8cFqW+/Dl+rOgTPGJCJH7ffZJuQTI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=vcl2GcZbTd3QEpBitP2LPaSNmXOw/8tutUlJ2qOV63R3S2hr2AhgipR/aOqeC0ajx
-         tk5W+ZLomVy2WLXlnslD0sSld2lhbnhea/V8WVnOU7AO26ZcpS2Smwx+NCK2ggDcbG
-         riR5MnJuxqse1XjlmjSmKiLkmXq+u51jFtZik9tE=
+        b=M++Vv1mKMgVzeReukqpPa16Efa2bd/R0+80NHAqH5jLCp+A1UMXbiW8Ra6kjWGtQp
+         PmLFJhOdodOwncUrX3rU8DO/wk9yGtSEjAFtM3CsA0GtPG6m4UL4s3ovvo8roV4B4p
+         kfOjzQlGna1/IapB9ZU4587nu9cp29kDiceS4s7g=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Tyrel Datwyler <tyreld@linux.ibm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Michael Ellerman <mpe@ellerman.id.au>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 067/134] PCI: rpaphp: Annotate and correctly byte swap DRC properties
-Date:   Wed, 11 Dec 2019 10:10:43 -0500
-Message-Id: <20191211151150.19073-67-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 066/134] PCI: rpaphp: Don't rely on firmware feature to imply drc-info support
+Date:   Wed, 11 Dec 2019 10:10:42 -0500
+Message-Id: <20191211151150.19073-66-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191211151150.19073-1-sashal@kernel.org>
 References: <20191211151150.19073-1-sashal@kernel.org>
@@ -61,112 +61,44 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Tyrel Datwyler <tyreld@linux.ibm.com>
 
-[ Upstream commit 0737686778c6dbe0908d684dd5b9c05b127526ba ]
+[ Upstream commit 52e2b0f16574afd082cff0f0e8567b2d9f68c033 ]
 
-The device tree is in big endian format and any properties directly
-retrieved using OF helpers that don't explicitly byte swap should
-be annotated. In particular there are several places where we grab
-the opaque property value for the old ibm,drc-* properties and the
-ibm,my-drc-index property.
+In the event that the partition is migrated to a platform with older
+firmware that doesn't support the ibm,drc-info property the device
+tree is modified to remove the ibm,drc-info property and replace it
+with the older style ibm,drc-* properties for types, names, indexes,
+and power-domains. One of the requirements of the drc-info firmware
+feature is that the client is able to handle both the new property,
+and old style properties at runtime. Therefore we can't rely on the
+firmware feature alone to dictate which property is currently
+present in the device tree.
 
-Fix this for better static checking by annotating values we know to
-explicitly big endian, and byte swap where appropriate.
+Fix this short coming by checking explicitly for the ibm,drc-info
+property, and falling back to the older ibm,drc-* properties if it
+doesn't exist.
 
 Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
 Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 Signed-off-by: Michael Ellerman <mpe@ellerman.id.au>
-Link: https://lore.kernel.org/r/1573449697-5448-9-git-send-email-tyreld@linux.ibm.com
+Link: https://lore.kernel.org/r/1573449697-5448-6-git-send-email-tyreld@linux.ibm.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/hotplug/rpaphp_core.c | 29 +++++++++++++++--------------
- 1 file changed, 15 insertions(+), 14 deletions(-)
+ drivers/pci/hotplug/rpaphp_core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/pci/hotplug/rpaphp_core.c b/drivers/pci/hotplug/rpaphp_core.c
-index e18e9a0e959c8..abb10b3c0b70f 100644
+index e3502644a45c3..e18e9a0e959c8 100644
 --- a/drivers/pci/hotplug/rpaphp_core.c
 +++ b/drivers/pci/hotplug/rpaphp_core.c
-@@ -154,11 +154,11 @@ static enum pci_bus_speed get_max_bus_speed(struct slot *slot)
- 	return speed;
- }
+@@ -275,7 +275,7 @@ int rpaphp_check_drc_props(struct device_node *dn, char *drc_name,
+ 		return -EINVAL;
+ 	}
  
--static int get_children_props(struct device_node *dn, const int **drc_indexes,
--		const int **drc_names, const int **drc_types,
--		const int **drc_power_domains)
-+static int get_children_props(struct device_node *dn, const __be32 **drc_indexes,
-+			      const __be32 **drc_names, const __be32 **drc_types,
-+			      const __be32 **drc_power_domains)
- {
--	const int *indexes, *names, *types, *domains;
-+	const __be32 *indexes, *names, *types, *domains;
- 
- 	indexes = of_get_property(dn, "ibm,drc-indexes", NULL);
- 	names = of_get_property(dn, "ibm,drc-names", NULL);
-@@ -194,8 +194,8 @@ static int rpaphp_check_drc_props_v1(struct device_node *dn, char *drc_name,
- 				char *drc_type, unsigned int my_index)
- {
- 	char *name_tmp, *type_tmp;
--	const int *indexes, *names;
--	const int *types, *domains;
-+	const __be32 *indexes, *names;
-+	const __be32 *types, *domains;
- 	int i, rc;
- 
- 	rc = get_children_props(dn->parent, &indexes, &names, &types, &domains);
-@@ -208,7 +208,7 @@ static int rpaphp_check_drc_props_v1(struct device_node *dn, char *drc_name,
- 
- 	/* Iterate through parent properties, looking for my-drc-index */
- 	for (i = 0; i < be32_to_cpu(indexes[0]); i++) {
--		if ((unsigned int) indexes[i + 1] == my_index)
-+		if (be32_to_cpu(indexes[i + 1]) == my_index)
- 			break;
- 
- 		name_tmp += (strlen(name_tmp) + 1);
-@@ -267,7 +267,7 @@ static int rpaphp_check_drc_props_v2(struct device_node *dn, char *drc_name,
- int rpaphp_check_drc_props(struct device_node *dn, char *drc_name,
- 			char *drc_type)
- {
--	const unsigned int *my_index;
-+	const __be32 *my_index;
- 
- 	my_index = of_get_property(dn, "ibm,my-drc-index", NULL);
- 	if (!my_index) {
-@@ -277,10 +277,10 @@ int rpaphp_check_drc_props(struct device_node *dn, char *drc_name,
- 
- 	if (of_find_property(dn->parent, "ibm,drc-info", NULL))
+-	if (firmware_has_feature(FW_FEATURE_DRC_INFO))
++	if (of_find_property(dn->parent, "ibm,drc-info", NULL))
  		return rpaphp_check_drc_props_v2(dn, drc_name, drc_type,
--						*my_index);
-+						be32_to_cpu(*my_index));
+ 						*my_index);
  	else
- 		return rpaphp_check_drc_props_v1(dn, drc_name, drc_type,
--						*my_index);
-+						be32_to_cpu(*my_index));
- }
- EXPORT_SYMBOL_GPL(rpaphp_check_drc_props);
- 
-@@ -311,10 +311,11 @@ static int is_php_type(char *drc_type)
-  * for built-in pci slots (even when the built-in slots are
-  * dlparable.)
-  */
--static int is_php_dn(struct device_node *dn, const int **indexes,
--		const int **names, const int **types, const int **power_domains)
-+static int is_php_dn(struct device_node *dn, const __be32 **indexes,
-+		     const __be32 **names, const __be32 **types,
-+		     const __be32 **power_domains)
- {
--	const int *drc_types;
-+	const __be32 *drc_types;
- 	int rc;
- 
- 	rc = get_children_props(dn, indexes, names, &drc_types, power_domains);
-@@ -349,7 +350,7 @@ int rpaphp_add_slot(struct device_node *dn)
- 	struct slot *slot;
- 	int retval = 0;
- 	int i;
--	const int *indexes, *names, *types, *power_domains;
-+	const __be32 *indexes, *names, *types, *power_domains;
- 	char *name, *type;
- 
- 	if (!dn->name || strcmp(dn->name, "pci"))
 -- 
 2.20.1
 
