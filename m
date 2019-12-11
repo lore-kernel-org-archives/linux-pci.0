@@ -4,49 +4,49 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D969C00454
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Dec 2019 15:44:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FAB0C2D0C6
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Dec 2019 15:44:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 116F22464B
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Dec 2019 15:44:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DCEA922B48
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Dec 2019 15:44:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576079072;
-	bh=+apFpkaZDwSpUqEzEbDAZkekxpk/M4D8c6QZn+sWc0M=;
+	s=default; t=1576079087;
+	bh=0kkvMRZ/npEE3ZOX3qFqvZr/yONXMfNvvPFi75Q63SE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=aGbwqRnk0pkgLBoYa98DayjL5aawzfhFt3oKkTbUGIkGQRBggjK46sLqkzu/PjGHx
-	 a2FW/TU5hkM6FMBxCaKdW/wYwrffHSAXg91Y8GYK3YP1ffZyJnNBFe4lBGxYgfRw22
-	 enDr0Dgb4C5CnyBS8ITp+HQ/nwmC+7CM0lBz0JEY=
+	b=F6fSGTFLa2XL6fPUTaXF9MmyQ6/hlcW8zuzRAj2G+7C2OyKKJuW8XTI52yZOpbv/P
+	 WU4Gz0sAn3BOW4W8sjFaMAuz0gYx89eNHul2FoJdevOtxmiLoZGjIM3e7pLBZSDgoR
+	 BTFbV/R/+dfl8p7DS6hKbkXQIfdhqF5umiVEzAXw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387678AbfLKPoU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 11 Dec 2019 10:44:20 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33098 "EHLO mail.kernel.org"
+        id S1729512AbfLKPol (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 11 Dec 2019 10:44:41 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33004 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387424AbfLKP11 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 11 Dec 2019 10:27:27 -0500
+        id S1732975AbfLKP1Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 11 Dec 2019 10:27:24 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 57BA9208C3;
-        Wed, 11 Dec 2019 15:27:26 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 2CBE322527;
+        Wed, 11 Dec 2019 15:27:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576078047;
-        bh=+apFpkaZDwSpUqEzEbDAZkekxpk/M4D8c6QZn+sWc0M=;
+        s=default; t=1576078043;
+        bh=0kkvMRZ/npEE3ZOX3qFqvZr/yONXMfNvvPFi75Q63SE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=pON9V1pfI6/5JS3Inu/yUUkQ0/FnamRAx60K3uar+j34lGKubwuJnAhBKk1E88Be+
-         wlD5vqVSCvEYH9aXVjEqqhUXX0sHt7mq0narYTlfiMNk8Xv+CFIY/4EHezvtDt+Zir
-         2tPQE44JoMsr0PyPKG+JZx/aveKSvIVJvavaIEtk=
+        b=cxjEja541X3RKkhiZ5d2w+ULOO0mS1iAELDhbmOh2hJZKvQbTAuaS7B0F7HkOjLSh
+         mjUXscKhmJfPLLHpG4dePEptlNttceaQsL6HlvJNFbmzogVGgxRoyxyrgqlkZTax4e
+         o+rU0z98EA8jBSn7UAyZmdgp/q9HnFstNgVkJLWA=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Tyrel Datwyler <tyreld@linux.ibm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Michael Ellerman <mpe@ellerman.id.au>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 40/79] PCI: rpaphp: Don't rely on firmware feature to imply drc-info support
-Date:   Wed, 11 Dec 2019 10:26:04 -0500
-Message-Id: <20191211152643.23056-40-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 37/79] PCI: rpaphp: Fix up pointer to first drc-info entry
+Date:   Wed, 11 Dec 2019 10:26:01 -0500
+Message-Id: <20191211152643.23056-37-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191211152643.23056-1-sashal@kernel.org>
 References: <20191211152643.23056-1-sashal@kernel.org>
@@ -61,44 +61,39 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Tyrel Datwyler <tyreld@linux.ibm.com>
 
-[ Upstream commit 52e2b0f16574afd082cff0f0e8567b2d9f68c033 ]
+[ Upstream commit 9723c25f99aff0451cfe6392e1b9fdd99d0bf9f0 ]
 
-In the event that the partition is migrated to a platform with older
-firmware that doesn't support the ibm,drc-info property the device
-tree is modified to remove the ibm,drc-info property and replace it
-with the older style ibm,drc-* properties for types, names, indexes,
-and power-domains. One of the requirements of the drc-info firmware
-feature is that the client is able to handle both the new property,
-and old style properties at runtime. Therefore we can't rely on the
-firmware feature alone to dictate which property is currently
-present in the device tree.
+The first entry of the ibm,drc-info property is an int encoded count
+of the number of drc-info entries that follow. The "value" pointer
+returned by of_prop_next_u32() is still pointing at the this value
+when we call of_read_drc_info_cell(), but the helper function
+expects that value to be pointing at the first element of an entry.
 
-Fix this short coming by checking explicitly for the ibm,drc-info
-property, and falling back to the older ibm,drc-* properties if it
-doesn't exist.
+Fix up by incrementing the "value" pointer to point at the first
+element of the first drc-info entry prior.
 
 Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
 Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 Signed-off-by: Michael Ellerman <mpe@ellerman.id.au>
-Link: https://lore.kernel.org/r/1573449697-5448-6-git-send-email-tyreld@linux.ibm.com
+Link: https://lore.kernel.org/r/1573449697-5448-5-git-send-email-tyreld@linux.ibm.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/hotplug/rpaphp_core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/hotplug/rpaphp_core.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
 diff --git a/drivers/pci/hotplug/rpaphp_core.c b/drivers/pci/hotplug/rpaphp_core.c
-index f56004243591f..ccc6deeb9ccf0 100644
+index cc860c5f7d26f..f56004243591f 100644
 --- a/drivers/pci/hotplug/rpaphp_core.c
 +++ b/drivers/pci/hotplug/rpaphp_core.c
-@@ -275,7 +275,7 @@ int rpaphp_check_drc_props(struct device_node *dn, char *drc_name,
+@@ -239,6 +239,8 @@ static int rpaphp_check_drc_props_v2(struct device_node *dn, char *drc_name,
+ 	value = of_prop_next_u32(info, NULL, &entries);
+ 	if (!value)
  		return -EINVAL;
- 	}
++	else
++		value++;
  
--	if (firmware_has_feature(FW_FEATURE_DRC_INFO))
-+	if (of_find_property(dn->parent, "ibm,drc-info", NULL))
- 		return rpaphp_check_drc_props_v2(dn, drc_name, drc_type,
- 						*my_index);
- 	else
+ 	for (j = 0; j < entries; j++) {
+ 		of_read_drc_info_cell(&info, &value, &drc);
 -- 
 2.20.1
 
