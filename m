@@ -2,191 +2,85 @@ Return-Path: <SRS0=GIoD=2G=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0C31C2D0D2
-	for <linux-pci@archiver.kernel.org>; Mon, 16 Dec 2019 11:01:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2BABC43603
+	for <linux-pci@archiver.kernel.org>; Mon, 16 Dec 2019 11:08:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C05272072B
-	for <linux-pci@archiver.kernel.org>; Mon, 16 Dec 2019 11:01:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C50EA20700
+	for <linux-pci@archiver.kernel.org>; Mon, 16 Dec 2019 11:08:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727566AbfLPLBa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 16 Dec 2019 06:01:30 -0500
-Received: from mx2.suse.de ([195.135.220.15]:36828 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727494AbfLPLB3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 16 Dec 2019 06:01:29 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 0A418ABF4;
-        Mon, 16 Dec 2019 11:01:27 +0000 (UTC)
-From:   Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-To:     andrew.murray@arm.com, maz@kernel.org,
-        linux-kernel@vger.kernel.org,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        bcm-kernel-feedback-list@broadcom.com,
-        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     james.quinlan@broadcom.com, mbrugger@suse.com,
-        phil@raspberrypi.org, wahrenst@gmx.net, jeremy.linton@arm.com,
-        linux-pci@vger.kernel.org, linux-rpi-kernel@lists.infradead.org,
-        Rob Herring <robh@kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org
-Subject: [PATCH v5 1/6] dt-bindings: PCI: Add bindings for brcmstb's PCIe device
-Date:   Mon, 16 Dec 2019 12:01:07 +0100
-Message-Id: <20191216110113.30436-2-nsaenzjulienne@suse.de>
-X-Mailer: git-send-email 2.24.0
-In-Reply-To: <20191216110113.30436-1-nsaenzjulienne@suse.de>
-References: <20191216110113.30436-1-nsaenzjulienne@suse.de>
+        id S1727317AbfLPLIZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 16 Dec 2019 06:08:25 -0500
+Received: from foss.arm.com ([217.140.110.172]:50240 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727174AbfLPLIZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 16 Dec 2019 06:08:25 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id B28881FB;
+        Mon, 16 Dec 2019 03:08:24 -0800 (PST)
+Received: from localhost (unknown [10.37.6.20])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 298DB3F6CF;
+        Mon, 16 Dec 2019 03:08:24 -0800 (PST)
+Date:   Mon, 16 Dec 2019 11:08:22 +0000
+From:   Andrew Murray <andrew.murray@arm.com>
+To:     Yurii Monakov <monakov.y@gmail.com>
+Cc:     linux-pci@vger.kernel.org, m-karicheri2@ti.com
+Subject: Re: [PATCH] PCI: keystone: Link training retries initiation
+Message-ID: <20191216110821.GR24359@e119886-lin.cambridge.arm.com>
+References: <20191007114159.61ad83ea@monakov-y.office.kontur-niirs.ru>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191007114159.61ad83ea@monakov-y.office.kontur-niirs.ru>
+User-Agent: Mutt/1.10.1+81 (426a6c1) (2018-08-26)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Jim Quinlan <james.quinlan@broadcom.com>
+On Mon, Oct 07, 2019 at 11:41:59AM +0300, Yurii Monakov wrote:
+> ks_pcie_stop_link function never cleared LTSSM_EN_VAL bit so
+> link training was never triggered more than once after startup.
+> In configurations where link can be unstable during early boot,
+> for example, under low temperature, it will never be established.
+> 
+> Signed-off-by: Yurii Monakov <monakov.y@gmail.com>
+> ---
+>  drivers/pci/controller/dwc/pci-keystone.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
+> index f19de60ac991..ea8e7ebd8c4f 100644
+> --- a/drivers/pci/controller/dwc/pci-keystone.c
+> +++ b/drivers/pci/controller/dwc/pci-keystone.c
+> @@ -510,7 +510,7 @@ static void ks_pcie_stop_link(struct dw_pcie *pci)
+>  	/* Disable Link training */
+>  	val = ks_pcie_app_readl(ks_pcie, CMD_STATUS);
+>  	val &= ~LTSSM_EN_VAL;
+> -	ks_pcie_app_writel(ks_pcie, CMD_STATUS, LTSSM_EN_VAL | val);
 
-The DT bindings description of the brcmstb PCIe device is described.
-This node can only be used for now on the Raspberry Pi 4.
+Oh yeah, that doesn't look right to me. Good spot. Thanks for this!
 
-Signed-off-by: Jim Quinlan <james.quinlan@broadcom.com>
-Co-developed-by: Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-Signed-off-by: Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-Reviewed-by: Rob Herring <robh@kernel.org>
-Reviewed-by: Andrew Murray <andrew.murray@arm.com>
+> +	ks_pcie_app_writel(ks_pcie, CMD_STATUS, val);
 
----
+As far as I can work out, this bug existed from the beginning - can
+you please resend with this tag?
 
-Changes since v2:
-  - Add pci reference schema
-  - Drop all default properties
-  - Assume msi-controller and msi-parent are properly defined
-  - Add num entries on multiple properties
-  - use unevaluatedProperties
-  - Update required properties
-  - Fix license
+Fixes: 0c4ffcfe1fbc ("PCI: keystone: Add TI Keystone PCIe driver")
 
-Changes since v1:
-  - Fix commit Subject
-  - Remove linux,pci-domain
+Can you also update the commit subject to emphasise it's a bug fix,
+e.g. PCI: keystone: Fix ... or similar.
 
-This was based on Jim's original submission[1], converted to yaml and
-adapted to the RPi4 case.
+Thanks,
 
-[1] https://patchwork.kernel.org/patch/10605937/
+Andrew Murray
 
- .../bindings/pci/brcm,stb-pcie.yaml           | 97 +++++++++++++++++++
- 1 file changed, 97 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
-
-diff --git a/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml b/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
-new file mode 100644
-index 000000000000..77d3e81a437b
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
-@@ -0,0 +1,97 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/pci/brcm,stb-pcie.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: Brcmstb PCIe Host Controller Device Tree Bindings
-+
-+maintainers:
-+  - Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-+
-+allOf:
-+  - $ref: /schemas/pci/pci-bus.yaml#
-+
-+properties:
-+  compatible:
-+    const: brcm,bcm2711-pcie # The Raspberry Pi 4
-+
-+  reg:
-+    maxItems: 1
-+
-+  interrupts:
-+    minItems: 1
-+    maxItems: 2
-+    items:
-+      - description: PCIe host controller
-+      - description: builtin MSI controller
-+
-+  interrupt-names:
-+    minItems: 1
-+    maxItems: 2
-+    items:
-+      - const: pcie
-+      - const: msi
-+
-+  ranges:
-+    maxItems: 1
-+
-+  dma-ranges:
-+    maxItems: 1
-+
-+  clocks:
-+    maxItems: 1
-+
-+  clock-names:
-+    items:
-+      - const: sw_pcie
-+
-+  msi-controller:
-+    description: Identifies the node as an MSI controller.
-+
-+  msi-parent:
-+    description: MSI controller the device is capable of using.
-+
-+  brcm,enable-ssc:
-+    description: Indicates usage of spread-spectrum clocking.
-+    type: boolean
-+
-+required:
-+  - reg
-+  - dma-ranges
-+  - "#interrupt-cells"
-+  - interrupts
-+  - interrupt-names
-+  - interrupt-map-mask
-+  - interrupt-map
-+  - msi-controller
-+
-+unevaluatedProperties: false
-+
-+examples:
-+  - |
-+    #include <dt-bindings/interrupt-controller/irq.h>
-+    #include <dt-bindings/interrupt-controller/arm-gic.h>
-+
-+    scb {
-+            #address-cells = <2>;
-+            #size-cells = <1>;
-+            pcie0: pcie@7d500000 {
-+                    compatible = "brcm,bcm2711-pcie";
-+                    reg = <0x0 0x7d500000 0x9310>;
-+                    device_type = "pci";
-+                    #address-cells = <3>;
-+                    #size-cells = <2>;
-+                    #interrupt-cells = <1>;
-+                    interrupts = <GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>,
-+                                 <GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>;
-+                    interrupt-names = "pcie", "msi";
-+                    interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+                    interrupt-map = <0 0 0 1 &gicv2 GIC_SPI 143 IRQ_TYPE_LEVEL_HIGH>;
-+                    msi-parent = <&pcie0>;
-+                    msi-controller;
-+                    ranges = <0x02000000 0x0 0xf8000000 0x6 0x00000000 0x0 0x04000000>;
-+                    dma-ranges = <0x02000000 0x0 0x00000000 0x0 0x00000000 0x0 0x80000000>;
-+                    brcm,enable-ssc;
-+            };
-+    };
--- 
-2.24.0
-
+>  }
+>  
+>  static int ks_pcie_start_link(struct dw_pcie *pci)
+> -- 
+> 2.17.1
+> 
