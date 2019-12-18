@@ -2,150 +2,97 @@ Return-Path: <SRS0=Txbz=2I=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_2 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0B25C2D0CD
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Dec 2019 15:07:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 460B3C3F68F
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Dec 2019 16:06:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C17222465E
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Dec 2019 15:07:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1B8F22467B
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Dec 2019 16:06:59 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="C1i8TT0B"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726858AbfLRPHR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 18 Dec 2019 10:07:17 -0500
-Received: from foss.arm.com ([217.140.110.172]:49376 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726723AbfLRPHQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 18 Dec 2019 10:07:16 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id B723C30E;
-        Wed, 18 Dec 2019 07:07:15 -0800 (PST)
-Received: from donnerap.cambridge.arm.com (usa-sjc-imap-foss1.foss.arm.com [10.121.207.14])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 4B46D3F719;
-        Wed, 18 Dec 2019 07:07:14 -0800 (PST)
-Date:   Wed, 18 Dec 2019 15:07:11 +0000
-From:   Andre Przywara <andre.przywara@arm.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Andrew Murray <andrew.murray@arm.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, Will Deacon <will@kernel.org>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH] pcie: Add quirk for the Arm Neoverse N1SDP platform
-Message-ID: <20191218150711.41bdf9a4@donnerap.cambridge.arm.com>
-In-Reply-To: <20191213150031.GA229369@google.com>
-References: <9ad40b55-0d31-a7b7-9f99-ea281fd4ad7d@arm.com>
-        <20191213150031.GA229369@google.com>
-Organization: ARM
-X-Mailer: Claws Mail 3.17.3 (GTK+ 2.24.32; aarch64-unknown-linux-gnu)
+        id S1727460AbfLRQG5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 18 Dec 2019 11:06:57 -0500
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:46305 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727608AbfLRQG5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Dec 2019 11:06:57 -0500
+Received: by mail-wr1-f65.google.com with SMTP id z7so2843200wrl.13
+        for <linux-pci@vger.kernel.org>; Wed, 18 Dec 2019 08:06:55 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=ilGmQzgVpyz5+GgzhiMi4TnzxPgEeCNgmk38TMF+kZE=;
+        b=C1i8TT0BKaZyqPij7EJiWtjjPH+4RB1V0a/wUUSe/JhD9Oslbx/1Q6XBpUW4q/UXah
+         aoe7twq2cCcWk0bOOJ8Gb45nCWzluMIaHz3zLYW62oA0JAIGE4LCdpdOofh0hHYbNncr
+         7MRGFnhVHQ4QYKCyBPZDcJ+yuntrIOsJELzFkUuNbHJ5GH97ieyD4Hx/gV1FrVok8xPE
+         jNC4iIRl7+jgHUADTihavmD3bgyz/hMLa6NPMD4z0NlctNZH0ccJcgj2fU8QyAbECLao
+         R/3/iPqI0xBufIyVNwBG7j7oOgv1rd4/DaFeC9pHElsyRmZy3qcm5xpPdim14xbF4VWO
+         YKKg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=ilGmQzgVpyz5+GgzhiMi4TnzxPgEeCNgmk38TMF+kZE=;
+        b=h7Mvz6Ke64ZJiPTY3Ayjg2lVyCs6IJ6cYMEfHV8sRC6T4s7tw2+vCt+6ZUbTxh50f6
+         SVUOb716YGlj/sbjK7X1WcoPNtTGuc1OmBkvCbh1O2xpMQh3/7saff1HMIWppUK5/ev9
+         sHUZOy2ywPrbNwIqELAHh7fd5wUwCd7tbK2gCoYMYOls8LIMthqRyNqnA8dgKuyQDb/U
+         ETHVC06IwalX38oM4+afeHPSnt4DaHyx5mOc6kWN7Qg7Iv76AcVxnqoq9gAr7ifGybQp
+         5YU7YqEK7DC7qLMAybD9jHGsuL5D6mvD8NsYEWCILIUEktOkvb9qo/uGU5ulRKobdLNr
+         AamQ==
+X-Gm-Message-State: APjAAAXmBmYD6mxb9Jzz8R6FQV0nHUGPgeum4B0J16taErBP6T2cmsRc
+        o7RZifohqsub71q4qw5krWQ2yA==
+X-Google-Smtp-Source: APXvYqzlJfnzBPNvhgPh9GCf337cLxDV4nJ7SDFk/WvYc0UpuKM/kTPeUg6Rln8M6dK6UBAz2n6nYw==
+X-Received: by 2002:a5d:4dc9:: with SMTP id f9mr3435991wru.297.1576685214969;
+        Wed, 18 Dec 2019 08:06:54 -0800 (PST)
+Received: from myrica (adsl-84-227-176-239.adslplus.ch. [84.227.176.239])
+        by smtp.gmail.com with ESMTPSA id d14sm3236857wru.9.2019.12.18.08.06.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 18 Dec 2019 08:06:54 -0800 (PST)
+Date:   Wed, 18 Dec 2019 17:06:49 +0100
+From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
+To:     Auger Eric <eric.auger@redhat.com>
+Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        iommu@lists.linux-foundation.org, joro@8bytes.org,
+        robh+dt@kernel.org, mark.rutland@arm.com,
+        lorenzo.pieralisi@arm.com, guohanjun@huawei.com,
+        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+        will@kernel.org, robin.murphy@arm.com, bhelgaas@google.com,
+        jonathan.cameron@huawei.com, zhangfei.gao@linaro.org
+Subject: Re: [PATCH v3 03/13] iommu/arm-smmu-v3: Support platform SSID
+Message-ID: <20191218160649.GE2371701@myrica>
+References: <20191209180514.272727-1-jean-philippe@linaro.org>
+ <20191209180514.272727-4-jean-philippe@linaro.org>
+ <06c57de4-cfca-f95f-ac06-ab6f49a028a3@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <06c57de4-cfca-f95f-ac06-ab6f49a028a3@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, 13 Dec 2019 15:07:07 -0600
-Bjorn Helgaas <helgaas@kernel.org> wrote:
-
-Hi Bjorn,
-
-> On Thu, Dec 12, 2019 at 11:05:31AM +0000, Andre Przywara wrote:
-> > On 11/12/2019 20:17, Bjorn Helgaas wrote:  
-> > > On Wed, Dec 11, 2019 at 11:00:49AM +0000, Andre Przywara wrote:  
-> > >> On Tue, 10 Dec 2019 08:41:15 -0600
-> > >> Bjorn Helgaas <helgaas@kernel.org> wrote:  
-> > >>> On Mon, Dec 09, 2019 at 04:06:38PM +0000, Andre Przywara wrote:  
-> > >>>> From: Deepak Pandey <Deepak.Pandey@arm.com>
-> > >>>>
-> > >>>> The Arm N1SDP SoC suffers from some PCIe integration issues, most
-> > >>>> prominently config space accesses to not existing BDFs being answered
-> > >>>> with a bus abort, resulting in an SError.    
-> > >>>
-> > >>> Can we tease this apart a little more?  Linux doesn't program all the
-> > >>> bits that control error signaling, so even on hardware that works
-> > >>> perfectly, much of this behavior is determined by what firmware did.
-> > >>> I wonder if Linux could be more careful about this.
-> > >>>
-> > >>> "Bus abort" is not a term used in PCIe.  
-> > >>
-> > >> Yes, sorry, that was my sloppy term, also aiming more at the CPU
-> > >> side of the bus, between the cores and the RC.
-> > >>  
-> > >>>  IIUC, a config read to a
-> > >>> device that doesn't exist should terminate with an Unsupported Request
-> > >>> completion, e.g., see the implementation note in PCIe r5.0 sec 2.3.1.  
-> > >>
-> > >> Yes, that's what Lorenzo mentioned as well.
-> > >>  
-> > >>> The UR should be an uncorrectable non-fatal error (Table 6-5), and
-> > >>> Figures 6-2 and 6-3 show how it should be handled and when it should
-> > >>> be signaled as a system error.  In case you don't have a copy of the
-> > >>> spec, I extracted those two figures and put them at [1].  
-> > >>
-> > >> Thanks for that.
-> > >> So in the last few months we tossed several ideas around how to
-> > >> work-around this without kernel intervention, all of them turned out
-> > >> to be not working. There are indeed registers in the RC that
-> > >> influence error reporting to the CPU side, but even if we could
-> > >> suppress (or catch) the SError, we can't recover and fixup the read
-> > >> transaction to the CPU. Even Lorenzo gave up on this ;-) As far as I
-> > >> understood this, there are gates missing which are supposed to
-> > >> translate this specific UR into a valid "all-1s" response.  
-> > > 
-> > > But the commit log says firmware scanned the bus (catching the
-> > > SErrors).  Shouldn't Linux be able to catch them the same way?  
-> > 
-> > Not really. The scanning is done by the SCP management processor,
-> > which is a Cortex-M class core on the same bus. So it's a simple,
-> > single core running very early after power-on, when the actual AP
-> > cores are still off. The SError handler is set to just increase a
-> > value, then to return. This value is then checked before and after a
-> > config space access for a given BDF:
-> > https://git.linaro.org/landing-teams/working/arm/n1sdp-pcie-quirk.git/tree/scp
-> > 
-> > On the AP cores that run Linux later on this is quite different: The
-> > SError is asynchronous, imprecise (inexact) and has no syndrome
-> > information. That means we can't attribute this anymore to the
-> > faulting instruction, we don't even know if it happened due to this
-> > config space access. The CPU might have executed later instructions
-> > already, so the state is broken at this point. SError basically
-> > means: the system is screwed up.  Because this is quite common for
-> > SErrors, we don't even allow to register SError handlers in arm64
-> > Linux.
-> > 
-> > So even if we could somehow handle this is in Linux, it would be a
-> > much greater and intrusive hack, so I'd rather stick with this
-> > version.  
+On Wed, Dec 18, 2019 at 11:17:40AM +0100, Auger Eric wrote:
+> Hi Jean,
 > 
-> The problem is that from a PCIe point of view, UR is something we
-> should be able to tolerate.  It happens during enumeration and also
-> during hotplug.  It definitely does not mean "the system is screwed up
-> and must be rebooted."
+> On 12/9/19 7:05 PM, Jean-Philippe Brucker wrote:
+> > For platform devices that support SubstreamID (SSID), firmware provides
+> > the number of supported SSID bits. Restrict it to what the SMMU supports
+> > and cache it into master->ssid_bits, which will also be used for PCI
+> > PASID.
+> > 
+> > Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
+> the title of the patch does not really explain what it actually does. At
+> this stage we are far from supporting SSIDs ;-) Same for 04?
 
-I agree, I am also wondering why an (ARM) SError was considered an appropriate answer in the first place. Maybe it's due to some confusion between the ARM architecture term "SError" and the PCI #SERR signal?
+Alright I'll make this "Parse PASID devicetree property of platform
+devices" and "Parse SSID property of named component node"
 
-> To go back to Figure 6-3, I'm getting the impression that the "System
-> Error" shown at the top is *not* the "SError" you're referring to.  If
-> they were the same, the Root Control enable bits should gate it, but
-> according to your lspci, those enable bits are cleared, yet you still
-> take SErrors.
-
-Yes, "System Error" in PCI lingo is definitely something different and unrelated to the ARM architecture SError.
-I also checked the (legacy) PCI command register, the PCIe baseline error handling and AER, all of them seem to not propagate the SERR signal. So I reckon it's something which does this on the root complex integration level, outside of generic PCIe. So far I also couldn't find a masking bit in the RC data sheet as well.
- 
-> SError is asynchronous and imprecise.  Is there no way to do the
-> config access in a way that makes it precise, by adding some kind of
-> sync?  There's no reason we can't single-thread config accesses and
-> maybe even MMIO/IO port accesses as well if necessary.
-
-There is, on this core, but it becomes even more dodgy: While you can *block* delivery of an SError (by setting PSTATE.A), you couldn't clear it so far. ARMv8.2 introduced the "esb" instruction, which allows us to actually consume the SError, so clearing the A bit afterwards would continue operation as normal. This particular core supports v8.2, but the Rockchip SoC does not. So it would not help in the general case, also has that bitter taste of possibly masking an unrelated SError.
-
-So I managed to hack some proof of concept up where I can indeed fence in the SError around the config space access, within the kernel, so I can *almost* certainly say whether this readl/readw triggered this. But that would require aarch64 specific code (even instructions that require an ARMv8.2 compatible core) in the PCI driver, and so is probably more ugly than the existing solution. Plus we would need to iron out the remaining uncertainty, not sure that's actually possible.
-
-Cheers,
-Andre.
+Thanks,
+Jean
