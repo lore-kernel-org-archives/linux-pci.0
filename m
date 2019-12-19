@@ -2,150 +2,243 @@ Return-Path: <SRS0=tMyV=2J=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A568C32771
-	for <linux-pci@archiver.kernel.org>; Thu, 19 Dec 2019 16:31:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC139C2D0D1
+	for <linux-pci@archiver.kernel.org>; Thu, 19 Dec 2019 16:32:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2DC3E24676
-	for <linux-pci@archiver.kernel.org>; Thu, 19 Dec 2019 16:31:41 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="dgEdguI1"
+	by mail.kernel.org (Postfix) with ESMTP id A119324679
+	for <linux-pci@archiver.kernel.org>; Thu, 19 Dec 2019 16:32:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1576773147;
+	bh=rn47R6IvO6EmAAUhCrgRqhoSznMNBK9nhnALCSAkwoE=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=nOCuo2e2BmaCQShAo57fu34g0jtI8/6yvZ1a+pF5/suhy/hNmwct7hzITZOpuCVaG
+	 tn/vASWErinA88QCbJfVbIkfcMk0+JQa2R8tt7j9rBnGiMpYRs3IcB11sS9OYP5vCY
+	 ukvKf6NAmiW5zaiRh6ZrXWNwKCm/ozhcx99ve11c=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727015AbfLSQbh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 19 Dec 2019 11:31:37 -0500
-Received: from mail-wm1-f65.google.com ([209.85.128.65]:34275 "EHLO
-        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726998AbfLSQbg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2019 11:31:36 -0500
-Received: by mail-wm1-f65.google.com with SMTP id f4so7418206wmj.1
-        for <linux-pci@vger.kernel.org>; Thu, 19 Dec 2019 08:31:35 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=en1Diu3sI6Wm13W9qcASbGXcjcSPf5WXodRzGlHYYvg=;
-        b=dgEdguI1vFCV7YNVUg0oEi5hoedAB5SCo0EHqrgrYN2fDZQP1jM0e2gVFmXjAsarm9
-         sE3jEiVBfo9bIxoraETghmWio/hExZaK0G2MlaAUWWPlH/s/lgj8y2aPluLIJwIiWDO5
-         nPCsL9EFTnWUXXPdeHMf2mqD8ncvbLtOVcjLDDmK20sqR/zY19gWGF0iPqJMOqrpBHzU
-         P5l5nDoT+24rRDoL/bDgoMasOpqDS3TpLXI4nHsZ6shxvb0a59G2E8TD5mPZoPT7AZm0
-         TE/nR/n+4AfO7nup111L94qgV7A8exhXah9vnGXYO9tpJuoHYa73upM3pfuz8aU4XUjD
-         EyRw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=en1Diu3sI6Wm13W9qcASbGXcjcSPf5WXodRzGlHYYvg=;
-        b=sANM/FKNpgHQ9niyZIlN1Zi6b25+RkkvDe+und9hMPttw3kUjcoappnCWsuHDe4aOj
-         FrUSiQd6WjLPbcIAGQncX1TdlxZejDEB6/JGQvxMxrD0at/CW+0Wlt85Z+6VesTSAN+S
-         KwdgsvQ9nPTXHJYAcBjVjW0EIpRM8CC6tYwXDhjYsJ2S6FLBvB3Yo08rROn2zjGDEb69
-         ZlTXB4CV+kgVOWnAe3lHp/zq1BSH7nTgWnIJXfCZRRuy+5ccxXPfbqU6vLEKs3DcgBhg
-         Y1L2Ofd3YxIs0A+WaIqbSIRBPzJssaAjQK3d0vtsNCvx7VG5dfqeJhWukB7VR5hj/kDq
-         zycg==
-X-Gm-Message-State: APjAAAXn4yiVDU8hCQAP+L6Z7FVpEDCp4vlmU/8EmH/uC3VWFIv85iyp
-        fcT22z6ivSHcjVOjk3czo6AFZiJpap0=
-X-Google-Smtp-Source: APXvYqz7aYfTKLRMIc9dIpZKfGpZT6KS6fOh8tdIld2RBmduglCWax9u24T9mQN4/gn+82GrDikg0g==
-X-Received: by 2002:a1c:7d93:: with SMTP id y141mr11448751wmc.111.1576773093503;
-        Thu, 19 Dec 2019 08:31:33 -0800 (PST)
-Received: from localhost.localdomain (adsl-84-227-176-239.adslplus.ch. [84.227.176.239])
-        by smtp.gmail.com with ESMTPSA id u22sm7092068wru.30.2019.12.19.08.31.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 19 Dec 2019 08:31:33 -0800 (PST)
-From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
-To:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org
-Cc:     joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
-        lorenzo.pieralisi@arm.com, guohanjun@huawei.com,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        will@kernel.org, robin.murphy@arm.com, bhelgaas@google.com,
-        eric.auger@redhat.com, jonathan.cameron@huawei.com,
-        zhangfei.gao@linaro.org
-Subject: [PATCH v4 11/13] iommu/arm-smmu-v3: Improve add_device() error handling
-Date:   Thu, 19 Dec 2019 17:30:31 +0100
-Message-Id: <20191219163033.2608177-12-jean-philippe@linaro.org>
-X-Mailer: git-send-email 2.24.1
-In-Reply-To: <20191219163033.2608177-1-jean-philippe@linaro.org>
-References: <20191219163033.2608177-1-jean-philippe@linaro.org>
+        id S1726911AbfLSQc0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 19 Dec 2019 11:32:26 -0500
+Received: from mail.kernel.org ([198.145.29.99]:41380 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726855AbfLSQc0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 19 Dec 2019 11:32:26 -0500
+Received: from mail-qt1-f170.google.com (mail-qt1-f170.google.com [209.85.160.170])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id A2BA324650;
+        Thu, 19 Dec 2019 16:32:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1576773145;
+        bh=rn47R6IvO6EmAAUhCrgRqhoSznMNBK9nhnALCSAkwoE=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=TmCUZc8HC4MsZMytQqpP6YcX2OvrwtIdtdZ6YvP+pdbVGfUu12j+4TI5oBr+en0UT
+         m/aJbFqmFebwpo9kyvgy5coWrQWisx3CZz+QjTTgSZdYFahKknGcHO/eomevXqiCw4
+         mjN5tcZn7GUMZSZ3eeuKMm1iNWfsp2D4VKOEXeJI=
+Received: by mail-qt1-f170.google.com with SMTP id w47so5552286qtk.4;
+        Thu, 19 Dec 2019 08:32:25 -0800 (PST)
+X-Gm-Message-State: APjAAAVCRj5LYzaqIfyBAYUy2XxbdPdTMhHZt2qKOzvarlBf/U6VTAMz
+        6wut6gj4UikkayqCwQuzKV3qLsfOjMEdG928/w==
+X-Google-Smtp-Source: APXvYqwZYa0h1s/HCI711yjy0PxWMFYhBrYLpz14TQY1Z//PXZAz3O5cSE1pEV1yX1YSasjOZatClg+LA3n1RvqJ8fA=
+X-Received: by 2002:ac8:6747:: with SMTP id n7mr7762290qtp.224.1576773144784;
+ Thu, 19 Dec 2019 08:32:24 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <cover.1575860791.git.eswara.kota@linux.intel.com> <a276c1107d40917901a4265d4d8622dee060e4f5.1575860791.git.eswara.kota@linux.intel.com>
+In-Reply-To: <a276c1107d40917901a4265d4d8622dee060e4f5.1575860791.git.eswara.kota@linux.intel.com>
+From:   Rob Herring <robh@kernel.org>
+Date:   Thu, 19 Dec 2019 10:32:13 -0600
+X-Gmail-Original-Message-ID: <CAL_JsqJE=7P3z8AzWUfWu1PCV4EVC1PBJ+ZAu3vmAcq5G5D34g@mail.gmail.com>
+Message-ID: <CAL_JsqJE=7P3z8AzWUfWu1PCV4EVC1PBJ+ZAu3vmAcq5G5D34g@mail.gmail.com>
+Subject: Re: [PATCH v11 1/3] dt-bindings: PCI: intel: Add YAML schemas for the
+ PCIe RC controller
+To:     Dilip Kota <eswara.kota@linux.intel.com>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        PCI <linux-pci@vger.kernel.org>, devicetree@vger.kernel.org,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Andrew Murray <andrew.murray@arm.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Andy Shevchenko <andriy.shevchenko@intel.com>,
+        cheol.yong.kim@intel.com, chuanhua.lei@linux.intel.com,
+        qi-ming.wu@intel.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Let add_device() clean up after itself. The iommu_bus_init() function
-does call remove_device() on error, but other sites (e.g. of_iommu) do
-not.
+On Sun, Dec 8, 2019 at 9:20 PM Dilip Kota <eswara.kota@linux.intel.com> wrote:
+>
+> Add YAML schemas for PCIe RC controller on Intel Gateway SoCs
+> which is Synopsys DesignWare based PCIe core.
+>
+> Signed-off-by: Dilip Kota <eswara.kota@linux.intel.com>
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Reviewed-by: Andrew Murray <andrew.murray@arm.com>
+> Reviewed-by: Rob Herring <robh@kernel.org>
+> ---
+>  .../devicetree/bindings/pci/intel-gw-pcie.yaml     | 138 +++++++++++++++++++++
+>  1 file changed, 138 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml
+>
+> diff --git a/Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml b/Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml
+> new file mode 100644
+> index 000000000000..db605d8a387d
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml
+> @@ -0,0 +1,138 @@
+> +# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
+> +%YAML 1.2
+> +---
+> +$id: http://devicetree.org/schemas/pci/intel-gw-pcie.yaml#
+> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> +
+> +title: PCIe RC controller on Intel Gateway SoCs
+> +
+> +maintainers:
+> +  - Dilip Kota <eswara.kota@linux.intel.com>
+> +
+> +properties:
+> +  compatible:
+> +    items:
+> +      - const: intel,lgm-pcie
+> +      - const: snps,dw-pcie
+> +
+> +  device_type:
+> +    const: pci
+> +
+> +  "#address-cells":
+> +    const: 3
+> +
+> +  "#size-cells":
+> +    const: 2
+> +
+> +  reg:
+> +    items:
+> +      - description: Controller control and status registers.
+> +      - description: PCIe configuration registers.
+> +      - description: Controller application registers.
+> +
+> +  reg-names:
+> +    items:
+> +      - const: dbi
+> +      - const: config
+> +      - const: app
+> +
+> +  ranges:
+> +    maxItems: 1
+> +
+> +  resets:
+> +    maxItems: 1
+> +
+> +  clocks:
+> +    maxItems: 1
+> +
+> +  phys:
+> +    maxItems: 1
+> +
+> +  phy-names:
+> +    const: pcie
+> +
+> +  reset-gpios:
+> +    maxItems: 1
+> +
+> +  linux,pci-domain: true
+> +
+> +  num-lanes:
+> +    maximum: 2
+> +    description: Number of lanes to use for this port.
+> +
+> +  '#interrupt-cells':
+> +    const: 1
+> +
+> +  interrupt-map-mask:
+> +    description: Standard PCI IRQ mapping properties.
+> +
+> +  interrupt-map:
+> +    description: Standard PCI IRQ mapping properties.
+> +
+> +  max-link-speed:
+> +    description: Specify PCI Gen for link capability.
+> +    allOf:
+> +      - $ref: /schemas/types.yaml#/definitions/uint32
+> +      - enum: [ 1, 2, 3, 4 ]
+> +      - default: 1
+> +
+> +  bus-range:
+> +    description: Range of bus numbers associated with this controller.
+> +
+> +  reset-assert-ms:
+> +    description: |
+> +      Delay after asserting reset to the PCIe device.
+> +    maximum: 500
+> +    default: 100
+> +
+> +required:
+> +  - compatible
+> +  - device_type
+> +  - "#address-cells"
+> +  - "#size-cells"
+> +  - reg
+> +  - reg-names
+> +  - ranges
+> +  - resets
+> +  - clocks
+> +  - phys
+> +  - phy-names
+> +  - reset-gpios
+> +  - '#interrupt-cells'
+> +  - interrupt-map
+> +  - interrupt-map-mask
+> +
+> +additionalProperties: false
+> +
+> +examples:
+> +  - |
+> +    #include <dt-bindings/gpio/gpio.h>
+> +    #include <dt-bindings/clock/intel,lgm-clk.h>
 
-Don't free level-2 stream tables because we'd have to track if we
-allocated each of them or if they are used by other endpoints. It's not
-worth the hassle since they are managed resources.
+I guess this is applied now as the example fails to build in
+linux-next as this header is missing.
 
-Reviewed-by: Eric Auger <eric.auger@redhat.com>
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
----
- drivers/iommu/arm-smmu-v3.c | 28 +++++++++++++++++++++-------
- 1 file changed, 21 insertions(+), 7 deletions(-)
+At this point I'd settle for just 'make dt_binding_check' passing on
+linux-next even though it should pass on maintainer trees too.
+However, it doesn't appear the clock driver with this header is close
+to being merged. The binding was sent on Aug 28 and not to the DT list
+so I hadn't seen it. Given that, I'd suggest a follow-up patch to
+remove the header dependency here. Just change LGM_GCLK_PCIE10 to the
+value.
 
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index bf106a7b53eb..e62ca80f2f76 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -2837,14 +2837,16 @@ static int arm_smmu_add_device(struct device *dev)
- 	for (i = 0; i < master->num_sids; i++) {
- 		u32 sid = master->sids[i];
- 
--		if (!arm_smmu_sid_in_range(smmu, sid))
--			return -ERANGE;
-+		if (!arm_smmu_sid_in_range(smmu, sid)) {
-+			ret = -ERANGE;
-+			goto err_free_master;
-+		}
- 
- 		/* Ensure l2 strtab is initialised */
- 		if (smmu->features & ARM_SMMU_FEAT_2_LVL_STRTAB) {
- 			ret = arm_smmu_init_l2_strtab(smmu, sid);
- 			if (ret)
--				return ret;
-+				goto err_free_master;
- 		}
- 	}
- 
-@@ -2854,13 +2856,25 @@ static int arm_smmu_add_device(struct device *dev)
- 		master->ssid_bits = min_t(u8, master->ssid_bits,
- 					  CTXDESC_LINEAR_CDMAX);
- 
-+	ret = iommu_device_link(&smmu->iommu, dev);
-+	if (ret)
-+		goto err_free_master;
-+
- 	group = iommu_group_get_for_dev(dev);
--	if (!IS_ERR(group)) {
--		iommu_group_put(group);
--		iommu_device_link(&smmu->iommu, dev);
-+	if (IS_ERR(group)) {
-+		ret = PTR_ERR(group);
-+		goto err_unlink;
- 	}
- 
--	return PTR_ERR_OR_ZERO(group);
-+	iommu_group_put(group);
-+	return 0;
-+
-+err_unlink:
-+	iommu_device_unlink(&smmu->iommu, dev);
-+err_free_master:
-+	kfree(master);
-+	fwspec->iommu_priv = NULL;
-+	return ret;
- }
- 
- static void arm_smmu_remove_device(struct device *dev)
--- 
-2.24.1
-
+> +    pcie10: pcie@d0e00000 {
+> +      compatible = "intel,lgm-pcie", "snps,dw-pcie";
+> +      device_type = "pci";
+> +      #address-cells = <3>;
+> +      #size-cells = <2>;
+> +      reg = <0xd0e00000 0x1000>,
+> +            <0xd2000000 0x800000>,
+> +            <0xd0a41000 0x1000>;
+> +      reg-names = "dbi", "config", "app";
+> +      linux,pci-domain = <0>;
+> +      max-link-speed = <4>;
+> +      bus-range = <0x00 0x08>;
+> +      interrupt-parent = <&ioapic1>;
+> +      #interrupt-cells = <1>;
+> +      interrupt-map-mask = <0 0 0 0x7>;
+> +      interrupt-map = <0 0 0 1 &ioapic1 27 1>,
+> +                      <0 0 0 2 &ioapic1 28 1>,
+> +                      <0 0 0 3 &ioapic1 29 1>,
+> +                      <0 0 0 4 &ioapic1 30 1>;
+> +      ranges = <0x02000000 0 0xd4000000 0xd4000000 0 0x04000000>;
+> +      resets = <&rcu0 0x50 0>;
+> +      clocks = <&cgu0 LGM_GCLK_PCIE10>;
+> +      phys = <&cb0phy0>;
+> +      phy-names = "pcie";
+> +      reset-assert-ms = <500>;
+> +      reset-gpios = <&gpio0 3 GPIO_ACTIVE_LOW>;
+> +      num-lanes = <2>;
+> +    };
+> --
+> 2.11.0
+>
