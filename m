@@ -5,49 +5,47 @@ X-Spam-Level:
 X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B288C43603
-	for <linux-pci@archiver.kernel.org>; Thu, 19 Dec 2019 12:01:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84A7FC2D0C1
+	for <linux-pci@archiver.kernel.org>; Thu, 19 Dec 2019 12:02:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2EAA924650
-	for <linux-pci@archiver.kernel.org>; Thu, 19 Dec 2019 12:01:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5654124684
+	for <linux-pci@archiver.kernel.org>; Thu, 19 Dec 2019 12:02:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="RBr3umIP"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="RFvRJCXO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726702AbfLSMBS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 19 Dec 2019 07:01:18 -0500
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:37964 "EHLO
-        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726704AbfLSMBS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2019 07:01:18 -0500
-Received: from lelv0266.itg.ti.com ([10.180.67.225])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id xBJC19aq067272;
-        Thu, 19 Dec 2019 06:01:09 -0600
+        id S1726866AbfLSMCc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 19 Dec 2019 07:02:32 -0500
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:50454 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726668AbfLSMCc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2019 07:02:32 -0500
+Received: from fllv0035.itg.ti.com ([10.64.41.0])
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id xBJC2I7s030349;
+        Thu, 19 Dec 2019 06:02:18 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1576756869;
-        bh=UE9chI9mah0RhDqtfW9UyM7cHrHG5JmXTXk/JRmKmUU=;
+        s=ti-com-17Q1; t=1576756938;
+        bh=SJ4hNptUJk4P4x4SOwGjpOGBMqMzUELoedaw1b+jwHI=;
         h=Subject:To:CC:References:From:Date:In-Reply-To;
-        b=RBr3umIPtIGbAZA44PEYUUII1Aj1fR/A7Yr+xSqCTYVJ+pDsy8gn7XJ7fzDv3/3v4
-         HE5Pi+VyhIfm1Jufg2koqiypZJH6SXUKbcgdZ36S6dd7h2RbLO5jOKeMuvS/odQHzT
-         G8jc1GfeOnFOLMnH5elgZJjtigM2evFq7tycs8pE=
-Received: from DLEE105.ent.ti.com (dlee105.ent.ti.com [157.170.170.35])
-        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id xBJC19J4051781
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 19 Dec 2019 06:01:09 -0600
-Received: from DLEE108.ent.ti.com (157.170.170.38) by DLEE105.ent.ti.com
- (157.170.170.35) with Microsoft SMTP Server (version=TLS1_2,
+        b=RFvRJCXO0HNrMEcTcs4Fcr3tvG2qzsk0ASlEc41wcAlIV1j1EOg9iX3ITF/TeAP62
+         pNUMfAKHW+v53YNoTRjTq67JrWwAQXmYAH5BVzcf8Y/dCQPYFQzZls5F6DrLZbYE4x
+         rJHv+WPgKFUV5JWWnd08mRG45SCctKuFBZZobeXk=
+Received: from DFLE114.ent.ti.com (dfle114.ent.ti.com [10.64.6.35])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id xBJC2H8k014202;
+        Thu, 19 Dec 2019 06:02:17 -0600
+Received: from DFLE104.ent.ti.com (10.64.6.25) by DFLE114.ent.ti.com
+ (10.64.6.35) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Thu, 19
- Dec 2019 06:01:09 -0600
-Received: from lelv0326.itg.ti.com (10.180.67.84) by DLEE108.ent.ti.com
- (157.170.170.38) with Microsoft SMTP Server (version=TLS1_2,
+ Dec 2019 06:02:17 -0600
+Received: from fllv0040.itg.ti.com (10.64.41.20) by DFLE104.ent.ti.com
+ (10.64.6.25) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
- Frontend Transport; Thu, 19 Dec 2019 06:01:08 -0600
+ Frontend Transport; Thu, 19 Dec 2019 06:02:17 -0600
 Received: from [10.24.69.159] (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id xBJC15YS047971;
-        Thu, 19 Dec 2019 06:01:06 -0600
-Subject: Re: [PATCH 06/13] PCI: cadence: Allow pci_host_bridge to have custom
- pci_ops
+        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id xBJC2DRK102964;
+        Thu, 19 Dec 2019 06:02:14 -0600
+Subject: Re: [PATCH 07/13] PCI: cadence: Add new *ops* for CPU addr fixup
 To:     Andrew Murray <andrew.murray@arm.com>
 CC:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -56,15 +54,15 @@ CC:     Bjorn Helgaas <bhelgaas@google.com>,
         <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <linux-omap@vger.kernel.org>
 References: <20191209092147.22901-1-kishon@ti.com>
- <20191209092147.22901-7-kishon@ti.com>
- <20191217123243.GC24359@e119886-lin.cambridge.arm.com>
+ <20191209092147.22901-8-kishon@ti.com>
+ <20191217124050.GD24359@e119886-lin.cambridge.arm.com>
 From:   Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <0176543a-bc9b-0584-537e-ea407f5340c2@ti.com>
-Date:   Thu, 19 Dec 2019 17:32:48 +0530
+Message-ID: <936cd6d6-33fc-6432-6fec-2b5173cb9ca4@ti.com>
+Date:   Thu, 19 Dec 2019 17:33:56 +0530
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.2.2
 MIME-Version: 1.0
-In-Reply-To: <20191217123243.GC24359@e119886-lin.cambridge.arm.com>
+In-Reply-To: <20191217124050.GD24359@e119886-lin.cambridge.arm.com>
 Content-Type: text/plain; charset="utf-8"
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -74,76 +72,68 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Andrew,
+Hi,
 
-On 17/12/19 6:02 pm, Andrew Murray wrote:
-> On Mon, Dec 09, 2019 at 02:51:40PM +0530, Kishon Vijay Abraham I wrote:
->> Certain platforms like TI's J721E allows only 32-bit configuration
->> space access. In such cases pci_generic_config_read and
->> pci_generic_config_write cannot be used. Add support in Cadence core
->> to let pci_host_bridge have custom pci_ops.
+On 17/12/19 6:10 pm, Andrew Murray wrote:
+> On Mon, Dec 09, 2019 at 02:51:41PM +0530, Kishon Vijay Abraham I wrote:
+>> Cadence driver uses "mem" memory resource to obtain the offset of
+>> configuration space address region, memory space address region and
+>> message space address region. The obtained offset is used to program
+>> the Address Translation Unit (ATU). However certain platforms like TI's
+>> J721E SoC require the absolute address to be programmed in the ATU and not
+>> just the offset.
+>>
+>> The same problem was solved in designware driver using a platform specific
+>> ops for CPU addr fixup in commit a660083eb06c5bb0 ("PCI: dwc: designware:
+> 
+> Thanks for this reference, though this doesn't need to be in the commit
+> log, please put such comments underneath a ---.
+> 
+>> Add new *ops* for CPU addr fixup"). Follow a similar mechanism in
+>> Cadence too instead of directly using "mem" memory resource in Cadence
+>> PCIe core.
 >>
 >> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 >> ---
->>  drivers/pci/controller/cadence/pcie-cadence-host.c | 7 ++++---
->>  drivers/pci/controller/cadence/pcie-cadence.h      | 8 ++++++++
->>  2 files changed, 12 insertions(+), 3 deletions(-)
+>>  .../pci/controller/cadence/pcie-cadence-host.c    | 15 ++++-----------
+>>  drivers/pci/controller/cadence/pcie-cadence.c     |  8 ++++++--
+>>  drivers/pci/controller/cadence/pcie-cadence.h     |  1 +
+>>  3 files changed, 11 insertions(+), 13 deletions(-)
 >>
 >> diff --git a/drivers/pci/controller/cadence/pcie-cadence-host.c b/drivers/pci/controller/cadence/pcie-cadence-host.c
->> index 0929554f5a81..2efc33b1cade 100644
+>> index 2efc33b1cade..cf817be237af 100644
 >> --- a/drivers/pci/controller/cadence/pcie-cadence-host.c
 >> +++ b/drivers/pci/controller/cadence/pcie-cadence-host.c
->> @@ -12,8 +12,8 @@
->>  
->>  #include "pcie-cadence.h"
->>  
->> -static void __iomem *cdns_pci_map_bus(struct pci_bus *bus, unsigned int devfn,
->> -				      int where)
->> +void __iomem *cdns_pci_map_bus(struct pci_bus *bus, unsigned int devfn,
->> +			       int where)
+>> @@ -105,15 +105,14 @@ static int cdns_pcie_host_init_root_port(struct cdns_pcie_rc *rc)
+>>  static int cdns_pcie_host_init_address_translation(struct cdns_pcie_rc *rc)
 >>  {
->>  	struct pci_host_bridge *bridge = pci_find_host_bridge(bus);
->>  	struct cdns_pcie_rc *rc = pci_host_bridge_priv(bridge);
->> @@ -289,7 +289,8 @@ int cdns_pcie_host_setup(struct cdns_pcie_rc *rc)
->>  	list_splice_init(&resources, &bridge->windows);
->>  	bridge->dev.parent = dev;
->>  	bridge->busnr = pcie->bus;
->> -	bridge->ops = &cdns_pcie_host_ops;
->> +	if (!bridge->ops)
->> +		bridge->ops = &cdns_pcie_host_ops;
->>  	bridge->map_irq = of_irq_parse_and_map_pci;
->>  	bridge->swizzle_irq = pci_common_swizzle;
+>>  	struct cdns_pcie *pcie = &rc->pcie;
+>> -	struct resource *mem_res = pcie->mem_res;
+>>  	struct resource *bus_range = rc->bus_range;
+>>  	struct resource *cfg_res = rc->cfg_res;
+>>  	struct device *dev = pcie->dev;
+>>  	struct device_node *np = dev->of_node;
+>>  	struct of_pci_range_parser parser;
+>> +	u64 cpu_addr = cfg_res->start;
+>>  	struct of_pci_range range;
+>>  	u32 addr0, addr1, desc1;
+>> -	u64 cpu_addr;
+>>  	int r, err;
 >>  
->> diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
->> index 5171d0da37da..c879dd3d2893 100644
->> --- a/drivers/pci/controller/cadence/pcie-cadence.h
->> +++ b/drivers/pci/controller/cadence/pcie-cadence.h
->> @@ -472,11 +472,19 @@ static inline bool cdns_pcie_is_link_up(struct cdns_pcie *pcie)
+>>  	/*
+>> @@ -126,7 +125,9 @@ static int cdns_pcie_host_init_address_translation(struct cdns_pcie_rc *rc)
+>>  	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_PCI_ADDR1(0), addr1);
+>>  	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_DESC1(0), desc1);
 >>  
->>  #ifdef CONFIG_PCIE_CADENCE_HOST
->>  int cdns_pcie_host_setup(struct cdns_pcie_rc *rc);
->> +void __iomem *cdns_pci_map_bus(struct pci_bus *bus, unsigned int devfn,
->> +			       int where);
-> 
-> The commit message doesn't explain why this change in visibility is needed).
-
-So that platform drivers can write custom read() and write() ops and
-re-use map_bus. Will add this info in commit message.
-> 
->>  #else
->>  static inline int cdns_pcie_host_setup(struct cdns_pcie_rc *rc)
->>  {
->>  	return 0;
->>  }
+>> -	cpu_addr = cfg_res->start - mem_res->start;
+>> +	if (pcie->ops->cpu_addr_fixup)
+>> +		cpu_addr = pcie->ops->cpu_addr_fixup(pcie, cpu_addr);
 >> +
->> +static inline void __iomem *cdns_pci_map_bus(struct pci_bus *bus,
->> +					     unsigned int devfn,
->> +					     int where)
->> +{
 > 
-> This still needs to return something right?
+> Won't this patch cause a breakage for existing users that won't have defined a
+> cpu_addr_fixup? The offset isn't being calculated and so cpu_addr will be wrong?
 
-Right, thanks for spotting this.
+Correct, this will need an additional patch in pcie-cadence-plat.c.
 
 Thanks
 Kishon
