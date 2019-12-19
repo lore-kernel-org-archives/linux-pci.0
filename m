@@ -4,56 +4,56 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE19AC2D0D3
-	for <linux-pci@archiver.kernel.org>; Thu, 19 Dec 2019 16:31:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C23DC3276E
+	for <linux-pci@archiver.kernel.org>; Thu, 19 Dec 2019 16:31:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A90A0206EC
-	for <linux-pci@archiver.kernel.org>; Thu, 19 Dec 2019 16:31:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4189E24676
+	for <linux-pci@archiver.kernel.org>; Thu, 19 Dec 2019 16:31:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="KsJmWTGB"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="W+Iytwj4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726930AbfLSQb1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 19 Dec 2019 11:31:27 -0500
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:41534 "EHLO
-        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726943AbfLSQb0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2019 11:31:26 -0500
-Received: by mail-wr1-f67.google.com with SMTP id c9so6611608wrw.8
-        for <linux-pci@vger.kernel.org>; Thu, 19 Dec 2019 08:31:25 -0800 (PST)
+        id S1726982AbfLSQbi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 19 Dec 2019 11:31:38 -0500
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:34760 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727005AbfLSQbh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2019 11:31:37 -0500
+Received: by mail-wr1-f66.google.com with SMTP id t2so6644197wrr.1
+        for <linux-pci@vger.kernel.org>; Thu, 19 Dec 2019 08:31:36 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=SVox6K0aClSgQAj4ZePzlVYlKOAA5RM1JxWE0eeJ+CM=;
-        b=KsJmWTGBulFgtHxInjLbvLy9PpRX0GteBfzNXmUrDZJrH+ZYaBQIa1dHh47VnHT3Us
-         G2OJX3xgvKyS2XK3zuqcw1ZOXlKDVBJQRRMVF0nOr9xyj+lDw01Q6Jd6vR/rkeYccEHt
-         yJOWYb/rjfBgXbMc7wgknxeamdVg+ZZN29ommW/LnpTHOjUz0VpuiDmfABbg1QOhKWEP
-         BK79LYU2nE8gQz8QcvCdTDHowZsM7F9ia5UVAVVs4wcvu3pPH0s1tj25cZ4VQrLWBmC5
-         SAfWsR+i6gOKs+s2DrspT9Ahp+NfOeXnTsawx79CvIM08A0Wu8V+jAyezZPtTeJVSYeM
-         zLKA==
+        bh=k0PTgEa8Z2EtxKNp+bXlU3gMIeIQMMd4dvAJJmx7ucE=;
+        b=W+Iytwj4wvUZ2mbwDVM7FzjhurcQ7XEm74cJFZdKNOpWZtf7wK2eBP0X8FsMZeSJ6x
+         iR0hoMFIuiITseQd974oYuP4t6sCXPRf3CBmd6yCV89pn+xP+xk+w7DoS2RBpcJj2xkt
+         9hAy9ONlO9aTHj8k3D5PUqhPlRW8+9sBhjji/UXYjHTc2kU0B/rcTeoqySC1prww1Kh5
+         lDK2rbNnj95q+9W/YHUT8aL/yY4xujuGQ3Gqt7+IIi+uCEaUwCmo0aNTuAmGuF4PphBE
+         eH7TqxdLwqXapRzKuHr8uFQZKVtKa1+hpBYpYNgTi8ckKxL0EE66EGNi9XNuHJ5DvbFx
+         fRpA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=SVox6K0aClSgQAj4ZePzlVYlKOAA5RM1JxWE0eeJ+CM=;
-        b=b47Gl4Rq+LwA4BUOaQN+DQNrUf6EUq+GF6OENA9FI+YSthxBBIC+kckNvOruW1lrf0
-         smPTMUKWhzRtSgzRjMZOKaJHQiZnCRKylGmCu9+gdayCHTRCXadB2c8f9VNJbByi7Yqx
-         QepIWdfxqcFoK4saC065vuSiauuXquqxVM0f8A5z2dhJaTKtMzSYqcyJWZ/e+L9Xbgpt
-         pUirANu7SPkGSxRhURFvRC9YoXCVAMJsZi51fncUamn+iV/e7f8fZo31NiinmGRDzcRu
-         7bXYdOf9Rc/Oz6RLI7mWCmgv8SzY91C8BRbMFwj3YL1kyC8qSLt6eeJ7elj/OIvlIw3g
-         wx+Q==
-X-Gm-Message-State: APjAAAX2dtCkdyGCMeydqyNcJRxnvSVm4YpPI3eJ7K3DS+ISd4MnpbTN
-        dScRKU/j3GF+iFdnRdAG3PA+jq6E3RU=
-X-Google-Smtp-Source: APXvYqzR3BRml1Osw8Pe6sNrf17z34IMgIAsII/16lKoUagOiEfpACFYNxRXRQ+jtWBFUTIlzmF8Sw==
-X-Received: by 2002:adf:eb48:: with SMTP id u8mr9977279wrn.283.1576773084271;
-        Thu, 19 Dec 2019 08:31:24 -0800 (PST)
+        bh=k0PTgEa8Z2EtxKNp+bXlU3gMIeIQMMd4dvAJJmx7ucE=;
+        b=CfuBBORfOshR5xN29HPOYXOD7g/exXSR2Mvio5gCdCVveqsZp3pruhoEB1Ds9rhp6/
+         o/ThbhgBPcINkHBTsVvTOAvNU/EV4U2HBQ3b1DVi4+99mFWqLCLjg8u1akKXqsqIy8ue
+         +9WZlRMeAK/UhaMBjGFQ6cNTKGYnt2mUpmVIDvM5N2cFhIsGKUZNUIwSvVc8YNbq/IZr
+         K5dgta5bCJrTkVT1h4/EeBbPCTcxZCLcg8kUKqiR5aKMUw3nAVkAsBhHq1UsHxn1GchJ
+         50OdE7ALZkJJ4FNR5eb5ngg5dOdaZ+IchOyyTad/4A0c7BD7WVr3Qmcz1V+njRv6zZdM
+         P8Mg==
+X-Gm-Message-State: APjAAAUa3VHQC27hTsYMMlbaCcItyR9RzfdtOJPvRn6R+gkZu6xk+zdw
+        uQtTO9lsZB4Nvk5ioqqv3gdDr5VTt5U=
+X-Google-Smtp-Source: APXvYqydpFFmYvpMjkEfbCXJIymkJAymWbp5K7XBwcoeSyvYywcmv2pSNLmPre/mfuyPhSrLgbG6Lw==
+X-Received: by 2002:adf:fcc4:: with SMTP id f4mr10390218wrs.247.1576773095285;
+        Thu, 19 Dec 2019 08:31:35 -0800 (PST)
 Received: from localhost.localdomain (adsl-84-227-176-239.adslplus.ch. [84.227.176.239])
-        by smtp.gmail.com with ESMTPSA id u22sm7092068wru.30.2019.12.19.08.31.23
+        by smtp.gmail.com with ESMTPSA id u22sm7092068wru.30.2019.12.19.08.31.33
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 19 Dec 2019 08:31:23 -0800 (PST)
+        Thu, 19 Dec 2019 08:31:34 -0800 (PST)
 From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
 To:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
@@ -64,9 +64,9 @@ Cc:     joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
         will@kernel.org, robin.murphy@arm.com, bhelgaas@google.com,
         eric.auger@redhat.com, jonathan.cameron@huawei.com,
         zhangfei.gao@linaro.org
-Subject: [PATCH v4 04/13] ACPI/IORT: Parse SSID property of named component node
-Date:   Thu, 19 Dec 2019 17:30:24 +0100
-Message-Id: <20191219163033.2608177-5-jean-philippe@linaro.org>
+Subject: [PATCH v4 12/13] PCI/ATS: Add PASID stubs
+Date:   Thu, 19 Dec 2019 17:30:32 +0100
+Message-Id: <20191219163033.2608177-13-jean-philippe@linaro.org>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20191219163033.2608177-1-jean-philippe@linaro.org>
 References: <20191219163033.2608177-1-jean-philippe@linaro.org>
@@ -77,62 +77,33 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Named component nodes in the IORT tables describe the number of
-Substream ID bits (aka. PASID) supported by the device. Propagate this
-value to the fwspec structure in order to enable PASID for platform
-devices.
+The SMMUv3 driver, which may be built without CONFIG_PCI, will soon gain
+PASID support.  Partially revert commit c6e9aefbf9db ("PCI/ATS: Remove
+unused PRI and PASID stubs") to re-introduce the PASID stubs, and avoid
+adding more #ifdefs to the SMMU driver.
 
-Acked-by: Hanjun Guo <guohanjun@huawei.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 Reviewed-by: Eric Auger <eric.auger@redhat.com>
 Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
 ---
- drivers/acpi/arm64/iort.c | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+ include/linux/pci-ats.h | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-index 33f71983e001..39f389214ecf 100644
---- a/drivers/acpi/arm64/iort.c
-+++ b/drivers/acpi/arm64/iort.c
-@@ -11,6 +11,7 @@
- #define pr_fmt(fmt)	"ACPI: IORT: " fmt
- 
- #include <linux/acpi_iort.h>
-+#include <linux/bitfield.h>
- #include <linux/iommu.h>
- #include <linux/kernel.h>
- #include <linux/list.h>
-@@ -924,6 +925,20 @@ static int iort_pci_iommu_init(struct pci_dev *pdev, u16 alias, void *data)
- 	return iort_iommu_xlate(info->dev, parent, streamid);
- }
- 
-+static void iort_named_component_init(struct device *dev,
-+				      struct acpi_iort_node *node)
-+{
-+	struct acpi_iort_named_component *nc;
-+	struct iommu_fwspec *fwspec = dev_iommu_fwspec_get(dev);
-+
-+	if (!fwspec)
-+		return;
-+
-+	nc = (struct acpi_iort_named_component *)node->node_data;
-+	fwspec->num_pasid_bits = FIELD_GET(ACPI_IORT_NC_PASID_BITS,
-+					   nc->node_flags);
-+}
-+
- /**
-  * iort_iommu_configure - Set-up IOMMU configuration for a device.
-  *
-@@ -978,6 +993,9 @@ const struct iommu_ops *iort_iommu_configure(struct device *dev)
- 			if (parent)
- 				err = iort_iommu_xlate(dev, parent, streamid);
- 		} while (parent && !err);
-+
-+		if (!err)
-+			iort_named_component_init(dev, node);
- 	}
- 
- 	/*
+diff --git a/include/linux/pci-ats.h b/include/linux/pci-ats.h
+index 5d62e78946a3..d08f0869f121 100644
+--- a/include/linux/pci-ats.h
++++ b/include/linux/pci-ats.h
+@@ -33,6 +33,9 @@ void pci_disable_pasid(struct pci_dev *pdev);
+ int pci_pasid_features(struct pci_dev *pdev);
+ int pci_max_pasids(struct pci_dev *pdev);
+ #else /* CONFIG_PCI_PASID */
++static inline int pci_enable_pasid(struct pci_dev *pdev, int features)
++{ return -EINVAL; }
++static inline void pci_disable_pasid(struct pci_dev *pdev) { }
+ static inline int pci_pasid_features(struct pci_dev *pdev)
+ { return -EINVAL; }
+ static inline int pci_max_pasids(struct pci_dev *pdev)
 -- 
 2.24.1
 
