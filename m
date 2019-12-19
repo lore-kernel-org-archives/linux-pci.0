@@ -2,91 +2,132 @@ Return-Path: <SRS0=tMyV=2J=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6202C43603
-	for <linux-pci@archiver.kernel.org>; Thu, 19 Dec 2019 12:03:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6025CC43603
+	for <linux-pci@archiver.kernel.org>; Thu, 19 Dec 2019 12:11:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B22A624672
-	for <linux-pci@archiver.kernel.org>; Thu, 19 Dec 2019 12:03:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 33D9F227BF
+	for <linux-pci@archiver.kernel.org>; Thu, 19 Dec 2019 12:11:02 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="GyQUlmhV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726744AbfLSMDs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 19 Dec 2019 07:03:48 -0500
-Received: from mout.kundenserver.de ([217.72.192.74]:55627 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726668AbfLSMDs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2019 07:03:48 -0500
-Received: from mail-qv1-f53.google.com ([209.85.219.53]) by
- mrelayeu.kundenserver.de (mreue109 [212.227.15.145]) with ESMTPSA (Nemesis)
- id 1MXH3Y-1iBNa345AU-00Yfyv; Thu, 19 Dec 2019 13:03:46 +0100
-Received: by mail-qv1-f53.google.com with SMTP id m14so2113644qvl.3;
-        Thu, 19 Dec 2019 04:03:45 -0800 (PST)
-X-Gm-Message-State: APjAAAXMlQFMB2P/264RYR8qG8bHAqtVvXZiWmueKgL7wxk/lTdZe/Nk
-        lOzae+eApQqXFmaZG3jgQSCd8S+cee5xbPRzixk=
-X-Google-Smtp-Source: APXvYqyRYAthWWOFbK4JwdbfUGnK3IkCerPrE6//l+bsXhqevvRLK6TVQiG7yBNWDpk0m44tuJY3intXaCEenSLn4+0=
-X-Received: by 2002:a0c:d788:: with SMTP id z8mr1183000qvi.211.1576757024622;
- Thu, 19 Dec 2019 04:03:44 -0800 (PST)
-MIME-Version: 1.0
-References: <20191209092147.22901-1-kishon@ti.com> <20191209092147.22901-6-kishon@ti.com>
- <20191216144932.GY24359@e119886-lin.cambridge.arm.com> <d1ee4579-a3da-6a73-3516-a6d264f80995@ti.com>
-In-Reply-To: <d1ee4579-a3da-6a73-3516-a6d264f80995@ti.com>
-From:   Arnd Bergmann <arnd@arndb.de>
-Date:   Thu, 19 Dec 2019 13:03:28 +0100
-X-Gmail-Original-Message-ID: <CAK8P3a06XLSa-FHNGsN=b10JrddjbOKAvfU=iXdMa+0L43m5fA@mail.gmail.com>
-Message-ID: <CAK8P3a06XLSa-FHNGsN=b10JrddjbOKAvfU=iXdMa+0L43m5fA@mail.gmail.com>
-Subject: Re: [PATCH 05/13] PCI: cadence: Add read and write accessors to
- perform only 32-bit accesses
-To:     Kishon Vijay Abraham I <kishon@ti.com>
-Cc:     Andrew Murray <andrew.murray@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
+        id S1726719AbfLSMK6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 19 Dec 2019 07:10:58 -0500
+Received: from lelv0142.ext.ti.com ([198.47.23.249]:55792 "EHLO
+        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726668AbfLSMK6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2019 07:10:58 -0500
+Received: from fllv0035.itg.ti.com ([10.64.41.0])
+        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id xBJCAm6A100054;
+        Thu, 19 Dec 2019 06:10:48 -0600
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1576757448;
+        bh=v7Np/OFkk20fqw6MV6RMIPQQKnOLNyFYGAZXUuSYuis=;
+        h=Subject:To:CC:References:From:Date:In-Reply-To;
+        b=GyQUlmhVIxuCexAwcASlKaNdBf4wIzpZSBhv1Apxw/aaLiQRDVPrssznmXnsNX/eY
+         5okO5d8vuR3DuOJtiuAdGVdMHZ0gU5mTeJp1hpz+D6NghP5Cjzr38iyopE6FnuZXZv
+         a5+u5ytJzvZEpuRScDl0GmdeuUKn3g8nSko27ZZE=
+Received: from DLEE103.ent.ti.com (dlee103.ent.ti.com [157.170.170.33])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id xBJCAmkd026460;
+        Thu, 19 Dec 2019 06:10:48 -0600
+Received: from DLEE109.ent.ti.com (157.170.170.41) by DLEE103.ent.ti.com
+ (157.170.170.33) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Thu, 19
+ Dec 2019 06:10:48 -0600
+Received: from lelv0326.itg.ti.com (10.180.67.84) by DLEE109.ent.ti.com
+ (157.170.170.41) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
+ Frontend Transport; Thu, 19 Dec 2019 06:10:47 -0600
+Received: from [10.24.69.159] (ileax41-snat.itg.ti.com [10.172.224.153])
+        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id xBJCAiUg062952;
+        Thu, 19 Dec 2019 06:10:45 -0600
+Subject: Re: [PATCH 08/13] PCI: cadence: Use local management register to
+ configure Vendor ID
+To:     Andrew Murray <andrew.murray@arm.com>
+CC:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Rob Herring <robh+dt@kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        DTML <devicetree@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-omap <linux-omap@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Provags-ID: V03:K1:r6T3/CcYpNS86A2Hvx7bMZm1KM8FiNbjscHFDmZ+OK596/2FHQw
- 14vK4BjTgsPQWg4SSBHNWwqS6TU86YPVztPL/xXH5371kxHFXCsOvIde4HG5UNt1u8wGx55
- AWkOYni8+6x1/5B6p+HXnwF3lJ9Q0z5E62HCsdQbWJgy7ex2BMVj4+VbB231e4izNmOxWfJ
- 0wGPd+fGDcyCzLxj0dAUA==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:XyO0F0+TXjA=:r/8VdwCanuBYUQ4DTNJuie
- QffNdRqHrA0PKHo66OByfUYaRxiUtIsPRrHvHxTt1zL5lT8EoXHNMPX2q+M8d9+lHMpd1aebu
- Gp/ebIp1FCuP/ZiTLo5vkO8coqiWo6Q9O6dVZhwx0agYKLAjnVdKgaJLpPV2l5YB1jJIi4ihQ
- t2QuYf8cAMoLsLQYJbniTt6Z19W5dGHv3BY3WR76XSOOtdvLKqPn0QLUVSj0zg/UMasDZHG7H
- kW1NCbJmxsUpak2z2DSRSJEGIlXHpCDvxbNTUjdFmjdMYClFdGSWo0kYQM903zK72v4JM5+nI
- 0lXxrbubQPRvxq2PQKoOWKD9nQGp4l6CG2QKsh2LQl3Qt3ymNIbPsLNPznGX3b/GNhUWt6tV6
- ijGGsDUWuVKFxgoKuAdjizL2ncUp4pyW1OJwsrLkRB3aeZ6K5ILBlBpOVtMf3yOau4ZeNdUQN
- 2ah/h3Zd02t85RB5YOuNQQRZPpMhPJaHWuRVdJWeqekgFmRqHH3DocCIlsP2cB0mnaf0nge0U
- Yt/PKaBs73aspwFTixChOQYD/y+RrY2IBtUJxWm3O6EAV0Tmu3lSsNUc0k1PKvp3+073euJAc
- Gna6Ai5KQoQpszqJIQKDSujU+4sIsk7SJkwAJ9eX4tKVwyXABq9NNxKiK/LMs4zbYewnrA/C7
- x06Jrh2YnaZ4urjdevC9gRfdxkhj5HNKgatjJIG49k9kG9VGsfRaz2Vbgv92VEy5mA08P1RJB
- 5YCK/X8cl+tTLVq8kAtzWiXT+OhcTwjeer2YmBM7fapkJhpyvTr0xr0h3yPZHxDEqHXlyXB2R
- TZ6ZmjQOy1aA+uJZkPRzqjjwTdVro8AvcUjbNjRlTZSnOpR78z8Pl/mpb5gQkGLlW+VxQ6JCZ
- QbqpeebYENhYnrghRqrQ==
+        Arnd Bergmann <arnd@arndb.de>, <linux-pci@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>, Tom Joseph <tjoseph@cadence.com>
+References: <20191209092147.22901-1-kishon@ti.com>
+ <20191209092147.22901-9-kishon@ti.com>
+ <20191217124238.GE24359@e119886-lin.cambridge.arm.com>
+From:   Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <cdb15479-6cc4-e00f-34a6-6cf191179bf7@ti.com>
+Date:   Thu, 19 Dec 2019 17:42:27 +0530
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.2
+MIME-Version: 1.0
+In-Reply-To: <20191217124238.GE24359@e119886-lin.cambridge.arm.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Dec 19, 2019 at 12:54 PM Kishon Vijay Abraham I <kishon@ti.com> wrote:
->
-> Hi Andrew,
->
-> On 16/12/19 8:19 pm, Andrew Murray wrote:
-> > On Mon, Dec 09, 2019 at 02:51:39PM +0530, Kishon Vijay Abraham I wrote:
-> >> Certain platforms like TI's J721E allow only 32-bit register accesses.
-> >
-> > When I first read this I thought you meant only 32-bit accesses are allowed
-> > and not other sizes (such as 64-bit). However the limitation you address
-> > here is that the J721E allows only 32-bit *aligned* register accesses.
->
-> It's both, it allows only 32-bit aligned accesses and the size should be
-> only 32 bits. That's why I always use "readl" in the APIs below.
++Tom
 
-In that case, can't you use the pci_generic_config_read32/write32
-functions with a cadence specific .map_bus() function?
+Hi,
 
-       Arnd
+On 17/12/19 6:12 pm, Andrew Murray wrote:
+> On Mon, Dec 09, 2019 at 02:51:42PM +0530, Kishon Vijay Abraham I wrote:
+>> PCI_VENDOR_ID in root port configuration space is read-only register
+>> and writing to it will have no effect. Use local management register to
+>> configure Vendor ID and Subsystem Vendor ID.
+> 
+> Is this a bug fix? Can you add a Fixes tag and make that clearer?
+
+I think this might have worked in Cadence platform? Tom?
+
+Thanks
+Kishon
+
+> 
+> Thanks,
+> 
+> Andrew Murray
+> 
+>>
+>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>> ---
+>>  drivers/pci/controller/cadence/pcie-cadence-host.c | 9 +++++++--
+>>  1 file changed, 7 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/pci/controller/cadence/pcie-cadence-host.c b/drivers/pci/controller/cadence/pcie-cadence-host.c
+>> index cf817be237af..afb2c96a6538 100644
+>> --- a/drivers/pci/controller/cadence/pcie-cadence-host.c
+>> +++ b/drivers/pci/controller/cadence/pcie-cadence-host.c
+>> @@ -71,6 +71,7 @@ static int cdns_pcie_host_init_root_port(struct cdns_pcie_rc *rc)
+>>  {
+>>  	struct cdns_pcie *pcie = &rc->pcie;
+>>  	u32 value, ctrl;
+>> +	u32 id;
+>>  
+>>  	/*
+>>  	 * Set the root complex BAR configuration register:
+>> @@ -90,8 +91,12 @@ static int cdns_pcie_host_init_root_port(struct cdns_pcie_rc *rc)
+>>  	cdns_pcie_writel(pcie, CDNS_PCIE_LM_RC_BAR_CFG, value);
+>>  
+>>  	/* Set root port configuration space */
+>> -	if (rc->vendor_id != 0xffff)
+>> -		cdns_pcie_rp_writew(pcie, PCI_VENDOR_ID, rc->vendor_id);
+>> +	if (rc->vendor_id != 0xffff) {
+>> +		id = CDNS_PCIE_LM_ID_VENDOR(rc->vendor_id) |
+>> +			CDNS_PCIE_LM_ID_SUBSYS(rc->vendor_id);
+>> +		cdns_pcie_writel(pcie, CDNS_PCIE_LM_ID, id);
+>> +	}
+>> +
+>>  	if (rc->device_id != 0xffff)
+>>  		cdns_pcie_rp_writew(pcie, PCI_DEVICE_ID, rc->device_id);
+>>  
+>> -- 
+>> 2.17.1
+>>
