@@ -2,271 +2,313 @@ Return-Path: <SRS0=sd4r=2Q=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2057FC2D0C0
-	for <linux-pci@archiver.kernel.org>; Thu, 26 Dec 2019 19:41:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C20E6C2D0C0
+	for <linux-pci@archiver.kernel.org>; Thu, 26 Dec 2019 20:02:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DDB3920828
-	for <linux-pci@archiver.kernel.org>; Thu, 26 Dec 2019 19:41:06 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxonhyperv.com header.i=@linuxonhyperv.com header.b="JIYFjhBR"
+	by mail.kernel.org (Postfix) with ESMTP id 8A086206CB
+	for <linux-pci@archiver.kernel.org>; Thu, 26 Dec 2019 20:02:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726855AbfLZTk4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 26 Dec 2019 14:40:56 -0500
-Received: from linux.microsoft.com ([13.77.154.182]:53638 "EHLO
-        linux.microsoft.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726511AbfLZTk4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 26 Dec 2019 14:40:56 -0500
-Received: by linux.microsoft.com (Postfix, from userid 1004)
-        id A9C1720B4798; Thu, 26 Dec 2019 11:40:55 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com A9C1720B4798
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linuxonhyperv.com;
-        s=default; t=1577389255;
-        bh=VIK2Q0hFXOFilAkgLu1S7mIVRWc2XaLB+41jdR8gf5A=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=JIYFjhBRGpSXvJzNz33cvpfYeA4Uj6wN5oCwnDfy06l2xJsQEAvgpXA183oSyJ+kk
-         0xZ/ewha686HZ1ZlaD4+lyWdq7oiHW/gSzuq0A8DsA0qVLCNITOxNTGmSMQCoX/Bp0
-         i25bBRQHVrQLl+0feDwMvncnOEyR/t1ALh3/XxwA=
-From:   longli@linuxonhyperv.com
-To:     "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Sasha Levin <sashal@kernel.org>,
+        id S1726684AbfLZUCu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 26 Dec 2019 15:02:50 -0500
+Received: from relay4-d.mail.gandi.net ([217.70.183.196]:44523 "EHLO
+        relay4-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726653AbfLZUCu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 26 Dec 2019 15:02:50 -0500
+X-Originating-IP: 88.190.179.123
+Received: from localhost (unknown [88.190.179.123])
+        (Authenticated sender: repk@triplefau.lt)
+        by relay4-d.mail.gandi.net (Postfix) with ESMTPSA id AE615E0006;
+        Thu, 26 Dec 2019 20:02:45 +0000 (UTC)
+Date:   Thu, 26 Dec 2019 21:11:46 +0100
+From:   Remi Pommarel <repk@triplefau.lt>
+To:     Jerome Brunet <jbrunet@baylibre.com>
+Cc:     Kishon Vijay Abraham I <kishon@ti.com>,
+        Yue Wang <yue.wang@amlogic.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Andrew Murray <andrew.murray@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     Long Li <longli@microsoft.com>
-Subject: [Patch v3 2/2] PCI: hv: Add support for protocol 1.3 and support PCI_BUS_RELATIONS2
-Date:   Thu, 26 Dec 2019 11:40:41 -0800
-Message-Id: <1577389241-108450-2-git-send-email-longli@linuxonhyperv.com>
-X-Mailer: git-send-email 1.8.3.1
-In-Reply-To: <1577389241-108450-1-git-send-email-longli@linuxonhyperv.com>
-References: <1577389241-108450-1-git-send-email-longli@linuxonhyperv.com>
+        Kevin Hilman <khilman@baylibre.com>,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Neil Armstrong <narmstrong@baylibre.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-amlogic@lists.infradead.org
+Subject: Re: [PATCH v2 1/3] phy: amlogic: Add Amlogic AXG MIPI/PCIE PHY Driver
+Message-ID: <20191226201146.GA1803@voidbox>
+References: <20191223214529.20377-1-repk@triplefau.lt>
+ <20191223214529.20377-2-repk@triplefau.lt>
+ <1jeewrpgrr.fsf@starbuckisacylon.baylibre.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1jeewrpgrr.fsf@starbuckisacylon.baylibre.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Long Li <longli@microsoft.com>
+On Thu, Dec 26, 2019 at 10:39:36AM +0100, Jerome Brunet wrote:
+> 
+> On Mon 23 Dec 2019 at 22:45, Remi Pommarel <repk@triplefau.lt> wrote:
+> 
+> > This adds support for the MIPI PHY also needed for PCIE found in the
+> > Amlogic AXG SoC Family.
+> >
+> > MIPI or PCIE selection is done by the #phy-cells, making the mode
+> > static and exclusive.
+> >
+> > For now only PCIE fonctionality is supported.
+> >
+> > This PHY will be used to replace the mipi_enable clock gating logic
+> > which was mistakenly added in the clock subsystem. This also activate
+> > a non documented band gap bit in those registers that allows reliable
+> > PCIE clock signal generation on AXG platforms.
+> >
+> > Signed-off-by: Remi Pommarel <repk@triplefau.lt>
+> > ---
+> >  drivers/phy/amlogic/Kconfig                   |  11 ++
+> >  drivers/phy/amlogic/Makefile                  |   1 +
+> >  drivers/phy/amlogic/phy-meson-axg-mipi-pcie.c | 176 ++++++++++++++++++
+> >  3 files changed, 188 insertions(+)
+> >  create mode 100644 drivers/phy/amlogic/phy-meson-axg-mipi-pcie.c
+> >
+> > diff --git a/drivers/phy/amlogic/Kconfig b/drivers/phy/amlogic/Kconfig
+> > index af774ac2b934..1eeb75d018e3 100644
+> > --- a/drivers/phy/amlogic/Kconfig
+> > +++ b/drivers/phy/amlogic/Kconfig
+> > @@ -59,3 +59,14 @@ config PHY_MESON_G12A_USB3_PCIE
+> >  	  Enable this to support the Meson USB3 + PCIE Combo PHY found
+> >  	  in Meson G12A SoCs.
+> >  	  If unsure, say N.
+> > +
+> > +config PHY_MESON_AXG_MIPI_PCIE
+> > +	tristate "Meson AXG MIPI + PCIE PHY driver"
+> > +	default ARCH_MESON
+> > +	depends on OF && (ARCH_MESON || COMPILE_TEST)
+> > +	select GENERIC_PHY
+> > +	select MFD_SYSCON
+> > +	help
+> > +	  Enable this to support the Meson MIPI + PCIE PHY found
+> > +	  in Meson AXG SoCs.
+> > +	  If unsure, say N.
+> > diff --git a/drivers/phy/amlogic/Makefile b/drivers/phy/amlogic/Makefile
+> > index 11d1c42ac2be..2167330a0ae8 100644
+> > --- a/drivers/phy/amlogic/Makefile
+> > +++ b/drivers/phy/amlogic/Makefile
+> > @@ -4,3 +4,4 @@ obj-$(CONFIG_PHY_MESON_GXL_USB2)	+= phy-meson-gxl-usb2.o
+> >  obj-$(CONFIG_PHY_MESON_G12A_USB2)	+= phy-meson-g12a-usb2.o
+> >  obj-$(CONFIG_PHY_MESON_GXL_USB3)	+= phy-meson-gxl-usb3.o
+> >  obj-$(CONFIG_PHY_MESON_G12A_USB3_PCIE)	+= phy-meson-g12a-usb3-pcie.o
+> > +obj-$(CONFIG_PHY_MESON_AXG_MIPI_PCIE)	+= phy-meson-axg-mipi-pcie.o
+> > diff --git a/drivers/phy/amlogic/phy-meson-axg-mipi-pcie.c b/drivers/phy/amlogic/phy-meson-axg-mipi-pcie.c
+> > new file mode 100644
+> > index 000000000000..006aa8cdfc47
+> > --- /dev/null
+> > +++ b/drivers/phy/amlogic/phy-meson-axg-mipi-pcie.c
+> > @@ -0,0 +1,176 @@
+> > +// SPDX-License-Identifier: GPL-2.0
+> > +/*
+> > + * Amlogic AXG MIPI + PCIE PHY driver
+> > + *
+> > + * Copyright (C) 2019 Remi Pommarel <repk@triplefau.lt>
+> > + */
+> > +#include <linux/module.h>
+> > +#include <linux/phy/phy.h>
+> > +#include <linux/regmap.h>
+> > +#include <linux/mfd/syscon.h>
+> > +#include <linux/platform_device.h>
+> > +#include <dt-bindings/phy/phy.h>
+> > +
+> > +#define HHI_MIPI_CNTL0 0x00
+> > +#define		HHI_MIPI_CNTL0_COMMON_BLOCK	GENMASK(31, 28)
+> > +#define		HHI_MIPI_CNTL0_ENABLE		BIT(29)
+> > +#define		HHI_MIPI_CNTL0_BANDGAP		BIT(26)
+> > +#define		HHI_MIPI_CNTL0_DECODE_TO_RTERM	GENMASK(15, 12)
+> > +#define		HHI_MIPI_CNTL0_OUTPUT_EN	BIT(3)
+> > +
+> > +#define HHI_MIPI_CNTL1 0x01
+> > +#define		HHI_MIPI_CNTL1_CH0_CML_PDR_EN	BIT(12)
+> > +#define		HHI_MIPI_CNTL1_LP_ABILITY	GENMASK(5, 4)
+> > +#define		HHI_MIPI_CNTL1_LP_RESISTER	BIT(3)
+> > +#define		HHI_MIPI_CNTL1_INPUT_SETTING	BIT(2)
+> > +#define		HHI_MIPI_CNTL1_INPUT_SEL	BIT(1)
+> > +#define		HHI_MIPI_CNTL1_PRBS7_EN		BIT(0)
+> > +
+> > +#define HHI_MIPI_CNTL2 0x02
+> > +#define		HHI_MIPI_CNTL2_CH_PU		GENMASK(31, 25)
+> > +#define		HHI_MIPI_CNTL2_CH_CTL		GENMASK(24, 19)
+> > +#define		HHI_MIPI_CNTL2_CH0_DIGDR_EN	BIT(18)
+> > +#define		HHI_MIPI_CNTL2_CH_DIGDR_EN	BIT(17)
+> > +#define		HHI_MIPI_CNTL2_LPULPS_EN	BIT(16)
+> > +#define		HHI_MIPI_CNTL2_CH_EN(n)		BIT(15 - (n))
+> > +#define		HHI_MIPI_CNTL2_CH0_LP_CTL	GENMASK(10, 1)
+> > +
+> > +struct phy_axg_mipi_pcie_priv {
+> > +	struct phy *phy;
+> > +	unsigned int mode;
+> > +	struct regmap *regmap;
+> > +};
+> > +
+> > +static const struct regmap_config phy_axg_mipi_pcie_regmap_conf = {
+> > +	.reg_bits = 8,
+> > +	.val_bits = 32,
+> > +	.reg_stride = 4,
+> > +	.max_register = HHI_MIPI_CNTL2,
+> > +};
+> > +
+> > +static int phy_axg_mipi_pcie_power_on(struct phy *phy)
+> > +{
+> > +	struct phy_axg_mipi_pcie_priv *priv = phy_get_drvdata(phy);
+> > +
+> > +	/* MIPI not supported yet */
+> > +	if (priv->mode != PHY_TYPE_PCIE)
+> > +		return 0;
+> > +
+> > +	regmap_update_bits(priv->regmap, HHI_MIPI_CNTL0,
+> > +			   HHI_MIPI_CNTL0_BANDGAP, HHI_MIPI_CNTL0_BANDGAP);
+> > +
+> > +	regmap_update_bits(priv->regmap, HHI_MIPI_CNTL0,
+> > +			   HHI_MIPI_CNTL0_ENABLE, HHI_MIPI_CNTL0_ENABLE);
+> > +	return 0;
+> > +}
+> > +
+> > +static int phy_axg_mipi_pcie_power_off(struct phy *phy)
+> > +{
+> > +	struct phy_axg_mipi_pcie_priv *priv = phy_get_drvdata(phy);
+> > +
+> > +	/* MIPI not supported yet */
+> > +	if (priv->mode != PHY_TYPE_PCIE)
+> > +		return 0;
+> > +
+> > +	regmap_update_bits(priv->regmap, HHI_MIPI_CNTL0,
+> > +			   HHI_MIPI_CNTL0_BANDGAP, 0);
+> > +	regmap_update_bits(priv->regmap, HHI_MIPI_CNTL0,
+> > +			   HHI_MIPI_CNTL0_ENABLE, 0);
+> > +	return 0;
+> > +}
+> > +
+> > +static int phy_axg_mipi_pcie_init(struct phy *phy)
+> > +{
+> > +	return 0;
+> > +}
+> > +
+> > +static int phy_axg_mipi_pcie_exit(struct phy *phy)
+> > +{
+> > +	return 0;
+> > +}
+> > +
+> > +static const struct phy_ops phy_axg_mipi_pcie_ops = {
+> > +	.init = phy_axg_mipi_pcie_init,
+> > +	.exit = phy_axg_mipi_pcie_exit,
+> > +	.power_on = phy_axg_mipi_pcie_power_on,
+> > +	.power_off = phy_axg_mipi_pcie_power_off,
+> > +	.owner = THIS_MODULE,
+> > +};
+> > +
+> > +static struct phy *phy_axg_mipi_pcie_xlate(struct device *dev,
+> > +					   struct of_phandle_args *args)
+> > +{
+> > +	struct phy_axg_mipi_pcie_priv *priv = dev_get_drvdata(dev);
+> > +	unsigned int mode;
+> > +
+> > +	if (args->args_count != 1) {
+> > +		dev_err(dev, "invalid number of arguments\n");
+> > +		return ERR_PTR(-EINVAL);
+> > +	}
+> > +
+> > +	mode = args->args[0];
+> > +
+> > +	/* MIPI mode is not supported yet */
+> > +	if (mode != PHY_TYPE_PCIE) {
+> > +		dev_err(dev, "invalid phy mode select argument\n");
+> > +		return ERR_PTR(-EINVAL);
+> > +	}
+> > +
+> > +	priv->mode = mode;
+> > +	return priv->phy;
+> > +}
+> > +
+> > +static int phy_axg_mipi_pcie_probe(struct platform_device *pdev)
+> > +{
+> > +	struct phy_provider *pphy;
+> > +	struct device *dev = &pdev->dev;
+> > +	struct phy_axg_mipi_pcie_priv *priv;
+> > +	struct device_node *np = dev->of_node;
+> > +	int ret;
+> > +
+> > +	priv = devm_kmalloc(dev, sizeof(*priv), GFP_KERNEL);
+> > +	if (!priv)
+> > +		return -ENOMEM;
+> > +
+> > +	/* Get the hhi system controller node */
+> > +	priv->regmap = syscon_node_to_regmap(of_get_parent(dev->of_node));
+> > +	if (IS_ERR(priv->regmap)) {
+> > +		dev_err(dev, "failed to get HHI regmap\n");
+> > +		return PTR_ERR(priv->regmap);
+> > +	}
+> 
+> Remi,
+> 
+> Unless we are absolutely sure this will be *AXG ONLY*, I would
+> prefer if you get the registers without the syscon.
+> 
+> Having it introduce some kind of dependency between the 2 which is
+> likely to make this driver SoC specific.
+> 
+> It was clearly wrong for the clock controller to map these regiters, and
+> if there is a possibility that this driver is used on other SoCs, I
+> would prefer if we did not carry that mistake over. I would prefer if we
+> fixed the clock controller so you don't need syscon here.
 
-Starting with Hyper-V PCI protocol version 1.3, the host VSP can send
-PCI_BUS_RELATIONS2 and pass the vNUMA node information for devices on the bus.
-The vNUMA node tells which guest NUMA node this device is on based on guest
-VM configuration topology and physical device inforamtion.
+Jerome thank you for reviewing this,
 
-The patch adds code to negotiate v1.3 and process PCI_BUS_RELATIONS2.
+Sure I will remove access to the registers through syscon system. Just
+to be sure we are on the same page here. What you suggest is keeping the
+two PHYs approach from this patchset (instead of the one PHY in v3),
+even if there is not exactly two PHYs, right ?
 
-Signed-off-by: Long Li <longli@microsoft.com>
----
-Changes
-v2: Changed some spaces to tabs, added put_pcichild() after get_pcichild_wslot(), renamed pci_assign_numa_node() to hv_pci_assign_numa_node()
+Thanks,
 
- drivers/pci/controller/pci-hyperv.c | 109 ++++++++++++++++++++++++++++
- 1 file changed, 109 insertions(+)
-
-diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
-index 4452c6bae6cf..b03119f94cd7 100644
---- a/drivers/pci/controller/pci-hyperv.c
-+++ b/drivers/pci/controller/pci-hyperv.c
-@@ -63,6 +63,7 @@
- enum pci_protocol_version_t {
- 	PCI_PROTOCOL_VERSION_1_1 = PCI_MAKE_VERSION(1, 1),	/* Win10 */
- 	PCI_PROTOCOL_VERSION_1_2 = PCI_MAKE_VERSION(1, 2),	/* RS1 */
-+	PCI_PROTOCOL_VERSION_1_3 = PCI_MAKE_VERSION(1, 3),	/* Vibranium */
- };
- 
- #define CPU_AFFINITY_ALL	-1ULL
-@@ -72,6 +73,7 @@ enum pci_protocol_version_t {
-  * first.
-  */
- static enum pci_protocol_version_t pci_protocol_versions[] = {
-+	PCI_PROTOCOL_VERSION_1_3,
- 	PCI_PROTOCOL_VERSION_1_2,
- 	PCI_PROTOCOL_VERSION_1_1,
- };
-@@ -124,6 +126,7 @@ enum pci_message_type {
- 	PCI_RESOURCES_ASSIGNED2		= PCI_MESSAGE_BASE + 0x16,
- 	PCI_CREATE_INTERRUPT_MESSAGE2	= PCI_MESSAGE_BASE + 0x17,
- 	PCI_DELETE_INTERRUPT_MESSAGE2	= PCI_MESSAGE_BASE + 0x18, /* unused */
-+	PCI_BUS_RELATIONS2		= PCI_MESSAGE_BASE + 0x19,
- 	PCI_MESSAGE_MAXIMUM
- };
- 
-@@ -169,6 +172,26 @@ struct pci_function_description {
- 	u32	ser;	/* serial number */
- } __packed;
- 
-+enum pci_device_description_flags {
-+	HV_PCI_DEVICE_FLAG_NONE			= 0x0,
-+	HV_PCI_DEVICE_FLAG_NUMA_AFFINITY	= 0x1,
-+};
-+
-+struct pci_function_description2 {
-+	u16	v_id;	/* vendor ID */
-+	u16	d_id;	/* device ID */
-+	u8	rev;
-+	u8	prog_intf;
-+	u8	subclass;
-+	u8	base_class;
-+	u32	subsystem_id;
-+	union	win_slot_encoding win_slot;
-+	u32	ser;	/* serial number */
-+	u32	flags;
-+	u16	virtual_numa_node;
-+	u16	reserved;
-+} __packed;
-+
- /**
-  * struct hv_msi_desc
-  * @vector:		IDT entry
-@@ -304,6 +327,12 @@ struct pci_bus_relations {
- 	struct pci_function_description func[0];
- } __packed;
- 
-+struct pci_bus_relations2 {
-+	struct pci_incoming_message incoming;
-+	u32 device_count;
-+	struct pci_function_description2 func[0];
-+} __packed;
-+
- struct pci_q_res_req_response {
- 	struct vmpacket_descriptor hdr;
- 	s32 status;			/* negative values are failures */
-@@ -1417,6 +1446,7 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
- 		break;
- 
- 	case PCI_PROTOCOL_VERSION_1_2:
-+	case PCI_PROTOCOL_VERSION_1_3:
- 		size = hv_compose_msi_req_v2(&ctxt.int_pkts.v2,
- 					dest,
- 					hpdev->desc.win_slot.slot,
-@@ -1798,6 +1828,27 @@ static void hv_pci_remove_slots(struct hv_pcibus_device *hbus)
- 	}
- }
- 
-+/*
-+ * Set NUMA node for the devices on the bus
-+ */
-+static void hv_pci_assign_numa_node(struct hv_pcibus_device *hbus)
-+{
-+	struct pci_dev *dev;
-+	struct pci_bus *bus = hbus->pci_bus;
-+	struct hv_pci_dev *hv_dev;
-+
-+	list_for_each_entry(dev, &bus->devices, bus_list) {
-+		hv_dev = get_pcichild_wslot(hbus, devfn_to_wslot(dev->devfn));
-+		if (!hv_dev)
-+			continue;
-+
-+		if (hv_dev->desc.flags & HV_PCI_DEVICE_FLAG_NUMA_AFFINITY)
-+			set_dev_node(&dev->dev, hv_dev->desc.virtual_numa_node);
-+
-+		put_pcichild(hv_dev);
-+	}
-+}
-+
- /**
-  * create_root_hv_pci_bus() - Expose a new root PCI bus
-  * @hbus:	Root PCI bus, as understood by this driver
-@@ -1820,6 +1871,7 @@ static int create_root_hv_pci_bus(struct hv_pcibus_device *hbus)
- 
- 	pci_lock_rescan_remove();
- 	pci_scan_child_bus(hbus->pci_bus);
-+	hv_pci_assign_numa_node(hbus);
- 	pci_bus_assign_resources(hbus->pci_bus);
- 	hv_pci_assign_slots(hbus);
- 	pci_bus_add_devices(hbus->pci_bus);
-@@ -2088,6 +2140,7 @@ static void pci_devices_present_work(struct work_struct *work)
- 		 */
- 		pci_lock_rescan_remove();
- 		pci_scan_child_bus(hbus->pci_bus);
-+		hv_pci_assign_numa_node(hbus);
- 		hv_pci_assign_slots(hbus);
- 		pci_unlock_rescan_remove();
- 		break;
-@@ -2184,6 +2237,46 @@ static void hv_pci_devices_present(struct hv_pcibus_device *hbus,
- 		kfree(dr);
- }
- 
-+/**
-+ * hv_pci_devices_present2() - Handles list of new children
-+ * @hbus:	Root PCI bus, as understood by this driver
-+ * @relations2:	Packet from host listing children
-+ *
-+ * This function is the v2 version of hv_pci_devices_present()
-+ */
-+static void hv_pci_devices_present2(struct hv_pcibus_device *hbus,
-+				    struct pci_bus_relations2 *relations)
-+{
-+	struct hv_dr_state *dr;
-+	int i;
-+
-+	dr = kzalloc(offsetof(struct hv_dr_state, func) +
-+		     (sizeof(struct hv_pcidev_description) *
-+		      (relations->device_count)), GFP_NOWAIT);
-+
-+	if (!dr)
-+		return;
-+
-+	dr->device_count = relations->device_count;
-+	for (i = 0; i < dr->device_count; i++) {
-+		dr->func[i].v_id = relations->func[i].v_id;
-+		dr->func[i].d_id = relations->func[i].d_id;
-+		dr->func[i].rev = relations->func[i].rev;
-+		dr->func[i].prog_intf = relations->func[i].prog_intf;
-+		dr->func[i].subclass = relations->func[i].subclass;
-+		dr->func[i].base_class = relations->func[i].base_class;
-+		dr->func[i].subsystem_id = relations->func[i].subsystem_id;
-+		dr->func[i].win_slot = relations->func[i].win_slot;
-+		dr->func[i].ser = relations->func[i].ser;
-+		dr->func[i].flags = relations->func[i].flags;
-+		dr->func[i].virtual_numa_node =
-+			relations->func[i].virtual_numa_node;
-+	}
-+
-+	if (hv_pci_start_relations_work(hbus, dr))
-+		kfree(dr);
-+}
-+
- /**
-  * hv_eject_device_work() - Asynchronously handles ejection
-  * @work:	Work struct embedded in internal device struct
-@@ -2289,6 +2382,7 @@ static void hv_pci_onchannelcallback(void *context)
- 	struct pci_response *response;
- 	struct pci_incoming_message *new_message;
- 	struct pci_bus_relations *bus_rel;
-+	struct pci_bus_relations2 *bus_rel2;
- 	struct pci_dev_inval_block *inval;
- 	struct pci_dev_incoming *dev_message;
- 	struct hv_pci_dev *hpdev;
-@@ -2356,6 +2450,21 @@ static void hv_pci_onchannelcallback(void *context)
- 				hv_pci_devices_present(hbus, bus_rel);
- 				break;
- 
-+			case PCI_BUS_RELATIONS2:
-+
-+				bus_rel2 = (struct pci_bus_relations2 *)buffer;
-+				if (bytes_recvd <
-+				    offsetof(struct pci_bus_relations2, func) +
-+				    (sizeof(struct pci_function_description2) *
-+				     (bus_rel2->device_count))) {
-+					dev_err(&hbus->hdev->device,
-+						"bus relations v2 too small\n");
-+					break;
-+				}
-+
-+				hv_pci_devices_present2(hbus, bus_rel2);
-+				break;
-+
- 			case PCI_EJECT:
- 
- 				dev_message = (struct pci_dev_incoming *)buffer;
 -- 
-2.17.1
+Remi
 
+> 
+> > +
+> > +	priv->phy = devm_phy_create(dev, np, &phy_axg_mipi_pcie_ops);
+> > +	if (IS_ERR(priv->phy)) {
+> > +		ret = PTR_ERR(priv->phy);
+> > +		if (ret != -EPROBE_DEFER)
+> > +			dev_err(dev, "failed to create PHY\n");
+> > +		return ret;
+> > +	}
+> > +
+> > +	phy_set_drvdata(priv->phy, priv);
+> > +	dev_set_drvdata(dev, priv);
+> > +	pphy = devm_of_phy_provider_register(dev, phy_axg_mipi_pcie_xlate);
+> > +
+> > +	return PTR_ERR_OR_ZERO(pphy);
+> > +}
+> > +
+> > +static const struct of_device_id phy_axg_mipi_pcie_of_match[] = {
+> > +	{
+> > +		.compatible = "amlogic,axg-mipi-pcie-phy",
+> > +	},
+> > +	{ },
+> > +};
+> > +MODULE_DEVICE_TABLE(of, phy_axg_mipi_pcie_of_match);
+> > +
+> > +static struct platform_driver phy_axg_mipi_pcie_driver = {
+> > +	.probe = phy_axg_mipi_pcie_probe,
+> > +	.driver = {
+> > +		.name = "phy-axg-mipi-pcie",
+> > +		.of_match_table = phy_axg_mipi_pcie_of_match,
+> > +	},
+> > +};
+> > +module_platform_driver(phy_axg_mipi_pcie_driver);
+> > +
+> > +MODULE_AUTHOR("Remi Pommarel <repk@triplefau.lt>");
+> > +MODULE_DESCRIPTION("Amlogic AXG MIPI + PCIE PHY driver");
+> > +MODULE_LICENSE("GPL v2");
+> 
