@@ -1,119 +1,137 @@
-Return-Path: <SRS0=sd4r=2Q=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=rySr=2R=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D697BC2D0DC
-	for <linux-pci@archiver.kernel.org>; Thu, 26 Dec 2019 20:11:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB3ABC2D0C0
+	for <linux-pci@archiver.kernel.org>; Fri, 27 Dec 2019 00:41:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AADE820882
-	for <linux-pci@archiver.kernel.org>; Thu, 26 Dec 2019 20:11:12 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=googlemail.com header.i=@googlemail.com header.b="dkoPDMmR"
+	by mail.kernel.org (Postfix) with ESMTP id A25E020838
+	for <linux-pci@archiver.kernel.org>; Fri, 27 Dec 2019 00:41:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726748AbfLZULL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 26 Dec 2019 15:11:11 -0500
-Received: from mail-ed1-f67.google.com ([209.85.208.67]:44800 "EHLO
-        mail-ed1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726653AbfLZULL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 26 Dec 2019 15:11:11 -0500
-Received: by mail-ed1-f67.google.com with SMTP id bx28so23591253edb.11;
-        Thu, 26 Dec 2019 12:11:10 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=googlemail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=DKyS0Vzar44g5nZVMq7w89sJBVTVVQr7IhBAjNIROrI=;
-        b=dkoPDMmRO2eMwq7TMq1HtLGXctYNZZjUXuFpwJaYLHjL4DHZBgoqJoj2hhpUurQB86
-         quqctLUkVeEctiVeMOgGlQKlzRsXqBY2H2rp9rluW2Ub29W0vqIMPXGP+zlhb+8UJmBD
-         NSl/EdBjv3zKh1ruJhqdiuFdRG813PmDhGNiz+al4f34WHfimfbMB8AlJCQVI/WhMSfz
-         7kMLzUho23PWWhN6nGDqRlnyl5bOKDsKbnmG/QVlKaVotqfucxZCUwe+mp+f52OcZpnR
-         ec0YYHCFTvIhPXxhSWEyhNw5FkVMpPcjhLiNnsQBSClPmjXpKatN6p2YCq8M+5eNPBYE
-         1vLA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=DKyS0Vzar44g5nZVMq7w89sJBVTVVQr7IhBAjNIROrI=;
-        b=DnR6LQSXjnUhRQyozO5E/IsetZ0az9w58fZux1kQq98Jrxp4Q3ffYaJHM4i1t4pYX9
-         NOUwRJO3J6gScDG7YZNTKc0ijq36SI5oNbVmRjVoMor4ZKSMdyJTOplW9m0MJzyBjCUQ
-         LwRugfdSpxpHFbXgvJmkAlG4o57hFBC1po79en973PuE6pE3hc7/+QhHuHy9Tc58N9yO
-         /rBTDlKGL0YojqyKHTqEyetOuib/6uGe9n4VDarN/TVZghYwnsMo3og1t3byLtzXNe2h
-         lV6RgwHPa0xcb5zFh01304ZrAgTnK29GZoqarsk4+xADj4kmcsA7IRtu3XyJU0XuPl1G
-         s2tw==
-X-Gm-Message-State: APjAAAVestf004B6fs77qzaHfRlTJqevVd8d6/b3wBW/trHYekgrn1zw
-        uXfcmB6AnPoDZ9PDQPtzrzmIiiyx5FfvXo06gZA=
-X-Google-Smtp-Source: APXvYqyOHd8m4jOZ18liraS1LmkJgDRRTlRaa1TAnpybzR7ymvltec/WOyoBzbMMK/SVycz37m9EThbBbClEbuEt25k=
-X-Received: by 2002:a50:fb96:: with SMTP id e22mr51700477edq.18.1577391069615;
- Thu, 26 Dec 2019 12:11:09 -0800 (PST)
+        id S1726804AbfL0Ale (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 26 Dec 2019 19:41:34 -0500
+Received: from mga01.intel.com ([192.55.52.88]:33488 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726193AbfL0Ald (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 26 Dec 2019 19:41:33 -0500
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 26 Dec 2019 16:41:33 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.69,361,1571727600"; 
+   d="scan'208";a="219979332"
+Received: from skuppusw-desk.jf.intel.com ([10.54.74.33])
+  by orsmga006.jf.intel.com with ESMTP; 26 Dec 2019 16:41:32 -0800
+From:   sathyanarayanan.kuppuswamy@linux.intel.com
+To:     bhelgaas@google.com
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ashok.raj@intel.com, keith.busch@intel.com,
+        sathyanarayanan.kuppuswamy@linux.intel.com
+Subject: [PATCH v11 0/8] Add Error Disconnect Recover (EDR) support
+Date:   Thu, 26 Dec 2019 16:39:06 -0800
+Message-Id: <cover.1577400653.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+X-Mailer: git-send-email 2.21.0
 MIME-Version: 1.0
-References: <20191224173942.18160-1-repk@triplefau.lt> <20191224173942.18160-6-repk@triplefau.lt>
-In-Reply-To: <20191224173942.18160-6-repk@triplefau.lt>
-From:   Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Date:   Thu, 26 Dec 2019 21:10:58 +0100
-Message-ID: <CAFBinCBzt6SRGx+8iT=NHW00ip_gtg2cW7T8z9aqjeGPH8f7OQ@mail.gmail.com>
-Subject: Re: [PATCH v3 5/5] dt-bindings: Add AXG PCIE PHY bindings
-To:     Remi Pommarel <repk@triplefau.lt>
-Cc:     Kishon Vijay Abraham I <kishon@ti.com>,
-        Yue Wang <yue.wang@amlogic.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Andrew Murray <andrew.murray@arm.com>,
-        Neil Armstrong <narmstrong@baylibre.com>,
-        Kevin Hilman <khilman@baylibre.com>,
-        Jerome Brunet <jbrunet@baylibre.com>,
-        linux-amlogic@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Dec 24, 2019 at 6:32 PM Remi Pommarel <repk@triplefau.lt> wrote:
->
-> Add documentation for PCIE PHYs found in AXG SoCs.
->
-> Signed-off-by: Remi Pommarel <repk@triplefau.lt>
-> ---
->  .../bindings/phy/amlogic,meson-axg-pcie.yaml  | 51 +++++++++++++++++++
->  1 file changed, 51 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/phy/amlogic,meson-axg-pcie.yaml
->
-> diff --git a/Documentation/devicetree/bindings/phy/amlogic,meson-axg-pcie.yaml b/Documentation/devicetree/bindings/phy/amlogic,meson-axg-pcie.yaml
-> new file mode 100644
-> index 000000000000..c622a1b38ffc
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/phy/amlogic,meson-axg-pcie.yaml
-> @@ -0,0 +1,51 @@
-> +# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
-> +# Copyright 2019 BayLibre, SAS
-> +%YAML 1.2
-> +---
-> +$id: "http://devicetree.org/schemas/phy/amlogic,meson-axg-pcie.yaml#"
-> +$schema: "http://devicetree.org/meta-schemas/core.yaml#"
-> +
-> +title: Amlogic AXG PCIE PHY
-> +
-> +maintainers:
-> +  - Remi Pommarel <repk@triplefau.lt>
-> +
-> +properties:
-> +  compatible:
-> +    enum:
-> +      - amlogic,axg-pcie-phy
-> +
-> +  reg:
-> +    maxItems: 1
-> +
-> +  aml,hhi-gpr:
-> +    maxItems: 1
-nit-pick (as I didn't have time to review the whole series yet):
-we have at least two other IP blocks that need this. they use
-"amlogic,hhi-sysctrl" for the property name
+From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 
+This patchset adds support for following features:
 
-Martin
+1. Error Disconnect Recover (EDR) support.
+2. _OSC based negotiation support for DPC.
+
+You can find EDR spec in the following link.
+
+https://members.pcisig.com/wg/PCI-SIG/document/12614
+
+Changes since v10:
+ * Added "edr_enabled" member to dpc priv structure, which is used to cache EDR
+   enabling status based on status of pcie_ports_dpc_native and FF mode.
+ * Changed type of _DSM argument from Integer to Package in acpi_enable_dpc_port()
+   function to fix ACPI related boot warnings.
+ * Rebased on top of v5.5-rc3
+
+Changes since v9:
+ * Removed caching of pcie_aer_get_firmware_first() in dpc driver.
+ * Added proper spec reference in git log for patch 5 & 7.
+ * Added new function parameter "ff_check" to pci_cleanup_aer_uncorrect_error_status(),
+   pci_aer_clear_fatal_status() and pci_cleanup_aer_error_status_regs() functions.
+ * Rebased on top of v5.4-rc5
+
+Changes since v8:
+ * Rebased on top of v5.4-rc1
+
+Changes since v7:
+ * Updated DSM version number to match the spec.
+
+Changes since v6:
+ * Modified the order of patches to enable EDR only after all necessary support is added in kernel.
+ * Addressed Bjorn comments.
+
+Changes since v5:
+ * Addressed Keith's comments.
+ * Added additional check for FF mode in pci_aer_init().
+ * Updated commit history of "PCI/DPC: Add support for DPC recovery on NON_FATAL errors" patch.
+
+Changes since v4:
+ * Rebased on top of v5.3-rc1
+ * Fixed lock/unlock issue in edr_handle_event().
+ * Merged "Update error status after reset_link()" patch into this patchset.
+
+Changes since v3:
+ * Moved EDR related ACPI functions/definitions to pci-acpi.c
+ * Modified commit history in few patches to include spec reference.
+ * Added support to handle DPC triggered by NON_FATAL errors.
+ * Added edr_lock to protect PCI device receiving duplicate EDR notifications.
+ * Addressed Bjorn comments.
+
+Changes since v2:
+ * Split EDR support patch into multiple patches.
+ * Addressed Bjorn comments.
+
+Changes since v1:
+ * Rebased on top of v5.1-rc1
+
+Kuppuswamy Sathyanarayanan (8):
+  PCI/ERR: Update error status after reset_link()
+  PCI/DPC: Allow dpc_probe() even if firmware first mode is enabled
+  PCI/DPC: Add dpc_process_error() wrapper function
+  PCI/DPC: Add Error Disconnect Recover (EDR) support
+  PCI/AER: Allow clearing Error Status Register in FF mode
+  PCI/DPC: Update comments related to DPC recovery on NON_FATAL errors
+  PCI/DPC: Clear AER registers in EDR mode
+  PCI/ACPI: Enable EDR support
+
+ Documentation/PCI/pcieaer-howto.rst       |   2 +-
+ drivers/acpi/pci_root.c                   |   9 +
+ drivers/net/ethernet/intel/ice/ice_main.c |   2 +-
+ drivers/ntb/hw/idt/ntb_hw_idt.c           |   2 +-
+ drivers/pci/pci-acpi.c                    |  98 ++++++++++
+ drivers/pci/pci.c                         |   2 +-
+ drivers/pci/pci.h                         |   2 +-
+ drivers/pci/pcie/Kconfig                  |  10 +
+ drivers/pci/pcie/aer.c                    |  16 +-
+ drivers/pci/pcie/dpc.c                    | 214 ++++++++++++++++++++--
+ drivers/pci/pcie/err.c                    |  12 +-
+ drivers/pci/pcie/portdrv_core.c           |   7 +-
+ drivers/pci/probe.c                       |   1 +
+ drivers/scsi/lpfc/lpfc_attr.c             |   2 +-
+ include/linux/acpi.h                      |   6 +-
+ include/linux/aer.h                       |  12 +-
+ include/linux/pci-acpi.h                  |  11 ++
+ include/linux/pci.h                       |   3 +-
+ 18 files changed, 365 insertions(+), 46 deletions(-)
+
+-- 
+2.21.0
+
