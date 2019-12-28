@@ -1,104 +1,94 @@
-Return-Path: <SRS0=rySr=2R=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=To0Z=2S=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-8.0 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
+	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91D66C2D0C6
-	for <linux-pci@archiver.kernel.org>; Fri, 27 Dec 2019 17:58:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFC63C2D0C6
+	for <linux-pci@archiver.kernel.org>; Sat, 28 Dec 2019 15:41:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 60366206CB
-	for <linux-pci@archiver.kernel.org>; Fri, 27 Dec 2019 17:58:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1577469529;
-	bh=Ho1Xlqow1ZoOG2sC7QTQAP4w132qJ+CdPclVM/y0AEk=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=xH9yBoggv6tXKaz99yfNk5Zwn03I84TcZIEt67g601uoxLznnn9Sj18PRTCIabnwJ
-	 e3QE89ANF1NlhE6WUcX2nZNhmKKxgCGJ93vlMoU6EE7gr3Qo1+sjuEsdU3ybT+HNL7
-	 OhBnxnmkZP3hL8BXpxu/52yj9wRWz2KAXOwWrI+s=
+	by mail.kernel.org (Postfix) with ESMTP id D10A721582
+	for <linux-pci@archiver.kernel.org>; Sat, 28 Dec 2019 15:41:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727369AbfL0RlQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 27 Dec 2019 12:41:16 -0500
-Received: from mail.kernel.org ([198.145.29.99]:37342 "EHLO mail.kernel.org"
+        id S1726410AbfL1Pla (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 28 Dec 2019 10:41:30 -0500
+Received: from smtp4-g21.free.fr ([212.27.42.4]:21342 "EHLO smtp4-g21.free.fr"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727358AbfL0RlQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 27 Dec 2019 12:41:16 -0500
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 2011B22525;
-        Fri, 27 Dec 2019 17:41:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1577468475;
-        bh=Ho1Xlqow1ZoOG2sC7QTQAP4w132qJ+CdPclVM/y0AEk=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=rdjReN0VJaOLUeDaMuzU7o1bTaP4qlQE2nxOT3cv5+R8I6InkX990p+ouokJ1mqAB
-         CWxGcn+VnULb3dMo18htrizHF+yRvcdrgi8XpO3V+sgjmoCJGoF4cKG/cfC5WY7557
-         hXyiduhG6zvpZEBzVrGMLPSg7EqqlUEBNtmq5FHY=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Thomas Gleixner <tglx@linutronix.de>, bp@alien8.de,
-        feng.tang@intel.com, harry.pan@intel.com, hpa@zytor.com,
-        Ingo Molnar <mingo@kernel.org>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 015/187] x86/intel: Disable HPET on Intel Coffee Lake H platforms
-Date:   Fri, 27 Dec 2019 12:38:03 -0500
-Message-Id: <20191227174055.4923-15-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191227174055.4923-1-sashal@kernel.org>
-References: <20191227174055.4923-1-sashal@kernel.org>
+        id S1726080AbfL1Pla (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 28 Dec 2019 10:41:30 -0500
+Received: from [192.168.1.91] (unknown [77.207.133.132])
+        (Authenticated sender: marc.w.gonzalez)
+        by smtp4-g21.free.fr (Postfix) with ESMTPSA id 6AC7119F5A8;
+        Sat, 28 Dec 2019 16:41:08 +0100 (CET)
+Subject: Re: [PATCH v2] PCI: qcom: Fix the fixup of PCI_VENDOR_ID_QCOM
+To:     Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Andrew Murray <andrew.murray@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc:     linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, stable@vger.kernel.org
+References: <20191227012717.78965-1-bjorn.andersson@linaro.org>
+ <9e5ee7e8-aa63-e82c-8135-acc77b476c87@mm-sol.com>
+From:   Marc Gonzalez <marc.w.gonzalez@free.fr>
+Message-ID: <38acf5fc-85aa-7090-e666-97a1281e9905@free.fr>
+Date:   Sat, 28 Dec 2019 16:41:08 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.2
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <9e5ee7e8-aa63-e82c-8135-acc77b476c87@mm-sol.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Kai-Heng Feng <kai.heng.feng@canonical.com>
+On 27/12/2019 09:51, Stanimir Varbanov wrote:
 
-[ Upstream commit f8edbde885bbcab6a2b4a1b5ca614e6ccb807577 ]
+> On 12/27/19 3:27 AM, Bjorn Andersson wrote:
+>
+>> There exists non-bridge PCIe devices with PCI_VENDOR_ID_QCOM, so limit
+>> the fixup to only affect the relevant PCIe bridges.
+>>
+>> Cc: stable@vger.kernel.org
+>> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+>> ---
+>>
+>> Stan, I picked up all the suggested device id's from the previous thread and
+>> added 0x1000 for QCS404. I looked at creating platform specific defines in
+>> pci_ids.h, but SDM845 has both 106 and 107... Please let me know if you would
+>> prefer that I do this anyway.
+> 
+> Looks good,
+> 
+> Acked-by: Stanimir Varbanov <svarbanov@mm-sol.com>
+> 
+>>  drivers/pci/controller/dwc/pcie-qcom.c | 8 +++++++-
+>>  1 file changed, 7 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+>> index 5ea527a6bd9f..138e1a2d21cc 100644
+>> --- a/drivers/pci/controller/dwc/pcie-qcom.c
+>> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+>> @@ -1439,7 +1439,13 @@ static void qcom_fixup_class(struct pci_dev *dev)
+>>  {
+>>  	dev->class = PCI_CLASS_BRIDGE_PCI << 8;
+>>  }
+>> -DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, PCI_ANY_ID, qcom_fixup_class);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x0101, qcom_fixup_class);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x0104, qcom_fixup_class);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x0106, qcom_fixup_class);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x0107, qcom_fixup_class);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x0302, qcom_fixup_class);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x1000, qcom_fixup_class);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x1001, qcom_fixup_class);
 
-Coffee Lake H SoC has similar behavior as Coffee Lake, skewed HPET timer
-once the SoCs entered PC10.
+Hrmmm... still not CCed on the patch, and still don't think the
+fixup is required(?) for 0x106 and 0x107.
 
-So let's disable HPET on CFL-H platforms.
-
-Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Peter Zijlstra <peterz@infradead.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: bp@alien8.de
-Cc: feng.tang@intel.com
-Cc: harry.pan@intel.com
-Cc: hpa@zytor.com
-Link: https://lkml.kernel.org/r/20191129062303.18982-1-kai.heng.feng@canonical.com
-Signed-off-by: Ingo Molnar <mingo@kernel.org>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- arch/x86/kernel/early-quirks.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/arch/x86/kernel/early-quirks.c b/arch/x86/kernel/early-quirks.c
-index 4cba91ec8049..606711f5ebf8 100644
---- a/arch/x86/kernel/early-quirks.c
-+++ b/arch/x86/kernel/early-quirks.c
-@@ -710,6 +710,8 @@ static struct chipset early_qrk[] __initdata = {
- 	 */
- 	{ PCI_VENDOR_ID_INTEL, 0x0f00,
- 		PCI_CLASS_BRIDGE_HOST, PCI_ANY_ID, 0, force_disable_hpet},
-+	{ PCI_VENDOR_ID_INTEL, 0x3e20,
-+		PCI_CLASS_BRIDGE_HOST, PCI_ANY_ID, 0, force_disable_hpet},
- 	{ PCI_VENDOR_ID_INTEL, 0x3ec4,
- 		PCI_CLASS_BRIDGE_HOST, PCI_ANY_ID, 0, force_disable_hpet},
- 	{ PCI_VENDOR_ID_BROADCOM, 0x4331,
--- 
-2.20.1
-
+Regards.
