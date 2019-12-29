@@ -2,134 +2,168 @@ Return-Path: <SRS0=Z2kI=2T=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12D28C2D0C8
-	for <linux-pci@archiver.kernel.org>; Sun, 29 Dec 2019 02:45:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBD2DC2D0C0
+	for <linux-pci@archiver.kernel.org>; Sun, 29 Dec 2019 22:37:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D17E620838
-	for <linux-pci@archiver.kernel.org>; Sun, 29 Dec 2019 02:45:51 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="wP8/Z/fA"
+	by mail.kernel.org (Postfix) with ESMTP id A1C152071E
+	for <linux-pci@archiver.kernel.org>; Sun, 29 Dec 2019 22:37:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726343AbfL2Cpv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 28 Dec 2019 21:45:51 -0500
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:44997 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726187AbfL2Cpu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 28 Dec 2019 21:45:50 -0500
-Received: by mail-pg1-f193.google.com with SMTP id x7so16407488pgl.11
-        for <linux-pci@vger.kernel.org>; Sat, 28 Dec 2019 18:45:50 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=6vQfMDnjAnyBecC4EFX4YToQU0vypJ/cCTtTTcCKPbQ=;
-        b=wP8/Z/fA9v6JoO3+Oqg8HNkYly6trwIiyQslwb8eMR0EJflqyY7kQ841eKvzL6t7Tu
-         NHjGwIdu5gfTyen+njsZyiefStSrCKSidxy23jGOx6WzdDsZjYUiqs3mR17+ZsCDOUfV
-         dTXLUe6Z+Mq31YgonJj1j/D6MKfLF6uov9FmqsMOBsCY+lEA7HJzJYHYaH5hRF3Q+wkm
-         i7RbBHkbJhoXMA+zHDVkAGfpmvIi+BBVwkBOOVdIN/mxpYrrANQ/KHdrgROr/CUv+ZFx
-         eURuoD7Zz9CTiwBZL/pM7UcE+qKqtUp5PNPg3OctGlT91iL/YiQ23JjiwqKBgPiEMpe4
-         Sizg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=6vQfMDnjAnyBecC4EFX4YToQU0vypJ/cCTtTTcCKPbQ=;
-        b=sxlfNVvzNP0c8y0U/uJrwuoKffmJn+3nz344tx712rpRwkEtuPNKcUOP5FT1ujJ1og
-         iylNpb75Lu/N8KL023fsAap7dvmKqSgvzUETN+hhslZDVtUKMXrh5GX7xSzWU5yVHbiw
-         YCSuThjYtSiLgYmGjvJWxRdccZVXK9JXk0okxnFaG4LstT/PEyUCtKpOo/zehAEYsDE6
-         Pk7oO15K4Q5AVcs3YvEd9J2PebutM1G/kaw/eLG7hfhWv7TnPUCV/U8MvI4Jzun4rERB
-         KsUze7vHRDT7tmBK/PlpuDFlGfvinJ2inj4w5w3k14pFejjw8LzNmoyGBQ9v3uXialpR
-         8Dlg==
-X-Gm-Message-State: APjAAAUhYLCnP3Lvkdq3rn/Gbup3qEo+EzfWYPKIFCN+gpglI0azquYX
-        FDkqh1m2JUrBp2h1h9OEMqsTwQ==
-X-Google-Smtp-Source: APXvYqzUR77xdE839/m6l8S88LYUtA1Wd64x+Elee8gvNt2cGvGDlb/OXr1UQYYdYRdHMPZDl3i5Bw==
-X-Received: by 2002:a63:338e:: with SMTP id z136mr64204052pgz.60.1577587550101;
-        Sat, 28 Dec 2019 18:45:50 -0800 (PST)
-Received: from builder (104-188-17-28.lightspeed.sndgca.sbcglobal.net. [104.188.17.28])
-        by smtp.gmail.com with ESMTPSA id p17sm44724028pfn.31.2019.12.28.18.45.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 28 Dec 2019 18:45:49 -0800 (PST)
-Date:   Sat, 28 Dec 2019 18:45:47 -0800
-From:   Bjorn Andersson <bjorn.andersson@linaro.org>
-To:     Marc Gonzalez <marc.w.gonzalez@free.fr>
-Cc:     Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Andrew Murray <andrew.murray@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: qcom: Fix the fixup of PCI_VENDOR_ID_QCOM
-Message-ID: <20191229024547.GH3755841@builder>
-References: <20191227012717.78965-1-bjorn.andersson@linaro.org>
- <9e5ee7e8-aa63-e82c-8135-acc77b476c87@mm-sol.com>
- <38acf5fc-85aa-7090-e666-97a1281e9905@free.fr>
+        id S1726586AbfL2Wh6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 29 Dec 2019 17:37:58 -0500
+Received: from cloudserver094114.home.pl ([79.96.170.134]:62237 "EHLO
+        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726490AbfL2Wh6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 29 Dec 2019 17:37:58 -0500
+Received: from 79.184.253.116.ipv4.supernova.orange.pl (79.184.253.116) (HELO kreacher.localnet)
+ by serwer1319399.home.pl (79.96.170.134) with SMTP (IdeaSmtpServer 0.83.320)
+ id fd89ba99d30803d6; Sun, 29 Dec 2019 23:37:55 +0100
+From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To:     Kai-Heng Feng <kai.heng.feng@canonical.com>
+Cc:     bhelgaas@google.com, rafael.j.wysocki@intel.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI/PM: Report runtime wakeup is not supported if bridge isn't bound to driver
+Date:   Sun, 29 Dec 2019 23:37:55 +0100
+Message-ID: <4466650.2HG2iOLVKt@kreacher>
+In-Reply-To: <C9708CF1-9F01-47BF-A568-53A01725AF95@canonical.com>
+References: <20191227092405.29588-1-kai.heng.feng@canonical.com> <1948783.ToaVGCCZch@kreacher> <C9708CF1-9F01-47BF-A568-53A01725AF95@canonical.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <38acf5fc-85aa-7090-e666-97a1281e9905@free.fr>
-User-Agent: Mutt/1.12.2 (2019-09-21)
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sat 28 Dec 07:41 PST 2019, Marc Gonzalez wrote:
-
-> On 27/12/2019 09:51, Stanimir Varbanov wrote:
+On Friday, December 27, 2019 6:15:26 PM CET Kai-Heng Feng wrote:
 > 
-> > On 12/27/19 3:27 AM, Bjorn Andersson wrote:
-> >
-> >> There exists non-bridge PCIe devices with PCI_VENDOR_ID_QCOM, so limit
-> >> the fixup to only affect the relevant PCIe bridges.
-> >>
-> >> Cc: stable@vger.kernel.org
-> >> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+> > On Dec 27, 2019, at 18:36, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> > 
+> > On Friday, December 27, 2019 10:24:05 AM CET Kai-Heng Feng wrote:
+> >> We have a Pericom USB add-on card that has three USB controller
+> >> functions 06:00.[0-2], connected to bridge device 05:03.0, which is
+> >> connected to another bridge device 04:00.0:
+> >> 
+> >> -[0000:00]-+-00.0
+> >>           +-1c.6-[04-06]----00.0-[05-06]----03.0-[06]--+-00.0
+> >>           |                                            +-00.1
+> >>           |                                            \-00.2
+> >> 
+> >> When bridge device (05:03.0) and all three USB controller functions
+> >> (06:00.[0-2]) are runtime suspended, they don't get woken up by plugging
+> >> USB devices into the add-on card.
+> >> 
+> >> This is because the pcieport driver failed to probe on 04:00.0, since
+> >> the device supports neither legacy IRQ, MSI nor MSI-X. Because of that,
+> >> there's no native PCIe PME can work for devices connected to it.
+> > 
+> > But in that case the PME driver (drivers/pci/pcie/pme.c) should not bind
+> > to the port in question, so the "can_wakeup" flag should not be set for
+> > the devices under that port.
+> 
+> We can remove the can_wakeup flag for all its child devices once pcieport probe fails, but I think it's not intuitive.
+> 
+> > 
+> >> So let's correctly report runtime wakeup isn't supported when any of
+> >> PCIe bridges isn't bound to pcieport driver.
+> >> 
+> >> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=205981
+> >> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
 > >> ---
-> >>
-> >> Stan, I picked up all the suggested device id's from the previous thread and
-> >> added 0x1000 for QCS404. I looked at creating platform specific defines in
-> >> pci_ids.h, but SDM845 has both 106 and 107... Please let me know if you would
-> >> prefer that I do this anyway.
+> >> drivers/pci/pci.c | 12 ++++++++++++
+> >> 1 file changed, 12 insertions(+)
+> >> 
+> >> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> >> index 951099279192..ca686cfbd65e 100644
+> >> --- a/drivers/pci/pci.c
+> >> +++ b/drivers/pci/pci.c
+> >> @@ -2493,6 +2493,18 @@ bool pci_dev_run_wake(struct pci_dev *dev)
+> >> 	if (!pci_pme_capable(dev, pci_target_state(dev, true)))
+> >> 		return false;
+> >> 
+> >> +	/* If any upstream PCIe bridge isn't bound to pcieport driver, there's
+> >> +	 * no IRQ for PME.
+> >> +	 */
+> >> +	if (pci_is_pcie(dev)) {
+> >> +		while (bus->parent) {
+> >> +			if (!bus->self->driver)
+> >> +				return false;
+> >> +
+> >> +			bus = bus->parent;
+> >> +		}
+> >> +	}
+> >> +
 > > 
-> > Looks good,
-> > 
-> > Acked-by: Stanimir Varbanov <svarbanov@mm-sol.com>
-> > 
-> >>  drivers/pci/controller/dwc/pcie-qcom.c | 8 +++++++-
-> >>  1 file changed, 7 insertions(+), 1 deletion(-)
-> >>
-> >> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-> >> index 5ea527a6bd9f..138e1a2d21cc 100644
-> >> --- a/drivers/pci/controller/dwc/pcie-qcom.c
-> >> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-> >> @@ -1439,7 +1439,13 @@ static void qcom_fixup_class(struct pci_dev *dev)
-> >>  {
-> >>  	dev->class = PCI_CLASS_BRIDGE_PCI << 8;
-> >>  }
-> >> -DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, PCI_ANY_ID, qcom_fixup_class);
-> >> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x0101, qcom_fixup_class);
-> >> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x0104, qcom_fixup_class);
-> >> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x0106, qcom_fixup_class);
-> >> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x0107, qcom_fixup_class);
-> >> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x0302, qcom_fixup_class);
-> >> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x1000, qcom_fixup_class);
-> >> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x1001, qcom_fixup_class);
+> > So it looks like device_can_wakeup() returns 'true' for this device, but it
+> > should return 'false'.
 > 
-> Hrmmm... still not CCed on the patch,
+> The USB controllers can assert PME#, so it actually can wakeup, in a way.
 
-You are Cc'ed on the patch, but as usual your mail server responds "451
-too many errors from your ip" and throw my emails away.
+Well, that's questionable.
 
-> and still don't think the fixup is required(?) for 0x106 and 0x107.
+If there is no known way for the PME to be signaled, we may as well mark the
+device as wakeup-incapable.
+
+> I think the logical distinction between pci_dev_run_wake() and device_can_wakeup() is that,
+> pci_dev_run_wake() means it can actually do runtime wakeup, while device_can_wakeup()
+> only means it has the capability to wakeup. Am I correct here?
+
+Kind of, but the "capability" part is not well defined, so to speak, because
+if the device happens to be located below a PCIe port in a low-power state
+(say D3hot), the PME "support" declared in the config space is clearly
+insufficient.
+
+> > 
+> > Do you know why the "can_wakeup" flag is set for it?
 > 
+> All PCI devices with PME cap calls device_set_wakeup_capable() in pci_pm_init().
 
-I re-read your reply in my v1 thread. So we know that 0x104 doesn't need
-the fixup, so resumably only 0x101 needs the fixup?
+Right, I forgot about that thing.
 
-Regards,
-Bjorn
+It is inconsistent with the rest of the code, particularly with
+pci_dev_run_wake(), so I'd try to drop it.
+
+IIRC that would require some other pieces of code to be reworked to avoid
+regressions, though.
+
+> > 
+> >> 	if (device_can_wakeup(&dev->dev))
+> >> 		return true;
+> >> 
+> >> 
+> > 
+> > Moreover, even if the native PME is not supported, there can be an ACPI GPE (or
+> > equivalent) that triggers when WAKE# is asserted by one of the PCIe devices
+> > connected to it, so the test added by this patch cannot be used in general.
+> 
+> Ok. So how to know when both native PME isn't supported and it doesn't use ACPI GPE?
+
+If the PME driver doesn't bind to the device's root port, the native PME cannot
+work.
+
+If there is no wakeup GPE, pci_acpi_setup() will not call
+device_set_wakeup_capable() for the device.
+
+> I thought ACPI GPE only works for devices directly connect to Root Complex, but I can't find the reference now.
+
+No, that's not the case.
+
+It can work for any devices (even old-style PCI, non-PCIe) with PME# connected
+to a dedicated WAKE# pin on the board (which then is represented as an ACPI GPE
+or a GPIO IRQ).
+
+> 
+> Another short-term workaround is to make pci_pme_list_scan() not skip bridge when it's in D3hot:
+
+No, that would not be safe in general.
+
+Basically, pci_finish_runtime_suspend() needs to enable wakeup for devices
+that can do PME even though can_wakeup is not set for them, as long as
+pci_pme_list_scan() can reach them.  That should be sufficient to cover
+all of the practically relevant cases.
+
+
+
