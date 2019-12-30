@@ -5,46 +5,47 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 131BCC2D0C2
-	for <linux-pci@archiver.kernel.org>; Mon, 30 Dec 2019 12:31:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36214C2D0C2
+	for <linux-pci@archiver.kernel.org>; Mon, 30 Dec 2019 12:31:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DEA2A20730
-	for <linux-pci@archiver.kernel.org>; Mon, 30 Dec 2019 12:31:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0DC772084D
+	for <linux-pci@archiver.kernel.org>; Mon, 30 Dec 2019 12:31:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="AuhWXSKY"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="KT1NIGdT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727494AbfL3Mbk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 30 Dec 2019 07:31:40 -0500
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:33384 "EHLO
-        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727477AbfL3Mbk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Dec 2019 07:31:40 -0500
-Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id xBUCVX4V065599;
-        Mon, 30 Dec 2019 06:31:33 -0600
+        id S1727504AbfL3Mbn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 30 Dec 2019 07:31:43 -0500
+Received: from fllv0015.ext.ti.com ([198.47.19.141]:46088 "EHLO
+        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727496AbfL3Mbn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Dec 2019 07:31:43 -0500
+Received: from lelv0265.itg.ti.com ([10.180.67.224])
+        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id xBUCVa09100332;
+        Mon, 30 Dec 2019 06:31:36 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1577709093;
-        bh=k383SgYvrZOses1OYvohCYRsQU04lSCHiU+tY0yKKY4=;
+        s=ti-com-17Q1; t=1577709096;
+        bh=NU/rxry6lKNRKG7KKBr3jvZ2rcYxkceQL6qF8JkV+fA=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=AuhWXSKYUSGLsCYxQN+EFlK4x2ymRRJCnbIM9lgGeQpEDmDVHmFu14kHL4OADOq90
-         Ww7wUyEygN8XBWiHNrY70CQ8UrfSk4FrB1sy25lgFdE/aVrz0WDYBGAXIF2eR75w5I
-         2uRvRAy40fq7MDjKW9CXOEI0hFmUkEcHomXe0xeg=
-Received: from DFLE100.ent.ti.com (dfle100.ent.ti.com [10.64.6.21])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id xBUCVX0I112470;
-        Mon, 30 Dec 2019 06:31:33 -0600
-Received: from DFLE103.ent.ti.com (10.64.6.24) by DFLE100.ent.ti.com
- (10.64.6.21) with Microsoft SMTP Server (version=TLS1_2,
+        b=KT1NIGdTMEf6Xo2ouarRFsJQczg0WOfU3fBrANPpgQR9EwmSgUodDw5kgt8eQsB4i
+         VE5NCUKOOoGCPsCbUOUsCo3Q2n/Ob3958dM2ZfEVKc5629zwWwXZmXgtUyF0XUBdtf
+         erf5xOkEkOcKIY67bw3kt7VvZkiQxrPA5E6/mjmE=
+Received: from DLEE105.ent.ti.com (dlee105.ent.ti.com [157.170.170.35])
+        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id xBUCVa7T095292
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 30 Dec 2019 06:31:36 -0600
+Received: from DLEE104.ent.ti.com (157.170.170.34) by DLEE105.ent.ti.com
+ (157.170.170.35) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Mon, 30
- Dec 2019 06:31:33 -0600
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DFLE103.ent.ti.com
- (10.64.6.24) with Microsoft SMTP Server (version=TLS1_2,
+ Dec 2019 06:31:35 -0600
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE104.ent.ti.com
+ (157.170.170.34) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
- Frontend Transport; Mon, 30 Dec 2019 06:31:33 -0600
+ Frontend Transport; Mon, 30 Dec 2019 06:31:35 -0600
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id xBUCVEhS002491;
-        Mon, 30 Dec 2019 06:31:31 -0600
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id xBUCVEhT002491;
+        Mon, 30 Dec 2019 06:31:33 -0600
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Kishon Vijay Abraham I <kishon@ti.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -52,9 +53,9 @@ To:     Kishon Vijay Abraham I <kishon@ti.com>,
 CC:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH 6/7] misc: pci_endpoint_test: Use full pci-endpoint-test name in request irq
-Date:   Mon, 30 Dec 2019 18:03:14 +0530
-Message-ID: <20191230123315.31037-7-kishon@ti.com>
+Subject: [PATCH 7/7] misc: pci_endpoint_test: Enable legacy interrupt
+Date:   Mon, 30 Dec 2019 18:03:15 +0530
+Message-ID: <20191230123315.31037-8-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20191230123315.31037-1-kishon@ti.com>
 References: <20191230123315.31037-1-kishon@ti.com>
@@ -66,51 +67,27 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Use full pci-endpoint-test name in request irq, so that it's easy to
-profile the device that actually raised the interrupt.
+PCI core does not enable legacy interrupt if it finds MSI or
+MSIX interrupt. Explicitly enable legacy interrupt here in order
+to perform legacy interrupt tests.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/misc/pci_endpoint_test.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/misc/pci_endpoint_test.c | 1 +
+ 1 file changed, 1 insertion(+)
 
 diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index b622e234f57c..dae450c1a653 100644
+index dae450c1a653..b2458988939e 100644
 --- a/drivers/misc/pci_endpoint_test.c
 +++ b/drivers/misc/pci_endpoint_test.c
-@@ -108,6 +108,7 @@ struct pci_endpoint_test {
- 	struct miscdevice miscdev;
- 	enum pci_barno test_reg_bar;
- 	size_t alignment;
-+	const char *name;
- };
- 
- struct pci_endpoint_test_data {
-@@ -226,7 +227,7 @@ static bool pci_endpoint_test_request_irq(struct pci_endpoint_test *test)
- 	for (i = 0; i < test->num_irqs; i++) {
- 		err = devm_request_irq(dev, pci_irq_vector(pdev, i),
- 				       pci_endpoint_test_irqhandler,
--				       IRQF_SHARED, DRV_MODULE_NAME, test);
-+				       IRQF_SHARED, test->name, test);
- 		if (err)
- 			goto fail;
+@@ -701,6 +701,7 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
  	}
-@@ -752,6 +753,7 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
- 		dev_err(dev, "Failed to register device\n");
- 		goto err_kfree_name;
- 	}
-+	test->name = kstrdup(name, GFP_KERNEL);
  
- 	return 0;
+ 	pci_set_master(pdev);
++	pci_intx(pdev, true);
  
-@@ -792,6 +794,7 @@ static void pci_endpoint_test_remove(struct pci_dev *pdev)
- 
- 	misc_deregister(&test->miscdev);
- 	kfree(misc_device->name);
-+	kfree(test->name);
- 	ida_simple_remove(&pci_endpoint_test_ida, id);
- 	for (bar = 0; bar < PCI_STD_NUM_BARS; bar++) {
- 		if (test->bar[bar])
+ 	if (!(is_am654_pci_dev(pdev) || is_j721e_pci_dev(pdev))) {
+ 		if (!pci_endpoint_test_alloc_irq_vectors(test, irq_type))
 -- 
 2.17.1
 
