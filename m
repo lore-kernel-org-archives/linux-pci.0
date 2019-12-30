@@ -2,127 +2,99 @@ Return-Path: <SRS0=Jg1T=2U=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2609C2D0CE
-	for <linux-pci@archiver.kernel.org>; Mon, 30 Dec 2019 08:12:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE7BFC2D0C2
+	for <linux-pci@archiver.kernel.org>; Mon, 30 Dec 2019 12:31:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ACD36208C4
-	for <linux-pci@archiver.kernel.org>; Mon, 30 Dec 2019 08:12:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F10720722
+	for <linux-pci@archiver.kernel.org>; Mon, 30 Dec 2019 12:31:29 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="HoGPOyLw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727208AbfL3IMH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 30 Dec 2019 03:12:07 -0500
-Received: from szxga05-in.huawei.com ([45.249.212.191]:8205 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727158AbfL3IMG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 30 Dec 2019 03:12:06 -0500
-Received: from DGGEMS413-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id 692DD9AA0CF7A4652F84;
-        Mon, 30 Dec 2019 16:12:02 +0800 (CST)
-Received: from [127.0.0.1] (10.184.52.56) by DGGEMS413-HUB.china.huawei.com
- (10.3.19.213) with Microsoft SMTP Server id 14.3.439.0; Mon, 30 Dec 2019
- 16:11:51 +0800
-Subject: Re: [PATCH v2] PCI: Add quirk for HiSilicon NP 5896 devices
-To:     Bjorn Helgaas <helgaas@kernel.org>
-CC:     <bjorn@helgaas.com>, <andrew.murray@arm.com>,
-        <linux-pci@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>,
-        <wangkefeng.wang@huawei.com>, <huawei.libin@huawei.com>,
-        <guohanjun@huawei.com>
-References: <20191218142831.GA101587@google.com>
-From:   Xiongfeng Wang <wangxiongfeng2@huawei.com>
-Message-ID: <dfd3ad93-7c17-abb2-b620-99df5c984fd4@huawei.com>
-Date:   Mon, 30 Dec 2019 16:11:50 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko/20100101
- Thunderbird/52.6.0
+        id S1727397AbfL3Mb3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 30 Dec 2019 07:31:29 -0500
+Received: from lelv0143.ext.ti.com ([198.47.23.248]:52584 "EHLO
+        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727376AbfL3Mb2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Dec 2019 07:31:28 -0500
+Received: from fllv0034.itg.ti.com ([10.64.40.246])
+        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id xBUCVIuN069300;
+        Mon, 30 Dec 2019 06:31:18 -0600
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1577709078;
+        bh=h1bBuCCt5p3npXFEeqmlW/XTH5HMdwLY7PMMhaC3OJs=;
+        h=From:To:CC:Subject:Date;
+        b=HoGPOyLwSvSx+HCBFECvXbTkr33tTMtHlzCLGV63NjT6+YUxhx1TNDfwH0/EovR8U
+         60xPaSHbLnsUu1eVJhTawnA6sMvShK2FbwZfrN2mdlqXFmOk2/jAgueqrnZMgCv3+l
+         a+SojzeUQncMV35M6pL0fBCGfG/4zbxQxSFLg1hs=
+Received: from DLEE102.ent.ti.com (dlee102.ent.ti.com [157.170.170.32])
+        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id xBUCVITa058483
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 30 Dec 2019 06:31:18 -0600
+Received: from DLEE113.ent.ti.com (157.170.170.24) by DLEE102.ent.ti.com
+ (157.170.170.32) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Mon, 30
+ Dec 2019 06:31:17 -0600
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE113.ent.ti.com
+ (157.170.170.24) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
+ Frontend Transport; Mon, 30 Dec 2019 06:31:17 -0600
+Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id xBUCVEhM002491;
+        Mon, 30 Dec 2019 06:31:15 -0600
+From:   Kishon Vijay Abraham I <kishon@ti.com>
+To:     Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Arnd Bergmann <arnd@arndb.de>
+CC:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH 0/7] Improvements to pci_endpoint_test driver
+Date:   Mon, 30 Dec 2019 18:03:08 +0530
+Message-ID: <20191230123315.31037-1-kishon@ti.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-In-Reply-To: <20191218142831.GA101587@google.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.184.52.56]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi, Bjorn
+This series adds improvements and fixes to pci_endpoint_test driver
+mostly applicable when used with multi-function endpoint (or multiple
+endpoint instances using pci_epf_test).
 
-On 2019/12/18 22:28, Bjorn Helgaas wrote:
-> On Wed, Dec 18, 2019 at 05:16:03PM +0800, Xiongfeng Wang wrote:
->> On 2019/12/11 12:10, Bjorn Helgaas wrote:
->>> On Tue, Dec 10, 2019 at 9:28 PM Xiongfeng Wang
->>> <wangxiongfeng2@huawei.com> wrote:
->>>> On 2019/12/7 2:10, Bjorn Helgaas wrote:
->>>>> On Fri, Dec 06, 2019 at 03:01:45PM +0800, Xiongfeng Wang wrote:
->>>>>> HiSilicon PCI Network Processor 5896 devices misreport the
->>>>>> class type as 'NOT_DEFINED', but it is actually a network
->>>>>> device. Also the size of BAR3 is reported as 265T, but this BAR
->>>>>> is actually unused.  This patch modify the class type to
->>>>>> 'CLASS_NETWORK' and disable the unused BAR3.
-> 
->>>>> The question is not whether the BAR is used by the driver; the
->>>>> question is whether the device responds to accesses to the
->>>>> region described by the BAR when PCI_COMMAND_MEMORY is turned
->>>>> on.
->>>>
->>>> I asked the hardware engineer. He said I can not write an address
->>>> into that BAR.
->>>
->>> If the BAR is not writable, I think sizing should fail, so I
->>> suspect some of the bits are actually writable.
->>
->> Sorry for the delayed response. It's not so convenient for me to get
->> to the hardware guys.  BAR0 BAR1 BAR2 are 32-bit and can be used to
->> access the registers and memory within 5896 devices. These three
->> BARs can meet the need for most scenario.  BAR3 is 64-bit and can be
->> used to access all the registers and memory within 5896 devices.
->> (BAR3 is writable. Sorry for the non-confirmed information before.)
->> But BAR3 is not used by the driver and the size is very
->> large（larger than 100G, still didn't get the precise size）.  So I
->> think maybe we can disable this BAR for now, otherwise the
->> unassigned resource will cause 'pci_enable_device()' returning
->> failure.
-> 
-> Here's the problem: the proposed patch (below) clears the struct
-> resource corresponding to BAR 3, but that doesn't actually disable the
-> BAR.  It hides the BAR from Linux, so Linux will pretend it doesn't
-> exist, but it's still there in the hardware.
-> 
-> The hardware BAR 3 still contains some value (possibly zero), and if
-> PCI_COMMAND_MEMORY is set (which you need to do if you want to use
-> *any* memory BARs on the device), the device will respond to any
-> transactions in the BAR 3 range.  Depending on the topology and all
-> the other BAR and window assignments, this may cause address
-> conflicts.
+*) Using module parameter to determine irqtype would indicate all the
+   pci_endpoint_test device have the same irqtype. Fix it here.
+*) Add ioctl to clear irq so that "cat /proc/interrupts" only lists
+   the entries for the devices that is actually being used.
+*) Creating more than 10 pci-endpoint-test devices results in a kernel
+   error.
+*) Use full pci-endpoint-test name in request irq so that it's easy to
+   profile the interrupt details in "cat /proc/interrupts"
+*) Always enable legacy interrupt.
 
-I have checked with the hardware engineer. He said the transactions have some
-bits to indicate whether the address is 32-bit or 64-bit. The device will respond
-only when the 64-bit address transactions is in the BAR3 range.
+Kishon Vijay Abraham I (7):
+  misc: pci_endpoint_test: Avoid using module parameter to determine
+    irqtype
+  misc: pci_endpoint_test: Do not request or allocate IRQs in probe
+  misc: pci_endpoint_test: Add ioctl to clear IRQ
+  tools: PCI: Add 'e' to clear IRQ
+  misc: pci_endpoint_test: Fix to support > 10 pci-endpoint-test devices
+  misc: pci_endpoint_test: Use full pci-endpoint-test name in request
+    irq
+  misc: pci_endpoint_test: Enable legacy interrupt
 
-So I think, if I clear the resource corresponding to BAR3, the 64-bit window of the
-downport is empty. There will be no 64-bit address transaction sent to the device.
+ drivers/misc/pci_endpoint_test.c | 43 +++++++++++++++++++++++++-------
+ include/uapi/linux/pcitest.h     |  1 +
+ tools/pci/pcitest.c              | 16 +++++++++++-
+ 3 files changed, 50 insertions(+), 10 deletions(-)
 
-Thanks,
-Xiongfeng
-
-> 
-> + * HiSilicon NP 5896 devices BAR3 size is reported as 256T and causes problem
-> + * when assigning the resources. But this BAR is actually unused by the driver,
-> + * so let's disable it.
-> + */
-> +static void quirk_hisi_fixup_np_bar(struct pci_dev *pdev)
-> +{
-> +       struct resource *r = &pdev->resource[3];
-> +
-> +       r->start = 0;
-> +       r->end = 0;
-> +       r->flags = 0;
-> +
-> +       pci_info(pdev, "Disabling invalid BAR 3\n");
-> 
-> .
-> 
+-- 
+2.17.1
 
