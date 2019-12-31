@@ -5,47 +5,47 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B266FC2D0DC
-	for <linux-pci@archiver.kernel.org>; Tue, 31 Dec 2019 11:34:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0326EC2D0DE
+	for <linux-pci@archiver.kernel.org>; Tue, 31 Dec 2019 11:34:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 84E5C20409
-	for <linux-pci@archiver.kernel.org>; Tue, 31 Dec 2019 11:34:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C2A2B20409
+	for <linux-pci@archiver.kernel.org>; Tue, 31 Dec 2019 11:34:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="LxTajdmE"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="XSuHH6c/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727133AbfLaLeO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 31 Dec 2019 06:34:14 -0500
-Received: from lelv0143.ext.ti.com ([198.47.23.248]:42316 "EHLO
-        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727085AbfLaLeI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Dec 2019 06:34:08 -0500
-Received: from lelv0265.itg.ti.com ([10.180.67.224])
-        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id xBVBXiiF117359;
-        Tue, 31 Dec 2019 05:33:44 -0600
+        id S1727085AbfLaLeS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 31 Dec 2019 06:34:18 -0500
+Received: from lelv0142.ext.ti.com ([198.47.23.249]:32806 "EHLO
+        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727145AbfLaLeQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Dec 2019 06:34:16 -0500
+Received: from lelv0266.itg.ti.com ([10.180.67.225])
+        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id xBVBXtKW097725;
+        Tue, 31 Dec 2019 05:33:55 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1577792025;
-        bh=Zgv5kKXEm0tGssEL2rZei0b8iDsdKd/7gxbFA0EbGJ0=;
+        s=ti-com-17Q1; t=1577792035;
+        bh=5snp5fw9QLv4HKFNhn1dH0ZAh+BCRnwFffHokQkHm90=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=LxTajdmEA1opLpYGrfYdkrp37fx68617N57vcZUIEsR548YXf5WMuZrPQJ7p43m/J
-         gtD54EtPpLAMt5z0XGryj4uHmQLKRRdjy+dj+RRf5Ls3JPePXupRBouVwrIQK+W5xz
-         rrVNeeH/kc6cPbZCZadn3QHeAPj9U1ccicCgZ4dk=
-Received: from DLEE107.ent.ti.com (dlee107.ent.ti.com [157.170.170.37])
-        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id xBVBXi5n040074
+        b=XSuHH6c/BEl5e2sWtHa0C8LwveIO45b5D8UjDzRr/sgOEn8PJa7IQZiTrMfkp3v/p
+         RMtds1fz+0KG1ZpItrdJF68ckRxfuN8Y6Snu8vVqxtrJ2IMfb61LC/Q9c5jaKC2EWo
+         ttn2lBY+fyw87iteXhwBVWI6hOx5anWMavUlhN2c=
+Received: from DLEE100.ent.ti.com (dlee100.ent.ti.com [157.170.170.30])
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id xBVBXtOK090274
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 31 Dec 2019 05:33:44 -0600
-Received: from DLEE107.ent.ti.com (157.170.170.37) by DLEE107.ent.ti.com
- (157.170.170.37) with Microsoft SMTP Server (version=TLS1_2,
+        Tue, 31 Dec 2019 05:33:55 -0600
+Received: from DLEE115.ent.ti.com (157.170.170.26) by DLEE100.ent.ti.com
+ (157.170.170.30) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Tue, 31
- Dec 2019 05:33:44 -0600
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE107.ent.ti.com
- (157.170.170.37) with Microsoft SMTP Server (version=TLS1_2,
+ Dec 2019 05:33:55 -0600
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE115.ent.ti.com
+ (157.170.170.26) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
- Frontend Transport; Tue, 31 Dec 2019 05:33:44 -0600
+ Frontend Transport; Tue, 31 Dec 2019 05:33:55 -0600
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id xBVBXX32024759;
-        Tue, 31 Dec 2019 05:33:39 -0600
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id xBVBXX34024759;
+        Tue, 31 Dec 2019 05:33:50 -0600
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Kishon Vijay Abraham I <kishon@ti.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -64,9 +64,9 @@ CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-rockchip@lists.infradead.org>,
         <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH 1/7] Documentation: PCI: endpoint/pci-endpoint-cfs: Guide to use SR-IOV
-Date:   Tue, 31 Dec 2019 17:05:28 +0530
-Message-ID: <20191231113534.30405-2-kishon@ti.com>
+Subject: [PATCH 3/7] PCI: endpoint: Add support to add virtual function in endpoint core
+Date:   Tue, 31 Dec 2019 17:05:30 +0530
+Message-ID: <20191231113534.30405-4-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20191231113534.30405-1-kishon@ti.com>
 References: <20191231113534.30405-1-kishon@ti.com>
@@ -78,53 +78,219 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add Documentation to help users use PCI endpoint to create virtual
-functions using configfs. An endpoint function is designated as a
-virtual endpoint function device when it is linked to a physical
-endpoint function device (instead of a endpoint controller).
+Add support to add virtual function in endpoint core. The virtual
+function can only be associated with a physical function instead of a
+endpoint controller. Provide APIs to associate a virtual function with
+a physical function here.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- Documentation/PCI/endpoint/pci-endpoint-cfs.rst | 12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
+ drivers/pci/endpoint/pci-epc-core.c |  2 +-
+ drivers/pci/endpoint/pci-epf-core.c | 92 ++++++++++++++++++++++++++++-
+ include/linux/pci-epf.h             | 16 ++++-
+ 3 files changed, 107 insertions(+), 3 deletions(-)
 
-diff --git a/Documentation/PCI/endpoint/pci-endpoint-cfs.rst b/Documentation/PCI/endpoint/pci-endpoint-cfs.rst
-index b6d39cdec56e..0f55c5511c6c 100644
---- a/Documentation/PCI/endpoint/pci-endpoint-cfs.rst
-+++ b/Documentation/PCI/endpoint/pci-endpoint-cfs.rst
-@@ -43,6 +43,7 @@ entries corresponding to EPF driver will be created by the EPF core.
- 		.. <EPF Driver1>/
- 			... <EPF Device 11>/
- 			... <EPF Device 21>/
-+			... <EPF Device 31>/
- 		.. <EPF Driver2>/
- 			... <EPF Device 12>/
- 			... <EPF Device 22>/
-@@ -68,6 +69,14 @@ created)
- 				... subsys_vendor_id
- 				... subsys_id
- 				... interrupt_pin
-+			        ... <Symlink EPF Device 31>/
+diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+index 13c03ccb39ac..fef8a212cbd9 100644
+--- a/drivers/pci/endpoint/pci-epc-core.c
++++ b/drivers/pci/endpoint/pci-epc-core.c
+@@ -477,7 +477,7 @@ int pci_epc_add_epf(struct pci_epc *epc, struct pci_epf *epf)
+ 	u32 func_no;
+ 	int ret = 0;
+ 
+-	if (epf->epc)
++	if (epf->epc || epf->is_vf)
+ 		return -EBUSY;
+ 
+ 	if (IS_ERR(epc))
+diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
+index 244e00f48c5c..3e0f94b47901 100644
+--- a/drivers/pci/endpoint/pci-epf-core.c
++++ b/drivers/pci/endpoint/pci-epf-core.c
+@@ -30,13 +30,20 @@ static const struct device_type pci_epf_type;
+  */
+ void pci_epf_unbind(struct pci_epf *epf)
+ {
++	struct pci_epf *epf_vf;
 +
-+The <EPF Device> directory can have a list of symbolic links to
-+other <EPF Device>. These symbolic links should be created by the user
-+to represent the virtual functions that are bound to the physical
-+function. In the above directory structure <EPF Device 11> is a physical
-+function and <EPF Device 31> is a virtual function. A EPF device once it's
-+linked to another EPF device, cannot be linked to a EPC device.
+ 	if (!epf->driver) {
+ 		dev_WARN(&epf->dev, "epf device not bound to driver\n");
+ 		return;
+ 	}
  
- EPC Device
- ==========
-@@ -88,7 +97,8 @@ entries corresponding to EPC device will be created by the EPC core.
+ 	mutex_lock(&epf->lock);
+-	epf->driver->ops->unbind(epf);
++	list_for_each_entry(epf_vf, &epf->pci_vepf, list) {
++		if (epf_vf->is_bound)
++			epf_vf->driver->ops->unbind(epf_vf);
++	}
++	if (epf->is_bound)
++		epf->driver->ops->unbind(epf);
+ 	mutex_unlock(&epf->lock);
+ 	module_put(epf->driver->owner);
+ }
+@@ -51,6 +58,7 @@ EXPORT_SYMBOL_GPL(pci_epf_unbind);
+  */
+ int pci_epf_bind(struct pci_epf *epf)
+ {
++	struct pci_epf *epf_vf;
+ 	int ret;
  
- The <EPC Device> directory will have a list of symbolic links to
- <EPF Device>. These symbolic links should be created by the user to
--represent the functions present in the endpoint device.
-+represent the functions present in the endpoint device. Only <EPF Device>
-+that represents a physical function can be linked to a EPC device.
+ 	if (!epf->driver) {
+@@ -62,13 +70,91 @@ int pci_epf_bind(struct pci_epf *epf)
+ 		return -EAGAIN;
  
- The <EPC Device> directory will also have a *start* field. Once
- "1" is written to this field, the endpoint device will be ready to
+ 	mutex_lock(&epf->lock);
++	list_for_each_entry(epf_vf, &epf->pci_vepf, list) {
++		epf_vf->func_no = epf->func_no;
++		epf_vf->epc = epf->epc;
++		ret = epf_vf->driver->ops->bind(epf_vf);
++		if (ret)
++			goto ret;
++		epf_vf->is_bound = true;
++	}
++
+ 	ret = epf->driver->ops->bind(epf);
++	if (ret)
++		goto ret;
++	epf->is_bound = true;
++
++	mutex_unlock(&epf->lock);
++	return 0;
++
++ret:
+ 	mutex_unlock(&epf->lock);
++	pci_epf_unbind(epf);
+ 
+ 	return ret;
+ }
+ EXPORT_SYMBOL_GPL(pci_epf_bind);
+ 
++/**
++ * pci_epf_add_vepf() - associate virtual EP function to physical EP function
++ * @epf_pf: the physical EP function to which the virtual EP function should be
++ *   associated
++ * @epf_vf: the virtual EP function to be added
++ *
++ * A physical endpoint function can be associated with multiple virtual
++ * endpoint functions. Invoke pci_epf_add_epf() to add a virtual PCI endpoint
++ * function to a physical PCI endpoint function.
++ */
++int pci_epf_add_vepf(struct pci_epf *epf_pf, struct pci_epf *epf_vf)
++{
++	u32 vfunc_no;
++
++	if (IS_ERR_OR_NULL(epf_pf) || IS_ERR_OR_NULL(epf_vf))
++		return -EINVAL;
++
++	if (epf_pf->epc || epf_vf->epc || epf_vf->epf_pf)
++		return -EBUSY;
++
++	mutex_lock(&epf_pf->lock);
++	vfunc_no = find_first_zero_bit(&epf_pf->vfunction_num_map,
++				       BITS_PER_LONG);
++	if (vfunc_no >= BITS_PER_LONG)
++		return -EINVAL;
++
++	set_bit(vfunc_no, &epf_pf->vfunction_num_map);
++	epf_vf->vfunc_no = vfunc_no;
++
++	epf_vf->epf_pf = epf_pf;
++	epf_vf->is_vf = true;
++
++	list_add_tail(&epf_vf->list, &epf_pf->pci_vepf);
++	mutex_unlock(&epf_pf->lock);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(pci_epf_add_vepf);
++
++/**
++ * pci_epf_remove_vepf() - remove virtual EP function from physical EP function
++ * @epf_pf: the physical EP function from which the virtual EP function should
++ *   be removed
++ * @epf_vf: the virtual EP function to be removed
++ *
++ * Invoke to remove a virtual endpoint function from the physcial endpoint
++ * function.
++ */
++void pci_epf_remove_vepf(struct pci_epf *epf_pf, struct pci_epf *epf_vf)
++{
++	if (IS_ERR_OR_NULL(epf_pf) || IS_ERR_OR_NULL(epf_vf))
++		return;
++
++	mutex_lock(&epf_pf->lock);
++	clear_bit(epf_vf->vfunc_no, &epf_pf->vfunction_num_map);
++	list_del(&epf_vf->list);
++	mutex_unlock(&epf_pf->lock);
++}
++EXPORT_SYMBOL_GPL(pci_epf_remove_vepf);
++
+ /**
+  * pci_epf_free_space() - free the allocated PCI EPF register space
+  * @addr: the virtual address of the PCI EPF register space
+@@ -258,6 +344,10 @@ struct pci_epf *pci_epf_create(const char *name)
+ 		return ERR_PTR(-ENOMEM);
+ 	}
+ 
++	/* VFs are numbered starting with 1. So set BIT(0) by default */
++	epf->vfunction_num_map = 1;
++	INIT_LIST_HEAD(&epf->pci_vepf);
++
+ 	dev = &epf->dev;
+ 	device_initialize(dev);
+ 	dev->bus = &pci_epf_bus_type;
+diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
+index efbc08a153ff..9544ce81d8fb 100644
+--- a/include/linux/pci-epf.h
++++ b/include/linux/pci-epf.h
+@@ -107,12 +107,18 @@ struct pci_epf_bar {
+  * @header: represents standard configuration header
+  * @bar: represents the BAR of EPF device
+  * @msi_interrupts: number of MSI interrupts required by this function
+- * @func_no: unique function number within this endpoint device
++ * @func_no: unique (physical) function number within this endpoint device
++ * @vfunc_no: unique virtual function number within a physical function
+  * @epc: the EPC device to which this EPF device is bound
++ * @epf_pf: the physical EPF device to which this virtual EPF device is bound
+  * @driver: the EPF driver to which this EPF device is bound
+  * @list: to add pci_epf as a list of PCI endpoint functions to pci_epc
+  * @nb: notifier block to notify EPF of any EPC events (like linkup)
+  * @lock: mutex to protect pci_epf_ops
++ * @is_bound: indicates if bind notification to function driver has been invoked
++ * @is_vf: true - virtual function, false - physical function
++ * @vfunction_num_map: bitmap to manage virtual function number
++ * @pci_vepf: list of virtual endpoint functions associated with this function
+  */
+ struct pci_epf {
+ 	struct device		dev;
+@@ -122,13 +128,19 @@ struct pci_epf {
+ 	u8			msi_interrupts;
+ 	u16			msix_interrupts;
+ 	u8			func_no;
++	u8			vfunc_no;
+ 
+ 	struct pci_epc		*epc;
++	struct pci_epf		*epf_pf;
+ 	struct pci_epf_driver	*driver;
+ 	struct list_head	list;
+ 	struct notifier_block   nb;
+ 	/* mutex to protect against concurrent access of pci_epf_ops */
+ 	struct mutex		lock;
++	unsigned int		is_bound;
++	unsigned int		is_vf;
++	unsigned long		vfunction_num_map;
++	struct list_head	pci_vepf;
+ };
+ 
+ /**
+@@ -171,4 +183,6 @@ void *pci_epf_alloc_space(struct pci_epf *epf, size_t size, enum pci_barno bar,
+ void pci_epf_free_space(struct pci_epf *epf, void *addr, enum pci_barno bar);
+ int pci_epf_bind(struct pci_epf *epf);
+ void pci_epf_unbind(struct pci_epf *epf);
++int pci_epf_add_vepf(struct pci_epf *epf_pf, struct pci_epf *epf_vf);
++void pci_epf_remove_vepf(struct pci_epf *epf_pf, struct pci_epf *epf_vf);
+ #endif /* __LINUX_PCI_EPF_H */
 -- 
 2.17.1
 
