@@ -2,142 +2,101 @@ Return-Path: <SRS0=lwCQ=2V=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1F0AC2D0DC
-	for <linux-pci@archiver.kernel.org>; Tue, 31 Dec 2019 10:02:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE0CDC2D0C2
+	for <linux-pci@archiver.kernel.org>; Tue, 31 Dec 2019 10:41:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 90CB9206DB
-	for <linux-pci@archiver.kernel.org>; Tue, 31 Dec 2019 10:02:04 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="SxC0oVBu"
+	by mail.kernel.org (Postfix) with ESMTP id 874B3206DB
+	for <linux-pci@archiver.kernel.org>; Tue, 31 Dec 2019 10:41:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727121AbfLaKBt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 31 Dec 2019 05:01:49 -0500
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:53528 "EHLO
-        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726650AbfLaKBs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Dec 2019 05:01:48 -0500
-Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id xBVA1g5p093213;
-        Tue, 31 Dec 2019 04:01:42 -0600
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1577786502;
-        bh=TIrGAMfYBliDBtaQKlV0MlGmf7iOyYCug35gAI9pUtQ=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=SxC0oVBurZin9Llk5gPDE4uX1IcVbG3e7bmez9dkPtuo09kGfh7Zo6Ms3SRHWFL+5
-         R2KuGQcOcDqrMHJSrNvKlhQsMwQW49+t6WIBIEYYoAmubUfrLEBNh1TOBHK6Nmi65Z
-         ZSyB+m9gqrYuQ02pjkvuxsWkvXi51N87nuZq1Ny0=
-Received: from DLEE107.ent.ti.com (dlee107.ent.ti.com [157.170.170.37])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id xBVA1gUW086796;
-        Tue, 31 Dec 2019 04:01:42 -0600
-Received: from DLEE109.ent.ti.com (157.170.170.41) by DLEE107.ent.ti.com
- (157.170.170.37) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Tue, 31
- Dec 2019 04:01:41 -0600
-Received: from lelv0326.itg.ti.com (10.180.67.84) by DLEE109.ent.ti.com
- (157.170.170.41) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
- Frontend Transport; Tue, 31 Dec 2019 04:01:41 -0600
-Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id xBVA1TZj020876;
-        Tue, 31 Dec 2019 04:01:39 -0600
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-To:     Kishon Vijay Abraham I <kishon@ti.com>,
+        id S1726658AbfLaKlT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 31 Dec 2019 05:41:19 -0500
+Received: from mga12.intel.com ([192.55.52.136]:33889 "EHLO mga12.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726421AbfLaKlS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 31 Dec 2019 05:41:18 -0500
+X-Amp-Result: UNSCANNABLE
+X-Amp-File-Uploaded: False
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 31 Dec 2019 02:41:17 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.69,379,1571727600"; 
+   d="scan'208";a="220913973"
+Received: from pl-dbox.sh.intel.com (HELO intel.com) ([10.239.159.39])
+  by orsmga006.jf.intel.com with ESMTP; 31 Dec 2019 02:41:13 -0800
+Date:   Tue, 31 Dec 2019 18:40:36 +0800
+From:   Philip Li <philip.li@intel.com>
+To:     Kishon Vijay Abraham I <kishon@ti.com>
+Cc:     kbuild test robot <lkp@intel.com>, kbuild-all@lists.01.org,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Andrew Murray <andrew.murray@arm.com>
-CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH 4/5] PCI: endpoint: Protect concurrent access to pci_epf_ops with mutex
-Date:   Tue, 31 Dec 2019 15:33:30 +0530
-Message-ID: <20191231100331.6316-5-kishon@ti.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20191231100331.6316-1-kishon@ti.com>
-References: <20191231100331.6316-1-kishon@ti.com>
+        Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [kbuild-all] Re: [PATCH 2/7] misc: pci_endpoint_test: Do not
+ request or allocate IRQs in probe
+Message-ID: <20191231104036.GB26177@intel.com>
+References: <20191230123315.31037-3-kishon@ti.com>
+ <201912310039.Jef27rlg%lkp@intel.com>
+ <b561503f-a753-7750-2a43-78509755eb83@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <b561503f-a753-7750-2a43-78509755eb83@ti.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Protect concurrent access to pci_epf_ops with mutex.
+On Tue, Dec 31, 2019 at 02:05:15PM +0530, Kishon Vijay Abraham I wrote:
+> Hi,
+> 
+> On 30/12/19 10:40 PM, kbuild test robot wrote:
+> > Hi Kishon,
+> > 
+> > I love your patch! Perhaps something to improve:
+> > 
+> > [auto build test WARNING on char-misc/char-misc-testing]
+> > [also build test WARNING on pci/next arm-soc/for-next linus/master v5.5-rc4 next-20191220]
+> > [if your patch is applied to the wrong git tree, please drop us a note to help
+> > improve the system. BTW, we also suggest to use '--base' option to specify the
+> > base tree in git format-patch, please see https://stackoverflow.com/a/37406982]
+> > 
+> > url:    https://github.com/0day-ci/linux/commits/Kishon-Vijay-Abraham-I/Improvements-to-pci_endpoint_test-driver/20191230-203402
+> > base:   https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/char-misc.git d1eef1c619749b2a57e514a3fa67d9a516ffa919
+> > config: arm-randconfig-a001-20191229 (attached as .config)
+> > compiler: arm-linux-gnueabi-gcc (GCC) 7.5.0
+> > reproduce:
+> >         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+> >         chmod +x ~/bin/make.cross
+> >         # save the attached .config to linux build tree
+> >         GCC_VERSION=7.5.0 make.cross ARCH=arm 
+> > 
+> > If you fix the issue, kindly add following tag
+> > Reported-by: kbuild test robot <lkp@intel.com>
+> > 
+> > All warnings (new ones prefixed by >>):
+> > 
+> >    In file included from include/linux/kernel.h:11:0,
+> >                     from include/linux/delay.h:22,
+> >                     from drivers/[1] -> http://lore.kernel.org/r/20191209092147.22901-1-kishon@ti.commisc/pci_endpoint_test.c:10:
+> >    drivers/misc/pci_endpoint_test.c: In function 'pci_endpoint_test_probe':
+> >    drivers/misc/pci_endpoint_test.c:73:22: error: 'PCI_DEVICE_ID_TI_J721E' undeclared (first use in this function); did you mean 'PCI_DEVICE_ID_TI_7510'?
+> >       ((pdev)->device == PCI_DEVICE_ID_TI_J721E)
+> 
+> The patches in this series should be merged only after [1]. With that
+> this error wouldn't be seen.
+thanks Kishon for the info, sorry for the false positive.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/endpoint/pci-epf-core.c | 11 ++++++++++-
- include/linux/pci-epf.h             |  3 +++
- 2 files changed, 13 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
-index 642f233efcaf..244e00f48c5c 100644
---- a/drivers/pci/endpoint/pci-epf-core.c
-+++ b/drivers/pci/endpoint/pci-epf-core.c
-@@ -35,7 +35,9 @@ void pci_epf_unbind(struct pci_epf *epf)
- 		return;
- 	}
- 
-+	mutex_lock(&epf->lock);
- 	epf->driver->ops->unbind(epf);
-+	mutex_unlock(&epf->lock);
- 	module_put(epf->driver->owner);
- }
- EXPORT_SYMBOL_GPL(pci_epf_unbind);
-@@ -49,6 +51,8 @@ EXPORT_SYMBOL_GPL(pci_epf_unbind);
-  */
- int pci_epf_bind(struct pci_epf *epf)
- {
-+	int ret;
-+
- 	if (!epf->driver) {
- 		dev_WARN(&epf->dev, "epf device not bound to driver\n");
- 		return -EINVAL;
-@@ -57,7 +61,11 @@ int pci_epf_bind(struct pci_epf *epf)
- 	if (!try_module_get(epf->driver->owner))
- 		return -EAGAIN;
- 
--	return epf->driver->ops->bind(epf);
-+	mutex_lock(&epf->lock);
-+	ret = epf->driver->ops->bind(epf);
-+	mutex_unlock(&epf->lock);
-+
-+	return ret;
- }
- EXPORT_SYMBOL_GPL(pci_epf_bind);
- 
-@@ -254,6 +262,7 @@ struct pci_epf *pci_epf_create(const char *name)
- 	device_initialize(dev);
- 	dev->bus = &pci_epf_bus_type;
- 	dev->type = &pci_epf_type;
-+	mutex_init(&epf->lock);
- 
- 	ret = dev_set_name(dev, "%s", name);
- 	if (ret) {
-diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
-index 75aa1003646b..efbc08a153ff 100644
---- a/include/linux/pci-epf.h
-+++ b/include/linux/pci-epf.h
-@@ -112,6 +112,7 @@ struct pci_epf_bar {
-  * @driver: the EPF driver to which this EPF device is bound
-  * @list: to add pci_epf as a list of PCI endpoint functions to pci_epc
-  * @nb: notifier block to notify EPF of any EPC events (like linkup)
-+ * @lock: mutex to protect pci_epf_ops
-  */
- struct pci_epf {
- 	struct device		dev;
-@@ -126,6 +127,8 @@ struct pci_epf {
- 	struct pci_epf_driver	*driver;
- 	struct list_head	list;
- 	struct notifier_block   nb;
-+	/* mutex to protect against concurrent access of pci_epf_ops */
-+	struct mutex		lock;
- };
- 
- /**
--- 
-2.17.1
-
+> 
+> [1] -> http://lore.kernel.org/r/20191209092147.22901-1-kishon@ti.com
+> 
+> Thanks
+> Kishon
+> _______________________________________________
+> kbuild-all mailing list -- kbuild-all@lists.01.org
+> To unsubscribe send an email to kbuild-all-leave@lists.01.org
