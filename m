@@ -2,135 +2,101 @@ Return-Path: <SRS0=Qtyg=23=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6222EC33C8C
-	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 22:39:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC98DC33C8C
+	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 23:33:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2DB49214D8
-	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 22:39:43 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="EtPDPVRA"
+	by mail.kernel.org (Postfix) with ESMTP id C29E0207FF
+	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 23:33:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727001AbgAFWjk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 6 Jan 2020 17:39:40 -0500
-Received: from mail-eopbgr750109.outbound.protection.outlook.com ([40.107.75.109]:26411
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726721AbgAFWjj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 6 Jan 2020 17:39:39 -0500
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=lf6gLMhJshSwl8qSKfMZnoaQ8b8mTW88RjRspuczU314kpcjGVYyZ9hRb/d+N8Jvx6dSZKrxUKkdqS9hgM7XxIHV2b9p5QahXUM6EIhoE8Ivha0qoK6WNqN+Fb+Vj46YaVfLqgeWoYf95dOtEhuqe8Oc0aYo38mi+i5q9MBHx93rQQSOjzS0zc6HzQW/PguZQ/0qiMNDsOBGRlL0FVO1jt8+wdX9Lf5m/CYBiE/V5e7MWP7b5opockdXFIMAsmWNMYWB4TwVNOJ0KRVvLC35JPwlWA1q2DfuRVe0L5M8vR5xj4nsVxnSxjYJdS26jaa2CqdP9pci3CFbKGfhE7xnxw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=7uANN529b+8BSGabR1XCQGDktRdLyhuFdOC++g3rsLw=;
- b=eNVEp75EB1c6HNHile4q5Bizs1KLvXelJLCOytEY41JV15ZCJAi+kg+9D9MT+TAPzYtRv4oevw0IwMSoDHvdSz/7MTPwmV7n9kpH788hMXsRP8EcGtf8GCSzibCv3Ty2lwyoizIkm/PGxtPR2fCfIT1C5uI8fxkpEvNldVwXVwiFS6iQJf+l9yVuegJ4EClqWK2wXHLCStD839s/JPbxR6mGeO01M/8Jh0o/4kjGlfw26fW2OM9At5LKpJMHNEj5nWSII1dNBseqcdEJCD3bAFFDOKeBB0Q7S7tFE4aHS2b/VFB71zLXs9b4+jZGvnjcPa7nLhT3PlBIVHz4fVHC/w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=7uANN529b+8BSGabR1XCQGDktRdLyhuFdOC++g3rsLw=;
- b=EtPDPVRAeoC9KeZS99sDsCnpeCQdve5ClG6xExZozC0kwQ5p1yKsoItocKiR44qzHrE2cvNzcJ2T9Bm8VzrWgHQc99bNTnOUWrENv1q8KFYsG1NITWd5MAc8FYKvzkFVSnORTsUWaXc89za0zomZ8jVBE5msUOq2Iuhyx24lhUg=
-Authentication-Results: spf=none (sender IP is )
- smtp.mailfrom=decui@microsoft.com; 
-Received: from CY4PR21MB0775.namprd21.prod.outlook.com (10.173.192.21) by
- CY4PR21MB0471.namprd21.prod.outlook.com (10.172.121.149) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2644.3; Mon, 6 Jan 2020 22:39:36 +0000
-Received: from CY4PR21MB0775.namprd21.prod.outlook.com
- ([fe80::6155:bc1d:1d39:977b]) by CY4PR21MB0775.namprd21.prod.outlook.com
- ([fe80::6155:bc1d:1d39:977b%8]) with mapi id 15.20.2644.002; Mon, 6 Jan 2020
- 22:39:35 +0000
-From:   Dexuan Cui <decui@microsoft.com>
-To:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        sashal@kernel.org, lorenzo.pieralisi@arm.com, bhelgaas@google.com,
-        linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, mikelley@microsoft.com,
-        Alexander.Levin@microsoft.com
-Cc:     Dexuan Cui <decui@microsoft.com>
-Subject: [PATCH] PCI: hv: Use kfree(hbus) in hv_pci_probe()'s error handling path
-Date:   Mon,  6 Jan 2020 14:39:11 -0800
-Message-Id: <1578350351-129783-1-git-send-email-decui@microsoft.com>
-X-Mailer: git-send-email 1.8.3.1
-Reply-To: decui@microsoft.com
-Content-Type: text/plain
-X-ClientProxiedBy: MWHPR2001CA0007.namprd20.prod.outlook.com
- (2603:10b6:301:15::17) To CY4PR21MB0775.namprd21.prod.outlook.com
- (2603:10b6:903:b8::21)
-MIME-Version: 1.0
-Received: from linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net (13.77.154.182) by MWHPR2001CA0007.namprd20.prod.outlook.com (2603:10b6:301:15::17) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2602.12 via Frontend Transport; Mon, 6 Jan 2020 22:39:34 +0000
-X-Mailer: git-send-email 1.8.3.1
-X-Originating-IP: [13.77.154.182]
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-HT: Tenant
-X-MS-Office365-Filtering-Correlation-Id: 49ed48a6-8ae2-4115-a9f4-08d792f94e28
-X-MS-TrafficTypeDiagnostic: CY4PR21MB0471:|CY4PR21MB0471:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <CY4PR21MB0471E51DDBEA4C10A48569CEBF3C0@CY4PR21MB0471.namprd21.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:7219;
-X-Forefront-PRVS: 0274272F87
-X-Forefront-Antispam-Report: SFV:NSPM;SFS:(10019020)(136003)(396003)(376002)(346002)(39860400002)(366004)(199004)(189003)(6506007)(6486002)(2906002)(66946007)(66476007)(66556008)(26005)(3450700001)(2616005)(36756003)(6512007)(956004)(5660300002)(4326008)(86362001)(10290500003)(8936002)(52116002)(316002)(16526019)(107886003)(8676002)(81156014)(6666004)(186003)(478600001)(6636002)(81166006)(921003)(1121003);DIR:OUT;SFP:1102;SCL:1;SRVR:CY4PR21MB0471;H:CY4PR21MB0775.namprd21.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-Received-SPF: None (protection.outlook.com: microsoft.com does not designate
- permitted sender hosts)
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: xwQktqa9VqCBfX6qxcXfv39ocAzuVcNnMcwqaEYMOmbLybPxfeIN3mPkE2JmibJz9rzJUYj6cIZOqC9XEzPIA9Ci0CpK+xXNwIFHMKrxII3OLiOwyGmfd6BIW0sxEhI9VW+8LZFYtKtVNVoT98R9QwzuRd3zcBH5pAsYuUyL4ZhKG+Ndn6aECGEuZitLYFivndefWl9M98G7W68uePESKSjar5qDglEXVUrVpHm83CuuqIhoXmkoyGsPW6ESnnQ1htLlzPEqtCQ6F6pK2r2nGc6C6PVI9ytyIr0U88eGeSqmMFuwfacflMxffYOaH3LyA4C+VymTWCD/iVcXDq1pkg7WYuKtWqzheLi5hRGgxJL8tsgYGMYJwsppgdg08Tjk7UWyAiBnBPNutWsrRxh2KqdWfddpNomY7sr5StDeUCiSWvmkE6eTdGVoLDppf4FbM8N0Bsd2DY34Nds35AVKIIQNZbZooIBWSW9BCiL02LX4Zv7r8EDpgMSwus8e8W2p
-X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 49ed48a6-8ae2-4115-a9f4-08d792f94e28
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Jan 2020 22:39:35.7471
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 0xvEspa+pPzk0R1c+Vm62uWutXleUEOOKpCqoFUUtz2yv6s/uoUdEOWoRF6I7o96hhEECwvZYs9O8Uzdpb2jAw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR21MB0471
+        id S1726735AbgAFXdS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 6 Jan 2020 18:33:18 -0500
+Received: from bilbo.ozlabs.org ([203.11.71.1]:39607 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726599AbgAFXdS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 6 Jan 2020 18:33:18 -0500
+Received: by ozlabs.org (Postfix, from userid 1034)
+        id 47sBdm0wtzz9sRR; Tue,  7 Jan 2020 10:33:16 +1100 (AEDT)
+X-powerpc-patch-notification: thanks
+X-powerpc-patch-commit: 3b5b9997b331e77ce967eba2c4bc80dc3134a7fe
+In-Reply-To: <20191028085424.12006-1-oohall@gmail.com>
+To:     Oliver O'Halloran <oohall@gmail.com>, linuxppc-dev@lists.ozlabs.org
+From:   Michael Ellerman <patch-notifications@ellerman.id.au>
+Cc:     aik@ozlabs.ru, linux-pci@vger.kernel.org,
+        Oliver O'Halloran <oohall@gmail.com>, shawn@anastas.io
+Subject: Re: [PATCH v2 1/3] powernv/iov: Ensure the pdn for VFs always contains a valid PE number
+Message-Id: <47sBdm0wtzz9sRR@ozlabs.org>
+Date:   Tue,  7 Jan 2020 10:33:16 +1100 (AEDT)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Now that we use kzalloc() to allocate the hbus buffer, we should use
-kfree() in the error path as well.
+On Mon, 2019-10-28 at 08:54:22 UTC, Oliver O'Halloran wrote:
+> On pseries there is a bug with adding hotplugged devices to an IOMMU group.
+> For a number of dumb reasons fixing that bug first requires re-working how
+> VFs are configured on PowerNV. For background, on PowerNV we use the
+> pcibios_sriov_enable() hook to do two things:
+> 
+> 1. Create a pci_dn structure for each of the VFs, and
+> 2. Configure the PHB's internal BARs so the MMIO range for each VF
+>    maps to a unique PE.
+> 
+> Roughly speaking a PE is the hardware counterpart to a Linux IOMMU group
+> since all the devices in a PE share the same IOMMU table. A PE also defines
+> the set of devices that should be isolated in response to a PCI error (i.e.
+> bad DMA, UR/CA, AER events, etc). When isolated all MMIO and DMA traffic to
+> and from devicein the PE is blocked by the root complex until the PE is
+> recovered by the OS.
+> 
+> The requirement to block MMIO causes a giant headache because the P8 PHB
+> generally uses a fixed mapping between MMIO addresses and PEs.  As a result
+> we need to delay configuring the IOMMU groups for device until after MMIO
+> resources are assigned. For physical devices (i.e. non-VFs) the PE
+> assignment is done in pcibios_setup_bridge() which is called immediately
+> after the MMIO resources for downstream devices (and the bridge's windows)
+> are assigned. For VFs the setup is more complicated because:
+> 
+> a) pcibios_setup_bridge() is not called again when VFs are activated, and
+> b) The pci_dev for VFs are created by generic code which runs after
+>    pcibios_sriov_enable() is called.
+> 
+> The work around for this is a two step process:
+> 
+> 1. A fixup in pcibios_add_device() is used to initialised the cached
+>    pe_number in pci_dn, then
+> 2. A bus notifier then adds the device to the IOMMU group for the PE
+>    specified in pci_dn->pe_number.
+> 
+> A side effect fixing the pseries bug mentioned in the first paragraph is
+> moving the fixup out of pcibios_add_device() and into
+> pcibios_bus_add_device(), which is called much later. This results in step
+> 2. failing because pci_dn->pe_number won't be initialised when the bus
+> notifier is run.
+> 
+> We can fix this by removing the need for the fixup. The PE for a VF is
+> known before the VF is even scanned so we can initialise pci_dn->pe_number
+> pcibios_sriov_enable() instead. Unfortunately, moving the initialisation
+> causes two problems:
+> 
+> 1. We trip the WARN_ON() in the current fixup code, and
+> 2. The EEH core clears pdn->pe_number when recovering a VF and relies
+>    on the fixup to correctly re-set it.
+> 
+> The only justification for either of these is a comment in eeh_rmv_device()
+> suggesting that pdn->pe_number *must* be set to IODA_INVALID_PE in order
+> for the VF to be scanned. However, this comment appears to have no basis
+> in reality. Both bugs can be fixed by just deleting the code.
+> 
+> Tested-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+> Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+> Signed-off-by: Oliver O'Halloran <oohall@gmail.com>
 
-Also remove the type casting, since it's unnecessary in C.
+Series applied to powerpc next, thanks.
 
-Fixes: 877b911a5ba0 ("PCI: hv: Avoid a kmemleak false positive caused by the hbus buffer")
-Signed-off-by: Dexuan Cui <decui@microsoft.com>
----
+https://git.kernel.org/powerpc/c/3b5b9997b331e77ce967eba2c4bc80dc3134a7fe
 
-Sorry for missing the error handling path.
-
- drivers/pci/controller/pci-hyperv.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
-index 9977abff92fc..15011a349520 100644
---- a/drivers/pci/controller/pci-hyperv.c
-+++ b/drivers/pci/controller/pci-hyperv.c
-@@ -2922,7 +2922,7 @@ static int hv_pci_probe(struct hv_device *hdev,
- 	 * positive by using kmemleak_alloc() and kmemleak_free() to ask
- 	 * kmemleak to track and scan the hbus buffer.
- 	 */
--	hbus = (struct hv_pcibus_device *)kzalloc(HV_HYP_PAGE_SIZE, GFP_KERNEL);
-+	hbus = kzalloc(HV_HYP_PAGE_SIZE, GFP_KERNEL);
- 	if (!hbus)
- 		return -ENOMEM;
- 	hbus->state = hv_pcibus_init;
-@@ -3058,7 +3058,7 @@ static int hv_pci_probe(struct hv_device *hdev,
- free_dom:
- 	hv_put_dom_num(hbus->sysdata.domain);
- free_bus:
--	free_page((unsigned long)hbus);
-+	kfree(hbus);
- 	return ret;
- }
- 
--- 
-2.19.1
-
+cheers
