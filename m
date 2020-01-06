@@ -5,286 +5,153 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61ED9C33C9B
-	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 08:27:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67069C2D0DA
+	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 10:19:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 32793222C4
-	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 08:27:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3C7EC207FD
+	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 10:19:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="dOkfrdiV"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="pFN9Giok"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725887AbgAFI1S (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 6 Jan 2020 03:27:18 -0500
-Received: from hqnvemgate25.nvidia.com ([216.228.121.64]:19398 "EHLO
-        hqnvemgate25.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725446AbgAFI1S (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jan 2020 03:27:18 -0500
-Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate25.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5e12ef530000>; Mon, 06 Jan 2020 00:26:59 -0800
-Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate101.nvidia.com (PGP Universal service);
-  Mon, 06 Jan 2020 00:27:16 -0800
-X-PGP-Universal: processed;
-        by hqpgpgate101.nvidia.com on Mon, 06 Jan 2020 00:27:16 -0800
-Received: from HQMAIL109.nvidia.com (172.20.187.15) by HQMAIL111.nvidia.com
- (172.20.187.18) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Mon, 6 Jan
- 2020 08:27:15 +0000
-Received: from hqnvemgw03.nvidia.com (10.124.88.68) by HQMAIL109.nvidia.com
- (172.20.187.15) with Microsoft SMTP Server (TLS) id 15.0.1473.3 via Frontend
- Transport; Mon, 6 Jan 2020 08:27:15 +0000
-Received: from vidyas-desktop.nvidia.com (Not Verified[10.24.37.48]) by hqnvemgw03.nvidia.com with Trustwave SEG (v7,5,8,10121)
-        id <B5e12ef600000>; Mon, 06 Jan 2020 00:27:15 -0800
-From:   Vidya Sagar <vidyas@nvidia.com>
-To:     <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
-        <rjw@rjwysocki.net>, <lenb@kernel.org>, <andrew.murray@arm.com>,
-        <treding@nvidia.com>, <jonathanh@nvidia.com>
-CC:     <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>,
-        <sagar.tv@gmail.com>
-Subject: [PATCH V2] PCI: Add MCFG quirks for Tegra194 host controllers
-Date:   Mon, 6 Jan 2020 13:57:09 +0530
-Message-ID: <20200106082709.14370-1-vidyas@nvidia.com>
+        id S1726560AbgAFKTN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 6 Jan 2020 05:19:13 -0500
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:46452 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726510AbgAFKTN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jan 2020 05:19:13 -0500
+Received: from fllv0035.itg.ti.com ([10.64.41.0])
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 006AJ3TI108462;
+        Mon, 6 Jan 2020 04:19:03 -0600
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1578305943;
+        bh=X5lwuTLFkOVZk26c8GWpVlnDdUNMycdKSyrQfl0QonA=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References;
+        b=pFN9Giok2Wo5pJCRmex8VK1e3mGvneEpocqbDQBJ7l4JbTw+CxZo0iixmWKV8GkB3
+         Pm9kRYLomMakJ3ms/zTy3FK6NvSiYG7HRjo2hDdpU0ZRbyP39YRs7LwdcIZQAHkZOE
+         0fALRoJtVxVW3Qai/E+jK2dNPer+b7ynj6X0A94Y=
+Received: from DLEE103.ent.ti.com (dlee103.ent.ti.com [157.170.170.33])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id 006AJ3T2031284;
+        Mon, 6 Jan 2020 04:19:03 -0600
+Received: from DLEE103.ent.ti.com (157.170.170.33) by DLEE103.ent.ti.com
+ (157.170.170.33) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Mon, 6 Jan
+ 2020 04:19:02 -0600
+Received: from fllv0040.itg.ti.com (10.64.41.20) by DLEE103.ent.ti.com
+ (157.170.170.33) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
+ Frontend Transport; Mon, 6 Jan 2020 04:19:02 -0600
+Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
+        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 006AIqXs118652;
+        Mon, 6 Jan 2020 04:18:59 -0600
+From:   Kishon Vijay Abraham I <kishon@ti.com>
+To:     Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Andrew Murray <andrew.murray@arm.com>
+CC:     <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v2 02/14] PCI: cadence: Fix cdns_pcie_{host|ep}_setup() error path
+Date:   Mon, 6 Jan 2020 15:50:46 +0530
+Message-ID: <20200106102058.19183-3-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200103174935.5612-1-vidyas@nvidia.com>
-References: <20200103174935.5612-1-vidyas@nvidia.com>
-X-NVConfidentiality: public
+In-Reply-To: <20200106102058.19183-1-kishon@ti.com>
+References: <20200106102058.19183-1-kishon@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1578299219; bh=oJ+tQhxxPsNoHh9LR4gnWiuxMQsEWJd06NDgbl63OKs=;
-        h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
-         In-Reply-To:References:X-NVConfidentiality:MIME-Version:
-         Content-Type;
-        b=dOkfrdiVzqRbvjFzmU8g1MPNimft4c4dlYhvXdTFtWegdIFJRuCZtzT4F1tPEZtCo
-         jfI4/LdOlUW4kxKbgoHgiArof47Y7uZu84TOsA/Ose0BJ5a+GGUJSGtDA8MsDPnlwy
-         KTZ8UjdUjdjG4vJ/pC4Vi96YEHKTV4C7EIA9a1JMvLq+gQkMoSW7ic0CSmrCFguJ06
-         Yp7m3YbbXRGodhLzuHvgQIpeVC4BoyZcXBwYsbQ3FJldv+uSP0qJWINNtdDruDR43+
-         p+Z4gf+9+54GfGrOxI4iCzzeVquZ8PLtYg+iv4m87vLvyYFWKR3Dv4gZJKN69f/9pr
-         yyOa9WAjrHnDQ==
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The PCIe controller in Tegra194 SoC is not completely ECAM-compliant.
-With the current hardware design limitations in place, ECAM can be enabled
-only for one controller (C5 controller to be precise) with bus numbers
-starting from 160 instead of 0. A different approach is taken to avoid this
-abnormal way of enabling ECAM  for just one controller and to also enable
-configuration space access for all the other controllers. In this approach,
-MCFG quirks are added for each controller with a 30MB PCIe aperture
-resource for each controller in the disguise of ECAM region. But, this
-region actually contains DesignWare core's internal Address Translation
-Unit (iATU) using which the ECAM ops access configuration space in the
-otherwise standard way of programming iATU registers in DesignWare core
-based IPs for a respective B:D:F.
+commit bd22885aa188f135fd9 ("PCI: cadence: Refactor driver to use
+as a core library") while refactoring the Cadence PCIe driver to be
+used as library, removed pm_runtime_get_sync() from cdns_pcie_ep_setup()
+and cdns_pcie_host_setup() but missed to remove the corresponding
+pm_runtime_put_sync() in the error path. Fix it here.
 
-Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
-Reported-by: kbuild test robot <lkp@intel.com>
+Fixes: bd22885aa188 ("PCI: cadence: Refactor driver to use as a core library")
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
-V2:
-* Fixed build issues reported by kbuild test bot
+ drivers/pci/controller/cadence/pcie-cadence-ep.c   | 9 ++-------
+ drivers/pci/controller/cadence/pcie-cadence-host.c | 6 +-----
+ 2 files changed, 3 insertions(+), 12 deletions(-)
 
- drivers/acpi/pci_mcfg.c                    |  13 +++
- drivers/pci/controller/dwc/Kconfig         |   3 +-
- drivers/pci/controller/dwc/Makefile        |   2 +-
- drivers/pci/controller/dwc/pcie-tegra194.c | 100 +++++++++++++++++++++
- include/linux/pci-ecam.h                   |   1 +
- 5 files changed, 117 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-index 6b347d9920cc..a42918ecc19a 100644
---- a/drivers/acpi/pci_mcfg.c
-+++ b/drivers/acpi/pci_mcfg.c
-@@ -116,6 +116,19 @@ static struct mcfg_fixup mcfg_quirks[] = {
- 	THUNDER_ECAM_QUIRK(2, 12),
- 	THUNDER_ECAM_QUIRK(2, 13),
- 
-+	{ "NVIDIA", "TEGRA194", 1, 0, MCFG_BUS_ANY, &tegra194_pcie_ops,
-+	  DEFINE_RES_MEM(0x38200000, (30 * SZ_1M))},
-+	{ "NVIDIA", "TEGRA194", 1, 1, MCFG_BUS_ANY, &tegra194_pcie_ops,
-+	  DEFINE_RES_MEM(0x30200000, (30 * SZ_1M))},
-+	{ "NVIDIA", "TEGRA194", 1, 2, MCFG_BUS_ANY, &tegra194_pcie_ops,
-+	  DEFINE_RES_MEM(0x32200000, (30 * SZ_1M))},
-+	{ "NVIDIA", "TEGRA194", 1, 3, MCFG_BUS_ANY, &tegra194_pcie_ops,
-+	  DEFINE_RES_MEM(0x34200000, (30 * SZ_1M))},
-+	{ "NVIDIA", "TEGRA194", 1, 4, MCFG_BUS_ANY, &tegra194_pcie_ops,
-+	  DEFINE_RES_MEM(0x36200000, (30 * SZ_1M))},
-+	{ "NVIDIA", "TEGRA194", 1, 5, MCFG_BUS_ANY, &tegra194_pcie_ops,
-+	  DEFINE_RES_MEM(0x3a200000, (30 * SZ_1M))},
-+
- #define XGENE_V1_ECAM_MCFG(rev, seg) \
- 	{"APM   ", "XGENE   ", rev, seg, MCFG_BUS_ANY, \
- 		&xgene_v1_pcie_ecam_ops }
-diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-index 0830dfcfa43a..f5b9e75aceed 100644
---- a/drivers/pci/controller/dwc/Kconfig
-+++ b/drivers/pci/controller/dwc/Kconfig
-@@ -255,7 +255,8 @@ config PCIE_TEGRA194
- 	select PHY_TEGRA194_P2U
- 	help
- 	  Say Y here if you want support for DesignWare core based PCIe host
--	  controller found in NVIDIA Tegra194 SoC.
-+	  controller found in NVIDIA Tegra194 SoC. ACPI platforms with Tegra194
-+	  don't need to enable this.
- 
- config PCIE_UNIPHIER
- 	bool "Socionext UniPhier PCIe controllers"
-diff --git a/drivers/pci/controller/dwc/Makefile b/drivers/pci/controller/dwc/Makefile
-index 8a637cfcf6e9..76a6c52b8500 100644
---- a/drivers/pci/controller/dwc/Makefile
-+++ b/drivers/pci/controller/dwc/Makefile
-@@ -17,7 +17,6 @@ obj-$(CONFIG_PCIE_INTEL_GW) += pcie-intel-gw.o
- obj-$(CONFIG_PCIE_KIRIN) += pcie-kirin.o
- obj-$(CONFIG_PCIE_HISI_STB) += pcie-histb.o
- obj-$(CONFIG_PCI_MESON) += pci-meson.o
--obj-$(CONFIG_PCIE_TEGRA194) += pcie-tegra194.o
- obj-$(CONFIG_PCIE_UNIPHIER) += pcie-uniphier.o
- 
- # The following drivers are for devices that use the generic ACPI
-@@ -33,4 +32,5 @@ obj-$(CONFIG_PCIE_UNIPHIER) += pcie-uniphier.o
- ifdef CONFIG_PCI
- obj-$(CONFIG_ARM64) += pcie-al.o
- obj-$(CONFIG_ARM64) += pcie-hisi.o
-+obj-$(CONFIG_ARM64) += pcie-tegra194.o
- endif
-diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-index cbe95f0ea0ca..0b9bd2875ec2 100644
---- a/drivers/pci/controller/dwc/pcie-tegra194.c
-+++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-@@ -21,6 +21,8 @@
- #include <linux/of_irq.h>
- #include <linux/of_pci.h>
- #include <linux/pci.h>
-+#include <linux/pci-acpi.h>
-+#include <linux/pci-ecam.h>
- #include <linux/phy/phy.h>
- #include <linux/pinctrl/consumer.h>
+diff --git a/drivers/pci/controller/cadence/pcie-cadence-ep.c b/drivers/pci/controller/cadence/pcie-cadence-ep.c
+index f90d849172cc..d5be81075cc3 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence-ep.c
++++ b/drivers/pci/controller/cadence/pcie-cadence-ep.c
+@@ -8,7 +8,6 @@
+ #include <linux/of.h>
+ #include <linux/pci-epc.h>
  #include <linux/platform_device.h>
-@@ -285,6 +287,101 @@ struct tegra_pcie_dw {
- 	struct dentry *debugfs;
- };
+-#include <linux/pm_runtime.h>
+ #include <linux/sizes.h>
  
-+#if defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS)
-+struct tegra194_pcie_acpi  {
-+	void __iomem *dbi_base;
-+	void __iomem *iatu_base;
-+};
-+
-+static int tegra194_acpi_init(struct pci_config_window *cfg)
-+{
-+	struct device *dev = cfg->parent;
-+	struct tegra194_pcie_acpi *pcie;
-+
-+	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
-+	if (!pcie)
-+		return -ENOMEM;
-+
-+	pcie->dbi_base = cfg->win;
-+	pcie->iatu_base = cfg->win + SZ_256K;
-+	cfg->priv = pcie;
-+
-+	return 0;
-+}
-+
-+static inline void atu_reg_write(struct tegra194_pcie_acpi *pcie, int index,
-+				 u32 val, u32 reg)
-+{
-+	u32 offset = PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(index);
-+
-+	writel(val, pcie->iatu_base + offset + reg);
-+}
-+
-+static void program_outbound_atu(struct tegra194_pcie_acpi *pcie, int index,
-+				 int type, u64 cpu_addr, u64 pci_addr, u64 size)
-+{
-+	atu_reg_write(pcie, index, lower_32_bits(cpu_addr),
-+		      PCIE_ATU_LOWER_BASE);
-+	atu_reg_write(pcie, index, upper_32_bits(cpu_addr),
-+		      PCIE_ATU_UPPER_BASE);
-+	atu_reg_write(pcie, index, lower_32_bits(pci_addr),
-+		      PCIE_ATU_LOWER_TARGET);
-+	atu_reg_write(pcie, index, lower_32_bits(cpu_addr + size - 1),
-+		      PCIE_ATU_LIMIT);
-+	atu_reg_write(pcie, index, upper_32_bits(pci_addr),
-+		      PCIE_ATU_UPPER_TARGET);
-+	atu_reg_write(pcie, index, type, PCIE_ATU_CR1);
-+	atu_reg_write(pcie, index, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
-+}
-+
-+static void __iomem *tegra194_map_bus(struct pci_bus *bus,
-+				      unsigned int devfn, int where)
-+{
-+	struct pci_config_window *cfg = bus->sysdata;
-+	struct tegra194_pcie_acpi *pcie = cfg->priv;
-+	u32 busdev;
-+	int type;
-+
-+	if (bus->number < cfg->busr.start || bus->number > cfg->busr.end)
-+		return NULL;
-+
-+	if (bus->number == cfg->busr.start) {
-+		if (PCI_SLOT(devfn) == 0)
-+			return pcie->dbi_base + where;
-+		else
-+			return NULL;
-+	}
-+
-+	busdev = PCIE_ATU_BUS(bus->number) | PCIE_ATU_DEV(PCI_SLOT(devfn)) |
-+		 PCIE_ATU_FUNC(PCI_FUNC(devfn));
-+
-+	if (bus->parent->number == cfg->busr.start) {
-+		if (PCI_SLOT(devfn) == 0)
-+			type = PCIE_ATU_TYPE_CFG0;
-+		else
-+			return NULL;
-+	} else {
-+		type = PCIE_ATU_TYPE_CFG1;
-+	}
-+
-+	program_outbound_atu(pcie, PCIE_ATU_REGION_INDEX0, type,
-+			     cfg->res.start + SZ_128K, busdev, SZ_128K);
-+	return (void __iomem *)(pcie->dbi_base + SZ_128K + where);
-+}
-+
-+struct pci_ecam_ops tegra194_pcie_ops = {
-+	.bus_shift	= 20,
-+	.init		= tegra194_acpi_init,
-+	.pci_ops	= {
-+		.map_bus	= tegra194_map_bus,
-+		.read		= pci_generic_config_read,
-+		.write		= pci_generic_config_write,
-+	}
-+};
-+#endif /* defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS) */
-+
-+#ifdef CONFIG_PCIE_TEGRA194
-+
- static inline struct tegra_pcie_dw *to_tegra_pcie(struct dw_pcie *pci)
- {
- 	return container_of(pci, struct tegra_pcie_dw, pci);
-@@ -1728,3 +1825,6 @@ MODULE_DEVICE_TABLE(of, tegra_pcie_dw_of_match);
- MODULE_AUTHOR("Vidya Sagar <vidyas@nvidia.com>");
- MODULE_DESCRIPTION("NVIDIA PCIe host controller driver");
- MODULE_LICENSE("GPL v2");
-+
-+#endif /* CONFIG_PCIE_TEGRA194 */
-+
-diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
-index a73164c85e78..6156140dcbb6 100644
---- a/include/linux/pci-ecam.h
-+++ b/include/linux/pci-ecam.h
-@@ -57,6 +57,7 @@ extern struct pci_ecam_ops pci_thunder_ecam_ops; /* Cavium ThunderX 1.x */
- extern struct pci_ecam_ops xgene_v1_pcie_ecam_ops; /* APM X-Gene PCIe v1 */
- extern struct pci_ecam_ops xgene_v2_pcie_ecam_ops; /* APM X-Gene PCIe v2.x */
- extern struct pci_ecam_ops al_pcie_ops; /* Amazon Annapurna Labs PCIe */
-+extern struct pci_ecam_ops tegra194_pcie_ops; /* Tegra194 PCIe */
- #endif
+ #include "pcie-cadence.h"
+@@ -545,8 +544,7 @@ int cdns_pcie_ep_setup(struct cdns_pcie_ep *ep)
+ 	epc = devm_pci_epc_create(dev, &cdns_pcie_epc_ops);
+ 	if (IS_ERR(epc)) {
+ 		dev_err(dev, "failed to create epc device\n");
+-		ret = PTR_ERR(epc);
+-		goto err_init;
++		return PTR_ERR(epc);
+ 	}
  
- #ifdef CONFIG_PCI_HOST_COMMON
+ 	epc_set_drvdata(epc, ep);
+@@ -563,7 +561,7 @@ int cdns_pcie_ep_setup(struct cdns_pcie_ep *ep)
+ 			       resource_size(pcie->mem_res));
+ 	if (ret < 0) {
+ 		dev_err(dev, "failed to initialize the memory space\n");
+-		goto err_init;
++		return ret;
+ 	}
+ 
+ 	ep->irq_cpu_addr = pci_epc_mem_alloc_addr(epc, &ep->irq_phys_addr,
+@@ -582,8 +580,5 @@ int cdns_pcie_ep_setup(struct cdns_pcie_ep *ep)
+  free_epc_mem:
+ 	pci_epc_mem_exit(epc);
+ 
+- err_init:
+-	pm_runtime_put_sync(dev);
+-
+ 	return ret;
+ }
+diff --git a/drivers/pci/controller/cadence/pcie-cadence-host.c b/drivers/pci/controller/cadence/pcie-cadence-host.c
+index 9b1c3966414b..11eb81da0233 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence-host.c
++++ b/drivers/pci/controller/cadence/pcie-cadence-host.c
+@@ -7,7 +7,6 @@
+ #include <linux/of_address.h>
+ #include <linux/of_pci.h>
+ #include <linux/platform_device.h>
+-#include <linux/pm_runtime.h>
+ 
+ #include "pcie-cadence.h"
+ 
+@@ -256,7 +255,7 @@ int cdns_pcie_host_setup(struct cdns_pcie_rc *rc)
+ 
+ 	ret = cdns_pcie_host_init(dev, &resources, rc);
+ 	if (ret)
+-		goto err_init;
++		return ret;
+ 
+ 	list_splice_init(&resources, &bridge->windows);
+ 	bridge->dev.parent = dev;
+@@ -274,8 +273,5 @@ int cdns_pcie_host_setup(struct cdns_pcie_rc *rc)
+  err_host_probe:
+ 	pci_free_resource_list(&resources);
+ 
+- err_init:
+-	pm_runtime_put_sync(dev);
+-
+ 	return ret;
+ }
 -- 
 2.17.1
 
