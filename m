@@ -5,46 +5,46 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18D29C2D0D1
-	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 10:19:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4C32C32771
+	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 10:19:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E0A5D207FF
-	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 10:19:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 815BA24672
+	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 10:19:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="tWyEhCZE"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="ctDffj4W"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726683AbgAFKTR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 6 Jan 2020 05:19:17 -0500
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:46468 "EHLO
+        id S1726656AbgAFKTU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 6 Jan 2020 05:19:20 -0500
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:46488 "EHLO
         fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726656AbgAFKTP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jan 2020 05:19:15 -0500
+        with ESMTP id S1726698AbgAFKTT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jan 2020 05:19:19 -0500
 Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 006AJ6uw108484;
-        Mon, 6 Jan 2020 04:19:06 -0600
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 006AJ9l9108499;
+        Mon, 6 Jan 2020 04:19:09 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1578305946;
-        bh=Rc8YT4TU+I5HtgVac7UO4Rq0QTyfIQpD6Hq6n/QrUS8=;
+        s=ti-com-17Q1; t=1578305949;
+        bh=0W8h6q1DjqH6SYZZFUMS/H0MQcTQzS4jdk+GtCZx1VE=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=tWyEhCZEWRflcLFOCduVl9xPBawSnJV+tuNPJnqTblQsUXyAefuhSXEGtdQriBj0R
-         4sXAlCb5rlDK7rIqPefCUXNLR9/YZtzu/USUHanaLBlZnWSvN8nhh8Q9ead0YMvV4d
-         LxvtvixdtBN2VRctbaGqbPh5kBs4LFAsWAa0ygXE=
-Received: from DLEE106.ent.ti.com (dlee106.ent.ti.com [157.170.170.36])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id 006AJ6xS031889;
-        Mon, 6 Jan 2020 04:19:06 -0600
-Received: from DLEE115.ent.ti.com (157.170.170.26) by DLEE106.ent.ti.com
- (157.170.170.36) with Microsoft SMTP Server (version=TLS1_2,
+        b=ctDffj4WfgDDK+d7ibzP0+cVRD3MpLAtsmD+a8rA4W2WkVWZp7roPUyvw9ymVrqCZ
+         O+lKYsRA/jwqIs/iec2UptS9n9P8ABX5Uj2d/U0NSYvKy59ncJ61RN/UUUk5Y/N+e2
+         2ucFEUu4DEKavGS5tu031/XI/dRTOKBrWlDmLK+g=
+Received: from DFLE106.ent.ti.com (dfle106.ent.ti.com [10.64.6.27])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id 006AJ95x031936;
+        Mon, 6 Jan 2020 04:19:09 -0600
+Received: from DFLE109.ent.ti.com (10.64.6.30) by DFLE106.ent.ti.com
+ (10.64.6.27) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Mon, 6 Jan
- 2020 04:19:06 -0600
-Received: from fllv0040.itg.ti.com (10.64.41.20) by DLEE115.ent.ti.com
- (157.170.170.26) with Microsoft SMTP Server (version=TLS1_2,
+ 2020 04:19:09 -0600
+Received: from fllv0040.itg.ti.com (10.64.41.20) by DFLE109.ent.ti.com
+ (10.64.6.30) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
- Frontend Transport; Mon, 6 Jan 2020 04:19:06 -0600
+ Frontend Transport; Mon, 6 Jan 2020 04:19:09 -0600
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 006AIqXt118652;
-        Mon, 6 Jan 2020 04:19:03 -0600
+        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 006AIqXu118652;
+        Mon, 6 Jan 2020 04:19:06 -0600
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Kishon Vijay Abraham I <kishon@ti.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -55,9 +55,9 @@ To:     Kishon Vijay Abraham I <kishon@ti.com>,
 CC:     <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v2 03/14] linux/kernel.h: Add PTR_ALIGN_DOWN macro
-Date:   Mon, 6 Jan 2020 15:50:47 +0530
-Message-ID: <20200106102058.19183-4-kishon@ti.com>
+Subject: [PATCH v2 04/14] PCI: cadence: Add support to use custom read and write accessors
+Date:   Mon, 6 Jan 2020 15:50:48 +0530
+Message-ID: <20200106102058.19183-5-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200106102058.19183-1-kishon@ti.com>
 References: <20200106102058.19183-1-kishon@ti.com>
@@ -69,27 +69,201 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add a macro for aligning down a pointer. This is useful to get an
-aligned register address when a device allows only word access and
-doesn't allow half word or byte access.
+Add support to use custom read and write accessors. Platforms that
+don't support half word or byte access or any other constraint
+while accessing registers can use this feature to populate custom
+read and write accessors. These custom accessors are used for both
+standard register access and configuration space register access of
+the PCIe host bridge.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- include/linux/kernel.h | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/pci/controller/cadence/pcie-cadence.h | 107 +++++++++++++++---
+ 1 file changed, 94 insertions(+), 13 deletions(-)
 
-diff --git a/include/linux/kernel.h b/include/linux/kernel.h
-index 3adcb39fa6f5..888ad70a80aa 100644
---- a/include/linux/kernel.h
-+++ b/include/linux/kernel.h
-@@ -34,6 +34,7 @@
- #define ALIGN_DOWN(x, a)	__ALIGN_KERNEL((x) - ((a) - 1), (a))
- #define __ALIGN_MASK(x, mask)	__ALIGN_KERNEL_MASK((x), (mask))
- #define PTR_ALIGN(p, a)		((typeof(p))ALIGN((unsigned long)(p), (a)))
-+#define PTR_ALIGN_DOWN(p, a)	((typeof(p))ALIGN_DOWN((unsigned long)(p), (a)))
- #define IS_ALIGNED(x, a)		(((x) & ((typeof(x))(a) - 1)) == 0)
+diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
+index 4f6bec506841..391636a9c084 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence.h
++++ b/drivers/pci/controller/cadence/pcie-cadence.h
+@@ -224,6 +224,11 @@ enum cdns_pcie_msg_routing {
+ 	MSG_ROUTING_GATHER,
+ };
  
- /* generic data direction definitions */
++struct cdns_pcie_ops {
++	u32	(*read)(void __iomem *addr, int size);
++	void	(*write)(void __iomem *addr, int size, u32 value);
++};
++
+ /**
+  * struct cdns_pcie - private data for Cadence PCIe controller drivers
+  * @reg_base: IO mapped register base
+@@ -240,7 +245,7 @@ struct cdns_pcie {
+ 	int			phy_count;
+ 	struct phy		**phy;
+ 	struct device_link	**link;
+-	const struct cdns_pcie_common_ops *ops;
++	const struct cdns_pcie_ops *ops;
+ };
+ 
+ /**
+@@ -311,69 +316,145 @@ struct cdns_pcie_ep {
+ /* Register access */
+ static inline void cdns_pcie_writeb(struct cdns_pcie *pcie, u32 reg, u8 value)
+ {
+-	writeb(value, pcie->reg_base + reg);
++	void __iomem *addr = pcie->reg_base + reg;
++
++	if (pcie->ops && pcie->ops->write) {
++		pcie->ops->write(addr, 0x1, value);
++		return;
++	}
++
++	writeb(value, addr);
+ }
+ 
+ static inline void cdns_pcie_writew(struct cdns_pcie *pcie, u32 reg, u16 value)
+ {
+-	writew(value, pcie->reg_base + reg);
++	void __iomem *addr = pcie->reg_base + reg;
++
++	if (pcie->ops && pcie->ops->write) {
++		pcie->ops->write(addr, 0x2, value);
++		return;
++	}
++
++	writew(value, addr);
+ }
+ 
+ static inline void cdns_pcie_writel(struct cdns_pcie *pcie, u32 reg, u32 value)
+ {
+-	writel(value, pcie->reg_base + reg);
++	void __iomem *addr = pcie->reg_base + reg;
++
++	if (pcie->ops && pcie->ops->write) {
++		pcie->ops->write(addr, 0x4, value);
++		return;
++	}
++
++	writel(value, addr);
+ }
+ 
+ static inline u32 cdns_pcie_readl(struct cdns_pcie *pcie, u32 reg)
+ {
+-	return readl(pcie->reg_base + reg);
++	void __iomem *addr = pcie->reg_base + reg;
++
++	if (pcie->ops && pcie->ops->read)
++		return pcie->ops->read(addr, 0x4);
++
++	return readl(addr);
+ }
+ 
+ /* Root Port register access */
+ static inline void cdns_pcie_rp_writeb(struct cdns_pcie *pcie,
+ 				       u32 reg, u8 value)
+ {
+-	writeb(value, pcie->reg_base + CDNS_PCIE_RP_BASE + reg);
++	void __iomem *addr = pcie->reg_base + CDNS_PCIE_RP_BASE + reg;
++
++	if (pcie->ops && pcie->ops->write) {
++		pcie->ops->write(addr, 0x1, value);
++		return;
++	}
++
++	writeb(value, addr);
+ }
+ 
+ static inline void cdns_pcie_rp_writew(struct cdns_pcie *pcie,
+ 				       u32 reg, u16 value)
+ {
+-	writew(value, pcie->reg_base + CDNS_PCIE_RP_BASE + reg);
++	void __iomem *addr = pcie->reg_base + CDNS_PCIE_RP_BASE + reg;
++
++	if (pcie->ops && pcie->ops->write) {
++		pcie->ops->write(addr, 0x2, value);
++		return;
++	}
++
++	writew(value, addr);
+ }
+ 
+ /* Endpoint Function register access */
+ static inline void cdns_pcie_ep_fn_writeb(struct cdns_pcie *pcie, u8 fn,
+ 					  u32 reg, u8 value)
+ {
+-	writeb(value, pcie->reg_base + CDNS_PCIE_EP_FUNC_BASE(fn) + reg);
++	void __iomem *addr = pcie->reg_base + CDNS_PCIE_EP_FUNC_BASE(fn) + reg;
++
++	if (pcie->ops && pcie->ops->write) {
++		pcie->ops->write(addr, 0x1, value);
++		return;
++	}
++
++	writeb(value, addr);
+ }
+ 
+ static inline void cdns_pcie_ep_fn_writew(struct cdns_pcie *pcie, u8 fn,
+ 					  u32 reg, u16 value)
+ {
+-	writew(value, pcie->reg_base + CDNS_PCIE_EP_FUNC_BASE(fn) + reg);
++	void __iomem *addr = pcie->reg_base + CDNS_PCIE_EP_FUNC_BASE(fn) + reg;
++
++	if (pcie->ops && pcie->ops->write) {
++		pcie->ops->write(addr, 0x2, value);
++		return;
++	}
++
++	writew(value, addr);
+ }
+ 
+ static inline void cdns_pcie_ep_fn_writel(struct cdns_pcie *pcie, u8 fn,
+ 					  u32 reg, u32 value)
+ {
+-	writel(value, pcie->reg_base + CDNS_PCIE_EP_FUNC_BASE(fn) + reg);
++	void __iomem *addr = pcie->reg_base + CDNS_PCIE_EP_FUNC_BASE(fn) + reg;
++
++	if (pcie->ops && pcie->ops->write) {
++		pcie->ops->write(addr, 0x4, value);
++		return;
++	}
++
++	writel(value, addr);
+ }
+ 
+ static inline u8 cdns_pcie_ep_fn_readb(struct cdns_pcie *pcie, u8 fn, u32 reg)
+ {
+-	return readb(pcie->reg_base + CDNS_PCIE_EP_FUNC_BASE(fn) + reg);
++	void __iomem *addr = pcie->reg_base + CDNS_PCIE_EP_FUNC_BASE(fn) + reg;
++
++	if (pcie->ops && pcie->ops->read)
++		return pcie->ops->read(addr, 0x1);
++
++	return readb(addr);
+ }
+ 
+ static inline u16 cdns_pcie_ep_fn_readw(struct cdns_pcie *pcie, u8 fn, u32 reg)
+ {
+-	return readw(pcie->reg_base + CDNS_PCIE_EP_FUNC_BASE(fn) + reg);
++	void __iomem *addr = pcie->reg_base + CDNS_PCIE_EP_FUNC_BASE(fn) + reg;
++
++	if (pcie->ops && pcie->ops->read)
++		return pcie->ops->read(addr, 0x2);
++
++	return readw(addr);
+ }
+ 
+ static inline u32 cdns_pcie_ep_fn_readl(struct cdns_pcie *pcie, u8 fn, u32 reg)
+ {
+-	return readl(pcie->reg_base + CDNS_PCIE_EP_FUNC_BASE(fn) + reg);
++	void __iomem *addr = pcie->reg_base + CDNS_PCIE_EP_FUNC_BASE(fn) + reg;
++
++	if (pcie->ops && pcie->ops->read)
++		return pcie->ops->read(addr, 0x4);
++
++	return readl(addr);
+ }
+ 
+ #ifdef CONFIG_PCIE_CADENCE_HOST
 -- 
 2.17.1
 
