@@ -2,49 +2,48 @@ Return-Path: <SRS0=Qtyg=23=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UPPERCASE_50_75,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1C8AC33C8C
-	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 19:04:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1011AC33C8C
+	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 19:04:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 81F4E2072C
-	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 19:04:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D7F482072C
+	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 19:04:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726913AbgAFTDp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1726906AbgAFTDp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Mon, 6 Jan 2020 14:03:45 -0500
-Received: from ale.deltatee.com ([207.54.116.67]:54806 "EHLO ale.deltatee.com"
+Received: from ale.deltatee.com ([207.54.116.67]:54796 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726569AbgAFTDn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 6 Jan 2020 14:03:43 -0500
+        id S1726659AbgAFTDm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 6 Jan 2020 14:03:42 -0500
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1ioXfA-0005mR-AS; Mon, 06 Jan 2020 12:03:42 -0700
+        id 1ioXf9-0005m4-NN; Mon, 06 Jan 2020 12:03:41 -0700
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.92)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1ioXfA-0000eb-4t; Mon, 06 Jan 2020 12:03:40 -0700
+        id 1ioXf9-0000e7-0r; Mon, 06 Jan 2020 12:03:39 -0700
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
         Bjorn Helgaas <bhelgaas@google.com>
 Cc:     Kelvin.Cao@microchip.com, Eric Pilmore <epilmore@gigaio.com>,
         Doug Meyer <dmeyer@gigaio.com>,
-        Kelvin Cao <kelvin.cao@microchip.com>,
+        Wesley Sheng <wesley.sheng@microchip.com>,
         Logan Gunthorpe <logang@deltatee.com>
-Date:   Mon,  6 Jan 2020 12:03:36 -0700
-Message-Id: <20200106190337.2428-12-logang@deltatee.com>
+Date:   Mon,  6 Jan 2020 12:03:26 -0700
+Message-Id: <20200106190337.2428-2-logang@deltatee.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200106190337.2428-1-logang@deltatee.com>
 References: <20200106190337.2428-1-logang@deltatee.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, bhelgaas@google.com, epilmore@gigaio.com, dmeyer@gigaio.com, Kelvin.Cao@microchip.com, kelvin.cao@microchip.com, logang@deltatee.com
+X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, bhelgaas@google.com, epilmore@gigaio.com, dmeyer@gigaio.com, Kelvin.Cao@microchip.com, wesley.sheng@microchip.com, logang@deltatee.com
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH 11/12] PCI/switchtec: Introduce gen4 variant IDS in the device ID table
+Subject: [PATCH 01/12] PCI/switchtec: Use dma_set_mask_and_coherent()
 X-SA-Exim-Version: 4.2.1 (built Wed, 08 May 2019 21:11:16 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
@@ -52,47 +51,33 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Kelvin Cao <kelvin.cao@microchip.com>
+From: Wesley Sheng <wesley.sheng@microchip.com>
 
-Now that GEN4 is properly supported, advertise support in the module's
-device ID table.
+Use dma_set_mask_and_coherent() instead of dma_set_coherent_mask() as
+the switchtec hardware fully supports 64bit addressing and we should
+set both the streaming and coherent masks the same.
 
-Signed-off-by: Kelvin Cao <kelvin.cao@microchip.com>
-[logang@deltatee.com: add commit message]
+Fixes: aff614c6339c ("switchtec: Set DMA coherent mask")
+Signed-off-by: Wesley Sheng <wesley.sheng@microchip.com>
+[logang@deltatee.com: reworked commit message]
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 ---
- drivers/pci/switch/switchtec.c | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+ drivers/pci/switch/switchtec.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
-index 990e0ee32f7b..db240b70fbdd 100644
+index 88091bbfe77f..2bf670977b9c 100644
 --- a/drivers/pci/switch/switchtec.c
 +++ b/drivers/pci/switch/switchtec.c
-@@ -1691,6 +1691,24 @@ static const struct pci_device_id switchtec_pci_tbl[] = {
- 	SWITCHTEC_PCI_DEVICE(0x8574, SWITCHTEC_GEN3),  //PFXI 64XG3
- 	SWITCHTEC_PCI_DEVICE(0x8575, SWITCHTEC_GEN3),  //PFXI 80XG3
- 	SWITCHTEC_PCI_DEVICE(0x8576, SWITCHTEC_GEN3),  //PFXI 96XG3
-+	SWITCHTEC_PCI_DEVICE(0x4000, SWITCHTEC_GEN4),  //PFX 100XG4
-+	SWITCHTEC_PCI_DEVICE(0x4084, SWITCHTEC_GEN4),  //PFX 84XG4
-+	SWITCHTEC_PCI_DEVICE(0x4068, SWITCHTEC_GEN4),  //PFX 68XG4
-+	SWITCHTEC_PCI_DEVICE(0x4052, SWITCHTEC_GEN4),  //PFX 52XG4
-+	SWITCHTEC_PCI_DEVICE(0x4036, SWITCHTEC_GEN4),  //PFX 36XG4
-+	SWITCHTEC_PCI_DEVICE(0x4028, SWITCHTEC_GEN4),  //PFX 28XG4
-+	SWITCHTEC_PCI_DEVICE(0x4100, SWITCHTEC_GEN4),  //PSX 100XG4
-+	SWITCHTEC_PCI_DEVICE(0x4184, SWITCHTEC_GEN4),  //PSX 84XG4
-+	SWITCHTEC_PCI_DEVICE(0x4168, SWITCHTEC_GEN4),  //PSX 68XG4
-+	SWITCHTEC_PCI_DEVICE(0x4152, SWITCHTEC_GEN4),  //PSX 52XG4
-+	SWITCHTEC_PCI_DEVICE(0x4136, SWITCHTEC_GEN4),  //PSX 36XG4
-+	SWITCHTEC_PCI_DEVICE(0x4128, SWITCHTEC_GEN4),  //PSX 28XG4
-+	SWITCHTEC_PCI_DEVICE(0x4200, SWITCHTEC_GEN4),  //PAX 100XG4
-+	SWITCHTEC_PCI_DEVICE(0x4284, SWITCHTEC_GEN4),  //PAX 84XG4
-+	SWITCHTEC_PCI_DEVICE(0x4268, SWITCHTEC_GEN4),  //PAX 68XG4
-+	SWITCHTEC_PCI_DEVICE(0x4252, SWITCHTEC_GEN4),  //PAX 52XG4
-+	SWITCHTEC_PCI_DEVICE(0x4236, SWITCHTEC_GEN4),  //PAX 36XG4
-+	SWITCHTEC_PCI_DEVICE(0x4228, SWITCHTEC_GEN4),  //PAX 28XG4
- 	{0}
- };
- MODULE_DEVICE_TABLE(pci, switchtec_pci_tbl);
+@@ -1349,7 +1349,7 @@ static int switchtec_init_pci(struct switchtec_dev *stdev,
+ 	if (rc)
+ 		return rc;
+ 
+-	rc = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(64));
++	rc = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
+ 	if (rc)
+ 		return rc;
+ 
 -- 
 2.20.1
 
