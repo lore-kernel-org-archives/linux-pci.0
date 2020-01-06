@@ -4,28 +4,28 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A372C33C9E
-	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 19:03:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2608C33C8C
+	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 19:04:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 49FDA214D8
-	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 19:03:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CF34F24672
+	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 19:04:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727154AbgAFTDu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 6 Jan 2020 14:03:50 -0500
-Received: from ale.deltatee.com ([207.54.116.67]:54866 "EHLO ale.deltatee.com"
+        id S1726698AbgAFTEH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 6 Jan 2020 14:04:07 -0500
+Received: from ale.deltatee.com ([207.54.116.67]:54880 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727139AbgAFTDt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 6 Jan 2020 14:03:49 -0500
+        id S1726977AbgAFTDv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 6 Jan 2020 14:03:51 -0500
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1ioXf9-0005m7-NM; Mon, 06 Jan 2020 12:03:48 -0700
+        id 1ioXf9-0005m8-NR; Mon, 06 Jan 2020 12:03:49 -0700
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.92)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1ioXf9-0000eG-EO; Mon, 06 Jan 2020 12:03:39 -0700
+        id 1ioXf9-0000eJ-HN; Mon, 06 Jan 2020 12:03:39 -0700
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
         Bjorn Helgaas <bhelgaas@google.com>
@@ -33,8 +33,8 @@ Cc:     Kelvin.Cao@microchip.com, Eric Pilmore <epilmore@gigaio.com>,
         Doug Meyer <dmeyer@gigaio.com>,
         Wesley Sheng <wesley.sheng@microchip.com>,
         Logan Gunthorpe <logang@deltatee.com>
-Date:   Mon,  6 Jan 2020 12:03:29 -0700
-Message-Id: <20200106190337.2428-5-logang@deltatee.com>
+Date:   Mon,  6 Jan 2020 12:03:30 -0700
+Message-Id: <20200106190337.2428-6-logang@deltatee.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200106190337.2428-1-logang@deltatee.com>
 References: <20200106190337.2428-1-logang@deltatee.com>
@@ -43,7 +43,7 @@ Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
 X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, bhelgaas@google.com, epilmore@gigaio.com, dmeyer@gigaio.com, Kelvin.Cao@microchip.com, wesley.sheng@microchip.com, logang@deltatee.com
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH 04/12] PCI/switchtec: Remove redundant valid PFF number count
+Subject: [PATCH 05/12] PCI/switchtec: Move check event id from mask_event() to switchtec_event_isr()
 X-SA-Exim-Version: 4.2.1 (built Wed, 08 May 2019 21:11:16 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
@@ -53,52 +53,46 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Wesley Sheng <wesley.sheng@microchip.com>
 
-init_pff() function has already counted the valid PFF number, so there
-is no requirement to count it again in ioctl_event_summary().
+Event id check doesn't depend on anything in the mask_all_events()
+to mask_event() path, doing it in switchtec_event_isr() would
+avoid the CSR read in mask_event().
 
 Signed-off-by: Wesley Sheng <wesley.sheng@microchip.com>
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 ---
- drivers/pci/switch/switchtec.c | 12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
+ drivers/pci/switch/switchtec.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
-index 218e67428cf9..231499da2899 100644
+index 231499da2899..05d4cb49219b 100644
 --- a/drivers/pci/switch/switchtec.c
 +++ b/drivers/pci/switch/switchtec.c
-@@ -683,11 +683,7 @@ static int ioctl_event_summary(struct switchtec_dev *stdev,
- 		s->part[i] = reg;
- 	}
+@@ -1180,10 +1180,6 @@ static int mask_event(struct switchtec_dev *stdev, int eid, int idx)
+ 	if (!(hdr & SWITCHTEC_EVENT_OCCURRED && hdr & SWITCHTEC_EVENT_EN_IRQ))
+ 		return 0;
  
--	for (i = 0; i < SWITCHTEC_MAX_PFF_CSR; i++) {
--		reg = ioread16(&stdev->mmio_pff_csr[i].vendor_id);
--		if (reg != PCI_VENDOR_ID_MICROSEMI)
--			break;
+-	if (eid == SWITCHTEC_IOCTL_EVENT_LINK_STATE ||
+-	    eid == SWITCHTEC_IOCTL_EVENT_MRPC_COMP)
+-		return 0;
 -
-+	for (i = 0; i < stdev->pff_csr_count; i++) {
- 		reg = ioread32(&stdev->mmio_pff_csr[i].pff_event_summary);
- 		s->pff[i] = reg;
- 	}
-@@ -1327,16 +1323,16 @@ static void init_pff(struct switchtec_dev *stdev)
- 	stdev->pff_csr_count = i;
+ 	dev_dbg(&stdev->dev, "%s: %d %d %x\n", __func__, eid, idx, hdr);
+ 	hdr &= ~(SWITCHTEC_EVENT_EN_IRQ | SWITCHTEC_EVENT_OCCURRED);
+ 	iowrite32(hdr, hdr_reg);
+@@ -1230,8 +1226,13 @@ static irqreturn_t switchtec_event_isr(int irq, void *dev)
  
- 	reg = ioread32(&pcfg->usp_pff_inst_id);
--	if (reg < SWITCHTEC_MAX_PFF_CSR)
-+	if (reg < stdev->pff_csr_count)
- 		stdev->pff_local[reg] = 1;
+ 	check_link_state_events(stdev);
  
- 	reg = ioread32(&pcfg->vep_pff_inst_id);
--	if (reg < SWITCHTEC_MAX_PFF_CSR)
-+	if (reg < stdev->pff_csr_count)
- 		stdev->pff_local[reg] = 1;
+-	for (eid = 0; eid < SWITCHTEC_IOCTL_MAX_EVENTS; eid++)
++	for (eid = 0; eid < SWITCHTEC_IOCTL_MAX_EVENTS; eid++) {
++		if (eid == SWITCHTEC_IOCTL_EVENT_LINK_STATE ||
++		    eid == SWITCHTEC_IOCTL_EVENT_MRPC_COMP)
++			continue;
++
+ 		event_count += mask_all_events(stdev, eid);
++	}
  
- 	for (i = 0; i < ARRAY_SIZE(pcfg->dsp_pff_inst_id); i++) {
- 		reg = ioread32(&pcfg->dsp_pff_inst_id[i]);
--		if (reg < SWITCHTEC_MAX_PFF_CSR)
-+		if (reg < stdev->pff_csr_count)
- 			stdev->pff_local[reg] = 1;
- 	}
- }
+ 	if (event_count) {
+ 		atomic_inc(&stdev->event_cnt);
 -- 
 2.20.1
 
