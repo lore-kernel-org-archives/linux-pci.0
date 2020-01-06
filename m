@@ -2,48 +2,48 @@ Return-Path: <SRS0=Qtyg=23=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	UPPERCASE_50_75,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3AA7C33C9E
-	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 19:04:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC9D5C33C9B
+	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 19:04:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7E45A214D8
-	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 19:04:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A23BE214D8
+	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 19:04:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726803AbgAFTEK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 6 Jan 2020 14:04:10 -0500
-Received: from ale.deltatee.com ([207.54.116.67]:54876 "EHLO ale.deltatee.com"
+        id S1727132AbgAFTDs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 6 Jan 2020 14:03:48 -0500
+Received: from ale.deltatee.com ([207.54.116.67]:54840 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727149AbgAFTDu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 6 Jan 2020 14:03:50 -0500
+        id S1727035AbgAFTDs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 6 Jan 2020 14:03:48 -0500
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1ioXfA-0005mP-6u; Mon, 06 Jan 2020 12:03:49 -0700
+        id 1ioXf9-0005m9-Qp; Mon, 06 Jan 2020 12:03:47 -0700
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.92)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1ioXfA-0000eY-1v; Mon, 06 Jan 2020 12:03:40 -0700
+        id 1ioXf9-0000eM-LP; Mon, 06 Jan 2020 12:03:39 -0700
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
         Bjorn Helgaas <bhelgaas@google.com>
 Cc:     Kelvin.Cao@microchip.com, Eric Pilmore <epilmore@gigaio.com>,
         Doug Meyer <dmeyer@gigaio.com>,
-        Kelvin Cao <kelvin.cao@microchip.com>,
         Logan Gunthorpe <logang@deltatee.com>
-Date:   Mon,  6 Jan 2020 12:03:35 -0700
-Message-Id: <20200106190337.2428-11-logang@deltatee.com>
+Date:   Mon,  6 Jan 2020 12:03:31 -0700
+Message-Id: <20200106190337.2428-7-logang@deltatee.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200106190337.2428-1-logang@deltatee.com>
 References: <20200106190337.2428-1-logang@deltatee.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, bhelgaas@google.com, epilmore@gigaio.com, dmeyer@gigaio.com, Kelvin.Cao@microchip.com, kelvin.cao@microchip.com, logang@deltatee.com
+X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, bhelgaas@google.com, Kelvin.Cao@microchip.com, epilmore@gigaio.com, dmeyer@gigaio.com, logang@deltatee.com
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH 10/12] PCI/switchtec: Add permission check for the GAS access MRPC commands
+Subject: [PATCH 06/12] PCI/switchtec: Introduce Generation Variable
 X-SA-Exim-Version: 4.2.1 (built Wed, 08 May 2019 21:11:16 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
@@ -51,59 +51,143 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Kelvin Cao <kelvin.cao@microchip.com>
+Add a generation variable passed through the device id table.
 
-GEN4 hardware provides new MRPC commands to read and write from
-directly from any address in the PCI BAR (which Microsemi refers to
-as GAS). Seeing accessing BAR registers can be dangerous and break
-the driver, we don't want unpriviliged users to have this ability.
+This will allow us to add generation 4 and other devices after they are
+functionally supported.
 
-Therefore, for the local and remote GAS access MRPC commands, the
-requesting process should need CAP_SYS_ADMIN. Priviligded processes
-will already have access to the bar through the sysfs resource file
-so this doesn't give userspace any capabilities it didn't already have.
-
-Signed-off-by: Kelvin Cao <kelvin.cao@microchip.com>
-[logang@deltatee.com: rework commit message]
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 ---
- drivers/pci/switch/switchtec.c | 6 ++++++
- include/linux/switchtec.h      | 5 +++++
- 2 files changed, 11 insertions(+)
+ drivers/pci/switch/switchtec.c | 66 ++++++++++++++++++----------------
+ include/linux/switchtec.h      |  7 ++++
+ 2 files changed, 42 insertions(+), 31 deletions(-)
 
 diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
-index 524cb4e4bbf7..990e0ee32f7b 100644
+index 05d4cb49219b..674c57c9ae4c 100644
 --- a/drivers/pci/switch/switchtec.c
 +++ b/drivers/pci/switch/switchtec.c
-@@ -478,6 +478,12 @@ static ssize_t switchtec_dev_write(struct file *filp, const char __user *data,
- 		rc = -EFAULT;
- 		goto out;
- 	}
-+	if (((MRPC_CMD_ID(stuser->cmd) == MRPC_GAS_WRITE) ||
-+	     (MRPC_CMD_ID(stuser->cmd) == MRPC_GAS_READ)) &&
-+	    !capable(CAP_SYS_ADMIN)) {
-+		rc = -EPERM;
-+		goto out;
-+	}
+@@ -1420,6 +1420,8 @@ static int switchtec_pci_probe(struct pci_dev *pdev,
+ 	if (IS_ERR(stdev))
+ 		return PTR_ERR(stdev);
  
- 	data += sizeof(stuser->cmd);
- 	rc = copy_from_user(&stuser->data, data, size - sizeof(stuser->cmd));
++	stdev->gen = id->driver_data;
++
+ 	rc = switchtec_init_pci(stdev, pdev);
+ 	if (rc)
+ 		goto err_put;
+@@ -1467,7 +1469,7 @@ static void switchtec_pci_remove(struct pci_dev *pdev)
+ 	put_device(&stdev->dev);
+ }
+ 
+-#define SWITCHTEC_PCI_DEVICE(device_id) \
++#define SWITCHTEC_PCI_DEVICE(device_id, gen) \
+ 	{ \
+ 		.vendor     = PCI_VENDOR_ID_MICROSEMI, \
+ 		.device     = device_id, \
+@@ -1475,6 +1477,7 @@ static void switchtec_pci_remove(struct pci_dev *pdev)
+ 		.subdevice  = PCI_ANY_ID, \
+ 		.class      = (PCI_CLASS_MEMORY_OTHER << 8), \
+ 		.class_mask = 0xFFFFFFFF, \
++		.driver_data = gen, \
+ 	}, \
+ 	{ \
+ 		.vendor     = PCI_VENDOR_ID_MICROSEMI, \
+@@ -1483,39 +1486,40 @@ static void switchtec_pci_remove(struct pci_dev *pdev)
+ 		.subdevice  = PCI_ANY_ID, \
+ 		.class      = (PCI_CLASS_BRIDGE_OTHER << 8), \
+ 		.class_mask = 0xFFFFFFFF, \
++		.driver_data = gen, \
+ 	}
+ 
+ static const struct pci_device_id switchtec_pci_tbl[] = {
+-	SWITCHTEC_PCI_DEVICE(0x8531),  //PFX 24xG3
+-	SWITCHTEC_PCI_DEVICE(0x8532),  //PFX 32xG3
+-	SWITCHTEC_PCI_DEVICE(0x8533),  //PFX 48xG3
+-	SWITCHTEC_PCI_DEVICE(0x8534),  //PFX 64xG3
+-	SWITCHTEC_PCI_DEVICE(0x8535),  //PFX 80xG3
+-	SWITCHTEC_PCI_DEVICE(0x8536),  //PFX 96xG3
+-	SWITCHTEC_PCI_DEVICE(0x8541),  //PSX 24xG3
+-	SWITCHTEC_PCI_DEVICE(0x8542),  //PSX 32xG3
+-	SWITCHTEC_PCI_DEVICE(0x8543),  //PSX 48xG3
+-	SWITCHTEC_PCI_DEVICE(0x8544),  //PSX 64xG3
+-	SWITCHTEC_PCI_DEVICE(0x8545),  //PSX 80xG3
+-	SWITCHTEC_PCI_DEVICE(0x8546),  //PSX 96xG3
+-	SWITCHTEC_PCI_DEVICE(0x8551),  //PAX 24XG3
+-	SWITCHTEC_PCI_DEVICE(0x8552),  //PAX 32XG3
+-	SWITCHTEC_PCI_DEVICE(0x8553),  //PAX 48XG3
+-	SWITCHTEC_PCI_DEVICE(0x8554),  //PAX 64XG3
+-	SWITCHTEC_PCI_DEVICE(0x8555),  //PAX 80XG3
+-	SWITCHTEC_PCI_DEVICE(0x8556),  //PAX 96XG3
+-	SWITCHTEC_PCI_DEVICE(0x8561),  //PFXL 24XG3
+-	SWITCHTEC_PCI_DEVICE(0x8562),  //PFXL 32XG3
+-	SWITCHTEC_PCI_DEVICE(0x8563),  //PFXL 48XG3
+-	SWITCHTEC_PCI_DEVICE(0x8564),  //PFXL 64XG3
+-	SWITCHTEC_PCI_DEVICE(0x8565),  //PFXL 80XG3
+-	SWITCHTEC_PCI_DEVICE(0x8566),  //PFXL 96XG3
+-	SWITCHTEC_PCI_DEVICE(0x8571),  //PFXI 24XG3
+-	SWITCHTEC_PCI_DEVICE(0x8572),  //PFXI 32XG3
+-	SWITCHTEC_PCI_DEVICE(0x8573),  //PFXI 48XG3
+-	SWITCHTEC_PCI_DEVICE(0x8574),  //PFXI 64XG3
+-	SWITCHTEC_PCI_DEVICE(0x8575),  //PFXI 80XG3
+-	SWITCHTEC_PCI_DEVICE(0x8576),  //PFXI 96XG3
++	SWITCHTEC_PCI_DEVICE(0x8531, SWITCHTEC_GEN3),  //PFX 24xG3
++	SWITCHTEC_PCI_DEVICE(0x8532, SWITCHTEC_GEN3),  //PFX 32xG3
++	SWITCHTEC_PCI_DEVICE(0x8533, SWITCHTEC_GEN3),  //PFX 48xG3
++	SWITCHTEC_PCI_DEVICE(0x8534, SWITCHTEC_GEN3),  //PFX 64xG3
++	SWITCHTEC_PCI_DEVICE(0x8535, SWITCHTEC_GEN3),  //PFX 80xG3
++	SWITCHTEC_PCI_DEVICE(0x8536, SWITCHTEC_GEN3),  //PFX 96xG3
++	SWITCHTEC_PCI_DEVICE(0x8541, SWITCHTEC_GEN3),  //PSX 24xG3
++	SWITCHTEC_PCI_DEVICE(0x8542, SWITCHTEC_GEN3),  //PSX 32xG3
++	SWITCHTEC_PCI_DEVICE(0x8543, SWITCHTEC_GEN3),  //PSX 48xG3
++	SWITCHTEC_PCI_DEVICE(0x8544, SWITCHTEC_GEN3),  //PSX 64xG3
++	SWITCHTEC_PCI_DEVICE(0x8545, SWITCHTEC_GEN3),  //PSX 80xG3
++	SWITCHTEC_PCI_DEVICE(0x8546, SWITCHTEC_GEN3),  //PSX 96xG3
++	SWITCHTEC_PCI_DEVICE(0x8551, SWITCHTEC_GEN3),  //PAX 24XG3
++	SWITCHTEC_PCI_DEVICE(0x8552, SWITCHTEC_GEN3),  //PAX 32XG3
++	SWITCHTEC_PCI_DEVICE(0x8553, SWITCHTEC_GEN3),  //PAX 48XG3
++	SWITCHTEC_PCI_DEVICE(0x8554, SWITCHTEC_GEN3),  //PAX 64XG3
++	SWITCHTEC_PCI_DEVICE(0x8555, SWITCHTEC_GEN3),  //PAX 80XG3
++	SWITCHTEC_PCI_DEVICE(0x8556, SWITCHTEC_GEN3),  //PAX 96XG3
++	SWITCHTEC_PCI_DEVICE(0x8561, SWITCHTEC_GEN3),  //PFXL 24XG3
++	SWITCHTEC_PCI_DEVICE(0x8562, SWITCHTEC_GEN3),  //PFXL 32XG3
++	SWITCHTEC_PCI_DEVICE(0x8563, SWITCHTEC_GEN3),  //PFXL 48XG3
++	SWITCHTEC_PCI_DEVICE(0x8564, SWITCHTEC_GEN3),  //PFXL 64XG3
++	SWITCHTEC_PCI_DEVICE(0x8565, SWITCHTEC_GEN3),  //PFXL 80XG3
++	SWITCHTEC_PCI_DEVICE(0x8566, SWITCHTEC_GEN3),  //PFXL 96XG3
++	SWITCHTEC_PCI_DEVICE(0x8571, SWITCHTEC_GEN3),  //PFXI 24XG3
++	SWITCHTEC_PCI_DEVICE(0x8572, SWITCHTEC_GEN3),  //PFXI 32XG3
++	SWITCHTEC_PCI_DEVICE(0x8573, SWITCHTEC_GEN3),  //PFXI 48XG3
++	SWITCHTEC_PCI_DEVICE(0x8574, SWITCHTEC_GEN3),  //PFXI 64XG3
++	SWITCHTEC_PCI_DEVICE(0x8575, SWITCHTEC_GEN3),  //PFXI 80XG3
++	SWITCHTEC_PCI_DEVICE(0x8576, SWITCHTEC_GEN3),  //PFXI 96XG3
+ 	{0}
+ };
+ MODULE_DEVICE_TABLE(pci, switchtec_pci_tbl);
 diff --git a/include/linux/switchtec.h b/include/linux/switchtec.h
-index e85155244135..1c3e76b535a2 100644
+index b4ba3a38f30f..0963912c679d 100644
 --- a/include/linux/switchtec.h
 +++ b/include/linux/switchtec.h
-@@ -21,6 +21,11 @@
- #define SWITCHTEC_EVENT_FATAL    BIT(4)
+@@ -32,6 +32,11 @@ enum {
+ 	SWITCHTEC_GAS_PFF_CSR_OFFSET    = 0x134000,
+ };
  
- #define SWITCHTEC_DMA_MRPC_EN	BIT(0)
++enum switchtec_gen {
++	SWITCHTEC_GEN3,
++	SWITCHTEC_GEN4,
++};
 +
-+#define MRPC_GAS_READ 0x29
-+#define MRPC_GAS_WRITE 0x87
-+#define MRPC_CMD_ID(x) ((x) & 0xffff)
+ struct mrpc_regs {
+ 	u8 input_data[SWITCHTEC_MRPC_PAYLOAD_SIZE];
+ 	u8 output_data[SWITCHTEC_MRPC_PAYLOAD_SIZE];
+@@ -358,6 +363,8 @@ struct switchtec_dev {
+ 	struct device dev;
+ 	struct cdev cdev;
+ 
++	enum switchtec_gen gen;
 +
- enum {
- 	SWITCHTEC_GAS_MRPC_OFFSET       = 0x0000,
- 	SWITCHTEC_GAS_TOP_CFG_OFFSET    = 0x1000,
+ 	int partition;
+ 	int partition_count;
+ 	int pff_csr_count;
 -- 
 2.20.1
 
