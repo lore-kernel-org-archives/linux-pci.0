@@ -2,44 +2,47 @@ Return-Path: <SRS0=Qtyg=23=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DAEE3C33C8C
-	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 16:51:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BAF44C33C8C
+	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 19:03:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AC9402072E
-	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 16:51:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 94D262072C
+	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 19:03:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726546AbgAFQv4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 6 Jan 2020 11:51:56 -0500
-Received: from ale.deltatee.com ([207.54.116.67]:52638 "EHLO ale.deltatee.com"
+        id S1726722AbgAFTDm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 6 Jan 2020 14:03:42 -0500
+Received: from ale.deltatee.com ([207.54.116.67]:54792 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726448AbgAFQv4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 6 Jan 2020 11:51:56 -0500
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-        by ale.deltatee.com with esmtp (Exim 4.92)
-        (envelope-from <logang@deltatee.com>)
-        id 1ioVbd-0002qj-Sl; Mon, 06 Jan 2020 09:51:54 -0700
-To:     Deepa Dinamani <deepa.kernel@gmail.com>, bhelgaas@google.com
-Cc:     mika.westerberg@linux.intel.com, alex.williamson@redhat.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20200104225149.27342-1-deepa.kernel@gmail.com>
+        id S1726569AbgAFTDl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 6 Jan 2020 14:03:41 -0500
+Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
+        by ale.deltatee.com with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <gunthorp@deltatee.com>)
+        id 1ioXf9-0005m6-NR; Mon, 06 Jan 2020 12:03:40 -0700
+Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.92)
+        (envelope-from <gunthorp@deltatee.com>)
+        id 1ioXf9-0000eD-Ar; Mon, 06 Jan 2020 12:03:39 -0700
 From:   Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <724d80ee-3a81-23bc-74b0-4b786b3ace53@deltatee.com>
-Date:   Mon, 6 Jan 2020 09:51:52 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc:     Kelvin.Cao@microchip.com, Eric Pilmore <epilmore@gigaio.com>,
+        Doug Meyer <dmeyer@gigaio.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date:   Mon,  6 Jan 2020 12:03:28 -0700
+Message-Id: <20200106190337.2428-4-logang@deltatee.com>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200106190337.2428-1-logang@deltatee.com>
+References: <20200106190337.2428-1-logang@deltatee.com>
 MIME-Version: 1.0
-In-Reply-To: <20200104225149.27342-1-deepa.kernel@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-CA
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, alex.williamson@redhat.com, mika.westerberg@linux.intel.com, bhelgaas@google.com, deepa.kernel@gmail.com
-X-SA-Exim-Mail-From: logang@deltatee.com
-Subject: Re: [PATCH] drivers: pci: Clear ACS state at kexec
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 172.16.1.31
+X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, bhelgaas@google.com, Kelvin.Cao@microchip.com, epilmore@gigaio.com, dmeyer@gigaio.com, logang@deltatee.com
+X-SA-Exim-Mail-From: gunthorp@deltatee.com
+Subject: [PATCH 03/12] PCI/switchtec: Add support for new events
 X-SA-Exim-Version: 4.2.1 (built Wed, 08 May 2019 21:11:16 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
@@ -47,48 +50,74 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 2020-01-04 3:51 p.m., Deepa Dinamani wrote:
-> ACS bits remain sticky through kexec reset. This is not really a
-> problem for Linux because turning IOMMU on assumes ACS on. But,
-> this becomes a problem if we kexec into something other than
-> Linux and that does not turn ACS on always.
-> 
-> Reset the ACS bits to default before kexec or device remove.
+The intercomm notify  event was added for PAX variants of switchtec
+hardware and the UEC Port was added for the MR1 release of GEN3 firmware.
 
-Hmm, I'm slightly hesitant about disabling ACS on a device's unbind...
-Not sure if that's going to open up a hole on us.
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+---
+ drivers/pci/switch/switchtec.c       | 3 +++
+ include/linux/switchtec.h            | 7 +++++--
+ include/uapi/linux/switchtec_ioctl.h | 4 +++-
+ 3 files changed, 11 insertions(+), 3 deletions(-)
 
-> +
-> +/* Standard PCI ACS capailities
-> + * Source Validation | P2P Request Redirect | P2P Completion Redirect | Upstream Forwarding
-> + */
-> +#define PCI_STD_ACS_CAP (PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF)
-> +
->  /**
-> - * pci_std_enable_acs - enable ACS on devices using standard ACS capabilities
-> + * pci_std_enable_disable_acs - enable/disable ACS on devices using standard
-> + * ACS capabilities
->   * @dev: the PCI device
->   */
-> -static void pci_std_enable_acs(struct pci_dev *dev)
-> +static void pci_std_enable_disable_acs(struct pci_dev *dev, int enable)
->  {
->  	int pos;
->  	u16 cap;
->  	u16 ctrl;
-> +	u16 val = 0;
->  
->  	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
->  	if (!pos)
-> @@ -3278,19 +3286,26 @@ static void pci_std_enable_acs(struct pci_dev *dev)
->  	pci_read_config_word(dev, pos + PCI_ACS_CAP, &cap);
->  	pci_read_config_word(dev, pos + PCI_ACS_CTRL, &ctrl);
->  
-> -	/* Source Validation */
-> -	ctrl |= (cap & PCI_ACS_SV);
-> +	val = (cap & PCI_STD_ACS_CAP);
+diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+index 9c3ad09d3022..218e67428cf9 100644
+--- a/drivers/pci/switch/switchtec.c
++++ b/drivers/pci/switch/switchtec.c
+@@ -751,10 +751,13 @@ static const struct event_reg {
+ 	EV_PAR(SWITCHTEC_IOCTL_EVENT_MRPC_COMP, mrpc_comp_hdr),
+ 	EV_PAR(SWITCHTEC_IOCTL_EVENT_MRPC_COMP_ASYNC, mrpc_comp_async_hdr),
+ 	EV_PAR(SWITCHTEC_IOCTL_EVENT_DYN_PART_BIND_COMP, dyn_binding_hdr),
++	EV_PAR(SWITCHTEC_IOCTL_EVENT_INTERCOMM_REQ_NOTIFY,
++	       intercomm_notify_hdr),
+ 	EV_PFF(SWITCHTEC_IOCTL_EVENT_AER_IN_P2P, aer_in_p2p_hdr),
+ 	EV_PFF(SWITCHTEC_IOCTL_EVENT_AER_IN_VEP, aer_in_vep_hdr),
+ 	EV_PFF(SWITCHTEC_IOCTL_EVENT_DPC, dpc_hdr),
+ 	EV_PFF(SWITCHTEC_IOCTL_EVENT_CTS, cts_hdr),
++	EV_PFF(SWITCHTEC_IOCTL_EVENT_UEC, uec_hdr),
+ 	EV_PFF(SWITCHTEC_IOCTL_EVENT_HOTPLUG, hotplug_hdr),
+ 	EV_PFF(SWITCHTEC_IOCTL_EVENT_IER, ier_hdr),
+ 	EV_PFF(SWITCHTEC_IOCTL_EVENT_THRESH, threshold_hdr),
+diff --git a/include/linux/switchtec.h b/include/linux/switchtec.h
+index e295515bc3f3..b4ba3a38f30f 100644
+--- a/include/linux/switchtec.h
++++ b/include/linux/switchtec.h
+@@ -196,7 +196,9 @@ struct part_cfg_regs {
+ 	u32 mrpc_comp_async_data[5];
+ 	u32 dyn_binding_hdr;
+ 	u32 dyn_binding_data[5];
+-	u32 reserved4[159];
++	u32 intercomm_notify_hdr;
++	u32 intercomm_notify_data[5];
++	u32 reserved4[153];
+ } __packed;
+ 
+ enum {
+@@ -320,7 +322,8 @@ struct pff_csr_regs {
+ 	u32 dpc_data[5];
+ 	u32 cts_hdr;
+ 	u32 cts_data[5];
+-	u32 reserved3[6];
++	u32 uec_hdr;
++	u32 uec_data[5];
+ 	u32 hotplug_hdr;
+ 	u32 hotplug_data[5];
+ 	u32 ier_hdr;
+diff --git a/include/uapi/linux/switchtec_ioctl.h b/include/uapi/linux/switchtec_ioctl.h
+index c912b5a678e4..e8db938985ca 100644
+--- a/include/uapi/linux/switchtec_ioctl.h
++++ b/include/uapi/linux/switchtec_ioctl.h
+@@ -98,7 +98,9 @@ struct switchtec_ioctl_event_summary {
+ #define SWITCHTEC_IOCTL_EVENT_CREDIT_TIMEOUT		27
+ #define SWITCHTEC_IOCTL_EVENT_LINK_STATE		28
+ #define SWITCHTEC_IOCTL_EVENT_GFMS			29
+-#define SWITCHTEC_IOCTL_MAX_EVENTS			30
++#define SWITCHTEC_IOCTL_EVENT_INTERCOMM_REQ_NOTIFY	30
++#define SWITCHTEC_IOCTL_EVENT_UEC			31
++#define SWITCHTEC_IOCTL_MAX_EVENTS			32
+ 
+ #define SWITCHTEC_IOCTL_EVENT_LOCAL_PART_IDX -1
+ #define SWITCHTEC_IOCTL_EVENT_IDX_ALL -2
+-- 
+2.20.1
 
-Can we open code PCI_STD_ACS_CAP? I don't see any value in it being
-defined above the function, it just makes the code harder to read.
-
-Logan
