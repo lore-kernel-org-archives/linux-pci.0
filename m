@@ -2,150 +2,55 @@ Return-Path: <SRS0=Qtyg=23=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FAKE_REPLY_C,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0E7FC33C8C
-	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 20:23:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52A2AC33C8C
+	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 22:37:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 706FA208C4
-	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 20:23:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1578342184;
-	bh=25PZJ3bxW9cvFKLoe04UEz+DJIDuK6tnzw3H5UoY7J4=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=I20nS30v+u46MEzyWh2D7/985Xua1PCYwN/VY5Odi6gOJId1OuWKetc457XNDfFvy
-	 Lx7DJs4263hy8jXksEXmUKjx8JVLL3b2hXmX5dgCC9bO/OBleVBAOCh5aAes+Bg740
-	 f/zRScV4bJylX1ObOGUpcxtSnJKlPCIfcUkb2pYk=
+	by mail.kernel.org (Postfix) with ESMTP id 2D34D207FF
+	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 22:37:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726683AbgAFUXE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 6 Jan 2020 15:23:04 -0500
-Received: from mail.kernel.org ([198.145.29.99]:45198 "EHLO mail.kernel.org"
+        id S1726735AbgAFWhX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 6 Jan 2020 17:37:23 -0500
+Received: from mga01.intel.com ([192.55.52.88]:28167 "EHLO mga01.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726657AbgAFUXD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 6 Jan 2020 15:23:03 -0500
-Received: from localhost (unknown [64.237.17.219])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 96A1B2072C;
-        Mon,  6 Jan 2020 20:23:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1578342182;
-        bh=25PZJ3bxW9cvFKLoe04UEz+DJIDuK6tnzw3H5UoY7J4=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=YiVVfvruwwv191AVb8asnyueIBs27wbbAGsxJY8Gr/pHeMFRlGl5wBlofVTEPkhid
-         orw+IpGondGfQoZbCnKI+KTIM35+5RgjuhF79WueafuY6uscQp7TnZFae5aiQ4clW8
-         po7qZHCt56ZzjgjUoVlm6f7VbjOFLcEc4utbKaw8=
-Date:   Mon, 6 Jan 2020 14:23:01 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>
-Cc:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Logan Gunthorpe <logang@deltatee.com>
-Subject: Re: [PATCH v1 3/4] PCI: Change extend_bridge_window() to set
- resource size directly
-Message-ID: <20200106202301.GA137556@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <PSXP216MB04386BA48874B56BC5CB0292803C0@PSXP216MB0438.KORP216.PROD.OUTLOOK.COM>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        id S1726721AbgAFWhX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 6 Jan 2020 17:37:23 -0500
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 06 Jan 2020 14:37:23 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.69,403,1571727600"; 
+   d="scan'208";a="210925883"
+Received: from unknown (HELO skalakox.lm.intel.com) ([10.232.116.60])
+  by orsmga007.jf.intel.com with ESMTP; 06 Jan 2020 14:37:22 -0800
+From:   Sushma Kalakota <sushmax.kalakota@intel.com>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     Jonathan Derrick <jonathan.derrick@intel.com>,
+        Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+        Sushma Kalakota <sushmax.kalakota@intel.com>
+Subject: [PATCH 0/2] New VMD Device ids
+Date:   Mon,  6 Jan 2020 15:41:20 -0700
+Message-Id: <20200106224122.3231-1-sushmax.kalakota@intel.com>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Thanks a lot for splitting these up.  It makes these dramatically
-easier to read.
+This set adds new VMD device ids
 
-On Mon, Jan 06, 2020 at 03:47:46PM +0000, Nicholas Johnson wrote:
-> Change extend_bridge_window() to set resource size directly instead of
-> using additional resource lists.
-> 
-> Because additional resource lists are optional resources, any algorithm
-> that requires guaranteed allocation that uses them cannot be guaranteed
-> to work.
+Sushma Kalakota (2):
+  PCI: vmd: Add device id for VMD device 8086:4C3D
+  PCI: vmd: Add device id for VMD device 8086:467F
 
-There is never a guarantee that PCI resource assignment will work.
-It's always possible that we don't have enough resources to allow us
-to enable a device.  So I'm not sure what this is telling me, and it
-doesn't seem like a justification for setting the resource size
-directly here.
+ drivers/pci/controller/vmd.c | 4 ++++
+ include/linux/pci_ids.h      | 2 ++
+ 2 files changed, 6 insertions(+)
 
-Prior to this patch, I think all the assignment and changes to
-dev->resource[] were in __assign_resources_sorted().  Maybe it's safe
-to do some here and some in __assign_resources_sorted(), but I don't
-understand it well enough to be confident.
+-- 
+2.17.1
 
-> Remove the resource from add_list, as a zero-sized additional resource
-> is redundant.
-> 
-> Update comment in pci_bus_distribute_available_resources() to reflect
-> the above changes.
-> 
-> Signed-off-by: Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>
-> ---
->  drivers/pci/setup-bus.c | 25 ++++++++-----------------
->  1 file changed, 8 insertions(+), 17 deletions(-)
-> 
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index de43815be..0c51f4937 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -1836,7 +1836,7 @@ static void adjust_bridge_window(struct pci_dev *bridge, struct resource *res,
->  				 struct list_head *add_list,
->  				 resource_size_t new_size)
->  {
-> -	struct pci_dev_resource *dev_res;
-> +	resource_size_t add_size;
->  
->  	if (res->parent)
->  		return;
-> @@ -1844,17 +1844,10 @@ static void adjust_bridge_window(struct pci_dev *bridge, struct resource *res,
->  	if (resource_size(res) >= new_size)
->  		return;
->  
-> -	dev_res = res_to_dev_res(add_list, res);
-> -	if (!dev_res)
-> -		return;
-> -
-> -	/* Is there room to extend the window? */
-> -	if (new_size - resource_size(res) <= dev_res->add_size)
-> -		return;
-> -
-> -	dev_res->add_size = new_size - resource_size(res);
-> -	pci_dbg(bridge, "bridge window %pR extended by %pa\n", res,
-> -		&dev_res->add_size);
-> +	add_size = new_size - resource_size(res);
-> +	pci_dbg(bridge, "bridge window %pR extended by %pa\n", res, &add_size);
-> +	res->end = res->start + new_size - 1;
-
-How do we know it's safe to extend this, i.e., how do we know there's
-nothing immediately after res?
-
-> +	remove_from_list(add_list, res);
->  }
->  
->  static void pci_bus_distribute_available_resources(struct pci_bus *bus,
-> @@ -1889,11 +1882,9 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
->  		mmio_pref.start = min(ALIGN(mmio_pref.start, align),
->  			mmio_pref.end + 1);
->  
-> -	/*
-> -	 * Update additional resource list (add_list) to fill all the
-> -	 * extra resource space available for this port except the space
-> -	 * calculated in __pci_bus_size_bridges() which covers all the
-> -	 * devices currently connected to the port and below.
-> +        /*
-> +	 * Now that we have adjusted for alignment, update the bridge window
-> +	 * resources to fill as much remaining resource space as possible.
->  	 */
->  	adjust_bridge_window(bridge, io_res, add_list, resource_size(&io));
->  	adjust_bridge_window(bridge, mmio_res, add_list, resource_size(&mmio));
-> -- 
-> 2.24.1
-> 
