@@ -2,137 +2,153 @@ Return-Path: <SRS0=Qtyg=23=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D89EC2D0DA
-	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 10:20:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 218ACC33C8C
+	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 11:55:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 12DBF207FF
-	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 10:20:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E5E2420731
+	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 11:55:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="T/srrEKx"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="L8gc2Xfm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726467AbgAFKTM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 6 Jan 2020 05:19:12 -0500
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:55794 "EHLO
-        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726155AbgAFKTM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jan 2020 05:19:12 -0500
-Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 006AIuva017532;
-        Mon, 6 Jan 2020 04:18:56 -0600
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1578305936;
-        bh=RG7euWT3O/6syk9ik2OS7LO4epm3FNAKw0V+gmUsq30=;
-        h=From:To:CC:Subject:Date;
-        b=T/srrEKxnBDgZkcMzBZm+4gQWEabRd0tyuRCRllQzP3POYF/NqWIiF4Pu+ODUcx4i
-         /OKgdUZPTfyX17ptOXe5J2Oh+yyOwU0TK1Xh64LEOtPiGKngNNvg5pVnSbOvN3igDK
-         hvYLwIr4IojPL3ylpNsxSCjf46cumrzoW3MHh3ak=
-Received: from DLEE105.ent.ti.com (dlee105.ent.ti.com [157.170.170.35])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id 006AIudm031107;
-        Mon, 6 Jan 2020 04:18:56 -0600
-Received: from DLEE110.ent.ti.com (157.170.170.21) by DLEE105.ent.ti.com
- (157.170.170.35) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Mon, 6 Jan
- 2020 04:18:56 -0600
-Received: from fllv0040.itg.ti.com (10.64.41.20) by DLEE110.ent.ti.com
- (157.170.170.21) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
- Frontend Transport; Mon, 6 Jan 2020 04:18:56 -0600
-Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 006AIqXq118652;
-        Mon, 6 Jan 2020 04:18:53 -0600
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-To:     Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Andrew Murray <andrew.murray@arm.com>
-CC:     <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v2 00/14] Add PCIe support to TI's J721E SoC
-Date:   Mon, 6 Jan 2020 15:50:44 +0530
-Message-ID: <20200106102058.19183-1-kishon@ti.com>
-X-Mailer: git-send-email 2.17.1
+        id S1726290AbgAFLzV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 6 Jan 2020 06:55:21 -0500
+Received: from mail-io1-f66.google.com ([209.85.166.66]:37983 "EHLO
+        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725787AbgAFLzV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jan 2020 06:55:21 -0500
+Received: by mail-io1-f66.google.com with SMTP id v3so48335593ioj.5;
+        Mon, 06 Jan 2020 03:55:20 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:from:date:message-id:subject:to;
+        bh=6Di6ffajBH2cZR+pVdW7IOpKkZDUHrowT9et6cWo7uY=;
+        b=L8gc2XfmZbBDtaLDePZyXvUltjzM6ScSH0/znKIKaMCtMCibv+eO04IaTmDlBTGhbT
+         1rWQ6Vxtd+o4e39T+uUEzmVcl6tC6lTKZECYTG3ADyckeJ2TKRJsyelTSAZPGKez8D1u
+         m9AV1p7UxTh7bcRIN24V638UW6qgwex5yhHpV1oBPHLuyL16FphzTKID3dnJ402mwY7T
+         fNA+T9uDhZOQbhiwhChgDX/xjmgG4zPj25Gy6KRmUXp8XXJJSewwhBEmcXUuqTv8EAue
+         UdDLrzLHpxFMpL4MJqK4cUngKwqznMSJAKFLCIvYGaknkBlUacMMgm2Nm416NF7SRbZg
+         mAYA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
+        bh=6Di6ffajBH2cZR+pVdW7IOpKkZDUHrowT9et6cWo7uY=;
+        b=KdJeOx5DrqPUqLUxPDZ+PuHUYCQb5BI06oXxlCvW3W6w+S5CdK5C7N8y2cPV7YWQHi
+         At8MJloPi5c4AOymZNvhfczlZfQDy7Wx4Epo9YuHrQngrBZG6LUI+uGpiEUFgiobgfNE
+         NtI74WnumVRduhCWLfd9HV2mJ3aCpPwgfgbH94HMknLkmWWP1e5gNgbE0psGu3JiRMuq
+         Z3/puamYjPSR/DcbTBZTfsEJJa7sepr85u7SkMIfOP8olda+auJLtcj6NTrbgJePnf+5
+         lNyYivrdALsHDxPBTG/HOtKegJ7JkcZsvmAjcCL3Df0iiPUDmAcdXriw4EYYqzZl4nYh
+         cNIg==
+X-Gm-Message-State: APjAAAUkPoiLiQysULbUH1dNYdsnIenU2B2ZnfVyh3NnhxZ+g69RuUcp
+        /dIDmlvx7uD9UDa7kvTPlgJwS+yIM+jNJ4Gf2Zz023RG
+X-Google-Smtp-Source: APXvYqyK5B13r8HZFUhRRLwCjL031uyNVHRJy14fnkwQW+NME79KYnHpYoaVPSOY+KwNL7GKReAVKzghVs3O6n2eRC8=
+X-Received: by 2002:a02:c90a:: with SMTP id t10mr77309211jao.25.1578311720271;
+ Mon, 06 Jan 2020 03:55:20 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+From:   Prabhakar Kushwaha <prabhakar.pkin@gmail.com>
+Date:   Mon, 6 Jan 2020 17:24:44 +0530
+Message-ID: <CAJ2QiJ+MVVztHONagmYc2-BzbtdGQhABRKO7h4+kOE9cCK=CxA@mail.gmail.com>
+Subject: kexec -e not working: root disk not able to detect
+To:     linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
+        Ganapatrao Prabhakerrao Kulkarni <gkulkarni@marvell.com>,
+        Kamlakant Patel <kamlakantp@marvell.com>,
+        kexec mailing list <kexec@lists.infradead.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-TI's J721E SoC uses Cadence PCIe core to implement both RC mode
-and EP mode.
+Hi All,
 
-The high level features are:
-  *) Supports Legacy, MSI and MSI-X interrupt
-  *) Supports upto GEN4 speed mode
-  *) Supports SR-IOV
-  *) Supports multiple physical function
-  *) Ability to route all transactions via SMMU
+I am trying kexec -e with latest kernel i.e. Linux-5.5.0-rc4.  Here
+second kernel is not able to detect/mount hard-disk having root file
+system (INTEL SSDSC2BB240G7).
 
-This patch series
-  *) Add support in Cadence PCIe core to be used for TI's J721E SoC
-  *) Add a driver for J721E PCIe wrapper
+[  279.690575] ata1: softreset failed (1st FIS failed)
+[  279.695446] ata1: limiting SATA link speed to 3.0 Gbps
+[  280.910020] ata1: SATA link down (SStatus 0 SControl 320)
+[  282.626018] ata1: SATA link down (SStatus 0 SControl 300)
+[  282.631409] ata1: link online but 1 devices misclassified, retrying
+[  282.637665] ata1: reset failed (errno=-11), retrying in 9 secs
+[  298.294546] ata1: failed to reset engine (errno=-5)
+[  302.042967] ata1: softreset failed (1st FIS failed)
+[  308.798609] ata1: failed to reset engine (errno=-5)
+[  337.546605] ata1: softreset failed (1st FIS failed)
+[  337.551475] ata1: limiting SATA link speed to 3.0 Gbps
+[  338.766022] ata1: SATA link down (SStatus 0 SControl 320)
+[  339.270943] ata1: EH pending after 5 tries, giving up
 
-v1 of the series can be found @ [1]
+I found following two workaround for this issue.
+A) Define ".shutdown" in driver/ata/ahci.c.
 
-Changes from v1:
-1) Added DT schemas cdns-pcie-host.yaml, cdns-pcie-ep.yaml and
-   cdns-pcie.yaml for Cadence PCIe core and included it in
-   TI's PCIe DT schema.
-2) Added cpu_addr_fixup() for Cadence Platform driver.
-3) Fixed subject/description/renamed functions as commented by
-   Andrew Murray.
+reboot --> kernel_kexec() --> kernel_restart_prepare() -->
+device_shutdown() --> pci_device_shutdown() --> ahci_shutdown_one()
+--> new function
 
-[1] -> http://lore.kernel.org/r/20191209092147.22901-1-kishon@ti.com
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 4bfd1b14b390..50a101002885 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -81,6 +81,7 @@ enum board_ids {
 
-Kishon Vijay Abraham I (14):
-  dt-bindings: PCI: cadence: Add PCIe RC/EP DT schema for Cadence PCIe
-  PCI: cadence: Fix cdns_pcie_{host|ep}_setup() error path
-  linux/kernel.h: Add PTR_ALIGN_DOWN macro
-  PCI: cadence: Add support to use custom read and write accessors
-  PCI: cadence: Add support to start link and verify link status
-  PCI: cadence: Add read/write accessors to perform only 32-bit accesses
-  PCI: cadence: Allow pci_host_bridge to have custom pci_ops
-  PCI: cadence: Add new *ops* for CPU addr fixup
-  PCI: cadence: Fix updating Vendor ID and Subsystem Vendor ID register
-  dt-bindings: PCI: Add host mode dt-bindings for TI's J721E SoC
-  dt-bindings: PCI: Add EP mode dt-bindings for TI's J721E SoC
-  PCI: j721e: Add TI J721E PCIe driver
-  misc: pci_endpoint_test: Add J721E in pci_device_id table
-  MAINTAINERS: Add Kishon Vijay Abraham I for TI J721E SoC PCIe
+ static int ahci_init_one(struct pci_dev *pdev, const struct
+pci_device_id *ent);
+ static void ahci_remove_one(struct pci_dev *dev);
+ +static void ahci_shutdown_one(struct pci_dev *dev);
+ static int ahci_vt8251_hardreset(struct ata_link *link, unsigned int *class,
+                                  unsigned long deadline);
+  static int ahci_avn_hardreset(struct ata_link *link, unsigned int *class,
+ @@ -606,6 +607,7 @@ static struct pci_driver ahci_pci_driver = {
+         .id_table               = ahci_pci_tbl,
+         .probe                  = ahci_init_one,
+         .remove                 = ahci_remove_one,
+ +       .shutdown               = ahci_shutdown_one,
+         .driver = {
+                 .pm             = &ahci_pci_pm_ops,
+         },
 
- .../devicetree/bindings/pci/cdns-pcie-ep.yaml |  20 +
- .../bindings/pci/cdns-pcie-host.yaml          |  30 ++
- .../devicetree/bindings/pci/cdns-pcie.yaml    |  32 ++
- .../bindings/pci/ti,j721e-pci-ep.yaml         |  93 ++++
- .../bindings/pci/ti,j721e-pci-host.yaml       | 119 +++++
- MAINTAINERS                                   |   4 +-
- drivers/misc/pci_endpoint_test.c              |   9 +
- drivers/pci/controller/cadence/Kconfig        |  23 +
- drivers/pci/controller/cadence/Makefile       |   1 +
- drivers/pci/controller/cadence/pci-j721e.c    | 438 ++++++++++++++++++
- .../pci/controller/cadence/pcie-cadence-ep.c  |  17 +-
- .../controller/cadence/pcie-cadence-host.c    |  59 ++-
- .../controller/cadence/pcie-cadence-plat.c    |  13 +
- drivers/pci/controller/cadence/pcie-cadence.c |  48 +-
- drivers/pci/controller/cadence/pcie-cadence.h | 148 +++++-
- include/linux/kernel.h                        |   1 +
- 16 files changed, 1014 insertions(+), 41 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/cdns-pcie-ep.yaml
- create mode 100644 Documentation/devicetree/bindings/pci/cdns-pcie-host.yaml
- create mode 100644 Documentation/devicetree/bindings/pci/cdns-pcie.yaml
- create mode 100644 Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
- create mode 100644 Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
- create mode 100644 drivers/pci/controller/cadence/pci-j721e.c
+ +static void ahci_shutdown_one(struct pci_dev *pdev)
+ +{
+ +       pm_runtime_get_noresume(&pdev->dev);
+ +       ata_pci_remove_one(pdev);
+ +}
+ +
+Note: After defining shutdown, error related to file-system write
+seen. Looks like even after device_shutdown, file system related
+transaction goes to disk.
 
--- 
-2.17.1
+B)) Commenting of pci_clear_master() from pci_device_shutdown()
+reboot --> kernel_kexec() --> kernel_restart_prepare() -->
+device_shutdown() --> pci_device_shutdown()
 
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 0454ca0e4e3f..ddffaa9321bb 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -481,8 +481,10 @@ static void pci_device_shutdown(struct device *dev)
+        /*
+         * If this is a kexec reboot, turn off Bus Master bit on the
+@@ -491,8 +493,16 @@ static void pci_device_shutdown(struct device *dev)
+         * If it is not a kexec reboot, firmware will hit the PCI
+         * devices with big hammer and stop their DMA any way.
+         */
+
+ - if (kexec_in_progress && (pci_dev->current_state <= PCI_D3hot))
+ -                pci_clear_master(pci_dev);
+
+Here pci_dev current_state. It is "0" i.e. D0.
+
+From A and B. Looks like even after pci_clear_master(), Some DMA
+transactions going on PCIe device  causing device in unstable.
+Not sure if this is the reason and how to solve this problem.
+
+Any help/guidance will help me in moving forward.
+
+Thanks!!
+
+--prabhakar (pk)
