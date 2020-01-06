@@ -2,50 +2,50 @@ Return-Path: <SRS0=Qtyg=23=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0BC0C2D0DA
-	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 10:20:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0B16C32771
+	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 10:20:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B54862081E
-	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 10:20:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 94BB72072C
+	for <linux-pci@archiver.kernel.org>; Mon,  6 Jan 2020 10:20:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="PVuDTOcc"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="tnCKUMjz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727140AbgAFKUE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 6 Jan 2020 05:20:04 -0500
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:46570 "EHLO
+        id S1726494AbgAFKTM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 6 Jan 2020 05:19:12 -0500
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:46448 "EHLO
         fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726373AbgAFKUC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jan 2020 05:20:02 -0500
-Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 006AJqCn108707;
-        Mon, 6 Jan 2020 04:19:52 -0600
+        with ESMTP id S1726290AbgAFKTM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jan 2020 05:19:12 -0500
+Received: from fllv0034.itg.ti.com ([10.64.40.246])
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 006AIxOs108404;
+        Mon, 6 Jan 2020 04:18:59 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1578305992;
-        bh=OE+CQaY8YINUAl14yThoqiQN60PdlpJALyII5dYryI0=;
+        s=ti-com-17Q1; t=1578305939;
+        bh=tdMkbn3osxZCAoJDuuw76Xdz9TI9EVK5gZFc5dtx1VY=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=PVuDTOcc8NCiUpgGjwYsgA2207dyK6imJ2kxlP9VaoszvtPWzq8+ep2gAG1nXMQkz
-         96BwQrhK71RqLAPLUGf6A3WCELZErPki3PyaggnTmBdEc4JLRkKgcg5e149AJFDowV
-         pDijFc41KkKdWpCbGiXvnuheoTYZB3TMSMNpbHkA=
-Received: from DFLE101.ent.ti.com (dfle101.ent.ti.com [10.64.6.22])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id 006AJqc0032595;
-        Mon, 6 Jan 2020 04:19:52 -0600
-Received: from DFLE104.ent.ti.com (10.64.6.25) by DFLE101.ent.ti.com
- (10.64.6.22) with Microsoft SMTP Server (version=TLS1_2,
+        b=tnCKUMjzgPOEiC0Ge0PITCE9W6TvLWDPdwljkuY2n9oLWaq598WscEAbLLKxv6Qjz
+         PGsuX0ti/z1n/r8oMSPt2IOO6K9BmQUbjOdemDPqYswpD6KYAeaTiyJz1wx37CZ0PM
+         f246xNW8R1MdeZfYRGvpAoCDDNL4kZMZzx1NAZSM=
+Received: from DFLE105.ent.ti.com (dfle105.ent.ti.com [10.64.6.26])
+        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 006AIxU2130685
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 6 Jan 2020 04:18:59 -0600
+Received: from DFLE102.ent.ti.com (10.64.6.23) by DFLE105.ent.ti.com
+ (10.64.6.26) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Mon, 6 Jan
- 2020 04:19:52 -0600
-Received: from fllv0040.itg.ti.com (10.64.41.20) by DFLE104.ent.ti.com
- (10.64.6.25) with Microsoft SMTP Server (version=TLS1_2,
+ 2020 04:18:59 -0600
+Received: from fllv0040.itg.ti.com (10.64.41.20) by DFLE102.ent.ti.com
+ (10.64.6.23) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
- Frontend Transport; Mon, 6 Jan 2020 04:19:52 -0600
+ Frontend Transport; Mon, 6 Jan 2020 04:18:59 -0600
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 006AIqY5118652;
-        Mon, 6 Jan 2020 04:19:48 -0600
+        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 006AIqXr118652;
+        Mon, 6 Jan 2020 04:18:56 -0600
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Kishon Vijay Abraham I <kishon@ti.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -56,9 +56,9 @@ To:     Kishon Vijay Abraham I <kishon@ti.com>,
 CC:     <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v2 13/14] misc: pci_endpoint_test: Add J721E in pci_device_id table
-Date:   Mon, 6 Jan 2020 15:50:57 +0530
-Message-ID: <20200106102058.19183-14-kishon@ti.com>
+Subject: [PATCH v2 01/14] dt-bindings: PCI: cadence: Add PCIe RC/EP DT schema for Cadence PCIe
+Date:   Mon, 6 Jan 2020 15:50:45 +0530
+Message-ID: <20200106102058.19183-2-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200106102058.19183-1-kishon@ti.com>
 References: <20200106102058.19183-1-kishon@ti.com>
@@ -70,48 +70,120 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add J721E in pci_device_id table so that pci-epf-test can be used
-for testing PCIe EP in J721E.
+Add PCIe Host (RC) and Endpoint (EP) device tree schema for Cadence
+PCIe core library. Platforms using Cadence PCIe core can include the
+schemas added here in the platform specific schemas.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/misc/pci_endpoint_test.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ .../devicetree/bindings/pci/cdns-pcie-ep.yaml | 20 ++++++++++++
+ .../bindings/pci/cdns-pcie-host.yaml          | 30 +++++++++++++++++
+ .../devicetree/bindings/pci/cdns-pcie.yaml    | 32 +++++++++++++++++++
+ 3 files changed, 82 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/cdns-pcie-ep.yaml
+ create mode 100644 Documentation/devicetree/bindings/pci/cdns-pcie-host.yaml
+ create mode 100644 Documentation/devicetree/bindings/pci/cdns-pcie.yaml
 
-diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index a5e317073d95..215f9b8432a3 100644
---- a/drivers/misc/pci_endpoint_test.c
-+++ b/drivers/misc/pci_endpoint_test.c
-@@ -64,6 +64,7 @@
- #define PCI_ENDPOINT_TEST_IRQ_TYPE		0x24
- #define PCI_ENDPOINT_TEST_IRQ_NUMBER		0x28
- 
-+#define PCI_DEVICE_ID_TI_J721E			0xb00d
- #define PCI_DEVICE_ID_TI_AM654			0xb00c
- 
- #define is_am654_pci_dev(pdev)		\
-@@ -789,6 +790,11 @@ static const struct pci_endpoint_test_data am654_data = {
- 	.irq_type = IRQ_TYPE_MSI,
- };
- 
-+static const struct pci_endpoint_test_data j721e_data = {
-+	.alignment = 256,
-+	.irq_type = IRQ_TYPE_MSI,
-+};
+diff --git a/Documentation/devicetree/bindings/pci/cdns-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/cdns-pcie-ep.yaml
+new file mode 100644
+index 000000000000..36aaae5931c3
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/cdns-pcie-ep.yaml
+@@ -0,0 +1,20 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++# Copyright (C) 2020 Texas Instruments Incorporated - http://www.ti.com/
++%YAML 1.2
++--
++$id: "http://devicetree.org/schemas/pci/cdns-pcie-ep.yaml#"
++$schema: "http://devicetree.org/meta-schemas/core.yaml#"
 +
- static const struct pci_device_id pci_endpoint_test_tbl[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA74x) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA72x) },
-@@ -797,6 +803,9 @@ static const struct pci_device_id pci_endpoint_test_tbl[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_AM654),
- 	  .driver_data = (kernel_ulong_t)&am654_data
- 	},
-+	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_J721E),
-+	  .driver_data = (kernel_ulong_t)&j721e_data,
-+	},
- 	{ }
- };
- MODULE_DEVICE_TABLE(pci, pci_endpoint_test_tbl);
++title: Cadence PCIe Endpoint
++
++maintainers:
++  - Tom Joseph <tjoseph@cadence.com>
++
++allOf:
++  - $ref: "cdns-pcie.yaml#"
++
++properties:
++  max-functions:
++    description: Maximum number of functions that can be configured (default 1)
++    allOf:
++      - $ref: /schemas/types.yaml#/definitions/uint8
+diff --git a/Documentation/devicetree/bindings/pci/cdns-pcie-host.yaml b/Documentation/devicetree/bindings/pci/cdns-pcie-host.yaml
+new file mode 100644
+index 000000000000..78261bc4f0c5
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/cdns-pcie-host.yaml
+@@ -0,0 +1,30 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++# Copyright (C) 2020 Texas Instruments Incorporated - http://www.ti.com/
++%YAML 1.2
++---
++$id: "http://devicetree.org/schemas/pci/cdns-pcie-host.yaml#"
++$schema: "http://devicetree.org/meta-schemas/core.yaml#"
++
++title: Cadence PCIe Host
++
++maintainers:
++  - Tom Joseph <tjoseph@cadence.com>
++
++allOf:
++  - $ref: "/schemas/pci/pci-bus.yaml#"
++  - $ref: "cdns-pcie.yaml#"
++
++properties:
++  vendor-id:
++    description: The PCI vendor ID (16 bits, default is design dependent)
++
++  device-id:
++    description: The PCI device ID (16 bits, default is design dependent)
++
++  cdns,no-bar-match-nbits:
++    description: Set into the no BAR match register to configure the number
++      of least significant bits kept during inbound (PCIe -> AXI) address
++      translations (default 32)
++    allOf:
++      - $ref: /schemas/types.yaml#/definitions/uint32
++
+diff --git a/Documentation/devicetree/bindings/pci/cdns-pcie.yaml b/Documentation/devicetree/bindings/pci/cdns-pcie.yaml
+new file mode 100644
+index 000000000000..497d3dc2e6f2
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/cdns-pcie.yaml
+@@ -0,0 +1,32 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++# Copyright (C) 2020 Texas Instruments Incorporated - http://www.ti.com/
++%YAML 1.2
++---
++$id: "http://devicetree.org/schemas/pci/cdns-pcie.yaml#"
++$schema: "http://devicetree.org/meta-schemas/core.yaml#"
++
++title: Cadence PCIe Core
++
++maintainers:
++  - Tom Joseph <tjoseph@cadence.com>
++
++properties:
++  max-link-speed:
++    minimum: 1
++    maximum: 3
++
++  num-lanes:
++    minimum: 1
++    maximum: 2
++
++  cdns,max-outbound-regions:
++    description: Set to maximum number of outbound regions.
++    allOf:
++      - $ref: /schemas/types.yaml#/definitions/uint32
++
++  phys:
++    description: List of Generic PHY phandles. One per lane if more than one in
++      the list. If only one PHY listed it must manage all lanes.
++
++  phy-names:
++    description: List of names to identify the PHY.
 -- 
 2.17.1
 
