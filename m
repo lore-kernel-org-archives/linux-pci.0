@@ -2,86 +2,146 @@ Return-Path: <SRS0=E7sN=24=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FAKE_REPLY_C,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98D64C282DD
-	for <linux-pci@archiver.kernel.org>; Tue,  7 Jan 2020 19:23:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4072AC282DD
+	for <linux-pci@archiver.kernel.org>; Tue,  7 Jan 2020 20:34:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7685A214D8
-	for <linux-pci@archiver.kernel.org>; Tue,  7 Jan 2020 19:23:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0F9CB208C4
+	for <linux-pci@archiver.kernel.org>; Tue,  7 Jan 2020 20:34:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1578429279;
+	bh=rOBrRkww+dpxH19H//3TaUngMuYnO8yIMvcGn9rynD4=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=y3SFPZXMf9Xdp7rgYV7HpbJd51YJjyXpc8/hBwtiCmPVNJJkkJWexaXmEcSlTwWTO
+	 gVH8OO+MbHR/he7Y9K9MJlqfYHQtDX5DxaOzmVOWs3lKTcv3ET4XKvFc6tXv500lCt
+	 zHXj9Ht7mB1NKf7gQa0807C8phN2aM9jV7IWpZDM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728633AbgAGTXC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 7 Jan 2020 14:23:02 -0500
-Received: from mga18.intel.com ([134.134.136.126]:38401 "EHLO mga18.intel.com"
+        id S1726346AbgAGUei (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 7 Jan 2020 15:34:38 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33316 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728307AbgAGTXB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 7 Jan 2020 14:23:01 -0500
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga106.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 07 Jan 2020 11:23:01 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.69,407,1571727600"; 
-   d="scan'208";a="217847246"
-Received: from orsmsx107.amr.corp.intel.com ([10.22.240.5])
-  by fmsmga008.fm.intel.com with ESMTP; 07 Jan 2020 11:22:50 -0800
-Received: from orsmsx101.amr.corp.intel.com ([169.254.8.147]) by
- ORSMSX107.amr.corp.intel.com ([169.254.1.58]) with mapi id 14.03.0439.000;
- Tue, 7 Jan 2020 11:22:50 -0800
-From:   "Derrick, Jonathan" <jonathan.derrick@intel.com>
-To:     "kbusch@kernel.org" <kbusch@kernel.org>,
-        "Kalakota, SushmaX" <sushmax.kalakota@intel.com>
-CC:     "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        id S1726142AbgAGUei (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 7 Jan 2020 15:34:38 -0500
+Received: from localhost (mobile-166-170-223-177.mycingular.net [166.170.223.177])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 2A04120848;
+        Tue,  7 Jan 2020 20:34:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1578429277;
+        bh=rOBrRkww+dpxH19H//3TaUngMuYnO8yIMvcGn9rynD4=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=fAu2DDQ7WnHNfP5nv3mkFSN/d3MANIITxeySpJ+jBihRLhQzCZould8MkfzvrfoiC
+         wJoczFeEHm1Lz9Z7GMXvNZP5p3nk2+ECwyaG3trUJTCI3yrL2e9pjZBDrHh/xF+Bp8
+         mnMvqrFtP9X4GNx/vHT19MlQL8ggaxa/rKAWpyK8=
+Date:   Tue, 7 Jan 2020 14:34:35 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>
+Cc:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "helgaas@kernel.org" <helgaas@kernel.org>
-Subject: Re: [PATCH 2/2] PCI: vmd: Add device id for VMD device 8086:467F
-Thread-Topic: [PATCH 2/2] PCI: vmd: Add device id for VMD device 8086:467F
-Thread-Index: AQHVxOHfBS8aoRB1SEWYa+dlTiYrs6fgGWCAgAACeIA=
-Date:   Tue, 7 Jan 2020 19:22:49 +0000
-Message-ID: <f6bebb58f3c86980d4fb5c387e1a357a2e152e42.camel@intel.com>
-References: <20200106224122.3231-1-sushmax.kalakota@intel.com>
-         <20200106224122.3231-3-sushmax.kalakota@intel.com>
-         <20200107191317.GA610403@chuupie.wdl.wdc.com>
-In-Reply-To: <20200107191317.GA610403@chuupie.wdl.wdc.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [10.232.115.159]
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <6A0F9D64C3241D498F30CF18260FEF81@intel.com>
-Content-Transfer-Encoding: base64
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Logan Gunthorpe <logang@deltatee.com>
+Subject: Re: [PATCH v1 4/4] PCI: Allow extend_bridge_window() to shrink
+ resource if necessary
+Message-ID: <20200107203435.GA137091@google.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <PSXP216MB0438D3E2CFE64EBAA32AF691803C0@PSXP216MB0438.KORP216.PROD.OUTLOOK.COM>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-VGhhbmtzIEtlaXRoLA0KDQpPbiBUdWUsIDIwMjAtMDEtMDcgYXQgMTI6MTMgLTA3MDAsIEtlaXRo
-IEJ1c2NoIHdyb3RlOg0KPiBPbiBNb24sIEphbiAwNiwgMjAyMCBhdCAwMzo0MToyMlBNIC0wNzAw
-LCBTdXNobWEgS2FsYWtvdGEgd3JvdGU6DQo+ID4gVGhpcyBwYXRjaCBhZGRzIHN1cHBvcnQgZm9y
-IHRoaXMgVk1EIGRldmljZSB3aGljaCBzdXBwb3J0cyB0aGUgYnVzDQo+ID4gcmVzdHJpY3Rpb24g
-bW9kZS4NCj4gDQo+IFN1Z2dlc3RlZCByZXBocmFzaW5nIHRvIGFuIGltcGVyYXRpdmUgdm9pY2U6
-DQo+IA0KPiAgIEFkZCBuZXcgVk1EIGRldmljZSBJRHMgdGhhdCByZXF1aXJlIHRoZSBidXMgcmVz
-dHJpY3Rpb24gbW9kZS4NCj4gDQpTdXJlDQoNCj4gPiBTaWduZWQtb2ZmLWJ5OiBKb24gRGVycmlj
-ayA8am9uYXRoYW4uZGVycmlja0BpbnRlbC5jb20+DQo+ID4gU2lnbmVkLW9mZi1ieTogU3VzaG1h
-IEthbGFrb3RhIDxzdXNobWF4LmthbGFrb3RhQGludGVsLmNvbT4NCj4gDQo+IFRoZSBmaXJzdCBz
-aWduLW9mZiBzaG91bGQgYmUgdGhlIGF1dGhvciwgYnV0IHRoZXJlJ3Mgbm8gIkZyb206IiBoZWFk
-ZXINCj4gbGluZSBmb3IgSm9uLiBJcyB0aGUgYXR0cmlidXRpb24gY29ycmVjdD8NCldlIGJvdGgg
-d29ya2VkIG9uIHRoaXMsIHRob3VnaCBpdCB3YXMgcHJpbWFyaWx5IFN1c2htYS4NCldlJ2xsIHN3
-aXRjaCB0aGUgYXR0cmlidXRpb24gb3JkZXIgcGVyIA0KaHR0cHM6Ly93d3cua2VybmVsLm9yZy9k
-b2MvaHRtbC92NC4xNy9wcm9jZXNzL3N1Ym1pdHRpbmctcGF0Y2hlcy5odG1sI3NpZ24teW91ci13
-b3JrLXRoZS1kZXZlbG9wZXItcy1jZXJ0aWZpY2F0ZS1vZi1vcmlnaW4NCg0KDQo+IA0KPiA+IEBA
-IC04NjgsNiArODY4LDggQEAgc3RhdGljIGNvbnN0IHN0cnVjdCBwY2lfZGV2aWNlX2lkIHZtZF9p
-ZHNbXSA9IHsNCj4gPiAgCXtQQ0lfREVWSUNFKFBDSV9WRU5ET1JfSURfSU5URUwsIFBDSV9ERVZJ
-Q0VfSURfSU5URUxfVk1EXzI4QzApLA0KPiA+ICAJCS5kcml2ZXJfZGF0YSA9IFZNRF9GRUFUX0hB
-U19NRU1CQVJfU0hBRE9XIHwNCj4gPiAgCQkJCVZNRF9GRUFUX0hBU19CVVNfUkVTVFJJQ1RJT05T
-LH0sDQo+ID4gKwl7UENJX0RFVklDRShQQ0lfVkVORE9SX0lEX0lOVEVMLCBQQ0lfREVWSUNFX0lE
-X0lOVEVMX1ZNRF80NjdGKSwNCj4gPiArCQkuZHJpdmVyX2RhdGEgPSBWTURfRkVBVF9IQVNfQlVT
-X1JFU1RSSUNUSU9OUyx9LA0KPiA+ICAJe1BDSV9ERVZJQ0UoUENJX1ZFTkRPUl9JRF9JTlRFTCwg
-UENJX0RFVklDRV9JRF9JTlRFTF9WTURfNEMzRCksDQo+ID4gIAkJLmRyaXZlcl9kYXRhID0gVk1E
-X0ZFQVRfSEFTX0JVU19SRVNUUklDVElPTlMsfSwNCj4gDQo+IFNpbmNlIHlvdSBrbm93IGFsbCB0
-aGUgbmV3IGRldmljZSBpZHMsIG1pZ2h0IGFzIHdlbGwgY29sbGFwc2UgdGhpcyBwYXRjaA0KPiB3
-aXRoIHRoZSBmaXJzdCBvbmUgZnJvbSB0aGlzIHNlcmllcy4NClN1cmUNCg==
+On Mon, Jan 06, 2020 at 03:48:06PM +0000, Nicholas Johnson wrote:
+> Remove checks for resource size in extend_bridge_window(). This is
+> necessary to allow the pci_bus_distribute_available_resources() to
+> function when the kernel parameter pci=hpmemsize=nn[KMG] is used to
+> allocate resources. Because the kernel parameter sets the size of all
+> hotplug bridges to be the same, there are problems when nested hotplug
+> bridges are encountered. Fitting a downstream hotplug bridge with size X
+> and normal bridges with non-zero size Y into parent hotplug bridge with
+> size X is impossible, and hence the downstream hotplug bridge needs to
+> shrink to fit into its parent.
+
+s/extend_bridge_window()/adjust_bridge_window()/ above
+s/to allow the/to allow/
+
+If this patch allows pci_bus_distribute_available_resources() to
+function when pci=hpmemsize=nn is used, what happens *before* this
+patch?  The text implies that pci_bus_distribute_available_resources()
+doesn't function, but what happens?  Do we try to assign a downstream
+bridge requiring X+n inside an upstream window of size X and the
+assignment fails, leaving the downstream bridge unusable?
+
+> Add check for if bridge is extended or shrunken and reflect that in the
+> call to pci_dbg().
+> 
+> Reset the resource if its new size is zero (if we have run out of a
+> bridge window resource) to prevent the PCI resource assignment code from
+> attempting to assign a zero-sized resource.
+> 
+> Signed-off-by: Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>
+> ---
+>  drivers/pci/setup-bus.c | 17 ++++++++++++-----
+>  1 file changed, 12 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 0c51f4937..e7e57bf72 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -1836,18 +1836,25 @@ static void adjust_bridge_window(struct pci_dev *bridge, struct resource *res,
+>  				 struct list_head *add_list,
+>  				 resource_size_t new_size)
+>  {
+> -	resource_size_t add_size;
+> +	resource_size_t add_size, size = resource_size(res);
+>  
+>  	if (res->parent)
+>  		return;
+>  
+> -	if (resource_size(res) >= new_size)
+> -		return;
+> +	if (new_size > size) {
+> +		add_size = new_size - size;
+> +		pci_dbg(bridge, "bridge window %pR extended by %pa\n", res,
+> +			&add_size);
+> +	} else if (new_size < size) {
+> +		add_size = size - new_size;
+> +		pci_dbg(bridge, "bridge window %pR shrunken by %pa\n", res,
+> +			&add_size);
+> +	}
+
+Where's the patch that changes the caller so "new_size" may be smaller
+than "size"?  I guess it must be "[3/3] PCI: Consider alignment of
+hot-added bridges ..." because that's the only one that makes a
+non-trivial change, right?
+
+> -	add_size = new_size - resource_size(res);
+> -	pci_dbg(bridge, "bridge window %pR extended by %pa\n", res, &add_size);
+>  	res->end = res->start + new_size - 1;
+>  	remove_from_list(add_list, res);
+> +	if (!new_size)
+> +		reset_resource(res);
+
+I consider reset_resource() to be deprecated because it throws away
+res->flags, which tells us what kind of resource it is
+(mem/io/32-bit/64-bit/prefetchable).  We learn this during
+enumeration, and we shouldn't forget the information until we remove
+the device.
+
+If the resource assignment code doesn't do the right thing with a
+zero-sized resource, I think we should fix that code.  Clearing the
+resource struct does nothing with the hardware BAR or window
+registers, so the BAR/window remains enabled unless we do something
+more.  If we don't need a window and we want to disable it, we can do
+that, but it requires writing special values to the hardware
+registers.
+
+Bjorn
