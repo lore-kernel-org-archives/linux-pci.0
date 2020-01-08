@@ -2,83 +2,88 @@ Return-Path: <SRS0=hvoA=25=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FAKE_REPLY_C,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9C9FC282DD
-	for <linux-pci@archiver.kernel.org>; Wed,  8 Jan 2020 21:33:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09556C282DD
+	for <linux-pci@archiver.kernel.org>; Wed,  8 Jan 2020 21:34:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AD0C220705
-	for <linux-pci@archiver.kernel.org>; Wed,  8 Jan 2020 21:33:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1578519220;
-	bh=Ebgnz0xt6ViRBHyLUIfMT2DAdw3EQ6/qLeN7bxMH+rI=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=EscP6lUlodymI+QlST8bdn2ts6SBIhOnxzNdrYaxZeWQP74gBHxqg0f5aa2EGHjt3
-	 KbWs4eQKnrfnUDiEXVcE8xdVkVntIly6O7Urm9LZiP9ycEAstC9mEwPWIORW+l4byh
-	 xbzWpNr9m8g29Pgp29B2YCzw5a8+PYyoDo6aRepA=
+	by mail.kernel.org (Postfix) with ESMTP id CA60B206DA
+	for <linux-pci@archiver.kernel.org>; Wed,  8 Jan 2020 21:34:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726182AbgAHVdk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 8 Jan 2020 16:33:40 -0500
-Received: from mail.kernel.org ([198.145.29.99]:42516 "EHLO mail.kernel.org"
+        id S1726694AbgAHVex (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 8 Jan 2020 16:34:53 -0500
+Received: from ale.deltatee.com ([207.54.116.67]:49842 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726179AbgAHVdk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 8 Jan 2020 16:33:40 -0500
-Received: from localhost (mobile-166-170-223-177.mycingular.net [166.170.223.177])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 34063206DA;
-        Wed,  8 Jan 2020 21:33:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1578519219;
-        bh=Ebgnz0xt6ViRBHyLUIfMT2DAdw3EQ6/qLeN7bxMH+rI=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=ZzrWYV06AEpqVgipROVFGbWVF7YaQsxGsNst9/hRWgrFLEsJbXMb8iHFYY8sk4kPk
-         3/GTM93KmUfLw3VOVAlZRFRLgTwCbBELU4S5g7YhW1XpZHhYERLwS6Rn8ymiYeEA/E
-         a1Ai/iI5uKQehToCu0HUzZTVNV4P3Kl/cFzXSWM0=
-Date:   Wed, 8 Jan 2020 15:33:37 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Logan Gunthorpe <logang@deltatee.com>
+        id S1726340AbgAHVex (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 8 Jan 2020 16:34:53 -0500
+Received: from s0106ac1f6bb1ecac.cg.shawcable.net ([70.73.163.230] helo=[192.168.11.155])
+        by ale.deltatee.com with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.92)
+        (envelope-from <logang@deltatee.com>)
+        id 1ipIyY-0000pM-BM; Wed, 08 Jan 2020 14:34:51 -0700
+To:     Bjorn Helgaas <helgaas@kernel.org>
 Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
         Kelvin.Cao@microchip.com, Eric Pilmore <epilmore@gigaio.com>,
         Doug Meyer <dmeyer@gigaio.com>
-Subject: Re: [PATCH 03/12] PCI/switchtec: Add support for new events
-Message-ID: <20200108213337.GA210184@google.com>
+References: <20200108212347.GA207738@google.com>
+From:   Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <02513858-4832-b971-138e-8ecc1c7730b8@deltatee.com>
+Date:   Wed, 8 Jan 2020 14:34:49 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.3.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200106190337.2428-4-logang@deltatee.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20200108212347.GA207738@google.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 70.73.163.230
+X-SA-Exim-Rcpt-To: dmeyer@gigaio.com, epilmore@gigaio.com, Kelvin.Cao@microchip.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, helgaas@kernel.org
+X-SA-Exim-Mail-From: logang@deltatee.com
+Subject: Re: [PATCH 09/12] PCI/switchtec: Add gen4 support in struct
+ flash_info_regs
+X-SA-Exim-Version: 4.2.1 (built Wed, 08 May 2019 21:11:16 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Jan 06, 2020 at 12:03:28PM -0700, Logan Gunthorpe wrote:
-> The intercomm notify  event was added for PAX variants of switchtec
-> hardware and the UEC Port was added for the MR1 release of GEN3 firmware.
 
-Do they actually spell it "intercomm" in the datasheet?  Seems like
-the most common English spelling is "intercom".
 
-Is there some meaningful expansion of "UEC"?
-
-> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-> ---
->  drivers/pci/switch/switchtec.c       | 3 +++
->  include/linux/switchtec.h            | 7 +++++--
->  include/uapi/linux/switchtec_ioctl.h | 4 +++-
->  3 files changed, 11 insertions(+), 3 deletions(-)
+On 2020-01-08 2:23 p.m., Bjorn Helgaas wrote:
+> On Mon, Jan 06, 2020 at 12:03:34PM -0700, Logan Gunthorpe wrote:
+>> From: Kelvin Cao <kelvin.cao@microchip.com>
+>>
+>> Add a union with gen3 and gen4 flash_info structs.
 > 
-> diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
-> index 9c3ad09d3022..218e67428cf9 100644
-> --- a/drivers/pci/switch/switchtec.c
-> +++ b/drivers/pci/switch/switchtec.c
-> @@ -751,10 +751,13 @@ static const struct event_reg {
->  	EV_PAR(SWITCHTEC_IOCTL_EVENT_MRPC_COMP, mrpc_comp_hdr),
->  	EV_PAR(SWITCHTEC_IOCTL_EVENT_MRPC_COMP_ASYNC, mrpc_comp_async_hdr),
->  	EV_PAR(SWITCHTEC_IOCTL_EVENT_DYN_PART_BIND_COMP, dyn_binding_hdr),
-> +	EV_PAR(SWITCHTEC_IOCTL_EVENT_INTERCOMM_REQ_NOTIFY,
-> +	       intercomm_notify_hdr),
+> This does a lot more than add a union :)
+> 
+> I think this looks reasonable, but I would like it even better if this
+> and related patches could be split up a little bit differently:
+> 
+>   - Rename SWITCHTEC_CFG0_RUNNING to SWITCHTEC_GEN3_CFG0_RUNNING, etc
+>     (purely mechanical change, so trivial and obvious).
+> 
+>   - Add switchtec_gen and the tests where it's needed, but with only
+>     SWITCHTEC_GEN3 cases for now.
+> 
+>   - Refactor ioctl_flash_part_info() (still only supports GEN3).
+>     Maybe adds struct flash_info_regs and union, but only with gen3.
+> 
+>   - Add GEN4 support (patch basically contains only GEN4-related
+>     things and doesn't touch GEN3 things at all).  Maybe it would
+>     still make sense to split the GEN4 support into multiple patches
+>     (as in this series), or maybe they could be squashed into a single
+>     GEN4 patch?
+> 
+>   - It seems like at least the aliasing quirk and the driver device ID
+>     update could/should be squashed since they contain the same
+>     constants.
+
+Thanks for the review. Yes, I should be able to clean this up and submit
+a v2 in the next week or two.
+
+Logan
+
