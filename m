@@ -2,262 +2,237 @@ Return-Path: <SRS0=hvoA=25=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0074C33CA9
-	for <linux-pci@archiver.kernel.org>; Wed,  8 Jan 2020 16:22:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 443E2C282DD
+	for <linux-pci@archiver.kernel.org>; Wed,  8 Jan 2020 17:39:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9CE0720720
-	for <linux-pci@archiver.kernel.org>; Wed,  8 Jan 2020 16:22:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1113120692
+	for <linux-pci@archiver.kernel.org>; Wed,  8 Jan 2020 17:39:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="h8knQN1o"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qPa4Qa1u"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728121AbgAHQWQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 8 Jan 2020 11:22:16 -0500
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:40782 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727241AbgAHQWQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jan 2020 11:22:16 -0500
-Received: by mail-wr1-f65.google.com with SMTP id c14so4020884wrn.7;
-        Wed, 08 Jan 2020 08:22:13 -0800 (PST)
+        id S1727287AbgAHRjW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 8 Jan 2020 12:39:22 -0500
+Received: from mail-il1-f195.google.com ([209.85.166.195]:39475 "EHLO
+        mail-il1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726803AbgAHRjW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jan 2020 12:39:22 -0500
+Received: by mail-il1-f195.google.com with SMTP id x5so3345876ila.6;
+        Wed, 08 Jan 2020 09:39:21 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=cUbkapGV6usokmQ+FjkB5jOvk1qHqcO9wl6AKNn00Nk=;
-        b=h8knQN1o2rUkXrs6cmqV6R0pZjpNIqTB7V3oR6JagTvF2BpOTk33TgZQ2VL93ruQ7P
-         NNtDsRaibXPh7F02dYHtJ23M3Y3TC1viY/GMDwFXVwsH7Drp2dVaq+ui+IOEhKqEWxww
-         RkI1XxZjkJLPRpBc3L41n30oe3o1GEAs4M3Vf0C9LFw4uYItxRTiYzLwTXE8YL6e6lF7
-         ejW2UtnyvBVNEuAw3RGFEgpsA20udS2bYVFlzlOWNZ6OhFIWCLIfEayHqXthpZXu3lfl
-         ruevaOxPDyQiiiDNRjoGGGj4DGK0ynXBLEITcvzszreVeWlDIGmLWGx9Dl8JZK2FYWcR
-         rrxA==
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=P+v8AezFlGdBI4UBOo3gWVVo1rHFZPhrTFBZe8wNUus=;
+        b=qPa4Qa1uYRuf96EMzDrn7JNukRAyeQwC/VNjUR0la/iUuG/QLLyRtxAHvTWi4tsTbM
+         O7S7za2abCqvwBoOPfIOwFNFUVhOxxrKSriPCCc8oqtSHXY/7wn+tJQ1aWDS7CRQzSIV
+         5Ubik6F/HSUt1ZJTwTk30b2xlPbdttuefDsH5xj4JOJQYwfA6WHQrD2086/nGn3+7NWP
+         Zd736YrN+EmNLKtWECiF0ypATSdmYQ2bSjsjymH1IXhGE9uy4L0e7kczKVuFWisgPEpi
+         tO9Aw45Ej9d5BMj6BeiiYm7kS/GAh32XC2gjd+FsVZRlgTHt45NRcK5Cj8Lb4mUMo4Xk
+         cbhQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=cUbkapGV6usokmQ+FjkB5jOvk1qHqcO9wl6AKNn00Nk=;
-        b=nkDqtskOAfVkvyShgRwxCXv+owi2GHE//gTa7CCDDPLnruO8InaXQZ4rE1ejbyhclv
-         +oV1DM5gjRhppxMKCknUjq/VkoIudrTTrDk+2q42Ef8g4+iqisxt+lZ1twqRgPA7bzzd
-         +A5LmZ6LYtK0NYTy6o+gKOq9uMljaOhVWNlnViMiwQPVQJU3nJw5c684ZC5Q2QpHUP19
-         hvEt9lkRNVeCvy3UKpWEUQ9ejFs6Y1fsiqsZ3zfbrvDdFJwcXskcEDeHPwOmWOG21Pb1
-         A0Wn77qixXvKEwVoFUDTnWp7Pnjdso3pv5FI4l5JZXOpNi3kEIMadWm3/UR85ERDe6uq
-         zHHA==
-X-Gm-Message-State: APjAAAWYIKLIiegsRceJUZwGVTQfDPc5ru9Tdib8JE/kZvfr+0QBwWC/
-        b6hyDtttjtftfwb8MIHT0E0=
-X-Google-Smtp-Source: APXvYqwhZnXB7Q+A6al2Q81sPowDetau5NML4GV6kVoXXoSM8NYtMGUCa8Dyubp6uMZAvSBs3Fp6EA==
-X-Received: by 2002:a05:6000:12c9:: with SMTP id l9mr5761235wrx.304.1578500533082;
-        Wed, 08 Jan 2020 08:22:13 -0800 (PST)
-Received: from prasmi.home ([2a00:23c6:d18:6d00:2811:8b65:294e:fa09])
-        by smtp.gmail.com with ESMTPSA id q3sm5112180wrn.33.2020.01.08.08.22.11
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 08 Jan 2020 08:22:12 -0800 (PST)
-From:   Lad Prabhakar <prabhakar.csengg@gmail.com>
-X-Google-Original-From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Magnus Damm <magnus.damm@gmail.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        linux-pci@vger.kernel.org
-Cc:     Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Andrew Murray <andrew.murray@arm.com>,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-renesas-soc@vger.kernel.org,
-        Chris Paterson <Chris.Paterson2@renesas.com>,
-        Frank Rowand <frowand.list@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Simon Horman <horms@verge.net.au>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Tom Joseph <tjoseph@cadence.com>,
-        Heiko Stuebner <heiko@sntech.de>,
-        linux-rockchip@lists.infradead.org,
-        Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-Subject: [v3 0/6] Add support for PCIe controller to work in endpoint mode on R-Car SoCs
-Date:   Wed,  8 Jan 2020 16:22:05 +0000
-Message-Id: <20200108162211.22358-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
-X-Mailer: git-send-email 2.20.1
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=P+v8AezFlGdBI4UBOo3gWVVo1rHFZPhrTFBZe8wNUus=;
+        b=il1bP+qiQIwT5Mg707jHr2U6/Z8tGrdq4jsw3LBSRGtwgIK7NvwTnvQXs2mkmah+QK
+         iui7Kfs9F/RK1u4pY8lbivxFHxhrJJqKe1WUrYHnjZ6CRxKelJdmpyXvtTuBgtL9GMdA
+         upKTnEYFVsKQ9FTD6+4Gyl8LLUPZEhkhiQwyOWzvTpuvOiNmN2RgrdzrjGyQSir57nm6
+         ho7L7RUhUL3G2Nz7IB/sif5RkKzQ4mcBWTsCzOzyX1JFQN+fodcJttESw5w+1kxAWKoC
+         TjNccc/v/8FdavcuLEBI9RXcOy8LhYTEPIh29SRuV4LgYikxHRfj3jiOkv/DSPV7C6dq
+         pqrA==
+X-Gm-Message-State: APjAAAXY5Zb2OeEYcDOl0daE0TcB+/xQoxeaplvS+WrvwM2gbJ4MfZ34
+        iAX0SNoJQ4Ui/lTWr6IMvabA3EN92BSh5Dc8JEY=
+X-Google-Smtp-Source: APXvYqwKGw0/OzUfb9T6q4NZ/Xb/CGDJvDes5D41RPL1TvFbw180YF0dbqEP33yDHdQy26bLVJ2NfglsNxhLh744NS4=
+X-Received: by 2002:a92:48c2:: with SMTP id j63mr4725684ilg.153.1578505161303;
+ Wed, 08 Jan 2020 09:39:21 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20200104225149.27342-1-deepa.kernel@gmail.com> <20200106143832.GA108920@google.com>
+In-Reply-To: <20200106143832.GA108920@google.com>
+From:   Deepa Dinamani <deepa.kernel@gmail.com>
+Date:   Wed, 8 Jan 2020 09:39:09 -0800
+Message-ID: <CABeXuvp4+GGsUvBwcTmR7949cFhw6pY_LMBRCr1_eh18gBvWnA@mail.gmail.com>
+Subject: Re: [PATCH] drivers: pci: Clear ACS state at kexec
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     mika.westerberg@linux.intel.com, alex.williamson@redhat.com,
+        logang@deltatee.com, linux-pci@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This patch series adds support for PCIe controller on rcar to work in
-endpoint mode, this also extends the epf framework to handle base region
-for mapping PCI address locally..
+On Mon, Jan 6, 2020 at 6:38 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+> On Sat, Jan 04, 2020 at 02:51:49PM -0800, Deepa Dinamani wrote:
+> > ACS bits remain sticky through kexec reset. This is not really a
+> > problem for Linux because turning IOMMU on assumes ACS on. But,
+> > this becomes a problem if we kexec into something other than
+> > Linux and that does not turn ACS on always.
+>
+> "Sticky" in the PCIe spec specifically describes bits that are
+> unaffected by hot reset or FLR (see PCIe r5.0, sec 7.4), but the
+> PCI_ACS_CTRL register contains no RWS bits, so I don't think that's
+> what you mean here.
+>
+> I suspect you mean something like "kexec doesn't reset the device, so
+> the new kernel inherits the PCI_ACS_CTRL settings from Linux"?
 
-Note:
-The cadence/rockchip/designware endpoint drivers are build tested only.
+Yes, I was using "sticky through kexec reset" as a phrase. I will make
+this more clear to read that the PCI_ACS_CTRL settings are not cleared
+during kexec.
 
-Changes for v3:
-1] Fixed review comments from Bjorn and Kishon.
-3] Converted to DT schema
+> So it looks like you're unconditionally disabling ACS during kexec.
+> The comment in pci_enable_acs() suggests that ACS may have been
+> enabled by platform firmware.  Maybe we should *restore* the original
+> ACS settings from before Linux enabled ACS rather than clearing them?
 
-Changes for v2:
-1] Fixed review comments from Biju for dt-bindings to include an example
-   for a tested platform.
-2] Fixed review comments from Kishon to extend the features of outbound
-   regions in epf framework.
-3] Added support to parse outbound-ranges in OF.
+I thought about this. I considered following scenarios:
 
-lspci output on host:
-=====================
+1. Old Linux Kernel (IOMMU on) - > New Linux Kernel (IOMMU on)  - ACS
+bits that the kernel touches are unaffected whether or not firmware
+has enabled these.
+2. Old Linux Kernel (IOMMU on) - > New Linux Kernel (IOMMU off)  - ACS
+bits that the kernel touches are cleared even if the firmware has
+enabled these. But, we already do pci_disable_acs_redir() when we boot
+with IOMMU off. So this is similar. Also, if the IOMMU is off, I do
+not see how ACS is useful unless we kexec a second time and turn the
+IOMMU on again. And, if we are kexec-ing into Linux again, we know
+that this is a no-op for ACS as in [1].
+3. Old Linux Kernel(IOMMU on) -> New Kernel(not Linux) (IOMMU on/ off)
+- This just matters if the new kernel even does a read/modify/write.
+We really can define no policy here unless we can invent a signalling
+mechanism from BIOS.
 
-01:00.0 Unassigned class [ff00]: Renesas Technology Corp. Device 002d
-        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0
-        Interrupt: pin A routed to IRQ 152
-        Region 0: Memory at fe200200 (64-bit, non-prefetchable) [size=128]
-        Region 2: Memory at fe200000 (64-bit, non-prefetchable) [size=256]
-        Region 4: Memory at fe200100 (64-bit, non-prefetchable) [size=256]
-        Capabilities: [40] Power Management version 3
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [50] MSI: Enable- Count=1/1 Maskable+ 64bit+
-                Address: 00000004fa36d000  Data: 0001
-                Masking: fffffffe  Pending: 00000000
-        Capabilities: [70] Express (v2) Endpoint, MSI 00
-                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s unlimited, L1 unlimited
-                        ExtTag+ AttnBtn- AttnInd- PwrInd- RBE+ FLReset- SlotPowerLimit 0.000W
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-                        RlxdOrd- ExtTag+ PhantFunc- AuxPwr- NoSnoop+
-                        MaxPayload 128 bytes, MaxReadReq 128 bytes
-                DevSta: CorrErr+ UncorrErr+ FatalErr- UnsuppReq+ AuxPwr- TransPend-
-                LnkCap: Port #0, Speed 5GT/s, Width x1, ASPM L0s, Exit Latency L0s unlimited
-                        ClockPM- Surprise- LLActRep- BwNot- ASPMOptComp-
-                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 5GT/s, Width x1, TrErr- Train- SlotClk- DLActive- BWMgmt- ABWMgmt-
-                DevCap2: Completion Timeout: Not Supported, TimeoutDis+, LTR-, OBFF Not Supported
-                         AtomicOpsCap: 32bit- 64bit- 128bitCAS-
-                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled
-                         AtomicOpsCtl: ReqEn-
-                LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-
-                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-                         Compliance De-emphasis: -6dB
-                LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-, EqualizationPhase1-
-                         EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
-        Capabilities: [100 v1] Virtual Channel
-                Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
-                Arb:    Fixed- WRR32- WRR64- WRR128-
-                Ctrl:   ArbSelect=Fixed
-                Status: InProgress-
-                VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
-                        Arb:    Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
-                        Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
-                        Status: NegoPending- InProgress-
-        Kernel driver in use: pci-endpoint-test
+> > Reset the ACS bits to default before kexec or device remove.
+> >
+> > Signed-off-by: Deepa Dinamani <deepa.kernel@gmail.com>
+> > ---
+> >  drivers/pci/pci-driver.c |  4 ++++
+> >  drivers/pci/pci.c        | 39 +++++++++++++++++++++++++++------------
+> >  drivers/pci/pci.h        |  1 +
+> >  3 files changed, 32 insertions(+), 12 deletions(-)
+> >
+> > diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> > index 0454ca0e4e3f..bd8d08e50b97 100644
+> > --- a/drivers/pci/pci-driver.c
+> > +++ b/drivers/pci/pci-driver.c
+> > @@ -453,6 +453,8 @@ static int pci_device_remove(struct device *dev)
+> >
+> >       /* Undo the runtime PM settings in local_pci_probe() */
+> >       pm_runtime_put_sync(dev);
+> > +     /* Undo the PCI ACS settings in pci_init_capabilities() */
+> > +     pci_disable_acs(pci_dev);
+>
+> Can this be a separate patch?  It doesn't seem to have anything to do
+> with kexec, so a different patch with (presumably) a different
+> rationale would be good.
 
-BAR Test
-========
-root@g2e:~# pcitest -b 0
-BAR0:           OKAY
-root@g2e:~# pcitest -b 1
-BAR1:           NOT OKAY
-root@g2e:~# pcitest -b 2
-BAR2:           OKAY
-root@g2e:~# pcitest -b 3
-BAR3:           NOT OKAY
-root@g2e:~# pcitest -b 4
-BAR4:           OKAY
-root@g2e:~# pcitest -b 5
-BAR5:           NOT OKAY
+We call device_shutdown() during kexec. If the devices are removed,
+then the pci_device_shutdown() is not called on such devices. Hence,
+the ACS settings we set during the probe() are still active. This is
+trying to clear that state. This should be part of the same patch for
+completeness, I think. Although this should be moved up as the first
+thing this function does. And, a check for the power state you
+suggested below.
 
-Note: BAR test for 1/3/5 fail because they are configured to be 64bits
+Also I noticed another thing(when testing) that is ommited in the
+patch is that this is not sufficient for bridge devices(without a
+driver). I'm thinking pci_remove_bus_device() is a good place for such
+devices. Let me know if you have a better recommendation.
 
-Interrupt Test
-==============
-root@g2e:~# pcitest -i 0
-SET IRQ TYPE TO LEGACY:         OKAY
-root@g2e:~# pcitest -l
-LEGACY IRQ:     OKAY
+> >       /*
+> >        * If the device is still on, set the power state as "unknown",
+> > @@ -493,6 +495,8 @@ static void pci_device_shutdown(struct device *dev)
+> >        */
+> >       if (kexec_in_progress && (pci_dev->current_state <= PCI_D3hot))
+> >               pci_clear_master(pci_dev);
+> > +     if (kexec_in_progress)
+> > +             pci_disable_acs(pci_dev);
+>
+> Shouldn't this be in the same "if" block as pci_clear_master()?  If
+> the device is in D3cold, it's not going to work to disable ACS because
+> config space isn't accessible.
 
-Read Test
-=========
-root@g2e:~# pcitest -r -s 1
-READ (      1 bytes):           OKAY
-root@g2e:~# pcitest -r -s 1024
-READ (   1024 bytes):           OKAY
-root@g2e:~# pcitest -r -s 1025
-READ (   1025 bytes):           OKAY
-root@g2e:~# pcitest -r -s 1024000
-READ (1024000 bytes):           OKAY
-root@g2e:~# pcitest -r -s 1024001
-READ (1024001 bytes):           OKAY
+Thanks. This is something I had missed. I will add this in v2.
 
-Write Test
-==========
-root@g2e:~# pcitest -w -s 1
-WRITE (      1 bytes):          OKAY
-root@g2e:~# pcitest -w -s 1024
-WRITE (   1024 bytes):          OKAY
-root@g2e:~# pcitest -w -s 1025
-WRITE (   1025 bytes):          OKAY
-root@g2e:~# pcitest -w -s 1024000
-WRITE (1024000 bytes):          OKAY
-root@g2e:~# pcitest -w -s 1024001
-WRITE (1024001 bytes):          OKAY
+> >  }
+> >
+> >  #ifdef CONFIG_PM
+> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > index da2e59daad6f..8254617cff03 100644
+> > --- a/drivers/pci/pci.c
+> > +++ b/drivers/pci/pci.c
+> > @@ -3261,15 +3261,23 @@ static void pci_disable_acs_redir(struct pci_dev *dev)
+> >       pci_info(dev, "disabled ACS redirect\n");
+> >  }
+> >
+> > +
+> > +/* Standard PCI ACS capailities
+> > + * Source Validation | P2P Request Redirect | P2P Completion Redirect | Upstream Forwarding
+>
+> Please make this comment fit in 80 columns.
 
-Copy Test
-=========
-root@g2e:~# pcitest -c -s 1
-COPY (      1 bytes):           OKAY
-root@g2e:~# pcitest -c -s 1024
-COPY (   1024 bytes):           OKAY
-root@g2e:~# pcitest -c -s 1025
-COPY (   1025 bytes):           OKAY
-root@g2e:~# pcitest -c -s 1024000
-COPY (1024000 bytes):           OKAY
-root@g2e:~# pcitest -c -s 1024001
-COPY (1024001 bytes):           OKAY
+Will do.
 
+> > + */
+> > +#define PCI_STD_ACS_CAP (PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF)
+> > +
+> >  /**
+> > - * pci_std_enable_acs - enable ACS on devices using standard ACS capabilities
+> > + * pci_std_enable_disable_acs - enable/disable ACS on devices using standard
+> > + * ACS capabilities
+> >   * @dev: the PCI device
+> >   */
+> > -static void pci_std_enable_acs(struct pci_dev *dev)
+> > +static void pci_std_enable_disable_acs(struct pci_dev *dev, int enable)
+>
+> Maybe you could split this refactoring into its own patch that doesn't
+> actually change any behavior?  Then the kexec patch would be a
+> one-liner and the device remove patch would be another one-liner, so
+> it's obvious where the important changes are.
 
-Lad Prabhakar (6):
-  PCI: rcar: Preparation for adding endpoint support
-  PCI: rcar: Fix calculating mask for PCIEPAMR register
-  PCI: endpoint: Add support to handle multiple base for mapping
-    outbound memory
-  dt-bindings: PCI: rcar: Add bindings for R-Car PCIe endpoint
-    controller
-  PCI: rcar: Add support for rcar PCIe controller in endpoint mode
-  misc: pci_endpoint_test: Add Device ID for RZ/G2E PCIe controller
+Sure, I can do it that way.
 
- .../devicetree/bindings/pci/rcar-pci-ep.yaml  |   76 +
- arch/arm64/configs/defconfig                  |    2 +-
- drivers/misc/pci_endpoint_test.c              |    3 +
- drivers/pci/controller/Kconfig                |   11 +-
- drivers/pci/controller/Makefile               |    3 +-
- .../pci/controller/cadence/pcie-cadence-ep.c  |   12 +-
- .../pci/controller/dwc/pcie-designware-ep.c   |   31 +-
- drivers/pci/controller/pcie-rcar-ep.c         |  497 +++++++
- drivers/pci/controller/pcie-rcar-host.c       | 1044 ++++++++++++++
- drivers/pci/controller/pcie-rcar.c            | 1232 +----------------
- drivers/pci/controller/pcie-rcar.h            |  132 ++
- drivers/pci/controller/pcie-rockchip-ep.c     |   14 +-
- drivers/pci/endpoint/functions/pci-epf-test.c |   29 +-
- drivers/pci/endpoint/pci-epc-core.c           |    7 +-
- drivers/pci/endpoint/pci-epc-mem.c            |  199 ++-
- include/linux/pci-epc.h                       |   46 +-
- 16 files changed, 2064 insertions(+), 1274 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/rcar-pci-ep.yaml
- create mode 100644 drivers/pci/controller/pcie-rcar-ep.c
- create mode 100644 drivers/pci/controller/pcie-rcar-host.c
- create mode 100644 drivers/pci/controller/pcie-rcar.h
+> >  {
+> >       int pos;
+> >       u16 cap;
+> >       u16 ctrl;
+> > +     u16 val = 0;
+> >
+> >       pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
+> >       if (!pos)
+> > @@ -3278,19 +3286,26 @@ static void pci_std_enable_acs(struct pci_dev *dev)
+> >       pci_read_config_word(dev, pos + PCI_ACS_CAP, &cap);
+> >       pci_read_config_word(dev, pos + PCI_ACS_CTRL, &ctrl);
+> >
+> > -     /* Source Validation */
+> > -     ctrl |= (cap & PCI_ACS_SV);
+> > +     val = (cap & PCI_STD_ACS_CAP);
+> >
+> > -     /* P2P Request Redirect */
+> > -     ctrl |= (cap & PCI_ACS_RR);
+> > +     if (enable)
+> > +             ctrl |= val;
+> > +     else
+> > +             ctrl &= ~val;
+> >
+> > -     /* P2P Completion Redirect */
+> > -     ctrl |= (cap & PCI_ACS_CR);
+> > +     pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
+> > +}
+> >
+> > -     /* Upstream Forwarding */
+> > -     ctrl |= (cap & PCI_ACS_UF);
+> > +/**
+> > + * pci_disable_acs - enable ACS if hardware support it
+>
+> s/enable/disable/ (in comment)
+> s/support/supports/
 
--- 
-2.20.1
-
+OK.
