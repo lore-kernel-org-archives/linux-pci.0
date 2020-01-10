@@ -2,154 +2,151 @@ Return-Path: <SRS0=3yex=27=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=DATE_IN_PAST_06_12,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E2DDC33CA7
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Jan 2020 23:24:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 918F1C282DD
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Jan 2020 23:37:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DF253206ED
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Jan 2020 23:24:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 67D6220721
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Jan 2020 23:37:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727463AbgAJXYH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 10 Jan 2020 18:24:07 -0500
-Received: from mga09.intel.com ([134.134.136.24]:46412 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727462AbgAJXYH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 10 Jan 2020 18:24:07 -0500
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by orsmga102.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 10 Jan 2020 15:24:06 -0800
-X-IronPort-AV: E=Sophos;i="5.69,418,1571727600"; 
-   d="scan'208";a="212412179"
-Received: from unknown (HELO nsgsw-rhel7p6.lm.intel.com) ([10.232.116.226])
-  by orsmga007-auth.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 10 Jan 2020 15:24:05 -0800
-From:   Jon Derrick <jonathan.derrick@intel.com>
-To:     <iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Keith Busch <kbusch@kernel.org>,
-        Joerg Roedel <joro@8bytes.org>, Christoph Hellwig <hch@lst.de>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Lu Baolu <baolu.lu@linux.intel.com>,
-        Jon Derrick <jonathan.derrick@intel.com>
-Subject: [PATCH v3 5/5] x86/pci: Remove X86_DEV_DMA_OPS
-Date:   Fri, 10 Jan 2020 10:21:13 -0700
-Message-Id: <1578676873-6206-6-git-send-email-jonathan.derrick@intel.com>
-X-Mailer: git-send-email 1.8.3.1
-In-Reply-To: <1578676873-6206-1-git-send-email-jonathan.derrick@intel.com>
-References: <1578676873-6206-1-git-send-email-jonathan.derrick@intel.com>
+        id S1727533AbgAJXhE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 10 Jan 2020 18:37:04 -0500
+Received: from mx0b-002e3701.pphosted.com ([148.163.143.35]:28182 "EHLO
+        mx0b-002e3701.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727527AbgAJXhE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2020 18:37:04 -0500
+Received: from pps.filterd (m0150244.ppops.net [127.0.0.1])
+        by mx0b-002e3701.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 00ANYbsS010254;
+        Fri, 10 Jan 2020 23:36:57 GMT
+Received: from g4t3425.houston.hpe.com (g4t3425.houston.hpe.com [15.241.140.78])
+        by mx0b-002e3701.pphosted.com with ESMTP id 2xenc0pf20-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 10 Jan 2020 23:36:57 +0000
+Received: from g4t3433.houston.hpecorp.net (g4t3433.houston.hpecorp.net [16.208.49.245])
+        by g4t3425.houston.hpe.com (Postfix) with ESMTP id A879892;
+        Fri, 10 Jan 2020 23:36:56 +0000 (UTC)
+Received: from anatevka.americas.hpqcorp.net (anatevka.americas.hpqcorp.net [10.34.81.30])
+        by g4t3433.houston.hpecorp.net (Postfix) with ESMTP id 4533E47;
+        Fri, 10 Jan 2020 23:36:56 +0000 (UTC)
+Date:   Fri, 10 Jan 2020 16:36:56 -0700
+From:   Jerry Hoemann <jerry.hoemann@hpe.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Kairui Song <kasong@redhat.com>, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+        Baoquan He <bhe@redhat.com>,
+        Deepa Dinamani <deepa.kernel@gmail.com>,
+        Randy Wright <rwright@hpe.com>
+Subject: Re: [RFC PATCH] PCI, kdump: Clear bus master bit upon shutdown in
+ kdump kernel
+Message-ID: <20200110233656.GC1875851@anatevka.americas.hpqcorp.net>
+Reply-To: Jerry.Hoemann@hpe.com
+References: <20191225192118.283637-1-kasong@redhat.com>
+ <20200110214217.GA88274@google.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200110214217.GA88274@google.com>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+MIME-Version: 1.0
+X-HPE-SCL: -1
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
+ definitions=2020-01-10_04:2020-01-10,2020-01-10 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0
+ priorityscore=1501 impostorscore=0 mlxscore=0 clxscore=1015
+ lowpriorityscore=0 malwarescore=0 spamscore=0 phishscore=0 mlxlogscore=999
+ suspectscore=0 adultscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-1910280000 definitions=main-2001100193
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Christoph Hellwig <hch@lst.de>
+On Fri, Jan 10, 2020 at 03:42:17PM -0600, Bjorn Helgaas wrote:
+> [+cc Deepa (also working in this area)]
+> 
+> On Thu, Dec 26, 2019 at 03:21:18AM +0800, Kairui Song wrote:
+> > There are reports about kdump hang upon reboot on some HPE machines,
+> > kernel hanged when trying to shutdown a PCIe port, an uncorrectable
+> > error occurred and crashed the system.
+> 
+> Details?  Do you have URLs for bug reports, dmesg logs, etc?
 
-There are no users of X86_DEV_DMA_OPS left, so remove the code.
+Hi, Bjorn,
 
-Reviewed-by: Jon Derrick <jonathan.derrick@intel.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- arch/x86/Kconfig              |  3 ---
- arch/x86/include/asm/device.h | 10 ----------
- arch/x86/pci/common.c         | 38 --------------------------------------
- 3 files changed, 51 deletions(-)
+Not sure if you have access to Red Hat Bugzilla, but I filed:
 
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 5e89499..77f9426 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -2955,9 +2955,6 @@ config HAVE_ATOMIC_IOMAP
- 	def_bool y
- 	depends on X86_32
- 
--config X86_DEV_DMA_OPS
--	bool
--
- source "drivers/firmware/Kconfig"
- 
- source "arch/x86/kvm/Kconfig"
-diff --git a/arch/x86/include/asm/device.h b/arch/x86/include/asm/device.h
-index 5e12c63..7e31f7f 100644
---- a/arch/x86/include/asm/device.h
-+++ b/arch/x86/include/asm/device.h
-@@ -8,16 +8,6 @@ struct dev_archdata {
- #endif
- };
- 
--#if defined(CONFIG_X86_DEV_DMA_OPS) && defined(CONFIG_PCI_DOMAINS)
--struct dma_domain {
--	struct list_head node;
--	const struct dma_map_ops *dma_ops;
--	int domain_nr;
--};
--void add_dma_domain(struct dma_domain *domain);
--void del_dma_domain(struct dma_domain *domain);
--#endif
--
- struct pdev_archdata {
- };
- 
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 83334a5..8f60d52 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -625,43 +625,6 @@ unsigned int pcibios_assign_all_busses(void)
- 	return (pci_probe & PCI_ASSIGN_ALL_BUSSES) ? 1 : 0;
- }
- 
--#if defined(CONFIG_X86_DEV_DMA_OPS) && defined(CONFIG_PCI_DOMAINS)
--static LIST_HEAD(dma_domain_list);
--static DEFINE_SPINLOCK(dma_domain_list_lock);
--
--void add_dma_domain(struct dma_domain *domain)
--{
--	spin_lock(&dma_domain_list_lock);
--	list_add(&domain->node, &dma_domain_list);
--	spin_unlock(&dma_domain_list_lock);
--}
--EXPORT_SYMBOL_GPL(add_dma_domain);
--
--void del_dma_domain(struct dma_domain *domain)
--{
--	spin_lock(&dma_domain_list_lock);
--	list_del(&domain->node);
--	spin_unlock(&dma_domain_list_lock);
--}
--EXPORT_SYMBOL_GPL(del_dma_domain);
--
--static void set_dma_domain_ops(struct pci_dev *pdev)
--{
--	struct dma_domain *domain;
--
--	spin_lock(&dma_domain_list_lock);
--	list_for_each_entry(domain, &dma_domain_list, node) {
--		if (pci_domain_nr(pdev->bus) == domain->domain_nr) {
--			pdev->dev.dma_ops = domain->dma_ops;
--			break;
--		}
--	}
--	spin_unlock(&dma_domain_list_lock);
--}
--#else
--static void set_dma_domain_ops(struct pci_dev *pdev) {}
--#endif
--
- static void set_dev_domain_options(struct pci_dev *pdev)
- {
- 	if (is_vmd(pdev->bus))
-@@ -697,7 +660,6 @@ int pcibios_add_device(struct pci_dev *dev)
- 		pa_data = data->next;
- 		memunmap(data);
- 	}
--	set_dma_domain_ops(dev);
- 	set_dev_domain_options(dev);
- 	return 0;
- }
+	https://bugzilla.redhat.com/show_bug.cgi?id=1774802
+
+When I hit this issue.
+
+
+
+> 
+> > On the machine I can reproduce this issue, part of the topology
+> > looks like this:
+> > 
+> > [0000:00]-+-00.0  Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 DMI2
+> >           +-01.0-[02]--
+> >           +-01.1-[05]--
+> >           +-02.0-[06]--+-00.0  Emulex Corporation OneConnect NIC (Skyhawk)
+> >           |            +-00.1  Emulex Corporation OneConnect NIC (Skyhawk)
+> >           |            +-00.2  Emulex Corporation OneConnect NIC (Skyhawk)
+> >           |            +-00.3  Emulex Corporation OneConnect NIC (Skyhawk)
+> >           |            +-00.4  Emulex Corporation OneConnect NIC (Skyhawk)
+> >           |            +-00.5  Emulex Corporation OneConnect NIC (Skyhawk)
+> >           |            +-00.6  Emulex Corporation OneConnect NIC (Skyhawk)
+> >           |            \-00.7  Emulex Corporation OneConnect NIC (Skyhawk)
+> >           +-02.1-[0f]--
+> >           +-02.2-[07]----00.0  Hewlett-Packard Company Smart Array Gen9 Controllers
+> > 
+> > When shutting down PCIe port 0000:00:02.2 or 0000:00:02.0, the machine
+> > will hang, depend on which device is reinitialized in kdump kernel.
+> > 
+> > If force remove unused device then trigger kdump, the problem will never
+> > happen:
+> > 
+> >     echo 1 > /sys/bus/pci/devices/0000\:00\:02.2/0000\:07\:00.0/remove
+> >     echo c > /proc/sysrq-trigger
+> > 
+> >     ... Kdump save vmcore through network, the NIC get reinitialized and
+> >     hpsa is untouched. Then reboot with no problem. (If hpsa is used
+> >     instead, shutdown the NIC in first kernel will help)
+> > 
+> > The cause is that some devices are enabled by the first kernel, but it
+> > don't have the chance to shutdown the device, and kdump kernel is not
+> > aware of it, unless it reinitialize the device.
+> > 
+> > Upon reboot, kdump kernel will skip downstream device shutdown and
+> > clears its bridge's master bit directly. The downstream device could
+> > error out as it can still send requests but upstream refuses it.
+> 
+> Can you help me understand the sequence of events?  If I understand
+> correctly, the desired sequence is:
+> 
+>   - user kernel boots
+>   - user kernel panics and kexecs to kdump kernel
+>   - kdump kernel writes vmcore to network or disk
+
+Some context:
+
+The problem for me hits itermittently during shutdown of the kdump kernel.
+During this time, the SUT sometimes gets a PCI error that raises an NMI.
+
+The reaction to the NMI that the kdump kernel takes is problematic.
+Sometimes the system prints the tombstones and resets through firmware
+without problems.  Other times it takes a second NMI and hangs.
+
+I'll note that the kdump initrd doesn't contain the NIC drivers.  When
+these are added, we don't see the issue.
+
+
+Jerry
+
 -- 
-1.8.3.1
 
+-----------------------------------------------------------------------------
+Jerry Hoemann                  Software Engineer   Hewlett Packard Enterprise
+-----------------------------------------------------------------------------
