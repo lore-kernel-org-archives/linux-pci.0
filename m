@@ -7,42 +7,42 @@ X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67BF7C282DD
-	for <linux-pci@archiver.kernel.org>; Sat, 11 Jan 2020 00:51:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE2A3C282DD
+	for <linux-pci@archiver.kernel.org>; Sat, 11 Jan 2020 01:47:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3848120842
-	for <linux-pci@archiver.kernel.org>; Sat, 11 Jan 2020 00:51:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B6C32072E
+	for <linux-pci@archiver.kernel.org>; Sat, 11 Jan 2020 01:47:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bfnHAhM6"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hslK5rcH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727762AbgAKAv5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 10 Jan 2020 19:51:57 -0500
-Received: from us-smtp-2.mimecast.com ([207.211.31.81]:28276 "EHLO
+        id S1727828AbgAKBrK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 10 Jan 2020 20:47:10 -0500
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:32186 "EHLO
         us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727758AbgAKAv5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2020 19:51:57 -0500
+        by vger.kernel.org with ESMTP id S1727812AbgAKBrK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2020 20:47:10 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1578703916;
+        s=mimecast20190719; t=1578707229;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=zbgMmgPunuCU+6eAQTwKzCS91MthkUUJmXAiSzigQk4=;
-        b=bfnHAhM6cPU5AxgbLKbDKqTJX/FM8B//3zMZN2p0a4rDJhWfdJyXERhKpwv+/2QBRL8CM+
-        OKGRh8bOCSt6Rsh30hu8X/ayc36+8979+XraQcuH33MqUDxuJgrlFTi7R0sGdhPLLSzxje
-        76ZXZXYmb+4oRgiOJ1qW9z0MeAYfPCM=
+        bh=jPPryPK1OzAOrv4+dW4KgmKutLsT1pslZulH2MfJk2s=;
+        b=hslK5rcH4fUzFmxbJkOZs3qst7QnW5w6RGeMPjukZyU5VA6wFJ+Jj2LcRJNVB3gJxGYuad
+        7RmxLe9vJYpQOYjNsiXnl1fg5HLM9+f4ahTebLIHIJfRQ43YdY41N8tYNZnBs8eaAHXkoJ
+        mYMopGCpt6H6l5X6kEWOpqhOKp8LQTk=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-101-GnAe3hIvPAGU2VTL5DUq0w-1; Fri, 10 Jan 2020 19:51:53 -0500
-X-MC-Unique: GnAe3hIvPAGU2VTL5DUq0w-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+ us-mta-346-aLeYG5BTPdu8ka9bzGE9Zw-1; Fri, 10 Jan 2020 20:47:06 -0500
+X-MC-Unique: aLeYG5BTPdu8ka9bzGE9Zw-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id DDF0B800EBF;
-        Sat, 11 Jan 2020 00:51:51 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 28F7A107ACC4;
+        Sat, 11 Jan 2020 01:47:05 +0000 (UTC)
 Received: from localhost (ovpn-12-27.pek2.redhat.com [10.72.12.27])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id D68521001B00;
-        Sat, 11 Jan 2020 00:51:48 +0000 (UTC)
-Date:   Sat, 11 Jan 2020 08:51:46 +0800
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 488955C1D4;
+        Sat, 11 Jan 2020 01:47:01 +0000 (UTC)
+Date:   Sat, 11 Jan 2020 09:46:57 +0800
 From:   Baoquan He <bhe@redhat.com>
 To:     Jerry Hoemann <jerry.hoemann@hpe.com>
 Cc:     Khalid Aziz and Shuah Khan <azizkhan@gonehiking.org>,
@@ -53,7 +53,7 @@ Cc:     Khalid Aziz and Shuah Khan <azizkhan@gonehiking.org>,
         Randy Wright <rwright@hpe.com>, dyoung@redhat.com
 Subject: Re: [RFC PATCH] PCI, kdump: Clear bus master bit upon shutdown in
  kdump kernel
-Message-ID: <20200111005146.GC19291@MiWiFi-R3L-srv>
+Message-ID: <20200111014657.GD19291@MiWiFi-R3L-srv>
 References: <20200110214217.GA88274@google.com>
  <e0194581-4cdd-3629-d9fe-10a1cfd29d03@gonehiking.org>
  <20200110230003.GB1875851@anatevka.americas.hpqcorp.net>
@@ -63,7 +63,7 @@ Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <20200111004510.GA19291@MiWiFi-R3L-srv>
 User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
@@ -126,13 +126,13 @@ On 01/11/20 at 08:45am, Baoquan He wrote:
 > driver. So HPSA device will never have chance to calibrate its status,
 > and can't be shut down by pci_device_shutdown() called by reboot
 > service. It's still PCI_D3hot, then crash happened when system try to
+                                      ~~~~~ s/crash/hang/, sorry, typo again
 > shutdown its upper bridge.
 > 
 > Fix:
 > 
 > Here, Kairui uses a quirk to get PM state and mask off value bigger than
 > PCI_D3cold. Means, all devices will get PM state 
-  ~~~~~~~~~ s/PCI_D3cold/PCI_D3hot/, typo
 > pci_dev->current_state = PCI_D0 or PCI_D3hot. Finally, during kdump
 > reboot stage, this device can be shut down successfully by clearing its
 > master bit.
