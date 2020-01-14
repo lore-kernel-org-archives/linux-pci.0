@@ -2,72 +2,92 @@ Return-Path: <SRS0=eZdz=3D=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12C56C33CAF
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Jan 2020 03:04:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D6B0C33CA9
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Jan 2020 07:30:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DE334214AF
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Jan 2020 03:04:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3EDA12187F
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Jan 2020 07:30:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729489AbgANDE2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 13 Jan 2020 22:04:28 -0500
-Received: from mga12.intel.com ([192.55.52.136]:31656 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729224AbgANDE2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 13 Jan 2020 22:04:28 -0500
-X-Amp-Result: UNSCANNABLE
-X-Amp-File-Uploaded: False
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 13 Jan 2020 19:04:27 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.69,431,1571727600"; 
-   d="scan'208";a="397354511"
-Received: from unknown (HELO chenyu-office) ([10.239.158.173])
-  by orsmga005.jf.intel.com with ESMTP; 13 Jan 2020 19:04:25 -0800
-Date:   Tue, 14 Jan 2020 11:04:00 +0800
-From:   Chen Yu <yu.c.chen@intel.com>
-To:     "Rafael J. Wysocki" <rafael@kernel.org>
-Cc:     Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI/PM: Print the pci config space of devices before
- suspend
-Message-ID: <20200114030400.GA5065@chenyu-office>
-References: <20200113060724.19571-1-yu.c.chen@intel.com>
- <CAJZ5v0jgdfAG_BDefdSQFV9hM61o68Aj31PxShNxxcpsYFpxgw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAJZ5v0jgdfAG_BDefdSQFV9hM61o68Aj31PxShNxxcpsYFpxgw@mail.gmail.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+        id S1728933AbgANHaD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Jan 2020 02:30:03 -0500
+Received: from lucky1.263xmail.com ([211.157.147.135]:39328 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728896AbgANHaD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jan 2020 02:30:03 -0500
+X-Greylist: delayed 373 seconds by postgrey-1.27 at vger.kernel.org; Tue, 14 Jan 2020 02:30:02 EST
+Received: from localhost (unknown [192.168.167.13])
+        by lucky1.263xmail.com (Postfix) with ESMTP id 9B9534FF83;
+        Tue, 14 Jan 2020 15:25:55 +0800 (CST)
+X-MAIL-GRAY: 1
+X-MAIL-DELIVERY: 0
+X-ADDR-CHECKED4: 1
+X-ANTISPAM-LEVEL: 2
+X-ABS-CHECKED: 0
+Received: from localhost.localdomain (unknown [58.22.7.114])
+        by smtp.263.net (postfix) whith ESMTP id P19895T140279339108096S1578986754975103_;
+        Tue, 14 Jan 2020 15:25:55 +0800 (CST)
+X-IP-DOMAINF: 1
+X-UNIQUE-TAG: <703626875cd62b4c13c2bb6d05db01c8>
+X-RL-SENDER: shawn.lin@rock-chips.com
+X-SENDER: lintao@rock-chips.com
+X-LOGIN-NAME: shawn.lin@rock-chips.com
+X-FST-TO: heiko@sntech.de
+X-SENDER-IP: 58.22.7.114
+X-ATTACHMENT-NUM: 0
+X-DNS-TYPE: 0
+From:   Shawn Lin <shawn.lin@rock-chips.com>
+To:     Heiko Stuebner <heiko@sntech.de>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc:     Jingoo Han <jingoohan1@gmail.com>, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, William Wu <william.wu@rock-chips.com>,
+        Simon Xue <xxm@rock-chips.com>,
+        linux-rockchip@lists.infradead.org,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH 6/6] MAINTAINERS: Update PCIe drivers for Rockchip
+Date:   Tue, 14 Jan 2020 15:25:15 +0800
+Message-Id: <1578986715-72122-1-git-send-email-shawn.lin@rock-chips.com>
+X-Mailer: git-send-email 1.9.1
+In-Reply-To: <1578986580-71974-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1578986580-71974-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Rafael,
-On Mon, Jan 13, 2020 at 11:01:28AM +0100, Rafael J. Wysocki wrote:
-> On Mon, Jan 13, 2020 at 7:08 AM Chen Yu <yu.c.chen@intel.com> wrote:
-> >
-> > The pci config space was found to be insane during resume
-> 
-> I wouldn't call it "insane".
-> 
-> It probably means that the device was not present or not accessible
-> during hibernation and now it appears to be present (maybe the restore
-> kernel found it and configured it).
-> 
-Right, thanks for the hint. If this is the case, it should not
-save any pci config settings if that device is not accessible,
-otherwise there's risk of pci config hard confliction after resumed.
-I've applied the patch and wait for the issue to be reproduced
-(not 100%) and will send the result later.
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-Thanks,
-Chenyu
+ MAINTAINERS | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 4b11d43..f95a85d 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -12956,11 +12956,13 @@ F:	drivers/pci/controller/dwc/*qcom*
+ 
+ PCIE DRIVER FOR ROCKCHIP
+ M:	Shawn Lin <shawn.lin@rock-chips.com>
++M:	Simon Xue <xxm@rock-chips.com>
+ L:	linux-pci@vger.kernel.org
+ L:	linux-rockchip@lists.infradead.org
+ S:	Maintained
+-F:	Documentation/devicetree/bindings/pci/rockchip-pcie*
++F:	Documentation/devicetree/bindings/pci/*rockchip*
+ F:	drivers/pci/controller/pcie-rockchip*
++F:	drivers/pci/controller/dwc/*rockchip*
+ 
+ PCI DRIVER FOR V3 SEMICONDUCTOR V360EPC
+ M:	Linus Walleij <linus.walleij@linaro.org>
+-- 
+1.9.1
+
+
+
