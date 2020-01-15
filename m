@@ -2,120 +2,147 @@ Return-Path: <SRS0=Q3uD=3E=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 345D7C33CB2
-	for <linux-pci@archiver.kernel.org>; Wed, 15 Jan 2020 07:57:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BEC0C33CB1
+	for <linux-pci@archiver.kernel.org>; Wed, 15 Jan 2020 09:08:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0C03524671
-	for <linux-pci@archiver.kernel.org>; Wed, 15 Jan 2020 07:57:55 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="i8ACrPmC"
+	by mail.kernel.org (Postfix) with ESMTP id 2931F2467D
+	for <linux-pci@archiver.kernel.org>; Wed, 15 Jan 2020 09:08:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728986AbgAOH5y (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 15 Jan 2020 02:57:54 -0500
-Received: from mail-wm1-f68.google.com ([209.85.128.68]:54786 "EHLO
-        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728916AbgAOH5y (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jan 2020 02:57:54 -0500
-Received: by mail-wm1-f68.google.com with SMTP id b19so16689236wmj.4
-        for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2020 23:57:52 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=6Ia3VncVrF7c3ZybtE0PPF5JK9Ck+5/tRhdE7y0iz1s=;
-        b=i8ACrPmCSBs+LYW5GnsySs7+9Wv84u6t9RSSW45kj5ZeFcp32dD8ehSZC7Xt1/5Bqg
-         h1DjGveoSyal45wtXHcZT12ieGr2xy/e8wo3G3CDUp4cnmrVk2dBMBHelGHp79Fony6U
-         PzxYeHpAPCO7OJlHOgT9kJnoaQxA/TYufvx/R4aFz+DWsO6XAAmRO/6BrT+Ih8WgpQdu
-         c6ekNSgZ6GiY2J08rJXJvTGQ1oEZ9kxZNs4IRe/nMDFb9UnQ9GcYUYMB+eaE+qqao7xg
-         33CsbG7zAeSpBNRqs3YmXjFWPmjtHKVWEZJY7FefO2sA/OEizZXaufWIgyH59yrGNt8Q
-         Yk/Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=6Ia3VncVrF7c3ZybtE0PPF5JK9Ck+5/tRhdE7y0iz1s=;
-        b=Pz2FbOxqPGKr3FhgnWcsTqV4coz/chPANsKs/ONmaDXbGsUlUlbLN4KYD5SS6cAkB7
-         pVbqCaLvhmTQwYik1jldQZv8j7MLc/e18FKkaXefswI3FIrvjIofxMe8CHKhB94WaWl3
-         DzKjaqPC/4PA+W1rxIQzcQSLSRRIRr0coOQwpNWq6aR7N30Gw2lp2QPYQUh6jx7aYHZk
-         ibXA1dpcAnzixtk6b+cmcRBardZ5dk/ZHUp9bFsU1shQiXisdjrXbTWCbSI3WwxZbQtB
-         oxeltkNfvGPSHcMJqntc23P3hZQH1GLDr1SAZNt4NDuBmm634/5qmk70HKtuhOY8/gND
-         syLA==
-X-Gm-Message-State: APjAAAVlLpicAYcWY1OK0zzrcxvBsBIC1Lipwg+i1cquFaoF3XNmSdJr
-        vsN/ZaHt+Z95jQdGQ/2UCF4pmUXay/8=
-X-Google-Smtp-Source: APXvYqyNEYvahUX2hjnKrrpMAXYUfqqL20FGP88ce7WRH3XP7tUR3FPmbPiIfTuZpy5b/JjF1w/zZg==
-X-Received: by 2002:a7b:cd07:: with SMTP id f7mr30916595wmj.37.1579075071790;
-        Tue, 14 Jan 2020 23:57:51 -0800 (PST)
-Received: from myrica ([2001:171b:2266:ba60:116c:c27a:3e7f:5eaf])
-        by smtp.gmail.com with ESMTPSA id h2sm23782648wrv.66.2020.01.14.23.57.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Jan 2020 23:57:51 -0800 (PST)
-Date:   Wed, 15 Jan 2020 08:57:46 +0100
-From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
-To:     Will Deacon <will@kernel.org>
-Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org, joro@8bytes.org,
-        robh+dt@kernel.org, mark.rutland@arm.com,
-        lorenzo.pieralisi@arm.com, guohanjun@huawei.com,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        robin.murphy@arm.com, bhelgaas@google.com, eric.auger@redhat.com,
-        jonathan.cameron@huawei.com, zhangfei.gao@linaro.org
-Subject: Re: [PATCH v4 13/13] iommu/arm-smmu-v3: Add support for PCI PASID
-Message-ID: <20200115075746.GA32782@myrica>
-References: <20191219163033.2608177-1-jean-philippe@linaro.org>
- <20191219163033.2608177-14-jean-philippe@linaro.org>
- <20200114124541.GE29222@willie-the-truck>
+        id S1729191AbgAOJIV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 15 Jan 2020 04:08:21 -0500
+Received: from szxga05-in.huawei.com ([45.249.212.191]:8722 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1729021AbgAOJIV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 15 Jan 2020 04:08:21 -0500
+Received: from DGGEMS409-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id B32F37BC9A0FAD2AD672;
+        Wed, 15 Jan 2020 17:08:19 +0800 (CST)
+Received: from localhost.localdomain (10.67.165.24) by
+ DGGEMS409-HUB.china.huawei.com (10.3.19.209) with Microsoft SMTP Server id
+ 14.3.439.0; Wed, 15 Jan 2020 17:08:10 +0800
+From:   Yicong Yang <yangyicong@hisilicon.com>
+To:     <helgaas@kernel.org>, <linux-pci@vger.kernel.org>
+CC:     <f.fangjian@huawei.com>
+Subject: [PATCH 4/6] PCI: Improve and rename PCIE_SPEED2STR macro
+Date:   Wed, 15 Jan 2020 17:04:21 +0800
+Message-ID: <1579079063-5668-5-git-send-email-yangyicong@hisilicon.com>
+X-Mailer: git-send-email 2.8.1
+In-Reply-To: <1579079063-5668-1-git-send-email-yangyicong@hisilicon.com>
+References: <1579079063-5668-1-git-send-email-yangyicong@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200114124541.GE29222@willie-the-truck>
+Content-Type: text/plain
+X-Originating-IP: [10.67.165.24]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jan 14, 2020 at 12:45:42PM +0000, Will Deacon wrote:
-> On Thu, Dec 19, 2019 at 05:30:33PM +0100, Jean-Philippe Brucker wrote:
-> > Enable PASID for PCI devices that support it. Since the SSID tables are
-> > allocated by arm_smmu_attach_dev(), PASID has to be enabled early enough.
-> > arm_smmu_dev_feature_enable() would be too late, since by that time the
-> 
-> What is arm_smmu_dev_feature_enable()?
+Use pci_bus_speed_strings[] array to refactor PCIE_SPEED2STR macro.
+Rename PCIE_SPEED2STR with PCI_SPEED2STR as it's also used to
+decode non-PCIe speeds. Modify bus_speed_read() and
+__pcie_print_link_status() with PCI_SPEED2STR macro.
 
-It's the implementation of the IOMMU op .dev_enable_feat(), which I'll add
-later (called by a device driver to enable the SVA feature). I'll reword
-this comment, since the only real requirement is enabling PASID before
-ATS.
+Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
+---
 
-> >  static void arm_smmu_detach_dev(struct arm_smmu_master *master)
-> >  {
-> >  	unsigned long flags;
-> > @@ -2852,13 +2899,16 @@ static int arm_smmu_add_device(struct device *dev)
-> >  
-> >  	master->ssid_bits = min(smmu->ssid_bits, fwspec->num_pasid_bits);
-> >  
-> > +	/* Note that PASID must be enabled before, and disabled after ATS */
-> > +	arm_smmu_enable_pasid(master);
-> 
-> Is that part of the PCIe specs? If so, please can you add a citation to the
-> comment?
+I don't add a boundary check in PCI_SPEED2STR macro because:
+1. we cannot get the array size of an extern one using ARRAY_SIZE
+2. It is the *speed* should be check valid or not when assigned,
+rather than checking it here. Actually we do make it valid when
+assigned, the speed is either a valid value or PCI_SPEED_UNKNOWN.
+And it's ensured in pcie_get_speed_cap(), pci_set_bus_speed()
+when probe, and pcie_link_speed[] array. Please check again for
+sure.
 
-Yes (PCIe 4.0r1.0 10.5.1.3 ATS Control register).
+ drivers/pci/pci-sysfs.c |  2 +-
+ drivers/pci/pci.c       |  6 +++---
+ drivers/pci/pci.h       | 10 +++-------
+ drivers/pci/slot.c      | 10 +++-------
+ 4 files changed, 10 insertions(+), 18 deletions(-)
 
-> Are there any other ordering requirements, i.e. with respect to enabling
-> substreams at the SMMU? For example, can a speculative ATS request provide
-> a PASID?
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 13f766d..f4eafbc 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -156,7 +156,7 @@ static ssize_t max_link_speed_show(struct device *dev,
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
 
-You recent fix bfff88ec1afe ("iommu/arm-smmu-v3: Rework enabling/disabling
-of ATS for PCI masters") should prevent from speculative ATS requests.
-More generally both ATS and SSID are enabled and disabled at the same time
-in the SMMU, when toggling STE.V, so any request arriving before STE
-enablement will be aborted regardless of SSID.
+-	return sprintf(buf, "%s\n", PCIE_SPEED2STR(pcie_get_speed_cap(pdev)));
++	return sprintf(buf, "%s\n", PCI_SPEED2STR(pcie_get_speed_cap(pdev)));
+ }
+ static DEVICE_ATTR_RO(max_link_speed);
 
-Thanks,
-Jean
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index e87196c..dce32ce 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5868,14 +5868,14 @@ void __pcie_print_link_status(struct pci_dev *dev, bool verbose)
+ 	if (bw_avail >= bw_cap && verbose)
+ 		pci_info(dev, "%u.%03u Gb/s available PCIe bandwidth (%s x%d link)\n",
+ 			 bw_cap / 1000, bw_cap % 1000,
+-			 PCIE_SPEED2STR(speed_cap), width_cap);
++			 PCI_SPEED2STR(speed_cap), width_cap);
+ 	else if (bw_avail < bw_cap)
+ 		pci_info(dev, "%u.%03u Gb/s available PCIe bandwidth, limited by %s x%d link at %s (capable of %u.%03u Gb/s with %s x%d link)\n",
+ 			 bw_avail / 1000, bw_avail % 1000,
+-			 PCIE_SPEED2STR(speed), width,
++			 PCI_SPEED2STR(speed), width,
+ 			 limiting_dev ? pci_name(limiting_dev) : "<unknown>",
+ 			 bw_cap / 1000, bw_cap % 1000,
+-			 PCIE_SPEED2STR(speed_cap), width_cap);
++			 PCI_SPEED2STR(speed_cap), width_cap);
+ }
+
+ /**
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 5fb1d76..5e1f810 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -291,13 +291,9 @@ struct pci_bus *pci_bus_get(struct pci_bus *bus);
+ void pci_bus_put(struct pci_bus *bus);
+
+ /* PCIe link information */
+-#define PCIE_SPEED2STR(speed) \
+-	((speed) == PCIE_SPEED_32_0GT ? "32 GT/s" : \
+-	 (speed) == PCIE_SPEED_16_0GT ? "16 GT/s" : \
+-	 (speed) == PCIE_SPEED_8_0GT ? "8 GT/s" : \
+-	 (speed) == PCIE_SPEED_5_0GT ? "5 GT/s" : \
+-	 (speed) == PCIE_SPEED_2_5GT ? "2.5 GT/s" : \
+-	 "Unknown speed")
++#define PCI_SPEED2STR(speed) \
++	((speed) == PCI_SPEED_UNKNOWN ? "Unknown speed" : \
++	 pci_bus_speed_strings[speed])
+
+ /* PCIe speed to Mb/s reduced by encoding overhead */
+ #define PCIE_SPEED2MBS_ENC(speed) \
+diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
+index 140dafb..871d598 100644
+--- a/drivers/pci/slot.c
++++ b/drivers/pci/slot.c
+@@ -51,14 +51,10 @@ static ssize_t address_read_file(struct pci_slot *slot, char *buf)
+
+ static ssize_t bus_speed_read(enum pci_bus_speed speed, char *buf)
+ {
+-	const char *speed_string;
++	if (speed <= PCI_SPEED_133MHz_PCIX_533)
++		return sprintf(buf, "%s\n", PCI_SPEED2STR(speed));
+
+-	if (speed == PCI_SPEED_UNKNOWN)
+-		speed_string = "Unknown";
+-	else
+-		speed_string = pci_bus_speed_strings[speed];
+-
+-	return sprintf(buf, "%s\n", speed_string);
++	return sprintf(buf, "%s PCIe\n", PCI_SPEED2STR(speed));
+ }
+
+ static ssize_t max_speed_read_file(struct pci_slot *slot, char *buf)
+--
+2.8.1
 
