@@ -2,157 +2,136 @@ Return-Path: <SRS0=Q3uD=3E=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DC02C33CB1
-	for <linux-pci@archiver.kernel.org>; Wed, 15 Jan 2020 12:45:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B49C8C33CB3
+	for <linux-pci@archiver.kernel.org>; Wed, 15 Jan 2020 12:53:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 07F0D24680
-	for <linux-pci@archiver.kernel.org>; Wed, 15 Jan 2020 12:45:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 86C712467E
+	for <linux-pci@archiver.kernel.org>; Wed, 15 Jan 2020 12:53:31 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Un9dRtM7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726506AbgAOMp2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 15 Jan 2020 07:45:28 -0500
-Received: from mx2.suse.de ([195.135.220.15]:52176 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725999AbgAOMp1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 15 Jan 2020 07:45:27 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id BCDC4ADE7;
-        Wed, 15 Jan 2020 12:45:25 +0000 (UTC)
-Message-ID: <330ca207dcbcb41b9d094fb2606c45e4173fa8f6.camel@suse.de>
-Subject: Re: [PATCH v5 0/6] Raspberry Pi 4 PCIe support
-From:   Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     devicetree@vger.kernel.org, f.fainelli@gmail.com, maz@kernel.org,
-        phil@raspberrypi.org, linux-kernel@vger.kernel.org,
-        jeremy.linton@arm.com, mbrugger@suse.com,
-        bcm-kernel-feedback-list@broadcom.com, wahrenst@gmx.net,
-        james.quinlan@broadcom.com, linux-pci@vger.kernel.org,
-        andrew.murray@arm.com, linux-arm-kernel@lists.infradead.org,
-        linux-rpi-kernel@lists.infradead.org
-Date:   Wed, 15 Jan 2020 13:45:23 +0100
-In-Reply-To: <20200115120238.GA7233@e121166-lin.cambridge.arm.com>
-References: <20191216110113.30436-1-nsaenzjulienne@suse.de>
-         <20200115120238.GA7233@e121166-lin.cambridge.arm.com>
-Content-Type: multipart/signed; micalg="pgp-sha256";
-        protocol="application/pgp-signature"; boundary="=-F2otfZC9sOf6KTpP904O"
-User-Agent: Evolution 3.34.3 
+        id S1728905AbgAOMxa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 15 Jan 2020 07:53:30 -0500
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:34974 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726562AbgAOMxa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jan 2020 07:53:30 -0500
+Received: by mail-wr1-f66.google.com with SMTP id g17so15620116wro.2
+        for <linux-pci@vger.kernel.org>; Wed, 15 Jan 2020 04:53:29 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=qvpO6T6lCyQjsFcC/B3MAQOfFJPvli4NlBcE8bVnq2o=;
+        b=Un9dRtM79GzqVUSyAD8iZOkwazLCNFPN06jszbZzjoO5X6y3APf6Ai8m4xLDh1rv+p
+         9QpUygnXhnhwj68gkjMH+zGrl+vtJTYPOfVTL2+UTTkmT8asVWfVm8hswGh4oMCiJv6J
+         FobO4S5wB3tp7ZFAa9ajhZM3j0+zz352jdcby4we3TkEQ7IiQS7idAfquMS9qPFuK1Lg
+         hp67GsukgiTHq6OTCFJKkEn6W6VseusestCZQjMr7nMdk6WS/LI8W+rIfW17KZCi/FVi
+         AGdk3/KfLRFvd0K6uSzqopJBpMTMjB2fKWn0V7QdS+tbKdEz2rGjDW/6TF6iw9KRthix
+         Dxrw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=qvpO6T6lCyQjsFcC/B3MAQOfFJPvli4NlBcE8bVnq2o=;
+        b=cDYb4JliZKz8nK2SRA5o48of92xf1kLrnaDO8TvfP3BFupmk6a30gdwcGbsf8N1AtR
+         OmQ6KiNRCPNxX9flJlvXXwMT7Rp5iRTBTWhv7HxnLM5XJESwq8a+fMGECC2T3hJMeXVP
+         h+tSfY6BCqZMD96i2yR7TDHd8h/OMFBfoSansrunZCW60aqe37HFPAHg0xWZ7Tgn7Yij
+         Tlb+PNwL7PtHOoFC9jSBV/Ok/t8tL4uMZ/4YJSz8ohe7hNQ9HKaoEWwJ55z0IAz4gx/w
+         RMPbPl+Ss2VDKXVGQPXPK2VbEs8B0/1u+nrtC6Nj+hIvrybKzusM2VTXPpcIfzRsYCPI
+         UQIg==
+X-Gm-Message-State: APjAAAXHjppX6GhXuS+6Y2H0d+yDmv+LppIZD20VHExXiq6hYuN1DDft
+        yVCTt0xVS+Z52efFjaUQi/rKfkfPVME=
+X-Google-Smtp-Source: APXvYqzDH6Ofz9W/fkRMwJX0uclPKkOnzuIwGWl7fHBi5dpcESWKfC7gH7eOZddi3/XzZnxRbT2koQ==
+X-Received: by 2002:adf:e6d2:: with SMTP id y18mr32269694wrm.262.1579092808455;
+        Wed, 15 Jan 2020 04:53:28 -0800 (PST)
+Received: from localhost.localdomain ([2001:171b:2266:ba60:116c:c27a:3e7f:5eaf])
+        by smtp.gmail.com with ESMTPSA id d12sm25196171wrp.62.2020.01.15.04.53.27
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 15 Jan 2020 04:53:28 -0800 (PST)
+From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
+To:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        iommu@lists.linux-foundation.org, will@kernel.org
+Cc:     joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
+        lorenzo.pieralisi@arm.com, guohanjun@huawei.com,
+        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+        robin.murphy@arm.com, bhelgaas@google.com, eric.auger@redhat.com,
+        jonathan.cameron@huawei.com, zhangfei.gao@linaro.org
+Subject: [PATCH v5 01/13] iommu/arm-smmu-v3: Drop __GFP_ZERO flag from DMA allocation
+Date:   Wed, 15 Jan 2020 13:52:27 +0100
+Message-Id: <20200115125239.136759-2-jean-philippe@linaro.org>
+X-Mailer: git-send-email 2.24.1
+In-Reply-To: <20200115125239.136759-1-jean-philippe@linaro.org>
+References: <20200115125239.136759-1-jean-philippe@linaro.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Since commit 518a2f1925c3 ("dma-mapping: zero memory returned from
+dma_alloc_*"), dma_alloc_* always initializes memory to zero, so there
+is no need to use dma_zalloc_* or pass the __GFP_ZERO flag anymore.
 
---=-F2otfZC9sOf6KTpP904O
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+The flag was introduced by commit 04fa26c71be5 ("iommu/arm-smmu: Convert
+DMA buffer allocations to the managed API"), since the managed API
+didn't provide a dmam_zalloc_coherent() function.
 
-On Wed, 2020-01-15 at 12:02 +0000, Lorenzo Pieralisi wrote:
-> On Mon, Dec 16, 2019 at 12:01:06PM +0100, Nicolas Saenz Julienne wrote:
-> > This series aims at providing support for Raspberry Pi 4's PCIe
-> > controller, which is also shared with the Broadcom STB family of
-> > devices.
-> >=20
-> > There was a previous attempt to upstream this some years ago[1] but was
-> > blocked as most STB PCIe integrations have a sparse DMA mapping[2] whic=
-h
-> > is something currently not supported by the kernel.  Luckily this is no=
-t
-> > the case for the Raspberry Pi 4.
-> >=20
-> > Note the series is based on top of linux next, as the DTS patch depends
-> > on it.
-> >=20
-> > [1] https://patchwork.kernel.org/cover/10605933/
-> > [2] https://patchwork.kernel.org/patch/10605957/
-> >=20
-> > ---
-> >=20
-> > Changes since v4:
-> >   - Rebase DTS patch
-> >   - Respin log2.h code into it's own series as it's still contentious
-> >     yet mostly unrelated to the PCIe part
-> >=20
-> > Changes since v3:
-> >   - Moved all the log2.h related changes at the end of the series, as I
-> >     presume they will be contentious and I don't want the PCIe patches
-> >     to depend on them. Ultimately I think I'll respin them on their own
-> >     series but wanted to keep them in for this submission just for the
-> >     sake of continuity.
-> >   - Addressed small nits here and there.
-> >=20
-> > Changes since v2:
-> >   - Redo register access in driver avoiding indirection while keeping
-> >     the naming intact
-> >   - Add patch editing ARM64's config
-> >   - Last MSI cleanups, notably removing MSIX flag
-> >   - Got rid of all _RB writes
-> >   - Got rid of all of_data
-> >   - Overall churn removal
-> >   - Address the rest of Andrew's comments
-> >=20
-> > Changes since v1:
-> >   - add generic rounddown/roundup_pow_two64() patch
-> >   - Add MAINTAINERS patch
-> >   - Fix Kconfig
-> >   - Cleanup probe, use up to date APIs, exit on MSI failure
-> >   - Get rid of linux,pci-domain and other unused constructs
-> >   - Use edge triggered setup for MSI
-> >   - Cleanup MSI implementation
-> >   - Fix multiple cosmetic issues
-> >   - Remove supend/resume code
-> >=20
-> > Jim Quinlan (3):
-> >   dt-bindings: PCI: Add bindings for brcmstb's PCIe device
-> >   PCI: brcmstb: Add Broadcom STB PCIe host controller driver
-> >   PCI: brcmstb: Add MSI support
-> >=20
-> > Nicolas Saenz Julienne (3):
-> >   ARM: dts: bcm2711: Enable PCIe controller
-> >   MAINTAINERS: Add brcmstb PCIe controller
-> >   arm64: defconfig: Enable Broadcom's STB PCIe controller
-> >=20
-> >  .../bindings/pci/brcm,stb-pcie.yaml           |   97 ++
-> >  MAINTAINERS                                   |    4 +
-> >  arch/arm/boot/dts/bcm2711.dtsi                |   31 +-
-> >  arch/arm64/configs/defconfig                  |    1 +
-> >  drivers/pci/controller/Kconfig                |    9 +
-> >  drivers/pci/controller/Makefile               |    1 +
-> >  drivers/pci/controller/pcie-brcmstb.c         | 1007 +++++++++++++++++
-> >  7 files changed, 1149 insertions(+), 1 deletion(-)
-> >  create mode 100644 Documentation/devicetree/bindings/pci/brcm,stb-pcie=
-.yaml
-> >  create mode 100644 drivers/pci/controller/pcie-brcmstb.c
->=20
-> Applied patches [1,3,4] to pci/brcmstb, please have a look to check
-> everything is in order after the minor update I included.
+Reviewed-by: Eric Auger <eric.auger@redhat.com>
+Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
+---
+ drivers/iommu/arm-smmu-v3.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-Looks good to me.
-
-Thanks,
-Nicolas
-
-
---=-F2otfZC9sOf6KTpP904O
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCAAdFiEErOkkGDHCg2EbPcGjlfZmHno8x/4FAl4fCWMACgkQlfZmHno8
-x/7eNAf9E5M7dM+K4pFouDMsP1SzO9yIUBi8WCbONKVbOsyQ6p7LQBY4Kzj3sLoL
-NB1VQMbdAD9+0ZxluUkMeuOxdiJU2CPHdEh8efJuyGzr3qMr4w8raGvUsOnAOzy9
-zBgwz3k6phZZwcVHV+N/tNGQYbhHud7N09NHLLDZKN1GLYd3ezgoE72apUFKYvHi
-7D7nByGSTSI6mhnQoRR243ct0usUQG4HHsB7ddDTno5sCNd9ViLPPtFna2bA9x6w
-B/7ahcSzHd1z3MamuEyNYNgZ173kYI4pZmovxkWX/Nm+qAbJioQK/hmaCwsBl+jQ
-8fAZVXVrBG8TYkR/zbChpgjg/RM3Tw==
-=lFyM
------END PGP SIGNATURE-----
-
---=-F2otfZC9sOf6KTpP904O--
+diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+index effe72eb89e7..d4e8b7f8d9f4 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -1675,7 +1675,7 @@ static int arm_smmu_init_l2_strtab(struct arm_smmu_device *smmu, u32 sid)
+ 
+ 	desc->span = STRTAB_SPLIT + 1;
+ 	desc->l2ptr = dmam_alloc_coherent(smmu->dev, size, &desc->l2ptr_dma,
+-					  GFP_KERNEL | __GFP_ZERO);
++					  GFP_KERNEL);
+ 	if (!desc->l2ptr) {
+ 		dev_err(smmu->dev,
+ 			"failed to allocate l2 stream table for SID %u\n",
+@@ -2161,8 +2161,7 @@ static int arm_smmu_domain_finalise_s1(struct arm_smmu_domain *smmu_domain,
+ 		return asid;
+ 
+ 	cfg->cdptr = dmam_alloc_coherent(smmu->dev, CTXDESC_CD_DWORDS << 3,
+-					 &cfg->cdptr_dma,
+-					 GFP_KERNEL | __GFP_ZERO);
++					 &cfg->cdptr_dma, GFP_KERNEL);
+ 	if (!cfg->cdptr) {
+ 		dev_warn(smmu->dev, "failed to allocate context descriptor\n");
+ 		ret = -ENOMEM;
+@@ -2883,7 +2882,7 @@ static int arm_smmu_init_strtab_2lvl(struct arm_smmu_device *smmu)
+ 
+ 	l1size = cfg->num_l1_ents * (STRTAB_L1_DESC_DWORDS << 3);
+ 	strtab = dmam_alloc_coherent(smmu->dev, l1size, &cfg->strtab_dma,
+-				     GFP_KERNEL | __GFP_ZERO);
++				     GFP_KERNEL);
+ 	if (!strtab) {
+ 		dev_err(smmu->dev,
+ 			"failed to allocate l1 stream table (%u bytes)\n",
+@@ -2910,7 +2909,7 @@ static int arm_smmu_init_strtab_linear(struct arm_smmu_device *smmu)
+ 
+ 	size = (1 << smmu->sid_bits) * (STRTAB_STE_DWORDS << 3);
+ 	strtab = dmam_alloc_coherent(smmu->dev, size, &cfg->strtab_dma,
+-				     GFP_KERNEL | __GFP_ZERO);
++				     GFP_KERNEL);
+ 	if (!strtab) {
+ 		dev_err(smmu->dev,
+ 			"failed to allocate linear stream table (%u bytes)\n",
+-- 
+2.24.1
 
