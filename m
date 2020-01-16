@@ -7,48 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB667C33CB7
-	for <linux-pci@archiver.kernel.org>; Thu, 16 Jan 2020 17:09:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF293C33CAF
+	for <linux-pci@archiver.kernel.org>; Thu, 16 Jan 2020 17:09:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 90CF92467A
-	for <linux-pci@archiver.kernel.org>; Thu, 16 Jan 2020 17:09:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB736205F4
+	for <linux-pci@archiver.kernel.org>; Thu, 16 Jan 2020 17:09:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579194572;
-	bh=aFuI9s9qrYGvRS3aJIBpExQNugQRFOhhIn8THPtBKoo=;
+	s=default; t=1579194586;
+	bh=yGgVaHGgBR6n1ABHhk0gvfmtZc0p3oSmfcOIHIkwBdU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=NM980imvbyRtn2G0awLqE6CdwEzM5iahwCNIgnqk4kJMsjGeC0Qv2+DKNCd84k29O
-	 Awijd9BShBgbaac3peH20gB+FYOUnGUGXneq4ktCiRT9rjCt84MNDwV5ANy1Rsp6vy
-	 QGjXpOXPLRfOJYI7C9aH9a1G7z/IEKjfaQE0q4cE=
+	b=qkLwWGT5vfGGKK2r5ENlY71cJNMX6SFWAl8Qzlov3wUwxBHTbregt6X++qzdvCZ+m
+	 LIYKpY7jUV5oLyGCz/cYZImgnrCsx394Ou3QgrVxhPDO0+R1G0vEyTAbk72drQz8rq
+	 8/eC+kaf2ejJJ7W76HWZezcejvd0jYvQL98z3qqc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389698AbgAPRJa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 16 Jan 2020 12:09:30 -0500
-Received: from mail.kernel.org ([198.145.29.99]:45526 "EHLO mail.kernel.org"
+        id S2389738AbgAPRJo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 16 Jan 2020 12:09:44 -0500
+Received: from mail.kernel.org ([198.145.29.99]:46220 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389689AbgAPRJ3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 16 Jan 2020 12:09:29 -0500
+        id S2389420AbgAPRJo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 16 Jan 2020 12:09:44 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5C19B24686;
-        Thu, 16 Jan 2020 17:09:28 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 3B3F7206D9;
+        Thu, 16 Jan 2020 17:09:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579194569;
-        bh=aFuI9s9qrYGvRS3aJIBpExQNugQRFOhhIn8THPtBKoo=;
+        s=default; t=1579194583;
+        bh=yGgVaHGgBR6n1ABHhk0gvfmtZc0p3oSmfcOIHIkwBdU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=g6Wwm9cfTpwTEcc321Q2yGt7PJg9zR1zcxvro7wJCQCwpbYJ9CN3zB5HSdZb2u03A
-         FjsznxaEvP+2INjOWgjUZb7H7HqUPAFVtDiEYrtxyFUUUa9f9L6qXOIbwsr/ukV//t
-         ZYcIlPFZoU66wqlVewQfSOGqZG1krmDDSHk4ydcg=
+        b=ng2qEHLLw856nVVkl4zL8YyDFArRc/4yBJbUNuqEhfC5SNZE3GxMBHufSPCQEAW8l
+         jAvXMd4kT93ugllclMDiw0lo7jpKKCXywzj+HLY9SUQcM12Jx/PUMLId8xaf1Ed4W0
+         gVpFqrf3CVNxNxGIQCqp56D4LkQRJt8KlfQ2DcMk=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        "Robert R . Howell" <RHowell@uwyo.edu>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Sasha Levin <sashal@kernel.org>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 447/671] PM: ACPI/PCI: Resume all devices during hibernation
-Date:   Thu, 16 Jan 2020 12:01:25 -0500
-Message-Id: <20200116170509.12787-184-sashal@kernel.org>
+Cc:     Hou Zhiqiang <Zhiqiang.Hou@nxp.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Minghuan Lian <Minghuan.Lian@nxp.com>,
+        Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>,
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 456/671] PCI: mobiveil: Fix the valid check for inbound and outbound windows
+Date:   Thu, 16 Jan 2020 12:01:34 -0500
+Message-Id: <20200116170509.12787-193-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200116170509.12787-1-sashal@kernel.org>
 References: <20200116170509.12787-1-sashal@kernel.org>
@@ -61,87 +60,46 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-[ Upstream commit 501debd4aa5edc755037c39ea5a8fba23b41e580 ]
+[ Upstream commit ccd34dac2ed596b1f26079912bdf638e002a3979 ]
 
-Both the PCI bus type and the ACPI PM domain avoid resuming
-runtime-suspended devices with DPM_FLAG_SMART_SUSPEND set during
-hibernation (before creating the snapshot image of system memory),
-but that turns out to be a mistake.  It leads to functional issues
-and adds complexity that's hard to justify.
+In program_ib/ob_windows() check the window index from the function
+parameter instead of the total number of initialized windows to
+determine if the specified window is valid.
 
-For this reason, resume all runtime-suspended PCI devices and all
-devices in the ACPI PM domains before creating a snapshot image of
-system memory during hibernation.
-
-Fixes: 05087360fd7a (ACPI / PM: Take SMART_SUSPEND driver flag into account)
-Fixes: c4b65157aeef (PCI / PM: Take SMART_SUSPEND driver flag into account)
-Link: https://lore.kernel.org/linux-acpi/917d4399-2e22-67b1-9d54-808561f9083f@uwyo.edu/T/#maf065fe6e4974f2a9d79f332ab99dfaba635f64c
-Reported-by: Robert R. Howell <RHowell@uwyo.edu>
-Tested-by: Robert R. Howell <RHowell@uwyo.edu>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+Fixes: 9af6bcb11e12 ("PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP driver")
+Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Reviewed-by: Minghuan Lian <Minghuan.Lian@nxp.com>
+Reviewed-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/acpi/device_pm.c | 13 +++++++------
- drivers/pci/pci-driver.c | 16 ++++++++--------
- 2 files changed, 15 insertions(+), 14 deletions(-)
+ drivers/pci/controller/pcie-mobiveil.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/acpi/device_pm.c b/drivers/acpi/device_pm.c
-index e0927c5fd282..11b7a1632e5a 100644
---- a/drivers/acpi/device_pm.c
-+++ b/drivers/acpi/device_pm.c
-@@ -1116,13 +1116,14 @@ EXPORT_SYMBOL_GPL(acpi_subsys_resume_early);
- int acpi_subsys_freeze(struct device *dev)
- {
- 	/*
--	 * This used to be done in acpi_subsys_prepare() for all devices and
--	 * some drivers may depend on it, so do it here.  Ideally, however,
--	 * runtime-suspended devices should not be touched during freeze/thaw
--	 * transitions.
-+	 * Resume all runtime-suspended devices before creating a snapshot
-+	 * image of system memory, because the restore kernel generally cannot
-+	 * be expected to always handle them consistently and they need to be
-+	 * put into the runtime-active metastate during system resume anyway,
-+	 * so it is better to ensure that the state saved in the image will be
-+	 * always consistent with that.
- 	 */
--	if (!dev_pm_test_driver_flags(dev, DPM_FLAG_SMART_SUSPEND))
--		pm_runtime_resume(dev);
-+	pm_runtime_resume(dev);
+diff --git a/drivers/pci/controller/pcie-mobiveil.c b/drivers/pci/controller/pcie-mobiveil.c
+index 476be4f3c7f6..14f816591e84 100644
+--- a/drivers/pci/controller/pcie-mobiveil.c
++++ b/drivers/pci/controller/pcie-mobiveil.c
+@@ -395,7 +395,7 @@ static void program_ib_windows(struct mobiveil_pcie *pcie, int win_num,
+ 	int amap_ctrl_dw;
+ 	u64 size64 = ~(size - 1);
  
- 	return pm_generic_freeze(dev);
- }
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index e69af9b8361d..5def4b74d54a 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -996,15 +996,15 @@ static int pci_pm_freeze(struct device *dev)
- 	}
+-	if ((pcie->ib_wins_configured + 1) > pcie->ppio_wins) {
++	if (win_num >= pcie->ppio_wins) {
+ 		dev_err(&pcie->pdev->dev,
+ 			"ERROR: max inbound windows reached !\n");
+ 		return;
+@@ -429,7 +429,7 @@ static void program_ob_windows(struct mobiveil_pcie *pcie, int win_num,
+ 	u32 value, type;
+ 	u64 size64 = ~(size - 1);
  
- 	/*
--	 * This used to be done in pci_pm_prepare() for all devices and some
--	 * drivers may depend on it, so do it here.  Ideally, runtime-suspended
--	 * devices should not be touched during freeze/thaw transitions,
--	 * however.
-+	 * Resume all runtime-suspended devices before creating a snapshot
-+	 * image of system memory, because the restore kernel generally cannot
-+	 * be expected to always handle them consistently and they need to be
-+	 * put into the runtime-active metastate during system resume anyway,
-+	 * so it is better to ensure that the state saved in the image will be
-+	 * always consistent with that.
- 	 */
--	if (!dev_pm_smart_suspend_and_suspended(dev)) {
--		pm_runtime_resume(dev);
--		pci_dev->state_saved = false;
--	}
-+	pm_runtime_resume(dev);
-+	pci_dev->state_saved = false;
- 
- 	if (pm->freeze) {
- 		int error;
+-	if ((pcie->ob_wins_configured + 1) > pcie->apio_wins) {
++	if (win_num >= pcie->apio_wins) {
+ 		dev_err(&pcie->pdev->dev,
+ 			"ERROR: max outbound windows reached !\n");
+ 		return;
 -- 
 2.20.1
 
