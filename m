@@ -7,48 +7,54 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FA8FC33CB6
-	for <linux-pci@archiver.kernel.org>; Thu, 16 Jan 2020 19:01:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9807C33CB7
+	for <linux-pci@archiver.kernel.org>; Thu, 16 Jan 2020 19:07:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 181C920663
-	for <linux-pci@archiver.kernel.org>; Thu, 16 Jan 2020 19:01:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B06232072E
+	for <linux-pci@archiver.kernel.org>; Thu, 16 Jan 2020 19:07:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579201267;
-	bh=F4cwf9f0yORGBvxuj54EAFRFgYgXoEyXBQKX2FzdycU=;
+	s=default; t=1579201666;
+	bh=pFIsn7kenSCtRS9qjn/pVoj416ubdkxUCU+LwNIeHs8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=JrWsy+/ou9XtuRzDrBxs+5iR5vJMflsT4wRQlSD32tnM3kFE9Or6jFDqC5Nb6/Xf9
-	 5kJXKJ+CLT4HARL/fgR+JYPwRD1nJGtNlbFsqHQk1Y1iH+CkUDotRsoXaLEb7vy9AZ
-	 AJltAwdrt1jkorSM/FyYfmD9SquQQgy2wHiX4uko=
+	b=K6CBLF/ZOIzZe5pkkKjXNINB2eZqdK1DIXVGfEL1LI4jajQjHpPCEWq2ZBSzo3PJL
+	 I6imrALSpxhxIquE28JrHU0e8ydrZGjj73o5x7vt5jySLLxQn61SCWyngpNeKhdl9K
+	 Gir0b7wVLB0R3tI/7VSSrbjrUO/nrewKvwf6nziY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388470AbgAPRGD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 16 Jan 2020 12:06:03 -0500
-Received: from mail.kernel.org ([198.145.29.99]:35640 "EHLO mail.kernel.org"
+        id S2387505AbgAPRBN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 16 Jan 2020 12:01:13 -0500
+Received: from mail.kernel.org ([198.145.29.99]:51948 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388818AbgAPRGB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 16 Jan 2020 12:06:01 -0500
+        id S2388035AbgAPRBM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 16 Jan 2020 12:01:12 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 966D421D56;
-        Thu, 16 Jan 2020 17:05:59 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 212382081E;
+        Thu, 16 Jan 2020 17:01:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579194360;
-        bh=F4cwf9f0yORGBvxuj54EAFRFgYgXoEyXBQKX2FzdycU=;
+        s=default; t=1579194072;
+        bh=pFIsn7kenSCtRS9qjn/pVoj416ubdkxUCU+LwNIeHs8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=S0zu3jqfVExMDvv5rWgMb1TfCUeSI+1RVPIHl6hojkNIdV1z4Tl8qTPeSv+HWsCZ8
-         zUTAX94kX4NagCUDAaguYPoGBnN83dArmf6gsRhnARCOKEsNJA0wdmJ0oH1BGeAYjb
-         r2yOsdKV3tNV+W+E6YWE3PDq6VYKE/ZrfZBiF4jg=
+        b=lNKp+kLp1n7LMbd+7PNijqmI5pzCXvH9KH+hzTOEHz3IACz+MD8xm3/YT8/hDvsVM
+         c4rThKwQUvckY7zfUeJLpYDnGLJ33u5rbacuXq4Oh4cpcNZG5x3rJNb1TMIs9DKNJ1
+         lK4+VEgm+bDOhWF2YCNyUZOobyEHGyXTZsm/BHCs=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Kishon Vijay Abraham I <kishon@ti.com>,
+Cc:     Wen Yang <wen.yang99@zte.com.cn>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 297/671] PCI: dwc: Fix dw_pcie_ep_find_capability() to return correct capability offset
-Date:   Thu, 16 Jan 2020 11:58:55 -0500
-Message-Id: <20200116170509.12787-34-sashal@kernel.org>
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Niklas Cassel <niklas.cassel@axis.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
+        linux-pci@vger.kernel.org, Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 180/671] PCI: endpoint: functions: Use memcpy_fromio()/memcpy_toio()
+Date:   Thu, 16 Jan 2020 11:51:29 -0500
+Message-Id: <20200116165940.10720-63-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200116170509.12787-1-sashal@kernel.org>
-References: <20200116170509.12787-1-sashal@kernel.org>
+In-Reply-To: <20200116165940.10720-1-sashal@kernel.org>
+References: <20200116165940.10720-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -58,64 +64,56 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Kishon Vijay Abraham I <kishon@ti.com>
+From: Wen Yang <wen.yang99@zte.com.cn>
 
-[ Upstream commit 421db1ab287eebe80fd203eb009ae92836c586ad ]
+[ Upstream commit 726dabfde6aa35a4f1508e235ae37edbbf9fbc65 ]
 
-commit beb4641a787d ("PCI: dwc: Add MSI-X callbacks handler") while
-adding MSI-X callback handler, introduced dw_pcie_ep_find_capability()
-and __dw_pcie_ep_find_next_cap() for finding the MSI and MSIX capability.
+Functions copying from/to IO addresses should use the
+memcpy_fromio()/memcpy_toio() API rather than plain memcpy().
 
-However if MSI or MSIX capability is the last capability (i.e there are
-no additional items in the capabilities list and the Next Capability
-Pointer is set to '0'), __dw_pcie_ep_find_next_cap will return '0'
-even though MSI or MSIX capability may be present because of
-incorrect ordering of the "next_cap_ptr" check. Fix it.
+Fix the issue detected through the sparse tool.
 
-Fixes: beb4641a787d ("PCI: dwc: Add MSI-X callbacks handler")
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Fixes: 349e7a85b25f ("PCI: endpoint: functions: Add an EP function to test PCI")
+Suggested-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Wen Yang <wen.yang99@zte.com.cn>
+[lorenzo.pieralisi@arm.com: updated log]
 Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+CC: Niklas Cassel <niklas.cassel@axis.com>
+CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+CC: linux-pci@vger.kernel.org
+CC: linux-kernel@vger.kernel.org
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/controller/dwc/pcie-designware-ep.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/pci/endpoint/functions/pci-epf-test.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 739d97080d3b..a3d07d9c598b 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -46,16 +46,19 @@ static u8 __dw_pcie_ep_find_next_cap(struct dw_pcie *pci, u8 cap_ptr,
- 	u8 cap_id, next_cap_ptr;
- 	u16 reg;
+diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+index 3e86fa3c7da3..4bbd26e8a9e2 100644
+--- a/drivers/pci/endpoint/functions/pci-epf-test.c
++++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+@@ -175,7 +175,7 @@ static int pci_epf_test_read(struct pci_epf_test *epf_test)
+ 		goto err_map_addr;
+ 	}
  
-+	if (!cap_ptr)
-+		return 0;
-+
- 	reg = dw_pcie_readw_dbi(pci, cap_ptr);
--	next_cap_ptr = (reg & 0xff00) >> 8;
- 	cap_id = (reg & 0x00ff);
+-	memcpy(buf, src_addr, reg->size);
++	memcpy_fromio(buf, src_addr, reg->size);
  
--	if (!next_cap_ptr || cap_id > PCI_CAP_ID_MAX)
-+	if (cap_id > PCI_CAP_ID_MAX)
- 		return 0;
+ 	crc32 = crc32_le(~0, buf, reg->size);
+ 	if (crc32 != reg->checksum)
+@@ -230,7 +230,7 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
+ 	get_random_bytes(buf, reg->size);
+ 	reg->checksum = crc32_le(~0, buf, reg->size);
  
- 	if (cap_id == cap)
- 		return cap_ptr;
+-	memcpy(dst_addr, buf, reg->size);
++	memcpy_toio(dst_addr, buf, reg->size);
  
-+	next_cap_ptr = (reg & 0xff00) >> 8;
- 	return __dw_pcie_ep_find_next_cap(pci, next_cap_ptr, cap);
- }
- 
-@@ -67,9 +70,6 @@ static u8 dw_pcie_ep_find_capability(struct dw_pcie *pci, u8 cap)
- 	reg = dw_pcie_readw_dbi(pci, PCI_CAPABILITY_LIST);
- 	next_cap_ptr = (reg & 0x00ff);
- 
--	if (!next_cap_ptr)
--		return 0;
--
- 	return __dw_pcie_ep_find_next_cap(pci, next_cap_ptr, cap);
- }
- 
+ 	/*
+ 	 * wait 1ms inorder for the write to complete. Without this delay L3
 -- 
 2.20.1
 
