@@ -4,54 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9807C33CB7
-	for <linux-pci@archiver.kernel.org>; Thu, 16 Jan 2020 19:07:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D54D3C33CAF
+	for <linux-pci@archiver.kernel.org>; Thu, 16 Jan 2020 19:08:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B06232072E
-	for <linux-pci@archiver.kernel.org>; Thu, 16 Jan 2020 19:07:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A781A206E6
+	for <linux-pci@archiver.kernel.org>; Thu, 16 Jan 2020 19:08:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579201666;
-	bh=pFIsn7kenSCtRS9qjn/pVoj416ubdkxUCU+LwNIeHs8=;
+	s=default; t=1579201703;
+	bh=UUbtdtYPxr1Fu2Ab0dI1KWoUNyTnq3mp4rCOTqYE0Cc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=K6CBLF/ZOIzZe5pkkKjXNINB2eZqdK1DIXVGfEL1LI4jajQjHpPCEWq2ZBSzo3PJL
-	 I6imrALSpxhxIquE28JrHU0e8ydrZGjj73o5x7vt5jySLLxQn61SCWyngpNeKhdl9K
-	 Gir0b7wVLB0R3tI/7VSSrbjrUO/nrewKvwf6nziY=
+	b=ghsTtDC6GmAaqxFAThWuEM8Oh0EUnKvGA7Eozvpf6ZvbHMLb1VzHu6uyDUKl9s2kP
+	 9HaPCR/tjQo9p+srLHNPfgZjLephgCjJtLQKqMzPcwnFYb4zqOTgaDISl1il1ASea1
+	 /HO00aGUtEvkbDpY69pIR2pgu9Wl3esmfdfsz8+I=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387505AbgAPRBN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 16 Jan 2020 12:01:13 -0500
-Received: from mail.kernel.org ([198.145.29.99]:51948 "EHLO mail.kernel.org"
+        id S2387991AbgAPTIW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 16 Jan 2020 14:08:22 -0500
+Received: from mail.kernel.org ([198.145.29.99]:51478 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388035AbgAPRBM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 16 Jan 2020 12:01:12 -0500
+        id S2387966AbgAPRBA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 16 Jan 2020 12:01:00 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 212382081E;
-        Thu, 16 Jan 2020 17:01:10 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 0BEA520730;
+        Thu, 16 Jan 2020 17:00:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579194072;
-        bh=pFIsn7kenSCtRS9qjn/pVoj416ubdkxUCU+LwNIeHs8=;
+        s=default; t=1579194060;
+        bh=UUbtdtYPxr1Fu2Ab0dI1KWoUNyTnq3mp4rCOTqYE0Cc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=lNKp+kLp1n7LMbd+7PNijqmI5pzCXvH9KH+hzTOEHz3IACz+MD8xm3/YT8/hDvsVM
-         c4rThKwQUvckY7zfUeJLpYDnGLJ33u5rbacuXq4Oh4cpcNZG5x3rJNb1TMIs9DKNJ1
-         lK4+VEgm+bDOhWF2YCNyUZOobyEHGyXTZsm/BHCs=
+        b=DLdZDnCLjA1nqHtFqVY7Ml1JYHighXnlOLb5vc5aGMBfCM3yUpW/uGtuf2d7jClxs
+         492zZ5BUKsnes4el8LJsXW0WbUOh2Og7U7/57uXvoLNW7XWno1/9dbFzcBDPxtUgL0
+         4rj7RMgXpfWvEaALJDEYsaAjO4IkbbJ8jYZH0uYk=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Wen Yang <wen.yang99@zte.com.cn>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Niklas Cassel <niklas.cassel@axis.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
-        linux-pci@vger.kernel.org, Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 180/671] PCI: endpoint: functions: Use memcpy_fromio()/memcpy_toio()
-Date:   Thu, 16 Jan 2020 11:51:29 -0500
-Message-Id: <20200116165940.10720-63-sashal@kernel.org>
+Cc:     Paul Selles <paul.selles@microchip.com>,
+        Wesley Sheng <wesley.sheng@microchip.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Jon Mason <jdmason@kudzu.us>, Sasha Levin <sashal@kernel.org>,
+        linux-pci@vger.kernel.org, linux-ntb@googlegroups.com
+Subject: [PATCH AUTOSEL 4.19 172/671] ntb_hw_switchtec: debug print 64bit aligned crosslink BAR Numbers
+Date:   Thu, 16 Jan 2020 11:51:21 -0500
+Message-Id: <20200116165940.10720-55-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200116165940.10720-1-sashal@kernel.org>
 References: <20200116165940.10720-1-sashal@kernel.org>
@@ -64,56 +60,37 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Wen Yang <wen.yang99@zte.com.cn>
+From: Paul Selles <paul.selles@microchip.com>
 
-[ Upstream commit 726dabfde6aa35a4f1508e235ae37edbbf9fbc65 ]
+[ Upstream commit cce8e04cf79e47809455215744685e8eb56f94bb ]
 
-Functions copying from/to IO addresses should use the
-memcpy_fromio()/memcpy_toio() API rather than plain memcpy().
+Switchtec NTB crosslink BARs are 64bit addressed but they are printed as
+32bit addressed BARs. Fix debug log to increment the BAR numbers by 2 to
+reflect the 64bit address alignment.
 
-Fix the issue detected through the sparse tool.
-
-Fixes: 349e7a85b25f ("PCI: endpoint: functions: Add an EP function to test PCI")
-Suggested-by: Kishon Vijay Abraham I <kishon@ti.com>
-Signed-off-by: Wen Yang <wen.yang99@zte.com.cn>
-[lorenzo.pieralisi@arm.com: updated log]
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
-CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>
-CC: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-CC: Niklas Cassel <niklas.cassel@axis.com>
-CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-CC: linux-pci@vger.kernel.org
-CC: linux-kernel@vger.kernel.org
+Fixes: 017525018202 ("ntb_hw_switchtec: Add initialization code for crosslink")
+Signed-off-by: Paul Selles <paul.selles@microchip.com>
+Signed-off-by: Wesley Sheng <wesley.sheng@microchip.com>
+Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
+Signed-off-by: Jon Mason <jdmason@kudzu.us>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/endpoint/functions/pci-epf-test.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/ntb/hw/mscc/ntb_hw_switchtec.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-index 3e86fa3c7da3..4bbd26e8a9e2 100644
---- a/drivers/pci/endpoint/functions/pci-epf-test.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-@@ -175,7 +175,7 @@ static int pci_epf_test_read(struct pci_epf_test *epf_test)
- 		goto err_map_addr;
- 	}
+diff --git a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
+index 5ee5f40b4dfc..9916bc5b6759 100644
+--- a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
++++ b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
+@@ -1120,7 +1120,7 @@ static int crosslink_enum_partition(struct switchtec_ntb *sndev,
  
--	memcpy(buf, src_addr, reg->size);
-+	memcpy_fromio(buf, src_addr, reg->size);
+ 		dev_dbg(&sndev->stdev->dev,
+ 			"Crosslink BAR%d addr: %llx\n",
+-			i, bar_addr);
++			i*2, bar_addr);
  
- 	crc32 = crc32_le(~0, buf, reg->size);
- 	if (crc32 != reg->checksum)
-@@ -230,7 +230,7 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
- 	get_random_bytes(buf, reg->size);
- 	reg->checksum = crc32_le(~0, buf, reg->size);
- 
--	memcpy(dst_addr, buf, reg->size);
-+	memcpy_toio(dst_addr, buf, reg->size);
- 
- 	/*
- 	 * wait 1ms inorder for the write to complete. Without this delay L3
+ 		if (bar_addr != bar_space * i)
+ 			continue;
 -- 
 2.20.1
 
