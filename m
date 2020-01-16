@@ -7,46 +7,51 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60792C33CAF
-	for <linux-pci@archiver.kernel.org>; Thu, 16 Jan 2020 18:22:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A1D8C33CAF
+	for <linux-pci@archiver.kernel.org>; Thu, 16 Jan 2020 18:32:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3A6D5208C3
-	for <linux-pci@archiver.kernel.org>; Thu, 16 Jan 2020 18:22:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 17530206D7
+	for <linux-pci@archiver.kernel.org>; Thu, 16 Jan 2020 18:32:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579198933;
-	bh=MVuQihC75yyeoF/lahCObJDjcs4ywXW3oeFo6Zh6GIE=;
+	s=default; t=1579199572;
+	bh=BR4bAa3sU9jTA4hgBf/kKhrT7L1DR2b3BRTZ3iHNCgU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=k7kjFOICvI1i2MZhx4AVKpx2UW4wSN3Z9frF+/NAx6iMaW8NJGYoVncC8AmOjrQNU
-	 w/n+DPFxP55XbB/lr+h+2yeKlgXeg/eayQK02/um46YXEP/t/TgV7i2Z+QT20x26d4
-	 hDotnPcjpSNJCbveSglZrW+mCmTRqjjbki76Eg4M=
+	b=QWJ7SJy94w0TweCzLZl9mGlh9lN8jHrHEgMqR9Oke+rfac90Ol2/OD+dcWPfoUUuQ
+	 B+bwKaZCArR9o3Bc/GuP46qpQ2u8v2M1MXSQCSFRIRkgYULod4xBgYJ0iL8YbOS4wL
+	 BhfTnngGT/b25eMBD3DTF6L0Y1Qa6OX8flkBqySk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392478AbgAPR1i (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 16 Jan 2020 12:27:38 -0500
-Received: from mail.kernel.org ([198.145.29.99]:37608 "EHLO mail.kernel.org"
+        id S2391829AbgAPRY5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 16 Jan 2020 12:24:57 -0500
+Received: from mail.kernel.org ([198.145.29.99]:60228 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2390821AbgAPR1h (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 16 Jan 2020 12:27:37 -0500
+        id S2391824AbgAPRY4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 16 Jan 2020 12:24:56 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B4AEC246DC;
-        Thu, 16 Jan 2020 17:27:35 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A51FE246AE;
+        Thu, 16 Jan 2020 17:24:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579195656;
-        bh=MVuQihC75yyeoF/lahCObJDjcs4ywXW3oeFo6Zh6GIE=;
+        s=default; t=1579195495;
+        bh=BR4bAa3sU9jTA4hgBf/kKhrT7L1DR2b3BRTZ3iHNCgU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=2reit09ulDujz+8GyMgmEtoVYMj1UmcJzVBX03UtFapvWVnR4sWzaHgDVmptG3w1R
-         wJ06mD6ndxoswhRhctL108pJl8VN7XFWR0h+IMQWJ+YC3ioRW+Sr3BWJl8FGEjGxn+
-         yWqAkvNIR//7Govug0KXDod1lx2IlDo2sahsXvQY=
+        b=FAWRqBduZG6ms5+eyc5GmhQd/ljzUuWYFKKyQjfvuC+sJ+Mpq+2+aI47QiICaou4h
+         czCwGaP3Vn0BAuLFE5m5TlZyesdG6giHLInyK3sS7E46JyMbXfJc8KxSIzQLnYP32S
+         lXUwxawg+/KFa6XlfYINEY1pXyYh489G7cN3sTBw=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 217/371] PCI: PM: Avoid possible suspend-to-idle issue
-Date:   Thu, 16 Jan 2020 12:21:29 -0500
-Message-Id: <20200116172403.18149-160-sashal@kernel.org>
+Cc:     Wen Yang <wen.yang99@zte.com.cn>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Niklas Cassel <niklas.cassel@axis.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
+        linux-pci@vger.kernel.org, Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 097/371] PCI: endpoint: functions: Use memcpy_fromio()/memcpy_toio()
+Date:   Thu, 16 Jan 2020 12:19:29 -0500
+Message-Id: <20200116172403.18149-40-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200116172403.18149-1-sashal@kernel.org>
 References: <20200116172403.18149-1-sashal@kernel.org>
@@ -59,87 +64,56 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+From: Wen Yang <wen.yang99@zte.com.cn>
 
-[ Upstream commit d491f2b75237ef37d8867830ab7fad8d9659e853 ]
+[ Upstream commit 726dabfde6aa35a4f1508e235ae37edbbf9fbc65 ]
 
-If a PCI driver leaves the device handled by it in D0 and calls
-pci_save_state() on the device in its ->suspend() or ->suspend_late()
-callback, it can expect the device to stay in D0 over the whole
-s2idle cycle.  However, that may not be the case if there is a
-spurious wakeup while the system is suspended, because in that case
-pci_pm_suspend_noirq() will run again after pci_pm_resume_noirq()
-which calls pci_restore_state(), via pci_pm_default_resume_early(),
-so state_saved is cleared and the second iteration of
-pci_pm_suspend_noirq() will invoke pci_prepare_to_sleep() which
-may change the power state of the device.
+Functions copying from/to IO addresses should use the
+memcpy_fromio()/memcpy_toio() API rather than plain memcpy().
 
-To avoid that, add a new internal flag, skip_bus_pm, that will be set
-by pci_pm_suspend_noirq() when it runs for the first time during the
-given system suspend-resume cycle if the state of the device has
-been saved already and the device is still in D0.  Setting that flag
-will cause the next iterations of pci_pm_suspend_noirq() to set
-state_saved for pci_pm_resume_noirq(), so that it always restores the
-device state from the originally saved data, and avoid calling
-pci_prepare_to_sleep() for the device.
+Fix the issue detected through the sparse tool.
 
-Fixes: 33e4f80ee69b ("ACPI / PM: Ignore spurious SCI wakeups from suspend-to-idle")
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Reviewed-by: Keith Busch <keith.busch@intel.com>
-Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Fixes: 349e7a85b25f ("PCI: endpoint: functions: Add an EP function to test PCI")
+Suggested-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Wen Yang <wen.yang99@zte.com.cn>
+[lorenzo.pieralisi@arm.com: updated log]
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+CC: Niklas Cassel <niklas.cassel@axis.com>
+CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+CC: linux-pci@vger.kernel.org
+CC: linux-kernel@vger.kernel.org
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/pci-driver.c | 17 ++++++++++++++++-
- include/linux/pci.h      |  1 +
- 2 files changed, 17 insertions(+), 1 deletion(-)
+ drivers/pci/endpoint/functions/pci-epf-test.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 522e59274b5d..1589a147c536 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -728,6 +728,8 @@ static int pci_pm_suspend(struct device *dev)
- 	struct pci_dev *pci_dev = to_pci_dev(dev);
- 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
- 
-+	pci_dev->skip_bus_pm = false;
-+
- 	if (pci_has_legacy_pm_support(pci_dev))
- 		return pci_legacy_suspend(dev, PMSG_SUSPEND);
- 
-@@ -801,7 +803,20 @@ static int pci_pm_suspend_noirq(struct device *dev)
- 		}
+diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+index f9308c2f22e6..c2541a772abc 100644
+--- a/drivers/pci/endpoint/functions/pci-epf-test.c
++++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+@@ -177,7 +177,7 @@ static int pci_epf_test_read(struct pci_epf_test *epf_test)
+ 		goto err_map_addr;
  	}
  
--	if (!pci_dev->state_saved) {
-+	if (pci_dev->skip_bus_pm) {
-+		/*
-+		 * The function is running for the second time in a row without
-+		 * going through full resume, which is possible only during
-+		 * suspend-to-idle in a spurious wakeup case.  Moreover, the
-+		 * device was originally left in D0, so its power state should
-+		 * not be changed here and the device register values saved
-+		 * originally should be restored on resume again.
-+		 */
-+		pci_dev->state_saved = true;
-+	} else if (pci_dev->state_saved) {
-+		if (pci_dev->current_state == PCI_D0)
-+			pci_dev->skip_bus_pm = true;
-+	} else {
- 		pci_save_state(pci_dev);
- 		if (pci_power_manageable(pci_dev))
- 			pci_prepare_to_sleep(pci_dev);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 59f4d10568c6..430f3c335446 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -346,6 +346,7 @@ struct pci_dev {
- 						   D3cold, not set for devices
- 						   powered on/off by the
- 						   corresponding bridge */
-+	unsigned int	skip_bus_pm:1;	/* Internal: Skip bus-level PM */
- 	unsigned int	ignore_hotplug:1;	/* Ignore hotplug events */
- 	unsigned int	hotplug_user_indicators:1; /* SlotCtl indicators
- 						      controlled exclusively by
+-	memcpy(buf, src_addr, reg->size);
++	memcpy_fromio(buf, src_addr, reg->size);
+ 
+ 	crc32 = crc32_le(~0, buf, reg->size);
+ 	if (crc32 != reg->checksum)
+@@ -231,7 +231,7 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
+ 	get_random_bytes(buf, reg->size);
+ 	reg->checksum = crc32_le(~0, buf, reg->size);
+ 
+-	memcpy(dst_addr, buf, reg->size);
++	memcpy_toio(dst_addr, buf, reg->size);
+ 
+ 	/*
+ 	 * wait 1ms inorder for the write to complete. Without this delay L3
 -- 
 2.20.1
 
