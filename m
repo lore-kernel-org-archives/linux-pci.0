@@ -2,160 +2,311 @@ Return-Path: <SRS0=0+aG=3F=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FAKE_REPLY_C,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1A50C33CB6
-	for <linux-pci@archiver.kernel.org>; Thu, 16 Jan 2020 19:23:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AAFEFC33CB6
+	for <linux-pci@archiver.kernel.org>; Thu, 16 Jan 2020 20:13:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 77DA7207E0
-	for <linux-pci@archiver.kernel.org>; Thu, 16 Jan 2020 19:23:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7DCDE206D9
+	for <linux-pci@archiver.kernel.org>; Thu, 16 Jan 2020 20:13:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579202605;
-	bh=B39tRMTgHG+yvSL+XbOx831COUj/FX+wNF00LG9uoJk=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=wX+R27yNmyi8a3RJMHUal7+N7dSmC8hhzBAXTHnNEIvGUJzTbgNL8FHHAhvYricSI
-	 tZ5FYM2+QzATABHYPqCHfUhtUST/PEzNygLtT5lxrbjRJwNx6zh9l45zP5A2yYyh1+
-	 zmgpbCzEu2J9HTuOxJmmi+MzL3gjEIG0G1iqh+2g=
+	s=default; t=1579205588;
+	bh=Oku1SgUcFNGjAlZYS25MeT7pk3002sc2qQcj/8n+Jy8=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=CgKG5q/L0DV2gbfkGgiQ+I/OpOlGfF9Oqh9zNLp+voFTp+KPDgVtkHUn2yqeOOWKp
+	 DeF/Mq4ryggiXo/N5i0UY66YQmokzEUuIN7NLToPXYlrMpwDY5zqU+MyuiOFdmSQ4t
+	 Ux37uIq5Vdw/H+vCWoJK1BJ8RKVMELBcFJ5M8zFo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387813AbgAPTXS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 16 Jan 2020 14:23:18 -0500
-Received: from mail.kernel.org ([198.145.29.99]:36944 "EHLO mail.kernel.org"
+        id S1730335AbgAPUNG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 16 Jan 2020 15:13:06 -0500
+Received: from mail.kernel.org ([198.145.29.99]:35488 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729449AbgAPQxR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 16 Jan 2020 11:53:17 -0500
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1730031AbgAPUNG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 16 Jan 2020 15:13:06 -0500
+Received: from localhost (mobile-166-170-223-177.mycingular.net [166.170.223.177])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 34E8A2464B;
-        Thu, 16 Jan 2020 16:53:15 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id CD59120663;
+        Thu, 16 Jan 2020 20:13:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579193596;
-        bh=B39tRMTgHG+yvSL+XbOx831COUj/FX+wNF00LG9uoJk=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=yvIL3ts7e6/NBWXtNwwxW8XtNthX3dpgcuCCrdaxOYgKimQfYaL+yBnOLByp3wkc6
-         rgya7sajdqpgbzP8XrkO3cBX4O1+AZzcL6z3RfpxmpbRNQyLJP35UWglp8sYWW8Hpt
-         7jeaxjDZUDYMeBRjeqJQJNXL98zEkoF1fSqgwg6I=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 135/205] PCI: pciehp: Do not disable interrupt twice on suspend
-Date:   Thu, 16 Jan 2020 11:41:50 -0500
-Message-Id: <20200116164300.6705-135-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200116164300.6705-1-sashal@kernel.org>
-References: <20200116164300.6705-1-sashal@kernel.org>
+        s=default; t=1579205585;
+        bh=Oku1SgUcFNGjAlZYS25MeT7pk3002sc2qQcj/8n+Jy8=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=IhK1f48Tna9dZ0CNq2pVZVJvKPG/cdAIh6XcKxhAJvXjvcOtTlpFNH6+h67axVlEE
+         TzPpUl0Qmm0F++vi8zFvYulQgCWNekYQQBNkKMLHCCnzq5JUrNzhVSenwf47miEj3D
+         z0SAzM3CIDXcKrYOY59mYoiq5Gzljk4zmpKSpT3w=
+Date:   Thu, 16 Jan 2020 14:13:03 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Remi Pommarel <repk@triplefau.lt>
+Cc:     Kishon Vijay Abraham I <kishon@ti.com>,
+        Yue Wang <yue.wang@Amlogic.com>,
+        Kevin Hilman <khilman@baylibre.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Neil Armstrong <narmstrong@baylibre.com>,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Jerome Brunet <jbrunet@baylibre.com>,
+        linux-amlogic@lists.infradead.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v5 7/7] PCI: amlogic: Use AXG PCIE
+Message-ID: <20200116201303.GA187897@google.com>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200116111850.23690-8-repk@triplefau.lt>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
+[+cc linux-pci, series at https://lore.kernel.org/r/20200116111850.23690-1-repk@triplefau.lt]
 
-[ Upstream commit 75fcc0ce72e5cea2e357cdde858216c5bad40442 ]
-
-We try to keep PCIe hotplug ports runtime suspended when entering system
-suspend. Because the PCIe portdrv sets the DPM_FLAG_NEVER_SKIP flag, the PM
-core always calls system suspend/resume hooks even if the device is left
-runtime suspended. Since PCIe hotplug driver re-used the same function for
-both runtime suspend and system suspend, it ended up disabling hotplug
-interrupt twice and the second time following was printed:
-
-  pciehp 0000:03:01.0:pcie204: pcie_do_write_cmd: no response from device
-
-Prevent this from happening by checking whether the device is already
-runtime suspended when the system suspend hook is called.
-
-Fixes: 9c62f0bfb832 ("PCI: pciehp: Implement runtime PM callbacks")
-Link: https://lore.kernel.org/r/20191029170022.57528-1-mika.westerberg@linux.intel.com
-Reported-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
-Tested-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/pci/hotplug/pciehp_core.c | 25 +++++++++++++++++++++++--
- 1 file changed, 23 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index b3122c151b80..56daad828c9e 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -253,7 +253,7 @@ static bool pme_is_native(struct pcie_device *dev)
- 	return pcie_ports_native || host->native_pme;
- }
- 
--static int pciehp_suspend(struct pcie_device *dev)
-+static void pciehp_disable_interrupt(struct pcie_device *dev)
- {
- 	/*
- 	 * Disable hotplug interrupt so that it does not trigger
-@@ -261,7 +261,19 @@ static int pciehp_suspend(struct pcie_device *dev)
- 	 */
- 	if (pme_is_native(dev))
- 		pcie_disable_interrupt(get_service_data(dev));
-+}
- 
-+#ifdef CONFIG_PM_SLEEP
-+static int pciehp_suspend(struct pcie_device *dev)
-+{
-+	/*
-+	 * If the port is already runtime suspended we can keep it that
-+	 * way.
-+	 */
-+	if (dev_pm_smart_suspend_and_suspended(&dev->port->dev))
-+		return 0;
-+
-+	pciehp_disable_interrupt(dev);
- 	return 0;
- }
- 
-@@ -279,6 +291,7 @@ static int pciehp_resume_noirq(struct pcie_device *dev)
- 
- 	return 0;
- }
-+#endif
- 
- static int pciehp_resume(struct pcie_device *dev)
- {
-@@ -292,6 +305,12 @@ static int pciehp_resume(struct pcie_device *dev)
- 	return 0;
- }
- 
-+static int pciehp_runtime_suspend(struct pcie_device *dev)
-+{
-+	pciehp_disable_interrupt(dev);
-+	return 0;
-+}
-+
- static int pciehp_runtime_resume(struct pcie_device *dev)
- {
- 	struct controller *ctrl = get_service_data(dev);
-@@ -318,10 +337,12 @@ static struct pcie_port_service_driver hpdriver_portdrv = {
- 	.remove		= pciehp_remove,
- 
- #ifdef	CONFIG_PM
-+#ifdef	CONFIG_PM_SLEEP
- 	.suspend	= pciehp_suspend,
- 	.resume_noirq	= pciehp_resume_noirq,
- 	.resume		= pciehp_resume,
--	.runtime_suspend = pciehp_suspend,
-+#endif
-+	.runtime_suspend = pciehp_runtime_suspend,
- 	.runtime_resume	= pciehp_runtime_resume,
- #endif	/* PM */
- };
--- 
-2.20.1
-
+On Thu, Jan 16, 2020 at 12:18:50PM +0100, Remi Pommarel wrote:
+> Now that PCIE PHY has been introduced for AXG, the whole has_shared_phy
+> logic can be mutualized between AXG and G12A platforms.
+> 
+> This new PHY makes use of the optional shared MIPI/PCIE analog PHY
+> found on AXG platforms, which need to be used in order to have reliable
+> PCIE communications.
+> 
+> Signed-off-by: Remi Pommarel <repk@triplefau.lt>
+> ---
+>  drivers/pci/controller/dwc/pci-meson.c | 116 +++++--------------------
+>  1 file changed, 22 insertions(+), 94 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/controller/dwc/pci-meson.c
+> index 3772b02a5c55..3715dceca1bf 100644
+> --- a/drivers/pci/controller/dwc/pci-meson.c
+> +++ b/drivers/pci/controller/dwc/pci-meson.c
+> @@ -66,7 +66,6 @@
+>  #define PORT_CLK_RATE			100000000UL
+>  #define MAX_PAYLOAD_SIZE		256
+>  #define MAX_READ_REQ_SIZE		256
+> -#define MESON_PCIE_PHY_POWERUP		0x1c
+>  #define PCIE_RESET_DELAY		500
+>  #define PCIE_SHARED_RESET		1
+>  #define PCIE_NORMAL_RESET		0
+> @@ -81,26 +80,19 @@ enum pcie_data_rate {
+>  struct meson_pcie_mem_res {
+>  	void __iomem *elbi_base;
+>  	void __iomem *cfg_base;
+> -	void __iomem *phy_base;
+>  };
+>  
+>  struct meson_pcie_clk_res {
+>  	struct clk *clk;
+> -	struct clk *mipi_gate;
+>  	struct clk *port_clk;
+>  	struct clk *general_clk;
+>  };
+>  
+>  struct meson_pcie_rc_reset {
+> -	struct reset_control *phy;
+>  	struct reset_control *port;
+>  	struct reset_control *apb;
+>  };
+>  
+> -struct meson_pcie_param {
+> -	bool has_shared_phy;
+> -};
+> -
+>  struct meson_pcie {
+>  	struct dw_pcie pci;
+>  	struct meson_pcie_mem_res mem_res;
+> @@ -108,7 +100,6 @@ struct meson_pcie {
+>  	struct meson_pcie_rc_reset mrst;
+>  	struct gpio_desc *reset_gpio;
+>  	struct phy *phy;
+> -	const struct meson_pcie_param *param;
+>  };
+>  
+>  static struct reset_control *meson_pcie_get_reset(struct meson_pcie *mp,
+> @@ -130,13 +121,6 @@ static int meson_pcie_get_resets(struct meson_pcie *mp)
+>  {
+>  	struct meson_pcie_rc_reset *mrst = &mp->mrst;
+>  
+> -	if (!mp->param->has_shared_phy) {
+> -		mrst->phy = meson_pcie_get_reset(mp, "phy", PCIE_SHARED_RESET);
+> -		if (IS_ERR(mrst->phy))
+> -			return PTR_ERR(mrst->phy);
+> -		reset_control_deassert(mrst->phy);
+> -	}
+> -
+>  	mrst->port = meson_pcie_get_reset(mp, "port", PCIE_NORMAL_RESET);
+>  	if (IS_ERR(mrst->port))
+>  		return PTR_ERR(mrst->port);
+> @@ -162,22 +146,6 @@ static void __iomem *meson_pcie_get_mem(struct platform_device *pdev,
+>  	return devm_ioremap_resource(dev, res);
+>  }
+>  
+> -static void __iomem *meson_pcie_get_mem_shared(struct platform_device *pdev,
+> -					       struct meson_pcie *mp,
+> -					       const char *id)
+> -{
+> -	struct device *dev = mp->pci.dev;
+> -	struct resource *res;
+> -
+> -	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, id);
+> -	if (!res) {
+> -		dev_err(dev, "No REG resource %s\n", id);
+> -		return ERR_PTR(-ENXIO);
+> -	}
+> -
+> -	return devm_ioremap(dev, res->start, resource_size(res));
+> -}
+> -
+>  static int meson_pcie_get_mems(struct platform_device *pdev,
+>  			       struct meson_pcie *mp)
+>  {
+> @@ -189,14 +157,6 @@ static int meson_pcie_get_mems(struct platform_device *pdev,
+>  	if (IS_ERR(mp->mem_res.cfg_base))
+>  		return PTR_ERR(mp->mem_res.cfg_base);
+>  
+> -	/* Meson AXG SoC has two PCI controllers use same phy register */
+> -	if (!mp->param->has_shared_phy) {
+> -		mp->mem_res.phy_base =
+> -			meson_pcie_get_mem_shared(pdev, mp, "phy");
+> -		if (IS_ERR(mp->mem_res.phy_base))
+> -			return PTR_ERR(mp->mem_res.phy_base);
+> -	}
+> -
+>  	return 0;
+>  }
+>  
+> @@ -204,37 +164,33 @@ static int meson_pcie_power_on(struct meson_pcie *mp)
+>  {
+>  	int ret = 0;
+>  
+> -	if (mp->param->has_shared_phy) {
+> -		ret = phy_init(mp->phy);
+> -		if (ret)
+> -			return ret;
+> +	ret = phy_init(mp->phy);
+> +	if (ret)
+> +		return ret;
+>  
+> -		ret = phy_power_on(mp->phy);
+> -		if (ret) {
+> -			phy_exit(mp->phy);
+> -			return ret;
+> -		}
+> -	} else
+> -		writel(MESON_PCIE_PHY_POWERUP, mp->mem_res.phy_base);
+> +	ret = phy_power_on(mp->phy);
+> +	if (ret) {
+> +		phy_exit(mp->phy);
+> +		return ret;
+> +	}
+>  
+>  	return 0;
+>  }
+>  
+> +static void meson_pcie_power_off(struct meson_pcie *mp)
+> +{
+> +	phy_power_off(mp->phy);
+> +	phy_exit(mp->phy);
+> +}
+> +
+>  static int meson_pcie_reset(struct meson_pcie *mp)
+>  {
+>  	struct meson_pcie_rc_reset *mrst = &mp->mrst;
+>  	int ret = 0;
+>  
+> -	if (mp->param->has_shared_phy) {
+> -		ret = phy_reset(mp->phy);
+> -		if (ret)
+> -			return ret;
+> -	} else {
+> -		reset_control_assert(mrst->phy);
+> -		udelay(PCIE_RESET_DELAY);
+> -		reset_control_deassert(mrst->phy);
+> -		udelay(PCIE_RESET_DELAY);
+> -	}
+> +	ret = phy_reset(mp->phy);
+> +	if (ret)
+> +		return ret;
+>  
+>  	reset_control_assert(mrst->port);
+>  	reset_control_assert(mrst->apb);
+> @@ -286,12 +242,6 @@ static int meson_pcie_probe_clocks(struct meson_pcie *mp)
+>  	if (IS_ERR(res->port_clk))
+>  		return PTR_ERR(res->port_clk);
+>  
+> -	if (!mp->param->has_shared_phy) {
+> -		res->mipi_gate = meson_pcie_probe_clock(dev, "mipi", 0);
+> -		if (IS_ERR(res->mipi_gate))
+> -			return PTR_ERR(res->mipi_gate);
+> -	}
+> -
+>  	res->general_clk = meson_pcie_probe_clock(dev, "general", 0);
+>  	if (IS_ERR(res->general_clk))
+>  		return PTR_ERR(res->general_clk);
+> @@ -562,7 +512,6 @@ static const struct dw_pcie_ops dw_pcie_ops = {
+>  
+>  static int meson_pcie_probe(struct platform_device *pdev)
+>  {
+> -	const struct meson_pcie_param *match_data;
+>  	struct device *dev = &pdev->dev;
+>  	struct dw_pcie *pci;
+>  	struct meson_pcie *mp;
+> @@ -576,17 +525,10 @@ static int meson_pcie_probe(struct platform_device *pdev)
+>  	pci->dev = dev;
+>  	pci->ops = &dw_pcie_ops;
+>  
+> -	match_data = of_device_get_match_data(dev);
+> -	if (!match_data) {
+> -		dev_err(dev, "failed to get match data\n");
+> -		return -ENODEV;
+> -	}
+> -	mp->param = match_data;
+> -
+> -	if (mp->param->has_shared_phy) {
+> -		mp->phy = devm_phy_get(dev, "pcie");
+> -		if (IS_ERR(mp->phy))
+> -			return PTR_ERR(mp->phy);
+> +	mp->phy = devm_phy_get(dev, "pcie");
+> +	if (IS_ERR(mp->phy)) {
+> +		dev_err(dev, "get phy failed, %ld\n", PTR_ERR(mp->phy));
+> +		return PTR_ERR(mp->phy);
+>  	}
+>  
+>  	mp->reset_gpio = devm_gpiod_get(dev, "reset", GPIOD_OUT_LOW);
+> @@ -636,30 +578,16 @@ static int meson_pcie_probe(struct platform_device *pdev)
+>  	return 0;
+>  
+>  err_phy:
+> -	if (mp->param->has_shared_phy) {
+> -		phy_power_off(mp->phy);
+> -		phy_exit(mp->phy);
+> -	}
+> -
+> +	meson_pcie_power_off(mp);
+>  	return ret;
+>  }
+>  
+> -static struct meson_pcie_param meson_pcie_axg_param = {
+> -	.has_shared_phy = false,
+> -};
+> -
+> -static struct meson_pcie_param meson_pcie_g12a_param = {
+> -	.has_shared_phy = true,
+> -};
+> -
+>  static const struct of_device_id meson_pcie_of_match[] = {
+>  	{
+>  		.compatible = "amlogic,axg-pcie",
+> -		.data = &meson_pcie_axg_param,
+>  	},
+>  	{
+>  		.compatible = "amlogic,g12a-pcie",
+> -		.data = &meson_pcie_g12a_param,
+>  	},
+>  	{},
+>  };
+> -- 
+> 2.24.1
+> 
