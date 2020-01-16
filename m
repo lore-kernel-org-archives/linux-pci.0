@@ -2,102 +2,197 @@ Return-Path: <SRS0=0+aG=3F=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-5.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 737C5C3F68F
-	for <linux-pci@archiver.kernel.org>; Thu, 16 Jan 2020 17:22:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D342C33CAF
+	for <linux-pci@archiver.kernel.org>; Thu, 16 Jan 2020 18:05:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 419F02468D
-	for <linux-pci@archiver.kernel.org>; Thu, 16 Jan 2020 17:22:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579195323;
-	bh=eCsheN5nJfhPWN/zVSO0BJvoRocn6ZHygXATnnbqHTk=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Ez1r3E1na/bxSizyL0Czsn+OvlvvjM/3QndX35gjKQVlq+eyFvgZplYFUpm9cW7wh
-	 9fyuVhcTAiAxYd+/AM5NaI6vwmAbLgAWQKJL4mlFET9yjOdZe5DzqfHoMWybgOni7q
-	 xp5nPnWEFbSYUMqEYGKXc9F5qMc2OGAgbPD8Qh6c=
+	by mail.kernel.org (Postfix) with ESMTP id DB5412087E
+	for <linux-pci@archiver.kernel.org>; Thu, 16 Jan 2020 18:05:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391434AbgAPRVv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 16 Jan 2020 12:21:51 -0500
-Received: from mail.kernel.org ([198.145.29.99]:42586 "EHLO mail.kernel.org"
+        id S2393551AbgAPRjy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 16 Jan 2020 12:39:54 -0500
+Received: from mga05.intel.com ([192.55.52.43]:12413 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2391206AbgAPRR1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 16 Jan 2020 12:17:27 -0500
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D76EC20730;
-        Thu, 16 Jan 2020 17:17:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579195046;
-        bh=eCsheN5nJfhPWN/zVSO0BJvoRocn6ZHygXATnnbqHTk=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=cpDI7WqCM3WwGcXzA6HnGt+Rz2xuCmpz33NCOijxGirWt/lnK38fz+Cps93f+wMjh
-         1ksDZNxZOoh5HbyfpVKFVwRBrpiVzRJhlvEzIK/q5mz2pHmdc28FfxhYk6WZbXi1Fk
-         U0+sTfj60bq/o4iTS2NNtqIFHE+aE/F0UIPw5MOQ=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Jitendra Bhivare <jitendra.bhivare@broadcom.com>,
-        Ray Jui <ray.jui@broadcom.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Andy Gospodarek <gospo@broadcom.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH AUTOSEL 4.14 005/371] PCI: iproc: Remove PAXC slot check to allow VF support
-Date:   Thu, 16 Jan 2020 12:11:13 -0500
-Message-Id: <20200116171719.16965-5-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200116171719.16965-1-sashal@kernel.org>
-References: <20200116171719.16965-1-sashal@kernel.org>
+        id S2393547AbgAPRjx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 16 Jan 2020 12:39:53 -0500
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 16 Jan 2020 09:39:51 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.70,327,1574150400"; 
+   d="scan'208";a="259359359"
+Received: from lkp-server01.sh.intel.com (HELO lkp-server01) ([10.239.97.150])
+  by fmsmga001.fm.intel.com with ESMTP; 16 Jan 2020 09:39:51 -0800
+Received: from kbuild by lkp-server01 with local (Exim 4.89)
+        (envelope-from <lkp@intel.com>)
+        id 1is97W-0005Yy-LL; Fri, 17 Jan 2020 01:39:50 +0800
+Date:   Fri, 17 Jan 2020 01:38:51 +0800
+From:   kbuild test robot <lkp@intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     linux-pci@vger.kernel.org
+Subject: [pci:next] BUILD SUCCESS 2919da90bf223900be14ec08e9bbbdee68c37b8a
+Message-ID: <5e209fab.9o54h/k3mPDcsxR3%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git  next
+branch HEAD: 2919da90bf223900be14ec08e9bbbdee68c37b8a  Merge branch 'remotes/lorenzo/pci/uniphier'
 
-[ Upstream commit 4da6b4480766e5bc9c4d7bc14bf1d0939a1a5fa7 ]
+elapsed time: 682m
 
-Fix previous incorrect logic that limits PAXC slot number to zero only.
-In order for SRIOV/VF to work, we need to allow the slot number to be
-greater than zero.
+configs tested: 136
+configs skipped: 0
 
-Fixes: 46560388c476c ("PCI: iproc: Allow multiple devices except on PAXC")
-Signed-off-by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-Signed-off-by: Ray Jui <ray.jui@broadcom.com>
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Reviewed-by: Andy Gospodarek <gospo@broadcom.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+sh                               allmodconfig
+sh                                allnoconfig
+sh                          rsk7269_defconfig
+sh                  sh7785lcr_32bit_defconfig
+sh                            titan_defconfig
+x86_64               randconfig-c001-20200116
+x86_64               randconfig-c002-20200116
+x86_64               randconfig-c003-20200116
+i386                 randconfig-c001-20200116
+i386                 randconfig-c002-20200116
+i386                 randconfig-c003-20200116
+mips                           32r2_defconfig
+mips                         64r6el_defconfig
+mips                             allmodconfig
+mips                              allnoconfig
+mips                             allyesconfig
+mips                      fuloong2e_defconfig
+mips                      malta_kvm_defconfig
+sparc                            allyesconfig
+sparc                               defconfig
+sparc64                          allmodconfig
+sparc64                           allnoconfig
+sparc64                          allyesconfig
+sparc64                             defconfig
+h8300                     edosk2674_defconfig
+h8300                    h8300h-sim_defconfig
+h8300                       h8s-sim_defconfig
+m68k                             allmodconfig
+m68k                       m5475evb_defconfig
+m68k                          multi_defconfig
+m68k                           sun3_defconfig
+alpha                randconfig-a001-20200116
+m68k                 randconfig-a001-20200116
+mips                 randconfig-a001-20200116
+nds32                randconfig-a001-20200116
+parisc               randconfig-a001-20200116
+riscv                randconfig-a001-20200116
+s390                             alldefconfig
+s390                             allmodconfig
+s390                              allnoconfig
+s390                             allyesconfig
+s390                          debug_defconfig
+s390                                defconfig
+s390                       zfcpdump_defconfig
+c6x                              allyesconfig
+c6x                        evmc6678_defconfig
+nios2                         10m50_defconfig
+nios2                         3c120_defconfig
+openrisc                    or1ksim_defconfig
+openrisc                 simple_smp_defconfig
+xtensa                       common_defconfig
+xtensa                          iss_defconfig
+arc                              allyesconfig
+arc                                 defconfig
+microblaze                      mmu_defconfig
+microblaze                    nommu_defconfig
+powerpc                           allnoconfig
+powerpc                             defconfig
+powerpc                       ppc64_defconfig
+powerpc                          rhel-kconfig
+x86_64               randconfig-a001-20200116
+x86_64               randconfig-a002-20200116
+x86_64               randconfig-a003-20200116
+i386                 randconfig-a001-20200116
+i386                 randconfig-a002-20200116
+i386                 randconfig-a003-20200116
+x86_64                              fedora-25
+x86_64                                  kexec
+x86_64                                    lkp
+x86_64                                   rhel
+x86_64                               rhel-7.6
+i386                             alldefconfig
+i386                              allnoconfig
+i386                             allyesconfig
+i386                                defconfig
+alpha                               defconfig
+csky                                defconfig
+nds32                             allnoconfig
+nds32                               defconfig
+parisc                            allnoconfig
+parisc                            allyesonfig
+parisc                         b180_defconfig
+parisc                        c3000_defconfig
+parisc                              defconfig
+x86_64               randconfig-d001-20200116
+x86_64               randconfig-d002-20200116
+x86_64               randconfig-d003-20200116
+i386                 randconfig-d001-20200116
+i386                 randconfig-d002-20200116
+i386                 randconfig-d003-20200116
+riscv                            allmodconfig
+riscv                             allnoconfig
+riscv                            allyesconfig
+riscv                               defconfig
+riscv                    nommu_virt_defconfig
+riscv                          rv32_defconfig
+um                                  defconfig
+um                             i386_defconfig
+um                           x86_64_defconfig
+arm                              allmodconfig
+arm                               allnoconfig
+arm                              allyesconfig
+arm                         at91_dt_defconfig
+arm                           efm32_defconfig
+arm                          exynos_defconfig
+arm                        multi_v5_defconfig
+arm                        multi_v7_defconfig
+arm                        shmobile_defconfig
+arm                           sunxi_defconfig
+arm64                            allmodconfig
+arm64                             allnoconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arc                  randconfig-a001-20200116
+arm                  randconfig-a001-20200116
+arm64                randconfig-a001-20200116
+ia64                 randconfig-a001-20200116
+powerpc              randconfig-a001-20200116
+sparc                randconfig-a001-20200116
+x86_64               randconfig-b001-20200116
+x86_64               randconfig-b002-20200116
+x86_64               randconfig-b003-20200116
+i386                 randconfig-b001-20200116
+i386                 randconfig-b002-20200116
+i386                 randconfig-b003-20200116
+ia64                             alldefconfig
+ia64                             allmodconfig
+ia64                              allnoconfig
+ia64                             allyesconfig
+ia64                                defconfig
+x86_64               randconfig-e001-20200116
+x86_64               randconfig-e002-20200116
+x86_64               randconfig-e003-20200116
+i386                 randconfig-e001-20200116
+i386                 randconfig-e002-20200116
+i386                 randconfig-e003-20200116
+
 ---
- drivers/pci/host/pcie-iproc.c | 8 --------
- 1 file changed, 8 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index c0ecc9f35667..8f8dac0155d6 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -573,14 +573,6 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct iproc_pcie *pcie,
- 			return (pcie->base + offset);
- 	}
- 
--	/*
--	 * PAXC is connected to an internally emulated EP within the SoC.  It
--	 * allows only one device.
--	 */
--	if (pcie->ep_is_internal)
--		if (slot > 0)
--			return NULL;
--
- 	return iproc_pcie_map_ep_cfg_reg(pcie, busno, slot, fn, where);
- }
- 
--- 
-2.20.1
-
+0-DAY kernel test infrastructure                 Open Source Technology Center
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org Intel Corporation
