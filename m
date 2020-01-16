@@ -7,51 +7,50 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84D1FC33CAF
-	for <linux-pci@archiver.kernel.org>; Thu, 16 Jan 2020 17:13:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DF30C33CAF
+	for <linux-pci@archiver.kernel.org>; Thu, 16 Jan 2020 17:17:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5C1A6246B4
-	for <linux-pci@archiver.kernel.org>; Thu, 16 Jan 2020 17:13:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CEC1A24693
+	for <linux-pci@archiver.kernel.org>; Thu, 16 Jan 2020 17:17:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579194818;
-	bh=pWEElET2TJj1Rs3U7xsrYRFMhcDQkuh7Oq+mAcenkEg=;
+	s=default; t=1579195072;
+	bh=a5NXb3Y9E0fU3qlVRFz+TmR7Y8NUePy1259Ab0G/ik4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=RhH3lRUlW+gah2llawbaY0rpMEZ9BH3C5rQoAG13FzOabbyIK5iL5iuEPaJrj5GVo
-	 Hc1pDFBeh9X4C8IikghPOcHv679C57qGsnmsvUw1/qkArVwO9BA4IxbMF5fy4X4ych
-	 B9fRx1hTdCnsAMqqdvluSVHx+kCQC5w6eIa0Df7I=
+	b=JYlDO8qyrKo1SnEjCi11hca+pYZOtXhfwGOjL++x6Jzs4PmSyEZ+6IE/EHj/Y/pLR
+	 GDVCKXmmZFP0IXP9vUie3oNnOLbWOfqJ9NiUJMXq4T0pJBe2te0kldQ2DXH5jioi9n
+	 F6KX6gJSJs/QMixo0FCp7QiNYS8IMYMQPCQvvruc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390088AbgAPRNh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 16 Jan 2020 12:13:37 -0500
-Received: from mail.kernel.org ([198.145.29.99]:59038 "EHLO mail.kernel.org"
+        id S2391289AbgAPRRv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 16 Jan 2020 12:17:51 -0500
+Received: from mail.kernel.org ([198.145.29.99]:43894 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2390779AbgAPRNh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 16 Jan 2020 12:13:37 -0500
+        id S2391287AbgAPRRv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 16 Jan 2020 12:17:51 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 91741246AB;
-        Thu, 16 Jan 2020 17:13:35 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 927902469D;
+        Thu, 16 Jan 2020 17:17:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579194816;
-        bh=pWEElET2TJj1Rs3U7xsrYRFMhcDQkuh7Oq+mAcenkEg=;
+        s=default; t=1579195070;
+        bh=a5NXb3Y9E0fU3qlVRFz+TmR7Y8NUePy1259Ab0G/ik4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Gml7VjfNl3j+VGixfyVzgC9jeEUJtBJjncFoIJYGhkTcUdnWQCbeYWlAv0nIypTTk
-         PHfvCzSM72O+VnE/1NBz3gjv5imhF/XlpfIabVbpA8YNEIm0rkxInE0DyEL/oHrGgF
-         1hW3G6KSCv6wD5w45Iod851fcQoRLpe/Ax9QlZ5c=
+        b=uxZPe7VG9IiybWYh9/kexZybybAaPGU+Si/WBxdhRGfLqDgEV8ZbrendjrbibCwOv
+         BOwk8lMz1idoGSMbELwnwjUkWCXLQgH93kKXDR/X2Mq5xOoMOr1AE4VTR2h4MBsO2o
+         OkqWAZiCcMmhMa0LvP+6HEmcRLfyzCLGx2y9fJFo=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Niklas Cassel <niklas.cassel@linaro.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Andrew Murray <andrew.murray@arm.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+Cc:     Kelvin Cao <kelvin.cao@microchip.com>,
+        Wesley Sheng <wesley.sheng@microchip.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 622/671] PCI: dwc: Fix find_next_bit() usage
-Date:   Thu, 16 Jan 2020 12:04:20 -0500
-Message-Id: <20200116170509.12787-359-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 023/371] switchtec: Remove immediate status check after submitting MRPC command
+Date:   Thu, 16 Jan 2020 12:11:31 -0500
+Message-Id: <20200116171719.16965-23-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200116170509.12787-1-sashal@kernel.org>
-References: <20200116170509.12787-1-sashal@kernel.org>
+In-Reply-To: <20200116171719.16965-1-sashal@kernel.org>
+References: <20200116171719.16965-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -61,61 +60,50 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Niklas Cassel <niklas.cassel@linaro.org>
+From: Kelvin Cao <kelvin.cao@microchip.com>
 
-[ Upstream commit 1137e61dcb99f7f8b54e77ed83f68b5b485a3e34 ]
+[ Upstream commit 526180408b815aa7b96fd48bd23cdd33ef04e38e ]
 
-find_next_bit() takes a parameter of size long, and performs arithmetic
-that assumes that the argument is of size long.
+After submitting a Firmware Download MRPC command, Switchtec firmware will
+delay Management EP BAR MemRd TLP responses by more than 10ms.  This is a
+firmware limitation.  Delayed MemRd completions are a problem for systems
+with a low Completion Timeout (CTO).
 
-Therefore we cannot pass a u32, since this will cause find_next_bit()
-to read outside the stack buffer and will produce the following print:
-BUG: KASAN: stack-out-of-bounds in find_next_bit+0x38/0xb0
+The current driver checks the MRPC status immediately after submitting an
+MRPC command, which results in a delayed MemRd completion that may cause a
+Completion Timeout.
 
-Fixes: 1b497e6493c4 ("PCI: dwc: Fix uninitialized variable in dw_handle_msi_irq()")
-Tested-by: Bjorn Andersson <bjorn.andersson@linaro.org>
-Signed-off-by: Niklas Cassel <niklas.cassel@linaro.org>
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Reviewed-by: Andrew Murray <andrew.murray@arm.com>
-Acked-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Remove the immediate status check and rely on the check after receiving an
+interrupt or timing out.
+
+This is only a software workaround to the READ issue and a proper fix of
+this should be done in firmware.
+
+Fixes: 080b47def5e5 ("MicroSemi Switchtec management interface driver")
+Signed-off-by: Kelvin Cao <kelvin.cao@microchip.com>
+Signed-off-by: Wesley Sheng <wesley.sheng@microchip.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/controller/dwc/pcie-designware-host.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+ drivers/pci/switch/switchtec.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index b57ee79f6d69..6d4ef0101ef6 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -78,7 +78,8 @@ static struct msi_domain_info dw_pcie_msi_domain_info = {
- irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
- {
- 	int i, pos, irq;
--	u32 val, num_ctrls;
-+	unsigned long val;
-+	u32 status, num_ctrls;
- 	irqreturn_t ret = IRQ_NONE;
+diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+index 0941555b84a5..73dba2739849 100644
+--- a/drivers/pci/switch/switchtec.c
++++ b/drivers/pci/switch/switchtec.c
+@@ -399,10 +399,6 @@ static void mrpc_cmd_submit(struct switchtec_dev *stdev)
+ 		    stuser->data, stuser->data_len);
+ 	iowrite32(stuser->cmd, &stdev->mmio_mrpc->cmd);
  
- 	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
-@@ -86,14 +87,14 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
- 	for (i = 0; i < num_ctrls; i++) {
- 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS +
- 					(i * MSI_REG_CTRL_BLOCK_SIZE),
--				    4, &val);
--		if (!val)
-+				    4, &status);
-+		if (!status)
- 			continue;
- 
- 		ret = IRQ_HANDLED;
-+		val = status;
- 		pos = 0;
--		while ((pos = find_next_bit((unsigned long *) &val,
--					    MAX_MSI_IRQS_PER_CTRL,
-+		while ((pos = find_next_bit(&val, MAX_MSI_IRQS_PER_CTRL,
- 					    pos)) != MAX_MSI_IRQS_PER_CTRL) {
- 			irq = irq_find_mapping(pp->irq_domain,
- 					       (i * MAX_MSI_IRQS_PER_CTRL) +
+-	stuser->status = ioread32(&stdev->mmio_mrpc->status);
+-	if (stuser->status != SWITCHTEC_MRPC_STATUS_INPROGRESS)
+-		mrpc_complete_cmd(stdev);
+-
+ 	schedule_delayed_work(&stdev->mrpc_timeout,
+ 			      msecs_to_jiffies(500));
+ }
 -- 
 2.20.1
 
