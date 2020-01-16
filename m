@@ -7,47 +7,45 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36774C47409
-	for <linux-pci@archiver.kernel.org>; Thu, 16 Jan 2020 18:59:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FA8FC33CB6
+	for <linux-pci@archiver.kernel.org>; Thu, 16 Jan 2020 19:01:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 09D5D206E6
-	for <linux-pci@archiver.kernel.org>; Thu, 16 Jan 2020 18:59:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 181C920663
+	for <linux-pci@archiver.kernel.org>; Thu, 16 Jan 2020 19:01:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579201173;
-	bh=9HczM8KMjOh+/adQ1ElIg7yf0eKRvEpuG1TERGMTVsU=;
+	s=default; t=1579201267;
+	bh=F4cwf9f0yORGBvxuj54EAFRFgYgXoEyXBQKX2FzdycU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=DKJk3hLsF8wp0zDwNlhOiAhydBhoeKYBelvM9Fp+91c3GkME00MBLDdE3/1B8i3vY
-	 2aoUab45NZCNx2ae6rn0yK4/huGAK3WMhPPlmFoPQvHR58GrLLHBA7TzRXZz/qQTAw
-	 ++8fhE3ie7ZyGxGgkaEILUOUABB0H3wh1D3cQhn0=
+	b=JrWsy+/ou9XtuRzDrBxs+5iR5vJMflsT4wRQlSD32tnM3kFE9Or6jFDqC5Nb6/Xf9
+	 5kJXKJ+CLT4HARL/fgR+JYPwRD1nJGtNlbFsqHQk1Y1iH+CkUDotRsoXaLEb7vy9AZ
+	 AJltAwdrt1jkorSM/FyYfmD9SquQQgy2wHiX4uko=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388953AbgAPRGf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 16 Jan 2020 12:06:35 -0500
-Received: from mail.kernel.org ([198.145.29.99]:36950 "EHLO mail.kernel.org"
+        id S2388470AbgAPRGD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 16 Jan 2020 12:06:03 -0500
+Received: from mail.kernel.org ([198.145.29.99]:35640 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388952AbgAPRGf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 16 Jan 2020 12:06:35 -0500
+        id S2388818AbgAPRGB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 16 Jan 2020 12:06:01 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id ADD6321D56;
-        Thu, 16 Jan 2020 17:06:33 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 966D421D56;
+        Thu, 16 Jan 2020 17:05:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579194394;
-        bh=9HczM8KMjOh+/adQ1ElIg7yf0eKRvEpuG1TERGMTVsU=;
+        s=default; t=1579194360;
+        bh=F4cwf9f0yORGBvxuj54EAFRFgYgXoEyXBQKX2FzdycU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=iSrXDm60fG4ibhKWeBwnYiAtPD6gnH5Dk43R9oE+JAXUG9UPegJ+nVUjD7BWmEYst
-         aKEKjALcZ8jEH2DZQcPUSJoEuhECAX1EUjXN8xTW8TGimS/fCvGxvBfQh8fsx+JiRY
-         4H07OV9ya256uoqz2KX7VHl6WIia9BApPncQEh+k=
+        b=S0zu3jqfVExMDvv5rWgMb1TfCUeSI+1RVPIHl6hojkNIdV1z4Tl8qTPeSv+HWsCZ8
+         zUTAX94kX4NagCUDAaguYPoGBnN83dArmf6gsRhnARCOKEsNJA0wdmJ0oH1BGeAYjb
+         r2yOsdKV3tNV+W+E6YWE3PDq6VYKE/ZrfZBiF4jg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Srinath Mannam <srinath.mannam@broadcom.com>,
+Cc:     Kishon Vijay Abraham I <kishon@ti.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Ray Jui <ray.jui@broadcom.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH AUTOSEL 4.19 321/671] PCI: iproc: Enable iProc config read for PAXBv2
-Date:   Thu, 16 Jan 2020 11:59:19 -0500
-Message-Id: <20200116170509.12787-58-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 297/671] PCI: dwc: Fix dw_pcie_ep_find_capability() to return correct capability offset
+Date:   Thu, 16 Jan 2020 11:58:55 -0500
+Message-Id: <20200116170509.12787-34-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200116170509.12787-1-sashal@kernel.org>
 References: <20200116170509.12787-1-sashal@kernel.org>
@@ -60,41 +58,64 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Srinath Mannam <srinath.mannam@broadcom.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
 
-[ Upstream commit 8cff995405eb0b563e7a0d2c49838611ea3f2692 ]
+[ Upstream commit 421db1ab287eebe80fd203eb009ae92836c586ad ]
 
-iProc config read flag has to be enabled for PAXBv2 instead of PAXB.
+commit beb4641a787d ("PCI: dwc: Add MSI-X callbacks handler") while
+adding MSI-X callback handler, introduced dw_pcie_ep_find_capability()
+and __dw_pcie_ep_find_next_cap() for finding the MSI and MSIX capability.
 
-Fixes: f78e60a29d4f ("PCI: iproc: Reject unconfigured physical functions from PAXC")
-Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
+However if MSI or MSIX capability is the last capability (i.e there are
+no additional items in the capabilities list and the Next Capability
+Pointer is set to '0'), __dw_pcie_ep_find_next_cap will return '0'
+even though MSI or MSIX capability may be present because of
+incorrect ordering of the "next_cap_ptr" check. Fix it.
+
+Fixes: beb4641a787d ("PCI: dwc: Add MSI-X callbacks handler")
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Reviewed-by: Ray Jui <ray.jui@broadcom.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/controller/pcie-iproc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/controller/dwc/pcie-designware-ep.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/controller/pcie-iproc.c b/drivers/pci/controller/pcie-iproc.c
-index c20fd6bd68fd..9d5cbc75d5ae 100644
---- a/drivers/pci/controller/pcie-iproc.c
-+++ b/drivers/pci/controller/pcie-iproc.c
-@@ -1347,7 +1347,6 @@ static int iproc_pcie_rev_init(struct iproc_pcie *pcie)
- 		break;
- 	case IPROC_PCIE_PAXB:
- 		regs = iproc_pcie_reg_paxb;
--		pcie->iproc_cfg_read = true;
- 		pcie->has_apb_err_disable = true;
- 		if (pcie->need_ob_cfg) {
- 			pcie->ob_map = paxb_ob_map;
-@@ -1356,6 +1355,7 @@ static int iproc_pcie_rev_init(struct iproc_pcie *pcie)
- 		break;
- 	case IPROC_PCIE_PAXB_V2:
- 		regs = iproc_pcie_reg_paxb_v2;
-+		pcie->iproc_cfg_read = true;
- 		pcie->has_apb_err_disable = true;
- 		if (pcie->need_ob_cfg) {
- 			pcie->ob_map = paxb_v2_ob_map;
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index 739d97080d3b..a3d07d9c598b 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -46,16 +46,19 @@ static u8 __dw_pcie_ep_find_next_cap(struct dw_pcie *pci, u8 cap_ptr,
+ 	u8 cap_id, next_cap_ptr;
+ 	u16 reg;
+ 
++	if (!cap_ptr)
++		return 0;
++
+ 	reg = dw_pcie_readw_dbi(pci, cap_ptr);
+-	next_cap_ptr = (reg & 0xff00) >> 8;
+ 	cap_id = (reg & 0x00ff);
+ 
+-	if (!next_cap_ptr || cap_id > PCI_CAP_ID_MAX)
++	if (cap_id > PCI_CAP_ID_MAX)
+ 		return 0;
+ 
+ 	if (cap_id == cap)
+ 		return cap_ptr;
+ 
++	next_cap_ptr = (reg & 0xff00) >> 8;
+ 	return __dw_pcie_ep_find_next_cap(pci, next_cap_ptr, cap);
+ }
+ 
+@@ -67,9 +70,6 @@ static u8 dw_pcie_ep_find_capability(struct dw_pcie *pci, u8 cap)
+ 	reg = dw_pcie_readw_dbi(pci, PCI_CAPABILITY_LIST);
+ 	next_cap_ptr = (reg & 0x00ff);
+ 
+-	if (!next_cap_ptr)
+-		return 0;
+-
+ 	return __dw_pcie_ep_find_next_cap(pci, next_cap_ptr, cap);
+ }
+ 
 -- 
 2.20.1
 
