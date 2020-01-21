@@ -1,81 +1,51 @@
-Return-Path: <SRS0=u6MS=3J=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=9+zz=3K=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33875C2D0DB
-	for <linux-pci@archiver.kernel.org>; Mon, 20 Jan 2020 16:10:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5A51C32771
+	for <linux-pci@archiver.kernel.org>; Tue, 21 Jan 2020 01:07:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 052CD21D7E
-	for <linux-pci@archiver.kernel.org>; Mon, 20 Jan 2020 16:10:15 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OciUar9F"
+	by mail.kernel.org (Postfix) with ESMTP id B90A024125
+	for <linux-pci@archiver.kernel.org>; Tue, 21 Jan 2020 01:07:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727285AbgATQKO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 20 Jan 2020 11:10:14 -0500
-Received: from mail-oi1-f194.google.com ([209.85.167.194]:42412 "EHLO
-        mail-oi1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726942AbgATQKO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Jan 2020 11:10:14 -0500
-Received: by mail-oi1-f194.google.com with SMTP id 18so28929456oin.9;
-        Mon, 20 Jan 2020 08:10:13 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=hEQYDkqPX4uYMhuYWM6fr7tZlzBSPPJbG7zw6GGKPF8=;
-        b=OciUar9FLHyi9IzxNGF0oGxjYDc7nKe/qJAhc24dHR1Vtqh7IUpF15oI1J7Z5s+0ab
-         5cJbX/UiiBMHmHeRDNOQT7Fw+756E4wkrPGMxEDdsT/36jqo7aHGllHztsSocthRSdl4
-         N4gk5zNCk8DpaEueOiEZapFJ9x50YqEiRAnU0+TmX+AFfFO3K7Sq0jsJQ499OiMxr+go
-         UVc6deORjfwkOCmKlHfowWRpL7bTAV47/f31GqcpKMa7O6wHKjS77ORC56+UIPMljamR
-         f3IKOPCysvdBfAljXA7SllOl5A6y8NnmRdPJ+Xa5yVxD2nodTOosbwEAmSY4rMCFa1Oz
-         CruQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=hEQYDkqPX4uYMhuYWM6fr7tZlzBSPPJbG7zw6GGKPF8=;
-        b=SFQI02EpQhJZ4/fQo+765y7Stj0s+3kIYoN6lvyMo1/PiDFIT+ZCxG/WAjCgmNL+o0
-         m28W6xhccLt7/LOnMb6tklzavggDX4U3dMtK7G3vq/DBalx28h8YIAI2jnEL+ak4RxEF
-         o/SY8T7ONqFF58clZcjbiphHRb4G6RHuPRbUpF+qhKQKySzCWEx9EeZex/M+LJ1P341S
-         /pFFHdgH1vN+EIAQpOs4E5K3hDGKVxCdSuR78l5/bDQF43CaDnY4gjMuHdGROZsxA/CO
-         9sXheOzW1hHdvMXiUCCiui7p+T65jH5Opeh1pgDO5K/U//e/4/tErUDqoIsanm05akw2
-         5hFg==
-X-Gm-Message-State: APjAAAWkiov8wcDhoA6lzktAaDzxNhPyh30f1equlKEopCnIpkF58NFm
-        ytfyO8dNo2CIIvye7yfyvCk=
-X-Google-Smtp-Source: APXvYqwKvXhusvAdd7PpGLaF7zlMGa8YTeeENIG0hi//rrxEB1/pVI5yuHqAvt/aNka9v5qJ2TcYvA==
-X-Received: by 2002:a05:6808:1c5:: with SMTP id x5mr5765oic.57.1579536613069;
-        Mon, 20 Jan 2020 08:10:13 -0800 (PST)
-Received: from [100.71.96.87] ([143.166.81.254])
-        by smtp.gmail.com with ESMTPSA id m12sm12480238otq.15.2020.01.20.08.10.12
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 20 Jan 2020 08:10:12 -0800 (PST)
-Subject: Re: [PATCH v2] PCI: pciehp: Make sure pciehp_isr clears interrupt
- events
-To:     Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Austin Bolen <austin_bolen@dell.com>, keith.busch@intel.com,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
-        "Gustavo A . R . Silva" <gustavo@embeddedor.com>,
-        Sinan Kaya <okaya@kernel.org>,
-        Oza Pawandeep <poza@codeaurora.org>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, lukas@wunner.de
-References: <20191120222043.53432-1-stuart.w.hayes@gmail.com>
-From:   Stuart Hayes <stuart.w.hayes@gmail.com>
-Message-ID: <41285254-1bc1-3ffe-383e-276dc7193990@gmail.com>
-Date:   Mon, 20 Jan 2020 10:10:11 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.6.1
+        id S1728512AbgAUBH7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 20 Jan 2020 20:07:59 -0500
+Received: from mga01.intel.com ([192.55.52.88]:3517 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727009AbgAUBH6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 20 Jan 2020 20:07:58 -0500
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 20 Jan 2020 17:07:58 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.70,344,1574150400"; 
+   d="scan'208";a="215374904"
+Received: from allen-box.sh.intel.com (HELO [10.239.159.138]) ([10.239.159.138])
+  by orsmga007.jf.intel.com with ESMTP; 20 Jan 2020 17:07:56 -0800
+Cc:     baolu.lu@linux.intel.com, iommu@lists.linux-foundation.org,
+        Christoph Hellwig <hch@lst.de>,
+        Keith Busch <kbusch@kernel.org>,
+        Joerg Roedel <joro@8bytes.org>,
+        David Woodhouse <dwmw2@infradead.org>
+Subject: Re: [PATCH v4 4/7] iommu/vt-d: Use pci_real_dma_dev() for mapping
+To:     Jon Derrick <jonathan.derrick@intel.com>,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <1579278449-174098-1-git-send-email-jonathan.derrick@intel.com>
+ <1579278449-174098-5-git-send-email-jonathan.derrick@intel.com>
+From:   Lu Baolu <baolu.lu@linux.intel.com>
+Message-ID: <88149be1-1e5d-f0d2-ba5d-6e979014f11e@linux.intel.com>
+Date:   Tue, 21 Jan 2020 09:06:28 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.2
 MIME-Version: 1.0
-In-Reply-To: <20191120222043.53432-1-stuart.w.hayes@gmail.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1579278449-174098-5-git-send-email-jonathan.derrick@intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
@@ -83,52 +53,29 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 11/20/19 4:20 PM, Stuart Hayes wrote:
-> Without this patch, a pciehp hotplug port can stop generating interrupts
-> on hotplug events, so device adds and removals will not be seen.
+Hi,
+
+On 1/18/20 12:27 AM, Jon Derrick wrote:
+> The PCI device may have a DMA requester on another bus, such as VMD
+> subdevices needing to use the VMD endpoint. This case requires the real
+> DMA device when mapping to IOMMU.
 > 
-> The pciehp interrupt handler pciehp_isr() will read the slot status
-> register and then write back to it to clear the bits that caused the
-> interrupt. If a different interrupt event bit gets set between the read and
-> the write, pciehp_isr will exit without having cleared all of the interrupt
-> event bits. If this happens, and the port is using an MSI interrupt where
-> per-vector masking is not supported, we won't get any more hotplug
-> interrupts from that device.
-> 
-> That is expected behavior, according to the PCI Express Base Specification
-> Revision 5.0 Version 1.0, section 6.7.3.4, "Software Notification of Hot-
-> Plug Events".
-> 
-> Because the "presence detect changed" and "data link layer state changed"
-> event bits are both getting set at nearly the same time when a device is
-> added or removed, this is more likely to happen than it might seem. The
-> issue was found (and can be reproduced rather easily) by connecting and
-> disconnecting an NVMe storage device on at least one system model.
-> 
-> This issue was found while adding and removing various NVMe storage devices
-> on an AMD PCIe port (PCI device 0x1022/0x1483).
-> 
-> This patch fixes this issue by modifying pciehp_isr() by looping back and
-> re-reading the slot status register immediately after writing to it, until
-> it sees that all of the event status bits have been cleared.
-> 
-> Signed-off-by: Stuart Hayes <stuart.w.hayes@gmail.com>
+> Signed-off-by: Jon Derrick<jonathan.derrick@intel.com>
 > ---
-> v2:
->   * fixed ctrl_warn() call
->   * improved comments
->   * added pvm_capable flag and changed pciehp_isr() to loop back only when
->     pvm_capable flag not set (suggested by Lukas Wunner)
->   
->  drivers/pci/hotplug/pciehp.h     |  3 ++
->  drivers/pci/hotplug/pciehp_hpc.c | 50 ++++++++++++++++++++++++++++----
->  2 files changed, 47 insertions(+), 6 deletions(-)
+>   drivers/iommu/intel-iommu.c | 9 +++++++++
+>   1 file changed, 9 insertions(+)
 > 
+> diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+> index 0c8d81f..01a1b0f 100644
+> --- a/drivers/iommu/intel-iommu.c
+> +++ b/drivers/iommu/intel-iommu.c
+> @@ -782,6 +782,8 @@ static struct intel_iommu *device_to_iommu(struct device *dev, u8 *bus, u8 *devf
+>   			return NULL;
+>   #endif
+>   
+> +		pdev = pci_real_dma_dev(dev);
 
-Bjorn,
+This isn't correct. It will result in a compiling error when bisect.
 
-Please let me know if I could do anything to help get this patch accepted.
-
-Thanks!
-Stuart
-
+Best regards,
+baolu
