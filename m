@@ -2,163 +2,134 @@ Return-Path: <SRS0=5Mj4=3M=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E853C2D0DB
-	for <linux-pci@archiver.kernel.org>; Thu, 23 Jan 2020 17:56:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB61EC2D0DB
+	for <linux-pci@archiver.kernel.org>; Thu, 23 Jan 2020 18:17:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 590A320718
-	for <linux-pci@archiver.kernel.org>; Thu, 23 Jan 2020 17:56:21 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="NK4+dXDp"
+	by mail.kernel.org (Postfix) with ESMTP id 8C8A421569
+	for <linux-pci@archiver.kernel.org>; Thu, 23 Jan 2020 18:17:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728767AbgAWR4U (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 23 Jan 2020 12:56:20 -0500
-Received: from mail-lf1-f66.google.com ([209.85.167.66]:34394 "EHLO
-        mail-lf1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728731AbgAWR4U (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 23 Jan 2020 12:56:20 -0500
-Received: by mail-lf1-f66.google.com with SMTP id l18so3028604lfc.1
-        for <linux-pci@vger.kernel.org>; Thu, 23 Jan 2020 09:56:18 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=tbUt6go+kLuXKXQ0VzJ6Mhyl0zSlPzgGsNDFNiXJt7g=;
-        b=NK4+dXDpNBbzPh3b80IEDt5inscQTCvjYG7+GPJ5WUbiU+W/8YhHNLVwGhxs57FIS4
-         fK7JN1NswFF2h0zIXnkR7Xk+qgzuLlEZVN6S32B+6w20Ygvnm09GYcbJgAJZKjeKpTGc
-         792wHEdxRwurEfdqWJVhjVFcefHoQJugA+IyI=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=tbUt6go+kLuXKXQ0VzJ6Mhyl0zSlPzgGsNDFNiXJt7g=;
-        b=Y16GEYoWIFxrJaw9MufTYdRsaRUhfiJfWSqmmYGV4Pwf7VDplezU+s9eaWiJY0unJV
-         kiFN89IgmkbpCXiCQkGm5PI9vsSX9ZCvYac2klR9wl0DzHzwLjBCiuPkhu/O8vhph6f8
-         KbR3Y7p7bZwa4vbFkf5x6hiUXypLBpYxYCvyJykSc1a4EzkOTvqjLnTPa05agFM8WNjO
-         A4Wxtf8tGPW3u9LHe4B17PbJ7wTq2721xgsnAnBdotrqTpXv1lElO+InJUX+Opm9yZ03
-         TWdq1Mls4BWxnkl9LZAcft6Qau5SsN1M1lCR6nWMvhEn1ttiSLXSoNDEz9eCyixmnYZs
-         cVYA==
-X-Gm-Message-State: APjAAAX0uVfyT0VSgsd70tFumA5HmSV8W1PLYh3YbWWjA0IevVZ8wnAM
-        hYv8drQJnY0rpVPzuZC4rotIQSB8ufM=
-X-Google-Smtp-Source: APXvYqxfnraROHGiApdKE3Hkgtf8DbEllKN1kHwY1xuw4mb5l1PPseM0uVIghNZE1r8nyJWUT9v+kQ==
-X-Received: by 2002:a19:6d13:: with SMTP id i19mr5171798lfc.6.1579802177472;
-        Thu, 23 Jan 2020 09:56:17 -0800 (PST)
-Received: from mail-lj1-f181.google.com (mail-lj1-f181.google.com. [209.85.208.181])
-        by smtp.gmail.com with ESMTPSA id i4sm1640602ljg.102.2020.01.23.09.56.16
-        for <linux-pci@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 23 Jan 2020 09:56:16 -0800 (PST)
-Received: by mail-lj1-f181.google.com with SMTP id h23so4557542ljc.8
-        for <linux-pci@vger.kernel.org>; Thu, 23 Jan 2020 09:56:16 -0800 (PST)
-X-Received: by 2002:a2e:b017:: with SMTP id y23mr24733117ljk.229.1579802175831;
- Thu, 23 Jan 2020 09:56:15 -0800 (PST)
-MIME-Version: 1.0
-References: <20200116133102.1.I9c7e72144ef639cc135ea33ef332852a6b33730f@changeid>
- <20200122172816.GA139285@google.com> <CAE=gft6hvO7G2OrxFGXeSDctz-21ryiu8JSBWT0g2fRFss-pxA@mail.gmail.com>
- <875zh3ukoy.fsf@nanos.tec.linutronix.de> <CAE=gft7ukQOxHmJT_tkWzA3u2cecmV0Jiq-ukAu-1OR+sPnTtg@mail.gmail.com>
- <871rrqva0t.fsf@nanos.tec.linutronix.de>
-In-Reply-To: <871rrqva0t.fsf@nanos.tec.linutronix.de>
-From:   Evan Green <evgreen@chromium.org>
-Date:   Thu, 23 Jan 2020 09:55:39 -0800
-X-Gmail-Original-Message-ID: <CAE=gft77xmkc6-4+h3WAp_4C7ra8XKSxcsqrVkBrYgXE0JPeSw@mail.gmail.com>
-Message-ID: <CAE=gft77xmkc6-4+h3WAp_4C7ra8XKSxcsqrVkBrYgXE0JPeSw@mail.gmail.com>
-Subject: Re: [PATCH] PCI/MSI: Avoid torn updates to MSI pairs
-To:     Thomas Gleixner <tglx@linutronix.de>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        id S1729009AbgAWSRB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 23 Jan 2020 13:17:01 -0500
+Received: from Galois.linutronix.de ([193.142.43.55]:40736 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727278AbgAWSRA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 23 Jan 2020 13:17:00 -0500
+Received: from p5b06da22.dip0.t-ipconnect.de ([91.6.218.34] helo=nanos.tec.linutronix.de)
+        by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
+        (Exim 4.80)
+        (envelope-from <tglx@linutronix.de>)
+        id 1iuh2G-0005bq-TU; Thu, 23 Jan 2020 19:16:57 +0100
+Received: by nanos.tec.linutronix.de (Postfix, from userid 1000)
+        id 3292F101623; Thu, 23 Jan 2020 19:16:56 +0100 (CET)
+From:   Thomas Gleixner <tglx@linutronix.de>
+To:     Evan Green <evgreen@chromium.org>, Rajat Jain <rajatja@google.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         linux-pci <linux-pci@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Marc Zyngier <maz@kernel.org>, Christoph Hellwig <hch@lst.de>,
-        Rajat Jain <rajatxjain@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2] PCI/MSI: Avoid torn updates to MSI pairs
+In-Reply-To: <87y2tytv5i.fsf@nanos.tec.linutronix.de>
+References: <20200117162444.v2.1.I9c7e72144ef639cc135ea33ef332852a6b33730f@changeid> <CACK8Z6Ft95qj4e_fsA32r_bcz2SsHOW1xxqZJt3_DBAJw=NMGA@mail.gmail.com> <CAE=gft6fKQWExW-=xjZGzXs30XohfpA5SKggvL2WtYXAHmzMew@mail.gmail.com> <87y2tytv5i.fsf@nanos.tec.linutronix.de>
+Date:   Thu, 23 Jan 2020 19:16:56 +0100
+Message-ID: <87eevqkpgn.fsf@nanos.tec.linutronix.de>
+MIME-Version: 1.0
+Content-Type: text/plain
+X-Linutronix-Spam-Score: -1.0
+X-Linutronix-Spam-Level: -
+X-Linutronix-Spam-Status: No , -1.0 points, 5.0 required,  ALL_TRUSTED=-1,SHORTCIRCUIT=-0.0001
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Jan 23, 2020 at 12:42 AM Thomas Gleixner <tglx@linutronix.de> wrote:
->
-> Evan Green <evgreen@chromium.org> writes:
-> > On Wed, Jan 22, 2020 at 3:37 PM Thomas Gleixner <tglx@linutronix.de> wrote:
-> >> > One other way you could avoid torn MSI writes would be to ensure that
-> >> > if you migrate IRQs across cores, you keep the same x86 vector number.
-> >> > That way the address portion would be updated, and data doesn't
-> >> > change, so there's no window. But that may not actually be feasible.
-> >>
-> >> That's not possible simply because the x86 vector space is limited. If
-> >> we would have to guarantee that then we'd end up with a max of ~220
-> >> interrupts per system. Sufficient for your notebook, but the big iron
-> >> people would be not amused.
-> >
-> > Right, that occurred to me as well. The actual requirement isn't quite
-> > as restrictive. What you really need is the old vector to be
-> > registered on both the old CPU and the new CPU. Then once the
-> > interrupt is confirmed to have moved we could release both the old
-> > vector both CPUs, leaving only the new vector on the new CPU.
->
-> Sure, and how can you guarantee that without reserving the vector on all
-> CPUs in the first place? If you don't do that then if the vector is not
-> available affinity setting would fail every so often and it would pretty
-> much prevent hotplug if a to be migrated vector is not available on at
-> least one online CPU.
->
-> > In that world some SMP affinity transitions might fail, which is a
-> > bummer. To avoid that, you could first migrate to a vector that's
-> > available on both the source and destination CPUs, keeping affinity
-> > the same. Then change affinity in a separate step.
->
-> Good luck with doing that at the end of the hotplug routine where the
-> CPU is about to vanish.
->
-> > Or alternatively, you could permanently designate a "transit" vector.
-> > If an interrupt fires on this vector, then we call all ISRs currently
-> > in transit between CPUs. You might end up calling ISRs that didn't
-> > actually need service, but at least that's better than missing edges.
->
-> I don't think we need that. While walking the dogs I thought about
-> invoking a force migrated interrupt on the target CPU, but haven't
-> thought it through yet.
+Evan,
 
-Yeah, I think the Intel folks did that in some tree of theirs too.
+Thomas Gleixner <tglx@linutronix.de> writes:
+> This is not yet debugged fully and as this is happening on MSI-X I'm not
+> really convinced yet that your 'torn write' theory holds.
 
->
-> >> 'lscpci -vvv' and 'cat /proc/interrupts'
-> >
-> > Here it is:
-> > https://pastebin.com/YyxBUvQ2
->
-> Hrm:
->
->         Capabilities: [80] MSI-X: Enable+ Count=16 Masked-
->
-> So this is weird. We mask it before moving it, so the tear issue should
-> not happen on MSI-X. So the tearing might be just a red herring.
+can you please apply the debug patch below and run your test. When the
+failure happens, stop the tracer and collect the trace.
 
-Mmm... sorry what? This is the complete entry for xhci:
+Another question. Did you ever try to change the affinity of that
+interrupt without hotplug rapidly while the device makes traffic? If
+not, it would be interesting whether this leads to a failure as well.
 
-00:14.0 USB controller: Intel Corporation Device 02ed (prog-if 30 [XHCI])
-        Subsystem: Intel Corporation Device 7270
-        Control: I/O- Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop-
-ParErr- Stepping- SERR- FastB2B- DisINTx+
-        Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium
->TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Interrupt: pin A routed to IRQ 124
-        Region 0: Memory at d1200000 (64-bit, non-prefetchable) [size=64K]
-        Capabilities: [70] Power Management version 2
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=375mA
-PME(D0-,D1-,D2-,D3hot+,D3cold+)
-                Status: D3 NoSoftRst+ PME-Enable+ DSel=0 DScale=0 PME-
-        Capabilities: [80] MSI: Enable+ Count=1/8 Maskable- 64bit+
-                Address: 00000000fee10004  Data: 402a
-        Capabilities: [90] Vendor Specific Information: Len=14 <?>
-        Kernel driver in use: xhci_hcd
+Thanks
 
+        tglx
 
->
-> Let me stare into the code a bit.
+8<---------------
 
-Thanks, I appreciate the help.
-
--Evan
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -964,6 +964,8 @@ void irq_force_complete_move(struct irq_
+ 	if (!vector)
+ 		goto unlock;
+ 
++	trace_printk("IRQ %u vector %u irq inprogress %u\n", vector,
++		     irqd->irq, apicd->move_in_progress);
+ 	/*
+ 	 * This is tricky. If the cleanup of the old vector has not been
+ 	 * done yet, then the following setaffinity call will fail with
+--- a/arch/x86/kernel/irq.c
++++ b/arch/x86/kernel/irq.c
+@@ -244,6 +244,8 @@ u64 arch_irq_stat(void)
+ 
+ 	desc = __this_cpu_read(vector_irq[vector]);
+ 	if (likely(!IS_ERR_OR_NULL(desc))) {
++		trace_printk("Handle vector %u IRQ %u\n", vector,
++			     desc->irq_data.irq);
+ 		if (IS_ENABLED(CONFIG_X86_32))
+ 			handle_irq(desc, regs);
+ 		else
+@@ -252,10 +254,18 @@ u64 arch_irq_stat(void)
+ 		ack_APIC_irq();
+ 
+ 		if (desc == VECTOR_UNUSED) {
++			trace_printk("Handle unused vector %u\n", vector);
+ 			pr_emerg_ratelimited("%s: %d.%d No irq handler for vector\n",
+ 					     __func__, smp_processor_id(),
+ 					     vector);
+ 		} else {
++			if (desc == VECTOR_SHUTDOWN) {
++				trace_printk("Handle shutdown vector %u\n",
++					     vector);
++			} else if (desc == VECTOR_RETRIGGERED) {
++				trace_printk("Handle retriggered vector %u\n",
++					     vector);
++			}
+ 			__this_cpu_write(vector_irq[vector], VECTOR_UNUSED);
+ 		}
+ 	}
+@@ -373,9 +383,14 @@ void fixup_irqs(void)
+ 		if (IS_ERR_OR_NULL(__this_cpu_read(vector_irq[vector])))
+ 			continue;
+ 
++		desc = __this_cpu_read(vector_irq[vector]);
++		trace_printk("FIXUP: %u\n", desc->irq_data.irq);
++
+ 		irr = apic_read(APIC_IRR + (vector / 32 * 0x10));
+ 		if (irr  & (1 << (vector % 32))) {
+ 			desc = __this_cpu_read(vector_irq[vector]);
++			trace_printk("FIXUP: %u IRR pending\n",
++				     desc->irq_data.irq);
+ 
+ 			raw_spin_lock(&desc->lock);
+ 			data = irq_desc_get_irq_data(desc);
+--- a/kernel/irq/cpuhotplug.c
++++ b/kernel/irq/cpuhotplug.c
+@@ -122,6 +122,10 @@ static bool migrate_one_irq(struct irq_d
+ 		affinity = cpu_online_mask;
+ 		brokeaff = true;
+ 	}
++
++	trace_printk("IRQ: %d maskchip %d wasmasked %d break %d\n",
++		     d->irq, maskchip, irqd_irq_masked(d), brokeaff);
++
+ 	/*
+ 	 * Do not set the force argument of irq_do_set_affinity() as this
+ 	 * disables the masking of offline CPUs from the supplied affinity
