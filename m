@@ -2,102 +2,81 @@ Return-Path: <SRS0=5Mj4=3M=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CA6AC35243
-	for <linux-pci@archiver.kernel.org>; Thu, 23 Jan 2020 23:22:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66554C35240
+	for <linux-pci@archiver.kernel.org>; Thu, 23 Jan 2020 23:47:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6A32C21D7E
-	for <linux-pci@archiver.kernel.org>; Thu, 23 Jan 2020 23:22:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 32BB52087E
+	for <linux-pci@archiver.kernel.org>; Thu, 23 Jan 2020 23:47:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729893AbgAWXWc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 23 Jan 2020 18:22:32 -0500
-Received: from relay1-d.mail.gandi.net ([217.70.183.193]:21241 "EHLO
-        relay1-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729851AbgAWXW2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 23 Jan 2020 18:22:28 -0500
-X-Originating-IP: 88.190.179.123
-Received: from localhost (unknown [88.190.179.123])
-        (Authenticated sender: repk@triplefau.lt)
-        by relay1-d.mail.gandi.net (Postfix) with ESMTPSA id BDB04240004;
-        Thu, 23 Jan 2020 23:22:24 +0000 (UTC)
-From:   Remi Pommarel <repk@triplefau.lt>
-To:     Kishon Vijay Abraham I <kishon@ti.com>,
-        Yue Wang <yue.wang@Amlogic.com>,
-        Kevin Hilman <khilman@baylibre.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Neil Armstrong <narmstrong@baylibre.com>,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        Rob Herring <robh+dt@kernel.org>
-Cc:     Jerome Brunet <jbrunet@baylibre.com>,
-        linux-amlogic@lists.infradead.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        Remi Pommarel <repk@triplefau.lt>
-Subject: [PATCH v6 4/7] arm64: dts: meson-axg: Add PCIE PHY nodes
-Date:   Fri, 24 Jan 2020 00:29:40 +0100
-Message-Id: <20200123232943.10229-5-repk@triplefau.lt>
-X-Mailer: git-send-email 2.24.1
-In-Reply-To: <20200123232943.10229-1-repk@triplefau.lt>
-References: <20200123232943.10229-1-repk@triplefau.lt>
+        id S1729368AbgAWXrZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 23 Jan 2020 18:47:25 -0500
+Received: from Galois.linutronix.de ([193.142.43.55]:41216 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728655AbgAWXrZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 23 Jan 2020 18:47:25 -0500
+Received: from p5b06da22.dip0.t-ipconnect.de ([91.6.218.34] helo=nanos.tec.linutronix.de)
+        by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
+        (Exim 4.80)
+        (envelope-from <tglx@linutronix.de>)
+        id 1iumBy-0001hK-2a; Fri, 24 Jan 2020 00:47:18 +0100
+Received: by nanos.tec.linutronix.de (Postfix, from userid 1000)
+        id 7A542100490; Fri, 24 Jan 2020 00:47:17 +0100 (CET)
+From:   Thomas Gleixner <tglx@linutronix.de>
+To:     Evan Green <evgreen@chromium.org>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Marc Zyngier <maz@kernel.org>, Christoph Hellwig <hch@lst.de>,
+        Rajat Jain <rajatxjain@gmail.com>
+Subject: Re: [PATCH] PCI/MSI: Avoid torn updates to MSI pairs
+In-Reply-To: <CAE=gft77xmkc6-4+h3WAp_4C7ra8XKSxcsqrVkBrYgXE0JPeSw@mail.gmail.com>
+References: <20200116133102.1.I9c7e72144ef639cc135ea33ef332852a6b33730f@changeid> <20200122172816.GA139285@google.com> <CAE=gft6hvO7G2OrxFGXeSDctz-21ryiu8JSBWT0g2fRFss-pxA@mail.gmail.com> <875zh3ukoy.fsf@nanos.tec.linutronix.de> <CAE=gft7ukQOxHmJT_tkWzA3u2cecmV0Jiq-ukAu-1OR+sPnTtg@mail.gmail.com> <871rrqva0t.fsf@nanos.tec.linutronix.de> <CAE=gft77xmkc6-4+h3WAp_4C7ra8XKSxcsqrVkBrYgXE0JPeSw@mail.gmail.com>
+Date:   Fri, 24 Jan 2020 00:47:17 +0100
+Message-ID: <87sgk520sa.fsf@nanos.tec.linutronix.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Linutronix-Spam-Score: -1.0
+X-Linutronix-Spam-Level: -
+X-Linutronix-Spam-Status: No , -1.0 points, 5.0 required,  ALL_TRUSTED=-1,SHORTCIRCUIT=-0.0001
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Enable both PCIE and shared MIPI/PCIE PHY nodes in order to make PCIE
-reliable on AXG SoC.
+Evan Green <evgreen@chromium.org> writes:
+> On Thu, Jan 23, 2020 at 12:42 AM Thomas Gleixner <tglx@linutronix.de> wrote:
+>> Hrm:
+>>
+>>         Capabilities: [80] MSI-X: Enable+ Count=16 Masked-
+>>
+>> So this is weird. We mask it before moving it, so the tear issue should
+>> not happen on MSI-X. So the tearing might be just a red herring.
+>
+> Mmm... sorry what? This is the complete entry for xhci:
+>
+> 00:14.0 USB controller: Intel Corporation Device 02ed (prog-if 30 [XHCI])
+>         Subsystem: Intel Corporation Device 7270
+>         Control: I/O- Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop-
+> ParErr- Stepping- SERR- FastB2B- DisINTx+
+>         Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium
+>>TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Interrupt: pin A routed to IRQ 124
+>         Region 0: Memory at d1200000 (64-bit, non-prefetchable) [size=64K]
+>         Capabilities: [70] Power Management version 2
+>                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=375mA
+> PME(D0-,D1-,D2-,D3hot+,D3cold+)
+>                 Status: D3 NoSoftRst+ PME-Enable+ DSel=0 DScale=0 PME-
+>         Capabilities: [80] MSI: Enable+ Count=1/8 Maskable- 64bit+
+>                 Address: 00000000fee10004  Data: 402a
+>         Capabilities: [90] Vendor Specific Information: Len=14 <?>
+>         Kernel driver in use: xhci_hcd
 
-Signed-off-by: Remi Pommarel <repk@triplefau.lt>
----
- arch/arm64/boot/dts/amlogic/meson-axg.dtsi | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+Bah. I was looking at the WIFI for whatever reason.
 
-diff --git a/arch/arm64/boot/dts/amlogic/meson-axg.dtsi b/arch/arm64/boot/dts/amlogic/meson-axg.dtsi
-index 04803c3bccfa..08a178aa0133 100644
---- a/arch/arm64/boot/dts/amlogic/meson-axg.dtsi
-+++ b/arch/arm64/boot/dts/amlogic/meson-axg.dtsi
-@@ -12,6 +12,7 @@
- #include <dt-bindings/interrupt-controller/arm-gic.h>
- #include <dt-bindings/reset/amlogic,meson-axg-audio-arb.h>
- #include <dt-bindings/reset/amlogic,meson-axg-reset.h>
-+#include <dt-bindings/phy/phy.h>
- 
- / {
- 	compatible = "amlogic,meson-axg";
-@@ -1104,6 +1105,12 @@ hiubus: bus@ff63c000 {
- 			#size-cells = <2>;
- 			ranges = <0x0 0x0 0x0 0xff63c000 0x0 0x1c00>;
- 
-+			mipi_analog_phy: phy@0 {
-+				compatible = "amlogic,axg-mipi-pcie-analog-phy";
-+				reg = <0x0 0x0 0x0 0xc>;
-+				#phy-cells = <1>;
-+			};
-+
- 			sysctrl: system-controller@0 {
- 				compatible = "amlogic,meson-axg-hhi-sysctrl",
- 					     "simple-mfd", "syscon";
-@@ -1356,6 +1363,15 @@ tdmout_c: audio-controller@580 {
- 			};
- 		};
- 
-+		pcie_phy: bus@ff644000 {
-+			compatible = "amlogic,axg-pcie-phy";
-+			reg = <0x0 0xff644000 0x0 0x1c>;
-+			resets = <&reset RESET_PCIE_PHY>;
-+			phys = <&mipi_analog_phy PHY_TYPE_PCIE>;
-+			phy-names = "analog";
-+			#phy-cells = <0>;
-+		};
-+
- 		aobus: bus@ff800000 {
- 			compatible = "simple-bus";
- 			reg = <0x0 0xff800000 0x0 0x100000>;
--- 
-2.24.1
+Thanks,
 
+        tglx
