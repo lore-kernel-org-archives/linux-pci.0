@@ -4,25 +4,25 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 642C5C35240
-	for <linux-pci@archiver.kernel.org>; Thu, 23 Jan 2020 23:22:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 625EAC35243
+	for <linux-pci@archiver.kernel.org>; Thu, 23 Jan 2020 23:22:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3D7D9218AC
-	for <linux-pci@archiver.kernel.org>; Thu, 23 Jan 2020 23:22:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2F729218AC
+	for <linux-pci@archiver.kernel.org>; Thu, 23 Jan 2020 23:22:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729863AbgAWXW2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 23 Jan 2020 18:22:28 -0500
-Received: from relay4-d.mail.gandi.net ([217.70.183.196]:39941 "EHLO
+        id S1729949AbgAWXWj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 23 Jan 2020 18:22:39 -0500
+Received: from relay4-d.mail.gandi.net ([217.70.183.196]:50579 "EHLO
         relay4-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729232AbgAWXW0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 23 Jan 2020 18:22:26 -0500
+        with ESMTP id S1729982AbgAWXWj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 23 Jan 2020 18:22:39 -0500
 X-Originating-IP: 88.190.179.123
 Received: from localhost (unknown [88.190.179.123])
         (Authenticated sender: repk@triplefau.lt)
-        by relay4-d.mail.gandi.net (Postfix) with ESMTPSA id B8F53E0002;
-        Thu, 23 Jan 2020 23:22:21 +0000 (UTC)
+        by relay4-d.mail.gandi.net (Postfix) with ESMTPSA id 82D4DE0006;
+        Thu, 23 Jan 2020 23:22:35 +0000 (UTC)
 From:   Remi Pommarel <repk@triplefau.lt>
 To:     Kishon Vijay Abraham I <kishon@ti.com>,
         Yue Wang <yue.wang@Amlogic.com>,
@@ -36,9 +36,9 @@ Cc:     Jerome Brunet <jbrunet@baylibre.com>,
         linux-amlogic@lists.infradead.org, linux-kernel@vger.kernel.org,
         devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
         Remi Pommarel <repk@triplefau.lt>
-Subject: [PATCH v6 3/7] dt-bindings: PCI: meson: Update PCIE bindings documentation
-Date:   Fri, 24 Jan 2020 00:29:39 +0100
-Message-Id: <20200123232943.10229-4-repk@triplefau.lt>
+Subject: [PATCH v6 7/7] PCI: amlogic: Use AXG PCIE
+Date:   Fri, 24 Jan 2020 00:29:43 +0100
+Message-Id: <20200123232943.10229-8-repk@triplefau.lt>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200123232943.10229-1-repk@triplefau.lt>
 References: <20200123232943.10229-1-repk@triplefau.lt>
@@ -49,80 +49,247 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Now that a new PHYs has been introduced for AXG SoC family, update
-dt bindings documentation.
+Now that PCIE PHY has been introduced for AXG, the whole has_shared_phy
+logic can be mutualized between AXG and G12A platforms.
 
-Please note that this breaks backward compatibility but as not a single
-devicetree uses that yet that seems ok.
+This new PHY makes use of the shared MIPI/PCIE analog PHY found on AXG
+platforms, which need to be used in order to have reliable PCIE
+communications.
 
 Signed-off-by: Remi Pommarel <repk@triplefau.lt>
 ---
- .../bindings/pci/amlogic,meson-pcie.txt       | 22 ++++++++-----------
- 1 file changed, 9 insertions(+), 13 deletions(-)
+ drivers/pci/controller/dwc/pci-meson.c | 116 +++++--------------------
+ 1 file changed, 22 insertions(+), 94 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
-index 84fdc422792e..b6acbe694ffb 100644
---- a/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
-@@ -18,7 +18,6 @@ Required properties:
- - reg-names: Must be
- 	- "elbi"	External local bus interface registers
- 	- "cfg"		Meson specific registers
--	- "phy"		Meson PCIE PHY registers for AXG SoC Family
- 	- "config"	PCIe configuration space
- - reset-gpios: The GPIO to generate PCIe PERST# assert and deassert signal.
- - clocks: Must contain an entry for each entry in clock-names.
-@@ -26,13 +25,13 @@ Required properties:
- 	- "pclk"       PCIe GEN 100M PLL clock
- 	- "port"       PCIe_x(A or B) RC clock gate
- 	- "general"    PCIe Phy clock
--	- "mipi"       PCIe_x(A or B) 100M ref clock gate for AXG SoC Family
- - resets: phandle to the reset lines.
--- reset-names: must contain "phy" "port" and "apb"
--       - "phy"         Share PHY reset for AXG SoC Family
-+- reset-names: must contain "port" and "apb"
-        - "port"        Port A or B reset
-        - "apb"         Share APB reset
--- phys: should contain a phandle to the shared phy for G12A SoC Family
-+- phys: should contain a phandle to the PCIE phy
-+- phy-names: must contain "pcie"
+diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/controller/dwc/pci-meson.c
+index 3772b02a5c55..3715dceca1bf 100644
+--- a/drivers/pci/controller/dwc/pci-meson.c
++++ b/drivers/pci/controller/dwc/pci-meson.c
+@@ -66,7 +66,6 @@
+ #define PORT_CLK_RATE			100000000UL
+ #define MAX_PAYLOAD_SIZE		256
+ #define MAX_READ_REQ_SIZE		256
+-#define MESON_PCIE_PHY_POWERUP		0x1c
+ #define PCIE_RESET_DELAY		500
+ #define PCIE_SHARED_RESET		1
+ #define PCIE_NORMAL_RESET		0
+@@ -81,26 +80,19 @@ enum pcie_data_rate {
+ struct meson_pcie_mem_res {
+ 	void __iomem *elbi_base;
+ 	void __iomem *cfg_base;
+-	void __iomem *phy_base;
+ };
+ 
+ struct meson_pcie_clk_res {
+ 	struct clk *clk;
+-	struct clk *mipi_gate;
+ 	struct clk *port_clk;
+ 	struct clk *general_clk;
+ };
+ 
+ struct meson_pcie_rc_reset {
+-	struct reset_control *phy;
+ 	struct reset_control *port;
+ 	struct reset_control *apb;
+ };
+ 
+-struct meson_pcie_param {
+-	bool has_shared_phy;
+-};
+-
+ struct meson_pcie {
+ 	struct dw_pcie pci;
+ 	struct meson_pcie_mem_res mem_res;
+@@ -108,7 +100,6 @@ struct meson_pcie {
+ 	struct meson_pcie_rc_reset mrst;
+ 	struct gpio_desc *reset_gpio;
+ 	struct phy *phy;
+-	const struct meson_pcie_param *param;
+ };
+ 
+ static struct reset_control *meson_pcie_get_reset(struct meson_pcie *mp,
+@@ -130,13 +121,6 @@ static int meson_pcie_get_resets(struct meson_pcie *mp)
+ {
+ 	struct meson_pcie_rc_reset *mrst = &mp->mrst;
+ 
+-	if (!mp->param->has_shared_phy) {
+-		mrst->phy = meson_pcie_get_reset(mp, "phy", PCIE_SHARED_RESET);
+-		if (IS_ERR(mrst->phy))
+-			return PTR_ERR(mrst->phy);
+-		reset_control_deassert(mrst->phy);
+-	}
+-
+ 	mrst->port = meson_pcie_get_reset(mp, "port", PCIE_NORMAL_RESET);
+ 	if (IS_ERR(mrst->port))
+ 		return PTR_ERR(mrst->port);
+@@ -162,22 +146,6 @@ static void __iomem *meson_pcie_get_mem(struct platform_device *pdev,
+ 	return devm_ioremap_resource(dev, res);
+ }
+ 
+-static void __iomem *meson_pcie_get_mem_shared(struct platform_device *pdev,
+-					       struct meson_pcie *mp,
+-					       const char *id)
+-{
+-	struct device *dev = mp->pci.dev;
+-	struct resource *res;
+-
+-	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, id);
+-	if (!res) {
+-		dev_err(dev, "No REG resource %s\n", id);
+-		return ERR_PTR(-ENXIO);
+-	}
+-
+-	return devm_ioremap(dev, res->start, resource_size(res));
+-}
+-
+ static int meson_pcie_get_mems(struct platform_device *pdev,
+ 			       struct meson_pcie *mp)
+ {
+@@ -189,14 +157,6 @@ static int meson_pcie_get_mems(struct platform_device *pdev,
+ 	if (IS_ERR(mp->mem_res.cfg_base))
+ 		return PTR_ERR(mp->mem_res.cfg_base);
+ 
+-	/* Meson AXG SoC has two PCI controllers use same phy register */
+-	if (!mp->param->has_shared_phy) {
+-		mp->mem_res.phy_base =
+-			meson_pcie_get_mem_shared(pdev, mp, "phy");
+-		if (IS_ERR(mp->mem_res.phy_base))
+-			return PTR_ERR(mp->mem_res.phy_base);
+-	}
+-
+ 	return 0;
+ }
+ 
+@@ -204,37 +164,33 @@ static int meson_pcie_power_on(struct meson_pcie *mp)
+ {
+ 	int ret = 0;
+ 
+-	if (mp->param->has_shared_phy) {
+-		ret = phy_init(mp->phy);
+-		if (ret)
+-			return ret;
++	ret = phy_init(mp->phy);
++	if (ret)
++		return ret;
+ 
+-		ret = phy_power_on(mp->phy);
+-		if (ret) {
+-			phy_exit(mp->phy);
+-			return ret;
+-		}
+-	} else
+-		writel(MESON_PCIE_PHY_POWERUP, mp->mem_res.phy_base);
++	ret = phy_power_on(mp->phy);
++	if (ret) {
++		phy_exit(mp->phy);
++		return ret;
++	}
+ 
+ 	return 0;
+ }
+ 
++static void meson_pcie_power_off(struct meson_pcie *mp)
++{
++	phy_power_off(mp->phy);
++	phy_exit(mp->phy);
++}
 +
- - device_type:
- 	should be "pci". As specified in designware-pcie.txt
+ static int meson_pcie_reset(struct meson_pcie *mp)
+ {
+ 	struct meson_pcie_rc_reset *mrst = &mp->mrst;
+ 	int ret = 0;
  
-@@ -43,9 +42,8 @@ Example configuration:
- 			compatible = "amlogic,axg-pcie", "snps,dw-pcie";
- 			reg = <0x0 0xf9800000 0x0 0x400000
- 					0x0 0xff646000 0x0 0x2000
--					0x0 0xff644000 0x0 0x2000
- 					0x0 0xf9f00000 0x0 0x100000>;
--			reg-names = "elbi", "cfg", "phy", "config";
-+			reg-names = "elbi", "cfg", "config";
- 			reset-gpios = <&gpio GPIOX_19 GPIO_ACTIVE_HIGH>;
- 			interrupts = <GIC_SPI 177 IRQ_TYPE_EDGE_RISING>;
- 			#interrupt-cells = <1>;
-@@ -58,17 +56,15 @@ Example configuration:
- 			ranges = <0x82000000 0 0 0x0 0xf9c00000 0 0x00300000>;
+-	if (mp->param->has_shared_phy) {
+-		ret = phy_reset(mp->phy);
+-		if (ret)
+-			return ret;
+-	} else {
+-		reset_control_assert(mrst->phy);
+-		udelay(PCIE_RESET_DELAY);
+-		reset_control_deassert(mrst->phy);
+-		udelay(PCIE_RESET_DELAY);
+-	}
++	ret = phy_reset(mp->phy);
++	if (ret)
++		return ret;
  
- 			clocks = <&clkc CLKID_USB
--					&clkc CLKID_MIPI_ENABLE
- 					&clkc CLKID_PCIE_A
- 					&clkc CLKID_PCIE_CML_EN0>;
- 			clock-names = "general",
--					"mipi",
- 					"pclk",
- 					"port";
--			resets = <&reset RESET_PCIE_PHY>,
--				<&reset RESET_PCIE_A>,
-+			resets = <&reset RESET_PCIE_A>,
- 				<&reset RESET_PCIE_APB>;
--			reset-names = "phy",
--					"port",
-+			reset-names = "port",
- 					"apb";
-+			phys = <&pcie_phy>;
-+			phy-names = "pcie";
- 	};
+ 	reset_control_assert(mrst->port);
+ 	reset_control_assert(mrst->apb);
+@@ -286,12 +242,6 @@ static int meson_pcie_probe_clocks(struct meson_pcie *mp)
+ 	if (IS_ERR(res->port_clk))
+ 		return PTR_ERR(res->port_clk);
+ 
+-	if (!mp->param->has_shared_phy) {
+-		res->mipi_gate = meson_pcie_probe_clock(dev, "mipi", 0);
+-		if (IS_ERR(res->mipi_gate))
+-			return PTR_ERR(res->mipi_gate);
+-	}
+-
+ 	res->general_clk = meson_pcie_probe_clock(dev, "general", 0);
+ 	if (IS_ERR(res->general_clk))
+ 		return PTR_ERR(res->general_clk);
+@@ -562,7 +512,6 @@ static const struct dw_pcie_ops dw_pcie_ops = {
+ 
+ static int meson_pcie_probe(struct platform_device *pdev)
+ {
+-	const struct meson_pcie_param *match_data;
+ 	struct device *dev = &pdev->dev;
+ 	struct dw_pcie *pci;
+ 	struct meson_pcie *mp;
+@@ -576,17 +525,10 @@ static int meson_pcie_probe(struct platform_device *pdev)
+ 	pci->dev = dev;
+ 	pci->ops = &dw_pcie_ops;
+ 
+-	match_data = of_device_get_match_data(dev);
+-	if (!match_data) {
+-		dev_err(dev, "failed to get match data\n");
+-		return -ENODEV;
+-	}
+-	mp->param = match_data;
+-
+-	if (mp->param->has_shared_phy) {
+-		mp->phy = devm_phy_get(dev, "pcie");
+-		if (IS_ERR(mp->phy))
+-			return PTR_ERR(mp->phy);
++	mp->phy = devm_phy_get(dev, "pcie");
++	if (IS_ERR(mp->phy)) {
++		dev_err(dev, "get phy failed, %ld\n", PTR_ERR(mp->phy));
++		return PTR_ERR(mp->phy);
+ 	}
+ 
+ 	mp->reset_gpio = devm_gpiod_get(dev, "reset", GPIOD_OUT_LOW);
+@@ -636,30 +578,16 @@ static int meson_pcie_probe(struct platform_device *pdev)
+ 	return 0;
+ 
+ err_phy:
+-	if (mp->param->has_shared_phy) {
+-		phy_power_off(mp->phy);
+-		phy_exit(mp->phy);
+-	}
+-
++	meson_pcie_power_off(mp);
+ 	return ret;
+ }
+ 
+-static struct meson_pcie_param meson_pcie_axg_param = {
+-	.has_shared_phy = false,
+-};
+-
+-static struct meson_pcie_param meson_pcie_g12a_param = {
+-	.has_shared_phy = true,
+-};
+-
+ static const struct of_device_id meson_pcie_of_match[] = {
+ 	{
+ 		.compatible = "amlogic,axg-pcie",
+-		.data = &meson_pcie_axg_param,
+ 	},
+ 	{
+ 		.compatible = "amlogic,g12a-pcie",
+-		.data = &meson_pcie_g12a_param,
+ 	},
+ 	{},
+ };
 -- 
 2.24.1
 
