@@ -7,47 +7,49 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D012C35242
-	for <linux-pci@archiver.kernel.org>; Fri, 24 Jan 2020 01:18:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6BC1C35240
+	for <linux-pci@archiver.kernel.org>; Fri, 24 Jan 2020 01:19:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F0B9D2468A
-	for <linux-pci@archiver.kernel.org>; Fri, 24 Jan 2020 01:18:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7336821D7E
+	for <linux-pci@archiver.kernel.org>; Fri, 24 Jan 2020 01:19:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579828728;
-	bh=d97+DNOiVfSHCsLfElaDRBIQhu0ScRku/iaDxOT3hWg=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=zMjzOM0UJACeoNYvWwcdAUK8ihNEG536ZAcH4QGutejk4feVlWPX14DwAjRZ93W8z
-	 HyVUFRwVQwKAgzoqcQF84z4t6tjnjPuXU6ikoB+j9F46gmmGMr7EEe9gx4BEWh34DR
-	 Fb29T/bv9C9p3GelL9QaQBvdjR4qARhlO6XkmOmQ=
+	s=default; t=1579828753;
+	bh=/725mQE0pLiU1D6ulEOt18A2RFyO+sN4CjajKAlYmIU=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=aqJk3eku7f1la2TjTrNrAFLIdmb9etA7+GOxkfTLVeCBwzmDbXSK6tdxHKOxfB5NK
+	 Xa1st98y9i8gH65FXkoKixlwFNAGOaDakjnCLmcuoVeew/DpAuOc1i5DK30qx6HXF4
+	 ZiXLbVKzXTVwg5PT8D6E7rK6SaqQafSY/cYR23L0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730937AbgAXBSE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 23 Jan 2020 20:18:04 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33206 "EHLO mail.kernel.org"
+        id S1730771AbgAXBTI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 23 Jan 2020 20:19:08 -0500
+Received: from mail.kernel.org ([198.145.29.99]:32872 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730914AbgAXBSE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 23 Jan 2020 20:18:04 -0500
+        id S1729504AbgAXBRv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 23 Jan 2020 20:17:51 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5E7FD2087E;
-        Fri, 24 Jan 2020 01:18:02 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8D77324691;
+        Fri, 24 Jan 2020 01:17:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579828683;
-        bh=d97+DNOiVfSHCsLfElaDRBIQhu0ScRku/iaDxOT3hWg=;
-        h=From:To:Cc:Subject:Date:From;
-        b=stXSQbSjsEJBFgYaZdAjNeIxLFP5ZmtQTWjybdk20mLVoP8JOV9Je7hMtYf89N0j4
-         F4MhZVdA4fghFKfrilavQlxUhj4ZKifq8zJqnyp5QDSBQmnKEKOzmibOkoYG+//H1e
-         MA6N/YTLQXIUTJwyE2Gi0Wy0cbYQVGop7IrFN/QI=
+        s=default; t=1579828670;
+        bh=/725mQE0pLiU1D6ulEOt18A2RFyO+sN4CjajKAlYmIU=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Y48DWO7P5aTaF75pVueY78mNWZYTC2Ro0PiUlUMKN3nEo5lUy3VqedbR7XXcWQOtI
+         IbAzJ6o87Y9T3hUy2PfJR0YOTykDRdMrTlqW1Ums/ffS8yUjaYX0E95z05KBRMifmK
+         XfHMWuyj+L8Si2AaD37bMa9VNVB/zptbkuDUGEqE=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Slawomir Pawlowski <slawomir.pawlowski@intel.com>,
         Przemek Kitszel <przemyslawx.kitszel@intel.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 1/5] PCI: Add DMA alias quirk for Intel VCA NTB
-Date:   Thu, 23 Jan 2020 20:17:57 -0500
-Message-Id: <20200124011801.18712-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 02/11] PCI: Add DMA alias quirk for Intel VCA NTB
+Date:   Thu, 23 Jan 2020 20:17:38 -0500
+Message-Id: <20200124011747.18575-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200124011747.18575-1-sashal@kernel.org>
+References: <20200124011747.18575-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -85,10 +87,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 34 insertions(+)
 
 diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 90df085e9f925..e7ed051ec125e 100644
+index 20a57a48ae1e4..ae7b3a2ade0ef 100644
 --- a/drivers/pci/quirks.c
 +++ b/drivers/pci/quirks.c
-@@ -4019,6 +4019,40 @@ static void quirk_mic_x200_dma_alias(struct pci_dev *pdev)
+@@ -3986,6 +3986,40 @@ static void quirk_mic_x200_dma_alias(struct pci_dev *pdev)
  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2260, quirk_mic_x200_dma_alias);
  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2264, quirk_mic_x200_dma_alias);
  
