@@ -2,102 +2,133 @@ Return-Path: <SRS0=FXHr=3N=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 673B8C35240
-	for <linux-pci@archiver.kernel.org>; Fri, 24 Jan 2020 00:50:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D012C35242
+	for <linux-pci@archiver.kernel.org>; Fri, 24 Jan 2020 01:18:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 434E2206D4
-	for <linux-pci@archiver.kernel.org>; Fri, 24 Jan 2020 00:50:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F0B9D2468A
+	for <linux-pci@archiver.kernel.org>; Fri, 24 Jan 2020 01:18:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1579828728;
+	bh=d97+DNOiVfSHCsLfElaDRBIQhu0ScRku/iaDxOT3hWg=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=zMjzOM0UJACeoNYvWwcdAUK8ihNEG536ZAcH4QGutejk4feVlWPX14DwAjRZ93W8z
+	 HyVUFRwVQwKAgzoqcQF84z4t6tjnjPuXU6ikoB+j9F46gmmGMr7EEe9gx4BEWh34DR
+	 Fb29T/bv9C9p3GelL9QaQBvdjR4qARhlO6XkmOmQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729880AbgAXAuk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 23 Jan 2020 19:50:40 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:41242 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729425AbgAXAuk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 23 Jan 2020 19:50:40 -0500
-Received: from p5b06da22.dip0.t-ipconnect.de ([91.6.218.34] helo=nanos.tec.linutronix.de)
-        by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-        (Exim 4.80)
-        (envelope-from <tglx@linutronix.de>)
-        id 1iunBF-00026p-5F; Fri, 24 Jan 2020 01:50:37 +0100
-Received: by nanos.tec.linutronix.de (Postfix, from userid 1000)
-        id 4A553100490; Fri, 24 Jan 2020 01:50:36 +0100 (CET)
-From:   Thomas Gleixner <tglx@linutronix.de>
-To:     Evan Green <evgreen@chromium.org>
-Cc:     Rajat Jain <rajatja@google.com>,
+        id S1730937AbgAXBSE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 23 Jan 2020 20:18:04 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33206 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730914AbgAXBSE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 23 Jan 2020 20:18:04 -0500
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5E7FD2087E;
+        Fri, 24 Jan 2020 01:18:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1579828683;
+        bh=d97+DNOiVfSHCsLfElaDRBIQhu0ScRku/iaDxOT3hWg=;
+        h=From:To:Cc:Subject:Date:From;
+        b=stXSQbSjsEJBFgYaZdAjNeIxLFP5ZmtQTWjybdk20mLVoP8JOV9Je7hMtYf89N0j4
+         F4MhZVdA4fghFKfrilavQlxUhj4ZKifq8zJqnyp5QDSBQmnKEKOzmibOkoYG+//H1e
+         MA6N/YTLQXIUTJwyE2Gi0Wy0cbYQVGop7IrFN/QI=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Slawomir Pawlowski <slawomir.pawlowski@intel.com>,
+        Przemek Kitszel <przemyslawx.kitszel@intel.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2] PCI/MSI: Avoid torn updates to MSI pairs
-In-Reply-To: <CAE=gft5xta4XCJtctWe=R3w=kVr598JCbk9VSRue04nzKAk3CQ@mail.gmail.com>
-References: <20200117162444.v2.1.I9c7e72144ef639cc135ea33ef332852a6b33730f@changeid> <CACK8Z6Ft95qj4e_fsA32r_bcz2SsHOW1xxqZJt3_DBAJw=NMGA@mail.gmail.com> <CAE=gft6fKQWExW-=xjZGzXs30XohfpA5SKggvL2WtYXAHmzMew@mail.gmail.com> <87y2tytv5i.fsf@nanos.tec.linutronix.de> <87eevqkpgn.fsf@nanos.tec.linutronix.de> <CAE=gft6YiM5S1A7iJYJTd5zmaAa8=nhLE3B94JtWa+XW-qVSqQ@mail.gmail.com> <CAE=gft5xta4XCJtctWe=R3w=kVr598JCbk9VSRue04nzKAk3CQ@mail.gmail.com>
-Date:   Fri, 24 Jan 2020 01:50:36 +0100
-Message-ID: <87pnf91xur.fsf@nanos.tec.linutronix.de>
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 1/5] PCI: Add DMA alias quirk for Intel VCA NTB
+Date:   Thu, 23 Jan 2020 20:17:57 -0500
+Message-Id: <20200124011801.18712-1-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Linutronix-Spam-Score: -1.0
-X-Linutronix-Spam-Level: -
-X-Linutronix-Spam-Status: No , -1.0 points, 5.0 required,  ALL_TRUSTED=-1,SHORTCIRCUIT=-0.0001
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Evan Green <evgreen@chromium.org> writes:
-> On Thu, Jan 23, 2020 at 12:59 PM Evan Green <evgreen@chromium.org> wrote:
->>
->> On Thu, Jan 23, 2020 at 10:17 AM Thomas Gleixner <tglx@linutronix.de> wrote:
->> >
->> > Evan,
->> >
->> > Thomas Gleixner <tglx@linutronix.de> writes:
->> > > This is not yet debugged fully and as this is happening on MSI-X I'm not
->> > > really convinced yet that your 'torn write' theory holds.
+From: Slawomir Pawlowski <slawomir.pawlowski@intel.com>
 
-As you pointed out that this is not on MSI-X I'm considering the torn
-write theory to be more likely. :)
+[ Upstream commit 56b4cd4b7da9ee95778eb5c8abea49f641ebfd91 ]
 
->> > can you please apply the debug patch below and run your test. When the
->> > failure happens, stop the tracer and collect the trace.
->> >
->> > Another question. Did you ever try to change the affinity of that
->> > interrupt without hotplug rapidly while the device makes traffic? If
->> > not, it would be interesting whether this leads to a failure as well.
->>
->> Thanks for the patch. Looks pretty familiar :)
->> I ran into issues where trace_printks on offlined cores seem to
->> disappear. I even made sure the cores were back online when I
->> collected the trace. So your logs might not be useful. Known issue
->> with the tracer?
+Intel Visual Compute Accelerator (VCA) is a family of PCIe add-in devices
+exposing computational units via Non Transparent Bridges (NTB, PEX 87xx).
 
-No. I tried the patch myself to verify that it does what I want.
+Similarly to MIC x200, we need to add DMA aliases to allow buffer access
+when IOMMU is enabled.
 
-The only information I'm missing right now is the interrupt number to
-look for. But I'll stare at it with brain awake tomorrow morning again.
+Add aliases to allow computational unit access to host memory.  These
+aliases mark the whole VCA device as one IOMMU group.
 
->> I also tried changing the affinity rapidly without CPU hotplug, but
->> didn't see the issue, at least not in the few minutes I waited
->> (normally repros easily within 1 minute). An interesting datapoint.
+All possible slot numbers (0x20) are used, since we are unable to tell what
+slot is used on other side.  This quirk is intended for both host and
+computational unit sides.  The VCA devices have up to five functions: four
+for DMA channels and one additional.
 
-That's what I expected. The main difference is that the vector
-modification happens at a point where a device is not supposed to send
-an interrupt. They happen when the interrupt of the device is serviced
-before the driver handler is invoked and at that point the device should
-not send another one.
+Link: https://lore.kernel.org/r/5683A335CC8BE1438C3C30C49DCC38DF637CED8E@IRSMSX102.ger.corp.intel.com
+Signed-off-by: Slawomir Pawlowski <slawomir.pawlowski@intel.com>
+Signed-off-by: Przemek Kitszel <przemyslawx.kitszel@intel.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/pci/quirks.c | 34 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 34 insertions(+)
 
-> One additional datapoint. The intel guys suggested enabling
-> CONFIG_IRQ_REMAP, which does seem to eliminate the issue for me. I'm
-> still hoping there's a smaller fix so I don't have to add all that in.
-
-Right, I wanted to ask you that as well and forgot. With interrupt
-remapping the migration happens at the remapping unit which does not
-have the horrible 'move it while servicing' requirement and it suppports
-proper masking.
-
-Thanks,
-
-        tglx
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 90df085e9f925..e7ed051ec125e 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4019,6 +4019,40 @@ static void quirk_mic_x200_dma_alias(struct pci_dev *pdev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2260, quirk_mic_x200_dma_alias);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2264, quirk_mic_x200_dma_alias);
+ 
++/*
++ * Intel Visual Compute Accelerator (VCA) is a family of PCIe add-in devices
++ * exposing computational units via Non Transparent Bridges (NTB, PEX 87xx).
++ *
++ * Similarly to MIC x200, we need to add DMA aliases to allow buffer access
++ * when IOMMU is enabled.  These aliases allow computational unit access to
++ * host memory.  These aliases mark the whole VCA device as one IOMMU
++ * group.
++ *
++ * All possible slot numbers (0x20) are used, since we are unable to tell
++ * what slot is used on other side.  This quirk is intended for both host
++ * and computational unit sides.  The VCA devices have up to five functions
++ * (four for DMA channels and one additional).
++ */
++static void quirk_pex_vca_alias(struct pci_dev *pdev)
++{
++	const unsigned int num_pci_slots = 0x20;
++	unsigned int slot;
++
++	for (slot = 0; slot < num_pci_slots; slot++) {
++		pci_add_dma_alias(pdev, PCI_DEVFN(slot, 0x0));
++		pci_add_dma_alias(pdev, PCI_DEVFN(slot, 0x1));
++		pci_add_dma_alias(pdev, PCI_DEVFN(slot, 0x2));
++		pci_add_dma_alias(pdev, PCI_DEVFN(slot, 0x3));
++		pci_add_dma_alias(pdev, PCI_DEVFN(slot, 0x4));
++	}
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2954, quirk_pex_vca_alias);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2955, quirk_pex_vca_alias);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2956, quirk_pex_vca_alias);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2958, quirk_pex_vca_alias);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2959, quirk_pex_vca_alias);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x295A, quirk_pex_vca_alias);
++
+ /*
+  * The IOMMU and interrupt controller on Broadcom Vulcan/Cavium ThunderX2 are
+  * associated not at the root bus, but at a bridge below. This quirk avoids
+-- 
+2.20.1
 
