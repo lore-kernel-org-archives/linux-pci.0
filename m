@@ -2,88 +2,92 @@ Return-Path: <SRS0=A/8/=3P=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E93E0C2D0DB
-	for <linux-pci@archiver.kernel.org>; Sun, 26 Jan 2020 18:13:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68FADC2D0DB
+	for <linux-pci@archiver.kernel.org>; Sun, 26 Jan 2020 20:10:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CB14320708
-	for <linux-pci@archiver.kernel.org>; Sun, 26 Jan 2020 18:13:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4228520702
+	for <linux-pci@archiver.kernel.org>; Sun, 26 Jan 2020 20:10:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727212AbgAZSNH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 26 Jan 2020 13:13:07 -0500
-Received: from mga12.intel.com ([192.55.52.136]:36752 "EHLO mga12.intel.com"
+        id S1726599AbgAZUKd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 26 Jan 2020 15:10:33 -0500
+Received: from mga18.intel.com ([134.134.136.126]:21205 "EHLO mga18.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725838AbgAZSNH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 26 Jan 2020 13:13:07 -0500
-X-Amp-Result: UNSCANNABLE
+        id S1726155AbgAZUKd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 26 Jan 2020 15:10:33 -0500
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
 X-Amp-File-Uploaded: False
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 26 Jan 2020 10:13:06 -0800
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by orsmga106.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 26 Jan 2020 12:10:07 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.70,366,1574150400"; 
-   d="scan'208";a="246211153"
+   d="scan'208";a="231160764"
 Received: from lkp-server01.sh.intel.com (HELO lkp-server01) ([10.239.97.150])
-  by orsmga002.jf.intel.com with ESMTP; 26 Jan 2020 10:13:01 -0800
+  by orsmga006.jf.intel.com with ESMTP; 26 Jan 2020 12:10:05 -0800
 Received: from kbuild by lkp-server01 with local (Exim 4.89)
         (envelope-from <lkp@intel.com>)
-        id 1ivmP7-0007e3-2V; Mon, 27 Jan 2020 02:13:01 +0800
-Date:   Mon, 27 Jan 2020 02:12:13 +0800
+        id 1ivoEO-0007Bz-Dt; Mon, 27 Jan 2020 04:10:04 +0800
+Date:   Mon, 27 Jan 2020 04:09:39 +0800
 From:   kbuild test robot <lkp@intel.com>
-To:     Shiju Jose <shiju.jose@huawei.com>
-Cc:     kbuild-all@lists.01.org, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        rjw@rjwysocki.net, helgaas@kernel.org, lenb@kernel.org,
-        bp@alien8.de, james.morse@arm.com, tony.luck@intel.com,
-        gregkh@linuxfoundation.org, zhangliguang@linux.alibaba.com,
-        tglx@linutronix.de, linuxarm@huawei.com,
-        jonathan.cameron@huawei.com, tanxiaofei@huawei.com,
-        yangyicong@hisilicon.com, Shiju Jose <shiju.jose@huawei.com>
-Subject: Re: [PATCH v2 2/2] PCI: hip: Add handling of HiSilicon hip PCIe
- controller's errors
-Message-ID: <202001270152.aPmzPfjp%lkp@intel.com>
-References: <20200124123938.16524-3-shiju.jose@huawei.com>
+To:     Jim Quinlan <james.quinlan@broadcom.com>
+Cc:     kbuild-all@lists.01.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
+        Andrew Murray <andrew.murray@arm.com>,
+        Jeremy Linton <jeremy.linton@arm.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH] PCI: brcmstb: fix resource_size.cocci warnings
+Message-ID: <20200126200939.k3vcseaccp3buh4z@f53c9c00458a>
+References: <202001270436.kA25JaWy%lkp@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200124123938.16524-3-shiju.jose@huawei.com>
+In-Reply-To: <202001270436.kA25JaWy%lkp@intel.com>
+X-Patchwork-Hint: ignore
 User-Agent: NeoMutt/20170113 (1.7.2)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Shiju,
+From: kbuild test robot <lkp@intel.com>
 
-Thank you for the patch! Perhaps something to improve:
-
-[auto build test WARNING on pm/linux-next]
-[also build test WARNING on linux/master linus/master v5.5-rc7]
-[cannot apply to pci/next next-20200121]
-[if your patch is applied to the wrong git tree, please drop us a note to help
-improve the system. BTW, we also suggest to use '--base' option to specify the
-base tree in git format-patch, please see https://stackoverflow.com/a/37406982]
-
-url:    https://github.com/0day-ci/linux/commits/Shiju-Jose/ACPI-APEI-Add-support-to-notify-the-vendor-specific-HW-errors/20200125-171952
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git linux-next
-reproduce:
-        # apt-get install sparse
-        # sparse version: v0.6.1-153-g47b6dfef-dirty
-        make ARCH=x86_64 allmodconfig
-        make C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__'
-
-If you fix the issue, kindly add following tag
-Reported-by: kbuild test robot <lkp@intel.com>
+drivers/pci/controller/pcie-brcmstb.c:552:13-16: ERROR: Missing resource_size with res
 
 
-sparse warnings: (new ones prefixed by >>)
+ Use resource_size function on resource object
+ instead of explicit computation.
 
->> drivers/pci/controller/pcie-hisi-error.c:53:8: sparse: sparse: symbol 'hisi_pcie_sec_type' was not declared. Should it be static?
+Generated by: scripts/coccinelle/api/resource_size.cocci
 
-Please review and possibly fold the followup patch.
-
+Fixes: 8ad90d975e00 ("PCI: brcmstb: Add Broadcom STB PCIe host controller driver")
+CC: Jim Quinlan <james.quinlan@broadcom.com>
+Signed-off-by: kbuild test robot <lkp@intel.com>
 ---
-0-DAY kernel test infrastructure                 Open Source Technology Center
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org Intel Corporation
+
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
+head:   702ccea170f07783bd002055a353a0866c062267
+commit: 8ad90d975e00c297a198f6ecbd65e414fbb06dc9 [8319/11283] PCI: brcmstb: Add Broadcom STB PCIe host controller driver
+
+ pcie-brcmstb.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- a/drivers/pci/controller/pcie-brcmstb.c
++++ b/drivers/pci/controller/pcie-brcmstb.c
+@@ -549,7 +549,7 @@ static int brcm_pcie_setup(struct brcm_p
+ 
+ 		brcm_pcie_set_outbound_win(pcie, num_out_wins, res->start,
+ 					   res->start - entry->offset,
+-					   res->end - res->start + 1);
++					   resource_size(res));
+ 		num_out_wins++;
+ 	}
+ 
