@@ -2,189 +2,137 @@ Return-Path: <SRS0=rx8c=3R=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 042E5C33CB3
-	for <linux-pci@archiver.kernel.org>; Tue, 28 Jan 2020 10:23:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8FADC2D0DB
+	for <linux-pci@archiver.kernel.org>; Tue, 28 Jan 2020 12:45:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CBA2424686
-	for <linux-pci@archiver.kernel.org>; Tue, 28 Jan 2020 10:23:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 644CE206A2
+	for <linux-pci@archiver.kernel.org>; Tue, 28 Jan 2020 12:45:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="Y3q+nV0c"
+	dkim=pass (1024-bit key) header.d=xilinx.onmicrosoft.com header.i=@xilinx.onmicrosoft.com header.b="Kd7apfQL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725941AbgA1KXC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 28 Jan 2020 05:23:02 -0500
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:64634 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725901AbgA1KXB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jan 2020 05:23:01 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 00SAKxs6024512;
-        Tue, 28 Jan 2020 02:22:55 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-type; s=pfpt0818;
- bh=vBoizTfwbnl5JRXaRcVosErYn0VqUwy/ivayMnsCSXI=;
- b=Y3q+nV0cfgLrdYQK51YyHgbgdhbdR7Mx9Yv8JmkBEzEVn3kGsYpU7PHWRUWoyYETbc5H
- KHf3SeKSo3QjvgwNrl+j4rrz+gwjVOzrPIp5wdffvqW9ErwMlMWKxYo0C+uLoEJooFN/
- sOVaueXpv/3DIQQznkcfTtjR1qv7B5+bRkAlq+Q6MASukNaioa7bTvI+oRdRus3bVpVs
- GC8/JTg2wjU693hnGdeUjUKg1YB9B2tArk/kw5bqIyJq/I3wR9px8oWYNT+fT8pQ4nNX
- iLXoibMVJKCfFI5BJl6fMmsWoMbrCi0qkoWNMCa5wgfFdYP6rjAaqzsbDIac65naB8w3 rQ== 
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-        by mx0b-0016f401.pphosted.com with ESMTP id 2xrp2t3hu9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Tue, 28 Jan 2020 02:22:55 -0800
-Received: from SC-EXCH01.marvell.com (10.93.176.81) by SC-EXCH03.marvell.com
- (10.93.176.83) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 28 Jan
- 2020 02:22:53 -0800
-Received: from maili.marvell.com (10.93.176.43) by SC-EXCH01.marvell.com
- (10.93.176.81) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Tue, 28 Jan 2020 02:22:53 -0800
-Received: from dc5-eodlnx05.marvell.com (dc5-eodlnx05.marvell.com [10.69.113.147])
-        by maili.marvell.com (Postfix) with ESMTP id 227573F7041;
-        Tue, 28 Jan 2020 02:22:53 -0800 (PST)
-From:   Prabhakar Kushwaha <pkushwaha@marvell.com>
-To:     <linux-ide@vger.kernel.org>, <axboe@kernel.dk>
-CC:     <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <helgaas@kernel.org>, <kexec@lists.infradead.org>,
-        <gkulkarni@marvell.com>, <kamlakantp@marvell.com>,
-        <prabhakar.pkin@gmail.com>,
-        Prabhakar Kushwaha <pkushwaha@marvell.com>
-Subject: [RESEND][PATCH][v2] ata: ahci: Add shutdown to freeze hardware resources of ahci
-Date:   Tue, 28 Jan 2020 02:22:51 -0800
-Message-ID: <1580206971-29908-1-git-send-email-pkushwaha@marvell.com>
-X-Mailer: git-send-email 1.8.3.1
+        id S1726059AbgA1MpJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 28 Jan 2020 07:45:09 -0500
+Received: from mail-co1nam11on2048.outbound.protection.outlook.com ([40.107.220.48]:6167
+        "EHLO NAM11-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725852AbgA1MpI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 28 Jan 2020 07:45:08 -0500
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=j+3tMCf99v/wXsSvzPwtkQlhbJQyqi1cqv2ChV9jVv9BhUpPufBlnXJ7T598fZcBwLwPs8jOPQ6ejzQv5kbDBAakrahrparzDJs28VS2+rwfhz4X36mP7W3BiIOACxvBNnhlr5ZYhw6XYfNSVx8jx81wzfmlAM+Qcti78bh84k3Wbi8JI8QFLOLcCUHZ9LlySOQldnhRM+Z+3LnTrt+oo/aivAEgi3UeoBbIFHbILgEU1ZZAl5F7Spd7X2tei/Ex9wLl6Jog/p3RzkHNxw+cG2FGiSpXuNNYqQ9IH+AaF68+eCzJy3CHqP28dSSDXbRSOctelMoeOcgEMvrA5hkfsA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=422ZksD2qtj8kZOJfFkot1HYa1vrDLwdrBy81V30CU0=;
+ b=g/X7nCR6CdNjGvrhQtKc+Y6WAwy04wmzCZ1IHYJWae9u4VUrdmxxqWR/BEprpfArisVDS4RYBmXIijbUJQNy6bVgeHgP11ks24vyGWBDZC8vWGqtpA/iqEBusWgZtgHhASEB3sop6xbGAfx4U9y+mmurAaAgFn+HV5Puf7+SpovtUV1hTl2Ewhx5ZUn7Y9pj4IBKCBUbyTT6SqLOnSqSjbi72Qadib1nlxo8CtXizBjVy5NnFfgWAdtVE9lmRzk19QexUiGdPtkSQ5CG+FN2kqu2GiZY+r01Ce0kfXytT852735MOimxmbw697gsaEJ+S1/79R/oo5GRfB3nImYA3A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 149.199.60.83) smtp.rcpttodomain=google.com smtp.mailfrom=xilinx.com;
+ dmarc=bestguesspass action=none header.from=xilinx.com; dkim=none (message
+ not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=xilinx.onmicrosoft.com; s=selector2-xilinx-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=422ZksD2qtj8kZOJfFkot1HYa1vrDLwdrBy81V30CU0=;
+ b=Kd7apfQLEc4NnAKYTS+W8XTQbOoWQiQ2vbAN8dGVt+sZEfVsdZI0alFjIehSH3cekpNlInWFWRuBRgNqyl8gdGbO8C95AlsETqX3ts46LJGbFUW+yDSJpac9z6Rv/Fxt1knqm1hI/xCiq4NWSD5XuWUTAP/VrX6392bVKVJudWU=
+Received: from MN2PR02CA0018.namprd02.prod.outlook.com (2603:10b6:208:fc::31)
+ by BN8PR02MB5954.namprd02.prod.outlook.com (2603:10b6:408:bb::32) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2665.20; Tue, 28 Jan
+ 2020 12:45:05 +0000
+Received: from CY1NAM02FT003.eop-nam02.prod.protection.outlook.com
+ (2a01:111:f400:7e45::208) by MN2PR02CA0018.outlook.office365.com
+ (2603:10b6:208:fc::31) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2665.20 via Frontend
+ Transport; Tue, 28 Jan 2020 12:45:05 +0000
+Authentication-Results: spf=pass (sender IP is 149.199.60.83)
+ smtp.mailfrom=xilinx.com; google.com; dkim=none (message not signed)
+ header.d=none;google.com; dmarc=bestguesspass action=none
+ header.from=xilinx.com;
+Received-SPF: Pass (protection.outlook.com: domain of xilinx.com designates
+ 149.199.60.83 as permitted sender) receiver=protection.outlook.com;
+ client-ip=149.199.60.83; helo=xsj-pvapsmtpgw01;
+Received: from xsj-pvapsmtpgw01 (149.199.60.83) by
+ CY1NAM02FT003.mail.protection.outlook.com (10.152.74.151) with Microsoft SMTP
+ Server (version=TLS1_0, cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.20.2665.18
+ via Frontend Transport; Tue, 28 Jan 2020 12:45:05 +0000
+Received: from unknown-38-66.xilinx.com ([149.199.38.66] helo=xsj-pvapsmtp01)
+        by xsj-pvapsmtpgw01 with esmtp (Exim 4.63)
+        (envelope-from <bharat.kumar.gogada@xilinx.com>)
+        id 1iwQEq-0007b8-Mh; Tue, 28 Jan 2020 04:45:04 -0800
+Received: from [127.0.0.1] (helo=localhost)
+        by xsj-pvapsmtp01 with smtp (Exim 4.63)
+        (envelope-from <bharat.kumar.gogada@xilinx.com>)
+        id 1iwQEl-0006rI-Iz; Tue, 28 Jan 2020 04:44:59 -0800
+Received: from xsj-pvapsmtp01 (smtp2.xilinx.com [149.199.38.66])
+        by xsj-smtp-dlp1.xlnx.xilinx.com (8.13.8/8.13.1) with ESMTP id 00SCiphB016792;
+        Tue, 28 Jan 2020 04:44:51 -0800
+Received: from [10.140.9.2] (helo=xhdbharatku40.xilinx.com)
+        by xsj-pvapsmtp01 with esmtp (Exim 4.63)
+        (envelope-from <bharat.kumar.gogada@xilinx.com>)
+        id 1iwQEd-0006pq-0k; Tue, 28 Jan 2020 04:44:51 -0800
+From:   Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     bhelgaas@google.com, rgummal@xilinx.com,
+        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Subject: [PATCH v4 0/2] Adding support for Versal CPM as Root Port driver.
+Date:   Tue, 28 Jan 2020 18:14:41 +0530
+Message-Id: <1580215483-8835-1-git-send-email-bharat.kumar.gogada@xilinx.com>
+X-Mailer: git-send-email 2.7.4
+X-RCIS-Action: ALLOW
+X-TM-AS-Product-Ver: IMSS-7.1.0.1224-8.2.0.1013-23620.005
+X-TM-AS-User-Approved-Sender: Yes;Yes
+X-EOPAttributedMessage: 0
+X-MS-Office365-Filtering-HT: Tenant
+X-Forefront-Antispam-Report: CIP:149.199.60.83;IPV:;CTRY:US;EFV:NLI;SFV:NSPM;SFS:(10009020)(4636009)(346002)(376002)(39860400002)(136003)(396003)(199004)(189003)(6666004)(2906002)(356004)(8676002)(4744005)(7696005)(186003)(36756003)(26005)(426003)(2616005)(336012)(107886003)(4326008)(316002)(81156014)(81166006)(70586007)(5660300002)(9786002)(478600001)(8936002)(70206006);DIR:OUT;SFP:1101;SCL:1;SRVR:BN8PR02MB5954;H:xsj-pvapsmtpgw01;FPR:;SPF:Pass;LANG:en;PTR:unknown-60-83.xilinx.com;A:1;MX:1;
 MIME-Version: 1.0
 Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
- definitions=2020-01-28_03:2020-01-24,2020-01-28 signatures=0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 29a82f6a-a205-480d-ebbe-08d7a3efe64f
+X-MS-TrafficTypeDiagnostic: BN8PR02MB5954:
+X-Microsoft-Antispam-PRVS: <BN8PR02MB5954B0528B501797D4C2ED1FA50A0@BN8PR02MB5954.namprd02.prod.outlook.com>
+X-Auto-Response-Suppress: DR, RN, NRN, OOF, AutoReply
+X-MS-Oob-TLC-OOBClassifiers: OLM:3513;
+X-Forefront-PRVS: 029651C7A1
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: KWhvAF3hrksp0LpriNrNHRJHGedAA5qnBVNAdiugGRwWty/XNwSNltBTbuBW/SvY+5QmI3p5b+u2BnFr6/Oq5RurRxcAHIItzvxlr8McZs71i8HUCGnoKvXk8qFPgDBvJG/xR2cLq0BfxuoQBx+8H9YZRXjtxHindj+HtJGpy/8/n+Shwvat0F1+I0s5MnQFU9mTJX8A+IvEKaMjf+HySwNM49j9pGsd2VNAGAv0TseNMhrR9cGY5sKwQRWNnYmF0lDa5Amboy3zVpcYbeSUuSPO9Sm3XYteYJQtaUG4HVD29/JQ/kdjSQ7PPF5Ijz5+Yzy0aYGGi7YuVYKlf9gL2jbsW+7kMJZbyRVUmOrEw7w7l5Va5GzbItkiZz4YpD6qtZno2Wba7bOSBb2lnHL3tQ5Hl02dyFDqHZzMnWRT+h7kmyVNvVUDa8zPUrEsV+kd
+X-OriginatorOrg: xilinx.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Jan 2020 12:45:05.1442
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 29a82f6a-a205-480d-ebbe-08d7a3efe64f
+X-MS-Exchange-CrossTenant-Id: 657af505-d5df-48d0-8300-c31994686c5c
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=657af505-d5df-48d0-8300-c31994686c5c;Ip=[149.199.60.83];Helo=[xsj-pvapsmtpgw01]
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN8PR02MB5954
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-device_shutdown() called from reboot or power_shutdown expect
-all devices to be shutdown. Same is true for even ahci pci driver.
-As no ahci shutdown function is implemented, the ata subsystem
-always remains alive with DMA & interrupt support. File system 
-related calls should not be honored after device_shutdown().
+- Add support for Versal CPM as Root port.
+- The Versal ACAP devices include CCIX-PCIe Module (CPM). The integrated
+  block for CPM along with the integrated bridge can function
+  as PCIe Root Port.
+- Versal CPM uses GICv3 ITS feature for assigning MSI/MSI-X
+  vectors and handling MSI/MSI-X interrupts.
+- Bridge error and legacy interrupts in Versal CPM are handled using
+  Versal CPM specific MISC interrupt line.
 
-So defining ahci pci driver shutdown to freeze hardware (mask
-interrupt, stop DMA engine and free DMA resources).
+Bharat Kumar Gogada (2):
+  PCI: xilinx-cpm: Add device tree binding for Versal CPM host bridge.
+  PCI: xilinx-cpm: Add Versal CPM Root Port driver
 
-Signed-off-by: Prabhakar Kushwaha <pkushwaha@marvell.com>
----
-- Resending with linux-kernel@vger.kernel.org in CC
-- Changes for v2: Incorporated Bjorn Helgaas's comments
-   - Updated description
-   - Removed Spurious whitespace change
+ .../devicetree/bindings/pci/xilinx-versal-cpm.txt  |  66 +++
+ drivers/pci/controller/Kconfig                     |   8 +
+ drivers/pci/controller/Makefile                    |   1 +
+ drivers/pci/controller/pcie-xilinx-cpm.c           | 506 +++++++++++++++++++++
+ 4 files changed, 581 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/xilinx-versal-cpm.txt
+ create mode 100644 drivers/pci/controller/pcie-xilinx-cpm.c
 
-Adding more details:
-We are seeing an issue during kexec -e where SATA hard-disk is not
-getting detected in second kernel. Lots of filesystem sync calls
-can be seen even after device_shutdown(). 
-Further invastigation revealed that pci_clear_master() causing this issue.
-During device_shutdown() --> pci_device_shutdown() calls 
-      --> ahci shutdown (not defined as of now, so device is still alive)
-      --> pci_clear_master() 
-pci_clear_master() disable DMA of device. Here filesystem calls after
-device_shutdown() causing the issue. 
-
-A device must implement shutdown() to stop/freeze before pcie_clear_master()
-called from pci_device_shutdown(). Otherwise It can have weird effect.  
-Refer  https://bugzilla.kernel.org/show_bug.cgi?id=63861#c24
-
-
- drivers/ata/ahci.c        |  7 +++++++
- drivers/ata/libata-core.c | 21 +++++++++++++++++++++
- include/linux/libata.h    |  1 +
- 3 files changed, 29 insertions(+)
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 4bfd1b14b390..11ea1aff40db 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -81,6 +81,7 @@ enum board_ids {
- 
- static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
- static void ahci_remove_one(struct pci_dev *dev);
-+static void ahci_shutdown_one(struct pci_dev *dev);
- static int ahci_vt8251_hardreset(struct ata_link *link, unsigned int *class,
- 				 unsigned long deadline);
- static int ahci_avn_hardreset(struct ata_link *link, unsigned int *class,
-@@ -606,6 +607,7 @@ static struct pci_driver ahci_pci_driver = {
- 	.id_table		= ahci_pci_tbl,
- 	.probe			= ahci_init_one,
- 	.remove			= ahci_remove_one,
-+	.shutdown		= ahci_shutdown_one,
- 	.driver = {
- 		.pm		= &ahci_pci_pm_ops,
- 	},
-@@ -1877,6 +1879,11 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	return 0;
- }
- 
-+static void ahci_shutdown_one(struct pci_dev *pdev)
-+{
-+	ata_pci_shutdown_one(pdev);
-+}
-+
- static void ahci_remove_one(struct pci_dev *pdev)
- {
- 	pm_runtime_get_noresume(&pdev->dev);
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 6f4ab5c5b52d..42c8728f6117 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6767,6 +6767,26 @@ void ata_pci_remove_one(struct pci_dev *pdev)
- 	ata_host_detach(host);
- }
- 
-+void ata_pci_shutdown_one(struct pci_dev *pdev)
-+{
-+	struct ata_host *host = pci_get_drvdata(pdev);
-+	int i;
-+
-+	for (i = 0; i < host->n_ports; i++) {
-+		struct ata_port *ap = host->ports[i];
-+
-+		ap->pflags |= ATA_PFLAG_FROZEN;
-+
-+		/* Disable port interrupts */
-+		if (ap->ops->freeze)
-+			ap->ops->freeze(ap);
-+
-+		/* Stop the port DMA engines */
-+		if (ap->ops->port_stop)
-+			ap->ops->port_stop(ap);
-+	}
-+}
-+
- /* move to PCI subsystem */
- int pci_test_config_bits(struct pci_dev *pdev, const struct pci_bits *bits)
- {
-@@ -7387,6 +7407,7 @@ EXPORT_SYMBOL_GPL(ata_timing_cycle2mode);
- 
- #ifdef CONFIG_PCI
- EXPORT_SYMBOL_GPL(pci_test_config_bits);
-+EXPORT_SYMBOL_GPL(ata_pci_shutdown_one);
- EXPORT_SYMBOL_GPL(ata_pci_remove_one);
- #ifdef CONFIG_PM
- EXPORT_SYMBOL_GPL(ata_pci_device_do_suspend);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 2dbde119721d..bff539918d82 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1221,6 +1221,7 @@ struct pci_bits {
- };
- 
- extern int pci_test_config_bits(struct pci_dev *pdev, const struct pci_bits *bits);
-+extern void ata_pci_shutdown_one(struct pci_dev *pdev);
- extern void ata_pci_remove_one(struct pci_dev *pdev);
- 
- #ifdef CONFIG_PM
 -- 
-2.17.1
+2.7.4
 
