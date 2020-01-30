@@ -6,38 +6,38 @@ X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FAKE_REPLY_C,MAILING_LIST_MULTI,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7787CC2D0DB
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Jan 2020 20:55:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CE52C2D0DB
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Jan 2020 20:56:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3DA002083E
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Jan 2020 20:55:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4EA4E214AF
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Jan 2020 20:56:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1580417734;
-	bh=9DKv4XnZE1n+vDCavbocWHj6Gbmd6v+IO+oNqvfhSn8=;
+	s=default; t=1580417762;
+	bh=x0l9zksZO/x6n1yGMkTxebE3Alqw68EoksjtXhi4Zl0=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=jm9PG35E/I0cnOcfGi+LzlltHw6XBMVPbibK2y0GBY0d9GKPspn8rPEn4WdRIHZgV
-	 6ldbfIRz5bLdjwMV8jIc4Y9kipSwGyhKglNG2j4Lqj7My+uXz3SYXPykVeSd/bU1DQ
-	 rRnbC7i3kOF5RrVqt/74O0JB6rJycF0mvtciJJrA=
+	b=jBKdbF86L31IZ7C+hzLXluhqSkWh8rorwjMeOkRQlEf3WSLT3dCI3lStSTuBeUGz3
+	 Abu9lRtQ8RRuzle0h6TTSJ37b8L/VVtuwQ5bmgIbnwVodomhUPSG/A+COMwTFVOxk4
+	 SokYFTkpqNvscUsd9ct/pjGSQZxkAKTCY/gNFm/c=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727201AbgA3Uzd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 30 Jan 2020 15:55:33 -0500
-Received: from mail.kernel.org ([198.145.29.99]:41360 "EHLO mail.kernel.org"
+        id S1727142AbgA3U4B (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 30 Jan 2020 15:56:01 -0500
+Received: from mail.kernel.org ([198.145.29.99]:41556 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726514AbgA3Uzd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 30 Jan 2020 15:55:33 -0500
+        id S1726514AbgA3U4B (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 30 Jan 2020 15:56:01 -0500
 Received: from localhost (mobile-166-175-186-165.mycingular.net [166.175.186.165])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5D4312082E;
-        Thu, 30 Jan 2020 20:55:32 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9F2152083E;
+        Thu, 30 Jan 2020 20:56:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1580417732;
-        bh=9DKv4XnZE1n+vDCavbocWHj6Gbmd6v+IO+oNqvfhSn8=;
+        s=default; t=1580417761;
+        bh=x0l9zksZO/x6n1yGMkTxebE3Alqw68EoksjtXhi4Zl0=;
         h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=P3T3P0fZVHS5zQS5VJ61WKl6MjkUd35tWa9j3lqZV+EfxLcOaHF7YsBfGRWzWdfxV
-         lMnWj5E1Pfcwz3HYRd7IFKU68LNR3vQ1zBdwUXORjDtEi0Cf8TLbsg7rEcDmZDrFxO
-         HNQ2z7nEbcVZKFdIuU1gGQgOvBZnGs85diQaeCD8=
-Date:   Thu, 30 Jan 2020 14:55:30 -0600
+        b=EcjvaqAPQAbA1paBJ2xmn8jqw1UQqNTMyy6IU1yhYS6BmaGbiFd8RDS2u3GwrJ5X0
+         H8TGzun37awCDvUaWrh/tO6S1UoKqIzeA5UB3g5u0DG4a7+hdqTs3noV/n5xv2tqFd
+         URRMpLDStB8pwuYFRE/PyQphlugBVfU/IyLHP73M=
+Date:   Thu, 30 Jan 2020 14:55:59 -0600
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>
 Cc:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
@@ -45,43 +45,33 @@ Cc:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         Mika Westerberg <mika.westerberg@linux.intel.com>,
         Benjamin Herrenschmidt <benh@kernel.crashing.org>,
         Logan Gunthorpe <logang@deltatee.com>
-Subject: Re: [PATCH v2 0/4] PCI: Allow Thunderbolt to work with resources
- from pci=hpmemsize
-Message-ID: <20200130205530.GA123630@google.com>
+Subject: Re: [PATCH v2 0/3] PCI: Fix failure to assign BARs with alignment
+ >1M with Thunderbolt
+Message-ID: <20200130205558.GA123734@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <PSXP216MB04388C465B8CD6FBEB8FDA3880370@PSXP216MB0438.KORP216.PROD.OUTLOOK.COM>
+In-Reply-To: <PSXP216MB04387C41E6734CC4DEA9846280370@PSXP216MB0438.KORP216.PROD.OUTLOOK.COM>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jan 15, 2020 at 05:56:42PM +0000, Nicholas Johnson wrote:
-> Changes:
-> 	- Add Mika Westerberg's Reviewed-by: tags that he gave for 1, 2
-> 	- Change commit description slightly in 1
-> 	- Change commit description more substantially in 3, 4
-> 	- Fix indentation in 3, oops. I thought I ran checkpatch.pl on
-> 	  it, clearly I was asleep or missed that one
-> 	- Update 4 to remove usage of reset_resource() which Bjorn says
-> 	  he considers to be depricated.
+On Wed, Jan 15, 2020 at 05:55:17PM +0000, Nicholas Johnson wrote:
+> Tiny changes:
+> 	- Add Mika Westerberg's Reviewed-by: tags which he gave.
+> 	- Change commit description slightly in 2/3.
 > 
-> I have not heard back from Bjorn in a while from my latest replies, so I
-> am moving ahead with PATCH v2. I have tried to act on his initial
-> feedback the best I can.
+> Nicholas Johnson (3):
+>   PCI: Remove redundant brackets in
+>     pci_bus_distribute_available_resources()
+>   PCI: Change pci_bus_distribute_available_resources() args to struct
+>     resource
+>   PCI: Consider alignment of hot-added bridges when distributing
+>     available resources
 > 
-> Apply this series after series:
-> "PCI: Fix failure to assign BARs with alignment >1M with Thunderbolt"
-> 
-> Nicholas Johnson (4):
->   PCI: In extend_bridge_window() change available to new_size
->   PCI: Rename extend_bridge_window() to adjust_bridge_window()
->   PCI: Change extend_bridge_window() to set resource size directly
->   PCI: Allow extend_bridge_window() to shrink resource if necessary
-> 
->  drivers/pci/setup-bus.c | 41 ++++++++++++++++++++---------------------
->  1 file changed, 20 insertions(+), 21 deletions(-)
+>  drivers/pci/setup-bus.c | 106 +++++++++++++++++++++++-----------------
+>  1 file changed, 61 insertions(+), 45 deletions(-)
 
 Applied to pci/resource for v5.6, thanks!
