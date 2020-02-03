@@ -2,161 +2,126 @@ Return-Path: <SRS0=oELR=3X=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0CE5C33C9E
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Feb 2020 05:03:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CA03C3524E
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Feb 2020 08:18:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8D62E207E0
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Feb 2020 05:03:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E816B2082E
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Feb 2020 08:18:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eccQdPSp"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Fza/D2YA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725800AbgBCFDa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 3 Feb 2020 00:03:30 -0500
-Received: from mail-qk1-f195.google.com ([209.85.222.195]:41226 "EHLO
-        mail-qk1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726084AbgBCFDY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Feb 2020 00:03:24 -0500
-Received: by mail-qk1-f195.google.com with SMTP id u19so5348573qku.8;
-        Sun, 02 Feb 2020 21:03:22 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=PHvPKoaqKtkykZLxCi4TerZ2d6tP9SE0xIIPoaJM2Ow=;
-        b=eccQdPSpf1llC7YR5VHHJlf0LJ2SN0WsloaRrCae1eSinKOwjkW30fDu9dVrkM/b0X
-         tc5czCv5b2qsqo4/y8zD7jti3aTAVsOiK1vlfWLdLFpdhLaiQ87xOGP8C+Rw5KXILatY
-         ZJNmj3gj3Xb9fFMI8+f5ERHG1z0U123/t8ix8s9U/bfD+vy89yDS24hDb0AnyH2aBI9D
-         XQjYre6nGFbNHhLGv6lfth2q13VZtFoZTHvidTcOB0xs+0my0Iq3Sb4rixgU08mWUhLT
-         Me8f/RKenDIINNa75WEzQniaZH8tnXRn11UCDGzK1bG3xuAk3ktpkVgJtvIOKngImihB
-         G4sQ==
+        id S1727454AbgBCISH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 3 Feb 2020 03:18:07 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:55982 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726100AbgBCISH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Feb 2020 03:18:07 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1580717885;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=CrlD/wgdUBtVzwn2ikuTQOIVSG3OPC/dcn0ZKFc6/Gs=;
+        b=Fza/D2YAtP+yh4T8xquu9UMFcsBn7oeHirAg6/CNH2zBpfJKO7zwGtpCIouq7xr51Y4SRB
+        JoNfwVBoQR5e+V2MKvWwVP/by9+mN44vb6J9UYp2eFPtSVqzq0crZlG7ZG/x01qvWSWOQ+
+        JIFsFjL769hq1iQkItoUr6SGBpnEFFA=
+Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
+ [209.85.128.71]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-190-bipk_wBYODClsX-UW0ivfw-1; Mon, 03 Feb 2020 03:18:04 -0500
+X-MC-Unique: bipk_wBYODClsX-UW0ivfw-1
+Received: by mail-wm1-f71.google.com with SMTP id d4so3707688wmd.7
+        for <linux-pci@vger.kernel.org>; Mon, 03 Feb 2020 00:18:03 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=PHvPKoaqKtkykZLxCi4TerZ2d6tP9SE0xIIPoaJM2Ow=;
-        b=FtUTwn1SuMrO1rUd6VY69vYQeehC29xWVylaN128Ot8st8vHozHXCMsNdxGD+edH5H
-         /pWjHfEeAmFxa8zuUkHLg0p6mdTFBtyp3euI8Ezvd1DMTbHNrQk/OrXH+oXsbOtUjOTt
-         vwvJPidHHZ3tWgnGq4JputEMDGxySYdWEeqsYTmTHWIuIt1hqbDWIeOkpIeFBXh9iR73
-         krsYNov1GR63X5CL9LS4q1PXyUdy25RTKln/ShxC+nv7DkN6tX2QcSeuHF29fjNZ5sAv
-         WX+ykPD3ftNPWm6ZUROnO4UECgga+1CMxPASg0ACaxSePXoKyYFANpfDKcLh9iFQ0Rhj
-         r+sQ==
-X-Gm-Message-State: APjAAAULdgJz+D3UCnBoJmdW/XokXwb85UEec6Mjrb9xZK5fo/9ZUfMG
-        RdG3cUv8Hkrs+yk0VFHvHbQ=
-X-Google-Smtp-Source: APXvYqzKk8N4hCeJ6CJD5TAcL/7v4lfU/s9T8nK42KRRAuCr9IO1YEQgEqAT7joW06yw2CkvdCgQig==
-X-Received: by 2002:a37:a744:: with SMTP id q65mr22115703qke.391.1580706201772;
-        Sun, 02 Feb 2020 21:03:21 -0800 (PST)
-Received: from auth1-smtp.messagingengine.com (auth1-smtp.messagingengine.com. [66.111.4.227])
-        by smtp.gmail.com with ESMTPSA id g6sm9311219qtp.53.2020.02.02.21.03.20
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 02 Feb 2020 21:03:21 -0800 (PST)
-Received: from compute6.internal (compute6.nyi.internal [10.202.2.46])
-        by mailauth.nyi.internal (Postfix) with ESMTP id 33B3E21EEB;
-        Mon,  3 Feb 2020 00:03:19 -0500 (EST)
-Received: from mailfrontend2 ([10.202.2.163])
-  by compute6.internal (MEProxy); Mon, 03 Feb 2020 00:03:19 -0500
-X-ME-Sender: <xms:l6k3XqLvV7p5_9WEE4ijQInGUfaeDkGrIxj-Gopqvh5xrgL5qo6mEQ>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedugedrgeeigdejjecutefuodetggdotefrodftvf
-    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
-    uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenog
-    fuohhrthgvugftvggtihhpvdculdegtddmnecujfgurhephffvufffkffojghfggfgsedt
-    keertdertddtnecuhfhrohhmpeeuohhquhhnucfhvghnghcuoegsohhquhhnrdhfvghngh
-    esghhmrghilhdrtghomheqnecukfhppeehvddrudehhedrudduuddrjedunecuvehluhhs
-    thgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepsghoqhhunhdomhgvsh
-    hmthhprghuthhhphgvrhhsohhnrghlihhthidqieelvdeghedtieegqddujeejkeehheeh
-    vddqsghoqhhunhdrfhgvnhhgpeepghhmrghilhdrtghomhesfhhigihmvgdrnhgrmhgv
-X-ME-Proxy: <xmx:l6k3Xo1lUECvj0i7npwxRp2S9fZxkwXWI6nxXbvx1pEafg3L4_Y3CA>
-    <xmx:l6k3XvI_ImMOnuA1Ko0f298f9xhLD07zzizUHL82Gl3WslEcexJxtA>
-    <xmx:l6k3Xtn0YP31nZqgxKE_3GaEO4To5uI-Jk_IA8jiLGu3jjmi2ydbCw>
-    <xmx:l6k3XuAWvO1bCYjflTM7KSIyGC-HNkZHtzihlje1YTexrtrrBtjE58oYyQE>
-Received: from localhost (unknown [52.155.111.71])
-        by mail.messagingengine.com (Postfix) with ESMTPA id 9D14F30600DC;
-        Mon,  3 Feb 2020 00:03:18 -0500 (EST)
-From:   Boqun Feng <boqun.feng@gmail.com>
-To:     linux-pci@vger.kernel.org, linux-hyperv@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Cc:     Michael Kelley <mikelley@microsoft.com>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Sasha Levin <sashal@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Andrew Murray <andrew.murray@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Boqun Feng <boqun.feng@gmail.com>
-Subject: [PATCH v2 1/3] PCI: hv: Move hypercall related definitions into tlfs header
-Date:   Mon,  3 Feb 2020 13:03:11 +0800
-Message-Id: <20200203050313.69247-2-boqun.feng@gmail.com>
-X-Mailer: git-send-email 2.24.1
-In-Reply-To: <20200203050313.69247-1-boqun.feng@gmail.com>
-References: <20200203050313.69247-1-boqun.feng@gmail.com>
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=CrlD/wgdUBtVzwn2ikuTQOIVSG3OPC/dcn0ZKFc6/Gs=;
+        b=bsMOod6jGv7h6re0x6urRnHZd3cz9ctUoAL6MGgZjvw9YqR3TUcqbu7s2JEP2g77gi
+         iqNrJv7mbteBlyYt6NaqeSwkoliWrQdEmfVXOZGsjh73kes4BhVxtS57CZ/+PRmmVpXj
+         Q2Kh5USYbMrOrsn1GNVY3Pl2S760aJoHtwXhf783KICFXfc5sNX//h5oJsAFgM7ef7x5
+         gUJqfrsmHCoqChWXBqHVx0podz8OBVDa1c/76Q1RmKxwJAiib+CU9O4R0phZEsBsVkr3
+         iYJW6qeMfsCGvsOhmsWV2v/hkk2N9RyhDWBuTeMC8A/BtzGFOVnejdJOVmbf2dUttLOd
+         SCeQ==
+X-Gm-Message-State: APjAAAVJZEm4KDbSYYTuY8IchbKRo3KBJ1sBmFsjUx/SymZOREjlQhOq
+        TjAz3OcZFFFK51icerX+JhGfb67WlK1zioTROHBf6S9cEvoWG4hzXTVSX5YfX5N0Gzx/y8G/knt
+        cMX7d+NMtYxAEGitBNfiT
+X-Received: by 2002:adf:f0c8:: with SMTP id x8mr3034924wro.359.1580717881768;
+        Mon, 03 Feb 2020 00:18:01 -0800 (PST)
+X-Google-Smtp-Source: APXvYqx9FVGQu5t2tcyaJhvPoLSS22q7NWyktDP3a+A/plvQOaRTXOMjAlgdnv0obzO54kAOXWlZ3A==
+X-Received: by 2002:adf:f0c8:: with SMTP id x8mr3034870wro.359.1580717881333;
+        Mon, 03 Feb 2020 00:18:01 -0800 (PST)
+Received: from localhost.localdomain ([151.29.2.83])
+        by smtp.gmail.com with ESMTPSA id r3sm24850786wrn.34.2020.02.03.00.18.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 03 Feb 2020 00:18:00 -0800 (PST)
+Date:   Mon, 3 Feb 2020 09:17:58 +0100
+From:   Juri Lelli <juri.lelli@redhat.com>
+To:     linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-rt-users@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     Dietmar Eggemann <dietmar.eggemann@arm.com>,
+        Morten Rasmussen <morten.rasmussen@arm.com>,
+        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+        Sudeep Holla <sudeep.holla@arm.com>,
+        Claudio Scordino <c.scordino@evidence.eu.com>,
+        Luca Abeni <luca.abeni@santannapisa.it>,
+        Tommaso Cucinotta <tommaso.cucinotta@santannapisa.it>
+Subject: Re: [ANNOUNCE][CFP] Power Management and Scheduling in the Linux
+ Kernel IV edition (OSPM-summit 2020)
+Message-ID: <20200203081758.GI8582@localhost.localdomain>
+References: <20191219103500.GC13724@localhost.localdomain>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191219103500.GC13724@localhost.localdomain>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Currently HVCALL_RETARGET_INTERRUPT and HV_PARTITION_ID_SELF are defined
-in pci-hyperv.c. However, similar to other hypercall related definitions
-, it makes more sense to put them in the tlfs header file.
+Hi,
 
-Besides, these definitions are arch-dependent, so for the support of
-virtual PCI on non-x86 archs in the future, move them into arch-specific
-tlfs header file.
+On 19/12/19 11:35, Juri Lelli wrote:
+> Power Management and Scheduling in the Linux Kernel (OSPM-summit) IV edition
+> 
+> May 11-13, 2020
+> Scuola Superiore Sant'Anna
+> Pisa, Italy
+> 
+> ---
 
-Signed-off-by: Boqun Feng (Microsoft) <boqun.feng@gmail.com>
----
- arch/x86/include/asm/hyperv-tlfs.h  | 3 +++
- drivers/pci/controller/pci-hyperv.c | 6 ------
- 2 files changed, 3 insertions(+), 6 deletions(-)
+[...]
 
-diff --git a/arch/x86/include/asm/hyperv-tlfs.h b/arch/x86/include/asm/hyperv-tlfs.h
-index 5f10f7f2098d..739bd89226a5 100644
---- a/arch/x86/include/asm/hyperv-tlfs.h
-+++ b/arch/x86/include/asm/hyperv-tlfs.h
-@@ -376,6 +376,7 @@ struct hv_tsc_emulation_status {
- #define HVCALL_SEND_IPI_EX			0x0015
- #define HVCALL_POST_MESSAGE			0x005c
- #define HVCALL_SIGNAL_EVENT			0x005d
-+#define HVCALL_RETARGET_INTERRUPT		0x007e
- #define HVCALL_FLUSH_GUEST_PHYSICAL_ADDRESS_SPACE 0x00af
- #define HVCALL_FLUSH_GUEST_PHYSICAL_ADDRESS_LIST 0x00b0
- 
-@@ -405,6 +406,8 @@ enum HV_GENERIC_SET_FORMAT {
- 	HV_GENERIC_SET_ALL,
- };
- 
-+#define HV_PARTITION_ID_SELF                    ((u64)-1)
-+
- #define HV_HYPERCALL_RESULT_MASK	GENMASK_ULL(15, 0)
- #define HV_HYPERCALL_FAST_BIT		BIT(16)
- #define HV_HYPERCALL_VARHEAD_OFFSET	17
-diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
-index 9977abff92fc..aacfcc90d929 100644
---- a/drivers/pci/controller/pci-hyperv.c
-+++ b/drivers/pci/controller/pci-hyperv.c
-@@ -406,12 +406,6 @@ struct pci_eject_response {
- 
- static int pci_ring_size = (4 * PAGE_SIZE);
- 
--/*
-- * Definitions or interrupt steering hypercall.
-- */
--#define HV_PARTITION_ID_SELF		((u64)-1)
--#define HVCALL_RETARGET_INTERRUPT	0x7e
--
- struct hv_interrupt_entry {
- 	u32	source;			/* 1 for MSI(-X) */
- 	u32	reserved1;
--- 
-2.24.1
+> .:: SUBMIT A TOPIC/PRESENTATION
+> 
+> To submit a topic/presentation add its details to this list:
+> https://docs.google.com/spreadsheets/d/1pPU2ybHHoQjqicYLTaNanPz9H5fv6mQTtrzOqwP9uHs/edit?usp=sharing
+> 
+> Or, if you prefer, simply reply (only to me, please :) to this email
+> specifying:
+> 
+> - name/surname
+> - affiliation
+> - short bio
+> - email address
+> - title
+> - abstract
+> - 30min or 50min slot
+> 
+> Deadline for submitting topics/presentations is 10th of February 2020.
+> Notifications for accepted topics/presentations will be sent out on 24th
+> of February 2020.
+
+A quick one to remind that deadline for submitting topics is
+approaching.  Please take time to think about what you'd like to discuss
+at the summit and to add the topic to the list.
+
+Best,
+
+Juri
 
