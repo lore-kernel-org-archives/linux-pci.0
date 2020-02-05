@@ -2,115 +2,79 @@ Return-Path: <SRS0=seBN=3Z=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FAKE_REPLY_C,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E03BEC35247
-	for <linux-pci@archiver.kernel.org>; Wed,  5 Feb 2020 19:03:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9B9AC352A2
+	for <linux-pci@archiver.kernel.org>; Wed,  5 Feb 2020 20:18:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B3BDB217F4
-	for <linux-pci@archiver.kernel.org>; Wed,  5 Feb 2020 19:03:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C07AF218AC
+	for <linux-pci@archiver.kernel.org>; Wed,  5 Feb 2020 20:18:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1580929420;
-	bh=s4sCPMZzjx09ipN9D6fBvtZZmWenqnm+d8znhpi4TZk=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=0klFDth+fnctPHt5DTzv1DMJL+yRoqGU5Cn8B/4gW3u4N14R00/SYd5vgsIV77Vy3
-	 JD/tIiD3hjwWQhUX0N+ZjD2MtkNUcKiPzJpTjIyJAFi8ogP/c5qgVMVY5wldGECijI
-	 JVGJVroNycLD5izsCRgkXetDVxsikO26au/HlsFI=
+	s=default; t=1580933938;
+	bh=1U2JNySow9ywV+0MoIP2f05Iqj1pjEt3CoLVZfd9sIs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=z94/gGxAc0fH1MtS8zQwTH45m7dk9yTmz7foxOLwiMbDzxbNDrNK5sYDM+wsjditn
+	 XN/sfbXjMYZGtfxTIivQKWdzB3ujqcbAc5hLfQ1bBrD8NGozXmmDj4lnEHsCND38Og
+	 67/oe8hcNxSqUK+N+IbzZQwExBuT3ixjuamqAFAI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727149AbgBETDk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 5 Feb 2020 14:03:40 -0500
-Received: from mail.kernel.org ([198.145.29.99]:36770 "EHLO mail.kernel.org"
+        id S1726720AbgBEUS6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 5 Feb 2020 15:18:58 -0500
+Received: from mail.kernel.org ([198.145.29.99]:49212 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726822AbgBETDk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 5 Feb 2020 14:03:40 -0500
-Received: from localhost (mobile-166-175-186-165.mycingular.net [166.175.186.165])
+        id S1726208AbgBEUS6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 5 Feb 2020 15:18:58 -0500
+Received: from localhost (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D4114217BA;
-        Wed,  5 Feb 2020 19:03:38 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 293BB20720;
+        Wed,  5 Feb 2020 20:18:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1580929419;
-        bh=s4sCPMZzjx09ipN9D6fBvtZZmWenqnm+d8znhpi4TZk=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=0AKQV4UfO1b+QsLo33c8vCAfvP7G5/ZUeMPltiu7YqChu+hOnUoUKqMGhMMwaiPys
-         z9n6XYK5WgOjl8qvi/DXwGj+inl7NMbZEXz5QFPnx7Rx3VZ9MSmi6a0Uz251GXAWWp
-         dYNBRi0Mieb69JSfl2NBHUVqU/FJpm5ijtfC31xU=
-Date:   Wed, 5 Feb 2020 13:03:37 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Kuppuswamy Sathyanarayanan 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ashok.raj@intel.com, Keith Busch <keith.busch@intel.com>
-Subject: Re: [PATCH v13 1/8] PCI/ERR: Update error status after reset_link()
-Message-ID: <20200205190337.GA232001@google.com>
+        s=default; t=1580933937;
+        bh=1U2JNySow9ywV+0MoIP2f05Iqj1pjEt3CoLVZfd9sIs=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=AtfVJGGE53V8jsRx4jZS4KtqAT6NoNv+ezxGCKvxqdo9kMyIQs3JAnkNhg7g8io+a
+         FEvppDkZoFTQllOk2fRgVfUtfkZLq7+xx9UZO8+UxeUrtDadP46ROtLEtqvSewGyKg
+         WjBroJhKWkH6fKrAyDNTwtsmd8AOQ2ONRb8cIKPI=
+Date:   Wed, 5 Feb 2020 15:18:56 -0500
+From:   Sasha Levin <sashal@kernel.org>
+To:     Thomas Gleixner <tglx@linutronix.de>
+Cc:     Evan Green <evgreen@chromium.org>, Rajat Jain <rajatja@google.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        x86@kernel.org, Marc Zyngier <maz@kernel.org>,
+        stable@vger.kernel.org
+Subject: Re: [PATCH] x86/apic/msi: Plug non-maskable MSI affinity race
+Message-ID: <20200205201856.GF31482@sasha-vm>
+References: <87lfpn50id.fsf@nanos.tec.linutronix.de>
+ <20200205144509.7004C21D7D@mail.kernel.org>
+ <87wo91rsgg.fsf@nanos.tec.linutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Disposition: inline
-In-Reply-To: <20200205182800.GB112031@skuppusw-desk.amr.corp.intel.com>
+In-Reply-To: <87wo91rsgg.fsf@nanos.tec.linutronix.de>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Feb 05, 2020 at 10:28:00AM -0800, Kuppuswamy Sathyanarayanan wrote:
-> Hi Bjorn,
-> 
-> On Sat, Jan 18, 2020 at 08:00:30PM -0800, sathyanarayanan.kuppuswamy@linux.intel.com wrote:
-> > From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-> > 
-> > Commit bdb5ac85777d ("PCI/ERR: Handle fatal error recovery") uses
-> > reset_link() to recover from fatal errors. But during fatal error
-> > recovery, if the initial value of error status is
-> > PCI_ERS_RESULT_DISCONNECT or PCI_ERS_RESULT_NO_AER_DRIVER then
-> > even after successful recovery (using reset_link()) pcie_do_recovery()
-> > will report the recovery result as failure. So update the status of
-> > error after reset_link().
-> 
-> Since this patch has no dependency on EDR, can we merge it first?
+On Wed, Feb 05, 2020 at 02:58:55PM +0000, Thomas Gleixner wrote:
+>Sasha Levin <sashal@kernel.org> writes:
+>
+>> Hi,
+>>
+>> [This is an automated email]
+>>
+>>
+>> NOTE: The patch will not be queued to stable trees until it is upstream.
+>>
+>> How should we proceed with this patch?
+>
+>Use V2 :)
 
-We *could*, but I don't think there's any benefit.  bdb5ac85777d
-appeared in v4.20, so this wouldn't really be a candidate for v5.6.
+My little bot can't keep up :)
 
-I'm expecting (hoping, anyway) that we'll merge this whole series for
-v5.7.  For minor bugfixes like this one, we should add stable tags so
-they'll get backported.
-
-> > Fixes: bdb5ac85777d ("PCI/ERR: Handle fatal error recovery")
-> > Cc: Ashok Raj <ashok.raj@intel.com>
-> > Cc: Keith Busch <keith.busch@intel.com>
-> > Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-> > Acked-by: Keith Busch <keith.busch@intel.com>
-> > ---
-> >  drivers/pci/pcie/err.c | 8 +++++---
-> >  1 file changed, 5 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-> > index b0e6048a9208..71639055511e 100644
-> > --- a/drivers/pci/pcie/err.c
-> > +++ b/drivers/pci/pcie/err.c
-> > @@ -204,9 +204,11 @@ void pcie_do_recovery(struct pci_dev *dev, enum pci_channel_state state,
-> >  	else
-> >  		pci_walk_bus(bus, report_normal_detected, &status);
-> >  
-> > -	if (state == pci_channel_io_frozen &&
-> > -	    reset_link(dev, service) != PCI_ERS_RESULT_RECOVERED)
-> > -		goto failed;
-> > +	if (state == pci_channel_io_frozen) {
-> > +		status = reset_link(dev, service);
-> > +		if (status != PCI_ERS_RESULT_RECOVERED)
-> > +			goto failed;
-> > +	}
-> >  
-> >  	if (status == PCI_ERS_RESULT_CAN_RECOVER) {
-> >  		status = PCI_ERS_RESULT_RECOVERED;
-> > -- 
-> > 2.21.0
-> > 
-> 
-> -- 
-> Sathyanarayanan Kuppuswamy
-> Linux kernel developer
+-- 
+Thanks,
+Sasha
