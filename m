@@ -2,34 +2,34 @@ Return-Path: <SRS0=seBN=3Z=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 177A9C33CA1
-	for <linux-pci@archiver.kernel.org>; Wed,  5 Feb 2020 09:22:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B87E4C33CA1
+	for <linux-pci@archiver.kernel.org>; Wed,  5 Feb 2020 09:22:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DB3EC20659
-	for <linux-pci@archiver.kernel.org>; Wed,  5 Feb 2020 09:22:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 95BD6217F4
+	for <linux-pci@archiver.kernel.org>; Wed,  5 Feb 2020 09:22:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728079AbgBEJWF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 5 Feb 2020 04:22:05 -0500
-Received: from szxga06-in.huawei.com ([45.249.212.32]:45228 "EHLO huawei.com"
+        id S1728083AbgBEJWL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 5 Feb 2020 04:22:11 -0500
+Received: from szxga06-in.huawei.com ([45.249.212.32]:45114 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728035AbgBEJWF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 5 Feb 2020 04:22:05 -0500
-Received: from DGGEMS412-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id 0F697B646FFE7539EDF6;
-        Wed,  5 Feb 2020 17:22:04 +0800 (CST)
+        id S1728034AbgBEJWK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 5 Feb 2020 04:22:10 -0500
+Received: from DGGEMS408-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id B1E5596657E9C05335B7;
+        Wed,  5 Feb 2020 17:21:58 +0800 (CST)
 Received: from localhost.localdomain (10.67.165.24) by
- DGGEMS412-HUB.china.huawei.com (10.3.19.212) with Microsoft SMTP Server id
- 14.3.439.0; Wed, 5 Feb 2020 17:21:56 +0800
+ DGGEMS408-HUB.china.huawei.com (10.3.19.208) with Microsoft SMTP Server id
+ 14.3.439.0; Wed, 5 Feb 2020 17:21:50 +0800
 From:   Yicong Yang <yangyicong@hisilicon.com>
 To:     <helgaas@kernel.org>, <linux-pci@vger.kernel.org>
 CC:     <f.fangjian@huawei.com>, <huangdaode@huawei.com>
-Subject: [PATCH 1/2] PCI: Change lock order in pci_dev_lock()
-Date:   Wed, 5 Feb 2020 17:18:03 +0800
-Message-ID: <1580894283-20790-1-git-send-email-yangyicong@hisilicon.com>
+Subject: [PATCH 0/2] PCI: Fix potential deadlock problems
+Date:   Wed, 5 Feb 2020 17:17:57 +0800
+Message-ID: <1580894277-20671-1-git-send-email-yangyicong@hisilicon.com>
 X-Mailer: git-send-email 2.8.1
 MIME-Version: 1.0
 Content-Type: text/plain
@@ -40,69 +40,27 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In pci_dev_lock(), we hold pci_lock for configuration access first,
-then is device_lock. But in sriov enable routine, we hold device_lock
-first and pci_lock subsequently. The inconsistent lock order  will have
-potential deadlock problem.
+Currently we use several locks to avoid racing conditions in pci
+framework. When involving more than one lock, the inconsistent
+lock order will lead to deadlock problems. This patchset aims to
+solve the problem by keeping the same lock order in different
+processes.
 
-In pci_dev_lock():
-pci_dev_lock()
-	pci_cfg_access_lock()
-	device_lock()
+Patch_1: fix the potential deadlock caused by pci_dev_lock() and
+VF enable routine.
+Patch_2: fix the deadlock caused by AER and sriov enable routine
+as reported.
 
-When adding VF by sysfs:
-sriov_numvfs_store()
-	device_lock()
-		...
-		sriov_enable()
-			pci_cfg_access_lock()
+Yicong Yang (2):
+  PCI: Change lock order in pci_dev_lock()
+  PCI/AER: Fix deadlock triggered by AER and sriov enable routine
 
-Adjust the lock order in pci_dev_lock(), pci_dev_trylock() and
-pci_dev_unlock() to avoid potential deadlock condition.
+ drivers/pci/bus.c      |  8 ++++++++
+ drivers/pci/pci.c      | 15 ++++++++-------
+ drivers/pci/pci.h      |  4 ++++
+ drivers/pci/pcie/err.c | 18 +++++-------------
+ 4 files changed, 25 insertions(+), 20 deletions(-)
 
-Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
----
- drivers/pci/pci.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index e87196c..78c99ef 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4876,18 +4876,19 @@ static int pci_dev_reset_slot_function(struct pci_dev *dev, int probe)
- 
- static void pci_dev_lock(struct pci_dev *dev)
- {
--	pci_cfg_access_lock(dev);
- 	/* block PM suspend, driver probe, etc. */
- 	device_lock(&dev->dev);
-+
-+	pci_cfg_access_lock(dev);
- }
- 
- /* Return 1 on successful lock, 0 on contention */
- static int pci_dev_trylock(struct pci_dev *dev)
- {
--	if (pci_cfg_access_trylock(dev)) {
--		if (device_trylock(&dev->dev))
-+	if (device_trylock(&dev->dev)) {
-+		if (pci_cfg_access_trylock(dev))
- 			return 1;
--		pci_cfg_access_unlock(dev);
-+		device_unlock(&dev->dev);
- 	}
- 
- 	return 0;
-@@ -4895,8 +4896,8 @@ static int pci_dev_trylock(struct pci_dev *dev)
- 
- static void pci_dev_unlock(struct pci_dev *dev)
- {
--	device_unlock(&dev->dev);
- 	pci_cfg_access_unlock(dev);
-+	device_unlock(&dev->dev);
- }
- 
- static void pci_dev_save_and_disable(struct pci_dev *dev)
--- 
+--
 2.8.1
 
