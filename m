@@ -2,67 +2,107 @@ Return-Path: <SRS0=seBN=3Z=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60B75C33CA1
-	for <linux-pci@archiver.kernel.org>; Wed,  5 Feb 2020 09:20:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 177A9C33CA1
+	for <linux-pci@archiver.kernel.org>; Wed,  5 Feb 2020 09:22:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3AA9921741
-	for <linux-pci@archiver.kernel.org>; Wed,  5 Feb 2020 09:20:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DB3EC20659
+	for <linux-pci@archiver.kernel.org>; Wed,  5 Feb 2020 09:22:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728078AbgBEJUC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 5 Feb 2020 04:20:02 -0500
-Received: from verein.lst.de ([213.95.11.211]:36313 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728034AbgBEJUC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 5 Feb 2020 04:20:02 -0500
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id CC7AC68C7B; Wed,  5 Feb 2020 10:19:59 +0100 (CET)
-Date:   Wed, 5 Feb 2020 10:19:59 +0100
-From:   Christoph Hellwig <hch@lst.de>
-To:     Kishon Vijay Abraham I <kishon@ti.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: pci-usb/pci-sata broken with LPAE config after "reduce use of
- block bounce buffers"
-Message-ID: <20200205091959.GA24413@lst.de>
-References: <20200130075833.GC30735@lst.de> <4a41bd0d-6491-3822-172a-fbca8a6abba5@ti.com> <20200130164235.GA6705@lst.de> <f76af743-dcb5-f59d-b315-f2332a9dc906@ti.com> <20200203142155.GA16388@lst.de> <a5eb4f73-418a-6780-354f-175d08395e71@ti.com> <20200205074719.GA22701@lst.de> <4a8bf1d3-6f8e-d13e-eae0-4db54f5cab8c@ti.com> <20200205084844.GA23831@lst.de> <88d50d13-65c7-7ca3-59c6-56f7d66c3816@ti.com>
+        id S1728079AbgBEJWF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 5 Feb 2020 04:22:05 -0500
+Received: from szxga06-in.huawei.com ([45.249.212.32]:45228 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728035AbgBEJWF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 5 Feb 2020 04:22:05 -0500
+Received: from DGGEMS412-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id 0F697B646FFE7539EDF6;
+        Wed,  5 Feb 2020 17:22:04 +0800 (CST)
+Received: from localhost.localdomain (10.67.165.24) by
+ DGGEMS412-HUB.china.huawei.com (10.3.19.212) with Microsoft SMTP Server id
+ 14.3.439.0; Wed, 5 Feb 2020 17:21:56 +0800
+From:   Yicong Yang <yangyicong@hisilicon.com>
+To:     <helgaas@kernel.org>, <linux-pci@vger.kernel.org>
+CC:     <f.fangjian@huawei.com>, <huangdaode@huawei.com>
+Subject: [PATCH 1/2] PCI: Change lock order in pci_dev_lock()
+Date:   Wed, 5 Feb 2020 17:18:03 +0800
+Message-ID: <1580894283-20790-1-git-send-email-yangyicong@hisilicon.com>
+X-Mailer: git-send-email 2.8.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <88d50d13-65c7-7ca3-59c6-56f7d66c3816@ti.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Type: text/plain
+X-Originating-IP: [10.67.165.24]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Feb 05, 2020 at 02:48:17PM +0530, Kishon Vijay Abraham I wrote:
-> Christoph,
-> 
-> On 05/02/20 2:18 PM, Christoph Hellwig wrote:
-> > On Wed, Feb 05, 2020 at 02:02:51PM +0530, Kishon Vijay Abraham I wrote:
-> >>> you try that branch?
-> >>
-> >> I see data mismatch with that branch.
-> > 
-> > But previously it didn't work at all? If you disable LPAE and thus
-> > limit the available RAM, does it work without any fixes?
-> 
-> Previously there was a warn dump and it gets stuck.
-> 
-> With the branch you shared (with LPAE enabled), there was data mismatch.
-> With the branch you shared (with LPAE disabled), things work fine
-> (https://pastebin.ubuntu.com/p/kPNdsJd7ds/)
+In pci_dev_lock(), we hold pci_lock for configuration access first,
+then is device_lock. But in sriov enable routine, we hold device_lock
+first and pci_lock subsequently. The inconsistent lock order  will have
+potential deadlock problem.
 
-Does the miscompare still happen if you revert:
+In pci_dev_lock():
+pci_dev_lock()
+	pci_cfg_access_lock()
+	device_lock()
 
- "dma-direct: improve DMA mask overflow reporting"
+When adding VF by sysfs:
+sriov_numvfs_store()
+	device_lock()
+		...
+		sriov_enable()
+			pci_cfg_access_lock()
 
-and
+Adjust the lock order in pci_dev_lock(), pci_dev_trylock() and
+pci_dev_unlock() to avoid potential deadlock condition.
 
- "dma-direct: improve swiotlb error reporting"
+Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
+---
+ drivers/pci/pci.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-?
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index e87196c..78c99ef 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4876,18 +4876,19 @@ static int pci_dev_reset_slot_function(struct pci_dev *dev, int probe)
+ 
+ static void pci_dev_lock(struct pci_dev *dev)
+ {
+-	pci_cfg_access_lock(dev);
+ 	/* block PM suspend, driver probe, etc. */
+ 	device_lock(&dev->dev);
++
++	pci_cfg_access_lock(dev);
+ }
+ 
+ /* Return 1 on successful lock, 0 on contention */
+ static int pci_dev_trylock(struct pci_dev *dev)
+ {
+-	if (pci_cfg_access_trylock(dev)) {
+-		if (device_trylock(&dev->dev))
++	if (device_trylock(&dev->dev)) {
++		if (pci_cfg_access_trylock(dev))
+ 			return 1;
+-		pci_cfg_access_unlock(dev);
++		device_unlock(&dev->dev);
+ 	}
+ 
+ 	return 0;
+@@ -4895,8 +4896,8 @@ static int pci_dev_trylock(struct pci_dev *dev)
+ 
+ static void pci_dev_unlock(struct pci_dev *dev)
+ {
+-	device_unlock(&dev->dev);
+ 	pci_cfg_access_unlock(dev);
++	device_unlock(&dev->dev);
+ }
+ 
+ static void pci_dev_save_and_disable(struct pci_dev *dev)
+-- 
+2.8.1
+
