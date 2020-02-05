@@ -2,254 +2,107 @@ Return-Path: <SRS0=seBN=3Z=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0DACC3F68F
-	for <linux-pci@archiver.kernel.org>; Wed,  5 Feb 2020 09:22:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A7CAC33CA1
+	for <linux-pci@archiver.kernel.org>; Wed,  5 Feb 2020 09:29:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B73A8222C2
-	for <linux-pci@archiver.kernel.org>; Wed,  5 Feb 2020 09:22:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3E31920659
+	for <linux-pci@archiver.kernel.org>; Wed,  5 Feb 2020 09:29:47 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="H9KQqFuR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728034AbgBEJWL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 5 Feb 2020 04:22:11 -0500
-Received: from szxga07-in.huawei.com ([45.249.212.35]:40626 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728035AbgBEJWL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 5 Feb 2020 04:22:11 -0500
-Received: from DGGEMS405-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id 3302157BCE2BC33765F7;
-        Wed,  5 Feb 2020 17:22:09 +0800 (CST)
-Received: from localhost.localdomain (10.67.165.24) by
- DGGEMS405-HUB.china.huawei.com (10.3.19.205) with Microsoft SMTP Server id
- 14.3.439.0; Wed, 5 Feb 2020 17:22:03 +0800
-From:   Yicong Yang <yangyicong@hisilicon.com>
-To:     <helgaas@kernel.org>, <linux-pci@vger.kernel.org>
-CC:     <f.fangjian@huawei.com>, <huangdaode@huawei.com>
-Subject: [PATCH 2/2] PCI/AER: Fix deadlock triggered by AER and sriov enable routine
-Date:   Wed, 5 Feb 2020 17:18:09 +0800
-Message-ID: <1580894289-21498-1-git-send-email-yangyicong@hisilicon.com>
-X-Mailer: git-send-email 2.8.1
+        id S1728130AbgBEJ3q (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 5 Feb 2020 04:29:46 -0500
+Received: from fllv0015.ext.ti.com ([198.47.19.141]:38802 "EHLO
+        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728119AbgBEJ3q (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Feb 2020 04:29:46 -0500
+Received: from fllv0035.itg.ti.com ([10.64.41.0])
+        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 0159Thjg027354;
+        Wed, 5 Feb 2020 03:29:43 -0600
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1580894983;
+        bh=xLEAFY0eInQuru5nfklQ/d2iYjGo3AFkM7A7McJzMNE=;
+        h=Subject:To:CC:References:From:Date:In-Reply-To;
+        b=H9KQqFuRXnvtO/geTs39ucvriUQkr7Ho8bgjK0WdTX+HDR7b20/4S3pLlpznjZXpj
+         VWcaPUKSxRt4wVB9mYE+RXmr07JgGQMDhxZC2IAzDRWwtz4yw+QWZ307kgTv+E17/G
+         tkbUZ0lpcPz7anRfepw2jzPYasQTDVOtcvUwQHCk=
+Received: from DLEE104.ent.ti.com (dlee104.ent.ti.com [157.170.170.34])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0159Thv6067707;
+        Wed, 5 Feb 2020 03:29:43 -0600
+Received: from DLEE102.ent.ti.com (157.170.170.32) by DLEE104.ent.ti.com
+ (157.170.170.34) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Wed, 5 Feb
+ 2020 03:29:43 -0600
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE102.ent.ti.com
+ (157.170.170.32) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
+ Frontend Transport; Wed, 5 Feb 2020 03:29:43 -0600
+Received: from [10.24.69.159] (ileax41-snat.itg.ti.com [10.172.224.153])
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0159TfTw097331;
+        Wed, 5 Feb 2020 03:29:42 -0600
+Subject: Re: pci-usb/pci-sata broken with LPAE config after "reduce use of
+ block bounce buffers"
+To:     Christoph Hellwig <hch@lst.de>
+CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <20200130075833.GC30735@lst.de>
+ <4a41bd0d-6491-3822-172a-fbca8a6abba5@ti.com> <20200130164235.GA6705@lst.de>
+ <f76af743-dcb5-f59d-b315-f2332a9dc906@ti.com> <20200203142155.GA16388@lst.de>
+ <a5eb4f73-418a-6780-354f-175d08395e71@ti.com> <20200205074719.GA22701@lst.de>
+ <4a8bf1d3-6f8e-d13e-eae0-4db54f5cab8c@ti.com> <20200205084844.GA23831@lst.de>
+ <88d50d13-65c7-7ca3-59c6-56f7d66c3816@ti.com> <20200205091959.GA24413@lst.de>
+From:   Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <9be3bed4-3804-1b3e-a91a-ed52407524ce@ti.com>
+Date:   Wed, 5 Feb 2020 15:03:13 +0530
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.67.165.24]
-X-CFilter-Loop: Reflected
+In-Reply-To: <20200205091959.GA24413@lst.de>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-When enabling VF of pci device by sysfs, we hold device_lock
-first in sriov_enable() and then pci_bus_sem in pci_device_add().
-But when AER invoked, we hold pci_bus_sem first in
-pcie_do_recovery() and then device_lock subsequently.
-The inconsistent order will lead to deadlock as reported [1].
+Christoph,
 
-when adding VF by sysfs:
-sriov_numvfs_store()
-	device_lock()
-		...
-		sriov_enable()
-			...
-			pci_device_add()
-				down_write(&pci_bus_sem)
-when invoking aer routine:
-pcie_do_recovery()
-	...
-	pci_walk_bus()
-		down_read(&pci_bus_sem)
-		report_*()
-			...
-			device_lock()
+On 05/02/20 2:49 PM, Christoph Hellwig wrote:
+> On Wed, Feb 05, 2020 at 02:48:17PM +0530, Kishon Vijay Abraham I wrote:
+>> Christoph,
+>>
+>> On 05/02/20 2:18 PM, Christoph Hellwig wrote:
+>>> On Wed, Feb 05, 2020 at 02:02:51PM +0530, Kishon Vijay Abraham I wrote:
+>>>>> you try that branch?
+>>>>
+>>>> I see data mismatch with that branch.
+>>>
+>>> But previously it didn't work at all? If you disable LPAE and thus
+>>> limit the available RAM, does it work without any fixes?
+>>
+>> Previously there was a warn dump and it gets stuck.
+>>
+>> With the branch you shared (with LPAE enabled), there was data mismatch.
+>> With the branch you shared (with LPAE disabled), things work fine
+>> (https://pastebin.ubuntu.com/p/kPNdsJd7ds/)
+> 
+> Does the miscompare still happen if you revert:
+> 
+>  "dma-direct: improve DMA mask overflow reporting"
+> 
+> and
+> 
+>  "dma-direct: improve swiotlb error reporting"
+> 
+> ?
 
-Add pci_lock_and_walk_bus(), which locks the devices on the bus first
-using pci_bus_lock() and then walk the bus with specific callback.
-Use pci_lock_and_walk_bus() in pcie_do_recovery() and remove
-device_lock() in report_*() callbacks. Then the lock order will be
-consistent with that in the sriov enable routine.
-User space access to the configuration space of the devices on the bus
-will also be blocked in the error recovery routine. The device should
-be unreachable during error recovery.
+Yes, I see the mismatch after reverting the above patches.
 
-[1] https://bugzilla.kernel.org/show_bug.cgi?id=203981
-Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
----
- drivers/pci/bus.c      |  8 ++++++++
- drivers/pci/pci.c      |  4 ++--
- drivers/pci/pci.h      |  4 ++++
- drivers/pci/pcie/err.c | 18 +++++-------------
- 4 files changed, 19 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 8e40b3e..eb29273 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -411,6 +411,14 @@ void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
- }
- EXPORT_SYMBOL_GPL(pci_walk_bus);
- 
-+void pci_lock_and_walk_bus(struct pci_bus *top,
-+		int (*cb)(struct pci_dev *, void *), void *userdata)
-+{
-+	pci_bus_lock(top);
-+	pci_walk_bus(top, cb, userdata);
-+	pci_bus_unlock(top);
-+}
-+
- struct pci_bus *pci_bus_get(struct pci_bus *bus)
- {
- 	if (bus)
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 78c99ef..94a7f91 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5150,7 +5150,7 @@ static bool pci_bus_resetable(struct pci_bus *bus)
- }
- 
- /* Lock devices from the top of the tree down */
--static void pci_bus_lock(struct pci_bus *bus)
-+void pci_bus_lock(struct pci_bus *bus)
- {
- 	struct pci_dev *dev;
- 
-@@ -5162,7 +5162,7 @@ static void pci_bus_lock(struct pci_bus *bus)
- }
- 
- /* Unlock devices from the bottom of the tree up */
--static void pci_bus_unlock(struct pci_bus *bus)
-+void pci_bus_unlock(struct pci_bus *bus)
- {
- 	struct pci_dev *dev;
- 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index a0a53bd..8f8cd53 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -39,6 +39,8 @@ int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vmai,
- int pci_probe_reset_function(struct pci_dev *dev);
- int pci_bridge_secondary_bus_reset(struct pci_dev *dev);
- int pci_bus_error_reset(struct pci_dev *dev);
-+void pci_bus_lock(struct pci_bus *bus);
-+void pci_bus_unlock(struct pci_bus *bus);
- 
- #define PCI_PM_D2_DELAY         200
- #define PCI_PM_D3_WAIT          10
-@@ -286,6 +288,8 @@ bool pci_bus_clip_resource(struct pci_dev *dev, int idx);
- 
- void pci_reassigndev_resource_alignment(struct pci_dev *dev);
- void pci_disable_bridge_window(struct pci_dev *dev);
-+void pci_lock_and_walk_bus(struct pci_bus *top,
-+		int (*cb)(struct pci_dev *, void *), void *userdata);
- struct pci_bus *pci_bus_get(struct pci_bus *bus);
- void pci_bus_put(struct pci_bus *bus);
- 
-diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index b0e6048..ce0ef5c 100644
---- a/drivers/pci/pcie/err.c
-+++ b/drivers/pci/pcie/err.c
-@@ -50,7 +50,6 @@ static int report_error_detected(struct pci_dev *dev,
- 	pci_ers_result_t vote;
- 	const struct pci_error_handlers *err_handler;
- 
--	device_lock(&dev->dev);
- 	if (!pci_dev_set_io_state(dev, state) ||
- 		!dev->driver ||
- 		!dev->driver->err_handler ||
-@@ -71,7 +70,6 @@ static int report_error_detected(struct pci_dev *dev,
- 	}
- 	pci_uevent_ers(dev, vote);
- 	*result = merge_result(*result, vote);
--	device_unlock(&dev->dev);
- 	return 0;
- }
- 
-@@ -90,7 +88,6 @@ static int report_mmio_enabled(struct pci_dev *dev, void *data)
- 	pci_ers_result_t vote, *result = data;
- 	const struct pci_error_handlers *err_handler;
- 
--	device_lock(&dev->dev);
- 	if (!dev->driver ||
- 		!dev->driver->err_handler ||
- 		!dev->driver->err_handler->mmio_enabled)
-@@ -100,7 +97,6 @@ static int report_mmio_enabled(struct pci_dev *dev, void *data)
- 	vote = err_handler->mmio_enabled(dev);
- 	*result = merge_result(*result, vote);
- out:
--	device_unlock(&dev->dev);
- 	return 0;
- }
- 
-@@ -109,7 +105,6 @@ static int report_slot_reset(struct pci_dev *dev, void *data)
- 	pci_ers_result_t vote, *result = data;
- 	const struct pci_error_handlers *err_handler;
- 
--	device_lock(&dev->dev);
- 	if (!dev->driver ||
- 		!dev->driver->err_handler ||
- 		!dev->driver->err_handler->slot_reset)
-@@ -119,7 +114,6 @@ static int report_slot_reset(struct pci_dev *dev, void *data)
- 	vote = err_handler->slot_reset(dev);
- 	*result = merge_result(*result, vote);
- out:
--	device_unlock(&dev->dev);
- 	return 0;
- }
- 
-@@ -127,7 +121,6 @@ static int report_resume(struct pci_dev *dev, void *data)
- {
- 	const struct pci_error_handlers *err_handler;
- 
--	device_lock(&dev->dev);
- 	if (!pci_dev_set_io_state(dev, pci_channel_io_normal) ||
- 		!dev->driver ||
- 		!dev->driver->err_handler ||
-@@ -138,7 +131,6 @@ static int report_resume(struct pci_dev *dev, void *data)
- 	err_handler->resume(dev);
- out:
- 	pci_uevent_ers(dev, PCI_ERS_RESULT_RECOVERED);
--	device_unlock(&dev->dev);
- 	return 0;
- }
- 
-@@ -200,9 +192,9 @@ void pcie_do_recovery(struct pci_dev *dev, enum pci_channel_state state,
- 
- 	pci_dbg(dev, "broadcast error_detected message\n");
- 	if (state == pci_channel_io_frozen)
--		pci_walk_bus(bus, report_frozen_detected, &status);
-+		pci_lock_and_walk_bus(bus, report_frozen_detected, &status);
- 	else
--		pci_walk_bus(bus, report_normal_detected, &status);
-+		pci_lock_and_walk_bus(bus, report_normal_detected, &status);
- 
- 	if (state == pci_channel_io_frozen &&
- 	    reset_link(dev, service) != PCI_ERS_RESULT_RECOVERED)
-@@ -211,7 +203,7 @@ void pcie_do_recovery(struct pci_dev *dev, enum pci_channel_state state,
- 	if (status == PCI_ERS_RESULT_CAN_RECOVER) {
- 		status = PCI_ERS_RESULT_RECOVERED;
- 		pci_dbg(dev, "broadcast mmio_enabled message\n");
--		pci_walk_bus(bus, report_mmio_enabled, &status);
-+		pci_lock_and_walk_bus(bus, report_mmio_enabled, &status);
- 	}
- 
- 	if (status == PCI_ERS_RESULT_NEED_RESET) {
-@@ -222,14 +214,14 @@ void pcie_do_recovery(struct pci_dev *dev, enum pci_channel_state state,
- 		 */
- 		status = PCI_ERS_RESULT_RECOVERED;
- 		pci_dbg(dev, "broadcast slot_reset message\n");
--		pci_walk_bus(bus, report_slot_reset, &status);
-+		pci_lock_and_walk_bus(bus, report_slot_reset, &status);
- 	}
- 
- 	if (status != PCI_ERS_RESULT_RECOVERED)
- 		goto failed;
- 
- 	pci_dbg(dev, "broadcast resume message\n");
--	pci_walk_bus(bus, report_resume, &status);
-+	pci_lock_and_walk_bus(bus, report_resume, &status);
- 
- 	pci_aer_clear_device_status(dev);
- 	pci_cleanup_aer_uncorrect_error_status(dev);
--- 
-2.8.1
-
+Thanks
+Kishon
