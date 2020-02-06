@@ -2,24 +2,24 @@ Return-Path: <SRS0=Eeyf=32=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3FA1C2D0B1
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Feb 2020 11:03:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1A8DC2D0B1
+	for <linux-pci@archiver.kernel.org>; Thu,  6 Feb 2020 11:03:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 84F2E20659
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Feb 2020 11:03:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7BFDD20659
+	for <linux-pci@archiver.kernel.org>; Thu,  6 Feb 2020 11:03:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727309AbgBFLD2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 6 Feb 2020 06:03:28 -0500
-Received: from szxga07-in.huawei.com ([45.249.212.35]:48886 "EHLO huawei.com"
+        id S1727279AbgBFLD3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 6 Feb 2020 06:03:29 -0500
+Received: from szxga07-in.huawei.com ([45.249.212.35]:48938 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726365AbgBFLD1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 6 Feb 2020 06:03:27 -0500
+        id S1727060AbgBFLD3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 6 Feb 2020 06:03:29 -0500
 Received: from DGGEMS406-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id AC14922D307F36E99476;
+        by Forcepoint Email with ESMTP id B694985F37D3CA603435;
         Thu,  6 Feb 2020 19:03:22 +0800 (CST)
 Received: from localhost.localdomain (10.67.165.24) by
  DGGEMS406-HUB.china.huawei.com (10.3.19.206) with Microsoft SMTP Server id
@@ -27,10 +27,12 @@ Received: from localhost.localdomain (10.67.165.24) by
 From:   Yicong Yang <yangyicong@hisilicon.com>
 To:     <helgaas@kernel.org>, <linux-pci@vger.kernel.org>
 CC:     <f.fangjian@huawei.com>, <huangdaode@huawei.com>
-Subject: [PATCH v2 0/6] Improve link speed presentation process
-Date:   Thu, 6 Feb 2020 18:59:14 +0800
-Message-ID: <1580986760-10182-1-git-send-email-yangyicong@hisilicon.com>
+Subject: [PATCH v2 3/6] PCI: Refactor and rename PCIE_SPEED2STR macro
+Date:   Thu, 6 Feb 2020 18:59:17 +0800
+Message-ID: <1580986760-10182-4-git-send-email-yangyicong@hisilicon.com>
 X-Mailer: git-send-email 2.8.1
+In-Reply-To: <1580986760-10182-1-git-send-email-yangyicong@hisilicon.com>
+References: <1580986760-10182-1-git-send-email-yangyicong@hisilicon.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [10.67.165.24]
@@ -40,44 +42,73 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In this series:
-1. Add 32 GT/s decoding in some macros as a complementary
-2. Remove redundancy in speed presentation process and improve the codes.
+Use pci_bus_speed_strings[] array to refactor PCIE_SPEED2STR
+macro. Rename it with PCI_SPEED2STR as it can also used to
+decode non-PCIe speeds with pci_bus_speed_strings[].
 
-Currently We use switch-case statements to acquire the speed
-string according to the pci bus speed in current_link_speed_show()
-and pcie_get_speed_cap(). It leads to redundant and when new
-standard comes, we have to add cases in the related functions,
-which is easy to omit at somewhere.
+Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
+---
+ drivers/pci/pci-sysfs.c |  2 +-
+ drivers/pci/pci.c       |  6 +++---
+ drivers/pci/pci.h       | 10 +++-------
+ 3 files changed, 7 insertions(+), 11 deletions(-)
 
-Abstract the judge statements out. Use macros and pci speed
-arrays instead. Then only the macros and arrays need to be
-extended when next generation comes.
-
-Link:
-https://lore.kernel.org/linux-pci/20200113211728.GA113776@google.com/
-https://lore.kernel.org/linux-pci/20200114224909.GA19633@google.com/
-
-change since v1:
-1. split "PCI: Make pci_bus_speed_strings[] public" from the series
-2. split v1 PATCH 4 to two patches as suggested
-3. modify some description in commit as suggested
-
-Yicong Yang (6):
-  PCI: add 32 GT/s decoding in some macros
-  PCI: Add comments for link speed info arrays
-  PCI: Refactor and rename PCIE_SPEED2STR macro
-  PCI: Refactor bus_speed_read() with PCI_SPEED2STR macro
-  PCI: Add PCIE_LNKCAP2_SLS2SPEED macro
-  PCI: Reduce redundancy in current_link_speed_show()
-
- drivers/pci/pci-sysfs.c | 26 ++++----------------------
- drivers/pci/pci.c       | 23 +++++++----------------
- drivers/pci/pci.h       | 21 ++++++++++++++-------
- drivers/pci/probe.c     |  8 ++++++++
- drivers/pci/slot.c      | 10 +++-------
- 5 files changed, 36 insertions(+), 52 deletions(-)
-
---
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 13f766d..f4eafbc 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -156,7 +156,7 @@ static ssize_t max_link_speed_show(struct device *dev,
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 
+-	return sprintf(buf, "%s\n", PCIE_SPEED2STR(pcie_get_speed_cap(pdev)));
++	return sprintf(buf, "%s\n", PCI_SPEED2STR(pcie_get_speed_cap(pdev)));
+ }
+ static DEVICE_ATTR_RO(max_link_speed);
+ 
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 3c30e72..7285fe0 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5871,14 +5871,14 @@ void __pcie_print_link_status(struct pci_dev *dev, bool verbose)
+ 	if (bw_avail >= bw_cap && verbose)
+ 		pci_info(dev, "%u.%03u Gb/s available PCIe bandwidth (%s x%d link)\n",
+ 			 bw_cap / 1000, bw_cap % 1000,
+-			 PCIE_SPEED2STR(speed_cap), width_cap);
++			 PCI_SPEED2STR(speed_cap), width_cap);
+ 	else if (bw_avail < bw_cap)
+ 		pci_info(dev, "%u.%03u Gb/s available PCIe bandwidth, limited by %s x%d link at %s (capable of %u.%03u Gb/s with %s x%d link)\n",
+ 			 bw_avail / 1000, bw_avail % 1000,
+-			 PCIE_SPEED2STR(speed), width,
++			 PCI_SPEED2STR(speed), width,
+ 			 limiting_dev ? pci_name(limiting_dev) : "<unknown>",
+ 			 bw_cap / 1000, bw_cap % 1000,
+-			 PCIE_SPEED2STR(speed_cap), width_cap);
++			 PCI_SPEED2STR(speed_cap), width_cap);
+ }
+ 
+ /**
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index d2e92b0f..ba6b2cb 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -295,13 +295,9 @@ struct pci_bus *pci_bus_get(struct pci_bus *bus);
+ void pci_bus_put(struct pci_bus *bus);
+ 
+ /* PCIe link information */
+-#define PCIE_SPEED2STR(speed) \
+-	((speed) == PCIE_SPEED_32_0GT ? "32 GT/s" : \
+-	 (speed) == PCIE_SPEED_16_0GT ? "16 GT/s" : \
+-	 (speed) == PCIE_SPEED_8_0GT ? "8 GT/s" : \
+-	 (speed) == PCIE_SPEED_5_0GT ? "5 GT/s" : \
+-	 (speed) == PCIE_SPEED_2_5GT ? "2.5 GT/s" : \
+-	 "Unknown speed")
++#define PCI_SPEED2STR(speed) \
++	((speed) < pci_bus_speed_strings_size ? \
++	 pci_bus_speed_strings[speed] : "Unknown speed")
+ 
+ /* PCIe speed to Mb/s reduced by encoding overhead */
+ #define PCIE_SPEED2MBS_ENC(speed) \
+-- 
 2.8.1
 
