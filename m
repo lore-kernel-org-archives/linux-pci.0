@@ -2,136 +2,108 @@ Return-Path: <SRS0=BRiv=33=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78BC1C352A2
-	for <linux-pci@archiver.kernel.org>; Fri,  7 Feb 2020 09:33:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A03DC352A4
+	for <linux-pci@archiver.kernel.org>; Fri,  7 Feb 2020 10:32:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 483AC20726
-	for <linux-pci@archiver.kernel.org>; Fri,  7 Feb 2020 09:33:51 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Z84OwjpK"
+	by mail.kernel.org (Postfix) with ESMTP id D30F321927
+	for <linux-pci@archiver.kernel.org>; Fri,  7 Feb 2020 10:32:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726417AbgBGJdu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 7 Feb 2020 04:33:50 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:20279 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726626AbgBGJdu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 7 Feb 2020 04:33:50 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1581068028;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=8PAzHny0x2QHx+dIx+vP8eKtbzz9uBF25gnK6yMYgy8=;
-        b=Z84OwjpKpwg/3A6RE14Q1vxzNkWPmtTLlsNiH7obRsjfEoC8lnPTk2NEMv+yjpL1BTtqCs
-        7sgLPpyBEc+uQ9MyScFofd8GPcbnxHY2YdDMIwYpe/n9cq8d55dNSf6X6agqMQH9uJVZkK
-        aNAXpwtsMXuJuGFRZ+SjrKfsNjaiGkA=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-191-gMqxWvVyMVmcXEgZT7bA4g-1; Fri, 07 Feb 2020 04:33:43 -0500
-X-MC-Unique: gMqxWvVyMVmcXEgZT7bA4g-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A69B1101FC60;
-        Fri,  7 Feb 2020 09:33:41 +0000 (UTC)
-Received: from gondolin (ovpn-117-112.ams2.redhat.com [10.36.117.112])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 3E3AC790F8;
-        Fri,  7 Feb 2020 09:33:36 +0000 (UTC)
-Date:   Fri, 7 Feb 2020 10:33:34 +0100
-From:   Cornelia Huck <cohuck@redhat.com>
-To:     Alex Williamson <alex.williamson@redhat.com>
-Cc:     kvm@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, dev@dpdk.org, mtosatti@redhat.com,
-        thomas@monjalon.net, bluca@debian.org, jerinjacobk@gmail.com,
-        bruce.richardson@intel.com
-Subject: Re: [RFC PATCH 1/7] vfio: Include optional device match in
- vfio_device_ops callbacks
-Message-ID: <20200207103334.25b17267.cohuck@redhat.com>
-In-Reply-To: <20200206111842.705bf58a@w520.home>
-References: <158085337582.9445.17682266437583505502.stgit@gimli.home>
-        <158085754299.9445.4389176548645142886.stgit@gimli.home>
-        <20200206121419.69997326.cohuck@redhat.com>
-        <20200206111842.705bf58a@w520.home>
-Organization: Red Hat GmbH
+        id S1726897AbgBGKcU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 7 Feb 2020 05:32:20 -0500
+Received: from szxga04-in.huawei.com ([45.249.212.190]:10167 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726867AbgBGKcT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Feb 2020 05:32:19 -0500
+Received: from DGGEMS410-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id AAFC14FD27FB1D769D9D;
+        Fri,  7 Feb 2020 18:32:13 +0800 (CST)
+Received: from DESKTOP-6T4S3DQ.china.huawei.com (10.47.88.120) by
+ DGGEMS410-HUB.china.huawei.com (10.3.19.210) with Microsoft SMTP Server id
+ 14.3.439.0; Fri, 7 Feb 2020 18:32:04 +0800
+From:   Shiju Jose <shiju.jose@huawei.com>
+To:     <linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <rjw@rjwysocki.net>,
+        <helgaas@kernel.org>, <lenb@kernel.org>, <bp@alien8.de>,
+        <james.morse@arm.com>, <tony.luck@intel.com>,
+        <gregkh@linuxfoundation.org>, <zhangliguang@linux.alibaba.com>,
+        <tglx@linutronix.de>
+CC:     <linuxarm@huawei.com>, <jonathan.cameron@huawei.com>,
+        <tanxiaofei@huawei.com>, <yangyicong@hisilicon.com>,
+        Shiju Jose <shiju.jose@huawei.com>
+Subject: [PATCH v4 0/2] ACPI: APEI: Add support to notify the vendor specific HW errors
+Date:   Fri, 7 Feb 2020 10:31:41 +0000
+Message-ID: <20200207103143.20104-1-shiju.jose@huawei.com>
+X-Mailer: git-send-email 2.19.2.windows.1
+In-Reply-To: <Shiju Jose>
+References: <Shiju Jose>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.47.88.120]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 6 Feb 2020 11:18:42 -0700
-Alex Williamson <alex.williamson@redhat.com> wrote:
+Presently the vendor drivers are unable to do the recovery for the
+vendor specific recoverable HW errors, reported to the APEI driver
+in the vendor defined sections, because APEI driver does not support
+reporting the same to the vendor drivers.
 
-> On Thu, 6 Feb 2020 12:14:19 +0100
-> Cornelia Huck <cohuck@redhat.com> wrote:
-> 
-> > On Tue, 04 Feb 2020 16:05:43 -0700
-> > Alex Williamson <alex.williamson@redhat.com> wrote:
-> >   
-> > > Allow bus drivers to provide their own callback to match a device to
-> > > the user provided string.
-> > > 
-> > > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> > > ---
-> > >  drivers/vfio/vfio.c  |   19 +++++++++++++++----
-> > >  include/linux/vfio.h |    3 +++
+This patch set
+1. add an interface to the APEI driver to enable the vendor
+drivers to register the event handling functions for the corresponding
+vendor specific HW errors and report the error to the vendor driver.
 
-> I think with your first option we arrive at something like this:
-> 
-> diff --git a/drivers/vfio/vfio.c b/drivers/vfio/vfio.c
-> index dda1726adda8..b5609a411139 100644
-> --- a/drivers/vfio/vfio.c
-> +++ b/drivers/vfio/vfio.c
-> @@ -883,14 +883,15 @@ static struct vfio_device *vfio_device_get_from_name(struct vfio_group *group,
->  
->  		if (it->ops->match) {
->  			ret = it->ops->match(it->device_data, buf);
-> -			if (ret < 0 && ret != -ENODEV) {
-> +			if (ret < 0) {
->  				device = ERR_PTR(ret);
->  				break;
->  			}
-> -		} else
-> -			ret = strcmp(dev_name(it->dev), buf);
-> +		} else {
-> +			ret = !strcmp(dev_name(it->dev), buf);
-> +		}
->  
-> -		if (!ret) {
-> +		if (ret) {
->  			device = it;
->  			vfio_device_get(device);
->  			break;
-> diff --git a/include/linux/vfio.h b/include/linux/vfio.h
-> index 755e0f0e2900..029694b977f2 100644
-> --- a/include/linux/vfio.h
-> +++ b/include/linux/vfio.h
-> @@ -26,8 +26,9 @@
->   *         operations documented below
->   * @mmap: Perform mmap(2) on a region of the device file descriptor
->   * @request: Request for the bus driver to release the device
-> - * @match: Optional device name match callback (return: 0 for match, -ENODEV
-> - *         (or >0) for no match and continue, other -errno: no match and stop)
-> + * @match: Optional device name match callback (return: 0 for no-match, >0 for
-> + *         match, -errno for abort (ex. match with insufficient or incorrect
-> + *         additional args)
->   */
->  struct vfio_device_ops {
->  	char	*name;
-> 
-> 
-> I like that.  Thanks,
-> 
-> Alex
+2. add driver to handle HiSilicon hip08 PCIe controller's errors
+   which is an example application of the above APEI interface.
 
-Looks good to me.
+Changes:
+
+V4:
+1. Fix for the smatch warning in the PCIe error driver:
+   warn: should '((((1))) << (9 + i))' be a 64 bit type?
+   if (err->val_bits & BIT(HISI_PCIE_LOCAL_VALID_ERR_MISC + i))
+	^^^ This should be BIT_ULL() because it goes up to 9 + 32.
+
+V3:
+1. Fix the comments from Bjorn Helgaas.
+
+V2:
+1. Changes in the HiSilicon PCIe controller's error handling driver
+   for the comments from Bjorn Helgaas.
+   
+2. Changes in the APEI interface to support reporting the vendor error
+   for module with multiple devices, but use the same section type.
+   In the error handler will use socket id/sub module id etc to distinguish
+   the device.
+
+V1:  
+1. Fix comments from James Morse.
+
+2. add driver to handle HiSilicon hip08 PCIe controller's errors,
+   which is an application of the above interface.
+
+Shiju Jose (1):
+  ACPI: APEI: Add support to notify the vendor specific HW errors
+
+Yicong Yang (1):
+  PCI: HIP: Add handling of HiSilicon HIP PCIe controller errors
+
+ drivers/acpi/apei/ghes.c                 | 116 ++++++++++-
+ drivers/pci/controller/Kconfig           |   8 +
+ drivers/pci/controller/Makefile          |   1 +
+ drivers/pci/controller/pcie-hisi-error.c | 334 +++++++++++++++++++++++++++++++
+ include/acpi/ghes.h                      |  56 ++++++
+ 5 files changed, 510 insertions(+), 5 deletions(-)
+ create mode 100644 drivers/pci/controller/pcie-hisi-error.c
+
+-- 
+1.9.1
+
 
