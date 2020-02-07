@@ -2,107 +2,120 @@ Return-Path: <SRS0=BRiv=33=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D74EC2BA83
-	for <linux-pci@archiver.kernel.org>; Fri,  7 Feb 2020 20:42:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AD5BC2BA83
+	for <linux-pci@archiver.kernel.org>; Fri,  7 Feb 2020 22:12:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2555521741
-	for <linux-pci@archiver.kernel.org>; Fri,  7 Feb 2020 20:42:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BCA9F21741
+	for <linux-pci@archiver.kernel.org>; Fri,  7 Feb 2020 22:12:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Tw6wTJ0K"
+	dkim=pass (1024-bit key) header.d=eideticcom.onmicrosoft.com header.i=@eideticcom.onmicrosoft.com header.b="hQhQDQui"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727491AbgBGUmF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 7 Feb 2020 15:42:05 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:37110 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726947AbgBGUmF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 7 Feb 2020 15:42:05 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Transfer-Encoding
-        :Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
-        Sender:Reply-To:Content-ID:Content-Description;
-        bh=hC4I5nJwx7uto4FIN8Dk9Z+Eyug283kzyKTXci+gNBs=; b=Tw6wTJ0KsV0PA0kwHG0T+3GxJm
-        WWRdxxjvyRklhUCQmYltYLKnmSGeqcw1JILVQ/pe+fHuBfsCOg/Hvwkhd0LB8Hj++M1606r8ltQgz
-        4chq38ObnDTsiIst+PWX3UdXaWAtwYGIzHVB4Ixu8sXUvtjJeYPouhSC0dNLvozInAU0P9a0dK+o0
-        0lRNpmR3vEHY5svMECArN0tnwk7Zdo+/4FjE2/E6Ot7QaA91vwDaRUl7aNCw6xYSuyWtZfruswHWl
-        sN9fr8yGRYzm6+fHnREuFLLa4VcH9bbgC33EKWeA25QsSS177P3XWWdawSwjjFSVAbZapYHqPZfQl
-        7x305BrA==;
-Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1j0ARu-0001cQ-03; Fri, 07 Feb 2020 20:42:02 +0000
-Date:   Fri, 7 Feb 2020 12:42:01 -0800
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Jason Gunthorpe <jgg@mellanox.com>
-Cc:     lsf-pc@lists.linux-foundation.org, linux-mm@kvack.org,
-        linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org,
-        Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-        Daniel Vetter <daniel.vetter@ffwll.ch>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
-        Ira Weiny <ira.weiny@intel.com>,
-        Christoph Hellwig <hch@lst.de>,
-        John Hubbard <jhubbard@nvidia.com>,
-        Ralph Campbell <rcampbell@nvidia.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Don Dutile <ddutile@redhat.com>,
-        Thomas =?iso-8859-1?Q?Hellstr=F6m_=28VMware=29?= 
-        <thomas_os@shipmail.org>, Joao Martins <joao.m.martins@oracle.com>
-Subject: Re: [LSF/MM TOPIC] get_user_pages() for PCI BAR Memory
-Message-ID: <20200207204201.GH8731@bombadil.infradead.org>
-References: <20200207182457.GM23346@mellanox.com>
- <20200207194620.GG8731@bombadil.infradead.org>
- <20200207201351.GN23346@mellanox.com>
+        id S1727048AbgBGWMo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 7 Feb 2020 17:12:44 -0500
+Received: from mail-co1nam11on2044.outbound.protection.outlook.com ([40.107.220.44]:41792
+        "EHLO NAM11-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727032AbgBGWMn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Feb 2020 17:12:43 -0500
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=dLRNWMxrS1v5gw047qhUO9SehBIokdqhusLkLZPEtmTVzJnRbrHo93rwIgZXuy1P44+R/XQyKsR0ExSyMVGjvTXwaqC5hP+BsI/rxon9bxw6nL2nrb3PAtrBXk6UKSmlR00YVDUEbFxw0p6pfxPqx7czlTxt3x3LJ5+817j/qzrBJD7fLQ3HH/DFBvgJOqnqgJKuMp/pdCW4NzEjmIjIMQtaqmXf2ilhOS79DarrtPDDflYdmMCzF0I9boRozDMnzA9oBW9YaiwrdxAkAtdidkJesEzWcQ/W2hU4z2Xdk/7nbBsOAr5Xw/1l2I2rsd6mdmI+1U3Fxywu2M2zIaic5A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=8sb+bkDHA2leFR1FYDKieFFOtyL9iI3x0I/A/TmKafE=;
+ b=DOn8iY0rxWH9PbrDW8TV1EqZCnJk9iPa9pf5fPJpM5sQItbIak5sg4TXBY5Ju9b8DjDOx8BqSdsQE8wTJuFoPOGy3+WqZpxDcV4bHAwxABbkvv0TPMC8Tb+1HCpCpWqzMAXZa48I+HcUDjljBc6pzIVdib9GPMAUOMRoGWuYFXgOzJyaGuPe67+GpxCRwyMPcaqwmdklGRL0Me7mW/t/IrR9jEkX1EXOq5b+IGBCkT3P/flBR5Y7Vw901gIWmrx9lyIMwHjgxtAKqmAZkrTP09q/Pm3NbKWyKvq2knHM0CeYuISZoi/4vJQU9OKDaOE83wIS2mxnMUtYcRNVZEnrtQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=eideticom.com; dmarc=pass action=none
+ header.from=eideticom.com; dkim=pass header.d=eideticom.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=eideticcom.onmicrosoft.com; s=selector2-eideticcom-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=8sb+bkDHA2leFR1FYDKieFFOtyL9iI3x0I/A/TmKafE=;
+ b=hQhQDQuiwz3AQRIKuh2zDnBueQTEsx2NeroA7gwIO8skE5saI86qrauY7tPy0Uxqp5I4ltqt9tQE9xDK61z8Vf6f86LEeCIVkJtXmAwSNg5lrORPmUmep/AUl5ZaMokz2BaSMwt05JxgcpvyPpN7PIueqBKGvXM6UP2zWqllsnQ=
+Authentication-Results: spf=none (sender IP is )
+ smtp.mailfrom=andrew.maier@eideticom.com; 
+Received: from MWHPR19MB1103.namprd19.prod.outlook.com (10.173.120.23) by
+ MWHPR19MB1136.namprd19.prod.outlook.com (10.173.124.151) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2707.24; Fri, 7 Feb 2020 22:12:40 +0000
+Received: from MWHPR19MB1103.namprd19.prod.outlook.com
+ ([fe80::1df3:7110:c934:6549]) by MWHPR19MB1103.namprd19.prod.outlook.com
+ ([fe80::1df3:7110:c934:6549%8]) with mapi id 15.20.2707.024; Fri, 7 Feb 2020
+ 22:12:40 +0000
+From:   Andrew Maier <andrew.maier@eideticom.com>
+To:     bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     logang@deltatee.com, Andrew Maier <andrew.maier@eideticom.com>
+Subject: [PATCH v2] PCI/P2PDMA: Add the remaining Intel Sky Lake-E root ports to the whitelist
+Date:   Fri,  7 Feb 2020 15:12:19 -0700
+Message-Id: <20200207221219.4309-1-andrew.maier@eideticom.com>
+X-Mailer: git-send-email 2.17.1
+Content-Type: text/plain
+X-ClientProxiedBy: CO1PR15CA0062.namprd15.prod.outlook.com
+ (2603:10b6:101:1f::30) To MWHPR19MB1103.namprd19.prod.outlook.com
+ (2603:10b6:300:9a::23)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20200207201351.GN23346@mellanox.com>
+Received: from odin.Eideticom.local (70.73.163.230) by CO1PR15CA0062.namprd15.prod.outlook.com (2603:10b6:101:1f::30) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2707.24 via Frontend Transport; Fri, 7 Feb 2020 22:12:39 +0000
+X-Mailer: git-send-email 2.17.1
+X-Originating-IP: [70.73.163.230]
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 1a8dc6f9-e43a-4e74-e2fd-08d7ac1ad8c2
+X-MS-TrafficTypeDiagnostic: MWHPR19MB1136:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <MWHPR19MB11362DB87BEA834221DC0208931C0@MWHPR19MB1136.namprd19.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:3044;
+X-Forefront-PRVS: 0306EE2ED4
+X-Forefront-Antispam-Report: SFV:NSPM;SFS:(10009020)(346002)(376002)(136003)(366004)(396003)(39830400003)(199004)(189003)(2906002)(86362001)(81156014)(8676002)(6486002)(6666004)(8936002)(6512007)(81166006)(52116002)(1076003)(316002)(6506007)(36756003)(4744005)(66946007)(4326008)(186003)(16526019)(2616005)(956004)(508600001)(44832011)(5660300002)(66556008)(66476007)(107886003)(26005);DIR:OUT;SFP:1101;SCL:1;SRVR:MWHPR19MB1136;H:MWHPR19MB1103.namprd19.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+Received-SPF: None (protection.outlook.com: eideticom.com does not designate
+ permitted sender hosts)
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: xJXRvm62+hn90Hm6lUYqqp/lPpZpiNTPnGqjifQLbdBfq1STIPNRRpdlBZqPo9mH7bgWzbo1D7a7LszVozG5VYZIDNyZWA3L0ufWkc3zsTkTNY7/LeOxZ2CgbwmpLHMT7uP9yr+BRG9THVGAmXZ65z4cWSCmz71aj0KHFup/gD/Rt5ynQV4jj4j8k2Eetz9XXLmPvnn7TaRXj0aLS8lqdOelJSUrN+P1lkT5lwxboRz83CwNm2jO56DBMhpevrWiXdMOW1RLNoPNpsg2l73WxlDvM85bV3xOykH5i3rk9veyz7bgOXhgoyrAI5TIMONxaBwomOb/vVrpJUCCchvJKxXGzgYClkDRrbPGaUgyV0HHPZme7tud4KLQjgY4QjU1RUGQSlZvPySeNDNYFLOyEijPU6KbQNN8SmNnxxsFJWPaqD9tH5BtXKYBNq48Um47
+X-MS-Exchange-AntiSpam-MessageData: WCOi63zsYouioK52p00tDjvtP+bVam8588APH+LgQeOYIg0LIwVYjJJjHAK140kW20VncKSVH812WOe4iIlqHqeld1sqfEmRLl7x54u3qu11T46rbO1PX0dj2ISPYNTFDw1hzEjY7GwfljavioEO7Q==
+X-OriginatorOrg: eideticom.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1a8dc6f9-e43a-4e74-e2fd-08d7ac1ad8c2
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Feb 2020 22:12:40.3761
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3490cd4b-0360-4377-abb1-15f8c5af8fc2
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: QcYIHKa4f+/pIAzK1q6pam3pTBNMdwZYg2orys7MWOG0WXhSYMmF91IQpN7n5OiYZdIZTxKeGRZ+iHat/h+Zfvmn7x0IMkCx3YAK/Pp27YA=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR19MB1136
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Feb 07, 2020 at 04:13:51PM -0400, Jason Gunthorpe wrote:
-> On Fri, Feb 07, 2020 at 11:46:20AM -0800, Matthew Wilcox wrote:
-> > > 
-> > >  Christian König <christian.koenig@amd.com>
-> > >  Daniel Vetter <daniel.vetter@ffwll.ch>
-> > >  Logan Gunthorpe <logang@deltatee.com>
-> > >  Stephen Bates <sbates@raithlin.com>
-> > >  Jérôme Glisse <jglisse@redhat.com>
-> > >  Ira Weiny <iweiny@intel.com>
-> > >  Christoph Hellwig <hch@lst.de>
-> > >  John Hubbard <jhubbard@nvidia.com>
-> > >  Ralph Campbell <rcampbell@nvidia.com>
-> > >  Dan Williams <dan.j.williams@intel.com>
-> > >  Don Dutile <ddutile@redhat.com>
-> > 
-> > That's a long list, and you're missing 
-> > 
-> > "Thomas Hellström (VMware)" <thomas_os@shipmail.org>
-> > Joao Martins <joao.m.martins@oracle.com>
-> 
-> Great, thanks, I'm not really aware of what the related work is
-> though?
+Add the three remaining Intel Sky Lake-E host root ports to the
+whitelist of p2pdma.
 
-Thomas has been working on huge pages for graphics BARs, so that's involved
-touching 'special' (ie pageless) VMAs:
-https://lore.kernel.org/linux-mm/20200205125353.2760-1-thomas_os@shipmail.org/
+P2P has been tested and is working on this system.
 
-Joao has been working on removing the need for KVM hosts to have struct pages
-that cover the memory of their guests:
-https://lore.kernel.org/linux-mm/20200110190313.17144-1-joao.m.martins@oracle.com/
+Signed-off-by: Andrew Maier <andrew.maier@eideticom.com>
+---
+Resending this as I rebased it onto the latest patches.
+ drivers/pci/p2pdma.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-> > both of whom have been working on related projects (for PFNs without pages).
-> > Hey, you missed me too!  ;-)
-> 
-> Ah I was not daring to propose a discussion on 'PFNs without pages'
-> again :)
-> 
-> The early exploratory work here has been creating ZONE_DEVICE pages as
-> is already done for P2P and now moving to also mmap them to userspace.
+diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+index 9a8a38384121..b73b10bce0df 100644
+--- a/drivers/pci/p2pdma.c
++++ b/drivers/pci/p2pdma.c
+@@ -291,6 +291,9 @@ static const struct pci_p2pdma_whitelist_entry {
+ 	{PCI_VENDOR_ID_INTEL,	0x2f01, REQ_SAME_HOST_BRIDGE},
+ 	/* Intel SkyLake-E */
+ 	{PCI_VENDOR_ID_INTEL,	0x2030, 0},
++	{PCI_VENDOR_ID_INTEL,	0x2031, 0},
++	{PCI_VENDOR_ID_INTEL,	0x2032, 0},
++	{PCI_VENDOR_ID_INTEL,	0x2033, 0},
+ 	{PCI_VENDOR_ID_INTEL,	0x2020, 0},
+ 	{}
+ };
+-- 
+2.17.1
 
-Dynamically allocating struct pages interests me too ;-)
