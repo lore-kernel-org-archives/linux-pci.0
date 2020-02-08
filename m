@@ -6,26 +6,26 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A8BBC2BA83
-	for <linux-pci@archiver.kernel.org>; Sat,  8 Feb 2020 00:00:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8F5BC2BA83
+	for <linux-pci@archiver.kernel.org>; Sat,  8 Feb 2020 00:00:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4B054206DB
-	for <linux-pci@archiver.kernel.org>; Sat,  8 Feb 2020 00:00:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 966EE206DB
+	for <linux-pci@archiver.kernel.org>; Sat,  8 Feb 2020 00:00:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727491AbgBHAAV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 7 Feb 2020 19:00:21 -0500
+        id S1727466AbgBHAAS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 7 Feb 2020 19:00:18 -0500
 Received: from mga03.intel.com ([134.134.136.65]:58200 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727524AbgBHAAU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Feb 2020 19:00:20 -0500
+        id S1727032AbgBHAAR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Feb 2020 19:00:17 -0500
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by orsmga103.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 07 Feb 2020 16:00:20 -0800
+  by orsmga103.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 07 Feb 2020 16:00:17 -0800
 X-IronPort-AV: E=Sophos;i="5.70,415,1574150400"; 
-   d="scan'208";a="225545780"
+   d="scan'208";a="225545726"
 Received: from nsgsw-rhel7p6.lm.intel.com ([10.232.116.83])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 07 Feb 2020 16:00:18 -0800
+  by orsmga008-auth.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 07 Feb 2020 16:00:15 -0800
 From:   Jon Derrick <jonathan.derrick@intel.com>
 To:     Bjorn Helgaas <helgaas@kernel.org>
 Cc:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
@@ -38,9 +38,9 @@ Cc:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         Alexandru Gagniuc <mr.nuke.me@gmail.com>,
         Christoph Hellwig <hch@lst.de>,
         Jon Derrick <jonathan.derrick@intel.com>
-Subject: [RFC 5/9] PCI: Add pcie_port_slot_emulated stub
-Date:   Fri,  7 Feb 2020 17:00:03 -0700
-Message-Id: <1581120007-5280-6-git-send-email-jonathan.derrick@intel.com>
+Subject: [RFC 3/9] PCI: pci-bridge-emul: Provide a helper to set behavior
+Date:   Fri,  7 Feb 2020 17:00:01 -0700
+Message-Id: <1581120007-5280-4-git-send-email-jonathan.derrick@intel.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1581120007-5280-1-git-send-email-jonathan.derrick@intel.com>
 References: <1581120007-5280-1-git-send-email-jonathan.derrick@intel.com>
@@ -49,102 +49,72 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add the checks to allow an emulated slot. An emulated slot will use
-native Hotplug, AER, and PME services. It also needs to specify itself
-as a hotplug bridge in order for bridge sizing to account for hotplug
-reserved windows.
+Add a handler to set behavior of a PCI or PCIe register. Add the
+appropriate enums to specify the register's Read-Only, Read-Write, and
+Write-1-to-Clear behaviors.
 
 Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
 ---
- drivers/pci/pci-acpi.c          |  3 +++
- drivers/pci/pcie/portdrv_core.c | 11 ++++++++---
- drivers/pci/probe.c             |  2 +-
- include/linux/pci.h             |  2 ++
- 4 files changed, 14 insertions(+), 4 deletions(-)
+ drivers/pci/pci-bridge-emul.c | 19 +++++++++++++++++++
+ drivers/pci/pci-bridge-emul.h | 10 ++++++++++
+ 2 files changed, 29 insertions(+)
 
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index 0c02d50..b693e9f 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -796,6 +796,9 @@ bool pciehp_is_native(struct pci_dev *bridge)
- 	if (!IS_ENABLED(CONFIG_HOTPLUG_PCI_PCIE))
- 		return false;
+diff --git a/drivers/pci/pci-bridge-emul.c b/drivers/pci/pci-bridge-emul.c
+index e0567ca..aa18091 100644
+--- a/drivers/pci/pci-bridge-emul.c
++++ b/drivers/pci/pci-bridge-emul.c
+@@ -44,6 +44,25 @@ struct pci_bridge_reg_behavior {
+ 	u32 w1c;
+ };
  
-+	if (pcie_port_slot_emulated(bridge))
-+		return true;
-+
- 	pcie_capability_read_dword(bridge, PCI_EXP_SLTCAP, &slot_cap);
- 	if (!(slot_cap & PCI_EXP_SLTCAP_HPC))
- 		return false;
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 5075cb9..5979bb7 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -193,6 +193,11 @@ static int pcie_init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
- 	return 0;
- }
- 
-+static inline bool is_port_native_or_emulated(struct pci_dev *dev)
++void pci_bridge_emul_set_reg_behavior(struct pci_bridge_emul *bridge,
++				      bool pcie, int reg, u32 val,
++				      enum pci_bridge_emul_reg_behavior type)
 +{
-+	return pcie_ports_native || pcie_port_slot_emulated(dev);
++	struct pci_bridge_reg_behavior *behavior;
++
++	if (pcie)
++		behavior = &bridge->pcie_cap_regs_behavior[reg / 4];
++	else
++		behavior = &bridge->pci_regs_behavior[reg / 4];
++
++	if (type == PCI_BRIDGE_EMUL_REG_BEHAVIOR_RO)
++		behavior->ro = val;
++	else if (type == PCI_BRIDGE_EMUL_REG_BEHAVIOR_RW)
++		behavior->rw = val;
++	else /* PCI_BRIDGE_EMUL_REG_BEHAVIOR_W1C */
++		behavior->w1c = val;
 +}
 +
- /**
-  * get_port_device_capability - discover capabilities of a PCI Express port
-  * @dev: PCI Express port to examine
-@@ -209,7 +214,7 @@ static int get_port_device_capability(struct pci_dev *dev)
- 	int services = 0;
+ static const struct pci_bridge_reg_behavior pci_regs_behavior[] = {
+ 	[PCI_VENDOR_ID / 4] = { .ro = ~0 },
+ 	[PCI_COMMAND / 4] = {
+diff --git a/drivers/pci/pci-bridge-emul.h b/drivers/pci/pci-bridge-emul.h
+index b318830..f7027e1 100644
+--- a/drivers/pci/pci-bridge-emul.h
++++ b/drivers/pci/pci-bridge-emul.h
+@@ -72,6 +72,12 @@ struct pci_bridge_emul_pcie_conf {
+ typedef enum { PCI_BRIDGE_EMUL_HANDLED,
+ 	       PCI_BRIDGE_EMUL_NOT_HANDLED } pci_bridge_emul_read_status_t;
  
- 	if (dev->is_hotplug_bridge &&
--	    (pcie_ports_native || host->native_pcie_hotplug)) {
-+	    (is_port_native_or_emulated(dev) || host->native_pcie_hotplug)) {
- 		services |= PCIE_PORT_SERVICE_HP;
- 
- 		/*
-@@ -222,7 +227,7 @@ static int get_port_device_capability(struct pci_dev *dev)
- 
- #ifdef CONFIG_PCIEAER
- 	if (dev->aer_cap && pci_aer_available() &&
--	    (pcie_ports_native || host->native_aer)) {
-+	    (is_port_native_or_emulated(dev) || host->native_aer)) {
- 		services |= PCIE_PORT_SERVICE_AER;
- 
- 		/*
-@@ -239,7 +244,7 @@ static int get_port_device_capability(struct pci_dev *dev)
- 	 * those yet.
- 	 */
- 	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT &&
--	    (pcie_ports_native || host->native_pme)) {
-+	    (is_port_native_or_emulated(dev) || host->native_pme)) {
- 		services |= PCIE_PORT_SERVICE_PME;
- 
- 		/*
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 512cb43..b04b0c2 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1477,7 +1477,7 @@ void set_pcie_hotplug_bridge(struct pci_dev *pdev)
- 	u32 reg32;
- 
- 	pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &reg32);
--	if (reg32 & PCI_EXP_SLTCAP_HPC)
-+	if (reg32 & PCI_EXP_SLTCAP_HPC || pcie_port_slot_emulated(pdev))
- 		pdev->is_hotplug_bridge = 1;
- }
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 3840a54..0391e39 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1536,6 +1536,8 @@ static inline int pci_irqd_intx_xlate(struct irq_domain *d,
- #define pcie_ports_native	false
- #endif
- 
-+#define pcie_port_slot_emulated(dev) false
++enum pci_bridge_emul_reg_behavior {
++	PCI_BRIDGE_EMUL_REG_BEHAVIOR_RO,
++	PCI_BRIDGE_EMUL_REG_BEHAVIOR_RW,
++	PCI_BRIDGE_EMUL_REG_BEHAVIOR_W1C,
++};
 +
- #define PCIE_LINK_STATE_L0S		BIT(0)
- #define PCIE_LINK_STATE_L1		BIT(1)
- #define PCIE_LINK_STATE_CLKPM		BIT(2)
+ struct pci_bridge_emul_ops {
+ 	/*
+ 	 * Called when reading from the regular PCI bridge
+@@ -132,4 +138,8 @@ int pci_bridge_emul_conf_read(struct pci_bridge_emul *bridge, int where,
+ int pci_bridge_emul_conf_write(struct pci_bridge_emul *bridge, int where,
+ 			       int size, u32 value);
+ 
++void pci_bridge_emul_set_reg_behavior(struct pci_bridge_emul *bridge,
++				      bool pcie, int reg, u32 val,
++				      enum pci_bridge_emul_reg_behavior type);
++
+ #endif /* __PCI_BRIDGE_EMUL_H__ */
 -- 
 1.8.3.1
 
