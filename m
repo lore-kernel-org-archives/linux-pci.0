@@ -2,127 +2,115 @@ Return-Path: <SRS0=3oUy=34=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 679A4C352A1
-	for <linux-pci@archiver.kernel.org>; Sat,  8 Feb 2020 18:37:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76671C352A1
+	for <linux-pci@archiver.kernel.org>; Sat,  8 Feb 2020 18:41:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4161A20661
-	for <linux-pci@archiver.kernel.org>; Sat,  8 Feb 2020 18:37:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 529F32253D
+	for <linux-pci@archiver.kernel.org>; Sat,  8 Feb 2020 18:41:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ug6trja9"
+	dkim=pass (2048-bit key) header.d=thegoodpenguin-co-uk.20150623.gappssmtp.com header.i=@thegoodpenguin-co-uk.20150623.gappssmtp.com header.b="PC7GCXBL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727980AbgBHSg5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 8 Feb 2020 13:36:57 -0500
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:42115 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727964AbgBHSg4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 8 Feb 2020 13:36:56 -0500
-Received: by mail-wr1-f68.google.com with SMTP id k11so2666564wrd.9;
-        Sat, 08 Feb 2020 10:36:54 -0800 (PST)
+        id S1727499AbgBHSlv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 8 Feb 2020 13:41:51 -0500
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:36041 "EHLO
+        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727471AbgBHSlv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 8 Feb 2020 13:41:51 -0500
+Received: by mail-wm1-f67.google.com with SMTP id p17so6236464wma.1
+        for <linux-pci@vger.kernel.org>; Sat, 08 Feb 2020 10:41:49 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=KjY0ZxPgA8xDdI4P8UFFhtICRDQWXvSYtBAZooAhylM=;
-        b=Ug6trja9jfyujkI7OOVeJvqVNOFLdsZkvVDlOHWng8rLWSgGZC7IcBQBT6XtFCgbBA
-         U+Ijyf1DornRokrSN6El65xgvgpYfUFrbtFZTBxAHtdeuVZ0QH79GeZMqoKe6uyUUElr
-         tJ3jBOAkYMrmE9iJBl9e9rqx0jMEI6Pt/LGD9hDHsRrugAj2zfJmRYL6qoDfoMHxNgIe
-         lbjjxYYEn1uA8xgnvR6LsGGlvEPs6wnDqIqKqzIOSDDYY0UHSW/T661hq0ufNVJicayr
-         woY8m+UU8c7fdXhhjto6pDPpsMTFVKUcOqUtJ1kt47NzomDZiC/Kw4ZwUaP14QF20Lz9
-         wNEA==
+        d=thegoodpenguin-co-uk.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=yuFklzcmtRlyLzv28Ill1R4mgHWH5TmE6qKQbk/+SAw=;
+        b=PC7GCXBLVaH++NIE2VO7Iz9G/Y/xg+cgxbNn/Mb5pX0FZoyds4F6n2d+vpiLq277RG
+         0YSAFlcouBuJRAtwPPUONwgacaa2cHeCAXLQB4YJOS8a0NYPwatgK/Bh1YKlcrV6E/vI
+         oQZGn8dng8h1jiQl6B8uafkRWemydqoinVXJzMOYVkF8HIhJshQAnXjY822aVvLKc98N
+         NSUiESBI6TjVBz//88dLXEQZZC48wfozkvmpIHES+0XpJLtk506iuTNYhtMMuZmByA7D
+         DTL+racOYWYdvwHLkcAFgxZ8nQ5LjiGtYS174Q6WDWXRfuN3KURY5U2+c2DjfXzCCfLy
+         0JDw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=KjY0ZxPgA8xDdI4P8UFFhtICRDQWXvSYtBAZooAhylM=;
-        b=Q0oV/8y5VW+EBS5dNZa2NsJqQsNPOQVgu41O2YNHHwVunt9THyx4wyZyYmTv01NnpZ
-         /vSr/AGmhxOHfLrtUzxdEtI5/Kit4orJCG3fZAeR6k6Y5Zas5BUpobzM7uCmwpXkBGyT
-         BxhHt2baR8jNaRqFG7Vw8udSLj7YHtqw6zcrB57I178r8x76lOTLMX823W0oQHyCu4Ew
-         Rqdj4xGtsRgJGOgdBQRcnSJ4hZdEy+XkyN8D+hcsdNRg7jD9Hsd7PgDD33hjxU0cvLCw
-         7KAq2WbVkt5bL51cOjGxXyX/tPxDihsH9ngMooxQNF7UqAaf5Hcd/kkHvh06D+mvcvlF
-         RwAA==
-X-Gm-Message-State: APjAAAXMomzUdjPHkoGkdZh1EC5jk+y2V2GNQualJgbWjqbGnvwPgj1s
-        riQePqaKWH81sWqiY2w9hfY=
-X-Google-Smtp-Source: APXvYqxIu6atAePt2heYHf7buiIaKkoy/ZjBtwOXRU6/ElHpeC9rstK/20wPHyjKhEeZtut77LTr3w==
-X-Received: by 2002:a5d:6284:: with SMTP id k4mr6541427wru.398.1581187014097;
-        Sat, 08 Feb 2020 10:36:54 -0800 (PST)
-Received: from prasmi.home ([2a00:23c8:2510:d000:a553:90a1:93f5:e306])
-        by smtp.gmail.com with ESMTPSA id b67sm8404385wmc.38.2020.02.08.10.36.53
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=yuFklzcmtRlyLzv28Ill1R4mgHWH5TmE6qKQbk/+SAw=;
+        b=Ar8Noz5sFy0UYHlBbf22iw3cZDlNAiouWb1jFicNEM4J1d9BTzDOQRldI8lVmvPmT/
+         abcFX9rA+1O0me3JnNeLbSIZ62C6kmjRCzjKCTQ2KkeBp3wm9J/LnLi0JzjPsOvZqjSz
+         RtZlaW9XIAYk7AUBs9FcQQO7tdHw3jS6tSw/f7SbsLfGTpduB5mOeAnamvEmxzqAFTCj
+         d+Zjj6l0fgUG7O+tsZLZf3PawHVrLeSNmt0ZXdrUS/x2PBSm84l56Q/jsKbi1lo61jp4
+         EipVUXXTsRM4Lf/yMJoNMxiFapI0oBsFdpIGg2lG0IPF1tfa1LWAsr8YavM6s+O1Y7xM
+         BpBg==
+X-Gm-Message-State: APjAAAUPtc4v2KxNja0FwsG1Ss2U50OJKn0QIwlew4gwzp1+JDcpULt6
+        2M751z66ErixxR8vyzfG9+v0w00Upqs=
+X-Google-Smtp-Source: APXvYqzm1fxtYdTOVS15Th1+jHBLOfEKmyzv8y7MpeitOvzf+LvrpOfxMrHYnN2nQpTT2F0aHIRgng==
+X-Received: by 2002:a1c:44d:: with SMTP id 74mr5517319wme.53.1581187309223;
+        Sat, 08 Feb 2020 10:41:49 -0800 (PST)
+Received: from big-machine ([2a00:23c5:dd80:8400:201c:bfcb:d69f:2329])
+        by smtp.gmail.com with ESMTPSA id k7sm7984506wmi.19.2020.02.08.10.41.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 08 Feb 2020 10:36:53 -0800 (PST)
-From:   Lad Prabhakar <prabhakar.csengg@gmail.com>
-X-Google-Original-From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will@kernel.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
+        Sat, 08 Feb 2020 10:41:48 -0800 (PST)
+Date:   Sat, 8 Feb 2020 18:41:47 +0000
+From:   Andrew Murray <amurray@thegoodpenguin.co.uk>
+To:     Marek Vasut <marek.vasut@gmail.com>
+Cc:     Andrew Murray <andrew.murray@arm.com>,
+        Simon Horman <horms@verge.net.au>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
         Marek Vasut <marek.vasut+renesas@gmail.com>,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Heiko Stuebner <heiko@sntech.de>
-Cc:     Andrew Murray <andrew.murray@arm.com>, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-renesas-soc@vger.kernel.org,
-        linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org,
-        Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-Subject: [PATCH v4 2/6] PCI: rcar: Fix calculating mask for PCIEPAMR register
-Date:   Sat,  8 Feb 2020 18:36:37 +0000
-Message-Id: <20200208183641.6674-3-prabhakar.mahadev-lad.rj@bp.renesas.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200208183641.6674-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
-References: <20200208183641.6674-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
+        linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org
+Subject: Re: [RFC PATCH] PCI: rcar: Fix incorrect programming of OB windows
+Message-ID: <20200208184147.GC19388@big-machine>
+References: <20191004132941.6660-1-andrew.murray@arm.com>
+ <20191216120607.GV24359@e119886-lin.cambridge.arm.com>
+ <0e6e7353-c92b-d819-771b-f9b58684a3d4@gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <0e6e7353-c92b-d819-771b-f9b58684a3d4@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The mask value was calculated incorrectly for PCIEPAMR register if the
-size was less the 128bytes, this patch fixes the above by adding a check
-on size.
+On Sat, Feb 08, 2020 at 10:46:25AM +0100, Marek Vasut wrote:
+> On 12/16/19 1:06 PM, Andrew Murray wrote:
+> > On Fri, Oct 04, 2019 at 02:29:41PM +0100, Andrew Murray wrote:
+> >> The outbound windows (PCIEPAUR(x), PCIEPALR(x)) describe a mapping between
+> >> a CPU address (which is determined by the window number 'x') and a
+> >> programmed PCI address - Thus allowing the controller to translate CPU
+> >> accesses into PCI accesses.
+> >>
+> >> However the existing code incorrectly writes the CPU address - lets fix
+> >> this by writing the PCI address instead.
+> >>
+> >> For memory transactions, existing DT users describe a 1:1 identity mapping
+> >> and thus this change should have no effect. However the same isn't true for
+> >> I/O.
+> >>
+> >> Fixes: c25da4778803 ("PCI: rcar: Add Renesas R-Car PCIe driver")
+> >> Signed-off-by: Andrew Murray <andrew.murray@arm.com>
+> >>
+> >> ---
+> >> This hasn't been tested, so keen for someone to give it a try.
+> >>
+> >> Also keen for someone to confirm my understanding that the RCar windows
+> >> expect PCI addresses and that res->start refers to CPU addresses. If this
+> >> is correct then it's possible the I/O doesn't work correctly.
+> > 
+> > Marek/Yoshihiro - any feedback on this?
+> 
+> It does indeed look correct,
+> Reviewed-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+> 
+> # On R8A77951 Salvator-XS with Intel 8086:f1a5 600P SSD
+> # On R8A77965 Salvator-XS with Intel 8086:10d3 82574L NIC
+> Tested-by: Marek Vasut <marek.vasut+renesas@gmail.com>
 
-Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
----
- drivers/pci/controller/pcie-rcar.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Thanks for testing - much appreciated!
 
-diff --git a/drivers/pci/controller/pcie-rcar.c b/drivers/pci/controller/pcie-rcar.c
-index d5568db..c76a92a 100644
---- a/drivers/pci/controller/pcie-rcar.c
-+++ b/drivers/pci/controller/pcie-rcar.c
-@@ -71,7 +71,7 @@ void rcar_pcie_set_outbound(int win, void __iomem *base,
- 	/* Setup PCIe address space mappings for each resource */
- 	resource_size_t res_start;
- 	resource_size_t size;
--	u32 mask;
-+	u32 mask = 0x0;
- 
- 	rcar_pci_write_reg(base, 0x00000000, PCIEPTCTLR(win));
- 
-@@ -80,7 +80,8 @@ void rcar_pcie_set_outbound(int win, void __iomem *base,
- 	 * keeps things pretty simple.
- 	 */
- 	size = resource_size(res);
--	mask = (roundup_pow_of_two(size) / SZ_128) - 1;
-+	if (size > 128)
-+		mask = (roundup_pow_of_two(size) / SZ_128) - 1;
- 	rcar_pci_write_reg(base, mask << 7, PCIEPAMR(win));
- 
- 	if (!host) {
--- 
-2.7.4
-
+Andrew Murray
