@@ -5,46 +5,47 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7C4AC2BA83
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Feb 2020 11:22:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7C40C352A4
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Feb 2020 11:22:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AF138206D7
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Feb 2020 11:22:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 841BC2173E
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Feb 2020 11:22:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="FIQ+g8mx"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="sCaAqDj2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728287AbgBLLWG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 12 Feb 2020 06:22:06 -0500
-Received: from lelv0142.ext.ti.com ([198.47.23.249]:59958 "EHLO
-        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726135AbgBLLWF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2020 06:22:05 -0500
-Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 01CBLptt023254;
-        Wed, 12 Feb 2020 05:21:51 -0600
+        id S1728334AbgBLLWM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 12 Feb 2020 06:22:12 -0500
+Received: from lelv0143.ext.ti.com ([198.47.23.248]:51802 "EHLO
+        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728315AbgBLLWL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2020 06:22:11 -0500
+Received: from fllv0034.itg.ti.com ([10.64.40.246])
+        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id 01CBLvGN014361;
+        Wed, 12 Feb 2020 05:21:57 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1581506511;
-        bh=irXm3n0Br626t+Byi041gd8ETS1z2r1vmrQt2s1wqxw=;
+        s=ti-com-17Q1; t=1581506517;
+        bh=LAHbe1ep18MRMLKppKExizKw+8T2sbESWHHKJMLTnvs=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=FIQ+g8mxDGB7ja+P/VTDmdpabW4bqxs5fgWyvW4ZWk6QV7GT5n/BsgRD5NX6AMb79
-         9lyKsEBuYJzGcLZPVExFi9yKqu0v/Hq92Qw+rsZ9CiDwIDDqF1/4PtVukFqeyX942k
-         95nzIw9gcrBDv+lxV2q1n2a3eeIyY9geoeljf91k=
-Received: from DLEE103.ent.ti.com (dlee103.ent.ti.com [157.170.170.33])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id 01CBLpmM078572;
-        Wed, 12 Feb 2020 05:21:51 -0600
-Received: from DLEE114.ent.ti.com (157.170.170.25) by DLEE103.ent.ti.com
- (157.170.170.33) with Microsoft SMTP Server (version=TLS1_2,
+        b=sCaAqDj2+59ftqzv0t66V8M3cHSXhnCnXnMfmhnOhOD0SnTx2ejUnoePSJ87Z7AcV
+         66MqYyfeLQhDS4NFUOfzjkHDJqKgjI8I2GSgskNDzIWjL2l/VSMfqUi5/4QCdkIQmp
+         ziXGgYyxU+ZUdb2stNJoc7hZc8yEfLb75gXqVcSo=
+Received: from DFLE102.ent.ti.com (dfle102.ent.ti.com [10.64.6.23])
+        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 01CBLv5F113060
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 12 Feb 2020 05:21:57 -0600
+Received: from DFLE109.ent.ti.com (10.64.6.30) by DFLE102.ent.ti.com
+ (10.64.6.23) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Wed, 12
- Feb 2020 05:21:51 -0600
-Received: from fllv0039.itg.ti.com (10.64.41.19) by DLEE114.ent.ti.com
- (157.170.170.25) with Microsoft SMTP Server (version=TLS1_2,
+ Feb 2020 05:21:57 -0600
+Received: from fllv0039.itg.ti.com (10.64.41.19) by DFLE109.ent.ti.com
+ (10.64.6.30) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
- Frontend Transport; Wed, 12 Feb 2020 05:21:51 -0600
+ Frontend Transport; Wed, 12 Feb 2020 05:21:57 -0600
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by fllv0039.itg.ti.com (8.15.2/8.15.2) with ESMTP id 01CBLc5Z049841;
-        Wed, 12 Feb 2020 05:21:48 -0600
+        by fllv0039.itg.ti.com (8.15.2/8.15.2) with ESMTP id 01CBLc5b049841;
+        Wed, 12 Feb 2020 05:21:54 -0600
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -54,9 +55,9 @@ To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Tom Joseph <tjoseph@cadence.com>
 CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         Kishon Vijay Abraham I <kishon@ti.com>
-Subject: [PATCH v2 3/5] PCI: endpoint: Protect concurrent access to memory allocation with mutex
-Date:   Wed, 12 Feb 2020 16:55:12 +0530
-Message-ID: <20200212112514.2000-4-kishon@ti.com>
+Subject: [PATCH v2 5/5] PCI: endpoint: Assign function number for each PF in EPC core
+Date:   Wed, 12 Feb 2020 16:55:14 +0530
+Message-ID: <20200212112514.2000-6-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200212112514.2000-1-kishon@ti.com>
 References: <20200212112514.2000-1-kishon@ti.com>
@@ -68,90 +69,161 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-pci-epc-mem uses bitmap to manage the PCI address region. This address
-region will be shared by multiple endpoint functions (in the case of
-multi function endpoint) and it has to be protected from concurrent
-access to avoid updating inconsistent state. Use mutex to protect while
-updating bitmap.
+The PCIe endpoint core relies on the drivers that invoke the
+pci_epc_add_epf() API to allocate and assign a function number
+to each physical function (PF). Since endpoint function device can
+be created by multiple mechanisms (configfs, devicetree, etc..),
+allowing each of these mechanisms to assign a function number
+would result in mutliple endpoint function devices having the
+same function number. In order to avoid this, let EPC core assign
+a function number to the endpoint device.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/endpoint/pci-epc-mem.c | 10 ++++++++--
- include/linux/pci-epc.h            |  3 +++
- 2 files changed, 11 insertions(+), 2 deletions(-)
+ drivers/pci/endpoint/pci-ep-cfs.c   | 27 +++++----------------------
+ drivers/pci/endpoint/pci-epc-core.c | 26 ++++++++++++++++++++++----
+ include/linux/pci-epc.h             |  2 ++
+ 3 files changed, 29 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/pci/endpoint/pci-epc-mem.c b/drivers/pci/endpoint/pci-epc-mem.c
-index d2b174ce15de..abfac1109a13 100644
---- a/drivers/pci/endpoint/pci-epc-mem.c
-+++ b/drivers/pci/endpoint/pci-epc-mem.c
-@@ -79,6 +79,7 @@ int __pci_epc_mem_init(struct pci_epc *epc, phys_addr_t phys_base, size_t size,
- 	mem->page_size = page_size;
- 	mem->pages = pages;
- 	mem->size = size;
-+	mutex_init(&mem->lock);
- 
- 	epc->mem = mem;
- 
-@@ -122,7 +123,7 @@ void __iomem *pci_epc_mem_alloc_addr(struct pci_epc *epc,
- 				     phys_addr_t *phys_addr, size_t size)
- {
- 	int pageno;
--	void __iomem *virt_addr;
-+	void __iomem *virt_addr = NULL;
- 	struct pci_epc_mem *mem = epc->mem;
- 	unsigned int page_shift = ilog2(mem->page_size);
- 	int order;
-@@ -130,15 +131,18 @@ void __iomem *pci_epc_mem_alloc_addr(struct pci_epc *epc,
- 	size = ALIGN(size, mem->page_size);
- 	order = pci_epc_mem_get_order(mem, size);
- 
-+	mutex_lock(&mem->lock);
- 	pageno = bitmap_find_free_region(mem->bitmap, mem->pages, order);
- 	if (pageno < 0)
--		return NULL;
-+		goto ret;
- 
- 	*phys_addr = mem->phys_base + ((phys_addr_t)pageno << page_shift);
- 	virt_addr = ioremap(*phys_addr, size);
- 	if (!virt_addr)
- 		bitmap_release_region(mem->bitmap, pageno, order);
- 
-+ret:
-+	mutex_unlock(&mem->lock);
- 	return virt_addr;
- }
- EXPORT_SYMBOL_GPL(pci_epc_mem_alloc_addr);
-@@ -164,7 +168,9 @@ void pci_epc_mem_free_addr(struct pci_epc *epc, phys_addr_t phys_addr,
- 	pageno = (phys_addr - mem->phys_base) >> page_shift;
- 	size = ALIGN(size, mem->page_size);
- 	order = pci_epc_mem_get_order(mem, size);
-+	mutex_lock(&mem->lock);
- 	bitmap_release_region(mem->bitmap, pageno, order);
-+	mutex_unlock(&mem->lock);
- }
- EXPORT_SYMBOL_GPL(pci_epc_mem_free_addr);
- 
-diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
-index 9dd60f2e9705..4e3e527c49d1 100644
---- a/include/linux/pci-epc.h
-+++ b/include/linux/pci-epc.h
-@@ -71,6 +71,7 @@ struct pci_epc_ops {
-  * @bitmap: bitmap to manage the PCI address space
-  * @pages: number of bits representing the address region
-  * @page_size: size of each page
-+ * @lock: mutex to protect bitmap
-  */
- struct pci_epc_mem {
- 	phys_addr_t	phys_base;
-@@ -78,6 +79,8 @@ struct pci_epc_mem {
- 	unsigned long	*bitmap;
- 	size_t		page_size;
- 	int		pages;
-+	/* mutex to protect against concurrent access for memory allocation*/
-+	struct mutex	lock;
+diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
+index d1288a0bd530..e7e8367eead1 100644
+--- a/drivers/pci/endpoint/pci-ep-cfs.c
++++ b/drivers/pci/endpoint/pci-ep-cfs.c
+@@ -29,7 +29,6 @@ struct pci_epc_group {
+ 	struct config_group group;
+ 	struct pci_epc *epc;
+ 	bool start;
+-	unsigned long function_num_map;
  };
  
- /**
+ static inline struct pci_epf_group *to_pci_epf_group(struct config_item *item)
+@@ -89,37 +88,22 @@ static int pci_epc_epf_link(struct config_item *epc_item,
+ 			    struct config_item *epf_item)
+ {
+ 	int ret;
+-	u32 func_no = 0;
+ 	struct pci_epf_group *epf_group = to_pci_epf_group(epf_item);
+ 	struct pci_epc_group *epc_group = to_pci_epc_group(epc_item);
+ 	struct pci_epc *epc = epc_group->epc;
+ 	struct pci_epf *epf = epf_group->epf;
+ 
+-	func_no = find_first_zero_bit(&epc_group->function_num_map,
+-				      BITS_PER_LONG);
+-	if (func_no >= BITS_PER_LONG)
+-		return -EINVAL;
+-
+-	set_bit(func_no, &epc_group->function_num_map);
+-	epf->func_no = func_no;
+-
+ 	ret = pci_epc_add_epf(epc, epf);
+ 	if (ret)
+-		goto err_add_epf;
++		return ret;
+ 
+ 	ret = pci_epf_bind(epf);
+-	if (ret)
+-		goto err_epf_bind;
++	if (ret) {
++		pci_epc_remove_epf(epc, epf);
++		return ret;
++	}
+ 
+ 	return 0;
+-
+-err_epf_bind:
+-	pci_epc_remove_epf(epc, epf);
+-
+-err_add_epf:
+-	clear_bit(func_no, &epc_group->function_num_map);
+-
+-	return ret;
+ }
+ 
+ static void pci_epc_epf_unlink(struct config_item *epc_item,
+@@ -134,7 +118,6 @@ static void pci_epc_epf_unlink(struct config_item *epc_item,
+ 
+ 	epc = epc_group->epc;
+ 	epf = epf_group->epf;
+-	clear_bit(epf->func_no, &epc_group->function_num_map);
+ 	pci_epf_unbind(epf);
+ 	pci_epc_remove_epf(epc, epf);
+ }
+diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+index e51a12ed85bb..dc1c673534e0 100644
+--- a/drivers/pci/endpoint/pci-epc-core.c
++++ b/drivers/pci/endpoint/pci-epc-core.c
+@@ -471,22 +471,39 @@ EXPORT_SYMBOL_GPL(pci_epc_write_header);
+  */
+ int pci_epc_add_epf(struct pci_epc *epc, struct pci_epf *epf)
+ {
++	u32 func_no;
++	int ret = 0;
++
+ 	if (epf->epc)
+ 		return -EBUSY;
+ 
+ 	if (IS_ERR(epc))
+ 		return -EINVAL;
+ 
+-	if (epf->func_no > epc->max_functions - 1)
+-		return -EINVAL;
++	mutex_lock(&epc->lock);
++	func_no = find_first_zero_bit(&epc->function_num_map,
++				      BITS_PER_LONG);
++	if (func_no >= BITS_PER_LONG) {
++		ret = -EINVAL;
++		goto ret;
++	}
++
++	if (func_no > epc->max_functions - 1) {
++		dev_err(&epc->dev, "Exceeding max supported Function Number\n");
++		ret = -EINVAL;
++		goto ret;
++	}
+ 
++	set_bit(func_no, &epc->function_num_map);
++	epf->func_no = func_no;
+ 	epf->epc = epc;
+ 
+-	mutex_lock(&epc->lock);
+ 	list_add_tail(&epf->list, &epc->pci_epf);
++
++ret:
+ 	mutex_unlock(&epc->lock);
+ 
+-	return 0;
++	return ret;
+ }
+ EXPORT_SYMBOL_GPL(pci_epc_add_epf);
+ 
+@@ -503,6 +520,7 @@ void pci_epc_remove_epf(struct pci_epc *epc, struct pci_epf *epf)
+ 		return;
+ 
+ 	mutex_lock(&epc->lock);
++	clear_bit(epf->func_no, &epc->function_num_map);
+ 	list_del(&epf->list);
+ 	epf->epc = NULL;
+ 	mutex_unlock(&epc->lock);
+diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
+index 4e3e527c49d1..ccaf6e3fa931 100644
+--- a/include/linux/pci-epc.h
++++ b/include/linux/pci-epc.h
+@@ -92,6 +92,7 @@ struct pci_epc_mem {
+  * @max_functions: max number of functions that can be configured in this EPC
+  * @group: configfs group representing the PCI EPC device
+  * @lock: mutex to protect pci_epc ops
++ * @function_num_map: bitmap to manage physical function number
+  * @notifier: used to notify EPF of any EPC events (like linkup)
+  */
+ struct pci_epc {
+@@ -103,6 +104,7 @@ struct pci_epc {
+ 	struct config_group		*group;
+ 	/* mutex to protect against concurrent access of EP controller */
+ 	struct mutex			lock;
++	unsigned long			function_num_map;
+ 	struct atomic_notifier_head	notifier;
+ };
+ 
 -- 
 2.17.1
 
