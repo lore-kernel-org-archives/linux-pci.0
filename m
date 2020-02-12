@@ -2,104 +2,98 @@ Return-Path: <SRS0=ut+1=4A=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0424C352A3
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Feb 2020 01:59:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF715C3B187
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Feb 2020 02:02:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 99C7721734
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Feb 2020 01:59:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 845C320873
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Feb 2020 02:02:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1581472746;
-	bh=W0g5qSvVsOWBX9eSAEaw1QlKJmjV/KDFXwdxltE4LxI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=QTm+MhVAB3WaQlfOs7k409GEHRDcPilulftUmURuXXQALX/96XEmkraPSKzIzbdqx
-	 ocW2F793nZLVhq9OHawY9QQiM3KY/I6POOmlzG3M9aExe8tjFQ183jZ8vqfNsbHOoG
-	 U9pzS+zCOZsgaWktZxfOrJAH+k/Y9batzQAu7Rws=
+	s=default; t=1581472947;
+	bh=htIylF4jROFJ6riEwNwA7KvXmOZ52qqEUUlhJZlLEoc=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=MNd1cyhFGc3kixoA+FoHrKQLdUxk4DP4zrFSmDwcdwju6sVQheGgOg8KKz4B2Cpsc
+	 4NGUgFNw8cC+DIdzurhYyvzEydNZgP1HHg3JgyEVcK/oE9dhl0/FtmxbNyJJ9Gves4
+	 OdCy3G5VVxn69lACMpwXZfCo4KXtgcFV0HJGXn8s=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727587AbgBLB7F (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 11 Feb 2020 20:59:05 -0500
-Received: from mail-oi1-f194.google.com ([209.85.167.194]:33045 "EHLO
-        mail-oi1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727414AbgBLB7F (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Feb 2020 20:59:05 -0500
-Received: by mail-oi1-f194.google.com with SMTP id q81so543954oig.0;
-        Tue, 11 Feb 2020 17:59:03 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=pztga/VfrpOW3mpKvfzJW4XJ0PmmY7R31h2DX/6cIMc=;
-        b=mAdthPqcwhiRo8hfojUvRpLrmkV3NNlvlhAcxr2F2pnt7S5AlOZ8oK6V2pbkpGwFfl
-         q8cnXwZelLRsIq40QoRp/A15qeJwjVr/6+R2hHaC7T78hXUMtHt02oRUa7MCFciMyUy4
-         XSP/BpwSfdv9JSjNXMEe5Epj/SMTZmRY8mRpWarIHPXBQ5mJeW5bE2P1zdn2hAF3RBjk
-         7Kq+VgmPIjRSh3kEsfPDR1Q44j2XA2jtPG1p2JwgD5nN7zdDabcbr2o2tUuLun7jnSbL
-         Re56U5eqTC7sksWEcBC/+yg6qoLHyqxLPiifW19b+zVRv59KGvTpo5CLTsujVV1wh3l1
-         5Irw==
-X-Gm-Message-State: APjAAAV9ohWSMAfL84Fze5E0GhQjiOvO6ptQg8nqxsH3qYc+eexdUYlm
-        cea9CgX0jd0N08O99R/nMw==
-X-Google-Smtp-Source: APXvYqzW6ROfSZI0pr+oJju9AGLtvmicqpA3cEsg6tlxYJ1VfmwTE0d9sylHIJtmrFHKeeljCubQ+g==
-X-Received: by 2002:aca:5a04:: with SMTP id o4mr4772399oib.113.1581472742537;
-        Tue, 11 Feb 2020 17:59:02 -0800 (PST)
-Received: from rob-hp-laptop (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.gmail.com with ESMTPSA id t22sm2067498otq.18.2020.02.11.17.59.01
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 11 Feb 2020 17:59:01 -0800 (PST)
-Received: (nullmailer pid 15263 invoked by uid 1000);
-        Wed, 12 Feb 2020 01:59:00 -0000
-Date:   Tue, 11 Feb 2020 19:59:00 -0600
+        id S1727434AbgBLCC0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 11 Feb 2020 21:02:26 -0500
+Received: from mail.kernel.org ([198.145.29.99]:53196 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726968AbgBLCC0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 11 Feb 2020 21:02:26 -0500
+Received: from mail-qv1-f44.google.com (mail-qv1-f44.google.com [209.85.219.44])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id AAF5E2082F;
+        Wed, 12 Feb 2020 02:02:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1581472945;
+        bh=htIylF4jROFJ6riEwNwA7KvXmOZ52qqEUUlhJZlLEoc=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=iCYPiTPYdnB2OI0v+huzasLYRjeRjhcTHmkhFmVrrmovvxZa6iqwp+hdE/5APs6Qq
+         jBu77bwScSQIx3wgiVcysNX+EYw9eqDJNGd2H+xZUfFiv09v2HHMzkvYylf5QYmA1M
+         a/bH3tJijMqMV4d8Ca8xN+gGXgXAyesWY/m8o6WY=
+Received: by mail-qv1-f44.google.com with SMTP id g6so243218qvy.5;
+        Tue, 11 Feb 2020 18:02:25 -0800 (PST)
+X-Gm-Message-State: APjAAAUAA8dkeAnjGBfnurkPVxxFEcZELkDGmUqIHD9G8o13Fh/NOhzA
+        X28u9Svlk5QBMTKzrYu5VYiRqatMtsVn+PpHaQ==
+X-Google-Smtp-Source: APXvYqyZK3Vkicu73sUU5sruUOApIl6NuW57qMDLHWUYWwewOnHbEyttYZ0F4fQksB2kDUYtiSYWzYbNkVpIpCNsWz8=
+X-Received: by 2002:a05:6214:11ac:: with SMTP id u12mr5582693qvv.85.1581472944822;
+ Tue, 11 Feb 2020 18:02:24 -0800 (PST)
+MIME-Version: 1.0
+References: <20200210123507.9491-1-kishon@ti.com> <20200210123507.9491-3-kishon@ti.com>
+ <20200212015900.GA14509@bogus>
+In-Reply-To: <20200212015900.GA14509@bogus>
 From:   Rob Herring <robh@kernel.org>
+Date:   Tue, 11 Feb 2020 20:02:13 -0600
+X-Gmail-Original-Message-ID: <CAL_JsqKozWNJqQOoyMRZzRBsjY9_Y2NkMwRbWP=DPXC7ZYViNg@mail.gmail.com>
+Message-ID: <CAL_JsqKozWNJqQOoyMRZzRBsjY9_Y2NkMwRbWP=DPXC7ZYViNg@mail.gmail.com>
+Subject: Re: [PATCH 2/2] dt-bindings: PCI: Convert PCIe Host/Endpoint in
+ Cadence platform to DT schema
 To:     Kishon Vijay Abraham I <kishon@ti.com>
 Cc:     Tom Joseph <tjoseph@cadence.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        Mark Rutland <mark.rutland@arm.com>, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH 2/2] dt-bindings: PCI: Convert PCIe Host/Endpoint in
- Cadence platform to DT schema
-Message-ID: <20200212015900.GA14509@bogus>
-References: <20200210123507.9491-1-kishon@ti.com>
- <20200210123507.9491-3-kishon@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200210123507.9491-3-kishon@ti.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        Mark Rutland <mark.rutland@arm.com>,
+        PCI <linux-pci@vger.kernel.org>, devicetree@vger.kernel.org,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, 10 Feb 2020 18:05:07 +0530, Kishon Vijay Abraham I wrote:
-> Include Cadence core DT schema and define the Cadence platform DT schema
-> for both Host and Endpoint mode. Note: The Cadence core DT schema could
-> be included for other platforms using Cadence PCIe core.
-> 
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->  .../bindings/pci/cdns,cdns-pcie-ep.txt        | 27 -------
->  .../bindings/pci/cdns,cdns-pcie-ep.yaml       | 48 ++++++++++++
->  .../bindings/pci/cdns,cdns-pcie-host.txt      | 66 ----------------
->  .../bindings/pci/cdns,cdns-pcie-host.yaml     | 76 +++++++++++++++++++
->  MAINTAINERS                                   |  2 +-
->  5 files changed, 125 insertions(+), 94 deletions(-)
->  delete mode 100644 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
->  create mode 100644 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.yaml
->  delete mode 100644 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
->  create mode 100644 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.yaml
-> 
+On Tue, Feb 11, 2020 at 7:59 PM Rob Herring <robh@kernel.org> wrote:
+>
+> On Mon, 10 Feb 2020 18:05:07 +0530, Kishon Vijay Abraham I wrote:
+> > Include Cadence core DT schema and define the Cadence platform DT schema
+> > for both Host and Endpoint mode. Note: The Cadence core DT schema could
+> > be included for other platforms using Cadence PCIe core.
+> >
+> > Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> > ---
+> >  .../bindings/pci/cdns,cdns-pcie-ep.txt        | 27 -------
+> >  .../bindings/pci/cdns,cdns-pcie-ep.yaml       | 48 ++++++++++++
+> >  .../bindings/pci/cdns,cdns-pcie-host.txt      | 66 ----------------
+> >  .../bindings/pci/cdns,cdns-pcie-host.yaml     | 76 +++++++++++++++++++
+> >  MAINTAINERS                                   |  2 +-
+> >  5 files changed, 125 insertions(+), 94 deletions(-)
+> >  delete mode 100644 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
+> >  create mode 100644 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.yaml
+> >  delete mode 100644 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
+> >  create mode 100644 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.yaml
+> >
+>
+> My bot found errors running 'make dt_binding_check' on your patch:
+>
+> Documentation/devicetree/bindings/display/simple-framebuffer.example.dts:21.16-37.11: Warning (chosen_node_is_root): /example-0/chosen: chosen node must be at root node
+> /builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.example.dt.yaml: pcie@fc000000: 'device_type' is a required property
+> /builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.example.dt.yaml: pcie@fc000000: 'ranges' is a required property
+> /builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.example.dt.yaml: pcie@fc000000: '#address-cells' is a required property
+> /builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.example.dt.yaml: pcie@fc000000: '#size-cells' is a required property
 
-My bot found errors running 'make dt_binding_check' on your patch:
-
-Documentation/devicetree/bindings/display/simple-framebuffer.example.dts:21.16-37.11: Warning (chosen_node_is_root): /example-0/chosen: chosen node must be at root node
-/builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.example.dt.yaml: pcie@fc000000: 'device_type' is a required property
-/builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.example.dt.yaml: pcie@fc000000: 'ranges' is a required property
-/builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.example.dt.yaml: pcie@fc000000: '#address-cells' is a required property
-/builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.example.dt.yaml: pcie@fc000000: '#size-cells' is a required property
-
-See https://patchwork.ozlabs.org/patch/1235807
-Please check and re-submit.
+Node name needs to be pcie-ep@...
