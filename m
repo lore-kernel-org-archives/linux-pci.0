@@ -2,49 +2,49 @@ Return-Path: <SRS0=ut+1=4A=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99416C2BA83
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Feb 2020 11:21:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7C4AC2BA83
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Feb 2020 11:22:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6BC2C2073C
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Feb 2020 11:21:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AF138206D7
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Feb 2020 11:22:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="L1xQkKeh"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="FIQ+g8mx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728121AbgBLLVw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 12 Feb 2020 06:21:52 -0500
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:48448 "EHLO
-        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727279AbgBLLVw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2020 06:21:52 -0500
+        id S1728287AbgBLLWG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 12 Feb 2020 06:22:06 -0500
+Received: from lelv0142.ext.ti.com ([198.47.23.249]:59958 "EHLO
+        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726135AbgBLLWF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2020 06:22:05 -0500
 Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 01CBLiPH021367;
-        Wed, 12 Feb 2020 05:21:44 -0600
+        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 01CBLptt023254;
+        Wed, 12 Feb 2020 05:21:51 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1581506504;
-        bh=OKW4SgkgKNhhGYTzK/oI4Jq7PUrtd1o0Bfyk+239kPk=;
-        h=From:To:CC:Subject:Date;
-        b=L1xQkKehpDONKfTMgp5Lsurvxdvs9ksbGC/j4mh/yEsZGYT+ASpmTTe++UR6w231S
-         50NMU+Hp0RPKMnkLACl2DfYOR8JDJx6NSDrMPTvxTw8kaJuWuM25mjhcKMTD2A+8b1
-         M2iWRdcePIIIwSB2tKijplIQk0xFOJorvSR/shMU=
-Received: from DFLE102.ent.ti.com (dfle102.ent.ti.com [10.64.6.23])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id 01CBLihi078506;
-        Wed, 12 Feb 2020 05:21:44 -0600
-Received: from DFLE109.ent.ti.com (10.64.6.30) by DFLE102.ent.ti.com
- (10.64.6.23) with Microsoft SMTP Server (version=TLS1_2,
+        s=ti-com-17Q1; t=1581506511;
+        bh=irXm3n0Br626t+Byi041gd8ETS1z2r1vmrQt2s1wqxw=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References;
+        b=FIQ+g8mxDGB7ja+P/VTDmdpabW4bqxs5fgWyvW4ZWk6QV7GT5n/BsgRD5NX6AMb79
+         9lyKsEBuYJzGcLZPVExFi9yKqu0v/Hq92Qw+rsZ9CiDwIDDqF1/4PtVukFqeyX942k
+         95nzIw9gcrBDv+lxV2q1n2a3eeIyY9geoeljf91k=
+Received: from DLEE103.ent.ti.com (dlee103.ent.ti.com [157.170.170.33])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id 01CBLpmM078572;
+        Wed, 12 Feb 2020 05:21:51 -0600
+Received: from DLEE114.ent.ti.com (157.170.170.25) by DLEE103.ent.ti.com
+ (157.170.170.33) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Wed, 12
- Feb 2020 05:21:41 -0600
-Received: from fllv0039.itg.ti.com (10.64.41.19) by DFLE109.ent.ti.com
- (10.64.6.30) with Microsoft SMTP Server (version=TLS1_2,
+ Feb 2020 05:21:51 -0600
+Received: from fllv0039.itg.ti.com (10.64.41.19) by DLEE114.ent.ti.com
+ (157.170.170.25) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
- Frontend Transport; Wed, 12 Feb 2020 05:21:41 -0600
+ Frontend Transport; Wed, 12 Feb 2020 05:21:51 -0600
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by fllv0039.itg.ti.com (8.15.2/8.15.2) with ESMTP id 01CBLc5W049841;
-        Wed, 12 Feb 2020 05:21:38 -0600
+        by fllv0039.itg.ti.com (8.15.2/8.15.2) with ESMTP id 01CBLc5Z049841;
+        Wed, 12 Feb 2020 05:21:48 -0600
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -54,10 +54,12 @@ To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Tom Joseph <tjoseph@cadence.com>
 CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         Kishon Vijay Abraham I <kishon@ti.com>
-Subject: [PATCH v2 0/5] PCI: Endpoint: Miscellaneous improvements
-Date:   Wed, 12 Feb 2020 16:55:09 +0530
-Message-ID: <20200212112514.2000-1-kishon@ti.com>
+Subject: [PATCH v2 3/5] PCI: endpoint: Protect concurrent access to memory allocation with mutex
+Date:   Wed, 12 Feb 2020 16:55:12 +0530
+Message-ID: <20200212112514.2000-4-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200212112514.2000-1-kishon@ti.com>
+References: <20200212112514.2000-1-kishon@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
@@ -66,44 +68,90 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Changes from v1:
-Rebased to Linux 5.6-rc1 and removed dependencies to my other series
-to unblock [1]
+pci-epc-mem uses bitmap to manage the PCI address region. This address
+region will be shared by multiple endpoint functions (in the case of
+multi function endpoint) and it has to be protected from concurrent
+access to avoid updating inconsistent state. Use mutex to protect while
+updating bitmap.
 
-[1] -> http://lore.kernel.org/r/20200103100736.27627-1-vidyas@nvidia.com
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/endpoint/pci-epc-mem.c | 10 ++++++++--
+ include/linux/pci-epc.h            |  3 +++
+ 2 files changed, 11 insertions(+), 2 deletions(-)
 
-v1 of this patch series can be found @
-http://lore.kernel.org/r/20191231100331.6316-1-kishon@ti.com
-
-This series adds miscellaneous improvements to PCIe endpoint core.
-1) Protect concurrent access to memory allocation in pci-epc-mem
-2) Replace spinlock with mutex in pci-epc-core and also use
-   notification chain mechanism to notify EPC events to EPF driver.
-3) Since endpoint function device can be created by multiple
-   mechanisms (configfs, devicetree, etc..), allowing each of these
-   mechanisms to assign a function number would result in mutliple
-   endpoint function devices having the same function number. In order
-   to avoid this, let EPC core assign a function number to the
-   endpoint device.
-
-Kishon Vijay Abraham I (5):
-  PCI: endpoint: Use notification chain mechanism to notify EPC events
-    to EPF
-  PCI: endpoint: Replace spinlock with mutex
-  PCI: endpoint: Protect concurrent access to memory allocation with
-    mutex
-  PCI: endpoint: Protect concurrent access to pci_epf_ops with mutex
-  PCI: endpoint: Assign function number for each PF in EPC core
-
- drivers/pci/endpoint/functions/pci-epf-test.c |  13 +-
- drivers/pci/endpoint/pci-ep-cfs.c             |  27 +----
- drivers/pci/endpoint/pci-epc-core.c           | 113 ++++++++----------
- drivers/pci/endpoint/pci-epc-mem.c            |  10 +-
- drivers/pci/endpoint/pci-epf-core.c           |  33 ++---
- include/linux/pci-epc.h                       |  19 ++-
- include/linux/pci-epf.h                       |   9 +-
- 7 files changed, 108 insertions(+), 116 deletions(-)
-
+diff --git a/drivers/pci/endpoint/pci-epc-mem.c b/drivers/pci/endpoint/pci-epc-mem.c
+index d2b174ce15de..abfac1109a13 100644
+--- a/drivers/pci/endpoint/pci-epc-mem.c
++++ b/drivers/pci/endpoint/pci-epc-mem.c
+@@ -79,6 +79,7 @@ int __pci_epc_mem_init(struct pci_epc *epc, phys_addr_t phys_base, size_t size,
+ 	mem->page_size = page_size;
+ 	mem->pages = pages;
+ 	mem->size = size;
++	mutex_init(&mem->lock);
+ 
+ 	epc->mem = mem;
+ 
+@@ -122,7 +123,7 @@ void __iomem *pci_epc_mem_alloc_addr(struct pci_epc *epc,
+ 				     phys_addr_t *phys_addr, size_t size)
+ {
+ 	int pageno;
+-	void __iomem *virt_addr;
++	void __iomem *virt_addr = NULL;
+ 	struct pci_epc_mem *mem = epc->mem;
+ 	unsigned int page_shift = ilog2(mem->page_size);
+ 	int order;
+@@ -130,15 +131,18 @@ void __iomem *pci_epc_mem_alloc_addr(struct pci_epc *epc,
+ 	size = ALIGN(size, mem->page_size);
+ 	order = pci_epc_mem_get_order(mem, size);
+ 
++	mutex_lock(&mem->lock);
+ 	pageno = bitmap_find_free_region(mem->bitmap, mem->pages, order);
+ 	if (pageno < 0)
+-		return NULL;
++		goto ret;
+ 
+ 	*phys_addr = mem->phys_base + ((phys_addr_t)pageno << page_shift);
+ 	virt_addr = ioremap(*phys_addr, size);
+ 	if (!virt_addr)
+ 		bitmap_release_region(mem->bitmap, pageno, order);
+ 
++ret:
++	mutex_unlock(&mem->lock);
+ 	return virt_addr;
+ }
+ EXPORT_SYMBOL_GPL(pci_epc_mem_alloc_addr);
+@@ -164,7 +168,9 @@ void pci_epc_mem_free_addr(struct pci_epc *epc, phys_addr_t phys_addr,
+ 	pageno = (phys_addr - mem->phys_base) >> page_shift;
+ 	size = ALIGN(size, mem->page_size);
+ 	order = pci_epc_mem_get_order(mem, size);
++	mutex_lock(&mem->lock);
+ 	bitmap_release_region(mem->bitmap, pageno, order);
++	mutex_unlock(&mem->lock);
+ }
+ EXPORT_SYMBOL_GPL(pci_epc_mem_free_addr);
+ 
+diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
+index 9dd60f2e9705..4e3e527c49d1 100644
+--- a/include/linux/pci-epc.h
++++ b/include/linux/pci-epc.h
+@@ -71,6 +71,7 @@ struct pci_epc_ops {
+  * @bitmap: bitmap to manage the PCI address space
+  * @pages: number of bits representing the address region
+  * @page_size: size of each page
++ * @lock: mutex to protect bitmap
+  */
+ struct pci_epc_mem {
+ 	phys_addr_t	phys_base;
+@@ -78,6 +79,8 @@ struct pci_epc_mem {
+ 	unsigned long	*bitmap;
+ 	size_t		page_size;
+ 	int		pages;
++	/* mutex to protect against concurrent access for memory allocation*/
++	struct mutex	lock;
+ };
+ 
+ /**
 -- 
 2.17.1
 
