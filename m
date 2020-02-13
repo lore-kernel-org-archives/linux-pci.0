@@ -2,25 +2,26 @@ Return-Path: <SRS0=VRgs=4B=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D916C3F68F
-	for <linux-pci@archiver.kernel.org>; Thu, 13 Feb 2020 06:09:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7B5EC3B189
+	for <linux-pci@archiver.kernel.org>; Thu, 13 Feb 2020 06:10:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 73FF32173E
-	for <linux-pci@archiver.kernel.org>; Thu, 13 Feb 2020 06:09:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 982C02173E
+	for <linux-pci@archiver.kernel.org>; Thu, 13 Feb 2020 06:10:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729364AbgBMGJ4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 13 Feb 2020 01:09:56 -0500
-Received: from lucky1.263xmail.com ([211.157.147.131]:45672 "EHLO
+        id S1729713AbgBMGKJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 13 Feb 2020 01:10:09 -0500
+Received: from lucky1.263xmail.com ([211.157.147.130]:50792 "EHLO
         lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726436AbgBMGJ4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Feb 2020 01:09:56 -0500
+        with ESMTP id S1726436AbgBMGKI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Feb 2020 01:10:08 -0500
 Received: from localhost (unknown [192.168.167.8])
-        by lucky1.263xmail.com (Postfix) with ESMTP id 0DBC77B572;
-        Thu, 13 Feb 2020 14:09:50 +0800 (CST)
+        by lucky1.263xmail.com (Postfix) with ESMTP id 7D4497F9EF;
+        Thu, 13 Feb 2020 14:10:05 +0800 (CST)
 X-MAIL-GRAY: 1
 X-MAIL-DELIVERY: 0
 X-ADDR-CHECKED4: 1
@@ -28,9 +29,9 @@ X-ANTISPAM-LEVEL: 2
 X-ABS-CHECKED: 0
 Received: from localhost.localdomain (unknown [58.22.7.114])
         by smtp.263.net (postfix) whith ESMTP id P16450T140624477026048S1581574189162340_;
-        Thu, 13 Feb 2020 14:09:50 +0800 (CST)
+        Thu, 13 Feb 2020 14:10:05 +0800 (CST)
 X-IP-DOMAINF: 1
-X-UNIQUE-TAG: <bf2bbd6009bc82268b1b0e4b1c4c96d8>
+X-UNIQUE-TAG: <512f38819e25d0463c2182f980fa4335>
 X-RL-SENDER: shawn.lin@rock-chips.com
 X-SENDER: lintao@rock-chips.com
 X-LOGIN-NAME: shawn.lin@rock-chips.com
@@ -49,57 +50,116 @@ Cc:     Jingoo Han <jingoohan1@gmail.com>, linux-pci@vger.kernel.org,
         Simon Xue <xxm@rock-chips.com>,
         linux-rockchip@lists.infradead.org,
         Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v2 0/6] Add Rockchip new PCIe controller and combo phy support
-Date:   Thu, 13 Feb 2020 14:08:05 +0800
-Message-Id: <1581574091-240890-1-git-send-email-shawn.lin@rock-chips.com>
+Subject: [PATCH v2 1/6] dt-bindings: add binding for Rockchip combo phy using an Innosilicon IP
+Date:   Thu, 13 Feb 2020 14:08:06 +0800
+Message-Id: <1581574091-240890-2-git-send-email-shawn.lin@rock-chips.com>
 X-Mailer: git-send-email 1.9.1
+In-Reply-To: <1581574091-240890-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1581574091-240890-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+This IP could supports USB3.0 and PCIe.
 
-Rockchip's new PCIe controller is based on DesignWare IP and the
-combo phy is shard by PCIe and USB3.0 controller. This series adds
-both of controller and phy drivers found on Rockchip RV1808 platform.
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
+---
 
 Changes in v2:
 - fix yaml format
-- add commit log and fix Kconfig
-- remove dead code
 
-Shawn Lin (3):
-  dt-bindings: add binding for Rockchip combo phy using an Innosilicon
-    IP
-  PCI: dwc: Skip allocating own MSI domain if using external MSI domain
-  MAINTAINERS: Update PCIe drivers for Rockchip
-
-Simon Xue (2):
-  dt-bindings: rockchip: Add DesignWare based PCIe controller
-  PCI: rockchip: add DesignWare based PCIe controller
-
-William Wu (1):
-  phy/rockchip: inno-combophy: Add initial support
-
- .../devicetree/bindings/pci/rockchip-dw-pcie.yaml  |  148 +++
- .../bindings/phy/rockchip,inno-combophy.yaml       |   80 ++
- MAINTAINERS                                        |    4 +-
- drivers/pci/controller/Kconfig                     |    4 +-
- drivers/pci/controller/dwc/Kconfig                 |    9 +
- drivers/pci/controller/dwc/Makefile                |    1 +
- drivers/pci/controller/dwc/pcie-designware-host.c  |   10 +-
- drivers/pci/controller/dwc/pcie-designware.h       |    1 +
- drivers/pci/controller/dwc/pcie-dw-rockchip.c      |  439 ++++++++
- drivers/phy/rockchip/Kconfig                       |    8 +
- drivers/phy/rockchip/Makefile                      |    1 +
- drivers/phy/rockchip/phy-rockchip-inno-combphy.c   | 1056 ++++++++++++++++++++
- 12 files changed, 1757 insertions(+), 4 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
+ .../bindings/phy/rockchip,inno-combophy.yaml       | 80 ++++++++++++++++++++++
+ 1 file changed, 80 insertions(+)
  create mode 100644 Documentation/devicetree/bindings/phy/rockchip,inno-combophy.yaml
- create mode 100644 drivers/pci/controller/dwc/pcie-dw-rockchip.c
- create mode 100644 drivers/phy/rockchip/phy-rockchip-inno-combphy.c
 
+diff --git a/Documentation/devicetree/bindings/phy/rockchip,inno-combophy.yaml b/Documentation/devicetree/bindings/phy/rockchip,inno-combophy.yaml
+new file mode 100644
+index 0000000..841f88a
+--- /dev/null
++++ b/Documentation/devicetree/bindings/phy/rockchip,inno-combophy.yaml
+@@ -0,0 +1,80 @@
++# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/phy/rockchip,inno-combophy.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Rockchip USB3.0/PCI-e combo phy
++
++maintainers:
++        - Shawn Lin <shawn.lin@rock-chips.com>
++        - William Wu <william.wu@rock-chips.com>
++
++properties:
++  "#phy-cells":
++    const: 1
++
++  compatible:
++    enum:
++      - rockchip,rk1808-combphy
++
++  reg:
++    maxItems: 1
++
++  clocks:
++    items:
++      - description: PLL reference clock
++
++  clock-names:
++    items:
++      - const: refclk
++
++  resets:
++    items:
++      - description: OTG unit reset line
++      - description: POR unit reset line
++      - description: APB interface reset line
++      - description: PIPE unit reset line
++
++  reset-names:
++    items:
++      - const: otg-rst
++      - const: combphy-por
++      - const: combphy-apb
++      - const: combphy-pipe
++
++  rockchip,combphygrf:
++    enum:
++      - rockchip,combphygrf
++    description: The grf for COMBPHY configuration and state registers.
++
++required:
++  - "#phy-cells"
++  - compatible
++  - reg
++  - clocks
++  - clock-names
++  - resets
++  - reset-names
++  - rockchip,combphygrf
++
++additionalProperties: false
++
++examples:
++  - |
++    combphy: phy@ff380000 {
++        compatible = "rockchip,rk1808-combphy";
++        reg = <0x0 0xff380000 0x0 0x10000>;
++        #phy-cells = <1>;
++        clocks = <&cru SCLK_PCIEPHY_REF>;
++        clock-names = "refclk";
++        assigned-clocks = <&cru SCLK_PCIEPHY_REF>;
++        assigned-clock-rates = <25000000>;
++        resets = <&cru SRST_USB3_OTG_A>, <&cru SRST_PCIEPHY_POR>,
++                 <&cru SRST_PCIEPHY_P>, <&cru SRST_PCIEPHY_PIPE>;
++        reset-names = "otg-rst", "combphy-por",
++                      "combphy-apb", "combphy-pipe";
++        rockchip,combphygrf = <&combphy_grf>;
++    };
++
++...
 -- 
 1.9.1
 
