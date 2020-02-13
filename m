@@ -7,53 +7,53 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68F9EC3B194
-	for <linux-pci@archiver.kernel.org>; Thu, 13 Feb 2020 16:52:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D413DC3B1A5
+	for <linux-pci@archiver.kernel.org>; Thu, 13 Feb 2020 16:52:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3C17122314
-	for <linux-pci@archiver.kernel.org>; Thu, 13 Feb 2020 16:52:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A6D2624650
+	for <linux-pci@archiver.kernel.org>; Thu, 13 Feb 2020 16:52:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="rI28DsCS"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="RU6hP0Ya"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728139AbgBMQwQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 13 Feb 2020 11:52:16 -0500
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:38267 "EHLO
+        id S1728323AbgBMQwS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 13 Feb 2020 11:52:18 -0500
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:33171 "EHLO
         mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728295AbgBMQwP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Feb 2020 11:52:15 -0500
-Received: by mail-wm1-f67.google.com with SMTP id a9so7544921wmj.3
-        for <linux-pci@vger.kernel.org>; Thu, 13 Feb 2020 08:52:13 -0800 (PST)
+        with ESMTP id S1728339AbgBMQwR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Feb 2020 11:52:17 -0500
+Received: by mail-wm1-f67.google.com with SMTP id m10so153185wmc.0
+        for <linux-pci@vger.kernel.org>; Thu, 13 Feb 2020 08:52:16 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=0vxAgnwgCi5tQ5T4tG4I38wvW8TUR4SKTYQ5b+iyeZ4=;
-        b=rI28DsCSktD93OGWztli5kHgpw2K88deSfarovudDtCGLfZder9iNg0E10dhs9fZpk
-         eFTsc3Fn6EAr9ouNGbiVBRkKPPK69q7RPGGtMBnyQCpqnyYvLAyAZqdIG/GIsLmqRzzi
-         12LIcEDQwvb3OQl7giRwQQNgiq+VK/5XXRBsF1abm2y1vArf+0wGRt0YpzwOshhxB9zM
-         Ix4415qok1sXN1TmaKBbTV/JM8kQC5iCIQJ1JAAK2NX29bDiYAkyRr6OEhmiVI8n9MLc
-         mqbryRMGESOmDUg+tOlIH5s27bZYFv0z5XJC5YvNUltOxU5Eij2jAeBJnEveZ7p4bVI3
-         Dzyg==
+        bh=WDMFZWW+h59RhGdVycD2Uyjz5YXns4ww4oPwlirB1xs=;
+        b=RU6hP0YaDVyg76DpwMt8+kokjDNdYK4t+fP1NMy86wohTGSpgKGZzXz22INLcb/uTG
+         SulDKPmxKjSDX9mM1ObcytxPc9qSyfmoSueNx1WrVr+i2pcQ0/1MH6MfZipjLCRNhZ4R
+         QAAwV9AK52wzbuAFhJ4wwljXxMGU1D8fjkRr3xz5yGktVvdi91XDhvfsXom1xAiav9Ca
+         9EsxU47a4H/ESMgWlgX459A9KaDdxI8GrFEiHciqdGPUqbJk6r0x0gm/NOt1/yOdfV8m
+         TYI4DrH7cKX39puiAtvbmBg0t24nmt6J4GV1r4c9AeQkOhtGKMzU9MsecC3L+ojmCMyI
+         c2Dg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=0vxAgnwgCi5tQ5T4tG4I38wvW8TUR4SKTYQ5b+iyeZ4=;
-        b=F/+nn/xlzvzRsi68XERTvsGZAKWuwDAKS6Itl/ycH+uwvgwssVwYxMqiYcWEfQxqDt
-         hPp6KDXyFhdnNlbS+r70WckxDl4Q8H5fdROpAkh+xCL3jN2iZpVNMUnjOzJehLBu2m8j
-         k3WxDEzJpx8gfIXVdeSu321vEpQ1Aq94CbC3Pn/ke49dZOqDSbYIoABskDhIceT91Uo4
-         yQIL0iawYBqacMgIjvFo6UJb/6CEJkcRx0do/576e2RFp70AISXOQJVabKyNDAigtRno
-         7EevfqvJYz58ex9S+M5L1tSwwl1CbXQe3HGQ9zeLGZs1JnL5+KPOkIFkvM9hn3dVR4DE
-         lwtw==
-X-Gm-Message-State: APjAAAXR93pgNzciTV7P+qNs2nWdc+s01a7eJ/sLxxSdyl5048/W/oJe
-        CT6+hN/8ciuyFB9rrrO8Ej5k7Q==
-X-Google-Smtp-Source: APXvYqya188D5MEbRkey+kBb9V0Qc0uxPc2c2lngtBX0mBG9/xBeCp7D0V/fZbJc3uSzBYe3p4UBoQ==
-X-Received: by 2002:a7b:c5d9:: with SMTP id n25mr7111336wmk.65.1581612733245;
-        Thu, 13 Feb 2020 08:52:13 -0800 (PST)
+        bh=WDMFZWW+h59RhGdVycD2Uyjz5YXns4ww4oPwlirB1xs=;
+        b=K8vvUvD4CYrGM4MRZTQqB1s0PluqwGvJ18ZnqgvqZG7z5c8RMY+VKEP9Lrtc11IwCP
+         SQU2ux2VeteeSIbeZGZap27LUUP7Xb/AHshRcywU7cLqIOAu82ataFAxXCKee6svlolL
+         2+7V05voDe/t9Mdkg9Vs7ExEgPgT8TPqdBy/+B6hGAGso/pZVzVx2kZ/f/HBoce5/1D4
+         UHlct0hnwwa4o9CKQeLWib2k9I37VYOCWD36zrH1QUwu8dIoDbojCUkPsjBTKWpQN4V0
+         Rj5GuVCbi2V5mg0HN7eQDeXRf//goziXZbtige4/bvgiMTp+nwu/WwhoeLH9mG+JbsWS
+         Ahgw==
+X-Gm-Message-State: APjAAAX00tB95+VSorgPSAmqCyFXFl8B4SJbn7vpj3enGEmWPLW1iprj
+        ETpckvb3k1mLShEDmMaLzZq52w==
+X-Google-Smtp-Source: APXvYqyTnYcfWPm44mmD/6D5Wm+c5cA7JDMBagRyfl9k+jEqNIeMmPTzO2182wwz9XUN7ktGp7/pbQ==
+X-Received: by 2002:a1c:7d8b:: with SMTP id y133mr6917432wmc.165.1581612735514;
+        Thu, 13 Feb 2020 08:52:15 -0800 (PST)
 Received: from localhost.localdomain ([2001:171b:2276:930:116c:c27a:3e7f:5eaf])
-        by smtp.gmail.com with ESMTPSA id y6sm3484807wrl.17.2020.02.13.08.52.12
+        by smtp.gmail.com with ESMTPSA id y6sm3484807wrl.17.2020.02.13.08.52.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 13 Feb 2020 08:52:12 -0800 (PST)
+        Thu, 13 Feb 2020 08:52:15 -0800 (PST)
 From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
 To:     bhelgaas@google.com, will@kernel.org, robh+dt@kernel.org,
         lorenzo.pieralisi@arm.com, joro@8bytes.org,
@@ -65,9 +65,9 @@ Cc:     corbet@lwn.net, mark.rutland@arm.com, liviu.dudau@arm.com,
         sudeep.holla@arm.com, guohanjun@huawei.com, rjw@rjwysocki.net,
         lenb@kernel.org, robin.murphy@arm.com, dwmw2@infradead.org,
         amurray@thegoodpenguin.co.uk, frowand.list@gmail.com
-Subject: [PATCH 08/11] iommu/vt-d: Use pci_ats_supported()
-Date:   Thu, 13 Feb 2020 17:50:46 +0100
-Message-Id: <20200213165049.508908-9-jean-philippe@linaro.org>
+Subject: [PATCH 10/11] arm64: dts: fast models: Enable PCIe ATS for Base RevC FVP
+Date:   Thu, 13 Feb 2020 17:50:48 +0100
+Message-Id: <20200213165049.508908-11-jean-philippe@linaro.org>
 X-Mailer: git-send-email 2.25.0
 In-Reply-To: <20200213165049.508908-1-jean-philippe@linaro.org>
 References: <20200213165049.508908-1-jean-philippe@linaro.org>
@@ -78,41 +78,29 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The pci_ats_supported() function checks if a device supports ATS and is
-allowed to use it.
+Declare that the host controller supports ATS, so the OS can enable it
+for ATS-capable PCIe endpoints.
 
 Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
 ---
- drivers/iommu/intel-iommu.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+All endpoints support ATS provided they have the ats_supported=1 model
+parameter. "lspci -vv" shows whether ATS is supported and enabled.
+---
+ arch/arm64/boot/dts/arm/fvp-base-revc.dts | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 9dc37672bf89..668f1b99111b 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1449,8 +1449,7 @@ static void iommu_enable_dev_iotlb(struct device_domain_info *info)
- 	    !pci_reset_pri(pdev) && !pci_enable_pri(pdev, 32))
- 		info->pri_enabled = 1;
- #endif
--	if (!pdev->untrusted && info->ats_supported &&
--	    pci_ats_page_aligned(pdev) &&
-+	if (info->ats_supported && pci_ats_page_aligned(pdev) &&
- 	    !pci_enable_ats(pdev, VTD_PAGE_SHIFT)) {
- 		info->ats_enabled = 1;
- 		domain_update_iotlb(info->domain);
-@@ -2611,10 +2610,8 @@ static struct dmar_domain *dmar_insert_one_dev_info(struct intel_iommu *iommu,
- 	if (dev && dev_is_pci(dev)) {
- 		struct pci_dev *pdev = to_pci_dev(info->dev);
+diff --git a/arch/arm64/boot/dts/arm/fvp-base-revc.dts b/arch/arm64/boot/dts/arm/fvp-base-revc.dts
+index 62ab0d54ff71..6e5bb7bcb4b3 100644
+--- a/arch/arm64/boot/dts/arm/fvp-base-revc.dts
++++ b/arch/arm64/boot/dts/arm/fvp-base-revc.dts
+@@ -170,6 +170,7 @@ pci: pci@40000000 {
+ 		iommu-map = <0x0 &smmu 0x0 0x10000>;
  
--		if (!pdev->untrusted &&
--		    !pci_ats_disabled() &&
--		    ecap_dev_iotlb_support(iommu->ecap) &&
--		    pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ATS) &&
-+		if (ecap_dev_iotlb_support(iommu->ecap) &&
-+		    pci_ats_supported(pdev) &&
- 		    dmar_find_matched_atsr_unit(pdev))
- 			info->ats_supported = 1;
+ 		dma-coherent;
++		ats-supported;
+ 	};
  
+ 	smmu: smmu@2b400000 {
 -- 
 2.25.0
 
