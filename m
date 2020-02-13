@@ -2,79 +2,92 @@ Return-Path: <SRS0=VRgs=4B=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49F61C2BA83
-	for <linux-pci@archiver.kernel.org>; Thu, 13 Feb 2020 11:04:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9717BC2BA83
+	for <linux-pci@archiver.kernel.org>; Thu, 13 Feb 2020 11:40:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 13DCE24650
-	for <linux-pci@archiver.kernel.org>; Thu, 13 Feb 2020 11:04:31 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="NKrKyZFg"
+	by mail.kernel.org (Postfix) with ESMTP id 66F65217F4
+	for <linux-pci@archiver.kernel.org>; Thu, 13 Feb 2020 11:40:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729823AbgBMLEX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 13 Feb 2020 06:04:23 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:29408 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1729544AbgBMLEX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Feb 2020 06:04:23 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1581591862;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=OZ4tlf6//wOCBIAt4m6Y7TpUBEEEO0ab5g+2/3VhPeM=;
-        b=NKrKyZFgm1oSFo4+x8wnnkOFFMoDHX79NlKeWjus1RWolPkGc8cRrasG8RNwQQmHwo6sti
-        +ia/TNTGstSuxK9TqzeuW9oUemEr9UIkheTCVZSrgU7dMhFJc7GQuuIspJQ08IR00QymsZ
-        6j+0fw2yg9z6WBZ3+a+L1ZFew2NzZms=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-357-1H5askKAP-Wy3PBWUAbB9A-1; Thu, 13 Feb 2020 06:04:18 -0500
-X-MC-Unique: 1H5askKAP-Wy3PBWUAbB9A-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 943A0107ACC4;
-        Thu, 13 Feb 2020 11:04:16 +0000 (UTC)
-Received: from gondolin (ovpn-117-100.ams2.redhat.com [10.36.117.100])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 3E94B5DA7B;
-        Thu, 13 Feb 2020 11:04:11 +0000 (UTC)
-Date:   Thu, 13 Feb 2020 12:04:08 +0100
-From:   Cornelia Huck <cohuck@redhat.com>
-To:     Alex Williamson <alex.williamson@redhat.com>
-Cc:     kvm@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, dev@dpdk.org, mtosatti@redhat.com,
-        thomas@monjalon.net, bluca@debian.org, jerinjacobk@gmail.com,
-        bruce.richardson@intel.com
-Subject: Re: [PATCH 2/7] vfio/pci: Implement match ops
-Message-ID: <20200213120408.15cd1d48.cohuck@redhat.com>
-In-Reply-To: <158146233422.16827.5520548241096752615.stgit@gimli.home>
-References: <158145472604.16827.15751375540102298130.stgit@gimli.home>
-        <158146233422.16827.5520548241096752615.stgit@gimli.home>
-Organization: Red Hat GmbH
+        id S1729511AbgBMLkj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 13 Feb 2020 06:40:39 -0500
+Received: from szxga06-in.huawei.com ([45.249.212.32]:41788 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1729532AbgBMLkj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 13 Feb 2020 06:40:39 -0500
+Received: from DGGEMS407-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id 692C3ADB03D569C0B965;
+        Thu, 13 Feb 2020 19:40:37 +0800 (CST)
+Received: from localhost.localdomain (10.67.165.24) by
+ DGGEMS407-HUB.china.huawei.com (10.3.19.207) with Microsoft SMTP Server id
+ 14.3.439.0; Thu, 13 Feb 2020 19:40:31 +0800
+From:   Yicong Yang <yangyicong@hisilicon.com>
+To:     <helgaas@kernel.org>, <linux-pci@vger.kernel.org>
+CC:     <f.fangjian@huawei.com>, <huangdaode@huawei.com>
+Subject: [PATCH v3 0/9] Improve link speed presentation process
+Date:   Thu, 13 Feb 2020 19:36:24 +0800
+Message-ID: <1581593793-23589-1-git-send-email-yangyicong@hisilicon.com>
+X-Mailer: git-send-email 2.8.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+Content-Type: text/plain
+X-Originating-IP: [10.67.165.24]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, 11 Feb 2020 16:05:34 -0700
-Alex Williamson <alex.williamson@redhat.com> wrote:
+In this series:
+1. Add 32 GT/s decoding in some macros as a complementary
+2. Remove redundancy in speed presentation process and improve the codes.
 
-> This currently serves the same purpose as the default implementation
-> but will be expanded for additional functionality.
-> 
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> ---
->  drivers/vfio/pci/vfio_pci.c |    8 ++++++++
->  1 file changed, 8 insertions(+)
+Currently We use switch-case statements to acquire the speed
+string according to the pci bus speed in current_link_speed_show()
+and pcie_get_speed_cap(). It leads to redundant and when new
+standard comes, we have to add cases in the related functions,
+which is easy to omit at somewhere.
 
-Reviewed-by: Cornelia Huck <cohuck@redhat.com>
+Abstract the judge statements out. Use macros and pci speed
+arrays instead. Then only the macros and arrays need to be
+extended when next generation comes.
+
+Link:
+https://lore.kernel.org/linux-pci/20200113211728.GA113776@google.com/
+https://lore.kernel.org/linux-pci/20200114224909.GA19633@google.com/
+
+change since v2:
+1. revert split "PCI: Make pci_bus_speed_strings[] public" from the series
+   and split into two patches. And modify the description as suggested.
+2. split "PCI: Refactor bus_speed_read() with PCI_SPEED2STR macro" to
+   two patches.
+Link: https://lore.kernel.org/linux-pci/20200212223133.GA177061@google.com/
+
+change since v1:
+1. split "PCI: Make pci_bus_speed_strings[] public" from the series
+2. split v1 PATCH 4 to two patches as suggested
+3. modify some description in commit as suggested
+
+Yicong Yang (9):
+  PCI: add 32 GT/s decoding in some macros
+  PCI: Make pci_bus_speed_strings[] public
+  PCI: Remove PCIe suffix in pci_bus_speed_strings[]
+  PCI: Add comments for link speed info arrays
+  PCI: Refactor and rename PCIE_SPEED2STR macro
+  PCI: Refactor bus_speed_read() with PCI_SPEED2STR macro
+  PCI: Add PCIe suffix when display PCIe slot bus speed
+  PCI: Add PCIE_LNKCAP2_SLS2SPEED macro
+  PCI: Reduce redundancy in current_link_speed_show()
+
+ drivers/pci/pci-sysfs.c | 26 ++++----------------------
+ drivers/pci/pci.c       | 23 +++++++----------------
+ drivers/pci/pci.h       | 23 ++++++++++++++++-------
+ drivers/pci/probe.c     | 38 ++++++++++++++++++++++++++++++++++++++
+ drivers/pci/slot.c      | 39 +++------------------------------------
+ 5 files changed, 68 insertions(+), 81 deletions(-)
+
+--
+2.8.1
 
