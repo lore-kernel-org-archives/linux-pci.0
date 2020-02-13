@@ -4,53 +4,53 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5796BC3F68F
-	for <linux-pci@archiver.kernel.org>; Thu, 13 Feb 2020 20:46:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0377EC3B18C
+	for <linux-pci@archiver.kernel.org>; Thu, 13 Feb 2020 20:47:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1995A24650
-	for <linux-pci@archiver.kernel.org>; Thu, 13 Feb 2020 20:46:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D02932465D
+	for <linux-pci@archiver.kernel.org>; Thu, 13 Feb 2020 20:47:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1581626809;
-	bh=2tyqZMmykl+/y9fiYFQXY++hWEyGiC65IJSiJaZQdqQ=;
+	s=default; t=1581626832;
+	bh=AOqC73SoVVvQu83cXMrF+MsVs4BosyZ5L/SdhOFjgJ4=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=acAjUYiaiyLaj78GEjhh7EJnO+mGLmXZZODbzgyiy+7OX6eQR8QoceHLgU6rUA/7z
-	 FBORHrQowBf1VBACpWHqKccg+438hj4AhUxm47AXOXmKRB02qiyDRHVFaDpzakHKni
-	 kOXggQOEW9dU3a7lKfXsoKREAZ6A28SUi/oKdFJ4=
+	b=VLt90/qq1pgqHa7YiKSyLWXesfXuh6DeFVvvmA8zMyaX9zdX+XDm9QVo5lQv53ct4
+	 UDh9j8HImyR7sGje7FvxM3SdQj18OAOWx9AlTHCwVOVi1AMm16lKJkRHmY99ZGZc3C
+	 A4jNK2DId3P+nMC893+RobtMMfyw9B3HDtvxbAS0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728123AbgBMUqs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 13 Feb 2020 15:46:48 -0500
-Received: from mail-ot1-f66.google.com ([209.85.210.66]:36679 "EHLO
-        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728130AbgBMUqs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Feb 2020 15:46:48 -0500
-Received: by mail-ot1-f66.google.com with SMTP id j20so6982490otq.3;
-        Thu, 13 Feb 2020 12:46:47 -0800 (PST)
+        id S1728209AbgBMUrM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 13 Feb 2020 15:47:12 -0500
+Received: from mail-oi1-f193.google.com ([209.85.167.193]:42662 "EHLO
+        mail-oi1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728138AbgBMUrL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Feb 2020 15:47:11 -0500
+Received: by mail-oi1-f193.google.com with SMTP id j132so7205250oih.9;
+        Thu, 13 Feb 2020 12:47:09 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=psOJlEetPRDRoxsa3f+Z8M0f2xosSTP4cPy/vWR0Ruw=;
-        b=frGAp2w+3vPCQYLYraGhrJl0AZQoez+wt0ZQD78OlBsY6pxoYW+ZhrJPLDVhEuQzYF
-         nsQp3dX3XU9YnXoEHUGF6t3r4YAx3vXq2ZIQ9WtC8QVB6GEZkzmSyChl7SsHUOXL6n/v
-         8/byM8WTBAUR2dX6hZQ1+Qhx+gFyhFagQQClusnjf4cFWZd+ppHm69+7Us41mclQVTFD
-         fPiVa4dFZiD358LKM7m6F47nGHat91vyb1VS4ak+z0pSB/1nPsfV0nnfHNFOuUmKvL9/
-         tnyx2Tg8RbN22u6ILofvMqhPMgRJOvglRnYl5qVuv3c2jXEVjHmwPTgdD9PYaJXit8ld
-         tYkg==
-X-Gm-Message-State: APjAAAWu4egd80So3Rw0Ln3rTlUZXYnbgcCA/LpCRlfTlEyyquDqYeIa
-        hupxquIBOkk3X8/2J+RU+g==
-X-Google-Smtp-Source: APXvYqy3sULmd5uqt/It774SbZe5Ly/Pz/6iKyGVw2itxbD64l7g6iG5gYX82BL71oueLveaCZg7wQ==
-X-Received: by 2002:a9d:784b:: with SMTP id c11mr14104655otm.246.1581626807462;
-        Thu, 13 Feb 2020 12:46:47 -0800 (PST)
+        bh=XXUb9OkK0jyVXlwIZacZ5ml8iLKHL5sOLBosp9LkOuw=;
+        b=iinFK52+BB//9nZLeChcdoJlu+7l8518EnWmayEfdLjRFznz2HfDhDPVLlOEKcgYAC
+         NCM1Os5q2PNRBwrOshGjEIACF9Pq5HXARAGuaeDQQIRz9RLPzuEzuGhbv+SAxPth5eMG
+         0hVt/LNwfvQFrXr7u4jgWQHhb8LvIMeh8RR0AnhSmWGE6IbBjUMhFm9DthT8LxiSilRu
+         szL/mxkVbr+I5g4v6C1iloIxcszvgqHvpK7RlTFYc0nWn0rXjS9viCFbf0C2SOGa9pWA
+         DrQCF03SAKj+iUIlZctRevbBItBDbJ4UqSd3ANtchsqPQ3ZUpxFl7WGFZ43Pt+tfm4HK
+         AYhw==
+X-Gm-Message-State: APjAAAVJUoNqog4VniFXg/KVOf8vvZydFQ4lQpYbFSFyZNYgQ79oc1Wv
+        z+F7zqjhoP3f3XzLQl0A3g==
+X-Google-Smtp-Source: APXvYqwG789BSM2bdMrY7tCbnbzbFJAtUdPIv2m1lllFDCiiHnH1f41Be9ptAltKdWOERzAIjQvefQ==
+X-Received: by 2002:aca:f1c6:: with SMTP id p189mr4342232oih.159.1581626829428;
+        Thu, 13 Feb 2020 12:47:09 -0800 (PST)
 Received: from rob-hp-laptop (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.gmail.com with ESMTPSA id p83sm1038787oia.51.2020.02.13.12.46.46
+        by smtp.gmail.com with ESMTPSA id d131sm1168918oia.36.2020.02.13.12.47.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 13 Feb 2020 12:46:46 -0800 (PST)
-Received: (nullmailer pid 2194 invoked by uid 1000);
-        Thu, 13 Feb 2020 20:46:46 -0000
-Date:   Thu, 13 Feb 2020 14:46:46 -0600
+        Thu, 13 Feb 2020 12:47:08 -0800 (PST)
+Received: (nullmailer pid 2814 invoked by uid 1000);
+        Thu, 13 Feb 2020 20:47:08 -0000
+Date:   Thu, 13 Feb 2020 14:47:08 -0600
 From:   Rob Herring <robh@kernel.org>
 To:     Shawn Lin <shawn.lin@rock-chips.com>
 Cc:     Heiko Stuebner <heiko@sntech.de>,
@@ -62,24 +62,25 @@ Cc:     Heiko Stuebner <heiko@sntech.de>,
         Simon Xue <xxm@rock-chips.com>,
         linux-rockchip@lists.infradead.org,
         Shawn Lin <shawn.lin@rock-chips.com>
-Subject: Re: [PATCH v2 1/6] dt-bindings: add binding for Rockchip combo phy
- using an Innosilicon IP
-Message-ID: <20200213204646.GA316@bogus>
+Subject: Re: [PATCH v2 4/6] dt-bindings: rockchip: Add DesignWare based PCIe
+ controller
+Message-ID: <20200213204708.GA2363@bogus>
 References: <1581574091-240890-1-git-send-email-shawn.lin@rock-chips.com>
- <1581574091-240890-2-git-send-email-shawn.lin@rock-chips.com>
+ <1581574091-240890-5-git-send-email-shawn.lin@rock-chips.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1581574091-240890-2-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1581574091-240890-5-git-send-email-shawn.lin@rock-chips.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 13 Feb 2020 14:08:06 +0800, Shawn Lin wrote:
-> This IP could supports USB3.0 and PCIe.
+On Thu, 13 Feb 2020 14:08:09 +0800, Shawn Lin wrote:
+> From: Simon Xue <xxm@rock-chips.com>
 > 
+> Signed-off-by: Simon Xue <xxm@rock-chips.com>
 > Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 > 
 > ---
@@ -87,20 +88,20 @@ On Thu, 13 Feb 2020 14:08:06 +0800, Shawn Lin wrote:
 > Changes in v2:
 > - fix yaml format
 > 
->  .../bindings/phy/rockchip,inno-combophy.yaml       | 80 ++++++++++++++++++++++
->  1 file changed, 80 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/phy/rockchip,inno-combophy.yaml
+>  .../devicetree/bindings/pci/rockchip-dw-pcie.yaml  | 148 +++++++++++++++++++++
+>  1 file changed, 148 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
 > 
 
 My bot found errors running 'make dt_binding_check' on your patch:
 
 Documentation/devicetree/bindings/display/simple-framebuffer.example.dts:21.16-37.11: Warning (chosen_node_is_root): /example-0/chosen: chosen node must be at root node
-Error: Documentation/devicetree/bindings/phy/rockchip,inno-combophy.example.dts:21.28-29 syntax error
+Error: Documentation/devicetree/bindings/pci/rockchip-dw-pcie.example.dts:24.26-27 syntax error
 FATAL ERROR: Unable to parse input tree
-scripts/Makefile.lib:300: recipe for target 'Documentation/devicetree/bindings/phy/rockchip,inno-combophy.example.dt.yaml' failed
-make[1]: *** [Documentation/devicetree/bindings/phy/rockchip,inno-combophy.example.dt.yaml] Error 1
+scripts/Makefile.lib:300: recipe for target 'Documentation/devicetree/bindings/pci/rockchip-dw-pcie.example.dt.yaml' failed
+make[1]: *** [Documentation/devicetree/bindings/pci/rockchip-dw-pcie.example.dt.yaml] Error 1
 Makefile:1263: recipe for target 'dt_binding_check' failed
 make: *** [dt_binding_check] Error 2
 
-See https://patchwork.ozlabs.org/patch/1237296
+See https://patchwork.ozlabs.org/patch/1237300
 Please check and re-submit.
