@@ -2,128 +2,98 @@ Return-Path: <SRS0=VRgs=4B=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F7E6C352A4
-	for <linux-pci@archiver.kernel.org>; Thu, 13 Feb 2020 01:48:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58939C3B186
+	for <linux-pci@archiver.kernel.org>; Thu, 13 Feb 2020 02:59:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 209EA21739
-	for <linux-pci@archiver.kernel.org>; Thu, 13 Feb 2020 01:48:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2EC212168B
+	for <linux-pci@archiver.kernel.org>; Thu, 13 Feb 2020 02:59:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b="jf/taqfs"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="twrJNR34"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729469AbgBMBsy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 12 Feb 2020 20:48:54 -0500
-Received: from gateway22.websitewelcome.com ([192.185.47.163]:34154 "EHLO
-        gateway22.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729333AbgBMBsx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2020 20:48:53 -0500
-X-Greylist: delayed 1776 seconds by postgrey-1.27 at vger.kernel.org; Wed, 12 Feb 2020 20:48:52 EST
-Received: from cm17.websitewelcome.com (cm17.websitewelcome.com [100.42.49.20])
-        by gateway22.websitewelcome.com (Postfix) with ESMTP id DCEBC7EC
-        for <linux-pci@vger.kernel.org>; Wed, 12 Feb 2020 18:52:24 -0600 (CST)
-Received: from gator4166.hostgator.com ([108.167.133.22])
-        by cmsmtp with SMTP
-        id 22jwjCKZ2AGTX22jwjOTJ6; Wed, 12 Feb 2020 18:52:24 -0600
-X-Authority-Reason: nr=8
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=embeddedor.com; s=default; h=Content-Type:MIME-Version:Message-ID:Subject:
-        Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=5757znZEcKNE8shq95boWLVSi/ziQ21brLl/oUcyXoM=; b=jf/taqfsOGtyyeJF8aKUd1ZDIN
-        vePbajlrmHcxYxPBVSHOWFUHMxIjTvIZFCADlnKzCQYe6i38c0TWW1iBT3KJ+TgF+4qGxM24DRHgS
-        7RR0gEZfC0xTRSZGIai/DiQDymW7ZngJb3IdzhyojB8eNXnOt3kMBhwX1p21pFVuwWC3aDPUc10ZJ
-        u59hiQroxBDv4LOfDLZ88VRfwxB+vjoHZZKxDqzG3RD8bn+BzcbCp7rmTf2y6sfCKfj/uutAgGKdS
-        GPI5+md7Agd7BY5019sTYEd0XJ/X++B2TykqhBOWOkKy4kMsxZ+LDw2D7APnj1K2VZmWoh686LEHI
-        sworcfag==;
-Received: from [200.68.141.42] (port=21707 helo=embeddedor)
-        by gator4166.hostgator.com with esmtpa (Exim 4.92)
-        (envelope-from <gustavo@embeddedor.com>)
-        id 1j22jv-003mS8-1n; Wed, 12 Feb 2020 18:52:23 -0600
-Date:   Wed, 12 Feb 2020 18:52:21 -0600
-From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH] PCI: Replace zero-length array with flexible-array member
-Message-ID: <20200213005221.GA10532@embeddedor.com>
+        id S1729469AbgBMC7p (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 12 Feb 2020 21:59:45 -0500
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:45959 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729538AbgBMC7p (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2020 21:59:45 -0500
+Received: by mail-pg1-f196.google.com with SMTP id b9so2130053pgk.12;
+        Wed, 12 Feb 2020 18:59:43 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=EMqWCu/u8fAYYp7TtyU/fjTB445DYU069x8bI/Oq0Zg=;
+        b=twrJNR34IPBlGalnU5Q52YnLdupQZkfEwe0uaVoLaN6r4c2PsX88QgCj94Du6QR3v9
+         zWvbwZi1zK6YUR2y6oXz/pRthxJcDK0MhpTlxEiZLhBtvu8EnWVH7dvPWM8RIJQC1XyJ
+         PPyHqzcQKIb89W+ieGEGosUrsDsDyXAj/qhf1jonavRKUKLJ51aygQnQcy7TdF/uPja9
+         xm3/qSqur6xuTNVWABGBtU5Dls/AwVyo97EI6ylo82Nizglf3jJV0CKjatXm/PbwIG7O
+         B0U2dGb1riq294KmUlXdr/qsDoJPdn3gZ4hhfatpJt6tfT2fC/BncL0sGHxeQaB1yqJg
+         tQVw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=EMqWCu/u8fAYYp7TtyU/fjTB445DYU069x8bI/Oq0Zg=;
+        b=SCcS9PIaGE/IfaJMNbcPfh16vGwlN5dLx18cjFnE9m3Tmz53ALnbvFUWENhqEVBVnO
+         PTtu5Z/d9DqZQjIJf8ptM2XDksg5+qPviqXgonpmbK/6VaYAQ5se137bLY82+0dgCVx7
+         O0GqmEqZ/pU+oPgcBCY9QDFAJoBcOgmk4nAzRHVEx10YbEoQ6Wqoc9BKttuwi/nq9PVJ
+         iLrfRJa94EXSW/Pp+x2TPmhd3/IbIFcMw4oxwVM/rIQINRb6w7D+6r5/P7fypmjZsvI0
+         2H+ZH+SPR0BB4/v318SIv1sr7D3NBBTtzk+/9GopKbTWhE4NaOTZYWB8raz43HG/P+89
+         Gg7Q==
+X-Gm-Message-State: APjAAAUc1KE0jYIR+aSz4fNkCZ62IOGvgs7kIAy0yMpeyqZ29x4+1d3v
+        spuw/XrG3dSAnew/Q50MeKg=
+X-Google-Smtp-Source: APXvYqwfRLPbJj1XCkk9zW4lToole8BO75rcB3EUWEwDHaxO6U1oC1lDB/SeSCgM5EHX3VkDbKaALA==
+X-Received: by 2002:a63:a019:: with SMTP id r25mr11678998pge.3.1581562783322;
+        Wed, 12 Feb 2020 18:59:43 -0800 (PST)
+Received: from localhost.localdomain ([125.130.116.2])
+        by smtp.gmail.com with ESMTPSA id 64sm602643pfd.48.2020.02.12.18.59.39
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 12 Feb 2020 18:59:42 -0800 (PST)
+From:   Jaedon Shin <jaedon.shin@gmail.com>
+To:     Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        bcm-kernel-feedback-list@broadcom.com
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Andrew Murray <amurray@thegoodpenguin.co.uk>,
+        Gregory Fong <gregory.0xf0@gmail.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Bartosz Golaszewski <bgolaszewski@baylibre.com>,
+        linux-gpio@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-pci@vger.kernel.org, Jaedon Shin <jaedon.shin@gmail.com>
+Subject: [PATCH 0/3] PCI: brcmstb: Add Broadcom STB support
+Date:   Thu, 13 Feb 2020 11:59:27 +0900
+Message-Id: <20200213025930.27943-1-jaedon.shin@gmail.com>
+X-Mailer: git-send-email 2.21.0 (Apple Git-122)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - embeddedor.com
-X-BWhitelist: no
-X-Source-IP: 200.68.141.42
-X-Source-L: No
-X-Exim-ID: 1j22jv-003mS8-1n
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
-X-Source-Sender: (embeddedor) [200.68.141.42]:21707
-X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 75
-X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
-X-Local-Domain: yes
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The current codebase makes use of the zero-length array language
-extension to the C90 standard, but the preferred mechanism to declare
-variable-length types such as these ones is a flexible array member[1][2],
-introduced in C99:
+This series enables the ARM based Broadcom STB SoCs and supports GPIO
+based regulators for its power supplies. and this has an improvement on
+devm_ APIS.
 
-struct foo {
-        int stuff;
-        struct boo array[];
-};
+Jaedon Shin (3):
+  PCI: brcmstb: Enable ARCH_BRCMSTB
+  PCI: brcmstb: Add regulator support
+  PCI: brcmstb: Drop clk_put when probe fails and remove
 
-By making use of the mechanism above, we will get a compiler warning
-in case the flexible array does not occur last in the structure, which
-will help us prevent some kind of undefined behavior bugs from being
-inadvertently introduced[3] to the codebase from now on.
+ .../bindings/pci/brcm,stb-pcie.yaml           |  8 +-
+ drivers/gpio/gpio-brcmstb.c                   | 13 +++-
+ drivers/pci/controller/Kconfig                |  2 +-
+ drivers/pci/controller/pcie-brcmstb.c         | 78 ++++++++++++++++++-
+ 4 files changed, 97 insertions(+), 4 deletions(-)
 
-Also, notice that, dynamic memory allocations won't be affected by
-this change:
-
-"Flexible array members have incomplete type, and so the sizeof operator
-may not be applied. As a quirk of the original implementation of
-zero-length arrays, sizeof evaluates to zero."[1]
-
-This issue was found with the help of Coccinelle.
-
-[1] https://gcc.gnu.org/onlinedocs/gcc/Zero-Length.html
-[2] https://github.com/KSPP/linux/issues/21
-[3] commit 76497732932f ("cxgb3/l2t: Fix undefined behaviour")
-
-Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
----
- drivers/pci/pci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index d828ca835a98..3217b8cdb1e0 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1521,7 +1521,7 @@ EXPORT_SYMBOL(pci_restore_state);
- 
- struct pci_saved_state {
- 	u32 config_space[16];
--	struct pci_cap_saved_data cap[0];
-+	struct pci_cap_saved_data cap[];
- };
- 
- /**
 -- 
-2.23.0
+2.21.0
 
