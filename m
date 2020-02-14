@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15BEBC47409
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Feb 2020 17:36:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A10C5C3B1A6
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Feb 2020 17:36:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DF1FB2168B
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Feb 2020 17:36:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 79E922067D
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Feb 2020 17:36:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1581701761;
-	bh=hbhqy1VIf4rqPgX/t0HvXSAoqhLM+FaG+qBst9hGctM=;
+	s=default; t=1581701763;
+	bh=J8OSz6X/3CfAu5lvqon5+DI7TzDJwMi7/bF87DT5l6c=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=nKzxbDGQLHS1XqEQ3f33lJPjhFwIsVDusugBy0J760FPjb1e+GTe8RG0y4KD261ql
-	 5SI/Osuwsxt2+C4LsMXIpDfAj4LeE34FdwllQboJFWpjfoydK/Fp2lJ0HtRyBR5JYS
-	 KPTThodJlEgVNA3E9iyuWVjqCuYBYmGJcUcKBcW0=
+	b=TqrBzfBZ68nTohJ1zSmbEikfAnmK5ASPRvxAunoBuA77PPlHRx+64lMAPllMONAPT
+	 hZEQFfXXgvIIsctcjrh7asOt3xEEp4ta9Ut3AU4jceWqTMobaCQaVFYCfMzouN2zsr
+	 jX4EetXu3sOacKuMmYKZ91C1TqsxWkyGpti9I7/o=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390232AbgBNQFq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 14 Feb 2020 11:05:46 -0500
-Received: from mail.kernel.org ([198.145.29.99]:55854 "EHLO mail.kernel.org"
+        id S2390226AbgBNQFp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 14 Feb 2020 11:05:45 -0500
+Received: from mail.kernel.org ([198.145.29.99]:55836 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2390228AbgBNQFq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 14 Feb 2020 11:05:46 -0500
+        id S2390220AbgBNQFo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 14 Feb 2020 11:05:44 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C958A2187F;
-        Fri, 14 Feb 2020 16:05:44 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9D108217F4;
+        Fri, 14 Feb 2020 16:05:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1581696345;
-        bh=hbhqy1VIf4rqPgX/t0HvXSAoqhLM+FaG+qBst9hGctM=;
+        s=default; t=1581696344;
+        bh=J8OSz6X/3CfAu5lvqon5+DI7TzDJwMi7/bF87DT5l6c=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=X03ZaHHphrqSUavTETI/yNP06fTOg9HWNlkH7LRsBgxzTiRFov/GnKKOK9ckJ9qsk
-         4lCT1kyMbW8jhXAph0Tpr+0fpSQcKRbMa2gyJIUi5HUppUaxKYhb9gZ4PQJ0eo4ptJ
-         8ici13tQzLQqIVvqybhq5W3tsB94Ario1khwJUdc=
+        b=DtAUQJo691gQaqWErPe1/30diaoUzllrSTSctq61EsvXo910xU3SUauykuj5M9GxO
+         L7VGrDcrxhZiOGQXQbbkxozKidxjqTzrccBfyzPBvIq4NUAtoQBEp/4FhiYA0QhbNg
+         R8zkfNbrJq88D2nfVvnqUQv1wsgwh6GBvcHd6mNU=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Daniel Drake <drake@endlessm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Mika Westerberg <mika.westerberg@linux.intel.com>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 180/459] PCI: Increase D3 delay for AMD Ryzen5/7 XHCI controllers
-Date:   Fri, 14 Feb 2020 10:57:10 -0500
-Message-Id: <20200214160149.11681-180-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 179/459] PCI: Add generic quirk for increasing D3hot delay
+Date:   Fri, 14 Feb 2020 10:57:09 -0500
+Message-Id: <20200214160149.11681-179-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200214160149.11681-1-sashal@kernel.org>
 References: <20200214160149.11681-1-sashal@kernel.org>
@@ -61,65 +61,57 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Daniel Drake <drake@endlessm.com>
 
-[ Upstream commit 3030df209aa8cf831b9963829bd9f94900ee8032 ]
+[ Upstream commit 62fe23df067715a21c4aef44068efe7ceaa8f627 ]
 
-On Asus UX434DA (AMD Ryzen7 3700U) and Asus X512DK (AMD Ryzen5 3500U), the
-XHCI controller fails to resume from runtime suspend or s2idle, and USB
-becomes unusable from that point.
+Separate the D3 delay increase functionality out of quirk_radeon_pm() into
+its own function so that it can be shared with other quirks, including the
+AMD Ryzen XHCI quirk that will be introduced in a followup commit.
 
-  xhci_hcd 0000:03:00.4: Refused to change power state, currently in D3
-  xhci_hcd 0000:03:00.4: enabling device (0000 -> 0002)
-  xhci_hcd 0000:03:00.4: WARN: xHC restore state timeout
-  xhci_hcd 0000:03:00.4: PCI post-resume error -110!
-  xhci_hcd 0000:03:00.4: HC died; cleaning up
+Tweak the function name and message to indicate more clearly that the delay
+relates to a D3hot-to-D0 transition.
 
-During suspend, a transition to D3cold is attempted, however the affected
-platforms do not seem to cut the power to the PCI device when in this
-state, so the device stays in D3hot.
-
-Upon resume, the D3hot-to-D0 transition is successful only if the D3 delay
-is increased to 20ms. The transition failure does not appear to be
-detectable as a CRS condition. Add a PCI quirk to increase the delay on the
-affected hardware.
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=205587
-Link: http://lkml.kernel.org/r/CAD8Lp47Vh69gQjROYG69=waJgL7hs1PwnLonL9+27S_TcRhixA@mail.gmail.com
-Link: https://lore.kernel.org/r/20191127053836.31624-2-drake@endlessm.com
+Link: https://lore.kernel.org/r/20191127053836.31624-1-drake@endlessm.com
 Signed-off-by: Daniel Drake <drake@endlessm.com>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/quirks.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+ drivers/pci/quirks.c | 19 ++++++++++++-------
+ 1 file changed, 12 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 5c863af9452ec..7b6df2d8d6cde 100644
+index 7afbce082d83e..5c863af9452ec 100644
 --- a/drivers/pci/quirks.c
 +++ b/drivers/pci/quirks.c
-@@ -1889,6 +1889,22 @@ static void quirk_radeon_pm(struct pci_dev *dev)
+@@ -1871,16 +1871,21 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	0x2609, quirk_intel_pcie_pm);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	0x260a, quirk_intel_pcie_pm);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	0x260b, quirk_intel_pcie_pm);
+ 
++static void quirk_d3hot_delay(struct pci_dev *dev, unsigned int delay)
++{
++	if (dev->d3_delay >= delay)
++		return;
++
++	dev->d3_delay = delay;
++	pci_info(dev, "extending delay after power-on from D3hot to %d msec\n",
++		 dev->d3_delay);
++}
++
+ static void quirk_radeon_pm(struct pci_dev *dev)
+ {
+ 	if (dev->subsystem_vendor == PCI_VENDOR_ID_APPLE &&
+-	    dev->subsystem_device == 0x00e2) {
+-		if (dev->d3_delay < 20) {
+-			dev->d3_delay = 20;
+-			pci_info(dev, "extending delay after power-on from D3 to %d msec\n",
+-				 dev->d3_delay);
+-		}
+-	}
++	    dev->subsystem_device == 0x00e2)
++		quirk_d3hot_delay(dev, 20);
  }
  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x6741, quirk_radeon_pm);
  
-+/*
-+ * Ryzen5/7 XHCI controllers fail upon resume from runtime suspend or s2idle.
-+ * https://bugzilla.kernel.org/show_bug.cgi?id=205587
-+ *
-+ * The kernel attempts to transition these devices to D3cold, but that seems
-+ * to be ineffective on the platforms in question; the PCI device appears to
-+ * remain on in D3hot state. The D3hot-to-D0 transition then requires an
-+ * extended delay in order to succeed.
-+ */
-+static void quirk_ryzen_xhci_d3hot(struct pci_dev *dev)
-+{
-+	quirk_d3hot_delay(dev, 20);
-+}
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x15e0, quirk_ryzen_xhci_d3hot);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x15e1, quirk_ryzen_xhci_d3hot);
-+
- #ifdef CONFIG_X86_IO_APIC
- static int dmi_disable_ioapicreroute(const struct dmi_system_id *d)
- {
 -- 
 2.20.1
 
