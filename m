@@ -7,46 +7,48 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45B5FC2BA83
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Feb 2020 17:52:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42FF8C2BA83
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Feb 2020 18:08:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 20AA3206D7
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Feb 2020 17:52:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1A5402168B
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Feb 2020 18:08:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1581702734;
-	bh=h4NPam10N3eignnDowrf5YwosObCNIFmYck3owIaMUg=;
+	s=default; t=1581703694;
+	bh=DiMCdG6riLHSRN4nxkcS6mNDd2S8rOcMOtsYxDu6lYc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=NJXU5Slhbrz4mR6mdhHjos0NTZzG2C3BWfZaXxYBnWagjLoHgqfzypCprOxC9RE56
-	 DE08NXmQ+Z8z89VQB9dXgV4krkgMq/YN2X26yMi6wie3ch37Z6u5O5+XdFMqCDVdNn
-	 xFpTXdq2Tfyi4A5HUn9bf4LDSvhhRZIzUgBmxVE4=
+	b=dmRMzRGoKgmMyBkUXuM3+3V4SCl4DWRFBFn+D7rpOURUQpOMPe0cKn0yLFS2P2v9q
+	 TIG636lbla/qs0TNXBS1fJZZW15GzsxY3JlKUGv28HnxCAkdBfbwUzqGkvG8N+6R5D
+	 4RFdxsazfJKPn8wx/dcwiFNm4csowbCoJVW3PZPQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388774AbgBNRwJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 14 Feb 2020 12:52:09 -0500
-Received: from mail.kernel.org ([198.145.29.99]:42814 "EHLO mail.kernel.org"
+        id S2392229AbgBNSII (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 14 Feb 2020 13:08:08 -0500
+Received: from mail.kernel.org ([198.145.29.99]:34364 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388300AbgBNP6k (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 14 Feb 2020 10:58:40 -0500
+        id S1731506AbgBNPyY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 14 Feb 2020 10:54:24 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BD1712067D;
-        Fri, 14 Feb 2020 15:58:38 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 751A72467E;
+        Fri, 14 Feb 2020 15:54:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1581695919;
-        bh=h4NPam10N3eignnDowrf5YwosObCNIFmYck3owIaMUg=;
+        s=default; t=1581695663;
+        bh=DiMCdG6riLHSRN4nxkcS6mNDd2S8rOcMOtsYxDu6lYc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=h6F4WA7jI0O6GA7aJ+/SXJ7jaPE7bPnYBtaGnqJJhw91YtpTU8fRfnNyVBkdM/fQU
-         Lkx6cVxx+ZeLKJfgjl/gqEoLKfAVFY8dR44doZIYEqdnwmt01D30adcO+MaFDmbYxk
-         5+fLkQX3ss6qh6Uj1HaFYBBbReTnpB/CVBZgOy4s=
+        b=oFYClWzI/35HO8t33Jz5Ms0wbpWwdDfHpnhxDP/CMapzj+1IuvvSfIaYVLgu4KxIn
+         gTrT01BDInWwrSwY3sa8raeEBenUOsFQc2ZGGV7U9mmFbydMDTyhSv8f1yjuYU8X90
+         OTHZVBK9EbHJX6rEiSZy1yRBX9JFTYonYa7VEC30=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Dongdong Liu <liudongdong3@huawei.com>,
+Cc:     Greg Kroah-Hartman <gregkh@google.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Sasha Levin <sashal@kernel.org>, linuxppc-dev@lists.ozlabs.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.5 457/542] PCI/AER: Initialize aer_fifo
-Date:   Fri, 14 Feb 2020 10:47:29 -0500
-Message-Id: <20200214154854.6746-457-sashal@kernel.org>
+        Joerg Roedel <jroedel@suse.de>, Will Deacon <will@kernel.org>,
+        John Garry <john.garry@huawei.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.5 253/542] PCI/ATS: Restore EXPORT_SYMBOL_GPL() for pci_{enable,disable}_ats()
+Date:   Fri, 14 Feb 2020 10:44:05 -0500
+Message-Id: <20200214154854.6746-253-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200214154854.6746-1-sashal@kernel.org>
 References: <20200214154854.6746-1-sashal@kernel.org>
@@ -59,47 +61,57 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Dongdong Liu <liudongdong3@huawei.com>
+From: Greg Kroah-Hartman <gregkh@google.com>
 
-[ Upstream commit d95f20c4f07020ebc605f3b46af4b6db9eb5fc99 ]
+[ Upstream commit bb950bca5d522119f8b9ce3f6cbac4841c6d6517 ]
 
-Previously we did not call INIT_KFIFO() for aer_fifo.  This leads to
-kfifo_put() sometimes returning 0 (queue full) when in fact it is not.
+Commit d355bb209783 ("PCI/ATS: Remove unnecessary EXPORT_SYMBOL_GPL()")
+unexported a bunch of symbols from the PCI core since the only external
+users were non-modular IOMMU drivers. Although most of those symbols
+can remain private for now, 'pci_{enable,disable_ats()' is required for
+the ARM SMMUv3 driver to build as a module, otherwise we get a build
+failure as follows:
 
-It is easy to reproduce the problem by using aer-inject:
+  | ERROR: "pci_enable_ats" [drivers/iommu/arm-smmu-v3.ko] undefined!
+  | ERROR: "pci_disable_ats" [drivers/iommu/arm-smmu-v3.ko] undefined!
 
-  $ aer-inject -s :82:00.0 multiple-corr-nonfatal
+Re-export these two functions so that the ARM SMMUv3 driver can be build
+as a module.
 
-The content of the multiple-corr-nonfatal file is as below:
-
-  AER
-  COR RCVR
-  HL 0 1 2 3
-  AER
-  UNCOR POISON_TLP
-  HL 4 5 6 7
-
-Fixes: 27c1ce8bbed7 ("PCI/AER: Use kfifo for tracking events instead of reimplementing it")
-Link: https://lore.kernel.org/r/1579767991-103898-1-git-send-email-liudongdong3@huawei.com
-Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Joerg Roedel <jroedel@suse.de>
+Signed-off-by: Greg Kroah-Hartman <gregkh@google.com>
+[will: rewrote commit message]
+Signed-off-by: Will Deacon <will@kernel.org>
+Tested-by: John Garry <john.garry@huawei.com> # smmu v3
+Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Joerg Roedel <jroedel@suse.de>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/pcie/aer.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/pci/ats.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index 1ca86f2e01665..4a818b07a1afb 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -1445,6 +1445,7 @@ static int aer_probe(struct pcie_device *dev)
- 		return -ENOMEM;
+diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+index b6f064c885c37..3ef0bb281e7cc 100644
+--- a/drivers/pci/ats.c
++++ b/drivers/pci/ats.c
+@@ -69,6 +69,7 @@ int pci_enable_ats(struct pci_dev *dev, int ps)
+ 	dev->ats_enabled = 1;
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(pci_enable_ats);
  
- 	rpc->rpd = port;
-+	INIT_KFIFO(rpc->aer_fifo);
- 	set_service_data(dev, rpc);
+ /**
+  * pci_disable_ats - disable the ATS capability
+@@ -87,6 +88,7 @@ void pci_disable_ats(struct pci_dev *dev)
  
- 	status = devm_request_threaded_irq(device, dev->irq, aer_irq, aer_isr,
+ 	dev->ats_enabled = 0;
+ }
++EXPORT_SYMBOL_GPL(pci_disable_ats);
+ 
+ void pci_restore_ats_state(struct pci_dev *dev)
+ {
 -- 
 2.20.1
 
