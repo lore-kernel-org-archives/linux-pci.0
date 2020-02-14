@@ -2,93 +2,107 @@ Return-Path: <SRS0=x16U=4C=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1B6DC3B1A4
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Feb 2020 16:57:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D148C2BA83
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Feb 2020 17:03:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 77EC720656
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Feb 2020 16:57:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1581699447;
-	bh=c26A2bg3uJXe7F0LhRk0c+g6Y+GY7my3jNmg1zjGONQ=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Jrb/3qSraZwP5Req1HRfHNMECUQFgUzC2qnR4f0sKqOv4WNAGzLvcXsVzYI34fAm5
-	 fQMfwmNHLC33CZkytADdWSbvzxAL3gF51rEMiFVxf46oz1mHEnFe/1ZxQVWDDF/Qyy
-	 OJ/MgCalRdd3ptJRo7De3dvCalXI6gTI/Y+ZS+eg=
+	by mail.kernel.org (Postfix) with ESMTP id 4038F20656
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Feb 2020 17:03:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392066AbgBNQ50 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 14 Feb 2020 11:57:26 -0500
-Received: from mail.kernel.org ([198.145.29.99]:49260 "EHLO mail.kernel.org"
+        id S2404397AbgBNRDT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 14 Feb 2020 12:03:19 -0500
+Received: from foss.arm.com ([217.140.110.172]:40718 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2404544AbgBNQRo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 14 Feb 2020 11:17:44 -0500
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id AAB02246E1;
-        Fri, 14 Feb 2020 16:17:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1581697063;
-        bh=c26A2bg3uJXe7F0LhRk0c+g6Y+GY7my3jNmg1zjGONQ=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=vKf+EcGB6A+6SxZicYViyMzbwiUaOuB7vuVRms2ziPDMvEMt1P142tONGgSN8NaaD
-         DSQ9/lIWLVVrmi1/tGqo17tQ8TlHRWRTTB5h4/yPUKY5fl/e+92r1srfRiJI+TovKM
-         NDHwLKTXt53D88llZt1ZmABuvcjLhli4EGnf9jTI=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Logan Gunthorpe <logang@deltatee.com>,
-        Doug Meyer <dmeyer@gigaio.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 021/186] PCI/switchtec: Fix vep_vector_number ioread width
-Date:   Fri, 14 Feb 2020 11:14:30 -0500
-Message-Id: <20200214161715.18113-21-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200214161715.18113-1-sashal@kernel.org>
-References: <20200214161715.18113-1-sashal@kernel.org>
+        id S2404321AbgBNRDT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 14 Feb 2020 12:03:19 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id ABC8B328;
+        Fri, 14 Feb 2020 09:03:18 -0800 (PST)
+Received: from [10.1.196.37] (e121345-lin.cambridge.arm.com [10.1.196.37])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 683133F68E;
+        Fri, 14 Feb 2020 09:03:17 -0800 (PST)
+Subject: Re: [PATCH 2/3] PCI: Add DMA configuration for virtual platforms
+To:     Jean-Philippe Brucker <jean-philippe@linaro.org>,
+        iommu@lists.linux-foundation.org,
+        virtualization@lists.linux-foundation.org,
+        linux-pci@vger.kernel.org
+Cc:     kevin.tian@intel.com, mst@redhat.com, sebastien.boeuf@intel.com,
+        jacob.jun.pan@intel.com, bhelgaas@google.com, jasowang@redhat.com
+References: <20200214160413.1475396-1-jean-philippe@linaro.org>
+ <20200214160413.1475396-3-jean-philippe@linaro.org>
+From:   Robin Murphy <robin.murphy@arm.com>
+Message-ID: <393cce27-dbed-f075-2a67-9882bed801e7@arm.com>
+Date:   Fri, 14 Feb 2020 17:03:16 +0000
+User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20200214160413.1475396-3-jean-philippe@linaro.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-GB
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Logan Gunthorpe <logang@deltatee.com>
+On 14/02/2020 4:04 pm, Jean-Philippe Brucker wrote:
+> Hardware platforms usually describe the IOMMU topology using either
+> device-tree pointers or vendor-specific ACPI tables.  For virtual
+> platforms that don't provide a device-tree, the virtio-iommu device
+> contains a description of the endpoints it manages.  That information
+> allows us to probe endpoints after the IOMMU is probed (possibly as late
+> as userspace modprobe), provided it is discovered early enough.
+> 
+> Add a hook to pci_dma_configure(), which returns -EPROBE_DEFER if the
+> endpoint is managed by a vIOMMU that will be loaded later, or 0 in any
+> other case to avoid disturbing the normal DMA configuration methods.
+> When CONFIG_VIRTIO_IOMMU_TOPOLOGY isn't selected, the call to
+> virt_dma_configure() is compiled out.
+> 
+> As long as the information is consistent, platforms can provide both a
+> device-tree and a built-in topology, and the IOMMU infrastructure is
+> able to deal with multiple DMA configuration methods.
 
-[ Upstream commit 9375646b4cf03aee81bc6c305aa18cc80b682796 ]
+Urgh, it's already been established[1] that having IOMMU setup tied to 
+DMA configuration at driver probe time is not just conceptually wrong 
+but actually broken, so the concept here worries me a bit. In a world 
+where of_iommu_configure() and friends are being called much earlier 
+around iommu_probe_device() time, how badly will this fall apart?
 
-vep_vector_number is actually a 16 bit register which should be read with
-ioread16() instead of ioread32().
+Robin.
 
-Fixes: 080b47def5e5 ("MicroSemi Switchtec management interface driver")
-Link: https://lore.kernel.org/r/20200106190337.2428-3-logang@deltatee.com
-Reported-by: Doug Meyer <dmeyer@gigaio.com>
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/pci/switch/switchtec.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+[1] 
+https://lore.kernel.org/linux-iommu/9625faf4-48ef-2dd3-d82f-931d9cf26976@huawei.com/
 
-diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
-index 73dba2739849b..bf229b442e723 100644
---- a/drivers/pci/switch/switchtec.c
-+++ b/drivers/pci/switch/switchtec.c
-@@ -1399,7 +1399,7 @@ static int switchtec_init_isr(struct switchtec_dev *stdev)
- 	if (nvecs < 0)
- 		return nvecs;
- 
--	event_irq = ioread32(&stdev->mmio_part_cfg->vep_vector_number);
-+	event_irq = ioread16(&stdev->mmio_part_cfg->vep_vector_number);
- 	if (event_irq < 0 || event_irq >= nvecs)
- 		return -EFAULT;
- 
--- 
-2.20.1
-
+> Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
+> ---
+>   drivers/pci/pci-driver.c | 5 +++++
+>   1 file changed, 5 insertions(+)
+> 
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index 0454ca0e4e3f..69303a814f21 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -18,6 +18,7 @@
+>   #include <linux/kexec.h>
+>   #include <linux/of_device.h>
+>   #include <linux/acpi.h>
+> +#include <linux/virt_iommu.h>
+>   #include "pci.h"
+>   #include "pcie/portdrv.h"
+>   
+> @@ -1602,6 +1603,10 @@ static int pci_dma_configure(struct device *dev)
+>   	struct device *bridge;
+>   	int ret = 0;
+>   
+> +	ret = virt_dma_configure(dev);
+> +	if (ret)
+> +		return ret;
+> +
+>   	bridge = pci_get_host_bridge_device(to_pci_dev(dev));
+>   
+>   	if (IS_ENABLED(CONFIG_OF) && bridge->parent &&
+> 
