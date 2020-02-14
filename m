@@ -2,93 +2,76 @@ Return-Path: <SRS0=x16U=4C=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3346EC2BA83
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Feb 2020 18:20:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08A0DC35242
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Feb 2020 21:33:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F2A5924673
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Feb 2020 18:20:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1581704416;
-	bh=URkh1b8UiRSNyvBORbxFf1FqHBMydbBaRt0r6nWpiPA=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=MwG7YCy4Lhecaf15p2XSC2a8FwFZq34mHOFwy/+vedHNGDyliObNOryoYgGr8y+vH
-	 sbAVUOv2vFHyKHcTvjHvNsUaikIjd9p+rF+92ASAiOMayXXCTRiG5VDOhCbRuIspZA
-	 9w7K3/MpEN1zBj1Ag3zts1LsHNcypg15mucsXf2U=
+	by mail.kernel.org (Postfix) with ESMTP id D4133222C2
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Feb 2020 21:33:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2394817AbgBNSUO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 14 Feb 2020 13:20:14 -0500
-Received: from mail.kernel.org ([198.145.29.99]:54068 "EHLO mail.kernel.org"
+        id S2388065AbgBNVdW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 14 Feb 2020 16:33:22 -0500
+Received: from mga14.intel.com ([192.55.52.115]:64984 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730379AbgBNPuL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 14 Feb 2020 10:50:11 -0500
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 110E32467D;
-        Fri, 14 Feb 2020 15:50:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1581695410;
-        bh=URkh1b8UiRSNyvBORbxFf1FqHBMydbBaRt0r6nWpiPA=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=NpbLhW8H4yytVpNBgkY+2ar2oeHpD8ERCz9yTtSgQBsbqzu4fnxq0efsOvP9F61PN
-         Wpe9mZljy0IXC6Gl7EauJRNTDnuxjTcx4QxZ1fOpis17Diaj9p4wWxdyWGOSOzdWIV
-         3V99xWf/WvCxztzlXEuxDTSKwUuHAsJ0luGtGW4s=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Logan Gunthorpe <logang@deltatee.com>,
-        Doug Meyer <dmeyer@gigaio.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.5 058/542] PCI/switchtec: Fix vep_vector_number ioread width
-Date:   Fri, 14 Feb 2020 10:40:50 -0500
-Message-Id: <20200214154854.6746-58-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200214154854.6746-1-sashal@kernel.org>
-References: <20200214154854.6746-1-sashal@kernel.org>
+        id S1728123AbgBNVdV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 14 Feb 2020 16:33:21 -0500
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 14 Feb 2020 13:33:21 -0800
+X-IronPort-AV: E=Sophos;i="5.70,441,1574150400"; 
+   d="scan'208";a="227742868"
+Received: from mravago-mobl.amr.corp.intel.com (HELO arch-ashland-svkelley.intel.com) ([10.252.135.120])
+  by orsmga008-auth.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-SHA; 14 Feb 2020 13:33:20 -0800
+From:   Sean V Kelley <sean.v.kelley@linux.intel.com>
+To:     tglx@linutronix.de, bhelgaas@google.com, corbet@lwn.net,
+        mingo@redhat.com, bp@alien8.de
+Cc:     x86@kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
+        kar.hin.ong@ni.com, sassmann@kpanic.de,
+        Sean V Kelley <sean.v.kelley@linux.intel.com>
+Subject: [PATCH 0/2] Add boot interrupt quirk mechanism for Xeon chipsets
+Date:   Fri, 14 Feb 2020 13:33:11 -0800
+Message-Id: <20200214213313.66622-1-sean.v.kelley@linux.intel.com>
+X-Mailer: git-send-email 2.25.0
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Logan Gunthorpe <logang@deltatee.com>
+When IRQ lines on secondary or higher IO-APICs are masked (e.g.,
+Real-Time threaded interrupts), many chipsets redirect IRQs on
+this line to the legacy PCH and in turn the base IO-APIC in the
+system. The unhandled interrupts on the base IO-APIC will be
+identified by the Linux kernel as Spurious Interrupts and can
+lead to disabled IRQ lines.
 
-[ Upstream commit 9375646b4cf03aee81bc6c305aa18cc80b682796 ]
+Disabling this legacy PCI interrupt routing is chipset-specific and
+varies in mechanism between chipset vendors and across generations.
+In some cases the mechanism is exposed to BIOS but not all BIOS
+vendors choose to pick it up. With the increasing usage of RT as it
+marches towards mainline, additional issues have been raised with
+more recent Xeon chipsets.
 
-vep_vector_number is actually a 16 bit register which should be read with
-ioread16() instead of ioread32().
+This patchset disables the boot interrupt on these Xeon chipsets where
+this is possible with an additional mechanism.  In addition, this
+patchset includes documentation covering the background of this quirk.
 
-Fixes: 080b47def5e5 ("MicroSemi Switchtec management interface driver")
-Link: https://lore.kernel.org/r/20200106190337.2428-3-logang@deltatee.com
-Reported-by: Doug Meyer <dmeyer@gigaio.com>
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/pci/switch/switchtec.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Sean V Kelley (2):
+  pci: Add boot interrupt quirk mechanism for Xeon chipsets
+  Documentation:PCI: Add background on Boot Interrupts
 
-diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
-index 88091bbfe77f2..29412451f9e1f 100644
---- a/drivers/pci/switch/switchtec.c
-+++ b/drivers/pci/switch/switchtec.c
-@@ -1276,7 +1276,7 @@ static int switchtec_init_isr(struct switchtec_dev *stdev)
- 	if (nvecs < 0)
- 		return nvecs;
- 
--	event_irq = ioread32(&stdev->mmio_part_cfg->vep_vector_number);
-+	event_irq = ioread16(&stdev->mmio_part_cfg->vep_vector_number);
- 	if (event_irq < 0 || event_irq >= nvecs)
- 		return -EFAULT;
- 
--- 
-2.20.1
+ Documentation/PCI/boot-interrupts.rst | 153 ++++++++++++++++++++++++++
+ Documentation/PCI/index.rst           |   1 +
+ drivers/pci/quirks.c                  |  80 ++++++++++++--
+ 3 files changed, 227 insertions(+), 7 deletions(-)
+ create mode 100644 Documentation/PCI/boot-interrupts.rst
+
+--
+2.25.0
 
