@@ -4,51 +4,51 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 590CCC2BA83
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Feb 2020 16:32:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15864C2BA83
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Feb 2020 16:39:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2E257246A5
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Feb 2020 16:32:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DE2EF24650
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Feb 2020 16:39:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1581697955;
-	bh=Zd1A/nqkeu6VMjWcugt+ULvaZDsKoAratpep8cXZ2yQ=;
+	s=default; t=1581698344;
+	bh=dsqEi709l+qenfWhaHd3mIIG/QwcXpRGZyNSwjjHc4Q=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=hy+5Mylyuf7FUsIAqYvf0lyep7Do0EB9ltmK5nFDYEkZ0BzP362OADL8DrF3ZLNyz
-	 SZTagjeq6JDuIpQkPILjnpC9CBQB7PgC2fpJpPHqutw5i0a2z7U3HE1lLCORl2m33j
-	 mPbGV4XtB2d6kg9c7wd7qgPWg1vb7LVb7QBOIWu0=
+	b=2vR7Ez0fKaj0tjsn7QkDK3nBmdLyAt6TN5dyCuPfjIICogHFhoptvNniyjpr66jqw
+	 n6CAx87xMWiUj5PYtGFmuDYu9Yn80JWXdnAreQypUdzfnLO0uIb852r1hy3wzOzeRK
+	 pYrNLo6D9EUutHuJQDqu84ul67l5i12OnijchLOc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2406224AbgBNQZu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 14 Feb 2020 11:25:50 -0500
-Received: from mail.kernel.org ([198.145.29.99]:35758 "EHLO mail.kernel.org"
+        id S2393537AbgBNQjE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 14 Feb 2020 11:39:04 -0500
+Received: from mail.kernel.org ([198.145.29.99]:59470 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2406215AbgBNQZt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 14 Feb 2020 11:25:49 -0500
+        id S2405585AbgBNQXS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 14 Feb 2020 11:23:18 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id F2C4B247D0;
-        Fri, 14 Feb 2020 16:25:47 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id E926A24776;
+        Fri, 14 Feb 2020 16:23:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1581697548;
-        bh=Zd1A/nqkeu6VMjWcugt+ULvaZDsKoAratpep8cXZ2yQ=;
+        s=default; t=1581697397;
+        bh=dsqEi709l+qenfWhaHd3mIIG/QwcXpRGZyNSwjjHc4Q=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=LhvDEbYXehtxbTwk3+kEc5Cy1yzxvih4HSXyo7fGWweN5bLW5qNIoW53Y6fZC5O4G
-         HBCPBWZvh7g851WogHm3qChsi40HGpBAktqLkbKRoGY5e1s8HIrH6ypv6XP28THkG2
-         tZjhHwZBmsI+ukGlue2oBx8dA4mXcWOTWK8mzkXc=
+        b=OVLC7nOIpQkfTk5d8oBr536SqcTcVnlupXIN4C7xLdgtAZPWFtOTZFyPnDZ+gtYnS
+         LqrJi9EjqbMnx8ptmpxRp+mFyRPWLzi1ddQdlQkbm9DFQRS6tzsxcJs3MP2g/8W5a8
+         bDe9fj9YLOVJevmEXXHJM0o+vI8PCNhWLHsGcdEE=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Logan Gunthorpe <logang@deltatee.com>, Kit Chow <kchow@gigaio.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 067/100] PCI: Don't disable bridge BARs when assigning bus resources
-Date:   Fri, 14 Feb 2020 11:23:51 -0500
-Message-Id: <20200214162425.21071-67-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 091/141] PCI: Don't disable bridge BARs when assigning bus resources
+Date:   Fri, 14 Feb 2020 11:20:31 -0500
+Message-Id: <20200214162122.19794-91-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200214162425.21071-1-sashal@kernel.org>
-References: <20200214162425.21071-1-sashal@kernel.org>
+In-Reply-To: <20200214162122.19794-1-sashal@kernel.org>
+References: <20200214162122.19794-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -120,10 +120,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 16 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 1723ac1b30e10..fe2865a0da395 100644
+index f30ca75b5b6c7..e631636a0aa50 100644
 --- a/drivers/pci/setup-bus.c
 +++ b/drivers/pci/setup-bus.c
-@@ -1760,12 +1760,18 @@ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
+@@ -1833,12 +1833,18 @@ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
  	/* restore size and flags */
  	list_for_each_entry(fail_res, &fail_head, list) {
  		struct resource *res = fail_res->res;
@@ -144,7 +144,7 @@ index 1723ac1b30e10..fe2865a0da395 100644
  	}
  	free_list(&fail_head);
  
-@@ -1826,12 +1832,18 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+@@ -1904,12 +1910,18 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
  	/* restore size and flags */
  	list_for_each_entry(fail_res, &fail_head, list) {
  		struct resource *res = fail_res->res;
