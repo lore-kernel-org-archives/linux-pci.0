@@ -2,113 +2,122 @@ Return-Path: <SRS0=fb+J=4F=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3AFBC7619F
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Feb 2020 09:12:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25FE6C7619F
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Feb 2020 11:11:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7A1382067D
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Feb 2020 09:12:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EF7AC20801
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Feb 2020 11:11:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="GI1HEZGX"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="aPguU36P"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728681AbgBQJMd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 Feb 2020 04:12:33 -0500
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:40106 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728272AbgBQJMc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Feb 2020 04:12:32 -0500
-Received: by mail-wr1-f68.google.com with SMTP id t3so18669199wru.7
-        for <linux-pci@vger.kernel.org>; Mon, 17 Feb 2020 01:12:31 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=3xReXtDN4LyAJUffUOB2fEzxHj5w+bYneLaFyHrhb/I=;
-        b=GI1HEZGX5Puf2LLrSwwBVyM71kCTbxTvC+JtBQ8Axtt2gtfpwmC28LBW78V5qH7fKP
-         0xpuXMLzitdJtwKfCYZwhRb0OtE746KFP03x5+2sH58M+pBmfxlPqYyk1VaIdvyQ/rR4
-         kbroefLW49Y8QNEw3NqlKuwdFljmv+N1NGnc7Ayhpv8IKMuHXPI+NXgaWMylU2QuVWX+
-         lxyRkocrR+9DAN3hR5jjIm+248w3FcgUr3iBOSakgPGi6mBgKNkF5EZrUG4SQtiKaNuT
-         j1OopcgprxWCGEXPMEo6JHTwWo9Tq0Q+nlzlRCr/nQZ98qGCo1ma5YhsXqZptzdJewW0
-         G4Xw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=3xReXtDN4LyAJUffUOB2fEzxHj5w+bYneLaFyHrhb/I=;
-        b=aepZUChsEu5nXdtnmKd31k8Szqkv/K1WDwPK6nGANUce9FIDRyewiHXRryYJUF5Vbl
-         KRo46GcGXzLxuqohZbVlFX/M/Dg42+0fgIFkTCtD7HTm1IINdp3KZ/brx31G+nVscD0z
-         /SAg2fIbSeKLkaHEjSqZ1aiOT1SPxnhHffYa3mWLBknbD7ZGDwB3QZ/oQfHT4VV/SsIU
-         ZgvslAx1yX+vEqWddOItzC2x1n2/u9E+A8f/4P7eP8RuFIslmnpxiYQ5iCxqugr40x7P
-         Ej6t8xt4ckJ1yRX+WR1FY8dvV1geXTvA5zhGY3HVeNtcDBSl6HJ4u9kkSJUAikkpEelO
-         tyOQ==
-X-Gm-Message-State: APjAAAWpbiLQPondhkJagrrMuGcT9BK6CGGR4YqGfN4gdPMQ8yD3kF2C
-        WttfxGAZZViC3NL1l32+kBqSlQ==
-X-Google-Smtp-Source: APXvYqy0+uCZz56gg9KY1CEZhOwTKCImzEBdQ7HaHkQZVJwABbD3oUbmhF4dXY4WjZGNxC5GhUv0GQ==
-X-Received: by 2002:a5d:4fce:: with SMTP id h14mr22612667wrw.60.1581930750507;
-        Mon, 17 Feb 2020 01:12:30 -0800 (PST)
-Received: from myrica ([2001:171b:2276:930:116c:c27a:3e7f:5eaf])
-        by smtp.gmail.com with ESMTPSA id t10sm19040467wmi.40.2020.02.17.01.12.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 17 Feb 2020 01:12:29 -0800 (PST)
-Date:   Mon, 17 Feb 2020 10:12:22 +0100
-From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
-To:     Robin Murphy <robin.murphy@arm.com>
-Cc:     iommu@lists.linux-foundation.org,
-        virtualization@lists.linux-foundation.org,
-        linux-pci@vger.kernel.org, kevin.tian@intel.com, mst@redhat.com,
-        sebastien.boeuf@intel.com, jacob.jun.pan@intel.com,
-        bhelgaas@google.com, jasowang@redhat.com
-Subject: Re: [PATCH 2/3] PCI: Add DMA configuration for virtual platforms
-Message-ID: <20200217091222.GB1650092@myrica>
-References: <20200214160413.1475396-1-jean-philippe@linaro.org>
- <20200214160413.1475396-3-jean-philippe@linaro.org>
- <393cce27-dbed-f075-2a67-9882bed801e7@arm.com>
+        id S1728115AbgBQLLy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 Feb 2020 06:11:54 -0500
+Received: from lelv0143.ext.ti.com ([198.47.23.248]:52666 "EHLO
+        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727513AbgBQLLx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Feb 2020 06:11:53 -0500
+Received: from fllv0035.itg.ti.com ([10.64.41.0])
+        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id 01HBBlQB039631;
+        Mon, 17 Feb 2020 05:11:47 -0600
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1581937907;
+        bh=YUlkxjL/5rW7/xSy0zkSYbWN6Df5HFgJ5tv8RMZL+nQ=;
+        h=From:To:CC:Subject:Date;
+        b=aPguU36PRPwnNWqe00LmaSV66/DGBMf8mdFtljWYkmQa5H4p/sCNIXdSrW78iWlbx
+         jEIZB+hpMGEnvRPBtb+Imc/wLuJkS673EknFIBcw4EvfGEsNbSHrTtulLMH2Y0Mm9C
+         QmlemScm18BkRFlc3RcfFR2U91C624YLAURT8Ow8=
+Received: from DLEE105.ent.ti.com (dlee105.ent.ti.com [157.170.170.35])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id 01HBBlA2049795;
+        Mon, 17 Feb 2020 05:11:47 -0600
+Received: from DLEE108.ent.ti.com (157.170.170.38) by DLEE105.ent.ti.com
+ (157.170.170.35) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Mon, 17
+ Feb 2020 05:11:46 -0600
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE108.ent.ti.com
+ (157.170.170.38) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
+ Frontend Transport; Mon, 17 Feb 2020 05:11:46 -0600
+Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 01HBBhYK030042;
+        Mon, 17 Feb 2020 05:11:44 -0600
+From:   Kishon Vijay Abraham I <kishon@ti.com>
+To:     Rob Herring <robh+dt@kernel.org>, Tom Joseph <tjoseph@cadence.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Andrew Murray <amurray@thegoodpenguin.co.uk>
+CC:     Mark Rutland <mark.rutland@arm.com>, <linux-pci@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>
+Subject: [PATCH v2 0/2] dt-bindings: Convert Cadence PCIe RC/EP to DT Schema
+Date:   Mon, 17 Feb 2020 16:45:17 +0530
+Message-ID: <20200217111519.29163-1-kishon@ti.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <393cce27-dbed-f075-2a67-9882bed801e7@arm.com>
+Content-Type: text/plain
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Feb 14, 2020 at 05:03:16PM +0000, Robin Murphy wrote:
-> On 14/02/2020 4:04 pm, Jean-Philippe Brucker wrote:
-> > Hardware platforms usually describe the IOMMU topology using either
-> > device-tree pointers or vendor-specific ACPI tables.  For virtual
-> > platforms that don't provide a device-tree, the virtio-iommu device
-> > contains a description of the endpoints it manages.  That information
-> > allows us to probe endpoints after the IOMMU is probed (possibly as late
-> > as userspace modprobe), provided it is discovered early enough.
-> > 
-> > Add a hook to pci_dma_configure(), which returns -EPROBE_DEFER if the
-> > endpoint is managed by a vIOMMU that will be loaded later, or 0 in any
-> > other case to avoid disturbing the normal DMA configuration methods.
-> > When CONFIG_VIRTIO_IOMMU_TOPOLOGY isn't selected, the call to
-> > virt_dma_configure() is compiled out.
-> > 
-> > As long as the information is consistent, platforms can provide both a
-> > device-tree and a built-in topology, and the IOMMU infrastructure is
-> > able to deal with multiple DMA configuration methods.
-> 
-> Urgh, it's already been established[1] that having IOMMU setup tied to DMA
-> configuration at driver probe time is not just conceptually wrong but
-> actually broken, so the concept here worries me a bit. In a world where
-> of_iommu_configure() and friends are being called much earlier around
-> iommu_probe_device() time, how badly will this fall apart?
+Cadence PCIe IP is used by multiple SoC vendors (e.g. TI). Cadence
+themselves have a validation platform for validating the PCIe IP which
+is already in the upstream kernel. Right now the binding only exists for
+Cadence platform and this will result in adding redundant binding schema
+for any platform using Cadence PCIe core.
 
-If present the DT configuration should take precedence over this built-in
-method, so the earlier it is called the better. virt_dma_configure()
-currently gives up if the device already has iommu_ops (well, still calls
-setup_dma_ops() which is safe enough, but I think I'll change that to have
-virt_iommu_setup() return NULL if iommu_ops are present).
+This series:
+1) Create cdns-pcie.yaml which includes properties that are applicable
+   to both host mode and endpoint mode of Cadence PCIe core.
+2) Create cdns-pcie-host.yaml to include properties that are specific to
+   host mode of Cadence PCIe core. cdns-pcie-host.yaml will include
+   cdns-pcie.yaml.
+3) Create cdns-pcie-ep.yaml to include properties that are specific to
+   endpoint mode of Cadence PCIe core. cdns-pcie-ep.yaml will include
+   cdns-pcie.yaml.
+4) Remove cdns,cdns-pcie-ep.txt and cdns,cdns-pcie-host.txt which had
+   the binding for Cadence "platform" and add cdns,cdns-pcie-host.yaml
+   and cdns,cdns-pcie-ep.yaml schema for Cadence Platform. The schema
+   for Cadence platform then includes schema for Cadence PCIe core.
 
-I don't have the full picture of the changes you intend for
-{of,acpi}_iommu_configure(), do you think checking the validity of
-dev->iommu_fwspec will remain sufficient to have both methods coexist?
+Changes from v1:
+*) Fix maximum values of num-lanes and cdns,no-bar-match-nbits
+*) Fix example DT node for PCIe Endpoint.
 
-Thanks,
-Jean
+Ref: Patches to convert Cadence driver to library
+     https://lkml.org/lkml/2019/11/11/317
+
+Some of this was initially part of [1], but to accelerate it getting
+into upstream, sending this as a separate series.
+
+[1] -> [1] -> http://lore.kernel.org/r/20200106102058.19183-1-kishon@ti.com
+
+Kishon Vijay Abraham I (2):
+  dt-bindings: PCI: cadence: Add PCIe RC/EP DT schema for Cadence PCIe
+  dt-bindings: PCI: Convert PCIe Host/Endpoint in Cadence platform to DT
+    schema
+
+ .../bindings/pci/cdns,cdns-pcie-ep.txt        | 27 -------
+ .../bindings/pci/cdns,cdns-pcie-ep.yaml       | 48 ++++++++++++
+ .../bindings/pci/cdns,cdns-pcie-host.txt      | 66 ----------------
+ .../bindings/pci/cdns,cdns-pcie-host.yaml     | 76 +++++++++++++++++++
+ .../devicetree/bindings/pci/cdns-pcie-ep.yaml | 22 ++++++
+ .../bindings/pci/cdns-pcie-host.yaml          | 27 +++++++
+ .../devicetree/bindings/pci/cdns-pcie.yaml    | 45 +++++++++++
+ MAINTAINERS                                   |  2 +-
+ 8 files changed, 219 insertions(+), 94 deletions(-)
+ delete mode 100644 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
+ create mode 100644 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.yaml
+ delete mode 100644 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
+ create mode 100644 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.yaml
+ create mode 100644 Documentation/devicetree/bindings/pci/cdns-pcie-ep.yaml
+ create mode 100644 Documentation/devicetree/bindings/pci/cdns-pcie-host.yaml
+ create mode 100644 Documentation/devicetree/bindings/pci/cdns-pcie.yaml
+
+-- 
+2.17.1
+
