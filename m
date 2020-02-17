@@ -2,342 +2,80 @@ Return-Path: <SRS0=fb+J=4F=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C5F5C35254
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Feb 2020 11:12:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72474C761A3
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Feb 2020 11:17:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0F629215A4
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Feb 2020 11:12:05 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="Qe03eJMO"
+	by mail.kernel.org (Postfix) with ESMTP id 5585E207FD
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Feb 2020 11:17:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728666AbgBQLMA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 Feb 2020 06:12:00 -0500
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:47274 "EHLO
-        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728708AbgBQLMA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Feb 2020 06:12:00 -0500
-Received: from lelv0266.itg.ti.com ([10.180.67.225])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 01HBBrQs065816;
-        Mon, 17 Feb 2020 05:11:53 -0600
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1581937913;
-        bh=WPk75aH8sYjcdIhOGh7wrqoGA4wLjj2n6sRFu+GJUZA=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=Qe03eJMOMQ7T3mI5KFiEq0Ny6skGlqB6G8OLg3bjK15XqsAEbQtLefTY0Mdj8PjaK
-         ArjGLzMDcRwQSCrJlZLkykmEYe55m/FBlvpGqn6iQZLlMK44x87Ej/tlsTeYWSAxvK
-         DwZ+eyki+cm3nTGDWXwfo1j4Xrq7UpgQXKuSk4c0=
-Received: from DLEE100.ent.ti.com (dlee100.ent.ti.com [157.170.170.30])
-        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 01HBBrgM097225
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 17 Feb 2020 05:11:53 -0600
-Received: from DLEE108.ent.ti.com (157.170.170.38) by DLEE100.ent.ti.com
- (157.170.170.30) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Mon, 17
- Feb 2020 05:11:53 -0600
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE108.ent.ti.com
- (157.170.170.38) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
- Frontend Transport; Mon, 17 Feb 2020 05:11:53 -0600
-Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 01HBBhYM030042;
-        Mon, 17 Feb 2020 05:11:50 -0600
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-To:     Rob Herring <robh+dt@kernel.org>, Tom Joseph <tjoseph@cadence.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Andrew Murray <amurray@thegoodpenguin.co.uk>
-CC:     Mark Rutland <mark.rutland@arm.com>, <linux-pci@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>
-Subject: [PATCH v2 2/2] dt-bindings: PCI: Convert PCIe Host/Endpoint in Cadence platform to DT schema
-Date:   Mon, 17 Feb 2020 16:45:19 +0530
-Message-ID: <20200217111519.29163-3-kishon@ti.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200217111519.29163-1-kishon@ti.com>
-References: <20200217111519.29163-1-kishon@ti.com>
+        id S1728524AbgBQLRO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 Feb 2020 06:17:14 -0500
+Received: from szxga06-in.huawei.com ([45.249.212.32]:57140 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728613AbgBQLRO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 17 Feb 2020 06:17:14 -0500
+Received: from DGGEMS407-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id C22C144A2D3E66D34E86;
+        Mon, 17 Feb 2020 19:17:10 +0800 (CST)
+Received: from localhost.localdomain (10.67.165.24) by
+ DGGEMS407-HUB.china.huawei.com (10.3.19.207) with Microsoft SMTP Server id
+ 14.3.439.0; Mon, 17 Feb 2020 19:17:04 +0800
+From:   Yicong Yang <yangyicong@hisilicon.com>
+To:     <helgaas@kernel.org>, <linux-pci@vger.kernel.org>
+CC:     <f.fangjian@huawei.com>, <huangdaode@huawei.com>
+Subject: [PATCH v4 01/10] PCI: add 32 GT/s decoding in some macros
+Date:   Mon, 17 Feb 2020 19:12:55 +0800
+Message-ID: <1581937984-40353-2-git-send-email-yangyicong@hisilicon.com>
+X-Mailer: git-send-email 2.8.1
+In-Reply-To: <1581937984-40353-1-git-send-email-yangyicong@hisilicon.com>
+References: <1581937984-40353-1-git-send-email-yangyicong@hisilicon.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+X-Originating-IP: [10.67.165.24]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Include Cadence core DT schema and define the Cadence platform DT schema
-for both Host and Endpoint mode. Note: The Cadence core DT schema could
-be included for other platforms using Cadence PCIe core.
+Link speed 32.0 GT/s is supported in PCIe r5.0. Add in macro
+PCIE_SPEED2STR and PCIE_SPEED2MBS_ENC to correctly decode.
+This patch is a complementary to
+commit de76cda215d5 ("PCI: Decode PCIe 32 GT/s link speed").
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
 ---
- .../bindings/pci/cdns,cdns-pcie-ep.txt        | 27 -------
- .../bindings/pci/cdns,cdns-pcie-ep.yaml       | 48 ++++++++++++
- .../bindings/pci/cdns,cdns-pcie-host.txt      | 66 ----------------
- .../bindings/pci/cdns,cdns-pcie-host.yaml     | 76 +++++++++++++++++++
- MAINTAINERS                                   |  2 +-
- 5 files changed, 125 insertions(+), 94 deletions(-)
- delete mode 100644 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
- create mode 100644 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.yaml
- delete mode 100644 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
- create mode 100644 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.yaml
+ drivers/pci/pci.h | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
-deleted file mode 100644
-index 4a0475e2ba7e..000000000000
---- a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
-+++ /dev/null
-@@ -1,27 +0,0 @@
--* Cadence PCIe endpoint controller
--
--Required properties:
--- compatible: Should contain "cdns,cdns-pcie-ep" to identify the IP used.
--- reg: Should contain the controller register base address and AXI interface
--  region base address respectively.
--- reg-names: Must be "reg" and "mem" respectively.
--- cdns,max-outbound-regions: Set to maximum number of outbound regions
--
--Optional properties:
--- max-functions: Maximum number of functions that can be configured (default 1).
--- phys: From PHY bindings: List of Generic PHY phandles. One per lane if more
--  than one in the list.  If only one PHY listed it must manage all lanes. 
--- phy-names:  List of names to identify the PHY.
--
--Example:
--
--pcie@fc000000 {
--	compatible = "cdns,cdns-pcie-ep";
--	reg = <0x0 0xfc000000 0x0 0x01000000>,
--	      <0x0 0x80000000 0x0 0x40000000>;
--	reg-names = "reg", "mem";
--	cdns,max-outbound-regions = <16>;
--	max-functions = /bits/ 8 <8>;
--	phys = <&ep_phy0 &ep_phy1>;
--	phy-names = "pcie-lane0","pcie-lane1";
--};
-diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.yaml
-new file mode 100644
-index 000000000000..be7009dd190c
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.yaml
-@@ -0,0 +1,48 @@
-+# SPDX-License-Identifier: GPL-2.0-only
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/pci/cdns,cdns-pcie-ep.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: Cadence PCIe EP Controller
-+
-+maintainers:
-+  - Tom Joseph <tjoseph@cadence.com>
-+
-+allOf:
-+  - $ref: "cdns-pcie-ep.yaml#"
-+
-+properties:
-+  compatible:
-+    const: cdns,cdns-pcie-ep
-+
-+  reg:
-+    maxItems: 2
-+
-+  reg-names:
-+    items:
-+      - const: reg
-+      - const: mem
-+
-+required:
-+  - reg
-+  - reg-names
-+
-+examples:
-+  - |
-+    bus {
-+        #address-cells = <2>;
-+        #size-cells = <2>;
-+
-+        pcie-ep@fc000000 {
-+                compatible = "cdns,cdns-pcie-ep";
-+                reg = <0x0 0xfc000000 0x0 0x01000000>,
-+                      <0x0 0x80000000 0x0 0x40000000>;
-+                reg-names = "reg", "mem";
-+                cdns,max-outbound-regions = <16>;
-+                max-functions = /bits/ 8 <8>;
-+                phys = <&pcie_phy0>;
-+                phy-names = "pcie-phy";
-+        };
-+    };
-+...
-diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
-deleted file mode 100644
-index 91de69c713a9..000000000000
---- a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
-+++ /dev/null
-@@ -1,66 +0,0 @@
--* Cadence PCIe host controller
--
--This PCIe controller inherits the base properties defined in
--host-generic-pci.txt.
--
--Required properties:
--- compatible: Should contain "cdns,cdns-pcie-host" to identify the IP used.
--- reg: Should contain the controller register base address, PCIe configuration
--  window base address, and AXI interface region base address respectively.
--- reg-names: Must be "reg", "cfg" and "mem" respectively.
--- #address-cells: Set to <3>
--- #size-cells: Set to <2>
--- device_type: Set to "pci"
--- ranges: Ranges for the PCI memory and I/O regions
--- #interrupt-cells: Set to <1>
--- interrupt-map-mask and interrupt-map: Standard PCI properties to define the
--  mapping of the PCIe interface to interrupt numbers.
--
--Optional properties:
--- cdns,max-outbound-regions: Set to maximum number of outbound regions
--  (default 32)
--- cdns,no-bar-match-nbits: Set into the no BAR match register to configure the
--  number of least significant bits kept during inbound (PCIe -> AXI) address
--  translations (default 32)
--- vendor-id: The PCI vendor ID (16 bits, default is design dependent)
--- device-id: The PCI device ID (16 bits, default is design dependent)
--- phys: From PHY bindings: List of Generic PHY phandles. One per lane if more
--  than one in the list.  If only one PHY listed it must manage all lanes. 
--- phy-names:  List of names to identify the PHY.
--
--Example:
--
--pcie@fb000000 {
--	compatible = "cdns,cdns-pcie-host";
--	device_type = "pci";
--	#address-cells = <3>;
--	#size-cells = <2>;
--	bus-range = <0x0 0xff>;
--	linux,pci-domain = <0>;
--	cdns,max-outbound-regions = <16>;
--	cdns,no-bar-match-nbits = <32>;
--	vendor-id = /bits/ 16 <0x17cd>;
--	device-id = /bits/ 16 <0x0200>;
--
--	reg = <0x0 0xfb000000  0x0 0x01000000>,
--	      <0x0 0x41000000  0x0 0x00001000>,
--	      <0x0 0x40000000  0x0 0x04000000>;
--	reg-names = "reg", "cfg", "mem";
--
--	ranges = <0x02000000 0x0 0x42000000  0x0 0x42000000  0x0 0x1000000>,
--		 <0x01000000 0x0 0x43000000  0x0 0x43000000  0x0 0x0010000>;
--
--	#interrupt-cells = <0x1>;
--
--	interrupt-map = <0x0 0x0 0x0  0x1  &gic  0x0 0x0 0x0 14 0x1
--			 0x0 0x0 0x0  0x2  &gic  0x0 0x0 0x0 15 0x1
--			 0x0 0x0 0x0  0x3  &gic  0x0 0x0 0x0 16 0x1
--			 0x0 0x0 0x0  0x4  &gic  0x0 0x0 0x0 17 0x1>;
--
--	interrupt-map-mask = <0x0 0x0 0x0  0x7>;
--
--	msi-parent = <&its_pci>;
--
--	phys = <&pcie_phy0>;
--	phy-names = "pcie-phy";
--};
-diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.yaml b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.yaml
-new file mode 100644
-index 000000000000..2f605297f862
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.yaml
-@@ -0,0 +1,76 @@
-+# SPDX-License-Identifier: GPL-2.0-only
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/pci/cdns,cdns-pcie-host.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: Cadence PCIe host controller
-+
-+maintainers:
-+  - Tom Joseph <tjoseph@cadence.com>
-+
-+allOf:
-+  - $ref: /schemas/pci/pci-bus.yaml#
-+  - $ref: "cdns-pcie-host.yaml#"
-+
-+properties:
-+  compatible:
-+    const: cdns,cdns-pcie-host
-+
-+  reg:
-+    maxItems: 3
-+
-+  reg-names:
-+    items:
-+      - const: reg
-+      - const: cfg
-+      - const: mem
-+
-+  msi-parent: true
-+
-+required:
-+  - reg
-+  - reg-names
-+
-+examples:
-+  - |
-+    bus {
-+        #address-cells = <2>;
-+        #size-cells = <2>;
-+
-+        pcie@fb000000 {
-+            compatible = "cdns,cdns-pcie-host";
-+            device_type = "pci";
-+            #address-cells = <3>;
-+            #size-cells = <2>;
-+            bus-range = <0x0 0xff>;
-+            linux,pci-domain = <0>;
-+            cdns,max-outbound-regions = <16>;
-+            cdns,no-bar-match-nbits = <32>;
-+            vendor-id = /bits/ 16 <0x17cd>;
-+            device-id = /bits/ 16 <0x0200>;
-+
-+            reg = <0x0 0xfb000000  0x0 0x01000000>,
-+                  <0x0 0x41000000  0x0 0x00001000>,
-+                  <0x0 0x40000000  0x0 0x04000000>;
-+            reg-names = "reg", "cfg", "mem";
-+
-+            ranges = <0x02000000 0x0 0x42000000  0x0 0x42000000  0x0 0x1000000>,
-+                     <0x01000000 0x0 0x43000000  0x0 0x43000000  0x0 0x0010000>;
-+
-+            #interrupt-cells = <0x1>;
-+
-+            interrupt-map = <0x0 0x0 0x0  0x1  &gic  0x0 0x0 0x0 14 0x1>,
-+                 <0x0 0x0 0x0  0x2  &gic  0x0 0x0 0x0 15 0x1>,
-+                 <0x0 0x0 0x0  0x3  &gic  0x0 0x0 0x0 16 0x1>,
-+                 <0x0 0x0 0x0  0x4  &gic  0x0 0x0 0x0 17 0x1>;
-+
-+            interrupt-map-mask = <0x0 0x0 0x0  0x7>;
-+
-+            msi-parent = <&its_pci>;
-+
-+            phys = <&pcie_phy0>;
-+            phy-names = "pcie-phy";
-+        };
-+    };
-+...
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 38fe2f3f7b6f..e0402e001edd 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -12739,7 +12739,7 @@ PCI DRIVER FOR CADENCE PCIE IP
- M:	Tom Joseph <tjoseph@cadence.com>
- L:	linux-pci@vger.kernel.org
- S:	Maintained
--F:	Documentation/devicetree/bindings/pci/cdns,*.txt
-+F:	Documentation/devicetree/bindings/pci/cdns,*
- F:	drivers/pci/controller/pcie-cadence*
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 6394e77..f65912e 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -294,7 +294,8 @@ void pci_bus_put(struct pci_bus *bus);
  
- PCI DRIVER FOR FREESCALE LAYERSCAPE
+ /* PCIe link information */
+ #define PCIE_SPEED2STR(speed) \
+-	((speed) == PCIE_SPEED_16_0GT ? "16 GT/s" : \
++	((speed) == PCIE_SPEED_32_0GT ? "32 GT/s" : \
++	 (speed) == PCIE_SPEED_16_0GT ? "16 GT/s" : \
+ 	 (speed) == PCIE_SPEED_8_0GT ? "8 GT/s" : \
+ 	 (speed) == PCIE_SPEED_5_0GT ? "5 GT/s" : \
+ 	 (speed) == PCIE_SPEED_2_5GT ? "2.5 GT/s" : \
+@@ -302,7 +303,8 @@ void pci_bus_put(struct pci_bus *bus);
+ 
+ /* PCIe speed to Mb/s reduced by encoding overhead */
+ #define PCIE_SPEED2MBS_ENC(speed) \
+-	((speed) == PCIE_SPEED_16_0GT ? 16000*128/130 : \
++	((speed) == PCIE_SPEED_32_0GT ? 32000*128/130 : \
++	 (speed) == PCIE_SPEED_16_0GT ? 16000*128/130 : \
+ 	 (speed) == PCIE_SPEED_8_0GT  ?  8000*128/130 : \
+ 	 (speed) == PCIE_SPEED_5_0GT  ?  5000*8/10 : \
+ 	 (speed) == PCIE_SPEED_2_5GT  ?  2500*8/10 : \
 -- 
-2.17.1
+2.8.1
 
