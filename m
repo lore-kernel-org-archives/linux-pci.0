@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72474C761A3
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Feb 2020 11:17:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1F10C35254
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Feb 2020 11:17:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5585E207FD
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Feb 2020 11:17:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C75F32072C
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Feb 2020 11:17:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728524AbgBQLRO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1728619AbgBQLRO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Mon, 17 Feb 2020 06:17:14 -0500
-Received: from szxga06-in.huawei.com ([45.249.212.32]:57140 "EHLO huawei.com"
+Received: from szxga06-in.huawei.com ([45.249.212.32]:57146 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728613AbgBQLRO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1728524AbgBQLRO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Mon, 17 Feb 2020 06:17:14 -0500
 Received: from DGGEMS407-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id C22C144A2D3E66D34E86;
+        by Forcepoint Email with ESMTP id C5B26C6133B427D6669F;
         Mon, 17 Feb 2020 19:17:10 +0800 (CST)
 Received: from localhost.localdomain (10.67.165.24) by
  DGGEMS407-HUB.china.huawei.com (10.3.19.207) with Microsoft SMTP Server id
- 14.3.439.0; Mon, 17 Feb 2020 19:17:04 +0800
+ 14.3.439.0; Mon, 17 Feb 2020 19:17:05 +0800
 From:   Yicong Yang <yangyicong@hisilicon.com>
 To:     <helgaas@kernel.org>, <linux-pci@vger.kernel.org>
 CC:     <f.fangjian@huawei.com>, <huangdaode@huawei.com>
-Subject: [PATCH v4 01/10] PCI: add 32 GT/s decoding in some macros
-Date:   Mon, 17 Feb 2020 19:12:55 +0800
-Message-ID: <1581937984-40353-2-git-send-email-yangyicong@hisilicon.com>
+Subject: [PATCH v4 03/10] PCI: Remove PCIe suffix in pci_bus_speed_strings[]
+Date:   Mon, 17 Feb 2020 19:12:57 +0800
+Message-ID: <1581937984-40353-4-git-send-email-yangyicong@hisilicon.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1581937984-40353-1-git-send-email-yangyicong@hisilicon.com>
 References: <1581937984-40353-1-git-send-email-yangyicong@hisilicon.com>
@@ -42,40 +42,53 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Link speed 32.0 GT/s is supported in PCIe r5.0. Add in macro
-PCIE_SPEED2STR and PCIE_SPEED2MBS_ENC to correctly decode.
-This patch is a complementary to
-commit de76cda215d5 ("PCI: Decode PCIe 32 GT/s link speed").
+Remove "PCIe" suffix of PCIe speed strings in
+pci_bus_speed_strings[] array. For example, if we use the
+array to decode link speed in __pcie_print_link_status,
+it'll lead to redundancy like:
+- nvme 0000:01:00.0: 16.000 Gb/s available PCIe bandwidth,
+  limited by 5 GT/s x4 link at 0000:00:01.1 (capable of
+  31.504 Gb/s with 8 GT/s x4 link)
++ nvme 0000:01:00.0: 16.000 Gb/s available PCIe bandwidth,
+  limited by 5 GT/s PCIe x4 link at 0000:00:01.1 (capable
+  of 31.504 Gb/s with 8 GT/s PCIe x4 link)
 
+The patch introduces changes in sysfs when display
+bus speed of certain slot from cur_bus_speed/max_bus_speed
+in /sys/bus/pci/slots/*. It may looks like:
+-/sys/bus/pci/slots/0/cur_bus_speed: 8 GT/s PCIe
++/sys/bus/pci/slots/0/cur_bus_speed: 8 GT/s
+The following patch will compensate and display slot
+bus speed with "PCIe" suffix as before.
+
+[1] https://lore.kernel.org/linux-pci/20200114224909.GA19633@google.com
+[2] https://lore.kernel.org/linux-pci/20200205183531.GA229621@google.com
 Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
 ---
- drivers/pci/pci.h | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/pci/probe.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 6394e77..f65912e 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -294,7 +294,8 @@ void pci_bus_put(struct pci_bus *bus);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 4e997e7..6ce47d8 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -700,11 +700,11 @@ const char *pci_bus_speed_strings[] = {
+ 	"66 MHz PCI-X 533",	/* 0x11 */
+ 	"100 MHz PCI-X 533",	/* 0x12 */
+ 	"133 MHz PCI-X 533",	/* 0x13 */
+-	"2.5 GT/s PCIe",	/* 0x14 */
+-	"5.0 GT/s PCIe",	/* 0x15 */
+-	"8.0 GT/s PCIe",	/* 0x16 */
+-	"16.0 GT/s PCIe",	/* 0x17 */
+-	"32.0 GT/s PCIe",	/* 0x18 */
++	"2.5 GT/s",	/* 0x14 */
++	"5.0 GT/s",	/* 0x15 */
++	"8.0 GT/s",	/* 0x16 */
++	"16.0 GT/s",	/* 0x17 */
++	"32.0 GT/s",	/* 0x18 */
+ };
+ const int pci_bus_speed_strings_size = ARRAY_SIZE(pci_bus_speed_strings);
  
- /* PCIe link information */
- #define PCIE_SPEED2STR(speed) \
--	((speed) == PCIE_SPEED_16_0GT ? "16 GT/s" : \
-+	((speed) == PCIE_SPEED_32_0GT ? "32 GT/s" : \
-+	 (speed) == PCIE_SPEED_16_0GT ? "16 GT/s" : \
- 	 (speed) == PCIE_SPEED_8_0GT ? "8 GT/s" : \
- 	 (speed) == PCIE_SPEED_5_0GT ? "5 GT/s" : \
- 	 (speed) == PCIE_SPEED_2_5GT ? "2.5 GT/s" : \
-@@ -302,7 +303,8 @@ void pci_bus_put(struct pci_bus *bus);
- 
- /* PCIe speed to Mb/s reduced by encoding overhead */
- #define PCIE_SPEED2MBS_ENC(speed) \
--	((speed) == PCIE_SPEED_16_0GT ? 16000*128/130 : \
-+	((speed) == PCIE_SPEED_32_0GT ? 32000*128/130 : \
-+	 (speed) == PCIE_SPEED_16_0GT ? 16000*128/130 : \
- 	 (speed) == PCIE_SPEED_8_0GT  ?  8000*128/130 : \
- 	 (speed) == PCIE_SPEED_5_0GT  ?  5000*8/10 : \
- 	 (speed) == PCIE_SPEED_2_5GT  ?  2500*8/10 : \
 -- 
 2.8.1
 
