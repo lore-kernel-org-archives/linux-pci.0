@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F0A4C35254
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3800CC761A3
 	for <linux-pci@archiver.kernel.org>; Mon, 17 Feb 2020 11:17:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E813C207FD
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Feb 2020 11:17:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1BC2B215A4
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Feb 2020 11:17:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729403AbgBQLRT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1728776AbgBQLRT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Mon, 17 Feb 2020 06:17:19 -0500
-Received: from szxga07-in.huawei.com ([45.249.212.35]:44210 "EHLO huawei.com"
+Received: from szxga07-in.huawei.com ([45.249.212.35]:44206 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728776AbgBQLRT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1728609AbgBQLRT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Mon, 17 Feb 2020 06:17:19 -0500
 Received: from DGGEMS407-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id DD8DE19B8D2595DAF6C5;
+        by Forcepoint Email with ESMTP id D570FA8BB66D855D5E0A;
         Mon, 17 Feb 2020 19:17:15 +0800 (CST)
 Received: from localhost.localdomain (10.67.165.24) by
  DGGEMS407-HUB.china.huawei.com (10.3.19.207) with Microsoft SMTP Server id
- 14.3.439.0; Mon, 17 Feb 2020 19:17:07 +0800
+ 14.3.439.0; Mon, 17 Feb 2020 19:17:06 +0800
 From:   Yicong Yang <yangyicong@hisilicon.com>
 To:     <helgaas@kernel.org>, <linux-pci@vger.kernel.org>
 CC:     <f.fangjian@huawei.com>, <huangdaode@huawei.com>
-Subject: [PATCH v4 10/10] PCI: Reduce redundancy in current_link_speed_show()
-Date:   Mon, 17 Feb 2020 19:13:04 +0800
-Message-ID: <1581937984-40353-11-git-send-email-yangyicong@hisilicon.com>
+Subject: [PATCH v4 06/10] PCI: Refactor and rename PCIE_SPEED2STR macro
+Date:   Mon, 17 Feb 2020 19:13:00 +0800
+Message-ID: <1581937984-40353-7-git-send-email-yangyicong@hisilicon.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1581937984-40353-1-git-send-email-yangyicong@hisilicon.com>
 References: <1581937984-40353-1-git-send-email-yangyicong@hisilicon.com>
@@ -42,56 +42,87 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Remove switch-case statements in current_link_speed_show(). Use
-pcie_link_speed[] array to get link speed and PCI_SPEED2STR macro
-to get link speed string.
+Use pci_bus_speed_strings[] array to refactor PCIE_SPEED2STR
+macro. Rename it with PCI_SPEED2STR as it can also be used to
+decode non-PCIe speeds with pci_bus_speed_strings[].
 
 Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
 ---
- drivers/pci/pci-sysfs.c | 24 +++---------------------
- 1 file changed, 3 insertions(+), 21 deletions(-)
+ drivers/pci/controller/pcie-brcmstb.c |  2 +-
+ drivers/pci/pci-sysfs.c               |  2 +-
+ drivers/pci/pci.c                     |  6 +++---
+ drivers/pci/pci.h                     | 10 +++-------
+ 4 files changed, 8 insertions(+), 12 deletions(-)
 
+diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
+index a390a29..da2251b 100644
+--- a/drivers/pci/controller/pcie-brcmstb.c
++++ b/drivers/pci/controller/pcie-brcmstb.c
+@@ -824,7 +824,7 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
+ 	cls = FIELD_GET(PCI_EXP_LNKSTA_CLS, lnksta);
+ 	nlw = FIELD_GET(PCI_EXP_LNKSTA_NLW, lnksta);
+ 	dev_info(dev, "link up, %s x%u %s\n",
+-		 PCIE_SPEED2STR(pcie_link_speed[cls]),
++		 PCI_SPEED2STR(pcie_link_speed[cls]),
+ 		 nlw, ssc_good ? "(SSC)" : "(!SSC)");
+ 
+ 	/* PCIe->SCB endian mode for BAR */
 diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index f4eafbc..eaece10 100644
+index 13f766d..f4eafbc 100644
 --- a/drivers/pci/pci-sysfs.c
 +++ b/drivers/pci/pci-sysfs.c
-@@ -175,33 +175,15 @@ static ssize_t current_link_speed_show(struct device *dev,
- 	struct pci_dev *pci_dev = to_pci_dev(dev);
- 	u16 linkstat;
- 	int err;
--	const char *speed;
-+	enum pci_bus_speed speed;
+@@ -156,7 +156,7 @@ static ssize_t max_link_speed_show(struct device *dev,
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
  
- 	err = pcie_capability_read_word(pci_dev, PCI_EXP_LNKSTA, &linkstat);
- 	if (err)
- 		return -EINVAL;
- 
--	switch (linkstat & PCI_EXP_LNKSTA_CLS) {
--	case PCI_EXP_LNKSTA_CLS_32_0GB:
--		speed = "32 GT/s";
--		break;
--	case PCI_EXP_LNKSTA_CLS_16_0GB:
--		speed = "16 GT/s";
--		break;
--	case PCI_EXP_LNKSTA_CLS_8_0GB:
--		speed = "8 GT/s";
--		break;
--	case PCI_EXP_LNKSTA_CLS_5_0GB:
--		speed = "5 GT/s";
--		break;
--	case PCI_EXP_LNKSTA_CLS_2_5GB:
--		speed = "2.5 GT/s";
--		break;
--	default:
--		speed = "Unknown speed";
--	}
-+	speed = pcie_link_speed[linkstat & PCI_EXP_LNKSTA_CLS];
- 
--	return sprintf(buf, "%s\n", speed);
-+	return sprintf(buf, "%s\n", PCI_SPEED2STR(speed));
+-	return sprintf(buf, "%s\n", PCIE_SPEED2STR(pcie_get_speed_cap(pdev)));
++	return sprintf(buf, "%s\n", PCI_SPEED2STR(pcie_get_speed_cap(pdev)));
  }
- static DEVICE_ATTR_RO(current_link_speed);
+ static DEVICE_ATTR_RO(max_link_speed);
  
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index d828ca8..e8d3c39 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5872,14 +5872,14 @@ void __pcie_print_link_status(struct pci_dev *dev, bool verbose)
+ 	if (bw_avail >= bw_cap && verbose)
+ 		pci_info(dev, "%u.%03u Gb/s available PCIe bandwidth (%s x%d link)\n",
+ 			 bw_cap / 1000, bw_cap % 1000,
+-			 PCIE_SPEED2STR(speed_cap), width_cap);
++			 PCI_SPEED2STR(speed_cap), width_cap);
+ 	else if (bw_avail < bw_cap)
+ 		pci_info(dev, "%u.%03u Gb/s available PCIe bandwidth, limited by %s x%d link at %s (capable of %u.%03u Gb/s with %s x%d link)\n",
+ 			 bw_avail / 1000, bw_avail % 1000,
+-			 PCIE_SPEED2STR(speed), width,
++			 PCI_SPEED2STR(speed), width,
+ 			 limiting_dev ? pci_name(limiting_dev) : "<unknown>",
+ 			 bw_cap / 1000, bw_cap % 1000,
+-			 PCIE_SPEED2STR(speed_cap), width_cap);
++			 PCI_SPEED2STR(speed_cap), width_cap);
+ }
+ 
+ /**
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index d2e92b0f..ba6b2cb 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -295,13 +295,9 @@ struct pci_bus *pci_bus_get(struct pci_bus *bus);
+ void pci_bus_put(struct pci_bus *bus);
+ 
+ /* PCIe link information */
+-#define PCIE_SPEED2STR(speed) \
+-	((speed) == PCIE_SPEED_32_0GT ? "32 GT/s" : \
+-	 (speed) == PCIE_SPEED_16_0GT ? "16 GT/s" : \
+-	 (speed) == PCIE_SPEED_8_0GT ? "8 GT/s" : \
+-	 (speed) == PCIE_SPEED_5_0GT ? "5 GT/s" : \
+-	 (speed) == PCIE_SPEED_2_5GT ? "2.5 GT/s" : \
+-	 "Unknown speed")
++#define PCI_SPEED2STR(speed) \
++	((speed) < pci_bus_speed_strings_size ? \
++	 pci_bus_speed_strings[speed] : "Unknown speed")
+ 
+ /* PCIe speed to Mb/s reduced by encoding overhead */
+ #define PCIE_SPEED2MBS_ENC(speed) \
 -- 
 2.8.1
 
