@@ -2,37 +2,35 @@ Return-Path: <SRS0=fb+J=4F=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1F10C35254
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Feb 2020 11:17:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5769C7619F
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Feb 2020 11:17:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C75F32072C
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Feb 2020 11:17:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C018D207FD
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Feb 2020 11:17:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728619AbgBQLRO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 Feb 2020 06:17:14 -0500
-Received: from szxga06-in.huawei.com ([45.249.212.32]:57146 "EHLO huawei.com"
+        id S1728613AbgBQLRP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 Feb 2020 06:17:15 -0500
+Received: from szxga06-in.huawei.com ([45.249.212.32]:57138 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728524AbgBQLRO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 17 Feb 2020 06:17:14 -0500
+        id S1727994AbgBQLRP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 17 Feb 2020 06:17:15 -0500
 Received: from DGGEMS407-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id C5B26C6133B427D6669F;
+        by Forcepoint Email with ESMTP id CD591946581B44129897;
         Mon, 17 Feb 2020 19:17:10 +0800 (CST)
 Received: from localhost.localdomain (10.67.165.24) by
  DGGEMS407-HUB.china.huawei.com (10.3.19.207) with Microsoft SMTP Server id
- 14.3.439.0; Mon, 17 Feb 2020 19:17:05 +0800
+ 14.3.439.0; Mon, 17 Feb 2020 19:17:04 +0800
 From:   Yicong Yang <yangyicong@hisilicon.com>
 To:     <helgaas@kernel.org>, <linux-pci@vger.kernel.org>
 CC:     <f.fangjian@huawei.com>, <huangdaode@huawei.com>
-Subject: [PATCH v4 03/10] PCI: Remove PCIe suffix in pci_bus_speed_strings[]
-Date:   Mon, 17 Feb 2020 19:12:57 +0800
-Message-ID: <1581937984-40353-4-git-send-email-yangyicong@hisilicon.com>
+Subject: [PATCH v4 00/10] Improve link speed presentation process
+Date:   Mon, 17 Feb 2020 19:12:54 +0800
+Message-ID: <1581937984-40353-1-git-send-email-yangyicong@hisilicon.com>
 X-Mailer: git-send-email 2.8.1
-In-Reply-To: <1581937984-40353-1-git-send-email-yangyicong@hisilicon.com>
-References: <1581937984-40353-1-git-send-email-yangyicong@hisilicon.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [10.67.165.24]
@@ -42,53 +40,62 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Remove "PCIe" suffix of PCIe speed strings in
-pci_bus_speed_strings[] array. For example, if we use the
-array to decode link speed in __pcie_print_link_status,
-it'll lead to redundancy like:
-- nvme 0000:01:00.0: 16.000 Gb/s available PCIe bandwidth,
-  limited by 5 GT/s x4 link at 0000:00:01.1 (capable of
-  31.504 Gb/s with 8 GT/s x4 link)
-+ nvme 0000:01:00.0: 16.000 Gb/s available PCIe bandwidth,
-  limited by 5 GT/s PCIe x4 link at 0000:00:01.1 (capable
-  of 31.504 Gb/s with 8 GT/s PCIe x4 link)
+In this series:
+1. Add 32 GT/s decoding in some macros as a complementary
+2. Remove redundancy in speed presentation process and improve the codes.
 
-The patch introduces changes in sysfs when display
-bus speed of certain slot from cur_bus_speed/max_bus_speed
-in /sys/bus/pci/slots/*. It may looks like:
--/sys/bus/pci/slots/0/cur_bus_speed: 8 GT/s PCIe
-+/sys/bus/pci/slots/0/cur_bus_speed: 8 GT/s
-The following patch will compensate and display slot
-bus speed with "PCIe" suffix as before.
+Currently We use switch-case statements to acquire the speed
+string according to the pci bus speed in current_link_speed_show()
+and pcie_get_speed_cap(). It leads to redundant and when new
+standard comes, we have to add cases in the related functions,
+which is easy to omit at somewhere.
 
-[1] https://lore.kernel.org/linux-pci/20200114224909.GA19633@google.com
-[2] https://lore.kernel.org/linux-pci/20200205183531.GA229621@google.com
-Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
----
- drivers/pci/probe.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+Abstract the judge statements out. Use macros and pci speed
+arrays instead. Then only the macros and arrays need to be
+extended when next generation comes.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 4e997e7..6ce47d8 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -700,11 +700,11 @@ const char *pci_bus_speed_strings[] = {
- 	"66 MHz PCI-X 533",	/* 0x11 */
- 	"100 MHz PCI-X 533",	/* 0x12 */
- 	"133 MHz PCI-X 533",	/* 0x13 */
--	"2.5 GT/s PCIe",	/* 0x14 */
--	"5.0 GT/s PCIe",	/* 0x15 */
--	"8.0 GT/s PCIe",	/* 0x16 */
--	"16.0 GT/s PCIe",	/* 0x17 */
--	"32.0 GT/s PCIe",	/* 0x18 */
-+	"2.5 GT/s",	/* 0x14 */
-+	"5.0 GT/s",	/* 0x15 */
-+	"8.0 GT/s",	/* 0x16 */
-+	"16.0 GT/s",	/* 0x17 */
-+	"32.0 GT/s",	/* 0x18 */
- };
- const int pci_bus_speed_strings_size = ARRAY_SIZE(pci_bus_speed_strings);
- 
--- 
+Link:
+https://lore.kernel.org/linux-pci/20200113211728.GA113776@google.com/
+https://lore.kernel.org/linux-pci/20200114224909.GA19633@google.com/
+
+change since v3:
+1. Use pcie_link_speed[] to decode link speed in brcmstb PCIe controller
+2. fix the compile error in pcie-brcmstb.c reported by kbuild test robot
+Link: https://lore.kernel.org/linux-pci/5e487ee7.lOkk8mDzWylEn16z%25lkp@intel.com
+
+change since v2:
+1. revert split "PCI: Make pci_bus_speed_strings[] public" from the series
+and split into two patches. And modify the description as suggested.
+2. split "PCI: Refactor bus_speed_read() with PCI_SPEED2STR macro" to
+two patches.
+Link: https://lore.kernel.org/linux-pci/20200212223133.GA177061@google.com/
+
+change since v1:
+1. split "PCI: Make pci_bus_speed_strings[] public" from the series
+2. split v1 PATCH 4 to two patches as suggested
+3. modify some description in commit as suggested
+
+
+Yicong Yang (10):
+  PCI: add 32 GT/s decoding in some macros
+  PCI: Make pci_bus_speed_strings[] public
+  PCI: Remove PCIe suffix in pci_bus_speed_strings[]
+  PCI: Add comments for link speed info arrays
+  PCI: brcmstb: Use pcie_link_speed[] to decode link speed
+  PCI: Refactor and rename PCIE_SPEED2STR macro
+  PCI: Refactor bus_speed_read() with PCI_SPEED2STR macro
+  PCI: Add PCIe suffix when display PCIe slot bus speed
+  PCI: Add PCIE_LNKCAP2_SLS2SPEED macro
+  PCI: Reduce redundancy in current_link_speed_show()
+
+ drivers/pci/controller/pcie-brcmstb.c |  2 +-
+ drivers/pci/pci-sysfs.c               | 26 ++++-------------------
+ drivers/pci/pci.c                     | 23 +++++++--------------
+ drivers/pci/pci.h                     | 23 ++++++++++++++-------
+ drivers/pci/probe.c                   | 38 ++++++++++++++++++++++++++++++++++
+ drivers/pci/slot.c                    | 39 +++--------------------------------
+ 6 files changed, 69 insertions(+), 82 deletions(-)
+
+--
 2.8.1
 
