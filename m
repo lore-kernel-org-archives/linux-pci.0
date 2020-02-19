@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2F0FC34050
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Feb 2020 12:40:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 235F2C3404D
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Feb 2020 12:40:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CB1F12467A
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Feb 2020 12:40:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EF10324654
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Feb 2020 12:40:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727705AbgBSMjz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 19 Feb 2020 07:39:55 -0500
-Received: from mx2.suse.de ([195.135.220.15]:52870 "EHLO mx2.suse.de"
+        id S1727696AbgBSMkV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 19 Feb 2020 07:40:21 -0500
+Received: from mx2.suse.de ([195.135.220.15]:52818 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726530AbgBSMjq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Feb 2020 07:39:46 -0500
+        id S1726491AbgBSMjo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Feb 2020 07:39:44 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 69A2CB9C6;
-        Wed, 19 Feb 2020 12:39:44 +0000 (UTC)
+        by mx2.suse.de (Postfix) with ESMTP id 7EEDEB48C;
+        Wed, 19 Feb 2020 12:39:42 +0000 (UTC)
 From:   Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
 To:     linux-kernel@vger.kernel.org,
         Florian Fainelli <f.fainelli@gmail.com>,
+        Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
         bcm-kernel-feedback-list@broadcom.com,
-        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Andrew Murray <amurray@thegoodpenguin.co.uk>
+        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
 Cc:     linux-usb@vger.kernel.org, linux-rpi-kernel@lists.infradead.org,
         linux-arm-kernel@lists.infradead.org, gregkh@linuxfoundation.org,
         tim.gover@raspberrypi.org, linux-pci@vger.kernel.org,
-        wahrenst@gmx.net, Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v2 3/4] PCI: brcmstb: Wait for Raspberry Pi's firmware when present
-Date:   Wed, 19 Feb 2020 13:39:32 +0100
-Message-Id: <20200219123933.2792-4-nsaenzjulienne@suse.de>
+        wahrenst@gmx.net
+Subject: [PATCH v2 1/4] soc: bcm2835: Sync xHCI reset firmware property with downstream
+Date:   Wed, 19 Feb 2020 13:39:30 +0100
+Message-Id: <20200219123933.2792-2-nsaenzjulienne@suse.de>
 X-Mailer: git-send-email 2.25.0
 In-Reply-To: <20200219123933.2792-1-nsaenzjulienne@suse.de>
 References: <20200219123933.2792-1-nsaenzjulienne@suse.de>
@@ -47,54 +47,33 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-xHCI's PCI fixup, run at the end of pcie-brcmstb's probe, depends on
-RPi4's VideoCore firmware interface to be up and running. It's possible
-for both initializations to race, so make sure it's available prior
-starting.
+The property is needed in order to trigger VL805's firmware load.
 
 Signed-off-by: Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
 ---
- drivers/pci/controller/pcie-brcmstb.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
 
-diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
-index d20aabc26273..9600052f768c 100644
---- a/drivers/pci/controller/pcie-brcmstb.c
-+++ b/drivers/pci/controller/pcie-brcmstb.c
-@@ -28,6 +28,8 @@
- #include <linux/string.h>
- #include <linux/types.h>
+Note that there is a gap between the property introduced and the previous
+one. This is also the case downstream.
+
+Changes since v1:
+ - move into own patch
+
+ include/soc/bcm2835/raspberrypi-firmware.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/soc/bcm2835/raspberrypi-firmware.h b/include/soc/bcm2835/raspberrypi-firmware.h
+index 7800e12ee042..cc9cdbc66403 100644
+--- a/include/soc/bcm2835/raspberrypi-firmware.h
++++ b/include/soc/bcm2835/raspberrypi-firmware.h
+@@ -90,7 +90,7 @@ enum rpi_firmware_property_tag {
+ 	RPI_FIRMWARE_SET_PERIPH_REG =                         0x00038045,
+ 	RPI_FIRMWARE_GET_POE_HAT_VAL =                        0x00030049,
+ 	RPI_FIRMWARE_SET_POE_HAT_VAL =                        0x00030050,
+-
++	RPI_FIRMWARE_NOTIFY_XHCI_RESET =                      0x00030058,
  
-+#include <soc/bcm2835/raspberrypi-firmware.h>
-+
- #include "../pci.h"
- 
- /* BRCM_PCIE_CAP_REGS - Offset for the mandatory capability config regs */
-@@ -917,11 +919,24 @@ static int brcm_pcie_probe(struct platform_device *pdev)
- {
- 	struct device_node *np = pdev->dev.of_node, *msi_np;
- 	struct pci_host_bridge *bridge;
-+	struct device_node *fw_np;
- 	struct brcm_pcie *pcie;
- 	struct pci_bus *child;
- 	struct resource *res;
- 	int ret;
- 
-+	/*
-+	 * We have to wait for the Raspberry Pi's firmware interface to be up
-+	 * as some PCI fixups depend on it.
-+	 */
-+	fw_np = of_find_compatible_node(NULL, NULL,
-+					"raspberrypi,bcm2835-firmware");
-+	if (fw_np && !rpi_firmware_get(fw_np)) {
-+		of_node_put(fw_np);
-+		return -EPROBE_DEFER;
-+	}
-+	of_node_put(fw_np);
-+
- 	bridge = devm_pci_alloc_host_bridge(&pdev->dev, sizeof(*pcie));
- 	if (!bridge)
- 		return -ENOMEM;
+ 	/* Dispmanx TAGS */
+ 	RPI_FIRMWARE_FRAMEBUFFER_ALLOCATE =                   0x00040001,
 -- 
 2.25.0
 
