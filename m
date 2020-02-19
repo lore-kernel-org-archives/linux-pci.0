@@ -1,98 +1,174 @@
-Return-Path: <SRS0=a8aH=4G=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=kTEH=4H=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D480C34031
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Feb 2020 21:13:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08A9DC34050
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Feb 2020 08:11:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7606624125
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Feb 2020 21:13:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CEFC22464E
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Feb 2020 08:11:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1582060435;
-	bh=jVC8I1sGpUiNMyiy8r1s4MV9S4tOyGLhWM1jmiBuVEo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=UZ6avmJfyGaYanJ2Ky0bgusH1Aji+FBpQbDM25d1d3Ogd0KW8BQpTCt/oBTKdhBVp
-	 EOSVrWSrYlm7jzlQU7T3ckCP4foqYU/izG/2DWUkunlA2NiU5CtF1lwJBPF4mnoW2J
-	 RO4RXoUulDTRpabOtxO2x2rUAL3qOXWkOwz1U5zY=
+	s=default; t=1582099912;
+	bh=QfU8iG3TjKxX5yhqwL+LRUe53aZyIy+gvaXUuliPqbg=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:List-ID:From;
+	b=0sz/C6eq7OIRBZnkGvbLhv+gGmsCKXHnQV+DWNQbhoyZutHU7IFCiDWJMH5GDj9bl
+	 t3zxO1fBSwSB+RFnqJh3kTePdGE9SEBtCH213bS99iOgFiya3/pYb701ycFO6tTg88
+	 vFyyFpRcjPDWAQw9OErA9S4jbPWORhGXu2/QWiBg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726939AbgBRVNv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 18 Feb 2020 16:13:51 -0500
-Received: from mail-oi1-f196.google.com ([209.85.167.196]:39649 "EHLO
-        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726339AbgBRVNv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Feb 2020 16:13:51 -0500
-Received: by mail-oi1-f196.google.com with SMTP id z2so21610187oih.6;
-        Tue, 18 Feb 2020 13:13:50 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=Wsp21LIcG4NslijziS7uyMDJScAYzOtQaO+9/p80IQ4=;
-        b=Gn4kmXJu9n+uXGhlbfM9KPlbi5ycH4xKUSLbngI4euPIE/5WlodKz25tj2XHe1BQO8
-         xNzavCIzz50qIB4nBht9+qyPoznu+UM5iZJpOPhWXkcCefa11U9uAvyp9KX4x7RHosXu
-         ShT7FMEoKFxuF6MvwgiDECAgw0JFNbMTsZLKuTFWydWxE2kxBscJDniJI1iEWC7KZNbz
-         FvwBxrIX/2PTtvmP1PgWhGZaBZ0OXkhhn7NxL+Us5Ynp9mw5uBTRK98RjrHd9HiKj7NN
-         /+5SDiP3j1Y6qdoO9BWRQqw7Ss4OaWpcXRfVBSTBiUWAQHExlu6cGNtvL4SUmm8mWgOz
-         QBKA==
-X-Gm-Message-State: APjAAAWWY1wTEeRHNyBSUA2BVamo+lEiKfdwaABl5FjrZE7d5F4kIiIr
-        RJ330liDWIbi5LpjPN7Ciw==
-X-Google-Smtp-Source: APXvYqzV9oocyBJZGvkp1bADAbLS2xQl21KF+EyRyietsBdKoEM/3HRmoC9kQcpKj2d8Pz3raOUtlA==
-X-Received: by 2002:aca:3542:: with SMTP id c63mr2575156oia.135.1582060430256;
-        Tue, 18 Feb 2020 13:13:50 -0800 (PST)
-Received: from rob-hp-laptop (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.gmail.com with ESMTPSA id m185sm13530oia.26.2020.02.18.13.13.49
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 18 Feb 2020 13:13:49 -0800 (PST)
-Received: (nullmailer pid 15304 invoked by uid 1000);
-        Tue, 18 Feb 2020 21:13:48 -0000
-Date:   Tue, 18 Feb 2020 15:13:48 -0600
-From:   Rob Herring <robh@kernel.org>
-To:     Lad Prabhakar <prabhakar.csengg@gmail.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        id S1726551AbgBSILw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 19 Feb 2020 03:11:52 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33672 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726156AbgBSILw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Feb 2020 03:11:52 -0500
+Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5DCC32176D;
+        Wed, 19 Feb 2020 08:11:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1582099911;
+        bh=QfU8iG3TjKxX5yhqwL+LRUe53aZyIy+gvaXUuliPqbg=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=ahFy/0bNrSNT6TxkKoZyef6m1GZfFipzdpOtruXbovl7mcipDDL9gWBa7SAlf3ZKo
+         1W504MjHeHa3ipk9lMGCcKv3draY0I7miXUG1c+aAwCwjg5psgyKDyYK6lEczG031I
+         DFqNxIrNsJGc/zqiW2t2ERpYCAJlGbfukfjo2itU=
+Received: from 78.163-31-62.static.virginmediabusiness.co.uk ([62.31.163.78] helo=why)
+        by disco-boy.misterjones.org with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <maz@kernel.org>)
+        id 1j4KST-006SGG-J4; Wed, 19 Feb 2020 08:11:49 +0000
+Date:   Wed, 19 Feb 2020 08:11:48 +0000
+From:   Marc Zyngier <maz@kernel.org>
+To:     Alan Mikhak <alan.mikhak@sifive.com>
+Cc:     Ard Biesheuvel <ardb@kernel.org>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Graeme Gregory <graeme.gregory@linaro.org>,
         Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Heiko Stuebner <heiko@sntech.de>, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
-        linux-renesas-soc@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Andrew Murray <andrew.murray@arm.com>,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v4 4/6] dt-bindings: PCI: rcar: Add bindings for R-Car
- PCIe  endpoint controller
-Message-ID: <20200218211348.GA15246@bogus>
-References: <20200208183641.6674-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <20200208183641.6674-5-prabhakar.mahadev-lad.rj@bp.renesas.com>
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Leif Lindholm <leif@nuviainc.com>
+Subject: Re: [PATCH 2/3] pci: designware: add separate driver for the MSI
+ part of the RC
+Message-ID: <20200219081148.5307e30a@why>
+In-Reply-To: <CABEDWGxDz6njYYQN879XnGmY2vxOKvbygeg=9nBK54U6WP8_ug@mail.gmail.com>
+References: <20170821192907.8695-3-ard.biesheuvel@linaro.org>
+        <1581728065-5862-1-git-send-email-alan.mikhak@sifive.com>
+        <CAKv+Gu9W0v9owp85hkAatwCvu-y9z4BZxvbKf92N-s_nnD910Q@mail.gmail.com>
+        <867e0o6ssr.wl-maz@kernel.org>
+        <CABEDWGxDz6njYYQN879XnGmY2vxOKvbygeg=9nBK54U6WP8_ug@mail.gmail.com>
+Organization: Approximate
+X-Mailer: Claws Mail 3.17.4 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200208183641.6674-5-prabhakar.mahadev-lad.rj@bp.renesas.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 62.31.163.78
+X-SA-Exim-Rcpt-To: alan.mikhak@sifive.com, ardb@kernel.org, Joao.Pinto@synopsys.com, bhelgaas@google.com, graeme.gregory@linaro.org, jingoohan1@gmail.com, linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org, leif@nuviainc.com
+X-SA-Exim-Mail-From: maz@kernel.org
+X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sat,  8 Feb 2020 18:36:39 +0000, Lad Prabhakar wrote:
-> This patch adds the bindings for the R-Car PCIe endpoint driver.
-> 
-> Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-> ---
->  .../devicetree/bindings/pci/rcar-pci-ep.yaml       | 76 ++++++++++++++++++++++
->  1 file changed, 76 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/rcar-pci-ep.yaml
-> 
+On Tue, 18 Feb 2020 11:09:10 -0800
+Alan Mikhak <alan.mikhak@sifive.com> wrote:
 
-Reviewed-by: Rob Herring <robh@kernel.org>
+> On Sat, Feb 15, 2020 at 2:36 AM Marc Zyngier <maz@kernel.org> wrote:
+> >
+> > On Sat, 15 Feb 2020 09:35:56 +0000,
+> > Ard Biesheuvel <ardb@kernel.org> wrote:  
+> > >
+> > > (updated some email addresses in cc, including my own)
+> > >
+> > > On Sat, 15 Feb 2020 at 01:54, Alan Mikhak <alan.mikhak@sifive.com> wrote:  
+> > > >
+> > > > Hi..
+> > > >
+> > > > What is the right approach for adding MSI support for the generic
+> > > > Linux PCI host driver?
+> > > >
+> > > > I came across this patch which seems to address a similar
+> > > > situation. It seems to have been dropped in v3 of the patchset
+> > > > with the explanation "drop MSI patch [for now], since it
+> > > > turns out we may not need it".
+> > > >
+> > > > [PATCH 2/3] pci: designware: add separate driver for the MSI part of the RC
+> > > > https://lore.kernel.org/linux-pci/20170821192907.8695-3-ard.biesheuvel@linaro.org/
+> > > >
+> > > > [PATCH v2 2/3] pci: designware: add separate driver for the MSI part of the RC
+> > > > https://lore.kernel.org/linux-pci/20170824184321.19432-3-ard.biesheuvel@linaro.org/
+> > > >
+> > > > [PATCH v3 0/2] pci: add support for firmware initialized designware RCs
+> > > > https://lore.kernel.org/linux-pci/20170828180437.2646-1-ard.biesheuvel@linaro.org/
+> > > >  
+> > >
+> > > For the platform in question, it turned out that we could use the MSI
+> > > block of the core's GIC interrupt controller directly, which is a much
+> > > better solution.
+> > >
+> > > In general, turning MSIs into wired interrupts is not a great idea,
+> > > since the whole point of MSIs is that they are sufficiently similar to
+> > > other DMA transactions to ensure that the interrupt won't arrive
+> > > before the related memory transactions have completed.
+> > >
+> > > If your interrupt controller does not have this capability, then yes,
+> > > you are stuck with this little widget that decodes an inbound write to
+> > > a magic address and turns it into a wired interrupt.  
+> >
+> > I can only second this. It is much better to have a generic block
+> > implementing MSI *in a non multiplexed way*, for multiple reasons:
+> >
+> > - the interrupt vs DMA race that Ard mentions above,
+> >
+> > - MSIs are very often used to describe the state of per-CPU queues. If
+> >   you multiplex MSIs behind a single multiplexing interrupt, it is
+> >   always the same CPU that gets interrupted, and you don't benefit
+> >   from having multiple queues at all.
+> >
+> > Even if you have to implement the support as a bunch of wired
+> > interrupts, there is still a lot of value in keeping a 1:1 mapping
+> > between MSIs and wires.
+> >
+> > Thanks,
+> >
+> >         M.
+> >
+> > --
+> > Jazz is not dead, it just smells funny.  
+> 
+> Ard and Marc, Thanks for you comments. I will take a look at the code
+> related to MSI block of GIC interrupt controller for some reference.
+
+GICv2m or GICv3 MBI are probably your best bets. Don't get anywhere near
+the GICv3 ITS, there lies madness. ;-)
+
+> I am looking into supporting MSI in a non-multiplexed way when using
+> ECAM and the generic Linux PCI host driver when Linux is booted
+> from U-Boot.
+
+I don't really get the relationship between ECAM and MSIs. They should
+be fairly independent, unless that has to do with the allowing the MSI
+doorbell to be reached from the PCIe endpoint.
+
+> Specifically, what is the right approach for sharing the physical
+> address of the MSI data block used in Linux with U-Boot?
+> 
+> I imagine the Linux driver for MSI interrupt controller allocates
+> some DMA-able memory for use as the MSI data block. The
+> U-Boot PCIe driver would program an inbound ATU region to
+> map mem writes from endpoint devices to that MSI data block
+> before booting Linux.
+
+The "MSI block" is really a piece of HW, not memory. So whatever you
+have to program in the PCIe RC must allow an endpoint to reach that
+device with a 32bit write.
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
