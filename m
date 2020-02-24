@@ -2,100 +2,108 @@ Return-Path: <SRS0=2i2g=4M=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 852F1C11D2F
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Feb 2020 16:57:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F72DC11D2F
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Feb 2020 16:59:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 594E920836
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Feb 2020 16:57:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1582563453;
-	bh=eAFdJ/GHOBZ8JOWQZMrpGy2jHaGViHZs8DzzU5E/LqU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=U2vwi9YG0HOrj4fEl9EoKTvtZdznJRiWfwxkc9XUkcjk2Kz3Rx7JqXip5KJWXWjT0
-	 IckamWXIZpumfYZRBHmX/UELwK1QE4o8vmnif8+GyZCAwbvngyy9ddVncnGaZXc7/E
-	 bd0QfgM7P9BZaBsS62wqUccdD0y808u8Svbj9EhY=
+	by mail.kernel.org (Postfix) with ESMTP id E6E8420836
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Feb 2020 16:59:08 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="h5rEfPIu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727883AbgBXQ53 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 24 Feb 2020 11:57:29 -0500
-Received: from mail-ot1-f67.google.com ([209.85.210.67]:38685 "EHLO
-        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727874AbgBXQ53 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Feb 2020 11:57:29 -0500
-Received: by mail-ot1-f67.google.com with SMTP id z9so9327833oth.5;
-        Mon, 24 Feb 2020 08:57:28 -0800 (PST)
+        id S1727978AbgBXQ7H (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 24 Feb 2020 11:59:07 -0500
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:38409 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728042AbgBXQ7H (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Feb 2020 11:59:07 -0500
+Received: by mail-wr1-f65.google.com with SMTP id e8so11253427wrm.5
+        for <linux-pci@vger.kernel.org>; Mon, 24 Feb 2020 08:59:06 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=8HIxi7ZL1ytSixldA0X7x1yzZ6pxdx7GHOJTgPsbD+w=;
+        b=h5rEfPIuduIQsDpoF+aKzWlaxFkIu7NDgF+GUcFIIt/VEnEoT0L5HPk9fkl7MEJle/
+         Ud2/GAlx627mLkL/h0OM7o+RKQDlXhqbE11lN9bmjiCsn4DNjmUERD/jrlTqzVJWNjj4
+         GKsFp79swWzlVETvQ6zeOwXBwvIXoqOkTvFEc5iELSunxPmlJa3C9IoktYgPNSri85j6
+         dOsjcm5aopJ5Wg/HN4EeLpWdLgJf2/AhAp5ryL71MVMahP0aLdvn5AtDO+E46a0UO5F/
+         xsZMf+Gj1g+5qy4Nt1bFFOG67DXu65lwChW+sVk7kYxBwmSFM94vz6m+bs8D32j8JX1B
+         kE3g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=6g/0/6uHeJ9SHvtHOygjn4v068gQNv45K/NSYSZDP4E=;
-        b=U4bVxMHNwJ6W7JIAPFLUPteLmJJA0QGPR31VfFdSP8+ZGFAdgDOYzlj0ym5qD1aIJM
-         Bmib+pRnAW4kq0/k8psdKx5rpJLLXoV8zu5Qv6C5XJPUuHov3HldBPDZwnhZVekqAkfy
-         aQymTIFOScZk02GEXFHyuE75t4Zhw0GfDZCgFqSD+Z//bMVDFVmUS5Hyc4GPJkISlo2u
-         VTf962Unq7aK78r8TtxckMzbAf7f0I4aJKmv4nco3IKg8Y8POpM5s+xspmcX5WZII3q9
-         CkHNZBug1qUSRBzuSut9u2erF2aRNolrksI7E4U6j7w9nf8Mp1s/CF5ZSwK4kaOP5hIL
-         Sq/g==
-X-Gm-Message-State: APjAAAXpeCOe1ykqxhRx9rHz7u29dcVf1xT9Zuap25zZ3IkYOHbr/NW7
-        /jPesK7HPXFUGqWp4eDsgg==
-X-Google-Smtp-Source: APXvYqzBSMqtk4LzoxQnFIH5IwbuCE4Q4g+OfNbeilXK0aQ5gXGWn1SAYGX3ICKI7wCB5mXfcqXu7A==
-X-Received: by 2002:a05:6830:1d8b:: with SMTP id y11mr42737812oti.4.1582563448155;
-        Mon, 24 Feb 2020 08:57:28 -0800 (PST)
-Received: from rob-hp-laptop (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.gmail.com with ESMTPSA id a1sm4610066oti.2.2020.02.24.08.57.26
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=8HIxi7ZL1ytSixldA0X7x1yzZ6pxdx7GHOJTgPsbD+w=;
+        b=Mdox3KLuyPzbazIjH2ATvkH/0sFLCu0x2LHlDfyxdtzA0VmGKxSrqO6NIaP2ZMZiew
+         DsL+hP8TLlkkpAI7fcyDD4SZwP3HBHblkxsUg/fuKVj2huAMfzirM1s1A4QyqEu7nge5
+         s++rPYTSfvNwpsZEG5IWrW9i5fHfOwbXKd+clFiD0umMi5Gw2W3YvKFMtEzN1kQ/S5Dg
+         yB33wJhrNrPFgBOGDE0C7UGgiB0NlJj+fkneu9eUu+BUbZvwgSpigcPIIXHpYYJdiNdp
+         7jRgvE8MVs21aOV7Vm8cEOgj+rzBKIv0IwOUbi36gCxNFLi5q05bH4a0bxexFfwR7Fcv
+         QOag==
+X-Gm-Message-State: APjAAAW9T2CNV7d8sCecF/QXrKjm/O6nk9hD/UcXQ9DZn3ZtTTQhc0IV
+        jmfEBU0bHemW0Ql/gXVFpGPKe6TYr/0=
+X-Google-Smtp-Source: APXvYqzKuk1DCPA9bZvrQ+EiIsobd8Fn/PAZ2IzLOJ9Fytea0eB2ueRowKL1GRPNmrrjY6GtmuesjA==
+X-Received: by 2002:adf:e6d2:: with SMTP id y18mr14316725wrm.270.1582563545042;
+        Mon, 24 Feb 2020 08:59:05 -0800 (PST)
+Received: from localhost.localdomain ([2001:171b:c9a8:fbc0:116c:c27a:3e7f:5eaf])
+        by smtp.gmail.com with ESMTPSA id b10sm19473978wrt.90.2020.02.24.08.59.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 24 Feb 2020 08:57:27 -0800 (PST)
-Received: (nullmailer pid 27821 invoked by uid 1000);
-        Mon, 24 Feb 2020 16:57:26 -0000
-Date:   Mon, 24 Feb 2020 10:57:26 -0600
-From:   Rob Herring <robh@kernel.org>
-To:     Lukas Bulwahn <lukas.bulwahn@gmail.com>
-Cc:     David Daney <david.daney@cavium.com>,
-        Robert Richter <rrichter@marvell.com>,
-        Will Deacon <will@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Andrew Murray <andrew.murray@arm.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        devicetree@vger.kernel.org, Joe Perches <joe@perches.com>,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] MAINTAINERS: clean up PCIE DRIVER FOR CAVIUM THUNDERX
-Message-ID: <20200224165726.GA27161@bogus>
-References: <20200223090950.5259-1-lukas.bulwahn@gmail.com>
+        Mon, 24 Feb 2020 08:59:04 -0800 (PST)
+From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
+To:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        iommu@lists.linux-foundation.org, will@kernel.org,
+        bhelgaas@google.com
+Cc:     joro@8bytes.org, robin.murphy@arm.com, jonathan.cameron@huawei.com,
+        zhangfei.gao@linaro.org, robh@kernel.org
+Subject: [PATCH v2 3/6] iommu/arm-smmu-v3: Write level-1 descriptors atomically
+Date:   Mon, 24 Feb 2020 17:58:43 +0100
+Message-Id: <20200224165846.345993-4-jean-philippe@linaro.org>
+X-Mailer: git-send-email 2.25.0
+In-Reply-To: <20200224165846.345993-1-jean-philippe@linaro.org>
+References: <20200224165846.345993-1-jean-philippe@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200223090950.5259-1-lukas.bulwahn@gmail.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sun, Feb 23, 2020 at 10:09:50AM +0100, Lukas Bulwahn wrote:
-> Commit e1ac611f57c9 ("dt-bindings: PCI: Convert generic host binding to
-> DT schema") combines all information from pci-thunder-{pem,ecam}.txt
-> into host-generic-pci.yaml, and deleted the two files in
-> Documentation/devicetree/bindings/pci/.
-> 
-> Since then, ./scripts/get_maintainer.pl --self-test complains:
-> 
->   no file matches F: Documentation/devicetree/bindings/pci/pci-thunder-*
-> 
-> As the PCIE DRIVER FOR CAVIUM THUNDERX-relevant information is only a
-> small part of the host-generic-pci.yaml, do not add this file to the
-> PCIE DRIVER FOR CAVIUM THUNDERX entry, and only drop the reference to
-> the removed files.
-> 
-> Signed-off-by: Lukas Bulwahn <lukas.bulwahn@gmail.com>
-> ---
-> Robert, are you still the maintainer of this driver?
-> Rob Herring, please pick this patch.
-> applies cleanly on current master and next-20200221
+Use WRITE_ONCE() to make sure that the SMMU doesn't read incomplete
+stream table descriptors. Refer to the comment about 64-bit accesses,
+and add the comment to the equivalent context descriptor code.
 
-Applied, thanks.
+Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
+---
+ drivers/iommu/arm-smmu-v3.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Rob
+diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+index 6b76df37025e..068a16d0eabe 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -1531,6 +1531,7 @@ static void arm_smmu_write_cd_l1_desc(__le64 *dst,
+ 	u64 val = (l1_desc->l2ptr_dma & CTXDESC_L1_DESC_L2PTR_MASK) |
+ 		  CTXDESC_L1_DESC_V;
+ 
++	/* See comment in arm_smmu_write_ctx_desc() */
+ 	WRITE_ONCE(*dst, cpu_to_le64(val));
+ }
+ 
+@@ -1726,7 +1727,8 @@ arm_smmu_write_strtab_l1_desc(__le64 *dst, struct arm_smmu_strtab_l1_desc *desc)
+ 	val |= FIELD_PREP(STRTAB_L1_DESC_SPAN, desc->span);
+ 	val |= desc->l2ptr_dma & STRTAB_L1_DESC_L2PTR_MASK;
+ 
+-	*dst = cpu_to_le64(val);
++	/* See comment in arm_smmu_write_ctx_desc() */
++	WRITE_ONCE(*dst, cpu_to_le64(val));
+ }
+ 
+ static void arm_smmu_sync_ste_for_sid(struct arm_smmu_device *smmu, u32 sid)
+-- 
+2.25.0
+
