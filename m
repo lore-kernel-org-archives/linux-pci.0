@@ -7,62 +7,62 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F72DC11D2F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3737C11D32
 	for <linux-pci@archiver.kernel.org>; Mon, 24 Feb 2020 16:59:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E6E8420836
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Feb 2020 16:59:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8AD7C20836
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Feb 2020 16:59:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="h5rEfPIu"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="RRx8U11v"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727978AbgBXQ7H (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 24 Feb 2020 11:59:07 -0500
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:38409 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728042AbgBXQ7H (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Feb 2020 11:59:07 -0500
-Received: by mail-wr1-f65.google.com with SMTP id e8so11253427wrm.5
-        for <linux-pci@vger.kernel.org>; Mon, 24 Feb 2020 08:59:06 -0800 (PST)
+        id S1727939AbgBXQ7I (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 24 Feb 2020 11:59:08 -0500
+Received: from mail-wm1-f65.google.com ([209.85.128.65]:51751 "EHLO
+        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728022AbgBXQ7F (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Feb 2020 11:59:05 -0500
+Received: by mail-wm1-f65.google.com with SMTP id t23so55275wmi.1
+        for <linux-pci@vger.kernel.org>; Mon, 24 Feb 2020 08:59:03 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=8HIxi7ZL1ytSixldA0X7x1yzZ6pxdx7GHOJTgPsbD+w=;
-        b=h5rEfPIuduIQsDpoF+aKzWlaxFkIu7NDgF+GUcFIIt/VEnEoT0L5HPk9fkl7MEJle/
-         Ud2/GAlx627mLkL/h0OM7o+RKQDlXhqbE11lN9bmjiCsn4DNjmUERD/jrlTqzVJWNjj4
-         GKsFp79swWzlVETvQ6zeOwXBwvIXoqOkTvFEc5iELSunxPmlJa3C9IoktYgPNSri85j6
-         dOsjcm5aopJ5Wg/HN4EeLpWdLgJf2/AhAp5ryL71MVMahP0aLdvn5AtDO+E46a0UO5F/
-         xsZMf+Gj1g+5qy4Nt1bFFOG67DXu65lwChW+sVk7kYxBwmSFM94vz6m+bs8D32j8JX1B
-         kE3g==
+        bh=ffFCJH69MWS3gu5TdGiWJyiqlV+lu2ttPiLstT+myYY=;
+        b=RRx8U11vMPRTlGnIGn4sCB8SnlGdKWqavfSqD6SR8YQbgWxZkfH48PSJ+5CDfsbk5S
+         Ze+3wOWEkqnI8YBqOFSDJz5FBNrpacYvYZgTsDkmdA5n4wlRZVjddXIXMc1Swc0FusDG
+         ID0exI27uMOdvgwnrKyEkHPZhPAkCE5/JcqFqErWtxLy03ZXcHvBaYquM+8n9pZzbnmf
+         JF5yKMQAnnlPwCUdQ417vEY8sBmXYM2Du+VPCiVVgh3ewo9JEWYEU99AdEfFfMi7eRqo
+         Nb3D2kPURsTnpbcyeQ1NnVKVHrxjKbWjHpk2O3LengMczoRsjyCdMZXBKdW27vABPch/
+         uALg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=8HIxi7ZL1ytSixldA0X7x1yzZ6pxdx7GHOJTgPsbD+w=;
-        b=Mdox3KLuyPzbazIjH2ATvkH/0sFLCu0x2LHlDfyxdtzA0VmGKxSrqO6NIaP2ZMZiew
-         DsL+hP8TLlkkpAI7fcyDD4SZwP3HBHblkxsUg/fuKVj2huAMfzirM1s1A4QyqEu7nge5
-         s++rPYTSfvNwpsZEG5IWrW9i5fHfOwbXKd+clFiD0umMi5Gw2W3YvKFMtEzN1kQ/S5Dg
-         yB33wJhrNrPFgBOGDE0C7UGgiB0NlJj+fkneu9eUu+BUbZvwgSpigcPIIXHpYYJdiNdp
-         7jRgvE8MVs21aOV7Vm8cEOgj+rzBKIv0IwOUbi36gCxNFLi5q05bH4a0bxexFfwR7Fcv
-         QOag==
-X-Gm-Message-State: APjAAAW9T2CNV7d8sCecF/QXrKjm/O6nk9hD/UcXQ9DZn3ZtTTQhc0IV
-        jmfEBU0bHemW0Ql/gXVFpGPKe6TYr/0=
-X-Google-Smtp-Source: APXvYqzKuk1DCPA9bZvrQ+EiIsobd8Fn/PAZ2IzLOJ9Fytea0eB2ueRowKL1GRPNmrrjY6GtmuesjA==
-X-Received: by 2002:adf:e6d2:: with SMTP id y18mr14316725wrm.270.1582563545042;
-        Mon, 24 Feb 2020 08:59:05 -0800 (PST)
+        bh=ffFCJH69MWS3gu5TdGiWJyiqlV+lu2ttPiLstT+myYY=;
+        b=AYVDyYZErg4M2W/NOsSm8zJ3JSAbaoseVqAueRgx+iI4iBAYrOXREwldOFDHJ2earK
+         392Hb+GGLCcuD7CafoDJUb6/ow0hOyGIXloVOtMNs/YALe/fz4MBxhIPLJ2Tsf/ide6q
+         c5r8vmm7txocR1EdKJZWKfSv3RbIgkKHZhCy0DxdNipJQwT7iCNjcN6ooujjUCNNt1kB
+         TcQUHFmnmXW2yz1khsDJVMFk5cljeBFUXwcHW1CuJD29rZ7KE7pmfDA8APEcC2hKsKJt
+         Oid4XUdq11K1ueqGlLh0kJxZX/ptGD8YzMdC9O0VRXMZYhOtVeqn+uc+fkTJJLbpyn6V
+         USGw==
+X-Gm-Message-State: APjAAAVqwqejFhMDp+76PBPl+fop81FDgdUGMIWaHq5PnC945DUPBlgd
+        wgUUiAqMg2CP4BAyEpxD00bOdB1R0tg=
+X-Google-Smtp-Source: APXvYqzuI5JL7DJSxxC2MA8748RGx58CDQkzuT+eunhF/IfX/BLY+BsUCaKxLYTvlGXreVTEpIeERg==
+X-Received: by 2002:a7b:cb86:: with SMTP id m6mr23887005wmi.51.1582563543020;
+        Mon, 24 Feb 2020 08:59:03 -0800 (PST)
 Received: from localhost.localdomain ([2001:171b:c9a8:fbc0:116c:c27a:3e7f:5eaf])
-        by smtp.gmail.com with ESMTPSA id b10sm19473978wrt.90.2020.02.24.08.59.04
+        by smtp.gmail.com with ESMTPSA id b10sm19473978wrt.90.2020.02.24.08.59.02
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 24 Feb 2020 08:59:04 -0800 (PST)
+        Mon, 24 Feb 2020 08:59:02 -0800 (PST)
 From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
 To:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         iommu@lists.linux-foundation.org, will@kernel.org,
         bhelgaas@google.com
 Cc:     joro@8bytes.org, robin.murphy@arm.com, jonathan.cameron@huawei.com,
         zhangfei.gao@linaro.org, robh@kernel.org
-Subject: [PATCH v2 3/6] iommu/arm-smmu-v3: Write level-1 descriptors atomically
-Date:   Mon, 24 Feb 2020 17:58:43 +0100
-Message-Id: <20200224165846.345993-4-jean-philippe@linaro.org>
+Subject: [PATCH v2 1/6] PCI/ATS: Export symbols of PASID functions
+Date:   Mon, 24 Feb 2020 17:58:41 +0100
+Message-Id: <20200224165846.345993-2-jean-philippe@linaro.org>
 X-Mailer: git-send-email 2.25.0
 In-Reply-To: <20200224165846.345993-1-jean-philippe@linaro.org>
 References: <20200224165846.345993-1-jean-philippe@linaro.org>
@@ -73,37 +73,48 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Use WRITE_ONCE() to make sure that the SMMU doesn't read incomplete
-stream table descriptors. Refer to the comment about 64-bit accesses,
-and add the comment to the equivalent context descriptor code.
+The Arm SMMUv3 driver uses pci_{enable,disable}_pasid() and related
+functions.  Export them to allow the driver to be built as a module.
 
 Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
 ---
- drivers/iommu/arm-smmu-v3.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/pci/ats.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index 6b76df37025e..068a16d0eabe 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -1531,6 +1531,7 @@ static void arm_smmu_write_cd_l1_desc(__le64 *dst,
- 	u64 val = (l1_desc->l2ptr_dma & CTXDESC_L1_DESC_L2PTR_MASK) |
- 		  CTXDESC_L1_DESC_V;
+diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+index 3ef0bb281e7c..390e92f2d8d1 100644
+--- a/drivers/pci/ats.c
++++ b/drivers/pci/ats.c
+@@ -366,6 +366,7 @@ int pci_enable_pasid(struct pci_dev *pdev, int features)
  
-+	/* See comment in arm_smmu_write_ctx_desc() */
- 	WRITE_ONCE(*dst, cpu_to_le64(val));
+ 	return 0;
  }
++EXPORT_SYMBOL_GPL(pci_enable_pasid);
  
-@@ -1726,7 +1727,8 @@ arm_smmu_write_strtab_l1_desc(__le64 *dst, struct arm_smmu_strtab_l1_desc *desc)
- 	val |= FIELD_PREP(STRTAB_L1_DESC_SPAN, desc->span);
- 	val |= desc->l2ptr_dma & STRTAB_L1_DESC_L2PTR_MASK;
+ /**
+  * pci_disable_pasid - Disable the PASID capability
+@@ -390,6 +391,7 @@ void pci_disable_pasid(struct pci_dev *pdev)
  
--	*dst = cpu_to_le64(val);
-+	/* See comment in arm_smmu_write_ctx_desc() */
-+	WRITE_ONCE(*dst, cpu_to_le64(val));
+ 	pdev->pasid_enabled = 0;
  }
++EXPORT_SYMBOL_GPL(pci_disable_pasid);
  
- static void arm_smmu_sync_ste_for_sid(struct arm_smmu_device *smmu, u32 sid)
+ /**
+  * pci_restore_pasid_state - Restore PASID capabilities
+@@ -441,6 +443,7 @@ int pci_pasid_features(struct pci_dev *pdev)
+ 
+ 	return supported;
+ }
++EXPORT_SYMBOL_GPL(pci_pasid_features);
+ 
+ #define PASID_NUMBER_SHIFT	8
+ #define PASID_NUMBER_MASK	(0x1f << PASID_NUMBER_SHIFT)
+@@ -469,4 +472,5 @@ int pci_max_pasids(struct pci_dev *pdev)
+ 
+ 	return (1 << supported);
+ }
++EXPORT_SYMBOL_GPL(pci_max_pasids);
+ #endif /* CONFIG_PCI_PASID */
 -- 
 2.25.0
 
