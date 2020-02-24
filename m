@@ -4,56 +4,56 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92BECC34050
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Feb 2020 18:24:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6044FC11D3F
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Feb 2020 18:24:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6355F24649
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Feb 2020 18:24:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3402220838
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Feb 2020 18:24:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="aDvzZHPt"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="hQ7R/j32"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727964AbgBXSYk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 24 Feb 2020 13:24:40 -0500
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:42489 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727952AbgBXSYj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Feb 2020 13:24:39 -0500
-Received: by mail-wr1-f68.google.com with SMTP id p18so7933598wre.9
-        for <linux-pci@vger.kernel.org>; Mon, 24 Feb 2020 10:24:39 -0800 (PST)
+        id S1727957AbgBXSYj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 24 Feb 2020 13:24:39 -0500
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:34518 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727916AbgBXSYi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Feb 2020 13:24:38 -0500
+Received: by mail-wr1-f65.google.com with SMTP id z15so3239632wrl.1
+        for <linux-pci@vger.kernel.org>; Mon, 24 Feb 2020 10:24:36 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=6tqcdrj1xZvDcY7k2ZzEJzD20ZqgKnIoPLeb93yl2Xc=;
-        b=aDvzZHPt9iVEQwZJj1vud5mf/cCAG1jb3PpU0tPKkgnq9edj9bpqrHE6Eoktch/Wxe
-         YkevW7vtCQ7o4zxdCRdqv7yvITCgSxf6H6szEOP+F3WE5Ip0NrJp+tBFY4ii8waFp1+G
-         g6F0duX+U/X1mGeZhsHnDiBNc6YigoXnE6IXag4W7ySDFxe6VvcC+ni71ci5R9yuXX8R
-         EIF3HXiiGiaQ+0ZIc7OclYDsNN6BvIE7UZlNby1PK/lZ5772P8Uf8yq5xCyAqHI7MCxu
-         HvKguxhEpuIXgThDOS+/Ngh5iwPVr2umzGovygvcHO1ZCp3TmC3j/q2drow2O6jsDj8S
-         bnng==
+        bh=5ke1+5YSOcxDNzSzBBGnaN+kOVlCxvSlETx/6pQryQw=;
+        b=hQ7R/j32SLrNiw6cB+MKzedjV5jb7wC2uDlPXljxSGn/Mm+e8K6vJRpSEh03PvC4u9
+         6SWVO6jkqy8f1MhFEXuwvn5CVzySq1eAR0OMIHnH231Ilx59ro788ZXbVKhAb08vEu3x
+         2DRDRX3reoEDjA1nXPvHdhi3NlMMHALRilHOP4FbegQ6bDl+MXF72BSCvs01Iga0ey/V
+         lRA5BpuJcyT4Bo+4XEn4NxJCsLV3waRxK/XqqsUDdfn1vY0NKse5RC5ThKKbEOiOSL6S
+         WBTlf6zQcjBQmTv4KAcSJKa3LHmn9N03VuV6CMiAjWvmhiZgf7OibmnfYlq8z45tqDXq
+         +QmQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=6tqcdrj1xZvDcY7k2ZzEJzD20ZqgKnIoPLeb93yl2Xc=;
-        b=phncNy54b4lPncHc8WGZPCPoX8zSF+cKFB7c26E6lripsfog3m7LDqsibsdsLwEBIE
-         CUplRRBU52pjljQyBuQB07b0x/vFnaeJk+zRhnpflPcxm7X2vZ3Q9yuttu1KLOiaVTz+
-         YF+1GEvcoudoxAXtk8EVNuL1Q06Kmc+DdVSJGJKgHLTPlJ3dwyDcsNUEvVhgfAV9e1IV
-         orYXSd6kNzZK3XHf98rEUKidHPoOY1JnsoXgYUcsqxkeeJ9gLkw9jFk3niXJ8MOso8G5
-         gCy+e9xJGIaihfx2IRM3Uxq42F3B/J1mSNdGY/X/P54ub96dnyNOo9PpK7ssKCkBOFEC
-         qx/A==
-X-Gm-Message-State: APjAAAXSPIPNwAcpG36U+e1XzoCyohOuwSyXHAUiZTd1+9ZUnaufUIIU
-        CQDZqhExsAZjeTKpGM/ODjTOkA==
-X-Google-Smtp-Source: APXvYqweDyVog+lllJdgzOC5yFjqb0Y6Z6mnJXgAaaIz7bHvgd5fr5XnnlJkWPmoF4mmrIHnKf7dfA==
-X-Received: by 2002:adf:fec4:: with SMTP id q4mr9813505wrs.368.1582568678393;
-        Mon, 24 Feb 2020 10:24:38 -0800 (PST)
+        bh=5ke1+5YSOcxDNzSzBBGnaN+kOVlCxvSlETx/6pQryQw=;
+        b=hng9PeRc5tp/jSaCmZkyKsgXaF+iftCAIzwcJBMRw1lmRayWyh8/X7BNXZY0qmWqoC
+         wwx+V60KOaiOGBtEomqivshuZeZRQgWenEwJof+EVqUs4aCWUP/sgLMDGYmi6cWuj/Vx
+         aYqkt9nEfAX9TiqYB542DenD6pqyoFxyK7+ILmzFOWbpwfN1cEsKiDhGbD7u90ujIoXO
+         xPwPKa+xsRWpTEa00j34Cqs/qDCwem84ba6N+GE7ejCsdAlU5/0nDTHgtfsjVAcT8UX6
+         5k4du8QaN2A7VaGons6EdZVZCgmdhMdoHBviAIkFhk5LKZR48tegRXXpn+acaQdu5RZF
+         xbSA==
+X-Gm-Message-State: APjAAAVvQPPlN454TNM3futXwKLAF76XO2dwUp+yE8kO+T2H+aZW1rkL
+        LpFoH6pCQEhe7T7mF7VWch5PwQ==
+X-Google-Smtp-Source: APXvYqxKuED5BtGA+H9sncjVVYaPSWdkOdWHekAifEqs9Cn+ZBcftrmVm7FgSaad06EVLWBinDxKzg==
+X-Received: by 2002:adf:df83:: with SMTP id z3mr67641748wrl.389.1582568676229;
+        Mon, 24 Feb 2020 10:24:36 -0800 (PST)
 Received: from localhost.localdomain ([2001:171b:c9a8:fbc0:116c:c27a:3e7f:5eaf])
-        by smtp.gmail.com with ESMTPSA id n3sm304255wmc.27.2020.02.24.10.24.37
+        by smtp.gmail.com with ESMTPSA id n3sm304255wmc.27.2020.02.24.10.24.35
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 24 Feb 2020 10:24:38 -0800 (PST)
+        Mon, 24 Feb 2020 10:24:35 -0800 (PST)
 From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
 To:     iommu@lists.linux-foundation.org, devicetree@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
@@ -63,10 +63,11 @@ Cc:     joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
         kevin.tian@intel.com, baolu.lu@linux.intel.com,
         Jonathan.Cameron@huawei.com, jacob.jun.pan@linux.intel.com,
         christian.koenig@amd.com, yi.l.liu@intel.com,
-        zhangfei.gao@linaro.org
-Subject: [PATCH v4 08/26] iommu/io-pgtable-arm: Move some definitions to a header
-Date:   Mon, 24 Feb 2020 19:23:43 +0100
-Message-Id: <20200224182401.353359-9-jean-philippe@linaro.org>
+        zhangfei.gao@linaro.org,
+        Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Subject: [PATCH v4 06/26] iommu/sva: Register page fault handler
+Date:   Mon, 24 Feb 2020 19:23:41 +0100
+Message-Id: <20200224182401.353359-7-jean-philippe@linaro.org>
 X-Mailer: git-send-email 2.25.0
 In-Reply-To: <20200224182401.353359-1-jean-philippe@linaro.org>
 References: <20200224182401.353359-1-jean-philippe@linaro.org>
@@ -77,104 +78,85 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Extract some of the most generic TCR defines, so they can be reused by
-the page table sharing code.
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+
+When enabling SVA, register the fault handler. Device driver will register
+an I/O page fault queue before or after calling iommu_sva_enable. The
+fault queue must be flushed before any io_mm is freed, to make sure that
+its PASID isn't used in any fault queue, and can be reallocated. Add
+iopf_queue_flush() calls in a few strategic locations.
 
 Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
 ---
- drivers/iommu/io-pgtable-arm.c | 27 ++-------------------------
- drivers/iommu/io-pgtable-arm.h | 30 ++++++++++++++++++++++++++++++
- 2 files changed, 32 insertions(+), 25 deletions(-)
- create mode 100644 drivers/iommu/io-pgtable-arm.h
+ drivers/iommu/Kconfig     |  1 +
+ drivers/iommu/iommu-sva.c | 16 ++++++++++++++++
+ 2 files changed, 17 insertions(+)
 
-diff --git a/drivers/iommu/io-pgtable-arm.c b/drivers/iommu/io-pgtable-arm.c
-index 983b08477e64..75782b525c2f 100644
---- a/drivers/iommu/io-pgtable-arm.c
-+++ b/drivers/iommu/io-pgtable-arm.c
-@@ -20,6 +20,8 @@
+diff --git a/drivers/iommu/Kconfig b/drivers/iommu/Kconfig
+index e4a42e1708b4..211684e785ea 100644
+--- a/drivers/iommu/Kconfig
++++ b/drivers/iommu/Kconfig
+@@ -106,6 +106,7 @@ config IOMMU_DMA
+ config IOMMU_SVA
+ 	bool
+ 	select IOASID
++	select IOMMU_PAGE_FAULT
+ 	select IOMMU_API
+ 	select MMU_NOTIFIER
  
- #include <asm/barrier.h>
+diff --git a/drivers/iommu/iommu-sva.c b/drivers/iommu/iommu-sva.c
+index bfd0c477f290..494ca0824e4b 100644
+--- a/drivers/iommu/iommu-sva.c
++++ b/drivers/iommu/iommu-sva.c
+@@ -366,6 +366,8 @@ static void io_mm_release(struct mmu_notifier *mn, struct mm_struct *mm)
+ 			dev_WARN(dev, "possible leak of PASID %u",
+ 				 io_mm->pasid);
  
-+#include "io-pgtable-arm.h"
++		iopf_queue_flush_dev(dev, io_mm->pasid);
 +
- #define ARM_LPAE_MAX_ADDR_BITS		52
- #define ARM_LPAE_S2_MAX_CONCAT_PAGES	16
- #define ARM_LPAE_MAX_LEVELS		4
-@@ -100,23 +102,6 @@
- #define ARM_LPAE_PTE_MEMATTR_DEV	(((arm_lpae_iopte)0x1) << 2)
+ 		/* unbind() frees the bond, we just detach it */
+ 		io_mm_detach_locked(bond);
+ 	}
+@@ -442,11 +444,20 @@ static void iommu_sva_unbind_locked(struct iommu_bond *bond)
  
- /* Register bits */
--#define ARM_LPAE_TCR_TG0_4K		0
--#define ARM_LPAE_TCR_TG0_64K		1
--#define ARM_LPAE_TCR_TG0_16K		2
--
--#define ARM_LPAE_TCR_TG1_16K		1
--#define ARM_LPAE_TCR_TG1_4K		2
--#define ARM_LPAE_TCR_TG1_64K		3
--
--#define ARM_LPAE_TCR_SH_NS		0
--#define ARM_LPAE_TCR_SH_OS		2
--#define ARM_LPAE_TCR_SH_IS		3
--
--#define ARM_LPAE_TCR_RGN_NC		0
--#define ARM_LPAE_TCR_RGN_WBWA		1
--#define ARM_LPAE_TCR_RGN_WT		2
--#define ARM_LPAE_TCR_RGN_WB		3
--
- #define ARM_LPAE_VTCR_SL0_MASK		0x3
+ void iommu_sva_unbind_generic(struct iommu_sva *handle)
+ {
++	int pasid;
+ 	struct iommu_param *param = handle->dev->iommu_param;
  
- #define ARM_LPAE_TCR_T0SZ_SHIFT		0
-@@ -124,14 +109,6 @@
- #define ARM_LPAE_VTCR_PS_SHIFT		16
- #define ARM_LPAE_VTCR_PS_MASK		0x7
+ 	if (WARN_ON(!param))
+ 		return;
  
--#define ARM_LPAE_TCR_PS_32_BIT		0x0ULL
--#define ARM_LPAE_TCR_PS_36_BIT		0x1ULL
--#define ARM_LPAE_TCR_PS_40_BIT		0x2ULL
--#define ARM_LPAE_TCR_PS_42_BIT		0x3ULL
--#define ARM_LPAE_TCR_PS_44_BIT		0x4ULL
--#define ARM_LPAE_TCR_PS_48_BIT		0x5ULL
--#define ARM_LPAE_TCR_PS_52_BIT		0x6ULL
--
- #define ARM_LPAE_MAIR_ATTR_SHIFT(n)	((n) << 3)
- #define ARM_LPAE_MAIR_ATTR_MASK		0xff
- #define ARM_LPAE_MAIR_ATTR_DEVICE	0x04
-diff --git a/drivers/iommu/io-pgtable-arm.h b/drivers/iommu/io-pgtable-arm.h
-new file mode 100644
-index 000000000000..ba7cfdf7afa0
---- /dev/null
-+++ b/drivers/iommu/io-pgtable-arm.h
-@@ -0,0 +1,30 @@
-+/* SPDX-License-Identifier: GPL-2.0-only */
-+#ifndef IO_PGTABLE_ARM_H_
-+#define IO_PGTABLE_ARM_H_
++	/*
++	 * Caller stopped the device from issuing PASIDs, now make sure they are
++	 * out of the fault queue.
++	 */
++	pasid = iommu_sva_get_pasid_generic(handle);
++	if (pasid != IOMMU_PASID_INVALID)
++		iopf_queue_flush_dev(handle->dev, pasid);
 +
-+#define ARM_LPAE_TCR_TG0_4K		0
-+#define ARM_LPAE_TCR_TG0_64K		1
-+#define ARM_LPAE_TCR_TG0_16K		2
+ 	mutex_lock(&param->sva_lock);
+ 	mutex_lock(&iommu_sva_lock);
+ 	iommu_sva_unbind_locked(to_iommu_bond(handle));
+@@ -484,6 +495,10 @@ int iommu_sva_enable(struct device *dev, struct iommu_sva_param *sva_param)
+ 		goto err_unlock;
+ 	}
+ 
++	ret = iommu_register_device_fault_handler(dev, iommu_queue_iopf, dev);
++	if (ret)
++		goto err_unlock;
 +
-+#define ARM_LPAE_TCR_TG1_16K		1
-+#define ARM_LPAE_TCR_TG1_4K		2
-+#define ARM_LPAE_TCR_TG1_64K		3
-+
-+#define ARM_LPAE_TCR_SH_NS		0
-+#define ARM_LPAE_TCR_SH_OS		2
-+#define ARM_LPAE_TCR_SH_IS		3
-+
-+#define ARM_LPAE_TCR_RGN_NC		0
-+#define ARM_LPAE_TCR_RGN_WBWA		1
-+#define ARM_LPAE_TCR_RGN_WT		2
-+#define ARM_LPAE_TCR_RGN_WB		3
-+
-+#define ARM_LPAE_TCR_PS_32_BIT		0x0ULL
-+#define ARM_LPAE_TCR_PS_36_BIT		0x1ULL
-+#define ARM_LPAE_TCR_PS_40_BIT		0x2ULL
-+#define ARM_LPAE_TCR_PS_42_BIT		0x3ULL
-+#define ARM_LPAE_TCR_PS_44_BIT		0x4ULL
-+#define ARM_LPAE_TCR_PS_48_BIT		0x5ULL
-+#define ARM_LPAE_TCR_PS_52_BIT		0x6ULL
-+
-+#endif /* IO_PGTABLE_ARM_H_ */
+ 	dev->iommu_param->sva_param = new_param;
+ 	mutex_unlock(&param->sva_lock);
+ 	return 0;
+@@ -521,6 +536,7 @@ int iommu_sva_disable(struct device *dev)
+ 		goto out_unlock;
+ 	}
+ 
++	iommu_unregister_device_fault_handler(dev);
+ 	kfree(param->sva_param);
+ 	param->sva_param = NULL;
+ out_unlock:
 -- 
 2.25.0
 
