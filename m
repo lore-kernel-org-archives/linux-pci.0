@@ -4,56 +4,56 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C89EFC11D3C
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Feb 2020 18:24:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92BECC34050
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Feb 2020 18:24:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 990D32084E
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Feb 2020 18:24:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6355F24649
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Feb 2020 18:24:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="M99vGkY3"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="aDvzZHPt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727895AbgBXSYh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 24 Feb 2020 13:24:37 -0500
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:41926 "EHLO
-        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727932AbgBXSYh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Feb 2020 13:24:37 -0500
-Received: by mail-wr1-f67.google.com with SMTP id c9so11578987wrw.8
-        for <linux-pci@vger.kernel.org>; Mon, 24 Feb 2020 10:24:35 -0800 (PST)
+        id S1727964AbgBXSYk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 24 Feb 2020 13:24:40 -0500
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:42489 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727952AbgBXSYj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Feb 2020 13:24:39 -0500
+Received: by mail-wr1-f68.google.com with SMTP id p18so7933598wre.9
+        for <linux-pci@vger.kernel.org>; Mon, 24 Feb 2020 10:24:39 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=4BAEKhOJP+vfPilA/A1esaPeb85rQ2xVF1xbquVY184=;
-        b=M99vGkY31vfp3/5YFldshvaVVuOLujfh7ojFCDTnoKW41IMEWZ1aa749ylDMF02mL8
-         EsF76A/xd0+D9G0LiMy/75wIjbUpTj5ggp4qwOihccmc7SvybU8lVP0RrXN+zijYA5Qc
-         apJfsPNlPuSkqhHR1soKd4ou/vRywxfhU5WwI8xMxkH50xEZuIxIVA73IGnf8LHXAHCj
-         UjbtPVxpTDPbVdR0XSSIE6QUa8HgvKgCyzUv3n8pFmnjopnM1ov1eMApD+8zJk5ozwNB
-         OxiUpbtucYRP2+G9IoH1N/DTaBxGAqy/M1yy3lxCR8X1HtuJnfAnMQlEHu+w73fAfXiH
-         B1Sw==
+        bh=6tqcdrj1xZvDcY7k2ZzEJzD20ZqgKnIoPLeb93yl2Xc=;
+        b=aDvzZHPt9iVEQwZJj1vud5mf/cCAG1jb3PpU0tPKkgnq9edj9bpqrHE6Eoktch/Wxe
+         YkevW7vtCQ7o4zxdCRdqv7yvITCgSxf6H6szEOP+F3WE5Ip0NrJp+tBFY4ii8waFp1+G
+         g6F0duX+U/X1mGeZhsHnDiBNc6YigoXnE6IXag4W7ySDFxe6VvcC+ni71ci5R9yuXX8R
+         EIF3HXiiGiaQ+0ZIc7OclYDsNN6BvIE7UZlNby1PK/lZ5772P8Uf8yq5xCyAqHI7MCxu
+         HvKguxhEpuIXgThDOS+/Ngh5iwPVr2umzGovygvcHO1ZCp3TmC3j/q2drow2O6jsDj8S
+         bnng==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=4BAEKhOJP+vfPilA/A1esaPeb85rQ2xVF1xbquVY184=;
-        b=W9IDQ3RBUH3DYE+NJpTb/PJm26VfWt5bxXOrt4OXylN9fDAqD+ht6Da3dGRKEO/+O9
-         wijnYGdWZq/fv5lztlvrymgF7x7nBmdCVLbTzmM1eRM9QMGfIci4x7abFaprRf2ELIpB
-         stXRn22NWhybxtjcM12BUt7g5MhMrDqi7zyi5WJz1yO+MtO0AFGvbzY4yd7Cp07RImy9
-         o44OVNlJj0yUAGtITItxt3l0B9zr6bq6pcPpjaU/xPlYheL2CPDumhWGwbInKCPg1z0U
-         cJvvd6/7j/x5k5UgxAuTGtNCS4Z5ws8yGE4BVJB/+XGFDDNSn+7NuRZZiA4zmNncWNvJ
-         B5ZQ==
-X-Gm-Message-State: APjAAAWGzC6ZV8TCghxYOXx454+25+tw468NO64W5beqBJQ61AN0ufR4
-        UQ9+sl9KjNZcwF7QVuwkh3eR6Q==
-X-Google-Smtp-Source: APXvYqzHbo1uSnOjPvq1dly/T3bNuAsEH0s+K/Vbu0r956R09tVR+hP/VVgCejHxcU6EI1GRu4bYzg==
-X-Received: by 2002:a5d:4651:: with SMTP id j17mr69088399wrs.237.1582568675196;
-        Mon, 24 Feb 2020 10:24:35 -0800 (PST)
+        bh=6tqcdrj1xZvDcY7k2ZzEJzD20ZqgKnIoPLeb93yl2Xc=;
+        b=phncNy54b4lPncHc8WGZPCPoX8zSF+cKFB7c26E6lripsfog3m7LDqsibsdsLwEBIE
+         CUplRRBU52pjljQyBuQB07b0x/vFnaeJk+zRhnpflPcxm7X2vZ3Q9yuttu1KLOiaVTz+
+         YF+1GEvcoudoxAXtk8EVNuL1Q06Kmc+DdVSJGJKgHLTPlJ3dwyDcsNUEvVhgfAV9e1IV
+         orYXSd6kNzZK3XHf98rEUKidHPoOY1JnsoXgYUcsqxkeeJ9gLkw9jFk3niXJ8MOso8G5
+         gCy+e9xJGIaihfx2IRM3Uxq42F3B/J1mSNdGY/X/P54ub96dnyNOo9PpK7ssKCkBOFEC
+         qx/A==
+X-Gm-Message-State: APjAAAXSPIPNwAcpG36U+e1XzoCyohOuwSyXHAUiZTd1+9ZUnaufUIIU
+        CQDZqhExsAZjeTKpGM/ODjTOkA==
+X-Google-Smtp-Source: APXvYqweDyVog+lllJdgzOC5yFjqb0Y6Z6mnJXgAaaIz7bHvgd5fr5XnnlJkWPmoF4mmrIHnKf7dfA==
+X-Received: by 2002:adf:fec4:: with SMTP id q4mr9813505wrs.368.1582568678393;
+        Mon, 24 Feb 2020 10:24:38 -0800 (PST)
 Received: from localhost.localdomain ([2001:171b:c9a8:fbc0:116c:c27a:3e7f:5eaf])
-        by smtp.gmail.com with ESMTPSA id n3sm304255wmc.27.2020.02.24.10.24.34
+        by smtp.gmail.com with ESMTPSA id n3sm304255wmc.27.2020.02.24.10.24.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 24 Feb 2020 10:24:34 -0800 (PST)
+        Mon, 24 Feb 2020 10:24:38 -0800 (PST)
 From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
 To:     iommu@lists.linux-foundation.org, devicetree@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
@@ -63,11 +63,10 @@ Cc:     joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
         kevin.tian@intel.com, baolu.lu@linux.intel.com,
         Jonathan.Cameron@huawei.com, jacob.jun.pan@linux.intel.com,
         christian.koenig@amd.com, yi.l.liu@intel.com,
-        zhangfei.gao@linaro.org,
-        Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Subject: [PATCH v4 05/26] iommu/iopf: Handle mm faults
-Date:   Mon, 24 Feb 2020 19:23:40 +0100
-Message-Id: <20200224182401.353359-6-jean-philippe@linaro.org>
+        zhangfei.gao@linaro.org
+Subject: [PATCH v4 08/26] iommu/io-pgtable-arm: Move some definitions to a header
+Date:   Mon, 24 Feb 2020 19:23:43 +0100
+Message-Id: <20200224182401.353359-9-jean-philippe@linaro.org>
 X-Mailer: git-send-email 2.25.0
 In-Reply-To: <20200224182401.353359-1-jean-philippe@linaro.org>
 References: <20200224182401.353359-1-jean-philippe@linaro.org>
@@ -78,127 +77,104 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-
-When a recoverable page fault is handled by the fault workqueue, find the
-associated mm and call handle_mm_fault.
+Extract some of the most generic TCR defines, so they can be reused by
+the page table sharing code.
 
 Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
 ---
- drivers/iommu/io-pgfault.c | 86 +++++++++++++++++++++++++++++++++++++-
- 1 file changed, 84 insertions(+), 2 deletions(-)
+ drivers/iommu/io-pgtable-arm.c | 27 ++-------------------------
+ drivers/iommu/io-pgtable-arm.h | 30 ++++++++++++++++++++++++++++++
+ 2 files changed, 32 insertions(+), 25 deletions(-)
+ create mode 100644 drivers/iommu/io-pgtable-arm.h
 
-diff --git a/drivers/iommu/io-pgfault.c b/drivers/iommu/io-pgfault.c
-index 76e153c59fe3..ffa9f14e0803 100644
---- a/drivers/iommu/io-pgfault.c
-+++ b/drivers/iommu/io-pgfault.c
-@@ -7,6 +7,7 @@
+diff --git a/drivers/iommu/io-pgtable-arm.c b/drivers/iommu/io-pgtable-arm.c
+index 983b08477e64..75782b525c2f 100644
+--- a/drivers/iommu/io-pgtable-arm.c
++++ b/drivers/iommu/io-pgtable-arm.c
+@@ -20,6 +20,8 @@
  
- #include <linux/iommu.h>
- #include <linux/list.h>
-+#include <linux/sched/mm.h>
- #include <linux/slab.h>
- #include <linux/workqueue.h>
+ #include <asm/barrier.h>
  
-@@ -76,8 +77,65 @@ static int iopf_complete(struct device *dev, struct iopf_fault *iopf,
- static enum iommu_page_response_code
- iopf_handle_single(struct iopf_fault *iopf)
- {
--	/* TODO */
--	return -ENODEV;
-+	vm_fault_t ret;
-+	struct mm_struct *mm;
-+	struct vm_area_struct *vma;
-+	unsigned int access_flags = 0;
-+	unsigned int fault_flags = FAULT_FLAG_REMOTE;
-+	struct iommu_fault_page_request *prm = &iopf->fault.prm;
-+	enum iommu_page_response_code status = IOMMU_PAGE_RESP_INVALID;
++#include "io-pgtable-arm.h"
 +
-+	if (!(prm->flags & IOMMU_FAULT_PAGE_REQUEST_PASID_VALID))
-+		return status;
-+
-+	mm = iommu_sva_find(prm->pasid);
-+	if (IS_ERR_OR_NULL(mm))
-+		return status;
-+
-+	down_read(&mm->mmap_sem);
-+
-+	vma = find_extend_vma(mm, prm->addr);
-+	if (!vma)
-+		/* Unmapped area */
-+		goto out_put_mm;
-+
-+	if (prm->perm & IOMMU_FAULT_PERM_READ)
-+		access_flags |= VM_READ;
-+
-+	if (prm->perm & IOMMU_FAULT_PERM_WRITE) {
-+		access_flags |= VM_WRITE;
-+		fault_flags |= FAULT_FLAG_WRITE;
-+	}
-+
-+	if (prm->perm & IOMMU_FAULT_PERM_EXEC) {
-+		access_flags |= VM_EXEC;
-+		fault_flags |= FAULT_FLAG_INSTRUCTION;
-+	}
-+
-+	if (!(prm->perm & IOMMU_FAULT_PERM_PRIV))
-+		fault_flags |= FAULT_FLAG_USER;
-+
-+	if (access_flags & ~vma->vm_flags)
-+		/* Access fault */
-+		goto out_put_mm;
-+
-+	ret = handle_mm_fault(vma, prm->addr, fault_flags);
-+	status = ret & VM_FAULT_ERROR ? IOMMU_PAGE_RESP_INVALID :
-+		IOMMU_PAGE_RESP_SUCCESS;
-+
-+out_put_mm:
-+	up_read(&mm->mmap_sem);
-+
-+	/*
-+	 * If the process exits while we're handling the fault on its mm, we
-+	 * can't do mmput(). exit_mmap() would release the MMU notifier, calling
-+	 * iommu_notifier_release(), which has to flush the fault queue that
-+	 * we're executing on... So mmput_async() moves the release of the mm to
-+	 * another thread, if we're the last user.
-+	 */
-+	mmput_async(mm);
-+
-+	return status;
- }
+ #define ARM_LPAE_MAX_ADDR_BITS		52
+ #define ARM_LPAE_S2_MAX_CONCAT_PAGES	16
+ #define ARM_LPAE_MAX_LEVELS		4
+@@ -100,23 +102,6 @@
+ #define ARM_LPAE_PTE_MEMATTR_DEV	(((arm_lpae_iopte)0x1) << 2)
  
- static void iopf_handle_group(struct work_struct *work)
-@@ -111,6 +169,30 @@ static void iopf_handle_group(struct work_struct *work)
-  *
-  * Add a fault to the device workqueue, to be handled by mm.
-  *
-+ * This module doesn't handle PCI PASID Stop Marker; IOMMU drivers must discard
-+ * them before reporting faults. A PASID Stop Marker (LRW = 0b100) doesn't
-+ * expect a response. It may be generated when disabling a PASID (issuing a
-+ * PASID stop request) by some PCI devices.
-+ *
-+ * The PASID stop request is triggered by the mm_exit() callback. When the
-+ * callback returns from the device driver, no page request is generated for
-+ * this PASID anymore and outstanding ones have been pushed to the IOMMU (as per
-+ * PCIe 4.0r1.0 - 6.20.1 and 10.4.1.2 - Managing PASID TLP Prefix Usage). Some
-+ * PCI devices will wait for all outstanding page requests to come back with a
-+ * response before completing the PASID stop request. Others do not wait for
-+ * page responses, and instead issue this Stop Marker that tells us when the
-+ * PASID can be reallocated.
-+ *
-+ * It is safe to discard the Stop Marker because it is an optimization.
-+ * a. Page requests, which are posted requests, have been flushed to the IOMMU
-+ *    when mm_exit() returns,
-+ * b. We flush all fault queues after mm_exit() returns and before freeing the
-+ *    PASID.
-+ *
-+ * So even though the Stop Marker might be issued by the device *after* the stop
-+ * request completes, outstanding faults will have been dealt with by the time
-+ * we free the PASID.
-+ *
-  * Return: 0 on success and <0 on error.
-  */
- int iommu_queue_iopf(struct iommu_fault *fault, void *cookie)
+ /* Register bits */
+-#define ARM_LPAE_TCR_TG0_4K		0
+-#define ARM_LPAE_TCR_TG0_64K		1
+-#define ARM_LPAE_TCR_TG0_16K		2
+-
+-#define ARM_LPAE_TCR_TG1_16K		1
+-#define ARM_LPAE_TCR_TG1_4K		2
+-#define ARM_LPAE_TCR_TG1_64K		3
+-
+-#define ARM_LPAE_TCR_SH_NS		0
+-#define ARM_LPAE_TCR_SH_OS		2
+-#define ARM_LPAE_TCR_SH_IS		3
+-
+-#define ARM_LPAE_TCR_RGN_NC		0
+-#define ARM_LPAE_TCR_RGN_WBWA		1
+-#define ARM_LPAE_TCR_RGN_WT		2
+-#define ARM_LPAE_TCR_RGN_WB		3
+-
+ #define ARM_LPAE_VTCR_SL0_MASK		0x3
+ 
+ #define ARM_LPAE_TCR_T0SZ_SHIFT		0
+@@ -124,14 +109,6 @@
+ #define ARM_LPAE_VTCR_PS_SHIFT		16
+ #define ARM_LPAE_VTCR_PS_MASK		0x7
+ 
+-#define ARM_LPAE_TCR_PS_32_BIT		0x0ULL
+-#define ARM_LPAE_TCR_PS_36_BIT		0x1ULL
+-#define ARM_LPAE_TCR_PS_40_BIT		0x2ULL
+-#define ARM_LPAE_TCR_PS_42_BIT		0x3ULL
+-#define ARM_LPAE_TCR_PS_44_BIT		0x4ULL
+-#define ARM_LPAE_TCR_PS_48_BIT		0x5ULL
+-#define ARM_LPAE_TCR_PS_52_BIT		0x6ULL
+-
+ #define ARM_LPAE_MAIR_ATTR_SHIFT(n)	((n) << 3)
+ #define ARM_LPAE_MAIR_ATTR_MASK		0xff
+ #define ARM_LPAE_MAIR_ATTR_DEVICE	0x04
+diff --git a/drivers/iommu/io-pgtable-arm.h b/drivers/iommu/io-pgtable-arm.h
+new file mode 100644
+index 000000000000..ba7cfdf7afa0
+--- /dev/null
++++ b/drivers/iommu/io-pgtable-arm.h
+@@ -0,0 +1,30 @@
++/* SPDX-License-Identifier: GPL-2.0-only */
++#ifndef IO_PGTABLE_ARM_H_
++#define IO_PGTABLE_ARM_H_
++
++#define ARM_LPAE_TCR_TG0_4K		0
++#define ARM_LPAE_TCR_TG0_64K		1
++#define ARM_LPAE_TCR_TG0_16K		2
++
++#define ARM_LPAE_TCR_TG1_16K		1
++#define ARM_LPAE_TCR_TG1_4K		2
++#define ARM_LPAE_TCR_TG1_64K		3
++
++#define ARM_LPAE_TCR_SH_NS		0
++#define ARM_LPAE_TCR_SH_OS		2
++#define ARM_LPAE_TCR_SH_IS		3
++
++#define ARM_LPAE_TCR_RGN_NC		0
++#define ARM_LPAE_TCR_RGN_WBWA		1
++#define ARM_LPAE_TCR_RGN_WT		2
++#define ARM_LPAE_TCR_RGN_WB		3
++
++#define ARM_LPAE_TCR_PS_32_BIT		0x0ULL
++#define ARM_LPAE_TCR_PS_36_BIT		0x1ULL
++#define ARM_LPAE_TCR_PS_40_BIT		0x2ULL
++#define ARM_LPAE_TCR_PS_42_BIT		0x3ULL
++#define ARM_LPAE_TCR_PS_44_BIT		0x4ULL
++#define ARM_LPAE_TCR_PS_48_BIT		0x5ULL
++#define ARM_LPAE_TCR_PS_52_BIT		0x6ULL
++
++#endif /* IO_PGTABLE_ARM_H_ */
 -- 
 2.25.0
 
