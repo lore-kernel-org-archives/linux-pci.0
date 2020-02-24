@@ -1,194 +1,267 @@
-Return-Path: <SRS0=ulsO=4L=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=2i2g=4M=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72DDFC35666
-	for <linux-pci@archiver.kernel.org>; Sun, 23 Feb 2020 12:22:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C379C35673
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Feb 2020 01:28:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4925720675
-	for <linux-pci@archiver.kernel.org>; Sun, 23 Feb 2020 12:22:15 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=amazon.com header.i=@amazon.com header.b="pX8BwdUN"
+	by mail.kernel.org (Postfix) with ESMTP id 1FACA20727
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Feb 2020 01:28:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1582507699;
+	bh=wuZf8v7s/ZfDka2P3YUYpDnWNCA0VPIdBjzd5E5TqzQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=WXlvFxlTnJveW+UqjQKViLxumB0aLnVZBq7yOT5G9ulo6QXn+aQbbozXv1mx0xi29
+	 jDFLG1Sz1c/BePZKxNiD0PkHku8mSyPWxxW1QR4/+JM0zl7xJtZ3voxbMFdc+ixtgC
+	 BYDdYtAqfV272wngwqPf9mqd6RJIGvvxVsg449oQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727282AbgBWMWO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 23 Feb 2020 07:22:14 -0500
-Received: from smtp-fw-6002.amazon.com ([52.95.49.90]:59592 "EHLO
-        smtp-fw-6002.amazon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726308AbgBWMWO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 23 Feb 2020 07:22:14 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=amazon.com; i=@amazon.com; q=dns/txt; s=amazon201209;
-  t=1582460534; x=1613996534;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=/5T9tN3oKmZA5iIMakG8TApXvG1ETaZYfCRIH79dVuo=;
-  b=pX8BwdUNJctw1P5vpYTrQjhslIRv56QVmjGIPBEu1c8Y1BBA3H7vy3al
-   oEwhYSyd1c8KxQofbWypST+36yphgYAlEjcY/MOKoeSFwLIPx7YWohPVa
-   p/2I2/ctjpNU/spHP9Qij0/u0uO3Ng6w/MjS9iaaNis9HXA8PQxvAHgGL
-   k=;
-IronPort-SDR: TI5SQvWH5ze2em/PV0bWW4zmHeGbOk0coTOZET/4fV6wr65b6w4TKf1pSkeQHPf5/pTL4yI89Y
- V73o5SEwKEvw==
-X-IronPort-AV: E=Sophos;i="5.70,476,1574121600"; 
-   d="scan'208";a="17759520"
-Received: from iad12-co-svc-p1-lb1-vlan3.amazon.com (HELO email-inbound-relay-2b-55156cd4.us-west-2.amazon.com) ([10.43.8.6])
-  by smtp-border-fw-out-6002.iad6.amazon.com with ESMTP; 23 Feb 2020 12:22:01 +0000
-Received: from EX13MTAUEA002.ant.amazon.com (pdx4-ws-svc-p6-lb7-vlan2.pdx.amazon.com [10.170.41.162])
-        by email-inbound-relay-2b-55156cd4.us-west-2.amazon.com (Postfix) with ESMTPS id A3BF0A1E36;
-        Sun, 23 Feb 2020 12:22:00 +0000 (UTC)
-Received: from EX13D09EUA001.ant.amazon.com (10.43.165.9) by
- EX13MTAUEA002.ant.amazon.com (10.43.61.77) with Microsoft SMTP Server (TLS)
- id 15.0.1236.3; Sun, 23 Feb 2020 12:22:00 +0000
-Received: from EX13MTAUEA001.ant.amazon.com (10.43.61.82) by
- EX13D09EUA001.ant.amazon.com (10.43.165.9) with Microsoft SMTP Server (TLS)
- id 15.0.1367.3; Sun, 23 Feb 2020 12:21:58 +0000
-Received: from u961addbe640f56.ant.amazon.com (10.28.84.111) by
- mail-relay.amazon.com (10.43.61.243) with Microsoft SMTP Server id
- 15.0.1367.3 via Frontend Transport; Sun, 23 Feb 2020 12:21:57 +0000
-From:   Stanislav Spassov <stanspas@amazon.com>
-To:     <linux-pci@vger.kernel.org>
-CC:     Stanislav Spassov <stanspas@amazon.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        =?UTF-8?q?Jan=20H=20=2E=20Sch=C3=B6nherr?= <jschoenh@amazon.de>,
-        Wei Wang <wawei@amazon.de>
-Subject: [PATCH 2/3] PCI: Introduce per-device reset_ready_poll override
-Date:   Sun, 23 Feb 2020 13:20:56 +0100
-Message-ID: <20200223122057.6504-3-stanspas@amazon.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200223122057.6504-1-stanspas@amazon.com>
-References: <20200223122057.6504-1-stanspas@amazon.com>
+        id S1727169AbgBXB2S (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 23 Feb 2020 20:28:18 -0500
+Received: from mail.kernel.org ([198.145.29.99]:46868 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727151AbgBXB2S (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 23 Feb 2020 20:28:18 -0500
+Received: from dragon (80.251.214.228.16clouds.com [80.251.214.228])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7D8582067D;
+        Mon, 24 Feb 2020 01:28:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1582507697;
+        bh=wuZf8v7s/ZfDka2P3YUYpDnWNCA0VPIdBjzd5E5TqzQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=xinodtHybZ2zERMZboQ/lO0ba3tYO8hysLnZ+8z8p/HwgmJNwzOEtqGv0qefOr4nb
+         e4PPc9NJ2J6knJJMxeZRa2va7rNicVIqLqghHXzDVFZxhc36nu4tZa5LuNkbVSRkDe
+         KKy5Enhd/KSrF2UMpc/9V+590EtR5a/cz5g+V4FM=
+Date:   Mon, 24 Feb 2020 09:28:10 +0800
+From:   Shawn Guo <shawnguo@kernel.org>
+To:     Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
+Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        bhelgaas@google.com, robh+dt@kernel.org, andrew.murray@arm.com,
+        arnd@arndb.de, mark.rutland@arm.com, l.subrahmanya@mobiveil.co.in,
+        m.karthikeyan@mobiveil.co.in, leoyang.li@nxp.com,
+        lorenzo.pieralisi@arm.com, catalin.marinas@arm.com,
+        will.deacon@arm.com, Mingkai.Hu@nxp.com, Minghuan.Lian@nxp.com,
+        Xiaowei.Bao@nxp.com
+Subject: Re: [PATCHv10 12/13] arm64: dts: lx2160a: Add PCIe controller DT
+ nodes
+Message-ID: <20200224012809.GB14331@dragon>
+References: <20200213040644.45858-1-Zhiqiang.Hou@nxp.com>
+ <20200213040644.45858-13-Zhiqiang.Hou@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200213040644.45858-13-Zhiqiang.Hou@nxp.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Stanislav Spassov <stanspas@amazon.de>
+On Thu, Feb 13, 2020 at 12:06:43PM +0800, Zhiqiang Hou wrote:
+> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+> 
+> The LX2160A integrated 6 PCIe Gen4 controllers.
+> 
+> Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+> Reviewed-by: Minghuan Lian <Minghuan.Lian@nxp.com>
+> ---
+> V10:
+>  - No change
+> 
+>  .../arm64/boot/dts/freescale/fsl-lx2160a.dtsi | 163 ++++++++++++++++++
+>  1 file changed, 163 insertions(+)
+> 
+> diff --git a/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi b/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi
+> index e5ee5591e52b..aee2810d91cc 100644
+> --- a/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi
+> +++ b/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi
+> @@ -1076,5 +1076,168 @@
+>  				};
+>  			};
+>  		};
+> +
+> +		pcie@3400000 {
 
-A broken device may never become responsive after reset, hence the need
-for a timeout. However, waiting for too long can have unintended side
-effects such as triggering hung task timeouts for processes waiting on
-a lock held during the reset. Locks that are shared across multiple
-devices, such as VFIO's per-bus reflck, are especially problematic,
-because a single broken VF can cause hangs for processes working with
-other VFs on the same bus.
+The nodes should be sorted in unit-address.  That said, they should be
+added after ata3: sata@3230000.
 
-To allow lowering the global default post-reset timeout, while still
-accommodating devices that require more time, this patch introduces
-a per-device override that can be configured via a quirk.
+> +			compatible = "fsl,lx2160a-pcie";
+> +			reg = <0x00 0x03400000 0x0 0x00100000   /* controller registers */
+> +			       0x80 0x00000000 0x0 0x00001000>; /* configuration space */
+> +			reg-names = "csr_axi_slave", "config_axi_slave";
+> +			interrupts = <GIC_SPI 108 IRQ_TYPE_LEVEL_HIGH>, /* AER interrupt */
+> +				     <GIC_SPI 108 IRQ_TYPE_LEVEL_HIGH>, /* PME interrupt */
+> +				     <GIC_SPI 108 IRQ_TYPE_LEVEL_HIGH>; /* controller interrupt */
+> +			interrupt-names = "aer", "pme", "intr";
+> +			#address-cells = <3>;
+> +			#size-cells = <2>;
+> +			device_type = "pci";
+> +			dma-coherent;
+> +			apio-wins = <8>;
+> +			ppio-wins = <8>;
+> +			bus-range = <0x0 0xff>;
+> +			ranges = <0x82000000 0x0 0x40000000 0x80 0x40000000 0x0 0x40000000>; /* non-prefetchable memory */
+> +			msi-parent = <&its>;
+> +			#interrupt-cells = <1>;
+> +			interrupt-map-mask = <0 0 0 7>;
+> +			interrupt-map = <0000 0 0 1 &gic 0 0 GIC_SPI 109 IRQ_TYPE_LEVEL_HIGH>,
+> +					<0000 0 0 2 &gic 0 0 GIC_SPI 110 IRQ_TYPE_LEVEL_HIGH>,
+> +					<0000 0 0 3 &gic 0 0 GIC_SPI 111 IRQ_TYPE_LEVEL_HIGH>,
+> +					<0000 0 0 4 &gic 0 0 GIC_SPI 112 IRQ_TYPE_LEVEL_HIGH>;
+> +			status = "disabled";
+> +		};
+> +
+> +		pcie@3500000 {
+> +			compatible = "fsl,lx2160a-pcie";
+> +			reg = <0x00 0x03500000 0x0 0x00100000   /* controller registers */
+> +			       0x88 0x00000000 0x0 0x00001000>; /* configuration space */
+> +			reg-names = "csr_axi_slave", "config_axi_slave";
+> +			interrupts = <GIC_SPI 113 IRQ_TYPE_LEVEL_HIGH>, /* AER interrupt */
+> +				     <GIC_SPI 113 IRQ_TYPE_LEVEL_HIGH>, /* PME interrupt */
+> +				     <GIC_SPI 113 IRQ_TYPE_LEVEL_HIGH>; /* controller interrupt */
+> +			interrupt-names = "aer", "pme", "intr";
+> +			#address-cells = <3>;
+> +			#size-cells = <2>;
+> +			device_type = "pci";
+> +			dma-coherent;
+> +			apio-wins = <8>;
+> +			ppio-wins = <8>;
+> +			bus-range = <0x0 0xff>;
+> +			ranges = <0x82000000 0x0 0x40000000 0x88 0x40000000 0x0 0x40000000>; /* non-prefetchable memory */
+> +			msi-parent = <&its>;
+> +			#interrupt-cells = <1>;
+> +			interrupt-map-mask = <0 0 0 7>;
+> +			interrupt-map = <0000 0 0 1 &gic 0 0 GIC_SPI 114 IRQ_TYPE_LEVEL_HIGH>,
+> +					<0000 0 0 2 &gic 0 0 GIC_SPI 115 IRQ_TYPE_LEVEL_HIGH>,
+> +					<0000 0 0 3 &gic 0 0 GIC_SPI 116 IRQ_TYPE_LEVEL_HIGH>,
+> +					<0000 0 0 4 &gic 0 0 GIC_SPI 117 IRQ_TYPE_LEVEL_HIGH>;
+> +			status = "disabled";
+> +		};
+> +
+> +		pcie@3600000 {
+> +			compatible = "fsl,lx2160a-pcie";
+> +			reg = <0x00 0x03600000 0x0 0x00100000   /* controller registers */
+> +			       0x90 0x00000000 0x0 0x00001000>; /* configuration space */
+> +			reg-names = "csr_axi_slave", "config_axi_slave";
+> +			interrupts = <GIC_SPI 118 IRQ_TYPE_LEVEL_HIGH>, /* AER interrupt */
+> +				     <GIC_SPI 118 IRQ_TYPE_LEVEL_HIGH>, /* PME interrupt */
+> +				     <GIC_SPI 118 IRQ_TYPE_LEVEL_HIGH>; /* controller interrupt */
+> +			interrupt-names = "aer", "pme", "intr";
+> +			#address-cells = <3>;
+> +			#size-cells = <2>;
+> +			device_type = "pci";
+> +			dma-coherent;
+> +			apio-wins = <256>;
+> +			ppio-wins = <24>;
+> +			bus-range = <0x0 0xff>;
+> +			ranges = <0x82000000 0x0 0x40000000 0x90 0x40000000 0x0 0x40000000>; /* non-prefetchable memory */
+> +			msi-parent = <&its>;
+> +			#interrupt-cells = <1>;
+> +			interrupt-map-mask = <0 0 0 7>;
+> +			interrupt-map = <0000 0 0 1 &gic 0 0 GIC_SPI 119 IRQ_TYPE_LEVEL_HIGH>,
+> +					<0000 0 0 2 &gic 0 0 GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>,
+> +					<0000 0 0 3 &gic 0 0 GIC_SPI 121 IRQ_TYPE_LEVEL_HIGH>,
+> +					<0000 0 0 4 &gic 0 0 GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>;
+> +			status = "disabled";
+> +		};
+> +
+> +		pcie@3700000 {
+> +			compatible = "fsl,lx2160a-pcie";
+> +			reg = <0x00 0x03700000 0x0 0x00100000   /* controller registers */
+> +			       0x98 0x00000000 0x0 0x00001000>; /* configuration space */
+> +			reg-names = "csr_axi_slave", "config_axi_slave";
+> +			interrupts = <GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>, /* AER interrupt */
+> +				     <GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>, /* PME interrupt */
+> +				     <GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>; /* controller interrupt */
+> +			interrupt-names = "aer", "pme", "intr";
+> +			#address-cells = <3>;
+> +			#size-cells = <2>;
+> +			device_type = "pci";
+> +			dma-coherent;
+> +			apio-wins = <8>;
+> +			ppio-wins = <8>;
+> +			bus-range = <0x0 0xff>;
+> +			ranges = <0x82000000 0x0 0x40000000 0x98 0x40000000 0x0 0x40000000>; /* non-prefetchable memory */
+> +			msi-parent = <&its>;
+> +			#interrupt-cells = <1>;
+> +			interrupt-map-mask = <0 0 0 7>;
+> +			interrupt-map = <0000 0 0 1 &gic 0 0 GIC_SPI 124 IRQ_TYPE_LEVEL_HIGH>,
+> +					<0000 0 0 2 &gic 0 0 GIC_SPI 125 IRQ_TYPE_LEVEL_HIGH>,
+> +					<0000 0 0 3 &gic 0 0 GIC_SPI 126 IRQ_TYPE_LEVEL_HIGH>,
+> +					<0000 0 0 4 &gic 0 0 GIC_SPI 127 IRQ_TYPE_LEVEL_HIGH>;
+> +			status = "disabled";
+> +		};
+> +
+> +		pcie@3800000 {
+> +			compatible = "fsl,lx2160a-pcie";
+> +			reg = <0x00 0x03800000 0x0 0x00100000   /* controller registers */
+> +			       0xa0 0x00000000 0x0 0x00001000>; /* configuration space */
+> +			reg-names = "csr_axi_slave", "config_axi_slave";
+> +			interrupts = <GIC_SPI 128 IRQ_TYPE_LEVEL_HIGH>, /* AER interrupt */
+> +				     <GIC_SPI 128 IRQ_TYPE_LEVEL_HIGH>, /* PME interrupt */
+> +				     <GIC_SPI 128 IRQ_TYPE_LEVEL_HIGH>; /* controller interrupt */
+> +			interrupt-names = "aer", "pme", "intr";
+> +			#address-cells = <3>;
+> +			#size-cells = <2>;
+> +			device_type = "pci";
+> +			dma-coherent;
+> +			apio-wins = <256>;
+> +			ppio-wins = <24>;
+> +			bus-range = <0x0 0xff>;
+> +			ranges = <0x82000000 0x0 0x40000000 0xa0 0x40000000 0x0 0x40000000>; /* non-prefetchable memory */
+> +			msi-parent = <&its>;
+> +			#interrupt-cells = <1>;
+> +			interrupt-map-mask = <0 0 0 7>;
+> +			interrupt-map = <0000 0 0 1 &gic 0 0 GIC_SPI 129 IRQ_TYPE_LEVEL_HIGH>,
+> +					<0000 0 0 2 &gic 0 0 GIC_SPI 130 IRQ_TYPE_LEVEL_HIGH>,
+> +					<0000 0 0 3 &gic 0 0 GIC_SPI 131 IRQ_TYPE_LEVEL_HIGH>,
+> +					<0000 0 0 4 &gic 0 0 GIC_SPI 132 IRQ_TYPE_LEVEL_HIGH>;
+> +			status = "disabled";
+> +		};
+> +
+> +		pcie@3900000 {
+> +			compatible = "fsl,lx2160a-pcie";
+> +			reg = <0x00 0x03900000 0x0 0x00100000   /* controller registers */
+> +			       0xa8 0x00000000 0x0 0x00001000>; /* configuration space */
+> +			reg-names = "csr_axi_slave", "config_axi_slave";
+> +			interrupts = <GIC_SPI 103 IRQ_TYPE_LEVEL_HIGH>, /* AER interrupt */
+> +				     <GIC_SPI 103 IRQ_TYPE_LEVEL_HIGH>, /* PME interrupt */
+> +				     <GIC_SPI 103 IRQ_TYPE_LEVEL_HIGH>; /* controller interrupt */
+> +			interrupt-names = "aer", "pme", "intr";
+> +			#address-cells = <3>;
+> +			#size-cells = <2>;
+> +			device_type = "pci";
+> +			dma-coherent;
+> +			apio-wins = <8>;
+> +			ppio-wins = <8>;
+> +			bus-range = <0x0 0xff>;
+> +			ranges = <0x82000000 0x0 0x40000000 0xa8 0x40000000 0x0 0x40000000>; /* non-prefetchable memory */
+> +			msi-parent = <&its>;
+> +			#interrupt-cells = <1>;
+> +			interrupt-map-mask = <0 0 0 7>;
+> +			interrupt-map = <0000 0 0 1 &gic 0 0 GIC_SPI 104 IRQ_TYPE_LEVEL_HIGH>,
+> +					<0000 0 0 2 &gic 0 0 GIC_SPI 105 IRQ_TYPE_LEVEL_HIGH>,
+> +					<0000 0 0 3 &gic 0 0 GIC_SPI 106 IRQ_TYPE_LEVEL_HIGH>,
+> +					<0000 0 0 4 &gic 0 0 GIC_SPI 107 IRQ_TYPE_LEVEL_HIGH>;
+> +			status = "disabled";
+> +		};
+> +
 
-Signed-off-by: Stanislav Spassov <stanspas@amazon.de>
----
- drivers/pci/pci.c   | 19 ++++++++++++++-----
- drivers/pci/probe.c |  2 ++
- include/linux/pci.h |  1 +
- 3 files changed, 17 insertions(+), 5 deletions(-)
+Unnecessary newline.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index db9b58ab6c68..a554818968ed 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1033,8 +1033,17 @@ void pci_wakeup_bus(struct pci_bus *bus)
- 		pci_walk_bus(bus, pci_wakeup, NULL);
- }
- 
--static int pci_dev_wait(struct pci_dev *dev, char *reset_type, int timeout)
-+static int pci_dev_get_reset_ready_poll_ms(struct pci_dev *dev)
- {
-+	if (dev->reset_ready_poll_ms >= 0)
-+		return dev->reset_ready_poll_ms;
-+
-+	return pcie_reset_ready_poll_ms;
-+}
-+
-+static int pci_dev_wait(struct pci_dev *dev, char *reset_type)
-+{
-+	int timeout = pci_dev_get_reset_ready_poll_ms(dev);
- 	int delay = 1;
- 	u32 id;
- 
-@@ -4518,7 +4527,7 @@ int pcie_flr(struct pci_dev *dev)
- 	 */
- 	msleep(100);
- 
--	return pci_dev_wait(dev, "FLR", pcie_reset_ready_poll_ms);
-+	return pci_dev_wait(dev, "FLR");
- }
- EXPORT_SYMBOL_GPL(pcie_flr);
- 
-@@ -4563,7 +4572,7 @@ static int pci_af_flr(struct pci_dev *dev, int probe)
- 	 */
- 	msleep(100);
- 
--	return pci_dev_wait(dev, "AF_FLR", pcie_reset_ready_poll_ms);
-+	return pci_dev_wait(dev, "AF_FLR");
- }
- 
- /**
-@@ -4608,7 +4617,7 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
- 	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, csr);
- 	pci_dev_d3_sleep(dev);
- 
--	return pci_dev_wait(dev, "PM D3hot->D0", pcie_reset_ready_poll_ms);
-+	return pci_dev_wait(dev, "PM D3hot->D0");
- }
- 
- /**
-@@ -4838,7 +4847,7 @@ int pci_bridge_secondary_bus_reset(struct pci_dev *dev)
- {
- 	pcibios_reset_secondary_bus(dev);
- 
--	return pci_dev_wait(dev, "bus reset", pcie_reset_ready_poll_ms);
-+	return pci_dev_wait(dev, "bus reset");
- }
- EXPORT_SYMBOL_GPL(pci_bridge_secondary_bus_reset);
- 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 512cb4312ddd..eeb79a45d504 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2166,6 +2166,8 @@ struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
- 	if (!dev)
- 		return NULL;
- 
-+	dev->reset_ready_poll_ms = -1;
-+
- 	INIT_LIST_HEAD(&dev->bus_list);
- 	dev->dev.type = &pci_dev_type;
- 	dev->bus = pci_bus_get(bus);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 3840a541a9de..049a41b9412b 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -468,6 +468,7 @@ struct pci_dev {
- 	size_t		romlen;		/* Length if not from BAR */
- 	char		*driver_override; /* Driver name to force a match */
- 
-+	int		reset_ready_poll_ms;
- 	unsigned long	priv_flags;	/* Private flags for the PCI driver */
- };
- 
--- 
-2.25.1
+I fixed them up and applied the patch.
 
+Shawn
 
-
-
-Amazon Development Center Germany GmbH
-Krausenstr. 38
-10117 Berlin
-Geschaeftsfuehrung: Christian Schlaeger, Jonathan Weiss
-Eingetragen am Amtsgericht Charlottenburg unter HRB 149173 B
-Sitz: Berlin
-Ust-ID: DE 289 237 879
-
-
-
+>  	};
+>  };
+> -- 
+> 2.17.1
+> 
