@@ -2,51 +2,50 @@ Return-Path: <SRS0=yR10=4N=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57BE4C35DFB
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Feb 2020 09:07:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5D9BC35DF5
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Feb 2020 09:07:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2308D21744
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Feb 2020 09:07:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B29D321744
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Feb 2020 09:07:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="vBssXWcV"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="ZCBv65Tp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729960AbgBYJHc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 25 Feb 2020 04:07:32 -0500
-Received: from lelv0142.ext.ti.com ([198.47.23.249]:47814 "EHLO
+        id S1729671AbgBYJH0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 25 Feb 2020 04:07:26 -0500
+Received: from lelv0142.ext.ti.com ([198.47.23.249]:47774 "EHLO
         lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729939AbgBYJHc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Feb 2020 04:07:32 -0500
+        with ESMTP id S1729898AbgBYJH0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Feb 2020 04:07:26 -0500
 Received: from fllv0034.itg.ti.com ([10.64.40.246])
-        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 01P97OGU037744;
-        Tue, 25 Feb 2020 03:07:24 -0600
+        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 01P97HMZ037706;
+        Tue, 25 Feb 2020 03:07:17 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1582621644;
-        bh=JRl5ARotx9L0/8W2ZWBpmQ2FofoiaRYaIrBYg+s9K+o=;
+        s=ti-com-17Q1; t=1582621637;
+        bh=hCKNQuZUkcO4X0mn7TApsybUnUlRIUHHECrZXl5Tk+M=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=vBssXWcV9JJRIxNEimRPO96+IRamMXSc0g68WQHDEmdBR3Kt8JYEMxoEAwHJnD+EC
-         RrBT+qThMcSefaASiSzK4eqQe2bPisqwauLk5pcbZZz6EbaVfhi6gDmlybYN8o9F0s
-         jjFnyd2xFDU5jCnPiNT3NMDUFWy8iGA8qUbnwUsI=
-Received: from DLEE101.ent.ti.com (dlee101.ent.ti.com [157.170.170.31])
-        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 01P97Oag035346
+        b=ZCBv65TplXENW9la844gM+R0apc1iThbJL4yhuI/qFYxihbKrUA56vgP5NwVyiO/G
+         yvE+Eie4ZyIvXbwY98bZ4yRrN1XI7METAmqsDNjzghkIsmF5vQLxZYdsr4xVc1LRIf
+         MRNZSZg1fHPW6M6wDcyf3/qhRv+dN8vihYrmLjDM=
+Received: from DFLE108.ent.ti.com (dfle108.ent.ti.com [10.64.6.29])
+        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 01P97HYl035122
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 25 Feb 2020 03:07:24 -0600
-Received: from DLEE106.ent.ti.com (157.170.170.36) by DLEE101.ent.ti.com
- (157.170.170.31) with Microsoft SMTP Server (version=TLS1_2,
+        Tue, 25 Feb 2020 03:07:17 -0600
+Received: from DFLE112.ent.ti.com (10.64.6.33) by DFLE108.ent.ti.com
+ (10.64.6.29) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Tue, 25
- Feb 2020 03:07:23 -0600
-Received: from lelv0326.itg.ti.com (10.180.67.84) by DLEE106.ent.ti.com
- (157.170.170.36) with Microsoft SMTP Server (version=TLS1_2,
+ Feb 2020 03:07:17 -0600
+Received: from lelv0326.itg.ti.com (10.180.67.84) by DFLE112.ent.ti.com
+ (10.64.6.33) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
- Frontend Transport; Tue, 25 Feb 2020 03:07:23 -0600
+ Frontend Transport; Tue, 25 Feb 2020 03:07:17 -0600
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 01P973Pt052643;
-        Tue, 25 Feb 2020 03:07:21 -0600
+        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 01P973Pr052643;
+        Tue, 25 Feb 2020 03:07:14 -0600
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Arnd Bergmann <arnd@arndb.de>,
@@ -55,10 +54,11 @@ To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
 CC:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Alan Mikhak <alan.mikhak@sifive.com>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH 5/5] misc: pci_endpoint_test: Add support to get DMA option from userspace
-Date:   Tue, 25 Feb 2020 14:41:30 +0530
-Message-ID: <20200225091130.29467-6-kishon@ti.com>
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        Sekhar Nori <nsekhar@ti.com>
+Subject: [PATCH 3/5] misc: pci_endpoint_test: Use streaming DMA APIs for buffer allocation
+Date:   Tue, 25 Feb 2020 14:41:28 +0530
+Message-ID: <20200225091130.29467-4-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200225091130.29467-1-kishon@ti.com>
 References: <20200225091130.29467-1-kishon@ti.com>
@@ -70,188 +70,230 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-'pcitest' utility now uses '-d' option to allow the user to test DMA.
-Add support to parse option to use DMA from userspace application.
+Use streaming DMA APIs (dma_map_single/dma_unmap_single) for buffers
+transmitted/received by the endpoint device instead of allocating
+a coherent memory. Also add default_data to set the alignment to
+4KB since dma_map_single might not return a 4KB aligned address.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Sekhar Nori <nsekhar@ti.com>
 ---
- drivers/misc/pci_endpoint_test.c | 65 ++++++++++++++++++++++++++++++--
- 1 file changed, 62 insertions(+), 3 deletions(-)
+ drivers/misc/pci_endpoint_test.c | 100 ++++++++++++++++++++++++-------
+ 1 file changed, 79 insertions(+), 21 deletions(-)
 
 diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index 5998df1c84e9..3f102356b600 100644
+index a5e317073d95..5998df1c84e9 100644
 --- a/drivers/misc/pci_endpoint_test.c
 +++ b/drivers/misc/pci_endpoint_test.c
-@@ -17,6 +17,7 @@
- #include <linux/mutex.h>
- #include <linux/random.h>
- #include <linux/slab.h>
-+#include <linux/uaccess.h>
- #include <linux/pci.h>
- #include <linux/pci_ids.h>
+@@ -341,14 +341,22 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
+ 		goto err;
+ 	}
  
-@@ -52,6 +53,7 @@
- #define STATUS_SRC_ADDR_INVALID			BIT(7)
- #define STATUS_DST_ADDR_INVALID			BIT(8)
+-	orig_src_addr = dma_alloc_coherent(dev, size + alignment,
+-					   &orig_src_phys_addr, GFP_KERNEL);
++	orig_src_addr = kzalloc(size + alignment, GFP_KERNEL);
+ 	if (!orig_src_addr) {
+ 		dev_err(dev, "Failed to allocate source buffer\n");
+ 		ret = false;
+ 		goto err;
+ 	}
  
-+#define PCI_ENDPOINT_TEST_STATUS		0x8
- #define PCI_ENDPOINT_TEST_LOWER_SRC_ADDR	0x0c
- #define PCI_ENDPOINT_TEST_UPPER_SRC_ADDR	0x10
- 
-@@ -64,6 +66,9 @@
- #define PCI_ENDPOINT_TEST_IRQ_TYPE		0x24
- #define PCI_ENDPOINT_TEST_IRQ_NUMBER		0x28
- 
-+#define PCI_ENDPOINT_TEST_FLAGS			0x2c
-+#define FLAG_USE_DMA				BIT(0)
-+
- #define PCI_DEVICE_ID_TI_AM654			0xb00c
- 
- #define is_am654_pci_dev(pdev)		\
-@@ -315,11 +320,16 @@ static bool pci_endpoint_test_msi_irq(struct pci_endpoint_test *test,
- 	return false;
- }
- 
--static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
-+static bool pci_endpoint_test_copy(struct pci_endpoint_test *test,
-+				   unsigned long arg)
- {
-+	struct pci_endpoint_test_xfer_param param;
- 	bool ret = false;
- 	void *src_addr;
- 	void *dst_addr;
-+	u32 flags = 0;
-+	bool use_dma;
-+	size_t size;
- 	dma_addr_t src_phys_addr;
- 	dma_addr_t dst_phys_addr;
- 	struct pci_dev *pdev = test->pdev;
-@@ -332,10 +342,22 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
- 	size_t alignment = test->alignment;
- 	u32 src_crc32;
- 	u32 dst_crc32;
-+	int err;
-+
-+	err = copy_from_user(&param, (void *)arg, sizeof(param));
-+	if (err) {
-+		dev_err(dev, "Failed to get transfer param\n");
-+		return false;
++	get_random_bytes(orig_src_addr, size + alignment);
++	orig_src_phys_addr = dma_map_single(dev, orig_src_addr,
++					    size + alignment, DMA_TO_DEVICE);
++	if (dma_mapping_error(dev, orig_src_phys_addr)) {
++		dev_err(dev, "failed to map source buffer address\n");
++		ret = false;
++		goto err_src_phys_addr;
 +	}
- 
-+	size = param.size;
- 	if (size > SIZE_MAX - alignment)
- 		goto err;
- 
-+	use_dma = param.use_dma;
-+	if (use_dma)
-+		flags |= FLAG_USE_DMA;
 +
- 	if (irq_type < IRQ_TYPE_LEGACY || irq_type > IRQ_TYPE_MSIX) {
- 		dev_err(dev, "Invalid IRQ type option\n");
- 		goto err;
-@@ -406,6 +428,7 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
- 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE,
- 				 size);
+ 	if (alignment && !IS_ALIGNED(orig_src_phys_addr, alignment)) {
+ 		src_phys_addr = PTR_ALIGN(orig_src_phys_addr, alignment);
+ 		offset = src_phys_addr - orig_src_phys_addr;
+@@ -364,15 +372,21 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_UPPER_SRC_ADDR,
+ 				 upper_32_bits(src_phys_addr));
  
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_FLAGS, flags);
- 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE, irq_type);
- 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 1);
- 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
-@@ -434,9 +457,13 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
+-	get_random_bytes(src_addr, size);
+ 	src_crc32 = crc32_le(~0, src_addr, size);
+ 
+-	orig_dst_addr = dma_alloc_coherent(dev, size + alignment,
+-					   &orig_dst_phys_addr, GFP_KERNEL);
++	orig_dst_addr = kzalloc(size + alignment, GFP_KERNEL);
+ 	if (!orig_dst_addr) {
+ 		dev_err(dev, "Failed to allocate destination address\n");
+ 		ret = false;
+-		goto err_orig_src_addr;
++		goto err_dst_addr;
++	}
++
++	orig_dst_phys_addr = dma_map_single(dev, orig_dst_addr,
++					    size + alignment, DMA_FROM_DEVICE);
++	if (dma_mapping_error(dev, orig_dst_phys_addr)) {
++		dev_err(dev, "failed to map destination buffer address\n");
++		ret = false;
++		goto err_dst_phys_addr;
+ 	}
+ 
+ 	if (alignment && !IS_ALIGNED(orig_dst_phys_addr, alignment)) {
+@@ -399,16 +413,22 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
+ 
+ 	wait_for_completion(&test->irq_raised);
+ 
++	dma_unmap_single(dev, orig_dst_phys_addr, size + alignment,
++			 DMA_FROM_DEVICE);
++
+ 	dst_crc32 = crc32_le(~0, dst_addr, size);
+ 	if (dst_crc32 == src_crc32)
+ 		ret = true;
+ 
+-	dma_free_coherent(dev, size + alignment, orig_dst_addr,
+-			  orig_dst_phys_addr);
++err_dst_phys_addr:
++	kfree(orig_dst_addr);
+ 
+-err_orig_src_addr:
+-	dma_free_coherent(dev, size + alignment, orig_src_addr,
+-			  orig_src_phys_addr);
++err_dst_addr:
++	dma_unmap_single(dev, orig_src_phys_addr, size + alignment,
++			 DMA_TO_DEVICE);
++
++err_src_phys_addr:
++	kfree(orig_src_addr);
+ 
+ err:
+ 	return ret;
+@@ -436,14 +456,23 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
+ 		goto err;
+ 	}
+ 
+-	orig_addr = dma_alloc_coherent(dev, size + alignment, &orig_phys_addr,
+-				       GFP_KERNEL);
++	orig_addr = kzalloc(size + alignment, GFP_KERNEL);
+ 	if (!orig_addr) {
+ 		dev_err(dev, "Failed to allocate address\n");
+ 		ret = false;
+ 		goto err;
+ 	}
+ 
++	get_random_bytes(orig_addr, size + alignment);
++
++	orig_phys_addr = dma_map_single(dev, orig_addr, size + alignment,
++					DMA_TO_DEVICE);
++	if (dma_mapping_error(dev, orig_phys_addr)) {
++		dev_err(dev, "failed to map source buffer address\n");
++		ret = false;
++		goto err_phys_addr;
++	}
++
+ 	if (alignment && !IS_ALIGNED(orig_phys_addr, alignment)) {
+ 		phys_addr =  PTR_ALIGN(orig_phys_addr, alignment);
+ 		offset = phys_addr - orig_phys_addr;
+@@ -453,8 +482,6 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
+ 		addr = orig_addr;
+ 	}
+ 
+-	get_random_bytes(addr, size);
+-
+ 	crc32 = crc32_le(~0, addr, size);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_CHECKSUM,
+ 				 crc32);
+@@ -477,7 +504,11 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
+ 	if (reg & STATUS_READ_SUCCESS)
+ 		ret = true;
+ 
+-	dma_free_coherent(dev, size + alignment, orig_addr, orig_phys_addr);
++	dma_unmap_single(dev, orig_phys_addr, size + alignment,
++			 DMA_TO_DEVICE);
++
++err_phys_addr:
++	kfree(orig_addr);
+ 
+ err:
+ 	return ret;
+@@ -504,14 +535,21 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
+ 		goto err;
+ 	}
+ 
+-	orig_addr = dma_alloc_coherent(dev, size + alignment, &orig_phys_addr,
+-				       GFP_KERNEL);
++	orig_addr = kzalloc(size + alignment, GFP_KERNEL);
+ 	if (!orig_addr) {
+ 		dev_err(dev, "Failed to allocate destination address\n");
+ 		ret = false;
+ 		goto err;
+ 	}
+ 
++	orig_phys_addr = dma_map_single(dev, orig_addr, size + alignment,
++					DMA_FROM_DEVICE);
++	if (dma_mapping_error(dev, orig_phys_addr)) {
++		dev_err(dev, "failed to map source buffer address\n");
++		ret = false;
++		goto err_phys_addr;
++	}
++
+ 	if (alignment && !IS_ALIGNED(orig_phys_addr, alignment)) {
+ 		phys_addr = PTR_ALIGN(orig_phys_addr, alignment);
+ 		offset = phys_addr - orig_phys_addr;
+@@ -535,11 +573,15 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
+ 
+ 	wait_for_completion(&test->irq_raised);
+ 
++	dma_unmap_single(dev, orig_phys_addr, size + alignment,
++			 DMA_FROM_DEVICE);
++
+ 	crc32 = crc32_le(~0, addr, size);
+ 	if (crc32 == pci_endpoint_test_readl(test, PCI_ENDPOINT_TEST_CHECKSUM))
+ 		ret = true;
+ 
+-	dma_free_coherent(dev, size + alignment, orig_addr, orig_phys_addr);
++err_phys_addr:
++	kfree(orig_addr);
+ err:
  	return ret;
  }
+@@ -667,6 +709,12 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 	init_completion(&test->irq_raised);
+ 	mutex_init(&test->mutex);
  
--static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
-+static bool pci_endpoint_test_write(struct pci_endpoint_test *test,
-+				    unsigned long arg)
- {
-+	struct pci_endpoint_test_xfer_param param;
- 	bool ret = false;
-+	u32 flags = 0;
-+	bool use_dma;
- 	u32 reg;
- 	void *addr;
- 	dma_addr_t phys_addr;
-@@ -446,11 +473,24 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
- 	dma_addr_t orig_phys_addr;
- 	size_t offset;
- 	size_t alignment = test->alignment;
-+	size_t size;
- 	u32 crc32;
-+	int err;
- 
-+	err = copy_from_user(&param, (void *)arg, sizeof(param));
-+	if (err != 0) {
-+		dev_err(dev, "Failed to get transfer param\n");
-+		return false;
++	if ((dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(48)) != 0) &&
++	    dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32)) != 0) {
++		dev_err(dev, "Cannot set DMA mask\n");
++		return -EINVAL;
 +	}
 +
-+	size = param.size;
- 	if (size > SIZE_MAX - alignment)
- 		goto err;
- 
-+	use_dma = param.use_dma;
-+	if (use_dma)
-+		flags |= FLAG_USE_DMA;
-+
- 	if (irq_type < IRQ_TYPE_LEGACY || irq_type > IRQ_TYPE_MSIX) {
- 		dev_err(dev, "Invalid IRQ type option\n");
- 		goto err;
-@@ -493,6 +533,7 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
- 
- 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE, size);
- 
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_FLAGS, flags);
- 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE, irq_type);
- 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 1);
- 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
-@@ -514,9 +555,14 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
- 	return ret;
+ 	err = pci_enable_device(pdev);
+ 	if (err) {
+ 		dev_err(dev, "Cannot enable PCI device\n");
+@@ -783,6 +831,12 @@ static void pci_endpoint_test_remove(struct pci_dev *pdev)
+ 	pci_disable_device(pdev);
  }
  
--static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
-+static bool pci_endpoint_test_read(struct pci_endpoint_test *test,
-+				   unsigned long arg)
- {
-+	struct pci_endpoint_test_xfer_param param;
- 	bool ret = false;
-+	u32 flags = 0;
-+	bool use_dma;
-+	size_t size;
- 	void *addr;
- 	dma_addr_t phys_addr;
- 	struct pci_dev *pdev = test->pdev;
-@@ -526,10 +572,22 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
- 	size_t offset;
- 	size_t alignment = test->alignment;
- 	u32 crc32;
-+	int err;
- 
-+	err = copy_from_user(&param, (void *)arg, sizeof(param));
-+	if (err) {
-+		dev_err(dev, "Failed to get transfer param\n");
-+		return false;
-+	}
++static const struct pci_endpoint_test_data default_data = {
++	.test_reg_bar = BAR_0,
++	.alignment = SZ_4K,
++	.irq_type = IRQ_TYPE_MSI,
++};
 +
-+	size = param.size;
- 	if (size > SIZE_MAX - alignment)
- 		goto err;
+ static const struct pci_endpoint_test_data am654_data = {
+ 	.test_reg_bar = BAR_2,
+ 	.alignment = SZ_64K,
+@@ -790,8 +844,12 @@ static const struct pci_endpoint_test_data am654_data = {
+ };
  
-+	use_dma = param.use_dma;
-+	if (use_dma)
-+		flags |= FLAG_USE_DMA;
-+
- 	if (irq_type < IRQ_TYPE_LEGACY || irq_type > IRQ_TYPE_MSIX) {
- 		dev_err(dev, "Invalid IRQ type option\n");
- 		goto err;
-@@ -566,6 +624,7 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
- 
- 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE, size);
- 
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_FLAGS, flags);
- 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE, irq_type);
- 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 1);
- 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+ static const struct pci_device_id pci_endpoint_test_tbl[] = {
+-	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA74x) },
+-	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA72x) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA74x),
++	  .driver_data = (kernel_ulong_t)&default_data,
++	},
++	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA72x),
++	  .driver_data = (kernel_ulong_t)&default_data,
++	},
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_FREESCALE, 0x81c0) },
+ 	{ PCI_DEVICE_DATA(SYNOPSYS, EDDA, NULL) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_AM654),
 -- 
 2.17.1
 
