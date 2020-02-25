@@ -2,240 +2,216 @@ Return-Path: <SRS0=yR10=4N=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA816C35DF5
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Feb 2020 12:08:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BAE8EC35DF5
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Feb 2020 13:53:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9D6BA2084E
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Feb 2020 12:08:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7655621927
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Feb 2020 13:53:45 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=xilinx.onmicrosoft.com header.i=@xilinx.onmicrosoft.com header.b="mC54EQb8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730399AbgBYMIy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 25 Feb 2020 07:08:54 -0500
-Received: from foss.arm.com ([217.140.110.172]:49958 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729458AbgBYMIx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 25 Feb 2020 07:08:53 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id EFD47113E;
-        Tue, 25 Feb 2020 04:08:52 -0800 (PST)
-Received: from e121166-lin.cambridge.arm.com (e121166-lin.cambridge.arm.com [10.1.196.255])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 35F0C3F6CF;
-        Tue, 25 Feb 2020 04:08:51 -0800 (PST)
-Date:   Tue, 25 Feb 2020 12:08:41 +0000
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Vidya Sagar <vidyas@nvidia.com>
-Cc:     jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
-        andrew.murray@arm.com, bhelgaas@google.com, kishon@ti.com,
-        thierry.reding@gmail.com, Jisheng.Zhang@synaptics.com,
-        jonathanh@nvidia.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, kthota@nvidia.com,
-        mmaddireddy@nvidia.com, sagar.tv@gmail.com
-Subject: Re: [PATCH V3 5/5] PCI: pci-epf-test: Add support to defer core
- initialization
-Message-ID: <20200225120832.GA7710@e121166-lin.cambridge.arm.com>
-References: <20200217121036.3057-1-vidyas@nvidia.com>
- <20200217121036.3057-6-vidyas@nvidia.com>
+        id S1730370AbgBYNxo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 25 Feb 2020 08:53:44 -0500
+Received: from mail-bn8nam11on2077.outbound.protection.outlook.com ([40.107.236.77]:7257
+        "EHLO NAM11-BN8-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1729065AbgBYNxo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 25 Feb 2020 08:53:44 -0500
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Y0EOgh4w5cj9Anx+rpU2R/knvqGIgnOlJYfR26xHR1f4WDzA6+iuOJikunj0y7pYOMDnLCsMsOKeFPU2c0dt379l8XiIEFl+HluSE08OtEPUwE/gpSYZDGgQUUd0Bdm5IlheUedCH/H4ITgEAtLrECeKaABlusgm4OPwM/Txc+Nog6WNOTjTp9Z6Y+pI+uqPjszdGJxEyixupQvFfVhjABu+3e/g83LlUUH+G03qiE8QHjjIYoKdzTaS2YPuRPYTuOGUgCdFSCcZzn7xruBr5sHns2iBgOaRnCXsrZY+qYoI2gn3WGRuGR33o782gfB037UCsZZskoVFp0ktjvVT7g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Z/tRXFh5cywy7PlV5Q88yHHPDOWdqiruyWu5By+svX0=;
+ b=i/fM6Jv3B1Ksib90CuZ1bRmYv+2N9XUXP+83cVYWPuhgrP47ViHSR/AOG1/9DBNJoLlIaBOO7+mHosk9BODHqKDIsa4RQFmEzqsJ/hcaabXSABeG1NbMAZOnYlSO+M5FwypPurgN/nyD4MBT0gioo47dZnz2qwRmZSgB9vv36A7MeFWGFI1kE++GQOIxEtmJ1KHWAzSjPF49pgrziX0/eQEGzLGtL/WZzZSBubwrzb72N2FihPE0DGYMpcl3EMnCJUjgldpKQvwHi/2Ai8yJodDYJGqxiHjQKfhIb5jtyp6NLOWvw/XzC36laMn7kmsk+3ybdilE+3If08C22UHGIg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=xilinx.com; dmarc=pass action=none header.from=xilinx.com;
+ dkim=pass header.d=xilinx.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=xilinx.onmicrosoft.com; s=selector2-xilinx-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Z/tRXFh5cywy7PlV5Q88yHHPDOWdqiruyWu5By+svX0=;
+ b=mC54EQb8nWDoaxQ0pwVlN4idoCQXsvwAvfL6aR9mBAWNg3mcjCRggQv6ZHBvMTxksKGmO2gKmNIlZMgmy3HnByX+911JdpLgyIecjBpuhJhKaS3q2pIlGFn654ddBzqn0Jkwz+nDTN9CoJ5j5nHc9qS0DHoWRo62SJ+Muw6d4Is=
+Received: from MN2PR02MB6336.namprd02.prod.outlook.com (2603:10b6:208:1b8::30)
+ by MN2PR02MB6975.namprd02.prod.outlook.com (2603:10b6:208:205::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2750.21; Tue, 25 Feb
+ 2020 13:53:39 +0000
+Received: from MN2PR02MB6336.namprd02.prod.outlook.com
+ ([fe80::f452:65fb:14c7:dd6b]) by MN2PR02MB6336.namprd02.prod.outlook.com
+ ([fe80::f452:65fb:14c7:dd6b%7]) with mapi id 15.20.2750.021; Tue, 25 Feb 2020
+ 13:53:39 +0000
+From:   Bharat Kumar Gogada <bharatku@xilinx.com>
+To:     "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>
+CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        Ravikiran Gummaluri <rgummal@xilinx.com>
+Subject: RE: [PATCH 1/2] PCI: Versal CPM: Add device tree binding forversal
+ CPM host controller
+Thread-Topic: [PATCH 1/2] PCI: Versal CPM: Add device tree binding forversal
+ CPM host controller
+Thread-Index: AQHVtypssK4lIAAUvEC8dXg0z5iyHagsJpcAgAAw40A=
+Date:   Tue, 25 Feb 2020 13:53:38 +0000
+Message-ID: <MN2PR02MB6336EE21A8BBBD36788D2108A5ED0@MN2PR02MB6336.namprd02.prod.outlook.com>
+References: <1576842072-32027-1-git-send-email-bharat.kumar.gogada@xilinx.com>
+ <1576842072-32027-2-git-send-email-bharat.kumar.gogada@xilinx.com>
+ <20200225105808.GA5089@e121166-lin.cambridge.arm.com>
+In-Reply-To: <20200225105808.GA5089@e121166-lin.cambridge.arm.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-Auto-Response-Suppress: DR, RN, NRN, OOF, AutoReply
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=bharatku@xilinx.com; 
+x-originating-ip: [149.199.50.133]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 739b0ecd-ddae-46ce-db24-08d7b9fa1e05
+x-ms-traffictypediagnostic: MN2PR02MB6975:|MN2PR02MB6975:
+x-ld-processed: 657af505-d5df-48d0-8300-c31994686c5c,ExtAddr
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <MN2PR02MB69753E5A57B1683D3906F02EA5ED0@MN2PR02MB6975.namprd02.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:7219;
+x-forefront-prvs: 0324C2C0E2
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(4636009)(376002)(346002)(366004)(396003)(39860400002)(136003)(199004)(189003)(2906002)(81156014)(81166006)(8676002)(6506007)(66946007)(316002)(71200400001)(54906003)(5660300002)(55016002)(52536014)(9686003)(66446008)(64756008)(66556008)(66476007)(4326008)(8936002)(107886003)(33656002)(6916009)(7696005)(86362001)(26005)(76116006)(478600001)(186003);DIR:OUT;SFP:1101;SCL:1;SRVR:MN2PR02MB6975;H:MN2PR02MB6336.namprd02.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: xilinx.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: 5tBqFWZzBis9RO3HSqaFLHTCGIhzQ4yfNtLYQhVFciy5iWjvegWUprW+axBBZWmCEUIxtG9uYqq0SgClO6Z/bcNlHlkSjX/0HTh8YWbUh3Gk4wsMPQ8hsslXAl2z6HbWwM7jvJmy/2/qKpXvE+rS3crNB5xFyXPtXGQlXzdp1qKrsQGUDxexk3J5B1R/dw0ZZV5VIPmvDv1W/pTQWr4qwJnLD0KnmCqZfvf2YEdedYsHwbrrTwLSe2zxH7tZMMPeacTkE0w/Wx/D5FO73+K1TnElSCaLQj12dpobG5DEFcVg/sG8NHM2+Xml0lD0GoL0Mgv5osy/tcqR2aPIATUuQtwDNtBZTPktgM0FWMixMzz4w/qwqDKdWY4nY70fvY9ln5lesH8l+b3hAoupz0DHTDW7J8VRa6LsWR8b6WKgkkYqb0+O3Q/4FxZ3nk82bCFH
+x-ms-exchange-antispam-messagedata: ZI2TgfKw3bHMKg3Fbl8naL6X1VdxP6GQWFzG8lvXbx9ZTY6u7aK9IN8Q8nvAjvDEorEI8/AenpDzUVA5G38R6vARcT8ySglK/LOeb2z2//5ZV8MTZ/VJY7e3K5h3qY4T1jTLahgEojMG91B9H0+6Bg==
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200217121036.3057-6-vidyas@nvidia.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+X-OriginatorOrg: xilinx.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 739b0ecd-ddae-46ce-db24-08d7b9fa1e05
+X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Feb 2020 13:53:39.1538
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 657af505-d5df-48d0-8300-c31994686c5c
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: Yb3LO5H5Quoili6h5CCV6vV05SDrwnl4LH53WvIIzdRau4YRBsH/89UO/HbwwyH0krhs5y+T7xjAGccATziNFw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR02MB6975
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Feb 17, 2020 at 05:40:36PM +0530, Vidya Sagar wrote:
-> Add support to defer core initialization and to receive a notifier
-> when core is ready to accommodate platforms where core is not for
-> initialization untile reference clock from host is available.
-
-I don't understand this commit log, please reword it and fix
-the typos, I would merge it then, thanks.
-
-Lorenzo
-
-> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
-> Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
-> V3:
-> * Added Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
-> 
-> V2:
-> * Addressed review comments from Kishon
-> 
->  drivers/pci/endpoint/functions/pci-epf-test.c | 118 ++++++++++++------
->  1 file changed, 77 insertions(+), 41 deletions(-)
-> 
-> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-> index bddff15052cc..be04c6220265 100644
-> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
-> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-> @@ -360,18 +360,6 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
->  			   msecs_to_jiffies(1));
->  }
->  
-> -static int pci_epf_test_notifier(struct notifier_block *nb, unsigned long val,
-> -				 void *data)
-> -{
-> -	struct pci_epf *epf = container_of(nb, struct pci_epf, nb);
-> -	struct pci_epf_test *epf_test = epf_get_drvdata(epf);
-> -
-> -	queue_delayed_work(kpcitest_workqueue, &epf_test->cmd_handler,
-> -			   msecs_to_jiffies(1));
-> -
-> -	return NOTIFY_OK;
-> -}
-> -
->  static void pci_epf_test_unbind(struct pci_epf *epf)
->  {
->  	struct pci_epf_test *epf_test = epf_get_drvdata(epf);
-> @@ -428,6 +416,78 @@ static int pci_epf_test_set_bar(struct pci_epf *epf)
->  	return 0;
->  }
->  
-> +static int pci_epf_test_core_init(struct pci_epf *epf)
-> +{
-> +	struct pci_epf_header *header = epf->header;
-> +	const struct pci_epc_features *epc_features;
-> +	struct pci_epc *epc = epf->epc;
-> +	struct device *dev = &epf->dev;
-> +	bool msix_capable = false;
-> +	bool msi_capable = true;
-> +	int ret;
-> +
-> +	epc_features = pci_epc_get_features(epc, epf->func_no);
-> +	if (epc_features) {
-> +		msix_capable = epc_features->msix_capable;
-> +		msi_capable = epc_features->msi_capable;
-> +	}
-> +
-> +	ret = pci_epc_write_header(epc, epf->func_no, header);
-> +	if (ret) {
-> +		dev_err(dev, "Configuration header write failed\n");
-> +		return ret;
-> +	}
-> +
-> +	ret = pci_epf_test_set_bar(epf);
-> +	if (ret)
-> +		return ret;
-> +
-> +	if (msi_capable) {
-> +		ret = pci_epc_set_msi(epc, epf->func_no, epf->msi_interrupts);
-> +		if (ret) {
-> +			dev_err(dev, "MSI configuration failed\n");
-> +			return ret;
-> +		}
-> +	}
-> +
-> +	if (msix_capable) {
-> +		ret = pci_epc_set_msix(epc, epf->func_no, epf->msix_interrupts);
-> +		if (ret) {
-> +			dev_err(dev, "MSI-X configuration failed\n");
-> +			return ret;
-> +		}
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static int pci_epf_test_notifier(struct notifier_block *nb, unsigned long val,
-> +				 void *data)
-> +{
-> +	struct pci_epf *epf = container_of(nb, struct pci_epf, nb);
-> +	struct pci_epf_test *epf_test = epf_get_drvdata(epf);
-> +	int ret;
-> +
-> +	switch (val) {
-> +	case CORE_INIT:
-> +		ret = pci_epf_test_core_init(epf);
-> +		if (ret)
-> +			return NOTIFY_BAD;
-> +		break;
-> +
-> +	case LINK_UP:
-> +		queue_delayed_work(kpcitest_workqueue, &epf_test->cmd_handler,
-> +				   msecs_to_jiffies(1));
-> +		break;
-> +
-> +	default:
-> +		dev_err(&epf->dev, "Invalid EPF test notifier event\n");
-> +		return NOTIFY_BAD;
-> +	}
-> +
-> +	return NOTIFY_OK;
-> +}
-> +
->  static int pci_epf_test_alloc_space(struct pci_epf *epf)
->  {
->  	struct pci_epf_test *epf_test = epf_get_drvdata(epf);
-> @@ -496,14 +556,11 @@ static int pci_epf_test_bind(struct pci_epf *epf)
->  {
->  	int ret;
->  	struct pci_epf_test *epf_test = epf_get_drvdata(epf);
-> -	struct pci_epf_header *header = epf->header;
->  	const struct pci_epc_features *epc_features;
->  	enum pci_barno test_reg_bar = BAR_0;
->  	struct pci_epc *epc = epf->epc;
-> -	struct device *dev = &epf->dev;
->  	bool linkup_notifier = false;
-> -	bool msix_capable = false;
-> -	bool msi_capable = true;
-> +	bool core_init_notifier = false;
->  
->  	if (WARN_ON_ONCE(!epc))
->  		return -EINVAL;
-> @@ -511,8 +568,7 @@ static int pci_epf_test_bind(struct pci_epf *epf)
->  	epc_features = pci_epc_get_features(epc, epf->func_no);
->  	if (epc_features) {
->  		linkup_notifier = epc_features->linkup_notifier;
-> -		msix_capable = epc_features->msix_capable;
-> -		msi_capable = epc_features->msi_capable;
-> +		core_init_notifier = epc_features->core_init_notifier;
->  		test_reg_bar = pci_epc_get_first_free_bar(epc_features);
->  		pci_epf_configure_bar(epf, epc_features);
->  	}
-> @@ -520,34 +576,14 @@ static int pci_epf_test_bind(struct pci_epf *epf)
->  	epf_test->test_reg_bar = test_reg_bar;
->  	epf_test->epc_features = epc_features;
->  
-> -	ret = pci_epc_write_header(epc, epf->func_no, header);
-> -	if (ret) {
-> -		dev_err(dev, "Configuration header write failed\n");
-> -		return ret;
-> -	}
-> -
->  	ret = pci_epf_test_alloc_space(epf);
->  	if (ret)
->  		return ret;
->  
-> -	ret = pci_epf_test_set_bar(epf);
-> -	if (ret)
-> -		return ret;
-> -
-> -	if (msi_capable) {
-> -		ret = pci_epc_set_msi(epc, epf->func_no, epf->msi_interrupts);
-> -		if (ret) {
-> -			dev_err(dev, "MSI configuration failed\n");
-> -			return ret;
-> -		}
-> -	}
-> -
-> -	if (msix_capable) {
-> -		ret = pci_epc_set_msix(epc, epf->func_no, epf->msix_interrupts);
-> -		if (ret) {
-> -			dev_err(dev, "MSI-X configuration failed\n");
-> +	if (!core_init_notifier) {
-> +		ret = pci_epf_test_core_init(epf);
-> +		if (ret)
->  			return ret;
-> -		}
->  	}
->  
->  	if (linkup_notifier) {
-> -- 
-> 2.17.1
-> 
+>=20
+> On Fri, Dec 20, 2019 at 05:11:11PM +0530, Bharat Kumar Gogada wrote:
+> > Adding device tree binding documentation for versal CPM Root Port drive=
+r.
+> >
+> > Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+> > ---
+> >  .../devicetree/bindings/pci/xilinx-versal-cpm.txt  | 66
+> > ++++++++++++++++++++++
+> >  1 file changed, 66 insertions(+)
+> >  create mode 100644
+> > Documentation/devicetree/bindings/pci/xilinx-versal-cpm.txt
+> >
+> > diff --git
+> > a/Documentation/devicetree/bindings/pci/xilinx-versal-cpm.txt
+> > b/Documentation/devicetree/bindings/pci/xilinx-versal-cpm.txt
+> > new file mode 100644
+> > index 0000000..35f8556
+> > --- /dev/null
+> > +++ b/Documentation/devicetree/bindings/pci/xilinx-versal-cpm.txt
+> > @@ -0,0 +1,66 @@
+> > +* Xilinx Versal CPM DMA Root Port Bridge DT description
+> > +
+> > +Required properties:
+> > +- #address-cells: Address representation for root ports, set to <3>
+> > +- #size-cells: Size representation for root ports, set to <2>
+> > +- #interrupt-cells: specifies the number of cells needed to encode an
+> > +	interrupt source. The value must be 1.
+> > +- compatible: Should contain "xlnx,versal-cpm-host-1.00"
+> > +- reg: Should contain configuration space (includes bridge registers) =
+and
+> > +	CPM system level control and status registers, and length
+> > +- reg-names: Must include the following entries:
+> > +	"cfg": configuration space region and bridge registers
+> > +	"cpm_slcr": CPM system level control and status registers
+> > +- interrupts: Should contain AXI PCIe interrupt
+> > +- interrupt-map-mask,
+> > +  interrupt-map: standard PCI properties to define the mapping of the
+> > +	PCI interface to interrupt numbers.
+> > +- ranges: ranges for the PCI memory regions (I/O space region is not
+> > +	supported by hardware)
+> > +	Please refer to the standard PCI bus binding document for a more
+> > +	detailed explanation
+> > +- msi-map: Maps a Requester ID to an MSI controller and associated MSI
+> > +	sideband data
+> > +- interrupt-names: Must include the following entries:
+> > +	"misc": interrupt asserted when legacy or error interrupt is
+> > +received
+> > +
+> > +Interrupt controller child node
+> > ++++++++++++++++++++++++++++++++
+> > +Required properties:
+> > +- interrupt-controller: identifies the node as an interrupt
+> > +controller
+> > +- #address-cells: specifies the number of cells needed to encode an
+> > +	address. The value must be 0.
+> > +- #interrupt-cells: specifies the number of cells needed to encode an
+> > +	interrupt source. The value must be 1.
+> > +
+> > +
+> > +Refer to the following binding document for more detailed description
+> > +on the use of 'msi-map':
+> > +	 Documentation/devicetree/bindings/pci/pci-msi.txt
+> > +
+> > +Example:
+> > +	pci@fca10000 {
+> > +		#address-cells =3D <3>;
+> > +		#interrupt-cells =3D <1>;
+> > +		#size-cells =3D <2>;
+> > +		compatible =3D "xlnx,versal-cpm-host-1.00";
+> > +		interrupt-map =3D <0 0 0 1 &pcie_intc_0 1>,
+> > +				<0 0 0 2 &pcie_intc_0 2>,
+> > +				<0 0 0 3 &pcie_intc_0 3>,
+> > +				<0 0 0 4 &pcie_intc_0 4>;
+>=20
+> This is wrong, interrupts map to pin 0,1,2,3 of pcie_intc.
+>=20
+> That's what's forcing you to use the pci_irqd_intx_xlate() function and t=
+hat's
+> completely wrong.
+>=20
+> I should find a way to write a common binding for all the host bridges in=
+terrupt-
+> map since this comes up over and over again.
+>=20
+> Please have a look at:
+>=20
+> Documentation/devicetree/bindings/pci/faraday,ftpci100.txt
+Thanks Lorenzo, will fix this in next patch.
+>=20
+>=20
+> > +		interrupt-map-mask =3D <0 0 0 7>;
+> > +		interrupt-parent =3D <&gic>;
+> > +		interrupt-names =3D "misc";
+> > +		interrupts =3D <0 72 4>;
+> > +		ranges =3D <0x02000000 0x00000000 0xE0000000 0x0
+> 0xE0000000 0x00000000 0x10000000>,
+> > +			 <0x43000000 0x00000080 0x00000000 0x00000080
+> 0x00000000 0x00000000 0x80000000>;
+> > +		msi-map =3D <0x0 &its_gic 0x0 0x10000>;
+> > +		reg =3D <0x6 0x00000000 0x0 0x1000000>,
+> > +		      <0x0 0xFCA10000 0x0 0x1000>;
+> > +		reg-names =3D "cfg", "cpm_slcr";
+> > +		pcie_intc_0: pci-interrupt-controller {
+> > +			#address-cells =3D <0>;
+> > +			#interrupt-cells =3D <1>;
+> > +			interrupt-controller ;
+> > +		};
+> > +	};
+> > --
+> > 2.7.4
+> >
