@@ -2,298 +2,157 @@ Return-Path: <SRS0=yR10=4N=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5D9BC35DF5
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Feb 2020 09:07:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18CB6C35DFE
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Feb 2020 09:24:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B29D321744
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Feb 2020 09:07:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D8E2924650
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Feb 2020 09:24:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="ZCBv65Tp"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="zl3vF2Dl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729671AbgBYJH0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 25 Feb 2020 04:07:26 -0500
-Received: from lelv0142.ext.ti.com ([198.47.23.249]:47774 "EHLO
-        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729898AbgBYJH0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Feb 2020 04:07:26 -0500
-Received: from fllv0034.itg.ti.com ([10.64.40.246])
-        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 01P97HMZ037706;
-        Tue, 25 Feb 2020 03:07:17 -0600
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1582621637;
-        bh=hCKNQuZUkcO4X0mn7TApsybUnUlRIUHHECrZXl5Tk+M=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=ZCBv65TplXENW9la844gM+R0apc1iThbJL4yhuI/qFYxihbKrUA56vgP5NwVyiO/G
-         yvE+Eie4ZyIvXbwY98bZ4yRrN1XI7METAmqsDNjzghkIsmF5vQLxZYdsr4xVc1LRIf
-         MRNZSZg1fHPW6M6wDcyf3/qhRv+dN8vihYrmLjDM=
-Received: from DFLE108.ent.ti.com (dfle108.ent.ti.com [10.64.6.29])
-        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 01P97HYl035122
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 25 Feb 2020 03:07:17 -0600
-Received: from DFLE112.ent.ti.com (10.64.6.33) by DFLE108.ent.ti.com
- (10.64.6.29) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Tue, 25
- Feb 2020 03:07:17 -0600
-Received: from lelv0326.itg.ti.com (10.180.67.84) by DFLE112.ent.ti.com
- (10.64.6.33) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
- Frontend Transport; Tue, 25 Feb 2020 03:07:17 -0600
-Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 01P973Pr052643;
-        Tue, 25 Feb 2020 03:07:14 -0600
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        id S1729908AbgBYJYu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 25 Feb 2020 04:24:50 -0500
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:40613 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729864AbgBYJYt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Feb 2020 04:24:49 -0500
+Received: by mail-wr1-f65.google.com with SMTP id t3so13785055wru.7
+        for <linux-pci@vger.kernel.org>; Tue, 25 Feb 2020 01:24:48 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=f/BcuFESeD0nxQhG6MiD0u6r1X/PnHdRmEXqrbWhTtE=;
+        b=zl3vF2DlbSqx5eFLLSUdDjI9EBwAJZ4gdDoR9UGpSvUPJOfbkv3eJR3zZrLTOKMU5r
+         D1kDFHHNnWKKqrQV7qph5B4gnUnW3MYHNVP9WtLrfnDrCUvQMjwl171h+LwnhrjjAhUL
+         ZdjznstMqGMEo0r7R+ZMNgE9YsZkix386pUoowGHr7Xeuj/plf1j8rEUOxYGQi94ARnr
+         /AuqGhdu0td5MoZWNt7hEUNQw/YJTSVuPHT+6d5f6XwTZqTqrzty29h/tWMUE+qOVNNo
+         O5UynFhd8cMEe83OPT8ZfIyYc0CAYZv4eLxgs1/afMqrI4bm73/HwhckO87ueeMlK+p9
+         B/0w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=f/BcuFESeD0nxQhG6MiD0u6r1X/PnHdRmEXqrbWhTtE=;
+        b=EBhrpZAGLV/ovmuPwB7n26m6PiSfe4LmfD9n+Yp1HwvFTV3dEjFvIgK0I735DUL6hh
+         osFTBy/eD00gAFZdgmTBMw9TTsZIcfdyk31n2ENgnogbbG8jO69omcsaOuHyK+7fa0ha
+         KAgayIJpb8U47CFLjXVSYruIKRN3mVxfAPXEWIlHz4uv6hwri4UffK7IqoyjLhKvl2C6
+         fKy/WcivXWxO00Q3sBxcmaUR/2wZJaqQA1o0FsFKZTZ+0WBE62V9/4GLVMxtCjtefnHv
+         svXh0F7pOjiSzTc7ZPWakH8D3eIuLmTVecoq3UB/5gUUK3ZiQ2ANOlJTYtvZ3LpXAPqM
+         xsZw==
+X-Gm-Message-State: APjAAAWVV32PsuFMTGv6Ghf+BvD6Zy5I4q5DNzjRcPWDzwMfPReU/NeC
+        jLTTiFm7Ooln1Q0nxPYo9rIwsg==
+X-Google-Smtp-Source: APXvYqzEBhx+1qou+rx6ieuBuVr+WsrtZbhL85bwQfWbU5iCMd2zUrtZQURsgfjNBpo6KHXv5wrHgA==
+X-Received: by 2002:adf:9cca:: with SMTP id h10mr1745887wre.390.1582622687476;
+        Tue, 25 Feb 2020 01:24:47 -0800 (PST)
+Received: from myrica ([2001:171b:c9a8:fbc0:116c:c27a:3e7f:5eaf])
+        by smtp.gmail.com with ESMTPSA id k16sm23442823wru.0.2020.02.25.01.24.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 25 Feb 2020 01:24:46 -0800 (PST)
+Date:   Tue, 25 Feb 2020 10:24:39 +0100
+From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
+To:     Jason Gunthorpe <jgg@ziepe.ca>
+Cc:     iommu@lists.linux-foundation.org, devicetree@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-mm@kvack.org, joro@8bytes.org, robh+dt@kernel.org,
+        mark.rutland@arm.com, catalin.marinas@arm.com, will@kernel.org,
+        robin.murphy@arm.com, kevin.tian@intel.com,
+        baolu.lu@linux.intel.com, Jonathan.Cameron@huawei.com,
+        jacob.jun.pan@linux.intel.com, christian.koenig@amd.com,
+        yi.l.liu@intel.com, zhangfei.gao@linaro.org,
+        Andrew Morton <akpm@linux-foundation.org>,
         Arnd Bergmann <arnd@arndb.de>,
-        Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        Kishon Vijay Abraham I <kishon@ti.com>
-CC:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Mikhak <alan.mikhak@sifive.com>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Sekhar Nori <nsekhar@ti.com>
-Subject: [PATCH 3/5] misc: pci_endpoint_test: Use streaming DMA APIs for buffer allocation
-Date:   Tue, 25 Feb 2020 14:41:28 +0530
-Message-ID: <20200225091130.29467-4-kishon@ti.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200225091130.29467-1-kishon@ti.com>
-References: <20200225091130.29467-1-kishon@ti.com>
+        Dimitri Sivanich <sivanich@sgi.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH v4 01/26] mm/mmu_notifiers: pass private data down to
+ alloc_notifier()
+Message-ID: <20200225092439.GB375953@myrica>
+References: <20200224182401.353359-1-jean-philippe@linaro.org>
+ <20200224182401.353359-2-jean-philippe@linaro.org>
+ <20200224190056.GT31668@ziepe.ca>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200224190056.GT31668@ziepe.ca>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Use streaming DMA APIs (dma_map_single/dma_unmap_single) for buffers
-transmitted/received by the endpoint device instead of allocating
-a coherent memory. Also add default_data to set the alignment to
-4KB since dma_map_single might not return a 4KB aligned address.
+On Mon, Feb 24, 2020 at 03:00:56PM -0400, Jason Gunthorpe wrote:
+> On Mon, Feb 24, 2020 at 07:23:36PM +0100, Jean-Philippe Brucker wrote:
+> > The new allocation scheme introduced by 2c7933f53f6b ("mm/mmu_notifiers:
+> > add a get/put scheme for the registration") provides a convenient way
+> > for users to attach notifier data to an mm. However, it would be even
+> > better to create this notifier data atomically.
+> > 
+> > Since the alloc_notifier() callback only takes an mm argument at the
+> > moment, some users have to perform the allocation in two times.
+> > alloc_notifier() initially creates an incomplete structure, which is
+> > then finalized using more context once mmu_notifier_get() returns. This
+> > second step requires carrying an initialization lock in the notifier
+> > data and playing dirty tricks to order memory accesses against live
+> > invalidation.
+> 
+> This was the intended pattern. Tthere shouldn't be an real issue as
+> there shouldn't be any data on which to invalidate, ie the later patch
+> does:
+> 
+> +       list_for_each_entry_rcu(bond, &io_mm->devices, mm_head)
+> 
+> And that list is empty post-allocation, so no 'dirty tricks' required.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-Signed-off-by: Sekhar Nori <nsekhar@ti.com>
----
- drivers/misc/pci_endpoint_test.c | 100 ++++++++++++++++++++++++-------
- 1 file changed, 79 insertions(+), 21 deletions(-)
+Before introducing this patch I had the following code:
 
-diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index a5e317073d95..5998df1c84e9 100644
---- a/drivers/misc/pci_endpoint_test.c
-+++ b/drivers/misc/pci_endpoint_test.c
-@@ -341,14 +341,22 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
- 		goto err;
- 	}
- 
--	orig_src_addr = dma_alloc_coherent(dev, size + alignment,
--					   &orig_src_phys_addr, GFP_KERNEL);
-+	orig_src_addr = kzalloc(size + alignment, GFP_KERNEL);
- 	if (!orig_src_addr) {
- 		dev_err(dev, "Failed to allocate source buffer\n");
- 		ret = false;
- 		goto err;
- 	}
- 
-+	get_random_bytes(orig_src_addr, size + alignment);
-+	orig_src_phys_addr = dma_map_single(dev, orig_src_addr,
-+					    size + alignment, DMA_TO_DEVICE);
-+	if (dma_mapping_error(dev, orig_src_phys_addr)) {
-+		dev_err(dev, "failed to map source buffer address\n");
-+		ret = false;
-+		goto err_src_phys_addr;
++	list_for_each_entry_rcu(bond, &io_mm->devices, mm_head) {
++		/*
++		 * To ensure that we observe the initialization of io_mm fields
++		 * by io_mm_finalize() before the registration of this bond to
++		 * the list by io_mm_attach(), introduce an address dependency
++		 * between bond and io_mm. It pairs with the smp_store_release()
++		 * from list_add_rcu().
++		 */
++		io_mm = rcu_dereference(bond->io_mm);
++		io_mm->ops->invalidate(bond->sva.dev, io_mm->pasid, io_mm->ctx,
++				       start, end - start);
 +	}
-+
- 	if (alignment && !IS_ALIGNED(orig_src_phys_addr, alignment)) {
- 		src_phys_addr = PTR_ALIGN(orig_src_phys_addr, alignment);
- 		offset = src_phys_addr - orig_src_phys_addr;
-@@ -364,15 +372,21 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
- 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_UPPER_SRC_ADDR,
- 				 upper_32_bits(src_phys_addr));
- 
--	get_random_bytes(src_addr, size);
- 	src_crc32 = crc32_le(~0, src_addr, size);
- 
--	orig_dst_addr = dma_alloc_coherent(dev, size + alignment,
--					   &orig_dst_phys_addr, GFP_KERNEL);
-+	orig_dst_addr = kzalloc(size + alignment, GFP_KERNEL);
- 	if (!orig_dst_addr) {
- 		dev_err(dev, "Failed to allocate destination address\n");
- 		ret = false;
--		goto err_orig_src_addr;
-+		goto err_dst_addr;
-+	}
-+
-+	orig_dst_phys_addr = dma_map_single(dev, orig_dst_addr,
-+					    size + alignment, DMA_FROM_DEVICE);
-+	if (dma_mapping_error(dev, orig_dst_phys_addr)) {
-+		dev_err(dev, "failed to map destination buffer address\n");
-+		ret = false;
-+		goto err_dst_phys_addr;
- 	}
- 
- 	if (alignment && !IS_ALIGNED(orig_dst_phys_addr, alignment)) {
-@@ -399,16 +413,22 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
- 
- 	wait_for_completion(&test->irq_raised);
- 
-+	dma_unmap_single(dev, orig_dst_phys_addr, size + alignment,
-+			 DMA_FROM_DEVICE);
-+
- 	dst_crc32 = crc32_le(~0, dst_addr, size);
- 	if (dst_crc32 == src_crc32)
- 		ret = true;
- 
--	dma_free_coherent(dev, size + alignment, orig_dst_addr,
--			  orig_dst_phys_addr);
-+err_dst_phys_addr:
-+	kfree(orig_dst_addr);
- 
--err_orig_src_addr:
--	dma_free_coherent(dev, size + alignment, orig_src_addr,
--			  orig_src_phys_addr);
-+err_dst_addr:
-+	dma_unmap_single(dev, orig_src_phys_addr, size + alignment,
-+			 DMA_TO_DEVICE);
-+
-+err_src_phys_addr:
-+	kfree(orig_src_addr);
- 
- err:
- 	return ret;
-@@ -436,14 +456,23 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
- 		goto err;
- 	}
- 
--	orig_addr = dma_alloc_coherent(dev, size + alignment, &orig_phys_addr,
--				       GFP_KERNEL);
-+	orig_addr = kzalloc(size + alignment, GFP_KERNEL);
- 	if (!orig_addr) {
- 		dev_err(dev, "Failed to allocate address\n");
- 		ret = false;
- 		goto err;
- 	}
- 
-+	get_random_bytes(orig_addr, size + alignment);
-+
-+	orig_phys_addr = dma_map_single(dev, orig_addr, size + alignment,
-+					DMA_TO_DEVICE);
-+	if (dma_mapping_error(dev, orig_phys_addr)) {
-+		dev_err(dev, "failed to map source buffer address\n");
-+		ret = false;
-+		goto err_phys_addr;
-+	}
-+
- 	if (alignment && !IS_ALIGNED(orig_phys_addr, alignment)) {
- 		phys_addr =  PTR_ALIGN(orig_phys_addr, alignment);
- 		offset = phys_addr - orig_phys_addr;
-@@ -453,8 +482,6 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
- 		addr = orig_addr;
- 	}
- 
--	get_random_bytes(addr, size);
--
- 	crc32 = crc32_le(~0, addr, size);
- 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_CHECKSUM,
- 				 crc32);
-@@ -477,7 +504,11 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
- 	if (reg & STATUS_READ_SUCCESS)
- 		ret = true;
- 
--	dma_free_coherent(dev, size + alignment, orig_addr, orig_phys_addr);
-+	dma_unmap_single(dev, orig_phys_addr, size + alignment,
-+			 DMA_TO_DEVICE);
-+
-+err_phys_addr:
-+	kfree(orig_addr);
- 
- err:
- 	return ret;
-@@ -504,14 +535,21 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
- 		goto err;
- 	}
- 
--	orig_addr = dma_alloc_coherent(dev, size + alignment, &orig_phys_addr,
--				       GFP_KERNEL);
-+	orig_addr = kzalloc(size + alignment, GFP_KERNEL);
- 	if (!orig_addr) {
- 		dev_err(dev, "Failed to allocate destination address\n");
- 		ret = false;
- 		goto err;
- 	}
- 
-+	orig_phys_addr = dma_map_single(dev, orig_addr, size + alignment,
-+					DMA_FROM_DEVICE);
-+	if (dma_mapping_error(dev, orig_phys_addr)) {
-+		dev_err(dev, "failed to map source buffer address\n");
-+		ret = false;
-+		goto err_phys_addr;
-+	}
-+
- 	if (alignment && !IS_ALIGNED(orig_phys_addr, alignment)) {
- 		phys_addr = PTR_ALIGN(orig_phys_addr, alignment);
- 		offset = phys_addr - orig_phys_addr;
-@@ -535,11 +573,15 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
- 
- 	wait_for_completion(&test->irq_raised);
- 
-+	dma_unmap_single(dev, orig_phys_addr, size + alignment,
-+			 DMA_FROM_DEVICE);
-+
- 	crc32 = crc32_le(~0, addr, size);
- 	if (crc32 == pci_endpoint_test_readl(test, PCI_ENDPOINT_TEST_CHECKSUM))
- 		ret = true;
- 
--	dma_free_coherent(dev, size + alignment, orig_addr, orig_phys_addr);
-+err_phys_addr:
-+	kfree(orig_addr);
- err:
- 	return ret;
- }
-@@ -667,6 +709,12 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
- 	init_completion(&test->irq_raised);
- 	mutex_init(&test->mutex);
- 
-+	if ((dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(48)) != 0) &&
-+	    dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32)) != 0) {
-+		dev_err(dev, "Cannot set DMA mask\n");
-+		return -EINVAL;
-+	}
-+
- 	err = pci_enable_device(pdev);
- 	if (err) {
- 		dev_err(dev, "Cannot enable PCI device\n");
-@@ -783,6 +831,12 @@ static void pci_endpoint_test_remove(struct pci_dev *pdev)
- 	pci_disable_device(pdev);
- }
- 
-+static const struct pci_endpoint_test_data default_data = {
-+	.test_reg_bar = BAR_0,
-+	.alignment = SZ_4K,
-+	.irq_type = IRQ_TYPE_MSI,
-+};
-+
- static const struct pci_endpoint_test_data am654_data = {
- 	.test_reg_bar = BAR_2,
- 	.alignment = SZ_64K,
-@@ -790,8 +844,12 @@ static const struct pci_endpoint_test_data am654_data = {
- };
- 
- static const struct pci_device_id pci_endpoint_test_tbl[] = {
--	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA74x) },
--	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA72x) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA74x),
-+	  .driver_data = (kernel_ulong_t)&default_data,
-+	},
-+	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA72x),
-+	  .driver_data = (kernel_ulong_t)&default_data,
-+	},
- 	{ PCI_DEVICE(PCI_VENDOR_ID_FREESCALE, 0x81c0) },
- 	{ PCI_DEVICE_DATA(SYNOPSYS, EDDA, NULL) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_AM654),
--- 
-2.17.1
 
+(1) io_mm_get() would obtain an empty io_mm from iommu_notifier_get().
+(2) then io_mm_finalize() would initialize io_mm->ops, io_mm->ctx, etc.
+(3) finally io_mm_attach() would add the bond to io_mm->devices.
+
+Since the above code can run before (2) it needs to observe valid
+io_mm->ctx, io_mm->ops initialized by (2) after obtaining the bond
+initialized by (3). Which I believe requires the address dependency from
+the rcu_dereference() above or some stronger barrier to pair with the
+list_add_rcu(). If io_mm->ctx and io_mm->ops are already valid before the
+mmu notifier is published, then we don't need that stuff.
+
+That's the main reason I would have liked moving everything to
+alloc_notifier(), the locking below isn't a big deal.
+
+> The other op callback is release, which also cannot be called as the
+> caller must hold a mmget to establish the notifier.
+> 
+> So just use the locking that already exists. There is one function
+> that calls io_mm_get() which immediately calls io_mm_attach, which
+> immediately grabs the global iommu_sva_lock.
+> 
+> Thus init the pasid for the first time under that lock and everything
+> is fine.
+
+I agree with this, can't remember why I used a separate lock for
+initialization rather than reusing iommu_sva_lock.
+
+Thanks,
+Jean
+
+> 
+> There is nothing inherently wrong with the approach in this patch, but
+> it seems unneeded in this case..
+> 
+> Jason
