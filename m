@@ -5,58 +5,58 @@ X-Spam-Level:
 X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A08FC35DE1
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Feb 2020 14:08:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85855C35E02
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Feb 2020 14:09:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 10AD221744
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Feb 2020 14:08:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5DF7021744
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Feb 2020 14:09:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PDKxN0RE"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ggyx+DhJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730670AbgBYOIk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 25 Feb 2020 09:08:40 -0500
-Received: from mail-wm1-f65.google.com ([209.85.128.65]:54754 "EHLO
-        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730656AbgBYOIk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Feb 2020 09:08:40 -0500
-Received: by mail-wm1-f65.google.com with SMTP id z12so3128591wmi.4;
-        Tue, 25 Feb 2020 06:08:38 -0800 (PST)
+        id S1730627AbgBYOIg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 25 Feb 2020 09:08:36 -0500
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:51586 "EHLO
+        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730612AbgBYOIe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Feb 2020 09:08:34 -0500
+Received: by mail-wm1-f67.google.com with SMTP id t23so3144963wmi.1;
+        Tue, 25 Feb 2020 06:08:33 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=subject:from:to:cc:references:message-id:date:user-agent
          :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=ArTAv9akc7/LkDwjVGNvRKjk3sNTR9LtjKLQSrks0NI=;
-        b=PDKxN0RElw9PRyO7fCZpANrOwsGJl2RaUOMlQzrM7ZJK3fzkzEvP3QXaZEMAVDMJSq
-         e+VsxVTXWKfkY29br29pSKRAFu5G4RGnDvBXYjmT6QGx85wCq5n583l5bLfm0+CyOE+q
-         Fze8QB9Ivdwg1/BqVYoOk9rfjbSDtIRovJEOhuMwRB19xdbDU2GLsoQxhLhwPF9LgAVY
-         TtO3bLG+eb+8+c4YNhY/p+iIg8inXXVLUBn3A/luUUVFOidgnsE58riyBV1l/sfgplRe
-         Rv/g+fTbTotfZZCY9WnRzssSwVi9IdWOSCl47M4YnNPz6kpQrHyDQo4j2OHULr7OlRek
-         gXsg==
+        bh=MXnr7SXWd3sZ9y2GpLG8oulHQdSPNjGvm3z7+mtPRUs=;
+        b=ggyx+DhJDs4IZW2NRQNVlJkJfvaztAI1R7yNUYaMvijzwfWBnKsuacf0Wr4M3vvda0
+         hiKM6OWN0Y2KCeoEnZU9qeFKYKM3SGmg9i7Fc1mbVfjAO0+4F4falIn7uvGbpY6ZOEio
+         WIwYrgZ1xsfj+xmSeg7fTWcawQ+DHE4fjsi/LweT+1VFdl7W4V++ul3920JT/Qw/HOFk
+         2nGtxsabeaNMYE3EBRNz6qqV618wKN7rRGt3bM2S8+7EmwPLre1YP1I1OoKNB0REqv4N
+         zTcEp95XvpaOHCe53qkr7JH/oNxBxdroGRJrDbT39NN93XChMPv4W8MgGDM5xaiY+Lqr
+         PI1A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:from:to:cc:references:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=ArTAv9akc7/LkDwjVGNvRKjk3sNTR9LtjKLQSrks0NI=;
-        b=XVMnifHkh5KwvGmu1PD3LmKaVf1TJVErxbAYHWFunX2uYQ2BHmYtODAaz05kqATHIN
-         40NJCkR6Ji2wrGwNDppoTw74UuQhd5jcYHZZMv2AOXK4HzGHNsOBLWQ82es2qHSCzzbx
-         4PHGwnK6A785fmza8FgbpkUNIALBGhVHM+G0wcdQUN+QTM13L4b+sJ/nNUpdiX1kuipc
-         9TsLtvpaDC4rsPcmgysZPqRlbMf1wKUG0csPN8mxXRQcqiXBjfyKsYw/TqcJSeb60ibg
-         DMlp+gHr9XyyBNNHz9M7YDU/9xWyn5K/Lfv2T4QwPSd3htf3wypZEmc7AWNJftzk2+Y9
-         EyNg==
-X-Gm-Message-State: APjAAAXm4ru3rdBXJ3+Hat/7SK/bYiAuDyGpMoOlHcChusI0aXHBG8v1
-        6pPyNYK48uxjvisCDGvTuvQ=
-X-Google-Smtp-Source: APXvYqzd4tD4DjZdUUgUg6ejSYxE3QSi9zi7vDtqJz1qP/UD58J1AlJbu8Ldj1JNBzQ4/T63qUh46Q==
-X-Received: by 2002:a1c:208a:: with SMTP id g132mr4839399wmg.143.1582639718246;
-        Tue, 25 Feb 2020 06:08:38 -0800 (PST)
+        bh=MXnr7SXWd3sZ9y2GpLG8oulHQdSPNjGvm3z7+mtPRUs=;
+        b=CpiQyts6DUwW+XExGPx9p/VV7PBR+YDtVby0TB95rk2nzQTDj/+rEJWGRf1z4EeL7F
+         1lSvneiRn58AV8c6+yPA1AfbWTFTo6rsLovoOMx+BFY9CrC3RGhP3roSvTilyDsS6Qy9
+         d33TEoMeBBmoMyqr/eLi/lDX7EdZaaeVNvhelwdpo374mC4wfN52czzHCS8cmclu5ZGn
+         gYXxgvzQUvO26tLrpFsTQx7ZQlsPutXx+gR+Zibhq3i63YqkKoI5bvDgBKEGtE1scExM
+         7uxItkYjT7A6+K2OYP8+KJXGynl/SYExUmArKQ4sZ/UbRCTAb343PMf2AJeNdmHANh05
+         TAVA==
+X-Gm-Message-State: APjAAAXpZ3KNYx839Mw2UcrFP+xXNGqtd5YsN/7ZxOYb+s2wnF9GzYAq
+        S13Rs/WAXVIWeZE9+qzstWo=
+X-Google-Smtp-Source: APXvYqx8olBiiKkdtYFvGn2/zTjsT2GqKL8ObDMkWU8WiL6yR2S5w+lKgH6FdOMBVF7oEsYDFplamQ==
+X-Received: by 2002:a1c:1f56:: with SMTP id f83mr3243800wmf.101.1582639713263;
+        Tue, 25 Feb 2020 06:08:33 -0800 (PST)
 Received: from ?IPv6:2003:ea:8f29:6000:30a8:e117:ed7d:d145? (p200300EA8F29600030A8E117ED7DD145.dip0.t-ipconnect.de. [2003:ea:8f29:6000:30a8:e117:ed7d:d145])
-        by smtp.googlemail.com with ESMTPSA id u8sm4315813wmm.15.2020.02.25.06.08.37
+        by smtp.googlemail.com with ESMTPSA id g14sm14009578wrv.58.2020.02.25.06.08.32
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 25 Feb 2020 06:08:37 -0800 (PST)
-Subject: [PATCH v3 8/8] sound: bt87x: use pci_status_get_and_clear_errors
+        Tue, 25 Feb 2020 06:08:32 -0800 (PST)
+Subject: [PATCH v3 4/8] net: cassini: use pci_status_get_and_clear_errors
 From:   Heiner Kallweit <hkallweit1@gmail.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Realtek linux nic maintainers <nic_swsd@realtek.com>,
@@ -70,8 +70,8 @@ Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
         alsa-devel@alsa-project.org
 References: <20ca7c1f-7530-2d89-40a6-d97a65aa25ef@gmail.com>
-Message-ID: <357c0134-c927-6a97-4333-310983b63ed9@gmail.com>
-Date:   Tue, 25 Feb 2020 15:07:43 +0100
+Message-ID: <58e21232-e3c7-f26a-aebc-f03f27a851d1@gmail.com>
+Date:   Tue, 25 Feb 2020 15:05:19 +0100
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
  Thunderbird/68.5.0
 MIME-Version: 1.0
@@ -88,31 +88,59 @@ Use new helper pci_status_get_and_clear_errors() to simplify the code.
 
 Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
 ---
- sound/pci/bt87x.c | 7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+ drivers/net/ethernet/sun/cassini.c | 28 ++++++++++------------------
+ 1 file changed, 10 insertions(+), 18 deletions(-)
 
-diff --git a/sound/pci/bt87x.c b/sound/pci/bt87x.c
-index 8c48864c8..656750466 100644
---- a/sound/pci/bt87x.c
-+++ b/sound/pci/bt87x.c
-@@ -271,13 +271,8 @@ static void snd_bt87x_free_risc(struct snd_bt87x *chip)
+diff --git a/drivers/net/ethernet/sun/cassini.c b/drivers/net/ethernet/sun/cassini.c
+index 6ec9163e2..e6d1aa882 100644
+--- a/drivers/net/ethernet/sun/cassini.c
++++ b/drivers/net/ethernet/sun/cassini.c
+@@ -1716,34 +1716,26 @@ static int cas_pci_interrupt(struct net_device *dev, struct cas *cp,
+ 	pr_cont("\n");
  
- static void snd_bt87x_pci_error(struct snd_bt87x *chip, unsigned int status)
- {
--	u16 pci_status;
-+	int pci_status = pci_status_get_and_clear_errors(chip->pci);
+ 	if (stat & PCI_ERR_OTHER) {
+-		u16 cfg;
++		int pci_errs;
  
--	pci_read_config_word(chip->pci, PCI_STATUS, &pci_status);
--	pci_status &= PCI_STATUS_PARITY | PCI_STATUS_SIG_TARGET_ABORT |
--		PCI_STATUS_REC_TARGET_ABORT | PCI_STATUS_REC_MASTER_ABORT |
--		PCI_STATUS_SIG_SYSTEM_ERROR | PCI_STATUS_DETECTED_PARITY;
--	pci_write_config_word(chip->pci, PCI_STATUS, pci_status);
- 	if (pci_status != PCI_STATUS_DETECTED_PARITY)
- 		dev_err(chip->card->dev,
- 			"Aieee - PCI error! status %#08x, PCI status %#04x\n",
+ 		/* Interrogate PCI config space for the
+ 		 * true cause.
+ 		 */
+-		pci_read_config_word(cp->pdev, PCI_STATUS, &cfg);
+-		netdev_err(dev, "Read PCI cfg space status [%04x]\n", cfg);
+-		if (cfg & PCI_STATUS_PARITY)
++		pci_errs = pci_status_get_and_clear_errors(cp->pdev);
++
++		netdev_err(dev, "PCI status errors[%04x]\n", pci_errs);
++		if (pci_errs & PCI_STATUS_PARITY)
+ 			netdev_err(dev, "PCI parity error detected\n");
+-		if (cfg & PCI_STATUS_SIG_TARGET_ABORT)
++		if (pci_errs & PCI_STATUS_SIG_TARGET_ABORT)
+ 			netdev_err(dev, "PCI target abort\n");
+-		if (cfg & PCI_STATUS_REC_TARGET_ABORT)
++		if (pci_errs & PCI_STATUS_REC_TARGET_ABORT)
+ 			netdev_err(dev, "PCI master acks target abort\n");
+-		if (cfg & PCI_STATUS_REC_MASTER_ABORT)
++		if (pci_errs & PCI_STATUS_REC_MASTER_ABORT)
+ 			netdev_err(dev, "PCI master abort\n");
+-		if (cfg & PCI_STATUS_SIG_SYSTEM_ERROR)
++		if (pci_errs & PCI_STATUS_SIG_SYSTEM_ERROR)
+ 			netdev_err(dev, "PCI system error SERR#\n");
+-		if (cfg & PCI_STATUS_DETECTED_PARITY)
++		if (pci_errs & PCI_STATUS_DETECTED_PARITY)
+ 			netdev_err(dev, "PCI parity error\n");
+-
+-		/* Write the error bits back to clear them. */
+-		cfg &= (PCI_STATUS_PARITY |
+-			PCI_STATUS_SIG_TARGET_ABORT |
+-			PCI_STATUS_REC_TARGET_ABORT |
+-			PCI_STATUS_REC_MASTER_ABORT |
+-			PCI_STATUS_SIG_SYSTEM_ERROR |
+-			PCI_STATUS_DETECTED_PARITY);
+-		pci_write_config_word(cp->pdev, PCI_STATUS, cfg);
+ 	}
+ 
+ 	/* For all PCI errors, we should reset the chip. */
 -- 
 2.25.1
-
-
 
 
