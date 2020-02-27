@@ -2,57 +2,65 @@ Return-Path: <SRS0=fw3j=4P=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FAKE_REPLY_C,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58E27C4BA24
-	for <linux-pci@archiver.kernel.org>; Thu, 27 Feb 2020 12:30:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D640C54FC0
+	for <linux-pci@archiver.kernel.org>; Thu, 27 Feb 2020 14:26:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3410A2469C
-	for <linux-pci@archiver.kernel.org>; Thu, 27 Feb 2020 12:30:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 47CB621D7E
+	for <linux-pci@archiver.kernel.org>; Thu, 27 Feb 2020 14:26:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1582813599;
+	bh=X9rl3ZGCnjqX0Ce24td4V97fsDt8ivYeM1csu23KtbA=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=09lYXZoG3qa3TFJOVAfa0aJ+A50QllflQ1aassHfgwC6OvcahnGOLfeO/axEWqWOq
+	 B1XNwuG2lnDaZ3IqISwopL3yBg+Wx8CAQWrQPDpuVdX3UrI0zmoueQEPruBaWzURD5
+	 pzZ2eW7zXBDVtk7BkOKxypJr4F4JyMNEx5mqThL8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728964AbgB0Mab (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 27 Feb 2020 07:30:31 -0500
-Received: from foss.arm.com ([217.140.110.172]:49606 "EHLO foss.arm.com"
+        id S2388418AbgB0OJw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 27 Feb 2020 09:09:52 -0500
+Received: from mail.kernel.org ([198.145.29.99]:47874 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728856AbgB0Mab (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 27 Feb 2020 07:30:31 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 0AD951FB;
-        Thu, 27 Feb 2020 04:30:31 -0800 (PST)
-Received: from e121166-lin.cambridge.arm.com (e121166-lin.cambridge.arm.com [10.1.196.255])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 7FF473F73B;
-        Thu, 27 Feb 2020 04:30:29 -0800 (PST)
-Date:   Thu, 27 Feb 2020 12:30:24 +0000
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Marek Szyprowski <m.szyprowski@samsung.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
+        id S1730257AbgB0OJu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 27 Feb 2020 09:09:50 -0500
+Received: from localhost (173-25-83-245.client.mchsi.com [173.25.83.245])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id E06EB20578;
+        Thu, 27 Feb 2020 14:09:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1582812590;
+        bh=X9rl3ZGCnjqX0Ce24td4V97fsDt8ivYeM1csu23KtbA=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=LFdE44vcMhziqC8vsqlprJou46T1FdXaTAU/cTGFMoy+JuvwXVnfxZvhShBpXVo9/
+         Ejhv5CEdeoWe0x4rO3WB6EcngNXFybpnYhP+JD2koCrpknOOJ7hjlr6e3SwMwZqf6O
+         tGDeNshu3lujRonV6asb77lm++OB/Rz3dhevOyAw=
+Date:   Thu, 27 Feb 2020 08:09:48 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Marek Szyprowski <m.szyprowski@samsung.com>
 Cc:     linux-rpi-kernel@lists.infradead.org,
         linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org,
         Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
         Florian Fainelli <f.fainelli@gmail.com>,
         bcm-kernel-feedback-list@broadcom.com,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Andrew Murray <amurray@thegoodpenguin.co.uk>
 Subject: Re: [PATCH] pci: brcmstb: Fix build on 32bit ARM platforms with
  older compilers
-Message-ID: <20200227123024.GA12798@e121166-lin.cambridge.arm.com>
-References: <CGME20200227115151eucas1p22ff7409009d917addcc7e20f523c9051@eucas1p2.samsung.com>
- <20200227115146.24515-1-m.szyprowski@samsung.com>
+Message-ID: <20200227140948.GA78063@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <20200227115146.24515-1-m.szyprowski@samsung.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+User-Agent: Mutt/1.12.2 (2019-09-21)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
-
-Subject should be:
-
-PCI: brcmstb: Fix build on 32bit ARM platforms with older compilers
 
 On Thu, Feb 27, 2020 at 12:51:46PM +0100, Marek Szyprowski wrote:
 > Some older compilers have no implementation for the helper for 64-bit
@@ -64,26 +72,15 @@ On Thu, Feb 27, 2020 at 12:51:46PM +0100, Marek Szyprowski wrote:
 > operation in the subsequent check can be replaced by a simple logical
 > AND with a proper mask.
 > 
-
-Add a Fixes: tag please.
-
-Fixes: c0452137034b ("PCI: brcmstb: Add Broadcom STB PCIe host controller driver")
-
 > Signed-off-by: Marek Szyprowski <m.szyprowski@samsung.com>
+
+Applied to for-linus for v5.6, thanks!  I added acks from Nicolas and
+Lorenzo and also the Fixes: tag from Lorenzo.
+
 > ---
 >  drivers/pci/controller/pcie-brcmstb.c | 2 +-
 >  1 file changed, 1 insertion(+), 1 deletion(-)
-
-Hi Bjorn,
-
-I think this should be merged in one of the upcoming -rc, given that
-it fixes v5.6 material.
-
-Here is my ACK to that end, if you prefer postponing it to v5.7
-please let me know.
-
-Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-
+> 
 > diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
 > index d20aabc26273..3a10e678c7f4 100644
 > --- a/drivers/pci/controller/pcie-brcmstb.c
