@@ -2,587 +2,248 @@ Return-Path: <SRS0=niy7=4Q=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E41DC3F2D7
-	for <linux-pci@archiver.kernel.org>; Fri, 28 Feb 2020 15:42:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0481C3F2D2
+	for <linux-pci@archiver.kernel.org>; Fri, 28 Feb 2020 16:26:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4E89F246A0
-	for <linux-pci@archiver.kernel.org>; Fri, 28 Feb 2020 15:42:32 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="U0r/a+PG"
+	by mail.kernel.org (Postfix) with ESMTP id C0086246A8
+	for <linux-pci@archiver.kernel.org>; Fri, 28 Feb 2020 16:26:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727316AbgB1PmN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 28 Feb 2020 10:42:13 -0500
-Received: from mail-wm1-f65.google.com ([209.85.128.65]:53615 "EHLO
-        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727064AbgB1PmM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 28 Feb 2020 10:42:12 -0500
-Received: by mail-wm1-f65.google.com with SMTP id f15so3644097wml.3;
-        Fri, 28 Feb 2020 07:42:08 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=yAA9P8jK6Ff+7bszNWOlXdAYW8Ukk6IJm2zQ0FlVWQg=;
-        b=U0r/a+PGPZX6grKIVx22UOb0I3fkDPnbiBj4OlQNWC4VZBIxTT2Pkyum8HJna8Qw2t
-         US4gHJ4MeAmqPdL9ZYwkIL3HOio5rhn+YnzcsObwb9r2rv8QpbIs6asxBhSuX0hn2OzS
-         AU4FlRCWwuDKLXA2C8btNAnG6taKkXBwXFoDu/WhMQw/FZoKTkqVsE0h7F2vADZnzrXP
-         sPgtCLwxWH3/SsaBuTPSfLjO8BCqopZLm+tWTrsuTQRa0lPUA5YnVCjOcxiAT5CCpxsB
-         JBhbDzInhRSCld1hAbIOuzTDIIxJGLz6QJjDI18FLoj/RJ0TUzp0Hu9PS9dqd+ugA3SP
-         QaEQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=yAA9P8jK6Ff+7bszNWOlXdAYW8Ukk6IJm2zQ0FlVWQg=;
-        b=AcYe3Ns1Q0sxGKP10od+Ug/jK/UNg27dOVTS+aWRHgjOEROZHQRI+4wIukBAlsG8KB
-         rKvV2VrcIz6B8stGdnzb07CAIXYQ5BNX8FFJMfqoVrCJFdOI/tRxUZ5t2Fcv9HPT22aX
-         9HuMjBV1JTm5cKExdGdgbo2d/bJczfPwCduaTHZfgVeyBShu5oT+fcHvzflt6qvTi91N
-         uw1Y7dQmRFhFsIbive+vh4dsSTuMeGEVQ1Pp4klHAqVM94w367dA21HQpZACWYsIe6kW
-         UUsCAKA5QnmgCOL96IuseY6/kGYK7Wp+cy+xcpNaFWkuDNGbQWa8QFBeN6m6p+ELTDg+
-         Lqmw==
-X-Gm-Message-State: APjAAAXPmsZvu1+vxREmJz7rWElLk0jYEgwOqTIVR+psu5gQAFUSTbjx
-        a0JOLbk5Hto7XGrS6KJDmKE=
-X-Google-Smtp-Source: APXvYqy8EPJ3UVupfVWxqQOjfVR1zuPe1XCPG3/IMI5/nusWcheUwuFtQ8iLtWfu4bznkUipeXrroQ==
-X-Received: by 2002:a1c:3b0a:: with SMTP id i10mr5718117wma.177.1582904527767;
-        Fri, 28 Feb 2020 07:42:07 -0800 (PST)
-Received: from prasmi.home ([2a00:23c8:2510:d000:3855:fd13:6b76:a11b])
-        by smtp.gmail.com with ESMTPSA id k16sm13355349wrd.17.2020.02.28.07.42.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 28 Feb 2020 07:42:07 -0800 (PST)
-From:   Lad Prabhakar <prabhakar.csengg@gmail.com>
-X-Google-Original-From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will@kernel.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Heiko Stuebner <heiko@sntech.de>
-Cc:     Andrew Murray <andrew.murray@arm.com>, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-renesas-soc@vger.kernel.org,
-        linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org,
-        Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-Subject: [PATCH v5 4/7] PCI: endpoint: Add support to handle multiple base for mapping outbound memory
-Date:   Fri, 28 Feb 2020 15:41:19 +0000
-Message-Id: <20200228154122.14164-5-prabhakar.mahadev-lad.rj@bp.renesas.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200228154122.14164-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
-References: <20200228154122.14164-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
+        id S1726118AbgB1Q0n (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 28 Feb 2020 11:26:43 -0500
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2480 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725730AbgB1Q0n (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 28 Feb 2020 11:26:43 -0500
+Received: from lhreml704-cah.china.huawei.com (unknown [172.18.7.106])
+        by Forcepoint Email with ESMTP id 0714367CCA21321329BA;
+        Fri, 28 Feb 2020 16:26:41 +0000 (GMT)
+Received: from lhreml710-chm.china.huawei.com (10.201.108.61) by
+ lhreml704-cah.china.huawei.com (10.201.108.45) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Fri, 28 Feb 2020 16:26:40 +0000
+Received: from localhost (10.202.226.57) by lhreml710-chm.china.huawei.com
+ (10.201.108.61) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5; Fri, 28 Feb
+ 2020 16:26:40 +0000
+Date:   Fri, 28 Feb 2020 16:26:37 +0000
+From:   Jonathan Cameron <Jonathan.Cameron@Huawei.com>
+To:     Jean-Philippe Brucker <jean-philippe@linaro.org>
+CC:     <iommu@lists.linux-foundation.org>, <devicetree@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-pci@vger.kernel.org>, <linux-mm@kvack.org>,
+        <joro@8bytes.org>, <robh+dt@kernel.org>, <mark.rutland@arm.com>,
+        <catalin.marinas@arm.com>, <will@kernel.org>,
+        <robin.murphy@arm.com>, <kevin.tian@intel.com>,
+        <baolu.lu@linux.intel.com>, <jacob.jun.pan@linux.intel.com>,
+        <christian.koenig@amd.com>, <yi.l.liu@intel.com>,
+        <zhangfei.gao@linaro.org>,
+        Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Subject: Re: [PATCH v4 02/26] iommu/sva: Manage process address spaces
+Message-ID: <20200228162637.00007f4c@Huawei.com>
+In-Reply-To: <20200228144304.GC2156@myrica>
+References: <20200224182401.353359-1-jean-philippe@linaro.org>
+        <20200224182401.353359-3-jean-philippe@linaro.org>
+        <20200226123506.000076fb@Huawei.com>
+        <20200228144304.GC2156@myrica>
+Organization: Huawei Technologies Research and Development (UK) Ltd.
+X-Mailer: Claws Mail 3.17.4 (GTK+ 2.24.32; i686-w64-mingw32)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.202.226.57]
+X-ClientProxiedBy: lhreml727-chm.china.huawei.com (10.201.108.78) To
+ lhreml710-chm.china.huawei.com (10.201.108.61)
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-R-Car PCIe controller has support to map multiple memory regions for
-mapping the outbound memory in local system also the controller limits
-single allocation for each region (that is, once a chunk is used from the
-region it cannot be used to allocate a new one). This features inspires to
-add support for handling multiple memory bases in endpoint framework.
+On Fri, 28 Feb 2020 15:43:04 +0100
+Jean-Philippe Brucker <jean-philippe@linaro.org> wrote:
 
-With this patch pci_epc_mem_init() now accepts multiple regions, also
-page_size for each memory region is passed during initialization so as
-to handle single allocation for each region by setting the page_size to
-window_size.
+> On Wed, Feb 26, 2020 at 12:35:06PM +0000, Jonathan Cameron wrote:
+> > > + * A single Process Address Space ID (PASID) is allocated for each mm. In the
+> > > + * example, devices use PASID 1 to read/write into address space X and PASID 2
+> > > + * to read/write into address space Y. Calling iommu_sva_get_pasid() on bond 1
+> > > + * returns 1, and calling it on bonds 2-4 returns 2.
+> > > + *
+> > > + * Hardware tables describing this configuration in the IOMMU would typically
+> > > + * look like this:
+> > > + *
+> > > + *                                PASID tables
+> > > + *                                 of domain A
+> > > + *                              .->+--------+
+> > > + *                             / 0 |        |-------> io_pgtable
+> > > + *                            /    +--------+
+> > > + *            Device tables  /   1 |        |-------> pgd X
+> > > + *              +--------+  /      +--------+
+> > > + *      00:00.0 |      A |-'     2 |        |--.
+> > > + *              +--------+         +--------+   \
+> > > + *              :        :       3 |        |    \
+> > > + *              +--------+         +--------+     --> pgd Y
+> > > + *      00:01.0 |      B |--.                    /
+> > > + *              +--------+   \                  |
+> > > + *      00:01.1 |      B |----+   PASID tables  |
+> > > + *              +--------+     \   of domain B  |
+> > > + *                              '->+--------+   |
+> > > + *                               0 |        |-- | --> io_pgtable
+> > > + *                                 +--------+   |
+> > > + *                               1 |        |   |
+> > > + *                                 +--------+   |
+> > > + *                               2 |        |---'
+> > > + *                                 +--------+
+> > > + *                               3 |        |
+> > > + *                                 +--------+
+> > > + *
+> > > + * With this model, a single call binds all devices in a given domain to an
+> > > + * address space. Other devices in the domain will get the same bond implicitly.
+> > > + * However, users must issue one bind() for each device, because IOMMUs may
+> > > + * implement SVA differently. Furthermore, mandating one bind() per device
+> > > + * allows the driver to perform sanity-checks on device capabilities.  
+> >   
+> > > + *
+> > > + * In some IOMMUs, one entry of the PASID table (typically the first one) can
+> > > + * hold non-PASID translations. In this case PASID 0 is reserved and the first
+> > > + * entry points to the io_pgtable pointer. In other IOMMUs the io_pgtable
+> > > + * pointer is held in the device table and PASID 0 is available to the
+> > > + * allocator.  
+> > 
+> > Is it worth hammering home in here that we can only do this because the PASID space
+> > is global (with exception of PASID 0)?  It's a convenient simplification but not
+> > necessarily a hardware restriction so perhaps we should remind people somewhere in here?  
+> 
+> I could add this four paragraphs up:
+> 
+> "A single Process Address Space ID (PASID) is allocated for each mm. It is
+> a choice made for the Linux SVA implementation, not a hardware
+> restriction."
 
-Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
----
- drivers/pci/controller/cadence/pcie-cadence-ep.c |   7 +-
- drivers/pci/controller/dwc/pcie-designware-ep.c  |  29 ++--
- drivers/pci/controller/pcie-rockchip-ep.c        |   7 +-
- drivers/pci/endpoint/pci-epc-mem.c               | 167 ++++++++++++++++-------
- include/linux/pci-epc.h                          |  39 ++++--
- 5 files changed, 169 insertions(+), 80 deletions(-)
+Perfect.
 
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-ep.c b/drivers/pci/controller/cadence/pcie-cadence-ep.c
-index 1c173da..90e32438 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-ep.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence-ep.c
-@@ -401,6 +401,7 @@ int cdns_pcie_ep_setup(struct cdns_pcie_ep *ep)
- 	struct device *dev = ep->pcie.dev;
- 	struct platform_device *pdev = to_platform_device(dev);
- 	struct device_node *np = dev->of_node;
-+	struct pci_epc_mem_window mem_window;
- 	struct cdns_pcie *pcie = &ep->pcie;
- 	struct resource *res;
- 	struct pci_epc *epc;
-@@ -449,8 +450,10 @@ int cdns_pcie_ep_setup(struct cdns_pcie_ep *ep)
- 	if (of_property_read_u8(np, "max-functions", &epc->max_functions) < 0)
- 		epc->max_functions = 1;
- 
--	ret = pci_epc_mem_init(epc, pcie->mem_res->start,
--			       resource_size(pcie->mem_res));
-+	mem_window.phys_base = pcie->mem_res->start;
-+	mem_window.size = resource_size(pcie->mem_res);
-+	mem_window.page_size = PAGE_SIZE;
-+	ret = pci_epc_mem_init(epc, &mem_window, 1);
- 	if (ret < 0) {
- 		dev_err(dev, "failed to initialize the memory space\n");
- 		goto err_init;
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index cfeccd7..b150ef3 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -195,8 +195,7 @@ static void dw_pcie_ep_unmap_addr(struct pci_epc *epc, u8 func_no,
- }
- 
- static int dw_pcie_ep_map_addr(struct pci_epc *epc, u8 func_no,
--			       phys_addr_t addr,
--			       u64 pci_addr, size_t size)
-+			       phys_addr_t addr, u64 pci_addr, size_t size)
- {
- 	int ret;
- 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
-@@ -367,6 +366,7 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 	unsigned int aligned_offset;
- 	u16 msg_ctrl, msg_data;
- 	u32 msg_addr_lower, msg_addr_upper, reg;
-+	int window = PCI_EPC_DEFAULT_WINDOW;
- 	u64 msg_addr;
- 	bool has_upper;
- 	int ret;
-@@ -390,11 +390,11 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 		reg = ep->msi_cap + PCI_MSI_DATA_32;
- 		msg_data = dw_pcie_readw_dbi(pci, reg);
- 	}
--	aligned_offset = msg_addr_lower & (epc->mem->page_size - 1);
-+	aligned_offset = msg_addr_lower & (epc->mem[window]->page_size - 1);
- 	msg_addr = ((u64)msg_addr_upper) << 32 |
- 			(msg_addr_lower & ~aligned_offset);
--	ret = dw_pcie_ep_map_addr(epc, func_no, ep->msi_mem_phys, msg_addr,
--				  epc->mem->page_size);
-+	ret = dw_pcie_ep_map_addr(epc, func_no, ep->msi_mem_phys,
-+				  msg_addr, epc->mem[window]->page_size);
- 	if (ret)
- 		return ret;
- 
-@@ -416,6 +416,7 @@ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
- 	u32 reg, msg_data, vec_ctrl;
- 	u64 tbl_addr, msg_addr, reg_u64;
- 	void __iomem *msix_tbl;
-+	int window = PCI_EPC_DEFAULT_WINDOW;
- 	int ret;
- 
- 	reg = ep->msix_cap + PCI_MSIX_TABLE;
-@@ -452,8 +453,8 @@ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
- 		return -EPERM;
- 	}
- 
--	ret = dw_pcie_ep_map_addr(epc, func_no, ep->msi_mem_phys, msg_addr,
--				  epc->mem->page_size);
-+	ret = dw_pcie_ep_map_addr(epc, func_no, ep->msi_mem_phys,
-+				  msg_addr, epc->mem[window]->page_size);
- 	if (ret)
- 		return ret;
- 
-@@ -466,10 +467,11 @@ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
- 
- void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
- {
-+	int window = PCI_EPC_DEFAULT_WINDOW;
- 	struct pci_epc *epc = ep->epc;
- 
- 	pci_epc_mem_free_addr(epc, ep->msi_mem_phys, ep->msi_mem,
--			      epc->mem->page_size);
-+			      epc->mem[window]->page_size);
- 
- 	pci_epc_mem_exit(epc);
- }
-@@ -502,6 +504,8 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 	unsigned int nbars;
- 	unsigned int offset;
- 	struct pci_epc *epc;
-+	size_t msi_page_size;
-+	struct pci_epc_mem_window mem_window;
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 	struct device *dev = pci->dev;
- 	struct device_node *np = dev->of_node;
-@@ -574,15 +578,18 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 	if (ret < 0)
- 		epc->max_functions = 1;
- 
--	ret = __pci_epc_mem_init(epc, ep->phys_base, ep->addr_size,
--				 ep->page_size);
-+	mem_window.phys_base = ep->phys_base;
-+	mem_window.size = ep->addr_size;
-+	mem_window.page_size = ep->page_size;
-+	ret = __pci_epc_mem_init(epc, &mem_window, 1);
- 	if (ret < 0) {
- 		dev_err(dev, "Failed to initialize address space\n");
- 		return ret;
- 	}
- 
-+	msi_page_size = epc->mem[PCI_EPC_DEFAULT_WINDOW]->page_size;
- 	ep->msi_mem = pci_epc_mem_alloc_addr(epc, &ep->msi_mem_phys,
--					     epc->mem->page_size);
-+					     msi_page_size);
- 	if (!ep->msi_mem) {
- 		dev_err(dev, "Failed to reserve memory for MSI/MSI-X\n");
- 		return -ENOMEM;
-diff --git a/drivers/pci/controller/pcie-rockchip-ep.c b/drivers/pci/controller/pcie-rockchip-ep.c
-index d743b0a..5a97390 100644
---- a/drivers/pci/controller/pcie-rockchip-ep.c
-+++ b/drivers/pci/controller/pcie-rockchip-ep.c
-@@ -562,6 +562,7 @@ static const struct of_device_id rockchip_pcie_ep_of_match[] = {
- 
- static int rockchip_pcie_ep_probe(struct platform_device *pdev)
- {
-+	struct pci_epc_mem_window mem_window;
- 	struct device *dev = &pdev->dev;
- 	struct rockchip_pcie_ep *ep;
- 	struct rockchip_pcie *rockchip;
-@@ -614,8 +615,10 @@ static int rockchip_pcie_ep_probe(struct platform_device *pdev)
- 	/* Only enable function 0 by default */
- 	rockchip_pcie_write(rockchip, BIT(0), PCIE_CORE_PHY_FUNC_CFG);
- 
--	err = pci_epc_mem_init(epc, rockchip->mem_res->start,
--			       resource_size(rockchip->mem_res));
-+	mem_window.phys_base = rockchip->mem_res->start;
-+	mem_window.size = resource_size(rockchip->mem_res);
-+	mem_window.page_size = PAGE_SIZE;
-+	err = pci_epc_mem_init(epc, &mem_window, 1);
- 	if (err < 0) {
- 		dev_err(dev, "failed to initialize the memory space\n");
- 		goto err_uninit_port;
-diff --git a/drivers/pci/endpoint/pci-epc-mem.c b/drivers/pci/endpoint/pci-epc-mem.c
-index d2b174c..6c21957 100644
---- a/drivers/pci/endpoint/pci-epc-mem.c
-+++ b/drivers/pci/endpoint/pci-epc-mem.c
-@@ -38,57 +38,76 @@ static int pci_epc_mem_get_order(struct pci_epc_mem *mem, size_t size)
- /**
-  * __pci_epc_mem_init() - initialize the pci_epc_mem structure
-  * @epc: the EPC device that invoked pci_epc_mem_init
-- * @phys_base: the physical address of the base
-- * @size: the size of the address space
-- * @page_size: size of each page
-+ * @windows: pointer to windows supported by the device
-+ * @num_windows: number of windows device supports
-  *
-  * Invoke to initialize the pci_epc_mem structure used by the
-  * endpoint functions to allocate mapped PCI address.
-  */
--int __pci_epc_mem_init(struct pci_epc *epc, phys_addr_t phys_base, size_t size,
--		       size_t page_size)
-+int __pci_epc_mem_init(struct pci_epc *epc, struct pci_epc_mem_window *windows,
-+		       int num_windows)
- {
--	int ret;
--	struct pci_epc_mem *mem;
--	unsigned long *bitmap;
-+	struct pci_epc_mem *mem = NULL;
-+	unsigned long *bitmap = NULL;
- 	unsigned int page_shift;
--	int pages;
-+	size_t page_size;
- 	int bitmap_size;
--
--	if (page_size < PAGE_SIZE)
--		page_size = PAGE_SIZE;
--
--	page_shift = ilog2(page_size);
--	pages = size >> page_shift;
--	bitmap_size = BITS_TO_LONGS(pages) * sizeof(long);
--
--	mem = kzalloc(sizeof(*mem), GFP_KERNEL);
--	if (!mem) {
--		ret = -ENOMEM;
--		goto err;
--	}
--
--	bitmap = kzalloc(bitmap_size, GFP_KERNEL);
--	if (!bitmap) {
--		ret = -ENOMEM;
--		goto err_mem;
-+	int pages;
-+	int ret;
-+	int i;
-+
-+	epc->mem_windows = 0;
-+
-+	if (!windows)
-+		return -EINVAL;
-+
-+	if (num_windows <= 0)
-+		return -EINVAL;
-+
-+	epc->mem = kcalloc(num_windows, sizeof(*mem), GFP_KERNEL);
-+	if (!epc->mem)
-+		return -EINVAL;
-+
-+	for (i = 0; i < num_windows; i++) {
-+		page_size = windows[i].page_size;
-+		if (page_size < PAGE_SIZE)
-+			page_size = PAGE_SIZE;
-+		page_shift = ilog2(page_size);
-+		pages = windows[i].size >> page_shift;
-+		bitmap_size = BITS_TO_LONGS(pages) * sizeof(long);
-+
-+		mem = kzalloc(sizeof(*mem), GFP_KERNEL);
-+		if (!mem) {
-+			ret = -ENOMEM;
-+			goto err_mem;
-+		}
-+
-+		bitmap = kzalloc(bitmap_size, GFP_KERNEL);
-+		if (!bitmap) {
-+			ret = -ENOMEM;
-+			goto err_mem;
-+		}
-+
-+		mem->bitmap = bitmap;
-+		mem->window.phys_base = windows[i].phys_base;
-+		mem->page_size = page_size;
-+		mem->pages = pages;
-+		mem->window.size = windows[i].size;
-+		epc->mem[i] = mem;
- 	}
--
--	mem->bitmap = bitmap;
--	mem->phys_base = phys_base;
--	mem->page_size = page_size;
--	mem->pages = pages;
--	mem->size = size;
--
--	epc->mem = mem;
-+	epc->mem_windows = num_windows;
- 
- 	return 0;
- 
- err_mem:
--	kfree(mem);
-+	for (; i >= 0; i--) {
-+		mem = epc->mem[i];
-+		kfree(mem->bitmap);
-+		kfree(mem);
-+	}
-+	kfree(epc->mem);
- 
--err:
--return ret;
-+	return ret;
- }
- EXPORT_SYMBOL_GPL(__pci_epc_mem_init);
- 
-@@ -101,11 +120,21 @@ EXPORT_SYMBOL_GPL(__pci_epc_mem_init);
-  */
- void pci_epc_mem_exit(struct pci_epc *epc)
- {
--	struct pci_epc_mem *mem = epc->mem;
-+	struct pci_epc_mem *mem;
-+	int i;
-+
-+	if (!epc->mem_windows)
-+		return;
-+
-+	for (i = 0; i <= epc->mem_windows; i++) {
-+		mem = epc->mem[i];
-+		kfree(mem->bitmap);
-+		kfree(mem);
-+	}
-+	kfree(epc->mem);
- 
- 	epc->mem = NULL;
--	kfree(mem->bitmap);
--	kfree(mem);
-+	epc->mem_windows = 0;
- }
- EXPORT_SYMBOL_GPL(pci_epc_mem_exit);
- 
-@@ -121,20 +150,30 @@ EXPORT_SYMBOL_GPL(pci_epc_mem_exit);
- void __iomem *pci_epc_mem_alloc_addr(struct pci_epc *epc,
- 				     phys_addr_t *phys_addr, size_t size)
- {
--	int pageno;
--	void __iomem *virt_addr;
--	struct pci_epc_mem *mem = epc->mem;
--	unsigned int page_shift = ilog2(mem->page_size);
-+	void __iomem *virt_addr = NULL;
-+	struct pci_epc_mem *mem;
-+	unsigned int page_shift;
-+	int pageno = -EINVAL;
- 	int order;
-+	int i;
- 
--	size = ALIGN(size, mem->page_size);
--	order = pci_epc_mem_get_order(mem, size);
-+	for (i = 0; i < epc->mem_windows; i++) {
-+		mem = epc->mem[i];
-+		size = ALIGN(size, mem->page_size);
-+		order = pci_epc_mem_get_order(mem, size);
-+
-+		pageno = bitmap_find_free_region(mem->bitmap, mem->pages,
-+						 order);
-+		if (pageno >= 0)
-+			break;
-+	}
- 
--	pageno = bitmap_find_free_region(mem->bitmap, mem->pages, order);
- 	if (pageno < 0)
- 		return NULL;
- 
--	*phys_addr = mem->phys_base + ((phys_addr_t)pageno << page_shift);
-+	page_shift = ilog2(mem->page_size);
-+	*phys_addr = mem->window.phys_base +
-+		     ((phys_addr_t)pageno << page_shift);
- 	virt_addr = ioremap(*phys_addr, size);
- 	if (!virt_addr)
- 		bitmap_release_region(mem->bitmap, pageno, order);
-@@ -143,6 +182,23 @@ void __iomem *pci_epc_mem_alloc_addr(struct pci_epc *epc,
- }
- EXPORT_SYMBOL_GPL(pci_epc_mem_alloc_addr);
- 
-+struct pci_epc_mem *pci_epc_get_matching_window(struct pci_epc *epc,
-+						phys_addr_t phys_addr)
-+{
-+	struct pci_epc_mem *mem;
-+	int i;
-+
-+	for (i = 0; i < epc->mem_windows; i++) {
-+		mem = epc->mem[i];
-+
-+		if (phys_addr >= mem->window.phys_base &&
-+		    phys_addr < (mem->window.phys_base + mem->window.size))
-+			return mem;
-+	}
-+
-+	return NULL;
-+}
-+
- /**
-  * pci_epc_mem_free_addr() - free the allocated memory address
-  * @epc: the EPC device on which memory was allocated
-@@ -155,13 +211,20 @@ EXPORT_SYMBOL_GPL(pci_epc_mem_alloc_addr);
- void pci_epc_mem_free_addr(struct pci_epc *epc, phys_addr_t phys_addr,
- 			   void __iomem *virt_addr, size_t size)
- {
-+	struct pci_epc_mem *mem;
-+	unsigned int page_shift;
- 	int pageno;
--	struct pci_epc_mem *mem = epc->mem;
--	unsigned int page_shift = ilog2(mem->page_size);
- 	int order;
- 
-+	mem = pci_epc_get_matching_window(epc, phys_addr);
-+	if (!mem) {
-+		pr_err("failed to get matching window\n");
-+		return;
-+	}
-+
-+	page_shift = ilog2(mem->page_size);
- 	iounmap(virt_addr);
--	pageno = (phys_addr - mem->phys_base) >> page_shift;
-+	pageno = (phys_addr - mem->window.phys_base) >> page_shift;
- 	size = ALIGN(size, mem->page_size);
- 	order = pci_epc_mem_get_order(mem, size);
- 	bitmap_release_region(mem->bitmap, pageno, order);
-diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
-index 56f1846..dde42e5 100644
---- a/include/linux/pci-epc.h
-+++ b/include/linux/pci-epc.h
-@@ -64,17 +64,29 @@ struct pci_epc_ops {
- 	struct module *owner;
- };
- 
-+#define PCI_EPC_DEFAULT_WINDOW         0
-+
-+/**
-+ * struct pci_epc_mem_window - address window of the endpoint controller
-+ * @phys_base: physical base address of the PCI address window
-+ * @size: the size of the PCI address window
-+ * @page_size: size of each page
-+ */
-+struct pci_epc_mem_window {
-+	phys_addr_t	phys_base;
-+	size_t		size;
-+	size_t		page_size;
-+};
-+
- /**
-  * struct pci_epc_mem - address space of the endpoint controller
-- * @phys_base: physical base address of the PCI address space
-- * @size: the size of the PCI address space
-+ * @window: address window of the endpoint controller
-  * @bitmap: bitmap to manage the PCI address space
-- * @pages: number of bits representing the address region
-  * @page_size: size of each page
-+ * @pages: number of bits representing the address region
-  */
- struct pci_epc_mem {
--	phys_addr_t	phys_base;
--	size_t		size;
-+	struct pci_epc_mem_window window;
- 	unsigned long	*bitmap;
- 	size_t		page_size;
- 	int		pages;
-@@ -85,7 +97,8 @@ struct pci_epc_mem {
-  * @dev: PCI EPC device
-  * @pci_epf: list of endpoint functions present in this EPC device
-  * @ops: function pointers for performing endpoint operations
-- * @mem: address space of the endpoint controller
-+ * @mem: array of address space of the endpoint controller
-+ * @mem_windows: number of windows supported by device
-  * @max_functions: max number of functions that can be configured in this EPC
-  * @group: configfs group representing the PCI EPC device
-  * @lock: spinlock to protect pci_epc ops
-@@ -94,7 +107,8 @@ struct pci_epc {
- 	struct device			dev;
- 	struct list_head		pci_epf;
- 	const struct pci_epc_ops	*ops;
--	struct pci_epc_mem		*mem;
-+	struct pci_epc_mem		**mem;
-+	unsigned int			mem_windows;
- 	u8				max_functions;
- 	struct config_group		*group;
- 	/* spinlock to protect against concurrent access of EP controller */
-@@ -128,8 +142,8 @@ struct pci_epc_features {
- #define devm_pci_epc_create(dev, ops)    \
- 		__devm_pci_epc_create((dev), (ops), THIS_MODULE)
- 
--#define pci_epc_mem_init(epc, phys_addr, size)	\
--		__pci_epc_mem_init((epc), (phys_addr), (size), PAGE_SIZE)
-+#define pci_epc_mem_init(epc, windows, num_windows)	\
-+		__pci_epc_mem_init((epc), windows, num_windows)
- 
- static inline void epc_set_drvdata(struct pci_epc *epc, void *data)
- {
-@@ -159,8 +173,7 @@ int pci_epc_set_bar(struct pci_epc *epc, u8 func_no,
- void pci_epc_clear_bar(struct pci_epc *epc, u8 func_no,
- 		       struct pci_epf_bar *epf_bar);
- int pci_epc_map_addr(struct pci_epc *epc, u8 func_no,
--		     phys_addr_t phys_addr,
--		     u64 pci_addr, size_t size);
-+		     phys_addr_t phys_addr, u64 pci_addr, size_t size);
- void pci_epc_unmap_addr(struct pci_epc *epc, u8 func_no,
- 			phys_addr_t phys_addr);
- int pci_epc_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts);
-@@ -178,8 +191,8 @@ unsigned int pci_epc_get_first_free_bar(const struct pci_epc_features
- struct pci_epc *pci_epc_get(const char *epc_name);
- void pci_epc_put(struct pci_epc *epc);
- 
--int __pci_epc_mem_init(struct pci_epc *epc, phys_addr_t phys_addr, size_t size,
--		       size_t page_size);
-+int __pci_epc_mem_init(struct pci_epc *epc, struct pci_epc_mem_window *window,
-+		       int num_windows);
- void pci_epc_mem_exit(struct pci_epc *epc);
- void __iomem *pci_epc_mem_alloc_addr(struct pci_epc *epc,
- 				     phys_addr_t *phys_addr, size_t size);
--- 
-2.7.4
+> 
+> > > + */
+> > > +
+> > > +struct io_mm {
+> > > +	struct list_head		devices;
+> > > +	struct mm_struct		*mm;
+> > > +	struct mmu_notifier		notifier;
+> > > +
+> > > +	/* Late initialization */
+> > > +	const struct io_mm_ops		*ops;
+> > > +	void				*ctx;
+> > > +	int				pasid;
+> > > +};
+> > > +
+> > > +#define to_io_mm(mmu_notifier)	container_of(mmu_notifier, struct io_mm, notifier)
+> > > +#define to_iommu_bond(handle)	container_of(handle, struct iommu_bond, sva)  
+> > 
+> > Code ordering wise, do we want this after the definition of iommu_bond?
+> > 
+> > For both of these it's a bit non obvious what they come 'from'.
+> > I wouldn't naturally assume to_io_mm gets me from notifier to the io_mm
+> > for example.  Not sure it matters though if these are only used in a few
+> > places.  
+> 
+> Right, I can rename the first one to mn_to_io_mm(). The second one I think
+> might be good enough.
+
+Agreed. The second one does feel more natural.
+
+> 
+> 
+> > > +static struct iommu_sva *
+> > > +io_mm_attach(struct device *dev, struct io_mm *io_mm, void *drvdata)
+> > > +{
+> > > +	int ret = 0;  
+> > 
+> > I'm fairly sure this is set in all paths below.  Now, of course the
+> > compiler might not think that in which case fair enough :)
+> >   
+> > > +	bool attach_domain = true;
+> > > +	struct iommu_bond *bond, *tmp;
+> > > +	struct iommu_domain *domain, *other;
+> > > +	struct iommu_sva_param *param = dev->iommu_param->sva_param;
+> > > +
+> > > +	domain = iommu_get_domain_for_dev(dev);
+> > > +
+> > > +	bond = kzalloc(sizeof(*bond), GFP_KERNEL);
+> > > +	if (!bond)
+> > > +		return ERR_PTR(-ENOMEM);
+> > > +
+> > > +	bond->sva.dev	= dev;
+> > > +	bond->drvdata	= drvdata;
+> > > +	refcount_set(&bond->refs, 1);
+> > > +	RCU_INIT_POINTER(bond->io_mm, io_mm);
+> > > +
+> > > +	mutex_lock(&iommu_sva_lock);
+> > > +	/* Is it already bound to the device or domain? */
+> > > +	list_for_each_entry(tmp, &io_mm->devices, mm_head) {
+> > > +		if (tmp->sva.dev != dev) {
+> > > +			other = iommu_get_domain_for_dev(tmp->sva.dev);
+> > > +			if (domain == other)
+> > > +				attach_domain = false;
+> > > +
+> > > +			continue;
+> > > +		}
+> > > +
+> > > +		if (WARN_ON(tmp->drvdata != drvdata)) {
+> > > +			ret = -EINVAL;
+> > > +			goto err_free;
+> > > +		}
+> > > +
+> > > +		/*
+> > > +		 * Hold a single io_mm reference per bond. Note that we can't
+> > > +		 * return an error after this, otherwise the caller would drop
+> > > +		 * an additional reference to the io_mm.
+> > > +		 */
+> > > +		refcount_inc(&tmp->refs);
+> > > +		io_mm_put(io_mm);
+> > > +		kfree(bond);  
+> > 
+> > Free outside the lock would be ever so slightly more logical given we allocated
+> > before taking the lock.
+> >   
+> > > +		mutex_unlock(&iommu_sva_lock);
+> > > +		return &tmp->sva;
+> > > +	}
+> > > +
+> > > +	list_add_rcu(&bond->mm_head, &io_mm->devices);
+> > > +	param->nr_bonds++;
+> > > +	mutex_unlock(&iommu_sva_lock);
+> > > +
+> > > +	ret = io_mm->ops->attach(bond->sva.dev, io_mm->pasid, io_mm->ctx,
+> > > +				 attach_domain);
+> > > +	if (ret)
+> > > +		goto err_remove;
+> > > +
+> > > +	return &bond->sva;
+> > > +
+> > > +err_remove:
+> > > +	/*
+> > > +	 * At this point concurrent threads may have started to access the
+> > > +	 * io_mm->devices list in order to invalidate address ranges, which
+> > > +	 * requires to free the bond via kfree_rcu()
+> > > +	 */
+> > > +	mutex_lock(&iommu_sva_lock);
+> > > +	param->nr_bonds--;
+> > > +	list_del_rcu(&bond->mm_head);
+> > > +
+> > > +err_free:
+> > > +	mutex_unlock(&iommu_sva_lock);
+> > > +	kfree_rcu(bond, rcu_head);  
+> > 
+> > I don't suppose it matters really but we don't need the rcu free if
+> > we follow the err_free goto.  Perhaps we are cleaner in this case
+> > to not use a unified exit path but do that case inline?  
+> 
+> Agreed, though I moved the kzalloc() later as suggested by Jacob, I think
+> it looks a little better and simplifies the error paths
+> 
+> Thanks,
+> Jean
+Jonathan
 
