@@ -7,25 +7,25 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D2D1C3F2CE
-	for <linux-pci@archiver.kernel.org>; Fri, 28 Feb 2020 01:03:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51C5FC3F2CF
+	for <linux-pci@archiver.kernel.org>; Fri, 28 Feb 2020 01:03:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6D9AE246A5
-	for <linux-pci@archiver.kernel.org>; Fri, 28 Feb 2020 01:03:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3093C246AC
+	for <linux-pci@archiver.kernel.org>; Fri, 28 Feb 2020 01:03:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730534AbgB1BCp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 27 Feb 2020 20:02:45 -0500
-Received: from mga14.intel.com ([192.55.52.115]:40114 "EHLO mga14.intel.com"
+        id S1730664AbgB1BDC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 27 Feb 2020 20:03:02 -0500
+Received: from mga14.intel.com ([192.55.52.115]:40111 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730577AbgB1BCp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 27 Feb 2020 20:02:45 -0500
+        id S1730561AbgB1BCo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 27 Feb 2020 20:02:44 -0500
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from orsmga001.jf.intel.com ([10.7.209.18])
   by fmsmga103.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 27 Feb 2020 17:02:43 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.70,493,1574150400"; 
-   d="scan'208";a="317977010"
+   d="scan'208";a="317977001"
 Received: from skuppusw-desk.jf.intel.com ([10.7.201.16])
   by orsmga001.jf.intel.com with ESMTP; 27 Feb 2020 17:02:42 -0800
 From:   sathyanarayanan.kuppuswamy@linux.intel.com
@@ -34,9 +34,9 @@ Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         ashok.raj@intel.com,
         Kuppuswamy Sathyanarayanan 
         <sathyanarayanan.kuppuswamy@linux.intel.com>
-Subject: [PATCH v16 6/9] PCI/AER: Allow clearing Error Status Register in FF mode
-Date:   Thu, 27 Feb 2020 16:59:48 -0800
-Message-Id: <9e71cba3596213b40d7c280bf57d8938189c2866.1582850766.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+Subject: [PATCH v16 3/9] PCI/ERR: Remove service dependency in pcie_do_recovery()
+Date:   Thu, 27 Feb 2020 16:59:45 -0800
+Message-Id: <152c530a3ca8780ae85c2325f97f5f35f5d3602f.1582850766.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <cover.1582850766.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 References: <cover.1582850766.git.sathyanarayanan.kuppuswamy@linux.intel.com>
@@ -49,87 +49,134 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 
-As per PCI firmware specification r3.2 System Firmware Intermediary
-(SFI) _OSC and DPC Updates ECR
-(https://members.pcisig.com/wg/PCI-SIG/document/13563), sec titled "DPC
-Event Handling Implementation Note", page 10, Error Disconnect Recover
-(EDR) support allows OS to handle error recovery and clearing Error
-Registers even in FF mode. So create new API pci_aer_raw_clear_status()
-which allows clearing AER registers without FF mode checks.
+Currently we pass PCIe service type parameter to pcie_do_recovery()
+function which was in-turn used by reset_link() function to identify
+the underlying pci_port_service_driver and then initiate the driver
+specific reset_link call. Instead of using this roundabout way, we
+can just pass the driver specific reset_link callback function when
+calling pcie_do_recovery() function.
+
+This change will also enable non PCIe service driver to call
+pcie_do_recovery() function. This is required for adding Error
+Disconnect Recover (EDR) support.
 
 Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 ---
- drivers/pci/pci.h      |  2 ++
- drivers/pci/pcie/aer.c | 22 ++++++++++++++++++----
- 2 files changed, 20 insertions(+), 4 deletions(-)
+ drivers/pci/pci.h      |  2 +-
+ drivers/pci/pcie/aer.c | 11 +++++------
+ drivers/pci/pcie/dpc.c |  2 +-
+ drivers/pci/pcie/err.c | 16 ++++++++--------
+ 4 files changed, 15 insertions(+), 16 deletions(-)
 
 diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index e57e78b619f8..c239e6dd2542 100644
+index a4c360515a69..2962200bfe35 100644
 --- a/drivers/pci/pci.h
 +++ b/drivers/pci/pci.h
-@@ -655,6 +655,7 @@ extern const struct attribute_group aer_stats_attr_group;
- void pci_aer_clear_fatal_status(struct pci_dev *dev);
- void pci_aer_clear_device_status(struct pci_dev *dev);
- int pci_cleanup_aer_error_status_regs(struct pci_dev *dev);
-+int pci_aer_raw_clear_status(struct pci_dev *dev);
- #else
- static inline void pci_no_aer(void) { }
- static inline void pci_aer_init(struct pci_dev *d) { }
-@@ -665,6 +666,7 @@ static inline int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
- {
- 	return -EINVAL;
- }
-+int pci_aer_raw_clear_status(struct pci_dev *dev) { return -EINVAL; }
- #endif
+@@ -548,7 +548,7 @@ static inline int pci_dev_specific_disable_acs_redir(struct pci_dev *dev)
  
- #ifdef CONFIG_ACPI
+ /* PCI error reporting and recovery */
+ void pcie_do_recovery(struct pci_dev *dev, enum pci_channel_state state,
+-		      u32 service);
++		      pci_ers_result_t (*reset_cb)(struct pci_dev *pdev));
+ 
+ bool pcie_wait_for_link(struct pci_dev *pdev, bool active);
+ #ifdef CONFIG_PCIEASPM
 diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index 1235eca0a2e6..70a1493d8aa6 100644
+index 4a818b07a1af..1235eca0a2e6 100644
 --- a/drivers/pci/pcie/aer.c
 +++ b/drivers/pci/pcie/aer.c
-@@ -420,7 +420,16 @@ void pci_aer_clear_fatal_status(struct pci_dev *dev)
- 		pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, status);
+@@ -102,6 +102,7 @@ struct aer_stats {
+ #define ERR_UNCOR_ID(d)			(d >> 16)
+ 
+ static int pcie_aer_disable;
++static pci_ers_result_t aer_root_reset(struct pci_dev *dev);
+ 
+ void pci_no_aer(void)
+ {
+@@ -1053,11 +1054,9 @@ static void handle_error_source(struct pci_dev *dev, struct aer_err_info *info)
+ 					info->status);
+ 		pci_aer_clear_device_status(dev);
+ 	} else if (info->severity == AER_NONFATAL)
+-		pcie_do_recovery(dev, pci_channel_io_normal,
+-				 PCIE_PORT_SERVICE_AER);
++		pcie_do_recovery(dev, pci_channel_io_normal, aer_root_reset);
+ 	else if (info->severity == AER_FATAL)
+-		pcie_do_recovery(dev, pci_channel_io_frozen,
+-				 PCIE_PORT_SERVICE_AER);
++		pcie_do_recovery(dev, pci_channel_io_frozen, aer_root_reset);
+ 	pci_dev_put(dev);
  }
  
--int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
-+/**
-+ * pci_aer_raw_clear_status - Clear AER error registers.
-+ * @dev: the PCI device
-+ *
-+ * NOTE: Allows clearing error registers in both FF and
-+ * non FF modes.
-+ *
-+ * Returns 0 on success, or negative on failure.
-+ */
-+int pci_aer_raw_clear_status(struct pci_dev *dev)
- {
- 	int pos;
- 	u32 status;
-@@ -433,9 +442,6 @@ int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
- 	if (!pos)
- 		return -EIO;
+@@ -1094,10 +1093,10 @@ static void aer_recover_work_func(struct work_struct *work)
+ 		cper_print_aer(pdev, entry.severity, entry.regs);
+ 		if (entry.severity == AER_NONFATAL)
+ 			pcie_do_recovery(pdev, pci_channel_io_normal,
+-					 PCIE_PORT_SERVICE_AER);
++					 aer_root_reset);
+ 		else if (entry.severity == AER_FATAL)
+ 			pcie_do_recovery(pdev, pci_channel_io_frozen,
+-					 PCIE_PORT_SERVICE_AER);
++					 aer_root_reset);
+ 		pci_dev_put(pdev);
+ 	}
+ }
+diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+index 6b116d7fdb89..114358d62ddf 100644
+--- a/drivers/pci/pcie/dpc.c
++++ b/drivers/pci/pcie/dpc.c
+@@ -227,7 +227,7 @@ static irqreturn_t dpc_handler(int irq, void *context)
+ 	}
  
--	if (pcie_aer_get_firmware_first(dev))
--		return -EIO;
--
- 	port_type = pci_pcie_type(dev);
- 	if (port_type == PCI_EXP_TYPE_ROOT_PORT) {
- 		pci_read_config_dword(dev, pos + PCI_ERR_ROOT_STATUS, &status);
-@@ -451,6 +457,14 @@ int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
- 	return 0;
+ 	/* We configure DPC so it only triggers on ERR_FATAL */
+-	pcie_do_recovery(pdev, pci_channel_io_frozen, PCIE_PORT_SERVICE_DPC);
++	pcie_do_recovery(pdev, pci_channel_io_frozen, dpc_reset_link);
+ 
+ 	return IRQ_HANDLED;
+ }
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index eefefe03857a..05f87bc9d011 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -162,14 +162,13 @@ static pci_ers_result_t default_reset_link(struct pci_dev *dev)
+ 	return rc ? PCI_ERS_RESULT_DISCONNECT : PCI_ERS_RESULT_RECOVERED;
  }
  
-+int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
-+{
-+	if (pcie_aer_get_firmware_first(dev))
-+		return -EIO;
-+
-+	return pci_aer_raw_clear_status(dev);
-+}
-+
- void pci_save_aer_state(struct pci_dev *dev)
+-static pci_ers_result_t reset_link(struct pci_dev *dev, u32 service)
++static pci_ers_result_t reset_link(struct pci_dev *dev,
++			pci_ers_result_t (*reset_cb)(struct pci_dev *pdev))
  {
- 	struct pci_cap_saved_state *save_state;
+ 	pci_ers_result_t status;
+-	struct pcie_port_service_driver *driver = NULL;
+ 
+-	driver = pcie_port_find_service(dev, service);
+-	if (driver && driver->reset_link) {
+-		status = driver->reset_link(dev);
++	if (reset_cb) {
++		status = reset_cb(dev);
+ 	} else if (pcie_downstream_port(dev)) {
+ 		status = default_reset_link(dev);
+ 	} else {
+@@ -187,8 +186,9 @@ static pci_ers_result_t reset_link(struct pci_dev *dev, u32 service)
+ 	return status;
+ }
+ 
+-void pcie_do_recovery(struct pci_dev *dev, enum pci_channel_state state,
+-		      u32 service)
++void pcie_do_recovery(struct pci_dev *dev,
++		      enum pci_channel_state state,
++		      pci_ers_result_t (*reset_cb)(struct pci_dev *pdev))
+ {
+ 	pci_ers_result_t status = PCI_ERS_RESULT_CAN_RECOVER;
+ 	struct pci_bus *bus;
+@@ -209,7 +209,7 @@ void pcie_do_recovery(struct pci_dev *dev, enum pci_channel_state state,
+ 		pci_walk_bus(bus, report_normal_detected, &status);
+ 
+ 	if (state == pci_channel_io_frozen) {
+-		status = reset_link(dev, service);
++		status = reset_link(dev, reset_cb);
+ 		if (status != PCI_ERS_RESULT_RECOVERED)
+ 			goto failed;
+ 	}
 -- 
 2.21.0
 
