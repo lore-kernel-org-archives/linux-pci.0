@@ -2,84 +2,69 @@ Return-Path: <SRS0=niy7=4Q=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2854EC3F2D2
-	for <linux-pci@archiver.kernel.org>; Fri, 28 Feb 2020 19:53:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81FBEC3F2D3
+	for <linux-pci@archiver.kernel.org>; Fri, 28 Feb 2020 19:55:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E8B3724672
-	for <linux-pci@archiver.kernel.org>; Fri, 28 Feb 2020 19:53:31 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fSBOEP1I"
+	by mail.kernel.org (Postfix) with ESMTP id 58980246AE
+	for <linux-pci@archiver.kernel.org>; Fri, 28 Feb 2020 19:55:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1582919712;
+	bh=7e01PYQtmVbFyozelgJ8XBP/mOO01pmq3UcmFX20UCk=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:List-ID:From;
+	b=KxI+H6aQ7kzvaXlG673s6eS3OsxBW6/Uh7lgvYeV3wJABF6kJRKu4NvAs5QGZks4N
+	 8/piBJO3Pw6/N3OUm2zPXB6ttmKGyUb4778XmPRV09Ce/Mz1WrlOXSQpCZrYxxgcIN
+	 066EVlJNuiDRw95ZMItqwqixZx40XRlTlkr9u0M0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726063AbgB1Txb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 28 Feb 2020 14:53:31 -0500
-Received: from mail-il1-f194.google.com ([209.85.166.194]:36851 "EHLO
-        mail-il1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725769AbgB1Txb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 28 Feb 2020 14:53:31 -0500
-Received: by mail-il1-f194.google.com with SMTP id b15so3799416iln.3;
-        Fri, 28 Feb 2020 11:53:30 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=JnlDWErKF8mDRNyNgdnTvgmZkvu7Blf7Wpl9qNzdgKE=;
-        b=fSBOEP1IAhrdav6hcqPPq6DsovnldH8jwg12SD/B8C6OOHJz2/tIMVB25bjlbjrCqm
-         kY5za1kNR4E27ndHju64DGymndfnKxmsNfP1Ks1RfuKQraLKMRsZhm6pKatILJ5pY99h
-         qGCsKYc6j4ViyP9VHzpHizkFQGModsCPXJ4AeLzesSqpdg76oXmrObKISA2BqQt5SahX
-         rNGKqlHSZh87S059uHUFeBs8mFDBU+TE09Xku624wTmSYsFMciAfxSCcssPJGQ9i1LSX
-         1mm08Ghj+WuhUf5kV0aevMw4X+1IPLcGvfgSE7hIc97SWKQDjb6V7VA015sI4CF4g8WL
-         h0VQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=JnlDWErKF8mDRNyNgdnTvgmZkvu7Blf7Wpl9qNzdgKE=;
-        b=ElUI56lsOnjwpQXeEWGMjjYhQJdP7HDEbBLy6+2KgjDMlYtMMeLuJWBr3l+9N9wLaQ
-         xQXOF83mIHfyaJSsZjw1d/ZjZK2UMN2tGaTCCwtm5kjmPYzIzqLd3n7Y7geJZnFWACJj
-         iP+ZA/GmuQuLqDkgoEZ4nUUkOv2we5G6/Sm5i1WKIt+LfvayHYmk7YK4wqfUHH45XXpm
-         ESxPp0UUGujPbLCjArS+m00HVhrmU/PKCnhALv4NqEv3//4arul2+bL5ZWJEbY0y5su0
-         rGy8iOURfBSDOn3IJy88sgiit8tYbiY+6MoSUIgbxZwiJCBLrcwTOtx3kEFAmushKASr
-         n4zQ==
-X-Gm-Message-State: APjAAAUWTe/eSfkqs/A35rEiX1KsZnA0L6meKrbiUHk+hWnO2Lwo15Fw
-        vdqHkN4SDiL/PBuhvexlQ/crY1/vnOyNvUxp1NM=
-X-Google-Smtp-Source: APXvYqxXZ0r2eo6M1S+emYmrQwIWztg8xMvfzYm/JgHMlZSn4ba0L7GEsp02PDYFz4ehlz+b/mjNPY/05Tab1srb1iE=
-X-Received: by 2002:a92:8c4b:: with SMTP id o72mr6223898ild.81.1582919610579;
- Fri, 28 Feb 2020 11:53:30 -0800 (PST)
-MIME-Version: 1.0
-References: <20191225192118.283637-1-kasong@redhat.com> <20200222165631.GA213225@google.com>
- <CACPcB9dv1YPhRmyWvtdt2U4g=XXU7dK4bV4HB1dvCVMTpPFdzA@mail.gmail.com>
-In-Reply-To: <CACPcB9dv1YPhRmyWvtdt2U4g=XXU7dK4bV4HB1dvCVMTpPFdzA@mail.gmail.com>
-From:   Deepa Dinamani <deepa.kernel@gmail.com>
-Date:   Fri, 28 Feb 2020 11:53:19 -0800
-Message-ID: <CABeXuvqm1iUGt1GWC9eujuoaACdPiZ2X=3LjKJ5JXKZcXD_z_g@mail.gmail.com>
-Subject: Re: [RFC PATCH] PCI, kdump: Clear bus master bit upon shutdown in
- kdump kernel
-To:     Kairui Song <kasong@redhat.com>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>,
-        Khalid Aziz <khalid@gonehiking.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-        Jerry Hoemann <jerry.hoemann@hpe.com>,
-        Baoquan He <bhe@redhat.com>, Randy Wright <rwright@hpe.com>,
-        Dave Young <dyoung@redhat.com>,
-        Myron Stowe <myron.stowe@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+        id S1726974AbgB1TzI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 28 Feb 2020 14:55:08 -0500
+Received: from mail.kernel.org ([198.145.29.99]:59866 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725730AbgB1TzH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 28 Feb 2020 14:55:07 -0500
+Subject: Re: [GIT PULL] PCI fixes for v5.6
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1582919707;
+        bh=7e01PYQtmVbFyozelgJ8XBP/mOO01pmq3UcmFX20UCk=;
+        h=From:In-Reply-To:References:Date:To:Cc:From;
+        b=NnaSU57hzsG06fp+CBtPX3TdXCqLGDmiL1wYqzYktEkB8JsiBdi45bjcExg4owz/a
+         OSZVoJIjgIf39VrzeXlnG8NRVtMHcFFqeZX1IP3vKuSBe15648n2mJnD74kG320NlJ
+         E9zzHn8bJeAkhz+HbP8W0bA7ygygSMXQhHYC5aNk=
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <20200228192153.GA97492@google.com>
+References: <20200228192153.GA97492@google.com>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20200228192153.GA97492@google.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
+ tags/pci-v5.6-fixes-2
+X-PR-Tracked-Commit-Id: 5901b51f3e5d9129da3e59b10cc76e4cc983e940
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 29795de0d242a5ba45904b36a5fb67e38a304cb7
+Message-Id: <158291970739.11737.5560436819113052472.pr-tracker-bot@kernel.org>
+Date:   Fri, 28 Feb 2020 19:55:07 +0000
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Lukas Bulwahn <lukas.bulwahn@gmail.com>,
+        Marek Szyprowski <m.szyprowski@samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-I think the quirk clearing BME might not solve all the problems, since
-endpoint devices can sometimes not honor BME settings.
+The pull request you sent on Fri, 28 Feb 2020 13:21:53 -0600:
 
-Better solution to me seems like not letting devices that we cannot
-identify send us interrupts. I was working on a patch for this. I'm on
-vacation for a couple of weeks and can post an update after I test out
-my patch internally.
+> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v5.6-fixes-2
 
--Deepa
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/29795de0d242a5ba45904b36a5fb67e38a304cb7
+
+Thank you!
+
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.wiki.kernel.org/userdoc/prtracker
