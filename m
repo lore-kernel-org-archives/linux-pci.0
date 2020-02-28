@@ -7,25 +7,25 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 438AAC3F2CE
-	for <linux-pci@archiver.kernel.org>; Fri, 28 Feb 2020 01:03:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DDEBC3F2CF
+	for <linux-pci@archiver.kernel.org>; Fri, 28 Feb 2020 01:03:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 20796246A8
-	for <linux-pci@archiver.kernel.org>; Fri, 28 Feb 2020 01:03:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 673B6246A5
+	for <linux-pci@archiver.kernel.org>; Fri, 28 Feb 2020 01:03:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730599AbgB1BCq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1730596AbgB1BCq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Thu, 27 Feb 2020 20:02:46 -0500
-Received: from mga14.intel.com ([192.55.52.115]:40114 "EHLO mga14.intel.com"
+Received: from mga07.intel.com ([134.134.136.100]:32657 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730563AbgB1BCo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 27 Feb 2020 20:02:44 -0500
+        id S1730568AbgB1BCp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 27 Feb 2020 20:02:45 -0500
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 27 Feb 2020 17:02:43 -0800
+  by orsmga105.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 27 Feb 2020 17:02:43 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.70,493,1574150400"; 
-   d="scan'208";a="317977004"
+   d="scan'208";a="317977019"
 Received: from skuppusw-desk.jf.intel.com ([10.7.201.16])
   by orsmga001.jf.intel.com with ESMTP; 27 Feb 2020 17:02:42 -0800
 From:   sathyanarayanan.kuppuswamy@linux.intel.com
@@ -33,10 +33,15 @@ To:     bhelgaas@google.com
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         ashok.raj@intel.com,
         Kuppuswamy Sathyanarayanan 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>
-Subject: [PATCH v16 4/9] PCI/ERR: Return status of pcie_do_recovery()
-Date:   Thu, 27 Feb 2020 16:59:46 -0800
-Message-Id: <7be7df50b2d88470b563b464e274307f13ffdbce.1582850766.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+        <sathyanarayanan.kuppuswamy@linux.intel.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Keith Busch <keith.busch@intel.com>,
+        Huong Nguyen <huong.nguyen@dell.com>,
+        Austin Bolen <Austin.Bolen@dell.com>
+Subject: [PATCH v16 9/9] PCI/ACPI: Enable EDR support
+Date:   Thu, 27 Feb 2020 16:59:51 -0800
+Message-Id: <b6076dcb7d4fcce6c401f9d722e2c8fc194d33ae.1582850766.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <cover.1582850766.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 References: <cover.1582850766.git.sathyanarayanan.kuppuswamy@linux.intel.com>
@@ -49,75 +54,162 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 
-As per the Downstream Port Containment Related Enhancements ECN to the
-PCI Firmware Specification r3.2, sec 4.5.1, table 4-4, Support for Error
-Disconnect Recover (EDR) implies that the OS will invalidate the
-software state associated with child devices of the port without
-attempting to access the child device hardware. If the OS supports
-Downstream Port Containment (DPC), as indicated by the OS setting bit 7
-of _OSC control field, the OS shall attempt to recover the child devices
-if the port implements the Downstream Port Containment Extended
-Capability. If the OS continues operation, the OS must inform the
-Firmware of the status of the recovery operation via the _OST method.
+As per PCI firmware specification r3.2 Downstream Port Containment
+Related Enhancements ECN, sec 4.5.1, OS must implement following steps
+to enable/use EDR feature.
 
-So in adding EDR support, to report status of error recovery via _OST,
-we need to know the status of error recovery. So add support to return
-the status of pcie_do_recovery() function.
+1. OS can use bit 7 of _OSC Control Field to negotiate control over
+Downstream Port Containment (DPC) configuration of PCIe port. After _OSC
+negotiation, firmware will Set this bit to grant OS control over PCIe
+DPC configuration and Clear it if this feature was requested and denied,
+or was not requested.
 
+2. Also, if OS supports EDR, it should expose its support to BIOS by
+setting bit 7 of _OSC Support Field. And if OS sets bit 7 of _OSC
+Control Field it must also expose support for EDR by setting bit 7 of
+_OSC Support Field.
+
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>
 Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Acked-by: Keith Busch <keith.busch@intel.com>
+Tested-by: Huong Nguyen <huong.nguyen@dell.com>
+Tested-by: Austin Bolen <Austin.Bolen@dell.com>
 ---
- drivers/pci/pci.h      |  5 +++--
- drivers/pci/pcie/err.c | 10 ++++++----
- 2 files changed, 9 insertions(+), 6 deletions(-)
+ drivers/acpi/pci_root.c | 16 ++++++++++++++++
+ drivers/pci/pcie/edr.c  |  4 +++-
+ drivers/pci/probe.c     |  1 +
+ include/linux/acpi.h    |  6 ++++--
+ include/linux/pci.h     |  1 +
+ 5 files changed, 25 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 2962200bfe35..c2c35f152cde 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -547,8 +547,9 @@ static inline int pci_dev_specific_disable_acs_redir(struct pci_dev *dev)
- #endif
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index d1e666ef3fcc..ad1be5941a00 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -131,6 +131,7 @@ static struct pci_osc_bit_struct pci_osc_support_bit[] = {
+ 	{ OSC_PCI_CLOCK_PM_SUPPORT, "ClockPM" },
+ 	{ OSC_PCI_SEGMENT_GROUPS_SUPPORT, "Segments" },
+ 	{ OSC_PCI_MSI_SUPPORT, "MSI" },
++	{ OSC_PCI_EDR_SUPPORT, "EDR" },
+ 	{ OSC_PCI_HPX_TYPE_3_SUPPORT, "HPX-Type3" },
+ };
  
- /* PCI error reporting and recovery */
--void pcie_do_recovery(struct pci_dev *dev, enum pci_channel_state state,
--		      pci_ers_result_t (*reset_cb)(struct pci_dev *pdev));
-+pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
-+			enum pci_channel_state state,
-+			pci_ers_result_t (*reset_cb)(struct pci_dev *pdev));
+@@ -141,6 +142,7 @@ static struct pci_osc_bit_struct pci_osc_control_bit[] = {
+ 	{ OSC_PCI_EXPRESS_AER_CONTROL, "AER" },
+ 	{ OSC_PCI_EXPRESS_CAPABILITY_CONTROL, "PCIeCapability" },
+ 	{ OSC_PCI_EXPRESS_LTR_CONTROL, "LTR" },
++	{ OSC_PCI_EXPRESS_DPC_CONTROL, "DPC" },
+ };
  
- bool pcie_wait_for_link(struct pci_dev *pdev, bool active);
- #ifdef CONFIG_PCIEASPM
-diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index 05f87bc9d011..b560f0096a70 100644
---- a/drivers/pci/pcie/err.c
-+++ b/drivers/pci/pcie/err.c
-@@ -186,9 +186,9 @@ static pci_ers_result_t reset_link(struct pci_dev *dev,
- 	return status;
- }
+ static void decode_osc_bits(struct acpi_pci_root *root, char *msg, u32 word,
+@@ -440,6 +442,8 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
+ 		support |= OSC_PCI_ASPM_SUPPORT | OSC_PCI_CLOCK_PM_SUPPORT;
+ 	if (pci_msi_enabled())
+ 		support |= OSC_PCI_MSI_SUPPORT;
++	if (IS_ENABLED(CONFIG_PCIE_EDR))
++		support |= OSC_PCI_EDR_SUPPORT;
  
--void pcie_do_recovery(struct pci_dev *dev,
--		      enum pci_channel_state state,
--		      pci_ers_result_t (*reset_cb)(struct pci_dev *pdev))
-+pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
-+			enum pci_channel_state state,
-+			pci_ers_result_t (*reset_cb)(struct pci_dev *pdev))
- {
- 	pci_ers_result_t status = PCI_ERS_RESULT_CAN_RECOVER;
- 	struct pci_bus *bus;
-@@ -240,11 +240,13 @@ void pcie_do_recovery(struct pci_dev *dev,
- 	pci_aer_clear_device_status(dev);
- 	pci_cleanup_aer_uncorrect_error_status(dev);
- 	pci_info(dev, "device recovery successful\n");
--	return;
-+	return status;
+ 	decode_osc_support(root, "OS supports", support);
+ 	status = acpi_pci_osc_support(root, support);
+@@ -487,6 +491,16 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
+ 			control |= OSC_PCI_EXPRESS_AER_CONTROL;
+ 	}
  
- failed:
- 	pci_uevent_ers(dev, PCI_ERS_RESULT_DISCONNECT);
- 
- 	/* TODO: Should kernel panic here? */
- 	pci_info(dev, "device recovery failed\n");
++	/*
++	 * Per the Downstream Port Containment Related Enhancements ECN to
++	 * the PCI Firmware Spec, r3.2, sec 4.5.1, table 4-5,
++	 * OSC_PCI_EXPRESS_DPC_CONTROL indicates the OS supports both DPC
++	 * and EDR. So use CONFIG_PCIE_EDR for requesting DPC control which
++	 * will only be turned on if both EDR and DPC is enabled.
++	 */
++	if (IS_ENABLED(CONFIG_PCIE_EDR))
++		control |= OSC_PCI_EXPRESS_DPC_CONTROL;
 +
-+	return status;
+ 	requested = control;
+ 	status = acpi_pci_osc_control_set(handle, &control,
+ 					  OSC_PCI_EXPRESS_CAPABILITY_CONTROL);
+@@ -916,6 +930,8 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+ 		host_bridge->native_pme = 0;
+ 	if (!(root->osc_control_set & OSC_PCI_EXPRESS_LTR_CONTROL))
+ 		host_bridge->native_ltr = 0;
++	if (!(root->osc_control_set & OSC_PCI_EXPRESS_DPC_CONTROL))
++		host_bridge->native_dpc = 0;
+ 
+ 	/*
+ 	 * Evaluate the "PCI Boot Configuration" _DSM Function.  If it
+diff --git a/drivers/pci/pcie/edr.c b/drivers/pci/pcie/edr.c
+index 2d8680be0302..45d165e838bb 100644
+--- a/drivers/pci/pcie/edr.c
++++ b/drivers/pci/pcie/edr.c
+@@ -195,6 +195,7 @@ static void edr_handle_event(acpi_handle handle, u32 event, void *data)
+ void pci_acpi_add_edr_notifier(struct pci_dev *pdev)
+ {
+ 	struct acpi_device *adev = ACPI_COMPANION(&pdev->dev);
++	struct pci_host_bridge *host = pci_find_host_bridge(pdev->bus);
+ 	acpi_status astatus;
+ 
+ 	if (!adev) {
+@@ -214,7 +215,8 @@ void pci_acpi_add_edr_notifier(struct pci_dev *pdev)
+ 	 * OS can use bit 7 of _OSC control field to negotiate control
+ 	 * over DPC Capability.
+ 	 */
+-	if (!pcie_aer_get_firmware_first(pdev) || pcie_ports_dpc_native) {
++	if (!pcie_aer_get_firmware_first(pdev) || pcie_ports_dpc_native ||
++	    (host->native_dpc)) {
+ 		pci_dbg(pdev, "OS handles AER/DPC, so skip EDR init\n");
+ 		return;
+ 	}
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 512cb4312ddd..c9a9c5b42e72 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -598,6 +598,7 @@ static void pci_init_host_bridge(struct pci_host_bridge *bridge)
+ 	bridge->native_shpc_hotplug = 1;
+ 	bridge->native_pme = 1;
+ 	bridge->native_ltr = 1;
++	bridge->native_dpc = 1;
  }
+ 
+ struct pci_host_bridge *pci_alloc_host_bridge(size_t priv)
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 0f24d701fbdc..b7d3caf6f205 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -530,8 +530,9 @@ extern bool osc_pc_lpi_support_confirmed;
+ #define OSC_PCI_CLOCK_PM_SUPPORT		0x00000004
+ #define OSC_PCI_SEGMENT_GROUPS_SUPPORT		0x00000008
+ #define OSC_PCI_MSI_SUPPORT			0x00000010
++#define OSC_PCI_EDR_SUPPORT			0x00000080
+ #define OSC_PCI_HPX_TYPE_3_SUPPORT		0x00000100
+-#define OSC_PCI_SUPPORT_MASKS			0x0000011f
++#define OSC_PCI_SUPPORT_MASKS			0x0000019f
+ 
+ /* PCI Host Bridge _OSC: Capabilities DWORD 3: Control Field */
+ #define OSC_PCI_EXPRESS_NATIVE_HP_CONTROL	0x00000001
+@@ -540,7 +541,8 @@ extern bool osc_pc_lpi_support_confirmed;
+ #define OSC_PCI_EXPRESS_AER_CONTROL		0x00000008
+ #define OSC_PCI_EXPRESS_CAPABILITY_CONTROL	0x00000010
+ #define OSC_PCI_EXPRESS_LTR_CONTROL		0x00000020
+-#define OSC_PCI_CONTROL_MASKS			0x0000003f
++#define OSC_PCI_EXPRESS_DPC_CONTROL		0x00000080
++#define OSC_PCI_CONTROL_MASKS			0x000000bf
+ 
+ #define ACPI_GSB_ACCESS_ATTRIB_QUICK		0x00000002
+ #define ACPI_GSB_ACCESS_ATTRIB_SEND_RCV         0x00000004
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index a0b7e7a53741..7ed7c088c952 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -515,6 +515,7 @@ struct pci_host_bridge {
+ 	unsigned int	native_shpc_hotplug:1;	/* OS may use SHPC hotplug */
+ 	unsigned int	native_pme:1;		/* OS may use PCIe PME */
+ 	unsigned int	native_ltr:1;		/* OS may use PCIe LTR */
++	unsigned int	native_dpc:1;		/* OS may use PCIe DPC */
+ 	unsigned int	preserve_config:1;	/* Preserve FW resource setup */
+ 
+ 	/* Resource alignment requirements */
 -- 
 2.21.0
 
