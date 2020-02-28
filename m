@@ -2,138 +2,87 @@ Return-Path: <SRS0=niy7=4Q=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5E47C3F2CD
-	for <linux-pci@archiver.kernel.org>; Fri, 28 Feb 2020 15:34:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70013C3F2D2
+	for <linux-pci@archiver.kernel.org>; Fri, 28 Feb 2020 15:38:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 985FD246AC
-	for <linux-pci@archiver.kernel.org>; Fri, 28 Feb 2020 15:34:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3A08D2469D
+	for <linux-pci@archiver.kernel.org>; Fri, 28 Feb 2020 15:38:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1582904054;
-	bh=+E+cDEQIOn/+OaQUF5/dHoKA3nKROt11LTRj27zC9aA=;
+	s=default; t=1582904304;
+	bh=xf57BYdgRaL5TPlhWHSjSr3IkSphINGZj7t7/H8WgVg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=exbsdyvD1Vq37tqE11wUgbMyPAHL2inGWAvAB9gDOWPuhsC+pgLHaUVTIrtWCSj8Q
-	 gRWtJAvnJVUYmqLGtT1IsAiyT9CI/IGncRPHTxITgYaoFmVW+zNGaRlduEtwrSGC7h
-	 evooJoQY3gtd7syVo3RVopwJtrIb+OC17FcNk8E8=
+	b=g1wryXyoeGkM0Q7FDRujGO1ZpOFSMpUMgbzrDxjwgPEqb6w/deuVh+JsbS1bdObBh
+	 aOpq6SD/uAnFj+e02mhFeFPEvnEEHaDM0X8FiOGViP/neUsq6Uwe+e0tk0O+l2JIE3
+	 V7+eE3JA1fzoUihLGtexYdjIteOtOKLbAkF10G+Q=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727060AbgB1PeO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 28 Feb 2020 10:34:14 -0500
-Received: from mail-oi1-f195.google.com ([209.85.167.195]:45947 "EHLO
-        mail-oi1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726956AbgB1PeO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 28 Feb 2020 10:34:14 -0500
-Received: by mail-oi1-f195.google.com with SMTP id v19so3173996oic.12;
-        Fri, 28 Feb 2020 07:34:13 -0800 (PST)
+        id S1727159AbgB1PiX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 28 Feb 2020 10:38:23 -0500
+Received: from mail-oi1-f193.google.com ([209.85.167.193]:43023 "EHLO
+        mail-oi1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727077AbgB1PiX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 28 Feb 2020 10:38:23 -0500
+Received: by mail-oi1-f193.google.com with SMTP id p125so3203305oif.10;
+        Fri, 28 Feb 2020 07:38:21 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=JHoIxRhgYioRssl3aItHva/kMqhlc714/thZOuTd344=;
-        b=N9O6QWZ9j3Tb9YEFOprQHaawNP5VSf6yKHN8ZbSmG2DdheszGQlAlizeOlfLmuEBgC
-         jygAyah4fHnfDV5WDB6tG0KPMCJB8Qn3sb3FzXuvb2GfaQ6LQLKLqMcjchGXJbAVZCjU
-         Z44NlqRDw2icEVt+G3v5g23fe6QJ6Z6f2+LDuVdXIDAoHmPPWL4wMcTS66S1Mk5dr0lG
-         R9+28gd1y7LhSvXvmFZ8UHAOutlhmo8PHeyqvy0qE65gq6PSrQEVHhLIWIRtUXjodt36
-         /zURg0K/HwI9f+TvrcI5fudT/WGwObnuzocWX2y2N1qESNd7stWDNwK1ckDfVxID+DV1
-         e38Q==
-X-Gm-Message-State: APjAAAXoOtlcHZOAkZC2qreL3mCCNdcNhRL09+Ly+Ll9TKIBPMogVAko
-        NUbHRAFR1Vo0T+8bq9gBSQ==
-X-Google-Smtp-Source: APXvYqxGbQolRQFv5+0zxGuLWsBLC8hwoIZ3Faz/JTGNBK5nNQnnwNk9b0SEpFexZcs116M+q/rSjA==
-X-Received: by 2002:aca:f1c6:: with SMTP id p189mr3641411oih.159.1582904053100;
-        Fri, 28 Feb 2020 07:34:13 -0800 (PST)
+        bh=PDpey6T8lgxYQHJUzjwO210zO7/INLaAqTjmTmx/Qhg=;
+        b=tRtdIaJWoK8dJLjYMmYsV+iguGKL3Z9hB6ZjJvZfLtEUqiQoLo9Qw0R+rzfjDDAOrr
+         8becKJjUB11MVIeU99OBHKEKPREh5sMk9NnhHt/VJ/YJkKqK/pKNwxDqwU5VV1/Vzj8f
+         JZp8pyweYLS9ROT5ju8Rj75w0KrrZfLhpQWR1L35LdchgXb3AW3aEro5CZyVy5d/Pw0U
+         8y1GFMvp9ybhxHllCNZ6PzD+/GPi+sJBnzRnOT6dksOm6hNQdyldgszcXxIP/iDxCYr0
+         mBWQG1MbLgs8uDwI+GHahLUxf8CxfPtYTIZxBp+xJDXz1h/qPW7iCzVBE9cWc1FTqXqW
+         8pnA==
+X-Gm-Message-State: APjAAAWGgH1QMRa1VMBFuzvY/K3WaVgjCyoCaTaYNHKse2quBz7jiVUi
+        Mg8Iaub2jJCB3AWJ8YmPAQ==
+X-Google-Smtp-Source: APXvYqwHhcuUz78YlJ14pZKglmsIhSta+BjmU1PYsKxSZExgso3eu7jX1iI+4smic8rg9VnjmMfOUg==
+X-Received: by 2002:aca:4a86:: with SMTP id x128mr1057001oia.29.1582904301019;
+        Fri, 28 Feb 2020 07:38:21 -0800 (PST)
 Received: from rob-hp-laptop (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.gmail.com with ESMTPSA id t22sm3245899otq.18.2020.02.28.07.34.12
+        by smtp.gmail.com with ESMTPSA id b4sm3181050oie.55.2020.02.28.07.38.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 28 Feb 2020 07:34:12 -0800 (PST)
-Received: (nullmailer pid 450 invoked by uid 1000);
-        Fri, 28 Feb 2020 15:34:11 -0000
-Date:   Fri, 28 Feb 2020 09:34:11 -0600
+        Fri, 28 Feb 2020 07:38:20 -0800 (PST)
+Received: (nullmailer pid 6555 invoked by uid 1000);
+        Fri, 28 Feb 2020 15:38:19 -0000
+Date:   Fri, 28 Feb 2020 09:38:19 -0600
 From:   Rob Herring <robh@kernel.org>
 To:     Kishon Vijay Abraham I <kishon@ti.com>
 Cc:     Tom Joseph <tjoseph@cadence.com>,
         Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH v3 1/4] dt-bindings: PCI: Add PCI Endpoint Controller
- Schema
-Message-ID: <20200228153411.GA7882@bogus>
+Subject: Re: [PATCH v3 2/4] dt-bindings: PCI: cadence: Add PCIe RC/EP DT
+ schema for Cadence PCIe
+Message-ID: <20200228153819.GA5476@bogus>
 References: <20200224130905.952-1-kishon@ti.com>
- <20200224130905.952-2-kishon@ti.com>
+ <20200224130905.952-3-kishon@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200224130905.952-2-kishon@ti.com>
+In-Reply-To: <20200224130905.952-3-kishon@ti.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Feb 24, 2020 at 06:39:02PM +0530, Kishon Vijay Abraham I wrote:
-> Define a common schema for PCI Endpoint Controllers.
+On Mon, Feb 24, 2020 at 06:39:03PM +0530, Kishon Vijay Abraham I wrote:
+> Add PCIe Host (RC) and Endpoint (EP) device tree schema for Cadence
+> PCIe core library. Platforms using Cadence PCIe core can include the
+> schemas added here in the platform specific schemas.
 > 
 > Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 > ---
->  .../devicetree/bindings/pci/pci-ep.yaml       | 41 +++++++++++++++++++
->  1 file changed, 41 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/pci-ep.yaml
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/pci-ep.yaml b/Documentation/devicetree/bindings/pci/pci-ep.yaml
-> new file mode 100644
-> index 000000000000..2287771a066a
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/pci-ep.yaml
-> @@ -0,0 +1,41 @@
-> +# SPDX-License-Identifier: (GPL2.0-only OR BSD-2-Clause)
+>  .../bindings/pci/cdns-pcie-host.yaml          | 27 ++++++++++++++++
+>  .../devicetree/bindings/pci/cdns-pcie.yaml    | 31 +++++++++++++++++++
+>  2 files changed, 58 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/cdns-pcie-host.yaml
+>  create mode 100644 Documentation/devicetree/bindings/pci/cdns-pcie.yaml
 
-Typo. Run checkpatch.
-
-> +%YAML 1.2
-> +---
-> +$id: http://devicetree.org/schemas/pci/pci-ep.yaml#
-> +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> +
-> +title: PCI Endpoint Controller Schema
-> +
-> +description: |
-> +  Common properties for PCI Endpoint Controller Nodes.
-> +
-> +maintainers:
-> +  - Kishon Vijay Abraham I <kishon@ti.com>
-> +
-> +properties:
-> +  $nodename:
-> +    pattern: "^pcie-ep?@"
-
-Why the '?'? Let's define the name and fix anything that doesn't match.
-
-> +
-> +  max-functions:
-> +    description: Maximum number of functions that can be configured
-> +    allOf:
-> +      - $ref: /schemas/types.yaml#/definitions/uint8
-> +    minimum: 1
-> +    default: 1
-> +    maximum: 255
-> +
-> +  max-link-speed:
-> +    allOf:
-> +      - $ref: /schemas/types.yaml#/definitions/uint32
-> +    enum: [ 1, 2, 3, 4 ]
-> +
-> +  num-lanes:
-> +    description: maximum number of lanes
-> +    allOf:
-> +      - $ref: /schemas/types.yaml#/definitions/uint32
-> +    minimum: 1
-> +    default: 1
-> +    maximum: 16
-> +
-> +required:
-> +  - compatible
-> -- 
-> 2.17.1
-> 
+Reviewed-by: Rob Herring <robh@kernel.org>
