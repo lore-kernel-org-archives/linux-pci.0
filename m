@@ -2,107 +2,78 @@ Return-Path: <SRS0=niy7=4Q=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D95D3C3F2C6
-	for <linux-pci@archiver.kernel.org>; Fri, 28 Feb 2020 01:03:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7F6BC3F2CF
+	for <linux-pci@archiver.kernel.org>; Fri, 28 Feb 2020 02:18:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BB3C0246AC
-	for <linux-pci@archiver.kernel.org>; Fri, 28 Feb 2020 01:03:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A0C3B2469F
+	for <linux-pci@archiver.kernel.org>; Fri, 28 Feb 2020 02:18:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730712AbgB1BDN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 27 Feb 2020 20:03:13 -0500
-Received: from mga14.intel.com ([192.55.52.115]:40111 "EHLO mga14.intel.com"
+        id S1730439AbgB1CS5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 27 Feb 2020 21:18:57 -0500
+Received: from mga18.intel.com ([134.134.136.126]:64154 "EHLO mga18.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730551AbgB1BCo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 27 Feb 2020 20:02:44 -0500
-X-Amp-Result: SKIPPED(no attachment in message)
+        id S1730343AbgB1CS5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 27 Feb 2020 21:18:57 -0500
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
 X-Amp-File-Uploaded: False
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 27 Feb 2020 17:02:42 -0800
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by orsmga106.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 27 Feb 2020 18:18:56 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.70,493,1574150400"; 
-   d="scan'208";a="317976998"
-Received: from skuppusw-desk.jf.intel.com ([10.7.201.16])
-  by orsmga001.jf.intel.com with ESMTP; 27 Feb 2020 17:02:42 -0800
-From:   sathyanarayanan.kuppuswamy@linux.intel.com
-To:     bhelgaas@google.com
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ashok.raj@intel.com,
-        Kuppuswamy Sathyanarayanan 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>
-Subject: [PATCH v16 2/9] PCI/AER: Move pci_cleanup_aer_error_status_regs() declaration to pci.h
-Date:   Thu, 27 Feb 2020 16:59:44 -0800
-Message-Id: <ca897f459ccb6da6bad81e3893d8daf9e865fac1.1582850766.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-X-Mailer: git-send-email 2.21.0
-In-Reply-To: <cover.1582850766.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-References: <cover.1582850766.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+   d="scan'208";a="437264890"
+Received: from otc-nc-03.jf.intel.com (HELO otc-nc-03) ([10.54.39.25])
+  by fmsmga005.fm.intel.com with ESMTP; 27 Feb 2020 18:18:55 -0800
+Date:   Thu, 27 Feb 2020 18:18:55 -0800
+From:   "Raj, Ashok" <ashok.raj@intel.com>
+To:     Sinan Kaya <okaya@kernel.org>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        "Spassov, Stanislav" <stanspas@amazon.de>,
+        "corbet@lwn.net" <corbet@lwn.net>,
+        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+        "tglx@linutronix.de" <tglx@linutronix.de>,
+        "Wang, Wei" <wawei@amazon.de>,
+        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+        "Schoenherr, Jan H." <jschoenh@amazon.de>,
+        "rajatja@google.com" <rajatja@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+        Ashok Raj <ashok.raj@intel.com>
+Subject: Re: [PATCH 1/3] PCI: Make PCIE_RESET_READY_POLL_MS configurable
+Message-ID: <20200228021855.GA57330@otc-nc-03>
+References: <20200227214534.GA143139@google.com>
+ <e162efcd-70fd-3390-2452-4915af1c9171@kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <e162efcd-70fd-3390-2452-4915af1c9171@kernel.org>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+On Thu, Feb 27, 2020 at 06:44:56PM -0500, Sinan Kaya wrote:
+> On 2/27/2020 4:45 PM, Bjorn Helgaas wrote:
+> > The 60 second timeout came from 821cdad5c46c ("PCI: Wait up to 60
+> > seconds for device to become ready after FLR") and is probably too
+> > long.  We probably should pick a smaller value based on numbers from
+> > the spec and make quirks for devices that needed more time.
+> 
+> If I remember right, there was no time mention about how long to
+> wait. Spec says device should send CRS as long as it is not ready.
 
-Since pci_cleanup_aer_error_status_regs() is only used within
-drivers/pci/* directory move the function declaration to pci.h.
+Not exactly.. there are some requirements to follow for rules after
+a conventional reset. 
 
-Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
----
- drivers/pci/pci.h   | 5 +++++
- include/linux/aer.h | 5 -----
- 2 files changed, 5 insertions(+), 5 deletions(-)
+Look for "The second set of rules addresses requirements placed on the system"
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 6394e7746fb5..a4c360515a69 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -651,12 +651,17 @@ void pci_aer_exit(struct pci_dev *dev);
- extern const struct attribute_group aer_stats_attr_group;
- void pci_aer_clear_fatal_status(struct pci_dev *dev);
- void pci_aer_clear_device_status(struct pci_dev *dev);
-+int pci_cleanup_aer_error_status_regs(struct pci_dev *dev);
- #else
- static inline void pci_no_aer(void) { }
- static inline void pci_aer_init(struct pci_dev *d) { }
- static inline void pci_aer_exit(struct pci_dev *d) { }
- static inline void pci_aer_clear_fatal_status(struct pci_dev *dev) { }
- static inline void pci_aer_clear_device_status(struct pci_dev *dev) { }
-+static inline int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
-+{
-+	return -EINVAL;
-+}
- #endif
- 
- #ifdef CONFIG_ACPI
-diff --git a/include/linux/aer.h b/include/linux/aer.h
-index fa19e01f418a..4e4b4960a3d8 100644
---- a/include/linux/aer.h
-+++ b/include/linux/aer.h
-@@ -45,7 +45,6 @@ struct aer_capability_regs {
- int pci_enable_pcie_error_reporting(struct pci_dev *dev);
- int pci_disable_pcie_error_reporting(struct pci_dev *dev);
- int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev);
--int pci_cleanup_aer_error_status_regs(struct pci_dev *dev);
- void pci_save_aer_state(struct pci_dev *dev);
- void pci_restore_aer_state(struct pci_dev *dev);
- #else
-@@ -61,10 +60,6 @@ static inline int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
- {
- 	return -EINVAL;
- }
--static inline int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
--{
--	return -EINVAL;
--}
- static inline void pci_save_aer_state(struct pci_dev *dev) {}
- static inline void pci_restore_aer_state(struct pci_dev *dev) {}
- #endif
--- 
-2.21.0
+i'm looking a the 5.0 spec (around page 553) :-). 
 
+In general 1s seems good enough for most cases. For ports that support
+> 5gt/s transfer speed, it says 100ms after link training completes.
+I'm not sure if this means 100ms after getting a DLLSC event?
