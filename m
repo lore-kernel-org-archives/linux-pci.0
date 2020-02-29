@@ -8,55 +8,55 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D8FFC3F2CD
-	for <linux-pci@archiver.kernel.org>; Sat, 29 Feb 2020 22:30:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10601C3F2CD
+	for <linux-pci@archiver.kernel.org>; Sat, 29 Feb 2020 22:30:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 43C1B24688
-	for <linux-pci@archiver.kernel.org>; Sat, 29 Feb 2020 22:30:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D60F224688
+	for <linux-pci@archiver.kernel.org>; Sat, 29 Feb 2020 22:30:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OaATaKOf"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RQ2Lpktt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727647AbgB2W3f (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 29 Feb 2020 17:29:35 -0500
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:36883 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727518AbgB2W3e (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 29 Feb 2020 17:29:34 -0500
-Received: by mail-wr1-f65.google.com with SMTP id l5so7805651wrx.4;
-        Sat, 29 Feb 2020 14:29:32 -0800 (PST)
+        id S1727562AbgB2W3b (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 29 Feb 2020 17:29:31 -0500
+Received: from mail-wm1-f66.google.com ([209.85.128.66]:40477 "EHLO
+        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727518AbgB2W3b (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 29 Feb 2020 17:29:31 -0500
+Received: by mail-wm1-f66.google.com with SMTP id e26so1600565wme.5;
+        Sat, 29 Feb 2020 14:29:29 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=subject:from:to:cc:references:message-id:date:user-agent
          :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=jVYqGE3zFQNBfIcS/dkWQZWOWyucD3CajAp6Ynd+Hzk=;
-        b=OaATaKOfIaajcpbpgibKbkpwskhmu50Vjjtlx2EirgUo5PV1p5HL+/rxdUohgs5iZY
-         A8oIht778UYbAlaUXkTCmf//DoQnHtIepIR3OvL9Jirl/sXhOgqtAk09MGrtxgbUsUiK
-         b4BpBIqXGvtrb+5Bt0mz24l5kOqniJIzXCwrR/sIlUgInT9DImbycfK3K6nNJIdUB59n
-         gzkNJ5KejFTsGlpy3Pp4nM3xZF/OhO5wZCg7S6vt+RNkuOkZllGWGCaIrvmtimXxfu7s
-         jkO+ccPv8WUy4Gho96D33awi8wM+ejiuuilJcsjlYp3uPQEOx4lFku456WeLbKWGx5QM
-         vjHg==
+        bh=jnuDTYj9lUlehqsBH2n0F57ZiFU3IVBaej0e8OE23bM=;
+        b=RQ2LpkttKbS8cs24JMeBKn32qIaxneyzbEMRLIrtE/fzLtZPHt/75IEPf+N/lJTKt8
+         169s9nLEnk4zg5DjB7iei2/Op5P5q/FlUz+y9/WuD2D96FoI5+bE08wfLWbmdkeGFvZW
+         /+Jq8Y1Ny44UEy5gHYVrfvk4hGZKs1Xv8dbJZAUnabJc1czQWorxkOwMN8RfeerLAa/Z
+         IYcYYbjEqlfXE64NVURam/aZT0eUl0kwk3tckYMpzAOaMkKWngMb8+xWru9cwSYxeytz
+         uHjxDeIhlUERmxKqwgUg7hjWXOQUOgyr+55r4JhEgwUYKExL/jjfA13CobF4JZ3j9lrT
+         UgOA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:from:to:cc:references:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=jVYqGE3zFQNBfIcS/dkWQZWOWyucD3CajAp6Ynd+Hzk=;
-        b=fmMxIzUFdziyLo9WcJrCrFoV8g6RX2P7Q2A4GxaOQvOd+iCb78gQNS+BWJQ0QU+e1i
-         LjdD5HA9yIp3eUTNPoDbHd25fA8CRYjAP6yh5J3Ir+vwhRQkJEqxV2yNa/aV6EzRWuID
-         qIMvSr7eycMItoNFPCOgnLX+dS37j0J/L3IWOS2J7MYzIKSU36c/DcBk418lAfqv5pHi
-         h1p4pPqELPR7jOZxn1likHxIsqfqDexRDbsvj9eOkI7lgbGb+sKpUBSr6NnusjVSIqkg
-         IXOf7QDg2oNcoz1hvGBvDNmUmUuJtVSTzKW3KqiU7tE6Z2G9kHtHPPgbxZAUYey7ih2o
-         p+2w==
-X-Gm-Message-State: APjAAAU+14ClTHNuP1drys5lsBaWZbljK74RPR7z6eGrBJwP/pEzyHyq
-        VfMvZ3lV9nX/kmepBkQ32aI=
-X-Google-Smtp-Source: APXvYqzl/hXV0qSgKwkh/YikHZvhUeSMY6k/AO3khueq4Xn4PyW7j2eWXvjgOcfRyRaKxbbmWmPRXA==
-X-Received: by 2002:adf:ff84:: with SMTP id j4mr7958780wrr.426.1583015371300;
-        Sat, 29 Feb 2020 14:29:31 -0800 (PST)
+        bh=jnuDTYj9lUlehqsBH2n0F57ZiFU3IVBaej0e8OE23bM=;
+        b=HQi4LlQ7gzKkL8PnXT4Gj5vQPjhDoN6E7KjRvT33GEYK1Tnp9U1QAl3C6xQTFh0KdL
+         i0LRa9vr0+vAXQ98Jf76ZkjRNUG+mq/qhEBg1wGJyRSqQOP7Dc52wS7xsP1KTbf3K1pE
+         nFBJ/LMi3819JzT8Gw5W/ZKqR66CbECq/usVxE7DFmd0qkphRVbN88oTDhzL3j5i0Oxy
+         AToSHXJFykncpMHW48Hlf6SHejefQjasd0nnW8uEsxW5lk/ME6Vt9XeAN/NEB1dxc/xC
+         clTVLORbvFxwXcr5ONr0jy3u+4VYnHAxQXi5qWBEo4bYBWiAtumKyHnVuY9kfr4WRTXh
+         msNQ==
+X-Gm-Message-State: APjAAAU4G9ZOBBzABPPTPxlbIpDkX0bvaSGBl5MnWCFdoPmMVH/RloGq
+        Kk+hlwV7DeqOdInXliIgTa4=
+X-Google-Smtp-Source: APXvYqzXO1TqpbaM9Fj6cDDlASNAwTaZ6t7s1GA3ldX6bahXJCDNJZCdyHUYjavqs+wiunrbffUlkw==
+X-Received: by 2002:a1c:7419:: with SMTP id p25mr11789810wmc.159.1583015368922;
+        Sat, 29 Feb 2020 14:29:28 -0800 (PST)
 Received: from ?IPv6:2003:ea:8f29:6000:7150:76fe:91ca:7ab5? (p200300EA8F296000715076FE91CA7AB5.dip0.t-ipconnect.de. [2003:ea:8f29:6000:7150:76fe:91ca:7ab5])
-        by smtp.googlemail.com with ESMTPSA id b21sm8012210wmd.37.2020.02.29.14.29.30
+        by smtp.googlemail.com with ESMTPSA id a26sm8442899wmm.18.2020.02.29.14.29.28
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 29 Feb 2020 14:29:30 -0800 (PST)
-Subject: [PATCH v4 07/10] net: sun: use pci_status_get_and_clear_errors
+        Sat, 29 Feb 2020 14:29:28 -0800 (PST)
+Subject: [PATCH v4 05/10] PCI: Add pci_status_get_and_clear_errors
 From:   Heiner Kallweit <hkallweit1@gmail.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Realtek linux nic maintainers <nic_swsd@realtek.com>,
@@ -70,8 +70,8 @@ Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
         alsa-devel@alsa-project.org
 References: <adeb9e6e-9be6-317f-3fc0-a4e6e6af5f81@gmail.com>
-Message-ID: <f2b690d8-bae5-6172-7f8c-1fe9b9e8e421@gmail.com>
-Date:   Sat, 29 Feb 2020 23:26:49 +0100
+Message-ID: <e0251b07-d08f-df4d-7e80-9eba3d3e43af@gmail.com>
+Date:   Sat, 29 Feb 2020 23:24:23 +0100
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
  Thunderbird/68.5.0
 MIME-Version: 1.0
@@ -84,114 +84,69 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Use new helper pci_status_get_and_clear_errors() to simplify the code.
+Several drivers use the following code sequence:
+1. Read PCI_STATUS
+2. Mask out non-error bits
+3. Action based on error bits set
+4. Write back set error bits to clear them
+
+As this is a repeated pattern, add a helper to the PCI core.
 
 Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
 ---
- drivers/net/ethernet/sun/cassini.c | 28 ++++++++++------------------
- drivers/net/ethernet/sun/sungem.c  | 30 +++++++++---------------------
- 2 files changed, 19 insertions(+), 39 deletions(-)
+v4:
+- improve commit description
+---
+ drivers/pci/pci.c   | 23 +++++++++++++++++++++++
+ include/linux/pci.h |  1 +
+ 2 files changed, 24 insertions(+)
 
-diff --git a/drivers/net/ethernet/sun/cassini.c b/drivers/net/ethernet/sun/cassini.c
-index 6ec9163e2..e6d1aa882 100644
---- a/drivers/net/ethernet/sun/cassini.c
-+++ b/drivers/net/ethernet/sun/cassini.c
-@@ -1716,34 +1716,26 @@ static int cas_pci_interrupt(struct net_device *dev, struct cas *cp,
- 	pr_cont("\n");
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index d828ca835..c16b0ba2a 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -173,6 +173,29 @@ unsigned char pci_bus_max_busnr(struct pci_bus *bus)
+ }
+ EXPORT_SYMBOL_GPL(pci_bus_max_busnr);
  
- 	if (stat & PCI_ERR_OTHER) {
--		u16 cfg;
-+		int pci_errs;
- 
- 		/* Interrogate PCI config space for the
- 		 * true cause.
- 		 */
--		pci_read_config_word(cp->pdev, PCI_STATUS, &cfg);
--		netdev_err(dev, "Read PCI cfg space status [%04x]\n", cfg);
--		if (cfg & PCI_STATUS_PARITY)
-+		pci_errs = pci_status_get_and_clear_errors(cp->pdev);
++/**
++ * pci_status_get_and_clear_errors - return and clear error bits in PCI_STATUS
++ * @pdev: the PCI device
++ *
++ * Returns error bits set in PCI_STATUS and clears them.
++ */
++int pci_status_get_and_clear_errors(struct pci_dev *pdev)
++{
++	u16 status;
++	int ret;
 +
-+		netdev_err(dev, "PCI status errors[%04x]\n", pci_errs);
-+		if (pci_errs & PCI_STATUS_PARITY)
- 			netdev_err(dev, "PCI parity error detected\n");
--		if (cfg & PCI_STATUS_SIG_TARGET_ABORT)
-+		if (pci_errs & PCI_STATUS_SIG_TARGET_ABORT)
- 			netdev_err(dev, "PCI target abort\n");
--		if (cfg & PCI_STATUS_REC_TARGET_ABORT)
-+		if (pci_errs & PCI_STATUS_REC_TARGET_ABORT)
- 			netdev_err(dev, "PCI master acks target abort\n");
--		if (cfg & PCI_STATUS_REC_MASTER_ABORT)
-+		if (pci_errs & PCI_STATUS_REC_MASTER_ABORT)
- 			netdev_err(dev, "PCI master abort\n");
--		if (cfg & PCI_STATUS_SIG_SYSTEM_ERROR)
-+		if (pci_errs & PCI_STATUS_SIG_SYSTEM_ERROR)
- 			netdev_err(dev, "PCI system error SERR#\n");
--		if (cfg & PCI_STATUS_DETECTED_PARITY)
-+		if (pci_errs & PCI_STATUS_DETECTED_PARITY)
- 			netdev_err(dev, "PCI parity error\n");
--
--		/* Write the error bits back to clear them. */
--		cfg &= (PCI_STATUS_PARITY |
--			PCI_STATUS_SIG_TARGET_ABORT |
--			PCI_STATUS_REC_TARGET_ABORT |
--			PCI_STATUS_REC_MASTER_ABORT |
--			PCI_STATUS_SIG_SYSTEM_ERROR |
--			PCI_STATUS_DETECTED_PARITY);
--		pci_write_config_word(cp->pdev, PCI_STATUS, cfg);
- 	}
++	ret = pci_read_config_word(pdev, PCI_STATUS, &status);
++	if (ret != PCIBIOS_SUCCESSFUL)
++		return -EIO;
++
++	status &= PCI_STATUS_ERROR_BITS;
++	if (status)
++		pci_write_config_word(pdev, PCI_STATUS, status);
++
++	return status;
++}
++EXPORT_SYMBOL_GPL(pci_status_get_and_clear_errors);
++
+ #ifdef CONFIG_HAS_IOMEM
+ void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar)
+ {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 101d71e0a..7beaf51e9 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1210,6 +1210,7 @@ int pci_select_bars(struct pci_dev *dev, unsigned long flags);
+ bool pci_device_is_present(struct pci_dev *pdev);
+ void pci_ignore_hotplug(struct pci_dev *dev);
+ struct pci_dev *pci_real_dma_dev(struct pci_dev *dev);
++int pci_status_get_and_clear_errors(struct pci_dev *pdev);
  
- 	/* For all PCI errors, we should reset the chip. */
-diff --git a/drivers/net/ethernet/sun/sungem.c b/drivers/net/ethernet/sun/sungem.c
-index 8358064fb..2d392a7b1 100644
---- a/drivers/net/ethernet/sun/sungem.c
-+++ b/drivers/net/ethernet/sun/sungem.c
-@@ -545,37 +545,25 @@ static int gem_pci_interrupt(struct net_device *dev, struct gem *gp, u32 gem_sta
- 	}
- 
- 	if (pci_estat & GREG_PCIESTAT_OTHER) {
--		u16 pci_cfg_stat;
-+		int pci_errs;
- 
- 		/* Interrogate PCI config space for the
- 		 * true cause.
- 		 */
--		pci_read_config_word(gp->pdev, PCI_STATUS,
--				     &pci_cfg_stat);
--		netdev_err(dev, "Read PCI cfg space status [%04x]\n",
--			   pci_cfg_stat);
--		if (pci_cfg_stat & PCI_STATUS_PARITY)
-+		pci_errs = pci_status_get_and_clear_errors(gp->pdev);
-+		netdev_err(dev, "PCI status errors[%04x]\n", pci_errs);
-+		if (pci_errs & PCI_STATUS_PARITY)
- 			netdev_err(dev, "PCI parity error detected\n");
--		if (pci_cfg_stat & PCI_STATUS_SIG_TARGET_ABORT)
-+		if (pci_errs & PCI_STATUS_SIG_TARGET_ABORT)
- 			netdev_err(dev, "PCI target abort\n");
--		if (pci_cfg_stat & PCI_STATUS_REC_TARGET_ABORT)
-+		if (pci_errs & PCI_STATUS_REC_TARGET_ABORT)
- 			netdev_err(dev, "PCI master acks target abort\n");
--		if (pci_cfg_stat & PCI_STATUS_REC_MASTER_ABORT)
-+		if (pci_errs & PCI_STATUS_REC_MASTER_ABORT)
- 			netdev_err(dev, "PCI master abort\n");
--		if (pci_cfg_stat & PCI_STATUS_SIG_SYSTEM_ERROR)
-+		if (pci_errs & PCI_STATUS_SIG_SYSTEM_ERROR)
- 			netdev_err(dev, "PCI system error SERR#\n");
--		if (pci_cfg_stat & PCI_STATUS_DETECTED_PARITY)
-+		if (pci_errs & PCI_STATUS_DETECTED_PARITY)
- 			netdev_err(dev, "PCI parity error\n");
--
--		/* Write the error bits back to clear them. */
--		pci_cfg_stat &= (PCI_STATUS_PARITY |
--				 PCI_STATUS_SIG_TARGET_ABORT |
--				 PCI_STATUS_REC_TARGET_ABORT |
--				 PCI_STATUS_REC_MASTER_ABORT |
--				 PCI_STATUS_SIG_SYSTEM_ERROR |
--				 PCI_STATUS_DETECTED_PARITY);
--		pci_write_config_word(gp->pdev,
--				      PCI_STATUS, pci_cfg_stat);
- 	}
- 
- 	/* For all PCI errors, we should reset the chip. */
+ int __printf(6, 7) pci_request_irq(struct pci_dev *dev, unsigned int nr,
+ 		irq_handler_t handler, irq_handler_t thread_fn, void *dev_id,
 -- 
 2.25.1
 
