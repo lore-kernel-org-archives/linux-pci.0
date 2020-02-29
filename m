@@ -2,47 +2,33 @@ Return-Path: <SRS0=678l=4R=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA622C3F2CD
-	for <linux-pci@archiver.kernel.org>; Sat, 29 Feb 2020 17:03:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3546C3F2CD
+	for <linux-pci@archiver.kernel.org>; Sat, 29 Feb 2020 18:04:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9E83B2073D
-	for <linux-pci@archiver.kernel.org>; Sat, 29 Feb 2020 17:03:44 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=armlinux.org.uk header.i=@armlinux.org.uk header.b="WuGamnAl"
+	by mail.kernel.org (Postfix) with ESMTP id 80F1124688
+	for <linux-pci@archiver.kernel.org>; Sat, 29 Feb 2020 18:04:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727177AbgB2RDo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 29 Feb 2020 12:03:44 -0500
-Received: from pandora.armlinux.org.uk ([78.32.30.218]:45952 "EHLO
-        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727168AbgB2RDn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 29 Feb 2020 12:03:43 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=armlinux.org.uk; s=pandora-2019; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=VJa4/ENqUUcyzQ50adGWhHo++94I/SPwFtIFyNEIG/M=; b=WuGamnAlOyuSYmTPlM/hnFV3Y
-        1IRzG/u5tcAan1mpj9ClDlUoxpvpfnYNsNO5Gh1YPhynX7JwAlSR233K+fmlM6xUzbnLP82u9nNuG
-        uJEFbtIPC5pghl/ddLd7vKTmeq5KHptLRAaAOHo1M77aGGLrAQT3ltKd7Vd7DfYw/eowQozBB2/lZ
-        WBASy0BUaKINZQHan6rUE098SKz/odQWVVLQ91+EwJmc5p6bvRNrvUTt0MhapgkZHO1/SfJn2/Loc
-        fGumiPlir8nJUR4QT+TH5RrkB3UePEIhw2UmlPY2zZZDZn8ZfmW/aQ1zACfMfRmlPKQiQ9rG+XxCw
-        rnqWtOcqQ==;
-Received: from shell.armlinux.org.uk ([fd8f:7570:feb6:1:5054:ff:fe00:4ec]:58578)
-        by pandora.armlinux.org.uk with esmtpsa (TLSv1.2:ECDHE-RSA-AES256-GCM-SHA384:256)
-        (Exim 4.90_1)
-        (envelope-from <linux@armlinux.org.uk>)
-        id 1j85WW-0002dX-Gr; Sat, 29 Feb 2020 17:03:32 +0000
-Received: from linux by shell.armlinux.org.uk with local (Exim 4.92)
-        (envelope-from <linux@shell.armlinux.org.uk>)
-        id 1j85WS-00037o-IM; Sat, 29 Feb 2020 17:03:28 +0000
-Date:   Sat, 29 Feb 2020 17:03:28 +0000
-From:   Russell King - ARM Linux admin <linux@armlinux.org.uk>
-To:     "Theodore Y. Ts'o" <tytso@mit.edu>
+        id S1727464AbgB2SEA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 29 Feb 2020 13:04:00 -0500
+Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:45042 "EHLO
+        outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727209AbgB2SD7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 29 Feb 2020 13:03:59 -0500
+Received: from callcc.thunk.org (75-104-88-164.mobility.exede.net [75.104.88.164] (may be forged))
+        (authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 01TI3N6m018652
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Sat, 29 Feb 2020 13:03:30 -0500
+Received: by callcc.thunk.org (Postfix, from userid 15806)
+        id 2E9B042045B; Sat, 29 Feb 2020 13:03:23 -0500 (EST)
+Date:   Sat, 29 Feb 2020 13:03:23 -0500
+From:   "Theodore Y. Ts'o" <tytso@mit.edu>
+To:     Russell King - ARM Linux admin <linux@armlinux.org.uk>
 Cc:     Olof Johansson <olof@lixom.net>, Jon Nettleton <jon@solid-run.com>,
         Andreas Dilger <adilger.kernel@dilger.ca>,
         "mark.rutland@arm.com" <mark.rutland@arm.com>,
@@ -66,9 +52,8 @@ Cc:     Olof Johansson <olof@lixom.net>, Jon Nettleton <jon@solid-run.com>,
         <linux-arm-kernel@lists.infradead.org>
 Subject: Re: [PATCHv9 00/12] PCI: Recode Mobiveil driver and add PCIe Gen4
  driver for NXP Layerscape SoCs
-Message-ID: <20200229170328.GD25745@shell.armlinux.org.uk>
-References: <CAOesGMjAQSfx1WZr6b1kNX=Exipj_f4X_f39Db7AxXr4xG4Tkg@mail.gmail.com>
- <DB8PR04MB6747DA8E1480DCF3EFF67C9284500@DB8PR04MB6747.eurprd04.prod.outlook.com>
+Message-ID: <20200229180323.GC7378@mit.edu>
+References: <DB8PR04MB6747DA8E1480DCF3EFF67C9284500@DB8PR04MB6747.eurprd04.prod.outlook.com>
  <20200110153347.GA29372@e121166-lin.cambridge.arm.com>
  <CAOesGMj9X1c7eJ4gX2QWXSNszPkRn68E4pkrSCxKMYJG7JHwsg@mail.gmail.com>
  <DB8PR04MB67473114B315FBCC97D0C6F9841D0@DB8PR04MB6747.eurprd04.prod.outlook.com>
@@ -77,80 +62,30 @@ References: <CAOesGMjAQSfx1WZr6b1kNX=Exipj_f4X_f39Db7AxXr4xG4Tkg@mail.gmail.com>
  <20200229095550.GX25745@shell.armlinux.org.uk>
  <20200229110456.GY25745@shell.armlinux.org.uk>
  <20200229151907.GA7378@mit.edu>
+ <20200229170328.GD25745@shell.armlinux.org.uk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200229151907.GA7378@mit.edu>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20200229170328.GD25745@shell.armlinux.org.uk>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sat, Feb 29, 2020 at 10:19:07AM -0500, Theodore Y. Ts'o wrote:
-> On Sat, Feb 29, 2020 at 11:04:56AM +0000, Russell King - ARM Linux admin wrote:
-> > Could it be a race condition, or some problem that's specific to the
-> > ARM64 kernel that's provoking this corruption?
+On Sat, Feb 29, 2020 at 05:03:28PM +0000, Russell King - ARM Linux admin wrote:
+> > There's a test-appliance designed to be run on ARM64 here[1].
+> > 
+> > [1] https://kernel.org/pub/linux/kernel/people/tytso/kvm-xfstests/xfstests-amd64.tar.xz
 > 
-> Since I got brought in mid-way through this discussion, can someone
-> summarize the vital details of the bughunt?  What kernel version is
-> involved, and is this a regression?  If so, what's the last version of
-> the kernel where you didn't have a problem on this hardware?
+> The filename seems to say "amd64" not "arm64" ?
 
-It's a new platform, I've run most 5.x kernels on it, but only recently
-have I had a NVMe.  Currently running a 5.5 based kernel (for which I
-have to patch in support for the platform), and I've no idea if it is
-a regression or not.
+Sorry, I cut and pasted the wrong link: s/amd64/arm64/
 
-> Can you trigger this failure reliably?
+If there are arm64-specific locking issues, we can probably flush them
+out if we could figure out some way of running some of the stress
+tests in xfstests.  I don't know a whole lot about arm-64
+architectures; would running xfstests on, say, an Amazon AWS arm-based
+VM be representative of your new architecture?  Or are there a lot of
+sub-architecture differences in the arm-64 world?
 
-No - the very first time I ended up with a corrupted ext4 fs was on the
-8th February, and at that time it was put down to the NVMe not being
-power-off safe: the machine had crashed sometime over night, resulting
-in a section of my network going offline (due to a pause frame storm).
-So, I powered it down from crashed state - and from what people tell me,
-NVMe _may_ keep blocks unwritten to safe media for a considerable time.
-
-I never bothered to investigate it because the explanation seemed
-reasonable, and manually running e2fsck fixed the filesystem.
-
-The system was then booted back into using the NVMe rootfs, and
-continued to do so without apparent issue until the 21st Feb, when I
-cleanly shut it down, and powered it off.  During the time it was
-running, it likely saw many reboots of the 5.5 kernel.
-
-I powered it back on yesterday morning, and this morning it found the
-fs corruption while trying to do a logrotate.
-
-As I say in my last email, I suspect it isn't an ext4 bug, but either
-a locking implementation issue, coherency issue, or interconnect issue.
-The 4k block with the affected inode looks perfectly reasonable with
-the only exception that the checksum is incorrect for that one inode -
-and other inodes stored in the same 4k block were modified afterwards.
-It suggests to me that the writes to update the two 16-bit words
-containing the checksum were somehow lost for this particular inode.
-
-> Unfortunately, while I'm regularly running xfstests on x86_64 on a
-> Google Compute Engine VM, I'm not doing any runs on arm64.  I can
-> certainly build an arm-64.
-> 
-> There's a test-appliance designed to be run on ARM64 here[1].
-> 
-> [1] https://kernel.org/pub/linux/kernel/people/tytso/kvm-xfstests/xfstests-amd64.tar.xz
-
-The filename seems to say "amd64" not "arm64" ?
-
-> which is a Debian chroot, designed to be run via android-xfstests[2], but
-> if you unpack it, it should be possible to enter the chroot and
-> trigger the xfstests run manually on any arm64 system.
-> 
-> [2] https://thunk.org/android-xfstests
-> 
-> Does anyone know if kernel CI is running xfstests regularly?
-
-I don't know...
-
--- 
-RMK's Patch system: https://www.armlinux.org.uk/developer/patches/
-FTTC broadband for 0.8mile line in suburbia: sync at 12.1Mbps down 622kbps up
-According to speedtest.net: 11.9Mbps down 500kbps up
+						- Ted
