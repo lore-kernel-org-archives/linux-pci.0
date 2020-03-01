@@ -1,126 +1,60 @@
-Return-Path: <SRS0=678l=4R=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=5kiX=4S=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6488FC3F2CD
-	for <linux-pci@archiver.kernel.org>; Sat, 29 Feb 2020 22:30:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D54F2C3F2D1
+	for <linux-pci@archiver.kernel.org>; Sun,  1 Mar 2020 05:28:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 222A224672
-	for <linux-pci@archiver.kernel.org>; Sat, 29 Feb 2020 22:30:22 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="W7j93h5+"
+	by mail.kernel.org (Postfix) with ESMTP id B0B9B21744
+	for <linux-pci@archiver.kernel.org>; Sun,  1 Mar 2020 05:28:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727185AbgB2W31 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 29 Feb 2020 17:29:27 -0500
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:33750 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726786AbgB2W30 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 29 Feb 2020 17:29:26 -0500
-Received: by mail-wr1-f68.google.com with SMTP id x7so7826141wrr.0;
-        Sat, 29 Feb 2020 14:29:24 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:from:to:cc:references:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=JUcStTd1OYnX+4/KTZoNwT3pKFBsMhYYxXgdxB6jewU=;
-        b=W7j93h5+gAXFNx9VjTexyPvITCCvM44iEc9yXZLJWWLzai9hpbYKLIPlAjzD61SKGy
-         NfQCBuAYb0M6t5HyCnmkWvzu7e2kJCxUa4lL6GfIm/8nsgALkayLXcSQ11KNVgoLfUjp
-         dR0iUK1MWrbED6doNC+8a6LcjaYZFtw3nXLG+cFCzYIxbc+hP4gbGiFJwSNSsRcn6YMr
-         qFs/0sr/K6WqfQWm5OIzt53tNNbyEvKJwTYttGysoXUJsPjCgOr/MGIqHHnYDIWbv59W
-         hyWN/KajLBnQF369IgqPkFZh42HTTMAMuKgC8rd8PEA5J3DYEqz0H3mowyc8mOvAPslA
-         cHjg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:from:to:cc:references:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=JUcStTd1OYnX+4/KTZoNwT3pKFBsMhYYxXgdxB6jewU=;
-        b=F5XBMskfak5fPZRHhESnq1g5wOxKemBsYzT7oUbXgB4MGhNNDbteQRf0FrpQ0cNtNN
-         RCQODVVUpV7sfd8vs6auLnnyPW70sFAF8g285yFbF2zdeS5X1LCuxVIo5hQpLuoD7vcj
-         CWKH9ligM8l2vOzNRNBWJ1yqKemwRfTS3GOO7zGWzfz08ebxv2RnoARmQRdmP4UI/yZx
-         d+wTObP4+2wCHIN1/PnpT8ysn7E/Jlq/HXcFuDjAf9ViBZPkhZQminXldZTZCza5RR18
-         fDuvnl0zsKekcwrQAoyfJ3uWONWgcwVxPdrGyiN0OK2knOKRss56j29E45ufgdQ0SmjR
-         L9Sg==
-X-Gm-Message-State: APjAAAUiWy9+MWg4Ay+GP7yjhIAH/yLsrpNmPVA7R4+qiLA1x3J3UkKc
-        nFpyyK6D+X/byctufsxMtI4a0RX5
-X-Google-Smtp-Source: APXvYqxDK8DmyGmZovFQT4NhCchWjRPiRjKFyOka2xlPwNfL3r2zy7c1fFhpYk0IV1YBKCtG+HsPdQ==
-X-Received: by 2002:a5d:424c:: with SMTP id s12mr12210642wrr.244.1583015364175;
-        Sat, 29 Feb 2020 14:29:24 -0800 (PST)
-Received: from ?IPv6:2003:ea:8f29:6000:7150:76fe:91ca:7ab5? (p200300EA8F296000715076FE91CA7AB5.dip0.t-ipconnect.de. [2003:ea:8f29:6000:7150:76fe:91ca:7ab5])
-        by smtp.googlemail.com with ESMTPSA id q3sm7781235wmj.38.2020.02.29.14.29.23
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 29 Feb 2020 14:29:23 -0800 (PST)
-Subject: [PATCH v4 01/10] net: marvell: add PCI_STATUS_SIG_TARGET_ABORT to PCI
- status error bits
-From:   Heiner Kallweit <hkallweit1@gmail.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Realtek linux nic maintainers <nic_swsd@realtek.com>,
-        David Miller <davem@davemloft.net>,
-        Mirko Lindner <mlindner@marvell.com>,
-        Stephen Hemminger <stephen@networkplumber.org>,
-        Clemens Ladisch <clemens@ladisch.de>,
-        Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>
-Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        alsa-devel@alsa-project.org
-References: <adeb9e6e-9be6-317f-3fc0-a4e6e6af5f81@gmail.com>
-Message-ID: <497952d4-de09-e268-0e2a-511a473198d7@gmail.com>
-Date:   Sat, 29 Feb 2020 23:20:32 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.5.0
-MIME-Version: 1.0
-In-Reply-To: <adeb9e6e-9be6-317f-3fc0-a4e6e6af5f81@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+        id S1725821AbgCAF2A (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 1 Mar 2020 00:28:00 -0500
+Received: from shards.monkeyblade.net ([23.128.96.9]:38712 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725267AbgCAF2A (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 1 Mar 2020 00:28:00 -0500
+Received: from localhost (unknown [IPv6:2601:601:9f00:477::3d5])
+        (using TLSv1 with cipher AES256-SHA (256/256 bits))
+        (Client did not present a certificate)
+        (Authenticated sender: davem-davemloft)
+        by shards.monkeyblade.net (Postfix) with ESMTPSA id 40AEC15BD950A;
+        Sat, 29 Feb 2020 21:28:00 -0800 (PST)
+Date:   Sat, 29 Feb 2020 21:27:59 -0800 (PST)
+Message-Id: <20200229.212759.1192215762119235356.davem@davemloft.net>
+To:     jacob.e.keller@intel.com
+Cc:     linux-pci@vger.kernel.org, netdev@vger.kernel.org,
+        bhelgaas@google.com, jeffrey.t.kirsher@intel.com,
+        QLogic-Storage-Upstream@cavium.com, michael.chan@broadcom.com
+Subject: Re: [PATCH 1/5] pci: introduce pci_get_dsn
+From:   David Miller <davem@davemloft.net>
+In-Reply-To: <20200227223635.1021197-3-jacob.e.keller@intel.com>
+References: <20200227223635.1021197-1-jacob.e.keller@intel.com>
+        <20200227223635.1021197-3-jacob.e.keller@intel.com>
+X-Mailer: Mew version 6.8 on Emacs 26.1
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
+X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.5.12 (shards.monkeyblade.net [149.20.54.216]); Sat, 29 Feb 2020 21:28:00 -0800 (PST)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In preparation of factoring out PCI_STATUS error bit handling let drivers
-use the same collection of error bits. To facilitate bisecting we do this
-in a separate patch per affected driver. For the Marvell drivers we have
-to add PCI_STATUS_SIG_TARGET_ABORT to the error bits.
+From: Jacob Keller <jacob.e.keller@intel.com>
+Date: Thu, 27 Feb 2020 14:36:31 -0800
 
-Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
----
- drivers/net/ethernet/marvell/skge.h | 1 +
- drivers/net/ethernet/marvell/sky2.h | 1 +
- 2 files changed, 2 insertions(+)
+> +int pci_get_dsn(struct pci_dev *dev, u8 dsn[])
+> +{
+> +	u32 dword;
+> +	int pos;
+> +
+> +
 
-diff --git a/drivers/net/ethernet/marvell/skge.h b/drivers/net/ethernet/marvell/skge.h
-index 6fa7b6a34..e76c03c87 100644
---- a/drivers/net/ethernet/marvell/skge.h
-+++ b/drivers/net/ethernet/marvell/skge.h
-@@ -19,6 +19,7 @@
- 			       PCI_STATUS_SIG_SYSTEM_ERROR | \
- 			       PCI_STATUS_REC_MASTER_ABORT | \
- 			       PCI_STATUS_REC_TARGET_ABORT | \
-+			       PCI_STATUS_SIG_TARGET_ABORT | \
- 			       PCI_STATUS_PARITY)
- 
- enum csr_regs {
-diff --git a/drivers/net/ethernet/marvell/sky2.h b/drivers/net/ethernet/marvell/sky2.h
-index b02b65230..aee87f838 100644
---- a/drivers/net/ethernet/marvell/sky2.h
-+++ b/drivers/net/ethernet/marvell/sky2.h
-@@ -256,6 +256,7 @@ enum {
- 			       PCI_STATUS_SIG_SYSTEM_ERROR | \
- 			       PCI_STATUS_REC_MASTER_ABORT | \
- 			       PCI_STATUS_REC_TARGET_ABORT | \
-+			       PCI_STATUS_SIG_TARGET_ABORT | \
- 			       PCI_STATUS_PARITY)
- 
- enum csr_regs {
--- 
-2.25.1
+Just one empty line after the local variable declarations please.
 
-
+Thank you.
