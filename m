@@ -7,48 +7,48 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64B70C3F2CD
-	for <linux-pci@archiver.kernel.org>; Mon,  2 Mar 2020 18:46:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3C15C3F2CD
+	for <linux-pci@archiver.kernel.org>; Mon,  2 Mar 2020 18:46:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3BB1E2166E
-	for <linux-pci@archiver.kernel.org>; Mon,  2 Mar 2020 18:46:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8C5752072A
+	for <linux-pci@archiver.kernel.org>; Mon,  2 Mar 2020 18:46:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=amazon.com header.i=@amazon.com header.b="PqqlUm9D"
+	dkim=pass (1024-bit key) header.d=amazon.com header.i=@amazon.com header.b="UHQDXTTG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727450AbgCBSqQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 2 Mar 2020 13:46:16 -0500
+        id S1726451AbgCBSqW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 2 Mar 2020 13:46:22 -0500
 Received: from smtp-fw-9102.amazon.com ([207.171.184.29]:52790 "EHLO
         smtp-fw-9102.amazon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727126AbgCBSqQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Mar 2020 13:46:16 -0500
+        with ESMTP id S1727126AbgCBSqV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Mar 2020 13:46:21 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=amazon.com; i=@amazon.com; q=dns/txt; s=amazon201209;
-  t=1583174776; x=1614710776;
+  t=1583174781; x=1614710781;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=9xqMD1N8mF24q9FbAWh4uDveX6H7dYjjMS/baY775kQ=;
-  b=PqqlUm9DcbDVe2Q1ybxrTGCRrfxUJ+JfF/JeWV9X4xnP8EK3A1/6M+6B
-   DO4gXf+lGlptRUkfURV6JKHD2N4yHVofEUVsRQYIo05OeSeEVVFwMO1pY
-   hxcpyqNbx7RFtjlJ38oD47DqRdKsuiVR3leSWXDACH7yCJ8ZpAwc3ARq/
-   s=;
-IronPort-SDR: kO8HjqOLM8oqROWJwjcu+g6YR1IS+rg38zj8EgQHECQo0zDNMYwRDEeOe6+ymECVf12FftcEMI
- 39xDTktKKExA==
+  bh=boi/zS9lyKDU1FKDZKAWPh9nzOZgJ/80+f/6R2sG+NE=;
+  b=UHQDXTTGR2HVCCG+SEAVqlFlL41TZssT6vt7ifvmKYUafAB4HIM16LSJ
+   R21HHYnMZbXXclFpwUUo92pGDeTxN/kfqJyoNj4+Y/aSM8RxYBhZT1dc4
+   YjEYCGhCuxUq6zpQL0Bhf2g9L7F4pATE7Ob2XO7AUBZtSok7Mju6/VNHN
+   g=;
+IronPort-SDR: fos/NqpK5c3g5RO2Kjrji5filQUsg2iLwvOVjiYcfYnbG4a/tcCqkK6p/wLYSGRvnoSqK22Hbo
+ X3n7rNsQAwYA==
 X-IronPort-AV: E=Sophos;i="5.70,507,1574121600"; 
-   d="scan'208";a="28691717"
-Received: from sea32-co-svc-lb4-vlan3.sea.corp.amazon.com (HELO email-inbound-relay-2b-a7fdc47a.us-west-2.amazon.com) ([10.47.23.38])
-  by smtp-border-fw-out-9102.sea19.amazon.com with ESMTP; 02 Mar 2020 18:46:14 +0000
+   d="scan'208";a="28691747"
+Received: from sea32-co-svc-lb4-vlan3.sea.corp.amazon.com (HELO email-inbound-relay-2b-baacba05.us-west-2.amazon.com) ([10.47.23.38])
+  by smtp-border-fw-out-9102.sea19.amazon.com with ESMTP; 02 Mar 2020 18:46:20 +0000
 Received: from EX13MTAUEA002.ant.amazon.com (pdx4-ws-svc-p6-lb7-vlan2.pdx.amazon.com [10.170.41.162])
-        by email-inbound-relay-2b-a7fdc47a.us-west-2.amazon.com (Postfix) with ESMTPS id 15E97C5D53;
-        Mon,  2 Mar 2020 18:46:13 +0000 (UTC)
-Received: from EX13D04EUB002.ant.amazon.com (10.43.166.51) by
+        by email-inbound-relay-2b-baacba05.us-west-2.amazon.com (Postfix) with ESMTPS id 0AA16A18ED;
+        Mon,  2 Mar 2020 18:46:18 +0000 (UTC)
+Received: from EX13D04EUA003.ant.amazon.com (10.43.165.148) by
  EX13MTAUEA002.ant.amazon.com (10.43.61.77) with Microsoft SMTP Server (TLS)
- id 15.0.1236.3; Mon, 2 Mar 2020 18:45:57 +0000
+ id 15.0.1236.3; Mon, 2 Mar 2020 18:46:05 +0000
 Received: from EX13MTAUWB001.ant.amazon.com (10.43.161.207) by
- EX13D04EUB002.ant.amazon.com (10.43.166.51) with Microsoft SMTP Server (TLS)
- id 15.0.1497.2; Mon, 2 Mar 2020 18:45:55 +0000
+ EX13D04EUA003.ant.amazon.com (10.43.165.148) with Microsoft SMTP Server (TLS)
+ id 15.0.1497.2; Mon, 2 Mar 2020 18:46:04 +0000
 Received: from u961addbe640f56.ant.amazon.com (10.28.84.111) by
  mail-relay.amazon.com (10.43.161.249) with Microsoft SMTP Server id
- 15.0.1367.3 via Frontend Transport; Mon, 2 Mar 2020 18:45:52 +0000
+ 15.0.1367.3 via Frontend Transport; Mon, 2 Mar 2020 18:46:00 +0000
 From:   Stanislav Spassov <stanspas@amazon.com>
 To:     <linux-pci@vger.kernel.org>
 CC:     Stanislav Spassov <stanspas@amazon.de>,
@@ -60,9 +60,9 @@ CC:     Stanislav Spassov <stanspas@amazon.de>,
         Ashok Raj <ashok.raj@intel.com>,
         Alex Williamson <alex.williamson@redhat.com>,
         "Sinan Kaya" <okaya@kernel.org>, Rajat Jain <rajatja@google.com>
-Subject: [PATCH v2 10/17] PCI: Use correct delay in pci_bridge_wait_for_secondary_bus
-Date:   Mon, 2 Mar 2020 19:44:22 +0100
-Message-ID: <20200302184429.12880-11-stanspas@amazon.com>
+Subject: [PATCH v2 12/17] PCI: Refactor pci_dev_wait to take pci_init_event
+Date:   Mon, 2 Mar 2020 19:44:24 +0100
+Message-ID: <20200302184429.12880-13-stanspas@amazon.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200302184429.12880-1-stanspas@amazon.com>
 References: <20200302184429.12880-1-stanspas@amazon.com>
@@ -76,44 +76,97 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Stanislav Spassov <stanspas@amazon.de>
 
-PCI Express Base Specification r5.0 (May 22, 2019) details the rules
-for device reset in Section 6.6.
+Knowing what kind of event knocked the device out could be useful not
+only for log output, but also to use different timeout/waiting behavior.
 
-For a Downstream Port that does not support Link speeds greater than
-5.0 GT/s, the minimum waiting period before software is permitted to
-send a Configuration Request after a Conventional Reset is 100ms
-(PCI_RESET_DELAY).
+Note: we do lose some specificity in log output due to the aliasing of
+FLR and AF_FLR, but it is doubtful the distinction is worthwhile.
 
-For a Downstream Port that supports Link speeds greater than 5.0 GT/s
-(such ports are required to be Data Link Layer Link Active Reporting
-capable), the period is again 100ms but measured after the link has
-become active (PCI_DL_UP_DELAY).
-
-The delays for both cases above can be overridden independently, and
-pci_bridge_wait_for_secondary_bus should use the appropriate one.
+Also, "bus reset" does not exactly match the more generic name for
+PCI_INIT_EVENT_RESET, which could break programs that scrape kernel
+output for overly specific patterns.
 
 Signed-off-by: Stanislav Spassov <stanspas@amazon.de>
 ---
- drivers/pci/pci.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/pci/pci.c | 17 +++++++++--------
+ 1 file changed, 9 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index e4840dbf2d1c..7e08c5f38190 100644
+index 9435e2b19f7b..5d62d4841d68 100644
 --- a/drivers/pci/pci.c
 +++ b/drivers/pci/pci.c
-@@ -4736,6 +4736,12 @@ void pci_bridge_wait_for_secondary_bus(struct pci_dev *dev, bool sx_resume)
- 	/* Take delay requirements into account */
- 	if (sx_resume && dev->ignore_reset_delay_on_sx_resume)
- 		delay = 0;
-+	else if (pcie_downstream_port(dev) &&
-+		 pcie_get_speed_cap(dev) > PCIE_SPEED_5_0GT &&
-+		 dev->link_active_reporting)
-+		delay = pci_bus_max_delay(dev->subordinate,
-+					  PCI_INIT_EVENT_DL_UP,
-+					  PCI_DL_UP_DELAY);
- 	else
- 		delay = pci_bus_max_delay(dev->subordinate,
- 					  PCI_INIT_EVENT_RESET,
+@@ -1030,8 +1030,9 @@ void pci_wakeup_bus(struct pci_bus *bus)
+ 		pci_walk_bus(bus, pci_wakeup, NULL);
+ }
+ 
+-static int pci_dev_wait(struct pci_dev *dev, char *reset_type)
++static int pci_dev_wait(struct pci_dev *dev, enum pci_init_event event)
+ {
++	const char *event_name = pci_init_event_name(event);
+ 	int timeout = PCIE_RESET_READY_POLL_MS;
+ 	int delay = 1;
+ 	u32 id;
+@@ -1052,13 +1053,13 @@ static int pci_dev_wait(struct pci_dev *dev, char *reset_type)
+ 	while (id == ~0) {
+ 		if (delay > timeout) {
+ 			pci_warn(dev, "not ready %dms after %s; giving up\n",
+-				 delay - 1, reset_type);
++				 delay - 1, event_name);
+ 			return -ETIMEDOUT;
+ 		}
+ 
+ 		if (delay > 1000)
+ 			pci_info(dev, "not ready %dms after %s; waiting\n",
+-				 delay - 1, reset_type);
++				 delay - 1, event_name);
+ 
+ 		msleep(delay);
+ 		delay *= 2;
+@@ -1067,7 +1068,7 @@ static int pci_dev_wait(struct pci_dev *dev, char *reset_type)
+ 
+ 	if (delay > 1000)
+ 		pci_info(dev, "ready %dms after %s\n", delay - 1,
+-			 reset_type);
++			 event_name);
+ 
+ 	return 0;
+ }
+@@ -4515,7 +4516,7 @@ int pcie_flr(struct pci_dev *dev)
+ 
+ 	msleep(dev->delay[PCI_INIT_EVENT_FLR]);
+ 
+-	return pci_dev_wait(dev, "FLR");
++	return pci_dev_wait(dev, PCI_INIT_EVENT_FLR);
+ }
+ EXPORT_SYMBOL_GPL(pcie_flr);
+ 
+@@ -4554,7 +4555,7 @@ static int pci_af_flr(struct pci_dev *dev, int probe)
+ 
+ 	msleep(dev->delay[PCI_INIT_EVENT_FLR]);
+ 
+-	return pci_dev_wait(dev, "AF_FLR");
++	return pci_dev_wait(dev, PCI_INIT_EVENT_FLR);
+ }
+ 
+ /**
+@@ -4601,7 +4602,7 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
+ 	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, csr);
+ 	pci_dev_d3_sleep(dev);
+ 
+-	return pci_dev_wait(dev, "PM D3hot->D0");
++	return pci_dev_wait(dev, PCI_INIT_EVENT_D3HOT_TO_D0);
+ }
+ 
+ /**
+@@ -4843,7 +4844,7 @@ int pci_bridge_secondary_bus_reset(struct pci_dev *dev)
+ {
+ 	pcibios_reset_secondary_bus(dev);
+ 
+-	return pci_dev_wait(dev, "bus reset");
++	return pci_dev_wait(dev, PCI_INIT_EVENT_RESET);
+ }
+ EXPORT_SYMBOL_GPL(pci_bridge_secondary_bus_reset);
+ 
 -- 
 2.25.1
 
