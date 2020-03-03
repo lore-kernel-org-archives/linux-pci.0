@@ -2,93 +2,144 @@ Return-Path: <SRS0=1yZ1=4U=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92F9EC3F2D1
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 17:36:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C212EC3F2D7
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 18:11:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6AF7220CC7
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 17:36:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9E734208C3
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 18:11:10 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="lW0tSYl+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728291AbgCCRgx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 3 Mar 2020 12:36:53 -0500
-Received: from mga17.intel.com ([192.55.52.151]:47673 "EHLO mga17.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727993AbgCCRgx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 3 Mar 2020 12:36:53 -0500
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 03 Mar 2020 09:36:47 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.70,511,1574150400"; 
-   d="scan'208";a="229000291"
-Received: from jekeller-mobl1.amr.corp.intel.com (HELO [134.134.177.106]) ([134.134.177.106])
-  by orsmga007.jf.intel.com with ESMTP; 03 Mar 2020 09:36:47 -0800
-Subject: Re: [PATCH v2 6/6] nfp: Use pci_get_dsn()
-To:     Jakub Kicinski <kuba@kernel.org>
-Cc:     linux-pci@vger.kernel.org, netdev@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        David Miller <davem@davemloft.net>
-References: <CABhMZUXJ_Omt-+fwa4Oz-Ly=J+NM8+8Ryv-Ad1u_bgEpDRH7RQ@mail.gmail.com>
- <20200303022506.1792776-1-jacob.e.keller@intel.com>
- <20200303022506.1792776-7-jacob.e.keller@intel.com>
- <20200302194044.27eb9e5a@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
-From:   Jacob Keller <jacob.e.keller@intel.com>
-Organization: Intel Corporation
-Message-ID: <fe15eb21-76c8-643d-9561-d3d2e12670f8@intel.com>
-Date:   Tue, 3 Mar 2020 09:36:47 -0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.5.0
+        id S2388333AbgCCSLG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 3 Mar 2020 13:11:06 -0500
+Received: from hqnvemgate24.nvidia.com ([216.228.121.143]:5871 "EHLO
+        hqnvemgate24.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731860AbgCCSLF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Mar 2020 13:11:05 -0500
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate24.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5e5e9d650000>; Tue, 03 Mar 2020 10:09:41 -0800
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate101.nvidia.com (PGP Universal service);
+  Tue, 03 Mar 2020 10:11:05 -0800
+X-PGP-Universal: processed;
+        by hqpgpgate101.nvidia.com on Tue, 03 Mar 2020 10:11:05 -0800
+Received: from HQMAIL109.nvidia.com (172.20.187.15) by HQMAIL105.nvidia.com
+ (172.20.187.12) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 3 Mar
+ 2020 18:11:04 +0000
+Received: from hqnvemgw03.nvidia.com (10.124.88.68) by HQMAIL109.nvidia.com
+ (172.20.187.15) with Microsoft SMTP Server (TLS) id 15.0.1473.3 via Frontend
+ Transport; Tue, 3 Mar 2020 18:11:04 +0000
+Received: from vidyas-desktop.nvidia.com (Not Verified[10.24.37.38]) by hqnvemgw03.nvidia.com with Trustwave SEG (v7,5,8,10121)
+        id <B5e5e9db40021>; Tue, 03 Mar 2020 10:11:04 -0800
+From:   Vidya Sagar <vidyas@nvidia.com>
+To:     <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
+        <robh+dt@kernel.org>, <thierry.reding@gmail.com>,
+        <jonathanh@nvidia.com>, <andrew.murray@arm.com>
+CC:     <kishon@ti.com>, <gustavo.pimentel@synopsys.com>,
+        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-tegra@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>, <kthota@nvidia.com>,
+        <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>, <sagar.tv@gmail.com>
+Subject: [PATCH V5 1/5] soc/tegra: bpmp: Update ABI header
+Date:   Tue, 3 Mar 2020 23:40:48 +0530
+Message-ID: <20200303181052.16134-2-vidyas@nvidia.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200303181052.16134-1-vidyas@nvidia.com>
+References: <20200303181052.16134-1-vidyas@nvidia.com>
+X-NVConfidentiality: public
 MIME-Version: 1.0
-In-Reply-To: <20200302194044.27eb9e5a@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1583258981; bh=XUQcmVU2DhS8rtI3qwBuPWvGBmBm8sm2EFYBWL3lXzQ=;
+        h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
+         In-Reply-To:References:X-NVConfidentiality:MIME-Version:
+         Content-Type;
+        b=lW0tSYl+OiW/sKB01NwG6K4zxTMZibNXeEQcbE+4eXc32UbmFHxN8tJPuSfQp9FgO
+         26JuRSvtpT2g9CJZym6MN4zTs7qbRQWEiRiVulnbbdJQJv2/gDyHqGJIalZNwPCFau
+         TO3x/mgqoBFfURMOm2FeNiC0Hs4iMnJ2JC0E2xZTegpMCHS+cPHLznwrYsYNjtfpt0
+         Dn9a5tC6gK0KuWTPhNWie63qxfUafEcbLzeqtKnMhqNIJWUFUWMfKmd+VUibx8y75R
+         qVBCHJ0ChViG2eWO0m7dRHX2XLfGemWrRhWCyuz9DjqKSRvkrajlr9RYKC6YcTHKR2
+         9MyQRKLRO31XQ==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 3/2/2020 7:40 PM, Jakub Kicinski wrote:
-> On Mon,  2 Mar 2020 18:25:05 -0800 Jacob Keller wrote:
->> Use the newly added pci_get_dsn() function for obtaining the 64-bit
->> Device Serial Number in the nfp6000_read_serial and
->> nfp_6000_get_interface functions.
->>
->> pci_get_dsn() reports the Device Serial number as a u64 value created by
->> combining two pci_read_config_dword functions. The lower 16 bits
->> represent the device interface value, and the next 48 bits represent the
->> serial value. Use put_unaligned_be32 and put_unaligned_be16 to convert
->> the serial value portion into a Big Endian formatted serial u8 array.
->>
->> Signed-off-by: Jacob Keller <jacob.e.keller@intel.com>
->> Cc: Jakub Kicinski <kuba@kernel.org>
-> 
-> Reviewed-by: Jakub Kicinski <kuba@kernel.org>
-> 
-> Thanks!
-> 
->> -	pci_read_config_dword(pdev, pos + 4, &reg);
->> -	put_unaligned_be16(reg >> 16, serial + 4);
->> -	pci_read_config_dword(pdev, pos + 8, &reg);
->> -	put_unaligned_be32(reg, serial);
->> +	put_unaligned_be32((u32)(dsn >> 32), serial);
->> +	put_unaligned_be16((u16)(dsn >> 16), serial + 4);
-> 
-> nit: the casts and extra brackets should be unnecessary, in case
->      you're respinning..
-> 
+Update the firmware header to support uninitialization of UPHY PLL
+when the PCIe controller is operating in endpoint mode and host cuts
+the PCIe reference clock.
 
-Ah, yea because the argument will get converted properly by the
-function. It's a bit of a habit since we use one of the -W warnings that
-warns about implicit conversions that use truncation. I can remove them
-if I need to respin.
+Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+Acked-by: Thierry Reding <treding@nvidia.com>
+---
+V5:
+* None
 
-It looks like this got picked up by one of the kbuild bots but got
-applied without the main PCI patch that implemented pci_get_dsn.
+V4:
+* None
 
-Thanks,
-Jake
+V3:
+* Added Acked-by: Thierry Reding <treding@nvidia.com>
+
+V2:
+* Changed Copyright year from 2019 to 2020
+
+ include/soc/tegra/bpmp-abi.h | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/include/soc/tegra/bpmp-abi.h b/include/soc/tegra/bpmp-abi.h
+index cac6f610b3fe..8f8e73e5cd45 100644
+--- a/include/soc/tegra/bpmp-abi.h
++++ b/include/soc/tegra/bpmp-abi.h
+@@ -1,6 +1,6 @@
+ /* SPDX-License-Identifier: GPL-2.0-only */
+ /*
+- * Copyright (c) 2014-2018, NVIDIA CORPORATION.  All rights reserved.
++ * Copyright (c) 2014-2020, NVIDIA CORPORATION.  All rights reserved.
+  */
+ 
+ #ifndef _ABI_BPMP_ABI_H_
+@@ -2119,6 +2119,7 @@ enum {
+ 	CMD_UPHY_PCIE_LANE_MARGIN_STATUS = 2,
+ 	CMD_UPHY_PCIE_EP_CONTROLLER_PLL_INIT = 3,
+ 	CMD_UPHY_PCIE_CONTROLLER_STATE = 4,
++	CMD_UPHY_PCIE_EP_CONTROLLER_PLL_OFF = 5,
+ 	CMD_UPHY_MAX,
+ };
+ 
+@@ -2151,6 +2152,11 @@ struct cmd_uphy_pcie_controller_state_request {
+ 	uint8_t enable;
+ } __ABI_PACKED;
+ 
++struct cmd_uphy_ep_controller_pll_off_request {
++	/** @brief EP controller number, valid: 0, 4, 5 */
++	uint8_t ep_controller;
++} __ABI_PACKED;
++
+ /**
+  * @ingroup UPHY
+  * @brief Request with #MRQ_UPHY
+@@ -2165,6 +2171,7 @@ struct cmd_uphy_pcie_controller_state_request {
+  * |CMD_UPHY_PCIE_LANE_MARGIN_STATUS     |                                        |
+  * |CMD_UPHY_PCIE_EP_CONTROLLER_PLL_INIT |cmd_uphy_ep_controller_pll_init_request |
+  * |CMD_UPHY_PCIE_CONTROLLER_STATE       |cmd_uphy_pcie_controller_state_request  |
++ * |CMD_UPHY_PCIE_EP_CONTROLLER_PLL_OFF  |cmd_uphy_ep_controller_pll_off_request  |
+  *
+  */
+ 
+@@ -2178,6 +2185,7 @@ struct mrq_uphy_request {
+ 		struct cmd_uphy_margin_control_request uphy_set_margin_control;
+ 		struct cmd_uphy_ep_controller_pll_init_request ep_ctrlr_pll_init;
+ 		struct cmd_uphy_pcie_controller_state_request controller_state;
++		struct cmd_uphy_ep_controller_pll_off_request ep_ctrlr_pll_off;
+ 	} __UNION_ANON;
+ } __ABI_PACKED;
+ 
+-- 
+2.17.1
+
