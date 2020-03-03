@@ -4,39 +4,39 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 814E1C3F2D8
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 02:25:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 052A5C3F2D9
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 02:25:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 60BB124681
+	by mail.kernel.org (Postfix) with ESMTP id DA123217F4
 	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 02:25:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727097AbgCCCZI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 2 Mar 2020 21:25:08 -0500
+        id S1727326AbgCCCZP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 2 Mar 2020 21:25:15 -0500
 Received: from mga14.intel.com ([192.55.52.115]:54186 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727075AbgCCCZI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 2 Mar 2020 21:25:08 -0500
+        id S1727085AbgCCCZJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 2 Mar 2020 21:25:09 -0500
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from fmsmga008.fm.intel.com ([10.253.24.58])
   by fmsmga103.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 02 Mar 2020 18:25:08 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.70,509,1574150400"; 
-   d="scan'208";a="233605689"
+   d="scan'208";a="233605696"
 Received: from jekeller-desk.amr.corp.intel.com (HELO jekeller-desk.jekeller.internal) ([10.166.244.172])
-  by fmsmga008.fm.intel.com with ESMTP; 02 Mar 2020 18:25:07 -0800
+  by fmsmga008.fm.intel.com with ESMTP; 02 Mar 2020 18:25:08 -0800
 From:   Jacob Keller <jacob.e.keller@intel.com>
 To:     linux-pci@vger.kernel.org, netdev@vger.kernel.org,
         Bjorn Helgaas <bhelgaas@google.com>
 Cc:     Jakub Kicinski <kuba@kernel.org>,
         David Miller <davem@davemloft.net>,
         Jacob Keller <jacob.e.keller@intel.com>,
-        Michael Chan <michael.chan@broadcom.com>
-Subject: [PATCH v2 2/6] bnxt_en: Use pci_get_dsn()
-Date:   Mon,  2 Mar 2020 18:25:01 -0800
-Message-Id: <20200303022506.1792776-3-jacob.e.keller@intel.com>
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Subject: [PATCH v2 4/6] ice: Use pci_get_dsn()
+Date:   Mon,  2 Mar 2020 18:25:03 -0800
+Message-Id: <20200303022506.1792776-5-jacob.e.keller@intel.com>
 X-Mailer: git-send-email 2.25.0.368.g28a2d05eebfb
 In-Reply-To: <20200303022506.1792776-1-jacob.e.keller@intel.com>
 References: <CABhMZUXJ_Omt-+fwa4Oz-Ly=J+NM8+8Ryv-Ad1u_bgEpDRH7RQ@mail.gmail.com>
@@ -51,61 +51,65 @@ X-Mailing-List: linux-pci@vger.kernel.org
 Replace the open-coded implementation for reading the PCIe DSN with
 pci_get_dsn().
 
-Use of put_unaligned_le64 should be correct. pci_get_dsn() will perform
-two pci_read_config_dword calls. The first dword will be placed in the
-first 32 bits of the u64, while the second dword will be placed in the
-upper 32 bits of the u64.
-
-On Little Endian systems, the least significant byte comes first, which
-will be the least significant byte of the first dword, followed by the
-least significant byte of the second dword. Since the _le32 variations
-do not perform byte swapping, we will correctly copy the dwords into the
-dsn[] array in the same order as before.
-
-On Big Endian systems, the most significant byte of the second dword
-will come first. put_unaligned_le64 will perform a CPU_TO_LE64, which
-will swap things correctly before copying. This should also end up with
-the correct bytes in the dsn[] array.
-
-While at it, fix a small typo in the netdev_info error message when the
-DSN cannot be read.
+The pci_get_dsn() function will perform two pci_read_config_dword calls
+to read the lower and upper config dwords. It bitwise ORs them into
+a u64 value. Instead of using put_unaligned_le32 to convert the value to
+LE32 format, just use the %016llX printf specifier. This will print the
+u64 correct, putting the most significant byte of the value first. Since
+pci_get_dsn() correctly orders the two dwords into a u64, this should
+produce equivalent results in less code.
 
 Signed-off-by: Jacob Keller <jacob.e.keller@intel.com>
-Cc: Michael Chan <michael.chan@broadcom.com>
+Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
 ---
- drivers/net/ethernet/broadcom/bnxt/bnxt.c | 16 ++++++----------
- 1 file changed, 6 insertions(+), 10 deletions(-)
+ drivers/net/ethernet/intel/ice/ice_main.c | 30 +++++++++--------------
+ 1 file changed, 11 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/net/ethernet/broadcom/bnxt/bnxt.c b/drivers/net/ethernet/broadcom/bnxt/bnxt.c
-index 597e6fd5bfea..49874079084d 100644
---- a/drivers/net/ethernet/broadcom/bnxt/bnxt.c
-+++ b/drivers/net/ethernet/broadcom/bnxt/bnxt.c
-@@ -11755,20 +11755,16 @@ static int bnxt_init_mac_addr(struct bnxt *bp)
- static int bnxt_pcie_dsn_get(struct bnxt *bp, u8 dsn[])
- {
- 	struct pci_dev *pdev = bp->pdev;
--	int pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_DSN);
--	u32 dw;
-+	u64 qword;
+diff --git a/drivers/net/ethernet/intel/ice/ice_main.c b/drivers/net/ethernet/intel/ice/ice_main.c
+index 5ae671609f98..c633519b1555 100644
+--- a/drivers/net/ethernet/intel/ice/ice_main.c
++++ b/drivers/net/ethernet/intel/ice/ice_main.c
+@@ -3099,30 +3099,22 @@ static char *ice_get_opt_fw_name(struct ice_pf *pf)
+ 	 * followed by a EUI-64 identifier (PCIe Device Serial Number)
+ 	 */
+ 	struct pci_dev *pdev = pf->pdev;
+-	char *opt_fw_filename = NULL;
+-	u32 dword;
+-	u8 dsn[8];
+-	int pos;
++	char *opt_fw_filename;
++	u64 dsn;
  
--	if (!pos) {
--		netdev_info(bp->dev, "Unable do read adapter's DSN");
-+	qword = pci_get_dsn(pdev);
-+	if (!qword) {
-+		netdev_info(bp->dev, "Unable to read adapter's DSN");
- 		return -EOPNOTSUPP;
- 	}
+ 	/* Determine the name of the optional file using the DSN (two
+ 	 * dwords following the start of the DSN Capability).
+ 	 */
+-	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_DSN);
+-	if (pos) {
+-		opt_fw_filename = kzalloc(NAME_MAX, GFP_KERNEL);
+-		if (!opt_fw_filename)
+-			return NULL;
++	dsn = pci_get_dsn(pdev);
++	if (!dsn)
++		return NULL;
  
--	/* DSN (two dw) is at an offset of 4 from the cap pos */
--	pos += 4;
--	pci_read_config_dword(pdev, pos, &dw);
--	put_unaligned_le32(dw, &dsn[0]);
--	pci_read_config_dword(pdev, pos + 4, &dw);
--	put_unaligned_le32(dw, &dsn[4]);
-+	put_unaligned_le64(qword, dsn);
+-		pci_read_config_dword(pdev, pos + 4, &dword);
+-		put_unaligned_le32(dword, &dsn[0]);
+-		pci_read_config_dword(pdev, pos + 8, &dword);
+-		put_unaligned_le32(dword, &dsn[4]);
+-		snprintf(opt_fw_filename, NAME_MAX,
+-			 "%sice-%02x%02x%02x%02x%02x%02x%02x%02x.pkg",
+-			 ICE_DDP_PKG_PATH,
+-			 dsn[7], dsn[6], dsn[5], dsn[4],
+-			 dsn[3], dsn[2], dsn[1], dsn[0]);
+-	}
++	opt_fw_filename = kzalloc(NAME_MAX, GFP_KERNEL);
++	if (!opt_fw_filename)
++		return NULL;
 +
- 	bp->flags |= BNXT_FLAG_DSN_VALID;
- 	return 0;
++	snprintf(opt_fw_filename, NAME_MAX, "%sice-%016llX.pkg",
++		 ICE_DDP_PKG_PATH, dsn);
+ 
+ 	return opt_fw_filename;
  }
 -- 
 2.25.0.368.g28a2d05eebfb
