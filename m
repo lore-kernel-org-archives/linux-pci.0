@@ -6,22 +6,22 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57E21C3F2D7
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E745C3F2D9
 	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 03:41:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 344DD2465E
+	by mail.kernel.org (Postfix) with ESMTP id 65C9B2465E
 	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 03:41:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726970AbgCCDl4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1726979AbgCCDl4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Mon, 2 Mar 2020 22:41:56 -0500
-Received: from yyz.mikelr.com ([170.75.163.43]:57146 "EHLO yyz.mikelr.com"
+Received: from yyz.mikelr.com ([170.75.163.43]:57138 "EHLO yyz.mikelr.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726979AbgCCDl4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1726958AbgCCDl4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Mon, 2 Mar 2020 22:41:56 -0500
 Received: from glidewell.ykf.mikelr.com (198-84-194-208.cpe.teksavvy.com [198.84.194.208])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (Client did not present a certificate)
-        by yyz.mikelr.com (Postfix) with ESMTPSA id 525E63CF2A;
+        by yyz.mikelr.com (Postfix) with ESMTPSA id 1FCFC3CF26;
         Mon,  2 Mar 2020 22:35:03 -0500 (EST)
 From:   Mikel Rychliski <mikel@mikelr.com>
 To:     amd-gfx@lists.freedesktop.org, linux-pci@vger.kernel.org
@@ -31,9 +31,9 @@ Cc:     Alex Deucher <alexander.deucher@amd.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Matthew Garrett <matthewgarrett@google.com>,
         Mikel Rychliski <mikel@mikelr.com>
-Subject: [PATCH 4/4] drm/amdgpu: iounmap unused mapping
-Date:   Mon,  2 Mar 2020 22:34:57 -0500
-Message-Id: <20200303033457.12180-5-mikel@mikelr.com>
+Subject: [PATCH 3/4] drm/radeon: iounmap unused mapping
+Date:   Mon,  2 Mar 2020 22:34:56 -0500
+Message-Id: <20200303033457.12180-4-mikel@mikelr.com>
 X-Mailer: git-send-email 2.13.7
 In-Reply-To: <20200303033457.12180-1-mikel@mikelr.com>
 References: <20200303033457.12180-1-mikel@mikelr.com>
@@ -47,21 +47,21 @@ image, we should remove this mapping after extracting the BIOS.
 
 Signed-off-by: Mikel Rychliski <mikel@mikelr.com>
 ---
- drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c | 1 +
+ drivers/gpu/drm/radeon/radeon_bios.c | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c
-index 50dff69a0f6e..ea6a1fa98ad9 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c
-@@ -207,6 +207,7 @@ static bool amdgpu_read_platform_bios(struct amdgpu_device *adev)
+diff --git a/drivers/gpu/drm/radeon/radeon_bios.c b/drivers/gpu/drm/radeon/radeon_bios.c
+index c3ae4c92a115..712b88d88957 100644
+--- a/drivers/gpu/drm/radeon/radeon_bios.c
++++ b/drivers/gpu/drm/radeon/radeon_bios.c
+@@ -123,6 +123,7 @@ static bool radeon_read_platform_bios(struct radeon_device *rdev)
  		return false;
  
- 	memcpy_fromio(adev->bios, bios, size);
+ 	memcpy_fromio(rdev->bios, bios, size);
 +	iounmap(bios);
  
- 	if (!check_atom_bios(adev->bios, size)) {
- 		kfree(adev->bios);
+ 	if (size == 0 || rdev->bios[0] != 0x55 || rdev->bios[1] != 0xaa) {
+ 		kfree(rdev->bios);
 -- 
 2.13.7
 
