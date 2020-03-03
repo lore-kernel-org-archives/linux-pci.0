@@ -2,299 +2,233 @@ Return-Path: <SRS0=1yZ1=4U=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D5A8C3F2D7
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 10:33:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68BD6C3F2D7
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 10:35:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 096FF20CC7
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 10:33:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 39E22214D8
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 10:35:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="dr/kxvpP"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="GrSBi/jS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728854AbgCCKdv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 3 Mar 2020 05:33:51 -0500
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:51044 "EHLO
-        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728738AbgCCKdu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Mar 2020 05:33:50 -0500
-Received: from fllv0034.itg.ti.com ([10.64.40.246])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 023AXW6v072820;
-        Tue, 3 Mar 2020 04:33:32 -0600
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1583231612;
-        bh=hCKNQuZUkcO4X0mn7TApsybUnUlRIUHHECrZXl5Tk+M=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=dr/kxvpPvyz5t2FfvHiWbgZSjzMxKW/Lgh3Eb/GTXjLUaOIOA8VX79Af7HT9e00zV
-         7w1VzbJJLa78I4l3i2jaJAuk9qzxas44WY87+Vq8kXDM7u6dk5HEJZEoyntm6RPaCU
-         M5vJVPw7uKLS5NQUEgUKs8MDDTDvZBhFj4TvNqOY=
-Received: from DLEE111.ent.ti.com (dlee111.ent.ti.com [157.170.170.22])
-        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 023AXWDI127014
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 3 Mar 2020 04:33:32 -0600
-Received: from DLEE108.ent.ti.com (157.170.170.38) by DLEE111.ent.ti.com
- (157.170.170.22) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Tue, 3 Mar
- 2020 04:33:32 -0600
-Received: from localhost.localdomain (10.64.41.19) by DLEE108.ent.ti.com
- (157.170.170.38) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
- Frontend Transport; Tue, 3 Mar 2020 04:33:32 -0600
-Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by localhost.localdomain (8.15.2/8.15.2) with ESMTP id 023AXJve114370;
-        Tue, 3 Mar 2020 04:33:29 -0600
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        Alan Mikhak <alan.mikhak@sifive.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC:     Tom Joseph <tjoseph@cadence.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Sekhar Nori <nsekhar@ti.com>
-Subject: [PATCH v2 3/5] misc: pci_endpoint_test: Use streaming DMA APIs for buffer allocation
-Date:   Tue, 3 Mar 2020 16:07:50 +0530
-Message-ID: <20200303103752.13076-4-kishon@ti.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200303103752.13076-1-kishon@ti.com>
-References: <20200303103752.13076-1-kishon@ti.com>
+        id S1728714AbgCCKfP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 3 Mar 2020 05:35:15 -0500
+Received: from hqnvemgate25.nvidia.com ([216.228.121.64]:17390 "EHLO
+        hqnvemgate25.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727830AbgCCKfP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Mar 2020 05:35:15 -0500
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate25.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5e5e32ba0000>; Tue, 03 Mar 2020 02:34:34 -0800
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate101.nvidia.com (PGP Universal service);
+  Tue, 03 Mar 2020 02:35:14 -0800
+X-PGP-Universal: processed;
+        by hqpgpgate101.nvidia.com on Tue, 03 Mar 2020 02:35:14 -0800
+Received: from [10.25.75.175] (172.20.13.39) by HQMAIL107.nvidia.com
+ (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 3 Mar
+ 2020 10:35:09 +0000
+Subject: Re: [PATCH V3 5/5] PCI: tegra: Add support for PCIe endpoint mode in
+ Tegra194
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC:     <bhelgaas@google.com>, <robh+dt@kernel.org>,
+        <thierry.reding@gmail.com>, <jonathanh@nvidia.com>,
+        <andrew.murray@arm.com>, <kishon@ti.com>,
+        <gustavo.pimentel@synopsys.com>, <linux-pci@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>, <kthota@nvidia.com>,
+        <mmaddireddy@nvidia.com>, <sagar.tv@gmail.com>
+References: <20200113181411.32743-1-vidyas@nvidia.com>
+ <20200113181411.32743-6-vidyas@nvidia.com>
+ <20200227114816.GA11443@e121166-lin.cambridge.arm.com>
+X-Nvconfidentiality: public
+From:   Vidya Sagar <vidyas@nvidia.com>
+Message-ID: <8a7edc61-48bf-704f-8d3f-7cf2c390517e@nvidia.com>
+Date:   Tue, 3 Mar 2020 16:05:06 +0530
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
+ Thunderbird/68.5.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+In-Reply-To: <20200227114816.GA11443@e121166-lin.cambridge.arm.com>
+X-Originating-IP: [172.20.13.39]
+X-ClientProxiedBy: HQMAIL107.nvidia.com (172.20.187.13) To
+ HQMAIL107.nvidia.com (172.20.187.13)
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1583231674; bh=ek4DSuMZku9rZzSkXPTOxyHMpIhIJu7DYX4wErCmPqc=;
+        h=X-PGP-Universal:Subject:To:CC:References:X-Nvconfidentiality:From:
+         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
+         X-Originating-IP:X-ClientProxiedBy:Content-Type:Content-Language:
+         Content-Transfer-Encoding;
+        b=GrSBi/jSUgozuR6As5RRTMgXYiV3n6MeudoPBJYjfUJL3AOS8dzmafd+0C++HRT7s
+         lVcIbpqMg4gfv1okFkvImr8yvbJWXUP8yRLD00yhMmmusUAp9P+FVnUyM4JQDSM8m1
+         /CPBTq9StHUS6IMDYrvDHsc67PwHFdKP3YZdj+LCEO5plSyqHddg8b4SMgM42MYENi
+         eOYPlnDiEUjR0/Z9sPsWcC3PUAyxjx5qfu9uO5OI2AeEXGUcR0VzJEpYDQ6N4biMk7
+         T9R6fNTudloSCJH56O6ciJcyfMrjF4Y0zuVVMFvvXZeGJtPlZuuCr97AMEo0Ht0g3W
+         W3xL0yHo9DFJA==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Use streaming DMA APIs (dma_map_single/dma_unmap_single) for buffers
-transmitted/received by the endpoint device instead of allocating
-a coherent memory. Also add default_data to set the alignment to
-4KB since dma_map_single might not return a 4KB aligned address.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-Signed-off-by: Sekhar Nori <nsekhar@ti.com>
----
- drivers/misc/pci_endpoint_test.c | 100 ++++++++++++++++++++++++-------
- 1 file changed, 79 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index a5e317073d95..5998df1c84e9 100644
---- a/drivers/misc/pci_endpoint_test.c
-+++ b/drivers/misc/pci_endpoint_test.c
-@@ -341,14 +341,22 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
- 		goto err;
- 	}
- 
--	orig_src_addr = dma_alloc_coherent(dev, size + alignment,
--					   &orig_src_phys_addr, GFP_KERNEL);
-+	orig_src_addr = kzalloc(size + alignment, GFP_KERNEL);
- 	if (!orig_src_addr) {
- 		dev_err(dev, "Failed to allocate source buffer\n");
- 		ret = false;
- 		goto err;
- 	}
- 
-+	get_random_bytes(orig_src_addr, size + alignment);
-+	orig_src_phys_addr = dma_map_single(dev, orig_src_addr,
-+					    size + alignment, DMA_TO_DEVICE);
-+	if (dma_mapping_error(dev, orig_src_phys_addr)) {
-+		dev_err(dev, "failed to map source buffer address\n");
-+		ret = false;
-+		goto err_src_phys_addr;
-+	}
-+
- 	if (alignment && !IS_ALIGNED(orig_src_phys_addr, alignment)) {
- 		src_phys_addr = PTR_ALIGN(orig_src_phys_addr, alignment);
- 		offset = src_phys_addr - orig_src_phys_addr;
-@@ -364,15 +372,21 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
- 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_UPPER_SRC_ADDR,
- 				 upper_32_bits(src_phys_addr));
- 
--	get_random_bytes(src_addr, size);
- 	src_crc32 = crc32_le(~0, src_addr, size);
- 
--	orig_dst_addr = dma_alloc_coherent(dev, size + alignment,
--					   &orig_dst_phys_addr, GFP_KERNEL);
-+	orig_dst_addr = kzalloc(size + alignment, GFP_KERNEL);
- 	if (!orig_dst_addr) {
- 		dev_err(dev, "Failed to allocate destination address\n");
- 		ret = false;
--		goto err_orig_src_addr;
-+		goto err_dst_addr;
-+	}
-+
-+	orig_dst_phys_addr = dma_map_single(dev, orig_dst_addr,
-+					    size + alignment, DMA_FROM_DEVICE);
-+	if (dma_mapping_error(dev, orig_dst_phys_addr)) {
-+		dev_err(dev, "failed to map destination buffer address\n");
-+		ret = false;
-+		goto err_dst_phys_addr;
- 	}
- 
- 	if (alignment && !IS_ALIGNED(orig_dst_phys_addr, alignment)) {
-@@ -399,16 +413,22 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
- 
- 	wait_for_completion(&test->irq_raised);
- 
-+	dma_unmap_single(dev, orig_dst_phys_addr, size + alignment,
-+			 DMA_FROM_DEVICE);
-+
- 	dst_crc32 = crc32_le(~0, dst_addr, size);
- 	if (dst_crc32 == src_crc32)
- 		ret = true;
- 
--	dma_free_coherent(dev, size + alignment, orig_dst_addr,
--			  orig_dst_phys_addr);
-+err_dst_phys_addr:
-+	kfree(orig_dst_addr);
- 
--err_orig_src_addr:
--	dma_free_coherent(dev, size + alignment, orig_src_addr,
--			  orig_src_phys_addr);
-+err_dst_addr:
-+	dma_unmap_single(dev, orig_src_phys_addr, size + alignment,
-+			 DMA_TO_DEVICE);
-+
-+err_src_phys_addr:
-+	kfree(orig_src_addr);
- 
- err:
- 	return ret;
-@@ -436,14 +456,23 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
- 		goto err;
- 	}
- 
--	orig_addr = dma_alloc_coherent(dev, size + alignment, &orig_phys_addr,
--				       GFP_KERNEL);
-+	orig_addr = kzalloc(size + alignment, GFP_KERNEL);
- 	if (!orig_addr) {
- 		dev_err(dev, "Failed to allocate address\n");
- 		ret = false;
- 		goto err;
- 	}
- 
-+	get_random_bytes(orig_addr, size + alignment);
-+
-+	orig_phys_addr = dma_map_single(dev, orig_addr, size + alignment,
-+					DMA_TO_DEVICE);
-+	if (dma_mapping_error(dev, orig_phys_addr)) {
-+		dev_err(dev, "failed to map source buffer address\n");
-+		ret = false;
-+		goto err_phys_addr;
-+	}
-+
- 	if (alignment && !IS_ALIGNED(orig_phys_addr, alignment)) {
- 		phys_addr =  PTR_ALIGN(orig_phys_addr, alignment);
- 		offset = phys_addr - orig_phys_addr;
-@@ -453,8 +482,6 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
- 		addr = orig_addr;
- 	}
- 
--	get_random_bytes(addr, size);
--
- 	crc32 = crc32_le(~0, addr, size);
- 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_CHECKSUM,
- 				 crc32);
-@@ -477,7 +504,11 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
- 	if (reg & STATUS_READ_SUCCESS)
- 		ret = true;
- 
--	dma_free_coherent(dev, size + alignment, orig_addr, orig_phys_addr);
-+	dma_unmap_single(dev, orig_phys_addr, size + alignment,
-+			 DMA_TO_DEVICE);
-+
-+err_phys_addr:
-+	kfree(orig_addr);
- 
- err:
- 	return ret;
-@@ -504,14 +535,21 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
- 		goto err;
- 	}
- 
--	orig_addr = dma_alloc_coherent(dev, size + alignment, &orig_phys_addr,
--				       GFP_KERNEL);
-+	orig_addr = kzalloc(size + alignment, GFP_KERNEL);
- 	if (!orig_addr) {
- 		dev_err(dev, "Failed to allocate destination address\n");
- 		ret = false;
- 		goto err;
- 	}
- 
-+	orig_phys_addr = dma_map_single(dev, orig_addr, size + alignment,
-+					DMA_FROM_DEVICE);
-+	if (dma_mapping_error(dev, orig_phys_addr)) {
-+		dev_err(dev, "failed to map source buffer address\n");
-+		ret = false;
-+		goto err_phys_addr;
-+	}
-+
- 	if (alignment && !IS_ALIGNED(orig_phys_addr, alignment)) {
- 		phys_addr = PTR_ALIGN(orig_phys_addr, alignment);
- 		offset = phys_addr - orig_phys_addr;
-@@ -535,11 +573,15 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
- 
- 	wait_for_completion(&test->irq_raised);
- 
-+	dma_unmap_single(dev, orig_phys_addr, size + alignment,
-+			 DMA_FROM_DEVICE);
-+
- 	crc32 = crc32_le(~0, addr, size);
- 	if (crc32 == pci_endpoint_test_readl(test, PCI_ENDPOINT_TEST_CHECKSUM))
- 		ret = true;
- 
--	dma_free_coherent(dev, size + alignment, orig_addr, orig_phys_addr);
-+err_phys_addr:
-+	kfree(orig_addr);
- err:
- 	return ret;
- }
-@@ -667,6 +709,12 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
- 	init_completion(&test->irq_raised);
- 	mutex_init(&test->mutex);
- 
-+	if ((dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(48)) != 0) &&
-+	    dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32)) != 0) {
-+		dev_err(dev, "Cannot set DMA mask\n");
-+		return -EINVAL;
-+	}
-+
- 	err = pci_enable_device(pdev);
- 	if (err) {
- 		dev_err(dev, "Cannot enable PCI device\n");
-@@ -783,6 +831,12 @@ static void pci_endpoint_test_remove(struct pci_dev *pdev)
- 	pci_disable_device(pdev);
- }
- 
-+static const struct pci_endpoint_test_data default_data = {
-+	.test_reg_bar = BAR_0,
-+	.alignment = SZ_4K,
-+	.irq_type = IRQ_TYPE_MSI,
-+};
-+
- static const struct pci_endpoint_test_data am654_data = {
- 	.test_reg_bar = BAR_2,
- 	.alignment = SZ_64K,
-@@ -790,8 +844,12 @@ static const struct pci_endpoint_test_data am654_data = {
- };
- 
- static const struct pci_device_id pci_endpoint_test_tbl[] = {
--	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA74x) },
--	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA72x) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA74x),
-+	  .driver_data = (kernel_ulong_t)&default_data,
-+	},
-+	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA72x),
-+	  .driver_data = (kernel_ulong_t)&default_data,
-+	},
- 	{ PCI_DEVICE(PCI_VENDOR_ID_FREESCALE, 0x81c0) },
- 	{ PCI_DEVICE_DATA(SYNOPSYS, EDDA, NULL) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_AM654),
--- 
-2.17.1
+On 2/27/2020 5:18 PM, Lorenzo Pieralisi wrote:
+> External email: Use caution opening links or attachments
+> 
+> 
+> On Mon, Jan 13, 2020 at 11:44:11PM +0530, Vidya Sagar wrote:
+>> Add support for the endpoint mode of Synopsys DesignWare core based
+>> dual mode PCIe controllers present in Tegra194 SoC.
+>>
+>> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+>> ---
+>> V3:
+>> * Addressed Thierry's review comments
+> 
+> I need his ACK to merge this series.
+> 
+> [...]
+> 
+>> +static int tegra_pcie_ep_work_thread(void *p)
+>> +{
+>> +     struct tegra_pcie_dw *pcie = (struct tegra_pcie_dw *)p;
+>> +     u32 event;
+>> +
+>> +     while (true) {
+>> +             wait_event_interruptible(pcie->wq,
+>> +                                      !kfifo_is_empty(&pcie->event_fifo));
+>> +
+>> +             if (kthread_should_stop())
+>> +                     break;
+>> +
+>> +             if (!kfifo_get(&pcie->event_fifo, &event)) {
+>> +                     dev_warn(pcie->dev, "EVENT FIFO is empty\n");
+>> +                     continue;
+>> +             }
+>> +
+>> +             switch (event) {
+>> +             case EP_PEX_RST_DEASSERT:
+>> +                     dev_info(pcie->dev, "EVENT: EP_PEX_RST_DEASSERT\n");
+>> +                     pex_ep_event_pex_rst_deassert(pcie);
+>> +                     break;
+>> +
+>> +             case EP_PEX_RST_ASSERT:
+>> +                     dev_info(pcie->dev, "EVENT: EP_PEX_RST_ASSERT\n");
+>> +                     pex_ep_event_pex_rst_assert(pcie);
+>> +                     break;
+>> +
+>> +             case EP_HOT_RST_DONE:
+>> +                     dev_info(pcie->dev, "EVENT: EP_HOT_RST_DONE\n");
+>> +                     pex_ep_event_hot_rst_done(pcie);
+>> +                     break;
+>> +
+>> +             case EP_BME_CHANGE:
+>> +                     dev_info(pcie->dev, "EVENT: EP_BME_CHANGE\n");
+>> +                     pex_ep_event_bme_change(pcie);
+>> +                     break;
+>> +
+>> +             case EP_EVENT_EXIT:
+>> +                     dev_info(pcie->dev, "EVENT: EP_EVENT_EXIT\n");
+>> +                     return 0;
+>> +
+>> +             default:
+>> +                     dev_warn(pcie->dev, "Invalid PCIe EP event: %u\n",
+>> +                              event);
+>> +                     break;
+>> +             }
+>> +     }
+>> +
+>> +     return 0;
+>> +}
+>> +
+>> +static irqreturn_t tegra_pcie_ep_pex_rst_irq(int irq, void *arg)
+>> +{
+>> +     struct tegra_pcie_dw *pcie = arg;
+>> +
+>> +     if (gpiod_get_value(pcie->pex_rst_gpiod)) {
+>> +             if (!kfifo_put(&pcie->event_fifo, EP_PEX_RST_ASSERT)) {
+>> +                     dev_err(pcie->dev, "EVENT FIFO is full\n");
+>> +                     return IRQ_HANDLED;
+>> +             }
+>> +     } else {
+>> +             if (!kfifo_put(&pcie->event_fifo, EP_PEX_RST_DEASSERT)) {
+>> +                     dev_err(pcie->dev, "EVENT FIFO is full\n");
+>> +                     return IRQ_HANDLED;
+>> +             }
+>> +     }
+>> +
+>> +     wake_up(&pcie->wq);
+>> +
+>> +     return IRQ_HANDLED;
+>> +}
+>> +
+> 
+> [...]
+> 
+>> +static int tegra_pcie_config_ep(struct tegra_pcie_dw *pcie,
+>> +                             struct platform_device *pdev)
+>> +{
+>> +     struct dw_pcie *pci = &pcie->pci;
+>> +     struct device *dev = pcie->dev;
+>> +     struct dw_pcie_ep *ep;
+>> +     struct resource *res;
+>> +     char *name;
+>> +     int ret;
+>> +
+>> +     ep = &pci->ep;
+>> +     ep->ops = &pcie_ep_ops;
+>> +
+>> +     res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
+>> +     if (!res)
+>> +             return -EINVAL;
+>> +
+>> +     ep->phys_base = res->start;
+>> +     ep->addr_size = resource_size(res);
+>> +     ep->page_size = SZ_64K;
+>> +
+>> +     ret = gpiod_set_debounce(pcie->pex_rst_gpiod, PERST_DEBOUNCE_TIME);
+>> +     if (ret < 0) {
+>> +             dev_err(dev, "Failed to set PERST GPIO debounce time: %d\n",
+>> +                     ret);
+>> +             return ret;
+>> +     }
+>> +
+>> +     ret = gpiod_to_irq(pcie->pex_rst_gpiod);
+>> +     if (ret < 0) {
+>> +             dev_err(dev, "Failed to get IRQ for PERST GPIO: %d\n", ret);
+>> +             return ret;
+>> +     }
+>> +     pcie->pex_rst_irq = (unsigned int)ret;
+>> +
+>> +     name = devm_kasprintf(dev, GFP_KERNEL, "tegra_pcie_%u_pex_rst_irq",
+>> +                           pcie->cid);
+>> +     if (!name) {
+>> +             dev_err(dev, "Failed to create PERST IRQ string\n");
+>> +             return -ENOMEM;
+>> +     }
+>> +
+>> +     irq_set_status_flags(pcie->pex_rst_irq, IRQ_NOAUTOEN);
+>> +
+>> +     ret = devm_request_irq(dev, pcie->pex_rst_irq,
+>> +                            tegra_pcie_ep_pex_rst_irq,
+>> +                            IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,
+>> +                            name, (void *)pcie);
+> 
+> I have the impression that a threaded IRQ is what you need, which
+> will also remove some boilerplate in the process. Any reason why
+> you can't use a threaded IRQ instead of a standalone kthread ?
+No reason specifically. We started with kthreads and continued with 
+that. I'll post a new series with threaded IRQ. It should be doable.
 
+Thanks,
+Vidya Sagar
+> 
+> Thanks,
+> Lorenzo
+> 
