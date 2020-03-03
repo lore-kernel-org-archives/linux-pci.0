@@ -7,48 +7,48 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48405C3F2C6
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 13:29:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9192C3F2CD
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 13:30:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1FA1120873
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 13:29:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C00D2208C3
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 13:30:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=amazon.com header.i=@amazon.com header.b="RPHNXHKi"
+	dkim=pass (1024-bit key) header.d=amazon.com header.i=@amazon.com header.b="onAKr0+t"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728291AbgCCN3h (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 3 Mar 2020 08:29:37 -0500
-Received: from smtp-fw-9102.amazon.com ([207.171.184.29]:43826 "EHLO
-        smtp-fw-9102.amazon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727663AbgCCN3h (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Mar 2020 08:29:37 -0500
+        id S1728850AbgCCNaJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 3 Mar 2020 08:30:09 -0500
+Received: from smtp-fw-33001.amazon.com ([207.171.190.10]:61587 "EHLO
+        smtp-fw-33001.amazon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728068AbgCCNaJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Mar 2020 08:30:09 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=amazon.com; i=@amazon.com; q=dns/txt; s=amazon201209;
-  t=1583242177; x=1614778177;
+  t=1583242208; x=1614778208;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=SXJONBdcDukonc95OMH4eVS6Q98vylWW4QxZSA+zyc4=;
-  b=RPHNXHKiIBgnEYX7tukHHwcfXpELVgTbenEJeV9udVCkuOPZOKG1tC05
-   n8ADYfiCWxLAYcMkmS+F/r+U4y1hLKDvxEiDMubQ7dsph5kWN3RG9SyXh
-   Ji3GxKGVmxWFYf/1sgYMrODFWPpEADEJCMzo8Upa60vqhBEbdtTMYSMtK
-   A=;
-IronPort-SDR: ZHfOmyRtvoKrNrSuFDx5WZe5K7G5pEeGhfrcw0ctxWbpHGi9tj3QUrjkD5nXjNMZwtJrr5pSlI
- Q7xH843pL4XA==
+  bh=7WM9yX1OJkKXJJaN0Bul5znh9nhHO2FbDkre7Td3gO0=;
+  b=onAKr0+ts16dbD2+VkV/undi3EfSN346NAQHhV56k2/qSY6xi9yzm4MI
+   O46QCb5LmCSPhEryy4ZGPDhsQ9yh/cs9CGI322jSEpjnVW+mqft7E4GFk
+   g5HpKEzUICUU5KKRfqO0UxSoNqc1a+m4FTtebd9p3fbwjtnezOPBN61mF
+   I=;
+IronPort-SDR: mdqZXfd6/iJ+37fvCK9FrLPkkeAsXdUvL1PNWQ85fyeOBxPFqFSXt6UG5vhZxLyjggZVvqa3Ft
+ 4x9mXvfNyDFA==
 X-IronPort-AV: E=Sophos;i="5.70,511,1574121600"; 
-   d="scan'208";a="28866224"
-Received: from sea32-co-svc-lb4-vlan3.sea.corp.amazon.com (HELO email-inbound-relay-2a-f14f4a47.us-west-2.amazon.com) ([10.47.23.38])
-  by smtp-border-fw-out-9102.sea19.amazon.com with ESMTP; 03 Mar 2020 13:29:34 +0000
-Received: from EX13MTAUEA002.ant.amazon.com (pdx4-ws-svc-p6-lb7-vlan2.pdx.amazon.com [10.170.41.162])
-        by email-inbound-relay-2a-f14f4a47.us-west-2.amazon.com (Postfix) with ESMTPS id 7FD5EA2FCE;
-        Tue,  3 Mar 2020 13:29:33 +0000 (UTC)
-Received: from EX13D12EUC002.ant.amazon.com (10.43.164.134) by
+   d="scan'208";a="30249617"
+Received: from sea32-co-svc-lb4-vlan3.sea.corp.amazon.com (HELO email-inbound-relay-2c-397e131e.us-west-2.amazon.com) ([10.47.23.38])
+  by smtp-border-fw-out-33001.sea14.amazon.com with ESMTP; 03 Mar 2020 13:30:06 +0000
+Received: from EX13MTAUEA002.ant.amazon.com (pdx4-ws-svc-p6-lb7-vlan3.pdx.amazon.com [10.170.41.166])
+        by email-inbound-relay-2c-397e131e.us-west-2.amazon.com (Postfix) with ESMTPS id E118AA34C5;
+        Tue,  3 Mar 2020 13:30:04 +0000 (UTC)
+Received: from EX13D12EUA003.ant.amazon.com (10.43.165.147) by
  EX13MTAUEA002.ant.amazon.com (10.43.61.77) with Microsoft SMTP Server (TLS)
- id 15.0.1236.3; Tue, 3 Mar 2020 13:29:33 +0000
+ id 15.0.1236.3; Tue, 3 Mar 2020 13:29:53 +0000
 Received: from EX13MTAUEE002.ant.amazon.com (10.43.62.24) by
- EX13D12EUC002.ant.amazon.com (10.43.164.134) with Microsoft SMTP Server (TLS)
- id 15.0.1497.2; Tue, 3 Mar 2020 13:29:31 +0000
+ EX13D12EUA003.ant.amazon.com (10.43.165.147) with Microsoft SMTP Server (TLS)
+ id 15.0.1497.2; Tue, 3 Mar 2020 13:29:52 +0000
 Received: from u961addbe640f56.ant.amazon.com (10.28.84.111) by
  mail-relay.amazon.com (10.43.62.224) with Microsoft SMTP Server id
- 15.0.1367.3 via Frontend Transport; Tue, 3 Mar 2020 13:29:29 +0000
+ 15.0.1367.3 via Frontend Transport; Tue, 3 Mar 2020 13:29:49 +0000
 From:   Stanislav Spassov <stanspas@amazon.com>
 To:     <linux-pci@vger.kernel.org>
 CC:     Stanislav Spassov <stanspas@amazon.de>,
@@ -61,9 +61,9 @@ CC:     Stanislav Spassov <stanspas@amazon.de>,
         Alex Williamson <alex.williamson@redhat.com>,
         Sinan Kaya <okaya@kernel.org>, Rajat Jain <rajatja@google.com>,
         kbuild test robot <lkp@intel.com>
-Subject: [PATCH v3 01/17] PCI: Fall back to slot/bus reset if softer methods timeout
-Date:   Tue, 3 Mar 2020 14:28:36 +0100
-Message-ID: <20200303132852.13184-2-stanspas@amazon.com>
+Subject: [PATCH v3 04/17] PCI: Do not override delay for D0->D3hot transition
+Date:   Tue, 3 Mar 2020 14:28:39 +0100
+Message-ID: <20200303132852.13184-5-stanspas@amazon.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200303132852.13184-1-stanspas@amazon.com>
 References: <20200303132852.13184-1-stanspas@amazon.com>
@@ -77,85 +77,31 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Stanislav Spassov <stanspas@amazon.de>
 
-Previously, if a device never came back (i.e., never started returning
-Successful Completions for Configuration Requests) after a reset, they
-would return -ENOTTY, causing __pci_reset_function_locked to move on
-to the next reset method.
-
-However, up until slot/bus reset, all of them rely on the device being
-responsive and are therefore not safe to attempt in this situation.
-
-This patch introduces ETIMEDOUT as a new, specially handled return value
-for the reset methods (which all end in "return pci_dev_wait"), to allow
-skipping to slot/bus reset where appropriate.
+Both specifications that document mechanisms for overriding the
+D3hot->D0 waiting time only speak of this specific direction.
+Nothing is mentioned about the opposite (D*->D3hot) except for
+the default value of 10ms in PCI Express Base Specification
+r5.0 (May 22, 2019), Section 5.9 "State Transition Recovery Time
+Requirements".
 
 Signed-off-by: Stanislav Spassov <stanspas@amazon.de>
 ---
- drivers/pci/pci.c | 21 +++++++++++++++++----
- 1 file changed, 17 insertions(+), 4 deletions(-)
+ drivers/pci/pci.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index d828ca835a98..ac8504d75c32 100644
+index c1a866f733e9..03103bb15b42 100644
 --- a/drivers/pci/pci.c
 +++ b/drivers/pci/pci.c
-@@ -1043,7 +1043,7 @@ static int pci_dev_wait(struct pci_dev *dev, char *reset_type, int timeout)
- 		if (delay > timeout) {
- 			pci_warn(dev, "not ready %dms after %s; giving up\n",
- 				 delay - 1, reset_type);
--			return -ENOTTY;
-+			return -ETIMEDOUT;
- 		}
+@@ -4589,7 +4589,7 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
+ 	csr &= ~PCI_PM_CTRL_STATE_MASK;
+ 	csr |= PCI_D3hot;
+ 	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, csr);
+-	pci_dev_d3_sleep(dev);
++	msleep(PCI_PM_D3_WAIT);
  
- 		if (delay > 1000)
-@@ -4845,6 +4845,7 @@ static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
- 	if (probe)
- 		return 0;
- 
-+	/* XXX: Shouldn't this lock the bus? */
- 	return pci_bridge_secondary_bus_reset(dev->bus->self);
- }
- 
-@@ -4979,25 +4980,37 @@ int __pci_reset_function_locked(struct pci_dev *dev)
- 	/*
- 	 * A reset method returns -ENOTTY if it doesn't support this device
- 	 * and we should try the next method.
-+	 * It returns -ETIMEDOUT if the device never became responsive after
-+	 * the reset: we jump to the reset types that do not rely on config
-+	 * space access (if any are left).
- 	 *
--	 * If it returns 0 (success), we're finished.  If it returns any
--	 * other error, we're also finished: this indicates that further
--	 * reset mechanisms might be broken on the device.
-+	 * If it returns 0 (success), we are finished.
-+	 * If it returns any other error, we are finished (something must have
-+	 * went terribly wrong and it is not safe to continue reset attempts).
- 	 */
- 	rc = pci_dev_specific_reset(dev, 0);
-+	if (rc == -ETIMEDOUT)
-+		goto unresponsive;
- 	if (rc != -ENOTTY)
- 		return rc;
- 	if (pcie_has_flr(dev)) {
- 		rc = pcie_flr(dev);
-+		if (rc == -ETIMEDOUT)
-+			goto unresponsive;
- 		if (rc != -ENOTTY)
- 			return rc;
- 	}
- 	rc = pci_af_flr(dev, 0);
-+	if (rc == -ETIMEDOUT)
-+		goto unresponsive;
- 	if (rc != -ENOTTY)
- 		return rc;
- 	rc = pci_pm_reset(dev, 0);
-+	if (rc == -ETIMEDOUT)
-+		goto unresponsive;
- 	if (rc != -ENOTTY)
- 		return rc;
-+unresponsive:
- 	rc = pci_dev_reset_slot_function(dev, 0);
- 	if (rc != -ENOTTY)
- 		return rc;
+ 	csr &= ~PCI_PM_CTRL_STATE_MASK;
+ 	csr |= PCI_D0;
 -- 
 2.25.1
 
