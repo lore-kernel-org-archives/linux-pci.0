@@ -2,233 +2,111 @@ Return-Path: <SRS0=1yZ1=4U=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68BD6C3F2D7
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 10:35:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 863EFC3F2C6
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 10:54:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 39E22214D8
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 10:35:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 57D062080C
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 10:54:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="GrSBi/jS"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="K/md86bq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728714AbgCCKfP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 3 Mar 2020 05:35:15 -0500
-Received: from hqnvemgate25.nvidia.com ([216.228.121.64]:17390 "EHLO
-        hqnvemgate25.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727830AbgCCKfP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Mar 2020 05:35:15 -0500
-Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate25.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5e5e32ba0000>; Tue, 03 Mar 2020 02:34:34 -0800
+        id S1728002AbgCCKy1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 3 Mar 2020 05:54:27 -0500
+Received: from hqnvemgate26.nvidia.com ([216.228.121.65]:1693 "EHLO
+        hqnvemgate26.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727993AbgCCKy1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Mar 2020 05:54:27 -0500
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate26.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5e5e37540000>; Tue, 03 Mar 2020 02:54:12 -0800
 Received: from hqmail.nvidia.com ([172.20.161.6])
   by hqpgpgate101.nvidia.com (PGP Universal service);
-  Tue, 03 Mar 2020 02:35:14 -0800
+  Tue, 03 Mar 2020 02:54:25 -0800
 X-PGP-Universal: processed;
-        by hqpgpgate101.nvidia.com on Tue, 03 Mar 2020 02:35:14 -0800
-Received: from [10.25.75.175] (172.20.13.39) by HQMAIL107.nvidia.com
- (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 3 Mar
- 2020 10:35:09 +0000
-Subject: Re: [PATCH V3 5/5] PCI: tegra: Add support for PCIe endpoint mode in
- Tegra194
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC:     <bhelgaas@google.com>, <robh+dt@kernel.org>,
-        <thierry.reding@gmail.com>, <jonathanh@nvidia.com>,
-        <andrew.murray@arm.com>, <kishon@ti.com>,
-        <gustavo.pimentel@synopsys.com>, <linux-pci@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>, <kthota@nvidia.com>,
-        <mmaddireddy@nvidia.com>, <sagar.tv@gmail.com>
-References: <20200113181411.32743-1-vidyas@nvidia.com>
- <20200113181411.32743-6-vidyas@nvidia.com>
- <20200227114816.GA11443@e121166-lin.cambridge.arm.com>
-X-Nvconfidentiality: public
+        by hqpgpgate101.nvidia.com on Tue, 03 Mar 2020 02:54:25 -0800
+Received: from HQMAIL101.nvidia.com (172.20.187.10) by HQMAIL111.nvidia.com
+ (172.20.187.18) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 3 Mar
+ 2020 10:54:25 +0000
+Received: from hqnvemgw03.nvidia.com (10.124.88.68) by HQMAIL101.nvidia.com
+ (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3 via Frontend
+ Transport; Tue, 3 Mar 2020 10:54:25 +0000
+Received: from vidyas-desktop.nvidia.com (Not Verified[10.24.37.38]) by hqnvemgw03.nvidia.com with Trustwave SEG (v7,5,8,10121)
+        id <B5e5e375d0000>; Tue, 03 Mar 2020 02:54:25 -0800
 From:   Vidya Sagar <vidyas@nvidia.com>
-Message-ID: <8a7edc61-48bf-704f-8d3f-7cf2c390517e@nvidia.com>
-Date:   Tue, 3 Mar 2020 16:05:06 +0530
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
- Thunderbird/68.5.0
+To:     <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
+        <robh+dt@kernel.org>, <thierry.reding@gmail.com>,
+        <jonathanh@nvidia.com>, <andrew.murray@arm.com>
+CC:     <kishon@ti.com>, <gustavo.pimentel@synopsys.com>,
+        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-tegra@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>, <kthota@nvidia.com>,
+        <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>, <sagar.tv@gmail.com>
+Subject: [PATCH V4 0/5] Add support for PCIe endpoint mode in Tegra194
+Date:   Tue, 3 Mar 2020 16:24:13 +0530
+Message-ID: <20200303105418.2840-1-vidyas@nvidia.com>
+X-Mailer: git-send-email 2.17.1
+X-NVConfidentiality: public
 MIME-Version: 1.0
-In-Reply-To: <20200227114816.GA11443@e121166-lin.cambridge.arm.com>
-X-Originating-IP: [172.20.13.39]
-X-ClientProxiedBy: HQMAIL107.nvidia.com (172.20.187.13) To
- HQMAIL107.nvidia.com (172.20.187.13)
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1583231674; bh=ek4DSuMZku9rZzSkXPTOxyHMpIhIJu7DYX4wErCmPqc=;
-        h=X-PGP-Universal:Subject:To:CC:References:X-Nvconfidentiality:From:
-         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
-         X-Originating-IP:X-ClientProxiedBy:Content-Type:Content-Language:
-         Content-Transfer-Encoding;
-        b=GrSBi/jSUgozuR6As5RRTMgXYiV3n6MeudoPBJYjfUJL3AOS8dzmafd+0C++HRT7s
-         lVcIbpqMg4gfv1okFkvImr8yvbJWXUP8yRLD00yhMmmusUAp9P+FVnUyM4JQDSM8m1
-         /CPBTq9StHUS6IMDYrvDHsc67PwHFdKP3YZdj+LCEO5plSyqHddg8b4SMgM42MYENi
-         eOYPlnDiEUjR0/Z9sPsWcC3PUAyxjx5qfu9uO5OI2AeEXGUcR0VzJEpYDQ6N4biMk7
-         T9R6fNTudloSCJH56O6ciJcyfMrjF4Y0zuVVMFvvXZeGJtPlZuuCr97AMEo0Ht0g3W
-         W3xL0yHo9DFJA==
+        t=1583232852; bh=8y0YHGhTk/Y1j2gYfLsrymHH+lWs6ZRXty08vP08rJw=;
+        h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
+         X-NVConfidentiality:MIME-Version:Content-Type;
+        b=K/md86bq4V+G5yRo+ilbLOZqMgP6P10y9qmE3bs6pjQGn4S+ihUuh5l2M8QTZ0q4D
+         7fxmLnd2AzpvQD5RhW8LRSi25/6lAjJBvgK5QtPQA1UvHVB6S2GITBXTv8cndmd5bw
+         ZygMyHQ1fcga4ji5/d+s3nMYYs+ULTtCIKkqomH7B5aMKkZ19qMmcusw3H+UP0wGlo
+         KFPo35RpQka/eXzSbHLPCqSbqwd0qWZDJzQ/KIdmcM1ax3+WEg5ap1oo74vnX0kl7f
+         a/dSzIK7mqxwMLis7wlYllubDVciHOjLmFP6J6xYrtXM7Bhg3zipz+R7dZhKNy2jfa
+         kEL/slX4ZwObQ==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Tegra194 has three (C0, C4 & C5) dual mode PCIe controllers that can operate
+either in root port mode or in end point mode but only in one mode at a time.
+Platform P2972-0000 supports enabling endpoint mode for C5 controller. This
+patch series adds support for PCIe endpoint mode in both the driver as well as
+in DT.
+This patch series depends on the changes made for Synopsys DesignWare endpoint
+mode subsystem that are recently accepted.
+@ https://patchwork.kernel.org/project/linux-pci/list/?series=202211
+which in turn depends on the patch made by Kishon
+@ https://patchwork.kernel.org/patch/10975123/
+which is also under review.
 
+V4:
+* Started using threaded irqs instead of kthreads
 
-On 2/27/2020 5:18 PM, Lorenzo Pieralisi wrote:
-> External email: Use caution opening links or attachments
-> 
-> 
-> On Mon, Jan 13, 2020 at 11:44:11PM +0530, Vidya Sagar wrote:
->> Add support for the endpoint mode of Synopsys DesignWare core based
->> dual mode PCIe controllers present in Tegra194 SoC.
->>
->> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
->> ---
->> V3:
->> * Addressed Thierry's review comments
-> 
-> I need his ACK to merge this series.
-> 
-> [...]
-> 
->> +static int tegra_pcie_ep_work_thread(void *p)
->> +{
->> +     struct tegra_pcie_dw *pcie = (struct tegra_pcie_dw *)p;
->> +     u32 event;
->> +
->> +     while (true) {
->> +             wait_event_interruptible(pcie->wq,
->> +                                      !kfifo_is_empty(&pcie->event_fifo));
->> +
->> +             if (kthread_should_stop())
->> +                     break;
->> +
->> +             if (!kfifo_get(&pcie->event_fifo, &event)) {
->> +                     dev_warn(pcie->dev, "EVENT FIFO is empty\n");
->> +                     continue;
->> +             }
->> +
->> +             switch (event) {
->> +             case EP_PEX_RST_DEASSERT:
->> +                     dev_info(pcie->dev, "EVENT: EP_PEX_RST_DEASSERT\n");
->> +                     pex_ep_event_pex_rst_deassert(pcie);
->> +                     break;
->> +
->> +             case EP_PEX_RST_ASSERT:
->> +                     dev_info(pcie->dev, "EVENT: EP_PEX_RST_ASSERT\n");
->> +                     pex_ep_event_pex_rst_assert(pcie);
->> +                     break;
->> +
->> +             case EP_HOT_RST_DONE:
->> +                     dev_info(pcie->dev, "EVENT: EP_HOT_RST_DONE\n");
->> +                     pex_ep_event_hot_rst_done(pcie);
->> +                     break;
->> +
->> +             case EP_BME_CHANGE:
->> +                     dev_info(pcie->dev, "EVENT: EP_BME_CHANGE\n");
->> +                     pex_ep_event_bme_change(pcie);
->> +                     break;
->> +
->> +             case EP_EVENT_EXIT:
->> +                     dev_info(pcie->dev, "EVENT: EP_EVENT_EXIT\n");
->> +                     return 0;
->> +
->> +             default:
->> +                     dev_warn(pcie->dev, "Invalid PCIe EP event: %u\n",
->> +                              event);
->> +                     break;
->> +             }
->> +     }
->> +
->> +     return 0;
->> +}
->> +
->> +static irqreturn_t tegra_pcie_ep_pex_rst_irq(int irq, void *arg)
->> +{
->> +     struct tegra_pcie_dw *pcie = arg;
->> +
->> +     if (gpiod_get_value(pcie->pex_rst_gpiod)) {
->> +             if (!kfifo_put(&pcie->event_fifo, EP_PEX_RST_ASSERT)) {
->> +                     dev_err(pcie->dev, "EVENT FIFO is full\n");
->> +                     return IRQ_HANDLED;
->> +             }
->> +     } else {
->> +             if (!kfifo_put(&pcie->event_fifo, EP_PEX_RST_DEASSERT)) {
->> +                     dev_err(pcie->dev, "EVENT FIFO is full\n");
->> +                     return IRQ_HANDLED;
->> +             }
->> +     }
->> +
->> +     wake_up(&pcie->wq);
->> +
->> +     return IRQ_HANDLED;
->> +}
->> +
-> 
-> [...]
-> 
->> +static int tegra_pcie_config_ep(struct tegra_pcie_dw *pcie,
->> +                             struct platform_device *pdev)
->> +{
->> +     struct dw_pcie *pci = &pcie->pci;
->> +     struct device *dev = pcie->dev;
->> +     struct dw_pcie_ep *ep;
->> +     struct resource *res;
->> +     char *name;
->> +     int ret;
->> +
->> +     ep = &pci->ep;
->> +     ep->ops = &pcie_ep_ops;
->> +
->> +     res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
->> +     if (!res)
->> +             return -EINVAL;
->> +
->> +     ep->phys_base = res->start;
->> +     ep->addr_size = resource_size(res);
->> +     ep->page_size = SZ_64K;
->> +
->> +     ret = gpiod_set_debounce(pcie->pex_rst_gpiod, PERST_DEBOUNCE_TIME);
->> +     if (ret < 0) {
->> +             dev_err(dev, "Failed to set PERST GPIO debounce time: %d\n",
->> +                     ret);
->> +             return ret;
->> +     }
->> +
->> +     ret = gpiod_to_irq(pcie->pex_rst_gpiod);
->> +     if (ret < 0) {
->> +             dev_err(dev, "Failed to get IRQ for PERST GPIO: %d\n", ret);
->> +             return ret;
->> +     }
->> +     pcie->pex_rst_irq = (unsigned int)ret;
->> +
->> +     name = devm_kasprintf(dev, GFP_KERNEL, "tegra_pcie_%u_pex_rst_irq",
->> +                           pcie->cid);
->> +     if (!name) {
->> +             dev_err(dev, "Failed to create PERST IRQ string\n");
->> +             return -ENOMEM;
->> +     }
->> +
->> +     irq_set_status_flags(pcie->pex_rst_irq, IRQ_NOAUTOEN);
->> +
->> +     ret = devm_request_irq(dev, pcie->pex_rst_irq,
->> +                            tegra_pcie_ep_pex_rst_irq,
->> +                            IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,
->> +                            name, (void *)pcie);
-> 
-> I have the impression that a threaded IRQ is what you need, which
-> will also remove some boilerplate in the process. Any reason why
-> you can't use a threaded IRQ instead of a standalone kthread ?
-No reason specifically. We started with kthreads and continued with 
-that. I'll post a new series with threaded IRQ. It should be doable.
+V3:
+* Re-ordered patches in the series to make the driver change as the last patch
+* Took care of Thierry's review comments
 
-Thanks,
-Vidya Sagar
-> 
-> Thanks,
-> Lorenzo
-> 
+V2:
+* Addressed Thierry & Bjorn's review comments
+* Added EP mode specific binding documentation to already existing binding documentation file
+* Removed patch that enables GPIO controller nodes explicitly as they are enabled already
+
+Vidya Sagar (5):
+  soc/tegra: bpmp: Update ABI header
+  dt-bindings: PCI: tegra: Add DT support for PCIe EP nodes in Tegra194
+  arm64: tegra: Add PCIe endpoint controllers nodes for Tegra194
+  arm64: tegra: Add support for PCIe endpoint mode in P2972-0000
+    platform
+  PCI: tegra: Add support for PCIe endpoint mode in Tegra194
+
+ .../bindings/pci/nvidia,tegra194-pcie.txt     | 125 +++-
+ .../boot/dts/nvidia/tegra194-p2972-0000.dts   |  18 +
+ arch/arm64/boot/dts/nvidia/tegra194.dtsi      |  99 +++
+ drivers/pci/controller/dwc/Kconfig            |  30 +-
+ drivers/pci/controller/dwc/pcie-tegra194.c    | 681 +++++++++++++++++-
+ include/soc/tegra/bpmp-abi.h                  |  10 +-
+ 6 files changed, 918 insertions(+), 45 deletions(-)
+
+-- 
+2.17.1
+
