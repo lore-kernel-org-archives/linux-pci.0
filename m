@@ -4,27 +4,27 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 455CEC3F2D1
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 02:25:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB87AC3F2D1
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 02:25:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 22047217F4
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 02:25:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B8486217F4
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 02:25:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727018AbgCCCZL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 2 Mar 2020 21:25:11 -0500
-Received: from mga14.intel.com ([192.55.52.115]:54187 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727146AbgCCCZJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1727126AbgCCCZJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Mon, 2 Mar 2020 21:25:09 -0500
+Received: from mga14.intel.com ([192.55.52.115]:54186 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727018AbgCCCZI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 2 Mar 2020 21:25:08 -0500
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from fmsmga008.fm.intel.com ([10.253.24.58])
   by fmsmga103.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 02 Mar 2020 18:25:08 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.70,509,1574150400"; 
-   d="scan'208";a="233605702"
+   d="scan'208";a="233605692"
 Received: from jekeller-desk.amr.corp.intel.com (HELO jekeller-desk.jekeller.internal) ([10.166.244.172])
   by fmsmga008.fm.intel.com with ESMTP; 02 Mar 2020 18:25:08 -0800
 From:   Jacob Keller <jacob.e.keller@intel.com>
@@ -33,9 +33,9 @@ To:     linux-pci@vger.kernel.org, netdev@vger.kernel.org,
 Cc:     Jakub Kicinski <kuba@kernel.org>,
         David Miller <davem@davemloft.net>,
         Jacob Keller <jacob.e.keller@intel.com>
-Subject: [PATCH v2 6/6] nfp: Use pci_get_dsn()
-Date:   Mon,  2 Mar 2020 18:25:05 -0800
-Message-Id: <20200303022506.1792776-7-jacob.e.keller@intel.com>
+Subject: [PATCH v2 3/6] scsi: qedf: Use pci_get_dsn()
+Date:   Mon,  2 Mar 2020 18:25:02 -0800
+Message-Id: <20200303022506.1792776-4-jacob.e.keller@intel.com>
 X-Mailer: git-send-email 2.25.0.368.g28a2d05eebfb
 In-Reply-To: <20200303022506.1792776-1-jacob.e.keller@intel.com>
 References: <CABhMZUXJ_Omt-+fwa4Oz-Ly=J+NM8+8Ryv-Ad1u_bgEpDRH7RQ@mail.gmail.com>
@@ -47,74 +47,59 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Use the newly added pci_get_dsn() function for obtaining the 64-bit
-Device Serial Number in the nfp6000_read_serial and
-nfp_6000_get_interface functions.
+Replace the open-coded implementation for reading the PCIe DSN with
+pci_get_dsn().
 
-pci_get_dsn() reports the Device Serial number as a u64 value created by
-combining two pci_read_config_dword functions. The lower 16 bits
-represent the device interface value, and the next 48 bits represent the
-serial value. Use put_unaligned_be32 and put_unaligned_be16 to convert
-the serial value portion into a Big Endian formatted serial u8 array.
+The original code used a for-loop that looped over each of the 8 bytes
+and copied them into a temporary buffer. pci_get_dsn() uses two calls to
+pci_read_config_dword, and correctly bitwise ORs them into a u64. Thus,
+we can simplify the snprintf significantly using %016llX on a u64 value.
 
 Signed-off-by: Jacob Keller <jacob.e.keller@intel.com>
-Cc: Jakub Kicinski <kuba@kernel.org>
 ---
- .../netronome/nfp/nfpcore/nfp6000_pcie.c      | 24 +++++++------------
- 1 file changed, 9 insertions(+), 15 deletions(-)
+The QLogic-Storage-Upstream@cavium.com appears to be a dud. I'm not sure who
+maintains this driver, and thus am not sure who to add to the Cc.
 
-diff --git a/drivers/net/ethernet/netronome/nfp/nfpcore/nfp6000_pcie.c b/drivers/net/ethernet/netronome/nfp/nfpcore/nfp6000_pcie.c
-index b454db283aef..8fde6c1f681b 100644
---- a/drivers/net/ethernet/netronome/nfp/nfpcore/nfp6000_pcie.c
-+++ b/drivers/net/ethernet/netronome/nfp/nfpcore/nfp6000_pcie.c
-@@ -1247,19 +1247,16 @@ static void nfp6000_free(struct nfp_cpp *cpp)
- static int nfp6000_read_serial(struct device *dev, u8 *serial)
+ drivers/scsi/qedf/qedf_main.c | 18 +++++-------------
+ 1 file changed, 5 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+index 604856e72cfb..5b19f5175c5c 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -1577,8 +1577,7 @@ static void qedf_setup_fdmi(struct qedf_ctx *qedf)
  {
- 	struct pci_dev *pdev = to_pci_dev(dev);
--	int pos;
--	u32 reg;
+ 	struct fc_lport *lport = qedf->lport;
+ 	struct fc_host_attrs *fc_host = shost_to_fc_host(lport->host);
+-	u8 buf[8];
+-	int i, pos;
 +	u64 dsn;
  
--	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_DSN);
--	if (!pos) {
-+	dsn = pci_get_dsn(pdev);
-+	if (!dsn) {
- 		dev_err(dev, "can't find PCIe Serial Number Capability\n");
- 		return -EINVAL;
- 	}
+ 	/*
+ 	 * fdmi_enabled needs to be set for libfc to execute FDMI registration.
+@@ -1591,18 +1590,11 @@ static void qedf_setup_fdmi(struct qedf_ctx *qedf)
+ 	 */
  
--	pci_read_config_dword(pdev, pos + 4, &reg);
--	put_unaligned_be16(reg >> 16, serial + 4);
--	pci_read_config_dword(pdev, pos + 8, &reg);
--	put_unaligned_be32(reg, serial);
-+	put_unaligned_be32((u32)(dsn >> 32), serial);
-+	put_unaligned_be16((u16)(dsn >> 16), serial + 4);
- 
- 	return 0;
- }
-@@ -1267,18 +1264,15 @@ static int nfp6000_read_serial(struct device *dev, u8 *serial)
- static int nfp6000_get_interface(struct device *dev)
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
--	int pos;
--	u32 reg;
-+	u64 dsn;
- 
--	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_DSN);
--	if (!pos) {
-+	dsn = pci_get_dsn(pdev);
-+	if (!dsn) {
- 		dev_err(dev, "can't find PCIe Serial Number Capability\n");
- 		return -EINVAL;
- 	}
- 
--	pci_read_config_dword(pdev, pos + 4, &reg);
+ 	/* Get the PCI-e Device Serial Number Capability */
+-	pos = pci_find_ext_capability(qedf->pdev, PCI_EXT_CAP_ID_DSN);
+-	if (pos) {
+-		pos += 4;
+-		for (i = 0; i < 8; i++)
+-			pci_read_config_byte(qedf->pdev, pos + i, &buf[i]);
 -
--	return reg & 0xffff;
-+	return dsn & 0xffff;
- }
++	dsn = pci_get_dsn(qedf->pdev);
++	if (dsn)
+ 		snprintf(fc_host->serial_number,
+-		    sizeof(fc_host->serial_number),
+-		    "%02X%02X%02X%02X%02X%02X%02X%02X",
+-		    buf[7], buf[6], buf[5], buf[4],
+-		    buf[3], buf[2], buf[1], buf[0]);
+-	} else
++		    sizeof(fc_host->serial_number), "%016llX", dsn);
++	else
+ 		snprintf(fc_host->serial_number,
+ 		    sizeof(fc_host->serial_number), "Unknown");
  
- static const struct nfp_cpp_operations nfp6000_pcie_ops = {
 -- 
 2.25.0.368.g28a2d05eebfb
 
