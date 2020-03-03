@@ -2,85 +2,60 @@ Return-Path: <SRS0=1yZ1=4U=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 350CFC3F2C6
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 03:40:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30B25C3F2CD
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 03:41:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 02DA22465D
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 03:40:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1583206848;
-	bh=Emh45AKiBNS724hebeoI21buaPmJhcQjoomhSfqsWM4=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:List-ID:From;
-	b=z9OSu3aiB0Ud2UrhseAXjW2L3E4bKI6UJtMxgWX8mdV7LR3QXalzd8a0g6mGaPNPG
-	 G3t2cwPckj6dort4gemEMmSMTWHctkQIOlQAMyR8Ad/dcGN/KUiutsg0cf+P0n7ZxA
-	 mX/upNBIvfjqFqtlVQWL0skS3yWR5dOfBfP+l6zU=
+	by mail.kernel.org (Postfix) with ESMTP id 0CA552465E
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 03:41:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726979AbgCCDkr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 2 Mar 2020 22:40:47 -0500
-Received: from mail.kernel.org ([198.145.29.99]:44928 "EHLO mail.kernel.org"
+        id S1726947AbgCCDl4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 2 Mar 2020 22:41:56 -0500
+Received: from yyz.mikelr.com ([170.75.163.43]:57142 "EHLO yyz.mikelr.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726954AbgCCDkr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 2 Mar 2020 22:40:47 -0500
-Received: from kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com (unknown [163.114.132.128])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7303220848;
-        Tue,  3 Mar 2020 03:40:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1583206846;
-        bh=Emh45AKiBNS724hebeoI21buaPmJhcQjoomhSfqsWM4=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=n1wjmuMYnzYAvfTbZEVI9jLVep9eomZoISgXS3rNs1Bs1ZxVQUk8wEaV4mQImWBuL
-         1cIU5ZR8BNyIcGa75ofPdS5yOo2on8DNQnwQteoYYPkd0ntmk+Aywcu4q+JKqyWw8z
-         NKZLkgbFkfKUVzcepD0WNDN7O7kuOKGiHZ4Wcc7o=
-Date:   Mon, 2 Mar 2020 19:40:44 -0800
-From:   Jakub Kicinski <kuba@kernel.org>
-To:     Jacob Keller <jacob.e.keller@intel.com>
-Cc:     linux-pci@vger.kernel.org, netdev@vger.kernel.org,
+        id S1726970AbgCCDl4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 2 Mar 2020 22:41:56 -0500
+Received: from glidewell.ykf.mikelr.com (198-84-194-208.cpe.teksavvy.com [198.84.194.208])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (Client did not present a certificate)
+        by yyz.mikelr.com (Postfix) with ESMTPSA id 7D0933CF20;
+        Mon,  2 Mar 2020 22:35:02 -0500 (EST)
+From:   Mikel Rychliski <mikel@mikelr.com>
+To:     amd-gfx@lists.freedesktop.org, linux-pci@vger.kernel.org
+Cc:     Alex Deucher <alexander.deucher@amd.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        "David (ChunMing) Zhou" <David1.Zhou@amd.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        David Miller <davem@davemloft.net>
-Subject: Re: [PATCH v2 6/6] nfp: Use pci_get_dsn()
-Message-ID: <20200302194044.27eb9e5a@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
-In-Reply-To: <20200303022506.1792776-7-jacob.e.keller@intel.com>
-References: <CABhMZUXJ_Omt-+fwa4Oz-Ly=J+NM8+8Ryv-Ad1u_bgEpDRH7RQ@mail.gmail.com>
-        <20200303022506.1792776-1-jacob.e.keller@intel.com>
-        <20200303022506.1792776-7-jacob.e.keller@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+        Matthew Garrett <matthewgarrett@google.com>,
+        Mikel Rychliski <mikel@mikelr.com>
+Subject: [PATCH 0/4] Fix loading of radeon BIOS from 32-bit EFI
+Date:   Mon,  2 Mar 2020 22:34:53 -0500
+Message-Id: <20200303033457.12180-1-mikel@mikelr.com>
+X-Mailer: git-send-email 2.13.7
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon,  2 Mar 2020 18:25:05 -0800 Jacob Keller wrote:
-> Use the newly added pci_get_dsn() function for obtaining the 64-bit
-> Device Serial Number in the nfp6000_read_serial and
-> nfp_6000_get_interface functions.
-> 
-> pci_get_dsn() reports the Device Serial number as a u64 value created by
-> combining two pci_read_config_dword functions. The lower 16 bits
-> represent the device interface value, and the next 48 bits represent the
-> serial value. Use put_unaligned_be32 and put_unaligned_be16 to convert
-> the serial value portion into a Big Endian formatted serial u8 array.
-> 
-> Signed-off-by: Jacob Keller <jacob.e.keller@intel.com>
-> Cc: Jakub Kicinski <kuba@kernel.org>
+This patch set fixes an opps when loading the radeon driver on old Macs
+with a 32-bit EFI implementation.
 
-Reviewed-by: Jakub Kicinski <kuba@kernel.org>
+Tested on a MacPro 1,1 with a Radeon X1900 XT card and 32-bit kernel.
 
-Thanks!
+Mikel Rychliski (4):
+  drm/radeon: Stop directly referencing iomem
+  PCI: Use ioremap, not phys_to_virt for platform rom
+  drm/radeon: iounmap unused mapping
+  drm/amdgpu: iounmap unused mapping
 
-> -	pci_read_config_dword(pdev, pos + 4, &reg);
-> -	put_unaligned_be16(reg >> 16, serial + 4);
-> -	pci_read_config_dword(pdev, pos + 8, &reg);
-> -	put_unaligned_be32(reg, serial);
-> +	put_unaligned_be32((u32)(dsn >> 32), serial);
-> +	put_unaligned_be16((u16)(dsn >> 16), serial + 4);
+ drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c |  1 +
+ drivers/gpu/drm/radeon/radeon_bios.c     | 12 ++++++++----
+ drivers/pci/rom.c                        |  5 ++---
+ 3 files changed, 11 insertions(+), 7 deletions(-)
 
-nit: the casts and extra brackets should be unnecessary, in case
-     you're respinning..
+-- 
+2.13.7
+
