@@ -7,48 +7,48 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A79CC3F2CD
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 13:30:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54788C3F2D8
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 13:30:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D3D4320CC7
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 13:30:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F3F1208C3
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 13:30:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=amazon.com header.i=@amazon.com header.b="i63vrdyS"
+	dkim=pass (1024-bit key) header.d=amazon.com header.i=@amazon.com header.b="HQBCxKOH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728972AbgCCNa1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 3 Mar 2020 08:30:27 -0500
-Received: from smtp-fw-6001.amazon.com ([52.95.48.154]:35759 "EHLO
-        smtp-fw-6001.amazon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727894AbgCCNa1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Mar 2020 08:30:27 -0500
+        id S1727894AbgCCNa2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 3 Mar 2020 08:30:28 -0500
+Received: from smtp-fw-6002.amazon.com ([52.95.49.90]:21163 "EHLO
+        smtp-fw-6002.amazon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728068AbgCCNa2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Mar 2020 08:30:28 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=amazon.com; i=@amazon.com; q=dns/txt; s=amazon201209;
   t=1583242227; x=1614778227;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=cBJBPVv+W+4p/cV1qgaUlMz0GLi1QkM2dp9VSDEJ5WE=;
-  b=i63vrdySja3C21tsj0n2XdUT8yr1dDXn0t2QN6GL6Y4o6wq9gYtSq4Wi
-   dmVMLmNyBHigGiaTW9EXeFBI8zDvEd2Pw5Tkv0tX73WiKyTmjEDRdCkWU
-   tNmkHC8pUmd7GFvjxADFlVg9XI1eh7+z7Lwk+24Pumtiwa/7WuAyhPWZV
-   8=;
-IronPort-SDR: OrsuFgpYPMr5SbJBD+toVXzyOEkDAGU89gWRolDuCVaKx8Hh4OMKekdIfl6SXN4p7Nhzko2dFD
- 9Ntw2kvZbytg==
+  bh=Gz6pfLMfGNZpaFxwlrBNkkqcP/vdNODzuYge/T20qto=;
+  b=HQBCxKOHQt8BFgjPadIT56uojQmu9TgLHXc+f6XvVhqYcTnhr86m2Cm4
+   nQp4syemLJjggSq940AbPPli52Y6yA7wDOkHbNlBjCvJZlaAE3TN/ZQLv
+   CK0Ov0hJ2wTN7CPn/bbbm5XrXoU8VDlAkpZFnCVbari7I3ed7s6apYbXc
+   o=;
+IronPort-SDR: FHWoXQAaMNLcqoTOhhHlOg33oQbd0JRg7pw5S6KyEKhcilo89yKsSNHnrucJPkxcNe0PNN2cuY
+ EATC/f881HJA==
 X-IronPort-AV: E=Sophos;i="5.70,511,1574121600"; 
-   d="scan'208";a="20717872"
-Received: from iad12-co-svc-p1-lb1-vlan3.amazon.com (HELO email-inbound-relay-2c-4e7c8266.us-west-2.amazon.com) ([10.43.8.6])
-  by smtp-border-fw-out-6001.iad6.amazon.com with ESMTP; 03 Mar 2020 13:30:13 +0000
-Received: from EX13MTAUEA002.ant.amazon.com (pdx4-ws-svc-p6-lb7-vlan2.pdx.amazon.com [10.170.41.162])
-        by email-inbound-relay-2c-4e7c8266.us-west-2.amazon.com (Postfix) with ESMTPS id 79C41A2E44;
-        Tue,  3 Mar 2020 13:30:11 +0000 (UTC)
-Received: from EX13D12EUC001.ant.amazon.com (10.43.164.45) by
+   d="scan'208";a="19279361"
+Received: from iad12-co-svc-p1-lb1-vlan3.amazon.com (HELO email-inbound-relay-2a-22cc717f.us-west-2.amazon.com) ([10.43.8.6])
+  by smtp-border-fw-out-6002.iad6.amazon.com with ESMTP; 03 Mar 2020 13:30:01 +0000
+Received: from EX13MTAUEA002.ant.amazon.com (pdx4-ws-svc-p6-lb7-vlan3.pdx.amazon.com [10.170.41.166])
+        by email-inbound-relay-2a-22cc717f.us-west-2.amazon.com (Postfix) with ESMTPS id 88C55A2785;
+        Tue,  3 Mar 2020 13:30:00 +0000 (UTC)
+Received: from EX13D12EUA004.ant.amazon.com (10.43.165.162) by
  EX13MTAUEA002.ant.amazon.com (10.43.61.77) with Microsoft SMTP Server (TLS)
- id 15.0.1236.3; Tue, 3 Mar 2020 13:30:00 +0000
+ id 15.0.1236.3; Tue, 3 Mar 2020 13:29:49 +0000
 Received: from EX13MTAUEE002.ant.amazon.com (10.43.62.24) by
- EX13D12EUC001.ant.amazon.com (10.43.164.45) with Microsoft SMTP Server (TLS)
- id 15.0.1497.2; Tue, 3 Mar 2020 13:29:58 +0000
+ EX13D12EUA004.ant.amazon.com (10.43.165.162) with Microsoft SMTP Server (TLS)
+ id 15.0.1497.2; Tue, 3 Mar 2020 13:29:48 +0000
 Received: from u961addbe640f56.ant.amazon.com (10.28.84.111) by
  mail-relay.amazon.com (10.43.62.224) with Microsoft SMTP Server id
- 15.0.1367.3 via Frontend Transport; Tue, 3 Mar 2020 13:29:56 +0000
+ 15.0.1367.3 via Frontend Transport; Tue, 3 Mar 2020 13:29:46 +0000
 From:   Stanislav Spassov <stanspas@amazon.com>
 To:     <linux-pci@vger.kernel.org>
 CC:     Stanislav Spassov <stanspas@amazon.de>,
@@ -61,9 +61,9 @@ CC:     Stanislav Spassov <stanspas@amazon.de>,
         Alex Williamson <alex.williamson@redhat.com>,
         Sinan Kaya <okaya@kernel.org>, Rajat Jain <rajatja@google.com>,
         kbuild test robot <lkp@intel.com>
-Subject: [PATCH v3 06/17] PCI: Fix us->ms conversion in pci_acpi_optimize_delay
-Date:   Tue, 3 Mar 2020 14:28:41 +0100
-Message-ID: <20200303132852.13184-7-stanspas@amazon.com>
+Subject: [PATCH v3 03/17] PCI: Use pci_bridge_wait_for_secondary_bus after SBR
+Date:   Tue, 3 Mar 2020 14:28:38 +0100
+Message-ID: <20200303132852.13184-4-stanspas@amazon.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200303132852.13184-1-stanspas@amazon.com>
 References: <20200303132852.13184-1-stanspas@amazon.com>
@@ -77,56 +77,58 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Stanislav Spassov <stanspas@amazon.de>
 
-_DSM Function 9 returns device readiness durations in microseconds.
+So far, pci_bridge_wait_for_secondary_bus() was only invoked by PM code
+after (runtime) resume of devices, but it naturally makes sense for
+handling post-SBR waiting as well.
 
-Without this fix, integer truncation could cause msleep()-ing for up to
-999us less than actually requested by the firmware.
+It uses the PCI_PM_D3COLD_WAIT value (100ms), potentially overridden on
+a per-device basis to a lower-value, as the basis for determining
+how long to wait, and handles special cases such as legacy PCI devices
+(requiring Trhfa), and the different starting points for the waiting
+time depending on PCIe port speed.
 
-Specifically, if the firmware specifies a 500us delay, msleep(0) would
-be invoked by the users of the delay values optimized here.
+On PCI Express, there will be cases where the new code sleeps far less
+than the 1s being replaced by this patch. This should be okay, because
+PCI Express Base Specification Revision 5.0 Version 1.0 (May 22, 2019)
+in Section 6.6.1 "Conventional Reset" only notes 100ms as the minimum
+waiting time. After this time, the OS is permitted to issue
+Configuration Requests, but it is possible that the device responds
+with Configuration Request Retry Status (CRS) Completions, rather than
+Successful Completion. Returning CRS can go on for up to 1 second after
+a Conventional Reset (such as SBR) before the OS can consider the device
+broken. This additional wait is handled by pci_dev_wait.
+
+Currently, the only callchain that lands in the function modified by
+this patch starts at pci_bridge_secondary_bus_reset which invokes
+one out of two versions of pcibios_reset_secondary_bus that both end
+with a call to pci_reset_secondary_bus.
+Afterwards, pci_bridge_secondary_bus_reset always invokes pci_dev_wait.
 
 Signed-off-by: Stanislav Spassov <stanspas@amazon.de>
 ---
- drivers/pci/pci-acpi.c | 15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
+ drivers/pci/pci.c | 9 +--------
+ 1 file changed, 1 insertion(+), 8 deletions(-)
 
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index a8fa13d6089d..b147b61c6668 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -1219,6 +1219,11 @@ static void pci_acpi_optimize_delay(struct pci_dev *pdev,
- 				    acpi_handle handle)
- {
- 	struct pci_host_bridge *bridge = pci_find_host_bridge(pdev->bus);
-+	/*
-+	 * _DSM 9 provides values in microseconds, but the kernel uses msleep()
-+	 * when waiting, so the code below rounds up when setting value in ms
-+	 */
-+	u64 value_us;
- 	int value;
- 	union acpi_object *obj, *elements;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index ac8504d75c32..c1a866f733e9 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4800,14 +4800,7 @@ void pci_reset_secondary_bus(struct pci_dev *dev)
+ 	ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
+ 	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
  
-@@ -1233,12 +1238,18 @@ static void pci_acpi_optimize_delay(struct pci_dev *pdev,
- 	if (obj->type == ACPI_TYPE_PACKAGE && obj->package.count == 5) {
- 		elements = obj->package.elements;
- 		if (elements[0].type == ACPI_TYPE_INTEGER) {
--			value = (int)elements[0].integer.value / 1000;
-+			value_us = elements[0].integer.value;
-+			value = (int)value_us / 1000;
-+			if ((int)value_us % 1000 > 0)
-+				value++;
- 			if (value < PCI_PM_D3COLD_WAIT)
- 				pdev->d3cold_delay = value;
- 		}
- 		if (elements[3].type == ACPI_TYPE_INTEGER) {
--			value = (int)elements[3].integer.value / 1000;
-+			value_us = elements[3].integer.value;
-+			value = (int)value_us / 1000;
-+			if ((int)value_us % 1000 > 0)
-+				value++;
- 			if (value < PCI_PM_D3_WAIT)
- 				pdev->d3_delay = value;
- 		}
+-	/*
+-	 * Trhfa for conventional PCI is 2^25 clock cycles.
+-	 * Assuming a minimum 33MHz clock this results in a 1s
+-	 * delay before we can consider subordinate devices to
+-	 * be re-initialized.  PCIe has some ways to shorten this,
+-	 * but we don't make use of them yet.
+-	 */
+-	ssleep(1);
++	pci_bridge_wait_for_secondary_bus(dev);
+ }
+ 
+ void __weak pcibios_reset_secondary_bus(struct pci_dev *dev)
 -- 
 2.25.1
 
