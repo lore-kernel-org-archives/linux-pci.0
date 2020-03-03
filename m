@@ -7,48 +7,48 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA965C3F2D7
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 13:30:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5426AC3F2D7
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 13:31:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A7B07217F4
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 13:30:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2AE7D208C3
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 13:31:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=amazon.com header.i=@amazon.com header.b="vLyGIpi8"
+	dkim=pass (1024-bit key) header.d=amazon.com header.i=@amazon.com header.b="iJItasEo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727862AbgCCNa4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 3 Mar 2020 08:30:56 -0500
-Received: from smtp-fw-33001.amazon.com ([207.171.190.10]:61783 "EHLO
-        smtp-fw-33001.amazon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729248AbgCCNa4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Mar 2020 08:30:56 -0500
+        id S1729068AbgCCNbB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 3 Mar 2020 08:31:01 -0500
+Received: from smtp-fw-6001.amazon.com ([52.95.48.154]:35902 "EHLO
+        smtp-fw-6001.amazon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729248AbgCCNbB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Mar 2020 08:31:01 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=amazon.com; i=@amazon.com; q=dns/txt; s=amazon201209;
-  t=1583242256; x=1614778256;
+  t=1583242260; x=1614778260;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=JNPVRg0IXhKYsKVgVhd2+6miS3vS/5AexheE4GJwtE0=;
-  b=vLyGIpi8Q3XL5TKo2lSMWpfDwb5ZYBf4vX2NsDVAjs2U9/CNISyxf4o9
-   GI8aHnZD95/jtCi/b7Ch8FlomXfZcRv33mGVmZiUxvksAiPZPNHfaHeu4
-   3nFYa1ooQjsmHYAbH1R4BIpQOppYNB/IwRlPO0aqflFI3oojTEOBUGz4U
-   g=;
-IronPort-SDR: jVg/e8oI4DlucrkV6r/lIpmtz56apX5RpLNM1aN8MgrRlvxPI1rCcCA/GZy6pyMkW/AlaA27pO
- sZuNxmc698gA==
+  bh=zo+xgKja6kmPxHfkNHFXpC45vKnXxIgJgU/su5JdReI=;
+  b=iJItasEo8mWdwMJOJTxEE+qFmXdKSxn+m7IKVQwixjyN4QVh8i7wNV8e
+   Onag4eCv3Op8khUPMFiu8T2HO61bXAlcAWmPmIq7xsKsHFY60HABLgdxJ
+   sjzmV2Ggu3nlHeebNL58k86TkO6h14qIdoXQo4tS7284X+NymKuJdLur3
+   Y=;
+IronPort-SDR: 20iqOC4jwvUhe9AChWG7nY6tjhxgZd/f5FFOXXqf2Nm+sVXTWaytkmG3c72mP0SOTqHiXu9N3F
+ MX+BuA8zLgrw==
 X-IronPort-AV: E=Sophos;i="5.70,511,1574121600"; 
-   d="scan'208";a="30249779"
-Received: from sea32-co-svc-lb4-vlan3.sea.corp.amazon.com (HELO email-inbound-relay-2b-4e24fd92.us-west-2.amazon.com) ([10.47.23.38])
-  by smtp-border-fw-out-33001.sea14.amazon.com with ESMTP; 03 Mar 2020 13:30:55 +0000
-Received: from EX13MTAUEA002.ant.amazon.com (pdx4-ws-svc-p6-lb7-vlan2.pdx.amazon.com [10.170.41.162])
-        by email-inbound-relay-2b-4e24fd92.us-west-2.amazon.com (Postfix) with ESMTPS id 39E60A2E10;
-        Tue,  3 Mar 2020 13:30:54 +0000 (UTC)
-Received: from EX13D12EUC001.ant.amazon.com (10.43.164.45) by
+   d="scan'208";a="20718008"
+Received: from iad12-co-svc-p1-lb1-vlan3.amazon.com (HELO email-inbound-relay-2b-81e76b79.us-west-2.amazon.com) ([10.43.8.6])
+  by smtp-border-fw-out-6001.iad6.amazon.com with ESMTP; 03 Mar 2020 13:30:58 +0000
+Received: from EX13MTAUEA002.ant.amazon.com (pdx4-ws-svc-p6-lb7-vlan3.pdx.amazon.com [10.170.41.166])
+        by email-inbound-relay-2b-81e76b79.us-west-2.amazon.com (Postfix) with ESMTPS id 6BB0FA1FAE;
+        Tue,  3 Mar 2020 13:30:57 +0000 (UTC)
+Received: from EX13D04EUA003.ant.amazon.com (10.43.165.148) by
  EX13MTAUEA002.ant.amazon.com (10.43.61.77) with Microsoft SMTP Server (TLS)
- id 15.0.1236.3; Tue, 3 Mar 2020 13:30:27 +0000
+ id 15.0.1236.3; Tue, 3 Mar 2020 13:30:32 +0000
 Received: from EX13MTAUEE002.ant.amazon.com (10.43.62.24) by
- EX13D12EUC001.ant.amazon.com (10.43.164.45) with Microsoft SMTP Server (TLS)
- id 15.0.1497.2; Tue, 3 Mar 2020 13:30:25 +0000
+ EX13D04EUA003.ant.amazon.com (10.43.165.148) with Microsoft SMTP Server (TLS)
+ id 15.0.1497.2; Tue, 3 Mar 2020 13:30:31 +0000
 Received: from u961addbe640f56.ant.amazon.com (10.28.84.111) by
  mail-relay.amazon.com (10.43.62.224) with Microsoft SMTP Server id
- 15.0.1367.3 via Frontend Transport; Tue, 3 Mar 2020 13:30:23 +0000
+ 15.0.1367.3 via Frontend Transport; Tue, 3 Mar 2020 13:30:28 +0000
 From:   Stanislav Spassov <stanspas@amazon.com>
 To:     <linux-pci@vger.kernel.org>
 CC:     Stanislav Spassov <stanspas@amazon.de>,
@@ -61,9 +61,9 @@ CC:     Stanislav Spassov <stanspas@amazon.de>,
         Alex Williamson <alex.williamson@redhat.com>,
         Sinan Kaya <okaya@kernel.org>, Rajat Jain <rajatja@google.com>,
         kbuild test robot <lkp@intel.com>
-Subject: [PATCH v3 11/17] PCI: Refactor pci_dev_wait to remove timeout parameter
-Date:   Tue, 3 Mar 2020 14:28:46 +0100
-Message-ID: <20200303132852.13184-12-stanspas@amazon.com>
+Subject: [PATCH v3 13/17] PCI: Cache CRS Software Visibiliy in struct pci_dev
+Date:   Tue, 3 Mar 2020 14:28:48 +0100
+Message-ID: <20200303132852.13184-14-stanspas@amazon.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200303132852.13184-1-stanspas@amazon.com>
 References: <20200303132852.13184-1-stanspas@amazon.com>
@@ -77,66 +77,73 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Stanislav Spassov <stanspas@amazon.de>
 
-Currently, all callers supply the same value, and in the future
-pci_dev_wait itself could determine the appropriate timeout based on
-values stored in struct pci_dev, and the reset type.
+Arguably, since CRS SV is a capability of Root Ports and determines
+how Root Ports will handle incoming CRS Completions, it makes more
+sense to store this flag in the struct pci bus that represents the
+port's secondary bus, and to cache it in any buses further down the
+hierarchy.
+
+However, storing the flag in struct pci_dev allows individual devices
+to be marked as not supporting CRS properly even when CRS SV is enabled
+on their parent Root Port. This way, future code that relies on the new
+flag will not be misled that it is safe to probe a device by relying on
+CRS SV to not cause platform timeouts (See the note on CRS SV on p. 553
+of PCI Express Base Specification r5.0 from May 22, 2019).
+
+Note: Endpoints integrated into the Root Complex (RCiEP) may also be
+capable of using CRS. In that case, the software visibility is
+controlled using a Root Complex Register Block (RCRB). This is currently
+not supported by the kernel. The code introduced here would simply not
+set the newly introduced flag for RCiEP as for those bus->self is NULL.
 
 Signed-off-by: Stanislav Spassov <stanspas@amazon.de>
 ---
- drivers/pci/pci.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+ drivers/pci/probe.c | 8 +++++++-
+ include/linux/pci.h | 3 +++
+ 2 files changed, 10 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 7e08c5f38190..9435e2b19f7b 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1030,8 +1030,9 @@ void pci_wakeup_bus(struct pci_bus *bus)
- 		pci_walk_bus(bus, pci_wakeup, NULL);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 512cb4312ddd..eeff8a07f330 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1080,9 +1080,11 @@ static void pci_enable_crs(struct pci_dev *pdev)
+ 
+ 	/* Enable CRS Software Visibility if supported */
+ 	pcie_capability_read_word(pdev, PCI_EXP_RTCAP, &root_cap);
+-	if (root_cap & PCI_EXP_RTCAP_CRSVIS)
++	if (root_cap & PCI_EXP_RTCAP_CRSVIS) {
+ 		pcie_capability_set_word(pdev, PCI_EXP_RTCTL,
+ 					 PCI_EXP_RTCTL_CRSSVE);
++		pdev->crssv_enabled = true;
++	}
  }
  
--static int pci_dev_wait(struct pci_dev *dev, char *reset_type, int timeout)
-+static int pci_dev_wait(struct pci_dev *dev, char *reset_type)
- {
-+	int timeout = PCIE_RESET_READY_POLL_MS;
- 	int delay = 1;
- 	u32 id;
+ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
+@@ -2414,6 +2416,10 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ 	list_add_tail(&dev->bus_list, &bus->devices);
+ 	up_write(&pci_bus_sem);
  
-@@ -4514,7 +4515,7 @@ int pcie_flr(struct pci_dev *dev)
++	/* Propagate CRS Software Visibility bit from the parent bridge */
++	if (bus->self)
++		dev->crssv_enabled = bus->self->crssv_enabled;
++
+ 	ret = pcibios_add_device(dev);
+ 	WARN_ON(ret < 0);
  
- 	msleep(dev->delay[PCI_INIT_EVENT_FLR]);
- 
--	return pci_dev_wait(dev, "FLR", PCIE_RESET_READY_POLL_MS);
-+	return pci_dev_wait(dev, "FLR");
- }
- EXPORT_SYMBOL_GPL(pcie_flr);
- 
-@@ -4553,7 +4554,7 @@ static int pci_af_flr(struct pci_dev *dev, int probe)
- 
- 	msleep(dev->delay[PCI_INIT_EVENT_FLR]);
- 
--	return pci_dev_wait(dev, "AF_FLR", PCIE_RESET_READY_POLL_MS);
-+	return pci_dev_wait(dev, "AF_FLR");
- }
- 
- /**
-@@ -4600,7 +4601,7 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
- 	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, csr);
- 	pci_dev_d3_sleep(dev);
- 
--	return pci_dev_wait(dev, "PM D3hot->D0", PCIE_RESET_READY_POLL_MS);
-+	return pci_dev_wait(dev, "PM D3hot->D0");
- }
- 
- /**
-@@ -4842,7 +4843,7 @@ int pci_bridge_secondary_bus_reset(struct pci_dev *dev)
- {
- 	pcibios_reset_secondary_bus(dev);
- 
--	return pci_dev_wait(dev, "bus reset", PCIE_RESET_READY_POLL_MS);
-+	return pci_dev_wait(dev, "bus reset");
- }
- EXPORT_SYMBOL_GPL(pci_bridge_secondary_bus_reset);
- 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 16dbfff2092e..1763e98625b9 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -386,6 +386,9 @@ struct pci_dev {
+ 						   bit manually */
+ 	unsigned int    ignore_reset_delay_on_sx_resume:1; /* Cached value from
+ 							      pci_host_bridge */
++	unsigned int	crssv_enabled:1;	/* Configuration Request Retry
++						   Status Software Visibility
++						   enabled on (parent) bridge */
+ 	unsigned int    delay[PCI_INIT_EVENT_COUNT]; /* minimum waiting time
+ 							after various events
+ 							in ms */
 -- 
 2.25.1
 
