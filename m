@@ -2,115 +2,94 @@ Return-Path: <SRS0=1yZ1=4U=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2F67C3F2CD
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 10:19:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1674BC3F2CD
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 10:33:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AB21721556
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 10:19:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E1D6B20CC7
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Mar 2020 10:33:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SfKRCoZ+"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="VFKQTpXi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728487AbgCCKTe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 3 Mar 2020 05:19:34 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:51862 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726661AbgCCKTd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Mar 2020 05:19:33 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1583230772;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=+UK+NMIgmwHXQhkRXAJ4Lsi7p+Mwd36pSYsGKvj2cB0=;
-        b=SfKRCoZ+rSSPDJrk/l8A56OJItYNdPcG/NDdEkldIeOQYLiikgifSXnZh0I3PCCcT/3Dqd
-        dyWj/vbLqtq0hjWbaBQrbi0r+cY7sCXF2dg2Fg0pLCmZ5kA1iMtwQnMTHvCY0hX2chskp/
-        jEzTs1uxKK/gyEujr+QRI2rgweOC3sg=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-401-3lbbavzDNpGMbY6vLt0Brg-1; Tue, 03 Mar 2020 05:19:29 -0500
-X-MC-Unique: 3lbbavzDNpGMbY6vLt0Brg-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 50AEB100550E;
-        Tue,  3 Mar 2020 10:19:27 +0000 (UTC)
-Received: from [10.36.116.59] (ovpn-116-59.ams2.redhat.com [10.36.116.59])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 02A3A1001B09;
-        Tue,  3 Mar 2020 10:19:21 +0000 (UTC)
-Subject: Re: [PATCH v2 1/3] iommu/virtio: Add topology description to
- virtio-iommu config space
-To:     Joerg Roedel <joro@8bytes.org>,
-        Jean-Philippe Brucker <jean-philippe@linaro.org>
-Cc:     iommu@lists.linux-foundation.org,
-        virtualization@lists.linux-foundation.org,
-        linux-pci@vger.kernel.org, bhelgaas@google.com, mst@redhat.com,
-        jasowang@redhat.com, kevin.tian@intel.com,
-        sebastien.boeuf@intel.com, jacob.jun.pan@intel.com,
-        robin.murphy@arm.com
-References: <20200228172537.377327-1-jean-philippe@linaro.org>
- <20200228172537.377327-2-jean-philippe@linaro.org>
- <20200302161611.GD7829@8bytes.org>
-From:   Auger Eric <eric.auger@redhat.com>
-Message-ID: <9004f814-2f7c-9024-3465-6f9661b97b7a@redhat.com>
-Date:   Tue, 3 Mar 2020 11:19:20 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.4.0
+        id S1728674AbgCCKdd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 3 Mar 2020 05:33:33 -0500
+Received: from lelv0142.ext.ti.com ([198.47.23.249]:50054 "EHLO
+        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728426AbgCCKdd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Mar 2020 05:33:33 -0500
+Received: from lelv0265.itg.ti.com ([10.180.67.224])
+        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 023AXMFu005259;
+        Tue, 3 Mar 2020 04:33:22 -0600
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1583231602;
+        bh=H23/C9c6D1Bn7rFt5P52oUsGTGwNGkRyxfjO34gCRzc=;
+        h=From:To:CC:Subject:Date;
+        b=VFKQTpXi/80VK2MnN/qbPYsMYvGxB/0mL7cf3fYGW9RoLsmJaReCFxMQQwNT9dXBW
+         hW1Lbp2WG31Vtx39Z7dT9qJMLBaLR1CFRktt0NDrOHS3uma/uhMEU5lRn3pfrlDBrM
+         8k6euOn/HIURI+6xrDbM/mYdlfw67AdTcUXc2aWA=
+Received: from DLEE105.ent.ti.com (dlee105.ent.ti.com [157.170.170.35])
+        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 023AXMuB105817
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 3 Mar 2020 04:33:22 -0600
+Received: from DLEE110.ent.ti.com (157.170.170.21) by DLEE105.ent.ti.com
+ (157.170.170.35) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Tue, 3 Mar
+ 2020 04:33:22 -0600
+Received: from localhost.localdomain (10.64.41.19) by DLEE110.ent.ti.com
+ (157.170.170.21) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
+ Frontend Transport; Tue, 3 Mar 2020 04:33:22 -0600
+Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
+        by localhost.localdomain (8.15.2/8.15.2) with ESMTP id 023AXJvb114370;
+        Tue, 3 Mar 2020 04:33:19 -0600
+From:   Kishon Vijay Abraham I <kishon@ti.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Andrew Murray <amurray@thegoodpenguin.co.uk>,
+        Alan Mikhak <alan.mikhak@sifive.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC:     Tom Joseph <tjoseph@cadence.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>
+Subject: [PATCH v2 0/5] PCI: functions/pci-epf-test: Add DMA data transfer
+Date:   Tue, 3 Mar 2020 16:07:47 +0530
+Message-ID: <20200303103752.13076-1-kishon@ti.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-In-Reply-To: <20200302161611.GD7829@8bytes.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+Content-Type: text/plain
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Joerg,
+Patch series uses dma engine APIs in pci-epf-test to transfer data using
+DMA. It also adds an option "-d" in pcitest for the user to indicate
+whether DMA has to be used for data transfer. This also prints
+throughput information for data transfer.
 
-On 3/2/20 5:16 PM, Joerg Roedel wrote:
-> On Fri, Feb 28, 2020 at 06:25:36PM +0100, Jean-Philippe Brucker wrote:
->> This solution isn't elegant nor foolproof, but is the best we can do at
->> the moment and works with existing virtio-iommu implementations. It also
->> enables an IOMMU for lightweight hypervisors that do not rely on
->> firmware methods for booting.
-> 
-> I appreciate the enablement on x86, but putting the conmfiguration into
-> mmio-space isn't really something I want to see upstream. What is the
-> problem with defining an ACPI table instead? This would also make things
-> work on AARCH64 UEFI machines.
-Michael has pushed this solution (putting the "configuration in the PCI
-config space"), I think for those main reasons:
-- ACPI may not be supported on some archs/hyps
-- the virtio-iommu is a PCIe device so binding should not need ACPI
-description
+Changes from v1:
+*) Fixed some of the function names from pci_epf_* to pci_epf_test_*
+since the DMA support is now been moved to pci-epf-test.c
 
-Another issue with ACPI integration is we have different flavours of
-tables that exist: IORT, DMAR, IVRS
+Kishon Vijay Abraham I (5):
+  PCI: endpoint: functions/pci-epf-test: Add DMA support to transfer
+    data
+  PCI: endpoint: functions/pci-epf-test: Print throughput information
+  misc: pci_endpoint_test: Use streaming DMA APIs for buffer allocation
+  tools: PCI: Add 'd' command line option to support DMA
+  misc: pci_endpoint_test: Add support to get DMA option from userspace
 
-x86 ACPI integration was suggested with IORT. But it seems ARM is
-reluctant to extend IORT to support para-virtualized IOMMU. So the VIOT
-was proposed as a different atternative in "[RFC 00/13] virtio-iommu on
-non-devicetree platforms"
-(https://patchwork.kernel.org/cover/11257727/). Proposing a table that
-may be used by different vendors seems to be a challenging issue here.
+ drivers/misc/pci_endpoint_test.c              | 165 ++++++++++--
+ drivers/pci/endpoint/functions/pci-epf-test.c | 253 +++++++++++++++++-
+ include/uapi/linux/pcitest.h                  |   5 +
+ tools/pci/pcitest.c                           |  20 +-
+ 4 files changed, 412 insertions(+), 31 deletions(-)
 
-So even if the above solution does not look perfect, it looked a
-sensible compromise given the above arguments. Please could you explain
-what are the most compelling arguments against it?
-
-Thanks
-
-Eric
-> 
-> Regards,
-> 
-> 	Joerg
-> 
+-- 
+2.17.1
 
