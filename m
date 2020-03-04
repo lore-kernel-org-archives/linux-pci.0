@@ -4,36 +4,37 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CEA18C3F2D7
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Mar 2020 02:39:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ECDBEC3F2C6
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Mar 2020 02:39:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A89542073D
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Mar 2020 02:39:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D132520866
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Mar 2020 02:39:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387643AbgCDCjK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 3 Mar 2020 21:39:10 -0500
-Received: from mga12.intel.com ([192.55.52.136]:44650 "EHLO mga12.intel.com"
+        id S2387664AbgCDCjM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 3 Mar 2020 21:39:12 -0500
+Received: from mga07.intel.com ([134.134.136.100]:56585 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387624AbgCDCjI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 3 Mar 2020 21:39:08 -0500
+        id S2387631AbgCDCjM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 3 Mar 2020 21:39:12 -0500
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 03 Mar 2020 18:39:07 -0800
+  by orsmga105.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 03 Mar 2020 18:39:07 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.70,511,1574150400"; 
-   d="scan'208";a="233866898"
+   d="scan'208";a="233866908"
 Received: from skuppusw-desk.jf.intel.com ([10.7.201.16])
   by orsmga008.jf.intel.com with ESMTP; 03 Mar 2020 18:39:06 -0800
 From:   sathyanarayanan.kuppuswamy@linux.intel.com
 To:     bhelgaas@google.com
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         ashok.raj@intel.com, sathyanarayanan.kuppuswamy@linux.intel.com
-Subject: [PATCH v17 04/12] PCI: portdrv: remove unnecessary pcie_port_find_service()
-Date:   Tue,  3 Mar 2020 18:36:27 -0800
-Message-Id: <2d2e15ac7079baa5883e2a1c06e11985e375cdff.1583286655.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+Subject: [PATCH v17 07/12] PCI/ERR: Return status of pcie_do_recovery()
+Date:   Tue,  3 Mar 2020 18:36:30 -0800
+Message-Id: <a795fe1f1f42f5aa1d334768d4e719d8c147894e.1583286655.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <cover.1583286655.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 References: <cover.1583286655.git.sathyanarayanan.kuppuswamy@linux.intel.com>
@@ -46,60 +47,75 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 
-Since pcie_do_recovery() has been refactored to not to depend
-on PCIe service driver, we no longer have any users for
-pcie_port_find_service() function. So just remove it.
+As per the Downstream Port Containment Related Enhancements ECN to the
+PCI Firmware Specification r3.2, sec 4.5.1, table 4-4, Support for Error
+Disconnect Recover (EDR) implies that the OS will invalidate the
+software state associated with child devices of the port without
+attempting to access the child device hardware. If the OS supports
+Downstream Port Containment (DPC), as indicated by the OS setting bit 7
+of _OSC control field, the OS shall attempt to recover the child devices
+if the port implements the Downstream Port Containment Extended
+Capability. If the OS continues operation, the OS must inform the
+Firmware of the status of the recovery operation via the _OST method.
+
+So in adding EDR support, to report status of error recovery via _OST,
+we need to know the status of error recovery. So add support to return
+the status of pcie_do_recovery() function.
 
 Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 ---
- drivers/pci/pcie/portdrv.h      |  2 --
- drivers/pci/pcie/portdrv_core.c | 21 ---------------------
- 2 files changed, 23 deletions(-)
+ drivers/pci/pci.h      |  5 +++--
+ drivers/pci/pcie/err.c | 10 ++++++----
+ 2 files changed, 9 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
-index 1e673619b101..c5da165ce016 100644
---- a/drivers/pci/pcie/portdrv.h
-+++ b/drivers/pci/pcie/portdrv.h
-@@ -161,7 +161,5 @@ static inline int pcie_aer_get_firmware_first(struct pci_dev *pci_dev)
- }
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 2962200bfe35..c2c35f152cde 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -547,8 +547,9 @@ static inline int pci_dev_specific_disable_acs_redir(struct pci_dev *dev)
  #endif
  
--struct pcie_port_service_driver *pcie_port_find_service(struct pci_dev *dev,
--							u32 service);
- struct device *pcie_port_find_device(struct pci_dev *dev, u32 service);
- #endif /* _PORTDRV_H_ */
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 5075cb9e850c..50a9522ab07d 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -458,27 +458,6 @@ static int find_service_iter(struct device *device, void *data)
- 	return 0;
+ /* PCI error reporting and recovery */
+-void pcie_do_recovery(struct pci_dev *dev, enum pci_channel_state state,
+-		      pci_ers_result_t (*reset_cb)(struct pci_dev *pdev));
++pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
++			enum pci_channel_state state,
++			pci_ers_result_t (*reset_cb)(struct pci_dev *pdev));
+ 
+ bool pcie_wait_for_link(struct pci_dev *pdev, bool active);
+ #ifdef CONFIG_PCIEASPM
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index 05f87bc9d011..b560f0096a70 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -186,9 +186,9 @@ static pci_ers_result_t reset_link(struct pci_dev *dev,
+ 	return status;
  }
  
--/**
-- * pcie_port_find_service - find the service driver
-- * @dev: PCI Express port the service is associated with
-- * @service: Service to find
-- *
-- * Find PCI Express port service driver associated with given service
-- */
--struct pcie_port_service_driver *pcie_port_find_service(struct pci_dev *dev,
--							u32 service)
--{
--	struct pcie_port_service_driver *drv;
--	struct portdrv_service_data pdrvs;
--
--	pdrvs.drv = NULL;
--	pdrvs.service = service;
--	device_for_each_child(&dev->dev, &pdrvs, find_service_iter);
--
--	drv = pdrvs.drv;
--	return drv;
--}
--
- /**
-  * pcie_port_find_device - find the struct device
-  * @dev: PCI Express port the service is associated with
+-void pcie_do_recovery(struct pci_dev *dev,
+-		      enum pci_channel_state state,
+-		      pci_ers_result_t (*reset_cb)(struct pci_dev *pdev))
++pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
++			enum pci_channel_state state,
++			pci_ers_result_t (*reset_cb)(struct pci_dev *pdev))
+ {
+ 	pci_ers_result_t status = PCI_ERS_RESULT_CAN_RECOVER;
+ 	struct pci_bus *bus;
+@@ -240,11 +240,13 @@ void pcie_do_recovery(struct pci_dev *dev,
+ 	pci_aer_clear_device_status(dev);
+ 	pci_cleanup_aer_uncorrect_error_status(dev);
+ 	pci_info(dev, "device recovery successful\n");
+-	return;
++	return status;
+ 
+ failed:
+ 	pci_uevent_ers(dev, PCI_ERS_RESULT_DISCONNECT);
+ 
+ 	/* TODO: Should kernel panic here? */
+ 	pci_info(dev, "device recovery failed\n");
++
++	return status;
+ }
 -- 
 2.25.1
 
