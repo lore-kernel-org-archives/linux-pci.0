@@ -6,61 +6,57 @@ X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90931C3F2CE
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Mar 2020 22:21:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E454C3F2D1
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Mar 2020 22:28:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 733CF20870
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Mar 2020 22:21:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3317C20842
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Mar 2020 22:28:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388281AbgCDWVf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 4 Mar 2020 17:21:35 -0500
-Received: from shards.monkeyblade.net ([23.128.96.9]:46816 "EHLO
+        id S2388337AbgCDW2n (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 4 Mar 2020 17:28:43 -0500
+Received: from shards.monkeyblade.net ([23.128.96.9]:46856 "EHLO
         shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388026AbgCDWVf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2020 17:21:35 -0500
+        with ESMTP id S2388312AbgCDW2n (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2020 17:28:43 -0500
 Received: from localhost (unknown [IPv6:2601:601:9f00:477::3d5])
         (using TLSv1 with cipher AES256-SHA (256/256 bits))
         (Client did not present a certificate)
         (Authenticated sender: davem-davemloft)
-        by shards.monkeyblade.net (Postfix) with ESMTPSA id 1C34C15AD790A;
-        Wed,  4 Mar 2020 14:21:34 -0800 (PST)
-Date:   Wed, 04 Mar 2020 14:21:33 -0800 (PST)
-Message-Id: <20200304.142133.2297314858740854355.davem@davemloft.net>
-To:     helgaas@kernel.org
-Cc:     hkallweit1@gmail.com, nic_swsd@realtek.com, mlindner@marvell.com,
-        stephen@networkplumber.org, clemens@ladisch.de, perex@perex.cz,
-        tiwai@suse.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        alsa-devel@alsa-project.org
-Subject: Re: [PATCH v4 00/10] PCI: Add and use constant
- PCI_STATUS_ERROR_BITS and helper pci_status_get_and_clear_errors
+        by shards.monkeyblade.net (Postfix) with ESMTPSA id 9E49915AD8556;
+        Wed,  4 Mar 2020 14:28:42 -0800 (PST)
+Date:   Wed, 04 Mar 2020 14:28:41 -0800 (PST)
+Message-Id: <20200304.142841.1338152963083331964.davem@davemloft.net>
+To:     jacob.e.keller@intel.com
+Cc:     linux-pci@vger.kernel.org, netdev@vger.kernel.org,
+        bhelgaas@google.com, kuba@kernel.org
+Subject: Re: [PATCH v2 0/6] PCI: Implement function to read Device Serial
+ Number
 From:   David Miller <davem@davemloft.net>
-In-Reply-To: <20200304165904.GA231103@google.com>
-References: <20200303.185937.1365050844508788930.davem@davemloft.net>
-        <20200304165904.GA231103@google.com>
+In-Reply-To: <20200303022506.1792776-1-jacob.e.keller@intel.com>
+References: <CABhMZUXJ_Omt-+fwa4Oz-Ly=J+NM8+8Ryv-Ad1u_bgEpDRH7RQ@mail.gmail.com>
+        <20200303022506.1792776-1-jacob.e.keller@intel.com>
 X-Mailer: Mew version 6.8 on Emacs 26.1
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.5.12 (shards.monkeyblade.net [149.20.54.216]); Wed, 04 Mar 2020 14:21:34 -0800 (PST)
+X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.5.12 (shards.monkeyblade.net [149.20.54.216]); Wed, 04 Mar 2020 14:28:42 -0800 (PST)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Bjorn Helgaas <helgaas@kernel.org>
-Date: Wed, 4 Mar 2020 10:59:04 -0600
+From: Jacob Keller <jacob.e.keller@intel.com>
+Date: Mon,  2 Mar 2020 18:24:59 -0800
 
-> On Tue, Mar 03, 2020 at 06:59:37PM -0800, David Miller wrote:
->> 
->> Bjorn, please review and let me know if it is OK to merge this via the
->> networking tree.
+> Several drivers read the Device Serial Number from the PCIe extended
+> configuration space. Each of these drivers implements a similar approach to
+> finding the position and then extracting the 8 bytes of data.
 > 
-> I acked the relevant patches and you're welcome to merge it via
-> networking.  Thanks!
+> Implement a new helper function, pci_get_dsn, which can be used to extract
+> this data into an 8 byte array.
+ ...
 
-Ok, thanks.
+Bjorn, another series that needs your review and could go via my networking
+tree.
 
-Series applied to net-next.
-
-Thanks again everyone.
+Please take a look, thanks.
