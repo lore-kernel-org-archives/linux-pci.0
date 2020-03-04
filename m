@@ -7,34 +7,34 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7DF1C3F2D8
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Mar 2020 02:39:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BEB07C3F2D7
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Mar 2020 02:39:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8C4FF2073D
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Mar 2020 02:39:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 970BF2073D
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Mar 2020 02:39:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387505AbgCDCj2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 3 Mar 2020 21:39:28 -0500
-Received: from mga07.intel.com ([134.134.136.100]:56584 "EHLO mga07.intel.com"
+        id S2387648AbgCDCjK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 3 Mar 2020 21:39:10 -0500
+Received: from mga12.intel.com ([192.55.52.136]:44652 "EHLO mga12.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387657AbgCDCjL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 3 Mar 2020 21:39:11 -0500
+        id S2387626AbgCDCjI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 3 Mar 2020 21:39:08 -0500
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by orsmga105.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 03 Mar 2020 18:39:07 -0800
+  by fmsmga106.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 03 Mar 2020 18:39:07 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.70,511,1574150400"; 
-   d="scan'208";a="233866911"
+   d="scan'208";a="233866902"
 Received: from skuppusw-desk.jf.intel.com ([10.7.201.16])
   by orsmga008.jf.intel.com with ESMTP; 03 Mar 2020 18:39:06 -0800
 From:   sathyanarayanan.kuppuswamy@linux.intel.com
 To:     bhelgaas@google.com
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         ashok.raj@intel.com, sathyanarayanan.kuppuswamy@linux.intel.com
-Subject: [PATCH v17 08/12] PCI/DPC: Cache DPC capabilities in pci_init_capabilities()
-Date:   Tue,  3 Mar 2020 18:36:31 -0800
-Message-Id: <6ac4e893e7d1054fe43efed0f89ca02f072c3190.1583286655.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+Subject: [PATCH v17 05/12] PCI: portdrv: remove reset_link member from pcie_port_service_driver
+Date:   Tue,  3 Mar 2020 18:36:28 -0800
+Message-Id: <13d4866abf46f034f706f255287258cda99fadb4.1583286655.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <cover.1583286655.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 References: <cover.1583286655.git.sathyanarayanan.kuppuswamy@linux.intel.com>
@@ -47,101 +47,58 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 
-Since we need to re-use DPC error handling routines in Error Disconnect
-Recover (EDR) driver, move the initalization and caching of DPC
-capabilities to pci_init_capabilities().
+reset_link member in struct pcie_port_service_driver was
+mainly added to let pcie_do_recovery() trigger the driver
+specific reset_link() on PCIe fatal errors. But after
+modifying the pcie_do_recovery() function to accept reset_link
+callback as function parameter, we no longer have need to use
+or set reset_link in struct pcie_port_service_driver. So remove
+it.
 
 Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 ---
- drivers/pci/pci.h      |  2 ++
- drivers/pci/pcie/dpc.c | 32 ++++++++++++++++++++------------
- drivers/pci/probe.c    |  1 +
- 3 files changed, 23 insertions(+), 12 deletions(-)
+ drivers/pci/pcie/aer.c     | 1 -
+ drivers/pci/pcie/dpc.c     | 1 -
+ drivers/pci/pcie/portdrv.h | 3 ---
+ 3 files changed, 5 deletions(-)
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index c2c35f152cde..e57e78b619f8 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -448,9 +448,11 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info);
- #ifdef CONFIG_PCIE_DPC
- void pci_save_dpc_state(struct pci_dev *dev);
- void pci_restore_dpc_state(struct pci_dev *dev);
-+void pci_dpc_init(struct pci_dev *pdev);
- #else
- static inline void pci_save_dpc_state(struct pci_dev *dev) {}
- static inline void pci_restore_dpc_state(struct pci_dev *dev) {}
-+static inline void pci_dpc_init(struct pci_dev *pdev) {}
- #endif
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index 1235eca0a2e6..c0540c3761dc 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -1500,7 +1500,6 @@ static struct pcie_port_service_driver aerdriver = {
  
- #ifdef CONFIG_PCI_ATS
+ 	.probe		= aer_probe,
+ 	.remove		= aer_remove,
+-	.reset_link	= aer_root_reset,
+ };
+ 
+ /**
 diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-index 1ae5d94944eb..ad011d6b22c5 100644
+index 114358d62ddf..1ae5d94944eb 100644
 --- a/drivers/pci/pcie/dpc.c
 +++ b/drivers/pci/pcie/dpc.c
-@@ -249,6 +249,26 @@ static irqreturn_t dpc_irq(int irq, void *context)
- 	return IRQ_HANDLED;
- }
+@@ -313,7 +313,6 @@ static struct pcie_port_service_driver dpcdriver = {
+ 	.service	= PCIE_PORT_SERVICE_DPC,
+ 	.probe		= dpc_probe,
+ 	.remove		= dpc_remove,
+-	.reset_link	= dpc_reset_link,
+ };
  
-+void pci_dpc_init(struct pci_dev *pdev)
-+{
-+	u16 cap;
-+
-+	pdev->dpc_cap = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_DPC);
-+	if (!pdev->dpc_cap)
-+		return;
-+
-+	pci_read_config_word(pdev, pdev->dpc_cap + PCI_EXP_DPC_CAP, &cap);
-+	pdev->dpc_rp_extensions = (cap & PCI_EXP_DPC_CAP_RP_EXT) ? 1 : 0;
-+	if (pdev->dpc_rp_extensions) {
-+		pdev->dpc_rp_log_size = (cap & PCI_EXP_DPC_RP_PIO_LOG_SIZE) >> 8;
-+		if (pdev->dpc_rp_log_size < 4 || pdev->dpc_rp_log_size > 9) {
-+			pci_err(pdev, "RP PIO log size %u is invalid\n",
-+				pdev->dpc_rp_log_size);
-+			pdev->dpc_rp_log_size = 0;
-+		}
-+	}
-+}
-+
- #define FLAG(x, y) (((x) & (y)) ? '+' : '-')
- static int dpc_probe(struct pcie_device *dev)
- {
-@@ -260,8 +280,6 @@ static int dpc_probe(struct pcie_device *dev)
- 	if (pcie_aer_get_firmware_first(pdev) && !pcie_ports_dpc_native)
- 		return -ENOTSUPP;
+ int __init pcie_dpc_init(void)
+diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
+index c5da165ce016..64b5e081cdb2 100644
+--- a/drivers/pci/pcie/portdrv.h
++++ b/drivers/pci/pcie/portdrv.h
+@@ -92,9 +92,6 @@ struct pcie_port_service_driver {
+ 	/* Device driver may resume normal operations */
+ 	void (*error_resume)(struct pci_dev *dev);
  
--	pdev->dpc_cap = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_DPC);
+-	/* Link Reset Capability - AER service driver specific */
+-	pci_ers_result_t (*reset_link)(struct pci_dev *dev);
 -
- 	status = devm_request_threaded_irq(device, dev->irq, dpc_irq,
- 					   dpc_handler, IRQF_SHARED,
- 					   "pcie-dpc", pdev);
-@@ -274,16 +292,6 @@ static int dpc_probe(struct pcie_device *dev)
- 	pci_read_config_word(pdev, pdev->dpc_cap + PCI_EXP_DPC_CAP, &cap);
- 	pci_read_config_word(pdev, pdev->dpc_cap + PCI_EXP_DPC_CTL, &ctl);
- 
--	pdev->dpc_rp_extensions = (cap & PCI_EXP_DPC_CAP_RP_EXT) ? 1 : 0;
--	if (pdev->dpc_rp_extensions) {
--		pdev->dpc_rp_log_size = (cap & PCI_EXP_DPC_RP_PIO_LOG_SIZE) >> 8;
--		if (pdev->dpc_rp_log_size < 4 || pdev->dpc_rp_log_size > 9) {
--			pci_err(pdev, "RP PIO log size %u is invalid\n",
--				pdev->dpc_rp_log_size);
--			pdev->dpc_rp_log_size = 0;
--		}
--	}
--
- 	ctl = (ctl & 0xfff4) | PCI_EXP_DPC_CTL_EN_FATAL | PCI_EXP_DPC_CTL_INT_EN;
- 	pci_write_config_word(pdev, pdev->dpc_cap + PCI_EXP_DPC_CTL, ctl);
- 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 512cb4312ddd..c6f91f886818 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2329,6 +2329,7 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 	pci_enable_acs(dev);		/* Enable ACS P2P upstream forwarding */
- 	pci_ptm_init(dev);		/* Precision Time Measurement */
- 	pci_aer_init(dev);		/* Advanced Error Reporting */
-+	pci_dpc_init(dev);		/* Downstream Port Containment */
- 
- 	pcie_report_downtraining(dev);
+ 	int port_type;  /* Type of the port this driver can handle */
+ 	u32 service;    /* Port service this device represents */
  
 -- 
 2.25.1
