@@ -7,34 +7,34 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECDBEC3F2C6
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Mar 2020 02:39:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6958CC3F2D8
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Mar 2020 02:39:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D132520866
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Mar 2020 02:39:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4CA102073D
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Mar 2020 02:39:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387664AbgCDCjM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S2387662AbgCDCjM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Tue, 3 Mar 2020 21:39:12 -0500
-Received: from mga07.intel.com ([134.134.136.100]:56585 "EHLO mga07.intel.com"
+Received: from mga07.intel.com ([134.134.136.100]:56583 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387631AbgCDCjM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 3 Mar 2020 21:39:12 -0500
+        id S2387656AbgCDCjL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 3 Mar 2020 21:39:11 -0500
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from orsmga008.jf.intel.com ([10.7.209.65])
   by orsmga105.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 03 Mar 2020 18:39:07 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.70,511,1574150400"; 
-   d="scan'208";a="233866908"
+   d="scan'208";a="233866917"
 Received: from skuppusw-desk.jf.intel.com ([10.7.201.16])
   by orsmga008.jf.intel.com with ESMTP; 03 Mar 2020 18:39:06 -0800
 From:   sathyanarayanan.kuppuswamy@linux.intel.com
 To:     bhelgaas@google.com
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         ashok.raj@intel.com, sathyanarayanan.kuppuswamy@linux.intel.com
-Subject: [PATCH v17 07/12] PCI/ERR: Return status of pcie_do_recovery()
-Date:   Tue,  3 Mar 2020 18:36:30 -0800
-Message-Id: <a795fe1f1f42f5aa1d334768d4e719d8c147894e.1583286655.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+Subject: [PATCH v17 10/12] PCI/DPC: Export DPC error recovery functions
+Date:   Tue,  3 Mar 2020 18:36:33 -0800
+Message-Id: <ac8816d4d41d0894720660f9b51dbeac0842869d.1583286655.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <cover.1583286655.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 References: <cover.1583286655.git.sathyanarayanan.kuppuswamy@linux.intel.com>
@@ -47,75 +47,76 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 
-As per the Downstream Port Containment Related Enhancements ECN to the
-PCI Firmware Specification r3.2, sec 4.5.1, table 4-4, Support for Error
-Disconnect Recover (EDR) implies that the OS will invalidate the
-software state associated with child devices of the port without
-attempting to access the child device hardware. If the OS supports
-Downstream Port Containment (DPC), as indicated by the OS setting bit 7
-of _OSC control field, the OS shall attempt to recover the child devices
-if the port implements the Downstream Port Containment Extended
-Capability. If the OS continues operation, the OS must inform the
-Firmware of the status of the recovery operation via the _OST method.
+This is a preparatory patch for adding EDR support.
 
-So in adding EDR support, to report status of error recovery via _OST,
-we need to know the status of error recovery. So add support to return
-the status of pcie_do_recovery() function.
+As per the Downstream Port Containment Related Enhancements ECN to the
+PCI Firmware Specification r3.2, sec 4.5.1, table 4-6, If DPC is
+controlled by firmware, firmware is responsible for initializing
+Downstream Port Containment Extended Capability Structures per firmware
+policy. Further, the OS is permitted to read or write DPC Control and
+Status registers of a port while processing an Error Disconnect Recover
+notification from firmware on that port.
+
+To add EDR support we need to re-use DPC error handling functions. So
+add necessary interfaces.
 
 Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 ---
- drivers/pci/pci.h      |  5 +++--
- drivers/pci/pcie/err.c | 10 ++++++----
- 2 files changed, 9 insertions(+), 6 deletions(-)
+ drivers/pci/pci.h      |  2 ++
+ drivers/pci/pcie/dpc.c | 12 +++++++++---
+ 2 files changed, 11 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 2962200bfe35..c2c35f152cde 100644
+index c239e6dd2542..a475192c553a 100644
 --- a/drivers/pci/pci.h
 +++ b/drivers/pci/pci.h
-@@ -547,8 +547,9 @@ static inline int pci_dev_specific_disable_acs_redir(struct pci_dev *dev)
- #endif
- 
- /* PCI error reporting and recovery */
--void pcie_do_recovery(struct pci_dev *dev, enum pci_channel_state state,
--		      pci_ers_result_t (*reset_cb)(struct pci_dev *pdev));
-+pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
-+			enum pci_channel_state state,
-+			pci_ers_result_t (*reset_cb)(struct pci_dev *pdev));
- 
- bool pcie_wait_for_link(struct pci_dev *pdev, bool active);
- #ifdef CONFIG_PCIEASPM
-diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index 05f87bc9d011..b560f0096a70 100644
---- a/drivers/pci/pcie/err.c
-+++ b/drivers/pci/pcie/err.c
-@@ -186,9 +186,9 @@ static pci_ers_result_t reset_link(struct pci_dev *dev,
- 	return status;
+@@ -449,6 +449,8 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info);
+ void pci_save_dpc_state(struct pci_dev *dev);
+ void pci_restore_dpc_state(struct pci_dev *dev);
+ void pci_dpc_init(struct pci_dev *pdev);
++void dpc_process_error(struct pci_dev *pdev);
++pci_ers_result_t dpc_reset_link(struct pci_dev *pdev);
+ #else
+ static inline void pci_save_dpc_state(struct pci_dev *dev) {}
+ static inline void pci_restore_dpc_state(struct pci_dev *dev) {}
+diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+index ad011d6b22c5..72bfb58918e1 100644
+--- a/drivers/pci/pcie/dpc.c
++++ b/drivers/pci/pcie/dpc.c
+@@ -89,7 +89,7 @@ static int dpc_wait_rp_inactive(struct pci_dev *pdev)
+ 	return 0;
  }
  
--void pcie_do_recovery(struct pci_dev *dev,
--		      enum pci_channel_state state,
--		      pci_ers_result_t (*reset_cb)(struct pci_dev *pdev))
-+pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
-+			enum pci_channel_state state,
-+			pci_ers_result_t (*reset_cb)(struct pci_dev *pdev))
+-static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
++pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
  {
- 	pci_ers_result_t status = PCI_ERS_RESULT_CAN_RECOVER;
- 	struct pci_bus *bus;
-@@ -240,11 +240,13 @@ void pcie_do_recovery(struct pci_dev *dev,
- 	pci_aer_clear_device_status(dev);
- 	pci_cleanup_aer_uncorrect_error_status(dev);
- 	pci_info(dev, "device recovery successful\n");
--	return;
-+	return status;
+ 	u16 cap;
  
- failed:
- 	pci_uevent_ers(dev, PCI_ERS_RESULT_DISCONNECT);
- 
- 	/* TODO: Should kernel panic here? */
- 	pci_info(dev, "device recovery failed\n");
-+
-+	return status;
+@@ -193,9 +193,8 @@ static int dpc_get_aer_uncorrect_severity(struct pci_dev *dev,
+ 	return 1;
  }
+ 
+-static irqreturn_t dpc_handler(int irq, void *context)
++void dpc_process_error(struct pci_dev *pdev)
+ {
+-	struct pci_dev *pdev = context;
+ 	u16 cap = pdev->dpc_cap, status, source, reason, ext_reason;
+ 	struct aer_err_info info;
+ 
+@@ -225,6 +224,13 @@ static irqreturn_t dpc_handler(int irq, void *context)
+ 		pci_cleanup_aer_uncorrect_error_status(pdev);
+ 		pci_aer_clear_fatal_status(pdev);
+ 	}
++}
++
++static irqreturn_t dpc_handler(int irq, void *context)
++{
++	struct pci_dev *pdev = context;
++
++	dpc_process_error(pdev);
+ 
+ 	/* We configure DPC so it only triggers on ERR_FATAL */
+ 	pcie_do_recovery(pdev, pci_channel_io_frozen, dpc_reset_link);
 -- 
 2.25.1
 
