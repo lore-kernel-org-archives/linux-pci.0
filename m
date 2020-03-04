@@ -7,34 +7,34 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 382E3C3F2C6
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Mar 2020 02:39:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07AFDC3F2C6
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Mar 2020 02:39:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 19A352073D
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Mar 2020 02:39:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DDCA62073D
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Mar 2020 02:39:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387641AbgCDCjK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 3 Mar 2020 21:39:10 -0500
+        id S2387555AbgCDCji (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 3 Mar 2020 21:39:38 -0500
 Received: from mga07.intel.com ([134.134.136.100]:56583 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387608AbgCDCjI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 3 Mar 2020 21:39:08 -0500
+        id S2387589AbgCDCjJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 3 Mar 2020 21:39:09 -0500
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from orsmga008.jf.intel.com ([10.7.209.65])
   by orsmga105.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 03 Mar 2020 18:39:07 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.70,511,1574150400"; 
-   d="scan'208";a="233866905"
+   d="scan'208";a="233866914"
 Received: from skuppusw-desk.jf.intel.com ([10.7.201.16])
   by orsmga008.jf.intel.com with ESMTP; 03 Mar 2020 18:39:06 -0800
 From:   sathyanarayanan.kuppuswamy@linux.intel.com
 To:     bhelgaas@google.com
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         ashok.raj@intel.com, sathyanarayanan.kuppuswamy@linux.intel.com
-Subject: [PATCH v17 06/12] Documentation: PCI: Remove reset_link references
-Date:   Tue,  3 Mar 2020 18:36:29 -0800
-Message-Id: <a46938d227f6a11c010943800450a10aac39b7d3.1583286655.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+Subject: [PATCH v17 09/12] PCI/AER: Allow clearing Error Status Register in FF mode
+Date:   Tue,  3 Mar 2020 18:36:32 -0800
+Message-Id: <29fb514a0d86e9bcc75cec4ea8474cd4db33adbf.1583286655.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <cover.1583286655.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 References: <cover.1583286655.git.sathyanarayanan.kuppuswamy@linux.intel.com>
@@ -47,74 +47,87 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 
-After pcie_do_recovery() refactor, instead of reset_link
-member in struct pcie_port_service_driver, we use reset_cb
-callback parameter in pcie_do_recovery() function to pass
-the service driver specific reset_link function. So modify
-the Documentation to reflect the latest changes.
+As per PCI firmware specification r3.2 System Firmware Intermediary
+(SFI) _OSC and DPC Updates ECR
+(https://members.pcisig.com/wg/PCI-SIG/document/13563), sec titled "DPC
+Event Handling Implementation Note", page 10, Error Disconnect Recover
+(EDR) support allows OS to handle error recovery and clearing Error
+Registers even in FF mode. So create new API pci_aer_raw_clear_status()
+which allows clearing AER registers without FF mode checks.
 
 Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 ---
- Documentation/PCI/pcieaer-howto.rst | 25 +++++++++++--------------
- 1 file changed, 11 insertions(+), 14 deletions(-)
+ drivers/pci/pci.h      |  2 ++
+ drivers/pci/pcie/aer.c | 22 ++++++++++++++++++----
+ 2 files changed, 20 insertions(+), 4 deletions(-)
 
-diff --git a/Documentation/PCI/pcieaer-howto.rst b/Documentation/PCI/pcieaer-howto.rst
-index 18bdefaafd1a..0f3e5880efb8 100644
---- a/Documentation/PCI/pcieaer-howto.rst
-+++ b/Documentation/PCI/pcieaer-howto.rst
-@@ -147,7 +147,7 @@ section 3.3.
- Provide callbacks
- -----------------
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index e57e78b619f8..c239e6dd2542 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -655,6 +655,7 @@ extern const struct attribute_group aer_stats_attr_group;
+ void pci_aer_clear_fatal_status(struct pci_dev *dev);
+ void pci_aer_clear_device_status(struct pci_dev *dev);
+ int pci_cleanup_aer_error_status_regs(struct pci_dev *dev);
++int pci_aer_raw_clear_status(struct pci_dev *dev);
+ #else
+ static inline void pci_no_aer(void) { }
+ static inline void pci_aer_init(struct pci_dev *d) { }
+@@ -665,6 +666,7 @@ static inline int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
+ {
+ 	return -EINVAL;
+ }
++int pci_aer_raw_clear_status(struct pci_dev *dev) { return -EINVAL; }
+ #endif
  
--callback reset_link to reset pci express link
-+callback reset_cb to reset pci express link
- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ #ifdef CONFIG_ACPI
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index c0540c3761dc..41afefa562b7 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -420,7 +420,16 @@ void pci_aer_clear_fatal_status(struct pci_dev *dev)
+ 		pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, status);
+ }
  
- This callback is used to reset the pci express physical link when a
-@@ -156,11 +156,8 @@ default reset_link function, but different upstream ports might
- have different specifications to reset pci express link, so all
- upstream ports should provide their own reset_link functions.
+-int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
++/**
++ * pci_aer_raw_clear_status - Clear AER error registers.
++ * @dev: the PCI device
++ *
++ * NOTE: Allows clearing error registers in both FF and
++ * non FF modes.
++ *
++ * Returns 0 on success, or negative on failure.
++ */
++int pci_aer_raw_clear_status(struct pci_dev *dev)
+ {
+ 	int pos;
+ 	u32 status;
+@@ -433,9 +442,6 @@ int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
+ 	if (!pos)
+ 		return -EIO;
  
--In struct pcie_port_service_driver, a new pointer, reset_link, is
--added.
--::
+-	if (pcie_aer_get_firmware_first(dev))
+-		return -EIO;
 -
--	pci_ers_result_t (*reset_link) (struct pci_dev *dev);
-+In pcie_do_recovery function, reset_cb function pointer can be used
-+to pass the port specific reset_link callback.
+ 	port_type = pci_pcie_type(dev);
+ 	if (port_type == PCI_EXP_TYPE_ROOT_PORT) {
+ 		pci_read_config_dword(dev, pos + PCI_ERR_ROOT_STATUS, &status);
+@@ -451,6 +457,14 @@ int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
+ 	return 0;
+ }
  
- Section 3.2.2.2 provides more detailed info on when to call
- reset_link.
-@@ -212,13 +209,13 @@ error_detected(dev, pci_channel_io_frozen) to all drivers within
- a hierarchy in question. Then, performing link reset at upstream is
- necessary. As different kinds of devices might use different approaches
- to reset link, AER port service driver is required to provide the
--function to reset link. Firstly, kernel looks for if the upstream
--component has an aer driver. If it has, kernel uses the reset_link
--callback of the aer driver. If the upstream component has no aer driver
--and the port is downstream port, we will perform a hot reset as the
--default by setting the Secondary Bus Reset bit of the Bridge Control
--register associated with the downstream port. As for upstream ports,
--they should provide their own aer service drivers with reset_link
-+function to reset link via reset_cb parameter of pcie_do_recovery()
-+function call. If reset_cb is not NULL, recovery function will use it
-+to reset the link. If there is no reset_cb callback provided and
-+the port is downstream port, we will perform a hot reset as the default
-+by setting the Secondary Bus Reset bit of the Bridge Control register
-+associated with the downstream port. As for upstream ports,
-+they should provide their own reset_link function via reset_cb callback
- function. If error_detected returns PCI_ERS_RESULT_CAN_RECOVER and
- reset_link returns PCI_ERS_RESULT_RECOVERED, the error handling goes
- to mmio_enabled.
-@@ -262,7 +259,7 @@ A:
- 
- Q:
-   What happens if an upstream port service driver does not provide
--  callback reset_link?
-+  callback reset_cb?
- 
- A:
-   Fatal error recovery will fail if the errors are reported by the
++int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
++{
++	if (pcie_aer_get_firmware_first(dev))
++		return -EIO;
++
++	return pci_aer_raw_clear_status(dev);
++}
++
+ void pci_save_aer_state(struct pci_dev *dev)
+ {
+ 	struct pci_cap_saved_state *save_state;
 -- 
 2.25.1
 
