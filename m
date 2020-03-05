@@ -5,46 +5,47 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A551DC3F2CD
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Mar 2020 10:26:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC286C3F2CD
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Mar 2020 10:26:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 68F7B2146E
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Mar 2020 10:26:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C217221739
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Mar 2020 10:26:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="olidOnhI"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="Q/pai1To"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727002AbgCEK0I (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 5 Mar 2020 05:26:08 -0500
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:46142 "EHLO
-        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727201AbgCEK0H (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Mar 2020 05:26:07 -0500
-Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 025APxsc003278;
-        Thu, 5 Mar 2020 04:25:59 -0600
+        id S1727112AbgCEK0D (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 5 Mar 2020 05:26:03 -0500
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:38138 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727079AbgCEK0D (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Mar 2020 05:26:03 -0500
+Received: from lelv0265.itg.ti.com ([10.180.67.224])
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 025APrD2079839;
+        Thu, 5 Mar 2020 04:25:53 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1583403959;
-        bh=X0Tvalk6YR+srEGFLOSxdsDQwOfhoj9E8eG9vhWgyAg=;
+        s=ti-com-17Q1; t=1583403953;
+        bh=MxZ27lOgLNAm0+mFy5tBZ/tTAFiLY0RQufZRpnWgtfA=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=olidOnhIL8jS9uZuqsFUR1NWDdRZgDOxFzHLTRNm2aFebrG01cX/bAAoCRQ3+RfRa
-         I336SBwWhsBN3FsLRrvJ9kvMURf9b/RCJ+gLE69NrWWn8eOXrDfXcunlk3028JBZlL
-         IShthiAes8dPUih3UvVuhg3bCcYAVuLAqbpveW/w=
-Received: from DLEE105.ent.ti.com (dlee105.ent.ti.com [157.170.170.35])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id 025APxV8008229;
-        Thu, 5 Mar 2020 04:25:59 -0600
-Received: from DLEE113.ent.ti.com (157.170.170.24) by DLEE105.ent.ti.com
- (157.170.170.35) with Microsoft SMTP Server (version=TLS1_2,
+        b=Q/pai1ToSdlJEgAE1FLmrqmR33Jayln1SKl37igXaBoO+8smUi2gBGlk+Kz2uivvk
+         qVXjC/ELm6CZmChHytRWatfSijH+OmSMgVHTDqTrP0/d8O+B1+rkRg/KHAMjmAJsaX
+         cAMqB40MDGW1KUFZV61ToS27hfsWxrUmqkUDfyx0=
+Received: from DFLE102.ent.ti.com (dfle102.ent.ti.com [10.64.6.23])
+        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 025APrwe116724
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 5 Mar 2020 04:25:53 -0600
+Received: from DFLE106.ent.ti.com (10.64.6.27) by DFLE102.ent.ti.com
+ (10.64.6.23) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Thu, 5 Mar
- 2020 04:25:58 -0600
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE113.ent.ti.com
- (157.170.170.24) with Microsoft SMTP Server (version=TLS1_2,
+ 2020 04:25:53 -0600
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DFLE106.ent.ti.com
+ (10.64.6.27) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
- Frontend Transport; Thu, 5 Mar 2020 04:25:58 -0600
+ Frontend Transport; Thu, 5 Mar 2020 04:25:53 -0600
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 025APijH013418;
-        Thu, 5 Mar 2020 04:25:56 -0600
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 025APijF013418;
+        Thu, 5 Mar 2020 04:25:50 -0600
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Tom Joseph <tjoseph@cadence.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -52,9 +53,9 @@ To:     Tom Joseph <tjoseph@cadence.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <kishon@ti.com>
-Subject: [PATCH v5 4/4] dt-bindings: PCI: cadence: Deprecate inbound/outbound specific bindings
-Date:   Thu, 5 Mar 2020 16:00:17 +0530
-Message-ID: <20200305103017.16706-5-kishon@ti.com>
+Subject: [PATCH v5 2/4] dt-bindings: PCI: cadence: Add PCIe RC/EP DT schema for Cadence PCIe
+Date:   Thu, 5 Mar 2020 16:00:15 +0530
+Message-ID: <20200305103017.16706-3-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200305103017.16706-1-kishon@ti.com>
 References: <20200305103017.16706-1-kishon@ti.com>
@@ -66,77 +67,68 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Deprecate cdns,max-outbound-regions and cdns,no-bar-match-nbits for
-host mode as both these could be derived from "ranges" and "dma-ranges"
-property. "cdns,max-outbound-regions" property would still be required
-for EP mode.
+Add PCIe Host (RC) and Endpoint (EP) device tree schema for Cadence
+PCIe core library. Platforms using Cadence PCIe core can include the
+schemas added here in the platform specific schemas.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
 ---
-Changes from v4:
-Keep "cdns,max-outbound-regions" mandatory property for EP mode while
-deprecating it for host mode
- .../bindings/pci/cdns,cdns-pcie-ep.yaml       |  2 +-
- .../bindings/pci/cdns,cdns-pcie-host.yaml     |  3 +--
- .../devicetree/bindings/pci/cdns-pcie-ep.yaml | 25 +++++++++++++++++++
- .../bindings/pci/cdns-pcie-host.yaml          | 10 ++++++++
- .../devicetree/bindings/pci/cdns-pcie.yaml    |  8 ------
- 5 files changed, 37 insertions(+), 11 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/cdns-pcie-ep.yaml
+ .../bindings/pci/cdns-pcie-host.yaml          | 27 ++++++++++++++++
+ .../devicetree/bindings/pci/cdns-pcie.yaml    | 31 +++++++++++++++++++
+ 2 files changed, 58 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/cdns-pcie-host.yaml
+ create mode 100644 Documentation/devicetree/bindings/pci/cdns-pcie.yaml
 
-diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.yaml
-index 2996f8d4777c..50ce5d79d2c7 100644
---- a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.yaml
-+++ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.yaml
-@@ -10,7 +10,7 @@ maintainers:
-   - Tom Joseph <tjoseph@cadence.com>
- 
- allOf:
--  - $ref: "cdns-pcie.yaml#"
-+  - $ref: "cdns-pcie-ep.yaml#"
-   - $ref: "pci-ep.yaml#"
- 
- properties:
-diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.yaml b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.yaml
-index cabbe46ff578..84a8f095d031 100644
---- a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.yaml
-+++ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.yaml
-@@ -45,8 +45,6 @@ examples:
-             #size-cells = <2>;
-             bus-range = <0x0 0xff>;
-             linux,pci-domain = <0>;
--            cdns,max-outbound-regions = <16>;
--            cdns,no-bar-match-nbits = <32>;
-             vendor-id = <0x17cd>;
-             device-id = <0x0200>;
- 
-@@ -57,6 +55,7 @@ examples:
- 
-             ranges = <0x02000000 0x0 0x42000000  0x0 0x42000000  0x0 0x1000000>,
-                      <0x01000000 0x0 0x43000000  0x0 0x43000000  0x0 0x0010000>;
-+            dma-ranges = <0x02000000 0x0 0x0 0x0 0x0 0x1 0x00000000>;
- 
-             #interrupt-cells = <0x1>;
- 
-diff --git a/Documentation/devicetree/bindings/pci/cdns-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/cdns-pcie-ep.yaml
+diff --git a/Documentation/devicetree/bindings/pci/cdns-pcie-host.yaml b/Documentation/devicetree/bindings/pci/cdns-pcie-host.yaml
 new file mode 100644
-index 000000000000..6150a7a7bdbf
+index 000000000000..ab6e43b636ec
 --- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/cdns-pcie-ep.yaml
-@@ -0,0 +1,25 @@
++++ b/Documentation/devicetree/bindings/pci/cdns-pcie-host.yaml
+@@ -0,0 +1,27 @@
 +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
 +%YAML 1.2
 +---
-+$id: "http://devicetree.org/schemas/pci/cdns-pcie-ep.yaml#"
++$id: "http://devicetree.org/schemas/pci/cdns-pcie-host.yaml#"
 +$schema: "http://devicetree.org/meta-schemas/core.yaml#"
 +
-+title: Cadence PCIe Device
++title: Cadence PCIe Host
 +
 +maintainers:
 +  - Tom Joseph <tjoseph@cadence.com>
 +
 +allOf:
++  - $ref: "/schemas/pci/pci-bus.yaml#"
 +  - $ref: "cdns-pcie.yaml#"
++
++properties:
++  cdns,no-bar-match-nbits:
++    description:
++      Set into the no BAR match register to configure the number of least
++      significant bits kept during inbound (PCIe -> AXI) address translations
++    allOf:
++      - $ref: /schemas/types.yaml#/definitions/uint32
++    minimum: 0
++    maximum: 64
++    default: 32
++
++  msi-parent: true
+diff --git a/Documentation/devicetree/bindings/pci/cdns-pcie.yaml b/Documentation/devicetree/bindings/pci/cdns-pcie.yaml
+new file mode 100644
+index 000000000000..6887ccc339cc
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/cdns-pcie.yaml
+@@ -0,0 +1,31 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: "http://devicetree.org/schemas/pci/cdns-pcie.yaml#"
++$schema: "http://devicetree.org/meta-schemas/core.yaml#"
++
++title: Cadence PCIe Core
++
++maintainers:
++  - Tom Joseph <tjoseph@cadence.com>
 +
 +properties:
 +  cdns,max-outbound-regions:
@@ -147,54 +139,17 @@ index 000000000000..6150a7a7bdbf
 +    maximum: 32
 +    default: 32
 +
-+required:
-+  - cdns,max-outbound-regions
-diff --git a/Documentation/devicetree/bindings/pci/cdns-pcie-host.yaml b/Documentation/devicetree/bindings/pci/cdns-pcie-host.yaml
-index ab6e43b636ec..3d64f85aeb39 100644
---- a/Documentation/devicetree/bindings/pci/cdns-pcie-host.yaml
-+++ b/Documentation/devicetree/bindings/pci/cdns-pcie-host.yaml
-@@ -14,6 +14,15 @@ allOf:
-   - $ref: "cdns-pcie.yaml#"
- 
- properties:
-+  cdns,max-outbound-regions:
-+    description: maximum number of outbound regions
-+    allOf:
-+      - $ref: /schemas/types.yaml#/definitions/uint32
-+    minimum: 1
-+    maximum: 32
-+    default: 32
-+    deprecated: true
++  phys:
++    description:
++      One per lane if more than one in the list. If only one PHY listed it must
++      manage all lanes.
++    minItems: 1
++    maxItems: 16
 +
-   cdns,no-bar-match-nbits:
-     description:
-       Set into the no BAR match register to configure the number of least
-@@ -23,5 +32,6 @@ properties:
-     minimum: 0
-     maximum: 64
-     default: 32
-+    deprecated: true
- 
-   msi-parent: true
-diff --git a/Documentation/devicetree/bindings/pci/cdns-pcie.yaml b/Documentation/devicetree/bindings/pci/cdns-pcie.yaml
-index 6887ccc339cc..02553d5e6c51 100644
---- a/Documentation/devicetree/bindings/pci/cdns-pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/cdns-pcie.yaml
-@@ -10,14 +10,6 @@ maintainers:
-   - Tom Joseph <tjoseph@cadence.com>
- 
- properties:
--  cdns,max-outbound-regions:
--    description: maximum number of outbound regions
--    allOf:
--      - $ref: /schemas/types.yaml#/definitions/uint32
--    minimum: 1
--    maximum: 32
--    default: 32
--
-   phys:
-     description:
-       One per lane if more than one in the list. If only one PHY listed it must
++  phy-names:
++    items:
++      - const: pcie-phy
++    # FIXME: names when more than 1
 -- 
 2.17.1
 
