@@ -2,154 +2,98 @@ Return-Path: <SRS0=ofoM=4W=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.3 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC286C3F2CD
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Mar 2020 10:26:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7C08C3F2CD
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Mar 2020 11:29:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C217221739
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Mar 2020 10:26:12 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="Q/pai1To"
+	by mail.kernel.org (Postfix) with ESMTP id AB4212073D
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Mar 2020 11:29:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727112AbgCEK0D (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 5 Mar 2020 05:26:03 -0500
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:38138 "EHLO
-        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727079AbgCEK0D (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Mar 2020 05:26:03 -0500
-Received: from lelv0265.itg.ti.com ([10.180.67.224])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 025APrD2079839;
-        Thu, 5 Mar 2020 04:25:53 -0600
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1583403953;
-        bh=MxZ27lOgLNAm0+mFy5tBZ/tTAFiLY0RQufZRpnWgtfA=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=Q/pai1ToSdlJEgAE1FLmrqmR33Jayln1SKl37igXaBoO+8smUi2gBGlk+Kz2uivvk
-         qVXjC/ELm6CZmChHytRWatfSijH+OmSMgVHTDqTrP0/d8O+B1+rkRg/KHAMjmAJsaX
-         cAMqB40MDGW1KUFZV61ToS27hfsWxrUmqkUDfyx0=
-Received: from DFLE102.ent.ti.com (dfle102.ent.ti.com [10.64.6.23])
-        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 025APrwe116724
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 5 Mar 2020 04:25:53 -0600
-Received: from DFLE106.ent.ti.com (10.64.6.27) by DFLE102.ent.ti.com
- (10.64.6.23) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Thu, 5 Mar
- 2020 04:25:53 -0600
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DFLE106.ent.ti.com
- (10.64.6.27) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
- Frontend Transport; Thu, 5 Mar 2020 04:25:53 -0600
-Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 025APijF013418;
-        Thu, 5 Mar 2020 04:25:50 -0600
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-To:     Tom Joseph <tjoseph@cadence.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <kishon@ti.com>
-Subject: [PATCH v5 2/4] dt-bindings: PCI: cadence: Add PCIe RC/EP DT schema for Cadence PCIe
-Date:   Thu, 5 Mar 2020 16:00:15 +0530
-Message-ID: <20200305103017.16706-3-kishon@ti.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200305103017.16706-1-kishon@ti.com>
-References: <20200305103017.16706-1-kishon@ti.com>
+        id S1726049AbgCEL3m (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 5 Mar 2020 06:29:42 -0500
+Received: from foss.arm.com ([217.140.110.172]:47440 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725897AbgCEL3m (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 5 Mar 2020 06:29:42 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 933A431B;
+        Thu,  5 Mar 2020 03:29:41 -0800 (PST)
+Received: from e121166-lin.cambridge.arm.com (e121166-lin.cambridge.arm.com [10.1.196.255])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id E1C5B3F6C4;
+        Thu,  5 Mar 2020 03:29:40 -0800 (PST)
+Date:   Thu, 5 Mar 2020 11:29:31 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Replace zero-length array with flexible-array member
+Message-ID: <20200305112923.GA5576@e121166-lin.cambridge.arm.com>
+References: <20200213005221.GA10532@embeddedor.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200213005221.GA10532@embeddedor.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add PCIe Host (RC) and Endpoint (EP) device tree schema for Cadence
-PCIe core library. Platforms using Cadence PCIe core can include the
-schemas added here in the platform specific schemas.
+On Wed, Feb 12, 2020 at 06:52:21PM -0600, Gustavo A. R. Silva wrote:
+> The current codebase makes use of the zero-length array language
+> extension to the C90 standard, but the preferred mechanism to declare
+> variable-length types such as these ones is a flexible array member[1][2],
+> introduced in C99:
+> 
+> struct foo {
+>         int stuff;
+>         struct boo array[];
+> };
+> 
+> By making use of the mechanism above, we will get a compiler warning
+> in case the flexible array does not occur last in the structure, which
+> will help us prevent some kind of undefined behavior bugs from being
+> inadvertently introduced[3] to the codebase from now on.
+> 
+> Also, notice that, dynamic memory allocations won't be affected by
+> this change:
+> 
+> "Flexible array members have incomplete type, and so the sizeof operator
+> may not be applied. As a quirk of the original implementation of
+> zero-length arrays, sizeof evaluates to zero."[1]
+> 
+> This issue was found with the help of Coccinelle.
+> 
+> [1] https://gcc.gnu.org/onlinedocs/gcc/Zero-Length.html
+> [2] https://github.com/KSPP/linux/issues/21
+> [3] commit 76497732932f ("cxgb3/l2t: Fix undefined behaviour")
+> 
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+> ---
+>  drivers/pci/pci.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
----
- .../bindings/pci/cdns-pcie-host.yaml          | 27 ++++++++++++++++
- .../devicetree/bindings/pci/cdns-pcie.yaml    | 31 +++++++++++++++++++
- 2 files changed, 58 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/cdns-pcie-host.yaml
- create mode 100644 Documentation/devicetree/bindings/pci/cdns-pcie.yaml
+Applied to pci/hv for v5.7, thanks.
 
-diff --git a/Documentation/devicetree/bindings/pci/cdns-pcie-host.yaml b/Documentation/devicetree/bindings/pci/cdns-pcie-host.yaml
-new file mode 100644
-index 000000000000..ab6e43b636ec
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/cdns-pcie-host.yaml
-@@ -0,0 +1,27 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: "http://devicetree.org/schemas/pci/cdns-pcie-host.yaml#"
-+$schema: "http://devicetree.org/meta-schemas/core.yaml#"
-+
-+title: Cadence PCIe Host
-+
-+maintainers:
-+  - Tom Joseph <tjoseph@cadence.com>
-+
-+allOf:
-+  - $ref: "/schemas/pci/pci-bus.yaml#"
-+  - $ref: "cdns-pcie.yaml#"
-+
-+properties:
-+  cdns,no-bar-match-nbits:
-+    description:
-+      Set into the no BAR match register to configure the number of least
-+      significant bits kept during inbound (PCIe -> AXI) address translations
-+    allOf:
-+      - $ref: /schemas/types.yaml#/definitions/uint32
-+    minimum: 0
-+    maximum: 64
-+    default: 32
-+
-+  msi-parent: true
-diff --git a/Documentation/devicetree/bindings/pci/cdns-pcie.yaml b/Documentation/devicetree/bindings/pci/cdns-pcie.yaml
-new file mode 100644
-index 000000000000..6887ccc339cc
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/cdns-pcie.yaml
-@@ -0,0 +1,31 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: "http://devicetree.org/schemas/pci/cdns-pcie.yaml#"
-+$schema: "http://devicetree.org/meta-schemas/core.yaml#"
-+
-+title: Cadence PCIe Core
-+
-+maintainers:
-+  - Tom Joseph <tjoseph@cadence.com>
-+
-+properties:
-+  cdns,max-outbound-regions:
-+    description: maximum number of outbound regions
-+    allOf:
-+      - $ref: /schemas/types.yaml#/definitions/uint32
-+    minimum: 1
-+    maximum: 32
-+    default: 32
-+
-+  phys:
-+    description:
-+      One per lane if more than one in the list. If only one PHY listed it must
-+      manage all lanes.
-+    minItems: 1
-+    maxItems: 16
-+
-+  phy-names:
-+    items:
-+      - const: pcie-phy
-+    # FIXME: names when more than 1
--- 
-2.17.1
+Lorenzo
 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index d828ca835a98..3217b8cdb1e0 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -1521,7 +1521,7 @@ EXPORT_SYMBOL(pci_restore_state);
+>  
+>  struct pci_saved_state {
+>  	u32 config_space[16];
+> -	struct pci_cap_saved_data cap[0];
+> +	struct pci_cap_saved_data cap[];
+>  };
+>  
+>  /**
+> -- 
+> 2.23.0
+> 
