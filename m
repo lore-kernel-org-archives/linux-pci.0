@@ -6,29 +6,29 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91AEBC10F25
-	for <linux-pci@archiver.kernel.org>; Fri,  6 Mar 2020 13:09:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D335C10F27
+	for <linux-pci@archiver.kernel.org>; Fri,  6 Mar 2020 13:09:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 73E8824681
-	for <linux-pci@archiver.kernel.org>; Fri,  6 Mar 2020 13:09:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1C57124655
+	for <linux-pci@archiver.kernel.org>; Fri,  6 Mar 2020 13:09:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727326AbgCFNIr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 6 Mar 2020 08:08:47 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:53326 "EHLO
+        id S1726307AbgCFNIq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 6 Mar 2020 08:08:46 -0500
+Received: from Galois.linutronix.de ([193.142.43.55]:53327 "EHLO
         Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727097AbgCFNIp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2020 08:08:45 -0500
+        with ESMTP id S1726676AbgCFNIq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2020 08:08:46 -0500
 Received: from p5de0bf0b.dip0.t-ipconnect.de ([93.224.191.11] helo=nanos.tec.linutronix.de)
         by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
         (Exim 4.80)
         (envelope-from <tglx@linutronix.de>)
-        id 1jACiX-0003g0-8l; Fri, 06 Mar 2020 14:08:41 +0100
+        id 1jACiV-0003fm-39; Fri, 06 Mar 2020 14:08:39 +0100
 Received: from nanos.tec.linutronix.de (localhost [IPv6:::1])
-        by nanos.tec.linutronix.de (Postfix) with ESMTP id 8ECE8104085;
-        Fri,  6 Mar 2020 14:08:39 +0100 (CET)
-Message-Id: <20200306130624.098374457@linutronix.de>
+        by nanos.tec.linutronix.de (Postfix) with ESMTP id 7C7E2104097;
+        Fri,  6 Mar 2020 14:08:38 +0100 (CET)
+Message-Id: <20200306130623.590923677@linutronix.de>
 User-Agent: quilt/0.65
-Date:   Fri, 06 Mar 2020 14:03:48 +0100
+Date:   Fri, 06 Mar 2020 14:03:43 +0100
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Marc Zyngier <maz@kernel.org>, x86@kernel.org,
@@ -36,7 +36,7 @@ Cc:     Marc Zyngier <maz@kernel.org>, x86@kernel.org,
         Keith Busch <kbusch@kernel.org>,
         Kuppuswamy Sathyanarayanan 
         <sathyanarayanan.kuppuswamy@linux.intel.com>
-Subject: [patch 7/7] PCI/AER: Fix the broken interrupt injection
+Subject: [patch 2/7] genirq: Add protection against unsafe usage of generic_handle_irq()
 References: <20200306130341.199467200@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -48,70 +48,113 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The AER error injection mechanism just blindly abuses generic_handle_irq()
-which is really not meant for consumption by random drivers. The include of
-linux/irq.h should have been a red flag in the first place. Driver code,
-unless implementing interrupt chips or low level hypervisor functionality
-has absolutely no business with that.
+In general calling generic_handle_irq() with interrupts disabled from non
+interrupt context is harmless. For some interrupt controllers like the x86
+trainwrecks this is outright dangerous as it might corrupt state if an
+interrupt affinity change is pending.
 
-Invoking generic_handle_irq() from non interrupt handling context can have
-nasty side effects at least on x86 due to the hardware trainwreck which
-makes interrupt affinity changes a fragile beast. Sathyanarayanan triggered
-a NULL pointer dereference in the low level APIC code that way. While the
-particular pointer could be checked this would only paper over the issue
-because there are other ways to trigger warnings or silently corrupt state.
+Add infrastructure which allows to mark interrupts as unsafe and catch such
+usage in generic_handle_irq().
 
-Invoke the new irq_inject_interrupt() mechanism, which has the necessary
-sanity checks in place and injects the interrupt via the irq_retrigger()
-mechanism, which is at least halfways safe vs. the fragile x86 affinity
-change mechanics.
-
-It's safe on x86 as it does not corrupt state, but it still can cause a
-premature completion of an interrupt affinity change causing the interrupt
-line to become stale. Very unlikely, but possible.
-
-For regular operations this is a non issue as AER error injection is meant
-for debugging and testing and not for usage on production systems. People
-using this should better know what they are doing.
-
-Fixes: 390e2db82480 ("PCI/AER: Abstract AER interrupt handling")
 Reported-by: sathyanarayanan.kuppuswamy@linux.intel.com
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- drivers/pci/pcie/Kconfig      |    1 +
- drivers/pci/pcie/aer_inject.c |    6 ++----
- 2 files changed, 3 insertions(+), 4 deletions(-)
+ include/linux/irq.h    |   13 +++++++++++++
+ kernel/irq/internals.h |    8 ++++++++
+ kernel/irq/irqdesc.c   |    6 ++++++
+ kernel/irq/resend.c    |    5 +++--
+ 4 files changed, 30 insertions(+), 2 deletions(-)
 
---- a/drivers/pci/pcie/Kconfig
-+++ b/drivers/pci/pcie/Kconfig
-@@ -34,6 +34,7 @@ config PCIEAER
- config PCIEAER_INJECT
- 	tristate "PCI Express error injection support"
- 	depends on PCIEAER
-+	select GENERIC_IRQ_INJECTION
- 	help
- 	  This enables PCI Express Root Port Advanced Error Reporting
- 	  (AER) software error injector.
---- a/drivers/pci/pcie/aer_inject.c
-+++ b/drivers/pci/pcie/aer_inject.c
-@@ -16,7 +16,7 @@
+--- a/include/linux/irq.h
++++ b/include/linux/irq.h
+@@ -211,6 +211,8 @@ struct irq_data {
+  * IRQD_CAN_RESERVE		- Can use reservation mode
+  * IRQD_MSI_NOMASK_QUIRK	- Non-maskable MSI quirk for affinity change
+  *				  required
++ * IRQD_HANDLE_ENFORCE_IRQCTX	- Enforce that handle_irq_*() is only invoked
++ *				  from actual interrupt context.
+  */
+ enum {
+ 	IRQD_TRIGGER_MASK		= 0xf,
+@@ -234,6 +236,7 @@ enum {
+ 	IRQD_DEFAULT_TRIGGER_SET	= (1 << 25),
+ 	IRQD_CAN_RESERVE		= (1 << 26),
+ 	IRQD_MSI_NOMASK_QUIRK		= (1 << 27),
++	IRQD_HANDLE_ENFORCE_IRQCTX	= (1 << 28),
+ };
  
- #include <linux/module.h>
- #include <linux/init.h>
--#include <linux/irq.h>
-+#include <linux/interrupt.h>
- #include <linux/miscdevice.h>
- #include <linux/pci.h>
- #include <linux/slab.h>
-@@ -468,9 +468,7 @@ static int aer_inject(struct aer_error_i
- 		}
- 		pci_info(edev->port, "Injecting errors %08x/%08x into device %s\n",
- 			 einj->cor_status, einj->uncor_status, pci_name(dev));
--		local_irq_disable();
--		generic_handle_irq(edev->irq);
--		local_irq_enable();
-+		ret = irq_inject_interrupt(edev->irq);
- 	} else {
- 		pci_err(rpdev, "AER device not found\n");
- 		ret = -ENODEV;
+ #define __irqd_to_state(d) ACCESS_PRIVATE((d)->common, state_use_accessors)
+@@ -303,6 +306,16 @@ static inline bool irqd_is_single_target
+ 	return __irqd_to_state(d) & IRQD_SINGLE_TARGET;
+ }
+ 
++static inline void irqd_set_handle_enforce_irqctx(struct irq_data *d)
++{
++	__irqd_to_state(d) |= IRQD_HANDLE_ENFORCE_IRQCTX;
++}
++
++static inline bool irqd_is_handle_enforce_irqctx(struct irq_data *d)
++{
++	return __irqd_to_state(d) & IRQD_HANDLE_ENFORCE_IRQCTX;
++}
++
+ static inline bool irqd_is_wakeup_set(struct irq_data *d)
+ {
+ 	return __irqd_to_state(d) & IRQD_WAKEUP_STATE;
+--- a/kernel/irq/internals.h
++++ b/kernel/irq/internals.h
+@@ -425,6 +425,10 @@ static inline struct cpumask *irq_desc_g
+ {
+ 	return desc->pending_mask;
+ }
++static inline bool handle_enforce_irqctx(struct irq_data *data)
++{
++	return irqd_is_handle_enforce_irqctx(data);
++}
+ bool irq_fixup_move_pending(struct irq_desc *desc, bool force_clear);
+ #else /* CONFIG_GENERIC_PENDING_IRQ */
+ static inline bool irq_can_move_pcntxt(struct irq_data *data)
+@@ -451,6 +455,10 @@ static inline bool irq_fixup_move_pendin
+ {
+ 	return false;
+ }
++static inline bool handle_enforce_irqctx(struct irq_data *data)
++{
++	return false;
++}
+ #endif /* !CONFIG_GENERIC_PENDING_IRQ */
+ 
+ #if !defined(CONFIG_IRQ_DOMAIN) || !defined(CONFIG_IRQ_DOMAIN_HIERARCHY)
+--- a/kernel/irq/irqdesc.c
++++ b/kernel/irq/irqdesc.c
+@@ -638,9 +638,15 @@ void irq_init_desc(unsigned int irq)
+ int generic_handle_irq(unsigned int irq)
+ {
+ 	struct irq_desc *desc = irq_to_desc(irq);
++	struct irq_data *data;
+ 
+ 	if (!desc)
+ 		return -EINVAL;
++
++	data = irq_desc_get_irq_data(desc);
++	if (WARN_ON_ONCE(!in_irq() && handle_enforce_irqctx(data)))
++		return -EPERM;
++
+ 	generic_handle_irq_desc(desc);
+ 	return 0;
+ }
+--- a/kernel/irq/resend.c
++++ b/kernel/irq/resend.c
+@@ -72,8 +72,9 @@ void check_irq_resend(struct irq_desc *d
+ 		desc->istate &= ~IRQS_PENDING;
+ 		desc->istate |= IRQS_REPLAY;
+ 
+-		if (!desc->irq_data.chip->irq_retrigger ||
+-		    !desc->irq_data.chip->irq_retrigger(&desc->irq_data)) {
++		if ((!desc->irq_data.chip->irq_retrigger ||
++		    !desc->irq_data.chip->irq_retrigger(&desc->irq_data)) &&
++		    !handle_enforce_irqctx(&desc->irq_data)) {
+ #ifdef CONFIG_HARDIRQS_SW_RESEND
+ 			unsigned int irq = irq_desc_get_irq(desc);
+ 
 
