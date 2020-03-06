@@ -2,247 +2,147 @@ Return-Path: <SRS0=A4Uv=4X=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D207C10F25
-	for <linux-pci@archiver.kernel.org>; Fri,  6 Mar 2020 13:09:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01CD1C10DCE
+	for <linux-pci@archiver.kernel.org>; Fri,  6 Mar 2020 13:09:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 106A124655
-	for <linux-pci@archiver.kernel.org>; Fri,  6 Mar 2020 13:09:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C9E1B24679
+	for <linux-pci@archiver.kernel.org>; Fri,  6 Mar 2020 13:09:22 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="foqmJvTU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726300AbgCFNJD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 6 Mar 2020 08:09:03 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:53319 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726650AbgCFNIo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2020 08:08:44 -0500
-Received: from p5de0bf0b.dip0.t-ipconnect.de ([93.224.191.11] helo=nanos.tec.linutronix.de)
-        by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-        (Exim 4.80)
-        (envelope-from <tglx@linutronix.de>)
-        id 1jACiW-0003fz-2V; Fri, 06 Mar 2020 14:08:40 +0100
-Received: from nanos.tec.linutronix.de (localhost [IPv6:::1])
-        by nanos.tec.linutronix.de (Postfix) with ESMTP id 5AF1E1040A0;
-        Fri,  6 Mar 2020 14:08:39 +0100 (CET)
-Message-Id: <20200306130623.990928309@linutronix.de>
-User-Agent: quilt/0.65
-Date:   Fri, 06 Mar 2020 14:03:47 +0100
-From:   Thomas Gleixner <tglx@linutronix.de>
-To:     LKML <linux-kernel@vger.kernel.org>
-Cc:     Marc Zyngier <maz@kernel.org>, x86@kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Keith Busch <kbusch@kernel.org>,
-        Kuppuswamy Sathyanarayanan 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>
-Subject: [patch 6/7] genirq: Provide interrupt injection mechanism
-References: <20200306130341.199467200@linutronix.de>
+        id S1726674AbgCFNJW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 6 Mar 2020 08:09:22 -0500
+Received: from mail-qv1-f68.google.com ([209.85.219.68]:43759 "EHLO
+        mail-qv1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726579AbgCFNJW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2020 08:09:22 -0500
+Received: by mail-qv1-f68.google.com with SMTP id eb12so860500qvb.10
+        for <linux-pci@vger.kernel.org>; Fri, 06 Mar 2020 05:09:21 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=XKKq26i7LXXgJsW46mcbcSbPq8I/xYnL2HpEPyMqw1w=;
+        b=foqmJvTUw2Rd/dJAzqjnhmFuMbsk1LtzLOifzjHgdZQbMzZ0fHXAAsUe/GdCO1ZYAj
+         7Bn2iIOTlWGut2weejRp8AcX3VG/Qn4/y/RQG0WtfMqv+MReV5P5jcMiLxOXdqYalZiA
+         /dVdSm1Sf6SyyIudvVIwFow4eMDAUcfiWaT/zF3cFXtW4JnKM0JErPEQqyhqPtB0Hhdr
+         ol2bHUU9KfkJM+O1Bn3ayXm8dujSMw6pcJy7+pV2WuGXVVhtWpVQF3na2JpDadwaG7Lv
+         FiGiNN5hAg+eY9U2557t7Y1y8aKkxx39cX6l7OgYqp4+v+dicxqKElU/9QEPZ5LM/fig
+         63hA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=XKKq26i7LXXgJsW46mcbcSbPq8I/xYnL2HpEPyMqw1w=;
+        b=R/1eRWTDbmXbC9AV7JeQ4pBePeJpxNEYSBCJ37EiNPCHpBrWslAwxHa9yCuv/uuJjF
+         KI7kHtDBRY8YtRVnLTK2yYEFqvLfaZZC+5wVN9lP5cv0j0YldLJn8jRTOkAXY375GE8A
+         qTQbVqfk4PdosaTlt7aHzoMVUC0EbFAVlEc5JSocqlAUbp/95dSIm+GMaVRz/RFbIb1s
+         Y1H3Bz+Ds5RwJETmjEpXuXlH/TVM/4bHNAjbcC7TYVkdniOk3cuB8FkWcPFO0rqvmUqW
+         LqyJHW55qg6KatBRD3Rp0TMqJpDBQf20zj4Eu3SyhK2cF74wX20dHCQiCVj+oAoBD7gs
+         Axvw==
+X-Gm-Message-State: ANhLgQ3o6uTwkVa8QZXYBSywLweCyDgWa56UZ2afxszmT9YUC+d0rZ3A
+        KojFLTnq1vR28lxxHzZIyISInA==
+X-Google-Smtp-Source: ADFU+vtl8tdBNaG32n8uRFCoIw2vjaXoLHT1yzW1F89T5e4eGpjKwith2OB8kDL1Ro6OTXnkI3ffpw==
+X-Received: by 2002:a0c:f5ce:: with SMTP id q14mr2642141qvm.191.1583500160921;
+        Fri, 06 Mar 2020 05:09:20 -0800 (PST)
+Received: from ziepe.ca (hlfxns017vw-142-68-57-212.dhcp-dynamic.fibreop.ns.bellaliant.net. [142.68.57.212])
+        by smtp.gmail.com with ESMTPSA id e7sm8754949qtp.0.2020.03.06.05.09.20
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Fri, 06 Mar 2020 05:09:20 -0800 (PST)
+Received: from jgg by mlx.ziepe.ca with local (Exim 4.90_1)
+        (envelope-from <jgg@ziepe.ca>)
+        id 1jACj9-0002zi-Hm; Fri, 06 Mar 2020 09:09:19 -0400
+Date:   Fri, 6 Mar 2020 09:09:19 -0400
+From:   Jason Gunthorpe <jgg@ziepe.ca>
+To:     Jean-Philippe Brucker <jean-philippe@linaro.org>
+Cc:     mark.rutland@arm.com, linux-pci@vger.kernel.org,
+        linux-mm@kvack.org, will@kernel.org,
+        Dimitri Sivanich <sivanich@sgi.com>, catalin.marinas@arm.com,
+        zhangfei.gao@linaro.org, devicetree@vger.kernel.org,
+        kevin.tian@intel.com, Arnd Bergmann <arnd@arndb.de>,
+        robh+dt@kernel.org, linux-arm-kernel@lists.infradead.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        iommu@lists.linux-foundation.org,
+        Andrew Morton <akpm@linux-foundation.org>,
+        robin.murphy@arm.com, christian.koenig@amd.com
+Subject: Re: [PATCH v4 01/26] mm/mmu_notifiers: pass private data down to
+ alloc_notifier()
+Message-ID: <20200306130919.GJ31668@ziepe.ca>
+References: <20200224182401.353359-1-jean-philippe@linaro.org>
+ <20200224182401.353359-2-jean-philippe@linaro.org>
+ <20200224190056.GT31668@ziepe.ca>
+ <20200225092439.GB375953@myrica>
+ <20200225140814.GW31668@ziepe.ca>
+ <20200228143935.GA2156@myrica>
+ <20200228144844.GQ31668@ziepe.ca>
+ <20200228150427.GF2156@myrica>
+ <20200228151339.GS31668@ziepe.ca>
+ <20200306095614.GA50020@myrica>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-X-Linutronix-Spam-Score: -1.0
-X-Linutronix-Spam-Level: -
-X-Linutronix-Spam-Status: No , -1.0 points, 5.0 required,  ALL_TRUSTED=-1,SHORTCIRCUIT=-0.0001
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200306095614.GA50020@myrica>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Error injection mechanisms need a half ways safe way to inject interrupts as
-invoking generic_handle_irq() or the actual device interrupt handler
-directly from e.g. a debugfs write is not guaranteed to be safe.
+On Fri, Mar 06, 2020 at 10:56:14AM +0100, Jean-Philippe Brucker wrote:
+> I tried to keep it simple like that: normally mmu_notifier_get() is called
+> in bind(), and mmu_notifier_put() is called in unbind(). 
+> 
+> Multiple device drivers may call bind() with the same mm. Each bind()
+> calls mmu_notifier_get(), obtains the same io_mm, and returns a new bond
+> (a device<->mm link). Each bond is freed by calling unbind(), which calls
+> mmu_notifier_put().
+> 
+> That's the most common case. Now if the process is killed and the mm
+> disappears, we do need to avoid use-after-free caused by DMA of the
+> mappings and the page tables. 
 
-On x86 generic_handle_irq() is unsafe due to the hardware trainwreck which
-is the base of x86 interrupt delivery and affinity management.
+This is why release must do invalidate all - but it doesn't need to do
+any more - as no SPTE can be established without a mmget() - and
+mmget() is no longer possible past release.
 
-Move the irq debugfs injection code into a separate function which can be
-used by error injection code as well.
+> So the release() callback, before doing invalidate_all, stops DMA
+> and clears the page table pointer on the IOMMU side. It detaches all
+> bonds from the io_mm, calling mmu_notifier_put() for each of
+> them. After release(), bond objects still exists and device drivers
+> still need to free them with unbind(), but they don't point to an
+> io_mm anymore.
 
-The implementation prevents at least that state is corrupted, but it cannot
-close a very tiny race window on x86 which might result in a stale and not
-serviced device interrupt under very unlikely circumstances.
+Why is so much work needed in release? It really should just be
+invalidate all, usually trying to sort out all the locking for the
+more complicated stuff is not worthwhile.
 
-This is explicitly for debugging and testing and not for production use or
-abuse in random driver code.
+If other stuff is implicitly relying on the mm being alive and release
+to fence against that then it is already racy. If it doesn't, then why
+bother doing complicated work in release?
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
----
- include/linux/interrupt.h |    2 +
- kernel/irq/Kconfig        |    5 ++++
- kernel/irq/chip.c         |    2 -
- kernel/irq/debugfs.c      |   34 -----------------------------
- kernel/irq/internals.h    |    2 -
- kernel/irq/resend.c       |   53 ++++++++++++++++++++++++++++++++++++++++++++--
- 6 files changed, 61 insertions(+), 37 deletions(-)
+> > Then you can never get a stale
+> > pointer. Don't worry about exit_mmap().
+> > 
+> > release() is an unusual callback and I see alot of places using it
+> > wrong. The purpose of release is to invalidate_all, that is it.
+> > 
+> > Also, confusingly release may be called multiple times in some
+> > situations, so it shouldn't disturb anything that might impact a 2nd
+> > call.
+> 
+> I hadn't realized that. The current implementation should be safe against
+> it, as release() is a nop if the io_mm doesn't have bonds anymore. Do you
+> have an example of such a situation?  I'm trying to write tests for this
+> kind of corner cases.
 
---- a/include/linux/interrupt.h
-+++ b/include/linux/interrupt.h
-@@ -248,6 +248,8 @@ extern void enable_percpu_nmi(unsigned i
- extern int prepare_percpu_nmi(unsigned int irq);
- extern void teardown_percpu_nmi(unsigned int irq);
- 
-+extern int irq_inject_interrupt(unsigned int irq);
-+
- /* The following three functions are for the core kernel use only. */
- extern void suspend_device_irqs(void);
- extern void resume_device_irqs(void);
---- a/kernel/irq/Kconfig
-+++ b/kernel/irq/Kconfig
-@@ -43,6 +43,10 @@ config GENERIC_IRQ_MIGRATION
- config AUTO_IRQ_AFFINITY
-        bool
- 
-+# Interrupt injection mechanism
-+config GENERIC_IRQ_INJECTION
-+	bool
-+
- # Tasklet based software resend for pending interrupts on enable_irq()
- config HARDIRQS_SW_RESEND
-        bool
-@@ -127,6 +131,7 @@ config SPARSE_IRQ
- config GENERIC_IRQ_DEBUGFS
- 	bool "Expose irq internals in debugfs"
- 	depends on DEBUG_FS
-+	select GENERIC_IRQ_INJECTION
- 	default n
- 	---help---
- 
---- a/kernel/irq/chip.c
-+++ b/kernel/irq/chip.c
-@@ -278,7 +278,7 @@ int irq_startup(struct irq_desc *desc, b
- 		}
- 	}
- 	if (resend)
--		check_irq_resend(desc);
-+		check_irq_resend(desc, false);
- 
- 	return ret;
- }
---- a/kernel/irq/debugfs.c
-+++ b/kernel/irq/debugfs.c
-@@ -190,39 +190,7 @@ static ssize_t irq_debug_write(struct fi
- 		return -EFAULT;
- 
- 	if (!strncmp(buf, "trigger", size)) {
--		unsigned long flags;
--		int err;
--
--		/* Try the HW interface first */
--		err = irq_set_irqchip_state(irq_desc_get_irq(desc),
--					    IRQCHIP_STATE_PENDING, true);
--		if (!err)
--			return count;
--
--		/*
--		 * Otherwise, try to inject via the resend interface,
--		 * which may or may not succeed.
--		 */
--		chip_bus_lock(desc);
--		raw_spin_lock_irqsave(&desc->lock, flags);
--
--		/*
--		 * Don't allow injection when the interrupt is:
--		 *  - Level or NMI type
--		 *  - not activated
--		 *  - replaying already
--		 */
--		if (irq_settings_is_level(desc) ||
--		    !irqd_is_activated(&desc->irq_data) ||
--		    (desc->istate & (IRQS_NMI | IRQS_REPLAY)) {
--			err = -EINVAL;
--		} else {
--			desc->istate |= IRQS_PENDING;
--			err = check_irq_resend(desc);
--		}
--
--		raw_spin_unlock_irqrestore(&desc->lock, flags);
--		chip_bus_sync_unlock(desc);
-+		int err = irq_inject_interrupt(irq_desc_get_irq(desc));
- 
- 		return err ? err : count;
- 	}
---- a/kernel/irq/internals.h
-+++ b/kernel/irq/internals.h
-@@ -108,7 +108,7 @@ irqreturn_t handle_irq_event_percpu(stru
- irqreturn_t handle_irq_event(struct irq_desc *desc);
- 
- /* Resending of interrupts :*/
--int check_irq_resend(struct irq_desc *desc);
-+int check_irq_resend(struct irq_desc *desc, bool inject);
- bool irq_wait_for_poll(struct irq_desc *desc);
- void __irq_wake_thread(struct irq_desc *desc, struct irqaction *action);
- 
---- a/kernel/irq/resend.c
-+++ b/kernel/irq/resend.c
-@@ -91,7 +91,7 @@ static int irq_sw_resend(struct irq_desc
-  *
-  * Is called with interrupts disabled and desc->lock held.
-  */
--int check_irq_resend(struct irq_desc *desc)
-+int check_irq_resend(struct irq_desc *desc, bool inject)
- {
- 	int err = 0;
- 
-@@ -108,7 +108,7 @@ int check_irq_resend(struct irq_desc *de
- 	if (desc->istate & IRQS_REPLAY)
- 		return -EBUSY;
- 
--	if (!(desc->istate & IRQS_PENDING))
-+	if (!(desc->istate & IRQS_PENDING) && !inject)
- 		return 0;
- 
- 	desc->istate &= ~IRQS_PENDING;
-@@ -122,3 +122,52 @@ int check_irq_resend(struct irq_desc *de
- 		desc->istate |= IRQS_REPLAY;
- 	return err;
- }
-+
-+#ifdef CONFIG_GENERIC_IRQ_INJECTION
-+/**
-+ * irq_inject_interrupt - Inject an interrupt for testing/error injection
-+ * @irq:	The interrupt number
-+ *
-+ * This function must only be used for debug and testing purposes!
-+ *
-+ * Especially on x86 this can cause a premature completion of an interrupt
-+ * affinity change causing the interrupt line to become stale. Very
-+ * unlikely, but possible.
-+ *
-+ * The injection can fail for various reasons:
-+ * - Interrupt is not activated
-+ * - Interrupt is NMI type or currently replaying
-+ * - Interrupt is level type
-+ * - Interrupt does not support hardware retrigger and software resend is
-+ *   either not enabled or not possible for the interrupt.
-+ */
-+int irq_inject_interrupt(unsigned int irq)
-+{
-+	struct irq_desc *desc;
-+	unsigned long flags;
-+	int err;
-+
-+	/* Try the state injection hardware interface first */
-+	if (!irq_set_irqchip_state(irq, IRQCHIP_STATE_PENDING, true))
-+		return 0;
-+
-+	/* That failed, try via the resend mechanism */
-+	desc = irq_get_desc_buslock(irq, &flags, 0);
-+	if (!desc)
-+		return -EINVAL;
-+
-+	/*
-+	 * Only try to inject when the interrupt is:
-+	 *  - not NMI type
-+	 *  - activated
-+	 */
-+	if ((desc->istate & IRQS_NMI) || !irqd_is_activated(&desc->irq_data))
-+		err = -EINVAL;
-+	else
-+		err = check_irq_resend(desc, true);
-+
-+	irq_put_desc_busunlock(desc, flags);
-+	return err;
-+}
-+EXPORT_SYMBOL_GPL(irq_inject_interrupt);
-+#endif
+Hmm, let me think. Ah, you have to be using mmu_notifier_unregister()
+to get that race. This is one of the things that get/put don't suffer
+from - but they conversely don't guarantee that release() will be
+called, so it is up to the caller to ensure everything is fenced
+before calling put.
 
+Jason
