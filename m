@@ -2,33 +2,33 @@ Return-Path: <SRS0=A4Uv=4X=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CB7FC10F26
-	for <linux-pci@archiver.kernel.org>; Fri,  6 Mar 2020 13:08:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91AEBC10F25
+	for <linux-pci@archiver.kernel.org>; Fri,  6 Mar 2020 13:09:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 45F1E222C3
-	for <linux-pci@archiver.kernel.org>; Fri,  6 Mar 2020 13:08:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 73E8824681
+	for <linux-pci@archiver.kernel.org>; Fri,  6 Mar 2020 13:09:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727097AbgCFNIu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 6 Mar 2020 08:08:50 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:53331 "EHLO
+        id S1727326AbgCFNIr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 6 Mar 2020 08:08:47 -0500
+Received: from Galois.linutronix.de ([193.142.43.55]:53326 "EHLO
         Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727356AbgCFNIt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2020 08:08:49 -0500
+        with ESMTP id S1727097AbgCFNIp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2020 08:08:45 -0500
 Received: from p5de0bf0b.dip0.t-ipconnect.de ([93.224.191.11] helo=nanos.tec.linutronix.de)
         by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
         (Exim 4.80)
         (envelope-from <tglx@linutronix.de>)
-        id 1jACiU-0003fj-TI; Fri, 06 Mar 2020 14:08:38 +0100
+        id 1jACiX-0003g0-8l; Fri, 06 Mar 2020 14:08:41 +0100
 Received: from nanos.tec.linutronix.de (localhost [IPv6:::1])
-        by nanos.tec.linutronix.de (Postfix) with ESMTP id 1125CFF8FB;
-        Fri,  6 Mar 2020 14:08:38 +0100 (CET)
-Message-Id: <20200306130341.199467200@linutronix.de>
+        by nanos.tec.linutronix.de (Postfix) with ESMTP id 8ECE8104085;
+        Fri,  6 Mar 2020 14:08:39 +0100 (CET)
+Message-Id: <20200306130624.098374457@linutronix.de>
 User-Agent: quilt/0.65
-Date:   Fri, 06 Mar 2020 14:03:41 +0100
+Date:   Fri, 06 Mar 2020 14:03:48 +0100
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Marc Zyngier <maz@kernel.org>, x86@kernel.org,
@@ -36,7 +36,10 @@ Cc:     Marc Zyngier <maz@kernel.org>, x86@kernel.org,
         Keith Busch <kbusch@kernel.org>,
         Kuppuswamy Sathyanarayanan 
         <sathyanarayanan.kuppuswamy@linux.intel.com>
-Subject: [patch 0/7] genirq/PCI: Sanitize interrupt injection
+Subject: [patch 7/7] PCI/AER: Fix the broken interrupt injection
+References: <20200306130341.199467200@linutronix.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 X-Linutronix-Spam-Score: -1.0
 X-Linutronix-Spam-Level: -
 X-Linutronix-Spam-Status: No , -1.0 points, 5.0 required,  ALL_TRUSTED=-1,SHORTCIRCUIT=-0.0001
@@ -45,54 +48,70 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Kuppuswamy triggered a NULL pointer dereference via the AER error injection
-mechanism in the low level APIC code.
+The AER error injection mechanism just blindly abuses generic_handle_irq()
+which is really not meant for consumption by random drivers. The include of
+linux/irq.h should have been a red flag in the first place. Driver code,
+unless implementing interrupt chips or low level hypervisor functionality
+has absolutely no business with that.
 
- https://lore.kernel.org/r/f54208d62407901b5de15ce8c3d078c70fc7a1d0.1582313239.git.sathyanarayanan.kuppuswamy@linux.intel.com
+Invoking generic_handle_irq() from non interrupt handling context can have
+nasty side effects at least on x86 due to the hardware trainwreck which
+makes interrupt affinity changes a fragile beast. Sathyanarayanan triggered
+a NULL pointer dereference in the low level APIC code that way. While the
+particular pointer could be checked this would only paper over the issue
+because there are other ways to trigger warnings or silently corrupt state.
 
-It turned out that AER error injection is calling generic_handle_irq() from
-task context which is unsafe for x86 interrupts which end up being handled
-by the APIC. The fragile interrupt affinity handling which is imposed by
-the x86 hardware does not allow to call into this code except from actual
-interrupt context.
+Invoke the new irq_inject_interrupt() mechanism, which has the necessary
+sanity checks in place and injects the interrupt via the irq_retrigger()
+mechanism, which is at least halfways safe vs. the fragile x86 affinity
+change mechanics.
 
-While the pointer could be checked this would just paper over the problem
-and still be able to trigger warnings or silently corrupting state.
+It's safe on x86 as it does not corrupt state, but it still can cause a
+premature completion of an interrupt affinity change causing the interrupt
+line to become stale. Very unlikely, but possible.
 
-This series addresses the problem:
+For regular operations this is a non issue as AER error injection is meant
+for debugging and testing and not for usage on production systems. People
+using this should better know what they are doing.
 
-  - Prevent the invocation of generic_handle_irq() from non interrupt
-    context on affected interrupts.
+Fixes: 390e2db82480 ("PCI/AER: Abstract AER interrupt handling")
+Reported-by: sathyanarayanan.kuppuswamy@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+---
+ drivers/pci/pcie/Kconfig      |    1 +
+ drivers/pci/pcie/aer_inject.c |    6 ++----
+ 2 files changed, 3 insertions(+), 4 deletions(-)
 
-  - Add a few missing sanity checks to the existing debugfs injection
-    mechanism
+--- a/drivers/pci/pcie/Kconfig
++++ b/drivers/pci/pcie/Kconfig
+@@ -34,6 +34,7 @@ config PCIEAER
+ config PCIEAER_INJECT
+ 	tristate "PCI Express error injection support"
+ 	depends on PCIEAER
++	select GENERIC_IRQ_INJECTION
+ 	help
+ 	  This enables PCI Express Root Port Advanced Error Reporting
+ 	  (AER) software error injector.
+--- a/drivers/pci/pcie/aer_inject.c
++++ b/drivers/pci/pcie/aer_inject.c
+@@ -16,7 +16,7 @@
+ 
+ #include <linux/module.h>
+ #include <linux/init.h>
+-#include <linux/irq.h>
++#include <linux/interrupt.h>
+ #include <linux/miscdevice.h>
+ #include <linux/pci.h>
+ #include <linux/slab.h>
+@@ -468,9 +468,7 @@ static int aer_inject(struct aer_error_i
+ 		}
+ 		pci_info(edev->port, "Injecting errors %08x/%08x into device %s\n",
+ 			 einj->cor_status, einj->uncor_status, pci_name(dev));
+-		local_irq_disable();
+-		generic_handle_irq(edev->irq);
+-		local_irq_enable();
++		ret = irq_inject_interrupt(edev->irq);
+ 	} else {
+ 		pci_err(rpdev, "AER device not found\n");
+ 		ret = -ENODEV;
 
-  - Convert the debugfs injection into a function which can be invoked from
-    other places.
-  
-    This provides a halfways safe interface to inject interrupts via the
-    irq_retrigger mechanism which does the injection via IPI.
-
-    This interface is solely for debug and testing purposes as it still can
-    make a device interrupts stale on x86 under very obscure and hard to
-    hit circumstances. For debug and error injection testing this is
-    acceptable. For any other use not.
-
-  - Change the AER code to use the new interface. 
-
-Thanks,
-
-	tglx
-----
- arch/x86/kernel/apic/vector.c |    6 +
- drivers/pci/pcie/Kconfig      |    1 
- drivers/pci/pcie/aer_inject.c |    6 -
- include/linux/interrupt.h     |    2 
- include/linux/irq.h           |   13 +++
- kernel/irq/Kconfig            |    5 +
- kernel/irq/chip.c             |    2 
- kernel/irq/debugfs.c          |   28 --------
- kernel/irq/internals.h        |   10 ++
- kernel/irq/irqdesc.c          |    6 +
- kernel/irq/resend.c           |  143 +++++++++++++++++++++++++++++++-----------
- 11 files changed, 153 insertions(+), 69 deletions(-)
