@@ -2,32 +2,31 @@ Return-Path: <SRS0=Ylk5=4Y=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2AADC3F2D6
-	for <linux-pci@archiver.kernel.org>; Sat,  7 Mar 2020 02:29:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5D05C10F26
+	for <linux-pci@archiver.kernel.org>; Sat,  7 Mar 2020 02:29:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8D78F20705
-	for <linux-pci@archiver.kernel.org>; Sat,  7 Mar 2020 02:29:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8F518206E6
+	for <linux-pci@archiver.kernel.org>; Sat,  7 Mar 2020 02:29:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726973AbgCGC3f (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 6 Mar 2020 21:29:35 -0500
-Received: from inva020.nxp.com ([92.121.34.13]:37466 "EHLO inva020.nxp.com"
+        id S1726751AbgCGC3k (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 6 Mar 2020 21:29:40 -0500
+Received: from inva020.nxp.com ([92.121.34.13]:37174 "EHLO inva020.nxp.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726874AbgCGC3R (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1726397AbgCGC3R (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Fri, 6 Mar 2020 21:29:17 -0500
 Received: from inva020.nxp.com (localhost [127.0.0.1])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 26FF11A1989;
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 0947A1A0E38;
         Sat,  7 Mar 2020 03:29:15 +0100 (CET)
 Received: from invc005.ap-rdc01.nxp.com (invc005.ap-rdc01.nxp.com [165.114.16.14])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id A30471A199F;
-        Sat,  7 Mar 2020 03:28:20 +0100 (CET)
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id A3E6B1A1975;
+        Sat,  7 Mar 2020 03:28:10 +0100 (CET)
 Received: from titan.ap.freescale.net (titan.ap.freescale.net [10.192.208.233])
-        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id A73DB40302;
-        Sat,  7 Mar 2020 10:28:09 +0800 (SGT)
+        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id 434F840294;
+        Sat,  7 Mar 2020 10:27:59 +0800 (SGT)
 From:   Xiaowei Bao <xiaowei.bao@nxp.com>
 To:     Zhiqiang.Hou@nxp.com, Minghuan.Lian@nxp.com, mingkai.hu@nxp.com,
         bhelgaas@google.com, robh+dt@kernel.org, shawnguo@kernel.org,
@@ -38,57 +37,46 @@ To:     Zhiqiang.Hou@nxp.com, Minghuan.Lian@nxp.com, mingkai.hu@nxp.com,
         linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linuxppc-dev@lists.ozlabs.org
 Cc:     Xiaowei Bao <xiaowei.bao@nxp.com>
-Subject: [PATCH v5 06/11] PCI: layerscape: Fix some format issue of the code
-Date:   Sat,  7 Mar 2020 10:14:25 +0800
-Message-Id: <20200307021430.36826-7-xiaowei.bao@nxp.com>
+Subject: [PATCH v4 00/11] Add the multiple PF support for DWC and Layerscape
+Date:   Sat,  7 Mar 2020 10:14:19 +0800
+Message-Id: <20200307021430.36826-1-xiaowei.bao@nxp.com>
 X-Mailer: git-send-email 2.9.5
-In-Reply-To: <20200307021430.36826-1-xiaowei.bao@nxp.com>
-References: <20200307021430.36826-1-xiaowei.bao@nxp.com>
 X-Virus-Scanned: ClamAV using ClamSMTP
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Fix some format issue of the code in EP driver.
+Add the PCIe EP multiple PF support for DWC and Layerscape, add
+the doorbell MSIX function for DWC, use list to manage the PF of
+one PCIe controller, and refactor the Layerscape EP driver due to
+some platforms difference.
 
-Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
-Reviewed-by: Andrew Murray <andrew.murray@arm.com>
----
-v2:
- - No change.
-v3:
- - No change.
-v4:
- - No change.
-v5:
- - No change.
+Xiaowei Bao (11):
+  PCI: designware-ep: Add multiple PFs support for DWC
+  PCI: designware-ep: Add the doorbell mode of MSI-X in EP mode
+  PCI: designware-ep: Move the function of getting MSI capability
+    forward
+  PCI: designware-ep: Modify MSI and MSIX CAP way of finding
+  dt-bindings: pci: layerscape-pci: Add compatible strings for ls1088a
+    and ls2088a
+  PCI: layerscape: Fix some format issue of the code
+  PCI: layerscape: Modify the way of getting capability with different
+    PEX
+  PCI: layerscape: Modify the MSIX to the doorbell mode
+  PCI: layerscape: Add EP mode support for ls1088a and ls2088a
+  arm64: dts: layerscape: Add PCIe EP node for ls1088a
+  misc: pci_endpoint_test: Add LS1088a in pci_device_id table
 
- drivers/pci/controller/dwc/pci-layerscape-ep.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ .../devicetree/bindings/pci/layerscape-pci.txt     |   2 +
+ arch/arm64/boot/dts/freescale/fsl-ls1088a.dtsi     |  31 +++
+ drivers/misc/pci_endpoint_test.c                   |   2 +
+ drivers/pci/controller/dwc/pci-layerscape-ep.c     | 100 ++++++--
+ drivers/pci/controller/dwc/pcie-designware-ep.c    | 255 +++++++++++++++++----
+ drivers/pci/controller/dwc/pcie-designware.c       |  59 +++--
+ drivers/pci/controller/dwc/pcie-designware.h       |  48 +++-
+ 7 files changed, 404 insertions(+), 93 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pci-layerscape-ep.c b/drivers/pci/controller/dwc/pci-layerscape-ep.c
-index 0d151ce..0691d9a 100644
---- a/drivers/pci/controller/dwc/pci-layerscape-ep.c
-+++ b/drivers/pci/controller/dwc/pci-layerscape-ep.c
-@@ -63,7 +63,7 @@ static void ls_pcie_ep_init(struct dw_pcie_ep *ep)
- }
- 
- static int ls_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
--				  enum pci_epc_irq_type type, u16 interrupt_num)
-+				enum pci_epc_irq_type type, u16 interrupt_num)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 
-@@ -87,7 +87,7 @@ static const struct dw_pcie_ep_ops pcie_ep_ops = {
- };
- 
- static int __init ls_add_pcie_ep(struct ls_pcie_ep *pcie,
--					struct platform_device *pdev)
-+				 struct platform_device *pdev)
- {
- 	struct dw_pcie *pci = pcie->pci;
- 	struct device *dev = pci->dev;
 -- 
 2.9.5
 
