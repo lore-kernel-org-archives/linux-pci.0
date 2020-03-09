@@ -2,25 +2,25 @@ Return-Path: <SRS0=ubi8=42=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 619D6C18E5C
-	for <linux-pci@archiver.kernel.org>; Mon,  9 Mar 2020 08:24:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 996BBC18E7A
+	for <linux-pci@archiver.kernel.org>; Mon,  9 Mar 2020 08:24:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 42B4120727
-	for <linux-pci@archiver.kernel.org>; Mon,  9 Mar 2020 08:24:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7BFA220727
+	for <linux-pci@archiver.kernel.org>; Mon,  9 Mar 2020 08:24:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726744AbgCIIXt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 9 Mar 2020 04:23:49 -0400
-Received: from mail.loongson.cn ([114.242.206.163]:55952 "EHLO loongson.cn"
+        id S1726733AbgCIIXs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 9 Mar 2020 04:23:48 -0400
+Received: from mail.loongson.cn ([114.242.206.163]:55950 "EHLO loongson.cn"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726391AbgCIIXr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1726463AbgCIIXr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Mon, 9 Mar 2020 04:23:47 -0400
 Received: from linux.localdomain (unknown [113.200.148.30])
-        by mail.loongson.cn (Coremail) with SMTP id AQAAf9Dxb9_+_GVesb4YAA--.12S2;
-        Mon, 09 Mar 2020 16:23:27 +0800 (CST)
+        by mail.loongson.cn (Coremail) with SMTP id AQAAf9Dxb9_+_GVesb4YAA--.12S5;
+        Mon, 09 Mar 2020 16:23:30 +0800 (CST)
 From:   Tiezhu Yang <yangtiezhu@loongson.cn>
 To:     Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
         Huacai Chen <chenhc@lemote.com>,
@@ -30,92 +30,79 @@ To:     Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
 Cc:     linux-mips@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
         Xuefeng Li <lixuefeng@loongson.cn>
-Subject: [PATCH 0/6] Add basic support for Loongson 7A1000 bridge chip
-Date:   Mon,  9 Mar 2020 16:23:20 +0800
-Message-Id: <1583742206-29163-1-git-send-email-yangtiezhu@loongson.cn>
+Subject: [PATCH 3/6] MIPS: Loongson: Use firmware arguments to get board name
+Date:   Mon,  9 Mar 2020 16:23:23 +0800
+Message-Id: <1583742206-29163-4-git-send-email-yangtiezhu@loongson.cn>
 X-Mailer: git-send-email 2.1.0
-X-CM-TRANSID: AQAAf9Dxb9_+_GVesb4YAA--.12S2
-X-Coremail-Antispam: 1UD129KBjvJXoWxCrWfZF1DZryrZrW3tF4Dtwb_yoW5GF48pa
-        y5A3Z5Grs8Wry7AFn3ZryUur4rArZ3JrZFqa12qr1UuasxX3WYvr93KF45Jr47Z348Kay8
-        WryrGrWUGFsxC3DanT9S1TB71UUUUUDqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9014x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
-        6F4UM28EF7xvwVC2z280aVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Cr
-        1j6rxdM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj
-        6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVW8JVWxJwAm72CE4IkC6x0Yz7v_Jr
-        0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E
-        8cxan2IY04v7MxkIecxEwVAFwVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbV
-        WUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF
-        67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42
-        IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWrZr1U
-        MIIF0xvEx4A2jsIE14v26r4j6F4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIda
-        VFxhVjvjDU0xZFpf9x0JU4a0PUUUUU=
+In-Reply-To: <1583742206-29163-1-git-send-email-yangtiezhu@loongson.cn>
+References: <1583742206-29163-1-git-send-email-yangtiezhu@loongson.cn>
+X-CM-TRANSID: AQAAf9Dxb9_+_GVesb4YAA--.12S5
+X-Coremail-Antispam: 1UD129KBjvJXoW7Cr47WF45uw1kZr1fGw1Utrb_yoW8Cw45pa
+        n3A34kWr4Ygr1Uur98trW3Cr1fAa98Krs7JFW2vr15Ka4qq34aqFZ8C3W8ArsrAF45Ga47
+        XryrKr48GF4Ikw7anT9S1TB71UUUUUDqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUPK14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JrWl82xGYIkIc2
+        x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+        Y4vE2Ix0cI8IcVAFwI0_Gr0_Xr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UM2
+        8EF7xvwVC2z280aVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Cr1j6rxd
+        M2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjx
+        v20xvE14v26r1j6r18McIj6I8E87Iv67AKxVW8JVWxJwAm72CE4IkC6x0Yz7v_Jr0_Gr1l
+        F7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2
+        IY04v7MxkIecxEwVAFwVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8
+        JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1V
+        AFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xII
+        jxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4
+        A2jsIE14v26r4j6F4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU
+        0xZFpf9x0JUcXo7UUUUU=
 X-CM-SenderInfo: p1dqw3xlh2x3gn0dqz5rrqw2lrqou0/
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The Loongson 7A1000 bridge chip has been released for several years
-since the second half of 2017, but it is not supported by the Linux
-mainline kernel while it only works well with the Loongson internal
-kernel version. When I update the latest version of Linux mainline
-kernel on the Loongson 3A3000 CPU and 7A1000 bridge chip system,
-the boot process failed and I feel depressed.
+In order to distinguish various types of bridge chip such as AMD RS780E
+or Loongson 7A1000, we can use firmware arguments to get board name.
 
-The 7A1000 bridge chip is used a lot with 3A3000 or 3A4000 CPU in
-the most Loongson desktop and sever products, it is important to
-support Loongson 7A1000 bridge chip by the Linux mainline kernel.
+Signed-off-by: Tiezhu Yang <yangtiezhu@loongson.cn>
+---
+ arch/mips/include/asm/mach-loongson64/boot_param.h | 1 +
+ arch/mips/loongson64/env.c                         | 5 +++++
+ 2 files changed, 6 insertions(+)
 
-This patch series adds the basic support for the Loongson 7A1000
-bridge chip, when apply these patches based on linux-5.6-rc5, the
-boot process is successful and we can login normally used with the
-latest firmware and discrete graphics card, the next work to do is
-power management and some other controller device drivers.
-
-Additionally, when I git clone mips code [1], the speed is too slow
-and clone always failed, so this patch series is based on the latest
-linux-5.6-rc5 [2].
-
-If you have any questions and suggestions, please let me know.
-
-Thanks,
-
-Tiezhu Yang
-
-[1] git clone https://git.kernel.org/pub/scm/linux/kernel/git/mips/linux.git
-[2] git clone https://github.com/torvalds/linux.git
-
-Tiezhu Yang (6):
-  PCI: Add Loongson vendor ID and 7A1000 device IDs
-  AHCI: Add support for Loongson 7A1000 SATA controller
-  MIPS: Loongson: Use firmware arguments to get board name
-  MIPS: Loongson: Add DMA support for 7A1000
-  MIPS: Loongson: Add PCI support for 7A1000
-  MIPS: Loongson: Add support for 7A1000 interrupt controller
-
- arch/mips/include/asm/mach-loongson64/boot_param.h |   2 +
- arch/mips/include/asm/mach-loongson64/ioaicu.h     | 166 +++++++++++
- arch/mips/include/asm/mach-loongson64/irq.h        |   2 +
- arch/mips/include/asm/mach-loongson64/pci.h        |   1 +
- arch/mips/loongson64/Makefile                      |   2 +-
- arch/mips/loongson64/dma.c                         |  49 +++-
- arch/mips/loongson64/env.c                         |   5 +
- arch/mips/loongson64/init.c                        |  13 +
- arch/mips/loongson64/ioaicu.c                      | 305 +++++++++++++++++++++
- arch/mips/loongson64/irq.c                         |  20 +-
- arch/mips/loongson64/pci.c                         |  12 +-
- arch/mips/loongson64/smp.c                         |  11 +-
- arch/mips/pci/Makefile                             |   2 +-
- arch/mips/pci/ops-loongson3-ls7a.c                 | 132 +++++++++
- drivers/ata/ahci.c                                 |   8 +
- include/linux/pci_ids.h                            |  18 ++
- 16 files changed, 733 insertions(+), 15 deletions(-)
- create mode 100644 arch/mips/include/asm/mach-loongson64/ioaicu.h
- create mode 100644 arch/mips/loongson64/ioaicu.c
- create mode 100644 arch/mips/pci/ops-loongson3-ls7a.c
-
+diff --git a/arch/mips/include/asm/mach-loongson64/boot_param.h b/arch/mips/include/asm/mach-loongson64/boot_param.h
+index 8c286be..225a563 100644
+--- a/arch/mips/include/asm/mach-loongson64/boot_param.h
++++ b/arch/mips/include/asm/mach-loongson64/boot_param.h
+@@ -217,5 +217,6 @@ struct loongson_system_configuration {
+ 
+ extern struct efi_memory_map_loongson *loongson_memmap;
+ extern struct loongson_system_configuration loongson_sysconf;
++extern struct board_devices *eboard;
+ 
+ #endif
+diff --git a/arch/mips/loongson64/env.c b/arch/mips/loongson64/env.c
+index 0daeb7b..a244a8c 100644
+--- a/arch/mips/loongson64/env.c
++++ b/arch/mips/loongson64/env.c
+@@ -24,6 +24,9 @@ EXPORT_SYMBOL(cpu_clock_freq);
+ struct efi_memory_map_loongson *loongson_memmap;
+ struct loongson_system_configuration loongson_sysconf;
+ 
++struct board_devices *eboard;
++EXPORT_SYMBOL(eboard);
++
+ u64 loongson_chipcfg[MAX_PACKAGES] = {0xffffffffbfc00180};
+ u64 loongson_chiptemp[MAX_PACKAGES];
+ u64 loongson_freqctrl[MAX_PACKAGES];
+@@ -51,6 +54,8 @@ void __init prom_init_env(void)
+ 		((u64)loongson_p + loongson_p->system_offset);
+ 	ecpu = (struct efi_cpuinfo_loongson *)
+ 		((u64)loongson_p + loongson_p->cpu_offset);
++	eboard = (struct board_devices *)
++		((u64)loongson_p + loongson_p->boarddev_table_offset);
+ 	eirq_source = (struct irq_source_routing_table *)
+ 		((u64)loongson_p + loongson_p->irq_offset);
+ 	loongson_memmap = (struct efi_memory_map_loongson *)
 -- 
 2.1.0
 
