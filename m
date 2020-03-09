@@ -2,25 +2,25 @@ Return-Path: <SRS0=ubi8=42=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8262C10F27
-	for <linux-pci@archiver.kernel.org>; Mon,  9 Mar 2020 08:24:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 619D6C18E5C
+	for <linux-pci@archiver.kernel.org>; Mon,  9 Mar 2020 08:24:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BE30320848
-	for <linux-pci@archiver.kernel.org>; Mon,  9 Mar 2020 08:24:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 42B4120727
+	for <linux-pci@archiver.kernel.org>; Mon,  9 Mar 2020 08:24:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726756AbgCIIXt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1726744AbgCIIXt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Mon, 9 Mar 2020 04:23:49 -0400
-Received: from mail.loongson.cn ([114.242.206.163]:56018 "EHLO loongson.cn"
+Received: from mail.loongson.cn ([114.242.206.163]:55952 "EHLO loongson.cn"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726428AbgCIIXq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 9 Mar 2020 04:23:46 -0400
+        id S1726391AbgCIIXr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 9 Mar 2020 04:23:47 -0400
 Received: from linux.localdomain (unknown [113.200.148.30])
-        by mail.loongson.cn (Coremail) with SMTP id AQAAf9Dxb9_+_GVesb4YAA--.12S7;
-        Mon, 09 Mar 2020 16:23:38 +0800 (CST)
+        by mail.loongson.cn (Coremail) with SMTP id AQAAf9Dxb9_+_GVesb4YAA--.12S2;
+        Mon, 09 Mar 2020 16:23:27 +0800 (CST)
 From:   Tiezhu Yang <yangtiezhu@loongson.cn>
 To:     Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
         Huacai Chen <chenhc@lemote.com>,
@@ -29,251 +29,93 @@ To:     Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
         Jens Axboe <axboe@kernel.dk>
 Cc:     linux-mips@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Xuefeng Li <lixuefeng@loongson.cn>,
-        Jianmin Lv <lvjianmin@loongson.cn>
-Subject: [PATCH 5/6] MIPS: Loongson: Add PCI support for 7A1000
-Date:   Mon,  9 Mar 2020 16:23:25 +0800
-Message-Id: <1583742206-29163-6-git-send-email-yangtiezhu@loongson.cn>
+        Xuefeng Li <lixuefeng@loongson.cn>
+Subject: [PATCH 0/6] Add basic support for Loongson 7A1000 bridge chip
+Date:   Mon,  9 Mar 2020 16:23:20 +0800
+Message-Id: <1583742206-29163-1-git-send-email-yangtiezhu@loongson.cn>
 X-Mailer: git-send-email 2.1.0
-In-Reply-To: <1583742206-29163-1-git-send-email-yangtiezhu@loongson.cn>
-References: <1583742206-29163-1-git-send-email-yangtiezhu@loongson.cn>
-X-CM-TRANSID: AQAAf9Dxb9_+_GVesb4YAA--.12S7
-X-Coremail-Antispam: 1UD129KBjvJXoW3WF18Xw4xJFy7XFWkCr1DAwb_yoWxAF43pF
-        1fAa18Gr4FqF17GF9ayFWUGr1fAFZYyF9rAay2yryj9asavw1jvrnYqF15tr4IkF4DXayx
-        WFZ3Gr4UCF1DCaUanT9S1TB71UUUUUDqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUmY14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-        kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-        z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr
-        1UM28EF7xvwVC2z280aVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Cr1j
-        6rxdM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6x
-        IIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVW8JVWxJwAm72CE4IkC6x0Yz7v_Jr0_
-        Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8c
-        xan2IY04v7MxkIecxEwVAFwVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWU
-        JVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67
-        kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI42IY
-        6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUCVW8JwCI42
-        IY6I8E87Iv67AKxVW8JVWxJwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIev
-        Ja73UjIFyTuYvjfU8c_TDUUUU
+X-CM-TRANSID: AQAAf9Dxb9_+_GVesb4YAA--.12S2
+X-Coremail-Antispam: 1UD129KBjvJXoWxCrWfZF1DZryrZrW3tF4Dtwb_yoW5GF48pa
+        y5A3Z5Grs8Wry7AFn3ZryUur4rArZ3JrZFqa12qr1UuasxX3WYvr93KF45Jr47Z348Kay8
+        WryrGrWUGFsxC3DanT9S1TB71UUUUUDqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9014x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
+        6F4UM28EF7xvwVC2z280aVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Cr
+        1j6rxdM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj
+        6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVW8JVWxJwAm72CE4IkC6x0Yz7v_Jr
+        0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E
+        8cxan2IY04v7MxkIecxEwVAFwVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbV
+        WUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF
+        67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42
+        IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWrZr1U
+        MIIF0xvEx4A2jsIE14v26r4j6F4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIda
+        VFxhVjvjDU0xZFpf9x0JU4a0PUUUUU=
 X-CM-SenderInfo: p1dqw3xlh2x3gn0dqz5rrqw2lrqou0/
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add PCI support for 7A1000 to detect PCI device.
+The Loongson 7A1000 bridge chip has been released for several years
+since the second half of 2017, but it is not supported by the Linux
+mainline kernel while it only works well with the Loongson internal
+kernel version. When I update the latest version of Linux mainline
+kernel on the Loongson 3A3000 CPU and 7A1000 bridge chip system,
+the boot process failed and I feel depressed.
 
-Co-developed-by: Jianmin Lv <lvjianmin@loongson.cn>
-Signed-off-by: Jianmin Lv <lvjianmin@loongson.cn>
-Signed-off-by: Tiezhu Yang <yangtiezhu@loongson.cn>
----
- arch/mips/include/asm/mach-loongson64/pci.h |   1 +
- arch/mips/loongson64/pci.c                  |  12 ++-
- arch/mips/pci/Makefile                      |   2 +-
- arch/mips/pci/ops-loongson3-ls7a.c          | 132 ++++++++++++++++++++++++++++
- 4 files changed, 143 insertions(+), 4 deletions(-)
+The 7A1000 bridge chip is used a lot with 3A3000 or 3A4000 CPU in
+the most Loongson desktop and sever products, it is important to
+support Loongson 7A1000 bridge chip by the Linux mainline kernel.
+
+This patch series adds the basic support for the Loongson 7A1000
+bridge chip, when apply these patches based on linux-5.6-rc5, the
+boot process is successful and we can login normally used with the
+latest firmware and discrete graphics card, the next work to do is
+power management and some other controller device drivers.
+
+Additionally, when I git clone mips code [1], the speed is too slow
+and clone always failed, so this patch series is based on the latest
+linux-5.6-rc5 [2].
+
+If you have any questions and suggestions, please let me know.
+
+Thanks,
+
+Tiezhu Yang
+
+[1] git clone https://git.kernel.org/pub/scm/linux/kernel/git/mips/linux.git
+[2] git clone https://github.com/torvalds/linux.git
+
+Tiezhu Yang (6):
+  PCI: Add Loongson vendor ID and 7A1000 device IDs
+  AHCI: Add support for Loongson 7A1000 SATA controller
+  MIPS: Loongson: Use firmware arguments to get board name
+  MIPS: Loongson: Add DMA support for 7A1000
+  MIPS: Loongson: Add PCI support for 7A1000
+  MIPS: Loongson: Add support for 7A1000 interrupt controller
+
+ arch/mips/include/asm/mach-loongson64/boot_param.h |   2 +
+ arch/mips/include/asm/mach-loongson64/ioaicu.h     | 166 +++++++++++
+ arch/mips/include/asm/mach-loongson64/irq.h        |   2 +
+ arch/mips/include/asm/mach-loongson64/pci.h        |   1 +
+ arch/mips/loongson64/Makefile                      |   2 +-
+ arch/mips/loongson64/dma.c                         |  49 +++-
+ arch/mips/loongson64/env.c                         |   5 +
+ arch/mips/loongson64/init.c                        |  13 +
+ arch/mips/loongson64/ioaicu.c                      | 305 +++++++++++++++++++++
+ arch/mips/loongson64/irq.c                         |  20 +-
+ arch/mips/loongson64/pci.c                         |  12 +-
+ arch/mips/loongson64/smp.c                         |  11 +-
+ arch/mips/pci/Makefile                             |   2 +-
+ arch/mips/pci/ops-loongson3-ls7a.c                 | 132 +++++++++
+ drivers/ata/ahci.c                                 |   8 +
+ include/linux/pci_ids.h                            |  18 ++
+ 16 files changed, 733 insertions(+), 15 deletions(-)
+ create mode 100644 arch/mips/include/asm/mach-loongson64/ioaicu.h
+ create mode 100644 arch/mips/loongson64/ioaicu.c
  create mode 100644 arch/mips/pci/ops-loongson3-ls7a.c
 
-diff --git a/arch/mips/include/asm/mach-loongson64/pci.h b/arch/mips/include/asm/mach-loongson64/pci.h
-index 8b59d64..42c9744 100644
---- a/arch/mips/include/asm/mach-loongson64/pci.h
-+++ b/arch/mips/include/asm/mach-loongson64/pci.h
-@@ -8,6 +8,7 @@
- #define __ASM_MACH_LOONGSON64_PCI_H_
- 
- extern struct pci_ops loongson_pci_ops;
-+extern struct pci_ops loongson_ls7a_pci_ops;
- 
- /* this is an offset from mips_io_port_base */
- #define LOONGSON_PCI_IO_START	0x00004000UL
-diff --git a/arch/mips/loongson64/pci.c b/arch/mips/loongson64/pci.c
-index e84ae20..b79368f 100644
---- a/arch/mips/loongson64/pci.c
-+++ b/arch/mips/loongson64/pci.c
-@@ -23,8 +23,8 @@ static struct resource loongson_pci_io_resource = {
- 	.flags	= IORESOURCE_IO,
- };
- 
--static struct pci_controller  loongson_pci_controller = {
--	.pci_ops	= &loongson_pci_ops,
-+static struct pci_controller loongson_pci_controller = {
-+	.pci_ops	= NULL,
- 	.io_resource	= &loongson_pci_io_resource,
- 	.mem_resource	= &loongson_pci_mem_resource,
- 	.mem_offset	= 0x00000000UL,
-@@ -36,6 +36,11 @@ extern int sbx00_acpi_init(void);
- 
- static int __init pcibios_init(void)
- {
-+	if (strstr(eboard->name, "780E"))
-+		loongson_pci_controller.pci_ops = &loongson_pci_ops;
-+
-+	if (strstr(eboard->name, "7A1000"))
-+		loongson_pci_controller.pci_ops = &loongson_ls7a_pci_ops;
- 
- 	loongson_pci_controller.io_map_base = mips_io_port_base;
- 	loongson_pci_mem_resource.start = loongson_sysconf.pci_mem_start_addr;
-@@ -43,7 +48,8 @@ static int __init pcibios_init(void)
- 
- 	register_pci_controller(&loongson_pci_controller);
- 
--	sbx00_acpi_init();
-+	if (strstr(eboard->name, "780E"))
-+		sbx00_acpi_init();
- 
- 	return 0;
- }
-diff --git a/arch/mips/pci/Makefile b/arch/mips/pci/Makefile
-index 342ce10..7256bb1 100644
---- a/arch/mips/pci/Makefile
-+++ b/arch/mips/pci/Makefile
-@@ -35,7 +35,7 @@ obj-$(CONFIG_LASAT)		+= pci-lasat.o
- obj-$(CONFIG_MIPS_COBALT)	+= fixup-cobalt.o
- obj-$(CONFIG_LEMOTE_FULOONG2E)	+= fixup-fuloong2e.o ops-loongson2.o
- obj-$(CONFIG_LEMOTE_MACH2F)	+= fixup-lemote2f.o ops-loongson2.o
--obj-$(CONFIG_MACH_LOONGSON64)	+= fixup-loongson3.o ops-loongson3.o
-+obj-$(CONFIG_MACH_LOONGSON64)	+= fixup-loongson3.o ops-loongson3.o ops-loongson3-ls7a.o
- obj-$(CONFIG_MIPS_MALTA)	+= fixup-malta.o pci-malta.o
- obj-$(CONFIG_PMC_MSP7120_GW)	+= fixup-pmcmsp.o ops-pmcmsp.o
- obj-$(CONFIG_PMC_MSP7120_EVAL)	+= fixup-pmcmsp.o ops-pmcmsp.o
-diff --git a/arch/mips/pci/ops-loongson3-ls7a.c b/arch/mips/pci/ops-loongson3-ls7a.c
-new file mode 100644
-index 0000000..4ed6c40
---- /dev/null
-+++ b/arch/mips/pci/ops-loongson3-ls7a.c
-@@ -0,0 +1,132 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (C) 2020 Loongson Technology Corporation Limited
-+ *
-+ * Author: Jianmin Lv <lvjianmin@loongson.cn>
-+ * Author: Tiezhu Yang <yangtiezhu@loongson.cn>
-+ */
-+
-+#include <linux/types.h>
-+#include <linux/pci.h>
-+#include <linux/kernel.h>
-+
-+#include <asm/mips-boards/bonito64.h>
-+
-+#include <loongson.h>
-+
-+#define PCI_ACCESS_READ 0
-+#define PCI_ACCESS_WRITE 1
-+
-+#define HT1LO_PCICFG_BASE 0x1a000000
-+#define HT1LO_PCICFG_BASE_TP1 0x1b000000
-+
-+#define HT1LO_PCICFG_BASE_EXT 0xefe00000000
-+#define HT1LO_PCICFG_BASE_TP1_EXT 0xefe10000000
-+
-+static int ls7a_pci_config_access(unsigned char access_type,
-+		struct pci_bus *bus, unsigned int devfn,
-+		int where, u32 *data)
-+{
-+	u_int64_t addr;
-+	void *addrp;
-+	unsigned char busnum = bus->number;
-+	int device = PCI_SLOT(devfn);
-+	int function = PCI_FUNC(devfn);
-+	int reg = where & ~3;
-+
-+	if (where >= PCI_CFG_SPACE_EXP_SIZE)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
-+	if (busnum == 0 && device > 23)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
-+	if (where < PCI_CFG_SPACE_SIZE) { /* standard config */
-+		addr = (busnum << 16) | (device << 11) | (function << 8) | reg;
-+		if (busnum == 0) {
-+			addr = HT1LO_PCICFG_BASE | addr;
-+			addrp = (void *)TO_UNCAC(addr);
-+		} else {
-+			addr = HT1LO_PCICFG_BASE_TP1 | addr;
-+			addrp = (void *)TO_UNCAC(addr);
-+		}
-+	} else { /* extended config */
-+		reg = (reg & 0xff) | ((reg & 0xf00) << 16);
-+		addr = (busnum << 16) | (device << 11) | (function << 8) | reg;
-+		if (busnum == 0) {
-+			addr = HT1LO_PCICFG_BASE_EXT | addr;
-+			addrp = (void *)TO_UNCAC(addr);
-+		} else {
-+			addr = HT1LO_PCICFG_BASE_TP1_EXT | addr;
-+			addrp = (void *)TO_UNCAC(addr);
-+		}
-+	}
-+
-+	if (access_type == PCI_ACCESS_WRITE)
-+		*(unsigned int *)addrp = cpu_to_le32(*data);
-+	else {
-+		*data = le32_to_cpu(*(unsigned int *)addrp);
-+		if (busnum == 0 &&
-+		    reg == PCI_CLASS_REVISION && *data == 0x06000001)
-+			*data = (PCI_CLASS_BRIDGE_PCI << 16) | (*data & 0xffff);
-+
-+		if (*data == 0xffffffff) {
-+			*data = -1;
-+			return PCIBIOS_DEVICE_NOT_FOUND;
-+		}
-+	}
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static int ls7a_pci_pcibios_read(struct pci_bus *bus, unsigned int devfn,
-+				 int where, int size, u32 *val)
-+{
-+	int ret;
-+	u32 data = 0;
-+
-+	ret = ls7a_pci_config_access(PCI_ACCESS_READ, bus, devfn, where, &data);
-+	if (ret != PCIBIOS_SUCCESSFUL)
-+		return ret;
-+
-+	if (size == 1)
-+		*val = (data >> ((where & 3) << 3)) & 0xff;
-+	else if (size == 2)
-+		*val = (data >> ((where & 3) << 3)) & 0xffff;
-+	else
-+		*val = data;
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static int ls7a_pci_pcibios_write(struct pci_bus *bus, unsigned int devfn,
-+				  int where, int size, u32 val)
-+{
-+	int ret;
-+	u32 data = 0;
-+
-+	if (size == 4)
-+		data = val;
-+	else {
-+		ret = ls7a_pci_config_access(PCI_ACCESS_READ, bus,
-+						devfn, where, &data);
-+		if (ret != PCIBIOS_SUCCESSFUL)
-+			return ret;
-+
-+		if (size == 1)
-+			data = (data & ~(0xff << ((where & 3) << 3))) |
-+				(val << ((where & 3) << 3));
-+		else if (size == 2)
-+			data = (data & ~(0xffff << ((where & 3) << 3))) |
-+				(val << ((where & 3) << 3));
-+	}
-+
-+	ret = ls7a_pci_config_access(PCI_ACCESS_WRITE, bus,
-+					devfn, where, &data);
-+
-+	return ret;
-+}
-+
-+struct pci_ops loongson_ls7a_pci_ops = {
-+	.read = ls7a_pci_pcibios_read,
-+	.write = ls7a_pci_pcibios_write
-+};
 -- 
 2.1.0
 
