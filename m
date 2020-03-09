@@ -2,35 +2,35 @@ Return-Path: <SRS0=ubi8=42=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCB86C18E5B
-	for <linux-pci@archiver.kernel.org>; Mon,  9 Mar 2020 08:50:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FADAC18E5B
+	for <linux-pci@archiver.kernel.org>; Mon,  9 Mar 2020 08:52:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 97FE620848
-	for <linux-pci@archiver.kernel.org>; Mon,  9 Mar 2020 08:50:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DBE1020828
+	for <linux-pci@archiver.kernel.org>; Mon,  9 Mar 2020 08:52:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=flygoat.com header.i=jiaxun.yang@flygoat.com header.b="c9gPUBVs"
+	dkim=pass (1024-bit key) header.d=flygoat.com header.i=jiaxun.yang@flygoat.com header.b="YbuUMczt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726411AbgCIIuu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 9 Mar 2020 04:50:50 -0400
-Received: from sender3-op-o12.zoho.com.cn ([124.251.121.243]:17842 "EHLO
+        id S1726928AbgCIIwh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 9 Mar 2020 04:52:37 -0400
+Received: from sender3-op-o12.zoho.com.cn ([124.251.121.243]:17822 "EHLO
         sender3-op-o12.zoho.com.cn" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725956AbgCIIut (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Mar 2020 04:50:49 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1583743805;
+        by vger.kernel.org with ESMTP id S1726716AbgCIIwg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Mar 2020 04:52:36 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1583743004;
         s=mail; d=flygoat.com; i=jiaxun.yang@flygoat.com;
         h=Date:From:To:Cc:Message-ID:In-Reply-To:References:Subject:MIME-Version:Content-Type:Content-Transfer-Encoding;
-        bh=arbMPqUJNmVr7z8xDGX4dxhr0Jiu/21GH9BeGGFEGqM=;
-        b=c9gPUBVssKTdnoFnpfLyta/PBYHPP/eNOKjJboGMgjuf+KpKU/ErK1jko5L5RUDe
-        e6M40FwTByqvsri6OqJNxafWBFFp9nZyJac3G61SiT9bqqDL3MHXg41EkGbbe8BQOis
-        DhQPwqyOvO110mqrpmmmtgbWZTavGMQLcHpfI5GM=
+        bh=fspPoWh79zaLVJtcCiuZPHpClxHc3HMz8kus+GU3cug=;
+        b=YbuUMczt+Flzmo9PiR+v1tbqyKOqjXiarABsnK0yVQyEU3cIXUA8Flomt/pQ3/zb
+        EhZm1g6u1W19YuqOmR4SzBDw8ALe8HixD94y6PpgzvK2f1GOSMeAw+GeHqIUii7eH58
+        Re4eRPxz/0Ny+V8XxGeJkYgR/ksbqEj5o542DP6E=
 Received: from mail.baihui.com by mx.zoho.com.cn
-        with SMTP id 15837438034103.9039562753517885; Mon, 9 Mar 2020 16:50:03 +0800 (CST)
-Date:   Mon, 09 Mar 2020 16:50:03 +0800
+        with SMTP id 1583743001556858.9546748061696; Mon, 9 Mar 2020 16:36:41 +0800 (CST)
+Date:   Mon, 09 Mar 2020 16:36:41 +0800
 From:   Jiaxun Yang <jiaxun.yang@flygoat.com>
 To:     "Tiezhu Yang" <yangtiezhu@loongson.cn>
 Cc:     "Thomas Bogendoerfer" <tsbogend@alpha.franken.de>,
@@ -42,11 +42,11 @@ Cc:     "Thomas Bogendoerfer" <tsbogend@alpha.franken.de>,
         "linux-ide" <linux-ide@vger.kernel.org>,
         "linux-kernel" <linux-kernel@vger.kernel.org>,
         "Xuefeng Li" <lixuefeng@loongson.cn>
-Message-ID: <170be7ca00e.133ea84fa2305.7803335422925759322@flygoat.com>
-In-Reply-To: <1583742206-29163-2-git-send-email-yangtiezhu@loongson.cn>
-References: <1583742206-29163-1-git-send-email-yangtiezhu@loongson.cn> <1583742206-29163-2-git-send-email-yangtiezhu@loongson.cn>
-Subject: =?UTF-8?Q?=E5=9B=9E=E5=A4=8D:[PATCH_1/6]_PCI:_Add_Loongson?=
- =?UTF-8?Q?_vendor_ID_and_7A1000_device_IDs?=
+Message-ID: <170be7063d1.c7d52ae02285.4730966984142345992@flygoat.com>
+In-Reply-To: <1583742206-29163-4-git-send-email-yangtiezhu@loongson.cn>
+References: <1583742206-29163-1-git-send-email-yangtiezhu@loongson.cn> <1583742206-29163-4-git-send-email-yangtiezhu@loongson.cn>
+Subject: =?UTF-8?Q?=E5=9B=9E=E5=A4=8D:[PATCH_3/6]_MIPS:_Loongson:_Use_?=
+ =?UTF-8?Q?firmware_arguments_to_get_board_name?=
 MIME-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
@@ -59,51 +59,72 @@ List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 
- ---- =E5=9C=A8 =E6=98=9F=E6=9C=9F=E4=B8=80, 2020-03-09 16:23:21 Tiezhu Yan=
+
+ ---- =E5=9C=A8 =E6=98=9F=E6=9C=9F=E4=B8=80, 2020-03-09 16:23:23 Tiezhu Yan=
 g <yangtiezhu@loongson.cn> =E6=92=B0=E5=86=99 ----
- > Add the Loongson vendor ID and 7A1000 device IDs to pci_ids.h
- > to be used by the controller driver in the future.
+ > In order to distinguish various types of bridge chip such as AMD RS780E
+ > or Loongson 7A1000, we can use firmware arguments to get board name.
  >=20
- > The Loongson IDs can be found at the following link:
- > https://git.kernel.org/pub/scm/utils/pciutils/pciutils.git/tree/pci.ids
- >=20
+Hi Tiezhu,
+
+Thanks for your contribution.
+Your series is sightly conflict with my "modernize" series. But that's fine=
+,
+if your code can meet mainline requirement, I'm going to adjust my works.=
+=20
+
+See my comments bellow.
+
  > Signed-off-by: Tiezhu Yang <yangtiezhu@loongson.cn>
  > ---
- >  include/linux/pci_ids.h | 18 ++++++++++++++++++
- >  1 file changed, 18 insertions(+)
+ >  arch/mips/include/asm/mach-loongson64/boot_param.h | 1 +
+ >  arch/mips/loongson64/env.c                         | 5 +++++
+ >  2 files changed, 6 insertions(+)
  >=20
- > diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
- > index 352c0d7..0125ab4 100644
- > --- a/include/linux/pci_ids.h
- > +++ b/include/linux/pci_ids.h
- > @@ -3113,4 +3113,22 @@
+ > diff --git a/arch/mips/include/asm/mach-loongson64/boot_param.h b/arch/m=
+ips/include/asm/mach-loongson64/boot_param.h
+ > index 8c286be..225a563 100644
+ > --- a/arch/mips/include/asm/mach-loongson64/boot_param.h
+ > +++ b/arch/mips/include/asm/mach-loongson64/boot_param.h
+ > @@ -217,5 +217,6 @@ struct loongson_system_configuration {
  > =20
- >  #define PCI_VENDOR_ID_NCUBE        0x10ff
+ >  extern struct efi_memory_map_loongson *loongson_memmap;
+ >  extern struct loongson_system_configuration loongson_sysconf;
+ > +extern struct board_devices *eboard;
  > =20
- > +#define PCI_VENDOR_ID_LOONGSON            0x0014
- > +#define PCI_DEVICE_ID_LOONGSON_7A1000_HT    0x7a00
- > +#define PCI_DEVICE_ID_LOONGSON_7A1000_APB    0x7a02
- > +#define PCI_DEVICE_ID_LOONGSON_7A1000_GMAC    0x7a03
- > +#define PCI_DEVICE_ID_LOONGSON_7A1000_OTG    0x7a04
- > +#define PCI_DEVICE_ID_LOONGSON_7A1000_DC    0x7a06
- > +#define PCI_DEVICE_ID_LOONGSON_7A1000_HDA    0x7a07
- > +#define PCI_DEVICE_ID_LOONGSON_7A1000_SATA    0x7a08
- > +#define PCI_DEVICE_ID_LOONGSON_7A1000_PCIE_X1    0x7a09
- > +#define PCI_DEVICE_ID_LOONGSON_7A1000_SPI    0x7a0b
- > +#define PCI_DEVICE_ID_LOONGSON_7A1000_LPC    0x7a0c
- > +#define PCI_DEVICE_ID_LOONGSON_7A1000_DMA    0x7a0f
- > +#define PCI_DEVICE_ID_LOONGSON_7A1000_EHCI    0x7a14
- > +#define PCI_DEVICE_ID_LOONGSON_7A1000_GPU    0x7a15
- > +#define PCI_DEVICE_ID_LOONGSON_7A1000_PCIE_X4    0x7a19
- > +#define PCI_DEVICE_ID_LOONGSON_7A1000_OHCI    0x7a24
- > +#define PCI_DEVICE_ID_LOONGSON_7A1000_PCIE_X8    0x7a29
+ >  #endif
+ > diff --git a/arch/mips/loongson64/env.c b/arch/mips/loongson64/env.c
+ > index 0daeb7b..a244a8c 100644
+ > --- a/arch/mips/loongson64/env.c
+ > +++ b/arch/mips/loongson64/env.c
+ > @@ -24,6 +24,9 @@ EXPORT_SYMBOL(cpu_clock_freq);
+ >  struct efi_memory_map_loongson *loongson_memmap;
+ >  struct loongson_system_configuration loongson_sysconf;
+ > =20
+ > +struct board_devices *eboard;
+ > +EXPORT_SYMBOL(eboard);
 
-Devices IDs are unlikely to be reused by mutiple subsystems, so probably we=
- don't need
-to add them here?
-=20
-> +
- >  #endif /* _LINUX_PCI_IDS_H */
+Can we make it as a part of struct loongson_sysconf and export that struct?
+Memory of struct eboard is not managed by kernel,  we shouldn't export such=
+ symbol.
+
+Also I noticed that you're checking PCH type repeatly in other subsystems. =
+Can you just
+determine the PCH type here?
+
+ > +
+ >  u64 loongson_chipcfg[MAX_PACKAGES] =3D {0xffffffffbfc00180};
+ >  u64 loongson_chiptemp[MAX_PACKAGES];
+ >  u64 loongson_freqctrl[MAX_PACKAGES];
+ > @@ -51,6 +54,8 @@ void __init prom_init_env(void)
+ >          ((u64)loongson_p + loongson_p->system_offset);
+ >      ecpu =3D (struct efi_cpuinfo_loongson *)
+ >          ((u64)loongson_p + loongson_p->cpu_offset);
+ > +    eboard =3D (struct board_devices *)
+ > +        ((u64)loongson_p + loongson_p->boarddev_table_offset);
+ >      eirq_source =3D (struct irq_source_routing_table *)
+ >          ((u64)loongson_p + loongson_p->irq_offset);
+ >      loongson_memmap =3D (struct efi_memory_map_loongson *)
  > --=20
  > 2.1.0
  >=20
