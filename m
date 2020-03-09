@@ -2,225 +2,199 @@ Return-Path: <SRS0=ubi8=42=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66688C10DCE
-	for <linux-pci@archiver.kernel.org>; Mon,  9 Mar 2020 03:37:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62C08C10F27
+	for <linux-pci@archiver.kernel.org>; Mon,  9 Mar 2020 08:23:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2A4192064A
-	for <linux-pci@archiver.kernel.org>; Mon,  9 Mar 2020 03:37:05 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fCsYG5F2"
+	by mail.kernel.org (Postfix) with ESMTP id 3CA5D2086A
+	for <linux-pci@archiver.kernel.org>; Mon,  9 Mar 2020 08:23:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726809AbgCIDhE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 8 Mar 2020 23:37:04 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:35934 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726788AbgCIDhE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 8 Mar 2020 23:37:04 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1583725022;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=S0qLVKfYZK8pYenESepAxVRIXfABKBnhJdpq7W8RSUA=;
-        b=fCsYG5F2c/j7p+LxsK7SJu3WHPEpdfleoVZ0Ttuk23Jkx1bpNEI/w/d01Js2QSlVwDYgbS
-        DfbAGbbvEfZ+OoQoHQGKI/JR5Xp0Gw0Zczc6ysuklktadqltg26n5U/eZJ6DsXADkymgEF
-        Is7CG+RJWN8J0jr7mGTVEfh99AMYM4U=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-47-VoLRSUGNOjaqQVz4KT5Ihg-1; Sun, 08 Mar 2020 23:36:59 -0400
-X-MC-Unique: VoLRSUGNOjaqQVz4KT5Ihg-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 65DFC477;
-        Mon,  9 Mar 2020 03:36:57 +0000 (UTC)
-Received: from [10.72.13.185] (ovpn-13-185.pek2.redhat.com [10.72.13.185])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 2A06D9008F;
-        Mon,  9 Mar 2020 03:36:47 +0000 (UTC)
-Subject: Re: [PATCH v2 0/7] vfio/pci: SR-IOV support
-To:     Alex Williamson <alex.williamson@redhat.com>
-Cc:     "Tian, Kevin" <kevin.tian@intel.com>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "dev@dpdk.org" <dev@dpdk.org>,
-        "mtosatti@redhat.com" <mtosatti@redhat.com>,
-        "thomas@monjalon.net" <thomas@monjalon.net>,
-        "bluca@debian.org" <bluca@debian.org>,
-        "jerinjacobk@gmail.com" <jerinjacobk@gmail.com>,
-        "Richardson, Bruce" <bruce.richardson@intel.com>,
-        "cohuck@redhat.com" <cohuck@redhat.com>
-References: <158213716959.17090.8399427017403507114.stgit@gimli.home>
- <AADFC41AFE54684AB9EE6CBC0274A5D19D79A8A7@SHSMSX104.ccr.corp.intel.com>
- <a6c04bac-0a37-f4c0-876e-e5cf2a8a6c3f@redhat.com>
- <20200305101406.02703e2a@w520.home>
- <3e8db1d0-8afc-f1e9-e857-aead4717fa11@redhat.com>
- <20200306092445.1bd4611c@x1.home>
-From:   Jason Wang <jasowang@redhat.com>
-Message-ID: <d9ac428f-c764-014c-db5b-3f94d8f3e626@redhat.com>
-Date:   Mon, 9 Mar 2020 11:36:46 +0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
-MIME-Version: 1.0
-In-Reply-To: <20200306092445.1bd4611c@x1.home>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
-Content-Transfer-Encoding: quoted-printable
+        id S1726469AbgCIIXw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 9 Mar 2020 04:23:52 -0400
+Received: from mail.loongson.cn ([114.242.206.163]:55948 "EHLO loongson.cn"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725796AbgCIIXv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 9 Mar 2020 04:23:51 -0400
+Received: from linux.localdomain (unknown [113.200.148.30])
+        by mail.loongson.cn (Coremail) with SMTP id AQAAf9Dxb9_+_GVesb4YAA--.12S6;
+        Mon, 09 Mar 2020 16:23:31 +0800 (CST)
+From:   Tiezhu Yang <yangtiezhu@loongson.cn>
+To:     Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        Huacai Chen <chenhc@lemote.com>,
+        Jiaxun Yang <jiaxun.yang@flygoat.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jens Axboe <axboe@kernel.dk>
+Cc:     linux-mips@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Xuefeng Li <lixuefeng@loongson.cn>
+Subject: [PATCH 4/6] MIPS: Loongson: Add DMA support for 7A1000
+Date:   Mon,  9 Mar 2020 16:23:24 +0800
+Message-Id: <1583742206-29163-5-git-send-email-yangtiezhu@loongson.cn>
+X-Mailer: git-send-email 2.1.0
+In-Reply-To: <1583742206-29163-1-git-send-email-yangtiezhu@loongson.cn>
+References: <1583742206-29163-1-git-send-email-yangtiezhu@loongson.cn>
+X-CM-TRANSID: AQAAf9Dxb9_+_GVesb4YAA--.12S6
+X-Coremail-Antispam: 1UD129KBjvJXoWxGr4ktF4kWF1xtry5Gr1xZrb_yoWrCr1xpF
+        Z7A3WrGr4Yqr17uF93X3y8ury5AanYyr4SqFW29r1Yka4qqw1rtF48Xa4ktw4fAr4rGF4x
+        urW0ka18CF1IgF7anT9S1TB71UUUUUDqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUm014x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
+        kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
+        z4x0Y4vE2Ix0cI8IcVAFwI0_Gr0_Xr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr
+        1UM28EF7xvwVC2z280aVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Cr1j
+        6rxdM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6x
+        IIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVW8JVWxJwAm72CE4IkC6x0Yz7v_Jr0_
+        Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8c
+        xan2IY04v7MxkIecxEwVAFwVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWU
+        JVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67
+        kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY
+        6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0x
+        vEx4A2jsIE14v26r4j6F4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVj
+        vjDU0xZFpf9x0JU2oGLUUUUU=
+X-CM-SenderInfo: p1dqw3xlh2x3gn0dqz5rrqw2lrqou0/
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Implement __phys_to_dma() and __dma_to_phys() according to the
+node id offset in 7A1000 DMA route config register.
 
-On 2020/3/7 =E4=B8=8A=E5=8D=8812:24, Alex Williamson wrote:
-> On Fri, 6 Mar 2020 11:35:21 +0800
-> Jason Wang <jasowang@redhat.com> wrote:
->
->> On 2020/3/6 =E4=B8=8A=E5=8D=881:14, Alex Williamson wrote:
->>> On Tue, 25 Feb 2020 14:09:07 +0800
->>> Jason Wang <jasowang@redhat.com> wrote:
->>>  =20
->>>> On 2020/2/25 =E4=B8=8A=E5=8D=8810:33, Tian, Kevin wrote:
->>>>>> From: Alex Williamson
->>>>>> Sent: Thursday, February 20, 2020 2:54 AM
->>>>>>
->>>>>> Changes since v1 are primarily to patch 3/7 where the commit log i=
-s
->>>>>> rewritten, along with option parsing and failure logging based on
->>>>>> upstream discussions.  The primary user visible difference is that
->>>>>> option parsing is now much more strict.  If a vf_token option is
->>>>>> provided that cannot be used, we generate an error.  As a result o=
-f
->>>>>> this, opening a PF with a vf_token option will serve as a mechanis=
-m of
->>>>>> setting the vf_token.  This seems like a more user friendly API th=
-an
->>>>>> the alternative of sometimes requiring the option (VFs in use) and
->>>>>> sometimes rejecting it, and upholds our desire that the option is
->>>>>> always either used or rejected.
->>>>>>
->>>>>> This also means that the VFIO_DEVICE_FEATURE ioctl is not the only
->>>>>> means of setting the VF token, which might call into question whet=
-her
->>>>>> we absolutely need this new ioctl.  Currently I'm keeping it becau=
-se I
->>>>>> can imagine use cases, for example if a hypervisor were to support
->>>>>> SR-IOV, the PF device might be opened without consideration for a =
-VF
->>>>>> token and we'd require the hypservisor to close and re-open the PF=
- in
->>>>>> order to set a known VF token, which is impractical.
->>>>>>
->>>>>> Series overview (same as provided with v1):
->>>>> Thanks for doing this!
->>>>>     =20
->>>>>> The synopsis of this series is that we have an ongoing desire to d=
-rive
->>>>>> PCIe SR-IOV PFs from userspace with VFIO.  There's an immediate ne=
-ed
->>>>>> for this with DPDK drivers and potentially interesting future use
->>>>> Can you provide a link to the DPDK discussion?
->>>>>     =20
->>>>>> cases in virtualization.  We've been reluctant to add this support
->>>>>> previously due to the dependency and trust relationship between th=
-e
->>>>>> VF device and PF driver.  Minimally the PF driver can induce a den=
-ial
->>>>>> of service to the VF, but depending on the specific implementation=
-,
->>>>>> the PF driver might also be responsible for moving data between VF=
-s
->>>>>> or have direct access to the state of the VF, including data or st=
-ate
->>>>>> otherwise private to the VF or VF driver.
->>>>> Just a loud thinking. While the motivation of VF token sounds reaso=
-nable
->>>>> to me, I'm curious why the same concern is not raised in other usag=
-es.
->>>>> For example, there is no such design in virtio framework, where the
->>>>> virtio device could also be restarted, putting in separate process =
-(vhost-user),
->>>>> and even in separate VM (virtio-vhost-user), etc.
->>>> AFAIK, the restart could only be triggered by either VM or qemu. But
->>>> yes, the datapath could be offloaded.
->>>>
->>>> But I'm not sure introducing another dedicated mechanism is better t=
-han
->>>> using the exist generic POSIX mechanism to make sure the connection
->>>> (AF_UINX) is secure.
->>>>
->>>>  =20
->>>>>     Of course the para-
->>>>> virtualized attribute of virtio implies some degree of trust, but a=
-s you
->>>>> mentioned many SR-IOV implementations support VF->PF communication
->>>>> which also implies some level of trust. It's perfectly fine if VFIO=
- just tries
->>>>> to do better than other sub-systems, but knowing how other people
->>>>> tackle the similar problem may make the whole picture clearer. =F0=9F=
-=98=8A
->>>>>
->>>>> +Jason.
->>>> I'm not quite sure e.g allowing userspace PF driver with kernel VF
->>>> driver would not break the assumption of kernel security model. At l=
-east
->>>> we should forbid a unprivileged PF driver running in userspace.
->>> It might be useful to have your opinion on this series, because that'=
-s
->>> exactly what we're trying to do here.  Various environments, DPDK
->>> specifically, want a userspace PF driver.  This series takes steps to
->>> mitigate the risk of having such a driver, such as requiring this VF
->>> token interface to extend the VFIO interface and validate participati=
-on
->>> around a PF that is not considered trusted by the kernel.
->>
->> I may miss something. But what happens if:
->>
->> - PF driver is running by unprivileged user
->> - PF is programmed to send translated DMA request
->> - Then unprivileged user can mangle the kernel data
-> ATS is a security risk regardless of SR-IOV, how does this change it?
-> Thanks,
+Signed-off-by: Tiezhu Yang <yangtiezhu@loongson.cn>
+---
+ arch/mips/include/asm/mach-loongson64/boot_param.h |  1 +
+ arch/mips/loongson64/dma.c                         | 49 +++++++++++++++++++++-
+ arch/mips/loongson64/init.c                        | 13 ++++++
+ 3 files changed, 61 insertions(+), 2 deletions(-)
 
-
-My understanding is the ATS only happen for some bugous devices. Some=20
-hardware has on-chip IOMMU, this probably means unprivileged userspace=20
-PF driver can control the on-chip IOMMU in this case.
-
-Thanks
-
-
->
-> Alex
->
->>> We also set
->>> a driver_override to try to make sure no host kernel driver can
->>> automatically bind to a VF of a user owned PF, only vfio-pci, but we
->>> don't prevent the admin from creating configurations where the VFs ar=
-e
->>> used by other host kernel drivers.
->>>
->>> I think the question Kevin is inquiring about is whether virtio devic=
-es
->>> are susceptible to the type of collaborative, shared key environment
->>> we're creating here.  For example, can a VM or qemu have access to
->>> reset a virtio device in a way that could affect other devices, ex. F=
-LR
->>> on a PF that could interfere with VF operation.  Thanks,
->>
->> Right, but I'm not sure it can be done only via virtio or need support
->> from transport (e.g PCI).
->>
->> Thanks
->>
->>
->>> Alex
->>>  =20
+diff --git a/arch/mips/include/asm/mach-loongson64/boot_param.h b/arch/mips/include/asm/mach-loongson64/boot_param.h
+index 225a563..60e7a7e 100644
+--- a/arch/mips/include/asm/mach-loongson64/boot_param.h
++++ b/arch/mips/include/asm/mach-loongson64/boot_param.h
+@@ -218,5 +218,6 @@ struct loongson_system_configuration {
+ extern struct efi_memory_map_loongson *loongson_memmap;
+ extern struct loongson_system_configuration loongson_sysconf;
+ extern struct board_devices *eboard;
++extern u32 node_id_offset;
+ 
+ #endif
+diff --git a/arch/mips/loongson64/dma.c b/arch/mips/loongson64/dma.c
+index 5e86635..997c257 100644
+--- a/arch/mips/loongson64/dma.c
++++ b/arch/mips/loongson64/dma.c
+@@ -2,24 +2,69 @@
+ #include <linux/dma-direct.h>
+ #include <linux/init.h>
+ #include <linux/swiotlb.h>
++#include <boot_param.h>
+ 
+-dma_addr_t __phys_to_dma(struct device *dev, phys_addr_t paddr)
++struct loongson_dma_ops {
++	dma_addr_t (*phys_to_dma)(struct device *dev, phys_addr_t paddr);
++	phys_addr_t (*dma_to_phys)(struct device *dev, dma_addr_t daddr);
++};
++
++struct loongson_dma_ops loongson_dma;
++
++dma_addr_t __rs780e_phys_to_dma(struct device *dev, phys_addr_t paddr)
+ {
+ 	/* We extract 2bit node id (bit 44~47, only bit 44~45 used now) from
+ 	 * Loongson-3's 48bit address space and embed it into 40bit */
+ 	long nid = (paddr >> 44) & 0x3;
++
+ 	return ((nid << 44) ^ paddr) | (nid << 37);
+ }
+ 
+-phys_addr_t __dma_to_phys(struct device *dev, dma_addr_t daddr)
++dma_addr_t __ls7a_phys_to_dma(struct device *dev, phys_addr_t paddr)
++{
++	long nid = (paddr >> 44) & 0x3;
++
++	return ((nid << 44) ^ paddr) | (nid << (36 + node_id_offset));
++}
++
++
++dma_addr_t __phys_to_dma(struct device *dev, phys_addr_t paddr)
++{
++	return loongson_dma.phys_to_dma(dev, paddr);
++}
++
++phys_addr_t __rs780e_dma_to_phys(struct device *dev, dma_addr_t daddr)
+ {
+ 	/* We extract 2bit node id (bit 44~47, only bit 44~45 used now) from
+ 	 * Loongson-3's 48bit address space and embed it into 40bit */
+ 	long nid = (daddr >> 37) & 0x3;
++
+ 	return ((nid << 37) ^ daddr) | (nid << 44);
+ }
+ 
++phys_addr_t __ls7a_dma_to_phys(struct device *dev, dma_addr_t daddr)
++{
++	long nid = (daddr >> (36 + node_id_offset)) & 0x3;
++
++	return ((nid << (36 + node_id_offset)) ^ daddr) | (nid << 44);
++}
++
++phys_addr_t __dma_to_phys(struct device *dev, dma_addr_t daddr)
++{
++	return loongson_dma.dma_to_phys(dev, daddr);
++}
++
+ void __init plat_swiotlb_setup(void)
+ {
+ 	swiotlb_init(1);
++
++	if (strstr(eboard->name, "780E")) {
++		loongson_dma.phys_to_dma = __rs780e_phys_to_dma;
++		loongson_dma.dma_to_phys = __rs780e_dma_to_phys;
++	}
++
++	if (strstr(eboard->name, "7A1000")) {
++		loongson_dma.phys_to_dma = __ls7a_phys_to_dma;
++		loongson_dma.dma_to_phys = __ls7a_dma_to_phys;
++	}
+ }
+diff --git a/arch/mips/loongson64/init.c b/arch/mips/loongson64/init.c
+index 5ac1a0f..dd8463d 100644
+--- a/arch/mips/loongson64/init.c
++++ b/arch/mips/loongson64/init.c
+@@ -12,6 +12,11 @@
+ #include <asm/fw/fw.h>
+ 
+ #include <loongson.h>
++#include <boot_param.h>
++
++#define NODE_ID_OFFSET_ADDR     0x90000E001001041CULL
++
++u32 node_id_offset;
+ 
+ static void __init mips_nmi_setup(void)
+ {
+@@ -23,6 +28,11 @@ static void __init mips_nmi_setup(void)
+ 	flush_icache_range((unsigned long)base, (unsigned long)base + 0x80);
+ }
+ 
++static void ls7a_early_config(void)
++{
++	node_id_offset = (*(u32 *)NODE_ID_OFFSET_ADDR >> 8) & 0x1F;
++}
++
+ void __init prom_init(void)
+ {
+ 	fw_init_cmdline();
+@@ -32,6 +42,9 @@ void __init prom_init(void)
+ 	set_io_port_base((unsigned long)
+ 		ioremap(LOONGSON_PCIIO_BASE, LOONGSON_PCIIO_SIZE));
+ 
++	if (strstr(eboard->name, "7A1000"))
++		ls7a_early_config();
++
+ 	prom_init_numa_memory();
+ 
+ 	/* Hardcode to CPU UART 0 */
+-- 
+2.1.0
 
