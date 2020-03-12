@@ -2,158 +2,76 @@ Return-Path: <SRS0=VYo7=45=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FAKE_REPLY_C,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FABAC10DCE
-	for <linux-pci@archiver.kernel.org>; Thu, 12 Mar 2020 14:11:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8AE2C10DCE
+	for <linux-pci@archiver.kernel.org>; Thu, 12 Mar 2020 14:12:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 120A72071C
-	for <linux-pci@archiver.kernel.org>; Thu, 12 Mar 2020 14:11:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1584022266;
-	bh=R/lnE+ckVywNCWcx1gHvO2Mh70J2f5SW32TxuQf+zGI=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=QqhT/5J8WjgBHAs0DID7Z4Hd9Xa2gEE7RxTYIeGRlE7onvZ9dOXIIHO6wjeh56f3M
-	 I+qnRHzNj5xXuwM2Pi98a8oHYdBoTuiiXpGv0EZBuJhmhSZF5h/OrCH+Uh94fwhgQt
-	 3cki6fyJRRhumyWA7qqljN6GFXCOMmVMj1XHiPE4=
+	by mail.kernel.org (Postfix) with ESMTP id 8363C20663
+	for <linux-pci@archiver.kernel.org>; Thu, 12 Mar 2020 14:12:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727431AbgCLOLF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 12 Mar 2020 10:11:05 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47560 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727123AbgCLOLF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 12 Mar 2020 10:11:05 -0400
-Received: from localhost (mobile-166-175-186-165.mycingular.net [166.175.186.165])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 10BBE206E7;
-        Thu, 12 Mar 2020 14:11:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1584022264;
-        bh=R/lnE+ckVywNCWcx1gHvO2Mh70J2f5SW32TxuQf+zGI=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=arv7/+jvUj9iJWfWlYdgqEG39OScPnVN8+yN/RSHbmQJwGazVMLlVu+Tctn3gdPTX
-         FNdntEiwli27ScYUOBN6gfOPY6ZhjBhMcMl/D3RquqPL+Y8s6k9qxCCbZiR8x3ervB
-         d5gWiTZ8T/wMs4bdrTy0xx25QCxA3drilWiFDdc0=
-Date:   Thu, 12 Mar 2020 09:11:02 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Marc Gonzalez <marc.w.gonzalez@free.fr>
-Cc:     Aman Sharma <amanharitsh123@gmail.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>,
-        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>,
-        Mans Rullgard <mans@mansr.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org, linux-mediatek@lists.infradead.org,
-        Marc Zyngier <maz@kernel.org>
-Subject: Re: [PATCH 4/5] pci: handled return value of platform_get_irq
- correctly
-Message-ID: <20200312141102.GA93224@google.com>
+        id S1727123AbgCLOMI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 12 Mar 2020 10:12:08 -0400
+Received: from szxga06-in.huawei.com ([45.249.212.32]:60262 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725978AbgCLOMI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 12 Mar 2020 10:12:08 -0400
+Received: from DGGEMS402-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id 08370A387A1824FBB9C2;
+        Thu, 12 Mar 2020 22:11:53 +0800 (CST)
+Received: from localhost.localdomain.localdomain (10.175.113.25) by
+ DGGEMS402-HUB.china.huawei.com (10.3.19.202) with Microsoft SMTP Server id
+ 14.3.487.0; Thu, 12 Mar 2020 22:11:44 +0800
+From:   Chen Zhou <chenzhou10@huawei.com>
+To:     <paulus@samba.org>, <mpe@ellerman.id.au>, <tyreld@linux.ibm.com>,
+        <bhelgaas@google.com>
+CC:     <linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <chenzhou10@huawei.com>
+Subject: [PATCH -next] PCI: rpaphp: remove set but not used variable 'value'
+Date:   Thu, 12 Mar 2020 22:04:12 +0800
+Message-ID: <20200312140412.32373-1-chenzhou10@huawei.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <6e413f63-06e3-9613-97dc-ff5968a4f759@free.fr>
-User-Agent: Mutt/1.12.2 (2019-09-21)
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.113.25]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc another Marc]
+Fixes gcc '-Wunused-but-set-variable' warning:
 
-On Thu, Mar 12, 2020 at 10:53:06AM +0100, Marc Gonzalez wrote:
-> On 11/03/2020 20:19, Aman Sharma wrote:
-> 
-> > diff --git a/drivers/pci/controller/pcie-tango.c b/drivers/pci/controller/pcie-tango.c
-> > index 21a208da3f59..18c2c4313eb5 100644
-> > --- a/drivers/pci/controller/pcie-tango.c
-> > +++ b/drivers/pci/controller/pcie-tango.c
-> > @@ -273,9 +273,9 @@ static int tango_pcie_probe(struct platform_device *pdev)
-> >  		writel_relaxed(0, pcie->base + SMP8759_ENABLE + offset);
-> >  
-> >  	virq = platform_get_irq(pdev, 1);
-> > -	if (virq <= 0) {
-> > +	if (virq < 0) {
-> >  		dev_err(dev, "Failed to map IRQ\n");
-> > -		return -ENXIO;
-> > +		return virq;
-> >  	}
-> >  
-> >  	irq_dom = irq_domain_create_linear(fwnode, MSI_MAX, &dom_ops, pcie);
-> 
-> Weee, here we go again :-)
-> 
-> https://patchwork.kernel.org/patch/11066455/
-> https://patchwork.kernel.org/patch/10006651/
-> 
-> Last time around, my understanding was that, going forward,
-> the best solution was:
-> 
-> 	virq = platform_get_irq(...)
-> 	if (virq <= 0)
-> 		return virq ? : -ENODEV;
-> 
-> i.e. map 0 to -ENODEV, pass other errors as-is, remove the dev_err
-> 
-> @Bjorn/Lorenzo did you have a change of heart?
+drivers/pci/hotplug/rpaphp_core.c: In function is_php_type:
+drivers/pci/hotplug/rpaphp_core.c:291:16: warning:
+	variable value set but not used [-Wunused-but-set-variable]
 
-Yes.  In 10006651 (Oct 20, 2017), I thought:
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: Chen Zhou <chenzhou10@huawei.com>
+---
+ drivers/pci/hotplug/rpaphp_core.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-  irq = platform_get_irq(pdev, 0);
-  if (irq <= 0)
-    return -ENODEV;
+diff --git a/drivers/pci/hotplug/rpaphp_core.c b/drivers/pci/hotplug/rpaphp_core.c
+index e408e40..5d871ef 100644
+--- a/drivers/pci/hotplug/rpaphp_core.c
++++ b/drivers/pci/hotplug/rpaphp_core.c
+@@ -288,11 +288,10 @@ EXPORT_SYMBOL_GPL(rpaphp_check_drc_props);
+ 
+ static int is_php_type(char *drc_type)
+ {
+-	unsigned long value;
+ 	char *endptr;
+ 
+ 	/* PCI Hotplug nodes have an integer for drc_type */
+-	value = simple_strtoul(drc_type, &endptr, 10);
++	simple_strtoul(drc_type, &endptr, 10);
+ 	if (endptr == drc_type)
+ 		return 0;
+ 
+-- 
+2.7.4
 
-was fine.  In 11066455 (Aug 7, 2019), I said I thought I was wrong and
-that:
-
-  platform_get_irq() is a generic interface and we have to be able to
-  interpret return values consistently.  The overwhelming consensus
-  among platform_get_irq() callers is to treat "irq < 0" as an error,
-  and I think we should follow suit.
-  ...
-  I think the best pattern is:
-
-    irq = platform_get_irq(pdev, i);
-    if (irq < 0)
-      return irq;
-
-I still think what I said in 2019 is the right approach.  I do see
-your comment in 10006651 about this pattern:
-
-  if (virq <= 0)
-    return virq ? : -ENODEV;
-
-but IMHO it's too complicated for general use.  Admittedly, it's not
-*very* complicated, but it's a relatively unusual C idiom and I
-stumble over it every time I see it.  If 0 is a special case I think
-it should be mapped to a negative error in arch-specific code, which I
-think is what Linus T suggested in [1].
-
-I think there's still a large consensus that "irq < 0" is the error
-case.  In the tree today we have about 1400 callers of
-platform_get_irq() and platform_get_irq_byname() [2].  Of those,
-almost 900 check for "irq < 0" [3], while only about 150 check for
-"irq <= 0" [4] and about 15 use some variant of a "irq ? : -ENODEV"
-pattern.
-
-The bottom line is that in drivers/pci, I'd like to see either a
-single style or a compelling argument for why some checks should be
-"irq < 0" and others should be "irq <= 0".
-
-[1] https://yarchive.net/comp/linux/zero.html
-[2] $ git grep "=.*platform_get_irq" | wc -l
-    1422
-[3] $ git grep -A4 "=.*platform_get_irq" | grep "<\s*0" | wc -l
-    894
-[4] $ git grep -A4 "=.*platform_get_irq" | grep "<=\s*0" | wc -l
-    151
-[5] $ git grep -A4 "=.*platform_get_irq" | grep "return.*?.*:.*;" | wc -l
-    15
