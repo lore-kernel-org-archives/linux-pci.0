@@ -2,49 +2,50 @@ Return-Path: <SRS0=axdC=5B=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66E29C18E5B
-	for <linux-pci@archiver.kernel.org>; Mon, 16 Mar 2020 11:20:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42B74C18E5B
+	for <linux-pci@archiver.kernel.org>; Mon, 16 Mar 2020 11:20:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3622B20736
-	for <linux-pci@archiver.kernel.org>; Mon, 16 Mar 2020 11:20:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0F7C420719
+	for <linux-pci@archiver.kernel.org>; Mon, 16 Mar 2020 11:20:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="J7XbZb5Z"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="JiCAb93n"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730819AbgCPLUF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 16 Mar 2020 07:20:05 -0400
-Received: from lelv0142.ext.ti.com ([198.47.23.249]:42732 "EHLO
-        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730560AbgCPLUE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Mar 2020 07:20:04 -0400
+        id S1730803AbgCPLUN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 16 Mar 2020 07:20:13 -0400
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:60612 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730794AbgCPLUN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Mar 2020 07:20:13 -0400
 Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 02GBJsfd028222;
-        Mon, 16 Mar 2020 06:19:54 -0500
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 02GBK45I029053;
+        Mon, 16 Mar 2020 06:20:04 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1584357594;
-        bh=Dw2S5w/tmyycFEyjt5mSgRddCHa2LcL9gP3RRp2BM3I=;
+        s=ti-com-17Q1; t=1584357604;
+        bh=S90JAhlN4faoJ5qHTsybTrVGu0IAkKpAgsGHTgZVwc8=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=J7XbZb5Zf5BgIYLYJ5Datvv5BkuySx1pdlNehI153cF+EEKf9O07xsttLff+qwbf2
-         n8F52hLGCl1CUH2NHGsgjMN8AVTZb3LtA52YofbroEcAwjOaUVMiJlk8RM+0cFRGgY
-         sw3/6Lar32+7NPusuhkzVTCAze08UBJ6mUwfO4Ps=
-Received: from DLEE101.ent.ti.com (dlee101.ent.ti.com [157.170.170.31])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id 02GBJskb001567;
-        Mon, 16 Mar 2020 06:19:54 -0500
-Received: from DLEE101.ent.ti.com (157.170.170.31) by DLEE101.ent.ti.com
- (157.170.170.31) with Microsoft SMTP Server (version=TLS1_2,
+        b=JiCAb93nzryjm1AwrWd0qJDMxtsiR9ROMcHU08H2q8mxjLhgaEO1yR81GFoE1WE2m
+         hGSyEPq2coJWWXgS0p8JdLG6bC0FvevXVUwOFLk9+PLJR2cV8uIP5SGXSTZxHrotvh
+         lwUWC82SHQcXU5CTGf7+BdeUbiPQhmL75n12O5IE=
+Received: from DLEE105.ent.ti.com (dlee105.ent.ti.com [157.170.170.35])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id 02GBK325001761;
+        Mon, 16 Mar 2020 06:20:04 -0500
+Received: from DLEE110.ent.ti.com (157.170.170.21) by DLEE105.ent.ti.com
+ (157.170.170.35) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Mon, 16
- Mar 2020 06:19:53 -0500
-Received: from fllv0040.itg.ti.com (10.64.41.20) by DLEE101.ent.ti.com
- (157.170.170.31) with Microsoft SMTP Server (version=TLS1_2,
+ Mar 2020 06:20:03 -0500
+Received: from fllv0040.itg.ti.com (10.64.41.20) by DLEE110.ent.ti.com
+ (157.170.170.21) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
- Frontend Transport; Mon, 16 Mar 2020 06:19:53 -0500
+ Frontend Transport; Mon, 16 Mar 2020 06:20:03 -0500
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 02GBJiTx049775;
-        Mon, 16 Mar 2020 06:19:51 -0500
+        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 02GBJiU2049775;
+        Mon, 16 Mar 2020 06:20:00 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Andrew Murray <amurray@thegoodpenguin.co.uk>,
@@ -54,9 +55,9 @@ CC:     Tom Joseph <tjoseph@cadence.com>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         Kishon Vijay Abraham I <kishon@ti.com>
-Subject: [PATCH v3 2/5] PCI: endpoint: functions/pci-epf-test: Print throughput information
-Date:   Mon, 16 Mar 2020 16:54:21 +0530
-Message-ID: <20200316112424.25295-3-kishon@ti.com>
+Subject: [PATCH v3 5/5] misc: pci_endpoint_test: Add support to get DMA option from userspace
+Date:   Mon, 16 Mar 2020 16:54:24 +0530
+Message-ID: <20200316112424.25295-6-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200316112424.25295-1-kishon@ti.com>
 References: <20200316112424.25295-1-kishon@ti.com>
@@ -68,145 +69,189 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Print throughput information in KB/s after every completed transfer,
-including information on whether DMA is used or not.
+'pcitest' utility now uses '-d' option to allow the user to test DMA.
+Add support to parse option to use DMA from userspace application.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 Tested-by: Alan Mikhak <alan.mikhak@sifive.com>
 ---
- drivers/pci/endpoint/functions/pci-epf-test.c | 48 +++++++++++++++++++
- 1 file changed, 48 insertions(+)
+ drivers/misc/pci_endpoint_test.c | 65 ++++++++++++++++++++++++++++++--
+ 1 file changed, 62 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-index c9d9d1780e66..108e4b40e67a 100644
---- a/drivers/pci/endpoint/functions/pci-epf-test.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-@@ -190,6 +190,36 @@ static void pci_epf_test_clean_dma_chan(struct pci_epf_test *epf_test)
- 	epf_test->dma_chan = NULL;
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index 5998df1c84e9..8682867ac14a 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -17,6 +17,7 @@
+ #include <linux/mutex.h>
+ #include <linux/random.h>
+ #include <linux/slab.h>
++#include <linux/uaccess.h>
+ #include <linux/pci.h>
+ #include <linux/pci_ids.h>
+ 
+@@ -52,6 +53,7 @@
+ #define STATUS_SRC_ADDR_INVALID			BIT(7)
+ #define STATUS_DST_ADDR_INVALID			BIT(8)
+ 
++#define PCI_ENDPOINT_TEST_STATUS		0x8
+ #define PCI_ENDPOINT_TEST_LOWER_SRC_ADDR	0x0c
+ #define PCI_ENDPOINT_TEST_UPPER_SRC_ADDR	0x10
+ 
+@@ -64,6 +66,9 @@
+ #define PCI_ENDPOINT_TEST_IRQ_TYPE		0x24
+ #define PCI_ENDPOINT_TEST_IRQ_NUMBER		0x28
+ 
++#define PCI_ENDPOINT_TEST_FLAGS			0x2c
++#define FLAG_USE_DMA				BIT(0)
++
+ #define PCI_DEVICE_ID_TI_AM654			0xb00c
+ 
+ #define is_am654_pci_dev(pdev)		\
+@@ -315,11 +320,16 @@ static bool pci_endpoint_test_msi_irq(struct pci_endpoint_test *test,
+ 	return false;
  }
  
-+static void pci_epf_test_print_rate(const char *ops, u64 size,
-+				    struct timespec64 *start,
-+				    struct timespec64 *end, bool dma)
-+{
-+	struct timespec64 ts;
-+	u64 rate, ns;
+-static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
++static bool pci_endpoint_test_copy(struct pci_endpoint_test *test,
++				   unsigned long arg)
+ {
++	struct pci_endpoint_test_xfer_param param;
+ 	bool ret = false;
+ 	void *src_addr;
+ 	void *dst_addr;
++	u32 flags = 0;
++	bool use_dma;
++	size_t size;
+ 	dma_addr_t src_phys_addr;
+ 	dma_addr_t dst_phys_addr;
+ 	struct pci_dev *pdev = test->pdev;
+@@ -332,10 +342,22 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
+ 	size_t alignment = test->alignment;
+ 	u32 src_crc32;
+ 	u32 dst_crc32;
++	int err;
 +
-+	ts = timespec64_sub(*end, *start);
++	err = copy_from_user(&param, (void __user *)arg, sizeof(param));
++	if (err) {
++		dev_err(dev, "Failed to get transfer param\n");
++		return false;
++	}
+ 
++	size = param.size;
+ 	if (size > SIZE_MAX - alignment)
+ 		goto err;
+ 
++	use_dma = !!(param.flags & PCITEST_FLAGS_USE_DMA);
++	if (use_dma)
++		flags |= FLAG_USE_DMA;
 +
-+	/* convert both size (stored in 'rate') and time in terms of 'ns' */
-+	ns = timespec64_to_ns(&ts);
-+	rate = size * NSEC_PER_SEC;
-+
-+	/* Divide both size (stored in 'rate') and ns by a common factor */
-+	while (ns > UINT_MAX) {
-+		rate >>= 1;
-+		ns >>= 1;
+ 	if (irq_type < IRQ_TYPE_LEGACY || irq_type > IRQ_TYPE_MSIX) {
+ 		dev_err(dev, "Invalid IRQ type option\n");
+ 		goto err;
+@@ -406,6 +428,7 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE,
+ 				 size);
+ 
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_FLAGS, flags);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE, irq_type);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 1);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+@@ -434,9 +457,13 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
+ 	return ret;
+ }
+ 
+-static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
++static bool pci_endpoint_test_write(struct pci_endpoint_test *test,
++				    unsigned long arg)
+ {
++	struct pci_endpoint_test_xfer_param param;
+ 	bool ret = false;
++	u32 flags = 0;
++	bool use_dma;
+ 	u32 reg;
+ 	void *addr;
+ 	dma_addr_t phys_addr;
+@@ -446,11 +473,24 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
+ 	dma_addr_t orig_phys_addr;
+ 	size_t offset;
+ 	size_t alignment = test->alignment;
++	size_t size;
+ 	u32 crc32;
++	int err;
+ 
++	err = copy_from_user(&param, (void __user *)arg, sizeof(param));
++	if (err != 0) {
++		dev_err(dev, "Failed to get transfer param\n");
++		return false;
 +	}
 +
-+	if (!ns)
-+		return;
++	size = param.size;
+ 	if (size > SIZE_MAX - alignment)
+ 		goto err;
+ 
++	use_dma = !!(param.flags & PCITEST_FLAGS_USE_DMA);
++	if (use_dma)
++		flags |= FLAG_USE_DMA;
 +
-+	/* calculate the rate */
-+	do_div(rate, (uint32_t)ns);
-+
-+	pr_info("\n%s => Size: %llu bytes\t DMA: %s\t Time: %llu.%09u seconds\t"
-+		"Rate: %llu KB/s\n", ops, size, dma ? "YES" : "NO",
-+		(u64)ts.tv_sec, (u32)ts.tv_nsec, rate / 1024);
-+}
-+
- static int pci_epf_test_copy(struct pci_epf_test *epf_test)
+ 	if (irq_type < IRQ_TYPE_LEGACY || irq_type > IRQ_TYPE_MSIX) {
+ 		dev_err(dev, "Invalid IRQ type option\n");
+ 		goto err;
+@@ -493,6 +533,7 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
+ 
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE, size);
+ 
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_FLAGS, flags);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE, irq_type);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 1);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+@@ -514,9 +555,14 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
+ 	return ret;
+ }
+ 
+-static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
++static bool pci_endpoint_test_read(struct pci_endpoint_test *test,
++				   unsigned long arg)
  {
- 	int ret;
-@@ -198,6 +228,7 @@ static int pci_epf_test_copy(struct pci_epf_test *epf_test)
- 	void __iomem *dst_addr;
- 	phys_addr_t src_phys_addr;
- 	phys_addr_t dst_phys_addr;
-+	struct timespec64 start, end;
- 	struct pci_epf *epf = epf_test->epf;
- 	struct device *dev = &epf->dev;
- 	struct pci_epc *epc = epf->epc;
-@@ -236,6 +267,7 @@ static int pci_epf_test_copy(struct pci_epf_test *epf_test)
- 		goto err_dst_addr;
- 	}
++	struct pci_endpoint_test_xfer_param param;
+ 	bool ret = false;
++	u32 flags = 0;
++	bool use_dma;
++	size_t size;
+ 	void *addr;
+ 	dma_addr_t phys_addr;
+ 	struct pci_dev *pdev = test->pdev;
+@@ -526,10 +572,22 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
+ 	size_t offset;
+ 	size_t alignment = test->alignment;
+ 	u32 crc32;
++	int err;
  
-+	ktime_get_ts64(&start);
- 	use_dma = !!(reg->flags & FLAG_USE_DMA);
- 	if (use_dma) {
- 		if (!epf_test->dma_supported) {
-@@ -251,6 +283,8 @@ static int pci_epf_test_copy(struct pci_epf_test *epf_test)
- 	} else {
- 		memcpy(dst_addr, src_addr, reg->size);
- 	}
-+	ktime_get_ts64(&end);
-+	pci_epf_test_print_rate("COPY", reg->size, &start, &end, use_dma);
- 
- err_map_addr:
- 	pci_epc_unmap_addr(epc, epf->func_no, dst_phys_addr);
-@@ -277,6 +311,7 @@ static int pci_epf_test_read(struct pci_epf_test *epf_test)
- 	bool use_dma;
- 	phys_addr_t phys_addr;
- 	phys_addr_t dst_phys_addr;
-+	struct timespec64 start, end;
- 	struct pci_epf *epf = epf_test->epf;
- 	struct device *dev = &epf->dev;
- 	struct pci_epc *epc = epf->epc;
-@@ -322,17 +357,23 @@ static int pci_epf_test_read(struct pci_epf_test *epf_test)
- 			goto err_dma_map;
- 		}
- 
-+		ktime_get_ts64(&start);
- 		ret = pci_epf_test_data_transfer(epf_test, dst_phys_addr,
- 						 phys_addr, reg->size);
- 		if (ret)
- 			dev_err(dev, "Data transfer failed\n");
-+		ktime_get_ts64(&end);
- 
- 		dma_unmap_single(dma_dev, dst_phys_addr, reg->size,
- 				 DMA_FROM_DEVICE);
- 	} else {
-+		ktime_get_ts64(&start);
- 		memcpy_fromio(buf, src_addr, reg->size);
-+		ktime_get_ts64(&end);
- 	}
- 
-+	pci_epf_test_print_rate("READ", reg->size, &start, &end, use_dma);
++	err = copy_from_user(&param, (void __user *)arg, sizeof(param));
++	if (err) {
++		dev_err(dev, "Failed to get transfer param\n");
++		return false;
++	}
 +
- 	crc32 = crc32_le(~0, buf, reg->size);
- 	if (crc32 != reg->checksum)
- 		ret = -EIO;
-@@ -358,6 +399,7 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
- 	bool use_dma;
- 	phys_addr_t phys_addr;
- 	phys_addr_t src_phys_addr;
-+	struct timespec64 start, end;
- 	struct pci_epf *epf = epf_test->epf;
- 	struct device *dev = &epf->dev;
- 	struct pci_epc *epc = epf->epc;
-@@ -406,17 +448,23 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
- 			goto err_dma_map;
- 		}
++	size = param.size;
+ 	if (size > SIZE_MAX - alignment)
+ 		goto err;
  
-+		ktime_get_ts64(&start);
- 		ret = pci_epf_test_data_transfer(epf_test, phys_addr,
- 						 src_phys_addr, reg->size);
- 		if (ret)
- 			dev_err(dev, "Data transfer failed\n");
-+		ktime_get_ts64(&end);
- 
- 		dma_unmap_single(dma_dev, src_phys_addr, reg->size,
- 				 DMA_TO_DEVICE);
- 	} else {
-+		ktime_get_ts64(&start);
- 		memcpy_toio(dst_addr, buf, reg->size);
-+		ktime_get_ts64(&end);
- 	}
- 
-+	pci_epf_test_print_rate("WRITE", reg->size, &start, &end, use_dma);
++	use_dma = !!(param.flags & PCITEST_FLAGS_USE_DMA);
++	if (use_dma)
++		flags |= FLAG_USE_DMA;
 +
- 	/*
- 	 * wait 1ms inorder for the write to complete. Without this delay L3
- 	 * error in observed in the host system.
+ 	if (irq_type < IRQ_TYPE_LEGACY || irq_type > IRQ_TYPE_MSIX) {
+ 		dev_err(dev, "Invalid IRQ type option\n");
+ 		goto err;
+@@ -566,6 +624,7 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
+ 
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE, size);
+ 
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_FLAGS, flags);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE, irq_type);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 1);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
 -- 
 2.17.1
 
