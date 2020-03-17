@@ -5,47 +5,46 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E1EEC3F2CE
-	for <linux-pci@archiver.kernel.org>; Tue, 17 Mar 2020 09:57:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 415E0C18E5B
+	for <linux-pci@archiver.kernel.org>; Tue, 17 Mar 2020 09:57:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EAE5120719
-	for <linux-pci@archiver.kernel.org>; Tue, 17 Mar 2020 09:57:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1B6C720719
+	for <linux-pci@archiver.kernel.org>; Tue, 17 Mar 2020 09:57:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="V6LxoXwS"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="W98Mlig9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726609AbgCQJ5r (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 17 Mar 2020 05:57:47 -0400
-Received: from lelv0143.ext.ti.com ([198.47.23.248]:43290 "EHLO
-        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726569AbgCQJ5o (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Mar 2020 05:57:44 -0400
-Received: from lelv0266.itg.ti.com ([10.180.67.225])
-        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id 02H9vVhR108105;
-        Tue, 17 Mar 2020 04:57:31 -0500
+        id S1726650AbgCQJ5u (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 17 Mar 2020 05:57:50 -0400
+Received: from lelv0142.ext.ti.com ([198.47.23.249]:45820 "EHLO
+        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726637AbgCQJ5t (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Mar 2020 05:57:49 -0400
+Received: from fllv0035.itg.ti.com ([10.64.41.0])
+        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 02H9vctk102689;
+        Tue, 17 Mar 2020 04:57:38 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1584439051;
-        bh=bpItwiRGbgOtzOiS/bfM6aM7INXn/1XJemanJWEH6U8=;
+        s=ti-com-17Q1; t=1584439058;
+        bh=Qn54HiHLXxL4X4GP8bGGjKHr8oEaF9XMRKoZm8J/so4=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=V6LxoXwSkgHLiflJw9J67XWwR3AhHl2c2x6yXpj/aF33q+aUhPOl+R4UIPgvnCqsh
-         a5T4M5say0XcKLueCeNU8XbKNohpvYw4CzWtLong73wRk8FQNkHdleRnB5g7vm0p7H
-         438HhPupqfQUMHIYwRrfybmrr4etPkgJPEsG3YOA=
-Received: from DLEE100.ent.ti.com (dlee100.ent.ti.com [157.170.170.30])
-        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 02H9vV7F039957
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 17 Mar 2020 04:57:31 -0500
-Received: from DLEE107.ent.ti.com (157.170.170.37) by DLEE100.ent.ti.com
- (157.170.170.30) with Microsoft SMTP Server (version=TLS1_2,
+        b=W98Mlig9Qp+9AaYGa8+VU/axZR3TVo4qCBRBNntMVNe8SS4yqz4qbbo907yhp/fir
+         P0/BZcjXPLsUHhNa5X4gieTuvlj1SPdu/B6YHM/5prOthlMNGEqbBMdqrA+KJMLY5T
+         X7xv/7RmT6HL2vjgCKCOa1n+8A2hJRoCUyYgigiM=
+Received: from DFLE102.ent.ti.com (dfle102.ent.ti.com [10.64.6.23])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id 02H9vcVl023169;
+        Tue, 17 Mar 2020 04:57:38 -0500
+Received: from DFLE115.ent.ti.com (10.64.6.36) by DFLE102.ent.ti.com
+ (10.64.6.23) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Tue, 17
- Mar 2020 04:57:31 -0500
-Received: from fllv0040.itg.ti.com (10.64.41.20) by DLEE107.ent.ti.com
- (157.170.170.37) with Microsoft SMTP Server (version=TLS1_2,
+ Mar 2020 04:57:37 -0500
+Received: from fllv0040.itg.ti.com (10.64.41.20) by DFLE115.ent.ti.com
+ (10.64.6.36) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
- Frontend Transport; Tue, 17 Mar 2020 04:57:31 -0500
+ Frontend Transport; Tue, 17 Mar 2020 04:57:37 -0500
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 02H9vIKU095155;
-        Tue, 17 Mar 2020 04:57:28 -0500
+        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 02H9vIKW095155;
+        Tue, 17 Mar 2020 04:57:35 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Andrew Murray <amurray@thegoodpenguin.co.uk>,
@@ -55,9 +54,9 @@ CC:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Arnd Bergmann <arnd@arndb.de>, <linux-pci@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>,
         Kishon Vijay Abraham I <kishon@ti.com>
-Subject: [PATCH v2 3/5] tools: PCI: Add 'e' to clear IRQ
-Date:   Tue, 17 Mar 2020 15:31:56 +0530
-Message-ID: <20200317100158.4692-4-kishon@ti.com>
+Subject: [PATCH v2 5/5] misc: pci_endpoint_test: Use full pci-endpoint-test name in request irq
+Date:   Tue, 17 Mar 2020 15:31:58 +0530
+Message-ID: <20200317100158.4692-6-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200317100158.4692-1-kishon@ti.com>
 References: <20200317100158.4692-1-kishon@ti.com>
@@ -69,69 +68,97 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add a new command line option 'e' to invoke "PCITEST_CLEAR_IRQ"
-ioctl. This can be used to clear the irqs set using the 'i' option.
+Use full pci-endpoint-test name in request irq, so that it's easy to
+profile the device that actually raised the interrupt.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- tools/pci/pcitest.c | 16 +++++++++++++++-
- 1 file changed, 15 insertions(+), 1 deletion(-)
+ drivers/misc/pci_endpoint_test.c | 25 +++++++++++++++++++------
+ 1 file changed, 19 insertions(+), 6 deletions(-)
 
-diff --git a/tools/pci/pcitest.c b/tools/pci/pcitest.c
-index 5e3b6368c5e0..0a1344c45213 100644
---- a/tools/pci/pcitest.c
-+++ b/tools/pci/pcitest.c
-@@ -30,6 +30,7 @@ struct pci_test {
- 	int		irqtype;
- 	bool		set_irqtype;
- 	bool		get_irqtype;
-+	bool		clear_irq;
- 	bool		read;
- 	bool		write;
- 	bool		copy;
-@@ -76,6 +77,15 @@ static int run_test(struct pci_test *test)
- 			fprintf(stdout, "%s\n", irq[ret]);
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index ef21d2d2f8ae..bc3ae4a4fb5c 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -109,6 +109,7 @@ struct pci_endpoint_test {
+ 	struct miscdevice miscdev;
+ 	enum pci_barno test_reg_bar;
+ 	size_t alignment;
++	const char *name;
+ };
+ 
+ struct pci_endpoint_test_data {
+@@ -227,7 +228,7 @@ static bool pci_endpoint_test_request_irq(struct pci_endpoint_test *test)
+ 	for (i = 0; i < test->num_irqs; i++) {
+ 		err = devm_request_irq(dev, pci_irq_vector(pdev, i),
+ 				       pci_endpoint_test_irqhandler,
+-				       IRQF_SHARED, DRV_MODULE_NAME, test);
++				       IRQF_SHARED, test->name, test);
+ 		if (err)
+ 			goto fail;
+ 	}
+@@ -807,9 +808,6 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 	if (!pci_endpoint_test_alloc_irq_vectors(test, irq_type))
+ 		goto err_disable_irq;
+ 
+-	if (!pci_endpoint_test_request_irq(test))
+-		goto err_disable_irq;
+-
+ 	for (bar = 0; bar < PCI_STD_NUM_BARS; bar++) {
+ 		if (pci_resource_flags(pdev, bar) & IORESOURCE_MEM) {
+ 			base = pci_ioremap_bar(pdev, bar);
+@@ -839,12 +837,21 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
  	}
  
-+	if (test->clear_irq) {
-+		ret = ioctl(fd, PCITEST_CLEAR_IRQ);
-+		fprintf(stdout, "CLEAR IRQ:\t\t");
-+		if (ret < 0)
-+			fprintf(stdout, "FAILED\n");
-+		else
-+			fprintf(stdout, "%s\n", result[ret]);
+ 	snprintf(name, sizeof(name), DRV_MODULE_NAME ".%d", id);
++	test->name = kstrdup(name, GFP_KERNEL);
++	if (!test->name) {
++		err = -ENOMEM;
++		goto err_ida_remove;
 +	}
 +
- 	if (test->legacyirq) {
- 		ret = ioctl(fd, PCITEST_LEGACY_IRQ, 0);
- 		fprintf(stdout, "LEGACY IRQ:\t");
-@@ -164,7 +174,7 @@ int main(int argc, char **argv)
- 	/* set default endpoint device */
- 	test->device = "/dev/pci-endpoint-test.0";
++	if (!pci_endpoint_test_request_irq(test))
++		goto err_kfree_test_name;
++
+ 	misc_device = &test->miscdev;
+ 	misc_device->minor = MISC_DYNAMIC_MINOR;
+ 	misc_device->name = kstrdup(name, GFP_KERNEL);
+ 	if (!misc_device->name) {
+ 		err = -ENOMEM;
+-		goto err_ida_remove;
++		goto err_release_irq;
+ 	}
+ 	misc_device->fops = &pci_endpoint_test_fops,
  
--	while ((c = getopt(argc, argv, "D:b:m:x:i:dIlhrwcs:")) != EOF)
-+	while ((c = getopt(argc, argv, "D:b:m:x:i:deIlhrwcs:")) != EOF)
- 	switch (c) {
- 	case 'D':
- 		test->device = optarg;
-@@ -205,6 +215,9 @@ int main(int argc, char **argv)
- 	case 'c':
- 		test->copy = true;
- 		continue;
-+	case 'e':
-+		test->clear_irq = true;
-+		continue;
- 	case 's':
- 		test->size = strtoul(optarg, NULL, 0);
- 		continue;
-@@ -222,6 +235,7 @@ int main(int argc, char **argv)
- 			"\t-m <msi num>		MSI test (msi number between 1..32)\n"
- 			"\t-x <msix num>	\tMSI-X test (msix number between 1..2048)\n"
- 			"\t-i <irq type>	\tSet IRQ type (0 - Legacy, 1 - MSI, 2 - MSI-X)\n"
-+			"\t-e			Clear IRQ\n"
- 			"\t-I			Get current IRQ type configured\n"
- 			"\t-d			Use DMA\n"
- 			"\t-l			Legacy IRQ test\n"
+@@ -859,6 +866,12 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ err_kfree_name:
+ 	kfree(misc_device->name);
+ 
++err_release_irq:
++	pci_endpoint_test_release_irq(test);
++
++err_kfree_test_name:
++	kfree(test->name);
++
+ err_ida_remove:
+ 	ida_simple_remove(&pci_endpoint_test_ida, id);
+ 
+@@ -867,7 +880,6 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 		if (test->bar[bar])
+ 			pci_iounmap(pdev, test->bar[bar]);
+ 	}
+-	pci_endpoint_test_release_irq(test);
+ 
+ err_disable_irq:
+ 	pci_endpoint_test_free_irq_vectors(test);
+@@ -893,6 +905,7 @@ static void pci_endpoint_test_remove(struct pci_dev *pdev)
+ 
+ 	misc_deregister(&test->miscdev);
+ 	kfree(misc_device->name);
++	kfree(test->name);
+ 	ida_simple_remove(&pci_endpoint_test_ida, id);
+ 	for (bar = 0; bar < PCI_STD_NUM_BARS; bar++) {
+ 		if (test->bar[bar])
 -- 
 2.17.1
 
