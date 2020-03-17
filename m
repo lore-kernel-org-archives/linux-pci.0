@@ -2,50 +2,50 @@ Return-Path: <SRS0=CoTa=5C=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26B55C2BB1D
-	for <linux-pci@archiver.kernel.org>; Tue, 17 Mar 2020 10:36:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA482C10F29
+	for <linux-pci@archiver.kernel.org>; Tue, 17 Mar 2020 11:15:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F19CC20663
-	for <linux-pci@archiver.kernel.org>; Tue, 17 Mar 2020 10:36:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 91AB4206EC
+	for <linux-pci@archiver.kernel.org>; Tue, 17 Mar 2020 11:15:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=renesasgroup.onmicrosoft.com header.i=@renesasgroup.onmicrosoft.com header.b="Y9Xi4xFy"
+	dkim=pass (1024-bit key) header.d=renesasgroup.onmicrosoft.com header.i=@renesasgroup.onmicrosoft.com header.b="fwnmVIQA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726130AbgCQKgT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 17 Mar 2020 06:36:19 -0400
-Received: from mail-eopbgr1400125.outbound.protection.outlook.com ([40.107.140.125]:34336
-        "EHLO JPN01-TY1-obe.outbound.protection.outlook.com"
+        id S1727607AbgCQLLd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 17 Mar 2020 07:11:33 -0400
+Received: from mail-eopbgr1410115.outbound.protection.outlook.com ([40.107.141.115]:2849
+        "EHLO JPN01-OS2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725730AbgCQKgT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 17 Mar 2020 06:36:19 -0400
+        id S1729281AbgCQLLd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 17 Mar 2020 07:11:33 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=oKn25MNWblYsWTtaRQ+dfyynHX3mtbSczcFN1oguAbU/QdVcOMGS3qfo7npjoZwegO3obXy8T2Cm/R9MMjg+NdDkpI3AwqkUsu0X9lHzXceufHBaW7zWJh7m+rm28RxAT+RxAC8cstdTgGFpAagVCRPL7JnBptbwIMLuGEvnM7fyLG75XWCpwRNWGexL6+ZlYpis/O+aCH/+4/imyx4H8jwtlpF++M6fehez9Y5RlHoUNiYCh16GPitoO5m6rR0qOcedeHlBoX7mnl0InAGamzvSQwp54D4s5wDFoM4YzX70jHzeDZi4O3yHIrj1m9NhM+s3sFxlG9lsg0PvS/ExMw==
+ b=nzmpT585cAMwbD8i6XHhJrUYDM0hp281C7glwyXKfu0xv2lgAv3Ku4LTkPFX5sq9GVbWgmRYXIFTFywY1xoIk3pGTZXuurFwhO+7bmVrORFa/gV7QhbSPKPUB9XNH8AIJD9dPyYtBN8h18nlzucXR7azMz3zSzY8Ee7jzWnzBUeqh1kLP4OdKlp68B17DhbbsmCvvZa2bHD2S6Y3HIIIK8LFUoWeSHlAwd9E1HMpMSJDQGNWCzJJrF4CRE/BB1NYikmcVEbMyxzm6PJrFg9iD4mQg1A6KsZbilKosRkEaPVaxRmRW1m+BEK9ZnmWcHiOjb7bP4IpL4J6Zs8KTwisPw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=uur5A43zlIis658Vag6mGc9U4SZ3N8hynWthYglxrpY=;
- b=J573pYRhjXxz6cr4EQ9MFkrY/piSHNlJ9LAfu9PMI3m6Jlp82f5kYPjFu13aoP+1ybEe9VBVnDBhci8WMNE+78a2OkEBHPdAclO9EkkIOszKI4swloGvfjDc6MH2OswIyC4VPoEVLMzXDleC4KaFFf5fm2v2KTVtN5hp5dp0dXmjijg1Qe86rkHJu430j0E2HeGpgNHKXRkZOgkkxXV7GLu9pdAteEbwVLKCoMUZdobI2xYmP81D2+10GYkYWEs03w9z7bi69h2PMFiYZOOeLnBALbY3uDSO3g0Kwcgi0N+POSo+9AColNCoBinzdlGlzLh+xWqpgl8zJmBNWPW2Pg==
+ bh=sb2eK4tdzXwFizdYNKLsOoW+5BUoMONAlwS5QSoazNk=;
+ b=kB3eUXNUH5EOwMH8D5tQqaYtArmo3l09t9Tq6SDCouzr3y8jV0+QEVeOJgHfNmLR0gSrcT578/1spj4Fa84xWXYLP2Pzj3dgZS2GbEmabwg7qPcVWgjY5dOwK9H5jPyX/PtvIj5TC2YATjhOl8+cz/aoRX4BUgVhpNrXuJX87g1xPf5qwVJJ5AP7FYrem3E/GP7oSv0w9lnEXjYPj0UFTGGqfergBvwkMDUhIJAD1FF4PySoyC3tLj6T3OWpgN/IXEEyVyKUq7pt6zAFjrMF5T1DXbQblTLhdg6FkpCZ+i7WfYtEHPeUEKIq1ZEbyaKJ9d4+P2vIci1SF9G/PIM3nQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=bp.renesas.com; dmarc=pass action=none
- header.from=bp.renesas.com; dkim=pass header.d=bp.renesas.com; arc=none
+ smtp.mailfrom=renesas.com; dmarc=pass action=none header.from=renesas.com;
+ dkim=pass header.d=renesas.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=renesasgroup.onmicrosoft.com; s=selector2-renesasgroup-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=uur5A43zlIis658Vag6mGc9U4SZ3N8hynWthYglxrpY=;
- b=Y9Xi4xFyf92TIwC7gimedqS6mr9PN7kjnTouYODAUTWPWp/6zJ8Gzaw8sI8JgI1bXxbVFXeDKHrWVIOvHUxqbuIonzfepb0ClSFxy684KkeDYdKlGrTpWojXeMSxYZ9qvhEQI3BfhJco79MLEGbVTii3wVKIt66FjFwmepbYWGA=
-Received: from OSBPR01MB3590.jpnprd01.prod.outlook.com (20.178.97.80) by
- OSBPR01MB2662.jpnprd01.prod.outlook.com (52.134.255.145) with Microsoft SMTP
+ bh=sb2eK4tdzXwFizdYNKLsOoW+5BUoMONAlwS5QSoazNk=;
+ b=fwnmVIQAxOqOwdx+uG6X9xsSDQUR9xO4D0o7Fwme7okKdaLdthr7AxcsUt0DXhhlZIxKdSjT/MK+SASTF7k8ZyGxzgRjyhcEnA9gBLU6pk3bOvTspe6/P55ikAIf2v8Y1lb8DmusXE3D3YKg0mzenXUMqB8X7AETNs4xZ53oqcM=
+Received: from TYAPR01MB4544.jpnprd01.prod.outlook.com (20.179.175.203) by
+ TYAPR01MB5277.jpnprd01.prod.outlook.com (20.178.138.87) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2814.21; Tue, 17 Mar 2020 10:36:13 +0000
-Received: from OSBPR01MB3590.jpnprd01.prod.outlook.com
- ([fe80::490:aa83:2d09:3a0b]) by OSBPR01MB3590.jpnprd01.prod.outlook.com
- ([fe80::490:aa83:2d09:3a0b%5]) with mapi id 15.20.2814.021; Tue, 17 Mar 2020
- 10:36:12 +0000
-From:   Prabhakar Mahadev Lad <prabhakar.mahadev-lad.rj@bp.renesas.com>
-To:     Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+ 15.20.2814.13; Tue, 17 Mar 2020 11:11:28 +0000
+Received: from TYAPR01MB4544.jpnprd01.prod.outlook.com
+ ([fe80::ed7f:1268:55a9:fc06]) by TYAPR01MB4544.jpnprd01.prod.outlook.com
+ ([fe80::ed7f:1268:55a9:fc06%4]) with mapi id 15.20.2814.021; Tue, 17 Mar 2020
+ 11:11:28 +0000
+From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+To:     Prabhakar Mahadev Lad <prabhakar.mahadev-lad.rj@bp.renesas.com>,
         Lad Prabhakar <prabhakar.csengg@gmail.com>
 CC:     Andrew Murray <andrew.murray@arm.com>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
@@ -57,6 +57,7 @@ CC:     Andrew Murray <andrew.murray@arm.com>,
         <linux-rockchip@lists.infradead.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        Rob Herring <robh@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Rob Herring <robh+dt@kernel.org>,
         Mark Rutland <mark.rutland@arm.com>,
@@ -71,139 +72,82 @@ CC:     Andrew Murray <andrew.murray@arm.com>,
         Marek Vasut <marek.vasut+renesas@gmail.com>,
         Shawn Lin <shawn.lin@rock-chips.com>,
         Heiko Stuebner <heiko@sntech.de>
-Subject: RE: [PATCH v5 7/7] misc: pci_endpoint_test: Add Device ID for RZ/G2E
- PCIe controller
-Thread-Topic: [PATCH v5 7/7] misc: pci_endpoint_test: Add Device ID for RZ/G2E
- PCIe controller
-Thread-Index: AQHV7k2qHnZcas9owkCCufgdtXIhrqhMsfcAgAAA1TA=
-Date:   Tue, 17 Mar 2020 10:36:12 +0000
-Message-ID: <OSBPR01MB3590DA5CDC8DF1B618B0AA34AAF60@OSBPR01MB3590.jpnprd01.prod.outlook.com>
+Subject: RE: [PATCH v5 5/7] dt-bindings: PCI: rcar: Add bindings for R-Car
+ PCIe endpoint controller
+Thread-Topic: [PATCH v5 5/7] dt-bindings: PCI: rcar: Add bindings for R-Car
+ PCIe endpoint controller
+Thread-Index: AQHV7k2mHX0IeWzmbUuqL/cidPXc16hMjZhwgAAghACAAA0gMA==
+Date:   Tue, 17 Mar 2020 11:11:28 +0000
+Message-ID: <TYAPR01MB454402897EA1C1334A7EF5C9D8F60@TYAPR01MB4544.jpnprd01.prod.outlook.com>
 References: <20200228154122.14164-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <20200228154122.14164-8-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <TYAPR01MB45441E4766FD57506A5B9F98D8F60@TYAPR01MB4544.jpnprd01.prod.outlook.com>
-In-Reply-To: <TYAPR01MB45441E4766FD57506A5B9F98D8F60@TYAPR01MB4544.jpnprd01.prod.outlook.com>
-Accept-Language: en-GB, en-US
-Content-Language: en-US
+ <20200228154122.14164-6-prabhakar.mahadev-lad.rj@bp.renesas.com>
+ <TYAPR01MB454466B8451E3115D8A7DFB7D8F60@TYAPR01MB4544.jpnprd01.prod.outlook.com>
+ <OSBPR01MB3590F13134F6E9BD106EC506AAF60@OSBPR01MB3590.jpnprd01.prod.outlook.com>
+In-Reply-To: <OSBPR01MB3590F13134F6E9BD106EC506AAF60@OSBPR01MB3590.jpnprd01.prod.outlook.com>
+Accept-Language: ja-JP, en-US
+Content-Language: ja-JP
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
 authentication-results: spf=none (sender IP is )
- smtp.mailfrom=prabhakar.mahadev-lad.rj@bp.renesas.com; 
-x-originating-ip: [193.141.220.21]
+ smtp.mailfrom=yoshihiro.shimoda.uh@renesas.com; 
+x-originating-ip: [124.210.22.195]
 x-ms-publictraffictype: Email
 x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 417486e6-7007-4090-8ec5-08d7ca5f03b0
-x-ms-traffictypediagnostic: OSBPR01MB2662:|OSBPR01MB2662:
+x-ms-office365-filtering-correlation-id: 127690c5-e293-4488-98d4-08d7ca63f0c1
+x-ms-traffictypediagnostic: TYAPR01MB5277:|TYAPR01MB5277:
 x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <OSBPR01MB266246D624F7611F628DC645AAF60@OSBPR01MB2662.jpnprd01.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:2399;
+x-microsoft-antispam-prvs: <TYAPR01MB527756263BEBFBF476043DC9D8F60@TYAPR01MB5277.jpnprd01.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:6790;
 x-forefront-prvs: 0345CFD558
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(39860400002)(366004)(396003)(376002)(346002)(136003)(199004)(316002)(26005)(110136005)(52536014)(5660300002)(66946007)(86362001)(64756008)(81166006)(66446008)(66476007)(81156014)(66556008)(186003)(2906002)(7416002)(76116006)(33656002)(53546011)(6506007)(8936002)(478600001)(7696005)(9686003)(54906003)(4326008)(55016002)(71200400001)(8676002);DIR:OUT;SFP:1102;SCL:1;SRVR:OSBPR01MB2662;H:OSBPR01MB3590.jpnprd01.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:0;
-received-spf: None (protection.outlook.com: bp.renesas.com does not designate
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(376002)(39860400002)(136003)(396003)(366004)(346002)(199004)(66946007)(71200400001)(66446008)(64756008)(66476007)(66556008)(2906002)(5660300002)(7416002)(9686003)(4326008)(52536014)(4744005)(33656002)(76116006)(7696005)(110136005)(54906003)(81166006)(8676002)(81156014)(55016002)(316002)(6506007)(55236004)(186003)(26005)(8936002)(86362001)(478600001);DIR:OUT;SFP:1102;SCL:1;SRVR:TYAPR01MB5277;H:TYAPR01MB4544.jpnprd01.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;
+received-spf: None (protection.outlook.com: renesas.com does not designate
  permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: XR8rIn7GMNL4pne/aHHfzP1Lw7O3F/XMP8dw1XbaLQ1JVzYqpybJvpzdKcz4+CeLgYtwTGrXd7gNWUYiC5JBHJvXRqHK+lI8VoPUpjM6oI94OpqbnYJQLmvm/dHyriIU+WNMtjeiU5ouagtfgYTuoFJv0W/Lrb2tMQLkbHBJjTtMQj9KIJy+hQtDzEEJ2bV12pnJJ1ZVtVUvZTZWH7t8goM+mYZvjov1fOrxKmueQQiqnYqFzTkJ1V9W4ALVMLy+U868Au6ui7sVMx5BF0jGDD2BijCqBC61SyObj6TplqKAU+aN+GwYUOk5cFG58Q/R/zldXFARgt/ExwZSBOWf8J6T/qLH369qdPUsY7DvGCiSRS/2SJsEkDvSsW87zKeTKPlc7TMBs9JwpvhI9UFH5IwKSn9hRUx3PaQvf5R/RSTULbnlmMAlLrvACI5iXLsU
-x-ms-exchange-antispam-messagedata: 1EsQNu/6793dt86AJ2FVXrO0TEgUs6Sxw+q7mY7dZ4v05flbrg8CnlAraN5XKPelGzHxQSVJXL+zCy8l1he5SxG8Q3IvA8VegsfPvOWmo2R5m6/wNjP/00xp7DZeG3tMN33E5PvZ8Ji5K/VKB8H1Ww==
+x-microsoft-antispam-message-info: RhXkg89RFmaVxRvYMByvI99uFELunUob1vkXOXqQepaGdbuaNuoRoobAflKrMimGej+gK52NjoV9sgCjzsK1X0k/UEYYWms7D1wxVKw6Nr8bvp2AdJPe4Hr+mLEw14fDF9+x0OYVZEgAjTPPWYY0Eesh23B3jMWy4LgoXabO5x3qG5nlVPL/7dwb6m89UYAxwxFJuxg3480cFdcetKGhg0Ie2UsY0I0DrKXQr+TqjeBvIEGhnjRjMWz7GDwDpsGPYShMXAbjrOWksxl648m4vz9uYz9R1tPG1NhYFf8XRo3x97oFAIWC5hQzF75UbSQ82YNZtsmUJY4FDeh5JOP4imqOclLc0eAaWnzI7oa5z1Nw67a+gOjAjLiMZSMGYnKhxRApBViHS7wwtC+jyJLadwfaT0vzmU6qfF57THuzYF30baXfPAjAdHTaHjkGkBVR
+x-ms-exchange-antispam-messagedata: 4BGqTl6hLUDX9ohnhyye2U0u2s3FAnHjdfCt3iSg6yL+8f88mGpUGrmsuD0xJem8tqeYJY/WrXEoQJjkaqQtKnMn8IKLGgNnb0xW6DrrKCJag/zZTcif2OPTTsDDE0sT4H/YwJ3IlUqEDSAT95MEaA==
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-OriginatorOrg: bp.renesas.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 417486e6-7007-4090-8ec5-08d7ca5f03b0
-X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Mar 2020 10:36:12.6242
+X-OriginatorOrg: renesas.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 127690c5-e293-4488-98d4-08d7ca63f0c1
+X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Mar 2020 11:11:28.4058
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 53d82571-da19-47e4-9cb4-625a166a4a2a
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: zijk8rJbZRMsYr+paqqg4EsOB3s7zvIAuikfWRJ7OmmPhQ3z4hIuaXRpdZGtb19h6ojUpwrgddCa2K5H358O+5XZ+jlwm9mx2Bt4g9U+uOIPRp+rq3R0vx/UiljEPtIK
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: OSBPR01MB2662
+X-MS-Exchange-CrossTenant-userprincipalname: ubKLgSGuMkFFf5knlYIWIk/IwV8yYZw0wHdxKxXVBYoRMSmtGrZhmJ2GL0rLZMSjUUAC84Sy4H4cciwdpmtyaRdhuihVEYntwCglQQFqCgCpeWnjm59npZaj7o1zU+Oj
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYAPR01MB5277
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Yoshihiro,
+Hi Prabhakar-san,
 
-Thank you for the review.
-
-> -----Original Message-----
-> From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-> Sent: 17 March 2020 10:32
-> To: Lad Prabhakar <prabhakar.csengg@gmail.com>
-> Cc: Andrew Murray <andrew.murray@arm.com>; linux-pci@vger.kernel.org;
-> linux-arm-kernel@lists.infradead.org; linux-renesas-soc@vger.kernel.org;
-> linux-rockchip@lists.infradead.org; linux-kernel@vger.kernel.org;
-> devicetree@vger.kernel.org; Prabhakar Mahadev Lad <prabhakar.mahadev-
-> lad.rj@bp.renesas.com>; Bjorn Helgaas <bhelgaas@google.com>; Rob
-> Herring <robh+dt@kernel.org>; Mark Rutland <mark.rutland@arm.com>;
-> Catalin Marinas <catalin.marinas@arm.com>; Will Deacon <will@kernel.org>;
-> Kishon Vijay Abraham I <kishon@ti.com>; Lorenzo Pieralisi
-> <lorenzo.pieralisi@arm.com>; Arnd Bergmann <arnd@arndb.de>; Greg
-> Kroah-Hartman <gregkh@linuxfoundation.org>; Jingoo Han
-> <jingoohan1@gmail.com>; Gustavo Pimentel
-> <gustavo.pimentel@synopsys.com>; Marek Vasut
-> <marek.vasut+renesas@gmail.com>; Shawn Lin <shawn.lin@rock-
-> chips.com>; Heiko Stuebner <heiko@sntech.de>
-> Subject: RE: [PATCH v5 7/7] misc: pci_endpoint_test: Add Device ID for
-> RZ/G2E PCIe controller
->
-> Hi Prabhakar-san,
->
-> Thank you for the patch!
->
-> > From: Lad Prabhakar, Sent: Saturday, February 29, 2020 12:41 AM
+> From: Prabhakar Mahadev Lad, Sent: Tuesday, March 17, 2020 7:18 PM
+<snip>
+> > > Signed-off-by: Lad Prabhakar <prabhakar.mahadev-
+> > lad.rj@bp.renesas.com>
+> > > Reviewed-by: Rob Herring <robh@kernel.org>
 > >
-> > Add RZ/G2E in pci_device_id table so that pci-epf-test can be used for
-> > testing PCIe EP in RZ/G2E.
+> > Reviewed-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 > >
-> > Signed-off-by: Lad Prabhakar <prabhakar.mahadev-
-> lad.rj@bp.renesas.com>
-> > ---
-> >  drivers/misc/pci_endpoint_test.c | 3 +++
-> >  1 file changed, 3 insertions(+)
-> >
-> > diff --git a/drivers/misc/pci_endpoint_test.c
-> > b/drivers/misc/pci_endpoint_test.c
-> > index a5e3170..3c84e9a 100644
-> > --- a/drivers/misc/pci_endpoint_test.c
-> > +++ b/drivers/misc/pci_endpoint_test.c
-> > @@ -66,6 +66,8 @@
-> >
-> >  #define PCI_DEVICE_ID_TI_AM6540xb00c
-> >
-> > +#define PCI_DEVICE_ID_RENESAS_RZG2E0x002d
->
-> This define should be in include/linux/pci_ids.h, and adding the define
-> should be separated.
-> Also, I think "R8A774C0" is better than "RZG2E".
->
-Agreed will add it under PCI_VENDOR_ID_RENESAS.
+> Thank you for the review. Shall I add this file under "PCI DRIVER FOR REN=
+ESAS R-CAR"
+> In MAINTAINERS file as a separate patch ?
 
-Cheers,
---Prabhakar
+That's a nice idea! I think we should add the following like for dt-binding=
+:
 
-> Best regards,
-> Yoshihiro Shimoda
->
-> >  #define is_am654_pci_dev(pdev)\
-> >  ((pdev)->device =3D=3D PCI_DEVICE_ID_TI_AM654)
-> >
-> > @@ -797,6 +799,7 @@ static const struct pci_device_id
-> pci_endpoint_test_tbl[] =3D {
-> >  { PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_AM654),
-> >    .driver_data =3D (kernel_ulong_t)&am654_data
-> >  },
-> > +{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS,
-> PCI_DEVICE_ID_RENESAS_RZG2E) },
-> >  { }
-> >  };
-> >  MODULE_DEVICE_TABLE(pci, pci_endpoint_test_tbl);
-> > --
-> > 2.7.4
+F:	Documentation/devicetree/bindings/pci/*rcar*
 
+Best regards,
+Yoshihiro Shimoda
 
+> Cheers,
+> --Prabhakar
+>=20
+> > Best regards,
+> > Yoshihiro Shimoda
 
-Renesas Electronics Europe GmbH, Geschaeftsfuehrer/President: Carsten Jauch=
-, Sitz der Gesellschaft/Registered office: Duesseldorf, Arcadiastrasse 10, =
-40472 Duesseldorf, Germany, Handelsregister/Commercial Register: Duesseldor=
-f, HRB 3708 USt-IDNr./Tax identification no.: DE 119353406 WEEE-Reg.-Nr./WE=
-EE reg. no.: DE 14978647
