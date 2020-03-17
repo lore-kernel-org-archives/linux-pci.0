@@ -2,63 +2,172 @@ Return-Path: <SRS0=CoTa=5C=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9649C10F29
-	for <linux-pci@archiver.kernel.org>; Tue, 17 Mar 2020 09:05:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E3BCC10F29
+	for <linux-pci@archiver.kernel.org>; Tue, 17 Mar 2020 09:57:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C2CD720719
-	for <linux-pci@archiver.kernel.org>; Tue, 17 Mar 2020 09:05:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 31ECF20663
+	for <linux-pci@archiver.kernel.org>; Tue, 17 Mar 2020 09:57:35 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="GxBhbvkm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725933AbgCQJFL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 17 Mar 2020 05:05:11 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:53647 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725872AbgCQJFL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Mar 2020 05:05:11 -0400
-Received: from p5de0bf0b.dip0.t-ipconnect.de ([93.224.191.11] helo=nanos.tec.linutronix.de)
-        by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-        (Exim 4.80)
-        (envelope-from <tglx@linutronix.de>)
-        id 1jE89p-0004bp-Tc; Tue, 17 Mar 2020 10:05:06 +0100
-Received: by nanos.tec.linutronix.de (Postfix, from userid 1000)
-        id BF3EF101161; Tue, 17 Mar 2020 10:05:04 +0100 (CET)
-From:   Thomas Gleixner <tglx@linutronix.de>
-To:     Logan Gunthorpe <logang@deltatee.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: Re: [PATCH] PCI/switchtec: Fix init_completion race condition with poll_wait()
-In-Reply-To: <38781f88-32df-e89a-7d00-fd2fcc097497@deltatee.com>
-References: <20200313183608.2646-1-logang@deltatee.com> <87mu8fdck6.fsf@nanos.tec.linutronix.de> <38781f88-32df-e89a-7d00-fd2fcc097497@deltatee.com>
-Date:   Tue, 17 Mar 2020 10:05:04 +0100
-Message-ID: <87k13jcpxb.fsf@nanos.tec.linutronix.de>
+        id S1725906AbgCQJ5e (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 17 Mar 2020 05:57:34 -0400
+Received: from lelv0142.ext.ti.com ([198.47.23.249]:45794 "EHLO
+        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725872AbgCQJ5e (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Mar 2020 05:57:34 -0400
+Received: from lelv0266.itg.ti.com ([10.180.67.225])
+        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 02H9vPUX102623;
+        Tue, 17 Mar 2020 04:57:25 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1584439045;
+        bh=6DPCQb5gnHUagCHjkwvxLKMIM/+htnKM5PjHBAvyfes=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References;
+        b=GxBhbvkmrHZzf5YgL+hwLkN2ISuz4NI4ARYucNHNRz8ZXeMeUN+wVt92uCtX9WxGA
+         wGVRa9GcWzXAICNOClokKsBdFEKVSof4+ijAgwwDpH5VTAgqO6n+u4nJyGXqsQoZXS
+         LFqSSUnWI2Yt9WLVenujueHJ6KbMbq8JdUv/VQpM=
+Received: from DLEE105.ent.ti.com (dlee105.ent.ti.com [157.170.170.35])
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 02H9vPN5039826
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 17 Mar 2020 04:57:25 -0500
+Received: from DLEE106.ent.ti.com (157.170.170.36) by DLEE105.ent.ti.com
+ (157.170.170.35) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Tue, 17
+ Mar 2020 04:57:24 -0500
+Received: from fllv0040.itg.ti.com (10.64.41.20) by DLEE106.ent.ti.com
+ (157.170.170.36) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
+ Frontend Transport; Tue, 17 Mar 2020 04:57:24 -0500
+Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
+        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 02H9vIKS095155;
+        Tue, 17 Mar 2020 04:57:22 -0500
+From:   Kishon Vijay Abraham I <kishon@ti.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Andrew Murray <amurray@thegoodpenguin.co.uk>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Arnd Bergmann <arnd@arndb.de>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        <stable@vger.kernel.org>
+Subject: [PATCH v2 1/5] misc: pci_endpoint_test: Avoid using module parameter to determine irqtype
+Date:   Tue, 17 Mar 2020 15:31:54 +0530
+Message-ID: <20200317100158.4692-2-kishon@ti.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200317100158.4692-1-kishon@ti.com>
+References: <20200317100158.4692-1-kishon@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-Linutronix-Spam-Score: -1.0
-X-Linutronix-Spam-Level: -
-X-Linutronix-Spam-Status: No , -1.0 points, 5.0 required,  ALL_TRUSTED=-1,SHORTCIRCUIT=-0.0001
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Logan Gunthorpe <logang@deltatee.com> writes:
-> On 2020-03-16 6:56 p.m., Thomas Gleixner wrote:
->> @Bjorn: Can you please hold off on this for a few days until we sorted
->>         out the remaining issues to avoid potential merge conflicts
->>         vs. the completion series?
->
-> I'd suggest simply rebasing the completion patch on this patch, or a
-> patch like it. Then we'll have the proper bug fix commit and there won't
-> be a conflict.
+commit e03327122e2c ("pci_endpoint_test: Add 2 ioctl commands")
+uses module parameter 'irqtype' in pci_endpoint_test_set_irq()
+to check if irq vectors of a particular type (MSI or MSI-X or
+LEGACY) is already allocated. However with multi-function devices,
+'irqtype' will not correctly reflect the irq type of the PCI device.
+Fix it here by adding 'irqtype' for each PCI device to show the
+irq type of a particular PCI device.
 
-The conflict is not a question of rebasing or not. The conflict arises
-when this patch is routed through PCI simply because then the rest of
-the completion work is stuck until this hits mainline.
+Fixes: e03327122e2c ("pci_endpoint_test: Add 2 ioctl commands")
+Cc: stable@vger.kernel.org # v4.19+
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/misc/pci_endpoint_test.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
 
-Thanks,
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index 8682867ac14a..ca680635d7a9 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -103,6 +103,7 @@ struct pci_endpoint_test {
+ 	struct completion irq_raised;
+ 	int		last_irq;
+ 	int		num_irqs;
++	int		irq_type;
+ 	/* mutex to protect the ioctls */
+ 	struct mutex	mutex;
+ 	struct miscdevice miscdev;
+@@ -162,6 +163,7 @@ static void pci_endpoint_test_free_irq_vectors(struct pci_endpoint_test *test)
+ 	struct pci_dev *pdev = test->pdev;
+ 
+ 	pci_free_irq_vectors(pdev);
++	test->irq_type = IRQ_TYPE_UNDEFINED;
+ }
+ 
+ static bool pci_endpoint_test_alloc_irq_vectors(struct pci_endpoint_test *test,
+@@ -196,6 +198,8 @@ static bool pci_endpoint_test_alloc_irq_vectors(struct pci_endpoint_test *test,
+ 		irq = 0;
+ 		res = false;
+ 	}
++
++	test->irq_type = type;
+ 	test->num_irqs = irq;
+ 
+ 	return res;
+@@ -340,6 +344,7 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test,
+ 	dma_addr_t orig_dst_phys_addr;
+ 	size_t offset;
+ 	size_t alignment = test->alignment;
++	int irq_type = test->irq_type;
+ 	u32 src_crc32;
+ 	u32 dst_crc32;
+ 	int err;
+@@ -473,6 +478,7 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test,
+ 	dma_addr_t orig_phys_addr;
+ 	size_t offset;
+ 	size_t alignment = test->alignment;
++	int irq_type = test->irq_type;
+ 	size_t size;
+ 	u32 crc32;
+ 	int err;
+@@ -571,6 +577,7 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test,
+ 	dma_addr_t orig_phys_addr;
+ 	size_t offset;
+ 	size_t alignment = test->alignment;
++	int irq_type = test->irq_type;
+ 	u32 crc32;
+ 	int err;
+ 
+@@ -656,7 +663,7 @@ static bool pci_endpoint_test_set_irq(struct pci_endpoint_test *test,
+ 		return false;
+ 	}
+ 
+-	if (irq_type == req_irq_type)
++	if (test->irq_type == req_irq_type)
+ 		return true;
+ 
+ 	pci_endpoint_test_release_irq(test);
+@@ -668,12 +675,10 @@ static bool pci_endpoint_test_set_irq(struct pci_endpoint_test *test,
+ 	if (!pci_endpoint_test_request_irq(test))
+ 		goto err;
+ 
+-	irq_type = req_irq_type;
+ 	return true;
+ 
+ err:
+ 	pci_endpoint_test_free_irq_vectors(test);
+-	irq_type = IRQ_TYPE_UNDEFINED;
+ 	return false;
+ }
+ 
+@@ -753,6 +758,7 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 	test->test_reg_bar = 0;
+ 	test->alignment = 0;
+ 	test->pdev = pdev;
++	test->irq_type = IRQ_TYPE_UNDEFINED;
+ 
+ 	if (no_msi)
+ 		irq_type = IRQ_TYPE_LEGACY;
+-- 
+2.17.1
 
-        tglx
