@@ -2,78 +2,118 @@ Return-Path: <SRS0=bIb/=5D=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FAKE_REPLY_C,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5BA2C10DCE
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Mar 2020 16:30:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 043A7C5ACD6
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Mar 2020 16:43:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A415F20752
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Mar 2020 16:30:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BE9C720753
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Mar 2020 16:43:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1584549057;
-	bh=SWq3vQe10D+2Ta/Vt6aPrSduBD94fsmRComoCIhY6Jc=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=xb4BgR0pzuK/pUlSJ2pPH5HS1q5dOgc3ntb/23bNmfe+VC9pVKbvJv9hT44Gn3m3u
-	 zWHQRJLk8O1GG30Wggc/MYtX2cHug/HE0xl51Ez/W0SHQ9qK1WBAFkS7J4J+hi14D8
-	 wSBYDmZRpHM4PItK5Tm3IvC8UKONT7K7mdtHlAt8=
+	s=default; t=1584549803;
+	bh=xkRZWv2qz/inCyPXDYapigGDKiogZ8MvrCnbzJ0+SYA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=ihwDOWk/Y/263yNeiOc6Q/ikkuV12cQCJWzPM1QvhOz/llXqZ73qVUBoOyvGKyA53
+	 e8I7i0KFYSdRYYU90/gucQ+CJeEO+wrqZPsm4loVBdBNjsF+mLrX3c0V+ePhj4cGYW
+	 uRfcVtI5GcxR7sJ508xKJIbtO/UHo61U7I5csSCk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726647AbgCRQa5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 18 Mar 2020 12:30:57 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40956 "EHLO mail.kernel.org"
+        id S1726872AbgCRQnX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 18 Mar 2020 12:43:23 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51924 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726473AbgCRQa5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 18 Mar 2020 12:30:57 -0400
-Received: from localhost (mobile-166-175-186-165.mycingular.net [166.175.186.165])
+        id S1726775AbgCRQnX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 18 Mar 2020 12:43:23 -0400
+Received: from redsun51.ssa.fujisawa.hgst.com (unknown [199.255.47.7])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BD45F205ED;
-        Wed, 18 Mar 2020 16:30:55 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 96F4C20752;
+        Wed, 18 Mar 2020 16:43:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1584549056;
-        bh=SWq3vQe10D+2Ta/Vt6aPrSduBD94fsmRComoCIhY6Jc=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=aoVFrCcbyKg/L2zC6V1v1sQ8sKRRgS9GVy3OMCZrxYvdaIQlSh/0i2mLSqfgVYVv6
-         GKDqQi6yJeObQJnr0eDR7LIeFoSmGvSl3AJE8VtkRi8M9+G0yaDeSqtjuFSiUCZm33
-         oEgF/g00lXvtlojVskzFd2+h8ohjB7GKj3ZxaaM8=
-Date:   Wed, 18 Mar 2020 11:30:53 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     Zhiqiang Hou <Zhiqiang.Hou@nxp.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, amurray@thegoodpenguin.co.uk,
-        rdunlap@infradead.org
-Subject: Re: [PATCH] PCI: mobiveil: Fix unmet dependency warning for
- PCIE_MOBIVEIL_PLAT
-Message-ID: <20200318163053.GA182914@google.com>
+        s=default; t=1584549802;
+        bh=xkRZWv2qz/inCyPXDYapigGDKiogZ8MvrCnbzJ0+SYA=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=YagajiTAAdWytDxLvsbXxdjw4DDyb8Kak0ZqpN0vfUTz86e4B8p+1u8ZMqb9l5FKN
+         xqPG36qEAp4YrGAl0l9J5kPU4ShPUhUVWwHWbxP0wBecMy5WtqIeIk0w8iyNVqyRD2
+         QUzeTlUGWaJqs6K4PANIqmjjsIOwvO5KqAl2N5vU=
+Date:   Thu, 19 Mar 2020 01:43:15 +0900
+From:   Keith Busch <kbusch@kernel.org>
+To:     Lukas Wunner <lukas@wunner.de>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        David Hoyer <David.Hoyer@netapp.com>,
+        linux-pci@vger.kernel.org,
+        Xiongfeng Wang <wangxiongfeng2@huawei.com>,
+        Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
+Subject: Re: [PATCH] PCI: pciehp: Fix indefinite wait on sysfs requests
+Message-ID: <20200318164315.GA22361@redsun51.ssa.fujisawa.hgst.com>
+References: <DM5PR06MB313235E97731D97AB813F65D92FB0@DM5PR06MB3132.namprd06.prod.outlook.com>
+ <cca1effa488065cb055120aa01b65719094bdcb5.1584530321.git.lukas@wunner.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200318103504.GA13361@e121166-lin.cambridge.arm.com>
-User-Agent: Mutt/1.12.2 (2019-09-21)
+In-Reply-To: <cca1effa488065cb055120aa01b65719094bdcb5.1584530321.git.lukas@wunner.de>
+User-Agent: Mutt/1.12.1 (2019-06-15)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Mar 18, 2020 at 10:35:16AM +0000, Lorenzo Pieralisi wrote:
-> On Wed, Mar 18, 2020 at 05:33:12PM +0800, Zhiqiang Hou wrote:
-> > From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-> > 
-> > Fix the follow warning by adding the dependency PCI_MSI_IRQ_DOMAIN
-> > into PCIE_MOBIVEIL_PLAT.
-> > 
-> > WARNING: unmet direct dependencies detected for PCIE_MOBIVEIL_HOST
-> >   Depends on [n]: PCI [=y] && PCI_MSI_IRQ_DOMAIN [=n]
-> >   Selected by [y]:
-> >   - PCIE_MOBIVEIL_PLAT [=y] && PCI [=y] && (ARCH_ZYNQMP || COMPILE_TEST [=y]) && OF [=y]
-> > 
-> > Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-> > ---
-> >  drivers/pci/controller/mobiveil/Kconfig | 1 +
-> >  1 file changed, 1 insertion(+)
-> 
-> I have applied it to pci/mobiveil for v5.7.
+On Wed, Mar 18, 2020 at 12:33:12PM +0100, Lukas Wunner wrote:
+> Fixes: 54ecb8f7028c ("PCI: pciehp: Avoid returning prematurely from sysfs requests")
+> Reported-by: David Hoyer <David.Hoyer@netapp.com>
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> Cc: stable@vger.kernel.org # v4.19+
+> Cc: Keith Busch <kbusch@kernel.org>
 
-Thanks, I updated my "next" branch with this.
+Looks good to me.
+
+Reviewed-by: Keith Busch <kbusch@kernel.org>
+
+>  drivers/pci/hotplug/pciehp_hpc.c | 14 +++++++-------
+>  1 file changed, 7 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+> index e4627c68b30f..5f1a27bfcb19 100644
+> --- a/drivers/pci/hotplug/pciehp_hpc.c
+> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -663,17 +663,15 @@ static irqreturn_t pciehp_ist(int irq, void *dev_id)
+>  	if (atomic_fetch_and(~RERUN_ISR, &ctrl->pending_events) & RERUN_ISR) {
+>  		ret = pciehp_isr(irq, dev_id);
+>  		enable_irq(irq);
+> -		if (ret != IRQ_WAKE_THREAD) {
+> -			pci_config_pm_runtime_put(pdev);
+> -			return ret;
+> -		}
+> +		if (ret != IRQ_WAKE_THREAD)
+> +			goto out;
+>  	}
+>  
+>  	synchronize_hardirq(irq);
+>  	events = atomic_xchg(&ctrl->pending_events, 0);
+>  	if (!events) {
+> -		pci_config_pm_runtime_put(pdev);
+> -		return IRQ_NONE;
+> +		ret = IRQ_NONE;
+> +		goto out;
+>  	}
+>  
+>  	/* Check Attention Button Pressed */
+> @@ -702,10 +700,12 @@ static irqreturn_t pciehp_ist(int irq, void *dev_id)
+>  		pciehp_handle_presence_or_link_change(ctrl, events);
+>  	up_read(&ctrl->reset_lock);
+>  
+> +	ret = IRQ_HANDLED;
+> +out:
+>  	pci_config_pm_runtime_put(pdev);
+>  	ctrl->ist_running = false;
+>  	wake_up(&ctrl->requester);
+> -	return IRQ_HANDLED;
+> +	return ret;
+>  }
+>  
+>  static int pciehp_poll(void *data)
+> -- 
+> 2.25.0
+> 
