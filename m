@@ -6,29 +6,29 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0EB5C4332D
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Mar 2020 20:48:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E1BAC4332D
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Mar 2020 20:48:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9230420777
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Mar 2020 20:48:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F26682071C
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Mar 2020 20:48:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727198AbgCRUr3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 18 Mar 2020 16:47:29 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:58408 "EHLO
+        id S1727148AbgCRUrZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 18 Mar 2020 16:47:25 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:58406 "EHLO
         Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727168AbgCRUr1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Mar 2020 16:47:27 -0400
+        with ESMTP id S1726631AbgCRUrY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Mar 2020 16:47:24 -0400
 Received: from p5de0bf0b.dip0.t-ipconnect.de ([93.224.191.11] helo=nanos.tec.linutronix.de)
         by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
         (Exim 4.80)
         (envelope-from <tglx@linutronix.de>)
-        id 1jEfaO-0006CB-Vy; Wed, 18 Mar 2020 21:46:45 +0100
+        id 1jEfaR-0006Fi-0w; Wed, 18 Mar 2020 21:46:47 +0100
 Received: from nanos.tec.linutronix.de (localhost [IPv6:::1])
-        by nanos.tec.linutronix.de (Postfix) with ESMTP id 61F721040CC;
-        Wed, 18 Mar 2020 21:46:36 +0100 (CET)
-Message-Id: <20200318204408.010461877@linutronix.de>
+        by nanos.tec.linutronix.de (Postfix) with ESMTP id 49D23101161;
+        Wed, 18 Mar 2020 21:46:37 +0100 (CET)
+Message-Id: <20200318204408.428468767@linutronix.de>
 User-Agent: quilt/0.65
-Date:   Wed, 18 Mar 2020 21:43:08 +0100
+Date:   Wed, 18 Mar 2020 21:43:12 +0100
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
@@ -38,8 +38,6 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Joel Fernandes <joel@joelfernandes.org>,
         Steven Rostedt <rostedt@goodmis.org>,
         Randy Dunlap <rdunlap@infradead.org>,
-        Oleg Nesterov <oleg@redhat.com>,
-        Davidlohr Bueso <dave@stgolabs.net>,
         Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
         Logan Gunthorpe <logang@deltatee.com>,
         Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
@@ -49,9 +47,11 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         linux-usb@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Oleg Nesterov <oleg@redhat.com>,
+        Davidlohr Bueso <dave@stgolabs.net>,
         Michael Ellerman <mpe@ellerman.id.au>,
         Arnd Bergmann <arnd@arndb.de>, linuxppc-dev@lists.ozlabs.org
-Subject: [patch V2 06/15] rcuwait: Add @state argument to rcuwait_wait_event()
+Subject: [patch V2 10/15] sched/swait: Prepare usage in completions
 References: <20200318204302.693307984@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -63,70 +63,62 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Extend rcuwait_wait_event() with a state variable so that it is not
-restricted to UNINTERRUPTIBLE waits.
+From: Thomas Gleixner <tglx@linutronix.de>
 
-Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
+As a preparation to use simple wait queues for completions:
+
+  - Provide swake_up_all_locked() to support complete_all()
+  - Make __prepare_to_swait() public available
+
+This is done to enable the usage of complete() within truly atomic contexts
+on a PREEMPT_RT enabled kernel.
+
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Oleg Nesterov <oleg@redhat.com>
-Cc: Davidlohr Bueso <dave@stgolabs.net>
 ---
- include/linux/rcuwait.h       |   12 ++++++++++--
- kernel/locking/percpu-rwsem.c |    2 +-
- 2 files changed, 11 insertions(+), 3 deletions(-)
+V2: Add comment to swake_up_all_locked()
+---
+ kernel/sched/sched.h |    3 +++
+ kernel/sched/swait.c |   15 ++++++++++++++-
+ 2 files changed, 17 insertions(+), 1 deletion(-)
 
---- a/include/linux/rcuwait.h
-+++ b/include/linux/rcuwait.h
-@@ -3,6 +3,7 @@
- #define _LINUX_RCUWAIT_H_
- 
- #include <linux/rcupdate.h>
-+#include <linux/sched/signal.h>
- 
- /*
-  * rcuwait provides a way of blocking and waking up a single
-@@ -30,23 +31,30 @@ extern void rcuwait_wake_up(struct rcuwa
-  * The caller is responsible for locking around rcuwait_wait_event(),
-  * such that writes to @task are properly serialized.
-  */
--#define rcuwait_wait_event(w, condition)				\
-+#define rcuwait_wait_event(w, condition, state)				\
- ({									\
-+	int __ret = 0;							\
- 	rcu_assign_pointer((w)->task, current);				\
- 	for (;;) {							\
- 		/*							\
- 		 * Implicit barrier (A) pairs with (B) in		\
- 		 * rcuwait_wake_up().					\
- 		 */							\
--		set_current_state(TASK_UNINTERRUPTIBLE);		\
-+		set_current_state(state);				\
- 		if (condition)						\
- 			break;						\
- 									\
-+		if (signal_pending_state(state, current)) {		\
-+			__ret = -EINTR;					\
-+			break;						\
-+		}							\
-+									\
- 		schedule();						\
- 	}								\
- 									\
- 	WRITE_ONCE((w)->task, NULL);					\
- 	__set_current_state(TASK_RUNNING);				\
-+	__ret;								\
- })
- 
- #endif /* _LINUX_RCUWAIT_H_ */
---- a/kernel/locking/percpu-rwsem.c
-+++ b/kernel/locking/percpu-rwsem.c
-@@ -162,7 +162,7 @@ void percpu_down_write(struct percpu_rw_
- 	 */
- 
- 	/* Wait for all now active readers to complete. */
--	rcuwait_wait_event(&sem->writer, readers_active_check(sem));
-+	rcuwait_wait_event(&sem->writer, readers_active_check(sem), TASK_UNINTERRUPTIBLE);
+--- a/kernel/sched/sched.h
++++ b/kernel/sched/sched.h
+@@ -2492,3 +2492,6 @@ static inline bool is_per_cpu_kthread(st
+ 	return true;
  }
- EXPORT_SYMBOL_GPL(percpu_down_write);
+ #endif
++
++void swake_up_all_locked(struct swait_queue_head *q);
++void __prepare_to_swait(struct swait_queue_head *q, struct swait_queue *wait);
+--- a/kernel/sched/swait.c
++++ b/kernel/sched/swait.c
+@@ -32,6 +32,19 @@ void swake_up_locked(struct swait_queue_
+ }
+ EXPORT_SYMBOL(swake_up_locked);
  
++/*
++ * Wake up all waiters. This is an interface which is solely exposed for
++ * completions and not for general usage.
++ *
++ * It is intentionally different from swake_up_all() to allow usage from
++ * hard interrupt context and interrupt disabled regions.
++ */
++void swake_up_all_locked(struct swait_queue_head *q)
++{
++	while (!list_empty(&q->task_list))
++		swake_up_locked(q);
++}
++
+ void swake_up_one(struct swait_queue_head *q)
+ {
+ 	unsigned long flags;
+@@ -69,7 +82,7 @@ void swake_up_all(struct swait_queue_hea
+ }
+ EXPORT_SYMBOL(swake_up_all);
+ 
+-static void __prepare_to_swait(struct swait_queue_head *q, struct swait_queue *wait)
++void __prepare_to_swait(struct swait_queue_head *q, struct swait_queue *wait)
+ {
+ 	wait->task = current;
+ 	if (list_empty(&wait->task_list))
 
