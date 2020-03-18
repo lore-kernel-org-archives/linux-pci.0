@@ -2,207 +2,393 @@ Return-Path: <SRS0=bIb/=5D=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3082EC5ACD6
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Mar 2020 19:23:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ACB66C4332B
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Mar 2020 20:47:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0B13A2072C
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Mar 2020 19:23:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A5832071C
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Mar 2020 20:47:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726930AbgCRTXN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 18 Mar 2020 15:23:13 -0400
-Received: from mga02.intel.com ([134.134.136.20]:53523 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726619AbgCRTXM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 18 Mar 2020 15:23:12 -0400
-IronPort-SDR: l17tzpdCnhbsuD5T0P8p9+cq8hLw4x84jbkeo2nz+pY2euY6mv2ghEsuQtAkJiGsYubbcul9nH
- PuUsPVkjipkQ==
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Mar 2020 12:23:12 -0700
-IronPort-SDR: lc5+nY8X20RmwOMgWKXaoabS743UxfyckFxokQD5dmmPSwnKBEfxIjKKUuruIrUw8jnowK2Hls
- iHuLWM/iNJkA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.70,568,1574150400"; 
-   d="scan'208";a="244923072"
-Received: from mattu-haswell.fi.intel.com (HELO [10.237.72.170]) ([10.237.72.170])
-  by orsmga003.jf.intel.com with ESMTP; 18 Mar 2020 12:23:09 -0700
-From:   Mathias Nyman <mathias.nyman@linux.intel.com>
-Subject: MSI interrupt for xhci still lost on 5.6-rc6 after cpu hotplug
-Openpgp: preference=signencrypt
-Autocrypt: addr=mathias.nyman@linux.intel.com; prefer-encrypt=mutual; keydata=
- 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 fiD/
-Cc:     linux-pci <linux-pci@vger.kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Evan Green <evgreen@chromium.org>,
-        "Ghorai, Sukumar" <sukumar.ghorai@intel.com>,
-        "Amara, Madhusudanarao" <madhusudanarao.amara@intel.com>,
-        "Nandamuri, Srikanth" <srikanth.nandamuri@intel.com>
-To:     x86@kernel.org
-Message-ID: <806c51fa-992b-33ac-61a9-00a606f82edb@linux.intel.com>
-Date:   Wed, 18 Mar 2020 21:25:39 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+        id S1727210AbgCRUr3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 18 Mar 2020 16:47:29 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:58409 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727183AbgCRUr2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Mar 2020 16:47:28 -0400
+Received: from p5de0bf0b.dip0.t-ipconnect.de ([93.224.191.11] helo=nanos.tec.linutronix.de)
+        by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
+        (Exim 4.80)
+        (envelope-from <tglx@linutronix.de>)
+        id 1jEfaM-00066P-DH; Wed, 18 Mar 2020 21:46:42 +0100
+Received: from nanos.tec.linutronix.de (localhost [IPv6:::1])
+        by nanos.tec.linutronix.de (Postfix) with ESMTP id D1C191040D0;
+        Wed, 18 Mar 2020 21:46:36 +0100 (CET)
+Message-Id: <20200318204408.211530902@linutronix.de>
+User-Agent: quilt/0.65
+Date:   Wed, 18 Mar 2020 21:43:10 +0100
+From:   Thomas Gleixner <tglx@linutronix.de>
+To:     LKML <linux-kernel@vger.kernel.org>
+Cc:     Peter Zijlstra <peterz@infradead.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Ingo Molnar <mingo@kernel.org>, Will Deacon <will@kernel.org>,
+        "Paul E . McKenney" <paulmck@kernel.org>,
+        Joel Fernandes <joel@joelfernandes.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Felipe Balbi <balbi@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-usb@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Oleg Nesterov <oleg@redhat.com>,
+        Davidlohr Bueso <dave@stgolabs.net>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Arnd Bergmann <arnd@arndb.de>, linuxppc-dev@lists.ozlabs.org
+Subject: [patch V2 08/15] Documentation: Add lock ordering and nesting documentation
+References: <20200318204302.693307984@linutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
+X-Linutronix-Spam-Score: -1.0
+X-Linutronix-Spam-Level: -
+X-Linutronix-Spam-Status: No , -1.0 points, 5.0 required,  ALL_TRUSTED=-1,SHORTCIRCUIT=-0.0001
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi
+From: Thomas Gleixner <tglx@linutronix.de>
 
-I can reproduce the lost MSI interrupt issue on 5.6-rc6 which includes
-the "Plug non-maskable MSI affinity race" patch.
+The kernel provides a variety of locking primitives. The nesting of these
+lock types and the implications of them on RT enabled kernels is nowhere
+documented.
 
-I can see this on a couple platforms, I'm running a script that first generates
-a lot of usb traffic, and then in a busyloop sets irq affinity and turns off
-and on cpus:
+Add initial documentation.
 
-for i in 1 3 5 7; do
-	echo "1" > /sys/devices/system/cpu/cpu$i/online
-done
-echo "A" > "/proc/irq/*/smp_affinity"
-echo "A" > "/proc/irq/*/smp_affinity"
-echo "F" > "/proc/irq/*/smp_affinity"
-for i in 1 3 5 7; do
-	echo "0" > /sys/devices/system/cpu/cpu$i/online
-done
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+---
+V2: Addressed review comments from Randy
+---
+ Documentation/locking/index.rst     |    1 
+ Documentation/locking/locktypes.rst |  298 ++++++++++++++++++++++++++++++++++++
+ 2 files changed, 299 insertions(+)
+ create mode 100644 Documentation/locking/locktypes.rst
 
-I added some very simple debugging but I don't really know what to look for.
-xhci interrupts (122) just stop after a setting msi affinity, it survived many
-similar msi_set_affinity() calls before this.
-
-I'm not that familiar with the inner workings of this, but I'll be happy to
-help out with adding debugging and testing patches.
-
-Details:
-
- cat /proc/interrupts
-            CPU0       CPU1       CPU2       CPU3       CPU4       CPU5       CPU6       CPU7
-   0:         26          0          0          0          0          0          0          0   IO-APIC    2-edge      timer
-   1:          0          0          0          0          0          7          0          0   IO-APIC    1-edge      i8042
-   4:          0          4      59941          0          0          0          0          0   IO-APIC    4-edge      ttyS0
-   8:          0          0          0          0          0          0          1          0   IO-APIC    8-edge      rtc0
-   9:          0         40          8          0          0          0          0          0   IO-APIC    9-fasteoi   acpi
-  16:          0          0          0          0          0          0          0          0   IO-APIC   16-fasteoi   i801_smbus
- 120:          0          0        293          0          0          0          0          0   PCI-MSI 32768-edge      i915
- 121:        728          0          0         58          0          0          0          0   PCI-MSI 520192-edge      enp0s31f6
- 122:      63575       2271          0       1957       7262          0          0          0   PCI-MSI 327680-edge      xhci_hcd
- 123:          0          0          0          0          0          0          0          0   PCI-MSI 514048-edge      snd_hda_intel:card0
- NMI:          0          0          0          0          0          0          0          0   Non-maskable interrupts
+--- a/Documentation/locking/index.rst
++++ b/Documentation/locking/index.rst
+@@ -7,6 +7,7 @@ locking
+ .. toctree::
+     :maxdepth: 1
  
-trace snippet: 
-      <idle>-0     [001] d.h.   129.676900: xhci_irq: xhci irq
-      <idle>-0     [001] d.h.   129.677507: xhci_irq: xhci irq
-      <idle>-0     [001] d.h.   129.677556: xhci_irq: xhci irq
-      <idle>-0     [001] d.h.   129.677647: xhci_irq: xhci irq
-      <...>-14    [001] d..1   129.679802: msi_set_affinity: direct update msi 122, vector 33 -> 33, apicid: 2 -> 6
-      <idle>-0     [003] d.h.   129.682639: xhci_irq: xhci irq
-      <idle>-0     [003] d.h.   129.682769: xhci_irq: xhci irq
-      <idle>-0     [003] d.h.   129.682908: xhci_irq: xhci irq
-      <idle>-0     [003] d.h.   129.683552: xhci_irq: xhci irq
-      <idle>-0     [003] d.h.   129.683677: xhci_irq: xhci irq
-      <idle>-0     [003] d.h.   129.683819: xhci_irq: xhci irq
-      <idle>-0     [003] d.h.   129.689017: xhci_irq: xhci irq
-      <idle>-0     [003] d.h.   129.689140: xhci_irq: xhci irq
-      <idle>-0     [003] d.h.   129.689307: xhci_irq: xhci irq
-      <idle>-0     [003] d.h.   129.689984: xhci_irq: xhci irq
-      <idle>-0     [003] d.h.   129.690107: xhci_irq: xhci irq
-      <idle>-0     [003] d.h.   129.690278: xhci_irq: xhci irq
-      <idle>-0     [003] d.h.   129.695541: xhci_irq: xhci irq
-      <idle>-0     [003] d.h.   129.695674: xhci_irq: xhci irq
-      <idle>-0     [003] d.h.   129.695839: xhci_irq: xhci irq
-      <idle>-0     [003] d.H.   129.696667: xhci_irq: xhci irq
-      <idle>-0     [003] d.h.   129.696797: xhci_irq: xhci irq
-      <idle>-0     [003] d.h.   129.696973: xhci_irq: xhci irq
-      <idle>-0     [003] d.h.   129.702288: xhci_irq: xhci irq
-      <idle>-0     [003] d.h.   129.702380: xhci_irq: xhci irq
-      <idle>-0     [003] d.h.   129.702493: xhci_irq: xhci irq
- migration/3-24    [003] d..1   129.703150: msi_set_affinity: direct update msi 122, vector 33 -> 33, apicid: 6 -> 0
- kworker/0:0-5     [000] d.h.   131.328790: msi_set_affinity: direct update msi 121, vector 34 -> 34, apicid: 0 -> 0
- kworker/0:0-5     [000] d.h.   133.312704: msi_set_affinity: direct update msi 121, vector 34 -> 34, apicid: 0 -> 0
- kworker/0:0-5     [000] d.h.   135.360786: msi_set_affinity: direct update msi 121, vector 34 -> 34, apicid: 0 -> 0
-      <idle>-0     [000] d.h.   137.344694: msi_set_affinity: direct update msi 121, vector 34 -> 34, apicid: 0 -> 0
- kworker/0:0-5     [000] d.h.   139.128679: msi_set_affinity: direct update msi 121, vector 34 -> 34, apicid: 0 -> 0
- kworker/0:0-5     [000] d.h.   141.312686: msi_set_affinity: direct update msi 121, vector 34 -> 34, apicid: 0 -> 0
- kworker/0:0-5     [000] d.h.   143.360703: msi_set_affinity: direct update msi 121, vector 34 -> 34, apicid: 0 -> 0
- kworker/0:0-5     [000] d.h.   145.344791: msi_set_affinity: direct update msi 121, vector 34 -> 34, apicid: 0 -> 0
++    locktypes
+     lockdep-design
+     lockstat
+     locktorture
+--- /dev/null
++++ b/Documentation/locking/locktypes.rst
+@@ -0,0 +1,298 @@
++.. _kernel_hacking_locktypes:
++
++==========================
++Lock types and their rules
++==========================
++
++Introduction
++============
++
++The kernel provides a variety of locking primitives which can be divided
++into two categories:
++
++ - Sleeping locks
++ - Spinning locks
++
++This document describes the lock types at least at the conceptual level and
++provides rules for nesting of lock types also under the aspect of PREEMPT_RT.
++
++Lock categories
++===============
++
++Sleeping locks
++--------------
++
++Sleeping locks can only be acquired in preemptible task context.
++
++Some of the implementations allow try_lock() attempts from other contexts,
++but that has to be really evaluated carefully including the question
++whether the unlock can be done from that context safely as well.
++
++Note that some lock types change their implementation details when
++debugging is enabled, so this should be really only considered if there is
++no other option.
++
++Sleeping lock types:
++
++ - mutex
++ - rt_mutex
++ - semaphore
++ - rw_semaphore
++ - ww_mutex
++ - percpu_rw_semaphore
++
++On a PREEMPT_RT enabled kernel the following lock types are converted to
++sleeping locks:
++
++ - spinlock_t
++ - rwlock_t
++
++Spinning locks
++--------------
++
++ - raw_spinlock_t
++ - bit spinlocks
++
++On a non PREEMPT_RT enabled kernel the following lock types are spinning
++locks as well:
++
++ - spinlock_t
++ - rwlock_t
++
++Spinning locks implicitly disable preemption and the lock / unlock functions
++can have suffixes which apply further protections:
++
++ ===================  ====================================================
++ _bh()                Disable / enable bottom halves (soft interrupts)
++ _irq()               Disable / enable interrupts
++ _irqsave/restore()   Save and disable / restore interrupt disabled state
++ ===================  ====================================================
++
++
++rtmutex
++=======
++
++RT-mutexes are mutexes with support for priority inheritance (PI).
++
++PI has limitations on non PREEMPT_RT enabled kernels due to preemption and
++interrupt disabled sections.
++
++On a PREEMPT_RT enabled kernel most of these sections are fully
++preemptible. This is possible because PREEMPT_RT forces most executions
++into task context, especially interrupt handlers and soft interrupts, which
++allows to substitute spinlock_t and rwlock_t with RT-mutex based
++implementations.
++
++
++raw_spinlock_t and spinlock_t
++=============================
++
++raw_spinlock_t
++--------------
++
++raw_spinlock_t is a strict spinning lock implementation regardless of the
++kernel configuration including PREEMPT_RT enabled kernels.
++
++raw_spinlock_t is to be used only in real critical core code, low level
++interrupt handling and places where protecting (hardware) state is required
++to be safe against preemption and eventually interrupts.
++
++Another reason to use raw_spinlock_t is when the critical section is tiny
++to avoid the overhead of spinlock_t on a PREEMPT_RT enabled kernel in the
++contended case.
++
++spinlock_t
++----------
++
++The semantics of spinlock_t change with the state of CONFIG_PREEMPT_RT.
++
++On a non PREEMPT_RT enabled kernel spinlock_t is mapped to raw_spinlock_t
++and has exactly the same semantics.
++
++spinlock_t and PREEMPT_RT
++-------------------------
++
++On a PREEMPT_RT enabled kernel spinlock_t is mapped to a separate
++implementation based on rt_mutex which changes the semantics:
++
++ - Preemption is not disabled
++
++ - The hard interrupt related suffixes for spin_lock / spin_unlock
++   operations (_irq, _irqsave / _irqrestore) do not affect the CPUs
++   interrupt disabled state
++
++ - The soft interrupt related suffix (_bh()) is still disabling the
++   execution of soft interrupts, but contrary to a non PREEMPT_RT enabled
++   kernel, which utilizes the preemption count, this is achieved by a per
++   CPU bottom half locking mechanism.
++
++All other semantics of spinlock_t are preserved:
++
++ - Migration of tasks which hold a spinlock_t is prevented. On a non
++   PREEMPT_RT enabled kernel this is implicit due to preemption disable.
++   PREEMPT_RT has a separate mechanism to achieve this. This ensures that
++   pointers to per CPU variables stay valid even if the task is preempted.
++
++ - Task state preservation. The task state is not affected when a lock is
++   contended and the task has to schedule out and wait for the lock to
++   become available. The lock wake up restores the task state unless there
++   was a regular (not lock related) wake up on the task. This ensures that
++   the task state rules are always correct independent of the kernel
++   configuration.
++
++rwlock_t
++========
++
++rwlock_t is a multiple readers and single writer lock mechanism.
++
++On a non PREEMPT_RT enabled kernel rwlock_t is implemented as a spinning
++lock and the suffix rules of spinlock_t apply accordingly. The
++implementation is fair and prevents writer starvation.
++
++rwlock_t and PREEMPT_RT
++-----------------------
++
++On a PREEMPT_RT enabled kernel rwlock_t is mapped to a separate
++implementation based on rt_mutex which changes the semantics:
++
++ - Same changes as for spinlock_t
++
++ - The implementation is not fair and can cause writer starvation under
++   certain circumstances. The reason for this is that a writer cannot grant
++   its priority to multiple readers. Readers which are blocked on a writer
++   fully support the priority inheritance protocol.
++
++
++PREEMPT_RT caveats
++==================
++
++spinlock_t and rwlock_t
++-----------------------
++
++The substitution of spinlock_t and rwlock_t on PREEMPT_RT enabled kernels
++with RT-mutex based implementations has a few implications.
++
++On a non PREEMPT_RT enabled kernel the following code construct is
++perfectly fine::
++
++   local_irq_disable();
++   spin_lock(&lock);
++
++and fully equivalent to::
++
++   spin_lock_irq(&lock);
++
++Same applies to rwlock_t and the _irqsave() suffix variant.
++
++On a PREEMPT_RT enabled kernel this breaks because the RT-mutex
++substitution expects a fully preemptible context.
++
++The preferred solution is to use :c:func:`spin_lock_irq()` or
++:c:func:`spin_lock_irqsave()` and their unlock counterparts.
++
++PREEMPT_RT also offers a local_lock mechanism to substitute the
++local_irq_disable/save() constructs in cases where a separation of the
++interrupt disabling and the locking is really unavoidable. This should be
++restricted to very rare cases.
++
++
++raw_spinlock_t
++--------------
++
++Locking of a raw_spinlock_t disables preemption and eventually interrupts.
++Therefore code inside the critical region has to be careful to avoid calls
++into code which takes a regular spinlock_t or rwlock_t. A prime example is
++memory allocation.
++
++On a non PREEMPT_RT enabled kernel the following code construct is
++perfectly fine code::
++
++  raw_spin_lock(&lock);
++  p = kmalloc(sizeof(*p), GFP_ATOMIC);
++
++On a PREEMPT_RT enabled kernel this breaks because the memory allocator is
++fully preemptible and therefore does not support allocations from truly
++atomic contexts.
++
++Contrary to that the following code construct is perfectly fine on
++PREEMPT_RT as spin_lock() does not disable preemption::
++
++  spin_lock(&lock);
++  p = kmalloc(sizeof(*p), GFP_ATOMIC);
++
++Most places which use GFP_ATOMIC allocations are safe on PREEMPT_RT as the
++execution is forced into thread context and the lock substitution is
++ensuring preemptibility.
++
++
++bit spinlocks
++-------------
++
++Bit spinlocks are problematic for PREEMPT_RT as they cannot be easily
++substituted by an RT-mutex based implementation for obvious reasons.
++
++The semantics of bit spinlocks are preserved on a PREEMPT_RT enabled kernel
++and the caveats vs. raw_spinlock_t apply.
++
++Some bit spinlocks are substituted by regular spinlock_t for PREEMPT_RT but
++this requires conditional (#ifdef'ed) code changes at the usage side while
++the spinlock_t substitution is simply done by the compiler and the
++conditionals are restricted to header files and core implementation of the
++locking primitives and the usage sites do not require any changes.
++
++
++Lock type nesting rules
++=======================
++
++The most basic rules are:
++
++  - Lock types of the same lock category (sleeping, spinning) can nest
++    arbitrarily as long as they respect the general lock ordering rules to
++    prevent deadlocks.
++
++  - Sleeping lock types cannot nest inside spinning lock types.
++
++  - Spinning lock types can nest inside sleeping lock types.
++
++These rules apply in general independent of CONFIG_PREEMPT_RT.
++
++As PREEMPT_RT changes the lock category of spinlock_t and rwlock_t from
++spinning to sleeping this has obviously restrictions how they can nest with
++raw_spinlock_t.
++
++This results in the following nest ordering:
++
++  1) Sleeping locks
++  2) spinlock_t and rwlock_t
++  3) raw_spinlock_t and bit spinlocks
++
++Lockdep is aware of these constraints to ensure that they are respected.
++
++
++Owner semantics
++===============
++
++Most lock types in the Linux kernel have strict owner semantics, i.e. the
++context (task) which acquires a lock has to release it.
++
++There are two exceptions:
++
++  - semaphores
++  - rwsems
++
++semaphores have no strict owner semantics for historical reasons. They are
++often used for both serialization and waiting purposes. That's generally
++discouraged and should be replaced by separate serialization and wait
++mechanisms.
++
++rwsems have grown interfaces which allow non owner release for special
++purposes. This usage is problematic on PREEMPT_RT because PREEMPT_RT
++substitutes all locking primitives except semaphores with RT-mutex based
++implementations to provide priority inheritance for all lock types except
++the truly spinning ones. Priority inheritance on ownerless locks is
++obviously impossible.
++
++For now the rwsem non-owner release excludes code which utilizes it from
++being used on PREEMPT_RT enabled kernels. In same cases this can be
++mitigated by disabling portions of the code, in other cases the complete
++functionality has to be disabled until a workable solution has been found.
 
-
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -92,6 +92,10 @@ msi_set_affinity(struct irq_data *irqd, const struct cpumask *mask, bool force)
-            cfg->vector == old_cfg.vector ||
-            old_cfg.vector == MANAGED_IRQ_SHUTDOWN_VECTOR ||
-            cfg->dest_apicid == old_cfg.dest_apicid) {
-+               trace_printk("direct update msi %u, vector %u -> %u, apicid: %u -> %u\n",
-+                    irqd->irq,
-+                    old_cfg.vector, cfg->vector,
-+                    old_cfg.dest_apicid, cfg->dest_apicid);
-                irq_msi_update_msg(irqd, cfg);
-                return ret;
-        }
-@@ -134,7 +138,10 @@ msi_set_affinity(struct irq_data *irqd, const struct cpumask *mask, bool force)
-         */
-        if (IS_ERR_OR_NULL(this_cpu_read(vector_irq[cfg->vector])))
-                this_cpu_write(vector_irq[cfg->vector], VECTOR_RETRIGGERED);
--
-+       trace_printk("twostep update msi, irq %u, vector %u -> %u, apicid: %u -> %u\n",
-+                    irqd->irq,
-+                    old_cfg.vector, cfg->vector,
-+                    old_cfg.dest_apicid, cfg->dest_apicid);
-        /* Redirect it to the new vector on the local CPU temporarily */
-        old_cfg.vector = cfg->vector;
-        irq_msi_update_msg(irqd, &old_cfg);
-
-Thanks
--Mathias
