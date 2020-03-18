@@ -2,81 +2,80 @@ Return-Path: <SRS0=bIb/=5D=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D827C10DCE
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Mar 2020 10:35:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CA0BC10DCE
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Mar 2020 11:38:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 39C7D20770
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Mar 2020 10:35:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 44C0020771
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Mar 2020 11:38:24 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oif1guY3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726550AbgCRKf2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 18 Mar 2020 06:35:28 -0400
-Received: from foss.arm.com ([217.140.110.172]:47974 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726486AbgCRKf2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 18 Mar 2020 06:35:28 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id BC02A1FB;
-        Wed, 18 Mar 2020 03:35:27 -0700 (PDT)
-Received: from e121166-lin.cambridge.arm.com (e121166-lin.cambridge.arm.com [10.1.196.255])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id D66E93F534;
-        Wed, 18 Mar 2020 03:35:26 -0700 (PDT)
-Date:   Wed, 18 Mar 2020 10:35:16 +0000
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        amurray@thegoodpenguin.co.uk, bhelgaas@google.com,
-        rdunlap@infradead.org
-Subject: Re: [PATCH] PCI: mobiveil: Fix unmet dependency warning for
- PCIE_MOBIVEIL_PLAT
-Message-ID: <20200318103504.GA13361@e121166-lin.cambridge.arm.com>
-References: <20200318093312.49004-1-Zhiqiang.Hou@nxp.com>
+        id S1726905AbgCRLiX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 18 Mar 2020 07:38:23 -0400
+Received: from mail-ot1-f41.google.com ([209.85.210.41]:36222 "EHLO
+        mail-ot1-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726855AbgCRLiX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Mar 2020 07:38:23 -0400
+Received: by mail-ot1-f41.google.com with SMTP id 39so9699197otu.3
+        for <linux-pci@vger.kernel.org>; Wed, 18 Mar 2020 04:38:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:from:date:message-id:subject:to:cc;
+        bh=eTyhRpsbG0kZyPAzv+dy/wYvyIITKWnTbwXBIUvSGbA=;
+        b=oif1guY36swCU6CoNPFUeyKB4o5nBLKMzDm2eVFyaDdoJH4PfPpT2Va1c3TmAQfBYk
+         iwIeIlHlLLsZ7ETT+LDvhBffsGUH3WzQJ+RrdMwIQSRSiDmetyEv0FBqdZjYS/s5B/q6
+         hPAeEFTiX0ZJTeRGlOcMOhekdvEVBWRsZizjIsTGQrZwNWLcLtNeeslBXjhvbsJ7XjK3
+         dVZZQS03D7w/StpJm2+/aCa0vIdyOc+le1P3gNvDm0Iv2SqSasHkNVjUpkIKxuCADOMJ
+         4f9feGDgKpTARbyZRRB3h5Pb1yHFzIUEezU0eSBQZ7my7HvJci4GBVCByIHh3L7p2mOf
+         d3UQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
+        bh=eTyhRpsbG0kZyPAzv+dy/wYvyIITKWnTbwXBIUvSGbA=;
+        b=l/7wlp6UVoAKD4LfC4HWk/STafYHHs3W4TQ+9/1pOqanVl/QRB6CmhWxeIDtQU4IC/
+         gB0ZmPNbvxXocjaJ318/O95CcQt5xDuUGaJyGiB2AA8nen9Mok91TtGNpc8ER5v6tMNX
+         X9D1f76fkIsEC0wMqeyQoNxlI3k+mOYpHNdO5G7i9ytpnQFI5RqgXONtz5kqhOe7JupH
+         nq9nxvlXcZcLGXdiSx0cjW4FohfX/06QBEt8eQU0TzFarq3Stk8oHNwnBbsafrJSzQzG
+         PmiIjO4Qp+AFMUwSWY5+I7Og6REfPc16peUD0yUGelGdzNrKgWHYrhALbwg9NmSmKk1p
+         gP5A==
+X-Gm-Message-State: ANhLgQ3MxQ8U44aVMcx7LiWJ42k2hY3zDH817fI/GZ3Lq9s90v8dewwf
+        np3LNhcEw1xf1NPK5E4pukSE6AR9JR1Bv4AC3uy1Vti70wU=
+X-Google-Smtp-Source: ADFU+vt802eDl6yomu15vpnLPvcS8ld8HnLbzt3u15BU1CjiB3NLVoljNzfkWSvSOnr7FkTu64rHz5SfrGHJJw0TNU4=
+X-Received: by 2002:a05:6830:20c9:: with SMTP id z9mr3482440otq.44.1584531502669;
+ Wed, 18 Mar 2020 04:38:22 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200318093312.49004-1-Zhiqiang.Hou@nxp.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+From:   "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
+Date:   Wed, 18 Mar 2020 11:37:56 +0000
+Message-ID: <CA+V-a8vOwwCjRnFZ_Cxtvep1nLMXd5AjOyJyispg1A1k_ExbSQ@mail.gmail.com>
+Subject: PCIe EPF
+To:     Kishon Vijay Abraham I <kishon@ti.com>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-pci <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Mar 18, 2020 at 05:33:12PM +0800, Zhiqiang Hou wrote:
-> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-> 
-> Fix the follow warning by adding the dependency PCI_MSI_IRQ_DOMAIN
-> into PCIE_MOBIVEIL_PLAT.
-> 
-> WARNING: unmet direct dependencies detected for PCIE_MOBIVEIL_HOST
->   Depends on [n]: PCI [=y] && PCI_MSI_IRQ_DOMAIN [=n]
->   Selected by [y]:
->   - PCIE_MOBIVEIL_PLAT [=y] && PCI [=y] && (ARCH_ZYNQMP || COMPILE_TEST [=y]) && OF [=y]
-> 
-> Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-> ---
->  drivers/pci/controller/mobiveil/Kconfig | 1 +
->  1 file changed, 1 insertion(+)
+Hi Kishon,
 
-I have applied it to pci/mobiveil for v5.7.
+I rebased my rcar-endpoint patches on endpoint branch, which has
+support for streaming DMA API support, with this  read/write/copy
+tests failed, to make sure nothing hasn't changed on my driver I
+reverted the streaming DMA API patch
+74b9b4da84c71418ceeaaeb78dc790376df92fea "misc: pci_endpoint_test: Use
+streaming DMA APIs for buffer allocation" and tests began to pass
+again.
 
-Thanks,
-Lorenzo
+If add a GFP_DMA flag for kzalloc (with streaming DMA), the test cases
+for read/write/copy pass as expected.
 
-> diff --git a/drivers/pci/controller/mobiveil/Kconfig b/drivers/pci/controller/mobiveil/Kconfig
-> index 7439991ee82c..a62d247018cf 100644
-> --- a/drivers/pci/controller/mobiveil/Kconfig
-> +++ b/drivers/pci/controller/mobiveil/Kconfig
-> @@ -15,6 +15,7 @@ config PCIE_MOBIVEIL_PLAT
->  	bool "Mobiveil AXI PCIe controller"
->  	depends on ARCH_ZYNQMP || COMPILE_TEST
->  	depends on OF
-> +	depends on PCI_MSI_IRQ_DOMAIN
->  	select PCIE_MOBIVEIL_HOST
->  	help
->  	  Say Y here if you want to enable support for the Mobiveil AXI PCIe
-> -- 
-> 2.17.1
-> 
+Could you please through some light why this could be happening.
+
+Cheers,
+--Prabhakar Lad
