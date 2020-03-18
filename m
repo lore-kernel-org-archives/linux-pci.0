@@ -2,33 +2,33 @@ Return-Path: <SRS0=bIb/=5D=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E1BAC4332D
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Mar 2020 20:48:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 472AAC4332D
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Mar 2020 20:48:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F26682071C
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Mar 2020 20:48:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 26FA52071C
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Mar 2020 20:48:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727148AbgCRUrZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 18 Mar 2020 16:47:25 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:58406 "EHLO
+        id S1727112AbgCRUrX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 18 Mar 2020 16:47:23 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:58402 "EHLO
         Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726631AbgCRUrY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Mar 2020 16:47:24 -0400
+        with ESMTP id S1727065AbgCRUrV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Mar 2020 16:47:21 -0400
 Received: from p5de0bf0b.dip0.t-ipconnect.de ([93.224.191.11] helo=nanos.tec.linutronix.de)
         by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
         (Exim 4.80)
         (envelope-from <tglx@linutronix.de>)
-        id 1jEfaR-0006Fi-0w; Wed, 18 Mar 2020 21:46:47 +0100
+        id 1jEfaH-00065i-6k; Wed, 18 Mar 2020 21:46:37 +0100
 Received: from nanos.tec.linutronix.de (localhost [IPv6:::1])
-        by nanos.tec.linutronix.de (Postfix) with ESMTP id 49D23101161;
-        Wed, 18 Mar 2020 21:46:37 +0100 (CET)
-Message-Id: <20200318204408.428468767@linutronix.de>
+        by nanos.tec.linutronix.de (Postfix) with ESMTP id 4402C1040C5;
+        Wed, 18 Mar 2020 21:46:35 +0100 (CET)
+Message-Id: <20200318204407.497942274@linutronix.de>
 User-Agent: quilt/0.65
-Date:   Wed, 18 Mar 2020 21:43:12 +0100
+Date:   Wed, 18 Mar 2020 21:43:03 +0100
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
@@ -51,7 +51,7 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Davidlohr Bueso <dave@stgolabs.net>,
         Michael Ellerman <mpe@ellerman.id.au>,
         Arnd Bergmann <arnd@arndb.de>, linuxppc-dev@lists.ozlabs.org
-Subject: [patch V2 10/15] sched/swait: Prepare usage in completions
+Subject: [patch V2 01/15] PCI/switchtec: Fix init_completion race condition with poll_wait()
 References: <20200318204302.693307984@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -63,62 +63,46 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Thomas Gleixner <tglx@linutronix.de>
+From: Logan Gunthorpe <logang@deltatee.com>
 
-As a preparation to use simple wait queues for completions:
+The call to init_completion() in mrpc_queue_cmd() can theoretically
+race with the call to poll_wait() in switchtec_dev_poll().
 
-  - Provide swake_up_all_locked() to support complete_all()
-  - Make __prepare_to_swait() public available
+  poll()			write()
+    switchtec_dev_poll()   	  switchtec_dev_write()
+      poll_wait(&s->comp.wait);      mrpc_queue_cmd()
+			               init_completion(&s->comp)
+				         init_waitqueue_head(&s->comp.wait)
 
-This is done to enable the usage of complete() within truly atomic contexts
-on a PREEMPT_RT enabled kernel.
+To my knowledge, no one has hit this bug.
 
+Fix this by using reinit_completion() instead of init_completion() in
+mrpc_queue_cmd().
+
+Fixes: 080b47def5e5 ("MicroSemi Switchtec management interface driver")
+Reported-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
----
-V2: Add comment to swake_up_all_locked()
----
- kernel/sched/sched.h |    3 +++
- kernel/sched/swait.c |   15 ++++++++++++++-
- 2 files changed, 17 insertions(+), 1 deletion(-)
+Link: https://lkml.kernel.org/r/20200313183608.2646-1-logang@deltatee.com
 
---- a/kernel/sched/sched.h
-+++ b/kernel/sched/sched.h
-@@ -2492,3 +2492,6 @@ static inline bool is_per_cpu_kthread(st
- 	return true;
- }
- #endif
-+
-+void swake_up_all_locked(struct swait_queue_head *q);
-+void __prepare_to_swait(struct swait_queue_head *q, struct swait_queue *wait);
---- a/kernel/sched/swait.c
-+++ b/kernel/sched/swait.c
-@@ -32,6 +32,19 @@ void swake_up_locked(struct swait_queue_
- }
- EXPORT_SYMBOL(swake_up_locked);
+---
+ drivers/pci/switch/switchtec.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+index a823b4b8ef8a..81dc7ac01381 100644
+--- a/drivers/pci/switch/switchtec.c
++++ b/drivers/pci/switch/switchtec.c
+@@ -175,7 +175,7 @@ static int mrpc_queue_cmd(struct switchtec_user *stuser)
+ 	kref_get(&stuser->kref);
+ 	stuser->read_len = sizeof(stuser->data);
+ 	stuser_set_state(stuser, MRPC_QUEUED);
+-	init_completion(&stuser->comp);
++	reinit_completion(&stuser->comp);
+ 	list_add_tail(&stuser->list, &stdev->mrpc_queue);
  
-+/*
-+ * Wake up all waiters. This is an interface which is solely exposed for
-+ * completions and not for general usage.
-+ *
-+ * It is intentionally different from swake_up_all() to allow usage from
-+ * hard interrupt context and interrupt disabled regions.
-+ */
-+void swake_up_all_locked(struct swait_queue_head *q)
-+{
-+	while (!list_empty(&q->task_list))
-+		swake_up_locked(q);
-+}
-+
- void swake_up_one(struct swait_queue_head *q)
- {
- 	unsigned long flags;
-@@ -69,7 +82,7 @@ void swake_up_all(struct swait_queue_hea
- }
- EXPORT_SYMBOL(swake_up_all);
- 
--static void __prepare_to_swait(struct swait_queue_head *q, struct swait_queue *wait)
-+void __prepare_to_swait(struct swait_queue_head *q, struct swait_queue *wait)
- {
- 	wait->task = current;
- 	if (list_empty(&wait->task_list))
+ 	mrpc_cmd_submit(stdev);
+-- 
+2.20.1
+
 
