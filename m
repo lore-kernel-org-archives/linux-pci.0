@@ -2,186 +2,168 @@ Return-Path: <SRS0=WM0i=5E=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50F13C4332D
-	for <linux-pci@archiver.kernel.org>; Thu, 19 Mar 2020 13:35:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66586C43332
+	for <linux-pci@archiver.kernel.org>; Thu, 19 Mar 2020 13:36:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1B67020663
-	for <linux-pci@archiver.kernel.org>; Thu, 19 Mar 2020 13:35:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EE81120789
+	for <linux-pci@archiver.kernel.org>; Thu, 19 Mar 2020 13:36:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OtlhXdNR"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="fSS2rSdj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727874AbgCSNfe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 19 Mar 2020 09:35:34 -0400
-Received: from us-smtp-delivery-74.mimecast.com ([63.128.21.74]:52579 "EHLO
-        us-smtp-delivery-74.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727525AbgCSNLg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2020 09:11:36 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1584623495;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=dwfqKsawwlA7QavpNFSxuBUqzZRSHs2EJIIMOQG0ECg=;
-        b=OtlhXdNR3oZrjq9fSNVcUdcpcBu2md4OKqbm0Zvkgp8Hu97JiK52SBNd2VcHb+xoC0cIGQ
-        Go561jsUOYI85yeQuCyu4BSf0VOSkLTbyk6A3fQRZbtZ4h0TGg6KgsjwuY0TOhsVM2jXE7
-        3bYvws4kpfyNGHazjHsr9WXwiV1Nwmc=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-472-jZHvhMY7OgWTkqmVKPZukg-1; Thu, 19 Mar 2020 09:11:29 -0400
-X-MC-Unique: jZHvhMY7OgWTkqmVKPZukg-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 6EAD918B6383;
-        Thu, 19 Mar 2020 13:11:27 +0000 (UTC)
-Received: from x1.home (ovpn-112-162.phx2.redhat.com [10.3.112.162])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 891275C1D8;
-        Thu, 19 Mar 2020 13:11:26 +0000 (UTC)
-Date:   Thu, 19 Mar 2020 07:11:26 -0600
-From:   Alex Williamson <alex.williamson@redhat.com>
-To:     "Tian, Kevin" <kevin.tian@intel.com>
-Cc:     "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "dev@dpdk.org" <dev@dpdk.org>,
-        "mtosatti@redhat.com" <mtosatti@redhat.com>,
-        "thomas@monjalon.net" <thomas@monjalon.net>,
-        "bluca@debian.org" <bluca@debian.org>,
-        "jerinjacobk@gmail.com" <jerinjacobk@gmail.com>,
-        "Richardson, Bruce" <bruce.richardson@intel.com>,
-        "cohuck@redhat.com" <cohuck@redhat.com>
-Subject: Re: [PATCH v3 0/7] vfio/pci: SR-IOV support
-Message-ID: <20200319071126.6f5e1b78@x1.home>
-In-Reply-To: <AADFC41AFE54684AB9EE6CBC0274A5D19D7DAFD5@SHSMSX104.ccr.corp.intel.com>
-References: <158396044753.5601.14804870681174789709.stgit@gimli.home>
-        <AADFC41AFE54684AB9EE6CBC0274A5D19D7DAFD5@SHSMSX104.ccr.corp.intel.com>
-Organization: Red Hat
+        id S1727670AbgCSNgH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 19 Mar 2020 09:36:07 -0400
+Received: from mailout2.samsung.com ([203.254.224.25]:64833 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727313AbgCSNgH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2020 09:36:07 -0400
+Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20200319133605epoutp0202ed33b56354a632f8bcd3b554c628ed~9uAKTkhZ41573915739epoutp02f
+        for <linux-pci@vger.kernel.org>; Thu, 19 Mar 2020 13:36:05 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20200319133605epoutp0202ed33b56354a632f8bcd3b554c628ed~9uAKTkhZ41573915739epoutp02f
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1584624965;
+        bh=4FL33iP/jwSsQW96+6AWrtYIL4nfSj8zvnMw8LCMztg=;
+        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+        b=fSS2rSdjXhxn6oNDINfpNeqFPOv54i7eXTlabPA9wFEWUeYjpMCDrE/xOL5Ka4F0c
+         2Ofbp0cNVzjWgzBUJwQWn5/sxBt4HxwEa6gVyVgeTkj57F9AqS+203/amPEIAobaiq
+         EqQ+7vR2Lj0VOiygkPQWo0bIWyi5JMJijmeOenxs=
+Received: from epsmges5p2new.samsung.com (unknown [182.195.42.74]) by
+        epcas5p3.samsung.com (KnoxPortal) with ESMTP id
+        20200319133604epcas5p3dbbb7941cdd45bee37c4c1caa320016b~9uAJzbOTa1621316213epcas5p3E;
+        Thu, 19 Mar 2020 13:36:04 +0000 (GMT)
+Received: from epcas5p2.samsung.com ( [182.195.41.40]) by
+        epsmges5p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        83.AF.04778.445737E5; Thu, 19 Mar 2020 22:36:04 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
+        20200319133603epcas5p294d8a6f404e5d168d75cfa6861e393e3~9uAJGi74l1782517825epcas5p2p;
+        Thu, 19 Mar 2020 13:36:03 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20200319133603epsmtrp20dd7c56c4edec8817d0b58191b050767~9uAJFqWh63159731597epsmtrp2N;
+        Thu, 19 Mar 2020 13:36:03 +0000 (GMT)
+X-AuditID: b6c32a4a-353ff700000012aa-b1-5e73754435e2
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        13.C4.04024.345737E5; Thu, 19 Mar 2020 22:36:03 +0900 (KST)
+Received: from sriramdash03 (unknown [107.111.85.15]) by
+        epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20200319133602epsmtip10df7c703058970433bc7f58b98daa829~9uAIAvU692963729637epsmtip1Y;
+        Thu, 19 Mar 2020 13:36:02 +0000 (GMT)
+From:   "Sriram Dash" <sriram.dash@samsung.com>
+To:     "'Shradha Todi'" <shradha.t@samsung.com>, <kishon@ti.com>
+Cc:     <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
+        <pankaj.dubey@samsung.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+In-Reply-To: <20200311102852.5207-1-shradha.t@samsung.com>
+Subject: RE: [PATCH] PCI: endpoint: Fix NULL pointer dereference for
+ ->get_features()
+Date:   Thu, 19 Mar 2020 19:06:01 +0530
+Message-ID: <000d01d5fdf3$55d43af0$017cb0d0$@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQIRa+BXjMtyeVOz/ELce4dgT57WJwIqUA0mp8e8EHA=
+Content-Language: en-in
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrNKsWRmVeSWpSXmKPExsWy7bCmhq5LaXGcwdVHihZLmjIsLjztYbO4
+        vGsOm8XZecfZLN78fsFusWjrF3aL3sO1Duwea+atYfRYsKnUo2/LKkaP4ze2M3l83iQXwBrF
+        ZZOSmpNZllqkb5fAldGz+wJbwTKBio/LfrE1ML7m7WLk5JAQMJF4OusPUxcjF4eQwG5Gie6n
+        t9ghnE+MEvduPWOBcL4xSjT/esUK0/JpZQdUYi+jxNQVG1ghnFeMEuu75jGDVLEJ6EqcvdHE
+        BmKLCNhKLN84H2wus8BkRokby3+xgyQ4BawkOvqngTUIC4RLrJh/kxHEZhFQlfh/4jYLiM0r
+        YCkxb/tRVghbUOLkzCdgcWYBbYllC18zQ5ykIPHz6TJWiGVWEhOX3GWDqBGXOPqzhxlksYTA
+        czaJ32+/M0E0uEhsbzwBZQtLvDq+hR3ClpL4/G4vG4SdLXG57znUghKJGa8WskDY9hIHrswB
+        sjmAFmhKrN+lD7GLT6L39xMmkLCEAK9ER5sQRLWqxKvbm6GmS0scWHsaaquHxNcJF5gmMCrO
+        QvLZLCSfzULywSyEZQsYWVYxSqYWFOempxabFhjlpZbrFSfmFpfmpesl5+duYgQnIS2vHYzL
+        zvkcYhTgYFTi4V2wpihOiDWxrLgy9xCjBAezkgivbnpxnBBvSmJlVWpRfnxRaU5q8SFGaQ4W
+        JXHeSaxXY4QE0hNLUrNTUwtSi2CyTBycUg2M+gHPp+5aecx8QZtgcMeuJ2zPG2c/6O5l9Td6
+        8Mj9dXK+VqPvm0libD1SKrI5Oxd4rBfbuUJuQqdZ79ot86xu17zY2r46t36V98o6qfK9/oks
+        Gf+n9v+JO9iyxaT2yI0PDzLEK1/6blxyK8ika9eZOO+iqAuRrTPMNylOjuD6zGpdkSDONqVH
+        iaU4I9FQi7moOBEACSYjbz4DAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFupjkeLIzCtJLcpLzFFi42LZdlhJTte5tDjOYE6LnsWSpgyLC0972Cwu
+        75rDZnF23nE2ize/X7BbLNr6hd2i93CtA7vHmnlrGD0WbCr16NuyitHj+I3tTB6fN8kFsEZx
+        2aSk5mSWpRbp2yVwZWzf0cte0CRQ8ebkN6YGxuO8XYycHBICJhKfVnawdDFycQgJ7GaUeLGj
+        n7GLkQMoIS3x864uRI2wxMp/z9khal4wSszq+sAGkmAT0JU4e6MJzBYRsJd4MWMjK0gRs8B0
+        Rom2LbOhOroZJXYsWQ9WxSlgJdHRP40ZxBYWCJX42DaVFcRmEVCV+H/iNguIzStgKTFv+1FW
+        CFtQ4uTMJ2BxZgFtid6HrYww9rKFr5khzlOQ+Pl0GSvEFVYSE5fcZYOoEZc4+rOHeQKj8Cwk
+        o2YhGTULyahZSFoWMLKsYpRMLSjOTc8tNiwwzEst1ytOzC0uzUvXS87P3cQIjiUtzR2Ml5fE
+        H2IU4GBU4uH1WFUUJ8SaWFZcmXuIUYKDWUmEVze9OE6INyWxsiq1KD++qDQntfgQozQHi5I4
+        79O8Y5FCAumJJanZqakFqUUwWSYOTqkGxtD++Ueudz1imOohe1Bi0suO+5Y9DEp3P5ry54ap
+        7/8X15/VvUm4gLX0vU35kcSQVwzZ05izpUVYeVXXuBgqJ2pznbW7urZN4I5bxLdXZhr8EkpF
+        u49Fcp1cudp0U8Ijpbw0VnmzjufCm3U37G09fDLtHe+axJvxUnoHUq+dXLd7cfaBJ/VTlViK
+        MxINtZiLihMB8/g/J6ECAAA=
+X-CMS-MailID: 20200319133603epcas5p294d8a6f404e5d168d75cfa6861e393e3
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+X-CMS-RootMailID: 20200311103443epcas5p2e97b8f3a8e52dc6f02eb551e0c97f132
+References: <CGME20200311103443epcas5p2e97b8f3a8e52dc6f02eb551e0c97f132@epcas5p2.samsung.com>
+        <20200311102852.5207-1-shradha.t@samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 19 Mar 2020 06:32:25 +0000
-"Tian, Kevin" <kevin.tian@intel.com> wrote:
+> From: Shradha Todi <shradha.t=40samsung.com>
+> Subject: =5BPATCH=5D PCI: endpoint: Fix NULL pointer dereference for -
+> >get_features()
+>=20
+> get_features ops of pci_epc_ops may return NULL, causing NULL pointer
+> dereference in pci_epf_test_bind function. Let us add a check for
+> pci_epc_feature pointer in pci_epf_test_bind before we access it to avoid=
+ any
+> such NULL pointer dereference and return -ENOTSUPP in case pci_epc_featur=
+e
+> is not found.
+>=20
+> Reviewed-by: Pankaj Dubey <pankaj.dubey=40samsung.com>
+> Signed-off-by: Sriram Dash <sriram.dash=40samsung.com>
+> Signed-off-by: Shradha Todi <shradha.t=40samsung.com>
+> ---
 
-> > From: Alex Williamson <alex.williamson@redhat.com>
-> > Sent: Thursday, March 12, 2020 5:58 AM
-> > 
-> > Only minor tweaks since v2, GET and SET on VFIO_DEVICE_FEATURE are
-> > enforced mutually exclusive except with the PROBE option as suggested
-> > by Connie, the modinfo text has been expanded for the opt-in to enable
-> > SR-IOV support in the vfio-pci driver per discussion with Kevin.
-> > 
-> > I have not incorporated runtime warnings attempting to detect misuse
-> > of SR-IOV or imposed a session lifetime of a VF token, both of which
-> > were significant portions of the discussion of the v2 series.  Both of
-> > these also seem to impose a usage model or make assumptions about VF
-> > resource usage or configuration requirements that don't seem necessary
-> > except for the sake of generating a warning or requiring an otherwise
-> > unnecessary and implicit token reinitialization.  If there are new
-> > thoughts around these or other discussion points, please raise them.
-> > 
-> > Series overview (same as provided with v1):
-> > 
-> > The synopsis of this series is that we have an ongoing desire to drive
-> > PCIe SR-IOV PFs from userspace with VFIO.  There's an immediate need
-> > for this with DPDK drivers and potentially interesting future use
-> > cases in virtualization.  We've been reluctant to add this support
-> > previously due to the dependency and trust relationship between the
-> > VF device and PF driver.  Minimally the PF driver can induce a denial
-> > of service to the VF, but depending on the specific implementation,
-> > the PF driver might also be responsible for moving data between VFs
-> > or have direct access to the state of the VF, including data or state
-> > otherwise private to the VF or VF driver.
-> > 
-> > To help resolve these concerns, we introduce a VF token into the VFIO
-> > PCI ABI, which acts as a shared secret key between drivers.  The
-> > userspace PF driver is required to set the VF token to a known value
-> > and userspace VF drivers are required to provide the token to access
-> > the VF device.  If a PF driver is restarted with VF drivers in use, it
-> > must also provide the current token in order to prevent a rogue
-> > untrusted PF driver from replacing a known driver.  The degree to
-> > which this new token is considered secret is left to the userspace
-> > drivers, the kernel intentionally provides no means to retrieve the
-> > current token.
-> > 
-> > Note that the above token is only required for this new model where
-> > both the PF and VF devices are usable through vfio-pci.  Existing
-> > models of VFIO drivers where the PF is used without SR-IOV enabled
-> > or the VF is bound to a userspace driver with an in-kernel, host PF
-> > driver are unaffected.
-> > 
-> > The latter configuration above also highlights a new inverted scenario
-> > that is now possible, a userspace PF driver with in-kernel VF drivers.
-> > I believe this is a scenario that should be allowed, but should not be
-> > enabled by default.  This series includes code to set a default
-> > driver_override for VFs sourced from a vfio-pci user owned PF, such
-> > that the VFs are also bound to vfio-pci.  This model is compatible
-> > with tools like driverctl and allows the system administrator to
-> > decide if other bindings should be enabled.  The VF token interface
-> > above exists only between vfio-pci PF and VF drivers, once a VF is
-> > bound to another driver, the administrator has effectively pronounced
-> > the device as trusted.  The vfio-pci driver will note alternate
-> > binding in dmesg for logging and debugging purposes.
-> > 
-> > Please review, comment, and test.  The example QEMU implementation
-> > provided with the RFC is still current for this version.  Thanks,
-> > 
-> > Alex  
-> 
-> The whole series looks good to me:
-> 	Reviewed-by: Kevin Tian <kevin.tian@intel.com>
+Hi Kishon,
 
-Thanks!
+Any update on this?
 
-> and confirm one understanding here, since it is not discussed anywhere. For
-> VM live migration with assigned VF device, it is not necessary to migrate the
-> VF token itself and actually we don't allow userspace to retrieve it. Instead,
-> Qemu just follows whatever token requirement on the dest to open the new
-> VF: could be same or different token as/from src, or even no token if PF
-> driver runs in kernel on dest. I suppose either combination could work, correct?
 
-That's correct.  Thanks,
+>  drivers/pci/endpoint/functions/pci-epf-test.c =7C 15 +++++++++------
+>  1 file changed, 9 insertions(+), 6 deletions(-)
+>=20
+> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c
+> b/drivers/pci/endpoint/functions/pci-epf-test.c
+> index c9121b1b9fa9..af4537a487bf 100644
+> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+> =40=40 -510,14 +510,17 =40=40 static int pci_epf_test_bind(struct pci_epf=
+ *epf)
+>  		return -EINVAL;
+>=20
+>  	epc_features =3D pci_epc_get_features(epc, epf->func_no);
+> -	if (epc_features) =7B
+> -		linkup_notifier =3D epc_features->linkup_notifier;
+> -		msix_capable =3D epc_features->msix_capable;
+> -		msi_capable =3D epc_features->msi_capable;
+> -		test_reg_bar =3D pci_epc_get_first_free_bar(epc_features);
+> -		pci_epf_configure_bar(epf, epc_features);
+> +	if (=21epc_features) =7B
+> +		dev_err(dev, =22epc_features not implemented=5Cn=22);
+> +		return -ENOTSUPP;
+>  	=7D
+>=20
+> +	linkup_notifier =3D epc_features->linkup_notifier;
+> +	msix_capable =3D epc_features->msix_capable;
+> +	msi_capable =3D epc_features->msi_capable;
+> +	test_reg_bar =3D pci_epc_get_first_free_bar(epc_features);
+> +	pci_epf_configure_bar(epf, epc_features);
+> +
+>  	epf_test->test_reg_bar =3D test_reg_bar;
+>  	epf_test->epc_features =3D epc_features;
+>=20
+> --
+> 2.17.1
 
-Alex
-
-> > RFC:
-> > https://lore.kernel.org/lkml/158085337582.9445.17682266437583505502.stg
-> > it@gimli.home/
-> > v1:
-> > https://lore.kernel.org/lkml/158145472604.16827.15751375540102298130.st
-> > git@gimli.home/
-> > v2:
-> > https://lore.kernel.org/lkml/158213716959.17090.8399427017403507114.stg
-> > it@gimli.home/
-> > 
-> > ---
-> > 
-> > Alex Williamson (7):
-> >       vfio: Include optional device match in vfio_device_ops callbacks
-> >       vfio/pci: Implement match ops
-> >       vfio/pci: Introduce VF token
-> >       vfio: Introduce VFIO_DEVICE_FEATURE ioctl and first user
-> >       vfio/pci: Add sriov_configure support
-> >       vfio/pci: Remove dev_fmt definition
-> >       vfio/pci: Cleanup .probe() exit paths
-> > 
-> > 
-> >  drivers/vfio/pci/vfio_pci.c         |  390
-> > +++++++++++++++++++++++++++++++++--
-> >  drivers/vfio/pci/vfio_pci_private.h |   10 +
-> >  drivers/vfio/vfio.c                 |   20 +-
-> >  include/linux/vfio.h                |    4
-> >  include/uapi/linux/vfio.h           |   37 +++
-> >  5 files changed, 433 insertions(+), 28 deletions(-)  
-> 
 
