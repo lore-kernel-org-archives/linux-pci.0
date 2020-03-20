@@ -2,88 +2,61 @@ Return-Path: <SRS0=KiQH=5F=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5348C4332D
-	for <linux-pci@archiver.kernel.org>; Fri, 20 Mar 2020 07:00:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B33F6C4332B
+	for <linux-pci@archiver.kernel.org>; Fri, 20 Mar 2020 07:04:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B957520773
-	for <linux-pci@archiver.kernel.org>; Fri, 20 Mar 2020 07:00:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7BC8320714
+	for <linux-pci@archiver.kernel.org>; Fri, 20 Mar 2020 07:04:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="SS2stUyn"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="O/YqoQA3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726789AbgCTG75 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 20 Mar 2020 02:59:57 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:43512 "EHLO
+        id S1726603AbgCTHEg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 20 Mar 2020 03:04:36 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:44662 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726232AbgCTG75 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Mar 2020 02:59:57 -0400
+        with ESMTP id S1726602AbgCTHEf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Mar 2020 03:04:35 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=iZ+tfXP9s+9EAQeQf95cP5ovh7AcQ3rFatDjmNA0Hpo=; b=SS2stUyn7rcx2bDE5sgbJPy234
-        X9zm/vp1W32VRiUAiag9wc6+PVqSgvIgsex3vU9E84yi9emMqCBjOL8b7qfPZtQkzzDv+ofwjR/c0
-        QqIG4wFoyXYG03dKfZLr/ByjjOnzQZgMIsED/UXA3TjGOpdi16UiLfl7+s/pKrebSwQXNd9u4pstl
-        +qXtTUiOQHDVZkhWsyHsqIFLLUunbIQgVzbJEP1S4/2sDgk9ikKUV9u7HOeGT3pSs1gwB2yhFrrPK
-        c3xR/dV7sjrTgGqDl4NyeXhuFf9XPfBkHa1DsefnsUIiMYD5W+PnILH3G4rhCIrK0mmmME0frAQvb
-        yfAFAVTA==;
+        bh=G2UnEglj8fZW+0J6m8F/lhP/qcPm0/Guw33QlVUVV+8=; b=O/YqoQA3MX8XRNRxBtJYAcqiAl
+        /27ULLZGR6XdKmX8cjHa+GHhsEmlwrE1ziBymcm7JPpisMvC1jNG3BvQdL5lpoM/YgCqMUtaO5YZd
+        ue9KKKRc5AG8DovkzlROWfHU7AOLCWFXifnyoVuJSjj80ssiYNh9W0pY3WDfRl0UcCe+JWEA+Bs7N
+        Mchzu3a8rnOeJP+q4Y3VUucc8pkuZVl6PZdQG8sw2vayw2OIVG9kO/yVuwNrTLvW7FgdqxGyybsTa
+        8SlAsUVT+76vdtqVHfUE8QQjzkIIV6yT30wnU/Oflxyystl4PlnPuAbSoG9tlvmz8y0mcnhr7BBwq
+        rzcrwuLw==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jFBdD-00080q-N8; Fri, 20 Mar 2020 06:59:47 +0000
-Date:   Thu, 19 Mar 2020 23:59:47 -0700
+        id 1jFBhq-000197-0A; Fri, 20 Mar 2020 07:04:34 +0000
+Date:   Fri, 20 Mar 2020 00:04:33 -0700
 From:   Christoph Hellwig <hch@infradead.org>
-To:     Julian Calaby <julian.calaby@gmail.com>
-Cc:     Thomas Gleixner <tglx@linutronix.de>,
-        Randy Dunlap <rdunlap@infradead.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        linux-pci@vger.kernel.org,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        Oleg Nesterov <oleg@redhat.com>,
-        Joel Fernandes <joel@joelfernandes.org>,
-        Will Deacon <will@kernel.org>, Ingo Molnar <mingo@kernel.org>,
-        Davidlohr Bueso <dave@stgolabs.net>,
-        "Paul E . McKenney" <paulmck@kernel.org>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Arnd Bergmann <arnd@arndb.de>, linuxppc-dev@lists.ozlabs.org,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Felipe Balbi <balbi@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-usb <linux-usb@vger.kernel.org>,
-        linux-wireless@vger.kernel.org,
-        LKML <linux-kernel@vger.kernel.org>, netdev@vger.kernel.org,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        "David S. Miller" <davem@davemloft.net>
-Subject: Re: [patch V2 11/15] completion: Use simple wait queues
-Message-ID: <20200320065947.GA25206@infradead.org>
-References: <20200318204302.693307984@linutronix.de>
- <20200318204408.521507446@linutronix.de>
- <CAGRGNgXAW14=8ntTiB_hJ_nLq7WC_oFR3N9BNjqVEZM=ze85tQ@mail.gmail.com>
+To:     Daire McNamara <daire.mcnamara@microchip.com>
+Cc:     lorenzo.pieralisi@arm.com, amurray@thegoodpenguin.co.uk,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v5] PCI: Microchip: Add host driver for Microchip PCIe
+ controller
+Message-ID: <20200320070433.GA3285@infradead.org>
+References: <20200319154917.GA1232@IRE-LT-TRAIN04.mchp-main.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAGRGNgXAW14=8ntTiB_hJ_nLq7WC_oFR3N9BNjqVEZM=ze85tQ@mail.gmail.com>
+In-Reply-To: <20200319154917.GA1232@IRE-LT-TRAIN04.mchp-main.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Mar 20, 2020 at 10:25:41AM +1100, Julian Calaby wrote:
-> > +++ b/drivers/usb/gadget/function/f_fs.c
-> > @@ -1703,7 +1703,7 @@ static void ffs_data_put(struct ffs_data
-> >                 pr_info("%s(): freeing\n", __func__);
-> >                 ffs_data_clear(ffs);
-> >                 BUG_ON(waitqueue_active(&ffs->ev.waitq) ||
-> > -                      waitqueue_active(&ffs->ep0req_completion.wait) ||
-> > +                      swait_active(&ffs->ep0req_completion.wait) ||
-> 
-> This looks like some code is reaching deep into the dirty dark corners
-> of the completion implementation, should there be some wrapper around
-> this to hide that?
+On Thu, Mar 19, 2020 at 03:49:18PM +0000, Daire McNamara wrote:
+> Signed-off-by: Daire McNamara <daire.mcnamara@microchip.com>
+> --
+> This v5 patch series adds support for PCIe IP block on Microchip PolarFire SoC.
 
-Or just remote it entirely..
+IIRC Arnd mentioned that the driver could reuse a lot of generic
+code first time it was posted, but I don't remember the details.
+Adding Arnd to see if he remembers.
