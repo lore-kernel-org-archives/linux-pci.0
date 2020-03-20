@@ -4,24 +4,24 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39C33C4332E
-	for <linux-pci@archiver.kernel.org>; Fri, 20 Mar 2020 09:49:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5E98C43332
+	for <linux-pci@archiver.kernel.org>; Fri, 20 Mar 2020 09:49:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1051120774
-	for <linux-pci@archiver.kernel.org>; Fri, 20 Mar 2020 09:49:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9223D20753
+	for <linux-pci@archiver.kernel.org>; Fri, 20 Mar 2020 09:49:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727281AbgCTJtf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 20 Mar 2020 05:49:35 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:35066 "EHLO
+        id S1726892AbgCTJtu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 20 Mar 2020 05:49:50 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:35084 "EHLO
         Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726791AbgCTJtb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Mar 2020 05:49:31 -0400
+        with ESMTP id S1726791AbgCTJtu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Mar 2020 05:49:50 -0400
 Received: from localhost ([127.0.0.1] helo=flow.W.breakpoint.cc)
         by Galois.linutronix.de with esmtp (Exim 4.80)
         (envelope-from <bigeasy@linutronix.de>)
-        id 1jFEH1-0000vL-J1; Fri, 20 Mar 2020 10:49:03 +0100
+        id 1jFEH2-0000vL-Rg; Fri, 20 Mar 2020 10:49:04 +0100
 From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 To:     tglx@linutronix.de
 Cc:     arnd@arndb.de, balbi@kernel.org, bhelgaas@google.com,
@@ -35,11 +35,12 @@ Cc:     arnd@arndb.de, balbi@kernel.org, bhelgaas@google.com,
         oleg@redhat.com, paulmck@kernel.org, peterz@infradead.org,
         rdunlap@infradead.org, rostedt@goodmis.org,
         torvalds@linux-foundation.org, will@kernel.org,
-        Guo Ren <guoren@kernel.org>, linux-csky@vger.kernel.org,
+        Tony Luck <tony.luck@intel.com>,
+        Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org,
         kbuild test robot <lkp@intel.com>
-Subject: [PATCH 2/5] csky: Remove mm.h from asm/uaccess.h
-Date:   Fri, 20 Mar 2020 10:48:53 +0100
-Message-Id: <20200320094856.3453859-3-bigeasy@linutronix.de>
+Subject: [PATCH 4/5] ia64: Remove mm.h from asm/uaccess.h
+Date:   Fri, 20 Mar 2020 10:48:55 +0100
+Message-Id: <20200320094856.3453859-5-bigeasy@linutronix.de>
 X-Mailer: git-send-email 2.26.0.rc2
 In-Reply-To: <20200320094856.3453859-1-bigeasy@linutronix.de>
 References: <20200318204408.010461877@linutronix.de>
@@ -56,7 +57,7 @@ include chain leands to:
 |   CC      kernel/locking/percpu-rwsem.o
 | In file included from include/linux/huge_mm.h:8,
 |                  from include/linux/mm.h:567,
-|                  from arch/csky/include/asm/uaccess.h:,
+|                  from arch/ia64/include/asm/uaccess.h:,
 |                  from include/linux/uaccess.h:11,
 |                  from include/linux/sched/task.h:11,
 |                  from include/linux/sched/signal.h:9,
@@ -71,27 +72,51 @@ once rcuwait.h includes linux/sched/signal.h.
 
 Remove the linux/mm.h include.
 
-Cc: Guo Ren <guoren@kernel.org>
-Cc: linux-csky@vger.kernel.org
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+Cc: linux-ia64@vger.kernel.org
 Reported-by: kbuild test robot <lkp@intel.com>
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 ---
- arch/csky/include/asm/uaccess.h | 1 -
- 1 file changed, 1 deletion(-)
+ arch/ia64/include/asm/uaccess.h | 1 -
+ arch/ia64/kernel/process.c      | 1 +
+ arch/ia64/mm/ioremap.c          | 1 +
+ 3 files changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/arch/csky/include/asm/uaccess.h b/arch/csky/include/asm/uacces=
+diff --git a/arch/ia64/include/asm/uaccess.h b/arch/ia64/include/asm/uacces=
 s.h
-index eaa1c3403a424..abefa125b93cf 100644
---- a/arch/csky/include/asm/uaccess.h
-+++ b/arch/csky/include/asm/uaccess.h
-@@ -11,7 +11,6 @@
- #include <linux/errno.h>
- #include <linux/types.h>
- #include <linux/sched.h>
+index 89782ad3fb887..5c7e79eccaeed 100644
+--- a/arch/ia64/include/asm/uaccess.h
++++ b/arch/ia64/include/asm/uaccess.h
+@@ -35,7 +35,6 @@
+=20
+ #include <linux/compiler.h>
+ #include <linux/page-flags.h>
 -#include <linux/mm.h>
- #include <linux/string.h>
- #include <linux/version.h>
- #include <asm/segment.h>
+=20
+ #include <asm/intrinsics.h>
+ #include <asm/pgtable.h>
+diff --git a/arch/ia64/kernel/process.c b/arch/ia64/kernel/process.c
+index 968b5f33e725e..743aaf5283278 100644
+--- a/arch/ia64/kernel/process.c
++++ b/arch/ia64/kernel/process.c
+@@ -681,3 +681,4 @@ machine_power_off (void)
+ 	machine_halt();
+ }
+=20
++EXPORT_SYMBOL(ia64_delay_loop);
+diff --git a/arch/ia64/mm/ioremap.c b/arch/ia64/mm/ioremap.c
+index a09cfa0645369..55fd3eb753ff9 100644
+--- a/arch/ia64/mm/ioremap.c
++++ b/arch/ia64/mm/ioremap.c
+@@ -8,6 +8,7 @@
+ #include <linux/module.h>
+ #include <linux/efi.h>
+ #include <linux/io.h>
++#include <linux/mm.h>
+ #include <linux/vmalloc.h>
+ #include <asm/io.h>
+ #include <asm/meminit.h>
 --=20
 2.26.0.rc2
 
