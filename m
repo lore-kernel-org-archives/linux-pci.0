@@ -2,69 +2,104 @@ Return-Path: <SRS0=KiQH=5F=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 422EFC4332E
-	for <linux-pci@archiver.kernel.org>; Fri, 20 Mar 2020 08:52:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED7CBC4332B
+	for <linux-pci@archiver.kernel.org>; Fri, 20 Mar 2020 08:56:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 15D4A20752
-	for <linux-pci@archiver.kernel.org>; Fri, 20 Mar 2020 08:52:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C7CD120752
+	for <linux-pci@archiver.kernel.org>; Fri, 20 Mar 2020 08:56:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726806AbgCTIvz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 20 Mar 2020 04:51:55 -0400
-Received: from mx2.suse.de ([195.135.220.15]:40228 "EHLO mx2.suse.de"
+        id S1727113AbgCTI4v (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 20 Mar 2020 04:56:51 -0400
+Received: from mx2.suse.de ([195.135.220.15]:43474 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726232AbgCTIvy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 20 Mar 2020 04:51:54 -0400
+        id S1726232AbgCTI4u (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 20 Mar 2020 04:56:50 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 9C2B4AEBD;
-        Fri, 20 Mar 2020 08:51:51 +0000 (UTC)
-Date:   Fri, 20 Mar 2020 01:50:46 -0700
+        by mx2.suse.de (Postfix) with ESMTP id 18286AE9A;
+        Fri, 20 Mar 2020 08:56:49 +0000 (UTC)
 From:   Davidlohr Bueso <dave@stgolabs.net>
-To:     Thomas Gleixner <tglx@linutronix.de>
-Cc:     LKML <linux-kernel@vger.kernel.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Ingo Molnar <mingo@kernel.org>, Will Deacon <will@kernel.org>,
-        "Paul E . McKenney" <paulmck@kernel.org>,
-        Joel Fernandes <joel@joelfernandes.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Randy Dunlap <rdunlap@infradead.org>,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Felipe Balbi <balbi@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-usb@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Oleg Nesterov <oleg@redhat.com>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Arnd Bergmann <arnd@arndb.de>, linuxppc-dev@lists.ozlabs.org
-Subject: Re: [patch V2 00/15] Lock ordering documentation and annotation for
- lockdep
-Message-ID: <20200320085046.agp5qq6tzxj5utoa@linux-p48b>
+To:     tglx@linutronix.de
+Cc:     arnd@arndb.de, balbi@kernel.org, bhelgaas@google.com,
+        bigeasy@linutronix.de, dave@stgolabs.net, davem@davemloft.net,
+        gregkh@linuxfoundation.org, joel@joelfernandes.org,
+        kurt.schwemmer@microsemi.com, kvalo@codeaurora.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, logang@deltatee.com,
+        mingo@kernel.org, mpe@ellerman.id.au, netdev@vger.kernel.org,
+        oleg@redhat.com, paulmck@kernel.org, peterz@infradead.org,
+        rdunlap@infradead.org, rostedt@goodmis.org,
+        torvalds@linux-foundation.org, will@kernel.org,
+        Davidlohr Bueso <dbueso@suse.de>
+Subject: [PATCH 19/15] sched/swait: Reword some of the main description
+Date:   Fri, 20 Mar 2020 01:55:27 -0700
+Message-Id: <20200320085527.23861-4-dave@stgolabs.net>
+X-Mailer: git-send-email 2.16.4
+In-Reply-To: <20200320085527.23861-1-dave@stgolabs.net>
 References: <20200318204302.693307984@linutronix.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-In-Reply-To: <20200318204302.693307984@linutronix.de>
-User-Agent: NeoMutt/20180716
+ <20200320085527.23861-1-dave@stgolabs.net>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, 18 Mar 2020, Thomas Gleixner wrote:
->    The PS3 one got converted by Peter Zijlstra to rcu_wait().
+With both the increased use of swait and kvm no longer using
+it, we can reword some of the comments. While removing Linus'
+valid rant, I've also cared to explicitly mention that swait
+is very different than regular wait. In addition it is
+mentioned against using swait in favor of the regular flavor.
 
-While at it, I think it makes sense to finally convert the kvm vcpu swait
-to rcuwait (patch 6/15 starts the necessary api changes). I'm sending
-some patches on top of this patchset.
+Signed-off-by: Davidlohr Bueso <dbueso@suse.de>
+---
+ include/linux/swait.h | 23 +++++------------------
+ 1 file changed, 5 insertions(+), 18 deletions(-)
 
-Thanks,
-Davidlohr
+diff --git a/include/linux/swait.h b/include/linux/swait.h
+index 73e06e9986d4..6e5b5d0e64fd 100644
+--- a/include/linux/swait.h
++++ b/include/linux/swait.h
+@@ -9,23 +9,10 @@
+ #include <asm/current.h>
+ 
+ /*
+- * BROKEN wait-queues.
+- *
+- * These "simple" wait-queues are broken garbage, and should never be
+- * used. The comments below claim that they are "similar" to regular
+- * wait-queues, but the semantics are actually completely different, and
+- * every single user we have ever had has been buggy (or pointless).
+- *
+- * A "swake_up_one()" only wakes up _one_ waiter, which is not at all what
+- * "wake_up()" does, and has led to problems. In other cases, it has
+- * been fine, because there's only ever one waiter (kvm), but in that
+- * case gthe whole "simple" wait-queue is just pointless to begin with,
+- * since there is no "queue". Use "wake_up_process()" with a direct
+- * pointer instead.
+- *
+- * While these are very similar to regular wait queues (wait.h) the most
+- * important difference is that the simple waitqueue allows for deterministic
+- * behaviour -- IOW it has strictly bounded IRQ and lock hold times.
++ * Simple waitqueues are semantically very different to regular wait queues
++ * (wait.h). The most important difference is that the simple waitqueue allows
++ * for deterministic behaviour -- IOW it has strictly bounded IRQ and lock hold
++ * times.
+  *
+  * Mainly, this is accomplished by two things. Firstly not allowing swake_up_all
+  * from IRQ disabled, and dropping the lock upon every wakeup, giving a higher
+@@ -39,7 +26,7 @@
+  *    sleeper state.
+  *
+  *  - the !exclusive mode; because that leads to O(n) wakeups, everything is
+- *    exclusive.
++ *    exclusive. As such swait_wake_up_one will only ever awake _one_ waiter.
+  *
+  *  - custom wake callback functions; because you cannot give any guarantees
+  *    about random code. This also allows swait to be used in RT, such that
+-- 
+2.16.4
+
