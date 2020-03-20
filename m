@@ -2,110 +2,217 @@ Return-Path: <SRS0=KiQH=5F=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-5.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94C60C10F29
-	for <linux-pci@archiver.kernel.org>; Fri, 20 Mar 2020 18:36:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E2C7C4332D
+	for <linux-pci@archiver.kernel.org>; Fri, 20 Mar 2020 18:47:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7090620784
-	for <linux-pci@archiver.kernel.org>; Fri, 20 Mar 2020 18:36:04 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KXlg6pGG"
+	by mail.kernel.org (Postfix) with ESMTP id 2B7DD20775
+	for <linux-pci@archiver.kernel.org>; Fri, 20 Mar 2020 18:47:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727337AbgCTSfO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 20 Mar 2020 14:35:14 -0400
-Received: from mail-ed1-f67.google.com ([209.85.208.67]:37987 "EHLO
-        mail-ed1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727178AbgCTSfN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Mar 2020 14:35:13 -0400
-Received: by mail-ed1-f67.google.com with SMTP id h5so8305505edn.5;
-        Fri, 20 Mar 2020 11:35:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=yRo9nDnkvpVgGMO52y9SDq2QLhuKK/RpwLheS8dxEdo=;
-        b=KXlg6pGGu7+fH+4J6SwTdmp3qRTOwbLeFyRc9llXU6NFZtCXG6y1ZL9UP42MReM4hK
-         Gn/CMltyY5HsmEeAnqsYpo9Ip2LyDJJQEBBQAMVbxRKt4I97B6B57gFesIt5eNQ61w00
-         AkUauYmKgMfzt26t/5/AZ9GRZ/FbOTwD1W3YC5JuyxHuPhR11Y/NZRp6eFldsyERVl+7
-         hwsGD/XchuHDwV/bjzdD/Rfc0QAfnrY5MEqIK2hsPk3FNC14QwvYigVo3uGexIeceUkc
-         8uEeuY3QTRDvx1me//9PydnQaziaISGFo1jvXtIstLEbQmrFJGhjecRBlSEGWIhnYvLD
-         MLew==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=yRo9nDnkvpVgGMO52y9SDq2QLhuKK/RpwLheS8dxEdo=;
-        b=kAt7wOm9tsUCIE5axI+IDHX9uPGQmisaO06YdOkJxlK2Ikt7wOuEjQvrheb7Zi1dk4
-         Pn6CGyd0WwR2XPIgoquOZisBblf2fm7iH3C8dmT2XlBmKP7H56iOE1fP7yUwMvbu1WDg
-         xiKbn9ty+DB5iJ9WDg6XeMEnqJXQVqUAgOuCcT593ewZCPSHmJn4NgNH5FW9su5sU34C
-         1zWnbM9SUPVwsCbTLxR+HMfWECj2KZbhivpKQhW0KrYf8dwlYhY0wNW2ATktOuI1KTyg
-         oYW9aQLIbP4mR4s3cA4lm3qHSP3BIPV2D2l5p5ppDnG/x+srthHEhMBdZjLZDizY8GTL
-         d4oQ==
-X-Gm-Message-State: ANhLgQ2KJ8lZhl79TvAmgjgASL8mGl3ugGrPEgkYnQFL/rmF20lqRSPL
-        5ISeAxxlNy9qbaNNB7QnJGA=
-X-Google-Smtp-Source: ADFU+vvNTp8sqzvhS1hnXVHuvIPBtK5wJsYEAeb0/JoRA6lZ9eu2HocXv6m9ZSeJEMfzrbSHH628gw==
-X-Received: by 2002:a50:a9a6:: with SMTP id n35mr671753edc.57.1584729310266;
-        Fri, 20 Mar 2020 11:35:10 -0700 (PDT)
-Received: from Ansuel-XPS.localdomain (host203-232-dynamic.53-79-r.retail.telecomitalia.it. [79.53.232.203])
-        by smtp.googlemail.com with ESMTPSA id y13sm172916eje.3.2020.03.20.11.35.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 20 Mar 2020 11:35:09 -0700 (PDT)
-From:   Ansuel Smith <ansuelsmth@gmail.com>
-To:     Stanimir Varbanov <svarbanov@mm-sol.com>
-Cc:     Abhishek Sahu <absahu@codeaurora.org>,
-        Ansuel Smith <ansuelsmth@gmail.com>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 03/12] pcie: qcom: change duplicate pci reset to phy reset
-Date:   Fri, 20 Mar 2020 19:34:45 +0100
-Message-Id: <20200320183455.21311-3-ansuelsmth@gmail.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200320183455.21311-1-ansuelsmth@gmail.com>
-References: <20200320183455.21311-1-ansuelsmth@gmail.com>
+        id S1726738AbgCTSrP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 20 Mar 2020 14:47:15 -0400
+Received: from mga11.intel.com ([192.55.52.93]:22472 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725446AbgCTSrP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 20 Mar 2020 14:47:15 -0400
+IronPort-SDR: Y3DtsNcJmb6W5zyKHa9L4ifO6imI4MbVrE9RsK2GESIJ8GEIJmNa3aYZDTg6+4nRPIOLGuEQpN
+ cOR3rsyyIKlA==
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Mar 2020 11:47:14 -0700
+IronPort-SDR: IiHoybRbURhXsMne0PsjLwxxpKqqIsmwnQFrkRqDMBLyh3UUCBcflEi/FAO7bh9xLzQpK6hljI
+ lb8vUAOKF8/g==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.72,285,1580803200"; 
+   d="scan'208";a="291991312"
+Received: from lkp-server01.sh.intel.com (HELO lkp-server01) ([10.239.97.150])
+  by FMSMGA003.fm.intel.com with ESMTP; 20 Mar 2020 11:47:13 -0700
+Received: from kbuild by lkp-server01 with local (Exim 4.89)
+        (envelope-from <lkp@intel.com>)
+        id 1jFMfp-000Gi6-1N; Sat, 21 Mar 2020 02:47:13 +0800
+Date:   Sat, 21 Mar 2020 02:46:51 +0800
+From:   kbuild test robot <lkp@intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     linux-pci@vger.kernel.org
+Subject: [pci:review/edr] BUILD SUCCESS
+ aa898fd0720c1521407eb52a3f954da0954c1ae5
+Message-ID: <5e750f9b.ig/tdfmHh6l55iE+%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Abhishek Sahu <absahu@codeaurora.org>
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git  review/edr
+branch HEAD: aa898fd0720c1521407eb52a3f954da0954c1ae5  PCI/AER: Rationalize error status register clearing
 
-The deinit issues reset_control_assert for pci twice and
-does not contain phy reset.
+elapsed time: 1187m
 
-Signed-off-by: Abhishek Sahu <absahu@codeaurora.org>
-Signed-off-by: Ansuel Smith <ansuelsmth@gmail.com>
+configs tested: 151
+configs skipped: 0
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+arm64                            allyesconfig
+arm                              allyesconfig
+arm64                            allmodconfig
+arm                              allmodconfig
+arm64                             allnoconfig
+arm                               allnoconfig
+arm                           efm32_defconfig
+arm                         at91_dt_defconfig
+arm                        shmobile_defconfig
+arm64                               defconfig
+arm                          exynos_defconfig
+arm                        multi_v5_defconfig
+arm                           sunxi_defconfig
+arm                        multi_v7_defconfig
+sparc                            allyesconfig
+i386                              allnoconfig
+i386                             alldefconfig
+i386                             allyesconfig
+i386                                defconfig
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                              allnoconfig
+ia64                             allyesconfig
+ia64                             alldefconfig
+nios2                         3c120_defconfig
+nios2                         10m50_defconfig
+c6x                        evmc6678_defconfig
+xtensa                          iss_defconfig
+c6x                              allyesconfig
+xtensa                       common_defconfig
+openrisc                 simple_smp_defconfig
+openrisc                    or1ksim_defconfig
+nds32                               defconfig
+nds32                             allnoconfig
+csky                                defconfig
+alpha                               defconfig
+h8300                       h8s-sim_defconfig
+h8300                     edosk2674_defconfig
+m68k                       m5475evb_defconfig
+m68k                             allmodconfig
+h8300                    h8300h-sim_defconfig
+m68k                           sun3_defconfig
+m68k                          multi_defconfig
+arc                                 defconfig
+arc                              allyesconfig
+powerpc                             defconfig
+powerpc                       ppc64_defconfig
+powerpc                          rhel-kconfig
+microblaze                      mmu_defconfig
+microblaze                    nommu_defconfig
+powerpc                           allnoconfig
+mips                      fuloong2e_defconfig
+mips                      malta_kvm_defconfig
+mips                             allyesconfig
+mips                         64r6el_defconfig
+mips                              allnoconfig
+mips                           32r2_defconfig
+mips                             allmodconfig
+parisc                            allnoconfig
+parisc                generic-64bit_defconfig
+parisc                generic-32bit_defconfig
+parisc                           allyesconfig
+i386                 randconfig-a002-20200320
+x86_64               randconfig-a002-20200320
+i386                 randconfig-a001-20200320
+x86_64               randconfig-a001-20200320
+i386                 randconfig-a003-20200320
+x86_64               randconfig-a003-20200320
+riscv                randconfig-a001-20200319
+m68k                 randconfig-a001-20200319
+nds32                randconfig-a001-20200319
+alpha                randconfig-a001-20200319
+parisc               randconfig-a001-20200319
+mips                 randconfig-a001-20200319
+h8300                randconfig-a001-20200319
+sparc64              randconfig-a001-20200319
+c6x                  randconfig-a001-20200319
+nios2                randconfig-a001-20200319
+microblaze           randconfig-a001-20200319
+csky                 randconfig-a001-20200319
+openrisc             randconfig-a001-20200319
+s390                 randconfig-a001-20200319
+sh                   randconfig-a001-20200319
+xtensa               randconfig-a001-20200319
+i386                 randconfig-b003-20200320
+i386                 randconfig-b001-20200320
+x86_64               randconfig-b003-20200320
+i386                 randconfig-b002-20200320
+x86_64               randconfig-b002-20200320
+x86_64               randconfig-b001-20200320
+x86_64               randconfig-c003-20200320
+i386                 randconfig-c002-20200320
+x86_64               randconfig-c001-20200320
+x86_64               randconfig-c002-20200320
+i386                 randconfig-c003-20200320
+i386                 randconfig-c001-20200320
+i386                 randconfig-d003-20200320
+i386                 randconfig-d001-20200320
+x86_64               randconfig-d002-20200320
+i386                 randconfig-d002-20200320
+x86_64               randconfig-d001-20200320
+x86_64               randconfig-d003-20200320
+i386                 randconfig-f001-20200320
+i386                 randconfig-f003-20200320
+i386                 randconfig-f002-20200320
+x86_64               randconfig-f002-20200320
+x86_64               randconfig-f003-20200320
+x86_64               randconfig-f001-20200320
+i386                 randconfig-g003-20200320
+x86_64               randconfig-g002-20200320
+i386                 randconfig-g001-20200320
+i386                 randconfig-g002-20200320
+x86_64               randconfig-g001-20200320
+x86_64               randconfig-g003-20200320
+arc                  randconfig-a001-20200319
+ia64                 randconfig-a001-20200319
+arm                  randconfig-a001-20200319
+arm64                randconfig-a001-20200319
+sparc                randconfig-a001-20200319
+riscv                            allyesconfig
+riscv                    nommu_virt_defconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                          rv32_defconfig
+riscv                            allmodconfig
+s390                       zfcpdump_defconfig
+s390                          debug_defconfig
+s390                             allyesconfig
+s390                              allnoconfig
+s390                             allmodconfig
+s390                             alldefconfig
+s390                                defconfig
+sh                          rsk7269_defconfig
+sh                               allmodconfig
+sh                            titan_defconfig
+sh                  sh7785lcr_32bit_defconfig
+sh                                allnoconfig
+sparc                               defconfig
+sparc64                             defconfig
+sparc64                           allnoconfig
+sparc64                          allyesconfig
+sparc64                          allmodconfig
+um                           x86_64_defconfig
+um                             i386_defconfig
+um                                  defconfig
+x86_64                              fedora-25
+x86_64                                  kexec
+x86_64                                    lkp
+x86_64                                   rhel
+x86_64                         rhel-7.2-clear
+x86_64                               rhel-7.6
+
 ---
- drivers/pci/controller/dwc/pcie-qcom.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index f958c535de6e..1fcc7fed8443 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -284,7 +284,7 @@ static void qcom_pcie_deinit_2_1_0(struct qcom_pcie *pcie)
- 	reset_control_assert(res->axi_reset);
- 	reset_control_assert(res->ahb_reset);
- 	reset_control_assert(res->por_reset);
--	reset_control_assert(res->pci_reset);
-+	reset_control_assert(res->phy_reset);
- 	clk_disable_unprepare(res->iface_clk);
- 	clk_disable_unprepare(res->core_clk);
- 	clk_disable_unprepare(res->phy_clk);
--- 
-2.25.1
-
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
