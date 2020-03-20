@@ -8,53 +8,53 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D126CC54EEB
-	for <linux-pci@archiver.kernel.org>; Fri, 20 Mar 2020 18:35:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80426C43332
+	for <linux-pci@archiver.kernel.org>; Fri, 20 Mar 2020 18:35:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A830020781
-	for <linux-pci@archiver.kernel.org>; Fri, 20 Mar 2020 18:35:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 50D5A20739
+	for <linux-pci@archiver.kernel.org>; Fri, 20 Mar 2020 18:35:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="sBbFrg0z"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Yr8IMgYk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727532AbgCTSfa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 20 Mar 2020 14:35:30 -0400
-Received: from mail-ed1-f68.google.com ([209.85.208.68]:39443 "EHLO
-        mail-ed1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727521AbgCTSf3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Mar 2020 14:35:29 -0400
-Received: by mail-ed1-f68.google.com with SMTP id a43so8311781edf.6;
-        Fri, 20 Mar 2020 11:35:27 -0700 (PDT)
+        id S1727518AbgCTSf0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 20 Mar 2020 14:35:26 -0400
+Received: from mail-ed1-f66.google.com ([209.85.208.66]:35068 "EHLO
+        mail-ed1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725446AbgCTSfX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Mar 2020 14:35:23 -0400
+Received: by mail-ed1-f66.google.com with SMTP id a20so8340211edj.2;
+        Fri, 20 Mar 2020 11:35:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=8eK3e1PI+UmHz8Hye1maNufVhAlQwBW5fj1ru2/xppA=;
-        b=sBbFrg0zbNZn74IeuNSoXSU6Y9Ofyq5BN2GbFCQXl9G1RaU95yjB1ZnZyv8AAJtwrn
-         A4YGM+8QDWL6BA71j9jt7C9D2c4qH6q8brieLBfWztcwlGlAznnrhY+g+Fq7vSSmAdCG
-         aH+A5d3Faz76PLzG9cMFpk/IUuJkaaFdpzEx3MnBrHa7vNy+4zJDUqLVjO0wfVZlN0o7
-         V6xUVCgIZ9W6EUpvu0WgLF/iKCDqTaxUbUirJcDWZqa6DT4AIX12+X3izpOBCAqSGj7K
-         7vdkv+bD8gZXidcwexThuXEJJauXAhWvJ/VcfxQHoBejwD85PKHkOybgZnRhgPiYFT0s
-         uBVw==
+        bh=WNYRUFULee31Lm1KjTnY4zWnox8RMFbDtxuR2OFtEzI=;
+        b=Yr8IMgYk/OnIfQBt54c2/wu5QbUMQsW4KWuVelx32qiWM+p71p49krEnEI3faLzgNo
+         T1CcLUikSCzQDVsWxrismxeWwBSBl0F2FjmttruqEgh5Wq0WH33EVpqyNWlSC14YwgDr
+         skKYJO/CLYDZIhetBwCNNXsfyCOWqDHa54EAM5DDtW6gdtNNVYs+XaOOxOCoMh7P8fLK
+         vHNT1iSae8VqX+2N0CuLRBQ+ulZ+oOgXMhERNIaLhXgWRPVe+rcNhS9S10udY7ZNbNhl
+         Mkg/8LGglLDipNrve1h1pRvBk86x068vnRkj7Gsg6zaK7Tgkk+O4651hw8MsqyK9CQ9q
+         HD5w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=8eK3e1PI+UmHz8Hye1maNufVhAlQwBW5fj1ru2/xppA=;
-        b=EEHrKER8e2NOQ/jEsE4RJ7XxQiKN0zAbp8cpS/Um3XrjHk30+dIln7IpLOXzXTM+4S
-         G2Jjn+Kn2p74bIXzyDWuCuO6WY/lamp1OY2PXSV7G14GwK4DnsngiqnhMM131zhKjMPl
-         rWxMLxp8NlmI6Mfnm0/RY101N1vJ8zRXzAu7lIZe21AtrtxLnbkCH8svkWPqDWOec6+S
-         uebyPZI6biLZyHyNScIsPYGU8wbvnTbZ20hZTbneFK+24CPvNnTgv73hOsniIKjTkS+D
-         er4bWBJzGBJdO0JSSoKCyyezKSSt3TRfWdKRIvf9Op0a1Jiq8HUpCjiMupC8+qAUybkI
-         ZZDg==
-X-Gm-Message-State: ANhLgQ3S12xiHYla348dqgq6fXWYF1U1rCneD+NhCsGiDGc37J/KAaPL
-        11uBH6GtvxIAZbQk5eXYVGM=
-X-Google-Smtp-Source: ADFU+vus817SAtCmyfU8vW8+j/gVz5a9XM2N41s6kR7OjTLOec8BOPOW4+naOkkgNjtoHKeFcJ76xQ==
-X-Received: by 2002:aa7:cd8f:: with SMTP id x15mr9317135edv.156.1584729326478;
-        Fri, 20 Mar 2020 11:35:26 -0700 (PDT)
+        bh=WNYRUFULee31Lm1KjTnY4zWnox8RMFbDtxuR2OFtEzI=;
+        b=W8a/uyud3y1w4UlQDV38g3TOctGm6OhMaCNXE4td7wZibxHnmgH49qCVpBAfI6qbzA
+         4s08XDvcYcwX4gKD9jIxIY/vWF6hXVyG/F6YiNy5L7AOO4cPQRtYh5OyLTe0EoEmoXnr
+         gHFjTK5V5nS2mqZJuH/Uddyqm/Qm2oNaI/wLEjlw73SCdTjA9YZFZf044YK3LUpo/LCh
+         K5cbYecKkU16GTCBFz/VyQqtDuRBAIa5+yqdCU1KO6eOZrd8JM4xLoFFILcg+naCxi2n
+         ZyiPtL8d32tZIFxzhsMBL0aJd/w+55xRkxPHvlO1AMd4YlugwwVjUw2fjXxvU4GzzSdF
+         f/OA==
+X-Gm-Message-State: ANhLgQ2E9PiFs+ZfS23NK0vW0aGHD1P2rP4MlaRmtldh82a4Lr+nJrqp
+        kghLhl8DB287P6H+cZ5YsVQ=
+X-Google-Smtp-Source: ADFU+vu8AW19omtsz4p5v1SCcaJKz9JTMA/bUWMxKE9V/XgDOHgX/qFmo+Ue2EvEDxfBuDtHV6Nyvw==
+X-Received: by 2002:a50:cd5a:: with SMTP id d26mr9634264edj.65.1584729321016;
+        Fri, 20 Mar 2020 11:35:21 -0700 (PDT)
 Received: from Ansuel-XPS.localdomain (host203-232-dynamic.53-79-r.retail.telecomitalia.it. [79.53.232.203])
-        by smtp.googlemail.com with ESMTPSA id y13sm172916eje.3.2020.03.20.11.35.24
+        by smtp.googlemail.com with ESMTPSA id y13sm172916eje.3.2020.03.20.11.35.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 20 Mar 2020 11:35:25 -0700 (PDT)
+        Fri, 20 Mar 2020 11:35:20 -0700 (PDT)
 From:   Ansuel Smith <ansuelsmth@gmail.com>
 To:     Stanimir Varbanov <svarbanov@mm-sol.com>
 Cc:     Sham Muthayyan <smuthayy@codeaurora.org>,
@@ -69,9 +69,9 @@ Cc:     Sham Muthayyan <smuthayy@codeaurora.org>,
         Philipp Zabel <p.zabel@pengutronix.de>,
         linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 09/12] pcie: qcom: Programming the PCIE iATU for IPQ806x
-Date:   Fri, 20 Mar 2020 19:34:51 +0100
-Message-Id: <20200320183455.21311-9-ansuelsmth@gmail.com>
+Subject: [PATCH 07/12] pcie: qcom: add tx term offset support
+Date:   Fri, 20 Mar 2020 19:34:49 +0100
+Message-Id: <20200320183455.21311-7-ansuelsmth@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200320183455.21311-1-ansuelsmth@gmail.com>
 References: <20200320183455.21311-1-ansuelsmth@gmail.com>
@@ -84,117 +84,131 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Sham Muthayyan <smuthayy@codeaurora.org>
 
-Resolved PCIE EP detection errors caused due to missing iATU programming.
+Add tx term offset support to pcie qcom driver
+need in some revision of the ipq806x soc
 
 Signed-off-by: Sham Muthayyan <smuthayy@codeaurora.org>
 Signed-off-by: Ansuel Smith <ansuelsmth@gmail.com>
 ---
- drivers/pci/controller/dwc/pcie-qcom.c | 78 ++++++++++++++++++++++++++
- 1 file changed, 78 insertions(+)
+ drivers/pci/controller/dwc/pcie-qcom.c | 61 ++++++++++++++++++++++----
+ 1 file changed, 52 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 8009e3117765..e26ba8f63d4f 100644
+index ecc22fd27ea6..8009e3117765 100644
 --- a/drivers/pci/controller/dwc/pcie-qcom.c
 +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -77,6 +77,30 @@
- #define PCIE20_CAP_LINK_1			(PCIE20_CAP + 0x14)
- #define PCIE_CAP_LINK1_VAL			0x2FD7F
+@@ -45,7 +45,13 @@
+ #define PCIE_CAP_CPL_TIMEOUT_DISABLE		0x10
  
-+#define PCIE20_CAP_LINKCTRLSTATUS		(PCIE20_CAP + 0x10)
+ #define PCIE20_PARF_PHY_CTRL			0x40
++#define PHY_CTRL_PHY_TX0_TERM_OFFSET_MASK	(0x1f << 16)
++#define PHY_CTRL_PHY_TX0_TERM_OFFSET(x)		(x << 16)
 +
-+#define PCIE20_AXI_MSTR_RESP_COMP_CTRL0		0x818
-+#define PCIE20_AXI_MSTR_RESP_COMP_CTRL1		0x81c
+ #define PCIE20_PARF_PHY_REFCLK			0x4C
++#define REF_SSP_EN				BIT(16)
++#define REF_USE_PAD				BIT(12)
 +
-+#define PCIE20_PLR_IATU_VIEWPORT		0x900
-+#define PCIE20_PLR_IATU_REGION_OUTBOUND		(0x0 << 31)
-+#define PCIE20_PLR_IATU_REGION_INDEX(x)		(x << 0)
-+
-+#define PCIE20_PLR_IATU_CTRL1			0x904
-+#define PCIE20_PLR_IATU_TYPE_CFG0		(0x4 << 0)
-+#define PCIE20_PLR_IATU_TYPE_MEM		(0x0 << 0)
-+
-+#define PCIE20_PLR_IATU_CTRL2			0x908
-+#define PCIE20_PLR_IATU_ENABLE			BIT(31)
-+
-+#define PCIE20_PLR_IATU_LBAR			0x90C
-+#define PCIE20_PLR_IATU_UBAR			0x910
-+#define PCIE20_PLR_IATU_LAR			0x914
-+#define PCIE20_PLR_IATU_LTAR			0x918
-+#define PCIE20_PLR_IATU_UTAR			0x91c
-+
-+#define MSM_PCIE_DEV_CFG_ADDR			0x01000000
-+
- #define PCIE20_PARF_Q2A_FLUSH			0x1AC
+ #define PCIE20_PARF_DBI_BASE_ADDR		0x168
+ #define PCIE20_PARF_SLV_ADDR_SPACE_SIZE		0x16C
+ #define PCIE20_PARF_MHI_CLOCK_RESET_CTRL	0x174
+@@ -77,6 +83,18 @@
+ #define DBI_RO_WR_EN				1
  
- #define PCIE20_MISC_CONTROL_1_REG		0x8BC
-@@ -251,6 +275,57 @@ static void qcom_pcie_2_1_0_ltssm_enable(struct qcom_pcie *pcie)
- 	writel(val, pcie->elbi + PCIE20_ELBI_SYS_CTRL);
- }
+ #define PERST_DELAY_US				1000
++/* PARF registers */
++#define PCIE20_PARF_PCS_DEEMPH			0x34
++#define PCS_DEEMPH_TX_DEEMPH_GEN1(x)		(x << 16)
++#define PCS_DEEMPH_TX_DEEMPH_GEN2_3_5DB(x)	(x << 8)
++#define PCS_DEEMPH_TX_DEEMPH_GEN2_6DB(x)	(x << 0)
++
++#define PCIE20_PARF_PCS_SWING			0x38
++#define PCS_SWING_TX_SWING_FULL(x)		(x << 8)
++#define PCS_SWING_TX_SWING_LOW(x)		(x << 0)
++
++#define PCIE20_PARF_CONFIG_BITS			0x50
++#define PHY_RX0_EQ(x)				(x << 24)
  
-+static void qcom_pcie_prog_viewport_cfg0(struct qcom_pcie *pcie, u32 busdev)
+ #define PCIE20_v3_PARF_SLV_ADDR_SPACE_SIZE	0x358
+ #define SLV_ADDR_SPACE_SZ			0x10000000
+@@ -97,6 +115,7 @@ struct qcom_pcie_resources_2_1_0 {
+ 	struct reset_control *phy_reset;
+ 	struct reset_control *ext_reset;
+ 	struct regulator_bulk_data supplies[QCOM_PCIE_2_1_0_MAX_SUPPLY];
++	uint8_t phy_tx0_term_offset;
+ };
+ 
+ struct qcom_pcie_resources_1_0_0 {
+@@ -184,6 +203,16 @@ struct qcom_pcie {
+ 
+ #define to_qcom_pcie(x)		dev_get_drvdata((x)->dev)
+ 
++static inline void
++writel_masked(void __iomem *addr, u32 clear_mask, u32 set_mask)
 +{
-+	struct pcie_port *pp = &pcie->pci->pp;
++	u32 val = readl(addr);
 +
-+	/*
-+	 * program and enable address translation region 0 (device config
-+	 * address space); region type config;
-+	 * axi config address range to device config address range
-+	 */
-+	writel(PCIE20_PLR_IATU_REGION_OUTBOUND |
-+	       PCIE20_PLR_IATU_REGION_INDEX(0),
-+	       pcie->pci->dbi_base + PCIE20_PLR_IATU_VIEWPORT);
-+
-+	writel(PCIE20_PLR_IATU_TYPE_CFG0, pcie->pci->dbi_base + PCIE20_PLR_IATU_CTRL1);
-+	writel(PCIE20_PLR_IATU_ENABLE, pcie->pci->dbi_base + PCIE20_PLR_IATU_CTRL2);
-+	writel(pp->cfg0_base, pcie->pci->dbi_base + PCIE20_PLR_IATU_LBAR);
-+	writel((pp->cfg0_base >> 32), pcie->pci->dbi_base + PCIE20_PLR_IATU_UBAR);
-+	writel((pp->cfg0_base + pp->cfg0_size - 1),
-+	       pcie->pci->dbi_base + PCIE20_PLR_IATU_LAR);
-+	writel(busdev, pcie->pci->dbi_base + PCIE20_PLR_IATU_LTAR);
-+	writel(0, pcie->pci->dbi_base + PCIE20_PLR_IATU_UTAR);
++	val &= ~clear_mask;
++	val |= set_mask;
++	writel(val, addr);
 +}
 +
-+static void qcom_pcie_prog_viewport_mem2_outbound(struct qcom_pcie *pcie)
-+{
-+	struct pcie_port *pp = &pcie->pci->pp;
-+
-+	/*
-+	 * program and enable address translation region 2 (device resource
-+	 * address space); region type memory;
-+	 * axi device bar address range to device bar address range
-+	 */
-+	writel(PCIE20_PLR_IATU_REGION_OUTBOUND |
-+	       PCIE20_PLR_IATU_REGION_INDEX(2),
-+	       pcie->pci->dbi_base + PCIE20_PLR_IATU_VIEWPORT);
-+
-+	writel(PCIE20_PLR_IATU_TYPE_MEM, pcie->pci->dbi_base + PCIE20_PLR_IATU_CTRL1);
-+	writel(PCIE20_PLR_IATU_ENABLE, pcie->pci->dbi_base + PCIE20_PLR_IATU_CTRL2);
-+	writel(pp->mem_base, pcie->pci->dbi_base + PCIE20_PLR_IATU_LBAR);
-+	writel((pp->mem_base >> 32), pcie->pci->dbi_base + PCIE20_PLR_IATU_UBAR);
-+	writel(pp->mem_base + pp->mem_size - 1,
-+	       pcie->pci->dbi_base + PCIE20_PLR_IATU_LAR);
-+	writel(pp->mem_bus_addr, pcie->pci->dbi_base + PCIE20_PLR_IATU_LTAR);
-+	writel(upper_32_bits(pp->mem_bus_addr),
-+	       pcie->pci->dbi_base + PCIE20_PLR_IATU_UTAR);
-+
-+	/* 256B PCIE buffer setting */
-+	writel(0x1, pcie->pci->dbi_base + PCIE20_AXI_MSTR_RESP_COMP_CTRL0);
-+	writel(0x1, pcie->pci->dbi_base + PCIE20_AXI_MSTR_RESP_COMP_CTRL1);
-+}
-+
- static int qcom_pcie_get_resources_2_1_0(struct qcom_pcie *pcie)
+ static void qcom_ep_reset_assert(struct qcom_pcie *pcie)
  {
- 	struct qcom_pcie_resources_2_1_0 *res = &pcie->res.v2_1_0;
-@@ -448,6 +523,9 @@ static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
- 	writel(CFG_BRIDGE_SB_INIT,
- 	       pci->dbi_base + PCIE20_AXI_MSTR_RESP_COMP_CTRL1);
+ 	gpiod_set_value_cansleep(pcie->reset, 1);
+@@ -277,6 +306,10 @@ static int qcom_pcie_get_resources_2_1_0(struct qcom_pcie *pcie)
+ 	if (IS_ERR(res->ext_reset))
+ 		return PTR_ERR(res->ext_reset);
  
-+	qcom_pcie_prog_viewport_cfg0(pcie, MSM_PCIE_DEV_CFG_ADDR);
-+	qcom_pcie_prog_viewport_mem2_outbound(pcie);
++	if (of_property_read_u8(dev->of_node, "phy-tx0-term-offset",
++				&res->phy_tx0_term_offset))
++		res->phy_tx0_term_offset = 0;
 +
- 	return 0;
+ 	res->phy_reset = devm_reset_control_get_exclusive(dev, "phy");
+ 	return PTR_ERR_OR_ZERO(res->phy_reset);
+ }
+@@ -304,7 +337,6 @@ static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
+ 	struct qcom_pcie_resources_2_1_0 *res = &pcie->res.v2_1_0;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct device *dev = pci->dev;
+-	u32 val;
+ 	int ret;
  
- err_deassert_ahb:
+ 	ret = reset_control_assert(res->ahb_reset);
+@@ -355,15 +387,26 @@ static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
+ 		goto err_deassert_ahb;
+ 	}
+ 
+-	/* enable PCIe clocks and resets */
+-	val = readl(pcie->parf + PCIE20_PARF_PHY_CTRL);
+-	val &= ~BIT(0);
+-	writel(val, pcie->parf + PCIE20_PARF_PHY_CTRL);
++	writel_masked(pcie->parf + PCIE20_PARF_PHY_CTRL, BIT(0), 0);
++
++	/* Set Tx termination offset */
++	writel_masked(pcie->parf + PCIE20_PARF_PHY_CTRL,
++		      PHY_CTRL_PHY_TX0_TERM_OFFSET_MASK,
++		      PHY_CTRL_PHY_TX0_TERM_OFFSET(res->phy_tx0_term_offset));
++
++	/* PARF programming */
++	writel(PCS_DEEMPH_TX_DEEMPH_GEN1(0x18) |
++	       PCS_DEEMPH_TX_DEEMPH_GEN2_3_5DB(0x18) |
++	       PCS_DEEMPH_TX_DEEMPH_GEN2_6DB(0x22),
++	       pcie->parf + PCIE20_PARF_PCS_DEEMPH);
++	writel(PCS_SWING_TX_SWING_FULL(0x78) |
++	       PCS_SWING_TX_SWING_LOW(0x78),
++	       pcie->parf + PCIE20_PARF_PCS_SWING);
++	writel(PHY_RX0_EQ(0x4), pcie->parf + PCIE20_PARF_CONFIG_BITS);
+ 
+-	/* enable external reference clock */
+-	val = readl(pcie->parf + PCIE20_PARF_PHY_REFCLK);
+-	val |= BIT(16);
+-	writel(val, pcie->parf + PCIE20_PARF_PHY_REFCLK);
++	/* Enable reference clock */
++	writel_masked(pcie->parf + PCIE20_PARF_PHY_REFCLK,
++		      REF_USE_PAD, REF_SSP_EN);
+ 
+ 	ret = reset_control_deassert(res->phy_reset);
+ 	if (ret) {
 -- 
 2.25.1
 
