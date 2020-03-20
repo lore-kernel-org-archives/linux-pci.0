@@ -2,58 +2,85 @@ Return-Path: <SRS0=KiQH=5F=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B4DBC4332D
-	for <linux-pci@archiver.kernel.org>; Fri, 20 Mar 2020 09:50:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D23FC4332D
+	for <linux-pci@archiver.kernel.org>; Fri, 20 Mar 2020 09:52:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5B89720722
-	for <linux-pci@archiver.kernel.org>; Fri, 20 Mar 2020 09:50:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DF7BA20753
+	for <linux-pci@archiver.kernel.org>; Fri, 20 Mar 2020 09:52:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727047AbgCTJtX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 20 Mar 2020 05:49:23 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:35039 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726527AbgCTJtX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Mar 2020 05:49:23 -0400
-Received: from localhost ([127.0.0.1] helo=flow.W.breakpoint.cc)
-        by Galois.linutronix.de with esmtp (Exim 4.80)
-        (envelope-from <bigeasy@linutronix.de>)
-        id 1jFEH0-0000vL-B6; Fri, 20 Mar 2020 10:49:02 +0100
-From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To:     tglx@linutronix.de
-Cc:     arnd@arndb.de, balbi@kernel.org, bhelgaas@google.com,
-        bigeasy@linutronix.de, dave@stgolabs.net, davem@davemloft.net,
-        gregkh@linuxfoundation.org, joel@joelfernandes.org,
-        kurt.schwemmer@microsemi.com, kvalo@codeaurora.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, logang@deltatee.com,
-        mingo@kernel.org, mpe@ellerman.id.au, netdev@vger.kernel.org,
-        oleg@redhat.com, paulmck@kernel.org, peterz@infradead.org,
-        rdunlap@infradead.org, rostedt@goodmis.org,
-        torvalds@linux-foundation.org, will@kernel.org
-Subject: [PATCH 0/5] Remove mm.h from arch/*/include/asm/uaccess.h
-Date:   Fri, 20 Mar 2020 10:48:51 +0100
-Message-Id: <20200320094856.3453859-1-bigeasy@linutronix.de>
-X-Mailer: git-send-email 2.26.0.rc2
-In-Reply-To: <20200318204408.010461877@linutronix.de>
-References: <20200318204408.010461877@linutronix.de>
+        id S1726805AbgCTJwO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 20 Mar 2020 05:52:14 -0400
+Received: from foss.arm.com ([217.140.110.172]:46746 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726767AbgCTJwO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 20 Mar 2020 05:52:14 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 45A3D30E;
+        Fri, 20 Mar 2020 02:52:13 -0700 (PDT)
+Received: from e121166-lin.cambridge.arm.com (e121166-lin.cambridge.arm.com [10.1.196.255])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 299363F305;
+        Fri, 20 Mar 2020 02:52:12 -0700 (PDT)
+Date:   Fri, 20 Mar 2020 09:52:04 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Kishon Vijay Abraham I <kishon@ti.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Andrew Murray <amurray@thegoodpenguin.co.uk>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 0/5] misc: Improvements to pci_endpoint_test driver
+Message-ID: <20200320095204.GA21466@e121166-lin.cambridge.arm.com>
+References: <20200317100158.4692-1-kishon@ti.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200317100158.4692-1-kishon@ti.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The following mini-series removes linux/mm.h from the asm/uaccess.h of
-the individual architecture. The series has been compile tested with the
-defconfig and additionally for ia64 with the "special" allmodconfig
-supplied by the bot. The regular allmod for the architectures does not
-compile (even without the series).
+On Tue, Mar 17, 2020 at 03:31:53PM +0530, Kishon Vijay Abraham I wrote:
+> This series adds improvements and fixes to pci_endpoint_test driver
+> mostly applicable when used with multi-function endpoint (or multiple
+> endpoint instances using pci_epf_test).
+> 
+> *) Using module parameter to determine irqtype would indicate all the
+>    pci_endpoint_test device have the same irqtype. Fix it here.
+> *) Add ioctl to clear irq so that "cat /proc/interrupts" only lists
+>    the entries for the devices that is actually being used.
+> *) Creating more than 10 pci-endpoint-test devices results in a kernel
+>    error.
+> *) Use full pci-endpoint-test name in request irq so that it's easy to
+>    profile the interrupt details in "cat /proc/interrupts"
+> 
+> Changes from v1:
+> *) Removed a patch that references J721E device ID (That patch will
+>    be added as part of J721E support series)
+> *) Removed a patch that always enable legacy interrupt. That should
+>    be handled by pci_alloc_irq_vectors()
+> 
+> Kishon Vijay Abraham I (5):
+>   misc: pci_endpoint_test: Avoid using module parameter to determine
+>     irqtype
+>   misc: pci_endpoint_test: Add ioctl to clear IRQ
+>   tools: PCI: Add 'e' to clear IRQ
+>   misc: pci_endpoint_test: Fix to support > 10 pci-endpoint-test devices
+>   misc: pci_endpoint_test: Use full pci-endpoint-test name in request
+>     irq
+> 
+>  drivers/misc/pci_endpoint_test.c | 49 +++++++++++++++++++++++++-------
+>  include/uapi/linux/pcitest.h     |  1 +
+>  tools/pci/pcitest.c              | 16 ++++++++++-
+>  3 files changed, 55 insertions(+), 11 deletions(-)
 
-Sebastian
+Applied to pci/endpoint for v5.7.
 
-
+Thanks,
+Lorenzo
