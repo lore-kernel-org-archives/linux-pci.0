@@ -2,26 +2,26 @@ Return-Path: <SRS0=KiQH=5F=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9465C4332D
-	for <linux-pci@archiver.kernel.org>; Fri, 20 Mar 2020 09:50:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B4DBC4332D
+	for <linux-pci@archiver.kernel.org>; Fri, 20 Mar 2020 09:50:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8D93B20753
-	for <linux-pci@archiver.kernel.org>; Fri, 20 Mar 2020 09:50:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5B89720722
+	for <linux-pci@archiver.kernel.org>; Fri, 20 Mar 2020 09:50:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727194AbgCTJtZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 20 Mar 2020 05:49:25 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:35044 "EHLO
+        id S1727047AbgCTJtX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 20 Mar 2020 05:49:23 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:35039 "EHLO
         Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726602AbgCTJtY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Mar 2020 05:49:24 -0400
+        with ESMTP id S1726527AbgCTJtX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Mar 2020 05:49:23 -0400
 Received: from localhost ([127.0.0.1] helo=flow.W.breakpoint.cc)
         by Galois.linutronix.de with esmtp (Exim 4.80)
         (envelope-from <bigeasy@linutronix.de>)
-        id 1jFEH0-0000vL-Ur; Fri, 20 Mar 2020 10:49:03 +0100
+        id 1jFEH0-0000vL-B6; Fri, 20 Mar 2020 10:49:02 +0100
 From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 To:     tglx@linutronix.de
 Cc:     arnd@arndb.de, balbi@kernel.org, bhelgaas@google.com,
@@ -34,18 +34,13 @@ Cc:     arnd@arndb.de, balbi@kernel.org, bhelgaas@google.com,
         mingo@kernel.org, mpe@ellerman.id.au, netdev@vger.kernel.org,
         oleg@redhat.com, paulmck@kernel.org, peterz@infradead.org,
         rdunlap@infradead.org, rostedt@goodmis.org,
-        torvalds@linux-foundation.org, will@kernel.org,
-        Nick Hu <nickhu@andestech.com>,
-        Greentime Hu <green.hu@gmail.com>,
-        Vincent Chen <deanbo422@gmail.com>,
-        kbuild test robot <lkp@intel.com>
-Subject: [PATCH 1/5] nds32: Remove mm.h from asm/uaccess.h
-Date:   Fri, 20 Mar 2020 10:48:52 +0100
-Message-Id: <20200320094856.3453859-2-bigeasy@linutronix.de>
+        torvalds@linux-foundation.org, will@kernel.org
+Subject: [PATCH 0/5] Remove mm.h from arch/*/include/asm/uaccess.h
+Date:   Fri, 20 Mar 2020 10:48:51 +0100
+Message-Id: <20200320094856.3453859-1-bigeasy@linutronix.de>
 X-Mailer: git-send-email 2.26.0.rc2
-In-Reply-To: <20200320094856.3453859-1-bigeasy@linutronix.de>
+In-Reply-To: <20200318204408.010461877@linutronix.de>
 References: <20200318204408.010461877@linutronix.de>
- <20200320094856.3453859-1-bigeasy@linutronix.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Sender: linux-pci-owner@vger.kernel.org
@@ -53,48 +48,12 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The defconfig compiles without linux/mm.h. With mm.h included the
-include chain leands to:
-|   CC      kernel/locking/percpu-rwsem.o
-| In file included from include/linux/huge_mm.h:8,
-|                  from include/linux/mm.h:567,
-|                  from arch/nds32/include/asm/uaccess.h:,
-|                  from include/linux/uaccess.h:11,
-|                  from include/linux/sched/task.h:11,
-|                  from include/linux/sched/signal.h:9,
-|                  from include/linux/rcuwait.h:6,
-|                  from include/linux/percpu-rwsem.h:8,
-|                  from kernel/locking/percpu-rwsem.c:6:
-| include/linux/fs.h:1422:29: error: array type has incomplete element type=
- 'struct percpu_rw_semaphore'
-|  1422 |  struct percpu_rw_semaphore rw_sem[SB_FREEZE_LEVELS];
+The following mini-series removes linux/mm.h from the asm/uaccess.h of
+the individual architecture. The series has been compile tested with the
+defconfig and additionally for ia64 with the "special" allmodconfig
+supplied by the bot. The regular allmod for the architectures does not
+compile (even without the series).
 
-once rcuwait.h includes linux/sched/signal.h.
+Sebastian
 
-Remove the linux/mm.h include.
-
-Cc: Nick Hu <nickhu@andestech.com>
-Cc: Greentime Hu <green.hu@gmail.com>
-Cc: Vincent Chen <deanbo422@gmail.com>
-Reported-by: kbuild test robot <lkp@intel.com>
-Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
----
- arch/nds32/include/asm/uaccess.h | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/arch/nds32/include/asm/uaccess.h b/arch/nds32/include/asm/uacc=
-ess.h
-index 8916ad9f9f139..3a9219f53ee0d 100644
---- a/arch/nds32/include/asm/uaccess.h
-+++ b/arch/nds32/include/asm/uaccess.h
-@@ -11,7 +11,6 @@
- #include <asm/errno.h>
- #include <asm/memory.h>
- #include <asm/types.h>
--#include <linux/mm.h>
-=20
- #define __asmeq(x, y)  ".ifnc " x "," y " ; .err ; .endif\n\t"
-=20
---=20
-2.26.0.rc2
 
