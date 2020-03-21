@@ -6,29 +6,29 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27229C4332B
-	for <linux-pci@archiver.kernel.org>; Sat, 21 Mar 2020 11:36:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B47D6C43333
+	for <linux-pci@archiver.kernel.org>; Sat, 21 Mar 2020 11:36:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0450C20658
-	for <linux-pci@archiver.kernel.org>; Sat, 21 Mar 2020 11:36:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9532920658
+	for <linux-pci@archiver.kernel.org>; Sat, 21 Mar 2020 11:36:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728615AbgCULe6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1726834AbgCULe6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Sat, 21 Mar 2020 07:34:58 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:38487 "EHLO
+Received: from Galois.linutronix.de ([193.142.43.55]:38496 "EHLO
         Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728492AbgCULe5 (ORCPT
+        with ESMTP id S1728521AbgCULe5 (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Sat, 21 Mar 2020 07:34:57 -0400
 Received: from p5de0bf0b.dip0.t-ipconnect.de ([93.224.191.11] helo=nanos.tec.linutronix.de)
         by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
         (Exim 4.80)
         (envelope-from <tglx@linutronix.de>)
-        id 1jFcOd-0002LQ-Fh; Sat, 21 Mar 2020 12:34:31 +0100
+        id 1jFcOT-0001zi-1B; Sat, 21 Mar 2020 12:34:21 +0100
 Received: from nanos.tec.linutronix.de (localhost [IPv6:::1])
-        by nanos.tec.linutronix.de (Postfix) with ESMTP id 2B9001040CB;
-        Sat, 21 Mar 2020 12:34:22 +0100 (CET)
-Message-Id: <20200321113242.643576700@linutronix.de>
+        by nanos.tec.linutronix.de (Postfix) with ESMTP id 16805FFBBF;
+        Sat, 21 Mar 2020 12:34:20 +0100 (CET)
+Message-Id: <20200321113241.824030968@linutronix.de>
 User-Agent: quilt/0.65
-Date:   Sat, 21 Mar 2020 12:26:03 +0100
+Date:   Sat, 21 Mar 2020 12:25:55 +0100
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
@@ -70,7 +70,7 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Jonathan Corbet <corbet@lwn.net>,
         Randy Dunlap <rdunlap@infradead.org>,
         Davidlohr Bueso <dbueso@suse.de>
-Subject: [patch V3 19/20] lockdep: Annotate irq_work
+Subject: [patch V3 11/20] rcuwait: Add @state argument to rcuwait_wait_event()
 References: <20200321112544.878032781@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -83,96 +83,74 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+From: Peter Zijlstra (Intel) <peterz@infradead.org>
 
-Mark irq_work items with IRQ_WORK_HARD_IRQ which should be invoked in
-hardirq context even on PREEMPT_RT. IRQ_WORK without this flag will be
-invoked in softirq context on PREEMPT_RT.
+Extend rcuwait_wait_event() with a state variable so that it is not
+restricted to UNINTERRUPTIBLE waits.
 
-Set ->irq_config to 1 for the IRQ_WORK items which are invoked in softirq
-context so lockdep knows that these can safely acquire a spinlock_t.
-
-Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
----
- include/linux/irq_work.h |    2 ++
- include/linux/irqflags.h |   13 +++++++++++++
- kernel/irq_work.c        |    2 ++
- kernel/rcu/tree.c        |    1 +
- kernel/time/tick-sched.c |    1 +
- 5 files changed, 19 insertions(+)
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Davidlohr Bueso <dave@stgolabs.net>
 
---- a/include/linux/irq_work.h
-+++ b/include/linux/irq_work.h
-@@ -18,6 +18,8 @@
+---
+ include/linux/rcuwait.h       |   12 ++++++++++--
+ kernel/locking/percpu-rwsem.c |    2 +-
+ 2 files changed, 11 insertions(+), 3 deletions(-)
+
+--- a/include/linux/rcuwait.h
++++ b/include/linux/rcuwait.h
+@@ -3,6 +3,7 @@
+ #define _LINUX_RCUWAIT_H_
  
- /* Doesn't want IPI, wait for tick: */
- #define IRQ_WORK_LAZY		BIT(2)
-+/* Run hard IRQ context, even on RT */
-+#define IRQ_WORK_HARD_IRQ	BIT(3)
- 
- #define IRQ_WORK_CLAIMED	(IRQ_WORK_PENDING | IRQ_WORK_BUSY)
- 
---- a/include/linux/irqflags.h
-+++ b/include/linux/irqflags.h
-@@ -69,6 +69,17 @@ do {						\
- 			current->irq_config = 0;	\
- 	  } while (0)
- 
-+# define lockdep_irq_work_enter(__work)					\
-+	  do {								\
-+		  if (!(atomic_read(&__work->flags) & IRQ_WORK_HARD_IRQ))\
-+			current->irq_config = 1;			\
-+	  } while (0)
-+# define lockdep_irq_work_exit(__work)					\
-+	  do {								\
-+		  if (!(atomic_read(&__work->flags) & IRQ_WORK_HARD_IRQ))\
-+			current->irq_config = 0;			\
-+	  } while (0)
-+
- #else
- # define trace_hardirqs_on()		do { } while (0)
- # define trace_hardirqs_off()		do { } while (0)
-@@ -83,6 +94,8 @@ do {						\
- # define lockdep_softirq_exit()		do { } while (0)
- # define lockdep_hrtimer_enter(__hrtimer)		do { } while (0)
- # define lockdep_hrtimer_exit(__hrtimer)		do { } while (0)
-+# define lockdep_irq_work_enter(__work)		do { } while (0)
-+# define lockdep_irq_work_exit(__work)		do { } while (0)
- #endif
- 
- #if defined(CONFIG_IRQSOFF_TRACER) || \
---- a/kernel/irq_work.c
-+++ b/kernel/irq_work.c
-@@ -153,7 +153,9 @@ static void irq_work_run_list(struct lli
- 		 */
- 		flags = atomic_fetch_andnot(IRQ_WORK_PENDING, &work->flags);
- 
-+		lockdep_irq_work_enter(work);
- 		work->func(work);
-+		lockdep_irq_work_exit(work);
- 		/*
- 		 * Clear the BUSY bit and return to the free state if
- 		 * no-one else claimed it meanwhile.
---- a/kernel/rcu/tree.c
-+++ b/kernel/rcu/tree.c
-@@ -1113,6 +1113,7 @@ static int rcu_implicit_dynticks_qs(stru
- 		    !rdp->rcu_iw_pending && rdp->rcu_iw_gp_seq != rnp->gp_seq &&
- 		    (rnp->ffmask & rdp->grpmask)) {
- 			init_irq_work(&rdp->rcu_iw, rcu_iw_handler);
-+			atomic_set(&rdp->rcu_iw.flags, IRQ_WORK_HARD_IRQ);
- 			rdp->rcu_iw_pending = true;
- 			rdp->rcu_iw_gp_seq = rnp->gp_seq;
- 			irq_work_queue_on(&rdp->rcu_iw, rdp->cpu);
---- a/kernel/time/tick-sched.c
-+++ b/kernel/time/tick-sched.c
-@@ -245,6 +245,7 @@ static void nohz_full_kick_func(struct i
- 
- static DEFINE_PER_CPU(struct irq_work, nohz_full_kick_work) = {
- 	.func = nohz_full_kick_func,
-+	.flags = ATOMIC_INIT(IRQ_WORK_HARD_IRQ),
- };
+ #include <linux/rcupdate.h>
++#include <linux/sched/signal.h>
  
  /*
+  * rcuwait provides a way of blocking and waking up a single
+@@ -30,23 +31,30 @@ extern void rcuwait_wake_up(struct rcuwa
+  * The caller is responsible for locking around rcuwait_wait_event(),
+  * such that writes to @task are properly serialized.
+  */
+-#define rcuwait_wait_event(w, condition)				\
++#define rcuwait_wait_event(w, condition, state)				\
+ ({									\
++	int __ret = 0;							\
+ 	rcu_assign_pointer((w)->task, current);				\
+ 	for (;;) {							\
+ 		/*							\
+ 		 * Implicit barrier (A) pairs with (B) in		\
+ 		 * rcuwait_wake_up().					\
+ 		 */							\
+-		set_current_state(TASK_UNINTERRUPTIBLE);		\
++		set_current_state(state);				\
+ 		if (condition)						\
+ 			break;						\
+ 									\
++		if (signal_pending_state(state, current)) {		\
++			__ret = -EINTR;					\
++			break;						\
++		}							\
++									\
+ 		schedule();						\
+ 	}								\
+ 									\
+ 	WRITE_ONCE((w)->task, NULL);					\
+ 	__set_current_state(TASK_RUNNING);				\
++	__ret;								\
+ })
+ 
+ #endif /* _LINUX_RCUWAIT_H_ */
+--- a/kernel/locking/percpu-rwsem.c
++++ b/kernel/locking/percpu-rwsem.c
+@@ -162,7 +162,7 @@ void percpu_down_write(struct percpu_rw_
+ 	 */
+ 
+ 	/* Wait for all now active readers to complete. */
+-	rcuwait_wait_event(&sem->writer, readers_active_check(sem));
++	rcuwait_wait_event(&sem->writer, readers_active_check(sem), TASK_UNINTERRUPTIBLE);
+ }
+ EXPORT_SYMBOL_GPL(percpu_down_write);
+ 
 
 
