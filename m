@@ -6,29 +6,29 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5462C4332D
-	for <linux-pci@archiver.kernel.org>; Sat, 21 Mar 2020 11:37:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E8E3C43333
+	for <linux-pci@archiver.kernel.org>; Sat, 21 Mar 2020 11:37:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9509520658
-	for <linux-pci@archiver.kernel.org>; Sat, 21 Mar 2020 11:37:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3DA5E20658
+	for <linux-pci@archiver.kernel.org>; Sat, 21 Mar 2020 11:37:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728771AbgCULh3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 21 Mar 2020 07:37:29 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:38469 "EHLO
+        id S1728600AbgCULhl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 21 Mar 2020 07:37:41 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:38468 "EHLO
         Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727052AbgCULez (ORCPT
+        with ESMTP id S1727033AbgCULez (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Sat, 21 Mar 2020 07:34:55 -0400
 Received: from p5de0bf0b.dip0.t-ipconnect.de ([93.224.191.11] helo=nanos.tec.linutronix.de)
         by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
         (Exim 4.80)
         (envelope-from <tglx@linutronix.de>)
-        id 1jFcOW-0002EM-Vk; Sat, 21 Mar 2020 12:34:25 +0100
+        id 1jFcOR-0001zL-1n; Sat, 21 Mar 2020 12:34:19 +0100
 Received: from nanos.tec.linutronix.de (localhost [IPv6:::1])
-        by nanos.tec.linutronix.de (Postfix) with ESMTP id 1C9FE1040C6;
-        Sat, 21 Mar 2020 12:34:21 +0100 (CET)
-Message-Id: <20200321113242.228481202@linutronix.de>
+        by nanos.tec.linutronix.de (Postfix) with ESMTP id 36749104084;
+        Sat, 21 Mar 2020 12:34:18 +0100 (CET)
+Message-Id: <20200321113241.150783464@linutronix.de>
 User-Agent: quilt/0.65
-Date:   Sat, 21 Mar 2020 12:25:59 +0100
+Date:   Sat, 21 Mar 2020 12:25:48 +0100
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
@@ -38,15 +38,14 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Joel Fernandes <joel@joelfernandes.org>,
         Oleg Nesterov <oleg@redhat.com>,
         Davidlohr Bueso <dave@stgolabs.net>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        linux-pci@vger.kernel.org,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Felipe Balbi <balbi@kernel.org>, linux-usb@vger.kernel.org,
         Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-usb@vger.kernel.org, Logan Gunthorpe <logang@deltatee.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        linux-pci@vger.kernel.org, Felipe Balbi <balbi@kernel.org>,
         Darren Hart <dvhart@infradead.org>,
         Andy Shevchenko <andy@infradead.org>,
         platform-driver-x86@vger.kernel.org,
@@ -70,7 +69,7 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Jonathan Corbet <corbet@lwn.net>,
         Randy Dunlap <rdunlap@infradead.org>,
         Davidlohr Bueso <dbueso@suse.de>
-Subject: [patch V3 15/20] sched/swait: Prepare usage in completions
+Subject: [patch V3 04/20] orinoco_usb: Use the regular completion interfaces
 References: <20200321112544.878032781@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -85,62 +84,93 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Thomas Gleixner <tglx@linutronix.de>
 
-As a preparation to use simple wait queues for completions:
+The completion usage in this driver is interesting:
 
-  - Provide swake_up_all_locked() to support complete_all()
-  - Make __prepare_to_swait() public available
+  - it uses a magic complete function which according to the comment was
+    implemented by invoking complete() four times in a row because
+    complete_all() was not exported at that time.
 
-This is done to enable the usage of complete() within truly atomic contexts
-on a PREEMPT_RT enabled kernel.
+  - it uses an open coded wait/poll which checks completion:done. Only one wait
+    side (device removal) uses the regular wait_for_completion() interface.
 
+The rationale behind this is to prevent that wait_for_completion() consumes
+completion::done which would prevent that all waiters are woken. This is not
+necessary with complete_all() as that sets completion::done to UINT_MAX which
+is left unmodified by the woken waiters.
+
+Replace the magic complete function with complete_all() and convert the
+open coded wait/poll to regular completion interfaces.
+
+This changes the wait to exclusive wait mode. But that does not make any
+difference because the wakers use complete_all() which ignores the
+exclusive mode.
+
+Reported-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: linux-usb@vger.kernel.org
 ---
-V2: Add comment to swake_up_all_locked()
+V2: New patch to avoid conversion to swait functions later.
 ---
- kernel/sched/sched.h |    3 +++
- kernel/sched/swait.c |   15 ++++++++++++++-
- 2 files changed, 17 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intersil/orinoco/orinoco_usb.c |   21 ++++----------------
+ 1 file changed, 5 insertions(+), 16 deletions(-)
 
---- a/kernel/sched/sched.h
-+++ b/kernel/sched/sched.h
-@@ -2492,3 +2492,6 @@ static inline bool is_per_cpu_kthread(st
- 	return true;
+--- a/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
++++ b/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
+@@ -365,17 +365,6 @@ static struct request_context *ezusb_all
+ 	return ctx;
  }
- #endif
-+
-+void swake_up_all_locked(struct swait_queue_head *q);
-+void __prepare_to_swait(struct swait_queue_head *q, struct swait_queue *wait);
---- a/kernel/sched/swait.c
-+++ b/kernel/sched/swait.c
-@@ -32,6 +32,19 @@ void swake_up_locked(struct swait_queue_
- }
- EXPORT_SYMBOL(swake_up_locked);
  
-+/*
-+ * Wake up all waiters. This is an interface which is solely exposed for
-+ * completions and not for general usage.
-+ *
-+ * It is intentionally different from swake_up_all() to allow usage from
-+ * hard interrupt context and interrupt disabled regions.
-+ */
-+void swake_up_all_locked(struct swait_queue_head *q)
-+{
-+	while (!list_empty(&q->task_list))
-+		swake_up_locked(q);
-+}
-+
- void swake_up_one(struct swait_queue_head *q)
+-
+-/* Hopefully the real complete_all will soon be exported, in the mean
+- * while this should work. */
+-static inline void ezusb_complete_all(struct completion *comp)
+-{
+-	complete(comp);
+-	complete(comp);
+-	complete(comp);
+-	complete(comp);
+-}
+-
+ static void ezusb_ctx_complete(struct request_context *ctx)
  {
- 	unsigned long flags;
-@@ -69,7 +82,7 @@ void swake_up_all(struct swait_queue_hea
- }
- EXPORT_SYMBOL(swake_up_all);
+ 	struct ezusb_priv *upriv = ctx->upriv;
+@@ -409,7 +398,7 @@ static void ezusb_ctx_complete(struct re
  
--static void __prepare_to_swait(struct swait_queue_head *q, struct swait_queue *wait)
-+void __prepare_to_swait(struct swait_queue_head *q, struct swait_queue *wait)
- {
- 	wait->task = current;
- 	if (list_empty(&wait->task_list))
+ 			netif_wake_queue(dev);
+ 		}
+-		ezusb_complete_all(&ctx->done);
++		complete_all(&ctx->done);
+ 		ezusb_request_context_put(ctx);
+ 		break;
+ 
+@@ -419,7 +408,7 @@ static void ezusb_ctx_complete(struct re
+ 			/* This is normal, as all request contexts get flushed
+ 			 * when the device is disconnected */
+ 			err("Called, CTX not terminating, but device gone");
+-			ezusb_complete_all(&ctx->done);
++			complete_all(&ctx->done);
+ 			ezusb_request_context_put(ctx);
+ 			break;
+ 		}
+@@ -690,11 +679,11 @@ static void ezusb_req_ctx_wait(struct ez
+ 			 * get the chance to run themselves. So we make sure
+ 			 * that we don't sleep for ever */
+ 			int msecs = DEF_TIMEOUT * (1000 / HZ);
+-			while (!ctx->done.done && msecs--)
++
++			while (!try_wait_for_completion(&ctx->done) && msecs--)
+ 				udelay(1000);
+ 		} else {
+-			wait_event_interruptible(ctx->done.wait,
+-						 ctx->done.done);
++			wait_for_completion(&ctx->done);
+ 		}
+ 		break;
+ 	default:
 
 
