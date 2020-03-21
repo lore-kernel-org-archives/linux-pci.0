@@ -6,29 +6,29 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CF11C4332D
-	for <linux-pci@archiver.kernel.org>; Sat, 21 Mar 2020 11:37:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C8CCC4332D
+	for <linux-pci@archiver.kernel.org>; Sat, 21 Mar 2020 11:38:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5761E20722
-	for <linux-pci@archiver.kernel.org>; Sat, 21 Mar 2020 11:37:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7BB7020722
+	for <linux-pci@archiver.kernel.org>; Sat, 21 Mar 2020 11:38:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728522AbgCULez (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 21 Mar 2020 07:34:55 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:38431 "EHLO
+        id S1728501AbgCULey (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 21 Mar 2020 07:34:54 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:38423 "EHLO
         Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726834AbgCULey (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 21 Mar 2020 07:34:54 -0400
+        with ESMTP id S1726652AbgCULex (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 21 Mar 2020 07:34:53 -0400
 Received: from p5de0bf0b.dip0.t-ipconnect.de ([93.224.191.11] helo=nanos.tec.linutronix.de)
         by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
         (Exim 4.80)
         (envelope-from <tglx@linutronix.de>)
-        id 1jFcOU-0001zl-4v; Sat, 21 Mar 2020 12:34:22 +0100
+        id 1jFcOZ-0002Re-66; Sat, 21 Mar 2020 12:34:27 +0100
 Received: from nanos.tec.linutronix.de (localhost [IPv6:::1])
-        by nanos.tec.linutronix.de (Postfix) with ESMTP id 53DF71039FD;
-        Sat, 21 Mar 2020 12:34:20 +0100 (CET)
-Message-Id: <20200321113241.930037873@linutronix.de>
+        by nanos.tec.linutronix.de (Postfix) with ESMTP id 692651040CC;
+        Sat, 21 Mar 2020 12:34:22 +0100 (CET)
+Message-Id: <20200321113242.751182723@linutronix.de>
 User-Agent: quilt/0.65
-Date:   Sat, 21 Mar 2020 12:25:56 +0100
+Date:   Sat, 21 Mar 2020 12:26:04 +0100
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
@@ -38,10 +38,6 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Joel Fernandes <joel@joelfernandes.org>,
         Oleg Nesterov <oleg@redhat.com>,
         Davidlohr Bueso <dave@stgolabs.net>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Geoff Levand <geoff@infradead.org>,
-        linuxppc-dev@lists.ozlabs.org,
         Logan Gunthorpe <logang@deltatee.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
@@ -66,11 +62,15 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         linux-hexagon@vger.kernel.org, Tony Luck <tony.luck@intel.com>,
         Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org,
         Michal Simek <monstr@monstr.eu>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Geoff Levand <geoff@infradead.org>,
+        linuxppc-dev@lists.ozlabs.org,
         "Paul E . McKenney" <paulmck@kernel.org>,
         Jonathan Corbet <corbet@lwn.net>,
         Randy Dunlap <rdunlap@infradead.org>,
         Davidlohr Bueso <dbueso@suse.de>
-Subject: [patch V3 12/20] powerpc/ps3: Convert half completion to rcuwait
+Subject: [patch V3 20/20] lockdep: Add posixtimer context tracing bits
 References: <20200321112544.878032781@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -83,97 +83,77 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Thomas Gleixner <tglx@linutronix.de>
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
-The PS3 notification interrupt and kthread use a hacked up completion to
-communicate. Since we're wanting to change the completion implementation and
-this is abuse anyway, replace it with a simple rcuwait since there is only ever
-the one waiter.
+Splitting run_posix_cpu_timers() into two parts is work in progress which
+is stuck on other entry code related problems. The heavy lifting which
+involves locking of sighand lock will be moved into task context so the
+necessary execution time is burdened on the task and not on interrupt
+context.
 
-AFAICT the kthread uses TASK_INTERRUPTIBLE to not increase loadavg, kthreads
-cannot receive signals by default and this one doesn't look different. Use
-TASK_IDLE instead.
+Until this work completes lockdep with the spinlock nesting rules enabled
+would emit warnings for this known context.
 
-Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
+Prevent it by setting "->irq_config = 1" for the invocation of
+run_posix_cpu_timers() so lockdep does not complain when sighand lock is
+acquried. This will be removed once the split is completed.
+
+Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Michael Ellerman <mpe@ellerman.id.au>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Geoff Levand <geoff@infradead.org>
-Cc: linuxppc-dev@lists.ozlabs.org
 ---
-V3: Folded the init fix from bigeasy
-V2: New patch to avoid the magic completion wait variant
----
- arch/powerpc/platforms/ps3/device-init.c |   18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ include/linux/irqflags.h       |   12 ++++++++++++
+ kernel/time/posix-cpu-timers.c |    6 +++++-
+ 2 files changed, 17 insertions(+), 1 deletion(-)
 
---- a/arch/powerpc/platforms/ps3/device-init.c
-+++ b/arch/powerpc/platforms/ps3/device-init.c
-@@ -13,6 +13,7 @@
- #include <linux/init.h>
- #include <linux/slab.h>
- #include <linux/reboot.h>
-+#include <linux/rcuwait.h>
+--- a/include/linux/irqflags.h
++++ b/include/linux/irqflags.h
+@@ -69,6 +69,16 @@ do {						\
+ 			current->irq_config = 0;	\
+ 	  } while (0)
  
- #include <asm/firmware.h>
- #include <asm/lv1call.h>
-@@ -670,7 +671,8 @@ struct ps3_notification_device {
- 	spinlock_t lock;
- 	u64 tag;
- 	u64 lv1_status;
--	struct completion done;
-+	struct rcuwait wait;
-+	bool done;
- };
- 
- enum ps3_notify_type {
-@@ -712,7 +714,8 @@ static irqreturn_t ps3_notification_inte
- 		pr_debug("%s:%u: completed, status 0x%llx\n", __func__,
- 			 __LINE__, status);
- 		dev->lv1_status = status;
--		complete(&dev->done);
-+		dev->done = true;
-+		rcuwait_wake_up(&dev->wait);
- 	}
- 	spin_unlock(&dev->lock);
- 	return IRQ_HANDLED;
-@@ -725,12 +728,12 @@ static int ps3_notification_read_write(s
- 	unsigned long flags;
- 	int res;
- 
--	init_completion(&dev->done);
- 	spin_lock_irqsave(&dev->lock, flags);
- 	res = write ? lv1_storage_write(dev->sbd.dev_id, 0, 0, 1, 0, lpar,
- 					&dev->tag)
- 		    : lv1_storage_read(dev->sbd.dev_id, 0, 0, 1, 0, lpar,
- 				       &dev->tag);
-+	dev->done = false;
- 	spin_unlock_irqrestore(&dev->lock, flags);
- 	if (res) {
- 		pr_err("%s:%u: %s failed %d\n", __func__, __LINE__, op, res);
-@@ -738,14 +741,10 @@ static int ps3_notification_read_write(s
- 	}
- 	pr_debug("%s:%u: notification %s issued\n", __func__, __LINE__, op);
- 
--	res = wait_event_interruptible(dev->done.wait,
--				       dev->done.done || kthread_should_stop());
-+	rcuwait_wait_event(&dev->wait, dev->done || kthread_should_stop(), TASK_IDLE);
++# define lockdep_posixtimer_enter()				\
++	  do {							\
++		  current->irq_config = 1;			\
++	  } while (0)
 +
- 	if (kthread_should_stop())
- 		res = -EINTR;
--	if (res) {
--		pr_debug("%s:%u: interrupted %s\n", __func__, __LINE__, op);
--		return res;
--	}
++# define lockdep_posixtimer_exit()				\
++	  do {							\
++		  current->irq_config = 0;			\
++	  } while (0)
++
+ # define lockdep_irq_work_enter(__work)					\
+ 	  do {								\
+ 		  if (!(atomic_read(&__work->flags) & IRQ_WORK_HARD_IRQ))\
+@@ -94,6 +104,8 @@ do {						\
+ # define lockdep_softirq_exit()		do { } while (0)
+ # define lockdep_hrtimer_enter(__hrtimer)		do { } while (0)
+ # define lockdep_hrtimer_exit(__hrtimer)		do { } while (0)
++# define lockdep_posixtimer_enter()		do { } while (0)
++# define lockdep_posixtimer_exit()		do { } while (0)
+ # define lockdep_irq_work_enter(__work)		do { } while (0)
+ # define lockdep_irq_work_exit(__work)		do { } while (0)
+ #endif
+--- a/kernel/time/posix-cpu-timers.c
++++ b/kernel/time/posix-cpu-timers.c
+@@ -1126,8 +1126,11 @@ void run_posix_cpu_timers(void)
+ 	if (!fastpath_timer_check(tsk))
+ 		return;
  
- 	if (dev->lv1_status) {
- 		pr_err("%s:%u: %s not completed, status 0x%llx\n", __func__,
-@@ -810,6 +809,7 @@ static int ps3_probe_thread(void *data)
+-	if (!lock_task_sighand(tsk, &flags))
++	lockdep_posixtimer_enter();
++	if (!lock_task_sighand(tsk, &flags)) {
++		lockdep_posixtimer_exit();
+ 		return;
++	}
+ 	/*
+ 	 * Here we take off tsk->signal->cpu_timers[N] and
+ 	 * tsk->cpu_timers[N] all the timers that are firing, and
+@@ -1169,6 +1172,7 @@ void run_posix_cpu_timers(void)
+ 			cpu_timer_fire(timer);
+ 		spin_unlock(&timer->it_lock);
  	}
++	lockdep_posixtimer_exit();
+ }
  
- 	spin_lock_init(&dev.lock);
-+	rcuwait_init(&dev.wait);
- 
- 	res = request_irq(irq, ps3_notification_interrupt, 0,
- 			  "ps3_notification", &dev);
+ /*
 
