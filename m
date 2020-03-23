@@ -2,86 +2,74 @@ Return-Path: <SRS0=7zJh=5I=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A195CC4332B
-	for <linux-pci@archiver.kernel.org>; Mon, 23 Mar 2020 09:41:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A5A1C4332B
+	for <linux-pci@archiver.kernel.org>; Mon, 23 Mar 2020 09:45:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 767F22074D
-	for <linux-pci@archiver.kernel.org>; Mon, 23 Mar 2020 09:41:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4D65C2072D
+	for <linux-pci@archiver.kernel.org>; Mon, 23 Mar 2020 09:45:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727755AbgCWJlE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 23 Mar 2020 05:41:04 -0400
-Received: from mx.socionext.com ([202.248.49.38]:5862 "EHLO mx.socionext.com"
+        id S1727741AbgCWJpw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 23 Mar 2020 05:45:52 -0400
+Received: from mx.socionext.com ([202.248.49.38]:5938 "EHLO mx.socionext.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727695AbgCWJlD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 23 Mar 2020 05:41:03 -0400
-Received: from unknown (HELO kinkan-ex.css.socionext.com) ([172.31.9.52])
-  by mx.socionext.com with ESMTP; 23 Mar 2020 18:41:01 +0900
-Received: from mail.mfilter.local (m-filter-2 [10.213.24.62])
-        by kinkan-ex.css.socionext.com (Postfix) with ESMTP id 0EAA0180BCB;
-        Mon, 23 Mar 2020 18:41:02 +0900 (JST)
-Received: from 172.31.9.51 (172.31.9.51) by m-FILTER with ESMTP; Mon, 23 Mar 2020 18:41:01 +0900
+        id S1727737AbgCWJpw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 23 Mar 2020 05:45:52 -0400
+Received: from unknown (HELO iyokan-ex.css.socionext.com) ([172.31.9.54])
+  by mx.socionext.com with ESMTP; 23 Mar 2020 18:45:51 +0900
+Received: from mail.mfilter.local (m-filter-1 [10.213.24.61])
+        by iyokan-ex.css.socionext.com (Postfix) with ESMTP id A21DB60057;
+        Mon, 23 Mar 2020 18:45:51 +0900 (JST)
+Received: from 172.31.9.51 (172.31.9.51) by m-FILTER with ESMTP; Mon, 23 Mar 2020 18:45:51 +0900
 Received: from plum.e01.socionext.com (unknown [10.213.132.32])
-        by kinkan.css.socionext.com (Postfix) with ESMTP id 7B9B61A12AD;
-        Mon, 23 Mar 2020 18:41:01 +0900 (JST)
+        by kinkan.css.socionext.com (Postfix) with ESMTP id 564BB1A12AD;
+        Mon, 23 Mar 2020 18:45:51 +0900 (JST)
 From:   Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
+To:     Kishon Vijay Abraham I <kishon@ti.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Andrew Murray <andrew.murray@arm.com>,
-        Masahiro Yamada <yamada.masahiro@socionext.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>
-Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Masami Hiramatsu <masami.hiramatsu@linaro.org>,
-        Jassi Brar <jaswinder.singh@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-Subject: [PATCH v3 0/2] PCI: Add new UniPhier PCIe endpoint driver
-Date:   Mon, 23 Mar 2020 18:40:52 +0900
-Message-Id: <1584956454-8829-1-git-send-email-hayashi.kunihiko@socionext.com>
+Subject: [PATCH] PCI: endpoint: functions/pci-epf-test: Avoid DMA release when DMA is unsupported
+Date:   Mon, 23 Mar 2020 18:45:47 +0900
+Message-Id: <1584956747-9273-1-git-send-email-hayashi.kunihiko@socionext.com>
 X-Mailer: git-send-email 2.7.4
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This series adds PCIe endpoint controller driver for Socionext UniPhier
-SoCs. This controller is based on the DesignWare PCIe core.
+When unbinding pci_epf_test, pci_epf_test_clean_dma_chan() is called in
+pci_epf_test_unbind() even though epf_test->dma_supported is false.
+As a result, dma_release_channel() will occur null pointer access because
+dma_chan isn't set.
 
-This driver supports Pro5 SoC only, so Pro5 needs multiple clocks and
-resets in devicetree node.
+This avoids calling dma_release_channel() if epf_test->dma_supported
+is false.
 
-Changes since v2:
-- dt-bindings: Add clock-names, reset-names, and fix example for Pro5
-- Remove 'is_legacy' indicating that the compatible is for legacy SoC
-- Use pci_epc_features instead of defining uniphier_soc_data
-- Remove redundant register read access
-- Clean up return code on uniphier_add_pcie_ep()
-- typo: intx -> INTx
+Fixes: a1d105d4ab8e ("PCI: endpoint: functions/pci-epf-test: Add DMA support to transfer data")
+Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+---
+ drivers/pci/endpoint/functions/pci-epf-test.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Changes since v1:
-- dt-bindings: Add Reviewed-by line
-- Fix register value to set EP mode
-- Add error message when failed to get phy
-- Replace INTx assertion time with macro
-
-Kunihiko Hayashi (2):
-  dt-bindings: PCI: Add UniPhier PCIe endpoint controller description
-  PCI: uniphier: Add Socionext UniPhier Pro5 PCIe endpoint controller
-    driver
-
- .../devicetree/bindings/pci/uniphier-pcie-ep.txt   |  53 +++
- MAINTAINERS                                        |   4 +-
- drivers/pci/controller/dwc/Kconfig                 |  13 +-
- drivers/pci/controller/dwc/Makefile                |   1 +
- drivers/pci/controller/dwc/pcie-uniphier-ep.c      | 380 +++++++++++++++++++++
- 5 files changed, 447 insertions(+), 4 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/uniphier-pcie-ep.txt
- create mode 100644 drivers/pci/controller/dwc/pcie-uniphier-ep.c
-
+diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+index 3b4cf7e..8b4f136 100644
+--- a/drivers/pci/endpoint/functions/pci-epf-test.c
++++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+@@ -609,7 +609,8 @@ static void pci_epf_test_unbind(struct pci_epf *epf)
+ 	int bar;
+ 
+ 	cancel_delayed_work(&epf_test->cmd_handler);
+-	pci_epf_test_clean_dma_chan(epf_test);
++	if (epf_test->dma_supported)
++		pci_epf_test_clean_dma_chan(epf_test);
+ 	pci_epc_stop(epc);
+ 	for (bar = 0; bar < PCI_STD_NUM_BARS; bar++) {
+ 		epf_bar = &epf->bar[bar];
 -- 
 2.7.4
 
