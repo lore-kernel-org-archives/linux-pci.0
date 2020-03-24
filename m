@@ -4,38 +4,37 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92F55C41621
-	for <linux-pci@archiver.kernel.org>; Tue, 24 Mar 2020 18:28:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25D86C43331
+	for <linux-pci@archiver.kernel.org>; Tue, 24 Mar 2020 18:28:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6DBFA20714
-	for <linux-pci@archiver.kernel.org>; Tue, 24 Mar 2020 18:28:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0DD5F20714
+	for <linux-pci@archiver.kernel.org>; Tue, 24 Mar 2020 18:28:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727806AbgCXS2X (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 24 Mar 2020 14:28:23 -0400
-Received: from mx2.suse.de ([195.135.220.15]:46928 "EHLO mx2.suse.de"
+        id S1728045AbgCXS20 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 24 Mar 2020 14:28:26 -0400
+Received: from mx2.suse.de ([195.135.220.15]:46994 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727382AbgCXS2X (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 24 Mar 2020 14:28:23 -0400
+        id S1727942AbgCXS20 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 24 Mar 2020 14:28:26 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 4A537ABD1;
-        Tue, 24 Mar 2020 18:28:22 +0000 (UTC)
+        by mx2.suse.de (Postfix) with ESMTP id EE53FABF6;
+        Tue, 24 Mar 2020 18:28:24 +0000 (UTC)
 From:   Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
 To:     linux-kernel@vger.kernel.org,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        bcm-kernel-feedback-list@broadcom.com,
-        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
+        Mathias Nyman <mathias.nyman@intel.com>
 Cc:     linux-usb@vger.kernel.org, linux-rpi-kernel@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, gregkh@linuxfoundation.org,
-        tim.gover@raspberrypi.org, linux-pci@vger.kernel.org,
-        wahrenst@gmx.net, sergei.shtylyov@cogentembedded.com
-Subject: [PATCH v6 1/4] soc: bcm2835: Sync xHCI reset firmware property with downstream
-Date:   Tue, 24 Mar 2020 19:28:09 +0100
-Message-Id: <20200324182812.20420-2-nsaenzjulienne@suse.de>
+        linux-arm-kernel@lists.infradead.org,
+        bcm-kernel-feedback-list@broadcom.com, f.fainelli@gmail.com,
+        gregkh@linuxfoundation.org, tim.gover@raspberrypi.org,
+        linux-pci@vger.kernel.org, wahrenst@gmx.net,
+        sergei.shtylyov@cogentembedded.com,
+        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
+Subject: [PATCH v6 4/4] USB: pci-quirks: Add Raspberry Pi 4 quirk
+Date:   Tue, 24 Mar 2020 19:28:12 +0100
+Message-Id: <20200324182812.20420-5-nsaenzjulienne@suse.de>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200324182812.20420-1-nsaenzjulienne@suse.de>
 References: <20200324182812.20420-1-nsaenzjulienne@suse.de>
@@ -46,29 +45,89 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The property is needed in order to trigger VL805's firmware load. Note
-that there is a gap between the property introduced and the previous
-one. This is also the case downstream.
+On the Raspberry Pi 4, after a PCI reset, VL805's firmware may either be
+loaded directly from an EEPROM or, if not present, by the SoC's
+VideCore. Inform VideCore that VL805 was just reset.
+
+Also, as this creates a dependency between USB_PCI and VideoCore's
+firmware interface. Since USB_PCI can't be set as a module neither this
+should.
 
 Signed-off-by: Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-Reviewed-by: Florian Fainelli <f.fainelli@gmail.com>
----
- include/soc/bcm2835/raspberrypi-firmware.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/soc/bcm2835/raspberrypi-firmware.h b/include/soc/bcm2835/raspberrypi-firmware.h
-index 7800e12ee042..cc9cdbc66403 100644
---- a/include/soc/bcm2835/raspberrypi-firmware.h
-+++ b/include/soc/bcm2835/raspberrypi-firmware.h
-@@ -90,7 +90,7 @@ enum rpi_firmware_property_tag {
- 	RPI_FIRMWARE_SET_PERIPH_REG =                         0x00038045,
- 	RPI_FIRMWARE_GET_POE_HAT_VAL =                        0x00030049,
- 	RPI_FIRMWARE_SET_POE_HAT_VAL =                        0x00030050,
--
-+	RPI_FIRMWARE_NOTIFY_XHCI_RESET =                      0x00030058,
+---
+
+Changes since v5:
+ - Fix Kconfig issue with allmodconfig
+
+Changes since v4:
+ - Do not split up error message
+
+Changes since v3:
+ - Add more complete error message
+
+Changes since v1:
+ - Make RASPBERRYPI_FIRMWARE dependent on this quirk to make sure it
+   gets compiled when needed.
+
+ drivers/firmware/Kconfig      |  3 ++-
+ drivers/usb/host/pci-quirks.c | 16 ++++++++++++++++
+ 2 files changed, 18 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/firmware/Kconfig b/drivers/firmware/Kconfig
+index ea869addc89b..78ab2ad6d3f0 100644
+--- a/drivers/firmware/Kconfig
++++ b/drivers/firmware/Kconfig
+@@ -178,8 +178,9 @@ config ISCSI_IBFT
+ 	  Otherwise, say N.
  
- 	/* Dispmanx TAGS */
- 	RPI_FIRMWARE_FRAMEBUFFER_ALLOCATE =                   0x00040001,
+ config RASPBERRYPI_FIRMWARE
+-	tristate "Raspberry Pi Firmware Driver"
++	bool "Raspberry Pi Firmware Driver"
+ 	depends on BCM2835_MBOX
++	default USB_PCI
+ 	help
+ 	  This option enables support for communicating with the firmware on the
+ 	  Raspberry Pi.
+diff --git a/drivers/usb/host/pci-quirks.c b/drivers/usb/host/pci-quirks.c
+index beb2efa71341..0dc34668bb2a 100644
+--- a/drivers/usb/host/pci-quirks.c
++++ b/drivers/usb/host/pci-quirks.c
+@@ -16,6 +16,9 @@
+ #include <linux/export.h>
+ #include <linux/acpi.h>
+ #include <linux/dmi.h>
++
++#include <soc/bcm2835/raspberrypi-firmware.h>
++
+ #include "pci-quirks.h"
+ #include "xhci-ext-caps.h"
+ 
+@@ -1243,11 +1246,24 @@ static void quirk_usb_handoff_xhci(struct pci_dev *pdev)
+ 
+ static void quirk_usb_early_handoff(struct pci_dev *pdev)
+ {
++	int ret;
++
+ 	/* Skip Netlogic mips SoC's internal PCI USB controller.
+ 	 * This device does not need/support EHCI/OHCI handoff
+ 	 */
+ 	if (pdev->vendor == 0x184e)	/* vendor Netlogic */
+ 		return;
++
++	if (pdev->vendor == PCI_VENDOR_ID_VIA && pdev->device == 0x3483) {
++		ret = rpi_firmware_init_vl805(pdev);
++		if (ret) {
++			/* Firmware might be outdated, or something failed */
++			dev_warn(&pdev->dev,
++				 "Failed to load VL805's firmware: %d. Will continue to attempt to work, but bad things might happen. You should fix this...\n",
++				 ret);
++		}
++	}
++
+ 	if (pdev->class != PCI_CLASS_SERIAL_USB_UHCI &&
+ 			pdev->class != PCI_CLASS_SERIAL_USB_OHCI &&
+ 			pdev->class != PCI_CLASS_SERIAL_USB_EHCI &&
 -- 
 2.25.1
 
