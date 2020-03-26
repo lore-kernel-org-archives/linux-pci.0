@@ -2,109 +2,131 @@ Return-Path: <SRS0=laK2=5L=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FAKE_REPLY_C,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EECDBC43331
-	for <linux-pci@archiver.kernel.org>; Thu, 26 Mar 2020 15:28:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AB5FC2D0E8
+	for <linux-pci@archiver.kernel.org>; Thu, 26 Mar 2020 15:28:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C719720748
-	for <linux-pci@archiver.kernel.org>; Thu, 26 Mar 2020 15:28:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1585236501;
-	bh=hLWw99VkerwY2yvNvNHjCZISiqZQOoDJZcOBRfe2TY8=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=tMl028S2UF1Nu5HP53CLoP44DDO3Or1ewpg0CLyVoS+fdknTWx9cuYeSXS60BeF75
-	 HqeA0PNmznj5LGH2tiHnEBKhJRl2wRbc1nv6lowc8sHCABIaCNKGW1oQCFeEs7OIgv
-	 QywmEXWwguxmegEdR0Mta+6Tc5nHrZzMjiUHvbwY=
+	by mail.kernel.org (Postfix) with ESMTP id D557420775
+	for <linux-pci@archiver.kernel.org>; Thu, 26 Mar 2020 15:28:56 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="WzKBzPq5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727779AbgCZP2V (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 26 Mar 2020 11:28:21 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42544 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727670AbgCZP2V (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 26 Mar 2020 11:28:21 -0400
-Received: from localhost (mobile-166-175-186-165.mycingular.net [166.175.186.165])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 597882073E;
-        Thu, 26 Mar 2020 15:28:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1585236500;
-        bh=hLWw99VkerwY2yvNvNHjCZISiqZQOoDJZcOBRfe2TY8=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=mGsm3Gr2ex9ZW0K8sLYNNzmaZCh32ETgvfitHZ9j3QdIBeXXTuBf6KAVtCW84RTgt
-         cPktU98SYyevdT2cD/uwZwMwwfb231/43dRA8cjKbQSLNmd8XIZjn169HlB39rKUIQ
-         hnVZe2WnZCv9Ac1Y1WQJGnKGeTIH+a4h73qFtOB8=
-Date:   Thu, 26 Mar 2020 10:28:18 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Srinath Mannam <srinath.mannam@broadcom.com>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Roman Bacik <roman.bacik@broadcom.com>
-Subject: Re: [PATCH 2/3] PCI: iproc: fix invalidating PAXB address mapping
-Message-ID: <20200326152818.GA7634@google.com>
+        id S1728527AbgCZP24 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 26 Mar 2020 11:28:56 -0400
+Received: from fllv0015.ext.ti.com ([198.47.19.141]:51626 "EHLO
+        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728479AbgCZP2z (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 26 Mar 2020 11:28:55 -0400
+Received: from fllv0034.itg.ti.com ([10.64.40.246])
+        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 02QFSpZ1077498;
+        Thu, 26 Mar 2020 10:28:51 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1585236531;
+        bh=KaXzgZRMHuOhjbAAQamjPiN1/h7tkGtzd9HYl/NPv84=;
+        h=Subject:To:CC:References:From:Date:In-Reply-To;
+        b=WzKBzPq5BIEMcPIl/sz2eDp+dindhIqLnLHFWicvE1dmeemDrpgdT7Jwi3iekYw39
+         ccaMXwFDAKMoM0YgfhVBcVhVXgrsjH7AP9W+rKehkOufft37xcf8iHsZJPmwK5EfXy
+         Q/IZNkHIEGsbTlbW+UWk+ZdK3Fi+LxRjSmY4DBl0=
+Received: from DFLE106.ent.ti.com (dfle106.ent.ti.com [10.64.6.27])
+        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 02QFSpDK009076
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 26 Mar 2020 10:28:51 -0500
+Received: from DFLE114.ent.ti.com (10.64.6.35) by DFLE106.ent.ti.com
+ (10.64.6.27) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Thu, 26
+ Mar 2020 10:28:50 -0500
+Received: from fllv0040.itg.ti.com (10.64.41.20) by DFLE114.ent.ti.com
+ (10.64.6.35) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
+ Frontend Transport; Thu, 26 Mar 2020 10:28:50 -0500
+Received: from [10.250.132.187] (ileax41-snat.itg.ti.com [10.172.224.153])
+        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 02QFSkbQ096295;
+        Thu, 26 Mar 2020 10:28:47 -0500
+Subject: Re: [PATCH] PCI: dwc: pci-dra7xx: Fix MSI IRQ handling
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC:     Kishon Vijay Abraham I <kishon@ti.com>,
+        Andrew Murray <andrew.murray@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+References: <20200124163650.4457-1-vigneshr@ti.com>
+ <20200324150520.GA1174@e121166-lin.cambridge.arm.com>
+From:   Vignesh Raghavendra <vigneshr@ti.com>
+Message-ID: <42024104-deb0-42e1-5e77-6ca7df822963@ti.com>
+Date:   Thu, 26 Mar 2020 20:58:46 +0530
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.4.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1585206447-1363-3-git-send-email-srinath.mannam@broadcom.com>
-User-Agent: Mutt/1.12.2 (2019-09-21)
+In-Reply-To: <20200324150520.GA1174@e121166-lin.cambridge.arm.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[fixed Andrew's email addr]
 
-Change subject to match convention, e.g.,
 
-  PCI: iproc: Invalidate correct PAXB inbound windows
-
-On Thu, Mar 26, 2020 at 12:37:26PM +0530, Srinath Mannam wrote:
-> From: Roman Bacik <roman.bacik@broadcom.com>
+On 24/03/20 8:35 pm, Lorenzo Pieralisi wrote:
+[...]
+>> -static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
+>> +static void dra7xx_pcie_msi_irq_handler(struct irq_desc *desc)
+>>  {
+>> -	struct dra7xx_pcie *dra7xx = arg;
+>> -	struct dw_pcie *pci = dra7xx->pci;
+>> -	struct pcie_port *pp = &pci->pp;
+>> +	struct irq_chip *chip = irq_desc_get_chip(desc);
+>> +	struct dra7xx_pcie *dra7xx;
+>> +	struct dw_pcie *pci;
+>> +	struct pcie_port *pp;
+>>  	unsigned long reg;
+>>  	u32 virq, bit;
+>> +	int count = 0;
+>> +
+>> +	chained_irq_enter(chip, desc);
+>> +
+>> +	pp = irq_desc_get_handler_data(desc);
+>> +	pci = to_dw_pcie_from_pp(pp);
+>> +	dra7xx = to_dra7xx_pcie(pci);
+>>  
+>>  	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI);
+>> +	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI, reg);
+>>  
+>>  	switch (reg) {
+>>  	case MSI:
+>> -		dw_handle_msi_irq(pp);
+>> +		/**
+>> +		 * Need to make sure all MSI status bits read 0 before
+>> +		 * exiting. Else, new MSI IRQs are not registered by the
+>> +		 * wrapper. Have an upperbound for the loop and exit the
+>> +		 * IRQ in case of IRQ flood to avoid locking up system
+>> +		 * in interrupt context.
+>> +		 */
+>> +		while (dra7xx_pcie_handle_msi_irq(pp) && count < 1000)
+>> +			count++;
 > 
-> Second stage bootloader prior to Linux boot may use all inbound windows
-> including IARR1/IMAP1. We need to ensure all previous configuration of
-> inbound windows are invalidated during the initialization stage of the
-> Linux iProc PCIe driver. Add fix to invalidate IARR1/IMAP1 because it was
-> missed in previous patch.
+> Apologies for the delay in replying.
 > 
-> Fixes: 9415743e4c8a ("PCI: iproc: Invalidate PAXB address mapping")
-> Signed-off-by: Roman Bacik <roman.bacik@broadcom.com>
-> ---
->  drivers/pci/controller/pcie-iproc.c | 2 ++
->  1 file changed, 2 insertions(+)
+> Do you really need to call the function in a loop ? Can't the loop
+> be written inside the function ? It is not going to be any nicer
+> but I think it would make code easier to follow. Also, don't know
+> if you want to print a warning to signal a count overrun.
 > 
-> diff --git a/drivers/pci/controller/pcie-iproc.c b/drivers/pci/controller/pcie-iproc.c
-> index 6972ca4..e7f0d58 100644
-> --- a/drivers/pci/controller/pcie-iproc.c
-> +++ b/drivers/pci/controller/pcie-iproc.c
-> @@ -351,6 +351,8 @@ static const u16 iproc_pcie_reg_paxb_v2[IPROC_PCIE_MAX_NUM_REG] = {
->  	[IPROC_PCIE_OMAP3]		= 0xdf8,
->  	[IPROC_PCIE_IARR0]		= 0xd00,
->  	[IPROC_PCIE_IMAP0]		= 0xc00,
-> +	[IPROC_PCIE_IARR1]		= 0xd08,
-> +	[IPROC_PCIE_IMAP1]		= 0xd70,
+> I don't like this code at all but at least it is self-contained
+> so we may get it in this cycle.
+> 
 
-Wow, this is a little too subtle for my taste.
+I have posted v3 with loop moved inside dra7xx_pcie_handle_msi_irq() and
+also added dev_warn on overrun. Thanks!
 
-9415743e4c8a added this loop:
+Regard
+Vignesh
 
-  +   for (idx = 0; idx < ib->nr_regions; idx++) {
-  +       iproc_pcie_write_reg(pcie,
-  +                            MAP_REG(IPROC_PCIE_IARR0, idx), 0);
+[...]
 
-This patch doesn't change the loop or the limit, so I *guess*
-previously we invalidated IPROC_PCIE_IARR0, IPROC_PCIE_IARR2, ...,
-(skipping IPROC_PCIE_IARR1), and now we will invalidate
-IPROC_PCIE_IARR0, IPROC_PCIE_IARR1, ... instead?
-
->  	[IPROC_PCIE_IARR2]		= 0xd10,
->  	[IPROC_PCIE_IMAP2]		= 0xcc0,
->  	[IPROC_PCIE_IARR3]		= 0xe00,
