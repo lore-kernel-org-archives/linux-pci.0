@@ -2,61 +2,53 @@ Return-Path: <SRS0=laK2=5L=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 991DAC43331
-	for <linux-pci@archiver.kernel.org>; Thu, 26 Mar 2020 14:37:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7449C43331
+	for <linux-pci@archiver.kernel.org>; Thu, 26 Mar 2020 14:51:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 72655206F8
-	for <linux-pci@archiver.kernel.org>; Thu, 26 Mar 2020 14:37:27 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Hj+GXptt"
+	by mail.kernel.org (Postfix) with ESMTP id 8034D2077D
+	for <linux-pci@archiver.kernel.org>; Thu, 26 Mar 2020 14:51:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1585234316;
+	bh=p3zv7d1KVn/lO0YWV+VHW3tOP5OSRao+l1dqyJw8S5c=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:List-ID:From;
+	b=tZm0F21PV+MwldsLoddVDdp7c4OX6UrbspHPLwsUmGX5uwSjq79hOGOi/6T+NvnTB
+	 qbO6TEhSjP2muyjulIIDFZ3iUcCPKppOWi8MvxDUHSp0kC+MmFHQ36c6506Y8co2ak
+	 YUrnp8G2mu3+EtO8hnIt/JH800ZkQC17BJM2k/Z4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727901AbgCZOhY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 26 Mar 2020 10:37:24 -0400
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:33179 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726270AbgCZOhY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 26 Mar 2020 10:37:24 -0400
-Received: by mail-pf1-f196.google.com with SMTP id j1so2880714pfe.0;
-        Thu, 26 Mar 2020 07:37:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=xcJ9A36qE7fmwILM0GIjQcoBryZ8cQtpU3R/gSX0bfw=;
-        b=Hj+GXpttQEF8xznQ2rVTuxma2i7jZmuN8GRAQn6sIWhgC4o4xDnW7wFusMuV8o2LbI
-         bay9pVfypJf/YhGlOzXqqT5xjCRnkIuIUkIZnegDauwEobqVXXbuuS6POybxMyvZl4be
-         ScLmbSsGBuJNWfiM60rxOUXURna7W/yXDmnthc8oqsqvzSiMWXGv5fUcrpvpz4bC+Oev
-         oLhZEwB8u4qNCz/t8D0bfjrMv3fhzNvzjiAwry9NZO8dtYlB/srOL0h6f9GJB6O/d1jZ
-         3OQ77yfP4NQ6Z7AlwktCS3ZTyeQpDKHnMBqewIgpL00cuSh78Ut0k9iYl0hOdolwR6P2
-         xZdw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=xcJ9A36qE7fmwILM0GIjQcoBryZ8cQtpU3R/gSX0bfw=;
-        b=d88pJOOfcCfvIuQNqp/3JuPV7vJgkxEzbvtJ9fiWMi9bPBYybTN47l2P3+/pgMrysG
-         zjTMdhCDb/NT12iwadTOzoOYqwYQud4fipuyViRIfxYcDawBTEkrWsWlnEeQS2631glb
-         MbG63iaTt4VU38zwI2FUxasN/fTYW1S6uL7elyIYrrkRN3vW/3/xNhT4yulqdvgQMPjb
-         PNpP/aK1dqqCE7lgr7+yj6zC+ztuV49ZYtY614iabZjqxcbo75q9zYRnICYpBql94FH5
-         erVjcb1Pouh+L2rcDGUJvf4RoXQyppUZLSxUdpiO2+X8Yqeru82RmG/rXWcPKNOQX0k6
-         XGtw==
-X-Gm-Message-State: ANhLgQ2lfDYYciacU0YJ+6y+kB6FOCeBhlSGA8/2PakTCiWnhBvfF1ca
-        ROBa9h41SKXd9K9tlm6n8GiOAHdmIlcfHALUxwM=
-X-Google-Smtp-Source: ADFU+vsONeD2TN2CDHUgnVhWVwIcnrhd9OmNhte1Zfml9aKMC9gE+W9zgd27TYvKJYDgdxOIM0foGkFZx1J2fO3yIo0=
-X-Received: by 2002:aa7:8149:: with SMTP id d9mr9058526pfn.170.1585233442792;
- Thu, 26 Mar 2020 07:37:22 -0700 (PDT)
+        id S1728335AbgCZOvu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 26 Mar 2020 10:51:50 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54174 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728187AbgCZOvt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 26 Mar 2020 10:51:49 -0400
+Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id B4B692078B;
+        Thu, 26 Mar 2020 14:51:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1585234308;
+        bh=p3zv7d1KVn/lO0YWV+VHW3tOP5OSRao+l1dqyJw8S5c=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=UfsHThTwiuyFpUiJWXxGs/wTECR1yUDEUwZeUTA2UgRjdb0qc8HlCXpU+grRqkEX+
+         4vCdmgFDaTGdVbk12d337OwrZ3f4gSrZwsyZKeP035fc56LSdHycfVOiwchkhrstpo
+         gDmnuk9+ZUi6BAvV0Od2OLVT3LtF5O+7W3kcSKjc=
+Received: from disco-boy.misterjones.org ([51.254.78.96] helo=www.loen.fr)
+        by disco-boy.misterjones.org with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.92)
+        (envelope-from <maz@kernel.org>)
+        id 1jHTrH-00FuHQ-21; Thu, 26 Mar 2020 14:51:47 +0000
 MIME-Version: 1.0
-References: <1585205326-25326-1-git-send-email-srinath.mannam@broadcom.com> <1585205326-25326-3-git-send-email-srinath.mannam@broadcom.com>
-In-Reply-To: <1585205326-25326-3-git-send-email-srinath.mannam@broadcom.com>
-From:   Andy Shevchenko <andy.shevchenko@gmail.com>
-Date:   Thu, 26 Mar 2020 16:37:15 +0200
-Message-ID: <CAHp75VfUCwcXN_OF-tq1wuiCFdicMMEpJpWNccQT=6cv0DNnWQ@mail.gmail.com>
-Subject: Re: [PATCH v5 2/6] PCI: iproc: Add INTx support with better modeling
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Thu, 26 Mar 2020 14:51:47 +0000
+From:   Marc Zyngier <maz@kernel.org>
 To:     Srinath Mannam <srinath.mannam@broadcom.com>
 Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -64,83 +56,126 @@ Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Ray Jui <rjui@broadcom.com>, Rob Herring <robh+dt@kernel.org>,
         Andrew Murray <andrew.murray@arm.com>,
         Mark Rutland <mark.rutland@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
-        linux-pci@vger.kernel.org, devicetree <devicetree@vger.kernel.org>,
-        linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Ray Jui <ray.jui@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Arnd Bergmann <arnd@arndb.de>, devicetree@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Ray Jui <ray.jui@broadcom.com>,
+        bcm-kernel-feedback-list@broadcom.com,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v5 1/6] dt-bindings: pci: Update iProc PCI binding for
+ INTx support
+In-Reply-To: <1585205326-25326-2-git-send-email-srinath.mannam@broadcom.com>
+References: <1585205326-25326-1-git-send-email-srinath.mannam@broadcom.com>
+ <1585205326-25326-2-git-send-email-srinath.mannam@broadcom.com>
+Message-ID: <54b2c749ec398e1c63880a7945f633ab@kernel.org>
+X-Sender: maz@kernel.org
+User-Agent: Roundcube Webmail/1.3.10
+X-SA-Exim-Connect-IP: 51.254.78.96
+X-SA-Exim-Rcpt-To: srinath.mannam@broadcom.com, lorenzo.pieralisi@arm.com, bhelgaas@google.com, f.fainelli@gmail.com, rjui@broadcom.com, robh+dt@kernel.org, andrew.murray@arm.com, mark.rutland@arm.com, andy.shevchenko@gmail.com, arnd@arndb.de, devicetree@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, ray.jui@broadcom.com, bcm-kernel-feedback-list@broadcom.com, linux-arm-kernel@lists.infradead.org
+X-SA-Exim-Mail-From: maz@kernel.org
+X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Mar 26, 2020 at 8:49 AM Srinath Mannam
-<srinath.mannam@broadcom.com> wrote:
->
+Srinath,
+
+Please note that Andrew's email address as changed (see the MAINTAINERS 
+file).
+
+On 2020-03-26 06:48, Srinath Mannam wrote:
 > From: Ray Jui <ray.jui@broadcom.com>
->
-> Add PCIe legacy interrupt INTx support to the iProc PCIe driver by
-> modeling it with its own IRQ domain. All 4 interrupts INTA, INTB, INTC,
-> INTD share the same interrupt line connected to the GIC in the system,
-> while the status of each INTx can be obtained through the INTX CSR
-> register.
-
-...
-> +       val &= ~(BIT(irqd_to_hwirq(d)));
-
-Too many parentheses.
-
-...
-
-> +       val |= (BIT(irqd_to_hwirq(d)));
-
-Ditto.
-
-...
-
-> +       /* go through INTx A, B, C, D until all interrupts are handled */
-> +       do {
-> +               status = iproc_pcie_read_reg(pcie, IPROC_PCIE_INTX_CSR);
-> +               for_each_set_bit(bit, &status, PCI_NUM_INTX) {
-> +                       virq = irq_find_mapping(pcie->irq_domain, bit);
-> +                       if (virq)
-> +                               generic_handle_irq(virq);
-
-> +                       else
-> +                               dev_err(dev, "unexpected INTx%u\n", bit);
-
-Any guarantee it will be no storm of undesired messages here?
-
-> +               }
-
-> +       } while ((status & SYS_RC_INTX_MASK) != 0);
-
-' != 0' part is not needed.
-
-If there an interrupt storm the handler will never end, right?
-Is it the idea by design?
-
-...
-
-> +       node = of_get_compatible_child(dev->of_node, "brcm,iproc-intc");
-> +       if (node)
-> +               pcie->irq = of_irq_get(node, 0);
+> 
+> Update the iProc PCIe binding document for better modeling of the 
+> legacy
+> interrupt (INTx) support.
+> 
+> Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+> Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
+> Reviewed-by: Rob Herring <robh@kernel.org>
+> ---
+>  .../devicetree/bindings/pci/brcm,iproc-pcie.txt    | 48 
+> ++++++++++++++++++----
+>  1 file changed, 41 insertions(+), 7 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+> b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+> index df065aa..d3f833a 100644
+> --- a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+> @@ -13,9 +13,6 @@ controller, used in Stingray
+>    PAXB-based root complex is used for external endpoint devices. 
+> PAXC-based
+>  root complex is connected to emulated endpoint devices internal to the 
+> ASIC
+>  - reg: base address and length of the PCIe controller I/O register 
+> space
+> -- #interrupt-cells: set to <1>
+> -- interrupt-map-mask and interrupt-map, standard PCI properties to 
+> define the
+> -  mapping of the PCIe interface to interrupt numbers
+>  - linux,pci-domain: PCI domain ID. Should be unique for each host 
+> controller
+>  - bus-range: PCI bus numbers covered
+>  - #address-cells: set to <3>
+> @@ -41,6 +38,21 @@ Required:
+>  - brcm,pcie-ob-axi-offset: The offset from the AXI address to the 
+> internal
+>  address used by the iProc PCIe core (not the PCIe address)
+> 
+> +Legacy interrupt (INTx) support (optional):
 > +
-> +       if (!node || pcie->irq <= 0)
-> +               return 0;
+> +Note INTx is for PAXB only.
+> +- interrupt-map-mask and interrupt-map, standard PCI properties to 
+> define
+> +the mapping of the PCIe interface to interrupt numbers
+> +
+> +In addition, a sub-node that describes the legacy interrupt controller 
+> built
+> +into the PCIe controller.
+> +This sub-node must have the following properties:
+> + - compatible: must be "brcm,iproc-intc"
+> + - interrupt-controller: claims itself as an interrupt controller for 
+> INTx
+> + - #interrupt-cells: set to <1>
+> + - interrupts: interrupt line wired to the generic GIC for INTx 
+> support
+> + - interrupt-parent: Phandle to the parent interrupt controller
+> +
+>  MSI support (optional):
+> 
+>  For older platforms without MSI integrated in the GIC, iProc PCIe core 
+> provides
+> @@ -77,8 +89,11 @@ Example:
+>  		reg = <0x18012000 0x1000>;
+> 
+>  		#interrupt-cells = <1>;
+> -		interrupt-map-mask = <0 0 0 0>;
+> -		interrupt-map = <0 0 0 0 &gic GIC_SPI 100 IRQ_TYPE_NONE>;
+> +		interrupt-map-mask = <0 0 0 7>;
+> +		interrupt-map = <0 0 0 1 &pcie0_intc 0>,
+> +				<0 0 0 2 &pcie0_intc 1>,
+> +				<0 0 0 3 &pcie0_intc 2>,
+> +				<0 0 0 4 &pcie0_intc 3>;
+> 
+>  		linux,pci-domain = <0>;
+> 
+> @@ -98,6 +113,14 @@ Example:
+> 
+>  		msi-parent = <&msi0>;
+> 
+> +		pcie0_intc: interrupt-controller {
+> +			compatible = "brcm,iproc-intc";
+> +			interrupt-controller;
+> +			#interrupt-cells = <1>;
+> +			interrupt-parent = <&gic>;
+> +			interrupts = <GIC_SPI 100 IRQ_TYPE_NONE>;
 
-Perhaps
-       node = of_get_compatible_child(dev->of_node, "brcm,iproc-intc");
-       if (!node)
-               return 0;
+There is no such thing as IRQ_TYPE_NONE in the GIC binding.
+Please update this to the right trigger type (which better
+be level high...)
 
-       pcie->irq = of_irq_get(node, 0);
-       if (pcie->irq <= 0)
-              return 0;
-?
-
+         M.
 -- 
-With Best Regards,
-Andy Shevchenko
+Jazz is not dead. It just smells funny...
