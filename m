@@ -2,90 +2,69 @@ Return-Path: <SRS0=7Auq=5M=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 130BAC2D0EF
-	for <linux-pci@archiver.kernel.org>; Fri, 27 Mar 2020 12:15:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F67DC2D0E5
+	for <linux-pci@archiver.kernel.org>; Fri, 27 Mar 2020 13:48:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DE138207FF
-	for <linux-pci@archiver.kernel.org>; Fri, 27 Mar 2020 12:15:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 80CE7208E4
+	for <linux-pci@archiver.kernel.org>; Fri, 27 Mar 2020 13:48:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727185AbgC0MP1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 27 Mar 2020 08:15:27 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:53204 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726661AbgC0MP0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Mar 2020 08:15:26 -0400
-Received: from bigeasy by Galois.linutronix.de with local (Exim 4.80)
-        (envelope-from <bigeasy@linutronix.de>)
-        id 1jHnsx-0005QZ-2Y; Fri, 27 Mar 2020 13:14:51 +0100
-Date:   Fri, 27 Mar 2020 13:14:51 +0100
-From:   Sebastian Siewior <bigeasy@linutronix.de>
-To:     Felipe Balbi <balbi@kernel.org>
-Cc:     Thomas Gleixner <tglx@linutronix.de>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Ingo Molnar <mingo@kernel.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Joel Fernandes <joel@joelfernandes.org>,
-        Oleg Nesterov <oleg@redhat.com>,
-        Davidlohr Bueso <dave@stgolabs.net>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-usb@vger.kernel.org, Logan Gunthorpe <logang@deltatee.com>,
+        id S1726333AbgC0NsR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 27 Mar 2020 09:48:17 -0400
+Received: from youngberry.canonical.com ([91.189.89.112]:55185 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726275AbgC0NsR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Mar 2020 09:48:17 -0400
+Received: from 1.general.cking.uk.vpn ([10.172.193.212] helo=localhost)
+        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.86_2)
+        (envelope-from <colin.king@canonical.com>)
+        id 1jHpJ6-0004sp-Mo; Fri, 27 Mar 2020 13:45:56 +0000
+From:   Colin King <colin.king@canonical.com>
+To:     Ley Foon Tan <ley.foon.tan@intel.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Andrew Murray <amurray@thegoodpenguin.co.uk>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        linux-pci@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Darren Hart <dvhart@infradead.org>,
-        Andy Shevchenko <andy@infradead.org>,
-        platform-driver-x86@vger.kernel.org,
-        Zhang Rui <rui.zhang@intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        linux-pm@vger.kernel.org, Len Brown <lenb@kernel.org>,
-        linux-acpi@vger.kernel.org, kbuild test robot <lkp@intel.com>,
-        Nick Hu <nickhu@andestech.com>,
-        Greentime Hu <green.hu@gmail.com>,
-        Vincent Chen <deanbo422@gmail.com>,
-        Guo Ren <guoren@kernel.org>, linux-csky@vger.kernel.org,
-        Brian Cain <bcain@codeaurora.org>,
-        linux-hexagon@vger.kernel.org, Tony Luck <tony.luck@intel.com>,
-        Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org,
-        Michal Simek <monstr@monstr.eu>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Geoff Levand <geoff@infradead.org>,
-        linuxppc-dev@lists.ozlabs.org,
-        "Paul E . McKenney" <paulmck@kernel.org>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Randy Dunlap <rdunlap@infradead.org>,
-        Davidlohr Bueso <dbueso@suse.de>
-Subject: Re: [patch V3 03/20] usb: gadget: Use completion interface instead
- of open coding it
-Message-ID: <20200327121451.pxwewr46urt6dmhe@linutronix.de>
-References: <20200321112544.878032781@linutronix.de>
- <20200321113241.043380271@linutronix.de>
- <87blokde3e.fsf@kernel.org>
+        rfi@lists.rocketboards.org, linux-pci@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] PCI: altera: clean up indentation issue on a return statement
+Date:   Fri, 27 Mar 2020 13:45:56 +0000
+Message-Id: <20200327134556.265411-1-colin.king@canonical.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <87blokde3e.fsf@kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 2020-03-25 10:37:57 [+0200], Felipe Balbi wrote:
-> Do you want to carry it via your tree? If so:
+From: Colin Ian King <colin.king@canonical.com>
 
-We would like to do so.
+A return statment is indented incorrectly, remove extraneous space.
 
-> Acked-by: Felipe Balbi <balbi@kernel.org>
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/pci/controller/pcie-altera.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thank you.
+diff --git a/drivers/pci/controller/pcie-altera.c b/drivers/pci/controller/pcie-altera.c
+index b447c3e4abad..24cb1c331058 100644
+--- a/drivers/pci/controller/pcie-altera.c
++++ b/drivers/pci/controller/pcie-altera.c
+@@ -193,7 +193,7 @@ static bool altera_pcie_valid_device(struct altera_pcie *pcie,
+ 	if (bus->number == pcie->root_bus_nr && dev > 0)
+ 		return false;
+ 
+-	 return true;
++	return true;
+ }
+ 
+ static int tlp_read_packet(struct altera_pcie *pcie, u32 *value)
+-- 
+2.25.1
 
-> Otherwise, let me know and I'll pick this patch.
-
-Sebastian
