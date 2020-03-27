@@ -2,50 +2,49 @@ Return-Path: <SRS0=7Auq=5M=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3FB8C2D0E8
-	for <linux-pci@archiver.kernel.org>; Fri, 27 Mar 2020 10:47:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DD84C43331
+	for <linux-pci@archiver.kernel.org>; Fri, 27 Mar 2020 10:47:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B01EA20714
-	for <linux-pci@archiver.kernel.org>; Fri, 27 Mar 2020 10:47:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 20E9D20714
+	for <linux-pci@archiver.kernel.org>; Fri, 27 Mar 2020 10:47:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="aferkor/"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="G3IsZgl1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726284AbgC0Krl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 27 Mar 2020 06:47:41 -0400
-Received: from lelv0142.ext.ti.com ([198.47.23.249]:58422 "EHLO
+        id S1726804AbgC0Krr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 27 Mar 2020 06:47:47 -0400
+Received: from lelv0142.ext.ti.com ([198.47.23.249]:58438 "EHLO
         lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726165AbgC0Krk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Mar 2020 06:47:40 -0400
-Received: from lelv0266.itg.ti.com ([10.180.67.225])
-        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 02RAlXB2117631;
-        Fri, 27 Mar 2020 05:47:33 -0500
+        with ESMTP id S1726165AbgC0Krr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Mar 2020 06:47:47 -0400
+Received: from fllv0035.itg.ti.com ([10.64.41.0])
+        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 02RAleSF117640;
+        Fri, 27 Mar 2020 05:47:40 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1585306053;
-        bh=4njoQxq90QN3hHZRS5zql1ytyXJOR1pn085xcmSSb6M=;
-        h=From:To:CC:Subject:Date;
-        b=aferkor/Eq1MEH5773efv1Tq6H680KadTblZx1rM/mjie8JvsIQzkOzbn1Xg6iP6q
-         ovTXnOGrAWY28oSkTkF//4psiZvNryWOoRibuyx46mLHRCq8mbFdv9/axI0I+EJ1d2
-         rL54zV5Fhq+seYiySnBv/hVtWkzhkRkiuACPVA3E=
-Received: from DLEE104.ent.ti.com (dlee104.ent.ti.com [157.170.170.34])
-        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 02RAlXop113842
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 27 Mar 2020 05:47:33 -0500
-Received: from DLEE115.ent.ti.com (157.170.170.26) by DLEE104.ent.ti.com
- (157.170.170.34) with Microsoft SMTP Server (version=TLS1_2,
+        s=ti-com-17Q1; t=1585306060;
+        bh=Nz7JeIi4Dm/Ixg7bAHRn/fYPyi7q2qtBRcaV3XEapOI=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References;
+        b=G3IsZgl1w9qZW3PaCOu7cfsn1AxxxLggwnCapJkwU4pQuyLYonnqDNj0fdAZYNn+g
+         BdlHEncqhjj2WvhmIEZeoko7RBy5UOM6fXrnkcTC5ZQT921a4w2z4Od7O2n9qqcCdP
+         UmiSeA27LvmGljLn73TZ4GO/62xBEoBOBXI/eQrI=
+Received: from DFLE104.ent.ti.com (dfle104.ent.ti.com [10.64.6.25])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id 02RAleNE090655;
+        Fri, 27 Mar 2020 05:47:40 -0500
+Received: from DFLE108.ent.ti.com (10.64.6.29) by DFLE104.ent.ti.com
+ (10.64.6.25) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Fri, 27
- Mar 2020 05:47:33 -0500
-Received: from lelv0326.itg.ti.com (10.180.67.84) by DLEE115.ent.ti.com
- (157.170.170.26) with Microsoft SMTP Server (version=TLS1_2,
+ Mar 2020 05:47:40 -0500
+Received: from lelv0326.itg.ti.com (10.180.67.84) by DFLE108.ent.ti.com
+ (10.64.6.29) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
- Frontend Transport; Fri, 27 Mar 2020 05:47:33 -0500
+ Frontend Transport; Fri, 27 Mar 2020 05:47:40 -0500
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 02RAlT8o128190;
-        Fri, 27 Mar 2020 05:47:30 -0500
+        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 02RAlT8q128190;
+        Fri, 27 Mar 2020 05:47:37 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Tom Joseph <tjoseph@cadence.com>, Rob Herring <robh+dt@kernel.org>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -55,10 +54,12 @@ CC:     Bjorn Helgaas <bhelgaas@google.com>,
         Kishon Vijay Abraham I <kishon@ti.com>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
-Subject: [PATCH 0/3] PCI: cadence: Deprecate inbound/outbound specific bindings
-Date:   Fri, 27 Mar 2020 16:17:24 +0530
-Message-ID: <20200327104727.4708-1-kishon@ti.com>
+Subject: [PATCH 2/3] PCI: cadence: Use "dma-ranges" instead of "cdns,no-bar-match-nbits" property
+Date:   Fri, 27 Mar 2020 16:17:26 +0530
+Message-ID: <20200327104727.4708-3-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200327104727.4708-1-kishon@ti.com>
+References: <20200327104727.4708-1-kishon@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
@@ -67,29 +68,54 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This series is a result of comments given by Rob Herring @ [1].
-Patch series changes the DT bindings and makes the corresponding driver
-changes.
+Cadence PCIe core dirver (host mode) uses "cdns,no-bar-match-nbits"
+property to configure the number of bits passed through from PCIe
+address to internal address in Inbound Address Translation register.
 
-[1] -> http://lore.kernel.org/r/20200219202700.GA21908@bogus
+However standard PCI dt-binding already defines "dma-ranges" to
+describe the address range accessible by PCIe controller. Parse
+"dma-ranges" property to configure the number of bits passed
+through from PCIe address to internal address in Inbound Address
+Translation register.
 
-Kishon Vijay Abraham I (3):
-  dt-bindings: PCI: cadence: Deprecate inbound/outbound specific
-    bindings
-  PCI: cadence: Use "dma-ranges" instead of "cdns,no-bar-match-nbits"
-    property
-  PCI: Cadence: Remove using "cdns,max-outbound-regions" DT property
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/controller/cadence/pcie-cadence-host.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
- .../bindings/pci/cdns,cdns-pcie-ep.yaml       |  2 +-
- .../bindings/pci/cdns,cdns-pcie-host.yaml     |  3 +--
- .../devicetree/bindings/pci/cdns-pcie-ep.yaml | 25 +++++++++++++++++++
- .../bindings/pci/cdns-pcie-host.yaml          | 10 ++++++++
- .../devicetree/bindings/pci/cdns-pcie.yaml    |  8 ------
- .../controller/cadence/pcie-cadence-host.c    | 17 +++++++------
- drivers/pci/controller/cadence/pcie-cadence.h |  2 --
- 7 files changed, 47 insertions(+), 20 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/cdns-pcie-ep.yaml
-
+diff --git a/drivers/pci/controller/cadence/pcie-cadence-host.c b/drivers/pci/controller/cadence/pcie-cadence-host.c
+index 9b1c3966414b..60f912a657b9 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence-host.c
++++ b/drivers/pci/controller/cadence/pcie-cadence-host.c
+@@ -206,8 +206,10 @@ int cdns_pcie_host_setup(struct cdns_pcie_rc *rc)
+ 	struct device *dev = rc->pcie.dev;
+ 	struct platform_device *pdev = to_platform_device(dev);
+ 	struct device_node *np = dev->of_node;
++	struct of_pci_range_parser parser;
+ 	struct pci_host_bridge *bridge;
+ 	struct list_head resources;
++	struct of_pci_range range;
+ 	struct cdns_pcie *pcie;
+ 	struct resource *res;
+ 	int ret;
+@@ -222,8 +224,15 @@ int cdns_pcie_host_setup(struct cdns_pcie_rc *rc)
+ 	rc->max_regions = 32;
+ 	of_property_read_u32(np, "cdns,max-outbound-regions", &rc->max_regions);
+ 
+-	rc->no_bar_nbits = 32;
+-	of_property_read_u32(np, "cdns,no-bar-match-nbits", &rc->no_bar_nbits);
++	if (!of_pci_dma_range_parser_init(&parser, np))
++		if (of_pci_range_parser_one(&parser, &range))
++			rc->no_bar_nbits = ilog2(range.size);
++
++	if (!rc->no_bar_nbits) {
++		rc->no_bar_nbits = 32;
++		of_property_read_u32(np, "cdns,no-bar-match-nbits",
++				     &rc->no_bar_nbits);
++	}
+ 
+ 	rc->vendor_id = 0xffff;
+ 	of_property_read_u16(np, "vendor-id", &rc->vendor_id);
 -- 
 2.17.1
 
