@@ -2,127 +2,163 @@ Return-Path: <SRS0=Lghl=5P=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBDFDC2D0EE
-	for <linux-pci@archiver.kernel.org>; Mon, 30 Mar 2020 15:49:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84C74C43331
+	for <linux-pci@archiver.kernel.org>; Mon, 30 Mar 2020 16:01:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9B98C205ED
-	for <linux-pci@archiver.kernel.org>; Mon, 30 Mar 2020 15:49:34 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=flygoat.com header.i=jiaxun.yang@flygoat.com header.b="Ft6YaDQk"
+	by mail.kernel.org (Postfix) with ESMTP id 54C4F208E4
+	for <linux-pci@archiver.kernel.org>; Mon, 30 Mar 2020 16:01:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1585584109;
+	bh=Xc7O8iV7oH1vYdIsM8wmcoSm/BKP36yg0ZNx3YhB9lU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=WD1PQ+xFCme/d49Z+qfylnMxzxfJVrX0zrNj5DkgpbW72yhQTgb8JobDvelwuj+qv
+	 FBFbUNL2kG/QLYN04vqkOxhvK+WLzT+zEeVmzLtr2kEyjMnjRYVCpZVtHZib2cjQpt
+	 2QBVa+mes+pevs2z6GLRRRhfSUZA8t6y6cNsAs+Y=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728458AbgC3Ptb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 30 Mar 2020 11:49:31 -0400
-Received: from sender3-op-o12.zoho.com.cn ([124.251.121.243]:17840 "EHLO
-        sender3-op-o12.zoho.com.cn" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728594AbgC3Ptb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Mar 2020 11:49:31 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1585583265;
-        s=mail; d=flygoat.com; i=jiaxun.yang@flygoat.com;
-        h=Date:In-Reply-To:References:MIME-Version:Content-Type:Content-Transfer-Encoding:Subject:To:CC:From:Message-ID;
-        bh=fKY1wcYZ+Cm3/0t0E+sucQoBEZCO55f18FQxrRV8tbU=;
-        b=Ft6YaDQksZwXu9aWisZaNWPg1STNzyBBqVK6U82BAG/PpOniQXG1fupGENDI66jg
-        9KPkxqwfRHK/qcPngRUpyAVy0uN4KW+ftQ848pOkFSee3p2GORUtcXvdVrRjG3ATG2C
-        kGMde+FJBhfqMB9TxLu9yhO0y9txS8/uSecWr5pY=
-Received: from [10.233.233.252] (183.156.33.130 [183.156.33.130]) by mx.zoho.com.cn
-        with SMTPS id 1585583262424928.8644851457047; Mon, 30 Mar 2020 23:47:42 +0800 (CST)
-Date:   Mon, 30 Mar 2020 23:47:32 +0800
-User-Agent: K-9 Mail for Android
-In-Reply-To: <68446094-263d-d0d9-df00-bc1e81c1dffe@cogentembedded.com>
-References: <20200330114239.1112759-1-jiaxun.yang@flygoat.com> <20200330114239.1112759-5-jiaxun.yang@flygoat.com> <68446094-263d-d0d9-df00-bc1e81c1dffe@cogentembedded.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Subject: Re: [PATCH 4/5] MIPS: DTS: Loongson64: Add PCI Controller Node
-To:     Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-        linux-mips@vger.kernel.org
-CC:     Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        Huacai Chen <chenhc@lemote.com>,
+        id S1729730AbgC3QBp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 30 Mar 2020 12:01:45 -0400
+Received: from mail-il1-f193.google.com ([209.85.166.193]:38631 "EHLO
+        mail-il1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729573AbgC3QBp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Mar 2020 12:01:45 -0400
+Received: by mail-il1-f193.google.com with SMTP id n13so8976310ilm.5;
+        Mon, 30 Mar 2020 09:01:44 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=ktt/Ga61qSWOmRmSZ17FaWn00l58rTu6NHlMsu22H60=;
+        b=SL/pteOzgd23ELhY5Tq0U1+NcyQXpwCnvfn3j5iX34qqa4ffj9GXzgVArRyli8ljTy
+         vDjycy1imRIIlv/awls9F0XF4dCKSpUD/HK3spvT64+37Leu/TvLFmKEHpnmu30/e826
+         Tp5cEDYzcEjDOui0UqjfEx14dC6uhnKXAL1vp0tIpjAthZQ7ZOJWb5LTz5BV8ewJa8es
+         XhuL7SlwcuHxZ6THbqw1F8vwh1rWzDqOKeRmUJnE+GWV5m6s3oILBOGaZfbTXpoC5nFc
+         EKpiIvDqcgQiRztgWM44I+EnJLazIdPcowkpCLdE9BM9BrziVSiBP9W4ZP4wwSGzZ5sv
+         XnfQ==
+X-Gm-Message-State: ANhLgQ0y87DW3HcwezWUDteW85qt69+0qfaxptvIY6YhpiNVdgiTytxf
+        5UNyjs46TGoRMGDt4O/lKQ==
+X-Google-Smtp-Source: ADFU+vuHJfjdltL5wlWlRwIkMluIpN1VyD7AySpoFLGDLUOGl3dNS864QY56ABH3/8lhbGCyhvlP3w==
+X-Received: by 2002:a92:3b56:: with SMTP id i83mr11919046ila.75.1585584104462;
+        Mon, 30 Mar 2020 09:01:44 -0700 (PDT)
+Received: from rob-hp-laptop ([64.188.179.250])
+        by smtp.gmail.com with ESMTPSA id i6sm5015642ila.20.2020.03.30.09.01.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 30 Mar 2020 09:01:43 -0700 (PDT)
+Received: (nullmailer pid 24386 invoked by uid 1000);
+        Mon, 30 Mar 2020 16:01:42 -0000
+Date:   Mon, 30 Mar 2020 10:01:42 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Kishon Vijay Abraham I <kishon@ti.com>
+Cc:     Tom Joseph <tjoseph@cadence.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        Paul Burton <paulburton@kernel.org>, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Mark Rutland <mark.rutland@arm.com>, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-From:   Jiaxun Yang <jiaxun.yang@flygoat.com>
-Message-ID: <90CFB680-D6DA-45E5-9E19-08F577672BA8@flygoat.com>
-X-ZohoCNMailClient: External
+Subject: Re: [PATCH 1/3] dt-bindings: PCI: cadence: Deprecate
+ inbound/outbound specific bindings
+Message-ID: <20200330160142.GA6259@bogus>
+References: <20200327104727.4708-1-kishon@ti.com>
+ <20200327104727.4708-2-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200327104727.4708-2-kishon@ti.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+On Fri, Mar 27, 2020 at 04:17:25PM +0530, Kishon Vijay Abraham I wrote:
+> Deprecate cdns,max-outbound-regions and cdns,no-bar-match-nbits for
+> host mode as both these could be derived from "ranges" and "dma-ranges"
+> property. "cdns,max-outbound-regions" property would still be required
+> for EP mode.
+> 
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  .../bindings/pci/cdns,cdns-pcie-ep.yaml       |  2 +-
+>  .../bindings/pci/cdns,cdns-pcie-host.yaml     |  3 +--
+>  .../devicetree/bindings/pci/cdns-pcie-ep.yaml | 25 +++++++++++++++++++
+>  .../bindings/pci/cdns-pcie-host.yaml          | 10 ++++++++
+>  .../devicetree/bindings/pci/cdns-pcie.yaml    |  8 ------
+>  5 files changed, 37 insertions(+), 11 deletions(-)
+>  create mode 100644 Documentation/devicetree/bindings/pci/cdns-pcie-ep.yaml
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.yaml
+> index 2996f8d4777c..50ce5d79d2c7 100644
+> --- a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.yaml
+> +++ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.yaml
+> @@ -10,7 +10,7 @@ maintainers:
+>    - Tom Joseph <tjoseph@cadence.com>
+>  
+>  allOf:
+> -  - $ref: "cdns-pcie.yaml#"
+> +  - $ref: "cdns-pcie-ep.yaml#"
+>    - $ref: "pci-ep.yaml#"
+>  
+>  properties:
+> diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.yaml b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.yaml
+> index cabbe46ff578..84a8f095d031 100644
+> --- a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.yaml
+> +++ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.yaml
+> @@ -45,8 +45,6 @@ examples:
+>              #size-cells = <2>;
+>              bus-range = <0x0 0xff>;
+>              linux,pci-domain = <0>;
+> -            cdns,max-outbound-regions = <16>;
+> -            cdns,no-bar-match-nbits = <32>;
+>              vendor-id = <0x17cd>;
+>              device-id = <0x0200>;
+>  
+> @@ -57,6 +55,7 @@ examples:
+>  
+>              ranges = <0x02000000 0x0 0x42000000  0x0 0x42000000  0x0 0x1000000>,
+>                       <0x01000000 0x0 0x43000000  0x0 0x43000000  0x0 0x0010000>;
+> +            dma-ranges = <0x02000000 0x0 0x0 0x0 0x0 0x1 0x00000000>;
+>  
+>              #interrupt-cells = <0x1>;
+>  
+> diff --git a/Documentation/devicetree/bindings/pci/cdns-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/cdns-pcie-ep.yaml
+> new file mode 100644
+> index 000000000000..6150a7a7bdbf
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/cdns-pcie-ep.yaml
+> @@ -0,0 +1,25 @@
+> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+> +%YAML 1.2
+> +---
+> +$id: "http://devicetree.org/schemas/pci/cdns-pcie-ep.yaml#"
+> +$schema: "http://devicetree.org/meta-schemas/core.yaml#"
+> +
+> +title: Cadence PCIe Device
+> +
+> +maintainers:
+> +  - Tom Joseph <tjoseph@cadence.com>
+> +
+> +allOf:
+> +  - $ref: "cdns-pcie.yaml#"
+> +
+> +properties:
+> +  cdns,max-outbound-regions:
+> +    description: maximum number of outbound regions
+> +    allOf:
+> +      - $ref: /schemas/types.yaml#/definitions/uint32
+> +    minimum: 1
+> +    maximum: 32
+> +    default: 32
 
+I have a feeling that as the PCI endpoint binding evolves this won't be 
+necessary. I can see a common need to define the number of BARs for an 
+endpoint and then this will again just be error checking.
 
-=E4=BA=8E 2020=E5=B9=B43=E6=9C=8830=E6=97=A5 GMT+08:00 =E4=B8=8B=E5=8D=881=
-1:37:21, Sergei Shtylyov <sergei=2Eshtylyov@cogentembedded=2Ecom> =E5=86=99=
-=E5=88=B0:
->Hello!
->
->On 03/30/2020 02:42 PM, Jiaxun Yang wrote:
->
->> Add PCI Host controller node for Loongson64 with RS780E PCH dts=2E
->> Note that PCI interrupts are probed via legacy way, as different
->> machine have different interrupt arrangement, we can't cover all
->> of them in dt=2E
->>=20
->> Signed-off-by: Jiaxun Yang <jiaxun=2Eyang@flygoat=2Ecom>
->> ---
->>  arch/mips/boot/dts/loongson/rs780e-pch=2Edtsi | 17 ++++++++++++++++-
->>  1 file changed, 16 insertions(+), 1 deletion(-)
->>=20
->> diff --git a/arch/mips/boot/dts/loongson/rs780e-pch=2Edtsi
->b/arch/mips/boot/dts/loongson/rs780e-pch=2Edtsi
->> index 45c54d555fa4=2E=2Ef09599a4b9d7 100644
->> --- a/arch/mips/boot/dts/loongson/rs780e-pch=2Edtsi
->> +++ b/arch/mips/boot/dts/loongson/rs780e-pch=2Edtsi
->> @@ -5,10 +5,25 @@ bus@10000000 {
->>  		compatible =3D "simple-bus";
->>  		#address-cells =3D <2>;
->>  		#size-cells =3D <2>;
->> -		ranges =3D <0 0x10000000 0 0x10000000 0 0x10000000
->> +		ranges =3D <0 0x00000000 0 0x00000000 0 0x00010000 /* ioports */
->> +				0 0x10000000 0 0x10000000 0 0x10000000
->>  				0 0x40000000 0 0x40000000 0 0x40000000
->>  				0xfd 0xfe000000 0xfd 0xfe000000  0 0x2000000 /* PCI Config Space
->*/>;
->> =20
->> +		pci@1a000000 {
->> +			compatible =3D "loongson,rs780e-pci";
->> +			device_type =3D "pci";
->> +			#address-cells =3D <3>;
->> +			#size-cells =3D <2>;
->> +			#interrupt-cells =3D <0x1>;
->
->   No need for 0x=2E
->
->> +
->> +			reg =3D <0 0x1a000000 0 0x02000000>;
->> +
->> +			ranges =3D <0x01000000 0x0 0x00004000 0x0 0x00004000  0x0
->0x00004000>,
->> +				<0x02000000 0x0 0x40000000 0x0 0x40000000  0x0 0x40000000>;
->
->   No need for 0x before 0 here either=2E And why double spaces?
-=20
-Thanks=2E Will fix in next version=2E
+What's the result if you write to a non-existent region in register 
+CDNS_PCIE_AT_OB_REGION_PCI_ADDR0/1? If the register is non-existent and 
+doesn't abort, you could detect this instead.
 
-The space was intent to split address and size but it seems unnecessary=2E
-
->
->> +
->> +		};
->> +
->>  		isa {
->>  			compatible =3D "isa";
->>  			#address-cells =3D <2>;
->>=20
->
->MBR, Sergei
-
---=20
-Jiaxun Yang
+Rob
