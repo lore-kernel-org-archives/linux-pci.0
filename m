@@ -2,111 +2,114 @@ Return-Path: <SRS0=o29A=5Q=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 793BDC2D0EE
-	for <linux-pci@archiver.kernel.org>; Tue, 31 Mar 2020 09:21:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26F2DC43331
+	for <linux-pci@archiver.kernel.org>; Tue, 31 Mar 2020 10:42:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 510D02072E
-	for <linux-pci@archiver.kernel.org>; Tue, 31 Mar 2020 09:21:41 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=alien8.de header.i=@alien8.de header.b="mJDZC8MH"
+	by mail.kernel.org (Postfix) with ESMTP id EDA9D20772
+	for <linux-pci@archiver.kernel.org>; Tue, 31 Mar 2020 10:42:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1585651334;
+	bh=MZAU576gyLJO4F4wEGfdDUQTS1+k9BE34i/jleEvrXM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=pAXYlKXqB1y/TN8UDcXW8702h7WxKsrPVZ3/6BZqye4HNifLkHNPjKP0Vn3WmZNpY
+	 m2nrA2FRJuy3muRgLSF43qpQpLh39J76skv0FLXZmlv9cpa5YMQSuHJZsf83ML8NOU
+	 7KUSlsoNgIvlPOU+fYOHUsjMVfnbrfgsU3eD+MQs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730548AbgCaJVg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 31 Mar 2020 05:21:36 -0400
-Received: from mail.skyhub.de ([5.9.137.197]:50816 "EHLO mail.skyhub.de"
+        id S1730391AbgCaKmG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 31 Mar 2020 06:42:06 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41322 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731473AbgCaJJg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 31 Mar 2020 05:09:36 -0400
-Received: from zn.tnic (p200300EC2F0C09003D11AEAD23413CBD.dip0.t-ipconnect.de [IPv6:2003:ec:2f0c:900:3d11:aead:2341:3cbd])
+        id S1730358AbgCaKmF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 31 Mar 2020 06:42:05 -0400
+Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.skyhub.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id 65EE11EC0CBD;
-        Tue, 31 Mar 2020 11:09:34 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=dkim;
-        t=1585645774;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:in-reply-to:in-reply-to:  references:references;
-        bh=IAjq8vkgmuwy5aDCdanAPTga8JYTa70hGlJvTK2iieo=;
-        b=mJDZC8MHDaOJXLbCV9bY6OQtS+NMQtl8VJzFy9IxXRsNRFMmcDI1hXEW3sx9fvxViwZqQ+
-        zaRUoDDBCBBARpOWZbSW+AgNfMQqetampHH+3rfhgtHcGFWgTYHep2T2a9mrqIZgRdtN0o
-        EPV1nJxi4h/xiUcIxBrPv7zKPSEclJw=
-Date:   Tue, 31 Mar 2020 11:09:29 +0200
-From:   Borislav Petkov <bp@alien8.de>
-To:     Shiju Jose <shiju.jose@huawei.com>
-Cc:     "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
-        "helgaas@kernel.org" <helgaas@kernel.org>,
-        "lenb@kernel.org" <lenb@kernel.org>,
-        "james.morse@arm.com" <james.morse@arm.com>,
-        "tony.luck@intel.com" <tony.luck@intel.com>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        "zhangliguang@linux.alibaba.com" <zhangliguang@linux.alibaba.com>,
-        "tglx@linutronix.de" <tglx@linutronix.de>,
-        Linuxarm <linuxarm@huawei.com>,
-        Jonathan Cameron <jonathan.cameron@huawei.com>,
-        tanxiaofei <tanxiaofei@huawei.com>,
-        yangyicong <yangyicong@huawei.com>
-Subject: Re: [PATCH v6 1/2] ACPI / APEI: Add support to notify the vendor
- specific HW errors
-Message-ID: <20200331090929.GB29131@zn.tnic>
-References: <ShijuJose>
- <20200325164223.650-1-shiju.jose@huawei.com>
- <20200325164223.650-2-shiju.jose@huawei.com>
- <20200327182214.GD8015@zn.tnic>
- <b180618fb6cb477ea7185979c11c5868@huawei.com>
- <20200330103353.GC16242@zn.tnic>
- <ee79588ee82445dcb76f1fe6c1082fb8@huawei.com>
- <20200330134249.GF16242@zn.tnic>
- <613133075a174454a88312448b9b333c@huawei.com>
+        by mail.kernel.org (Postfix) with ESMTPSA id 936A7208E4;
+        Tue, 31 Mar 2020 10:42:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1585651325;
+        bh=MZAU576gyLJO4F4wEGfdDUQTS1+k9BE34i/jleEvrXM=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=R1DaSB+mTncyky8tsYLt/2VbvY124DhWGXSFbkKH/FsUb3sL2o494Xms4GD3EdOfs
+         uWL7HfRO/kMdPHq3Y6acegGr6qNXyYMNd/A0e8MdsotYW0yiJzqm1AAoV6i4o2hUah
+         Nbdgrk4B+T0wUCZQgB/PYSLJv5NQJC1UOcvvzgR0=
+Date:   Tue, 31 Mar 2020 12:04:06 +0200
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Dave Jiang <dave.jiang@intel.com>
+Cc:     vkoul@kernel.org, tglx@linutronix.de, mingo@redhat.com,
+        bp@alien8.de, hpa@zytor.com, bhelgaas@google.com, arnd@arndb.de,
+        linux-kernel@vger.kernel.org, x86@kernel.org,
+        dmaengine@vger.kernel.org, dan.j.williams@intel.com,
+        ashok.raj@intel.com, fenghua.yu@intel.com,
+        linux-pci@vger.kernel.org, tony.luck@intel.com, jing.lin@intel.com,
+        sanjay.k.kumar@intel.com
+Subject: Re: [PATCH 2/6] device/pci: add cmdmem cap to pci_dev
+Message-ID: <20200331100406.GB1204199@kroah.com>
+References: <158560290392.6059.16921214463585182874.stgit@djiang5-desk3.ch.intel.com>
+ <158560362090.6059.1762280705382158736.stgit@djiang5-desk3.ch.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <613133075a174454a88312448b9b333c@huawei.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <158560362090.6059.1762280705382158736.stgit@djiang5-desk3.ch.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Mar 30, 2020 at 03:44:29PM +0000, Shiju Jose wrote:
-> 1. rasdaemon need not to print the vendor error data reported by the firmware if the 
->     kernel driver already print those information. In this case rasdaemon will only need to store
->     the decoded vendor error data to the SQL database.
+On Mon, Mar 30, 2020 at 02:27:00PM -0700, Dave Jiang wrote:
+> Since the current accelerator devices do not have standard PCIe capability
+> enumeration for accepting ENQCMDS yet, for now an attribute of pdev->cmdmem has
+> been added to struct pci_dev.  Currently a PCI quirk must be used for the
+> devices that have such cap until the PCI cap is standardized. Add a helper
+> function to provide the check if a device supports the cmdmem capability.
+> 
+> Such capability is expected to be added to PCIe device cap enumeration in
+> the future.
+> 
+> Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+> ---
+>  drivers/base/core.c    |   13 +++++++++++++
+>  include/linux/device.h |    2 ++
+>  include/linux/pci.h    |    1 +
+>  3 files changed, 16 insertions(+)
+> 
+> diff --git a/drivers/base/core.c b/drivers/base/core.c
+> index dbb0f9130f42..cd9f5b040ed4 100644
+> --- a/drivers/base/core.c
+> +++ b/drivers/base/core.c
+> @@ -27,6 +27,7 @@
+>  #include <linux/netdevice.h>
+>  #include <linux/sched/signal.h>
+>  #include <linux/sysfs.h>
+> +#include <linux/pci.h>
+>  
+>  #include "base.h"
+>  #include "power/power.h"
+> @@ -3790,3 +3791,15 @@ int device_match_any(struct device *dev, const void *unused)
+>  	return 1;
+>  }
+>  EXPORT_SYMBOL_GPL(device_match_any);
+> +
+> +bool device_supports_cmdmem(struct device *dev)
+> +{
+> +	struct pci_dev *pdev;
+> +
+> +	if (!dev_is_pci(dev))
+> +		return false;
+> +
+> +	pdev = to_pci_dev(dev);
+> +	return pdev->cmdmem;
+> +}
+> +EXPORT_SYMBOL_GPL(device_supports_cmdmem);
 
-Well, there's a problem with this:
+Why would a pci-specific function like this be ok to have in the driver
+core?  Please keep it in the pci core code instead.
 
-rasdaemon printing != kernel driver printing
+thanks,
 
-Because printing in dmesg would need people to go grep dmesg.
-
-Printing through rasdaemon or any userspace agent, OTOH, is a lot more
-flexible wrt analyzing and collecting those error records. Especially
-if you are a data center admin and you want to collect all your error
-records: grepping dmesg simply doesn't scale versus all the rasdaemon
-agents reporting to a centrallized location.
-
-> 2. If the vendor kernel driver want to report extra error information through
->     the vendor specific data (though presently we do not have any such use case) for the rasdamon to log. 
->     I think the error handled status useful to indicate that the kernel driver has filled the extra information and
->     rasdaemon to decode and log them after extra data specific validity check.
-
-The kernel driver can report that extra information without the kernel
-saying that the error was handled.
-
-So I still see no sense for the kernel to tell userspace explicitly that
-it handled the error. There might be a valid reason, though, of which I
-cannot think of right now.
-
-Thx.
-
--- 
-Regards/Gruss,
-    Boris.
-
-https://people.kernel.org/tglx/notes-about-netiquette
+greg k-h
