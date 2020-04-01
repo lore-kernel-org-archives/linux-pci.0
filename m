@@ -2,202 +2,100 @@ Return-Path: <SRS0=BFTA=5R=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 937B6C2D0E8
-	for <linux-pci@archiver.kernel.org>; Wed,  1 Apr 2020 03:08:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A05DEC2D0F1
+	for <linux-pci@archiver.kernel.org>; Wed,  1 Apr 2020 03:09:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5F4C62077D
-	for <linux-pci@archiver.kernel.org>; Wed,  1 Apr 2020 03:08:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6C9802077D
+	for <linux-pci@archiver.kernel.org>; Wed,  1 Apr 2020 03:09:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="svH23gQL"
+	dkim=pass (1024-bit key) header.d=flygoat.com header.i=jiaxun.yang@flygoat.com header.b="KMo6oVLL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731619AbgDADIn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 31 Mar 2020 23:08:43 -0400
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:35828 "EHLO
-        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731592AbgDADIn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Mar 2020 23:08:43 -0400
-Received: from lelv0265.itg.ti.com ([10.180.67.224])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 03138XVe083327;
-        Tue, 31 Mar 2020 22:08:33 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1585710513;
-        bh=QGxTvKSuMAvjN97JC/+YbiSUgKIoFS5hHdeQwmmihL8=;
-        h=Subject:To:CC:References:From:Date:In-Reply-To;
-        b=svH23gQL6L6RQllYde7vA4qFa7cNAFQdHgdJdaiBLrMlkuQE1Yo9V2VhWBQ93wen5
-         L37uEHT+EYnDmp/RTAGWkNhQMmGgsrB1422HGGLqXNyiFsVCnDszZcTLXZ/dK6mFhQ
-         7u6+8Afdaj/M6DWcbOD6u6OClBCE//jfthIobAeA=
-Received: from DFLE112.ent.ti.com (dfle112.ent.ti.com [10.64.6.33])
-        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 03138XDk076010
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 31 Mar 2020 22:08:33 -0500
-Received: from DFLE114.ent.ti.com (10.64.6.35) by DFLE112.ent.ti.com
- (10.64.6.33) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Tue, 31
- Mar 2020 22:08:33 -0500
-Received: from fllv0040.itg.ti.com (10.64.41.20) by DFLE114.ent.ti.com
- (10.64.6.35) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
- Frontend Transport; Tue, 31 Mar 2020 22:08:33 -0500
-Received: from [10.250.133.232] (ileax41-snat.itg.ti.com [10.172.224.153])
-        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 03138RCe023502;
-        Tue, 31 Mar 2020 22:08:30 -0500
-Subject: Re: [PATCH 1/3] dt-bindings: PCI: cadence: Deprecate inbound/outbound
- specific bindings
-To:     Rob Herring <robh@kernel.org>
-CC:     Tom Joseph <tjoseph@cadence.com>,
+        id S1731608AbgDADJs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 31 Mar 2020 23:09:48 -0400
+Received: from sender3-op-o12.zoho.com.cn ([124.251.121.243]:17812 "EHLO
+        sender3-op-o12.zoho.com.cn" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1731574AbgDADJs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Mar 2020 23:09:48 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1585710539;
+        s=mail; d=flygoat.com; i=jiaxun.yang@flygoat.com;
+        h=From:To:Cc:Message-ID:Subject:Date:In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:Content-Type;
+        bh=M9AG6YJZ1M+WKraGHw9VnEsvm+cbbYRG2eJ2kWp3UGU=;
+        b=KMo6oVLLsQ9yNTJfow4o7J4LIeR3Z2B1b+bgIuykaGoNcnY1oCS47x9J3xRunquY
+        OYQRPR7t+4guSAHZM5cjpNQr3p+St4Of0/BxvGh0Wt+lkSYGQwH1UNdKF/EDLtE4krI
+        6oIZvcynYV3kZPh7vjnn1qIQE3XK3QH81X9B0XGU=
+Received: from localhost.localdomain (39.155.141.144 [39.155.141.144]) by mx.zoho.com.cn
+        with SMTPS id 1585710537953921.8430799380282; Wed, 1 Apr 2020 11:08:57 +0800 (CST)
+From:   Jiaxun Yang <jiaxun.yang@flygoat.com>
+To:     linux-mips@vger.kernel.org
+Cc:     Jiaxun Yang <jiaxun.yang@flygoat.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        Huacai Chen <chenhc@lemote.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-References: <20200327104727.4708-1-kishon@ti.com>
- <20200327104727.4708-2-kishon@ti.com> <20200330160142.GA6259@bogus>
- <2a18a228-9248-24a8-c9cd-a041c62aa381@ti.com> <20200331164529.GA32149@bogus>
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <2985575e-e079-2a8d-bf3e-b7efb7291fc3@ti.com>
-Date:   Wed, 1 Apr 2020 08:38:26 +0530
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.6.0
+        Paul Burton <paulburton@kernel.org>, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-ID: <20200401030658.1174045-2-jiaxun.yang@flygoat.com>
+Subject: [PATCH v2 1/5] PCI: OF: Don't remap iospace on unsupported platform
+Date:   Wed,  1 Apr 2020 11:06:45 +0800
+X-Mailer: git-send-email 2.26.0.rc2
+In-Reply-To: <20200401030658.1174045-1-jiaxun.yang@flygoat.com>
+References: <20200401030658.1174045-1-jiaxun.yang@flygoat.com>
 MIME-Version: 1.0
-In-Reply-To: <20200331164529.GA32149@bogus>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+Content-Transfer-Encoding: quoted-printable
+X-ZohoCNMailClient: External
+Content-Type: text/plain; charset=utf8
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Rob,
+There are some platforms doesn't support iospace remapping
+like MIPS. However, our PCI code will try to remap iospace
+unconditionally and reject io resources on these platforms.
 
-On 3/31/2020 10:15 PM, Rob Herring wrote:
-> On Tue, Mar 31, 2020 at 09:08:12AM +0530, Kishon Vijay Abraham I wrote:
->> Hi Rob,
->>
->> On 3/30/2020 9:31 PM, Rob Herring wrote:
->>> On Fri, Mar 27, 2020 at 04:17:25PM +0530, Kishon Vijay Abraham I wrote:
->>>> Deprecate cdns,max-outbound-regions and cdns,no-bar-match-nbits for
->>>> host mode as both these could be derived from "ranges" and "dma-ranges"
->>>> property. "cdns,max-outbound-regions" property would still be required
->>>> for EP mode.
->>>>
->>>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
->>>> ---
->>>>  .../bindings/pci/cdns,cdns-pcie-ep.yaml       |  2 +-
->>>>  .../bindings/pci/cdns,cdns-pcie-host.yaml     |  3 +--
->>>>  .../devicetree/bindings/pci/cdns-pcie-ep.yaml | 25 +++++++++++++++++++
->>>>  .../bindings/pci/cdns-pcie-host.yaml          | 10 ++++++++
->>>>  .../devicetree/bindings/pci/cdns-pcie.yaml    |  8 ------
->>>>  5 files changed, 37 insertions(+), 11 deletions(-)
->>>>  create mode 100644 Documentation/devicetree/bindings/pci/cdns-pcie-ep.yaml
->>>>
->>>> diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.yaml
->>>> index 2996f8d4777c..50ce5d79d2c7 100644
->>>> --- a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.yaml
->>>> +++ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.yaml
->>>> @@ -10,7 +10,7 @@ maintainers:
->>>>    - Tom Joseph <tjoseph@cadence.com>
->>>>  
->>>>  allOf:
->>>> -  - $ref: "cdns-pcie.yaml#"
->>>> +  - $ref: "cdns-pcie-ep.yaml#"
->>>>    - $ref: "pci-ep.yaml#"
->>>>  
->>>>  properties:
->>>> diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.yaml b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.yaml
->>>> index cabbe46ff578..84a8f095d031 100644
->>>> --- a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.yaml
->>>> +++ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.yaml
->>>> @@ -45,8 +45,6 @@ examples:
->>>>              #size-cells = <2>;
->>>>              bus-range = <0x0 0xff>;
->>>>              linux,pci-domain = <0>;
->>>> -            cdns,max-outbound-regions = <16>;
->>>> -            cdns,no-bar-match-nbits = <32>;
->>>>              vendor-id = <0x17cd>;
->>>>              device-id = <0x0200>;
->>>>  
->>>> @@ -57,6 +55,7 @@ examples:
->>>>  
->>>>              ranges = <0x02000000 0x0 0x42000000  0x0 0x42000000  0x0 0x1000000>,
->>>>                       <0x01000000 0x0 0x43000000  0x0 0x43000000  0x0 0x0010000>;
->>>> +            dma-ranges = <0x02000000 0x0 0x0 0x0 0x0 0x1 0x00000000>;
->>>>  
->>>>              #interrupt-cells = <0x1>;
->>>>  
->>>> diff --git a/Documentation/devicetree/bindings/pci/cdns-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/cdns-pcie-ep.yaml
->>>> new file mode 100644
->>>> index 000000000000..6150a7a7bdbf
->>>> --- /dev/null
->>>> +++ b/Documentation/devicetree/bindings/pci/cdns-pcie-ep.yaml
->>>> @@ -0,0 +1,25 @@
->>>> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
->>>> +%YAML 1.2
->>>> +---
->>>> +$id: "http://devicetree.org/schemas/pci/cdns-pcie-ep.yaml#"
->>>> +$schema: "http://devicetree.org/meta-schemas/core.yaml#"
->>>> +
->>>> +title: Cadence PCIe Device
->>>> +
->>>> +maintainers:
->>>> +  - Tom Joseph <tjoseph@cadence.com>
->>>> +
->>>> +allOf:
->>>> +  - $ref: "cdns-pcie.yaml#"
->>>> +
->>>> +properties:
->>>> +  cdns,max-outbound-regions:
->>>> +    description: maximum number of outbound regions
->>>> +    allOf:
->>>> +      - $ref: /schemas/types.yaml#/definitions/uint32
->>>> +    minimum: 1
->>>> +    maximum: 32
->>>> +    default: 32
->>>
->>> I have a feeling that as the PCI endpoint binding evolves this won't be 
->>> necessary. I can see a common need to define the number of BARs for an 
->>> endpoint and then this will again just be error checking.
->>
->> For every buffer given by the host, we have to create a new outbound
->> translation. If there are no outbound regions, we have to report the error to
->> the endpoint function driver. At-least for reporting the error, we'd need to
->> have this binding no?
-> 
-> But isn't the endpoint defined to have some number of BARs? The PCI host 
-> doesn't decide that.
+So we should remove iospace remapping check and use a range
+check instead on these platforms.
 
-cdns,max-outbound-regions defined here doesn't configure the BARs. BARs provide
-an interface for the host to access the endpoints memory. IOW for BARs we
-configure the inbound address translation unit.
+Signed-off-by: Jiaxun Yang <jiaxun.yang@flygoat.com>
+---
+ drivers/pci/of.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-cdns,max-outbound-regions is used while configuring the outbound address
-translation unit. Outbound regions are used while the endpoint access host
-memory and in that path endpoint BARs doesn't come.
-> 
->>>
->>> What's the result if you write to a non-existent region in register 
->>> CDNS_PCIE_AT_OB_REGION_PCI_ADDR0/1? If the register is non-existent and 
->>> doesn't abort, you could detect this instead.
->>
->> I'm not sure if we should ever try to write to a non-existent register though
->> the behavior could be different in different platforms. IMHO maximum number of
->> outbound regions is a HW property and is best described in device tree.
-> 
-> AIUI, PCI defines non-existent (config space) registers to return all 
-> 1s. Not sure if this register is in PCI config space or the host SoC bus 
-> (e.g. AXI). It seems PCI bridges get done both ways from what I've seen.
+diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+index 81ceeaa6f1d5..36e8761b66c6 100644
+--- a/drivers/pci/of.c
++++ b/drivers/pci/of.c
+@@ -547,12 +547,21 @@ int pci_parse_request_of_pci_ranges(struct device *de=
+v,
+=20
+ =09=09switch (resource_type(res)) {
+ =09=09case IORESOURCE_IO:
++#if defined(PCI_IOBASE) && defined(CONFIG_MMU)
+ =09=09=09err =3D devm_pci_remap_iospace(dev, res, iobase);
+ =09=09=09if (err) {
+ =09=09=09=09dev_warn(dev, "error %d: failed to map resource %pR\n",
+ =09=09=09=09=09 err, res);
+ =09=09=09=09resource_list_destroy_entry(win);
+ =09=09=09}
++#else
++=09=09=09/* Simply check if IO is inside the range */
++=09=09=09if (res->end > IO_SPACE_LIMIT) {
++=09=09=09=09dev_warn(dev, "resource %pR out of the IO range\n",
++=09=09=09=09=09res);
++=09=09=09=09resource_list_destroy_entry(win);
++=09=09=09}
++#endif
+ =09=09=09break;
+ =09=09case IORESOURCE_MEM:
+ =09=09=09res_valid |=3D !(res->flags & IORESOURCE_PREFETCH);
+--=20
+2.26.0.rc2
 
-All of that is correct for the Host or RC. However here
-cdns,max-outbound-regions is an endpoint specific property (defined only in
-cdns-pcie-ep.yaml) and is useful while configuring OB address translation unit
-for the endpoint to access host memory.
 
-Thanks
-Kishon
