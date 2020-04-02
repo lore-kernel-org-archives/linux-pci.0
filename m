@@ -2,124 +2,73 @@ Return-Path: <SRS0=whaY=5S=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B1D4C43331
-	for <linux-pci@archiver.kernel.org>; Thu,  2 Apr 2020 17:45:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA420C43331
+	for <linux-pci@archiver.kernel.org>; Thu,  2 Apr 2020 18:01:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9CB002078B
-	for <linux-pci@archiver.kernel.org>; Thu,  2 Apr 2020 17:45:06 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VXA6CrMz"
+	by mail.kernel.org (Postfix) with ESMTP id 7CD552077D
+	for <linux-pci@archiver.kernel.org>; Thu,  2 Apr 2020 18:01:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1585850515;
+	bh=oWUzlHfuwWKgME7NjSzkRgepanaeIaWsrH5an+W0Uds=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=Wg0Sc28D0BLeh5BE7lkHfA8pPlSzcAsWar5qsggukkM67smQsGKtQ/g8AJ82GKmw5
+	 iuqfIVdaFSsxULof+J8agVt+ZutrwGgqIfyaIeKF4Vv2Mo0D037Wyu0zVXmpIsIM7y
+	 Z2bZkuRVKhm6JX+ZptjH5s8X/hYCYAI1q81o6dW0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389264AbgDBRpF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 2 Apr 2020 13:45:05 -0400
-Received: from mail-oi1-f194.google.com ([209.85.167.194]:42372 "EHLO
-        mail-oi1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389166AbgDBRpF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Apr 2020 13:45:05 -0400
-Received: by mail-oi1-f194.google.com with SMTP id e4so3533308oig.9
-        for <linux-pci@vger.kernel.org>; Thu, 02 Apr 2020 10:45:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=ciIw1P+AciIPVRcSA+xgtTfNvu8Z4LEGAoW8vtRJG9A=;
-        b=VXA6CrMz53r8cVWPp0IY6eu5PetsOAMZXQ6jSYjp63dq86cRSAskmHfHaEOXfQ+Vww
-         yT5sPEmIZGf7qpdxSK+ECan/qfZqLiT/i3TIIuVDd+vDF8o0W/e9Ag42Od7odpYnrEMU
-         C0EdEPI7WBEraOsNUObTV6dfCcjEaBzhq2apxXDWmUoQKJOKYlk4JXXYfqU7jp9KusQF
-         eubfRMV4s5HWPRpde1h1ehrvCrOue9+FTeX40qydQ3bkWNoxVD4V9S0xbkotyoNMx4qi
-         3LjqRCsN6Ojn1b8DjOsulJpzT5GhwOVU8c7RvldnjRyh5cXorNA0FXVVqO8r32y/M3W7
-         8x5A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=ciIw1P+AciIPVRcSA+xgtTfNvu8Z4LEGAoW8vtRJG9A=;
-        b=jlwrDa9rSaL7FgYyuYO7QH9E/YlXRI2OnHWl4tL+zRE3jaZgYqZO9UbYiHsnnu6JNJ
-         S7mcVloyr2+HrhHktbcqEtctTs8k7t1BrfKaCGrzFBgWB9tjyspazGcQ1EFfnOXr8/vC
-         avVuLGJTISxN/k5rMOwW4BWRSBSUmodYr0R6noLtb1/AnGfMecr2js4OoUJaJsKy12Gf
-         pgW2a2gnEJYKiU36RXWNFflGDIOg/1pr4PieMdG8pemeujy4/l0/hFFD+FvZvGlXVo3c
-         u1XstDzlXQVYhfYw7kyt3ydNPrcrKFOsJCjjUAW5ICIVHJ/8u0wOjKy7mjT2m3LSmvy3
-         +EiA==
-X-Gm-Message-State: AGi0PuZZdevTVAdQc2uQR6n6KAk/yWs02NlqBW/67Qy8+lXqJwwBQuqh
-        DspU2QE3T7mVxGUX1rZuwklji3ouDBH1Yc0trcEc2qEW5EJjgA==
-X-Google-Smtp-Source: APiQypK2XU9kvp2BwIPAaFtHDVmceF7VMmrP9h4svg4/MjoiAFHiMWG9fb3FxiGuUAFGuEwlr9rMtoWOcCZgm7dmG1M=
-X-Received: by 2002:aca:ac46:: with SMTP id v67mr162807oie.62.1585849504798;
- Thu, 02 Apr 2020 10:45:04 -0700 (PDT)
+        id S2389178AbgDBSBy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 2 Apr 2020 14:01:54 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43848 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388641AbgDBSBy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 2 Apr 2020 14:01:54 -0400
+Received: from localhost (mobile-166-170-223-166.mycingular.net [166.170.223.166])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id D8492206F6;
+        Thu,  2 Apr 2020 18:01:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1585850514;
+        bh=oWUzlHfuwWKgME7NjSzkRgepanaeIaWsrH5an+W0Uds=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=Wl70XaZIn/iM6huN3hAgmn9HJGzsCtMrt2DpC4VSkh0dGXZTMNkgiOcLnej8YzzGd
+         /UK/KnXqbbXwH6woCGQii3desEhyWPv/wEWByxZfPPyC7m5NkJaIOWYB0yxPvXYhnN
+         VddlJvK//g5/zZtXqbmks5qmJS7XkSODgKXNYoic=
+Date:   Thu, 2 Apr 2020 13:01:51 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
+Cc:     linux-kernel@vger.kernel.org,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        bcm-kernel-feedback-list@broadcom.com, linux-usb@vger.kernel.org,
+        linux-rpi-kernel@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, gregkh@linuxfoundation.org,
+        tim.gover@raspberrypi.org, linux-pci@vger.kernel.org,
+        wahrenst@gmx.net, sergei.shtylyov@cogentembedded.com
+Subject: Re: [PATCH v6 1/4] soc: bcm2835: Sync xHCI reset firmware property
+ with downstream
+Message-ID: <20200402180151.GA50169@google.com>
 MIME-Version: 1.0
-References: <CA+V-a8vOwwCjRnFZ_Cxtvep1nLMXd5AjOyJyispg1A1k_ExbSQ@mail.gmail.com>
- <e5570897-0566-6cce-9af2-8be23fb0d3ef@ti.com> <CA+V-a8ssdO9R_wHbJM8RinzP5d7YX5KWES20G-TV0XnCx4SUeA@mail.gmail.com>
- <83024641-7bd3-b47f-cd2c-0d831279086d@ti.com> <CA+V-a8sBC5+v+BsVSjkfLvYzddPs2jj1roFaDO4Tz4q9CWnGSg@mail.gmail.com>
- <CA+V-a8t15gotL1v-PRO1fGjL0WKTO2fOa69qZ5rctYn08XY=BA@mail.gmail.com>
- <CA+V-a8sNcdC8SO6pXGUH3TkM7B6dX-xxcqtZjRZ_496qyG1h+Q@mail.gmail.com>
- <60deaab7-fe56-0f30-a8bd-fbeea9224b11@ti.com> <CA+V-a8uxAD5-BovZPrKi_a6DPJVJPpez4V45C7YY-Rh3QjN8ag@mail.gmail.com>
- <e34a54f2-af3a-b760-c7d2-1da836e8fb4d@ti.com> <CA+V-a8t6WuBsMaW4WTCDHihUFv69WpwqJgOYH+rL7ndJ2NhrDQ@mail.gmail.com>
- <TYAPR01MB45446ABD97A846045FD2B896D8C80@TYAPR01MB4544.jpnprd01.prod.outlook.com>
- <CA+V-a8sn-qv+MEtWOoBqNh9xwSj4kzo6m_SHtQ-DHr+_0hJ4UA@mail.gmail.com>
- <TYAPR01MB4544F0435DB48E168EF41B90D8C90@TYAPR01MB4544.jpnprd01.prod.outlook.com>
- <CA+V-a8vK36es7Q6AB-t2wkyF-DNJa6GP5HZ41YgJG-PopxuHfw@mail.gmail.com>
- <TYAPR01MB4544972970249F317DEBE5AAD8C90@TYAPR01MB4544.jpnprd01.prod.outlook.com>
- <CA+V-a8vCKRtWxfB1u-XZxVeioi76Fdhb_gOWMC9TtSEmyFersg@mail.gmail.com>
- <TYAPR01MB4544C9091D4E2186FD7A0A37D8C60@TYAPR01MB4544.jpnprd01.prod.outlook.com>
- <TYAPR01MB45442E975AEA3EDD22A3CD3BD8C60@TYAPR01MB4544.jpnprd01.prod.outlook.com>
-In-Reply-To: <TYAPR01MB45442E975AEA3EDD22A3CD3BD8C60@TYAPR01MB4544.jpnprd01.prod.outlook.com>
-From:   "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
-Date:   Thu, 2 Apr 2020 18:44:37 +0100
-Message-ID: <CA+V-a8uZX+D1peigQuoTgmJq6KzZhUN_J7DjA_jCw=Re=titkw@mail.gmail.com>
-Subject: Re: PCIe EPF
-To:     Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Cc:     Kishon Vijay Abraham I <kishon@ti.com>,
-        Chris Paterson <Chris.Paterson2@renesas.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200324182812.20420-2-nsaenzjulienne@suse.de>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Shimoda-san,
+On Tue, Mar 24, 2020 at 07:28:09PM +0100, Nicolas Saenz Julienne wrote:
+> The property is needed in order to trigger VL805's firmware load. Note
+> that there is a gap between the property introduced and the previous
+> one. This is also the case downstream.
 
-On Thu, Apr 2, 2020 at 5:58 AM Yoshihiro Shimoda
-<yoshihiro.shimoda.uh@renesas.com> wrote:
->
-> Hi Prabhakar-san,
->
-> > From: Yoshihiro Shimoda, Sent: Thursday, April 2, 2020 10:23 AM
-> <snip>
-> > By the way, according to previous your report, you are using pci/next branch
-> > and the branch is based on v5.6-rc1. There is no evidence though,
-> > I'd like to use next-20200401 tag from linux-next repo to use v5.6 based kernel
-> > whether the strange issue happens on the latest v5.6 kernel code or not.
-> > Note that I confirmed the next-20200401 tag has a commit d293237739414d
-> > ("misc: pci_endpoint_test: Use streaming DMA APIs for buffer allocation").
->
-> I'm afraid but I'd like to recall this because next-20200401 seems unstable on
-> R-Car Gen3 environment (a lot of WARING happens). So, perhaps using linux mainline
-> v5.6 + merging pci/next branch is better.
->
-Taking your advice I rebased my patches on Geert's tree [1] (master
-branch) and choose
-M3N as my root device, and with rigorous testing I can confirm
-read/write/copy work
-without any issues. Using the same branch with G2N as root device still failed.
+I don't know what "downstream" means, so I don't know what we're
+syncing *with*.  If there's another branch or project we need to
+coordinate with, is there a name or URL that would help facilitate
+that?  If not, I'm not sure what value that sentence adds.
 
-Since this is a Root device issue and not ep I am posting v6 and
-swiotlb can be handled
-separately for G2x platforms.
-
-[1] https://git.kernel.org/pub/scm/linux/kernel/git/geert/renesas-drivers.git/
-
-Cheers,
---Prabhakar
-
-> Best regards,
-> Yoshihiro Shimoda
->
-> > Best regards,
-> > Yoshihiro Shimoda
->
+Bjorn
