@@ -2,63 +2,61 @@ Return-Path: <SRS0=whaY=5S=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F640C2BA15
-	for <linux-pci@archiver.kernel.org>; Thu,  2 Apr 2020 12:12:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62999C2D0F4
+	for <linux-pci@archiver.kernel.org>; Thu,  2 Apr 2020 12:12:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 16C122078C
-	for <linux-pci@archiver.kernel.org>; Thu,  2 Apr 2020 12:12:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3719C2078B
+	for <linux-pci@archiver.kernel.org>; Thu,  2 Apr 2020 12:12:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DbAA1ASm"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="agymgViU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388262AbgDBMMF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 2 Apr 2020 08:12:05 -0400
-Received: from mail-ed1-f67.google.com ([209.85.208.67]:33995 "EHLO
-        mail-ed1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387937AbgDBMMF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Apr 2020 08:12:05 -0400
-Received: by mail-ed1-f67.google.com with SMTP id o1so3841884edv.1;
-        Thu, 02 Apr 2020 05:12:03 -0700 (PDT)
+        id S2388029AbgDBMMA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 2 Apr 2020 08:12:00 -0400
+Received: from mail-ed1-f43.google.com ([209.85.208.43]:35444 "EHLO
+        mail-ed1-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387730AbgDBML7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Apr 2020 08:11:59 -0400
+Received: by mail-ed1-f43.google.com with SMTP id a20so3822155edj.2;
+        Thu, 02 Apr 2020 05:11:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=KsFq7yQU1rlzNMJrGzP0f6VuMClLu/ToR/AF+zEb8qI=;
-        b=DbAA1ASmX06fN4fhcKuLmpG395IJaD5OzO2OkAiIl3DUn6qMG8A4hu6nPEdiRCy7qS
-         LUAx5RFECtsHPfmAvq/jS+h69W4IoCvCC39zMgpLoonFBTN9bkgKuV046V8nKC5a3pp1
-         GbpFsy/t/M/WH9bVudqmABrVTR3ubeyKcGUC81SUv9egWRY4uAe9km7lOzqbw9M9FkeB
-         tv0Ejc/l0+FeXM5Tf1OaLrcBIUNWxN2+GTojdYe+/yfD+uWbkr/370kF9IgxgbIw+Dob
-         gofwLkhJV9J8fxs72AqfRyaHTut5OimKD6Gumrr+d+on8LtR1JrT5I65/iuHfxKu1NTm
-         I19g==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=dQNKCc7PUxqRbfY956FD6h+k4Y66wdaQrbWQY54QQ5w=;
+        b=agymgViUtAI2emTrH34p5ZHRX2vFxpJYQZfO6Ph/EpAkAH2SKbGh9Gwowg/y5F2xF9
+         GN9bUassTsCq6TmOom09VHTeAwUjAGfKm8kyfj8L5nGKieUt7e9AmBZ0/ZTmGkrOLi9N
+         pr+6N6O7GHNu8M8Iu1GZGh3K0wLBtSPqGXELUNzjNXnj/DFNRaqkfc9QZto9nWu40mDz
+         GZ2nhih6haNInv37Cq8PqojOPRewbPgnPnex1rzGDwVqgC31gSH+X7GQNx0ioCcTTAet
+         GS4NOrCtJ2TuSOIXnr3rZMN64006zcLHMZ2xA+KOGNbosVbW8GmBGh6odMjJ9ZwM4eB9
+         iEMw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=KsFq7yQU1rlzNMJrGzP0f6VuMClLu/ToR/AF+zEb8qI=;
-        b=aHPB3/uWoLz31tJTNgiXAowuPspiS1FmkwnG3b4rhGlMsdrPvmq852k4wXPu5iNYE3
-         eMT/UBOhqB1Di4ndm5mSvd8fLYXYsfZ5I3UtI4qEIfZCaJu0KDPkej7p1BgBewmNr3IB
-         Ngl01m4a5bnGiKPiDyLDxm7sowu6mwJ7KOhGqZ5+yD1CmVIVisIL6fiEs6lqaFUuGmha
-         mmPrGZDREyFzIv4xbWUOdepRVXbR8Wmc0nlxnu9JNYFg/sFhL/PuzcJ6qedUjGO6PJ53
-         SgR7E2RfP9N3UpRIU8eb/J5RFsowKxhe4rCN/LlUrsjKUDT0IjKeSNXIROAGkkzcfZJx
-         mR0g==
-X-Gm-Message-State: AGi0PuaI7GGoMY3eaLt1weaJDuARSTUYoOGItkFZIwkv2DW/AkGWgumq
-        +DSo5BpzQh9Ss7/xabGn4j2EeSgMZxUyCTz7
-X-Google-Smtp-Source: APiQypIvBMbr8/OcVfmbOg/N7gt60xcGNaW9v5EquvvNuFHwtAY2cx8E5B83GtZqK9UIvLjtxRP+eA==
-X-Received: by 2002:aa7:d91a:: with SMTP id a26mr2622190edr.236.1585829522548;
-        Thu, 02 Apr 2020 05:12:02 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=dQNKCc7PUxqRbfY956FD6h+k4Y66wdaQrbWQY54QQ5w=;
+        b=uiNfsFjatiixPhFU0JiUfPN3qh4EEOsQFy65bQKQQdKqKJTRsc7k5vG5hD9PWN++3E
+         eP0JG5c3CZiTQZVBBntxnDsTrLIF23QOUyky4OHYZpKjlrgEGVudgLkzoBbG2OIU7Sh7
+         yJiyTGtajFNSctrnCGx7vYD6gEcwB8cWE5XJms5I6VV+fINAUGZkUKPSU0Wa0pnuSZAM
+         WmGXtRdCSCNmCyHxR/D0kj4UoBgJjOZ/YI02RrVK59lnqsNxWUszEX7YxpBROKap5kYB
+         fD7he1MwTMriJosnDIPIE5IDdTO6sYbwg0eYXtC6Fru+HM3//FsgVuYTJxasjmCPLL9y
+         ryCw==
+X-Gm-Message-State: AGi0PuaOkBUGyZxKcu0ShUmcHM9vYgY/iNp2bDBoBH4EX21szL48GJcG
+        UlNqZVNxkFko96pdKiYMr5w=
+X-Google-Smtp-Source: APiQypLPNlmjZYpYHEbYalA5cdj8vdbm+4lcqgc+IcUsx4IEdOq3RzlqeMTeSu9WJGrGxVExBWuiNQ==
+X-Received: by 2002:a50:da49:: with SMTP id a9mr2429759edk.388.1585829515709;
+        Thu, 02 Apr 2020 05:11:55 -0700 (PDT)
 Received: from Ansuel-XPS.localdomain (host250-251-dynamic.250-95-r.retail.telecomitalia.it. [95.250.251.250])
-        by smtp.googlemail.com with ESMTPSA id w20sm1083611ejv.40.2020.04.02.05.12.00
+        by smtp.googlemail.com with ESMTPSA id w20sm1083611ejv.40.2020.04.02.05.11.53
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 02 Apr 2020 05:12:02 -0700 (PDT)
+        Thu, 02 Apr 2020 05:11:54 -0700 (PDT)
 From:   Ansuel Smith <ansuelsmth@gmail.com>
 To:     Andy Gross <agross@kernel.org>
-Cc:     Abhishek Sahu <absahu@codeaurora.org>,
-        Ansuel Smith <ansuelsmth@gmail.com>,
+Cc:     Ansuel Smith <ansuelsmth@gmail.com>,
         Bjorn Andersson <bjorn.andersson@linaro.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Rob Herring <robh+dt@kernel.org>,
@@ -69,12 +67,10 @@ Cc:     Abhishek Sahu <absahu@codeaurora.org>,
         Philipp Zabel <p.zabel@pengutronix.de>,
         linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 03/10] PCIe: qcom: change duplicate PCI reset to phy reset
-Date:   Thu,  2 Apr 2020 14:11:40 +0200
-Message-Id: <20200402121148.1767-4-ansuelsmth@gmail.com>
+Subject: [PATCH v2 00/10] Multiple fixes in PCIe qcom driver
+Date:   Thu,  2 Apr 2020 14:11:37 +0200
+Message-Id: <20200402121148.1767-1-ansuelsmth@gmail.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200402121148.1767-1-ansuelsmth@gmail.com>
-References: <20200402121148.1767-1-ansuelsmth@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
@@ -82,30 +78,38 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Abhishek Sahu <absahu@codeaurora.org>
+This contains multiple fix for PCIe qcom driver.
+Some optional reset and clocks were missing.
+Fix a problem with no PARF programming that cause kernel lock on load.
+Add support to force gen 1 speed if needed. (due to hardware limitation)
+Add ipq8064 rev 2 support that use a different tx termination offset.
 
-The deinit issues reset_control_assert for pci twice and does not contain
-phy reset.
+v2:
+* Drop iATU programming (already done in pcie init)
+* Use max-link-speed instead of force-gen1 custom definition
+* Drop MRRS to 256B (Can't find a realy reason why this was suggested)
+* Introduce a new variant for different revision of ipq8064
 
-Signed-off-by: Abhishek Sahu <absahu@codeaurora.org>
-Signed-off-by: Ansuel Smith <ansuelsmth@gmail.com>
----
- drivers/pci/controller/dwc/pcie-qcom.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Abhishek Sahu (1):
+  PCIe: qcom: change duplicate PCI reset to phy reset
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index f958c535de6e..1fcc7fed8443 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -284,7 +284,7 @@ static void qcom_pcie_deinit_2_1_0(struct qcom_pcie *pcie)
- 	reset_control_assert(res->axi_reset);
- 	reset_control_assert(res->ahb_reset);
- 	reset_control_assert(res->por_reset);
--	reset_control_assert(res->pci_reset);
-+	reset_control_assert(res->phy_reset);
- 	clk_disable_unprepare(res->iface_clk);
- 	clk_disable_unprepare(res->core_clk);
- 	clk_disable_unprepare(res->phy_clk);
+Ansuel Smith (7):
+  PCIe: qcom: add missing ipq806x clocks in PCIe driver
+  devicetree: bindings: pci: add missing clks to qcom,pcie
+  PCIe: qcom: Fixed pcie_phy_clk branch issue
+  PCIe: qcom: add missing reset for ipq806x
+  devicetree: bindings: pci: add ext reset to qcom,pcie
+  PCIe: qcom: fix init problem with missing PARF programming
+  devicetree: bindings: pci: add ipq8064 rev 2 variant to qcom,pcie
+
+Sham Muthayyan (2):
+  PCIe: qcom: add ipq8064 rev2 variant and set tx term offset
+  PCIe: qcom: add Force GEN1 support
+
+ .../devicetree/bindings/pci/qcom,pcie.txt     |  56 +++++++-
+ drivers/pci/controller/dwc/pcie-qcom.c        | 134 +++++++++++++++---
+ 2 files changed, 167 insertions(+), 23 deletions(-)
+
 -- 
 2.25.1
 
