@@ -2,114 +2,111 @@ Return-Path: <SRS0=whaY=5S=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62999C2D0F4
-	for <linux-pci@archiver.kernel.org>; Thu,  2 Apr 2020 12:12:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B908C43331
+	for <linux-pci@archiver.kernel.org>; Thu,  2 Apr 2020 14:13:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3719C2078B
-	for <linux-pci@archiver.kernel.org>; Thu,  2 Apr 2020 12:12:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D39DA2074D
+	for <linux-pci@archiver.kernel.org>; Thu,  2 Apr 2020 14:13:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="agymgViU"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Vd8sZW9+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388029AbgDBMMA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 2 Apr 2020 08:12:00 -0400
-Received: from mail-ed1-f43.google.com ([209.85.208.43]:35444 "EHLO
-        mail-ed1-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387730AbgDBML7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Apr 2020 08:11:59 -0400
-Received: by mail-ed1-f43.google.com with SMTP id a20so3822155edj.2;
-        Thu, 02 Apr 2020 05:11:56 -0700 (PDT)
+        id S2387807AbgDBONu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 2 Apr 2020 10:13:50 -0400
+Received: from mail-ed1-f65.google.com ([209.85.208.65]:42341 "EHLO
+        mail-ed1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729213AbgDBONu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Apr 2020 10:13:50 -0400
+Received: by mail-ed1-f65.google.com with SMTP id cw6so4280938edb.9
+        for <linux-pci@vger.kernel.org>; Thu, 02 Apr 2020 07:13:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=dQNKCc7PUxqRbfY956FD6h+k4Y66wdaQrbWQY54QQ5w=;
-        b=agymgViUtAI2emTrH34p5ZHRX2vFxpJYQZfO6Ph/EpAkAH2SKbGh9Gwowg/y5F2xF9
-         GN9bUassTsCq6TmOom09VHTeAwUjAGfKm8kyfj8L5nGKieUt7e9AmBZ0/ZTmGkrOLi9N
-         pr+6N6O7GHNu8M8Iu1GZGh3K0wLBtSPqGXELUNzjNXnj/DFNRaqkfc9QZto9nWu40mDz
-         GZ2nhih6haNInv37Cq8PqojOPRewbPgnPnex1rzGDwVqgC31gSH+X7GQNx0ioCcTTAet
-         GS4NOrCtJ2TuSOIXnr3rZMN64006zcLHMZ2xA+KOGNbosVbW8GmBGh6odMjJ9ZwM4eB9
-         iEMw==
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=bw59ldBI6KmfNxBN+y0j5ytL7a/p3G46T3zdDz6zPM0=;
+        b=Vd8sZW9+VxdPDDMgilaEnRb0n2QbgASfz9HECgv9zVtB1vRmYW4mmSFrcTDP5TjaBa
+         pr6kMHwrcfwUQqsS/QB000by2Fz/jcC8d9c9NUoq2aIgv1nUwWJDce/5mhSKImSnHOHc
+         nJWRSFm8I8EXaUl0MxUK2Q2Qa2Hq5YIxFdB5823aTghWsQNWqcLCxuCPBMEgpkrS9/ka
+         A7iCujr37cbqWXvAZigq1EPswxHxySv02ocO0jHQClrE2blNg7wUt++pkqp2ZY9xQf4m
+         SV4GobTX0SOeA28s7V1QPgL8QDjF7KWhcJ/6YkcWLz5Oe1u1hz73YTWP/lryjq+eBrvm
+         oI7w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=dQNKCc7PUxqRbfY956FD6h+k4Y66wdaQrbWQY54QQ5w=;
-        b=uiNfsFjatiixPhFU0JiUfPN3qh4EEOsQFy65bQKQQdKqKJTRsc7k5vG5hD9PWN++3E
-         eP0JG5c3CZiTQZVBBntxnDsTrLIF23QOUyky4OHYZpKjlrgEGVudgLkzoBbG2OIU7Sh7
-         yJiyTGtajFNSctrnCGx7vYD6gEcwB8cWE5XJms5I6VV+fINAUGZkUKPSU0Wa0pnuSZAM
-         WmGXtRdCSCNmCyHxR/D0kj4UoBgJjOZ/YI02RrVK59lnqsNxWUszEX7YxpBROKap5kYB
-         fD7he1MwTMriJosnDIPIE5IDdTO6sYbwg0eYXtC6Fru+HM3//FsgVuYTJxasjmCPLL9y
-         ryCw==
-X-Gm-Message-State: AGi0PuaOkBUGyZxKcu0ShUmcHM9vYgY/iNp2bDBoBH4EX21szL48GJcG
-        UlNqZVNxkFko96pdKiYMr5w=
-X-Google-Smtp-Source: APiQypLPNlmjZYpYHEbYalA5cdj8vdbm+4lcqgc+IcUsx4IEdOq3RzlqeMTeSu9WJGrGxVExBWuiNQ==
-X-Received: by 2002:a50:da49:: with SMTP id a9mr2429759edk.388.1585829515709;
-        Thu, 02 Apr 2020 05:11:55 -0700 (PDT)
-Received: from Ansuel-XPS.localdomain (host250-251-dynamic.250-95-r.retail.telecomitalia.it. [95.250.251.250])
-        by smtp.googlemail.com with ESMTPSA id w20sm1083611ejv.40.2020.04.02.05.11.53
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 02 Apr 2020 05:11:54 -0700 (PDT)
-From:   Ansuel Smith <ansuelsmth@gmail.com>
-To:     Andy Gross <agross@kernel.org>
-Cc:     Ansuel Smith <ansuelsmth@gmail.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 00/10] Multiple fixes in PCIe qcom driver
-Date:   Thu,  2 Apr 2020 14:11:37 +0200
-Message-Id: <20200402121148.1767-1-ansuelsmth@gmail.com>
-X-Mailer: git-send-email 2.25.1
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=bw59ldBI6KmfNxBN+y0j5ytL7a/p3G46T3zdDz6zPM0=;
+        b=F3BrE4YPlP/WILzeC4Rds027MM8cExta3lSxwfKZGwIpt9mm5/cHRFWEVackHMJ7ku
+         V+7IhiDEZuLHTB0UYH2yE0gp9VtJoANJ2fulboUWZMWN/dUlNglA+Jzfx0peN+vBzPYK
+         l8m5ctir1IclVrM70pmttKOCI2cMeBrYg/EYycO7UUQurKmr8+QdEXNOjV90pHjoQtcP
+         gevBWfOsxOHZH1hxbD6JFRbsoh6jRGNq8f8zVXfTQG7Ri8lh/6z7JN2DkRUB+EnFWpAY
+         Ll5Z+g/laJZmWms84jiXgR8ea934scayrdjI9mpDgGp3pQxmHx5S8loWLqNNLhUe4Gwd
+         F+FA==
+X-Gm-Message-State: AGi0PuYwVNt9cHZh1kuLLufR/nudsEGopHDPbLMLVEfIbppJEl9bwKk8
+        p41DUkxdOCH7ILJPKSrDDUhj2iKh/ZELFHEWIns=
+X-Google-Smtp-Source: APiQypLvFhqvwaErkuFG8n6IyUVYNWjly21J9H5nhf+TGWxgYZwQnRblj2PU+Ct5d3FUKcerwiQJsX0BOs8sNmoEPmc=
+X-Received: by 2002:aa7:c251:: with SMTP id y17mr3058772edo.117.1585836827713;
+ Thu, 02 Apr 2020 07:13:47 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <CAEzXK1pZufvY9VcXnjrrDMmiMoURtTaL1+8jGWL7k+yyGhKyDw@mail.gmail.com>
+ <20200401233121.GA152016@google.com>
+In-Reply-To: <20200401233121.GA152016@google.com>
+From:   =?UTF-8?B?THXDrXMgTWVuZGVz?= <luis.p.mendes@gmail.com>
+Date:   Thu, 2 Apr 2020 15:13:36 +0100
+Message-ID: <CAEzXK1qmYkpHzhbBmYG_Mvk+s6-NAJO-17+VW9fm-=trSZ-v5Q@mail.gmail.com>
+Subject: Re: Problem with PCIe enumeration of Google/Coral TPU Edge module on Linux
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Jason Cooper <jason@lakedaemon.net>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This contains multiple fix for PCIe qcom driver.
-Some optional reset and clocks were missing.
-Fix a problem with no PARF programming that cause kernel lock on load.
-Add support to force gen 1 speed if needed. (due to hardware limitation)
-Add ipq8064 rev 2 support that use a different tx termination offset.
+Hi Bjorn,
 
-v2:
-* Drop iATU programming (already done in pcie init)
-* Use max-link-speed instead of force-gen1 custom definition
-* Drop MRRS to 256B (Can't find a realy reason why this was suggested)
-* Introduce a new variant for different revision of ipq8064
+The command that worked was:
+#  sh -c "echo 1 >
+/sys/bus/pci/devices/0000\:00\:01.0/pci_bus/0000\:01/bus_rescan"
 
-Abhishek Sahu (1):
-  PCIe: qcom: change duplicate PCI reset to phy reset
+The only new information compared to yesterday dmesg are the following line=
+s:
+...
+[   20.633566] mvneta f1070000.ethernet eth0: Link is Up - 1Gbps/Full
+- flow control off
+[   20.633598] IPv6: ADDRCONF(NETDEV_CHANGE): eth0: link becomes ready
+[ 1048.661591] FAT-fs (sda1): Volume was not properly unmounted. Some
+data may be corrupt. Please run fsck.
+[ 1049.792121] EXT4-fs (sdb1): mounted filesystem with ordered data
+mode. Opts: (null)
+[60026.321476] pci_bus 0000:01: __pci_bus_assign_resources
+[60026.321481] pci_bus 0000:01: pbus_assign_resources_sorted
+[60026.321485] pci 0000:01:00.0: __dev_sort_resources
+[60026.321487] __assign_resources_sorted
+[60026.321490] pci 0000:01:00.0: __pci_bus_assign_resources
+[60026.321493] pci 0000:01:00.0: pdev_assign_fixed_resources
 
-Ansuel Smith (7):
-  PCIe: qcom: add missing ipq806x clocks in PCIe driver
-  devicetree: bindings: pci: add missing clks to qcom,pcie
-  PCIe: qcom: Fixed pcie_phy_clk branch issue
-  PCIe: qcom: add missing reset for ipq806x
-  devicetree: bindings: pci: add ext reset to qcom,pcie
-  PCIe: qcom: fix init problem with missing PARF programming
-  devicetree: bindings: pci: add ipq8064 rev 2 variant to qcom,pcie
+Lu=C3=ADs
 
-Sham Muthayyan (2):
-  PCIe: qcom: add ipq8064 rev2 variant and set tx term offset
-  PCIe: qcom: add Force GEN1 support
-
- .../devicetree/bindings/pci/qcom,pcie.txt     |  56 +++++++-
- drivers/pci/controller/dwc/pcie-qcom.c        | 134 +++++++++++++++---
- 2 files changed, 167 insertions(+), 23 deletions(-)
-
--- 
-2.25.1
-
+On Thu, Apr 2, 2020 at 12:31 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+> On Wed, Apr 01, 2020 at 10:20:42PM +0100, Lu=C3=ADs Mendes wrote:
+> > Hi Bjorn,
+> >
+> > Here is the dmesg output with the new kernel patch:
+> > https://paste.ubuntu.com/p/7cv7ZcyrnG/
+>
+> Thanks.  What happens if you do this:
+>
+>   # echo 1 > sys/devices/pci0000:00/0000:00:01.0/pci_bus/0000:01/rescan
+>
+> (I think on v5.6 that file is "bus_rescan" instead of "rescan".
+> There's a patch queued up to change it.)
