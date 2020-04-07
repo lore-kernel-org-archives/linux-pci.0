@@ -6,24 +6,24 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82D09C2BB1D
-	for <linux-pci@archiver.kernel.org>; Tue,  7 Apr 2020 12:02:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1ECAEC2BB1D
+	for <linux-pci@archiver.kernel.org>; Tue,  7 Apr 2020 12:02:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 63B5F20857
-	for <linux-pci@archiver.kernel.org>; Tue,  7 Apr 2020 12:02:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E692B206F7
+	for <linux-pci@archiver.kernel.org>; Tue,  7 Apr 2020 12:02:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728482AbgDGMCu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 7 Apr 2020 08:02:50 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:38010 "EHLO huawei.com"
+        id S1728618AbgDGMC6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 7 Apr 2020 08:02:58 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:53742 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726591AbgDGMCu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 7 Apr 2020 08:02:50 -0400
-Received: from DGGEMS401-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id 0E0729E1B38DA7DBF78E;
-        Tue,  7 Apr 2020 20:02:44 +0800 (CST)
+        id S1728054AbgDGMC6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 7 Apr 2020 08:02:58 -0400
+Received: from DGGEMS401-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id B81D56EE67588597E0CB;
+        Tue,  7 Apr 2020 20:02:23 +0800 (CST)
 Received: from DESKTOP-6T4S3DQ.china.huawei.com (10.47.82.134) by
  DGGEMS401-HUB.china.huawei.com (10.3.19.201) with Microsoft SMTP Server id
- 14.3.487.0; Tue, 7 Apr 2020 20:02:36 +0800
+ 14.3.487.0; Tue, 7 Apr 2020 20:02:16 +0800
 From:   Shiju Jose <shiju.jose@huawei.com>
 To:     <linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <rjw@rjwysocki.net>,
@@ -34,9 +34,9 @@ To:     <linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
 CC:     <linuxarm@huawei.com>, <jonathan.cameron@huawei.com>,
         <tanxiaofei@huawei.com>, <yangyicong@hisilicon.com>,
         Shiju Jose <shiju.jose@huawei.com>
-Subject: [v7 PATCH 5/6] ACPI / APEI: Add callback for non-standard HW errors to the GHES notifier
-Date:   Tue, 7 Apr 2020 13:00:44 +0100
-Message-ID: <20200407120045.958-6-shiju.jose@huawei.com>
+Subject: [v7 PATCH 1/6] ACPI / APEI: Add support to queuing up the non-fatal HW errors and notify
+Date:   Tue, 7 Apr 2020 13:00:40 +0100
+Message-ID: <20200407120045.958-2-shiju.jose@huawei.com>
 X-Mailer: git-send-email 2.26.0.windows.1
 In-Reply-To: <20200407120045.958-1-shiju.jose@huawei.com>
 References: <Shiju Jose>
@@ -51,114 +51,252 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add callback function for the non-standard HW errors to the GHES notifier.
+Add queuing up the non-fatal HW errors to the work queue and interface to
+notify the registered kernel drivers for the error recovery.
+The interface enables drivers to register the callback functions to
+receive the error notification, including the vendor-specific HW errors
+and supports handling the non-fatal HW errors in the bottom half.
 
+Suggested-by: Borislav Petkov <bp@alien8.de>
 Signed-off-by: Shiju Jose <shiju.jose@huawei.com>
 ---
- drivers/acpi/apei/ghes.c | 56 ++++++++++++++++++++++++++--------------
- 1 file changed, 37 insertions(+), 19 deletions(-)
+ drivers/acpi/apei/ghes.c | 127 +++++++++++++++++++++++++++++++++++++++
+ include/acpi/ghes.h      |  28 +++++++++
+ 2 files changed, 155 insertions(+)
 
 diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
-index 3b89c7621a0d..0c27ea8ea943 100644
+index 24c9642e8fc7..5c0ab5422311 100644
 --- a/drivers/acpi/apei/ghes.c
 +++ b/drivers/acpi/apei/ghes.c
-@@ -578,6 +578,34 @@ static int ghes_handle_arm_hw_error(struct notifier_block *nb,
- 	return NOTIFY_STOP;
- }
+@@ -33,6 +33,7 @@
+ #include <linux/irq_work.h>
+ #include <linux/llist.h>
+ #include <linux/genalloc.h>
++#include <linux/kfifo.h>
+ #include <linux/pci.h>
+ #include <linux/pfn.h>
+ #include <linux/aer.h>
+@@ -63,6 +64,11 @@
+ #define GHES_ESTATUS_CACHES_SIZE	4
  
-+static int ghes_handle_non_standard_event(struct notifier_block *nb,
-+					  unsigned long event, void *data)
-+{
-+	struct acpi_hest_generic_data *gdata = data;
-+	void *err = acpi_hest_get_payload(gdata);
-+	int sec_sev;
-+	guid_t *sec_type;
-+	const guid_t *fru_id = &guid_null;
-+	char *fru_text = "";
+ #define GHES_ESTATUS_IN_CACHE_MAX_NSEC	10000000000ULL
 +
-+	if (guid_equal((guid_t *)gdata->section_type, &CPER_SEC_PLATFORM_MEM) ||
-+	    guid_equal((guid_t *)gdata->section_type, &CPER_SEC_PCIE) ||
-+	    guid_equal((guid_t *)gdata->section_type, &CPER_SEC_PROC_ARM))
-+		return NOTIFY_DONE;
++#define GHES_EVENT_RING_SIZE	256
++#define GHES_GDATA_POOL_MIN_ALLOC_ORDER	3
++#define GHES_GDATA_POOL_MIN_SIZE	65536
 +
-+	sec_type = (guid_t *)gdata->section_type;
-+	sec_sev = ghes_severity(gdata->error_severity);
-+	if (gdata->validation_bits & CPER_SEC_VALID_FRU_ID)
-+		fru_id = (guid_t *)gdata->fru_id;
-+
-+	if (gdata->validation_bits & CPER_SEC_VALID_FRU_TEXT)
-+		fru_text = gdata->fru_text;
-+
-+	log_non_standard_event(sec_type, fru_id, fru_text, sec_sev,
-+			       err, gdata->error_data_length);
-+	return NOTIFY_OK;
-+}
-+
- static struct notifier_block ghes_notifier_mem_error = {
- 	.notifier_call = ghes_handle_memory_failure,
- };
-@@ -590,6 +618,10 @@ static struct notifier_block ghes_notifier_arm_hw_error = {
- 	.notifier_call = ghes_handle_arm_hw_error,
- };
+ /* Prevent too many caches are allocated because of RCU */
+ #define GHES_ESTATUS_CACHE_ALLOCED_MAX	(GHES_ESTATUS_CACHES_SIZE * 3 / 2)
  
-+static struct notifier_block ghes_notifier_non_standard_event = {
-+	.notifier_call = ghes_handle_non_standard_event,
+@@ -122,6 +128,19 @@ static DEFINE_MUTEX(ghes_list_mutex);
+  */
+ static DEFINE_SPINLOCK(ghes_notify_lock_irq);
+ 
++struct ghes_event_entry {
++	struct acpi_hest_generic_data *gdata;
++	int error_severity;
 +};
 +
- struct ghes_error_handler_list {
- 	const char *name;
- 	struct notifier_block *nb;
-@@ -608,6 +640,10 @@ static const struct ghes_error_handler_list ghes_error_handler_list[] = {
- 		.name = "ghes_notifier_arm_hw_error",
- 		.nb = &ghes_notifier_arm_hw_error,
- 	},
-+	{
-+		.name = "ghes_notifier_non_standard_event",
-+		.nb = &ghes_notifier_non_standard_event,
-+	},
- };
++static DEFINE_KFIFO(ghes_event_ring, struct ghes_event_entry,
++		    GHES_EVENT_RING_SIZE);
++
++static DEFINE_SPINLOCK(ghes_event_ring_lock);
++
++static struct gen_pool *ghes_gdata_pool;
++static unsigned long ghes_gdata_pool_size_request;
++
+ static struct gen_pool *ghes_estatus_pool;
+ static unsigned long ghes_estatus_pool_size_request;
  
- static BLOCKING_NOTIFIER_HEAD(ghes_event_notify_list);
-@@ -656,24 +692,13 @@ static DECLARE_WORK(ghes_event_work, ghes_event_work_func);
+@@ -188,6 +207,40 @@ int ghes_estatus_pool_init(int num_ghes)
+ 	return -ENOMEM;
+ }
+ 
++int ghes_gdata_pool_init(void)
++{
++	unsigned long addr, len;
++	int rc;
++
++	ghes_gdata_pool = gen_pool_create(GHES_GDATA_POOL_MIN_ALLOC_ORDER, -1);
++	if (!ghes_gdata_pool)
++		return -ENOMEM;
++
++	if (ghes_gdata_pool_size_request < GHES_GDATA_POOL_MIN_SIZE)
++		ghes_gdata_pool_size_request = GHES_GDATA_POOL_MIN_SIZE;
++
++	len = ghes_gdata_pool_size_request;
++	addr = (unsigned long)vmalloc(PAGE_ALIGN(len));
++	if (!addr)
++		goto err_pool_alloc;
++
++	vmalloc_sync_mappings();
++
++	rc = gen_pool_add(ghes_gdata_pool, addr, PAGE_ALIGN(len), -1);
++	if (rc)
++		goto err_pool_add;
++
++	return 0;
++
++err_pool_add:
++	vfree((void *)addr);
++
++err_pool_alloc:
++	gen_pool_destroy(ghes_gdata_pool);
++
++	return -ENOMEM;
++}
++
+ static int map_gen_v2(struct ghes *ghes)
+ {
+ 	return apei_map_generic_address(&ghes->generic_v2->read_ack_register);
+@@ -247,6 +300,10 @@ static struct ghes *ghes_new(struct acpi_hest_generic *generic)
+ 		goto err_unmap_status_addr;
+ 	}
+ 
++	ghes_gdata_pool_size_request += generic->records_to_preallocate *
++					generic->max_sections_per_record *
++					generic->max_raw_data_length;
++
+ 	return ghes;
+ 
+ err_unmap_status_addr:
+@@ -490,6 +547,49 @@ static void ghes_handle_aer(struct acpi_hest_generic_data *gdata)
+ #endif
+ }
+ 
++static BLOCKING_NOTIFIER_HEAD(ghes_event_notify_list);
++
++/**
++ * ghes_register_event_notifier - register an event notifier
++ * for the non-fatal HW errors.
++ * @nb: pointer to the notifier_block structure of the event handler.
++ *
++ * return 0 : SUCCESS, non-zero : FAIL
++ */
++int ghes_register_event_notifier(struct notifier_block *nb)
++{
++	return blocking_notifier_chain_register(&ghes_event_notify_list, nb);
++}
++EXPORT_SYMBOL_GPL(ghes_register_event_notifier);
++
++/**
++ * ghes_unregister_event_notifier - unregister the previously
++ * registered event notifier.
++ * @nb: pointer to the notifier_block structure of the event handler.
++ */
++void ghes_unregister_event_notifier(struct notifier_block *nb)
++{
++	blocking_notifier_chain_unregister(&ghes_event_notify_list, nb);
++}
++EXPORT_SYMBOL_GPL(ghes_unregister_event_notifier);
++
++static void ghes_event_work_func(struct work_struct *work)
++{
++	struct ghes_event_entry entry;
++	u32 len;
++
++	while (kfifo_get(&ghes_event_ring, &entry)) {
++		blocking_notifier_call_chain(&ghes_event_notify_list,
++					     entry.error_severity,
++					     entry.gdata);
++		len = acpi_hest_get_size(entry.gdata) +
++				acpi_hest_get_error_length(entry.gdata);
++		gen_pool_free(ghes_gdata_pool, (unsigned long)entry.gdata, len);
++	}
++}
++
++static DECLARE_WORK(ghes_event_work, ghes_event_work_func);
++
  static void ghes_do_proc(struct ghes *ghes,
  			 const struct acpi_hest_generic_status *estatus)
  {
--	int sev, sec_sev;
-+	int sev;
- 	struct acpi_hest_generic_data *gdata;
--	guid_t *sec_type;
--	const guid_t *fru_id = &guid_null;
--	char *fru_text = "";
- 	struct ghes_event_entry event_entry;
- 	u32 len;
+@@ -498,6 +598,8 @@ static void ghes_do_proc(struct ghes *ghes,
+ 	guid_t *sec_type;
+ 	const guid_t *fru_id = &guid_null;
+ 	char *fru_text = "";
++	struct ghes_event_entry event_entry;
++	u32 len;
  
  	sev = ghes_severity(estatus->error_severity);
  	apei_estatus_for_each_section(estatus, gdata) {
--		sec_type = (guid_t *)gdata->section_type;
--		sec_sev = ghes_severity(gdata->error_severity);
--		if (gdata->validation_bits & CPER_SEC_VALID_FRU_ID)
--			fru_id = (guid_t *)gdata->fru_id;
--
--		if (gdata->validation_bits & CPER_SEC_VALID_FRU_TEXT)
--			fru_text = gdata->fru_text;
--
- 		len = acpi_hest_get_record_size(gdata);
- 		event_entry.gdata = (void *)gen_pool_alloc(ghes_gdata_pool,
- 							   len);
-@@ -692,13 +717,6 @@ static void ghes_do_proc(struct ghes *ghes,
- 			pr_warn(GHES_PFX "ghes event queue full\n");
- 			break;
- 		}
--		{
--			void *err = acpi_hest_get_payload(gdata);
--
--			log_non_standard_event(sec_type, fru_id, fru_text,
--					       sec_sev, err,
--					       gdata->error_data_length);
--		}
- 	}
- }
+@@ -509,6 +611,25 @@ static void ghes_do_proc(struct ghes *ghes,
+ 		if (gdata->validation_bits & CPER_SEC_VALID_FRU_TEXT)
+ 			fru_text = gdata->fru_text;
  
++		len = acpi_hest_get_record_size(gdata);
++		event_entry.gdata = (void *)gen_pool_alloc(ghes_gdata_pool,
++							   len);
++		if (!event_entry.gdata) {
++			pr_warn(GHES_PFX "ghes gdata pool alloc fail\n");
++			break;
++		}
++
++		memcpy(event_entry.gdata, gdata, len);
++		event_entry.error_severity = sev;
++
++		if (kfifo_in_spinlocked(&ghes_event_ring, &event_entry, 1,
++					&ghes_event_ring_lock))
++			schedule_work(&ghes_event_work);
++		else {
++			pr_warn(GHES_PFX "ghes event queue full\n");
++			break;
++		}
++
+ 		if (guid_equal(sec_type, &CPER_SEC_PLATFORM_MEM)) {
+ 			struct cper_sec_mem_err *mem_err = acpi_hest_get_payload(gdata);
+ 
+@@ -1346,6 +1467,12 @@ static int __init ghes_init(void)
+ 	else
+ 		pr_info(GHES_PFX "Failed to enable APEI firmware first mode.\n");
+ 
++	rc = ghes_gdata_pool_init();
++	if (rc) {
++		pr_warn(GHES_PFX "ghes_gdata_pool_init failed\n");
++		goto err;
++	}
++
+ 	return 0;
+ err:
+ 	return rc;
+diff --git a/include/acpi/ghes.h b/include/acpi/ghes.h
+index e3f1cddb4ac8..a3dd82069069 100644
+--- a/include/acpi/ghes.h
++++ b/include/acpi/ghes.h
+@@ -50,6 +50,34 @@ enum {
+ 	GHES_SEV_PANIC = 0x3,
+ };
+ 
++
++#ifdef CONFIG_ACPI_APEI_GHES
++/**
++ * ghes_register_event_notifier - register an event notifier
++ * for the non-fatal HW errors.
++ * @nb: pointer to the notifier_block structure of the event notifier.
++ *
++ * Return : 0 - SUCCESS, non-zero - FAIL.
++ */
++int ghes_register_event_notifier(struct notifier_block *nb);
++
++/**
++ * ghes_unregister_event_notifier - unregister the previously
++ * registered event notifier.
++ * @nb: pointer to the notifier_block structure of the event notifier.
++ */
++void ghes_unregister_event_notifier(struct notifier_block *nb);
++#else
++static inline int ghes_register_event_notifier(struct notifier_block *nb)
++{
++	return -ENODEV;
++}
++
++static inline void ghes_unregister_event_notifier(struct notifier_block *nb)
++{
++}
++#endif
++
+ int ghes_estatus_pool_init(int num_ghes);
+ 
+ /* From drivers/edac/ghes_edac.c */
 -- 
 2.17.1
 
