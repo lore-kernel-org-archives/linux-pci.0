@@ -4,27 +4,27 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3E83C2BBFD
-	for <linux-pci@archiver.kernel.org>; Wed,  8 Apr 2020 15:38:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F116C2BB55
+	for <linux-pci@archiver.kernel.org>; Wed,  8 Apr 2020 15:38:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 733CB20730
-	for <linux-pci@archiver.kernel.org>; Wed,  8 Apr 2020 15:38:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6A4972076D
+	for <linux-pci@archiver.kernel.org>; Wed,  8 Apr 2020 15:38:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729640AbgDHPio (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 8 Apr 2020 11:38:44 -0400
+        id S1729609AbgDHPix (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 8 Apr 2020 11:38:53 -0400
 Received: from relmlor2.renesas.com ([210.160.252.172]:22084 "EHLO
         relmlie6.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1729552AbgDHPin (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Apr 2020 11:38:43 -0400
+        by vger.kernel.org with ESMTP id S1729552AbgDHPix (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Apr 2020 11:38:53 -0400
 X-IronPort-AV: E=Sophos;i="5.72,359,1580742000"; 
-   d="scan'208";a="43920571"
+   d="scan'208";a="43920582"
 Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
-  by relmlie6.idc.renesas.com with ESMTP; 09 Apr 2020 00:38:42 +0900
+  by relmlie6.idc.renesas.com with ESMTP; 09 Apr 2020 00:38:52 +0900
 Received: from localhost.localdomain (unknown [10.226.36.204])
-        by relmlir5.idc.renesas.com (Postfix) with ESMTP id 8724A400942C;
-        Thu,  9 Apr 2020 00:38:37 +0900 (JST)
+        by relmlir5.idc.renesas.com (Postfix) with ESMTP id C2326400942C;
+        Thu,  9 Apr 2020 00:38:47 +0900 (JST)
 From:   Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
 To:     Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -46,9 +46,9 @@ Cc:     Geert Uytterhoeven <geert+renesas@glider.be>,
         linux-rockchip@lists.infradead.org,
         Lad Prabhakar <prabhakar.csengg@gmail.com>,
         Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-Subject: [PATCH v7 5/8] dt-bindings: PCI: rcar: Add bindings for R-Car PCIe endpoint controller
-Date:   Wed,  8 Apr 2020 16:37:57 +0100
-Message-Id: <1586360280-10956-6-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Subject: [PATCH v7 7/8] PCI: Add Renesas R8A774C0 device ID
+Date:   Wed,  8 Apr 2020 16:37:59 +0100
+Message-Id: <1586360280-10956-8-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1586360280-10956-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
 References: <1586360280-10956-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
@@ -57,99 +57,27 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This patch adds the bindings for the R-Car PCIe endpoint driver.
+Add R8A774C0 device ID so that this can be used by
+pci_endpoint_test driver.
 
 Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
 Reviewed-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 ---
- .../devicetree/bindings/pci/rcar-pci-ep.yaml  | 77 +++++++++++++++++++
- 1 file changed, 77 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/rcar-pci-ep.yaml
+ include/linux/pci_ids.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/rcar-pci-ep.yaml b/Documentation/devicetree/bindings/pci/rcar-pci-ep.yaml
-new file mode 100644
-index 000000000000..65d32ccba4b5
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/rcar-pci-ep.yaml
-@@ -0,0 +1,77 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+# Copyright (C) 2020 Renesas Electronics Europe GmbH - https://www.renesas.com/eu/en/
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/pci/rcar-pci-ep.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: Renesas R-Car PCIe Endpoint
-+
-+maintainers:
-+  - Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-+  - Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-+
-+properties:
-+  compatible:
-+    items:
-+      - const: renesas,r8a774c0-pcie-ep
-+      - const: renesas,rcar-gen3-pcie-ep
-+
-+  reg:
-+    maxItems: 5
-+
-+  reg-names:
-+    items:
-+      - const: apb-base
-+      - const: memory0
-+      - const: memory1
-+      - const: memory2
-+      - const: memory3
-+
-+  power-domains:
-+    maxItems: 1
-+
-+  resets:
-+    maxItems: 1
-+
-+  clocks:
-+    maxItems: 1
-+
-+  clock-names:
-+    items:
-+      - const: pcie
-+
-+  max-functions:
-+    minimum: 1
-+    maximum: 6
-+
-+required:
-+  - compatible
-+  - reg
-+  - reg-names
-+  - resets
-+  - power-domains
-+  - clocks
-+  - clock-names
-+  - max-functions
-+
-+examples:
-+  - |
-+    #include <dt-bindings/clock/r8a774c0-cpg-mssr.h>
-+    #include <dt-bindings/power/r8a774c0-sysc.h>
-+
-+     pcie0_ep: pcie-ep@fe000000 {
-+            compatible = "renesas,r8a774c0-pcie-ep",
-+                         "renesas,rcar-gen3-pcie-ep";
-+            reg = <0xfe000000 0x80000>,
-+                  <0xfe100000 0x100000>,
-+                  <0xfe200000 0x200000>,
-+                  <0x30000000 0x8000000>,
-+                  <0x38000000 0x8000000>;
-+            reg-names = "apb-base", "memory0", "memory1", "memory2", "memory3";
-+            resets = <&cpg 319>;
-+            power-domains = <&sysc R8A774C0_PD_ALWAYS_ON>;
-+            clocks = <&cpg CPG_MOD 319>;
-+            clock-names = "pcie";
-+            max-functions = /bits/ 8 <1>;
-+    };
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 1dfc4e1dcb94..9e957c18abeb 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2460,6 +2460,7 @@
+ #define PCI_DEVICE_ID_RENESAS_SH7763	0x0004
+ #define PCI_DEVICE_ID_RENESAS_SH7785	0x0007
+ #define PCI_DEVICE_ID_RENESAS_SH7786	0x0010
++#define PCI_DEVICE_ID_RENESAS_R8A774C0	0x002d
+ 
+ #define PCI_VENDOR_ID_SOLARFLARE	0x1924
+ #define PCI_DEVICE_ID_SOLARFLARE_SFC4000A_0	0x0703
 -- 
 2.20.1
 
