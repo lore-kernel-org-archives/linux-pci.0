@@ -2,62 +2,64 @@ Return-Path: <SRS0=pSR+=5Z=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3C41C38A2D
-	for <linux-pci@archiver.kernel.org>; Thu,  9 Apr 2020 10:14:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FA74C2BA2B
+	for <linux-pci@archiver.kernel.org>; Thu,  9 Apr 2020 10:15:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E20D4208FE
-	for <linux-pci@archiver.kernel.org>; Thu,  9 Apr 2020 10:05:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 136C720771
+	for <linux-pci@archiver.kernel.org>; Thu,  9 Apr 2020 10:15:11 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iQL+Gq3Q"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725970AbgDIKFU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 9 Apr 2020 06:05:20 -0400
-Received: from mail-ot1-f67.google.com ([209.85.210.67]:33189 "EHLO
+        id S1726536AbgDIKPG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 9 Apr 2020 06:15:06 -0400
+Received: from mail-ot1-f67.google.com ([209.85.210.67]:43693 "EHLO
         mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725783AbgDIKFU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Apr 2020 06:05:20 -0400
-Received: by mail-ot1-f67.google.com with SMTP id 103so3519923otv.0;
-        Thu, 09 Apr 2020 03:05:18 -0700 (PDT)
+        with ESMTP id S1725783AbgDIKPG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Apr 2020 06:15:06 -0400
+Received: by mail-ot1-f67.google.com with SMTP id n25so7286341otr.10;
+        Thu, 09 Apr 2020 03:15:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=339j4MaqRyQUqdJT33toZfwVsRBRNf1r0tP9u8tA6/k=;
-        b=E1dFeILKHlqqZAzfS0yB6UoHzzwrLRtZ8X8WHp+c1guK812Ac3v1D8MqHQms5kdfj0
-         3yyMWYgtrOyTvMYdbGk7LG3bqCNXBbKmyVByy1WkLVRcyRNNHIKtAC/Ff/Ffrx0Eyxwg
-         34jnSSD42/QryQnaEchzDT17xTYgVRNKJotdWuyJBww1ox8bXhVVLeVPnmnemwEUjJ19
-         /vNgWYmIKQfliHgiboJ5yKJveN5HoiD5xnCDzFwefHb0Kx4WaqeSCvuqR7IYEwoGbmfa
-         xnjM1LOH0HynOtlqdJOWztV53gpIugfHYz9hYfqAXd12Wk/G21Z6fXwZK3+8Fm31/kRz
-         KE2A==
+        bh=/NSZZSKSu5WJt1RNoef9dBjCn8fIK10WqZ6WGC2+h/M=;
+        b=iQL+Gq3QA9xSB0G77RYT1DZl9zxaKwiQKV7PF57j5DmP4f7Z+K389I+vbjLtPG0pyw
+         TsgkfIqwbahrRJXW8+QzFOO4x6LTG5trpY7ZUktLi8S7PL9Ekma4X2V2Cx+W6nUc/hBP
+         o8WvUlKV5Pm80i7lOPwWp7H6C8ljw9sMS24M3L83ZVjo8e/XavF7iDhLPZJuU6P8JADJ
+         ROC17jM7JvA/1li4pUqoH2bNUu+g3zK4qs0i8GBIPfm6oJBciuxGe5xjvSUfcOJB1XQF
+         ZnBjsViCtVXvHYEeBNexwrm34bN3C5mE/kI0lc084QX8A9v2+w7IAa67TUTcdks1+NHE
+         UKFA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=339j4MaqRyQUqdJT33toZfwVsRBRNf1r0tP9u8tA6/k=;
-        b=h30BwOqb943WWLPKJDgPZV6lL+NL7sISAyPkNuJ9D6lLf9mwgvyARvISazHMLHBJ/J
-         zGU6EiBEHX7cf7g2LOxasCBv+Xp6wfAb4b5jqByxObQqG2FmgQVTUuPmh5YoiKMxy3n9
-         O0GJUtQwF7Y+Ekt8BnjR7Agp5dE0RL6uaGXuvKRn0gPusvwjy4uZ+o8WGgX61ZCTDdXL
-         5S6/ZlkO5QYdgvfOdcM+hp8V1GKr4pyHBcWP/sUnyB2mh1uz/o1T3vfYAXJSpQPUmpNh
-         5JjkAi6TSpQGc3rYHRiYebkBmMQoQq/w7vPWkpAO7TlnzUVoOSGlWzsS9vjmlB+NWir/
-         smnQ==
-X-Gm-Message-State: AGi0PuYh9GO3mc3Zu2qlNvDDlsNJTyh4Xxh2/0JWswsOtVToyt0eVrsg
-        0YOn2Lrumt52fNrOlGdctgVl+ZAg/ZbzVIT+A04=
-X-Google-Smtp-Source: APiQypI1ZTh7a2IVl4I8tXE41Mc3lGPBZY4nosM1GN+H5r+AL5nH4NCX6DGIGvQhFATTRXa0MRQAoqev/aam1hCwyf0=
-X-Received: by 2002:a9d:ef6:: with SMTP id 109mr2955843otj.43.1586426718309;
- Thu, 09 Apr 2020 03:05:18 -0700 (PDT)
+        bh=/NSZZSKSu5WJt1RNoef9dBjCn8fIK10WqZ6WGC2+h/M=;
+        b=pw90wKgMwoIxtYdUcUHsBgOAwcvDYSe4Wr6vnRAAhDL6zesqJpmqf+/+g9xBUR5qwt
+         97ot9VL4Djn4C//HuMPV/+CJrThTwyaFJDTSbSWEfHptCSN6UZmI+crPPLoN00ZWQE2b
+         OTSI8Lf/ge3dKJsXk+3UL9YgIQjpkpOaN7AxF5+f2i8uAgPN+wdBkd6Br8FPrDX9Wrjv
+         JamGcXzHyB8uaw+Mu/9woybBzxAUO30G8e0m1wW1CiNBfFQTiM5D18YapWKB/e4PUD8p
+         flGhkGSX0LgINmYRh7lTChuJjN/mW9zr1f2EN6WQr8f3yiaKIsJ8odDxMb4Dvh/C6foY
+         tQng==
+X-Gm-Message-State: AGi0PuYt0N/PZ1sbSRhXPL2m1XLUcDJwvgPfijtuhR2AQhMtWkkDYYdi
+        obZ0487HEJnrCQNzxWt+BTi2C+PQEH0xzGlzXHE=
+X-Google-Smtp-Source: APiQypJZ7ipa4bMCkW9mI2xrPpPXDZ+7ffNf67WIS2NRxz3lWs1SiJCULWWWchWx+Is+aY4H+ame5VIgN7uLwHuVtno=
+X-Received: by 2002:a9d:895:: with SMTP id 21mr8780254otf.365.1586427305866;
+ Thu, 09 Apr 2020 03:15:05 -0700 (PDT)
 MIME-Version: 1.0
-References: <1586360280-10956-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <1586360280-10956-8-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com> <e3f5fa77-f78e-edbf-9efc-53b5ea620460@cogentembedded.com>
-In-Reply-To: <e3f5fa77-f78e-edbf-9efc-53b5ea620460@cogentembedded.com>
+References: <1586360280-10956-7-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
+ <20200408235133.GA151858@google.com>
+In-Reply-To: <20200408235133.GA151858@google.com>
 From:   "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
-Date:   Thu, 9 Apr 2020 11:04:52 +0100
-Message-ID: <CA+V-a8s1E_kq_GENBTw3zGxKSPFnVKNY-ta9+c8W8nV4JFyEEw@mail.gmail.com>
-Subject: Re: [PATCH v7 7/8] PCI: Add Renesas R8A774C0 device ID
-To:     Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
+Date:   Thu, 9 Apr 2020 11:14:39 +0100
+Message-ID: <CA+V-a8taA-CYNC2vLoPPm9WHZwTOFoHe-c2zus_n5=qr4x32WQ@mail.gmail.com>
+Subject: Re: [PATCH v7 6/8] PCI: rcar: Add support for R-Car PCIe controller
+ in endpoint mode
+To:     Bjorn Helgaas <helgaas@kernel.org>
 Cc:     Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -84,45 +86,65 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Sergei and Bjorn,
+Hi Bjorn,
 
-On Thu, Apr 9, 2020 at 10:36 AM Sergei Shtylyov
-<sergei.shtylyov@cogentembedded.com> wrote:
+Thank you for the review.
+
+On Thu, Apr 9, 2020 at 12:51 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
 >
-> Hello!
+> Maybe:
 >
-> On 08.04.2020 18:37, Lad Prabhakar wrote:
+>   PCI: rcar: Add endpoint mode support
 >
-> > Add R8A774C0 device ID so that this can be used by
-> > pci_endpoint_test driver.
-> >
-> > Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-> > Reviewed-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-> > ---
-> >   include/linux/pci_ids.h | 1 +
-> >   1 file changed, 1 insertion(+)
-> >
-> > diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> > index 1dfc4e1dcb94..9e957c18abeb 100644
-> > --- a/include/linux/pci_ids.h
-> > +++ b/include/linux/pci_ids.h
-> > @@ -2460,6 +2460,7 @@
-> >   #define PCI_DEVICE_ID_RENESAS_SH7763        0x0004
-> >   #define PCI_DEVICE_ID_RENESAS_SH7785        0x0007
-> >   #define PCI_DEVICE_ID_RENESAS_SH7786        0x0010
-> > +#define PCI_DEVICE_ID_RENESAS_R8A774C0       0x002d
+> so the important "endpoint mode" part is early and doesn't get chopped
+> off or wrapped.  We already know it's PCIe and rcar-related.
 >
->     We don't add the device IDs in this file, unless used in several places.
-> Is it?
+Agreed will change it.
+
+> On Wed, Apr 08, 2020 at 04:37:58PM +0100, Lad Prabhakar wrote:
+> > This patch adds support for R-Car PCIe controller to work in endpoint mode.
 >
-My bad I should have checked it before making this change actually it
-was suggested in my previous version of the series but anyway atm this
-was planned to be  used only in pci_endpoint_test driver, so in that
-case Ill drop this patch.
+> s/This patch adds/Add/
+>
+OK
+
+> > +static int rcar_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no,
+> > +                             struct pci_epf_bar *epf_bar)
+> > +{
+> > +     int flags = epf_bar->flags | LAR_ENABLE | LAM_64BIT;
+> > +     struct rcar_pcie_endpoint *ep = epc_get_drvdata(epc);
+> > +     u64 size = 1ULL << fls64(epf_bar->size - 1);
+> > +     dma_addr_t cpu_addr = epf_bar->phys_addr;
+> > +     enum pci_barno bar = epf_bar->barno;
+> > +     struct rcar_pcie *pcie = &ep->pcie;
+> > +     u32 mask;
+> > +     int idx;
+> > +     int err;
+> > +
+> > +     idx = find_first_zero_bit(ep->ib_window_map, ep->num_ib_windows);
+> > +     if (idx >= ep->num_ib_windows) {
+> > +             dev_err(pcie->dev, "no free inbound window\n");
+> > +             return -EINVAL;
+> > +     }
+> > +
+> > +     if ((flags & PCI_BASE_ADDRESS_SPACE) == PCI_BASE_ADDRESS_SPACE_IO)
+> > +             flags |= IO_SPACE;
+> > +
+> > +     ep->bar_to_atu[bar] = idx;
+> > +     /* use 64 bit bars */
+>
+> s/64 bit bars/64-bit BARs/
+>
+OK shall replace it.
+
+> > +static const struct pci_epc_features rcar_pcie_epc_features = {
+> > +     .linkup_notifier = false,
+> > +     .msi_capable = true,
+> > +     .msix_capable = false,
+> > +     /* use 64-bit bars so mark bar1/3/5 as reserved */
+>
+> s/bar/BAR/g
+OK shall replace it.
 
 Cheers,
 --Prabhakar
-
-> [...]
->
-> MBR, Sergei
