@@ -2,96 +2,175 @@ Return-Path: <SRS0=9Ijd=52=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EF76C2BB86
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Apr 2020 13:14:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50F44C2BBC7
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Apr 2020 16:00:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1DE042082D
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Apr 2020 13:14:53 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BE9EH8I0"
+	by mail.kernel.org (Postfix) with ESMTP id 33EEE214DB
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Apr 2020 16:00:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726009AbgDJNOw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 10 Apr 2020 09:14:52 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:20237 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725930AbgDJNOv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Apr 2020 09:14:51 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1586524491;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=UgrYcoVu9FKjPVruinahWgmUMbCGqdc7Uj5CG/o/3e0=;
-        b=BE9EH8I0b69cJWf6b5ek2piRbFy/Ap0GHI3HZY5x6NlU2+d91kU+Ugv+qQyL7Lm+HagYbS
-        C3o74ylcZrk8oL0ZswTgktlfFIcKktH4DLfkUX14f5GJhU2+6WtshHIOS1DeUB6lePbcx8
-        2FW6R21rZ68uYCsOgSO7hVTOd8pivK4=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-271-XHtnpSRtO6i9i5L_NmSftw-1; Fri, 10 Apr 2020 09:14:47 -0400
-X-MC-Unique: XHtnpSRtO6i9i5L_NmSftw-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 8709D8017F3;
-        Fri, 10 Apr 2020 13:14:46 +0000 (UTC)
-Received: from x1.localdomain.com (ovpn-112-81.ams2.redhat.com [10.36.112.81])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 2DB5210027A9;
-        Fri, 10 Apr 2020 13:14:43 +0000 (UTC)
-From:   Hans de Goede <hdegoede@redhat.com>
-To:     "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Hans de Goede <hdegoede@redhat.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH] ACPI/PCI: pci_link: use extended_irq union member when setting ext-irq shareable
-Date:   Fri, 10 Apr 2020 15:14:42 +0200
-Message-Id: <20200410131442.22842-1-hdegoede@redhat.com>
+        id S1726682AbgDJQAt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 10 Apr 2020 12:00:49 -0400
+Received: from cloudserver094114.home.pl ([79.96.170.134]:61530 "EHLO
+        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726203AbgDJQAs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Apr 2020 12:00:48 -0400
+Received: from 185.80.35.16 (185.80.35.16) (HELO kreacher.localnet)
+ by serwer1319399.home.pl (79.96.170.134) with SMTP (IdeaSmtpServer 0.83.415)
+ id efbcdca732cb25c5; Fri, 10 Apr 2020 18:00:46 +0200
+From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To:     Linux PM <linux-pm@vger.kernel.org>,
+        Alan Stern <stern@rowland.harvard.edu>
+Cc:     Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Hans De Goede <hdegoede@redhat.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux I2C <linux-i2c@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>
+Subject: [PATCH 6/7] PM: sleep: core: Rename DPM_FLAG_LEAVE_SUSPENDED
+Date:   Fri, 10 Apr 2020 17:57:49 +0200
+Message-ID: <11863688.3RhLv4JJn2@kreacher>
+In-Reply-To: <1888197.j9z7NJ8yPn@kreacher>
+References: <1888197.j9z7NJ8yPn@kreacher>
 MIME-Version: 1.0
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The case ACPI_RESOURCE_TYPE_EXTENDED_IRQ inside acpi_pci_link_set()
-is correctly using resource->res.data.extended_irq.foo for most settings,
-but for the sharable setting it sofar has accidentally been using
-resource->res.data.irq.shareable instead of
-resource->res.data.extended_irq.shareable.
+From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
 
-Note that the old code happens to also work because the sharable field
-offset is the same for both the acpi_resource_irq and
-acpi_resource_extended_irq structs.
+Rename DPM_FLAG_LEAVE_SUSPENDED to DPM_FLAG_MAY_SKIP_RESUME which
+matches its purpose more closely.
 
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+No functional impact.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- drivers/acpi/pci_link.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ Documentation/driver-api/pm/devices.rst     | 4 ++--
+ Documentation/power/pci.rst                 | 2 +-
+ drivers/acpi/acpi_tad.c                     | 2 +-
+ drivers/base/power/main.c                   | 2 +-
+ drivers/i2c/busses/i2c-designware-platdrv.c | 2 +-
+ include/linux/pm.h                          | 6 +++---
+ 6 files changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-index 00a6da2121be..ed3d2182cf2c 100644
---- a/drivers/acpi/pci_link.c
-+++ b/drivers/acpi/pci_link.c
-@@ -322,10 +322,10 @@ static int acpi_pci_link_set(struct acpi_pci_link *=
-link, int irq)
- 		resource->res.data.extended_irq.polarity =3D
- 		    link->irq.polarity;
- 		if (link->irq.triggering =3D=3D ACPI_EDGE_SENSITIVE)
--			resource->res.data.irq.shareable =3D
-+			resource->res.data.extended_irq.shareable =3D
- 			    ACPI_EXCLUSIVE;
- 		else
--			resource->res.data.irq.shareable =3D ACPI_SHARED;
-+			resource->res.data.extended_irq.shareable =3D ACPI_SHARED;
- 		resource->res.data.extended_irq.interrupt_count =3D 1;
- 		resource->res.data.extended_irq.interrupts[0] =3D irq;
- 		/* ignore resource_source, it's optional */
---=20
-2.26.0
+diff --git a/Documentation/driver-api/pm/devices.rst b/Documentation/driver-api/pm/devices.rst
+index 4ace0eba4506..f342c7549b4c 100644
+--- a/Documentation/driver-api/pm/devices.rst
++++ b/Documentation/driver-api/pm/devices.rst
+@@ -803,7 +803,7 @@ general.]
+ However, it often is desirable to leave devices in suspend after system
+ transitions to the working state, especially if those devices had been in
+ runtime suspend before the preceding system-wide suspend (or analogous)
+-transition.  Device drivers can use the ``DPM_FLAG_LEAVE_SUSPENDED`` flag to
++transition.  Device drivers can use the ``DPM_FLAG_MAY_SKIP_RESUME`` flag to
+ indicate to the PM core (and middle-layer code) that they prefer the specific
+ devices handled by them to be left suspended and they have no problems with
+ skipping their system-wide resume callbacks for this reason.  Whether or not the
+@@ -825,7 +825,7 @@ device really can be left in suspend.
+ 
+ For devices whose "noirq", "late" and "early" driver callbacks are invoked
+ directly by the PM core, all of the system-wide resume callbacks are skipped if
+-``DPM_FLAG_LEAVE_SUSPENDED`` is set and the device is in runtime suspend during
++``DPM_FLAG_MAY_SKIP_RESUME`` is set and the device is in runtime suspend during
+ the ``suspend_noirq`` (or analogous) phase or the transition under way is a
+ proper system suspend (rather than anything related to hibernation) and the
+ device's wakeup settings are suitable for runtime PM (that is, it cannot
+diff --git a/Documentation/power/pci.rst b/Documentation/power/pci.rst
+index 9e1408121bea..f09b382b4621 100644
+--- a/Documentation/power/pci.rst
++++ b/Documentation/power/pci.rst
+@@ -1029,7 +1029,7 @@ into D0 going forward), but if it is in runtime suspend in pci_pm_thaw_noirq(),
+ the function will set the power.direct_complete flag for it (to make the PM core
+ skip the subsequent "thaw" callbacks for it) and return.
+ 
+-Setting the DPM_FLAG_LEAVE_SUSPENDED flag means that the driver prefers the
++Setting the DPM_FLAG_MAY_SKIP_RESUME flag means that the driver prefers the
+ device to be left in suspend after system-wide transitions to the working state.
+ This flag is checked by the PM core, but the PCI bus type informs the PM core
+ which devices may be left in suspend from its perspective (that happens during
+diff --git a/drivers/acpi/acpi_tad.c b/drivers/acpi/acpi_tad.c
+index 33a4bcdaa4d7..7d45cce0c3c1 100644
+--- a/drivers/acpi/acpi_tad.c
++++ b/drivers/acpi/acpi_tad.c
+@@ -624,7 +624,7 @@ static int acpi_tad_probe(struct platform_device *pdev)
+ 	 */
+ 	device_init_wakeup(dev, true);
+ 	dev_pm_set_driver_flags(dev, DPM_FLAG_SMART_SUSPEND |
+-				     DPM_FLAG_LEAVE_SUSPENDED);
++				     DPM_FLAG_MAY_SKIP_RESUME);
+ 	/*
+ 	 * The platform bus type layer tells the ACPI PM domain powers up the
+ 	 * device, so set the runtime PM status of it to "active".
+diff --git a/drivers/base/power/main.c b/drivers/base/power/main.c
+index aa9c8df9fc4b..b6f785024b24 100644
+--- a/drivers/base/power/main.c
++++ b/drivers/base/power/main.c
+@@ -1247,7 +1247,7 @@ static int __device_suspend_noirq(struct device *dev, pm_message_t state, bool a
+ 	 * to be skipped.
+ 	 */
+ 	if (atomic_read(&dev->power.usage_count) > 1 ||
+-	    !(dev_pm_test_driver_flags(dev, DPM_FLAG_LEAVE_SUSPENDED) &&
++	    !(dev_pm_test_driver_flags(dev, DPM_FLAG_MAY_SKIP_RESUME) &&
+ 	      dev->power.may_skip_resume))
+ 		dev->power.must_resume = true;
+ 
+diff --git a/drivers/i2c/busses/i2c-designware-platdrv.c b/drivers/i2c/busses/i2c-designware-platdrv.c
+index c98befe2a92e..b6270e69f853 100644
+--- a/drivers/i2c/busses/i2c-designware-platdrv.c
++++ b/drivers/i2c/busses/i2c-designware-platdrv.c
+@@ -357,7 +357,7 @@ static int dw_i2c_plat_probe(struct platform_device *pdev)
+ 	dev_pm_set_driver_flags(&pdev->dev,
+ 				DPM_FLAG_SMART_PREPARE |
+ 				DPM_FLAG_SMART_SUSPEND |
+-				DPM_FLAG_LEAVE_SUSPENDED);
++				DPM_FLAG_MAY_SKIP_RESUME);
+ 
+ 	/* The code below assumes runtime PM to be disabled. */
+ 	WARN_ON(pm_runtime_enabled(&pdev->dev));
+diff --git a/include/linux/pm.h b/include/linux/pm.h
+index 28fd444fb5c9..f545666120d0 100644
+--- a/include/linux/pm.h
++++ b/include/linux/pm.h
+@@ -547,7 +547,7 @@ struct pm_subsys_data {
+  * NO_DIRECT_COMPLETE: Do not apply direct-complete optimization to the device.
+  * SMART_PREPARE: Check the return value of the driver's ->prepare callback.
+  * SMART_SUSPEND: No need to resume the device from runtime suspend.
+- * LEAVE_SUSPENDED: Avoid resuming the device during system resume if possible.
++ * MAY_SKIP_RESUME: Avoid resuming the device during system resume if possible.
+  *
+  * Setting SMART_PREPARE instructs bus types and PM domains which may want
+  * system suspend/resume callbacks to be skipped for the device to return 0 from
+@@ -562,13 +562,13 @@ struct pm_subsys_data {
+  * invocations of the ->suspend_late and ->suspend_noirq callbacks provided by
+  * the driver if they decide to leave the device in runtime suspend.
+  *
+- * Setting LEAVE_SUSPENDED informs the PM core and middle-layer code that the
++ * Setting MAY_SKIP_RESUME informs the PM core and middle-layer code that the
+  * driver prefers the device to be left in suspend after system resume.
+  */
+ #define DPM_FLAG_NO_DIRECT_COMPLETE	BIT(0)
+ #define DPM_FLAG_SMART_PREPARE		BIT(1)
+ #define DPM_FLAG_SMART_SUSPEND		BIT(2)
+-#define DPM_FLAG_LEAVE_SUSPENDED	BIT(3)
++#define DPM_FLAG_MAY_SKIP_RESUME	BIT(3)
+ 
+ struct dev_pm_info {
+ 	pm_message_t		power_state;
+-- 
+2.16.4
+
+
+
 
