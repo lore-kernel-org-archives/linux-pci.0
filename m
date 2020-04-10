@@ -2,98 +2,125 @@ Return-Path: <SRS0=9Ijd=52=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22C31C2BA2B
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Apr 2020 17:07:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86E5FC2BA2B
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Apr 2020 17:13:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E7C7D207FF
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Apr 2020 17:07:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 58DB5207FF
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Apr 2020 17:13:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FL5qTg4n"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZwfcHmXB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726203AbgDJRHS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 10 Apr 2020 13:07:18 -0400
-Received: from mail-wm1-f66.google.com ([209.85.128.66]:55785 "EHLO
-        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726142AbgDJRHS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Apr 2020 13:07:18 -0400
-Received: by mail-wm1-f66.google.com with SMTP id e26so3053875wmk.5
-        for <linux-pci@vger.kernel.org>; Fri, 10 Apr 2020 10:07:18 -0700 (PDT)
+        id S1726173AbgDJRNE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 10 Apr 2020 13:13:04 -0400
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:34463 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726142AbgDJRNE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Apr 2020 13:13:04 -0400
+Received: by mail-wr1-f65.google.com with SMTP id 65so2987878wrl.1
+        for <linux-pci@vger.kernel.org>; Fri, 10 Apr 2020 10:13:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=clJNAroYTWV4rFME+VeIhbSZLGr3iQaW6NDSUMyrTgw=;
-        b=FL5qTg4nFJ/6Eu82dsF6X+euCiginV5M9aN1kQ6Oxlx9WUrVLzSKyHblXlhSpP4ZjG
-         yMF6oOIzL+fs44m+5QvdMVlgogNTGyYmoyzo13BKNVRlvUpHQTF1fGXE3zqGXFzllvku
-         jXqUVWzEHEruhOm8BeEBoktOd6G0lgeXV9oIp5dWzp6QuNV3gLqzmaH4PxyW0fBN/rBV
-         +zsGruFnMg5aMG5Wge/sp+iGnJ4BhsAbOqDUDAnAQnk0GOiFAu02FPMcM8L6VsY1t1TA
-         /XcNHBZLB0M9iv7MTHQELe+sGnHjH5NSgWxEGF+BnsABclCyvlNs7MaurokY93y2x13v
-         xfEg==
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding:content-language;
+        bh=4+OqSKL5rRrfoKU/1VqAfq4iEHzWI8XxnyhjlWGzoFE=;
+        b=ZwfcHmXBeF9+p29iFN8MvbSVYYb7U/FzgvD7kGIoHxtXrtreqCMBTENi+tYMwzhMhV
+         KHIv084oKnUYoJKR4A1zG/67MI6VlYBCkZFGeqehbufWvW7hYX3Xn9Tei2R40wS0ZxVW
+         ZZVx1Hyu7wqf098N3VowRpc7L8YgpNy0nqh4YxsZ/9rjlGd+TDF+HggJBuVQMp8rWKHH
+         Cq5zmAS/pfjNWPBw8V5pyKluF70KpDwkRlIYLNcYOeP/rxpoBGo1lqFrFjYsGMNdp8jc
+         r2ZrKIKlPlwhqChHgyGaiR53/k4smwcyFJn1AcXW37lmjZ49auy/ewe/J7M+9ToLnbSZ
+         O80w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=clJNAroYTWV4rFME+VeIhbSZLGr3iQaW6NDSUMyrTgw=;
-        b=S96e0H0GpmU+iqxnKq7thIHT/B6BYDZLTUFHnPoyz3YzPn8jDy8rkcQB9ov9yq6qaw
-         3xsI3G5jB4Jzhjih+vhenoy9IXSdC6ABKUwLYFzOup39cDXWEqPCet1vbACvzg4KqpU5
-         26R68RlN+BGSqmz0BBeUYO8Og40FMpVs1y/6eH1fX7+zZPXlmw6dp3NSUyzZYDPVpXQq
-         oujBBHheuf5Vjnw0nOTlgyA1euTPPCoI6Hf08E8putxSohEL7KtvbwBtFzB3teDFGG7K
-         zrb26V17EroLzAgjNSwLmVfQLcGZYvRQRGdS64LbVvECIdM4a91C8HC5jP1ztu5AsSvu
-         hbQg==
-X-Gm-Message-State: AGi0PubXfkzf3u6MEPXlTsLktp6HQB8I/eTPj6bPNUWNwYTcI2E4f97v
-        KHGnuqnaGN1dQkQrNNvXqx8=
-X-Google-Smtp-Source: APiQypICHuExie1wnsp+D/paEQPShT2cLdtXGr4O+4g8z2a4gWSYVQbESOQWg9hDvuXw7hhw7rx1nA==
-X-Received: by 2002:a05:600c:2314:: with SMTP id 20mr5867075wmo.35.1586538437353;
-        Fri, 10 Apr 2020 10:07:17 -0700 (PDT)
-Received: from localhost.localdomain (51B6D8A0.dsl.pool.telekom.hu. [81.182.216.160])
-        by smtp.gmail.com with ESMTPSA id j68sm3618363wrj.32.2020.04.10.10.07.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 10 Apr 2020 10:07:16 -0700 (PDT)
-From:   Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
-To:     helgaas@kernel.org
-Cc:     Bolarinwa Olayemi Saheed <refactormyself@gmail.com>,
-        bjorn@helgaas.com, skhan@linuxfoundation.org,
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding
+         :content-language;
+        bh=4+OqSKL5rRrfoKU/1VqAfq4iEHzWI8XxnyhjlWGzoFE=;
+        b=iezbEc2CIeIQrdram8nUMKuT2fStVVTE8pXwccoyqlnUMSwBifGNQwhtdkA2ymvaYi
+         Ixr3MHa/LeOL4eu6OrxQoMAX6qcCxbzlbz58oIMnCIqBLAd7cbEZDaGm4FuUYp7oHQjp
+         cTcAJ/VSTrq+T5WfK/xcFoT0IrDu+JwQ2QZd0VYitm+CO2xo3QAARMr5QuAmlv3HjJD+
+         g62C+MeEr5bk5OEUl34f9h18+ofBSanG54WEs8YrNKzFEh6hHJmhmggQ1yU4/x7wFE/q
+         VMCgpvgzUWSqO/UZYU5nZ2oCsvCi1fUyjbl1z2ECAPKp5FtqAZS9vEsR+6vmvBHJFHa3
+         EIDg==
+X-Gm-Message-State: AGi0PuYiCoYQBV0C+/nvwFCB8aPLBEVMBtKIy9WOtFHEyJkgCh3ukoHc
+        e+pmlldyoO8J7fVtt9bIPm3fWG9FI3IvOA==
+X-Google-Smtp-Source: APiQypJzJr3NO4kPMLNCyCIYqYUGdHlBDBGGY9bVFf7RY/wgp3eEWiIARXRl1YMYLah8D3cdh1tcpw==
+X-Received: by 2002:adf:fc05:: with SMTP id i5mr5383153wrr.127.1586538782214;
+        Fri, 10 Apr 2020 10:13:02 -0700 (PDT)
+Received: from net.saheed (51B6D8A0.dsl.pool.telekom.hu. [81.182.216.160])
+        by smtp.gmail.com with ESMTPSA id f12sm3456407wrm.94.2020.04.10.10.13.01
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 10 Apr 2020 10:13:01 -0700 (PDT)
+Subject: Re: [PATCH] Replace -EINVAL with PCIBIOS_BAD_REGISTER_NUMBER
+To:     Yicong Yang <yangyicong@hisilicon.com>, helgaas@kernel.org
+Cc:     bjorn@helgaas.com, skhan@linuxfoundation.org,
         linux-pci@vger.kernel.org
-Subject: [PATCH v2] Replace -EINVAL with a positive error number
-Date:   Fri, 10 Apr 2020 19:07:13 +0200
-Message-Id: <20200410170713.2029-1-refactormyself@gmail.com>
-X-Mailer: git-send-email 2.17.1
+References: <20200409161609.2034-1-refactormyself@gmail.com>
+ <31a43a1a-d271-7652-db62-1a7c55cd135b@hisilicon.com>
+From:   Saheed Bolarinwa <refactormyself@gmail.com>
+Message-ID: <7a543d6e-4c23-c9d1-7abd-0bbf4031b2c1@gmail.com>
+Date:   Fri, 10 Apr 2020 18:13:11 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.6.0
+MIME-Version: 1.0
+In-Reply-To: <31a43a1a-d271-7652-db62-1a7c55cd135b@hisilicon.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Signed-off-by: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
----
- drivers/pci/access.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index 451f2b8b2b3c..d5460eb92c12 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -409,7 +409,7 @@ int pcie_capability_read_word(struct pci_dev *dev, int pos, u16 *val)
- 
- 	*val = 0;
- 	if (pos & 1)
--		return PCIBIOS_BAD_REGISTER_NUMBER;
-+		return pcibios_err_to_errno(PCIBIOS_BAD_REGISTER_NUMBER);
- 
- 	if (pcie_capability_reg_implemented(dev, pos)) {
- 		ret = pci_read_config_word(dev, pci_pcie_cap(dev) + pos, val);
-@@ -444,7 +444,7 @@ int pcie_capability_read_dword(struct pci_dev *dev, int pos, u32 *val)
- 
- 	*val = 0;
- 	if (pos & 3)
--		return PCIBIOS_BAD_REGISTER_NUMBER;
-+		return pcibios_err_to_errno(PCIBIOS_BAD_REGISTER_NUMBER);
- 
- 	if (pcie_capability_reg_implemented(dev, pos)) {
- 		ret = pci_read_config_dword(dev, pci_pcie_cap(dev) + pos, val);
--- 
-2.17.1
+On 4/10/20 3:28 AM, Yicong Yang wrote:
+> Hi Bolarinwa,
+>
+> I notice some drivers use these functions and if there is an error, pass the error code
+> directly to the userspace. As it's our private error code, is it appropriate to pass or
+> should we call pcibios_err_to_errno()(include/linux/pci.h, line 672) to do the conversion?
 
+Hello Yicong,
+
+Thank you for pointing out that function to me. I have resent the patch.
+
+Saheed
+
+
+> Regards,
+> Yicong
+>
+> On 2020/4/10 0:16, Bolarinwa Olayemi Saheed wrote:
+>> Signed-off-by: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
+>> Suggested-by: Bjorn Helgaas <bjorn@helgaas.com>
+>> ---
+>>   drivers/pci/access.c | 4 ++--
+>>   1 file changed, 2 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+>> index 79c4a2ef269a..451f2b8b2b3c 100644
+>> --- a/drivers/pci/access.c
+>> +++ b/drivers/pci/access.c
+>> @@ -409,7 +409,7 @@ int pcie_capability_read_word(struct pci_dev *dev, int pos, u16 *val)
+>>   
+>>   	*val = 0;
+>>   	if (pos & 1)
+>> -		return -EINVAL;
+>> +		return PCIBIOS_BAD_REGISTER_NUMBER;
+>>   
+>>   	if (pcie_capability_reg_implemented(dev, pos)) {
+>>   		ret = pci_read_config_word(dev, pci_pcie_cap(dev) + pos, val);
+>> @@ -444,7 +444,7 @@ int pcie_capability_read_dword(struct pci_dev *dev, int pos, u32 *val)
+>>   
+>>   	*val = 0;
+>>   	if (pos & 3)
+>> -		return -EINVAL;
+>> +		return PCIBIOS_BAD_REGISTER_NUMBER;
+>>   
+>>   	if (pcie_capability_reg_implemented(dev, pos)) {
+>>   		ret = pci_read_config_dword(dev, pci_pcie_cap(dev) + pos, val);
