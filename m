@@ -2,94 +2,97 @@ Return-Path: <SRS0=9Ijd=52=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53953C2D0EC
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Apr 2020 17:38:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3864CC2D0EC
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Apr 2020 18:48:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 18CF82078E
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Apr 2020 17:38:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586540305;
-	bh=Xe5UQOwIMmuLN/H9Uwn+mB5L4ZX04mnr0GuGaIfcGHg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=BObnDFe+OTLe+AeCtxNWeOMySvo2Sp86amzcVvOYhZ3cAr/izzpBudCBHoAT2dKN+
-	 xUI6/8a391iEQfF0ofVS3IhBb7qHm4v18EeObCaYdV7SXLa03bhwRgUAdJ81/cqweR
-	 KP/yIXVmsVrM+LXR4Ye1R7m6Ak4vYVBVY3mvNoJ0=
+	by mail.kernel.org (Postfix) with ESMTP id DF39120801
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Apr 2020 18:48:29 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=sifive.com header.i=@sifive.com header.b="mT8ZqmB5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726706AbgDJRiY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 10 Apr 2020 13:38:24 -0400
-Received: from mail-oi1-f194.google.com ([209.85.167.194]:33909 "EHLO
-        mail-oi1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726177AbgDJRiX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Apr 2020 13:38:23 -0400
-Received: by mail-oi1-f194.google.com with SMTP id 7so1125975oij.1;
-        Fri, 10 Apr 2020 10:38:24 -0700 (PDT)
+        id S1726594AbgDJSs2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 10 Apr 2020 14:48:28 -0400
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:34641 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726177AbgDJSs2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Apr 2020 14:48:28 -0400
+Received: by mail-pl1-f194.google.com with SMTP id a23so936143plm.1
+        for <linux-pci@vger.kernel.org>; Fri, 10 Apr 2020 11:48:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=sifive.com; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=GDlhvc737A1B7cqsgBD4sqvBWI/XRw9Xyu07r8MIXfc=;
+        b=mT8ZqmB5a9bl0OGDjI6ftL1heRzJQ9Muiz3UgW+QH/iqaDz7TeV23rAllAwKs6NKFb
+         KKJgab8ftLZAuE4FwVh2LzuvDvQssOBccrT30WDH8S4YkF9QABOr3C+q28elqXqNlW6D
+         4F7BLE/acJZgPQvH/PP0Kqh10ygzz/WnfBGpFgHyyhZ7alb7OuyHvBUVzI5ayt0RRnII
+         2ko1H0m+scD6lIcYskm5P/WewB6mVnWOpIWgnUXK8sTbXB3SgVAPPPGmmixva4s2F1Db
+         n+VrYaxpY4+Mg5VOoMXoAVjXNF9MzD0azmeAhN7kPuUF9Z2/NIFO3TQTFAXAQsvdoHN6
+         jd7A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=n6yX0b8Hm0JPUuZWcgvM4ULeOvzJFOtIDNl+L5FLnKg=;
-        b=fGURTeQRg4yuyxdWnhDgKaPJcSGLNC0X0/y4dBycuDf+nhPRk8byvTqjqE8h6JLRiZ
-         4sgtN/OzTVb28X6h6WF+9RAcK/1+PeM0SyZZ71VoxRVm5/TuZ0Zmdm/tZRt5a/JUIoz+
-         Phb7FWHg21tKb7tyCvxUkv90HYy4kB5dIZsJthtKyPmqoypekkc/4JYbxCRN7TG3d7St
-         ATXARfYvnK/MGvFlobFk6ZEQUZaudEQ/sX23OShyih4XwvVAnMd/zHqYWIqWFymq5dRX
-         qIuRdZCKcl130VvaVq9lrd3RBF3Tw/Ddgg5yxvUP8bRS41g8g6gRSeI98mkYVElQmOZf
-         BCuA==
-X-Gm-Message-State: AGi0Pub7rZKe831fTfwO/z6Lf6hVNXIL6JhWr/eb0khwR3HSTqwTgAJZ
-        FEUwt0QDXDda0GrPu57Awg==
-X-Google-Smtp-Source: APiQypLKMR+p1kanXyT4GdXxKgvLIIesn44nxyyn3jlU9qHM+24UxE9ucdA80WfebHRxZeQ5740vzg==
-X-Received: by 2002:aca:3745:: with SMTP id e66mr3938591oia.153.1586540303586;
-        Fri, 10 Apr 2020 10:38:23 -0700 (PDT)
-Received: from rob-hp-laptop (ip-99-203-29-27.pools.spcsdns.net. [99.203.29.27])
-        by smtp.gmail.com with ESMTPSA id e21sm1635967ooh.31.2020.04.10.10.38.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 10 Apr 2020 10:38:22 -0700 (PDT)
-Received: (nullmailer pid 24581 invoked by uid 1000);
-        Fri, 10 Apr 2020 16:38:17 -0000
-Date:   Fri, 10 Apr 2020 11:38:17 -0500
-From:   Rob Herring <robh@kernel.org>
-To:     Kishon Vijay Abraham I <kishon@ti.com>
-Cc:     Tom Joseph <tjoseph@cadence.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/3] dt-bindings: PCI: cadence: Deprecate
- inbound/outbound specific bindings
-Message-ID: <20200410163817.GA24330@bogus>
-References: <20200327104727.4708-1-kishon@ti.com>
- <20200327104727.4708-2-kishon@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200327104727.4708-2-kishon@ti.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=GDlhvc737A1B7cqsgBD4sqvBWI/XRw9Xyu07r8MIXfc=;
+        b=T/YDX4ncl5te0Bq+zvxKfWk+MoL/WXqY/uR9f7r2/akHufvY5skL/xnhX0Hhi3I2hc
+         1R6pG0GvIlh0ROBXj8CmgRuGrewu+tP9yTTI0YNzaG5RJwUIeY5ek120jIvGfu7Bwr0+
+         Y/Tf2XpYuyiVBhQ7ApQUR4wY4NVCXR+loLkUK71zOPFfd2L0O7U5KqgmYkBjwUJtYWui
+         LlLwmMx427Vm5VM+UAuowmTvCxOSsTgNVtb+gn6EFLkkLmkur8RGcU2pQNpdCKbpLMJz
+         5utw3u70uYv/wPEKb5LoImgqmszD6qNzlXcEWJJpjgel3N+m13Sjv9A9XPuJ0YNjUxZL
+         Uhvg==
+X-Gm-Message-State: AGi0Pubnbnt1FOM5BW6QDIZjEEoVxNrSLxWd+tgRxQLE0x67AK6G70DI
+        JE2A+RWW/Iv/UZDM851cnH3MGw==
+X-Google-Smtp-Source: APiQypITCmOjMlF7oMcP8hYQCto8Gc0uxLeigoyYZ68+fhV9ErbYZsK+3ARklA9XJdGzoj4RtmXEZA==
+X-Received: by 2002:a17:902:9f8f:: with SMTP id g15mr5742612plq.221.1586544508317;
+        Fri, 10 Apr 2020 11:48:28 -0700 (PDT)
+Received: from nuc7.sifive.com (c-24-5-48-146.hsd1.ca.comcast.net. [24.5.48.146])
+        by smtp.gmail.com with ESMTPSA id u10sm2382619pjd.13.2020.04.10.11.48.26
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 10 Apr 2020 11:48:27 -0700 (PDT)
+From:   Alan Mikhak <alan.mikhak@sifive.com>
+X-Google-Original-From: Alan Mikhak < alan.mikhak@sifive.com >
+To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        kernel-janitors@vger.kernel.org, kishon@ti.com,
+        bhelgaas@google.com, martin.petersen@oracle.com, vidyas@nvidia.com,
+        efremov@linux.com, kjlu@umn.edu, paul.walmsley@sifive.com
+Cc:     Alan Mikhak <alan.mikhak@sifive.com>
+Subject: [PATCH][next] PCI: endpoint: functions/pci-epf-test: fix leak of buf in pci_epf_test_write()
+Date:   Fri, 10 Apr 2020 11:48:18 -0700
+Message-Id: <1586544498-29978-1-git-send-email-alan.mikhak@sifive.com>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, 27 Mar 2020 16:17:25 +0530, Kishon Vijay Abraham I wrote:
-> Deprecate cdns,max-outbound-regions and cdns,no-bar-match-nbits for
-> host mode as both these could be derived from "ranges" and "dma-ranges"
-> property. "cdns,max-outbound-regions" property would still be required
-> for EP mode.
-> 
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->  .../bindings/pci/cdns,cdns-pcie-ep.yaml       |  2 +-
->  .../bindings/pci/cdns,cdns-pcie-host.yaml     |  3 +--
->  .../devicetree/bindings/pci/cdns-pcie-ep.yaml | 25 +++++++++++++++++++
->  .../bindings/pci/cdns-pcie-host.yaml          | 10 ++++++++
->  .../devicetree/bindings/pci/cdns-pcie.yaml    |  8 ------
->  5 files changed, 37 insertions(+), 11 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/pci/cdns-pcie-ep.yaml
-> 
+From: Alan Mikhak <alan.mikhak@sifive.com>
 
-Reviewed-by: Rob Herring <robh@kernel.org>
+In the case where pci_epf_test_write() cannot transfer using DMA, the
+allocation of 'buf' leaks on the error return path. Fix by jumping to
+the label err_dma_map to free the 'buf' before returning.
+
+Fixes: a558357b1b34 ("PCI: endpoint: functions/pci-epf-test: Add DMA support to transfer data")
+Signed-off-by: Alan Mikhak <alan.mikhak@sifive.com>
+---
+ drivers/pci/endpoint/functions/pci-epf-test.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+index 60330f3e3751..22fb2858f20a 100644
+--- a/drivers/pci/endpoint/functions/pci-epf-test.c
++++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+@@ -438,7 +438,7 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
+ 		if (!epf_test->dma_supported) {
+ 			dev_err(dev, "Cannot transfer data using DMA\n");
+ 			ret = -EINVAL;
+-			goto err_map_addr;
++			goto err_dma_map;
+ 		}
+ 
+ 		src_phys_addr = dma_map_single(dma_dev, buf, reg->size,
+-- 
+2.7.4
+
