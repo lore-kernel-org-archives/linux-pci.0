@@ -2,105 +2,109 @@ Return-Path: <SRS0=9Ijd=52=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F38D8C2BB85
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Apr 2020 02:23:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92BB5C2D0EC
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Apr 2020 03:53:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CA7802145D
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Apr 2020 02:23:48 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JFVBcnHt"
+	by mail.kernel.org (Postfix) with ESMTP id 60089206C0
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Apr 2020 03:53:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1586490791;
+	bh=vYw31K3dfJsinyVeUtCj5HraLL20BgC3xRu/iOIZ+8k=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=rd6gae7LlMQr647cPJjqLObDNpWVfPJFg/47nc73kzDTeI6SAJH+L3MJc6vCwRDM1
+	 k8+88lcudzWi0kuJ6qFr/UyX0Z5tEpxgH+R5eJNJC2R4AHYzOLURjT649vwBrieb4N
+	 x3fRvZZCBBRTbGEa5+n19u7r5ogAQOawbzqbG0kA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726082AbgDJCXr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 9 Apr 2020 22:23:47 -0400
-Received: from mail-lj1-f196.google.com ([209.85.208.196]:34548 "EHLO
-        mail-lj1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725987AbgDJCXr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Apr 2020 22:23:47 -0400
-Received: by mail-lj1-f196.google.com with SMTP id m8so637419lji.1;
-        Thu, 09 Apr 2020 19:23:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=C7nub2iC7HflOtCQHAAafbgeNv5reSfX1ICVh/feaUg=;
-        b=JFVBcnHtGbIdWIzex5YH9WvtY0JYL61bG3IWoWHDvhab8sS7zyKzabEW+N1KhP6CDJ
-         o//t4xh1c9ED3fWEGmYjw8T9ATBMJ/HsSaaCo2OzTHaNWXgova2j3RPoUf7Jcb/KRTfd
-         thrhVzgcQM1Cdxy4FaObzOCGdPDYBMaTZAh9N14VKmxdNK2cxmxyAuU5S+jBoK6qlwH9
-         SdXdmi1R2j4UVjl94PbHzLTiGa8dXQ+8UN2Tj2PggHIHyEcZC9GQblO15j3CWmobYXZQ
-         C2ZtS8XrVOnIW0U/pRCtlF/VPDHqKhnaU/byLhjlQEN/YjHPMXbO8ctaE6Hs/jQceDBx
-         YdHQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=C7nub2iC7HflOtCQHAAafbgeNv5reSfX1ICVh/feaUg=;
-        b=n4G6UUqCEOwFvUajwDSbGJJPrEP+oQpcAixfc1+MFZ6dFQ0Iy1V+ldKMxIMiT/j/Qy
-         ABqR6kU/NQACLDCqdmIOW3RVRvlYCXSrCPlY7BUWpS/G3xMw6n2UkNbQz0287tNX04Yk
-         eLgYJk0PwLyPib5veJK2XhUEWWQz2MsZetd5F8fV2zXB3pBYNfHPhUd5CE91ijlDNwd3
-         y8GBGmxz2rZkn5dyfP/PkRLNGrAhl9JPXvzqLXOvsZNlyp2NlpETQPVzeKgvF4Ax+guN
-         Gu72Ifpyp1NVrJnUuCmlty01WzEADhaWUfx6wF2SbzrNsng729W34Fc2aLDboFjVs2/u
-         ug4g==
-X-Gm-Message-State: AGi0PubsqSAgavwT35JvSnmqBgb2eGSDrKcMdj02tlajLkJSWkZyGnl5
-        NMwq0wEoXPVvxP9YO2SX3o5TEgA3yrIbxO1MVtQ=
-X-Google-Smtp-Source: APiQypLnZGTvqOGESVBjKQo4/Lj3hRB1ay/3mDXASjqrLo7VK00BjILY9FTR5FqYsL8gYvGI1WpmBu69VNNGszWlHjI=
-X-Received: by 2002:a2e:974d:: with SMTP id f13mr1694240ljj.178.1586485424861;
- Thu, 09 Apr 2020 19:23:44 -0700 (PDT)
-MIME-Version: 1.0
-References: <20200410004738.19668-1-ansuelsmth@gmail.com> <20200410004738.19668-3-ansuelsmth@gmail.com>
-In-Reply-To: <20200410004738.19668-3-ansuelsmth@gmail.com>
-From:   Fabio Estevam <festevam@gmail.com>
-Date:   Thu, 9 Apr 2020 23:24:12 -0300
-Message-ID: <CAOMZO5AKYO3xLsp4k6_fJCV9qW=rAtRKEGWnxksixU794dOw8A@mail.gmail.com>
-Subject: Re: [PATCH 2/4] drivers: pci: dwc: pci-imx6: update binding to
- generic name
-To:     Ansuel Smith <ansuelsmth@gmail.com>
-Cc:     "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>, Richard Zhu <hongxing.zhu@nxp.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
+        id S1729023AbgDJDu4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 9 Apr 2020 23:50:56 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35860 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728381AbgDJDuz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 9 Apr 2020 23:50:55 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id CA215206C0;
+        Fri, 10 Apr 2020 03:50:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1586490655;
+        bh=vYw31K3dfJsinyVeUtCj5HraLL20BgC3xRu/iOIZ+8k=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=HdYiuID3Wo4Z2wgutxZxXgSXsgj2K5MugjBiGegNKVpJ9ybhAcmWrhec1KjXQ7uRB
+         HVEgM8BNok+vR1WL+6rzCW/DK3IKVeKHdw9dws5tJO4zlhBu1DCVkuqsw/Lvbcbg7s
+         0x25kLa3jN1JsXFl/O+5qeFHETgAF8DzOitpF2EE=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Logan Gunthorpe <logang@deltatee.com>,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Peter Zijlstra <peterz@infradead.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Shawn Guo <shawnguo@kernel.org>,
-        Sascha Hauer <s.hauer@pengutronix.de>,
-        Pengutronix Kernel Team <kernel@pengutronix.de>,
-        NXP Linux Team <linux-imx@nxp.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        linux-pci@vger.kernel.org,
-        "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE" 
-        <linux-arm-kernel@lists.infradead.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 09/22] PCI/switchtec: Fix init_completion race condition with poll_wait()
+Date:   Thu,  9 Apr 2020 23:50:31 -0400
+Message-Id: <20200410035044.9698-9-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200410035044.9698-1-sashal@kernel.org>
+References: <20200410035044.9698-1-sashal@kernel.org>
+MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Ansuel,
+From: Logan Gunthorpe <logang@deltatee.com>
 
-On Thu, Apr 9, 2020 at 9:47 PM Ansuel Smith <ansuelsmth@gmail.com> wrote:
->
-> Rename specific bindings to generic name.
->
-> Signed-off-by: Ansuel Smith <ansuelsmth@gmail.com>
-> ---
->  drivers/pci/controller/dwc/pci-imx6.c | 12 ++++++------
->  1 file changed, 6 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-> index acfbd34032a8..4ac140e007b4 100644
-> --- a/drivers/pci/controller/dwc/pci-imx6.c
-> +++ b/drivers/pci/controller/dwc/pci-imx6.c
-> @@ -1146,28 +1146,28 @@ static int imx6_pcie_probe(struct platform_device *pdev)
->         }
->
->         /* Grab PCIe PHY Tx Settings */
-> -       if (of_property_read_u32(node, "fsl,tx-deemph-gen1",
-> +       if (of_property_read_u32(node, "tx-deemph-gen1",
+[ Upstream commit efbdc769601f4d50018bf7ca50fc9f7c67392ece ]
 
-This breaks compatibility with older dtbs.
+The call to init_completion() in mrpc_queue_cmd() can theoretically
+race with the call to poll_wait() in switchtec_dev_poll().
+
+  poll()			write()
+    switchtec_dev_poll()   	  switchtec_dev_write()
+      poll_wait(&s->comp.wait);      mrpc_queue_cmd()
+			               init_completion(&s->comp)
+				         init_waitqueue_head(&s->comp.wait)
+
+To my knowledge, no one has hit this bug.
+
+Fix this by using reinit_completion() instead of init_completion() in
+mrpc_queue_cmd().
+
+Fixes: 080b47def5e5 ("MicroSemi Switchtec management interface driver")
+
+Reported-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Link: https://lkml.kernel.org/r/20200313183608.2646-1-logang@deltatee.com
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/pci/switch/switchtec.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+index bf229b442e723..6ef0d4b756f09 100644
+--- a/drivers/pci/switch/switchtec.c
++++ b/drivers/pci/switch/switchtec.c
+@@ -412,7 +412,7 @@ static int mrpc_queue_cmd(struct switchtec_user *stuser)
+ 	kref_get(&stuser->kref);
+ 	stuser->read_len = sizeof(stuser->data);
+ 	stuser_set_state(stuser, MRPC_QUEUED);
+-	init_completion(&stuser->comp);
++	reinit_completion(&stuser->comp);
+ 	list_add_tail(&stuser->list, &stdev->mrpc_queue);
+ 
+ 	mrpc_cmd_submit(stdev);
+-- 
+2.20.1
+
