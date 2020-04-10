@@ -8,53 +8,53 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1643C2BB86
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Apr 2020 00:48:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47240C2BA19
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Apr 2020 00:48:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B83C320936
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Apr 2020 00:48:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F7C820768
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Apr 2020 00:48:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="T54WVr0f"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iesyHr/h"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726859AbgDJAsA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 9 Apr 2020 20:48:00 -0400
-Received: from mail-ed1-f65.google.com ([209.85.208.65]:41887 "EHLO
-        mail-ed1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727593AbgDJAr7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Apr 2020 20:47:59 -0400
-Received: by mail-ed1-f65.google.com with SMTP id v1so532098edq.8;
-        Thu, 09 Apr 2020 17:47:57 -0700 (PDT)
+        id S1727512AbgDJAry (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 9 Apr 2020 20:47:54 -0400
+Received: from mail-ed1-f66.google.com ([209.85.208.66]:43119 "EHLO
+        mail-ed1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727308AbgDJArx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Apr 2020 20:47:53 -0400
+Received: by mail-ed1-f66.google.com with SMTP id p6so519050edu.10;
+        Thu, 09 Apr 2020 17:47:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=a14CUzpnGpaGv5dqUvAXTePxj5EaRSdIRWci/5zAkWM=;
-        b=T54WVr0f4ocGL79xzwZP975p3f2YyA0/5A0mdP+YGo9pmXJJXsRDk7VPwQscwpAHx1
-         ZZppHBemzYJCtE2a+zH1yHdeKfugxwFT2mdIi+xKiYCCRjdMiIxyoMMx087hwYCA+4zj
-         /OlxiFd56bzU1CH6KU+079LWF5Bq5o2K2QCck2uIzqgvukSiLwNw2eHGiuJU+PhxcBO4
-         VJhEuRBJTelU7depw9VQqFRvtvm6uZJpm0Tw3b+D08jRWamOWnKWQH+Htft4MyLDwFrR
-         T+pX8yMu0s1SVAUczekj5wwpWK5bSHhCK72ESYuJppeFhhAgW5jP90N+OgJTFT0fG0tG
-         3y1Q==
+        bh=w7akJQeZgBAyvPhH/ChJKlP3JYPIrxMAGcuficQZtxY=;
+        b=iesyHr/hnvI62Ueqr1Zv1c7YEhMlo24XbPFHaXZ0BayN5Lx8TPOkxfj1b2NeKaO55Y
+         Eh1Jz9v/+GVO0TtkxoF19Kf9MkYEtSv7yI2Dku7cALzGaP7qpPVhrveu/VVr2qrO/2Yn
+         mkpzOJo5JHYel/0KxdPpUfh+f3A7repRDnJyuATFVvFJE/OFJdVayvc5EaHbiTH5r85N
+         4MctnmC+wsVJblh6KMRqsC5MnzXrkPmF12N2q649moDDmhSe4TQQJItoMp7q7hGZvRrw
+         VeBGT9qghaOJNFALVeGBNhRDUJZH7xk+oAwKAMyuF9sdxu4qV8+BOhCwbHN347nZsdDp
+         muBQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=a14CUzpnGpaGv5dqUvAXTePxj5EaRSdIRWci/5zAkWM=;
-        b=mvEsrvuNw1XoCCNaOeWd7+pqp8WqP+UrqlXmz97IWXO3chOfwUZ9zoD12Z4YcJ2X/k
-         BOOk4hW52fHKwu/nsC6m49ojnGj8lUXOkYCp2G+UpmqC4vVcF2/P0itNozfrThcLNT31
-         E33b1Zv67WpqcKl82ee7tNFMwlIMNHbgqBQU1pTxaqyiX0wr+cA/eLhp8yH081CXn6Pf
-         u9XupcIXc4YVdx38s7KTQB5NeNV+/X4yoISTN4M8Pc8V0oCqc+5aYTAnQT+/505903OI
-         FZrAvUCFgIzBHugE0lgqYXaEI7jlt4jhzmVCNkgNLXKTm+KN//LMkBWm3rhyn+vyryGB
-         wT8A==
-X-Gm-Message-State: AGi0PuYKOaxTkFZsT2Atpfc2gbd1kauSQmyqkqui4dc1t1gRw7wkr3dQ
-        8QYZSjkHHBQCdA4YMMzTn+pBo8X3b/lo7Cba
-X-Google-Smtp-Source: APiQypLvgG31h2JAiJ4I9uBgeYyo/rkkcxrJMy4IA3mBlMc4DdltbrM21eJVNk/Yzl5aRHNkGsWTkg==
-X-Received: by 2002:a17:906:48c:: with SMTP id f12mr1637382eja.93.1586479675986;
-        Thu, 09 Apr 2020 17:47:55 -0700 (PDT)
+        bh=w7akJQeZgBAyvPhH/ChJKlP3JYPIrxMAGcuficQZtxY=;
+        b=JTNpQujHOkblHT8zQJf3tJY3rTc6zSx+jjUi+h/mLAFmf9uvHeny/+DoG3BILLAAKv
+         vCJ9rFXc9FjyK6bY5OCsRPis2rW8+b8SsbJEyuhEVN95YVuarTYNL3sw4M7SJkF5NJFe
+         crImWMyiFZR9RnFxkJKyLn+PveBmMpVttSHIAlvXL9Nd9mt16N3eE/dqfK0sBUDDvAmD
+         Gelq+tHz9C+syQPDvm0JzDy2klcfpT3hpvwSULjggH3dV9LKSB3VtmiJgsJmd9/+9ANJ
+         73up99L5LGhEsTXBmVG3nuFPR1U/4Ut9wpjtbSB0XaQVkNyrvLdqQZClOjD3yQFfL0Y0
+         DJCA==
+X-Gm-Message-State: AGi0PuZm5JB2MpTOgl3JHU7gQUZHQmjXkafun3AfKMfJwqIJ4/oKocn6
+        nQ19ojL5wlcRzF4yBvnmgY1MnjKCg3yGCZVd
+X-Google-Smtp-Source: APiQypLsY/OE3plQ2JuqYCxhA/x+TXFMmkcH/bNCsm1jD7QvwkDIAIyneK4Vg11GYlMqsLFqQoiJ6A==
+X-Received: by 2002:a17:906:af81:: with SMTP id mj1mr1529524ejb.99.1586479671240;
+        Thu, 09 Apr 2020 17:47:51 -0700 (PDT)
 Received: from Ansuel-XPS.localdomain (host117-205-dynamic.180-80-r.retail.telecomitalia.it. [80.180.205.117])
-        by smtp.googlemail.com with ESMTPSA id z16sm30523edm.52.2020.04.09.17.47.53
+        by smtp.googlemail.com with ESMTPSA id z16sm30523edm.52.2020.04.09.17.47.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 09 Apr 2020 17:47:55 -0700 (PDT)
+        Thu, 09 Apr 2020 17:47:50 -0700 (PDT)
 From:   Ansuel Smith <ansuelsmth@gmail.com>
 To:     devicetree@vger.kernel.org
 Cc:     Ansuel Smith <ansuelsmth@gmail.com>,
@@ -72,9 +72,9 @@ Cc:     Ansuel Smith <ansuelsmth@gmail.com>,
         Andrew Murray <amurray@thegoodpenguin.co.uk>,
         linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 4/4] devicetree: bindings: pci: fsl,imx6q-pcie: rename tx deemph and swing
-Date:   Fri, 10 Apr 2020 02:47:38 +0200
-Message-Id: <20200410004738.19668-5-ansuelsmth@gmail.com>
+Subject: [PATCH 2/4] drivers: pci: dwc: pci-imx6: update binding to generic name
+Date:   Fri, 10 Apr 2020 02:47:36 +0200
+Message-Id: <20200410004738.19668-3-ansuelsmth@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200410004738.19668-1-ansuelsmth@gmail.com>
 References: <20200410004738.19668-1-ansuelsmth@gmail.com>
@@ -85,37 +85,52 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-TX Deemph and TX Swing are now defined in pci.txt, rename them to follow
-the new name.
+Rename specific bindings to generic name.
 
 Signed-off-by: Ansuel Smith <ansuelsmth@gmail.com>
 ---
- .../devicetree/bindings/pci/fsl,imx6q-pcie.txt       | 12 ++++++------
+ drivers/pci/controller/dwc/pci-imx6.c | 12 ++++++------
  1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-index de4b2baf91e8..937442a4c2ab 100644
---- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-@@ -19,12 +19,12 @@ Required properties:
- 	- "pcie_phy"
+diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+index acfbd34032a8..4ac140e007b4 100644
+--- a/drivers/pci/controller/dwc/pci-imx6.c
++++ b/drivers/pci/controller/dwc/pci-imx6.c
+@@ -1146,28 +1146,28 @@ static int imx6_pcie_probe(struct platform_device *pdev)
+ 	}
  
- Optional properties:
--- fsl,tx-deemph-gen1: Gen1 De-emphasis value. Default: 0
--- fsl,tx-deemph-gen2-3p5db: Gen2 (3.5db) De-emphasis value. Default: 0
--- fsl,tx-deemph-gen2-6db: Gen2 (6db) De-emphasis value. Default: 20
--- fsl,tx-swing-full: Gen2 TX SWING FULL value. Default: 127
--- fsl,tx-swing-low: TX launch amplitude swing_low value. Default: 127
--- fsl,max-link-speed: Specify PCI gen for link capability. Must be '2' for
-+- tx-deemph-gen1: Gen1 De-emphasis value. Default: 0
-+- tx-deemph-gen2-3p5db: Gen2 (3.5db) De-emphasis value. Default: 0
-+- tx-deemph-gen2-6db: Gen2 (6db) De-emphasis value. Default: 20
-+- tx-swing-full: Gen2 TX SWING FULL value. Default: 127
-+- tx-swing-low: TX launch amplitude swing_low value. Default: 127
-+- max-link-speed: Specify PCI gen for link capability. Must be '2' for
-   gen2, otherwise will default to gen1. Note that the IMX6 LVDS clock outputs
-   do not meet gen2 jitter requirements and thus for gen2 capability a gen2
-   compliant clock generator should be used and configured.
+ 	/* Grab PCIe PHY Tx Settings */
+-	if (of_property_read_u32(node, "fsl,tx-deemph-gen1",
++	if (of_property_read_u32(node, "tx-deemph-gen1",
+ 				 &imx6_pcie->tx_deemph_gen1))
+ 		imx6_pcie->tx_deemph_gen1 = 0;
+ 
+-	if (of_property_read_u32(node, "fsl,tx-deemph-gen2-3p5db",
++	if (of_property_read_u32(node, "tx-deemph-gen2-3p5db",
+ 				 &imx6_pcie->tx_deemph_gen2_3p5db))
+ 		imx6_pcie->tx_deemph_gen2_3p5db = 0;
+ 
+-	if (of_property_read_u32(node, "fsl,tx-deemph-gen2-6db",
++	if (of_property_read_u32(node, "tx-deemph-gen2-6db",
+ 				 &imx6_pcie->tx_deemph_gen2_6db))
+ 		imx6_pcie->tx_deemph_gen2_6db = 20;
+ 
+-	if (of_property_read_u32(node, "fsl,tx-swing-full",
++	if (of_property_read_u32(node, "tx-swing-full",
+ 				 &imx6_pcie->tx_swing_full))
+ 		imx6_pcie->tx_swing_full = 127;
+ 
+-	if (of_property_read_u32(node, "fsl,tx-swing-low",
++	if (of_property_read_u32(node, "tx-swing-low",
+ 				 &imx6_pcie->tx_swing_low))
+ 		imx6_pcie->tx_swing_low = 127;
+ 
+ 	/* Limit link speed */
+-	ret = of_property_read_u32(node, "fsl,max-link-speed",
++	ret = of_property_read_u32(node, "max-link-speed",
+ 				   &imx6_pcie->link_gen);
+ 	if (ret)
+ 		imx6_pcie->link_gen = 1;
 -- 
 2.25.1
 
