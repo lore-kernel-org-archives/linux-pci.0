@@ -2,127 +2,107 @@ Return-Path: <SRS0=9Ijd=52=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B6AAC2BB86
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Apr 2020 00:48:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60120C2BA19
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Apr 2020 01:22:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D62ED20768
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Apr 2020 00:48:07 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GAo1LCks"
+	by mail.kernel.org (Postfix) with ESMTP id 3E7E920730
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Apr 2020 01:22:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727331AbgDJArw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 9 Apr 2020 20:47:52 -0400
-Received: from mail-ed1-f67.google.com ([209.85.208.67]:44124 "EHLO
-        mail-ed1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726859AbgDJArv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Apr 2020 20:47:51 -0400
-Received: by mail-ed1-f67.google.com with SMTP id cb27so513623edb.11;
-        Thu, 09 Apr 2020 17:47:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=Aeb6WaCv9+BqBEPfkzxDMWuTT6GpZmxwwCdelm77Gbc=;
-        b=GAo1LCkscF+/t0GiJq5CqFhSJsAXoQCLXRI5K8wZlBDeenlGWbDDYRzgLHCR6NkbvL
-         FOG8Jfcted4yeKOiTk+PjwUn16uZbLtfT7AAkLNkaYiQ9cIX+yQJx9Fq5TNKkwd8Yz4z
-         OWvEaDD4aHUYV8/2bMW4HIyKtekvS5cDUdT801CK04XSzh8ddz3eDq8PzmpO1+Xv2w41
-         sYrSN9KHWYWg1bU7Y3pGrvdW1V+KlI2KUW1QxKGZcMNuyMi3jeGCWhFP8aBTAMTyHpO4
-         ETcztWRl11jYuTq4HqeYvSBhSjZQgwZau5fpgXnAn77d/+JMHRxDSMUiav8i/GfQejlm
-         staA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=Aeb6WaCv9+BqBEPfkzxDMWuTT6GpZmxwwCdelm77Gbc=;
-        b=AA2eyH8o1+RxOomJtEJnysNxJflI1Ln3dIDrl1TTRQRZM2t4eybagjLqS6rsUZ9D5z
-         dswsEAHjWUwp641La+GMXcsTw4GoakS7RX6YZlk1oVleTGDdNAJ6NwOWPl6xODwqPVqi
-         KAhbQglWtgrH4uLSPQF5XOtl1VvpPuJaA9A7thcaeJu/h40AxRDETdnTSushHLKQ23Wh
-         rD+3ZfaAdLPFzXI6iW5qqpqfiHTLGde4LG/B4hb9V8kWJPulXFk4mgY57t7U8Lc3hyZU
-         LyTvr+bnkZPnImx4wgJmD09Y37iGQJbIEf2oQmcbWlZDefdpy8oh6Di/wPOe0RxY336s
-         cvJQ==
-X-Gm-Message-State: AGi0Pub+70NKdoSxDmYYmvo0cMfPrgumAPLYiff1W3k7C4gBc7fMUndz
-        filTKB0VplWZUTwtUnQOYbr9vd/9z+bQm49Y
-X-Google-Smtp-Source: APiQypIdEyfEOx5q5eI9Aq9XOBio5duIss+ITVGGn0sW+sZmX/FPNCSsU+kshlb3ePbWwBuwIagx3Q==
-X-Received: by 2002:aa7:c559:: with SMTP id s25mr2671184edr.2.1586479669036;
-        Thu, 09 Apr 2020 17:47:49 -0700 (PDT)
-Received: from Ansuel-XPS.localdomain (host117-205-dynamic.180-80-r.retail.telecomitalia.it. [80.180.205.117])
-        by smtp.googlemail.com with ESMTPSA id z16sm30523edm.52.2020.04.09.17.47.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 09 Apr 2020 17:47:48 -0700 (PDT)
-From:   Ansuel Smith <ansuelsmth@gmail.com>
-To:     devicetree@vger.kernel.org
-Cc:     Ansuel Smith <ansuelsmth@gmail.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Shawn Guo <shawnguo@kernel.org>,
-        Sascha Hauer <s.hauer@pengutronix.de>,
-        Pengutronix Kernel Team <kernel@pengutronix.de>,
-        Fabio Estevam <festevam@gmail.com>,
-        NXP Linux Team <linux-imx@nxp.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 1/4] devicetree: bindings: pci: document tx-deempth tx swing and rx-eq property
-Date:   Fri, 10 Apr 2020 02:47:35 +0200
-Message-Id: <20200410004738.19668-2-ansuelsmth@gmail.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200410004738.19668-1-ansuelsmth@gmail.com>
-References: <20200410004738.19668-1-ansuelsmth@gmail.com>
+        id S1726327AbgDJBWM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 9 Apr 2020 21:22:12 -0400
+Received: from mga11.intel.com ([192.55.52.93]:51193 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725987AbgDJBWL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 9 Apr 2020 21:22:11 -0400
+IronPort-SDR: SIMuZz087n8xZwQkX8++C7I5oZoA/OA+K4Qc2YWztWuIh8PNPBALUEHTVhlBj4QfxWXARr49Oz
+ eli/pgPnBShg==
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Apr 2020 18:22:12 -0700
+IronPort-SDR: U0LlOhp033dDpJPPRIzdr1qICn5m5DgXMkvF6UN2/gm+pVchKp5Q1VZM1s1x4NEjzo2NQHo0+X
+ tFeKb4LUNZng==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.72,364,1580803200"; 
+   d="scan'208";a="244462326"
+Received: from blu2-mobl3.ccr.corp.intel.com (HELO [10.254.208.184]) ([10.254.208.184])
+  by fmsmga008.fm.intel.com with ESMTP; 09 Apr 2020 18:22:10 -0700
+Cc:     baolu.lu@linux.intel.com, Bjorn Helgaas <helgaas@kernel.org>,
+        linux-pci@vger.kernel.org, Daniel Drake <drake@endlessm.com>,
+        linux@endlessm.com
+Subject: Re: [PATCH 1/1] iommu/vt-d: use DMA domain for real DMA devices and
+ subdevices
+To:     Jon Derrick <jonathan.derrick@intel.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        iommu@lists.linux-foundation.org
+References: <20200409191736.6233-1-jonathan.derrick@intel.com>
+ <20200409191736.6233-2-jonathan.derrick@intel.com>
+From:   Lu Baolu <baolu.lu@linux.intel.com>
+Message-ID: <09c98569-ed22-8886-3372-f5752334f8af@linux.intel.com>
+Date:   Fri, 10 Apr 2020 09:22:08 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.6.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20200409191736.6233-2-jonathan.derrick@intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Document tx-deempth, tx swing and rx-eq property property used on some
-device (qcom ipq806x or imx6q) to tune and fix init error of the pci
-bridge.
+Hi,
 
-Signed-off-by: Ansuel Smith <ansuelsmth@gmail.com>
----
- Documentation/devicetree/bindings/pci/pci.txt | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+On 2020/4/10 3:17, Jon Derrick wrote:
+> The PCI devices handled by intel-iommu may have a DMA requester on another bus,
+> such as VMD subdevices needing to use the VMD endpoint.
+> 
+> The real DMA device is now used for the DMA mapping, but one case was missed
+> earlier: if the VMD device (and hence subdevices too) are under
+> IOMMU_DOMAIN_IDENTITY, mappings do not work.
+> 
+> Codepaths like intel_map_page() handle the IOMMU_DOMAIN_DMA case by creating an
+> iommu DMA mapping, and fall back on dma_direct_map_page() for the
+> IOMMU_DOMAIN_IDENTITY case. However, handling of the IDENTITY case is broken
+> when intel_page_page() handles a subdevice.
+> 
+> We observe that at iommu attach time, dmar_insert_one_dev_info() for the
+> subdevices will never set dev->archdata.iommu. This is because that function
 
-diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
-index 29bcbd88f457..df37486f1853 100644
---- a/Documentation/devicetree/bindings/pci/pci.txt
-+++ b/Documentation/devicetree/bindings/pci/pci.txt
-@@ -24,6 +24,24 @@ driver implementation may support the following properties:
-    unsupported link speed, for instance, trying to do training for
-    unsupported link speed, etc.  Must be '4' for gen4, '3' for gen3, '2'
-    for gen2, and '1' for gen1. Any other values are invalid.
-+- tx-deemph-gen1
-+   If present this property will tune the Transmit De-Emphasis level for GEN1 if
-+   supported by the driver.
-+- tx-deemph-gen2-3p5db
-+   If present this property will tune the Transmit De-Emphasis level for GEN2 in
-+   3.5db band if supported by the driver.
-+- tx-deempth-gen2-6db
-+   If present this property will tune the Transmit De-Emphasis level for GEN2 in
-+   6db band if supported by the driver.
-+- tx-swing-full
-+   If present this property will tune the Tx Swing Full value if supported by the
-+   driver.
-+- tx-swing-low
-+   If present this property will tune the Tx Swing Low value if supported by the
-+   driver.
-+- rx-equalization
-+   If present this property will tune the Rx equalization value if supported by
-+   the driver.
- - reset-gpios:
-    If present this property specifies PERST# GPIO. Host drivers can parse the
-    GPIO and apply fundamental reset to endpoints.
--- 
-2.25.1
+Do you mind telling why not setting this?
 
+> uses find_domain() to check if there is already an IOMMU for the device, and
+> find_domain() then defers to the real DMA device which does have one. Thus
+> dmar_insert_one_dev_info() returns without assigning dev->archdata.iommu.
+> 
+> Then, later:
+> 
+> 1. intel_map_page() checks if an IOMMU mapping is needed by calling
+>     iommu_need_mapping() on the subdevice. identity_mapping() returns
+>     false because dev->archdata.iommu is NULL, so this function
+>     returns false indicating that mapping is needed.
+> 2. __intel_map_single() is called to create the mapping.
+> 3. __intel_map_single() calls find_domain(). This function now returns
+>     the IDENTITY domain corresponding to the real DMA device.
+> 4. __intel_map_single() calls domain_get_iommu() on this "real" domain.
+>     A failure is hit and the entire operation is aborted, because this
+>     codepath is not intended to handle IDENTITY mappings:
+>         if (WARN_ON(domain->domain.type != IOMMU_DOMAIN_DMA))
+>                     return NULL;
+
+This is caused by the fragile private domain implementation. We are in
+process of removing it by enhancing the iommu subsystem with per-group
+default domain.
+
+https://www.spinics.net/lists/iommu/msg42976.html
+
+So ultimately VMD subdevices should have their own per-device iommu data
+and support per-device dma ops.
+
+Best regards,
+baolu
