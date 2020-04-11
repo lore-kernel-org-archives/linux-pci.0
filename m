@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC655C2BA19
-	for <linux-pci@archiver.kernel.org>; Sat, 11 Apr 2020 23:07:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B33DDC2BBFD
+	for <linux-pci@archiver.kernel.org>; Sat, 11 Apr 2020 23:09:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7D4C220708
-	for <linux-pci@archiver.kernel.org>; Sat, 11 Apr 2020 23:07:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 84CAA21973
+	for <linux-pci@archiver.kernel.org>; Sat, 11 Apr 2020 23:09:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586646423;
-	bh=QMpWSEYlbZIG32XtIUzNXua+eaJnZCj/Xx6VQhjziUA=;
+	s=default; t=1586646586;
+	bh=QBecWT10Dqsz7Rx4C+yjn7Qrk9Syifw08hMzeIoP64o=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=TwQFm8Visi/4yYKid+YKSE/q47VNepsWcB8xnnOZFGqXvgmosmwOacXqyGlRzvfIH
-	 ft28KoUanMVN+YWRB6doLHJQTqt1NonRQoW7R4gdvk742Qu+IiVCX1NnqPwFFXjtba
-	 2CuBoN6CNYMjokxiy7gCmxYoBqBcsyaZcwoxAHUs=
+	b=hPh/+BHA3u8P/cuDNr19tFQbLA3fiyCaHqIOYjkhtxD7dMfmCZAc2mxVCLQfnMaQc
+	 +MBkdJf88/eAg7Gxhxg5BGujvifIVGdGI3pDANGOx0Eo3dMjP5vtyTHgCFHg6OfCKq
+	 AoMYqSsE8cndcK14yflNhZcLj0upweqGgZsE/HWw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728547AbgDKXG4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 11 Apr 2020 19:06:56 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42594 "EHLO mail.kernel.org"
+        id S1729286AbgDKXJg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 11 Apr 2020 19:09:36 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47400 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727191AbgDKXGz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 11 Apr 2020 19:06:55 -0400
+        id S1729276AbgDKXJf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 11 Apr 2020 19:09:35 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 0BE8A20708;
-        Sat, 11 Apr 2020 23:06:53 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id F41D6216FD;
+        Sat, 11 Apr 2020 23:09:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586646415;
-        bh=QMpWSEYlbZIG32XtIUzNXua+eaJnZCj/Xx6VQhjziUA=;
+        s=default; t=1586646575;
+        bh=QBecWT10Dqsz7Rx4C+yjn7Qrk9Syifw08hMzeIoP64o=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Lxp1UIHKdO6wNUYJcEtkyRFpm4L+oYIb3TZlZvkVrXjPuMZJv5ku+eTMSiD9Odu5q
-         Hk1sEIYJStmqC/LdG+T6rWjjtkpOqi9aBHNnxKtOYzp85f/ycKryYTaP82HyUZfOXa
-         uEpedw8WEK5a1Dfd8mDhnMjD10WMTvuLdd761wWA=
+        b=N1e/mt3+pXxSOGC1U7h2sOFxfkBDYCeNUIueNXd2u7YPSIowhTL6V97BhZNyPKzLi
+         Wi8vgzeB9jOaLnGrG6oEOZYWtUu1U2XZ17SNzrWeU8GP/WDk9OA7VZa9dIlJx1hB0m
+         iv9gDxQgBT0/zr94mtO/wnA43Gb+6CmJthVfxWyw=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Mikel Rychliski <mikel@mikelr.com>,
@@ -46,12 +46,12 @@ Cc:     Mikel Rychliski <mikel@mikelr.com>,
         Sasha Levin <sashal@kernel.org>, amd-gfx@lists.freedesktop.org,
         dri-devel@lists.freedesktop.org, nouveau@lists.freedesktop.org,
         linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.6 149/149] PCI: Use ioremap(), not phys_to_virt() for platform ROM
-Date:   Sat, 11 Apr 2020 19:03:46 -0400
-Message-Id: <20200411230347.22371-149-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.5 121/121] PCI: Use ioremap(), not phys_to_virt() for platform ROM
+Date:   Sat, 11 Apr 2020 19:07:06 -0400
+Message-Id: <20200411230706.23855-121-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200411230347.22371-1-sashal@kernel.org>
-References: <20200411230347.22371-1-sashal@kernel.org>
+In-Reply-To: <20200411230706.23855-1-sashal@kernel.org>
+References: <20200411230706.23855-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -211,7 +211,7 @@ index 9b91da09dc5f8..8d9812a51ef63 100644
  	.rw = true,
  };
 diff --git a/drivers/gpu/drm/radeon/radeon_bios.c b/drivers/gpu/drm/radeon/radeon_bios.c
-index c42f73fad3e31..bb29cf02974d1 100644
+index 4d1490fbb0750..756a50e8aff20 100644
 --- a/drivers/gpu/drm/radeon/radeon_bios.c
 +++ b/drivers/gpu/drm/radeon/radeon_bios.c
 @@ -108,25 +108,33 @@ static bool radeon_read_bios(struct radeon_device *rdev)
@@ -285,10 +285,10 @@ index 137bf0cee897c..8fc9a4e911e3a 100644
 -}
 -EXPORT_SYMBOL(pci_platform_rom);
 diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 3840a541a9de5..7268dcf1f23e9 100644
+index 930fab2930736..73d97d12c9b11 100644
 --- a/include/linux/pci.h
 +++ b/include/linux/pci.h
-@@ -1214,7 +1214,6 @@ int pci_enable_rom(struct pci_dev *pdev);
+@@ -1213,7 +1213,6 @@ int pci_enable_rom(struct pci_dev *pdev);
  void pci_disable_rom(struct pci_dev *pdev);
  void __iomem __must_check *pci_map_rom(struct pci_dev *pdev, size_t *size);
  void pci_unmap_rom(struct pci_dev *pdev, void __iomem *rom);
