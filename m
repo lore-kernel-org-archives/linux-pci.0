@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B33DDC2BBFD
-	for <linux-pci@archiver.kernel.org>; Sat, 11 Apr 2020 23:09:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C6C7C2BB86
+	for <linux-pci@archiver.kernel.org>; Sat, 11 Apr 2020 23:21:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 84CAA21973
-	for <linux-pci@archiver.kernel.org>; Sat, 11 Apr 2020 23:09:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1A6342084D
+	for <linux-pci@archiver.kernel.org>; Sat, 11 Apr 2020 23:21:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586646586;
-	bh=QBecWT10Dqsz7Rx4C+yjn7Qrk9Syifw08hMzeIoP64o=;
+	s=default; t=1586647296;
+	bh=VN1tik0rdM6XxLfL2lSm6cGNyAaPvCAp/XAjCQ4mijk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=hPh/+BHA3u8P/cuDNr19tFQbLA3fiyCaHqIOYjkhtxD7dMfmCZAc2mxVCLQfnMaQc
-	 +MBkdJf88/eAg7Gxhxg5BGujvifIVGdGI3pDANGOx0Eo3dMjP5vtyTHgCFHg6OfCKq
-	 AoMYqSsE8cndcK14yflNhZcLj0upweqGgZsE/HWw=
+	b=baUb+O3tl5cIvmU4qqHQ6/qMq14DZjatb+0H2AAp+LKn6Rcd9O3o5hb9WmrLSZYW0
+	 6LIQtjcujRJC0rtKG16pyVtbKi5IqiUZRp7AfOGakhmO7jNfU/Wh4BN0L5aRz8ufPq
+	 M74PD+mKeAL/uKIT9e0uGFf/+QJjFMwHLcGC0GZo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729286AbgDKXJg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 11 Apr 2020 19:09:36 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47400 "EHLO mail.kernel.org"
+        id S1730417AbgDKXNZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 11 Apr 2020 19:13:25 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54502 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729276AbgDKXJf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 11 Apr 2020 19:09:35 -0400
+        id S1730413AbgDKXNY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 11 Apr 2020 19:13:24 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id F41D6216FD;
-        Sat, 11 Apr 2020 23:09:33 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7FC6B20757;
+        Sat, 11 Apr 2020 23:13:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586646575;
-        bh=QBecWT10Dqsz7Rx4C+yjn7Qrk9Syifw08hMzeIoP64o=;
+        s=default; t=1586646804;
+        bh=VN1tik0rdM6XxLfL2lSm6cGNyAaPvCAp/XAjCQ4mijk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=N1e/mt3+pXxSOGC1U7h2sOFxfkBDYCeNUIueNXd2u7YPSIowhTL6V97BhZNyPKzLi
-         Wi8vgzeB9jOaLnGrG6oEOZYWtUu1U2XZ17SNzrWeU8GP/WDk9OA7VZa9dIlJx1hB0m
-         iv9gDxQgBT0/zr94mtO/wnA43Gb+6CmJthVfxWyw=
+        b=h+5wiaO0OTpNWNtUz7GLnv274Xk9Jz06UUs4iVlun9geuvOTFBhd3IzJz7mxftmc1
+         Fcr7OzqNSSoC1eE18nPEPOTNwDnpzXr0cBkCZgh9PWhdo8Zf5OlBwXY4esljdXBlWK
+         gsPhH8q8xD9l/UO1YMXPbgTYYCg8CDZN7hjxIuxI=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Mikel Rychliski <mikel@mikelr.com>,
@@ -46,12 +46,12 @@ Cc:     Mikel Rychliski <mikel@mikelr.com>,
         Sasha Levin <sashal@kernel.org>, amd-gfx@lists.freedesktop.org,
         dri-devel@lists.freedesktop.org, nouveau@lists.freedesktop.org,
         linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.5 121/121] PCI: Use ioremap(), not phys_to_virt() for platform ROM
-Date:   Sat, 11 Apr 2020 19:07:06 -0400
-Message-Id: <20200411230706.23855-121-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 66/66] PCI: Use ioremap(), not phys_to_virt() for platform ROM
+Date:   Sat, 11 Apr 2020 19:12:03 -0400
+Message-Id: <20200411231203.25933-66-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200411230706.23855-1-sashal@kernel.org>
-References: <20200411230706.23855-1-sashal@kernel.org>
+In-Reply-To: <20200411231203.25933-1-sashal@kernel.org>
+References: <20200411231203.25933-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -117,10 +117,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  5 files changed, 52 insertions(+), 44 deletions(-)
 
 diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c
-index 50dff69a0f6e3..b1172d93c99c3 100644
+index a5df80d50d447..6cf3dd5edffda 100644
 --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c
 +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c
-@@ -192,30 +192,35 @@ static bool amdgpu_read_bios_from_rom(struct amdgpu_device *adev)
+@@ -191,30 +191,35 @@ static bool amdgpu_read_bios_from_rom(struct amdgpu_device *adev)
  
  static bool amdgpu_read_platform_bios(struct amdgpu_device *adev)
  {
@@ -211,10 +211,10 @@ index 9b91da09dc5f8..8d9812a51ef63 100644
  	.rw = true,
  };
 diff --git a/drivers/gpu/drm/radeon/radeon_bios.c b/drivers/gpu/drm/radeon/radeon_bios.c
-index 4d1490fbb0750..756a50e8aff20 100644
+index 04c0ed41374f1..dd0528cf98183 100644
 --- a/drivers/gpu/drm/radeon/radeon_bios.c
 +++ b/drivers/gpu/drm/radeon/radeon_bios.c
-@@ -108,25 +108,33 @@ static bool radeon_read_bios(struct radeon_device *rdev)
+@@ -104,25 +104,33 @@ static bool radeon_read_bios(struct radeon_device *rdev)
  
  static bool radeon_read_platform_bios(struct radeon_device *rdev)
  {
@@ -285,10 +285,10 @@ index 137bf0cee897c..8fc9a4e911e3a 100644
 -}
 -EXPORT_SYMBOL(pci_platform_rom);
 diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 930fab2930736..73d97d12c9b11 100644
+index b1f297f4b7b0b..993051f60a009 100644
 --- a/include/linux/pci.h
 +++ b/include/linux/pci.h
-@@ -1213,7 +1213,6 @@ int pci_enable_rom(struct pci_dev *pdev);
+@@ -1141,7 +1141,6 @@ int pci_enable_rom(struct pci_dev *pdev);
  void pci_disable_rom(struct pci_dev *pdev);
  void __iomem __must_check *pci_map_rom(struct pci_dev *pdev, size_t *size);
  void pci_unmap_rom(struct pci_dev *pdev, void __iomem *rom);
