@@ -1,94 +1,134 @@
-Return-Path: <SRS0=an1L=53=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=qgIh=54=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0857CC2BBFD
-	for <linux-pci@archiver.kernel.org>; Sat, 11 Apr 2020 23:42:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EC07C2D0EC
+	for <linux-pci@archiver.kernel.org>; Sun, 12 Apr 2020 03:50:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CBDD8206E9
-	for <linux-pci@archiver.kernel.org>; Sat, 11 Apr 2020 23:42:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586648560;
-	bh=OpFbVyvYnIHYbXaql1M7ib78tJ4gNMyNDUmLjzivcGo=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=h6PJQY6jwnQ73wDAbIH87o2JkoaRlCnz03Ds4cPltJcDlpAXbIrdN0KR6h0VThOrS
-	 7Zw5mTVomtAMXUxcXcvukXicJvCNQNXrcsU5uH6Z1jEepEu2p2Tt2YWqnRmXm053vz
-	 3zissagxDTh7UR/9v9Ak/HwAdBnFh6x/TqPIo7AY=
+	by mail.kernel.org (Postfix) with ESMTP id 0262320737
+	for <linux-pci@archiver.kernel.org>; Sun, 12 Apr 2020 03:50:22 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=endlessm-com.20150623.gappssmtp.com header.i=@endlessm-com.20150623.gappssmtp.com header.b="wLCfbz64"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728467AbgDKXGi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 11 Apr 2020 19:06:38 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42118 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728462AbgDKXGh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 11 Apr 2020 19:06:37 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 03AF2214D8;
-        Sat, 11 Apr 2020 23:06:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586646397;
-        bh=OpFbVyvYnIHYbXaql1M7ib78tJ4gNMyNDUmLjzivcGo=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=vWVlA58lktUHHnOy583PmAaQnEb/Ed7OHvfRQCSpdu76E0f2Kb4FodWiLUoG6UJRx
-         oOPydRZmUa6gpjDA7eAPGqo1OJzeRkuFULmhoRLLk5rP2s/oNjPeZ1c8YlIYm2154V
-         K7w0BKpQKIbp/R8FF+PRXOepvLg7qNnVj+IN83Uc=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Dexuan Cui <decui@microsoft.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Michael Kelley <mikelley@microsoft.com>,
-        Sasha Levin <sashal@kernel.org>, linux-hyperv@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.6 135/149] PCI: hv: Add missing kfree(hbus) in hv_pci_probe()'s error handling path
-Date:   Sat, 11 Apr 2020 19:03:32 -0400
-Message-Id: <20200411230347.22371-135-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200411230347.22371-1-sashal@kernel.org>
-References: <20200411230347.22371-1-sashal@kernel.org>
+        id S1726565AbgDLDuV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 11 Apr 2020 23:50:21 -0400
+Received: from mail-qv1-f66.google.com ([209.85.219.66]:40008 "EHLO
+        mail-qv1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726155AbgDLDuV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 11 Apr 2020 23:50:21 -0400
+Received: by mail-qv1-f66.google.com with SMTP id k9so2892732qvw.7
+        for <linux-pci@vger.kernel.org>; Sat, 11 Apr 2020 20:50:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=endlessm-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=zhoRhZDp08/Quy9bCcHgtDQxeTieG6fo0BmAZCUWVT0=;
+        b=wLCfbz64y+8kPiY0+va7itbGbEkr9OiPxqNpPlyD19X7zcskbzPg+3TG4gR26frwtI
+         Ty3K7iiNK/as921hvyJeGC7dDDXKgS+V7UsP34ZFPt1LqkpWmtTCc/3GPOWZtVaPET7m
+         rXU2n3JmL/VisI/TYM6QT+xrNb+7kpzAlIEQ7rsXyogDxbsh0PmdsoUtLJ8hkdJ13Uqz
+         2Uxl+dDBnVwOaPvEHayPxS5+nF7CWu33rz4QWdA9kbGSc31KE37TYvpa9CTbYXYL/e1Z
+         kdCQwfvvOQPRTjI62pwH+lK9FiCQ9YrS/pXmLuh9XY41pWNZiGu50EEAYk5o2lEnTGWE
+         uG9Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=zhoRhZDp08/Quy9bCcHgtDQxeTieG6fo0BmAZCUWVT0=;
+        b=VQzrq9ohA2S2N7+lf4/udxHMX7KUeoOJdg6tvsL7W837lR1o0Qn0QbCU5DNvVCfPD5
+         kjy29Cy3W8/QwpLr8U2mLYOMGvEcY2nKBxlUxLHo7/C/CySjNgUOhj5yIQ8wOey6oqSq
+         A7sIBQQfXXH41Wedpv/kEG4UGOpVLc9icEywJfbuYpuB5greZQEluGeXW0wyiefqFuDj
+         QGsulrGqKcyiss1PBc7FC+dOEPqHZZY6W2PudH41F/2J6qz5w/ZsiEEblAkeDtRGGH4R
+         Z1my/eS9NnOEjeNumNj30aqu7UsJpCirinIQ5rvSsgWpV0AS7GjAydJOE/sQAjYhbtPU
+         BcFw==
+X-Gm-Message-State: AGi0PuY1ws+O2LyrCOw/tmjyiR7v4khzigHBo3DqGVL0P/O7nqkDG0he
+        74aQV7waiGuX0p8aVmbbjPixR/6/FaTgMtqgdJJNrQ==
+X-Google-Smtp-Source: APiQypIPtGp+Rk2/ThEt56ejQs/3C9hKMliJgxzSeMLEWQqrnotFIgltyl8Zm3S3qvJdGxZ/XTZeHCqFOn4SYHNPH+Q=
+X-Received: by 2002:a05:6214:1781:: with SMTP id ct1mr11957162qvb.87.1586663420608;
+ Sat, 11 Apr 2020 20:50:20 -0700 (PDT)
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+References: <20200409191736.6233-1-jonathan.derrick@intel.com> <20200409191736.6233-2-jonathan.derrick@intel.com>
+In-Reply-To: <20200409191736.6233-2-jonathan.derrick@intel.com>
+From:   Daniel Drake <drake@endlessm.com>
+Date:   Sun, 12 Apr 2020 11:50:09 +0800
+Message-ID: <CAD8Lp442LO1Sq5xpKOaRUKLsEyGbou4TiHQrDdnMbCOV-TG0+g@mail.gmail.com>
+Subject: Re: [PATCH 1/1] iommu/vt-d: use DMA domain for real DMA devices and subdevices
+To:     Jon Derrick <jonathan.derrick@intel.com>
+Cc:     Joerg Roedel <joro@8bytes.org>, iommu@lists.linux-foundation.org,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Lu Baolu <baolu.lu@linux.intel.com>,
+        Linux Upstreaming Team <linux@endlessm.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Dexuan Cui <decui@microsoft.com>
+Hi Jon,
 
-[ Upstream commit 42c3d41832ef4fcf60aaa6f748de01ad99572adf ]
+Thanks for picking this up. Apologies for my absence here - I wasn't
+able to work on this recently, but I'm back again now.
 
-Now that we use kzalloc() to allocate the hbus buffer, we must call
-kfree() in the error path as well to prevent memory leakage.
+On Fri, Apr 10, 2020 at 3:32 AM Jon Derrick <jonathan.derrick@intel.com> wrote:
+> This becomes problematic if the real DMA device and the subdevices have
+> different addressing capabilities and some require translation. Instead we can
+> put the real DMA dev and any subdevices on the DMA domain. This change assigns
+> subdevices to the DMA domain, and moves the real DMA device to the DMA domain
+> if necessary.
 
-Fixes: 877b911a5ba0 ("PCI: hv: Avoid a kmemleak false positive caused by the hbus buffer")
-Signed-off-by: Dexuan Cui <decui@microsoft.com>
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Reviewed-by: Michael Kelley <mikelley@microsoft.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/pci/controller/pci-hyperv.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Have you tested this with the real DMA device in identity mode?
+It is not quite working for me. (Again, I'm not using VMD here, but
+have looked closely and believe we're working under the same
+constraints)
 
-diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
-index 9977abff92fc5..6b3cee4324047 100644
---- a/drivers/pci/controller/pci-hyperv.c
-+++ b/drivers/pci/controller/pci-hyperv.c
-@@ -3058,7 +3058,7 @@ static int hv_pci_probe(struct hv_device *hdev,
- free_dom:
- 	hv_put_dom_num(hbus->sysdata.domain);
- free_bus:
--	free_page((unsigned long)hbus);
-+	kfree(hbus);
- 	return ret;
- }
- 
--- 
-2.20.1
+First, the real DMA device gets added to the group:
+ pci 0000:00:17.0: Adding to iommu group 9
+(it's in IDENTITY mode here)
 
+Then later, the first subdevice comes along, and these are the results:
+ pci 10000:00:00.0: [8086:02d7] type 00 class 0x010601
+ pci 10000:00:00.0: reg 0x10: [mem 0xae1a0000-0xae1a7fff]
+ pci 10000:00:00.0: reg 0x14: [mem 0xae1a8000-0xae1a80ff]
+ pci 10000:00:00.0: reg 0x18: [io  0x3090-0x3097]
+ pci 10000:00:00.0: reg 0x1c: [io  0x3080-0x3083]
+ pci 10000:00:00.0: reg 0x20: [io  0x3060-0x307f]
+ pci 10000:00:00.0: reg 0x24: [mem 0xae100000-0xae103fff]
+ pci 10000:00:00.0: PME# supported from D3hot
+ pci 10000:00:00.0: Adding to iommu group 9
+ pci 10000:00:00.0: DMAR: Failed to get a private domain.
+
+That final message is added by your patch and indicates that it's not working.
+
+This is because the subdevice got added to the iommu group before the
+code you added tried to change to the DMA domain.
+
+It first gets added to the group through this call path:
+    intel_iommu_add_device
+-> iommu_group_get_for_dev
+-> iommu_group_add_device
+
+Then, continuing within intel_iommu_add_device we get to the code you
+added, which tries to move the real DMA dev to DMA mode instead. It
+calls:
+
+   intel_iommu_request_dma_domain_for_dev
+-> iommu_request_dma_domain_for_dev
+-> request_default_domain_for_dev
+
+Which fails here:
+    /* Don't change mappings of existing devices */
+    ret = -EBUSY;
+    if (iommu_group_device_count(group) != 1)
+        goto out;
+
+because we already have 2 devices in the group (the real DMA dev, plus
+the subdevice we're in the process of handling now).
+
+Next I'll look into the iommu group rework that Baolu mentioned.
+
+Thanks,
+Daniel
