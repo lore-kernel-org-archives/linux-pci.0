@@ -2,117 +2,385 @@ Return-Path: <SRS0=Fzm5=55=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 638C0C2BB55
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Apr 2020 02:49:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B607CC2BB1D
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Apr 2020 05:42:31 +0000 (UTC)
 Received: from vger.kernel.org (unknown [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 24CBB206C3
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Apr 2020 02:49:02 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 24CBB206C3
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.intel.com
+	by mail.kernel.org (Postfix) with ESMTP id 86C8D20735
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Apr 2020 05:42:31 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=flygoat.com header.i=@flygoat.com header.b="RGRZG+a7"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 86C8D20735
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=flygoat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728248AbgDMCtA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 12 Apr 2020 22:49:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.18]:43778 "EHLO
+        id S1729067AbgDMFmb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 13 Apr 2020 01:42:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.18]:42862 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727511AbgDMCtA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 12 Apr 2020 22:49:00 -0400
-Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1072C0A3BE0
-        for <linux-pci@vger.kernel.org>; Sun, 12 Apr 2020 19:49:00 -0700 (PDT)
-IronPort-SDR: nAu/EyUraFV4PSDm4jOYcxEbkREylvp6he89Mvhj0aF3onawNbaFeVdNwtU/6PcQUKmXXc/lPp
- AgPoQTOx/pZg==
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Apr 2020 19:49:00 -0700
-IronPort-SDR: 8h2kJz9H2xByAm0Ehh0zIvn6ATdAcGQpeq1tHagj9rbqQVoUMOGf47be9xS1Z5eyn7z+wHJA8X
- d3LLcRluFVVw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.72,377,1580803200"; 
-   d="scan'208";a="362961161"
-Received: from blu2-mobl3.ccr.corp.intel.com (HELO [10.254.211.54]) ([10.254.211.54])
-  by fmsmga001.fm.intel.com with ESMTP; 12 Apr 2020 19:48:55 -0700
-Cc:     baolu.lu@linux.intel.com, Jon Derrick <jonathan.derrick@intel.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        iommu@lists.linux-foundation.org,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Upstreaming Team <linux@endlessm.com>
-Subject: Re: [PATCH 1/1] iommu/vt-d: use DMA domain for real DMA devices and
- subdevices
-To:     Daniel Drake <drake@endlessm.com>
-References: <20200409191736.6233-1-jonathan.derrick@intel.com>
- <20200409191736.6233-2-jonathan.derrick@intel.com>
- <09c98569-ed22-8886-3372-f5752334f8af@linux.intel.com>
- <CAD8Lp45dJ3-t6qqctiP1a=c44PEWZ-L04yv0r0=1Nrvwfouz1w@mail.gmail.com>
-From:   Lu Baolu <baolu.lu@linux.intel.com>
-Message-ID: <32cc4809-7029-bc5e-5a74-abbe43596e8d@linux.intel.com>
-Date:   Mon, 13 Apr 2020 10:48:55 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+        with ESMTP id S1727426AbgDMFma (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Apr 2020 01:42:30 -0400
+Received: from vultr.net.flygoat.com (vultr.net.flygoat.com [IPv6:2001:19f0:6001:3633:5400:2ff:fe8c:553])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B294C00867A;
+        Sun, 12 Apr 2020 22:42:30 -0700 (PDT)
+Received: from localhost.localdomain (unknown [IPv6:2001:da8:20f:4430:250:56ff:fe9a:7470])
+        by vultr.net.flygoat.com (Postfix) with ESMTPSA id EB31420D1A;
+        Mon, 13 Apr 2020 05:34:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=flygoat.com; s=vultr;
+        t=1586756061; bh=jesBfoIdJO3LgLwZbuFxL0t5+wu18EtO3/xPsqqrrh0=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=RGRZG+a7BcK+ggoJxc7MB4z/rMLEmVeIkUZi2I7QIzQr0mByCZx5txpBxRkYKBVPa
+         VuU/zJI+hOJaFWO6Hs5wdTugpg14VEjLdZVsSRmenFYuPH3g/j8Zhb16ivzuljIVmY
+         mSmOY7k/QCHdVHjvcZ1ewumC/sYsvvXofv5ozMV/2hBEufNm6q2mYTgc1hraVDbjxP
+         p5MNiKe4XhhvC0neHtZdCD1LFw8SPBEGoxbBIewgAn3eKwICrCXwEbZm38MMlKapB0
+         kOSmhXxAaqsIpkaEHDEC4PWLfospJiSoy62yX02frDw6L5wiP7Dy2FKDFUoX2cJQYV
+         QO5Y8E58FioCQ==
+From:   Jiaxun Yang <jiaxun.yang@flygoat.com>
+To:     linux-mips@vger.kernel.org
+Cc:     Jiaxun Yang <jiaxun.yang@flygoat.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        Huacai Chen <chenhc@lemote.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Andrew Murray <amurray@thegoodpenguin.co.uk>,
+        Paul Burton <paulburton@kernel.org>, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v3 2/5] PCI: Add Loongson PCI Controller support
+Date:   Mon, 13 Apr 2020 13:32:10 +0800
+Message-Id: <20200413053222.3976680-2-jiaxun.yang@flygoat.com>
+X-Mailer: git-send-email 2.26.0.rc2
+In-Reply-To: <20200413053222.3976680-1-jiaxun.yang@flygoat.com>
+References: <20200330114239.1112759-1-jiaxun.yang@flygoat.com>
+ <20200413053222.3976680-1-jiaxun.yang@flygoat.com>
 MIME-Version: 1.0
-In-Reply-To: <CAD8Lp45dJ3-t6qqctiP1a=c44PEWZ-L04yv0r0=1Nrvwfouz1w@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Daniel,
+This controller can be found on Loongson-2K SoC, Loongson-3
+systems with RS780E/LS7A PCH.
 
-On 2020/4/13 10:25, Daniel Drake wrote:
-> On Fri, Apr 10, 2020 at 9:22 AM Lu Baolu <baolu.lu@linux.intel.com> wrote:
->> This is caused by the fragile private domain implementation. We are in
->> process of removing it by enhancing the iommu subsystem with per-group
->> default domain.
->>
->> https://www.spinics.net/lists/iommu/msg42976.html
->>
->> So ultimately VMD subdevices should have their own per-device iommu data
->> and support per-device dma ops.
-> 
-> Interesting. There's also this patchset you posted:
-> [PATCH 00/19] [PULL REQUEST] iommu/vt-d: patches for v5.7
-> https://lists.linuxfoundation.org/pipermail/iommu/2020-April/042967.html
-> (to be pushed out to 5.8)
+The RS780E part of code was previously located at
+arch/mips/pci/ops-loongson3.c and now it can use generic PCI
+driver implementation.
 
-Both are trying to solve a same problem.
+Signed-off-by: Jiaxun Yang <jiaxun.yang@flygoat.com>
 
-I have sync'ed with Joerg. This patch set will be replaced with Joerg's
-proposal due to a race concern between domain switching and driver
-binding. I will rebase all vt-d patches in this set on top of Joerg's
-change.
+--
+v2:
+	- Clean up according to rob's suggestions
+	- Claim that it can't work as a module
+v3:
+	- Fix a typo
+---
+ drivers/pci/controller/Kconfig        |   9 +
+ drivers/pci/controller/Makefile       |   1 +
+ drivers/pci/controller/pci-loongson.c | 257 ++++++++++++++++++++++++++
+ 3 files changed, 267 insertions(+)
+ create mode 100644 drivers/pci/controller/pci-loongson.c
 
-Best regards,
-baolu
+diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+index 91bfdb784829..7d7e70402ebd 100644
+--- a/drivers/pci/controller/Kconfig
++++ b/drivers/pci/controller/Kconfig
+@@ -258,6 +258,15 @@ config PCI_HYPERV_INTERFACE
+ 	  The Hyper-V PCI Interface is a helper driver allows other drivers to
+ 	  have a common interface with the Hyper-V PCI frontend driver.
+ 
++config PCI_LOONGSON
++	bool "LOONGSON PCI Controller"
++	depends on MACH_LOONGSON64 || COMPILE_TEST
++	depends on OF
++	depends on PCI_QUIRKS
++	help
++	  Say Y here if you want to enable PCI controller support on
++	  Loongson systems.
++
+ source "drivers/pci/controller/dwc/Kconfig"
+ source "drivers/pci/controller/mobiveil/Kconfig"
+ source "drivers/pci/controller/cadence/Kconfig"
+diff --git a/drivers/pci/controller/Makefile b/drivers/pci/controller/Makefile
+index 158c59771824..fbac4b0190a0 100644
+--- a/drivers/pci/controller/Makefile
++++ b/drivers/pci/controller/Makefile
+@@ -28,6 +28,7 @@ obj-$(CONFIG_PCIE_MEDIATEK) += pcie-mediatek.o
+ obj-$(CONFIG_PCIE_TANGO_SMP8759) += pcie-tango.o
+ obj-$(CONFIG_VMD) += vmd.o
+ obj-$(CONFIG_PCIE_BRCMSTB) += pcie-brcmstb.o
++obj-$(CONFIG_PCI_LOONGSON) += pci-loongson.o
+ # pcie-hisi.o quirks are needed even without CONFIG_PCIE_DW
+ obj-y				+= dwc/
+ obj-y				+= mobiveil/
+diff --git a/drivers/pci/controller/pci-loongson.c b/drivers/pci/controller/pci-loongson.c
+new file mode 100644
+index 000000000000..0bd3b52c14fb
+--- /dev/null
++++ b/drivers/pci/controller/pci-loongson.c
+@@ -0,0 +1,257 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Loongson PCI Host Controller Driver
++ *
++ * Copyright (C) 2020 Jiaxun Yang <jiaxun.yang@flygoat.com>
++ */
++
++#include <linux/of_address.h>
++#include <linux/of_pci.h>
++#include <linux/of_platform.h>
++#include <linux/pci.h>
++#include <linux/pci_ids.h>
++
++#include "../pci.h"
++
++/* Device IDs */
++#define DEV_PCIE_PORT_0	0x7a09
++#define DEV_PCIE_PORT_1	0x7a19
++#define DEV_PCIE_PORT_2	0x7a29
++
++#define DEV_LS2K_APB	0x7a02
++#define DEV_LS7A_CONF	0x7a10
++#define DEV_LS7A_LPC	0x7a0c
++
++#define FLAG_CFG0	BIT(0)
++#define FLAG_CFG1	BIT(1)
++#define FLAG_DEV_FIX	BIT(2)
++
++struct loongson_pci {
++	void __iomem *cfg0_base;
++	void __iomem *cfg1_base;
++	struct platform_device *pdev;
++	u32 flags;
++};
++
++/* Fixup wrong class code in PCIe bridges */
++static void bridge_class_quirk(struct pci_dev *dev)
++{
++	dev->class = PCI_CLASS_BRIDGE_PCI << 8;
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LOONGSON,
++			DEV_PCIE_PORT_0, bridge_class_quirk);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LOONGSON,
++			DEV_PCIE_PORT_1, bridge_class_quirk);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LOONGSON,
++			DEV_PCIE_PORT_2, bridge_class_quirk);
++
++static void system_bus_quirk(struct pci_dev *pdev)
++{
++	u16 tmp;
++
++	pdev->mmio_always_on = 1;
++	pdev->non_compliant_bars = 1;
++	/* Enable MEM & IO Decoding */
++	pci_read_config_word(pdev, PCI_STATUS, &tmp);
++	tmp |= PCI_COMMAND_IO | PCI_COMMAND_MEMORY;
++	pci_write_config_word(pdev, PCI_STATUS, tmp);
++}
++
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_LOONGSON,
++			DEV_LS2K_APB, system_bus_quirk);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_LOONGSON,
++			DEV_LS7A_CONF, system_bus_quirk);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_LOONGSON,
++			DEV_LS7A_LPC, system_bus_quirk);
++
++static void loongson_mrrs_quirk(struct pci_dev *dev)
++{
++	struct pci_bus *bus = dev->bus;
++	struct pci_dev *bridge;
++	static const struct pci_device_id bridge_devids[] = {
++		{ PCI_VDEVICE(LOONGSON, DEV_PCIE_PORT_0) },
++		{ PCI_VDEVICE(LOONGSON, DEV_PCIE_PORT_1) },
++		{ PCI_VDEVICE(LOONGSON, DEV_PCIE_PORT_2) },
++		{ 0, },
++	};
++
++
++	/* look for the matching bridge */
++	while (!pci_is_root_bus(bus)) {
++		bridge = bus->self;
++		bus = bus->parent;
++		/*
++		 * Some Loongson PCIE ports has a h/w limitation of
++		 * 256 bytes maximum read request size. It can't handle
++		 * anything higher than this. So force this limit on
++		 * any devices attached under these ports.
++		 */
++		if (pci_match_id(bridge_devids, bridge)) {
++			if (pcie_get_readrq(dev) > 256) {
++				dev_info(&dev->dev, "limiting MRRS to 256\n");
++				pcie_set_readrq(dev, 256);
++			}
++			break;
++		}
++	}
++}
++DECLARE_PCI_FIXUP_ENABLE(PCI_ANY_ID, PCI_ANY_ID, loongson_mrrs_quirk);
++
++static void __iomem *cfg1_map(struct loongson_pci *priv, int bus, int dev,
++				int func, int where)
++{
++	unsigned long addroff = 0x0;
++
++	if (bus != 0)
++		addroff |= BIT(28); /* Type 1 Access */
++	addroff |= (where & 0xff) | ((where & 0xf00) << 16);
++	addroff |= (bus << 16) | (dev << 11) | (func << 8);
++	return priv->cfg1_base + addroff;
++}
++
++static void __iomem *cfg0_map(struct loongson_pci *priv, int bus, int dev,
++				int func, int where)
++{
++	unsigned long addroff = 0x0;
++
++	if (bus != 0)
++		addroff |= BIT(24); /* Type 1 Access */
++	addroff |= (bus << 16) | (dev << 11) | (func << 8) | where;
++	return priv->cfg0_base + addroff;
++}
++
++void __iomem *pci_loongson_map_bus(struct pci_bus *bus, unsigned int devfn,
++			       int where)
++{
++	unsigned char busnum = bus->number;
++	int device = PCI_SLOT(devfn);
++	int function = PCI_FUNC(devfn);
++	struct pci_host_bridge *bridge = pci_find_host_bridge(bus);
++	struct loongson_pci *priv =  pci_host_bridge_priv(bridge);
++
++	/*
++	 * Do not read more than one device on the bus other than
++	 * the host bridge.
++	 */
++	if (bus->primary != 0 && device > 0 &&
++		priv->flags & FLAG_DEV_FIX)
++		return NULL;
++
++	/* CFG0 can only access standard space */
++	if (where < PCI_CFG_SPACE_SIZE && priv->flags & FLAG_CFG0 &&
++		priv->cfg0_base)
++		return cfg0_map(priv, busnum, device, function, where);
++
++	/* CFG1 can access exp space */
++	if (where < PCI_CFG_SPACE_EXP_SIZE && priv->flags & FLAG_CFG1 &&
++		priv->cfg1_base)
++		return cfg1_map(priv, busnum, device, function, where);
++
++	return NULL;
++}
++
++static int loongson_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
++{
++	int irq;
++	u8 val;
++
++	irq = of_irq_parse_and_map_pci(dev, slot, pin);
++	if (irq > 0)
++		return irq;
++
++	/* Care i8259 legacy systems */
++	pci_read_config_byte(dev, PCI_INTERRUPT_LINE, &val);
++	/* 0xff is also invalid */
++	if (val == 0xff)
++		return 0;
++
++	return val;
++}
++
++/* H/w only accept 32-bit PCI operations */
++static struct pci_ops loongson_pci_ops = {
++	.map_bus = pci_loongson_map_bus,
++	.read	= pci_generic_config_read32,
++	.write	= pci_generic_config_write32,
++};
++
++static const struct of_device_id loongson_pci_of_match[] = {
++	{ .compatible = "loongson,rs780e-pci",
++		.data = (void *)(FLAG_CFG0), },
++	{ .compatible = "loongson,ls2k-pci",
++		.data = (void *)(FLAG_CFG0 | FLAG_CFG1 | FLAG_DEV_FIX), },
++	{ .compatible = "loongson,ls7a-pci",
++		.data = (void *)(FLAG_CFG0 | FLAG_CFG1 | FLAG_DEV_FIX), },
++	{}
++};
++
++static int loongson_pci_probe(struct platform_device *pdev)
++{
++	struct loongson_pci *priv;
++	struct device *dev = &pdev->dev;
++	struct device_node *node = dev->of_node;
++	struct pci_host_bridge *bridge;
++	struct resource *regs;
++	int err;
++
++	if (!node)
++		return -ENODEV;
++
++	bridge = devm_pci_alloc_host_bridge(dev, sizeof(*priv));
++	if (!bridge)
++		return -ENODEV;
++
++	priv = pci_host_bridge_priv(bridge);
++	priv->pdev = pdev;
++	priv->flags = (unsigned long)of_device_get_match_data(dev);
++
++	regs = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!regs) {
++		dev_err(dev, "missing mem resources for cfg0\n");
++		return -EINVAL;
++	}
++
++	priv->cfg0_base = devm_pci_remap_cfg_resource(dev, regs);
++	if (IS_ERR(priv->cfg0_base))
++		return PTR_ERR(priv->cfg0_base);
++
++	/* CFG1 is optional */
++	if (priv->flags & FLAG_CFG1) {
++		regs = platform_get_resource(pdev, IORESOURCE_MEM, 1);
++		if (!regs)
++			dev_info(dev, "missing mem resource for cfg1\n");
++		else {
++			priv->cfg1_base = devm_pci_remap_cfg_resource(dev, regs);
++			if (IS_ERR(priv->cfg1_base))
++				priv->cfg1_base = NULL;
++		}
++	}
++
++
++	err = pci_parse_request_of_pci_ranges(dev, &bridge->windows,
++						&bridge->dma_ranges, NULL);
++	if (err) {
++		dev_err(dev, "Failed to get bridge resources\n");
++		return err;
++	}
++
++	bridge->dev.parent = dev;
++	bridge->sysdata = priv;
++	bridge->ops = &loongson_pci_ops;
++	bridge->map_irq = loongson_map_irq;
++
++	err = pci_host_probe(bridge);
++	if (err)
++		return err;
++
++	return 0;
++}
++
++static struct platform_driver loongson_pci_driver = {
++	.driver = {
++		.name = "loongson-pci",
++		.of_match_table = loongson_pci_of_match,
++	},
++	.probe = loongson_pci_probe,
++};
++builtin_platform_driver(loongson_pci_driver);
+-- 
+2.26.0.rc2
 
-> 
-> In there you have:
->> iommu/vt-d: Don't force 32bit devices to uses DMA domain
-> which seems to clash with the approach being explored in this thread.
-> 
-> And:
->> iommu/vt-d: Apply per-device dma_ops
-> This effectively solves the trip point that caused me to open these
-> discussions, where intel_map_page() -> iommu_need_mapping() would
-> incorrectly determine that a intel-iommu DMA mapping was needed for a
-> PCI subdevice running in identity mode. After this patch, a PCI
-> subdevice in identity mode uses the default system dma_ops and
-> completely avoids intel-iommu.
-> 
-> So that solves the issues I was looking at. Jon, you might want to
-> check if the problems you see are likewise solved for you by these
-> patches.
-> 
-> I didn't try Joerg's iommu group rework yet as it conflicts with those
-> patches above.
-> 
-> Daniel
-> 
