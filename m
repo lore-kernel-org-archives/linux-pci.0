@@ -2,83 +2,80 @@ Return-Path: <SRS0=Fzm5=55=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBC44C2BA19
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Apr 2020 09:39:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44E4AC2BA19
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Apr 2020 13:08:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A740B20737
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Apr 2020 09:39:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1FEA92072C
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Apr 2020 13:08:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=cogentembedded-com.20150623.gappssmtp.com header.i=@cogentembedded-com.20150623.gappssmtp.com header.b="BWhN9CNU"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MnQMaJK6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728434AbgDMJjw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 13 Apr 2020 05:39:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35710 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728417AbgDMJjr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Apr 2020 05:39:47 -0400
-Received: from mail-lf1-x142.google.com (mail-lf1-x142.google.com [IPv6:2a00:1450:4864:20::142])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 959E7C00860A
-        for <linux-pci@vger.kernel.org>; Mon, 13 Apr 2020 02:31:45 -0700 (PDT)
-Received: by mail-lf1-x142.google.com with SMTP id k28so6046676lfe.10
-        for <linux-pci@vger.kernel.org>; Mon, 13 Apr 2020 02:31:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cogentembedded-com.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=22ry+294zZcqaoEVkMcWEawZi6DDugMuA4lCNKrgbiM=;
-        b=BWhN9CNUIFwnRIEzUe/BwAX9gwW7YYJZCyOYxczVx74YIU7V0mC7z2OcM35UyP4e1p
-         4oOxRRQucYbYOo8AiCmMAGW2yCJUIihy25350/EbU/I375sSwG7o78dsiV8hysjDDbOa
-         DCnUiVrCWoS2EZjk23MnwjFyE6krOT3x7Sgxkcs7aHT2ffdKiX8lkj0vMnmWerfoO+2i
-         7zWqbpEpLBQKObzkG36N8VsFPvN5FgXPc9jylTJvXndqQyp2RHqSXY8Jmqsv+lNrTK9M
-         QWJIsmnIw6LotVNSi1iGc+NY6cZD7jfb5lTAXo0ikhgxxY6x18NMuTetmUhmdg4P5gRK
-         IQkw==
+        id S1728494AbgDMNIr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 13 Apr 2020 09:08:47 -0400
+Received: from us-smtp-2.mimecast.com ([207.211.31.81]:48738 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727855AbgDMNIq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Apr 2020 09:08:46 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1586783325;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=s9m5bEJM55+CCEjTc3mQmvoxvmzLMIrk5m1SdUE6h/k=;
+        b=MnQMaJK6r2zJotLsf6zKzRQoltuyneIEB0QV6PCeAXaZJVVv2M8XOKbhJvRIpl+x871lB3
+        KaGthnnXS1HVWiDaUpM2HXskgvPC+wi0L3oKbovrsKPJkwF+37i4OxOx2rOvEWbm6MBi9B
+        l25diGuJAIETiTR56EQDZWIcgkQf3gw=
+Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
+ [209.85.128.70]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-169-FvGzow3ANGGBOjd8gi109w-1; Mon, 13 Apr 2020 09:08:44 -0400
+X-MC-Unique: FvGzow3ANGGBOjd8gi109w-1
+Received: by mail-wm1-f70.google.com with SMTP id f128so1011451wmf.8
+        for <linux-pci@vger.kernel.org>; Mon, 13 Apr 2020 06:08:44 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=22ry+294zZcqaoEVkMcWEawZi6DDugMuA4lCNKrgbiM=;
-        b=XXjQ0Zzu0bxRdZCC3eub0MQM20fBQ+MVsbtfgdKKOgp0eT+57nUhPBz8MzKF6ExuJx
-         vRfMv54uVH6vpbNveVryPKMKt94qLlQHB0SQsz1kulH11MN6tEQ34vQxxf7kL4QrCW8V
-         DyZ8Q/ld9nQB5JXp5en7ViWXexh719jn+vSN8u+tKDY/1r2pMA2lLcgJP1V9cYIvArLI
-         QOlqKrD4zNoK2KeHIimhN4YBO7P2Khv+xIKM0/0obf3Yk4los1LJopyiuCWfZB1+LFby
-         re7+qXbKE9WbXSVSIPR8JJHV59Z/JReZ+fc5nPvb3ahbzRlkhQTbE4lR7rx8U3CsN7ra
-         R5iw==
-X-Gm-Message-State: AGi0Puadg3Y70jg3MvSoRMcWWnB/q8z3/YajoeJ95N8lfPhUxNhHMglk
-        bRImGOicf3ItWpFaEvi4ajzctQ==
-X-Google-Smtp-Source: APiQypLU2XLKZjsSZmZYU4dGrsmyNyLhGMWhvQXMiwFm5FV0dumbDAT+1S0NQ6VdA0RQSuVQGrkBvQ==
-X-Received: by 2002:ac2:4554:: with SMTP id j20mr10171876lfm.91.1586770304122;
-        Mon, 13 Apr 2020 02:31:44 -0700 (PDT)
-Received: from ?IPv6:2a00:1fa0:449a:6c6f:9d43:1ad8:e18f:9ec1? ([2a00:1fa0:449a:6c6f:9d43:1ad8:e18f:9ec1])
-        by smtp.gmail.com with ESMTPSA id u1sm6665830ljo.65.2020.04.13.02.31.42
+        bh=s9m5bEJM55+CCEjTc3mQmvoxvmzLMIrk5m1SdUE6h/k=;
+        b=EaBIgHYgIxHYHeb9qLzH0YVkl8q5JX963cLWUVP0hKlAcaQ2bZSy9dZVncy+rZD/4b
+         rBic8bZtWSYweWFE/1A1tbCOL6TkI0siCjJxaxdiq4vc8TLjptWzwIaQOxAhzkr+duFn
+         //AUaGwZ2EHwTDSyHafIDLVzJgl/LsavALMxRlO5ZVtRCkcxKuunVrMgv7iYKkiTC5NY
+         UgflA13C7H9SJOkzEw1vYdQaWgZMftK/fioxvm1DiPJDlEznSGoKKcgBrS7lJ7TcVMVX
+         +6fMnmYz5PsNJVTKYtabQ4TdTIqc+uTCzY0NmCeXUTceubv1wBN3m2DlyiY0UMq2lGf7
+         SJdw==
+X-Gm-Message-State: AGi0PuZ5xwgXsirqFQicXXaN7dWR4lTLgQFbNoqu6QcBks2kNB+9liB5
+        OyhPG7mO99w5IH94qt7bgu1xhwT3XBzaJNvZLnfxshInkIsuEQJ/2FkZzSjxrEWSe0/DOTrMwsN
+        //xJloTFaxfVlAFEQobjr
+X-Received: by 2002:a5d:522c:: with SMTP id i12mr1051157wra.215.1586783322945;
+        Mon, 13 Apr 2020 06:08:42 -0700 (PDT)
+X-Google-Smtp-Source: APiQypKJSH7viqtLUiSYWLMN2+J0c6+yVIDg8r4gEnWrO7CZ/ceQ5+EZ5b1PZUTdcQFfUQRJNgizuQ==
+X-Received: by 2002:a5d:522c:: with SMTP id i12mr1051139wra.215.1586783322746;
+        Mon, 13 Apr 2020 06:08:42 -0700 (PDT)
+Received: from x1.localdomain (2001-1c00-0c0c-fe00-d2ea-f29d-118b-24dc.cable.dynamic.v6.ziggo.nl. [2001:1c00:c0c:fe00:d2ea:f29d:118b:24dc])
+        by smtp.gmail.com with ESMTPSA id e1sm3845350wrc.12.2020.04.13.06.08.41
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 13 Apr 2020 02:31:43 -0700 (PDT)
-Subject: Re: [PATCH v3 1/5] PCI: OF: Don't remap iospace on unsupported
- platform
-To:     Jiaxun Yang <jiaxun.yang@flygoat.com>, linux-mips@vger.kernel.org
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        Huacai Chen <chenhc@lemote.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        Paul Burton <paulburton@kernel.org>, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20200330114239.1112759-1-jiaxun.yang@flygoat.com>
- <20200413053222.3976680-1-jiaxun.yang@flygoat.com>
-From:   Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Message-ID: <10ef1a19-c2e5-60fc-b3c8-64547017f758@cogentembedded.com>
-Date:   Mon, 13 Apr 2020 12:31:38 +0300
-User-Agent: Mozilla/5.0 (Windows NT 6.3; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+        Mon, 13 Apr 2020 06:08:41 -0700 (PDT)
+Subject: Re: [PATCH] ACPI/PCI: pci_link: use extended_irq union member when
+ setting ext-irq shareable
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org
+References: <20200410194547.GA7293@google.com>
+From:   Hans de Goede <hdegoede@redhat.com>
+Message-ID: <abaa91fa-12a4-e273-c983-7d1153dab9a2@redhat.com>
+Date:   Mon, 13 Apr 2020 15:08:41 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.6.0
 MIME-Version: 1.0
-In-Reply-To: <20200413053222.3976680-1-jiaxun.yang@flygoat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20200410194547.GA7293@google.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
@@ -86,21 +83,63 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hello!
+Hi,
 
-On 13.04.2020 8:32, Jiaxun Yang wrote:
-
-> There are some platforms doesn't support iospace remapping
-
-    That don't support.
-
-> like MIPS. However, our PCI code will try to remap iospace
-> unconditionally and reject io resources on these platforms.
+On 4/10/20 9:45 PM, Bjorn Helgaas wrote:
+> On Fri, Apr 10, 2020 at 03:14:42PM +0200, Hans de Goede wrote:
+>> The case ACPI_RESOURCE_TYPE_EXTENDED_IRQ inside acpi_pci_link_set()
+>> is correctly using resource->res.data.extended_irq.foo for most settings,
+>> but for the sharable setting it sofar has accidentally been using
+>> resource->res.data.irq.shareable instead of
+>> resource->res.data.extended_irq.shareable.
+>>
+>> Note that the old code happens to also work because the sharable field
+>> offset is the same for both the acpi_resource_irq and
+>> acpi_resource_extended_irq structs.
 > 
-> So we should remove iospace remapping check and use a range
-> check instead on these platforms.
+> s/sharable/shareable/ several times above
+> s/sofar/so far/
 > 
-> Signed-off-by: Jiaxun Yang <jiaxun.yang@flygoat.com>
-[...]
+>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+> 
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-MBR, Sergei
+Thanks, I'll send out a v2 with the spelling issues in the commit-msg fixed.
+
+Regards,
+
+Hans
+
+
+
+> 
+>> ---
+>>   drivers/acpi/pci_link.c | 4 ++--
+>>   1 file changed, 2 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+>> index 00a6da2121be..ed3d2182cf2c 100644
+>> --- a/drivers/acpi/pci_link.c
+>> +++ b/drivers/acpi/pci_link.c
+>> @@ -322,10 +322,10 @@ static int acpi_pci_link_set(struct acpi_pci_link *link, int irq)
+>>   		resource->res.data.extended_irq.polarity =
+>>   		    link->irq.polarity;
+>>   		if (link->irq.triggering == ACPI_EDGE_SENSITIVE)
+>> -			resource->res.data.irq.shareable =
+>> +			resource->res.data.extended_irq.shareable =
+>>   			    ACPI_EXCLUSIVE;
+>>   		else
+>> -			resource->res.data.irq.shareable = ACPI_SHARED;
+>> +			resource->res.data.extended_irq.shareable = ACPI_SHARED;
+> 
+> Ouch, looks like that copy/paste error has been there since the
+> beginning of git.  Nice catch!
+> 
+>>   		resource->res.data.extended_irq.interrupt_count = 1;
+>>   		resource->res.data.extended_irq.interrupts[0] = irq;
+>>   		/* ignore resource_source, it's optional */
+>> -- 
+>> 2.26.0
+>>
+> 
+
