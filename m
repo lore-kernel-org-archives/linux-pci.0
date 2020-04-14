@@ -2,121 +2,176 @@ Return-Path: <SRS0=isgL=56=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4D20C2BA19
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 13:52:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB75CC2BA19
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 16:55:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8088E20768
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 13:52:14 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rj28FQbu"
+	by mail.kernel.org (Postfix) with ESMTP id C90E22078A
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 16:55:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1586883325;
+	bh=0BnJSftuUBqhmdRzeJYG8vzypho0PIEfncwKqSh7oyw=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=LxQOZ20vzCKgB7+hJyIoEmwd+dRdizvhCaxcdjOSnYLm6WBmWmTna+Wk9KSLRVHiv
+	 v/30fISlJZ15SQUCceyO0muBfI6ygpI+nh0gtB8vzrSE+FoDIrzV9DdKvBW7VhHrLg
+	 86h/zrCtgqF2qk9UqN7QlpvNfgmzCTgVd9IiYuyY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388224AbgDNNwD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 Apr 2020 09:52:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60728 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388218AbgDNNv4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Apr 2020 09:51:56 -0400
-Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C103BC061A0C;
-        Tue, 14 Apr 2020 06:51:55 -0700 (PDT)
-Received: by mail-wm1-x343.google.com with SMTP id x4so13060686wmj.1;
-        Tue, 14 Apr 2020 06:51:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=FOGDiV0hbJz1HxbN2jXqtj/ZF+6uRGkUpCQ+mfwEdqc=;
-        b=rj28FQbuYbXsaqyH1cjVScKGQOVPVLPOqL4vBsWa38E7JDhF/em/0U/N8ugTyZmbB8
-         5u3ziNCGseii9Fd6o5GaB0iKq3ryfySrsY0soGUPAi4dSE5vDxp9FwA1vKl6vfph4HkP
-         L5JX9Y7Vif/7Ku2NuyK2jtKRwH3sQagbP9LSNEjPkbWldE0cfQmROCBOdzl40wqeJeAa
-         3j28uixlqgnT2M3fyB6+uL0f3VVuVFdgvpwrAz/ExM8ffHJO3gpZWHAB7URI7o7A6Qlo
-         eeQlzxDaE7Mu+ZiN0WSfPSBuVfL5SkzvL1HLH63DrBJhq7vrdEKNVA1u4GMUlRdVdMCO
-         l7cw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=FOGDiV0hbJz1HxbN2jXqtj/ZF+6uRGkUpCQ+mfwEdqc=;
-        b=AJcBX9furE0LrA8XdX6mz4xt8wxpLGzEP5If8ub23pUsxVXQYNbtkQ+s8KfefTWzsR
-         Om4SnWcTtD9wfjSHIGHPAZmd/DsdCDmn98hudMfaMeC1LPgvZSkhajkEVEQav1Q1CAPD
-         PiNPSYQ/J3+NFnYf2fhW7uXjU8EsWMRN2G39VJsJwC7WBObwEn6ffjJ9nx65YYXgUh/M
-         sAYFCU6baBcc679OfDMgflC500ZCa49XiOt5bOfujj5PsbqWeGLhyPWEGqLn2AAUCi/1
-         4jrGHekrmhvCgIo0ZIfAnbEowbOl3K7hYjgrHkTvtVHpHNUzg6LZbLYb3c9agJJZybXW
-         1OIg==
-X-Gm-Message-State: AGi0PuZRrP8UtEBQZx/tpBe4g6XRjkrVeM1aRi9vqy77E3w5DsrF2YyP
-        WF+CD2sWELqQd0l+fQgzwWo=
-X-Google-Smtp-Source: APiQypLsLZfv2no2RHT1VR4cnHQ8aQ/o1kXW3w8nzIS3t33Jr2bsL3TmOpsURd+K8rYZ/rRKXIOufw==
-X-Received: by 2002:a1c:c345:: with SMTP id t66mr25259325wmf.189.1586872314481;
-        Tue, 14 Apr 2020 06:51:54 -0700 (PDT)
-Received: from localhost (pD9E51D62.dip0.t-ipconnect.de. [217.229.29.98])
-        by smtp.gmail.com with ESMTPSA id k23sm18681735wmi.46.2020.04.14.06.51.53
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Apr 2020 06:51:53 -0700 (PDT)
-Date:   Tue, 14 Apr 2020 15:51:52 +0200
-From:   Thierry Reding <thierry.reding@gmail.com>
-To:     Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Hunter <jonathanh@nvidia.com>,
-        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: tegra: Fix reporting GPIO error value
-Message-ID: <20200414135152.GA3593749@ulmo>
-References: <20200414102512.27506-1-pali@kernel.org>
+        id S2391897AbgDNQzW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Apr 2020 12:55:22 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55256 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2407501AbgDNQtI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 14 Apr 2020 12:49:08 -0400
+Received: from mail.kernel.org (ip5f5ad4d8.dynamic.kabel-deutschland.de [95.90.212.216])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id BBDDF21734;
+        Tue, 14 Apr 2020 16:49:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1586882942;
+        bh=0BnJSftuUBqhmdRzeJYG8vzypho0PIEfncwKqSh7oyw=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=f90DO2kKSJSFPfSJklC/NQUf50ZmxxG5CyWXyV40uYwiEn0YMyRLl3o0vgrCiWFgS
+         s0XIojPWf3zjpO+DoRZ9QEJ7RWqhVR5FHGFZoteImH6fw3ZUqzRO8y6MxyoaAFsTtO
+         P/5UFvfKKfwgpGOm8bkqdhChlf5tsLWzI9Gv2ETE=
+Received: from mchehab by mail.kernel.org with local (Exim 4.92.3)
+        (envelope-from <mchehab@kernel.org>)
+        id 1jOOk8-0068ly-W6; Tue, 14 Apr 2020 18:49:01 +0200
+From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+To:     Linux Doc Mailing List <linux-doc@vger.kernel.org>
+Cc:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: [PATCH v2 14/33] docs: pci: boot-interrupts.rst: improve html output
+Date:   Tue, 14 Apr 2020 18:48:40 +0200
+Message-Id: <a6a9eb16eede10731bcce69a600ab12d92e6ba47.1586881715.git.mchehab+huawei@kernel.org>
+X-Mailer: git-send-email 2.25.2
+In-Reply-To: <cover.1586881715.git.mchehab+huawei@kernel.org>
+References: <cover.1586881715.git.mchehab+huawei@kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="J2SCkAp4GZ/dPZZf"
-Content-Disposition: inline
-In-Reply-To: <20200414102512.27506-1-pali@kernel.org>
-User-Agent: Mutt/1.13.1 (2019-12-14)
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+There are some warnings with this file:
 
---J2SCkAp4GZ/dPZZf
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+    /Documentation/PCI/boot-interrupts.rst:42: WARNING: Unexpected indentation.
+    /Documentation/PCI/boot-interrupts.rst:52: WARNING: Block quote ends without a blank line; unexpected unindent.
+    /Documentation/PCI/boot-interrupts.rst:92: WARNING: Unexpected indentation.
+    /Documentation/PCI/boot-interrupts.rst:98: WARNING: Unexpected indentation.
+    /Documentation/PCI/boot-interrupts.rst:136: WARNING: Unexpected indentation.
 
-On Tue, Apr 14, 2020 at 12:25:12PM +0200, Pali Roh=C3=A1r wrote:
-> Error code is stored in rp->reset_gpio and not in err variable.
->=20
-> Signed-off-by: Pali Roh=C3=A1r <pali@kernel.org>
-> ---
->  drivers/pci/controller/pci-tegra.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+It turns that this file conversion to ReST could be improved,
+in order to remove the warnings and provide a better output.
 
-With or without Micha=C5=82's suggestion:
+So, fix the warnings by adjusting blank lines, add a table and
+some list markups. Also, mark endnodes as such.
 
-Acked-by: Thierry Reding <treding@nvidia.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+---
+ Documentation/PCI/boot-interrupts.rst | 34 +++++++++++++++------------
+ 1 file changed, 19 insertions(+), 15 deletions(-)
 
---J2SCkAp4GZ/dPZZf
-Content-Type: application/pgp-signature; name="signature.asc"
+diff --git a/Documentation/PCI/boot-interrupts.rst b/Documentation/PCI/boot-interrupts.rst
+index d078ef3eb192..2ec70121bfca 100644
+--- a/Documentation/PCI/boot-interrupts.rst
++++ b/Documentation/PCI/boot-interrupts.rst
+@@ -32,12 +32,13 @@ interrupt goes unhandled over time, they are tracked by the Linux kernel as
+ Spurious Interrupts. The IRQ will be disabled by the Linux kernel after it
+ reaches a specific count with the error "nobody cared". This disabled IRQ
+ now prevents valid usage by an existing interrupt which may happen to share
+-the IRQ line.
++the IRQ line::
+ 
+   irq 19: nobody cared (try booting with the "irqpoll" option)
+   CPU: 0 PID: 2988 Comm: irq/34-nipalk Tainted: 4.14.87-rt49-02410-g4a640ec-dirty #1
+   Hardware name: National Instruments NI PXIe-8880/NI PXIe-8880, BIOS 2.1.5f1 01/09/2020
+   Call Trace:
++
+   <IRQ>
+    ? dump_stack+0x46/0x5e
+    ? __report_bad_irq+0x2e/0xb0
+@@ -85,15 +86,18 @@ Mitigations
+ The mitigations take the form of PCI quirks. The preference has been to
+ first identify and make use of a means to disable the routing to the PCH.
+ In such a case a quirk to disable boot interrupt generation can be
+-added.[1]
++added. [1]_
+ 
+-  Intel® 6300ESB I/O Controller Hub
++Intel® 6300ESB I/O Controller Hub
+   Alternate Base Address Register:
+    BIE: Boot Interrupt Enable
+-	  0 = Boot interrupt is enabled.
+-	  1 = Boot interrupt is disabled.
+ 
+-  Intel® Sandy Bridge through Sky Lake based Xeon servers:
++	  ==  ===========================
++	  0   Boot interrupt is enabled.
++	  1   Boot interrupt is disabled.
++	  ==  ===========================
++
++Intel® Sandy Bridge through Sky Lake based Xeon servers:
+   Coherent Interface Protocol Interrupt Control
+    dis_intx_route2pch/dis_intx_route2ich/dis_intx_route2dmi2:
+ 	  When this bit is set. Local INTx messages received from the
+@@ -109,12 +113,12 @@ line by default.  Therefore, on chipsets where this INTx routing cannot be
+ disabled, the Linux kernel will reroute the valid interrupt to its legacy
+ interrupt. This redirection of the handler will prevent the occurrence of
+ the spurious interrupt detection which would ordinarily disable the IRQ
+-line due to excessive unhandled counts.[2]
++line due to excessive unhandled counts. [2]_
+ 
+ The config option X86_REROUTE_FOR_BROKEN_BOOT_IRQS exists to enable (or
+ disable) the redirection of the interrupt handler to the PCH interrupt
+ line. The option can be overridden by either pci=ioapicreroute or
+-pci=noioapicreroute.[3]
++pci=noioapicreroute. [3]_
+ 
+ 
+ More Documentation
+@@ -127,19 +131,19 @@ into the evolution of its handling with chipsets.
+ Example of disabling of the boot interrupt
+ ------------------------------------------
+ 
+-Intel® 6300ESB I/O Controller Hub (Document # 300641-004US)
++      - Intel® 6300ESB I/O Controller Hub (Document # 300641-004US)
+ 	5.7.3 Boot Interrupt
+ 	https://www.intel.com/content/dam/doc/datasheet/6300esb-io-controller-hub-datasheet.pdf
+ 
+-Intel® Xeon® Processor E5-1600/2400/2600/4600 v3 Product Families
+-Datasheet - Volume 2: Registers (Document # 330784-003)
++      - Intel® Xeon® Processor E5-1600/2400/2600/4600 v3 Product Families
++	Datasheet - Volume 2: Registers (Document # 330784-003)
+ 	6.6.41 cipintrc Coherent Interface Protocol Interrupt Control
+ 	https://www.intel.com/content/dam/www/public/us/en/documents/datasheets/xeon-e5-v3-datasheet-vol-2.pdf
+ 
+ Example of handler rerouting
+ ----------------------------
+ 
+-Intel® 6700PXH 64-bit PCI Hub (Document # 302628)
++      - Intel® 6700PXH 64-bit PCI Hub (Document # 302628)
+ 	2.15.2 PCI Express Legacy INTx Support and Boot Interrupt
+ 	https://www.intel.com/content/dam/doc/datasheet/6700pxh-64-bit-pci-hub-datasheet.pdf
+ 
+@@ -150,6 +154,6 @@ Cheers,
+     Sean V Kelley
+     sean.v.kelley@linux.intel.com
+ 
+-[1] https://lore.kernel.org/r/12131949181903-git-send-email-sassmann@suse.de/
+-[2] https://lore.kernel.org/r/12131949182094-git-send-email-sassmann@suse.de/
+-[3] https://lore.kernel.org/r/487C8EA7.6020205@suse.de/
++.. [1] https://lore.kernel.org/r/12131949181903-git-send-email-sassmann@suse.de/
++.. [2] https://lore.kernel.org/r/12131949182094-git-send-email-sassmann@suse.de/
++.. [3] https://lore.kernel.org/r/487C8EA7.6020205@suse.de/
+-- 
+2.25.2
 
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAl6Vv/YACgkQ3SOs138+
-s6Eamw//c9rjXOHWJcTFLrcwMcrxead/8lDekjEgx85muyvjFplQbZzzOSEImmss
-z9vAjmlyGOGOl0mWBqDGl9OHnLxBHjlSYFT2DlZY92dBgfsa0qY9oEAJ2eFaNRnP
-iyRDns4lq14wcRNlVqeA7/LgOjcyYhFMWx4fR5kMqECPxDF9BteS7A8Mbxp+oKl1
-Zg6e8cBfJ92XzRTX1uR2aHmTZTqIC26xxd0qe40/+8dHTtada4TCrX+C5Cyn1gCF
-6pNWvVAWqqcOZqI9tGR5i/7SiMceUxAGcxBLD/owQEKLaIVCQgRmoeKJUo3TJcVk
-UlOjB990t1qVtOQLym7gP9T2wOS01kzwoWy9/EvsLO5WALYrmzhLVJ//qH9ph0Xi
-FyD5BszkDoaG4O+NG1vq9uDoL4k+cOPhyxleJ/Y1QJ04xdsq4fUPcT5YRWkYJukX
-c/SslMaiPeqstf63FNzHmbZuViKcmpFXj+JbRXrdpH8sXVwrchd1PBVXlc0x3o95
-ieD1fQTUU+tYYE0lV5Z8qxLeAZiSYjBa9BOOnRGuULAwbJFigGjs6tkyu0AY54kM
-id2LnQNrL2PdYRO3pwY9Juaqn/ryAE1U2KEoRKSVWQO8/3PgNAzYW7e3IApkEe+I
-6dPJnoqnuebk5fgsoIx3OP6hx5QbcivpaAAdUpHagUEXKdYSgZk=
-=JwZT
------END PGP SIGNATURE-----
-
---J2SCkAp4GZ/dPZZf--
