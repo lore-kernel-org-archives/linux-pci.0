@@ -5,58 +5,58 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11D02C3A5A0
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 17:04:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F8E8C4CC77
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 17:04:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DF6A9206A2
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 17:04:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 803522075E
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 17:04:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="po6t4my3"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Z/x8cPL2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391370AbgDNREb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 Apr 2020 13:04:31 -0400
+        id S2391306AbgDNREe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Apr 2020 13:04:34 -0400
 Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34542 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S2391330AbgDNRE2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Apr 2020 13:04:28 -0400
+        by vger.kernel.org with ESMTP id S2391341AbgDNREb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Apr 2020 13:04:31 -0400
 Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62E62C061A0F
-        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 10:04:28 -0700 (PDT)
-Received: by mail-wm1-x342.google.com with SMTP id x4so13826754wmj.1
-        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 10:04:28 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 514B8C061A10
+        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 10:04:31 -0700 (PDT)
+Received: by mail-wm1-x342.google.com with SMTP id a201so14546734wme.1
+        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 10:04:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=GCsqjS+Tnwu1hr3WMvNuD+P9uXkPM0pVKS2lTlLCiJU=;
-        b=po6t4my3Go9g7beq4oi5gBqHe0K8I8gLjjolwSf6g7Inuex/2pKCElDmTw05chnprB
-         VpcDmTm9mJndKQ44OUnWiFNGWAnRefKxTsOEpgZkGH6fmib0dAJkrwdNZzEReQlfHRLw
-         zmHfO/enRYNLngF50Q/ItNGZfOVNZOP1Wjn1Tm/UzlvI3Aq2ub4XSW6+HyraLp5KrRtN
-         gUQ66eIR/V7LC06nJlZF2rLHNx0sFnWE5LcK9o3Z9V83oIkL5irCCS39MKos1xZK1qWT
-         MZY9xrqkkCHiVCztI/hzFS5XxD5U/SGIE/6AMMBqlAMbF3wtNCRxo5V2z/5fM3LcFagm
-         S0GQ==
+        bh=erC/yZ4yqf+8sj3sT7z9RmtS2eJz/nnIlww3PMj9LNg=;
+        b=Z/x8cPL2SESYSfgT7USIjcJ03j+yB0RlxWlgpL06IaYNqQQiDsvaIHSi8h1/6csvx5
+         kK3IN5C+qcarpFXtn3clOaAiwcKXNvVa1EWM/usyv6coAE89GVxlq0y+++3RZEk606mS
+         eK/EjQn6TUpXWOsA1a0nlNknOXuMZrhFMHmCmBAyiUyODyk/I0jtGaFPz3zFkgOjmMZf
+         uD2X83kt/GQjoEZq/g3kTgLEpNi3zTYhvueIqbfhi3Y4uoytjUedxC4iTy6yeOtZC8Nv
+         yQnYlRAUvzb6xUuSOOjFLyw5N5rMpXC5onjkVSQrucRWu0tMM59YEgFJOBJCzYIEWPgN
+         8ZNA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=GCsqjS+Tnwu1hr3WMvNuD+P9uXkPM0pVKS2lTlLCiJU=;
-        b=XHOsP7iWe6yk/mQj5SBJyEMlvBOmn1x/kDHpmgsTVbaIwNVyvG+MgnUfbAf71M2GP8
-         ye4SlP1JR4GayAh8Dgv31+76qr+EkE8QNNoUjxq1qSQDD9JP5i21LxG+pylxVPlgPacN
-         hjYMSSnYWp7Cg8ec/MEjpzmDRjeElV/iyx6HTruCBy7/CEEhIAas9KuEoeujPOphcxRm
-         vMBsX/bXdjtqMu2qWhPXoRZ91Suhu8c/ArInNx9T8xzCMB6xe0tUhks/wMrkBh+OOB4W
-         MNRjfXQ7cfYbN9EE/SFdapxI4RhbK6aqxpSn7fk4Y5qQ3sqhEo7+NgRyqa4Y45q5oTNA
-         qrIg==
-X-Gm-Message-State: AGi0PuYNgSNk4PCknooDFeAd6CquVeSGnKP1BHCFrsDa2+ARdkRLZa8/
-        Bj4LdTujAk1DAMnu9+VP3DZa9g==
-X-Google-Smtp-Source: APiQypItrJFyYm1dKZ3R07kVZC02nj/EnEUI4s9HX58/CnIZwkPk4I7z7a9PSJbV36nuH4swD5HWaA==
-X-Received: by 2002:a1c:3281:: with SMTP id y123mr814694wmy.30.1586883867167;
-        Tue, 14 Apr 2020 10:04:27 -0700 (PDT)
+        bh=erC/yZ4yqf+8sj3sT7z9RmtS2eJz/nnIlww3PMj9LNg=;
+        b=hptYMY9svlPwmKViiEBTyeYdRpdaNEGIHiVaDypNLR2MknYxqJS5FrCh14vz2qbBXG
+         uZ+TT331TLdARRhobRtKyDX9N9oNJe8c/pu+lI9qr3BHMZhj0LepJo7SauYf3HPZu3Z5
+         BvpF8v+ejtcK1FqHcpF97xFsOvdXHUeu1EVjKd3GktfBGMe7Ro2cGqSu3ZLeEuPQHGSI
+         xhKWvXDaBs2Fjk6L4ry/V2N4azXNFpRcrF4E8/K2gp/v9yRzOZBAY1mmW45sFHpRR3Gh
+         G5omvWSZgpaGK5a+cShZ2Jae5hDOPfif7SPIaXDqynTrAk94aqxz3hZ4he8Kkw6YoOIy
+         CmiQ==
+X-Gm-Message-State: AGi0Pua7Ewp/pSJU2I65/UOTZEJJCi9+erIsM/cYhL8cWxY/22vL27B7
+        Is9licOTNJYP484QC6TrbA61OQ==
+X-Google-Smtp-Source: APiQypII+WOd1DdLkhhXCc4VJ0kp8rxI4M4if6Dbn88/uuwISRQZtuLUUNyYcRkEY4LiB2fY33DLlA==
+X-Received: by 2002:a7b:c313:: with SMTP id k19mr802495wmj.100.1586883870064;
+        Tue, 14 Apr 2020 10:04:30 -0700 (PDT)
 Received: from localhost.localdomain ([2001:171b:226b:54a0:116c:c27a:3e7f:5eaf])
-        by smtp.gmail.com with ESMTPSA id x18sm19549147wrs.11.2020.04.14.10.04.26
+        by smtp.gmail.com with ESMTPSA id x18sm19549147wrs.11.2020.04.14.10.04.28
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Apr 2020 10:04:26 -0700 (PDT)
+        Tue, 14 Apr 2020 10:04:29 -0700 (PDT)
 From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
 To:     iommu@lists.linux-foundation.org, devicetree@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
@@ -67,9 +67,9 @@ Cc:     joro@8bytes.org, catalin.marinas@arm.com, will@kernel.org,
         jacob.jun.pan@linux.intel.com, christian.koenig@amd.com,
         zhangfei.gao@linaro.org, jgg@ziepe.ca, xuzaibo@huawei.com,
         Jean-Philippe Brucker <jean-philippe@linaro.org>
-Subject: [PATCH v5 07/25] arm64: mm: Add asid_gen_match() helper
-Date:   Tue, 14 Apr 2020 19:02:35 +0200
-Message-Id: <20200414170252.714402-8-jean-philippe@linaro.org>
+Subject: [PATCH v5 09/25] iommu/io-pgtable-arm: Move some definitions to a header
+Date:   Tue, 14 Apr 2020 19:02:37 +0200
+Message-Id: <20200414170252.714402-10-jean-philippe@linaro.org>
 X-Mailer: git-send-email 2.26.0
 In-Reply-To: <20200414170252.714402-1-jean-philippe@linaro.org>
 References: <20200414170252.714402-1-jean-philippe@linaro.org>
@@ -80,49 +80,104 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add a macro to check if an ASID is from the current generation, since a
-subsequent patch will introduce a third user for this test.
+Extract some of the most generic TCR defines, so they can be reused by
+the page table sharing code.
 
 Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
 ---
-v4->v5: new
----
- arch/arm64/mm/context.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ drivers/iommu/io-pgtable-arm.h | 30 ++++++++++++++++++++++++++++++
+ drivers/iommu/io-pgtable-arm.c | 27 ++-------------------------
+ 2 files changed, 32 insertions(+), 25 deletions(-)
+ create mode 100644 drivers/iommu/io-pgtable-arm.h
 
-diff --git a/arch/arm64/mm/context.c b/arch/arm64/mm/context.c
-index 9b26f9a88724f..d702d60e64dab 100644
---- a/arch/arm64/mm/context.c
-+++ b/arch/arm64/mm/context.c
-@@ -92,6 +92,9 @@ static void set_reserved_asid_bits(void)
- 		bitmap_clear(asid_map, 0, NUM_USER_ASIDS);
- }
- 
-+#define asid_gen_match(asid) \
-+	(!(((asid) ^ atomic64_read(&asid_generation)) >> asid_bits))
+diff --git a/drivers/iommu/io-pgtable-arm.h b/drivers/iommu/io-pgtable-arm.h
+new file mode 100644
+index 0000000000000..ba7cfdf7afa03
+--- /dev/null
++++ b/drivers/iommu/io-pgtable-arm.h
+@@ -0,0 +1,30 @@
++/* SPDX-License-Identifier: GPL-2.0-only */
++#ifndef IO_PGTABLE_ARM_H_
++#define IO_PGTABLE_ARM_H_
 +
- static void flush_context(void)
- {
- 	int i;
-@@ -220,8 +223,7 @@ void check_and_switch_context(struct mm_struct *mm, unsigned int cpu)
- 	 *   because atomic RmWs are totally ordered for a given location.
- 	 */
- 	old_active_asid = atomic64_read(&per_cpu(active_asids, cpu));
--	if (old_active_asid &&
--	    !((asid ^ atomic64_read(&asid_generation)) >> asid_bits) &&
-+	if (old_active_asid && asid_gen_match(asid) &&
- 	    atomic64_cmpxchg_relaxed(&per_cpu(active_asids, cpu),
- 				     old_active_asid, asid))
- 		goto switch_mm_fastpath;
-@@ -229,7 +231,7 @@ void check_and_switch_context(struct mm_struct *mm, unsigned int cpu)
- 	raw_spin_lock_irqsave(&cpu_asid_lock, flags);
- 	/* Check that our ASID belongs to the current generation. */
- 	asid = atomic64_read(&mm->context.id);
--	if ((asid ^ atomic64_read(&asid_generation)) >> asid_bits) {
-+	if (!asid_gen_match(asid)) {
- 		asid = new_context(mm);
- 		atomic64_set(&mm->context.id, asid);
- 	}
++#define ARM_LPAE_TCR_TG0_4K		0
++#define ARM_LPAE_TCR_TG0_64K		1
++#define ARM_LPAE_TCR_TG0_16K		2
++
++#define ARM_LPAE_TCR_TG1_16K		1
++#define ARM_LPAE_TCR_TG1_4K		2
++#define ARM_LPAE_TCR_TG1_64K		3
++
++#define ARM_LPAE_TCR_SH_NS		0
++#define ARM_LPAE_TCR_SH_OS		2
++#define ARM_LPAE_TCR_SH_IS		3
++
++#define ARM_LPAE_TCR_RGN_NC		0
++#define ARM_LPAE_TCR_RGN_WBWA		1
++#define ARM_LPAE_TCR_RGN_WT		2
++#define ARM_LPAE_TCR_RGN_WB		3
++
++#define ARM_LPAE_TCR_PS_32_BIT		0x0ULL
++#define ARM_LPAE_TCR_PS_36_BIT		0x1ULL
++#define ARM_LPAE_TCR_PS_40_BIT		0x2ULL
++#define ARM_LPAE_TCR_PS_42_BIT		0x3ULL
++#define ARM_LPAE_TCR_PS_44_BIT		0x4ULL
++#define ARM_LPAE_TCR_PS_48_BIT		0x5ULL
++#define ARM_LPAE_TCR_PS_52_BIT		0x6ULL
++
++#endif /* IO_PGTABLE_ARM_H_ */
+diff --git a/drivers/iommu/io-pgtable-arm.c b/drivers/iommu/io-pgtable-arm.c
+index 04fbd4bf0ff9f..f71a2eade04ab 100644
+--- a/drivers/iommu/io-pgtable-arm.c
++++ b/drivers/iommu/io-pgtable-arm.c
+@@ -20,6 +20,8 @@
+ 
+ #include <asm/barrier.h>
+ 
++#include "io-pgtable-arm.h"
++
+ #define ARM_LPAE_MAX_ADDR_BITS		52
+ #define ARM_LPAE_S2_MAX_CONCAT_PAGES	16
+ #define ARM_LPAE_MAX_LEVELS		4
+@@ -100,23 +102,6 @@
+ #define ARM_LPAE_PTE_MEMATTR_DEV	(((arm_lpae_iopte)0x1) << 2)
+ 
+ /* Register bits */
+-#define ARM_LPAE_TCR_TG0_4K		0
+-#define ARM_LPAE_TCR_TG0_64K		1
+-#define ARM_LPAE_TCR_TG0_16K		2
+-
+-#define ARM_LPAE_TCR_TG1_16K		1
+-#define ARM_LPAE_TCR_TG1_4K		2
+-#define ARM_LPAE_TCR_TG1_64K		3
+-
+-#define ARM_LPAE_TCR_SH_NS		0
+-#define ARM_LPAE_TCR_SH_OS		2
+-#define ARM_LPAE_TCR_SH_IS		3
+-
+-#define ARM_LPAE_TCR_RGN_NC		0
+-#define ARM_LPAE_TCR_RGN_WBWA		1
+-#define ARM_LPAE_TCR_RGN_WT		2
+-#define ARM_LPAE_TCR_RGN_WB		3
+-
+ #define ARM_LPAE_VTCR_SL0_MASK		0x3
+ 
+ #define ARM_LPAE_TCR_T0SZ_SHIFT		0
+@@ -124,14 +109,6 @@
+ #define ARM_LPAE_VTCR_PS_SHIFT		16
+ #define ARM_LPAE_VTCR_PS_MASK		0x7
+ 
+-#define ARM_LPAE_TCR_PS_32_BIT		0x0ULL
+-#define ARM_LPAE_TCR_PS_36_BIT		0x1ULL
+-#define ARM_LPAE_TCR_PS_40_BIT		0x2ULL
+-#define ARM_LPAE_TCR_PS_42_BIT		0x3ULL
+-#define ARM_LPAE_TCR_PS_44_BIT		0x4ULL
+-#define ARM_LPAE_TCR_PS_48_BIT		0x5ULL
+-#define ARM_LPAE_TCR_PS_52_BIT		0x6ULL
+-
+ #define ARM_LPAE_MAIR_ATTR_SHIFT(n)	((n) << 3)
+ #define ARM_LPAE_MAIR_ATTR_MASK		0xff
+ #define ARM_LPAE_MAIR_ATTR_DEVICE	0x04
 -- 
 2.26.0
 
