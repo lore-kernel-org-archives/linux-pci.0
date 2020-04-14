@@ -2,83 +2,89 @@ Return-Path: <SRS0=isgL=56=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_ABUSE_SURBL,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EDA12C2BB86
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 10:55:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2A5FC2BA19
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 11:31:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CBBAE2075E
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 10:55:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 85075206D5
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 11:31:29 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=rere.qmqm.pl header.i=@rere.qmqm.pl header.b="CPsOHPWc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2438695AbgDNKzQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 Apr 2020 06:55:16 -0400
-Received: from foss.arm.com ([217.140.110.172]:52706 "EHLO foss.arm.com"
+        id S2439211AbgDNLbR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Apr 2020 07:31:17 -0400
+Received: from rere.qmqm.pl ([91.227.64.183]:21527 "EHLO rere.qmqm.pl"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2438412AbgDNKe2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 14 Apr 2020 06:34:28 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id E0D1C31B;
-        Tue, 14 Apr 2020 03:22:45 -0700 (PDT)
-Received: from gaia (unknown [172.31.20.19])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id B236C3F6C4;
-        Tue, 14 Apr 2020 03:22:43 -0700 (PDT)
-Date:   Tue, 14 Apr 2020 11:22:41 +0100
-From:   Catalin Marinas <catalin.marinas@arm.com>
-To:     Rob Herring <robh@kernel.org>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        id S2439200AbgDNLbM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 14 Apr 2020 07:31:12 -0400
+Received: from remote.user (localhost [127.0.0.1])
+        by rere.qmqm.pl (Postfix) with ESMTPSA id 491jwp4f2HzZ5;
+        Tue, 14 Apr 2020 13:31:06 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=rere.qmqm.pl; s=1;
+        t=1586863867; bh=XMK7e0Dm8F9YE8gKtQY1u7hsmjy1KuLoqRJsGZsIDcE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=CPsOHPWcNDRbKJmA8ReFm7MwVhynuUCOFOdWX6Kj3c3xx9s4hmVn0j6s2Z4nzzt1c
+         Z/XzQ1W/X1ISsCV0CfSuVFBiTlLHb0I0iejhgKeM6WJs/JfZ35kq3KjyN5LuJEjEV5
+         WcWH0WoFwMfJ7qyqXaw3zhARV8ktvem1kFKh/y/aA4APigaAxCXAABAbL0rEQk6rt2
+         n54j71vXR4APXPcqYXC2+hZ0OTlr1LYcy/2dFdqBj8KFoAi158AeS2Ug+8TmLbxJ4G
+         +zsecp8nh0QLpwSIilYPdOCCvD0MbqBUeiP3kFlQ0AdNu22tN631+88QZjSRB3X0La
+         AR5yu3RKD69EQ==
+X-Virus-Status: Clean
+X-Virus-Scanned: clamav-milter 0.102.2 at mail
+Date:   Tue, 14 Apr 2020 13:31:04 +0200
+From:   =?iso-8859-2?Q?Micha=B3_Miros=B3aw?= <mirq-linux@rere.qmqm.pl>
+To:     Pali =?iso-8859-2?Q?Roh=E1r?= <pali@kernel.org>
+Cc:     Thierry Reding <thierry.reding@gmail.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Will Deacon <will@kernel.org>,
         Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        Mans Rullgard <mans@mansr.com>,
-        Marc Gonzalez <marc.w.gonzalez@free.fr>,
-        Robert Richter <rrichter@marvell.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Toan Le <toan@os.amperecomputing.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Jonathan Chocron <jonnyc@amazon.com>,
-        linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/3] PCI: Constify struct pci_ecam_ops
-Message-ID: <20200414102240.GB22140@gaia>
-References: <20200409234923.21598-1-robh@kernel.org>
- <20200409234923.21598-2-robh@kernel.org>
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: tegra: Fix reporting GPIO error value
+Message-ID: <20200414113104.GA27984@qmqm.qmqm.pl>
+References: <20200414102512.27506-1-pali@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-2
 Content-Disposition: inline
-In-Reply-To: <20200409234923.21598-2-robh@kernel.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20200414102512.27506-1-pali@kernel.org>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Apr 09, 2020 at 05:49:21PM -0600, Rob Herring wrote:
-> struct pci_ecam_ops is typically DT match table data which is defined to
-> be const. It's also best practice for ops structs to be const. Ideally,
-> we'd make struct pci_ops const as well, but that becomes pretty
-> invasive, so for now we just cast it where needed.
+On Tue, Apr 14, 2020 at 12:25:12PM +0200, Pali Rohár wrote:
+> Error code is stored in rp->reset_gpio and not in err variable.
 > 
-> Cc: Catalin Marinas <catalin.marinas@arm.com>
-> Cc: Will Deacon <will@kernel.org>
-> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Andrew Murray <amurray@thegoodpenguin.co.uk>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-> Cc: Len Brown <lenb@kernel.org>
-> Cc: Jonathan Chocron <jonnyc@amazon.com>
-> Cc: Zhou Wang <wangzhou1@hisilicon.com>
-> Cc: Robert Richter <rrichter@marvell.com>
-> Cc: Toan Le <toan@os.amperecomputing.com>
-> Cc: Marc Gonzalez <marc.w.gonzalez@free.fr>
-> Cc: Mans Rullgard <mans@mansr.com>
-> Cc: linux-acpi@vger.kernel.org
-> Signed-off-by: Rob Herring <robh@kernel.org>
+> Signed-off-by: Pali Rohár <pali@kernel.org>
 > ---
->  arch/arm64/kernel/pci.c                   |  4 ++--
+>  drivers/pci/controller/pci-tegra.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
+> index 0e03cef72840..378d5a8773c7 100644
+> --- a/drivers/pci/controller/pci-tegra.c
+> +++ b/drivers/pci/controller/pci-tegra.c
+> @@ -2314,8 +2314,8 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
+>  			if (PTR_ERR(rp->reset_gpio) == -ENOENT) {
+>  				rp->reset_gpio = NULL;
+>  			} else {
+> -				dev_err(dev, "failed to get reset GPIO: %d\n",
+> -					err);
+> +				dev_err(dev, "failed to get reset GPIO: %ld\n",
+> +					PTR_ERR(rp->reset_gpio));
+>  				return PTR_ERR(rp->reset_gpio);
+>  			}
+>  		}
 
-For arm64:
+You can use %pe directly on the pointer for added benefit of translation
+of the error to a name.
 
-Acked-by: Catalin Marinas <catalin.marinas@arm.com>
+Best Regards,
+Micha³ Miros³aw
