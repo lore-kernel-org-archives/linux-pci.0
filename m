@@ -7,56 +7,56 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCD43C352BE
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 17:04:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76CD2C5321D
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 17:04:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9D943206A2
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 17:04:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 56FBD206A2
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 17:04:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="H/49gtTy"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="hSOw4eWI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391194AbgDNREd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 Apr 2020 13:04:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34548 "EHLO
+        id S2391338AbgDNREf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Apr 2020 13:04:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34540 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S2391306AbgDNRE1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Apr 2020 13:04:27 -0400
-Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E2F4C061A0C
-        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 10:04:27 -0700 (PDT)
-Received: by mail-wm1-x344.google.com with SMTP id a81so14893170wmf.5
-        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 10:04:27 -0700 (PDT)
+        by vger.kernel.org with ESMTP id S2391371AbgDNREc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Apr 2020 13:04:32 -0400
+Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B274C061A0C
+        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 10:04:32 -0700 (PDT)
+Received: by mail-wm1-x343.google.com with SMTP id a81so14893656wmf.5
+        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 10:04:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=Pm90KHnx8uK8AXrbNapri8S3uUJ3F4SFKQZ/TEPP7D0=;
-        b=H/49gtTyBTSYl8Y/NsAtw8/g2zInRHKwlAM06dE15HfIZYVeRpp26xgT3c6zafASzi
-         7uDVin3Kh8IClWDwqrYvKeFnyEB6udiDwCzxx2XTV4flbL6HH0XG9E/oPAZMxmIEDG2M
-         jnmEkxuf7GeDgwVmmZ4SS2Ai+L4FsU4qiAepIcf4xzuUgNOcUilebN8pD4B0N++nF8Vq
-         Zp/DuX2F1sTJiHAzOXJwPFc6HbGiFHxiJnEcW/IlfA8fGtHRi7Np+xmoeh36HV8dpfll
-         4HfN46I/PT6emJf6bvhw3gp7qf7nU5c8gXH7dohtjLBTfv8wGTTZmGm7nQ70C7xIRVtp
-         OYOQ==
+        bh=uHUqHTfoGR+1ZkqPou9Z5HBhwxdn8u/b73K/p08vGt4=;
+        b=hSOw4eWIOpcUGkqXNPQ9dtdmR/ipT2mxWsiI3pMLVH0qgRPNjHSMENCRjHZ4NJar66
+         7/UT+rWF0VVOTwd6Qq1Ko5BGuW+jxJLwAD3xaf5wYQROloGanuLGb7IPMnVJv7HK78+I
+         6ngZrW4BxXtksLmLmfoiWffLmjWadvjH0C7qLcRN+lO7dVaEm1JGvGctjkYtl4N944aK
+         W3n+wj6bEmpU/CznO6UiFv/JDUuQBgZiEQyXklusRoJ6jwr/CH6Wy/hgVNh5izNnczuz
+         90748Du66RWc5+QokDus/aLjad+8nROeHW3JEc7vfg8mwm0Xu+810td/BaN7JKL0CQ6H
+         pY3A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Pm90KHnx8uK8AXrbNapri8S3uUJ3F4SFKQZ/TEPP7D0=;
-        b=HJ5ow8FPTogK5GDk9qIHN33J6aEEGSedjeXPDJNf+HdRfuJEuVMiCeBBlTH5CKJmvd
-         dN3pgr499wjJEq1LFD2K6lwiWJnej1Qioia877PASKcPysrH9u21KilWGSE4zZSVhRrZ
-         0ChCRtiadyGK+cDeDa2aAqo3c7XIYo8Ni0zmOQQq5M28mTXiZD9r3Lyt2N7pO9ajzkxo
-         /zdH55QM5tQSP+Eqiil/yeeRPBd6FzcdNxQCgb6F3rBY7UxbG6HO/mqKB54wAI9nDAKO
-         /pbb6saaztE0aMGxGmYBnI7qkjT3+woriZKsAcmjjRz42WBgOI3phHMS8j5M9qT09mjB
-         OyiQ==
-X-Gm-Message-State: AGi0PuY9XwawnYBlv2EoGRx3fKdonGxJ2lO9EPgvWS0ydUGSm47hCY3p
-        fhhMN0DuyDg9eIPd9fUQujl0jQ==
-X-Google-Smtp-Source: APiQypJk/dl8CBfLNh5x7aucnzwvWIEs4TpxXFyGB0h6saUKXXv74fXgKyRLf7k//vQrLyri2cta5A==
-X-Received: by 2002:a1c:998b:: with SMTP id b133mr767731wme.65.1586883865987;
-        Tue, 14 Apr 2020 10:04:25 -0700 (PDT)
+        bh=uHUqHTfoGR+1ZkqPou9Z5HBhwxdn8u/b73K/p08vGt4=;
+        b=IMEFZpmYbaceyeP9nRr/dOBACiiFweK3ro8IM75ferTsAQMAHUvbSluCawWZcwwi00
+         /2kQExnRzbdFIDxSXDlkxtS746PkFiHOaDlsRSmNitU9RPkFYzLn6K8eb2X7yXUnsshr
+         gtUdkAE5nP5TWjzD/hIcl21B+B79C8srwFAC6gqy4sZV4XhzVxSaZTMSUSPBdy00LZRv
+         qW8xSpRIzTAhos/2HenwmXEYnfgwigEXUphewDI/88Yc+QYoTZ4BwFXm8LW58Dkdbps8
+         am0aFgd9foc7Ee0bpvn6k+tmz4O/ANr/BgrWtGouFm0K6iaI8LDLsSYj/NrY4fpEPd9y
+         gR6w==
+X-Gm-Message-State: AGi0PuYCQ5sH/sabkojXe5wW4AGhxw3znKHML/SmnPAS2WGYPXqerX7o
+        190+cuR4HLI248f9Qh0DkXoHog==
+X-Google-Smtp-Source: APiQypKS0JuC3gKtoh+XCp+shpu7gwSGraLZSLm/eXL7WMGLNhlt6UWbZ/JnbP6LfEz+El1lwsxHkg==
+X-Received: by 2002:a1c:2506:: with SMTP id l6mr784909wml.44.1586883871278;
+        Tue, 14 Apr 2020 10:04:31 -0700 (PDT)
 Received: from localhost.localdomain ([2001:171b:226b:54a0:116c:c27a:3e7f:5eaf])
-        by smtp.gmail.com with ESMTPSA id x18sm19549147wrs.11.2020.04.14.10.04.24
+        by smtp.gmail.com with ESMTPSA id x18sm19549147wrs.11.2020.04.14.10.04.30
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Apr 2020 10:04:25 -0700 (PDT)
+        Tue, 14 Apr 2020 10:04:30 -0700 (PDT)
 From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
 To:     iommu@lists.linux-foundation.org, devicetree@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
@@ -67,9 +67,9 @@ Cc:     joro@8bytes.org, catalin.marinas@arm.com, will@kernel.org,
         jacob.jun.pan@linux.intel.com, christian.koenig@amd.com,
         zhangfei.gao@linaro.org, jgg@ziepe.ca, xuzaibo@huawei.com,
         Jean-Philippe Brucker <jean-philippe@linaro.org>
-Subject: [PATCH v5 06/25] iommu/sva: Register page fault handler
-Date:   Tue, 14 Apr 2020 19:02:34 +0200
-Message-Id: <20200414170252.714402-7-jean-philippe@linaro.org>
+Subject: [PATCH v5 10/25] iommu/arm-smmu-v3: Manage ASIDs with xarray
+Date:   Tue, 14 Apr 2020 19:02:38 +0200
+Message-Id: <20200414170252.714402-11-jean-philippe@linaro.org>
 X-Mailer: git-send-email 2.26.0
 In-Reply-To: <20200414170252.714402-1-jean-philippe@linaro.org>
 References: <20200414170252.714402-1-jean-philippe@linaro.org>
@@ -80,65 +80,93 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-When enabling SVA, register the fault handler. Device driver will register
-an I/O page fault queue before or after calling iommu_sva_enable. The
-fault queue must be flushed before any io_mm is freed, to make sure that
-its PASID isn't used in any fault queue, and can be reallocated.
+In preparation for sharing some ASIDs with the CPU, use a global xarray to
+store ASIDs and their context. ASID#0 is now reserved, and the ASID
+space is global.
 
 Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
 ---
- drivers/iommu/Kconfig     |  1 +
- drivers/iommu/iommu-sva.c | 11 +++++++++++
- 2 files changed, 12 insertions(+)
+ drivers/iommu/arm-smmu-v3.c | 27 ++++++++++++++++++---------
+ 1 file changed, 18 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/iommu/Kconfig b/drivers/iommu/Kconfig
-index bf620bf48da03..411a7ee2ab12d 100644
---- a/drivers/iommu/Kconfig
-+++ b/drivers/iommu/Kconfig
-@@ -106,6 +106,7 @@ config IOMMU_DMA
- config IOMMU_SVA
- 	bool
- 	select IOASID
-+	select IOMMU_PAGE_FAULT
- 	select IOMMU_API
- 	select MMU_NOTIFIER
+diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+index 60a415e8e2b6f..96ee60002e85e 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -664,7 +664,6 @@ struct arm_smmu_device {
  
-diff --git a/drivers/iommu/iommu-sva.c b/drivers/iommu/iommu-sva.c
-index b177d6cbf4fff..00d5e7e895e80 100644
---- a/drivers/iommu/iommu-sva.c
-+++ b/drivers/iommu/iommu-sva.c
-@@ -420,6 +420,12 @@ void iommu_sva_unbind_generic(struct iommu_sva *handle)
- 	if (WARN_ON(!param))
- 		return;
+ #define ARM_SMMU_MAX_ASIDS		(1 << 16)
+ 	unsigned int			asid_bits;
+-	DECLARE_BITMAP(asid_map, ARM_SMMU_MAX_ASIDS);
  
-+	/*
-+	 * Caller stopped the device from issuing PASIDs, now make sure they are
-+	 * out of the fault queue.
-+	 */
-+	iopf_queue_flush_dev(handle->dev, bond->io_mm->pasid);
+ #define ARM_SMMU_MAX_VMIDS		(1 << 16)
+ 	unsigned int			vmid_bits;
+@@ -724,6 +723,8 @@ struct arm_smmu_option_prop {
+ 	const char *prop;
+ };
+ 
++static DEFINE_XARRAY_ALLOC1(asid_xa);
 +
- 	mutex_lock(&param->sva_lock);
- 	mutex_lock(&iommu_sva_lock);
- 	io_mm_detach(bond);
-@@ -457,6 +463,10 @@ int iommu_sva_enable(struct device *dev, struct iommu_sva_param *sva_param)
- 		goto err_unlock;
- 	}
+ static struct arm_smmu_option_prop arm_smmu_options[] = {
+ 	{ ARM_SMMU_OPT_SKIP_PREFETCH, "hisilicon,broken-prefetch-cmd" },
+ 	{ ARM_SMMU_OPT_PAGE0_REGS_ONLY, "cavium,cn9900-broken-page1-regspace"},
+@@ -1763,6 +1764,14 @@ static void arm_smmu_free_cd_tables(struct arm_smmu_domain *smmu_domain)
+ 	cdcfg->cdtab = NULL;
+ }
  
-+	ret = iommu_register_device_fault_handler(dev, iommu_queue_iopf, dev);
++static void arm_smmu_free_asid(struct arm_smmu_ctx_desc *cd)
++{
++	if (!cd->asid)
++		return;
++
++	xa_erase(&asid_xa, cd->asid);
++}
++
+ /* Stream table manipulation functions */
+ static void
+ arm_smmu_write_strtab_l1_desc(__le64 *dst, struct arm_smmu_strtab_l1_desc *desc)
+@@ -2448,10 +2457,9 @@ static void arm_smmu_domain_free(struct iommu_domain *domain)
+ 	if (smmu_domain->stage == ARM_SMMU_DOMAIN_S1) {
+ 		struct arm_smmu_s1_cfg *cfg = &smmu_domain->s1_cfg;
+ 
+-		if (cfg->cdcfg.cdtab) {
++		if (cfg->cdcfg.cdtab)
+ 			arm_smmu_free_cd_tables(smmu_domain);
+-			arm_smmu_bitmap_free(smmu->asid_map, cfg->cd.asid);
+-		}
++		arm_smmu_free_asid(&cfg->cd);
+ 	} else {
+ 		struct arm_smmu_s2_cfg *cfg = &smmu_domain->s2_cfg;
+ 		if (cfg->vmid)
+@@ -2466,14 +2474,15 @@ static int arm_smmu_domain_finalise_s1(struct arm_smmu_domain *smmu_domain,
+ 				       struct io_pgtable_cfg *pgtbl_cfg)
+ {
+ 	int ret;
+-	int asid;
++	u32 asid;
+ 	struct arm_smmu_device *smmu = smmu_domain->smmu;
+ 	struct arm_smmu_s1_cfg *cfg = &smmu_domain->s1_cfg;
+ 	typeof(&pgtbl_cfg->arm_lpae_s1_cfg.tcr) tcr = &pgtbl_cfg->arm_lpae_s1_cfg.tcr;
+ 
+-	asid = arm_smmu_bitmap_alloc(smmu->asid_map, smmu->asid_bits);
+-	if (asid < 0)
+-		return asid;
++	ret = xa_alloc(&asid_xa, &asid, &cfg->cd,
++		       XA_LIMIT(1, (1 << smmu->asid_bits) - 1), GFP_KERNEL);
 +	if (ret)
-+		goto err_unlock;
-+
- 	dev->iommu->sva_param = new_param;
- 	mutex_unlock(&param->sva_lock);
- 	return 0;
-@@ -494,6 +504,7 @@ int iommu_sva_disable(struct device *dev)
- 		goto out_unlock;
- 	}
++		return ret;
  
-+	iommu_unregister_device_fault_handler(dev);
- 	kfree(param->sva_param);
- 	param->sva_param = NULL;
- out_unlock:
+ 	cfg->s1cdmax = master->ssid_bits;
+ 
+@@ -2506,7 +2515,7 @@ static int arm_smmu_domain_finalise_s1(struct arm_smmu_domain *smmu_domain,
+ out_free_cd_tables:
+ 	arm_smmu_free_cd_tables(smmu_domain);
+ out_free_asid:
+-	arm_smmu_bitmap_free(smmu->asid_map, asid);
++	arm_smmu_free_asid(&cfg->cd);
+ 	return ret;
+ }
+ 
 -- 
 2.26.0
 
