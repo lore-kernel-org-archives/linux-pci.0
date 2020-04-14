@@ -2,61 +2,61 @@ Return-Path: <SRS0=isgL=56=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9832C55185
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 17:04:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D96C1C54FD0
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 17:05:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 87CAF2075E
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 17:04:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B0032206A2
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 17:05:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="GQc1HJyS"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="EJcosvT8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391609AbgDNRE6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 Apr 2020 13:04:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34634 "EHLO
+        id S2391584AbgDNRFC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Apr 2020 13:05:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34614 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S2391569AbgDNREx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Apr 2020 13:04:53 -0400
-Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53C6AC061A0C
-        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 10:04:53 -0700 (PDT)
-Received: by mail-wm1-x344.google.com with SMTP id a201so14548622wme.1
-        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 10:04:53 -0700 (PDT)
+        by vger.kernel.org with ESMTP id S2391490AbgDNREl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Apr 2020 13:04:41 -0400
+Received: from mail-wm1-x341.google.com (mail-wm1-x341.google.com [IPv6:2a00:1450:4864:20::341])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2C82C061A0E
+        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 10:04:40 -0700 (PDT)
+Received: by mail-wm1-x341.google.com with SMTP id h2so13796390wmb.4
+        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 10:04:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=vE2itLZu3hqvC4LzqU2NUCFx+9C8ab/nGgmunlfocw4=;
-        b=GQc1HJySAIFGl4e9JGBFURgN/vl21Fb+oCGY0ghVUDlr5r96ZmZmw/X83yVkMwCMvt
-         DVAASgUR/v3/ZKBKl9O60CQVrNvn4oMMVLsH3g9JXWg+IeYIxVCppffgWVDw7kFLs+SL
-         qL185/o63pqZqsBw6EgV8XD0/UHJpB1qI+n6vwa7Qv2mwO4fdLqiqOvJiR2hZWZH7Me1
-         eoakZAu9sIB1oOiShcxlx+56zauDP7aBZBVxrI01fRfnSKCQXLcXyLhFUPuBdcSxvOTp
-         gidl1cZtbaXu5tx9otKpXSBohIzzToXZC0tS5fggLOAxV0+H42kV0oHqDEtXsMF2hNlm
-         qwfg==
+        bh=WbxTMbV/4pSZQY8//KTZeKZ9tN56Paf1UOPOW4z/8RA=;
+        b=EJcosvT8tFkBoFeE83VxfL3JFEp9wWkEoSy/u9HV1nMiRCsFuVEFCg34QhFQ0Ig2kd
+         5RlmWmu750PxzLmkcygnohAcg49vEEDeNfjWtg5MKWWP6XFcyM2tj355kGY9uGF4ZAs4
+         VBovUW//PIawkzdqzgeX1UNUTp2dC+P5BJ8PDfNxvR5iJK2NKUeVHSGq8m2iRyQCBYUr
+         zAMqLF1jFxkHBxRtHTgX8Bt6G/4FEITLfhTi1sJBtKT3dPfkMTCxXA73c5L6GS3LRuAO
+         VLIhcAN5rTerG5x4f/Bpu5puRhb3XuwkTyEhwJVJxBMzkVzzIn0g0hmFa9UkKW6yNlQZ
+         8rtQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=vE2itLZu3hqvC4LzqU2NUCFx+9C8ab/nGgmunlfocw4=;
-        b=CLfiOphawORfSH80Z/UTBGqTpYDmniLN7bGqL+W6DyMvSGgurhu53fYKnMEfo0WW3N
-         3Za3CbIbmQ/hx9gfQ8Rucnn5uQ/ZcfyErhRsxpvaBxfpa81rQaTZz4egZ5cJ6/e0MJho
-         I9GtEYSN8sfvgXKu/f/6DC8lIOnCc8fV0krheg0ZKZRcvuXTpjfjHCmPbTlAQ9QPMrRw
-         l+i8pt7cObpiFs6BYiGAp+PfVRTqf1B7qEeHAB4Cycy1dZM1qLm0NTDjQds83cRcjLRt
-         FcBSZir00QFEe+CWjlTsLkbjtJlxR7uCb9lWa2LqkqVM+L2u7iJ+nW1QDIm1VEBuYhlz
-         PO+Q==
-X-Gm-Message-State: AGi0PuaZv5e9XJUGMWro/8NpC5/D5XH4pACDstTXNr4QemwQxFjJUpX/
-        a9dJCcOZ69A3L8ivhACnUH8wAg==
-X-Google-Smtp-Source: APiQypIBMdNPHOZOhnCMJH0FJPJY2Rdi+r/VG4B2wmIYz2z44PksUMUJ1Q8ZKmB8ryyXqmfTYJG52Q==
-X-Received: by 2002:a1c:3c08:: with SMTP id j8mr814017wma.30.1586883892098;
-        Tue, 14 Apr 2020 10:04:52 -0700 (PDT)
+        bh=WbxTMbV/4pSZQY8//KTZeKZ9tN56Paf1UOPOW4z/8RA=;
+        b=rMk3jUPkBT/jiPplYLHFAO7gOROGNiAT4qyARrP7n5zq5YiRb8gFuVgFRTRwpitwUO
+         onG8FJX0UsLbGHlvKnZeXQ+XAz26g1nEZGHt5Qruub1PptjIDytxBMV8/FXiQG4RVTbU
+         II/PZyizNu++XWAFxymIbxQZ+AZcTQKAifkV0asgfhqQKlAMvotsm/Yq+jOEbDemyBjP
+         FBBulFnL3evOiEpeUPpy8nCLgHTU6hDqWkq5gTOs9QrSBmGGHk7/AzwdMP4sowX+uarb
+         KPKAOeKtOJmr0HuWDToIM2a+6AaMQQXLtFhe5shvZBMpkIZKN/f3bYDEw2xVKUNfW47V
+         TYTA==
+X-Gm-Message-State: AGi0PuZfqtaPjZg7qnxZOHdjgm48R9RFqMxfRzztUQqXuNVZXuM6NTCN
+        dHY8VDvaKdFQMvhkEHP/AkmnIA==
+X-Google-Smtp-Source: APiQypLVdIym/zn6jkDftt+MJ2EfuiypDwrDx/YKm8MzyYUO/W3AgP2uDmxEurb3a37PkHFH7PvBWg==
+X-Received: by 2002:a1c:ed18:: with SMTP id l24mr783359wmh.122.1586883879712;
+        Tue, 14 Apr 2020 10:04:39 -0700 (PDT)
 Received: from localhost.localdomain ([2001:171b:226b:54a0:116c:c27a:3e7f:5eaf])
-        by smtp.gmail.com with ESMTPSA id x18sm19549147wrs.11.2020.04.14.10.04.50
+        by smtp.gmail.com with ESMTPSA id x18sm19549147wrs.11.2020.04.14.10.04.38
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Apr 2020 10:04:51 -0700 (PDT)
+        Tue, 14 Apr 2020 10:04:39 -0700 (PDT)
 From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
 To:     iommu@lists.linux-foundation.org, devicetree@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
@@ -66,11 +66,10 @@ Cc:     joro@8bytes.org, catalin.marinas@arm.com, will@kernel.org,
         baolu.lu@linux.intel.com, Jonathan.Cameron@huawei.com,
         jacob.jun.pan@linux.intel.com, christian.koenig@amd.com,
         zhangfei.gao@linaro.org, jgg@ziepe.ca, xuzaibo@huawei.com,
-        Jean-Philippe Brucker <jean-philippe@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v5 24/25] PCI/ATS: Export PRI functions
-Date:   Tue, 14 Apr 2020 19:02:52 +0200
-Message-Id: <20200414170252.714402-25-jean-philippe@linaro.org>
+        Jean-Philippe Brucker <jean-philippe@linaro.org>
+Subject: [PATCH v5 15/25] iommu/arm-smmu-v3: Enable broadcast TLB maintenance
+Date:   Tue, 14 Apr 2020 19:02:43 +0200
+Message-Id: <20200414170252.714402-16-jean-philippe@linaro.org>
 X-Mailer: git-send-email 2.26.0
 In-Reply-To: <20200414170252.714402-1-jean-philippe@linaro.org>
 References: <20200414170252.714402-1-jean-philippe@linaro.org>
@@ -81,52 +80,89 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The SMMUv3 driver uses pci_{enable,disable}_pri() and related
-functions. Export those functions to allow the driver to be built as a
-module.
+The SMMUv3 can handle invalidation targeted at TLB entries with shared
+ASIDs. If the implementation supports broadcast TLB maintenance, enable it
+and keep track of it in a feature bit. The SMMU will then be affected by
+inner-shareable TLB invalidations from other agents.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+A major side-effect of this change is that stage-2 translation contexts
+are now affected by all invalidations by VMID. VMIDs are all shared and
+the only ways to prevent over-invalidation, since the stage-2 page tables
+are not shared between CPU and SMMU, are to either disable BTM or allocate
+different VMIDs. This patch does not address the problem.
+
 Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
 ---
- drivers/pci/ats.c | 4 ++++
- 1 file changed, 4 insertions(+)
+v4->v5: bump feature bit
+---
+ drivers/iommu/arm-smmu-v3.c | 19 +++++++++++++++++--
+ 1 file changed, 17 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-index bbfd0d42b8b97..fc8fc6fc8bd55 100644
---- a/drivers/pci/ats.c
-+++ b/drivers/pci/ats.c
-@@ -197,6 +197,7 @@ void pci_pri_init(struct pci_dev *pdev)
- 	if (status & PCI_PRI_STATUS_PASID)
- 		pdev->pasid_required = 1;
- }
-+EXPORT_SYMBOL_GPL(pci_pri_init);
+diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+index 21d458d817fc2..e7de8a7459fa4 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -56,6 +56,7 @@
+ #define IDR0_ASID16			(1 << 12)
+ #define IDR0_ATS			(1 << 10)
+ #define IDR0_HYP			(1 << 9)
++#define IDR0_BTM			(1 << 5)
+ #define IDR0_COHACC			(1 << 4)
+ #define IDR0_TTF			GENMASK(3, 2)
+ #define IDR0_TTF_AARCH64		2
+@@ -655,6 +656,7 @@ struct arm_smmu_device {
+ #define ARM_SMMU_FEAT_VAX		(1 << 14)
+ #define ARM_SMMU_FEAT_RANGE_INV		(1 << 15)
+ #define ARM_SMMU_FEAT_E2H		(1 << 16)
++#define ARM_SMMU_FEAT_BTM		(1 << 17)
+ 	u32				features;
  
- /**
-  * pci_enable_pri - Enable PRI capability
-@@ -243,6 +244,7 @@ int pci_enable_pri(struct pci_dev *pdev, u32 reqs)
+ #define ARM_SMMU_OPT_SKIP_PREFETCH	(1 << 0)
+@@ -3814,11 +3816,14 @@ static int arm_smmu_device_reset(struct arm_smmu_device *smmu, bool bypass)
+ 	writel_relaxed(reg, smmu->base + ARM_SMMU_CR1);
  
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(pci_enable_pri);
+ 	/* CR2 (random crap) */
+-	reg = CR2_PTM | CR2_RECINVSID;
++	reg = CR2_RECINVSID;
  
- /**
-  * pci_disable_pri - Disable PRI capability
-@@ -322,6 +324,7 @@ int pci_reset_pri(struct pci_dev *pdev)
+ 	if (smmu->features & ARM_SMMU_FEAT_E2H)
+ 		reg |= CR2_E2H;
  
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(pci_reset_pri);
++	if (!(smmu->features & ARM_SMMU_FEAT_BTM))
++		reg |= CR2_PTM;
++
+ 	writel_relaxed(reg, smmu->base + ARM_SMMU_CR2);
  
- /**
-  * pci_prg_resp_pasid_required - Return PRG Response PASID Required bit
-@@ -337,6 +340,7 @@ int pci_prg_resp_pasid_required(struct pci_dev *pdev)
+ 	/* Stream table */
+@@ -3929,6 +3934,7 @@ static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
+ {
+ 	u32 reg;
+ 	bool coherent = smmu->features & ARM_SMMU_FEAT_COHERENCY;
++	bool vhe = cpus_have_cap(ARM64_HAS_VIRT_HOST_EXTN);
  
- 	return pdev->pasid_required;
- }
-+EXPORT_SYMBOL_GPL(pci_prg_resp_pasid_required);
- #endif /* CONFIG_PCI_PRI */
+ 	/* IDR0 */
+ 	reg = readl_relaxed(smmu->base + ARM_SMMU_IDR0);
+@@ -3978,10 +3984,19 @@ static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
  
- #ifdef CONFIG_PCI_PASID
+ 	if (reg & IDR0_HYP) {
+ 		smmu->features |= ARM_SMMU_FEAT_HYP;
+-		if (cpus_have_cap(ARM64_HAS_VIRT_HOST_EXTN))
++		if (vhe)
+ 			smmu->features |= ARM_SMMU_FEAT_E2H;
+ 	}
+ 
++	/*
++	 * If the CPU is using VHE, but the SMMU doesn't support it, the SMMU
++	 * will create TLB entries for NH-EL1 world and will miss the
++	 * broadcasted TLB invalidations that target EL2-E2H world. Don't enable
++	 * BTM in that case.
++	 */
++	if (reg & IDR0_BTM && (!vhe || reg & IDR0_HYP))
++		smmu->features |= ARM_SMMU_FEAT_BTM;
++
+ 	/*
+ 	 * The coherency feature as set by FW is used in preference to the ID
+ 	 * register, but warn on mismatch.
 -- 
 2.26.0
 
