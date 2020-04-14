@@ -6,29 +6,29 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 788AEC2BB85
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E00F7C352BE
 	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 20:45:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 58E0E2064A
+	by mail.kernel.org (Postfix) with ESMTP id BEBDB2064A
 	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 20:45:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730657AbgDNUpI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S2633345AbgDNUpI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Tue, 14 Apr 2020 16:45:08 -0400
-Received: from mga17.intel.com ([192.55.52.151]:48105 "EHLO mga17.intel.com"
+Received: from mga17.intel.com ([192.55.52.151]:48103 "EHLO mga17.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2633343AbgDNUpF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 14 Apr 2020 16:45:05 -0400
-IronPort-SDR: 9T5urCGPGOKdSV6kjTQKQ73B9ftsGjbcu+nkJigpV67E1QMKR9hHoJnHPalBhVSzJdxK8+9GoV
- VizjI1I4+gbw==
+        id S1730657AbgDNUpE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 14 Apr 2020 16:45:04 -0400
+IronPort-SDR: JX67Mv1stTuCh/Y5R7NLeBIL8sr+P0KhSNoVGli0gYnYQFc3E/FZGQMuYWp5YiIYaCW3tChKE9
+ Ii6rmSOmQNOA==
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2020 13:45:04 -0700
-IronPort-SDR: r1OErjyVz/Uf3pbjJWtls2b0aSYVi8LXLWedBhEELM4u8lH0Sr9XAKRHZCrDOhwzv+RCVsXqa3
- 5QSkfIeQITFA==
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2020 13:45:03 -0700
+IronPort-SDR: BtWPs45gS/aQZnVfRGuw8SadJ1a3Rk7YvZW3tgwryErfWSaL2zCBQ1LT4y84mccKOovMsb1snu
+ nfXhB0xSCVhg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.72,384,1580803200"; 
-   d="scan'208";a="288336376"
+   d="scan'208";a="288336367"
 Received: from unknown (HELO localhost.lm.intel.com) ([10.232.116.40])
   by fmsmga002.fm.intel.com with ESMTP; 14 Apr 2020 13:45:03 -0700
 From:   Jon Derrick <jonathan.derrick@intel.com>
@@ -37,9 +37,9 @@ Cc:     Bjorn Helgaas <helgaas@kernel.org>,
         Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
         Russell King <rmk+kernel@armlinux.org.uk>,
         Jon Derrick <jonathan.derrick@intel.com>
-Subject: [PATCH 3/5] PCI: pci-bridge-emul: Convert to GENMASK and BIT
-Date:   Tue, 14 Apr 2020 16:30:03 -0400
-Message-Id: <20200414203005.5166-4-jonathan.derrick@intel.com>
+Subject: [PATCH 1/5] PCI: pci-bridge-emul: Fix PCIe bit conflicts
+Date:   Tue, 14 Apr 2020 16:30:01 -0400
+Message-Id: <20200414203005.5166-2-jonathan.derrick@intel.com>
 X-Mailer: git-send-email 2.18.1
 In-Reply-To: <20200414203005.5166-1-jonathan.derrick@intel.com>
 References: <20200414203005.5166-1-jonathan.derrick@intel.com>
@@ -48,58 +48,45 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In order to make pci-bridge-emul easier to keep up-to-date with new PCIe
-features, convert all named register bits to GENMASK and BIT pairs. This
-patch doesn't alter any of the PCI configuration space as these bits are
-fully defined.
+This patch fixes two bit conflicts in the pci-bridge-emul driver:
+
+1. Bit 3 of Device Status (19 of Device Control) is marked as both
+   Write-1-to-Clear and Read-Only. It should be Write-1-to-Clear.
+   The Read-Only and Reserved bitmasks are shifted by 1 bit due to this
+   error.
+
+2. Bit 12 of Slot Control is marked as both Read-Write and Reserved.
+   It should be Read-Write.
 
 Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
 ---
- drivers/pci/pci-bridge-emul.c | 17 ++++++-----------
- 1 file changed, 6 insertions(+), 11 deletions(-)
+ drivers/pci/pci-bridge-emul.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/pci/pci-bridge-emul.c b/drivers/pci/pci-bridge-emul.c
-index c00c30ffb198..bbcccadca85e 100644
+index 4f4f54bc732e..faa414655f33 100644
 --- a/drivers/pci/pci-bridge-emul.c
 +++ b/drivers/pci/pci-bridge-emul.c
-@@ -221,11 +221,8 @@ static const struct pci_bridge_reg_behavior pcie_cap_regs_behavior[] = {
- 		 * as reserved bits.
+@@ -185,8 +185,8 @@ static const struct pci_bridge_reg_behavior pcie_cap_regs_behavior[] = {
+ 		 * RO, the rest is reserved
  		 */
- 		.rw = GENMASK(12, 0),
--		.w1c = (PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
--			PCI_EXP_SLTSTA_MRLSC | PCI_EXP_SLTSTA_PDC |
--			PCI_EXP_SLTSTA_CC | PCI_EXP_SLTSTA_DLLSC) << 16,
--		.ro = (PCI_EXP_SLTSTA_MRLSS | PCI_EXP_SLTSTA_PDS |
--		       PCI_EXP_SLTSTA_EIS) << 16,
-+		.w1c = (BIT(8) | GENMASK(4, 0)) << 16,
-+		.ro = GENMASK(7, 5) << 16,
- 		.rsvd = GENMASK(15, 13) | (GENMASK(15, 9) << 16),
+ 		.w1c = GENMASK(19, 16),
+-		.ro = GENMASK(20, 19),
+-		.rsvd = GENMASK(31, 21),
++		.ro = GENMASK(21, 20),
++		.rsvd = GENMASK(31, 22),
  	},
  
-@@ -236,10 +233,8 @@ static const struct pci_bridge_reg_behavior pcie_cap_regs_behavior[] = {
- 		 *
- 		 * Root capabilities has bit 0 RO, the rest is reserved.
- 		 */
--		.rw = (PCI_EXP_RTCTL_SECEE | PCI_EXP_RTCTL_SENFEE |
--		       PCI_EXP_RTCTL_SEFEE | PCI_EXP_RTCTL_PMEIE |
--		       PCI_EXP_RTCTL_CRSSVE),
--		.ro = PCI_EXP_RTCAP_CRSVIS << 16,
-+		.rw = GENMASK(4, 0),
-+		.ro = BIT(0) << 16,
- 		.rsvd = GENMASK(15, 5) | (GENMASK(15, 1) << 16),
+ 	[PCI_EXP_LNKCAP / 4] = {
+@@ -226,7 +226,7 @@ static const struct pci_bridge_reg_behavior pcie_cap_regs_behavior[] = {
+ 			PCI_EXP_SLTSTA_CC | PCI_EXP_SLTSTA_DLLSC) << 16,
+ 		.ro = (PCI_EXP_SLTSTA_MRLSS | PCI_EXP_SLTSTA_PDS |
+ 		       PCI_EXP_SLTSTA_EIS) << 16,
+-		.rsvd = GENMASK(15, 12) | (GENMASK(15, 9) << 16),
++		.rsvd = GENMASK(15, 13) | (GENMASK(15, 9) << 16),
  	},
  
-@@ -248,8 +243,8 @@ static const struct pci_bridge_reg_behavior pcie_cap_regs_behavior[] = {
- 		 * Root status has bits 17 and [15:0] RO, bit 16 W1C, the rest
- 		 * is reserved.
- 		 */
--		.ro = GENMASK(15, 0) | PCI_EXP_RTSTA_PENDING,
--		.w1c = PCI_EXP_RTSTA_PME,
-+		.ro = BIT(17) | GENMASK(15, 0),
-+		.w1c = BIT(16),
- 		.rsvd = GENMASK(31, 18),
- 	},
- };
+ 	[PCI_EXP_RTCTL / 4] = {
 -- 
 2.18.1
 
