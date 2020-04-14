@@ -2,78 +2,74 @@ Return-Path: <SRS0=isgL=56=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E85FC3815B
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 16:55:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01007C352BE
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 17:04:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ED0812054F
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 16:55:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586883359;
-	bh=hpU3ilpDhIBh1EkpHoT8CRglKxDNGuySrswIRHuRmXU=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=wkcovmgjPjIJ3v9jas2wUbn9bWgU+S5sXU7yyQJgL7zMRVsFP4flRvzSA5LbCHxDf
-	 RAZ7IgZgAI0NjJ9kU/1KKWS3tlUHwc1gpf1LrdTI+nm+/q5pdMZBjQJIk/7XCwYRzo
-	 VkERPL8spO3pDYfavQrfpRJ4iNdO3mmQNEOAnw88=
+	by mail.kernel.org (Postfix) with ESMTP id D801F20936
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 17:04:24 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="NEj+O1VP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391902AbgDNQzX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 Apr 2020 12:55:23 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55194 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2440299AbgDNQtI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 14 Apr 2020 12:49:08 -0400
-Received: from mail.kernel.org (ip5f5ad4d8.dynamic.kabel-deutschland.de [95.90.212.216])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 64BDD20787;
-        Tue, 14 Apr 2020 16:49:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586882942;
-        bh=hpU3ilpDhIBh1EkpHoT8CRglKxDNGuySrswIRHuRmXU=;
-        h=From:To:Cc:Subject:Date:From;
-        b=qP/fh2JuBrTWMBDU0Po9QgHcYacrRlFhnHwEY8en7h953JH1K2J6xRWgtWi+ouXIY
-         3gGiDenojv2rrUzJ4Wxk3whARW64aaikv0MOeHbofi1sPuRVe5IZT8BpzPaRPNxcO+
-         07Ps8XSWU9UmRtIfijlblMPlQG+5+iBYwuA7KjAY=
-Received: from mchehab by mail.kernel.org with local (Exim 4.92.3)
-        (envelope-from <mchehab@kernel.org>)
-        id 1jOOk8-0068kv-FR; Tue, 14 Apr 2020 18:49:00 +0200
-From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
-To:     Linux Doc Mailing List <linux-doc@vger.kernel.org>
-Cc:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
-        linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
-        Rob Herring <robh@kernel.org>,
-        Maxime Ripard <maxime@cerno.tech>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Sudeep Holla <sudeep.holla@arm.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Yuti Amonkar <yamonkar@cadence.com>,
-        devicetree@vger.kernel.org, linux-arch@vger.kernel.org,
-        kvm@vger.kernel.org, kvm-ppc@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, dri-devel@lists.freedesktop.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-fsdevel@vger.kernel.org, linux-unionfs@vger.kernel.org,
-        linux-mm@kvack.org, linux-rdma@vger.kernel.org,
-        kvmarm@lists.cs.columbia.edu, linux-crypto@vger.kernel.org,
-        linux-media@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        freedreno@lists.freedesktop.org, linux-afs@lists.infradead.org,
-        ecryptfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net,
-        ocfs2-devel@oss.oracle.com, linux-pci@vger.kernel.org,
-        linux-edac@vger.kernel.org, linux-spi@vger.kernel.org,
-        Sandeep Maheswaram <sanm@codeaurora.org>,
-        Stephen Boyd <swboyd@chromium.org>,
-        Matthias Kaehlcke <mka@chromium.org>,
-        linux-usb@vger.kernel.org,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Matthias Brugger <mbrugger@suse.com>, netdev@vger.kernel.org,
-        linux-i2c@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        linux-ide@vger.kernel.org, linux1394-devel@lists.sourceforge.net
-Subject: [PATCH v2 00/33] Documentation fixes for Kernel 5.8
-Date:   Tue, 14 Apr 2020 18:48:26 +0200
-Message-Id: <cover.1586881715.git.mchehab+huawei@kernel.org>
-X-Mailer: git-send-email 2.25.2
+        id S2391187AbgDNREX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Apr 2020 13:04:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34524 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1729745AbgDNRET (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Apr 2020 13:04:19 -0400
+Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8D53C061A0C
+        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 10:04:18 -0700 (PDT)
+Received: by mail-wm1-x344.google.com with SMTP id e26so13823666wmk.5
+        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 10:04:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=fDR92FG/W9XzyoEKCk0ZF8N6Phe9WGPiX+0dpA5beXc=;
+        b=NEj+O1VPlDE3+b9GRhqJpb7imwatVrbEHRPijSau+X9Vbg+US5qIqjILEeTsiMZyzd
+         Jbi8pl9C2UJZk5wt+F2ohcMMgOlmn6vRXNL+oLg3PX1OQyFq5Vi7QeyaSHWpCnKH9wwW
+         BQcMuKVX1Kxci3T4tlG5aUlteOmxPqpT3W6wO26dWN/t7wdHaxqmgBUfDWUgwMMU2ufA
+         pOJXldxAAh12JJAT7GYE/YQAYLgMhCdkm9Y3ZNUlaySCcDtsLm5njdvcwhqHN+ekOPfb
+         7Kguikc/vkv7QzJrcpWobUk53WblaNZeBLUQoi01vtQvlCASM3Ery/NF+KrJ8hZbl8nn
+         tsaA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=fDR92FG/W9XzyoEKCk0ZF8N6Phe9WGPiX+0dpA5beXc=;
+        b=jjFiDSSU310o7ajjFevx1ZyGPD7W4vstU1K3tJAdMIX15m0WBW7M2aNb07Xbw3S+fz
+         hpcvdigjC73Gvv9ma/Gl7pZd0F7pC0/YIKFSSVe2mbyo8wo3RE7uTXHsdVugysfAnhaX
+         piyw2gG3QCQx/gTGIY+ItRYbSXeywlnIpDuDUnwDlSWqm+4ofRPpbkitl8y22NIl+1BL
+         CFoR5EDH68AdjPuPn8a5vhkDQNao2ZdGGCgw9/4POaRmd6B/LBMSYCH4Gu2HFkD2JLrO
+         EjmBFr0GABa87AqhZju2jhCkx/fxjscy8FdGJzw4cb9wQe/Z1wCbvGCuM5TrYSTnI1Y7
+         3cLg==
+X-Gm-Message-State: AGi0PuZI6R+7z8zsMqC7aWoYTVog1hjn6Su0IiKnluVzBaljLe8tGEEb
+        3HJdbs/udKrBwGqrFUvC2L+xdQ==
+X-Google-Smtp-Source: APiQypIdArRSrPXSdknP2IMK7ppxpSO4QpwtmnnSeA+CSALQDIlf3m4G7fjFu80JrmrhRYEK5Otokw==
+X-Received: by 2002:a1c:4e16:: with SMTP id g22mr723817wmh.157.1586883857511;
+        Tue, 14 Apr 2020 10:04:17 -0700 (PDT)
+Received: from localhost.localdomain ([2001:171b:226b:54a0:116c:c27a:3e7f:5eaf])
+        by smtp.gmail.com with ESMTPSA id x18sm19549147wrs.11.2020.04.14.10.04.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 14 Apr 2020 10:04:16 -0700 (PDT)
+From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
+To:     iommu@lists.linux-foundation.org, devicetree@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-mm@kvack.org
+Cc:     joro@8bytes.org, catalin.marinas@arm.com, will@kernel.org,
+        robin.murphy@arm.com, kevin.tian@intel.com,
+        baolu.lu@linux.intel.com, Jonathan.Cameron@huawei.com,
+        jacob.jun.pan@linux.intel.com, christian.koenig@amd.com,
+        zhangfei.gao@linaro.org, jgg@ziepe.ca, xuzaibo@huawei.com,
+        Jean-Philippe Brucker <jean-philippe@linaro.org>
+Subject: [PATCH v5 00/25] iommu: Shared Virtual Addressing and SMMUv3 support
+Date:   Tue, 14 Apr 2020 19:02:28 +0200
+Message-Id: <20200414170252.714402-1-jean-philippe@linaro.org>
+X-Mailer: git-send-email 2.26.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
@@ -81,188 +77,80 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Patches 1 to 5 contain changes to the documentation toolset:
+Shared Virtual Addressing (SVA) allows to share process page tables with
+devices using the IOMMU. Add a generic implementation of the IOMMU SVA
+API, and add support in the Arm SMMUv3 driver.
 
-- The first 3 patches help to reduce a lot the number of reported
-  kernel-doc issues, by making the tool more smart.
+Since v4 [1] I changed the PASID lifetime. It isn't released when the
+corresponding process address space dies, but when the device driver calls
+unbind. This alleviates the mmput() path as we don't need to ensure that
+the device driver stops DMA there anymore. For more details see my
+proposal from last week [2], which is a requirement for this series. As a
+result patch 1 has separate clear() and detach() operations, and patch 17
+has a new context descriptor state. 
 
-- Patches 4 and 5 are meant to partially address the PDF
-  build, with now requires Sphinx version 2.4 or upper.
+Other changes are a simplification of the locking in patch 1 and overall
+cleanups following review comments.
 
-The remaining patches fix broken references detected by
-this tool:
+[1] [PATCH v4 00/26] iommu: Shared Virtual Addressing and SMMUv3 support
+    https://lore.kernel.org/linux-iommu/20200224182401.353359-1-jean-philippe@linaro.org/
+[2] [PATCH 0/2] iommu: Remove iommu_sva_ops::mm_exit()
+    https://lore.kernel.org/linux-iommu/20200408140427.212807-1-jean-philippe@linaro.org/
 
-        ./scripts/documentation-file-ref-check
+Jean-Philippe Brucker (25):
+  mm/mmu_notifiers: pass private data down to alloc_notifier()
+  iommu/sva: Manage process address spaces
+  iommu: Add a page fault handler
+  iommu/sva: Search mm by PASID
+  iommu/iopf: Handle mm faults
+  iommu/sva: Register page fault handler
+  arm64: mm: Add asid_gen_match() helper
+  arm64: mm: Pin down ASIDs for sharing mm with devices
+  iommu/io-pgtable-arm: Move some definitions to a header
+  iommu/arm-smmu-v3: Manage ASIDs with xarray
+  arm64: cpufeature: Export symbol read_sanitised_ftr_reg()
+  iommu/arm-smmu-v3: Share process page tables
+  iommu/arm-smmu-v3: Seize private ASID
+  iommu/arm-smmu-v3: Add support for VHE
+  iommu/arm-smmu-v3: Enable broadcast TLB maintenance
+  iommu/arm-smmu-v3: Add SVA feature checking
+  iommu/arm-smmu-v3: Implement mm operations
+  iommu/arm-smmu-v3: Hook up ATC invalidation to mm ops
+  iommu/arm-smmu-v3: Add support for Hardware Translation Table Update
+  iommu/arm-smmu-v3: Maintain a SID->device structure
+  dt-bindings: document stall property for IOMMU masters
+  iommu/arm-smmu-v3: Add stall support for platform devices
+  PCI/ATS: Add PRI stubs
+  PCI/ATS: Export PRI functions
+  iommu/arm-smmu-v3: Add support for PRI
 
-and address other random errors due to tags being mis-interpreted
-or mis-used.
-
-They are independent each other, but some may depend on
-the kernel-doc improvements.
-
-PS.: Due to the large number of C/C, I opted to keep a smaller
-set of C/C at this first e-mail (only e-mails with "L:" tag from
-MAINTAINERS file).
-
-Jon,
-
-Those patches should apply cleanly at docs-next, once you
-pull from v5.7-rc1.
-
-
--
-
-v2:
-
-- patches re-ordered;
-- added reviewed/acked-by tags;
-- rebased on the top of docs-next + v5.7-rc1.
-
-
-Mauro Carvalho Chehab (33):
-  scripts: kernel-doc: proper handle @foo->bar()
-  scripts: kernel-doc: accept negation like !@var
-  scripts: kernel-doc: accept blank lines on parameter description
-  docs: update recommended Sphinx version to 2.4.4
-  docs: LaTeX/PDF: drop list of documents
-  MAINTAINERS: dt: update display/allwinner file entry
-  MAINTAINERS: dt: fix pointers for ARM Integrator, Versatile and
-    RealView
-  docs: dt: fix broken reference to phy-cadence-torrent.yaml
-  docs: fix broken references to text files
-  docs: fix broken references for ReST files that moved around
-  docs: filesystems: fix renamed references
-  docs: amu: supress some Sphinx warnings
-  docs: arm64: booting.rst: get rid of some warnings
-  docs: pci: boot-interrupts.rst: improve html output
-  docs: ras: get rid of some warnings
-  docs: ras: don't need to repeat twice the same thing
-  docs: infiniband: verbs.c: fix some documentation warnings
-  docs: spi: spi.h: fix a doc building warning
-  docs: drivers: fix some warnings at base/platform.c when building docs
-  docs: mm: userfaultfd.rst: use ``foo`` for literals
-  docs: mm: userfaultfd.rst: use a cross-reference for a section
-  docs: vm: index.rst: add an orphan doc to the building system
-  docs: dt: qcom,dwc3.txt: fix cross-reference for a converted file
-  docs: dt: fix a broken reference for a file converted to json
-  docs: powerpc: cxl.rst: mark two section titles as such
-  docs: i2c: rename i2c.svg to i2c_bus.svg
-  docs: Makefile: place final pdf docs on a separate dir
-  docs: dt: rockchip,dwc3.txt: fix a pointer to a renamed file
-  ata: libata-core: fix a doc warning
-  firewire: firewire-cdev.hL get rid of a docs warning
-  fs: inode.c: get rid of docs warnings
-  futex: get rid of a kernel-docs build warning
-  lib: bitmap.c: get rid of some doc warnings
-
- Documentation/ABI/stable/sysfs-devices-node   |   2 +-
- Documentation/ABI/testing/procfs-smaps_rollup |   2 +-
- Documentation/Makefile                        |   6 +-
- Documentation/PCI/boot-interrupts.rst         |  34 +--
- Documentation/admin-guide/cpu-load.rst        |   2 +-
- Documentation/admin-guide/mm/userfaultfd.rst  | 209 +++++++++---------
- Documentation/admin-guide/nfs/nfsroot.rst     |   2 +-
- Documentation/admin-guide/ras.rst             |  18 +-
- Documentation/arm64/amu.rst                   |   5 +
- Documentation/arm64/booting.rst               |  36 +--
- Documentation/conf.py                         |  38 ----
- .../bindings/net/qualcomm-bluetooth.txt       |   2 +-
- .../bindings/phy/ti,phy-j721e-wiz.yaml        |   2 +-
- .../devicetree/bindings/usb/qcom,dwc3.txt     |   4 +-
- .../devicetree/bindings/usb/rockchip,dwc3.txt |   2 +-
- .../doc-guide/maintainer-profile.rst          |   2 +-
- .../driver-api/driver-model/device.rst        |   4 +-
- .../driver-api/driver-model/overview.rst      |   2 +-
- Documentation/filesystems/dax.txt             |   2 +-
- Documentation/filesystems/dnotify.txt         |   2 +-
- .../filesystems/ramfs-rootfs-initramfs.rst    |   2 +-
- Documentation/filesystems/sysfs.rst           |   2 +-
- Documentation/i2c/{i2c.svg => i2c_bus.svg}    |   2 +-
- Documentation/i2c/summary.rst                 |   2 +-
- Documentation/memory-barriers.txt             |   2 +-
- Documentation/powerpc/cxl.rst                 |   2 +
- .../powerpc/firmware-assisted-dump.rst        |   2 +-
- Documentation/process/adding-syscalls.rst     |   2 +-
- Documentation/process/submit-checklist.rst    |   2 +-
- Documentation/sphinx/requirements.txt         |   2 +-
- .../it_IT/process/adding-syscalls.rst         |   2 +-
- .../it_IT/process/submit-checklist.rst        |   2 +-
- .../translations/ko_KR/memory-barriers.txt    |   2 +-
- .../translations/zh_CN/filesystems/sysfs.txt  |   8 +-
- .../zh_CN/process/submit-checklist.rst        |   2 +-
- Documentation/virt/kvm/arm/pvtime.rst         |   2 +-
- Documentation/virt/kvm/devices/vcpu.rst       |   2 +-
- Documentation/virt/kvm/hypercalls.rst         |   4 +-
- Documentation/virt/kvm/mmu.rst                |   2 +-
- Documentation/virt/kvm/review-checklist.rst   |   2 +-
- Documentation/vm/index.rst                    |   1 +
- MAINTAINERS                                   |   7 +-
- arch/powerpc/include/uapi/asm/kvm_para.h      |   2 +-
- arch/x86/kvm/mmu/mmu.c                        |   2 +-
- drivers/ata/libata-core.c                     |   2 +-
- drivers/base/core.c                           |   2 +-
- drivers/base/platform.c                       |   6 +-
- .../allwinner/sun8i-ce/sun8i-ce-cipher.c      |   2 +-
- .../crypto/allwinner/sun8i-ce/sun8i-ce-core.c |   2 +-
- .../allwinner/sun8i-ss/sun8i-ss-cipher.c      |   2 +-
- .../crypto/allwinner/sun8i-ss/sun8i-ss-core.c |   2 +-
- drivers/gpu/drm/Kconfig                       |   2 +-
- drivers/gpu/drm/drm_ioctl.c                   |   2 +-
- drivers/gpu/drm/msm/disp/dpu1/dpu_kms.h       |   2 +-
- drivers/hwtracing/coresight/Kconfig           |   2 +-
- drivers/infiniband/core/verbs.c               |   7 +-
- drivers/media/v4l2-core/v4l2-fwnode.c         |   2 +-
- fs/Kconfig                                    |   2 +-
- fs/Kconfig.binfmt                             |   2 +-
- fs/adfs/Kconfig                               |   2 +-
- fs/affs/Kconfig                               |   2 +-
- fs/afs/Kconfig                                |   6 +-
- fs/bfs/Kconfig                                |   2 +-
- fs/cramfs/Kconfig                             |   2 +-
- fs/ecryptfs/Kconfig                           |   2 +-
- fs/fat/Kconfig                                |   8 +-
- fs/fuse/Kconfig                               |   2 +-
- fs/fuse/dev.c                                 |   2 +-
- fs/hfs/Kconfig                                |   2 +-
- fs/hpfs/Kconfig                               |   2 +-
- fs/inode.c                                    |   6 +-
- fs/isofs/Kconfig                              |   2 +-
- fs/namespace.c                                |   2 +-
- fs/notify/inotify/Kconfig                     |   2 +-
- fs/ntfs/Kconfig                               |   2 +-
- fs/ocfs2/Kconfig                              |   2 +-
- fs/overlayfs/Kconfig                          |   6 +-
- fs/proc/Kconfig                               |   4 +-
- fs/romfs/Kconfig                              |   2 +-
- fs/sysfs/dir.c                                |   2 +-
- fs/sysfs/file.c                               |   2 +-
- fs/sysfs/mount.c                              |   2 +-
- fs/sysfs/symlink.c                            |   2 +-
- fs/sysv/Kconfig                               |   2 +-
- fs/udf/Kconfig                                |   2 +-
- include/linux/kobject.h                       |   2 +-
- include/linux/kobject_ns.h                    |   2 +-
- include/linux/mm.h                            |   4 +-
- include/linux/relay.h                         |   2 +-
- include/linux/spi/spi.h                       |   1 +
- include/linux/sysfs.h                         |   2 +-
- include/uapi/linux/ethtool_netlink.h          |   2 +-
- include/uapi/linux/firewire-cdev.h            |   2 +-
- include/uapi/linux/kvm.h                      |   4 +-
- include/uapi/rdma/rdma_user_ioctl_cmds.h      |   2 +-
- kernel/futex.c                                |   3 +
- kernel/relay.c                                |   2 +-
- lib/bitmap.c                                  |  27 +--
- lib/kobject.c                                 |   4 +-
- mm/gup.c                                      |  12 +-
- scripts/kernel-doc                            |  41 ++--
- tools/include/uapi/linux/kvm.h                |   4 +-
- virt/kvm/arm/vgic/vgic-mmio-v3.c              |   2 +-
- virt/kvm/arm/vgic/vgic.h                      |   4 +-
- 104 files changed, 343 insertions(+), 326 deletions(-)
- rename Documentation/i2c/{i2c.svg => i2c_bus.svg} (99%)
+ drivers/iommu/Kconfig                         |   13 +
+ drivers/iommu/Makefile                        |    2 +
+ .../devicetree/bindings/iommu/iommu.txt       |   18 +
+ arch/arm64/include/asm/mmu.h                  |    1 +
+ arch/arm64/include/asm/mmu_context.h          |   11 +-
+ drivers/iommu/io-pgtable-arm.h                |   30 +
+ drivers/iommu/iommu-sva.h                     |   78 +
+ include/linux/iommu.h                         |   75 +
+ include/linux/mmu_notifier.h                  |   11 +-
+ include/linux/pci-ats.h                       |    8 +
+ arch/arm64/kernel/cpufeature.c                |    1 +
+ arch/arm64/mm/context.c                       |  103 +-
+ drivers/iommu/arm-smmu-v3.c                   | 1398 +++++++++++++++--
+ drivers/iommu/io-pgfault.c                    |  525 +++++++
+ drivers/iommu/io-pgtable-arm.c                |   27 +-
+ drivers/iommu/iommu-sva.c                     |  557 +++++++
+ drivers/iommu/iommu.c                         |    1 +
+ drivers/iommu/of_iommu.c                      |    5 +-
+ drivers/misc/sgi-gru/grutlbpurge.c            |    5 +-
+ drivers/pci/ats.c                             |    4 +
+ mm/mmu_notifier.c                             |    6 +-
+ 21 files changed, 2716 insertions(+), 163 deletions(-)
+ create mode 100644 drivers/iommu/io-pgtable-arm.h
+ create mode 100644 drivers/iommu/iommu-sva.h
+ create mode 100644 drivers/iommu/io-pgfault.c
+ create mode 100644 drivers/iommu/iommu-sva.c
 
 -- 
-2.25.2
-
+2.26.0
 
