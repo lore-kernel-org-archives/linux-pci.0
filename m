@@ -2,130 +2,118 @@ Return-Path: <SRS0=isgL=56=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48802C2BA19
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 18:09:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29216C352BE
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 20:37:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2515B20656
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 18:09:23 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="HUV9qAl0"
+	by mail.kernel.org (Postfix) with ESMTP id F1FB22076A
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 20:37:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1586896636;
+	bh=1kEessR5Rmc3hm/dxFQZPXCSt5/iIogI84U0YsP7EG0=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=kyVk3qzHOov69DCWsJfUTvzfee8NXpCZRqNRqixlgvsdrc8kcJL+8lA4fxmtkJOEV
+	 Tj3QJJ8SwhY1cFjGbEPndwN5i9ndLmyrSms3vgxuI4n38ibyVyCZ9p3YscWMrZa2yb
+	 nQD5IC/D9+ZbdeIQwH5o5CwnmMNz/tHhcIIFo7WE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731265AbgDNSJT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 Apr 2020 14:09:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44716 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S2503440AbgDNSJO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Apr 2020 14:09:14 -0400
-Received: from mail-qk1-x743.google.com (mail-qk1-x743.google.com [IPv6:2607:f8b0:4864:20::743])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B890C061A0E
-        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 11:09:14 -0700 (PDT)
-Received: by mail-qk1-x743.google.com with SMTP id m67so14273309qke.12
-        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 11:09:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=bv0sJf01GOa0wIzpOx9SRUfmEHLHh5Wp99C/Vrgdaec=;
-        b=HUV9qAl0/LTHa4gW9R5GB8bZskgMoquMycxLWoNqVXVK2lCPXRRchgd9fNWmRJ3r3E
-         MwOpBF6IYEAIRmh+0P+Mk/Xdy5ihB9c56BGZ9huMOY7437gGh4cXj2ES77WCdjN3h14P
-         vz4I9nCHk4olhkup2TXyZYzBKURBuBpg2EVTYcri8bZwVCHw5clEERw7k1EtxwCQTnnM
-         VJSbHXiqAULOv3ywp1xrIzqfxDneUHsXKLo7wHnHwkX7qU6WFdjY2E7rloSUWnmAC5gN
-         4MMiLhwcwPZJrM0qv+cchcfFMGuVM8+32TSi5HJ9+6a8/GOL1PH/AfPEODAh7ce0zWHj
-         Orfw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=bv0sJf01GOa0wIzpOx9SRUfmEHLHh5Wp99C/Vrgdaec=;
-        b=n+ck6fWVgSviyHt4L90UfzVbSmIbngtv7ZVg9F+i/DvawTYzPHyVbRyeLx8EiYw7ZN
-         7XegTRlamTStnr+BEGh164vAUvIbYWGtnD7ArDDL2ngUm8wbwf8FdaxmLy7P7gZsBu0A
-         Rr9YUquqkZAh8d19kTIKQacIOGC3yfsVXq1NAjfT/nOeemF77dntb4D6CqC5igV98UWQ
-         vlmc9sSNe23JscZNGwpWemUqpt/PGUXk+MbNhfIc1PN7qFVTiSLynTv+muNj0hocPg7u
-         TNG7alvOZiUm6CwJf+1bNUglnm25v/UZDeUyVMwHK8QbtS2ln4qi+rYWtAAyfB7mLNLU
-         15RQ==
-X-Gm-Message-State: AGi0PuYaLBTOzf/fpiaqzEzYQMt5rO7I3Y7n+AoD9bzJmX4taiZ2UZz1
-        htQJWyDLyiCEKL65eqPIUK7Ghw==
-X-Google-Smtp-Source: APiQypLF3T0ctlDMYDCZmNS5QXnrk26ya+xUobfqsrIExRvDdUeoVWUu8wspkPshY2Cg+OHu4MKS2Q==
-X-Received: by 2002:a37:8645:: with SMTP id i66mr23325550qkd.229.1586887753646;
-        Tue, 14 Apr 2020 11:09:13 -0700 (PDT)
-Received: from ziepe.ca (hlfxns017vw-142-68-57-212.dhcp-dynamic.fibreop.ns.bellaliant.net. [142.68.57.212])
-        by smtp.gmail.com with ESMTPSA id f13sm11354811qti.47.2020.04.14.11.09.12
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 14 Apr 2020 11:09:13 -0700 (PDT)
-Received: from jgg by mlx.ziepe.ca with local (Exim 4.90_1)
-        (envelope-from <jgg@ziepe.ca>)
-        id 1jOPzk-0007ib-Gs; Tue, 14 Apr 2020 15:09:12 -0300
-Date:   Tue, 14 Apr 2020 15:09:12 -0300
-From:   Jason Gunthorpe <jgg@ziepe.ca>
-To:     Jean-Philippe Brucker <jean-philippe@linaro.org>
-Cc:     iommu@lists.linux-foundation.org, devicetree@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-mm@kvack.org, joro@8bytes.org, catalin.marinas@arm.com,
-        will@kernel.org, robin.murphy@arm.com, kevin.tian@intel.com,
-        baolu.lu@linux.intel.com, Jonathan.Cameron@huawei.com,
-        jacob.jun.pan@linux.intel.com, christian.koenig@amd.com,
-        zhangfei.gao@linaro.org, xuzaibo@huawei.com,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Christoph Hellwig <hch@infradead.org>,
-        Dimitri Sivanich <sivanich@sgi.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH v5 01/25] mm/mmu_notifiers: pass private data down to
- alloc_notifier()
-Message-ID: <20200414180912.GH5100@ziepe.ca>
-References: <20200414170252.714402-1-jean-philippe@linaro.org>
- <20200414170252.714402-2-jean-philippe@linaro.org>
+        id S2633231AbgDNUhP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Apr 2020 16:37:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54738 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2633249AbgDNUhO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 14 Apr 2020 16:37:14 -0400
+Received: from localhost (mobile-166-175-184-103.mycingular.net [166.175.184.103])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6550D2076C;
+        Tue, 14 Apr 2020 20:37:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1586896633;
+        bh=1kEessR5Rmc3hm/dxFQZPXCSt5/iIogI84U0YsP7EG0=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=dVleGaxaCs/x2eXvs3oxo4ao97oEJ+MLmeXA3r4YbSnq3pmpBtf4y0rDZC9PtK50b
+         xdm8BjqRb/Jbm2Hqt69GRJ3mhVpJ/svl9eBlF3WWikJdGsBLU14GT5A67MvaN4r+Z0
+         oMV08TEkamV+bqk8InrsN6HYQBrJRP94D73/lge4=
+Date:   Tue, 14 Apr 2020 15:37:11 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Sean V Kelley <sean.v.kelley@linux.intel.com>
+Cc:     mj@ucw.cz, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v4 2/2] pciutils: Decode Compute eXpress Link DVSEC
+Message-ID: <20200414203711.GA102808@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200414170252.714402-2-jean-philippe@linaro.org>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+In-Reply-To: <20200413153526.805776-3-sean.v.kelley@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Apr 14, 2020 at 07:02:29PM +0200, Jean-Philippe Brucker wrote:
-> The new allocation scheme introduced by commit 2c7933f53f6b
-> ("mm/mmu_notifiers: add a get/put scheme for the registration") provides
-> a convenient way for users to attach notifier data to an mm. However, it
-> would be even better to create this notifier data atomically.
+On Mon, Apr 13, 2020 at 08:35:26AM -0700, Sean V Kelley wrote:
+> Compute eXpress Link[1] is a new CPU interconnect created with
+> workload accelerators in mind. The interconnect relies on PCIe
+> electrical and physical interconnect for communication via a Flex Bus
+> port which allows designs to choose between providing PCIe or CXL.
 > 
-> Since the alloc_notifier() callback only takes an mm argument at the
-> moment, some users have to perform the allocation in two times.
-> alloc_notifier() initially creates an incomplete structure, which is
-> then finalized using more context once mmu_notifier_get() returns. This
-> second step requires extra care to order memory accesses against live
-> invalidation.
-> 
-> The IOMMU SVA module, which attaches an mm to multiple devices,
-> exemplifies this situation. In essence it does:
-> 
-> 	mmu_notifier_get()
-> 	  alloc_notifier()
-> 	     A = kzalloc()
-> 	  /* MMU notifier is published */
-> 	A->ctx = ctx;				// (1)
-> 	device->A = A;
-> 	list_add_rcu(device, A->devices);	// (2)
-> 
-> The invalidate notifier, which may start running before A is fully
-> initialized, does the following:
-> 
-> 	io_mm_invalidate(A)
-> 	  list_for_each_entry_rcu(device, A->devices)
-> 	    device->invalidate(A->ctx)
+> This patch introduces basic support for lspci decode of CXL and
+> builds upon the existing Designated Vendor-Specific support in
+> lspci through identification of a Flex Bus capable Vendor ID.
 
-This could probably also have been reliably fixed by not having A->ctx
-be allocated memory, but inlined into the notifier struct
+I don't think this is quite right.  Isn't the Flex Bus ID the
+"DVSEC ID" (not the "DVSEC Vendor ID")?
 
-But I can't think of a down side to not add a params either.
+> +static int
+> +is_flexbus_cap(struct device *d, int where)
+> +{
+> +  u32 hdr;
+> +  u16 w;
+> +
+> +  if (!config_fetch(d, where + PCI_DVSEC_HEADER1, 8))
+> +    return 0;
 
-Reviewed-by: Jason Gunthorpe <jgg@mellanox.com>
+And here, I think we need to check the "DVSEC Vendor ID" first, i.e.,
+in the log below, I guess we'd look for the Intel Vendor ID (0x8086).
 
-Regards,
-Jason
+We can only decode the capability if *both* the DVSEC Vendor ID
+(HEADER1) and the DVSEC ID (HEADER2) match.
+
+> +  /* Check for Designated Vendor-Specific Flex Bus Capable ID */
+> +  hdr = get_conf_long(d, where + PCI_DVSEC_HEADER2);
+> +  w = BITS(hdr, 0, 16);
+> +  if (w == PCI_DVSEC_FLEXBUS_ID)
+> +    return 1;
+> +
+> +  return 0;
+> +}
+> +
+>  static void
+>  cap_dvsec(struct device *d, int where)
+>  {
+> @@ -947,7 +992,10 @@ show_ext_caps(struct device *d, int type)
+>  	    printf("Readiness Time Reporting <?>\n");
+>  	    break;
+>  	  case PCI_EXT_CAP_ID_DVSEC:
+> -	    cap_dvsec(d, where);
+> +	    if (is_flexbus_cap(d, where))
+> +	      cap_cxl(d, where);
+> +	    else
+> +	      cap_dvsec(d, where);
+>  	    break;
+>  	  case PCI_EXT_CAP_ID_VF_REBAR:
+>  	    printf("VF Resizable BAR <?>\n");
+
+> +        Capabilities: [e00 v1] CXL Designated Vendor-Specific:
+> +                CXLCap: Cache+ IO+ Mem+ Mem HW Init+ HDMCount 1 Viral-
+> +                CXLCtl: Cache+ IO+ Mem- Cache SF Cov 0 Cache SF Gran 0 Cache Clean- Viral-
+> +                CXLSta: Viral-
+> +        Capabilities: [e38 v1] Device Serial Number 12-34-56-78-90-00-00-00
+
+> +e00: 23 00 81 e3 86 80 80 03 00 00 1f 00 03 00 00 00
+> +e10: 00 00 00 00 00 00 00 00 00 00 00 00 03 01 00 08
+> +e20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> +e30: 00 00 00 00 00 00 00 00 03 00 01 00 00 00 00 90
+> +e40: 78 56 34 12 00 00 00 00 00 00 00 00 00 00 00 00
+
