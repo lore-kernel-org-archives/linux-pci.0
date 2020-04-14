@@ -2,61 +2,61 @@ Return-Path: <SRS0=isgL=56=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76CD2C5321D
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 17:04:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F986C38A2D
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 17:04:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 56FBD206A2
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 17:04:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 295A4206A2
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 17:04:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="hSOw4eWI"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="s8kwev4q"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391338AbgDNREf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 Apr 2020 13:04:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34540 "EHLO
+        id S1728549AbgDNRE3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Apr 2020 13:04:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34552 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S2391371AbgDNREc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Apr 2020 13:04:32 -0400
-Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B274C061A0C
-        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 10:04:32 -0700 (PDT)
-Received: by mail-wm1-x343.google.com with SMTP id a81so14893656wmf.5
-        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 10:04:32 -0700 (PDT)
+        by vger.kernel.org with ESMTP id S2391162AbgDNREZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Apr 2020 13:04:25 -0400
+Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9263C061A10
+        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 10:04:24 -0700 (PDT)
+Received: by mail-wm1-x344.google.com with SMTP id d77so13808089wmd.3
+        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 10:04:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=uHUqHTfoGR+1ZkqPou9Z5HBhwxdn8u/b73K/p08vGt4=;
-        b=hSOw4eWIOpcUGkqXNPQ9dtdmR/ipT2mxWsiI3pMLVH0qgRPNjHSMENCRjHZ4NJar66
-         7/UT+rWF0VVOTwd6Qq1Ko5BGuW+jxJLwAD3xaf5wYQROloGanuLGb7IPMnVJv7HK78+I
-         6ngZrW4BxXtksLmLmfoiWffLmjWadvjH0C7qLcRN+lO7dVaEm1JGvGctjkYtl4N944aK
-         W3n+wj6bEmpU/CznO6UiFv/JDUuQBgZiEQyXklusRoJ6jwr/CH6Wy/hgVNh5izNnczuz
-         90748Du66RWc5+QokDus/aLjad+8nROeHW3JEc7vfg8mwm0Xu+810td/BaN7JKL0CQ6H
-         pY3A==
+        bh=VGMc5wLgmgx1eLWq9RQ7RG7NMxWRw2tpIDY5WHUtd3w=;
+        b=s8kwev4qB+FwMlvJnZIEgUlpsfPv5PqQmyfezwvPiaaBckIACLW3XMkbvKRq6DnKDi
+         t2UKqeUTPQYcigtkMp+zlJsyJsWC29+hzyF/YILdw1kem5LX+rUdahvgddngTIewGKPI
+         Ls9qOOWbX1+GZLw2eHVDQ0C+3Q+XuIo7i0CpC5yzUkrPvbUvTws6yMxrz4kHGk4gH7S2
+         lLF7B3VkEZoHfACdrS90vN31rEj3/80zND2C7VWgfzHYgNywd5gdWfI831crvwFJA6Fr
+         T0J9K0/WC/Dm3PeoZXFwuI8vTy1x6RYRQz3w1oY7B7IC5RAT8PsArjVC3oEpvuMEqYG7
+         NofQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=uHUqHTfoGR+1ZkqPou9Z5HBhwxdn8u/b73K/p08vGt4=;
-        b=IMEFZpmYbaceyeP9nRr/dOBACiiFweK3ro8IM75ferTsAQMAHUvbSluCawWZcwwi00
-         /2kQExnRzbdFIDxSXDlkxtS746PkFiHOaDlsRSmNitU9RPkFYzLn6K8eb2X7yXUnsshr
-         gtUdkAE5nP5TWjzD/hIcl21B+B79C8srwFAC6gqy4sZV4XhzVxSaZTMSUSPBdy00LZRv
-         qW8xSpRIzTAhos/2HenwmXEYnfgwigEXUphewDI/88Yc+QYoTZ4BwFXm8LW58Dkdbps8
-         am0aFgd9foc7Ee0bpvn6k+tmz4O/ANr/BgrWtGouFm0K6iaI8LDLsSYj/NrY4fpEPd9y
-         gR6w==
-X-Gm-Message-State: AGi0PuYCQ5sH/sabkojXe5wW4AGhxw3znKHML/SmnPAS2WGYPXqerX7o
-        190+cuR4HLI248f9Qh0DkXoHog==
-X-Google-Smtp-Source: APiQypKS0JuC3gKtoh+XCp+shpu7gwSGraLZSLm/eXL7WMGLNhlt6UWbZ/JnbP6LfEz+El1lwsxHkg==
-X-Received: by 2002:a1c:2506:: with SMTP id l6mr784909wml.44.1586883871278;
-        Tue, 14 Apr 2020 10:04:31 -0700 (PDT)
+        bh=VGMc5wLgmgx1eLWq9RQ7RG7NMxWRw2tpIDY5WHUtd3w=;
+        b=aJ1sVZDN8VFWWkbytwOZXREtPoHT3cKrMLU5e7jhnWmcsKy5Azs9iZ2zq60Ysomw1e
+         ZSrMaZmTMcTc/xuEC1hEGi39Jo1tkjHoTMlNvpnCnQZCK3SpMksoMuXr3lcxpHKPGZco
+         B4OFliGZtHolYQkvynoxdqZTaz2HL3SeTYmsQ5iz4Xw27mSg/QQoRGF34ou23g85u4bF
+         rBuMoHHtD2Ojf1zf12mC8g+wFT9OqbFgX+2nPoR+gIXuDyPldsOEgwFBUSAnpfiP7AJM
+         QsVWdWPtz81PibPaMQ8Zs4G1mwJ4OO4VxytvBqUEdcbbQi2NO1DlYz1PyB1htB6kBR63
+         kIOg==
+X-Gm-Message-State: AGi0Pub2XHr8LoqLitXuDHkUefYc3xyJ4zHShOThvZpE239ZPRtmScCV
+        TAKXL7RO80mX7L4e8OaTueu3Bg==
+X-Google-Smtp-Source: APiQypL42n0W5SIMAbcNDaJARHcsQO61MSaD9RMrsbqmlsVv6uHGjdhQFjv16aEzCb2QZXgo0ox3nw==
+X-Received: by 2002:a1c:e906:: with SMTP id q6mr775518wmc.62.1586883863302;
+        Tue, 14 Apr 2020 10:04:23 -0700 (PDT)
 Received: from localhost.localdomain ([2001:171b:226b:54a0:116c:c27a:3e7f:5eaf])
-        by smtp.gmail.com with ESMTPSA id x18sm19549147wrs.11.2020.04.14.10.04.30
+        by smtp.gmail.com with ESMTPSA id x18sm19549147wrs.11.2020.04.14.10.04.21
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Apr 2020 10:04:30 -0700 (PDT)
+        Tue, 14 Apr 2020 10:04:22 -0700 (PDT)
 From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
 To:     iommu@lists.linux-foundation.org, devicetree@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
@@ -67,9 +67,9 @@ Cc:     joro@8bytes.org, catalin.marinas@arm.com, will@kernel.org,
         jacob.jun.pan@linux.intel.com, christian.koenig@amd.com,
         zhangfei.gao@linaro.org, jgg@ziepe.ca, xuzaibo@huawei.com,
         Jean-Philippe Brucker <jean-philippe@linaro.org>
-Subject: [PATCH v5 10/25] iommu/arm-smmu-v3: Manage ASIDs with xarray
-Date:   Tue, 14 Apr 2020 19:02:38 +0200
-Message-Id: <20200414170252.714402-11-jean-philippe@linaro.org>
+Subject: [PATCH v5 04/25] iommu/sva: Search mm by PASID
+Date:   Tue, 14 Apr 2020 19:02:32 +0200
+Message-Id: <20200414170252.714402-5-jean-philippe@linaro.org>
 X-Mailer: git-send-email 2.26.0
 In-Reply-To: <20200414170252.714402-1-jean-philippe@linaro.org>
 References: <20200414170252.714402-1-jean-philippe@linaro.org>
@@ -80,93 +80,62 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In preparation for sharing some ASIDs with the CPU, use a global xarray to
-store ASIDs and their context. ASID#0 is now reserved, and the ASID
-space is global.
+The fault handler will need to find an mm given its PASID. This is the
+reason we have an IDR for storing address spaces, so hook it up.
 
 Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
 ---
- drivers/iommu/arm-smmu-v3.c | 27 ++++++++++++++++++---------
- 1 file changed, 18 insertions(+), 9 deletions(-)
+ include/linux/iommu.h     |  9 +++++++++
+ drivers/iommu/iommu-sva.c | 19 +++++++++++++++++++
+ 2 files changed, 28 insertions(+)
 
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index 60a415e8e2b6f..96ee60002e85e 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -664,7 +664,6 @@ struct arm_smmu_device {
+diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+index 5a3d092c2568a..4b9c25d7246d5 100644
+--- a/include/linux/iommu.h
++++ b/include/linux/iommu.h
+@@ -1081,6 +1081,15 @@ void iommu_debugfs_setup(void);
+ static inline void iommu_debugfs_setup(void) {}
+ #endif
  
- #define ARM_SMMU_MAX_ASIDS		(1 << 16)
- 	unsigned int			asid_bits;
--	DECLARE_BITMAP(asid_map, ARM_SMMU_MAX_ASIDS);
- 
- #define ARM_SMMU_MAX_VMIDS		(1 << 16)
- 	unsigned int			vmid_bits;
-@@ -724,6 +723,8 @@ struct arm_smmu_option_prop {
- 	const char *prop;
- };
- 
-+static DEFINE_XARRAY_ALLOC1(asid_xa);
-+
- static struct arm_smmu_option_prop arm_smmu_options[] = {
- 	{ ARM_SMMU_OPT_SKIP_PREFETCH, "hisilicon,broken-prefetch-cmd" },
- 	{ ARM_SMMU_OPT_PAGE0_REGS_ONLY, "cavium,cn9900-broken-page1-regspace"},
-@@ -1763,6 +1764,14 @@ static void arm_smmu_free_cd_tables(struct arm_smmu_domain *smmu_domain)
- 	cdcfg->cdtab = NULL;
- }
- 
-+static void arm_smmu_free_asid(struct arm_smmu_ctx_desc *cd)
++#ifdef CONFIG_IOMMU_SVA
++extern struct mm_struct *iommu_sva_find(int pasid);
++#else /* !CONFIG_IOMMU_SVA */
++static inline struct mm_struct *iommu_sva_find(int pasid)
 +{
-+	if (!cd->asid)
-+		return;
++	return NULL;
++}
++#endif /* !CONFIG_IOMMU_SVA */
 +
-+	xa_erase(&asid_xa, cd->asid);
+ #ifdef CONFIG_IOMMU_PAGE_FAULT
+ extern int iommu_queue_iopf(struct iommu_fault *fault, void *cookie);
+ 
+diff --git a/drivers/iommu/iommu-sva.c b/drivers/iommu/iommu-sva.c
+index 7fecc74a9f7d6..b177d6cbf4fff 100644
+--- a/drivers/iommu/iommu-sva.c
++++ b/drivers/iommu/iommu-sva.c
+@@ -525,3 +525,22 @@ int iommu_sva_get_pasid_generic(struct iommu_sva *handle)
+ 	return bond->io_mm->pasid;
+ }
+ EXPORT_SYMBOL_GPL(iommu_sva_get_pasid_generic);
++
++/* ioasid wants a void * argument */
++static bool __mmget_not_zero(void *mm)
++{
++	return mmget_not_zero(mm);
 +}
 +
- /* Stream table manipulation functions */
- static void
- arm_smmu_write_strtab_l1_desc(__le64 *dst, struct arm_smmu_strtab_l1_desc *desc)
-@@ -2448,10 +2457,9 @@ static void arm_smmu_domain_free(struct iommu_domain *domain)
- 	if (smmu_domain->stage == ARM_SMMU_DOMAIN_S1) {
- 		struct arm_smmu_s1_cfg *cfg = &smmu_domain->s1_cfg;
- 
--		if (cfg->cdcfg.cdtab) {
-+		if (cfg->cdcfg.cdtab)
- 			arm_smmu_free_cd_tables(smmu_domain);
--			arm_smmu_bitmap_free(smmu->asid_map, cfg->cd.asid);
--		}
-+		arm_smmu_free_asid(&cfg->cd);
- 	} else {
- 		struct arm_smmu_s2_cfg *cfg = &smmu_domain->s2_cfg;
- 		if (cfg->vmid)
-@@ -2466,14 +2474,15 @@ static int arm_smmu_domain_finalise_s1(struct arm_smmu_domain *smmu_domain,
- 				       struct io_pgtable_cfg *pgtbl_cfg)
- {
- 	int ret;
--	int asid;
-+	u32 asid;
- 	struct arm_smmu_device *smmu = smmu_domain->smmu;
- 	struct arm_smmu_s1_cfg *cfg = &smmu_domain->s1_cfg;
- 	typeof(&pgtbl_cfg->arm_lpae_s1_cfg.tcr) tcr = &pgtbl_cfg->arm_lpae_s1_cfg.tcr;
- 
--	asid = arm_smmu_bitmap_alloc(smmu->asid_map, smmu->asid_bits);
--	if (asid < 0)
--		return asid;
-+	ret = xa_alloc(&asid_xa, &asid, &cfg->cd,
-+		       XA_LIMIT(1, (1 << smmu->asid_bits) - 1), GFP_KERNEL);
-+	if (ret)
-+		return ret;
- 
- 	cfg->s1cdmax = master->ssid_bits;
- 
-@@ -2506,7 +2515,7 @@ static int arm_smmu_domain_finalise_s1(struct arm_smmu_domain *smmu_domain,
- out_free_cd_tables:
- 	arm_smmu_free_cd_tables(smmu_domain);
- out_free_asid:
--	arm_smmu_bitmap_free(smmu->asid_map, asid);
-+	arm_smmu_free_asid(&cfg->cd);
- 	return ret;
- }
- 
++/**
++ * iommu_sva_find() - Find mm associated to the given PASID
++ * @pasid: Process Address Space ID assigned to the mm
++ *
++ * Returns the mm corresponding to this PASID, or an error if not found. A
++ * reference to the mm is taken, and must be released with mmput().
++ */
++struct mm_struct *iommu_sva_find(int pasid)
++{
++	return ioasid_find(&shared_pasid, pasid, __mmget_not_zero);
++}
++EXPORT_SYMBOL_GPL(iommu_sva_find);
 -- 
 2.26.0
 
