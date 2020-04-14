@@ -2,61 +2,61 @@ Return-Path: <SRS0=isgL=56=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A6E2C3A5A0
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 17:04:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28E21C38A2F
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 17:04:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 040DD206A2
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 17:04:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0232F2078A
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 17:04:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ggXFs8Uq"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="JI5QkA97"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391552AbgDNREo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 Apr 2020 13:04:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34604 "EHLO
+        id S2391518AbgDNREu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Apr 2020 13:04:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34618 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S2391450AbgDNREl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Apr 2020 13:04:41 -0400
-Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9444EC061A10
-        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 10:04:39 -0700 (PDT)
-Received: by mail-wm1-x344.google.com with SMTP id x25so13830689wmc.0
-        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 10:04:39 -0700 (PDT)
+        by vger.kernel.org with ESMTP id S2391553AbgDNREp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Apr 2020 13:04:45 -0400
+Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03640C061A10
+        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 10:04:45 -0700 (PDT)
+Received: by mail-wr1-x441.google.com with SMTP id d27so6044229wra.1
+        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 10:04:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=0hiETRXfeZLt0WY2JvQ+8wg567BFjejHnLqaaI4LKSM=;
-        b=ggXFs8UqysltNuEcHyHwogoctE8XNDFDfAu1AwROQXAOMyMogcSE0j72TDoP1TCx/6
-         XlOWMCWDGs2EJmNoARvv9gY3JhDVUlHZ/HqkwOGzwgH33UvMVBa06XrUlaLgXGwJCymx
-         ITUuuxeHnRndaKzy3EocRi5yX73vqtLaEgPI/+TNl8JqLo59tjesU7IB8k2do61bP42/
-         quM6cTlpZvSQWBud+xyZMfoer/1r/ScL8zsYDivwWoSN5g61lCoW6+OOfLW0E3ubCvvf
-         YRhsFhoBX2K/RXr4fcyKbYIfRuwy+y0OgWmRjlMNS0/zZulCxy1mGcShYuzLlijBO545
-         FqoA==
+        bh=iFQo4eLK0C51ieV33vlbkwWvrpzk0Iu0nUGg4g65CHs=;
+        b=JI5QkA97eezOSapi2fPqRY+esAG4E9fuADRTO9KkwAXqshRxQg2LKwGOVpQ8bEJ81f
+         7XPxMj7271i5R78HnNq28pZSLk3B7jV9yN0c4/bTfJRpnWpYm9Lt2jtqPzuqS2HV02Z2
+         hkq9kvDb8FIDY1FaOeaNgULZXDgiAcMd9YqMGytbbSvWq4fOyoPZG5zIKdYtbwIwjSXa
+         /p9Mczkd/c2xupqo0EB5V5OSAvg3O/E1/F5JPD2SgV6IMuTc6+yiI7lkQVerTEvPWxXm
+         XspXwZKvxZ42rz0b7zJEQWuYEyF6WUnRsl/SYo5BgSVSgOvKFQDMOtkvWsn7y2Hxn6V5
+         9ulA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=0hiETRXfeZLt0WY2JvQ+8wg567BFjejHnLqaaI4LKSM=;
-        b=Ql6FVbNUgzb6uDywcQAdcADF2gSVZOTVjTLcywrngvuq4ujDYenVdMU/6mhEEm/WIr
-         tU2GFWhcndf+tFhl7ieV30EKCCUtybEXQRPSEJ+36Jd49Wp/hR6uUxsTlXX6L0CsygTn
-         cZTE12xZoFw1WIzYwTddyxN8H7TZGhE1ovL4bqZqJOnwMXrLtVBcZHJlIoWqnYLB7UT4
-         FiEj0xtq8CbiZczcWkquqikPMJCeVOFQT2tC5LxdgYROlos8GvZ6J6nLHAlgr/iilmrC
-         gA3m8/mdRl7TkB93+niuPdDDLXM6+TpQ7hdgBMvByKuGXheQRKqVTw41YEEmcJflnK5x
-         4ghA==
-X-Gm-Message-State: AGi0PuaqP9UQAiyF3lZiQcPSAeU4gApV79gt24XsFfiXx2WASpKHDYwR
-        joPhHd2BMLNPQmgKd4QMrEix3g==
-X-Google-Smtp-Source: APiQypJeBEUtsFeDxdQMOdRxs85MGZqmg6nyXk4JwZKpcy//4Udg+l2ZYnvs4q2GACl0XhRwyq7rHw==
-X-Received: by 2002:a1c:cc0a:: with SMTP id h10mr729491wmb.127.1586883878270;
-        Tue, 14 Apr 2020 10:04:38 -0700 (PDT)
+        bh=iFQo4eLK0C51ieV33vlbkwWvrpzk0Iu0nUGg4g65CHs=;
+        b=sRQums5bLzKUcvvfQCVJJQE7mh13J8z6oUp9mZ9mWXa2w6sNh/YmgTYPoU+cj9mFXC
+         MCesAjzsKGxIxeQjv1UrIbvrl0GRFQgN7geQrtmENPO4JZmusiiR3oXfk8uYITJ4KeRi
+         frb6Ats8dUVxplj6kNOkjRLd6cc3Lf14VowDJwzPdahQVXCLc3FprlXHpLoK6c3xHue5
+         SKCdx497khoQh/2aAUTj4yHLmpEGjQiMUaDVOSdlnzsM2jWawmccXwsyjHj/aomFqVjk
+         TCp+SBEw4U8TPTRM/Aq/iLDI3Q39gDj+ipmiVwK0S60J7Epf4zPjaKu+blUppiCON71T
+         XM5Q==
+X-Gm-Message-State: AGi0PuYNwxZMIg9EIlGRJPVfRUosPIjj4ldj06ZCCMcwCx9ZD3vdgik/
+        yn8+Cwc3Cx9nWT//DaYCVQQ8fw==
+X-Google-Smtp-Source: APiQypLZa+lawPw64nTDrcMPpw0HQPprW6BlaWllx/hPptH94lEGFoejVXa1lUE2ugeNThH+6x6yTQ==
+X-Received: by 2002:a5d:4085:: with SMTP id o5mr23364377wrp.327.1586883883718;
+        Tue, 14 Apr 2020 10:04:43 -0700 (PDT)
 Received: from localhost.localdomain ([2001:171b:226b:54a0:116c:c27a:3e7f:5eaf])
-        by smtp.gmail.com with ESMTPSA id x18sm19549147wrs.11.2020.04.14.10.04.36
+        by smtp.gmail.com with ESMTPSA id x18sm19549147wrs.11.2020.04.14.10.04.42
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Apr 2020 10:04:37 -0700 (PDT)
+        Tue, 14 Apr 2020 10:04:43 -0700 (PDT)
 From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
 To:     iommu@lists.linux-foundation.org, devicetree@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
@@ -67,9 +67,9 @@ Cc:     joro@8bytes.org, catalin.marinas@arm.com, will@kernel.org,
         jacob.jun.pan@linux.intel.com, christian.koenig@amd.com,
         zhangfei.gao@linaro.org, jgg@ziepe.ca, xuzaibo@huawei.com,
         Jean-Philippe Brucker <jean-philippe@linaro.org>
-Subject: [PATCH v5 14/25] iommu/arm-smmu-v3: Add support for VHE
-Date:   Tue, 14 Apr 2020 19:02:42 +0200
-Message-Id: <20200414170252.714402-15-jean-philippe@linaro.org>
+Subject: [PATCH v5 18/25] iommu/arm-smmu-v3: Hook up ATC invalidation to mm ops
+Date:   Tue, 14 Apr 2020 19:02:46 +0200
+Message-Id: <20200414170252.714402-19-jean-philippe@linaro.org>
 X-Mailer: git-send-email 2.26.0
 In-Reply-To: <20200414170252.714402-1-jean-philippe@linaro.org>
 References: <20200414170252.714402-1-jean-philippe@linaro.org>
@@ -80,139 +80,141 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-ARMv8.1 extensions added Virtualization Host Extensions (VHE), which allow
-to run a host kernel at EL2. When using normal DMA, Device and CPU address
-spaces are dissociated, and do not need to implement the same
-capabilities, so VHE hasn't been used in the SMMU until now.
-
-With shared address spaces however, ASIDs are shared between MMU and SMMU,
-and broadcast TLB invalidations issued by a CPU are taken into account by
-the SMMU. TLB entries on both sides need to have identical exception level
-in order to be cleared with a single invalidation.
-
-When the CPU is using VHE, enable VHE in the SMMU for all STEs. Normal DMA
-mappings will need to use TLBI_EL2 commands instead of TLBI_NH, but
-shouldn't be otherwise affected by this change.
+iommu-sva calls us when an mm is modified. Perform the required ATC
+invalidations.
 
 Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
 ---
-v4->v5: bump feature bit
+v4->v5: more comments
 ---
- drivers/iommu/arm-smmu-v3.c | 31 ++++++++++++++++++++++++++-----
- 1 file changed, 26 insertions(+), 5 deletions(-)
+ drivers/iommu/arm-smmu-v3.c | 70 ++++++++++++++++++++++++++++++-------
+ 1 file changed, 58 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index 8fbc5da133ae4..21d458d817fc2 100644
+index 6640c2ac2a7c5..c4bffb14461aa 100644
 --- a/drivers/iommu/arm-smmu-v3.c
 +++ b/drivers/iommu/arm-smmu-v3.c
-@@ -13,6 +13,7 @@
- #include <linux/acpi_iort.h>
- #include <linux/bitfield.h>
- #include <linux/bitops.h>
-+#include <linux/cpufeature.h>
- #include <linux/crash_dump.h>
- #include <linux/delay.h>
- #include <linux/dma-iommu.h>
-@@ -480,6 +481,8 @@ struct arm_smmu_cmdq_ent {
- 		#define CMDQ_OP_TLBI_NH_ASID	0x11
- 		#define CMDQ_OP_TLBI_NH_VA	0x12
- 		#define CMDQ_OP_TLBI_EL2_ALL	0x20
-+		#define CMDQ_OP_TLBI_EL2_ASID	0x21
-+		#define CMDQ_OP_TLBI_EL2_VA	0x22
- 		#define CMDQ_OP_TLBI_S12_VMALL	0x28
- 		#define CMDQ_OP_TLBI_S2_IPA	0x2a
- 		#define CMDQ_OP_TLBI_NSNH_ALL	0x30
-@@ -651,6 +654,7 @@ struct arm_smmu_device {
- #define ARM_SMMU_FEAT_STALL_FORCE	(1 << 13)
- #define ARM_SMMU_FEAT_VAX		(1 << 14)
- #define ARM_SMMU_FEAT_RANGE_INV		(1 << 15)
-+#define ARM_SMMU_FEAT_E2H		(1 << 16)
- 	u32				features;
+@@ -2375,6 +2375,20 @@ arm_smmu_atc_inv_to_cmd(int ssid, unsigned long iova, size_t size,
+ 	size_t inval_grain_shift = 12;
+ 	unsigned long page_start, page_end;
  
- #define ARM_SMMU_OPT_SKIP_PREFETCH	(1 << 0)
-@@ -924,6 +928,8 @@ static int arm_smmu_cmdq_build_cmd(u64 *cmd, struct arm_smmu_cmdq_ent *ent)
- 		cmd[0] |= FIELD_PREP(CMDQ_TLBI_0_NUM, ent->tlbi.num);
- 		cmd[0] |= FIELD_PREP(CMDQ_TLBI_0_SCALE, ent->tlbi.scale);
- 		cmd[0] |= FIELD_PREP(CMDQ_TLBI_0_VMID, ent->tlbi.vmid);
-+		/* Fallthrough */
-+	case CMDQ_OP_TLBI_EL2_VA:
- 		cmd[0] |= FIELD_PREP(CMDQ_TLBI_0_ASID, ent->tlbi.asid);
- 		cmd[1] |= FIELD_PREP(CMDQ_TLBI_1_LEAF, ent->tlbi.leaf);
- 		cmd[1] |= FIELD_PREP(CMDQ_TLBI_1_TTL, ent->tlbi.ttl);
-@@ -945,6 +951,9 @@ static int arm_smmu_cmdq_build_cmd(u64 *cmd, struct arm_smmu_cmdq_ent *ent)
- 	case CMDQ_OP_TLBI_S12_VMALL:
- 		cmd[0] |= FIELD_PREP(CMDQ_TLBI_0_VMID, ent->tlbi.vmid);
- 		break;
-+	case CMDQ_OP_TLBI_EL2_ASID:
-+		cmd[0] |= FIELD_PREP(CMDQ_TLBI_0_ASID, ent->tlbi.asid);
-+		break;
- 	case CMDQ_OP_ATC_INV:
- 		cmd[0] |= FIELD_PREP(CMDQ_0_SSV, ent->substream_valid);
- 		cmd[0] |= FIELD_PREP(CMDQ_ATC_0_GLOBAL, ent->atc.global);
-@@ -1538,7 +1547,8 @@ static int arm_smmu_cmdq_batch_submit(struct arm_smmu_device *smmu,
- static void arm_smmu_tlb_inv_asid(struct arm_smmu_device *smmu, u16 asid)
++	/*
++	 * ATS and PASID:
++	 *
++	 * If substream_valid is clear, the PCIe TLP is sent without a PASID
++	 * prefix. In that case all ATC entries within the address range are
++	 * invalidated, including those that were requested with a PASID! There
++	 * is no way to invalidate only entries without PASID.
++	 *
++	 * When using STRTAB_STE_1_S1DSS_SSID0 (reserving CD 0 for non-PASID
++	 * traffic), translation requests without PASID create ATC entries
++	 * without PASID, which must be invalidated with substream_valid clear.
++	 * This has the unpleasant side-effect of invalidating all PASID-tagged
++	 * ATC entries within the address range.
++	 */
+ 	*cmd = (struct arm_smmu_cmdq_ent) {
+ 		.opcode			= CMDQ_OP_ATC_INV,
+ 		.substream_valid	= !!ssid,
+@@ -2418,12 +2432,12 @@ arm_smmu_atc_inv_to_cmd(int ssid, unsigned long iova, size_t size,
+ 	cmd->atc.size	= log2_span;
+ }
+ 
+-static int arm_smmu_atc_inv_master(struct arm_smmu_master *master)
++static int arm_smmu_atc_inv_master(struct arm_smmu_master *master, int ssid)
  {
- 	struct arm_smmu_cmdq_ent cmd = {
--		.opcode = CMDQ_OP_TLBI_NH_ASID,
-+		.opcode	= smmu->features & ARM_SMMU_FEAT_E2H ?
-+			CMDQ_OP_TLBI_EL2_ASID : CMDQ_OP_TLBI_NH_ASID,
- 		.tlbi.asid = asid,
- 	};
+ 	int i;
+ 	struct arm_smmu_cmdq_ent cmd;
  
-@@ -2093,13 +2103,16 @@ static void arm_smmu_write_strtab_ent(struct arm_smmu_master *master, u32 sid,
- 	}
+-	arm_smmu_atc_inv_to_cmd(0, 0, 0, &cmd);
++	arm_smmu_atc_inv_to_cmd(ssid, 0, 0, &cmd);
  
- 	if (s1_cfg) {
-+		int strw = smmu->features & ARM_SMMU_FEAT_E2H ?
-+			STRTAB_STE_1_STRW_EL2 : STRTAB_STE_1_STRW_NSEL1;
+ 	for (i = 0; i < master->num_sids; i++) {
+ 		cmd.atc.sid = master->sids[i];
+@@ -2934,7 +2948,7 @@ static void arm_smmu_disable_ats(struct arm_smmu_master *master)
+ 	 * ATC invalidation via the SMMU.
+ 	 */
+ 	wmb();
+-	arm_smmu_atc_inv_master(master);
++	arm_smmu_atc_inv_master(master, 0);
+ 	atomic_dec(&smmu_domain->nr_ats_masters);
+ }
+ 
+@@ -3131,7 +3145,22 @@ arm_smmu_iova_to_phys(struct iommu_domain *domain, dma_addr_t iova)
+ static void arm_smmu_mm_invalidate(struct device *dev, int pasid, void *entry,
+ 				   unsigned long iova, size_t size)
+ {
+-	/* TODO: Invalidate ATC */
++	int i;
++	struct arm_smmu_cmdq_ent cmd;
++	struct arm_smmu_cmdq_batch cmds = {};
++	struct arm_smmu_master *master = dev_iommu_priv_get(dev);
 +
- 		BUG_ON(ste_live);
- 		dst[1] = cpu_to_le64(
- 			 FIELD_PREP(STRTAB_STE_1_S1DSS, STRTAB_STE_1_S1DSS_SSID0) |
- 			 FIELD_PREP(STRTAB_STE_1_S1CIR, STRTAB_STE_1_S1C_CACHE_WBRA) |
- 			 FIELD_PREP(STRTAB_STE_1_S1COR, STRTAB_STE_1_S1C_CACHE_WBRA) |
- 			 FIELD_PREP(STRTAB_STE_1_S1CSH, ARM_SMMU_SH_ISH) |
--			 FIELD_PREP(STRTAB_STE_1_STRW, STRTAB_STE_1_STRW_NSEL1));
-+			 FIELD_PREP(STRTAB_STE_1_STRW, strw));
- 
- 		if (smmu->features & ARM_SMMU_FEAT_STALLS &&
- 		   !(smmu->features & ARM_SMMU_FEAT_STALL_FORCE))
-@@ -2495,7 +2508,8 @@ static void arm_smmu_tlb_inv_range(unsigned long iova, size_t size,
- 		return;
- 
- 	if (smmu_domain->stage == ARM_SMMU_DOMAIN_S1) {
--		cmd.opcode	= CMDQ_OP_TLBI_NH_VA;
-+		cmd.opcode	= smmu->features & ARM_SMMU_FEAT_E2H ?
-+				  CMDQ_OP_TLBI_EL2_VA : CMDQ_OP_TLBI_NH_VA;
- 		cmd.tlbi.asid	= smmu_domain->s1_cfg.cd.asid;
- 	} else {
- 		cmd.opcode	= CMDQ_OP_TLBI_S2_IPA;
-@@ -3800,7 +3814,11 @@ static int arm_smmu_device_reset(struct arm_smmu_device *smmu, bool bypass)
- 	writel_relaxed(reg, smmu->base + ARM_SMMU_CR1);
- 
- 	/* CR2 (random crap) */
--	reg = CR2_PTM | CR2_RECINVSID | CR2_E2H;
-+	reg = CR2_PTM | CR2_RECINVSID;
++	if (!master->ats_enabled)
++		return;
 +
-+	if (smmu->features & ARM_SMMU_FEAT_E2H)
-+		reg |= CR2_E2H;
++	arm_smmu_atc_inv_to_cmd(pasid, iova, size, &cmd);
 +
- 	writel_relaxed(reg, smmu->base + ARM_SMMU_CR2);
- 
- 	/* Stream table */
-@@ -3958,8 +3976,11 @@ static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
- 	if (reg & IDR0_MSI)
- 		smmu->features |= ARM_SMMU_FEAT_MSI;
- 
--	if (reg & IDR0_HYP)
-+	if (reg & IDR0_HYP) {
- 		smmu->features |= ARM_SMMU_FEAT_HYP;
-+		if (cpus_have_cap(ARM64_HAS_VIRT_HOST_EXTN))
-+			smmu->features |= ARM_SMMU_FEAT_E2H;
++	for (i = 0; i < master->num_sids; i++) {
++		cmd.atc.sid = master->sids[i];
++		arm_smmu_cmdq_batch_add(master->smmu, &cmds, &cmd);
 +	}
++
++	arm_smmu_cmdq_batch_submit(master->smmu, &cmds);
+ }
  
- 	/*
- 	 * The coherency feature as set by FW is used in preference to the ID
+ static int arm_smmu_mm_attach(struct device *dev, int pasid, void *entry,
+@@ -3168,26 +3197,43 @@ static void arm_smmu_mm_clear(struct device *dev, int pasid, void *entry)
+ 	 * for this ASID, so we need to do it manually.
+ 	 */
+ 	arm_smmu_tlb_inv_asid(smmu_domain->smmu, cd->asid);
+-
+-	/* TODO: invalidate ATC */
++	arm_smmu_atc_inv_domain(smmu_domain, pasid, 0, 0);
+ }
+ 
+ static void arm_smmu_mm_detach(struct device *dev, int pasid, void *entry,
+ 			       bool detach_domain, bool cleared)
+ {
+ 	struct arm_smmu_ctx_desc *cd = entry;
++	struct arm_smmu_master *master = dev_iommu_priv_get(dev);
+ 	struct iommu_domain *domain = iommu_get_domain_for_dev(dev);
+ 	struct arm_smmu_domain *smmu_domain = to_smmu_domain(domain);
+ 
+-	if (detach_domain) {
++	if (detach_domain)
+ 		arm_smmu_write_ctx_desc(smmu_domain, pasid, NULL);
+ 
+-		if (!cleared)
+-			/* See comment in arm_smmu_mm_clear() */
+-			arm_smmu_tlb_inv_asid(smmu_domain->smmu, cd->asid);
+-	}
++	/*
++	 * If we went through clear(), we've already invalidated, and no new TLB
++	 * entry can have been formed.
++	 */
++	if (cleared)
++		return;
++
++	if (detach_domain) {
++		/* See comment in arm_smmu_mm_clear() */
++		arm_smmu_tlb_inv_asid(smmu_domain->smmu, cd->asid);
++		arm_smmu_atc_inv_domain(smmu_domain, pasid, 0, 0);
+ 
+-	/* TODO: invalidate ATC */
++	} else if (master->ats_enabled) {
++		/*
++		 * There are more devices bound with this PASID in this domain,
++		 * so we cannot yet clear the PASID entry, and this device could
++		 * create new ATC entries. Invalidate the ATC for the sake of
++		 * it. On unbinding the last device we'll properly invalidate
++		 * all ATCs in the domain. Alternatively, an early detach_dev()
++		 * on this device will also flush the ATC.
++		 */
++		arm_smmu_atc_inv_master(master, pasid);
++	}
+ }
+ 
+ static void *arm_smmu_mm_alloc(struct mm_struct *mm)
 -- 
 2.26.0
 
