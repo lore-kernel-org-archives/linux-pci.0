@@ -5,58 +5,58 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85545C38A2F
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 17:04:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40596C2BB85
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 17:04:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5C92020678
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 17:04:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 138EE2074D
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 17:04:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="y4TOb2qt"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="K4fkstqA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391341AbgDNREf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 Apr 2020 13:04:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34552 "EHLO
+        id S2391339AbgDNREi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Apr 2020 13:04:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34588 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S2391338AbgDNREb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Apr 2020 13:04:31 -0400
+        by vger.kernel.org with ESMTP id S2391371AbgDNREg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Apr 2020 13:04:36 -0400
 Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2970AC061A0E
-        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 10:04:30 -0700 (PDT)
-Received: by mail-wm1-x344.google.com with SMTP id x4so13826898wmj.1
-        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 10:04:30 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24451C061A0E
+        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 10:04:36 -0700 (PDT)
+Received: by mail-wm1-x344.google.com with SMTP id y24so14905662wma.4
+        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 10:04:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=XVnU/a+9kiTjgyJABvxlIUtTDbUHnlU3sn0za3P4+KE=;
-        b=y4TOb2qtjvNBIJUd8KcyU9EEjwdkr9J7mvW9hXz+F0XZmim7g+pYOYHb96aca0KdFW
-         44QBmP2GffC25/NpySyArRaBAu8Bm/U2oJuskkWo8CgAuMVAZdjlvl6r+uD0J6tcAvtL
-         eRaMGRFt8DcaMTdXaNJAjwYOGdyr/DYezCc6h2lFUzpgk1eFvFidug0Wv9kYpv7ChbAk
-         QNNItq4KMpflBIeWZFmjzcnZuCaGHqFrlwabWOpw1rbG1zJgqUY0ZNLJ3qukiinWagkN
-         zp+DyNqQkMFa3040PRUNdXz1LMkoaOtNfD4+3oaBBc44OS2FQFt4kOdYrqzVRyGKxRsl
-         9dJg==
+        bh=s1HUs0+2Q+zc8r7u2INxKEDZQ5j1LlQHYTHQkt76NtE=;
+        b=K4fkstqAPRERqVtNPbYsutxfsU9hH3mpIKCHec/HOXed4BamcKlHhkuXhGRIkumKp5
+         0bWrGZsPu1P2TxKFJXeWCC5M2vw/iWLoTuwASyujA79foklyw7lYhBe9EqFB7VsQfIWW
+         JTbVeyhOekx/h7lLAZanFA6Oz5DgfLjv/PIPCARjyTpZMRYEC8qgAeMk8WeF8cHIe49b
+         Yoy0Hi20zrX3AcDlDuY3IeiklUkaB18PjR8/T7DXFBcaGG9a1fBe3FBII0KnBu64ccZ4
+         WK8QBhqDRWARl0enZCw0TH73lx1LkC8Gd7HkDJojREUTYR7zIdZVXfizyRPAF3QKkbXF
+         8LJg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=XVnU/a+9kiTjgyJABvxlIUtTDbUHnlU3sn0za3P4+KE=;
-        b=rzY6oMBGnhXMlIYLCx0fEDm2HF6R8RTUyv9DHn8VS1jeqYK1l5IChZIR5uqF/adkLY
-         QMe/9df6yjahbzmte72EJrHGXRPJYC9LQmvkLIjz0HMqi03MqdhgcYMohRo/CJRJ8nTS
-         DO6sFTzexMc6JHX6q2Z5KCXFBSnD/sQ/JtIRd8aHLP3Odk+QP3VZaZqWfvjrLGPsGJ+p
-         VE4Mz27fLYdh6XAYvyb3/HBswvFeDgjro4G6s7Jg8022m6eut3d5JFHXfbOosJyO8LyX
-         hSGQ/nKiSgE1VP9i3pnxJ3+2QQL/MIU5PKahHieMevHIM5AKKiCXSaZX2QEKH4dgE828
-         JTRQ==
-X-Gm-Message-State: AGi0PuZ1nfu0Tm2489etxu+6j0wjhPJp+OreP4YOuoxQFPXNNpR45bz5
-        qu9ZuA1rDoTfhJcWW9yjFym8GA==
-X-Google-Smtp-Source: APiQypJXgDOnDjgeo1jUjf+ryj+C67fPxPR/45K6mtX7NMuGtOOFfjEt1SlUseEiGGPQRxoI9Aaa5w==
-X-Received: by 2002:a1c:4603:: with SMTP id t3mr763909wma.103.1586883868805;
-        Tue, 14 Apr 2020 10:04:28 -0700 (PDT)
+        bh=s1HUs0+2Q+zc8r7u2INxKEDZQ5j1LlQHYTHQkt76NtE=;
+        b=QRF3sQEQtcTs6kP77hPtHRLCKLHyNuRdgZcIuY8kk7jCCpZ6WWRPUMuttF2AhQdpSj
+         dZmbjW343NFr1/JWE320aQGALTrL+x8Pw6Z6vvna9rMQqgdazxPSrOrol4SDYvKOScrp
+         3jnYTrJpbOjzHciAZdDjafP9INmr6PFnjIkYWy6r5TiFJfr3uEC33N4awNboi2gmQhYn
+         XW7iyfXIMQWMwvQuEj3YY3mi7rfbpt8Yr41szCPyluuoECMXEDh72Xy0d2RfUAB0Ful7
+         5hTPFBz7gM5KrVxBTd82uK+1aMFMWD1VACLqlbLdg4Lg6Cc+y7HcEMPQ3HhwLuGqTArf
+         9TLQ==
+X-Gm-Message-State: AGi0PubYEwHnhK4yzR/KlMD/hh+BZ07RpcnLOL9EQmw9d+I6i02I2sj2
+        lDamQ7do+SyeNZpFE6OMvDd4Wg==
+X-Google-Smtp-Source: APiQypKXCM6f7ZuYUh8Dyj9zYqP8uoDSuKBFCTPu9yhNG4YpLoxQAy4lexGTBWq20UC9ppvHQtp9eA==
+X-Received: by 2002:a1c:a553:: with SMTP id o80mr736521wme.159.1586883874768;
+        Tue, 14 Apr 2020 10:04:34 -0700 (PDT)
 Received: from localhost.localdomain ([2001:171b:226b:54a0:116c:c27a:3e7f:5eaf])
-        by smtp.gmail.com with ESMTPSA id x18sm19549147wrs.11.2020.04.14.10.04.27
+        by smtp.gmail.com with ESMTPSA id x18sm19549147wrs.11.2020.04.14.10.04.33
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Apr 2020 10:04:27 -0700 (PDT)
+        Tue, 14 Apr 2020 10:04:34 -0700 (PDT)
 From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
 To:     iommu@lists.linux-foundation.org, devicetree@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
@@ -66,10 +66,11 @@ Cc:     joro@8bytes.org, catalin.marinas@arm.com, will@kernel.org,
         baolu.lu@linux.intel.com, Jonathan.Cameron@huawei.com,
         jacob.jun.pan@linux.intel.com, christian.koenig@amd.com,
         zhangfei.gao@linaro.org, jgg@ziepe.ca, xuzaibo@huawei.com,
-        Jean-Philippe Brucker <jean-philippe@linaro.org>
-Subject: [PATCH v5 08/25] arm64: mm: Pin down ASIDs for sharing mm with devices
-Date:   Tue, 14 Apr 2020 19:02:36 +0200
-Message-Id: <20200414170252.714402-9-jean-philippe@linaro.org>
+        Jean-Philippe Brucker <jean-philippe@linaro.org>,
+        Suzuki K Poulose <suzuki.poulose@arm.com>
+Subject: [PATCH v5 12/25] iommu/arm-smmu-v3: Share process page tables
+Date:   Tue, 14 Apr 2020 19:02:40 +0200
+Message-Id: <20200414170252.714402-13-jean-philippe@linaro.org>
 X-Mailer: git-send-email 2.26.0
 In-Reply-To: <20200414170252.714402-1-jean-philippe@linaro.org>
 References: <20200414170252.714402-1-jean-philippe@linaro.org>
@@ -80,240 +81,228 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-To enable address space sharing with the IOMMU, introduce mm_context_get()
-and mm_context_put(), that pin down a context and ensure that it will keep
-its ASID after a rollover. Export the symbols to let the modular SMMUv3
-driver use them.
+With Shared Virtual Addressing (SVA), we need to mirror CPU TTBR, TCR,
+MAIR and ASIDs in SMMU contexts. Each SMMU has a single ASID space split
+into two sets, shared and private. Shared ASIDs correspond to those
+obtained from the arch ASID allocator, and private ASIDs are used for
+"classic" map/unmap DMA.
 
-Pinning is necessary because a device constantly needs a valid ASID,
-unlike tasks that only require one when running. Without pinning, we would
-need to notify the IOMMU when we're about to use a new ASID for a task,
-and it would get complicated when a new task is assigned a shared ASID.
-Consider the following scenario with no ASID pinned:
-
-1. Task t1 is running on CPUx with shared ASID (gen=1, asid=1)
-2. Task t2 is scheduled on CPUx, gets ASID (1, 2)
-3. Task tn is scheduled on CPUy, a rollover occurs, tn gets ASID (2, 1)
-   We would now have to immediately generate a new ASID for t1, notify
-   the IOMMU, and finally enable task tn. We are holding the lock during
-   all that time, since we can't afford having another CPU trigger a
-   rollover. The IOMMU issues invalidation commands that can take tens of
-   milliseconds.
-
-It gets needlessly complicated. All we wanted to do was schedule task tn,
-that has no business with the IOMMU. By letting the IOMMU pin tasks when
-needed, we avoid stalling the slow path, and let the pinning fail when
-we're out of shareable ASIDs.
-
-After a rollover, the allocator expects at least one ASID to be available
-in addition to the reserved ones (one per CPU). So (NR_ASIDS - NR_CPUS -
-1) is the maximum number of ASIDs that can be shared with the IOMMU.
-
+Cc: Suzuki K Poulose <suzuki.poulose@arm.com>
 Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
 ---
-v4->v5: extract helper macro
----
- arch/arm64/include/asm/mmu.h         |  1 +
- arch/arm64/include/asm/mmu_context.h | 11 +++-
- arch/arm64/mm/context.c              | 95 +++++++++++++++++++++++++++-
- 3 files changed, 104 insertions(+), 3 deletions(-)
+ drivers/iommu/arm-smmu-v3.c | 161 +++++++++++++++++++++++++++++++++++-
+ 1 file changed, 157 insertions(+), 4 deletions(-)
 
-diff --git a/arch/arm64/include/asm/mmu.h b/arch/arm64/include/asm/mmu.h
-index 68140fdd89d6b..bbdd291e31d59 100644
---- a/arch/arm64/include/asm/mmu.h
-+++ b/arch/arm64/include/asm/mmu.h
-@@ -19,6 +19,7 @@
+diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+index 96ee60002e85e..09f4f712fb103 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -22,6 +22,7 @@
+ #include <linux/iommu.h>
+ #include <linux/iopoll.h>
+ #include <linux/module.h>
++#include <linux/mmu_context.h>
+ #include <linux/msi.h>
+ #include <linux/of.h>
+ #include <linux/of_address.h>
+@@ -33,6 +34,8 @@
  
- typedef struct {
- 	atomic64_t	id;
-+	unsigned long	pinned;
- 	void		*vdso;
- 	unsigned long	flags;
- } mm_context_t;
-diff --git a/arch/arm64/include/asm/mmu_context.h b/arch/arm64/include/asm/mmu_context.h
-index ab46187c63001..69599a64945b0 100644
---- a/arch/arm64/include/asm/mmu_context.h
-+++ b/arch/arm64/include/asm/mmu_context.h
-@@ -177,7 +177,13 @@ static inline void cpu_replace_ttbr1(pgd_t *pgdp)
- #define destroy_context(mm)		do { } while(0)
- void check_and_switch_context(struct mm_struct *mm, unsigned int cpu);
+ #include <linux/amba/bus.h>
  
--#define init_new_context(tsk,mm)	({ atomic64_set(&(mm)->context.id, 0); 0; })
-+static inline int
-+init_new_context(struct task_struct *tsk, struct mm_struct *mm)
-+{
-+	atomic64_set(&mm->context.id, 0);
-+	mm->context.pinned = 0;
-+	return 0;
-+}
- 
- #ifdef CONFIG_ARM64_SW_TTBR0_PAN
- static inline void update_saved_ttbr0(struct task_struct *tsk,
-@@ -250,6 +256,9 @@ switch_mm(struct mm_struct *prev, struct mm_struct *next,
- void verify_cpu_asid_bits(void);
- void post_ttbr_update_workaround(void);
- 
-+unsigned long mm_context_get(struct mm_struct *mm);
-+void mm_context_put(struct mm_struct *mm);
++#include "io-pgtable-arm.h"
 +
- #endif /* !__ASSEMBLY__ */
- 
- #endif /* !__ASM_MMU_CONTEXT_H */
-diff --git a/arch/arm64/mm/context.c b/arch/arm64/mm/context.c
-index d702d60e64dab..d0ddd413f5645 100644
---- a/arch/arm64/mm/context.c
-+++ b/arch/arm64/mm/context.c
-@@ -27,6 +27,10 @@ static DEFINE_PER_CPU(atomic64_t, active_asids);
- static DEFINE_PER_CPU(u64, reserved_asids);
- static cpumask_t tlb_flush_pending;
- 
-+static unsigned long max_pinned_asids;
-+static unsigned long nr_pinned_asids;
-+static unsigned long *pinned_asid_map;
+ /* MMIO registers */
+ #define ARM_SMMU_IDR0			0x0
+ #define IDR0_ST_LVL			GENMASK(28, 27)
+@@ -587,6 +590,9 @@ struct arm_smmu_ctx_desc {
+ 	u64				ttbr;
+ 	u64				tcr;
+ 	u64				mair;
 +
- #define ASID_MASK		(~GENMASK(asid_bits - 1, 0))
- #define ASID_FIRST_VERSION	(1UL << asid_bits)
++	refcount_t			refs;
++	struct mm_struct		*mm;
+ };
  
-@@ -74,6 +78,9 @@ void verify_cpu_asid_bits(void)
+ struct arm_smmu_l1_ctx_desc {
+@@ -1660,7 +1666,8 @@ static int arm_smmu_write_ctx_desc(struct arm_smmu_domain *smmu_domain,
+ #ifdef __BIG_ENDIAN
+ 			CTXDESC_CD_0_ENDI |
+ #endif
+-			CTXDESC_CD_0_R | CTXDESC_CD_0_A | CTXDESC_CD_0_ASET |
++			CTXDESC_CD_0_R | CTXDESC_CD_0_A |
++			(cd->mm ? 0 : CTXDESC_CD_0_ASET) |
+ 			CTXDESC_CD_0_AA64 |
+ 			FIELD_PREP(CTXDESC_CD_0_ASID, cd->asid) |
+ 			CTXDESC_CD_0_V;
+@@ -1764,12 +1771,156 @@ static void arm_smmu_free_cd_tables(struct arm_smmu_domain *smmu_domain)
+ 	cdcfg->cdtab = NULL;
+ }
  
- static void set_kpti_asid_bits(void)
+-static void arm_smmu_free_asid(struct arm_smmu_ctx_desc *cd)
++static void arm_smmu_init_cd(struct arm_smmu_ctx_desc *cd)
  {
-+	unsigned int k;
-+	u8 *dst = (u8 *)asid_map;
-+	u8 *src = (u8 *)pinned_asid_map;
- 	unsigned int len = BITS_TO_LONGS(NUM_USER_ASIDS) * sizeof(unsigned long);
- 	/*
- 	 * In case of KPTI kernel/user ASIDs are allocated in
-@@ -81,7 +88,8 @@ static void set_kpti_asid_bits(void)
- 	 * is set, then the ASID will map only userspace. Thus
- 	 * mark even as reserved for kernel.
- 	 */
--	memset(asid_map, 0xaa, len);
-+	for (k = 0; k < len; k++)
-+		dst[k] = src[k] | 0xaa;
- }
- 
- static void set_reserved_asid_bits(void)
-@@ -89,7 +97,7 @@ static void set_reserved_asid_bits(void)
- 	if (arm64_kernel_unmapped_at_el0())
- 		set_kpti_asid_bits();
- 	else
--		bitmap_clear(asid_map, 0, NUM_USER_ASIDS);
-+		bitmap_copy(asid_map, pinned_asid_map, NUM_USER_ASIDS);
- }
- 
- #define asid_gen_match(asid) \
-@@ -165,6 +173,14 @@ static u64 new_context(struct mm_struct *mm)
- 		if (check_update_reserved_asid(asid, newasid))
- 			return newasid;
- 
-+		/*
-+		 * If it is pinned, we can keep using it. Note that reserved
-+		 * takes priority, because even if it is also pinned, we need to
-+		 * update the generation into the reserved_asids.
-+		 */
-+		if (mm->context.pinned)
-+			return newasid;
-+
- 		/*
- 		 * We had a valid ASID in a previous life, so try to re-use
- 		 * it if possible.
-@@ -254,6 +270,68 @@ void check_and_switch_context(struct mm_struct *mm, unsigned int cpu)
- 		cpu_switch_mm(mm->pgd, mm);
- }
- 
-+unsigned long mm_context_get(struct mm_struct *mm)
-+{
-+	unsigned long flags;
-+	u64 asid;
-+
-+	raw_spin_lock_irqsave(&cpu_asid_lock, flags);
-+
-+	asid = atomic64_read(&mm->context.id);
-+
-+	if (mm->context.pinned) {
-+		mm->context.pinned++;
-+		asid &= ~ASID_MASK;
-+		goto out_unlock;
-+	}
-+
-+	if (nr_pinned_asids >= max_pinned_asids) {
-+		asid = 0;
-+		goto out_unlock;
-+	}
-+
-+	if (!asid_gen_match(asid)) {
-+		/*
-+		 * We went through one or more rollover since that ASID was
-+		 * used. Ensure that it is still valid, or generate a new one.
-+		 */
-+		asid = new_context(mm);
-+		atomic64_set(&mm->context.id, asid);
-+	}
-+
-+	asid &= ~ASID_MASK;
-+
-+	nr_pinned_asids++;
-+	__set_bit(asid2idx(asid), pinned_asid_map);
-+	mm->context.pinned++;
-+
-+out_unlock:
-+	raw_spin_unlock_irqrestore(&cpu_asid_lock, flags);
-+
-+	/* Set the equivalent of USER_ASID_BIT */
-+	if (asid && IS_ENABLED(CONFIG_UNMAP_KERNEL_AT_EL0))
-+		asid |= 1;
-+
-+	return asid;
++	refcount_set(&cd->refs, 1);
 +}
-+EXPORT_SYMBOL_GPL(mm_context_get);
 +
-+void mm_context_put(struct mm_struct *mm)
++static bool arm_smmu_free_asid(struct arm_smmu_ctx_desc *cd)
 +{
-+	unsigned long flags;
-+	u64 asid = atomic64_read(&mm->context.id) & ~ASID_MASK;
++	bool free;
++	struct arm_smmu_ctx_desc *old_cd;
 +
-+	raw_spin_lock_irqsave(&cpu_asid_lock, flags);
+ 	if (!cd->asid)
+-		return;
++		return false;
 +
-+	if (--mm->context.pinned == 0) {
-+		__clear_bit(asid2idx(asid), pinned_asid_map);
-+		nr_pinned_asids--;
++	xa_lock(&asid_xa);
++	free = refcount_dec_and_test(&cd->refs);
++	if (free) {
++		old_cd = __xa_erase(&asid_xa, cd->asid);
++		WARN_ON(old_cd != cd);
 +	}
-+
-+	raw_spin_unlock_irqrestore(&cpu_asid_lock, flags);
++	xa_unlock(&asid_xa);
++	return free;
 +}
-+EXPORT_SYMBOL_GPL(mm_context_put);
 +
- /* Errata workaround post TTBRx_EL1 update. */
- asmlinkage void post_ttbr_update_workaround(void)
- {
-@@ -303,6 +381,13 @@ static int asids_update_limit(void)
- 	WARN_ON(num_available_asids - 1 <= num_possible_cpus());
- 	pr_info("ASID allocator initialised with %lu entries\n",
- 		num_available_asids);
++static struct arm_smmu_ctx_desc *arm_smmu_share_asid(u16 asid)
++{
++	struct arm_smmu_ctx_desc *cd;
++
++	cd = xa_load(&asid_xa, asid);
++	if (!cd)
++		return NULL;
++
++	if (cd->mm) {
++		/*
++		 * It's pretty common to find a stale CD when doing unbind-bind,
++		 * given that the release happens after a RCU grace period.
++		 * arm_smmu_free_asid() hasn't gone through yet, so reuse it.
++		 */
++		refcount_inc(&cd->refs);
++		return cd;
++	}
 +
 +	/*
-+	 * We assume that an ASID is always available after a rollover. This
-+	 * means that even if all CPUs have a reserved ASID, there still is at
-+	 * least one slot available in the asid map.
++	 * Ouch, ASID is already in use for a private cd.
++	 * TODO: seize it.
 +	 */
-+	max_pinned_asids = num_available_asids - num_possible_cpus() - 2;
- 	return 0;
- }
- arch_initcall(asids_update_limit);
-@@ -317,6 +402,12 @@ static int asids_init(void)
- 		panic("Failed to allocate bitmap for %lu ASIDs\n",
- 		      NUM_USER_ASIDS);
- 
-+	pinned_asid_map = kcalloc(BITS_TO_LONGS(NUM_USER_ASIDS),
-+				  sizeof(*pinned_asid_map), GFP_KERNEL);
-+	if (!pinned_asid_map)
-+		panic("Failed to allocate pinned ASID bitmap\n");
-+	nr_pinned_asids = 0;
++	return ERR_PTR(-EEXIST);
++}
 +
- 	/*
- 	 * We cannot call set_reserved_asid_bits() here because CPU
- 	 * caps are not finalized yet, so it is safer to assume KPTI
++__maybe_unused
++static struct arm_smmu_ctx_desc *arm_smmu_alloc_shared_cd(struct mm_struct *mm)
++{
++	u16 asid;
++	int ret = 0;
++	u64 tcr, par, reg;
++	struct arm_smmu_ctx_desc *cd;
++	struct arm_smmu_ctx_desc *old_cd = NULL;
++
++	asid = mm_context_get(mm);
++	if (!asid)
++		return ERR_PTR(-ESRCH);
++
++	cd = kzalloc(sizeof(*cd), GFP_KERNEL);
++	if (!cd) {
++		ret = -ENOMEM;
++		goto err_put_context;
++	}
++
++	arm_smmu_init_cd(cd);
++
++	xa_lock(&asid_xa);
++	old_cd = arm_smmu_share_asid(asid);
++	if (!old_cd) {
++		old_cd = __xa_store(&asid_xa, asid, cd, GFP_ATOMIC);
++		/*
++		 * Keep error, clear valid pointers. If there was an old entry
++		 * it has been moved already by arm_smmu_share_asid().
++		 */
++		old_cd = ERR_PTR(xa_err(old_cd));
++		cd->asid = asid;
++	}
++	xa_unlock(&asid_xa);
++
++	if (IS_ERR(old_cd)) {
++		ret = PTR_ERR(old_cd);
++		goto err_free_cd;
++	} else if (old_cd) {
++		if (WARN_ON(old_cd->mm != mm)) {
++			ret = -EINVAL;
++			goto err_free_cd;
++		}
++		kfree(cd);
++		mm_context_put(mm);
++		return old_cd;
++	}
++
++	tcr = FIELD_PREP(CTXDESC_CD_0_TCR_T0SZ, 64ULL - VA_BITS) |
++	      FIELD_PREP(CTXDESC_CD_0_TCR_IRGN0, ARM_LPAE_TCR_RGN_WBWA) |
++	      FIELD_PREP(CTXDESC_CD_0_TCR_ORGN0, ARM_LPAE_TCR_RGN_WBWA) |
++	      FIELD_PREP(CTXDESC_CD_0_TCR_SH0, ARM_LPAE_TCR_SH_IS) |
++	      CTXDESC_CD_0_TCR_EPD1 | CTXDESC_CD_0_AA64;
++
++	switch (PAGE_SIZE) {
++	case SZ_4K:
++		tcr |= FIELD_PREP(CTXDESC_CD_0_TCR_TG0, ARM_LPAE_TCR_TG0_4K);
++		break;
++	case SZ_16K:
++		tcr |= FIELD_PREP(CTXDESC_CD_0_TCR_TG0, ARM_LPAE_TCR_TG0_16K);
++		break;
++	case SZ_64K:
++		tcr |= FIELD_PREP(CTXDESC_CD_0_TCR_TG0, ARM_LPAE_TCR_TG0_64K);
++		break;
++	default:
++		WARN_ON(1);
++		ret = -EINVAL;
++		goto err_free_asid;
++	}
++
++	reg = read_sanitised_ftr_reg(SYS_ID_AA64MMFR0_EL1);
++	par = cpuid_feature_extract_unsigned_field(reg, ID_AA64MMFR0_PARANGE_SHIFT);
++	tcr |= FIELD_PREP(CTXDESC_CD_0_TCR_IPS, par);
++
++	cd->ttbr = virt_to_phys(mm->pgd);
++	cd->tcr = tcr;
++	/*
++	 * MAIR value is pretty much constant and global, so we can just get it
++	 * from the current CPU register
++	 */
++	cd->mair = read_sysreg(mair_el1);
+ 
+-	xa_erase(&asid_xa, cd->asid);
++	cd->mm = mm;
++
++	return cd;
++
++err_free_asid:
++	arm_smmu_free_asid(cd);
++err_free_cd:
++	kfree(cd);
++err_put_context:
++	mm_context_put(mm);
++	return ERR_PTR(ret);
++}
++
++__maybe_unused
++static void arm_smmu_free_shared_cd(struct arm_smmu_ctx_desc *cd)
++{
++	if (arm_smmu_free_asid(cd)) {
++		/* Unpin ASID */
++		mm_context_put(cd->mm);
++		kfree(cd);
++	}
+ }
+ 
+ /* Stream table manipulation functions */
+@@ -2479,6 +2630,8 @@ static int arm_smmu_domain_finalise_s1(struct arm_smmu_domain *smmu_domain,
+ 	struct arm_smmu_s1_cfg *cfg = &smmu_domain->s1_cfg;
+ 	typeof(&pgtbl_cfg->arm_lpae_s1_cfg.tcr) tcr = &pgtbl_cfg->arm_lpae_s1_cfg.tcr;
+ 
++	arm_smmu_init_cd(&cfg->cd);
++
+ 	ret = xa_alloc(&asid_xa, &asid, &cfg->cd,
+ 		       XA_LIMIT(1, (1 << smmu->asid_bits) - 1), GFP_KERNEL);
+ 	if (ret)
 -- 
 2.26.0
 
