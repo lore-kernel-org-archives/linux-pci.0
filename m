@@ -7,56 +7,56 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C7BDC55186
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 17:05:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCD43C352BE
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 17:04:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ED05C20678
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 17:04:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9D943206A2
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 17:04:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="KSZ3slzL"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="H/49gtTy"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391619AbgDNRE6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 Apr 2020 13:04:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34654 "EHLO
+        id S2391194AbgDNREd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Apr 2020 13:04:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34548 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S2391603AbgDNREv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Apr 2020 13:04:51 -0400
-Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9422BC061A10
-        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 10:04:51 -0700 (PDT)
-Received: by mail-wr1-x442.google.com with SMTP id h26so3845030wrb.7
-        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 10:04:51 -0700 (PDT)
+        by vger.kernel.org with ESMTP id S2391306AbgDNRE1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Apr 2020 13:04:27 -0400
+Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E2F4C061A0C
+        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 10:04:27 -0700 (PDT)
+Received: by mail-wm1-x344.google.com with SMTP id a81so14893170wmf.5
+        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 10:04:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=dxDAAgL2UYsehlg428ECGLr43fDkT+szEz8iWolntSk=;
-        b=KSZ3slzLde6NozRQYn2Ai7oqpucgG9X78qXMfbMZBdcER7nRY1kUNT7Qt/IDN4MDjl
-         vb8Pwa0ulpEZSn0BBnH4dvqEPTE7RcoGq9Z0W234cFc+SVbRftS1kIvCyI853alAlB+Y
-         rEPDG1qUaGZ8aDnk0qSGGOfVXMDaGzZE9CbxCxqT/oC+CO1OIwkFRvN+6kDc104C4vkE
-         8G9SDBWgw+ffbm6VeWoWzvyoCQ+PUbDkthqAws5ZdzYv2p4NNty/Nv1AQXZJv7O+3rA/
-         yHUo655cjGXVw0ER+P3ankuAQ6Jt9og6eLbHOvkwVehp8uN30C+g/z+zrhkAnk1Cf6Kl
-         OqWw==
+        bh=Pm90KHnx8uK8AXrbNapri8S3uUJ3F4SFKQZ/TEPP7D0=;
+        b=H/49gtTyBTSYl8Y/NsAtw8/g2zInRHKwlAM06dE15HfIZYVeRpp26xgT3c6zafASzi
+         7uDVin3Kh8IClWDwqrYvKeFnyEB6udiDwCzxx2XTV4flbL6HH0XG9E/oPAZMxmIEDG2M
+         jnmEkxuf7GeDgwVmmZ4SS2Ai+L4FsU4qiAepIcf4xzuUgNOcUilebN8pD4B0N++nF8Vq
+         Zp/DuX2F1sTJiHAzOXJwPFc6HbGiFHxiJnEcW/IlfA8fGtHRi7Np+xmoeh36HV8dpfll
+         4HfN46I/PT6emJf6bvhw3gp7qf7nU5c8gXH7dohtjLBTfv8wGTTZmGm7nQ70C7xIRVtp
+         OYOQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=dxDAAgL2UYsehlg428ECGLr43fDkT+szEz8iWolntSk=;
-        b=LxhU4iRyXq6c/JgrVi+4YGbcG3YTJcMPxsSqbCGjE1Hqxr413ZrzRs04l4sGWpY2B6
-         wvq9RnSoN34kpHAT3KO6Y25uxpiTaIstFtglNA0gfEGFMX6CKpJeksyieERklISInJk8
-         /db+yzNIwczzT/hMhjbQk4wD8ZbALEJ3GgzteTNIl9smFPLqAv+3HaBrxrQDuPi4h0bR
-         sAJXhMDkltcblnlwBhgGfr/mGokW/o8Fj24sH4nt62Cz6yZk+3d2j5IV/dp1d6fohd99
-         T0qZO7PNoevtGZbPNfSwPXELxwj+knaVVF1UnsyJdea5GsG29RdUoDOGXm9hGAILjS+7
-         3auA==
-X-Gm-Message-State: AGi0Pua8sJVJAtRIsjJ6IsjBed7m8w7m2HOBslQKCwjQ6HKGd4w0zAQZ
-        IvZJ1+DJOvnv1olsSPsMevBDsw==
-X-Google-Smtp-Source: APiQypLvU1DM9P6089K9k3mSfMy8oJyq3WdIaLTthIKtphu5RdduiyeU/R3KBAD03tQZ8c5tQnffKg==
-X-Received: by 2002:a5d:4447:: with SMTP id x7mr2258833wrr.299.1586883890363;
-        Tue, 14 Apr 2020 10:04:50 -0700 (PDT)
+        bh=Pm90KHnx8uK8AXrbNapri8S3uUJ3F4SFKQZ/TEPP7D0=;
+        b=HJ5ow8FPTogK5GDk9qIHN33J6aEEGSedjeXPDJNf+HdRfuJEuVMiCeBBlTH5CKJmvd
+         dN3pgr499wjJEq1LFD2K6lwiWJnej1Qioia877PASKcPysrH9u21KilWGSE4zZSVhRrZ
+         0ChCRtiadyGK+cDeDa2aAqo3c7XIYo8Ni0zmOQQq5M28mTXiZD9r3Lyt2N7pO9ajzkxo
+         /zdH55QM5tQSP+Eqiil/yeeRPBd6FzcdNxQCgb6F3rBY7UxbG6HO/mqKB54wAI9nDAKO
+         /pbb6saaztE0aMGxGmYBnI7qkjT3+woriZKsAcmjjRz42WBgOI3phHMS8j5M9qT09mjB
+         OyiQ==
+X-Gm-Message-State: AGi0PuY9XwawnYBlv2EoGRx3fKdonGxJ2lO9EPgvWS0ydUGSm47hCY3p
+        fhhMN0DuyDg9eIPd9fUQujl0jQ==
+X-Google-Smtp-Source: APiQypJk/dl8CBfLNh5x7aucnzwvWIEs4TpxXFyGB0h6saUKXXv74fXgKyRLf7k//vQrLyri2cta5A==
+X-Received: by 2002:a1c:998b:: with SMTP id b133mr767731wme.65.1586883865987;
+        Tue, 14 Apr 2020 10:04:25 -0700 (PDT)
 Received: from localhost.localdomain ([2001:171b:226b:54a0:116c:c27a:3e7f:5eaf])
-        by smtp.gmail.com with ESMTPSA id x18sm19549147wrs.11.2020.04.14.10.04.48
+        by smtp.gmail.com with ESMTPSA id x18sm19549147wrs.11.2020.04.14.10.04.24
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Apr 2020 10:04:49 -0700 (PDT)
+        Tue, 14 Apr 2020 10:04:25 -0700 (PDT)
 From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
 To:     iommu@lists.linux-foundation.org, devicetree@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
@@ -66,11 +66,10 @@ Cc:     joro@8bytes.org, catalin.marinas@arm.com, will@kernel.org,
         baolu.lu@linux.intel.com, Jonathan.Cameron@huawei.com,
         jacob.jun.pan@linux.intel.com, christian.koenig@amd.com,
         zhangfei.gao@linaro.org, jgg@ziepe.ca, xuzaibo@huawei.com,
-        Jean-Philippe Brucker <jean-philippe@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v5 23/25] PCI/ATS: Add PRI stubs
-Date:   Tue, 14 Apr 2020 19:02:51 +0200
-Message-Id: <20200414170252.714402-24-jean-philippe@linaro.org>
+        Jean-Philippe Brucker <jean-philippe@linaro.org>
+Subject: [PATCH v5 06/25] iommu/sva: Register page fault handler
+Date:   Tue, 14 Apr 2020 19:02:34 +0200
+Message-Id: <20200414170252.714402-7-jean-philippe@linaro.org>
 X-Mailer: git-send-email 2.26.0
 In-Reply-To: <20200414170252.714402-1-jean-philippe@linaro.org>
 References: <20200414170252.714402-1-jean-philippe@linaro.org>
@@ -81,36 +80,65 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The SMMUv3 driver, which can be built without CONFIG_PCI, will soon gain
-support for PRI.  Partially revert commit c6e9aefbf9db ("PCI/ATS: Remove
-unused PRI and PASID stubs") to re-introduce the PRI stubs, and avoid
-adding more #ifdefs to the SMMU driver.
+When enabling SVA, register the fault handler. Device driver will register
+an I/O page fault queue before or after calling iommu_sva_enable. The
+fault queue must be flushed before any io_mm is freed, to make sure that
+its PASID isn't used in any fault queue, and can be reallocated.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
 ---
- include/linux/pci-ats.h | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/iommu/Kconfig     |  1 +
+ drivers/iommu/iommu-sva.c | 11 +++++++++++
+ 2 files changed, 12 insertions(+)
 
-diff --git a/include/linux/pci-ats.h b/include/linux/pci-ats.h
-index f75c307f346de..e9e266df9b37c 100644
---- a/include/linux/pci-ats.h
-+++ b/include/linux/pci-ats.h
-@@ -28,6 +28,14 @@ int pci_enable_pri(struct pci_dev *pdev, u32 reqs);
- void pci_disable_pri(struct pci_dev *pdev);
- int pci_reset_pri(struct pci_dev *pdev);
- int pci_prg_resp_pasid_required(struct pci_dev *pdev);
-+#else /* CONFIG_PCI_PRI */
-+static inline int pci_enable_pri(struct pci_dev *pdev, u32 reqs)
-+{ return -ENODEV; }
-+static inline void pci_disable_pri(struct pci_dev *pdev) { }
-+static inline int pci_reset_pri(struct pci_dev *pdev)
-+{ return -ENODEV; }
-+static inline int pci_prg_resp_pasid_required(struct pci_dev *pdev)
-+{ return 0; }
- #endif /* CONFIG_PCI_PRI */
+diff --git a/drivers/iommu/Kconfig b/drivers/iommu/Kconfig
+index bf620bf48da03..411a7ee2ab12d 100644
+--- a/drivers/iommu/Kconfig
++++ b/drivers/iommu/Kconfig
+@@ -106,6 +106,7 @@ config IOMMU_DMA
+ config IOMMU_SVA
+ 	bool
+ 	select IOASID
++	select IOMMU_PAGE_FAULT
+ 	select IOMMU_API
+ 	select MMU_NOTIFIER
  
- #ifdef CONFIG_PCI_PASID
+diff --git a/drivers/iommu/iommu-sva.c b/drivers/iommu/iommu-sva.c
+index b177d6cbf4fff..00d5e7e895e80 100644
+--- a/drivers/iommu/iommu-sva.c
++++ b/drivers/iommu/iommu-sva.c
+@@ -420,6 +420,12 @@ void iommu_sva_unbind_generic(struct iommu_sva *handle)
+ 	if (WARN_ON(!param))
+ 		return;
+ 
++	/*
++	 * Caller stopped the device from issuing PASIDs, now make sure they are
++	 * out of the fault queue.
++	 */
++	iopf_queue_flush_dev(handle->dev, bond->io_mm->pasid);
++
+ 	mutex_lock(&param->sva_lock);
+ 	mutex_lock(&iommu_sva_lock);
+ 	io_mm_detach(bond);
+@@ -457,6 +463,10 @@ int iommu_sva_enable(struct device *dev, struct iommu_sva_param *sva_param)
+ 		goto err_unlock;
+ 	}
+ 
++	ret = iommu_register_device_fault_handler(dev, iommu_queue_iopf, dev);
++	if (ret)
++		goto err_unlock;
++
+ 	dev->iommu->sva_param = new_param;
+ 	mutex_unlock(&param->sva_lock);
+ 	return 0;
+@@ -494,6 +504,7 @@ int iommu_sva_disable(struct device *dev)
+ 		goto out_unlock;
+ 	}
+ 
++	iommu_unregister_device_fault_handler(dev);
+ 	kfree(param->sva_param);
+ 	param->sva_param = NULL;
+ out_unlock:
 -- 
 2.26.0
 
