@@ -2,61 +2,61 @@ Return-Path: <SRS0=isgL=56=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BF67C3A5A9
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 17:04:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 086A7C54FCC
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 17:04:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7D771206A2
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 17:04:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D850C206A2
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Apr 2020 17:04:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="h9+T4NKl"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Z0Yp2WFw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388403AbgDNREl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 Apr 2020 13:04:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34596 "EHLO
+        id S2391397AbgDNREh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Apr 2020 13:04:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34546 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S2391390AbgDNREj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Apr 2020 13:04:39 -0400
-Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 299C4C061A0C
-        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 10:04:38 -0700 (PDT)
-Received: by mail-wm1-x344.google.com with SMTP id y24so14905812wma.4
-        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 10:04:38 -0700 (PDT)
+        by vger.kernel.org with ESMTP id S2391339AbgDNREe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Apr 2020 13:04:34 -0400
+Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E945C061A0E
+        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 10:04:34 -0700 (PDT)
+Received: by mail-wm1-x342.google.com with SMTP id r26so14958652wmh.0
+        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2020 10:04:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=XYjzYLucwyMWs5ATd69ukU535fMinAQdw/Sa1FQ9874=;
-        b=h9+T4NKlDIuEuOboHRkQ9VM5O6C305HktEqTd1ZjCrXyVdjGXpKMut+cm0j25dz8L8
-         qED+RLh1oJwzxEXRlXzbxme6N1keKufeYV9dapDPQtGb3afujRsD37DcAqdUwlABi+kY
-         6+AD1XXWqkoRRFGeAhAXRueOoV8MzRbnmuvkLQUNpXIZcveXEGWfkMnnceb6fPbrFvux
-         k+IrqpGZ8iqZSSXdseYwd+fkjbxj05n2Va1tkNh5llSnOQ3uPgo2WjZy0jga6vHpGoLM
-         ImtsA+n+pkrR86mvRcRxAaM8Z1T/E7yFwFVTV3O3UFgsvbJf2Prxmyrzb1TDgj8KqAPd
-         Q+ew==
+        bh=aOn2/ivBf+XmB6Al4WmdsHcps0QyIiLuo8qefeV2C0s=;
+        b=Z0Yp2WFwHT70u0R7Wr7R5AhtdbVQPNTMNufdFuXd+ENpRenI7zcZxRtj1eDH/8DVxK
+         w7N9nOpW7sEG9K/u3l1KC6rScagAtd4Om9U5KNXAa5xEBG0aKQFAomBQj49jMwAx80bm
+         VnyWFWc4Yzp3RbBcbzqkmhqjzSXUGlBrfV9Kgixw0dzjGUnOx/ApPNVuQ8gPPBhxSY5/
+         4wGrHj0nf+rS03Agdvzb84edls0jQzbEhQ/0sOzl94i50gjL44IGJs4I98eE/dCmXuXl
+         D4QQcRCEFAxwwKcohtYfh0JlVaKZdefOyxLVJTOa7V2u0lkZCvT24PKYz706K9mF45p0
+         UpIA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=XYjzYLucwyMWs5ATd69ukU535fMinAQdw/Sa1FQ9874=;
-        b=qFqmqnXc7vj4J9ey38bdtLFXJvF5QuU6nGd5y6RpodDe0KrZrn0+TB4FHbY62hrW+p
-         xxFXF+xR0oCjsTovfqEotaKDyaBBpGU2JVCr2CIl9wYpY6f++ZSC25UpP89kskEn7r/5
-         tqWQ5jZm1QkUn8e23THtC6OdUP0K+Uqoswt3IKH96C8enNRO7lDZN++Gu1Tx07eQ9fVZ
-         s5LDhKIrnGBL9y3uO0kZ9+m/WVucpBLvBH2Nzb8fgTnqDOtWnMTSIWy2LINy8Go66Axj
-         FfFu+Hio/2yVfWyzzFA8pe4caNPJAvPUEJW3FmqoZAx4od5AIIPA2sSHpveP/cQUb6bE
-         cXpw==
-X-Gm-Message-State: AGi0PubSVodlzRjDnRlT8g9Kq4K5WKChr5czyNcW/NvK5cK4tHqBf7Mu
-        vFko2TBdUa6DjAovx4AIiWIWhA==
-X-Google-Smtp-Source: APiQypI7JCLr3IUyR+gNk8YroVsmo+Ju0KwL83AHQIeXPjqzPAV1RnhANqCP4fKquYyiz4/jl6+90g==
-X-Received: by 2002:a7b:cc88:: with SMTP id p8mr777259wma.108.1586883876735;
-        Tue, 14 Apr 2020 10:04:36 -0700 (PDT)
+        bh=aOn2/ivBf+XmB6Al4WmdsHcps0QyIiLuo8qefeV2C0s=;
+        b=TREwsMZpNyFnEHpVq1JPzlC10rs4z+3b1TsS8MMRCQSeI5RkrF6iFSL4kgO8DTaQv7
+         hyE9+4txVPWZveo7wqd3prLFxp2bQkVliG9RAJsHprHLRJ0NYCO3t/XCfLcyrt7LTcmr
+         g+tI1B759oP5Pir4FpetA2BCbV5Pg3GNOfx+pnLpXPv68mTs59kQsdWtwcPwduOBuKKH
+         CAO6nzyesZljGv5C6HJDuJPgBikLDJtMYHeczqqLdAk7vbO7ZrRy8l6z9pcsQ3adiTNG
+         EOztH/9qpVW012JeIPDoeca8ATWy+Uw+UZsx8auVBPFSND81Rxmd2HYncVZbV8C9/9ve
+         f1Vw==
+X-Gm-Message-State: AGi0Pub8abErxr30L0OmEC1ARPiEyHo3a7Rd7m19ZNSlmqwAhvvPJ0M1
+        XD/XhGxIGN1T4yNgQJ5XSLlBlw==
+X-Google-Smtp-Source: APiQypJHABOUo0l69p8cEPC/4JaEesvnVVdt7c8KNCFhOJxICd+3rtd3OwSved0AadUjHTnKij1dPw==
+X-Received: by 2002:a1c:e906:: with SMTP id q6mr776151wmc.62.1586883872984;
+        Tue, 14 Apr 2020 10:04:32 -0700 (PDT)
 Received: from localhost.localdomain ([2001:171b:226b:54a0:116c:c27a:3e7f:5eaf])
-        by smtp.gmail.com with ESMTPSA id x18sm19549147wrs.11.2020.04.14.10.04.34
+        by smtp.gmail.com with ESMTPSA id x18sm19549147wrs.11.2020.04.14.10.04.31
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Apr 2020 10:04:35 -0700 (PDT)
+        Tue, 14 Apr 2020 10:04:32 -0700 (PDT)
 From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
 To:     iommu@lists.linux-foundation.org, devicetree@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
@@ -66,10 +66,11 @@ Cc:     joro@8bytes.org, catalin.marinas@arm.com, will@kernel.org,
         baolu.lu@linux.intel.com, Jonathan.Cameron@huawei.com,
         jacob.jun.pan@linux.intel.com, christian.koenig@amd.com,
         zhangfei.gao@linaro.org, jgg@ziepe.ca, xuzaibo@huawei.com,
-        Jean-Philippe Brucker <jean-philippe@linaro.org>
-Subject: [PATCH v5 13/25] iommu/arm-smmu-v3: Seize private ASID
-Date:   Tue, 14 Apr 2020 19:02:41 +0200
-Message-Id: <20200414170252.714402-14-jean-philippe@linaro.org>
+        Jean-Philippe Brucker <jean-philippe@linaro.org>,
+        Suzuki K Poulose <suzuki.poulose@arm.com>
+Subject: [PATCH v5 11/25] arm64: cpufeature: Export symbol read_sanitised_ftr_reg()
+Date:   Tue, 14 Apr 2020 19:02:39 +0200
+Message-Id: <20200414170252.714402-12-jean-philippe@linaro.org>
 X-Mailer: git-send-email 2.26.0
 In-Reply-To: <20200414170252.714402-1-jean-philippe@linaro.org>
 References: <20200414170252.714402-1-jean-philippe@linaro.org>
@@ -80,184 +81,28 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The SMMU has a single ASID space, the union of shared and private ASID
-sets. This means that the SMMU driver competes with the arch allocator
-for ASIDs. Shared ASIDs are those of Linux processes, allocated by the
-arch, and contribute in broadcast TLB maintenance. Private ASIDs are
-allocated by the SMMU driver and used for "classic" map/unmap DMA. They
-require explicit TLB invalidations.
+The SMMUv3 driver would like to read the MMFR0 PARANGE field in order to
+share CPU page tables with devices. Allow the driver to be built as
+module by exporting the read_sanitized_ftr_reg() cpufeature symbol.
 
-When we pin down an mm_context and get an ASID that is already in use by
-the SMMU, it belongs to a private context. We used to simply abort the
-bind, but this is unfair to users that would be unable to bind a few
-seemingly random processes. Try to allocate a new private ASID for the
-context, and make the old ASID shared.
-
-Introduce a new lock to prevent races when rewriting context
-descriptors. Unfortunately it has to be a spinlock since we take it
-while holding the asid lock, which will be held in non-sleepable context
-(freeing ASIDs from an RCU callback).
-
+Cc: Suzuki K Poulose <suzuki.poulose@arm.com>
 Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
 ---
- drivers/iommu/arm-smmu-v3.c | 83 +++++++++++++++++++++++++++++--------
- 1 file changed, 66 insertions(+), 17 deletions(-)
+ arch/arm64/kernel/cpufeature.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index 09f4f712fb103..8fbc5da133ae4 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -730,6 +730,7 @@ struct arm_smmu_option_prop {
- };
- 
- static DEFINE_XARRAY_ALLOC1(asid_xa);
-+static DEFINE_SPINLOCK(contexts_lock);
- 
- static struct arm_smmu_option_prop arm_smmu_options[] = {
- 	{ ARM_SMMU_OPT_SKIP_PREFETCH, "hisilicon,broken-prefetch-cmd" },
-@@ -1534,6 +1535,17 @@ static int arm_smmu_cmdq_batch_submit(struct arm_smmu_device *smmu,
+diff --git a/arch/arm64/kernel/cpufeature.c b/arch/arm64/kernel/cpufeature.c
+index 9fac745aa7bb2..5f6adbf4ae893 100644
+--- a/arch/arm64/kernel/cpufeature.c
++++ b/arch/arm64/kernel/cpufeature.c
+@@ -841,6 +841,7 @@ u64 read_sanitised_ftr_reg(u32 id)
+ 	BUG_ON(!regp);
+ 	return regp->sys_val;
  }
++EXPORT_SYMBOL_GPL(read_sanitised_ftr_reg);
  
- /* Context descriptor manipulation functions */
-+static void arm_smmu_tlb_inv_asid(struct arm_smmu_device *smmu, u16 asid)
-+{
-+	struct arm_smmu_cmdq_ent cmd = {
-+		.opcode = CMDQ_OP_TLBI_NH_ASID,
-+		.tlbi.asid = asid,
-+	};
-+
-+	arm_smmu_cmdq_issue_cmd(smmu, &cmd);
-+	arm_smmu_cmdq_issue_sync(smmu);
-+}
-+
- static void arm_smmu_sync_cd(struct arm_smmu_domain *smmu_domain,
- 			     int ssid, bool leaf)
- {
-@@ -1568,7 +1580,7 @@ static int arm_smmu_alloc_cd_leaf_table(struct arm_smmu_device *smmu,
- 	size_t size = CTXDESC_L2_ENTRIES * (CTXDESC_CD_DWORDS << 3);
- 
- 	l1_desc->l2ptr = dmam_alloc_coherent(smmu->dev, size,
--					     &l1_desc->l2ptr_dma, GFP_KERNEL);
-+					     &l1_desc->l2ptr_dma, GFP_ATOMIC);
- 	if (!l1_desc->l2ptr) {
- 		dev_warn(smmu->dev,
- 			 "failed to allocate context descriptor table\n");
-@@ -1614,8 +1626,8 @@ static __le64 *arm_smmu_get_cd_ptr(struct arm_smmu_domain *smmu_domain,
- 	return l1_desc->l2ptr + idx * CTXDESC_CD_DWORDS;
- }
- 
--static int arm_smmu_write_ctx_desc(struct arm_smmu_domain *smmu_domain,
--				   int ssid, struct arm_smmu_ctx_desc *cd)
-+static int __arm_smmu_write_ctx_desc(struct arm_smmu_domain *smmu_domain,
-+				     int ssid, struct arm_smmu_ctx_desc *cd)
- {
- 	/*
- 	 * This function handles the following cases:
-@@ -1691,6 +1703,17 @@ static int arm_smmu_write_ctx_desc(struct arm_smmu_domain *smmu_domain,
- 	return 0;
- }
- 
-+static int arm_smmu_write_ctx_desc(struct arm_smmu_domain *smmu_domain,
-+				   int ssid, struct arm_smmu_ctx_desc *cd)
-+{
-+	int ret;
-+
-+	spin_lock(&contexts_lock);
-+	ret = __arm_smmu_write_ctx_desc(smmu_domain, ssid, cd);
-+	spin_unlock(&contexts_lock);
-+	return ret;
-+}
-+
- static int arm_smmu_alloc_cd_tables(struct arm_smmu_domain *smmu_domain)
- {
- 	int ret;
-@@ -1794,9 +1817,18 @@ static bool arm_smmu_free_asid(struct arm_smmu_ctx_desc *cd)
- 	return free;
- }
- 
-+/*
-+ * Try to reserve this ASID in the SMMU. If it is in use, try to steal it from
-+ * the private entry. Careful here, we may be modifying the context tables of
-+ * another SMMU!
-+ */
- static struct arm_smmu_ctx_desc *arm_smmu_share_asid(u16 asid)
- {
-+	int ret;
-+	u32 new_asid;
- 	struct arm_smmu_ctx_desc *cd;
-+	struct arm_smmu_device *smmu;
-+	struct arm_smmu_domain *smmu_domain;
- 
- 	cd = xa_load(&asid_xa, asid);
- 	if (!cd)
-@@ -1812,11 +1844,31 @@ static struct arm_smmu_ctx_desc *arm_smmu_share_asid(u16 asid)
- 		return cd;
- 	}
- 
-+	smmu_domain = container_of(cd, struct arm_smmu_domain, s1_cfg.cd);
-+	smmu = smmu_domain->smmu;
-+
-+	/*
-+	 * Race with unmap: TLB invalidations will start targeting the new ASID,
-+	 * which isn't assigned yet. We'll do an invalidate-all on the old ASID
-+	 * later, so it doesn't matter.
-+	 */
-+	ret = __xa_alloc(&asid_xa, &new_asid, cd,
-+			 XA_LIMIT(1, 1 << smmu->asid_bits), GFP_ATOMIC);
-+	if (ret)
-+		return ERR_PTR(-ENOSPC);
-+	cd->asid = new_asid;
-+
- 	/*
--	 * Ouch, ASID is already in use for a private cd.
--	 * TODO: seize it.
-+	 * Update ASID and invalidate CD in all associated masters. There will
-+	 * be some overlap between use of both ASIDs, until we invalidate the
-+	 * TLB.
- 	 */
--	return ERR_PTR(-EEXIST);
-+	arm_smmu_write_ctx_desc(smmu_domain, 0, cd);
-+
-+	/* Invalidate TLB entries previously associated with that context */
-+	arm_smmu_tlb_inv_asid(smmu, asid);
-+
-+	return NULL;
- }
- 
- __maybe_unused
-@@ -2407,15 +2459,6 @@ static void arm_smmu_tlb_inv_context(void *cookie)
- 	struct arm_smmu_device *smmu = smmu_domain->smmu;
- 	struct arm_smmu_cmdq_ent cmd;
- 
--	if (smmu_domain->stage == ARM_SMMU_DOMAIN_S1) {
--		cmd.opcode	= CMDQ_OP_TLBI_NH_ASID;
--		cmd.tlbi.asid	= smmu_domain->s1_cfg.cd.asid;
--		cmd.tlbi.vmid	= 0;
--	} else {
--		cmd.opcode	= CMDQ_OP_TLBI_S12_VMALL;
--		cmd.tlbi.vmid	= smmu_domain->s2_cfg.vmid;
--	}
--
- 	/*
- 	 * NOTE: when io-pgtable is in non-strict mode, we may get here with
- 	 * PTEs previously cleared by unmaps on the current CPU not yet visible
-@@ -2423,8 +2466,14 @@ static void arm_smmu_tlb_inv_context(void *cookie)
- 	 * insertion to guarantee those are observed before the TLBI. Do be
- 	 * careful, 007.
- 	 */
--	arm_smmu_cmdq_issue_cmd(smmu, &cmd);
--	arm_smmu_cmdq_issue_sync(smmu);
-+	if (smmu_domain->stage == ARM_SMMU_DOMAIN_S1) {
-+		arm_smmu_tlb_inv_asid(smmu, smmu_domain->s1_cfg.cd.asid);
-+	} else {
-+		cmd.opcode	= CMDQ_OP_TLBI_S12_VMALL;
-+		cmd.tlbi.vmid	= smmu_domain->s2_cfg.vmid;
-+		arm_smmu_cmdq_issue_cmd(smmu, &cmd);
-+		arm_smmu_cmdq_issue_sync(smmu);
-+	}
- 	arm_smmu_atc_inv_domain(smmu_domain, 0, 0, 0);
- }
- 
+ #define read_sysreg_case(r)	\
+ 	case r:		return read_sysreg_s(r)
 -- 
 2.26.0
 
