@@ -7,45 +7,45 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C634C2BB1D
-	for <linux-pci@archiver.kernel.org>; Wed, 15 Apr 2020 00:13:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7F07C2BB1D
+	for <linux-pci@archiver.kernel.org>; Wed, 15 Apr 2020 00:13:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 260202084D
-	for <linux-pci@archiver.kernel.org>; Wed, 15 Apr 2020 00:13:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B2DC920774
+	for <linux-pci@archiver.kernel.org>; Wed, 15 Apr 2020 00:13:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586909604;
-	bh=dRngsPvuG+kETgs2smktXaw9v1l2uk2emjkFea1ZosU=;
+	s=default; t=1586909628;
+	bh=DDPko3qzftraw9JGNnT2damoPH954XYBiL7tnFM7Aug=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=XEkvlHoDZX3Bwb+UfGZ5PxgvJCiA/5Yc0p4Z5kq7XN0Su6GPQwmrMmR8faKO+pODO
-	 4vSwmp1s8QOTudTxvyB0JRMsRkFTDjg95DVswYtF2kr7Thic8Hp4ezYjioxClaXNAX
-	 pYEcUhxOzg5sgPM92ZU53lCbN+KYxvCXKXGYWIyA=
+	b=Y9EqZVfN0Kch3XTHfLLtiadCYI+fgWTs1naLPXp0fudNMHC6YV3lBP9dUFsLhIzeE
+	 1XpmTXyCLPVSNAcMPV6mvtLCwqtrWgAgkzg316NYn0aPAnGQL5oF5GbLKuiFpaAMQf
+	 UVhPtbR++H78QITiDpFNGEcAedc/GvOHxVtLg1Wo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392308AbgDOANR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 Apr 2020 20:13:17 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36960 "EHLO mail.kernel.org"
+        id S2392328AbgDOANh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Apr 2020 20:13:37 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36998 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2392311AbgDOANP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 14 Apr 2020 20:13:15 -0400
+        id S2392315AbgDOANX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 14 Apr 2020 20:13:23 -0400
 Received: from localhost (mobile-166-175-184-103.mycingular.net [166.175.184.103])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 0CC3120774;
-        Wed, 15 Apr 2020 00:13:12 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 97B9720774;
+        Wed, 15 Apr 2020 00:13:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586909593;
-        bh=dRngsPvuG+kETgs2smktXaw9v1l2uk2emjkFea1ZosU=;
+        s=default; t=1586909597;
+        bh=DDPko3qzftraw9JGNnT2damoPH954XYBiL7tnFM7Aug=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=JNc70G7YwSQcq2MM9qgM51emm22lpt/Tuq/i8nVHyR/l+0y5zCxciz4rG1GVYkmKj
-         pUBkZ4veIBiIho+l1qIauTrjurx2Pt/rtbf2BZMIQRMLtDj8bjmTc/esrjKJk6Cczd
-         2DETdj5iD/rHgC9jtVpQ90O9wrblPLZxrC1g86Sg=
+        b=mNjblSYHzwMejKzDZbezJEHTEOJkIpAk5fxnaWdnPwTuXPiXd8kc9yqDvzdlhXgD/
+         WVsT2zCRlGHzS9cUBWmbEgc4XN3yscP/1EkpUBD/PMN0gVn2H7yzKlHQt+Gxf9VAi8
+         AsFF4OZFCSPHUUBuy+5byaSJ+L6HPjaZfJhGZWXM=
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     linux-pci@vger.kernel.org
 Cc:     linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        linux-omap@vger.kernel.org
-Subject: [PATCH 1/4] PCI: dra7xx: Don't select CONFIG_PCI_DRA7XX_HOST by default
-Date:   Tue, 14 Apr 2020 19:12:41 -0500
-Message-Id: <20200415001244.144623-2-helgaas@kernel.org>
+        Murali Karicheri <m-karicheri2@ti.com>,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 2/4] PCI: keystone: Don't select CONFIG_PCI_KEYSTONE_HOST by default
+Date:   Tue, 14 Apr 2020 19:12:42 -0500
+Message-Id: <20200415001244.144623-3-helgaas@kernel.org>
 X-Mailer: git-send-email 2.26.0.110.g2183baf09c-goog
 In-Reply-To: <20200415001244.144623-1-helgaas@kernel.org>
 References: <20200415001244.144623-1-helgaas@kernel.org>
@@ -61,27 +61,27 @@ From: Bjorn Helgaas <bhelgaas@google.com>
 Drivers should not be selected by default because that bloats the kernel
 for people who don't need them.
 
-Remove the "default y" for CONFIG_PCI_DRA7XX_HOST.
+Remove the "default y" for CONFIG_PCI_KEYSTONE_HOST.
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: linux-omap@vger.kernel.org
+Cc: Murali Karicheri <m-karicheri2@ti.com>
+Cc: linux-arm-kernel@lists.infradead.org
 ---
  drivers/pci/controller/dwc/Kconfig | 1 -
  1 file changed, 1 deletion(-)
 
 diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-index 03dcaf65d159..ea335ee7ca8e 100644
+index ea335ee7ca8e..695f754b2110 100644
 --- a/drivers/pci/controller/dwc/Kconfig
 +++ b/drivers/pci/controller/dwc/Kconfig
-@@ -26,7 +26,6 @@ config PCI_DRA7XX_HOST
- 	depends on OF && HAS_IOMEM && TI_PIPE3
+@@ -110,7 +110,6 @@ config PCI_KEYSTONE_HOST
+ 	depends on PCI_MSI_IRQ_DOMAIN
  	select PCIE_DW_HOST
- 	select PCI_DRA7XX
+ 	select PCI_KEYSTONE
 -	default y
  	help
- 	  Enables support for the PCIe controller in the DRA7xx SoC to work in
- 	  host mode. There are two instances of PCIe controller in DRA7xx.
+ 	  Enables support for the PCIe controller in the Keystone SoC to
+ 	  work in host mode. The PCI controller on Keystone is based on
 -- 
 2.26.0.110.g2183baf09c-goog
 
