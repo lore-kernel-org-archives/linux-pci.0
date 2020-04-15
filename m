@@ -2,161 +2,98 @@ Return-Path: <SRS0=Fxx+=57=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D553CC3815B
-	for <linux-pci@archiver.kernel.org>; Wed, 15 Apr 2020 13:15:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D12CEC2BA19
+	for <linux-pci@archiver.kernel.org>; Wed, 15 Apr 2020 16:01:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B259E20737
-	for <linux-pci@archiver.kernel.org>; Wed, 15 Apr 2020 13:15:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B052C20936
+	for <linux-pci@archiver.kernel.org>; Wed, 15 Apr 2020 16:01:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586956542;
-	bh=ZhmmQ2uQggeQBv8vRD13OM1tsKFrpXqz7RaKpwCXUT0=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Tb7SZhfDyVUu78emXXO8zi7sjfs0+pM+LXDAgnoNQMBaMP3UuHd4DhvcbwIiP8alX
-	 KCdFp5NQkPSK9TH7vfHDPLzNNuW63YBcOPzPkYp5WctuhAgrmrCV9dYQqjb+CfSK/p
-	 k+HjnBkzkh3p3cihcANZcjbTTVKXO4BxiOmh/6RI=
+	s=default; t=1586966486;
+	bh=HtmYGm9rwoS1yuOpLorCoobfvar2sayOeSxcIlUCURM=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=vZM2DWhwHeWlZX37RUZkkfhXkLporWX+OBXuKMiCmHNOUuy7jklwdXwNTM2mrN0b+
+	 6ei0Z8b2oadO2dpHpo+sK+y38INYIl5cdpX0dpsTc0y5qU10AOUwxkw+U8Ahm+2gm8
+	 T+HJworPEZS+0b4ERB5adehmon+fZOLKwKgJUy20=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S370689AbgDONPg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 15 Apr 2020 09:15:36 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54634 "EHLO mail.kernel.org"
+        id S1415137AbgDOQBY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 15 Apr 2020 12:01:24 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51980 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2897032AbgDOLfP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 15 Apr 2020 07:35:15 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1415132AbgDOQBT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 15 Apr 2020 12:01:19 -0400
+Received: from pali.im (pali.im [31.31.79.79])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7A23720737;
-        Wed, 15 Apr 2020 11:35:14 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id F0C7A206F9;
+        Wed, 15 Apr 2020 16:01:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586950515;
-        bh=ZhmmQ2uQggeQBv8vRD13OM1tsKFrpXqz7RaKpwCXUT0=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=q99amnyvGewC+rN8aRmSBpPwXShqNTwpeAPuNmD2T0y7DkBi+8KH7b+0vHUiuIIxG
-         /SOt4Yonzs2kAJWu4MpAQPsKmsNXNLixOj4lEKuE6WZUTESSCfA2Hys2DBuS6Kxn45
-         lrtO528fL/lpOlny3ztP9em9OOpavAw5ufE3qKcw=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Jon Hunter <jonathanh@nvidia.com>,
-        Thierry Reding <treding@nvidia.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-tegra@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.6 025/129] arm64: tegra: Fix Tegra194 PCIe compatible string
-Date:   Wed, 15 Apr 2020 07:33:00 -0400
-Message-Id: <20200415113445.11881-25-sashal@kernel.org>
+        s=default; t=1586966478;
+        bh=HtmYGm9rwoS1yuOpLorCoobfvar2sayOeSxcIlUCURM=;
+        h=From:To:Cc:Subject:Date:From;
+        b=X3mn1rSyk1+FHEiTjmAk5CWv5wKT+oPgBNud+agJZ4Pamj6To3NuosaiNu3U6Dto7
+         NL8V5hO1Zhfc+GHdHTdmKh/Qib3L0Ra7DzVOcQU7sP+r4ylAZkFdALh+8n6ggNIoaf
+         d+PIzzbqO0u1W/lsURHLBB0bSZH8X+qIJaKNAr0w=
+Received: by pali.im (Postfix)
+        id C080C58E; Wed, 15 Apr 2020 18:01:15 +0200 (CEST)
+From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
+To:     Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Andrew Murray <amurray@thegoodpenguin.co.uk>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Remi Pommarel <repk@triplefau.lt>,
+        =?UTF-8?q?Marek=20Beh=C3=BAn?= <marek.behun@nic.cz>,
+        Tomasz Maciej Nowak <tmn505@gmail.com>,
+        Xogium <contact@xogium.me>
+Cc:     devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: [PATCH 0/8] PCI: aardvark: Fix support for Turris MOX and Compex wifi cards
+Date:   Wed, 15 Apr 2020 18:00:46 +0200
+Message-Id: <20200415160054.951-1-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200415113445.11881-1-sashal@kernel.org>
-References: <20200415113445.11881-1-sashal@kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Jon Hunter <jonathanh@nvidia.com>
+This patch series fixes PCI aardvark controller to work on Turris MOX
+with Compex WLE900VX (and also other ath10k) wifi cards.
 
-[ Upstream commit f9f711efd441ad0d22874be49986d92121862335 ]
+Patches are available also in my git repository in branch pci-aardvark:
+https://git.kernel.org/pub/scm/linux/kernel/git/pali/linux.git/log/?h=pci-aardvark
 
-If the kernel configuration option CONFIG_PCIE_DW_PLAT_HOST is enabled
-then this can cause the kernel to incorrectly probe the generic
-designware PCIe platform driver instead of the Tegra194 designware PCIe
-driver. This causes a boot failure on Tegra194 because the necessary
-configuration to access the hardware is not performed.
+Pali Rohár (8):
+  PCI: aardvark: Set controller speed from Device Tree max-link-speed
+  dts: espressobin: Define max-link-speed for pcie0
+  PCI: aardvark: Start link training immediately after enabling link
+    training
+  PCI: aardvark: Do not overwrite Link Status register and ASPM Control
+    bits in Link Control register
+  PCI: aardvark: Set final controller speed based on negotiated link
+    speed
+  PCI: aardvark: Add support for issuing PERST via GPIO
+  dts: aardvark: Route pcie reset pin to gpio function and define
+    reset-gpios for pcie
+  PCI: aardvark: Add FIXME for code which access
+    PCIE_CORE_CMD_STATUS_REG
 
-The order in which the compatible strings are populated in Device-Tree
-is not relevant in this case, because the kernel will attempt to probe
-the device as soon as a driver is loaded and if the generic designware
-PCIe driver is loaded first, then this driver will be probed first.
-Therefore, to fix this problem, remove the "snps,dw-pcie" string from
-the compatible string as we never want this driver to be probe on
-Tegra194.
+ .../dts/marvell/armada-3720-espressobin.dtsi  |   2 +
+ .../dts/marvell/armada-3720-turris-mox.dts    |   4 -
+ arch/arm64/boot/dts/marvell/armada-37xx.dtsi  |   2 +-
+ drivers/pci/controller/pci-aardvark.c         | 118 +++++++++++++++---
+ 4 files changed, 106 insertions(+), 20 deletions(-)
 
-Fixes: 2602c32f15e7 ("arm64: tegra: Add P2U and PCIe controller nodes to Tegra194 DT")
-Signed-off-by: Jon Hunter <jonathanh@nvidia.com>
-Signed-off-by: Thierry Reding <treding@nvidia.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- .../devicetree/bindings/pci/nvidia,tegra194-pcie.txt |  2 +-
- arch/arm64/boot/dts/nvidia/tegra194.dtsi             | 12 ++++++------
- 2 files changed, 7 insertions(+), 7 deletions(-)
-
-diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt
-index b739f92da58e5..1f90eb39870be 100644
---- a/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt
-@@ -118,7 +118,7 @@ Tegra194:
- --------
- 
- 	pcie@14180000 {
--		compatible = "nvidia,tegra194-pcie", "snps,dw-pcie";
-+		compatible = "nvidia,tegra194-pcie";
- 		power-domains = <&bpmp TEGRA194_POWER_DOMAIN_PCIEX8B>;
- 		reg = <0x00 0x14180000 0x0 0x00020000   /* appl registers (128K)      */
- 		       0x00 0x38000000 0x0 0x00040000   /* configuration space (256K) */
-diff --git a/arch/arm64/boot/dts/nvidia/tegra194.dtsi b/arch/arm64/boot/dts/nvidia/tegra194.dtsi
-index 844e7fac30c58..a8f024662e60e 100644
---- a/arch/arm64/boot/dts/nvidia/tegra194.dtsi
-+++ b/arch/arm64/boot/dts/nvidia/tegra194.dtsi
-@@ -1208,7 +1208,7 @@
- 	};
- 
- 	pcie@14100000 {
--		compatible = "nvidia,tegra194-pcie", "snps,dw-pcie";
-+		compatible = "nvidia,tegra194-pcie";
- 		power-domains = <&bpmp TEGRA194_POWER_DOMAIN_PCIEX1A>;
- 		reg = <0x00 0x14100000 0x0 0x00020000   /* appl registers (128K)      */
- 		       0x00 0x30000000 0x0 0x00040000   /* configuration space (256K) */
-@@ -1253,7 +1253,7 @@
- 	};
- 
- 	pcie@14120000 {
--		compatible = "nvidia,tegra194-pcie", "snps,dw-pcie";
-+		compatible = "nvidia,tegra194-pcie";
- 		power-domains = <&bpmp TEGRA194_POWER_DOMAIN_PCIEX1A>;
- 		reg = <0x00 0x14120000 0x0 0x00020000   /* appl registers (128K)      */
- 		       0x00 0x32000000 0x0 0x00040000   /* configuration space (256K) */
-@@ -1298,7 +1298,7 @@
- 	};
- 
- 	pcie@14140000 {
--		compatible = "nvidia,tegra194-pcie", "snps,dw-pcie";
-+		compatible = "nvidia,tegra194-pcie";
- 		power-domains = <&bpmp TEGRA194_POWER_DOMAIN_PCIEX1A>;
- 		reg = <0x00 0x14140000 0x0 0x00020000   /* appl registers (128K)      */
- 		       0x00 0x34000000 0x0 0x00040000   /* configuration space (256K) */
-@@ -1343,7 +1343,7 @@
- 	};
- 
- 	pcie@14160000 {
--		compatible = "nvidia,tegra194-pcie", "snps,dw-pcie";
-+		compatible = "nvidia,tegra194-pcie";
- 		power-domains = <&bpmp TEGRA194_POWER_DOMAIN_PCIEX4A>;
- 		reg = <0x00 0x14160000 0x0 0x00020000   /* appl registers (128K)      */
- 		       0x00 0x36000000 0x0 0x00040000   /* configuration space (256K) */
-@@ -1388,7 +1388,7 @@
- 	};
- 
- 	pcie@14180000 {
--		compatible = "nvidia,tegra194-pcie", "snps,dw-pcie";
-+		compatible = "nvidia,tegra194-pcie";
- 		power-domains = <&bpmp TEGRA194_POWER_DOMAIN_PCIEX8B>;
- 		reg = <0x00 0x14180000 0x0 0x00020000   /* appl registers (128K)      */
- 		       0x00 0x38000000 0x0 0x00040000   /* configuration space (256K) */
-@@ -1433,7 +1433,7 @@
- 	};
- 
- 	pcie@141a0000 {
--		compatible = "nvidia,tegra194-pcie", "snps,dw-pcie";
-+		compatible = "nvidia,tegra194-pcie";
- 		power-domains = <&bpmp TEGRA194_POWER_DOMAIN_PCIEX8A>;
- 		reg = <0x00 0x141a0000 0x0 0x00020000   /* appl registers (128K)      */
- 		       0x00 0x3a000000 0x0 0x00040000   /* configuration space (256K) */
 -- 
 2.20.1
 
