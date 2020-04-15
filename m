@@ -2,50 +2,47 @@ Return-Path: <SRS0=Fxx+=57=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8281BC352BE
-	for <linux-pci@archiver.kernel.org>; Wed, 15 Apr 2020 00:07:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45486C2BB1D
+	for <linux-pci@archiver.kernel.org>; Wed, 15 Apr 2020 00:13:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5803A2076B
-	for <linux-pci@archiver.kernel.org>; Wed, 15 Apr 2020 00:07:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1EBDC20784
+	for <linux-pci@archiver.kernel.org>; Wed, 15 Apr 2020 00:13:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586909224;
-	bh=kX9vypy+m7pQaRNUL9aqUl2TFQjXB7+7PTmQ2YV4/2M=;
+	s=default; t=1586909588;
+	bh=Uy34z7wNWCDG+KW1g5dBujLdhx7TVAVPtvpyIcZ8Bsg=;
 	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=zJg5VY8c1XzbN/T4S4o8O5QrrkD0Iin9IAoKcX9TW5JHXhqHnUQtxld/U0RZgBCaq
-	 5qOXHs1wUcGahm61Zexhq/2TlgWhMVNf4QM973D9aSgftHDq2vd9SnHzn2Z0E/9KZ6
-	 1YoKKMPgwq6MHnVBFNkq8vMwOS3SWKrXU918JWR8=
+	b=AzYaZvMkVuxfoIpv1L+mkZau9R+sZn8t8hOl0fyn6YApD6Ov865lQum9ZVBRV2H1X
+	 jLj5wurLkI9zSYE7xV6AKJ2tv+SLFDYr+/syrrmj0zEIw7JWOtQHhrlB4n5UgeYVP2
+	 MWWyU+2xFCSbYyIOfZ6UFJRoCj6cN0lpoTxu/7SQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392239AbgDOAHA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 Apr 2020 20:07:00 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35366 "EHLO mail.kernel.org"
+        id S2392301AbgDOANH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Apr 2020 20:13:07 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36860 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2392240AbgDOAG6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 14 Apr 2020 20:06:58 -0400
+        id S2392299AbgDOAND (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 14 Apr 2020 20:13:03 -0400
 Received: from localhost (mobile-166-175-184-103.mycingular.net [166.175.184.103])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 84C722076B;
-        Wed, 15 Apr 2020 00:06:57 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 113A020784;
+        Wed, 15 Apr 2020 00:13:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586909217;
-        bh=kX9vypy+m7pQaRNUL9aqUl2TFQjXB7+7PTmQ2YV4/2M=;
+        s=default; t=1586909583;
+        bh=Uy34z7wNWCDG+KW1g5dBujLdhx7TVAVPtvpyIcZ8Bsg=;
         h=From:To:Cc:Subject:Date:From;
-        b=gRO4dsLDyAqo+weACE5eZSSEfg08RLogdh6jLKlPDCPCEsVQztae7cK0OiGuUcwv9
-         ILh5pd8J1DFcWTdS4dxehzOA12fPjdELHxJpTzYVyI9DIFZp0ad1zhEo2RRgc9YIbA
-         7zRX6Jzi4WqRVzoNGL4Fyrd59AcE/GheFpD+Micc=
+        b=MqNkjBjPE/BhBsP4fHKARN231nhcJ5f0o2xl49ghBYccnQxblfGjBw6OvUfS3T76a
+         dLIRsmAC1c5O9Dc0WeQ1NdGxD+OrAbnnr1jmK2MVRVSNAruhiKChyIAIN50TG14ljH
+         eWAq6JwSqgHQlTwpIkfc1f3qcjx+EotH7D3/m/yc=
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     linux-pci@vger.kernel.org
-Cc:     "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH] PCI/PM: Call .bridge_d3() hook only if non-NULL
-Date:   Tue, 14 Apr 2020 19:06:35 -0500
-Message-Id: <20200415000635.144283-1-helgaas@kernel.org>
+Cc:     linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH 0/4] PCI: Don't select Kconfig symbols by default
+Date:   Tue, 14 Apr 2020 19:12:40 -0500
+Message-Id: <20200415001244.144623-1-helgaas@kernel.org>
 X-Mailer: git-send-email 2.26.0.110.g2183baf09c-goog
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -56,38 +53,25 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Bjorn Helgaas <bhelgaas@google.com>
 
-26ad34d510a8 ("PCI / ACPI: Whitelist D3 for more PCIe hotplug ports") added
-the struct pci_platform_pm_ops.bridge_d3() function pointer and
-platform_pci_bridge_d3() to use it.
+A few Kconfig symbols snuck in with "default y".  In general we don't want
+that because we don't want to bloat the kernel with unnecessary drivers.
 
-The .bridge_d3() op is implemented by acpi_pci_platform_pm, but not by
-mid_pci_platform_pm.  We don't expect platform_pci_bridge_d3() to be called
-on Intel MID platforms, but nothing in the code itself would prevent that.
+Remove the ones that are optional.
 
-Check the .bridge_d3() pointer for NULL before calling it.
+There are a few left, but they depend on something else that seems like the
+real choice, e.g., XEN_PCIDEV_FRONTEND depends on XEN and PCI_XGENE_MSI
+depends on PCI_XGENE.
 
-Fixes: 26ad34d510a8 ("PCI / ACPI: Whitelist D3 for more PCIe hotplug ports")
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/pci/pci.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Bjorn Helgaas (4):
+  PCI: dra7xx: Don't select CONFIG_PCI_DRA7XX_HOST by default
+  PCI: keystone: Don't select CONFIG_PCI_KEYSTONE_HOST by default
+  PCI/AER: Don't select CONFIG_PCIEAER by default
+  PCI/ASPM: Don't select CONFIG_PCIEASPM by default
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 595fcf59843f..dfa7ec008963 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -868,7 +868,9 @@ static inline bool platform_pci_need_resume(struct pci_dev *dev)
- 
- static inline bool platform_pci_bridge_d3(struct pci_dev *dev)
- {
--	return pci_platform_pm ? pci_platform_pm->bridge_d3(dev) : false;
-+	if (pci_platform_pm && pci_platform_pm->bridge_d3)
-+		return pci_platform_pm->bridge_d3(dev);
-+	return false;
- }
- 
- /**
+ drivers/pci/controller/dwc/Kconfig | 2 --
+ drivers/pci/pcie/Kconfig           | 2 --
+ 2 files changed, 4 deletions(-)
+
 -- 
 2.26.0.110.g2183baf09c-goog
 
