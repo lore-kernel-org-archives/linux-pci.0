@@ -2,70 +2,161 @@ Return-Path: <SRS0=Fxx+=57=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80410C2BA19
-	for <linux-pci@archiver.kernel.org>; Wed, 15 Apr 2020 13:10:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D553CC3815B
+	for <linux-pci@archiver.kernel.org>; Wed, 15 Apr 2020 13:15:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 663A12076D
-	for <linux-pci@archiver.kernel.org>; Wed, 15 Apr 2020 13:10:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B259E20737
+	for <linux-pci@archiver.kernel.org>; Wed, 15 Apr 2020 13:15:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1586956542;
+	bh=ZhmmQ2uQggeQBv8vRD13OM1tsKFrpXqz7RaKpwCXUT0=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=Tb7SZhfDyVUu78emXXO8zi7sjfs0+pM+LXDAgnoNQMBaMP3UuHd4DhvcbwIiP8alX
+	 KCdFp5NQkPSK9TH7vfHDPLzNNuW63YBcOPzPkYp5WctuhAgrmrCV9dYQqjb+CfSK/p
+	 k+HjnBkzkh3p3cihcANZcjbTTVKXO4BxiOmh/6RI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2504632AbgDONKV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 15 Apr 2020 09:10:21 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:50276 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2505981AbgDONKL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 15 Apr 2020 09:10:11 -0400
-Received: from DGGEMS406-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id 9B3CF165915F79B5C852;
-        Wed, 15 Apr 2020 21:10:07 +0800 (CST)
-Received: from [127.0.0.1] (10.173.221.195) by DGGEMS406-HUB.china.huawei.com
- (10.3.19.206) with Microsoft SMTP Server id 14.3.487.0; Wed, 15 Apr 2020
- 21:09:57 +0800
-Subject: Re: [PATCH] PCI: dwc: intel: make intel_pcie_cpu_addr() static
-To:     Andy Shevchenko <andriy.shevchenko@intel.com>
-CC:     <lorenzo.pieralisi@arm.com>, <amurray@thegoodpenguin.co.uk>,
-        <bhelgaas@google.com>, <p.zabel@pengutronix.de>,
-        <gustavo.pimentel@synopsys.com>, <eswara.kota@linux.intel.com>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Hulk Robot <hulkci@huawei.com>
-References: <20200415084953.6533-1-yanaijie@huawei.com>
- <20200415100742.GR34613@smile.fi.intel.com>
-From:   Jason Yan <yanaijie@huawei.com>
-Message-ID: <29bc09ef-6e81-9411-302c-50ee9314764b@huawei.com>
-Date:   Wed, 15 Apr 2020 21:09:56 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.2
+        id S370689AbgDONPg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 15 Apr 2020 09:15:36 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54634 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2897032AbgDOLfP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 15 Apr 2020 07:35:15 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7A23720737;
+        Wed, 15 Apr 2020 11:35:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1586950515;
+        bh=ZhmmQ2uQggeQBv8vRD13OM1tsKFrpXqz7RaKpwCXUT0=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=q99amnyvGewC+rN8aRmSBpPwXShqNTwpeAPuNmD2T0y7DkBi+8KH7b+0vHUiuIIxG
+         /SOt4Yonzs2kAJWu4MpAQPsKmsNXNLixOj4lEKuE6WZUTESSCfA2Hys2DBuS6Kxn45
+         lrtO528fL/lpOlny3ztP9em9OOpavAw5ufE3qKcw=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Jon Hunter <jonathanh@nvidia.com>,
+        Thierry Reding <treding@nvidia.com>,
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-tegra@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.6 025/129] arm64: tegra: Fix Tegra194 PCIe compatible string
+Date:   Wed, 15 Apr 2020 07:33:00 -0400
+Message-Id: <20200415113445.11881-25-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200415113445.11881-1-sashal@kernel.org>
+References: <20200415113445.11881-1-sashal@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20200415100742.GR34613@smile.fi.intel.com>
-Content-Type: text/plain; charset="gbk"; format=flowed
+X-stable: review
+X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.173.221.195]
-X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-ÔÚ 2020/4/15 18:07, Andy Shevchenko Ð´µÀ:
-> On Wed, Apr 15, 2020 at 04:49:53PM +0800, Jason Yan wrote:
->> Fix the following sparse warning:
->>
->> drivers/pci/controller/dwc/pcie-intel-gw.c:456:5: warning: symbol
->> 'intel_pcie_cpu_addr' was not declared. Should it be static?
-> 
-> Please, learn how to use get_maintainers.pl to avoid spamming people.
-> Hint:
-> 	scripts/get_maintainer.pl --git --git-min-percent=67
-> would give advantage, though it still requires a common sense to be applied.
-> 
+From: Jon Hunter <jonathanh@nvidia.com>
 
-I'm so sorry to bother you with this. I will be more careful when I'm
-sending patches.
+[ Upstream commit f9f711efd441ad0d22874be49986d92121862335 ]
 
-Thanks,
+If the kernel configuration option CONFIG_PCIE_DW_PLAT_HOST is enabled
+then this can cause the kernel to incorrectly probe the generic
+designware PCIe platform driver instead of the Tegra194 designware PCIe
+driver. This causes a boot failure on Tegra194 because the necessary
+configuration to access the hardware is not performed.
 
-Jason
+The order in which the compatible strings are populated in Device-Tree
+is not relevant in this case, because the kernel will attempt to probe
+the device as soon as a driver is loaded and if the generic designware
+PCIe driver is loaded first, then this driver will be probed first.
+Therefore, to fix this problem, remove the "snps,dw-pcie" string from
+the compatible string as we never want this driver to be probe on
+Tegra194.
+
+Fixes: 2602c32f15e7 ("arm64: tegra: Add P2U and PCIe controller nodes to Tegra194 DT")
+Signed-off-by: Jon Hunter <jonathanh@nvidia.com>
+Signed-off-by: Thierry Reding <treding@nvidia.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ .../devicetree/bindings/pci/nvidia,tegra194-pcie.txt |  2 +-
+ arch/arm64/boot/dts/nvidia/tegra194.dtsi             | 12 ++++++------
+ 2 files changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt
+index b739f92da58e5..1f90eb39870be 100644
+--- a/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt
+@@ -118,7 +118,7 @@ Tegra194:
+ --------
+ 
+ 	pcie@14180000 {
+-		compatible = "nvidia,tegra194-pcie", "snps,dw-pcie";
++		compatible = "nvidia,tegra194-pcie";
+ 		power-domains = <&bpmp TEGRA194_POWER_DOMAIN_PCIEX8B>;
+ 		reg = <0x00 0x14180000 0x0 0x00020000   /* appl registers (128K)      */
+ 		       0x00 0x38000000 0x0 0x00040000   /* configuration space (256K) */
+diff --git a/arch/arm64/boot/dts/nvidia/tegra194.dtsi b/arch/arm64/boot/dts/nvidia/tegra194.dtsi
+index 844e7fac30c58..a8f024662e60e 100644
+--- a/arch/arm64/boot/dts/nvidia/tegra194.dtsi
++++ b/arch/arm64/boot/dts/nvidia/tegra194.dtsi
+@@ -1208,7 +1208,7 @@
+ 	};
+ 
+ 	pcie@14100000 {
+-		compatible = "nvidia,tegra194-pcie", "snps,dw-pcie";
++		compatible = "nvidia,tegra194-pcie";
+ 		power-domains = <&bpmp TEGRA194_POWER_DOMAIN_PCIEX1A>;
+ 		reg = <0x00 0x14100000 0x0 0x00020000   /* appl registers (128K)      */
+ 		       0x00 0x30000000 0x0 0x00040000   /* configuration space (256K) */
+@@ -1253,7 +1253,7 @@
+ 	};
+ 
+ 	pcie@14120000 {
+-		compatible = "nvidia,tegra194-pcie", "snps,dw-pcie";
++		compatible = "nvidia,tegra194-pcie";
+ 		power-domains = <&bpmp TEGRA194_POWER_DOMAIN_PCIEX1A>;
+ 		reg = <0x00 0x14120000 0x0 0x00020000   /* appl registers (128K)      */
+ 		       0x00 0x32000000 0x0 0x00040000   /* configuration space (256K) */
+@@ -1298,7 +1298,7 @@
+ 	};
+ 
+ 	pcie@14140000 {
+-		compatible = "nvidia,tegra194-pcie", "snps,dw-pcie";
++		compatible = "nvidia,tegra194-pcie";
+ 		power-domains = <&bpmp TEGRA194_POWER_DOMAIN_PCIEX1A>;
+ 		reg = <0x00 0x14140000 0x0 0x00020000   /* appl registers (128K)      */
+ 		       0x00 0x34000000 0x0 0x00040000   /* configuration space (256K) */
+@@ -1343,7 +1343,7 @@
+ 	};
+ 
+ 	pcie@14160000 {
+-		compatible = "nvidia,tegra194-pcie", "snps,dw-pcie";
++		compatible = "nvidia,tegra194-pcie";
+ 		power-domains = <&bpmp TEGRA194_POWER_DOMAIN_PCIEX4A>;
+ 		reg = <0x00 0x14160000 0x0 0x00020000   /* appl registers (128K)      */
+ 		       0x00 0x36000000 0x0 0x00040000   /* configuration space (256K) */
+@@ -1388,7 +1388,7 @@
+ 	};
+ 
+ 	pcie@14180000 {
+-		compatible = "nvidia,tegra194-pcie", "snps,dw-pcie";
++		compatible = "nvidia,tegra194-pcie";
+ 		power-domains = <&bpmp TEGRA194_POWER_DOMAIN_PCIEX8B>;
+ 		reg = <0x00 0x14180000 0x0 0x00020000   /* appl registers (128K)      */
+ 		       0x00 0x38000000 0x0 0x00040000   /* configuration space (256K) */
+@@ -1433,7 +1433,7 @@
+ 	};
+ 
+ 	pcie@141a0000 {
+-		compatible = "nvidia,tegra194-pcie", "snps,dw-pcie";
++		compatible = "nvidia,tegra194-pcie";
+ 		power-domains = <&bpmp TEGRA194_POWER_DOMAIN_PCIEX8A>;
+ 		reg = <0x00 0x141a0000 0x0 0x00020000   /* appl registers (128K)      */
+ 		       0x00 0x3a000000 0x0 0x00040000   /* configuration space (256K) */
+-- 
+2.20.1
 
