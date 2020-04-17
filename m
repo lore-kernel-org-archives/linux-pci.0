@@ -7,44 +7,45 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22242C352BE
-	for <linux-pci@archiver.kernel.org>; Fri, 17 Apr 2020 12:58:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AC48C38A2C
+	for <linux-pci@archiver.kernel.org>; Fri, 17 Apr 2020 12:58:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F362D206A2
-	for <linux-pci@archiver.kernel.org>; Fri, 17 Apr 2020 12:58:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1BD6F206E9
+	for <linux-pci@archiver.kernel.org>; Fri, 17 Apr 2020 12:58:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="hMKnvHy3"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="m+PudO8a"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730293AbgDQM6r (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 17 Apr 2020 08:58:47 -0400
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:47236 "EHLO
-        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730241AbgDQM6p (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Apr 2020 08:58:45 -0400
-Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 03HCwUsE013807;
-        Fri, 17 Apr 2020 07:58:30 -0500
+        id S1730437AbgDQM6z (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 17 Apr 2020 08:58:55 -0400
+Received: from lelv0143.ext.ti.com ([198.47.23.248]:59286 "EHLO
+        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730417AbgDQM6x (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Apr 2020 08:58:53 -0400
+Received: from lelv0266.itg.ti.com ([10.180.67.225])
+        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id 03HCwbew051629;
+        Fri, 17 Apr 2020 07:58:37 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1587128310;
-        bh=O9L4/8B5VRW+YMKUUzhKymFFP7eSxK8Ynyqo3J84KmE=;
+        s=ti-com-17Q1; t=1587128317;
+        bh=Tokt8bE8xf8SwK8YMP/mYBJzyTHsRFtWo6jnbrPFbYU=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=hMKnvHy3Lahn3foDo8TjqEVDsxNCy7ZVT4agZeORH4C5q4/r5pnSRyKH1Fw4zohtP
-         W1B0lENP7lvs8TMdnqwCg0y2G/394EliV2tMB5yMDBAw88FgYbvFqp+PFTt3dHMkcv
-         jVyb3g0F1PYLy5eLgkr3Kxn0x/pU1wHlYd5RtZR0=
-Received: from DFLE104.ent.ti.com (dfle104.ent.ti.com [10.64.6.25])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id 03HCwUBN051883;
-        Fri, 17 Apr 2020 07:58:30 -0500
-Received: from DFLE110.ent.ti.com (10.64.6.31) by DFLE104.ent.ti.com
- (10.64.6.25) with Microsoft SMTP Server (version=TLS1_2,
+        b=m+PudO8aaj5X5jB/0TA6dUrbLEFuNorHJoa6PO9+aaFnncRRYxt0RFL5yIBsYB+DW
+         bqguyihyK2Ku2VWIzxFwwyu7p6e8PCqzdHPV28F71LtAGCdP80ivnlXbnN/lyKcU0E
+         v6ENkrb/QrUAzzyALEM/SyNmAhWOI+EShfrGsey0=
+Received: from DFLE102.ent.ti.com (dfle102.ent.ti.com [10.64.6.23])
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 03HCwbWf109314
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Fri, 17 Apr 2020 07:58:37 -0500
+Received: from DFLE100.ent.ti.com (10.64.6.21) by DFLE102.ent.ti.com
+ (10.64.6.23) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Fri, 17
- Apr 2020 07:58:30 -0500
-Received: from lelv0326.itg.ti.com (10.180.67.84) by DFLE110.ent.ti.com
- (10.64.6.31) with Microsoft SMTP Server (version=TLS1_2,
+ Apr 2020 07:58:37 -0500
+Received: from lelv0326.itg.ti.com (10.180.67.84) by DFLE100.ent.ti.com
+ (10.64.6.21) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
- Frontend Transport; Fri, 17 Apr 2020 07:58:30 -0500
+ Frontend Transport; Fri, 17 Apr 2020 07:58:37 -0500
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 03HCvsDE031089;
-        Fri, 17 Apr 2020 07:58:27 -0500
+        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 03HCvsDG031089;
+        Fri, 17 Apr 2020 07:58:34 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Tom Joseph <tjoseph@cadence.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -56,9 +57,9 @@ CC:     Arnd Bergmann <arnd@arndb.de>,
         <linux-arm-kernel@lists.infradead.org>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
-Subject: [PATCH v3 09/14] PCI: cadence: Add MSI-X support to Endpoint driver
-Date:   Fri, 17 Apr 2020 18:27:48 +0530
-Message-ID: <20200417125753.13021-10-kishon@ti.com>
+Subject: [PATCH v3 11/14] dt-bindings: PCI: Add EP mode dt-bindings for TI's J721E SoC
+Date:   Fri, 17 Apr 2020 18:27:50 +0530
+Message-ID: <20200417125753.13021-12-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200417125753.13021-1-kishon@ti.com>
 References: <20200417125753.13021-1-kishon@ti.com>
@@ -70,246 +71,109 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Alan Douglas <adouglas@cadence.com>
+Add PCIe EP mode dt-bindings for TI's J721E SoC.
 
-Implement ->set_msix() and ->get_msix() callback functions in order
-to configure MSIX capability in the PCIe endpoint controller.
-
-Add cdns_pcie_ep_send_msix_irq() to send MSIX interrupts to Host.
-cdns_pcie_ep_send_msix_irq() gets the MSIX table address (virtual
-address) from "struct cdns_pcie_epf" that gets initialized in
-->set_bar() call back function.
-
-[kishon@ti.com: Re-implement MSIX support in accordance with the
- re-designed core MSI-X interfaces]
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-Signed-off-by: Alan Douglas <adouglas@cadence.com>
 ---
- .../pci/controller/cadence/pcie-cadence-ep.c  | 112 +++++++++++++++++-
- drivers/pci/controller/cadence/pcie-cadence.h |  10 ++
- 2 files changed, 121 insertions(+), 1 deletion(-)
+ .../bindings/pci/ti,j721e-pci-ep.yaml         | 89 +++++++++++++++++++
+ 1 file changed, 89 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
 
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-ep.c b/drivers/pci/controller/cadence/pcie-cadence-ep.c
-index 14021d760482..c43340ca0630 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-ep.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence-ep.c
-@@ -51,6 +51,7 @@ static int cdns_pcie_ep_set_bar(struct pci_epc *epc, u8 fn,
- 				struct pci_epf_bar *epf_bar)
- {
- 	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
-+	struct cdns_pcie_epf *epf = &ep->epf[fn];
- 	struct cdns_pcie *pcie = &ep->pcie;
- 	dma_addr_t bar_phys = epf_bar->phys_addr;
- 	enum pci_barno bar = epf_bar->barno;
-@@ -111,6 +112,8 @@ static int cdns_pcie_ep_set_bar(struct pci_epc *epc, u8 fn,
- 		CDNS_PCIE_LM_EP_FUNC_BAR_CFG_BAR_CTRL(b, ctrl));
- 	cdns_pcie_writel(pcie, reg, cfg);
- 
-+	epf->epf_bar[bar] = epf_bar;
+diff --git a/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml b/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
+new file mode 100644
+index 000000000000..cb25c45d5a96
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
+@@ -0,0 +1,89 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++# Copyright (C) 2020 Texas Instruments Incorporated - http://www.ti.com/
++%YAML 1.2
++---
++$id: "http://devicetree.org/schemas/pci/ti,j721e-pci-ep.yaml#"
++$schema: "http://devicetree.org/meta-schemas/core.yaml#"
 +
- 	return 0;
- }
- 
-@@ -118,6 +121,7 @@ static void cdns_pcie_ep_clear_bar(struct pci_epc *epc, u8 fn,
- 				   struct pci_epf_bar *epf_bar)
- {
- 	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
-+	struct cdns_pcie_epf *epf = &ep->epf[fn];
- 	struct cdns_pcie *pcie = &ep->pcie;
- 	enum pci_barno bar = epf_bar->barno;
- 	u32 reg, cfg, b, ctrl;
-@@ -139,6 +143,8 @@ static void cdns_pcie_ep_clear_bar(struct pci_epc *epc, u8 fn,
- 
- 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_IB_EP_FUNC_BAR_ADDR0(fn, bar), 0);
- 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_IB_EP_FUNC_BAR_ADDR1(fn, bar), 0);
++title: TI J721E PCI EP (PCIe Wrapper)
 +
-+	epf->epf_bar[bar] = NULL;
- }
- 
- static int cdns_pcie_ep_map_addr(struct pci_epc *epc, u8 fn, phys_addr_t addr,
-@@ -224,6 +230,50 @@ static int cdns_pcie_ep_get_msi(struct pci_epc *epc, u8 fn)
- 	return mme;
- }
- 
-+static int cdns_pcie_ep_get_msix(struct pci_epc *epc, u8 func_no)
-+{
-+	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
-+	struct cdns_pcie *pcie = &ep->pcie;
-+	u32 cap = CDNS_PCIE_EP_FUNC_MSIX_CAP_OFFSET;
-+	u32 val, reg;
++maintainers:
++  - Kishon Vijay Abraham I <kishon@ti.com>
 +
-+	reg = cap + PCI_MSIX_FLAGS;
-+	val = cdns_pcie_ep_fn_readw(pcie, func_no, reg);
-+	if (!(val & PCI_MSIX_FLAGS_ENABLE))
-+		return -EINVAL;
++allOf:
++  - $ref: "cdns-pcie-ep.yaml#"
 +
-+	val &= PCI_MSIX_FLAGS_QSIZE;
++properties:
++  compatible:
++      enum:
++          - ti,j721e-pcie-ep
 +
-+	return val;
-+}
++  reg:
++    maxItems: 4
 +
-+static int cdns_pcie_ep_set_msix(struct pci_epc *epc, u8 fn, u16 interrupts,
-+				 enum pci_barno bir, u32 offset)
-+{
-+	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
-+	struct cdns_pcie *pcie = &ep->pcie;
-+	u32 cap = CDNS_PCIE_EP_FUNC_MSIX_CAP_OFFSET;
-+	u32 val, reg;
++  reg-names:
++    items:
++      - const: intd_cfg
++      - const: user_cfg
++      - const: reg
++      - const: mem
 +
-+	reg = cap + PCI_MSIX_FLAGS;
-+	val = cdns_pcie_ep_fn_readw(pcie, fn, reg);
-+	val &= ~PCI_MSIX_FLAGS_QSIZE;
-+	val |= interrupts;
-+	cdns_pcie_ep_fn_writew(pcie, fn, reg, val);
++  ti,syscon-pcie-ctrl:
++    description: Phandle to the SYSCON entry required for configuring PCIe mode
++                 and link speed.
++    allOf:
++      - $ref: /schemas/types.yaml#/definitions/phandle
 +
-+	/* Set MSIX BAR and offset */
-+	reg = cap + PCI_MSIX_TABLE;
-+	val = offset | bir;
-+	cdns_pcie_ep_fn_writel(pcie, fn, reg, val);
++  power-domains:
++    maxItems: 1
 +
-+	/* Set PBA BAR and offset.  BAR must match MSIX BAR */
-+	reg = cap + PCI_MSIX_PBA;
-+	val = (offset + (interrupts * PCI_MSIX_ENTRY_SIZE)) | bir;
-+	cdns_pcie_ep_fn_writel(pcie, fn, reg, val);
++  clocks:
++    maxItems: 1
++    description: clock-specifier to represent input to the PCIe
 +
-+	return 0;
-+}
++  clock-names:
++    items:
++      - const: fck
 +
- static void cdns_pcie_ep_assert_intx(struct cdns_pcie_ep *ep, u8 fn,
- 				     u8 intx, bool is_asserted)
- {
-@@ -330,6 +380,56 @@ static int cdns_pcie_ep_send_msi_irq(struct cdns_pcie_ep *ep, u8 fn,
- 	return 0;
- }
- 
-+static int cdns_pcie_ep_send_msix_irq(struct cdns_pcie_ep *ep, u8 fn,
-+				      u16 interrupt_num)
-+{
-+	u32 cap = CDNS_PCIE_EP_FUNC_MSIX_CAP_OFFSET;
-+	u32 tbl_offset, msg_data, reg, vec_ctrl;
-+	struct cdns_pcie *pcie = &ep->pcie;
-+	struct pci_epf_msix_tbl *msix_tbl;
-+	struct pci_epf_bar *epf_bar;
-+	struct cdns_pcie_epf *epf;
-+	u64 pci_addr_mask = 0xff;
-+	u64 msg_addr;
-+	u16 flags;
-+	u8 bir;
++  dma-coherent:
++    description: Indicates that the PCIe IP block can ensure the coherency
 +
-+	/* Check whether the MSI-X feature has been enabled by the PCI host. */
-+	flags = cdns_pcie_ep_fn_readw(pcie, fn, cap + PCI_MSIX_FLAGS);
-+	if (!(flags & PCI_MSIX_FLAGS_ENABLE))
-+		return -EINVAL;
++required:
++  - compatible
++  - reg
++  - reg-names
++  - ti,syscon-pcie-ctrl
++  - max-link-speed
++  - num-lanes
++  - power-domains
++  - clocks
++  - clock-names
++  - cdns,max-outbound-regions
++  - dma-coherent
++  - max-functions
++  - phys
++  - phy-names
 +
-+	reg = cap + PCI_MSIX_TABLE;
-+	tbl_offset = cdns_pcie_ep_fn_readl(pcie, fn, reg);
-+	bir = tbl_offset & PCI_MSIX_TABLE_BIR;
-+	tbl_offset &= PCI_MSIX_TABLE_OFFSET;
++examples:
++  - |
++    #include <dt-bindings/soc/ti,sci_pm_domain.h>
 +
-+	epf = &ep->epf[fn];
-+	epf_bar = epf->epf_bar[bir];
-+	msix_tbl = epf_bar->addr;
-+	msix_tbl = (struct pci_epf_msix_tbl *)((char *)msix_tbl + tbl_offset);
-+
-+	msg_addr = msix_tbl[(interrupt_num - 1)].msg_addr;
-+	msg_data = msix_tbl[(interrupt_num - 1)].msg_data;
-+	vec_ctrl = msix_tbl[(interrupt_num - 1)].vector_ctrl;
-+
-+	/* Set the outbound region if needed. */
-+	if (ep->irq_pci_addr != (msg_addr & ~pci_addr_mask) ||
-+	    ep->irq_pci_fn != fn) {
-+		/* First region was reserved for IRQ writes. */
-+		cdns_pcie_set_outbound_region(pcie, fn, 0,
-+					      false,
-+					      ep->irq_phys_addr,
-+					      msg_addr & ~pci_addr_mask,
-+					      pci_addr_mask + 1);
-+		ep->irq_pci_addr = (msg_addr & ~pci_addr_mask);
-+		ep->irq_pci_fn = fn;
-+	}
-+	writel(msg_data, ep->irq_cpu_addr + (msg_addr & pci_addr_mask));
-+
-+	return 0;
-+}
-+
- static int cdns_pcie_ep_raise_irq(struct pci_epc *epc, u8 fn,
- 				  enum pci_epc_irq_type type,
- 				  u16 interrupt_num)
-@@ -343,6 +443,9 @@ static int cdns_pcie_ep_raise_irq(struct pci_epc *epc, u8 fn,
- 	case PCI_EPC_IRQ_MSI:
- 		return cdns_pcie_ep_send_msi_irq(ep, fn, interrupt_num);
- 
-+	case PCI_EPC_IRQ_MSIX:
-+		return cdns_pcie_ep_send_msix_irq(ep, fn, interrupt_num);
-+
- 	default:
- 		break;
- 	}
-@@ -380,7 +483,7 @@ static int cdns_pcie_ep_start(struct pci_epc *epc)
- static const struct pci_epc_features cdns_pcie_epc_features = {
- 	.linkup_notifier = false,
- 	.msi_capable = true,
--	.msix_capable = false,
-+	.msix_capable = true,
- };
- 
- static const struct pci_epc_features*
-@@ -397,6 +500,8 @@ static const struct pci_epc_ops cdns_pcie_epc_ops = {
- 	.unmap_addr	= cdns_pcie_ep_unmap_addr,
- 	.set_msi	= cdns_pcie_ep_set_msi,
- 	.get_msi	= cdns_pcie_ep_get_msi,
-+	.set_msix	= cdns_pcie_ep_set_msix,
-+	.get_msix	= cdns_pcie_ep_get_msix,
- 	.raise_irq	= cdns_pcie_ep_raise_irq,
- 	.start		= cdns_pcie_ep_start,
- 	.get_features	= cdns_pcie_ep_get_features,
-@@ -455,6 +560,11 @@ int cdns_pcie_ep_setup(struct cdns_pcie_ep *ep)
- 	if (of_property_read_u8(np, "max-functions", &epc->max_functions) < 0)
- 		epc->max_functions = 1;
- 
-+	ep->epf = devm_kcalloc(dev, epc->max_functions, sizeof(*ep->epf),
-+			       GFP_KERNEL);
-+	if (!ep->epf)
-+		return -ENOMEM;
-+
- 	ret = pci_epc_mem_init(epc, pcie->mem_res->start,
- 			       resource_size(pcie->mem_res));
- 	if (ret < 0) {
-diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
-index 16a6b0ee547c..ea850290a602 100644
---- a/drivers/pci/controller/cadence/pcie-cadence.h
-+++ b/drivers/pci/controller/cadence/pcie-cadence.h
-@@ -99,6 +99,7 @@
- #define CDNS_PCIE_EP_FUNC_BASE(fn)	(((fn) << 12) & GENMASK(19, 12))
- 
- #define CDNS_PCIE_EP_FUNC_MSI_CAP_OFFSET	0x90
-+#define CDNS_PCIE_EP_FUNC_MSIX_CAP_OFFSET	0xb0
- 
- /*
-  * Root Port Registers (PCI configuration space for the root port function)
-@@ -280,6 +281,14 @@ struct cdns_pcie_rc {
- 	u32			device_id;
- };
- 
-+/**
-+ * struct cdns_pcie_epf - Structure to hold info about endpoint function
-+ * @epf_bar: reference to the pci_epf_bar for the six Base Address Registers
-+ */
-+struct cdns_pcie_epf {
-+	struct pci_epf_bar *epf_bar[PCI_STD_NUM_BARS];
-+};
-+
- /**
-  * struct cdns_pcie_ep - private data for this PCIe endpoint controller driver
-  * @pcie: Cadence PCIe controller
-@@ -307,6 +316,7 @@ struct cdns_pcie_ep {
- 	u64			irq_pci_addr;
- 	u8			irq_pci_fn;
- 	u8			irq_pending;
-+	struct cdns_pcie_epf	*epf;
- };
- 
- 
++     pcie0_ep: pcie-ep@d000000 {
++            compatible = "ti,j721e-pcie-ep";
++            reg = <0x00 0x02900000 0x00 0x1000>,
++                  <0x00 0x02907000 0x00 0x400>,
++                  <0x00 0x0d000000 0x00 0x00800000>,
++                  <0x00 0x10000000 0x00 0x08000000>;
++            reg-names = "intd_cfg", "user_cfg", "reg", "mem";
++            ti,syscon-pcie-ctrl = <&pcie0_ctrl>;
++            max-link-speed = <3>;
++            num-lanes = <2>;
++            power-domains = <&k3_pds 239 TI_SCI_PD_EXCLUSIVE>;
++            clocks = <&k3_clks 239 1>;
++            clock-names = "fck";
++            cdns,max-outbound-regions = <16>;
++            max-functions = /bits/ 8 <6>;
++            dma-coherent;
++            phys = <&serdes0_pcie_link>;
++            phy-names = "pcie-phy";
++    };
 -- 
 2.17.1
 
