@@ -2,51 +2,50 @@ Return-Path: <SRS0=f1uR=6B=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B62EC2D0EF
-	for <linux-pci@archiver.kernel.org>; Fri, 17 Apr 2020 12:59:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00907C352BE
+	for <linux-pci@archiver.kernel.org>; Fri, 17 Apr 2020 12:59:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2C91321974
-	for <linux-pci@archiver.kernel.org>; Fri, 17 Apr 2020 12:59:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D06A52063A
+	for <linux-pci@archiver.kernel.org>; Fri, 17 Apr 2020 12:59:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="emYxc1Fu"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="ecU4VcG8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730584AbgDQM7H (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 17 Apr 2020 08:59:07 -0400
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:47276 "EHLO
-        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730417AbgDQM7G (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Apr 2020 08:59:06 -0400
-Received: from fllv0034.itg.ti.com ([10.64.40.246])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 03HCwilj013864;
-        Fri, 17 Apr 2020 07:58:44 -0500
+        id S1730358AbgDQM6w (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 17 Apr 2020 08:58:52 -0400
+Received: from lelv0142.ext.ti.com ([198.47.23.249]:48978 "EHLO
+        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730197AbgDQM6n (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Apr 2020 08:58:43 -0400
+Received: from lelv0266.itg.ti.com ([10.180.67.225])
+        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 03HCwNkH005419;
+        Fri, 17 Apr 2020 07:58:23 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1587128325;
-        bh=Y1we4D1Lq5AXU5mBtwTBsbjAGG8YZJkuEFwzw81Hii0=;
+        s=ti-com-17Q1; t=1587128303;
+        bh=cy3H7a71qLj8n7c0hh94+aNcS7Q/r5jCLJaSzp7nawo=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=emYxc1FuwpnVHkQcIuJ9tSZEaN4demLTMa5xpub/tdRkGRGl6MXiKT/YVBMSub0Zy
-         cly2TH8u7rKQm7hiKnfyPFxuO7NPtVSeGF6cdw6gpIpBhnvSdk4eXQ5Fym/Aixs1Bs
-         6g7cR+Whx1cN+Lm1qyGEAFvBQ839x9uSAgMom83I=
-Received: from DFLE114.ent.ti.com (dfle114.ent.ti.com [10.64.6.35])
-        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 03HCwiFr062168
+        b=ecU4VcG8thIrAAhsMUJLydazWpwj/c1iXgkf0uPpkElVbnxsFBU6fKsSMi8n4hHt5
+         hGRmJ/ntPcLovto8E5ZLennSmZdZLoqULuCUcacNvI/82Z8mop3HZKWre/PvPPeGBU
+         /ESyYTZW2t2np1Z5a3YcG0tiMy+bSkUYPs2BxEOA=
+Received: from DLEE113.ent.ti.com (dlee113.ent.ti.com [157.170.170.24])
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 03HCwNiL109183
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 17 Apr 2020 07:58:44 -0500
-Received: from DFLE101.ent.ti.com (10.64.6.22) by DFLE114.ent.ti.com
- (10.64.6.35) with Microsoft SMTP Server (version=TLS1_2,
+        Fri, 17 Apr 2020 07:58:23 -0500
+Received: from DLEE109.ent.ti.com (157.170.170.41) by DLEE113.ent.ti.com
+ (157.170.170.24) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Fri, 17
- Apr 2020 07:58:44 -0500
-Received: from lelv0326.itg.ti.com (10.180.67.84) by DFLE101.ent.ti.com
- (10.64.6.22) with Microsoft SMTP Server (version=TLS1_2,
+ Apr 2020 07:58:22 -0500
+Received: from lelv0326.itg.ti.com (10.180.67.84) by DLEE109.ent.ti.com
+ (157.170.170.41) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
- Frontend Transport; Fri, 17 Apr 2020 07:58:44 -0500
+ Frontend Transport; Fri, 17 Apr 2020 07:58:23 -0500
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 03HCvsDI031089;
-        Fri, 17 Apr 2020 07:58:41 -0500
+        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 03HCvsDC031089;
+        Fri, 17 Apr 2020 07:58:20 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Tom Joseph <tjoseph@cadence.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -58,9 +57,9 @@ CC:     Arnd Bergmann <arnd@arndb.de>,
         <linux-arm-kernel@lists.infradead.org>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
-Subject: [PATCH v3 13/14] misc: pci_endpoint_test: Add J721E in pci_device_id table
-Date:   Fri, 17 Apr 2020 18:27:52 +0530
-Message-ID: <20200417125753.13021-14-kishon@ti.com>
+Subject: [PATCH v3 07/14] PCI: cadence: Add new *ops* for CPU addr fixup
+Date:   Fri, 17 Apr 2020 18:27:46 +0530
+Message-ID: <20200417125753.13021-8-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200417125753.13021-1-kishon@ti.com>
 References: <20200417125753.13021-1-kishon@ti.com>
@@ -72,48 +71,151 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add J721E in pci_device_id table so that pci-epf-test can be used
-for testing PCIe EP in J721E.
+Cadence driver uses "mem" memory resource to obtain the offset of
+configuration space address region, memory space address region and
+message space address region. The obtained offset is used to program
+the Address Translation Unit (ATU). However certain platforms like TI's
+J721E SoC require the absolute address to be programmed in the ATU and not
+just the offset.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/misc/pci_endpoint_test.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ .../pci/controller/cadence/pcie-cadence-host.c    | 15 ++++-----------
+ .../pci/controller/cadence/pcie-cadence-plat.c    | 13 +++++++++++++
+ drivers/pci/controller/cadence/pcie-cadence.c     |  8 ++++++--
+ drivers/pci/controller/cadence/pcie-cadence.h     |  1 +
+ 4 files changed, 24 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index ef5a1af6bab7..a70b17e5dd9a 100644
---- a/drivers/misc/pci_endpoint_test.c
-+++ b/drivers/misc/pci_endpoint_test.c
-@@ -68,6 +68,7 @@
- #define PCI_ENDPOINT_TEST_FLAGS			0x2c
- #define FLAG_USE_DMA				BIT(0)
+diff --git a/drivers/pci/controller/cadence/pcie-cadence-host.c b/drivers/pci/controller/cadence/pcie-cadence-host.c
+index 6c84520318a7..7c220671e66f 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence-host.c
++++ b/drivers/pci/controller/cadence/pcie-cadence-host.c
+@@ -104,15 +104,14 @@ static int cdns_pcie_host_init_root_port(struct cdns_pcie_rc *rc)
+ static int cdns_pcie_host_init_address_translation(struct cdns_pcie_rc *rc)
+ {
+ 	struct cdns_pcie *pcie = &rc->pcie;
+-	struct resource *mem_res = pcie->mem_res;
+ 	struct resource *bus_range = rc->bus_range;
+ 	struct resource *cfg_res = rc->cfg_res;
+ 	struct device *dev = pcie->dev;
+ 	struct device_node *np = dev->of_node;
+ 	struct of_pci_range_parser parser;
++	u64 cpu_addr = cfg_res->start;
+ 	struct of_pci_range range;
+ 	u32 addr0, addr1, desc1;
+-	u64 cpu_addr;
+ 	int r, err;
  
-+#define PCI_DEVICE_ID_TI_J721E			0xb00d
- #define PCI_DEVICE_ID_TI_AM654			0xb00c
+ 	/*
+@@ -125,7 +124,9 @@ static int cdns_pcie_host_init_address_translation(struct cdns_pcie_rc *rc)
+ 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_PCI_ADDR1(0), addr1);
+ 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_DESC1(0), desc1);
  
- #define is_am654_pci_dev(pdev)		\
-@@ -930,6 +931,11 @@ static const struct pci_endpoint_test_data am654_data = {
- 	.irq_type = IRQ_TYPE_MSI,
- };
+-	cpu_addr = cfg_res->start - mem_res->start;
++	if (pcie->ops->cpu_addr_fixup)
++		cpu_addr = pcie->ops->cpu_addr_fixup(pcie, cpu_addr);
++
+ 	addr0 = CDNS_PCIE_AT_OB_REGION_CPU_ADDR0_NBITS(12) |
+ 		(lower_32_bits(cpu_addr) & GENMASK(31, 8));
+ 	addr1 = upper_32_bits(cpu_addr);
+@@ -266,14 +267,6 @@ int cdns_pcie_host_setup(struct cdns_pcie_rc *rc)
+ 	}
+ 	rc->cfg_res = res;
  
-+static const struct pci_endpoint_test_data j721e_data = {
-+	.alignment = 256,
-+	.irq_type = IRQ_TYPE_MSI,
+-	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "mem");
+-	if (!res) {
+-		dev_err(dev, "missing \"mem\"\n");
+-		return -EINVAL;
+-	}
+-
+-	pcie->mem_res = res;
+-
+ 	ret = cdns_pcie_start_link(pcie);
+ 	if (ret) {
+ 		dev_err(dev, "Failed to start link\n");
+diff --git a/drivers/pci/controller/cadence/pcie-cadence-plat.c b/drivers/pci/controller/cadence/pcie-cadence-plat.c
+index f5c6bf6dfcb8..6f5f07b3eed1 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence-plat.c
++++ b/drivers/pci/controller/cadence/pcie-cadence-plat.c
+@@ -13,6 +13,8 @@
+ #include <linux/of_device.h>
+ #include "pcie-cadence.h"
+ 
++#define CDNS_PLAT_CPU_TO_BUS_ADDR	0x0FFFFFFF
++
+ /**
+  * struct cdns_plat_pcie - private data for this PCIe platform driver
+  * @pcie: Cadence PCIe controller
+@@ -30,6 +32,15 @@ struct cdns_plat_pcie_of_data {
+ 
+ static const struct of_device_id cdns_plat_pcie_of_match[];
+ 
++static u64 cdns_plat_cpu_addr_fixup(struct cdns_pcie *pcie, u64 cpu_addr)
++{
++	return cpu_addr & CDNS_PLAT_CPU_TO_BUS_ADDR;
++}
++
++static const struct cdns_pcie_ops cdns_plat_ops = {
++	.cpu_addr_fixup = cdns_plat_cpu_addr_fixup,
 +};
 +
- static const struct pci_device_id pci_endpoint_test_tbl[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA74x),
- 	  .driver_data = (kernel_ulong_t)&default_data,
-@@ -942,6 +948,9 @@ static const struct pci_device_id pci_endpoint_test_tbl[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_AM654),
- 	  .driver_data = (kernel_ulong_t)&am654_data
- 	},
-+	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_J721E),
-+	  .driver_data = (kernel_ulong_t)&j721e_data,
-+	},
- 	{ }
+ static int cdns_plat_pcie_probe(struct platform_device *pdev)
+ {
+ 	const struct cdns_plat_pcie_of_data *data;
+@@ -66,6 +77,7 @@ static int cdns_plat_pcie_probe(struct platform_device *pdev)
+ 
+ 		rc = pci_host_bridge_priv(bridge);
+ 		rc->pcie.dev = dev;
++		rc->pcie.ops = &cdns_plat_ops;
+ 		cdns_plat_pcie->pcie = &rc->pcie;
+ 		cdns_plat_pcie->is_rc = is_rc;
+ 
+@@ -93,6 +105,7 @@ static int cdns_plat_pcie_probe(struct platform_device *pdev)
+ 			return -ENOMEM;
+ 
+ 		ep->pcie.dev = dev;
++		ep->pcie.ops = &cdns_plat_ops;
+ 		cdns_plat_pcie->pcie = &ep->pcie;
+ 		cdns_plat_pcie->is_rc = is_rc;
+ 
+diff --git a/drivers/pci/controller/cadence/pcie-cadence.c b/drivers/pci/controller/cadence/pcie-cadence.c
+index 874b7fa93577..29d32019145c 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence.c
++++ b/drivers/pci/controller/cadence/pcie-cadence.c
+@@ -113,7 +113,9 @@ void cdns_pcie_set_outbound_region(struct cdns_pcie *pcie, u8 fn,
+ 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_DESC1(r), desc1);
+ 
+ 	/* Set the CPU address */
+-	cpu_addr -= pcie->mem_res->start;
++	if (pcie->ops->cpu_addr_fixup)
++		cpu_addr = pcie->ops->cpu_addr_fixup(pcie, cpu_addr);
++
+ 	addr0 = CDNS_PCIE_AT_OB_REGION_CPU_ADDR0_NBITS(nbits) |
+ 		(lower_32_bits(cpu_addr) & GENMASK(31, 8));
+ 	addr1 = upper_32_bits(cpu_addr);
+@@ -140,7 +142,9 @@ void cdns_pcie_set_outbound_region_for_normal_msg(struct cdns_pcie *pcie, u8 fn,
+ 	}
+ 
+ 	/* Set the CPU address */
+-	cpu_addr -= pcie->mem_res->start;
++	if (pcie->ops->cpu_addr_fixup)
++		cpu_addr = pcie->ops->cpu_addr_fixup(pcie, cpu_addr);
++
+ 	addr0 = CDNS_PCIE_AT_OB_REGION_CPU_ADDR0_NBITS(17) |
+ 		(lower_32_bits(cpu_addr) & GENMASK(31, 8));
+ 	addr1 = upper_32_bits(cpu_addr);
+diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
+index 03c21ce4c9e9..16a6b0ee547c 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence.h
++++ b/drivers/pci/controller/cadence/pcie-cadence.h
+@@ -234,6 +234,7 @@ struct cdns_pcie_ops {
+ 	int	(*start_link)(struct cdns_pcie *pcie);
+ 	void	(*stop_link)(struct cdns_pcie *pcie);
+ 	bool	(*link_up)(struct cdns_pcie *pcie);
++	u64     (*cpu_addr_fixup)(struct cdns_pcie *pcie, u64 cpu_addr);
  };
- MODULE_DEVICE_TABLE(pci, pci_endpoint_test_tbl);
+ 
+ /**
 -- 
 2.17.1
 
