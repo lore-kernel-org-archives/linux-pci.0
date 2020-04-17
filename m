@@ -2,101 +2,81 @@ Return-Path: <SRS0=f1uR=6B=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+X-Spam-Status: No, score=-3.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C3C0C2D0EF
-	for <linux-pci@archiver.kernel.org>; Fri, 17 Apr 2020 14:04:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5ACD9C38A2B
+	for <linux-pci@archiver.kernel.org>; Fri, 17 Apr 2020 15:21:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 51065208E4
-	for <linux-pci@archiver.kernel.org>; Fri, 17 Apr 2020 14:04:17 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aMOSDDGw"
+	by mail.kernel.org (Postfix) with ESMTP id 3BCA62224E
+	for <linux-pci@archiver.kernel.org>; Fri, 17 Apr 2020 15:21:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730662AbgDQOEQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 17 Apr 2020 10:04:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59506 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1730563AbgDQOEQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Apr 2020 10:04:16 -0400
-Received: from mail-il1-x144.google.com (mail-il1-x144.google.com [IPv6:2607:f8b0:4864:20::144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C5F2C061A0C
-        for <linux-pci@vger.kernel.org>; Fri, 17 Apr 2020 07:04:16 -0700 (PDT)
-Received: by mail-il1-x144.google.com with SMTP id b18so2237478ilf.2
-        for <linux-pci@vger.kernel.org>; Fri, 17 Apr 2020 07:04:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=s4PtYCRRGMjCHyUoR/ZC/d46oKq8RduBjto5rW6+7ao=;
-        b=aMOSDDGw4jRUBWTYPDPLybYUIdgXhyMsB6U3tCOoQkdRcGW0bZdc3PfzG26H4ufX8/
-         biSquO+yL5Jk75LKGTNdz9HFnkRvKB2tIX6ZL5srXR3cJaOYeDblGFRdUSlA9QU5WS8e
-         6JR85+BP1eyV9WWIvU7chq8E4fIJZSb9vgVlfRIikZw3UkkH1ck0OxMOU+gpybFQeJ4E
-         FgOzw21jvPWSRrK6jiC1/5qdXrSqRPKN15sXCbHOirSQAdAAvnIdsrG65An0Soslfq/b
-         kNOQLkMdh+QCZwZSG5RHdPHZkXG+/YYFShRMwbWCtbtXCXcWdBQiHAXSJx4hx/MV9G80
-         LWYg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=s4PtYCRRGMjCHyUoR/ZC/d46oKq8RduBjto5rW6+7ao=;
-        b=L4lEqA/55JWF1ikYVGe+by9rz3TgFYqSq607jO4y+SuS9UefVsPNB2yJMOYy3Q+EwF
-         SUI+55T2rloY16h4dMbX6wreOaYT5rKPRQMWr9RY+Fs5ddvm67e1UWkL7DBRp+rq517E
-         xE2ccba+uENh21S4V5f2q1Gq0j9s+GbFHSxlFLRjfhkI+PTcQ40cy8J4O9jmpDxW5Tac
-         RmsUgBP04w4TSU6uUVpRwUIkqVn/pWE3SInhJc8GdwtmIN5VaAY/iMRm0j5uMb3BwxA/
-         QNePWx6S4QIrrKLqd858pvcq2jw9EKToLRIDKgUJqo/VG4nZJsE+pEpNW2bcuEteBKxw
-         1/6Q==
-X-Gm-Message-State: AGi0PuaT27JK+/kLh+E6jkeGSXP5znAc8ffq14BmM4btNkuj6p0JWAbf
-        mqO1Wbp8NLkrBPaIwMElfV09ghdoWuVuJ9WxyTk=
-X-Google-Smtp-Source: APiQypKMep5b3CfGNz96ChZdXyrA/PH4HyqxxVUUz38S5QLVqoUXaolJnn9BjpGM84wOsLlndV4kBwqgqzRR8EuWaIo=
-X-Received: by 2002:a05:6e02:dc3:: with SMTP id l3mr2973276ilj.149.1587132255465;
- Fri, 17 Apr 2020 07:04:15 -0700 (PDT)
+        id S1728376AbgDQPVp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 17 Apr 2020 11:21:45 -0400
+Received: from smtprelay0187.hostedemail.com ([216.40.44.187]:41826 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1728114AbgDQPVp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Apr 2020 11:21:45 -0400
+Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
+        by smtprelay01.hostedemail.com (Postfix) with ESMTP id 03417100E7B42;
+        Fri, 17 Apr 2020 15:21:44 +0000 (UTC)
+X-Session-Marker: 6A6F6540706572636865732E636F6D
+X-HE-Tag: rat66_8345024049b55
+X-Filterd-Recvd-Size: 2028
+Received: from XPS-9350.home (unknown [47.151.136.130])
+        (Authenticated sender: joe@perches.com)
+        by omf02.hostedemail.com (Postfix) with ESMTPA;
+        Fri, 17 Apr 2020 15:21:41 +0000 (UTC)
+Message-ID: <ee72cdce1c487f7d0fd089f59fb92422ef2d9396.camel@perches.com>
+Subject: Re: [PATCH v3 14/14] MAINTAINERS: Add Kishon Vijay Abraham I for TI
+ J721E SoC PCIe
+From:   Joe Perches <joe@perches.com>
+To:     Kishon Vijay Abraham I <kishon@ti.com>,
+        Tom Joseph <tjoseph@cadence.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Andrew Murray <amurray@thegoodpenguin.co.uk>
+Cc:     Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Date:   Fri, 17 Apr 2020 08:19:29 -0700
+In-Reply-To: <20200417125753.13021-15-kishon@ti.com>
+References: <20200417125753.13021-1-kishon@ti.com>
+         <20200417125753.13021-15-kishon@ti.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+User-Agent: Evolution 3.34.1-2 
 MIME-Version: 1.0
-References: <20200416165725.206741-1-maxg@mellanox.com> <20200416165725.206741-2-maxg@mellanox.com>
- <20200417070238.GC18880@lst.de> <7255b11a-4ea0-3bac-2cc3-7fff0b56c9ac@mellanox.com>
-In-Reply-To: <7255b11a-4ea0-3bac-2cc3-7fff0b56c9ac@mellanox.com>
-From:   "Oliver O'Halloran" <oohall@gmail.com>
-Date:   Sat, 18 Apr 2020 00:04:04 +1000
-Message-ID: <CAOSf1CHdepTVZUE0=H0P3vLTY820wyiLGuKM_qOjv9kguS3Zww@mail.gmail.com>
-Subject: Re: [PATCH 2/2] powerpc/powernv: Enable and setup PCI P2P
-To:     Max Gurtovoy <maxg@mellanox.com>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-pci@vger.kernel.org,
-        Frederic Barrat <fbarrat@linux.ibm.com>,
-        Carol L Soto <clsoto@us.ibm.com>, idanw@mellanox.com,
-        aneela@mellanox.com, shlomin@mellanox.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Apr 17, 2020 at 9:17 PM Max Gurtovoy <maxg@mellanox.com> wrote:
->
-> > The enable and disable path shares almost no code, why not split it into
-> > two functions?
->
-> how about also changing the defines OPAL_PCI_P2P_* to an enum ?
->
-> /* PCI p2p operation descriptors */
-> enum opal_pci_p2p {
->
->          OPAL_PCI_P2P_DISABLE    = 0,
->
->          OPAL_PCI_P2P_ENABLE     = (1 << 0),
->          OPAL_PCI_P2P_LOAD       = (1 << 1),
->          OPAL_PCI_P2P_STORE      = (1 << 2),
-> };
->
-> Fred ?
+On Fri, 2020-04-17 at 18:27 +0530, Kishon Vijay Abraham I wrote:
+> Add Kishon Vijay Abraham I as MAINTAINER for TI J721E SoC PCIe.
+[]
+> diff --git a/MAINTAINERS b/MAINTAINERS
+[]
+> @@ -12968,13 +12968,15 @@ S:	Maintained
+>  F:	Documentation/devicetree/bindings/pci/designware-pcie.txt
+>  F:	drivers/pci/controller/dwc/*designware*
+>  
+> -PCI DRIVER FOR TI DRA7XX
+> +PCI DRIVER FOR TI DRA7XX/J721E
+>  M:	Kishon Vijay Abraham I <kishon@ti.com>
+>  L:	linux-omap@vger.kernel.org
+>  L:	linux-pci@vger.kernel.org
+> +L:	linux-arm-kernel@lists.infradead.org
+>  S:	Supported
+>  F:	Documentation/devicetree/bindings/pci/ti-pci.txt
+>  F:	drivers/pci/controller/dwc/pci-dra7xx.c
+> +F:	drivers/pci/controller/cadence/pci-j721e.c
 
-I'd rather you didn't. We try to keep the definitions in opal-api.h
-the same as the skiboot's opal-api.h since the skiboot version is
-canonical.
+Please keep file patterns in alphabetic order by
+moving this new cadence line up one line above dwc.
 
-Also, generally patches to anything PowerNV related go through the
-powerpc tree rather than the pci tree even if they're PCI related. Can
-you make sure you have linuxppc-dev CCed when you post v2.
 
-Oliver
+
