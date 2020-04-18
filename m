@@ -2,206 +2,244 @@ Return-Path: <SRS0=EUoI=6C=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9ADCAC3A5A0
-	for <linux-pci@archiver.kernel.org>; Sat, 18 Apr 2020 14:54:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57417C38A29
+	for <linux-pci@archiver.kernel.org>; Sat, 18 Apr 2020 15:20:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7491122244
-	for <linux-pci@archiver.kernel.org>; Sat, 18 Apr 2020 14:54:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1587221698;
-	bh=+J1rnpev1mWG2DjbDUlUXV/sV3CYW4t3iOt9gosTfsA=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=cpCr6YeKC3inCpqeMgngEdy3dDKtZW8TaZdeDxc57EPuy5Tt3BcX6xXUxdLDcTCD8
-	 ScHQ219rWmKcLcVeANWzU8UH27g0g5kplhsRPrJ9bekk8+kP4KGfmYI51oykacZ/g2
-	 +cFQDV+qaTiZID7l3u9ZadH2aEOV/NZF/5f9SNi0=
+	by mail.kernel.org (Postfix) with ESMTP id 2BC0921D7E
+	for <linux-pci@archiver.kernel.org>; Sat, 18 Apr 2020 15:20:35 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="KPGOm3X9";
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="j5Vqtv9H"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728436AbgDROyx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 18 Apr 2020 10:54:53 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50558 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727965AbgDROl1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 18 Apr 2020 10:41:27 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1726121AbgDRPUb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 18 Apr 2020 11:20:31 -0400
+Received: from smtprelay-out1.synopsys.com ([149.117.87.133]:55968 "EHLO
+        smtprelay-out1.synopsys.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725903AbgDRPUa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 18 Apr 2020 11:20:30 -0400
+Received: from mailhost.synopsys.com (badc-mailhost2.synopsys.com [10.192.0.18])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 26E2222244;
-        Sat, 18 Apr 2020 14:41:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1587220886;
-        bh=+J1rnpev1mWG2DjbDUlUXV/sV3CYW4t3iOt9gosTfsA=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=HzkVAYVHyEjxHHN7InZPFuDhOKPqz3D5WC3LYA3ErKCETDSIy7qJ+/06YRTeYXHXZ
-         SPXpsHieXdGpDTF5I7r+y8bnotPQ9UKA0JLPyl7AbqjeTa0dxIeL+Cl6l7X4uV3vj6
-         7VqAfRWEvsA0LzFfRXVXazhOHOZ03fPf3Oif/168=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Karol Herbst <kherbst@redhat.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lyude Paul <lyude@redhat.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Mika Westerberg <mika.westerberg@intel.com>,
-        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, nouveau@lists.freedesktop.org,
-        Ben Skeggs <bskeggs@redhat.com>,
-        Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.4 30/78] drm/nouveau: workaround runpm fail by disabling PCI power management on certain intel bridges
-Date:   Sat, 18 Apr 2020 10:39:59 -0400
-Message-Id: <20200418144047.9013-30-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200418144047.9013-1-sashal@kernel.org>
-References: <20200418144047.9013-1-sashal@kernel.org>
+        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id D848BC00CA;
+        Sat, 18 Apr 2020 15:20:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
+        t=1587223229; bh=yjqs4L7VPY8W1zKgM132IyhUZvH00hKvz7/SSobGo+o=;
+        h=From:To:CC:Subject:Date:References:In-Reply-To:From;
+        b=KPGOm3X97eeo/PbMbmi+wpd47BpukXP2DuQ6VJ2ZzD3CNADl+57XTvYiEt2c9BndH
+         k587vxHe5gP+jJeSGaxqBiu7SdhBbWOWLiWJ9jlaBMpLJ1wwX35rhbsQ6+mUM8R9dI
+         MAYDfsdtXQff88P6v+eeMl20Wzix/jWdPYbZupkNOIDoazXNr/7v9Or5TV6SBeFDEy
+         H7Hd6HeYObQMFScduFIMyOKd3jB6xImy5m5XMq4TcJjCjx2C+rX537tcdeGKPZoh1l
+         aMDa5Nklb1X00QaTdVHlf7dRi72Vd0xVRSi4jg9aDdICGlog9j2cedymhYJpMPt3cW
+         wtOr8ylRv/VoQ==
+Received: from US01WEHTC3.internal.synopsys.com (us01wehtc3.internal.synopsys.com [10.15.84.232])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mailhost.synopsys.com (Postfix) with ESMTPS id 0C654A0067;
+        Sat, 18 Apr 2020 15:20:17 +0000 (UTC)
+Received: from us01hybrid1.internal.synopsys.com (10.200.27.51) by
+ US01WEHTC3.internal.synopsys.com (10.15.84.232) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Sat, 18 Apr 2020 08:19:43 -0700
+Received: from NAM12-MW2-obe.outbound.protection.outlook.com (10.202.3.67) by
+ mrs.synopsys.com (10.200.27.51) with Microsoft SMTP Server (TLS) id
+ 14.3.487.0; Sat, 18 Apr 2020 08:19:42 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=T4UfYyLlGvuw/hpG4dGl2SZ0VAGrXUAZ/t8r6Qp7SunH7iu/ivXcZVI3y3YCd+zN9kFcoGFrFKnTeTceEm98Jx4UIiPsfmYZiZVqw7nh6nTs1gARrtpHkEzbiYisEmUd9WU79mkWbODHQmIA5xoMgMSqXRhI7RPs+E/5Zw3+0HyOZvkhX1RP7BbUi0YH3nLbxga7+IvhgwF4QKfKJndO4qfZ1xV4X6QDPwhvx++fP4BEs8FXOHbFJ4DwHB4FGMg+OB+h7FytBvAGLo7xfwsSUYi75vLqKp5TH8mJ8ViQZqTUo4J4RAAqUYqk7bn0XlqFglwUu7Tch/K5fuYc0+SFFw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=yjqs4L7VPY8W1zKgM132IyhUZvH00hKvz7/SSobGo+o=;
+ b=NAdjaNy3+8nAWPNA4IiJPp9TeL/2NhXM4v/Q48pP9y5lMeftiOBHGy+T3dpBfxyg1qmXbXOxT0hEUjcCWm3mG3XR9eJLK6vHgqm0G17ttBGeGSHsuy6K06BgSvYXcR/ULynuhcflu9B9hl8ofz2gIlXUC2OyUhVb7iywUcUJstvAIAN+2EtOxVnHjSgKZkRL3gSSD/IgzskxhjwlAI52hkPrKeQQmHNSHZmgWj4WgDPEAlDUyJv9ce6JRPTaUtFpxYNsZBiW3k0W7HWkYFUqneTq3s5/xIYdL9DL79H/9qKbbm9iT3jb4mpDWJ5TtAraiBHdQ1j73HbXRn+QQMr65A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=synopsys.com; dmarc=pass action=none header.from=synopsys.com;
+ dkim=pass header.d=synopsys.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=synopsys.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=yjqs4L7VPY8W1zKgM132IyhUZvH00hKvz7/SSobGo+o=;
+ b=j5Vqtv9H3Cd/kptzbc6dENj5xSrsPbqfvAiGhpi3PBCd669pc1FasVixx5CD24EO8R6M8IKfCI7K2eenndbk5n7E61Jpf8oTl/X6rxUkG7Ia1UQ2e9dmiVsITUXXKJegNRaCUoDiMak4MoM2gGswVbKdMJ+pCOUpN5uoO0fAS0w=
+Received: from CY4PR12MB1271.namprd12.prod.outlook.com (2603:10b6:903:3d::22)
+ by CY4PR12MB1237.namprd12.prod.outlook.com (2603:10b6:903:3e::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2900.26; Sat, 18 Apr
+ 2020 15:19:42 +0000
+Received: from CY4PR12MB1271.namprd12.prod.outlook.com
+ ([fe80::99c:b980:181f:7a31]) by CY4PR12MB1271.namprd12.prod.outlook.com
+ ([fe80::99c:b980:181f:7a31%11]) with mapi id 15.20.2921.027; Sat, 18 Apr 2020
+ 15:19:42 +0000
+From:   Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
+To:     Marc Zyngier <maz@kernel.org>, Alan Mikhak <alan.mikhak@sifive.com>
+CC:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "tglx@linutronix.de" <tglx@linutronix.de>,
+        "kishon@ti.com" <kishon@ti.com>,
+        "paul.walmsley@sifive.com" <paul.walmsley@sifive.com>
+Subject: RE: [PATCH] genirq/msi: Check null pointer before copying struct
+ msi_msg
+Thread-Topic: [PATCH] genirq/msi: Check null pointer before copying struct
+ msi_msg
+Thread-Index: AQHWFOj2GuwhmqAbhkeOnSBUbwf1lqh+vSmAgAA2tGA=
+Date:   Sat, 18 Apr 2020 15:19:41 +0000
+Message-ID: <CY4PR12MB1271277CEE4F1FE06B71DDE8DAD60@CY4PR12MB1271.namprd12.prod.outlook.com>
+References: <1587149322-28104-1-git-send-email-alan.mikhak@sifive.com>
+ <20200418122123.10157ddd@why>
+In-Reply-To: <20200418122123.10157ddd@why>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-dg-ref: =?us-ascii?Q?PG1ldGE+PGF0IG5tPSJib2R5LnR4dCIgcD0iYzpcdXNlcnNcZ3VzdGF2b1xh?=
+ =?us-ascii?Q?cHBkYXRhXHJvYW1pbmdcMDlkODQ5YjYtMzJkMy00YTQwLTg1ZWUtNmI4NGJh?=
+ =?us-ascii?Q?MjllMzViXG1zZ3NcbXNnLTA0MzIwNjdhLTgxODgtMTFlYS05OGE3LWY4OTRj?=
+ =?us-ascii?Q?MjczODA0MlxhbWUtdGVzdFwwNDMyMDY3Yi04MTg4LTExZWEtOThhNy1mODk0?=
+ =?us-ascii?Q?YzI3MzgwNDJib2R5LnR4dCIgc3o9IjIwMTAiIHQ9IjEzMjMxNjk2Nzc4OTY1?=
+ =?us-ascii?Q?NjU0MiIgaD0icXpOeXpIQmZYSFZhOTVFKzJLMWl2UEY3RUVzPSIgaWQ9IiIg?=
+ =?us-ascii?Q?Ymw9IjAiIGJvPSIxIiBjaT0iY0FBQUFFUkhVMVJTUlVGTkNnVUFBQlFKQUFE?=
+ =?us-ascii?Q?ZStkdkdsQlhXQVlMWXpOdVVyQlA4Z3RqTTI1U3NFL3dPQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUhBQUFBQ2tDQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUVBQVFBQkFBQUFFbU1la3dBQUFBQUFBQUFBQUFBQUFKNEFBQUJtQUdrQWJn?=
+ =?us-ascii?Q?QmhBRzRBWXdCbEFGOEFjQUJzQUdFQWJnQnVBR2tBYmdCbkFGOEFkd0JoQUhR?=
+ =?us-ascii?Q?QVpRQnlBRzBBWVFCeUFHc0FBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?RUFBQUFBQUFBQUFnQUFBQUFBbmdBQUFHWUFid0IxQUc0QVpBQnlBSGtBWHdC?=
+ =?us-ascii?Q?d0FHRUFjZ0IwQUc0QVpRQnlBSE1BWHdCbkFHWUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQVFBQUFBQUFBQUFDQUFB?=
+ =?us-ascii?Q?QUFBQ2VBQUFBWmdCdkFIVUFiZ0JrQUhJQWVRQmZBSEFBWVFCeUFIUUFiZ0Js?=
+ =?us-ascii?Q?QUhJQWN3QmZBSE1BWVFCdEFITUFkUUJ1QUdjQVh3QmpBRzhBYmdCbUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUJBQUFBQUFBQUFBSUFBQUFBQUo0QUFBQm1BRzhB?=
+ =?us-ascii?Q?ZFFCdUFHUUFjZ0I1QUY4QWNBQmhBSElBZEFCdUFHVUFjZ0J6QUY4QWN3QmhB?=
+ =?us-ascii?Q?RzBBY3dCMUFHNEFad0JmQUhJQVpRQnpBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFFQUFBQUFBQUFBQWdBQUFBQUFuZ0FBQUdZQWJ3QjFBRzRBWkFCeUFIa0FY?=
+ =?us-ascii?Q?d0J3QUdFQWNnQjBBRzRBWlFCeUFITUFYd0J6QUcwQWFRQmpBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBUUFBQUFBQUFBQUNB?=
+ =?us-ascii?Q?QUFBQUFDZUFBQUFaZ0J2QUhVQWJnQmtBSElBZVFCZkFIQUFZUUJ5QUhRQWJn?=
+ =?us-ascii?Q?QmxBSElBY3dCZkFITUFkQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQkFBQUFBQUFBQUFJQUFBQUFBSjRBQUFCbUFH?=
+ =?us-ascii?Q?OEFkUUJ1QUdRQWNnQjVBRjhBY0FCaEFISUFkQUJ1QUdVQWNnQnpBRjhBZEFC?=
+ =?us-ascii?Q?ekFHMEFZd0FBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUVBQUFBQUFBQUFBZ0FBQUFBQW5nQUFBR1lBYndCMUFHNEFaQUJ5QUhr?=
+ =?us-ascii?Q?QVh3QndBR0VBY2dCMEFHNEFaUUJ5QUhNQVh3QjFBRzBBWXdBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFRQUFBQUFBQUFB?=
+ =?us-ascii?Q?Q0FBQUFBQUNlQUFBQVp3QjBBSE1BWHdCd0FISUFid0JrQUhVQVl3QjBBRjhB?=
+ =?us-ascii?Q?ZEFCeUFHRUFhUUJ1QUdrQWJnQm5BQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFCQUFBQUFBQUFBQUlBQUFBQUFKNEFBQUJ6?=
+ =?us-ascii?Q?QUdFQWJBQmxBSE1BWHdCaEFHTUFZd0J2QUhVQWJnQjBBRjhBY0FCc0FHRUFi?=
+ =?us-ascii?Q?Z0FBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBRUFBQUFBQUFBQUFnQUFBQUFBbmdBQUFITUFZUUJzQUdVQWN3QmZB?=
+ =?us-ascii?Q?SEVBZFFCdkFIUUFaUUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQVFBQUFBQUFB?=
+ =?us-ascii?Q?QUFDQUFBQUFBQ2VBQUFBY3dCdUFIQUFjd0JmQUd3QWFRQmpBR1VBYmdCekFH?=
+ =?us-ascii?Q?VUFYd0IwQUdVQWNnQnRBRjhBTVFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUJBQUFBQUFBQUFBSUFBQUFBQUo0QUFB?=
+ =?us-ascii?Q?QnpBRzRBY0FCekFGOEFiQUJwQUdNQVpRQnVBSE1BWlFCZkFIUUFaUUJ5QUcw?=
+ =?us-ascii?Q?QVh3QnpBSFFBZFFCa0FHVUFiZ0IwQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFFQUFBQUFBQUFBQWdBQUFBQUFuZ0FBQUhZQVp3QmZBR3NBWlFC?=
+ =?us-ascii?Q?NUFIY0Fid0J5QUdRQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBUUFBQUFB?=
+ =?us-ascii?Q?QUFBQUNBQUFBQUFBPSIvPjwvbWV0YT4=3D?=
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=gustavo@synopsys.com; 
+x-originating-ip: [198.182.37.200]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 1af31d65-e2bc-4ec1-7d7b-08d7e3abeb2f
+x-ms-traffictypediagnostic: CY4PR12MB1237:
+x-microsoft-antispam-prvs: <CY4PR12MB1237042482CD36B4FBABC73CDAD60@CY4PR12MB1237.namprd12.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:3276;
+x-forefront-prvs: 0377802854
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY4PR12MB1271.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(10019020)(366004)(346002)(39850400004)(376002)(396003)(136003)(52536014)(66446008)(7696005)(66476007)(64756008)(66556008)(26005)(81156014)(6506007)(8676002)(8936002)(66946007)(478600001)(33656002)(5660300002)(71200400001)(2906002)(4326008)(9686003)(110136005)(54906003)(55016002)(86362001)(316002)(186003)(76116006);DIR:OUT;SFP:1102;
+received-spf: None (protection.outlook.com: synopsys.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: wxD9l4hS128nuaD3Fpme+2y8jBTHiC8fBTCoFNzTx5YoiGwrKDF6s04ovp4McXKfEAnpdmi7/LYH271encY1Bn5h5E8XS/2+3vX9JLI+FCidl7usKnEBu9Y9ET2tnr5NI4RW/QDYG2v5SGtJ6XV7sWEBQrZYwXUHau1D1u6gk6CLB9PFjEO1hKSL71Yd7zIPOVkIYJptRgUQpyKz34JyS7DVJzbju2k7Bb+1iyKz2gHWI49NG73Zblr2c7mHWly5UJ9Pqr/TTixcbZTn8/q5QTekLbfBUYxpe4n3dMnv8gn5fxuTZCCoQBLB3p1Ede9mOi3ezHC7IlET3XjOK+4YIlMRgkLV2PQcxQLkiEFqTYAFbuIpuuqIGG0gIihw8YSJPrDOxStMLlCFhAfd5UafXSXVq429b/YE1wylddQtI8lo1EYgfcWqY5JXIQeUJsen
+x-ms-exchange-antispam-messagedata: Yl1H8PBbAGflHVbBuu0JrUY4orpMtjR06xqtBaQ6e8TTzSHd1VGp1xMzo5opKGZAKqBCBhpzg2RETg4wEEEMAWDDzfkwVewtejaaDgdslUQJZOXEbplej3XvCdMqq+G7531Pr5+qAy2UF/X1yXsj5A==
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1af31d65-e2bc-4ec1-7d7b-08d7e3abeb2f
+X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Apr 2020 15:19:41.9775
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: c33c9f88-1eb7-4099-9700-16013fd9e8aa
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 9x7reueSoHCKQOsyZKQIVPxQcRr1L1U1f1VowI/rxF4F49fFQN3j2PGIwa/hLlgCfJiJI0+EUKMQrpTpe8wZMg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR12MB1237
+X-OriginatorOrg: synopsys.com
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Karol Herbst <kherbst@redhat.com>
+Hi Marc and Alan,
 
-[ Upstream commit 434fdb51513bf3057ac144d152e6f2f2b509e857 ]
+> I'm not convinced by this. If you know that, by construction, these
+> interrupts are not associated with an underlying MSI, why calling
+> get_cached_msi_msg() the first place?
+>=20
+> There seem to be some assumptions in the DW EDMA driver that the
+> signaling would be MSI based, so maybe someone from Synopsys (Gustavo?)
+> could clarify that. From my own perspective, running on an endpoint
+> device means that it is *generating* interrupts, and I'm not sure what
+> the MSIs represent here.
 
-Fixes the infamous 'runtime PM' bug many users are facing on Laptops with
-Nvidia Pascal GPUs by skipping said PCI power state changes on the GPU.
+Giving a little context to this topic.
 
-Depending on the used kernel there might be messages like those in demsg:
+The eDMA IP present on the Synopsys DesignWare PCIe Endpoints can be=20
+configured and triggered *remotely* as well *locally*.
+For the sake of simplicity let's assume for now the eDMA was implemented=20
+on the EP and that is the IP that we want to configure and use.
 
-"nouveau 0000:01:00.0: Refused to change power state, currently in D3"
-"nouveau 0000:01:00.0: can't change power state from D3cold to D0 (config
-space inaccessible)"
-followed by backtraces of kernel crashes or timeouts within nouveau.
+When I say *remotely* I mean that this IP can be configurable through the=20
+RC/CPU side, however, for that, it requires the eDMA registers to be=20
+exposed through a PCIe BAR on the EP. This will allow setting the SAR,=20
+DAR and other settings, also need(s) the interrupt(s) address(es) to be=20
+set as well (MSI or MSI-X only) so that it can signal through PCIe (to=20
+the RC and consecutively the associated EP driver) if the data transfer=20
+has been completed, aborted or if the Linked List consumer algorithm has=20
+passed in some linked element marked with a watermark.
+=20
+It was based on this case that the eDMA driver was exclusively developed.
 
-It's still unkown why this issue exists, but this is a reliable workaround
-and solves a very annoying issue for user having to choose between a
-crashing kernel or higher power consumption of their Laptops.
+However, Alan, wants to expand a little more this, by being able to use=20
+this driver on the EP side (through=20
+pcitest/pci_endpoint_test/pci_epf_test) so that he can configure this IP=20
+*locally*.
+In fact, when doing this, he doesn't need to configure the interrupt=20
+address (MSI or MSI-X), because this IP provides a local interrupt line=20
+so that be connected to other blocks on the EP side.
 
-Signed-off-by: Karol Herbst <kherbst@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Lyude Paul <lyude@redhat.com>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Mika Westerberg <mika.westerberg@intel.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-pm@vger.kernel.org
-Cc: dri-devel@lists.freedesktop.org
-Cc: nouveau@lists.freedesktop.org
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=205623
-Signed-off-by: Ben Skeggs <bskeggs@redhat.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/gpu/drm/nouveau/nouveau_drm.c | 63 +++++++++++++++++++++++++++
- drivers/gpu/drm/nouveau/nouveau_drv.h |  2 +
- 2 files changed, 65 insertions(+)
-
-diff --git a/drivers/gpu/drm/nouveau/nouveau_drm.c b/drivers/gpu/drm/nouveau/nouveau_drm.c
-index 2cd83849600f3..b1beed40e746a 100644
---- a/drivers/gpu/drm/nouveau/nouveau_drm.c
-+++ b/drivers/gpu/drm/nouveau/nouveau_drm.c
-@@ -618,6 +618,64 @@ nouveau_drm_device_fini(struct drm_device *dev)
- 	kfree(drm);
- }
- 
-+/*
-+ * On some Intel PCIe bridge controllers doing a
-+ * D0 -> D3hot -> D3cold -> D0 sequence causes Nvidia GPUs to not reappear.
-+ * Skipping the intermediate D3hot step seems to make it work again. This is
-+ * probably caused by not meeting the expectation the involved AML code has
-+ * when the GPU is put into D3hot state before invoking it.
-+ *
-+ * This leads to various manifestations of this issue:
-+ *  - AML code execution to power on the GPU hits an infinite loop (as the
-+ *    code waits on device memory to change).
-+ *  - kernel crashes, as all PCI reads return -1, which most code isn't able
-+ *    to handle well enough.
-+ *
-+ * In all cases dmesg will contain at least one line like this:
-+ * 'nouveau 0000:01:00.0: Refused to change power state, currently in D3'
-+ * followed by a lot of nouveau timeouts.
-+ *
-+ * In the \_SB.PCI0.PEG0.PG00._OFF code deeper down writes bit 0x80 to the not
-+ * documented PCI config space register 0x248 of the Intel PCIe bridge
-+ * controller (0x1901) in order to change the state of the PCIe link between
-+ * the PCIe port and the GPU. There are alternative code paths using other
-+ * registers, which seem to work fine (executed pre Windows 8):
-+ *  - 0xbc bit 0x20 (publicly available documentation claims 'reserved')
-+ *  - 0xb0 bit 0x10 (link disable)
-+ * Changing the conditions inside the firmware by poking into the relevant
-+ * addresses does resolve the issue, but it seemed to be ACPI private memory
-+ * and not any device accessible memory at all, so there is no portable way of
-+ * changing the conditions.
-+ * On a XPS 9560 that means bits [0,3] on \CPEX need to be cleared.
-+ *
-+ * The only systems where this behavior can be seen are hybrid graphics laptops
-+ * with a secondary Nvidia Maxwell, Pascal or Turing GPU. It's unclear whether
-+ * this issue only occurs in combination with listed Intel PCIe bridge
-+ * controllers and the mentioned GPUs or other devices as well.
-+ *
-+ * documentation on the PCIe bridge controller can be found in the
-+ * "7th Generation Intel® Processor Families for H Platforms Datasheet Volume 2"
-+ * Section "12 PCI Express* Controller (x16) Registers"
-+ */
-+
-+static void quirk_broken_nv_runpm(struct pci_dev *pdev)
-+{
-+	struct drm_device *dev = pci_get_drvdata(pdev);
-+	struct nouveau_drm *drm = nouveau_drm(dev);
-+	struct pci_dev *bridge = pci_upstream_bridge(pdev);
-+
-+	if (!bridge || bridge->vendor != PCI_VENDOR_ID_INTEL)
-+		return;
-+
-+	switch (bridge->device) {
-+	case 0x1901:
-+		drm->old_pm_cap = pdev->pm_cap;
-+		pdev->pm_cap = 0;
-+		NV_INFO(drm, "Disabling PCI power management to avoid bug\n");
-+		break;
-+	}
-+}
-+
- static int nouveau_drm_probe(struct pci_dev *pdev,
- 			     const struct pci_device_id *pent)
- {
-@@ -699,6 +757,7 @@ static int nouveau_drm_probe(struct pci_dev *pdev,
- 	if (ret)
- 		goto fail_drm_dev_init;
- 
-+	quirk_broken_nv_runpm(pdev);
- 	return 0;
- 
- fail_drm_dev_init:
-@@ -736,7 +795,11 @@ static void
- nouveau_drm_remove(struct pci_dev *pdev)
- {
- 	struct drm_device *dev = pci_get_drvdata(pdev);
-+	struct nouveau_drm *drm = nouveau_drm(dev);
- 
-+	/* revert our workaround */
-+	if (drm->old_pm_cap)
-+		pdev->pm_cap = drm->old_pm_cap;
- 	nouveau_drm_device_remove(dev);
- }
- 
-diff --git a/drivers/gpu/drm/nouveau/nouveau_drv.h b/drivers/gpu/drm/nouveau/nouveau_drv.h
-index 70f34cacc552c..8104e3806499d 100644
---- a/drivers/gpu/drm/nouveau/nouveau_drv.h
-+++ b/drivers/gpu/drm/nouveau/nouveau_drv.h
-@@ -138,6 +138,8 @@ struct nouveau_drm {
- 
- 	struct list_head clients;
- 
-+	u8 old_pm_cap;
-+
- 	struct {
- 		struct agp_bridge_data *bridge;
- 		u32 base;
--- 
-2.20.1
+Regards,
+Gustavo
 
