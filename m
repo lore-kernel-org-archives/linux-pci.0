@@ -7,125 +7,201 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A264C38A2F
-	for <linux-pci@archiver.kernel.org>; Sat, 18 Apr 2020 14:53:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9ADCAC3A5A0
+	for <linux-pci@archiver.kernel.org>; Sat, 18 Apr 2020 14:54:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 17AE920753
-	for <linux-pci@archiver.kernel.org>; Sat, 18 Apr 2020 14:53:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7491122244
+	for <linux-pci@archiver.kernel.org>; Sat, 18 Apr 2020 14:54:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1587221582;
-	bh=4ZKCqnq3aMeP0p5bGe5j0lm2MElKEZ8zCA5qJu5O/l4=;
+	s=default; t=1587221698;
+	bh=+J1rnpev1mWG2DjbDUlUXV/sV3CYW4t3iOt9gosTfsA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=tEc+x36RXZGPyWHtIhcdq8YdFohXmafkH2dnoeXkhVCAmtdevh1txC7WEp044ZF3n
-	 T1XVueFzfs9IIufDKWTDQmKcF8A540CaEfeCabnNYxGYYhzqOI1gh1PeVndbHyum5N
-	 NCcTaNyHsqYgbGluH+b58ijOvc5TefJDAOHF+Hqo=
+	b=cpCr6YeKC3inCpqeMgngEdy3dDKtZW8TaZdeDxc57EPuy5Tt3BcX6xXUxdLDcTCD8
+	 ScHQ219rWmKcLcVeANWzU8UH27g0g5kplhsRPrJ9bekk8+kP4KGfmYI51oykacZ/g2
+	 +cFQDV+qaTiZID7l3u9ZadH2aEOV/NZF/5f9SNi0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726416AbgDROww (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 18 Apr 2020 10:52:52 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51966 "EHLO mail.kernel.org"
+        id S1728436AbgDROyx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 18 Apr 2020 10:54:53 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50558 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728253AbgDROmI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 18 Apr 2020 10:42:08 -0400
+        id S1727965AbgDROl1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 18 Apr 2020 10:41:27 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 880D222202;
-        Sat, 18 Apr 2020 14:42:07 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 26E2222244;
+        Sat, 18 Apr 2020 14:41:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1587220928;
-        bh=4ZKCqnq3aMeP0p5bGe5j0lm2MElKEZ8zCA5qJu5O/l4=;
+        s=default; t=1587220886;
+        bh=+J1rnpev1mWG2DjbDUlUXV/sV3CYW4t3iOt9gosTfsA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=f7KTMu79CWekh+DAPfy2BnLf61nmYvma36h/K6tdLjMKzLr8L5oLKYEk0IrH+H8LP
-         MiFJnG1IpXt8aBKrZMpQG0skowd7qsqsFLSvtXWRRwViTYWa6zCe2ddJAb8X8Q/hNZ
-         CnizLvcO4P91yMv9Q/JIg156rOXGhnKWmHgcSFxk=
+        b=HzkVAYVHyEjxHHN7InZPFuDhOKPqz3D5WC3LYA3ErKCETDSIy7qJ+/06YRTeYXHXZ
+         SPXpsHieXdGpDTF5I7r+y8bnotPQ9UKA0JLPyl7AbqjeTa0dxIeL+Cl6l7X4uV3vj6
+         7VqAfRWEvsA0LzFfRXVXazhOHOZ03fPf3Oif/168=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Mika Westerberg <mika.westerberg@linux.intel.com>,
+Cc:     Karol Herbst <kherbst@redhat.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 65/78] PCI/PM: Add pcie_wait_for_link_delay()
-Date:   Sat, 18 Apr 2020 10:40:34 -0400
-Message-Id: <20200418144047.9013-65-sashal@kernel.org>
+        Lyude Paul <lyude@redhat.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Mika Westerberg <mika.westerberg@intel.com>,
+        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, nouveau@lists.freedesktop.org,
+        Ben Skeggs <bskeggs@redhat.com>,
+        Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 30/78] drm/nouveau: workaround runpm fail by disabling PCI power management on certain intel bridges
+Date:   Sat, 18 Apr 2020 10:39:59 -0400
+Message-Id: <20200418144047.9013-30-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200418144047.9013-1-sashal@kernel.org>
 References: <20200418144047.9013-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
+From: Karol Herbst <kherbst@redhat.com>
 
-[ Upstream commit 4827d63891b6a839dac49c6ab62e61c4b011c4f2 ]
+[ Upstream commit 434fdb51513bf3057ac144d152e6f2f2b509e857 ]
 
-Add pcie_wait_for_link_delay().  Similar to pcie_wait_for_link() but allows
-passing custom activation delay in milliseconds.
+Fixes the infamous 'runtime PM' bug many users are facing on Laptops with
+Nvidia Pascal GPUs by skipping said PCI power state changes on the GPU.
 
-Link: https://lore.kernel.org/r/20191112091617.70282-2-mika.westerberg@linux.intel.com
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Depending on the used kernel there might be messages like those in demsg:
+
+"nouveau 0000:01:00.0: Refused to change power state, currently in D3"
+"nouveau 0000:01:00.0: can't change power state from D3cold to D0 (config
+space inaccessible)"
+followed by backtraces of kernel crashes or timeouts within nouveau.
+
+It's still unkown why this issue exists, but this is a reliable workaround
+and solves a very annoying issue for user having to choose between a
+crashing kernel or higher power consumption of their Laptops.
+
+Signed-off-by: Karol Herbst <kherbst@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Lyude Paul <lyude@redhat.com>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Mika Westerberg <mika.westerberg@intel.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-pm@vger.kernel.org
+Cc: dri-devel@lists.freedesktop.org
+Cc: nouveau@lists.freedesktop.org
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=205623
+Signed-off-by: Ben Skeggs <bskeggs@redhat.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/pci.c | 21 ++++++++++++++++++---
- 1 file changed, 18 insertions(+), 3 deletions(-)
+ drivers/gpu/drm/nouveau/nouveau_drm.c | 63 +++++++++++++++++++++++++++
+ drivers/gpu/drm/nouveau/nouveau_drv.h |  2 +
+ 2 files changed, 65 insertions(+)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 981ae16f935bc..94d6e120b4734 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4605,14 +4605,17 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
- 
- 	return pci_dev_wait(dev, "PM D3->D0", PCIE_RESET_READY_POLL_MS);
- }
-+
- /**
-- * pcie_wait_for_link - Wait until link is active or inactive
-+ * pcie_wait_for_link_delay - Wait until link is active or inactive
-  * @pdev: Bridge device
-  * @active: waiting for active or inactive?
-+ * @delay: Delay to wait after link has become active (in ms)
-  *
-  * Use this to wait till link becomes active or inactive.
-  */
--bool pcie_wait_for_link(struct pci_dev *pdev, bool active)
-+static bool pcie_wait_for_link_delay(struct pci_dev *pdev, bool active,
-+				     int delay)
- {
- 	int timeout = 1000;
- 	bool ret;
-@@ -4649,13 +4652,25 @@ bool pcie_wait_for_link(struct pci_dev *pdev, bool active)
- 		timeout -= 10;
- 	}
- 	if (active && ret)
--		msleep(100);
-+		msleep(delay);
- 	else if (ret != active)
- 		pci_info(pdev, "Data Link Layer Link Active not %s in 1000 msec\n",
- 			active ? "set" : "cleared");
- 	return ret == active;
+diff --git a/drivers/gpu/drm/nouveau/nouveau_drm.c b/drivers/gpu/drm/nouveau/nouveau_drm.c
+index 2cd83849600f3..b1beed40e746a 100644
+--- a/drivers/gpu/drm/nouveau/nouveau_drm.c
++++ b/drivers/gpu/drm/nouveau/nouveau_drm.c
+@@ -618,6 +618,64 @@ nouveau_drm_device_fini(struct drm_device *dev)
+ 	kfree(drm);
  }
  
-+/**
-+ * pcie_wait_for_link - Wait until link is active or inactive
-+ * @pdev: Bridge device
-+ * @active: waiting for active or inactive?
++/*
++ * On some Intel PCIe bridge controllers doing a
++ * D0 -> D3hot -> D3cold -> D0 sequence causes Nvidia GPUs to not reappear.
++ * Skipping the intermediate D3hot step seems to make it work again. This is
++ * probably caused by not meeting the expectation the involved AML code has
++ * when the GPU is put into D3hot state before invoking it.
 + *
-+ * Use this to wait till link becomes active or inactive.
++ * This leads to various manifestations of this issue:
++ *  - AML code execution to power on the GPU hits an infinite loop (as the
++ *    code waits on device memory to change).
++ *  - kernel crashes, as all PCI reads return -1, which most code isn't able
++ *    to handle well enough.
++ *
++ * In all cases dmesg will contain at least one line like this:
++ * 'nouveau 0000:01:00.0: Refused to change power state, currently in D3'
++ * followed by a lot of nouveau timeouts.
++ *
++ * In the \_SB.PCI0.PEG0.PG00._OFF code deeper down writes bit 0x80 to the not
++ * documented PCI config space register 0x248 of the Intel PCIe bridge
++ * controller (0x1901) in order to change the state of the PCIe link between
++ * the PCIe port and the GPU. There are alternative code paths using other
++ * registers, which seem to work fine (executed pre Windows 8):
++ *  - 0xbc bit 0x20 (publicly available documentation claims 'reserved')
++ *  - 0xb0 bit 0x10 (link disable)
++ * Changing the conditions inside the firmware by poking into the relevant
++ * addresses does resolve the issue, but it seemed to be ACPI private memory
++ * and not any device accessible memory at all, so there is no portable way of
++ * changing the conditions.
++ * On a XPS 9560 that means bits [0,3] on \CPEX need to be cleared.
++ *
++ * The only systems where this behavior can be seen are hybrid graphics laptops
++ * with a secondary Nvidia Maxwell, Pascal or Turing GPU. It's unclear whether
++ * this issue only occurs in combination with listed Intel PCIe bridge
++ * controllers and the mentioned GPUs or other devices as well.
++ *
++ * documentation on the PCIe bridge controller can be found in the
++ * "7th Generation Intel® Processor Families for H Platforms Datasheet Volume 2"
++ * Section "12 PCI Express* Controller (x16) Registers"
 + */
-+bool pcie_wait_for_link(struct pci_dev *pdev, bool active)
++
++static void quirk_broken_nv_runpm(struct pci_dev *pdev)
 +{
-+	return pcie_wait_for_link_delay(pdev, active, 100);
++	struct drm_device *dev = pci_get_drvdata(pdev);
++	struct nouveau_drm *drm = nouveau_drm(dev);
++	struct pci_dev *bridge = pci_upstream_bridge(pdev);
++
++	if (!bridge || bridge->vendor != PCI_VENDOR_ID_INTEL)
++		return;
++
++	switch (bridge->device) {
++	case 0x1901:
++		drm->old_pm_cap = pdev->pm_cap;
++		pdev->pm_cap = 0;
++		NV_INFO(drm, "Disabling PCI power management to avoid bug\n");
++		break;
++	}
 +}
 +
- void pci_reset_secondary_bus(struct pci_dev *dev)
+ static int nouveau_drm_probe(struct pci_dev *pdev,
+ 			     const struct pci_device_id *pent)
  {
- 	u16 ctrl;
+@@ -699,6 +757,7 @@ static int nouveau_drm_probe(struct pci_dev *pdev,
+ 	if (ret)
+ 		goto fail_drm_dev_init;
+ 
++	quirk_broken_nv_runpm(pdev);
+ 	return 0;
+ 
+ fail_drm_dev_init:
+@@ -736,7 +795,11 @@ static void
+ nouveau_drm_remove(struct pci_dev *pdev)
+ {
+ 	struct drm_device *dev = pci_get_drvdata(pdev);
++	struct nouveau_drm *drm = nouveau_drm(dev);
+ 
++	/* revert our workaround */
++	if (drm->old_pm_cap)
++		pdev->pm_cap = drm->old_pm_cap;
+ 	nouveau_drm_device_remove(dev);
+ }
+ 
+diff --git a/drivers/gpu/drm/nouveau/nouveau_drv.h b/drivers/gpu/drm/nouveau/nouveau_drv.h
+index 70f34cacc552c..8104e3806499d 100644
+--- a/drivers/gpu/drm/nouveau/nouveau_drv.h
++++ b/drivers/gpu/drm/nouveau/nouveau_drv.h
+@@ -138,6 +138,8 @@ struct nouveau_drm {
+ 
+ 	struct list_head clients;
+ 
++	u8 old_pm_cap;
++
+ 	struct {
+ 		struct agp_bridge_data *bridge;
+ 		u32 base;
 -- 
 2.20.1
 
