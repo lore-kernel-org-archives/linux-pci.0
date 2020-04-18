@@ -2,286 +2,60 @@ Return-Path: <SRS0=EUoI=6C=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CD68C3A5A0
-	for <linux-pci@archiver.kernel.org>; Sat, 18 Apr 2020 17:14:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F37ADC3A5A0
+	for <linux-pci@archiver.kernel.org>; Sat, 18 Apr 2020 18:00:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 85679221F7
-	for <linux-pci@archiver.kernel.org>; Sat, 18 Apr 2020 17:14:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DE5EF2224F
+	for <linux-pci@archiver.kernel.org>; Sat, 18 Apr 2020 18:00:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725887AbgDRRM2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 18 Apr 2020 13:12:28 -0400
-Received: from cloudserver094114.home.pl ([79.96.170.134]:58291 "EHLO
-        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725923AbgDRRL5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 18 Apr 2020 13:11:57 -0400
-Received: from 185.80.35.16 (185.80.35.16) (HELO kreacher.localnet)
- by serwer1319399.home.pl (79.96.170.134) with SMTP (IdeaSmtpServer 0.83.415)
- id a76c4f0d6061ffcc; Sat, 18 Apr 2020 19:11:52 +0200
-From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To:     Linux PM <linux-pm@vger.kernel.org>,
-        Alan Stern <stern@rowland.harvard.edu>
-Cc:     Linux ACPI <linux-acpi@vger.kernel.org>,
+        id S1726677AbgDRSAP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 18 Apr 2020 14:00:15 -0400
+Received: from netrider.rowland.org ([192.131.102.5]:58691 "HELO
+        netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S1725827AbgDRSAP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 18 Apr 2020 14:00:15 -0400
+Received: (qmail 2621 invoked by uid 500); 18 Apr 2020 14:00:14 -0400
+Received: from localhost (sendmail-bs@127.0.0.1)
+  by localhost with SMTP; 18 Apr 2020 14:00:14 -0400
+Date:   Sat, 18 Apr 2020 14:00:14 -0400 (EDT)
+From:   Alan Stern <stern@rowland.harvard.edu>
+X-X-Sender: stern@netrider.rowland.org
+To:     "Rafael J. Wysocki" <rjw@rjwysocki.net>
+cc:     Linux PM <linux-pm@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
         Linux PCI <linux-pci@vger.kernel.org>,
         LKML <linux-kernel@vger.kernel.org>,
         Bjorn Helgaas <helgaas@kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Mika Westerberg <mika.westerberg@linux.intel.com>,
         Hans De Goede <hdegoede@redhat.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        DRI-devel <dri-devel@lists.freedesktop.org>,
-        Intel Graphics <intel-gfx@lists.freedesktop.org>,
-        intel-wired-lan@lists.osuosl.org
-Subject: [PATCH v2 7/9] PM: sleep: core: Rename DPM_FLAG_NEVER_SKIP
-Date:   Sat, 18 Apr 2020 18:53:01 +0200
-Message-ID: <2011970.oZpq0QmfcQ@kreacher>
+        Ulf Hansson <ulf.hansson@linaro.org>
+Subject: Re: [PATCH v2 0/9] PM: sleep: core: Rearrange the handling of driver
+ power management flags
 In-Reply-To: <5673945.BT02kTCndr@kreacher>
-References: <1888197.j9z7NJ8yPn@kreacher> <5673945.BT02kTCndr@kreacher>
+Message-ID: <Pine.LNX.4.44L0.2004181356070.2069-100000@netrider.rowland.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+On Sat, 18 Apr 2020, Rafael J. Wysocki wrote:
 
-Rename DPM_FLAG_NEVER_SKIP to DPM_FLAG_NO_DIRECT_COMPLETE which
-matches its purpose more closely.
+> Hi,
+> 
+> This is an update including some fixes and extra patches based on the
+> continuation of the discussion [1].
 
-No functional impact.
+I haven't checked the updates in detail yet.  However, it seems that 
+dev_pm_skip_suspend() and dev_pm_skip_resume() should be EXPORTed, 
+since they are intended to be used by subsystems, which may be in 
+modules.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com> # for PCI parts
-Acked-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
----
-
--> v2:
-   * Rebased.
-   * Added tags received so far.
-
----
- Documentation/driver-api/pm/devices.rst    |  6 +++---
- Documentation/power/pci.rst                | 10 +++++-----
- drivers/base/power/main.c                  |  2 +-
- drivers/gpu/drm/amd/amdgpu/amdgpu_kms.c    |  2 +-
- drivers/gpu/drm/i915/intel_runtime_pm.c    |  2 +-
- drivers/gpu/drm/radeon/radeon_kms.c        |  2 +-
- drivers/misc/mei/pci-me.c                  |  2 +-
- drivers/misc/mei/pci-txe.c                 |  2 +-
- drivers/net/ethernet/intel/e1000e/netdev.c |  2 +-
- drivers/net/ethernet/intel/igb/igb_main.c  |  2 +-
- drivers/net/ethernet/intel/igc/igc_main.c  |  2 +-
- drivers/pci/pcie/portdrv_pci.c             |  2 +-
- include/linux/pm.h                         |  6 +++---
- 13 files changed, 21 insertions(+), 21 deletions(-)
-
-diff --git a/Documentation/driver-api/pm/devices.rst b/Documentation/driver-api/pm/devices.rst
-index f66c7b9126ea..4ace0eba4506 100644
---- a/Documentation/driver-api/pm/devices.rst
-+++ b/Documentation/driver-api/pm/devices.rst
-@@ -361,9 +361,9 @@ the phases are: ``prepare``, ``suspend``, ``suspend_late``, ``suspend_noirq``.
- 	runtime PM disabled.
- 
- 	This feature also can be controlled by device drivers by using the
--	``DPM_FLAG_NEVER_SKIP`` and ``DPM_FLAG_SMART_PREPARE`` driver power
--	management flags.  [Typically, they are set at the time the driver is
--	probed against the device in question by passing them to the
-+	``DPM_FLAG_NO_DIRECT_COMPLETE`` and ``DPM_FLAG_SMART_PREPARE`` driver
-+	power management flags.  [Typically, they are set at the time the driver
-+	is probed against the device in question by passing them to the
- 	:c:func:`dev_pm_set_driver_flags` helper function.]  If the first of
- 	these flags is set, the PM core will not apply the direct-complete
- 	procedure described above to the given device and, consequenty, to any
-diff --git a/Documentation/power/pci.rst b/Documentation/power/pci.rst
-index aa1c7fce6cd0..9e1408121bea 100644
---- a/Documentation/power/pci.rst
-+++ b/Documentation/power/pci.rst
-@@ -1004,11 +1004,11 @@ including the PCI bus type.  The flags should be set once at the driver probe
- time with the help of the dev_pm_set_driver_flags() function and they should not
- be updated directly afterwards.
- 
--The DPM_FLAG_NEVER_SKIP flag prevents the PM core from using the direct-complete
--mechanism allowing device suspend/resume callbacks to be skipped if the device
--is in runtime suspend when the system suspend starts.  That also affects all of
--the ancestors of the device, so this flag should only be used if absolutely
--necessary.
-+The DPM_FLAG_NO_DIRECT_COMPLETE flag prevents the PM core from using the
-+direct-complete mechanism allowing device suspend/resume callbacks to be skipped
-+if the device is in runtime suspend when the system suspend starts.  That also
-+affects all of the ancestors of the device, so this flag should only be used if
-+absolutely necessary.
- 
- The DPM_FLAG_SMART_PREPARE flag instructs the PCI bus type to only return a
- positive value from pci_pm_prepare() if the ->prepare callback provided by the
-diff --git a/drivers/base/power/main.c b/drivers/base/power/main.c
-index 3170d93e29f9..dbc1e5e7346b 100644
---- a/drivers/base/power/main.c
-+++ b/drivers/base/power/main.c
-@@ -1844,7 +1844,7 @@ static int device_prepare(struct device *dev, pm_message_t state)
- 	spin_lock_irq(&dev->power.lock);
- 	dev->power.direct_complete = state.event == PM_EVENT_SUSPEND &&
- 		(ret > 0 || dev->power.no_pm_callbacks) &&
--		!dev_pm_test_driver_flags(dev, DPM_FLAG_NEVER_SKIP);
-+		!dev_pm_test_driver_flags(dev, DPM_FLAG_NO_DIRECT_COMPLETE);
- 	spin_unlock_irq(&dev->power.lock);
- 	return 0;
- }
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_kms.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_kms.c
-index fd1dc3236eca..a9086ea1ab60 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu_kms.c
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_kms.c
-@@ -191,7 +191,7 @@ int amdgpu_driver_load_kms(struct drm_device *dev, unsigned long flags)
- 	}
- 
- 	if (adev->runpm) {
--		dev_pm_set_driver_flags(dev->dev, DPM_FLAG_NEVER_SKIP);
-+		dev_pm_set_driver_flags(dev->dev, DPM_FLAG_NO_DIRECT_COMPLETE);
- 		pm_runtime_use_autosuspend(dev->dev);
- 		pm_runtime_set_autosuspend_delay(dev->dev, 5000);
- 		pm_runtime_set_active(dev->dev);
-diff --git a/drivers/gpu/drm/i915/intel_runtime_pm.c b/drivers/gpu/drm/i915/intel_runtime_pm.c
-index ad719c9602af..9cb2d7548daa 100644
---- a/drivers/gpu/drm/i915/intel_runtime_pm.c
-+++ b/drivers/gpu/drm/i915/intel_runtime_pm.c
-@@ -549,7 +549,7 @@ void intel_runtime_pm_enable(struct intel_runtime_pm *rpm)
- 	 * becaue the HDA driver may require us to enable the audio power
- 	 * domain during system suspend.
- 	 */
--	dev_pm_set_driver_flags(kdev, DPM_FLAG_NEVER_SKIP);
-+	dev_pm_set_driver_flags(kdev, DPM_FLAG_NO_DIRECT_COMPLETE);
- 
- 	pm_runtime_set_autosuspend_delay(kdev, 10000); /* 10s */
- 	pm_runtime_mark_last_busy(kdev);
-diff --git a/drivers/gpu/drm/radeon/radeon_kms.c b/drivers/gpu/drm/radeon/radeon_kms.c
-index 58176db85952..372962358a18 100644
---- a/drivers/gpu/drm/radeon/radeon_kms.c
-+++ b/drivers/gpu/drm/radeon/radeon_kms.c
-@@ -158,7 +158,7 @@ int radeon_driver_load_kms(struct drm_device *dev, unsigned long flags)
- 	}
- 
- 	if (radeon_is_px(dev)) {
--		dev_pm_set_driver_flags(dev->dev, DPM_FLAG_NEVER_SKIP);
-+		dev_pm_set_driver_flags(dev->dev, DPM_FLAG_NO_DIRECT_COMPLETE);
- 		pm_runtime_use_autosuspend(dev->dev);
- 		pm_runtime_set_autosuspend_delay(dev->dev, 5000);
- 		pm_runtime_set_active(dev->dev);
-diff --git a/drivers/misc/mei/pci-me.c b/drivers/misc/mei/pci-me.c
-index 3d21c38e2dbb..53f16f3bd091 100644
---- a/drivers/misc/mei/pci-me.c
-+++ b/drivers/misc/mei/pci-me.c
-@@ -240,7 +240,7 @@ static int mei_me_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	 * MEI requires to resume from runtime suspend mode
- 	 * in order to perform link reset flow upon system suspend.
- 	 */
--	dev_pm_set_driver_flags(&pdev->dev, DPM_FLAG_NEVER_SKIP);
-+	dev_pm_set_driver_flags(&pdev->dev, DPM_FLAG_NO_DIRECT_COMPLETE);
- 
- 	/*
- 	 * ME maps runtime suspend/resume to D0i states,
-diff --git a/drivers/misc/mei/pci-txe.c b/drivers/misc/mei/pci-txe.c
-index beacf2a2f2b5..4bf26ce61044 100644
---- a/drivers/misc/mei/pci-txe.c
-+++ b/drivers/misc/mei/pci-txe.c
-@@ -128,7 +128,7 @@ static int mei_txe_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	 * MEI requires to resume from runtime suspend mode
- 	 * in order to perform link reset flow upon system suspend.
- 	 */
--	dev_pm_set_driver_flags(&pdev->dev, DPM_FLAG_NEVER_SKIP);
-+	dev_pm_set_driver_flags(&pdev->dev, DPM_FLAG_NO_DIRECT_COMPLETE);
- 
- 	/*
- 	 * TXE maps runtime suspend/resume to own power gating states,
-diff --git a/drivers/net/ethernet/intel/e1000e/netdev.c b/drivers/net/ethernet/intel/e1000e/netdev.c
-index 177c6da80c57..2730b1c7dddb 100644
---- a/drivers/net/ethernet/intel/e1000e/netdev.c
-+++ b/drivers/net/ethernet/intel/e1000e/netdev.c
-@@ -7549,7 +7549,7 @@ static int e1000_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	e1000_print_device_info(adapter);
- 
--	dev_pm_set_driver_flags(&pdev->dev, DPM_FLAG_NEVER_SKIP);
-+	dev_pm_set_driver_flags(&pdev->dev, DPM_FLAG_NO_DIRECT_COMPLETE);
- 
- 	if (pci_dev_run_wake(pdev) && hw->mac.type < e1000_pch_cnp)
- 		pm_runtime_put_noidle(&pdev->dev);
-diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
-index b46bff8fe056..8bb3db2cbd41 100644
---- a/drivers/net/ethernet/intel/igb/igb_main.c
-+++ b/drivers/net/ethernet/intel/igb/igb_main.c
-@@ -3445,7 +3445,7 @@ static int igb_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		}
- 	}
- 
--	dev_pm_set_driver_flags(&pdev->dev, DPM_FLAG_NEVER_SKIP);
-+	dev_pm_set_driver_flags(&pdev->dev, DPM_FLAG_NO_DIRECT_COMPLETE);
- 
- 	pm_runtime_put_noidle(&pdev->dev);
- 	return 0;
-diff --git a/drivers/net/ethernet/intel/igc/igc_main.c b/drivers/net/ethernet/intel/igc/igc_main.c
-index 69fa1ce1f927..59fc0097438f 100644
---- a/drivers/net/ethernet/intel/igc/igc_main.c
-+++ b/drivers/net/ethernet/intel/igc/igc_main.c
-@@ -4825,7 +4825,7 @@ static int igc_probe(struct pci_dev *pdev,
- 	pcie_print_link_status(pdev);
- 	netdev_info(netdev, "MAC: %pM\n", netdev->dev_addr);
- 
--	dev_pm_set_driver_flags(&pdev->dev, DPM_FLAG_NEVER_SKIP);
-+	dev_pm_set_driver_flags(&pdev->dev, DPM_FLAG_NO_DIRECT_COMPLETE);
- 
- 	pm_runtime_put_noidle(&pdev->dev);
- 
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index 160d67c59310..3acf151ae015 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -115,7 +115,7 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
- 
- 	pci_save_state(dev);
- 
--	dev_pm_set_driver_flags(&dev->dev, DPM_FLAG_NEVER_SKIP |
-+	dev_pm_set_driver_flags(&dev->dev, DPM_FLAG_NO_DIRECT_COMPLETE |
- 					   DPM_FLAG_SMART_SUSPEND);
- 
- 	if (pci_bridge_d3_possible(dev)) {
-diff --git a/include/linux/pm.h b/include/linux/pm.h
-index 8c59a7f0bcf4..cdb8fbd6ab18 100644
---- a/include/linux/pm.h
-+++ b/include/linux/pm.h
-@@ -544,7 +544,7 @@ struct pm_subsys_data {
-  * These flags can be set by device drivers at the probe time.  They need not be
-  * cleared by the drivers as the driver core will take care of that.
-  *
-- * NEVER_SKIP: Do not skip all system suspend/resume callbacks for the device.
-+ * NO_DIRECT_COMPLETE: Do not apply direct-complete optimization to the device.
-  * SMART_PREPARE: Check the return value of the driver's ->prepare callback.
-  * SMART_SUSPEND: No need to resume the device from runtime suspend.
-  * LEAVE_SUSPENDED: Avoid resuming the device during system resume if possible.
-@@ -554,7 +554,7 @@ struct pm_subsys_data {
-  * their ->prepare callbacks if the driver's ->prepare callback returns 0 (in
-  * other words, the system suspend/resume callbacks can only be skipped for the
-  * device if its driver doesn't object against that).  This flag has no effect
-- * if NEVER_SKIP is set.
-+ * if NO_DIRECT_COMPLETE is set.
-  *
-  * Setting SMART_SUSPEND instructs bus types and PM domains which may want to
-  * runtime resume the device upfront during system suspend that doing so is not
-@@ -565,7 +565,7 @@ struct pm_subsys_data {
-  * Setting LEAVE_SUSPENDED informs the PM core and middle-layer code that the
-  * driver prefers the device to be left in suspend after system resume.
-  */
--#define DPM_FLAG_NEVER_SKIP		BIT(0)
-+#define DPM_FLAG_NO_DIRECT_COMPLETE	BIT(0)
- #define DPM_FLAG_SMART_PREPARE		BIT(1)
- #define DPM_FLAG_SMART_SUSPEND		BIT(2)
- #define DPM_FLAG_LEAVE_SUSPENDED	BIT(3)
--- 
-2.16.4
-
-
-
+Alan Stern
 
