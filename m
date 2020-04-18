@@ -2,206 +2,128 @@ Return-Path: <SRS0=EUoI=6C=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-7.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39A1FC38A2F
-	for <linux-pci@archiver.kernel.org>; Sat, 18 Apr 2020 14:13:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 165B0C3A5A9
+	for <linux-pci@archiver.kernel.org>; Sat, 18 Apr 2020 14:49:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1682121D6C
-	for <linux-pci@archiver.kernel.org>; Sat, 18 Apr 2020 14:13:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E341321D82
+	for <linux-pci@archiver.kernel.org>; Sat, 18 Apr 2020 14:49:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1587219187;
-	bh=+J1rnpev1mWG2DjbDUlUXV/sV3CYW4t3iOt9gosTfsA=;
+	s=default; t=1587221379;
+	bh=oBDpPo5r7BnQud5hg5Ni8kM1Rsc27eJkjugY81+CtPw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=V2A+OgXVbfwmhkXUD+BSUqIGt30XVsr9MJYAUcjaP5QAwjyKC9Us+frqeEZrNnWTR
-	 Ws5X01dYUyyX+gcX5En2714DQP6v413pXkW7H78euaH7fPH0+xiKJo3L+pZwKhAPhT
-	 TtcBCvCl0RhPbYAWfpBbr73ZeIbqHwc654nmCbKE=
+	b=2NXDku2/NDjZC28tHL2oTXhq66qAoIR+qCut3IVK9Kk12klTBa8bFJfdxEduZ+Zor
+	 tvzp1dsXlUpT8Z3Vy2J7L2KNCzze9ERJoxk++TaZNleyfu7QTfJMdNxyBv+/iZjuwg
+	 tvC40sS+FGNl2rluRbZY2DgXl5JcNz6I0IjFO1yE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726823AbgDRONA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 18 Apr 2020 10:13:00 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37562 "EHLO mail.kernel.org"
+        id S1728248AbgDROtf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 18 Apr 2020 10:49:35 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54496 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726701AbgDROJw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 18 Apr 2020 10:09:52 -0400
+        id S1726798AbgDROn1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 18 Apr 2020 10:43:27 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 090F722264;
-        Sat, 18 Apr 2020 14:09:49 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id E9B4C22240;
+        Sat, 18 Apr 2020 14:43:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1587218991;
-        bh=+J1rnpev1mWG2DjbDUlUXV/sV3CYW4t3iOt9gosTfsA=;
+        s=default; t=1587221006;
+        bh=oBDpPo5r7BnQud5hg5Ni8kM1Rsc27eJkjugY81+CtPw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Wv2GtNodjhZm3Fwe99Saj4vESyde3uAKIE7+DxAd70KViU97O6AD/3IW21ZhzPfXo
-         ns4Hltrnv+6aPg19gpjKMlILg3uI9KLWS3ZtjQ2jozcMIHNOf0q1tpeOeEyR+VL+/o
-         zpQM7vN8C/tuUIq3y1qZLSNs8RbCAki/yQzGss0k=
+        b=dG60jycwDjX2U96AZIAD06NnFfbTGgPF0E+M/SGDsU/tu9nkDt3VUPBOmDF+qhPDD
+         oy9LMArJupVNgDYx/EwAq0LVXGeMv3uZ3b+cLK8UeXpUvH9yqsIOY2f8o7e8lNP12H
+         9Vevjf9SlhN1DwMW025WBUMmQpZ2jbJeHUGanPSo=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Karol Herbst <kherbst@redhat.com>,
+Cc:     Heiner Kallweit <hkallweit1@gmail.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Lyude Paul <lyude@redhat.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Mika Westerberg <mika.westerberg@intel.com>,
-        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, nouveau@lists.freedesktop.org,
-        Ben Skeggs <bskeggs@redhat.com>,
-        Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.5 32/75] drm/nouveau: workaround runpm fail by disabling PCI power management on certain intel bridges
-Date:   Sat, 18 Apr 2020 10:08:27 -0400
-Message-Id: <20200418140910.8280-32-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 47/47] PCI/ASPM: Allow re-enabling Clock PM
+Date:   Sat, 18 Apr 2020 10:42:27 -0400
+Message-Id: <20200418144227.9802-47-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200418140910.8280-1-sashal@kernel.org>
-References: <20200418140910.8280-1-sashal@kernel.org>
+In-Reply-To: <20200418144227.9802-1-sashal@kernel.org>
+References: <20200418144227.9802-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Karol Herbst <kherbst@redhat.com>
+From: Heiner Kallweit <hkallweit1@gmail.com>
 
-[ Upstream commit 434fdb51513bf3057ac144d152e6f2f2b509e857 ]
+[ Upstream commit 35efea32b26f9aacc99bf07e0d2cdfba2028b099 ]
 
-Fixes the infamous 'runtime PM' bug many users are facing on Laptops with
-Nvidia Pascal GPUs by skipping said PCI power state changes on the GPU.
+Previously Clock PM could not be re-enabled after being disabled by
+pci_disable_link_state() because clkpm_capable was reset.  Change this by
+adding a clkpm_disable field similar to aspm_disable.
 
-Depending on the used kernel there might be messages like those in demsg:
-
-"nouveau 0000:01:00.0: Refused to change power state, currently in D3"
-"nouveau 0000:01:00.0: can't change power state from D3cold to D0 (config
-space inaccessible)"
-followed by backtraces of kernel crashes or timeouts within nouveau.
-
-It's still unkown why this issue exists, but this is a reliable workaround
-and solves a very annoying issue for user having to choose between a
-crashing kernel or higher power consumption of their Laptops.
-
-Signed-off-by: Karol Herbst <kherbst@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Lyude Paul <lyude@redhat.com>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Mika Westerberg <mika.westerberg@intel.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-pm@vger.kernel.org
-Cc: dri-devel@lists.freedesktop.org
-Cc: nouveau@lists.freedesktop.org
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=205623
-Signed-off-by: Ben Skeggs <bskeggs@redhat.com>
+Link: https://lore.kernel.org/r/4e8a66db-7d53-4a66-c26c-f0037ffaa705@gmail.com
+Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/gpu/drm/nouveau/nouveau_drm.c | 63 +++++++++++++++++++++++++++
- drivers/gpu/drm/nouveau/nouveau_drv.h |  2 +
- 2 files changed, 65 insertions(+)
+ drivers/pci/pcie/aspm.c | 18 +++++++++++-------
+ 1 file changed, 11 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/gpu/drm/nouveau/nouveau_drm.c b/drivers/gpu/drm/nouveau/nouveau_drm.c
-index 2cd83849600f3..b1beed40e746a 100644
---- a/drivers/gpu/drm/nouveau/nouveau_drm.c
-+++ b/drivers/gpu/drm/nouveau/nouveau_drm.c
-@@ -618,6 +618,64 @@ nouveau_drm_device_fini(struct drm_device *dev)
- 	kfree(drm);
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 1117b25fbe0bb..2948f86d88969 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -67,6 +67,7 @@ struct pcie_link_state {
+ 	u32 clkpm_capable:1;		/* Clock PM capable? */
+ 	u32 clkpm_enabled:1;		/* Current Clock PM state */
+ 	u32 clkpm_default:1;		/* Default Clock PM state by BIOS */
++	u32 clkpm_disable:1;		/* Clock PM disabled */
+ 
+ 	/* Exit latencies */
+ 	struct aspm_latency latency_up;	/* Upstream direction exit latency */
+@@ -164,8 +165,11 @@ static void pcie_set_clkpm_nocheck(struct pcie_link_state *link, int enable)
+ 
+ static void pcie_set_clkpm(struct pcie_link_state *link, int enable)
+ {
+-	/* Don't enable Clock PM if the link is not Clock PM capable */
+-	if (!link->clkpm_capable)
++	/*
++	 * Don't enable Clock PM if the link is not Clock PM capable
++	 * or Clock PM is disabled
++	 */
++	if (!link->clkpm_capable || link->clkpm_disable)
+ 		enable = 0;
+ 	/* Need nothing if the specified equals to current state */
+ 	if (link->clkpm_enabled == enable)
+@@ -195,7 +199,8 @@ static void pcie_clkpm_cap_init(struct pcie_link_state *link, int blacklist)
+ 	}
+ 	link->clkpm_enabled = enabled;
+ 	link->clkpm_default = enabled;
+-	link->clkpm_capable = (blacklist) ? 0 : capable;
++	link->clkpm_capable = capable;
++	link->clkpm_disable = blacklist ? 1 : 0;
  }
  
-+/*
-+ * On some Intel PCIe bridge controllers doing a
-+ * D0 -> D3hot -> D3cold -> D0 sequence causes Nvidia GPUs to not reappear.
-+ * Skipping the intermediate D3hot step seems to make it work again. This is
-+ * probably caused by not meeting the expectation the involved AML code has
-+ * when the GPU is put into D3hot state before invoking it.
-+ *
-+ * This leads to various manifestations of this issue:
-+ *  - AML code execution to power on the GPU hits an infinite loop (as the
-+ *    code waits on device memory to change).
-+ *  - kernel crashes, as all PCI reads return -1, which most code isn't able
-+ *    to handle well enough.
-+ *
-+ * In all cases dmesg will contain at least one line like this:
-+ * 'nouveau 0000:01:00.0: Refused to change power state, currently in D3'
-+ * followed by a lot of nouveau timeouts.
-+ *
-+ * In the \_SB.PCI0.PEG0.PG00._OFF code deeper down writes bit 0x80 to the not
-+ * documented PCI config space register 0x248 of the Intel PCIe bridge
-+ * controller (0x1901) in order to change the state of the PCIe link between
-+ * the PCIe port and the GPU. There are alternative code paths using other
-+ * registers, which seem to work fine (executed pre Windows 8):
-+ *  - 0xbc bit 0x20 (publicly available documentation claims 'reserved')
-+ *  - 0xb0 bit 0x10 (link disable)
-+ * Changing the conditions inside the firmware by poking into the relevant
-+ * addresses does resolve the issue, but it seemed to be ACPI private memory
-+ * and not any device accessible memory at all, so there is no portable way of
-+ * changing the conditions.
-+ * On a XPS 9560 that means bits [0,3] on \CPEX need to be cleared.
-+ *
-+ * The only systems where this behavior can be seen are hybrid graphics laptops
-+ * with a secondary Nvidia Maxwell, Pascal or Turing GPU. It's unclear whether
-+ * this issue only occurs in combination with listed Intel PCIe bridge
-+ * controllers and the mentioned GPUs or other devices as well.
-+ *
-+ * documentation on the PCIe bridge controller can be found in the
-+ * "7th Generation Intel® Processor Families for H Platforms Datasheet Volume 2"
-+ * Section "12 PCI Express* Controller (x16) Registers"
-+ */
-+
-+static void quirk_broken_nv_runpm(struct pci_dev *pdev)
-+{
-+	struct drm_device *dev = pci_get_drvdata(pdev);
-+	struct nouveau_drm *drm = nouveau_drm(dev);
-+	struct pci_dev *bridge = pci_upstream_bridge(pdev);
-+
-+	if (!bridge || bridge->vendor != PCI_VENDOR_ID_INTEL)
-+		return;
-+
-+	switch (bridge->device) {
-+	case 0x1901:
-+		drm->old_pm_cap = pdev->pm_cap;
-+		pdev->pm_cap = 0;
-+		NV_INFO(drm, "Disabling PCI power management to avoid bug\n");
-+		break;
-+	}
-+}
-+
- static int nouveau_drm_probe(struct pci_dev *pdev,
- 			     const struct pci_device_id *pent)
- {
-@@ -699,6 +757,7 @@ static int nouveau_drm_probe(struct pci_dev *pdev,
- 	if (ret)
- 		goto fail_drm_dev_init;
+ static bool pcie_retrain_link(struct pcie_link_state *link)
+@@ -1106,10 +1111,9 @@ static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem)
+ 		link->aspm_disable |= ASPM_STATE_L1;
+ 	pcie_config_aspm_link(link, policy_to_aspm_state(link));
  
-+	quirk_broken_nv_runpm(pdev);
- 	return 0;
- 
- fail_drm_dev_init:
-@@ -736,7 +795,11 @@ static void
- nouveau_drm_remove(struct pci_dev *pdev)
- {
- 	struct drm_device *dev = pci_get_drvdata(pdev);
-+	struct nouveau_drm *drm = nouveau_drm(dev);
- 
-+	/* revert our workaround */
-+	if (drm->old_pm_cap)
-+		pdev->pm_cap = drm->old_pm_cap;
- 	nouveau_drm_device_remove(dev);
- }
- 
-diff --git a/drivers/gpu/drm/nouveau/nouveau_drv.h b/drivers/gpu/drm/nouveau/nouveau_drv.h
-index 70f34cacc552c..8104e3806499d 100644
---- a/drivers/gpu/drm/nouveau/nouveau_drv.h
-+++ b/drivers/gpu/drm/nouveau/nouveau_drv.h
-@@ -138,6 +138,8 @@ struct nouveau_drm {
- 
- 	struct list_head clients;
- 
-+	u8 old_pm_cap;
-+
- 	struct {
- 		struct agp_bridge_data *bridge;
- 		u32 base;
+-	if (state & PCIE_LINK_STATE_CLKPM) {
+-		link->clkpm_capable = 0;
+-		pcie_set_clkpm(link, 0);
+-	}
++	if (state & PCIE_LINK_STATE_CLKPM)
++		link->clkpm_disable = 1;
++	pcie_set_clkpm(link, policy_to_clkpm_state(link));
+ 	mutex_unlock(&aspm_lock);
+ 	if (sem)
+ 		up_read(&pci_bus_sem);
 -- 
 2.20.1
 
