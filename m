@@ -2,83 +2,106 @@ Return-Path: <SRS0=+/lQ=6D=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA9DCC5321D
-	for <linux-pci@archiver.kernel.org>; Sun, 19 Apr 2020 16:38:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FD8CC5321D
+	for <linux-pci@archiver.kernel.org>; Sun, 19 Apr 2020 18:14:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C44962051A
-	for <linux-pci@archiver.kernel.org>; Sun, 19 Apr 2020 16:38:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E412F21974
+	for <linux-pci@archiver.kernel.org>; Sun, 19 Apr 2020 18:14:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1587320081;
+	bh=bOt9BTn/I9BtpLW6MYPux7kH7zXf1KQ4OwttSbOUgxw=;
+	h=In-Reply-To:References:Subject:From:Cc:To:Date:List-ID:From;
+	b=Fjua5yMmrDwnoDbvzpOf5cvRXVF9JqY6j2ofQXjbXyItQY2t7Crdppso7PPHODIeB
+	 byb3XbdpNof3XGq8bfuwR9uDklUOuJNSW5scfUhNmosFQ6+xsZ4fbgOm78qADH3yBy
+	 fGYdmQQBlNeaucIOb6UbD773YZ9mgWcnZ+Rre5Uw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725927AbgDSQib (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 19 Apr 2020 12:38:31 -0400
-Received: from smtprelay0088.hostedemail.com ([216.40.44.88]:51650 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725793AbgDSQib (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 19 Apr 2020 12:38:31 -0400
-Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
-        by smtprelay02.hostedemail.com (Postfix) with ESMTP id E2A595836;
-        Sun, 19 Apr 2020 16:38:29 +0000 (UTC)
-X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-HE-Tag: bone84_2ca91b5f55455
-X-Filterd-Recvd-Size: 2304
-Received: from XPS-9350.home (unknown [47.151.136.130])
-        (Authenticated sender: joe@perches.com)
-        by omf18.hostedemail.com (Postfix) with ESMTPA;
-        Sun, 19 Apr 2020 16:38:26 +0000 (UTC)
-Message-ID: <975f3a73bb272b8276687af609cd7e592d6ba9ac.camel@perches.com>
-Subject: Re: [PATCH v8 8/8] MAINTAINERS: Add file patterns for rcar PCI
- device tree bindings
-From:   Joe Perches <joe@perches.com>
-To:     Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        Tom Joseph <tjoseph@cadence.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Heiko Stuebner <heiko@sntech.de>
-Cc:     Geert Uytterhoeven <geert+renesas@glider.be>,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org,
-        Lad Prabhakar <prabhakar.csengg@gmail.com>
-Date:   Sun, 19 Apr 2020 09:36:11 -0700
-In-Reply-To: <1587302823-4435-9-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
-References: <1587302823-4435-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
-         <1587302823-4435-9-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-User-Agent: Evolution 3.34.1-2 
+        id S1726702AbgDSSOl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 19 Apr 2020 14:14:41 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37082 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726440AbgDSSOk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 19 Apr 2020 14:14:40 -0400
+Received: from kernel.org (unknown [104.132.0.74])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 3440920771;
+        Sun, 19 Apr 2020 18:14:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1587320079;
+        bh=bOt9BTn/I9BtpLW6MYPux7kH7zXf1KQ4OwttSbOUgxw=;
+        h=In-Reply-To:References:Subject:From:Cc:To:Date:From;
+        b=F96kxGnwb5hbRo2uaveExMkh4pG5tmsfXC/X4f7LcIR9NVVk3+CXqwPimCRGIZsLq
+         200DZ+NlYkyxPrNFkbuYootDCzDqqWFu0hJkAVPZpKUAgkDDPBPfI6mIZvHi8k+VtM
+         aJNXnDOzYimf/GSU7Z8wIQIZEF7kJxvbDOxdjZqA=
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20200416005549.9683-2-robh@kernel.org>
+References: <20200416005549.9683-1-robh@kernel.org> <20200416005549.9683-2-robh@kernel.org>
+Subject: Re: [PATCH 2/2] dt-bindings: Remove cases of 'allOf' containing a '$ref'
+From:   Stephen Boyd <sboyd@kernel.org>
+Cc:     Krzysztof Kozlowski <krzk@kernel.org>,
+        Maxime Ripard <mripard@kernel.org>,
+        Alexandre Torgue <alexandre.torgue@st.com>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Sam Ravnborg <sam@ravnborg.org>, Vinod Koul <vkoul@kernel.org>,
+        Bartosz Golaszewski <bgolaszewski@baylibre.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Jonathan Cameron <jic23@kernel.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Jacek Anaszewski <jacek.anaszewski@gmail.com>,
+        Pavel Machek <pavel@ucw.cz>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Lee Jones <lee.jones@linaro.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Heiko Stuebner <heiko@sntech.de>, Andrew Lunn <andrew@lunn.ch>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Fabio Estevam <festevam@gmail.com>,
+        Mark Brown <broonie@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Alexandre Belloni <alexandre.belloni@bootlin.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Amit Kucheria <amit.kucheria@linaro.org>,
+        Danie l Lezcano <daniel.lezcano@linaro.org>,
+        linux-arm-kernel@lists.infradead.org, linux-clk@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, linux-i2c@vger.kernel.org,
+        linux-hwmon@vger.kernel.org, linux-iio@vger.kernel.org,
+        linux-input@vger.kernel.org, linux-leds@vger.kernel.org,
+        linux-media@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-can@vger.kernel.org,
+        netdev@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-gpio@vger.kernel.org, linux-pwm@vger.kernel.org,
+        linux-remoteproc@vger.kernel.org, linux-riscv@lists.infradead.org,
+        linux-rtc@vger.kernel.org, linux-serial@vger.kernel.org,
+        alsa-devel@alsa-project.org, linux-spi@vger.kernel.org
+To:     Rob Herring <robh@kernel.org>, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date:   Sun, 19 Apr 2020 11:14:38 -0700
+Message-ID: <158732007844.132238.3936257450130949073@swboyd.mtv.corp.google.com>
+User-Agent: alot/0.9
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sun, 2020-04-19 at 14:27 +0100, Lad Prabhakar wrote:
-> Add file pattern entry for rcar PCI devicetree binding, so that when
-> people run ./scripts/get_maintainer.pl the rcar PCI maintainers could also
-> be listed.
-[]
-> diff --git a/MAINTAINERS b/MAINTAINERS
-[]
-> @@ -12933,6 +12933,7 @@ L:	linux-pci@vger.kernel.org
->  L:	linux-renesas-soc@vger.kernel.org
->  S:	Maintained
->  F:	drivers/pci/controller/*rcar*
-> +F:	Documentation/devicetree/bindings/pci/*rcar*
+Quoting Rob Herring (2020-04-15 17:55:49)
+> json-schema versions draft7 and earlier have a weird behavior in that
+> any keywords combined with a '$ref' are ignored (silently). The correct
+> form was to put a '$ref' under an 'allOf'. This behavior is now changed
+> in the 2019-09 json-schema spec and '$ref' can be mixed with other
+> keywords. The json-schema library doesn't yet support this, but the
+> tooling now does a fixup for this and either way works.
+>=20
+> This has been a constant source of review comments, so let's change this
+> treewide so everyone copies the simpler syntax.
+>=20
+> Signed-off-by: Rob Herring <robh@kernel.org>
+> ---
+>  .../bindings/clock/fixed-factor-clock.yaml    |   5 +-
 
-MAINTAINERS was recently sorted for consistency.
-
-Please move this new line above drivers/ to keep alphabetic ordering.
-
-
+Reviewed-by: Stephen Boyd <sboyd@kernel.org> # clock
