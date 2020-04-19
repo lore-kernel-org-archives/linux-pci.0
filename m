@@ -2,204 +2,88 @@ Return-Path: <SRS0=+/lQ=6D=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8A60C2BA2B
-	for <linux-pci@archiver.kernel.org>; Sun, 19 Apr 2020 06:56:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1F4DC38A30
+	for <linux-pci@archiver.kernel.org>; Sun, 19 Apr 2020 09:51:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9F594221F7
-	for <linux-pci@archiver.kernel.org>; Sun, 19 Apr 2020 06:56:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C293721473
+	for <linux-pci@archiver.kernel.org>; Sun, 19 Apr 2020 09:51:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WBG4WyLO"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="p3g9j1xn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725910AbgDSG4M (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 19 Apr 2020 02:56:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40980 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725446AbgDSG4L (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 19 Apr 2020 02:56:11 -0400
-Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 81E4EC061A0C
-        for <linux-pci@vger.kernel.org>; Sat, 18 Apr 2020 23:56:11 -0700 (PDT)
-Received: by mail-wm1-x343.google.com with SMTP id y24so7543871wma.4
-        for <linux-pci@vger.kernel.org>; Sat, 18 Apr 2020 23:56:11 -0700 (PDT)
+        id S1725914AbgDSJvf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 19 Apr 2020 05:51:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39472 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725832AbgDSJve (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 19 Apr 2020 05:51:34 -0400
+Received: from mail-lf1-x142.google.com (mail-lf1-x142.google.com [IPv6:2a00:1450:4864:20::142])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DE22C061A0C
+        for <linux-pci@vger.kernel.org>; Sun, 19 Apr 2020 02:51:34 -0700 (PDT)
+Received: by mail-lf1-x142.google.com with SMTP id l11so5436627lfc.5
+        for <linux-pci@vger.kernel.org>; Sun, 19 Apr 2020 02:51:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=bvVxplEq12gRKVU/1QU9KaRq3+qBnxhiE6tTLAwVB9M=;
-        b=WBG4WyLOEuUI2MbKwXFW38XL4fhkHm6uzkMXk6+gDdSpp4n0GoaWe+W2uzcutPOnvR
-         snhMv6X0m5D9YYfKEhoetHYugFL6MS+r6S8YIp1V+5R1+sa06JlO+NCw4FFkYSnKlP7k
-         F/ENKVJxkwboQ13oDBhVRxEnsXfLeTzIbPdjbL4ZwDHZqRDIB8ay6AWA9kBCi/O3G1ys
-         WnATbSEuCHd+wOo3Ja374xGXYAlX/G4b5ILHdzjUjdSa9qx4vm6AVmFbwX8dhpkniVLD
-         2T5HUFoNZqCwbGlvhAH7qYmAr8dl/5t3Bp7KuupXzqXLc2JlbzjjHQbFP6RuGUAr++wE
-         yLnQ==
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=N9JI33hna/+DxESkUc7SCOMzfYQhchoF06eN0/wfACI=;
+        b=p3g9j1xnjdCtzhbgZS6lVhDB+mXR+o9+FTp1/dXRbri/Wmu8K7EsTY54Buw14cqV/t
+         VKxBLkOHqGwNawDndp5tVo/S7shTTp5VMCP5HXlx8k/HYr2tWG8IWRdGbpqCALRIZzQM
+         Uz+TJKMudQF8GP6epv9M+qUY0yPfFOA3Rtftp5MoijLCN0kLYX66lDmQHN005k+sIOr/
+         4WL3/aPNX72Hze9blP2PGXgcyc7ChGVoR33ORT9uk0i6aKO5Tp5fvInqHRq/KFyuRFxh
+         70sd1Nm6cx1GNlcjDDS6kH2o/l0cYZ87Zsa8nqUlRZhyHhUD5FqIDNJ3V6gaweMl1PwH
+         Ge+Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=bvVxplEq12gRKVU/1QU9KaRq3+qBnxhiE6tTLAwVB9M=;
-        b=Ugr5RwE38W5uBH5t1utwjYiZ8jDnIiyL7AaG9g0Euj+NS0Ocao7zvXPp8HMy+Q8SNP
-         2zJAy58CrBfMztNXV3Yjp1WbfbHN66gdRZWSyQoSPStT+pKQmmdhXN0GW7zSdpbePff3
-         b79UYxVfgneD709s413gnVWw2Y568FWaC7ZSE4VZzE+bxYxyqnRBb+/L0t75IzyRi4p7
-         +MQmD9GIMgakJE9UIig/szni5U3rSXmSkiH+2/qdHJVd0OBkq8rOoJ+Dx4Z3dbcwpUwm
-         Vprtr9YWaON9whJVjJoegmCYC61Ia14URvTZ4Pm4iLqKBnMQ4r8MF0NWg+7paDO261Hr
-         4BDw==
-X-Gm-Message-State: AGi0PubIqDvzdcYVm8R+58NXTcluWa2uRf1r34//BEgTD9IbHUfVKTOJ
-        unlEwB71DmSVWF8wC7uB3wGm6rVTv/TYVg==
-X-Google-Smtp-Source: APiQypLaz0MJhFpNHXTXSn3LYY6czBEyM7F5ajNWVEnejkLJbEOHPeG/7XmloVReicWHrSZoQ+uO/A==
-X-Received: by 2002:a1c:b757:: with SMTP id h84mr11480261wmf.188.1587279369849;
-        Sat, 18 Apr 2020 23:56:09 -0700 (PDT)
-Received: from net.saheed (5402C526.dsl.pool.telekom.hu. [84.2.197.38])
-        by smtp.gmail.com with ESMTPSA id q184sm2295470wma.25.2020.04.18.23.56.08
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 18 Apr 2020 23:56:09 -0700 (PDT)
-Subject: Re: [PATCH] Replace -EINVAL with PCIBIOS_BAD_REGISTER_NUMBER
-To:     Yicong Yang <yangyicong@hisilicon.com>,
-        Bjorn Helgaas <helgaas@kernel.org>, bjorn@helgaas.com
-Cc:     skhan@linuxfoundation.org, linux-pci@vger.kernel.org
-References: <20200410202252.GA11837@google.com>
- <ec072da8-3dcb-2606-40ee-39e745311292@hisilicon.com>
-From:   Saheed Bolarinwa <refactormyself@gmail.com>
-Message-ID: <f348edfc-cecc-f732-833d-f99ca64d565c@gmail.com>
-Date:   Sun, 19 Apr 2020 07:56:22 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.6.0
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=N9JI33hna/+DxESkUc7SCOMzfYQhchoF06eN0/wfACI=;
+        b=AgzC5z1ut/92Leu9kKi8k5tkprcRx/FQIMajsw/2qVSfe/9Yni8pqGXpZX5ggOJr3k
+         fB2Bhm++X4PCAeqm2tVlClcoaH3nPqrxYVPLd8PSSUGfXBKAAgGMP6iqT5rlm11B77WA
+         weWvj813UQixVUDwfimNVrQpQjH71Pd6Z2IYUqr2H7Hl3hnOVmvE2UWQkeKZ16lhFa8M
+         LuY51BDloqGUD97vSr8qxkihyHxJwAXGpLR6LbFy6wWTUQyvdY9FcSHuIBly6L1ZhQmQ
+         lWk4vUV6qmthQJt7cexoy5FWmyBT+RKLtgfKa4HFXdeXQRRxyTBeJ0dC0fiUbJ+ey7AB
+         0aIw==
+X-Gm-Message-State: AGi0PuZBI+HDBL8izlvVR41VfmbRH5bZcNOUAOMjPtQ13W7WxgKQDM1c
+        EEZ/3r14+bIOhmV7ph5MmWEctY8e6H/7O4I8gjEmWQ==
+X-Google-Smtp-Source: APiQypIlD7DYc2IomXQqpRtLDysv7ESAnj92UknD/T+xCMSjLv6O3t2ovN2pL1+lrcMzWtZaNVqxUacU/pQItDMN1+I=
+X-Received: by 2002:a05:6512:685:: with SMTP id t5mr7019601lfe.47.1587289892894;
+ Sun, 19 Apr 2020 02:51:32 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <ec072da8-3dcb-2606-40ee-39e745311292@hisilicon.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+References: <20200418081637.1585-1-christophe.jaillet@wanadoo.fr>
+In-Reply-To: <20200418081637.1585-1-christophe.jaillet@wanadoo.fr>
+From:   Linus Walleij <linus.walleij@linaro.org>
+Date:   Sun, 19 Apr 2020 11:51:21 +0200
+Message-ID: <CACRpkdZ347msE7ohENGw1nBLJX1zQybywKoMA8HgZ6Cc6d9Z-A@mail.gmail.com>
+Subject: Re: [PATCH] PCI: v3-semi: Fix a memory leak in some error handling
+ paths in 'v3_pci_probe()'
+To:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Andrew Murray <amurray@thegoodpenguin.co.uk>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hello Bjorn and Yicong
+On Sat, Apr 18, 2020 at 10:16 AM Christophe JAILLET
+<christophe.jaillet@wanadoo.fr> wrote:
 
-On 4/11/20 4:10 AM, Yicong Yang wrote:
-> Hi Bjorn and Saheed,
+> IF we fails somewhere in 'v3_pci_probe()', we need to free 'host'.
+> Use the managed version of 'pci_alloc_host_bridge()' to do that easily.
+> The use of managed resources is already widely used in this driver.
 >
-> Callers use return value(most callers even don't check) of
-> pcie_capability_{read,write}_*() I found lists below. some
+> Fixes: 68a15eb7bd0c ("PCI: v3-semi: Add V3 Semiconductor PCI host driver")
+> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 
-In this patch I have focused only on pcie_capability_read_{word & dword}()
+Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
-Do you think the consistency issue is of concern also with 
-pcie_capability_write_*()?
-
-> may directly print them to dmesg, others return the error
-> codes to its caller. I think we should do the conversion in
-> both condition.
->
-> - pcie_speeds() in drivers/infiniband/hw/hfi1/pcie.c, line 306
-> - amd_ntb_get_link_status() in drivers/ntb/hw/amd/ntb_hw_amd.c, line 216, line 233
-
-Thank you Yicong for helping me with this. I have also search for 
-functions that
-
-either persist the return value of pcie_capability_read_*() or return it 
-directly.
-
-I have sent a RFC Patch with a report of my audit of the functions I 
-found. I will
-
-appreciate your comment.
-
-- Saheed
-
-
-> the probably change may look like:
->
->      ret = pcie_capability_{read, write}_*();
->      if (ret)
->          return pcibios_err_to_errno(ret);
->
-> However, pci_{read, write}_config*() also have such problem, as they are also
-> used widely outside pci driver and these drivers don't do the conversion. for example
-> in arch/x86/platform/intel/iosf_mbi.c, iosf_mbi_pci_read_mdr() at line 39:
->
->      result = pci_read_config_dword();
->      if (result < 0)
->          goto fail_read;
->
-> Seems it'll nevet get a failure result. Perhaps another patch is needed to solve these issues.
->
-> AS PCIBIOS_* error code canbe *equivalent* to generic error code, why can't we
-> directly use the generic ones? Considering of compatibility, maybe possible
-> change will be like:
->
->      - #define PCIBIOS_FUNC_NOT_SUPPORTED 0X81
->      + #define PCIBIOS_FUNC_NOT_SUPPORTED -ENOENT
->      ......
->
-> and pcibios_err_to_errno() is not neccessary any more.
->
-> I don't know why we didn't use generic error code and define positive private errors.
-> Please tell me if there is any background.
->
-> Regards,
-> Yicong
->
->
-> On 2020/4/11 4:22, Bjorn Helgaas wrote:
->> On Fri, Apr 10, 2020 at 09:28:07AM +0800, Yicong Yang wrote:
->>> Hi Bolarinwa,
->>>
->>> I notice some drivers use these functions and if there is an error,
->>> pass the error code directly to the userspace. As it's our private
->>> error code, is it appropriate to pass or should we call
->>> pcibios_err_to_errno()(include/linux/pci.h, line 672) to do the
->>> conversion?
->> The whole point of this is to make the return values of the
->> pcie_capability_{read,write,etc}*() functions work the same as
->> the pci_{read,write}_config*() functions.
->>
->> The latter return PCIBIOS_* error codes, so the former should as well.
->>
->> When we do this, we do need to audit every caller of the
->> pcie_capability_{read,write}*() functions to make sure we don't break
->> them.  If some callers pass the error code directly to userspace, they
->> may need some change.
->>
->> Yicong, can you point to the ones you noticed so Saheed can check them
->> out?
->>
->> Bjorn
->>
->>> On 2020/4/10 0:16, Bolarinwa Olayemi Saheed wrote:
->>>> Signed-off-by: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
->>>> Suggested-by: Bjorn Helgaas <bjorn@helgaas.com>
->>>> ---
->>>>   drivers/pci/access.c | 4 ++--
->>>>   1 file changed, 2 insertions(+), 2 deletions(-)
->>>>
->>>> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
->>>> index 79c4a2ef269a..451f2b8b2b3c 100644
->>>> --- a/drivers/pci/access.c
->>>> +++ b/drivers/pci/access.c
->>>> @@ -409,7 +409,7 @@ int pcie_capability_read_word(struct pci_dev *dev, int pos, u16 *val)
->>>>   
->>>>   	*val = 0;
->>>>   	if (pos & 1)
->>>> -		return -EINVAL;
->>>> +		return PCIBIOS_BAD_REGISTER_NUMBER;
->>>>   
->>>>   	if (pcie_capability_reg_implemented(dev, pos)) {
->>>>   		ret = pci_read_config_word(dev, pci_pcie_cap(dev) + pos, val);
->>>> @@ -444,7 +444,7 @@ int pcie_capability_read_dword(struct pci_dev *dev, int pos, u32 *val)
->>>>   
->>>>   	*val = 0;
->>>>   	if (pos & 3)
->>>> -		return -EINVAL;
->>>> +		return PCIBIOS_BAD_REGISTER_NUMBER;
->>>>   
->>>>   	if (pcie_capability_reg_implemented(dev, pos)) {
->>>>   		ret = pci_read_config_dword(dev, pci_pcie_cap(dev) + pos, val);
->> .
->>
+Yours,
+Linus Walleij
