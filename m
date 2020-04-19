@@ -1,73 +1,110 @@
-Return-Path: <SRS0=EUoI=6C=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=+/lQ=6D=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AD52C352BE
-	for <linux-pci@archiver.kernel.org>; Sat, 18 Apr 2020 19:41:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E1A6C38A2F
+	for <linux-pci@archiver.kernel.org>; Sun, 19 Apr 2020 03:19:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 095E421D93
-	for <linux-pci@archiver.kernel.org>; Sat, 18 Apr 2020 19:41:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 251E92145D
+	for <linux-pci@archiver.kernel.org>; Sun, 19 Apr 2020 03:19:32 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=nic.cz header.i=@nic.cz header.b="l1qqsOhe"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728167AbgDRTld (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 18 Apr 2020 15:41:33 -0400
-Received: from netrider.rowland.org ([192.131.102.5]:52271 "HELO
-        netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with SMTP id S1728143AbgDRTld (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 18 Apr 2020 15:41:33 -0400
-Received: (qmail 8750 invoked by uid 500); 18 Apr 2020 15:41:32 -0400
-Received: from localhost (sendmail-bs@127.0.0.1)
-  by localhost with SMTP; 18 Apr 2020 15:41:32 -0400
-Date:   Sat, 18 Apr 2020 15:41:32 -0400 (EDT)
-From:   Alan Stern <stern@rowland.harvard.edu>
-X-X-Sender: stern@netrider.rowland.org
-To:     "Rafael J. Wysocki" <rafael@kernel.org>
-cc:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Hans De Goede <hdegoede@redhat.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>
-Subject: Re: [PATCH v2 0/9] PM: sleep: core: Rearrange the handling of driver
- power management flags
-In-Reply-To: <CAJZ5v0hAyLv2+xE_eMgmra5kccDLGY941inJbKZyWPStKXk2nQ@mail.gmail.com>
-Message-ID: <Pine.LNX.4.44L0.2004181540230.8036-100000@netrider.rowland.org>
+        id S1726100AbgDSDTQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 18 Apr 2020 23:19:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36114 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725877AbgDSDTP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 18 Apr 2020 23:19:15 -0400
+X-Greylist: delayed 121 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sat, 18 Apr 2020 20:19:15 PDT
+Received: from mail.nic.cz (mail.nic.cz [IPv6:2001:1488:800:400::400])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99929C061A0C;
+        Sat, 18 Apr 2020 20:19:15 -0700 (PDT)
+Received: from localhost (unknown [172.20.6.135])
+        by mail.nic.cz (Postfix) with ESMTPSA id C51A8140079;
+        Sun, 19 Apr 2020 05:19:11 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=nic.cz; s=default;
+        t=1587266352; bh=jzs55wN+zxgwJgkgiXcqXtgwjnh4IgEdGh/n6vKt/Io=;
+        h=Date:From:To;
+        b=l1qqsOhe3XeChgdJOBat9enl4XDCKRzMFmu6CL7wgBIZWznVbq8oNMcpQNDhnyfCJ
+         69iDvJUa+lwtR0GFdAxh5dHCNIFUSwitxWCpJpsKRcjHulo0IVnYQuJ8ciAFJwsEAY
+         rOYa5TbvXpz1hNAJ4BzWZRsQJm486qDz7ZhMAXzU=
+Date:   Sun, 19 Apr 2020 05:19:11 +0200
+From:   Marek Behun <marek.behun@nic.cz>
+To:     Pali =?UTF-8?B?Um9ow6Fy?= <pali@kernel.org>
+Cc:     Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Andrew Murray <amurray@thegoodpenguin.co.uk>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Remi Pommarel <repk@triplefau.lt>,
+        Tomasz Maciej Nowak <tmn505@gmail.com>,
+        Xogium <contact@xogium.me>, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/8] dts: espressobin: Define max-link-speed for pcie0
+Message-ID: <20200419051911.1b5adef0@nic.cz>
+In-Reply-To: <20200415160054.951-3-pali@kernel.org>
+References: <20200415160054.951-1-pali@kernel.org>
+        <20200415160054.951-3-pali@kernel.org>
+X-Mailer: Claws Mail 3.17.3 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+X-Virus-Scanned: clamav-milter 0.101.4 at mail
+X-Virus-Status: Clean
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sat, 18 Apr 2020, Rafael J. Wysocki wrote:
+When chaning dts files in arch/arm64/boot/dts/marvell, use subject
+prefix
+  arm64: dts: marvell:
+for espressobin for example
+  arm64: dts: marvell: espressobin:
 
-> On Sat, Apr 18, 2020 at 8:00 PM Alan Stern <stern@rowland.harvard.edu> wrote:
-> >
-> > On Sat, 18 Apr 2020, Rafael J. Wysocki wrote:
-> >
-> > > Hi,
-> > >
-> > > This is an update including some fixes and extra patches based on the
-> > > continuation of the discussion [1].
-> >
-> > I haven't checked the updates in detail yet.  However, it seems that
-> > dev_pm_skip_suspend() and dev_pm_skip_resume() should be EXPORTed,
-> > since they are intended to be used by subsystems, which may be in
-> > modules.
-> 
-> OK, so what about an extra patch to export them?
-> 
-> Currently there are no modular users of these functions.
+instead of
+  dts: espressobin
+or
+  dts: aardvark
 
-Ah, all right.  So when/if I want to use them, I will submit such a 
-patch.
+Marek
 
-Alan Stern
+
+On Wed, 15 Apr 2020 18:00:48 +0200
+Pali Roh=C3=A1r <pali@kernel.org> wrote:
+
+> Previously aardvark PCI controller set speed to gen2. Now it reads speed
+> from Device Tree and as default use maximal possible speed which is gen3.
+>=20
+> Because Espressobin has advertised only PCI Express 2.0 capability and
+> previous value was gen2, define max-link-speed to 2, so there would not be
+> any configuration change.
+>=20
+> Signed-off-by: Pali Roh=C3=A1r <pali@kernel.org>
+> ---
+>  arch/arm64/boot/dts/marvell/armada-3720-espressobin.dtsi | 1 +
+>  1 file changed, 1 insertion(+)
+>=20
+> diff --git a/arch/arm64/boot/dts/marvell/armada-3720-espressobin.dtsi b/a=
+rch/arm64/boot/dts/marvell/armada-3720-espressobin.dtsi
+> index 42e992f9c8a5..6705618162d5 100644
+> --- a/arch/arm64/boot/dts/marvell/armada-3720-espressobin.dtsi
+> +++ b/arch/arm64/boot/dts/marvell/armada-3720-espressobin.dtsi
+> @@ -47,6 +47,7 @@
+>  	phys =3D <&comphy1 0>;
+>  	pinctrl-names =3D "default";
+>  	pinctrl-0 =3D <&pcie_reset_pins &pcie_clkreq_pins>;
+> +	max-link-speed =3D <2>;
+>  };
+> =20
+>  /* J6 */
 
