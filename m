@@ -2,119 +2,77 @@ Return-Path: <SRS0=9FxQ=6E=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EAAAAC55181
-	for <linux-pci@archiver.kernel.org>; Mon, 20 Apr 2020 22:01:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74529C54FCC
+	for <linux-pci@archiver.kernel.org>; Mon, 20 Apr 2020 22:14:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D32FB20BED
-	for <linux-pci@archiver.kernel.org>; Mon, 20 Apr 2020 22:01:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4C9B520722
+	for <linux-pci@archiver.kernel.org>; Mon, 20 Apr 2020 22:14:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726532AbgDTWBQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 20 Apr 2020 18:01:16 -0400
-Received: from mga02.intel.com ([134.134.136.20]:16270 "EHLO mga02.intel.com"
+        id S1726539AbgDTWOq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 20 Apr 2020 18:14:46 -0400
+Received: from mga17.intel.com ([192.55.52.151]:35641 "EHLO mga17.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726913AbgDTWBM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 20 Apr 2020 18:01:12 -0400
-IronPort-SDR: NcL4+SkEHL/QSArFK4VXYoLYWEvMyGptOjbs3d3ih755ENT1GUXVLmWWAHJoCpKNvxxIub7Q/a
- Kwf/vWuau0tg==
+        id S1726056AbgDTWOq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 20 Apr 2020 18:14:46 -0400
+IronPort-SDR: 9N8sXmssmmP3FVfE+yMXChfJElnGUK6ty3P7lOKmp32izw0mHFOAo0eWoEccl+zzXq+OgDfjeO
+ LQ/Olp9MWxRg==
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Apr 2020 15:01:12 -0700
-IronPort-SDR: NaBAspYZuGnSTQEfEZz9R/EbojjS+9L7WFqbqEMeVWAABLhwoBVpCJ/CdN5nfrfXocev3M49EF
- hB6ewiUK3MTQ==
-X-ExtLoop1: 1
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Apr 2020 15:14:46 -0700
+IronPort-SDR: q8VS/1Yuw0b1O/JnfDcMxaReAXkOt/JUavPbRTYskoS3Twv4hhhFTqbKTQEUSNoQXDM1/CLtR9
+ keOwer98O/EQ==
 X-IronPort-AV: E=Sophos;i="5.72,407,1580803200"; 
-   d="scan'208";a="455848368"
-Received: from unknown (HELO nsgsw-wilsonpoint.lm.intel.com) ([10.232.116.102])
-  by fmsmga005.fm.intel.com with ESMTP; 20 Apr 2020 15:01:10 -0700
-From:   Jon Derrick <jonathan.derrick@intel.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     <linux-pci@vger.kernel.org>, Keith Busch <kbusch@kernel.org>,
-        Jon Derrick <jonathan.derrick@intel.com>,
-        Russell Currey <ruscur@russell.cc>,
-        Sam Bobroff <sbobroff@linux.ibm.com>,
-        "Oliver O'Halloran" <oohall@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Kuppuswamy Sathyanarayanan 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Frederick Lawler <fred@fredlawl.com>,
-        Rajat Jain <rajatja@google.com>,
-        "Patel, Mayurkumar" <mayurkumar.patel@intel.com>,
-        Olof Johansson <olof@lixom.net>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 2/2] PCI/DPC: Allow Native DPC Host Bridges to use DPC
-Date:   Mon, 20 Apr 2020 15:37:10 -0600
-Message-Id: <1587418630-13562-3-git-send-email-jonathan.derrick@intel.com>
-X-Mailer: git-send-email 1.8.3.1
-In-Reply-To: <1587418630-13562-1-git-send-email-jonathan.derrick@intel.com>
-References: <1587418630-13562-1-git-send-email-jonathan.derrick@intel.com>
+   d="scan'208";a="279398601"
+Received: from clmau-mobl.amr.corp.intel.com (HELO arch-ashland-svkelley.intel.com) ([10.254.28.212])
+  by fmsmga004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Apr 2020 15:14:44 -0700
+From:   Sean V Kelley <sean.v.kelley@linux.intel.com>
+To:     mj@ucw.cz, bhelgaas@google.com
+Cc:     linux-pci@vger.kernel.org,
+        Sean V Kelley <sean.v.kelley@linux.intel.com>
+Subject: [PATCH v6 0/2] pciutils: Add basic decode support for CXL DVSEC
+Date:   Mon, 20 Apr 2020 15:14:42 -0700
+Message-Id: <20200420221444.2641935-1-sean.v.kelley@linux.intel.com>
+X-Mailer: git-send-email 2.26.0
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The existing portdrv model prevents DPC services without either OS
-control (_OSC) granted to AER services, a Host Bridge requesting Native
-AER, or using one of the 'pcie_ports=' parameters of 'native' or
-'dpc-native'.
+Changes since v5 [1]:
 
-The DPC port service driver itself will also fail to probe if the kernel
-assumes the port is using Firmware-First AER. It's a reasonable
-expectation that a port using Firmware-First AER will also be using
-Firmware-First DPC, however if a Host Bridge requests Native DPC, the
-DPC driver should allow it and not fail to bind due to AER capability
-settings.
+- There can be multiple vendor specific DVSEC IDs associated with CXL.
+(Bjorn Helgaas)
 
-Host Bridges which request Native DPC port services will also likely
-request Native AER, however it shouldn't be a requirement. This patch
-allows ports on those Host Bridges to have DPC port services.
+[1] https://lore.kernel.org/linux-pci/20200415004751.2103963-1-sean.v.kelley@linux.intel.com/
 
-This will avoid the unlikely situation where the port is Firmware-First
-AER and Native DPC, and a BIOS or switch firmware preconfiguration of
-the DPC trigger could result in unhandled DPC events.
+This patch series adds support for basic lspci decode of Compute eXpress Link[2],
+a new CPU interconnect building upon PCIe. As a foundation for the CXL
+support it adds separate Designated Vendor-Specific Capability (DVSEC) defines
+and a cap function so as to align with PCIe r5.0, sec 7.9.6.2 terms and
+provide available details. It makes use of the DVSEC Vendor ID and DVSEC ID so as
+to identify a CXL capable device.
 
-Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
----
- drivers/pci/pcie/dpc.c          | 3 ++-
- drivers/pci/pcie/portdrv_core.c | 3 ++-
- 2 files changed, 4 insertions(+), 2 deletions(-)
+[2] https://www.computeexpresslink.org/
 
-diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-index 7621704..3f3106f 100644
---- a/drivers/pci/pcie/dpc.c
-+++ b/drivers/pci/pcie/dpc.c
-@@ -284,7 +284,8 @@ static int dpc_probe(struct pcie_device *dev)
- 	int status;
- 	u16 ctl, cap;
- 
--	if (pcie_aer_get_firmware_first(pdev) && !pcie_ports_dpc_native)
-+	if (pcie_aer_get_firmware_first(pdev) && !pcie_ports_dpc_native &&
-+	    !pci_find_host_bridge(pdev->bus)->native_dpc)
- 		return -ENOTSUPP;
- 
- 	status = devm_request_threaded_irq(device, dev->irq, dpc_irq,
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 50a9522..f2139a1 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -256,7 +256,8 @@ static int get_port_device_capability(struct pci_dev *dev)
- 	 */
- 	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC) &&
- 	    pci_aer_available() &&
--	    (pcie_ports_dpc_native || (services & PCIE_PORT_SERVICE_AER)))
-+	    (pcie_ports_dpc_native || host->native_dpc ||
-+	     (services & PCIE_PORT_SERVICE_AER)))
- 		services |= PCIE_PORT_SERVICE_DPC;
- 
- 	if (pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM ||
--- 
-1.8.3.1
+Sean V Kelley (2):
+  pciutils: Decode available DVSEC details
+  pciutils: Decode Compute eXpress Link DVSEC
+
+ lib/header.h        |  24 ++++
+ ls-ecaps.c          |  79 +++++++++-
+ tests/cap-dvsec     | 340 ++++++++++++++++++++++++++++++++++++++++++++
+ tests/cap-dvsec-cxl | 340 ++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 782 insertions(+), 1 deletion(-)
+ create mode 100644 tests/cap-dvsec
+ create mode 100644 tests/cap-dvsec-cxl
+
+--
+2.26.0
 
