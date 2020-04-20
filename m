@@ -2,117 +2,139 @@ Return-Path: <SRS0=9FxQ=6E=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E14D9C3A5A0
-	for <linux-pci@archiver.kernel.org>; Mon, 20 Apr 2020 17:42:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D53FC3815B
+	for <linux-pci@archiver.kernel.org>; Mon, 20 Apr 2020 17:47:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CD428218AC
-	for <linux-pci@archiver.kernel.org>; Mon, 20 Apr 2020 17:42:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 01B64218AC
+	for <linux-pci@archiver.kernel.org>; Mon, 20 Apr 2020 17:47:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1587404872;
+	bh=ogUYSVM55USDnKeQpopurUgbZXdaHQijRGcrBP8asAk=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=HYarpcNMkjQIbc41cdn1ATmu2EZingLWsQwfJ11KF4FvmecQFiNL1kYVH35ZgOjhj
+	 kZkVh0t9pTGY3+IALdzGwyTsMAL/eNck7bQsfKoKdNpKAmyZDsFKDq7+x9ntL+SXAA
+	 QR8FAEc38m3rywou1Ud+tKUoasdgeAIW1qHJeric=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726294AbgDTRmz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 20 Apr 2020 13:42:55 -0400
-Received: from mga18.intel.com ([134.134.136.126]:49434 "EHLO mga18.intel.com"
+        id S1725784AbgDTRrv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 20 Apr 2020 13:47:51 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59450 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726067AbgDTRmz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 20 Apr 2020 13:42:55 -0400
-IronPort-SDR: gz0hhQAtpr7Q9Pwvwx8b6bw8t63HUc9ftnAV+RMFWK/dZe37U8muwLLnlsila7TZ7+978Emxj0
- Ea8jjTkMvQdQ==
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Apr 2020 10:42:54 -0700
-IronPort-SDR: eM/j/RrA0dBjUaYVKE+3++Tb85wNGqjGC5Sdurj8El2Xw1ycvBFzcuEk1vr5nmoJeb1Oix9ZJQ
- KqoHCv3cjXTw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.72,407,1580803200"; 
-   d="scan'208";a="246953658"
-Received: from jacob-builder.jf.intel.com (HELO jacob-builder) ([10.7.199.155])
-  by fmsmga008.fm.intel.com with ESMTP; 20 Apr 2020 10:42:53 -0700
-Date:   Mon, 20 Apr 2020 10:48:50 -0700
-From:   Jacob Pan <jacob.jun.pan@linux.intel.com>
-To:     Jason Gunthorpe <jgg@ziepe.ca>
-Cc:     Jean-Philippe Brucker <jean-philippe@linaro.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        iommu@lists.linux-foundation.org, devicetree@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-mm@kvack.org, joro@8bytes.org, catalin.marinas@arm.com,
-        will@kernel.org, robin.murphy@arm.com, kevin.tian@intel.com,
-        baolu.lu@linux.intel.com, Jonathan.Cameron@huawei.com,
-        christian.koenig@amd.com, zhangfei.gao@linaro.org,
-        xuzaibo@huawei.com, jacob.jun.pan@linux.intel.com,
-        "Raj, Ashok" <ashok.raj@intel.com>,
-        "Yu, Fenghua" <fenghua.yu@intel.com>
-Subject: Re: [PATCH v5 02/25] iommu/sva: Manage process address spaces
-Message-ID: <20200420104850.60531cb6@jacob-builder>
-In-Reply-To: <20200420135727.GO26002@ziepe.ca>
-References: <20200414170252.714402-1-jean-philippe@linaro.org>
-        <20200414170252.714402-3-jean-philippe@linaro.org>
-        <20200416072852.GA32000@infradead.org>
-        <20200416085402.GB1286150@myrica>
-        <20200416121331.GA18661@infradead.org>
-        <20200420074213.GA3180232@myrica>
-        <20200420135727.GO26002@ziepe.ca>
-Organization: OTC
-X-Mailer: Claws Mail 3.13.2 (GTK+ 2.24.30; x86_64-pc-linux-gnu)
+        id S1726830AbgDTRrv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 20 Apr 2020 13:47:51 -0400
+Received: from localhost (mobile-166-175-186-98.mycingular.net [166.175.186.98])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id A219420857;
+        Mon, 20 Apr 2020 17:47:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1587404870;
+        bh=ogUYSVM55USDnKeQpopurUgbZXdaHQijRGcrBP8asAk=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=IVLGUfaNQ+E955UjBMns5yCdi6CncvvdEpmDMNhU+N8AWWmpxIgZKiSAOXPImpx3r
+         vBVwty+ZW9t8ULPy447tAuJPHduLL7EMdGDJW3REfYpfKpk4ot5o5Zh7hYY0gYzk1F
+         tLmG4eSy75GaRbCai/Su/fUF4XLqH5qsYIHXqBDY=
+Date:   Mon, 20 Apr 2020 12:47:47 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Sean V Kelley <sean.v.kelley@linux.intel.com>
+Cc:     Jay Fang <f.fangjian@huawei.com>, mj@ucw.cz,
+        linux-pci@vger.kernel.org, huangdaode <huangdaode@hisilicon.com>
+Subject: Re: [PATCH v5 2/2] pciutils: Decode Compute eXpress Link DVSEC
+Message-ID: <20200420174747.GA48539@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <B647B03B-9476-4D31-9662-4D68E7204459@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, 20 Apr 2020 10:57:27 -0300
-Jason Gunthorpe <jgg@ziepe.ca> wrote:
+Hi Jay, thanks for taking a look at this!
 
-> On Mon, Apr 20, 2020 at 09:42:13AM +0200, Jean-Philippe Brucker wrote:
-> > On Thu, Apr 16, 2020 at 05:13:31AM -0700, Christoph Hellwig wrote:  
-> > > On Thu, Apr 16, 2020 at 10:54:02AM +0200, Jean-Philippe Brucker
-> > > wrote:  
-> > > > On Thu, Apr 16, 2020 at 12:28:52AM -0700, Christoph Hellwig
-> > > > wrote:  
-> > > > > > +	rcu_read_lock();
-> > > > > > +	hlist_for_each_entry_rcu(bond, &io_mm->devices,
-> > > > > > mm_node)
-> > > > > > +		io_mm->ops->invalidate(bond->sva.dev,
-> > > > > > io_mm->pasid, io_mm->ctx,
-> > > > > > +				       start, end - start);
-> > > > > > +	rcu_read_unlock();
-> > > > > > +}  
-> > > > > 
-> > > > > What is the reason that the devices don't register their own
-> > > > > notifiers? This kinds of multiplexing is always rather messy,
-> > > > > and you do it for all the methods.  
-> > > > 
-> > > > This sends TLB and ATC invalidations through the IOMMU, it
-> > > > doesn't go through device drivers  
+On Mon, Apr 20, 2020 at 09:21:27AM -0700, Sean V Kelley wrote:
+> On 18 Apr 2020, at 1:36, Jay Fang wrote:
+> > On 2020/4/15 8:47, Sean V Kelley wrote:
 > > > 
-> > > I don't think we mean the same thing, probably because of my
-> > > rather imprecise use of the word device.
+> > > [1] https://www.computeexpresslink.org/
 > > > 
-> > > What I mean is that the mmu_notifier should not be embedded into
-> > > the io_mm structure (whch btw, seems to have a way to generic
-> > > name, just like all other io_* prefixed names), but instead into
-> > > the iommu_bond structure.  That avoid the whole multiplexing
-> > > layer.  
+> > > Signed-off-by: Sean V Kelley <sean.v.kelley@linux.intel.com>
+> > > ---
+> > >  lib/header.h        |  20 +++
 > > 
-> > Right, I can see the appeal. I still like having a single mmu
-> > notifier per mm because it ensures we allocate a single PASID per
-> > mm (as required by x86). I suppose one alternative is to maintain a
-> > hashtable of mm->pasid, to avoid iterating over all bonds during
-> > allocation.  
+> > > +
+> > > +static int
+> > > +is_cxl_cap(struct device *d, int where)
+> > > +{
+> > > +  u32 hdr;
+> > > +  u16 w;
+> > > +
+> > > +  if (!config_fetch(d, where + PCI_DVSEC_HEADER1, 8))
+> > > +    return 0;
+> > > +
+> > > +  /* Check for supported Vendor */
+> > > +  hdr = get_conf_long(d, where + PCI_DVSEC_HEADER1);
+> > > +  w = BITS(hdr, 0, 16);
+> > > +  if (w != PCI_VENDOR_ID_INTEL)
+> >
+> > I don't think here checking is quite right. Does only Intel support CXL?
+> > Other Vendors should also be considered.
 > 
-> I've been getting rid of hash tables like this.. Adding it to the
-> mm_struct does seem reasonable, I think PASID is a pretty broad
-> concept now.
-> 
-Agreed, perhaps Fenghua can consider that in his patchset. It would
-help align life cycles as well.
-https://lkml.org/lkml/2020/3/30/910
+> In the absence of currently available hardware, I was attempting to limit
+> false positive noise.  I’m happy to avoid the check on the vendor if there
+> were to exist a definitive supported list.  Bjorn suggested that I check for
+> vendor ID with DVSEC ID for now.  As hardware enters the market, I can
+> surely revise this with an update when the CXL group publishes a list.
 
-> Jason
+The Vendor ID check cannot be avoided.  Vendor IDs are allocated by
+the PCI-SIG, but the DVSEC ID is vendor-defined so there cannot be a
+global "CXL capability" DVSEC ID.
 
-[Jacob Pan]
+CXL *could* work through the PCI-SIG and define a new CXL Extended
+Capability that could make this generic.  But apparently they've
+chosen to use the DVSEC mechanism instead.
+
+> > > +  /* Check for Designated Vendor-Specific ID */
+> > > +  hdr = get_conf_long(d, where + PCI_DVSEC_HEADER2);
+> > > +  w = BITS(hdr, 0, 16);
+> > > +  if (w == PCI_DVSEC_ID)
+
+However, this is slightly wrong.  The name "PCI_DVSEC_ID" implies that
+there can only be one DVSEC ID and it is vendor-independent, but
+neither is true.
+
+This value is allocated by Intel, so we must check for the Intel
+Vendor ID first.  And Intel may define several DVSEC capabilities for
+different purposes, so the name should also mention CXL.
+
+So this should be "PCI_DVSEC_INTEL_CXL" or something similar.
+
+But that doesn't mean other vendors need to define their own DVSEC
+IDs for CXL.  The spec (PCIe r5.0, sec 7.9.6) says:
+
+  [The DVSEC Capability] allows PCI Express component vendors to use
+  the Extended Capability mechanism to expose vendor-specific
+  registers that can be present in components by a variety of
+  vendors.
+
+Any vendor that implements this CXL DVSEC the same way Intel does can
+tag it with PCI_VENDOR_ID_INTEL and PCI_DVSEC_INTEL_CXL.
+
+Note that there are two types of vendor-specific capabilities:
+
+  1) Vendor-Specific Extended Capability (VSEC).  The structure and
+  definition are defined by the *Function* Vendor ID (from offset 0 in
+  config space) and the VSEC ID in the capability.
+
+  2) Designated Vendor-Specific Extended Capability (DVSEC).  The
+  structure and definition are defined by the *DVSEC* Vendor ID (from
+  the DVSEC capability, *not* the vendor of the Function) and the
+  DVSEC ID in the capability.
+
+This CXL capability is the latter, of course.
+
+Bjorn
