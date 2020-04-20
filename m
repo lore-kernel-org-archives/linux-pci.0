@@ -7,36 +7,35 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CE6BC54FCC
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FFA6C54FD0
 	for <linux-pci@archiver.kernel.org>; Mon, 20 Apr 2020 07:18:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 18B6321473
+	by mail.kernel.org (Postfix) with ESMTP id 6E02E218AC
 	for <linux-pci@archiver.kernel.org>; Mon, 20 Apr 2020 07:18:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=flygoat.com header.i=@flygoat.com header.b="kxQ9fcFf"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=flygoat.com header.i=@flygoat.com header.b="cT/eJyMy"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726048AbgDTHSF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1726067AbgDTHSF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Mon, 20 Apr 2020 03:18:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39056 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39058 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725865AbgDTHSF (ORCPT
+        by vger.kernel.org with ESMTP id S1725971AbgDTHSF (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Apr 2020 03:18:05 -0400
-X-Greylist: delayed 331 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 20 Apr 2020 00:18:05 PDT
 Received: from vultr.net.flygoat.com (vultr.net.flygoat.com [IPv6:2001:19f0:6001:3633:5400:2ff:fe8c:553])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05712C061A0C;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0DF97C061A0F;
         Mon, 20 Apr 2020 00:18:05 -0700 (PDT)
 Received: from localhost.localdomain (unknown [IPv6:2001:da8:20f:4430:250:56ff:fe9a:7470])
-        by vultr.net.flygoat.com (Postfix) with ESMTPSA id B7A1520C7E;
-        Mon, 20 Apr 2020 07:12:30 +0000 (UTC)
+        by vultr.net.flygoat.com (Postfix) with ESMTPSA id 1F44120CD8;
+        Mon, 20 Apr 2020 07:12:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=flygoat.com; s=vultr;
-        t=1587366752; bh=1ni7V2KVE9MknDP4f9hczijTI6TI6s7uclRiTdIqcpU=;
+        t=1587366775; bh=ASg+iuEBGSsKPnwR6mS70BOGMwAUI0N42iiAJ2GiVfk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=kxQ9fcFfuGwyQAlL0SBOY9EXY/jwSt5K3Wl2FGyOzlhWgzQgv3bu+3KwtQNmIW8Wt
-         ditpsAPeT7OK5Y5atMvUwt0kqqd56FuPrusBF5WgyrjckNZQD8zIa4o6Yfgkd6CZOH
-         3ekMfJ54qS3zJ9f1iW/dQu0rbQB6yve4Z+36QAoiqgq0ly8464rSM6zEs/j5P0FQhz
-         bO/h0hh59EJ9osGFreFpiu6bZRzQlhd7UoEqSJMe2sJ2N88uRLyMb3wtQKxowNOvg0
-         sop/ecLF0Rp/yfYbz+qUJHZd9jV2BD2ZE/PazJ7W55TVXdG29+qWEF4AYLgN5qEEcs
-         dwwZOokLkRQ8w==
+        b=cT/eJyMyYOWNzwPQek4vDhuDJ5kF7yJr5Pl4cbnpwHgX9Istzl5tzX4eriXm+6E46
+         58d3V0Y8/As8LJEkQVJOVX9n9W7T4h16ygnob9P4AeqBkR2xgaCywy4eSux241aZpK
+         yvw2PcO17xwyfOovm8Xeqqhykly0IqtmxlQAjf3Ht+G8sFvb3IMHzPxRwFV+9+ewZg
+         kOj+g/Z2YCvltJj8KpA7QuAgT3o3ck/pudTMvJCbzwI2RCQY62GIJeyMipi2jJloLr
+         tcIcgx+4Z63qhI4FUPD5A1uIhkeE7ojI8ysZ1Xh0+OgNGuYNaMx5WHpXOOyhG8Fynu
+         U3ElElk5X9oow==
 From:   Jiaxun Yang <jiaxun.yang@flygoat.com>
 To:     linux-mips@vger.kernel.org
 Cc:     Jiaxun Yang <jiaxun.yang@flygoat.com>,
@@ -48,12 +47,13 @@ Cc:     Jiaxun Yang <jiaxun.yang@flygoat.com>,
         Andrew Murray <amurray@thegoodpenguin.co.uk>,
         Paul Burton <paulburton@kernel.org>, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v4 1/5] PCI: OF: Don't remap iospace on unsupported platform
-Date:   Mon, 20 Apr 2020 15:12:07 +0800
-Message-Id: <20200420071220.155357-1-jiaxun.yang@flygoat.com>
+Subject: [PATCH v4 3/5] dt-bindings: Document Loongson PCI Host Controller
+Date:   Mon, 20 Apr 2020 15:12:09 +0800
+Message-Id: <20200420071220.155357-3-jiaxun.yang@flygoat.com>
 X-Mailer: git-send-email 2.26.0.rc2
-In-Reply-To: <20200330114239.1112759-1-jiaxun.yang@flygoat.com>
+In-Reply-To: <20200420071220.155357-1-jiaxun.yang@flygoat.com>
 References: <20200330114239.1112759-1-jiaxun.yang@flygoat.com>
+ <20200420071220.155357-1-jiaxun.yang@flygoat.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
@@ -61,46 +61,85 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-There are some platforms don't support iospace remapping
-like MIPS. However, our PCI code will try to remap iospace
-unconditionally and reject io resources on these platforms.
-
-So we should remove iospace remapping check and use a range
-check instead on these platforms.
+PCI host controller found on Loongson PCHs and SoCs.
 
 Signed-off-by: Jiaxun Yang <jiaxun.yang@flygoat.com>
---
-v4: Fix a typo in commit message.
----
- drivers/pci/of.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
 
-diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-index 81ceeaa6f1d5..36e8761b66c6 100644
---- a/drivers/pci/of.c
-+++ b/drivers/pci/of.c
-@@ -547,12 +547,21 @@ int pci_parse_request_of_pci_ranges(struct device *dev,
- 
- 		switch (resource_type(res)) {
- 		case IORESOURCE_IO:
-+#if defined(PCI_IOBASE) && defined(CONFIG_MMU)
- 			err = devm_pci_remap_iospace(dev, res, iobase);
- 			if (err) {
- 				dev_warn(dev, "error %d: failed to map resource %pR\n",
- 					 err, res);
- 				resource_list_destroy_entry(win);
- 			}
-+#else
-+			/* Simply check if IO is inside the range */
-+			if (res->end > IO_SPACE_LIMIT) {
-+				dev_warn(dev, "resource %pR out of the IO range\n",
-+					res);
-+				resource_list_destroy_entry(win);
-+			}
-+#endif
- 			break;
- 		case IORESOURCE_MEM:
- 			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
+--
+v3: Fix ranges
+---
+ .../devicetree/bindings/pci/loongson.yaml     | 62 +++++++++++++++++++
+ 1 file changed, 62 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/loongson.yaml
+
+diff --git a/Documentation/devicetree/bindings/pci/loongson.yaml b/Documentation/devicetree/bindings/pci/loongson.yaml
+new file mode 100644
+index 000000000000..20b4cf3fe696
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/loongson.yaml
+@@ -0,0 +1,62 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/pci/loongson.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Loongson PCI Host Controller
++
++maintainers:
++  - Jiaxun Yang <jiaxun.yang@flygoat.com>
++
++description: |+
++  PCI host controller found on Loongson PCHs and SoCs.
++
++allOf:
++  - $ref: /schemas/pci/pci-bus.yaml#
++
++properties:
++  compatible:
++    oneOf:
++      - const: loongson,rs780e-pci
++      - const: loongson,ls7a-pci
++      - const: loongson,ls2k-pci
++
++  reg:
++    minItems: 1
++    maxItems: 2
++    items:
++      - description: CFG0 standard config space register
++      - description: CFG1 extended config space register
++
++  ranges:
++    minItems: 1
++    maxItems: 3
++
++
++required:
++  - compatible
++  - reg
++  - ranges
++
++examples:
++  - |
++
++    bus {
++        #address-cells = <2>;
++        #size-cells = <2>;
++        pcie@1a000000 {
++            compatible = "loongson,rs780e-pci";
++            device_type = "pci";
++            #address-cells = <3>;
++            #size-cells = <2>;
++
++            // CPU_PHYSICAL(2)  SIZE(2)
++            reg = <0x0 0x1a000000  0x0 0x2000000>;
++
++            // BUS_ADDRESS(3)  CPU_PHYSICAL(2)  SIZE(2)
++            ranges = <0x01000000 0x0 0x00004000  0x0 0x00004000  0x0 0x00004000>,
++                     <0x02000000 0x0 0x40000000  0x0 0x40000000  0x0 0x40000000>;
++        };
++    };
++...
 -- 
 2.26.0.rc2
 
