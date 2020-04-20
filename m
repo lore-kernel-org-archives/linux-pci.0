@@ -2,120 +2,148 @@ Return-Path: <SRS0=9FxQ=6E=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66D9CC38A30
-	for <linux-pci@archiver.kernel.org>; Mon, 20 Apr 2020 18:15:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFC3AC3815B
+	for <linux-pci@archiver.kernel.org>; Mon, 20 Apr 2020 18:16:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4F6C1218AC
-	for <linux-pci@archiver.kernel.org>; Mon, 20 Apr 2020 18:15:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CCAB520BED
+	for <linux-pci@archiver.kernel.org>; Mon, 20 Apr 2020 18:16:17 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=sifive.com header.i=@sifive.com header.b="CYie8fSQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726021AbgDTSPW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 20 Apr 2020 14:15:22 -0400
-Received: from mga11.intel.com ([192.55.52.93]:24125 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725891AbgDTSPW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 20 Apr 2020 14:15:22 -0400
-IronPort-SDR: veVE+vdBnwufb+p6R7TQvMejQbVC4DT6CRqiNEU/FduGh0PJ5xok/dzYFop3/nu9ARfOcx2z74
- HDZoR7wXw62w==
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Apr 2020 11:15:21 -0700
-IronPort-SDR: 8fT09weErfTNfN3mfjnYSebk8Nn+HR58tGa0lnQIUlEHvLqz6923WibZ88j62ipIrGurCIktai
- 4d4uQqkvArDA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.72,407,1580803200"; 
-   d="scan'208";a="246960869"
-Received: from romley-ivt3.sc.intel.com ([172.25.110.60])
-  by fmsmga008.fm.intel.com with ESMTP; 20 Apr 2020 11:15:21 -0700
-Date:   Mon, 20 Apr 2020 11:14:37 -0700
-From:   Fenghua Yu <fenghua.yu@intel.com>
-To:     Jacob Pan <jacob.jun.pan@linux.intel.com>
-Cc:     Jason Gunthorpe <jgg@ziepe.ca>,
-        Jean-Philippe Brucker <jean-philippe@linaro.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        iommu@lists.linux-foundation.org, devicetree@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-mm@kvack.org, joro@8bytes.org, catalin.marinas@arm.com,
-        will@kernel.org, robin.murphy@arm.com, kevin.tian@intel.com,
-        baolu.lu@linux.intel.com, Jonathan.Cameron@huawei.com,
-        christian.koenig@amd.com, zhangfei.gao@linaro.org,
-        xuzaibo@huawei.com, "Raj, Ashok" <ashok.raj@intel.com>
-Subject: Re: [PATCH v5 02/25] iommu/sva: Manage process address spaces
-Message-ID: <20200420181437.GA229170@romley-ivt3.sc.intel.com>
-References: <20200414170252.714402-1-jean-philippe@linaro.org>
- <20200414170252.714402-3-jean-philippe@linaro.org>
- <20200416072852.GA32000@infradead.org>
- <20200416085402.GB1286150@myrica>
- <20200416121331.GA18661@infradead.org>
- <20200420074213.GA3180232@myrica>
- <20200420135727.GO26002@ziepe.ca>
- <20200420104850.60531cb6@jacob-builder>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200420104850.60531cb6@jacob-builder>
-User-Agent: Mutt/1.5.23 (2014-03-12)
+        id S1726492AbgDTSQR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 20 Apr 2020 14:16:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56860 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726392AbgDTSQQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Apr 2020 14:16:16 -0400
+Received: from mail-pf1-x441.google.com (mail-pf1-x441.google.com [IPv6:2607:f8b0:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8EBFDC061A0C
+        for <linux-pci@vger.kernel.org>; Mon, 20 Apr 2020 11:16:16 -0700 (PDT)
+Received: by mail-pf1-x441.google.com with SMTP id w65so5317416pfc.12
+        for <linux-pci@vger.kernel.org>; Mon, 20 Apr 2020 11:16:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=sifive.com; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=QUQCSO3sl8PGNrXa4jdtXmAY28M49Ft4G5H9JTodPcw=;
+        b=CYie8fSQkf91EabFDU6MKKRA6RXg/CIZ6raAEDtACsf+pAkhaGG3bA/B7ftMPTNAzv
+         PcogpFXonbLQ+YmmSUkglNSbsfn7wqDj82SDGr5L8FhFSAg0MYrfkfx9CStopUgtgm5q
+         3L/ERws+4oT7z6ZdWKWaWCMBSf8jT3UD1zJOpHfQzDqy4j9DQ2QkluudG3Vl6MAi1Cnc
+         GMciq0L9RcR+K3OlOGAp5F4E4W3lubJ0/CJtYOScGbaomeCpHasbIajOwgHvgt13m71K
+         l5K/vBMgIGr9lwThmMxps+a+zMnWb1rKMDbiFJPqMMvoUkgVfLGC/xMdRcGmyPWoYJTD
+         fsIA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=QUQCSO3sl8PGNrXa4jdtXmAY28M49Ft4G5H9JTodPcw=;
+        b=DPiJW3E/i287esvvROINuHP3TKZyxxUqA4aoAiaB8ApxSaVGtt8eOPdw0ds3EI/9Gu
+         DU/MmBdOhBQAgFFyluYV+TLKBJ8l9pBPxmUiiJnaKRrOr04Bpfj79a6qbuOQqm68bko0
+         Jivw1Q4uR1Upzlw+VIB6m2Um7MEAErFLs3fioFGSZO2Be471jv38l1SjE9Y1zbIg/eme
+         0FVDm+doYzKjqq0n6dVpJO31+1GOva2dgaFiup8o0jtOlS8R/SoFBpJEikEmUNMPB4uW
+         T9c9vuuM8rk+wKw9h77AiLt35NQUfxQlQJQDINOMng6y3cjdk21i4Y8D6t1tWcyX7WAT
+         PAuQ==
+X-Gm-Message-State: AGi0Puaa0Iec2SzfYZ9/JwiRrFCWOvJCToCHkG3vA9IWOJlQosoKEkw5
+        8AorcSmYt7IS3ec+p1PKSVAA2Q==
+X-Google-Smtp-Source: APiQypKSr8NJ930Ww3r7NLKtsxj6P8B/4DFGcMVHASsZ+V6AMZEEIBGEr2AQ/j4RGvOMFYpgpdxfNg==
+X-Received: by 2002:a62:874e:: with SMTP id i75mr9560713pfe.248.1587406575986;
+        Mon, 20 Apr 2020 11:16:15 -0700 (PDT)
+Received: from nuc7.sifive.com (c-24-5-48-146.hsd1.ca.comcast.net. [24.5.48.146])
+        by smtp.gmail.com with ESMTPSA id t6sm150753pfh.98.2020.04.20.11.16.13
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 20 Apr 2020 11:16:14 -0700 (PDT)
+From:   Alan Mikhak <alan.mikhak@sifive.com>
+X-Google-Original-From: Alan Mikhak < alan.mikhak@sifive.com >
+To:     dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, gustavo.pimentel@synopsys.com,
+        dan.j.williams@intel.com, vkoul@kernel.org, kishon@ti.com,
+        maz@kernel.org, paul.walmsley@sifive.com
+Cc:     Alan Mikhak <alan.mikhak@sifive.com>
+Subject: [PATCH] dmaengine: dw-edma: Check MSI descriptor before copying
+Date:   Mon, 20 Apr 2020 11:16:08 -0700
+Message-Id: <1587406568-26592-1-git-send-email-alan.mikhak@sifive.com>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Apr 20, 2020 at 10:48:50AM -0700, Jacob Pan wrote:
-> On Mon, 20 Apr 2020 10:57:27 -0300
-> Jason Gunthorpe <jgg@ziepe.ca> wrote:
-> 
-> > On Mon, Apr 20, 2020 at 09:42:13AM +0200, Jean-Philippe Brucker wrote:
-> > > On Thu, Apr 16, 2020 at 05:13:31AM -0700, Christoph Hellwig wrote:  
-> > > > On Thu, Apr 16, 2020 at 10:54:02AM +0200, Jean-Philippe Brucker
-> > > > wrote:  
-> > > > > On Thu, Apr 16, 2020 at 12:28:52AM -0700, Christoph Hellwig
-> > > > > wrote:  
-> > > > > > > +	rcu_read_lock();
-> > > > > > > +	hlist_for_each_entry_rcu(bond, &io_mm->devices,
-> > > > > > > mm_node)
-> > > > > > > +		io_mm->ops->invalidate(bond->sva.dev,
-> > > > > > > io_mm->pasid, io_mm->ctx,
-> > > > > > > +				       start, end - start);
-> > > > > > > +	rcu_read_unlock();
-> > > > > > > +}  
-> > > > > > 
-> > > > > > What is the reason that the devices don't register their own
-> > > > > > notifiers? This kinds of multiplexing is always rather messy,
-> > > > > > and you do it for all the methods.  
-> > > > > 
-> > > > > This sends TLB and ATC invalidations through the IOMMU, it
-> > > > > doesn't go through device drivers  
-> > > > 
-> > > > I don't think we mean the same thing, probably because of my
-> > > > rather imprecise use of the word device.
-> > > > 
-> > > > What I mean is that the mmu_notifier should not be embedded into
-> > > > the io_mm structure (whch btw, seems to have a way to generic
-> > > > name, just like all other io_* prefixed names), but instead into
-> > > > the iommu_bond structure.  That avoid the whole multiplexing
-> > > > layer.  
-> > > 
-> > > Right, I can see the appeal. I still like having a single mmu
-> > > notifier per mm because it ensures we allocate a single PASID per
-> > > mm (as required by x86). I suppose one alternative is to maintain a
-> > > hashtable of mm->pasid, to avoid iterating over all bonds during
-> > > allocation.  
-> > 
-> > I've been getting rid of hash tables like this.. Adding it to the
-> > mm_struct does seem reasonable, I think PASID is a pretty broad
-> > concept now.
-> > 
-> Agreed, perhaps Fenghua can consider that in his patchset. It would
-> help align life cycles as well.
-> https://lkml.org/lkml/2020/3/30/910>
+From: Alan Mikhak <alan.mikhak@sifive.com>
 
-Seems we depend on each other: my patch defines pasid in mm_struct.
-I can free PASID in your detach() function.
+Modify dw_edma_irq_request() to check if a struct msi_desc entry exists
+before copying the contents of its struct msi_msg pointer.
 
-Thanks.
+Without this sanity check, __get_cached_msi_msg() crashes when invoked by
+dw_edma_irq_request() running on a Linux-based PCIe endpoint device. MSI
+interrupt are not received by PCIe endpoint devices. If irq_get_msi_desc()
+returns null, then there is no cached struct msi_msg to be copied.
 
--Fenghua
+This patch depends on the following patch:
+[PATCH v2] dmaengine: dw-edma: Decouple dw-edma-core.c from struct pci_dev
+https://patchwork.kernel.org/patch/11491757/
+
+Signed-off-by: Alan Mikhak <alan.mikhak@sifive.com>
+---
+ drivers/dma/dw-edma/dw-edma-core.c | 16 +++++++++-------
+ 1 file changed, 9 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
+index db401eb11322..a5d15f6ed5eb 100644
+--- a/drivers/dma/dw-edma/dw-edma-core.c
++++ b/drivers/dma/dw-edma/dw-edma-core.c
+@@ -773,6 +773,7 @@ static int dw_edma_irq_request(struct dw_edma_chip *chip,
+ 	u32 rd_mask = 1;
+ 	int i, err = 0;
+ 	u32 ch_cnt;
++	int irq;
+ 
+ 	ch_cnt = dw->wr_ch_cnt + dw->rd_ch_cnt;
+ 
+@@ -781,16 +782,16 @@ static int dw_edma_irq_request(struct dw_edma_chip *chip,
+ 
+ 	if (dw->nr_irqs == 1) {
+ 		/* Common IRQ shared among all channels */
+-		err = request_irq(dw->ops->irq_vector(dev, 0),
+-				  dw_edma_interrupt_common,
++		irq = dw->ops->irq_vector(dev, 0);
++		err = request_irq(irq, dw_edma_interrupt_common,
+ 				  IRQF_SHARED, dw->name, &dw->irq[0]);
+ 		if (err) {
+ 			dw->nr_irqs = 0;
+ 			return err;
+ 		}
+ 
+-		get_cached_msi_msg(dw->ops->irq_vector(dev, 0),
+-				   &dw->irq[0].msi);
++		if (irq_get_msi_desc(irq))
++			get_cached_msi_msg(irq, &dw->irq[0].msi);
+ 	} else {
+ 		/* Distribute IRQs equally among all channels */
+ 		int tmp = dw->nr_irqs;
+@@ -804,7 +805,8 @@ static int dw_edma_irq_request(struct dw_edma_chip *chip,
+ 		dw_edma_add_irq_mask(&rd_mask, *rd_alloc, dw->rd_ch_cnt);
+ 
+ 		for (i = 0; i < (*wr_alloc + *rd_alloc); i++) {
+-			err = request_irq(dw->ops->irq_vector(dev, i),
++			irq = dw->ops->irq_vector(dev, i);
++			err = request_irq(irq,
+ 					  i < *wr_alloc ?
+ 						dw_edma_interrupt_write :
+ 						dw_edma_interrupt_read,
+@@ -815,8 +817,8 @@ static int dw_edma_irq_request(struct dw_edma_chip *chip,
+ 				return err;
+ 			}
+ 
+-			get_cached_msi_msg(dw->ops->irq_vector(dev, i),
+-					   &dw->irq[i].msi);
++			if (irq_get_msi_desc(irq))
++				get_cached_msi_msg(irq, &dw->irq[i].msi);
+ 		}
+ 
+ 		dw->nr_irqs = i;
+-- 
+2.7.4
+
