@@ -7,32 +7,33 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3781C54FCF
-	for <linux-pci@archiver.kernel.org>; Mon, 20 Apr 2020 07:23:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 628E2C54FD0
+	for <linux-pci@archiver.kernel.org>; Mon, 20 Apr 2020 07:23:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CAFFA2145D
-	for <linux-pci@archiver.kernel.org>; Mon, 20 Apr 2020 07:23:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3EA9621D82
+	for <linux-pci@archiver.kernel.org>; Mon, 20 Apr 2020 07:23:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=flygoat.com header.i=@flygoat.com header.b="Kzi21q9Z"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=flygoat.com header.i=@flygoat.com header.b="sEWxZJxO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725815AbgDTHXF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 20 Apr 2020 03:23:05 -0400
-Received: from vultr.net.flygoat.com ([149.28.68.211]:58972 "EHLO
+        id S1726136AbgDTHXE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 20 Apr 2020 03:23:04 -0400
+Received: from vultr.net.flygoat.com ([149.28.68.211]:58970 "EHLO
         vultr.net.flygoat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726039AbgDTHXE (ORCPT
+        with ESMTP id S1725815AbgDTHXE (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Apr 2020 03:23:04 -0400
+X-Greylist: delayed 630 seconds by postgrey-1.27 at vger.kernel.org; Mon, 20 Apr 2020 03:23:04 EDT
 Received: from localhost.localdomain (unknown [IPv6:2001:da8:20f:4430:250:56ff:fe9a:7470])
-        by vultr.net.flygoat.com (Postfix) with ESMTPSA id 7FD6A20CDC;
-        Mon, 20 Apr 2020 07:13:15 +0000 (UTC)
+        by vultr.net.flygoat.com (Postfix) with ESMTPSA id DC2E620C80;
+        Mon, 20 Apr 2020 07:12:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=flygoat.com; s=vultr;
-        t=1587366797; bh=XVtJE3axiwJF42CUhbXtApGSEySTohRvJkGky4xCzys=;
+        t=1587366764; bh=jesBfoIdJO3LgLwZbuFxL0t5+wu18EtO3/xPsqqrrh0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Kzi21q9ZTGKOGrYz23D0JWpEXFTNk0J2dRUDBkoZAizsDsQpNSTJsR9LpOQsCV68n
-         2PhUg0K72eXs2VVFRnZNTTDa4fMaEjSZYjVETwxg1mVPUgUxLT3z//VSEWPYVDSGw9
-         QHF8Ul7HG/ETIG8bZ4PdmZnilH02/5Mz1mtM8QZUpVB88VjuZi1Xvi/PoZmqB/1l14
-         1JnbETnC0inMV+U3bcv83QAIIvrizyY0rjWk1pTMgN9lgfLLPUeEUeKD7j1AeHeSZx
-         evO/jGhwlDHWQ51++73so0DB+7U642P9LJkJLnRBPSo12tWP2A84BrZQA8SqZyc8xz
-         J3VYVc0rJ9Fyg==
+        b=sEWxZJxOj47IR7Q9Sjp/dy4XXF883eMowaCZgCDYsQfBGYgkNLze7vm64FDN5Z50n
+         s5PATZRSD4xWcuPARtAOIQ6RtZdEnX0M0N6S47lZSRO7S+IGQilCA1hptXT1BSFA42
+         WRzm9LMOfGhjtJyWNjYSNGV9c3njE866Yb4jjE6rWs0X+tMK7BjmWvkxGl0DeBM8RP
+         SM/cTexyjNmcVoZGzZ97y1UUZha1ho/iymWGFNkIstn6uSGCWF94GT6q09JmrN4/z+
+         4TXiXi1I/HNZH9YTJBERGE1YsscwCu5gnMv3NiBs+BgsWgg/yLleU7OEM4nt5xfVx7
+         XHK0dTl7jF9Cw==
 From:   Jiaxun Yang <jiaxun.yang@flygoat.com>
 To:     linux-mips@vger.kernel.org
 Cc:     Jiaxun Yang <jiaxun.yang@flygoat.com>,
@@ -44,9 +45,9 @@ Cc:     Jiaxun Yang <jiaxun.yang@flygoat.com>,
         Andrew Murray <amurray@thegoodpenguin.co.uk>,
         Paul Burton <paulburton@kernel.org>, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v4 5/5] MIPS: Loongson64: Switch to generic PCI driver
-Date:   Mon, 20 Apr 2020 15:12:11 +0800
-Message-Id: <20200420071220.155357-5-jiaxun.yang@flygoat.com>
+Subject: [PATCH v4 2/5] PCI: Add Loongson PCI Controller support
+Date:   Mon, 20 Apr 2020 15:12:08 +0800
+Message-Id: <20200420071220.155357-2-jiaxun.yang@flygoat.com>
 X-Mailer: git-send-email 2.26.0.rc2
 In-Reply-To: <20200420071220.155357-1-jiaxun.yang@flygoat.com>
 References: <20200330114239.1112759-1-jiaxun.yang@flygoat.com>
@@ -58,295 +59,323 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-We can now enable generic PCI driver in Kconfig, and remove legacy
-PCI driver code.
+This controller can be found on Loongson-2K SoC, Loongson-3
+systems with RS780E/LS7A PCH.
 
-Radeon vbios quirk is moved to the platform folder to fit the
-new structure.
+The RS780E part of code was previously located at
+arch/mips/pci/ops-loongson3.c and now it can use generic PCI
+driver implementation.
 
 Signed-off-by: Jiaxun Yang <jiaxun.yang@flygoat.com>
----
- arch/mips/Kconfig                  |   1 +
- arch/mips/loongson64/Makefile      |   2 +-
- arch/mips/loongson64/vbios_quirk.c |  29 ++++++++
- arch/mips/pci/Makefile             |   1 -
- arch/mips/pci/fixup-loongson3.c    |  71 ------------------
- arch/mips/pci/ops-loongson3.c      | 116 -----------------------------
- 6 files changed, 31 insertions(+), 189 deletions(-)
- create mode 100644 arch/mips/loongson64/vbios_quirk.c
- delete mode 100644 arch/mips/pci/fixup-loongson3.c
- delete mode 100644 arch/mips/pci/ops-loongson3.c
 
-diff --git a/arch/mips/Kconfig b/arch/mips/Kconfig
-index 9f15539a6342..16f7ffef54e1 100644
---- a/arch/mips/Kconfig
-+++ b/arch/mips/Kconfig
-@@ -481,6 +481,7 @@ config MACH_LOONGSON64
- 	select IRQ_MIPS_CPU
- 	select NR_CPUS_DEFAULT_64
- 	select USE_GENERIC_EARLY_PRINTK_8250
-+	select PCI_DRIVERS_GENERIC
- 	select SYS_HAS_CPU_LOONGSON64
- 	select SYS_HAS_EARLY_PRINTK
- 	select SYS_SUPPORTS_SMP
-diff --git a/arch/mips/loongson64/Makefile b/arch/mips/loongson64/Makefile
-index b7f40b179c71..f04461839540 100644
---- a/arch/mips/loongson64/Makefile
-+++ b/arch/mips/loongson64/Makefile
-@@ -8,6 +8,6 @@ obj-$(CONFIG_MACH_LOONGSON64) += cop2-ex.o platform.o acpi_init.o dma.o \
- obj-$(CONFIG_SMP)	+= smp.o
- obj-$(CONFIG_NUMA)	+= numa.o
- obj-$(CONFIG_RS780_HPET) += hpet.o
--obj-$(CONFIG_PCI) += pci.o
- obj-$(CONFIG_LOONGSON_MC146818) += rtc.o
- obj-$(CONFIG_SUSPEND) += pm.o
-+obj-$(CONFIG_PCI_QUIRKS) += vbios_quirk.o
-diff --git a/arch/mips/loongson64/vbios_quirk.c b/arch/mips/loongson64/vbios_quirk.c
+--
+v2:
+	- Clean up according to rob's suggestions
+	- Claim that it can't work as a module
+v3:
+	- Fix a typo
+---
+ drivers/pci/controller/Kconfig        |   9 +
+ drivers/pci/controller/Makefile       |   1 +
+ drivers/pci/controller/pci-loongson.c | 257 ++++++++++++++++++++++++++
+ 3 files changed, 267 insertions(+)
+ create mode 100644 drivers/pci/controller/pci-loongson.c
+
+diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+index 91bfdb784829..7d7e70402ebd 100644
+--- a/drivers/pci/controller/Kconfig
++++ b/drivers/pci/controller/Kconfig
+@@ -258,6 +258,15 @@ config PCI_HYPERV_INTERFACE
+ 	  The Hyper-V PCI Interface is a helper driver allows other drivers to
+ 	  have a common interface with the Hyper-V PCI frontend driver.
+ 
++config PCI_LOONGSON
++	bool "LOONGSON PCI Controller"
++	depends on MACH_LOONGSON64 || COMPILE_TEST
++	depends on OF
++	depends on PCI_QUIRKS
++	help
++	  Say Y here if you want to enable PCI controller support on
++	  Loongson systems.
++
+ source "drivers/pci/controller/dwc/Kconfig"
+ source "drivers/pci/controller/mobiveil/Kconfig"
+ source "drivers/pci/controller/cadence/Kconfig"
+diff --git a/drivers/pci/controller/Makefile b/drivers/pci/controller/Makefile
+index 158c59771824..fbac4b0190a0 100644
+--- a/drivers/pci/controller/Makefile
++++ b/drivers/pci/controller/Makefile
+@@ -28,6 +28,7 @@ obj-$(CONFIG_PCIE_MEDIATEK) += pcie-mediatek.o
+ obj-$(CONFIG_PCIE_TANGO_SMP8759) += pcie-tango.o
+ obj-$(CONFIG_VMD) += vmd.o
+ obj-$(CONFIG_PCIE_BRCMSTB) += pcie-brcmstb.o
++obj-$(CONFIG_PCI_LOONGSON) += pci-loongson.o
+ # pcie-hisi.o quirks are needed even without CONFIG_PCIE_DW
+ obj-y				+= dwc/
+ obj-y				+= mobiveil/
+diff --git a/drivers/pci/controller/pci-loongson.c b/drivers/pci/controller/pci-loongson.c
 new file mode 100644
-index 000000000000..1f0a462aeddd
+index 000000000000..0bd3b52c14fb
 --- /dev/null
-+++ b/arch/mips/loongson64/vbios_quirk.c
-@@ -0,0 +1,29 @@
++++ b/drivers/pci/controller/pci-loongson.c
+@@ -0,0 +1,257 @@
 +// SPDX-License-Identifier: GPL-2.0
++/*
++ * Loongson PCI Host Controller Driver
++ *
++ * Copyright (C) 2020 Jiaxun Yang <jiaxun.yang@flygoat.com>
++ */
 +
++#include <linux/of_address.h>
++#include <linux/of_pci.h>
++#include <linux/of_platform.h>
 +#include <linux/pci.h>
-+#include <loongson.h>
++#include <linux/pci_ids.h>
 +
-+static void pci_fixup_radeon(struct pci_dev *pdev)
++#include "../pci.h"
++
++/* Device IDs */
++#define DEV_PCIE_PORT_0	0x7a09
++#define DEV_PCIE_PORT_1	0x7a19
++#define DEV_PCIE_PORT_2	0x7a29
++
++#define DEV_LS2K_APB	0x7a02
++#define DEV_LS7A_CONF	0x7a10
++#define DEV_LS7A_LPC	0x7a0c
++
++#define FLAG_CFG0	BIT(0)
++#define FLAG_CFG1	BIT(1)
++#define FLAG_DEV_FIX	BIT(2)
++
++struct loongson_pci {
++	void __iomem *cfg0_base;
++	void __iomem *cfg1_base;
++	struct platform_device *pdev;
++	u32 flags;
++};
++
++/* Fixup wrong class code in PCIe bridges */
++static void bridge_class_quirk(struct pci_dev *dev)
 +{
-+	struct resource *res = &pdev->resource[PCI_ROM_RESOURCE];
-+
-+	if (res->start)
-+		return;
-+
-+	if (!loongson_sysconf.vgabios_addr)
-+		return;
-+
-+	pci_disable_rom(pdev);
-+	if (res->parent)
-+		release_resource(res);
-+
-+	res->start = virt_to_phys((void *) loongson_sysconf.vgabios_addr);
-+	res->end   = res->start + 256*1024 - 1;
-+	res->flags = IORESOURCE_MEM | IORESOURCE_ROM_SHADOW |
-+		     IORESOURCE_PCI_FIXED;
-+
-+	dev_info(&pdev->dev, "BAR %d: assigned %pR for Radeon ROM\n",
-+		 PCI_ROM_RESOURCE, res);
++	dev->class = PCI_CLASS_BRIDGE_PCI << 8;
 +}
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_ATI, 0x9615,
-+				PCI_CLASS_DISPLAY_VGA, 8, pci_fixup_radeon);
-diff --git a/arch/mips/pci/Makefile b/arch/mips/pci/Makefile
-index 342ce10ef593..438f10955d89 100644
---- a/arch/mips/pci/Makefile
-+++ b/arch/mips/pci/Makefile
-@@ -35,7 +35,6 @@ obj-$(CONFIG_LASAT)		+= pci-lasat.o
- obj-$(CONFIG_MIPS_COBALT)	+= fixup-cobalt.o
- obj-$(CONFIG_LEMOTE_FULOONG2E)	+= fixup-fuloong2e.o ops-loongson2.o
- obj-$(CONFIG_LEMOTE_MACH2F)	+= fixup-lemote2f.o ops-loongson2.o
--obj-$(CONFIG_MACH_LOONGSON64)	+= fixup-loongson3.o ops-loongson3.o
- obj-$(CONFIG_MIPS_MALTA)	+= fixup-malta.o pci-malta.o
- obj-$(CONFIG_PMC_MSP7120_GW)	+= fixup-pmcmsp.o ops-pmcmsp.o
- obj-$(CONFIG_PMC_MSP7120_EVAL)	+= fixup-pmcmsp.o ops-pmcmsp.o
-diff --git a/arch/mips/pci/fixup-loongson3.c b/arch/mips/pci/fixup-loongson3.c
-deleted file mode 100644
-index 8a741c2c6685..000000000000
---- a/arch/mips/pci/fixup-loongson3.c
-+++ /dev/null
-@@ -1,71 +0,0 @@
--/*
-- * fixup-loongson3.c
-- *
-- * Copyright (C) 2012 Lemote, Inc.
-- * Author: Xiang Yu, xiangy@lemote.com
-- *         Chen Huacai, chenhc@lemote.com
-- *
-- * This program is free software; you can redistribute  it and/or modify it
-- * under  the terms of  the GNU General  Public License as published by the
-- * Free Software Foundation;  either version 2 of the  License, or (at your
-- * option) any later version.
-- *
-- * THIS  SOFTWARE  IS PROVIDED   ``AS  IS'' AND   ANY  EXPRESS OR IMPLIED
-- * WARRANTIES,   INCLUDING, BUT NOT  LIMITED  TO, THE IMPLIED WARRANTIES OF
-- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN
-- * NO  EVENT  SHALL   THE AUTHOR  BE    LIABLE FOR ANY   DIRECT, INDIRECT,
-- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
-- * NOT LIMITED   TO, PROCUREMENT OF  SUBSTITUTE GOODS  OR SERVICES; LOSS OF
-- * USE, DATA,  OR PROFITS; OR  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
-- * ANY THEORY OF LIABILITY, WHETHER IN  CONTRACT, STRICT LIABILITY, OR TORT
-- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
-- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-- *
-- */
--
--#include <linux/pci.h>
--#include <boot_param.h>
--
--static void print_fixup_info(const struct pci_dev *pdev)
--{
--	dev_info(&pdev->dev, "Device %x:%x, irq %d\n",
--			pdev->vendor, pdev->device, pdev->irq);
--}
--
--int pcibios_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
--{
--	print_fixup_info(dev);
--	return dev->irq;
--}
--
--static void pci_fixup_radeon(struct pci_dev *pdev)
--{
--	struct resource *res = &pdev->resource[PCI_ROM_RESOURCE];
--
--	if (res->start)
--		return;
--
--	if (!loongson_sysconf.vgabios_addr)
--		return;
--
--	pci_disable_rom(pdev);
--	if (res->parent)
--		release_resource(res);
--
--	res->start = virt_to_phys((void *) loongson_sysconf.vgabios_addr);
--	res->end   = res->start + 256*1024 - 1;
--	res->flags = IORESOURCE_MEM | IORESOURCE_ROM_SHADOW |
--		     IORESOURCE_PCI_FIXED;
--
--	dev_info(&pdev->dev, "BAR %d: assigned %pR for Radeon ROM\n",
--		 PCI_ROM_RESOURCE, res);
--}
--
--DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_ATI, PCI_ANY_ID,
--				PCI_CLASS_DISPLAY_VGA, 8, pci_fixup_radeon);
--
--/* Do platform specific device initialization at pci_enable_device() time */
--int pcibios_plat_dev_init(struct pci_dev *dev)
--{
--	return 0;
--}
-diff --git a/arch/mips/pci/ops-loongson3.c b/arch/mips/pci/ops-loongson3.c
-deleted file mode 100644
-index 2f6ad36bdea6..000000000000
---- a/arch/mips/pci/ops-loongson3.c
-+++ /dev/null
-@@ -1,116 +0,0 @@
--// SPDX-License-Identifier: GPL-2.0
--#include <linux/types.h>
--#include <linux/pci.h>
--#include <linux/kernel.h>
--
--#include <asm/mips-boards/bonito64.h>
--
--#include <loongson.h>
--
--#define PCI_ACCESS_READ  0
--#define PCI_ACCESS_WRITE 1
--
--#define HT1LO_PCICFG_BASE      0x1a000000
--#define HT1LO_PCICFG_BASE_TP1  0x1b000000
--
--static int loongson3_pci_config_access(unsigned char access_type,
--		struct pci_bus *bus, unsigned int devfn,
--		int where, u32 *data)
--{
--	unsigned char busnum = bus->number;
--	int function = PCI_FUNC(devfn);
--	int device = PCI_SLOT(devfn);
--	int reg = where & ~3;
--	void *addrp;
--	u64 addr;
--
--	if (where < PCI_CFG_SPACE_SIZE) { /* standard config */
--		addr = (busnum << 16) | (device << 11) | (function << 8) | reg;
--		if (busnum == 0) {
--			if (device > 31)
--				return PCIBIOS_DEVICE_NOT_FOUND;
--			addrp = (void *)TO_UNCAC(HT1LO_PCICFG_BASE | addr);
--		} else {
--			addrp = (void *)TO_UNCAC(HT1LO_PCICFG_BASE_TP1 | addr);
--		}
--	} else if (where < PCI_CFG_SPACE_EXP_SIZE) {  /* extended config */
--		struct pci_dev *rootdev;
--
--		rootdev = pci_get_domain_bus_and_slot(0, 0, 0);
--		if (!rootdev)
--			return PCIBIOS_DEVICE_NOT_FOUND;
--
--		addr = pci_resource_start(rootdev, 3);
--		if (!addr)
--			return PCIBIOS_DEVICE_NOT_FOUND;
--
--		addr |= busnum << 20 | device << 15 | function << 12 | reg;
--		addrp = (void *)TO_UNCAC(addr);
--	} else {
--		return PCIBIOS_DEVICE_NOT_FOUND;
--	}
--
--	if (access_type == PCI_ACCESS_WRITE)
--		writel(*data, addrp);
--	else {
--		*data = readl(addrp);
--		if (*data == 0xffffffff) {
--			*data = -1;
--			return PCIBIOS_DEVICE_NOT_FOUND;
--		}
--	}
--	return PCIBIOS_SUCCESSFUL;
--}
--
--static int loongson3_pci_pcibios_read(struct pci_bus *bus, unsigned int devfn,
--				 int where, int size, u32 *val)
--{
--	u32 data = 0;
--	int ret = loongson3_pci_config_access(PCI_ACCESS_READ,
--			bus, devfn, where, &data);
--
--	if (ret != PCIBIOS_SUCCESSFUL)
--		return ret;
--
--	if (size == 1)
--		*val = (data >> ((where & 3) << 3)) & 0xff;
--	else if (size == 2)
--		*val = (data >> ((where & 3) << 3)) & 0xffff;
--	else
--		*val = data;
--
--	return PCIBIOS_SUCCESSFUL;
--}
--
--static int loongson3_pci_pcibios_write(struct pci_bus *bus, unsigned int devfn,
--				  int where, int size, u32 val)
--{
--	u32 data = 0;
--	int ret;
--
--	if (size == 4)
--		data = val;
--	else {
--		ret = loongson3_pci_config_access(PCI_ACCESS_READ,
--				bus, devfn, where, &data);
--		if (ret != PCIBIOS_SUCCESSFUL)
--			return ret;
--
--		if (size == 1)
--			data = (data & ~(0xff << ((where & 3) << 3))) |
--			    (val << ((where & 3) << 3));
--		else if (size == 2)
--			data = (data & ~(0xffff << ((where & 3) << 3))) |
--			    (val << ((where & 3) << 3));
--	}
--
--	ret = loongson3_pci_config_access(PCI_ACCESS_WRITE,
--			bus, devfn, where, &data);
--
--	return ret;
--}
--
--struct pci_ops loongson_pci_ops = {
--	.read = loongson3_pci_pcibios_read,
--	.write = loongson3_pci_pcibios_write
--};
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LOONGSON,
++			DEV_PCIE_PORT_0, bridge_class_quirk);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LOONGSON,
++			DEV_PCIE_PORT_1, bridge_class_quirk);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LOONGSON,
++			DEV_PCIE_PORT_2, bridge_class_quirk);
++
++static void system_bus_quirk(struct pci_dev *pdev)
++{
++	u16 tmp;
++
++	pdev->mmio_always_on = 1;
++	pdev->non_compliant_bars = 1;
++	/* Enable MEM & IO Decoding */
++	pci_read_config_word(pdev, PCI_STATUS, &tmp);
++	tmp |= PCI_COMMAND_IO | PCI_COMMAND_MEMORY;
++	pci_write_config_word(pdev, PCI_STATUS, tmp);
++}
++
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_LOONGSON,
++			DEV_LS2K_APB, system_bus_quirk);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_LOONGSON,
++			DEV_LS7A_CONF, system_bus_quirk);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_LOONGSON,
++			DEV_LS7A_LPC, system_bus_quirk);
++
++static void loongson_mrrs_quirk(struct pci_dev *dev)
++{
++	struct pci_bus *bus = dev->bus;
++	struct pci_dev *bridge;
++	static const struct pci_device_id bridge_devids[] = {
++		{ PCI_VDEVICE(LOONGSON, DEV_PCIE_PORT_0) },
++		{ PCI_VDEVICE(LOONGSON, DEV_PCIE_PORT_1) },
++		{ PCI_VDEVICE(LOONGSON, DEV_PCIE_PORT_2) },
++		{ 0, },
++	};
++
++
++	/* look for the matching bridge */
++	while (!pci_is_root_bus(bus)) {
++		bridge = bus->self;
++		bus = bus->parent;
++		/*
++		 * Some Loongson PCIE ports has a h/w limitation of
++		 * 256 bytes maximum read request size. It can't handle
++		 * anything higher than this. So force this limit on
++		 * any devices attached under these ports.
++		 */
++		if (pci_match_id(bridge_devids, bridge)) {
++			if (pcie_get_readrq(dev) > 256) {
++				dev_info(&dev->dev, "limiting MRRS to 256\n");
++				pcie_set_readrq(dev, 256);
++			}
++			break;
++		}
++	}
++}
++DECLARE_PCI_FIXUP_ENABLE(PCI_ANY_ID, PCI_ANY_ID, loongson_mrrs_quirk);
++
++static void __iomem *cfg1_map(struct loongson_pci *priv, int bus, int dev,
++				int func, int where)
++{
++	unsigned long addroff = 0x0;
++
++	if (bus != 0)
++		addroff |= BIT(28); /* Type 1 Access */
++	addroff |= (where & 0xff) | ((where & 0xf00) << 16);
++	addroff |= (bus << 16) | (dev << 11) | (func << 8);
++	return priv->cfg1_base + addroff;
++}
++
++static void __iomem *cfg0_map(struct loongson_pci *priv, int bus, int dev,
++				int func, int where)
++{
++	unsigned long addroff = 0x0;
++
++	if (bus != 0)
++		addroff |= BIT(24); /* Type 1 Access */
++	addroff |= (bus << 16) | (dev << 11) | (func << 8) | where;
++	return priv->cfg0_base + addroff;
++}
++
++void __iomem *pci_loongson_map_bus(struct pci_bus *bus, unsigned int devfn,
++			       int where)
++{
++	unsigned char busnum = bus->number;
++	int device = PCI_SLOT(devfn);
++	int function = PCI_FUNC(devfn);
++	struct pci_host_bridge *bridge = pci_find_host_bridge(bus);
++	struct loongson_pci *priv =  pci_host_bridge_priv(bridge);
++
++	/*
++	 * Do not read more than one device on the bus other than
++	 * the host bridge.
++	 */
++	if (bus->primary != 0 && device > 0 &&
++		priv->flags & FLAG_DEV_FIX)
++		return NULL;
++
++	/* CFG0 can only access standard space */
++	if (where < PCI_CFG_SPACE_SIZE && priv->flags & FLAG_CFG0 &&
++		priv->cfg0_base)
++		return cfg0_map(priv, busnum, device, function, where);
++
++	/* CFG1 can access exp space */
++	if (where < PCI_CFG_SPACE_EXP_SIZE && priv->flags & FLAG_CFG1 &&
++		priv->cfg1_base)
++		return cfg1_map(priv, busnum, device, function, where);
++
++	return NULL;
++}
++
++static int loongson_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
++{
++	int irq;
++	u8 val;
++
++	irq = of_irq_parse_and_map_pci(dev, slot, pin);
++	if (irq > 0)
++		return irq;
++
++	/* Care i8259 legacy systems */
++	pci_read_config_byte(dev, PCI_INTERRUPT_LINE, &val);
++	/* 0xff is also invalid */
++	if (val == 0xff)
++		return 0;
++
++	return val;
++}
++
++/* H/w only accept 32-bit PCI operations */
++static struct pci_ops loongson_pci_ops = {
++	.map_bus = pci_loongson_map_bus,
++	.read	= pci_generic_config_read32,
++	.write	= pci_generic_config_write32,
++};
++
++static const struct of_device_id loongson_pci_of_match[] = {
++	{ .compatible = "loongson,rs780e-pci",
++		.data = (void *)(FLAG_CFG0), },
++	{ .compatible = "loongson,ls2k-pci",
++		.data = (void *)(FLAG_CFG0 | FLAG_CFG1 | FLAG_DEV_FIX), },
++	{ .compatible = "loongson,ls7a-pci",
++		.data = (void *)(FLAG_CFG0 | FLAG_CFG1 | FLAG_DEV_FIX), },
++	{}
++};
++
++static int loongson_pci_probe(struct platform_device *pdev)
++{
++	struct loongson_pci *priv;
++	struct device *dev = &pdev->dev;
++	struct device_node *node = dev->of_node;
++	struct pci_host_bridge *bridge;
++	struct resource *regs;
++	int err;
++
++	if (!node)
++		return -ENODEV;
++
++	bridge = devm_pci_alloc_host_bridge(dev, sizeof(*priv));
++	if (!bridge)
++		return -ENODEV;
++
++	priv = pci_host_bridge_priv(bridge);
++	priv->pdev = pdev;
++	priv->flags = (unsigned long)of_device_get_match_data(dev);
++
++	regs = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!regs) {
++		dev_err(dev, "missing mem resources for cfg0\n");
++		return -EINVAL;
++	}
++
++	priv->cfg0_base = devm_pci_remap_cfg_resource(dev, regs);
++	if (IS_ERR(priv->cfg0_base))
++		return PTR_ERR(priv->cfg0_base);
++
++	/* CFG1 is optional */
++	if (priv->flags & FLAG_CFG1) {
++		regs = platform_get_resource(pdev, IORESOURCE_MEM, 1);
++		if (!regs)
++			dev_info(dev, "missing mem resource for cfg1\n");
++		else {
++			priv->cfg1_base = devm_pci_remap_cfg_resource(dev, regs);
++			if (IS_ERR(priv->cfg1_base))
++				priv->cfg1_base = NULL;
++		}
++	}
++
++
++	err = pci_parse_request_of_pci_ranges(dev, &bridge->windows,
++						&bridge->dma_ranges, NULL);
++	if (err) {
++		dev_err(dev, "Failed to get bridge resources\n");
++		return err;
++	}
++
++	bridge->dev.parent = dev;
++	bridge->sysdata = priv;
++	bridge->ops = &loongson_pci_ops;
++	bridge->map_irq = loongson_map_irq;
++
++	err = pci_host_probe(bridge);
++	if (err)
++		return err;
++
++	return 0;
++}
++
++static struct platform_driver loongson_pci_driver = {
++	.driver = {
++		.name = "loongson-pci",
++		.of_match_table = loongson_pci_of_match,
++	},
++	.probe = loongson_pci_probe,
++};
++builtin_platform_driver(loongson_pci_driver);
 -- 
 2.26.0.rc2
 
