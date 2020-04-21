@@ -2,112 +2,118 @@ Return-Path: <SRS0=8E5B=6F=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37FCBC54FC9
-	for <linux-pci@archiver.kernel.org>; Tue, 21 Apr 2020 14:25:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 199E4C54FC9
+	for <linux-pci@archiver.kernel.org>; Tue, 21 Apr 2020 15:18:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 19D032070B
-	for <linux-pci@archiver.kernel.org>; Tue, 21 Apr 2020 14:25:54 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="OFLiLcky"
+	by mail.kernel.org (Postfix) with ESMTP id F3E58206A5
+	for <linux-pci@archiver.kernel.org>; Tue, 21 Apr 2020 15:18:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726691AbgDUOZx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 21 Apr 2020 10:25:53 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:52444 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726628AbgDUOZx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Apr 2020 10:25:53 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03LECPuf104152;
-        Tue, 21 Apr 2020 14:16:40 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=KH7JSrOcrG0YkK05NQHdKXeBwOzqSpU/M/EkFRPsDJU=;
- b=OFLiLckynNhGGR/eAiiEYrtmckqtERtrg3zbWlTXTubdUgYeX6D8zCfogsqLvU5hIMy1
- nLESg71meqYz9dk8pt5Qxsf7x3FWIDchid7Dtuu1yrZ98A4heR6OSFHEg5OV0XTDhEaY
- fKD+nKPUYNw093M51+HnMNsMQ49lg+6lVI2UAntsxguELIUpy20Ju5GDDeobCplLYtlD
- yGZwDSjp4c4r1lfz0Wix1mQzL901RpGgx0gwIfNaS0+2Arvnv6SoV1fh/Z2QVwXEw61S
- LyM+gtTLd5DFsWH6iHv/mYHG0a8GiWPzsSjhrhWXe9WVxZIO9EfGj/JpAySuPxAtmXb2 WA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 30fsgkw880-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 21 Apr 2020 14:16:40 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03LEBd5o143244;
-        Tue, 21 Apr 2020 14:14:39 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 30gb3sa2jh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 21 Apr 2020 14:14:39 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 03LEEaDS007921;
-        Tue, 21 Apr 2020 14:14:36 GMT
-Received: from kadam (/41.57.98.10)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 21 Apr 2020 07:14:35 -0700
-Date:   Tue, 21 Apr 2020 17:14:26 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     Shiju Jose <shiju.jose@huawei.com>
-Cc:     linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, rjw@rjwysocki.net, bp@alien8.de,
-        james.morse@arm.com, helgaas@kernel.org, lenb@kernel.org,
-        tony.luck@intel.com, gregkh@linuxfoundation.org,
-        zhangliguang@linux.alibaba.com, tglx@linutronix.de,
-        linuxarm@huawei.com, jonathan.cameron@huawei.com,
-        tanxiaofei@huawei.com, yangyicong@hisilicon.com
-Subject: Re: [RESEND PATCH v7 4/6] ACPI / APEI: Add callback for ARM HW
+        id S1725990AbgDUPSH convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 21 Apr 2020 11:18:07 -0400
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2077 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725613AbgDUPSH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 21 Apr 2020 11:18:07 -0400
+Received: from lhreml721-chm.china.huawei.com (unknown [172.18.7.108])
+        by Forcepoint Email with ESMTP id BF833D248BFA70D8CFB2;
+        Tue, 21 Apr 2020 16:18:05 +0100 (IST)
+Received: from lhreml715-chm.china.huawei.com (10.201.108.66) by
+ lhreml721-chm.china.huawei.com (10.201.108.72) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1913.5; Tue, 21 Apr 2020 16:18:05 +0100
+Received: from lhreml715-chm.china.huawei.com ([10.201.108.66]) by
+ lhreml715-chm.china.huawei.com ([10.201.108.66]) with mapi id 15.01.1913.007;
+ Tue, 21 Apr 2020 16:18:04 +0100
+From:   Shiju Jose <shiju.jose@huawei.com>
+To:     Dan Carpenter <dan.carpenter@oracle.com>
+CC:     "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+        "bp@alien8.de" <bp@alien8.de>,
+        "james.morse@arm.com" <james.morse@arm.com>,
+        "helgaas@kernel.org" <helgaas@kernel.org>,
+        "lenb@kernel.org" <lenb@kernel.org>,
+        "tony.luck@intel.com" <tony.luck@intel.com>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        "zhangliguang@linux.alibaba.com" <zhangliguang@linux.alibaba.com>,
+        "tglx@linutronix.de" <tglx@linutronix.de>,
+        Linuxarm <linuxarm@huawei.com>,
+        Jonathan Cameron <jonathan.cameron@huawei.com>,
+        tanxiaofei <tanxiaofei@huawei.com>,
+        yangyicong <yangyicong@huawei.com>
+Subject: RE: [RESEND PATCH v7 4/6] ACPI / APEI: Add callback for ARM HW errors
+ to the GHES notifier
+Thread-Topic: [RESEND PATCH v7 4/6] ACPI / APEI: Add callback for ARM HW
  errors to the GHES notifier
-Message-ID: <20200421141426.GD2682@kadam>
-References: <ShijuJose>
- <20200421132136.1595-1-shiju.jose@huawei.com>
- <20200421132136.1595-5-shiju.jose@huawei.com>
+Thread-Index: AQHWF+AgGjWUb7UHikyyLKOn1rsB1aiDjc8AgAAhSyA=
+Date:   Tue, 21 Apr 2020 15:18:04 +0000
+Message-ID: <19755019addc4fc3bbac5238157dee2c@huawei.com>
+References: <ShijuJose> <20200421132136.1595-1-shiju.jose@huawei.com>
+ <20200421132136.1595-5-shiju.jose@huawei.com> <20200421141426.GD2682@kadam>
+In-Reply-To: <20200421141426.GD2682@kadam>
+Accept-Language: en-GB, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [10.47.83.77]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200421132136.1595-5-shiju.jose@huawei.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9597 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0 adultscore=0
- mlxlogscore=999 phishscore=0 suspectscore=0 bulkscore=0 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004210112
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9597 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 priorityscore=1501
- lowpriorityscore=0 mlxlogscore=999 malwarescore=0 clxscore=1015
- spamscore=0 bulkscore=0 phishscore=0 suspectscore=0 impostorscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004210112
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Apr 21, 2020 at 02:21:34PM +0100, Shiju Jose wrote:
->  static BLOCKING_NOTIFIER_HEAD(ghes_event_notify_list);
-> @@ -670,12 +692,7 @@ static void ghes_do_proc(struct ghes *ghes,
->  			pr_warn(GHES_PFX "ghes event queue full\n");
->  			break;
->  		}
-> -
-> -		if (guid_equal(sec_type, &CPER_SEC_PROC_ARM)) {
-> -			struct cper_sec_proc_arm *err = acpi_hest_get_payload(gdata);
-> -
-> -			log_arm_hw_error(err);
-> -		} else {
-> +		{
->  			void *err = acpi_hest_get_payload(gdata);
+Hi Dan,
 
-This is ugly.  Just move the "void *err;" declaration to the top of the
-function so we can delete this block.
+>-----Original Message-----
+>From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
+>Sent: 21 April 2020 15:14
+>To: Shiju Jose <shiju.jose@huawei.com>
+>Cc: linux-acpi@vger.kernel.org; linux-pci@vger.kernel.org; linux-
+>kernel@vger.kernel.org; rjw@rjwysocki.net; bp@alien8.de;
+>james.morse@arm.com; helgaas@kernel.org; lenb@kernel.org;
+>tony.luck@intel.com; gregkh@linuxfoundation.org;
+>zhangliguang@linux.alibaba.com; tglx@linutronix.de; Linuxarm
+><linuxarm@huawei.com>; Jonathan Cameron
+><jonathan.cameron@huawei.com>; tanxiaofei <tanxiaofei@huawei.com>;
+>yangyicong <yangyicong@huawei.com>
+>Subject: Re: [RESEND PATCH v7 4/6] ACPI / APEI: Add callback for ARM HW
+>errors to the GHES notifier
+>
+>On Tue, Apr 21, 2020 at 02:21:34PM +0100, Shiju Jose wrote:
+>>  static BLOCKING_NOTIFIER_HEAD(ghes_event_notify_list);
+>> @@ -670,12 +692,7 @@ static void ghes_do_proc(struct ghes *ghes,
+>>  			pr_warn(GHES_PFX "ghes event queue full\n");
+>>  			break;
+>>  		}
+>> -
+>> -		if (guid_equal(sec_type, &CPER_SEC_PROC_ARM)) {
+>> -			struct cper_sec_proc_arm *err =
+>acpi_hest_get_payload(gdata);
+>> -
+>> -			log_arm_hw_error(err);
+>> -		} else {
+>> +		{
+>>  			void *err = acpi_hest_get_payload(gdata);
+>
+>This is ugly.  Just move the "void *err;" declaration to the top of the function
+>so we can delete this block.
+Ok. I will change. 
+>
+>>
+>>  			log_non_standard_event(sec_type, fru_id, fru_text,
+>> --
+>
+>regards,
+>dan carpenter
 
->  
->  			log_non_standard_event(sec_type, fru_id, fru_text,
-> -- 
-
-regards,
-dan carpenter
+Thanks,
+Shiju
