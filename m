@@ -2,141 +2,113 @@ Return-Path: <SRS0=8E5B=6F=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74664C54FC9
-	for <linux-pci@archiver.kernel.org>; Tue, 21 Apr 2020 11:03:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37342C54FC9
+	for <linux-pci@archiver.kernel.org>; Tue, 21 Apr 2020 11:17:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5C2F8206B9
-	for <linux-pci@archiver.kernel.org>; Tue, 21 Apr 2020 11:03:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1405A2075E
+	for <linux-pci@archiver.kernel.org>; Tue, 21 Apr 2020 11:17:06 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=nic.cz header.i=@nic.cz header.b="P+gtIP4y"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728584AbgDULDp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 21 Apr 2020 07:03:45 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:36398 "EHLO
-        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726018AbgDULDp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Apr 2020 07:03:45 -0400
-Received: from pps.filterd (m0127361.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 03LB3EwZ187360
-        for <linux-pci@vger.kernel.org>; Tue, 21 Apr 2020 07:03:43 -0400
-Received: from e06smtp07.uk.ibm.com (e06smtp07.uk.ibm.com [195.75.94.103])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 30gmuabua2-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Tue, 21 Apr 2020 07:03:42 -0400
-Received: from localhost
-        by e06smtp07.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <fbarrat@linux.ibm.com>;
-        Tue, 21 Apr 2020 12:03:32 +0100
-Received: from b06cxnps3075.portsmouth.uk.ibm.com (9.149.109.195)
-        by e06smtp07.uk.ibm.com (192.168.101.137) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
-        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
-        Tue, 21 Apr 2020 12:03:30 +0100
-Received: from b06wcsmtp001.portsmouth.uk.ibm.com (b06wcsmtp001.portsmouth.uk.ibm.com [9.149.105.160])
-        by b06cxnps3075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 03LB3YU923134340
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 21 Apr 2020 11:03:35 GMT
-Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id E179BA405C;
-        Tue, 21 Apr 2020 11:03:34 +0000 (GMT)
-Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 91E2FA4064;
-        Tue, 21 Apr 2020 11:03:34 +0000 (GMT)
-Received: from pic2.home (unknown [9.145.42.232])
-        by b06wcsmtp001.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Tue, 21 Apr 2020 11:03:34 +0000 (GMT)
-Subject: Re: [PATCH AUTOSEL 5.4 70/78] pci/hotplug/pnv-php: Remove erroneous
- warning
-To:     Sasha Levin <sashal@kernel.org>, linux-kernel@vger.kernel.org,
-        stable@vger.kernel.org
-Cc:     "Alastair D'Silva" <alastair@d-silva.org>,
-        Andrew Donnellan <ajd@linux.ibm.com>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-References: <20200418144047.9013-1-sashal@kernel.org>
- <20200418144047.9013-70-sashal@kernel.org>
-From:   Frederic Barrat <fbarrat@linux.ibm.com>
-Date:   Tue, 21 Apr 2020 13:03:34 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+        id S1728654AbgDULRF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 21 Apr 2020 07:17:05 -0400
+Received: from mail.nic.cz ([217.31.204.67]:40748 "EHLO mail.nic.cz"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728610AbgDULRF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 21 Apr 2020 07:17:05 -0400
+Received: from dellmb.labs.office.nic.cz (unknown [IPv6:2001:1488:fffe:6:cac7:3539:7f1f:463])
+        by mail.nic.cz (Postfix) with ESMTP id 98EEA141337;
+        Tue, 21 Apr 2020 13:17:02 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=nic.cz; s=default;
+        t=1587467822; bh=WWdULTS/yrmI1pxEZNYpKN5Ix1wCZmr0xU/efBMkzws=;
+        h=From:To:Date;
+        b=P+gtIP4yAlKb6dV434lUbdneEyqVTityTaylZAxiUnA5wMFgnQ3Em6U39xDbgV3h4
+         rqPE/1U8s0i4j8zcbQDDSPsBVgzsmrmDCYVoR1Af+AwkifZ6+H/gxJV0IKNqJCAjCq
+         qwXu5ef/jVZ7qGyugZ37PamWbUWz93L89Gobnl7I=
+From:   =?UTF-8?q?Marek=20Beh=C3=BAn?= <marek.behun@nic.cz>
+To:     linux-pci@vger.kernel.org
+Cc:     Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Andrew Murray <amurray@thegoodpenguin.co.uk>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Remi Pommarel <repk@triplefau.lt>,
+        Tomasz Maciej Nowak <tmn505@gmail.com>,
+        Xogium <contact@xogium.me>,
+        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
+Subject: [PATCH v2 2/9] PCI: aardvark: don't write to read-only register
+Date:   Tue, 21 Apr 2020 13:16:54 +0200
+Message-Id: <20200421111701.17088-3-marek.behun@nic.cz>
+X-Mailer: git-send-email 2.24.1
+In-Reply-To: <20200421111701.17088-1-marek.behun@nic.cz>
+References: <20200421111701.17088-1-marek.behun@nic.cz>
 MIME-Version: 1.0
-In-Reply-To: <20200418144047.9013-70-sashal@kernel.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-x-cbid: 20042111-0028-0000-0000-000003FC425A
-X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
-x-cbparentid: 20042111-0029-0000-0000-000024C20597
-Message-Id: <3f547720-ec27-7a12-d80e-79cd46477daf@linux.ibm.com>
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.676
- definitions=2020-04-21_04:2020-04-20,2020-04-21 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 mlxscore=0
- spamscore=0 phishscore=0 adultscore=0 suspectscore=0 priorityscore=1501
- lowpriorityscore=0 bulkscore=0 mlxlogscore=999 clxscore=1031
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004210088
+X-Spamd-Bar: /
+X-Virus-Scanned: clamav-milter 0.101.4 at mail
+X-Virus-Status: Clean
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+From: Pali Rohár <pali@kernel.org>
 
+Trying to change Link Status register does not have any effect as this
+is a read-only register. Trying to overwrite bits for Negotiated Link
+Width does not make sense.
 
-Le 18/04/2020 à 16:40, Sasha Levin a écrit :
-> From: Frederic Barrat <fbarrat@linux.ibm.com>
-> 
-> [ Upstream commit 658ab186dd22060408d94f5c5a6d02d809baba44 ]
+In future proper change of link width can be done via Lane Count Select
+bits in PCIe Control 0 register.
 
+Trying to unconditionally enable ASPM L0s via ASPM Control bits in Link
+Control register is wrong. There should be at least some detection if
+endpoint supports L0s as isn't mandatory.
 
-This doesn't need to be backported to stable.
+Moreover ASPM Control bits in Link Control register are controlled by
+pcie/aspm.c code which sets it according to system ASPM settings,
+immediately after aardvark driver probes. So setting these bits by
+aardvark driver has no long running effect.
 
-   Fred
+Remove code which touches ASPM L0s bits from this driver and let
+kernel's ASPM implementation to set ASPM state properly.
 
+Some users are reporting issues that this code is problematic for some
+Intel wifi cards and removing it fixes them, see e.g.:
+https://bugzilla.kernel.org/show_bug.cgi?id=196339
 
-> On powernv, when removing a device through hotplug, the following
-> warning is logged:
-> 
->       Invalid refcount <.> on <...>
-> 
-> It may be incorrect, the refcount may be set to a higher value than 1
-> and be valid. of_detach_node() can drop more than one reference. As it
-> doesn't seem trivial to assert the correct value, let's remove the
-> warning.
-> 
-> Reviewed-by: Alastair D'Silva <alastair@d-silva.org>
-> Reviewed-by: Andrew Donnellan <ajd@linux.ibm.com>
-> Signed-off-by: Frederic Barrat <fbarrat@linux.ibm.com>
-> Signed-off-by: Michael Ellerman <mpe@ellerman.id.au>
-> Link: https://lore.kernel.org/r/20191121134918.7155-7-fbarrat@linux.ibm.com
-> Signed-off-by: Sasha Levin <sashal@kernel.org>
-> ---
->   drivers/pci/hotplug/pnv_php.c | 6 ------
->   1 file changed, 6 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/pnv_php.c b/drivers/pci/hotplug/pnv_php.c
-> index d7b2b47bc33eb..6037983c6e46b 100644
-> --- a/drivers/pci/hotplug/pnv_php.c
-> +++ b/drivers/pci/hotplug/pnv_php.c
-> @@ -151,17 +151,11 @@ static void pnv_php_rmv_pdns(struct device_node *dn)
->   static void pnv_php_detach_device_nodes(struct device_node *parent)
->   {
->   	struct device_node *dn;
-> -	int refcount;
->   
->   	for_each_child_of_node(parent, dn) {
->   		pnv_php_detach_device_nodes(dn);
->   
->   		of_node_put(dn);
-> -		refcount = kref_read(&dn->kobj.kref);
-> -		if (refcount != 1)
-> -			pr_warn("Invalid refcount %d on <%pOF>\n",
-> -				refcount, dn);
-> -
->   		of_detach_node(dn);
->   	}
->   }
-> 
+If problems with Intel wifi cards occur even after this commit, then
+pcie/aspm.c code could be modified / hooked to not enable ASPM L0s state
+for affected problematic cards.
+
+Signed-off-by: Pali Rohár <pali@kernel.org>
+---
+ drivers/pci/controller/pci-aardvark.c | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
+index b59198a102d0..551d98174613 100644
+--- a/drivers/pci/controller/pci-aardvark.c
++++ b/drivers/pci/controller/pci-aardvark.c
+@@ -356,10 +356,6 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
+ 
+ 	advk_pcie_wait_for_link(pcie);
+ 
+-	reg = PCIE_CORE_LINK_L0S_ENTRY |
+-		(1 << PCIE_CORE_LINK_WIDTH_SHIFT);
+-	advk_writel(pcie, reg, PCIE_CORE_LINK_CTRL_STAT_REG);
+-
+ 	reg = advk_readl(pcie, PCIE_CORE_CMD_STATUS_REG);
+ 	reg |= PCIE_CORE_CMD_MEM_ACCESS_EN |
+ 		PCIE_CORE_CMD_IO_ACCESS_EN |
+-- 
+2.24.1
 
