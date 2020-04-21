@@ -6,32 +6,32 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA517C55186
-	for <linux-pci@archiver.kernel.org>; Tue, 21 Apr 2020 23:34:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F21AFC55189
+	for <linux-pci@archiver.kernel.org>; Tue, 21 Apr 2020 23:34:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B0B0120679
-	for <linux-pci@archiver.kernel.org>; Tue, 21 Apr 2020 23:34:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D483D20724
+	for <linux-pci@archiver.kernel.org>; Tue, 21 Apr 2020 23:34:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725822AbgDUXeJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 21 Apr 2020 19:34:09 -0400
-Received: from mga05.intel.com ([192.55.52.43]:10107 "EHLO mga05.intel.com"
+        id S1726457AbgDUXeO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 21 Apr 2020 19:34:14 -0400
+Received: from mga12.intel.com ([192.55.52.136]:35979 "EHLO mga12.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726373AbgDUXeI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 21 Apr 2020 19:34:08 -0400
-IronPort-SDR: gj/HV3+RyhDo1NzmEmmHSGrWoIlFF2YW4aQcwiGJS0XDXn4dLsfKnSXz170QIS6z87Vhfts4xH
- be6zQnHEziZg==
+        id S1726451AbgDUXeN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 21 Apr 2020 19:34:13 -0400
+IronPort-SDR: q2b4Th76ee9wY0QAa3NwC4KU9b4PA+vGVwqMqBJ2ZZUlPKgO/ZC/3fShqYN/6qCPRXyzpyIIew
+ qPgtB2ZA5tPw==
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Apr 2020 16:34:00 -0700
-IronPort-SDR: iJ1MRYp5BPfCtqBEdZDaPFs2OEEnUSCFISx+8YUDKbWRQr5FhFLQ6m1Q5rW+zca6goptwqkxK4
- lUsXm58ZWXEQ==
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Apr 2020 16:34:13 -0700
+IronPort-SDR: PQBV/gzbJQ/w8O+RLeKfbPQdNhHVGd1il12nwqmpVqW+q2dT7TaiYAYDJhaZEv5sGpig9gT3Xb
+ mQh/QnTXQjsw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.72,411,1580803200"; 
-   d="scan'208";a="258876422"
+   d="scan'208";a="245816413"
 Received: from djiang5-desk3.ch.intel.com ([143.182.136.137])
-  by orsmga006.jf.intel.com with ESMTP; 21 Apr 2020 16:33:59 -0700
-Subject: [PATCH RFC 02/15] drivers/base: Introduce a new platform-msi list
+  by fmsmga007.fm.intel.com with ESMTP; 21 Apr 2020 16:34:11 -0700
+Subject: [PATCH RFC 04/15] drivers/base: Add support for a new IMS irq domain
 From:   Dave Jiang <dave.jiang@intel.com>
 To:     vkoul@kernel.org, megha.dey@linux.intel.com, maz@kernel.org,
         bhelgaas@google.com, rafael@kernel.org, gregkh@linuxfoundation.org,
@@ -43,14 +43,14 @@ To:     vkoul@kernel.org, megha.dey@linux.intel.com, maz@kernel.org,
         eric.auger@redhat.com, parav@mellanox.com
 Cc:     dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org,
         x86@kernel.org, linux-pci@vger.kernel.org, kvm@vger.kernel.org
-Date:   Tue, 21 Apr 2020 16:33:59 -0700
-Message-ID: <158751203902.36773.2662739280103265908.stgit@djiang5-desk3.ch.intel.com>
+Date:   Tue, 21 Apr 2020 16:34:11 -0700
+Message-ID: <158751205175.36773.1874642824360728883.stgit@djiang5-desk3.ch.intel.com>
 In-Reply-To: <158751095889.36773.6009825070990637468.stgit@djiang5-desk3.ch.intel.com>
 References: <158751095889.36773.6009825070990637468.stgit@djiang5-desk3.ch.intel.com>
 User-Agent: StGit/unknown-version
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
@@ -58,304 +58,276 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Megha Dey <megha.dey@linux.intel.com>
 
-This is a preparatory patch to introduce Interrupt Message Store (IMS).
+Add support for the creation of a new IMS irq domain. It creates a new
+irq chip associated with the IMS domain and adds the necessary domain
+operations to it.
 
-The struct device has a linked list ('msi_list') of the MSI (msi/msi-x,
-platform-msi) descriptors of that device. This list holds only 1 type
-of descriptor since it is not possible for a device to support more
-than one of these descriptors concurrently.
-
-However, with the introduction of IMS, a device can support IMS as well
-as MSI-X at the same time. Instead of sharing this list between IMS (a
-type of platform-msi) and MSI-X descriptors, introduce a new linked list,
-platform_msi_list, which will hold all the platform-msi descriptors.
-
-Thus, msi_list will point to the MSI/MSIX descriptors of a device, while
-platform_msi_list will point to the platform-msi descriptors of a device.
+Also, add a new config option MSI_IMS which must be enabled by any driver
+who would want to use the IMS infrastructure.
 
 Signed-off-by: Megha Dey <megha.dey@linux.intel.com>
 ---
- drivers/base/core.c         |    1 +
- drivers/base/platform-msi.c |   19 +++++++++++--------
- include/linux/device.h      |    2 ++
- include/linux/list.h        |   36 ++++++++++++++++++++++++++++++++++++
- include/linux/msi.h         |   21 +++++++++++++++++++++
- kernel/irq/msi.c            |   16 ++++++++--------
- 6 files changed, 79 insertions(+), 16 deletions(-)
+ arch/x86/include/asm/hw_irq.h    |    7 +++
+ drivers/base/Kconfig             |    9 +++
+ drivers/base/Makefile            |    1 
+ drivers/base/ims-msi.c           |  100 ++++++++++++++++++++++++++++++++++++++
+ drivers/base/platform-msi.c      |    6 +-
+ drivers/vfio/mdev/mdev_core.c    |    6 ++
+ drivers/vfio/mdev/mdev_private.h |    1 
+ include/linux/mdev.h             |    3 +
+ include/linux/msi.h              |    2 +
+ 9 files changed, 131 insertions(+), 4 deletions(-)
+ create mode 100644 drivers/base/ims-msi.c
 
-diff --git a/drivers/base/core.c b/drivers/base/core.c
-index 139cdf7e7327..5a0116d1a8d0 100644
---- a/drivers/base/core.c
-+++ b/drivers/base/core.c
-@@ -1984,6 +1984,7 @@ void device_initialize(struct device *dev)
- 	set_dev_node(dev, -1);
- #ifdef CONFIG_GENERIC_MSI_IRQ
- 	INIT_LIST_HEAD(&dev->msi_list);
-+	INIT_LIST_HEAD(&dev->platform_msi_list);
- #endif
- 	INIT_LIST_HEAD(&dev->links.consumers);
- 	INIT_LIST_HEAD(&dev->links.suppliers);
-diff --git a/drivers/base/platform-msi.c b/drivers/base/platform-msi.c
-index 1a3af5f33802..b25c52f734dc 100644
---- a/drivers/base/platform-msi.c
-+++ b/drivers/base/platform-msi.c
-@@ -110,7 +110,8 @@ static void platform_msi_free_descs(struct device *dev, int base, int nvec)
- {
- 	struct msi_desc *desc, *tmp;
- 
--	list_for_each_entry_safe(desc, tmp, dev_to_msi_list(dev), list) {
-+	list_for_each_entry_safe(desc, tmp, dev_to_platform_msi_list(dev),
-+				 list) {
- 		if (desc->platform.msi_index >= base &&
- 		    desc->platform.msi_index < (base + nvec)) {
- 			list_del(&desc->list);
-@@ -127,8 +128,8 @@ static int platform_msi_alloc_descs_with_irq(struct device *dev, int virq,
- 	struct msi_desc *desc;
- 	int i, base = 0;
- 
--	if (!list_empty(dev_to_msi_list(dev))) {
--		desc = list_last_entry(dev_to_msi_list(dev),
-+	if (!list_empty(dev_to_platform_msi_list(dev))) {
-+		desc = list_last_entry(dev_to_platform_msi_list(dev),
- 				       struct msi_desc, list);
- 		base = desc->platform.msi_index + 1;
- 	}
-@@ -142,7 +143,7 @@ static int platform_msi_alloc_descs_with_irq(struct device *dev, int virq,
- 		desc->platform.msi_index = base + i;
- 		desc->irq = virq ? virq + i : 0;
- 
--		list_add_tail(&desc->list, dev_to_msi_list(dev));
-+		list_add_tail(&desc->list, dev_to_platform_msi_list(dev));
- 	}
- 
- 	if (i != nvec) {
-@@ -213,7 +214,7 @@ platform_msi_alloc_priv_data(struct device *dev, unsigned int nvec,
- 	}
- 
- 	/* Already had a helping of MSI? Greed... */
--	if (!list_empty(dev_to_msi_list(dev)))
-+	if (!list_empty(dev_to_platform_msi_list(dev)))
- 		return ERR_PTR(-EBUSY);
- 
- 	datap = kzalloc(sizeof(*datap), GFP_KERNEL);
-@@ -255,6 +256,8 @@ int platform_msi_domain_alloc_irqs(struct device *dev, unsigned int nvec,
- 	struct platform_msi_priv_data *priv_data;
- 	int err;
- 
-+	dev->platform_msi_type = GEN_PLAT_MSI;
-+
- 	priv_data = platform_msi_alloc_priv_data(dev, nvec, platform_ops);
- 	if (IS_ERR(priv_data))
- 		return PTR_ERR(priv_data);
-@@ -284,10 +287,10 @@ EXPORT_SYMBOL_GPL(platform_msi_domain_alloc_irqs);
-  */
- void platform_msi_domain_free_irqs(struct device *dev)
- {
--	if (!list_empty(dev_to_msi_list(dev))) {
-+	if (!list_empty(dev_to_platform_msi_list(dev))) {
- 		struct msi_desc *desc;
- 
--		desc = first_msi_entry(dev);
-+		desc = first_platform_msi_entry(dev);
- 		platform_msi_free_priv_data(desc->platform.msi_priv_data);
- 	}
- 
-@@ -370,7 +373,7 @@ void platform_msi_domain_free(struct irq_domain *domain, unsigned int virq,
- {
- 	struct platform_msi_priv_data *data = domain->host_data;
- 	struct msi_desc *desc, *tmp;
--	for_each_msi_entry_safe(desc, tmp, data->dev) {
-+	for_each_platform_msi_entry_safe(desc, tmp, data->dev) {
- 		if (WARN_ON(!desc->irq || desc->nvec_used != 1))
- 			return;
- 		if (!(desc->irq >= virq && desc->irq < (virq + nvec)))
-diff --git a/include/linux/device.h b/include/linux/device.h
-index ac8e37cd716a..cbcecb14584e 100644
---- a/include/linux/device.h
-+++ b/include/linux/device.h
-@@ -567,6 +567,8 @@ struct device {
- #endif
- #ifdef CONFIG_GENERIC_MSI_IRQ
- 	struct list_head	msi_list;
-+	struct list_head	platform_msi_list;
-+	unsigned int		platform_msi_type;
- #endif
- 
- 	const struct dma_map_ops *dma_ops;
-diff --git a/include/linux/list.h b/include/linux/list.h
-index aff44d34f4e4..7a5ea40cb945 100644
---- a/include/linux/list.h
-+++ b/include/linux/list.h
-@@ -492,6 +492,18 @@ static inline void list_splice_tail_init(struct list_head *list,
- #define list_entry(ptr, type, member) \
- 	container_of(ptr, type, member)
- 
-+/**
-+ * list_entry_select - get the correct struct for this entry based on condition
-+ * @condition:	the condition to choose a particular &struct list head pointer
-+ * @ptr_a:      the &struct list_head pointer if @condition is not met.
-+ * @ptr_b:      the &struct list_head pointer if @condition is met.
-+ * @type:       the type of the struct this is embedded in.
-+ * @member:     the name of the list_head within the struct.
-+ */
-+#define list_entry_select(condition, ptr_a, ptr_b, type, member)\
-+	(condition) ? list_entry(ptr_a, type, member) :		\
-+		      list_entry(ptr_b, type, member)
-+
- /**
-  * list_first_entry - get the first element from a list
-  * @ptr:	the list head to take the element from.
-@@ -503,6 +515,17 @@ static inline void list_splice_tail_init(struct list_head *list,
- #define list_first_entry(ptr, type, member) \
- 	list_entry((ptr)->next, type, member)
- 
-+/**
-+ * list_first_entry_select - get the first element from list based on condition
-+ * @condition:  the condition to choose a particular &struct list head pointer
-+ * @ptr_a:      the &struct list_head pointer if @condition is not met.
-+ * @ptr_b:      the &struct list_head pointer if @condition is met.
-+ * @type:       the type of the struct this is embedded in.
-+ * @member:     the name of the list_head within the struct.
-+ */
-+#define list_first_entry_select(condition, ptr_a, ptr_b, type, member)  \
-+	list_entry_select((condition), (ptr_a)->next, (ptr_b)->next, type, member)
-+
- /**
-  * list_last_entry - get the last element from a list
-  * @ptr:	the list head to take the element from.
-@@ -602,6 +625,19 @@ static inline void list_splice_tail_init(struct list_head *list,
- 	     &pos->member != (head);					\
- 	     pos = list_next_entry(pos, member))
- 
-+/**
-+ * list_for_each_entry_select - iterate over list of given type based on condition
-+ * @condition:  the condition to choose a particular &struct list head pointer
-+ * @pos:        the type * to use as a loop cursor.
-+ * @head_a:     the head for your list if condition is met.
-+ * @head_b:     the head for your list if condition is not met.
-+ * @member:     the name of the list_head within the struct.
-+ */
-+#define list_for_each_entry_select(condition, pos, head_a, head_b, member)\
-+	for (pos = list_first_entry_select((condition), head_a, head_b, typeof(*pos), member);\
-+	     (condition) ? &pos->member != (head_a) : &pos->member != (head_b);\
-+	     pos = list_next_entry(pos, member))
-+
- /**
-  * list_for_each_entry_reverse - iterate backwards over list of given type.
-  * @pos:	the type * to use as a loop cursor.
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 8e08907d70cb..9c15b7403694 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -130,6 +130,11 @@ struct msi_desc {
- 	};
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index 4154bc5f6a4e..2e355aa6ba50 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -62,6 +62,7 @@ enum irq_alloc_type {
+ 	X86_IRQ_ALLOC_TYPE_MSIX,
+ 	X86_IRQ_ALLOC_TYPE_DMAR,
+ 	X86_IRQ_ALLOC_TYPE_UV,
++	X86_IRQ_ALLOC_TYPE_IMS,
  };
  
-+enum platform_msi_type {
-+	NOT_PLAT_MSI = 0,
-+	GEN_PLAT_MSI = 1,
+ struct irq_alloc_info {
+@@ -83,6 +84,12 @@ struct irq_alloc_info {
+ 			irq_hw_number_t	msi_hwirq;
+ 		};
+ #endif
++#ifdef	CONFIG_MSI_IMS
++		struct {
++			struct device	*dev;
++			irq_hw_number_t	ims_hwirq;
++		};
++#endif
+ #ifdef	CONFIG_X86_IO_APIC
+ 		struct {
+ 			int		ioapic_id;
+diff --git a/drivers/base/Kconfig b/drivers/base/Kconfig
+index 5f0bc74d2409..877e0fdee013 100644
+--- a/drivers/base/Kconfig
++++ b/drivers/base/Kconfig
+@@ -209,4 +209,13 @@ config GENERIC_ARCH_TOPOLOGY
+ 	  appropriate scaling, sysfs interface for reading capacity values at
+ 	  runtime.
+ 
++config MSI_IMS
++	bool "Device Specific Interrupt Message Storage (IMS)"
++	depends on X86
++	select GENERIC_MSI_IRQ_DOMAIN
++	select IRQ_REMAP
++	help
++	  This allows device drivers to enable device specific
++	  interrupt message storage (IMS) besides standard MSI-X interrupts.
++
+ endmenu
+diff --git a/drivers/base/Makefile b/drivers/base/Makefile
+index 157452080f3d..659b9b0c0b8a 100644
+--- a/drivers/base/Makefile
++++ b/drivers/base/Makefile
+@@ -22,6 +22,7 @@ obj-$(CONFIG_SOC_BUS) += soc.o
+ obj-$(CONFIG_PINCTRL) += pinctrl.o
+ obj-$(CONFIG_DEV_COREDUMP) += devcoredump.o
+ obj-$(CONFIG_GENERIC_MSI_IRQ_DOMAIN) += platform-msi.o
++obj-$(CONFIG_MSI_IMS) += ims-msi.o
+ obj-$(CONFIG_GENERIC_ARCH_TOPOLOGY) += arch_topology.o
+ 
+ obj-y			+= test/
+diff --git a/drivers/base/ims-msi.c b/drivers/base/ims-msi.c
+new file mode 100644
+index 000000000000..738f6d153155
+--- /dev/null
++++ b/drivers/base/ims-msi.c
+@@ -0,0 +1,100 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Support for Device Specific IMS interrupts.
++ *
++ * Copyright © 2019 Intel Corporation.
++ *
++ * Author: Megha Dey <megha.dey@intel.com>
++ */
++
++#include <linux/dmar.h>
++#include <linux/irq.h>
++#include <linux/mdev.h>
++#include <linux/pci.h>
++
++/*
++ * Determine if a dev is mdev or not. Return NULL if not mdev device.
++ * Return mdev's parent dev if success.
++ */
++static inline struct device *mdev_to_parent(struct device *dev)
++{
++	struct device *ret = NULL;
++	struct device *(*fn)(struct device *dev);
++	struct bus_type *bus = symbol_get(mdev_bus_type);
++
++	if (bus && dev->bus == bus) {
++		fn = symbol_get(mdev_dev_to_parent_dev);
++		ret = fn(dev);
++		symbol_put(mdev_dev_to_parent_dev);
++		symbol_put(mdev_bus_type);
++	}
++
++	return ret;
++}
++
++static irq_hw_number_t dev_ims_get_hwirq(struct msi_domain_info *info,
++					 msi_alloc_info_t *arg)
++{
++	return arg->ims_hwirq;
++}
++
++static int dev_ims_prepare(struct irq_domain *domain, struct device *dev,
++			   int nvec, msi_alloc_info_t *arg)
++{
++	if (dev_is_mdev(dev))
++		dev = mdev_to_parent(dev);
++
++	init_irq_alloc_info(arg, NULL);
++	arg->dev = dev;
++	arg->type = X86_IRQ_ALLOC_TYPE_IMS;
++
++	return 0;
++}
++
++static void dev_ims_set_desc(msi_alloc_info_t *arg, struct msi_desc *desc)
++{
++	arg->ims_hwirq = platform_msi_calc_hwirq(desc);
++}
++
++static struct msi_domain_ops dev_ims_domain_ops = {
++	.get_hwirq	= dev_ims_get_hwirq,
++	.msi_prepare	= dev_ims_prepare,
++	.set_desc	= dev_ims_set_desc,
 +};
 +
- /* Helpers to hide struct msi_desc implementation details */
- #define msi_desc_to_dev(desc)		((desc)->dev)
- #define dev_to_msi_list(dev)		(&(dev)->msi_list)
-@@ -140,6 +145,22 @@ struct msi_desc {
- #define for_each_msi_entry_safe(desc, tmp, dev)	\
- 	list_for_each_entry_safe((desc), (tmp), dev_to_msi_list((dev)), list)
++static struct irq_chip dev_ims_ir_controller = {
++	.name			= "IR-DEV-IMS",
++	.irq_ack		= irq_chip_ack_parent,
++	.irq_retrigger		= irq_chip_retrigger_hierarchy,
++	.irq_set_vcpu_affinity	= irq_chip_set_vcpu_affinity_parent,
++	.flags			= IRQCHIP_SKIP_SET_WAKE,
++	.irq_write_msi_msg	= platform_msi_write_msg,
++};
++
++static struct msi_domain_info ims_ir_domain_info = {
++	.flags		= MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS,
++	.ops		= &dev_ims_domain_ops,
++	.chip		= &dev_ims_ir_controller,
++	.handler	= handle_edge_irq,
++	.handler_name	= "edge",
++};
++
++struct irq_domain *arch_create_ims_irq_domain(struct irq_domain *parent,
++					      const char *name)
++{
++	struct fwnode_handle *fn;
++	struct irq_domain *domain;
++
++	fn = irq_domain_alloc_named_fwnode(name);
++	if (!fn)
++		return NULL;
++
++	domain = msi_create_irq_domain(fn, &ims_ir_domain_info, parent);
++	if (!domain)
++		return NULL;
++
++	irq_domain_update_bus_token(domain, DOMAIN_BUS_PLATFORM_MSI);
++	irq_domain_free_fwnode(fn);
++
++	return domain;
++}
+diff --git a/drivers/base/platform-msi.c b/drivers/base/platform-msi.c
+index 2696aa75983b..59160e8cbfb1 100644
+--- a/drivers/base/platform-msi.c
++++ b/drivers/base/platform-msi.c
+@@ -31,12 +31,11 @@ struct platform_msi_priv_data {
+ /* The devid allocator */
+ static DEFINE_IDA(platform_msi_devid_ida);
  
-+#define dev_to_platform_msi_list(dev)	(&(dev)->platform_msi_list)
-+#define first_platform_msi_entry(dev)		\
-+	list_first_entry(dev_to_platform_msi_list((dev)), struct msi_desc, list)
-+#define for_each_platform_msi_entry(desc, dev)	\
-+	list_for_each_entry((desc), dev_to_platform_msi_list((dev)), list)
-+#define for_each_platform_msi_entry_safe(desc, tmp, dev)	\
-+	list_for_each_entry_safe((desc), (tmp), dev_to_platform_msi_list((dev)), list)
-+
-+#define first_msi_entry_common(dev)	\
-+	list_first_entry_select((dev)->platform_msi_type, dev_to_platform_msi_list((dev)),	\
-+				dev_to_msi_list((dev)), struct msi_desc, list)
-+
-+#define for_each_msi_entry_common(desc, dev)	\
-+	list_for_each_entry_select((dev)->platform_msi_type, desc, dev_to_platform_msi_list((dev)), \
-+				   dev_to_msi_list((dev)), list)	\
-+
- #ifdef CONFIG_IRQ_MSI_IOMMU
- static inline const void *msi_desc_get_iommu_cookie(struct msi_desc *desc)
+-#ifdef GENERIC_MSI_DOMAIN_OPS
+ /*
+  * Convert an msi_desc to a globaly unique identifier (per-device
+  * devid + msi_desc position in the msi_list).
+  */
+-static irq_hw_number_t platform_msi_calc_hwirq(struct msi_desc *desc)
++irq_hw_number_t platform_msi_calc_hwirq(struct msi_desc *desc)
  {
-diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
-index eb95f6106a1e..bc5f9e32387f 100644
---- a/kernel/irq/msi.c
-+++ b/kernel/irq/msi.c
-@@ -320,7 +320,7 @@ int msi_domain_populate_irqs(struct irq_domain *domain, struct device *dev,
- 	struct msi_desc *desc;
- 	int ret = 0;
+ 	u32 devid;
  
--	for_each_msi_entry(desc, dev) {
-+	for_each_msi_entry_common(desc, dev) {
- 		/* Don't even try the multi-MSI brain damage. */
- 		if (WARN_ON(!desc->irq || desc->nvec_used != 1)) {
- 			ret = -EINVAL;
-@@ -342,7 +342,7 @@ int msi_domain_populate_irqs(struct irq_domain *domain, struct device *dev,
- 
- 	if (ret) {
- 		/* Mop up the damage */
--		for_each_msi_entry(desc, dev) {
-+		for_each_msi_entry_common(desc, dev) {
- 			if (!(desc->irq >= virq && desc->irq < (virq + nvec)))
- 				continue;
- 
-@@ -383,7 +383,7 @@ static bool msi_check_reservation_mode(struct irq_domain *domain,
- 	 * Checking the first MSI descriptor is sufficient. MSIX supports
- 	 * masking and MSI does so when the maskbit is set.
- 	 */
--	desc = first_msi_entry(dev);
-+	desc = first_msi_entry_common(dev);
- 	return desc->msi_attrib.is_msix || desc->msi_attrib.maskbit;
+@@ -45,6 +44,7 @@ static irq_hw_number_t platform_msi_calc_hwirq(struct msi_desc *desc)
+ 	return (devid << (32 - DEV_ID_SHIFT)) | desc->platform.msi_index;
  }
  
-@@ -411,7 +411,7 @@ int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
- 	if (ret)
- 		return ret;
- 
--	for_each_msi_entry(desc, dev) {
-+	for_each_msi_entry_common(desc, dev) {
- 		ops->set_desc(&arg, desc);
- 
- 		virq = __irq_domain_alloc_irqs(domain, -1, desc->nvec_used,
-@@ -437,7 +437,7 @@ int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
- 
- 	can_reserve = msi_check_reservation_mode(domain, info, dev);
- 
--	for_each_msi_entry(desc, dev) {
-+	for_each_msi_entry_common(desc, dev) {
- 		virq = desc->irq;
- 		if (desc->nvec_used == 1)
- 			dev_dbg(dev, "irq %d for MSI\n", virq);
-@@ -468,7 +468,7 @@ int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
- 	 * so request_irq() will assign the final vector.
- 	 */
- 	if (can_reserve) {
--		for_each_msi_entry(desc, dev) {
-+		for_each_msi_entry_common(desc, dev) {
- 			irq_data = irq_domain_get_irq_data(domain, desc->irq);
- 			irqd_clr_activated(irq_data);
- 		}
-@@ -476,7 +476,7 @@ int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
- 	return 0;
- 
- cleanup:
--	for_each_msi_entry(desc, dev) {
-+	for_each_msi_entry_common(desc, dev) {
- 		struct irq_data *irqd;
- 
- 		if (desc->irq == virq)
-@@ -500,7 +500,7 @@ void msi_domain_free_irqs(struct irq_domain *domain, struct device *dev)
++#ifdef GENERIC_MSI_DOMAIN_OPS
+ static void platform_msi_set_desc(msi_alloc_info_t *arg, struct msi_desc *desc)
  {
- 	struct msi_desc *desc;
+ 	arg->desc = desc;
+@@ -76,7 +76,7 @@ static void platform_msi_update_dom_ops(struct msi_domain_info *info)
+ 		ops->set_desc = platform_msi_set_desc;
+ }
  
--	for_each_msi_entry(desc, dev) {
-+	for_each_msi_entry_common(desc, dev) {
- 		/*
- 		 * We might have failed to allocate an MSI early
- 		 * enough that there is no IRQ associated to this
+-static void platform_msi_write_msg(struct irq_data *data, struct msi_msg *msg)
++void platform_msi_write_msg(struct irq_data *data, struct msi_msg *msg)
+ {
+ 	struct msi_desc *desc = irq_data_get_msi_desc(data);
+ 	struct platform_msi_priv_data *priv_data;
+diff --git a/drivers/vfio/mdev/mdev_core.c b/drivers/vfio/mdev/mdev_core.c
+index b558d4cfd082..cecc6a6bdbef 100644
+--- a/drivers/vfio/mdev/mdev_core.c
++++ b/drivers/vfio/mdev/mdev_core.c
+@@ -33,6 +33,12 @@ struct device *mdev_parent_dev(struct mdev_device *mdev)
+ }
+ EXPORT_SYMBOL(mdev_parent_dev);
+ 
++struct device *mdev_dev_to_parent_dev(struct device *dev)
++{
++	return to_mdev_device(dev)->parent->dev;
++}
++EXPORT_SYMBOL(mdev_dev_to_parent_dev);
++
+ void *mdev_get_drvdata(struct mdev_device *mdev)
+ {
+ 	return mdev->driver_data;
+diff --git a/drivers/vfio/mdev/mdev_private.h b/drivers/vfio/mdev/mdev_private.h
+index 7d922950caaf..c21f1305a76b 100644
+--- a/drivers/vfio/mdev/mdev_private.h
++++ b/drivers/vfio/mdev/mdev_private.h
+@@ -36,7 +36,6 @@ struct mdev_device {
+ };
+ 
+ #define to_mdev_device(dev)	container_of(dev, struct mdev_device, dev)
+-#define dev_is_mdev(d)		((d)->bus == &mdev_bus_type)
+ 
+ struct mdev_type {
+ 	struct kobject kobj;
+diff --git a/include/linux/mdev.h b/include/linux/mdev.h
+index 0ce30ca78db0..fa2344e239ef 100644
+--- a/include/linux/mdev.h
++++ b/include/linux/mdev.h
+@@ -144,5 +144,8 @@ void mdev_unregister_driver(struct mdev_driver *drv);
+ struct device *mdev_parent_dev(struct mdev_device *mdev);
+ struct device *mdev_dev(struct mdev_device *mdev);
+ struct mdev_device *mdev_from_dev(struct device *dev);
++struct device *mdev_dev_to_parent_dev(struct device *dev);
++
++#define dev_is_mdev(dev) ((dev)->bus == symbol_get(mdev_bus_type))
+ 
+ #endif /* MDEV_H */
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 3890b143b04d..80386468a7bc 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -418,6 +418,8 @@ int platform_msi_domain_alloc(struct irq_domain *domain, unsigned int virq,
+ void platform_msi_domain_free(struct irq_domain *domain, unsigned int virq,
+ 			      unsigned int nvec);
+ void *platform_msi_get_host_data(struct irq_domain *domain);
++irq_hw_number_t platform_msi_calc_hwirq(struct msi_desc *desc);
++void platform_msi_write_msg(struct irq_data *data, struct msi_msg *msg);
+ #endif /* CONFIG_GENERIC_MSI_IRQ_DOMAIN */
+ 
+ #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
 
