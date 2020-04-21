@@ -2,160 +2,146 @@ Return-Path: <SRS0=8E5B=6F=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97F0AC55184
-	for <linux-pci@archiver.kernel.org>; Tue, 21 Apr 2020 11:17:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87945C54FD0
+	for <linux-pci@archiver.kernel.org>; Tue, 21 Apr 2020 11:33:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6A1622078C
-	for <linux-pci@archiver.kernel.org>; Tue, 21 Apr 2020 11:17:14 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=nic.cz header.i=@nic.cz header.b="AE1rv34e"
+	by mail.kernel.org (Postfix) with ESMTP id 6706F20753
+	for <linux-pci@archiver.kernel.org>; Tue, 21 Apr 2020 11:33:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1587468796;
+	bh=wuWcfKVVQJWBIvO//gYpP6cdrjsK4jOZs78nE2BpXGo=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=UpD5yOSLdFSDAak3klWz7q8E0k46b1BzWkNSpNRTTAPuxodGwiIRxwlXeDRTAk74U
+	 pfyvZb/YH0TCLqENVB9UZrq9tuL8Jd2D2sAiyw6qOa3LeOMKp8NAWCz9hkkIyya1A+
+	 be8c5jE9qxYKgkBU4RkTZ/TH6h4Jw19fCIPV9AoY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728510AbgDULRN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 21 Apr 2020 07:17:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47036 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728671AbgDULRH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Apr 2020 07:17:07 -0400
-Received: from mail.nic.cz (lists.nic.cz [IPv6:2001:1488:800:400::400])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0EF0AC0610D5;
-        Tue, 21 Apr 2020 04:17:07 -0700 (PDT)
-Received: from dellmb.labs.office.nic.cz (unknown [IPv6:2001:1488:fffe:6:cac7:3539:7f1f:463])
-        by mail.nic.cz (Postfix) with ESMTP id 1942614134D;
-        Tue, 21 Apr 2020 13:17:04 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=nic.cz; s=default;
-        t=1587467824; bh=pMq7DErqh8TZojDH/eCNG834Z0dgCEq5ncP4/JNZcI8=;
-        h=From:To:Date;
-        b=AE1rv34eGV1gri095fNdiXFazUXfD2T8ZGarU0kmLnrU2w/iMU6XF2rhQTWqwoVtm
-         tgNY/Vr9FU+6+YZaSLbRIzAIQ7iDTFzbAvBXYDGGtc4fxbcfipRirW3uH55mPFbb0t
-         XqGmGhzaW+JpqnNoDyHP0B68srUF+4XwNm7J+4U4=
-From:   =?UTF-8?q?Marek=20Beh=C3=BAn?= <marek.behun@nic.cz>
-To:     linux-pci@vger.kernel.org
-Cc:     Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Remi Pommarel <repk@triplefau.lt>,
-        Tomasz Maciej Nowak <tmn505@gmail.com>,
-        Xogium <contact@xogium.me>,
-        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
-        =?UTF-8?q?Marek=20Beh=C3=BAn?= <marek.behun@nic.cz>,
-        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org
-Subject: [PATCH v2 8/9] arm64: dts: marvell: armada-37xx: set pcie_reset_pin to gpio function
-Date:   Tue, 21 Apr 2020 13:17:00 +0200
-Message-Id: <20200421111701.17088-9-marek.behun@nic.cz>
-X-Mailer: git-send-email 2.24.1
-In-Reply-To: <20200421111701.17088-1-marek.behun@nic.cz>
-References: <20200421111701.17088-1-marek.behun@nic.cz>
+        id S1728625AbgDULdM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 21 Apr 2020 07:33:12 -0400
+Received: from mail-oi1-f196.google.com ([209.85.167.196]:37883 "EHLO
+        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726691AbgDULdL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Apr 2020 07:33:11 -0400
+Received: by mail-oi1-f196.google.com with SMTP id r25so11723615oij.4;
+        Tue, 21 Apr 2020 04:33:11 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=HW9k9kfTW78ME8X5ahcJnyYNk11gvYfm0hTWpxib3PU=;
+        b=kYvcoUfMP/IQ7Y6lMxW/hMoH6vfLAB8YNs0GbF86ZOQVMVLOUTKQP2lxTEekdIsDG2
+         4D+YgLjQ4nG+RF0UfYG+gjNjm/bsGNoI4m3bCc/tbXsURFclaCoj1wO6QHUeCOSvnnmA
+         qLYmDxVxpoOVePbkjlkZ5dlpyz0CjySv402aFuvvALMn3YqVA6QoPkR4c1Js1hdw0sVM
+         dEUZCM85svc8SlKV/782qF1dR1QgAwE4ujVaM6ptsVpfERBtR5cy9OrKnxGTrIbjWYxv
+         xgnh6yZn953cam1OUmga8jb+NCUd15z078f5WYFuN4KYe4TTdgJfdiKr3K8KSYyFL2rR
+         vu5A==
+X-Gm-Message-State: AGi0PuaHaSS7sjkPjqcZpMa9uBZWkCfVM15K1oiUEYL9356Vk1qrsFgP
+        przzXsJgKtk5DyuDqqru6H3i0NW58iE8wqnbf1o=
+X-Google-Smtp-Source: APiQypLN96ZexQcfh1NyKo0/zqGY6oMeGu2AGd9i5r1cD0mnDcePTx9i44H4ZpIkfqEAujnUYUtfIKys73CXfTqBwXU=
+X-Received: by 2002:a05:6808:81:: with SMTP id s1mr2709126oic.68.1587468790638;
+ Tue, 21 Apr 2020 04:33:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Spamd-Bar: /
-X-Virus-Scanned: clamav-milter 0.101.4 at mail
-X-Virus-Status: Clean
+References: <1888197.j9z7NJ8yPn@kreacher> <5673945.BT02kTCndr@kreacher> <CAPDyKFoV-gMn34nghBBK91pRYy3c90D8jrA4-OP2SGxQPzxgdg@mail.gmail.com>
+In-Reply-To: <CAPDyKFoV-gMn34nghBBK91pRYy3c90D8jrA4-OP2SGxQPzxgdg@mail.gmail.com>
+From:   "Rafael J. Wysocki" <rafael@kernel.org>
+Date:   Tue, 21 Apr 2020 13:32:50 +0200
+Message-ID: <CAJZ5v0hsVZQpm5SFfvCQQMNURJ28RNd+i6Cyh=ZUmt+izZhvRw@mail.gmail.com>
+Subject: Re: [PATCH v2 0/9] PM: sleep: core: Rearrange the handling of driver
+ power management flags
+To:     Ulf Hansson <ulf.hansson@linaro.org>
+Cc:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Hans De Goede <hdegoede@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-We found out that we are unable to control the PERST# signal via the
-default pin dedicated to be PERST# pin (GPIO2[3] pin) on A3700 SOC when
-this pin is in EP_PCIE1_Resetn mode. There is a register in the PCIe
-register space called PERSTN_GPIO_EN (D0088004[3]), but changing the
-value of this register does not change the pin output when measuring
-with voltmeter.
+On Tue, Apr 21, 2020 at 12:30 PM Ulf Hansson <ulf.hansson@linaro.org> wrote:
+>
+> On Sat, 18 Apr 2020 at 19:11, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> >
+> > Hi,
+> >
+> > This is an update including some fixes and extra patches based on the
+> > continuation of the discussion [1].
+> >
+> > On Friday, April 10, 2020 5:46:27 PM CEST Rafael J. Wysocki wrote:
+> > > Hi Alan,
+> > >
+> > > Following our recent discussion regarding the DPM_FLAG_* family of flags [1],
+> > > I have decided to follow some of your recommendations and make changes to the
+> > > core code handling those flags.
+> > >
+> > > The purpose of this is basically to make the code more consistent internally,
+> > > easier to follow and better documented.
+> > >
+> > > First of all, patch [1/7] changes the PM core to skip driver-level "late"
+> > > and "noirq" suspend callbacks for devices with SMART_SUSPEND set if they are
+> > > still runtime-suspended during the "late" system-wide suspend phase (without
+> > > the patch it does that only if subsystem-level late/noirq/early suspend/resume
+> > > callbacks are not present for the device, which is demonstrably inconsistent)
+> > > and updates the resume part of the code accordingly (it doesn't need to check
+> > > whether or not the subsystem-level callbacks are present any more).
+> > >
+> > > The next patch, [2/7], is purely cosmetic and its only purpose is to reduce
+> > > the LOC number and move related pieces of code closer to each other.
+> >
+> > The first two patches have not changed.
+> >
+> > > Patch [3/7] changes the PM core so that it doesn't skip any subsystem-level
+> > > callbacks during system-wide resume (without the patch they may be skipped in
+> > > the "early resume" and "resume" phases due to LEAVE_SUSPENDED being set which
+> > > may be problematic) and to always run the driver's ->resume callback if the
+> > > corresponding subsystem-level callback is not present (without the patch it
+> > > may be skipped if LEAVE_SUSPENDED is set) to let it reverse the changes made
+> > > by the driver's ->suspend callback (which always runs too) if need be.
+> >
+> > The difference between this one and patch [3/9] in the v2 is the fixed
+> > definition of dev_pm_may_skip_resume(), renamed to dev_pm_skip_resume() by
+> > one of the next patches.
+> >
+> > Patch [4/9] changes the handling of the power.may_skip_resume flag to set it
+> > to 'true' by default and updates the subsystems aware of it to clear it when
+> > they don't want devices to stay in suspend.
+> >
+> > > Patches [4-6/7] rename one function in the PM core and two driver PM flags to
+> > > make their names better reflect their purpose.
+> >
+> > These are patches [5/9] and [7-8/9] in the v2 and patch [6/9] renames
+> > dev_pm_smart_suspend_and_suspended() to dev_pm_skip_suspend().
+> >
+> > > Finally, patch [7/7] updates the documentation of the driver PM flags to
+> > > reflect the new code flows.
+> >
+> > This patch [9/9] now and it has been updated to reflect the new code changes.
+> >
+> > The pm-sleep-core branch:
+> >
+> >   git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git \
+> >   pm-sleep-core
+> >
+> > contains the v2 now.
+> >
+> > Cheers!
+>
+> Rafael, apologize for taking some time to review and respond. I
+> noticed you have queued this up on your next branch by now, good.
+>
+> In any case, I have looked through the series and I think it looks good, thanks!
 
-We do not know if this is a bug in the SOC, or if it works only when
-PCIe controller is in a certain state.
+Thanks for letting me know!
 
-Commit f4c7d053d7f7 ("PCI: aardvark: Wait for endpoint to be ready
-before training link") says that when this pin changes pinctrl mode
-from EP_PCIE1_Resetn to GPIO, the PERST# signal is asserted for a brief
-moment.
-
-So currently the situation is that on A3700 boards the PERST# signal is
-asserted in U-Boot (because the code in U-Boot issues reset via this pin
-via GPIO mode), and then in Linux by the obscure and undocumented
-mechanism described by the above mentioned commit.
-
-We want to issue PERST# signal in a known way, therefore this patch
-changes the pcie_reset_pin function from "pcie" to "gpio" and adds the
-reset-gpios property to the PCIe node in device tree files of
-EspressoBin and Armada 3720 Dev Board (Turris Mox device tree already
-has this property and uDPU does not have a PCIe port).
-
-Signed-off-by: Marek Behún <marek.behun@nic.cz>
-Cc: Remi Pommarel <repk@triplefau.lt>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: devicetree@vger.kernel.org
----
- arch/arm64/boot/dts/marvell/armada-3720-db.dts           | 3 +++
- arch/arm64/boot/dts/marvell/armada-3720-espressobin.dtsi | 1 +
- arch/arm64/boot/dts/marvell/armada-3720-turris-mox.dts   | 4 ----
- arch/arm64/boot/dts/marvell/armada-37xx.dtsi             | 2 +-
- 4 files changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/arch/arm64/boot/dts/marvell/armada-3720-db.dts b/arch/arm64/boot/dts/marvell/armada-3720-db.dts
-index f2cc00594d64..3e5789f37206 100644
---- a/arch/arm64/boot/dts/marvell/armada-3720-db.dts
-+++ b/arch/arm64/boot/dts/marvell/armada-3720-db.dts
-@@ -128,6 +128,9 @@ phy1: ethernet-phy@1 {
- 
- /* CON15(V2.0)/CON17(V1.4) : PCIe / CON15(V2.0)/CON12(V1.4) :mini-PCIe */
- &pcie0 {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pcie_reset_pins &pcie_clkreq_pins>;
-+	reset-gpios = <&gpiosb 3 GPIO_ACTIVE_LOW>;
- 	status = "okay";
- };
- 
-diff --git a/arch/arm64/boot/dts/marvell/armada-3720-espressobin.dtsi b/arch/arm64/boot/dts/marvell/armada-3720-espressobin.dtsi
-index 42e992f9c8a5..c92ad664cb0e 100644
---- a/arch/arm64/boot/dts/marvell/armada-3720-espressobin.dtsi
-+++ b/arch/arm64/boot/dts/marvell/armada-3720-espressobin.dtsi
-@@ -47,6 +47,7 @@ &pcie0 {
- 	phys = <&comphy1 0>;
- 	pinctrl-names = "default";
- 	pinctrl-0 = <&pcie_reset_pins &pcie_clkreq_pins>;
-+	reset-gpios = <&gpiosb 3 GPIO_ACTIVE_LOW>;
- };
- 
- /* J6 */
-diff --git a/arch/arm64/boot/dts/marvell/armada-3720-turris-mox.dts b/arch/arm64/boot/dts/marvell/armada-3720-turris-mox.dts
-index bb42d1e6a4e9..e496bd9d4737 100644
---- a/arch/arm64/boot/dts/marvell/armada-3720-turris-mox.dts
-+++ b/arch/arm64/boot/dts/marvell/armada-3720-turris-mox.dts
-@@ -128,10 +128,6 @@ rtc@6f {
- 	};
- };
- 
--&pcie_reset_pins {
--	function = "gpio";
--};
--
- &pcie0 {
- 	pinctrl-names = "default";
- 	pinctrl-0 = <&pcie_reset_pins &pcie_clkreq_pins>;
-diff --git a/arch/arm64/boot/dts/marvell/armada-37xx.dtsi b/arch/arm64/boot/dts/marvell/armada-37xx.dtsi
-index 000c135e39b7..7909c146eabf 100644
---- a/arch/arm64/boot/dts/marvell/armada-37xx.dtsi
-+++ b/arch/arm64/boot/dts/marvell/armada-37xx.dtsi
-@@ -317,7 +317,7 @@ sdio_pins: sdio-pins {
- 
- 				pcie_reset_pins: pcie-reset-pins {
- 					groups = "pcie1";
--					function = "pcie";
-+					function = "gpio";
- 				};
- 
- 				pcie_clkreq_pins: pcie-clkreq-pins {
--- 
-2.24.1
-
+Cheers!
