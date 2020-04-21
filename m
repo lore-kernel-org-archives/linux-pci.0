@@ -2,28 +2,29 @@ Return-Path: <SRS0=8E5B=6F=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 038E7C54FC9
-	for <linux-pci@archiver.kernel.org>; Tue, 21 Apr 2020 13:23:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7E22C54FCC
+	for <linux-pci@archiver.kernel.org>; Tue, 21 Apr 2020 13:23:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DD22B208E4
-	for <linux-pci@archiver.kernel.org>; Tue, 21 Apr 2020 13:23:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 902362084D
+	for <linux-pci@archiver.kernel.org>; Tue, 21 Apr 2020 13:23:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728956AbgDUNXg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 21 Apr 2020 09:23:36 -0400
-Received: from szxga04-in.huawei.com ([45.249.212.190]:2861 "EHLO huawei.com"
+        id S1729024AbgDUNXo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 21 Apr 2020 09:23:44 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:2822 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728859AbgDUNXf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 21 Apr 2020 09:23:35 -0400
-Received: from DGGEMS403-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id E1C2A57CB1E21CE031AC;
-        Tue, 21 Apr 2020 21:23:30 +0800 (CST)
+        id S1728864AbgDUNXn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 21 Apr 2020 09:23:43 -0400
+Received: from DGGEMS403-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id 0F239F6509CB6C65CFB;
+        Tue, 21 Apr 2020 21:23:41 +0800 (CST)
 Received: from DESKTOP-6T4S3DQ.china.huawei.com (10.47.83.77) by
  DGGEMS403-HUB.china.huawei.com (10.3.19.203) with Microsoft SMTP Server id
- 14.3.487.0; Tue, 21 Apr 2020 21:23:21 +0800
+ 14.3.487.0; Tue, 21 Apr 2020 21:23:34 +0800
 From:   Shiju Jose <shiju.jose@huawei.com>
 To:     <linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <rjw@rjwysocki.net>,
@@ -34,12 +35,13 @@ To:     <linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
 CC:     <linuxarm@huawei.com>, <jonathan.cameron@huawei.com>,
         <tanxiaofei@huawei.com>, <yangyicong@hisilicon.com>,
         Shiju Jose <shiju.jose@huawei.com>
-Subject: [RESEND PATCH v7 0/6] ACPI / APEI: Add support to notify non-fatal HW errors
-Date:   Tue, 21 Apr 2020 14:21:30 +0100
-Message-ID: <20200421132136.1595-1-shiju.jose@huawei.com>
+Subject: [RESEND PATCH v7 2/6] ACPI / APEI: Add callback for memory errors to the GHES notifier
+Date:   Tue, 21 Apr 2020 14:21:32 +0100
+Message-ID: <20200421132136.1595-3-shiju.jose@huawei.com>
 X-Mailer: git-send-email 2.26.0.windows.1
-In-Reply-To: <Shiju Jose>
+In-Reply-To: <20200421132136.1595-1-shiju.jose@huawei.com>
 References: <Shiju Jose>
+ <20200421132136.1595-1-shiju.jose@huawei.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -50,83 +52,128 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add common interface for queuing up the non-fatal HW errors and notify
-the registered kernel drivers.The interface supports drivers to register
-to receive the callback for the non-fatal HW errors, including the vendor
-specific HW errors, for the recovery and supports handling the non-fatal
-errors in the process context.
+Add callback function for handling the memory errors to the GHES notifier.
 
-Patch set
-1. add the new interface to the APEI driver for the non-fatal HW
-   error notification.
-2. change the existing error handling for the standard errors
-   to use the above notification interface.
-2. add driver to handle HiSilicon hip PCIe controller's errors.
+Signed-off-by: Shiju Jose <shiju.jose@huawei.com>
+---
+ drivers/acpi/apei/ghes.c | 55 ++++++++++++++++++++++++++++++----------
+ 1 file changed, 42 insertions(+), 13 deletions(-)
 
-Changes:
-
-V7:
-1. Add changes in the APEI driver suggested by Borislav Petkov, for
-   queuing up all the non-fatal HW errors to the work queue and
-   notify the registered kernel drivers from the bottom half using
-   blocking notifier, common interface for both standard and
-   vendor-spcific errors.
-2. Fix for further feedbacks in v5 HIP PCIe error handler driver
-   by Bjorn Helgaas.
-
-V6:
-1. Fix few changes in the patch subject line suggested by Bjorn Helgaas.
-
-V5:
-1. Fix comments from James Morse.
-1.1 Changed the notification method to use the atomic_notifier_chain.
-1.2 Add the error handled status for the user space.  
-
-V4:
-1. Fix for the following smatch warning in the PCIe error driver,
-   reported by kbuild test robot<lkp@intel.com>:
-   warn: should '((((1))) << (9 + i))' be a 64 bit type?
-   if (err->val_bits & BIT(HISI_PCIE_LOCAL_VALID_ERR_MISC + i))
-	^^^ This should be BIT_ULL() because it goes up to 9 + 32.
-
-V3:
-1. Fix the comments from Bjorn Helgaas.
-
-V2:
-1. Changes in the HiSilicon PCIe controller's error handling driver
-   for the comments from Bjorn Helgaas.
-   
-2. Changes in the APEI interface to support reporting the vendor error
-   for module with multiple devices, but use the same section type.
-   In the error handler will use socket id/sub module id etc to distinguish
-   the device.
-
-V1:  
-1. Fix comments from James Morse.
-
-2. add driver to handle HiSilicon hip08 PCIe controller's errors,
-   which is an application of the above interface.
-
-Shiju Jose (5):
-  ACPI / APEI: Add support to queuing up the non-fatal HW errors and
-    notify
-  ACPI / APEI: Add callback for memory errors to the GHES notifier
-  ACPI / APEI: Add callback for AER to the GHES notifier
-  ACPI / APEI: Add callback for ARM HW errors to the GHES notifier
-  ACPI / APEI: Add callback for non-standard HW errors to the GHES
-    notifier
-
-Yicong Yang (1):
-  PCI: hip: Add handling of HiSilicon HIP PCIe controller errors
-
- drivers/acpi/apei/ghes.c                 | 268 ++++++++++++++++---
- drivers/pci/controller/Kconfig           |   8 +
- drivers/pci/controller/Makefile          |   1 +
- drivers/pci/controller/pcie-hisi-error.c | 323 +++++++++++++++++++++++
- include/acpi/ghes.h                      |  28 ++
- 5 files changed, 595 insertions(+), 33 deletions(-)
- create mode 100644 drivers/pci/controller/pcie-hisi-error.c
-
+diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
+index 5c0ab5422311..053c4a2ed96c 100644
+--- a/drivers/acpi/apei/ghes.c
++++ b/drivers/acpi/apei/ghes.c
+@@ -471,23 +471,33 @@ static void ghes_clear_estatus(struct ghes *ghes,
+ 		ghes_ack_error(ghes->generic_v2);
+ }
+ 
+-static void ghes_handle_memory_failure(struct acpi_hest_generic_data *gdata, int sev)
++static int ghes_handle_memory_failure(struct notifier_block *nb,
++				      unsigned long event, void *data)
+ {
+ #ifdef CONFIG_ACPI_APEI_MEMORY_FAILURE
+ 	unsigned long pfn;
+ 	int flags = -1;
++	int sev = event;
++	struct acpi_hest_generic_data *gdata = data;
+ 	int sec_sev = ghes_severity(gdata->error_severity);
+ 	struct cper_sec_mem_err *mem_err = acpi_hest_get_payload(gdata);
+ 
++	if (!guid_equal((guid_t *)gdata->section_type, &CPER_SEC_PLATFORM_MEM))
++		return NOTIFY_DONE;
++
++	ghes_edac_report_mem_error(sev, mem_err);
++
++	arch_apei_report_mem_error(sev, mem_err);
++
+ 	if (!(mem_err->validation_bits & CPER_MEM_VALID_PA))
+-		return;
++		return NOTIFY_STOP;
+ 
+ 	pfn = mem_err->physical_addr >> PAGE_SHIFT;
+ 	if (!pfn_valid(pfn)) {
+ 		pr_warn_ratelimited(FW_WARN GHES_PFX
+ 		"Invalid address in generic error data: %#llx\n",
+ 		mem_err->physical_addr);
+-		return;
++		return NOTIFY_STOP;
+ 	}
+ 
+ 	/* iff following two events can be handled properly by now */
+@@ -500,6 +510,7 @@ static void ghes_handle_memory_failure(struct acpi_hest_generic_data *gdata, int
+ 	if (flags != -1)
+ 		memory_failure_queue(pfn, flags);
+ #endif
++	return NOTIFY_STOP;
+ }
+ 
+ /*
+@@ -547,6 +558,22 @@ static void ghes_handle_aer(struct acpi_hest_generic_data *gdata)
+ #endif
+ }
+ 
++static struct notifier_block ghes_notifier_mem_error = {
++	.notifier_call = ghes_handle_memory_failure,
++};
++
++struct ghes_error_handler_list {
++	const char *name;
++	struct notifier_block *nb;
++};
++
++static const struct ghes_error_handler_list ghes_error_handler_list[] = {
++	{
++		.name = "ghes_notifier_mem_error",
++		.nb = &ghes_notifier_mem_error,
++	},
++};
++
+ static BLOCKING_NOTIFIER_HEAD(ghes_event_notify_list);
+ 
+ /**
+@@ -630,15 +657,7 @@ static void ghes_do_proc(struct ghes *ghes,
+ 			break;
+ 		}
+ 
+-		if (guid_equal(sec_type, &CPER_SEC_PLATFORM_MEM)) {
+-			struct cper_sec_mem_err *mem_err = acpi_hest_get_payload(gdata);
+-
+-			ghes_edac_report_mem_error(sev, mem_err);
+-
+-			arch_apei_report_mem_error(sev, mem_err);
+-			ghes_handle_memory_failure(gdata, sev);
+-		}
+-		else if (guid_equal(sec_type, &CPER_SEC_PCIE)) {
++		if (guid_equal(sec_type, &CPER_SEC_PCIE)) {
+ 			ghes_handle_aer(gdata);
+ 		}
+ 		else if (guid_equal(sec_type, &CPER_SEC_PROC_ARM)) {
+@@ -1431,7 +1450,7 @@ static struct platform_driver ghes_platform_driver = {
+ 
+ static int __init ghes_init(void)
+ {
+-	int rc;
++	int rc, i;
+ 
+ 	if (acpi_disabled)
+ 		return -ENODEV;
+@@ -1473,6 +1492,16 @@ static int __init ghes_init(void)
+ 		goto err;
+ 	}
+ 
++	for (i = 0; i < ARRAY_SIZE(ghes_error_handler_list); i++) {
++		const struct ghes_error_handler_list *list =
++						&ghes_error_handler_list[i];
++		rc = ghes_register_event_notifier(list->nb);
++		if (rc) {
++			pr_warn(GHES_PFX "fail to register %s\n", list->name);
++			goto err;
++		}
++	}
++
+ 	return 0;
+ err:
+ 	return rc;
 -- 
 2.17.1
 
