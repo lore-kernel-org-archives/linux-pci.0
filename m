@@ -4,40 +4,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12CA8C55189
-	for <linux-pci@archiver.kernel.org>; Wed, 22 Apr 2020 10:32:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DCB2C5518A
+	for <linux-pci@archiver.kernel.org>; Wed, 22 Apr 2020 10:43:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E449120781
-	for <linux-pci@archiver.kernel.org>; Wed, 22 Apr 2020 10:32:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E31BF2076E
+	for <linux-pci@archiver.kernel.org>; Wed, 22 Apr 2020 10:43:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1587551537;
-	bh=uzrTWlHs53ZPHHMtK8nctjkf4SsWJpLaX73oQPd1U6o=;
+	s=default; t=1587552237;
+	bh=+J1rnpev1mWG2DjbDUlUXV/sV3CYW4t3iOt9gosTfsA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=gtwjuSO9EZ4nR1r0tIVELUIbDWrdjqUV/u7Pr2a02ti9KhcJSD0Rec3G4BTmv7lIm
-	 qCkrtN4Ubq0sgWFPZmyNPMSD+k3Q/GN50phT43pjVUNg7wjlUT3s1XMzhqNzzDfpX9
-	 rt9bYIykaUFz+TUzMIA0LaadT+EiGcZ+kAL3ElpE=
+	b=L/zn44lEJyVYMmyyUcYdm131CASbgxlL6anD7ikdlBf4SZGYdJ6o7RG0Um3TakwMh
+	 16V+dCmtyyozOXqiha+c5rk6umdxrTaDH8kpNcSZ0mXYSjJyCdgUCKHr+EjItm0zV/
+	 dAnSg3bWijPVMFPYllRVGjtSroSCYGSkFQIB/hWw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728089AbgDVKcM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 22 Apr 2020 06:32:12 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33930 "EHLO mail.kernel.org"
+        id S1730055AbgDVKTM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 22 Apr 2020 06:19:12 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55942 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730562AbgDVKZY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 22 Apr 2020 06:25:24 -0400
+        id S1729743AbgDVKTM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 22 Apr 2020 06:19:12 -0400
 Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E97482071E;
-        Wed, 22 Apr 2020 10:25:22 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 98CB12070B;
+        Wed, 22 Apr 2020 10:19:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1587551123;
-        bh=uzrTWlHs53ZPHHMtK8nctjkf4SsWJpLaX73oQPd1U6o=;
+        s=default; t=1587550751;
+        bh=+J1rnpev1mWG2DjbDUlUXV/sV3CYW4t3iOt9gosTfsA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=FKO36OlYPqqPun1A4G0pY3KrD9niXvdFtqnoh7OXVD8EGRZdTOLWXUX3oEIpWBt/i
-         aUm9Dq6t/52WkWcNZ6bTtQVJXYgDYCFcdxnSO7nqLnqw7bODGGG8BbfCiyKT7NWE5F
-         DvUwvrDEeeorIdnASWGM/VPqmX5LugdOHssyFPBc=
+        b=LmYJTWyV8KQG90fkevdc8GdAXrrkBOPNj9szUH9r8x4/Yf2JJZMDT1BELNWPaC5V6
+         CsGthyZ3eJzJcm93RL3xsIols94xnJwAuhL2YH8rMLU4MleMfKQ6+2tbN29V63v+BQ
+         qLPhKnEx05iEFlYXe8ih0ZkBi3a802pWaB8sFbsk=
 From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -50,12 +50,12 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         dri-devel@lists.freedesktop.org, nouveau@lists.freedesktop.org,
         Ben Skeggs <bskeggs@redhat.com>,
         Sasha Levin <sashal@kernel.org>
-Subject: [PATCH 5.6 108/166] drm/nouveau: workaround runpm fail by disabling PCI power management on certain intel bridges
-Date:   Wed, 22 Apr 2020 11:57:15 +0200
-Message-Id: <20200422095100.404318585@linuxfoundation.org>
+Subject: [PATCH 5.4 076/118] drm/nouveau: workaround runpm fail by disabling PCI power management on certain intel bridges
+Date:   Wed, 22 Apr 2020 11:57:17 +0200
+Message-Id: <20200422095044.161891152@linuxfoundation.org>
 X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20200422095047.669225321@linuxfoundation.org>
-References: <20200422095047.669225321@linuxfoundation.org>
+In-Reply-To: <20200422095031.522502705@linuxfoundation.org>
+References: <20200422095031.522502705@linuxfoundation.org>
 User-Agent: quilt/0.66
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -101,7 +101,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  2 files changed, 65 insertions(+)
 
 diff --git a/drivers/gpu/drm/nouveau/nouveau_drm.c b/drivers/gpu/drm/nouveau/nouveau_drm.c
-index b65ae817eabf5..2d4c899e1f8b9 100644
+index 2cd83849600f3..b1beed40e746a 100644
 --- a/drivers/gpu/drm/nouveau/nouveau_drm.c
 +++ b/drivers/gpu/drm/nouveau/nouveau_drm.c
 @@ -618,6 +618,64 @@ nouveau_drm_device_fini(struct drm_device *dev)
@@ -177,7 +177,7 @@ index b65ae817eabf5..2d4c899e1f8b9 100644
  	return 0;
  
  fail_drm_dev_init:
-@@ -734,7 +793,11 @@ static void
+@@ -736,7 +795,11 @@ static void
  nouveau_drm_remove(struct pci_dev *pdev)
  {
  	struct drm_device *dev = pci_get_drvdata(pdev);
@@ -187,13 +187,13 @@ index b65ae817eabf5..2d4c899e1f8b9 100644
 +	if (drm->old_pm_cap)
 +		pdev->pm_cap = drm->old_pm_cap;
  	nouveau_drm_device_remove(dev);
- 	pci_disable_device(pdev);
  }
+ 
 diff --git a/drivers/gpu/drm/nouveau/nouveau_drv.h b/drivers/gpu/drm/nouveau/nouveau_drv.h
-index c2c332fbde979..2a6519737800c 100644
+index 70f34cacc552c..8104e3806499d 100644
 --- a/drivers/gpu/drm/nouveau/nouveau_drv.h
 +++ b/drivers/gpu/drm/nouveau/nouveau_drv.h
-@@ -140,6 +140,8 @@ struct nouveau_drm {
+@@ -138,6 +138,8 @@ struct nouveau_drm {
  
  	struct list_head clients;
  
