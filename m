@@ -2,92 +2,221 @@ Return-Path: <SRS0=NHSM=6H=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15660C55191
-	for <linux-pci@archiver.kernel.org>; Thu, 23 Apr 2020 20:00:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0396C54FD0
+	for <linux-pci@archiver.kernel.org>; Thu, 23 Apr 2020 20:05:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DF07620784
-	for <linux-pci@archiver.kernel.org>; Thu, 23 Apr 2020 20:00:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A484120767
+	for <linux-pci@archiver.kernel.org>; Thu, 23 Apr 2020 20:05:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="pMEoHWAL"
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="esGb0qsr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726145AbgDWUAW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 23 Apr 2020 16:00:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39314 "EHLO
+        id S1726110AbgDWUFx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 23 Apr 2020 16:05:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40196 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725934AbgDWUAV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 23 Apr 2020 16:00:21 -0400
-Received: from mail-wm1-x32e.google.com (mail-wm1-x32e.google.com [IPv6:2a00:1450:4864:20::32e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19C3BC09B042;
-        Thu, 23 Apr 2020 12:52:30 -0700 (PDT)
-Received: by mail-wm1-x32e.google.com with SMTP id t63so7867960wmt.3;
-        Thu, 23 Apr 2020 12:52:30 -0700 (PDT)
+        with ESMTP id S1726060AbgDWUFw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 23 Apr 2020 16:05:52 -0400
+Received: from mail-qt1-x841.google.com (mail-qt1-x841.google.com [IPv6:2607:f8b0:4864:20::841])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 422EAC09B044
+        for <linux-pci@vger.kernel.org>; Thu, 23 Apr 2020 13:05:52 -0700 (PDT)
+Received: by mail-qt1-x841.google.com with SMTP id x8so5992677qtp.13
+        for <linux-pci@vger.kernel.org>; Thu, 23 Apr 2020 13:05:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to;
-        bh=bovI+nPzSNj2sKyQBiYFJbyyronnwfOZafj50co011I=;
-        b=pMEoHWALeeAnkX1KcYrdq9Wu09rZZfiG5IlDb0WnsVVnJDRHzrp05fQubkH2BZTNmb
-         yW+R/DX+rnBB8PgAdw0U/4eHnsp39QNe8FT25c3xH45B8LCuhSWon7FM4BFoB6t/koUs
-         U9DUDbWpZXMp/QJMw0zGszTH06M9Y5ZRbAwuIqTZCL0Y8HQymmcB/6BovysfBVKYZABC
-         zn+RXSL3uxt0jyISXIuYIxiL5iu4cd9mDG/H9USAFsr7cwFDJVikzJMaGgp0aYtXuS/R
-         PhNb9mcDil7QY99HMs/Gm1boGu3tyqqAQBlNWZ76ShV6EkXW6cZh60fduZye4h3x9luF
-         cbmg==
+        d=ziepe.ca; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=OGu+H9Gxb4tDFOp8fw7exxKfo/lmw1deEj+U+KuzxgA=;
+        b=esGb0qsr8S2R0qKpqcjD9DwR12EsySXYgYnUu0i6LoNRLHfDiOcOGOfE1ip57oJT4I
+         9JoZdQywHPq8WwQZyKjBCegka9UlyLCmBj/4PJ2gTi9a1GRLgmw1lBi6/67XfkoxHjtF
+         QIDZSX0x/NjOMGXbmKkpw1qlMTexOynEVkORye9X4iR4JffO3n+BQYmExdQpvKUWvZ5u
+         CQLLPjUzxy3QmpI3ZMjz32ZbvpMtFduWvOuy/c3rIPw+SnUda5vZIqDGmqcKqF9nOQ7n
+         UUzZg3Fom3EvQGVr7dk46QzhEHMVshgJI+0kEysmMee+yWRtbMmfLghZXzmWbJ8uNisB
+         QjMw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to;
-        bh=bovI+nPzSNj2sKyQBiYFJbyyronnwfOZafj50co011I=;
-        b=DkhKEM5chH9v21A/Mmy5LvaZ7Crr+3qZR7GNg5JqOnMwtWnoEX9WrPsJeMMoWjfMMk
-         EnG3Pg+7tD/ncLz8S45ccSykDu6/0w40ktr/+RQIcpWJFNG5bxujERFOAuE6ZwP/ey8F
-         Y0VSGLiKupC3OfNxV9w2e6Yolm7Xx+MPQ/8jVAZaxjCE00wLr/MFI/ktNvdHhrKFgryG
-         9iV94O9lv+VWhaAAovhhUVCD1IyWImuZkEg0F++KRnzuPCJcRSjhl0jTJAO6xlPxmtKx
-         fF/8ipBlaS0yO/6cqLZbwf6fGgJPZeVeJpi+tBEop+NCy9s1J8wtZT3oVzyyS9S08JWL
-         whRA==
-X-Gm-Message-State: AGi0PuZz3Dgadld7y8j1lLLMwgeeU/0axG50C9+8FADMw1qqMYtSoyVv
-        CYpYK2g9NaMMi3S1Mw/qk8GU/rdepXH9fcXbs62CUK7I
-X-Google-Smtp-Source: APiQypKWYdRlNdDAQJSC7cfHmZ7OAgf6FRy5MFVTwUB9gGunyGmFEOeM9r8KlecUb0R6BbS0howq0wze2Q9r3Z4OpUQ=
-X-Received: by 2002:a5d:5352:: with SMTP id t18mr6638141wrv.111.1587671548719;
- Thu, 23 Apr 2020 12:52:28 -0700 (PDT)
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=OGu+H9Gxb4tDFOp8fw7exxKfo/lmw1deEj+U+KuzxgA=;
+        b=Op1llFbNPRzHtyRwN/OMGgJbLJkT9spVpZzPi8kziPyzcf6zSsN9OMPXiEwEcqmo7W
+         5dH+Ppmeacxo3xf98EG90LtxXVUF+mBhevTg0yOxv3LildY1LmQm9yg2t1oN2WllM+J/
+         L+jZWQwoRw4/DN0N51jENcyHrGQkZJifIzjcpHiYbmj+LaTKBRTqobMBoziBQqjpS71T
+         7uaG9+/JK0O/ToQoUAEbdi/mXkkXzX4PGuohdobnEaPDNY5CY5dpu/201icX4sr9UO2J
+         yZOjJHB0kidH+hcWTZKQDF7WBhd1yccRa457ypUe6m3QYkuw/W4DvY9E1aiFOYTGCvnS
+         kfzQ==
+X-Gm-Message-State: AGi0PuZERs+TV3Q0z7KpxQDw9UGPFOorYreR7fB0lwdXZJZEzknjQj8f
+        G2TFlJCrxr/RWLpStNG9ZJr85Q==
+X-Google-Smtp-Source: APiQypKgTkhoslLa1VaSlI6+/e0Q/twNfuGjIX2/4S0TUHP9uXc8vJs6MhROT+wFJvVo/Suzu/usIg==
+X-Received: by 2002:ac8:2c66:: with SMTP id e35mr5990474qta.188.1587672351308;
+        Thu, 23 Apr 2020 13:05:51 -0700 (PDT)
+Received: from ziepe.ca (hlfxns017vw-142-68-57-212.dhcp-dynamic.fibreop.ns.bellaliant.net. [142.68.57.212])
+        by smtp.gmail.com with ESMTPSA id 70sm2291707qkh.67.2020.04.23.13.04.46
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Thu, 23 Apr 2020 13:05:17 -0700 (PDT)
+Received: from jgg by mlx.ziepe.ca with local (Exim 4.90_1)
+        (envelope-from <jgg@ziepe.ca>)
+        id 1jRi5M-0007gM-Ow; Thu, 23 Apr 2020 17:04:36 -0300
+Date:   Thu, 23 Apr 2020 17:04:36 -0300
+From:   Jason Gunthorpe <jgg@ziepe.ca>
+To:     Dave Jiang <dave.jiang@intel.com>
+Cc:     vkoul@kernel.org, megha.dey@linux.intel.com, maz@kernel.org,
+        bhelgaas@google.com, rafael@kernel.org, gregkh@linuxfoundation.org,
+        tglx@linutronix.de, hpa@zytor.com, alex.williamson@redhat.com,
+        jacob.jun.pan@intel.com, ashok.raj@intel.com, yi.l.liu@intel.com,
+        baolu.lu@intel.com, kevin.tian@intel.com, sanjay.k.kumar@intel.com,
+        tony.luck@intel.com, jing.lin@intel.com, dan.j.williams@intel.com,
+        kwankhede@nvidia.com, eric.auger@redhat.com, parav@mellanox.com,
+        dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org,
+        x86@kernel.org, linux-pci@vger.kernel.org, kvm@vger.kernel.org
+Subject: Re: [PATCH RFC 07/15] Documentation: Interrupt Message store
+Message-ID: <20200423200436.GA29181@ziepe.ca>
+References: <158751095889.36773.6009825070990637468.stgit@djiang5-desk3.ch.intel.com>
+ <158751207000.36773.18208950543781892.stgit@djiang5-desk3.ch.intel.com>
 MIME-Version: 1.0
-References: <CADnq5_NUueBoEXcO_HBHqwrONnmoAvepBLwwxtQW7R=SuyoFfQ@mail.gmail.com>
-In-Reply-To: <CADnq5_NUueBoEXcO_HBHqwrONnmoAvepBLwwxtQW7R=SuyoFfQ@mail.gmail.com>
-From:   Alex Deucher <alexdeucher@gmail.com>
-Date:   Thu, 23 Apr 2020 15:52:17 -0400
-Message-ID: <CADnq5_PPxCPPrggE96uNRHQLTq7+bg0iSq2+C46QybV_Xd_=gQ@mail.gmail.com>
-Subject: Re: runtime pm without pci or platform subsystem involvement
-To:     Linux PM <linux-pm@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <158751207000.36773.18208950543781892.stgit@djiang5-desk3.ch.intel.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Apr 1, 2020 at 10:54 AM Alex Deucher <alexdeucher@gmail.com> wrote:
->
-> Hi,
->
->   I would like to be able to use the runtime pm infrastructure to
-> support additional power savings at runtime for a PCIe device, but for
-> various reasons, I need to keep the device in D0.  I don't want the
-> PCI or platform subsystem to put the device into D3hot/cold.  Is this
-> possible?  If so how?  I'd like to avoid spinning my own variant of
-> runtime pm just to support this feature.
+On Tue, Apr 21, 2020 at 04:34:30PM -0700, Dave Jiang wrote:
 
-Expanding the audience a bit.  Is what I want to do possible?  Just
-want to make sure I don't re-invent something that already exists.
+> diff --git a/Documentation/ims-howto.rst b/Documentation/ims-howto.rst
+> new file mode 100644
+> index 000000000000..a18de152b393
+> +++ b/Documentation/ims-howto.rst
+> @@ -0,0 +1,210 @@
+> +.. SPDX-License-Identifier: GPL-2.0
+> +.. include:: <isonum.txt>
+> +
+> +==========================
+> +The IMS Driver Guide HOWTO
+> +==========================
+> +
+> +:Authors: Megha Dey
+> +
+> +:Copyright: 2020 Intel Corporation
+> +
+> +About this guide
+> +================
+> +
+> +This guide describes the basics of Interrupt Message Store (IMS), the
+> +need to introduce a new interrupt mechanism, implementation details of
+> +IMS in the kernel, driver changes required to support IMS and the general
+> +misconceptions and FAQs associated with IMS.
 
-Thanks,
+I'm not sure why we need to call this IMS in kernel documentat? I know
+Intel is using this term, but this document is really only talking
+about extending the existing platform_msi stuff, which looks pretty
+good actually.
 
-Alex
+A lot of this is good for the cover letter..
 
->
-> Thanks,
->
-> Alex
+> +Implementation of IMS in the kernel
+> +===================================
+> +
+> +The Linux kernel today already provides a generic mechanism to support
+> +non-PCI compliant MSI interrupts for platform devices (platform-msi.c).
+> +To support IMS interrupts, we create a new IMS IRQ domain and extend the
+> +existing infrastructure. Dynamic allocation of IMS vectors is a requirement
+> +for devices which support Scalable I/O Virtualization. A driver can allocate
+> +and free vectors not just once during probe (as was the case with MSI/MSI-X)
+> +but also in the post probe phase where actual demand is available. Thus, a
+> +new API, platform_msi_domain_alloc_irqs_group is introduced which drivers
+> +using IMS would be able to call multiple times. The vectors allocated each
+> +time this API is called are associated with a group ID. To free the vectors
+> +associated with a particular group, the platform_msi_domain_free_irqs_group
+> +API can be called. The existing drivers using platform-msi infrastructure
+> +will continue to use the existing alloc (platform_msi_domain_alloc_irqs)
+> +and free (platform_msi_domain_free_irqs) APIs and are assigned a default
+> +group ID of 0.
+> +
+> +Thus, platform-msi.c provides the generic methods which can be used by any
+> +non-pci MSI interrupt type while the newly created ims-msi.c provides IMS
+> +specific callbacks that can be used by drivers capable of generating IMS
+> +interrupts. 
+
+How exactly is an IMS interrupt is different from a platform msi?
+
+It looks like it is just some thin wrapper around msi_domain - what is
+it for?
+
+> +FAQs and general misconceptions:
+> +================================
+> +
+> +** There were some concerns raised by Thomas Gleixner and Marc Zyngier
+> +during Linux plumbers conference 2019:
+> +
+> +1. Enumeration of IMS needs to be done by PCI core code and not by
+> +   individual device drivers:
+> +
+> +   Currently, if the kernel needs a generic way to discover IMS capability
+> +   without host driver dependency, the PCIE Designated Vendor specific
+> +
+> +   However, we cannot have a standard way of enumerating the IMS size
+> +   because for context based devices, the interrupt message is part of
+> +   the context itself which is managed entirely by the driver. Since
+> +   context creation is done on demand, there is no way to tell during boot
+> +   time, the maximum number of contexts (and hence the number of interrupt
+> +   messages)that the device can support.
+
+FWIW, I agree with this.
+
+Like platform-msi, IMS should be controlled entirely by the driver.
+
+> +2. Why is Intel designing a new interrupt mechanism rather than extending
+> +   MSI-X to address its limitations? Isn't 2048 device interrupts enough?
+> +
+> +   MSI-X has a rigid definition of one-table and on-device storage and does
+> +   not provide the full flexibility required for future multi-tile
+> +   accelerator designs.
+> +   IMS was envisioned to be used with large number of ADIs in devices where
+> +   each will need unique interrupt resources. For example, a DSA shared
+> +   work queue can support large number of clients where each client can
+> +   have its own interrupt. In future, with user interrupts, we expect the
+> +   demand for messages to increase further.
+
+Generally agree
+
+> +Device Driver Changes:
+> +=====================
+> +
+> +1. platform_msi_domain_alloc_irqs_group (struct device *dev, unsigned int
+> +   nvec, const struct platform_msi_ops *platform_ops, int *group_id)
+> +   to allocate IMS interrupts, where:
+> +
+> +   dev: The device for which to allocate interrupts
+> +   nvec: The number of interrupts to allocate
+> +   platform_ops: Callbacks for platform MSI ops (to be provided by driver)
+> +   group_id: returned by the call, to be used to free IRQs of a certain type
+> +
+> +   eg: static struct platform_msi_ops ims_ops  = {
+> +        .irq_mask               = ims_irq_mask,
+> +        .irq_unmask             = ims_irq_unmask,
+> +        .write_msg              = ims_write_msg,
+> +        };
+> +
+> +        int group;
+> +        platform_msi_domain_alloc_irqs_group (dev, nvec, platform_ops, &group)
+> +
+> +   where, struct platform_msi_ops:
+> +   irq_mask:   mask an interrupt source
+> +   irq_unmask: unmask an interrupt source
+> +   irq_write_msi_msg: write message content
+> +
+> +   This API can be called multiple times. Every time a new group will be
+> +   associated with the allocated vectors. Group ID starts from 0.
+
+Need much more closer look, but this seems conceptually fine to me.
+
+As above the API here is called platform_msi - which seems good to
+me. Again not sure why the word IMS is needed
+
+Jason
