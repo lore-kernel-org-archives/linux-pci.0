@@ -7,39 +7,39 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6943AC55186
-	for <linux-pci@archiver.kernel.org>; Fri, 24 Apr 2020 15:39:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33AD1C55197
+	for <linux-pci@archiver.kernel.org>; Fri, 24 Apr 2020 15:39:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4938320706
-	for <linux-pci@archiver.kernel.org>; Fri, 24 Apr 2020 15:39:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1382420706
+	for <linux-pci@archiver.kernel.org>; Fri, 24 Apr 2020 15:39:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1587742760;
-	bh=8dGLFXDw65iFrKhsdpHxcbBE+qVbA+a6Y6GfXOjiBnM=;
+	s=default; t=1587742761;
+	bh=X2+JV0oDgncx/VEQRHXbQ1ayRkCQmmFc+ktcFpbVES0=;
 	h=From:To:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Tn9PCyjra57hYBribR87qmCSPf/EpOWEDjq1TDTtWB4PY3GOiXTXTe3qzRypwKKPR
-	 VHUmXGOKeTm2Jn2Np0Zm8sc+MMhStyd85jjJRj16HEZ//srRoF+rxZcyiQ2rXUsK27
-	 S1v5l9pmZODxYuIFq95qlRMv/UBD8UCywbeEO5OE=
+	b=PPeWFRJAii4eNdItR2G0jYIwNx2BBcgE4hwasr06EZ7tc/qaToPV8Cs/z7w74DG7Q
+	 tap218NNTSfkZm/aG9faGuoYP8Raj9MubrHkJllRBJ+xfIB7h/hlIrwICtAHS8UTwM
+	 cmwQgwnq+ybokxVgJ2w8dSEgyksEp/o/QLX+RjRo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729065AbgDXPjR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 24 Apr 2020 11:39:17 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36558 "EHLO mail.kernel.org"
+        id S1728518AbgDXPjT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 24 Apr 2020 11:39:19 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36628 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729037AbgDXPjR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 24 Apr 2020 11:39:17 -0400
+        id S1728524AbgDXPjT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 24 Apr 2020 11:39:19 -0400
 Received: from pali.im (pali.im [31.31.79.79])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 75C4720700;
-        Fri, 24 Apr 2020 15:39:16 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 4E46721569;
+        Fri, 24 Apr 2020 15:39:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1587742756;
-        bh=8dGLFXDw65iFrKhsdpHxcbBE+qVbA+a6Y6GfXOjiBnM=;
+        s=default; t=1587742758;
+        bh=X2+JV0oDgncx/VEQRHXbQ1ayRkCQmmFc+ktcFpbVES0=;
         h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=hmimKy7el7OqecjO58yTwll14AJWEavRoB70uN/I/53OHTKl9qznAD2hSZjO4hPcm
-         zC2bsVoWyFpkHXH80yWaJYRYVPnnVR/nFkOF3MZBGMn2gFLN5AQKBCvk8uPDLT6+Un
-         F+KScTvVQDQOPROEFlEVv2k2gVfsxSZfIUx7V37Y=
+        b=T49/CS+p0bP6GEZDqEOBeFUP7eTGqLMmxgUDV6RUHV1pNZc4mqsKIe2s5Jrtd3fpx
+         1mOixvAZjFNCZRlhjHo8GWMH5zcSccVsZj5gb+VQXI3z3qHOg+mhigf39Y1Og3xsWt
+         5+7ZuRl69eGzbvGbRcJI2WIULAGDUcq0IV7Ecuiw=
 Received: by pali.im (Postfix)
-        id 841EDA19; Fri, 24 Apr 2020 17:39:14 +0200 (CEST)
+        id 82035A05; Fri, 24 Apr 2020 17:39:16 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     linux-pci@vger.kernel.org, Jason Cooper <jason@lakedaemon.net>,
         Andrew Lunn <andrew@lunn.ch>,
@@ -53,9 +53,9 @@ To:     linux-pci@vger.kernel.org, Jason Cooper <jason@lakedaemon.net>,
         Xogium <contact@xogium.me>, Rob Herring <robh@kernel.org>,
         =?UTF-8?q?Marek=20Beh=C3=BAn?= <marek.behun@nic.cz>,
         Bjorn Helgaas <helgaas@kernel.org>
-Subject: [PATCH v3 03/12] PCI: of: Return -ENOENT if max-link-speed property is not found
-Date:   Fri, 24 Apr 2020 17:38:49 +0200
-Message-Id: <20200424153858.29744-4-pali@kernel.org>
+Subject: [PATCH v3 05/12] PCI: aardvark: Issue PERST via GPIO
+Date:   Fri, 24 Apr 2020 17:38:51 +0200
+Message-Id: <20200424153858.29744-6-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200424153858.29744-1-pali@kernel.org>
 References: <20200424153858.29744-1-pali@kernel.org>
@@ -67,89 +67,119 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-OF API function of_property_read_u32() returns -EINVAL if property is
-not found. Therefore this also happens with of_pci_get_max_link_speed(),
-which also returns -EINVAL if the 'max-link-speed' property has invalid
-value.
+Add support for issuing PERST via GPIO specified in 'reset-gpios'
+property (as described in PCI device tree bindings).
 
-Change the behaviour of of_pci_get_max_link_speed() to return -ENOENT
-in case when the property does not exist and -EINVAL if it has invalid
-value.
+Some buggy cards (e.g. Compex WLE900VX or WLE1216) are not detected
+after reboot when PERST is not issued during driver initialization.
 
-Also interpret zero max-link-speed value of this property as invalid,
-as the device tree bindings documentation specifies.
+If bootloader already enabled link training then issuing PERST has no
+effect for some buggy cards (e.g. Compex WLE900VX) and these cards are
+not detected. We therefore clear the LINK_TRAINING_EN register before.
 
-Update pcie-tegra194 code to handle errors from this function like other
-drivers - they do not distinguish between no value and invalid value.
+It was observed that Compex WLE900VX card needs to be in PERST reset
+for at least 10ms if bootloader enabled link training.
+
+Tested on Turris MOX.
 
 Signed-off-by: Pali Rohár <pali@kernel.org>
 ---
- drivers/pci/controller/dwc/pcie-tegra194.c |  6 +++---
- drivers/pci/of.c                           | 15 +++++++++++----
- 2 files changed, 14 insertions(+), 7 deletions(-)
+ drivers/pci/controller/pci-aardvark.c | 43 ++++++++++++++++++++++++++-
+ 1 file changed, 42 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-index ae30a2fd3716..027bb41809f9 100644
---- a/drivers/pci/controller/dwc/pcie-tegra194.c
-+++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-@@ -296,7 +296,7 @@ struct tegra_pcie_dw {
- 	u8 init_link_width;
- 	u32 msi_ctrl_int;
- 	u32 num_lanes;
--	u32 max_speed;
-+	int max_speed;
- 	u32 cid;
- 	u32 cfg_link_cap_l1sub;
- 	u32 pcie_cap_base;
-@@ -911,7 +911,7 @@ static void tegra_pcie_prepare_host(struct pcie_port *pp)
- 	dw_pcie_writel_dbi(pci, PORT_LOGIC_AMBA_ERROR_RESPONSE_DEFAULT, val);
- 
- 	/* Configure Max Speed from DT */
--	if (pcie->max_speed && pcie->max_speed != -EINVAL) {
-+	if (pcie->max_speed > 0) {
- 		val = dw_pcie_readl_dbi(pci, pcie->pcie_cap_base +
- 					PCI_EXP_LNKCAP);
- 		val &= ~PCI_EXP_LNKCAP_SLS;
-@@ -1830,7 +1830,7 @@ static void pex_ep_event_pex_rst_deassert(struct tegra_pcie_dw *pcie)
- 	dw_pcie_writel_dbi(pci, PORT_LOGIC_GEN2_CTRL, val);
- 
- 	/* Configure Max Speed from DT */
--	if (pcie->max_speed && pcie->max_speed != -EINVAL) {
-+	if (pcie->max_speed > 0) {
- 		val = dw_pcie_readl_dbi(pci, pcie->pcie_cap_base +
- 					PCI_EXP_LNKCAP);
- 		val &= ~PCI_EXP_LNKCAP_SLS;
-diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-index 81ceeaa6f1d5..19bf652256d8 100644
---- a/drivers/pci/of.c
-+++ b/drivers/pci/of.c
-@@ -584,15 +584,22 @@ EXPORT_SYMBOL_GPL(pci_parse_request_of_pci_ranges);
-  *
-  * @node: device tree node with the max link speed information
-  *
-- * Returns the associated max link speed from DT, or a negative value if the
-- * required property is not found or is invalid.
-+ * Returns the associated max link speed from DT, -ENOENT if the required
-+ * property is not found or -EINVAL if the required property is invalid.
+diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
+index a6c4d4d52631..9e2f44213b5e 100644
+--- a/drivers/pci/controller/pci-aardvark.c
++++ b/drivers/pci/controller/pci-aardvark.c
+@@ -9,6 +9,7 @@
   */
- int of_pci_get_max_link_speed(struct device_node *node)
- {
- 	u32 max_link_speed;
-+	int ret;
+ 
+ #include <linux/delay.h>
++#include <linux/gpio.h>
+ #include <linux/interrupt.h>
+ #include <linux/irq.h>
+ #include <linux/irqdomain.h>
+@@ -18,6 +19,7 @@
+ #include <linux/platform_device.h>
+ #include <linux/msi.h>
+ #include <linux/of_address.h>
++#include <linux/of_gpio.h>
+ #include <linux/of_pci.h>
+ 
+ #include "../pci.h"
+@@ -204,6 +206,7 @@ struct advk_pcie {
+ 	int root_bus_nr;
+ 	int link_gen;
+ 	struct pci_bridge_emul bridge;
++	struct gpio_desc *reset_gpio;
+ };
+ 
+ static inline void advk_writel(struct advk_pcie *pcie, u32 val, u64 reg)
+@@ -330,10 +333,31 @@ static void advk_pcie_train_link(struct advk_pcie *pcie)
+ 	dev_err(dev, "link never came up\n");
+ }
+ 
++static void advk_pcie_issue_perst(struct advk_pcie *pcie)
++{
++	u32 reg;
 +
-+	/* of_property_read_u32 returns -EINVAL if property does not exist */
-+	ret = of_property_read_u32(node, "max-link-speed", &max_link_speed);
-+	if (ret == -EINVAL)
-+		return -ENOENT;
-+	else if (ret)
-+		return -EINVAL;
++	if (!pcie->reset_gpio)
++		return;
++
++	/* PERST does not work for some cards when link training is enabled */
++	reg = advk_readl(pcie, PCIE_CORE_CTRL0_REG);
++	reg &= ~LINK_TRAINING_EN;
++	advk_writel(pcie, reg, PCIE_CORE_CTRL0_REG);
++
++	/* 10ms delay is needed for some cards */
++	dev_info(&pcie->pdev->dev, "issuing PERST via reset GPIO for 10ms\n");
++	gpiod_set_value_cansleep(pcie->reset_gpio, 1);
++	usleep_range(10000, 11000);
++	gpiod_set_value_cansleep(pcie->reset_gpio, 0);
++}
++
+ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
+ {
+ 	u32 reg;
  
--	if (of_property_read_u32(node, "max-link-speed", &max_link_speed) ||
--	    max_link_speed > 4)
-+	if (max_link_speed == 0 || max_link_speed > 4)
- 		return -EINVAL;
++	advk_pcie_issue_perst(pcie);
++
+ 	/* Set to Direct mode */
+ 	reg = advk_readl(pcie, CTRL_CONFIG_REG);
+ 	reg &= ~(CTRL_MODE_MASK << CTRL_MODE_SHIFT);
+@@ -406,7 +430,8 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
  
- 	return max_link_speed;
+ 	/*
+ 	 * PERST# signal could have been asserted by pinctrl subsystem before
+-	 * probe() callback has been called, making the endpoint going into
++	 * probe() callback has been called or issued explicitly by reset gpio
++	 * function advk_pcie_issue_perst(), making the endpoint going into
+ 	 * fundamental reset. As required by PCI Express spec a delay for at
+ 	 * least 100ms after such a reset before link training is needed.
+ 	 */
+@@ -1046,6 +1071,22 @@ static int advk_pcie_probe(struct platform_device *pdev)
+ 	}
+ 	pcie->root_bus_nr = bus->start;
+ 
++	pcie->reset_gpio = devm_gpiod_get_from_of_node(dev, dev->of_node,
++						       "reset-gpios", 0,
++						       GPIOD_OUT_LOW,
++						       "pcie1-reset");
++	ret = PTR_ERR_OR_ZERO(pcie->reset_gpio);
++	if (ret) {
++		if (ret == -ENOENT) {
++			pcie->reset_gpio = NULL;
++		} else {
++			if (ret != -EPROBE_DEFER)
++				dev_err(dev, "Failed to get reset-gpio: %i\n",
++					ret);
++			return ret;
++		}
++	}
++
+ 	ret = of_pci_get_max_link_speed(dev->of_node);
+ 	if (ret < 0)
+ 		return ret;
 -- 
 2.20.1
 
