@@ -7,39 +7,39 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9CDFC55196
-	for <linux-pci@archiver.kernel.org>; Fri, 24 Apr 2020 15:39:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B68AC54FCB
+	for <linux-pci@archiver.kernel.org>; Fri, 24 Apr 2020 15:39:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C23FD21569
-	for <linux-pci@archiver.kernel.org>; Fri, 24 Apr 2020 15:39:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6F6F42166E
+	for <linux-pci@archiver.kernel.org>; Fri, 24 Apr 2020 15:39:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1587742764;
-	bh=7Q6yx7BAcNGphXyMJ64Hizlmq02sPIkiGXe5IfpE7Z8=;
+	s=default; t=1587742765;
+	bh=EVFjn07kmFor7UKViXp0cTbAK/KeKBmBXH77UZhMUfU=;
 	h=From:To:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=g4Sty/jOd0PY4QFqT8bjMH1BHN+B9sSrfmW16ujouM4HjEMwixK6URlTQxBofjOeK
-	 WrXcK5/0zTFz88678uWOw4Z16c2eGN1b0yywD34japzPgK9ly9z4WSLczoRbgZiJqN
-	 7199+GfbvaI1cdzOVXygYaP+UQRqx/q8tYcdXyaY=
+	b=s4mN9NeM3QnaJATJ3Y6BmDckN5MPXZ1RvuAbYkWiaS7aCpFakU7Vx+DdUNzj7fmya
+	 bQle/DQRnka7IY0AZZDYF8IOdfn8gsgi+Pc9c8Xn/4sI+mhGX719uKFm4KfIpjWKM4
+	 SEWzHL4hwXIDQf9nZT+JR9F8PT5mVYo9r/rKlmy4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728563AbgDXPjW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 24 Apr 2020 11:39:22 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36486 "EHLO mail.kernel.org"
+        id S1727837AbgDXPjY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 24 Apr 2020 11:39:24 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36896 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728464AbgDXPjQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 24 Apr 2020 11:39:16 -0400
+        id S1728584AbgDXPjX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 24 Apr 2020 11:39:23 -0400
 Received: from pali.im (pali.im [31.31.79.79])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7AD0320706;
-        Fri, 24 Apr 2020 15:39:15 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id EC16E20776;
+        Fri, 24 Apr 2020 15:39:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1587742755;
-        bh=7Q6yx7BAcNGphXyMJ64Hizlmq02sPIkiGXe5IfpE7Z8=;
+        s=default; t=1587742763;
+        bh=EVFjn07kmFor7UKViXp0cTbAK/KeKBmBXH77UZhMUfU=;
         h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=zOfcjEtzZDdJPDC6Pu/dUsj0Z6/XOyHEFjq2DuKTHjfNUOhcvRW7jYI4u6l8wrq6B
-         kh7uTzdQgThIeo2WK/c3sNVdxqKrbU1rM67PGcuRhtTsa+yoY4EGvqT0+u83UUOA2X
-         z3qpMiFXXrvpCsLPulMIsI7U1IsiE36TwC2SeB2Y=
+        b=bwhocbOCwXOFvjgUJn7FYFi0mC8xWKKyhkFwM8FGb7rzYETqZSaRu+0CSbPuMv9S5
+         HoioX0aisvqfeTWZ2F+5sh2bxvwxOzqe3XOmwAj9Rx7wPc46y0+xbnVB0L9h/FWOD0
+         7Z+EAXLp+JvurcVhZdqYkfra/V50MUU+diWIwTpE=
 Received: by pali.im (Postfix)
-        id 93D25A05; Fri, 24 Apr 2020 17:39:13 +0200 (CEST)
+        id 1F1D9A19; Fri, 24 Apr 2020 17:39:21 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     linux-pci@vger.kernel.org, Jason Cooper <jason@lakedaemon.net>,
         Andrew Lunn <andrew@lunn.ch>,
@@ -53,9 +53,9 @@ To:     linux-pci@vger.kernel.org, Jason Cooper <jason@lakedaemon.net>,
         Xogium <contact@xogium.me>, Rob Herring <robh@kernel.org>,
         =?UTF-8?q?Marek=20Beh=C3=BAn?= <marek.behun@nic.cz>,
         Bjorn Helgaas <helgaas@kernel.org>
-Subject: [PATCH v3 02/12] PCI: aardvark: Don't blindly enable ASPM L0s and don't write to read-only register
-Date:   Fri, 24 Apr 2020 17:38:48 +0200
-Message-Id: <20200424153858.29744-3-pali@kernel.org>
+Subject: [PATCH v3 09/12] dt-bindings: PCI: aardvark: Describe new properties
+Date:   Fri, 24 Apr 2020 17:38:55 +0200
+Message-Id: <20200424153858.29744-10-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200424153858.29744-1-pali@kernel.org>
 References: <20200424153858.29744-1-pali@kernel.org>
@@ -67,53 +67,40 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Trying to change Link Status register does not have any effect as this
-is a read-only register. Trying to overwrite bits for Negotiated Link
-Width does not make sense.
+From: Marek Behún <marek.behun@nic.cz>
 
-In future proper change of link width can be done via Lane Count Select
-bits in PCIe Control 0 register.
+Document the possibility to reference a PHY and reset-gpios and to set
+max-link-speed property.
 
-Trying to unconditionally enable ASPM L0s via ASPM Control bits in Link
-Control register is wrong. There should be at least some detection if
-endpoint supports L0s as isn't mandatory.
-
-Moreover ASPM Control bits in Link Control register are controlled by
-pcie/aspm.c code which sets it according to system ASPM settings,
-immediately after aardvark driver probes. So setting these bits by
-aardvark driver has no long running effect.
-
-Remove code which touches ASPM L0s bits from this driver and let
-kernel's ASPM implementation to set ASPM state properly.
-
-Some users are reporting issues that this code is problematic for some
-Intel wifi cards and removing it fixes them, see e.g.:
-https://bugzilla.kernel.org/show_bug.cgi?id=196339
-
-If problems with Intel wifi cards occur even after this commit, then
-pcie/aspm.c code could be modified / hooked to not enable ASPM L0s state
-for affected problematic cards.
-
-Signed-off-by: Pali Rohár <pali@kernel.org>
+Signed-off-by: Marek Behún <marek.behun@nic.cz>
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: devicetree@vger.kernel.org
 ---
- drivers/pci/controller/pci-aardvark.c | 4 ----
- 1 file changed, 4 deletions(-)
+ Documentation/devicetree/bindings/pci/aardvark-pci.txt | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index f9955b494267..74b90940a9d4 100644
---- a/drivers/pci/controller/pci-aardvark.c
-+++ b/drivers/pci/controller/pci-aardvark.c
-@@ -356,10 +356,6 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
+diff --git a/Documentation/devicetree/bindings/pci/aardvark-pci.txt b/Documentation/devicetree/bindings/pci/aardvark-pci.txt
+index 310ef7145c47..2b8ca920a7fa 100644
+--- a/Documentation/devicetree/bindings/pci/aardvark-pci.txt
++++ b/Documentation/devicetree/bindings/pci/aardvark-pci.txt
+@@ -19,6 +19,9 @@ contain the following properties:
+  - interrupt-map-mask and interrupt-map: standard PCI properties to
+    define the mapping of the PCIe interface to interrupt numbers.
+  - bus-range: PCI bus numbers covered
++ - phys: the PCIe PHY handle
++ - max-link-speed: see pci.txt
++ - reset-gpios: see pci.txt
  
- 	advk_pcie_wait_for_link(pcie);
- 
--	reg = PCIE_CORE_LINK_L0S_ENTRY |
--		(1 << PCIE_CORE_LINK_WIDTH_SHIFT);
--	advk_writel(pcie, reg, PCIE_CORE_LINK_CTRL_STAT_REG);
--
- 	reg = advk_readl(pcie, PCIE_CORE_CMD_STATUS_REG);
- 	reg |= PCIE_CORE_CMD_MEM_ACCESS_EN |
- 		PCIE_CORE_CMD_IO_ACCESS_EN |
+ In addition, the Device Tree describing an Aardvark PCIe controller
+ must include a sub-node that describes the legacy interrupt controller
+@@ -48,6 +51,7 @@ Example:
+ 				<0 0 0 2 &pcie_intc 1>,
+ 				<0 0 0 3 &pcie_intc 2>,
+ 				<0 0 0 4 &pcie_intc 3>;
++		phys = <&comphy1 0>;
+ 		pcie_intc: interrupt-controller {
+ 			interrupt-controller;
+ 			#interrupt-cells = <1>;
 -- 
 2.20.1
 
