@@ -2,44 +2,44 @@ Return-Path: <SRS0=ntsD=6I=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6727AC55186
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9CDFC55196
 	for <linux-pci@archiver.kernel.org>; Fri, 24 Apr 2020 15:39:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4537120767
+	by mail.kernel.org (Postfix) with ESMTP id C23FD21569
 	for <linux-pci@archiver.kernel.org>; Fri, 24 Apr 2020 15:39:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=default; t=1587742764;
-	bh=2ofFNGAK1E0rs60VFb7DeTztmUag/J0xriJe81CHMjM=;
+	bh=7Q6yx7BAcNGphXyMJ64Hizlmq02sPIkiGXe5IfpE7Z8=;
 	h=From:To:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=CQEOjBsQ+O5BO616Xzkmf+bn4rTfAOYU4jbVV74kL6DPi+DJTWMSJ21ZQOS4tZFHX
-	 Y6WpmDdow4saW4wwGIb323KJ6J99LgK9e/Nl89J5vu72ovx9Oe7epT0CPhnBF+2fTN
-	 lf8yE5MrPWEwlWRBRnMb8QaRVKCkrK/5IdYjglWk=
+	b=g4Sty/jOd0PY4QFqT8bjMH1BHN+B9sSrfmW16ujouM4HjEMwixK6URlTQxBofjOeK
+	 WrXcK5/0zTFz88678uWOw4Z16c2eGN1b0yywD34japzPgK9ly9z4WSLczoRbgZiJqN
+	 7199+GfbvaI1cdzOVXygYaP+UQRqx/q8tYcdXyaY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728464AbgDXPjX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 24 Apr 2020 11:39:23 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36808 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728524AbgDXPjW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1728563AbgDXPjW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Fri, 24 Apr 2020 11:39:22 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36486 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728464AbgDXPjQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 24 Apr 2020 11:39:16 -0400
 Received: from pali.im (pali.im [31.31.79.79])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6C4FB20706;
-        Fri, 24 Apr 2020 15:39:21 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7AD0320706;
+        Fri, 24 Apr 2020 15:39:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1587742761;
-        bh=2ofFNGAK1E0rs60VFb7DeTztmUag/J0xriJe81CHMjM=;
+        s=default; t=1587742755;
+        bh=7Q6yx7BAcNGphXyMJ64Hizlmq02sPIkiGXe5IfpE7Z8=;
         h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=OMVYE8z0OWbX9tu+UWCD/i6GRDMgYFOKgsV37xKnmRYHDOBnXdCohmskai7fTpKjs
-         HZeuAlmPM6SEQLFVpQ9R0tiKll2eBB3mbODGdFq68ZHd/joDRuKQ1S9rPv8O6yShC6
-         b0OU8lmgqxnKK/kAYVbTgqUEhbc91OxJ4VRC6BtU=
+        b=zOfcjEtzZDdJPDC6Pu/dUsj0Z6/XOyHEFjq2DuKTHjfNUOhcvRW7jYI4u6l8wrq6B
+         kh7uTzdQgThIeo2WK/c3sNVdxqKrbU1rM67PGcuRhtTsa+yoY4EGvqT0+u83UUOA2X
+         z3qpMiFXXrvpCsLPulMIsI7U1IsiE36TwC2SeB2Y=
 Received: by pali.im (Postfix)
-        id A31A1A05; Fri, 24 Apr 2020 17:39:19 +0200 (CEST)
+        id 93D25A05; Fri, 24 Apr 2020 17:39:13 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     linux-pci@vger.kernel.org, Jason Cooper <jason@lakedaemon.net>,
         Andrew Lunn <andrew@lunn.ch>,
@@ -53,9 +53,9 @@ To:     linux-pci@vger.kernel.org, Jason Cooper <jason@lakedaemon.net>,
         Xogium <contact@xogium.me>, Rob Herring <robh@kernel.org>,
         =?UTF-8?q?Marek=20Beh=C3=BAn?= <marek.behun@nic.cz>,
         Bjorn Helgaas <helgaas@kernel.org>
-Subject: [PATCH v3 07/12] PCI: aardvark: Add PHY support
-Date:   Fri, 24 Apr 2020 17:38:53 +0200
-Message-Id: <20200424153858.29744-8-pali@kernel.org>
+Subject: [PATCH v3 02/12] PCI: aardvark: Don't blindly enable ASPM L0s and don't write to read-only register
+Date:   Fri, 24 Apr 2020 17:38:48 +0200
+Message-Id: <20200424153858.29744-3-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200424153858.29744-1-pali@kernel.org>
 References: <20200424153858.29744-1-pali@kernel.org>
@@ -67,149 +67,53 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Marek Behún <marek.behun@nic.cz>
+Trying to change Link Status register does not have any effect as this
+is a read-only register. Trying to overwrite bits for Negotiated Link
+Width does not make sense.
 
-With recent proposed changes for U-Boot it is possible that bootloader
-won't initialize the PHY for this controller (currently the PHY is
-initialized regardless whether PCI is used in U-Boot, but with these
-proposed changes the PHY is initialized only on request).
+In future proper change of link width can be done via Lane Count Select
+bits in PCIe Control 0 register.
 
-Since the mvebu-a3700-comphy driver by Miquèl Raynal supports enabling
-PCIe PHY, and since Linux' functionality should be independent on what
-bootloader did, add code for enabling generic PHY if found in device OF
-node.
+Trying to unconditionally enable ASPM L0s via ASPM Control bits in Link
+Control register is wrong. There should be at least some detection if
+endpoint supports L0s as isn't mandatory.
 
-The mvebu-a3700-comphy driver does PHY powering via SMC calls to ARM
-Trusted Firmware. The corresponding code in ARM Trusted Firmware skips
-one register write which U-Boot does not: step 7 ("Enable TX"), see [1].
-Instead ARM Trusted Firmware expects PCIe driver to do this step,
-probably because the register is in PCIe controller address space,
-instead of PHY address space. We therefore add this step into the
-advk_pcie_setup_hw function.
+Moreover ASPM Control bits in Link Control register are controlled by
+pcie/aspm.c code which sets it according to system ASPM settings,
+immediately after aardvark driver probes. So setting these bits by
+aardvark driver has no long running effect.
 
-[1] https://git.trustedfirmware.org/TF-A/trusted-firmware-a.git/tree/drivers/marvell/comphy/phy-comphy-3700.c?h=v2.3-rc2#n836
+Remove code which touches ASPM L0s bits from this driver and let
+kernel's ASPM implementation to set ASPM state properly.
 
-Signed-off-by: Marek Behún <marek.behun@nic.cz>
-Cc: Miquèl Raynal <miquel.raynal@bootlin.com>
+Some users are reporting issues that this code is problematic for some
+Intel wifi cards and removing it fixes them, see e.g.:
+https://bugzilla.kernel.org/show_bug.cgi?id=196339
+
+If problems with Intel wifi cards occur even after this commit, then
+pcie/aspm.c code could be modified / hooked to not enable ASPM L0s state
+for affected problematic cards.
+
+Signed-off-by: Pali Rohár <pali@kernel.org>
 ---
- drivers/pci/controller/pci-aardvark.c | 69 +++++++++++++++++++++++++++
- 1 file changed, 69 insertions(+)
+ drivers/pci/controller/pci-aardvark.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
 diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index 8e1f61d82c21..7a4f395c5812 100644
+index f9955b494267..74b90940a9d4 100644
 --- a/drivers/pci/controller/pci-aardvark.c
 +++ b/drivers/pci/controller/pci-aardvark.c
-@@ -16,6 +16,7 @@
- #include <linux/kernel.h>
- #include <linux/pci.h>
- #include <linux/init.h>
-+#include <linux/phy/phy.h>
- #include <linux/platform_device.h>
- #include <linux/msi.h>
- #include <linux/of_address.h>
-@@ -104,6 +105,8 @@
- #define     PCIE_CORE_CTRL2_STRICT_ORDER_ENABLE	BIT(5)
- #define     PCIE_CORE_CTRL2_OB_WIN_ENABLE	BIT(6)
- #define     PCIE_CORE_CTRL2_MSI_ENABLE		BIT(10)
-+#define PCIE_CORE_REF_CLK_REG			(CONTROL_BASE_ADDR + 0x14)
-+#define     PCIE_CORE_REF_CLK_TX_ENABLE		BIT(1)
- #define PCIE_MSG_LOG_REG			(CONTROL_BASE_ADDR + 0x30)
- #define PCIE_ISR0_REG				(CONTROL_BASE_ADDR + 0x40)
- #define PCIE_MSG_PM_PME_MASK			BIT(7)
-@@ -207,6 +210,7 @@ struct advk_pcie {
- 	int link_gen;
- 	struct pci_bridge_emul bridge;
- 	struct gpio_desc *reset_gpio;
-+	struct phy *phy;
- };
+@@ -356,10 +356,6 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
  
- static inline void advk_writel(struct advk_pcie *pcie, u32 val, u64 reg)
-@@ -358,6 +362,11 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
+ 	advk_pcie_wait_for_link(pcie);
  
- 	advk_pcie_issue_perst(pcie);
- 
-+	/* Enable TX */
-+	reg = advk_readl(pcie, PCIE_CORE_REF_CLK_REG);
-+	reg |= PCIE_CORE_REF_CLK_TX_ENABLE;
-+	advk_writel(pcie, reg, PCIE_CORE_REF_CLK_REG);
-+
- 	/* Set to Direct mode */
- 	reg = advk_readl(pcie, CTRL_CONFIG_REG);
- 	reg &= ~(CTRL_MODE_MASK << CTRL_MODE_SHIFT);
-@@ -1041,6 +1050,62 @@ static irqreturn_t advk_pcie_irq_handler(int irq, void *arg)
- 	return IRQ_HANDLED;
- }
- 
-+static void __maybe_unused advk_pcie_disable_phy(struct advk_pcie *pcie)
-+{
-+	phy_power_off(pcie->phy);
-+	phy_exit(pcie->phy);
-+}
-+
-+static int advk_pcie_enable_phy(struct advk_pcie *pcie)
-+{
-+	int ret;
-+
-+	if (!pcie->phy)
-+		return 0;
-+
-+	ret = phy_init(pcie->phy);
-+	if (ret)
-+		return ret;
-+
-+	ret = phy_set_mode(pcie->phy, PHY_MODE_PCIE);
-+	if (ret) {
-+		phy_exit(pcie->phy);
-+		return ret;
-+	}
-+
-+	ret = phy_power_on(pcie->phy);
-+	if (ret) {
-+		phy_exit(pcie->phy);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static int advk_pcie_setup_phy(struct advk_pcie *pcie)
-+{
-+	struct device *dev = &pcie->pdev->dev;
-+	struct device_node *node = dev->of_node;
-+	int ret = 0;
-+
-+	pcie->phy = devm_of_phy_get(dev, node, NULL);
-+	if (IS_ERR(pcie->phy) && (PTR_ERR(pcie->phy) == -EPROBE_DEFER))
-+		return PTR_ERR(pcie->phy);
-+
-+	/* Old bindings miss the PHY handle */
-+	if (IS_ERR(pcie->phy)) {
-+		dev_warn(dev, "PHY unavailable (%ld)\n", PTR_ERR(pcie->phy));
-+		pcie->phy = NULL;
-+		return 0;
-+	}
-+
-+	ret = advk_pcie_enable_phy(pcie);
-+	if (ret)
-+		dev_err(dev, "Failed to initialize PHY (%d)\n", ret);
-+
-+	return ret;
-+}
-+
- static int advk_pcie_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
-@@ -1099,6 +1164,10 @@ static int advk_pcie_probe(struct platform_device *pdev)
- 		return ret;
- 	pcie->link_gen = (ret > 3) ? 3 : ret;
- 
-+	ret = advk_pcie_setup_phy(pcie);
-+	if (ret)
-+		return ret;
-+
- 	advk_pcie_setup_hw(pcie);
- 
- 	advk_sw_pci_bridge_init(pcie);
+-	reg = PCIE_CORE_LINK_L0S_ENTRY |
+-		(1 << PCIE_CORE_LINK_WIDTH_SHIFT);
+-	advk_writel(pcie, reg, PCIE_CORE_LINK_CTRL_STAT_REG);
+-
+ 	reg = advk_readl(pcie, PCIE_CORE_CMD_STATUS_REG);
+ 	reg |= PCIE_CORE_CMD_MEM_ACCESS_EN |
+ 		PCIE_CORE_CMD_IO_ACCESS_EN |
 -- 
 2.20.1
 
