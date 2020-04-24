@@ -7,39 +7,39 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1142BC54FCB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9507C54FD0
 	for <linux-pci@archiver.kernel.org>; Fri, 24 Apr 2020 15:39:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DA4B720767
-	for <linux-pci@archiver.kernel.org>; Fri, 24 Apr 2020 15:39:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A7E102166E
+	for <linux-pci@archiver.kernel.org>; Fri, 24 Apr 2020 15:39:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1587742762;
-	bh=o2G1fhO9mfnDxsTYV4mQJ3o5E7ZbLZJaB4mk12TAxv8=;
+	s=default; t=1587742763;
+	bh=HhAmAT2/A+qPYpQdZvTmptCNczQiph9isL1WeEaN0bM=;
 	h=From:To:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=A6RGpXjQARrf8fv1a5AioVBMojhztCw2XKgPSin/Ce+UHdJsbeawjJx7BaMJdpjAl
-	 P7F6NfZhB42GH7Ljk9dS/lwdbImphdilgKg5txARR33yUW4VYPcl66om3p8nu49yeZ
-	 3ftZ9rQlked7TxX13a2Iyo/Hhj9cOH38vpgMSAv0=
+	b=gmMNCvnZbtydyQszPFTjrBNGR5fVKYuThl+asMhn6/6/Ku43Cwf6J5vmf78oJ4qbP
+	 d9EkThxTo3YgHClRUF8sfqigNRhAybumCGMAnxddyZLtyR/4C0J2TwWE/Bl2aFtpMw
+	 CdIvSZZxPxv5vq2++kJrRlqA0DlhmpeRdCWymDQ8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729056AbgDXPjV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 24 Apr 2020 11:39:21 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36700 "EHLO mail.kernel.org"
+        id S1728529AbgDXPjP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 24 Apr 2020 11:39:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36446 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728563AbgDXPjU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 24 Apr 2020 11:39:20 -0400
+        id S1728146AbgDXPjP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 24 Apr 2020 11:39:15 -0400
 Received: from pali.im (pali.im [31.31.79.79])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A40462084D;
-        Fri, 24 Apr 2020 15:39:19 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 926612084D;
+        Fri, 24 Apr 2020 15:39:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1587742759;
-        bh=o2G1fhO9mfnDxsTYV4mQJ3o5E7ZbLZJaB4mk12TAxv8=;
+        s=default; t=1587742754;
+        bh=HhAmAT2/A+qPYpQdZvTmptCNczQiph9isL1WeEaN0bM=;
         h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=F/fqTaOfxUobMJfy57HVQDrHukVVqZb7pbnFpsEneqJacKiXoNxxD5s3dOIiJg40m
-         UxPWZF8ZC0vOJtq7B5+TQ6SF3XM6Ahymazp5pnAeVHk6QOCrWq/4ELVI4ASHTNzDzI
-         V/AAmnHlFeawGA7LdAH7AJviOx4PY9qYNcVqMmUU=
+        b=ynkzVM0ADF3x/exHS1j0BwO4N+8EjItWKqiT09aY2+fWazoFeJgFFtvtc7yP43C1a
+         hzom+pfiWEj0NlGfz63eZJkNxNPYueqWY3rGeVNv8JqMYvYB3RB2Tewe+oj5zPk1lR
+         e6AwFf33RjD5rE0C2KF64cmM5VlYQ5ZHlAhK63/I=
 Received: by pali.im (Postfix)
-        id D0DD682E; Fri, 24 Apr 2020 17:39:17 +0200 (CEST)
+        id B246982E; Fri, 24 Apr 2020 17:39:12 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     linux-pci@vger.kernel.org, Jason Cooper <jason@lakedaemon.net>,
         Andrew Lunn <andrew@lunn.ch>,
@@ -53,9 +53,9 @@ To:     linux-pci@vger.kernel.org, Jason Cooper <jason@lakedaemon.net>,
         Xogium <contact@xogium.me>, Rob Herring <robh@kernel.org>,
         =?UTF-8?q?Marek=20Beh=C3=BAn?= <marek.behun@nic.cz>,
         Bjorn Helgaas <helgaas@kernel.org>
-Subject: [PATCH v3 06/12] PCI: aardvark: Add FIXME comment for PCIE_CORE_CMD_STATUS_REG access
-Date:   Fri, 24 Apr 2020 17:38:52 +0200
-Message-Id: <20200424153858.29744-7-pali@kernel.org>
+Subject: [PATCH v3 01/12] PCI: aardvark: Train link immediately after enabling training
+Date:   Fri, 24 Apr 2020 17:38:47 +0200
+Message-Id: <20200424153858.29744-2-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200424153858.29744-1-pali@kernel.org>
 References: <20200424153858.29744-1-pali@kernel.org>
@@ -67,39 +67,55 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This register is applicable only when the controller is configured for
-Endpoint mode, which is not the case for the current version of this
-driver.
+Adding even 100ms (PCI_PM_D3COLD_WAIT) delay between enabling link
+training and starting link training causes detection issues with some
+buggy cards (such as Compex WLE900VX).
 
-Attempting to remove this code though caused some ath10k cards to stop
-working, so for some unknown reason it is needed here.
+Move the code which enables link training immediately before the one
+which starts link traning.
 
-This should be investigated and a comment explaining this should be put
-before the code, so we add a FIXME comment for now.
+This fixes detection issues of Compex WLE900VX card on Turris MOX after
+cold boot.
 
+Fixes: f4c7d053d7f7 ("PCI: aardvark: Wait for endpoint to be ready...")
 Signed-off-by: Pali Rohár <pali@kernel.org>
 ---
- drivers/pci/controller/pci-aardvark.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/pci/controller/pci-aardvark.c | 15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index 9e2f44213b5e..8e1f61d82c21 100644
+index 2a20b649f40c..f9955b494267 100644
 --- a/drivers/pci/controller/pci-aardvark.c
 +++ b/drivers/pci/controller/pci-aardvark.c
-@@ -439,6 +439,13 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
+@@ -300,11 +300,6 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
+ 	reg |= LANE_COUNT_1;
+ 	advk_writel(pcie, reg, PCIE_CORE_CTRL0_REG);
  
- 	advk_pcie_train_link(pcie);
+-	/* Enable link training */
+-	reg = advk_readl(pcie, PCIE_CORE_CTRL0_REG);
+-	reg |= LINK_TRAINING_EN;
+-	advk_writel(pcie, reg, PCIE_CORE_CTRL0_REG);
+-
+ 	/* Enable MSI */
+ 	reg = advk_readl(pcie, PCIE_CORE_CTRL2_REG);
+ 	reg |= PCIE_CORE_CTRL2_MSI_ENABLE;
+@@ -346,7 +341,15 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
+ 	 */
+ 	msleep(PCI_PM_D3COLD_WAIT);
  
+-	/* Start link training */
++	/* Enable link training */
++	reg = advk_readl(pcie, PCIE_CORE_CTRL0_REG);
++	reg |= LINK_TRAINING_EN;
++	advk_writel(pcie, reg, PCIE_CORE_CTRL0_REG);
++
 +	/*
-+	 * FIXME: The following register update is suspicious. This register is
-+	 * applicable only when the PCI controller is configured for Endpoint
-+	 * mode, not as a Root Complex. But apparently when this code is
-+	 * removed, some cards stop working. This should be investigated and
-+	 * a comment explaining this should be put here.
++	 * Start link training immediately after enabling it.
++	 * This solves problems for some buggy cards.
 +	 */
- 	reg = advk_readl(pcie, PCIE_CORE_CMD_STATUS_REG);
- 	reg |= PCIE_CORE_CMD_MEM_ACCESS_EN |
- 		PCIE_CORE_CMD_IO_ACCESS_EN |
+ 	reg = advk_readl(pcie, PCIE_CORE_LINK_CTRL_STAT_REG);
+ 	reg |= PCIE_CORE_LINK_TRAINING;
+ 	advk_writel(pcie, reg, PCIE_CORE_LINK_CTRL_STAT_REG);
 -- 
 2.20.1
 
