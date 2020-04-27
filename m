@@ -7,39 +7,39 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7F03C81AC3
-	for <linux-pci@archiver.kernel.org>; Mon, 27 Apr 2020 18:24:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E7A5C81AC5
+	for <linux-pci@archiver.kernel.org>; Mon, 27 Apr 2020 18:24:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7BA6A214AF
-	for <linux-pci@archiver.kernel.org>; Mon, 27 Apr 2020 18:24:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7E44720775
+	for <linux-pci@archiver.kernel.org>; Mon, 27 Apr 2020 18:24:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="k8X5HK3K"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="XmaCNS0N"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726229AbgD0SY0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 27 Apr 2020 14:24:26 -0400
-Received: from mta-02.yadro.com ([89.207.88.252]:53212 "EHLO mta-01.yadro.com"
+        id S1726362AbgD0SY1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 27 Apr 2020 14:24:27 -0400
+Received: from mta-02.yadro.com ([89.207.88.252]:53048 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726266AbgD0SY0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 27 Apr 2020 14:24:26 -0400
+        id S1726226AbgD0SY1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 27 Apr 2020 14:24:27 -0400
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 56B374C865;
-        Mon, 27 Apr 2020 18:24:23 +0000 (UTC)
+        by mta-01.yadro.com (Postfix) with ESMTP id 7B3884C867;
+        Mon, 27 Apr 2020 18:24:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:date:subject
         :subject:from:from:received:received:received; s=mta-01; t=
-        1588011862; x=1589826263; bh=/htqB/0rYGM6bOltjMUumNTM/7sIZv8Pvtx
-        4XF2+xgg=; b=k8X5HK3K1Xw5iaqGLxkhjvOUjbx1imyUS+KB4cuB85rYea/TWQN
-        VD4HVbiy7C/IBJ9h4NizV/HyZbKMYXtjdoQVD+iPxfcB53nm1ZFTCdZxL3Fj8JU2
-        eQVzIDN+Rxg8u6B2XllXSkz+x9stIxPYqCgoG8EZpTEpnMN9SIwSibkM=
+        1588011863; x=1589826264; bh=bLYazg1sv1Yf5L9nAqAHsxzIv0PFIhlEuNP
+        aBze48OU=; b=XmaCNS0N+i5pu4xyHVVw7plGrbwNf8QCFjJWGI0X3FODFxo2Czz
+        4ItzA0UVSKUB5KOG6vNL5dLIejm8YO+rWpTxxTC6iAMY7MmEow6lZFg0WRBSlMT3
+        z7HlQe0mv/5y1IiAQtR34Ic2yXdnMrtA/AkS+UfyjJPSGjpPEgQpwr7A=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 08VrbMObn6bB; Mon, 27 Apr 2020 21:24:22 +0300 (MSK)
+        with ESMTP id yNVOxIz5Eabc; Mon, 27 Apr 2020 21:24:23 +0300 (MSK)
 Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 345414C848;
+        by mta-01.yadro.com (Postfix) with ESMTPS id 9B31D4C84A;
         Mon, 27 Apr 2020 21:24:12 +0300 (MSK)
 Received: from NB-148.yadro.com (172.17.15.136) by T-EXCH-02.corp.yadro.com
  (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
@@ -53,11 +53,10 @@ CC:     Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>,
         Ard Biesheuvel <ardb@kernel.org>,
         David Laight <David.Laight@ACULAB.COM>,
         Rajat Jain <rajatja@google.com>, <linux@yadro.com>,
-        Sergei Miroshnichenko <s.miroshnichenko@yadro.com>,
-        Thomas Gleixner <tglx@linutronix.de>
-Subject: [PATCH v8 16/24] x86/PCI/ACPI: Fix up PCIBIOS_MIN_MEM if value computed from e820 is invalid
-Date:   Mon, 27 Apr 2020 21:23:50 +0300
-Message-ID: <20200427182358.2067702-17-s.miroshnichenko@yadro.com>
+        Sergei Miroshnichenko <s.miroshnichenko@yadro.com>
+Subject: [PATCH v8 18/24] PCI: hotplug: Don't disable the released bridge windows immediately
+Date:   Mon, 27 Apr 2020 21:23:52 +0300
+Message-ID: <20200427182358.2067702-19-s.miroshnichenko@yadro.com>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200427182358.2067702-1-s.miroshnichenko@yadro.com>
 References: <20200427182358.2067702-1-s.miroshnichenko@yadro.com>
@@ -72,56 +71,40 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The value of PCIBIOS_MIN_MEM reported by BIOS 1.3 on Supermicro H11SSL-i
-via e820__setup_pci_gap():
+On a hotplug event with enabled BAR movement, calculating new BAR layout
+and bridge windows takes some time. During this procedure, the structures
+representing these windows are released - marked for recalculation.
 
-  [mem 0xebff1000-0xfe9fffff] available for PCI devices
+When the new bridge window values are ready, they are written to the bridge
+registers via pci_setup_bridges().
 
-is only suitable for a single root complex out of four (0000:00):
+Currently, bridge's registers are updated immediately after releasing a
+window to disable it. But if a driver doesn't yet support movable BARs, it
+doesn't stop MEM transactions during the hotplug, so disabled bridge
+windows will break them.
 
-  pci_bus 0000:00: root bus resource [mem 0xec000000-0xefffffff window]
-  pci_bus 0000:20: root bus resource [mem 0xeb800000-0xebefffff window]
-  pci_bus 0000:40: root bus resource [mem 0xeb200000-0xeb5fffff window]
-  pci_bus 0000:60: root bus resource [mem 0xe8b00000-0xeaffffff window]
+Let the bridge windows remain operating after releasing, as they will be
+updated to the new values in the end of a hotplug event.
 
-That makes the AMD EPYC 7251 unable to assign BARs of devices hot-added in
-those three unlucky RCs (0000:20, 0000:40 and 0000:60).
-
-If there are apertures that end below the current PCIBIOS_MIN_MEM (which is
-a variable pci_mem_start on x86), adjust it to the aperture's start.
-
-CC: Thomas Gleixner <tglx@linutronix.de>
 Signed-off-by: Sergei Miroshnichenko <s.miroshnichenko@yadro.com>
 ---
- arch/x86/pci/acpi.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ drivers/pci/setup-bus.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 948656069cdd..9eccb26d0bf3 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -299,6 +299,21 @@ static int pci_acpi_root_prepare_resources(struct acpi_pci_root_info *ci)
- 	int status;
- 
- 	status = acpi_pci_probe_root_resources(ci);
-+
-+	resource_list_for_each_entry(entry, &ci->resources) {
-+		struct resource *res = entry->res;
-+
-+		if (!(res->flags & IORESOURCE_MEM) ||
-+		    res->end > pci_mem_start ||
-+		    res->start == 0xa0000)
-+			continue;
-+
-+		dev_warn(&ci->root->device->dev, "Fix up PCI start address: %lx -> %llx\n",
-+			 pci_mem_start, res->start);
-+
-+		pci_mem_start = res->start;
-+	}
-+
- 	if (pci_use_crs) {
- 		resource_list_for_each_entry_safe(entry, tmp, &ci->resources)
- 			if (resource_is_pcicfg_ioport(entry->res))
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 4cadfa1f9519..3081f2d2a48a 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1635,7 +1635,8 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
+ 		/* Avoiding touch the one without PREF */
+ 		if (type & IORESOURCE_PREFETCH)
+ 			type = IORESOURCE_PREFETCH;
+-		__pci_setup_bridge(bus, type);
++		if (!pci_can_move_bars)
++			__pci_setup_bridge(bus, type);
+ 		/* For next child res under same bridge */
+ 		r->flags = old_flags;
+ 	}
 -- 
 2.24.1
 
