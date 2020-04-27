@@ -7,44 +7,44 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A91A1C81AC0
-	for <linux-pci@archiver.kernel.org>; Mon, 27 Apr 2020 18:24:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2830CC81AC4
+	for <linux-pci@archiver.kernel.org>; Mon, 27 Apr 2020 18:24:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 88547214AF
-	for <linux-pci@archiver.kernel.org>; Mon, 27 Apr 2020 18:24:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 00F81214AF
+	for <linux-pci@archiver.kernel.org>; Mon, 27 Apr 2020 18:24:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="Ugl6bzG8"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="P2chGHTL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726461AbgD0SY0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 27 Apr 2020 14:24:26 -0400
-Received: from mta-02.yadro.com ([89.207.88.252]:53026 "EHLO mta-01.yadro.com"
+        id S1726249AbgD0SY1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 27 Apr 2020 14:24:27 -0400
+Received: from mta-02.yadro.com ([89.207.88.252]:53238 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726474AbgD0SYZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 27 Apr 2020 14:24:25 -0400
+        id S1726362AbgD0SY0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 27 Apr 2020 14:24:26 -0400
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 268F04C862;
-        Mon, 27 Apr 2020 18:24:22 +0000 (UTC)
+        by mta-01.yadro.com (Postfix) with ESMTP id AA2594C866;
+        Mon, 27 Apr 2020 18:24:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:date:subject
         :subject:from:from:received:received:received; s=mta-01; t=
-        1588011860; x=1589826261; bh=1hH0nQX2D0BR0azE9TVa05Nt8MtUW7FplWz
-        tO+JMCbU=; b=Ugl6bzG8NIWvoPmrF/HIUdqIgo6AqDRXhqXcYFckZNfku8QwdfE
-        VHd6adl2DnY9ZMdMRy1WJpu2n06Eapn4f7mX1oRdKC0ESy3TRjISOjzH6+F387Dg
-        ZYmCj9z0liLtMnlmVl/2Umj7Md8SS8jjM5N8okJt9m/BeVcrrzxjh0q4=
+        1588011862; x=1589826263; bh=XCerxuP4kI3gs46RMMe56g/f4erT/fS2u3T
+        lS2n0Bww=; b=P2chGHTLWR7ORtD4MI31GahOJfZ5rnHPL4BWFLMnvAFT8n/TgPG
+        oQfYNZkq7EJGExxHLgZ2IzfJAr2N0I5m8K3AE42w/NuGHaRTOmDAxxcaKaGU6fIO
+        4eJkUCGo6IKZRl91+R+X0o70we9byr0IJ4XEfXbFt2lB22jMOn5d4BI8=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id F3zFRHo-2x3F; Mon, 27 Apr 2020 21:24:20 +0300 (MSK)
+        with ESMTP id q20rnpg5tt8e; Mon, 27 Apr 2020 21:24:22 +0300 (MSK)
 Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id EA77C499B3;
-        Mon, 27 Apr 2020 21:24:11 +0300 (MSK)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 6CF994C849;
+        Mon, 27 Apr 2020 21:24:12 +0300 (MSK)
 Received: from NB-148.yadro.com (172.17.15.136) by T-EXCH-02.corp.yadro.com
  (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Mon, 27
- Apr 2020 21:24:12 +0300
+ Apr 2020 21:24:13 +0300
 From:   Sergei Miroshnichenko <s.miroshnichenko@yadro.com>
 To:     <linux-pci@vger.kernel.org>
 CC:     Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>,
@@ -54,9 +54,9 @@ CC:     Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>,
         David Laight <David.Laight@ACULAB.COM>,
         Rajat Jain <rajatja@google.com>, <linux@yadro.com>,
         Sergei Miroshnichenko <s.miroshnichenko@yadro.com>
-Subject: [PATCH v8 14/24] PCI: hotplug: Add support of fixed BARs to pci_assign_resource()
-Date:   Mon, 27 Apr 2020 21:23:48 +0300
-Message-ID: <20200427182358.2067702-15-s.miroshnichenko@yadro.com>
+Subject: [PATCH v8 17/24] PCI: hotplug: Configure MPS after manual bus rescan
+Date:   Mon, 27 Apr 2020 21:23:51 +0300
+Message-ID: <20200427182358.2067702-18-s.miroshnichenko@yadro.com>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200427182358.2067702-1-s.miroshnichenko@yadro.com>
 References: <20200427182358.2067702-1-s.miroshnichenko@yadro.com>
@@ -71,142 +71,39 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Fixed BARs must be assigned within a bridge window first, before movable
-BARs and neighboring bridge windows. Currently they are assigned last by
-pdev_assign_fixed_resources().
-
-Let the fixed BARs be handled by pci_assign_resource() in the same way as
-it does for movable ones, assigning them in correct order, unifying the
-code.
-
-Allow matching IORESOURCE_PCI_FIXED prefetchable BARs to non-prefetchable
-windows, so they follow the same rules as non-flagged fixed BARs.
+Assure that MPS settings are set up for bridges which are discovered during
+manually triggered rescan via sysfs. This sequence of bridge init (using
+pci_rescan_bus()) later will be used for pciehp hot-add events when BAR
+movement is enabled.
 
 Signed-off-by: Sergei Miroshnichenko <s.miroshnichenko@yadro.com>
 ---
- drivers/pci/setup-bus.c | 43 -----------------------------------------
- drivers/pci/setup-res.c | 41 +++++++++++++++++++++++++++++++++++++--
- 2 files changed, 39 insertions(+), 45 deletions(-)
+ drivers/pci/probe.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index a6d8bb5ed43d..1f76a4dffb7d 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1344,47 +1344,6 @@ void pci_bus_size_bridges(struct pci_bus *bus)
- }
- EXPORT_SYMBOL(pci_bus_size_bridges);
- 
--static void assign_fixed_resource_on_bus(struct pci_bus *b, struct resource *r)
--{
--	int i;
--	struct resource *parent_r;
--	unsigned long mask = IORESOURCE_IO | IORESOURCE_MEM |
--			     IORESOURCE_PREFETCH;
--
--	pci_bus_for_each_resource(b, parent_r, i) {
--		if (!parent_r)
--			continue;
--
--		if ((r->flags & mask) == (parent_r->flags & mask) &&
--		    resource_contains(parent_r, r))
--			request_resource(parent_r, r);
--	}
--}
--
--/*
-- * Try to assign any resources marked as IORESOURCE_PCI_FIXED, as they are
-- * skipped by pbus_assign_resources_sorted().
-- */
--static void pdev_assign_fixed_resources(struct pci_dev *dev)
--{
--	int i;
--
--	for (i = 0; i <  PCI_NUM_RESOURCES; i++) {
--		struct pci_bus *b;
--		struct resource *r = &dev->resource[i];
--
--		if (r->parent || !(r->flags & IORESOURCE_PCI_FIXED) ||
--		    !(r->flags & (IORESOURCE_IO | IORESOURCE_MEM)))
--			continue;
--
--		b = dev->bus;
--		while (b && !r->parent) {
--			assign_fixed_resource_on_bus(b, r);
--			b = b->parent;
--		}
--	}
--}
--
- void __pci_bus_assign_resources(const struct pci_bus *bus,
- 				struct list_head *realloc_head,
- 				struct list_head *fail_head)
-@@ -1395,8 +1354,6 @@ void __pci_bus_assign_resources(const struct pci_bus *bus,
- 	pbus_assign_resources_sorted(bus, realloc_head, fail_head);
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
--		pdev_assign_fixed_resources(dev);
--
- 		b = dev->subordinate;
- 		if (!b)
- 			continue;
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 494eb5a2e98c..a1e61e74ce00 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -331,14 +331,51 @@ static int _pci_assign_resource(struct pci_dev *dev, int resno,
- 	return ret;
- }
- 
-+static int assign_fixed_resource_on_bus(struct pci_dev *dev, int resno)
-+{
-+	int i;
-+	struct resource *parent_r;
-+	unsigned long mask = IORESOURCE_TYPE_BITS;
-+	struct resource *r = dev->resource + resno;
-+
-+	/*
-+	 * If we have a shadow copy in RAM, the PCI device doesn't respond
-+	 * to the shadow range
-+	 */
-+	if (r->flags & IORESOURCE_ROM_SHADOW)
-+		return 0;
-+
-+	pci_bus_for_each_resource(dev->bus, parent_r, i) {
-+		if (!parent_r)
-+			continue;
-+
-+		if ((r->flags & mask) != (parent_r->flags & mask))
-+			continue;
-+
-+		if (parent_r->flags & IORESOURCE_PREFETCH &&
-+		    !(r->flags & IORESOURCE_PREFETCH))
-+			continue;
-+
-+		if (resource_contains(parent_r, r)) {
-+			if (!request_resource(parent_r, r)) {
-+				pci_info(dev, "BAR %d: assigned fixed %pR\n", resno, r);
-+				return 0;
-+			}
-+		}
-+	}
-+
-+	pci_err(dev, "BAR %d: failed to assign fixed %pR\n", resno, r);
-+	return -ENOSPC;
-+}
-+
- int pci_assign_resource(struct pci_dev *dev, int resno)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 765b2883755a..d01d93c6bfa2 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -3554,7 +3554,7 @@ static void pci_reassign_root_bus_resources(struct pci_bus *root)
+ unsigned int pci_rescan_bus(struct pci_bus *bus)
  {
- 	struct resource *res = dev->resource + resno;
- 	resource_size_t align, size;
- 	int ret;
+ 	unsigned int max;
+-	struct pci_bus *root = bus;
++	struct pci_bus *root = bus, *child;
  
--	if (res->flags & IORESOURCE_PCI_FIXED)
--		return 0;
-+	if (res->flags && pci_dev_bar_fixed(dev, res))
-+		return assign_fixed_resource_on_bus(dev, resno);
+ 	while (!pci_is_root_bus(root))
+ 		root = root->parent;
+@@ -3575,6 +3575,9 @@ unsigned int pci_rescan_bus(struct pci_bus *bus)
+ 		pci_assign_unassigned_bus_resources(bus);
+ 	}
  
- 	res->flags |= IORESOURCE_UNSET;
- 	align = pci_resource_alignment(dev, res);
++	list_for_each_entry(child, &root->children, node)
++		pcie_bus_configure_settings(child);
++
+ 	pci_bus_add_devices(bus);
+ 
+ 	return max;
 -- 
 2.24.1
 
