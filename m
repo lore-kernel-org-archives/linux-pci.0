@@ -7,39 +7,39 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A82B0C54EEB
-	for <linux-pci@archiver.kernel.org>; Mon, 27 Apr 2020 18:24:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CBC3C4CECC
+	for <linux-pci@archiver.kernel.org>; Mon, 27 Apr 2020 18:24:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 89B4220775
-	for <linux-pci@archiver.kernel.org>; Mon, 27 Apr 2020 18:24:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 731E0217BA
+	for <linux-pci@archiver.kernel.org>; Mon, 27 Apr 2020 18:24:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="p8DoLrcO"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="crgcQN/z"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726463AbgD0SYT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 27 Apr 2020 14:24:19 -0400
-Received: from mta-02.yadro.com ([89.207.88.252]:53000 "EHLO mta-01.yadro.com"
+        id S1726475AbgD0SYV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 27 Apr 2020 14:24:21 -0400
+Received: from mta-02.yadro.com ([89.207.88.252]:53048 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726362AbgD0SYT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 27 Apr 2020 14:24:19 -0400
+        id S1726283AbgD0SYV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 27 Apr 2020 14:24:21 -0400
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 778134C855;
-        Mon, 27 Apr 2020 18:24:16 +0000 (UTC)
+        by mta-01.yadro.com (Postfix) with ESMTP id C6CD04C859;
+        Mon, 27 Apr 2020 18:24:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:date:subject
         :subject:from:from:received:received:received; s=mta-01; t=
-        1588011855; x=1589826256; bh=zXK6593vRwJaMb5TJmwihGWxT6oOmCZd4hU
-        6lDP62T0=; b=p8DoLrcOnz5GcaVkU0VvDcFP0OCaD/EzH75mBaFqjQpixmp+rSw
-        EYITbZoheyyYoVF22Pz5bEbL/W0LuZNUUhkTnINxddivOhT+7i67G7OSaL1TStnF
-        P75GSiz9Jc9QJRmxdnAnsR5b2MDoYL9GuZD5bfsGRcHWlNmxfKW9YB1Q=
+        1588011856; x=1589826257; bh=JZFEuRZ4Olei8kVKOpa2v13cbjpCm2nfCBn
+        EgOI0pW8=; b=crgcQN/zsW5haUkaV9r/j7tRvZGM2vKUnWSBNBApf81/A5szMWX
+        lGpGKEORbxNCd9LBuka23EQ2wnucDnHqgI2c2kHB4NZS8PwXVYGrLIzwZicqbwAi
+        OgW0ZvTIaAzN+cZl8g5RnT1Kc9B4T2sEZlzF3sG55Sz0Sre8Z5ccSsR8=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 5UKEFRFezleC; Mon, 27 Apr 2020 21:24:15 +0300 (MSK)
+        with ESMTP id 4NQ11Dg6VM46; Mon, 27 Apr 2020 21:24:16 +0300 (MSK)
 Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id A7CF74C83D;
+        by mta-01.yadro.com (Postfix) with ESMTPS id B5DA24C840;
         Mon, 27 Apr 2020 21:24:11 +0300 (MSK)
 Received: from NB-148.yadro.com (172.17.15.136) by T-EXCH-02.corp.yadro.com
  (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
@@ -54,9 +54,9 @@ CC:     Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>,
         David Laight <David.Laight@ACULAB.COM>,
         Rajat Jain <rajatja@google.com>, <linux@yadro.com>,
         Sergei Miroshnichenko <s.miroshnichenko@yadro.com>
-Subject: [PATCH v8 06/24] PCI: hotplug: Recalculate every bridge window during rescan
-Date:   Mon, 27 Apr 2020 21:23:40 +0300
-Message-ID: <20200427182358.2067702-7-s.miroshnichenko@yadro.com>
+Subject: [PATCH v8 08/24] PCI: Reassign BARs if BIOS/bootloader had assigned not all of them
+Date:   Mon, 27 Apr 2020 21:23:42 +0300
+Message-ID: <20200427182358.2067702-9-s.miroshnichenko@yadro.com>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200427182358.2067702-1-s.miroshnichenko@yadro.com>
 References: <20200427182358.2067702-1-s.miroshnichenko@yadro.com>
@@ -71,99 +71,95 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-When the movable BARs feature is enabled and a rescan has been requested,
-release all bridge windows and recalculate them from scratch, taking into
-account all kinds of BARs: fixed, movable, new.
+Some BIOSes don't allocate all requested BARs, leaving some (for example,
+SR_IOV) unassigned, without gaps for bridge windows to extend.
 
-Comparing to simply trying to expand bridge windows, this also employs the
-PCI ability to shuffle BARs within a bridge, increasing the chances to find
-a memory space to fit BARs of newly hot-added devices, especially if no (or
-not enough) gaps were reserved by the BIOS/bootloader/firmware.
+If that happens, let the kernel use its own methods of BAR allocating on an
+early init stage, when drivers aren't yet bound to their devices, and it is
+safe to shuffle BARs that are not yet used.
 
-The last step of writing the recalculated windows to the bridges is done by
-the new pci_setup_bridges() function.
+Not every BAR can be safely moved: some framebuffer drivers (efifb) don't
+act as a PCI driver (like nouveau), taking BAR locations indirectly - via
+ACPI for example. Until every such driver is aware of movable BARs, mark
+every VGA BAR as fixed. Perhaps this is also useful for splash screens, so
+they don't flicker.
+
+If this reassignment fails, fall back to the BAR layout proposed by BIOS,
+working around the fact that they are marked with IORESOURCE_UNSET during
+init, so the new flag pci_init_done was introduced.
 
 Signed-off-by: Sergei Miroshnichenko <s.miroshnichenko@yadro.com>
 ---
- drivers/pci/pci.h       |  1 +
- drivers/pci/probe.c     | 22 ++++++++++++++++++++++
- drivers/pci/setup-bus.c |  9 +++++++++
- 3 files changed, 32 insertions(+)
+ drivers/pci/pci.h       | 2 ++
+ drivers/pci/probe.c     | 8 +++++++-
+ drivers/pci/setup-bus.c | 7 +++++++
+ 3 files changed, 16 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 25e49c5b998b..c7d3c022bf35 100644
+index 7483a5716317..2ef72741e8e5 100644
 --- a/drivers/pci/pci.h
 +++ b/drivers/pci/pci.h
-@@ -286,6 +286,7 @@ void __pci_bus_assign_resources(const struct pci_bus *bus,
- 				struct list_head *realloc_head,
- 				struct list_head *fail_head);
- bool pci_bus_clip_resource(struct pci_dev *dev, int idx);
-+void pci_bus_release_root_bridge_resources(struct pci_bus *bus);
+@@ -297,6 +297,8 @@ bool pci_dev_bar_fixed(struct pci_dev *dev, struct resource *res);
+ bool pci_dev_bar_enabled(const struct pci_dev *dev, int idx);
+ bool pci_bus_check_bars_assigned(struct pci_bus *bus, bool complete_set);
  
- void pci_reassigndev_resource_alignment(struct pci_dev *dev);
- void pci_disable_bridge_window(struct pci_dev *dev);
++extern bool pci_init_done;
++
+ /* PCIe link information from Link Capabilities 2 */
+ #define PCIE_LNKCAP2_SLS2SPEED(lnkcap2) \
+ 	((lnkcap2) & PCI_EXP_LNKCAP2_SLS_32_0GB ? PCIE_SPEED_32_0GT : \
 diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 1ac08b64ce83..5baad5325b16 100644
+index 5ca6e5887326..0c681bb767cc 100644
 --- a/drivers/pci/probe.c
 +++ b/drivers/pci/probe.c
-@@ -3250,6 +3250,25 @@ static void pci_bus_rescan_done(struct pci_bus *bus)
- 	}
- }
+@@ -41,6 +41,7 @@ EXPORT_SYMBOL(pci_root_buses);
+  * were assigned before the rescan.
+  */
+ static bool pci_try_failed_bars = true;
++bool pci_init_done;
  
-+static void pci_setup_bridges(struct pci_bus *bus)
-+{
-+	struct pci_dev *dev;
-+
-+	list_for_each_entry(dev, &bus->devices, bus_list) {
-+		struct pci_bus *child;
-+
-+		if (!pci_dev_is_added(dev))
-+			continue;
-+
-+		child = dev->subordinate;
-+		if (child)
-+			pci_setup_bridges(child);
-+	}
-+
-+	if (bus->self)
-+		pci_setup_bridge(bus);
-+}
-+
- /**
-  * pci_rescan_bus - Scan a PCI bus for devices
-  * @bus: PCI bus to scan
-@@ -3271,8 +3290,11 @@ unsigned int pci_rescan_bus(struct pci_bus *bus)
- 		pci_bus_rescan_prepare(root);
+ static LIST_HEAD(pci_domain_busn_res_list);
  
- 		max = pci_scan_child_bus(root);
-+
-+		pci_bus_release_root_bridge_resources(root);
- 		pci_assign_unassigned_root_bus_resources(root);
+@@ -3240,6 +3241,11 @@ bool pci_dev_bar_fixed(struct pci_dev *dev, struct resource *res)
+ 	if (region.start == 0xa0000)
+ 		return true;
  
-+		pci_setup_bridges(root);
- 		pci_bus_rescan_done(root);
- 	} else {
- 		max = pci_scan_child_bus(bus);
++	if (res->start &&
++	    !(res->flags & IORESOURCE_IO) &&
++	    (dev->class >> 8) == PCI_CLASS_DISPLAY_VGA)
++		return true;
++
+ 	if (!dev->driver && !res->child)
+ 		return false;
+ 
+@@ -3255,7 +3261,7 @@ static unsigned int pci_dev_count_res_mask(struct pci_dev *dev)
+ 		struct resource *r = &dev->resource[i];
+ 
+ 		if (!r->flags || !r->parent ||
+-		    (r->flags & IORESOURCE_UNSET))
++		    (pci_init_done && (r->flags & IORESOURCE_UNSET)))
+ 			continue;
+ 
+ 		res_mask |= (1 << i);
 diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index ffa81949a75f..00bdbc0ea817 100644
+index 3bde8fdb9aa0..d265db4c746d 100644
 --- a/drivers/pci/setup-bus.c
 +++ b/drivers/pci/setup-bus.c
-@@ -1663,6 +1663,15 @@ static void pci_bus_release_bridge_resources(struct pci_bus *bus,
- 		pci_bridge_release_resources(bus, type);
+@@ -1909,7 +1909,14 @@ void __init pci_assign_unassigned_resources(void)
+ 		/* Make sure the root bridge has a companion ACPI device */
+ 		if (ACPI_HANDLE(root_bus->bridge))
+ 			acpi_ioapic_add(ACPI_HANDLE(root_bus->bridge));
++
++		if (pci_can_move_bars && !pci_bus_check_bars_assigned(root_bus, true)) {
++			dev_err(&root_bus->dev, "Not all requested BARs are assigned, triggering a rescan with movable BARs");
++			pci_rescan_bus(root_bus);
++		}
+ 	}
++
++	pci_init_done = true;
  }
  
-+void pci_bus_release_root_bridge_resources(struct pci_bus *root_bus)
-+{
-+	pci_bus_release_bridge_resources(root_bus, IORESOURCE_IO, whole_subtree);
-+	pci_bus_release_bridge_resources(root_bus, IORESOURCE_MEM, whole_subtree);
-+	pci_bus_release_bridge_resources(root_bus,
-+					 IORESOURCE_MEM_64 | IORESOURCE_PREFETCH,
-+					 whole_subtree);
-+}
-+
- static void pci_bus_dump_res(struct pci_bus *bus)
- {
- 	struct resource *res;
+ static void adjust_bridge_window(struct pci_dev *bridge, struct resource *res,
 -- 
 2.24.1
 
