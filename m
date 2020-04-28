@@ -1,58 +1,178 @@
 Return-Path: <SRS0=9Hmn=6M=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
-X-Spam-Level: *
-X-Spam-Status: No, score=1.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,PHP_ORIG_SCRIPT,SPF_HELO_NONE,SPF_PASS autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Level: 
+X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E7E5C83002
-	for <linux-pci@archiver.kernel.org>; Tue, 28 Apr 2020 02:16:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2184C83004
+	for <linux-pci@archiver.kernel.org>; Tue, 28 Apr 2020 02:19:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 13D24206D9
-	for <linux-pci@archiver.kernel.org>; Tue, 28 Apr 2020 02:16:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B91842076A
+	for <linux-pci@archiver.kernel.org>; Tue, 28 Apr 2020 02:19:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726411AbgD1CQj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 27 Apr 2020 22:16:39 -0400
-Received: from comunidaddenegocios.com ([167.86.78.137]:57686 "EHLO
-        vmi244585.contaboserver.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726251AbgD1CQj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Apr 2020 22:16:39 -0400
-X-Greylist: delayed 3289 seconds by postgrey-1.27 at vger.kernel.org; Mon, 27 Apr 2020 22:16:38 EDT
-Received: from comunidaddenegoc by vmi244585.contaboserver.net with local (Exim 4.93)
-        (envelope-from <support@planc.comunidaddenegocios.com>)
-        id 1jTENa-0005ID-6J
-        for linux-pci@vger.kernel.org; Tue, 28 Apr 2020 02:45:42 +0200
-To:     linux-pci@vger.kernel.org
-Subject: Curiosity
-X-PHP-Script: planc.comunidaddenegocios.com/wp-content/plugins/ocbhfaobnrrke.php for 109.236.16.121
-X-PHP-Originating-Script: 1000:ocbhfaobnrrke.php
-Date:   Tue, 28 Apr 2020 00:45:42 +0000
-From:   support@planc.comunidaddenegocios.com
-Reply-To: lindhanse@aol.com
-Message-ID: <1eba7fea87e17fde0f48fd5d79b4e4ab@planc.comunidaddenegocios.com>
+        id S1726279AbgD1CTF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 27 Apr 2020 22:19:05 -0400
+Received: from szxga06-in.huawei.com ([45.249.212.32]:40060 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726261AbgD1CTE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 27 Apr 2020 22:19:04 -0400
+Received: from DGGEMS408-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id 76E57BEF60CBAFF6AC79;
+        Tue, 28 Apr 2020 10:19:02 +0800 (CST)
+Received: from [10.65.58.147] (10.65.58.147) by DGGEMS408-HUB.china.huawei.com
+ (10.3.19.208) with Microsoft SMTP Server id 14.3.487.0; Tue, 28 Apr 2020
+ 10:19:00 +0800
+Subject: Re: [PATCH v4] pci: Make return value of pcie_capability_read*()
+ consistent
+To:     Bjorn Helgaas <helgaas@kernel.org>,
+        Saheed Bolarinwa <refactormyself@gmail.com>
+References: <20200427181304.GA214573@google.com>
+CC:     <bjorn@helgaas.com>, <skhan@linuxfoundation.org>,
+        <linux-pci@vger.kernel.org>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        <linux-mips@vger.kernel.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        <linuxppc-dev@lists.ozlabs.org>, <linux-kernel@vger.kernel.org>
+From:   Yicong Yang <yangyicong@hisilicon.com>
+Message-ID: <4cc16e59-d346-5523-5072-eebe77d06a08@hisilicon.com>
+Date:   Tue, 28 Apr 2020 10:19:08 +0800
+User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.7.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - vmi244585.contaboserver.net
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [1000 993] / [47 12]
-X-AntiAbuse: Sender Address Domain - planc.comunidaddenegocios.com
-X-Get-Message-Sender-Via: vmi244585.contaboserver.net: authenticated_id: comunidaddenegoc/from_h
-X-Authenticated-Sender: vmi244585.contaboserver.net: support@planc.comunidaddenegocios.com
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
+In-Reply-To: <20200427181304.GA214573@google.com>
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.65.58.147]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hello,
+On 2020/4/28 2:13, Bjorn Helgaas wrote:
+>
+> I'm starting to think we're approaching this backwards.  I searched
+> for PCIBIOS_FUNC_NOT_SUPPORTED, PCIBIOS_BAD_VENDOR_ID, and the other
+> error values.  Almost every use is a *return* in a config accessor.
+> There are very, very few *tests* for these values.
 
-I am writing to certify if you receive my email  yesterday?
+If we have certain reasons to reserve PCI_BIOS* error to identify PCI errors
+in PCI drivers, maybe redefine the PCI_BIOS* to generic error codes can solve
+the issues, and no need to call pcibios_err_to_errno() to do the conversion.
+Few changes may be made to current codes. One possible patch may
+look like below. Otherwise, maybe convert all PCI_BIOS* errors to generic error
+codes is a better idea.
 
-Regards,
+Not sure it's the best way or not. Just FYI.
 
-Linda
+
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 83ce1cd..843987c 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -675,14 +675,18 @@ static inline bool pci_dev_msi_enabled(struct pci_dev *pci_dev) { return false;
+ 
+ /* Error values that may be returned by PCI functions */
+ #define PCIBIOS_SUCCESSFUL		0x00
+-#define PCIBIOS_FUNC_NOT_SUPPORTED	0x81
+-#define PCIBIOS_BAD_VENDOR_ID		0x83
+-#define PCIBIOS_DEVICE_NOT_FOUND	0x86
+-#define PCIBIOS_BAD_REGISTER_NUMBER	0x87
+-#define PCIBIOS_SET_FAILED		0x88
+-#define PCIBIOS_BUFFER_TOO_SMALL	0x89
+-
+-/* Translate above to generic errno for passing back through non-PCI code */
++#define PCIBIOS_FUNC_NOT_SUPPORTED	-ENOENT
++#define PCIBIOS_BAD_VENDOR_ID		-ENOTTY
++#define PCIBIOS_DEVICE_NOT_FOUND	-ENODEV
++#define PCIBIOS_BAD_REGISTER_NUMBER	-EFAULT
++#define PCIBIOS_SET_FAILED		-EIO
++#define PCIBIOS_BUFFER_TOO_SMALL	-ENOSPC
++
++/**
++ * Translate above to generic errno for passing back through non-PCI code
++ *
++ * Deprecated. Use the PCIBIOS_* directly without a translation.
++ */
+ static inline int pcibios_err_to_errno(int err)
+ {
+ 	if (err <= PCIBIOS_SUCCESSFUL)
+@@ -690,17 +694,12 @@ static inline int pcibios_err_to_errno(int err)
+ 
+ 	switch (err) {
+ 	case PCIBIOS_FUNC_NOT_SUPPORTED:
+-		return -ENOENT;
+ 	case PCIBIOS_BAD_VENDOR_ID:
+-		return -ENOTTY;
+ 	case PCIBIOS_DEVICE_NOT_FOUND:
+-		return -ENODEV;
+ 	case PCIBIOS_BAD_REGISTER_NUMBER:
+-		return -EFAULT;
+ 	case PCIBIOS_SET_FAILED:
+-		return -EIO;
+ 	case PCIBIOS_BUFFER_TOO_SMALL:
+-		return -ENOSPC;
++		return err;
+ 	}
+ 
+ 	return -ERANGE;
+
+
+>
+> For example, the only tests for PCIBIOS_FUNC_NOT_SUPPORTED are in
+> xen_pcibios_err_to_errno() and pcibios_err_to_errno(), i.e., we're
+> just converting that value to -ENOENT or the Xen-specific thing.
+>
+> So I think the best approach might be to remove the PCIBIOS_* error
+> values completely and replace them with the corresponding values from
+> pcibios_err_to_errno().  For example, a part of the patch would look
+> like this:
+>
+> diff --git a/arch/mips/pci/ops-emma2rh.c b/arch/mips/pci/ops-emma2rh.c
+> index 65f47344536c..d4d9c902c147 100644
+> --- a/arch/mips/pci/ops-emma2rh.c
+> +++ b/arch/mips/pci/ops-emma2rh.c
+> @@ -100,7 +100,7 @@ static int pci_config_read(struct pci_bus *bus, unsigned int devfn, int where,
+>  		break;
+>  	default:
+>  		emma2rh_out32(EMMA2RH_PCI_IWIN0_CTR, backup_win0);
+> -		return PCIBIOS_FUNC_NOT_SUPPORTED;
+> +		return -ENOENT;
+>  	}
+>  
+>  	emma2rh_out32(EMMA2RH_PCI_IWIN0_CTR, backup_win0);
+> @@ -149,7 +149,7 @@ static int pci_config_write(struct pci_bus *bus, unsigned int devfn, int where,
+>  		break;
+>  	default:
+>  		emma2rh_out32(EMMA2RH_PCI_IWIN0_CTR, backup_win0);
+> -		return PCIBIOS_FUNC_NOT_SUPPORTED;
+> +		return -ENOENT;
+>  	}
+>  	*(volatile u32 *)(base + (PCI_FUNC(devfn) << 8) +
+>  			  (where & 0xfffffffc)) = data;
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 83ce1cdf5676..f95637a8d391 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -675,7 +675,6 @@ static inline bool pci_dev_msi_enabled(struct pci_dev *pci_dev) { return false;
+>  
+>  /* Error values that may be returned by PCI functions */
+>  #define PCIBIOS_SUCCESSFUL		0x00
+> -#define PCIBIOS_FUNC_NOT_SUPPORTED	0x81
+>  #define PCIBIOS_BAD_VENDOR_ID		0x83
+>  #define PCIBIOS_DEVICE_NOT_FOUND	0x86
+>  #define PCIBIOS_BAD_REGISTER_NUMBER	0x87
+> @@ -689,8 +688,6 @@ static inline int pcibios_err_to_errno(int err)
+>  		return err; /* Assume already errno */
+>  
+>  	switch (err) {
+> -	case PCIBIOS_FUNC_NOT_SUPPORTED:
+> -		return -ENOENT;
+>  	case PCIBIOS_BAD_VENDOR_ID:
+>  		return -ENOTTY;
+>  	case PCIBIOS_DEVICE_NOT_FOUND:
+> .
+>
 
