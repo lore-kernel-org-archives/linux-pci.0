@@ -2,62 +2,103 @@ Return-Path: <SRS0=9Hmn=6M=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D049C83006
-	for <linux-pci@archiver.kernel.org>; Tue, 28 Apr 2020 05:13:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27168C83007
+	for <linux-pci@archiver.kernel.org>; Tue, 28 Apr 2020 07:35:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E762F206A5
-	for <linux-pci@archiver.kernel.org>; Tue, 28 Apr 2020 05:13:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EE5AF206B8
+	for <linux-pci@archiver.kernel.org>; Tue, 28 Apr 2020 07:35:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1588059313;
+	bh=IAwY+0Nh3EkxxXHtSahpYzrED4Rl8r+8ekoqfkVKb/0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=kyurQVSPW7TWn4Yc5T6whgibSKkvD093JjdBK38N1S5LXGLaw+blCjUQehjytE7Ue
+	 xbSNc04MAtj6FX6njcwrHp62pJk/RJIHm6rM1F8l3lU/WrJrfcba1uLdS61jSas3Ot
+	 tdwv9+6azatE1osKsxjoCMfW4uMOHubbIoggg2zE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726286AbgD1FNQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 28 Apr 2020 01:13:16 -0400
-Received: from verein.lst.de ([213.95.11.211]:53676 "EHLO verein.lst.de"
+        id S1726760AbgD1HfI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 28 Apr 2020 03:35:08 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34258 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725792AbgD1FNQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 28 Apr 2020 01:13:16 -0400
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id B715168C7B; Tue, 28 Apr 2020 07:13:12 +0200 (CEST)
-Date:   Tue, 28 Apr 2020 07:13:12 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     "David E. Box" <david.e.box@linux.intel.com>
-Cc:     rjw@rjwysocki.net, lenb@kernel.org, bhelgaas@google.com,
-        kbusch@kernel.org, axboe@fb.com, hch@lst.de, sagi@grimberg.me,
-        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/2] Add support for StorageD3Enable _DSD property
-Message-ID: <20200428051312.GB17146@lst.de>
-References: <20200428003214.3764-1-david.e.box@linux.intel.com>
+        id S1726800AbgD1HfF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 28 Apr 2020 03:35:05 -0400
+Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id C72F0206B9;
+        Tue, 28 Apr 2020 07:35:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1588059303;
+        bh=IAwY+0Nh3EkxxXHtSahpYzrED4Rl8r+8ekoqfkVKb/0=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=oZDYROcDt/z2hNKXF24FZRVWFw/iV17GPFpXarq4tvPeCBQyL+ns9y5VzPlfMGqYd
+         s2hp8hQIBz9WYApD+atCrE3vYXR1rMcyjn05BNKspBQn72xPop6y115/ZPZkEKMGQn
+         50YnTSqionB3NEYZKPwRCPjHicWPXB+inBFdAC+8=
+Date:   Tue, 28 Apr 2020 09:34:58 +0200
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Dave Jiang <dave.jiang@intel.com>
+Cc:     vkoul@kernel.org, megha.dey@linux.intel.com, maz@kernel.org,
+        bhelgaas@google.com, rafael@kernel.org, tglx@linutronix.de,
+        hpa@zytor.com, alex.williamson@redhat.com, jacob.jun.pan@intel.com,
+        ashok.raj@intel.com, jgg@mellanox.com, yi.l.liu@intel.com,
+        baolu.lu@intel.com, kevin.tian@intel.com, sanjay.k.kumar@intel.com,
+        tony.luck@intel.com, jing.lin@intel.com, dan.j.williams@intel.com,
+        kwankhede@nvidia.com, eric.auger@redhat.com, parav@mellanox.com,
+        dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org,
+        x86@kernel.org, linux-pci@vger.kernel.org, kvm@vger.kernel.org
+Subject: Re: [PATCH RFC 01/15] drivers/base: Introduce platform_msi_ops
+Message-ID: <20200428073458.GB994208@kroah.com>
+References: <158751095889.36773.6009825070990637468.stgit@djiang5-desk3.ch.intel.com>
+ <158751203294.36773.11436842117908325764.stgit@djiang5-desk3.ch.intel.com>
+ <20200426070118.GA2083720@kroah.com>
+ <4223511b-8dc0-33d1-6af1-831d8bf40b3d@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200428003214.3764-1-david.e.box@linux.intel.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <4223511b-8dc0-33d1-6af1-831d8bf40b3d@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Apr 27, 2020 at 05:32:12PM -0700, David E. Box wrote:
-> NVMe storage power management during suspend-to-idle, particularly on
-> laptops, has been inconsistent with some devices working with D3 while
-> others must rely on NVMe APST in order for power savings to be realized.
-> Currently the default is to use APST unless quirked to do otherwise.
-> However newer platforms, like Intel Comet Lake systems, may require NVMe
-> drives to use D3 in order for the PCIe ports to be properly power managed.
-> To make it easier for drivers to choose, these platforms may supply a
-> special "StorageD3Enable" _DSD property under the root port that the device
-> is attached to. If supplied, the driver must use D3 in order for the
-> platform to realize the deepest power savings in suspend-to-idle.
->     
-> The first patch adds the new _DSD GUID and fowards the property through the
-> pci/acpi layer to the pci device.
+On Mon, Apr 27, 2020 at 02:38:12PM -0700, Dave Jiang wrote:
 > 
-> The second patch adds support for the property to the nvme driver.
+> 
+> On 4/26/2020 12:01 AM, Greg KH wrote:
+> > On Tue, Apr 21, 2020 at 04:33:53PM -0700, Dave Jiang wrote:
+> > > From: Megha Dey <megha.dey@linux.intel.com>
+> > > 
+> > > This is a preparatory patch to introduce Interrupt Message Store (IMS).
+> > > 
+> > > Until now, platform-msi.c provided a generic way to handle non-PCI MSI
+> > > interrupts. Platform-msi uses its parent chip's mask/unmask routines
+> > > and only provides a way to write the message in the generating device.
+> > > 
+> > > Newly creeping non-PCI complaint MSI-like interrupts (Intel's IMS for
+> > > instance) might need to provide a device specific mask and unmask callback
+> > > as well, apart from the write function.
+> > > 
+> > > Hence, introduce a new structure platform_msi_ops, which would provide
+> > > device specific write function as well as other device specific callbacks
+> > > (mask/unmask).
+> > > 
+> > > Signed-off-by: Megha Dey <megha.dey@linux.intel.com>
+> > 
+> > As this is not following the Intel-specific rules for sending me new
+> > code, I am just deleting it all from my inbox.
+> 
+> That is my fault. As the aggregator of the patches, I should've signed off
+> Megha's patches.
 
-I'm not sure who came up with the idea to put this into ACPI, but it
-belongs into NVMe.  Please talk to the NVMe technical working group
-instead of trying to overrules them in an unrelated group that doesn't
-apply to all of PCIe.
+That is NOT the Intel-specific rules I am talking about.  Please go work
+with the "Linux group" at Intel to find out what I am referring to, they
+know what I mean.
+
+The not-signing-off is just a normal kernel community rule, everyone has
+to follow that.
+
+greg k-h
