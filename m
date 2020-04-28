@@ -2,48 +2,52 @@ Return-Path: <SRS0=9Hmn=6M=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90777C83001
-	for <linux-pci@archiver.kernel.org>; Tue, 28 Apr 2020 00:32:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD976C83003
+	for <linux-pci@archiver.kernel.org>; Tue, 28 Apr 2020 00:33:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6CB5E2070B
-	for <linux-pci@archiver.kernel.org>; Tue, 28 Apr 2020 00:32:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 862182070B
+	for <linux-pci@archiver.kernel.org>; Tue, 28 Apr 2020 00:33:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726285AbgD1Acv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 27 Apr 2020 20:32:51 -0400
+        id S1726421AbgD1Acz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 27 Apr 2020 20:32:55 -0400
 Received: from mga03.intel.com ([134.134.136.65]:53455 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726233AbgD1Acv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1726257AbgD1Acv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Mon, 27 Apr 2020 20:32:51 -0400
-IronPort-SDR: 5KNYLR3I1xhGKJi7l7vIQiOSnasLct7HltAiYDg6fmwVh+4+feyGshyO433Ja8xOxbTukETJZC
- tJB0J0JCO9qQ==
+IronPort-SDR: WE4VW56HMcP6Yb/KYWFvfKAagHJCrtiVcgOdEoH0EBFFICUlttHJ4Vr0Z7lw0wVBIdoUa/Egw+
+ vZTb4rC73Ajg==
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Apr 2020 17:32:49 -0700
-IronPort-SDR: lBQl9HB+Bjlc4ebtztBGRLJrNoDj+JSiAJk5fsXKUOGRNmgqvn0zEzFk1Tu7dEYA7LmXv6D9mr
- GHn4do8gGo+Q==
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Apr 2020 17:32:50 -0700
+IronPort-SDR: S6siCG9eoW2gDi2go+lBLTfZ0I6oOsSrhS7as1w04pGxOS2bxIxLT4+UTXar1EAtw952ZV1v7r
+ GTUljKNc4dnA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.73,325,1583222400"; 
-   d="scan'208";a="404503975"
+   d="scan'208";a="367331794"
 Received: from linux.intel.com ([10.54.29.200])
-  by orsmga004.jf.intel.com with ESMTP; 27 Apr 2020 17:32:49 -0700
+  by fmsmga001.fm.intel.com with ESMTP; 27 Apr 2020 17:32:49 -0700
 Received: from debox1-hc.jf.intel.com (debox1-hc.jf.intel.com [10.54.75.159])
-        by linux.intel.com (Postfix) with ESMTP id B16885807CA;
+        by linux.intel.com (Postfix) with ESMTP id C52EB58081E;
         Mon, 27 Apr 2020 17:32:49 -0700 (PDT)
 From:   "David E. Box" <david.e.box@linux.intel.com>
 To:     rjw@rjwysocki.net, lenb@kernel.org, bhelgaas@google.com,
         kbusch@kernel.org, axboe@fb.com, hch@lst.de, sagi@grimberg.me
 Cc:     "David E. Box" <david.e.box@linux.intel.com>,
         linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 0/2] Add support for StorageD3Enable _DSD property
-Date:   Mon, 27 Apr 2020 17:32:12 -0700
-Message-Id: <20200428003214.3764-1-david.e.box@linux.intel.com>
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH 2/2] drivers/nvme: Add support for ACPI StorageD3Enable property
+Date:   Mon, 27 Apr 2020 17:32:14 -0700
+Message-Id: <20200428003214.3764-3-david.e.box@linux.intel.com>
 X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200428003214.3764-1-david.e.box@linux.intel.com>
+References: <20200428003214.3764-1-david.e.box@linux.intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
@@ -61,24 +65,35 @@ To make it easier for drivers to choose, these platforms may supply a
 special "StorageD3Enable" _DSD property under the root port that the device
 is attached to. If supplied, the driver must use D3 in order for the
 platform to realize the deepest power savings in suspend-to-idle.
-    
-The first patch adds the new _DSD GUID and fowards the property through the
-pci/acpi layer to the pci device.
 
-The second patch adds support for the property to the nvme driver.
+Add check of StorageD3Enable property during probe to use D3 as specified
+by platform firmware.
 
-David E. Box (2):
-  pci: Add ACPI StorageD3Enable _DSD support
-  drivers/nvme: Add support for ACPI StorageD3Enable property
+Acked-by: Dan Williams <dan.j.williams@intel.com>
+Link: https://docs.microsoft.com/en-us/windows-hardware/design/component-guidelines/power-management-for-storage-hardware-devices-intro
+Signed-off-by: David E. Box <david.e.box@linux.intel.com>
+---
+ drivers/nvme/host/pci.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
- drivers/acpi/property.c |  3 +++
- drivers/nvme/host/pci.c |  7 ++++++
- drivers/pci/pci-acpi.c  | 47 +++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.c       |  6 ++++++
- drivers/pci/pci.h       |  4 ++++
- include/linux/pci.h     |  1 +
- 6 files changed, 68 insertions(+)
-
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index 4e79e412b276..4d67735975f6 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -2777,6 +2777,13 @@ static int nvme_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 
+ 	quirks |= check_vendor_combination_bug(pdev);
+ 
++	/*
++	 * Platform requires storage device to use D3 for kernel managed
++	 * suspend.
++	 */
++	if (pdev->storage_d3)
++		quirks |= NVME_QUIRK_SIMPLE_SUSPEND;
++
+ 	/*
+ 	 * Double check that our mempool alloc size will cover the biggest
+ 	 * command we support.
 -- 
 2.20.1
 
