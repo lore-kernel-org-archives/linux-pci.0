@@ -2,37 +2,36 @@ Return-Path: <SRS0=q/mj=6O=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B6E4C4724C
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 21:10:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0AF8C47247
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 21:12:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 311D220873
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 21:10:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B797920836
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 21:12:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726338AbgD3VKR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 30 Apr 2020 17:10:17 -0400
-Received: from mga07.intel.com ([134.134.136.100]:39120 "EHLO mga07.intel.com"
+        id S1726483AbgD3VMP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 30 Apr 2020 17:12:15 -0400
+Received: from mga17.intel.com ([192.55.52.151]:55366 "EHLO mga17.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725844AbgD3VKR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 30 Apr 2020 17:10:17 -0400
-IronPort-SDR: 0fG/4nYpDCA6z3wH0x5urgXlgl8pOS/NXzpEuq7AxildTO3+RYyTCgtZ6nAV/CPt3jXpXqHWG1
- PbVAXdDCEiyQ==
+        id S1726394AbgD3VMO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 30 Apr 2020 17:12:14 -0400
+IronPort-SDR: dfV4DXO6d/2nWIN4qfBqkpFgm3mt489hMfbAGL1WcE8PTrYKZOkSHYt1KRsHqBy4rVgD/hP635
+ EaHemQfxkFVg==
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Apr 2020 14:10:14 -0700
-IronPort-SDR: rMyFru6ygd/4Pb86NBUPiwU+TSBA2noZt2VYVFyTo3OZHtuwptkoi8s1u1Z3ldXwCd8RNpiygs
- Z5SpE9BM47eQ==
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Apr 2020 14:12:13 -0700
+IronPort-SDR: LVHsRMgJ7GdSWX064ocXY72QKgePGf1G+/dA+XVa/E+wyPTuvCryaG2DXe8fDKuW9WtKlwUhjb
+ MeYme43Pk+/A==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.73,337,1583222400"; 
-   d="scan'208";a="247319487"
+   d="scan'208";a="460080601"
 Received: from jacob-builder.jf.intel.com (HELO jacob-builder) ([10.7.199.155])
-  by orsmga007.jf.intel.com with ESMTP; 30 Apr 2020 14:10:14 -0700
-Date:   Thu, 30 Apr 2020 14:16:17 -0700
+  by fmsmga006.fm.intel.com with ESMTP; 30 Apr 2020 14:12:13 -0700
+Date:   Thu, 30 Apr 2020 14:18:16 -0700
 From:   Jacob Pan <jacob.jun.pan@linux.intel.com>
 To:     Jean-Philippe Brucker <jean-philippe@linaro.org>
 Cc:     iommu@lists.linux-foundation.org, devicetree@vger.kernel.org,
@@ -43,13 +42,11 @@ Cc:     iommu@lists.linux-foundation.org, devicetree@vger.kernel.org,
         christian.koenig@amd.com, felix.kuehling@amd.com,
         zhangfei.gao@linaro.org, jgg@ziepe.ca, xuzaibo@huawei.com,
         fenghua.yu@intel.com, hch@infradead.org,
-        jacob.jun.pan@linux.intel.com
-Subject: Re: [PATCH v6 17/25] iommu/arm-smmu-v3: Implement
- iommu_sva_bind/unbind()
-Message-ID: <20200430141617.6ad4be4c@jacob-builder>
-In-Reply-To: <20200430143424.2787566-18-jean-philippe@linaro.org>
+        jacob.jun.pan@linux.intel.com, "Liu, Yi L" <yi.l.liu@intel.com>
+Subject: Re: [PATCH v6 00/25] iommu: Shared Virtual Addressing for SMMUv3
+Message-ID: <20200430141816.595b758f@jacob-builder>
+In-Reply-To: <20200430143424.2787566-1-jean-philippe@linaro.org>
 References: <20200430143424.2787566-1-jean-philippe@linaro.org>
-        <20200430143424.2787566-18-jean-philippe@linaro.org>
 Organization: OTC
 X-Mailer: Claws Mail 3.13.2 (GTK+ 2.24.30; x86_64-pc-linux-gnu)
 MIME-Version: 1.0
@@ -60,445 +57,108 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Jean,
-
-A couple question on how SMMU handles CD.v and translation disable.
-
-On Thu, 30 Apr 2020 16:34:16 +0200
+On Thu, 30 Apr 2020 16:33:59 +0200
 Jean-Philippe Brucker <jean-philippe@linaro.org> wrote:
 
-> The sva_bind() function allows devices to access process address
-> spaces using a PASID (aka SSID).
+> Shared Virtual Addressing (SVA) allows to share process page tables
+> with devices using the IOMMU, PASIDs and I/O page faults. Add SVA
+> support to the Arm SMMUv3 driver.
 > 
-> (1) bind() allocates or gets an existing MMU notifier tied to the
->     (domain, mm) pair. Each mm gets one PASID.
+> Since v5 [1]:
 > 
-> (2) Any change to the address space calls invalidate_range() which
-> sends ATC invalidations (in a subsequent patch).
+> * Added patches 1-3. Patch 1 adds a PASID field to mm_struct as
+>   discussed in [1] and [2]. This is also needed for Intel ENQCMD.
+> Patch 2 adds refcounts to IOASID and patch 3 adds a couple of helpers
+> to allocate the PASID.
 > 
-> (3) When the process address space dies, the release() notifier
-> disables the CD to allow reclaiming the page tables. Since release()
-> has to be light we do not instruct device drivers to stop DMA here,
-> we just ignore incoming page faults.
+> * Dropped most of iommu-sva.c. After getting rid of io_mm following
+>   review of v5, there wasn't enough generic code left to justify the
+>   indirect branch overhead of io_mm_ops in the MMU notifiers. I ended
+> up with more glue than useful code, and couldn't find an easy way to
+> deal with domains in the SMMU driver (we keep PASID tables per domain,
+>   while x86 keeps them per device). The direct approach in patch 17 is
+>   nicer and a little easier to read. The SMMU driver only gained 160
+>   lines, while iommu-sva lost 470 lines.
 > 
->     To avoid any event 0x0a print (C_BAD_CD) we disable translation
->     without clearing CD.V. PCIe Translation Requests and Page Requests
->     are silently denied. Don't clear the R bit because the S bit can't
->     be cleared when STALL_MODEL==0b10 (forced), and clearing R without
->     clearing S is useless. Faulting transactions will stall and will
-> be aborted by the IOPF handler.
+>   As a result I dropped the MMU notifier patch.
 > 
-> (4) After stopping DMA, the device driver releases the bond by calling
->     unbind(). We release the MMU notifier, free the PASID and the
-> bond.
+>   Jacob, one upside of this rework is that we now free ioasids in
+>   blocking context, which might help with your addition of notifiers
+> to ioasid.c
 > 
-> Three structures keep track of bonds:
-> * arm_smmu_bond: one per (device, mm) pair, the handle returned to the
->   device driver for a bind() request.
-> * arm_smmu_mmu_notifier: one per (domain, mm) pair, deals with ATS/TLB
->   invalidations and clearing the context descriptor on mm exit.
-> * arm_smmu_ctx_desc: one per mm, holds the pinned ASID and pgd.
-> 
-> Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
-> ---
-> v5->v6:
-> * Implement bind() directly instead of going through io_mm_ops
-> * Don't clear S and R bits in step (3), it doesn't work with
->   STALL_FORCE.
-> ---
->  drivers/iommu/Kconfig       |   1 +
->  drivers/iommu/arm-smmu-v3.c | 256
-> +++++++++++++++++++++++++++++++++++- 2 files changed, 253
-> insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/iommu/Kconfig b/drivers/iommu/Kconfig
-> index 1e64ee6592e16..f863c4562feeb 100644
-> --- a/drivers/iommu/Kconfig
-> +++ b/drivers/iommu/Kconfig
-> @@ -432,6 +432,7 @@ config ARM_SMMU_V3
->  	tristate "ARM Ltd. System MMU Version 3 (SMMUv3) Support"
->  	depends on ARM64
->  	select IOMMU_API
-> +	select IOMMU_SVA
->  	select IOMMU_IO_PGTABLE_LPAE
->  	select GENERIC_MSI_IRQ_DOMAIN
->  	help
-> diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-> index c7942d0540599..00e5b69bb81a5 100644
-> --- a/drivers/iommu/arm-smmu-v3.c
-> +++ b/drivers/iommu/arm-smmu-v3.c
-> @@ -24,6 +24,7 @@
->  #include <linux/iopoll.h>
->  #include <linux/module.h>
->  #include <linux/mmu_context.h>
-> +#include <linux/mmu_notifier.h>
->  #include <linux/msi.h>
->  #include <linux/of.h>
->  #include <linux/of_address.h>
-> @@ -36,6 +37,7 @@
->  #include <linux/amba/bus.h>
->  
->  #include "io-pgtable-arm.h"
-> +#include "iommu-sva.h"
->  
->  /* MMIO registers */
->  #define ARM_SMMU_IDR0			0x0
-> @@ -731,8 +733,31 @@ struct arm_smmu_domain {
->  
->  	struct list_head		devices;
->  	spinlock_t			devices_lock;
-> +
-> +	struct mmu_notifier_ops		mn_ops;
->  };
->  
-> +struct arm_smmu_mmu_notifier {
-> +	struct mmu_notifier		mn;
-> +	struct arm_smmu_ctx_desc	*cd;
-> +	bool				cleared;
-> +	refcount_t			refs;
-> +	struct arm_smmu_domain		*domain;
-> +};
-> +
-> +#define mn_to_smmu(mn) container_of(mn, struct
-> arm_smmu_mmu_notifier, mn) +
-> +struct arm_smmu_bond {
-> +	struct iommu_sva		sva;
-> +	struct mm_struct		*mm;
-> +	struct arm_smmu_mmu_notifier	*smmu_mn;
-> +	struct list_head		list;
-> +	refcount_t			refs;
-> +};
-> +
-> +#define sva_to_bond(handle) \
-> +	container_of(handle, struct arm_smmu_bond, sva)
-> +
->  struct arm_smmu_option_prop {
->  	u32 opt;
->  	const char *prop;
-> @@ -742,6 +767,13 @@ static DEFINE_XARRAY_ALLOC1(asid_xa);
->  static DEFINE_SPINLOCK(contexts_lock);
->  static DEFINE_MUTEX(arm_smmu_sva_lock);
->  
-> +/*
-> + * When a process dies, DMA is still running but we need to clear
-> the pgd. If we
-> + * simply cleared the valid bit from the context descriptor, we'd
-> get event 0x0a
-> + * which are not recoverable.
-> + */
-> +static struct arm_smmu_ctx_desc invalid_cd = { 0 };
-> +
->  static struct arm_smmu_option_prop arm_smmu_options[] = {
->  	{ ARM_SMMU_OPT_SKIP_PREFETCH,
-> "hisilicon,broken-prefetch-cmd" }, { ARM_SMMU_OPT_PAGE0_REGS_ONLY,
-> "cavium,cn9900-broken-page1-regspace"}, @@ -1652,7 +1684,9 @@ static
-> int __arm_smmu_write_ctx_desc(struct arm_smmu_domain *smmu_domain,
->  	 * (2) Install a secondary CD, for SID+SSID traffic.
->  	 * (3) Update ASID of a CD. Atomically write the first 64
-> bits of the
->  	 *     CD, then invalidate the old entry and mappings.
-> -	 * (4) Remove a secondary CD.
-> +	 * (4) Quiesce the context without clearing the valid bit.
-> Disable
-> +	 *     translation, and ignore any translation fault.
-> +	 * (5) Remove a secondary CD.
->  	 */
->  	u64 val;
->  	bool cd_live;
-> @@ -1669,8 +1703,10 @@ static int __arm_smmu_write_ctx_desc(struct
-> arm_smmu_domain *smmu_domain, val = le64_to_cpu(cdptr[0]);
->  	cd_live = !!(val & CTXDESC_CD_0_V);
->  
-> -	if (!cd) { /* (4) */
-> +	if (!cd) { /* (5) */
->  		val = 0;
-> +	} else if (cd == &invalid_cd) { /* (4) */
-> +		val |= CTXDESC_CD_0_TCR_EPD0;
->  	} else if (cd_live) { /* (3) */
->  		val &= ~CTXDESC_CD_0_ASID;
->  		val |= FIELD_PREP(CTXDESC_CD_0_ASID, cd->asid);
-> @@ -1883,7 +1919,6 @@ static struct arm_smmu_ctx_desc
-> *arm_smmu_share_asid(u16 asid) return NULL;
->  }
->  
-> -__maybe_unused
->  static struct arm_smmu_ctx_desc *arm_smmu_alloc_shared_cd(struct
-> mm_struct *mm) {
->  	u16 asid;
-> @@ -1976,7 +2011,6 @@ static struct arm_smmu_ctx_desc
-> *arm_smmu_alloc_shared_cd(struct mm_struct *mm) return ERR_PTR(ret);
->  }
->  
-> -__maybe_unused
->  static void arm_smmu_free_shared_cd(struct arm_smmu_ctx_desc *cd)
->  {
->  	if (arm_smmu_free_asid(cd)) {
-> @@ -2611,6 +2645,8 @@ static bool arm_smmu_capable(enum iommu_cap cap)
->  	}
->  }
->  
-> +static struct mmu_notifier_ops arm_smmu_mmu_notifier_ops;
-> +
->  static struct iommu_domain *arm_smmu_domain_alloc(unsigned type)
->  {
->  	struct arm_smmu_domain *smmu_domain;
-> @@ -2638,6 +2674,7 @@ static struct iommu_domain
-> *arm_smmu_domain_alloc(unsigned type)
-> mutex_init(&smmu_domain->init_mutex);
-> INIT_LIST_HEAD(&smmu_domain->devices);
-> spin_lock_init(&smmu_domain->devices_lock);
-> +	smmu_domain->mn_ops = arm_smmu_mmu_notifier_ops;
->  
->  	return &smmu_domain->domain;
->  }
-> @@ -3118,6 +3155,208 @@ arm_smmu_iova_to_phys(struct iommu_domain
-> *domain, dma_addr_t iova) return ops->iova_to_phys(ops, iova);
->  }
->  
-> +static struct mmu_notifier *arm_smmu_mmu_notifier_alloc(struct
-> mm_struct *mm) +{
-> +	struct arm_smmu_mmu_notifier *smmu_mn;
-> +
-> +	smmu_mn = kzalloc(sizeof(*smmu_mn), GFP_KERNEL);
-> +	if (!smmu_mn)
-> +		return ERR_PTR(-ENOMEM);
-> +
-> +	smmu_mn->cd = arm_smmu_alloc_shared_cd(mm);
-> +	if (IS_ERR(smmu_mn->cd)) {
-> +		void *ptr = ERR_CAST(smmu_mn->cd);
-> +
-> +		kfree(smmu_mn);
-> +		return ptr;
-> +	}
-> +	refcount_set(&smmu_mn->refs, 1);
-> +
-> +	return &smmu_mn->mn;
-> +}
-> +
-> +static void arm_smmu_mmu_notifier_free(struct mmu_notifier *mn)
-> +{
-> +	struct arm_smmu_mmu_notifier *smmu_mn = mn_to_smmu(mn);
-> +
-> +	arm_smmu_free_shared_cd(smmu_mn->cd);
-> +	kfree(smmu_mn);
-> +}
-> +
-> +static void arm_smmu_mm_invalidate_range(struct mmu_notifier *mn,
-> +					 struct mm_struct *mm,
-> +					 unsigned long start,
-> unsigned long end) +{
-> +	/* TODO: invalidate ATS */
-> +}
-> +
-> +static void arm_smmu_mm_release(struct mmu_notifier *mn, struct
-> mm_struct *mm) +{
-> +	struct arm_smmu_mmu_notifier *smmu_mn = mn_to_smmu(mn);
-> +	struct arm_smmu_domain *smmu_domain;
-> +
-> +	mutex_lock(&arm_smmu_sva_lock);
-> +	if (smmu_mn->cleared) {
-> +		mutex_unlock(&arm_smmu_sva_lock);
-> +		return;
-> +	}
-> +
-> +	smmu_domain = smmu_mn->domain;
-> +
-> +	/*
-> +	 * DMA may still be running. Keep the cd valid but disable
-> +	 * translation, so that new events will still result in
-> stall.
-> +	 */
-Does "disable translation" also disable translated requests? I guess
-release is called after tlb invalidate range, so assuming no more
-devTLB left to generate translated request?
+Thanks for the note. It does make notifier much easier, plus the
+refcount can alleviate the constraint on ordering.
 
-> +	arm_smmu_write_ctx_desc(smmu_domain, mm->pasid, &invalid_cd);
-> +
-> +	arm_smmu_tlb_inv_asid(smmu_domain->smmu, smmu_mn->cd->asid);
-> +	/* TODO: invalidate ATS */
-> +
-If mm release is called after tlb invalidate range, is it still
-necessary to invalidate again?
+I guess we don't share mmu notifier code for now :)
 
-> +	smmu_mn->cleared = true;
-> +	mutex_unlock(&arm_smmu_sva_lock);
-> +}
-> +
-> +static struct mmu_notifier_ops arm_smmu_mmu_notifier_ops = {
-> +	.alloc_notifier		= arm_smmu_mmu_notifier_alloc,
-> +	.free_notifier		= arm_smmu_mmu_notifier_free,
-> +	.invalidate_range	= arm_smmu_mm_invalidate_range,
-> +	.release		= arm_smmu_mm_release,
-> +};
-> +
-> +static struct iommu_sva *
-> +__arm_smmu_sva_bind(struct device *dev, struct mm_struct *mm)
-> +{
-> +	int ret;
-> +	ioasid_t pasid;
-> +	struct mmu_notifier *mn;
-> +	struct arm_smmu_bond *bond;
-> +	struct arm_smmu_mmu_notifier *smmu_mn;
-> +	struct arm_smmu_master *master = dev_iommu_priv_get(dev);
-> +	struct iommu_domain *domain = iommu_get_domain_for_dev(dev);
-> +	struct arm_smmu_domain *smmu_domain = to_smmu_domain(domain);
-> +
-> +	if (!master || !master->sva_enabled)
-> +		return ERR_PTR(-ENODEV);
-> +
-> +	/* If bind() was already called for this (dev, mm) pair,
-> reuse it. */
-> +	list_for_each_entry(bond, &master->bonds, list) {
-> +		if (bond->mm == mm) {
-> +			refcount_inc(&bond->refs);
-> +			return &bond->sva;
-> +		}
-> +	}
-> +
-> +	mn = mmu_notifier_get(&smmu_domain->mn_ops, mm);
-> +	if (IS_ERR(mn))
-> +		return ERR_CAST(mn);
-> +
-> +	smmu_mn = mn_to_smmu(mn);
-> +	if (smmu_mn->domain)
-> +		refcount_inc(&smmu_mn->refs);
-> +
-> +	bond = kzalloc(sizeof(*bond), GFP_KERNEL);
-> +	if (!bond) {
-> +		ret = -ENOMEM;
-> +		goto err_put_mn;
-> +	}
-> +
-> +	/* Allocate a PASID for this mm if necessary */
-> +	pasid = iommu_sva_alloc_pasid(mm, 1, (1U <<
-> master->ssid_bits) - 1);
-> +	if (pasid == INVALID_IOASID) {
-> +		ret = -ENOSPC;
-> +		goto err_free_bond;
-> +	}
-> +	bond->mm = mm;
-> +	bond->sva.dev = dev;
-> +	bond->smmu_mn = smmu_mn;
-> +	refcount_set(&bond->refs, 1);
-> +
-> +	ret = arm_smmu_write_ctx_desc(smmu_domain, mm->pasid,
-> smmu_mn->cd);
-> +	if (ret)
-> +		goto err_free_pasid;
-> +
-> +	bond->sva.dev = dev;
-> +	list_add(&bond->list, &master->bonds);
-> +	smmu_mn->domain = smmu_domain;
-> +	return &bond->sva;
-> +
-> +err_free_pasid:
-> +	iommu_sva_free_pasid(mm);
-> +err_free_bond:
-> +	kfree(bond);
-> +err_put_mn:
-> +	refcount_dec(&smmu_mn->refs);
-> +	mmu_notifier_put(mn);
-> +	return ERR_PTR(ret);
-> +}
-> +
-> +static void __arm_smmu_sva_unbind(struct iommu_sva *handle)
-> +{
-> +	struct arm_smmu_mmu_notifier *smmu_mn;
-> +	struct arm_smmu_bond *bond = sva_to_bond(handle);
-> +	struct iommu_domain *domain =
-> iommu_get_domain_for_dev(handle->dev);
-> +	struct arm_smmu_domain *smmu_domain = to_smmu_domain(domain);
-> +
-> +	if (!refcount_dec_and_test(&bond->refs))
-> +		return;
-> +
-> +	list_del(&bond->list);
-> +
-> +	smmu_mn = bond->smmu_mn;
-> +	/*
-> +	 * This is redundant as the MMU notifier already counts
-> refs, but frees
-> +	 * the bond in a RCU callback which cannot sleep. We have
-> much cleaning
-> +	 * to do and we hold all the right locks, so duplicate the
-> refcounting.
-> +	 */
-> +	if (refcount_dec_and_test(&smmu_mn->refs)) {
-> +		arm_smmu_write_ctx_desc(smmu_domain,
-> bond->mm->pasid, NULL); +
-> +		/*
-> +		 * If we went through clear(), we've already
-> invalidated, and no
-> +		 * new TLB entry can have been formed.
-> +		 */
-> +		if (!smmu_mn->cleared) {
-> +			arm_smmu_tlb_inv_asid(smmu_domain->smmu,
-> +					      smmu_mn->cd->asid);
-> +			/* TODO: invalidate ATS */
-> +		}
-> +	}
-> +
-> +	iommu_sva_free_pasid(bond->mm);
-> +	kfree(bond);
-> +	mmu_notifier_put(&smmu_mn->mn);
-> +}
-> +
-> +static struct iommu_sva *
-> +arm_smmu_sva_bind(struct device *dev, struct mm_struct *mm, void
-> *drvdata) +{
-> +	struct iommu_sva *handle;
-> +	struct iommu_domain *domain = iommu_get_domain_for_dev(dev);
-> +	struct arm_smmu_domain *smmu_domain = to_smmu_domain(domain);
-> +
-> +	if (smmu_domain->stage != ARM_SMMU_DOMAIN_S1)
-> +		return ERR_PTR(-EINVAL);
-> +
-> +	mutex_lock(&arm_smmu_sva_lock);
-> +	handle = __arm_smmu_sva_bind(dev, mm);
-> +	mutex_unlock(&arm_smmu_sva_lock);
-> +	return handle;
-> +}
-> +
-> +static void arm_smmu_sva_unbind(struct iommu_sva *handle)
-> +{
-> +	mutex_lock(&arm_smmu_sva_lock);
-> +	__arm_smmu_sva_unbind(handle);
-> +	mutex_unlock(&arm_smmu_sva_lock);
-> +}
-> +
-> +static int arm_smmu_sva_get_pasid(struct iommu_sva *handle)
-> +{
-> +	struct arm_smmu_bond *bond = sva_to_bond(handle);
-> +
-> +	return bond->mm->pasid;
-> +}
-> +
->  static struct platform_driver arm_smmu_driver;
->  
->  static
-> @@ -3426,6 +3665,12 @@ static int arm_smmu_dev_disable_sva(struct
-> device *dev) master->sva_enabled = false;
->  	mutex_unlock(&arm_smmu_sva_lock);
->  
-> +	/*
-> +	 * Since the MMU notifier ops are held in the domain, it is
-> not safe to
-> +	 * free the domain until all MMU notifiers are freed.
-> +	 */
-> +	mmu_notifier_synchronize();
-> +
->  	return 0;
->  }
->  
-> @@ -3482,6 +3727,9 @@ static struct iommu_ops arm_smmu_ops = {
->  	.dev_feat_enabled	= arm_smmu_dev_feature_enabled,
->  	.dev_enable_feat	= arm_smmu_dev_enable_feature,
->  	.dev_disable_feat	= arm_smmu_dev_disable_feature,
-> +	.sva_bind		= arm_smmu_sva_bind,
-> +	.sva_unbind		= arm_smmu_sva_unbind,
-> +	.sva_get_pasid		= arm_smmu_sva_get_pasid,
->  	.pgsize_bitmap		= -1UL, /* Restricted during
-> device attach */ };
->  
+> * Simplified io-pgfault a bit, since flush() isn't called from mm exit
+>   path anymore.
+> 
+> * Fixed a bug in patch 17 (don't clear the stall bit when stall is
+>   forced).
+> 
+> You can find the latest version on https://jpbrucker.net/git/linux
+> branch sva/current, and sva/zip-devel for the Hisilicon zip
+> accelerator.
+> 
+> [1]
+> https://lore.kernel.org/linux-iommu/20200414170252.714402-1-jean-philippe@linaro.org/
+> [2]
+> https://lore.kernel.org/linux-iommu/1585596788-193989-6-git-send-email-fenghua.yu@intel.com/
+> 
+> Jean-Philippe Brucker (25):
+>   mm: Add a PASID field to mm_struct
+>   iommu/ioasid: Add ioasid references
+>   iommu/sva: Add PASID helpers
+>   iommu: Add a page fault handler
+>   iommu/iopf: Handle mm faults
+>   arm64: mm: Add asid_gen_match() helper
+>   arm64: mm: Pin down ASIDs for sharing mm with devices
+>   iommu/io-pgtable-arm: Move some definitions to a header
+>   iommu/arm-smmu-v3: Manage ASIDs with xarray
+>   arm64: cpufeature: Export symbol read_sanitised_ftr_reg()
+>   iommu/arm-smmu-v3: Share process page tables
+>   iommu/arm-smmu-v3: Seize private ASID
+>   iommu/arm-smmu-v3: Add support for VHE
+>   iommu/arm-smmu-v3: Enable broadcast TLB maintenance
+>   iommu/arm-smmu-v3: Add SVA feature checking
+>   iommu/arm-smmu-v3: Add SVA device feature
+>   iommu/arm-smmu-v3: Implement iommu_sva_bind/unbind()
+>   iommu/arm-smmu-v3: Hook up ATC invalidation to mm ops
+>   iommu/arm-smmu-v3: Add support for Hardware Translation Table Update
+>   iommu/arm-smmu-v3: Maintain a SID->device structure
+>   dt-bindings: document stall property for IOMMU masters
+>   iommu/arm-smmu-v3: Add stall support for platform devices
+>   PCI/ATS: Add PRI stubs
+>   PCI/ATS: Export PRI functions
+>   iommu/arm-smmu-v3: Add support for PRI
+> 
+>  drivers/iommu/Kconfig                         |   11 +
+>  drivers/iommu/Makefile                        |    2 +
+>  .../devicetree/bindings/iommu/iommu.txt       |   18 +
+>  arch/arm64/include/asm/mmu.h                  |    1 +
+>  arch/arm64/include/asm/mmu_context.h          |   11 +-
+>  drivers/iommu/io-pgtable-arm.h                |   30 +
+>  drivers/iommu/iommu-sva.h                     |   15 +
+>  include/linux/ioasid.h                        |   10 +-
+>  include/linux/iommu.h                         |   53 +
+>  include/linux/mm_types.h                      |    4 +
+>  include/linux/pci-ats.h                       |    8 +
+>  arch/arm64/kernel/cpufeature.c                |    1 +
+>  arch/arm64/mm/context.c                       |  103 +-
+>  drivers/iommu/arm-smmu-v3.c                   | 1554
+> +++++++++++++++-- drivers/iommu/io-pgfault.c                    |
+> 458 +++++ drivers/iommu/io-pgtable-arm.c                |   27 +-
+>  drivers/iommu/ioasid.c                        |   30 +-
+>  drivers/iommu/iommu-sva.c                     |   85 +
+>  drivers/iommu/of_iommu.c                      |    5 +-
+>  drivers/pci/ats.c                             |    4 +
+>  MAINTAINERS                                   |    3 +-
+>  21 files changed, 2275 insertions(+), 158 deletions(-)
+>  create mode 100644 drivers/iommu/io-pgtable-arm.h
+>  create mode 100644 drivers/iommu/iommu-sva.h
+>  create mode 100644 drivers/iommu/io-pgfault.c
+>  create mode 100644 drivers/iommu/iommu-sva.c
+> 
 
 [Jacob Pan]
