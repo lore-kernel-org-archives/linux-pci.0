@@ -2,185 +2,192 @@ Return-Path: <SRS0=q/mj=6O=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C96EC47253
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 16:19:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7510CC47247
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 18:33:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E105B208DB
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 16:19:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1588263578;
-	bh=ugCY3y9aPneko9xp0OW8Y5PqnnRdwIA6ZnhjiQw0pbg=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=LodkZ5f5BmEyXe7gKUHJZ7Gw2DPUpVJmPmvDUS+YWW/dChH3MoBaBhuDI36+VvDJZ
-	 TjQ2HDKHg45FizmCylYdrtXM2AIR1PhIJlUNo2D0mVS4ubD7BwpVLjyKA1lzsIWau0
-	 BRyg7JCndvSlAf9yjwekW1+1DbVer9N109jJTGrg=
+	by mail.kernel.org (Postfix) with ESMTP id 5F29B21973
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 18:33:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728175AbgD3QSk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 30 Apr 2020 12:18:40 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58600 "EHLO mail.kernel.org"
+        id S1726384AbgD3Sda (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 30 Apr 2020 14:33:30 -0400
+Received: from mga05.intel.com ([192.55.52.43]:31224 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726431AbgD3QSi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 30 Apr 2020 12:18:38 -0400
-Received: from mail.kernel.org (ip5f5ad5c5.dynamic.kabel-deutschland.de [95.90.213.197])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A7673208D5;
-        Thu, 30 Apr 2020 16:18:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1588263517;
-        bh=ugCY3y9aPneko9xp0OW8Y5PqnnRdwIA6ZnhjiQw0pbg=;
-        h=From:To:Cc:Subject:Date:From;
-        b=jkbiKuotKQWoJifXoYaYKWd4u1OUCkFJTCeaJ2hFfc8Mmzm6hL99xXi+5i8oLaR6e
-         GJ1b6u5OLXCuKZdQPYYbqcEoGl4qcjUVxJHvEaPOc1nGKIjtw42GlkxhXUFJCRfzBO
-         IWB28xT442895dIcuie8By96F883CyyppOigyJ4o=
-Received: from mchehab by mail.kernel.org with local (Exim 4.92.3)
-        (envelope-from <mchehab@kernel.org>)
-        id 1jUBtT-00Axgb-Pl; Thu, 30 Apr 2020 18:18:35 +0200
-From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
-To:     Linux Doc Mailing List <linux-doc@vger.kernel.org>
-Cc:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
-        linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
-        linux-pm@vger.kernel.org, keyrings@vger.kernel.org,
-        linux-crypto@vger.kernel.org, dmaengine@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linuxppc-dev@lists.ozlabs.org, linux-sh@vger.kernel.org,
-        kvm@vger.kernel.org
-Subject: [PATCH v4 00/19] Manually convert  thermal, crypto and misc devices to ReST
-Date:   Thu, 30 Apr 2020 18:18:14 +0200
-Message-Id: <cover.1588263270.git.mchehab+huawei@kernel.org>
-X-Mailer: git-send-email 2.25.4
+        id S1726318AbgD3Sda (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 30 Apr 2020 14:33:30 -0400
+IronPort-SDR: QYeQDpDxDQ0xiIxh+VpYeWRTaw44rMHjkmjzrX7xdWZX3oSlOeS15aqIKKesVzjnBNErrioA8G
+ dpv8514pWfXw==
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Apr 2020 11:33:29 -0700
+IronPort-SDR: J48xY2cKJPAK1NVryygQbF/nagAXDIYz1I6SC3AHIW5UHcqfCG66Luu3iM/N/zRymWaoSl5F24
+ 9Hf1OxKC5PKg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.73,336,1583222400"; 
+   d="scan'208";a="433056299"
+Received: from jacob-builder.jf.intel.com (HELO jacob-builder) ([10.7.199.155])
+  by orsmga005.jf.intel.com with ESMTP; 30 Apr 2020 11:33:28 -0700
+Date:   Thu, 30 Apr 2020 11:39:31 -0700
+From:   Jacob Pan <jacob.jun.pan@linux.intel.com>
+To:     Jean-Philippe Brucker <jean-philippe@linaro.org>
+Cc:     iommu@lists.linux-foundation.org, devicetree@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-mm@kvack.org, joro@8bytes.org, catalin.marinas@arm.com,
+        will@kernel.org, robin.murphy@arm.com, kevin.tian@intel.com,
+        baolu.lu@linux.intel.com, Jonathan.Cameron@huawei.com,
+        christian.koenig@amd.com, felix.kuehling@amd.com,
+        zhangfei.gao@linaro.org, jgg@ziepe.ca, xuzaibo@huawei.com,
+        fenghua.yu@intel.com, hch@infradead.org,
+        jacob.jun.pan@linux.intel.com
+Subject: Re: [PATCH v6 02/25] iommu/ioasid: Add ioasid references
+Message-ID: <20200430113931.0fbf7a37@jacob-builder>
+In-Reply-To: <20200430143424.2787566-3-jean-philippe@linaro.org>
+References: <20200430143424.2787566-1-jean-philippe@linaro.org>
+        <20200430143424.2787566-3-jean-philippe@linaro.org>
+Organization: OTC
+X-Mailer: Claws Mail 3.13.2 (GTK+ 2.24.30; x86_64-pc-linux-gnu)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Manually convert some files from thermal, crypto and misc-devices
-to ReST format.
+On Thu, 30 Apr 2020 16:34:01 +0200
+Jean-Philippe Brucker <jean-philippe@linaro.org> wrote:
 
-This series is against linux-next 20200430 tag (as I rebased it, in order
-to check if some patch were already merged via some other tree),
-but it should very likely merge fine against docs-next.
-
-The full series (including those ones) are at:
-
-	https://git.linuxtv.org/mchehab/experimental.git/log/?h=misc-docs
-
-The documents touched on this patch, converted to HTML via the 
-building system are at (together with patches from other series):
-
-	https://www.infradead.org/~mchehab/kernel_docs/
+> Let IOASID users take references to existing ioasids with
+> ioasid_get(). ioasid_free() drops a reference and only frees the
+> ioasid when its reference number is zero. It returns whether the
+> ioasid was freed.
+> 
+Looks good to me, I was planning to do the same for VT-d use. Just a
+couple of points for potential extension. I can rebase on top of this.
 
 
-v4:
+> Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
+> ---
+>  include/linux/ioasid.h | 10 ++++++++--
+>  drivers/iommu/ioasid.c | 30 +++++++++++++++++++++++++++++-
+>  2 files changed, 37 insertions(+), 3 deletions(-)
+> 
+> diff --git a/include/linux/ioasid.h b/include/linux/ioasid.h
+> index 6f000d7a0ddcd..609ba6f15b9e3 100644
+> --- a/include/linux/ioasid.h
+> +++ b/include/linux/ioasid.h
+> @@ -34,7 +34,8 @@ struct ioasid_allocator_ops {
+>  #if IS_ENABLED(CONFIG_IOASID)
+>  ioasid_t ioasid_alloc(struct ioasid_set *set, ioasid_t min, ioasid_t
+> max, void *private);
+> -void ioasid_free(ioasid_t ioasid);
+> +void ioasid_get(ioasid_t ioasid);
+> +bool ioasid_free(ioasid_t ioasid);
+>  void *ioasid_find(struct ioasid_set *set, ioasid_t ioasid,
+>  		  bool (*getter)(void *));
+>  int ioasid_register_allocator(struct ioasid_allocator_ops
+> *allocator); @@ -48,10 +49,15 @@ static inline ioasid_t
+> ioasid_alloc(struct ioasid_set *set, ioasid_t min, return
+> INVALID_IOASID; }
+>  
+> -static inline void ioasid_free(ioasid_t ioasid)
+> +static inline void ioasid_get(ioasid_t ioasid)
+>  {
+>  }
+>  
+> +static inline bool ioasid_free(ioasid_t ioasid)
+> +{
+> +	return false;
+> +}
+> +
+>  static inline void *ioasid_find(struct ioasid_set *set, ioasid_t
+> ioasid, bool (*getter)(void *))
+>  {
+> diff --git a/drivers/iommu/ioasid.c b/drivers/iommu/ioasid.c
+> index 0f8dd377aada3..46511ac53e0c8 100644
+> --- a/drivers/iommu/ioasid.c
+> +++ b/drivers/iommu/ioasid.c
+> @@ -15,6 +15,7 @@ struct ioasid_data {
+>  	struct ioasid_set *set;
+>  	void *private;
+>  	struct rcu_head rcu;
+> +	refcount_t refs;
+>  };
+>  
+>  /*
+> @@ -314,6 +315,7 @@ ioasid_t ioasid_alloc(struct ioasid_set *set,
+> ioasid_t min, ioasid_t max, 
+>  	data->set = set;
+>  	data->private = private;
+> +	refcount_set(&data->refs, 1);
+>  
+>  	/*
+>  	 * Custom allocator needs allocator data to perform platform
+> specific @@ -345,12 +347,33 @@ ioasid_t ioasid_alloc(struct
+> ioasid_set *set, ioasid_t min, ioasid_t max, }
+>  EXPORT_SYMBOL_GPL(ioasid_alloc);
+>  
+> +/**
+> + * ioasid_get - obtain a reference to the IOASID
+> + */
+> +void ioasid_get(ioasid_t ioasid)
+why void? what if the ioasid is not valid.
 
-- added some acks.
+> +{
+> +	struct ioasid_data *ioasid_data;
+> +
+> +	spin_lock(&ioasid_allocator_lock);
+> +	ioasid_data = xa_load(&active_allocator->xa, ioasid);
+> +	if (ioasid_data)
+> +		refcount_inc(&ioasid_data->refs);
+> +	spin_unlock(&ioasid_allocator_lock);
+> +}
+> +EXPORT_SYMBOL_GPL(ioasid_get);
+> +
+>  /**
+>   * ioasid_free - Free an IOASID
+>   * @ioasid: the ID to remove
+> + *
+> + * Put a reference to the IOASID, free it when the number of
+> references drops to
+> + * zero.
+> + *
+> + * Return: %true if the IOASID was freed, %false otherwise.
+>   */
+> -void ioasid_free(ioasid_t ioasid)
+> +bool ioasid_free(ioasid_t ioasid)
+>  {
+> +	bool free = false;
+>  	struct ioasid_data *ioasid_data;
+>  
+>  	spin_lock(&ioasid_allocator_lock);
+> @@ -360,6 +383,10 @@ void ioasid_free(ioasid_t ioasid)
+>  		goto exit_unlock;
+>  	}
+>  
+> +	free = refcount_dec_and_test(&ioasid_data->refs);
+> +	if (!free)
+> +		goto exit_unlock;
+> +
+Just FYI, we may need to add states for the IOASID, i.g. mark the IOASID
+inactive after free. And prohibit ioasid_get() after freed. For VT-d,
+this is useful when KVM queries the IOASID.
 
-v3:
+>  	active_allocator->ops->free(ioasid,
+> active_allocator->ops->pdata); /* Custom allocator needs additional
+> steps to free the xa element */ if (active_allocator->flags &
+> IOASID_ALLOCATOR_CUSTOM) { @@ -369,6 +396,7 @@ void
+> ioasid_free(ioasid_t ioasid) 
+>  exit_unlock:
+>  	spin_unlock(&ioasid_allocator_lock);
+> +	return free;
+>  }
+>  EXPORT_SYMBOL_GPL(ioasid_free);
+>  
 
-- removed the cpu-freq patches from this series, as Rafael should
-  be applying it on his tree.
-
-v2: 
-
-- a small change at patch 2 to avoid uneeded whitespace changes;
-- added 13 new patches at the end
-
-
-Mauro Carvalho Chehab (19):
-  docs: thermal: convert cpu-idle-cooling.rst to ReST
-  docs: crypto: convert asymmetric-keys.txt to ReST
-  docs: crypto: convert api-intro.txt to ReST format
-  docs: crypto: convert async-tx-api.txt to ReST format
-  docs: crypto: descore-readme.txt: convert to ReST format
-  docs: misc-devices/spear-pcie-gadget.txt: convert to ReST
-  docs: misc-devices/pci-endpoint-test.txt: convert to ReST
-  docs: misc-devices/pci-endpoint-test.txt: convert to ReST
-  docs: misc-devices/c2port.txt: convert to ReST format
-  docs: misc-devices/bh1770glc.txt: convert to ReST
-  docs: misc-devices/apds990x.txt: convert to ReST format
-  docs: pci: endpoint/function/binding/pci-test.txt convert to ReST
-  docs: arm64: convert perf.txt to ReST format
-  docs: powerpc: convert vcpudispatch_stats.txt to ReST
-  docs: sh: convert new-machine.txt to ReST
-  docs: sh: convert register-banks.txt to ReST
-  docs: trace: ring-buffer-design.txt: convert to ReST format
-  docs: kvm: get read of devices/README
-  docs: misc-devices: add uacce to the index.rst
-
- .../endpoint/function/binding/pci-test.rst    |  26 +
- .../endpoint/function/binding/pci-test.txt    |  19 -
- Documentation/PCI/endpoint/index.rst          |   2 +
- Documentation/arm64/index.rst                 |   1 +
- Documentation/arm64/{perf.txt => perf.rst}    |   7 +-
- .../crypto/{api-intro.txt => api-intro.rst}   | 186 ++--
- ...symmetric-keys.txt => asymmetric-keys.rst} |  91 +-
- .../{async-tx-api.txt => async-tx-api.rst}    | 253 +++---
- ...{descore-readme.txt => descore-readme.rst} | 152 +++-
- Documentation/crypto/index.rst                |   5 +
- Documentation/driver-api/dmaengine/client.rst |   2 +-
- .../driver-api/dmaengine/provider.rst         |   2 +-
- .../driver-api/thermal/cpu-idle-cooling.rst   |  18 +-
- Documentation/driver-api/thermal/index.rst    |   1 +
- .../{ad525x_dpot.txt => ad525x_dpot.rst}      |  24 +-
- .../{apds990x.txt => apds990x.rst}            |  31 +-
- .../{bh1770glc.txt => bh1770glc.rst}          |  45 +-
- .../misc-devices/{c2port.txt => c2port.rst}   |  58 +-
- Documentation/misc-devices/index.rst          |   7 +
- .../misc-devices/pci-endpoint-test.rst        |  56 ++
- .../misc-devices/pci-endpoint-test.txt        |  41 -
- .../misc-devices/spear-pcie-gadget.rst        | 170 ++++
- .../misc-devices/spear-pcie-gadget.txt        | 130 ---
- Documentation/powerpc/index.rst               |   1 +
- ...patch_stats.txt => vcpudispatch_stats.rst} |  17 +-
- Documentation/security/keys/core.rst          |   2 +-
- Documentation/sh/index.rst                    |   6 +
- .../sh/{new-machine.txt => new-machine.rst}   | 195 +++--
- ...{register-banks.txt => register-banks.rst} |  13 +-
- Documentation/trace/index.rst                 |   1 +
- ...ffer-design.txt => ring-buffer-design.rst} | 802 ++++++++++--------
- Documentation/virt/kvm/devices/README         |   1 -
- Documentation/virt/kvm/devices/index.rst      |   3 +
- MAINTAINERS                                   |   4 +-
- arch/sh/Kconfig.cpu                           |   2 +-
- crypto/asymmetric_keys/asymmetric_type.c      |   2 +-
- crypto/asymmetric_keys/public_key.c           |   2 +-
- crypto/asymmetric_keys/signature.c            |   2 +-
- drivers/misc/Kconfig                          |   2 +-
- drivers/misc/ad525x_dpot.c                    |   2 +-
- include/crypto/public_key.h                   |   2 +-
- include/keys/asymmetric-parser.h              |   2 +-
- include/keys/asymmetric-subtype.h             |   2 +-
- include/keys/asymmetric-type.h                |   2 +-
- 44 files changed, 1358 insertions(+), 1034 deletions(-)
- create mode 100644 Documentation/PCI/endpoint/function/binding/pci-test.rst
- delete mode 100644 Documentation/PCI/endpoint/function/binding/pci-test.txt
- rename Documentation/arm64/{perf.txt => perf.rst} (95%)
- rename Documentation/crypto/{api-intro.txt => api-intro.rst} (70%)
- rename Documentation/crypto/{asymmetric-keys.txt => asymmetric-keys.rst} (91%)
- rename Documentation/crypto/{async-tx-api.txt => async-tx-api.rst} (55%)
- rename Documentation/crypto/{descore-readme.txt => descore-readme.rst} (81%)
- rename Documentation/misc-devices/{ad525x_dpot.txt => ad525x_dpot.rst} (85%)
- rename Documentation/misc-devices/{apds990x.txt => apds990x.rst} (86%)
- rename Documentation/misc-devices/{bh1770glc.txt => bh1770glc.rst} (83%)
- rename Documentation/misc-devices/{c2port.txt => c2port.rst} (59%)
- create mode 100644 Documentation/misc-devices/pci-endpoint-test.rst
- delete mode 100644 Documentation/misc-devices/pci-endpoint-test.txt
- create mode 100644 Documentation/misc-devices/spear-pcie-gadget.rst
- delete mode 100644 Documentation/misc-devices/spear-pcie-gadget.txt
- rename Documentation/powerpc/{vcpudispatch_stats.txt => vcpudispatch_stats.rst} (94%)
- rename Documentation/sh/{new-machine.txt => new-machine.rst} (73%)
- rename Documentation/sh/{register-banks.txt => register-banks.rst} (88%)
- rename Documentation/trace/{ring-buffer-design.txt => ring-buffer-design.rst} (55%)
- delete mode 100644 Documentation/virt/kvm/devices/README
-
--- 
-2.25.4
-
-
+[Jacob Pan]
