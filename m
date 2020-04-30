@@ -8,60 +8,59 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B584EC47257
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 22:07:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB60FC47247
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 22:07:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9164D21775
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 22:07:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 86C5C214D8
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 22:07:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bhmK4NgX"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="msohcg/+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728085AbgD3WHG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 30 Apr 2020 18:07:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48304 "EHLO
+        id S1728024AbgD3WG6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 30 Apr 2020 18:06:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48274 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728075AbgD3WHF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Apr 2020 18:07:05 -0400
-Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3432AC035494;
-        Thu, 30 Apr 2020 15:07:05 -0700 (PDT)
-Received: by mail-ej1-x643.google.com with SMTP id gr25so5994238ejb.10;
-        Thu, 30 Apr 2020 15:07:05 -0700 (PDT)
+        with ESMTP id S1728003AbgD3WG4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Apr 2020 18:06:56 -0400
+Received: from mail-ej1-x644.google.com (mail-ej1-x644.google.com [IPv6:2a00:1450:4864:20::644])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B1EAC035494;
+        Thu, 30 Apr 2020 15:06:56 -0700 (PDT)
+Received: by mail-ej1-x644.google.com with SMTP id q8so6016743eja.2;
+        Thu, 30 Apr 2020 15:06:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=W5A/crgfZBL8YxYLkhsNHl2s+K8l8jm+GhQ951aW+/A=;
-        b=bhmK4NgXPzg+9b2pTOX7XMP/8EMjfOr97em1PZUZZXthc6eMXBGfuItM+KkSQhVpcF
-         W7IIcBrQYURVrkZG1CaFst8mjutMNOKwDPVEWr7ff2McocuUlPz2yyZ3BGOBVEUeK4/9
-         sBu0ua1seONVYb5fq93X6RP3WbVv6pImCErSiG6orXkOmFmTDepfVmQV9cfu0N2ULAMr
-         dmNEVP7UhsFWNot3hmrq0G7sW+2+iczzDnEvMWAXbCFagqTe0GsYFM5f2RKgNC7MnZQV
-         hAiOHn1Xkod++cixNMgfXyE8hCsfxYMDddOVCUrH623VmHeVXjseSc1nurTr/go0gnUk
-         sbGQ==
+        bh=w1PEB75T9vhNli8IGbA8jki4mGo4pTtbkW42Phxv8eA=;
+        b=msohcg/+zvVBWBp/LV/9TYGzKCx1tBKTA3R8ykh2656KuiULAoYBq/qDQWNyhp7bUB
+         vnKvsVh3EYMDBjtiVoXT20Qhqvq9OadqGjNJTqJqUPc4dpp9qUs5C/CSCeSs6C56gjGv
+         g22quSEm9H3XO/Bq6DKicQF30fbP700QU60s7m0LKlPYw6J7q9sAzocqqPi47QDTLHq7
+         e+1bcU68cj6yWpQMSZBfRvVBqx/yPPhG0hjzgDJZyuzy1unoKkidIdl6XwZGvMvZWeTE
+         kT2mB+eguVoUmDll/o3IOK0VN0eMfEHMKnIEkQJTnnsIBLZ6Yi+MJl9e4E6WllD2bcaQ
+         uRlQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=W5A/crgfZBL8YxYLkhsNHl2s+K8l8jm+GhQ951aW+/A=;
-        b=PzFAsfW4yyQ5chCFc4avwg/Ler6drwzaR1xnRqXzdd31MW6TtHfsO9aK+LzAOmFd9S
-         t5qO3By8CSdShQ8enq8SNCssy4df2XgRpRSHf27pQeYImxbfN6qbB0hLbrd6NeS1tcHZ
-         j900TyKIKo4pULSKNWhpt00LwJDzhk2VBNYBhz5hhmjat6UgWU4OvMGy35yo4uW+RB6H
-         qb6OMdF5/h0XQP60UE/77vBCzlpGkff2pJCZSSVB/2+363Zam3v7HPf/MYtPQ8+JRTqm
-         yMS56zDD/AOq2ioB6Me/bKHyuWHyZMX7dlQD/929PxhWPiLtOce19da0LNkfiGMeNGtm
-         hKAg==
-X-Gm-Message-State: AGi0PuZidYlXaYBCg8apC0w9/Q7WvE04HVgImQo0x6/UStPrTt/qqpfn
-        hNAzGPjIelcJbkoOf+Tg/sM=
-X-Google-Smtp-Source: APiQypLzZJfog1vNc6Uoeh95qV8hGH+RRLoLGbJzYGzYvuO7ke/M2nr92ZgUv1ctCRRYieb/Nvolig==
-X-Received: by 2002:a17:906:4e50:: with SMTP id g16mr570966ejw.338.1588284423757;
-        Thu, 30 Apr 2020 15:07:03 -0700 (PDT)
+        bh=w1PEB75T9vhNli8IGbA8jki4mGo4pTtbkW42Phxv8eA=;
+        b=FWaYOYcVrnjDKCbpyIs2CZMi5BmrYTdjJKPn1xrGJhX2UDK3a83qjinIW+mbSjqFs7
+         GOHJZy8e7yKtrJfq+bczpFyd3BXCvQp1/cF0AuEirFQ5FF000QTkFcaUe7AJnFrjIY1Y
+         ZMUuohlzsK4cFHLV2hhLG19zDTq74XmzncgFtVHUYDviImrM05uuIUkKJ76EitpnWl95
+         +8w44zDbWvPB+RZA0ez8GWkS77oBx9BNk4Yx/cUdOEC7M7EBf2BqXgbmvzeWF9GlQgkU
+         gZMlQGni8opMmrDEhTHU60R4fwZGXxo0QDJ0DXdIFHE0dlwrBduhbAZmdC1pq+wWRwPK
+         TRxQ==
+X-Gm-Message-State: AGi0PubemePKCcSzq4ihBIp+xUgBClP6YndZZTM+/IDuiRGyCc3u6mm0
+        2X5ndtd4B5Fh1sUz7caarqI=
+X-Google-Smtp-Source: APiQypKuDx3EydaEc0EcG2mW6wzDegIebMGM0I462nb1cc/jtaFvAb/PfwIeFV24N7HZ4h6JEs6Plg==
+X-Received: by 2002:a17:906:4dc8:: with SMTP id f8mr573477ejw.23.1588284415074;
+        Thu, 30 Apr 2020 15:06:55 -0700 (PDT)
 Received: from Ansuel-XPS.localdomain ([79.37.253.240])
-        by smtp.googlemail.com with ESMTPSA id t17sm54185edq.88.2020.04.30.15.07.02
+        by smtp.googlemail.com with ESMTPSA id t17sm54185edq.88.2020.04.30.15.06.53
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 30 Apr 2020 15:07:03 -0700 (PDT)
+        Thu, 30 Apr 2020 15:06:54 -0700 (PDT)
 From:   Ansuel Smith <ansuelsmth@gmail.com>
 To:     Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc:     Sham Muthayyan <smuthayy@codeaurora.org>,
-        Ansuel Smith <ansuelsmth@gmail.com>,
+Cc:     Ansuel Smith <ansuelsmth@gmail.com>,
         Andy Gross <agross@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Rob Herring <robh+dt@kernel.org>,
@@ -72,9 +71,9 @@ Cc:     Sham Muthayyan <smuthayy@codeaurora.org>,
         Philipp Zabel <p.zabel@pengutronix.de>,
         linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v3 11/11] PCI: qcom: add Force GEN1 support
-Date:   Fri,  1 May 2020 00:06:18 +0200
-Message-Id: <20200430220619.3169-12-ansuelsmth@gmail.com>
+Subject: [PATCH v3 08/11] devicetree: bindings: pci: document PARF params bindings
+Date:   Fri,  1 May 2020 00:06:15 +0200
+Message-Id: <20200430220619.3169-9-ansuelsmth@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200430220619.3169-1-ansuelsmth@gmail.com>
 References: <20200430220619.3169-1-ansuelsmth@gmail.com>
@@ -85,71 +84,61 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Sham Muthayyan <smuthayy@codeaurora.org>
+It is now supported the editing of Tx De-Emphasis, Tx Swing and
+Rx equalization params on ipq8064. Document this new optional params.
 
-Add Force GEN1 support needed in some ipq8064 board that needs to limit
-some PCIe line to gen1 for some hardware limitation.
-This is set by the max-link-speed binding and needed by some soc based
-on ipq8064. (for example Netgear R7800 router)
-
-Signed-off-by: Sham Muthayyan <smuthayy@codeaurora.org>
 Signed-off-by: Ansuel Smith <ansuelsmth@gmail.com>
 ---
- drivers/pci/controller/dwc/pcie-qcom.c | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ .../devicetree/bindings/pci/qcom,pcie.txt     | 36 +++++++++++++++++++
+ 1 file changed, 36 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 372d2c8508b5..a568f28645e7 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -27,6 +27,7 @@
- #include <linux/slab.h>
- #include <linux/types.h>
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+index 6efcef040741..8cc5aea8a1da 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+@@ -254,6 +254,42 @@
+ 			- "perst-gpios"	PCIe endpoint reset signal line
+ 			- "wake-gpios"	PCIe endpoint wake signal line
  
-+#include "../../pci.h"
- #include "pcie-designware.h"
- 
- #define PCIE20_PARF_SYS_CTRL			0x00
-@@ -99,6 +100,8 @@
- #define PCIE20_v3_PARF_SLV_ADDR_SPACE_SIZE	0x358
- #define SLV_ADDR_SPACE_SZ			0x10000000
- 
-+#define PCIE20_LNK_CONTROL2_LINK_STATUS2	0xa0
++- qcom,tx-deemph-gen1:
++	Usage: optional (available for ipq/apq8064)
++	Value type: <u32>
++	Definition: Gen1 De-emphasis value.
++		    For ipq806x should be set to 24.
 +
- #define DEVICE_TYPE_RC				0x4
- 
- #define QCOM_PCIE_2_1_0_MAX_SUPPLY	3
-@@ -205,6 +208,7 @@ struct qcom_pcie {
- 	struct phy *phy;
- 	struct gpio_desc *reset;
- 	const struct qcom_pcie_ops *ops;
-+	int gen;
- };
- 
- #define to_qcom_pcie(x)		dev_get_drvdata((x)->dev)
-@@ -462,6 +466,11 @@ static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
- 	/* wait for clock acquisition */
- 	usleep_range(1000, 1500);
- 
-+	if (pcie->gen == 1) {
-+		qcom_clear_and_set_dword(pci->dbi_base +
-+				PCIE20_LNK_CONTROL2_LINK_STATUS2, 0, 1);
-+	}
++- qcom,tx-deemph-gen2-3p5db:
++	Usage: optional (available for ipq/apq8064)
++	Value type: <u32>
++	Definition: Gen2 (3.5db) De-emphasis value.
++		    For ipq806x should be set to 24.
 +
- 
- 	/* Set the Max TLP size to 2K, instead of using default of 4K */
- 	writel(CFG_REMOTE_RD_REQ_BRIDGE_SIZE_2K,
-@@ -1431,6 +1440,10 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 		goto err_pm_runtime_put;
- 	}
- 
-+	pcie->gen = of_pci_get_max_link_speed(pdev->dev.of_node);
-+	if (pcie->gen < 0)
-+		pcie->gen = 2;
++- qcom,tx-deemph-gen2-6db:
++	Usage: optional (available for ipq/apq8064)
++	Value type: <u32>
++	Definition: Gen2 (6db) De-emphasis value.
++		    For ipq806x should be set to 34.
 +
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "parf");
- 	pcie->parf = devm_ioremap_resource(dev, res);
- 	if (IS_ERR(pcie->parf)) {
++- qcom,tx-swing-full:
++	Usage: optional (available for ipq/apq8064)
++	Value type: <u32>
++	Definition: TX launch amplitude swing_full value.
++		    For ipq806x should be set to 120.
++
++- qcom,tx-swing-low:
++	Usage: optional (available for ipq/apq8064)
++	Value type: <u32>
++	Definition: TX launch amplitude swing_low value.
++		    For ipq806x should be set to 120.
++
++- qcom,rx0-eq:
++	Usage: optional (available for ipq/apq8064)
++	Value type: <u32>
++	Definition: RX0 equalization value.
++		    For ipq806x should be set to 4.
++
+ * Example for ipq/apq8064
+ 	pcie@1b500000 {
+ 		compatible = "qcom,pcie-apq8064", "qcom,pcie-ipq8064", "snps,dw-pcie";
 -- 
 2.25.1
 
