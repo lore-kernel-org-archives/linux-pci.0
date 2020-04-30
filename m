@@ -2,64 +2,66 @@ Return-Path: <SRS0=q/mj=6O=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7807C47247
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 22:06:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C43FAC4724C
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 22:06:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C50662074A
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 22:06:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9E2EE20836
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 22:06:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kLPGrpSD"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="W9lUgU66"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727062AbgD3WGe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 30 Apr 2020 18:06:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48200 "EHLO
+        id S1727880AbgD3WGn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 30 Apr 2020 18:06:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48226 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726447AbgD3WGe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Apr 2020 18:06:34 -0400
-Received: from mail-ed1-x52d.google.com (mail-ed1-x52d.google.com [IPv6:2a00:1450:4864:20::52d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF7E8C035494;
-        Thu, 30 Apr 2020 15:06:33 -0700 (PDT)
-Received: by mail-ed1-x52d.google.com with SMTP id k22so5854122eds.6;
-        Thu, 30 Apr 2020 15:06:33 -0700 (PDT)
+        with ESMTP id S1727879AbgD3WGm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Apr 2020 18:06:42 -0400
+Received: from mail-ed1-x542.google.com (mail-ed1-x542.google.com [IPv6:2a00:1450:4864:20::542])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 154B5C035494;
+        Thu, 30 Apr 2020 15:06:42 -0700 (PDT)
+Received: by mail-ed1-x542.google.com with SMTP id d16so5842970edv.8;
+        Thu, 30 Apr 2020 15:06:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=q+mkxNtTPZhi/LAJrBV1pwlKLJ9IVJIPihcu3p+f0f4=;
-        b=kLPGrpSDFXWcNc6EbBhYJxYWfjkLjQ7+maWsFJYWNSkObt+rcEeJ4YHfJ4srEPLr59
-         u9GoVC2YIHoGYphA8DHPpj0ik+WK/rfttyR7UuR3r21N9YO4lEmOq+ApSkv4fSt86vUD
-         L8pEXipDq1l3OXSBIcpf61geLhqO31d7ruLqGAa8u5Wlwv73OgaxTrt9xfHFqnUMuztX
-         SLYd0WkNO9/nPwxusMvXelK03QcKPcokvJdvso/snVDF2GfshMeFtXK0wMVn2CLYX0Vq
-         UNfdGFof4f0Jwd+KXQ6VhPUCWZ+VMn6LwMb/gkf4Mnddq/2K6jJdV9VgN3RPVjyKpGnj
-         vSIw==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=CgTrzh3Tu5k7J4C6anuKQZFd/nJ6FehtS7rnu7w0aik=;
+        b=W9lUgU66nDUDMQXEq+6WhaUSOwFR89PMCUiEzi9uQtlmrbT3JUKTTX8N/YvWpmGRZM
+         bflOf5xiTdbtWJrHBNFVSeEm+ltIVGx/x7kqByJXaZjP5RSgebWF8zkpfKGiVBBrqo+T
+         ulnFiY7CxTNRRJVS1U+SxBPB6cN2KjoeJv4TFmlMl0RcQgP8zt1Mw+q4KYnW8qbjribj
+         cebgHLKEyWmZnHu7OovETEUUJJb+W+jfYrjGT4pL1C/FniBrTOWpRtNF9NWvapGi2zVC
+         3gRUTaf7+pzMeMkHewo63L90kIIiHdlTHSIb3lrak94otqyrmZYWcNxMj1JToDaELXRv
+         HOuQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=q+mkxNtTPZhi/LAJrBV1pwlKLJ9IVJIPihcu3p+f0f4=;
-        b=hy3qxFBIMVrkMNpsJlmxdaEF44uAx9T3FqFKAxt8yRkC8yxPv1P6VjB8cOCZnj7WTs
-         gpgn8RrqjJuNYbAnxBiUGdU3MMpekF2sVMdxOqhuSstfBlJZIqTxQEchdwIuOPsmbXF3
-         ea2oibGmsSHNIo8kMEVivcKvcdh42mLLvrMaGMbzQ3QUc3dBB23akc3ZdiIIT50rHZpx
-         1XSO/z0orXrmWEtCNK5j8oxUUj/6Zx+j8CH0CRiBiFDXw3NNMtoVKUm7M+Eqz1D1Pw9x
-         /+7aGiPisijtz6OhEElfMCGFYR31STOA0lsoGSNm7gj60hgk59iMpO6yfxvgZAW+TBje
-         WpFQ==
-X-Gm-Message-State: AGi0PuY+k2prM2X2xR6K3zrBeVzK9dnJqqpxhLQbc8rrWFU2WQU3GSA0
-        bNYp4/7VlASrmr7rg06aqCY=
-X-Google-Smtp-Source: APiQypIgPFzSk+gRylgl6RZkkZgJyX6/kqkDDLtTXeaQ/UD4SIAItyRDStoTO2fc2ZgBpRYFfqAeZg==
-X-Received: by 2002:a05:6402:712:: with SMTP id w18mr1101986edx.386.1588284392192;
-        Thu, 30 Apr 2020 15:06:32 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=CgTrzh3Tu5k7J4C6anuKQZFd/nJ6FehtS7rnu7w0aik=;
+        b=i6bZXrlmltDhgXTV5Vy/4J2iIoHJmytlZ14dOSVsgTsX883D/VbJZFkSJT51CcdUZO
+         72m7WiZQbKLzCjP6fi+zXSQG/y7h6e3Y8Y5+1zcI1bVY9LUES/IZrZa+3Y2YgN/IGGvX
+         JH+oS3q5/0qVsvtXZqkerEefTIRaX0f409OJclmX0+fuJ7QVfpYOEiJg9vOhr9xildMY
+         efa+rcg7kdEbdkU4tlA7zOKc2rjH/Z4nLWR3QED9y7CkH2u0PU/2Ow1zBwShKRO+9seG
+         EE8KZwghfvCLIZaStCUH+sOw6cFi+ozZevuqX2vHwWQtQIfdla/zJEl2DwX2+UR23Jc1
+         +s5w==
+X-Gm-Message-State: AGi0PuaJ+/vu2EPYNKIjW652gg63xmA+SuZGyW0UDZ3LCWfwf2ok16u8
+        qAwsJ+s2JZ6RK6KCrnGvg2Q=
+X-Google-Smtp-Source: APiQypKAWtOnJY37BTq1roF1i90+nc9Z/fJC/RtNKvUzlpXZZWc8QxpkmmWxFQpUlmKLLpjH1nhY7g==
+X-Received: by 2002:a05:6402:95e:: with SMTP id h30mr1049680edz.117.1588284400719;
+        Thu, 30 Apr 2020 15:06:40 -0700 (PDT)
 Received: from Ansuel-XPS.localdomain ([79.37.253.240])
-        by smtp.googlemail.com with ESMTPSA id t17sm54185edq.88.2020.04.30.15.06.29
+        by smtp.googlemail.com with ESMTPSA id t17sm54185edq.88.2020.04.30.15.06.38
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 30 Apr 2020 15:06:31 -0700 (PDT)
+        Thu, 30 Apr 2020 15:06:40 -0700 (PDT)
 From:   Ansuel Smith <ansuelsmth@gmail.com>
 To:     Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc:     Ansuel Smith <ansuelsmth@gmail.com>,
+Cc:     Abhishek Sahu <absahu@codeaurora.org>,
+        Ansuel Smith <ansuelsmth@gmail.com>,
         Andy Gross <agross@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Rob Herring <robh+dt@kernel.org>,
@@ -70,10 +72,12 @@ Cc:     Ansuel Smith <ansuelsmth@gmail.com>,
         Philipp Zabel <p.zabel@pengutronix.de>,
         linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v3 00/11] Multiple fixes in PCIe qcom driver
-Date:   Fri,  1 May 2020 00:06:07 +0200
-Message-Id: <20200430220619.3169-1-ansuelsmth@gmail.com>
+Subject: [PATCH v3 03/11] PCI: qcom: change duplicate PCI reset to phy reset
+Date:   Fri,  1 May 2020 00:06:10 +0200
+Message-Id: <20200430220619.3169-4-ansuelsmth@gmail.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200430220619.3169-1-ansuelsmth@gmail.com>
+References: <20200430220619.3169-1-ansuelsmth@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
@@ -81,46 +85,73 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This contains multiple fix for PCIe qcom driver.
-Some optional reset and clocks were missing.
-Fix a problem with no PARF programming that cause kernel lock on load.
-Add support to force gen 1 speed if needed. (due to hardware limitation)
-Add ipq8064 rev 2 support that use a different tx termination offset.
+From: Abhishek Sahu <absahu@codeaurora.org>
 
-v3:
-* Fix check reported by checkpatch --strict
-* Rename force_gen1 to gen
-* Fix spelling error
-* Better describe qcom_clear_and_set_dword
-* Make PARF deemph and equalization configurable
+The deinit issues reset_control_assert for PCI twice and does not contain
+phy reset.
 
-v2:
-* Drop iATU programming (already done in pcie init)
-* Use max-link-speed instead of force-gen1 custom definition
-* Drop MRRS to 256B (Can't find a realy reason why this was suggested)
-* Introduce a new variant for different revision of ipq8064
+Signed-off-by: Abhishek Sahu <absahu@codeaurora.org>
+Signed-off-by: Ansuel Smith <ansuelsmth@gmail.com>
+---
+ drivers/pci/controller/dwc/pcie-qcom.c | 18 ++++++++----------
+ 1 file changed, 8 insertions(+), 10 deletions(-)
 
-Abhishek Sahu (1):
-  PCI: qcom: change duplicate PCI reset to phy reset
-
-Ansuel Smith (8):
-  PCI: qcom: add missing ipq806x clocks in PCIe driver
-  devicetree: bindings: pci: add missing clks to qcom,pcie
-  PCI: qcom: add missing reset for ipq806x
-  devicetree: bindings: pci: add ext reset to qcom,pcie
-  PCI: qcom: introduce qcom_clear_and_set_dword
-  PCI: qcom: add support for defining some PARF params
-  devicetree: bindings: pci: document PARF params bindings
-  devicetree: bindings: pci: add ipq8064 rev 2 variant to qcom,pcie
-
-Sham Muthayyan (2):
-  PCI: qcom: add ipq8064 rev2 variant and set tx term offset
-  PCI: qcom: add Force GEN1 support
-
- .../devicetree/bindings/pci/qcom,pcie.txt     |  51 +++-
- drivers/pci/controller/dwc/pcie-qcom.c        | 241 ++++++++++++------
- 2 files changed, 211 insertions(+), 81 deletions(-)
-
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index 2a39dfdccfc8..7a8901efc031 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -280,14 +280,14 @@ static void qcom_pcie_deinit_2_1_0(struct qcom_pcie *pcie)
+ {
+ 	struct qcom_pcie_resources_2_1_0 *res = &pcie->res.v2_1_0;
+ 
++	clk_disable_unprepare(res->phy_clk);
+ 	reset_control_assert(res->pci_reset);
+ 	reset_control_assert(res->axi_reset);
+ 	reset_control_assert(res->ahb_reset);
+ 	reset_control_assert(res->por_reset);
+-	reset_control_assert(res->pci_reset);
++	reset_control_assert(res->phy_reset);
+ 	clk_disable_unprepare(res->iface_clk);
+ 	clk_disable_unprepare(res->core_clk);
+-	clk_disable_unprepare(res->phy_clk);
+ 	clk_disable_unprepare(res->aux_clk);
+ 	clk_disable_unprepare(res->ref_clk);
+ 	regulator_bulk_disable(ARRAY_SIZE(res->supplies), res->supplies);
+@@ -325,12 +325,6 @@ static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
+ 		goto err_clk_core;
+ 	}
+ 
+-	ret = clk_prepare_enable(res->phy_clk);
+-	if (ret) {
+-		dev_err(dev, "cannot prepare/enable phy clock\n");
+-		goto err_clk_phy;
+-	}
+-
+ 	if (res->aux_clk) {
+ 		ret = clk_prepare_enable(res->aux_clk);
+ 		if (ret) {
+@@ -387,6 +381,12 @@ static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
+ 		return ret;
+ 	}
+ 
++	ret = clk_prepare_enable(res->phy_clk);
++	if (ret) {
++		dev_err(dev, "cannot prepare/enable phy clock\n");
++		goto err_deassert_ahb;
++	}
++
+ 	/* wait for clock acquisition */
+ 	usleep_range(1000, 1500);
+ 
+@@ -404,8 +404,6 @@ static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
+ err_clk_ref:
+ 	clk_disable_unprepare(res->aux_clk);
+ err_clk_aux:
+-	clk_disable_unprepare(res->phy_clk);
+-err_clk_phy:
+ 	clk_disable_unprepare(res->core_clk);
+ err_clk_core:
+ 	clk_disable_unprepare(res->iface_clk);
 -- 
 2.25.1
 
