@@ -7,56 +7,56 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04014C4725F
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 14:40:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BDBA7C54E46
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 14:40:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D2BC02051A
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 14:40:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9518F20873
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 14:40:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="DcrvGlQp"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="GdxqERSg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728040AbgD3Ok1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 30 Apr 2020 10:40:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34242 "EHLO
+        id S1728196AbgD3Okc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 30 Apr 2020 10:40:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34274 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727915AbgD3Ok0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Apr 2020 10:40:26 -0400
-Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77F93C035494
-        for <linux-pci@vger.kernel.org>; Thu, 30 Apr 2020 07:40:26 -0700 (PDT)
-Received: by mail-wm1-x342.google.com with SMTP id k12so2145336wmj.3
-        for <linux-pci@vger.kernel.org>; Thu, 30 Apr 2020 07:40:26 -0700 (PDT)
+        by vger.kernel.org with ESMTP id S1728182AbgD3Okc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Apr 2020 10:40:32 -0400
+Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C880BC035495
+        for <linux-pci@vger.kernel.org>; Thu, 30 Apr 2020 07:40:31 -0700 (PDT)
+Received: by mail-wr1-x442.google.com with SMTP id x18so7247462wrq.2
+        for <linux-pci@vger.kernel.org>; Thu, 30 Apr 2020 07:40:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=oH09lE6EyF+7ddnT7acJ3k+jJHyiqaDtNA7hzb2+sc4=;
-        b=DcrvGlQp3aypCcqoN+dkF/d0nkxcpxpMBKeHygdxhq6pA3zd8XZM4QH4aGcjJ/4Tht
-         9Tqg6MvR7s2TeMD2dsMqnAePywvLPYenkSK2kqY1aeQ5SP9/rKss1+vPSjAOTqdrBVzC
-         3Hk3sNXrPCV4FacRXsy5+JDyySaQuCd99SZEr2yUC/DEQ+NMzYMOHy2AFCct+xzP/4sC
-         h8tNesK9eh+4jAyMW+Myo5oIfE7BWYBL5NXT4aV3gr63yJiHIm1CQMdWqcy+2LlMGvC5
-         0q2zH9+Bx3SJDZIJOYsGForK5bwlhaFFDJLuGWuknwxC3tkJTHPS6KG3KsC4W4x0HmYe
-         /uDw==
+        bh=jRLktX4Fv4UiegcQ1XKfrXB/TH8/LTOUgoi8xC3haZQ=;
+        b=GdxqERSg6Wq+QjSLrDklObgdKsWyrI/p2A6U4BFEZlyPUG/0SIcCQinPURmpCcRIjv
+         3f5gJe4XY/u6yERJf9AwN+ZPq2bItwT/fSCgvMu08smasfLjOjOJxGrn+O0ElEcXqAXt
+         3mpjlsAkdnOtr7eBUEquFjghsowytMyHCnwJbMdBG1W0oE7FrywpRTw78nLWSLKbfC7S
+         +MhVK+j71pwZaHQOdr2Gde0ZOYTVwaFzIBka+fFjE+PTE5NEpEV43oSc/LN4IXGD6VD0
+         4/CBaxt0Jike33CwfczPG3OxP+5W0s6u1z+Du0kqJEI8+0UBC180s6/Oj/dEyXpErCLG
+         4rqg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=oH09lE6EyF+7ddnT7acJ3k+jJHyiqaDtNA7hzb2+sc4=;
-        b=Y55VgMALdCXHV76lLixZexu713F6D0hZn88j6ti5bUk7QYIPgWIqoZxLZXA5UUcr+x
-         2Nqlblfx/YVptI8LPxGw0Mo2JXlPbsmFEejjW6JoxrbN3Av+oyFcyM1t2sAEM9zxhhsf
-         oIsxFQhDEplLD8nFlP5soJcpw+TFYiO206O6jb20BIr7UOPocAGzuBwsTnVo7owl4IG/
-         hZz9PNcUQ/6VjHA0EC1ZKjB6Z7ezC8YxZR4OI1sgu0HPmsiURU2YqQQWaN6J24KMX5ZL
-         Aegkee5n23RaILQtx7qSodBgw0G/AhvdowdM6yuHDNuYmUl+h2uzLpCGj1y6SHjM8l+3
-         IVAg==
-X-Gm-Message-State: AGi0PuZqqEKwrEnYtc0Q/yefTzet01SJ9oX+UukPQ6P75RNdlIJZGGt4
-        wSs4Lm4lthd0zSe49mu7qcz6Og==
-X-Google-Smtp-Source: APiQypK39c6e8iviTZ8YwC7ivNBAH/kpcwBHJCtUr7sjyJdgvl1DlUReTsvBACR1UGiEnN8Ql6GmcA==
-X-Received: by 2002:a1c:e302:: with SMTP id a2mr3256603wmh.96.1588257625192;
-        Thu, 30 Apr 2020 07:40:25 -0700 (PDT)
+        bh=jRLktX4Fv4UiegcQ1XKfrXB/TH8/LTOUgoi8xC3haZQ=;
+        b=kB7qPm4CibDSEwSGTmRECKeafLwFL8r9CKdI3xEVW54aWjI89xDFOSF87vDCYM4W4W
+         rbg1m87iJlrORECd3M1sUw8eZTMEHbv4HdQubbS5JAicXOnGMJH2gEHbBqQ36tntIEuU
+         G431FCxB0PydsiCKdTxgkpnt0xGvtXaQCYUDnEsWi7uKswZPh4DDjIAvUKHxXLKFys/7
+         +/q1B4WAXQciePwxHWXGBvs+8sJFIakXvdBUdeTGAfX5WhAdXtAvumExwYverZJ/iSNE
+         bC7kv2O7R/OEmrS7KPtKjDh/BSjoaozMA1aJtBKJBFMieHhdJq/P3Mf/fqGRgMFYj0Sn
+         WVYg==
+X-Gm-Message-State: AGi0PuZoqXi3f21fyAif+PHvHt7JoZwcMyKI4gKpTLMsBnHoS5+/xlEt
+        VvY3LvD5wktEQog5dsuin0JLzA==
+X-Google-Smtp-Source: APiQypKGnRA3rC4LIOfEdPstuV2izIDoWxEDRt3yJJdFAFTW4qtuKV91hxDhmiqWADguGvwulI61dQ==
+X-Received: by 2002:a5d:60ca:: with SMTP id x10mr4210723wrt.407.1588257630518;
+        Thu, 30 Apr 2020 07:40:30 -0700 (PDT)
 Received: from localhost.localdomain ([2001:171b:226e:c200:c43b:ef78:d083:b355])
-        by smtp.gmail.com with ESMTPSA id n2sm4153286wrt.33.2020.04.30.07.40.23
+        by smtp.gmail.com with ESMTPSA id n2sm4153286wrt.33.2020.04.30.07.40.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 30 Apr 2020 07:40:24 -0700 (PDT)
+        Thu, 30 Apr 2020 07:40:30 -0700 (PDT)
 From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
 To:     iommu@lists.linux-foundation.org, devicetree@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
@@ -67,10 +67,11 @@ Cc:     joro@8bytes.org, catalin.marinas@arm.com, will@kernel.org,
         jacob.jun.pan@linux.intel.com, christian.koenig@amd.com,
         felix.kuehling@amd.com, zhangfei.gao@linaro.org, jgg@ziepe.ca,
         xuzaibo@huawei.com, fenghua.yu@intel.com, hch@infradead.org,
-        Jean-Philippe Brucker <jean-philippe@linaro.org>
-Subject: [PATCH v6 06/25] arm64: mm: Add asid_gen_match() helper
-Date:   Thu, 30 Apr 2020 16:34:05 +0200
-Message-Id: <20200430143424.2787566-7-jean-philippe@linaro.org>
+        Jean-Philippe Brucker <jean-philippe@linaro.org>,
+        Suzuki K Poulose <suzuki.poulose@arm.com>
+Subject: [PATCH v6 10/25] arm64: cpufeature: Export symbol read_sanitised_ftr_reg()
+Date:   Thu, 30 Apr 2020 16:34:09 +0200
+Message-Id: <20200430143424.2787566-11-jean-philippe@linaro.org>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200430143424.2787566-1-jean-philippe@linaro.org>
 References: <20200430143424.2787566-1-jean-philippe@linaro.org>
@@ -81,47 +82,28 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add a macro to check if an ASID is from the current generation, since a
-subsequent patch will introduce a third user for this test.
+The SMMUv3 driver would like to read the MMFR0 PARANGE field in order to
+share CPU page tables with devices. Allow the driver to be built as
+module by exporting the read_sanitized_ftr_reg() cpufeature symbol.
 
+Cc: Suzuki K Poulose <suzuki.poulose@arm.com>
 Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
 ---
- arch/arm64/mm/context.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ arch/arm64/kernel/cpufeature.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/arch/arm64/mm/context.c b/arch/arm64/mm/context.c
-index 9b26f9a88724f..d702d60e64dab 100644
---- a/arch/arm64/mm/context.c
-+++ b/arch/arm64/mm/context.c
-@@ -92,6 +92,9 @@ static void set_reserved_asid_bits(void)
- 		bitmap_clear(asid_map, 0, NUM_USER_ASIDS);
+diff --git a/arch/arm64/kernel/cpufeature.c b/arch/arm64/kernel/cpufeature.c
+index 9fac745aa7bb2..5f6adbf4ae893 100644
+--- a/arch/arm64/kernel/cpufeature.c
++++ b/arch/arm64/kernel/cpufeature.c
+@@ -841,6 +841,7 @@ u64 read_sanitised_ftr_reg(u32 id)
+ 	BUG_ON(!regp);
+ 	return regp->sys_val;
  }
++EXPORT_SYMBOL_GPL(read_sanitised_ftr_reg);
  
-+#define asid_gen_match(asid) \
-+	(!(((asid) ^ atomic64_read(&asid_generation)) >> asid_bits))
-+
- static void flush_context(void)
- {
- 	int i;
-@@ -220,8 +223,7 @@ void check_and_switch_context(struct mm_struct *mm, unsigned int cpu)
- 	 *   because atomic RmWs are totally ordered for a given location.
- 	 */
- 	old_active_asid = atomic64_read(&per_cpu(active_asids, cpu));
--	if (old_active_asid &&
--	    !((asid ^ atomic64_read(&asid_generation)) >> asid_bits) &&
-+	if (old_active_asid && asid_gen_match(asid) &&
- 	    atomic64_cmpxchg_relaxed(&per_cpu(active_asids, cpu),
- 				     old_active_asid, asid))
- 		goto switch_mm_fastpath;
-@@ -229,7 +231,7 @@ void check_and_switch_context(struct mm_struct *mm, unsigned int cpu)
- 	raw_spin_lock_irqsave(&cpu_asid_lock, flags);
- 	/* Check that our ASID belongs to the current generation. */
- 	asid = atomic64_read(&mm->context.id);
--	if ((asid ^ atomic64_read(&asid_generation)) >> asid_bits) {
-+	if (!asid_gen_match(asid)) {
- 		asid = new_context(mm);
- 		atomic64_set(&mm->context.id, asid);
- 	}
+ #define read_sysreg_case(r)	\
+ 	case r:		return read_sysreg_s(r)
 -- 
 2.26.2
 
