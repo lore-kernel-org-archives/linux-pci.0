@@ -2,44 +2,44 @@ Return-Path: <SRS0=q/mj=6O=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74E02C83006
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 08:07:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7440FC83001
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 08:07:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 527812186A
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 08:07:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 54DD42186A
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 08:07:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1588234040;
-	bh=kwMHrQRCUR0Xnjbf55cLJqGOENIDvbYB5y5ST/WRl6w=;
+	s=default; t=1588234041;
+	bh=ywMAarf+hIwIAp8Ap6stYGiRmo4nHI7hFwnjfqa79os=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=v+51E5MQzMyaz5rkw2pxI/3F0ISutONWwyIeMLOSS8TVlRUf4r6sD2i9mP75Wp6SH
-	 srSRmDHskreKrxGxVQgk7F6+h7OmoiFQeovTBVRLHkFJEKi5JIGvOp191VJULaWCn/
-	 vgNqifs1X+ziaeMpmpI7f/wJcQ7Taed03l8VnJYQ=
+	b=JwxPIsjYhQOLoRw0YL4eP9Xi12W0EC0tadDIvQCwquL9vTlFLWM0ayT0jdQ5GoiVB
+	 ItVqDrTWNRdVG/rE/psPZQUXR2jrU0Opvy4dO+MaIYX/nCb8iPUlvmyYOuOjFa0v2n
+	 2cjpiZHEJNUh1M8hLgrBCCzXHiia6sGwSCJBoElY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726649AbgD3IHM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 30 Apr 2020 04:07:12 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51226 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726910AbgD3IGt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1726943AbgD3IGt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Thu, 30 Apr 2020 04:06:49 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51156 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726930AbgD3IGs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 30 Apr 2020 04:06:48 -0400
 Received: from pali.im (pali.im [31.31.79.79])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A47D72186A;
-        Thu, 30 Apr 2020 08:06:48 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id AEDF321D7A;
+        Thu, 30 Apr 2020 08:06:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1588234008;
-        bh=kwMHrQRCUR0Xnjbf55cLJqGOENIDvbYB5y5ST/WRl6w=;
+        s=default; t=1588234007;
+        bh=ywMAarf+hIwIAp8Ap6stYGiRmo4nHI7hFwnjfqa79os=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=cn1xEq0YyV3o+vE/Xuar5Hm8tFbZ5uBt7y+LbKe1qe6T9tn95ytJUULutb3jxGAEm
-         CVnVs+VQNxhGdMf8OeDZFH9ozwQoJS6m2W37Ly3vsP+QHNE1joV2Ja5bX8YWuEXjKs
-         M7zDutva9fee7ChAlYVG33bcbpSm2be/Nn372Xgs=
+        b=QD7s7OoRieHIuM6kTekxCrpfF6DLL+lFE0CX0XzvIt1NYgWLHM50RPbLyP9t+wgoB
+         w6TLSdTo9K1aLWK1AxgkvfqZOxW+w9DN6QTbJxiH6+nbQEhjhH5LINv5tGegqUqK6g
+         fboOIfQwLg/gdrR+7KBeFtV0JxkOmE5MKHu35Gok=
 Received: by pali.im (Postfix)
-        id DF46B7AD; Thu, 30 Apr 2020 10:06:46 +0200 (CEST)
+        id DD10EA19; Thu, 30 Apr 2020 10:06:45 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
         Gregory Clement <gregory.clement@bootlin.com>,
@@ -55,9 +55,9 @@ To:     Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
         Xogium <contact@xogium.me>
 Cc:     devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-pci@vger.kernel.org
-Subject: [PATCH v4 07/12] PCI: aardvark: Add PHY support
-Date:   Thu, 30 Apr 2020 10:06:20 +0200
-Message-Id: <20200430080625.26070-8-pali@kernel.org>
+Subject: [PATCH v4 06/12] PCI: aardvark: Add FIXME comment for PCIE_CORE_CMD_STATUS_REG access
+Date:   Thu, 30 Apr 2020 10:06:19 +0200
+Message-Id: <20200430080625.26070-7-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200430080625.26070-1-pali@kernel.org>
 References: <20200430080625.26070-1-pali@kernel.org>
@@ -69,149 +69,39 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Marek Behún <marek.behun@nic.cz>
+This register is applicable only when the controller is configured for
+Endpoint mode, which is not the case for the current version of this
+driver.
 
-With recent proposed changes for U-Boot it is possible that bootloader
-won't initialize the PHY for this controller (currently the PHY is
-initialized regardless whether PCI is used in U-Boot, but with these
-proposed changes the PHY is initialized only on request).
+Attempting to remove this code though caused some ath10k cards to stop
+working, so for some unknown reason it is needed here.
 
-Since the mvebu-a3700-comphy driver by Miquèl Raynal supports enabling
-PCIe PHY, and since Linux' functionality should be independent on what
-bootloader did, add code for enabling generic PHY if found in device OF
-node.
+This should be investigated and a comment explaining this should be put
+before the code, so we add a FIXME comment for now.
 
-The mvebu-a3700-comphy driver does PHY powering via SMC calls to ARM
-Trusted Firmware. The corresponding code in ARM Trusted Firmware skips
-one register write which U-Boot does not: step 7 ("Enable TX"), see [1].
-Instead ARM Trusted Firmware expects PCIe driver to do this step,
-probably because the register is in PCIe controller address space,
-instead of PHY address space. We therefore add this step into the
-advk_pcie_setup_hw function.
-
-[1] https://git.trustedfirmware.org/TF-A/trusted-firmware-a.git/tree/drivers/marvell/comphy/phy-comphy-3700.c?h=v2.3-rc2#n836
-
-Signed-off-by: Marek Behún <marek.behun@nic.cz>
-Cc: Miquèl Raynal <miquel.raynal@bootlin.com>
+Signed-off-by: Pali Rohár <pali@kernel.org>
 ---
- drivers/pci/controller/pci-aardvark.c | 69 +++++++++++++++++++++++++++
- 1 file changed, 69 insertions(+)
+ drivers/pci/controller/pci-aardvark.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
 diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index 8332c71d69fa..053ae6c19a3d 100644
+index 2ecc79c03ade..8332c71d69fa 100644
 --- a/drivers/pci/controller/pci-aardvark.c
 +++ b/drivers/pci/controller/pci-aardvark.c
-@@ -16,6 +16,7 @@
- #include <linux/kernel.h>
- #include <linux/pci.h>
- #include <linux/init.h>
-+#include <linux/phy/phy.h>
- #include <linux/platform_device.h>
- #include <linux/msi.h>
- #include <linux/of_address.h>
-@@ -104,6 +105,8 @@
- #define     PCIE_CORE_CTRL2_STRICT_ORDER_ENABLE	BIT(5)
- #define     PCIE_CORE_CTRL2_OB_WIN_ENABLE	BIT(6)
- #define     PCIE_CORE_CTRL2_MSI_ENABLE		BIT(10)
-+#define PCIE_CORE_REF_CLK_REG			(CONTROL_BASE_ADDR + 0x14)
-+#define     PCIE_CORE_REF_CLK_TX_ENABLE		BIT(1)
- #define PCIE_MSG_LOG_REG			(CONTROL_BASE_ADDR + 0x30)
- #define PCIE_ISR0_REG				(CONTROL_BASE_ADDR + 0x40)
- #define PCIE_MSG_PM_PME_MASK			BIT(7)
-@@ -207,6 +210,7 @@ struct advk_pcie {
- 	int link_gen;
- 	struct pci_bridge_emul bridge;
- 	struct gpio_desc *reset_gpio;
-+	struct phy *phy;
- };
+@@ -439,6 +439,13 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
  
- static inline void advk_writel(struct advk_pcie *pcie, u32 val, u64 reg)
-@@ -358,6 +362,11 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
+ 	advk_pcie_train_link(pcie);
  
- 	advk_pcie_issue_perst(pcie);
- 
-+	/* Enable TX */
-+	reg = advk_readl(pcie, PCIE_CORE_REF_CLK_REG);
-+	reg |= PCIE_CORE_REF_CLK_TX_ENABLE;
-+	advk_writel(pcie, reg, PCIE_CORE_REF_CLK_REG);
-+
- 	/* Set to Direct mode */
- 	reg = advk_readl(pcie, CTRL_CONFIG_REG);
- 	reg &= ~(CTRL_MODE_MASK << CTRL_MODE_SHIFT);
-@@ -1041,6 +1050,62 @@ static irqreturn_t advk_pcie_irq_handler(int irq, void *arg)
- 	return IRQ_HANDLED;
- }
- 
-+static void __maybe_unused advk_pcie_disable_phy(struct advk_pcie *pcie)
-+{
-+	phy_power_off(pcie->phy);
-+	phy_exit(pcie->phy);
-+}
-+
-+static int advk_pcie_enable_phy(struct advk_pcie *pcie)
-+{
-+	int ret;
-+
-+	if (!pcie->phy)
-+		return 0;
-+
-+	ret = phy_init(pcie->phy);
-+	if (ret)
-+		return ret;
-+
-+	ret = phy_set_mode(pcie->phy, PHY_MODE_PCIE);
-+	if (ret) {
-+		phy_exit(pcie->phy);
-+		return ret;
-+	}
-+
-+	ret = phy_power_on(pcie->phy);
-+	if (ret) {
-+		phy_exit(pcie->phy);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static int advk_pcie_setup_phy(struct advk_pcie *pcie)
-+{
-+	struct device *dev = &pcie->pdev->dev;
-+	struct device_node *node = dev->of_node;
-+	int ret = 0;
-+
-+	pcie->phy = devm_of_phy_get(dev, node, NULL);
-+	if (IS_ERR(pcie->phy) && (PTR_ERR(pcie->phy) == -EPROBE_DEFER))
-+		return PTR_ERR(pcie->phy);
-+
-+	/* Old bindings miss the PHY handle */
-+	if (IS_ERR(pcie->phy)) {
-+		dev_warn(dev, "PHY unavailable (%ld)\n", PTR_ERR(pcie->phy));
-+		pcie->phy = NULL;
-+		return 0;
-+	}
-+
-+	ret = advk_pcie_enable_phy(pcie);
-+	if (ret)
-+		dev_err(dev, "Failed to initialize PHY (%d)\n", ret);
-+
-+	return ret;
-+}
-+
- static int advk_pcie_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
-@@ -1100,6 +1165,10 @@ static int advk_pcie_probe(struct platform_device *pdev)
- 	else
- 		pcie->link_gen = ret;
- 
-+	ret = advk_pcie_setup_phy(pcie);
-+	if (ret)
-+		return ret;
-+
- 	advk_pcie_setup_hw(pcie);
- 
- 	advk_sw_pci_bridge_init(pcie);
++	/*
++	 * FIXME: The following register update is suspicious. This register is
++	 * applicable only when the PCI controller is configured for Endpoint
++	 * mode, not as a Root Complex. But apparently when this code is
++	 * removed, some cards stop working. This should be investigated and
++	 * a comment explaining this should be put here.
++	 */
+ 	reg = advk_readl(pcie, PCIE_CORE_CMD_STATUS_REG);
+ 	reg |= PCIE_CORE_CMD_MEM_ACCESS_EN |
+ 		PCIE_CORE_CMD_IO_ACCESS_EN |
 -- 
 2.20.1
 
