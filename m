@@ -5,62 +5,63 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4FF0C47258
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 22:06:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25F94C47257
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 22:07:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 96AAC214D8
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 22:06:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 04C21214D8
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 22:07:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YAgKdCsB"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="c5CYdiZZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727969AbgD3WGw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 30 Apr 2020 18:06:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48256 "EHLO
+        id S1728050AbgD3WHB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 30 Apr 2020 18:07:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48286 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727955AbgD3WGv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Apr 2020 18:06:51 -0400
-Received: from mail-ej1-x644.google.com (mail-ej1-x644.google.com [IPv6:2a00:1450:4864:20::644])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08295C035494;
-        Thu, 30 Apr 2020 15:06:51 -0700 (PDT)
-Received: by mail-ej1-x644.google.com with SMTP id s9so6028433eju.1;
-        Thu, 30 Apr 2020 15:06:50 -0700 (PDT)
+        with ESMTP id S1728039AbgD3WG7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Apr 2020 18:06:59 -0400
+Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59429C035494;
+        Thu, 30 Apr 2020 15:06:59 -0700 (PDT)
+Received: by mail-ej1-x642.google.com with SMTP id s3so6017667eji.6;
+        Thu, 30 Apr 2020 15:06:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=T7fxTmFHD/7QIFtrzRSLVLRXMToDkzdfYoVrqZS2ee8=;
-        b=YAgKdCsBI9EVHZ0rPbeQL9a8iOzCbMAEtAivW4tqMSnAzsxp06oNOsp/RZsYBzqXgm
-         /0RFmx7pDFLpyjzOyshiLRRIqnQeCjKc//S6f5FdXNvUTkSJGAzF9Sj7ftU52+Ksw5dl
-         etWKjYQcVrA7aa4jnRkFxKkU9EBu0EpyT7bC6jR0LzRLx/DLKnu/ww715dHEm1LpWQml
-         SRrQJ6iXRc3bbCAk+LTQ54VQtrRDKOUCRTSRb6Vy0H0/kmWk2qJDMrsPH46452uK2f62
-         OGTRL0bRul2Y0USsJ5xnELbnfGhEpbtqb6XBmsqEG7v9lasiAy2Rl64t6WkXKCyXy0Jk
-         W1kQ==
+        bh=p5qwOdOjBM0kR3h5Ux00+NLqsBpbJPVpfGyfoBvZ0KU=;
+        b=c5CYdiZZeep2K6qtPUqzur442gkAeLpmaznc9LJNKtnDY06F+DPUTIgjpf+0VNDeEc
+         WV41w4nGCCBTsAnaRozUjiWqtmYyufG1BADcu/c/Yoe3+5/2U44N87u+FghlfBGkkHML
+         a2qc51oGITjmf5QQMmqZRip+7UdC5YyQhe2LxbBLesBgTLu73zkmd9sa2QHxriHG8+FP
+         n54Cy99LdxFGl35iKumefOEkTEkIqK0AAiZ/Th664L7KXr7pcTYHVfjuZqye9s80VCnf
+         TivfTQTuisO3pn4ncaCOJJRHM0pprwhqKohaCrE8fBqQWsFDQ7aajqDHyKSOttcKd2Dn
+         Tvjg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=T7fxTmFHD/7QIFtrzRSLVLRXMToDkzdfYoVrqZS2ee8=;
-        b=tiJWtzr5SKXZD+j0JdWkSXMC1kRyd/3RN4MJBIlNvijgnuzxC/eC2WGTOwiTeSDyjg
-         4vRQS9F5JYK2xQBJx3TukEar9gqu3URYKTNqv3v+Hly4LYyL6kPRkIRJ09FihjbLO1Ps
-         0wm+SHo9MZGHjtnlQkMeUf3wJKtNMLvAvnAa1YCqDjtP2ITzQoukjDfQa5NqbbVDuO2c
-         Lxglp4krQhZAAXrKpHkJoJYabF/9oUFyXy5oy4cIG74USIagONXno8ANHpeLFM+tENER
-         QxQJEsF8KF2jBcAuOk7QdLPWWzmochgxRR3XnD7OWrNdcWyAtw3gfGzqUCbMM0brcOYo
-         +Lqw==
-X-Gm-Message-State: AGi0PuYom5D9RBKgpGEP/YgooyUDerSFarpwgScntulTqH9MDJPaRQFR
-        eLSnt1zdqXs01vxZyjQTlmw=
-X-Google-Smtp-Source: APiQypIqSPFMQHiJV9RlWmmf6BGqJL0Xri2zN7mWx4whRpYlSTSCkS103E6lLBPhKiwa88tvlSgTUg==
-X-Received: by 2002:a17:906:72c8:: with SMTP id m8mr589017ejl.318.1588284409578;
-        Thu, 30 Apr 2020 15:06:49 -0700 (PDT)
+        bh=p5qwOdOjBM0kR3h5Ux00+NLqsBpbJPVpfGyfoBvZ0KU=;
+        b=adpUytGkKUTV9V9xd46liMfPEQDMmPB5am+hoE22IvNOVxUNs5ZyShsQhCQUFzRxZ2
+         hgFuwhnb1Qfs1FuaZJBhVBA8m9tS3Wj6/GNPbYbZTEsMqeMHT0Ps744pEn3Ty3YaExuv
+         LYrRExvNFeDf6LKYw0zOI9n7EVb1JxeBsgiMxjjztCCcqi7AgxwOV/XC7DuByoDhgTqQ
+         u7mVW6sxuN1JFRWbhLtvdGYM/mToYHXeKmEPN9DzxFRELBTdzV8jlk9b96g8KoN5wvYR
+         8aRQPkLhBqVmTFvoXTgB8XPmeq2UtQGF6g5ehzLwP8JlGmCCwRiPcG2OdZ4jPZlToxAi
+         0dAA==
+X-Gm-Message-State: AGi0PuaOQWG9k7MqjUQzO5yAbmj+L3wR0HHtDbglMFpth5JFZaaH3A1p
+        hLxL94zMT/Qcn/X0HthvMzA=
+X-Google-Smtp-Source: APiQypLsfhnbzhYBF4ojiBpUSjb/Wnjy30KMuPcOEgMymuyUa0nQMhfoim7Tbvd/6YROw9VY3sQqMA==
+X-Received: by 2002:a17:906:1199:: with SMTP id n25mr623646eja.30.1588284418018;
+        Thu, 30 Apr 2020 15:06:58 -0700 (PDT)
 Received: from Ansuel-XPS.localdomain ([79.37.253.240])
-        by smtp.googlemail.com with ESMTPSA id t17sm54185edq.88.2020.04.30.15.06.47
+        by smtp.googlemail.com with ESMTPSA id t17sm54185edq.88.2020.04.30.15.06.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 30 Apr 2020 15:06:48 -0700 (PDT)
+        Thu, 30 Apr 2020 15:06:57 -0700 (PDT)
 From:   Ansuel Smith <ansuelsmth@gmail.com>
 To:     Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc:     Ansuel Smith <ansuelsmth@gmail.com>,
+Cc:     Sham Muthayyan <smuthayy@codeaurora.org>,
+        Ansuel Smith <ansuelsmth@gmail.com>,
         Andy Gross <agross@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Rob Herring <robh+dt@kernel.org>,
@@ -71,9 +72,9 @@ Cc:     Ansuel Smith <ansuelsmth@gmail.com>,
         Philipp Zabel <p.zabel@pengutronix.de>,
         linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v3 06/11] PCI: qcom: introduce qcom_clear_and_set_dword
-Date:   Fri,  1 May 2020 00:06:13 +0200
-Message-Id: <20200430220619.3169-7-ansuelsmth@gmail.com>
+Subject: [PATCH v3 09/11] PCI: qcom: add ipq8064 rev2 variant and set tx term offset
+Date:   Fri,  1 May 2020 00:06:16 +0200
+Message-Id: <20200430220619.3169-10-ansuelsmth@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200430220619.3169-1-ansuelsmth@gmail.com>
 References: <20200430220619.3169-1-ansuelsmth@gmail.com>
@@ -84,257 +85,73 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Use qcom_clear_and_set_dword instead of use the same code many times in
-the entire driver.
+From: Sham Muthayyan <smuthayy@codeaurora.org>
 
+Add tx term offset support to pcie qcom driver need in some revision of
+the ipq806x SoC.
+Ipq8064 have tx term offset set to 7.
+Ipq8064-v2 revision and ipq8065 have the tx term offset set to 0.
+
+Signed-off-by: Sham Muthayyan <smuthayy@codeaurora.org>
 Signed-off-by: Ansuel Smith <ansuelsmth@gmail.com>
 ---
- drivers/pci/controller/dwc/pcie-qcom.c | 108 ++++++++++---------------
- 1 file changed, 41 insertions(+), 67 deletions(-)
+ drivers/pci/controller/dwc/pcie-qcom.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
 diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 921030a64bab..a4fd5baada34 100644
+index da8058fd1925..372d2c8508b5 100644
 --- a/drivers/pci/controller/dwc/pcie-qcom.c
 +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -184,6 +184,16 @@ struct qcom_pcie {
+@@ -45,6 +45,9 @@
+ #define PCIE_CAP_CPL_TIMEOUT_DISABLE		0x10
  
- #define to_qcom_pcie(x)		dev_get_drvdata((x)->dev)
- 
-+static void qcom_clear_and_set_dword(void __iomem *addr, u32 clear_mask,
-+				     u32 set_mask)
-+{
-+	u32 val = readl(addr);
+ #define PCIE20_PARF_PHY_CTRL			0x40
++#define PHY_CTRL_PHY_TX0_TERM_OFFSET_MASK	GENMASK(12, 16)
++#define PHY_CTRL_PHY_TX0_TERM_OFFSET(x)		((x) << 16)
 +
-+	val &= ~clear_mask;
-+	val |= set_mask;
-+	writel(val, addr);
-+}
+ #define PCIE20_PARF_PHY_REFCLK			0x4C
+ #define PHY_REFCLK_SSP_EN			BIT(16)
+ #define PHY_REFCLK_USE_PAD			BIT(12)
+@@ -118,6 +121,7 @@ struct qcom_pcie_resources_2_1_0 {
+ 	u32 tx_swing_full;
+ 	u32 tx_swing_low;
+ 	u32 rx0_eq;
++	u8 phy_tx0_term_offset;
+ };
+ 
+ struct qcom_pcie_resources_1_0_0 {
+@@ -318,6 +322,11 @@ static int qcom_pcie_get_resources_2_1_0(struct qcom_pcie *pcie)
+ 	if (IS_ERR(res->ext_reset))
+ 		return PTR_ERR(res->ext_reset);
+ 
++	if (of_device_is_compatible(dev->of_node, "qcom,pcie-ipq8064"))
++		res->phy_tx0_term_offset = 7;
++	else
++		res->phy_tx0_term_offset = 0;
 +
- static void qcom_ep_reset_assert(struct qcom_pcie *pcie)
- {
- 	gpiod_set_value_cansleep(pcie->reset, 1);
-@@ -214,12 +224,9 @@ static int qcom_pcie_establish_link(struct qcom_pcie *pcie)
- 
- static void qcom_pcie_2_1_0_ltssm_enable(struct qcom_pcie *pcie)
- {
--	u32 val;
--
- 	/* enable link training */
--	val = readl(pcie->elbi + PCIE20_ELBI_SYS_CTRL);
--	val |= PCIE20_ELBI_SYS_CTRL_LT_ENABLE;
--	writel(val, pcie->elbi + PCIE20_ELBI_SYS_CTRL);
-+	qcom_clear_and_set_dword(pcie->elbi + PCIE20_ELBI_SYS_CTRL, 0,
-+				 PCIE20_ELBI_SYS_CTRL_LT_ENABLE);
+ 	res->phy_reset = devm_reset_control_get_exclusive(dev, "phy");
+ 	return PTR_ERR_OR_ZERO(res->phy_reset);
  }
- 
- static int qcom_pcie_get_resources_2_1_0(struct qcom_pcie *pcie)
-@@ -304,7 +311,6 @@ static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
- 	struct qcom_pcie_resources_2_1_0 *res = &pcie->res.v2_1_0;
- 	struct dw_pcie *pci = pcie->pci;
- 	struct device *dev = pci->dev;
--	u32 val;
- 	int ret;
- 
- 	ret = regulator_bulk_enable(ARRAY_SIZE(res->supplies), res->supplies);
-@@ -360,14 +366,11 @@ static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
- 	}
- 
+@@ -402,6 +411,11 @@ static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
  	/* enable PCIe clocks and resets */
--	val = readl(pcie->parf + PCIE20_PARF_PHY_CTRL);
--	val &= ~BIT(0);
--	writel(val, pcie->parf + PCIE20_PARF_PHY_CTRL);
-+	qcom_clear_and_set_dword(pcie->parf + PCIE20_PARF_PHY_CTRL, BIT(0), 0);
+ 	qcom_clear_and_set_dword(pcie->parf + PCIE20_PARF_PHY_CTRL, BIT(0), 0);
  
- 	/* enable external reference clock */
--	val = readl(pcie->parf + PCIE20_PARF_PHY_REFCLK);
--	val |= BIT(16);
--	writel(val, pcie->parf + PCIE20_PARF_PHY_REFCLK);
-+	qcom_clear_and_set_dword(pcie->parf + PCIE20_PARF_PHY_REFCLK, 0,
-+				 BIT(16));
- 
- 	ret = reset_control_deassert(res->phy_reset);
- 	if (ret) {
-@@ -514,10 +517,9 @@ static int qcom_pcie_init_1_0_0(struct qcom_pcie *pcie)
- 	writel(0, pcie->parf + PCIE20_PARF_DBI_BASE_ADDR);
- 
- 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
--		u32 val = readl(pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT);
--
--		val |= BIT(31);
--		writel(val, pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT);
-+		qcom_clear_and_set_dword(
-+			pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT, 0,
-+			BIT(31));
- 	}
- 
- 	return 0;
-@@ -537,12 +539,8 @@ static int qcom_pcie_init_1_0_0(struct qcom_pcie *pcie)
- 
- static void qcom_pcie_2_3_2_ltssm_enable(struct qcom_pcie *pcie)
- {
--	u32 val;
--
- 	/* enable link training */
--	val = readl(pcie->parf + PCIE20_PARF_LTSSM);
--	val |= BIT(8);
--	writel(val, pcie->parf + PCIE20_PARF_LTSSM);
-+	qcom_clear_and_set_dword(pcie->parf + PCIE20_PARF_LTSSM, 0, BIT(8));
- }
- 
- static int qcom_pcie_get_resources_2_3_2(struct qcom_pcie *pcie)
-@@ -603,7 +601,6 @@ static int qcom_pcie_init_2_3_2(struct qcom_pcie *pcie)
- 	struct qcom_pcie_resources_2_3_2 *res = &pcie->res.v2_3_2;
- 	struct dw_pcie *pci = pcie->pci;
- 	struct device *dev = pci->dev;
--	u32 val;
- 	int ret;
- 
- 	ret = regulator_bulk_enable(ARRAY_SIZE(res->supplies), res->supplies);
-@@ -637,25 +634,19 @@ static int qcom_pcie_init_2_3_2(struct qcom_pcie *pcie)
- 	}
- 
- 	/* enable PCIe clocks and resets */
--	val = readl(pcie->parf + PCIE20_PARF_PHY_CTRL);
--	val &= ~BIT(0);
--	writel(val, pcie->parf + PCIE20_PARF_PHY_CTRL);
-+	qcom_clear_and_set_dword(pcie->parf + PCIE20_PARF_PHY_CTRL, BIT(0), 0);
- 
- 	/* change DBI base address */
- 	writel(0, pcie->parf + PCIE20_PARF_DBI_BASE_ADDR);
- 
- 	/* MAC PHY_POWERDOWN MUX DISABLE  */
--	val = readl(pcie->parf + PCIE20_PARF_SYS_CTRL);
--	val &= ~BIT(29);
--	writel(val, pcie->parf + PCIE20_PARF_SYS_CTRL);
-+	qcom_clear_and_set_dword(pcie->parf + PCIE20_PARF_SYS_CTRL, BIT(29), 0);
- 
--	val = readl(pcie->parf + PCIE20_PARF_MHI_CLOCK_RESET_CTRL);
--	val |= BIT(4);
--	writel(val, pcie->parf + PCIE20_PARF_MHI_CLOCK_RESET_CTRL);
-+	qcom_clear_and_set_dword(pcie->parf + PCIE20_PARF_MHI_CLOCK_RESET_CTRL,
-+				 0, BIT(4));
- 
--	val = readl(pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT_V2);
--	val |= BIT(31);
--	writel(val, pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT_V2);
-+	qcom_clear_and_set_dword(
-+		pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT_V2, 0, BIT(31));
- 
- 	return 0;
- 
-@@ -792,7 +783,6 @@ static int qcom_pcie_init_2_4_0(struct qcom_pcie *pcie)
- 	struct qcom_pcie_resources_2_4_0 *res = &pcie->res.v2_4_0;
- 	struct dw_pcie *pci = pcie->pci;
- 	struct device *dev = pci->dev;
--	u32 val;
- 	int ret;
- 
- 	ret = reset_control_assert(res->axi_m_reset);
-@@ -918,25 +908,19 @@ static int qcom_pcie_init_2_4_0(struct qcom_pcie *pcie)
- 		goto err_clks;
- 
- 	/* enable PCIe clocks and resets */
--	val = readl(pcie->parf + PCIE20_PARF_PHY_CTRL);
--	val &= ~BIT(0);
--	writel(val, pcie->parf + PCIE20_PARF_PHY_CTRL);
-+	qcom_clear_and_set_dword(pcie->parf + PCIE20_PARF_PHY_CTRL, BIT(0), 0);
- 
- 	/* change DBI base address */
- 	writel(0, pcie->parf + PCIE20_PARF_DBI_BASE_ADDR);
- 
- 	/* MAC PHY_POWERDOWN MUX DISABLE  */
--	val = readl(pcie->parf + PCIE20_PARF_SYS_CTRL);
--	val &= ~BIT(29);
--	writel(val, pcie->parf + PCIE20_PARF_SYS_CTRL);
-+	qcom_clear_and_set_dword(pcie->parf + PCIE20_PARF_SYS_CTRL, BIT(29), 0);
- 
--	val = readl(pcie->parf + PCIE20_PARF_MHI_CLOCK_RESET_CTRL);
--	val |= BIT(4);
--	writel(val, pcie->parf + PCIE20_PARF_MHI_CLOCK_RESET_CTRL);
-+	qcom_clear_and_set_dword(pcie->parf + PCIE20_PARF_MHI_CLOCK_RESET_CTRL,
-+				 0, BIT(4));
- 
--	val = readl(pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT_V2);
--	val |= BIT(31);
--	writel(val, pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT_V2);
-+	qcom_clear_and_set_dword(
-+		pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT_V2, 0, BIT(31));
- 
- 	return 0;
- 
-@@ -1017,7 +1001,6 @@ static int qcom_pcie_init_2_3_3(struct qcom_pcie *pcie)
- 	struct dw_pcie *pci = pcie->pci;
- 	struct device *dev = pci->dev;
- 	int i, ret;
--	u32 val;
- 
- 	for (i = 0; i < ARRAY_SIZE(res->rst); i++) {
- 		ret = reset_control_assert(res->rst[i]);
-@@ -1077,9 +1060,7 @@ static int qcom_pcie_init_2_3_3(struct qcom_pcie *pcie)
- 	writel(SLV_ADDR_SPACE_SZ,
- 		pcie->parf + PCIE20_v3_PARF_SLV_ADDR_SPACE_SIZE);
- 
--	val = readl(pcie->parf + PCIE20_PARF_PHY_CTRL);
--	val &= ~BIT(0);
--	writel(val, pcie->parf + PCIE20_PARF_PHY_CTRL);
-+	qcom_clear_and_set_dword(pcie->parf + PCIE20_PARF_PHY_CTRL, BIT(0), 0);
- 
- 	writel(0, pcie->parf + PCIE20_PARF_DBI_BASE_ADDR);
- 
-@@ -1093,9 +1074,8 @@ static int qcom_pcie_init_2_3_3(struct qcom_pcie *pcie)
- 	writel(DBI_RO_WR_EN, pci->dbi_base + PCIE20_MISC_CONTROL_1_REG);
- 	writel(PCIE_CAP_LINK1_VAL, pci->dbi_base + PCIE20_CAP_LINK_1);
- 
--	val = readl(pci->dbi_base + PCIE20_CAP_LINK_CAPABILITIES);
--	val &= ~PCIE20_CAP_ACTIVE_STATE_LINK_PM_SUPPORT;
--	writel(val, pci->dbi_base + PCIE20_CAP_LINK_CAPABILITIES);
-+	qcom_clear_and_set_dword(pcie->dbi_base + PCIE20_CAP_LINK_CAPABILITIES,
-+				 PCIE20_CAP_ACTIVE_STATE_LINK_PM_SUPPORT, 0);
- 
- 	writel(PCIE_CAP_CPL_TIMEOUT_DISABLE, pci->dbi_base +
- 		PCIE20_DEVICE_CONTROL2_STATUS2);
-@@ -1159,7 +1139,6 @@ static int qcom_pcie_init_2_7_0(struct qcom_pcie *pcie)
- 	struct qcom_pcie_resources_2_7_0 *res = &pcie->res.v2_7_0;
- 	struct dw_pcie *pci = pcie->pci;
- 	struct device *dev = pci->dev;
--	u32 val;
- 	int ret;
- 
- 	ret = regulator_bulk_enable(ARRAY_SIZE(res->supplies), res->supplies);
-@@ -1196,26 +1175,21 @@ static int qcom_pcie_init_2_7_0(struct qcom_pcie *pcie)
- 	writel(DEVICE_TYPE_RC, pcie->parf + PCIE20_PARF_DEVICE_TYPE);
- 
- 	/* enable PCIe clocks and resets */
--	val = readl(pcie->parf + PCIE20_PARF_PHY_CTRL);
--	val &= ~BIT(0);
--	writel(val, pcie->parf + PCIE20_PARF_PHY_CTRL);
-+	qcom_clear_and_set_dword(pcie->parf + PCIE20_PARF_PHY_CTRL, BIT(0), 0);
- 
- 	/* change DBI base address */
- 	writel(0, pcie->parf + PCIE20_PARF_DBI_BASE_ADDR);
- 
- 	/* MAC PHY_POWERDOWN MUX DISABLE  */
--	val = readl(pcie->parf + PCIE20_PARF_SYS_CTRL);
--	val &= ~BIT(29);
--	writel(val, pcie->parf + PCIE20_PARF_SYS_CTRL);
-+	qcom_clear_and_set_dword(pcie->parf + PCIE20_PARF_SYS_CTRL, BIT(29), 0);
- 
--	val = readl(pcie->parf + PCIE20_PARF_MHI_CLOCK_RESET_CTRL);
--	val |= BIT(4);
--	writel(val, pcie->parf + PCIE20_PARF_MHI_CLOCK_RESET_CTRL);
-+	qcom_clear_and_set_dword(pcie->parf + PCIE20_PARF_MHI_CLOCK_RESET_CTRL,
-+				 0, BIT(4));
- 
- 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
--		val = readl(pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT);
--		val |= BIT(31);
--		writel(val, pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT);
-+		qcom_clear_and_set_dword(
-+			pcie->parf + PCIE20_PARF_MHI_CLOCK_RESET_CTRL, 0,
-+			BIT(31));
- 	}
- 
- 	return 0;
++	/* set TX termination offset */
++	qcom_clear_and_set_dword(pcie->parf + PCIE20_PARF_PHY_CTRL,
++			PHY_CTRL_PHY_TX0_TERM_OFFSET_MASK,
++			PHY_CTRL_PHY_TX0_TERM_OFFSET(res->phy_tx0_term_offset));
++
+ 	writel(PCS_DEEMPH_TX_DEEMPH_GEN1(res->tx_deemph_gen1) |
+ 	       PCS_DEEMPH_TX_DEEMPH_GEN2_3_5DB(res->tx_deemph_gen2_3p5db) |
+ 	       PCS_DEEMPH_TX_DEEMPH_GEN2_6DB(res->tx_deemph_gen2_6db),
+@@ -1485,6 +1499,7 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ static const struct of_device_id qcom_pcie_match[] = {
+ 	{ .compatible = "qcom,pcie-apq8084", .data = &ops_1_0_0 },
+ 	{ .compatible = "qcom,pcie-ipq8064", .data = &ops_2_1_0 },
++	{ .compatible = "qcom,pcie-ipq8064-v2", .data = &ops_2_1_0 },
+ 	{ .compatible = "qcom,pcie-apq8064", .data = &ops_2_1_0 },
+ 	{ .compatible = "qcom,pcie-msm8996", .data = &ops_2_3_2 },
+ 	{ .compatible = "qcom,pcie-ipq8074", .data = &ops_2_3_3 },
 -- 
 2.25.1
 
