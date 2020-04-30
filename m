@@ -7,39 +7,39 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B3BCC83006
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2B11C83009
 	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 08:07:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6DCBA2073E
+	by mail.kernel.org (Postfix) with ESMTP id C0FB92073E
 	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 08:07:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=default; t=1588234031;
-	bh=EVFjn07kmFor7UKViXp0cTbAK/KeKBmBXH77UZhMUfU=;
+	bh=dkqvXTL9+Vx5TfVq+Qm+IxU+y+qPkG/crH1tOtt/POg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=SfPEX6HH1ZbyV7bOB5EcbZEEu0NYNHo41CW20DI4FK6SjBTijtzgi17y+U964nAnj
-	 PhxwgtWdb62+PBDdhlobdgqa7fVUbEt7YpGDwa2u4eOm6Dxu97kg23qTADLRY/tB05
-	 sVjmZ2L5rgn8vpLntfA7lHxdJKXXLXemQwNe0Sco=
+	b=DLj+RaWkQzdeyClVNmjnzUQWPsjk2FqJuxyiYpL6/QrrSc/vyUVlDA8jWM0W2nARj
+	 +3m8YACjBqAQnnB4a5dPx+WgkUhlh4dx2g97cM7aTi//6aNViXlqUkzkcP7NmBb5vK
+	 MbXv1F8MXrujjcwsQPyqe7gk017vXvjtCWXhS808=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727078AbgD3IHD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 30 Apr 2020 04:07:03 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51306 "EHLO mail.kernel.org"
+        id S1726561AbgD3IHC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 30 Apr 2020 04:07:02 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51430 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726961AbgD3IGv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 30 Apr 2020 04:06:51 -0400
+        id S1726930AbgD3IGx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 30 Apr 2020 04:06:53 -0400
 Received: from pali.im (pali.im [31.31.79.79])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BE4F121BE5;
-        Thu, 30 Apr 2020 08:06:50 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id F2BDC21D7F;
+        Thu, 30 Apr 2020 08:06:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1588234010;
-        bh=EVFjn07kmFor7UKViXp0cTbAK/KeKBmBXH77UZhMUfU=;
+        s=default; t=1588234013;
+        bh=dkqvXTL9+Vx5TfVq+Qm+IxU+y+qPkG/crH1tOtt/POg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=v67OJ1Rp1oOFl7Vj1Smbs4oVAWXOK0Qh3/349/FZd5r6Dka/ntS9BkYRLT4ulnV9O
-         nnWrETfrA+f8o3tGADIFy6rIMjzfTmJ4MRb733n8ixye+2rS2dMrelkF6Bq4NiyMS9
-         O594pO37ZBxr6RYdubkx22V5/XXInqarw7uG5ZPc=
+        b=zTQfyTVepnOQCOx20RRVjLZSraoxjtBWeUawYEh2WtjnmvgO+3f2FkMIdszbGRf/B
+         eukhcoPnJgJVe/42lJAEoM4WHCwGvoIfNxkVQYy85AiCO59cegPyWGWqIdv6uPN3Pv
+         aEzwptwd0ZDfpN01UsxKiBAEzzzdaoobUFshhXFE=
 Received: by pali.im (Postfix)
-        id ED84B7AD; Thu, 30 Apr 2020 10:06:48 +0200 (CEST)
+        id 357297AD; Thu, 30 Apr 2020 10:06:51 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
         Gregory Clement <gregory.clement@bootlin.com>,
@@ -55,9 +55,9 @@ To:     Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
         Xogium <contact@xogium.me>
 Cc:     devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-pci@vger.kernel.org
-Subject: [PATCH v4 09/12] dt-bindings: PCI: aardvark: Describe new properties
-Date:   Thu, 30 Apr 2020 10:06:22 +0200
-Message-Id: <20200430080625.26070-10-pali@kernel.org>
+Subject: [PATCH v4 11/12] arm64: dts: marvell: armada-37xx: Move PCIe comphy handle property
+Date:   Thu, 30 Apr 2020 10:06:24 +0200
+Message-Id: <20200430080625.26070-12-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200430080625.26070-1-pali@kernel.org>
 References: <20200430080625.26070-1-pali@kernel.org>
@@ -71,38 +71,57 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Marek Behún <marek.behun@nic.cz>
 
-Document the possibility to reference a PHY and reset-gpios and to set
-max-link-speed property.
+Move the comphy handle property of the PCIe node from board specific
+device tree files (EspressoBin and Turris Mox) to the generic
+armada-37xx.dtsi.
+
+This is correct since this is the only possible PCIe PHY configuration
+on Armada 37xx, so when PCIe is enabled on any board, this handle is
+correct.
 
 Signed-off-by: Marek Behún <marek.behun@nic.cz>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: devicetree@vger.kernel.org
 ---
- Documentation/devicetree/bindings/pci/aardvark-pci.txt | 4 ++++
- 1 file changed, 4 insertions(+)
+ arch/arm64/boot/dts/marvell/armada-3720-espressobin.dtsi | 1 -
+ arch/arm64/boot/dts/marvell/armada-3720-turris-mox.dts   | 1 -
+ arch/arm64/boot/dts/marvell/armada-37xx.dtsi             | 1 +
+ 3 files changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/aardvark-pci.txt b/Documentation/devicetree/bindings/pci/aardvark-pci.txt
-index 310ef7145c47..2b8ca920a7fa 100644
---- a/Documentation/devicetree/bindings/pci/aardvark-pci.txt
-+++ b/Documentation/devicetree/bindings/pci/aardvark-pci.txt
-@@ -19,6 +19,9 @@ contain the following properties:
-  - interrupt-map-mask and interrupt-map: standard PCI properties to
-    define the mapping of the PCIe interface to interrupt numbers.
-  - bus-range: PCI bus numbers covered
-+ - phys: the PCIe PHY handle
-+ - max-link-speed: see pci.txt
-+ - reset-gpios: see pci.txt
+diff --git a/arch/arm64/boot/dts/marvell/armada-3720-espressobin.dtsi b/arch/arm64/boot/dts/marvell/armada-3720-espressobin.dtsi
+index c92ad664cb0e..b97218c72727 100644
+--- a/arch/arm64/boot/dts/marvell/armada-3720-espressobin.dtsi
++++ b/arch/arm64/boot/dts/marvell/armada-3720-espressobin.dtsi
+@@ -44,7 +44,6 @@
+ /* J9 */
+ &pcie0 {
+ 	status = "okay";
+-	phys = <&comphy1 0>;
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pcie_reset_pins &pcie_clkreq_pins>;
+ 	reset-gpios = <&gpiosb 3 GPIO_ACTIVE_LOW>;
+diff --git a/arch/arm64/boot/dts/marvell/armada-3720-turris-mox.dts b/arch/arm64/boot/dts/marvell/armada-3720-turris-mox.dts
+index e496bd9d4737..15c1cf5c5b69 100644
+--- a/arch/arm64/boot/dts/marvell/armada-3720-turris-mox.dts
++++ b/arch/arm64/boot/dts/marvell/armada-3720-turris-mox.dts
+@@ -134,7 +134,6 @@
+ 	status = "okay";
+ 	max-link-speed = <2>;
+ 	reset-gpios = <&gpiosb 3 GPIO_ACTIVE_LOW>;
+-	phys = <&comphy1 0>;
  
- In addition, the Device Tree describing an Aardvark PCIe controller
- must include a sub-node that describes the legacy interrupt controller
-@@ -48,6 +51,7 @@ Example:
- 				<0 0 0 2 &pcie_intc 1>,
- 				<0 0 0 3 &pcie_intc 2>,
- 				<0 0 0 4 &pcie_intc 3>;
-+		phys = <&comphy1 0>;
- 		pcie_intc: interrupt-controller {
- 			interrupt-controller;
- 			#interrupt-cells = <1>;
+ 	/* enabled by U-Boot if PCIe module is present */
+ 	status = "disabled";
+diff --git a/arch/arm64/boot/dts/marvell/armada-37xx.dtsi b/arch/arm64/boot/dts/marvell/armada-37xx.dtsi
+index 7909c146eabf..5aaad64a793d 100644
+--- a/arch/arm64/boot/dts/marvell/armada-37xx.dtsi
++++ b/arch/arm64/boot/dts/marvell/armada-37xx.dtsi
+@@ -493,6 +493,7 @@
+ 					<0 0 0 2 &pcie_intc 1>,
+ 					<0 0 0 3 &pcie_intc 2>,
+ 					<0 0 0 4 &pcie_intc 3>;
++			phys = <&comphy1 0>;
+ 			pcie_intc: interrupt-controller {
+ 				interrupt-controller;
+ 				#interrupt-cells = <1>;
 -- 
 2.20.1
 
