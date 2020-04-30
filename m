@@ -2,191 +2,280 @@ Return-Path: <SRS0=q/mj=6O=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 679ECC47254
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 22:07:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D71EDC47247
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 22:40:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 36B93214D8
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 22:07:31 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bk6sNZJ8"
+	by mail.kernel.org (Postfix) with ESMTP id 9F64C20774
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 22:40:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1588286423;
+	bh=IW//kslVhjbU5AOLThyrSGs7wZ30HZZnzDtcIFaqgzY=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=rEbayf8C446/HaTTBj2HeDjUDNFGeN0TK02m6FzRCOrn6RoC1ZdVfyj3v1NADn5mm
+	 n8x4UqEFtM1JesTru8t1URnBgfsknSJ7jEcp36tuafiT1TCOVNCPSf7brrGtVrrfW/
+	 RgE2sr5H0tIQY6Hagj/ItOACrm0x3nMugQpr30yo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727124AbgD3WGi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 30 Apr 2020 18:06:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48210 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726447AbgD3WGi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Apr 2020 18:06:38 -0400
-Received: from mail-ej1-x644.google.com (mail-ej1-x644.google.com [IPv6:2a00:1450:4864:20::644])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C9BDC035494;
-        Thu, 30 Apr 2020 15:06:36 -0700 (PDT)
-Received: by mail-ej1-x644.google.com with SMTP id q8so6016072eja.2;
-        Thu, 30 Apr 2020 15:06:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=OqdsL6oVEYDsaU2ajghqSTycB/dhWD7JVGPrizA/d1E=;
-        b=bk6sNZJ87amcVdfIb232iw1yidtULT6ThRortjgOydN9S//dH/QOGsc0rHLvYSzQD7
-         J+KGwzZyTa6q4jZNBsXkewjvCDVpxxQvpmHIYL0tm7I65sBPrqgrNXf8VQ8sUJrJsLhO
-         MyRbJklX6Y7xzb26M5+D1SGps/Y8DVEbqi+mbSDTjcL1zlV0wXovsOhHB9WWFGtYBeHh
-         YyG6HD4myO1FCt9bA+cF1+D835PhXO0K1Uka11HdNR7/K2mQrP4rcCEUWxcgEcLks4En
-         NTY4Gszr0e3RLDXPFJiTdMqibOKVl6Mm9Vbbx6DbjytMTBPZ3S2MDsXcUnqgYSSvKAhj
-         7HJw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=OqdsL6oVEYDsaU2ajghqSTycB/dhWD7JVGPrizA/d1E=;
-        b=hVcrwZEEoEB2UFNVdm6dmi+7CdLGle2Ix7C0fI1oS4JWO9V1zgfNWBYuVv3LCnWqo3
-         Bm+CSOPQ1skTLbiVzwoloTPEKv3Lk9lwts1QtLq16bFVQ5ZmM/FBLJc9fIBuiUY4nyTo
-         yxvDIhnZ2pT7lZeWd4d11MadKsRqrjdA/pxQH8kg5IHaKsXmNcAPwEap5TZQqmxRi0Vl
-         /UqGbD99DjJ9z/oDAb7xcvB/SbNe3zJuftN+Z3QP0yAXJOPy7dRpZZkDOHfbbbGy40iP
-         zLNHWS8bollmWos4Q3D+w9F2ur7RYTF6PegVR4MjnLE6Q1/4Vm3qgIUinEsudJzzz36R
-         Qf4g==
-X-Gm-Message-State: AGi0PuaxAOSGpUi/nUbd6Tm031o0OeD2CCjgj9VRmPQGeNmUEWaT5iKW
-        /IcgdXNc/cJinRZs3U7HK0M=
-X-Google-Smtp-Source: APiQypItPxjgwbSyRlXSixiFqHQbhHHGoPoMPlzjtd7ZlRMtNHvSfTkDOsdKKHiWxy7IK+enwCBH9w==
-X-Received: by 2002:a17:906:13d1:: with SMTP id g17mr596971ejc.162.1588284394952;
-        Thu, 30 Apr 2020 15:06:34 -0700 (PDT)
-Received: from Ansuel-XPS.localdomain ([79.37.253.240])
-        by smtp.googlemail.com with ESMTPSA id t17sm54185edq.88.2020.04.30.15.06.33
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 30 Apr 2020 15:06:34 -0700 (PDT)
-From:   Ansuel Smith <ansuelsmth@gmail.com>
-To:     Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc:     Ansuel Smith <ansuelsmth@gmail.com>,
-        Sham Muthayyan <smuthayy@codeaurora.org>,
-        stable@vger.kernel.org, Andy Gross <agross@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v3 01/11] PCI: qcom: add missing ipq806x clocks in PCIe driver
-Date:   Fri,  1 May 2020 00:06:08 +0200
-Message-Id: <20200430220619.3169-2-ansuelsmth@gmail.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200430220619.3169-1-ansuelsmth@gmail.com>
-References: <20200430220619.3169-1-ansuelsmth@gmail.com>
+        id S1726817AbgD3WkX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 30 Apr 2020 18:40:23 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36764 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726784AbgD3WkW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 30 Apr 2020 18:40:22 -0400
+Received: from localhost (mobile-166-175-184-168.mycingular.net [166.175.184.168])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5BF8420731;
+        Thu, 30 Apr 2020 22:40:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1588286421;
+        bh=IW//kslVhjbU5AOLThyrSGs7wZ30HZZnzDtcIFaqgzY=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=S1hjKN9vgvacqe5bKeCab67HgXLud45GQFQKNEvG78mD5GZMp8JxMz4YSo4KTNUCF
+         JLBAtuBoGkkeTkmHDi+U8t6gOvvW1RXejV9B8yPhGzhbTZN7XRvNc4qqPX+SH5Y/Na
+         /N8W24vRfLo5Nva3Spdsyc2JBEdgyQr2yJ/ZCjCw=
+Date:   Thu, 30 Apr 2020 17:40:19 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     sathyanarayanan.kuppuswamy@linux.intel.com
+Cc:     bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ashok.raj@intel.com,
+        Austin Bolen <Austin.Bolen@dell.com>,
+        Mario Limonciello <Mario.Limonciello@dell.com>,
+        Jon Derrick <jonathan.derrick@intel.com>,
+        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Keith Busch <kbusch@kernel.org>, Sinan Kaya <okaya@kernel.org>,
+        Tyler Baicar <tbaicar@codeaurora.org>
+Subject: Re: [PATCH v1 1/1] PCI/AER: Use _OSC negotiation to determine AER
+ ownership
+Message-ID: <20200430224019.GA71117@bjorn-Precision-5520>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <67af2931705bed9a588b5a39d369cb70b9942190.1587925636.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Aux and Ref clk are missing in PCIe qcom driver.
-Add support in the driver to fix PCIe initialization in ipq806x.
+[+cc Austin, Mario, Jon, Alex, Rafael, Keith, Sinan, Tyler]
 
-Fixes: 82a823833f4e PCI: qcom: Add Qualcomm PCIe controller driver
-Signed-off-by: Sham Muthayyan <smuthayy@codeaurora.org>
-Signed-off-by: Ansuel Smith <ansuelsmth@gmail.com>
-Cc: stable@vger.kernel.org # v4.5+
----
- drivers/pci/controller/dwc/pcie-qcom.c | 44 ++++++++++++++++++++++----
- 1 file changed, 38 insertions(+), 6 deletions(-)
+On Sun, Apr 26, 2020 at 11:30:06AM -0700, sathyanarayanan.kuppuswamy@linux.intel.com wrote:
+> From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+> 
+> Currently PCIe AER driver uses HEST FIRMWARE_FIRST bit to
+> determine the PCIe AER Capability ownership between OS and
+> firmware. This support is added based on following spec
+> reference.
+> 
+> Per ACPI spec r6.3, table 18-387, 18-388, 18-389, HEST table
+> flags field BIT-0 and BIT-1 can be used to expose the
+> ownership of error source between firmware and OSPM.
+> 
+> Bit [0] - FIRMWARE_FIRST: If set, indicates that system
+>           firmware will handle errors from this source
+>           first.
+> Bit [1] – GLOBAL: If set, indicates that the settings
+>           contained in this structure apply globally to all
+>           PCI Express Bridges.
+> 
+> Although above spec reference states that setting
+> FIRMWARE_FIRST bit means firmware will handle the error source
+> first, it does not explicitly state anything about AER
+> ownership. So using HEST to determine AER ownership is
+> incorrect.
+> 
+> Also, as per following specification references, _OSC can be
+> used to negotiate the AER ownership between firmware and OS.
+> Details are,
+> 
+> Per ACPI spec r6.3, sec 6.2.11.3, table titled “Interpretation
+> of _OSC Control Field” and as per PCI firmware specification r3.2,
+> sec 4.5.1, table 4-5, OS can set bit 3 of _OSC control field
+> to request control over PCI Express AER. If the OS successfully
+> receives control of this feature, it must handle error reporting
+> through the AER Capability as described in the PCI Express Base
+> Specification.
+> 
+> Since above spec references clearly states _OSC can be used to
+> determine AER ownership, don't depend on HEST FIRMWARE_FIRST bit.
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 5ea527a6bd9f..2a39dfdccfc8 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -88,6 +88,8 @@ struct qcom_pcie_resources_2_1_0 {
- 	struct clk *iface_clk;
- 	struct clk *core_clk;
- 	struct clk *phy_clk;
-+	struct clk *aux_clk;
-+	struct clk *ref_clk;
- 	struct reset_control *pci_reset;
- 	struct reset_control *axi_reset;
- 	struct reset_control *ahb_reset;
-@@ -246,6 +248,14 @@ static int qcom_pcie_get_resources_2_1_0(struct qcom_pcie *pcie)
- 	if (IS_ERR(res->phy_clk))
- 		return PTR_ERR(res->phy_clk);
- 
-+	res->aux_clk = devm_clk_get_optional(dev, "aux");
-+	if (IS_ERR(res->aux_clk))
-+		return PTR_ERR(res->aux_clk);
-+
-+	res->ref_clk = devm_clk_get_optional(dev, "ref");
-+	if (IS_ERR(res->ref_clk))
-+		return PTR_ERR(res->ref_clk);
-+
- 	res->pci_reset = devm_reset_control_get_exclusive(dev, "pci");
- 	if (IS_ERR(res->pci_reset))
- 		return PTR_ERR(res->pci_reset);
-@@ -278,6 +288,8 @@ static void qcom_pcie_deinit_2_1_0(struct qcom_pcie *pcie)
- 	clk_disable_unprepare(res->iface_clk);
- 	clk_disable_unprepare(res->core_clk);
- 	clk_disable_unprepare(res->phy_clk);
-+	clk_disable_unprepare(res->aux_clk);
-+	clk_disable_unprepare(res->ref_clk);
- 	regulator_bulk_disable(ARRAY_SIZE(res->supplies), res->supplies);
- }
- 
-@@ -307,16 +319,32 @@ static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
- 		goto err_assert_ahb;
- 	}
- 
-+	ret = clk_prepare_enable(res->core_clk);
-+	if (ret) {
-+		dev_err(dev, "cannot prepare/enable core clock\n");
-+		goto err_clk_core;
-+	}
-+
- 	ret = clk_prepare_enable(res->phy_clk);
- 	if (ret) {
- 		dev_err(dev, "cannot prepare/enable phy clock\n");
- 		goto err_clk_phy;
- 	}
- 
--	ret = clk_prepare_enable(res->core_clk);
--	if (ret) {
--		dev_err(dev, "cannot prepare/enable core clock\n");
--		goto err_clk_core;
-+	if (res->aux_clk) {
-+		ret = clk_prepare_enable(res->aux_clk);
-+		if (ret) {
-+			dev_err(dev, "cannot prepare/enable aux clock\n");
-+			goto err_clk_aux;
-+		}
-+	}
-+
-+	if (res->ref_clk) {
-+		ret = clk_prepare_enable(res->ref_clk);
-+		if (ret) {
-+			dev_err(dev, "cannot prepare/enable ref clock\n");
-+			goto err_clk_ref;
-+		}
- 	}
- 
- 	ret = reset_control_deassert(res->ahb_reset);
-@@ -372,10 +400,14 @@ static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
- 	return 0;
- 
- err_deassert_ahb:
--	clk_disable_unprepare(res->core_clk);
--err_clk_core:
-+	clk_disable_unprepare(res->ref_clk);
-+err_clk_ref:
-+	clk_disable_unprepare(res->aux_clk);
-+err_clk_aux:
- 	clk_disable_unprepare(res->phy_clk);
- err_clk_phy:
-+	clk_disable_unprepare(res->core_clk);
-+err_clk_core:
- 	clk_disable_unprepare(res->iface_clk);
- err_assert_ahb:
- 	regulator_bulk_disable(ARRAY_SIZE(res->supplies), res->supplies);
--- 
-2.25.1
+I pulled out the _OSC part of this to a separate patch.  What's left
+is below, and is essentially equivalent to Alex's patch:
 
+  https://lore.kernel.org/r/20190326172343.28946-3-mr.nuke.me@gmail.com/
+
+I like what this does, but what I don't like is the fact that we now
+have this thing called pcie_aer_get_firmware_first() that is not
+connected with the ACPI FIRMWARE_FIRST bit at all.
+
+I think the end result will be more readable if we get rid of the
+"firmware_first" completely.  I don't know if we need a wrapper for it
+at all, or if we should just open-code:
+
+  int pci_enable_pcie_error_reporting(struct pci_dev *dev)
+  {
+    struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
+
+    if (!host->native_aer)
+      return -EIO;
+
+It's of nice to minimize the number of things you have look at.
+We already have native_aer, aer_cap, pcie_ports_native,
+pci_aer_available(), ..., so maybe we can live with seeing
+pci_find_host_bridge() a few times.
+
+> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+> index f4274d301235..85d73d28ec26 100644
+> --- a/drivers/pci/pcie/aer.c
+> +++ b/drivers/pci/pcie/aer.c
+> @@ -217,133 +217,19 @@ void pcie_ecrc_get_policy(char *str)
+>  }
+>  #endif	/* CONFIG_PCIE_ECRC */
+>  
+> -#ifdef CONFIG_ACPI_APEI
+> -static inline int hest_match_pci(struct acpi_hest_aer_common *p,
+> -				 struct pci_dev *pci)
+> -{
+> -	return   ACPI_HEST_SEGMENT(p->bus) == pci_domain_nr(pci->bus) &&
+> -		 ACPI_HEST_BUS(p->bus)     == pci->bus->number &&
+> -		 p->device                 == PCI_SLOT(pci->devfn) &&
+> -		 p->function               == PCI_FUNC(pci->devfn);
+> -}
+> -
+> -static inline bool hest_match_type(struct acpi_hest_header *hest_hdr,
+> -				struct pci_dev *dev)
+> -{
+> -	u16 hest_type = hest_hdr->type;
+> -	u8 pcie_type = pci_pcie_type(dev);
+> -
+> -	if ((hest_type == ACPI_HEST_TYPE_AER_ROOT_PORT &&
+> -		pcie_type == PCI_EXP_TYPE_ROOT_PORT) ||
+> -	    (hest_type == ACPI_HEST_TYPE_AER_ENDPOINT &&
+> -		pcie_type == PCI_EXP_TYPE_ENDPOINT) ||
+> -	    (hest_type == ACPI_HEST_TYPE_AER_BRIDGE &&
+> -		(dev->class >> 16) == PCI_BASE_CLASS_BRIDGE))
+> -		return true;
+> -	return false;
+> -}
+> -
+> -struct aer_hest_parse_info {
+> -	struct pci_dev *pci_dev;
+> -	int firmware_first;
+> -};
+> -
+> -static int hest_source_is_pcie_aer(struct acpi_hest_header *hest_hdr)
+> -{
+> -	if (hest_hdr->type == ACPI_HEST_TYPE_AER_ROOT_PORT ||
+> -	    hest_hdr->type == ACPI_HEST_TYPE_AER_ENDPOINT ||
+> -	    hest_hdr->type == ACPI_HEST_TYPE_AER_BRIDGE)
+> -		return 1;
+> -	return 0;
+> -}
+> -
+> -static int aer_hest_parse(struct acpi_hest_header *hest_hdr, void *data)
+> -{
+> -	struct aer_hest_parse_info *info = data;
+> -	struct acpi_hest_aer_common *p;
+> -	int ff;
+> -
+> -	if (!hest_source_is_pcie_aer(hest_hdr))
+> -		return 0;
+> -
+> -	p = (struct acpi_hest_aer_common *)(hest_hdr + 1);
+> -	ff = !!(p->flags & ACPI_HEST_FIRMWARE_FIRST);
+> -
+> -	/*
+> -	 * If no specific device is supplied, determine whether
+> -	 * FIRMWARE_FIRST is set for *any* PCIe device.
+> -	 */
+> -	if (!info->pci_dev) {
+> -		info->firmware_first |= ff;
+> -		return 0;
+> -	}
+> -
+> -	/* Otherwise, check the specific device */
+> -	if (p->flags & ACPI_HEST_GLOBAL) {
+> -		if (hest_match_type(hest_hdr, info->pci_dev))
+> -			info->firmware_first = ff;
+> -	} else
+> -		if (hest_match_pci(p, info->pci_dev))
+> -			info->firmware_first = ff;
+> -
+> -	return 0;
+> -}
+> -
+> -static void aer_set_firmware_first(struct pci_dev *pci_dev)
+> -{
+> -	int rc;
+> -	struct aer_hest_parse_info info = {
+> -		.pci_dev	= pci_dev,
+> -		.firmware_first	= 0,
+> -	};
+> -
+> -	rc = apei_hest_parse(aer_hest_parse, &info);
+> -
+> -	if (rc)
+> -		pci_dev->__aer_firmware_first = 0;
+> -	else
+> -		pci_dev->__aer_firmware_first = info.firmware_first;
+> -	pci_dev->__aer_firmware_first_valid = 1;
+> -}
+> -
+>  int pcie_aer_get_firmware_first(struct pci_dev *dev)
+>  {
+> +	struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
+> +
+>  	if (!pci_is_pcie(dev))
+>  		return 0;
+>  
+>  	if (pcie_ports_native)
+>  		return 0;
+>  
+> -	if (!dev->__aer_firmware_first_valid)
+> -		aer_set_firmware_first(dev);
+> -	return dev->__aer_firmware_first;
+> +	return !host->native_aer;
+>  }
+
+> diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
+> index 64b5e081cdb2..c05b49d740f4 100644
+> --- a/drivers/pci/pcie/portdrv.h
+> +++ b/drivers/pci/pcie/portdrv.h
+> @@ -147,16 +147,7 @@ static inline bool pcie_pme_no_msi(void) { return false; }
+>  static inline void pcie_pme_interrupt_enable(struct pci_dev *dev, bool en) {}
+>  #endif /* !CONFIG_PCIE_PME */
+>  
+> -#ifdef CONFIG_ACPI_APEI
+>  int pcie_aer_get_firmware_first(struct pci_dev *pci_dev);
+> -#else
+> -static inline int pcie_aer_get_firmware_first(struct pci_dev *pci_dev)
+> -{
+> -	if (pci_dev->__aer_firmware_first_valid)
+> -		return pci_dev->__aer_firmware_first;
+> -	return 0;
+> -}
+> -#endif
+>  
+>  struct device *pcie_port_find_device(struct pci_dev *dev, u32 service);
+>  #endif /* _PORTDRV_H_ */
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 83ce1cdf5676..43f265830eca 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -420,8 +420,6 @@ struct pci_dev {
+>  	 * mappings to make sure they cannot access arbitrary memory.
+>  	 */
+>  	unsigned int	untrusted:1;
+> -	unsigned int	__aer_firmware_first_valid:1;
+> -	unsigned int	__aer_firmware_first:1;
+>  	unsigned int	broken_intx_masking:1;	/* INTx masking can't be used */
+>  	unsigned int	io_window_1k:1;		/* Intel bridge 1K I/O windows */
+>  	unsigned int	irq_managed:1;
+> -- 
+> 2.17.1
+> 
