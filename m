@@ -2,152 +2,125 @@ Return-Path: <SRS0=q/mj=6O=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 817F6C47247
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 21:17:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7807C47247
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 22:06:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5EE18206C0
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 21:17:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C50662074A
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 22:06:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="frQcDQ4W"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kLPGrpSD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727049AbgD3VR2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 30 Apr 2020 17:17:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40506 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726626AbgD3VRX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Apr 2020 17:17:23 -0400
-Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70488C08E859
-        for <linux-pci@vger.kernel.org>; Thu, 30 Apr 2020 14:17:23 -0700 (PDT)
-Received: by mail-wr1-x442.google.com with SMTP id d15so9061264wrx.3
-        for <linux-pci@vger.kernel.org>; Thu, 30 Apr 2020 14:17:23 -0700 (PDT)
+        id S1727062AbgD3WGe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 30 Apr 2020 18:06:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48200 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726447AbgD3WGe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Apr 2020 18:06:34 -0400
+Received: from mail-ed1-x52d.google.com (mail-ed1-x52d.google.com [IPv6:2a00:1450:4864:20::52d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF7E8C035494;
+        Thu, 30 Apr 2020 15:06:33 -0700 (PDT)
+Received: by mail-ed1-x52d.google.com with SMTP id k22so5854122eds.6;
+        Thu, 30 Apr 2020 15:06:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=8WL5+R63j920S0bt22y/MPX2pfyBeTnA7YIOS7PRZKQ=;
-        b=frQcDQ4WCQVLv5/aD12Lmk0nCBUbfuzzI+xShWJ0lmfghfmg7u5Nyib31+KLW4DWf6
-         emuYWTL/tu7itw/WxmjNCM6SVWPFLDFvZQ7ZVwNJ8cWZ/IQGEw25HZT3j5HnFP/80pEI
-         bXwkKq1SaFh6ohPsp1ttXqes/+ik4IqrL5Kdo=
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=q+mkxNtTPZhi/LAJrBV1pwlKLJ9IVJIPihcu3p+f0f4=;
+        b=kLPGrpSDFXWcNc6EbBhYJxYWfjkLjQ7+maWsFJYWNSkObt+rcEeJ4YHfJ4srEPLr59
+         u9GoVC2YIHoGYphA8DHPpj0ik+WK/rfttyR7UuR3r21N9YO4lEmOq+ApSkv4fSt86vUD
+         L8pEXipDq1l3OXSBIcpf61geLhqO31d7ruLqGAa8u5Wlwv73OgaxTrt9xfHFqnUMuztX
+         SLYd0WkNO9/nPwxusMvXelK03QcKPcokvJdvso/snVDF2GfshMeFtXK0wMVn2CLYX0Vq
+         UNfdGFof4f0Jwd+KXQ6VhPUCWZ+VMn6LwMb/gkf4Mnddq/2K6jJdV9VgN3RPVjyKpGnj
+         vSIw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=8WL5+R63j920S0bt22y/MPX2pfyBeTnA7YIOS7PRZKQ=;
-        b=np8o8aId8wuLZJVlK9JKRnDx3DaIHxdM13iahH23N60EDF1N9A04Oibj8Ne7/mIEEY
-         L5IiTWRNeJcBXoc9Qqg4UIpKpCO0vdLPEr7aYMSFXunFQGOEHLGXXq2ies2MzBdoaBIn
-         H9UCx1N8sm2YfC8cKgR85mm8bddqsCNOfg7zgFurWnU3xrhHy0FJ5k7i503WCzoOUGIH
-         W8CfHye+Kv14JAsECrIuI7WasnMPqYy+tdIRdrvbKLnHEdfHAdUR2VuBRMSyOMuR9JQi
-         8NB/DGHVcswQgiXhcFL13usHhwgQeaDf14TYlunAt4+InMDMvtQdIv4kHVhFZXxq+9eC
-         AOLA==
-X-Gm-Message-State: AGi0PubhY4KNe8eUabs7pxwKKXD18bXRTtNzrLTKRGVP56VwWFRhoUDN
-        ZJ/52CZHX4NmtXDLkVfWuXAFYKq8075PeNY5tzgRyA==
-X-Google-Smtp-Source: APiQypIrbs9SeynjYCjcsyxd3tGq+jY5BQu3eRy4jVk1GxW92FiZ1RNN0wUrj73yIHP4rSrPXj6fVWi+Iva7Qb24Nhw=
-X-Received: by 2002:adf:f74f:: with SMTP id z15mr491830wrp.297.1588281441827;
- Thu, 30 Apr 2020 14:17:21 -0700 (PDT)
-MIME-Version: 1.0
-References: <20200430185522.4116-5-james.quinlan@broadcom.com> <20200430204017.GA62947@bjorn-Precision-5520>
-In-Reply-To: <20200430204017.GA62947@bjorn-Precision-5520>
-From:   Jim Quinlan <james.quinlan@broadcom.com>
-Date:   Thu, 30 Apr 2020 17:17:10 -0400
-Message-ID: <CA+-6iNzwxL0T130Bww-TkoVWhn_2--a1URu4JktGb6aD6qGjbA@mail.gmail.com>
-Subject: Re: [PATCH 5/5] PCI: brcmstb: disable L0s component of ASPM by default
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=q+mkxNtTPZhi/LAJrBV1pwlKLJ9IVJIPihcu3p+f0f4=;
+        b=hy3qxFBIMVrkMNpsJlmxdaEF44uAx9T3FqFKAxt8yRkC8yxPv1P6VjB8cOCZnj7WTs
+         gpgn8RrqjJuNYbAnxBiUGdU3MMpekF2sVMdxOqhuSstfBlJZIqTxQEchdwIuOPsmbXF3
+         ea2oibGmsSHNIo8kMEVivcKvcdh42mLLvrMaGMbzQ3QUc3dBB23akc3ZdiIIT50rHZpx
+         1XSO/z0orXrmWEtCNK5j8oxUUj/6Zx+j8CH0CRiBiFDXw3NNMtoVKUm7M+Eqz1D1Pw9x
+         /+7aGiPisijtz6OhEElfMCGFYR31STOA0lsoGSNm7gj60hgk59iMpO6yfxvgZAW+TBje
+         WpFQ==
+X-Gm-Message-State: AGi0PuY+k2prM2X2xR6K3zrBeVzK9dnJqqpxhLQbc8rrWFU2WQU3GSA0
+        bNYp4/7VlASrmr7rg06aqCY=
+X-Google-Smtp-Source: APiQypIgPFzSk+gRylgl6RZkkZgJyX6/kqkDDLtTXeaQ/UD4SIAItyRDStoTO2fc2ZgBpRYFfqAeZg==
+X-Received: by 2002:a05:6402:712:: with SMTP id w18mr1101986edx.386.1588284392192;
+        Thu, 30 Apr 2020 15:06:32 -0700 (PDT)
+Received: from Ansuel-XPS.localdomain ([79.37.253.240])
+        by smtp.googlemail.com with ESMTPSA id t17sm54185edq.88.2020.04.30.15.06.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 30 Apr 2020 15:06:31 -0700 (PDT)
+From:   Ansuel Smith <ansuelsmth@gmail.com>
+To:     Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc:     Ansuel Smith <ansuelsmth@gmail.com>,
+        Andy Gross <agross@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        "maintainer:BROADCOM BCM7XXX ARM ARCHITECTURE" 
-        <bcm-kernel-feedback-list@broadcom.com>,
-        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
-        <linux-rpi-kernel@lists.infradead.org>,
-        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "open list:PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS" 
-        <linux-pci@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Andrew Murray <amurray@thegoodpenguin.co.uk>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v3 00/11] Multiple fixes in PCIe qcom driver
+Date:   Fri,  1 May 2020 00:06:07 +0200
+Message-Id: <20200430220619.3169-1-ansuelsmth@gmail.com>
+X-Mailer: git-send-email 2.25.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Apr 30, 2020 at 4:40 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
->
-> On Thu, Apr 30, 2020 at 02:55:22PM -0400, Jim Quinlan wrote:
-> > From: Jim Quinlan <jquinlan@broadcom.com>
-> >
-> > Some informal internal experiments has shown that the BrcmSTB ASPM L0s
-> > savings may introduce an undesirable noise signal on some customers'
-> > boards.  In addition, L0s was found lacking in realized power savings,
-> > especially relative to the L1 ASPM component.  This is BrcmSTB's
-> > experience and may not hold for others.  At any rate, we disable L0s
-> > savings by default unless the DT node has the 'brcm,aspm-en-l0s'
-> > property.
->
-> I assume this works by writing the PCIe Link Capabilities register,
-> which is read-only via the config space path used by the generic ASPM
-> code, so that code thinks the device doesn't support L0s at all.
-Correct.
->
-> Documentation/devicetree/bindings/pci/rockchip-pcie-host.txt includes
-> an "aspm-no-l0s" property.  It'd be nice if this could use the same
-> property.
-I'd like to use the existing "aspm-no-l0s" but we'd really like to
-have it disabled by default.  I'll probably switch but let me dwell on
-it a little.
-Thanks, Jim
->
-> > Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
-> > ---
-> >  drivers/pci/controller/pcie-brcmstb.c | 14 +++++++++++++-
-> >  1 file changed, 13 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
-> > index 2bc913c0262c..bc1d514b19e4 100644
-> > --- a/drivers/pci/controller/pcie-brcmstb.c
-> > +++ b/drivers/pci/controller/pcie-brcmstb.c
-> > @@ -44,6 +44,9 @@
-> >  #define PCIE_RC_CFG_PRIV1_ID_VAL3                    0x043c
-> >  #define  PCIE_RC_CFG_PRIV1_ID_VAL3_CLASS_CODE_MASK   0xffffff
-> >
-> > +#define PCIE_RC_CFG_PRIV1_LINK_CAPABILITY                    0x04dc
-> > +#define  PCIE_RC_CFG_PRIV1_LINK_CAPABILITY_ASPM_SUPPORT_MASK 0xc00
-> > +
-> >  #define PCIE_RC_DL_MDIO_ADDR                         0x1100
-> >  #define PCIE_RC_DL_MDIO_WR_DATA                              0x1104
-> >  #define PCIE_RC_DL_MDIO_RD_DATA                              0x1108
-> > @@ -696,7 +699,7 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
-> >       int num_out_wins = 0;
-> >       u16 nlw, cls, lnksta;
-> >       int i, ret;
-> > -     u32 tmp;
-> > +     u32 tmp, aspm_support;
-> >
-> >       /* Reset the bridge */
-> >       brcm_pcie_bridge_sw_init_set(pcie, 1);
-> > @@ -806,6 +809,15 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
-> >               num_out_wins++;
-> >       }
-> >
-> > +     /* Only support ASPM L1 unless L0s is explicitly desired */
-> > +     aspm_support = PCIE_LINK_STATE_L1;
-> > +     if (of_property_read_bool(pcie->np, "brcm,aspm-en-l0s"))
-> > +             aspm_support |= PCIE_LINK_STATE_L0S;
-> > +     tmp = readl(base + PCIE_RC_CFG_PRIV1_LINK_CAPABILITY);
-> > +     u32p_replace_bits(&tmp, aspm_support,
-> > +             PCIE_RC_CFG_PRIV1_LINK_CAPABILITY_ASPM_SUPPORT_MASK);
-> > +     writel(tmp, base + PCIE_RC_CFG_PRIV1_LINK_CAPABILITY);
-> > +
-> >       /*
-> >        * For config space accesses on the RC, show the right class for
-> >        * a PCIe-PCIe bridge (the default setting is to be EP mode).
-> > --
-> > 2.17.1
-> >
+This contains multiple fix for PCIe qcom driver.
+Some optional reset and clocks were missing.
+Fix a problem with no PARF programming that cause kernel lock on load.
+Add support to force gen 1 speed if needed. (due to hardware limitation)
+Add ipq8064 rev 2 support that use a different tx termination offset.
+
+v3:
+* Fix check reported by checkpatch --strict
+* Rename force_gen1 to gen
+* Fix spelling error
+* Better describe qcom_clear_and_set_dword
+* Make PARF deemph and equalization configurable
+
+v2:
+* Drop iATU programming (already done in pcie init)
+* Use max-link-speed instead of force-gen1 custom definition
+* Drop MRRS to 256B (Can't find a realy reason why this was suggested)
+* Introduce a new variant for different revision of ipq8064
+
+Abhishek Sahu (1):
+  PCI: qcom: change duplicate PCI reset to phy reset
+
+Ansuel Smith (8):
+  PCI: qcom: add missing ipq806x clocks in PCIe driver
+  devicetree: bindings: pci: add missing clks to qcom,pcie
+  PCI: qcom: add missing reset for ipq806x
+  devicetree: bindings: pci: add ext reset to qcom,pcie
+  PCI: qcom: introduce qcom_clear_and_set_dword
+  PCI: qcom: add support for defining some PARF params
+  devicetree: bindings: pci: document PARF params bindings
+  devicetree: bindings: pci: add ipq8064 rev 2 variant to qcom,pcie
+
+Sham Muthayyan (2):
+  PCI: qcom: add ipq8064 rev2 variant and set tx term offset
+  PCI: qcom: add Force GEN1 support
+
+ .../devicetree/bindings/pci/qcom,pcie.txt     |  51 +++-
+ drivers/pci/controller/dwc/pcie-qcom.c        | 241 ++++++++++++------
+ 2 files changed, 211 insertions(+), 81 deletions(-)
+
+-- 
+2.25.1
+
