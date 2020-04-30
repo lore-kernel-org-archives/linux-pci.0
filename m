@@ -2,96 +2,155 @@ Return-Path: <SRS0=q/mj=6O=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C08ADC47247
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 15:35:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 735D3C47254
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 16:18:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A108D2082E
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 15:35:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5248121775
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 16:18:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1588263521;
+	bh=QZoCtLS8vGxFXMe1dFt6/xBiiVGEl5Zx8nnYO8f1efI=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=UNWoAuGqtf2G7QyjjxH79nF3zDTqMT9dAN1SEfUvZRsANd0BD9pLNrfmLbyUKR6RH
+	 GM+xHHwBkU7a8NyJmblCGS2llt6NysWgG0KdthOeOPQOT/wSOjTKMkqJPGnmuHm3r4
+	 8+3z6KGvf4vbh2C3Dpc7O5tuCdSVIwGe27r2C86E=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726701AbgD3PfH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 30 Apr 2020 11:35:07 -0400
-Received: from foss.arm.com ([217.140.110.172]:57574 "EHLO foss.arm.com"
+        id S1728188AbgD3QSk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 30 Apr 2020 12:18:40 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58748 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726344AbgD3PfG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 30 Apr 2020 11:35:06 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id EB36731B;
-        Thu, 30 Apr 2020 08:35:05 -0700 (PDT)
-Received: from [10.37.12.139] (unknown [10.37.12.139])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 84D063F68F;
-        Thu, 30 Apr 2020 08:34:57 -0700 (PDT)
-Subject: Re: [PATCH v6 11/25] iommu/arm-smmu-v3: Share process page tables
-To:     jean-philippe@linaro.org, iommu@lists.linux-foundation.org,
-        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-pci@vger.kernel.org, linux-mm@kvack.org
-Cc:     joro@8bytes.org, catalin.marinas@arm.com, will@kernel.org,
-        robin.murphy@arm.com, kevin.tian@intel.com,
-        baolu.lu@linux.intel.com, Jonathan.Cameron@huawei.com,
-        jacob.jun.pan@linux.intel.com, christian.koenig@amd.com,
-        felix.kuehling@amd.com, zhangfei.gao@linaro.org, jgg@ziepe.ca,
-        xuzaibo@huawei.com, fenghua.yu@intel.com, hch@infradead.org
-References: <20200430143424.2787566-1-jean-philippe@linaro.org>
- <20200430143424.2787566-12-jean-philippe@linaro.org>
-From:   Suzuki K Poulose <suzuki.poulose@arm.com>
-Message-ID: <580a915f-f8bf-3b3e-c77d-6d0c2ea4bd02@arm.com>
-Date:   Thu, 30 Apr 2020 16:39:53 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
- Thunderbird/52.7.0
+        id S1728113AbgD3QSj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 30 Apr 2020 12:18:39 -0400
+Received: from mail.kernel.org (ip5f5ad5c5.dynamic.kabel-deutschland.de [95.90.213.197])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id DE5A524957;
+        Thu, 30 Apr 2020 16:18:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1588263518;
+        bh=QZoCtLS8vGxFXMe1dFt6/xBiiVGEl5Zx8nnYO8f1efI=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=H9OoOMPfLKL9ccdYmXdsNHV03NyOb/pVa+IhySo5mw0s7lDdxSnRk/HRvbEm8rO/x
+         tIpy4Iwcc/yAbwYL1iClCtqH3ONVtL4KfqkdV+EHkAHFe0/jLYgfZ25Ptg7oAx30er
+         dqKLIELwO1+0JYcsmvuBtft53HKwxBCuhQJaMOko=
+Received: from mchehab by mail.kernel.org with local (Exim 4.92.3)
+        (envelope-from <mchehab@kernel.org>)
+        id 1jUBtU-00AxhX-6L; Thu, 30 Apr 2020 18:18:36 +0200
+From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+To:     Linux Doc Mailing List <linux-doc@vger.kernel.org>
+Cc:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: [PATCH v4 12/19] docs: pci: endpoint/function/binding/pci-test.txt convert to ReST
+Date:   Thu, 30 Apr 2020 18:18:26 +0200
+Message-Id: <fa73d1a7fb6c4691899a110a732216bcdac75f2b.1588263270.git.mchehab+huawei@kernel.org>
+X-Mailer: git-send-email 2.25.4
+In-Reply-To: <cover.1588263270.git.mchehab+huawei@kernel.org>
+References: <cover.1588263270.git.mchehab+huawei@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20200430143424.2787566-12-jean-philippe@linaro.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 04/30/2020 03:34 PM, Jean-Philippe Brucker wrote:
-> With Shared Virtual Addressing (SVA), we need to mirror CPU TTBR, TCR,
-> MAIR and ASIDs in SMMU contexts. Each SMMU has a single ASID space split
-> into two sets, shared and private. Shared ASIDs correspond to those
-> obtained from the arch ASID allocator, and private ASIDs are used for
-> "classic" map/unmap DMA.
-> 
-> Cc: Suzuki K Poulose <suzuki.poulose@arm.com>
-> Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
-> ---
+Convert this file to ReST by adding a proper title to it and
+use the right markups for a table.
 
-> +
-> +	tcr = FIELD_PREP(CTXDESC_CD_0_TCR_T0SZ, 64ULL - VA_BITS) |
-> +	      FIELD_PREP(CTXDESC_CD_0_TCR_IRGN0, ARM_LPAE_TCR_RGN_WBWA) |
-> +	      FIELD_PREP(CTXDESC_CD_0_TCR_ORGN0, ARM_LPAE_TCR_RGN_WBWA) |
-> +	      FIELD_PREP(CTXDESC_CD_0_TCR_SH0, ARM_LPAE_TCR_SH_IS) |
-> +	      CTXDESC_CD_0_TCR_EPD1 | CTXDESC_CD_0_AA64;
-> +
-> +	switch (PAGE_SIZE) {
-> +	case SZ_4K:
-> +		tcr |= FIELD_PREP(CTXDESC_CD_0_TCR_TG0, ARM_LPAE_TCR_TG0_4K);
-> +		break;
-> +	case SZ_16K:
-> +		tcr |= FIELD_PREP(CTXDESC_CD_0_TCR_TG0, ARM_LPAE_TCR_TG0_16K);
-> +		break;
-> +	case SZ_64K:
-> +		tcr |= FIELD_PREP(CTXDESC_CD_0_TCR_TG0, ARM_LPAE_TCR_TG0_64K);
-> +		break;
-> +	default:
-> +		WARN_ON(1);
-> +		ret = -EINVAL;
-> +		goto err_free_asid;
-> +	}
-> +
-> +	reg = read_sanitised_ftr_reg(SYS_ID_AA64MMFR0_EL1);
-> +	par = cpuid_feature_extract_unsigned_field(reg, ID_AA64MMFR0_PARANGE_SHIFT);
-> +	tcr |= FIELD_PREP(CTXDESC_CD_0_TCR_IPS, par);
-> +
-> +	cd->ttbr = virt_to_phys(mm->pgd);
+While here, add a SPDX header.
 
-Does the TTBR follow the same layout as TTBR_ELx for 52bit IPA ? i.e, 
-TTBR[5:2] = BADDR[51:48] ? Are you covered for that ?
+Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+---
+ .../endpoint/function/binding/pci-test.rst    | 26 +++++++++++++++++++
+ .../endpoint/function/binding/pci-test.txt    | 19 --------------
+ Documentation/PCI/endpoint/index.rst          |  2 ++
+ .../misc-devices/pci-endpoint-test.rst        |  2 +-
+ 4 files changed, 29 insertions(+), 20 deletions(-)
+ create mode 100644 Documentation/PCI/endpoint/function/binding/pci-test.rst
+ delete mode 100644 Documentation/PCI/endpoint/function/binding/pci-test.txt
 
-Suzuki
+diff --git a/Documentation/PCI/endpoint/function/binding/pci-test.rst b/Documentation/PCI/endpoint/function/binding/pci-test.rst
+new file mode 100644
+index 000000000000..57ee866fb165
+--- /dev/null
++++ b/Documentation/PCI/endpoint/function/binding/pci-test.rst
+@@ -0,0 +1,26 @@
++.. SPDX-License-Identifier: GPL-2.0
++
++==========================
++PCI Test Endpoint Function
++==========================
++
++name: Should be "pci_epf_test" to bind to the pci_epf_test driver.
++
++Configurable Fields:
++
++================   ===========================================================
++vendorid	   should be 0x104c
++deviceid	   should be 0xb500 for DRA74x and 0xb501 for DRA72x
++revid		   don't care
++progif_code	   don't care
++subclass_code	   don't care
++baseclass_code	   should be 0xff
++cache_line_size	   don't care
++subsys_vendor_id   don't care
++subsys_id	   don't care
++interrupt_pin	   Should be 1 - INTA, 2 - INTB, 3 - INTC, 4 -INTD
++msi_interrupts	   Should be 1 to 32 depending on the number of MSI interrupts
++		   to test
++msix_interrupts	   Should be 1 to 2048 depending on the number of MSI-X
++		   interrupts to test
++================   ===========================================================
+diff --git a/Documentation/PCI/endpoint/function/binding/pci-test.txt b/Documentation/PCI/endpoint/function/binding/pci-test.txt
+deleted file mode 100644
+index cd76ba47394b..000000000000
+--- a/Documentation/PCI/endpoint/function/binding/pci-test.txt
++++ /dev/null
+@@ -1,19 +0,0 @@
+-PCI TEST ENDPOINT FUNCTION
+-
+-name: Should be "pci_epf_test" to bind to the pci_epf_test driver.
+-
+-Configurable Fields:
+-vendorid	 : should be 0x104c
+-deviceid	 : should be 0xb500 for DRA74x and 0xb501 for DRA72x
+-revid		 : don't care
+-progif_code	 : don't care
+-subclass_code	 : don't care
+-baseclass_code	 : should be 0xff
+-cache_line_size	 : don't care
+-subsys_vendor_id : don't care
+-subsys_id	 : don't care
+-interrupt_pin	 : Should be 1 - INTA, 2 - INTB, 3 - INTC, 4 -INTD
+-msi_interrupts	 : Should be 1 to 32 depending on the number of MSI interrupts
+-		   to test
+-msix_interrupts	 : Should be 1 to 2048 depending on the number of MSI-X
+-		   interrupts to test
+diff --git a/Documentation/PCI/endpoint/index.rst b/Documentation/PCI/endpoint/index.rst
+index d114ea74b444..4ca7439fbfc9 100644
+--- a/Documentation/PCI/endpoint/index.rst
++++ b/Documentation/PCI/endpoint/index.rst
+@@ -11,3 +11,5 @@ PCI Endpoint Framework
+    pci-endpoint-cfs
+    pci-test-function
+    pci-test-howto
++
++   function/binding/pci-test
+diff --git a/Documentation/misc-devices/pci-endpoint-test.rst b/Documentation/misc-devices/pci-endpoint-test.rst
+index 26e5d9ba146b..4cf3f4433be7 100644
+--- a/Documentation/misc-devices/pci-endpoint-test.rst
++++ b/Documentation/misc-devices/pci-endpoint-test.rst
+@@ -53,4 +53,4 @@ ioctl
+ 	      Perform read tests. The size of the buffer should be passed
+ 	      as argument.
+ 
+-.. [1] Documentation/PCI/endpoint/function/binding/pci-test.txt
++.. [1] Documentation/PCI/endpoint/function/binding/pci-test.rst
+-- 
+2.25.4
+
