@@ -2,44 +2,44 @@ Return-Path: <SRS0=q/mj=6O=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 592C0C83001
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 08:07:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74E02C83006
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 08:07:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 364622073E
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 08:07:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 527812186A
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 08:07:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1588234033;
-	bh=z93B9h0QOxKbZaQkEDh4KqmCDdJd+q+kLhHmnwRSlhk=;
+	s=default; t=1588234040;
+	bh=kwMHrQRCUR0Xnjbf55cLJqGOENIDvbYB5y5ST/WRl6w=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=urATtJ/YviTO12sQZDl+Iw5KGdito+BbCCkKk5dbsbJU0c70RVPUm2SRxSRNnnjTr
-	 mMgi3qXpHRGJEEssY9oLpPxcEnl7YVTQAv9NttmZaC9NC+LBsJ8Q5xMCqaNkcx9Sgl
-	 CLUGKniOaeJ/j6/5hwqs64R3bCgfQ+JwlVtZWEOI=
+	b=v+51E5MQzMyaz5rkw2pxI/3F0ISutONWwyIeMLOSS8TVlRUf4r6sD2i9mP75Wp6SH
+	 srSRmDHskreKrxGxVQgk7F6+h7OmoiFQeovTBVRLHkFJEKi5JIGvOp191VJULaWCn/
+	 vgNqifs1X+ziaeMpmpI7f/wJcQ7Taed03l8VnJYQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726558AbgD3IHM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1726649AbgD3IHM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Thu, 30 Apr 2020 04:07:12 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51266 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:51226 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726949AbgD3IGu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 30 Apr 2020 04:06:50 -0400
+        id S1726910AbgD3IGt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 30 Apr 2020 04:06:49 -0400
 Received: from pali.im (pali.im [31.31.79.79])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id AF2D92073E;
-        Thu, 30 Apr 2020 08:06:49 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A47D72186A;
+        Thu, 30 Apr 2020 08:06:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1588234009;
-        bh=z93B9h0QOxKbZaQkEDh4KqmCDdJd+q+kLhHmnwRSlhk=;
+        s=default; t=1588234008;
+        bh=kwMHrQRCUR0Xnjbf55cLJqGOENIDvbYB5y5ST/WRl6w=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=kKR8J0xSVQnso1YoPq2jaSZ/9WGmTpXzzo/G6aHpT6yE7LH8yrd98X/uqkZAaXdYQ
-         gIFUa+8Le2KLyf6445xjZ3cM1XzSyN+nTQxIAlm9YzxQWLaCXilSuA9qExow8/zaVi
-         /a/1FIYJfGIqRUzF/jlQenS2wIntwsPDk8F8ftvw=
+        b=cn1xEq0YyV3o+vE/Xuar5Hm8tFbZ5uBt7y+LbKe1qe6T9tn95ytJUULutb3jxGAEm
+         CVnVs+VQNxhGdMf8OeDZFH9ozwQoJS6m2W37Ly3vsP+QHNE1joV2Ja5bX8YWuEXjKs
+         M7zDutva9fee7ChAlYVG33bcbpSm2be/Nn372Xgs=
 Received: by pali.im (Postfix)
-        id E76A8AC9; Thu, 30 Apr 2020 10:06:47 +0200 (CEST)
+        id DF46B7AD; Thu, 30 Apr 2020 10:06:46 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
         Gregory Clement <gregory.clement@bootlin.com>,
@@ -55,9 +55,9 @@ To:     Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
         Xogium <contact@xogium.me>
 Cc:     devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-pci@vger.kernel.org
-Subject: [PATCH v4 08/12] PCI: aardvark: Replace custom macros by standard linux/pci_regs.h macros
-Date:   Thu, 30 Apr 2020 10:06:21 +0200
-Message-Id: <20200430080625.26070-9-pali@kernel.org>
+Subject: [PATCH v4 07/12] PCI: aardvark: Add PHY support
+Date:   Thu, 30 Apr 2020 10:06:20 +0200
+Message-Id: <20200430080625.26070-8-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200430080625.26070-1-pali@kernel.org>
 References: <20200430080625.26070-1-pali@kernel.org>
@@ -69,92 +69,149 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PCI-E capability macros are already defined in linux/pci_regs.h.
-Remove their reimplementation in pcie-aardvark.
+From: Marek Behún <marek.behun@nic.cz>
 
-Signed-off-by: Pali Rohár <pali@kernel.org>
+With recent proposed changes for U-Boot it is possible that bootloader
+won't initialize the PHY for this controller (currently the PHY is
+initialized regardless whether PCI is used in U-Boot, but with these
+proposed changes the PHY is initialized only on request).
+
+Since the mvebu-a3700-comphy driver by Miquèl Raynal supports enabling
+PCIe PHY, and since Linux' functionality should be independent on what
+bootloader did, add code for enabling generic PHY if found in device OF
+node.
+
+The mvebu-a3700-comphy driver does PHY powering via SMC calls to ARM
+Trusted Firmware. The corresponding code in ARM Trusted Firmware skips
+one register write which U-Boot does not: step 7 ("Enable TX"), see [1].
+Instead ARM Trusted Firmware expects PCIe driver to do this step,
+probably because the register is in PCIe controller address space,
+instead of PHY address space. We therefore add this step into the
+advk_pcie_setup_hw function.
+
+[1] https://git.trustedfirmware.org/TF-A/trusted-firmware-a.git/tree/drivers/marvell/comphy/phy-comphy-3700.c?h=v2.3-rc2#n836
+
+Signed-off-by: Marek Behún <marek.behun@nic.cz>
+Cc: Miquèl Raynal <miquel.raynal@bootlin.com>
 ---
- drivers/pci/controller/pci-aardvark.c | 41 ++++++++++++---------------
- 1 file changed, 18 insertions(+), 23 deletions(-)
+ drivers/pci/controller/pci-aardvark.c | 69 +++++++++++++++++++++++++++
+ 1 file changed, 69 insertions(+)
 
 diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index 053ae6c19a3d..c53ae2511a9c 100644
+index 8332c71d69fa..053ae6c19a3d 100644
 --- a/drivers/pci/controller/pci-aardvark.c
 +++ b/drivers/pci/controller/pci-aardvark.c
-@@ -34,17 +34,6 @@
- #define     PCIE_CORE_CMD_MEM_IO_REQ_EN				BIT(2)
- #define PCIE_CORE_DEV_REV_REG					0x8
- #define PCIE_CORE_PCIEXP_CAP					0xc0
--#define PCIE_CORE_DEV_CTRL_STATS_REG				0xc8
--#define     PCIE_CORE_DEV_CTRL_STATS_RELAX_ORDER_DISABLE	(0 << 4)
--#define     PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ_SHIFT	5
--#define     PCIE_CORE_DEV_CTRL_STATS_SNOOP_DISABLE		(0 << 11)
--#define     PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SIZE_SHIFT	12
--#define     PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SZ		0x2
--#define PCIE_CORE_LINK_CTRL_STAT_REG				0xd0
--#define     PCIE_CORE_LINK_L0S_ENTRY				BIT(0)
--#define     PCIE_CORE_LINK_TRAINING				BIT(5)
--#define     PCIE_CORE_LINK_SPEED_SHIFT				16
--#define     PCIE_CORE_LINK_WIDTH_SHIFT				20
- #define PCIE_CORE_ERR_CAPCTL_REG				0x118
- #define     PCIE_CORE_ERR_CAPCTL_ECRC_CHK_TX			BIT(5)
- #define     PCIE_CORE_ERR_CAPCTL_ECRC_CHK_TX_EN			BIT(6)
-@@ -223,6 +212,11 @@ static inline u32 advk_readl(struct advk_pcie *pcie, u64 reg)
- 	return readl(pcie->base + reg);
+@@ -16,6 +16,7 @@
+ #include <linux/kernel.h>
+ #include <linux/pci.h>
+ #include <linux/init.h>
++#include <linux/phy/phy.h>
+ #include <linux/platform_device.h>
+ #include <linux/msi.h>
+ #include <linux/of_address.h>
+@@ -104,6 +105,8 @@
+ #define     PCIE_CORE_CTRL2_STRICT_ORDER_ENABLE	BIT(5)
+ #define     PCIE_CORE_CTRL2_OB_WIN_ENABLE	BIT(6)
+ #define     PCIE_CORE_CTRL2_MSI_ENABLE		BIT(10)
++#define PCIE_CORE_REF_CLK_REG			(CONTROL_BASE_ADDR + 0x14)
++#define     PCIE_CORE_REF_CLK_TX_ENABLE		BIT(1)
+ #define PCIE_MSG_LOG_REG			(CONTROL_BASE_ADDR + 0x30)
+ #define PCIE_ISR0_REG				(CONTROL_BASE_ADDR + 0x40)
+ #define PCIE_MSG_PM_PME_MASK			BIT(7)
+@@ -207,6 +210,7 @@ struct advk_pcie {
+ 	int link_gen;
+ 	struct pci_bridge_emul bridge;
+ 	struct gpio_desc *reset_gpio;
++	struct phy *phy;
+ };
+ 
+ static inline void advk_writel(struct advk_pcie *pcie, u32 val, u64 reg)
+@@ -358,6 +362,11 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
+ 
+ 	advk_pcie_issue_perst(pcie);
+ 
++	/* Enable TX */
++	reg = advk_readl(pcie, PCIE_CORE_REF_CLK_REG);
++	reg |= PCIE_CORE_REF_CLK_TX_ENABLE;
++	advk_writel(pcie, reg, PCIE_CORE_REF_CLK_REG);
++
+ 	/* Set to Direct mode */
+ 	reg = advk_readl(pcie, CTRL_CONFIG_REG);
+ 	reg &= ~(CTRL_MODE_MASK << CTRL_MODE_SHIFT);
+@@ -1041,6 +1050,62 @@ static irqreturn_t advk_pcie_irq_handler(int irq, void *arg)
+ 	return IRQ_HANDLED;
  }
  
-+static inline u16 advk_read16(struct advk_pcie *pcie, u64 reg)
++static void __maybe_unused advk_pcie_disable_phy(struct advk_pcie *pcie)
 +{
-+	return advk_readl(pcie, (reg & ~0x3)) >> ((reg & 0x3) * 8);
++	phy_power_off(pcie->phy);
++	phy_exit(pcie->phy);
 +}
 +
- static int advk_pcie_link_up(struct advk_pcie *pcie)
++static int advk_pcie_enable_phy(struct advk_pcie *pcie)
++{
++	int ret;
++
++	if (!pcie->phy)
++		return 0;
++
++	ret = phy_init(pcie->phy);
++	if (ret)
++		return ret;
++
++	ret = phy_set_mode(pcie->phy, PHY_MODE_PCIE);
++	if (ret) {
++		phy_exit(pcie->phy);
++		return ret;
++	}
++
++	ret = phy_power_on(pcie->phy);
++	if (ret) {
++		phy_exit(pcie->phy);
++		return ret;
++	}
++
++	return 0;
++}
++
++static int advk_pcie_setup_phy(struct advk_pcie *pcie)
++{
++	struct device *dev = &pcie->pdev->dev;
++	struct device_node *node = dev->of_node;
++	int ret = 0;
++
++	pcie->phy = devm_of_phy_get(dev, node, NULL);
++	if (IS_ERR(pcie->phy) && (PTR_ERR(pcie->phy) == -EPROBE_DEFER))
++		return PTR_ERR(pcie->phy);
++
++	/* Old bindings miss the PHY handle */
++	if (IS_ERR(pcie->phy)) {
++		dev_warn(dev, "PHY unavailable (%ld)\n", PTR_ERR(pcie->phy));
++		pcie->phy = NULL;
++		return 0;
++	}
++
++	ret = advk_pcie_enable_phy(pcie);
++	if (ret)
++		dev_err(dev, "Failed to initialize PHY (%d)\n", ret);
++
++	return ret;
++}
++
+ static int advk_pcie_probe(struct platform_device *pdev)
  {
- 	u32 val, ltssm_state;
-@@ -286,16 +280,16 @@ static int advk_pcie_train_at_gen(struct advk_pcie *pcie, int gen)
- 	 * Start link training immediately after enabling it.
- 	 * This solves problems for some buggy cards.
- 	 */
--	reg = advk_readl(pcie, PCIE_CORE_LINK_CTRL_STAT_REG);
--	reg |= PCIE_CORE_LINK_TRAINING;
--	advk_writel(pcie, reg, PCIE_CORE_LINK_CTRL_STAT_REG);
-+	reg = advk_readl(pcie, PCIE_CORE_PCIEXP_CAP + PCI_EXP_LNKCTL);
-+	reg |= PCI_EXP_LNKCTL_RL;
-+	advk_writel(pcie, reg, PCIE_CORE_PCIEXP_CAP + PCI_EXP_LNKCTL);
+ 	struct device *dev = &pdev->dev;
+@@ -1100,6 +1165,10 @@ static int advk_pcie_probe(struct platform_device *pdev)
+ 	else
+ 		pcie->link_gen = ret;
  
- 	ret = advk_pcie_wait_for_link(pcie);
- 	if (ret)
- 		return ret;
++	ret = advk_pcie_setup_phy(pcie);
++	if (ret)
++		return ret;
++
+ 	advk_pcie_setup_hw(pcie);
  
--	reg = advk_readl(pcie, PCIE_CORE_LINK_CTRL_STAT_REG);
--	neg_gen = (reg >> PCIE_CORE_LINK_SPEED_SHIFT) & 0xf;
-+	reg = advk_read16(pcie, PCIE_CORE_PCIEXP_CAP + PCI_EXP_LNKSTA);
-+	neg_gen = reg & PCI_EXP_LNKSTA_CLS;
- 
- 	return neg_gen;
- }
-@@ -385,13 +379,14 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
- 		PCIE_CORE_ERR_CAPCTL_ECRC_CHCK_RCV;
- 	advk_writel(pcie, reg, PCIE_CORE_ERR_CAPCTL_REG);
- 
--	/* Set PCIe Device Control and Status 1 PF0 register */
--	reg = PCIE_CORE_DEV_CTRL_STATS_RELAX_ORDER_DISABLE |
--		(7 << PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ_SHIFT) |
--		PCIE_CORE_DEV_CTRL_STATS_SNOOP_DISABLE |
--		(PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SZ <<
--		 PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SIZE_SHIFT);
--	advk_writel(pcie, reg, PCIE_CORE_DEV_CTRL_STATS_REG);
-+	/* Set PCIe Device Control register */
-+	reg = advk_readl(pcie, PCIE_CORE_PCIEXP_CAP + PCI_EXP_DEVCTL);
-+	reg &= ~PCI_EXP_DEVCTL_RELAX_EN;
-+	reg &= ~PCI_EXP_DEVCTL_NOSNOOP_EN;
-+	reg &= ~PCI_EXP_DEVCTL_READRQ;
-+	reg |= PCI_EXP_DEVCTL_PAYLOAD; /* Set max payload size */
-+	reg |= PCI_EXP_DEVCTL_READRQ_512B;
-+	advk_writel(pcie, reg, PCIE_CORE_PCIEXP_CAP + PCI_EXP_DEVCTL);
- 
- 	/* Program PCIe Control 2 to disable strict ordering */
- 	reg = PCIE_CORE_CTRL2_RESERVED |
+ 	advk_sw_pci_bridge_init(pcie);
 -- 
 2.20.1
 
