@@ -5,58 +5,58 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DA0DC47259
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 14:40:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 384AAC54E8B
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 14:40:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1A79524956
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 14:40:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 146F720774
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Apr 2020 14:40:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="UKQPK0H1"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="AVtmLG7x"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728185AbgD3Okb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 30 Apr 2020 10:40:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34258 "EHLO
+        id S1728259AbgD3Oki (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 30 Apr 2020 10:40:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34308 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726839AbgD3Oka (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Apr 2020 10:40:30 -0400
-Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64636C035494
-        for <linux-pci@vger.kernel.org>; Thu, 30 Apr 2020 07:40:29 -0700 (PDT)
-Received: by mail-wr1-x444.google.com with SMTP id o27so1917160wra.12
-        for <linux-pci@vger.kernel.org>; Thu, 30 Apr 2020 07:40:29 -0700 (PDT)
+        by vger.kernel.org with ESMTP id S1727972AbgD3Okh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Apr 2020 10:40:37 -0400
+Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A320EC035495
+        for <linux-pci@vger.kernel.org>; Thu, 30 Apr 2020 07:40:37 -0700 (PDT)
+Received: by mail-wm1-x342.google.com with SMTP id r26so2211150wmh.0
+        for <linux-pci@vger.kernel.org>; Thu, 30 Apr 2020 07:40:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=A4g2MUm95A8vqce0Clcy1vClGPiS8qWrRsLIZv825ks=;
-        b=UKQPK0H1AfjHhmhias/B6F2uiehuVlmX9uNQaTC/eIERhp1uuCi3NjwqhMPvCkYml9
-         TIP9tvDR/dd3/TIlW2XWQ9gEVMVrtKdJT4954SMiKdXJEwvUnGnxLZwZRpAvuVXa/Ryh
-         v29bboFRz/NIzieeGHUX/Sk/+LvKRwsY05+gk91gLlfOzc045XTpFNkh1es/T/4EtJdH
-         K+ywTD6nGF2EKYFqtcMFpAGKYNV240R+oPuUDDPMjrg7MUM4q5Dl5i/6c8rytMXYUtMM
-         bSDsli4HaKlobXA6aKDQb6ZXjkvfqhFvnunxbJ0H35R1n/m6stCpgd2aoqFiyTW3n7x5
-         lCdg==
+        bh=v8m/gvQmdEE9q+Hk6vZz26imXwSjnQ8yRBvjHzdBrII=;
+        b=AVtmLG7xYoehDlrnZavnpbAOhvBcGvD8THICXsw2+FmNJiMb6JVlWTGYe4FmG1dmI8
+         At5vrjT6MtoEzwTTzQ/y3NsrffNNLmUePhwD3TlPy1PXULk/Y1uUJsFvECAPDGCNQ7fo
+         WPg9bTKlMkc/notJMFKWvoyOjQPeX73fDxPWn0d0WwMcnOwyW751edW/3yr44yceNv+8
+         ZQ70u9G30xYPpT6uX7q7q6j5dFb0RDjmuo9I0d3VzU/CaL7ueffD2Q/3MwJgwJUt4wz9
+         WDvu7KNJaJSo6FtBHyshkNa/Aiz+MdDoA/jrjtMFAOdffIGw3K2yfTNouUR0Lyfn5K4Z
+         tUjQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=A4g2MUm95A8vqce0Clcy1vClGPiS8qWrRsLIZv825ks=;
-        b=RqU5RBlTKV0MjWw50Aznidu3Um3penXM1Y2pbPlJEbrbQ/dgbpLXjCCXQAccsc2+hH
-         MDrFg1tQvZCGJ4oD5FBtigUo07LJbLmMy/p5TaUrAyJsp1NpnrbzAloynlfWt43Q91B1
-         MoqGrtRXZ6vlYcKsCMWgjF2htfsuBo3y5vpRbsG8vfIOHT42IIq8KH6o08ZKclsegjPh
-         w+1iPK7q24RFGiRL/IWk5XiSudM7FUqX1+PbO6OaGXfCxdM8o8hiA1Tz5657NubTwgb7
-         5GOGV5vTGo1GIUygMbFEOT9AmkRMZFvH6tpT0RAGVtQ/vrKr99oHtOjAkOOPn8NdjqeO
-         p4xA==
-X-Gm-Message-State: AGi0Pub6PJyjBRWRV6wS6u/BA3Jh5/pb7LpMnVvmfqsSxJfyP9KfnkKs
-        oNagWQ9yCOk3Hz319J/D/g6hoA==
-X-Google-Smtp-Source: APiQypISpfemZuOHOoY/XW6qkuY6DwYhB+l4cJZx0Y+98tF9fBGdV2EJ4CVYyTjwpT8nIv4VWOpAig==
-X-Received: by 2002:a5d:634d:: with SMTP id b13mr4170605wrw.353.1588257628116;
-        Thu, 30 Apr 2020 07:40:28 -0700 (PDT)
+        bh=v8m/gvQmdEE9q+Hk6vZz26imXwSjnQ8yRBvjHzdBrII=;
+        b=IpLAHu2enRuJreuEJCvZJTrhz5yQSeAWkEpbML9EtvsvYKJNA3D2EyXDsyRVOELmU2
+         h+yolBN7uit86zFJw5fAlcF5QREJDFxyzewvOCwEJPkslECZnQAj70FpK5CDsNaBQRpQ
+         cBwqNvVHbZFtBMbab8XCl1SVb+5OMHHZ6lq4KRaQlM9ObN0NUQdwEp8zZQrTuYPMvF2D
+         wpeJkViH9KIbv8z3N42lDORRSIlzggJPKvoSpXjB23MDxecuG62fLUPZsPbQbdJGf7nC
+         vE9AXtM4kcve/0OiG/IDFLSELl/VKPHE78y8HJXq62ebgNOqlE8sf0Pmy59hYG0ohyvh
+         I6/A==
+X-Gm-Message-State: AGi0PuZD5JoBYc5RhE4EalI+Irgq8R+jCD/h8MJKSyeNXahy8hT/dR14
+        1uIVg4S4JyOyPIN1sBSdtiLnBg==
+X-Google-Smtp-Source: APiQypKC2Ra8wot+z9FmTb6X9lIUjfF/migCT+XYOIs58HdBF3GJl8+jq+TxpZeczK0hV/dLr58P0Q==
+X-Received: by 2002:a05:600c:414b:: with SMTP id h11mr3325816wmm.9.1588257636329;
+        Thu, 30 Apr 2020 07:40:36 -0700 (PDT)
 Received: from localhost.localdomain ([2001:171b:226e:c200:c43b:ef78:d083:b355])
-        by smtp.gmail.com with ESMTPSA id n2sm4153286wrt.33.2020.04.30.07.40.26
+        by smtp.gmail.com with ESMTPSA id n2sm4153286wrt.33.2020.04.30.07.40.35
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 30 Apr 2020 07:40:27 -0700 (PDT)
+        Thu, 30 Apr 2020 07:40:35 -0700 (PDT)
 From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
 To:     iommu@lists.linux-foundation.org, devicetree@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
@@ -67,10 +67,11 @@ Cc:     joro@8bytes.org, catalin.marinas@arm.com, will@kernel.org,
         jacob.jun.pan@linux.intel.com, christian.koenig@amd.com,
         felix.kuehling@amd.com, zhangfei.gao@linaro.org, jgg@ziepe.ca,
         xuzaibo@huawei.com, fenghua.yu@intel.com, hch@infradead.org,
-        Jean-Philippe Brucker <jean-philippe@linaro.org>
-Subject: [PATCH v6 08/25] iommu/io-pgtable-arm: Move some definitions to a header
-Date:   Thu, 30 Apr 2020 16:34:07 +0200
-Message-Id: <20200430143424.2787566-9-jean-philippe@linaro.org>
+        Jean-Philippe Brucker <jean-philippe@linaro.org>,
+        Suzuki K Poulose <suzuki.poulose@arm.com>
+Subject: [PATCH v6 15/25] iommu/arm-smmu-v3: Add SVA feature checking
+Date:   Thu, 30 Apr 2020 16:34:14 +0200
+Message-Id: <20200430143424.2787566-16-jean-philippe@linaro.org>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200430143424.2787566-1-jean-philippe@linaro.org>
 References: <20200430143424.2787566-1-jean-philippe@linaro.org>
@@ -81,121 +82,114 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Extract some of the most generic TCR defines, so they can be reused by
-the page table sharing code.
+Aggregate all sanity-checks for sharing CPU page tables with the SMMU
+under a single ARM_SMMU_FEAT_SVA bit. For PCIe SVA, users also need to
+check FEAT_ATS and FEAT_PRI. For platform SVA, they will most likely have
+to check FEAT_STALLS.
 
+Cc: Suzuki K Poulose <suzuki.poulose@arm.com>
 Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
 ---
-v5->v6: Update MAINTAINERS
----
- drivers/iommu/io-pgtable-arm.h | 30 ++++++++++++++++++++++++++++++
- drivers/iommu/io-pgtable-arm.c | 27 ++-------------------------
- MAINTAINERS                    |  3 +--
- 3 files changed, 33 insertions(+), 27 deletions(-)
- create mode 100644 drivers/iommu/io-pgtable-arm.h
+ drivers/iommu/arm-smmu-v3.c | 72 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 72 insertions(+)
 
-diff --git a/drivers/iommu/io-pgtable-arm.h b/drivers/iommu/io-pgtable-arm.h
-new file mode 100644
-index 0000000000000..ba7cfdf7afa03
---- /dev/null
-+++ b/drivers/iommu/io-pgtable-arm.h
-@@ -0,0 +1,30 @@
-+/* SPDX-License-Identifier: GPL-2.0-only */
-+#ifndef IO_PGTABLE_ARM_H_
-+#define IO_PGTABLE_ARM_H_
-+
-+#define ARM_LPAE_TCR_TG0_4K		0
-+#define ARM_LPAE_TCR_TG0_64K		1
-+#define ARM_LPAE_TCR_TG0_16K		2
-+
-+#define ARM_LPAE_TCR_TG1_16K		1
-+#define ARM_LPAE_TCR_TG1_4K		2
-+#define ARM_LPAE_TCR_TG1_64K		3
-+
-+#define ARM_LPAE_TCR_SH_NS		0
-+#define ARM_LPAE_TCR_SH_OS		2
-+#define ARM_LPAE_TCR_SH_IS		3
-+
-+#define ARM_LPAE_TCR_RGN_NC		0
-+#define ARM_LPAE_TCR_RGN_WBWA		1
-+#define ARM_LPAE_TCR_RGN_WT		2
-+#define ARM_LPAE_TCR_RGN_WB		3
-+
-+#define ARM_LPAE_TCR_PS_32_BIT		0x0ULL
-+#define ARM_LPAE_TCR_PS_36_BIT		0x1ULL
-+#define ARM_LPAE_TCR_PS_40_BIT		0x2ULL
-+#define ARM_LPAE_TCR_PS_42_BIT		0x3ULL
-+#define ARM_LPAE_TCR_PS_44_BIT		0x4ULL
-+#define ARM_LPAE_TCR_PS_48_BIT		0x5ULL
-+#define ARM_LPAE_TCR_PS_52_BIT		0x6ULL
-+
-+#endif /* IO_PGTABLE_ARM_H_ */
-diff --git a/drivers/iommu/io-pgtable-arm.c b/drivers/iommu/io-pgtable-arm.c
-index 04fbd4bf0ff9f..f71a2eade04ab 100644
---- a/drivers/iommu/io-pgtable-arm.c
-+++ b/drivers/iommu/io-pgtable-arm.c
-@@ -20,6 +20,8 @@
+diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+index a562c4b243292..9b90cc57a609b 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -657,6 +657,7 @@ struct arm_smmu_device {
+ #define ARM_SMMU_FEAT_RANGE_INV		(1 << 15)
+ #define ARM_SMMU_FEAT_E2H		(1 << 16)
+ #define ARM_SMMU_FEAT_BTM		(1 << 17)
++#define ARM_SMMU_FEAT_SVA		(1 << 18)
+ 	u32				features;
  
- #include <asm/barrier.h>
+ #define ARM_SMMU_OPT_SKIP_PREFETCH	(1 << 0)
+@@ -3925,6 +3926,74 @@ static int arm_smmu_device_reset(struct arm_smmu_device *smmu, bool bypass)
+ 	return 0;
+ }
  
-+#include "io-pgtable-arm.h"
++static bool arm_smmu_supports_sva(struct arm_smmu_device *smmu)
++{
++	unsigned long reg, fld;
++	unsigned long oas;
++	unsigned long asid_bits;
 +
- #define ARM_LPAE_MAX_ADDR_BITS		52
- #define ARM_LPAE_S2_MAX_CONCAT_PAGES	16
- #define ARM_LPAE_MAX_LEVELS		4
-@@ -100,23 +102,6 @@
- #define ARM_LPAE_PTE_MEMATTR_DEV	(((arm_lpae_iopte)0x1) << 2)
++	u32 feat_mask = ARM_SMMU_FEAT_BTM | ARM_SMMU_FEAT_COHERENCY;
++
++	if ((smmu->features & feat_mask) != feat_mask)
++		return false;
++
++	if (!(smmu->pgsize_bitmap & PAGE_SIZE))
++		return false;
++
++	/*
++	 * Get the smallest PA size of all CPUs (sanitized by cpufeature). We're
++	 * not even pretending to support AArch32 here.
++	 */
++	reg = read_sanitised_ftr_reg(SYS_ID_AA64MMFR0_EL1);
++	fld = cpuid_feature_extract_unsigned_field(reg, ID_AA64MMFR0_PARANGE_SHIFT);
++	switch (fld) {
++	case 0x0:
++		oas = 32;
++		break;
++	case 0x1:
++		oas = 36;
++		break;
++	case 0x2:
++		oas = 40;
++		break;
++	case 0x3:
++		oas = 42;
++		break;
++	case 0x4:
++		oas = 44;
++		break;
++	case 0x5:
++		oas = 48;
++		break;
++	case 0x6:
++		oas = 52;
++		break;
++	default:
++		return false;
++	}
++
++	/* abort if MMU outputs addresses greater than what we support. */
++	if (smmu->oas < oas)
++		return false;
++
++	/* We can support bigger ASIDs than the CPU, but not smaller */
++	fld = cpuid_feature_extract_unsigned_field(reg, ID_AA64MMFR0_ASID_SHIFT);
++	asid_bits = fld ? 16 : 8;
++	if (smmu->asid_bits < asid_bits)
++		return false;
++
++	/*
++	 * See max_pinned_asids in arch/arm64/mm/context.c. The following is
++	 * generally the maximum number of bindable processes.
++	 */
++	if (IS_ENABLED(CONFIG_UNMAP_KERNEL_AT_EL0))
++		asid_bits--;
++	dev_dbg(smmu->dev, "%d shared contexts\n", (1 << asid_bits) -
++		num_possible_cpus() - 2);
++
++	return true;
++}
++
+ static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
+ {
+ 	u32 reg;
+@@ -4137,6 +4206,9 @@ static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
  
- /* Register bits */
--#define ARM_LPAE_TCR_TG0_4K		0
--#define ARM_LPAE_TCR_TG0_64K		1
--#define ARM_LPAE_TCR_TG0_16K		2
--
--#define ARM_LPAE_TCR_TG1_16K		1
--#define ARM_LPAE_TCR_TG1_4K		2
--#define ARM_LPAE_TCR_TG1_64K		3
--
--#define ARM_LPAE_TCR_SH_NS		0
--#define ARM_LPAE_TCR_SH_OS		2
--#define ARM_LPAE_TCR_SH_IS		3
--
--#define ARM_LPAE_TCR_RGN_NC		0
--#define ARM_LPAE_TCR_RGN_WBWA		1
--#define ARM_LPAE_TCR_RGN_WT		2
--#define ARM_LPAE_TCR_RGN_WB		3
--
- #define ARM_LPAE_VTCR_SL0_MASK		0x3
+ 	smmu->ias = max(smmu->ias, smmu->oas);
  
- #define ARM_LPAE_TCR_T0SZ_SHIFT		0
-@@ -124,14 +109,6 @@
- #define ARM_LPAE_VTCR_PS_SHIFT		16
- #define ARM_LPAE_VTCR_PS_MASK		0x7
- 
--#define ARM_LPAE_TCR_PS_32_BIT		0x0ULL
--#define ARM_LPAE_TCR_PS_36_BIT		0x1ULL
--#define ARM_LPAE_TCR_PS_40_BIT		0x2ULL
--#define ARM_LPAE_TCR_PS_42_BIT		0x3ULL
--#define ARM_LPAE_TCR_PS_44_BIT		0x4ULL
--#define ARM_LPAE_TCR_PS_48_BIT		0x5ULL
--#define ARM_LPAE_TCR_PS_52_BIT		0x6ULL
--
- #define ARM_LPAE_MAIR_ATTR_SHIFT(n)	((n) << 3)
- #define ARM_LPAE_MAIR_ATTR_MASK		0xff
- #define ARM_LPAE_MAIR_ATTR_DEVICE	0x04
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 26f281d9f32a4..c637d38764594 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -1463,8 +1463,7 @@ L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
- S:	Maintained
- F:	Documentation/devicetree/bindings/iommu/arm,smmu*
- F:	drivers/iommu/arm-smmu*
--F:	drivers/iommu/io-pgtable-arm-v7s.c
--F:	drivers/iommu/io-pgtable-arm.c
-+F:	drivers/iommu/io-pgtable-arm*
- 
- ARM SUB-ARCHITECTURES
- L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
++	if (arm_smmu_supports_sva(smmu))
++		smmu->features |= ARM_SMMU_FEAT_SVA;
++
+ 	dev_info(smmu->dev, "ias %lu-bit, oas %lu-bit (features 0x%08x)\n",
+ 		 smmu->ias, smmu->oas, smmu->features);
+ 	return 0;
 -- 
 2.26.2
 
