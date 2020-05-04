@@ -2,145 +2,87 @@ Return-Path: <SRS0=JKpi=6S=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3603C3A5A9
-	for <linux-pci@archiver.kernel.org>; Mon,  4 May 2020 06:18:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92DD2C3A5A9
+	for <linux-pci@archiver.kernel.org>; Mon,  4 May 2020 07:03:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A99A020658
-	for <linux-pci@archiver.kernel.org>; Mon,  4 May 2020 06:18:50 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Wx/Ea1rp"
+	by mail.kernel.org (Postfix) with ESMTP id 7BAA3215A4
+	for <linux-pci@archiver.kernel.org>; Mon,  4 May 2020 07:03:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726578AbgEDGSu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 4 May 2020 02:18:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60412 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726330AbgEDGSt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 May 2020 02:18:49 -0400
-Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FE25C061A0E
-        for <linux-pci@vger.kernel.org>; Sun,  3 May 2020 23:18:48 -0700 (PDT)
-Received: by mail-wr1-x441.google.com with SMTP id d17so19384506wrg.11
-        for <linux-pci@vger.kernel.org>; Sun, 03 May 2020 23:18:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=YDlG0Xw1x/kgXl/YkAa69pkzlhWwY8X9N+5Bs9v5cew=;
-        b=Wx/Ea1rpn6/dIelkYV8bMF7ToJsTIKXw6Vw1nBXW5kLruk0Wm5iH9Kj4JRFs7ScP+t
-         utJfe4Z/iu9XmLtFvAMdE1wvN8O43r8pOi5POyaWVti7HtqwCc204/4HyukBBGe63nlO
-         wG0Kevnm9vzowJB2tW8/xJg6O4ZMd62LDdF8dcvcMPuDqNymyTdkfyIdEDE7je/sg3st
-         FeoHjy88pMvgwteC+xb6UBidfncENcfAaJAvGsWXmZ9+ROUTV4XJkptg9OPGgC931vmz
-         PCyefSolyPlm6cUYRD8I3JkuTrlhphO0K2rp1dZGhIyfeW8mjHdTwgQHwQvO1qbI8Xl0
-         vXlg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=YDlG0Xw1x/kgXl/YkAa69pkzlhWwY8X9N+5Bs9v5cew=;
-        b=QCmvauoH0ocfBwN+C/QU0h7e/lSXBlEkPOYuqSTA1d4Pg8EQPWXFtz/RlqfYA1yMuQ
-         QBgw1muNJQbGbOmyrQVjBAXBhgTLswHl70BSSsZN51FrP2uamgtsWuG9ivA7R63vHQZy
-         0K3EbJ6HxYDhuP8imJ5aLuCP+HVmZYWN0Y4lDi1P7/gUTefz/TzHHgOzRW69uwUP/ZQa
-         CevaP85UlYw/T1JFWGC9ItG9sE5rCi4bFvuMU4YyDEObvkG261j7ynBDzBWPxBPJ4iDw
-         dmOTxZiMp8/+qrxscPYEBTOnrVHs4kVGqC5QldTkWmbQqKDl2xIOryxBFQbl2Jp2mcjA
-         fbcQ==
-X-Gm-Message-State: AGi0PuZkBkbcyV2k7hrV32EyuUMf+hduwk2R1RnfIc0F9oqV1W7Cr+wy
-        D1UlHRzya3vRL2K6uSf4ZEk=
-X-Google-Smtp-Source: APiQypLxeRYL85Yfp7NqvJbDkFX8Zn2rtvi8+uBh0Q7eXtp4iLsVAYK8ybnOjPP+WDnbmJSBysldWw==
-X-Received: by 2002:a5d:4dcb:: with SMTP id f11mr16966244wru.174.1588573126967;
-        Sun, 03 May 2020 23:18:46 -0700 (PDT)
-Received: from net.saheed (540018A9.dsl.pool.telekom.hu. [84.0.24.169])
-        by smtp.gmail.com with ESMTPSA id k23sm11559004wmi.46.2020.05.03.23.18.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 03 May 2020 23:18:46 -0700 (PDT)
-From:   refactormyself@gmail.com
-To:     helgaas@kernel.org
-Cc:     Bolarinwa Olayemi Saheed <refactormyself@gmail.com>,
-        bjorn@helgaas.com, yangyicong@hisilicon.com,
-        skhan@linuxfoundation.org, linux-pci@vger.kernel.org
-Subject: [PATCH RFC 2/2] pci: Set all PCIBIOS_* error codes to generic error codes
-Date:   Mon,  4 May 2020 07:18:12 +0200
-Message-Id: <20200504051812.22662-3-refactormyself@gmail.com>
-X-Mailer: git-send-email 2.18.2
-In-Reply-To: <20200504051812.22662-1-refactormyself@gmail.com>
-References: <20200504051812.22662-1-refactormyself@gmail.com>
+        id S1727933AbgEDHDI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 4 May 2020 03:03:08 -0400
+Received: from youngberry.canonical.com ([91.189.89.112]:55251 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726410AbgEDHDI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 May 2020 03:03:08 -0400
+Received: from 61-220-137-37.hinet-ip.hinet.net ([61.220.137.37] helo=localhost)
+        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.86_2)
+        (envelope-from <kai.heng.feng@canonical.com>)
+        id 1jVV85-0002cB-SL; Mon, 04 May 2020 07:03:06 +0000
+From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
+To:     bhelgaas@google.com
+Cc:     Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        linux-pci@vger.kernel.org (open list:PCI SUBSYSTEM),
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH] PCI: Enable ASPM L1 on TI PCIe-to-PCI bridge
+Date:   Mon,  4 May 2020 15:02:59 +0800
+Message-Id: <20200504070259.6034-1-kai.heng.feng@canonical.com>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
+The TI PCIe-to-PCI bridge prevents the Intel SoC from entering power
+state deeper than PC3, consumes lots of unnecessary power.
 
-PCIBIOS_* error codes now set to negative value generic codes.
-pcibios_err_to_errno() is modified to reflect this changes and the function
-is now marked deprecated. The function now only returns negative error
-codes.
+On Windows ASPM L1 is enabled on the device and its upstream bridge,
+so it can make the Intel SoC reach PC8 or PC10 to save lots of power.
 
-These changes effect the consistency across pci and pcie accessors.
-Now they all return 0 on success and < 0, otherwise.
+So enable ASPM L1 like Windows does, to save additional power.
 
-Signed-off-by: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
-Suggested-by: Yicong Yang <yangyicong@hisilicon.com>
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=207571
+Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
 ---
- include/linux/pci.h | 31 +++++++++++++++----------------
- 1 file changed, 15 insertions(+), 16 deletions(-)
+ drivers/pci/quirks.c | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 3840a541a9de..ee87def7242a 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -661,32 +661,31 @@ static inline bool pci_dev_msi_enabled(struct pci_dev *pci_dev) { return false;
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index ca9ed5774eb1..ac7eccf34f87 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2330,6 +2330,27 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x10f1, quirk_disable_aspm_l0s);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x10f4, quirk_disable_aspm_l0s);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1508, quirk_disable_aspm_l0s);
  
- /* Error values that may be returned by PCI functions */
- #define PCIBIOS_SUCCESSFUL		0x00
--#define PCIBIOS_FUNC_NOT_SUPPORTED	0x81
--#define PCIBIOS_BAD_VENDOR_ID		0x83
--#define PCIBIOS_DEVICE_NOT_FOUND	0x86
--#define PCIBIOS_BAD_REGISTER_NUMBER	0x87
--#define PCIBIOS_SET_FAILED		0x88
--#define PCIBIOS_BUFFER_TOO_SMALL	0x89
--
--/* Translate above to generic errno for passing back through non-PCI code */
-+#define PCIBIOS_FUNC_NOT_SUPPORTED	-ENOENT
-+#define PCIBIOS_BAD_VENDOR_ID		-ENOTTY
-+#define PCIBIOS_DEVICE_NOT_FOUND	-ENODEV
-+#define PCIBIOS_BAD_REGISTER_NUMBER	-EFAULT
-+#define PCIBIOS_SET_FAILED		-EIO
-+#define PCIBIOS_BUFFER_TOO_SMALL	-ENOSPC
++static void quirk_enable_aspm_l1(struct pci_dev *dev)
++{
++	struct pci_dev *bridge = pci_upstream_bridge(dev);
++	u16 lnkctl;
 +
-+/* *
-+ * Translate above to generic errno for passing back through non-PCI code
-+ *
-+ * Deprecated. Use the PCIBIOS_* directly without a translation.
-+ */
- static inline int pcibios_err_to_errno(int err)
- {
--	if (err <= PCIBIOS_SUCCESSFUL)
--		return err; /* Assume already errno */
-+	if (err == PCIBIOS_SUCCESSFUL)
-+		return err; /* preserve success */
- 
- 	switch (err) {
- 	case PCIBIOS_FUNC_NOT_SUPPORTED:
--		return -ENOENT;
- 	case PCIBIOS_BAD_VENDOR_ID:
--		return -ENOTTY;
- 	case PCIBIOS_DEVICE_NOT_FOUND:
--		return -ENODEV;
- 	case PCIBIOS_BAD_REGISTER_NUMBER:
--		return -EFAULT;
- 	case PCIBIOS_SET_FAILED:
--		return -EIO;
- 	case PCIBIOS_BUFFER_TOO_SMALL:
--		return -ENOSPC;
-+		return err;
- 	}
- 
- 	return -ERANGE;
++	pci_info(dev, "Enabling L1\n");
++	pcie_capability_read_word(dev, PCI_EXP_LNKCTL, &lnkctl);
++	if (!(lnkctl & PCI_EXP_LNKCTL_ASPM_L1))
++		pcie_capability_write_word(dev, PCI_EXP_LNKCTL,
++					   lnkctl | PCI_EXP_LNKCTL_ASPM_L1);
++
++	if (!bridge)
++		return;
++
++	pcie_capability_read_word(bridge, PCI_EXP_LNKCTL, &lnkctl);
++	if (!(lnkctl & PCI_EXP_LNKCTL_ASPM_L1))
++		pcie_capability_write_word(bridge, PCI_EXP_LNKCTL,
++					   lnkctl | PCI_EXP_LNKCTL_ASPM_L1);
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_TI, 0x8240, quirk_enable_aspm_l1);
++
+ /*
+  * Some Pericom PCIe-to-PCI bridges in reverse mode need the PCIe Retrain
+  * Link bit cleared after starting the link retrain process to allow this
 -- 
-2.18.2
+2.17.1
 
