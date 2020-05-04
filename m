@@ -2,113 +2,100 @@ Return-Path: <SRS0=JKpi=6S=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D3AFC3A5A9
-	for <linux-pci@archiver.kernel.org>; Mon,  4 May 2020 05:30:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 185CDC3A5A9
+	for <linux-pci@archiver.kernel.org>; Mon,  4 May 2020 06:18:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7C0A120643
-	for <linux-pci@archiver.kernel.org>; Mon,  4 May 2020 05:30:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1588570206;
-	bh=qb8TFTxPvAhYVp5MgrmNT6TV3hFAhoKv0fd+mmu/eVQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=j6Ef99ydzKAnqutLHzWhYf2Hyic8iPtufS1bGDntLFqsveV0OQ2bo8ni+QldbgMlz
-	 VIJd3PFISk1uZh+pqJmQyf/xPiJb6KMRHbZig6QJUOKNGAHVXnkNrDaaZeFyQLDCma
-	 vRAoLlcnTyC2uDHAysFPpM+athVpPVPLCQ0Zj+n0=
+	by mail.kernel.org (Postfix) with ESMTP id E7C44206B9
+	for <linux-pci@archiver.kernel.org>; Mon,  4 May 2020 06:18:03 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VHhosTF+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726625AbgEDFaD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 4 May 2020 01:30:03 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36380 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725859AbgEDFaD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 4 May 2020 01:30:03 -0400
-Received: from localhost (unknown [171.76.84.84])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 0EE6A20643;
-        Mon,  4 May 2020 05:30:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1588570202;
-        bh=qb8TFTxPvAhYVp5MgrmNT6TV3hFAhoKv0fd+mmu/eVQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=APZ0NKptkV7nQmbOJVXrZ9iWMmMUmj7uJeCMSrHt7W1oMBQo2hOiesdv2pwFAdOAX
-         n+RM1steegXVBEEFP8BhW3PsJ+at9begFNrDZryT9bPwWuktnqkKUAj8LVmqsASYwL
-         JxanWkMRzCWA5b0BpFF1z3OMwKSLO7Spju32iFGc=
-Date:   Mon, 4 May 2020 10:59:58 +0530
-From:   Vinod Koul <vkoul@kernel.org>
-To:     Alan Mikhak <alan.mikhak@sifive.com>
-Cc:     dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, gustavo.pimentel@synopsys.com,
-        dan.j.williams@intel.com, kishon@ti.com, paul.walmsley@sifive.com
-Subject: Re: [PATCH][next] dmaengine: dw-edma: support local dma device
- transfer semantics
-Message-ID: <20200504052958.GH1375924@vkoul-mobl>
-References: <1588122633-1552-1-git-send-email-alan.mikhak@sifive.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1588122633-1552-1-git-send-email-alan.mikhak@sifive.com>
+        id S1726410AbgEDGSD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 4 May 2020 02:18:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60290 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726330AbgEDGSD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 May 2020 02:18:03 -0400
+Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BFEAAC061A0E
+        for <linux-pci@vger.kernel.org>; Sun,  3 May 2020 23:18:02 -0700 (PDT)
+Received: by mail-wm1-x344.google.com with SMTP id x25so7053134wmc.0
+        for <linux-pci@vger.kernel.org>; Sun, 03 May 2020 23:18:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=/QPEOCYA02sDCotUfQPVcojJzssWpbusVJYfCsRI7SU=;
+        b=VHhosTF+HtEGQT9ISgoyeUqtFqOFEg5HYWONE+W33OxEUp9bK+FgSkQXKphqX+WQP1
+         0sHZZuY+0EOAUnzLhhFL1WTof501b/xHLsnAVtQeBTmwUbPqtX+tRSg601zh9yQRCVEL
+         24GjGocpa6qmXg9lM7bbXiJLAPm2xs4/SPGbpPoPs8HOePiFxgu7erZhUoAf7SXfFAa1
+         OOkd3ZgU6Oe71aEmTzYrsijRzJfLo4/6Vo35SgFNHH/dkXqyBVsNgsPPEv19sZGNGLdQ
+         hSTJe8t8QV51L7yEyZVDEP8AtNspWaYof98oym+ftCOuWbhYiOcuj7Sd4vim+FKNsWV2
+         W6lg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=/QPEOCYA02sDCotUfQPVcojJzssWpbusVJYfCsRI7SU=;
+        b=TcU1jL8npgLSFGNt259efCiNVPLUUauaJfXA3sowEYJN0KSN8zRNuIaCy8vPjj+rZF
+         5TZAGWhbGAUFWYW8NZjB9yhDlN0u3TuVTN1IOrL1ug3qvO8HbEcA9yRfiCqLfsLWJvbe
+         anBrlNyHIKtAkJlAGW1m1nw9B07yHwJsdXEjfBzASw2YberjLHPyQLkmgawOMLSSKNfS
+         yd5uMKBAqSHpYQQwl3x/NFX0e16k3KjkImU7rNYzLV27e1R6ryaKiPKIUEAatAChC4Dx
+         EgE0I5Cv5z1BQyITeCdjD5/uRxPVXzECeswNS2C1tl50Swi1KvA5AA/LOPl/lckYjAUW
+         fn9Q==
+X-Gm-Message-State: AGi0PuZ3pmO7CIJbxv/M3+8xw5Dc9LfC98CUyLd608HSEqVA3g1+ai/S
+        7eR5WcEfQRcA3FLDBSPIA3k=
+X-Google-Smtp-Source: APiQypJeiJs5qQUYJ8ms6IPR5I2EsBQJ5NDAFItX40I2/3jPNGY/MVRiGGqzoXmzCtR4p+y/up0kHw==
+X-Received: by 2002:a1c:2002:: with SMTP id g2mr12301205wmg.109.1588573081503;
+        Sun, 03 May 2020 23:18:01 -0700 (PDT)
+Received: from net.saheed (540018A9.dsl.pool.telekom.hu. [84.0.24.169])
+        by smtp.gmail.com with ESMTPSA id k23sm11559004wmi.46.2020.05.03.23.18.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 03 May 2020 23:18:00 -0700 (PDT)
+From:   refactormyself@gmail.com
+To:     helgaas@kernel.org
+Cc:     Bolarinwa Olayemi Saheed <refactormyself@gmail.com>,
+        bjorn@helgaas.com, yangyicong@hisilicon.com,
+        skhan@linuxfoundation.org, linux-pci@vger.kernel.org
+Subject: [PATCH RFC 0/2] pci: Make return value of pcie_capability_*() consistent
+Date:   Mon,  4 May 2020 07:18:10 +0200
+Message-Id: <20200504051812.22662-1-refactormyself@gmail.com>
+X-Mailer: git-send-email 2.18.2
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 28-04-20, 18:10, Alan Mikhak wrote:
-> From: Alan Mikhak <alan.mikhak@sifive.com>
-> 
-> Modify dw_edma_device_transfer() to also support the semantics of dma
-> device transfer for additional use cases involving pcitest utility as a
-> local initiator.
-> 
-> For its original use case, dw-edma supported the semantics of dma device
-> transfer from the perspective of a remote initiator who is located across
-> the PCIe bus from dma channel hardware.
-> 
-> To a remote initiator, DMA_DEV_TO_MEM means using a remote dma WRITE
-> channel to transfer from remote memory to local memory. A WRITE channel
-> would be employed on the remote device in order to move the contents of
-> remote memory to the bus destined for local memory.
-> 
-> To a remote initiator, DMA_MEM_TO_DEV means using a remote dma READ
-> channel to transfer from local memory to remote memory. A READ channel
-> would be employed on the remote device in order to move the contents of
-> local memory to the bus destined for remote memory.
-> 
-> >From the perspective of a local dma initiator who is co-located on the
-> same side of the PCIe bus as the dma channel hardware, the semantics of
-> dma device transfer are flipped.
-> 
-> To a local initiator, DMA_DEV_TO_MEM means using a local dma READ channel
-> to transfer from remote memory to local memory. A READ channel would be
-> employed on the local device in order to move the contents of remote
-> memory to the bus destined for local memory.
-> 
-> To a local initiator, DMA_MEM_TO_DEV means using a local dma WRITE channel
-> to transfer from local memory to remote memory. A WRITE channel would be
-> employed on the local device in order to move the contents of local memory
-> to the bus destined for remote memory.
-> 
-> To support local dma initiators, dw_edma_device_transfer() is modified to
-> now examine the direction field of struct dma_slave_config for the channel
-> which initiators can configure by calling dmaengine_slave_config().
-> 
-> If direction is configured as either DMA_DEV_TO_MEM or DMA_MEM_TO_DEV,
-> local initiator semantics are used. If direction is a value other than
-> DMA_DEV_TO_MEM nor DMA_MEM_TO_DEV, then remote initiator semantics are
-> used. This should maintain backward compatibility with the original use
-> case of dw-edma.
-> 
-> The dw-edma-test utility is an example of a remote initiator. From reading
-> its patch, dw-edma-test does not specifically set the direction field of
-> struct dma_slave_config. Since dw_edma_device_transfer() also does not
-> check the direction field of struct dma_slave_config, it seems safe to use
-> this convention in dw-edma to support both local and remote initiator
-> semantics.
+From: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
 
-Applied, thanks
+Changes in version 5:
+ - Extend consitency to all accesors, they all now return PCIBIOS_* error
+   codes
+ - Enforce -ve error code, any case of > 0 error code is return as -ERANGE
+   this is done in line with the implementation of pcibios_err_to_errno()
+   which is now deprecated.
+ - Set all PCIBIOS_* error codes to generic error codes.
+ - pcibios_err_to_errno() is now dormant and deprecated. It will return
+   -ERANGE if a any positive error code is passed into it.
+ - Remove verbose dependency audit report from commit log. No conflict was
+   discovered so far.
+
+Changes in version 4:
+ - make patch independent of earlier versions
+ - add commit log
+ - add justificaation and report on audit of affected functions
+
+Bolarinwa Olayemi Saheed (2):
+  pci: Make return value of pcie_capability_{read|write}_*() consistent
+  Set all PCIBIOS_* error codes to generic error codes
+
+ drivers/pci/access.c | 64 +++++++++++++++++++++++++++++++++++---------
+ include/linux/pci.h  | 31 +++++++++++----------
+ 2 files changed, 66 insertions(+), 29 deletions(-)
 
 -- 
-~Vinod
+2.18.2
+
