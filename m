@@ -2,152 +2,107 @@ Return-Path: <SRS0=JKpi=6S=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 014E0C47258
-	for <linux-pci@archiver.kernel.org>; Mon,  4 May 2020 14:26:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E86DFC47257
+	for <linux-pci@archiver.kernel.org>; Mon,  4 May 2020 14:37:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D4EF820721
-	for <linux-pci@archiver.kernel.org>; Mon,  4 May 2020 14:26:05 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="z1iuPCF+"
+	by mail.kernel.org (Postfix) with ESMTP id D172B2087E
+	for <linux-pci@archiver.kernel.org>; Mon,  4 May 2020 14:37:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728786AbgEDO0F (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 4 May 2020 10:26:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51610 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726922AbgEDO0F (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 May 2020 10:26:05 -0400
-Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69145C061A10
-        for <linux-pci@vger.kernel.org>; Mon,  4 May 2020 07:26:03 -0700 (PDT)
-Received: by mail-wr1-x443.google.com with SMTP id i10so21161636wrv.10
-        for <linux-pci@vger.kernel.org>; Mon, 04 May 2020 07:26:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=F/z0V3mcBGUp+syXehq8FDmPP6eWJmRKpReZL7dY1ho=;
-        b=z1iuPCF+taVGKa11c2yjWNjOpHuDo1RB1E7mbiG1WoVCEMCNh5P8g+itjpP3FUb4gs
-         mCE66WIAwk3XxYtzkPIlMa2cgsSYqPT/sHmkzg7ZxXM+z96IIV31FcsFHFSq4qIafaMB
-         24lM1ATRxsNNtieYoZwGa57aXFJ3ATXi47XR5U3U8SyqHQfieuZVpCa6NuqP10uVhaer
-         GlXWtziftzxxoED82b0x2bP5555Q3FS+QQfHvURtC/EZAjTaNVZME8nZQsu/VQSLGBQV
-         3URfU7Lb1juS31WTwwRasil1iZl8t0N/SPOSiqBJE6kdXsxH3add7ofJV2qxRW9qCi7T
-         V46g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=F/z0V3mcBGUp+syXehq8FDmPP6eWJmRKpReZL7dY1ho=;
-        b=bMsvf5s3AF8HkhtoEV/g8STm6tsKgp1JQhhSRuGDQrGhZ1BdEcj8ZBSHemlJssvJmB
-         4QQqtICYLu6ZNLOprAwzZA2Gxh6IUVGkl2FQsQHaMs+Dxk+x9tZamWin0IWalJ1mm4Cq
-         9LU93mY72/BZso/epOOkzGhAWa2RdDOh7xcOrGLGp/yF6yCvirg5OMS7QuawxlfTmbV3
-         J9SVLGF8EPu3bIC6IYCTOJw3qVy1U/EczPPdIh1bYqBj4Q31SAM8MlUB25Udt/dWWfQ1
-         uSfqUgeXPqxg01hDRou8GwmrYaF5yhbyTXUNUHdMWBlqsuge6bcjCxZJgVZOMXfz38O/
-         S8Bw==
-X-Gm-Message-State: AGi0PuZDF0Ua9TidaSpuwQkwoaP5mcYaElUVy8OiJaUDcjxWzcuuaqNY
-        mZMFp7YdX9gIww8QFqUh4TjHkA==
-X-Google-Smtp-Source: APiQypJvR/uVsrLrYsoae/U5bNYqj69oeGktdTlceIG72vmnH3x2R6717uW94oIHTrpwNOfPUuH1bw==
-X-Received: by 2002:adf:e745:: with SMTP id c5mr9977426wrn.263.1588602361937;
-        Mon, 04 May 2020 07:26:01 -0700 (PDT)
-Received: from myrica ([2001:171b:226e:c200:c43b:ef78:d083:b355])
-        by smtp.gmail.com with ESMTPSA id a205sm14484714wmh.29.2020.05.04.07.25.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 04 May 2020 07:26:01 -0700 (PDT)
-Date:   Mon, 4 May 2020 16:25:48 +0200
-From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
-To:     Jacob Pan <jacob.jun.pan@linux.intel.com>
+        id S1728990AbgEDOhS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 4 May 2020 10:37:18 -0400
+Received: from foss.arm.com ([217.140.110.172]:46302 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728486AbgEDOhS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 4 May 2020 10:37:18 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 9D6461FB;
+        Mon,  4 May 2020 07:37:17 -0700 (PDT)
+Received: from [10.37.12.17] (unknown [10.37.12.17])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 543783F305;
+        Mon,  4 May 2020 07:37:04 -0700 (PDT)
+Subject: Re: [PATCH v6 11/25] iommu/arm-smmu-v3: Share process page tables
+To:     jean-philippe@linaro.org
 Cc:     iommu@lists.linux-foundation.org, devicetree@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
         linux-mm@kvack.org, joro@8bytes.org, catalin.marinas@arm.com,
         will@kernel.org, robin.murphy@arm.com, kevin.tian@intel.com,
         baolu.lu@linux.intel.com, Jonathan.Cameron@huawei.com,
-        christian.koenig@amd.com, felix.kuehling@amd.com,
-        zhangfei.gao@linaro.org, jgg@ziepe.ca, xuzaibo@huawei.com,
-        fenghua.yu@intel.com, hch@infradead.org
-Subject: Re: [PATCH v6 02/25] iommu/ioasid: Add ioasid references
-Message-ID: <20200504142548.GB170104@myrica>
+        jacob.jun.pan@linux.intel.com, christian.koenig@amd.com,
+        felix.kuehling@amd.com, zhangfei.gao@linaro.org, jgg@ziepe.ca,
+        xuzaibo@huawei.com, fenghua.yu@intel.com, hch@infradead.org
 References: <20200430143424.2787566-1-jean-philippe@linaro.org>
- <20200430143424.2787566-3-jean-philippe@linaro.org>
- <20200430113931.0fbf7a37@jacob-builder>
+ <20200430143424.2787566-12-jean-philippe@linaro.org>
+ <580a915f-f8bf-3b3e-c77d-6d0c2ea4bd02@arm.com>
+ <20200504141137.GA170104@myrica>
+From:   Suzuki K Poulose <suzuki.poulose@arm.com>
+Message-ID: <82f54362-34f1-2378-49c2-2d87e065e385@arm.com>
+Date:   Mon, 4 May 2020 15:42:04 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
+ Thunderbird/52.7.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200430113931.0fbf7a37@jacob-builder>
+In-Reply-To: <20200504141137.GA170104@myrica>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Apr 30, 2020 at 11:39:31AM -0700, Jacob Pan wrote:
-> > +/**
-> > + * ioasid_get - obtain a reference to the IOASID
-> > + */
-> > +void ioasid_get(ioasid_t ioasid)
-> why void? what if the ioasid is not valid.
-
-My intended use was for the caller to get an additional reference when
-they're already holding one. So this should always succeed and I'd prefer
-a WARN_ON if the ioasid isn't valid rather than returning an error. But if
-you intend to add a state to ioasids between dropping refcount and free,
-then a return value makes sense.
-
-Thanks,
-Jean
-
+On 05/04/2020 03:11 PM, Jean-Philippe Brucker wrote:
+> On Thu, Apr 30, 2020 at 04:39:53PM +0100, Suzuki K Poulose wrote:
+>> On 04/30/2020 03:34 PM, Jean-Philippe Brucker wrote:
+>>> With Shared Virtual Addressing (SVA), we need to mirror CPU TTBR, TCR,
+>>> MAIR and ASIDs in SMMU contexts. Each SMMU has a single ASID space split
+>>> into two sets, shared and private. Shared ASIDs correspond to those
+>>> obtained from the arch ASID allocator, and private ASIDs are used for
+>>> "classic" map/unmap DMA.
+>>>
+>>> Cc: Suzuki K Poulose <suzuki.poulose@arm.com>
+>>> Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
+>>> ---
+>>
+>>> +
+>>> +	tcr = FIELD_PREP(CTXDESC_CD_0_TCR_T0SZ, 64ULL - VA_BITS) |
+>>> +	      FIELD_PREP(CTXDESC_CD_0_TCR_IRGN0, ARM_LPAE_TCR_RGN_WBWA) |
+>>> +	      FIELD_PREP(CTXDESC_CD_0_TCR_ORGN0, ARM_LPAE_TCR_RGN_WBWA) |
+>>> +	      FIELD_PREP(CTXDESC_CD_0_TCR_SH0, ARM_LPAE_TCR_SH_IS) |
+>>> +	      CTXDESC_CD_0_TCR_EPD1 | CTXDESC_CD_0_AA64;
+>>> +
+>>> +	switch (PAGE_SIZE) {
+>>> +	case SZ_4K:
+>>> +		tcr |= FIELD_PREP(CTXDESC_CD_0_TCR_TG0, ARM_LPAE_TCR_TG0_4K);
+>>> +		break;
+>>> +	case SZ_16K:
+>>> +		tcr |= FIELD_PREP(CTXDESC_CD_0_TCR_TG0, ARM_LPAE_TCR_TG0_16K);
+>>> +		break;
+>>> +	case SZ_64K:
+>>> +		tcr |= FIELD_PREP(CTXDESC_CD_0_TCR_TG0, ARM_LPAE_TCR_TG0_64K);
+>>> +		break;
+>>> +	default:
+>>> +		WARN_ON(1);
+>>> +		ret = -EINVAL;
+>>> +		goto err_free_asid;
+>>> +	}
+>>> +
+>>> +	reg = read_sanitised_ftr_reg(SYS_ID_AA64MMFR0_EL1);
+>>> +	par = cpuid_feature_extract_unsigned_field(reg, ID_AA64MMFR0_PARANGE_SHIFT);
+>>> +	tcr |= FIELD_PREP(CTXDESC_CD_0_TCR_IPS, par);
+>>> +
+>>> +	cd->ttbr = virt_to_phys(mm->pgd);
+>>
+>> Does the TTBR follow the same layout as TTBR_ELx for 52bit IPA ? i.e,
+>> TTBR[5:2] = BADDR[51:48] ? Are you covered for that ?
 > 
-> > +{
-> > +	struct ioasid_data *ioasid_data;
-> > +
-> > +	spin_lock(&ioasid_allocator_lock);
-> > +	ioasid_data = xa_load(&active_allocator->xa, ioasid);
-> > +	if (ioasid_data)
-> > +		refcount_inc(&ioasid_data->refs);
-> > +	spin_unlock(&ioasid_allocator_lock);
-> > +}
-> > +EXPORT_SYMBOL_GPL(ioasid_get);
-> > +
-> >  /**
-> >   * ioasid_free - Free an IOASID
-> >   * @ioasid: the ID to remove
-> > + *
-> > + * Put a reference to the IOASID, free it when the number of
-> > references drops to
-> > + * zero.
-> > + *
-> > + * Return: %true if the IOASID was freed, %false otherwise.
-> >   */
-> > -void ioasid_free(ioasid_t ioasid)
-> > +bool ioasid_free(ioasid_t ioasid)
-> >  {
-> > +	bool free = false;
-> >  	struct ioasid_data *ioasid_data;
-> >  
-> >  	spin_lock(&ioasid_allocator_lock);
-> > @@ -360,6 +383,10 @@ void ioasid_free(ioasid_t ioasid)
-> >  		goto exit_unlock;
-> >  	}
-> >  
-> > +	free = refcount_dec_and_test(&ioasid_data->refs);
-> > +	if (!free)
-> > +		goto exit_unlock;
-> > +
-> Just FYI, we may need to add states for the IOASID, i.g. mark the IOASID
-> inactive after free. And prohibit ioasid_get() after freed. For VT-d,
-> this is useful when KVM queries the IOASID.
-> 
-> >  	active_allocator->ops->free(ioasid,
-> > active_allocator->ops->pdata); /* Custom allocator needs additional
-> > steps to free the xa element */ if (active_allocator->flags &
-> > IOASID_ALLOCATOR_CUSTOM) { @@ -369,6 +396,7 @@ void
-> > ioasid_free(ioasid_t ioasid) 
-> >  exit_unlock:
-> >  	spin_unlock(&ioasid_allocator_lock);
-> > +	return free;
-> >  }
-> >  EXPORT_SYMBOL_GPL(ioasid_free);
-> >  
-> 
-> [Jacob Pan]
+> Good point, I don't remember checking this. The SMMU TTBR doesn't have the
+> same layout as the CPU's, and we don't need to swizzle the bits. For the
+> lower bits, the alignment requirements on the pgd are identical to the
+> MMU.
+
+Ok, if that is the case:
+
+Acked-by: Suzuki K Poulose <suzuki.poulose@arm.com>
