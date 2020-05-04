@@ -6,57 +6,57 @@ X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
 	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6887C47257
-	for <linux-pci@archiver.kernel.org>; Mon,  4 May 2020 14:39:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49DB5C47257
+	for <linux-pci@archiver.kernel.org>; Mon,  4 May 2020 15:09:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C72D32192A
-	for <linux-pci@archiver.kernel.org>; Mon,  4 May 2020 14:39:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2B3D320721
+	for <linux-pci@archiver.kernel.org>; Mon,  4 May 2020 15:09:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="VT6A3yuh"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="QNbwqk4D"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728452AbgEDOjo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 4 May 2020 10:39:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53720 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728187AbgEDOjn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 May 2020 10:39:43 -0400
-Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 970D1C061A0E
-        for <linux-pci@vger.kernel.org>; Mon,  4 May 2020 07:39:43 -0700 (PDT)
-Received: by mail-wm1-x343.google.com with SMTP id r26so9407970wmh.0
-        for <linux-pci@vger.kernel.org>; Mon, 04 May 2020 07:39:43 -0700 (PDT)
+        id S1728997AbgEDPJj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 4 May 2020 11:09:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58370 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726509AbgEDPJj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 May 2020 11:09:39 -0400
+Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A5A38C061A0E
+        for <linux-pci@vger.kernel.org>; Mon,  4 May 2020 08:09:37 -0700 (PDT)
+Received: by mail-wr1-x444.google.com with SMTP id s8so11079007wrt.9
+        for <linux-pci@vger.kernel.org>; Mon, 04 May 2020 08:09:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=w4t0U+D/kp+A2G6So+DAelHTG97Zr7f3qIlp9fzkip4=;
-        b=VT6A3yuhts/Sup1Aaf3TlojcaThJY4hOWcMYKaz7xPgexle4/kuynbkV7mgcUoEEbw
-         Gn/CW2sYLNgTZA45X9XgPW8JrJWgoeIRF3BPeDrgJPKkGIcPRKop0Gyla7rJZz4Ol5w0
-         2lpW0x79AXvLKOlbwqjWSR7H42s53C2/AzDy/RZEYO8aimi5hqvmtvnptqLq1VKbO7a3
-         hJy0881ArJOTDVsdeKrk0ixZzwswHqdRYytNWMCWIzu3HYx7Dg6+cxeyEeodVUIodnze
-         KcHOc3sN/muaK/jcXS+hiuhM9+aCpMI9of01BChv2AdZ+UxLwm0J0i0JNuUhT5jFaKLt
-         cvug==
+        bh=ymxZ/AHKc54MsFnFnjiy487/cd2cO0lIerw33LQLJwg=;
+        b=QNbwqk4D1MPIi3P7kInzB1wd9Nwnz4c2VQo9LuhJOdRLdMrPzNMgpvKqTLZMK1uPi+
+         P2pe+v2OCrrPEexPYdYwl192CIA5G6xYliglrRqqtdaIAR+usOr6a/3cJuAgWCIrlSe1
+         OdskZIteDeuDIgetVe9zuT/oEpmFwh99LEyLr+Zq8PUuCUTWaKKGaTmfFvbQ2/+u5d3b
+         tftW1WWsJsddoYK8llhhdNTtirX5vLRtjEeFAIEdNjNGfsIxaS1xLDMsskU7xZaWG3ng
+         uBZkgyMKL71WDmOBvkjPrl5x7RLtobyGsphgAfOHe28m7ebcN/qz+Xrs9em6Jezxz6jQ
+         4Kkg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=w4t0U+D/kp+A2G6So+DAelHTG97Zr7f3qIlp9fzkip4=;
-        b=Dg3I6pz2ZCe4uTSCuMQhkBR7n4KInPLwGAECevi0oHdJukwVk0v6+Mzo/Z98W3sQVr
-         c6i4o4j7iQPgLP+ZAizuaIM2PVmlk9Ek4TmD8/KxfsPSuy0HPgw5FHYfwU7BeIiwgzNg
-         IYjVOKW2E4Ph/wSAJgz/X1e7xoNASqyM0YDn48Z0WQUOcT7KgiXox5tMq7hT66p1TgZ4
-         Kvhq08dX+l8K3e7Ki/ZeekRCPwvhmKkt09Ce5DC8WsQrpi167Ur7+cHhAPiqLY6HN2Tp
-         Ex+WblJIQYtAGOjojWHBIk5vNCBbDjQ3ykSLjS2T9NH9SAFjZopWWPu7SBPBqHZRJndg
-         dvVQ==
-X-Gm-Message-State: AGi0PubC1u0Zp6gQgMdGaqGHUhPYfX0R2CBep8DogqB1OfFpiD+c53JP
-        m1mhWXFSUgCwaVP76aBTqD8OdQ==
-X-Google-Smtp-Source: APiQypI2F7wsUGonQC0TZFKc5uxhIN4f0OL+bxJR0Xwpj7YciVqjrvdRQtQdeeCKgcaZ8I7mLJ+60A==
-X-Received: by 2002:a1c:1d92:: with SMTP id d140mr14822175wmd.67.1588603182395;
-        Mon, 04 May 2020 07:39:42 -0700 (PDT)
+        bh=ymxZ/AHKc54MsFnFnjiy487/cd2cO0lIerw33LQLJwg=;
+        b=s+ECjVEXraL1R0D3xyW7KxH5+PgyXtiGupjOCprNDH7Ym+YxLvC6EWk2z3jDGMImBW
+         BNtaCKxed6/ZfBrvFAOJ3toC9oonKdk1i4ZvOSbkRNlmcsif9bdJwPMpVR2zqAkyLUTr
+         UFLzm443S21wr5wWrK2E/IpuNSUHvRSQ6VskK1ue+1dlauq85Z6RlXh5ti5avwBCxaxn
+         kHNEcl6iXF7QGzITMq+CjTQIppTYUWvjgoRWdoUHm4jupdDMbmbyHvsWGWQXk3eyNiZo
+         mvdxOtoeCZbDmEapsb4jaoJgsZDWX5/oi1xklGGzOYmLb9iO+0oOrZesL8Z2MLgATQ5M
+         gK1Q==
+X-Gm-Message-State: AGi0PuZw2D7xi1YvebUaX5wfA7evmk5wMpkABfByxEb8qINH+ztm2gLe
+        Oc7kGWCUdOSlZXL8ty0niRysGw==
+X-Google-Smtp-Source: APiQypIDrGUvuteScMrJ9fLWEogSG6ijt2/PYwyFrJ0NSjLGFvyO34VY4LnIIaZoFl/ctKT+r9PVxQ==
+X-Received: by 2002:adf:ee86:: with SMTP id b6mr56993wro.419.1588604976411;
+        Mon, 04 May 2020 08:09:36 -0700 (PDT)
 Received: from myrica ([2001:171b:226e:c200:c43b:ef78:d083:b355])
-        by smtp.gmail.com with ESMTPSA id p190sm14130168wmp.38.2020.05.04.07.39.41
+        by smtp.gmail.com with ESMTPSA id w83sm14711145wmb.37.2020.05.04.08.09.35
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 04 May 2020 07:39:41 -0700 (PDT)
-Date:   Mon, 4 May 2020 16:39:32 +0200
+        Mon, 04 May 2020 08:09:35 -0700 (PDT)
+Date:   Mon, 4 May 2020 17:09:26 +0200
 From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
 To:     Jacob Pan <jacob.jun.pan@linux.intel.com>
 Cc:     iommu@lists.linux-foundation.org, devicetree@vger.kernel.org,
@@ -66,55 +66,61 @@ Cc:     iommu@lists.linux-foundation.org, devicetree@vger.kernel.org,
         baolu.lu@linux.intel.com, Jonathan.Cameron@huawei.com,
         christian.koenig@amd.com, felix.kuehling@amd.com,
         zhangfei.gao@linaro.org, jgg@ziepe.ca, xuzaibo@huawei.com,
-        fenghua.yu@intel.com, hch@infradead.org
-Subject: Re: [PATCH v6 02/25] iommu/ioasid: Add ioasid references
-Message-ID: <20200504143932.GC170104@myrica>
+        fenghua.yu@intel.com, hch@infradead.org,
+        "Liu, Yi L" <yi.l.liu@intel.com>
+Subject: Re: [PATCH v6 00/25] iommu: Shared Virtual Addressing for SMMUv3
+Message-ID: <20200504150926.GA176594@myrica>
 References: <20200430143424.2787566-1-jean-philippe@linaro.org>
- <20200430143424.2787566-3-jean-philippe@linaro.org>
- <20200430113931.0fbf7a37@jacob-builder>
- <20200430134842.74e596b8@jacob-builder>
+ <20200430141816.595b758f@jacob-builder>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200430134842.74e596b8@jacob-builder>
+In-Reply-To: <20200430141816.595b758f@jacob-builder>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Apr 30, 2020 at 01:48:42PM -0700, Jacob Pan wrote:
-> On Thu, 30 Apr 2020 11:39:31 -0700
-> Jacob Pan <jacob.jun.pan@linux.intel.com> wrote:
+On Thu, Apr 30, 2020 at 02:18:16PM -0700, Jacob Pan wrote:
+> On Thu, 30 Apr 2020 16:33:59 +0200
+> Jean-Philippe Brucker <jean-philippe@linaro.org> wrote:
 > 
-> > > -void ioasid_free(ioasid_t ioasid)
-> > > +bool ioasid_free(ioasid_t ioasid)
-> > >  {
-> Sorry I missed this in the last reply.
+> > Shared Virtual Addressing (SVA) allows to share process page tables
+> > with devices using the IOMMU, PASIDs and I/O page faults. Add SVA
+> > support to the Arm SMMUv3 driver.
+> > 
+> > Since v5 [1]:
+> > 
+> > * Added patches 1-3. Patch 1 adds a PASID field to mm_struct as
+> >   discussed in [1] and [2]. This is also needed for Intel ENQCMD.
+> > Patch 2 adds refcounts to IOASID and patch 3 adds a couple of helpers
+> > to allocate the PASID.
+> > 
+> > * Dropped most of iommu-sva.c. After getting rid of io_mm following
+> >   review of v5, there wasn't enough generic code left to justify the
+> >   indirect branch overhead of io_mm_ops in the MMU notifiers. I ended
+> > up with more glue than useful code, and couldn't find an easy way to
+> > deal with domains in the SMMU driver (we keep PASID tables per domain,
+> >   while x86 keeps them per device). The direct approach in patch 17 is
+> >   nicer and a little easier to read. The SMMU driver only gained 160
+> >   lines, while iommu-sva lost 470 lines.
+> > 
+> >   As a result I dropped the MMU notifier patch.
+> > 
+> >   Jacob, one upside of this rework is that we now free ioasids in
+> >   blocking context, which might help with your addition of notifiers
+> > to ioasid.c
+> > 
+> Thanks for the note. It does make notifier much easier, plus the
+> refcount can alleviate the constraint on ordering.
 > 
-> I think free needs to be unconditional since there is not a good way to
-> fail it.
-> 
-> Also can we have more symmetric APIs, seems we don't have ioasid_put()
-> in this patchset.
+> I guess we don't share mmu notifier code for now :)
 
-Yes I was thinking of renaming ioasid_free() to ioasid_put() but got lazy. 
-
-> How about?
-> ioasid_alloc()
-> ioasid_free(); //drop reference, mark inactive, but not reclaimed if
-> 		refcount is not zero.
-> ioasid_get() // returns err if the ioasid is marked inactive by
-> 		ioasid_free()
-
-How does the caller know that the ioasid is in active/inactive state, and
-not freed/reallocated?
-
-> ioasid_put();// drop reference, reclaim if refcount is 0.
-
-I'll add ioasid_put() for now. I'd like to avoid introducing the inactive
-state in this patch, so shall I change the calls in the Intel driver to
-ioasid_put(), and not introduce a new ioasid_free() for the moment?
+I think it's more efficient for each IOMMU driver to at least implement
+their own invalidate_range() callback and avoid indirect branches. For the
+rest I couldn't find a lot of code to share, most of it is writing PASID
+tables and invalidating. We can revisit later, as long as we agree on the
+bind() API the implementations should be similar enough.
 
 Thanks,
 Jean
-
