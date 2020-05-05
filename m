@@ -2,202 +2,124 @@ Return-Path: <SRS0=gy3g=6T=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EA28C47257
-	for <linux-pci@archiver.kernel.org>; Tue,  5 May 2020 16:14:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9310CC47254
+	for <linux-pci@archiver.kernel.org>; Tue,  5 May 2020 16:34:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 38CDD21835
-	for <linux-pci@archiver.kernel.org>; Tue,  5 May 2020 16:14:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 66CA020735
+	for <linux-pci@archiver.kernel.org>; Tue,  5 May 2020 16:34:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1588696463;
+	bh=BqeRErPLvrkInDRUEC8fNeToroaXgVoXwdAnzn6jhV8=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=hhgib96bykDDktPDy+8Jmi8MO1fCVc7Oxl+tQJtZWr5KvgmqfiwG4kUK1wm9Fp0ex
+	 vhfrlZkwBKqrUJdPp8Pkcu/bPWke3w1WbjHo0hEkPdm8SeYCGHWfvjSIL2DyzW0V/6
+	 66Y4RyuDDNxFWm9Y2rqU6jxOkmOOd+AUS8ZaAqK0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729289AbgEEQNv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 May 2020 12:13:51 -0400
-Received: from mx2.suse.de ([195.135.220.15]:53008 "EHLO mx2.suse.de"
+        id S1729981AbgEEQeW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 May 2020 12:34:22 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40226 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730171AbgEEQN2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 5 May 2020 12:13:28 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 4B6EDAF5D;
-        Tue,  5 May 2020 16:13:29 +0000 (UTC)
-From:   Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-To:     f.fainelli@gmail.com, gregkh@linuxfoundation.org, wahrenst@gmx.net,
-        helgaas@kernel.org, linux-kernel@vger.kernel.org,
-        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        bcm-kernel-feedback-list@broadcom.com
-Cc:     linux-usb@vger.kernel.org, linux-rpi-kernel@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, tim.gover@raspberrypi.org,
+        id S1728687AbgEEQeW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 5 May 2020 12:34:22 -0400
+Received: from localhost (mobile-166-175-56-67.mycingular.net [166.175.56.67])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 74D29206FA;
+        Tue,  5 May 2020 16:34:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1588696461;
+        bh=BqeRErPLvrkInDRUEC8fNeToroaXgVoXwdAnzn6jhV8=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=ClXe+DR40QL3TVBIydWa9ZpfBw9VdX7i2AtxLrzIhy3x5pcQ+Psqh8ikvxF0hH4cM
+         yQ+R/tjMh4VW1C0qRfRzjjIVyOvCTTiHbCZ9A9y9PX8V4FexoiB7IDPp2UzRM/rqQF
+         m7SNiYRDP7FXIjH0bfP+QnvB5NB5feokFsUGM6LE=
+Date:   Tue, 5 May 2020 11:34:20 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     "David E. Box" <david.e.box@linux.intel.com>
+Cc:     bhelgaas@google.com, andy@infradead.org,
+        alexander.h.duyck@intel.com, linux-kernel@vger.kernel.org,
         linux-pci@vger.kernel.org
-Subject: [PATCH v8 2/4] firmware: raspberrypi: Introduce vl805 init routine
-Date:   Tue,  5 May 2020 18:13:15 +0200
-Message-Id: <20200505161318.26200-3-nsaenzjulienne@suse.de>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20200505161318.26200-1-nsaenzjulienne@suse.de>
-References: <20200505161318.26200-1-nsaenzjulienne@suse.de>
+Subject: Re: [PATCH 1/3] pci: Add Designated Vendor Specific Capability
+Message-ID: <20200505163420.GA363203@bjorn-Precision-5520>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200505013206.11223-2-david.e.box@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The Raspberry Pi 4 gets its USB functionality from VL805, a PCIe chip
-that implements xHCI. After a PCI reset, VL805's firmware may either be
-loaded directly from an EEPROM or, if not present, by the SoC's
-co-processor, VideoCore. RPi4's VideoCore OS contains both the non public
-firmware load logic and the VL805 firmware blob. The function this patch
-introduces triggers the aforementioned process.
+  $ git log --oneline include/uapi/linux/pci_regs.h
+  202853595e53 PCI: pciehp: Disable in-band presence detect when possible
+  ed22aaaede44 PCI: dwc: intel: PCIe RC controller driver
+  bbdb2f5ecdf1 PCI: Add #defines for Enter Compliance, Transmit Margin
+  c9c13ba428ef PCI: Add PCI_STD_NUM_BARS for the number of standard BARs
+  106feb2fdced PCI: pciehp: Remove pciehp_set_attention_status()
+  448d5a55759a PCI: Add #defines for some of PCIe spec r4.0 features
+  de76cda215d5 PCI: Decode PCIe 32 GT/s link speed
 
-Signed-off-by: Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
+Yours could be:
 
----
+  PCI: Add #defines for Designated Vendor-Specific Capability
 
-Change since v7:
-- Use usleep_delay()
-- Add comment about PCI errors
-- Don't wait on error
-- Typos
+On Mon, May 04, 2020 at 06:32:04PM -0700, David E. Box wrote:
+> Add pcie dvsec extended capability id along with helper macros to
+> retrieve information from the headers.
 
-Change since v6:
-- Add test to avoid loading the firmware when not needed
-- Since we have it around, print VL805's firmware version, it'll make
-debugging easier in the future
-- Correct typos
-- Add a clearer view of HW topology in patch description
+s/pcie/PCIe/
+s/dvsec/DVSEC/
+s/id/ID/
 
-Changes since v4:
-- Inline function definition when RASPBERRYPI_FIRMWARE is not defined
+I don't see any helper macros in the patch.  Well, OK, I guess the
+header offsets could be considered macros.
 
-Changes since v1:
-- Move include into .c file and add forward declaration to .h
+> https://members.pcisig.com/wg/PCI-SIG/document/12335
 
- drivers/firmware/raspberrypi.c             | 61 ++++++++++++++++++++++
- include/soc/bcm2835/raspberrypi-firmware.h |  7 +++
- 2 files changed, 68 insertions(+)
+This URL is for an ECN.  DVSEC is included in PCIe r5.0, sec 7.9.6, so
+please cite that instead so the citation remains useful after the URL
+becomes stale and for people who have the spec but not access to the
+PCI-SIG website.
 
-diff --git a/drivers/firmware/raspberrypi.c b/drivers/firmware/raspberrypi.c
-index da26a584dca0..a166ad0cec2c 100644
---- a/drivers/firmware/raspberrypi.c
-+++ b/drivers/firmware/raspberrypi.c
-@@ -12,6 +12,8 @@
- #include <linux/of_platform.h>
- #include <linux/platform_device.h>
- #include <linux/slab.h>
-+#include <linux/pci.h>
-+#include <linux/delay.h>
- #include <soc/bcm2835/raspberrypi-firmware.h>
- 
- #define MBOX_MSG(chan, data28)		(((data28) & ~0xf) | ((chan) & 0xf))
-@@ -19,6 +21,8 @@
- #define MBOX_DATA28(msg)		((msg) & ~0xf)
- #define MBOX_CHAN_PROPERTY		8
- 
-+#define VL805_PCI_CONFIG_VERSION_OFFSET		0x50
-+
- static struct platform_device *rpi_hwmon;
- static struct platform_device *rpi_clk;
- 
-@@ -286,6 +290,63 @@ struct rpi_firmware *rpi_firmware_get(struct device_node *firmware_node)
- }
- EXPORT_SYMBOL_GPL(rpi_firmware_get);
- 
-+/*
-+ * The Raspberry Pi 4 gets its USB functionality from VL805, a PCIe chip that
-+ * implements xHCI. After a PCI reset, VL805's firmware may either be loaded
-+ * directly from an EEPROM or, if not present, by the SoC's co-processor,
-+ * VideoCore. RPi4's VideoCore OS contains both the non public firmware load
-+ * logic and the VL805 firmware blob. This function triggers the aforementioned
-+ * process.
-+ */
-+int rpi_firmware_init_vl805(struct pci_dev *pdev)
-+{
-+	struct device_node *fw_np;
-+	struct rpi_firmware *fw;
-+	u32 dev_addr, version;
-+	int ret;
-+
-+	fw_np = of_find_compatible_node(NULL, NULL,
-+					"raspberrypi,bcm2835-firmware");
-+	if (!fw_np)
-+		return 0;
-+
-+	fw = rpi_firmware_get(fw_np);
-+	of_node_put(fw_np);
-+	if (!fw)
-+		return -ENODEV;
-+
-+	/*
-+	 * Make sure we don't trigger a firmware load unnecessarily.
-+	 *
-+	 * If something went wrong with PCI, this whole exercise would be
-+	 * futile as VideoCore expects from us a configured PCI bus. Just take
-+	 * the faulty version (likely ~0) and let xHCI's registration fail
-+	 * further down the line.
-+	 */
-+	pci_read_config_dword(pdev, VL805_PCI_CONFIG_VERSION_OFFSET, &version);
-+	if (version)
-+		goto exit;
-+
-+	dev_addr = pdev->bus->number << 20 | PCI_SLOT(pdev->devfn) << 15 |
-+		   PCI_FUNC(pdev->devfn) << 12;
-+
-+	ret = rpi_firmware_property(fw, RPI_FIRMWARE_NOTIFY_XHCI_RESET,
-+				    &dev_addr, sizeof(dev_addr));
-+	if (ret)
-+		return ret;
-+
-+	/* Wait for vl805 to startup */
-+	usleep_range(200, 1000);
-+
-+	pci_read_config_dword(pdev, VL805_PCI_CONFIG_VERSION_OFFSET,
-+			      &version);
-+exit:
-+	pci_info(pdev, "VL805 firmware version %08x\n", version);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(rpi_firmware_init_vl805);
-+
- static const struct of_device_id rpi_firmware_of_match[] = {
- 	{ .compatible = "raspberrypi,bcm2835-firmware", },
- 	{},
-diff --git a/include/soc/bcm2835/raspberrypi-firmware.h b/include/soc/bcm2835/raspberrypi-firmware.h
-index cc9cdbc66403..3025aca3c358 100644
---- a/include/soc/bcm2835/raspberrypi-firmware.h
-+++ b/include/soc/bcm2835/raspberrypi-firmware.h
-@@ -10,6 +10,7 @@
- #include <linux/of_device.h>
- 
- struct rpi_firmware;
-+struct pci_dev;
- 
- enum rpi_firmware_property_status {
- 	RPI_FIRMWARE_STATUS_REQUEST = 0,
-@@ -141,6 +142,7 @@ int rpi_firmware_property(struct rpi_firmware *fw,
- int rpi_firmware_property_list(struct rpi_firmware *fw,
- 			       void *data, size_t tag_size);
- struct rpi_firmware *rpi_firmware_get(struct device_node *firmware_node);
-+int rpi_firmware_init_vl805(struct pci_dev *pdev);
- #else
- static inline int rpi_firmware_property(struct rpi_firmware *fw, u32 tag,
- 					void *data, size_t len)
-@@ -158,6 +160,11 @@ static inline struct rpi_firmware *rpi_firmware_get(struct device_node *firmware
- {
- 	return NULL;
- }
-+
-+static inline int rpi_firmware_init_vl805(struct pci_dev *pdev)
-+{
-+	return 0;
-+}
- #endif
- 
- #endif /* __SOC_RASPBERRY_FIRMWARE_H__ */
--- 
-2.26.2
+> Signed-off-by: David E. Box <david.e.box@linux.intel.com>
 
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+> ---
+>  include/uapi/linux/pci_regs.h | 5 +++++
+>  1 file changed, 5 insertions(+)
+> 
+> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+> index f9701410d3b5..c96f08d1e711 100644
+> --- a/include/uapi/linux/pci_regs.h
+> +++ b/include/uapi/linux/pci_regs.h
+> @@ -720,6 +720,7 @@
+>  #define PCI_EXT_CAP_ID_DPC	0x1D	/* Downstream Port Containment */
+>  #define PCI_EXT_CAP_ID_L1SS	0x1E	/* L1 PM Substates */
+>  #define PCI_EXT_CAP_ID_PTM	0x1F	/* Precision Time Measurement */
+> +#define PCI_EXT_CAP_ID_DVSEC	0x23	/* Desinated Vendor-Specific */
+
+s/Desinated/Designated/
+
+>  #define PCI_EXT_CAP_ID_DLF	0x25	/* Data Link Feature */
+>  #define PCI_EXT_CAP_ID_PL_16GT	0x26	/* Physical Layer 16.0 GT/s */
+>  #define PCI_EXT_CAP_ID_MAX	PCI_EXT_CAP_ID_PL_16GT
+> @@ -1062,6 +1063,10 @@
+>  #define  PCI_L1SS_CTL1_LTR_L12_TH_SCALE	0xe0000000  /* LTR_L1.2_THRESHOLD_Scale */
+>  #define PCI_L1SS_CTL2		0x0c	/* Control 2 Register */
+>  
+> +/* Designated Vendor-Specific (DVSEC, PCI_EXT_CAP_ID_DVSEC) */
+> +#define PCI_DVSEC_HEADER1		0x4 /* Vendor-Specific Header1 */
+> +#define PCI_DVSEC_HEADER2		0x8 /* Vendor-Specific Header2 */
+> +
+>  /* Data Link Feature */
+>  #define PCI_DLF_CAP		0x04	/* Capabilities Register */
+>  #define  PCI_DLF_EXCHANGE_ENABLE	0x80000000  /* Data Link Feature Exchange Enable */
+> -- 
+> 2.20.1
+> 
