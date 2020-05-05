@@ -4,45 +4,45 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4B05C47259
-	for <linux-pci@archiver.kernel.org>; Tue,  5 May 2020 13:21:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D08FC47254
+	for <linux-pci@archiver.kernel.org>; Tue,  5 May 2020 13:21:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 829532085B
-	for <linux-pci@archiver.kernel.org>; Tue,  5 May 2020 13:21:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5CE7520836
+	for <linux-pci@archiver.kernel.org>; Tue,  5 May 2020 13:21:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="GhzSTl6t"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LjVL7TA4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728960AbgEENVr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 May 2020 09:21:47 -0400
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:59763 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728892AbgEENVr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 May 2020 09:21:47 -0400
+        id S1729029AbgEENVt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 May 2020 09:21:49 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:25952 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728996AbgEENVt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 May 2020 09:21:49 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1588684904;
+        s=mimecast20190719; t=1588684908;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=oXvOfYNLxP2n9KMtCvZ22eK9RVc3+f2D2Cb9gIn69YQ=;
-        b=GhzSTl6tu9Qtq5m5onQdcqkbnZJ7qwFhqFE+cDV1xIgRMeAA/HMV+JZF6KAnvnwCmf+Osq
-        y8z8kTZSnQ9XL44L+5czkATDLgKOH7pKW+Mo7Vz6SiVQNzbx5/chKdzWOyJkRtBiGqoasN
-        61QC7m3ChM6zXvWKJmGZgIf2JQG345I=
+        bh=pCVuo/wWVMtEixMAsPUx+ERNNUL83pR0CaQxlVIb/Cs=;
+        b=LjVL7TA4UtgNses7tJTb39Bl5zIRHD6jmE0x2MWxp52t7b4ZQuSTeGFzWlPj2ZYAmD8nik
+        ucDfXy69Hb3/uWSvWgxb4GJYcJhWSLJ7FeWqqFQFk0igzRgmTprIGFIoBgv3m+jbDpr2Uh
+        YN7GCFVUiQVsloaN8FAyYVwie6ef9lM=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-457-i4ij7bCGNJOK2v75-TcwWg-1; Tue, 05 May 2020 09:21:42 -0400
-X-MC-Unique: i4ij7bCGNJOK2v75-TcwWg-1
+ us-mta-150-irMXFVHKMEGlX47Pv6O8bg-1; Tue, 05 May 2020 09:21:46 -0400
+X-MC-Unique: irMXFVHKMEGlX47Pv6O8bg-1
 Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C1CCE8014D7;
-        Tue,  5 May 2020 13:21:40 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1C5348014C1;
+        Tue,  5 May 2020 13:21:45 +0000 (UTC)
 Received: from x1.localdomain.com (ovpn-113-21.ams2.redhat.com [10.36.113.21])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id E16D26060E;
-        Tue,  5 May 2020 13:21:38 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 3787B6060E;
+        Tue,  5 May 2020 13:21:43 +0000 (UTC)
 From:   Hans de Goede <hdegoede@redhat.com>
 To:     "Rafael J . Wysocki" <rjw@rjwysocki.net>,
         Len Brown <lenb@kernel.org>,
@@ -52,9 +52,9 @@ To:     "Rafael J . Wysocki" <rjw@rjwysocki.net>,
         Linus Walleij <linus.walleij@linaro.org>
 Cc:     Hans de Goede <hdegoede@redhat.com>, linux-acpi@vger.kernel.org,
         linux-pci@vger.kernel.org, linux-gpio@vger.kernel.org
-Subject: [PATCH 1/3] ACPI / utils: Add acpi_evaluate_reg() helper
-Date:   Tue,  5 May 2020 15:21:26 +0200
-Message-Id: <20200505132128.19476-2-hdegoede@redhat.com>
+Subject: [PATCH 3/3] pinctrl: cherryview: Use the new acpi_evaluate_reg() helper
+Date:   Tue,  5 May 2020 15:21:28 +0200
+Message-Id: <20200505132128.19476-4-hdegoede@redhat.com>
 In-Reply-To: <20200505132128.19476-1-hdegoede@redhat.com>
 References: <20200505132128.19476-1-hdegoede@redhat.com>
 MIME-Version: 1.0
@@ -65,71 +65,45 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-With a recent fix to the pinctrl-cherryview driver we know have
-2 drivers open-coding the parameter building / passing for calling
-_REG on an ACPI handle.
-
-Add a helper for this, so that these 2 drivers can be converted to this
-helper.
+Use the new acpi_evaluate_reg() helper in the pinctrl-cherryview code.
 
 Signed-off-by: Hans de Goede <hdegoede@redhat.com>
 ---
- drivers/acpi/utils.c    | 25 +++++++++++++++++++++++++
- include/acpi/acpi_bus.h |  1 +
- 2 files changed, 26 insertions(+)
+ drivers/pinctrl/intel/pinctrl-cherryview.c | 11 ++---------
+ 1 file changed, 2 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/acpi/utils.c b/drivers/acpi/utils.c
-index 804ac0df58ec..838b719ec7ce 100644
---- a/drivers/acpi/utils.c
-+++ b/drivers/acpi/utils.c
-@@ -605,6 +605,31 @@ acpi_status acpi_evaluate_lck(acpi_handle handle, in=
-t lock)
- 	return status;
- }
+diff --git a/drivers/pinctrl/intel/pinctrl-cherryview.c b/drivers/pinctrl=
+/intel/pinctrl-cherryview.c
+index 4817aec114d6..579bdfcfab8f 100644
+--- a/drivers/pinctrl/intel/pinctrl-cherryview.c
++++ b/drivers/pinctrl/intel/pinctrl-cherryview.c
+@@ -1693,8 +1693,6 @@ static acpi_status chv_pinctrl_mmio_access_handler(=
+u32 function,
 =20
-+/**
-+ * acpi_evaluate_reg: Evaluate _REG method to register OpRegion presence
-+ * @handle: ACPI device handle
-+ * @space_id: ACPI address space id to register OpRegion presence for
-+ * @function: Parameter to pass to _REG one of ACPI_REG_CONNECT or
-+ *            ACPI_REG_DISCONNECT
-+ *
-+ * Evaluate device's _REG method to register OpRegion presence.
-+ */
-+acpi_status acpi_evaluate_reg(acpi_handle handle, u8 space_id, u32 funct=
-ion)
-+{
-+	struct acpi_object_list arg_list;
-+	union acpi_object params[2];
-+
-+	params[0].type =3D ACPI_TYPE_INTEGER;
-+	params[0].integer.value =3D space_id;
-+	params[1].type =3D ACPI_TYPE_INTEGER;
-+	params[1].integer.value =3D function;
-+	arg_list.count =3D 2;
-+	arg_list.pointer =3D params;
-+
-+	return acpi_evaluate_object(handle, "_REG", &arg_list, NULL);
-+}
-+EXPORT_SYMBOL(acpi_evaluate_reg);
-+
- /**
-  * acpi_evaluate_dsm - evaluate device's _DSM method
-  * @handle: ACPI device handle
-diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-index a92bea7184a8..5afb6ceb284f 100644
---- a/include/acpi/acpi_bus.h
-+++ b/include/acpi/acpi_bus.h
-@@ -44,6 +44,7 @@ acpi_status acpi_execute_simple_method(acpi_handle hand=
-le, char *method,
- 				       u64 arg);
- acpi_status acpi_evaluate_ej0(acpi_handle handle);
- acpi_status acpi_evaluate_lck(acpi_handle handle, int lock);
-+acpi_status acpi_evaluate_reg(acpi_handle handle, u8 space_id, u32 funct=
-ion);
- bool acpi_ata_match(acpi_handle handle);
- bool acpi_bay_match(acpi_handle handle);
- bool acpi_dock_match(acpi_handle handle);
+ static int chv_pinctrl_probe(struct platform_device *pdev)
+ {
+-	struct acpi_object_list input;
+-	union acpi_object params[2];
+ 	struct chv_pinctrl *pctrl;
+ 	struct acpi_device *adev;
+ 	acpi_status status;
+@@ -1765,13 +1763,8 @@ static int chv_pinctrl_probe(struct platform_devic=
+e *pdev)
+ 	 * the GeneralPurposeIo OpRegion. Manually call _REG here so that
+ 	 * the DSDT-s GeneralPurposeIo availability checks will succeed.
+ 	 */
+-	params[0].type =3D ACPI_TYPE_INTEGER;
+-	params[0].integer.value =3D ACPI_ADR_SPACE_GPIO;
+-	params[1].type =3D ACPI_TYPE_INTEGER;
+-	params[1].integer.value =3D 1;
+-	input.count =3D 2;
+-	input.pointer =3D params;
+-	acpi_evaluate_object(adev->handle, "_REG", &input, NULL);
++	acpi_evaluate_reg(adev->handle, ACPI_ADR_SPACE_GPIO,
++			  ACPI_REG_CONNECT);
+=20
+ 	platform_set_drvdata(pdev, pctrl);
+=20
 --=20
 2.26.0
 
