@@ -2,108 +2,111 @@ Return-Path: <SRS0=gy3g=6T=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85F6AC4725D
-	for <linux-pci@archiver.kernel.org>; Tue,  5 May 2020 13:21:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E43AC47247
+	for <linux-pci@archiver.kernel.org>; Tue,  5 May 2020 13:24:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 569432078D
-	for <linux-pci@archiver.kernel.org>; Tue,  5 May 2020 13:21:51 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="T6Laf5jF"
+	by mail.kernel.org (Postfix) with ESMTP id 0313C20746
+	for <linux-pci@archiver.kernel.org>; Tue,  5 May 2020 13:24:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729023AbgEENVu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 May 2020 09:21:50 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:56724 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728898AbgEENVt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 May 2020 09:21:49 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1588684908;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=C62A7ZX2Fzn6OxQtLQ6cG85T/2JvqNh73Sjw5wOf4Z8=;
-        b=T6Laf5jF4DIp+ZvT8SHM6TNinrAB1F/IkoU5HCQysSwQyH0mwDu+JXg10bjPrRNCJCcaT5
-        mPVd3+2JobgcQjTw1dHDwYvqNFlo5orQav/CTyaLjetv9yytgvMlWrK8Q1XH9azASzk1fd
-        aveBEd8W5nLqgnfji9FvVmu2gIqqKrY=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-490-1qLHArz8Prq-zst2h12iQw-1; Tue, 05 May 2020 09:21:44 -0400
-X-MC-Unique: 1qLHArz8Prq-zst2h12iQw-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id E35C0107ACF6;
-        Tue,  5 May 2020 13:21:42 +0000 (UTC)
-Received: from x1.localdomain.com (ovpn-113-21.ams2.redhat.com [10.36.113.21])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 120236060E;
-        Tue,  5 May 2020 13:21:40 +0000 (UTC)
-From:   Hans de Goede <hdegoede@redhat.com>
-To:     "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Linus Walleij <linus.walleij@linaro.org>
-Cc:     Hans de Goede <hdegoede@redhat.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-gpio@vger.kernel.org
-Subject: [PATCH 2/3] ACPI / hotplug / PCI: Use the new acpi_evaluate_reg() helper
-Date:   Tue,  5 May 2020 15:21:27 +0200
-Message-Id: <20200505132128.19476-3-hdegoede@redhat.com>
-In-Reply-To: <20200505132128.19476-1-hdegoede@redhat.com>
-References: <20200505132128.19476-1-hdegoede@redhat.com>
+        id S1728977AbgEENX7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 May 2020 09:23:59 -0400
+Received: from mx2.suse.de ([195.135.220.15]:46206 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728892AbgEENX7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 5 May 2020 09:23:59 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id BBA43AB3D;
+        Tue,  5 May 2020 13:23:59 +0000 (UTC)
+Message-ID: <7946e8efb23376a395d32b2ae2ea240c519502b9.camel@suse.de>
+Subject: Re: [PATCH v2 1/4] PCI: brcmstb: Don't clk_put() a managed clock
+From:   Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
+To:     Jim Quinlan <james.quinlan@broadcom.com>
+Cc:     "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>,
+        Rob Herring <robh@kernel.org>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        "open list:PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS" 
+        <linux-pci@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        "maintainer:BROADCOM BCM7XXX ARM ARCHITECTURE" 
+        <bcm-kernel-feedback-list@broadcom.com>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-rpi-kernel@lists.infradead.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Date:   Tue, 05 May 2020 15:23:54 +0200
+In-Reply-To: <20200501142831.35174-2-james.quinlan@broadcom.com>
+References: <20200501142831.35174-1-james.quinlan@broadcom.com>
+         <20200501142831.35174-2-james.quinlan@broadcom.com>
+Content-Type: multipart/signed; micalg="pgp-sha256";
+        protocol="application/pgp-signature"; boundary="=-j/ZrGLyXvIzAV7yVCtRN"
+User-Agent: Evolution 3.36.2 
 MIME-Version: 1.0
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
-Content-Transfer-Encoding: quoted-printable
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Use the new acpi_evaluate_reg() helper in the acpiphp_glue.c code.
 
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
----
- drivers/pci/hotplug/acpiphp_glue.c | 17 ++++-------------
- 1 file changed, 4 insertions(+), 13 deletions(-)
+--=-j/ZrGLyXvIzAV7yVCtRN
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acp=
-iphp_glue.c
-index b3869951c0eb..fd77eb1d460c 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -385,20 +385,11 @@ static unsigned char acpiphp_max_busnr(struct pci_b=
-us *bus)
- static void acpiphp_set_acpi_region(struct acpiphp_slot *slot)
- {
- 	struct acpiphp_func *func;
--	union acpi_object params[2];
--	struct acpi_object_list arg_list;
-=20
--	list_for_each_entry(func, &slot->funcs, sibling) {
--		arg_list.count =3D 2;
--		arg_list.pointer =3D params;
--		params[0].type =3D ACPI_TYPE_INTEGER;
--		params[0].integer.value =3D ACPI_ADR_SPACE_PCI_CONFIG;
--		params[1].type =3D ACPI_TYPE_INTEGER;
--		params[1].integer.value =3D 1;
--		/* _REG is optional, we don't care about if there is failure */
--		acpi_evaluate_object(func_to_handle(func), "_REG", &arg_list,
--				     NULL);
--	}
-+	list_for_each_entry(func, &slot->funcs, sibling)
-+		acpi_evaluate_reg(func_to_handle(func),
-+				  ACPI_ADR_SPACE_PCI_CONFIG,
-+				  ACPI_REG_CONNECT);
- }
-=20
- static void check_hotplug_bridge(struct acpiphp_slot *slot, struct pci_d=
-ev *dev)
---=20
-2.26.0
+On Fri, 2020-05-01 at 10:28 -0400, Jim Quinlan wrote:
+> From: Jim Quinlan <jquinlan@broadcom.com>
+>=20
+> clk_put() was being invoked on a clock obtained by
+> devm_clk_get_optional().
+>=20
+> Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
+> Acked-by: Florian Fainelli <f.fainelli@gmail.com>
+> ---
+
+Acked-by: Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
+
+Regards,
+Nicolas
+
+>  drivers/pci/controller/pcie-brcmstb.c | 1 -
+>  1 file changed, 1 deletion(-)
+>=20
+> diff --git a/drivers/pci/controller/pcie-brcmstb.c
+> b/drivers/pci/controller/pcie-brcmstb.c
+> index 6d79d14527a6..454917ee9241 100644
+> --- a/drivers/pci/controller/pcie-brcmstb.c
+> +++ b/drivers/pci/controller/pcie-brcmstb.c
+> @@ -899,7 +899,6 @@ static void __brcm_pcie_remove(struct brcm_pcie *pcie=
+)
+>  	brcm_msi_remove(pcie);
+>  	brcm_pcie_turn_off(pcie);
+>  	clk_disable_unprepare(pcie->clk);
+> -	clk_put(pcie->clk);
+>  }
+> =20
+>  static int brcm_pcie_remove(struct platform_device *pdev)
+
+
+--=-j/ZrGLyXvIzAV7yVCtRN
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCAAdFiEErOkkGDHCg2EbPcGjlfZmHno8x/4FAl6xaOoACgkQlfZmHno8
+x/4zFAf6A28BXIGgiFx4cGET/exjJuFYtSEdnxdHqrU3xmv0+qw+NJRL+o6kzhqa
+Pb1Wx5+R2KV1NbiU0BKwzhHL8vj2KiE2k/zi14dvyEoy1EHsnu3aQ96eeXralUOU
+AjubnENtm+mfBPX03xZaWzjRGs4fgrJbqEEE3INb8Iji4X85iMhTh46ylY49Hkdz
+oM0lPWTRTAEXQLzBONZe7VQi+S0Zd1t8mY0IZV8nJYifwqgvYoJdSvXzNxCfJ3fA
+slYEVGW5maJEO/qHsWKyJYE17mwWPGeskeAVF4dQWQt1rDPc1vm+AsaCJzjPLMhM
+904BWZ69Lu3pdxhAiLGBX8dd+oRvzA==
+=A2C7
+-----END PGP SIGNATURE-----
+
+--=-j/ZrGLyXvIzAV7yVCtRN--
 
