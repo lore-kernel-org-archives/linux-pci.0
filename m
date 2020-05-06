@@ -2,81 +2,118 @@ Return-Path: <SRS0=V6A1=6U=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.2 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0363C47256
-	for <linux-pci@archiver.kernel.org>; Wed,  6 May 2020 06:14:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06E45C47258
+	for <linux-pci@archiver.kernel.org>; Wed,  6 May 2020 08:57:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 910D8206E6
-	for <linux-pci@archiver.kernel.org>; Wed,  6 May 2020 06:14:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E43AF206DB
+	for <linux-pci@archiver.kernel.org>; Wed,  6 May 2020 08:57:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727772AbgEFGOn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 6 May 2020 02:14:43 -0400
-Received: from mga11.intel.com ([192.55.52.93]:13733 "EHLO mga11.intel.com"
+        id S1728877AbgEFI5q (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 6 May 2020 04:57:46 -0400
+Received: from foss.arm.com ([217.140.110.172]:59704 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726495AbgEFGOm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 6 May 2020 02:14:42 -0400
-IronPort-SDR: Aea8bJ0TPKSGcD2+YdR056vVwmezCMYnZNc80YCGOkgY80P0/ClkoH5fuIy38WYW8/isyxkgmZ
- WLdX2Fwf4M4g==
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 May 2020 23:14:42 -0700
-IronPort-SDR: 8SU0ZqGeDxAqRO3wxKhezSMu6O2lsRivPI+hZNxm7YSA4YXKFMebS7DjQxzKlx6yRlYm9rM62J
- 4aPiWNDugCFA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.73,358,1583222400"; 
-   d="scan'208";a="369691803"
-Received: from lahna.fi.intel.com (HELO lahna) ([10.237.72.163])
-  by fmsmga001.fm.intel.com with SMTP; 05 May 2020 23:14:39 -0700
-Received: by lahna (sSMTP sendmail emulation); Wed, 06 May 2020 09:14:38 +0300
-Date:   Wed, 6 May 2020 09:14:38 +0300
-From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     Kai-Heng Feng <kai.heng.feng@canonical.com>
-Cc:     bhelgaas@google.com, Heiner Kallweit <hkallweit1@gmail.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Chris Packham <chris.packham@alliedtelesis.co.nz>,
-        Yicong Yang <yangyicong@hisilicon.com>,
-        Krzysztof Wilczynski <kw@linux.com>,
-        "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3] PCI/ASPM: Enable ASPM for bridge-to-bridge link
-Message-ID: <20200506061438.GR487496@lahna.fi.intel.com>
-References: <20200505122801.12903-1-kai.heng.feng@canonical.com>
- <20200505173423.26968-1-kai.heng.feng@canonical.com>
+        id S1728870AbgEFI5q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 6 May 2020 04:57:46 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 6C54A30E;
+        Wed,  6 May 2020 01:57:45 -0700 (PDT)
+Received: from e121166-lin.cambridge.arm.com (e121166-lin.cambridge.arm.com [10.1.196.255])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 86B5E3F71F;
+        Wed,  6 May 2020 01:57:44 -0700 (PDT)
+Date:   Wed, 6 May 2020 09:57:36 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Marek Vasut <marek.vasut@gmail.com>
+Cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH] PCI: pcie-rcar: Cache PHY init function pointer
+Message-ID: <20200506085736.GA30251@e121166-lin.cambridge.arm.com>
+References: <20200426123148.56051-1-marek.vasut@gmail.com>
+ <20200428083231.GC12459@e121166-lin.cambridge.arm.com>
+ <717765f1-b5be-a436-20d6-d0a95f58cbdc@gmail.com>
+ <20200505180214.GA18468@e121166-lin.cambridge.arm.com>
+ <a7971547-869a-b3ca-5934-4ce5028aacf1@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200505173423.26968-1-kai.heng.feng@canonical.com>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+In-Reply-To: <a7971547-869a-b3ca-5934-4ce5028aacf1@gmail.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, May 06, 2020 at 01:34:21AM +0800, Kai-Heng Feng wrote:
-> The TI PCIe-to-PCI bridge prevents the Intel SoC from entering power
-> state deeper than PC3 due to disabled ASPM, consumes lots of unnecessary
-> power. On Windows ASPM L1 is enabled on the device and its upstream
-> bridge, so it can make the Intel SoC reach PC8 or PC10 to save lots of
-> power.
+On Tue, May 05, 2020 at 08:35:04PM +0200, Marek Vasut wrote:
+> On 5/5/20 8:02 PM, Lorenzo Pieralisi wrote:
+> > On Fri, May 01, 2020 at 10:42:06PM +0200, Marek Vasut wrote:
+> >> On 4/28/20 10:32 AM, Lorenzo Pieralisi wrote:
+> >>> On Sun, Apr 26, 2020 at 02:31:47PM +0200, marek.vasut@gmail.com wrote:
+> >>>> From: Marek Vasut <marek.vasut+renesas@gmail.com>
+> >>>>
+> >>>> The PHY initialization function pointer does not change during the
+> >>>> lifetime of the driver instance, it is therefore sufficient to get
+> >>>> the pointer in .probe(), cache it in driver private data, and just
+> >>>> call the function through the cached pointer in .resume().
+> >>>>
+> >>>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+> >>>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> >>>> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> >>>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> >>>> Cc: Wolfram Sang <wsa@the-dreams.de>
+> >>>> Cc: linux-renesas-soc@vger.kernel.org
+> >>>> ---
+> >>>> NOTE: Based on git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/pci.git
+> >>>>       branch pci/rcar
+> >>>> NOTE: The driver tag is now 'pcie-rcar' to distinguish it from pci-rcar-gen2.c
+> >>>> ---
+> >>>>  drivers/pci/controller/pcie-rcar.c | 10 ++++------
+> >>>>  1 file changed, 4 insertions(+), 6 deletions(-)
+> >>>
+> >>> Squashed in https://patchwork.kernel.org/patch/11438665
+> >>
+> >> Thanks
+> >>
+> >>> Do you want me to rename the $SUBJECT (and the branch name while at it)
+> >>> in the patches in my pci/rcar branch ("PCI: pcie-rcar: ...") to start
+> >>> the commit subject tag renaming from this cycle (and in the interim you
+> >>> send a rename for the drivers files ?)
+> >>
+> >> I don't really have a particular preference either way. I can keep
+> >> marking the drivers with pcie-rcar and pci-rcar tags if that helps
+> >> discern them.
+> > 
+> > So:
+> > 
+> > - "rcar" for the PCIe driver
 > 
-> In short, ASPM always gets disabled on bridge-to-bridge link.
+> Wouldn't it be better to mark this rcar-pcie , so it's clear it's the
+> PCIe driver ?
 
-Excelent finding :) I've heard several reports complaining that we can't
-enter PC10 when TBT is enabled and I guess this explains it.
+All other drivers in drivers/pci/controller are PCIe but don't require
+an extra tag to clarify it - that's the rationale behind "rcar".
 
-> The special case was part of first ASPM introduction patch, commit
-> 7d715a6c1ae5 ("PCI: add PCI Express ASPM support"). However, it didn't
-> explain why ASPM needs to be disabled in special bridge-to-bridge case.
+How does that sound ?
+
+> > - "rcar-pci" or "rcar-legacy" for the pci-rcar-gen2.c (preference ?
+> >   there is no urgency, no commit queued to rename, it is for future
+> >   code)
 > 
-> Let's remove the the special case, as PCIe spec already envisioned ASPM
-> on bridge-to-bridge link.
-> 
-> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=207571
-> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+> rcar-pci , since the Gen2 controller surely isn't legacy.
 
-Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Ok
+
+> > Are we OK with that ? If yes I will rewrite the commits subjects
+> > and push out an updated pci/rcar branch.
+> > 
+> > ...DT bindings commit subjects - should I change their tag subject
+> > too ?
+
+I shall leave DT bindings as they are then.
+
+Lorenzo
