@@ -2,122 +2,138 @@ Return-Path: <SRS0=V6A1=6U=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A50DBC28CBC
-	for <linux-pci@archiver.kernel.org>; Wed,  6 May 2020 15:42:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76DA1C47256
+	for <linux-pci@archiver.kernel.org>; Wed,  6 May 2020 16:59:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 84DD9206DB
-	for <linux-pci@archiver.kernel.org>; Wed,  6 May 2020 15:42:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F2C5208E4
+	for <linux-pci@archiver.kernel.org>; Wed,  6 May 2020 16:59:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1588784383;
+	bh=YQF8j6KEhKwnPtrb6xBuYQlIxEGfDwEBnvs9W1vNn5o=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=LzQ6UsiUNwNGW1S7Db4ngM0zbDOzkgSNUxUbIQxE+ytWPnPF3m2jREll84sd50QeJ
+	 LoMHaZ27DrcVuVCM1NmP/2IJiI/gUiZaF7FoO3BbVbNNf7YjXS31uuLYeala4l5Wyp
+	 9ndqj8MRdmsOlb0rnP/DsCBBzD0OBT8g3nTB2UGU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729768AbgEFPmI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 6 May 2020 11:42:08 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:50728 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1729668AbgEFPmI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 6 May 2020 11:42:08 -0400
-Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 046F2Qod060973;
-        Wed, 6 May 2020 11:42:07 -0400
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 30uvm97051-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 06 May 2020 11:42:01 -0400
-Received: from m0098420.ppops.net (m0098420.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 046FdOPj007467;
-        Wed, 6 May 2020 11:41:46 -0400
-Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 30uvm9703w-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 06 May 2020 11:41:45 -0400
-Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
-        by ppma03ams.nl.ibm.com (8.16.0.27/8.16.0.27) with SMTP id 046FexB6027812;
-        Wed, 6 May 2020 15:41:42 GMT
-Received: from b06avi18626390.portsmouth.uk.ibm.com (b06avi18626390.portsmouth.uk.ibm.com [9.149.26.192])
-        by ppma03ams.nl.ibm.com with ESMTP id 30s0g5sg8g-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 06 May 2020 15:41:42 +0000
-Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
-        by b06avi18626390.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 046FeUs065732886
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 6 May 2020 15:40:30 GMT
-Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 08C35A404D;
-        Wed,  6 May 2020 15:41:40 +0000 (GMT)
-Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id D47A0A4055;
-        Wed,  6 May 2020 15:41:39 +0000 (GMT)
-Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
-        by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Wed,  6 May 2020 15:41:39 +0000 (GMT)
-From:   Niklas Schnelle <schnelle@linux.ibm.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Pierre Morel <pmorel@linux.ibm.com>,
-        Peter Oberparleiter <oberpar@linux.ibm.com>
-Subject: [RFC 0/2] Enable PF-VF linking with pdev->no_vf_scan (s390)
-Date:   Wed,  6 May 2020 17:41:37 +0200
-Message-Id: <20200506154139.90609-1-schnelle@linux.ibm.com>
-X-Mailer: git-send-email 2.17.1
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.676
- definitions=2020-05-06_07:2020-05-05,2020-05-06 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 mlxscore=0
- suspectscore=0 clxscore=1015 adultscore=0 bulkscore=0 malwarescore=0
- phishscore=0 mlxlogscore=461 lowpriorityscore=0 spamscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2005060117
+        id S1729341AbgEFQ7m (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 6 May 2020 12:59:42 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60806 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727984AbgEFQ7m (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 6 May 2020 12:59:42 -0400
+Received: from localhost (mobile-166-175-190-200.mycingular.net [166.175.190.200])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5E967206B9;
+        Wed,  6 May 2020 16:59:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1588784381;
+        bh=YQF8j6KEhKwnPtrb6xBuYQlIxEGfDwEBnvs9W1vNn5o=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=Bl/BVxAIVr56QFXAv9pnp6WQVrobs8g8Fxbpjue97jbM3xUKp1LmbIWG0OzkQz6SG
+         3wMYuc/FKPnPY+h5O78/axkASCAUKmnjLu+6rF7I2xwYKnhz9vssaDdUqDxEDadMq5
+         UnpDauki8tXFFxoEwrygyfQ0bjdH5ZBL1bCjNpYo=
+Date:   Wed, 6 May 2020 11:59:38 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     Geert Uytterhoeven <geert@linux-m68k.org>,
+        Marek Vasut <marek.vasut@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+Subject: Re: [PATCH] PCI: pcie-rcar: Cache PHY init function pointer
+Message-ID: <20200506165938.GA435967@bjorn-Precision-5520>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200506153340.GA2978@e121166-lin.cambridge.arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hello Kernel Hackers,
+On Wed, May 06, 2020 at 04:33:40PM +0100, Lorenzo Pieralisi wrote:
+> On Wed, May 06, 2020 at 12:22:13PM +0200, Geert Uytterhoeven wrote:
+> > Hi Lorenzo,
+> > 
+> > On Wed, May 6, 2020 at 11:19 AM Lorenzo Pieralisi
+> > <lorenzo.pieralisi@arm.com> wrote:
+> > > On Wed, May 06, 2020 at 11:02:31AM +0200, Geert Uytterhoeven wrote:
+> > > > On Wed, May 6, 2020 at 10:57 AM Lorenzo Pieralisi
+> > > > <lorenzo.pieralisi@arm.com> wrote:
+> > > > > On Tue, May 05, 2020 at 08:35:04PM +0200, Marek Vasut wrote:
+> > > > > > On 5/5/20 8:02 PM, Lorenzo Pieralisi wrote:
+> > > > > > > On Fri, May 01, 2020 at 10:42:06PM +0200, Marek Vasut wrote:
+> > > > > > >> On 4/28/20 10:32 AM, Lorenzo Pieralisi wrote:
+> > > > > > >>> On Sun, Apr 26, 2020 at 02:31:47PM +0200, marek.vasut@gmail.com wrote:
+> > > > > > >>>> From: Marek Vasut <marek.vasut+renesas@gmail.com>
+> > > > > > >>>>
+> > > > > > >>>> The PHY initialization function pointer does not change during the
+> > > > > > >>>> lifetime of the driver instance, it is therefore sufficient to get
+> > > > > > >>>> the pointer in .probe(), cache it in driver private data, and just
+> > > > > > >>>> call the function through the cached pointer in .resume().
+> > > > > > >>>>
+> > > > > > >>>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+> > > > > > >>>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > > > > > >>>> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > > > > > >>>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> > > > > > >>>> Cc: Wolfram Sang <wsa@the-dreams.de>
+> > > > > > >>>> Cc: linux-renesas-soc@vger.kernel.org
+> > > > > > >>>> ---
+> > > > > > >>>> NOTE: Based on git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/pci.git
+> > > > > > >>>>       branch pci/rcar
+> > > > > > >>>> NOTE: The driver tag is now 'pcie-rcar' to distinguish it from pci-rcar-gen2.c
+> > > > > > >>>> ---
+> > > > > > >>>>  drivers/pci/controller/pcie-rcar.c | 10 ++++------
+> > > > > > >>>>  1 file changed, 4 insertions(+), 6 deletions(-)
+> > > > > > >>>
+> > > > > > >>> Squashed in https://patchwork.kernel.org/patch/11438665
+> > > > > > >>
+> > > > > > >> Thanks
+> > > > > > >>
+> > > > > > >>> Do you want me to rename the $SUBJECT (and the branch name while at it)
+> > > > > > >>> in the patches in my pci/rcar branch ("PCI: pcie-rcar: ...") to start
+> > > > > > >>> the commit subject tag renaming from this cycle (and in the interim you
+> > > > > > >>> send a rename for the drivers files ?)
+> > > > > > >>
+> > > > > > >> I don't really have a particular preference either way. I can keep
+> > > > > > >> marking the drivers with pcie-rcar and pci-rcar tags if that helps
+> > > > > > >> discern them.
+> > > > > > >
+> > > > > > > So:
+> > > > > > >
+> > > > > > > - "rcar" for the PCIe driver
+> > > > > >
+> > > > > > Wouldn't it be better to mark this rcar-pcie , so it's clear it's the
+> > > > > > PCIe driver ?
+> > > > >
+> > > > > All other drivers in drivers/pci/controller are PCIe but don't require
+> > > > > an extra tag to clarify it - that's the rationale behind "rcar".
+> > > > >
+> > > > > How does that sound ?
+> > > >
+> > > > Are there any other platforms that have two different drivers for the same
+> > > > platform, one for PCI, and one for PCIe?
+> > >
+> > > I don't think so - nonetheless it's time we agreed on something and be
+> > > done with it. Bjorn expressed his opinion on this and unless we have a
+> > > compelling reason not to follow it IMO it'd be better to take it.
+> > >
+> > > I don't think using rcar-pcie is a disaster either.
+> > >
+> > > Let me know how you want to proceed, thanks.
+> > 
+> > /me has just returned from a bike ride, so it's time for a bike-shed
+> > 
+> > "PCI: rcar:" for pcie-rcar.c, "PCI: rcar-gen2:" (or "PCI: rcar2"?) for
+> > pci-rcar-gen2.c?
+> 
+> Fine by me, all agreed ?
 
-the following series enables PF-VF linking for architectures using the
-pdev->no_vf_scan flag (currently just s390). This includes kernel internal
-linking with pdev->physfn as well as creation of the relevant sysfs links.
-The former are required for example by libvirt to manage VFs.
-
-The series consists of two patches against the featuress branch of
-git.kernel.org/pub/scm/linux/kernel/git/s390/linux.git
-
-- PCI/IOV: Introduce pci_iov_sysfs_link() function
-
-This patch factors the sysfs link creation out of pci_iov_add_virtfn() and
-into a new pci_iov_sysfs_link() function. On its own it also applies
-cleanly on v5.7-rc4.
- 
-- s390/pci: create links between PFs and VFs
-
-This patch makes use of the pci_iov_sysfs_link() function introduced in the
-first patch to create the sysfs PF-VF links. It exploits recent work for
-multi-function support on s390 that gives us the real devfnto identify the
-parent PF of a given VF.
-Apart from these s390 specific support contained within arch/s390/ it also
-removes the fencing off of pci_iov_remove_virtfn() by the pdev->no_vf_scan
-flag making use of the common code path for clean VF removal.
-While this is common code s390 is currently the only case where
-pdev->no_vf_scan is true I can of course split this into a separate patch
-if requested but wanted to keep this together for the discussion.
-
-Best regards and your feedback is welcome,
-Niklas Schnelle
-
-Niklas Schnelle (2):
-  PCI/IOV: Introduce pci_iov_sysfs_link() function
-  s390/pci: create links between PFs and VFs
-
- arch/s390/include/asm/pci.h     |  3 +-
- arch/s390/include/asm/pci_clp.h |  3 +-
- arch/s390/pci/pci_bus.c         | 69 ++++++++++++++++++++++++++++++++-
- arch/s390/pci/pci_clp.c         |  1 +
- drivers/pci/iov.c               | 39 ++++++++++++-------
- include/linux/pci.h             |  8 ++++
- 6 files changed, 105 insertions(+), 18 deletions(-)
-
--- 
-2.17.1
-
+Sounds good to me.
