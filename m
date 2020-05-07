@@ -7,51 +7,51 @@ X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21189C54E49
-	for <linux-pci@archiver.kernel.org>; Thu,  7 May 2020 21:24:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DC54C54E49
+	for <linux-pci@archiver.kernel.org>; Thu,  7 May 2020 21:25:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E1AA5208DB
-	for <linux-pci@archiver.kernel.org>; Thu,  7 May 2020 21:24:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1025220731
+	for <linux-pci@archiver.kernel.org>; Thu,  7 May 2020 21:25:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1588886683;
-	bh=0qELMJVlr5HsqCLhn1jVT2p0vxZTnoMpWvOu7nZdYO4=;
+	s=default; t=1588886716;
+	bh=Omfm8EvZ5trId1boonyIAOBS7fDkjnWbLTghCvkGOmU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=HAEcsvGAKueD0qFp1ZqHNjjYKeaOv6wgJYLCzLuvRo5EExBZ8GiyBJuLzsarT/ehx
-	 zKGDpsBA/JhvgdT5UsnIcka9EWMo3W256RXNUW8hvIjR1Vd87zEI8fA3tii6Z1aUXX
-	 KsgxtLMNCewNhIxJAhuNqCybIc4cIxJ9lWbJ/BpI=
+	b=hJxkyv1U63lGbXFr2gIy/stnkVCPktoGfPJzh4jvVvow2XcZo1EeKy56on4Uhh86N
+	 oVtnOQ+j6/mxSlwe3LOtrp9/z+FKLtdadCIJxVT+B7Hbfn7zy7AT6nBuQ/X+mUB3KF
+	 LanVm9FL5yG5enCBWKJJ9UwKFBDhj8vFfg3r4vbg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726437AbgEGVYm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 7 May 2020 17:24:42 -0400
-Received: from mail-oi1-f194.google.com ([209.85.167.194]:36025 "EHLO
-        mail-oi1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726218AbgEGVYm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 May 2020 17:24:42 -0400
-Received: by mail-oi1-f194.google.com with SMTP id x7so5657453oic.3;
-        Thu, 07 May 2020 14:24:41 -0700 (PDT)
+        id S1726809AbgEGVZO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 7 May 2020 17:25:14 -0400
+Received: from mail-oi1-f196.google.com ([209.85.167.196]:43827 "EHLO
+        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726531AbgEGVZN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 May 2020 17:25:13 -0400
+Received: by mail-oi1-f196.google.com with SMTP id j16so6541107oih.10;
+        Thu, 07 May 2020 14:25:13 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:content-transfer-encoding
          :in-reply-to:user-agent;
-        bh=mDXolm6iZ733M48u/HXZ2xjvw7OsZxr5Jn1VStChtTo=;
-        b=CmzUAbfG5ZgqgwhzxqdLvZOk8Bbd78LnicZ+JkO1ZAnI4vRNldKLqIunKknmWE0leu
-         405mMf4Y8zHy7tkr7335uw6Uc+LdYDDpyLwqZ36oz+NslTuT7bUUnxKTMklqhPxhDmVz
-         mZ/8oFYozrMsxEy0CqKmH2xLOur2BedD/xoXsESE7gO1lBV+ZAKref4MKrkjPRqgEmab
-         KF79HTLHnlbJ93bIGE3EPZKrj7J8S45+M7hih0XoEKQuAezGBFdHpezz0jutPRkQf77T
-         XZ+BEzaNRlSGGI9haWvDV1g3szYk9DUjXMe01OaK+NM828lF4NiYk85BHFDRT/kTBNW2
-         89Fg==
-X-Gm-Message-State: AGi0PuZVJr1MvLYwsEsYrkpIiaXdxZO8TFxvOa4T73IyJYrmUiP+8A7n
-        jeJUP9cIZGjUkWehs8O+Mw==
-X-Google-Smtp-Source: APiQypKKqJfMnM1Ip/+XR1s3YlltvCJekEqerjn7XDOrC43sW/SMYdrVIRRleAlY6VdT7ccQH/TcZA==
-X-Received: by 2002:aca:fcce:: with SMTP id a197mr862441oii.32.1588886680910;
-        Thu, 07 May 2020 14:24:40 -0700 (PDT)
+        bh=DJ5irMJzwpgHAqiapmHTr23XyC1rqL9GiDlf1aWaR14=;
+        b=Dsz87cEyw8i5Qy59dGW5ap5/py+spueNDMp4EUVO23qrfPCrsX9g/q9Gl1fe3uLZNQ
+         1CCBJ+4TDClZkge1U9O01UcxzZQlLQitUtsW371zd+9758TbsXh63vCIeBbu4XM78fQU
+         +54M8sFpTINtOwP7SEnaeEG3O4txGnX+lJzV0/KuuIQwVVA9I1r5yIu5nuJT0OAMWRxV
+         1iR6ubKmUiWvwWeNT98GJleAnY5PqKPWkvuSMry3mKtTFcpb8dJYCm3w2FBe8YWuOUov
+         MZu9pdi/FLojwJwF64/NJcI9fzfTmOwwdieu5vThEDcOFxPd8LdxjWesW9pxPpmgH+YB
+         4czA==
+X-Gm-Message-State: AGi0PuY0p/0RLwC06uzTSGBhgNBVM2gngQ7T85lqIYLx6+lbx2ucsXvo
+        SjpcM5K4vV3uQ5vNqLxn3Q==
+X-Google-Smtp-Source: APiQypKak97u52rwxgIVHGAGYeOCHRT1KhU4tTs3bXDA93ePG3IM2v3ZiF4m5A4F8yUEOh2ffsNKWA==
+X-Received: by 2002:aca:3b07:: with SMTP id i7mr1750409oia.164.1588886713019;
+        Thu, 07 May 2020 14:25:13 -0700 (PDT)
 Received: from rob-hp-laptop (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.gmail.com with ESMTPSA id c25sm1625571otp.50.2020.05.07.14.24.39
+        by smtp.gmail.com with ESMTPSA id n11sm1672004oij.21.2020.05.07.14.25.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 May 2020 14:24:40 -0700 (PDT)
-Received: (nullmailer pid 23968 invoked by uid 1000);
-        Thu, 07 May 2020 21:24:39 -0000
-Date:   Thu, 7 May 2020 16:24:39 -0500
+        Thu, 07 May 2020 14:25:12 -0700 (PDT)
+Received: (nullmailer pid 24945 invoked by uid 1000);
+        Thu, 07 May 2020 21:25:11 -0000
+Date:   Thu, 7 May 2020 16:25:11 -0500
 From:   Rob Herring <robh@kernel.org>
 To:     Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>
 Cc:     Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
@@ -66,30 +66,34 @@ Cc:     Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
         Tomasz Maciej Nowak <tmn505@gmail.com>,
         Xogium <contact@xogium.me>, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4 08/12] PCI: aardvark: Replace custom macros by
- standard linux/pci_regs.h macros
-Message-ID: <20200507212439.GA23897@bogus>
+Subject: Re: [PATCH v4 09/12] dt-bindings: PCI: aardvark: Describe new
+ properties
+Message-ID: <20200507212511.GA24873@bogus>
 References: <20200430080625.26070-1-pali@kernel.org>
- <20200430080625.26070-9-pali@kernel.org>
+ <20200430080625.26070-10-pali@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20200430080625.26070-9-pali@kernel.org>
+In-Reply-To: <20200430080625.26070-10-pali@kernel.org>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 30 Apr 2020 10:06:21 +0200, =?UTF-8?q?Pali=20Roh=C3=A1r?= wrote:
-> PCI-E capability macros are already defined in linux/pci_regs.h.
-> Remove their reimplementation in pcie-aardvark.
+On Thu, 30 Apr 2020 10:06:22 +0200, =?UTF-8?q?Pali=20Roh=C3=A1r?= wrote:
+> From: Marek Behún <marek.behun@nic.cz>
 > 
-> Signed-off-by: Pali Rohár <pali@kernel.org>
+> Document the possibility to reference a PHY and reset-gpios and to set
+> max-link-speed property.
+> 
+> Signed-off-by: Marek Behún <marek.behun@nic.cz>
+> Cc: Rob Herring <robh+dt@kernel.org>
+> Cc: devicetree@vger.kernel.org
 > ---
->  drivers/pci/controller/pci-aardvark.c | 41 ++++++++++++---------------
->  1 file changed, 18 insertions(+), 23 deletions(-)
+>  Documentation/devicetree/bindings/pci/aardvark-pci.txt | 4 ++++
+>  1 file changed, 4 insertions(+)
 > 
 
 Reviewed-by: Rob Herring <robh@kernel.org>
