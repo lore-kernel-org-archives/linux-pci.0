@@ -2,88 +2,112 @@ Return-Path: <SRS0=kFL5=6V=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E496CC4724C
-	for <linux-pci@archiver.kernel.org>; Thu,  7 May 2020 20:16:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9838C38A2A
+	for <linux-pci@archiver.kernel.org>; Thu,  7 May 2020 20:17:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BD8AA24972
-	for <linux-pci@archiver.kernel.org>; Thu,  7 May 2020 20:16:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7EB77208CA
+	for <linux-pci@archiver.kernel.org>; Thu,  7 May 2020 20:17:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="d3S1T8Bw"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="R8QxXSAb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728564AbgEGUQE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 7 May 2020 16:16:04 -0400
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:47526 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728514AbgEGUQD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 May 2020 16:16:03 -0400
-Received: from mail-irv-17.broadcom.com (mail-irv-17.lvn.broadcom.net [10.75.242.48])
-        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id 30BCA30C05B;
-        Thu,  7 May 2020 13:15:26 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com 30BCA30C05B
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
-        s=dkimrelay; t=1588882526;
-        bh=g/m+KV/xnyKsi5NusBrB40iCFxt3VudgtyX3DALG/2g=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=d3S1T8BwOhppDarKsWr1V84L93e8Hn9U5Fw5QdmtVJ8XeP3I2ZIikX5RWPHS7OBxJ
-         gMWzurRrGlHhx1tKLM7HmO7+cT5JESXv4QbbFZZyZzu6MD+ZCQf5Nd70xA5ulggdNf
-         hCpg1HyALP0lvXPK2aUnPfG0JeC+tkcsgOShkmCE=
-Received: from stbsrv-and-01.and.broadcom.net (stbsrv-and-01.and.broadcom.net [10.28.16.211])
-        by mail-irv-17.broadcom.com (Postfix) with ESMTP id 8B05114008D;
-        Thu,  7 May 2020 13:16:00 -0700 (PDT)
-From:   Jim Quinlan <james.quinlan@broadcom.com>
-To:     james.quinlan@broadcom.com
-Cc:     Jim Quinlan <james.quinlan@broadcom.com>,
-        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        bcm-kernel-feedback-list@broadcom.com (maintainer:BROADCOM BCM7XXX ARM
-        ARCHITECTURE), Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        linux-rpi-kernel@lists.infradead.org (moderated list:BROADCOM
-        BCM2711/BCM2835 ARM ARCHITECTURE),
-        linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM
-        BCM2711/BCM2835 ARM ARCHITECTURE),
-        linux-pci@vger.kernel.org (open list:PCI SUBSYSTEM),
-        devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED
-        DEVICE TREE BINDINGS), linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v3 3/4] dt-bindings: PCI: brcmstb: New prop 'aspm-no-l0s'
-Date:   Thu,  7 May 2020 16:15:42 -0400
-Message-Id: <20200507201544.43432-4-james.quinlan@broadcom.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200507201544.43432-1-james.quinlan@broadcom.com>
+        id S1726514AbgEGUR6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 7 May 2020 16:17:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47210 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726367AbgEGUR5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 May 2020 16:17:57 -0400
+Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5EDD2C05BD43;
+        Thu,  7 May 2020 13:17:57 -0700 (PDT)
+Received: by mail-wm1-x342.google.com with SMTP id r26so8305515wmh.0;
+        Thu, 07 May 2020 13:17:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=RGbtCswDTgsFLypisMjHemhGa1gfh6xqfnI2J9mGaYg=;
+        b=R8QxXSAb86c/ioq5vI1vsHGKZAkJnzS0DjY/yFt4eMsepV8vaoHS7ZCD83RtZ/885H
+         TxzAt2Cte98AukbnMPo/tifw8WNX4jiywLIHbptOiZigyefuc0CvUA5MkOtVtBxaqIGq
+         28BfQPRl7QrOU5sTJBZUZkpEoXENQdthEOrYEBeA8BiI5nh9g32reDAGMkTQTBx51I2c
+         iXasH7C4hOpwVoKs5JSUhkMUm2KlWVp3ZRyBYoSj3pQ3sL86cGXRr7U5edt3AT0+3i5Y
+         tGijdyZsEJal8BjKIYa/ta6q2A7x0hPVAc5BhcrJyavNicNvpBoUBwphuj767IOzFX1/
+         xZWw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=RGbtCswDTgsFLypisMjHemhGa1gfh6xqfnI2J9mGaYg=;
+        b=XBlM1dPQqrTbhOlzQ/g9qCU8NN01jD7F6bzIJybkgor87hs+g6TNXrNqbVK9k6MBxf
+         IUjDWARtep77jv6uhmoRseucBWLQWlz4QwqVp8NNYYMq04VKp6DRCYhVPetGCcRstyOm
+         0SN5XYrF0Gvu3/DeDyb6mzIYR6nGZ7RAENcovibSIuNqVofLzA9PL6F8HFqPYv69ZYRq
+         rt1SgVVWuCjxOciJ6VyP7OW/1oz+DagOWtFXrw5Kt6B8pxVHEWSkB5FP3y1KflY1z66I
+         98hReRVoySYFv1UVHK5i5qPjsWGOm5YwQKzSt04+cVCPzV7RFDDxVkMHXA51IzKemVnb
+         WP8A==
+X-Gm-Message-State: AGi0PuaJ1c57BUoGK2pV5bBn7h0VGRxLLdb2DhB3V4UoyTUKMVsAoepd
+        L64TmTzowof9B9H2qvnVN7pEIkug
+X-Google-Smtp-Source: APiQypKwYfOoUWjK0tabjGOtcz+Wjakktm4C1Yp0U1VLzErywtiaT2qObR3zUpmGxLPYLmn62ifkmA==
+X-Received: by 2002:a1c:4d18:: with SMTP id o24mr11401308wmh.141.1588882675802;
+        Thu, 07 May 2020 13:17:55 -0700 (PDT)
+Received: from [10.230.188.43] ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id u74sm9942459wmu.13.2020.05.07.13.17.52
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 07 May 2020 13:17:55 -0700 (PDT)
+Subject: Re: [PATCH v3 1/4] PCI: brcmstb: Don't clk_put() a managed clock
+To:     Jim Quinlan <james.quinlan@broadcom.com>
+Cc:     Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "maintainer:BROADCOM BCM7XXX ARM ARCHITECTURE" 
+        <bcm-kernel-feedback-list@broadcom.com>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-rpi-kernel@lists.infradead.org>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "open list:PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS" 
+        <linux-pci@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
 References: <20200507201544.43432-1-james.quinlan@broadcom.com>
+ <20200507201544.43432-2-james.quinlan@broadcom.com>
+From:   Florian Fainelli <f.fainelli@gmail.com>
+Message-ID: <8c8ac461-c6e9-0362-a30c-eab48cfbdae1@gmail.com>
+Date:   Thu, 7 May 2020 13:17:50 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Firefox/68.0 Thunderbird/68.7.0
+MIME-Version: 1.0
+In-Reply-To: <20200507201544.43432-2-james.quinlan@broadcom.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Jim Quinlan <jquinlan@broadcom.com>
 
-For various reasons, one may want to disable the ASPM L0s
-capability.
 
-Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
----
- Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml | 2 ++
- 1 file changed, 2 insertions(+)
+On 5/7/2020 1:15 PM, Jim Quinlan wrote:
+> From: Jim Quinlan <jquinlan@broadcom.com>
+> 
+> clk_put() was being invoked on a clock obtained by
+> devm_clk_get_optional().
+> 
+> Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
+> Acked-by: Florian Fainelli <f.fainelli@gmail.com>
+> Acked-by: Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
 
-diff --git a/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml b/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
-index 77d3e81a437b..8680a0f86c5a 100644
---- a/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
-@@ -56,6 +56,8 @@ properties:
-     description: Indicates usage of spread-spectrum clocking.
-     type: boolean
- 
-+  aspm-no-l0s: true
-+
- required:
-   - reg
-   - dma-ranges
+This one should also have:
+
+Fixes: c0452137034b ("PCI: brcmstb: Add Broadcom STB PCIe host
+controller driver")
+
+not sure if Bjorn can add it while applying.
 -- 
-2.17.1
-
+Florian
