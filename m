@@ -2,279 +2,222 @@ Return-Path: <SRS0=kFL5=6V=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FA3EC47247
-	for <linux-pci@archiver.kernel.org>; Thu,  7 May 2020 14:09:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EB2FC38A24
+	for <linux-pci@archiver.kernel.org>; Thu,  7 May 2020 14:31:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1F0F32184D
-	for <linux-pci@archiver.kernel.org>; Thu,  7 May 2020 14:09:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1588860559;
-	bh=vN8Q4ypSUZ2agPVTKnY7WoLJVzB26/lBwy4ShpBgv5A=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=SPm9BR8KyZnT1MLVQv5yKM61VCAKw1zs2UQCzbD4m5n4vagfloI5MOEFmCnKXX5ff
-	 WgHRr5HrkMFaiJYAIeaHCddrU19Asoj6P8u5mJcWRZ1M3Ryo4coMUVfYXiwrrKRwhA
-	 B7NBAAxKuhrRhHP1HAimlQqTn4FH0X3RKdXFgGcI=
+	by mail.kernel.org (Postfix) with ESMTP id ED9D32083B
+	for <linux-pci@archiver.kernel.org>; Thu,  7 May 2020 14:31:16 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="EROMeIja"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728380AbgEGOJS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 7 May 2020 10:09:18 -0400
-Received: from mail-ot1-f66.google.com ([209.85.210.66]:33146 "EHLO
-        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726356AbgEGOJL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 May 2020 10:09:11 -0400
-Received: by mail-ot1-f66.google.com with SMTP id j26so4561339ots.0;
-        Thu, 07 May 2020 07:09:10 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=zxy1VYlySamy/54ZCy3MVykfYMPHma2/B2G6ctk5KFo=;
-        b=WlkgoTSi0oSdWNkyJ7Fh7up4AXvG28RaJqYRJo+eDsQ/bzV6BwVSKkpsQYoLwpok4D
-         AUITi43Xj36nB7mfijZeayI74cf4tiYY4RK2qLpG3OJDK/4vmelML2RIqEQf0Adre/Pk
-         kRepMupYJeFYqGWMiRUvJPyPOjHMB0voWMI4Twt7XEQnC/oVbeNPNULXh8o4nsj3Ht6v
-         naUKUubPixZUZ3gnCO7Xx5zBO+nMdyNMfSoc2Y4+8vE6/XRHUAGO/DhyYozsDtkS9aRr
-         BJ5kD9zmga9pWiSJgBrSZk/M1DbusKSP35KDqfYft8ZgZUSLwQPtpKpu/rOrqgjuVgcu
-         pbqA==
-X-Gm-Message-State: AGi0PuY+hJ00mqg5WrpDot96iErIdRlWVmAuwI7webboub2ASisXolnA
-        2JuvKvnQravfv57onorY5g==
-X-Google-Smtp-Source: APiQypKuEb23tqT5lHsR9WW8dsCVzi95vv3SvgIuptykvvHFTCJe8uyjd1G5ZZJOCUu2wxRqWspPqw==
-X-Received: by 2002:a05:6830:30b8:: with SMTP id g24mr10356153ots.225.1588860550347;
-        Thu, 07 May 2020 07:09:10 -0700 (PDT)
-Received: from rob-hp-laptop (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.gmail.com with ESMTPSA id r67sm1380336oie.19.2020.05.07.07.09.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 May 2020 07:09:09 -0700 (PDT)
-Received: (nullmailer pid 4842 invoked by uid 1000);
-        Thu, 07 May 2020 14:09:08 -0000
-Date:   Thu, 7 May 2020 09:09:08 -0500
-From:   Rob Herring <robh@kernel.org>
-To:     Shawn Lin <shawn.lin@rock-chips.com>
-Cc:     Heiko Stuebner <heiko@sntech.de>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, William Wu <william.wu@rock-chips.com>,
-        Simon Xue <xxm@rock-chips.com>,
-        linux-rockchip@lists.infradead.org
-Subject: Re: [PATCH v2 4/6] dt-bindings: rockchip: Add DesignWare based PCIe
- controller
-Message-ID: <20200507140908.GA22326@bogus>
-References: <1581574091-240890-1-git-send-email-shawn.lin@rock-chips.com>
- <1581574091-240890-5-git-send-email-shawn.lin@rock-chips.com>
+        id S1727778AbgEGObO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 7 May 2020 10:31:14 -0400
+Received: from mail-mw2nam12on2095.outbound.protection.outlook.com ([40.107.244.95]:63553
+        "EHLO NAM12-MW2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728871AbgEGOap (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 7 May 2020 10:30:45 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Hrdz3oahrHUkV8WQxPJkocLIz+szEqwmuiYKQkc+GJjmXUk5FR3NOoztrV4KAWh/14F4t5UUq4y4mp2J5F1tCajU9H3AK5YvR5gijjbv5+0ROPp2knIws1xVtXvfFH+OAaTeaEcGAXjVfBruZsvsxOoFTh440+ECOdbz1T4BkhVJDgBM5Ll7E3pL08p4WV+sYnzVNEosT3gRz4C9GjSIUpYF5HJ3vFkwYC4U/W4S4VANRwhMle3VJx6W91dyx4f6eKaw2I2tt3cSMTtKa2uTnEHvQE/0Ql3Bmo7/JFolGeMZW6H1lrC/PuAIp6q2wWaEZJy7kGvFKGWFJV6yzWlB3w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ECC0/1jLu4dN7PzyKffoiRoNKjE9oQTOl51rLAsEvgc=;
+ b=TMkU2e61eOFjb52Xg2eH7Nl4Guwi/U6iqOHdMDe47W0icMsaTFOjWwXn1SiOGbkYkPZsMim4ErLXbqWkzca2j8SPIWtCvXfjSzn2ihcTmiUbyA6L865h7R19N1KKGeBrRuoNY84Mfat1z17dcAnjyQJZbeN9KcjA/QtC6O635siF6wSz5yruyu1FuFqT/XpQQYsxsM+R43d7h50NQ2X9HrHYpwCC6y1szbXHYfz2tTu7sQr+NdCaBfibOOd47EZ4NQhgKJexBQwjLklLLgzkwOITF00+36laoAX0IhZBDpIdNwqGPll1mGTe9tNPsxWKU024Yk87EuNe36nzial7/A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=microsoft.com; dmarc=pass action=none
+ header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ECC0/1jLu4dN7PzyKffoiRoNKjE9oQTOl51rLAsEvgc=;
+ b=EROMeIjaKC5skPWQP378Tdjm125uEmtFv9REZTFTMyyI8esr7/iM470pUlF4SQquI04j6cQ7lji7Hr0nDp/We8a5UmOVi2hy0ch8nbUwCS0IzVGQC+sDUnWCrNPdrFV5isyLVaeI2Mxb46BLkm+ndS9EUDiWY7ShMeE8p2NpC7M=
+Received: from MW2PR2101MB1052.namprd21.prod.outlook.com (2603:10b6:302:a::16)
+ by MWHPR21MB0830.namprd21.prod.outlook.com (2603:10b6:300:76::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2979.3; Thu, 7 May
+ 2020 14:30:42 +0000
+Received: from MW2PR2101MB1052.namprd21.prod.outlook.com
+ ([fe80::5a3:a5e0:1e3c:e950]) by MW2PR2101MB1052.namprd21.prod.outlook.com
+ ([fe80::5a3:a5e0:1e3c:e950%5]) with mapi id 15.20.3000.007; Thu, 7 May 2020
+ 14:30:41 +0000
+From:   Michael Kelley <mikelley@microsoft.com>
+To:     Wei Hu <weh@microsoft.com>, KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "wei.liu@kernel.org" <wei.liu@kernel.org>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "robh@kernel.org" <robh@kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Dexuan Cui <decui@microsoft.com>
+Subject: RE: [PATCH v3 2/2] PCI: hv: Retry PCI bus D0 entry when the first
+ attempt failed with invalid device state
+Thread-Topic: [PATCH v3 2/2] PCI: hv: Retry PCI bus D0 entry when the first
+ attempt failed with invalid device state
+Thread-Index: AQHWJCzZDKxRzfjqCkaO48A4c1MHP6icr6Tg
+Date:   Thu, 7 May 2020 14:30:41 +0000
+Message-ID: <MW2PR2101MB10522E5BE2E487DF9BD3F3A7D7A50@MW2PR2101MB1052.namprd21.prod.outlook.com>
+References: <20200507050300.10974-1-weh@microsoft.com>
+In-Reply-To: <20200507050300.10974-1-weh@microsoft.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=True;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Owner=mikelley@ntdev.microsoft.com;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2020-05-07T14:30:40.3665743Z;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=General;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Application=Microsoft Azure
+ Information Protection;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=128d0214-299f-42fc-b205-0ba9a5ed7641;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Extended_MSFT_Method=Automatic
+authentication-results: microsoft.com; dkim=none (message not signed)
+ header.d=none;microsoft.com; dmarc=none action=none
+ header.from=microsoft.com;
+x-originating-ip: [24.22.167.197]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: cf06d9dd-1c77-4364-0a92-08d7f2933898
+x-ms-traffictypediagnostic: MWHPR21MB0830:|MWHPR21MB0830:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <MWHPR21MB08301AE5BFC5EA8A6E9FBE04D7A50@MWHPR21MB0830.namprd21.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:9508;
+x-forefront-prvs: 03965EFC76
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: rRb9uywRiqmdHL+nwvBfiXE/NuMVQsTm72ftw57nTi0ySW2HglVU+xkjkshsCE8NR0ULS8HFAWUx2hfvjRApB3OTVJ2iy587W82nhDQA2lPNVqE/rCpRPPIwgo7rJrXWLrfrXlcGqxhrfPu6bQL2eCEAjzxA4ZLsiUxNwMj8X+pViDX8U1gSr73QEJm9WleffQl+DlIEKW2sFankCP/CJsuw2zpg7aHJ6QrWBkk2XxkqBMrEdCMvyB6om5VWgUdHkxutGpHitm5YQdOkpkHwbo+dsqf3vSSTcb81rS3JBENi8Vo7aU0V1Bukqqqs3pf6QDb97hNMZCgo7hHOkPUkiS9o0pN6MUE64PFhQeX5dGLw8GcmPHx3LCjjnaLvIQJ4dwXO0jlFZJxktOgLETwaoST6P3yYSM1OxoSDNo2e8BegZUeXyk1WgsV86RN4i7nErToqO87P81Jrgmw9F7z2l52SINysMuXg4wM2lBbQu4kihCGvz8253vGN2AUtt3rcHWBPNyebNoXjOblP7CZphS8UNGYSS2g3P5nqtCKP7jg=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW2PR2101MB1052.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(366004)(346002)(39860400002)(136003)(376002)(396003)(33430700001)(9686003)(33440700001)(64756008)(52536014)(8990500004)(6636002)(66946007)(83300400001)(66556008)(83320400001)(83280400001)(83310400001)(83290400001)(66446008)(66476007)(76116006)(5660300002)(33656002)(2906002)(6506007)(316002)(55016002)(8676002)(71200400001)(86362001)(478600001)(186003)(10290500003)(110136005)(8936002)(26005)(7696005)(82960400001)(82950400001)(921003);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: k97llJtLsLm76cTndl9xipuKekWXD1CUkGObUiS2Dd/1/tCBe2tPdBHZdEqwAIlWsur6/idu6c7/4z48HLzqDeHb6a6H1oYhBRmrn5wpTCNDZsTw2YTFpS8Y/I+h27Q7MUdhS0yqkCOBrdICRLKJi0cjA+pFRXOOO+gqLlN8Lw2UiCMXxtf9cmjckBYvKeDoXuNjmhjfr/EPsLz+2Olq0aPmieHDLHz2Ep3C3wml+c+a+xMbht+xjbrY1B3lj9/KaW4z+WQYdqz9AUWKU/XzA8g4Wq3OUNXCijD4RcS6SJJCfT/bEPk3l4dcw7nD6hOxcPdvwFZoItTyin6FRWvUJ9Tvb8bCdcE937Q0iQEB+ZT+74MLcIw916AgosDIFjONAKF1Gm2XEnmOUZlcKAXp+wBjBqtPI4zhB2w02tozjaxaFztM/w+6vnnmfkEzS3Eyv0KNqaxwJjGvMdAH2SA2XS0yWh3HPS1izLNLsLUZf+kLLj6ITR6wB5I8HpqCnFcRrSClOm+jHjy099qP64o9anCEZ1xdeWCuCs4OWnB6T7kL10LeJwdndI7zN+BY6ZfuZ86SPSjivn1Y+Vu4UpYTBRLJpLG4fsaBNxjMU+0eir+G7MxxYczRu6YjbptWV6B5RE33JolYr1Gnk7367MT7hT6hx/wzgpqovxEWnUHrURGSz3Oh0rlphLc8ID3z2R6Y4SJFVf2bR1343seyK2VCP98IxSlTHqCPgypOgtv4L5fsy3KBr2zv03WJNxzQNm9K3KkhrkcNhFWC21mnTy6b+V2YPco8OTi9kt94vaEwZpY=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1581574091-240890-5-git-send-email-shawn.lin@rock-chips.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+X-OriginatorOrg: microsoft.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: cf06d9dd-1c77-4364-0a92-08d7f2933898
+X-MS-Exchange-CrossTenant-originalarrivaltime: 07 May 2020 14:30:41.8827
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: K+fRahHVNgSMZfidDL53tY4gIAerbFndOOVfYcbyG5B0ztGfQYjssiRPHqztJ1vl20HOj77/o8/O3TL9NM7WineonSX3fdoutlwa+R3+zbo=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR21MB0830
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Feb 13, 2020 at 02:08:09PM +0800, Shawn Lin wrote:
-> From: Simon Xue <xxm@rock-chips.com>
-> 
-> Signed-off-by: Simon Xue <xxm@rock-chips.com>
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> 
+From: Wei Hu <weh@microsoft.com> Sent: Wednesday, May 6, 2020 10:03 PM
+>=20
+> In the case of kdump, the PCI device was not cleanly shut down
+> before the kdump kernel starts. This causes the initial
+> attempt of entering D0 state in the kdump kernel to fail with
+> invalid device state returned from Hyper-V host.
+> When this happens, explicitly call PCI bus exit and retry to
+> enter the D0 state.
+>=20
+> Signed-off-by: Wei Hu <weh@microsoft.com>
 > ---
-> 
-> Changes in v2:
-> - fix yaml format
-> 
->  .../devicetree/bindings/pci/rockchip-dw-pcie.yaml  | 148 +++++++++++++++++++++
->  1 file changed, 148 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
-> new file mode 100644
-> index 0000000..527c770
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
-> @@ -0,0 +1,148 @@
-> +# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
-> +%YAML 1.2
-> +---
-> +$id: http://devicetree.org/schemas/pci/rockchip-dw-pcie.yaml#
-> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+>     v2: Incorporate review comments from Michael Kelley, Dexuan Cui and
+>     Bjorn Helgaas
+>=20
+>  drivers/pci/controller/pci-hyperv.c | 40 +++++++++++++++++++++++++++--
+>  1 file changed, 38 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller=
+/pci-hyperv.c
+> index e6fac0187722..92092a47d3af 100644
+> --- a/drivers/pci/controller/pci-hyperv.c
+> +++ b/drivers/pci/controller/pci-hyperv.c
+> @@ -2739,6 +2739,8 @@ static void hv_free_config_window(struct hv_pcibus_=
+device
+> *hbus)
+>  	vmbus_free_mmio(hbus->mem_config->start, PCI_CONFIG_MMIO_LENGTH);
+>  }
+>=20
+> +static int hv_pci_bus_exit(struct hv_device *hdev, bool keep_devs);
 > +
-> +title: DesignWare based PCIe RC controller on Rockchip SoCs
+>  /**
+>   * hv_pci_enter_d0() - Bring the "bus" into the D0 power state
+>   * @hdev:	VMBus's tracking struct for this root PCI bus
+> @@ -2751,8 +2753,10 @@ static int hv_pci_enter_d0(struct hv_device *hdev)
+>  	struct pci_bus_d0_entry *d0_entry;
+>  	struct hv_pci_compl comp_pkt;
+>  	struct pci_packet *pkt;
+> +	bool retry =3D true;
+>  	int ret;
+>=20
+> +enter_d0_retry:
+>  	/*
+>  	 * Tell the host that the bus is ready to use, and moved into the
+>  	 * powered-on state.  This includes telling the host which region
+> @@ -2779,6 +2783,38 @@ static int hv_pci_enter_d0(struct hv_device *hdev)
+>  	if (ret)
+>  		goto exit;
+>=20
+> +	/*
+> +	 * In certain case (Kdump) the pci device of interest was
+> +	 * not cleanly shut down and resource is still held on host
+> +	 * side, the host could return invalid device status.
+> +	 * We need to explicitly request host to release the resource
+> +	 * and try to enter D0 again.
+> +	 */
+> +	if (comp_pkt.completion_status < 0 && retry) {
+> +		retry =3D false;
 > +
-> +maintainers:
-> +  - Shawn Lin <shawn.lin@rock-chips.com>
-> +  - Simon Xue <xxm@rock-chips.com>
+> +		dev_err(&hdev->device, "Retrying D0 Entry\n");
 > +
-> +# We need a select here so we don't match all nodes with 'snps,dw-pcie'
-> +select:
-> +  properties:
-> +    compatible:
-> +      contains:
-> +        const: rockchip,rk1808-pcie
-> +  required:
-> +    - compatible
+> +		/*
+> +		 * Hv_pci_bus_exit() calls hv_send_resource_released()
+> +		 * to free up resources of its child devices.
+> +		 * In the kdump kernel we need to set the
+> +		 * wslot_res_allocated to 255 so it scans all child
+> +		 * devices to release resources allocated in the
+> +		 * normal kernel before panic happened.
+> +		 */
+> +		hbus->wslot_res_allocated =3D 255;
 > +
-
-Need to reference pci-bus.yaml.
-
-> +properties:
-> +  compatible:
-> +    enum:
-> +      - rockchip,rk1808-pcie
-> +      - snps,dw-pcie
-
-Doesn't match the example. This says 1 string that either of the 2 
-strings.
-
+> +		ret =3D hv_pci_bus_exit(hdev, true);
 > +
-> +  reg:
-> +    maxItems: 1
-
-Example shows 2. If so, need to define here what each one is.
-
+> +		if (ret =3D=3D 0) {
+> +			kfree(pkt);
+> +			goto enter_d0_retry;
+> +		}
+> +		dev_err(&hdev->device,
+> +			"Retrying D0 failed with ret %d\n", ret);
+> +	}
 > +
-> +  clocks:
-> +    items:
-> +      - description: High speed clock for PCIe
-> +      - description: Low speed clock for PCIe
-> +      - description: AHB clock for PCIe
-> +      - description: APB clock for PCIe
-> +      - description: Auxiliary clock for PCIe
-> +
-> +  clock-names:
-> +    items:
-> +      - const: hsclk
-> +      - const: lsclk
-> +      - const: aclk
-> +      - const: pclk
-> +      - const: sclk-aux
-> +
-> +  resets:
-> +    items:
-> +      - description: PCIe niu high reset line
-> +      - description: PCIe niu low reset line
-> +      - description: PCIe grf reset line
-> +      - description: PCIe control reset line
-> +      - description: PCIe control powerup reset line
-> +      - description: PCIe control master reset line
-> +      - description: PCIe control slave reset line
-> +      - description: PCIe control dbi reset line
-> +      - description: PCIe control button reset line
-> +      - description: PCIe control power engine reset line
-> +      - description: PCIe control core reset line
-> +      - description: PCIe control non-sticky reset line
-> +      - description: PCIe control sticky reset line
-> +      - description: PCIe control power reset line
-> +      - description: PCIe niu ahb reset line
-> +      - description: PCIe niu apb reset line
-> +
-> +  reset-names:
-> +    items:
-> +      - const: niu-h
-> +      - const: niu-l
-> +      - const: grf-p
-> +      - const: ctl-p
-> +      - const: ctl-powerup
-> +      - const: ctl-mst-a
-> +      - const: ctl-slv-a
-> +      - const: ctl-dbi-a
-> +      - const: ctl-button
-> +      - const: ctl-pe
-> +      - const: ctl-core
-> +      - const: ctl-nsticky
-> +      - const: ctl-sticky
-> +      - const: ctl-pwr
-> +      - const: ctl-niu-a
-> +      - const: ctl-niu-p
-> +
-> +  rockchip,usbpciegrf:
-> +    enum:
-> +      - rockchip,usbpciegrf
-> +    description: The grf for COMBPHY configuration and state registers.
+>  	if (comp_pkt.completion_status < 0) {
+>  		dev_err(&hdev->device,
+>  			"PCI Pass-through VSP failed D0 Entry with status %x\n",
+> @@ -3185,7 +3221,7 @@ static int hv_pci_probe(struct hv_device *hdev,
+>  	return ret;
+>  }
+>=20
+> -static int hv_pci_bus_exit(struct hv_device *hdev, bool hibernating)
+> +static int hv_pci_bus_exit(struct hv_device *hdev, bool keep_devs)
+>  {
+>  	struct hv_pcibus_device *hbus =3D hv_get_drvdata(hdev);
+>  	struct {
+> @@ -3203,7 +3239,7 @@ static int hv_pci_bus_exit(struct hv_device *hdev, =
+bool
+> hibernating)
+>  	if (hdev->channel->rescind)
+>  		return 0;
+>=20
+> -	if (!hibernating) {
+> +	if (!keep_devs) {
+>  		/* Delete any children which might still exist. */
+>  		dr =3D kzalloc(sizeof(*dr), GFP_KERNEL);
+>  		if (dr && hv_pci_start_relations_work(hbus, dr))
+> --
+> 2.20.1
 
-COMBOPHY?
-
-Why isn't this part of the phy node?
-
-> +
-> +required:
-> +  - compatible
-> +  - "#address-cells"
-> +  - "#size-cells"
-> +  - reg
-> +  - clocks
-> +  - clock-names
-> +  - msi-map
-> +  - num-lanes
-> +  - phys
-> +  - phy-names
-> +  - ranges
-> +  - resets
-> +  - reset-names
-> +  - rockchip,usbpciegrf
-> +  - reset-gpios
-> +
-> +additionalProperties: false
-
-With pci-bus.yaml included, this will have to be 
-'unevaluatedProperties: false'.
-
-> +
-> +examples:
-> +  - |
-> +    pcie0: pcie@fc400000 {
-
-Unit address should be first entry in 'reg'.
-
-> +      compatible = "rockchip,rk1808-pcie", "snps,dw-pcie";
-> +      #address-cells = <3>;
-> +      #size-cells = <2>;
-> +      bus-range = <0x0 0x1f>;
-> +      reg = <0x0 0xfc000000 0x0 0x400000>,
-> +            <0x0 0xfc400000 0x0 0x10000>;
-> +      clocks = <&cru HSCLK_PCIE>, <&cru LSCLK_PCIE>,
-> +               <&cru ACLK_PCIE>, <&cru PCLK_PCIE>,
-> +               <&cru SCLK_PCIE_AUX>;
-> +      clock-names = "hsclk", "lsclk",
-> +                    "aclk", "pclk",
-> +                    "sclk-aux";
-> +      msi-map = <0x0 &its 0x0 0x1000>;
-> +      num-lanes = <2>;
-> +      phys = <&combphy PHY_TYPE_PCIE>;
-
-Not documented.
-
-> +      phy-names = "pcie-phy";
-
-Not documented. Not really needed if only 1.
-
-> +      ranges = <0x00000800 0x0 0xf8000000 0x0 0xf8000000 0x0 0x800000
-> +                0x83000000 0x0 0xf8800000 0x0 0xf8800000 0x0 0x3700000
-> +                0x81000000 0x0 0xfbf00000 0x0 0xfbf00000 0x0 0x100000>;
-> +      resets = <&cru SRST_PCIE_NIU_H>, <&cru SRST_PCIE_NIU_L>,
-> +               <&cru SRST_PCIEGRF_P>, <&cru SRST_PCIECTL_P>,
-> +               <&cru SRST_PCIECTL_POWERUP>, <&cru SRST_PCIECTL_MST_A>,
-> +               <&cru SRST_PCIECTL_SLV_A>, <&cru SRST_PCIECTL_DBI_A>,
-> +               <&cru SRST_PCIECTL_BUTTON>, <&cru SRST_PCIECTL_PE>,
-> +               <&cru SRST_PCIECTL_CORE>, <&cru SRST_PCIECTL_NSTICKY>,
-> +               <&cru SRST_PCIECTL_STICKY>, <&cru SRST_PCIECTL_PWR>,
-> +               <&cru SRST_PCIE_NIU_A>, <&cru SRST_PCIE_NIU_P>;
-> +      reset-names = "niu-h", "niu-l", "grf-p", "ctl-p",
-> +                    "ctl-powerup", "ctl-mst-a", "ctl-slv-a",
-> +                    "ctl-dbi-a", "ctl-button", "ctl-pe",
-> +                    "ctl-core", "ctl-nsticky", "ctl-sticky",
-> +                    "ctl-pwr", "ctl-niu-a", "ctl-niu-p";
-> +      rockchip,usbpciegrf = <&usb_pcie_grf>;
-> +      reset-gpios = <&gpio0 RK_PB6 GPIO_ACTIVE_HIGH>;
-> +    };
-> +
-> +...
-> -- 
-> 1.9.1
-> 
-> 
-> 
+Reviewed-by: Michael Kelley <mikelley@microsoft.com>
