@@ -7,34 +7,34 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 255D8C4724C
-	for <linux-pci@archiver.kernel.org>; Thu,  7 May 2020 20:16:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69A9EC4724C
+	for <linux-pci@archiver.kernel.org>; Thu,  7 May 2020 20:16:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 01532208CA
-	for <linux-pci@archiver.kernel.org>; Thu,  7 May 2020 20:16:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 42A9824972
+	for <linux-pci@archiver.kernel.org>; Thu,  7 May 2020 20:16:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="HqaoCa1W"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="g6WaUiIY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728468AbgEGUQC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 7 May 2020 16:16:02 -0400
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:47470 "EHLO
+        id S1728514AbgEGUQH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 7 May 2020 16:16:07 -0400
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:47600 "EHLO
         rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726320AbgEGUQB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 May 2020 16:16:01 -0400
+        by vger.kernel.org with ESMTP id S1728596AbgEGUQG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 May 2020 16:16:06 -0400
 Received: from mail-irv-17.broadcom.com (mail-irv-17.lvn.broadcom.net [10.75.242.48])
-        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id AAB2130C018;
-        Thu,  7 May 2020 13:15:23 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com AAB2130C018
+        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id 4D56130C07C;
+        Thu,  7 May 2020 13:15:29 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com 4D56130C07C
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
-        s=dkimrelay; t=1588882523;
-        bh=AlMuEa61meXpiw5wjlL0cyiH8vZu7sD/qJXFoQ+Bns4=;
+        s=dkimrelay; t=1588882529;
+        bh=oFHk9VaUvsDwZCOGkYPtno7t1fm1Qk5TvgnXILVu774=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=HqaoCa1WX8ZST6ZZ+BgC7wfj5/9nEKpmI4k/g9O/x0KUC32AGa5zim6ZCXLFsHyEK
-         5dKicYKrrY7TWhYIG2AOA3/4FCiV5xBz69bNsuZcvdLauQZinqTuNTt3vq5YDREgdw
-         ios/0Epm7ucTMtZLt0dOuxDSH9XvpGrc11JKnbL8=
+        b=g6WaUiIYt7T8JBD5hNN4dnAYffCjzYDtC1OPxx+CsAyVzyC1rKGHqKYwFYl0qwsn6
+         NqNl5BXxDUxd6qLir88ZrPxmM/j75k8dm4JA4PtuKaaynO1bw7nUXzaTet8rMSSQMv
+         VBhT1XeL7Lt4iEFSq3UgmeCiX9XH0Jr7CGA7G/KY=
 Received: from stbsrv-and-01.and.broadcom.net (stbsrv-and-01.and.broadcom.net [10.28.16.211])
-        by mail-irv-17.broadcom.com (Postfix) with ESMTP id 9CB7C14008C;
-        Thu,  7 May 2020 13:15:57 -0700 (PDT)
+        by mail-irv-17.broadcom.com (Postfix) with ESMTP id 682E5140069;
+        Thu,  7 May 2020 13:16:03 -0700 (PDT)
 From:   Jim Quinlan <james.quinlan@broadcom.com>
 To:     james.quinlan@broadcom.com
 Cc:     Jim Quinlan <james.quinlan@broadcom.com>,
@@ -44,17 +44,16 @@ Cc:     Jim Quinlan <james.quinlan@broadcom.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Florian Fainelli <f.fainelli@gmail.com>,
         bcm-kernel-feedback-list@broadcom.com (maintainer:BROADCOM BCM7XXX ARM
-        ARCHITECTURE), Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        Jeremy Linton <jeremy.linton@arm.com>,
+        ARCHITECTURE),
         linux-rpi-kernel@lists.infradead.org (moderated list:BROADCOM
         BCM2711/BCM2835 ARM ARCHITECTURE),
         linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM
         BCM2711/BCM2835 ARM ARCHITECTURE),
         linux-pci@vger.kernel.org (open list:PCI NATIVE HOST BRIDGE AND
         ENDPOINT DRIVERS), linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v3 2/4] PCI: brcmstb: Fix window register offset from 4 to 8
-Date:   Thu,  7 May 2020 16:15:41 -0400
-Message-Id: <20200507201544.43432-3-james.quinlan@broadcom.com>
+Subject: [PATCH v3 4/4] PCI: brcmstb: Disable L0s component of ASPM if requested
+Date:   Thu,  7 May 2020 16:15:43 -0400
+Message-Id: <20200507201544.43432-5-james.quinlan@broadcom.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200507201544.43432-1-james.quinlan@broadcom.com>
 References: <20200507201544.43432-1-james.quinlan@broadcom.com>
@@ -65,37 +64,59 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Jim Quinlan <jquinlan@broadcom.com>
 
-The outbound memory window registers were being referenced
-with an incorrect stride offset.  This probably wasn't noticed
-previously as there was likely only one such window employed.
+Some informal internal experiments has shown that the BrcmSTB ASPM L0s
+savings may introduce an undesirable noise signal on some customers'
+boards.  In addition, L0s was found lacking in realized power savings,
+especially relative to the L1 ASPM component.  This is BrcmSTB's
+experience and may not hold for others.  At any rate, if the
+'aspm-no-l0s' property is present L0s will be disabled.
 
 Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
 Acked-by: Florian Fainelli <f.fainelli@gmail.com>
 Acked-by: Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-
-Fixes: c0452137034b ("PCI: brcmstb: Add Broadcom STB PCIe host controller driver")
 ---
- drivers/pci/controller/pcie-brcmstb.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/pci/controller/pcie-brcmstb.c | 14 +++++++++++++-
+ 1 file changed, 13 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
-index 454917ee9241..5b0dec5971b8 100644
+index 5b0dec5971b8..73020b4ff090 100644
 --- a/drivers/pci/controller/pcie-brcmstb.c
 +++ b/drivers/pci/controller/pcie-brcmstb.c
-@@ -54,11 +54,11 @@
+@@ -41,6 +41,9 @@
+ #define PCIE_RC_CFG_PRIV1_ID_VAL3			0x043c
+ #define  PCIE_RC_CFG_PRIV1_ID_VAL3_CLASS_CODE_MASK	0xffffff
  
- #define PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LO		0x400c
- #define PCIE_MEM_WIN0_LO(win)	\
--		PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LO + ((win) * 4)
-+		PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LO + ((win) * 8)
++#define PCIE_RC_CFG_PRIV1_LINK_CAPABILITY			0x04dc
++#define  PCIE_RC_CFG_PRIV1_LINK_CAPABILITY_ASPM_SUPPORT_MASK	0xc00
++
+ #define PCIE_RC_DL_MDIO_ADDR				0x1100
+ #define PCIE_RC_DL_MDIO_WR_DATA				0x1104
+ #define PCIE_RC_DL_MDIO_RD_DATA				0x1108
+@@ -693,7 +696,7 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
+ 	int num_out_wins = 0;
+ 	u16 nlw, cls, lnksta;
+ 	int i, ret;
+-	u32 tmp;
++	u32 tmp, aspm_support;
  
- #define PCIE_MISC_CPU_2_PCIE_MEM_WIN0_HI		0x4010
- #define PCIE_MEM_WIN0_HI(win)	\
--		PCIE_MISC_CPU_2_PCIE_MEM_WIN0_HI + ((win) * 4)
-+		PCIE_MISC_CPU_2_PCIE_MEM_WIN0_HI + ((win) * 8)
+ 	/* Reset the bridge */
+ 	brcm_pcie_bridge_sw_init_set(pcie, 1);
+@@ -803,6 +806,15 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
+ 		num_out_wins++;
+ 	}
  
- #define PCIE_MISC_RC_BAR1_CONFIG_LO			0x402c
- #define  PCIE_MISC_RC_BAR1_CONFIG_LO_SIZE_MASK		0x1f
++	/* Don't advertise L0s capability if 'aspm-no-l0s' */
++	aspm_support = PCIE_LINK_STATE_L1;
++	if (!of_property_read_bool(pcie->np, "aspm-no-l0s"))
++		aspm_support |= PCIE_LINK_STATE_L0S;
++	tmp = readl(base + PCIE_RC_CFG_PRIV1_LINK_CAPABILITY);
++	u32p_replace_bits(&tmp, aspm_support,
++		PCIE_RC_CFG_PRIV1_LINK_CAPABILITY_ASPM_SUPPORT_MASK);
++	writel(tmp, base + PCIE_RC_CFG_PRIV1_LINK_CAPABILITY);
++
+ 	/*
+ 	 * For config space accesses on the RC, show the right class for
+ 	 * a PCIe-PCIe bridge (the default setting is to be EP mode).
 -- 
 2.17.1
 
