@@ -4,83 +4,88 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F12B4C38A2A
-	for <linux-pci@archiver.kernel.org>; Thu,  7 May 2020 19:44:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10635C38A2A
+	for <linux-pci@archiver.kernel.org>; Thu,  7 May 2020 19:48:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B6A5121655
-	for <linux-pci@archiver.kernel.org>; Thu,  7 May 2020 19:44:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D0383208E4
+	for <linux-pci@archiver.kernel.org>; Thu,  7 May 2020 19:48:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1588880694;
-	bh=oH3DZpPyLO/oa8fwdiVm1DYBIcosVzBKWKLtBz2Hb0c=;
+	s=default; t=1588880898;
+	bh=6Pk2yZxF4nAW4ZWLJgHEJAd6+kv16mjukBwhT1XNdfo=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=GHGreWYnWniB5evoWl6DWKShm4k9v4QK4x0TFhcGCsbRJ35ssDCDR154yshZocvJF
-	 cfT11CNg9DZaz0kkI1ygjQ3ahskMfjylLyW5TwUkVzfCXVDF5DuxpuHQYEOo5WO569
-	 wH5XhjhQ2qOSzuQEhHtFQb76rXAVGu0IjsRRKiXc=
+	b=InbBNW2d9R8xrG50Xb6wHmzn5ojkDjcGy6RQHH5Lcxa8g6K42LDPU6EICoqWlAyyE
+	 kUmqNsBVkE1THo5IMK20jb3guufeyhjmAa6PKzZx3ffujnN6JrcSd2nBVcM2q5qEeV
+	 On+ymwN46HcJy/6ZlrFrHjJ0Pz/JEjpAj1mD4urI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726367AbgEGToy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 7 May 2020 15:44:54 -0400
-Received: from mail-oo1-f67.google.com ([209.85.161.67]:46631 "EHLO
-        mail-oo1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726326AbgEGTox (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 May 2020 15:44:53 -0400
-Received: by mail-oo1-f67.google.com with SMTP id x16so1612063oop.13;
-        Thu, 07 May 2020 12:44:52 -0700 (PDT)
+        id S1726367AbgEGTsS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 7 May 2020 15:48:18 -0400
+Received: from mail-oi1-f196.google.com ([209.85.167.196]:41729 "EHLO
+        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726326AbgEGTsS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 May 2020 15:48:18 -0400
+Received: by mail-oi1-f196.google.com with SMTP id 19so6318585oiy.8
+        for <linux-pci@vger.kernel.org>; Thu, 07 May 2020 12:48:17 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to:user-agent;
-        bh=0knBIBoZa1fhrLfHhlBCmtkeQd++JrRt2MMqGHWeht4=;
-        b=Id+sZt+Q7KtKxF6wBuntet0URgMgjhgyBP9w1OBfSktNIz0ImDgQg07WQqREO4/B9u
-         zcPtgStd+1aKP3VOw/8R9g4teNp+vUsgPWtP4Gky/zw9yHaCTQlRYZtGFS/B6d9LLSo7
-         fsCI+YSk9pap17tc93wdZC41FB9+KtyhU/t30H6gbfjc0VrYeUWn5uinlN/xUl+1Vozc
-         ynYIu+ciDkeAYAVBvo2dHWNSbyrSoyc0UPoRDupvxQUV2DO1hWBQbkAQj+09mvp7Rfim
-         RUlmYeDKsgtwvxgO74sUHYMsaAky5UPlevwqW4LIgScSY5ymIa9aRR0AFtK5kYPCHykZ
-         90pQ==
-X-Gm-Message-State: AGi0PuYb8sp/xbGrxvUblmCao0LoCSr9uowNvrWRd49wE1pGB8q1iXtQ
-        K9aG1nZMzTJnuTA8s3NABg==
-X-Google-Smtp-Source: APiQypKQ9hchUvLCeIFKV8nt8CxTJKxHp3QhpkCDcIIPl6JnFmMIu3D8onuZ4Ff/MLkNAMvH/ik6eg==
-X-Received: by 2002:a4a:a54a:: with SMTP id s10mr13421411oom.73.1588880691546;
-        Thu, 07 May 2020 12:44:51 -0700 (PDT)
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=JHRZN4QXlV+VTyC/AzhlPZ69XG/vCfyxvZQTQirVX+E=;
+        b=gH9B0eEGpZHfRm5tWfUjNuRf9jtAEIVCe0xcWQppqiiucUwRB3FptwuHkf2Wmcr93Y
+         Fx49Lm7+FDl4JHRyruQ9l3h7UpacrA3TffhlXstD0HTKmqH+LqUiWzqapF1UQOTkdkaY
+         y+nrE60NNOCbI2crWHmDcr1dteOhrrcSSTs5IUAe/v1wpj5Pc0DtgHHKJ46cyE+tHTl0
+         1O7VR+eeddSH2ryy73ejww2Fm6jOnrIOgpX0Axg6QPnz+vmLF6WwN/oxBs4yTmANNc06
+         wZrG0hgmhcOmvG+dxxeQlaJELnhfioTvo7N9zKvlIMpz8zyWOo2K1rDeh0TT6Lf0ZhA2
+         PkZw==
+X-Gm-Message-State: AGi0PuaUqM9Yk9coaoO6dCtJy3oT+FuLhALZHWqonvmuc5hUFCrciF7V
+        dYX8x7ywqIgw+H3StILw2g==
+X-Google-Smtp-Source: APiQypILJLNc50XQ5VRltSyZuU/r8YcWYOnXY7wrfzXiXdXAghGO/XkEOBAVXJI72WGG0sjssrVdxQ==
+X-Received: by 2002:aca:5358:: with SMTP id h85mr7805471oib.42.1588880896928;
+        Thu, 07 May 2020 12:48:16 -0700 (PDT)
 Received: from rob-hp-laptop (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.gmail.com with ESMTPSA id t186sm1646722oif.13.2020.05.07.12.44.50
+        by smtp.gmail.com with ESMTPSA id z24sm1555927otq.75.2020.05.07.12.48.16
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 May 2020 12:44:50 -0700 (PDT)
-Received: (nullmailer pid 26367 invoked by uid 1000);
-        Thu, 07 May 2020 19:44:49 -0000
-Date:   Thu, 7 May 2020 14:44:49 -0500
+        Thu, 07 May 2020 12:48:16 -0700 (PDT)
+Received: (nullmailer pid 32173 invoked by uid 1000);
+        Thu, 07 May 2020 19:48:15 -0000
+Date:   Thu, 7 May 2020 14:48:15 -0500
 From:   Rob Herring <robh@kernel.org>
-To:     Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>
-Cc:     Thierry Reding <thierry.reding@gmail.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Hunter <jonathanh@nvidia.com>,
-        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: tegra: Fix reporting GPIO error value
-Message-ID: <20200507194449.GA26252@bogus>
-References: <20200414102512.27506-1-pali@kernel.org>
+To:     Jon Derrick <jonathan.derrick@intel.com>
+Cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Russell King <rmk+kernel@armlinux.org.uk>,
+        Jon Derrick <jonathan.derrick@intel.com>
+Subject: Re: [PATCH 1/5] PCI: pci-bridge-emul: Fix PCIe bit conflicts
+Message-ID: <20200507194815.GA32105@bogus>
+References: <20200414203005.5166-1-jonathan.derrick@intel.com>
+ <20200414203005.5166-2-jonathan.derrick@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20200414102512.27506-1-pali@kernel.org>
+In-Reply-To: <20200414203005.5166-2-jonathan.derrick@intel.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, 14 Apr 2020 12:25:12 +0200, =?UTF-8?q?Pali=20Roh=C3=A1r?= wrote:
-> Error code is stored in rp->reset_gpio and not in err variable.
+On Tue, 14 Apr 2020 16:30:01 -0400, Jon Derrick wrote:
+> This patch fixes two bit conflicts in the pci-bridge-emul driver:
 > 
-> Signed-off-by: Pali Rohár <pali@kernel.org>
+> 1. Bit 3 of Device Status (19 of Device Control) is marked as both
+>    Write-1-to-Clear and Read-Only. It should be Write-1-to-Clear.
+>    The Read-Only and Reserved bitmasks are shifted by 1 bit due to this
+>    error.
+> 
+> 2. Bit 12 of Slot Control is marked as both Read-Write and Reserved.
+>    It should be Read-Write.
+> 
+> Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
 > ---
->  drivers/pci/controller/pci-tegra.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+>  drivers/pci/pci-bridge-emul.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
 > 
 
 Acked-by: Rob Herring <robh@kernel.org>
