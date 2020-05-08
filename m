@@ -2,107 +2,157 @@ Return-Path: <SRS0=2kU9=6W=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50247C47247
-	for <linux-pci@archiver.kernel.org>; Fri,  8 May 2020 13:07:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2337C38A2A
+	for <linux-pci@archiver.kernel.org>; Fri,  8 May 2020 13:12:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3022F24970
-	for <linux-pci@archiver.kernel.org>; Fri,  8 May 2020 13:07:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A1D93249C3
+	for <linux-pci@archiver.kernel.org>; Fri,  8 May 2020 13:12:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="TqL3Pzp7"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="sqIriFNW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727882AbgEHNHa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 8 May 2020 09:07:30 -0400
-Received: from lelv0142.ext.ti.com ([198.47.23.249]:39136 "EHLO
-        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728303AbgEHNHG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 May 2020 09:07:06 -0400
-Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 048D6oHY082815;
-        Fri, 8 May 2020 08:06:50 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1588943210;
-        bh=7TFi8DenwabYdupg92PMqRYeyZT1ttnchvOUlGfcwpc=;
-        h=From:To:CC:Subject:Date;
-        b=TqL3Pzp733fAQrOCIkHz80JSjfKlDiEM2UFYAzUyw3GGabhU9P2Gm4C7KS/giVKuo
-         u29bGztq86zQOohltHNcW/FbJr2dKt7knj3L8yg5owuuj2URSasgEVXdu2eSSX52YS
-         SlACno9Jma6W7hZhBnfHcspidkek4id/gYuveUMM=
-Received: from DFLE103.ent.ti.com (dfle103.ent.ti.com [10.64.6.24])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id 048D6oGH000444;
-        Fri, 8 May 2020 08:06:50 -0500
-Received: from DFLE100.ent.ti.com (10.64.6.21) by DFLE103.ent.ti.com
- (10.64.6.24) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Fri, 8 May
- 2020 08:06:50 -0500
-Received: from fllv0039.itg.ti.com (10.64.41.19) by DFLE100.ent.ti.com
- (10.64.6.21) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
- Frontend Transport; Fri, 8 May 2020 08:06:50 -0500
-Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by fllv0039.itg.ti.com (8.15.2/8.15.2) with ESMTP id 048D6kYk018673;
-        Fri, 8 May 2020 08:06:47 -0500
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
+        id S1729526AbgEHNLz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 8 May 2020 09:11:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35788 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1730192AbgEHNLx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 May 2020 09:11:53 -0400
+Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C16E8C05BD43;
+        Fri,  8 May 2020 06:11:52 -0700 (PDT)
+Received: by mail-wr1-x442.google.com with SMTP id w7so1761245wre.13;
+        Fri, 08 May 2020 06:11:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=m6PwKC0GGKuK1AQCcfQJuTFB4k9S8lgpVMeQgt9tC7M=;
+        b=sqIriFNWfo+C01cQSiy2PlZsONvClgfMh/XyGoUm/jLV/eavxNsd/+2a5uGsdcB44r
+         08CaTwxdgLKC2JffT68IPYyTue5HyS9eH7ikLBpla/57s3BTJ+4xsSdXN4lB3na5eevA
+         CU52bAJODnMyBLF4UKg3SNbnLnbTZ5SKthIznITkqTJXinHtcLkbRNX8JReg1QaupdQV
+         cDrc6R8rX2Vhblj5n5irkd+lIEr+EzDpTuCZr0XiosydNi7WpW6h0IwUd6FVtjb21Pio
+         4DCv5Y4bL+ZpYojiw9dEDJSTyH/Fp/ehE9FQ9AlEMv3hxGbM+I53QvUWJ1w+FrKvEuyX
+         0eaQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=m6PwKC0GGKuK1AQCcfQJuTFB4k9S8lgpVMeQgt9tC7M=;
+        b=mb/gXF7O61HCOv4YtEn3mhuGnkbDvQOs7KaPX0JineUjtEeer+ZLz6ejbAgVcSX8D6
+         teDefBB4Hu1r7tAWxU4oXTjzsYIMYkTioOeA/S5RT7CD7I+89yssEblEW0X5lqi1mJhv
+         FJlT7k7Z2c1yZQXl0JMCSu17fAtQ+fwsfvRm8DdiUNNuqh9LCrU8KS2DMmYAYLCxzJ+U
+         nICeNwndIX9HK0/Kc/4dstNYTYioTZJb7c+5d6kxqUVol9VwJz/DW8xkGUYkly9w739Q
+         TblMDIA5QnjAvhoVWAkAmjLyKHkS6Jx3Lg4qJHS3gakkgvA8ZOTcle4DHMmVwSWo84xS
+         KZZQ==
+X-Gm-Message-State: AGi0PuYebcIvlEKFcb082/srDUGTRoxTHokwnjUmvuD9Mdt8Rf0dGHR7
+        BQ0aDVrL0WX86h7qjuMj1hE2dQ8OVMNUu0sM
+X-Google-Smtp-Source: APiQypIDsTyVBV8sQuS/K/6cCNcKKifc+7wFf6IB98XX1bm8I0BIRm6w640Gs6sWGa5I5em0HqkaiA==
+X-Received: by 2002:adf:efcc:: with SMTP id i12mr2830699wrp.325.1588943511317;
+        Fri, 08 May 2020 06:11:51 -0700 (PDT)
+Received: from [10.8.0.6] ([5.2.67.190])
+        by smtp.gmail.com with ESMTPSA id 88sm3139115wrq.77.2020.05.08.06.11.49
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 08 May 2020 06:11:50 -0700 (PDT)
+Subject: Re: [PATCH v4 00/12] PCI: aardvark: Fix support for Turris MOX and
+ Compex wifi cards
+To:     =?UTF-8?Q?Pali_Roh=c3=a1r?= <pali@kernel.org>,
+        Jason Cooper <jason@lakedaemon.net>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
         Rob Herring <robh+dt@kernel.org>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Tom Joseph <tjoseph@cadence.com>
-CC:     <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>, <kishon@ti.com>
-Subject: [PATCH v3 0/4] PCI: cadence: Deprecate inbound/outbound specific bindings
-Date:   Fri, 8 May 2020 18:36:42 +0530
-Message-ID: <20200508130646.23939-1-kishon@ti.com>
-X-Mailer: git-send-email 2.17.1
+        Andrew Murray <amurray@thegoodpenguin.co.uk>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Remi Pommarel <repk@triplefau.lt>,
+        =?UTF-8?Q?Marek_Beh=c3=ban?= <marek.behun@nic.cz>,
+        Xogium <contact@xogium.me>
+Cc:     devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+References: <20200430080625.26070-1-pali@kernel.org>
+From:   Tomasz Maciej Nowak <tmn505@gmail.com>
+Message-ID: <6ff6d161-adba-9e5c-5a4a-1bfa49de0fc4@gmail.com>
+Date:   Fri, 8 May 2020 15:11:49 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.7.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+In-Reply-To: <20200430080625.26070-1-pali@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This series is a result of comments given by Rob Herring @ [1].
-Patch series changes the DT bindings and makes the corresponding driver
-changes.
+W dniu 30.04.2020 o 10:06, Pali Rohár pisze:
+> Hello,
+> 
+> this is the fourth version of the patch series for Armada 3720 PCIe
+> controller (aardvark). It's main purpose is to fix some bugs regarding
+> buggy ath10k cards, but we also found out some suspicious stuff about
+> the driver and the SOC itself, which we try to address.
+> 
+> Patches are available also in my git branch pci-aardvark:
+> https://git.kernel.org/pub/scm/linux/kernel/git/pali/linux.git/log/?h=pci-aardvark
+> 
+> Changes since v3:
+> - do not change return value of of_pci_get_max_link_speed() function
+> - mark zero 'max-link-speed' as invalid
+> - silently use gen3 speed when 'max-link-speed' as invalid
+> 
+> Changes since v2:
+> - move PCIe max-link-speed property to armada-37xx.dtsi
+> - replace custom macros by standard linux/pci_regs.h macros
+> - increase PERST delay to 10ms (needed for initialized Compex WLE900VX)
+> - disable link training before PERST (needed for Compex WLE900VX)
+> - change of_pci_get_max_link_speed() function to signal -ENOENT
+> - handle errors from of_pci_get_max_link_speed() function
+> - updated comments, commit titles and messages
+> 
+> Changes since v1:
+> - commit titles and messages were reviewed and some of them were rewritten
+> - patches 1 and 5 from v1 which touch PCIe speed configuration were
+>   reworked into one patch
+> - patch 2 from v1 was removed, it is not needed anymore
+> - patch 7 from v1 now touches the device tree of armada-3720-db
+> - a patch was added that tries to enable PCIe PHY via generic-phy API
+>   (if a phandle to the PHY is found in the device tree)
+> - a patch describing the new PCIe node DT properties was added
+> - a patch was added that moves the PHY phandle from board device trees
+>   to armada-37xx.dtsi
+> 
+> Marek and Pali
+> 
+> Marek Behún (5):
+>   PCI: aardvark: Improve link training
+>   PCI: aardvark: Add PHY support
+>   dt-bindings: PCI: aardvark: Describe new properties
+>   arm64: dts: marvell: armada-37xx: Set pcie_reset_pin to gpio function
+>   arm64: dts: marvell: armada-37xx: Move PCIe comphy handle property
+> 
+> Pali Rohár (7):
+>   PCI: aardvark: Train link immediately after enabling training
+>   PCI: aardvark: Don't blindly enable ASPM L0s and don't write to
+>     read-only register
+>   PCI: of: Zero max-link-speed value is invalid
+>   PCI: aardvark: Issue PERST via GPIO
+>   PCI: aardvark: Add FIXME comment for PCIE_CORE_CMD_STATUS_REG access
+>   PCI: aardvark: Replace custom macros by standard linux/pci_regs.h
+>     macros
+>   arm64: dts: marvell: armada-37xx: Move PCIe max-link-speed property
 
-Changes from v2:
-1) Changed the order of patches (no solid reason. Just save some
-rebasing effort for me)
-2) Added Acked-by Tom and Rob except for the dma-ranges patch
-3) Re-worked dma-ranges patch for it do decode multiple dma-ranges
-   and configure BAR0, BAR1 and NO_BAR instead of just NO_BAR [2].
+Hi.
+The PCI interface seems to work fine as in the first series, so
 
-Changes from v1:
-1) Added Reviewed-by: Rob Herring <robh@kernel.org> for dt-binding patch
-2) Fixed nitpick comments from Bjorn Helgaas
-3) Added a patch to read 32-bit Vendor ID/Device ID property from DT
-
-[1] -> http://lore.kernel.org/r/20200219202700.GA21908@bogus
-[2] -> http://lore.kernel.org/r/eb1ffcb3-264f-5174-1f25-b5b2d3269840@ti.com
-
-Kishon Vijay Abraham I (4):
-  dt-bindings: PCI: cadence: Deprecate inbound/outbound specific
-    bindings
-  PCI: cadence: Remove "cdns,max-outbound-regions" DT property
-  PCI: cadence: Fix to read 32-bit Vendor ID/Device ID property from DT
-  PCI: cadence: Use "dma-ranges" instead of "cdns,no-bar-match-nbits"
-    property
-
- .../bindings/pci/cdns,cdns-pcie-ep.yaml       |   2 +-
- .../bindings/pci/cdns,cdns-pcie-host.yaml     |   3 +-
- .../devicetree/bindings/pci/cdns-pcie-ep.yaml |  25 +++
- .../bindings/pci/cdns-pcie-host.yaml          |  10 ++
- .../devicetree/bindings/pci/cdns-pcie.yaml    |   8 -
- .../controller/cadence/pcie-cadence-host.c    | 151 +++++++++++++++---
- drivers/pci/controller/cadence/pcie-cadence.h |  23 ++-
- 7 files changed, 182 insertions(+), 40 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/cdns-pcie-ep.yaml
+Tested-by: Tomasz Maciej Nowak <tmn505@gmail.com>
 
 -- 
-2.17.1
-
+TMN
