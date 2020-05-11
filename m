@@ -2,95 +2,115 @@ Return-Path: <SRS0=Mx90=6Z=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69676C54E8D
-	for <linux-pci@archiver.kernel.org>; Mon, 11 May 2020 18:27:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33FCDC47255
+	for <linux-pci@archiver.kernel.org>; Mon, 11 May 2020 19:03:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4BDCD20720
-	for <linux-pci@archiver.kernel.org>; Mon, 11 May 2020 18:27:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1589221641;
-	bh=fHt6NotIDbjyuRjKWVZLSLEFQGGAmUaBGRfmc2CnhE8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=Z1gBULhu680pzVBACAD2iJbLZYXi7eMrQfkyNDMgNJjNmc2C9NjSTdvxqAyAtRg72
-	 TFl5T7GJJaELZVdwjmJSzsgnMPVYxoRdOUOaf1JTOKcF8NPFoehmqnPFymQS8UTZ4K
-	 zzb9NgMljx1w0ODHUOd2kB/HUg4WDzM92/Qs9hdE=
+	by mail.kernel.org (Postfix) with ESMTP id 1D20320675
+	for <linux-pci@archiver.kernel.org>; Mon, 11 May 2020 19:03:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731111AbgEKS1U (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 May 2020 14:27:20 -0400
-Received: from mail-ot1-f66.google.com ([209.85.210.66]:36587 "EHLO
-        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731027AbgEKS1U (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 May 2020 14:27:20 -0400
-Received: by mail-ot1-f66.google.com with SMTP id t3so8365126otp.3;
-        Mon, 11 May 2020 11:27:18 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to:user-agent;
-        bh=CIBx1VjiCxtA0AYvNLauEJB36ppdEW439Ed+xOZ8GOI=;
-        b=Gb69kHsweaCXKzYjnW2W6Q+BQD4RVpcEAPXGeoP+f5KOpmQ9HtjdX6pfOZkoXIzKwn
-         vQM3I6R76KDGvawrrUlgjet5msI4sTRjaYFgpWdmP8cuH1ANRwdAMMZnsv1zX+G1cIN5
-         lM1fdZ92ax9yw++6a3ZATi56Sk1aMUQKrMWoS2k/uFfLu/y4msBElNF+wPVybfke7Uef
-         NS8dYwW6/XqZLuTAO9k9kdNZW0jAmcP5Mlup96LwrAg21sFBjD3hqhNICrqH3ehNKF7G
-         uPCJSxgTJC2YKkzXTTLsXEFBYoAUlTGQoxte31A06SqzyTF29i9YMxNfvQYlYrgWhEbQ
-         DEWw==
-X-Gm-Message-State: AGi0PuaR/hquCl98HBO0pfZl8e9PTjOMMH1+DN4q3NRGIiDwpNdYuchE
-        tPR4wXXteoN09fIEKZ4Ltg==
-X-Google-Smtp-Source: APiQypIS1s3puareZxlhadJ1/IfeGfhmFMCEV1g0UAvrkDW9+LMJYWL0VuUAU8L4Cp1evliUtjvKFQ==
-X-Received: by 2002:a05:6830:2158:: with SMTP id r24mr14045090otd.65.1589221638203;
-        Mon, 11 May 2020 11:27:18 -0700 (PDT)
-Received: from rob-hp-laptop (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.gmail.com with ESMTPSA id f73sm2839119otf.53.2020.05.11.11.27.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 11 May 2020 11:27:17 -0700 (PDT)
-Received: (nullmailer pid 20786 invoked by uid 1000);
-        Mon, 11 May 2020 18:24:23 -0000
-Date:   Mon, 11 May 2020 13:24:23 -0500
-From:   Rob Herring <robh@kernel.org>
-To:     Marek =?iso-8859-1?Q?Beh=FAn?= <marek.behun@nic.cz>
-Cc:     Jason Cooper <jason@lakedaemon.net>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Remi Pommarel <repk@triplefau.lt>, Xogium <contact@xogium.me>,
-        Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-        Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>,
+        id S1730974AbgEKTDv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 May 2020 15:03:51 -0400
+Received: from mga12.intel.com ([192.55.52.136]:11261 "EHLO mga12.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728613AbgEKTDv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 11 May 2020 15:03:51 -0400
+IronPort-SDR: OQLI/1yQsIY/Vcrv6DGU7Tg050zo5zEPdY/Ezd7h5OFy5F4nBa6L4p3z1soPM/YrjWKal9QLQ6
+ Gmly6pxUE7wA==
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 May 2020 12:03:47 -0700
+IronPort-SDR: P0puikl7IKLENmxHcD9tPx2nAPmyP9LaL8lPpxJkIVNXit7NhCytw3wRgL6/wJ5dbXk16ombmH
+ LoHM5qE1CFVw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.73,381,1583222400"; 
+   d="scan'208";a="306261928"
+Received: from otc-nc-03.jf.intel.com (HELO otc-nc-03) ([10.54.39.25])
+  by FMSMGA003.fm.intel.com with ESMTP; 11 May 2020 12:03:46 -0700
+Date:   Mon, 11 May 2020 12:03:41 -0700
+From:   "Raj, Ashok" <ashok.raj@intel.com>
+To:     Thomas Gleixner <tglx@linutronix.de>
+Cc:     "Raj, Ashok" <ashok.raj@linux.intel.com>,
+        Evan Green <evgreen@chromium.org>,
+        Mathias Nyman <mathias.nyman@linux.intel.com>, x86@kernel.org,
+        linux-pci <linux-pci@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Tomasz Maciej Nowak <tmn505@gmail.com>,
-        Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 7/9] dt-bindings: PCI: aardvark: describe new
- properties
-Message-ID: <20200511182423.GA20142@bogus>
-References: <20200421111701.17088-1-marek.behun@nic.cz>
- <20200421111701.17088-8-marek.behun@nic.cz>
+        "Ghorai, Sukumar" <sukumar.ghorai@intel.com>,
+        "Amara, Madhusudanarao" <madhusudanarao.amara@intel.com>,
+        "Nandamuri, Srikanth" <srikanth.nandamuri@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>
+Subject: Re: MSI interrupt for xhci still lost on 5.6-rc6 after cpu hotplug
+Message-ID: <20200511190341.GA95413@otc-nc-03>
+References: <20200508005528.GB61703@otc-nc-03>
+ <87368almbm.fsf@nanos.tec.linutronix.de>
+ <20200508160958.GA19631@otc-nc-03>
+ <87h7wqjrsk.fsf@nanos.tec.linutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20200421111701.17088-8-marek.behun@nic.cz>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <87h7wqjrsk.fsf@nanos.tec.linutronix.de>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, 21 Apr 2020 13:16:59 +0200, Marek Behún wrote:
-> Document the possibility to reference a PHY and reset-gpios and to set
-> max-link-speed property.
-> 
-> Signed-off-by: Marek Behún <marek.behun@nic.cz>
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Cc: devicetree@vger.kernel.org
-> ---
->  Documentation/devicetree/bindings/pci/aardvark-pci.txt | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
+Hi Thomas, 
 
-Reviewed-by: Rob Herring <robh@kernel.org>
+On Fri, May 08, 2020 at 06:49:15PM +0200, Thomas Gleixner wrote:
+> Ashok,
+> 
+> "Raj, Ashok" <ashok.raj@intel.com> writes:
+> > With legacy MSI we can have these races and kernel is trying to do the
+> > song and dance, but we see this happening even when IR is turned on.
+> > Which is perplexing. I think when we have IR, once we do the change vector 
+> > and flush the interrupt entry cache, if there was an outstandng one in 
+> > flight it should be in IRR. Possibly should be clearned up by the
+> > send_cleanup_vector() i suppose.
+> 
+> Ouch. With IR this really should never happen and yes the old vector
+> will catch one which was raised just before the migration disabled the
+> IR entry. During the change nothing can go wrong because the entry is
+> disabled and only reenabled after it's flushed which will send a pending
+> one to the new vector.
+
+with IR, I'm not sure if we actually mask the interrupt except when
+its a Posted Interrupt. 
+
+We do an atomic update to IRTE, with cmpxchg_double
+
+	ret = cmpxchg_double(&irte->low, &irte->high,
+			     irte->low, irte->high,
+			     irte_modified->low, irte_modified->high);
+
+followed by flushing the interrupt entry cache. After which any 
+old ones in flight before the flush should be sittig in IRR
+on the outgoing cpu.
+
+The send_cleanup_vector() sends IPI to the apic_id->old_cpu which 
+would be the cpu we are running on correct? and this is a self_ipi
+to IRQ_MOVE_CLEANUP_VECTOR.
+
+smp_irq_move_cleanup_interrupt() seems to check IRR with 
+apicid_prev_vector()
+
+	irr = apic_read(APIC_IRR + (vector / 32 * 0x10));
+	if (irr & (1U << (vector % 32))) {
+		apic->send_IPI_self(IRQ_MOVE_CLEANUP_VECTOR);
+		continue;
+	}
+
+And this would allow any pending IRR bits in the outgoing CPU to 
+call the relevant ISR's before draining all vectors on the outgoing
+CPU. 
+
+Does it sound right?
+
+I couldn't quite pin down how the device ISR's are hooked up through
+this send_cleanup_vector() and what follows.
+
