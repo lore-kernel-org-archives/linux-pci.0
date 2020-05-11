@@ -2,138 +2,183 @@ Return-Path: <SRS0=Mx90=6Z=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA5A4C54E8F
-	for <linux-pci@archiver.kernel.org>; Mon, 11 May 2020 16:37:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5ECC2C54E8D
+	for <linux-pci@archiver.kernel.org>; Mon, 11 May 2020 17:26:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C46CC2075E
-	for <linux-pci@archiver.kernel.org>; Mon, 11 May 2020 16:37:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3899F20720
+	for <linux-pci@archiver.kernel.org>; Mon, 11 May 2020 17:26:51 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=sifive.com header.i=@sifive.com header.b="KJnTxBod"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729120AbgEKQha (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 May 2020 12:37:30 -0400
-Received: from mga04.intel.com ([192.55.52.120]:7552 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729698AbgEKQh3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 11 May 2020 12:37:29 -0400
-IronPort-SDR: QUj+7FgeYFsz6aEAZHQVW84dgP4gDyYsiGIHLXo+gDVGD8JkF031fP1MAjW1OIRBGMuVL1i0Up
- 8XlmEkEIwY5g==
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 May 2020 09:37:28 -0700
-IronPort-SDR: AjvYVvB9La++9a2R2gcnWKbsEHjDd/7/gsRzDTHZyja36WJ0IKDRHGMiy842/RkMHwxmswkieC
- ftoNd3wRPc1Q==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.73,380,1583222400"; 
-   d="scan'208";a="286334385"
-Received: from unknown (HELO localhost.lm.intel.com) ([10.232.116.74])
-  by fmsmga004.fm.intel.com with ESMTP; 11 May 2020 09:37:09 -0700
-From:   Jon Derrick <jonathan.derrick@intel.com>
-To:     <linux-pci@vger.kernel.org>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Russell King <rmk+kernel@armlinux.org.uk>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Christoph Hellwig <hch@lst.de>, Rob Herring <robh@kernel.org>,
-        Jon Derrick <jonathan.derrick@intel.com>
-Subject: [PATCH v2 3/4] PCI: pci-bridge-emul: Update for PCIe 5.0 r1.0
-Date:   Mon, 11 May 2020 12:21:16 -0400
-Message-Id: <20200511162117.6674-4-jonathan.derrick@intel.com>
-X-Mailer: git-send-email 2.18.1
-In-Reply-To: <20200511162117.6674-1-jonathan.derrick@intel.com>
-References: <20200511162117.6674-1-jonathan.derrick@intel.com>
+        id S1730841AbgEKR0r (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 May 2020 13:26:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38964 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730829AbgEKR0r (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 May 2020 13:26:47 -0400
+Received: from mail-lj1-x244.google.com (mail-lj1-x244.google.com [IPv6:2a00:1450:4864:20::244])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0D89C061A0E
+        for <linux-pci@vger.kernel.org>; Mon, 11 May 2020 10:26:46 -0700 (PDT)
+Received: by mail-lj1-x244.google.com with SMTP id e25so10433187ljg.5
+        for <linux-pci@vger.kernel.org>; Mon, 11 May 2020 10:26:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=sifive.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=2syOPhIUuk5+IIGwPWtaFvYhD+RO13CJnl5VVYLO2dc=;
+        b=KJnTxBodECfNSWC+eXV6D9gkJ/P9LWcTJrXC4Ghx2Vn9hyQwnoY7rP9e/Qnv64vGu+
+         ShEE2LP25xfnfLorU/NMyCqQarLGS419o5kBE3SwFxQs98FNZzckVPVqSSnApRO5k/YO
+         F7kuYSn8gjSSEiC7F9lvthwHeRQoIqLWSslcr9J1OVKxajVJmhOYy0MgcdAyIxT96kFY
+         O00pFB6HFyU8tmRMpmL7HTwei/rqW0eocZTDHnXeyZwi/ifgD1HA7UQCk7hJr8yrZ+d7
+         kQvhk7wrn6lfmCpUvmtB1JJsBA6vb9O0R+mz/B2OpP8dHg8rLhiWx2YfvdG1CaBBsptw
+         cFZQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=2syOPhIUuk5+IIGwPWtaFvYhD+RO13CJnl5VVYLO2dc=;
+        b=FEIJ7eDKHr97U/Mzl77Pj7SYQJTGdNfmsmMNYiI+cxe7ehqKW8H3bbw7h8KZ/YQecv
+         0xBdc/HwRI5t4JulpEPDEEGXaG1USHn0TM8yV8LXklicoRURBDMUKhW0IodbFf/QFaSg
+         b1zV/7TIjdx6TxDERBnqGQLIDPAGzrsMeNc7Bb2tLPLM9tfFx+NF5NTz+Vbn1JqdVoKt
+         XTsfkY0iDmf8RFLDi21dC0cSgYOMrPpHYPhEh08LAw+vMYNMLmelkVCfkNdutd+j6n/K
+         QuzC0ue5flNnVc5fxOR/uX7i1CKs8zntwjx6nQQxQhXLloF5KQTUvpN9KVtmo9WlEBJP
+         zS/Q==
+X-Gm-Message-State: AOAM5300CTK7soh8ROwFmsVzGB9IOFaxvsEAdKE6kFFxSghj90xT9BV0
+        iNGQ6/Ot/S9FILxqOUiaMd12yT26Xk52ZMqeTNIyJg==
+X-Google-Smtp-Source: ABdhPJzLWh2c6HKanzjF35gvufPT/AenACZyvySv0aUIe5AQ4TxUG2/GcC/bY0xcWzmTE/GXX51eHW/7Q84P+RgSIZY=
+X-Received: by 2002:a2e:b52a:: with SMTP id z10mr237472ljm.200.1589218005149;
+ Mon, 11 May 2020 10:26:45 -0700 (PDT)
+MIME-Version: 1.0
+References: <1588350008-8143-1-git-send-email-alan.mikhak@sifive.com> <20200507214234.GA5449@bogus>
+In-Reply-To: <20200507214234.GA5449@bogus>
+From:   Alan Mikhak <alan.mikhak@sifive.com>
+Date:   Mon, 11 May 2020 10:26:33 -0700
+Message-ID: <CABEDWGygtfK0-dd7VUKH2K1FWy8KweG8o7bRjNFQAXfWHkT8fA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: endpoint: functions/pci-epf-test: Enable picking DMA
+ channel by name
+To:     Rob Herring <robh@kernel.org>
+Cc:     linux-pci <linux-pci@vger.kernel.org>,
+        linux-kernel@vger.kernel.org,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        lorenzo.pieralisi@arm.com, Bjorn Helgaas <bhelgaas@google.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>, sebott@linux.ibm.com,
+        efremov@linux.com, vidyas@nvidia.com,
+        Paul Walmsley <paul.walmsley@sifive.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add missing bits from PCIe 4.0 and updates for PCIe 5.0 r1.0.
+On Thu, May 7, 2020 at 2:42 PM Rob Herring <robh@kernel.org> wrote:
+>
+> On Fri, May 01, 2020 at 09:20:08AM -0700, Alan Mikhak wrote:
+> > From: Alan Mikhak <alan.mikhak@sifive.com>
+> >
+> > Modify pci_epf_test_init_dma_chan() to call dma_request_channel() with a
+> > filter function to pick DMA channel by name, if desired.
+> >
+> > Add a new filter function pci_epf_test_pick_dma_chan() which takes a name
+> > string as an optional parameter. If desired name is specified, the filter
+> > function checks the name of each DMA channel candidate against the desired
+> > name. If no match, the filter function rejects the candidate channel.
+> > Otherwise, the candidate channel is accepted. If optional name parameter
+> > is null or an empty string, filter function picks the first DMA channel
+> > candidate, thereby preserving the existing behavior of pci-epf-test.
+> >
+> > Currently, pci-epf-test picks the first suitable DMA channel. Adding a
+> > filter function enables a developer to modify the optional parameter
+> > during debugging by providing the name of a desired DMA channel. This is
+> > useful during debugging because it allows different DMA channels to be
+> > exercised.
+> >
+> > Adding a filter function also takes one step toward modifying pcitest to
+> > allow the user to choose a DMA channel by providing a name string at the
+> > command line when issuing the -d parameter for DMA transfers.
+>
+> This mostly looks fine, but needs to be part of a series giving it a
+> user.
 
-PCIe 4.0:
-Device Status bit 6 - W1C - Emergency Power Reduction Detected
-Link Control bits 15:14 - RW - DRS Signaling Control
-Slot Control bit 13 - RW - Auto Slow Power Limit Disable
+Thanks Rob for your comments.
 
-PCIe 5.0:
-Slot Control bit 14 - RW - In-Band PD Disable
+I do have other changes in mind that build on this patch to give this
+filter function a user other than its current caller that is passing a
+NULL pointer as the filter parameter. I can hold it back until then.
+However, those changes are more involved and may take longer to implement
+and review. In the meantime, maybe this can be accepted independently as
+an interim measure to aid debugging during development. If this patch were
+to be applied to the codebase, it becomes much simpler to manually edit
+the code during development and replace the NULL with a string such as
+"dma0chan1" until a command line option becomes available.
 
-Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
----
- drivers/pci/pci-bridge-emul.c | 31 ++++++++++++++++---------------
- 1 file changed, 16 insertions(+), 15 deletions(-)
+This patch is also not necessarily related to my other patch about
+supporting slave dma transfers. Even when working on machines that just
+have platform dma channels and no slave dma channels, I experience the
+same limitation where I cannot exercise any channel other than the one
+picked by default.
 
-diff --git a/drivers/pci/pci-bridge-emul.c b/drivers/pci/pci-bridge-emul.c
-index c00c30ffb198..6b1949995dee 100644
---- a/drivers/pci/pci-bridge-emul.c
-+++ b/drivers/pci/pci-bridge-emul.c
-@@ -181,12 +181,12 @@ static const struct pci_bridge_reg_behavior pcie_cap_regs_behavior[] = {
- 		.rw = GENMASK(15, 0),
- 
- 		/*
--		 * Device status register has 4 bits W1C, then 2 bits
--		 * RO, the rest is reserved
-+		 * Device status register has bits 6 and [3:0] W1C, [5:4] RO,
-+		 * the rest is reserved
- 		 */
--		.w1c = GENMASK(19, 16),
--		.ro = GENMASK(21, 20),
--		.rsvd = GENMASK(31, 22),
-+		.w1c = (BIT(6) | GENMASK(3, 0)) << 16,
-+		.ro = GENMASK(5, 4) << 16,
-+		.rsvd = GENMASK(15, 7) << 16,
- 	},
- 
- 	[PCI_EXP_LNKCAP / 4] = {
-@@ -197,15 +197,16 @@ static const struct pci_bridge_reg_behavior pcie_cap_regs_behavior[] = {
- 
- 	[PCI_EXP_LNKCTL / 4] = {
- 		/*
--		 * Link control has bits [1:0] and [11:3] RW, the
--		 * other bits are reserved.
--		 * Link status has bits [13:0] RO, and bits [14:15]
-+		 * Link control has bits [15:14], [11:3] and [1:0] RW, the
-+		 * rest is reserved.
-+		 *
-+		 * Link status has bits [13:0] RO, and bits [15:14]
- 		 * W1C.
- 		 */
--		.rw = GENMASK(11, 3) | GENMASK(1, 0),
-+		.rw = GENMASK(15, 14) | GENMASK(11, 3) | GENMASK(1, 0),
- 		.ro = GENMASK(13, 0) << 16,
- 		.w1c = GENMASK(15, 14) << 16,
--		.rsvd = GENMASK(15, 12) | BIT(2),
-+		.rsvd = GENMASK(13, 12) | BIT(2),
- 	},
- 
- 	[PCI_EXP_SLTCAP / 4] = {
-@@ -214,19 +215,19 @@ static const struct pci_bridge_reg_behavior pcie_cap_regs_behavior[] = {
- 
- 	[PCI_EXP_SLTCTL / 4] = {
- 		/*
--		 * Slot control has bits [12:0] RW, the rest is
-+		 * Slot control has bits [14:0] RW, the rest is
- 		 * reserved.
- 		 *
--		 * Slot status has a mix of W1C and RO bits, as well
--		 * as reserved bits.
-+		 * Slot status has bits 8 and [4:0] W1C, bits [7:5] RO, the
-+		 * rest is reserved.
- 		 */
--		.rw = GENMASK(12, 0),
-+		.rw = GENMASK(14, 0),
- 		.w1c = (PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
- 			PCI_EXP_SLTSTA_MRLSC | PCI_EXP_SLTSTA_PDC |
- 			PCI_EXP_SLTSTA_CC | PCI_EXP_SLTSTA_DLLSC) << 16,
- 		.ro = (PCI_EXP_SLTSTA_MRLSS | PCI_EXP_SLTSTA_PDS |
- 		       PCI_EXP_SLTSTA_EIS) << 16,
--		.rsvd = GENMASK(15, 13) | (GENMASK(15, 9) << 16),
-+		.rsvd = GENMASK(15) | (GENMASK(15, 9) << 16),
- 	},
- 
- 	[PCI_EXP_RTCTL / 4] = {
--- 
-2.18.1
+>
+> > Signed-off-by: Alan Mikhak <alan.mikhak@sifive.com>
+> > ---
+> >  drivers/pci/endpoint/functions/pci-epf-test.c | 24 ++++++++++++++++++++----
+> >  1 file changed, 20 insertions(+), 4 deletions(-)
+> >
+> > diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+> > index 60330f3e3751..043916d3ab5f 100644
+> > --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+> > +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+> > @@ -149,10 +149,26 @@ static int pci_epf_test_data_transfer(struct pci_epf_test *epf_test,
+> >  }
+> >
+> >  /**
+> > - * pci_epf_test_init_dma_chan() - Function to initialize EPF test DMA channel
+> > - * @epf_test: the EPF test device that performs data transfer operation
+> > + * pci_epf_test_pick_dma_chan() - Filter DMA channel based on desired criteria
+> > + * @chan: the DMA channel to examine
+> >   *
+> > - * Function to initialize EPF test DMA channel.
+> > + * Filter DMA channel candidates by matching against an optional desired name.
+> > + * Pick first candidate channel if desired name is not specified.
+> > + * Reject candidate channel if its name does not match the desired name.
+> > + */
+> > +static bool pci_epf_test_pick_dma_chan(struct dma_chan *chan, void *name)
+> > +{
+> > +     if (name && strlen(name) && strcmp(dma_chan_name(chan), name))
+>
+> Doesn't this cause warning with 'name' being void*?
 
+I compiled this patch for riscv and x86_64 but didn't see any warning. I will
+address your concern by posting a v2 patch.
+
+>
+>
+> > +             return false;
+> > +
+> > +     return true;
+> > +}
+> > +
+> > +/**
+> > + * pci_epf_test_init_dma_chan() - Helper to initialize EPF DMA channel
+> > + * @epf: the EPF device that has to perform the data transfer operation
+> > + *
+> > + * Helper to initialize EPF DMA channel.
+> >   */
+> >  static int pci_epf_test_init_dma_chan(struct pci_epf_test *epf_test)
+> >  {
+> > @@ -165,7 +181,7 @@ static int pci_epf_test_init_dma_chan(struct pci_epf_test *epf_test)
+> >       dma_cap_zero(mask);
+> >       dma_cap_set(DMA_MEMCPY, mask);
+> >
+> > -     dma_chan = dma_request_chan_by_mask(&mask);
+> > +     dma_chan = dma_request_channel(mask, pci_epf_test_pick_dma_chan, NULL);
+> >       if (IS_ERR(dma_chan)) {
+> >               ret = PTR_ERR(dma_chan);
+> >               if (ret != -EPROBE_DEFER)
+> > --
+> > 2.7.4
+> >
