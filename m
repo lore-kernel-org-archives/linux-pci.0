@@ -2,115 +2,90 @@ Return-Path: <SRS0=Mx90=6Z=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33FCDC47255
-	for <linux-pci@archiver.kernel.org>; Mon, 11 May 2020 19:03:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C18DEC47255
+	for <linux-pci@archiver.kernel.org>; Mon, 11 May 2020 19:17:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1D20320675
-	for <linux-pci@archiver.kernel.org>; Mon, 11 May 2020 19:03:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9FACB2075E
+	for <linux-pci@archiver.kernel.org>; Mon, 11 May 2020 19:17:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730974AbgEKTDv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 May 2020 15:03:51 -0400
-Received: from mga12.intel.com ([192.55.52.136]:11261 "EHLO mga12.intel.com"
+        id S1731199AbgEKTRV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 May 2020 15:17:21 -0400
+Received: from mga05.intel.com ([192.55.52.43]:10033 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728613AbgEKTDv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 11 May 2020 15:03:51 -0400
-IronPort-SDR: OQLI/1yQsIY/Vcrv6DGU7Tg050zo5zEPdY/Ezd7h5OFy5F4nBa6L4p3z1soPM/YrjWKal9QLQ6
- Gmly6pxUE7wA==
+        id S1729453AbgEKTRU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 11 May 2020 15:17:20 -0400
+IronPort-SDR: FQ0D/lyzM4w1/1yc9qN6B46OGKvXo/6lUk3IN7zbREdACUSgesA0BFnFY7096iTo3rexCDoo98
+ zRjkfb0rEJOg==
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 May 2020 12:03:47 -0700
-IronPort-SDR: P0puikl7IKLENmxHcD9tPx2nAPmyP9LaL8lPpxJkIVNXit7NhCytw3wRgL6/wJ5dbXk16ombmH
- LoHM5qE1CFVw==
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 May 2020 12:17:20 -0700
+IronPort-SDR: WjpuYqEF+qzqXPuACAFjsM92dYFGRCCWz6fzDpq8PNm2nU+qrb85LhLrkwpl4oJJdMYaY82LTH
+ gfm/J0thY/mg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.73,381,1583222400"; 
-   d="scan'208";a="306261928"
-Received: from otc-nc-03.jf.intel.com (HELO otc-nc-03) ([10.54.39.25])
-  by FMSMGA003.fm.intel.com with ESMTP; 11 May 2020 12:03:46 -0700
-Date:   Mon, 11 May 2020 12:03:41 -0700
-From:   "Raj, Ashok" <ashok.raj@intel.com>
-To:     Thomas Gleixner <tglx@linutronix.de>
-Cc:     "Raj, Ashok" <ashok.raj@linux.intel.com>,
-        Evan Green <evgreen@chromium.org>,
-        Mathias Nyman <mathias.nyman@linux.intel.com>, x86@kernel.org,
-        linux-pci <linux-pci@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Ghorai, Sukumar" <sukumar.ghorai@intel.com>,
-        "Amara, Madhusudanarao" <madhusudanarao.amara@intel.com>,
-        "Nandamuri, Srikanth" <srikanth.nandamuri@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>
-Subject: Re: MSI interrupt for xhci still lost on 5.6-rc6 after cpu hotplug
-Message-ID: <20200511190341.GA95413@otc-nc-03>
-References: <20200508005528.GB61703@otc-nc-03>
- <87368almbm.fsf@nanos.tec.linutronix.de>
- <20200508160958.GA19631@otc-nc-03>
- <87h7wqjrsk.fsf@nanos.tec.linutronix.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <87h7wqjrsk.fsf@nanos.tec.linutronix.de>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+   d="scan'208";a="463494234"
+Received: from unknown (HELO localhost.lm.intel.com) ([10.232.116.74])
+  by fmsmga006.fm.intel.com with ESMTP; 11 May 2020 12:17:19 -0700
+From:   Jon Derrick <jonathan.derrick@intel.com>
+To:     <linux-pci@vger.kernel.org>, qemu-devel@nongnu.org
+Cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        virtualization@lists.linux-foundation.org,
+        Christoph Hellwig <hch@lst.de>,
+        Andrzej Jakowski <andrzej.jakowski@linux.intel.com>,
+        Jon Derrick <jonathan.derrick@intel.com>
+Subject: [PATCH v2 0/2] VMD endpoint passthrough support
+Date:   Mon, 11 May 2020 15:01:26 -0400
+Message-Id: <20200511190129.9313-1-jonathan.derrick@intel.com>
+X-Mailer: git-send-email 2.18.1
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Thomas, 
+This set contains 2 patches for Linux and 1 for QEMU. VMD device
+8086:28C0 contains information in registers to assist with direct
+assignment passthrough. Several other VMD devices don't have this
+information, but can easily be emulated to offer this feature.
 
-On Fri, May 08, 2020 at 06:49:15PM +0200, Thomas Gleixner wrote:
-> Ashok,
-> 
-> "Raj, Ashok" <ashok.raj@intel.com> writes:
-> > With legacy MSI we can have these races and kernel is trying to do the
-> > song and dance, but we see this happening even when IR is turned on.
-> > Which is perplexing. I think when we have IR, once we do the change vector 
-> > and flush the interrupt entry cache, if there was an outstandng one in 
-> > flight it should be in IRR. Possibly should be clearned up by the
-> > send_cleanup_vector() i suppose.
-> 
-> Ouch. With IR this really should never happen and yes the old vector
-> will catch one which was raised just before the migration disabled the
-> IR entry. During the change nothing can go wrong because the entry is
-> disabled and only reenabled after it's flushed which will send a pending
-> one to the new vector.
+The existing VMD devices not supporting the feature cannot be changed to
+offer the information, but also don't restrict the ability to offer this
+information in emulation by the hypervisor. Future VMD devices will
+offer the 28C0 mode natively.
 
-with IR, I'm not sure if we actually mask the interrupt except when
-its a Posted Interrupt. 
+The QEMU patch emulates the hardware assistance that the VMD 28C0 device
+provides: a config space register claiming passthrough support, and the
+shadow membar registers containing the host information for guest
+address assignment in the VMD domain. These VMD devices have this config
+space register set as reserved and will not conflict with the emulated
+bit.
 
-We do an atomic update to IRTE, with cmpxchg_double
+The Linux patch allows guest kernels to use the passthrough information
+emulated by the QEMU patch, by matching the config space register
+claiming passthrough support.
 
-	ret = cmpxchg_double(&irte->low, &irte->high,
-			     irte->low, irte->high,
-			     irte_modified->low, irte_modified->high);
+Changes from v1:
+v1 changed the VMD Subsystem ID to QEMU's so that the guest driver could
+match against it. This was unnecessary as the VMLOCK register and shadow
+membar registers could be safely emulated. Future VMDs will be aligned
+on these register bits.
 
-followed by flushing the interrupt entry cache. After which any 
-old ones in flight before the flush should be sittig in IRR
-on the outgoing cpu.
+Added the resource bit filtering patch that got lost in the mailserver.
 
-The send_cleanup_vector() sends IPI to the apic_id->old_cpu which 
-would be the cpu we are running on correct? and this is a self_ipi
-to IRQ_MOVE_CLEANUP_VECTOR.
+v1: https://lore.kernel.org/linux-pci/20200422171444.10992-1-jonathan.derrick@intel.com/
 
-smp_irq_move_cleanup_interrupt() seems to check IRR with 
-apicid_prev_vector()
+Jon Derrick (2):
+  PCI: vmd: Filter resource type bits from shadow register
+  PCI: vmd: Use Shadow MEMBAR registers for QEMU/KVM guests
 
-	irr = apic_read(APIC_IRR + (vector / 32 * 0x10));
-	if (irr & (1U << (vector % 32))) {
-		apic->send_IPI_self(IRQ_MOVE_CLEANUP_VECTOR);
-		continue;
-	}
+ drivers/pci/controller/vmd.c | 21 ++++++++++++++-------
+ 1 file changed, 14 insertions(+), 7 deletions(-)
 
-And this would allow any pending IRR bits in the outgoing CPU to 
-call the relevant ISR's before draining all vectors on the outgoing
-CPU. 
-
-Does it sound right?
-
-I couldn't quite pin down how the device ISR's are hooked up through
-this send_cleanup_vector() and what follows.
+-- 
+2.18.1
 
