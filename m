@@ -8,60 +8,59 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24863C433E6
-	for <linux-pci@archiver.kernel.org>; Thu, 14 May 2020 20:08:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1303C433E1
+	for <linux-pci@archiver.kernel.org>; Thu, 14 May 2020 20:08:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F352B207D4
-	for <linux-pci@archiver.kernel.org>; Thu, 14 May 2020 20:07:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C33D620709
+	for <linux-pci@archiver.kernel.org>; Thu, 14 May 2020 20:08:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Hpw4cPqf"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mMfJLANr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729395AbgENUH6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 May 2020 16:07:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60278 "EHLO
+        id S1729353AbgENUHv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 May 2020 16:07:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60246 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1729388AbgENUHz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 May 2020 16:07:55 -0400
-Received: from mail-ed1-x544.google.com (mail-ed1-x544.google.com [IPv6:2a00:1450:4864:20::544])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0847C061A0C;
-        Thu, 14 May 2020 13:07:54 -0700 (PDT)
-Received: by mail-ed1-x544.google.com with SMTP id h16so3459991eds.5;
-        Thu, 14 May 2020 13:07:54 -0700 (PDT)
+        by vger.kernel.org with ESMTP id S1729341AbgENUHs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 May 2020 16:07:48 -0400
+Received: from mail-ej1-x644.google.com (mail-ej1-x644.google.com [IPv6:2a00:1450:4864:20::644])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9ECA4C061A0C;
+        Thu, 14 May 2020 13:07:47 -0700 (PDT)
+Received: by mail-ej1-x644.google.com with SMTP id s3so4617eji.6;
+        Thu, 14 May 2020 13:07:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=hGP2kVUTi+hmH+HLFCJp0uoULPxAxN5xn10J+tUm53U=;
-        b=Hpw4cPqfiPP3//Dxg/Vtg9+8ubhTtUWWjO+Fya935pmnju/CQ7D//KNkSI6oDphlLl
-         8QBclziH4I/bWcoITfofG9Xo1reP1ot4UZwlSjUzcB3cyXasR7OQ1JR2ZOgBnAGslSAA
-         PkWKXSyrbiFGrTCYChsIEhEguRZP3mHbHyA5Z1dqvc/xEzG4c5Dqj66PBfvE/V6M4jhj
-         p5E8FaMPvA7fBEceWuK5Hg/SZLf9ojNAfMX+LXM/wKVpLESlssJB8S3bx9awKhvOPhcn
-         y7Cm4FiB5eCNqjA7hXGI+9G9GCcK5RbVLZZhLxaGJ4Uajmcctw6YCwGS47+XqO3FdBty
-         gkEQ==
+        bh=c7s8PI1C4weEkl07MvE9RhRVBEJwMJ9l5BWaz0ggV1E=;
+        b=mMfJLANrQoMjmVFz0LsA1WxCOPSD63DvdKi+3nsjWqFyJMyR2ND2+NYvw0u76y7oXP
+         gfhXeQIo8IFOy/GmFm61rcgjYrV7gljEGzebEX80Bgi5EAmP9Bc7emc2VStUfR1KPCFL
+         8vHv9RHIOCsm49DAplxLQb9egoEKIKWoqleIHDUtSM8+KJiTvJWxntan2+TJzoF3oycI
+         Y/lcpCkFaQNf4Npt6RKDhLAsPIDV6nagnhKrvgZzllBIi4yqJ7VqV0jd8rCK+9T8On0B
+         2MkcNpv5pjxbNmbEJAg85CpXT6c5ZtrMge0ckCrFg9oHT5LNlVsRoCBDXb5eTrdXjFaT
+         PxHQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=hGP2kVUTi+hmH+HLFCJp0uoULPxAxN5xn10J+tUm53U=;
-        b=mxmyM+uw+p8SoVzO2nAq8AGzfae5Hf2NR6R6kXRBZLuDgLilq2TXYuxKbsl4/U7SU2
-         LTUdVea7i7jGhB52DJdaJ/blr4X4cwsh54O9TtoRaPBDlWgrAwpS/XYO6cJGhdC9E9mM
-         7KF9GySl03Qo1nV8C5uNiakS0Y/qm6QIHmLK34pN2itx9h9EjweFq1O1j0RE5e38gS5P
-         WbTZBjmWS7QY/76zu1uX3gCC1x74DM8ETFCNdXgClQ8V/78yt5+u9rEg9HIaQK+SOVT1
-         qfHSA6g5S86f6qxrebds2fbAU4YUWhNr3fBLik/38dklEcBbNo2V9ryDnQgiUQP0ooiH
-         W/Ww==
-X-Gm-Message-State: AOAM533fXLI89T7Fyyq4S1swAv85l/UDe/YbvdIpz98DoOOlcR8wr17v
-        6AEw94WPZTyXzKrra0luBsI=
-X-Google-Smtp-Source: ABdhPJwIrv2umWBuAOzcuH4PGpXomvSLEHSaSd7MZc9vrXVBYLGk7Eqisbbb08WV/iDalRuLVulGXA==
-X-Received: by 2002:a05:6402:1296:: with SMTP id w22mr5233666edv.364.1589486873617;
-        Thu, 14 May 2020 13:07:53 -0700 (PDT)
+        bh=c7s8PI1C4weEkl07MvE9RhRVBEJwMJ9l5BWaz0ggV1E=;
+        b=L97vmS3Bc4wUPo+uJRRFpZDs8ZmnwsMxRqBqq6crom4QTSeNM1u+VxVxtl5vfrpWYp
+         bI4RkzdaIwNz5kh3R4NLak33vQlDu4g1MMrnO0RHdx7e9Lp6IHaA0rYh5RT0gcFmm8D9
+         8jx5xpIK3ry0Y53EoF5XUqO/GFRxKDOuBhRtH2DSKIzZ9xwqt4avIz1W3ZXAE94ZdyqT
+         OJzk9DkzkbdCUvk2z+tCw26cXF75pM4fwBB8YXeFTFtMOy1g8E4R9n1FyFldUnnIYzs/
+         nDLUpvI8dpxweknxnuIrS0rkXoBC/+xjLSqSGE1A2CCD8Cr7BLvpwYRQSyDMIQlcyDkx
+         GR3A==
+X-Gm-Message-State: AOAM530w6bfy91n4afpxHxcO3S7QESCzs1/3eDCOQVPjKrSEaq90+RJ5
+        N4JieS673YHw2MHNwqlAhlA=
+X-Google-Smtp-Source: ABdhPJymzN4HIFPWCqToGODe6lRdU+8SC1V1goiAZWdYlI/8xEFUJRgE3qC3l9Cpvq7ObzAhCyWUcg==
+X-Received: by 2002:a17:906:770b:: with SMTP id q11mr5435245ejm.224.1589486866213;
+        Thu, 14 May 2020 13:07:46 -0700 (PDT)
 Received: from Ansuel-XPS.localdomain (host122-89-dynamic.247-95-r.retail.telecomitalia.it. [95.247.89.122])
-        by smtp.googlemail.com with ESMTPSA id bd10sm1472edb.10.2020.05.14.13.07.52
+        by smtp.googlemail.com with ESMTPSA id bd10sm1472edb.10.2020.05.14.13.07.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 14 May 2020 13:07:53 -0700 (PDT)
+        Thu, 14 May 2020 13:07:45 -0700 (PDT)
 From:   Ansuel Smith <ansuelsmth@gmail.com>
 To:     Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc:     Sham Muthayyan <smuthayy@codeaurora.org>,
-        Ansuel Smith <ansuelsmth@gmail.com>,
+Cc:     Ansuel Smith <ansuelsmth@gmail.com>, stable@vger.kernel.org,
         Andy Gross <agross@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Rob Herring <robh+dt@kernel.org>,
@@ -72,9 +71,9 @@ Cc:     Sham Muthayyan <smuthayy@codeaurora.org>,
         Philipp Zabel <p.zabel@pengutronix.de>,
         linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v4 10/10] PCI: qcom: Add Force GEN1 support
-Date:   Thu, 14 May 2020 22:07:11 +0200
-Message-Id: <20200514200712.12232-11-ansuelsmth@gmail.com>
+Subject: [PATCH v4 07/10] PCI: qcom: Define some PARF params needed for ipq8064 SoC
+Date:   Thu, 14 May 2020 22:07:08 +0200
+Message-Id: <20200514200712.12232-8-ansuelsmth@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200514200712.12232-1-ansuelsmth@gmail.com>
 References: <20200514200712.12232-1-ansuelsmth@gmail.com>
@@ -85,71 +84,76 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Sham Muthayyan <smuthayy@codeaurora.org>
+Set some specific value for Tx De-Emphasis, Tx Swing and Rx equalization
+needed on some ipq8064 based device (Netgear R7800 for example). Without
+this the system locks on kernel load.
 
-Add Force GEN1 support needed in some ipq8064 board that needs to limit
-some PCIe line to gen1 for some hardware limitation. This is set by the
-max-link-speed binding and needed by some soc based on ipq8064. (for
-example Netgear R7800 router)
-
-Signed-off-by: Sham Muthayyan <smuthayy@codeaurora.org>
+Fixes: 82a823833f4e ("PCI: qcom: Add Qualcomm PCIe controller driver")
 Signed-off-by: Ansuel Smith <ansuelsmth@gmail.com>
+Cc: stable@vger.kernel.org # v4.5+
 ---
- drivers/pci/controller/dwc/pcie-qcom.c | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ drivers/pci/controller/dwc/pcie-qcom.c | 27 ++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
 
 diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index ab6f1bdd24c3..f6190c954e92 100644
+index f2ea1ab6f584..f5398b0d270c 100644
 --- a/drivers/pci/controller/dwc/pcie-qcom.c
 +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -27,6 +27,7 @@
- #include <linux/slab.h>
- #include <linux/types.h>
+@@ -46,6 +46,9 @@
  
-+#include "../../pci.h"
- #include "pcie-designware.h"
+ #define PCIE20_PARF_PHY_CTRL			0x40
+ #define PCIE20_PARF_PHY_REFCLK			0x4C
++#define PHY_REFCLK_SSP_EN			BIT(16)
++#define PHY_REFCLK_USE_PAD			BIT(12)
++
+ #define PCIE20_PARF_DBI_BASE_ADDR		0x168
+ #define PCIE20_PARF_SLV_ADDR_SPACE_SIZE		0x16C
+ #define PCIE20_PARF_MHI_CLOCK_RESET_CTRL	0x174
+@@ -77,6 +80,18 @@
+ #define DBI_RO_WR_EN				1
  
- #define PCIE20_PARF_SYS_CTRL			0x00
-@@ -99,6 +100,8 @@
+ #define PERST_DELAY_US				1000
++/* PARF registers */
++#define PCIE20_PARF_PCS_DEEMPH			0x34
++#define PCS_DEEMPH_TX_DEEMPH_GEN1(x)		((x) << 16)
++#define PCS_DEEMPH_TX_DEEMPH_GEN2_3_5DB(x)	((x) << 8)
++#define PCS_DEEMPH_TX_DEEMPH_GEN2_6DB(x)	((x) << 0)
++
++#define PCIE20_PARF_PCS_SWING			0x38
++#define PCS_SWING_TX_SWING_FULL(x)		((x) << 8)
++#define PCS_SWING_TX_SWING_LOW(x)		((x) << 0)
++
++#define PCIE20_PARF_CONFIG_BITS		0x50
++#define PHY_RX0_EQ(x)				((x) << 24)
+ 
  #define PCIE20_v3_PARF_SLV_ADDR_SPACE_SIZE	0x358
  #define SLV_ADDR_SPACE_SZ			0x10000000
+@@ -293,6 +308,7 @@ static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
+ 	struct qcom_pcie_resources_2_1_0 *res = &pcie->res.v2_1_0;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct device *dev = pci->dev;
++	struct device_node *node = dev->of_node;
+ 	u32 val;
+ 	int ret;
  
-+#define PCIE20_LNK_CONTROL2_LINK_STATUS2	0xa0
-+
- #define DEVICE_TYPE_RC				0x4
+@@ -347,6 +363,17 @@ static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
+ 	val &= ~BIT(0);
+ 	writel(val, pcie->parf + PCIE20_PARF_PHY_CTRL);
  
- #define QCOM_PCIE_2_1_0_MAX_SUPPLY	3
-@@ -195,6 +198,7 @@ struct qcom_pcie {
- 	struct phy *phy;
- 	struct gpio_desc *reset;
- 	const struct qcom_pcie_ops *ops;
-+	int gen;
- };
- 
- #define to_qcom_pcie(x)		dev_get_drvdata((x)->dev)
-@@ -395,6 +399,11 @@ static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
- 	/* wait for clock acquisition */
- 	usleep_range(1000, 1500);
- 
-+	if (pcie->gen == 1) {
-+		val = readl(pci->dbi_base + PCIE20_LNK_CONTROL2_LINK_STATUS2);
-+		val |= 1;
-+		writel(val, pci->dbi_base + PCIE20_LNK_CONTROL2_LINK_STATUS2);
++	if (of_device_is_compatible(node, "qcom,pcie-ipq8064")) {
++		writel(PCS_DEEMPH_TX_DEEMPH_GEN1(24) |
++			       PCS_DEEMPH_TX_DEEMPH_GEN2_3_5DB(24) |
++			       PCS_DEEMPH_TX_DEEMPH_GEN2_6DB(34),
++		       pcie->parf + PCIE20_PARF_PCS_DEEMPH);
++		writel(PCS_SWING_TX_SWING_FULL(120) |
++			       PCS_SWING_TX_SWING_LOW(120),
++		       pcie->parf + PCIE20_PARF_PCS_SWING);
++		writel(PHY_RX0_EQ(4), pcie->parf + PCIE20_PARF_CONFIG_BITS);
 +	}
- 
- 	/* Set the Max TLP size to 2K, instead of using default of 4K */
- 	writel(CFG_REMOTE_RD_REQ_BRIDGE_SIZE_2K,
-@@ -1397,6 +1406,10 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 		goto err_pm_runtime_put;
- 	}
- 
-+	pcie->gen = of_pci_get_max_link_speed(pdev->dev.of_node);
-+	if (pcie->gen < 0)
-+		pcie->gen = 2;
 +
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "parf");
- 	pcie->parf = devm_ioremap_resource(dev, res);
- 	if (IS_ERR(pcie->parf)) {
+ 	/* enable external reference clock */
+ 	val = readl(pcie->parf + PCIE20_PARF_PHY_REFCLK);
+ 	val |= BIT(16);
 -- 
 2.25.1
 
