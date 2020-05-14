@@ -5,47 +5,46 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20990C433DF
-	for <linux-pci@archiver.kernel.org>; Thu, 14 May 2020 15:00:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 032C3C433E1
+	for <linux-pci@archiver.kernel.org>; Thu, 14 May 2020 15:01:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F2FE320643
-	for <linux-pci@archiver.kernel.org>; Thu, 14 May 2020 15:00:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D6EE720657
+	for <linux-pci@archiver.kernel.org>; Thu, 14 May 2020 15:01:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="MkKcHfOX"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="Zto/dwKC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727999AbgENPAW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 May 2020 11:00:22 -0400
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:42116 "EHLO
-        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726146AbgENPAV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 May 2020 11:00:21 -0400
-Received: from fllv0034.itg.ti.com ([10.64.40.246])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 04EF06Rd029135;
-        Thu, 14 May 2020 10:00:06 -0500
+        id S1728103AbgENPBI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 May 2020 11:01:08 -0400
+Received: from lelv0143.ext.ti.com ([198.47.23.248]:47208 "EHLO
+        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726726AbgENPBI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 May 2020 11:01:08 -0400
+Received: from fllv0035.itg.ti.com ([10.64.41.0])
+        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id 04EF0L0x000397;
+        Thu, 14 May 2020 10:00:21 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1589468406;
-        bh=oPxuXqtF223OER+bcyGCz8Cb674T5LZwKws+2r6ddns=;
+        s=ti-com-17Q1; t=1589468421;
+        bh=y89RQ0LlIPyIbyZ2I5CO0BLv3OcOvgocP9HIgT4BsH4=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=MkKcHfOX0rkPf/0CruxXMcU/KDNgv7PfzNXoxweAGS0wa6ecFAEvPpP/K37TmmSmb
-         Muc1KvKYi7OBEN/wPFkhaFxwWdgNqM3rPHdKkYoVv365sZNi2HVPqPogyD5qLel9IP
-         TIt80aFUFEPdMTPyhdw1PlkTnDLp9CTxsgTYgFoM=
-Received: from DFLE103.ent.ti.com (dfle103.ent.ti.com [10.64.6.24])
-        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 04EF05qA117768
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 14 May 2020 10:00:06 -0500
-Received: from DFLE101.ent.ti.com (10.64.6.22) by DFLE103.ent.ti.com
- (10.64.6.24) with Microsoft SMTP Server (version=TLS1_2,
+        b=Zto/dwKCRWyoy0FiXsccjGH2DQnLJJ4JxrKBVvVdI6hVOnvsvX1Nz6F/HWgjXzSso
+         95VSJgxfc9sYo5d9DJsTsaDhJqkapIZq4SwSZU9hkk/M94x5+udYsFKc+YuLHXnXkr
+         Q0yV28kAukxPTOnb3QNmup6bD8I7OnUt3Wjra+5s=
+Received: from DFLE100.ent.ti.com (dfle100.ent.ti.com [10.64.6.21])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id 04EF0Kr3128969;
+        Thu, 14 May 2020 10:00:20 -0500
+Received: from DFLE114.ent.ti.com (10.64.6.35) by DFLE100.ent.ti.com
+ (10.64.6.21) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Thu, 14
- May 2020 10:00:06 -0500
-Received: from lelv0326.itg.ti.com (10.180.67.84) by DFLE101.ent.ti.com
- (10.64.6.22) with Microsoft SMTP Server (version=TLS1_2,
+ May 2020 10:00:20 -0500
+Received: from lelv0326.itg.ti.com (10.180.67.84) by DFLE114.ent.ti.com
+ (10.64.6.35) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
- Frontend Transport; Thu, 14 May 2020 10:00:05 -0500
+ Frontend Transport; Thu, 14 May 2020 10:00:20 -0500
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 04EExgAm019279;
-        Thu, 14 May 2020 10:00:01 -0500
+        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 04EExgAp019279;
+        Thu, 14 May 2020 10:00:16 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Arnd Bergmann <arnd@arndb.de>, Jon Mason <jdmason@kudzu.us>,
@@ -59,9 +58,9 @@ CC:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <devicetree@vger.kernel.org>, <linux-ntb@googlegroups.com>,
         Kishon Vijay Abraham I <kishon@ti.com>
-Subject: [PATCH 04/19] PCI: endpoint: Add API to create EPF device from device tree
-Date:   Thu, 14 May 2020 20:29:12 +0530
-Message-ID: <20200514145927.17555-5-kishon@ti.com>
+Subject: [PATCH 07/19] PCI: endpoint: Add helper API to get the 'next' unreserved BAR
+Date:   Thu, 14 May 2020 20:29:15 +0530
+Message-ID: <20200514145927.17555-8-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200514145927.17555-1-kishon@ti.com>
 References: <20200514145927.17555-1-kishon@ti.com>
@@ -73,140 +72,87 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add API to create EPF device from device tree and the device managed
-interface corresponding to it. This is added in order to define
-an endpoint function completely from device tree.
+Add an API to get the next unreserved BAR starting from a given BAR
+number that can be used by the endpoint function.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/endpoint/pci-epf-core.c | 68 +++++++++++++++++++++++++++++
- include/linux/pci-epf.h             |  6 +++
- 2 files changed, 74 insertions(+)
+ drivers/pci/endpoint/pci-epc-core.c | 26 ++++++++++++++++++++++----
+ include/linux/pci-epc.h             |  2 ++
+ 2 files changed, 24 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
-index 244e00f48c5c..cb6c7b886325 100644
---- a/drivers/pci/endpoint/pci-epf-core.c
-+++ b/drivers/pci/endpoint/pci-epf-core.c
-@@ -280,6 +280,73 @@ struct pci_epf *pci_epf_create(const char *name)
- }
- EXPORT_SYMBOL_GPL(pci_epf_create);
- 
-+/**
-+ * pci_epf_of_create() - create a new PCI EPF device from device tree node
-+ * @node: the device node of the PCI EPF device.
-+ *
-+ * Invoke to create a new PCI EPF device by providing a device tree node
-+ * with compatible property.
-+ */
-+struct pci_epf *pci_epf_of_create(struct device_node *node)
-+{
-+	struct pci_epf *epf;
-+	const char *compat;
-+	int ret;
-+
-+	of_node_get(node);
-+
-+	ret = of_property_read_string(node, "compatible", &compat);
-+	if (ret) {
-+		of_node_put(node);
-+		return ERR_PTR(ret);
-+	}
-+
-+	epf = pci_epf_create(compat);
-+	if (!IS_ERR(epf))
-+		epf->node = node;
-+
-+	return epf;
-+}
-+EXPORT_SYMBOL_GPL(pci_epf_of_create);
-+
-+static void devm_epf_release(struct device *dev, void *res)
-+{
-+	struct pci_epf *epf = *(struct pci_epf **)res;
-+
-+	pci_epf_destroy(epf);
-+}
-+
-+/**
-+ * devm_pci_epf_of_create() - create a new PCI EPF device from device tree node
-+ * @dev: device that is creating the new EPF
-+ * @node: the device node of the PCI EPF device.
-+ *
-+ * Invoke to create a new PCI EPF device by providing a device tree node with
-+ * compatible property. While at that, it also associates the device with the
-+ * EPF using devres. On driver detach, release function is invoked on the devres
-+ * data, where devres data is freed.
-+ */
-+struct pci_epf *devm_pci_epf_of_create(struct device *dev,
-+				       struct device_node *node)
-+{
-+	struct pci_epf **ptr, *epf;
-+
-+	ptr = devres_alloc(devm_epf_release, sizeof(*ptr), GFP_KERNEL);
-+	if (!ptr)
-+		return ERR_PTR(-ENOMEM);
-+
-+	epf = pci_epf_of_create(node);
-+	if (!IS_ERR(epf)) {
-+		*ptr = epf;
-+		devres_add(dev, ptr);
-+	} else {
-+		devres_free(ptr);
-+	}
-+
-+	return epf;
-+}
-+EXPORT_SYMBOL_GPL(devm_pci_epf_of_create);
-+
- const struct pci_epf_device_id *
- pci_epf_match_device(const struct pci_epf_device_id *id, struct pci_epf *epf)
- {
-@@ -300,6 +367,7 @@ static void pci_epf_dev_release(struct device *dev)
- {
- 	struct pci_epf *epf = to_pci_epf(dev);
- 
-+	of_node_put(epf->node);
- 	kfree(epf->name);
- 	kfree(epf);
- }
-diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
-index 6644ff3b0702..8fb77ab1968f 100644
---- a/include/linux/pci-epf.h
-+++ b/include/linux/pci-epf.h
-@@ -11,6 +11,7 @@
- 
- #include <linux/device.h>
- #include <linux/mod_devicetable.h>
-+#include <linux/of.h>
- #include <linux/pci.h>
- 
- struct pci_epf;
-@@ -108,6 +109,7 @@ struct pci_epf_bar {
- /**
-  * struct pci_epf - represents the PCI EPF device
-  * @dev: the PCI EPF device
-+ * @node: the device tree node of the PCI EPF device
-  * @name: the name of the PCI EPF device
-  * @header: represents standard configuration header
-  * @bar: represents the BAR of EPF device
-@@ -121,6 +123,7 @@ struct pci_epf_bar {
+diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+index 49bffa2349c5..85e542aae617 100644
+--- a/drivers/pci/endpoint/pci-epc-core.c
++++ b/drivers/pci/endpoint/pci-epc-core.c
+@@ -147,17 +147,36 @@ EXPORT_SYMBOL_GPL(of_pci_epc_get_by_name);
+  * pci_epc_get_first_free_bar() - helper to get first unreserved BAR
+  * @epc_features: pci_epc_features structure that holds the reserved bar bitmap
+  *
+- * Invoke to get the first unreserved BAR that can be used for endpoint
++ * Invoke to get the first unreserved BAR that can be used by the endpoint
+  * function. For any incorrect value in reserved_bar return '0'.
   */
- struct pci_epf {
- 	struct device		dev;
-+	struct device_node	*node;
- 	const char		*name;
- 	struct pci_epf_header	*header;
- 	struct pci_epf_bar	bar[6];
-@@ -167,6 +170,9 @@ static inline void *epf_get_drvdata(struct pci_epf *epf)
- const struct pci_epf_device_id *
- pci_epf_match_device(const struct pci_epf_device_id *id, struct pci_epf *epf);
- struct pci_epf *pci_epf_create(const char *name);
-+struct pci_epf *pci_epf_of_create(struct device_node *node);
-+struct pci_epf *devm_pci_epf_of_create(struct device *dev,
-+				       struct device_node *node);
- void pci_epf_destroy(struct pci_epf *epf);
- int __pci_epf_register_driver(struct pci_epf_driver *driver,
- 			      struct module *owner);
+ unsigned int pci_epc_get_first_free_bar(const struct pci_epc_features
+ 					*epc_features)
++{
++	return pci_epc_get_next_free_bar(epc_features, BAR_0);
++}
++EXPORT_SYMBOL_GPL(pci_epc_get_first_free_bar);
++
++/**
++ * pci_epc_get_next_free_bar() - helper to get unreserved BAR starting from @bar
++ * @epc_features: pci_epc_features structure that holds the reserved bar bitmap
++ * @bar: the starting BAR number from where unreserved BAR should be searched
++ *
++ * Invoke to get the next unreserved BAR starting from @bar that can be used
++ * for endpoint function. For any incorrect value in reserved_bar return '0'.
++ */
++unsigned int pci_epc_get_next_free_bar(const struct pci_epc_features
++				       *epc_features, enum pci_barno bar)
+ {
+ 	unsigned long free_bar;
+ 
+ 	if (!epc_features)
+ 		return 0;
+ 
++	/* If 'bar - 1' is a 64-bit BAR, move to the next BAR */
++	if ((epc_features->bar_fixed_64bit << 1) & 1 << bar)
++		bar++;
++
+ 	/* Find if the reserved BAR is also a 64-bit BAR */
+ 	free_bar = epc_features->reserved_bar & epc_features->bar_fixed_64bit;
+ 
+@@ -165,14 +184,13 @@ unsigned int pci_epc_get_first_free_bar(const struct pci_epc_features
+ 	free_bar <<= 1;
+ 	free_bar |= epc_features->reserved_bar;
+ 
+-	/* Now find the free BAR */
+-	free_bar = ffz(free_bar);
++	free_bar = find_next_zero_bit(&free_bar, 6, bar);
+ 	if (free_bar > 5)
+ 		return 0;
+ 
+ 	return free_bar;
+ }
+-EXPORT_SYMBOL_GPL(pci_epc_get_first_free_bar);
++EXPORT_SYMBOL_GPL(pci_epc_get_next_free_bar);
+ 
+ /**
+  * pci_epc_get_features() - get the features supported by EPC
+diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
+index dd3c2d566c3d..68f7c0d81442 100644
+--- a/include/linux/pci-epc.h
++++ b/include/linux/pci-epc.h
+@@ -203,6 +203,8 @@ const struct pci_epc_features *pci_epc_get_features(struct pci_epc *epc,
+ 						    u8 func_no);
+ unsigned int pci_epc_get_first_free_bar(const struct pci_epc_features
+ 					*epc_features);
++unsigned int pci_epc_get_next_free_bar(const struct pci_epc_features
++				       *epc_features, enum pci_barno bar);
+ struct pci_epc *pci_epc_get(const char *epc_name);
+ void pci_epc_put(struct pci_epc *epc);
+ 
 -- 
 2.17.1
 
