@@ -2,202 +2,175 @@ Return-Path: <SRS0=uJIJ=64=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F838C433DF
-	for <linux-pci@archiver.kernel.org>; Thu, 14 May 2020 10:30:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46BFBC433E1
+	for <linux-pci@archiver.kernel.org>; Thu, 14 May 2020 12:03:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4204420760
-	for <linux-pci@archiver.kernel.org>; Thu, 14 May 2020 10:30:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2722E20727
+	for <linux-pci@archiver.kernel.org>; Thu, 14 May 2020 12:03:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726200AbgENKag (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 May 2020 06:30:36 -0400
-Received: from foss.arm.com ([217.140.110.172]:33884 "EHLO foss.arm.com"
+        id S1726550AbgENMD0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 May 2020 08:03:26 -0400
+Received: from mx.socionext.com ([202.248.49.38]:18124 "EHLO mx.socionext.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725978AbgENKad (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 14 May 2020 06:30:33 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 5C93D31B;
-        Thu, 14 May 2020 03:30:32 -0700 (PDT)
-Received: from red-moon.cambridge.arm.com (unknown [10.57.1.235])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 80A3E3F305;
-        Thu, 14 May 2020 03:30:31 -0700 (PDT)
-Date:   Thu, 14 May 2020 11:30:28 +0100
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Rob Herring <robh@kernel.org>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Anders Roxell <anders.roxell@linaro.org>,
-        Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 2/2] PCI: Fix pci_host_bridge struct device release/free
- handling
-Message-ID: <20200514103028.GA16121@red-moon.cambridge.arm.com>
-References: <20200513223859.11295-1-robh@kernel.org>
- <20200513223859.11295-2-robh@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200513223859.11295-2-robh@kernel.org>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+        id S1726176AbgENMD0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 14 May 2020 08:03:26 -0400
+Received: from unknown (HELO kinkan-ex.css.socionext.com) ([172.31.9.52])
+  by mx.socionext.com with ESMTP; 14 May 2020 21:03:24 +0900
+Received: from mail.mfilter.local (m-filter-2 [10.213.24.62])
+        by kinkan-ex.css.socionext.com (Postfix) with ESMTP id 6DC58180082;
+        Thu, 14 May 2020 21:03:24 +0900 (JST)
+Received: from 172.31.9.51 (172.31.9.51) by m-FILTER with ESMTP; Thu, 14 May 2020 21:03:24 +0900
+Received: from plum.e01.socionext.com (unknown [10.213.132.32])
+        by kinkan.css.socionext.com (Postfix) with ESMTP id 26FF61A12B9;
+        Thu, 14 May 2020 21:03:24 +0900 (JST)
+From:   Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Masahiro Yamada <yamada.masahiro@socionext.com>
+Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Masami Hiramatsu <masami.hiramatsu@linaro.org>,
+        Jassi Brar <jaswinder.singh@linaro.org>,
+        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+Subject: [PATCH v4 1/2] dt-bindings: PCI: Add UniPhier PCIe endpoint controller description
+Date:   Thu, 14 May 2020 21:03:20 +0900
+Message-Id: <1589457801-12796-2-git-send-email-hayashi.kunihiko@socionext.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1589457801-12796-1-git-send-email-hayashi.kunihiko@socionext.com>
+References: <1589457801-12796-1-git-send-email-hayashi.kunihiko@socionext.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, May 13, 2020 at 05:38:59PM -0500, Rob Herring wrote:
-> The PCI code has several paths where the struct pci_host_bridge is freed
-> directly. This is wrong because it contains a struct device which is
-> refcounted and should be freed using put_device(). This can result in
-> use-after-free errors. I think this problem has existed since 2012 with
-> commit 7b5436635800 ("PCI: add generic device into pci_host_bridge
-> struct"). It generally hasn't mattered as most host bridge drivers are
-> still built-in and can't unbind.
-> 
-> The problem is a struct device should never be freed directly once
-> device_initialize() is called and a ref is held, but that doesn't happen
-> until pci_register_host_bridge(). There's then a window between
-> allocating the host bridge and pci_register_host_bridge() where kfree
-> should be used. This is fragile and requires callers to do the right
-> thing. To fix this, we need to split device_register() into
-> device_initialize() and device_add() calls, so that the host bridge
-> struct is always freed by using a put_device().
-> 
-> devm_pci_alloc_host_bridge() is using devm_kzalloc() to allocate struct
-> pci_host_bridge which will be freed directly. Instead, we can use a
-> custom devres action to call put_device().
-> 
-> Reported-by: Anders Roxell <anders.roxell@linaro.org>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Rob Herring <robh@kernel.org>
-> ---
->  drivers/pci/probe.c  | 36 +++++++++++++++++++-----------------
->  drivers/pci/remove.c |  2 +-
->  2 files changed, 20 insertions(+), 18 deletions(-)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index e21dc71b1907..e064ded6fbec 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -565,7 +565,7 @@ static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
->  	return b;
->  }
->  
-> -static void devm_pci_release_host_bridge_dev(struct device *dev)
-> +static void pci_release_host_bridge_dev(struct device *dev)
->  {
->  	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
->  
-> @@ -574,12 +574,7 @@ static void devm_pci_release_host_bridge_dev(struct device *dev)
->  
->  	pci_free_resource_list(&bridge->windows);
->  	pci_free_resource_list(&bridge->dma_ranges);
-> -}
-> -
-> -static void pci_release_host_bridge_dev(struct device *dev)
-> -{
-> -	devm_pci_release_host_bridge_dev(dev);
-> -	kfree(to_pci_host_bridge(dev));
-> +	kfree(bridge);
->  }
->  
->  static void pci_init_host_bridge(struct pci_host_bridge *bridge)
-> @@ -599,6 +594,8 @@ static void pci_init_host_bridge(struct pci_host_bridge *bridge)
->  	bridge->native_pme = 1;
->  	bridge->native_ltr = 1;
->  	bridge->native_dpc = 1;
-> +
-> +	device_initialize(&bridge->dev);
->  }
->  
->  struct pci_host_bridge *pci_alloc_host_bridge(size_t priv)
-> @@ -616,17 +613,25 @@ struct pci_host_bridge *pci_alloc_host_bridge(size_t priv)
->  }
->  EXPORT_SYMBOL(pci_alloc_host_bridge);
->  
-> +static void devm_pci_alloc_host_bridge_release(void *data)
-> +{
-> +	pci_free_host_bridge(data);
-> +}
-> +
->  struct pci_host_bridge *devm_pci_alloc_host_bridge(struct device *dev,
->  						   size_t priv)
->  {
-> +	int ret;
->  	struct pci_host_bridge *bridge;
->  
-> -	bridge = devm_kzalloc(dev, sizeof(*bridge) + priv, GFP_KERNEL);
-> +	bridge = pci_alloc_host_bridge(priv);
->  	if (!bridge)
->  		return NULL;
->  
-> -	pci_init_host_bridge(bridge);
-> -	bridge->dev.release = devm_pci_release_host_bridge_dev;
-> +	ret = devm_add_action_or_reset(dev, devm_pci_alloc_host_bridge_release,
-> +				       bridge);
-> +	if (ret)
-> +		return NULL;
->  
->  	return bridge;
->  }
-> @@ -634,10 +639,7 @@ EXPORT_SYMBOL(devm_pci_alloc_host_bridge);
->  
->  void pci_free_host_bridge(struct pci_host_bridge *bridge)
->  {
-> -	pci_free_resource_list(&bridge->windows);
-> -	pci_free_resource_list(&bridge->dma_ranges);
-> -
-> -	kfree(bridge);
-> +	put_device(&bridge->dev);
->  }
->  EXPORT_SYMBOL(pci_free_host_bridge);
->  
-> @@ -908,7 +910,7 @@ static int pci_register_host_bridge(struct pci_host_bridge *bridge)
->  	if (err)
->  		goto free;
->  
-> -	err = device_register(&bridge->dev);
-> +	err = device_add(&bridge->dev);
->  	if (err) {
->  		put_device(&bridge->dev);
->  		goto free;
-> @@ -978,7 +980,7 @@ static int pci_register_host_bridge(struct pci_host_bridge *bridge)
->  
->  unregister:
->  	put_device(&bridge->dev);
-> -	device_unregister(&bridge->dev);
-> +	device_del(&bridge->dev);
+Add DT bindings for PCIe controller implemented in UniPhier SoCs
+when configured in endpoint mode. This controller is based on
+the DesignWare PCIe core.
 
-I think we need to execute device_del() first, then put_device().
+Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+---
+ .../bindings/pci/socionext,uniphier-pcie-ep.yaml   | 92 ++++++++++++++++++++++
+ MAINTAINERS                                        |  2 +-
+ 2 files changed, 93 insertions(+), 1 deletion(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/socionext,uniphier-pcie-ep.yaml
 
-Thank you for fixing this code path.
+diff --git a/Documentation/devicetree/bindings/pci/socionext,uniphier-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/socionext,uniphier-pcie-ep.yaml
+new file mode 100644
+index 0000000..f0558b9
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/socionext,uniphier-pcie-ep.yaml
+@@ -0,0 +1,92 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/pci/socionext,uniphier-pcie-ep.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Socionext UniPhier PCIe endpoint controller
++
++description: |
++  UniPhier PCIe endpoint controller is based on the Synopsys DesignWare
++  PCI core. It shares common features with the PCIe DesignWare core and
++  inherits common properties defined in
++  Documentation/devicetree/bindings/pci/designware-pcie.txt.
++
++maintainers:
++  - Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
++
++allOf:
++  - $ref: "pci-ep.yaml#"
++
++properties:
++  compatible:
++    const: socionext,uniphier-pro5-pcie-ep
++
++  reg:
++    maxItems: 4
++
++  reg-names:
++    items:
++      - const: dbi
++      - const: dbi2
++      - const: link
++      - const: addr_space
++
++  clocks:
++    maxItems: 2
++
++  clock-names:
++    items:
++      - const: gio
++      - const: link
++
++  resets:
++    maxItems: 2
++
++  reset-names:
++    items:
++      - const: gio
++      - const: link
++
++  num-ib-windows:
++    const: 16
++
++  num-ob-windows:
++    const: 16
++
++  num-lanes: true
++
++  phys:
++    maxItems: 1
++
++  phy-names:
++    const: pcie-phy
++
++required:
++  - compatible
++  - reg
++  - reg-names
++  - clocks
++  - clock-names
++  - resets
++  - reset-names
++
++additionalProperties: false
++
++examples:
++  - |
++    pcie_ep: pcie-ep@66000000 {
++        compatible = "socionext,uniphier-pro5-pcie-ep";
++        reg-names = "dbi", "dbi2", "link", "addr_space";
++        reg = <0x66000000 0x1000>, <0x66001000 0x1000>,
++              <0x66010000 0x10000>, <0x67000000 0x400000>;
++        clock-names = "gio", "link";
++        clocks = <&sys_clk 12>, <&sys_clk 24>;
++        reset-names = "gio", "link";
++        resets = <&sys_rst 12>, <&sys_rst 24>;
++        num-ib-windows = <16>;
++        num-ob-windows = <16>;
++        num-lanes = <4>;
++        phy-names = "pcie-phy";
++        phys = <&pcie_phy>;
++    };
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 92657a1..7f26748 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -13211,7 +13211,7 @@ PCIE DRIVER FOR SOCIONEXT UNIPHIER
+ M:	Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+-F:	Documentation/devicetree/bindings/pci/uniphier-pcie.txt
++F:	Documentation/devicetree/bindings/pci/uniphier-pcie*
+ F:	drivers/pci/controller/dwc/pcie-uniphier.c
+ 
+ PCIE DRIVER FOR ST SPEAR13XX
+-- 
+2.7.4
 
-Lorenzo
-
->  free:
->  	kfree(bus);
-> @@ -2953,7 +2955,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->  	return bridge->bus;
->  
->  err_out:
-> -	kfree(bridge);
-> +	put_device(&bridge->dev);
->  	return NULL;
->  }
->  EXPORT_SYMBOL_GPL(pci_create_root_bus);
-> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-> index e9c6b120cf45..95dec03d9f2a 100644
-> --- a/drivers/pci/remove.c
-> +++ b/drivers/pci/remove.c
-> @@ -160,6 +160,6 @@ void pci_remove_root_bus(struct pci_bus *bus)
->  	host_bridge->bus = NULL;
->  
->  	/* remove the host bridge */
-> -	device_unregister(&host_bridge->dev);
-> +	device_del(&host_bridge->dev);
->  }
->  EXPORT_SYMBOL_GPL(pci_remove_root_bus);
-> -- 
-> 2.20.1
-> 
