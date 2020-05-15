@@ -7,27 +7,27 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C126C433E0
-	for <linux-pci@archiver.kernel.org>; Fri, 15 May 2020 09:59:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 154C9C433E1
+	for <linux-pci@archiver.kernel.org>; Fri, 15 May 2020 09:59:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3333220709
+	by mail.kernel.org (Postfix) with ESMTP id E7CF020709
 	for <linux-pci@archiver.kernel.org>; Fri, 15 May 2020 09:59:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728040AbgEOJ7l (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 15 May 2020 05:59:41 -0400
+        id S1728183AbgEOJ7U (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 15 May 2020 05:59:20 -0400
 Received: from mx.socionext.com ([202.248.49.38]:29835 "EHLO mx.socionext.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728213AbgEOJ7W (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 15 May 2020 05:59:22 -0400
-Received: from unknown (HELO iyokan-ex.css.socionext.com) ([172.31.9.54])
-  by mx.socionext.com with ESMTP; 15 May 2020 18:59:20 +0900
-Received: from mail.mfilter.local (m-filter-2 [10.213.24.62])
-        by iyokan-ex.css.socionext.com (Postfix) with ESMTP id 17E9D60057;
-        Fri, 15 May 2020 18:59:21 +0900 (JST)
-Received: from 172.31.9.51 (172.31.9.51) by m-FILTER with ESMTP; Fri, 15 May 2020 18:59:21 +0900
+        id S1728142AbgEOJ7U (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 15 May 2020 05:59:20 -0400
+Received: from unknown (HELO kinkan-ex.css.socionext.com) ([172.31.9.52])
+  by mx.socionext.com with ESMTP; 15 May 2020 18:59:17 +0900
+Received: from mail.mfilter.local (m-filter-1 [10.213.24.61])
+        by kinkan-ex.css.socionext.com (Postfix) with ESMTP id 2336E180B60;
+        Fri, 15 May 2020 18:59:18 +0900 (JST)
+Received: from 172.31.9.51 (172.31.9.51) by m-FILTER with ESMTP; Fri, 15 May 2020 18:59:18 +0900
 Received: from plum.e01.socionext.com (unknown [10.213.132.32])
-        by kinkan.css.socionext.com (Postfix) with ESMTP id 938C91A12D0;
-        Fri, 15 May 2020 18:59:20 +0900 (JST)
+        by kinkan.css.socionext.com (Postfix) with ESMTP id C5AD11A12D0;
+        Fri, 15 May 2020 18:59:17 +0900 (JST)
 From:   Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -40,9 +40,9 @@ Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         Masami Hiramatsu <masami.hiramatsu@linaro.org>,
         Jassi Brar <jaswinder.singh@linaro.org>,
         Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-Subject: [PATCH v2 4/5] PCI: uniphier: Add iATU register support
-Date:   Fri, 15 May 2020 18:59:02 +0900
-Message-Id: <1589536743-6684-5-git-send-email-hayashi.kunihiko@socionext.com>
+Subject: [PATCH v2 1/5] PCI: dwc: Add msi_host_isr() callback
+Date:   Fri, 15 May 2020 18:58:59 +0900
+Message-Id: <1589536743-6684-2-git-send-email-hayashi.kunihiko@socionext.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1589536743-6684-1-git-send-email-hayashi.kunihiko@socionext.com>
 References: <1589536743-6684-1-git-send-email-hayashi.kunihiko@socionext.com>
@@ -51,33 +51,53 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This gets iATU register area from reg property. In Synopsis DWC version
-4.80 or later, since iATU register area is separated from core register
-area, this area is necessary to get from DT independently.
+This adds msi_host_isr() callback function support to describe
+SoC-dependent service triggered by MSI.
+
+For example, when AER interrupt is triggered by MSI, the callback function
+reads SoC-dependent registers and detects that the interrupt is from AER,
+and invoke AER interrupts related to MSI.
 
 Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
 ---
- drivers/pci/controller/dwc/pcie-uniphier.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/pci/controller/dwc/pcie-designware-host.c | 8 ++++----
+ drivers/pci/controller/dwc/pcie-designware.h      | 1 +
+ 2 files changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-uniphier.c b/drivers/pci/controller/dwc/pcie-uniphier.c
-index a8dda39..493f105 100644
---- a/drivers/pci/controller/dwc/pcie-uniphier.c
-+++ b/drivers/pci/controller/dwc/pcie-uniphier.c
-@@ -447,6 +447,13 @@ static int uniphier_pcie_probe(struct platform_device *pdev)
- 	if (IS_ERR(priv->pci.dbi_base))
- 		return PTR_ERR(priv->pci.dbi_base);
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index 42fbfe2..7dd1021 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -112,13 +112,13 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+ static void dw_chained_msi_isr(struct irq_desc *desc)
+ {
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+-	struct pcie_port *pp;
++	struct pcie_port *pp = irq_desc_get_handler_data(desc);
  
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "atu");
-+	if (res) {
-+		priv->pci.atu_base = devm_pci_remap_cfg_resource(dev, res);
-+		if (IS_ERR(priv->pci.atu_base))
-+			priv->pci.atu_base = NULL;
-+	}
-+
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "link");
- 	priv->base = devm_ioremap_resource(dev, res);
- 	if (IS_ERR(priv->base))
+-	chained_irq_enter(chip, desc);
++	if (pp->ops->msi_host_isr)
++		pp->ops->msi_host_isr(pp);
+ 
+-	pp = irq_desc_get_handler_data(desc);
++	chained_irq_enter(chip, desc);
+ 	dw_handle_msi_irq(pp);
+-
+ 	chained_irq_exit(chip, desc);
+ }
+ 
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 656e00f..e741967 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -170,6 +170,7 @@ struct dw_pcie_host_ops {
+ 	void (*scan_bus)(struct pcie_port *pp);
+ 	void (*set_num_vectors)(struct pcie_port *pp);
+ 	int (*msi_host_init)(struct pcie_port *pp);
++	void (*msi_host_isr)(struct pcie_port *pp);
+ };
+ 
+ struct pcie_port {
 -- 
 2.7.4
 
