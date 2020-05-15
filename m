@@ -7,27 +7,27 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48957C433E2
-	for <linux-pci@archiver.kernel.org>; Fri, 15 May 2020 09:59:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C126C433E0
+	for <linux-pci@archiver.kernel.org>; Fri, 15 May 2020 09:59:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2C8EB2074D
-	for <linux-pci@archiver.kernel.org>; Fri, 15 May 2020 09:59:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3333220709
+	for <linux-pci@archiver.kernel.org>; Fri, 15 May 2020 09:59:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728230AbgEOJ7W (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 15 May 2020 05:59:22 -0400
-Received: from mx.socionext.com ([202.248.49.38]:29843 "EHLO mx.socionext.com"
+        id S1728040AbgEOJ7l (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 15 May 2020 05:59:41 -0400
+Received: from mx.socionext.com ([202.248.49.38]:29835 "EHLO mx.socionext.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728164AbgEOJ7V (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 15 May 2020 05:59:21 -0400
+        id S1728213AbgEOJ7W (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 15 May 2020 05:59:22 -0400
 Received: from unknown (HELO iyokan-ex.css.socionext.com) ([172.31.9.54])
-  by mx.socionext.com with ESMTP; 15 May 2020 18:59:19 +0900
+  by mx.socionext.com with ESMTP; 15 May 2020 18:59:20 +0900
 Received: from mail.mfilter.local (m-filter-2 [10.213.24.62])
-        by iyokan-ex.css.socionext.com (Postfix) with ESMTP id 888C360057;
-        Fri, 15 May 2020 18:59:19 +0900 (JST)
-Received: from 172.31.9.51 (172.31.9.51) by m-FILTER with ESMTP; Fri, 15 May 2020 18:59:19 +0900
+        by iyokan-ex.css.socionext.com (Postfix) with ESMTP id 17E9D60057;
+        Fri, 15 May 2020 18:59:21 +0900 (JST)
+Received: from 172.31.9.51 (172.31.9.51) by m-FILTER with ESMTP; Fri, 15 May 2020 18:59:21 +0900
 Received: from plum.e01.socionext.com (unknown [10.213.132.32])
-        by kinkan.css.socionext.com (Postfix) with ESMTP id D24FB1A12D0;
-        Fri, 15 May 2020 18:59:18 +0900 (JST)
+        by kinkan.css.socionext.com (Postfix) with ESMTP id 938C91A12D0;
+        Fri, 15 May 2020 18:59:20 +0900 (JST)
 From:   Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -40,9 +40,9 @@ Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         Masami Hiramatsu <masami.hiramatsu@linaro.org>,
         Jassi Brar <jaswinder.singh@linaro.org>,
         Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-Subject: [PATCH v2 2/5] PCI: uniphier: Add misc interrupt handler to invoke PME and AER
-Date:   Fri, 15 May 2020 18:59:00 +0900
-Message-Id: <1589536743-6684-3-git-send-email-hayashi.kunihiko@socionext.com>
+Subject: [PATCH v2 4/5] PCI: uniphier: Add iATU register support
+Date:   Fri, 15 May 2020 18:59:02 +0900
+Message-Id: <1589536743-6684-5-git-send-email-hayashi.kunihiko@socionext.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1589536743-6684-1-git-send-email-hayashi.kunihiko@socionext.com>
 References: <1589536743-6684-1-git-send-email-hayashi.kunihiko@socionext.com>
@@ -51,121 +51,33 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The misc interrupts consisting of PME, AER, and Link event, is handled
-by INTx handler, however, these interrupts should be also handled by
-MSI handler.
-
-This adds the function uniphier_pcie_misc_isr() that handles misc
-intterupts, which is called from both INTx and MSI handlers.
-This function detects PME and AER interrupts with the status register,
-and invoke PME and AER drivers related to INTx or MSI.
-
-And this sets the mask for misc interrupts from INTx if MSI is enabled
-and sets the mask for misc interrupts from MSI if MSI is disabled.
+This gets iATU register area from reg property. In Synopsis DWC version
+4.80 or later, since iATU register area is separated from core register
+area, this area is necessary to get from DT independently.
 
 Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
 ---
- drivers/pci/controller/dwc/pcie-uniphier.c | 53 +++++++++++++++++++++++-------
- 1 file changed, 42 insertions(+), 11 deletions(-)
+ drivers/pci/controller/dwc/pcie-uniphier.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
 diff --git a/drivers/pci/controller/dwc/pcie-uniphier.c b/drivers/pci/controller/dwc/pcie-uniphier.c
-index a5401a0..a8dda39 100644
+index a8dda39..493f105 100644
 --- a/drivers/pci/controller/dwc/pcie-uniphier.c
 +++ b/drivers/pci/controller/dwc/pcie-uniphier.c
-@@ -44,7 +44,9 @@
- #define PCL_SYS_AUX_PWR_DET		BIT(8)
+@@ -447,6 +447,13 @@ static int uniphier_pcie_probe(struct platform_device *pdev)
+ 	if (IS_ERR(priv->pci.dbi_base))
+ 		return PTR_ERR(priv->pci.dbi_base);
  
- #define PCL_RCV_INT			0x8108
-+#define PCL_RCV_INT_ALL_INT_MASK	GENMASK(28, 25)
- #define PCL_RCV_INT_ALL_ENABLE		GENMASK(20, 17)
-+#define PCL_RCV_INT_ALL_MSI_MASK	GENMASK(12, 9)
- #define PCL_CFG_BW_MGT_STATUS		BIT(4)
- #define PCL_CFG_LINK_AUTO_BW_STATUS	BIT(3)
- #define PCL_CFG_AER_RC_ERR_MSI_STATUS	BIT(2)
-@@ -167,7 +169,15 @@ static void uniphier_pcie_stop_link(struct dw_pcie *pci)
- 
- static void uniphier_pcie_irq_enable(struct uniphier_pcie_priv *priv)
- {
--	writel(PCL_RCV_INT_ALL_ENABLE, priv->base + PCL_RCV_INT);
-+	u32 val;
-+
-+	val = PCL_RCV_INT_ALL_ENABLE;
-+	if (pci_msi_enabled())
-+		val |= PCL_RCV_INT_ALL_INT_MASK;
-+	else
-+		val |= PCL_RCV_INT_ALL_MSI_MASK;
-+
-+	writel(val, priv->base + PCL_RCV_INT);
- 	writel(PCL_RCV_INTX_ALL_ENABLE, priv->base + PCL_RCV_INTX);
- }
- 
-@@ -231,28 +241,48 @@ static const struct irq_domain_ops uniphier_intx_domain_ops = {
- 	.map = uniphier_pcie_intx_map,
- };
- 
--static void uniphier_pcie_irq_handler(struct irq_desc *desc)
-+static void uniphier_pcie_misc_isr(struct pcie_port *pp)
- {
--	struct pcie_port *pp = irq_desc_get_handler_data(desc);
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 	struct uniphier_pcie_priv *priv = to_uniphier_pcie(pci);
--	struct irq_chip *chip = irq_desc_get_chip(desc);
--	unsigned long reg;
--	u32 val, bit, virq;
-+	u32 val, virq;
- 
--	/* INT for debug */
- 	val = readl(priv->base + PCL_RCV_INT);
- 
- 	if (val & PCL_CFG_BW_MGT_STATUS)
- 		dev_dbg(pci->dev, "Link Bandwidth Management Event\n");
-+
- 	if (val & PCL_CFG_LINK_AUTO_BW_STATUS)
- 		dev_dbg(pci->dev, "Link Autonomous Bandwidth Event\n");
--	if (val & PCL_CFG_AER_RC_ERR_MSI_STATUS)
--		dev_dbg(pci->dev, "Root Error\n");
--	if (val & PCL_CFG_PME_MSI_STATUS)
--		dev_dbg(pci->dev, "PME Interrupt\n");
-+
-+	if (pci_msi_enabled()) {
-+		if (val & PCL_CFG_AER_RC_ERR_MSI_STATUS) {
-+			dev_dbg(pci->dev, "Root Error Status\n");
-+			virq = irq_linear_revmap(pp->irq_domain, 0);
-+			generic_handle_irq(virq);
-+		}
-+
-+		if (val & PCL_CFG_PME_MSI_STATUS) {
-+			dev_dbg(pci->dev, "PME Interrupt\n");
-+			virq = irq_linear_revmap(pp->irq_domain, 0);
-+			generic_handle_irq(virq);
-+		}
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "atu");
++	if (res) {
++		priv->pci.atu_base = devm_pci_remap_cfg_resource(dev, res);
++		if (IS_ERR(priv->pci.atu_base))
++			priv->pci.atu_base = NULL;
 +	}
- 
- 	writel(val, priv->base + PCL_RCV_INT);
-+}
 +
-+static void uniphier_pcie_irq_handler(struct irq_desc *desc)
-+{
-+	struct pcie_port *pp = irq_desc_get_handler_data(desc);
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+	struct uniphier_pcie_priv *priv = to_uniphier_pcie(pci);
-+	struct irq_chip *chip = irq_desc_get_chip(desc);
-+	unsigned long reg;
-+	u32 val, bit, virq;
-+
-+	/* misc interrupt */
-+	uniphier_pcie_misc_isr(pp);
- 
- 	/* INTx */
- 	chained_irq_enter(chip, desc);
-@@ -330,6 +360,7 @@ static int uniphier_pcie_host_init(struct pcie_port *pp)
- 
- static const struct dw_pcie_host_ops uniphier_pcie_host_ops = {
- 	.host_init = uniphier_pcie_host_init,
-+	.msi_host_isr = uniphier_pcie_misc_isr,
- };
- 
- static int uniphier_add_pcie_port(struct uniphier_pcie_priv *priv,
+ 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "link");
+ 	priv->base = devm_ioremap_resource(dev, res);
+ 	if (IS_ERR(priv->base))
 -- 
 2.7.4
 
