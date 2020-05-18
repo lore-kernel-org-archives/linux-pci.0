@@ -2,108 +2,91 @@ Return-Path: <SRS0=Olcz=7A=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9E46C433DF
-	for <linux-pci@archiver.kernel.org>; Mon, 18 May 2020 16:35:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6F6CC433E0
+	for <linux-pci@archiver.kernel.org>; Mon, 18 May 2020 16:36:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8B506207D8
-	for <linux-pci@archiver.kernel.org>; Mon, 18 May 2020 16:35:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B43B820758
+	for <linux-pci@archiver.kernel.org>; Mon, 18 May 2020 16:36:48 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="PDn/PxtM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728245AbgERQf2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 18 May 2020 12:35:28 -0400
-Received: from mga01.intel.com ([192.55.52.88]:16277 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727006AbgERQf1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 18 May 2020 12:35:27 -0400
-IronPort-SDR: acu3cf1c8cHr+7y7/Wc9xG7bmN/rctQv9hc1StRF9NZT0OFmb0QMd1DFGOLaJ3c1jF3iOzxP0s
- UnJLMnJqBXUQ==
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 May 2020 09:35:27 -0700
-IronPort-SDR: tIiZalxemVzC8wfCTjMDmUhf1WwA+VczUG28LAnt+JhT2xRo+Xk9R6nL8NzzqNQXQ+2ucqEMow
- LX0J846Z3BLQ==
-X-IronPort-AV: E=Sophos;i="5.73,407,1583222400"; 
-   d="scan'208";a="264014280"
-Received: from kharjox-mobl1.amr.corp.intel.com (HELO arch-ashland-svkelley.intel.com) ([10.254.180.35])
-  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 May 2020 09:35:25 -0700
-From:   Sean V Kelley <sean.v.kelley@linux.intel.com>
-To:     bhelgaas@google.com
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Sean V Kelley <sean.v.kelley@linux.intel.com>
-Subject: [PATCH V2 0/3] PCI: Add basic Compute eXpress Link DVSEC decode
-Date:   Mon, 18 May 2020 09:35:20 -0700
-Message-Id: <20200518163523.1225643-1-sean.v.kelley@linux.intel.com>
-X-Mailer: git-send-email 2.26.2
+        id S1727040AbgERQgs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 18 May 2020 12:36:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49574 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727035AbgERQgs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 May 2020 12:36:48 -0400
+Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97639C061A0C
+        for <linux-pci@vger.kernel.org>; Mon, 18 May 2020 09:36:47 -0700 (PDT)
+Received: by mail-wr1-x442.google.com with SMTP id l11so12720757wru.0
+        for <linux-pci@vger.kernel.org>; Mon, 18 May 2020 09:36:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=2gB71GDbYw4drdErrFCHDJu6OIFxLC1rGMVvbvndxDM=;
+        b=PDn/PxtMfkLDgv/KDv9kB0no5kBMLuhS+qeMDcod8WbYLbhEgkIlgH2u0QFRzcPVOl
+         q+awlo77fgxtG8/InLzpp4GGLQGpLlEiXok6uGcW/2hPLhtNyzDv65j8LEsb7LKb91FL
+         /05873qUSxmeP3aP/CeuSoF2CSKGIasPqXcq6bkBNvEHYE6U+4ebU86gavemPyFrd8aX
+         NIluOhSZEwzye8Yc+0X8snjsraF4P+pCEmcRIx5w7cws889GEJdb55p143NKDwnbn6Ye
+         gpxe8iA+sJuxkM1jHcgB2EVidW60koXndSh/pSNwb8s8/rC/w5S5nOIRf80ahCi8J4/m
+         AArA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=2gB71GDbYw4drdErrFCHDJu6OIFxLC1rGMVvbvndxDM=;
+        b=ck6/kuAbEEinUax2HIumYOsjW7EiJKwFyyxQu78SWeVQ5JXRjt88iiBaQ+fG6FYvHL
+         +R3uHLa+FB7+qKhfWzYCPt3QleITL0np4Q7UszlmwLza7DWapKH8A4Go3okfEM/IqTYm
+         RqWESXHttEclTwCg4zAkHqaljZSZ6OxY3/nlmEgWo6tBEZZVZz1KZyQ5M5wUBg0bts6e
+         esEIpWOaiC4zbHpEuIwCH/5SgiaOY9Jf2fa1z7S5t4muJjCqDo3EcgCj7hYmp+wBTcC1
+         J/XTv2jCKVyMmx4Yq7hy885SL/pXw7pf6rUJfFWteZLo+XxmuOfSqaMV6a8erkpA0J//
+         Re5g==
+X-Gm-Message-State: AOAM530PErJ25iHOAN9XOVFC3D5chj64p3uYrLAfyOKFwghVw2XTLNO3
+        aX/oNWKNX3eEh/0gCIa4SoHZIw==
+X-Google-Smtp-Source: ABdhPJyoblToVYDpynfOZzcoPNIcIPzA/+uGv6r9gM7IsrGshV+QeruKxRwI6mlqXy28BRkRGgWhgA==
+X-Received: by 2002:adf:f5cb:: with SMTP id k11mr20827860wrp.300.1589819806321;
+        Mon, 18 May 2020 09:36:46 -0700 (PDT)
+Received: from myrica ([2001:171b:226e:c200:c43b:ef78:d083:b355])
+        by smtp.gmail.com with ESMTPSA id 5sm143931wmz.16.2020.05.18.09.36.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 18 May 2020 09:36:45 -0700 (PDT)
+Date:   Mon, 18 May 2020 18:36:36 +0200
+From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        iommu@lists.linux-foundation.org, joro@8bytes.org,
+        bhelgaas@google.com, ashok.raj@intel.com, will@kernel.org,
+        alex.williamson@redhat.com, robin.murphy@arm.com,
+        dwmw2@infradead.org, baolu.lu@linux.intel.com
+Subject: Re: [PATCH 0/4] PCI, iommu: Factor 'untrusted' check for ATS
+ enablement
+Message-ID: <20200518163636.GA1515149@myrica>
+References: <20200515104359.1178606-1-jean-philippe@linaro.org>
+ <20200515154351.GA6546@infradead.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200515154351.GA6546@infradead.org>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Changes since v1 [1]:
+On Fri, May 15, 2020 at 08:43:51AM -0700, Christoph Hellwig wrote:
+> Can you please lift the untrusted flag into struct device?  It really
+> isn't a PCI specific concept, and we should not have code poking into
+> pci_dev all over the iommu code.
 
-- Make use pci_info() and FLAG(), as in pcie_init().
-- Wrap new cxl_cap in pci_dev struct within #ifdef PCI_CXL.
-(Bjorn Helgaas)
+I suppose that could go in a separate series once other buses need it?
+The only methods for setting this bit at the moment apply to PCI ports.
+(ACPI ExternalFacingPort and dt external-facing properties declared by
+firmware).
 
-- Added functionality for some CXL.mem and CXL.cache helper functions.
-Snoop filter helper functions along with a performance hint as
-well as a toggle for viral self-isolation mode could be implemented.
-However, in the absence of CXL devices with their associated drivers, it
-perhaps makes best sense to be in a holding pattern on this until we have
-something to exercise it with.
-
-Thoughts?
-
-[1] https://lore.kernel.org/linux-pci/20200515175528.980103-1-sean.v.kelley@linux.intel.com/
-
-This patch series implements basic Designated Vendor-Specific Extended
-Capabilities (DVSEC) decode for Compute eXpress Link devices, a new CPU
-interconnect building upon PCIe. As a basis for the CXL support it provides
-PCI init handling for detection, decode, and caching of CXL device
-capabilities.  Moreover, it makes use of the DVSEC Vendor ID and DVSEC ID so
-as to identify a CXL capable device. (PCIe r5.0, sec 7.9.6.2)
-
-DocLink: https://www.computeexpresslink.org/
-
-For your reference, a parallel series of patches have been submitted to enable
-lspci decode of CXL DVSEC and may be tracked.
-
-Link: https://lore.kernel.org/linux-pci/20200511174618.10589-1-sean.v.kelley@linux.intel.com/
-
-This patch makes use of pending DVSEC related header additions and the
-first patch of that series is included here. It can be sorted out when the
-upstream merge is done.
-
-Link: https://lore.kernel.org/linux-pci/20200508021844.6911-2-david.e.box@linux.intel.com/
-
-Sample dmesg output of a CXL Type 3 device (CXL.io, CXL.mem):
-[    2.997177] pci 0000:6b:00.0: CXL: Cache- IO+ Mem+ Viral- HDMCount 1
-[    2.997188] pci 0000:6b:00.0: CXL: cap ctrl status ctrl2 status2 lock
-[    2.997201] pci 0000:6b:00.0: CXL: 001e 0002 0000 0000 0000 0000
-
-David E. Box (1):
-  pci: Add Designated Vendor Specific Capability
-
-Sean V Kelley (2):
-  PCI: Add basic Compute eXpress Link DVSEC decode
-  PCI: Add helpers to enable/disable CXL.mem and CXL.cache
-
- drivers/pci/Kconfig           |   9 ++
- drivers/pci/Makefile          |   1 +
- drivers/pci/cxl.c             | 175 ++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h             |  15 +++
- drivers/pci/probe.c           |   1 +
- include/linux/pci.h           |   3 +
- include/uapi/linux/pci_regs.h |   5 +
- 7 files changed, 209 insertions(+)
- create mode 100644 drivers/pci/cxl.c
-
---
-2.26.2
-
+Thanks,
+Jean
