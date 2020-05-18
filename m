@@ -1,94 +1,167 @@
-Return-Path: <SRS0=BI5g=7I=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=Olcz=7A=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A208FC433E0
-	for <linux-pci@archiver.kernel.org>; Tue, 26 May 2020 19:34:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DF18C433E0
+	for <linux-pci@archiver.kernel.org>; Mon, 18 May 2020 14:22:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 813DF20873
-	for <linux-pci@archiver.kernel.org>; Tue, 26 May 2020 19:34:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E1AB920657
+	for <linux-pci@archiver.kernel.org>; Mon, 18 May 2020 14:22:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=amazon.com header.i=@amazon.com header.b="aM0E67Df"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="Z8q4xTJr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389767AbgEZTe0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 26 May 2020 15:34:26 -0400
-Received: from smtp-fw-6001.amazon.com ([52.95.48.154]:16303 "EHLO
-        smtp-fw-6001.amazon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387398AbgEZSyy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 26 May 2020 14:54:54 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=amazon.com; i=@amazon.com; q=dns/txt; s=amazon201209;
-  t=1590519294; x=1622055294;
-  h=from:to:cc:date:message-id:references:in-reply-to:
-   content-id:content-transfer-encoding:mime-version:subject;
-  bh=sw3GsXgWODA02zmkjx9WwSIRN5Jis0cQ31/Ca05dRdg=;
-  b=aM0E67Dfv2LjUwmz9p2n3lClJnNPSoLBGHuLwzEZtbTDc0a8KOQzuO4E
-   RMLvNnXtaxyjOaE7bmSUNzR7I1TQzNkCoAIGWQoJ4N8UpSTCG+l8m7+MA
-   /KKwH7D/H6avRGDl17i7AFzXkE52p+fQ8uJEUJH4No6XtHX25UXYp5c9e
-   I=;
-IronPort-SDR: ts3ePCm91EG/cd8uz8c4XPtmkZtbHDMPNckvoQ+t9cj6hYusStsbojEFrsJ2/SMRCuc2l9OLqX
- BPI/CEcEHpHg==
-X-IronPort-AV: E=Sophos;i="5.73,437,1583193600"; 
-   d="scan'208";a="33663270"
-Subject: Re: [PATCH v1] PCI: controller: Remove duplicate error message
-Thread-Topic: [PATCH v1] PCI: controller: Remove duplicate error message
-Received: from iad12-co-svc-p1-lb1-vlan3.amazon.com (HELO email-inbound-relay-1d-37fd6b3d.us-east-1.amazon.com) ([10.43.8.6])
-  by smtp-border-fw-out-6001.iad6.amazon.com with ESMTP; 26 May 2020 18:22:59 +0000
-Received: from EX13MTAUWA001.ant.amazon.com (iad55-ws-svc-p15-lb9-vlan2.iad.amazon.com [10.40.159.162])
-        by email-inbound-relay-1d-37fd6b3d.us-east-1.amazon.com (Postfix) with ESMTPS id 96E9C28211C;
-        Tue, 26 May 2020 18:22:57 +0000 (UTC)
-Received: from EX13D13UWA004.ant.amazon.com (10.43.160.251) by
- EX13MTAUWA001.ant.amazon.com (10.43.160.118) with Microsoft SMTP Server (TLS)
- id 15.0.1497.2; Tue, 26 May 2020 18:22:57 +0000
-Received: from EX13D13UWA001.ant.amazon.com (10.43.160.136) by
- EX13D13UWA004.ant.amazon.com (10.43.160.251) with Microsoft SMTP Server (TLS)
- id 15.0.1497.2; Tue, 26 May 2020 18:22:57 +0000
-Received: from EX13D13UWA001.ant.amazon.com ([10.43.160.136]) by
- EX13D13UWA001.ant.amazon.com ([10.43.160.136]) with mapi id 15.00.1497.006;
- Tue, 26 May 2020 18:22:56 +0000
-From:   "Chocron, Jonathan" <jonnyc@amazon.com>
-To:     "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "thomas.petazzoni@bootlin.com" <thomas.petazzoni@bootlin.com>,
-        "pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
-        "robh@kernel.org" <robh@kernel.org>,
-        "zhengdejin5@gmail.com" <zhengdejin5@gmail.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "tjoseph@cadence.com" <tjoseph@cadence.com>
-CC:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Thread-Index: AQHWM3A7ZXCRFcozsESZq5tPMlXzIai6rncA
-Date:   Tue, 26 May 2020 18:22:56 +0000
-Message-ID: <1d7703d5c29dc9371ace3645377d0ddd9c89be30.camel@amazon.com>
-References: <20200526150954.4729-1-zhengdejin5@gmail.com>
-In-Reply-To: <20200526150954.4729-1-zhengdejin5@gmail.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-messagesentrepresentingtype: 1
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [10.43.160.48]
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <B772E1B8FC60C34D8AEBA36F4B277AEF@amazon.com>
-Content-Transfer-Encoding: base64
+        id S1727035AbgEROWe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 18 May 2020 10:22:34 -0400
+Received: from hqnvemgate24.nvidia.com ([216.228.121.143]:5334 "EHLO
+        hqnvemgate24.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726997AbgEROWe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 May 2020 10:22:34 -0400
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate24.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5ec2999c0001>; Mon, 18 May 2020 07:20:12 -0700
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate101.nvidia.com (PGP Universal service);
+  Mon, 18 May 2020 07:22:34 -0700
+X-PGP-Universal: processed;
+        by hqpgpgate101.nvidia.com on Mon, 18 May 2020 07:22:34 -0700
+Received: from [10.25.73.9] (172.20.13.39) by HQMAIL107.nvidia.com
+ (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Mon, 18 May
+ 2020 14:22:30 +0000
+Subject: Re: [PATCH V2] arm64: tegra: Fix flag for 64-bit resources in
+ 'ranges' property
+To:     <robh+dt@kernel.org>, <thierry.reding@gmail.com>,
+        <jonathanh@nvidia.com>
+CC:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        <amurray@thegoodpenguin.co.uk>, <bhelgaas@google.com>,
+        <linux-kernel@vger.kernel.org>, <kthota@nvidia.com>,
+        <mmaddireddy@nvidia.com>, <sagar.tv@gmail.com>,
+        <devicetree@vger.kernel.org>, <linux-tegra@vger.kernel.org>
+References: <20200513191627.8533-1-vidyas@nvidia.com>
+ <20200514135437.29814-1-vidyas@nvidia.com>
+ <20200518135006.GB31554@e121166-lin.cambridge.arm.com>
+X-Nvconfidentiality: public
+From:   Vidya Sagar <vidyas@nvidia.com>
+Message-ID: <e64ccace-d2b9-0e03-db3f-e65ed6f56230@nvidia.com>
+Date:   Mon, 18 May 2020 19:52:24 +0530
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
+ Thunderbird/68.8.0
 MIME-Version: 1.0
+In-Reply-To: <20200518135006.GB31554@e121166-lin.cambridge.arm.com>
+X-Originating-IP: [172.20.13.39]
+X-ClientProxiedBy: HQMAIL107.nvidia.com (172.20.187.13) To
+ HQMAIL107.nvidia.com (172.20.187.13)
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1589811612; bh=ygS6whssLxUlGMHQFNVShdRPY01pxJPdCk+7KRT+K0o=;
+        h=X-PGP-Universal:Subject:To:CC:References:X-Nvconfidentiality:From:
+         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
+         X-Originating-IP:X-ClientProxiedBy:Content-Type:Content-Language:
+         Content-Transfer-Encoding;
+        b=Z8q4xTJrqbT3TqukcpA2boW25MUibTcyZk2LOr4lUfXriS67bB4pwTPESL9FzrzoH
+         CBq3WfjCqgHNVhdgSy98zJInR9G72eOFGdCyesIGYd7Gxrel/XJL4YoDKBOTOri/AX
+         8jmi6Ji88tiLsr3XQy72WCwEsgkcLVmvgJNViG6w71xqOSfEj4b/mlHNCteD4jd1et
+         4rNTIsvA0b5QKkpJrz+NSvbKrx7y2YeEDNM7fMzYuCWoiQJnRopAd2284lIPCe8ajU
+         dm4nndJFKPtCPixdtaGobNjzyviitrQbytJxzPELLLtE6ejE8EhWhulmuUGAI6q3Yo
+         AojcaxMOI5zEA==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-T24gVHVlLCAyMDIwLTA1LTI2IGF0IDIzOjA5ICswODAwLCBEZWppbiBaaGVuZyB3cm90ZToNCj4g
-Q0FVVElPTjogVGhpcyBlbWFpbCBvcmlnaW5hdGVkIGZyb20gb3V0c2lkZSBvZiB0aGUgb3JnYW5p
-emF0aW9uLiBEbw0KPiBub3QgY2xpY2sgbGlua3Mgb3Igb3BlbiBhdHRhY2htZW50cyB1bmxlc3Mg
-eW91IGNhbiBjb25maXJtIHRoZSBzZW5kZXINCj4gYW5kIGtub3cgdGhlIGNvbnRlbnQgaXMgc2Fm
-ZS4NCj4gDQo+IA0KPiANCj4gSXQgd2lsbCBwcmludCBhbiBlcnJvciBtZXNzYWdlIGJ5IGl0c2Vs
-ZiB3aGVuDQo+IGRldm1fcGNpX3JlbWFwX2NmZ19yZXNvdXJjZSgpIGdvZXMgd3JvbmcuIHNvIHJl
-bW92ZSB0aGUgZHVwbGljYXRlDQo+IGVycm9yIG1lc3NhZ2UuDQo+IA0KDQpJdCBzZWVtcyBsaWtl
-IHRoYXQgaW4gdGhlIGZpcnN0IGVycm9yIGNhc2UgaW4NCmRldm1fcGNpX3JlbWFwX2NmZ19yZXNv
-dXJjZSgpLCB0aGUgcHJpbnQgd2lsbCBiZSBsZXNzIGluZGljYXRpdmUuIENvdWxkDQp5b3UgcGxl
-YXNlIHNoYXJlIGFuIGV4YW1wbGUgcHJpbnQgbG9nIHdpdGggdGhlIGR1cGxpY2F0ZSBwcmludD8N
-Cg0KVGhhbmtzLA0KICAgSm9uYXRoYW4NCg==
+Thanks Lorenzo.
+I've moved linux-pci to BCC and included
+devicetree and linux-tegra mailing lists to CC.
+
+Rob, Could you please review this patch?
+
+Thanks,
+Vidya Sagar
+
+On 18-May-20 7:20 PM, Lorenzo Pieralisi wrote:
+> External email: Use caution opening links or attachments
+> 
+> 
+> On Thu, May 14, 2020 at 07:24:37PM +0530, Vidya Sagar wrote:
+>> Fix flag in PCIe controllers device-tree nodes 'ranges' property to correctly
+>> represent 64-bit resources.
+>>
+>> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+>> ---
+>> V2:
+>> * Extended the change to cover other controllers as well
+>>
+>>   arch/arm64/boot/dts/nvidia/tegra194.dtsi | 12 ++++++------
+>>   1 file changed, 6 insertions(+), 6 deletions(-)
+> 
+> We don't apply DTS patches - so no need to CC linux-pci from now
+> onwards on these. Marked as not-applicable.
+> 
+> Lorenzo
+> 
+>> diff --git a/arch/arm64/boot/dts/nvidia/tegra194.dtsi b/arch/arm64/boot/dts/nvidia/tegra194.dtsi
+>> index e1ae01c2d039..4bc187a4eacd 100644
+>> --- a/arch/arm64/boot/dts/nvidia/tegra194.dtsi
+>> +++ b/arch/arm64/boot/dts/nvidia/tegra194.dtsi
+>> @@ -1405,7 +1405,7 @@
+>>
+>>                bus-range = <0x0 0xff>;
+>>                ranges = <0x81000000 0x0  0x30100000 0x0  0x30100000 0x0 0x00100000   /* downstream I/O (1MB) */
+>> -                       0xc2000000 0x12 0x00000000 0x12 0x00000000 0x0 0x30000000   /* prefetchable memory (768MB) */
+>> +                       0xc3000000 0x12 0x00000000 0x12 0x00000000 0x0 0x30000000   /* prefetchable memory (768MB) */
+>>                          0x82000000 0x0  0x40000000 0x12 0x30000000 0x0 0x10000000>; /* non-prefetchable memory (256MB) */
+>>        };
+>>
+>> @@ -1450,7 +1450,7 @@
+>>
+>>                bus-range = <0x0 0xff>;
+>>                ranges = <0x81000000 0x0  0x32100000 0x0  0x32100000 0x0 0x00100000   /* downstream I/O (1MB) */
+>> -                       0xc2000000 0x12 0x40000000 0x12 0x40000000 0x0 0x30000000   /* prefetchable memory (768MB) */
+>> +                       0xc3000000 0x12 0x40000000 0x12 0x40000000 0x0 0x30000000   /* prefetchable memory (768MB) */
+>>                          0x82000000 0x0  0x40000000 0x12 0x70000000 0x0 0x10000000>; /* non-prefetchable memory (256MB) */
+>>        };
+>>
+>> @@ -1495,7 +1495,7 @@
+>>
+>>                bus-range = <0x0 0xff>;
+>>                ranges = <0x81000000 0x0  0x34100000 0x0  0x34100000 0x0 0x00100000   /* downstream I/O (1MB) */
+>> -                       0xc2000000 0x12 0x80000000 0x12 0x80000000 0x0 0x30000000   /* prefetchable memory (768MB) */
+>> +                       0xc3000000 0x12 0x80000000 0x12 0x80000000 0x0 0x30000000   /* prefetchable memory (768MB) */
+>>                          0x82000000 0x0  0x40000000 0x12 0xb0000000 0x0 0x10000000>; /* non-prefetchable memory (256MB) */
+>>        };
+>>
+>> @@ -1540,7 +1540,7 @@
+>>
+>>                bus-range = <0x0 0xff>;
+>>                ranges = <0x81000000 0x0  0x36100000 0x0  0x36100000 0x0 0x00100000   /* downstream I/O (1MB) */
+>> -                       0xc2000000 0x14 0x00000000 0x14 0x00000000 0x3 0x40000000   /* prefetchable memory (13GB) */
+>> +                       0xc3000000 0x14 0x00000000 0x14 0x00000000 0x3 0x40000000   /* prefetchable memory (13GB) */
+>>                          0x82000000 0x0  0x40000000 0x17 0x40000000 0x0 0xc0000000>; /* non-prefetchable memory (3GB) */
+>>        };
+>>
+>> @@ -1585,7 +1585,7 @@
+>>
+>>                bus-range = <0x0 0xff>;
+>>                ranges = <0x81000000 0x0  0x38100000 0x0  0x38100000 0x0 0x00100000   /* downstream I/O (1MB) */
+>> -                       0xc2000000 0x18 0x00000000 0x18 0x00000000 0x3 0x40000000   /* prefetchable memory (13GB) */
+>> +                       0xc3000000 0x18 0x00000000 0x18 0x00000000 0x3 0x40000000   /* prefetchable memory (13GB) */
+>>                          0x82000000 0x0  0x40000000 0x1b 0x40000000 0x0 0xc0000000>; /* non-prefetchable memory (3GB) */
+>>        };
+>>
+>> @@ -1634,7 +1634,7 @@
+>>
+>>                bus-range = <0x0 0xff>;
+>>                ranges = <0x81000000 0x0  0x3a100000 0x0  0x3a100000 0x0 0x00100000   /* downstream I/O (1MB) */
+>> -                       0xc2000000 0x1c 0x00000000 0x1c 0x00000000 0x3 0x40000000   /* prefetchable memory (13GB) */
+>> +                       0xc3000000 0x1c 0x00000000 0x1c 0x00000000 0x3 0x40000000   /* prefetchable memory (13GB) */
+>>                          0x82000000 0x0  0x40000000 0x1f 0x40000000 0x0 0xc0000000>; /* non-prefetchable memory (3GB) */
+>>        };
+>>
+>> --
+>> 2.17.1
+>>
