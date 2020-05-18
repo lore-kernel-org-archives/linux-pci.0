@@ -1,109 +1,84 @@
-Return-Path: <SRS0=Vf45=67=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=Olcz=7A=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49D3EC433E1
-	for <linux-pci@archiver.kernel.org>; Sun, 17 May 2020 15:57:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD6A7C433E0
+	for <linux-pci@archiver.kernel.org>; Mon, 18 May 2020 10:05:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 28E85207D4
-	for <linux-pci@archiver.kernel.org>; Sun, 17 May 2020 15:57:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8C8F620801
+	for <linux-pci@archiver.kernel.org>; Mon, 18 May 2020 10:05:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728004AbgEQP5K convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 17 May 2020 11:57:10 -0400
-Received: from relay12.mail.gandi.net ([217.70.178.232]:54937 "EHLO
-        relay12.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727979AbgEQP5K (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 17 May 2020 11:57:10 -0400
-Received: from localhost (91-175-115-186.subs.proxad.net [91.175.115.186])
-        (Authenticated sender: gregory.clement@bootlin.com)
-        by relay12.mail.gandi.net (Postfix) with ESMTPSA id 39B1F200005;
-        Sun, 17 May 2020 15:57:03 +0000 (UTC)
-From:   Gregory CLEMENT <gregory.clement@bootlin.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Pali =?utf-8?Q?Roh=C3=A1r?= <pali@kernel.org>
-Cc:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Jason Cooper <jason@lakedaemon.net>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        id S1726528AbgERKF1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 18 May 2020 06:05:27 -0400
+Received: from mx.socionext.com ([202.248.49.38]:2449 "EHLO mx.socionext.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726274AbgERKF1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 18 May 2020 06:05:27 -0400
+Received: from unknown (HELO kinkan-ex.css.socionext.com) ([172.31.9.52])
+  by mx.socionext.com with ESMTP; 18 May 2020 19:05:25 +0900
+Received: from mail.mfilter.local (m-filter-1 [10.213.24.61])
+        by kinkan-ex.css.socionext.com (Postfix) with ESMTP id 26634180B84;
+        Mon, 18 May 2020 19:05:26 +0900 (JST)
+Received: from 172.31.9.53 (172.31.9.53) by m-FILTER with ESMTP; Mon, 18 May 2020 19:05:26 +0900
+Received: from yuzu.css.socionext.com (yuzu [172.31.8.45])
+        by iyokan.css.socionext.com (Postfix) with ESMTP id DEC7D41C5A;
+        Mon, 18 May 2020 19:05:25 +0900 (JST)
+Received: from [10.213.31.127] (unknown [10.213.31.127])
+        by yuzu.css.socionext.com (Postfix) with ESMTP id 26A161207BB;
+        Mon, 18 May 2020 19:05:25 +0900 (JST)
+Subject: Re: [PATCH v2 4/5] PCI: uniphier: Add iATU register support
+To:     Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
         Rob Herring <robh+dt@kernel.org>,
-        Remi Pommarel <repk@triplefau.lt>,
-        Marek =?utf-8?Q?Beh=C3=BAn?= <marek.behun@nic.cz>,
-        Tomasz Maciej Nowak <tmn505@gmail.com>,
-        Xogium <contact@xogium.me>, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4 00/12] PCI: aardvark: Fix support for Turris MOX and Compex wifi cards
-In-Reply-To: <20200513135643.478ffbda@windsurf.home>
-References: <20200430080625.26070-1-pali@kernel.org> <20200513135643.478ffbda@windsurf.home>
-Date:   Sun, 17 May 2020 17:57:02 +0200
-Message-ID: <87pnb2h7w1.fsf@FE-laptop>
+        Masahiro Yamada <yamada.masahiro@socionext.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Masami Hiramatsu <masami.hiramatsu@linaro.org>,
+        Jassi Brar <jaswinder.singh@linaro.org>
+References: <1589536743-6684-1-git-send-email-hayashi.kunihiko@socionext.com>
+ <1589536743-6684-5-git-send-email-hayashi.kunihiko@socionext.com>
+ <DM5PR12MB1276D6181D86C8DF0F98427ADABD0@DM5PR12MB1276.namprd12.prod.outlook.com>
+From:   Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+Message-ID: <e3c5a841-7098-542d-cf71-9591fd24db5c@socionext.com>
+Date:   Mon, 18 May 2020 19:05:24 +0900
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
+In-Reply-To: <DM5PR12MB1276D6181D86C8DF0F98427ADABD0@DM5PR12MB1276.namprd12.prod.outlook.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hello,
+Hi Gustavo,
 
-> Hello,
->
-> On Thu, 30 Apr 2020 10:06:13 +0200
-> Pali Rohár <pali@kernel.org> wrote:
->
->> Marek Behún (5):
->>   PCI: aardvark: Improve link training
->>   PCI: aardvark: Add PHY support
->>   dt-bindings: PCI: aardvark: Describe new properties
->>   arm64: dts: marvell: armada-37xx: Set pcie_reset_pin to gpio function
->>   arm64: dts: marvell: armada-37xx: Move PCIe comphy handle property
->> 
->> Pali Rohár (7):
->>   PCI: aardvark: Train link immediately after enabling training
->>   PCI: aardvark: Don't blindly enable ASPM L0s and don't write to
->>     read-only register
->>   PCI: of: Zero max-link-speed value is invalid
->>   PCI: aardvark: Issue PERST via GPIO
->>   PCI: aardvark: Add FIXME comment for PCIE_CORE_CMD_STATUS_REG access
->>   PCI: aardvark: Replace custom macros by standard linux/pci_regs.h
->>     macros
->>   arm64: dts: marvell: armada-37xx: Move PCIe max-link-speed property
->
-> Thanks a lot for this work. For a number of reasons, I'm less involved
-> in Marvell platform support in Linux, but I reviewed your series and
-> followed the discussions around it, and I'm happy to give my:
->
-> Acked-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+On 2020/05/15 22:16, Gustavo Pimentel wrote:
+> Hi Kunihiko,
+> 
+> On Fri, May 15, 2020 at 10:59:2, Kunihiko Hayashi
+> <hayashi.kunihiko@socionext.com> wrote:
+> 
+>> This gets iATU register area from reg property. In Synopsis DWC version
+> 
+> s/Synopsis/Synopsys
+> in all patches
+Thank you for pointing out.
+I'll fix and be careful about this.
 
-With this acked-by for the series, the reviewed-by from Rob on the
-binding and the tested-by, I am pretty confident so I applied the
-patches 10, 11 and 12 on mvebu/dt64.
+Thank you,
 
-Thanks,
-
-Gregory
-
-
->
-> for the whole series. The changes all seem sensible, and have been
-> tested by several folks.
->
-> Thanks!
->
-> Thomas
-> -- 
-> Thomas Petazzoni, CTO, Bootlin
-> Embedded Linux and Kernel engineering
-> https://bootlin.com
-
--- 
-Gregory Clement, Bootlin
-Embedded Linux and Kernel engineering
-http://bootlin.com
+---
+Best Regards
+Kunihiko Hayashi
