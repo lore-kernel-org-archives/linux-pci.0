@@ -5,58 +5,58 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E63ABC433E7
-	for <linux-pci@archiver.kernel.org>; Tue, 19 May 2020 18:01:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0A95C433E9
+	for <linux-pci@archiver.kernel.org>; Tue, 19 May 2020 18:01:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C9BD52087D
-	for <linux-pci@archiver.kernel.org>; Tue, 19 May 2020 18:01:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F7C020826
+	for <linux-pci@archiver.kernel.org>; Tue, 19 May 2020 18:01:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Xv3nIZEa"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="huY/boZ2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727911AbgESSBt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 19 May 2020 14:01:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33380 "EHLO
+        id S1729001AbgESSB5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 19 May 2020 14:01:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33426 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727045AbgESSBs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2020 14:01:48 -0400
+        with ESMTP id S1728934AbgESSB4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2020 14:01:56 -0400
 Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D14D9C08C5C0
-        for <linux-pci@vger.kernel.org>; Tue, 19 May 2020 11:01:47 -0700 (PDT)
-Received: by mail-wr1-x443.google.com with SMTP id 50so366909wrc.11
-        for <linux-pci@vger.kernel.org>; Tue, 19 May 2020 11:01:47 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E7D3C08C5C2
+        for <linux-pci@vger.kernel.org>; Tue, 19 May 2020 11:01:56 -0700 (PDT)
+Received: by mail-wr1-x443.google.com with SMTP id e1so413256wrt.5
+        for <linux-pci@vger.kernel.org>; Tue, 19 May 2020 11:01:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=JQuzdFMBg7Iw4LrkZEQw+rVA7XCl31VEgZ2OF3TCid4=;
-        b=Xv3nIZEaMkXunCjTLTN8mKncxHfhxQxPHtxxmF8Hm8pn2PcrYNtETz67dfrdOeA3Vv
-         hBlc5N+lbm1Cgfi4ylorePnANem8L8P4ey84k9mtFCHmT64Q4+rRK3793Zofc4Qr9F3p
-         lnaAXXKpHXWWZoYaBmmvDzD4k21xim99PZHkMXkrjmyofCSutcadgt9ubseTCkqbPLBq
-         VXjhqAZ4/7wdMFg8WPWFTBQFm63+MKO/IrpSJDcQOzRdR5QYDlSKC/cwT3imYldAA+Wl
-         OznsSdgM1k+2lya24YVU9ko7ThbxXjZi8Sb6zdqZkhtDlaDr2KoPnh3Dt2GOr0LuOANp
-         ogIA==
+        bh=XBKcHNY1n69RPE8RkPPU5z/rlngsZCnS/EuX/PAz4IU=;
+        b=huY/boZ2R0L8m0KTImbAnN89+/2ewwTJYLMEBBCpcua+DalBUsakIScasPz1tAUdut
+         jRLy3r1jNosv70oYwSU9jO/ND777I99T3vTcwtDuvS+z4ts3JBiyyelU4xrccZtfv65M
+         OoGGVHnkE3+NYPIRcGlfJu3caej4l9TJmqKGkN/NstG1NCG63dxqwgHHgFCMfUm4mrj0
+         z1oeTNy0tARikd0eyqDO4i543e7oQYPFKVv5hf9WWhxCUW3E5Cn6ju0kq0tTnDeE3Ux8
+         tvYYtC0GsBVoEtefsfPtLyyXRmMJBG1+xMkQ9hQtTSnIhJWUYukG+coDDK6CSirzk1XF
+         Ki2g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=JQuzdFMBg7Iw4LrkZEQw+rVA7XCl31VEgZ2OF3TCid4=;
-        b=OvWuzXvre7nLOfivJNqTlZUXX18yLMxf/1AHoRu/eaL9Gocq1gxDSpDeztIbXnAe/e
-         G5Biub9TVrMNNjwg9ACbM62322iYxZ7uFwYo/tFRbSDWuSu9oV0Y6qlgfuYYP2S2MsGf
-         C/AHLpp+/gEUWj6GD6bYIEjZT4kLRv942KcZjXQyg7H0748vUzggrJ4KoKs239Ga6s7F
-         3ulNI5NsNJnNXZgbVAha+GqJKDqL3jhqsPRDSaPglL8I8ILf9zsGrUDHR6Cq7w2Rz5+N
-         tJL41Q/iXm8AtLpydq0w9e0hMngB55UcDkDLWL40FGW7JUpW8ln6I+rWqWISMW4rEGZ8
-         dvMQ==
-X-Gm-Message-State: AOAM531lzlgECX50onGW5BwDvDSILYj7z177TOafylj/fbxc6uWCUWWH
-        kiiAl4mElH5jJ1e8BaYAB/s6tw==
-X-Google-Smtp-Source: ABdhPJx25gvFVR0h+JQpCJF4HIhNojN1F6m0XZSoaeLP8BF7lnH6uKjCT2wrg168VD5+8+Qm4nosxA==
-X-Received: by 2002:a5d:6388:: with SMTP id p8mr68240wru.369.1589911306266;
-        Tue, 19 May 2020 11:01:46 -0700 (PDT)
+        bh=XBKcHNY1n69RPE8RkPPU5z/rlngsZCnS/EuX/PAz4IU=;
+        b=kbOpAs18Z5lbT4eO12YydBfQMFmUzecqCYWCjVIHK6TIe3md2vHxQIbvDulMvq6Ic8
+         GzYf3ZgAtUUg58CBjSNXJX2Wo1kZkNMU5+tJu5FJCNZhqJxzIGjTUOFo1UBPJeLlDBB9
+         CBt1bIqBS+PD0SPQUP3hg9zQVnLcsh9Drud1RSzFhGGhvHQ33or1im7dlkd20vb7MVXV
+         Y035niKjQqLbo+GWX3d2gY7b65ocHHt3BQbzj1FogBcniPB4LakEW+9jxVsTTBBhxEru
+         jNicwPwUsPezsEJb0Qo6rnREmjPCp7tQNye7pNC6orJeGsgUMIJ19q2OTGKVRcQ9AmBh
+         VPrg==
+X-Gm-Message-State: AOAM5319Xs0F4po99Cy+JjQGjphv0LWbAIjC827txwbjkZzTpfKuqbnI
+        ypbhLl1c1+0v3nMXjI/SHmgL3A==
+X-Google-Smtp-Source: ABdhPJyaRoZ2ct/6xg1Cpi+87CQAyXoR+7ccakgkN9wxMnUzVPrjQA/FX1kAYbsrPwmNn+nen9KjLQ==
+X-Received: by 2002:adf:ec88:: with SMTP id z8mr126757wrn.44.1589911314539;
+        Tue, 19 May 2020 11:01:54 -0700 (PDT)
 Received: from localhost.localdomain ([2001:171b:226e:c200:c43b:ef78:d083:b355])
-        by smtp.gmail.com with ESMTPSA id 1sm510496wmz.13.2020.05.19.11.01.45
+        by smtp.gmail.com with ESMTPSA id 1sm510496wmz.13.2020.05.19.11.01.53
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 19 May 2020 11:01:45 -0700 (PDT)
+        Tue, 19 May 2020 11:01:54 -0700 (PDT)
 From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
 To:     iommu@lists.linux-foundation.org, devicetree@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
@@ -68,9 +68,9 @@ Cc:     joro@8bytes.org, catalin.marinas@arm.com, will@kernel.org,
         felix.kuehling@amd.com, zhangfei.gao@linaro.org, jgg@ziepe.ca,
         xuzaibo@huawei.com, fenghua.yu@intel.com, hch@infradead.org,
         Jean-Philippe Brucker <jean-philippe@linaro.org>
-Subject: [PATCH v7 04/24] iommu: Add a page fault handler
-Date:   Tue, 19 May 2020 19:54:42 +0200
-Message-Id: <20200519175502.2504091-5-jean-philippe@linaro.org>
+Subject: [PATCH v7 11/24] iommu/arm-smmu-v3: Seize private ASID
+Date:   Tue, 19 May 2020 19:54:49 +0200
+Message-Id: <20200519175502.2504091-12-jean-philippe@linaro.org>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200519175502.2504091-1-jean-philippe@linaro.org>
 References: <20200519175502.2504091-1-jean-philippe@linaro.org>
@@ -81,612 +81,226 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Some systems allow devices to handle I/O Page Faults in the core mm. For
-example systems implementing the PCIe PRI extension or Arm SMMU stall
-model. Infrastructure for reporting these recoverable page faults was
-added to the IOMMU core by commit 0c830e6b3282 ("iommu: Introduce device
-fault report API"). Add a page fault handler for host SVA.
+The SMMU has a single ASID space, the union of shared and private ASID
+sets. This means that the SMMU driver competes with the arch allocator
+for ASIDs. Shared ASIDs are those of Linux processes, allocated by the
+arch, and contribute in broadcast TLB maintenance. Private ASIDs are
+allocated by the SMMU driver and used for "classic" map/unmap DMA. They
+require command-queue TLB invalidations.
 
-IOMMU driver can now instantiate several fault workqueues and link them
-to IOPF-capable devices. Drivers can choose between a single global
-workqueue, one per IOMMU device, one per low-level fault queue, one per
-domain, etc.
-
-When it receives a fault event, supposedly in an IRQ handler, the IOMMU
-driver reports the fault using iommu_report_device_fault(), which calls
-the registered handler. The page fault handler then calls the mm fault
-handler, and reports either success or failure with iommu_page_response().
-When the handler succeeded, the IOMMU retries the access.
-
-The iopf_param pointer could be embedded into iommu_fault_param. But
-putting iopf_param into the iommu_param structure allows us not to care
-about ordering between calls to iopf_queue_add_device() and
-iommu_register_device_fault_handler().
+When we pin down an mm_context and get an ASID that is already in use by
+the SMMU, it belongs to a private context. We used to simply abort the
+bind, but this is unfair to users that would be unable to bind a few
+seemingly random processes. Try to allocate a new private ASID for the
+context, and make the old ASID shared.
 
 Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
 ---
-v6->v7: Fix leak in iopf_queue_discard_partial()
+v6->v7: Replace context_lock spinlock with asid_lock mutex, remove
+  GFP_ATOMIC changes, add comments about locking.
 ---
- drivers/iommu/Kconfig      |   4 +
- drivers/iommu/Makefile     |   1 +
- include/linux/iommu.h      |  51 +++++
- drivers/iommu/io-pgfault.c | 459 +++++++++++++++++++++++++++++++++++++
- 4 files changed, 515 insertions(+)
- create mode 100644 drivers/iommu/io-pgfault.c
+ drivers/iommu/arm-smmu-v3.c | 100 ++++++++++++++++++++++++++++--------
+ 1 file changed, 80 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/iommu/Kconfig b/drivers/iommu/Kconfig
-index d9fa5b410015..15e9dc4e503c 100644
---- a/drivers/iommu/Kconfig
-+++ b/drivers/iommu/Kconfig
-@@ -107,6 +107,10 @@ config IOMMU_SVA
- 	bool
- 	select IOASID
- 
-+config IOMMU_PAGE_FAULT
-+	bool
-+	select IOMMU_SVA
-+
- config FSL_PAMU
- 	bool "Freescale IOMMU support"
- 	depends on PCI
-diff --git a/drivers/iommu/Makefile b/drivers/iommu/Makefile
-index 40c800dd4e3e..bf5cb4ee8409 100644
---- a/drivers/iommu/Makefile
-+++ b/drivers/iommu/Makefile
-@@ -4,6 +4,7 @@ obj-$(CONFIG_IOMMU_API) += iommu-traces.o
- obj-$(CONFIG_IOMMU_API) += iommu-sysfs.o
- obj-$(CONFIG_IOMMU_DEBUGFS) += iommu-debugfs.o
- obj-$(CONFIG_IOMMU_DMA) += dma-iommu.o
-+obj-$(CONFIG_IOMMU_PAGE_FAULT) += io-pgfault.o
- obj-$(CONFIG_IOMMU_IO_PGTABLE) += io-pgtable.o
- obj-$(CONFIG_IOMMU_IO_PGTABLE_ARMV7S) += io-pgtable-arm-v7s.o
- obj-$(CONFIG_IOMMU_IO_PGTABLE_LPAE) += io-pgtable-arm.o
-diff --git a/include/linux/iommu.h b/include/linux/iommu.h
-index b62525747bd9..a462157c855b 100644
---- a/include/linux/iommu.h
-+++ b/include/linux/iommu.h
-@@ -46,6 +46,7 @@ struct iommu_domain;
- struct notifier_block;
- struct iommu_sva;
- struct iommu_fault_event;
-+struct iopf_queue;
- 
- /* iommu fault flags */
- #define IOMMU_FAULT_READ	0x0
-@@ -347,6 +348,7 @@ struct iommu_fault_param {
-  * struct dev_iommu - Collection of per-device IOMMU data
-  *
-  * @fault_param: IOMMU detected device fault reporting data
-+ * @iopf_param:	 I/O Page Fault queue and data
-  * @fwspec:	 IOMMU fwspec data
-  * @priv:	 IOMMU Driver private data
-  *
-@@ -356,6 +358,7 @@ struct iommu_fault_param {
- struct dev_iommu {
- 	struct mutex lock;
- 	struct iommu_fault_param	*fault_param;
-+	struct iopf_device_param	*iopf_param;
- 	struct iommu_fwspec		*fwspec;
- 	void				*priv;
+diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+index 52cbdf08f5e2..403871d36438 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -733,6 +733,7 @@ struct arm_smmu_option_prop {
  };
-@@ -1067,4 +1070,52 @@ void iommu_debugfs_setup(void);
- static inline void iommu_debugfs_setup(void) {}
- #endif
  
-+#ifdef CONFIG_IOMMU_PAGE_FAULT
-+extern int iommu_queue_iopf(struct iommu_fault *fault, void *cookie);
-+
-+extern int iopf_queue_add_device(struct iopf_queue *queue, struct device *dev);
-+extern int iopf_queue_remove_device(struct iopf_queue *queue,
-+				    struct device *dev);
-+extern int iopf_queue_flush_dev(struct device *dev);
-+extern struct iopf_queue *iopf_queue_alloc(const char *name);
-+extern void iopf_queue_free(struct iopf_queue *queue);
-+extern int iopf_queue_discard_partial(struct iopf_queue *queue);
-+#else /* CONFIG_IOMMU_PAGE_FAULT */
-+static inline int iommu_queue_iopf(struct iommu_fault *fault, void *cookie)
+ static DEFINE_XARRAY_ALLOC1(asid_xa);
++static DEFINE_MUTEX(asid_lock);
+ static DEFINE_MUTEX(sva_lock);
+ 
+ static struct arm_smmu_option_prop arm_smmu_options[] = {
+@@ -1537,6 +1538,17 @@ static int arm_smmu_cmdq_batch_submit(struct arm_smmu_device *smmu,
+ }
+ 
+ /* Context descriptor manipulation functions */
++static void arm_smmu_tlb_inv_asid(struct arm_smmu_device *smmu, u16 asid)
 +{
-+	return -ENODEV;
-+}
-+
-+static inline int iopf_queue_add_device(struct iopf_queue *queue,
-+					struct device *dev)
-+{
-+	return -ENODEV;
-+}
-+
-+static inline int iopf_queue_remove_device(struct iopf_queue *queue,
-+					   struct device *dev)
-+{
-+	return -ENODEV;
-+}
-+
-+static inline int iopf_queue_flush_dev(struct device *dev)
-+{
-+	return -ENODEV;
-+}
-+
-+static inline struct iopf_queue *iopf_queue_alloc(const char *name)
-+{
-+	return NULL;
-+}
-+
-+static inline void iopf_queue_free(struct iopf_queue *queue)
-+{
-+}
-+
-+static inline int iopf_queue_discard_partial(struct iopf_queue *queue)
-+{
-+	return -ENODEV;
-+}
-+#endif /* CONFIG_IOMMU_PAGE_FAULT */
-+
- #endif /* __LINUX_IOMMU_H */
-diff --git a/drivers/iommu/io-pgfault.c b/drivers/iommu/io-pgfault.c
-new file mode 100644
-index 000000000000..1f61c1bc05da
---- /dev/null
-+++ b/drivers/iommu/io-pgfault.c
-@@ -0,0 +1,459 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Handle device page faults
-+ *
-+ * Copyright (C) 2020 ARM Ltd.
-+ */
-+
-+#include <linux/iommu.h>
-+#include <linux/list.h>
-+#include <linux/sched/mm.h>
-+#include <linux/slab.h>
-+#include <linux/workqueue.h>
-+
-+#include "iommu-sva.h"
-+
-+/**
-+ * struct iopf_queue - IO Page Fault queue
-+ * @wq: the fault workqueue
-+ * @devices: devices attached to this queue
-+ * @lock: protects the device list
-+ */
-+struct iopf_queue {
-+	struct workqueue_struct		*wq;
-+	struct list_head		devices;
-+	struct mutex			lock;
-+};
-+
-+/**
-+ * struct iopf_device_param - IO Page Fault data attached to a device
-+ * @dev: the device that owns this param
-+ * @queue: IOPF queue
-+ * @queue_list: index into queue->devices
-+ * @partial: faults that are part of a Page Request Group for which the last
-+ *           request hasn't been submitted yet.
-+ */
-+struct iopf_device_param {
-+	struct device			*dev;
-+	struct iopf_queue		*queue;
-+	struct list_head		queue_list;
-+	struct list_head		partial;
-+};
-+
-+struct iopf_fault {
-+	struct iommu_fault		fault;
-+	struct list_head		list;
-+};
-+
-+struct iopf_group {
-+	struct iopf_fault		last_fault;
-+	struct list_head		faults;
-+	struct work_struct		work;
-+	struct device			*dev;
-+};
-+
-+static int iopf_complete_group(struct device *dev, struct iopf_fault *iopf,
-+			       enum iommu_page_response_code status)
-+{
-+	struct iommu_page_response resp = {
-+		.version		= IOMMU_PAGE_RESP_VERSION_1,
-+		.pasid			= iopf->fault.prm.pasid,
-+		.grpid			= iopf->fault.prm.grpid,
-+		.code			= status,
++	struct arm_smmu_cmdq_ent cmd = {
++		.opcode = CMDQ_OP_TLBI_NH_ASID,
++		.tlbi.asid = asid,
 +	};
 +
-+	if (iopf->fault.prm.flags & IOMMU_FAULT_PAGE_REQUEST_PASID_VALID)
-+		resp.flags = IOMMU_PAGE_RESP_PASID_VALID;
-+
-+	return iommu_page_response(dev, &resp);
++	arm_smmu_cmdq_issue_cmd(smmu, &cmd);
++	arm_smmu_cmdq_issue_sync(smmu);
 +}
 +
-+static enum iommu_page_response_code
-+iopf_handle_single(struct iopf_fault *iopf)
-+{
-+	vm_fault_t ret;
-+	struct mm_struct *mm;
-+	struct vm_area_struct *vma;
-+	unsigned int access_flags = 0;
-+	unsigned int fault_flags = FAULT_FLAG_REMOTE;
-+	struct iommu_fault_page_request *prm = &iopf->fault.prm;
-+	enum iommu_page_response_code status = IOMMU_PAGE_RESP_INVALID;
-+
-+	if (!(prm->flags & IOMMU_FAULT_PAGE_REQUEST_PASID_VALID))
-+		return status;
-+
-+	mm = iommu_sva_find(prm->pasid);
-+	if (IS_ERR_OR_NULL(mm))
-+		return status;
-+
-+	down_read(&mm->mmap_sem);
-+
-+	vma = find_extend_vma(mm, prm->addr);
-+	if (!vma)
-+		/* Unmapped area */
-+		goto out_put_mm;
-+
-+	if (prm->perm & IOMMU_FAULT_PERM_READ)
-+		access_flags |= VM_READ;
-+
-+	if (prm->perm & IOMMU_FAULT_PERM_WRITE) {
-+		access_flags |= VM_WRITE;
-+		fault_flags |= FAULT_FLAG_WRITE;
-+	}
-+
-+	if (prm->perm & IOMMU_FAULT_PERM_EXEC) {
-+		access_flags |= VM_EXEC;
-+		fault_flags |= FAULT_FLAG_INSTRUCTION;
-+	}
-+
-+	if (!(prm->perm & IOMMU_FAULT_PERM_PRIV))
-+		fault_flags |= FAULT_FLAG_USER;
-+
-+	if (access_flags & ~vma->vm_flags)
-+		/* Access fault */
-+		goto out_put_mm;
-+
-+	ret = handle_mm_fault(vma, prm->addr, fault_flags);
-+	status = ret & VM_FAULT_ERROR ? IOMMU_PAGE_RESP_INVALID :
-+		IOMMU_PAGE_RESP_SUCCESS;
-+
-+out_put_mm:
-+	up_read(&mm->mmap_sem);
-+	mmput(mm);
-+
-+	return status;
-+}
-+
-+static void iopf_handle_group(struct work_struct *work)
-+{
-+	struct iopf_group *group;
-+	struct iopf_fault *iopf, *next;
-+	enum iommu_page_response_code status = IOMMU_PAGE_RESP_SUCCESS;
-+
-+	group = container_of(work, struct iopf_group, work);
-+
-+	list_for_each_entry_safe(iopf, next, &group->faults, list) {
-+		/*
-+		 * For the moment, errors are sticky: don't handle subsequent
-+		 * faults in the group if there is an error.
-+		 */
-+		if (status == IOMMU_PAGE_RESP_SUCCESS)
-+			status = iopf_handle_single(iopf);
-+
-+		if (!(iopf->fault.prm.flags &
-+		      IOMMU_FAULT_PAGE_REQUEST_LAST_PAGE))
-+			kfree(iopf);
-+	}
-+
-+	iopf_complete_group(group->dev, &group->last_fault, status);
-+	kfree(group);
-+}
-+
-+/**
-+ * iommu_queue_iopf - IO Page Fault handler
-+ * @evt: fault event
-+ * @cookie: struct device, passed to iommu_register_device_fault_handler.
-+ *
-+ * Add a fault to the device workqueue, to be handled by mm.
-+ *
-+ * This module doesn't handle PCI PASID Stop Marker; IOMMU drivers must discard
-+ * them before reporting faults. A PASID Stop Marker (LRW = 0b100) doesn't
-+ * expect a response. It may be generated when disabling a PASID (issuing a
-+ * PASID stop request) by some PCI devices.
-+ *
-+ * The PASID stop request is issued by the device driver before unbind(). Once
-+ * it completes, no page request is generated for this PASID anymore and
-+ * outstanding ones have been pushed to the IOMMU (as per PCIe 4.0r1.0 - 6.20.1
-+ * and 10.4.1.2 - Managing PASID TLP Prefix Usage). Some PCI devices will wait
-+ * for all outstanding page requests to come back with a response before
-+ * completing the PASID stop request. Others do not wait for page responses, and
-+ * instead issue this Stop Marker that tells us when the PASID can be
-+ * reallocated.
-+ *
-+ * It is safe to discard the Stop Marker because it is an optimization.
-+ * a. Page requests, which are posted requests, have been flushed to the IOMMU
-+ *    when the stop request completes.
-+ * b. We flush all fault queues on unbind() before freeing the PASID.
-+ *
-+ * So even though the Stop Marker might be issued by the device *after* the stop
-+ * request completes, outstanding faults will have been dealt with by the time
-+ * we free the PASID.
-+ *
-+ * Return: 0 on success and <0 on error.
+ static void arm_smmu_sync_cd(struct arm_smmu_domain *smmu_domain,
+ 			     int ssid, bool leaf)
+ {
+@@ -1795,9 +1807,18 @@ static bool arm_smmu_free_asid(struct arm_smmu_ctx_desc *cd)
+ 	return free;
+ }
+ 
++/*
++ * Try to reserve this ASID in the SMMU. If it is in use, try to steal it from
++ * the private entry. Careful here, we may be modifying the context tables of
++ * another SMMU!
 + */
-+int iommu_queue_iopf(struct iommu_fault *fault, void *cookie)
-+{
+ static struct arm_smmu_ctx_desc *arm_smmu_share_asid(u16 asid)
+ {
 +	int ret;
-+	struct iopf_group *group;
-+	struct iopf_fault *iopf, *next;
-+	struct iopf_device_param *iopf_param;
++	u32 new_asid;
+ 	struct arm_smmu_ctx_desc *cd;
++	struct arm_smmu_device *smmu;
++	struct arm_smmu_domain *smmu_domain;
+ 
+ 	cd = xa_load(&asid_xa, asid);
+ 	if (!cd)
+@@ -1809,11 +1830,31 @@ static struct arm_smmu_ctx_desc *arm_smmu_share_asid(u16 asid)
+ 		return cd;
+ 	}
+ 
++	smmu_domain = container_of(cd, struct arm_smmu_domain, s1_cfg.cd);
++	smmu = smmu_domain->smmu;
 +
-+	struct device *dev = cookie;
-+	struct dev_iommu *param = dev->iommu;
-+
-+	lockdep_assert_held(&param->lock);
-+
-+	if (fault->type != IOMMU_FAULT_PAGE_REQ)
-+		/* Not a recoverable page fault */
-+		return -EOPNOTSUPP;
-+
-+	/*
-+	 * As long as we're holding param->lock, the queue can't be unlinked
-+	 * from the device and therefore cannot disappear.
-+	 */
-+	iopf_param = param->iopf_param;
-+	if (!iopf_param)
-+		return -ENODEV;
-+
-+	if (!(fault->prm.flags & IOMMU_FAULT_PAGE_REQUEST_LAST_PAGE)) {
-+		iopf = kzalloc(sizeof(*iopf), GFP_KERNEL);
-+		if (!iopf)
-+			return -ENOMEM;
-+
-+		iopf->fault = *fault;
-+
-+		/* Non-last request of a group. Postpone until the last one */
-+		list_add(&iopf->list, &iopf_param->partial);
-+
-+		return 0;
-+	}
-+
-+	group = kzalloc(sizeof(*group), GFP_KERNEL);
-+	if (!group) {
-+		/*
-+		 * The caller will send a response to the hardware. But we do
-+		 * need to clean up before leaving, otherwise partial faults
-+		 * will be stuck.
-+		 */
-+		ret = -ENOMEM;
-+		goto cleanup_partial;
-+	}
-+
-+	group->dev = dev;
-+	group->last_fault.fault = *fault;
-+	INIT_LIST_HEAD(&group->faults);
-+	list_add(&group->last_fault.list, &group->faults);
-+	INIT_WORK(&group->work, iopf_handle_group);
-+
-+	/* See if we have partial faults for this group */
-+	list_for_each_entry_safe(iopf, next, &iopf_param->partial, list) {
-+		if (iopf->fault.prm.grpid == fault->prm.grpid)
-+			/* Insert *before* the last fault */
-+			list_move(&iopf->list, &group->faults);
-+	}
-+
-+	queue_work(iopf_param->queue->wq, &group->work);
-+	return 0;
-+
-+cleanup_partial:
-+	list_for_each_entry_safe(iopf, next, &iopf_param->partial, list) {
-+		if (iopf->fault.prm.grpid == fault->prm.grpid) {
-+			list_del(&iopf->list);
-+			kfree(iopf);
-+		}
-+	}
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(iommu_queue_iopf);
-+
-+/**
-+ * iopf_queue_flush_dev - Ensure that all queued faults have been processed
-+ * @dev: the endpoint whose faults need to be flushed.
-+ *
-+ * The IOMMU driver calls this before releasing a PASID, to ensure that all
-+ * pending faults for this PASID have been handled, and won't hit the address
-+ * space of the next process that uses this PASID. The driver must make sure
-+ * that no new fault is added to the queue. In particular it must flush its
-+ * low-level queue before calling this function.
-+ *
-+ * Return: 0 on success and <0 on error.
-+ */
-+int iopf_queue_flush_dev(struct device *dev)
-+{
-+	int ret = 0;
-+	struct iopf_device_param *iopf_param;
-+	struct dev_iommu *param = dev->iommu;
-+
-+	if (!param)
-+		return -ENODEV;
-+
-+	mutex_lock(&param->lock);
-+	iopf_param = param->iopf_param;
-+	if (iopf_param)
-+		flush_workqueue(iopf_param->queue->wq);
-+	else
-+		ret = -ENODEV;
-+	mutex_unlock(&param->lock);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(iopf_queue_flush_dev);
-+
-+/**
-+ * iopf_queue_discard_partial - Remove all pending partial fault
-+ * @queue: the queue whose partial faults need to be discarded
-+ *
-+ * When the hardware queue overflows, last page faults in a group may have been
-+ * lost and the IOMMU driver calls this to discard all partial faults. The
-+ * driver shouldn't be adding new faults to this queue concurrently.
-+ *
-+ * Return: 0 on success and <0 on error.
-+ */
-+int iopf_queue_discard_partial(struct iopf_queue *queue)
-+{
-+	struct iopf_fault *iopf, *next;
-+	struct iopf_device_param *iopf_param;
-+
-+	if (!queue)
-+		return -EINVAL;
-+
-+	mutex_lock(&queue->lock);
-+	list_for_each_entry(iopf_param, &queue->devices, queue_list) {
-+		list_for_each_entry_safe(iopf, next, &iopf_param->partial,
-+					 list) {
-+			list_del(&iopf->list);
-+			kfree(iopf);
-+		}
-+	}
-+	mutex_unlock(&queue->lock);
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(iopf_queue_discard_partial);
-+
-+/**
-+ * iopf_queue_add_device - Add producer to the fault queue
-+ * @queue: IOPF queue
-+ * @dev: device to add
-+ *
-+ * Return: 0 on success and <0 on error.
-+ */
-+int iopf_queue_add_device(struct iopf_queue *queue, struct device *dev)
-+{
-+	int ret = -EBUSY;
-+	struct iopf_device_param *iopf_param;
-+	struct dev_iommu *param = dev->iommu;
-+
-+	if (!param)
-+		return -ENODEV;
-+
-+	iopf_param = kzalloc(sizeof(*iopf_param), GFP_KERNEL);
-+	if (!iopf_param)
-+		return -ENOMEM;
-+
-+	INIT_LIST_HEAD(&iopf_param->partial);
-+	iopf_param->queue = queue; iopf_param->dev = dev;
-+
-+	mutex_lock(&queue->lock);
-+	mutex_lock(&param->lock);
-+	if (!param->iopf_param) {
-+		list_add(&iopf_param->queue_list, &queue->devices);
-+		param->iopf_param = iopf_param;
-+		ret = 0;
-+	}
-+	mutex_unlock(&param->lock);
-+	mutex_unlock(&queue->lock);
-+
++	ret = xa_alloc(&asid_xa, &new_asid, cd,
++		       XA_LIMIT(1, 1 << smmu->asid_bits), GFP_KERNEL);
 +	if (ret)
-+		kfree(iopf_param);
++		return ERR_PTR(-ENOSPC);
++	/*
++	 * Race with unmap: TLB invalidations will start targeting the new ASID,
++	 * which isn't assigned yet. We'll do an invalidate-all on the old ASID
++	 * later, so it doesn't matter.
++	 */
++	cd->asid = new_asid;
 +
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(iopf_queue_add_device);
+ 	/*
+-	 * Ouch, ASID is already in use for a private cd.
+-	 * TODO: seize it.
++	 * Update ASID and invalidate CD in all associated masters. There will
++	 * be some overlap between use of both ASIDs, until we invalidate the
++	 * TLB.
+ 	 */
+-	return ERR_PTR(-EEXIST);
++	arm_smmu_write_ctx_desc(smmu_domain, 0, cd);
 +
-+/**
-+ * iopf_queue_remove_device - Remove producer from fault queue
-+ * @queue: IOPF queue
-+ * @dev: device to remove
-+ *
-+ * Caller makes sure that no more faults are reported for this device.
-+ *
-+ * Return: 0 on success and <0 on error.
-+ */
-+int iopf_queue_remove_device(struct iopf_queue *queue, struct device *dev)
-+{
-+	int ret = 0;
-+	struct iopf_fault *iopf, *next;
-+	struct iopf_device_param *iopf_param;
-+	struct dev_iommu *param = dev->iommu;
++	/* Invalidate TLB entries previously associated with that context */
++	arm_smmu_tlb_inv_asid(smmu, asid);
 +
-+	if (!param || !queue)
-+		return -EINVAL;
++	return NULL;
+ }
+ 
+ __maybe_unused
+@@ -1839,7 +1880,20 @@ static struct arm_smmu_ctx_desc *arm_smmu_alloc_shared_cd(struct mm_struct *mm)
+ 
+ 	arm_smmu_init_cd(cd);
+ 
++	/*
++	 * Serialize against arm_smmu_domain_finalise_s1() and
++	 * arm_smmu_domain_free() as we might need to replace the private ASID
++	 * from an existing CD.
++	 */
++	mutex_lock(&asid_lock);
+ 	old_cd = arm_smmu_share_asid(asid);
++	if (!old_cd) {
++		ret = xa_insert(&asid_xa, asid, cd, GFP_KERNEL);
++		if (ret)
++			old_cd = ERR_PTR(ret);
++	}
++	mutex_unlock(&asid_lock);
 +
-+	mutex_lock(&queue->lock);
-+	mutex_lock(&param->lock);
-+	iopf_param = param->iopf_param;
-+	if (iopf_param && iopf_param->queue == queue) {
-+		list_del(&iopf_param->queue_list);
-+		param->iopf_param = NULL;
+ 	if (IS_ERR(old_cd)) {
+ 		ret = PTR_ERR(old_cd);
+ 		goto err_free_cd;
+@@ -1853,11 +1907,6 @@ static struct arm_smmu_ctx_desc *arm_smmu_alloc_shared_cd(struct mm_struct *mm)
+ 		return old_cd;
+ 	}
+ 
+-	/* Fails if a private ASID has been allocated since we last checked */
+-	ret = xa_insert(&asid_xa, asid, cd, GFP_KERNEL);
+-	if (ret)
+-		goto err_free_cd;
+-
+ 	tcr = FIELD_PREP(CTXDESC_CD_0_TCR_T0SZ, 64ULL - VA_BITS) |
+ 	      FIELD_PREP(CTXDESC_CD_0_TCR_IRGN0, ARM_LPAE_TCR_RGN_WBWA) |
+ 	      FIELD_PREP(CTXDESC_CD_0_TCR_ORGN0, ARM_LPAE_TCR_RGN_WBWA) |
+@@ -2401,15 +2450,6 @@ static void arm_smmu_tlb_inv_context(void *cookie)
+ 	struct arm_smmu_device *smmu = smmu_domain->smmu;
+ 	struct arm_smmu_cmdq_ent cmd;
+ 
+-	if (smmu_domain->stage == ARM_SMMU_DOMAIN_S1) {
+-		cmd.opcode	= CMDQ_OP_TLBI_NH_ASID;
+-		cmd.tlbi.asid	= smmu_domain->s1_cfg.cd.asid;
+-		cmd.tlbi.vmid	= 0;
+-	} else {
+-		cmd.opcode	= CMDQ_OP_TLBI_S12_VMALL;
+-		cmd.tlbi.vmid	= smmu_domain->s2_cfg.vmid;
+-	}
+-
+ 	/*
+ 	 * NOTE: when io-pgtable is in non-strict mode, we may get here with
+ 	 * PTEs previously cleared by unmaps on the current CPU not yet visible
+@@ -2417,8 +2457,14 @@ static void arm_smmu_tlb_inv_context(void *cookie)
+ 	 * insertion to guarantee those are observed before the TLBI. Do be
+ 	 * careful, 007.
+ 	 */
+-	arm_smmu_cmdq_issue_cmd(smmu, &cmd);
+-	arm_smmu_cmdq_issue_sync(smmu);
++	if (smmu_domain->stage == ARM_SMMU_DOMAIN_S1) {
++		arm_smmu_tlb_inv_asid(smmu, smmu_domain->s1_cfg.cd.asid);
 +	} else {
-+		ret = -EINVAL;
++		cmd.opcode	= CMDQ_OP_TLBI_S12_VMALL;
++		cmd.tlbi.vmid	= smmu_domain->s2_cfg.vmid;
++		arm_smmu_cmdq_issue_cmd(smmu, &cmd);
++		arm_smmu_cmdq_issue_sync(smmu);
 +	}
-+	mutex_unlock(&param->lock);
-+	mutex_unlock(&queue->lock);
-+	if (ret)
-+		return ret;
-+
-+	/* Just in case some faults are still stuck */
-+	list_for_each_entry_safe(iopf, next, &iopf_param->partial, list)
-+		kfree(iopf);
-+
-+	kfree(iopf_param);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(iopf_queue_remove_device);
-+
-+/**
-+ * iopf_queue_alloc - Allocate and initialize a fault queue
-+ * @name: a unique string identifying the queue (for workqueue)
-+ *
-+ * Return: the queue on success and NULL on error.
-+ */
-+struct iopf_queue *iopf_queue_alloc(const char *name)
-+{
-+	struct iopf_queue *queue;
-+
-+	queue = kzalloc(sizeof(*queue), GFP_KERNEL);
-+	if (!queue)
-+		return NULL;
-+
+ 	arm_smmu_atc_inv_domain(smmu_domain, 0, 0, 0);
+ }
+ 
+@@ -2602,9 +2648,15 @@ static void arm_smmu_domain_free(struct iommu_domain *domain)
+ 	if (smmu_domain->stage == ARM_SMMU_DOMAIN_S1) {
+ 		struct arm_smmu_s1_cfg *cfg = &smmu_domain->s1_cfg;
+ 
++		/*
++		 * Prevent arm_smmu_share_asid() from rewriting CD#0 while we're
++		 * freeing it.
++		 */
++		mutex_lock(&asid_lock);
+ 		if (cfg->cdcfg.cdtab)
+ 			arm_smmu_free_cd_tables(smmu_domain);
+ 		arm_smmu_free_asid(&cfg->cd);
++		mutex_unlock(&asid_lock);
+ 	} else {
+ 		struct arm_smmu_s2_cfg *cfg = &smmu_domain->s2_cfg;
+ 		if (cfg->vmid)
+@@ -2626,10 +2678,15 @@ static int arm_smmu_domain_finalise_s1(struct arm_smmu_domain *smmu_domain,
+ 
+ 	arm_smmu_init_cd(&cfg->cd);
+ 
 +	/*
-+	 * The WQ is unordered because the low-level handler enqueues faults by
-+	 * group. PRI requests within a group have to be ordered, but once
-+	 * that's dealt with, the high-level function can handle groups out of
-+	 * order.
++	 * Prevent arm_smmu_share_asid() from seizing the private ASID we're
++	 * allocating here until it is written to the CD.
 +	 */
-+	queue->wq = alloc_workqueue("iopf_queue/%s", WQ_UNBOUND, 0, name);
-+	if (!queue->wq) {
-+		kfree(queue);
-+		return NULL;
-+	}
-+
-+	INIT_LIST_HEAD(&queue->devices);
-+	mutex_init(&queue->lock);
-+
-+	return queue;
-+}
-+EXPORT_SYMBOL_GPL(iopf_queue_alloc);
-+
-+/**
-+ * iopf_queue_free - Free IOPF queue
-+ * @queue: queue to free
-+ *
-+ * Counterpart to iopf_queue_alloc(). The driver must not be queuing faults or
-+ * adding/removing devices on this queue anymore.
-+ */
-+void iopf_queue_free(struct iopf_queue *queue)
-+{
-+	struct iopf_device_param *iopf_param, *next;
-+
-+	if (!queue)
-+		return;
-+
-+	list_for_each_entry_safe(iopf_param, next, &queue->devices, queue_list)
-+		iopf_queue_remove_device(queue, iopf_param->dev);
-+
-+	destroy_workqueue(queue->wq);
-+	kfree(queue);
-+}
-+EXPORT_SYMBOL_GPL(iopf_queue_free);
++	mutex_lock(&asid_lock);
+ 	ret = xa_alloc(&asid_xa, &asid, &cfg->cd,
+ 		       XA_LIMIT(1, (1 << smmu->asid_bits) - 1), GFP_KERNEL);
+ 	if (ret)
+-		return ret;
++		goto out_unlock;
+ 
+ 	cfg->s1cdmax = master->ssid_bits;
+ 
+@@ -2657,12 +2714,15 @@ static int arm_smmu_domain_finalise_s1(struct arm_smmu_domain *smmu_domain,
+ 	if (ret)
+ 		goto out_free_cd_tables;
+ 
++	mutex_unlock(&asid_lock);
+ 	return 0;
+ 
+ out_free_cd_tables:
+ 	arm_smmu_free_cd_tables(smmu_domain);
+ out_free_asid:
+ 	arm_smmu_free_asid(&cfg->cd);
++out_unlock:
++	mutex_unlock(&asid_lock);
+ 	return ret;
+ }
+ 
 -- 
 2.26.2
 
