@@ -5,58 +5,58 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9841BC4345F
-	for <linux-pci@archiver.kernel.org>; Tue, 19 May 2020 18:02:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EEEBC4347E
+	for <linux-pci@archiver.kernel.org>; Tue, 19 May 2020 18:02:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7E05B20823
-	for <linux-pci@archiver.kernel.org>; Tue, 19 May 2020 18:02:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 61FF120823
+	for <linux-pci@archiver.kernel.org>; Tue, 19 May 2020 18:02:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Y4EdnjwY"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="RaBfqvZB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729214AbgESSCB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 19 May 2020 14:02:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33452 "EHLO
+        id S1729345AbgESSCK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 19 May 2020 14:02:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33506 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729197AbgESSCB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2020 14:02:01 -0400
-Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A6725C08C5C0
-        for <linux-pci@vger.kernel.org>; Tue, 19 May 2020 11:02:00 -0700 (PDT)
-Received: by mail-wm1-x344.google.com with SMTP id u188so220731wmu.1
-        for <linux-pci@vger.kernel.org>; Tue, 19 May 2020 11:02:00 -0700 (PDT)
+        with ESMTP id S1729346AbgESSCK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2020 14:02:10 -0400
+Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3A4EC08C5C2
+        for <linux-pci@vger.kernel.org>; Tue, 19 May 2020 11:02:09 -0700 (PDT)
+Received: by mail-wm1-x342.google.com with SMTP id f134so180497wmf.1
+        for <linux-pci@vger.kernel.org>; Tue, 19 May 2020 11:02:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=w0kdAS+3V4p7jXN1k79MYNGRv9Y+4JMnAcNVoiF0l70=;
-        b=Y4EdnjwYGiovh5kRncy2PI1+5V23I9EidrfOm90dz7a75obSThtBtY4iz/6hLBVCho
-         5gutgO9+jYJaqa3AP50b579CyD3Xo8Os+g5ZMtz+rvzj3KIv4+JVix3pPmzIdWGBJpUr
-         mRdFDzxwXg8P6rMBwMIB7hmJCUHwiDSjb9udlALkBO4crYuf5bUdIRrst4t2//W5+BIr
-         qDjRWz0EZjqj5ojI8fljkyY6ePbeArnslKBHUJdWTLeNiK8/mjqfUvalHtpMS9aAXXYY
-         1FNHNPtwsiFRQScSD/UobANFMpQMISm2uWThO2evgtfehAQl/p6SzjFc3OPNw3sSLGHi
-         TQ7A==
+        bh=hORlUUicNTnmubGRwNiUffCoZPiWJG9HuOL8osSXdzo=;
+        b=RaBfqvZBLG2+O2ys2+0Ikq5Wp+XHH/rqPMkeuqJRaQX3zplSn8zIVMkUTAPhGK28u9
+         wAEiv6Yy2jClvwowLeJGvp9nz/q2xjW3B1m8ef6AweRUFIRQce+1qhbFZu9Iqxpgb93T
+         HQS/ayRa/QKZAcPdong1IOD4jlzFFccRioNNAzKo4Svis/lAW9o32Xi6WC9+XqJP5jVD
+         95wb3prQy7RhU+V9NvD9Uimr2HAe66cN0BSaK01ShE8K4Vh5b6WaVDUh0vqD6yii3Akb
+         VvWJQ/nNMjB1sgj37nXUu8itMP/AiTtQykovHtt0BFwZVr2yuqgX+iT4E9CLWqxkgpmY
+         SZRA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=w0kdAS+3V4p7jXN1k79MYNGRv9Y+4JMnAcNVoiF0l70=;
-        b=Hkxu0ee1Pj+O3H5ndOYE1H24m32+rS72yCwKmBqMnJvpKGI8b+NOeUMd1YTTQn+Lth
-         i7i+MM7kkoq5jDHyVAUNgXDDRYGVwEoFtVuX7hUnxkXi7uU5Xl79rlL0euDxniAtmN8Q
-         2yGVa2dTGJCJbASdupmvFm/mtB50OaFsi2CWG+a9br8j9HZIYJ+bR/fcBYHvPNqXuYt1
-         c94wpOJOflbBTGfnzxqKSCO1gJSLFV20EM+NJ+vlRs9gLpoMAbU+wJxbfVZqIf4wUSaE
-         ieWKG866WNrGBnn8afiBNUDHDcQS3hRUi1Dvvr5BMXceLqRjs6Rg+r8bQS0g+Lbc/R3D
-         Am6A==
-X-Gm-Message-State: AOAM531D8ffZcKmHwtC7vhUq5nhimljH45jxalPQRIiRjFJ4Se9JLEGg
-        /HbH7b2PTSjigMnqT1NVTHPC7w==
-X-Google-Smtp-Source: ABdhPJxiur973rQO7P0is4n9bTcqUoLADPVJgaczJU1ETHTcZpVacHBincB+tnOWfVKyZnCnndXCAg==
-X-Received: by 2002:a7b:c3da:: with SMTP id t26mr575120wmj.146.1589911319392;
-        Tue, 19 May 2020 11:01:59 -0700 (PDT)
+        bh=hORlUUicNTnmubGRwNiUffCoZPiWJG9HuOL8osSXdzo=;
+        b=UTsnPZwZ9UqbajYnqkzAXmZBUZyOU6KpX1DoZ7yDszXRfWK8VT+wXz1SRDsxkbD5jF
+         lpwPzGiJw5RjLdopTTw6yt59TGTsYYAvaGVbb/nyq5kpUTP5R602xTitx50YkNDGPNhW
+         ihh6bP7QXmmThNlCxat/iTtdkJYbQNfAytPVEpYvkk3IRb2obfYaLqbUM44DRrzHydc7
+         DJS9GAFbm1cRefFfeW93XODOT48pPKPsD4PfvnpCMlkE3ayulQSV6AX4mhl0+lW5b36G
+         8ePyxTcwGnCZjVv/G7NVH74JXEuMSFrQJwuFuwx2ilSdJrbiRttkvS72mZ9lq98UiFJd
+         02Sw==
+X-Gm-Message-State: AOAM5319XVGNm6ccieUmguWh2tWYQ7EokHmXQvGFJwdhMdkNSxJS1Y2n
+        1tt9prhKuyHIxKzfgE7zqOeZuw==
+X-Google-Smtp-Source: ABdhPJxkJn6Qhu9nn0EKvZWG6V4NMT7DJRYrUqG7GGKCgCc/g26MRyJ+LKLXQeOruPfp1Lim/+kFJw==
+X-Received: by 2002:a05:600c:29a:: with SMTP id 26mr615194wmk.151.1589911328505;
+        Tue, 19 May 2020 11:02:08 -0700 (PDT)
 Received: from localhost.localdomain ([2001:171b:226e:c200:c43b:ef78:d083:b355])
-        by smtp.gmail.com with ESMTPSA id 1sm510496wmz.13.2020.05.19.11.01.58
+        by smtp.gmail.com with ESMTPSA id 1sm510496wmz.13.2020.05.19.11.02.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 19 May 2020 11:01:58 -0700 (PDT)
+        Tue, 19 May 2020 11:02:08 -0700 (PDT)
 From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
 To:     iommu@lists.linux-foundation.org, devicetree@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
@@ -67,10 +67,13 @@ Cc:     joro@8bytes.org, catalin.marinas@arm.com, will@kernel.org,
         jacob.jun.pan@linux.intel.com, christian.koenig@amd.com,
         felix.kuehling@amd.com, zhangfei.gao@linaro.org, jgg@ziepe.ca,
         xuzaibo@huawei.com, fenghua.yu@intel.com, hch@infradead.org,
-        Jean-Philippe Brucker <jean-philippe@linaro.org>
-Subject: [PATCH v7 15/24] iommu/arm-smmu-v3: Add SVA device feature
-Date:   Tue, 19 May 2020 19:54:53 +0200
-Message-Id: <20200519175502.2504091-16-jean-philippe@linaro.org>
+        Jean-Philippe Brucker <jean-philippe@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Kuppuswamy Sathyanarayanan 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>
+Subject: [PATCH v7 23/24] PCI/ATS: Export PRI functions
+Date:   Tue, 19 May 2020 19:55:01 +0200
+Message-Id: <20200519175502.2504091-24-jean-philippe@linaro.org>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200519175502.2504091-1-jean-philippe@linaro.org>
 References: <20200519175502.2504091-1-jean-philippe@linaro.org>
@@ -81,185 +84,53 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Implement the IOMMU device feature callbacks to support the SVA feature.
-At the moment dev_has_feat() returns false since I/O Page Faults isn't
-yet implemented.
+The SMMUv3 driver uses pci_{enable,disable}_pri() and related
+functions. Export those functions to allow the driver to be built as a
+module.
 
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
 ---
- drivers/iommu/arm-smmu-v3.c | 124 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 124 insertions(+)
+ drivers/pci/ats.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index a9f6f1d7014e..b016b61cee23 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -703,6 +703,8 @@ struct arm_smmu_master {
- 	u32				*sids;
- 	unsigned int			num_sids;
- 	bool				ats_enabled;
-+	bool				sva_enabled;
-+	struct list_head		bonds;
- 	unsigned int			ssid_bits;
- };
- 
-@@ -3013,6 +3015,19 @@ static int arm_smmu_attach_dev(struct iommu_domain *domain, struct device *dev)
- 	master = dev_iommu_priv_get(dev);
- 	smmu = master->smmu;
- 
-+	/*
-+	 * Checking that SVA is disabled ensures that this device isn't bound to
-+	 * any mm, and can be safely detached from its old domain. Bonds cannot
-+	 * be removed concurrently since we're holding the group mutex.
-+	 */
-+	mutex_lock(&sva_lock);
-+	if (master->sva_enabled) {
-+		mutex_unlock(&sva_lock);
-+		dev_err(dev, "cannot attach - SVA enabled\n");
-+		return -EBUSY;
-+	}
-+	mutex_unlock(&sva_lock);
-+
- 	arm_smmu_detach_dev(master);
- 
- 	mutex_lock(&smmu_domain->init_mutex);
-@@ -3161,6 +3176,7 @@ static int arm_smmu_add_device(struct device *dev)
- 	master->smmu = smmu;
- 	master->sids = fwspec->ids;
- 	master->num_sids = fwspec->num_ids;
-+	INIT_LIST_HEAD(&master->bonds);
- 	dev_iommu_priv_set(dev, master);
- 
- 	/* Check the SIDs are in range of the SMMU and our stream table */
-@@ -3230,6 +3246,7 @@ static void arm_smmu_remove_device(struct device *dev)
- 
- 	master = dev_iommu_priv_get(dev);
- 	smmu = master->smmu;
-+	WARN_ON(master->sva_enabled);
- 	arm_smmu_detach_dev(master);
- 	iommu_group_remove_device(dev);
- 	iommu_device_unlink(&smmu->iommu, dev);
-@@ -3349,6 +3366,109 @@ static void arm_smmu_get_resv_regions(struct device *dev,
- 	iommu_dma_get_resv_regions(dev, head);
+diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+index a4722e8b6a51..418737a3c2c2 100644
+--- a/drivers/pci/ats.c
++++ b/drivers/pci/ats.c
+@@ -191,6 +191,7 @@ void pci_pri_init(struct pci_dev *pdev)
+ 	if (status & PCI_PRI_STATUS_PASID)
+ 		pdev->pasid_required = 1;
  }
++EXPORT_SYMBOL_GPL(pci_pri_init);
  
-+static bool arm_smmu_iopf_supported(struct arm_smmu_master *master)
-+{
-+	return false;
-+}
-+
-+static bool arm_smmu_dev_has_feature(struct device *dev,
-+				     enum iommu_dev_features feat)
-+{
-+	struct arm_smmu_master *master = dev_iommu_priv_get(dev);
-+
-+	if (!master)
-+		return false;
-+
-+	switch (feat) {
-+	case IOMMU_DEV_FEAT_SVA:
-+		if (!(master->smmu->features & ARM_SMMU_FEAT_SVA))
-+			return false;
-+
-+		/* SSID and IOPF support are mandatory for the moment */
-+		return master->ssid_bits && arm_smmu_iopf_supported(master);
-+	default:
-+		return false;
-+	}
-+}
-+
-+static bool arm_smmu_dev_feature_enabled(struct device *dev,
-+					 enum iommu_dev_features feat)
-+{
-+	bool enabled = false;
-+	struct arm_smmu_master *master = dev_iommu_priv_get(dev);
-+
-+	if (!master)
-+		return false;
-+
-+	switch (feat) {
-+	case IOMMU_DEV_FEAT_SVA:
-+		mutex_lock(&sva_lock);
-+		enabled = master->sva_enabled;
-+		mutex_unlock(&sva_lock);
-+		return enabled;
-+	default:
-+		return false;
-+	}
-+}
-+
-+static int arm_smmu_dev_enable_sva(struct device *dev)
-+{
-+	struct arm_smmu_master *master = dev_iommu_priv_get(dev);
-+
-+	mutex_lock(&sva_lock);
-+	master->sva_enabled = true;
-+	mutex_unlock(&sva_lock);
-+
-+	return 0;
-+}
-+
-+static int arm_smmu_dev_disable_sva(struct device *dev)
-+{
-+	struct arm_smmu_master *master = dev_iommu_priv_get(dev);
-+
-+	mutex_lock(&sva_lock);
-+	if (!list_empty(&master->bonds)) {
-+		dev_err(dev, "cannot disable SVA, device is bound\n");
-+		mutex_unlock(&sva_lock);
-+		return -EBUSY;
-+	}
-+	master->sva_enabled = false;
-+	mutex_unlock(&sva_lock);
-+
-+	return 0;
-+}
-+
-+static int arm_smmu_dev_enable_feature(struct device *dev,
-+				       enum iommu_dev_features feat)
-+{
-+	if (!arm_smmu_dev_has_feature(dev, feat))
-+		return -ENODEV;
-+
-+	if (arm_smmu_dev_feature_enabled(dev, feat))
-+		return -EBUSY;
-+
-+	switch (feat) {
-+	case IOMMU_DEV_FEAT_SVA:
-+		return arm_smmu_dev_enable_sva(dev);
-+	default:
-+		return -EINVAL;
-+	}
-+}
-+
-+static int arm_smmu_dev_disable_feature(struct device *dev,
-+					enum iommu_dev_features feat)
-+{
-+	if (!arm_smmu_dev_feature_enabled(dev, feat))
-+		return -EINVAL;
-+
-+	switch (feat) {
-+	case IOMMU_DEV_FEAT_SVA:
-+		return arm_smmu_dev_disable_sva(dev);
-+	default:
-+		return -EINVAL;
-+	}
-+}
-+
- static struct iommu_ops arm_smmu_ops = {
- 	.capable		= arm_smmu_capable,
- 	.domain_alloc		= arm_smmu_domain_alloc,
-@@ -3367,6 +3487,10 @@ static struct iommu_ops arm_smmu_ops = {
- 	.of_xlate		= arm_smmu_of_xlate,
- 	.get_resv_regions	= arm_smmu_get_resv_regions,
- 	.put_resv_regions	= generic_iommu_put_resv_regions,
-+	.dev_has_feat		= arm_smmu_dev_has_feature,
-+	.dev_feat_enabled	= arm_smmu_dev_feature_enabled,
-+	.dev_enable_feat	= arm_smmu_dev_enable_feature,
-+	.dev_disable_feat	= arm_smmu_dev_disable_feature,
- 	.pgsize_bitmap		= -1UL, /* Restricted during device attach */
- };
+ /**
+  * pci_enable_pri - Enable PRI capability
+@@ -237,6 +238,7 @@ int pci_enable_pri(struct pci_dev *pdev, u32 reqs)
  
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(pci_enable_pri);
+ 
+ /**
+  * pci_disable_pri - Disable PRI capability
+@@ -316,6 +318,7 @@ int pci_reset_pri(struct pci_dev *pdev)
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(pci_reset_pri);
+ 
+ /**
+  * pci_prg_resp_pasid_required - Return PRG Response PASID Required bit
+@@ -331,6 +334,7 @@ int pci_prg_resp_pasid_required(struct pci_dev *pdev)
+ 
+ 	return pdev->pasid_required;
+ }
++EXPORT_SYMBOL_GPL(pci_prg_resp_pasid_required);
+ #endif /* CONFIG_PCI_PRI */
+ 
+ #ifdef CONFIG_PCI_PASID
 -- 
 2.26.2
 
