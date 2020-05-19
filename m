@@ -5,58 +5,58 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBB47C43478
-	for <linux-pci@archiver.kernel.org>; Tue, 19 May 2020 18:02:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 998D8C43464
+	for <linux-pci@archiver.kernel.org>; Tue, 19 May 2020 18:02:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A9328207D3
-	for <linux-pci@archiver.kernel.org>; Tue, 19 May 2020 18:02:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 78AD4207D3
+	for <linux-pci@archiver.kernel.org>; Tue, 19 May 2020 18:02:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="y/8IM4di"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="afLtAp2i"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728188AbgESSCM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 19 May 2020 14:02:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33512 "EHLO
+        id S1728898AbgESSCC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 19 May 2020 14:02:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33464 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729346AbgESSCL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2020 14:02:11 -0400
-Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3900AC08C5C2
-        for <linux-pci@vger.kernel.org>; Tue, 19 May 2020 11:02:11 -0700 (PDT)
-Received: by mail-wm1-x344.google.com with SMTP id m12so186762wmc.0
-        for <linux-pci@vger.kernel.org>; Tue, 19 May 2020 11:02:11 -0700 (PDT)
+        with ESMTP id S1729197AbgESSCC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2020 14:02:02 -0400
+Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 040A7C08C5C1
+        for <linux-pci@vger.kernel.org>; Tue, 19 May 2020 11:02:02 -0700 (PDT)
+Received: by mail-wr1-x441.google.com with SMTP id y3so441076wrt.1
+        for <linux-pci@vger.kernel.org>; Tue, 19 May 2020 11:02:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=AZVtT0+f6X5811rIC/7eFM+1SWq0XkgTDX4OMv/rtSg=;
-        b=y/8IM4diOU4krq6HMoVF7f0Y++pnxOPCkejvCpK3aTG07a0Qxk+6R7uqk98vcXKlzI
-         kchOH3VtsBfPE0U2uuFiyQquqS9kMsbSDltMhnebkO0iQg4C+226OmQP4wMIR+HCqlF+
-         41aLZcvFMdCRNSEq8iKYVjkuH6BVjVwzrBP+12yYFLQdAOMTW4zVlVsEeJ3OnOTL/WvP
-         Je7ukKCuRMI3T8Jz6nt0rL4QDKWQsBBVBDxjZB/HWBBrwwSLxCRi/80pEaO9MsGBD+3P
-         hPlCIa0wqjxurS2HBv5h4EqxEkl/ExrLRf5vvvbCT13sfFuk0fhgbvnJYHv7lFqFgPjK
-         zDqA==
+        bh=4JRCRvDwKBaj6zFWwAyf94DPzbFyDqhKWQ8Qel74T6k=;
+        b=afLtAp2iGh0TSBKhOlXEtgRXoAAe/HVKmjTsSeDv9UxjhRCMaVKuinCcCKSstdsZUZ
+         kdMWspzZ2QsL5Dau2h4mskzs/qU/JpXEbIEasYD0S1PcdPIAajqvdZryUJYwyh97byo3
+         I9Wwh3Ym7E5J8i7hGztD4+iEGuD60ykADGTl3eKWMyiY2HIf6xDoG7OcUZp981d6hEq6
+         0TIm+yZWWnnOBVgyRxiN34vur8pq+aRPJrG5M24Zz24eEH8j19WveCVy5CYw4fv399WU
+         TGCaw9JbKY4KIq9k1nnPX6+3+/4+X2jtr691bmfVQXZQwcKQTCWCY+xoNAk8RN14s9Ip
+         D1oQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=AZVtT0+f6X5811rIC/7eFM+1SWq0XkgTDX4OMv/rtSg=;
-        b=eTPeIcpqEKZdmPD6QPKueSj7y5hrgHw2gB+ga0cgPSSOBWF4AuA8BA98KXt2B+/hbO
-         ZAKZxfgPQR8eWYib2ebxwvEYKi8epLY7TfrqLN7Xnc7yYbktQUazbU0mccdwEScOdHkS
-         sUmu/OuLs9EzWq40e7yw3yeGJnCIP3TLRcMTzMgub72Qlzk89vhXx+j/PmggGvd4A3yA
-         maoUdzigIGT0C08ge04dQ2AUQ798noQjlKhQ7/GK5c7+yRxeoFhb/bj8oARv/ovnLk5k
-         DD+LoVL4XmJ/OAIUtB6z66xC9Bd9xs790ZQpZeouSnFZb+zGfxf/gs6ViezF/Z5bzsa3
-         ItmA==
-X-Gm-Message-State: AOAM531ahXowkV1qPaDB3qLDoaZ1KNao5ekci+xg+M4d4PQ0fDfOzydy
-        tAq+2faocy/Jy/4jJO99FN7pJg==
-X-Google-Smtp-Source: ABdhPJxPtlkQwzUBDce7fJNlN5kO5eqR07yp7xsnruz/zjgxdTINU7bmb+Zc+7/oMVeAIV6K2MrVLA==
-X-Received: by 2002:a1c:a3c4:: with SMTP id m187mr622057wme.50.1589911329720;
-        Tue, 19 May 2020 11:02:09 -0700 (PDT)
+        bh=4JRCRvDwKBaj6zFWwAyf94DPzbFyDqhKWQ8Qel74T6k=;
+        b=fSNRoxissVWTUeALjIg8EbKywd6W3S1oTNL5BUm05ecTPzaylYcqj+gHEZ0jZ1IPJX
+         mqPWfbuIsq6pxWo6ukx2AUZVfVAXNIhpD2h4QEyt8cTJ9uNcbarBFqSwc8+WAw3RJUUN
+         4tuPPDob1w+bSBeYDqdndo9ImTZyFYs3MKa/Uf/e5KIpV4uKbnpDNbLpsI/yxOzaTLJy
+         PEriTfR5X1dGCGe+IPqrMzjphLaAkJbL7vYL8pfgQsv53XXuQmCeM7U7WkwV6MRhg4xV
+         mYOk4ig5QNeq+zX9Bhpo5WNI6K3EXHjrd6K1KPG+WU1nT7pqBWs+ClYi9OWz3RokQ+ao
+         bv6Q==
+X-Gm-Message-State: AOAM5338bKszYLV6C4/aSJryEDU754RFu8uBH6yVXPCgJCfhcsD6YDlm
+        r0SFFt0TpvTe78/0WoGGSQ8uRg==
+X-Google-Smtp-Source: ABdhPJx8Z3P30TLSvOFRBCkey5bHCv2HIx/ihXvi35CP5z2ZNK51cJrX3rrbYnMtuijPpPM1UkAWBQ==
+X-Received: by 2002:adf:ffc2:: with SMTP id x2mr76717wrs.273.1589911320419;
+        Tue, 19 May 2020 11:02:00 -0700 (PDT)
 Received: from localhost.localdomain ([2001:171b:226e:c200:c43b:ef78:d083:b355])
-        by smtp.gmail.com with ESMTPSA id 1sm510496wmz.13.2020.05.19.11.02.08
+        by smtp.gmail.com with ESMTPSA id 1sm510496wmz.13.2020.05.19.11.01.59
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 19 May 2020 11:02:09 -0700 (PDT)
+        Tue, 19 May 2020 11:01:59 -0700 (PDT)
 From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
 To:     iommu@lists.linux-foundation.org, devicetree@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
@@ -68,9 +68,9 @@ Cc:     joro@8bytes.org, catalin.marinas@arm.com, will@kernel.org,
         felix.kuehling@amd.com, zhangfei.gao@linaro.org, jgg@ziepe.ca,
         xuzaibo@huawei.com, fenghua.yu@intel.com, hch@infradead.org,
         Jean-Philippe Brucker <jean-philippe@linaro.org>
-Subject: [PATCH v7 24/24] iommu/arm-smmu-v3: Add support for PRI
-Date:   Tue, 19 May 2020 19:55:02 +0200
-Message-Id: <20200519175502.2504091-25-jean-philippe@linaro.org>
+Subject: [PATCH v7 16/24] iommu/arm-smmu-v3: Implement iommu_sva_bind/unbind()
+Date:   Tue, 19 May 2020 19:54:54 +0200
+Message-Id: <20200519175502.2504091-17-jean-philippe@linaro.org>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200519175502.2504091-1-jean-philippe@linaro.org>
 References: <20200519175502.2504091-1-jean-philippe@linaro.org>
@@ -81,482 +81,438 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-For PCI devices that support it, enable the PRI capability and handle PRI
-Page Requests with the generic fault handler. It is enabled on demand by
-iommu_sva_device_init().
+The sva_bind() function allows devices to access process address spaces
+using a PASID (aka SSID).
+
+(1) bind() allocates or gets an existing MMU notifier tied to the
+    (domain, mm) pair. Each mm gets one PASID.
+
+(2) Any change to the address space calls invalidate_range() which sends
+    ATC invalidations (in a subsequent patch).
+
+(3) When the process address space dies, the release() notifier disables
+    the CD to allow reclaiming the page tables. Since release() has to
+    be light we do not instruct device drivers to stop DMA here, we just
+    ignore incoming page faults from this point onwards.
+
+    To avoid any event 0x0a print (C_BAD_CD) we disable translation
+    without clearing CD.V. PCIe Translation Requests and Page Requests
+    are silently denied. Don't clear the R bit because the S bit can't
+    be cleared when STALL_MODEL==0b10 (forced), and clearing R without
+    clearing S is useless. Faulting transactions will stall and will be
+    aborted by the IOPF handler.
+
+(4) After stopping DMA, the device driver releases the bond by calling
+    unbind(). We release the MMU notifier, free the PASID and the bond.
+
+Three structures keep track of bonds:
+* arm_smmu_bond: one per {device, mm} pair, the handle returned to the
+  device driver for a bind() request.
+* arm_smmu_mmu_notifier: one per {domain, mm} pair, deals with ATS/TLB
+  invalidations and clearing the context descriptor on mm exit.
+* arm_smmu_ctx_desc: one per mm, holds the pinned ASID and pgd.
 
 Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
 ---
- drivers/iommu/arm-smmu-v3.c | 286 +++++++++++++++++++++++++++++-------
- 1 file changed, 236 insertions(+), 50 deletions(-)
+v6->v7: Keep track of {domains, mm} pairs. Move
+  mmu_notifier_synchronize() to module_exit().
+---
+ drivers/iommu/Kconfig       |   2 +
+ drivers/iommu/arm-smmu-v3.c | 272 +++++++++++++++++++++++++++++++++++-
+ 2 files changed, 269 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/iommu/Kconfig b/drivers/iommu/Kconfig
+index 15e9dc4e503c..00b517f449ab 100644
+--- a/drivers/iommu/Kconfig
++++ b/drivers/iommu/Kconfig
+@@ -432,8 +432,10 @@ config ARM_SMMU_V3
+ 	tristate "ARM Ltd. System MMU Version 3 (SMMUv3) Support"
+ 	depends on ARM64
+ 	select IOMMU_API
++	select IOMMU_SVA
+ 	select IOMMU_IO_PGTABLE_LPAE
+ 	select GENERIC_MSI_IRQ_DOMAIN
++	select MMU_NOTIFIER
+ 	help
+ 	  Support for implementations of the ARM System MMU architecture
+ 	  version 3 providing translation support to a PCIe root complex.
 diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index 9ec2f362802b..b4c49c6fe221 100644
+index b016b61cee23..00a9342eed99 100644
 --- a/drivers/iommu/arm-smmu-v3.c
 +++ b/drivers/iommu/arm-smmu-v3.c
-@@ -254,6 +254,7 @@
- #define STRTAB_STE_1_S1COR		GENMASK_ULL(5, 4)
- #define STRTAB_STE_1_S1CSH		GENMASK_ULL(7, 6)
+@@ -24,6 +24,7 @@
+ #include <linux/iopoll.h>
+ #include <linux/module.h>
+ #include <linux/mmu_context.h>
++#include <linux/mmu_notifier.h>
+ #include <linux/msi.h>
+ #include <linux/of.h>
+ #include <linux/of_address.h>
+@@ -36,6 +37,7 @@
+ #include <linux/amba/bus.h>
  
-+#define STRTAB_STE_1_PPAR		(1UL << 18)
- #define STRTAB_STE_1_S1STALLD		(1UL << 27)
+ #include "io-pgtable-arm.h"
++#include "iommu-sva.h"
  
- #define STRTAB_STE_1_EATS		GENMASK_ULL(29, 28)
-@@ -384,6 +385,9 @@
- #define CMDQ_PRI_0_SID			GENMASK_ULL(63, 32)
- #define CMDQ_PRI_1_GRPID		GENMASK_ULL(8, 0)
- #define CMDQ_PRI_1_RESP			GENMASK_ULL(13, 12)
-+#define CMDQ_PRI_1_RESP_FAILURE		0UL
-+#define CMDQ_PRI_1_RESP_INVALID		1UL
-+#define CMDQ_PRI_1_RESP_SUCCESS		2UL
+ /* MMIO registers */
+ #define ARM_SMMU_IDR0			0x0
+@@ -734,8 +736,32 @@ struct arm_smmu_domain {
  
- #define CMDQ_RESUME_0_SID		GENMASK_ULL(63, 32)
- #define CMDQ_RESUME_0_RESP_TERM		0UL
-@@ -456,12 +460,6 @@ module_param_named(disable_bypass, disable_bypass, bool, S_IRUGO);
- MODULE_PARM_DESC(disable_bypass,
- 	"Disable bypass streams such that incoming transactions from devices that are not attached to an iommu domain will report an abort back to the device and will not be allowed to pass through the SMMU.");
- 
--enum pri_resp {
--	PRI_RESP_DENY = 0,
--	PRI_RESP_FAIL = 1,
--	PRI_RESP_SUCC = 2,
--};
--
- enum arm_smmu_msi_index {
- 	EVTQ_MSI_INDEX,
- 	GERROR_MSI_INDEX,
-@@ -548,7 +546,7 @@ struct arm_smmu_cmdq_ent {
- 			u32			sid;
- 			u32			ssid;
- 			u16			grpid;
--			enum pri_resp		resp;
-+			u8			resp;
- 		} pri;
- 
- 		#define CMDQ_OP_RESUME		0x44
-@@ -626,6 +624,7 @@ struct arm_smmu_evtq {
- 
- struct arm_smmu_priq {
- 	struct arm_smmu_queue		q;
-+	struct iopf_queue		*iopf;
+ 	struct list_head		devices;
+ 	spinlock_t			devices_lock;
++
++	struct list_head		mmu_notifiers;
++};
++
++struct arm_smmu_mmu_notifier {
++	struct mmu_notifier		mn;
++	struct arm_smmu_ctx_desc	*cd;
++	bool				cleared;
++	refcount_t			refs;
++	struct list_head		list;
++	struct arm_smmu_domain		*domain;
  };
  
- /* High-level stream table and context descriptor structures */
-@@ -760,6 +759,8 @@ struct arm_smmu_master {
- 	unsigned int			num_streams;
- 	bool				ats_enabled;
- 	bool				stall_enabled;
-+	bool				pri_supported;
-+	bool				prg_resp_needs_ssid;
- 	bool				sva_enabled;
- 	struct list_head		bonds;
- 	unsigned int			ssid_bits;
-@@ -1064,14 +1065,6 @@ static int arm_smmu_cmdq_build_cmd(u64 *cmd, struct arm_smmu_cmdq_ent *ent)
- 		cmd[0] |= FIELD_PREP(CMDQ_PRI_0_SSID, ent->pri.ssid);
- 		cmd[0] |= FIELD_PREP(CMDQ_PRI_0_SID, ent->pri.sid);
- 		cmd[1] |= FIELD_PREP(CMDQ_PRI_1_GRPID, ent->pri.grpid);
--		switch (ent->pri.resp) {
--		case PRI_RESP_DENY:
--		case PRI_RESP_FAIL:
--		case PRI_RESP_SUCC:
--			break;
--		default:
--			return -EINVAL;
--		}
- 		cmd[1] |= FIELD_PREP(CMDQ_PRI_1_RESP, ent->pri.resp);
- 		break;
- 	case CMDQ_OP_RESUME:
-@@ -1651,6 +1644,7 @@ static int arm_smmu_page_response(struct device *dev,
- {
- 	struct arm_smmu_cmdq_ent cmd = {0};
- 	struct arm_smmu_master *master = dev_iommu_priv_get(dev);
-+	bool pasid_valid = resp->flags & IOMMU_PAGE_RESP_PASID_VALID;
- 	int sid = master->streams[0].id;
- 
- 	if (master->stall_enabled) {
-@@ -1668,8 +1662,27 @@ static int arm_smmu_page_response(struct device *dev,
- 		default:
- 			return -EINVAL;
- 		}
-+	} else if (master->pri_supported) {
-+		cmd.opcode		= CMDQ_OP_PRI_RESP;
-+		cmd.substream_valid	= pasid_valid &&
-+					  master->prg_resp_needs_ssid;
-+		cmd.pri.sid		= sid;
-+		cmd.pri.ssid		= resp->pasid;
-+		cmd.pri.grpid		= resp->grpid;
-+		switch (resp->code) {
-+		case IOMMU_PAGE_RESP_FAILURE:
-+			cmd.pri.resp = CMDQ_PRI_1_RESP_FAILURE;
-+			break;
-+		case IOMMU_PAGE_RESP_INVALID:
-+			cmd.pri.resp = CMDQ_PRI_1_RESP_INVALID;
-+			break;
-+		case IOMMU_PAGE_RESP_SUCCESS:
-+			cmd.pri.resp = CMDQ_PRI_1_RESP_SUCCESS;
-+			break;
-+		default:
-+			return -EINVAL;
-+		}
- 	} else {
--		/* TODO: insert PRI response here */
- 		return -ENODEV;
- 	}
- 
-@@ -2253,6 +2266,9 @@ static void arm_smmu_write_strtab_ent(struct arm_smmu_master *master, u32 sid,
- 			 FIELD_PREP(STRTAB_STE_1_S1CSH, ARM_SMMU_SH_ISH) |
- 			 FIELD_PREP(STRTAB_STE_1_STRW, strw));
- 
-+		if (master->prg_resp_needs_ssid)
-+			dst[1] |= STRTAB_STE_1_PPAR;
++#define mn_to_smmu(mn) container_of(mn, struct arm_smmu_mmu_notifier, mn)
 +
- 		if (smmu->features & ARM_SMMU_FEAT_STALLS &&
- 		    !master->stall_enabled)
- 			dst[1] |= cpu_to_le64(STRTAB_STE_1_S1STALLD);
-@@ -2497,61 +2513,110 @@ static irqreturn_t arm_smmu_evtq_thread(int irq, void *dev)
- 
- static void arm_smmu_handle_ppr(struct arm_smmu_device *smmu, u64 *evt)
- {
--	u32 sid, ssid;
--	u16 grpid;
--	bool ssv, last;
--
--	sid = FIELD_GET(PRIQ_0_SID, evt[0]);
--	ssv = FIELD_GET(PRIQ_0_SSID_V, evt[0]);
--	ssid = ssv ? FIELD_GET(PRIQ_0_SSID, evt[0]) : 0;
--	last = FIELD_GET(PRIQ_0_PRG_LAST, evt[0]);
--	grpid = FIELD_GET(PRIQ_1_PRG_IDX, evt[1]);
--
--	dev_info(smmu->dev, "unexpected PRI request received:\n");
--	dev_info(smmu->dev,
--		 "\tsid 0x%08x.0x%05x: [%u%s] %sprivileged %s%s%s access at iova 0x%016llx\n",
--		 sid, ssid, grpid, last ? "L" : "",
--		 evt[0] & PRIQ_0_PERM_PRIV ? "" : "un",
--		 evt[0] & PRIQ_0_PERM_READ ? "R" : "",
--		 evt[0] & PRIQ_0_PERM_WRITE ? "W" : "",
--		 evt[0] & PRIQ_0_PERM_EXEC ? "X" : "",
--		 evt[1] & PRIQ_1_ADDR_MASK);
--
--	if (last) {
--		struct arm_smmu_cmdq_ent cmd = {
--			.opcode			= CMDQ_OP_PRI_RESP,
--			.substream_valid	= ssv,
--			.pri			= {
--				.sid	= sid,
--				.ssid	= ssid,
--				.grpid	= grpid,
--				.resp	= PRI_RESP_DENY,
--			},
-+	u32 sid = FIELD_PREP(PRIQ_0_SID, evt[0]);
++struct arm_smmu_bond {
++	struct iommu_sva		sva;
++	struct mm_struct		*mm;
++	struct arm_smmu_mmu_notifier	*smmu_mn;
++	struct list_head		list;
++	refcount_t			refs;
++};
 +
-+	bool pasid_valid, last;
-+	struct arm_smmu_master *master;
-+	struct iommu_fault_event fault_evt = {
-+		.fault.type = IOMMU_FAULT_PAGE_REQ,
-+		.fault.prm = {
-+			.pasid		= FIELD_GET(PRIQ_0_SSID, evt[0]),
-+			.grpid		= FIELD_GET(PRIQ_1_PRG_IDX, evt[1]),
-+			.addr		= evt[1] & PRIQ_1_ADDR_MASK,
-+		},
-+	};
-+	struct iommu_fault_page_request *pr = &fault_evt.fault.prm;
++#define sva_to_bond(handle) \
++	container_of(handle, struct arm_smmu_bond, sva)
 +
-+	pasid_valid = evt[0] & PRIQ_0_SSID_V;
-+	last = evt[0] & PRIQ_0_PRG_LAST;
-+
-+	/* Discard Stop PASID marker, it isn't used */
-+	if (!(evt[0] & (PRIQ_0_PERM_READ | PRIQ_0_PERM_WRITE)) && last)
-+		return;
-+
-+	if (last)
-+		pr->flags |= IOMMU_FAULT_PAGE_REQUEST_LAST_PAGE;
-+	if (pasid_valid)
-+		pr->flags |= IOMMU_FAULT_PAGE_REQUEST_PASID_VALID;
-+	if (evt[0] & PRIQ_0_PERM_READ)
-+		pr->perm |= IOMMU_FAULT_PERM_READ;
-+	if (evt[0] & PRIQ_0_PERM_WRITE)
-+		pr->perm |= IOMMU_FAULT_PERM_WRITE;
-+	if (evt[0] & PRIQ_0_PERM_EXEC)
-+		pr->perm |= IOMMU_FAULT_PERM_EXEC;
-+	if (evt[0] & PRIQ_0_PERM_PRIV)
-+		pr->perm |= IOMMU_FAULT_PERM_PRIV;
-+
-+	master = arm_smmu_find_master(smmu, sid);
-+	if (WARN_ON(!master))
-+		return;
-+
-+	if (iommu_report_device_fault(master->dev, &fault_evt)) {
-+		/*
-+		 * No handler registered, so subsequent faults won't produce
-+		 * better results. Try to disable PRI.
-+		 */
-+		struct iommu_page_response resp = {
-+			.flags		= pasid_valid ?
-+					  IOMMU_PAGE_RESP_PASID_VALID : 0,
-+			.pasid		= pr->pasid,
-+			.grpid		= pr->grpid,
-+			.code		= IOMMU_PAGE_RESP_FAILURE,
- 		};
- 
--		arm_smmu_cmdq_issue_cmd(smmu, &cmd);
-+		dev_warn(master->dev,
-+			 "PPR 0x%x:0x%llx 0x%x: nobody cared, disabling PRI\n",
-+			 pasid_valid ? pr->pasid : 0, pr->addr, pr->perm);
-+		if (last)
-+			arm_smmu_page_response(master->dev, NULL, &resp);
- 	}
- }
- 
- static irqreturn_t arm_smmu_priq_thread(int irq, void *dev)
- {
-+	int num_handled = 0;
-+	bool overflow = false;
- 	struct arm_smmu_device *smmu = dev;
- 	struct arm_smmu_queue *q = &smmu->priq.q;
- 	struct arm_smmu_ll_queue *llq = &q->llq;
-+	size_t queue_size = 1 << llq->max_n_shift;
- 	u64 evt[PRIQ_ENT_DWORDS];
- 
-+	spin_lock(&q->wq.lock);
- 	do {
--		while (!queue_remove_raw(q, evt))
-+		while (!queue_remove_raw(q, evt)) {
-+			spin_unlock(&q->wq.lock);
- 			arm_smmu_handle_ppr(smmu, evt);
-+			spin_lock(&q->wq.lock);
-+			if (++num_handled == queue_size) {
-+				q->batch++;
-+				wake_up_all_locked(&q->wq);
-+				num_handled = 0;
-+			}
-+		}
- 
--		if (queue_sync_prod_in(q) == -EOVERFLOW)
-+		if (queue_sync_prod_in(q) == -EOVERFLOW) {
- 			dev_err(smmu->dev, "PRIQ overflow detected -- requests lost\n");
-+			overflow = true;
-+		}
- 	} while (!queue_empty(llq));
- 
- 	/* Sync our overflow flag, as we believe we're up to speed */
- 	llq->cons = Q_OVF(llq->prod) | Q_WRP(llq, llq->cons) |
- 		      Q_IDX(llq, llq->cons);
- 	queue_sync_cons_out(q);
-+
-+	wake_up_all_locked(&q->wq);
-+	spin_unlock(&q->wq.lock);
-+
-+	/*
-+	 * On overflow, the SMMU might have discarded the last PPR in a group.
-+	 * There is no way to know more about it, so we have to discard all
-+	 * partial faults already queued.
-+	 */
-+	if (overflow)
-+		iopf_queue_discard_partial(smmu->priq.iopf);
-+
- 	return IRQ_HANDLED;
- }
- 
-@@ -2585,6 +2650,35 @@ static int arm_smmu_flush_evtq(struct arm_smmu_device *smmu)
- 	return ret;
- }
+ struct arm_smmu_option_prop {
+ 	u32 opt;
+ 	const char *prop;
+@@ -745,6 +771,13 @@ static DEFINE_XARRAY_ALLOC1(asid_xa);
+ static DEFINE_MUTEX(asid_lock);
+ static DEFINE_MUTEX(sva_lock);
  
 +/*
-+ * arm_smmu_flush_priq - wait until all requests currently in the queue have
-+ *                       been consumed.
-+ *
-+ * See arm_smmu_flush_evtq().
++ * When a process dies, DMA is still running but we need to clear the pgd. If we
++ * simply cleared the valid bit from the context descriptor, we'd get event 0x0a
++ * which are not recoverable.
 + */
-+static int arm_smmu_flush_priq(struct arm_smmu_device *smmu)
-+{
-+	int ret;
-+	u64 batch;
-+	bool overflow = false;
-+	struct arm_smmu_queue *q = &smmu->priq.q;
++static struct arm_smmu_ctx_desc invalid_cd = { 0 };
 +
-+	spin_lock(&q->wq.lock);
-+	if (queue_sync_prod_in(q) == -EOVERFLOW) {
-+		dev_err(smmu->dev, "priq overflow detected -- requests lost\n");
-+		overflow = true;
-+	}
-+
-+	batch = q->batch;
-+	ret = wait_event_interruptible_locked(q->wq, queue_empty(&q->llq) ||
-+					      q->batch >= batch + 2);
-+	spin_unlock(&q->wq.lock);
-+
-+	if (overflow)
-+		iopf_queue_discard_partial(smmu->priq.iopf);
-+	return ret;
-+}
-+
- static int arm_smmu_device_disable(struct arm_smmu_device *smmu);
+ static struct arm_smmu_option_prop arm_smmu_options[] = {
+ 	{ ARM_SMMU_OPT_SKIP_PREFETCH, "hisilicon,broken-prefetch-cmd" },
+ 	{ ARM_SMMU_OPT_PAGE0_REGS_ONLY, "cavium,cn9900-broken-page1-regspace"},
+@@ -1654,7 +1687,9 @@ static int arm_smmu_write_ctx_desc(struct arm_smmu_domain *smmu_domain,
+ 	 * (2) Install a secondary CD, for SID+SSID traffic.
+ 	 * (3) Update ASID of a CD. Atomically write the first 64 bits of the
+ 	 *     CD, then invalidate the old entry and mappings.
+-	 * (4) Remove a secondary CD.
++	 * (4) Quiesce the context without clearing the valid bit. Disable
++	 *     translation, and ignore any translation fault.
++	 * (5) Remove a secondary CD.
+ 	 */
+ 	u64 val;
+ 	bool cd_live;
+@@ -1671,8 +1706,10 @@ static int arm_smmu_write_ctx_desc(struct arm_smmu_domain *smmu_domain,
+ 	val = le64_to_cpu(cdptr[0]);
+ 	cd_live = !!(val & CTXDESC_CD_0_V);
  
- static irqreturn_t arm_smmu_gerror_handler(int irq, void *dev)
-@@ -3303,6 +3397,75 @@ static void arm_smmu_disable_pasid(struct arm_smmu_master *master)
- 	pci_disable_pasid(pdev);
+-	if (!cd) { /* (4) */
++	if (!cd) { /* (5) */
+ 		val = 0;
++	} else if (cd == &invalid_cd) { /* (4) */
++		val |= CTXDESC_CD_0_TCR_EPD0;
+ 	} else if (cd_live) { /* (3) */
+ 		val &= ~CTXDESC_CD_0_ASID;
+ 		val |= FIELD_PREP(CTXDESC_CD_0_ASID, cd->asid);
+@@ -1872,7 +1909,6 @@ static struct arm_smmu_ctx_desc *arm_smmu_share_asid(u16 asid)
+ 	return NULL;
  }
  
-+static int arm_smmu_init_pri(struct arm_smmu_master *master)
-+{
-+	int pos;
-+	struct pci_dev *pdev;
-+
-+	if (!dev_is_pci(master->dev))
-+		return -EINVAL;
-+
-+	if (!(master->smmu->features & ARM_SMMU_FEAT_PRI))
-+		return 0;
-+
-+	pdev = to_pci_dev(master->dev);
-+	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PRI);
-+	if (!pos)
-+		return 0;
-+
-+	/* If the device supports PASID and PRI, set STE.PPAR */
-+	if (master->ssid_bits)
-+		master->prg_resp_needs_ssid = pci_prg_resp_pasid_required(pdev);
-+
-+	master->pri_supported = true;
-+	return 0;
-+}
-+
-+static int arm_smmu_enable_pri(struct arm_smmu_master *master)
-+{
-+	int ret;
-+	struct pci_dev *pdev;
-+	/*
-+	 * TODO: find a good inflight PPR number. According to the SMMU spec we
-+	 * should divide the PRI queue by the number of PRI-capable devices, but
-+	 * it's impossible to know about future (probed late or hotplugged)
-+	 * devices. So we might miss some PPRs due to queue overflow.
-+	 */
-+	size_t max_inflight_pprs = 16;
-+
-+	if (!master->pri_supported || !master->ats_enabled)
-+		return -ENODEV;
-+
-+	pdev = to_pci_dev(master->dev);
-+
-+	ret = pci_reset_pri(pdev);
-+	if (ret)
-+		return ret;
-+
-+	ret = pci_enable_pri(pdev, max_inflight_pprs);
-+	if (ret) {
-+		dev_err(master->dev, "cannot enable PRI: %d\n", ret);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static void arm_smmu_disable_pri(struct arm_smmu_master *master)
-+{
-+	struct pci_dev *pdev;
-+
-+	if (!dev_is_pci(master->dev))
-+		return;
-+
-+	pdev = to_pci_dev(master->dev);
-+
-+	if (!pdev->pri_enabled)
-+		return;
-+
-+	pci_disable_pri(pdev);
-+}
-+
- static void arm_smmu_detach_dev(struct arm_smmu_master *master)
+-__maybe_unused
+ static struct arm_smmu_ctx_desc *arm_smmu_alloc_shared_cd(struct mm_struct *mm)
  {
- 	unsigned long flags;
-@@ -3653,6 +3816,8 @@ static void arm_smmu_sva_unbind(struct iommu_sva *handle)
- 
- 	if (master->stall_enabled)
- 		arm_smmu_flush_evtq(master->smmu);
-+	else if (master->pri_supported)
-+		arm_smmu_flush_priq(master->smmu);
- 	iopf_queue_flush_dev(handle->dev);
- 
- 	mutex_lock(&sva_lock);
-@@ -3836,6 +4001,8 @@ static int arm_smmu_add_device(struct device *dev)
- 	    smmu->features & ARM_SMMU_FEAT_STALL_FORCE)
- 		master->stall_enabled = true;
- 
-+	arm_smmu_init_pri(master);
-+
- 	ret = iommu_device_link(&smmu->iommu, dev);
- 	if (ret)
- 		goto err_disable_pasid;
-@@ -3871,6 +4038,7 @@ static void arm_smmu_remove_device(struct device *dev)
- 
- 	master = dev_iommu_priv_get(dev);
- 	smmu = master->smmu;
-+	iopf_queue_remove_device(smmu->priq.iopf, dev);
- 	iopf_queue_remove_device(smmu->evtq.iopf, dev);
- 	WARN_ON(master->sva_enabled);
- 	arm_smmu_detach_dev(master);
-@@ -3995,7 +4163,7 @@ static void arm_smmu_get_resv_regions(struct device *dev,
- 
- static bool arm_smmu_iopf_supported(struct arm_smmu_master *master)
- {
--	return master->stall_enabled;
-+	return master->stall_enabled || master->pri_supported;
+ 	u16 asid;
+@@ -1969,7 +2005,6 @@ static struct arm_smmu_ctx_desc *arm_smmu_alloc_shared_cd(struct mm_struct *mm)
+ 	return ERR_PTR(ret);
  }
  
- static bool arm_smmu_dev_has_feature(struct device *dev,
-@@ -4047,6 +4215,15 @@ static int arm_smmu_dev_enable_sva(struct device *dev)
- 		ret = iopf_queue_add_device(master->smmu->evtq.iopf, dev);
- 		if (ret)
- 			return ret;
-+	} else if (master->pri_supported) {
-+		ret = iopf_queue_add_device(master->smmu->priq.iopf, dev);
-+		if (ret)
-+			return ret;
-+
-+		if (arm_smmu_enable_pri(master)) {
-+			iopf_queue_remove_device(master->smmu->priq.iopf, dev);
-+			return ret;
-+		}
+-__maybe_unused
+ static void arm_smmu_free_shared_cd(struct arm_smmu_ctx_desc *cd)
+ {
+ 	lockdep_assert_held(&sva_lock);
+@@ -2606,6 +2641,8 @@ static bool arm_smmu_capable(enum iommu_cap cap)
  	}
- 
- 	ret = iommu_register_device_fault_handler(dev, iommu_queue_iopf, dev);
-@@ -4060,6 +4237,8 @@ static int arm_smmu_dev_enable_sva(struct device *dev)
- 	return 0;
- 
- err_disable_iopf:
-+	arm_smmu_disable_pri(master);
-+	iopf_queue_remove_device(master->smmu->priq.iopf, dev);
- 	iopf_queue_remove_device(master->smmu->evtq.iopf, dev);
- 	return ret;
  }
-@@ -4078,6 +4257,8 @@ static int arm_smmu_dev_disable_sva(struct device *dev)
- 	mutex_unlock(&sva_lock);
  
- 	iommu_unregister_device_fault_handler(dev);
-+	arm_smmu_disable_pri(master);
-+	iopf_queue_remove_device(master->smmu->priq.iopf, dev);
- 	iopf_queue_remove_device(master->smmu->evtq.iopf, dev);
- 
- 	return 0;
-@@ -4250,6 +4431,10 @@ static int arm_smmu_init_queues(struct arm_smmu_device *smmu)
- 	if (!(smmu->features & ARM_SMMU_FEAT_PRI))
- 		return 0;
- 
-+	smmu->priq.iopf = iopf_queue_alloc(dev_name(smmu->dev));
-+	if (!smmu->priq.iopf)
-+		return -ENOMEM;
++static struct mmu_notifier_ops arm_smmu_mmu_notifier_ops;
 +
- 	return arm_smmu_init_one_queue(smmu, &smmu->priq.q, ARM_SMMU_PRIQ_PROD,
- 				       ARM_SMMU_PRIQ_CONS, PRIQ_ENT_DWORDS,
- 				       "priq");
-@@ -5252,6 +5437,7 @@ static int arm_smmu_device_remove(struct platform_device *pdev)
- 	iommu_device_sysfs_remove(&smmu->iommu);
- 	arm_smmu_device_disable(smmu);
- 	iopf_queue_free(smmu->evtq.iopf);
-+	iopf_queue_free(smmu->priq.iopf);
+ static struct iommu_domain *arm_smmu_domain_alloc(unsigned type)
+ {
+ 	struct arm_smmu_domain *smmu_domain;
+@@ -2633,6 +2670,7 @@ static struct iommu_domain *arm_smmu_domain_alloc(unsigned type)
+ 	mutex_init(&smmu_domain->init_mutex);
+ 	INIT_LIST_HEAD(&smmu_domain->devices);
+ 	spin_lock_init(&smmu_domain->devices_lock);
++	INIT_LIST_HEAD(&smmu_domain->mmu_notifiers);
  
- 	return 0;
+ 	return &smmu_domain->domain;
  }
+@@ -3127,6 +3165,216 @@ arm_smmu_iova_to_phys(struct iommu_domain *domain, dma_addr_t iova)
+ 	return ops->iova_to_phys(ops, iova);
+ }
+ 
++static void arm_smmu_mm_invalidate_range(struct mmu_notifier *mn,
++					 struct mm_struct *mm,
++					 unsigned long start, unsigned long end)
++{
++	/* TODO: invalidate ATS */
++}
++
++static void arm_smmu_mm_release(struct mmu_notifier *mn, struct mm_struct *mm)
++{
++	struct arm_smmu_mmu_notifier *smmu_mn = mn_to_smmu(mn);
++	struct arm_smmu_domain *smmu_domain = smmu_mn->domain;
++
++	mutex_lock(&sva_lock);
++	if (smmu_mn->cleared) {
++		mutex_unlock(&sva_lock);
++		return;
++	}
++
++	/*
++	 * DMA may still be running. Keep the cd valid to avoid C_BAD_CD events,
++	 * but disable translation.
++	 */
++	arm_smmu_write_ctx_desc(smmu_domain, mm->pasid, &invalid_cd);
++
++	arm_smmu_tlb_inv_asid(smmu_domain->smmu, smmu_mn->cd->asid);
++	/* TODO: invalidate ATS */
++
++	smmu_mn->cleared = true;
++	mutex_unlock(&sva_lock);
++}
++
++static void arm_smmu_mmu_notifier_free(struct mmu_notifier *mn)
++{
++	kfree(mn_to_smmu(mn));
++}
++
++static struct mmu_notifier_ops arm_smmu_mmu_notifier_ops = {
++	.invalidate_range	= arm_smmu_mm_invalidate_range,
++	.release		= arm_smmu_mm_release,
++	.free_notifier		= arm_smmu_mmu_notifier_free,
++};
++
++/* Allocate or get existing MMU notifier for this {domain, mm} pair */
++static struct arm_smmu_mmu_notifier *
++arm_smmu_mmu_notifier_get(struct arm_smmu_domain *smmu_domain,
++			  struct mm_struct *mm)
++{
++	int ret;
++	struct arm_smmu_ctx_desc *cd;
++	struct arm_smmu_mmu_notifier *smmu_mn;
++
++	lockdep_assert_held(&sva_lock);
++
++	list_for_each_entry(smmu_mn, &smmu_domain->mmu_notifiers, list) {
++		if (smmu_mn->mn.mm == mm) {
++			refcount_inc(&smmu_mn->refs);
++			return smmu_mn;
++		}
++	}
++
++	cd = arm_smmu_alloc_shared_cd(mm);
++	if (IS_ERR(cd))
++		return ERR_CAST(cd);
++
++	smmu_mn = kzalloc(sizeof(*smmu_mn), GFP_KERNEL);
++	if (!smmu_mn) {
++		ret = -ENOMEM;
++		goto err_free_cd;
++	}
++
++	refcount_set(&smmu_mn->refs, 1);
++	smmu_mn->cd = cd;
++	smmu_mn->domain = smmu_domain;
++	smmu_mn->mn.ops = &arm_smmu_mmu_notifier_ops;
++
++	ret = mmu_notifier_register(&smmu_mn->mn, mm);
++	if (ret) {
++		kfree(smmu_mn);
++		goto err_free_cd;
++	}
++
++	ret = arm_smmu_write_ctx_desc(smmu_domain, mm->pasid, cd);
++	if (ret)
++		goto err_put_notifier;
++
++	list_add(&smmu_mn->list, &smmu_domain->mmu_notifiers);
++	return smmu_mn;
++
++err_put_notifier:
++	/* Frees smmu_mn */
++	mmu_notifier_put(&smmu_mn->mn);
++err_free_cd:
++	arm_smmu_free_shared_cd(cd);
++	return ERR_PTR(ret);
++}
++
++static void arm_smmu_mmu_notifier_put(struct arm_smmu_mmu_notifier *smmu_mn)
++{
++	struct mm_struct *mm = smmu_mn->mn.mm;
++	struct arm_smmu_ctx_desc *cd = smmu_mn->cd;
++	struct arm_smmu_domain *smmu_domain = smmu_mn->domain;
++
++	lockdep_assert_held(&sva_lock);
++
++	if (!refcount_dec_and_test(&smmu_mn->refs))
++		return;
++
++	list_del(&smmu_mn->list);
++	arm_smmu_write_ctx_desc(smmu_domain, mm->pasid, NULL);
++
++	/*
++	 * If we went through clear(), we've already invalidated, and no
++	 * new TLB entry can have been formed.
++	 */
++	if (!smmu_mn->cleared) {
++		arm_smmu_tlb_inv_asid(smmu_domain->smmu, cd->asid);
++		/* TODO: invalidate ATS */
++	}
++
++	/* Frees smmu_mn */
++	mmu_notifier_put(&smmu_mn->mn);
++	arm_smmu_free_shared_cd(cd);
++}
++
++static struct iommu_sva *
++__arm_smmu_sva_bind(struct device *dev, struct mm_struct *mm)
++{
++	int ret;
++	struct arm_smmu_bond *bond;
++	struct arm_smmu_master *master = dev_iommu_priv_get(dev);
++	struct iommu_domain *domain = iommu_get_domain_for_dev(dev);
++	struct arm_smmu_domain *smmu_domain = to_smmu_domain(domain);
++
++	lockdep_assert_held(&sva_lock);
++
++	if (!master || !master->sva_enabled)
++		return ERR_PTR(-ENODEV);
++
++	/* If bind() was already called for this {dev, mm} pair, reuse it. */
++	list_for_each_entry(bond, &master->bonds, list) {
++		if (bond->mm == mm) {
++			refcount_inc(&bond->refs);
++			return &bond->sva;
++		}
++	}
++
++	bond = kzalloc(sizeof(*bond), GFP_KERNEL);
++	if (!bond)
++		return ERR_PTR(-ENOMEM);
++
++	/* Allocate a PASID for this mm if necessary */
++	ret = iommu_sva_alloc_pasid(mm, 1, (1U << master->ssid_bits) - 1);
++	if (ret)
++		goto err_free_bond;
++
++	bond->mm = mm;
++	bond->sva.dev = dev;
++	refcount_set(&bond->refs, 1);
++
++	bond->smmu_mn = arm_smmu_mmu_notifier_get(smmu_domain, mm);
++	if (IS_ERR(bond->smmu_mn))
++		goto err_free_pasid;
++
++	list_add(&bond->list, &master->bonds);
++	return &bond->sva;
++
++err_free_pasid:
++	iommu_sva_free_pasid(mm);
++err_free_bond:
++	kfree(bond);
++	return ERR_PTR(ret);
++}
++
++static struct iommu_sva *
++arm_smmu_sva_bind(struct device *dev, struct mm_struct *mm, void *drvdata)
++{
++	struct iommu_sva *handle;
++	struct iommu_domain *domain = iommu_get_domain_for_dev(dev);
++	struct arm_smmu_domain *smmu_domain = to_smmu_domain(domain);
++
++	if (smmu_domain->stage != ARM_SMMU_DOMAIN_S1)
++		return ERR_PTR(-EINVAL);
++
++	mutex_lock(&sva_lock);
++	handle = __arm_smmu_sva_bind(dev, mm);
++	mutex_unlock(&sva_lock);
++	return handle;
++}
++
++static void arm_smmu_sva_unbind(struct iommu_sva *handle)
++{
++	struct arm_smmu_bond *bond = sva_to_bond(handle);
++
++	mutex_lock(&sva_lock);
++	if (refcount_dec_and_test(&bond->refs)) {
++		list_del(&bond->list);
++		arm_smmu_mmu_notifier_put(bond->smmu_mn);
++		iommu_sva_free_pasid(bond->mm);
++		kfree(bond);
++	}
++	mutex_unlock(&sva_lock);
++}
++
++static int arm_smmu_sva_get_pasid(struct iommu_sva *handle)
++{
++	struct arm_smmu_bond *bond = sva_to_bond(handle);
++
++	return bond->mm->pasid;
++}
++
+ static struct platform_driver arm_smmu_driver;
+ 
+ static
+@@ -3491,6 +3739,9 @@ static struct iommu_ops arm_smmu_ops = {
+ 	.dev_feat_enabled	= arm_smmu_dev_feature_enabled,
+ 	.dev_enable_feat	= arm_smmu_dev_enable_feature,
+ 	.dev_disable_feat	= arm_smmu_dev_disable_feature,
++	.sva_bind		= arm_smmu_sva_bind,
++	.sva_unbind		= arm_smmu_sva_unbind,
++	.sva_get_pasid		= arm_smmu_sva_get_pasid,
+ 	.pgsize_bitmap		= -1UL, /* Restricted during device attach */
+ };
+ 
+@@ -4598,6 +4849,16 @@ static const struct of_device_id arm_smmu_of_match[] = {
+ };
+ MODULE_DEVICE_TABLE(of, arm_smmu_of_match);
+ 
++static void arm_smmu_driver_unregister(struct platform_driver *drv)
++{
++	/*
++	 * Wait for all notifiers free() RCU callbacks, since they are still
++	 * using the arm_smmu_mmu_notifier_ops.
++	 */
++	mmu_notifier_synchronize();
++	platform_driver_unregister(drv);
++}
++
+ static struct platform_driver arm_smmu_driver = {
+ 	.driver	= {
+ 		.name			= "arm-smmu-v3",
+@@ -4608,7 +4869,8 @@ static struct platform_driver arm_smmu_driver = {
+ 	.remove	= arm_smmu_device_remove,
+ 	.shutdown = arm_smmu_device_shutdown,
+ };
+-module_platform_driver(arm_smmu_driver);
++module_driver(arm_smmu_driver, platform_driver_register,
++	      arm_smmu_driver_unregister);
+ 
+ MODULE_DESCRIPTION("IOMMU API for ARM architected SMMUv3 implementations");
+ MODULE_AUTHOR("Will Deacon <will@kernel.org>");
 -- 
 2.26.2
 
