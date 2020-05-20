@@ -2,86 +2,107 @@ Return-Path: <SRS0=tlVJ=7C=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 551D5C433E0
-	for <linux-pci@archiver.kernel.org>; Wed, 20 May 2020 18:07:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25D11C433E0
+	for <linux-pci@archiver.kernel.org>; Wed, 20 May 2020 18:09:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2EE0F207D8
-	for <linux-pci@archiver.kernel.org>; Wed, 20 May 2020 18:07:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0588B20671
+	for <linux-pci@archiver.kernel.org>; Wed, 20 May 2020 18:09:18 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="ThItXi9C"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726977AbgETSGz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 20 May 2020 14:06:55 -0400
-Received: from mga14.intel.com ([192.55.52.115]:46824 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726548AbgETSGq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 20 May 2020 14:06:46 -0400
-IronPort-SDR: KZu2UvqZH44iNEdPDd+u+w2j5QFYrBQSBcnzKtcty5dhXspVI1mMYw+RPzyDhTZWd+6JLyZ7W2
- kai0YI7XL1cA==
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 May 2020 11:06:45 -0700
-IronPort-SDR: LezuK/BIDnBntPn+DzPG2NCkDGtAklXtxkgwdb0fO07rcWaojInjP3ZCa7ZGVOUZizptkEleJq
- UnnfbJ5dQX7g==
-X-IronPort-AV: E=Sophos;i="5.73,414,1583222400"; 
-   d="scan'208";a="289442239"
-Received: from ydandeka-mobl.amr.corp.intel.com (HELO arch-ashland-svkelley.intel.com) ([10.254.5.7])
-  by fmsmga004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 May 2020 11:06:45 -0700
-From:   Sean V Kelley <sean.v.kelley@linux.intel.com>
-To:     bhelgaas@google.com
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "David E. Box" <david.e.box@linux.intel.com>
-Subject: [PATCH V3 1/3] PCI: Add defines for Designated Vendor-Specific Capability
-Date:   Wed, 20 May 2020 11:06:38 -0700
-Message-Id: <20200520180640.1911202-2-sean.v.kelley@linux.intel.com>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20200520180640.1911202-1-sean.v.kelley@linux.intel.com>
-References: <20200520180640.1911202-1-sean.v.kelley@linux.intel.com>
+        id S1726560AbgETSJP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 20 May 2020 14:09:15 -0400
+Received: from hqnvemgate25.nvidia.com ([216.228.121.64]:8118 "EHLO
+        hqnvemgate25.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726548AbgETSJP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 May 2020 14:09:15 -0400
+Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate25.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5ec571fb0002>; Wed, 20 May 2020 11:07:55 -0700
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate102.nvidia.com (PGP Universal service);
+  Wed, 20 May 2020 11:09:14 -0700
+X-PGP-Universal: processed;
+        by hqpgpgate102.nvidia.com on Wed, 20 May 2020 11:09:14 -0700
+Received: from [10.25.75.122] (10.124.1.5) by HQMAIL107.nvidia.com
+ (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Wed, 20 May
+ 2020 18:09:11 +0000
+Subject: Re: [PATCH] PCI: tegra: fix runtime pm imbalance on error
+To:     Bjorn Helgaas <helgaas@kernel.org>,
+        Thierry Reding <thierry.reding@gmail.com>
+CC:     Dinghao Liu <dinghao.liu@zju.edu.cn>, <kjlu@umn.edu>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        Andrew Murray <amurray@thegoodpenguin.co.uk>,
+        <linux-pci@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+References: <20200520163739.GA1100601@bjorn-Precision-5520>
+X-Nvconfidentiality: public
+From:   Vidya Sagar <vidyas@nvidia.com>
+Message-ID: <e7c967a0-c285-450a-bbad-f6456c661d41@nvidia.com>
+Date:   Wed, 20 May 2020 23:39:08 +0530
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
+ Thunderbird/68.8.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20200520163739.GA1100601@bjorn-Precision-5520>
+X-Originating-IP: [10.124.1.5]
+X-ClientProxiedBy: HQMAIL101.nvidia.com (172.20.187.10) To
+ HQMAIL107.nvidia.com (172.20.187.13)
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1589998075; bh=EY5HqxwEqKqg5b+Jx1MhOv8T2s5ZKTI22o9MVaqGtdU=;
+        h=X-PGP-Universal:Subject:To:CC:References:X-Nvconfidentiality:From:
+         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
+         X-Originating-IP:X-ClientProxiedBy:Content-Type:Content-Language:
+         Content-Transfer-Encoding;
+        b=ThItXi9C4A38MvEvZWl6y1zxcJmFKnsGvjy+afoD88QwZmLHlTiSFnRBX8RSTOymo
+         +cNmtEMeZyXZeVrsPAofXCHibv+vmtwq+TXYsF/TCwwlmHgZxXLAZQqOQzQ6YjrI96
+         RTf+d7h2UmTepNBcv4kQLelDmAB/qDqrDaUPQMAFRl2f4sR7K8ndeTd8zx0HtabHw6
+         EvV4rDAc8PmyJRJnHB5txgZKqirO2F0EVdtqNSLpYA07+tim+a+4JboEyiCIB873Q9
+         IVjBEV25coJjCYfNQxj8VlL/I1s/0KnXazcI2uROVCdPo8Hu4arS8NPr9qCZCYd798
+         JUfHT02OzScRA==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: "David E. Box" <david.e.box@linux.intel.com>
+Thanks for pushing a patch to fix it. I've been under the wrong 
+assumption that a failing pm_runtime_get_sync() wouldn't increment the 
+usage counter.
+With Thierry's and Bjorn's comments addressed
 
-Add PCIe DVSEC extended capability ID and defines for the header offsets.
-Defined in PCIe r5.0, sec 7.9.6.
+Acked-by: Vidya Sagar <vidyas@nvidia.com>
 
-Signed-off-by: David E. Box <david.e.box@linux.intel.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- include/uapi/linux/pci_regs.h | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index f9701410d3b5..09daa9f07b6b 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -720,6 +720,7 @@
- #define PCI_EXT_CAP_ID_DPC	0x1D	/* Downstream Port Containment */
- #define PCI_EXT_CAP_ID_L1SS	0x1E	/* L1 PM Substates */
- #define PCI_EXT_CAP_ID_PTM	0x1F	/* Precision Time Measurement */
-+#define PCI_EXT_CAP_ID_DVSEC	0x23	/* Designated Vendor-Specific */
- #define PCI_EXT_CAP_ID_DLF	0x25	/* Data Link Feature */
- #define PCI_EXT_CAP_ID_PL_16GT	0x26	/* Physical Layer 16.0 GT/s */
- #define PCI_EXT_CAP_ID_MAX	PCI_EXT_CAP_ID_PL_16GT
-@@ -1062,6 +1063,10 @@
- #define  PCI_L1SS_CTL1_LTR_L12_TH_SCALE	0xe0000000  /* LTR_L1.2_THRESHOLD_Scale */
- #define PCI_L1SS_CTL2		0x0c	/* Control 2 Register */
- 
-+/* Designated Vendor-Specific (DVSEC, PCI_EXT_CAP_ID_DVSEC) */
-+#define PCI_DVSEC_HEADER1		0x4 /* Vendor-Specific Header1 */
-+#define PCI_DVSEC_HEADER2		0x8 /* Vendor-Specific Header2 */
-+
- /* Data Link Feature */
- #define PCI_DLF_CAP		0x04	/* Capabilities Register */
- #define  PCI_DLF_EXCHANGE_ENABLE	0x80000000  /* Data Link Feature Exchange Enable */
--- 
-2.26.2
-
+On 20-May-20 10:07 PM, Bjorn Helgaas wrote:
+> External email: Use caution opening links or attachments
+> 
+> 
+> On Wed, May 20, 2020 at 11:59:08AM +0200, Thierry Reding wrote:
+>> On Wed, May 20, 2020 at 04:52:23PM +0800, Dinghao Liu wrote:
+>>> pm_runtime_get_sync() increments the runtime PM usage counter even
+>>> it returns an error code. Thus a pairing decrement is needed on
+>>
+>> s/even it/even when it/
+>>
+>> Might also be a good idea to use a different subject prefix because I
+>> was almost not going to look at the other patch, taking this to be a
+>> replacement for it.
+> 
+> Amen.  This would be a good change to start using "PCI: tegra194" or
+> something for pcie-tegra194.c.  Or will there be tegra195, tegra 196,
+> etc added to this driver?
+> 
+> Also, please capitalize the first word and "PM" in the subjects:
+> 
+>    PCI: tegra194: Fix runtime PM imbalance on error
+> 
+> Bjorn
+> 
