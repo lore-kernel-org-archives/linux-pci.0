@@ -4,39 +4,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B60CC433E1
-	for <linux-pci@archiver.kernel.org>; Wed, 20 May 2020 18:06:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 551D5C433E0
+	for <linux-pci@archiver.kernel.org>; Wed, 20 May 2020 18:07:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 288BF20671
-	for <linux-pci@archiver.kernel.org>; Wed, 20 May 2020 18:06:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2EE0F207D8
+	for <linux-pci@archiver.kernel.org>; Wed, 20 May 2020 18:07:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726940AbgETSGv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 20 May 2020 14:06:51 -0400
-Received: from mga14.intel.com ([192.55.52.115]:46831 "EHLO mga14.intel.com"
+        id S1726977AbgETSGz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 20 May 2020 14:06:55 -0400
+Received: from mga14.intel.com ([192.55.52.115]:46824 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726856AbgETSGt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 20 May 2020 14:06:49 -0400
-IronPort-SDR: 40H4e4sivOBPskR5/hEKzrEX/mKs4VWjbxWNj+bOXl5RJhU+Dppt3ywGtFm/FV+MlYwA+D3JHk
- HnC6V5sY4TSw==
+        id S1726548AbgETSGq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 20 May 2020 14:06:46 -0400
+IronPort-SDR: KZu2UvqZH44iNEdPDd+u+w2j5QFYrBQSBcnzKtcty5dhXspVI1mMYw+RPzyDhTZWd+6JLyZ7W2
+ kai0YI7XL1cA==
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 May 2020 11:06:48 -0700
-IronPort-SDR: u9gDP6FZblclJIaNTvy38fhxPFfJMkwzF6VBOKC6I6jaf45Dkik35TYjIPEz9l6IO27V5+BmnD
- kJhWRiHCVbcQ==
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 May 2020 11:06:45 -0700
+IronPort-SDR: LezuK/BIDnBntPn+DzPG2NCkDGtAklXtxkgwdb0fO07rcWaojInjP3ZCa7ZGVOUZizptkEleJq
+ UnnfbJ5dQX7g==
 X-IronPort-AV: E=Sophos;i="5.73,414,1583222400"; 
-   d="scan'208";a="289442253"
+   d="scan'208";a="289442239"
 Received: from ydandeka-mobl.amr.corp.intel.com (HELO arch-ashland-svkelley.intel.com) ([10.254.5.7])
-  by fmsmga004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 May 2020 11:06:47 -0700
+  by fmsmga004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 May 2020 11:06:45 -0700
 From:   Sean V Kelley <sean.v.kelley@linux.intel.com>
 To:     bhelgaas@google.com
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Sean V Kelley <sean.v.kelley@linux.intel.com>
-Subject: [PATCH V3 3/3] PCI: Add helpers to enable/disable CXL.mem and CXL.cache
-Date:   Wed, 20 May 2020 11:06:40 -0700
-Message-Id: <20200520180640.1911202-4-sean.v.kelley@linux.intel.com>
+        "David E. Box" <david.e.box@linux.intel.com>
+Subject: [PATCH V3 1/3] PCI: Add defines for Designated Vendor-Specific Capability
+Date:   Wed, 20 May 2020 11:06:38 -0700
+Message-Id: <20200520180640.1911202-2-sean.v.kelley@linux.intel.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200520180640.1911202-1-sean.v.kelley@linux.intel.com>
 References: <20200520180640.1911202-1-sean.v.kelley@linux.intel.com>
@@ -47,132 +48,40 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-With these helpers, a device driver can enable/disable access to
-CXL.mem and CXL.cache. Note that the device driver is responsible for
-managing the memory area.
+From: "David E. Box" <david.e.box@linux.intel.com>
 
-Signed-off-by: Sean V Kelley <sean.v.kelley@linux.intel.com>
+Add PCIe DVSEC extended capability ID and defines for the header offsets.
+Defined in PCIe r5.0, sec 7.9.6.
+
+Signed-off-by: David E. Box <david.e.box@linux.intel.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/cxl.c | 84 +++++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h |  8 +++++
- 2 files changed, 92 insertions(+)
+ include/uapi/linux/pci_regs.h | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/pci/cxl.c b/drivers/pci/cxl.c
-index 4497c597347f..e58e5262b59a 100644
---- a/drivers/pci/cxl.c
-+++ b/drivers/pci/cxl.c
-@@ -24,6 +24,90 @@
- #define PCI_CXL_HDM_COUNT(reg)		(((reg) & (3 << 4)) >> 4)
- #define PCI_CXL_VIRAL			BIT(14)
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index f9701410d3b5..09daa9f07b6b 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -720,6 +720,7 @@
+ #define PCI_EXT_CAP_ID_DPC	0x1D	/* Downstream Port Containment */
+ #define PCI_EXT_CAP_ID_L1SS	0x1E	/* L1 PM Substates */
+ #define PCI_EXT_CAP_ID_PTM	0x1F	/* Precision Time Measurement */
++#define PCI_EXT_CAP_ID_DVSEC	0x23	/* Designated Vendor-Specific */
+ #define PCI_EXT_CAP_ID_DLF	0x25	/* Data Link Feature */
+ #define PCI_EXT_CAP_ID_PL_16GT	0x26	/* Physical Layer 16.0 GT/s */
+ #define PCI_EXT_CAP_ID_MAX	PCI_EXT_CAP_ID_PL_16GT
+@@ -1062,6 +1063,10 @@
+ #define  PCI_L1SS_CTL1_LTR_L12_TH_SCALE	0xe0000000  /* LTR_L1.2_THRESHOLD_Scale */
+ #define PCI_L1SS_CTL2		0x0c	/* Control 2 Register */
  
-+#define PCI_CXL_CONFIG_LOCK		BIT(0)
++/* Designated Vendor-Specific (DVSEC, PCI_EXT_CAP_ID_DVSEC) */
++#define PCI_DVSEC_HEADER1		0x4 /* Vendor-Specific Header1 */
++#define PCI_DVSEC_HEADER2		0x8 /* Vendor-Specific Header2 */
 +
-+static void pci_cxl_unlock(struct pci_dev *dev)
-+{
-+	int cxl = dev->cxl_cap;
-+	u16 lock;
-+
-+	pci_read_config_word(dev, cxl + PCI_CXL_LOCK, &lock);
-+	lock &= ~PCI_CXL_CONFIG_LOCK;
-+	pci_write_config_word(dev, cxl + PCI_CXL_LOCK, lock);
-+}
-+
-+static void pci_cxl_lock(struct pci_dev *dev)
-+{
-+	int cxl = dev->cxl_cap;
-+	u16 lock;
-+
-+	pci_read_config_word(dev, cxl + PCI_CXL_LOCK, &lock);
-+	lock |= PCI_CXL_CONFIG_LOCK;
-+	pci_write_config_word(dev, cxl + PCI_CXL_LOCK, lock);
-+}
-+
-+/*
-+ * CXL DVSEC CTRL registers have Read-Write-Lockable attributes.
-+ * PCI_CXL_CONFIG_LOCK locks these CTRL registers by making them RO.
-+ * This lock prevents future changes to configuration and is not intended
-+ * for enforcing mutual exclusion. See CXL 1.1, sec 7.1.1.6
-+ */
-+static int pci_cxl_enable_disable_feature(struct pci_dev *dev, int enable,
-+					  u16 feature)
-+{
-+	int cxl = dev->cxl_cap;
-+	int ret;
-+	u16 reg;
-+
-+	if (!dev->cxl_cap)
-+		return -EINVAL;
-+
-+	/* Only for Device 0 Function 0, Root Complex Integrated Endpoints */
-+	if (dev->devfn != 0 || (pci_pcie_type(dev) != PCI_EXP_TYPE_RC_END))
-+		return -EINVAL;
-+
-+	pci_cxl_unlock(dev);
-+	ret = pci_read_config_word(dev, cxl + PCI_CXL_CTRL, &reg);
-+	if (ret)
-+		goto lock;
-+
-+	if (enable)
-+		reg |= feature;
-+	else
-+		reg &= ~feature;
-+
-+	ret = pci_write_config_word(dev, cxl + PCI_CXL_CTRL, reg);
-+
-+lock:
-+	pci_cxl_lock(dev);
-+
-+	return ret;
-+}
-+
-+int pci_cxl_mem_enable(struct pci_dev *dev)
-+{
-+	return pci_cxl_enable_disable_feature(dev, true, PCI_CXL_MEM);
-+}
-+EXPORT_SYMBOL_GPL(pci_cxl_mem_enable);
-+
-+void pci_cxl_mem_disable(struct pci_dev *dev)
-+{
-+	pci_cxl_enable_disable_feature(dev, false, PCI_CXL_MEM);
-+}
-+EXPORT_SYMBOL_GPL(pci_cxl_mem_disable);
-+
-+int pci_cxl_cache_enable(struct pci_dev *dev)
-+{
-+	return pci_cxl_enable_disable_feature(dev, true, PCI_CXL_CACHE);
-+}
-+EXPORT_SYMBOL_GPL(pci_cxl_cache_enable);
-+
-+void pci_cxl_cache_disable(struct pci_dev *dev)
-+{
-+	pci_cxl_enable_disable_feature(dev, false, PCI_CXL_CACHE);
-+}
-+EXPORT_SYMBOL_GPL(pci_cxl_cache_disable);
-+
- /*
-  * pci_find_cxl_capability - Identify and return offset to Vendor-Specific
-  * capabilities.
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index d9905e2dee95..5ec7fa0eb709 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -472,8 +472,16 @@ static inline void pci_restore_ats_state(struct pci_dev *dev) { }
- #ifdef CONFIG_PCI_CXL
- /* Compute eXpress Link */
- void pci_cxl_init(struct pci_dev *dev);
-+int pci_cxl_mem_enable(struct pci_dev *dev);
-+void pci_cxl_mem_disable(struct pci_dev *dev);
-+int pci_cxl_cache_enable(struct pci_dev *dev);
-+void pci_cxl_cache_disable(struct pci_dev *dev);
- #else
- static inline void pci_cxl_init(struct pci_dev *dev) { }
-+static inline int pci_cxl_mem_enable(struct pci_dev *dev) { return 0; }
-+static inline void pci_cxl_mem_disable(struct pci_dev *dev) { }
-+static inline int pci_cxl_cache_enable(struct pci_dev *dev) { return 0; }
-+static inline void pci_cxl_cache_disable(struct pci_dev *dev) { }
- #endif
- 
- #ifdef CONFIG_PCI_PRI
+ /* Data Link Feature */
+ #define PCI_DLF_CAP		0x04	/* Capabilities Register */
+ #define  PCI_DLF_EXCHANGE_ENABLE	0x80000000  /* Data Link Feature Exchange Enable */
 -- 
 2.26.2
 
