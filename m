@@ -1,160 +1,93 @@
-Return-Path: <SRS0=tlVJ=7C=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=y01v=7D=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75FEBC433E0
-	for <linux-pci@archiver.kernel.org>; Wed, 20 May 2020 23:29:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92562C433DF
+	for <linux-pci@archiver.kernel.org>; Thu, 21 May 2020 01:05:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 479E820825
-	for <linux-pci@archiver.kernel.org>; Wed, 20 May 2020 23:29:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1590017399;
-	bh=ml/5Lrb2JgHgCp2VG6AK9LVynTzj51rBivW+PswI6+o=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=rGG5VbKSZ0cU8aD3XATTz1PpIYnWvbmLsFc3ZJxsrF0EGubpoPZ26ta/0/RiqdSgy
-	 qTl7icGjIN3Jr6IoCtTcfEwhovEJv0sagdXSKNTXaOb3u4zLHXu19qvTiqhHhf/0aa
-	 /cSirstYVR442kfD1nmLXNWWKUSeFdVKVH/ilkzw=
+	by mail.kernel.org (Postfix) with ESMTP id 55AE0206F6
+	for <linux-pci@archiver.kernel.org>; Thu, 21 May 2020 01:05:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728581AbgETX36 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 20 May 2020 19:29:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56314 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728552AbgETX36 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 20 May 2020 19:29:58 -0400
-Received: from localhost (mobile-166-175-190-200.mycingular.net [166.175.190.200])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 2A2EE20759;
-        Wed, 20 May 2020 23:29:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1590017397;
-        bh=ml/5Lrb2JgHgCp2VG6AK9LVynTzj51rBivW+PswI6+o=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=UIPVLuZVgVbu1MDPPDKLeIa1NDT6Suo3tfoROlVkPKt4JxkVPkITrhDdxjUoEDl03
-         u9ml8rR7GHi4lFOgXalX0yl0wEn4QnTR/y1JqjVtTnPzuFQz+J7L9P/r9m4GaAGsTi
-         iDXhPf8tdcezG3ysThtzWSDIe5tNByC/DzJW3Fbs=
-Date:   Wed, 20 May 2020 18:29:54 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Marcos Scriven <marcos@scriven.org>
-Cc:     linux-pci@vger.kernel.org,
-        Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH] PCI: Avoid FLR for AMD Matisse HD Audio and USB
- Controllers
-Message-ID: <20200520232954.GA1124908@bjorn-Precision-5520>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAAri2DoF-6A3qcag4etdWh3vQQUGqzfebw6syeU8HFeph5tWQw@mail.gmail.com>
+        id S1726898AbgEUBFm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 20 May 2020 21:05:42 -0400
+Received: from lucky1.263xmail.com ([211.157.147.130]:33740 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726896AbgEUBFm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 May 2020 21:05:42 -0400
+Received: from localhost (unknown [192.168.167.70])
+        by lucky1.263xmail.com (Postfix) with ESMTP id 475CEB7F27;
+        Thu, 21 May 2020 09:05:40 +0800 (CST)
+X-MAIL-GRAY: 1
+X-MAIL-DELIVERY: 0
+X-ADDR-CHECKED4: 1
+X-ANTISPAM-LEVEL: 2
+X-ABS-CHECKED: 0
+Received: from localhost.localdomain (unknown [58.22.7.114])
+        by smtp.263.net (postfix) whith ESMTP id P14523T139720957146880S1590023137801405_;
+        Thu, 21 May 2020 09:05:39 +0800 (CST)
+X-IP-DOMAINF: 1
+X-UNIQUE-TAG: <0da65a9be77c1661a7923a420a656514>
+X-RL-SENDER: shawn.lin@rock-chips.com
+X-SENDER: lintao@rock-chips.com
+X-LOGIN-NAME: shawn.lin@rock-chips.com
+X-FST-TO: lorenzo.pieralisi@arm.com
+X-SENDER-IP: 58.22.7.114
+X-ATTACHMENT-NUM: 0
+X-DNS-TYPE: 0
+X-System-Flag: 0
+From:   Shawn Lin <shawn.lin@rock-chips.com>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc:     linux-pci@vger.kernel.org, Simon Xue <xxm@rock-chips.com>,
+        linux-rockchip@lists.infradead.org,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH 2/2] PCI: rockchip: Add 100ms delay before enabling training
+Date:   Thu, 21 May 2020 09:05:30 +0800
+Message-Id: <1590023130-137406-2-git-send-email-shawn.lin@rock-chips.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1590023130-137406-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1590023130-137406-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, May 20, 2020 at 10:41:03AM +0100, Marcos Scriven wrote:
-> On Mon, 18 May 2020 at 20:26, Marcos Scriven <marcos@scriven.org> wrote:
-> >
-> > On Mon, 18 May 2020 at 17:17, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > >
-> > > [+cc Alex]
-> > >
-> > > On Sat, May 16, 2020 at 02:37:23PM +0100, Marcos Scriven wrote:
-> > > > This patch fixes an FLR bug on the following two devices:
-> > > >
-> > > > AMD Matisse HD Audio Controller 0x1487
-> > > > AMD Matisse USB 3.0 Host Controller 0x149c
-> > > >
-> > > > As there was already such a quirk for an Intel network device, I have
-> > > > renamed that method and updated the comments, trying to make it
-> > > > clearer what the specific original devices that were affected are
-> > > > (based on the commit message this was original done:
-> > > > https://git.thm.de/mhnn55/eco32-linux-ba/commit/f65fd1aa4f9881d5540192d11f7b8ed2fec936db).
-> > > >
-> > > > I have ordered them by hex product ID.
-> > > >
-> > > > I have verified this works on a X570 I AORUS PRO WIFI (rev. 1.0) motherboard.
-> > >
-> > > If we avoid FLR, is there another method used to reset these devices
-> > > between attachments to different VMs?  Does the lack of FLR mean we
-> > > can leak information between VMs?
-> > >
-> > > Would additional delay after the FLR work around this, e.g., something
-> > > like 51ba09452d11 ("PCI: Delay after FLR of Intel DC P3700 NVMe")?
-> > >
-> >
-> > Thanks for looking at this patch Bjorn.
-> >
-> > To take your three points:
-> >
-> > 1. Certainly I can see those devices able to be passed back and forth
-> > between host and guest multiple times, once this patch is applied.
-> >
-> > 2. I don't know the answer to that question; would appreciate guidance
-> > on how to determine this. Do you mean perhaps some buffered data in
-> > the USB controller, for instance?
-> >
-> > 3. I have not tried an additional delay. This is the logs I see when
-> > the error is occurring:
-> >
-> > [ 2423.556570] vfio-pci 0000:0c:00.3: not ready 1023ms after FLR; waiting
-> > [ 2425.604526] vfio-pci 0000:0c:00.3: not ready 2047ms after FLR; waiting
-> > [ 2428.804509] vfio-pci 0000:0c:00.3: not ready 4095ms after FLR; waiting
-> > [ 2433.924409] vfio-pci 0000:0c:00.3: not ready 8191ms after FLR; waiting
-> > [ 2443.140721] vfio-pci 0000:0c:00.3: not ready 16383ms after FLR; waiting
-> > [ 2461.571944] vfio-pci 0000:0c:00.3: not ready 32767ms after FLR; waiting
-> > [ 2496.387544] vfio-pci 0000:0c:00.3: not ready 65535ms after FLR; giving up
-> >
-> > What makes this bug especially bad is the host never recovers, and
-> > eventually hangs or crashes.
-> >
-> > For reference, the delay example you're talking about is:
-> >
-> > static int delay_250ms_after_flr(struct pci_dev *dev, int probe)
-> > {
-> > if (!pcie_has_flr(dev))
-> > return -ENOTTY;
-> >
-> > if (probe)
-> > return 0;
-> >
-> > pcie_flr(dev);
-> >
-> > msleep(250);
-> >
-> > return 0;
-> > }
-> >
-> > I don't know if it would work, but I will try it out and report back.
-> >
-> > Marcos
-> >
-> >
-> 
-> Bjorn/Alex
-> 
-> I have just tried the alternate approach of adding a 250ms delay to
-> the function level reset - this unfortunately results in the same
-> broken behaviour, with the host itself never recovering.
-> 
-> [   76.905410] vfio-pci 0000:0d:00.3: not ready 1023ms after FLR; waiting
-> [   79.018014] vfio-pci 0000:0d:00.3: not ready 2047ms after FLR; waiting
-> [   82.089390] vfio-pci 0000:0d:00.3: not ready 4095ms after FLR; waiting
-> [   87.209416] vfio-pci 0000:0d:00.3: not ready 8191ms after FLR; waiting
-> [   96.425440] vfio-pci 0000:0d:00.3: not ready 16383ms after FLR; waiting
-> [  114.615491] vfio-pci 0000:0d:00.3: not ready 32767ms after FLR; waiting
-> [  149.417712] vfio-pci 0000:0d:00.3: not ready 65535ms after FLR; giving up
-> 
-> I also tried a full second, to no avail.
-> 
-> What would be the next step in proceeding with the original patch please?
+According to PCI Express Card Electromechanical Specification
+Revision 3.0, Table 2-4, power stable and reference clk stable
+before PERST# inactive should be at least 100ms and 100us
+respectively. Otherwise we do see some failures for link training.
 
-Implementation of FLR is "strongly recommended" by the spec but is
-optional.  So I don't see a problem with just avoiding it via your
-patch.
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-I applied it to pci/virtualization for v5.8, thanks!
+ drivers/pci/controller/pcie-rockchip-host.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-Bjorn
+diff --git a/drivers/pci/controller/pcie-rockchip-host.c b/drivers/pci/controller/pcie-rockchip-host.c
+index 94af6f5..2f4d909 100644
+--- a/drivers/pci/controller/pcie-rockchip-host.c
++++ b/drivers/pci/controller/pcie-rockchip-host.c
+@@ -331,6 +331,14 @@ static int rockchip_pcie_host_init_port(struct rockchip_pcie *rockchip)
+ 	rockchip_pcie_write(rockchip, PCIE_CLIENT_LINK_TRAIN_ENABLE,
+ 			    PCIE_CLIENT_CONFIG);
+ 
++	/*
++	 * According to PCI Express Card Electromechanical Specification
++	 * Revision 3.0, Table 2-4, power stable and reference clk stable
++	 * before PERST# inactive should be at least 100ms and 100us
++	 * respectively. Otherwise we do see some failures for link training.
++	 */
++	msleep(100);
++
+ 	gpiod_set_value_cansleep(rockchip->ep_gpio, 1);
+ 
+ 	/* 500ms timeout value should be enough for Gen1/2 training */
+-- 
+2.7.4
+
+
+
