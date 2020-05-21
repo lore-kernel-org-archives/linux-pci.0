@@ -2,44 +2,44 @@ Return-Path: <SRS0=y01v=7D=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC06CC433E0
-	for <linux-pci@archiver.kernel.org>; Thu, 21 May 2020 11:20:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5AF0C433E1
+	for <linux-pci@archiver.kernel.org>; Thu, 21 May 2020 11:20:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C38AE2083E
-	for <linux-pci@archiver.kernel.org>; Thu, 21 May 2020 11:20:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CA25A207D3
+	for <linux-pci@archiver.kernel.org>; Thu, 21 May 2020 11:20:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728965AbgEULUm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 May 2020 07:20:42 -0400
-Received: from mail-ej1-f66.google.com ([209.85.218.66]:35178 "EHLO
-        mail-ej1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728442AbgEULUl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 May 2020 07:20:41 -0400
-Received: by mail-ej1-f66.google.com with SMTP id s21so8382574ejd.2
-        for <linux-pci@vger.kernel.org>; Thu, 21 May 2020 04:20:39 -0700 (PDT)
+        id S1728442AbgEULUn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 May 2020 07:20:43 -0400
+Received: from mail-ej1-f67.google.com ([209.85.218.67]:38918 "EHLO
+        mail-ej1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728947AbgEULUn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 May 2020 07:20:43 -0400
+Received: by mail-ej1-f67.google.com with SMTP id s3so8348836eji.6
+        for <linux-pci@vger.kernel.org>; Thu, 21 May 2020 04:20:41 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=/sYGy12rNNYnIFh52O3J7fACxDx7xWZZHTrt8U+0v2Y=;
-        b=GGaQgqzdvM7phRllKSXp0PeGLfZfO8SdPIS+gM/Sf00ZsfHxIKQFZ336HGsrx68Jhm
-         eTBDLFM3YkbhGz6tuWb7A81m0Yx0w/L48MjzEoU4PSaNBpw0AjK3/pGglZ2+pOlmYb2U
-         3W7QVRNmexqCjF1IZpZIzQ3ArGRIYdSHbtvL2daamhVaTtyjGrAnkihrE6r3ONOyZsWJ
-         f8B3WLKUbQMxVocbO+838yHlKMABJFEVkMMYiL6COxa+ANb6ex3tifFZklgcbswqthLg
-         5iHAIHn1Jn/uTPecOYB1UqPpyIayYxU869C4kMTSLChAQXxuHU2/SPglrQefja+VI2Z5
-         bC8Q==
-X-Gm-Message-State: AOAM533FNs1wS5t1e13G4N+8akKUGQqcAbcUVyJEtbnVeJVIGfPhzyW/
-        dELGVHn0G60+2jHcFGEGbEg=
-X-Google-Smtp-Source: ABdhPJz4lj//JtoXnz1qbmoEwNsOuUuNvX25OCyaVvZsKWn+RNLe/PYuMGHeF9kvPATE609JgOGPYA==
-X-Received: by 2002:a17:906:c785:: with SMTP id cw5mr2871708ejb.543.1590060038548;
-        Thu, 21 May 2020 04:20:38 -0700 (PDT)
+        bh=LoEZoMAAOxm9SLL0tL+xU3v7X0W3qwmaHX2hNNqrQz0=;
+        b=cdEmP4nSysnIw/ooN8shxrXEi5Omh+ybSSSWh1xVbQKzsLPrJev1mk+bQh7Osm+kHP
+         6lVeS8FZNx3EHltzA9f5flPdZO4y4wcVasN2c1oVTv41F0DYGJAsrHo8DQvdCr8KClV2
+         dsjDc3fu9qF5wAgKHzNnxRRBmsInFqP0+GowmawBy4GbhZoxwYQ8zi/nToW+3bQO7aV5
+         ra184zwR56bOLid52unFNfdXcS1N5qiRVnCN2KX8Cf4AxXPyF1LG6+XzQzdtaz9TRKiS
+         4T2ZLhOF2Iq4mt7YXvTmc0WwgFIlV6yho4qgB6FCKOTD+27XRL9Aqqbe7tn96gz3LJKq
+         lusw==
+X-Gm-Message-State: AOAM531+xiT6kQ/bSm9JTA1xIEmXLYnaM4cAJoIyl+ZukNgc9YxGoJvL
+        Mdarrz0O/jjYo9+E+jLFxF4=
+X-Google-Smtp-Source: ABdhPJwZLJz/bHmoSFaZC8pLgJRZsGK71YTegZtox3iCpduVGVsj+AD+KD80MqaEpYrghEnRODsaFw==
+X-Received: by 2002:a17:906:33c1:: with SMTP id w1mr3194421eja.313.1590060040888;
+        Thu, 21 May 2020 04:20:40 -0700 (PDT)
 Received: from workstation.lan ([95.155.85.46])
-        by smtp.gmail.com with ESMTPSA id w10sm4522376eju.106.2020.05.21.04.20.37
+        by smtp.gmail.com with ESMTPSA id w10sm4522376eju.106.2020.05.21.04.20.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 21 May 2020 04:20:37 -0700 (PDT)
+        Thu, 21 May 2020 04:20:40 -0700 (PDT)
 From:   Krzysztof Wilczynski <kw@linux.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>
 Cc:     Dominik Brodowski <linux@dominikbrodowski.net>,
@@ -48,12 +48,13 @@ Cc:     Dominik Brodowski <linux@dominikbrodowski.net>,
         Takashi Iwai <tiwai@suse.de>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-pci@vger.kernel.org
-Subject: [PATCH v4 0/2] PCI: Reference bridge window resources explicitly
-Date:   Thu, 21 May 2020 11:20:34 +0000
-Message-Id: <20200521112036.470112-1-kw@linux.com>
+Subject: [PATCH v4 2/2] pcmcia: Use resources definitions when freeing CardBus resources
+Date:   Thu, 21 May 2020 11:20:36 +0000
+Message-Id: <20200521112036.470112-3-kw@linux.com>
 X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20200521081638.GA30231@rocinante>
+In-Reply-To: <20200521112036.470112-1-kw@linux.com>
 References: <20200521081638.GA30231@rocinante>
+ <20200521112036.470112-1-kw@linux.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
@@ -61,67 +62,57 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add definitions to allow for more explicit mapping of PCI-to-PCI (P2P)
-and CardBus bridge window resources.
+Remove the loop used to free CardBus resources and replace it with
+a yenta_free_res() helper used to release bridge resources explicitly.
 
-Added for P2P:
-
-  PCI_BRIDGE_RESOURCES + 0 -> PCI_BRIDGE_IO_WINDOW
-  PCI_BRIDGE_RESOURCES + 1 -> PCI_BRIDGE_MEM_WINDOW
-  PCI_BRIDGE_RESOURCES + 2 -> PCI_BRIDGE_PREF_MEM_WINDOW
-
-Added for CardBus:
-
-  PCI_BRIDGE_RESOURCES + 0 -> PCI_CB_BRIDGE_IO_0_WINDOW
-  PCI_BRIDGE_RESOURCES + 1 -> PCI_CB_BRIDGE_IO_1_WINDOW
-  PCI_BRIDGE_RESOURCES + 2 -> PCI_CB_BRIDGE_MEM_0_WINDOW
-  PCI_BRIDGE_RESOURCES + 3 -> PCI_CB_BRIDGE_MEM_1_WINDOW
-
-The old way of addressing resources using an index:
-
-  bridge->resource[PCI_BRIDGE_RESOURCES+0]
-
-Would now be replaced with:
-
-  bridge->resource[PCI_BRIDGE_IO_WINDOW]
-
-This series of patches builds on top of the changes proposed before:
-
-  https://lore.kernel.org/r/20100203233931.10803.39854.stgit@bob.kio
-  https://lore.kernel.org/r/20100212170022.19522.81135.stgit@bob.kio
-
-Krzysztof Wilczynski (2):
-  PCI: Move from using PCI_BRIDGE_RESOURCES to bridge resource
-    definitions
-  pcmcia: Use resources definitions when freeing CardBus resources
-
+Signed-off-by: Krzysztof Wilczynski <kw@linux.com>
+Acked-by: Dominik Brodowski <linux@dominikbrodowski.net>
 ---
-Changes in v4:
-  Correct variable name as per the kbuild bot feedback.
-  Added "Acked-by" from Dominik Brodowski for the PCMCIA changes.
-  Update cover letter wording.
+ drivers/pcmcia/yenta_socket.c | 24 ++++++++++++++++--------
+ 1 file changed, 16 insertions(+), 8 deletions(-)
 
-Changes in v3:
-  Remove the PCI quirk patch for ALI M7101 chipset as it's not needed.
-  Remove surplus new variables added in pci_bus_size_cardbus().
-
-Changes in v2:
-  Split patches based on the feedback from Bjorn allowing for the
-  patch that correct the PCI quirk for the ALI chipset to be applied
-  independently, if someone needs to cherry-pick it, before updating
-  the said quirk to use definitions for bridge window resources.
+diff --git a/drivers/pcmcia/yenta_socket.c b/drivers/pcmcia/yenta_socket.c
+index 76036ccf2106..3f34b49a6f33 100644
+--- a/drivers/pcmcia/yenta_socket.c
++++ b/drivers/pcmcia/yenta_socket.c
+@@ -745,6 +745,18 @@ static int yenta_allocate_res(struct yenta_socket *socket, int nr, unsigned type
+ 	return 0;
+ }
  
-Krzysztof Wilczynski (2):
-  PCI: Move from using PCI_BRIDGE_RESOURCES to bridge resource
-    definitions
-  pcmcia: Use resources definitions when freeing CardBus resources
-
- drivers/pci/quirks.c          |  34 +++++-----
- drivers/pci/setup-bus.c       | 114 ++++++++++++++++++----------------
- drivers/pcmcia/yenta_socket.c |  46 +++++++++-----
- include/linux/pci.h           |  14 ++++-
- 4 files changed, 120 insertions(+), 88 deletions(-)
-
++static void yenta_free_res(struct yenta_socket *socket, int nr)
++{
++	struct pci_dev *dev = socket->dev;
++	struct resource *res;
++
++	res = &dev->resource[nr];
++	if (res->start != 0 && res->end != 0)
++		release_resource(res);
++
++	res->start = res->end = res->flags = 0;
++}
++
+ /*
+  * Allocate the bridge mappings for the device..
+  */
+@@ -773,14 +785,10 @@ static void yenta_allocate_resources(struct yenta_socket *socket)
+  */
+ static void yenta_free_resources(struct yenta_socket *socket)
+ {
+-	int i;
+-	for (i = 0; i < 4; i++) {
+-		struct resource *res;
+-		res = socket->dev->resource + PCI_BRIDGE_RESOURCES + i;
+-		if (res->start != 0 && res->end != 0)
+-			release_resource(res);
+-		res->start = res->end = res->flags = 0;
+-	}
++	yenta_free_res(socket, PCI_CB_BRIDGE_IO_0_WINDOW);
++	yenta_free_res(socket, PCI_CB_BRIDGE_IO_1_WINDOW);
++	yenta_free_res(socket, PCI_CB_BRIDGE_MEM_0_WINDOW);
++	yenta_free_res(socket, PCI_CB_BRIDGE_MEM_1_WINDOW);
+ }
+ 
+ 
 -- 
 2.26.2
 
