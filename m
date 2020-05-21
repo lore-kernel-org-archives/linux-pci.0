@@ -2,492 +2,126 @@ Return-Path: <SRS0=y01v=7D=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 654B2C433DF
-	for <linux-pci@archiver.kernel.org>; Thu, 21 May 2020 11:20:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81D4CC433E1
+	for <linux-pci@archiver.kernel.org>; Thu, 21 May 2020 11:35:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 31CBB2072C
-	for <linux-pci@archiver.kernel.org>; Thu, 21 May 2020 11:20:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 607F920885
+	for <linux-pci@archiver.kernel.org>; Thu, 21 May 2020 11:35:17 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="gpL4D4jK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728414AbgEULUn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 May 2020 07:20:43 -0400
-Received: from mail-ej1-f66.google.com ([209.85.218.66]:35180 "EHLO
-        mail-ej1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728887AbgEULUn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 May 2020 07:20:43 -0400
-Received: by mail-ej1-f66.google.com with SMTP id s21so8382635ejd.2
-        for <linux-pci@vger.kernel.org>; Thu, 21 May 2020 04:20:40 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=NTwhqKiI4mqVWsUBtrAJblMmvtOQrxmc20ieD2nWfHw=;
-        b=h5v0104yTKKCX7GiAtdd49LlwOpd4Ba/+9DmESEx9JDK3DOaCZIb9t2dOhRr682jQb
-         6u8rhpYW7jbBtV1VXQJK+AI1ghtKXHYm6OMf79cbR9lLkT+p5kz8jQnTdrzpFfRNYJhX
-         bAKfMCL7jG522WpaKSeCUfyUKNVqeL/EIRd3ba9oJpeVf7CuGJVmvUBzP4u5etGN51PQ
-         jvyAObbkbifTf3Oor8kj6+P4nLv0oXPqhlUUtKlPGRt5HpB/QdY8l2DwBVydxDb94ozq
-         UC1ItguhULkc4YVCHfe+eQ42Xb5EI3diRTwnd2gpKbFvXGCCLO8KWXgl0BSe8mke6z7v
-         NNsg==
-X-Gm-Message-State: AOAM531M375H2/mI1lIAh+WNZU8kVUyaWJZXzu2ZGto0wt3rrZ8/1Tum
-        uh28aH6c0JzKZowYsPPNNko=
-X-Google-Smtp-Source: ABdhPJx9qnbMUn25sGvR18oAMuZvoQbCmzRDU+Ubc8nWy1E1gwh/AEhPR1QCD72bEYLBB1duobMINA==
-X-Received: by 2002:a17:906:eb1a:: with SMTP id mb26mr2809647ejb.362.1590060039703;
-        Thu, 21 May 2020 04:20:39 -0700 (PDT)
-Received: from workstation.lan ([95.155.85.46])
-        by smtp.gmail.com with ESMTPSA id w10sm4522376eju.106.2020.05.21.04.20.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 21 May 2020 04:20:39 -0700 (PDT)
-From:   Krzysztof Wilczynski <kw@linux.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Dominik Brodowski <linux@dominikbrodowski.net>,
-        Chuhong Yuan <hslester96@gmail.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Takashi Iwai <tiwai@suse.de>,
+        id S1729002AbgEULfQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 May 2020 07:35:16 -0400
+Received: from fllv0015.ext.ti.com ([198.47.19.141]:49788 "EHLO
+        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728348AbgEULfP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 May 2020 07:35:15 -0400
+Received: from fllv0034.itg.ti.com ([10.64.40.246])
+        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 04LBYxLP047809;
+        Thu, 21 May 2020 06:34:59 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1590060899;
+        bh=NKzh9+B9wxDJ0+3F2ItUkU3OQXKDmdpEmjKcIKq6+ls=;
+        h=Subject:To:CC:References:From:Date:In-Reply-To;
+        b=gpL4D4jKfPTyyrWSYH184r2DwD2XU7CKPdc0BhBOwkjTU+AEFGNxGIapVrs2n/2K8
+         +AwLdBav9KsPUzwlnhELyyH0qyGgCDSKS0xniYVlqBwQlVS7jJHzEI1aF8hIOVNaM5
+         4biOufV0nO/cJ2tTAI/rP9fXMlA56OuMq0wrZZ08=
+Received: from DLEE108.ent.ti.com (dlee108.ent.ti.com [157.170.170.38])
+        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 04LBYxt3074955
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 21 May 2020 06:34:59 -0500
+Received: from DLEE103.ent.ti.com (157.170.170.33) by DLEE108.ent.ti.com
+ (157.170.170.38) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Thu, 21
+ May 2020 06:34:58 -0500
+Received: from lelv0326.itg.ti.com (10.180.67.84) by DLEE103.ent.ti.com
+ (157.170.170.33) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
+ Frontend Transport; Thu, 21 May 2020 06:34:58 -0500
+Received: from [10.250.233.85] (ileax41-snat.itg.ti.com [10.172.224.153])
+        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 04LBYtCd024102;
+        Thu, 21 May 2020 06:34:55 -0500
+Subject: Re: [PATCH v4 07/14] PCI: cadence: Add new *ops* for CPU addr fixup
+To:     Rob Herring <robh@kernel.org>
+CC:     Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Tom Joseph <tjoseph@cadence.com>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-pci@vger.kernel.org
-Subject: [PATCH v4 1/2] PCI: Move from using PCI_BRIDGE_RESOURCES to bridge resource definitions
-Date:   Thu, 21 May 2020 11:20:35 +0000
-Message-Id: <20200521112036.470112-2-kw@linux.com>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20200521112036.470112-1-kw@linux.com>
-References: <20200521081638.GA30231@rocinante>
- <20200521112036.470112-1-kw@linux.com>
+        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>
+References: <20200506151429.12255-1-kishon@ti.com>
+ <20200506151429.12255-8-kishon@ti.com> <20200520213434.GA583923@bogus>
+From:   Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <3f9cf6e5-94f8-4c54-aaee-c181b0e79f1f@ti.com>
+Date:   Thu, 21 May 2020 17:04:54 +0530
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.8.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20200520213434.GA583923@bogus>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Move to use bridge resource definitions instead of using the
-PCI_BRIDGE_RESOURCES constant with an integer offeset.
+Hi Rob,
 
-Signed-off-by: Krzysztof Wilczynski <kw@linux.com>
----
- drivers/pci/quirks.c          |  34 +++++-----
- drivers/pci/setup-bus.c       | 114 ++++++++++++++++++----------------
- drivers/pcmcia/yenta_socket.c |  22 ++++---
- include/linux/pci.h           |  14 ++++-
- 4 files changed, 104 insertions(+), 80 deletions(-)
+On 5/21/2020 3:04 AM, Rob Herring wrote:
+> On Wed, May 06, 2020 at 08:44:22PM +0530, Kishon Vijay Abraham I wrote:
+>> Cadence driver uses "mem" memory resource to obtain the offset of
+>> configuration space address region, memory space address region and
+>> message space address region. The obtained offset is used to program
+>> the Address Translation Unit (ATU). However certain platforms like TI's
+>> J721E SoC require the absolute address to be programmed in the ATU and not
+>> just the offset.
+> 
+> Once again, Cadence host binding is broken (or at least the example is). 
+> The 'mem' region shouldn't even exist. It is overlapping the config 
+> space and 'ranges':
+> 
+>             reg = <0x0 0xfb000000  0x0 0x01000000>,
+>                   <0x0 0x41000000  0x0 0x00001000>,
+>                   <0x0 0x40000000  0x0 0x04000000>;
+>             reg-names = "reg", "cfg", "mem";
+> 
+>             ranges = <0x02000000 0x0 0x42000000  0x0 0x42000000  0x0 0x1000000>,
+>                      <0x01000000 0x0 0x43000000  0x0 0x43000000  0x0 0x0010000>;
+> 
+> 
+> 16M of registers looks a bit odd. I guess it doesn't matter 
+> unless you have a 32-bit platform and care about your virtual 
+> space. Probably should have been 3 regions for LM, RP, and AT looking 
+> at the driver.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index ca9ed5774eb1..08a94a0534de 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -653,8 +653,8 @@ DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_SYNOPSYS, PCI_ANY_ID,
-  */
- static void quirk_ali7101_acpi(struct pci_dev *dev)
- {
--	quirk_io_region(dev, 0xE0, 64, PCI_BRIDGE_RESOURCES, "ali7101 ACPI");
--	quirk_io_region(dev, 0xE2, 32, PCI_BRIDGE_RESOURCES+1, "ali7101 SMB");
-+	quirk_io_region(dev, 0xE0, 64, PCI_BRIDGE_IO_WINDOW, "ali7101 ACPI");
-+	quirk_io_region(dev, 0xE2, 32, PCI_BRIDGE_MEM_WINDOW, "ali7101 SMB");
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AL,	PCI_DEVICE_ID_AL_M7101,		quirk_ali7101_acpi);
- 
-@@ -720,8 +720,8 @@ static void quirk_piix4_acpi(struct pci_dev *dev)
- {
- 	u32 res_a;
- 
--	quirk_io_region(dev, 0x40, 64, PCI_BRIDGE_RESOURCES, "PIIX4 ACPI");
--	quirk_io_region(dev, 0x90, 16, PCI_BRIDGE_RESOURCES+1, "PIIX4 SMB");
-+	quirk_io_region(dev, 0x40, 64, PCI_BRIDGE_IO_WINDOW, "PIIX4 ACPI");
-+	quirk_io_region(dev, 0x90, 16, PCI_BRIDGE_MEM_WINDOW, "PIIX4 SMB");
- 
- 	/* Device resource A has enables for some of the other ones */
- 	pci_read_config_dword(dev, 0x5c, &res_a);
-@@ -776,12 +776,12 @@ static void quirk_ich4_lpc_acpi(struct pci_dev *dev)
- 	 */
- 	pci_read_config_byte(dev, ICH_ACPI_CNTL, &enable);
- 	if (enable & ICH4_ACPI_EN)
--		quirk_io_region(dev, ICH_PMBASE, 128, PCI_BRIDGE_RESOURCES,
--				 "ICH4 ACPI/GPIO/TCO");
-+		quirk_io_region(dev, ICH_PMBASE, 128, PCI_BRIDGE_IO_WINDOW,
-+				"ICH4 ACPI/GPIO/TCO");
- 
- 	pci_read_config_byte(dev, ICH4_GPIO_CNTL, &enable);
- 	if (enable & ICH4_GPIO_EN)
--		quirk_io_region(dev, ICH4_GPIOBASE, 64, PCI_BRIDGE_RESOURCES+1,
-+		quirk_io_region(dev, ICH4_GPIOBASE, 64, PCI_BRIDGE_MEM_WINDOW,
- 				"ICH4 GPIO");
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,    PCI_DEVICE_ID_INTEL_82801AA_0,		quirk_ich4_lpc_acpi);
-@@ -801,12 +801,12 @@ static void ich6_lpc_acpi_gpio(struct pci_dev *dev)
- 
- 	pci_read_config_byte(dev, ICH_ACPI_CNTL, &enable);
- 	if (enable & ICH6_ACPI_EN)
--		quirk_io_region(dev, ICH_PMBASE, 128, PCI_BRIDGE_RESOURCES,
--				 "ICH6 ACPI/GPIO/TCO");
-+		quirk_io_region(dev, ICH_PMBASE, 128, PCI_BRIDGE_IO_WINDOW,
-+				"ICH6 ACPI/GPIO/TCO");
- 
- 	pci_read_config_byte(dev, ICH6_GPIO_CNTL, &enable);
- 	if (enable & ICH6_GPIO_EN)
--		quirk_io_region(dev, ICH6_GPIOBASE, 64, PCI_BRIDGE_RESOURCES+1,
-+		quirk_io_region(dev, ICH6_GPIOBASE, 64, PCI_BRIDGE_MEM_WINDOW,
- 				"ICH6 GPIO");
- }
- 
-@@ -911,7 +911,7 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,   PCI_DEVICE_ID_INTEL_ICH10_1, qui
- static void quirk_vt82c586_acpi(struct pci_dev *dev)
- {
- 	if (dev->revision & 0x10)
--		quirk_io_region(dev, 0x48, 256, PCI_BRIDGE_RESOURCES,
-+		quirk_io_region(dev, 0x48, 256, PCI_BRIDGE_IO_WINDOW,
- 				"vt82c586 ACPI");
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_82C586_3,	quirk_vt82c586_acpi);
-@@ -926,10 +926,10 @@ static void quirk_vt82c686_acpi(struct pci_dev *dev)
- {
- 	quirk_vt82c586_acpi(dev);
- 
--	quirk_io_region(dev, 0x70, 128, PCI_BRIDGE_RESOURCES+1,
--				 "vt82c686 HW-mon");
--
--	quirk_io_region(dev, 0x90, 16, PCI_BRIDGE_RESOURCES+2, "vt82c686 SMB");
-+	quirk_io_region(dev, 0x70, 128, PCI_BRIDGE_MEM_WINDOW,
-+			"vt82c686 HW-mon");
-+	quirk_io_region(dev, 0x90, 16, PCI_BRIDGE_PREF_MEM_WINDOW,
-+			"vt82c686 SMB");
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_82C686_4,	quirk_vt82c686_acpi);
- 
-@@ -940,8 +940,8 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_82C686_4,	quirk_vt
-  */
- static void quirk_vt8235_acpi(struct pci_dev *dev)
- {
--	quirk_io_region(dev, 0x88, 128, PCI_BRIDGE_RESOURCES, "vt8235 PM");
--	quirk_io_region(dev, 0xd0, 16, PCI_BRIDGE_RESOURCES+1, "vt8235 SMB");
-+	quirk_io_region(dev, 0x88, 128, PCI_BRIDGE_IO_WINDOW, "vt8235 PM");
-+	quirk_io_region(dev, 0xd0, 16, PCI_BRIDGE_MEM_WINDOW, "vt8235 SMB");
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_8235,	quirk_vt8235_acpi);
- 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index bbcef1a053ab..07cd7a3817dc 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -583,7 +583,7 @@ static void pci_setup_bridge_io(struct pci_dev *bridge)
- 		io_mask = PCI_IO_1K_RANGE_MASK;
- 
- 	/* Set up the top and bottom of the PCI I/O segment for this bus */
--	res = &bridge->resource[PCI_BRIDGE_RESOURCES + 0];
-+	res = &bridge->resource[PCI_BRIDGE_IO_WINDOW];
- 	pcibios_resource_to_bus(bridge->bus, &region, res);
- 	if (res->flags & IORESOURCE_IO) {
- 		pci_read_config_word(bridge, PCI_IO_BASE, &l);
-@@ -613,7 +613,7 @@ static void pci_setup_bridge_mmio(struct pci_dev *bridge)
- 	u32 l;
- 
- 	/* Set up the top and bottom of the PCI Memory segment for this bus */
--	res = &bridge->resource[PCI_BRIDGE_RESOURCES + 1];
-+	res = &bridge->resource[PCI_BRIDGE_MEM_WINDOW];
- 	pcibios_resource_to_bus(bridge->bus, &region, res);
- 	if (res->flags & IORESOURCE_MEM) {
- 		l = (region.start >> 16) & 0xfff0;
-@@ -640,7 +640,7 @@ static void pci_setup_bridge_mmio_pref(struct pci_dev *bridge)
- 
- 	/* Set up PREF base/limit */
- 	bu = lu = 0;
--	res = &bridge->resource[PCI_BRIDGE_RESOURCES + 2];
-+	res = &bridge->resource[PCI_BRIDGE_PREF_MEM_WINDOW];
- 	pcibios_resource_to_bus(bridge->bus, &region, res);
- 	if (res->flags & IORESOURCE_PREFETCH) {
- 		l = (region.start >> 16) & 0xfff0;
-@@ -707,14 +707,14 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
- 	if (!pci_bus_clip_resource(bridge, i))
- 		return -EINVAL;	/* Clipping didn't change anything */
- 
--	switch (i - PCI_BRIDGE_RESOURCES) {
--	case 0:
-+	switch (i) {
-+	case PCI_BRIDGE_IO_WINDOW:
- 		pci_setup_bridge_io(bridge);
- 		break;
--	case 1:
-+	case PCI_BRIDGE_MEM_WINDOW:
- 		pci_setup_bridge_mmio(bridge);
- 		break;
--	case 2:
-+	case PCI_BRIDGE_PREF_MEM_WINDOW:
- 		pci_setup_bridge_mmio_pref(bridge);
- 		break;
- 	default:
-@@ -735,18 +735,22 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
- static void pci_bridge_check_ranges(struct pci_bus *bus)
- {
- 	struct pci_dev *bridge = bus->self;
--	struct resource *b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
-+	struct resource *b_res;
- 
--	b_res[1].flags |= IORESOURCE_MEM;
-+	b_res = &bridge->resource[PCI_BRIDGE_MEM_WINDOW];
-+	b_res->flags |= IORESOURCE_MEM;
- 
--	if (bridge->io_window)
--		b_res[0].flags |= IORESOURCE_IO;
-+	if (bridge->io_window) {
-+		b_res = &bridge->resource[PCI_BRIDGE_IO_WINDOW];
-+		b_res->flags |= IORESOURCE_IO;
-+	}
- 
- 	if (bridge->pref_window) {
--		b_res[2].flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH;
-+		b_res = &bridge->resource[PCI_BRIDGE_PREF_MEM_WINDOW];
-+		b_res->flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH;
- 		if (bridge->pref_64_window) {
--			b_res[2].flags |= IORESOURCE_MEM_64;
--			b_res[2].flags |= PCI_PREF_RANGE_TYPE_64;
-+			b_res->flags |= IORESOURCE_MEM_64 |
-+					PCI_PREF_RANGE_TYPE_64;
- 		}
- 	}
- }
-@@ -1105,35 +1109,37 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
- 				 struct list_head *realloc_head)
- {
- 	struct pci_dev *bridge = bus->self;
--	struct resource *b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
-+	struct resource *b_res;
- 	resource_size_t b_res_3_size = pci_cardbus_mem_size * 2;
- 	u16 ctrl;
- 
--	if (b_res[0].parent)
-+	b_res = &bridge->resource[PCI_CB_BRIDGE_IO_0_WINDOW];
-+	if (b_res->parent)
- 		goto handle_b_res_1;
- 	/*
- 	 * Reserve some resources for CardBus.  We reserve a fixed amount
- 	 * of bus space for CardBus bridges.
- 	 */
--	b_res[0].start = pci_cardbus_io_size;
--	b_res[0].end = b_res[0].start + pci_cardbus_io_size - 1;
--	b_res[0].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
-+	b_res->start = pci_cardbus_io_size;
-+	b_res->end = b_res->start + pci_cardbus_io_size - 1;
-+	b_res->flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
- 	if (realloc_head) {
--		b_res[0].end -= pci_cardbus_io_size;
-+		b_res->end -= pci_cardbus_io_size;
- 		add_to_list(realloc_head, bridge, b_res, pci_cardbus_io_size,
--				pci_cardbus_io_size);
-+			    pci_cardbus_io_size);
- 	}
- 
- handle_b_res_1:
--	if (b_res[1].parent)
-+	b_res = &bridge->resource[PCI_CB_BRIDGE_IO_1_WINDOW];
-+	if (b_res->parent)
- 		goto handle_b_res_2;
--	b_res[1].start = pci_cardbus_io_size;
--	b_res[1].end = b_res[1].start + pci_cardbus_io_size - 1;
--	b_res[1].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
-+	b_res->start = pci_cardbus_io_size;
-+	b_res->end = b_res->start + pci_cardbus_io_size - 1;
-+	b_res->flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
- 	if (realloc_head) {
--		b_res[1].end -= pci_cardbus_io_size;
--		add_to_list(realloc_head, bridge, b_res+1, pci_cardbus_io_size,
--				 pci_cardbus_io_size);
-+		b_res->end -= pci_cardbus_io_size;
-+		add_to_list(realloc_head, bridge, b_res, pci_cardbus_io_size,
-+			    pci_cardbus_io_size);
- 	}
- 
- handle_b_res_2:
-@@ -1153,21 +1159,22 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
- 		pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
- 	}
- 
--	if (b_res[2].parent)
-+	b_res = &bridge->resource[PCI_CB_BRIDGE_MEM_0_WINDOW];
-+	if (b_res->parent)
- 		goto handle_b_res_3;
- 	/*
- 	 * If we have prefetchable memory support, allocate two regions.
- 	 * Otherwise, allocate one region of twice the size.
- 	 */
- 	if (ctrl & PCI_CB_BRIDGE_CTL_PREFETCH_MEM0) {
--		b_res[2].start = pci_cardbus_mem_size;
--		b_res[2].end = b_res[2].start + pci_cardbus_mem_size - 1;
--		b_res[2].flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH |
--				  IORESOURCE_STARTALIGN;
-+		b_res->start = pci_cardbus_mem_size;
-+		b_res->end = b_res->start + pci_cardbus_mem_size - 1;
-+		b_res->flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH |
-+				    IORESOURCE_STARTALIGN;
- 		if (realloc_head) {
--			b_res[2].end -= pci_cardbus_mem_size;
--			add_to_list(realloc_head, bridge, b_res+2,
--				 pci_cardbus_mem_size, pci_cardbus_mem_size);
-+			b_res->end -= pci_cardbus_mem_size;
-+			add_to_list(realloc_head, bridge, b_res,
-+				    pci_cardbus_mem_size, pci_cardbus_mem_size);
- 		}
- 
- 		/* Reduce that to half */
-@@ -1175,15 +1182,16 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
- 	}
- 
- handle_b_res_3:
--	if (b_res[3].parent)
-+	b_res = &bridge->resource[PCI_CB_BRIDGE_MEM_1_WINDOW];
-+	if (b_res->parent)
- 		goto handle_done;
--	b_res[3].start = pci_cardbus_mem_size;
--	b_res[3].end = b_res[3].start + b_res_3_size - 1;
--	b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_STARTALIGN;
-+	b_res->start = pci_cardbus_mem_size;
-+	b_res->end = b_res->start + b_res_3_size - 1;
-+	b_res->flags |= IORESOURCE_MEM | IORESOURCE_STARTALIGN;
- 	if (realloc_head) {
--		b_res[3].end -= b_res_3_size;
--		add_to_list(realloc_head, bridge, b_res+3, b_res_3_size,
--				 pci_cardbus_mem_size);
-+		b_res->end -= b_res_3_size;
-+		add_to_list(realloc_head, bridge, b_res, b_res_3_size,
-+			    pci_cardbus_mem_size);
- 	}
- 
- handle_done:
-@@ -1227,7 +1235,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 				break;
- 		hdr_type = -1;	/* Intentionally invalid - not a PCI device. */
- 	} else {
--		pref = &bus->self->resource[PCI_BRIDGE_RESOURCES + 2];
-+		pref = &bus->self->resource[PCI_BRIDGE_PREF_MEM_WINDOW];
- 		hdr_type = bus->self->hdr_type;
- 	}
- 
-@@ -1885,9 +1893,9 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
- 	struct pci_dev *dev, *bridge = bus->self;
- 	resource_size_t io_per_hp, mmio_per_hp, mmio_pref_per_hp, align;
- 
--	io_res = &bridge->resource[PCI_BRIDGE_RESOURCES + 0];
--	mmio_res = &bridge->resource[PCI_BRIDGE_RESOURCES + 1];
--	mmio_pref_res = &bridge->resource[PCI_BRIDGE_RESOURCES + 2];
-+	io_res = &bridge->resource[PCI_BRIDGE_IO_WINDOW];
-+	mmio_res = &bridge->resource[PCI_BRIDGE_MEM_WINDOW];
-+	mmio_pref_res = &bridge->resource[PCI_BRIDGE_PREF_MEM_WINDOW];
- 
- 	/*
- 	 * The alignment of this bridge is yet to be considered, hence it must
-@@ -1960,21 +1968,21 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
- 		 * Reduce the available resource space by what the
- 		 * bridge and devices below it occupy.
- 		 */
--		res = &dev->resource[PCI_BRIDGE_RESOURCES + 0];
-+		res = &dev->resource[PCI_BRIDGE_IO_WINDOW];
- 		align = pci_resource_alignment(dev, res);
- 		align = align ? ALIGN(io.start, align) - io.start : 0;
- 		used_size = align + resource_size(res);
- 		if (!res->parent)
- 			io.start = min(io.start + used_size, io.end + 1);
- 
--		res = &dev->resource[PCI_BRIDGE_RESOURCES + 1];
-+		res = &dev->resource[PCI_BRIDGE_MEM_WINDOW];
- 		align = pci_resource_alignment(dev, res);
- 		align = align ? ALIGN(mmio.start, align) - mmio.start : 0;
- 		used_size = align + resource_size(res);
- 		if (!res->parent)
- 			mmio.start = min(mmio.start + used_size, mmio.end + 1);
- 
--		res = &dev->resource[PCI_BRIDGE_RESOURCES + 2];
-+		res = &dev->resource[PCI_BRIDGE_PREF_MEM_WINDOW];
- 		align = pci_resource_alignment(dev, res);
- 		align = align ? ALIGN(mmio_pref.start, align) -
- 			mmio_pref.start : 0;
-@@ -2027,9 +2035,9 @@ static void pci_bridge_distribute_available_resources(struct pci_dev *bridge,
- 		return;
- 
- 	/* Take the initial extra resources from the hotplug port */
--	available_io = bridge->resource[PCI_BRIDGE_RESOURCES + 0];
--	available_mmio = bridge->resource[PCI_BRIDGE_RESOURCES + 1];
--	available_mmio_pref = bridge->resource[PCI_BRIDGE_RESOURCES + 2];
-+	available_io = bridge->resource[PCI_BRIDGE_IO_WINDOW];
-+	available_mmio = bridge->resource[PCI_BRIDGE_MEM_WINDOW];
-+	available_mmio_pref = bridge->resource[PCI_BRIDGE_PREF_MEM_WINDOW];
- 
- 	pci_bus_distribute_available_resources(bridge->subordinate,
- 					       add_list, available_io,
-diff --git a/drivers/pcmcia/yenta_socket.c b/drivers/pcmcia/yenta_socket.c
-index bf6529b0b5b0..76036ccf2106 100644
---- a/drivers/pcmcia/yenta_socket.c
-+++ b/drivers/pcmcia/yenta_socket.c
-@@ -694,7 +694,7 @@ static int yenta_allocate_res(struct yenta_socket *socket, int nr, unsigned type
- 	struct pci_bus_region region;
- 	unsigned mask;
- 
--	res = dev->resource + PCI_BRIDGE_RESOURCES + nr;
-+	res = &dev->resource[nr];
- 	/* Already allocated? */
- 	if (res->parent)
- 		return 0;
-@@ -711,7 +711,7 @@ static int yenta_allocate_res(struct yenta_socket *socket, int nr, unsigned type
- 	region.end = config_readl(socket, addr_end) | ~mask;
- 	if (region.start && region.end > region.start && !override_bios) {
- 		pcibios_bus_to_resource(dev->bus, res, &region);
--		if (pci_claim_resource(dev, PCI_BRIDGE_RESOURCES + nr) == 0)
-+		if (pci_claim_resource(dev, nr) == 0)
- 			return 0;
- 		dev_info(&dev->dev,
- 			 "Preassigned resource %d busy or not available, reconfiguring...\n",
-@@ -751,14 +751,18 @@ static int yenta_allocate_res(struct yenta_socket *socket, int nr, unsigned type
- static void yenta_allocate_resources(struct yenta_socket *socket)
- {
- 	int program = 0;
--	program += yenta_allocate_res(socket, 0, IORESOURCE_IO,
--			   PCI_CB_IO_BASE_0, PCI_CB_IO_LIMIT_0);
--	program += yenta_allocate_res(socket, 1, IORESOURCE_IO,
--			   PCI_CB_IO_BASE_1, PCI_CB_IO_LIMIT_1);
--	program += yenta_allocate_res(socket, 2, IORESOURCE_MEM|IORESOURCE_PREFETCH,
-+	program += yenta_allocate_res(socket, PCI_CB_BRIDGE_IO_0_WINDOW,
-+			   IORESOURCE_IO, PCI_CB_IO_BASE_0,
-+			   PCI_CB_IO_LIMIT_0);
-+	program += yenta_allocate_res(socket, PCI_CB_BRIDGE_IO_1_WINDOW,
-+			   IORESOURCE_IO, PCI_CB_IO_BASE_1,
-+			   PCI_CB_IO_LIMIT_1);
-+	program += yenta_allocate_res(socket, PCI_CB_BRIDGE_MEM_0_WINDOW,
-+			   IORESOURCE_MEM | IORESOURCE_PREFETCH,
- 			   PCI_CB_MEMORY_BASE_0, PCI_CB_MEMORY_LIMIT_0);
--	program += yenta_allocate_res(socket, 3, IORESOURCE_MEM,
--			   PCI_CB_MEMORY_BASE_1, PCI_CB_MEMORY_LIMIT_1);
-+	program += yenta_allocate_res(socket, PCI_CB_BRIDGE_MEM_1_WINDOW,
-+			   IORESOURCE_MEM, PCI_CB_MEMORY_BASE_1,
-+			   PCI_CB_MEMORY_LIMIT_1);
- 	if (program)
- 		pci_setup_cardbus(socket->dev->subordinate);
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 83ce1cdf5676..cdfb07bfdf7d 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -100,9 +100,21 @@ enum {
- 	PCI_IOV_RESOURCE_END = PCI_IOV_RESOURCES + PCI_SRIOV_NUM_BARS - 1,
- #endif
- 
--	/* Resources assigned to buses behind the bridge */
-+/* PCI-to-PCI (P2P) bridge windows */
-+#define PCI_BRIDGE_IO_WINDOW		(PCI_BRIDGE_RESOURCES + 0)
-+#define PCI_BRIDGE_MEM_WINDOW		(PCI_BRIDGE_RESOURCES + 1)
-+#define PCI_BRIDGE_PREF_MEM_WINDOW	(PCI_BRIDGE_RESOURCES + 2)
-+
-+/* CardBus bridge windows */
-+#define PCI_CB_BRIDGE_IO_0_WINDOW	(PCI_BRIDGE_RESOURCES + 0)
-+#define PCI_CB_BRIDGE_IO_1_WINDOW	(PCI_BRIDGE_RESOURCES + 1)
-+#define PCI_CB_BRIDGE_MEM_0_WINDOW	(PCI_BRIDGE_RESOURCES + 2)
-+#define PCI_CB_BRIDGE_MEM_1_WINDOW	(PCI_BRIDGE_RESOURCES + 3)
-+
-+/* Total number of bridge resources for P2P and CardBus */
- #define PCI_BRIDGE_RESOURCE_NUM 4
- 
-+	/* Resources assigned to buses behind the bridge */
- 	PCI_BRIDGE_RESOURCES,
- 	PCI_BRIDGE_RESOURCE_END = PCI_BRIDGE_RESOURCES +
- 				  PCI_BRIDGE_RESOURCE_NUM - 1,
--- 
-2.26.2
+The "mem" region in never ioremapped. However $patch removes requiring to add
+"mem" memory resource.
+> 
+> Whatever outbound address translation you need should be based on 
+> 'ranges'.
 
+You mean we don't need to add "new *ops* for CPU addr fixup"?. The issue is
+ranges provides CPU address and PCI address. The CPU will access whatever is
+populated in ranges to access the PCI bus. However while programming the ATU,
+we cannot use the CPU address provided in ranges directly (in some platforms)
+because the controller does not see the full address and only the lower 28bits.
+
+This similar restriction was there with Designware (mostly an integration
+issue) and we used *ops* to fixup the address that has to be programmed in ATU.
+The Designware initially used a wrapper so that ranges property can be directly
+used [1]. However this approach was later removed in [2]
+
+[1] -> https://lore.kernel.org/patchwork/patch/468523/
+[2] -> https://lkml.org/lkml/2015/10/16/232
+
+Thanks
+Kishon
