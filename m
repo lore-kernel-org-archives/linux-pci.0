@@ -2,79 +2,94 @@ Return-Path: <SRS0=y01v=7D=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47790C433E4
-	for <linux-pci@archiver.kernel.org>; Thu, 21 May 2020 17:32:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 762EEC433E0
+	for <linux-pci@archiver.kernel.org>; Thu, 21 May 2020 17:42:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 321DC2072C
-	for <linux-pci@archiver.kernel.org>; Thu, 21 May 2020 17:32:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 61940207F7
+	for <linux-pci@archiver.kernel.org>; Thu, 21 May 2020 17:42:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726821AbgEURcv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 May 2020 13:32:51 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2241 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728542AbgEURcv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 21 May 2020 13:32:51 -0400
-Received: from lhreml710-chm.china.huawei.com (unknown [172.18.7.107])
-        by Forcepoint Email with ESMTP id B94FB3A13135244B263E;
-        Thu, 21 May 2020 18:32:46 +0100 (IST)
-Received: from lhrphicprd00229.huawei.com (10.123.41.22) by
- lhreml710-chm.china.huawei.com (10.201.108.61) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1913.5; Thu, 21 May 2020 18:32:46 +0100
-From:   Jonathan Cameron <Jonathan.Cameron@huawei.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-CC:     <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Subject: [PATCH 1/2] PCI/AER: Do not reset the device status if doing firmware first handling.
-Date:   Fri, 22 May 2020 01:31:33 +0800
-Message-ID: <20200521173134.2456773-2-Jonathan.Cameron@huawei.com>
-X-Mailer: git-send-email 2.19.1
-In-Reply-To: <20200521173134.2456773-1-Jonathan.Cameron@huawei.com>
-References: <20200521173134.2456773-1-Jonathan.Cameron@huawei.com>
+        id S1728139AbgEURmR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 May 2020 13:42:17 -0400
+Received: from foss.arm.com ([217.140.110.172]:50902 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727966AbgEURmR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 21 May 2020 13:42:17 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 6F0CE30E;
+        Thu, 21 May 2020 10:42:14 -0700 (PDT)
+Received: from e121166-lin.cambridge.arm.com (e121166-lin.cambridge.arm.com [10.1.196.255])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id DE2803F68F;
+        Thu, 21 May 2020 10:42:12 -0700 (PDT)
+Date:   Thu, 21 May 2020 18:42:10 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Michael Kelley <mikelley@microsoft.com>
+Cc:     Wei Hu <weh@microsoft.com>, KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "wei.liu@kernel.org" <wei.liu@kernel.org>,
+        "robh@kernel.org" <robh@kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Dexuan Cui <decui@microsoft.com>
+Subject: Re: [PATCH v3 0/2] Fix PCI HyperV device error handling
+Message-ID: <20200521174210.GB29590@e121166-lin.cambridge.arm.com>
+References: <20200507050126.10871-1-weh@microsoft.com>
+ <20200511112147.GD24954@e121166-lin.cambridge.arm.com>
+ <MW2PR2101MB1052A57E7BE9634821E29E4FD7B70@MW2PR2101MB1052.namprd21.prod.outlook.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.123.41.22]
-X-ClientProxiedBy: lhreml737-chm.china.huawei.com (10.201.108.187) To
- lhreml710-chm.china.huawei.com (10.201.108.61)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <MW2PR2101MB1052A57E7BE9634821E29E4FD7B70@MW2PR2101MB1052.namprd21.prod.outlook.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-pci_aer_clear_device_status() currently resets the device status even when
-firmware first handling is going on.  In particular it resets it on the
-root port.
+On Thu, May 21, 2020 at 02:39:58AM +0000, Michael Kelley wrote:
+> From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> Sent: Monday, May 11, 2020 4:22 AM
+> > 
+> > On Thu, May 07, 2020 at 01:01:26PM +0800, Wei Hu wrote:
+> > > This series better handles some PCI HyperV error cases in general
+> > > and for kdump case. Some of review comments from previous individual
+> > > patch reviews, including splitting into separate patches, have already
+> > > been incorporated. Thanks Lorenzo Pieralisi for the review and
+> > > suggestions, as well as Michael Kelley's contribution to the commit
+> > > log.
+> > >
+> > > Thanks,
+> > > Wei
+> > >
+> > >
+> > > Wei Hu (2):
+> > >   PCI: hv: Fix the PCI HyperV probe failure path to release resource
+> > >     properly
+> > >   PCI: hv: Retry PCI bus D0 entry when the first attempt failed with
+> > >     invalid device state
+> > >
+> > >  drivers/pci/controller/pci-hyperv.c | 60 ++++++++++++++++++++++++++---
+> > >  1 file changed, 54 insertions(+), 6 deletions(-)
+> > 
+> > Applied to pci/hv, thanks.
+> > 
+> 
+> Lorenzo -- 
+> 
+> Will you be bringing these fixes into 5.7?  The main fix is the 2nd patch, but
+> there wasn't a clear "Fixes:" tag to add because the problem is due more to
+> how Hyper-V operates than a bug in a previous Linux commit.  We have a
+> customer experiencing the problem, so getting the fix into the main tree
+> sooner rather than later is helpful.
 
-This has been discussed previously
-https://lore.kernel.org/patchwork/patch/427375/.
+We usually send fixes at -rc* if the bug was introduced in the previous
+release, at the moment this is v5.8 material not planned for such a late
+-rc* (ie -rc7). We can send patches to stable and/or apply a Fixes: tag
+if that can help when the commits hit mainline.
 
-Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
----
- drivers/pci/pcie/aer.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index f4274d301235..43e78b97ace6 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -373,6 +373,9 @@ void pci_aer_clear_device_status(struct pci_dev *dev)
- {
- 	u16 sta;
- 
-+	if (pcie_aer_get_firmware_first(dev))
-+		return;
-+
- 	pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &sta);
- 	pcie_capability_write_word(dev, PCI_EXP_DEVSTA, sta);
- }
--- 
-2.19.1
-
+Lorenzo
