@@ -2,64 +2,77 @@ Return-Path: <SRS0=d3wJ=7E=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8301CC433E0
-	for <linux-pci@archiver.kernel.org>; Fri, 22 May 2020 14:28:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CC31C433E3
+	for <linux-pci@archiver.kernel.org>; Fri, 22 May 2020 14:28:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6C52F22E03
-	for <linux-pci@archiver.kernel.org>; Fri, 22 May 2020 14:28:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 71DBC22E03
+	for <linux-pci@archiver.kernel.org>; Fri, 22 May 2020 14:28:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730114AbgEVO2W (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1730083AbgEVO2W (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Fri, 22 May 2020 10:28:22 -0400
-Received: from elvis.franken.de ([193.175.24.41]:34551 "EHLO elvis.franken.de"
+Received: from elvis.franken.de ([193.175.24.41]:34552 "EHLO elvis.franken.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729952AbgEVO2V (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1729947AbgEVO2V (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Fri, 22 May 2020 10:28:21 -0400
 Received: from uucp (helo=alpha)
         by elvis.franken.de with local-bsmtp (Exim 3.36 #1)
-        id 1jc8ed-0006D2-00; Fri, 22 May 2020 16:28:07 +0200
+        id 1jc8ee-0006D2-01; Fri, 22 May 2020 16:28:08 +0200
 Received: by alpha.franken.de (Postfix, from userid 1000)
-        id E7B32C015D; Fri, 22 May 2020 16:25:27 +0200 (CEST)
-Date:   Fri, 22 May 2020 16:25:27 +0200
+        id 18336C0175; Fri, 22 May 2020 16:27:59 +0200 (CEST)
+Date:   Fri, 22 May 2020 16:27:59 +0200
 From:   Thomas Bogendoerfer <tsbogend@alpha.franken.de>
-To:     Jiaxun Yang <jiaxun.yang@flygoat.com>
-Cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     Jiaxun Yang <jiaxun.yang@flygoat.com>, linux-pci@vger.kernel.org,
+        Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
         Rob Herring <robh+dt@kernel.org>,
         Huacai Chen <chenhc@lemote.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Paul Burton <paulburton@kernel.org>,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-mips@vger.kernel.org
-Subject: Re: [PATCH v10 4/5] MIPS: DTS: Loongson64: Add PCI Controller Node
-Message-ID: <20200522142527.GA15261@alpha.franken.de>
+Subject: Re: [PATCH v10 2/5] PCI: Add Loongson PCI Controller support
+Message-ID: <20200522142759.GA15332@alpha.franken.de>
 References: <20200427060551.1372591-1-jiaxun.yang@flygoat.com>
  <20200514131650.3587281-1-jiaxun.yang@flygoat.com>
- <20200514131650.3587281-4-jiaxun.yang@flygoat.com>
+ <20200514131650.3587281-2-jiaxun.yang@flygoat.com>
+ <AC29D474-D846-41AF-9900-759CE430A744@flygoat.com>
+ <20200522131018.GE11785@e121166-lin.cambridge.arm.com>
+ <7FE3D498-D293-407C-A70C-5E763151477C@flygoat.com>
+ <20200522134048.GG11785@e121166-lin.cambridge.arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200514131650.3587281-4-jiaxun.yang@flygoat.com>
+In-Reply-To: <20200522134048.GG11785@e121166-lin.cambridge.arm.com>
 User-Agent: Mutt/1.5.23 (2014-03-12)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, May 14, 2020 at 09:16:40PM +0800, Jiaxun Yang wrote:
-> Add PCI Host controller node for Loongson64 with RS780E PCH dts.
-> Note that PCI interrupts are probed via legacy way, as different
-> machine have different interrupt arrangement, we can't cover all
-> of them in dt.
+On Fri, May 22, 2020 at 02:40:48PM +0100, Lorenzo Pieralisi wrote:
+> On Fri, May 22, 2020 at 09:32:10PM +0800, Jiaxun Yang wrote:
 > 
-> Signed-off-by: Jiaxun Yang <jiaxun.yang@flygoat.com>
-> ---
->  arch/mips/boot/dts/loongson/rs780e-pch.dtsi | 12 ++++++++++++
->  1 file changed, 12 insertions(+)
+> [...]
+> 
+> > >> Is it possible to let this series go into next tree soon?
+> > >> 
+> > >> As LS7A dts patch would depend on this series, and I want to
+> > >> make the whole LS7A basic support as a part of 5.8 release.
+> > >
+> > >I think you have all necessary tags to take this in the MIPS
+> > >tree, please let me know if that's the way we want this to go
+> > >upstream - I would not pull MIPS/dts changes into the PCI tree
+> > >and I don't think it is needed for this series.
+> > 
+> > Please pull all PCI changes [1~3] into PCI tree.
+> 
+> Pulled [1,2,3] into pci/mips, thanks !
 
-Acked-by: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
+could please take the other patches, too ?
 
 Thomas.
 
