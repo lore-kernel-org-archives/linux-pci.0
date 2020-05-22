@@ -2,192 +2,282 @@ Return-Path: <SRS0=d3wJ=7E=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 251A1C433DF
-	for <linux-pci@archiver.kernel.org>; Fri, 22 May 2020 03:08:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96D2CC433E2
+	for <linux-pci@archiver.kernel.org>; Fri, 22 May 2020 03:36:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E99432078B
-	for <linux-pci@archiver.kernel.org>; Fri, 22 May 2020 03:08:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 71D8520825
+	for <linux-pci@archiver.kernel.org>; Fri, 22 May 2020 03:36:40 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="tfwDFl2F"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727083AbgEVDIG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 May 2020 23:08:06 -0400
-Received: from lucky1.263xmail.com ([211.157.147.134]:51196 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727123AbgEVDIG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 May 2020 23:08:06 -0400
-X-Greylist: delayed 470 seconds by postgrey-1.27 at vger.kernel.org; Thu, 21 May 2020 23:08:04 EDT
-Received: from localhost (unknown [192.168.167.224])
-        by lucky1.263xmail.com (Postfix) with ESMTP id 1260BAF778;
-        Fri, 22 May 2020 11:00:06 +0800 (CST)
-X-MAIL-GRAY: 1
-X-MAIL-DELIVERY: 0
-X-ADDR-CHECKED4: 1
-X-ANTISPAM-LEVEL: 2
-X-SKE-CHECKED: 1
-X-ABS-CHECKED: 1
-Received: from [172.16.12.64] (unknown [58.22.7.114])
-        by smtp.263.net (postfix) whith ESMTP id P11979T139798356420352S1590116403246432_;
-        Fri, 22 May 2020 11:00:03 +0800 (CST)
-X-IP-DOMAINF: 1
-X-UNIQUE-TAG: <1bf8029f95bd2f1e48884df3163eacf3>
-X-RL-SENDER: shawn.lin@rock-chips.com
-X-SENDER: lintao@rock-chips.com
-X-LOGIN-NAME: shawn.lin@rock-chips.com
-X-FST-TO: linux-rockchip@lists.infradead.org
-X-SENDER-IP: 58.22.7.114
-X-ATTACHMENT-NUM: 0
-X-DNS-TYPE: 0
-X-System-Flag: 0
-Cc:     shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org,
+        id S1727914AbgEVDgh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 May 2020 23:36:37 -0400
+Received: from lelv0142.ext.ti.com ([198.47.23.249]:40664 "EHLO
+        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727024AbgEVDgh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 May 2020 23:36:37 -0400
+Received: from fllv0035.itg.ti.com ([10.64.41.0])
+        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 04M3aLPc037280;
+        Thu, 21 May 2020 22:36:21 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1590118581;
+        bh=HrQjWJ1fQIqu1ayf7fVo3VgYbxThYydlatrnKWcfJzQ=;
+        h=Subject:To:CC:References:From:Date:In-Reply-To;
+        b=tfwDFl2F4veF+44wEnyZlowAjXC0drn3TmboAkdNp0ZOyAkE78ogBwSbSWqLldhL3
+         Qhuhq/XcUxjP2k8I5fxsrbCSvPrp4cNNbO92twrmXmJohLjODsk1oo8VoEkfVkVTLl
+         +JrPaxJngNCUWSZzjOCCvzuHum4WA3kwsXqiceZU=
+Received: from DFLE100.ent.ti.com (dfle100.ent.ti.com [10.64.6.21])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id 04M3aLWW007398;
+        Thu, 21 May 2020 22:36:21 -0500
+Received: from DFLE105.ent.ti.com (10.64.6.26) by DFLE100.ent.ti.com
+ (10.64.6.21) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Thu, 21
+ May 2020 22:36:21 -0500
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DFLE105.ent.ti.com
+ (10.64.6.26) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
+ Frontend Transport; Thu, 21 May 2020 22:36:21 -0500
+Received: from [10.250.233.85] (ileax41-snat.itg.ti.com [10.172.224.153])
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 04M3aHDv049868;
+        Thu, 21 May 2020 22:36:18 -0500
+Subject: Re: [PATCH v4 03/14] PCI: cadence: Add support to use custom read and
+ write accessors
+To:     Rob Herring <robh@kernel.org>
+CC:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Simon Xue <xxm@rock-chips.com>,
-        linux-rockchip@lists.infradead.org
-Subject: =?UTF-8?Q?Re=3a_=5bPATCH_1/2=5d_PCI=3a_rockchip=3a_Enable_IO_base_a?=
- =?UTF-8?B?bmQgbGltaXQgcmVnaXN0ZXJz44CQ6K+35rOo5oSP77yM6YKu5Lu255SxbGludXgt?=
- =?UTF-8?Q?rockchip-bounces+shawn=2elin=3drock-chips=2ecom=40lists=2einfrade?=
- =?UTF-8?B?YWQub3Jn5Luj5Y+R44CR?=
-To:     Anand Moon <linux.amoon@gmail.com>
-References: <1590023130-137406-1-git-send-email-shawn.lin@rock-chips.com>
- <CANAwSgRXuMQaytB4BXL89JQAmU=XutBXj6iMhfKdZp3JwM9a4g@mail.gmail.com>
-From:   Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <eb0acd3d-92d0-db00-78e4-8a17033f7f0a@rock-chips.com>
-Date:   Fri, 22 May 2020 11:00:04 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:77.0) Gecko/20100101
- Thunderbird/77.0
+        Arnd Bergmann <arnd@arndb.de>,
+        Tom Joseph <tjoseph@cadence.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        PCI <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linux-omap <linux-omap@vger.kernel.org>,
+        "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>
+References: <20200506151429.12255-1-kishon@ti.com>
+ <20200506151429.12255-4-kishon@ti.com> <20200520220724.GA636352@bogus>
+ <37d2d6c3-232d-adb8-4e0b-e0c699ec435a@ti.com>
+ <CAL_JsqK8xRTxuJ39yPMzE1JMBrYccXB5QqsSvn7HosvrEQGdWQ@mail.gmail.com>
+From:   Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <0bb5280c-99d1-6b33-ce69-5698f9902415@ti.com>
+Date:   Fri, 22 May 2020 09:06:17 +0530
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.8.0
 MIME-Version: 1.0
-In-Reply-To: <CANAwSgRXuMQaytB4BXL89JQAmU=XutBXj6iMhfKdZp3JwM9a4g@mail.gmail.com>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAL_JsqK8xRTxuJ39yPMzE1JMBrYccXB5QqsSvn7HosvrEQGdWQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Hi Rob,
 
-ÔÚ 2020/5/21 18:51, Anand Moon Ð´µÀ:
-> Hi Shawn,
-> 
-> On Thu, 21 May 2020 at 06:35, Shawn Lin <shawn.lin@rock-chips.com> wrote:
+On 5/22/2020 3:47 AM, Rob Herring wrote:
+> On Thu, May 21, 2020 at 7:33 AM Kishon Vijay Abraham I <kishon@ti.com> wrote:
 >>
->> According to RK3399 user manual, bit 9 in PCIE_RC_BAR_CONF should
->> be set, otherwise accessing to IO base and limit registers would
->> fail.
+>> Hi Rob,
 >>
->> [    0.411318] pci_bus 0000:00: root bus resource [bus 00-1f]
->> [    0.411822] pci_bus 0000:00: root bus resource [mem 0xfa000000-0xfbdfffff]
->> [    0.412440] pci_bus 0000:00: root bus resource [io  0x0000-0xfffff] (bus address [0xfbe00000-0xfbefffff])
->> [    0.413665] pci 0000:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
->> [    0.414698] pci 0000:01:00.0: reg 0x10: initial BAR value 0x00000000 invalid
->> [    0.415412] pci 0000:01:00.0: reg 0x18: initial BAR value 0x00000000 invalid
->> [    0.418456] pci 0000:00:00.0: BAR 8: assigned [mem 0xfa000000-0xfa0fffff]
->> [    0.419065] pci 0000:01:00.0: BAR 1: assigned [mem 0xfa000000-0xfa007fff pref]
->> [    0.419728] pci 0000:01:00.0: BAR 6: assigned [mem 0xfa008000-0xfa00ffff pref]
->> [    0.420377] pci 0000:01:00.0: BAR 0: no space for [io  size 0x0100]
->> [    0.420935] pci 0000:01:00.0: BAR 0: failed to assign [io  size 0x0100]
->> [    0.421526] pci 0000:01:00.0: BAR 2: no space for [io  size 0x0004]
->> [    0.422084] pci 0000:01:00.0: BAR 2: failed to assign [io  size 0x0004]
->> [    0.422687] pci 0000:00:00.0: PCI bridge to [bus 01]
->> [    0.423135] pci 0000:00:00.0:   bridge window [mem 0xfa000000-0xfa0fffff]
->> [    0.423794] pcieport 0000:00:00.0: enabling device (0000 -> 0002)
->> [    0.424566] pcieport 0000:00:00.0: Signaling PME through PCIe PME interrupt
->> [    0.425182] pci 0000:01:00.0: Signaling PME through PCIe PME interrupt
+>> On 5/21/2020 3:37 AM, Rob Herring wrote:
+>>> On Wed, May 06, 2020 at 08:44:18PM +0530, Kishon Vijay Abraham I wrote:
+>>>> Add support to use custom read and write accessors. Platforms that
+>>>> don't support half word or byte access or any other constraint
+>>>> while accessing registers can use this feature to populate custom
+>>>> read and write accessors. These custom accessors are used for both
+>>>> standard register access and configuration space register access of
+>>>> the PCIe host bridge.
+>>>>
+>>>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>>>> ---
+>>>>  drivers/pci/controller/cadence/pcie-cadence.h | 107 +++++++++++++++---
+>>>>  1 file changed, 94 insertions(+), 13 deletions(-)
+>>>
+>>> Actually, take back my R-by...
+>>>
+>>>>
+>>>> diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
+>>>> index df14ad002fe9..70b6b25153e8 100644
+>>>> --- a/drivers/pci/controller/cadence/pcie-cadence.h
+>>>> +++ b/drivers/pci/controller/cadence/pcie-cadence.h
+>>>> @@ -223,6 +223,11 @@ enum cdns_pcie_msg_routing {
+>>>>      MSG_ROUTING_GATHER,
+>>>>  };
+>>>>
+>>>> +struct cdns_pcie_ops {
+>>>> +    u32     (*read)(void __iomem *addr, int size);
+>>>> +    void    (*write)(void __iomem *addr, int size, u32 value);
+>>>> +};
+>>>> +
+>>>>  /**
+>>>>   * struct cdns_pcie - private data for Cadence PCIe controller drivers
+>>>>   * @reg_base: IO mapped register base
+>>>> @@ -239,7 +244,7 @@ struct cdns_pcie {
+>>>>      int                     phy_count;
+>>>>      struct phy              **phy;
+>>>>      struct device_link      **link;
+>>>> -    const struct cdns_pcie_common_ops *ops;
+>>>> +    const struct cdns_pcie_ops *ops;
+>>>>  };
+>>>>
+>>>>  /**
+>>>> @@ -299,69 +304,145 @@ struct cdns_pcie_ep {
+>>>>  /* Register access */
+>>>>  static inline void cdns_pcie_writeb(struct cdns_pcie *pcie, u32 reg, u8 value)
+>>>>  {
+>>>> -    writeb(value, pcie->reg_base + reg);
+>>>> +    void __iomem *addr = pcie->reg_base + reg;
+>>>> +
+>>>> +    if (pcie->ops && pcie->ops->write) {
+>>>> +            pcie->ops->write(addr, 0x1, value);
+>>>> +            return;
+>>>> +    }
+>>>> +
+>>>> +    writeb(value, addr);
+>>>>  }
+>>>>
+>>>>  static inline void cdns_pcie_writew(struct cdns_pcie *pcie, u32 reg, u16 value)
+>>>>  {
+>>>> -    writew(value, pcie->reg_base + reg);
+>>>> +    void __iomem *addr = pcie->reg_base + reg;
+>>>> +
+>>>> +    if (pcie->ops && pcie->ops->write) {
+>>>> +            pcie->ops->write(addr, 0x2, value);
+>>>> +            return;
+>>>> +    }
+>>>> +
+>>>> +    writew(value, addr);
+>>>>  }
+>>>
+>>> cdns_pcie_writeb and cdns_pcie_writew are used, so remove them.
+>>>
+>>>>
+>>>>  static inline void cdns_pcie_writel(struct cdns_pcie *pcie, u32 reg, u32 value)
+>>>>  {
+>>>> -    writel(value, pcie->reg_base + reg);
+>>>> +    void __iomem *addr = pcie->reg_base + reg;
+>>>> +
+>>>> +    if (pcie->ops && pcie->ops->write) {
+>>>> +            pcie->ops->write(addr, 0x4, value);
+>>>> +            return;
+>>>> +    }
+>>>> +
+>>>> +    writel(value, addr);
+>>>
+>>> writel isn't broken for you, so you don't need this either.
+>>>
+>>>>  }
+>>>>
+>>>>  static inline u32 cdns_pcie_readl(struct cdns_pcie *pcie, u32 reg)
+>>>>  {
+>>>> -    return readl(pcie->reg_base + reg);
+>>>> +    void __iomem *addr = pcie->reg_base + reg;
+>>>> +
+>>>> +    if (pcie->ops && pcie->ops->read)
+>>>> +            return pcie->ops->read(addr, 0x4);
+>>>> +
+>>>> +    return readl(addr);
+>>>
+>>> And neither is readl.
 >>
->> 01:00.0 Class 0700: Device 1c00:3853 (rev 10) (prog-if 05)
->>          Subsystem: Device 1c00:3853
->>          Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
->>          Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
->>          Interrupt: pin A routed to IRQ 230
->>          Region 0: I/O ports at <unassigned> [disabled]
->>          Region 1: Memory at fa000000 (32-bit, prefetchable) [disabled] [size=32K]
->>          Region 2: I/O ports at <unassigned> [disabled]
->>          [virtual] Expansion ROM at fa008000 [disabled] [size=32K]
+>> Sure, I'll remove all the unused functions and avoid using ops for readl and
+>> writel.
+>>>
+>>>>  }
+>>>>
+>>>>  /* Root Port register access */
+>>>>  static inline void cdns_pcie_rp_writeb(struct cdns_pcie *pcie,
+>>>>                                     u32 reg, u8 value)
+>>>>  {
+>>>> -    writeb(value, pcie->reg_base + CDNS_PCIE_RP_BASE + reg);
+>>>> +    void __iomem *addr = pcie->reg_base + CDNS_PCIE_RP_BASE + reg;
+>>>> +
+>>>> +    if (pcie->ops && pcie->ops->write) {
+>>>> +            pcie->ops->write(addr, 0x1, value);
+>>>> +            return;
+>>>> +    }
+>>>> +
+>>>> +    writeb(value, addr);
+>>>>  }
+>>>>
+>>>>  static inline void cdns_pcie_rp_writew(struct cdns_pcie *pcie,
+>>>>                                     u32 reg, u16 value)
+>>>>  {
+>>>> -    writew(value, pcie->reg_base + CDNS_PCIE_RP_BASE + reg);
+>>>> +    void __iomem *addr = pcie->reg_base + CDNS_PCIE_RP_BASE + reg;
+>>>> +
+>>>> +    if (pcie->ops && pcie->ops->write) {
+>>>> +            pcie->ops->write(addr, 0x2, value);
+>>>> +            return;
+>>>> +    }
+>>>> +
+>>>> +    writew(value, addr);
+>>>
+>>> You removed 2 out of 3 calls to this. I think I'd just make the root
+>>> port writes always be 32-bit. It is all just one time init stuff
+>>> anyways.
+>>>
+>>> Either rework the calls to assemble the data into 32-bits or keep these
+>>> functions and do the RMW here.
 >>
->> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
->> ---
+>> The problem with assembling data into 32-bits is we have to read/write with
+>> different offsets. We'll give PCI_VENDOR_ID offset for modifying deviceID,
+>> PCI_INTERRUPT_LINE for modifying INTERRUPT_PIN which might get non-intuitive.
+>> Similarly in endpoint we read and write to MSI_FLAGS (which is at offset 2) we
+>> have to directly use MSI capability offset.
+>>
+>> And doing RMW in the accessors would mean the same RMW op is repeated. So if we
+>> just have cdns_pcie_rp_writeb() and cdns_pcie_rp_writew(), the same code will
+>> be repeated here twice.
 > 
-> I have old development board Odroid N1 (RK3399),  It has onboard PCIe
-> 2 dual sata bridge.
-> I have tested this patch, but I am still getting following log on
-> Odroid N1 board.
-> Is their any more configuration needed for sata ports ?
+> Why repeated? Just copy what the config accessors do:
+> 
+> static inline void cdns_pcie_write_sz(u32 val, void __iomem *addr, int size)
+> {
+>   u32 tmp, mask, where = (unsigned long)addr & 0x3;
+> 
+>   addr -= where;
+> 
+>   mask = ~(((1 << (size * 8)) - 1) << (where * 8));
+>   tmp = readl(addr) & mask;
+>   tmp |= val << (where * 8);
+>   writel(tmp, addr);
+> }
+> 
+> /* Root Port register access */
+> static inline void cdns_pcie_rp_writeb(struct cdns_pcie *pcie,
+>        u32 reg, u8 value)
+> {
+>   cdns_pcie_write_sz(value, pcie->reg_base + CDNS_PCIE_RP_BASE + reg, 1);
+> }
+> 
+> static inline void cdns_pcie_rp_writew(struct cdns_pcie *pcie,
+>        u32 reg, u16 value)
+> {
+>   cdns_pcie_write_sz(value, pcie->reg_base + CDNS_PCIE_RP_BASE + reg, 2);
+> }
+> 
+>>
+>> IMHO using ops is a lot cleaner for these cases. IMHO except for removing
+>> unused functions and not changing readl/writel, others should use ops.
+> 
+> Trying to read the DW PCI driver I don't agree...
+> 
+> Again, unless doing RMW is fundamentally broken (like it is for config
+> space at runtime), then you only want to do it on broken h/w and ops
+> would be appropriate. It is all mostly one time setup, so doing a few
+> extra reads isn't a big deal. If you really care about speed on that,
+> probably should use the _relaxed accessor variants.
+> 
+> I'm being hopeful the Cadence IP doesn't become the mess that DW is.
 
-Thanks for testing. I made a mistake that it should be bit 19, so
-can you try using BIT(19)?
+Okay, I'll remove ops for read/write accessors.
 
-> 
-> [    7.444504] pci_bus 0000:01: busn_res: [bus 01-1f] end is updated to 01
-> [    7.445521] panfrost ff9a0000.gpu: Features: L2:0x07120206
-> Shader:0x00000000 Tiler:0x00000809 Mem:0x1 MMU:0x00002830 AS:0xff
-> JS:0x7
-> [    7.452246] pci 0000:00:00.0: BAR 14: assigned [mem 0xfa000000-0xfa0fffff]
-> [    7.460106] panfrost ff9a0000.gpu: shader_present=0xf l2_present=0x1
-> [    7.466459] pci 0000:01:00.0: BAR 6: assigned [mem
-> 0xfa000000-0xfa00ffff pref]
-> [    7.473679] panfrost ff9a0000.gpu: [drm:panfrost_devfreq_init
-> [panfrost]] Failed to register cooling device
-> [    7.479703] pci 0000:01:00.0: BAR 5: assigned [mem 0xfa010000-0xfa0101ff]
-> [    7.487706] [drm] Initialized panfrost 1.1.0 20180908 for
-> ff9a0000.gpu on minor 0
-> [    7.494343] pci 0000:01:00.0: BAR 4: no space for [io  size 0x0010]
-> [    7.494348] pci 0000:01:00.0: BAR 4: failed to assign [io  size 0x0010]
-> [    7.494352] pci 0000:01:00.0: BAR 0: no space for [io  size 0x0008]
-> [    7.494356] pci 0000:01:00.0: BAR 0: failed to assign [io  size 0x0008]
-> [    7.494360] pci 0000:01:00.0: BAR 2: no space for [io  size 0x0008]
-> [    7.494364] pci 0000:01:00.0: BAR 2: failed to assign [io  size 0x0008]
-> [    7.494368] pci 0000:01:00.0: BAR 1: no space for [io  size 0x0004]
-> [    7.494372] pci 0000:01:00.0: BAR 1: failed to assign [io  size 0x0004]
-> [    7.578910] rockchip-vop ff8f0000.vop: Adding to iommu group 3
-> [    7.587074] pci 0000:01:00.0: BAR 3: no space for [io  size 0x0004]
-> [    7.594780] rockchip-vop ff900000.vop: Adding to iommu group 4
-> [    7.607701] pci 0000:01:00.0: BAR 3: failed to assign [io  size 0x0004]
-> 
-> # lspci -v
-> 00:00.0 PCI bridge: Fuzhou Rockchip Electronics Co., Ltd RK3399 PCI
-> Express Root Port (prog-if 00 [Normal decode])
->          Flags: bus master, fast devsel, latency 0, IRQ 237
->          Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
->          I/O behind bridge: 00000000-00000fff [size=4K]
->          Memory behind bridge: fa000000-fa0fffff [size=1M]
->          Prefetchable memory behind bridge: 00000000-000fffff [size=1M]
->          Capabilities: [80] Power Management version 3
->          Capabilities: [90] MSI: Enable+ Count=1/1 Maskable+ 64bit+
->          Capabilities: [b0] MSI-X: Enable- Count=1 Masked-
->          Capabilities: [c0] Express Root Port (Slot+), MSI 00
->          Capabilities: [100] Advanced Error Reporting
->          Capabilities: [274] Transaction Processing Hints
->          Kernel driver in use: pcieport
-> 
-> 01:00.0 IDE interface: ASMedia Technology Inc. ASM1061 SATA IDE
-> Controller (rev 02) (prog-if 85 [PCI native mode-only controller,
-> supports bus mastering])
->          Subsystem: ASMedia Technology Inc. ASM1061 SATA IDE Controller
->          Flags: bus master, fast devsel, latency 0, IRQ 238
->          I/O ports at <unassigned> [disabled]
->          I/O ports at <unassigned> [disabled]
->          I/O ports at <unassigned> [disabled]
->          I/O ports at <unassigned> [disabled]
->          I/O ports at <unassigned> [disabled]
->          Memory at fa010000 (32-bit, non-prefetchable) [size=512]
->          Expansion ROM at fa000000 [virtual] [disabled] [size=64K]
->          Capabilities: [50] MSI: Enable+ Count=1/1 Maskable- 64bit-
->          Capabilities: [78] Power Management version 3
->          Capabilities: [80] Express Legacy Endpoint, MSI 00
->          Capabilities: [100] Virtual Channel
->          Kernel driver in use: ahci
-> 
-> Best Regards
-> -Anand
-> 
-> _______________________________________________
-> Linux-rockchip mailing list
-> Linux-rockchip@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-rockchip
-> 
-> 
-> 
-
-
+Thanks
+Kishon
