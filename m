@@ -6,25 +6,25 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 760CAC433E1
-	for <linux-pci@archiver.kernel.org>; Sun, 24 May 2020 21:40:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC4F0C433E3
+	for <linux-pci@archiver.kernel.org>; Sun, 24 May 2020 21:40:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4B7D9204EF
-	for <linux-pci@archiver.kernel.org>; Sun, 24 May 2020 21:40:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8E626204EF
+	for <linux-pci@archiver.kernel.org>; Sun, 24 May 2020 21:40:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388432AbgEXVkG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 24 May 2020 17:40:06 -0400
+        id S2388455AbgEXVj7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 24 May 2020 17:39:59 -0400
 Received: from relmlor2.renesas.com ([210.160.252.172]:17462 "EHLO
         relmlie6.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S2387879AbgEXVkF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 24 May 2020 17:40:05 -0400
+        by vger.kernel.org with ESMTP id S2387879AbgEXVj7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 24 May 2020 17:39:59 -0400
 X-IronPort-AV: E=Sophos;i="5.73,431,1583161200"; 
-   d="scan'208";a="47678222"
+   d="scan'208";a="47678197"
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie6.idc.renesas.com with ESMTP; 25 May 2020 06:40:04 +0900
+  by relmlie6.idc.renesas.com with ESMTP; 25 May 2020 06:39:57 +0900
 Received: from localhost.localdomain (unknown [10.226.36.204])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 7DE8B40E3D5C;
-        Mon, 25 May 2020 06:40:01 +0900 (JST)
+        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 3CB9E40E3D5C;
+        Mon, 25 May 2020 06:39:54 +0900 (JST)
 From:   Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
 To:     Geert Uytterhoeven <geert+renesas@glider.be>,
         Vinod Koul <vkoul@kernel.org>,
@@ -38,9 +38,9 @@ Cc:     dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         Prabhakar <prabhakar.csengg@gmail.com>,
         Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-Subject: [PATCH 5/8] dt-bindings: usb: usb-xhci: Document r8a7742 support
-Date:   Sun, 24 May 2020 22:37:54 +0100
-Message-Id: <1590356277-19993-6-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Subject: [PATCH 3/8] dt-bindings: usb: renesas,usbhs: Add support for r8a7742
+Date:   Sun, 24 May 2020 22:37:52 +0100
+Message-Id: <1590356277-19993-4-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1590356277-19993-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
 References: <1590356277-19993-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
@@ -49,28 +49,26 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Document r8a7742 xhci support. The driver will use the fallback
-compatible string "renesas,rcar-gen2-xhci", therefore no driver
-change is needed.
+Document support for RZ/G1H (R8A7742) SoC.
 
 Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
 Reviewed-by: Marian-Cristian Rotariu <marian-cristian.rotariu.rb@bp.renesas.com>
 ---
- Documentation/devicetree/bindings/usb/usb-xhci.txt | 1 +
+ Documentation/devicetree/bindings/usb/renesas,usbhs.yaml | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/Documentation/devicetree/bindings/usb/usb-xhci.txt b/Documentation/devicetree/bindings/usb/usb-xhci.txt
-index 3f37895..ce54791 100644
---- a/Documentation/devicetree/bindings/usb/usb-xhci.txt
-+++ b/Documentation/devicetree/bindings/usb/usb-xhci.txt
-@@ -7,6 +7,7 @@ Required properties:
-     - "marvell,armada3700-xhci" for Armada 37xx SoCs
-     - "marvell,armada-375-xhci" for Armada 375 SoCs
-     - "marvell,armada-380-xhci" for Armada 38x SoCs
-+    - "renesas,xhci-r8a7742" for r8a7742 SoC
-     - "renesas,xhci-r8a7743" for r8a7743 SoC
-     - "renesas,xhci-r8a7744" for r8a7744 SoC
-     - "renesas,xhci-r8a774a1" for r8a774a1 SoC
+diff --git a/Documentation/devicetree/bindings/usb/renesas,usbhs.yaml b/Documentation/devicetree/bindings/usb/renesas,usbhs.yaml
+index 469affa..32ade41 100644
+--- a/Documentation/devicetree/bindings/usb/renesas,usbhs.yaml
++++ b/Documentation/devicetree/bindings/usb/renesas,usbhs.yaml
+@@ -22,6 +22,7 @@ properties:
+ 
+       - items:
+           - enum:
++              - renesas,usbhs-r8a7742  # RZ/G1H
+               - renesas,usbhs-r8a7743  # RZ/G1M
+               - renesas,usbhs-r8a7744  # RZ/G1N
+               - renesas,usbhs-r8a7745  # RZ/G1E
 -- 
 2.7.4
 
