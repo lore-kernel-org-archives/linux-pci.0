@@ -1,294 +1,176 @@
-Return-Path: <SRS0=VlP6=7F=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=Hy9I=7G=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	LONGWORDS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2891C433DF
-	for <linux-pci@archiver.kernel.org>; Sat, 23 May 2020 17:30:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 445CFC433E0
+	for <linux-pci@archiver.kernel.org>; Sun, 24 May 2020 02:16:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AC4CB20849
-	for <linux-pci@archiver.kernel.org>; Sat, 23 May 2020 17:30:23 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="k3Y3YIs8"
+	by mail.kernel.org (Postfix) with ESMTP id 2B06620759
+	for <linux-pci@archiver.kernel.org>; Sun, 24 May 2020 02:16:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387640AbgEWRaX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 23 May 2020 13:30:23 -0400
-Received: from hqnvemgate25.nvidia.com ([216.228.121.64]:12736 "EHLO
-        hqnvemgate25.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387665AbgEWRaW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 23 May 2020 13:30:22 -0400
-Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate25.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5ec95d5d0000>; Sat, 23 May 2020 10:29:01 -0700
-Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate102.nvidia.com (PGP Universal service);
-  Sat, 23 May 2020 10:30:22 -0700
-X-PGP-Universal: processed;
-        by hqpgpgate102.nvidia.com on Sat, 23 May 2020 10:30:22 -0700
-Received: from [10.25.72.65] (172.20.13.39) by HQMAIL107.nvidia.com
- (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Sat, 23 May
- 2020 17:30:16 +0000
-Subject: Re: Re: Re: [PATCH] PCI: dwc: Warn only for non-prefetchable memory
- resource size >4GB
-To:     Thierry Reding <thierry.reding@gmail.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC:     Rob Herring <robh@kernel.org>,
-        Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "jonathanh@nvidia.com" <jonathanh@nvidia.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "kthota@nvidia.com" <kthota@nvidia.com>,
-        "mmaddireddy@nvidia.com" <mmaddireddy@nvidia.com>,
-        "sagar.tv@gmail.com" <sagar.tv@gmail.com>,
-        Alan Mikhak <alan.mikhak@sifive.com>
-References: <20200513223508.GA352288@bjorn-Precision-5520>
- <20200518155435.GA2299@e121166-lin.cambridge.arm.com>
- <cd62a9da-5c47-ceb2-10e7-4cf657f07801@nvidia.com>
- <20200519145816.GB21261@e121166-lin.cambridge.arm.com>
- <DM5PR12MB1276C836FEE46B113112FA92DAB90@DM5PR12MB1276.namprd12.prod.outlook.com>
- <20200520111717.GB2141681@ulmo>
- <b1a72abe-6da0-b782-0269-65388f663e26@nvidia.com>
- <20200520224816.GA739245@bogus> <20200522120655.GC2163848@ulmo>
- <20200522133249.GF11785@e121166-lin.cambridge.arm.com>
- <20200522140640.GA2373406@ulmo>
-X-Nvconfidentiality: public
-From:   Vidya Sagar <vidyas@nvidia.com>
-Message-ID: <53ad34e3-d58a-d81c-a001-2c1f6e601fb4@nvidia.com>
-Date:   Sat, 23 May 2020 23:00:12 +0530
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
+        id S2388262AbgEXCQ2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 23 May 2020 22:16:28 -0400
+Received: from mga17.intel.com ([192.55.52.151]:63895 "EHLO mga17.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388225AbgEXCQ1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 23 May 2020 22:16:27 -0400
+IronPort-SDR: QKFY/kp+kIV3UcRnz5nUGLnTd7B6itPn4caYZSACWPoefAgbpHjAQrxPuHy6RsOYwrwYYioenY
+ iBv5VML+dKQQ==
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 May 2020 19:16:27 -0700
+IronPort-SDR: Nz2xoEerEH/BJ6D1HVdYe7IQKLvJESSzDd+dwD/N4S0+79IaKpc5OQ3p6pT0iSFtLWVhj5Wy/W
+ QZUPWBrebQLg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.73,427,1583222400"; 
+   d="scan'208";a="467599113"
+Received: from lkp-server01.sh.intel.com (HELO lkp-server01) ([10.239.97.150])
+  by fmsmga005.fm.intel.com with ESMTP; 23 May 2020 19:16:25 -0700
+Received: from kbuild by lkp-server01 with local (Exim 4.89)
+        (envelope-from <lkp@intel.com>)
+        id 1jcgBc-000IHu-OJ; Sun, 24 May 2020 10:16:24 +0800
+Date:   Sun, 24 May 2020 10:15:31 +0800
+From:   kbuild test robot <lkp@intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     linux-pci@vger.kernel.org
+Subject: [pci:pci/enumeration] BUILD SUCCESS
+ 11fdcf05032812bd23cdc42850d1f650376ec09d
+Message-ID: <5ec9d8c3.yQJ/zWBY/VTpL+6Y%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-In-Reply-To: <20200522140640.GA2373406@ulmo>
-X-Originating-IP: [172.20.13.39]
-X-ClientProxiedBy: HQMAIL107.nvidia.com (172.20.187.13) To
- HQMAIL107.nvidia.com (172.20.187.13)
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1590254941; bh=DrSTj9OaeiI2rXt1QD/u5w0d/6cs410b88d0v85vuEQ=;
-        h=X-PGP-Universal:Subject:To:CC:References:X-Nvconfidentiality:From:
-         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
-         X-Originating-IP:X-ClientProxiedBy:Content-Type:Content-Language:
-         Content-Transfer-Encoding;
-        b=k3Y3YIs8L1nRJO+UihIBYVVOzLdKLiFy8JUWW1841HvXt9mpaePEyghvPzB/wVGho
-         J0ZqNAmP2IeSs1TcVYLemxaJRwCPkdobXS3OgLmTRTFq0ENg4gX2dDi508tuhlmaWe
-         JYcFjCzoysNtfbh8YJX1buvz3Rv3UaduHka+jh7PC/magvJA48MGpSUgub5fchufwu
-         k7Ps/CxfQZgeDMEA+lniuCShLLXOpp5y0yM9USvB739+y+VKQkg3uy/VaJTIjLqSnh
-         9TI1ZZ7RLpIWllEGb35lJUC5HYXENXViOODpaEj/G64v/xknebWZDBsoZa/4LFyUNN
-         BSqxDOvFZWlTA==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git  pci/enumeration
+branch HEAD: 11fdcf05032812bd23cdc42850d1f650376ec09d  pcmcia: Use CardBus window names (PCI_CB_BRIDGE_IO_0_WINDOW etc) when freeing
 
+elapsed time: 3141m
 
-On 22-May-20 7:36 PM, Thierry Reding wrote:
-> On Fri, May 22, 2020 at 02:32:49PM +0100, Lorenzo Pieralisi wrote:
->> On Fri, May 22, 2020 at 02:06:55PM +0200, Thierry Reding wrote:
->>> On Wed, May 20, 2020 at 04:48:16PM -0600, Rob Herring wrote:
->>>> On Wed, May 20, 2020 at 11:16:32PM +0530, Vidya Sagar wrote:
->>>>>
->>>>>
->>>>> On 20-May-20 4:47 PM, Thierry Reding wrote:
->>>>>> On Tue, May 19, 2020 at 10:08:54PM +0000, Gustavo Pimentel wrote:
->>>>>>> On Tue, May 19, 2020 at 15:58:16, Lorenzo Pieralisi
->>>>>>> <lorenzo.pieralisi@arm.com> wrote:
->>>>>>>
->>>>>>>> On Tue, May 19, 2020 at 07:25:02PM +0530, Vidya Sagar wrote:
->>>>>>>>>
->>>>>>>>>
->>>>>>>>> On 18-May-20 9:24 PM, Lorenzo Pieralisi wrote:
->>>>>>>>>> External email: Use caution opening links or attachments
->>>>>>>>>>
->>>>>>>>>>
->>>>>>>>>> On Wed, May 13, 2020 at 05:35:08PM -0500, Bjorn Helgaas wrote:
->>>>>>>>>>> [+cc Alan; please cc authors of relevant commits,
->>>>>>>>>>> updated Andrew's email address]
->>>>>>>>>>>
->>>>>>>>>>> On Thu, May 14, 2020 at 12:38:55AM +0530, Vidya Sagar wrote:
->>>>>>>>>>>> commit 9e73fa02aa009 ("PCI: dwc: Warn if MEM resource size exceeds max for
->>>>>>>>>>>> 32-bits") enables warning for MEM resources of size >4GB but prefetchable
->>>>>>>>>>>>     memory resources also come under this category where sizes can go beyond
->>>>>>>>>>>> 4GB. Avoid logging a warning for prefetchable memory resources.
->>>>>>>>>>>>
->>>>>>>>>>>> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
->>>>>>>>>>>> ---
->>>>>>>>>>>>     drivers/pci/controller/dwc/pcie-designware-host.c | 3 ++-
->>>>>>>>>>>>     1 file changed, 2 insertions(+), 1 deletion(-)
->>>>>>>>>>>>
->>>>>>>>>>>> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
->>>>>>>>>>>> index 42fbfe2a1b8f..a29396529ea4 100644
->>>>>>>>>>>> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
->>>>>>>>>>>> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
->>>>>>>>>>>> @@ -366,7 +366,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
->>>>>>>>>>>>                        pp->mem = win->res;
->>>>>>>>>>>>                        pp->mem->name = "MEM";
->>>>>>>>>>>>                        mem_size = resource_size(pp->mem);
->>>>>>>>>>>> -                   if (upper_32_bits(mem_size))
->>>>>>>>>>>> +                   if (upper_32_bits(mem_size) &&
->>>>>>>>>>>> +                       !(win->res->flags & IORESOURCE_PREFETCH))
->>>>>>>>>>>>                                dev_warn(dev, "MEM resource size exceeds max for 32 bits\n");
->>>>>>>>>>>>                        pp->mem_size = mem_size;
->>>>>>>>>>>>                        pp->mem_bus_addr = pp->mem->start - win->offset;
->>>>>>>>>>
->>>>>>>>>> That warning was added for a reason - why should not we log legitimate
->>>>>>>>>> warnings ? AFAIU having resources larger than 4GB can lead to undefined
->>>>>>>>>> behaviour given the current ATU programming API.
->>>>>>>>> Yeah. I'm all for a warning if the size is larger than 4GB in case of
->>>>>>>>> non-prefetchable window as one of the ATU outbound translation
->>>>>>>>> channels is being used,
->>>>>>>>
->>>>>>>> Is it true for all DWC host controllers ? Or there may be another
->>>>>>>> exception whereby we would be forced to disable this warning altogether
->>>>>>>> ?
->>>>>>>>
->>>>>>>>> but, we are not employing any ATU outbound translation channel for
->>>>>>>>
->>>>>>>> What does this mean ? "we are not employing any ATU outbound...", is
->>>>>>>> this the tegra driver ? And what guarantees that this warning is not
->>>>>>>> legitimate on DWC host controllers that do use the ATU outbound
->>>>>>>> translation for prefetchable windows ?
->>>>>>>>
->>>>>>>> Can DWC maintainers chime in and clarify please ?
->>>>>>>
->>>>>>> Before this code section, there is the following function call
->>>>>>> pci_parse_request_of_pci_ranges(), which performs a simple validation for
->>>>>>> the IORESOURCE_MEM resource type.
->>>>>>> This validation checks if the resource is marked as prefetchable, if so,
->>>>>>> an error message "non-prefetchable memory resource required" is given and
->>>>>>> a return code with the -EINVAL value.
->>>>>>
->>>>>> That's not what the code is doing. pci_parse_request_of_pci_range() will
->>>>>> traverse over the whole list of resources that it can find for the given
->>>>>> host controller and checks whether one of the resources defines prefetch
->>>>>> memory (note the res_valid |= ...). The error will only be returned if
->>>>>> no prefetchable memory region was found.
->>>>>>
->>>>>> dw_pcie_host_init() will then again traverse the list of resources and
->>>>>> it will typically encounter two resource of type IORESOURCE_MEM, one for
->>>>>> non-prefetchable memory and another for prefetchable memory.
->>>>>>
->>>>>> Vidya's patch is to differentiate between these two resources and allow
->>>>>> prefetchable memory regions to exceed sizes of 4 GiB.
->>>>>>
->>>>>> That said, I wonder if there isn't a bigger problem at hand here. From
->>>>>> looking at the code it doesn't seem like the DWC driver makes any
->>>>>> distinction between prefetchable and non-prefetchable memory. Or at
->>>>>> least it doesn't allow both to be stored in struct pcie_port.
->>>>>>
->>>>>> Am I missing something? Or can anyone explain how we're programming the
->>>>>> apertures for prefetchable vs. non-prefetchable memory? Perhaps this is
->>>>>> what Vidya was referring to when he said: "we are not using an outbound
->>>>>> ATU translation channel for prefetchable memory".
->>>>>>
->>>>>> It looks to me like we're also getting partially lucky, or perhaps that
->>>>>> is by design, in that Tegra194 defines PCI regions in the following
->>>>>> order: I/O, prefetchable memory, non-prefetchable memory. That means
->>>>>> that the DWC core code will overwrite prefetchable memory data with that
->>>>>> of non-prefetchable memory and hence the non-prefetchable region ends up
->>>>>> stored in struct pcie_port and is then used to program the ATU outbound
->>>>>> channel.
->>>>> Well,it is by design. I mean, since the code is not differentiating between
->>>>> prefetchable and non-prefetchable regions, I ordered the entries in 'ranges'
->>>>> property in such a way that 'prefetchable' comes first followed by
->>>>> 'non-prefetchable' entry so that ATU region is used for generating the
->>>>> translation required for 'non-prefetchable' region (which is a non 1-to-1
->>>>> mapping)
->>>>
->>>> You are getting lucky with your 'design'. Relying on order is fragile
->>>> (except of course in the places in DT where order is defined, but ranges
->>>> is not one of them).
->>>
->>> Yeah, I think the DWC core should be improved to differentiate between
->>> the two types of memory resources. There shouldn't be a need to encode
->>> any ordering because the type is already part of the value in the
->>> ranges property.
->>
->> DWC resources handling is broken beyond belief. In practical terms, I
->> think the best thing I can do is dropping:
->>
->> 9e73fa02aa00 ("PCI: dwc: Warn if MEM resource size exceeds max for 32-bits")
->>
->> from my pci/dwc branch. However, the ATU programming API must be fixed
->> and this reliance on DT entries ordering avoided - it is really bad
->> practice (and it prevents us from reworking kernel code in ways that are
->> legitimate but would break owing to DT assumptions).
->>
->> So yes, the DWC host bridge code must be updated asap - this is not
->> acceptable.
-> 
-> Vidya, would you have any spare cycles to look into this a bit since
-> you're already familiar? I think for starters it would be good to add
-> a special case to the IORESOURCE_MEM case in dw_pcie_host_init() that
-> deals with IORESOURCE_PREFETCH set and then store the result in a
-> separate struct resource in struct pcie_port, something roughly along
-> the lines of:
-> 
-> 	struct pcie_port {
-> 		...
-> 		struct resource *mem;
-> 		struct resource *prefetch;
-> 		...
-> 	};
-> 
-> 	...
-> 
-> 	int dw_pcie_host_init(struct pcie_port *pp)
-> 	{
-> 		...
-> 		resource_list_for_each_entry(win, &bridge->windows) {
-> 			switch (resource_type(win->res)) {
-> 			...
-> 			case IORESOURCE_MEM:
-> 				if (win->res.flags & IORESOURCE_PREFETCH) {
-> 					pp->prefetch = win->res;
-> 					...
-> 				} else {
-> 					pp->mem = win->res;
-> 					...
-> 				}
-> 				break;
-> 			...
-> 		}
-> 		...
-> 	}
-> 
-> I suppose for the non-prefetchable memory we could leave the warning in
-> because they can never be larger than 32 bits anyway. Then again, I'm
-> not sure the check is actually fully correct. My recollection is that
-> non-prefetchable memory needs to be completely within the 4 GiB range,
-> rather than just the base and the size. So I think something like the
-> base starting at 3 GiB and then spanning 2 GiB would be valid according
-> to the current check, but I don't think it's valid according to the
-> specification.
-> 
-> The other interesting datapoint to have would be whether the DWC core
-> always has 1:1 mappings for prefetchable memory. If so, I think it might
-> be useful to still parse them, even if nothing in the driver is using
-> them. But I don't know what would be a good way to find out if that's
-> really the case.
-> 
-> I also saw, like you did, that none of the other, non-Tegra device trees
-> specify any prefetchable memory for the DWC, so I don't understand how
-> they would work. Perhaps they just don't support prefetchable memory?
-> 
-> If you don't have the time to do this I could possibly take a stab at it
-> but there are a few other things I need to look into, so I probably
-> won't get around to this within the next two or so weeks.
-Sure. I'll try to come up with a patch set to address this at DWC core 
-level.
+configs tested: 109
+configs skipped: 1
 
-Thanks,
-Vidya Sagar
-> 
-> Thierry
-> 
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+arm                                 defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+arm                               allnoconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm64                            allmodconfig
+arm64                             allnoconfig
+sparc                            allyesconfig
+mips                             allyesconfig
+m68k                             allyesconfig
+i386                              allnoconfig
+i386                             allyesconfig
+i386                                defconfig
+i386                              debian-10.3
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                              allnoconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                              allnoconfig
+m68k                           sun3_defconfig
+m68k                                defconfig
+nios2                               defconfig
+nios2                            allyesconfig
+openrisc                            defconfig
+c6x                              allyesconfig
+c6x                               allnoconfig
+openrisc                         allyesconfig
+nds32                               defconfig
+nds32                             allnoconfig
+csky                             allyesconfig
+csky                                defconfig
+alpha                               defconfig
+alpha                            allyesconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+h8300                            allmodconfig
+xtensa                              defconfig
+arc                                 defconfig
+arc                              allyesconfig
+sh                               allmodconfig
+sh                                allnoconfig
+microblaze                        allnoconfig
+mips                              allnoconfig
+mips                             allmodconfig
+parisc                            allnoconfig
+parisc                              defconfig
+parisc                           allyesconfig
+parisc                           allmodconfig
+powerpc                          allyesconfig
+powerpc                          rhel-kconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+powerpc                             defconfig
+x86_64               randconfig-a002-20200521
+x86_64               randconfig-a006-20200521
+x86_64               randconfig-a005-20200521
+x86_64               randconfig-a004-20200521
+x86_64               randconfig-a003-20200521
+x86_64               randconfig-a001-20200521
+i386                 randconfig-a001-20200521
+i386                 randconfig-a004-20200521
+i386                 randconfig-a006-20200521
+i386                 randconfig-a003-20200521
+i386                 randconfig-a002-20200521
+i386                 randconfig-a005-20200521
+x86_64               randconfig-a015-20200522
+x86_64               randconfig-a016-20200522
+x86_64               randconfig-a012-20200522
+x86_64               randconfig-a014-20200522
+x86_64               randconfig-a011-20200522
+i386                 randconfig-a013-20200522
+i386                 randconfig-a012-20200522
+i386                 randconfig-a015-20200522
+i386                 randconfig-a011-20200522
+i386                 randconfig-a016-20200522
+i386                 randconfig-a014-20200522
+i386                 randconfig-a013-20200521
+i386                 randconfig-a012-20200521
+i386                 randconfig-a015-20200521
+i386                 randconfig-a011-20200521
+i386                 randconfig-a016-20200521
+i386                 randconfig-a014-20200521
+riscv                            allyesconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                            allmodconfig
+s390                             allyesconfig
+s390                              allnoconfig
+s390                             allmodconfig
+s390                                defconfig
+x86_64                              defconfig
+sparc                               defconfig
+sparc64                             defconfig
+sparc64                           allnoconfig
+sparc64                          allyesconfig
+sparc64                          allmodconfig
+um                                allnoconfig
+um                                  defconfig
+um                               allyesconfig
+um                               allmodconfig
+x86_64                                   rhel
+x86_64                               rhel-7.6
+x86_64                    rhel-7.6-kselftests
+x86_64                         rhel-7.2-clear
+x86_64                                    lkp
+x86_64                              fedora-25
+x86_64                                  kexec
+
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
