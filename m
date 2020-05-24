@@ -6,25 +6,25 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AB84C433E2
-	for <linux-pci@archiver.kernel.org>; Sun, 24 May 2020 21:40:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C23EC433E4
+	for <linux-pci@archiver.kernel.org>; Sun, 24 May 2020 21:40:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 79B5B208A7
-	for <linux-pci@archiver.kernel.org>; Sun, 24 May 2020 21:40:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 38BAA204EF
+	for <linux-pci@archiver.kernel.org>; Sun, 24 May 2020 21:40:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387879AbgEXVkR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 24 May 2020 17:40:17 -0400
+        id S2388481AbgEXVkK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 24 May 2020 17:40:10 -0400
 Received: from relmlor2.renesas.com ([210.160.252.172]:17462 "EHLO
         relmlie6.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S2388539AbgEXVkQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 24 May 2020 17:40:16 -0400
+        by vger.kernel.org with ESMTP id S2387879AbgEXVkJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 24 May 2020 17:40:09 -0400
 X-IronPort-AV: E=Sophos;i="5.73,431,1583161200"; 
-   d="scan'208";a="47678241"
+   d="scan'208";a="47678230"
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie6.idc.renesas.com with ESMTP; 25 May 2020 06:40:15 +0900
+  by relmlie6.idc.renesas.com with ESMTP; 25 May 2020 06:40:08 +0900
 Received: from localhost.localdomain (unknown [10.226.36.204])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 7B45940E4593;
-        Mon, 25 May 2020 06:40:12 +0900 (JST)
+        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 269CD40E4593;
+        Mon, 25 May 2020 06:40:04 +0900 (JST)
 From:   Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
 To:     Geert Uytterhoeven <geert+renesas@glider.be>,
         Vinod Koul <vkoul@kernel.org>,
@@ -38,9 +38,9 @@ Cc:     dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         Prabhakar <prabhakar.csengg@gmail.com>,
         Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-Subject: [PATCH 8/8] ARM: dts: r8a7742: Add xhci support
-Date:   Sun, 24 May 2020 22:37:57 +0100
-Message-Id: <1590356277-19993-9-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Subject: [PATCH 6/8] ARM: dts: r8a7742: Add USB 2.0 host support
+Date:   Sun, 24 May 2020 22:37:55 +0100
+Message-Id: <1590356277-19993-7-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1590356277-19993-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
 References: <1590356277-19993-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
@@ -49,38 +49,148 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add xhci support to R8A7742 SoC DT.
+Describe internal PCI bridge devices, USB phy device and
+link PCI USB devices to USB phy.
 
 Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
 Reviewed-by: Marian-Cristian Rotariu <marian-cristian.rotariu.rb@bp.renesas.com>
 ---
- arch/arm/boot/dts/r8a7742.dtsi | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ arch/arm/boot/dts/r8a7742.dtsi | 115 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 115 insertions(+)
 
 diff --git a/arch/arm/boot/dts/r8a7742.dtsi b/arch/arm/boot/dts/r8a7742.dtsi
-index cbf3d85..3a9c67b 100644
+index df914da..5be3da7 100644
 --- a/arch/arm/boot/dts/r8a7742.dtsi
 +++ b/arch/arm/boot/dts/r8a7742.dtsi
-@@ -821,6 +821,19 @@
+@@ -505,6 +505,28 @@
  			status = "disabled";
  		};
  
-+		xhci: usb@ee000000 {
-+			compatible = "renesas,xhci-r8a7742",
-+				     "renesas,rcar-gen2-xhci";
-+			reg = <0 0xee000000 0 0xc00>;
-+			interrupts = <GIC_SPI 101 IRQ_TYPE_LEVEL_HIGH>;
-+			clocks = <&cpg CPG_MOD 328>;
++		usbphy: usb-phy@e6590100 {
++			compatible = "renesas,usb-phy-r8a7742",
++				     "renesas,rcar-gen2-usb-phy";
++			reg = <0 0xe6590100 0 0x100>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++			clocks = <&cpg CPG_MOD 704>;
++			clock-names = "usbhs";
 +			power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
-+			resets = <&cpg 328>;
-+			phys = <&usb2 1>;
-+			phy-names = "usb";
++			resets = <&cpg 704>;
 +			status = "disabled";
++
++			usb0: usb-channel@0 {
++				reg = <0>;
++				#phy-cells = <1>;
++			};
++			usb2: usb-channel@2 {
++				reg = <2>;
++				#phy-cells = <1>;
++			};
 +		};
 +
- 		pci0: pci@ee090000 {
- 			compatible = "renesas,pci-r8a7742",
- 				     "renesas,pci-rcar-gen2";
+ 		dmac0: dma-controller@e6700000 {
+ 			compatible = "renesas,dmac-r8a7742",
+ 				     "renesas,rcar-dmac";
+@@ -754,6 +776,99 @@
+ 			status = "disabled";
+ 		};
+ 
++		pci0: pci@ee090000 {
++			compatible = "renesas,pci-r8a7742",
++				     "renesas,pci-rcar-gen2";
++			device_type = "pci";
++			reg = <0 0xee090000 0 0xc00>,
++			      <0 0xee080000 0 0x1100>;
++			interrupts = <GIC_SPI 108 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cpg CPG_MOD 703>;
++			power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
++			resets = <&cpg 703>;
++			status = "disabled";
++
++			bus-range = <0 0>;
++			#address-cells = <3>;
++			#size-cells = <2>;
++			#interrupt-cells = <1>;
++			ranges = <0x02000000 0 0xee080000 0 0xee080000 0 0x00010000>;
++			interrupt-map-mask = <0xf800 0 0 0x7>;
++			interrupt-map = <0x0000 0 0 1 &gic GIC_SPI 108 IRQ_TYPE_LEVEL_HIGH>,
++					<0x0800 0 0 1 &gic GIC_SPI 108 IRQ_TYPE_LEVEL_HIGH>,
++					<0x1000 0 0 2 &gic GIC_SPI 108 IRQ_TYPE_LEVEL_HIGH>;
++
++			usb@1,0 {
++				reg = <0x800 0 0 0 0>;
++				phys = <&usb0 0>;
++				phy-names = "usb";
++			};
++
++			usb@2,0 {
++				reg = <0x1000 0 0 0 0>;
++				phys = <&usb0 0>;
++				phy-names = "usb";
++			};
++		};
++
++		pci1: pci@ee0b0000 {
++			compatible = "renesas,pci-r8a7742",
++				     "renesas,pci-rcar-gen2";
++			device_type = "pci";
++			reg = <0 0xee0b0000 0 0xc00>,
++			      <0 0xee0a0000 0 0x1100>;
++			interrupts = <GIC_SPI 112 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cpg CPG_MOD 703>;
++			power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
++			resets = <&cpg 703>;
++			status = "disabled";
++
++			bus-range = <1 1>;
++			#address-cells = <3>;
++			#size-cells = <2>;
++			#interrupt-cells = <1>;
++			ranges = <0x02000000 0 0xee0a0000 0 0xee0a0000 0 0x00010000>;
++			interrupt-map-mask = <0xf800 0 0 0x7>;
++			interrupt-map = <0x0000 0 0 1 &gic GIC_SPI 112 IRQ_TYPE_LEVEL_HIGH>,
++					<0x0800 0 0 1 &gic GIC_SPI 112 IRQ_TYPE_LEVEL_HIGH>,
++					<0x1000 0 0 2 &gic GIC_SPI 112 IRQ_TYPE_LEVEL_HIGH>;
++		};
++
++		pci2: pci@ee0d0000 {
++			compatible = "renesas,pci-r8a7742",
++				     "renesas,pci-rcar-gen2";
++			device_type = "pci";
++			clocks = <&cpg CPG_MOD 703>;
++			power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
++			resets = <&cpg 703>;
++			reg = <0 0xee0d0000 0 0xc00>,
++			      <0 0xee0c0000 0 0x1100>;
++			interrupts = <GIC_SPI 113 IRQ_TYPE_LEVEL_HIGH>;
++			status = "disabled";
++
++			bus-range = <2 2>;
++			#address-cells = <3>;
++			#size-cells = <2>;
++			#interrupt-cells = <1>;
++			ranges = <0x02000000 0 0xee0c0000 0 0xee0c0000 0 0x00010000>;
++			interrupt-map-mask = <0xf800 0 0 0x7>;
++			interrupt-map = <0x0000 0 0 1 &gic GIC_SPI 113 IRQ_TYPE_LEVEL_HIGH>,
++					<0x0800 0 0 1 &gic GIC_SPI 113 IRQ_TYPE_LEVEL_HIGH>,
++					<0x1000 0 0 2 &gic GIC_SPI 113 IRQ_TYPE_LEVEL_HIGH>;
++
++			usb@1,0 {
++				reg = <0x20800 0 0 0 0>;
++				phys = <&usb2 0>;
++				phy-names = "usb";
++			};
++
++			usb@2,0 {
++				reg = <0x21000 0 0 0 0>;
++				phys = <&usb2 0>;
++				phy-names = "usb";
++			};
++		};
++
+ 		sdhi0: sd@ee100000 {
+ 			compatible = "renesas,sdhi-r8a7742",
+ 				     "renesas,rcar-gen2-sdhi";
 -- 
 2.7.4
 
