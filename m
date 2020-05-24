@@ -2,104 +2,81 @@ Return-Path: <SRS0=Hy9I=7G=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 819BEC433E0
-	for <linux-pci@archiver.kernel.org>; Sun, 24 May 2020 21:32:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B956BC433E1
+	for <linux-pci@archiver.kernel.org>; Sun, 24 May 2020 21:38:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 621D820776
-	for <linux-pci@archiver.kernel.org>; Sun, 24 May 2020 21:32:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 94A4E20823
+	for <linux-pci@archiver.kernel.org>; Sun, 24 May 2020 21:38:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388083AbgEXVcx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 24 May 2020 17:32:53 -0400
-Received: from mga02.intel.com ([134.134.136.20]:9322 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388207AbgEXVch (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 24 May 2020 17:32:37 -0400
-IronPort-SDR: p4CL3PRqbOE0hR2v39gxrsLT/zFkXdDfc10XWSpJLtO5tOw4kaOO6oFI+m+caV1CYQKOlpBATm
- yPezHnvRqpuw==
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 May 2020 14:32:36 -0700
-IronPort-SDR: u2xAiNzMTqyQAeDogt1qooqYuEyxdSMZbO2TnvlklOaDfrQsOcCiT91RD4V02GeYM3J58YejEq
- x0GMix9imQ5Q==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.73,431,1583222400"; 
-   d="scan'208";a="467875389"
-Received: from tjrondo-mobl.amr.corp.intel.com (HELO localhost.localdomain) ([10.251.20.235])
-  by fmsmga006.fm.intel.com with ESMTP; 24 May 2020 14:32:36 -0700
-From:   sathyanarayanan.kuppuswamy@linux.intel.com
-To:     bhelgaas@google.com
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ashok.raj@intel.com, sathyanarayanan.kuppuswamy@linux.intel.com
-Subject: [PATCH v3 1/5] PCI/AER: Remove redundant pci_is_pcie() checks.
-Date:   Sun, 24 May 2020 14:32:30 -0700
-Message-Id: <361c622eabe5b845b8092e0bec04a3a2c262cb38.1590355824.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <cover.1590355824.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-References: <cover.1590355824.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+        id S2387914AbgEXViL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 24 May 2020 17:38:11 -0400
+Received: from relmlor2.renesas.com ([210.160.252.172]:26877 "EHLO
+        relmlie6.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S2387879AbgEXViL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 24 May 2020 17:38:11 -0400
+X-IronPort-AV: E=Sophos;i="5.73,430,1583161200"; 
+   d="scan'208";a="47678059"
+Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
+  by relmlie6.idc.renesas.com with ESMTP; 25 May 2020 06:38:09 +0900
+Received: from localhost.localdomain (unknown [10.226.36.204])
+        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 05AB740E3D4A;
+        Mon, 25 May 2020 06:38:05 +0900 (JST)
+From:   Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+To:     Geert Uytterhoeven <geert+renesas@glider.be>,
+        Vinod Koul <vkoul@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Magnus Damm <magnus.damm@gmail.com>
+Cc:     dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-usb@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Prabhakar <prabhakar.csengg@gmail.com>,
+        Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Subject: [PATCH 0/8] R8A7742 add support for HSUSB and USB2.0/3.0
+Date:   Sun, 24 May 2020 22:37:49 +0100
+Message-Id: <1590356277-19993-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Hi All,
 
-AER is a PCIe Extended Capability. So checking for dev->aer_cap
-will implicitly include check for PCIe device. So remove redundant
-pci_is_pcie() checks.
+This patch series adds support for HSUSB, USB2.0 and USB3.0 to
+R8A7742 SoC DT.
 
-Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
----
- drivers/pci/pcie/aer.c | 11 +----------
- 1 file changed, 1 insertion(+), 10 deletions(-)
+This patch series applies on-top of [1].
 
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index efc26773cc6d..7c4294454df0 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -139,9 +139,6 @@ static int enable_ecrc_checking(struct pci_dev *dev)
- 	int pos;
- 	u32 reg32;
- 
--	if (!pci_is_pcie(dev))
--		return -ENODEV;
--
- 	pos = dev->aer_cap;
- 	if (!pos)
- 		return -ENODEV;
-@@ -167,9 +164,6 @@ static int disable_ecrc_checking(struct pci_dev *dev)
- 	int pos;
- 	u32 reg32;
- 
--	if (!pci_is_pcie(dev))
--		return -ENODEV;
--
- 	pos = dev->aer_cap;
- 	if (!pos)
- 		return -ENODEV;
-@@ -308,7 +302,7 @@ static void aer_set_firmware_first(struct pci_dev *pci_dev)
- 
- int pcie_aer_get_firmware_first(struct pci_dev *dev)
- {
--	if (!pci_is_pcie(dev))
-+	if (!dev->aer_cap)
- 		return 0;
- 
- 	if (pcie_ports_native)
-@@ -411,9 +405,6 @@ int pci_aer_raw_clear_status(struct pci_dev *dev)
- 	u32 status;
- 	int port_type;
- 
--	if (!pci_is_pcie(dev))
--		return -ENODEV;
--
- 	pos = dev->aer_cap;
- 	if (!pos)
- 		return -EIO;
+[1] https://patchwork.kernel.org/project/linux-renesas-soc/list/?series=288491
+
+Cheers,
+Prabhakar
+
+Lad Prabhakar (8):
+  dt-bindings: phy: rcar-gen2: Add r8a7742 support
+  dt-bindings: PCI: pci-rcar-gen2: Add device tree support for r8a7742
+  dt-bindings: usb: renesas,usbhs: Add support for r8a7742
+  dt-bindings: dmaengine: renesas,usb-dmac: Add binding for r8a7742
+  dt-bindings: usb: usb-xhci: Document r8a7742 support
+  ARM: dts: r8a7742: Add USB 2.0 host support
+  ARM: dts: r8a7742: Add USB-DMAC and HSUSB device nodes
+  ARM: dts: r8a7742: Add xhci support
+
+ .../devicetree/bindings/dma/renesas,usb-dmac.yaml  |   1 +
+ .../devicetree/bindings/pci/pci-rcar-gen2.txt      |   3 +-
+ .../devicetree/bindings/phy/rcar-gen2-phy.txt      |   3 +-
+ .../devicetree/bindings/usb/renesas,usbhs.yaml     |   1 +
+ Documentation/devicetree/bindings/usb/usb-xhci.txt |   1 +
+ arch/arm/boot/dts/r8a7742.dtsi                     | 173 +++++++++++++++++++++
+ 6 files changed, 180 insertions(+), 2 deletions(-)
+
 -- 
-2.17.1
+2.7.4
 
