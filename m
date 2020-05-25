@@ -2,44 +2,44 @@ Return-Path: <SRS0=gM90=7H=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94E88C433DF
-	for <linux-pci@archiver.kernel.org>; Mon, 25 May 2020 18:26:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AEA04C433E0
+	for <linux-pci@archiver.kernel.org>; Mon, 25 May 2020 18:26:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8136B20787
-	for <linux-pci@archiver.kernel.org>; Mon, 25 May 2020 18:26:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9C6C820787
+	for <linux-pci@archiver.kernel.org>; Mon, 25 May 2020 18:26:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389200AbgEYS0N (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 25 May 2020 14:26:13 -0400
-Received: from mail-ej1-f66.google.com ([209.85.218.66]:37236 "EHLO
-        mail-ej1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387644AbgEYS0N (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 May 2020 14:26:13 -0400
-Received: by mail-ej1-f66.google.com with SMTP id l21so21340052eji.4;
-        Mon, 25 May 2020 11:26:11 -0700 (PDT)
+        id S2389470AbgEYS0V (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 25 May 2020 14:26:21 -0400
+Received: from mail-ed1-f68.google.com ([209.85.208.68]:35257 "EHLO
+        mail-ed1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389100AbgEYS0S (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 May 2020 14:26:18 -0400
+Received: by mail-ed1-f68.google.com with SMTP id be9so15716301edb.2;
+        Mon, 25 May 2020 11:26:16 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=1qikXNcYuPEp2SbYrhq3PIeLmdf37Vp6toU2hryNiAU=;
-        b=UmCbsIdwmg0jEmX4PliEuAzxbhnr++enG6DM+5PuammxCnBstbdR/KQuR+PQ0y42pB
-         fELpWJdXAh9RRdvCdWiH9zJBGAFpDDjj9hVcqgZRFsmp+QEJ3TaWFO9YfkzBGYJJHvAw
-         o4Q+ZpiNqa5bc5+55Ii/p9IZQV6zI7wmnkKzetFoTXnND07uZfTbO0xCl/Lq513bMTAH
-         5Wh8pwjGqrxPUiH1SErSegLkfEqMhFcnq8ekW5Ri//s16Av17xL3ey9iqTng4x6xVtNd
-         6L3rIuXUbnfs+yEY4cuwJJkqbYguGR9w4bl6PHVt3r2SZMgjF5r8gFw3XllbqpAHOW39
-         eTGQ==
-X-Gm-Message-State: AOAM530wgjA9f4C4bbwoAhVYMprvnaEiCXOn5aEnfXakvXVCvKmo8Wih
-        B7R6u9qx8iVPnxwLifqJiBg=
-X-Google-Smtp-Source: ABdhPJxkEBfJS/XXtSSCnmQUkO84UroYhCAKuA4jbTqreWDo9ErA8dsQuCsf23LSLacMkksSHFqFeg==
-X-Received: by 2002:a17:906:4bc1:: with SMTP id x1mr19051208ejv.13.1590431170704;
-        Mon, 25 May 2020 11:26:10 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=1bL0BwD4jERke74zdsN6GWlbqAKQcOkJQVbWbDofjCc=;
+        b=CoHAjtuTgZ7RKbrHFOXlqXo6a0T0ih3ZweRc7jHDv1fccdmzPVdTB48Z665vf2mDPq
+         4vfKDab8lm7GuHVAMX2FsfrDxdM2rYU8eMu47gymPgZWJlJ2V7gB3PtCzNNyfZYcaiii
+         +FJK74we0EI5UzE8VI8zey1ncORARQI0UCIG7d6yH5YAXcoD2VUa8yFu/vUdC122elxw
+         jDFaymZx2lTr4udcolAOP5Wu1zam8TGXzviOR/6hg5lP0gFuwAU4ubhIORuGjekaIYn0
+         PxrkEfOKvL1K8zzm8SNFWbmpIZuwNYqdPLcv3ieEbWjA9RQKCdbw38MNw1md4kbYmOZ4
+         UlfQ==
+X-Gm-Message-State: AOAM530LRNPud5BE4WiJF7vu8+7TLEoiB0vfW09lNzC/H9PukFwkEjeO
+        02Q6ldMywmkcBnvZOU2axLg=
+X-Google-Smtp-Source: ABdhPJwrYFIAvzGWl142jMalbOrQRtAasOCaag/9Ikx3BCjjSja4mpWvlAvCZRDWouYD7Z+QytFuXg==
+X-Received: by 2002:aa7:cb8d:: with SMTP id r13mr16272548edt.12.1590431175453;
+        Mon, 25 May 2020 11:26:15 -0700 (PDT)
 Received: from workstation.lan ([95.155.85.46])
-        by smtp.gmail.com with ESMTPSA id n15sm15555707ejs.10.2020.05.25.11.26.08
+        by smtp.gmail.com with ESMTPSA id n15sm15555707ejs.10.2020.05.25.11.26.13
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 25 May 2020 11:26:09 -0700 (PDT)
+        Mon, 25 May 2020 11:26:14 -0700 (PDT)
 From:   =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
 To:     Dan Carpenter <dan.carpenter@oracle.com>
 Cc:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
@@ -63,10 +63,12 @@ Cc:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
         linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-pm@vger.kernel.org, linux-s390@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
-Subject: [PATCH 0/8] Add helper for accessing Power Management callbacs
-Date:   Mon, 25 May 2020 18:26:00 +0000
-Message-Id: <20200525182608.1823735-1-kw@linux.com>
+Subject: [PATCH 3/8] greybus: Use the new device_to_pm() helper to access struct dev_pm_ops
+Date:   Mon, 25 May 2020 18:26:03 +0000
+Message-Id: <20200525182608.1823735-4-kw@linux.com>
 X-Mailer: git-send-email 2.26.2
+In-Reply-To: <20200525182608.1823735-1-kw@linux.com>
+References: <20200525182608.1823735-1-kw@linux.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -75,71 +77,38 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This series aims to add a new driver_to_pm() helper allowing for
-accessing the Power Management callbacs for a particular device.
-
-Access to the callbacs (struct dev_pm_ops) is normally done through
-using the pm pointer that is embedded within the device_driver struct.
-
-This new helper allows for the code required to reference the pm pointer
-and access Power Management callbas to be simplified.  Changing the
-following:
-
-  struct device_driver *drv = dev->driver;
-  if (dev->driver && dev->driver->pm && dev->driver->pm->prepare) {
-      int ret = dev->driver->pm->prepare(dev);
-
-To:
-
-  const struct dev_pm_ops *pm = driver_to_pm(dev->driver);
-  if (pm && pm->prepare) {
-      int ret = pm->prepare(dev);
-
-Or, changing the following:
-
-     const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
-
-To:
-     const struct dev_pm_ops *pm = driver_to_pm(dev->driver);
-
-This series builds on top of the previous commit 6da2f2ccfd2d ("PCI/PM:
-Make power management op coding style consistent") that had an aim to
-make accessing the Power Managemnet callbacs more consistent.
+Use the new device_to_pm() helper to access Power Management callbacs
+(struct dev_pm_ops) for a particular device (struct device_driver).
 
 No functional change intended.
 
-Links:
-  https://lore.kernel.org/driverdev-devel/20191014230016.240912-6-helgaas@kernel.org/
-  https://lore.kernel.org/driverdev-devel/8592302.r4xC6RIy69@kreacher/
-  https://lore.kernel.org/driverdev-devel/20191016135002.GA24678@kadam/
+Signed-off-by: Krzysztof Wilczyński <kw@linux.com>
+---
+ drivers/greybus/bundle.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Krzysztof Wilczyński (8):
-  driver core: Add helper for accessing Power Management callbacs
-  ACPI: PM: Use the new device_to_pm() helper to access struct
-    dev_pm_ops
-  greybus: Use the new device_to_pm() helper to access struct dev_pm_ops
-  scsi: pm: Use the new device_to_pm() helper to access struct
-    dev_pm_ops
-  usb: phy: fsl: Use the new device_to_pm() helper to access struct
-    dev_pm_ops
-  PCI/PM: Use the new device_to_pm() helper to access struct dev_pm_ops
-  PM: Use the new device_to_pm() helper to access struct dev_pm_ops
-  net/iucv: Use the new device_to_pm() helper to access struct
-    dev_pm_ops
-
- drivers/acpi/device_pm.c         |  5 ++-
- drivers/base/power/domain.c      | 12 ++++--
- drivers/base/power/generic_ops.c | 65 ++++++++++++++------------------
- drivers/base/power/main.c        | 48 +++++++++++++++--------
- drivers/base/power/runtime.c     |  7 ++--
- drivers/greybus/bundle.c         |  4 +-
- drivers/pci/pci-driver.c         | 32 ++++++++--------
- drivers/scsi/scsi_pm.c           |  8 ++--
- drivers/usb/phy/phy-fsl-usb.c    | 11 ++++--
- include/linux/device/driver.h    | 15 ++++++++
- net/iucv/iucv.c                  | 30 +++++++++------
- 11 files changed, 138 insertions(+), 99 deletions(-)
-
+diff --git a/drivers/greybus/bundle.c b/drivers/greybus/bundle.c
+index 84660729538b..d38d3a630812 100644
+--- a/drivers/greybus/bundle.c
++++ b/drivers/greybus/bundle.c
+@@ -108,7 +108,7 @@ static void gb_bundle_enable_all_connections(struct gb_bundle *bundle)
+ static int gb_bundle_suspend(struct device *dev)
+ {
+ 	struct gb_bundle *bundle = to_gb_bundle(dev);
+-	const struct dev_pm_ops *pm = dev->driver->pm;
++	const struct dev_pm_ops *pm = driver_to_pm(dev->driver);
+ 	int ret;
+ 
+ 	if (pm && pm->runtime_suspend) {
+@@ -135,7 +135,7 @@ static int gb_bundle_suspend(struct device *dev)
+ static int gb_bundle_resume(struct device *dev)
+ {
+ 	struct gb_bundle *bundle = to_gb_bundle(dev);
+-	const struct dev_pm_ops *pm = dev->driver->pm;
++	const struct dev_pm_ops *pm = driver_to_pm(dev->driver);
+ 	int ret;
+ 
+ 	ret = gb_control_bundle_resume(bundle->intf->control, bundle->id);
 -- 
 2.26.2
 
