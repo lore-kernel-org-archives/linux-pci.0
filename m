@@ -2,43 +2,45 @@ Return-Path: <SRS0=BI5g=7I=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB144C433E0
-	for <linux-pci@archiver.kernel.org>; Tue, 26 May 2020 23:18:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0162DC433DF
+	for <linux-pci@archiver.kernel.org>; Tue, 26 May 2020 23:18:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B6708207ED
+	by mail.kernel.org (Postfix) with ESMTP id D5E8D20DD4
 	for <linux-pci@archiver.kernel.org>; Tue, 26 May 2020 23:18:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389728AbgEZXSl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 26 May 2020 19:18:41 -0400
-Received: from mga02.intel.com ([134.134.136.20]:56936 "EHLO mga02.intel.com"
+        id S2390018AbgEZXSp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 26 May 2020 19:18:45 -0400
+Received: from mga02.intel.com ([134.134.136.20]:56937 "EHLO mga02.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389709AbgEZXSl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 26 May 2020 19:18:41 -0400
-IronPort-SDR: PDLdGCUmwFUFd/WsIREBQAwnqGyfilP7n37QujhabXSSzBv2ghg2JHzd5En3m6LpW/CBberDcT
- 4yl6eEHbqFUQ==
+        id S2389709AbgEZXSn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 26 May 2020 19:18:43 -0400
+IronPort-SDR: nNlkgZUM/wU66ITebIFq4Abm+NY/cH6dQ8nvVBew7atrU8RshaXeTH8oThO4x1mO3IFBe+6cEg
+ 42zfx0HS52vA==
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 May 2020 16:18:40 -0700
-IronPort-SDR: Li330vBe6ISt2pvFdqKegpO1Sndq+68bSDB5BLBY2Px7m46MYPkStA2Dp0wC9BHNS/AdPnm65I
- 9eAJ1dAPEcXA==
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 May 2020 16:18:42 -0700
+IronPort-SDR: 0WMRdAa0R1/NaC4gtqe1zVXWIsl1U2dSQ6LHaXpuWmXtBBgtJZEL1wsTI+oyxT3iIcIZsSCPqG
+ 2U6ycbHI7s4Q==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.73,439,1583222400"; 
-   d="scan'208";a="291378667"
+   d="scan'208";a="291378684"
 Received: from zalvear-mobl.amr.corp.intel.com (HELO localhost.localdomain) ([10.254.67.58])
-  by fmsmga004.fm.intel.com with ESMTP; 26 May 2020 16:18:40 -0700
+  by fmsmga004.fm.intel.com with ESMTP; 26 May 2020 16:18:42 -0700
 From:   sathyanarayanan.kuppuswamy@linux.intel.com
 To:     bhelgaas@google.com
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         ashok.raj@intel.com, sathyanarayanan.kuppuswamy@linux.intel.com
-Subject: [PATCH v4 0/5] Remove AER HEST table parser
-Date:   Tue, 26 May 2020 16:18:24 -0700
-Message-Id: <cover.1590534843.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+Subject: [PATCH v4 2/5] PCI/AER: Remove redundant dev->aer_cap checks.
+Date:   Tue, 26 May 2020 16:18:26 -0700
+Message-Id: <d5ccc7a060ec9cdc234bdae7df8a0a4410f13f42.1590534843.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <cover.1590534843.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+References: <cover.1590534843.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
@@ -46,35 +48,58 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 
-Commit c100beb9ccfb ("PCI/AER: Use only _OSC to determine AER ownership")
-removed HEST dependency in determining the AER ownership status. The
-following patch set cleansup rest of the HEST table related code from
-AER driver.
+pcie_aer_get_firmware_first() includes check for dev->aer_cap.
+So remove redundant dev->aer_cap checks.
 
-This patchset also includes some minor AER driver fixes.
+Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+---
+ drivers/pci/pcie/aer.c | 15 ++-------------
+ 1 file changed, 2 insertions(+), 13 deletions(-)
 
-Changes since v3:
- * Fixed compilation issues reported by kbuild test robot.
-
-Changes since v2:
- * Fixed commit sha id for patch "PCI/AER: Use only _OSC to determine AER ownership".
-
-Kuppuswamy Sathyanarayanan (5):
-  PCI/AER: Remove redundant pci_is_pcie() checks.
-  PCI/AER: Remove redundant dev->aer_cap checks.
-  ACPI/PCI: Ignore _OSC negotiation result if pcie_ports_native is set.
-  ACPI/PCI: Ignore _OSC DPC negotiation result if pcie_ports_dpc_native
-    is set.
-  PCI/AER: Replace pcie_aer_get_firmware_first() with
-    pcie_aer_is_native()
-
- drivers/acpi/pci_root.c    |  28 ++++----
- drivers/pci/pcie/aer.c     | 139 ++++---------------------------------
- drivers/pci/pcie/dpc.c     |   2 +-
- drivers/pci/pcie/portdrv.h |  15 +---
- include/linux/pci.h        |   2 +
- 5 files changed, 34 insertions(+), 152 deletions(-)
-
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index 7c4294454df0..5f5ffe2f0986 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -322,9 +322,6 @@ int pci_enable_pcie_error_reporting(struct pci_dev *dev)
+ 	if (pcie_aer_get_firmware_first(dev))
+ 		return -EIO;
+ 
+-	if (!dev->aer_cap)
+-		return -EIO;
+-
+ 	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_AER_FLAGS);
+ }
+ EXPORT_SYMBOL_GPL(pci_enable_pcie_error_reporting);
+@@ -349,13 +346,9 @@ void pci_aer_clear_device_status(struct pci_dev *dev)
+ 
+ int pci_aer_clear_nonfatal_status(struct pci_dev *dev)
+ {
+-	int pos;
++	int pos = dev->aer_cap;
+ 	u32 status, sev;
+ 
+-	pos = dev->aer_cap;
+-	if (!pos)
+-		return -EIO;
+-
+ 	if (pcie_aer_get_firmware_first(dev))
+ 		return -EIO;
+ 
+@@ -372,13 +365,9 @@ EXPORT_SYMBOL_GPL(pci_aer_clear_nonfatal_status);
+ 
+ void pci_aer_clear_fatal_status(struct pci_dev *dev)
+ {
+-	int pos;
++	int pos = dev->aer_cap;
+ 	u32 status, sev;
+ 
+-	pos = dev->aer_cap;
+-	if (!pos)
+-		return;
+-
+ 	if (pcie_aer_get_firmware_first(dev))
+ 		return;
+ 
 -- 
 2.17.1
 
