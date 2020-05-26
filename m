@@ -2,146 +2,86 @@ Return-Path: <SRS0=BI5g=7I=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DD43C433E0
-	for <linux-pci@archiver.kernel.org>; Tue, 26 May 2020 22:17:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C183AC433E0
+	for <linux-pci@archiver.kernel.org>; Tue, 26 May 2020 22:53:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 00A4C20870
-	for <linux-pci@archiver.kernel.org>; Tue, 26 May 2020 22:17:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 984532075F
+	for <linux-pci@archiver.kernel.org>; Tue, 26 May 2020 22:53:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1590533590;
+	bh=xsGmzS5AjN6haAWaWevKp0V7RkemTOAW9eXLR0Ipw6Y=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=qP86znk1B9lnknquiDGpwG6RSNrEuDlsv0N3jrjskD67HYEOpGs8AXi8Zwf4XGY03
+	 zzFVcEKgblw6L9l5oTv15Vg9xNmNAObi2rYEyvrmLN3nitmXckvwr4tUj1hzTZgXmv
+	 6chMYk0Y+O6Q0bCEBRNior8XHnuX8upfLHR1//aQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391271AbgEZWRk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 26 May 2020 18:17:40 -0400
-Received: from mga04.intel.com ([192.55.52.120]:7297 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389638AbgEZWRk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 26 May 2020 18:17:40 -0400
-IronPort-SDR: L8MtWR+/i5iHSz4CbrtfAQ72Pvgc8uU2hUFyN1E9rHbkUEag+yr8k1vWGAGSymn4ol6tWEi298
- UpxgaDrnjf6A==
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 May 2020 15:17:39 -0700
-IronPort-SDR: LQRNBHg29mtUm+BYhW/F0JYJJY+Cx1gdDil/ex+yWAzjp61fCcXcLRRNl6lMtygMxkLl6ENDcN
- YPLwPdtukCtQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.73,439,1583222400"; 
-   d="scan'208";a="468512269"
-Received: from otc-nc-03.jf.intel.com ([10.54.39.25])
-  by fmsmga006.fm.intel.com with ESMTP; 26 May 2020 15:17:39 -0700
-From:   Ashok Raj <ashok.raj@intel.com>
-To:     linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Joerg Roedel <joro@8bytes.org>
-Cc:     Ashok Raj <ashok.raj@intel.com>, linux-kernel@vger.kernel.org,
-        iommu@lists.linux-foundation.org,
-        Lu Baolu <baolu.lu@linux.intel.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Darrel Goeddel <DGoeddel@forcepoint.com>,
-        Mark Scott <mscott@forcepoint.com>,
-        Romil Sharma <rsharma@forcepoint.com>
-Subject: [PATCH] iommu: Relax ACS requirement for Intel RCiEP devices.
-Date:   Tue, 26 May 2020 15:17:35 -0700
-Message-Id: <1590531455-19757-1-git-send-email-ashok.raj@intel.com>
-X-Mailer: git-send-email 2.7.4
+        id S2392283AbgEZWxG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 26 May 2020 18:53:06 -0400
+Received: from mail-io1-f65.google.com ([209.85.166.65]:42446 "EHLO
+        mail-io1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2390428AbgEZWxG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 26 May 2020 18:53:06 -0400
+Received: by mail-io1-f65.google.com with SMTP id d5so14404184ios.9;
+        Tue, 26 May 2020 15:53:05 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=kF+vRBfnhOkmQvA5KLQ4cDaPOVZ28rGc0O0qwy5RLx8=;
+        b=P32b7cIs61bWGQKO+vQfRMx78GBXXufAz5+lymJb8v/BLQiAw3GLKhroiWOh7g6vKJ
+         ICdZbXcu62p6ev8/3dXEwFcfmwj9mRoCzBd0+a58xQBN8C7S8vYCPmGHdimDigWb3h9D
+         fM2K38PLu4zAqEJJrmWoDfhzhGwfF8Hv1ZC0tWnoLFRQfgmVyAGY4jIjHR/NluUL80YH
+         IyKjL8lOFZZTkrpdTjzGiBGlfRKhoG4Lb3gTDe1jhC7vk4pn5yYMIJlDws6H2yBUy/sP
+         bmGTrlE/WvCW5ojFM1YX21Yc3WFwPzfMV1j11qwU/L2CfWNyZOscVyks2AmwHkebHWix
+         qdcw==
+X-Gm-Message-State: AOAM530ySfiiCluWycmTP3K8+2WJUnOwNWRAZQB4zlwp0Rpe/qi7cTbJ
+        rOq8Y4/3GdT2/wp7p3rLCw==
+X-Google-Smtp-Source: ABdhPJyeoVtuZCUkjCMNR8Y6ccXH320ipxK5P3DJiUPsweubOQS/CFyKLVhwUqzve4pZavKBpEp3dg==
+X-Received: by 2002:a02:93a1:: with SMTP id z30mr3149527jah.25.1590533583588;
+        Tue, 26 May 2020 15:53:03 -0700 (PDT)
+Received: from xps15 ([64.188.179.252])
+        by smtp.gmail.com with ESMTPSA id p1sm632821ilq.67.2020.05.26.15.53.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 26 May 2020 15:53:03 -0700 (PDT)
+Received: (nullmailer pid 538555 invoked by uid 1000);
+        Tue, 26 May 2020 22:53:02 -0000
+Date:   Tue, 26 May 2020 16:53:02 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Kishon Vijay Abraham I <kishon@ti.com>
+Cc:     Tom Joseph <tjoseph@cadence.com>, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Arnd Bergmann <arnd@arndb.de>, devicetree@vger.kernel.org,
+        linux-omap@vger.kernel.org
+Subject: Re: [PATCH v5 06/14] dt-bindings: PCI: cadence: Remove "mem" from
+ reg binding
+Message-ID: <20200526225302.GA538495@bogus>
+References: <20200522033631.32574-1-kishon@ti.com>
+ <20200522033631.32574-7-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200522033631.32574-7-kishon@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-All Intel platforms guarantee that all root complex implementations
-must send transactions up to IOMMU for address translations. Hence for
-RCiEP devices that are Vendor ID Intel, can claim exception for lack of
-ACS support.
+On Fri, 22 May 2020 09:06:23 +0530, Kishon Vijay Abraham I wrote:
+> "mem" is not a memory resource and it overlaps with PCIe config space
+> and memory region. Removve "mem" from reg binding.
+> 
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  .../devicetree/bindings/pci/cdns,cdns-pcie-host.yaml      | 8 +++-----
+>  1 file changed, 3 insertions(+), 5 deletions(-)
+> 
 
-
-3.16 Root-Complex Peer to Peer Considerations
-When DMA remapping is enabled, peer-to-peer requests through the
-Root-Complex must be handled
-as follows:
-• The input address in the request is translated (through first-level,
-  second-level or nested translation) to a host physical address (HPA).
-  The address decoding for peer addresses must be done only on the
-  translated HPA. Hardware implementations are free to further limit
-  peer-to-peer accesses to specific host physical address regions
-  (or to completely disallow peer-forwarding of translated requests).
-• Since address translation changes the contents (address field) of
-  the PCI Express Transaction Layer Packet (TLP), for PCI Express
-  peer-to-peer requests with ECRC, the Root-Complex hardware must use
-  the new ECRC (re-computed with the translated address) if it
-  decides to forward the TLP as a peer request.
-• Root-ports, and multi-function root-complex integrated endpoints, may
-  support additional peerto-peer control features by supporting PCI Express
-  Access Control Services (ACS) capability. Refer to ACS capability in
-  PCI Express specifications for details.
-
-Since Linux didn't give special treatment to allow this exception, certain
-RCiEP MFD devices are getting grouped in a single iommu group. This
-doesn't permit a single device to be assigned to a guest for instance.
-
-In one vendor system: Device 14.x were grouped in a single IOMMU group.
-
-/sys/kernel/iommu_groups/5/devices/0000:00:14.0
-/sys/kernel/iommu_groups/5/devices/0000:00:14.2
-/sys/kernel/iommu_groups/5/devices/0000:00:14.3
-
-After the patch:
-/sys/kernel/iommu_groups/5/devices/0000:00:14.0
-/sys/kernel/iommu_groups/5/devices/0000:00:14.2
-/sys/kernel/iommu_groups/6/devices/0000:00:14.3 <<< new group
-
-14.0 and 14.2 are integrated devices, but legacy end points.
-Whereas 14.3 was a PCIe compliant RCiEP.
-
-00:14.3 Network controller: Intel Corporation Device 9df0 (rev 30)
-Capabilities: [40] Express (v2) Root Complex Integrated Endpoint, MSI 00
-
-This permits assigning this device to a guest VM.
-
-Fixes: f096c061f552 ("iommu: Rework iommu_group_get_for_pci_dev()")
-Signed-off-by: Ashok Raj <ashok.raj@intel.com>
-To: Joerg Roedel <joro@8bytes.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org
-Cc: iommu@lists.linux-foundation.org
-Cc: Lu Baolu <baolu.lu@linux.intel.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>
-Cc: Darrel Goeddel <DGoeddel@forcepoint.com>
-Cc: Mark Scott <mscott@forcepoint.com>,
-Cc: Romil Sharma <rsharma@forcepoint.com>
-Cc: Ashok Raj <ashok.raj@intel.com>
----
- drivers/iommu/iommu.c | 13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-index 2b471419e26c..31b595dfedde 100644
---- a/drivers/iommu/iommu.c
-+++ b/drivers/iommu/iommu.c
-@@ -1187,7 +1187,18 @@ static struct iommu_group *get_pci_function_alias_group(struct pci_dev *pdev,
- 	struct pci_dev *tmp = NULL;
- 	struct iommu_group *group;
- 
--	if (!pdev->multifunction || pci_acs_enabled(pdev, REQ_ACS_FLAGS))
-+	/*
-+	 * Intel VT-d Specification Section 3.16, Root-Complex Peer to Peer
-+	 * Considerations manadate that all transactions in RCiEP's and
-+	 * even Integrated MFD's *must* be sent up to the IOMMU. P2P is
-+	 * only possible on translated addresses. This gives enough
-+	 * guarantee that such devices can be forgiven for lack of ACS
-+	 * support.
-+	 */
-+	if (!pdev->multifunction ||
-+	    (pdev->vendor == PCI_VENDOR_ID_INTEL &&
-+	     pci_pcie_type(pdev) == PCI_EXP_TYPE_RC_END) ||
-+	     pci_acs_enabled(pdev, REQ_ACS_FLAGS))
- 		return NULL;
- 
- 	for_each_pci_dev(tmp) {
--- 
-2.7.4
-
+Reviewed-by: Rob Herring <robh@kernel.org>
