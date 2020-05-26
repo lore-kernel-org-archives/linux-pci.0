@@ -1,167 +1,76 @@
-Return-Path: <SRS0=Olcz=7A=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=BI5g=7I=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DF18C433E0
-	for <linux-pci@archiver.kernel.org>; Mon, 18 May 2020 14:22:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0913C433DF
+	for <linux-pci@archiver.kernel.org>; Tue, 26 May 2020 20:23:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E1AB920657
-	for <linux-pci@archiver.kernel.org>; Mon, 18 May 2020 14:22:37 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="Z8q4xTJr"
+	by mail.kernel.org (Postfix) with ESMTP id 8EF6C207D8
+	for <linux-pci@archiver.kernel.org>; Tue, 26 May 2020 20:23:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727035AbgEROWe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 18 May 2020 10:22:34 -0400
-Received: from hqnvemgate24.nvidia.com ([216.228.121.143]:5334 "EHLO
-        hqnvemgate24.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726997AbgEROWe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 May 2020 10:22:34 -0400
-Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate24.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5ec2999c0001>; Mon, 18 May 2020 07:20:12 -0700
-Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate101.nvidia.com (PGP Universal service);
-  Mon, 18 May 2020 07:22:34 -0700
-X-PGP-Universal: processed;
-        by hqpgpgate101.nvidia.com on Mon, 18 May 2020 07:22:34 -0700
-Received: from [10.25.73.9] (172.20.13.39) by HQMAIL107.nvidia.com
- (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Mon, 18 May
- 2020 14:22:30 +0000
-Subject: Re: [PATCH V2] arm64: tegra: Fix flag for 64-bit resources in
- 'ranges' property
-To:     <robh+dt@kernel.org>, <thierry.reding@gmail.com>,
-        <jonathanh@nvidia.com>
-CC:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        <amurray@thegoodpenguin.co.uk>, <bhelgaas@google.com>,
-        <linux-kernel@vger.kernel.org>, <kthota@nvidia.com>,
-        <mmaddireddy@nvidia.com>, <sagar.tv@gmail.com>,
-        <devicetree@vger.kernel.org>, <linux-tegra@vger.kernel.org>
-References: <20200513191627.8533-1-vidyas@nvidia.com>
- <20200514135437.29814-1-vidyas@nvidia.com>
- <20200518135006.GB31554@e121166-lin.cambridge.arm.com>
-X-Nvconfidentiality: public
-From:   Vidya Sagar <vidyas@nvidia.com>
-Message-ID: <e64ccace-d2b9-0e03-db3f-e65ed6f56230@nvidia.com>
-Date:   Mon, 18 May 2020 19:52:24 +0530
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
+        id S2390072AbgEZUX7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 26 May 2020 16:23:59 -0400
+Received: from mga01.intel.com ([192.55.52.88]:17182 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2389893AbgEZUX6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 26 May 2020 16:23:58 -0400
+IronPort-SDR: ToZMgNggOTMmk36WqF3T/Va8Wb8L0XBrk3uB/MjHGRQ63T+Klw3de8E4X60pFA6S1n7EOk467f
+ bcYDVNz42juQ==
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 May 2020 13:23:58 -0700
+IronPort-SDR: bZWk4+f1RUAqJTFyFVwl8JZc4rLRTbebLSxZaSN8DGEI/Le+0XA2o3/bexq4FTA/A5ZkfiMNaW
+ 0UzdWfESW2Jw==
+X-IronPort-AV: E=Sophos;i="5.73,437,1583222400"; 
+   d="scan'208";a="442228673"
+Received: from dswadhwa-mobl1.amr.corp.intel.com (HELO [10.212.25.137]) ([10.212.25.137])
+  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 May 2020 13:23:57 -0700
+From:   "Sean V Kelley" <sean.v.kelley@linux.intel.com>
+To:     "Martin =?utf-8?q?Mare=C5=A1?=" <mj@ucw.cz>
+Cc:     bhelgaas@google.com, linux-pci@vger.kernel.org,
+        f.fangjian@huawei.com, huangdaode@hisilicon.com
+Subject: Re: [PATCH v7 0/2] pciutils: Add basic decode support for CXL DVSEC
+Date:   Tue, 26 May 2020 13:23:56 -0700
+X-Mailer: MailMate (1.13.1r5671)
+Message-ID: <9A956B40-0ADC-45DD-9B98-3969C9C77132@linux.intel.com>
+In-Reply-To: <mj+md-20200525.103642.86045.nikam@ucw.cz>
+References: <20200511174618.10589-1-sean.v.kelley@linux.intel.com>
+ <mj+md-20200525.103642.86045.nikam@ucw.cz>
 MIME-Version: 1.0
-In-Reply-To: <20200518135006.GB31554@e121166-lin.cambridge.arm.com>
-X-Originating-IP: [172.20.13.39]
-X-ClientProxiedBy: HQMAIL107.nvidia.com (172.20.187.13) To
- HQMAIL107.nvidia.com (172.20.187.13)
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1589811612; bh=ygS6whssLxUlGMHQFNVShdRPY01pxJPdCk+7KRT+K0o=;
-        h=X-PGP-Universal:Subject:To:CC:References:X-Nvconfidentiality:From:
-         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
-         X-Originating-IP:X-ClientProxiedBy:Content-Type:Content-Language:
-         Content-Transfer-Encoding;
-        b=Z8q4xTJrqbT3TqukcpA2boW25MUibTcyZk2LOr4lUfXriS67bB4pwTPESL9FzrzoH
-         CBq3WfjCqgHNVhdgSy98zJInR9G72eOFGdCyesIGYd7Gxrel/XJL4YoDKBOTOri/AX
-         8jmi6Ji88tiLsr3XQy72WCwEsgkcLVmvgJNViG6w71xqOSfEj4b/mlHNCteD4jd1et
-         4rNTIsvA0b5QKkpJrz+NSvbKrx7y2YeEDNM7fMzYuCWoiQJnRopAd2284lIPCe8ajU
-         dm4nndJFKPtCPixdtaGobNjzyviitrQbytJxzPELLLtE6ejE8EhWhulmuUGAI6q3Yo
-         AojcaxMOI5zEA==
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Thanks Lorenzo.
-I've moved linux-pci to BCC and included
-devicetree and linux-tegra mailing lists to CC.
+Hi Martin,
 
-Rob, Could you please review this patch?
+On 25 May 2020, at 3:37, Martin Mareš wrote:
 
-Thanks,
-Vidya Sagar
+> Hello!
+>
+> I applied your patch (by mistake, I applied v6 first, so the vendor ID 
+> change
+> is a separate commit).
+>
+> I have cleaned up the code a bit, so that the DVSEC header is not 
+> parsed
+> multiple times.
+>
+> Could you also update the cap-dvsec-cxl test to match the new vendor 
+> ID?
+>
+> 			Have a nice day
+> 						Martin
 
-On 18-May-20 7:20 PM, Lorenzo Pieralisi wrote:
-> External email: Use caution opening links or attachments
-> 
-> 
-> On Thu, May 14, 2020 at 07:24:37PM +0530, Vidya Sagar wrote:
->> Fix flag in PCIe controllers device-tree nodes 'ranges' property to correctly
->> represent 64-bit resources.
->>
->> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
->> ---
->> V2:
->> * Extended the change to cover other controllers as well
->>
->>   arch/arm64/boot/dts/nvidia/tegra194.dtsi | 12 ++++++------
->>   1 file changed, 6 insertions(+), 6 deletions(-)
-> 
-> We don't apply DTS patches - so no need to CC linux-pci from now
-> onwards on these. Marked as not-applicable.
-> 
-> Lorenzo
-> 
->> diff --git a/arch/arm64/boot/dts/nvidia/tegra194.dtsi b/arch/arm64/boot/dts/nvidia/tegra194.dtsi
->> index e1ae01c2d039..4bc187a4eacd 100644
->> --- a/arch/arm64/boot/dts/nvidia/tegra194.dtsi
->> +++ b/arch/arm64/boot/dts/nvidia/tegra194.dtsi
->> @@ -1405,7 +1405,7 @@
->>
->>                bus-range = <0x0 0xff>;
->>                ranges = <0x81000000 0x0  0x30100000 0x0  0x30100000 0x0 0x00100000   /* downstream I/O (1MB) */
->> -                       0xc2000000 0x12 0x00000000 0x12 0x00000000 0x0 0x30000000   /* prefetchable memory (768MB) */
->> +                       0xc3000000 0x12 0x00000000 0x12 0x00000000 0x0 0x30000000   /* prefetchable memory (768MB) */
->>                          0x82000000 0x0  0x40000000 0x12 0x30000000 0x0 0x10000000>; /* non-prefetchable memory (256MB) */
->>        };
->>
->> @@ -1450,7 +1450,7 @@
->>
->>                bus-range = <0x0 0xff>;
->>                ranges = <0x81000000 0x0  0x32100000 0x0  0x32100000 0x0 0x00100000   /* downstream I/O (1MB) */
->> -                       0xc2000000 0x12 0x40000000 0x12 0x40000000 0x0 0x30000000   /* prefetchable memory (768MB) */
->> +                       0xc3000000 0x12 0x40000000 0x12 0x40000000 0x0 0x30000000   /* prefetchable memory (768MB) */
->>                          0x82000000 0x0  0x40000000 0x12 0x70000000 0x0 0x10000000>; /* non-prefetchable memory (256MB) */
->>        };
->>
->> @@ -1495,7 +1495,7 @@
->>
->>                bus-range = <0x0 0xff>;
->>                ranges = <0x81000000 0x0  0x34100000 0x0  0x34100000 0x0 0x00100000   /* downstream I/O (1MB) */
->> -                       0xc2000000 0x12 0x80000000 0x12 0x80000000 0x0 0x30000000   /* prefetchable memory (768MB) */
->> +                       0xc3000000 0x12 0x80000000 0x12 0x80000000 0x0 0x30000000   /* prefetchable memory (768MB) */
->>                          0x82000000 0x0  0x40000000 0x12 0xb0000000 0x0 0x10000000>; /* non-prefetchable memory (256MB) */
->>        };
->>
->> @@ -1540,7 +1540,7 @@
->>
->>                bus-range = <0x0 0xff>;
->>                ranges = <0x81000000 0x0  0x36100000 0x0  0x36100000 0x0 0x00100000   /* downstream I/O (1MB) */
->> -                       0xc2000000 0x14 0x00000000 0x14 0x00000000 0x3 0x40000000   /* prefetchable memory (13GB) */
->> +                       0xc3000000 0x14 0x00000000 0x14 0x00000000 0x3 0x40000000   /* prefetchable memory (13GB) */
->>                          0x82000000 0x0  0x40000000 0x17 0x40000000 0x0 0xc0000000>; /* non-prefetchable memory (3GB) */
->>        };
->>
->> @@ -1585,7 +1585,7 @@
->>
->>                bus-range = <0x0 0xff>;
->>                ranges = <0x81000000 0x0  0x38100000 0x0  0x38100000 0x0 0x00100000   /* downstream I/O (1MB) */
->> -                       0xc2000000 0x18 0x00000000 0x18 0x00000000 0x3 0x40000000   /* prefetchable memory (13GB) */
->> +                       0xc3000000 0x18 0x00000000 0x18 0x00000000 0x3 0x40000000   /* prefetchable memory (13GB) */
->>                          0x82000000 0x0  0x40000000 0x1b 0x40000000 0x0 0xc0000000>; /* non-prefetchable memory (3GB) */
->>        };
->>
->> @@ -1634,7 +1634,7 @@
->>
->>                bus-range = <0x0 0xff>;
->>                ranges = <0x81000000 0x0  0x3a100000 0x0  0x3a100000 0x0 0x00100000   /* downstream I/O (1MB) */
->> -                       0xc2000000 0x1c 0x00000000 0x1c 0x00000000 0x3 0x40000000   /* prefetchable memory (13GB) */
->> +                       0xc3000000 0x1c 0x00000000 0x1c 0x00000000 0x3 0x40000000   /* prefetchable memory (13GB) */
->>                          0x82000000 0x0  0x40000000 0x1f 0x40000000 0x0 0xc0000000>; /* non-prefetchable memory (3GB) */
->>        };
->>
->> --
->> 2.17.1
->>
+Will do.
+
+Thanks!
+
+Sean
