@@ -2,69 +2,152 @@ Return-Path: <SRS0=6xW0=7J=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66900C433E0
-	for <linux-pci@archiver.kernel.org>; Wed, 27 May 2020 12:36:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C93ADC433DF
+	for <linux-pci@archiver.kernel.org>; Wed, 27 May 2020 13:20:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4DC9520899
-	for <linux-pci@archiver.kernel.org>; Wed, 27 May 2020 12:36:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9D074212CC
+	for <linux-pci@archiver.kernel.org>; Wed, 27 May 2020 13:20:13 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="pmSKiN7G"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729635AbgE0MgZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 27 May 2020 08:36:25 -0400
-Received: from 8bytes.org ([81.169.241.247]:44942 "EHLO theia.8bytes.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728513AbgE0MgZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 27 May 2020 08:36:25 -0400
-Received: by theia.8bytes.org (Postfix, from userid 1000)
-        id 78345247; Wed, 27 May 2020 14:36:24 +0200 (CEST)
-Date:   Wed, 27 May 2020 14:36:22 +0200
-From:   Joerg Roedel <joro@8bytes.org>
-To:     Jean-Philippe Brucker <jean-philippe@linaro.org>
-Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        iommu@lists.linux-foundation.org, bhelgaas@google.com,
-        will@kernel.org, robin.murphy@arm.com, dwmw2@infradead.org,
-        baolu.lu@linux.intel.com, ashok.raj@intel.com,
-        alex.williamson@redhat.com, hch@infradead.org
-Subject: Re: [PATCH v2 0/4] PCI, iommu: Factor 'untrusted' check for ATS
- enablement
-Message-ID: <20200527123622.GI5221@8bytes.org>
-References: <20200520152201.3309416-1-jean-philippe@linaro.org>
+        id S1730207AbgE0NUM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 27 May 2020 09:20:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33590 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725267AbgE0NUM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 May 2020 09:20:12 -0400
+Received: from mail-pj1-x1042.google.com (mail-pj1-x1042.google.com [IPv6:2607:f8b0:4864:20::1042])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7123EC08C5C1;
+        Wed, 27 May 2020 06:20:12 -0700 (PDT)
+Received: by mail-pj1-x1042.google.com with SMTP id 5so1519801pjd.0;
+        Wed, 27 May 2020 06:20:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=Dw32ouB6gQXzj8nA7ooTUjln7E5bWlES7f0YQFqrj/0=;
+        b=pmSKiN7G0uupR6LhwkcM/0k5mAAcFfDG/oxnNb1Y5eSRQbbB6yoD7YV54eZdwve+8s
+         8Q+/vtI3PneaTQnTDmbbh5lssT2QkQDc8jpyeWIoLOP56eljJTpHglqS0hUGlYzRk2U8
+         SFewfaCvAHM8Sz1eMF/jHZO+Pcg8stht3QboP32VXEa6k9PXfRuE4QnkYBfOrX5dwCSS
+         f9CyBPjE3ClgIbAyzOFEqX1ikJWUhwHJ3xpLAI5Kr1Cxpotw/K8UYvOQLnLDHcYWabUi
+         n69SKl/rxtvSZXP0Xz8OAQTdj4UVfQuRK2gqrkb5QCTW9RLNaTQeVad9WDoHf6QIqKCP
+         CArQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=Dw32ouB6gQXzj8nA7ooTUjln7E5bWlES7f0YQFqrj/0=;
+        b=X4EiQHfiLaAFOp8umIBS5cnmGNuWi1tnOZjG4I9Hktf8cPofsCthaAalVALbpLNxAW
+         93ELCQtbkbsyOv2yvux0gqXYQu6XhSSRsWJUGMBywX+p/gOatBTRxLoI5UPOsqzqOXp7
+         5n2v14BmLpNEcZQJx5n3bfFwfxeb+KbPI8zDpnibhurj0u29MPXOnm1pwC+LgwyQXcyt
+         20aF5sWNMgY4eN4rS36fqUJy1W0ABVIub8M7VlRP5rSfHs+vTPx9uHQxZOB/EM7QSqLU
+         uaT2rfwSZRnIgPnj/ClsskvkO/rQwI9IqK05kFwSnWH79v94M1XXoAf+p9FtY6a6Q9Lu
+         2Hjw==
+X-Gm-Message-State: AOAM533G+cLwR63sn4/Si6/LnxdsLS5jlRYZXmzTOQ3RjxVi1qAWoSy2
+        RJzeceXqzHR3+ecjgzX0ZMUnZ4QI
+X-Google-Smtp-Source: ABdhPJy3/WG2PX+nNjKnHY5uEmmZ8xLj7mfYO1XTs0pF/6Z80hUoc2d2cBTWcx02bl3IbwVyo7p2YQ==
+X-Received: by 2002:a17:902:8c8c:: with SMTP id t12mr5944363plo.285.1590585611919;
+        Wed, 27 May 2020 06:20:11 -0700 (PDT)
+Received: from localhost ([144.34.194.82])
+        by smtp.gmail.com with ESMTPSA id k12sm2083141pfg.177.2020.05.27.06.20.10
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Wed, 27 May 2020 06:20:11 -0700 (PDT)
+Date:   Wed, 27 May 2020 21:20:05 +0800
+From:   Dejin Zheng <zhengdejin5@gmail.com>
+To:     "Chocron, Jonathan" <jonnyc@amazon.com>
+Cc:     "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "thomas.petazzoni@bootlin.com" <thomas.petazzoni@bootlin.com>,
+        "pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
+        "robh@kernel.org" <robh@kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "tjoseph@cadence.com" <tjoseph@cadence.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v1] PCI: controller: Remove duplicate error message
+Message-ID: <20200527132005.GA7143@nuc8i5>
+References: <20200526150954.4729-1-zhengdejin5@gmail.com>
+ <1d7703d5c29dc9371ace3645377d0ddd9c89be30.camel@amazon.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200520152201.3309416-1-jean-philippe@linaro.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <1d7703d5c29dc9371ace3645377d0ddd9c89be30.camel@amazon.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, May 20, 2020 at 05:21:59PM +0200, Jean-Philippe Brucker wrote:
-> IOMMU drivers currently check themselves if a device is untrusted
-> (plugged into an external-facing port) before enabling ATS. Move the
-> check to drivers/pci. The only functional change should be to the AMD
-> IOMMU driver. With this change all IOMMU drivers block 'Translated' PCIe
-> transactions and Translation Requests from untrusted devices.
+On Tue, May 26, 2020 at 06:22:56PM +0000, Chocron, Jonathan wrote:
+> On Tue, 2020-05-26 at 23:09 +0800, Dejin Zheng wrote:
+> > CAUTION: This email originated from outside of the organization. Do
+> > not click links or open attachments unless you can confirm the sender
+> > and know the content is safe.
+> > 
+> > 
+> > 
+> > It will print an error message by itself when
+> > devm_pci_remap_cfg_resource() goes wrong. so remove the duplicate
+> > error message.
+> > 
 > 
-> Since v1 [1] I added tags, addressed comments on patches 1 and 3, and
-> fixed a regression in patch 3.
-> 
-> [1] https://lore.kernel.org/linux-iommu/20200515104359.1178606-1-jean-philippe@linaro.org/
-> 
-> Jean-Philippe Brucker (4):
->   PCI/ATS: Only enable ATS for trusted devices
->   iommu/amd: Use pci_ats_supported()
->   iommu/arm-smmu-v3: Use pci_ats_supported()
->   iommu/vt-d: Use pci_ats_supported()
-> 
->  include/linux/pci-ats.h     |  3 +++
->  drivers/iommu/amd_iommu.c   | 12 ++++--------
->  drivers/iommu/arm-smmu-v3.c | 20 +++++++-------------
->  drivers/iommu/intel-iommu.c |  9 +++------
->  drivers/pci/ats.c           | 18 +++++++++++++++++-
->  5 files changed, 34 insertions(+), 28 deletions(-)
+> It seems like that in the first error case in
+> devm_pci_remap_cfg_resource(), the print will be less indicative. Could
+> you please share an example print log with the duplicate print?
+>
+Hi Jonathan:
 
-Applied, thanks.
+Thank you very much for using your precious time to review my patch.
+
+I did not have this log and just found it by review codes. the function
+of devm_pci_remap_cfg_resource() is designed to handle error messages by
+itself. and Its recommended usage is as follows in the function description
+	
+	base = devm_pci_remap_cfg_resource(&pdev->dev, res);
+	if (IS_ERR(base))
+		return PTR_ERR(base);
+
+In fact, I think its error handling is clear enough, It just goes wrong
+in three places, as follows:
+
+void __iomem *devm_pci_remap_cfg_resource(struct device *dev,
+                                          struct resource *res)
+{
+        resource_size_t size;
+        const char *name;
+        void __iomem *dest_ptr;
+
+        BUG_ON(!dev);
+
+        if (!res || resource_type(res) != IORESOURCE_MEM) {
+                dev_err(dev, "invalid resource\n");
+                return IOMEM_ERR_PTR(-EINVAL);
+        }
+
+        size = resource_size(res);
+        name = res->name ?: dev_name(dev);
+
+        if (!devm_request_mem_region(dev, res->start, size, name)) {
+                dev_err(dev, "can't request region for resource %pR\n", res);
+                return IOMEM_ERR_PTR(-EBUSY);
+        }
+
+        dest_ptr = devm_pci_remap_cfgspace(dev, res->start, size);
+        if (!dest_ptr) {
+                dev_err(dev, "ioremap failed for resource %pR\n", res);
+                devm_release_mem_region(dev, res->start, size);
+                dest_ptr = IOMEM_ERR_PTR(-ENOMEM);
+        }
+
+        return dest_ptr;
+}
+
+BR,
+Dejin
+
+> Thanks,
+>    Jonathan
