@@ -2,129 +2,264 @@ Return-Path: <SRS0=6xW0=7J=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0F97C433E0
-	for <linux-pci@archiver.kernel.org>; Wed, 27 May 2020 13:52:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23726C433E1
+	for <linux-pci@archiver.kernel.org>; Wed, 27 May 2020 15:00:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D14FC208DB
-	for <linux-pci@archiver.kernel.org>; Wed, 27 May 2020 13:52:13 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="IQd9QRIu"
+	by mail.kernel.org (Postfix) with ESMTP id 0775020787
+	for <linux-pci@archiver.kernel.org>; Wed, 27 May 2020 15:00:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388901AbgE0NwJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 27 May 2020 09:52:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38562 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388647AbgE0NwJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 May 2020 09:52:09 -0400
-Received: from mail-pl1-x643.google.com (mail-pl1-x643.google.com [IPv6:2607:f8b0:4864:20::643])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45910C08C5C4
-        for <linux-pci@vger.kernel.org>; Wed, 27 May 2020 06:52:09 -0700 (PDT)
-Received: by mail-pl1-x643.google.com with SMTP id q16so10153276plr.2
-        for <linux-pci@vger.kernel.org>; Wed, 27 May 2020 06:52:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=sVOrxsk18BnSFATyAjPbeo6+7yMbRqTwIElwDUYrAFk=;
-        b=IQd9QRIugzIzBpTvp3+gDmqldfXigO2E49gsEa4gWjkW8zQ7okCePzzME85lMseCYp
-         C6UogWhM76FwGK5GWiG8mRjoqMxQAiVMmmfU32mB1clNfA4oHsd9jNVbdkKq9iRLaZ6o
-         /GSx8wknomZEweg/pRNTs5AEyhz2TlPsVfIh1FVWAsub3p7gsfYfKsWEW0GjuGLOSeH3
-         JX/KrTERHguXCxqwKCC2l18gU5RD125PFLl4ooOSVZXxkfqWDt3XB8oULXtxbINGB7jy
-         IZ+Ys2oL0/yBtqmoT9wOKg1LwOZXfABmxwNOY7WVGXRfz3jB/ahveiTxn+3ArAeBKNsp
-         azNw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=sVOrxsk18BnSFATyAjPbeo6+7yMbRqTwIElwDUYrAFk=;
-        b=bKodszwV0gX9TBIPX8u0V/QQ3CpW3i+T7eezQMF5TavTMo//zZu+yVJ7Qu6kT4qIcJ
-         e23YhJjP6bvO5+Uni0yJbR4YKlDvm24m+jjbgnazCbgHxMlezilOVlDdpQnalLrttihq
-         8849lBwGWkdqJJxgVEsTGpcIqFu77ULLO68SuYnQL3VpsDkrKbWRGuBaTpCxsxXRLoXR
-         Rn3bA6rMOvqpX6uAEd3L0ToedEg1oN2AlPLzeGfoImoR3S89VjMvEoDWbIZa+P2MX+xm
-         Adap0X+yTE0NTEkuPkn2+7v/HAsJiUnR+wBNvwvkJvmPZOzmef9rUdCdtKsXs3Mt1CZF
-         fTAw==
-X-Gm-Message-State: AOAM530Xg78HbVwRREreLDHb88Ry1x9sWfKIpB2KvBHHUsE5dYbtYP9+
-        eZV11w3n9Y3nMTXz9WuZr5nVxDAlv8EoDA==
-X-Google-Smtp-Source: ABdhPJyJEWrfFe5MlHVlgCY+nDX0MeA9yhMhsez39F2xUkBVmUD/N243xLXOBOeIAja47JbP7VfxPQ==
-X-Received: by 2002:a17:90a:2ac2:: with SMTP id i2mr5055611pjg.80.1590587528565;
-        Wed, 27 May 2020 06:52:08 -0700 (PDT)
-Received: from [192.168.11.133] (li1566-229.members.linode.com. [139.162.86.229])
-        by smtp.gmail.com with ESMTPSA id s15sm2106775pgv.5.2020.05.27.06.51.46
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 27 May 2020 06:52:07 -0700 (PDT)
-Subject: Re: [PATCH 0/2] Introduce PCI_FIXUP_IOMMU
-To:     Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     Joerg Roedel <joro@8bytes.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Hanjun Guo <guohanjun@huawei.com>,
-        Sudeep Holla <sudeep.holla@arm.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        jean-philippe <jean-philippe@linaro.org>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        kenneth-lee-2012@foxmail.com, Wangzhou <wangzhou1@hisilicon.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "open list:HARDWARE RANDOM NUMBER GENERATOR CORE" 
-        <linux-crypto@vger.kernel.org>,
-        "open list:IOMMU DRIVERS" <iommu@lists.linux-foundation.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        linux-pci <linux-pci@vger.kernel.org>
-References: <1590493749-13823-1-git-send-email-zhangfei.gao@linaro.org>
- <20200527090007.GA179718@kroah.com>
- <CAK8P3a35fjXt1F2hJygup5gWfjPHZTuU+VD69K5uzrNhhgu0Pw@mail.gmail.com>
-From:   Zhangfei Gao <zhangfei.gao@linaro.org>
-Message-ID: <ec994862-ac1c-bb6e-4fe6-ce5bf74f614a@linaro.org>
-Date:   Wed, 27 May 2020 21:51:13 +0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+        id S2389385AbgE0PAO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 27 May 2020 11:00:14 -0400
+Received: from mx2.suse.de ([195.135.220.15]:53010 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2389364AbgE0PAN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 27 May 2020 11:00:13 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id D8313B1A5;
+        Wed, 27 May 2020 15:00:13 +0000 (UTC)
+Message-ID: <59a0b4e1454a8ef4d3e4ebaf55dcbf3dcd2d73a2.camel@suse.de>
+Subject: Re: [PATCH v2 09/14] device core: Add ability to handle multiple
+ dma offsets
+From:   Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
+To:     Jim Quinlan <james.quinlan@broadcom.com>,
+        linux-pci@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        bcm-kernel-feedback-list@broadcom.com
+Cc:     Rob Herring <robh+dt@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Oliver Neukum <oneukum@suse.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Wolfram Sang <wsa@kernel.org>, Corey Minyard <minyard@acm.org>,
+        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+        Suzuki K Poulose <suzuki.poulose@arm.com>,
+        Saravana Kannan <saravanak@google.com>,
+        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE" 
+        <devicetree@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        "open list:USB SUBSYSTEM" <linux-usb@vger.kernel.org>,
+        "open list:DMA MAPPING HELPERS" <iommu@lists.linux-foundation.org>
+Date:   Wed, 27 May 2020 17:00:07 +0200
+In-Reply-To: <20200526191303.1492-10-james.quinlan@broadcom.com>
+References: <20200526191303.1492-1-james.quinlan@broadcom.com>
+         <20200526191303.1492-10-james.quinlan@broadcom.com>
+Content-Type: multipart/signed; micalg="pgp-sha256";
+        protocol="application/pgp-signature"; boundary="=-U+7wZGgMLMRLCbS+rYVu"
+User-Agent: Evolution 3.36.2 
 MIME-Version: 1.0
-In-Reply-To: <CAK8P3a35fjXt1F2hJygup5gWfjPHZTuU+VD69K5uzrNhhgu0Pw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 
+--=-U+7wZGgMLMRLCbS+rYVu
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 2020/5/27 下午5:53, Arnd Bergmann wrote:
-> On Wed, May 27, 2020 at 11:00 AM Greg Kroah-Hartman
-> <gregkh@linuxfoundation.org> wrote:
->> On Tue, May 26, 2020 at 07:49:07PM +0800, Zhangfei Gao wrote:
->>> Some platform devices appear as PCI but are actually on the AMBA bus,
->> Why would these devices not just show up on the AMBA bus and use all of
->> that logic instead of being a PCI device and having to go through odd
->> fixes like this?
-> There is a general move to having hardware be discoverable even with
-> ARM processors. Having on-chip devices be discoverable using PCI config
-> space is how x86 SoCs usually do it, and that is generally a good thing
-> as it means we don't need to describe them in DT
->
-> I guess as the hardware designers are still learning about it, this is not
-> always done correctly. In general, we can also describe PCI devices on
-> DT and do fixups during the probing there, but I suspect that won't work
-> as easily using ACPI probing, so the fixup is keyed off the hardware ID,
-> again as is common for x86 on-chip devices.
->
->   
-Yes, thanks Arnd :)
+Hi Jim,
+one thing comes to mind, there is a small test suite in drivers/of/unittest=
+.c
+(specifically of_unittest_pci_dma_ranges()) you could extend it to include =
+your
+use cases.
 
-In order to use pasid, io page fault has to be supported,
-either by PCI PRI feature (from pci device) or stall mode from smmu 
-(platform device).
-Here is letting system know the platform device can support smmu stall 
-mode, as a result support pasid.
-While stall is not a pci capability, so we use a fixup here.
+On Tue, 2020-05-26 at 15:12 -0400, Jim Quinlan wrote:
+> The new field in struct device 'dma_pfn_offset_map' is used to facilitate
+> the use of multiple pfn offsets between cpu addrs and dma addrs.  It is
+> similar to 'dma_pfn_offset' except that the offset chosen depends on the
+> cpu or dma address involved.
+>=20
+> Signed-off-by: Jim Quinlan <james.quinlan@broadcom.com>
+> ---
+>  drivers/of/address.c        | 65 +++++++++++++++++++++++++++++++++++--
+>  drivers/usb/core/message.c  |  3 ++
+>  drivers/usb/core/usb.c      |  3 ++
+>  include/linux/device.h      | 10 +++++-
+>  include/linux/dma-direct.h  | 10 ++++--
+>  include/linux/dma-mapping.h | 46 ++++++++++++++++++++++++++
+>  kernel/dma/Kconfig          | 13 ++++++++
+>  7 files changed, 144 insertions(+), 6 deletions(-)
+>=20
 
-Thanks
+[...]
+
+> @@ -977,10 +1020,19 @@ int of_dma_get_range(struct device *dev, struct
+> device_node *np, u64 *dma_addr,
+>  		pr_debug("dma_addr(%llx) cpu_addr(%llx) size(%llx)\n",
+>  			 range.bus_addr, range.cpu_addr, range.size);
+> =20
+> +		num_ranges++;
+>  		if (dma_offset && range.cpu_addr - range.bus_addr !=3D dma_offset)
+> {
+> -			pr_warn("Can't handle multiple dma-ranges with different
+> offsets on node(%pOF)\n", node);
+> -			/* Don't error out as we'd break some existing DTs */
+> -			continue;
+> +			if (!IS_ENABLED(CONFIG_DMA_PFN_OFFSET_MAP)) {
+> +				pr_warn("Can't handle multiple dma-ranges with
+> different offsets on node(%pOF)\n", node);
+> +				pr_warn("Perhaps set DMA_PFN_OFFSET_MAP=3Dy?\n");
+> +				/*
+> +				 * Don't error out as we'd break some existing
+> +				 * DTs that are using configs w/o
+> +				 * CONFIG_DMA_PFN_OFFSET_MAP set.
+> +				 */
+> +				continue;
+
+dev->bus_dma_limit is set in of_dma_configure(), this function's caller, ba=
+sed
+on dma_start's value (set after this continue). So you'd be effectively set=
+ting
+the dev->bus_dma_limit to whatever we get from the first dma-range.
+
+This can be troublesome depending on how the dma-ranges are setup, for exam=
+ple
+if the first dma-range doesn't include the CMA area, in arm64 generally set=
+ as
+high as possible in ZONE_DMA32, that would render it useless for
+dma/{direct/swiotlb}. Again depending on the bus_dma_limit value, if smalle=
+r
+than ZONE_DMA you'd be unable to allocate any DMA memory.
+
+IMO, a solution to this calls for a revamp of dma-direct's dma_capable(): m=
+atch
+the target DMA memory area with each dma-range we have to see if it fits.
+
+> +			}
+> +			dma_multi_pfn_offset =3D true;
+>  		}
+>  		dma_offset =3D range.cpu_addr - range.bus_addr;
+> =20
+> @@ -991,6 +1043,13 @@ int of_dma_get_range(struct device *dev, struct
+> device_node *np, u64 *dma_addr,
+>  			dma_end =3D range.bus_addr + range.size;
+>  	}
+> =20
+> +	if (dma_multi_pfn_offset) {
+> +		dma_offset =3D 0;
+> +		ret =3D attach_dma_pfn_offset_map(dev, node, num_ranges);
+> +		if (ret)
+> +			return ret;
+> +	}
+> +
+>  	if (dma_start >=3D dma_end) {
+>  		ret =3D -EINVAL;
+>  		pr_debug("Invalid DMA ranges configuration on node(%pOF)\n",
+> diff --git a/drivers/usb/core/message.c b/drivers/usb/core/message.c
+> index 6197938dcc2d..aaa3e58f5eb4 100644
+> --- a/drivers/usb/core/message.c
+> +++ b/drivers/usb/core/message.c
+> @@ -1960,6 +1960,9 @@ int usb_set_configuration(struct usb_device *dev, i=
+nt
+> configuration)
+>  		 */
+>  		intf->dev.dma_mask =3D dev->dev.dma_mask;
+>  		intf->dev.dma_pfn_offset =3D dev->dev.dma_pfn_offset;
+> +#ifdef CONFIG_DMA_PFN_OFFSET_MAP
+> +		intf->dev.dma_pfn_offset_map =3D dev->dev.dma_pfn_offset_map;
+> +#endif
+
+Thanks for looking at this, that said, I see more instances of drivers chan=
+ging
+dma_pfn_offset outside of the core code. Why not doing this there too?
+
+Also, are we 100% sure that dev->dev.dma_pfn_offset isn't going to be freed
+before we're done using intf->dev? Maybe it's safer to copy the ranges?
+
+>  		INIT_WORK(&intf->reset_ws, __usb_queue_reset_device);
+>  		intf->minor =3D -1;
+>  		device_initialize(&intf->dev);
+> diff --git a/drivers/usb/core/usb.c b/drivers/usb/core/usb.c
+> index f16c26dc079d..d2ed4d90e56e 100644
+> --- a/drivers/usb/core/usb.c
+> +++ b/drivers/usb/core/usb.c
+> @@ -612,6 +612,9 @@ struct usb_device *usb_alloc_dev(struct usb_device
+> *parent,
+>  	 */
+>  	dev->dev.dma_mask =3D bus->sysdev->dma_mask;
+>  	dev->dev.dma_pfn_offset =3D bus->sysdev->dma_pfn_offset;
+> +#ifdef CONFIG_DMA_PFN_OFFSET_MAP
+> +	dev->dev.dma_pfn_offset_map =3D bus->sysdev->dma_pfn_offset_map;
+> +#endif
+>  	set_dev_node(&dev->dev, dev_to_node(bus->sysdev));
+>  	dev->state =3D USB_STATE_ATTACHED;
+>  	dev->lpm_disable_count =3D 1;
+> diff --git a/include/linux/device.h b/include/linux/device.h
+> index ac8e37cd716a..67a240ad4fc5 100644
+> --- a/include/linux/device.h
+> +++ b/include/linux/device.h
+> @@ -493,6 +493,8 @@ struct dev_links_info {
+>   * @bus_dma_limit: Limit of an upstream bridge or bus which imposes a sm=
+aller
+>   *		DMA limit than the device itself supports.
+>   * @dma_pfn_offset: offset of DMA memory range relatively of RAM
+> + * @dma_pfn_offset_map:	Like dma_pfn_offset but used when there are
+> multiple
+> + *		pfn offsets for multiple dma-ranges.
+>   * @dma_parms:	A low level driver may set these to teach IOMMU code
+> about
+>   * 		segment limitations.
+>   * @dma_pools:	Dma pools (if dma'ble device).
+> @@ -578,7 +580,13 @@ struct device {
+>  					     allocations such descriptors. */
+>  	u64		bus_dma_limit;	/* upstream dma constraint */
+>  	unsigned long	dma_pfn_offset;
+> -
+> +#ifdef CONFIG_DMA_PFN_OFFSET_MAP
+> +	const struct dma_pfn_offset_region *dma_pfn_offset_map;
+> +					/* Like dma_pfn_offset, but for
+> +					 * the unlikely case of multiple
+> +					 * offsets. If non-null, dma_pfn_offset
+> +					 * will be set to 0. */
+> +#endif
+
+I'm still sad this doesn't fully replace dma_pfn_offset & bus_dma_limit. I =
+feel
+the extra logic involved in incorporating this as default isn't going to be
+noticeable as far as performance is concerned to single dma-range users, an=
+d
+it'd make for a nicer DMA code. Also you'd force everyone to test their cha=
+nges
+on the multi dma-ranges code path, as opposed to having this disabled 99.9%=
+ of
+the time (hence broken every so often).
+
+Note that I sympathize with the amount of work involved on improving that, =
+so
+better wait to hear what more knowledgeable people have to say about this :=
+)
+
+Regards,
+Nicolas
+
+
+--=-U+7wZGgMLMRLCbS+rYVu
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCAAdFiEErOkkGDHCg2EbPcGjlfZmHno8x/4FAl7OgHcACgkQlfZmHno8
+x/5aqAgAtmbHeV7BQvfE3hZbzxOqDfPLkpXq6BB646SCtiQ/l3uzT6TBS2w8UQ7A
+F8YkwGAEODoS8hAhImINqjrJHPAachmqkLICx7z3HKt2zDKJkAqIO3jOZTPtkBe2
+ZNeOQslgtj9l5uUOmGC+84xeHa73PH8FbUFVCXnzksawH/YuNh5tR1MA3ooFLA9J
+EVsNyDwxasfmnoANxbfNDqSFg8m5ycP0GyMQLo+LaV7McJSvlIfa4YFlTzJRVTiW
+yj2tSkYtFosbMccUlBZPim1Uv/UKAk6LiXp1eD/S9pPeF8v0Gxa5aYBYUkXQ1Bxm
+HdyI1X5a4AdEQzQmGSW4Oi1vbNM0iA==
+=Xo2q
+-----END PGP SIGNATURE-----
+
+--=-U+7wZGgMLMRLCbS+rYVu--
 
