@@ -2,266 +2,304 @@ Return-Path: <SRS0=Vh5R=7L=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9505AC433E1
-	for <linux-pci@archiver.kernel.org>; Fri, 29 May 2020 17:35:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4024C433E0
+	for <linux-pci@archiver.kernel.org>; Fri, 29 May 2020 17:41:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 715132072D
-	for <linux-pci@archiver.kernel.org>; Fri, 29 May 2020 17:35:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1590773723;
-	bh=N+Un+BXPNCdwo4xJnKmNvAMc7B65G5dDUl6XlFJhboc=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=qdIbnV77NZ5VE8bHRVCgJKJ7qixUIYoItd9MdWtLHZlzYQH98/4zn6CzA73PjsJKo
-	 JZHVkqY9A+6I8IP9W9TsxxKMwyH0as5azSr3ICMiyOU+9r9Sj94r4YipDHTpJ/D3Y2
-	 96Wp55jU9n9NVG9A635Mac3TDOAaM+XkykpF5zvY=
+	by mail.kernel.org (Postfix) with ESMTP id B071A2065F
+	for <linux-pci@archiver.kernel.org>; Fri, 29 May 2020 17:41:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727980AbgE2RfS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 29 May 2020 13:35:18 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56382 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727062AbgE2RfN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 29 May 2020 13:35:13 -0400
-Received: from mail-oi1-f176.google.com (mail-oi1-f176.google.com [209.85.167.176])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 2808A2158C;
-        Fri, 29 May 2020 17:35:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1590773712;
-        bh=N+Un+BXPNCdwo4xJnKmNvAMc7B65G5dDUl6XlFJhboc=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=FC3K04+o4kotI0QdMdPXhWg/NrGqfBDvkybMPFFYhcROjhXFdhvHa2g/UMuaRQqe4
-         0PXK7cz+RH1eDoNP8QxNY3rNcgGsseJCELbyZgsSzVIjNfuk4dHvCtCGqflCylK4jK
-         2TJzKOFI4NdHk0vFqSZFwojvCm1olXIh9bODbUlM=
-Received: by mail-oi1-f176.google.com with SMTP id r67so3313147oih.0;
-        Fri, 29 May 2020 10:35:12 -0700 (PDT)
-X-Gm-Message-State: AOAM532dp6rzP1uKWpfJEU6XO0c81OyZZOmeY2rQ1eJnDwovfyHadNWA
-        YNnMUwwk9zdR2nFgd5vsYMU8afdq35lyhYxLuA==
-X-Google-Smtp-Source: ABdhPJy67vCAsYB4Fd3qNuQ9AC0QhkVo349CUBfpkVbINCPQGDe2HpNRSlbYDZ1gs0sw/NCjOOh6RfVzTBK35dFAoUo=
-X-Received: by 2002:a05:6808:7cb:: with SMTP id f11mr6993653oij.152.1590773711249;
- Fri, 29 May 2020 10:35:11 -0700 (PDT)
+        id S1726845AbgE2RlD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 29 May 2020 13:41:03 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:59338 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726487AbgE2RlC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 29 May 2020 13:41:02 -0400
+Received: from DGGEMS402-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id 46AC018462DC81F5B320;
+        Sat, 30 May 2020 01:40:59 +0800 (CST)
+Received: from DESKTOP-6T4S3DQ.china.huawei.com (10.47.92.215) by
+ DGGEMS402-HUB.china.huawei.com (10.3.19.202) with Microsoft SMTP Server id
+ 14.3.487.0; Sat, 30 May 2020 01:40:53 +0800
+From:   Shiju Jose <shiju.jose@huawei.com>
+To:     <linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <rjw@rjwysocki.net>,
+        <bp@alien8.de>, <james.morse@arm.com>, <helgaas@kernel.org>,
+        <lenb@kernel.org>, <tony.luck@intel.com>,
+        <dan.carpenter@oracle.com>, <gregkh@linuxfoundation.org>,
+        <zhangliguang@linux.alibaba.com>, <tglx@linutronix.de>
+CC:     Shiju Jose <shiju.jose@huawei.com>, <linuxarm@huawei.com>,
+        <yangyicong@hisilicon.com>
+Subject: [PATCH v8 1/2] ACPI / APEI: Add support to notify the vendor specific HW errors
+Date:   Fri, 29 May 2020 18:38:53 +0100
+Message-ID: <20200529173854.2521-2-shiju.jose@huawei.com>
+X-Mailer: git-send-email 2.26.0.windows.1
+In-Reply-To: <20200529173854.2521-1-shiju.jose@huawei.com>
+References: <20200529173854.2521-1-shiju.jose@huawei.com>
 MIME-Version: 1.0
-References: <20200526191303.1492-1-james.quinlan@broadcom.com>
- <20200526191303.1492-10-james.quinlan@broadcom.com> <59a0b4e1454a8ef4d3e4ebaf55dcbf3dcd2d73a2.camel@suse.de>
- <CA+-6iNyOKvY-xNfXqDRa5_nJVJuqGKA-oe-ejNuJHUBt6ORu0A@mail.gmail.com>
-In-Reply-To: <CA+-6iNyOKvY-xNfXqDRa5_nJVJuqGKA-oe-ejNuJHUBt6ORu0A@mail.gmail.com>
-From:   Rob Herring <robh+dt@kernel.org>
-Date:   Fri, 29 May 2020 11:34:59 -0600
-X-Gmail-Original-Message-ID: <CAL_JsqJsxxC6msUXBCa9naitMLfOcVZauk44gPJNGGe3iXRzsA@mail.gmail.com>
-Message-ID: <CAL_JsqJsxxC6msUXBCa9naitMLfOcVZauk44gPJNGGe3iXRzsA@mail.gmail.com>
-Subject: Re: [PATCH v2 09/14] device core: Add ability to handle multiple dma offsets
-To:     Jim Quinlan <james.quinlan@broadcom.com>
-Cc:     Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
-        "open list:PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS" 
-        <linux-pci@vger.kernel.org>, Christoph Hellwig <hch@lst.de>,
-        "maintainer:BROADCOM BCM7XXX ARM ARCHITECTURE" 
-        <bcm-kernel-feedback-list@broadcom.com>,
-        Frank Rowand <frowand.list@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Oliver Neukum <oneukum@suse.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Wolfram Sang <wsa@kernel.org>, Corey Minyard <minyard@acm.org>,
-        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-        Suzuki K Poulose <suzuki.poulose@arm.com>,
-        Saravana Kannan <saravanak@google.com>,
-        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE" 
-        <devicetree@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        "open list:USB SUBSYSTEM" <linux-usb@vger.kernel.org>,
-        "open list:DMA MAPPING HELPERS" <iommu@lists.linux-foundation.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.47.92.215]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, May 27, 2020 at 9:43 AM Jim Quinlan <james.quinlan@broadcom.com> wrote:
->
-> Hi Nicolas,
->
-> On Wed, May 27, 2020 at 11:00 AM Nicolas Saenz Julienne
-> <nsaenzjulienne@suse.de> wrote:
-> >
-> > Hi Jim,
-> > one thing comes to mind, there is a small test suite in drivers/of/unittest.c
-> > (specifically of_unittest_pci_dma_ranges()) you could extend it to include your
-> > use cases.
-> Sure, will check out.
-> >
-> > On Tue, 2020-05-26 at 15:12 -0400, Jim Quinlan wrote:
-> > > The new field in struct device 'dma_pfn_offset_map' is used to facilitate
-> > > the use of multiple pfn offsets between cpu addrs and dma addrs.  It is
-> > > similar to 'dma_pfn_offset' except that the offset chosen depends on the
-> > > cpu or dma address involved.
-> > >
-> > > Signed-off-by: Jim Quinlan <james.quinlan@broadcom.com>
-> > > ---
-> > >  drivers/of/address.c        | 65 +++++++++++++++++++++++++++++++++++--
-> > >  drivers/usb/core/message.c  |  3 ++
-> > >  drivers/usb/core/usb.c      |  3 ++
-> > >  include/linux/device.h      | 10 +++++-
-> > >  include/linux/dma-direct.h  | 10 ++++--
-> > >  include/linux/dma-mapping.h | 46 ++++++++++++++++++++++++++
-> > >  kernel/dma/Kconfig          | 13 ++++++++
-> > >  7 files changed, 144 insertions(+), 6 deletions(-)
-> > >
-> >
-> > [...]
-> >
-> > > @@ -977,10 +1020,19 @@ int of_dma_get_range(struct device *dev, struct
-> > > device_node *np, u64 *dma_addr,
-> > >               pr_debug("dma_addr(%llx) cpu_addr(%llx) size(%llx)\n",
-> > >                        range.bus_addr, range.cpu_addr, range.size);
-> > >
-> > > +             num_ranges++;
-> > >               if (dma_offset && range.cpu_addr - range.bus_addr != dma_offset)
-> > > {
-> > > -                     pr_warn("Can't handle multiple dma-ranges with different
-> > > offsets on node(%pOF)\n", node);
-> > > -                     /* Don't error out as we'd break some existing DTs */
-> > > -                     continue;
-> > > +                     if (!IS_ENABLED(CONFIG_DMA_PFN_OFFSET_MAP)) {
-> > > +                             pr_warn("Can't handle multiple dma-ranges with
-> > > different offsets on node(%pOF)\n", node);
-> > > +                             pr_warn("Perhaps set DMA_PFN_OFFSET_MAP=y?\n");
-> > > +                             /*
-> > > +                              * Don't error out as we'd break some existing
-> > > +                              * DTs that are using configs w/o
-> > > +                              * CONFIG_DMA_PFN_OFFSET_MAP set.
-> > > +                              */
-> > > +                             continue;
-> >
-> > dev->bus_dma_limit is set in of_dma_configure(), this function's caller, based
-> > on dma_start's value (set after this continue). So you'd be effectively setting
-> > the dev->bus_dma_limit to whatever we get from the first dma-range.
-> I'm not seeing that at all.  On the  evaluation of each dma-range,
-> dma_start and dma_end are re-evaluated to be the lowest and highest
-> bus values of the  dma-ranges seen so far.  After all dma-ranges are
-> examined,  dev->bus_dma_limit being set to the highest.  In fact, the
-> current code -- ie before my commits -- already does this for multiple
-> dma-ranges as long as the cpu-bus offset is the same in the
-> dma-ranges.
-> >
-> > This can be troublesome depending on how the dma-ranges are setup, for example
-> > if the first dma-range doesn't include the CMA area, in arm64 generally set as
-> > high as possible in ZONE_DMA32, that would render it useless for
-> > dma/{direct/swiotlb}. Again depending on the bus_dma_limit value, if smaller
-> > than ZONE_DMA you'd be unable to allocate any DMA memory.
-> >
-> > IMO, a solution to this calls for a revamp of dma-direct's dma_capable(): match
-> > the target DMA memory area with each dma-range we have to see if it fits.
-> >
-> > > +                     }
-> > > +                     dma_multi_pfn_offset = true;
-> > >               }
-> > >               dma_offset = range.cpu_addr - range.bus_addr;
-> > >
-> > > @@ -991,6 +1043,13 @@ int of_dma_get_range(struct device *dev, struct
-> > > device_node *np, u64 *dma_addr,
-> > >                       dma_end = range.bus_addr + range.size;
-> > >       }
-> > >
-> > > +     if (dma_multi_pfn_offset) {
-> > > +             dma_offset = 0;
-> > > +             ret = attach_dma_pfn_offset_map(dev, node, num_ranges);
-> > > +             if (ret)
-> > > +                     return ret;
-> > > +     }
-> > > +
-> > >       if (dma_start >= dma_end) {
-> > >               ret = -EINVAL;
-> > >               pr_debug("Invalid DMA ranges configuration on node(%pOF)\n",
-> > > diff --git a/drivers/usb/core/message.c b/drivers/usb/core/message.c
-> > > index 6197938dcc2d..aaa3e58f5eb4 100644
-> > > --- a/drivers/usb/core/message.c
-> > > +++ b/drivers/usb/core/message.c
-> > > @@ -1960,6 +1960,9 @@ int usb_set_configuration(struct usb_device *dev, int
-> > > configuration)
-> > >                */
-> > >               intf->dev.dma_mask = dev->dev.dma_mask;
-> > >               intf->dev.dma_pfn_offset = dev->dev.dma_pfn_offset;
-> > > +#ifdef CONFIG_DMA_PFN_OFFSET_MAP
-> > > +             intf->dev.dma_pfn_offset_map = dev->dev.dma_pfn_offset_map;
-> > > +#endif
-> >
-> > Thanks for looking at this, that said, I see more instances of drivers changing
-> > dma_pfn_offset outside of the core code. Why not doing this there too?
-> >
-> > Also, are we 100% sure that dev->dev.dma_pfn_offset isn't going to be freed
-> > before we're done using intf->dev? Maybe it's safer to copy the ranges?
-> >
-> > >               INIT_WORK(&intf->reset_ws, __usb_queue_reset_device);
-> > >               intf->minor = -1;
-> > >               device_initialize(&intf->dev);
-> > > diff --git a/drivers/usb/core/usb.c b/drivers/usb/core/usb.c
-> > > index f16c26dc079d..d2ed4d90e56e 100644
-> > > --- a/drivers/usb/core/usb.c
-> > > +++ b/drivers/usb/core/usb.c
-> > > @@ -612,6 +612,9 @@ struct usb_device *usb_alloc_dev(struct usb_device
-> > > *parent,
-> > >        */
-> > >       dev->dev.dma_mask = bus->sysdev->dma_mask;
-> > >       dev->dev.dma_pfn_offset = bus->sysdev->dma_pfn_offset;
-> > > +#ifdef CONFIG_DMA_PFN_OFFSET_MAP
-> > > +     dev->dev.dma_pfn_offset_map = bus->sysdev->dma_pfn_offset_map;
-> > > +#endif
-> > >       set_dev_node(&dev->dev, dev_to_node(bus->sysdev));
-> > >       dev->state = USB_STATE_ATTACHED;
-> > >       dev->lpm_disable_count = 1;
-> > > diff --git a/include/linux/device.h b/include/linux/device.h
-> > > index ac8e37cd716a..67a240ad4fc5 100644
-> > > --- a/include/linux/device.h
-> > > +++ b/include/linux/device.h
-> > > @@ -493,6 +493,8 @@ struct dev_links_info {
-> > >   * @bus_dma_limit: Limit of an upstream bridge or bus which imposes a smaller
-> > >   *           DMA limit than the device itself supports.
-> > >   * @dma_pfn_offset: offset of DMA memory range relatively of RAM
-> > > + * @dma_pfn_offset_map:      Like dma_pfn_offset but used when there are
-> > > multiple
-> > > + *           pfn offsets for multiple dma-ranges.
-> > >   * @dma_parms:       A low level driver may set these to teach IOMMU code
-> > > about
-> > >   *           segment limitations.
-> > >   * @dma_pools:       Dma pools (if dma'ble device).
-> > > @@ -578,7 +580,13 @@ struct device {
-> > >                                            allocations such descriptors. */
-> > >       u64             bus_dma_limit;  /* upstream dma constraint */
-> > >       unsigned long   dma_pfn_offset;
-> > > -
-> > > +#ifdef CONFIG_DMA_PFN_OFFSET_MAP
-> > > +     const struct dma_pfn_offset_region *dma_pfn_offset_map;
-> > > +                                     /* Like dma_pfn_offset, but for
-> > > +                                      * the unlikely case of multiple
-> > > +                                      * offsets. If non-null, dma_pfn_offset
-> > > +                                      * will be set to 0. */
-> > > +#endif
-> >
-> > I'm still sad this doesn't fully replace dma_pfn_offset & bus_dma_limit. I feel
-> > the extra logic involved in incorporating this as default isn't going to be
-> > noticeable as far as performance is concerned to single dma-range users, and
-> > it'd make for a nicer DMA code. Also you'd force everyone to test their changes
-> > on the multi dma-ranges code path, as opposed to having this disabled 99.9% of
-> > the time (hence broken every so often).
-> Good point.
+Add support to report the vendor specific non-fatal HW errors
+to the drivers for the error recovery.
 
-+1
+Signed-off-by: Shiju Jose <shiju.jose@huawei.com>
+---
+ drivers/acpi/apei/ghes.c | 126 ++++++++++++++++++++++++++++++++++++++-
+ include/acpi/ghes.h      |  28 +++++++++
+ 2 files changed, 153 insertions(+), 1 deletion(-)
 
-> > Note that I sympathize with the amount of work involved on improving that, so
-> > better wait to hear what more knowledgeable people have to say about this :)
-> Yes, I agree.  I want to avoid coding and testing one solution only to
-> have a different reviewer NAK it.
+diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
+index 24c9642e8fc7..d89a74dfae6a 100644
+--- a/drivers/acpi/apei/ghes.c
++++ b/drivers/acpi/apei/ghes.c
+@@ -33,6 +33,7 @@
+ #include <linux/irq_work.h>
+ #include <linux/llist.h>
+ #include <linux/genalloc.h>
++#include <linux/kfifo.h>
+ #include <linux/pci.h>
+ #include <linux/pfn.h>
+ #include <linux/aer.h>
+@@ -63,6 +64,11 @@
+ #define GHES_ESTATUS_CACHES_SIZE	4
+ 
+ #define GHES_ESTATUS_IN_CACHE_MAX_NSEC	10000000000ULL
++
++#define GHES_EVENT_RING_SIZE	256
++#define GHES_GDATA_POOL_MIN_ALLOC_ORDER	3
++#define GHES_GDATA_POOL_MIN_SIZE	65536
++
+ /* Prevent too many caches are allocated because of RCU */
+ #define GHES_ESTATUS_CACHE_ALLOCED_MAX	(GHES_ESTATUS_CACHES_SIZE * 3 / 2)
+ 
+@@ -122,6 +128,19 @@ static DEFINE_MUTEX(ghes_list_mutex);
+  */
+ static DEFINE_SPINLOCK(ghes_notify_lock_irq);
+ 
++struct ghes_event_entry {
++	struct acpi_hest_generic_data *gdata;
++	int error_severity;
++};
++
++static DEFINE_KFIFO(ghes_event_ring, struct ghes_event_entry,
++		    GHES_EVENT_RING_SIZE);
++
++static DEFINE_SPINLOCK(ghes_event_ring_lock);
++
++static struct gen_pool *ghes_gdata_pool;
++static unsigned long ghes_gdata_pool_size_request;
++
+ static struct gen_pool *ghes_estatus_pool;
+ static unsigned long ghes_estatus_pool_size_request;
+ 
+@@ -188,6 +207,40 @@ int ghes_estatus_pool_init(int num_ghes)
+ 	return -ENOMEM;
+ }
+ 
++int ghes_gdata_pool_init(void)
++{
++	unsigned long addr, len;
++	int rc;
++
++	ghes_gdata_pool = gen_pool_create(GHES_GDATA_POOL_MIN_ALLOC_ORDER, -1);
++	if (!ghes_gdata_pool)
++		return -ENOMEM;
++
++	if (ghes_gdata_pool_size_request < GHES_GDATA_POOL_MIN_SIZE)
++		ghes_gdata_pool_size_request = GHES_GDATA_POOL_MIN_SIZE;
++
++	len = ghes_gdata_pool_size_request;
++	addr = (unsigned long)vmalloc(PAGE_ALIGN(len));
++	if (!addr)
++		goto err_pool_alloc;
++
++	vmalloc_sync_mappings();
++
++	rc = gen_pool_add(ghes_gdata_pool, addr, PAGE_ALIGN(len), -1);
++	if (rc)
++		goto err_pool_add;
++
++	return 0;
++
++err_pool_add:
++	vfree((void *)addr);
++
++err_pool_alloc:
++	gen_pool_destroy(ghes_gdata_pool);
++
++	return -ENOMEM;
++}
++
+ static int map_gen_v2(struct ghes *ghes)
+ {
+ 	return apei_map_generic_address(&ghes->generic_v2->read_ack_register);
+@@ -247,6 +300,10 @@ static struct ghes *ghes_new(struct acpi_hest_generic *generic)
+ 		goto err_unmap_status_addr;
+ 	}
+ 
++	ghes_gdata_pool_size_request += generic->records_to_preallocate *
++					generic->max_sections_per_record *
++					generic->max_raw_data_length;
++
+ 	return ghes;
+ 
+ err_unmap_status_addr:
+@@ -490,6 +547,48 @@ static void ghes_handle_aer(struct acpi_hest_generic_data *gdata)
+ #endif
+ }
+ 
++static BLOCKING_NOTIFIER_HEAD(ghes_event_notify_list);
++
++/**
++ * ghes_register_event_notifier - register an event notifier
++ * for the non-fatal HW errors.
++ * @nb: pointer to the notifier_block structure of the event handler.
++ *
++ * return 0 : SUCCESS, non-zero : FAIL
++ */
++int ghes_register_event_notifier(struct notifier_block *nb)
++{
++	return blocking_notifier_chain_register(&ghes_event_notify_list, nb);
++}
++EXPORT_SYMBOL_GPL(ghes_register_event_notifier);
++
++/**
++ * ghes_unregister_event_notifier - unregister the previously
++ * registered event notifier.
++ * @nb: pointer to the notifier_block structure of the event handler.
++ */
++void ghes_unregister_event_notifier(struct notifier_block *nb)
++{
++	blocking_notifier_chain_unregister(&ghes_event_notify_list, nb);
++}
++EXPORT_SYMBOL_GPL(ghes_unregister_event_notifier);
++
++static void ghes_event_work_func(struct work_struct *work)
++{
++	struct ghes_event_entry entry;
++	u32 len;
++
++	while (kfifo_get(&ghes_event_ring, &entry)) {
++		blocking_notifier_call_chain(&ghes_event_notify_list,
++					     entry.error_severity,
++					     entry.gdata);
++		len = acpi_hest_get_record_size(entry.gdata);
++		gen_pool_free(ghes_gdata_pool, (unsigned long)entry.gdata, len);
++	}
++}
++
++static DECLARE_WORK(ghes_event_work, ghes_event_work_func);
++
+ static void ghes_do_proc(struct ghes *ghes,
+ 			 const struct acpi_hest_generic_status *estatus)
+ {
+@@ -498,6 +597,8 @@ static void ghes_do_proc(struct ghes *ghes,
+ 	guid_t *sec_type;
+ 	const guid_t *fru_id = &guid_null;
+ 	char *fru_text = "";
++	struct ghes_event_entry event_entry;
++	u32 len;
+ 
+ 	sev = ghes_severity(estatus->error_severity);
+ 	apei_estatus_for_each_section(estatus, gdata) {
+@@ -527,6 +628,21 @@ static void ghes_do_proc(struct ghes *ghes,
+ 		} else {
+ 			void *err = acpi_hest_get_payload(gdata);
+ 
++			len = acpi_hest_get_record_size(gdata);
++			event_entry.gdata =
++				(void *)gen_pool_alloc(ghes_gdata_pool, len);
++			if (event_entry.gdata) {
++				memcpy(event_entry.gdata, gdata, len);
++				event_entry.error_severity = sev;
++
++				if (kfifo_in_spinlocked(&ghes_event_ring,
++							&event_entry, 1,
++							&ghes_event_ring_lock))
++					schedule_work(&ghes_event_work);
++				else
++					pr_warn(GHES_PFX "ghes event queue full\n");
++			}
++
+ 			log_non_standard_event(sec_type, fru_id, fru_text,
+ 					       sec_sev, err,
+ 					       gdata->error_data_length);
+@@ -1334,7 +1450,7 @@ static int __init ghes_init(void)
+ 
+ 	rc = platform_driver_register(&ghes_platform_driver);
+ 	if (rc)
+-		goto err;
++		goto exit;
+ 
+ 	rc = apei_osc_setup();
+ 	if (rc == 0 && osc_sb_apei_support_acked)
+@@ -1346,8 +1462,16 @@ static int __init ghes_init(void)
+ 	else
+ 		pr_info(GHES_PFX "Failed to enable APEI firmware first mode.\n");
+ 
++	rc = ghes_gdata_pool_init();
++	if (rc) {
++		pr_warn(GHES_PFX "ghes_gdata_pool_init failed\n");
++		goto err;
++	}
++
+ 	return 0;
+ err:
++	platform_driver_unregister(&ghes_platform_driver);
++exit:
+ 	return rc;
+ }
+ device_initcall(ghes_init);
+diff --git a/include/acpi/ghes.h b/include/acpi/ghes.h
+index e3f1cddb4ac8..a3dd82069069 100644
+--- a/include/acpi/ghes.h
++++ b/include/acpi/ghes.h
+@@ -50,6 +50,34 @@ enum {
+ 	GHES_SEV_PANIC = 0x3,
+ };
+ 
++
++#ifdef CONFIG_ACPI_APEI_GHES
++/**
++ * ghes_register_event_notifier - register an event notifier
++ * for the non-fatal HW errors.
++ * @nb: pointer to the notifier_block structure of the event notifier.
++ *
++ * Return : 0 - SUCCESS, non-zero - FAIL.
++ */
++int ghes_register_event_notifier(struct notifier_block *nb);
++
++/**
++ * ghes_unregister_event_notifier - unregister the previously
++ * registered event notifier.
++ * @nb: pointer to the notifier_block structure of the event notifier.
++ */
++void ghes_unregister_event_notifier(struct notifier_block *nb);
++#else
++static inline int ghes_register_event_notifier(struct notifier_block *nb)
++{
++	return -ENODEV;
++}
++
++static inline void ghes_unregister_event_notifier(struct notifier_block *nb)
++{
++}
++#endif
++
+ int ghes_estatus_pool_init(int num_ghes);
+ 
+ /* From drivers/edac/ghes_edac.c */
+-- 
+2.17.1
 
-It's a pretty safe bet that everyone will prefer one code path over 2.
 
-Rob
