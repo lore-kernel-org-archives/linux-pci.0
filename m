@@ -2,83 +2,115 @@ Return-Path: <SRS0=Mhck=7M=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D797AC433E0
-	for <linux-pci@archiver.kernel.org>; Sat, 30 May 2020 11:33:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDBE8C433E0
+	for <linux-pci@archiver.kernel.org>; Sat, 30 May 2020 22:25:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AF894212CC
-	for <linux-pci@archiver.kernel.org>; Sat, 30 May 2020 11:33:56 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="IMwvZtlW"
+	by mail.kernel.org (Postfix) with ESMTP id CA403206A1
+	for <linux-pci@archiver.kernel.org>; Sat, 30 May 2020 22:25:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728848AbgE3Ldz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 30 May 2020 07:33:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39634 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728304AbgE3Ldz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 30 May 2020 07:33:55 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8790AC03E969;
-        Sat, 30 May 2020 04:33:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=uBs5qA4b4HpHoQWurKlW7KyHPg6+1oDn7PTuK57+Tk0=; b=IMwvZtlWkoReIdDdp8GfPd1IaK
-        rweQ97xMVVudMr4rghIG7Ph4wDb5B+v3ELxgAMCXyaDZWLjmFlqnlrv0K3NzIPUgF9nJFKYpjtGUH
-        Zl1heV2A1hGNxoL+wBQKhjercn0Nr4cMI2jMWEzdtJmsWvsjRxlixrXQHFUjo5Ao8jDRDYfJfmSmh
-        0iDrdxI/B5ZUELjBcIwR2I31rBDm+cy3ghjORls71Te+oqG9qUl9IEu5bdZwwutgG7HWD/Uq88Jgk
-        UzWS5VtFOTGHIJ4o7mb3sF2OvC6KloCsEbEwrONDPhCylf3wLwRIOTfHOFyPJhgz+j3/14wKkpDl/
-        1vZSxPPw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jezkG-0004GI-MC; Sat, 30 May 2020 11:33:44 +0000
-Date:   Sat, 30 May 2020 04:33:44 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Matthew Garrett <mjg59@srcf.ucam.org>
-Cc:     Heiner Kallweit <hkallweit1@gmail.com>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: Lost PCIe PME after a914ff2d78ce ("PCI/ASPM: Don't select
- CONFIG_PCIEASPM by default")
-Message-ID: <20200530113344.GA2834@infradead.org>
-References: <bdc33be8-1db6-b147-cbc4-90fa0dc3d999@gmail.com>
- <20200529202135.GA461617@bjorn-Precision-5520>
- <20200529205900.whx3mxuvt6ijlqwg@srcf.ucam.org>
- <824d63d8-668c-22c8-a303-b44e30e805e1@gmail.com>
- <20200529225801.szl4obsas6ndilz4@srcf.ucam.org>
- <7c8cab08-e2d4-1952-1923-aa023ea67657@gmail.com>
- <20200530071434.vjkqxfmgo7xpls6j@srcf.ucam.org>
+        id S1729183AbgE3WZj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 30 May 2020 18:25:39 -0400
+Received: from jabberwock.ucw.cz ([46.255.230.98]:55378 "EHLO
+        jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729083AbgE3WZi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 30 May 2020 18:25:38 -0400
+Received: from albireo.burrow.ucw.cz (albireo.ucw.cz [91.219.245.20])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256
+         client-signature RSA-PSS (1024 bits) client-digest SHA256)
+        (Client CN "albireo.ucw.cz", Issuer "ucw.cz" (verified OK))
+        by jabberwock.ucw.cz (Postfix) with ESMTPS id ED5911C0BD2
+        for <linux-pci@vger.kernel.org>; Sun, 31 May 2020 00:25:36 +0200 (CEST)
+Received: by albireo.burrow.ucw.cz (Postfix, from userid 1000)
+        id C47761A103F; Sun, 31 May 2020 00:25:36 +0200 (CEST)
+Date:   Sun, 31 May 2020 00:25:36 +0200
+From:   Martin =?utf-8?B?TWFyZcWh?= <mj@ucw.cz>
+To:     Linux-PCI Mailing List <linux-pci@vger.kernel.org>
+Subject: pciutils-3.7.0 released
+Message-ID: <mj+md-20200530.222433.78612.albireo@ucw.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20200530071434.vjkqxfmgo7xpls6j@srcf.ucam.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Spamd-Bar: /
+X-Spamd-Result: default: False [-0.60 / 15.00];
+         MID_RHS_MATCH_FROM(0.00)[];
+         ARC_NA(0.00)[];
+         BAYES_HAM(-3.00)[99.99%];
+         FROM_HAS_DN(0.00)[];
+         TO_MATCH_ENVRCPT_ALL(0.00)[];
+         MIME_GOOD(-0.10)[text/plain];
+         SENDER_REP_HAM(0.00)[asn: 51744(0.22), country: CZ(-0.00), ip: 91.219.245.20(-0.52)];
+         DMARC_NA(0.00)[ucw.cz];
+         AUTH_NA(1.00)[];
+         RCPT_COUNT_ONE(0.00)[1];
+         HFILTER_HELO_IP_A(1.00)[albireo.burrow.ucw.cz];
+         TO_DN_ALL(0.00)[];
+         HFILTER_HELO_NORES_A_OR_MX(0.30)[albireo.burrow.ucw.cz];
+         NEURAL_HAM(-0.00)[-0.475];
+         R_SPF_NA(0.00)[no SPF record];
+         RCVD_COUNT_ZERO(0.00)[0];
+         FROM_EQ_ENVFROM(0.00)[];
+         R_DKIM_NA(0.00)[];
+         MIME_TRACE(0.00)[0:+];
+         ASN(0.00)[asn:51744, ipnet:91.219.244.0/22, country:CZ];
+         TAGGED_FROM(0.00)[f-310520,linux-pci=vger.kernel.org];
+         R_MIXED_CHARSET(0.20)[subject]
+X-Rspamd-Queue-Id: ED5911C0BD2
+Authentication-Results: jabberwock.ucw.cz;
+        dkim=none;
+        dmarc=none;
+        spf=none (jabberwock.ucw.cz: domain of mj@ucw.cz has no SPF policy when checking 91.219.245.20) smtp.mailfrom=mj@ucw.cz
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sat, May 30, 2020 at 08:14:34AM +0100, Matthew Garrett wrote:
-> On Sat, May 30, 2020 at 08:33:50AM +0200, Heiner Kallweit wrote:
-> 
-> > It *was* default y. This changed with a914ff2d78ce ("PCI/ASPM: Don't
-> > select CONFIG_PCIEASPM by default") and that's what triggered the
-> > problem. If there's no easy solution, then maybe it's best to revert
-> > the change for now.
-> 
-> Oh, sorry, I was looking at mainline. CONFIG_PCIEASPM should 
-> *definitely* be enabled by default - platforms expect the OS to support 
-> it. If we want to get rid of default y then I think it'd make more sense 
-> to have a CONFIG_DISABLE_PCIEASPM that's under EXPERT, and people who 
-> really want to disable the code can do so.
+Hello world!\n
 
-I think the fact that the EXPERT didn't get removed in the above bug
-is a defintive bug.  But I'd go further and think the CONFIG_PCIEASPM
-option should be removed entirely.  There is absolutely no good reason
-to not build this small amount of code if PCIe support is enabled.
+I released version 3.7.0 of the pciutils.
+
+From the changelog:
+
+	* Released as 3.7.0.
+
+	* Added or improved the following capabilities: Designated Vendor-Specific,
+	  Compute eXpress Link, Resizable BARs, VF Resizable BARs, Link
+	  Capabilities 2, Link Status 2.
+
+	* On Linux, lspci can show IOMMU groups.
+
+	* setpci can be asked to skip bus scan and operate on a device
+	  completely specified by its domain/bus/dev/func address. This
+	  involved major internal cleanup.
+
+	* The above feature of setpci uses the pci_get_dev() function,
+	  which obtains a struct pci_dev without doing a bus scan. This was
+	  always possible, but apparently little used, because back-ends
+	  frequently choked when operating on such devices. Fixed a lot
+	  of minor bugs related to this.
+
+	* Also, back-ends which do not support domains now correctly fail when
+	  trying to access devices outside domain 0.
+
+	* Semantics of pci_fill_info() and pci_dev->known_fields was underspecified,
+	  which lead to inconsistencies between back-ends. Improved documentation
+	  to give a more precise definition and updated all back-ends to conform
+	  to it. Most importantly, pci_dev->known_fields shows all fields requested
+	  over the lifetime of the pci_dev, but never those which are not supported
+	  by the back-end.
+
+	* As usually, updated pci.ids to the current snapshot of the database.
+
+If you are aware of a patch which was not merged, please let me know.
+
+				Have a nice fortnight
+-- 
+Martin `MJ' Mareš                        <mj@ucw.cz>   http://mj.ucw.cz/
+United Computer Wizards, Prague, Czech Republic, Europe, Earth, Universe
+And God said: E = 1/2mv^2 - Ze^2/r ...and there *was* light!
