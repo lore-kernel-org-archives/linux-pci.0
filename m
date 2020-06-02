@@ -2,193 +2,146 @@ Return-Path: <SRS0=KYvh=7P=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6EBFC433DF
-	for <linux-pci@archiver.kernel.org>; Tue,  2 Jun 2020 10:05:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AECE5C433E1
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Jun 2020 10:10:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C2C2E206A4
-	for <linux-pci@archiver.kernel.org>; Tue,  2 Jun 2020 10:05:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 87768206A4
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Jun 2020 10:10:05 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="IdyNqTNS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726110AbgFBKFZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 2 Jun 2020 06:05:25 -0400
-Received: from mx2.suse.de ([195.135.220.15]:46340 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726012AbgFBKFZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 2 Jun 2020 06:05:25 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 8F90EAD12;
-        Tue,  2 Jun 2020 10:05:25 +0000 (UTC)
-Message-ID: <7cbe4da8ba4a1524824473f8c58720f412a00fc2.camel@suse.de>
-Subject: Re: [PATCH v8 4/4] USB: pci-quirks: Add Raspberry Pi 4 quirk
-From:   Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-To:     Mathias Nyman <mathias.nyman@intel.com>,
-        Rob Herring <robh@kernel.org>
-Cc:     linux-usb@vger.kernel.org, linux-rpi-kernel@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org,
-        bcm-kernel-feedback-list@broadcom.com, tim.gover@raspberrypi.org,
-        linux-pci@vger.kernel.org, Florian Fainelli <f.fainelli@gmail.com>,
-        gregkh@linuxfoundation.org,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date:   Tue, 02 Jun 2020 12:05:20 +0200
-In-Reply-To: <20200505161318.26200-5-nsaenzjulienne@suse.de>
-References: <20200505161318.26200-1-nsaenzjulienne@suse.de>
-         <20200505161318.26200-5-nsaenzjulienne@suse.de>
-Content-Type: multipart/signed; micalg="pgp-sha256";
-        protocol="application/pgp-signature"; boundary="=-ePWuOhLXkyI0rM3f0PjZ"
-User-Agent: Evolution 3.36.2 
+        id S1728050AbgFBKKD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 2 Jun 2020 06:10:03 -0400
+Received: from hqnvemgate25.nvidia.com ([216.228.121.64]:5289 "EHLO
+        hqnvemgate25.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728059AbgFBKKA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jun 2020 06:10:00 -0400
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate25.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5ed625210000>; Tue, 02 Jun 2020 03:08:33 -0700
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate101.nvidia.com (PGP Universal service);
+  Tue, 02 Jun 2020 03:09:59 -0700
+X-PGP-Universal: processed;
+        by hqpgpgate101.nvidia.com on Tue, 02 Jun 2020 03:09:59 -0700
+Received: from HQMAIL101.nvidia.com (172.20.187.10) by HQMAIL105.nvidia.com
+ (172.20.187.12) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 2 Jun
+ 2020 10:09:54 +0000
+Received: from rnnvemgw01.nvidia.com (10.128.109.123) by HQMAIL101.nvidia.com
+ (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3 via Frontend
+ Transport; Tue, 2 Jun 2020 10:09:54 +0000
+Received: from vidyas-desktop.nvidia.com (Not Verified[10.24.37.48]) by rnnvemgw01.nvidia.com with Trustwave SEG (v7,5,8,10121)
+        id <B5ed6256e0001>; Tue, 02 Jun 2020 03:09:53 -0700
+From:   Vidya Sagar <vidyas@nvidia.com>
+To:     <jingoohan1@gmail.com>, <gustavo.pimentel@synopsys.com>,
+        <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
+        <amurray@thegoodpenguin.co.uk>, <robh@kernel.org>,
+        <thierry.reding@gmail.com>, <jonathanh@nvidia.com>
+CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>,
+        <sagar.tv@gmail.com>
+Subject: [PATCH 1/2] PCI: dwc: Add support to handle prefetchable memory separately
+Date:   Tue, 2 Jun 2020 15:39:39 +0530
+Message-ID: <20200602100940.10575-2-vidyas@nvidia.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200602100940.10575-1-vidyas@nvidia.com>
+References: <20200602100940.10575-1-vidyas@nvidia.com>
+X-NVConfidentiality: public
 MIME-Version: 1.0
+Content-Type: text/plain
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1591092513; bh=cT5G8s0tuAY7ryjlQpRrXd7Ziy0127lhAECR/SIk7dQ=;
+        h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
+         In-Reply-To:References:X-NVConfidentiality:MIME-Version:
+         Content-Type;
+        b=IdyNqTNSFDTXb0+FTNTNin7kRwm1M7ulsVP17ymj3nbxjfsY750b6Vik1Lw0+jk9T
+         B5ZIoESMII0KUyLDk/YRdvXVTI+S/qmDyfIvPoYkH5Yps+Lkq8WNRQ4W2HoK/VkuB/
+         Z0nIKG0e/xUV70+PJHG0kb70wWX8cXL4cUii0qSqiFs+dCPN3ArT1xv4QDF5m2CIRa
+         4Km5zlDG6Afv7QvVPWPpXnKNa55qlECb0iam2/Jd/5Pw1o8LNQKyDCRhtridjOjpUj
+         8aKxcSfZoGmImMhbF8yOC9To8uV+KkDGjVJwsC9fO1KGm7Zt4ZhzX7QvmgHNeVd1PG
+         aPZXCZqRG6tSg==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Add required structure members to struct pcie_port to handle prefetchable
+memory aperture separately from non-prefetchable memory aperture so that
+any dependency on the order of their appearance in the 'ranges' property
+of the respective PCIe device tree node can be removed.
 
---=-ePWuOhLXkyI0rM3f0PjZ
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+---
+ .../pci/controller/dwc/pcie-designware-host.c | 26 ++++++++++++-------
+ drivers/pci/controller/dwc/pcie-designware.h  |  4 +++
+ 2 files changed, 21 insertions(+), 9 deletions(-)
 
-On Tue, 2020-05-05 at 18:13 +0200, Nicolas Saenz Julienne wrote:
-> On the Raspberry Pi 4, after a PCI reset, VL805's firmware may either be
-> loaded directly from an EEPROM or, if not present, by the SoC's
-> VideoCore. Inform VideoCore that VL805 was just reset.
->=20
-> Also, as this creates a dependency between USB_PCI and VideoCore's
-> firmware interface, and since USB_PCI can't be set as a module neither
-> this can. Reflect that on the firmware interface Kconfg.
->=20
-> Signed-off-by: Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-> ---
-
-It was pointed out to me on the u-boot mailing lists that all this could be
-implemented trough a reset controller. In other words have xhci get the res=
-et
-controller trough device-tree, assert it, ultamately causing the firmware
-routine to be run.
-
-As much as it pains me to go over stuff that's already 'fixed', it seems to=
- me
-it's a better solution. On one hand we get over the device-tree dependency =
-mess
-(see patch #3), and on the other we transform a pci-quirk into something le=
-ss
-hacky.
-
-That said, before getting my hands dirty, I was wondering if there is any
-obvious reasons why I shouldn't do this, note that:
-
-- We're talking here of a PCIe XCHI device, maybe there's an issue integrat=
-ing
-  it with DT, given the fact that, as of today, it's not really represented
-  there.
-
-- There is no reset controller support in xhci-pci, maybe there are good
-  reasons why. For instance, it's not something that's reflected in any way=
- in
-  the spec.
-
-Regards,
-Nicolas
-
->=20
-> Changes since v5:
->  - Fix Kconfig issue with allmodconfig
->=20
-> Changes since v4:
->  - Do not split up error message
->=20
-> Changes since v3:
->  - Add more complete error message
->=20
-> Changes since v1:
->  - Make RASPBERRYPI_FIRMWARE dependent on this quirk to make sure it
->    gets compiled when needed.
->=20
->  drivers/firmware/Kconfig      |  3 ++-
->  drivers/usb/host/pci-quirks.c | 16 ++++++++++++++++
->  2 files changed, 18 insertions(+), 1 deletion(-)
->=20
-> diff --git a/drivers/firmware/Kconfig b/drivers/firmware/Kconfig
-> index 8007d4aa76dc..b42140cff8ac 100644
-> --- a/drivers/firmware/Kconfig
-> +++ b/drivers/firmware/Kconfig
-> @@ -178,8 +178,9 @@ config ISCSI_IBFT
->  	  Otherwise, say N.
-> =20
->  config RASPBERRYPI_FIRMWARE
-> -	tristate "Raspberry Pi Firmware Driver"
-> +	bool "Raspberry Pi Firmware Driver"
->  	depends on BCM2835_MBOX
-> +	default USB_PCI
->  	help
->  	  This option enables support for communicating with the firmware on th=
-e
->  	  Raspberry Pi.
-> diff --git a/drivers/usb/host/pci-quirks.c b/drivers/usb/host/pci-quirks.=
-c
-> index 92150ecdb036..0b949acfa258 100644
-> --- a/drivers/usb/host/pci-quirks.c
-> +++ b/drivers/usb/host/pci-quirks.c
-> @@ -16,6 +16,9 @@
->  #include <linux/export.h>
->  #include <linux/acpi.h>
->  #include <linux/dmi.h>
-> +
-> +#include <soc/bcm2835/raspberrypi-firmware.h>
-> +
->  #include "pci-quirks.h"
->  #include "xhci-ext-caps.h"
-> =20
-> @@ -1243,11 +1246,24 @@ static void quirk_usb_handoff_xhci(struct pci_dev
-> *pdev)
-> =20
->  static void quirk_usb_early_handoff(struct pci_dev *pdev)
->  {
-> +	int ret;
-> +
->  	/* Skip Netlogic mips SoC's internal PCI USB controller.
->  	 * This device does not need/support EHCI/OHCI handoff
->  	 */
->  	if (pdev->vendor =3D=3D 0x184e)	/* vendor Netlogic */
->  		return;
-> +
-> +	if (pdev->vendor =3D=3D PCI_VENDOR_ID_VIA && pdev->device =3D=3D 0x3483=
-) {
-> +		ret =3D rpi_firmware_init_vl805(pdev);
-> +		if (ret) {
-> +			/* Firmware might be outdated, or something failed */
-> +			dev_warn(&pdev->dev,
-> +				 "Failed to load VL805's firmware: %d. Will
-> continue to attempt to work, but bad things might happen. You should fix
-> this...\n",
-> +				 ret);
-> +		}
-> +	}
-> +
->  	if (pdev->class !=3D PCI_CLASS_SERIAL_USB_UHCI &&
->  			pdev->class !=3D PCI_CLASS_SERIAL_USB_OHCI &&
->  			pdev->class !=3D PCI_CLASS_SERIAL_USB_EHCI &&
-
-
---=-ePWuOhLXkyI0rM3f0PjZ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCAAdFiEErOkkGDHCg2EbPcGjlfZmHno8x/4FAl7WJGAACgkQlfZmHno8
-x/6SjQf/Qywc5xMG/WfuS5YbTgjiJzIg9nJVk2umtOVQOaE6cXK6I2HUcLXKSphG
-ZAIxOSd8yG38RZGU/E/XCiWpYe0uEjJYnR4gKLF4/QsTwWKvjXvksXvcZYD/d4/U
-JJeFUPeutvO90Q3WSiUowjt0/uEaH8PDdYSvPfqe/DZt6loaIHXJXhv8M1e/R8a8
-Jatksa8pTD5uVBYYJFgY83Mrwd/SJ8/LthiE5FCHc1z1L3sbaChf+26xKtvn3iHU
-j1taE9o84y6m2IqDVDLZVeU2yuYt/VPOsnA5JarsZX/y1HoFg9OdoJL7GTazUefj
-q6BBn3BmYTUIQvDBgXg/JY1MYyNoEA==
-=5e/e
------END PGP SIGNATURE-----
-
---=-ePWuOhLXkyI0rM3f0PjZ--
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index 42fbfe2a1b8f..6f06d6bd9f00 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -363,13 +363,23 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 			pp->io_base = pci_pio_to_address(pp->io->start);
+ 			break;
+ 		case IORESOURCE_MEM:
+-			pp->mem = win->res;
+-			pp->mem->name = "MEM";
+-			mem_size = resource_size(pp->mem);
+-			if (upper_32_bits(mem_size))
+-				dev_warn(dev, "MEM resource size exceeds max for 32 bits\n");
+-			pp->mem_size = mem_size;
+-			pp->mem_bus_addr = pp->mem->start - win->offset;
++			if (win->res->flags & IORESOURCE_PREFETCH) {
++				pp->prefetch = win->res;
++				pp->prefetch->name = "PREFETCH";
++				pp->prefetch_base = pp->prefetch->start;
++				pp->prefetch_size = resource_size(pp->prefetch);
++				pp->perfetch_bus_addr = pp->prefetch->start -
++							win->offset;
++			} else {
++				pp->mem = win->res;
++				pp->mem->name = "MEM";
++				pp->mem_base = pp->mem->start;
++				mem_size = resource_size(pp->mem);
++				if (upper_32_bits(mem_size))
++					dev_warn(dev, "MEM resource size exceeds max for 32 bits\n");
++				pp->mem_size = mem_size;
++				pp->mem_bus_addr = pp->mem->start - win->offset;
++			}
+ 			break;
+ 		case 0:
+ 			pp->cfg = win->res;
+@@ -394,8 +404,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 		}
+ 	}
+ 
+-	pp->mem_base = pp->mem->start;
+-
+ 	if (!pp->va_cfg0_base) {
+ 		pp->va_cfg0_base = devm_pci_remap_cfgspace(dev,
+ 					pp->cfg0_base, pp->cfg0_size);
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 656e00f8fbeb..c87c1b2a1177 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -186,9 +186,13 @@ struct pcie_port {
+ 	u64			mem_base;
+ 	phys_addr_t		mem_bus_addr;
+ 	u32			mem_size;
++	u64			prefetch_base;
++	phys_addr_t		perfetch_bus_addr;
++	u64			prefetch_size;
+ 	struct resource		*cfg;
+ 	struct resource		*io;
+ 	struct resource		*mem;
++	struct resource		*prefetch;
+ 	struct resource		*busn;
+ 	int			irq;
+ 	const struct dw_pcie_host_ops *ops;
+-- 
+2.17.1
 
