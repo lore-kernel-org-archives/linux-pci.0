@@ -2,157 +2,281 @@ Return-Path: <SRS0=KYvh=7P=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1280C433E1
-	for <linux-pci@archiver.kernel.org>; Tue,  2 Jun 2020 11:55:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F10FC433E1
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Jun 2020 12:12:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8066820674
-	for <linux-pci@archiver.kernel.org>; Tue,  2 Jun 2020 11:55:17 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IF8EoKhE"
+	by mail.kernel.org (Postfix) with ESMTP id 48D87207ED
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Jun 2020 12:12:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727784AbgFBLyb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 2 Jun 2020 07:54:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35070 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726267AbgFBLy3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jun 2020 07:54:29 -0400
-Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B0220C061A0E;
-        Tue,  2 Jun 2020 04:54:29 -0700 (PDT)
-Received: by mail-wm1-x342.google.com with SMTP id g10so2627251wmh.4;
-        Tue, 02 Jun 2020 04:54:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=s9klwDUAQHUdrbunE/kS0tb+TnD6OrjCFpNB//xZIAs=;
-        b=IF8EoKhEoV6G2tqq6uLVNzyik+LsxddjgENfK5q27xfR6rvBQ0AWqO0R51+rqquoh5
-         6UTt1ketVQz1Dy+lQdPNeyVdAxWo6kHAJdnfr43IP+93VwysWqQSmCsMqOjg/eC15j1y
-         XDOh8aqzswhdiNHEB6/JXb7sBl9QUot8Lf8OpJMk5+PJF4tv8f6uDBAAfiJOyZxiY8T5
-         fXweBCzhyKpNVXp1zc/uddB3Mmhp9JyGP9P2MNdrfGR7CoXe25s/7dF/w3GqFnWGcYMc
-         PFuZDy/qVlQEIdFOqTOzCjieEpge2RLlRMKDuNCZGIUxFVjQ8RHcR/jLGEJ12NSDSR2U
-         Kozw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=s9klwDUAQHUdrbunE/kS0tb+TnD6OrjCFpNB//xZIAs=;
-        b=hnzwkDwa6AyW65W8tw5kAj5TwniC/uATLYRERHmBTX5R5C9AaaweyTMjHRs1mEudJv
-         BncuR5D15F3J8TLojol9GBIih2CucilruXhz7+JEfIACFl6tqgr7MQBBNxy8K1QKiNem
-         Yz6e7GuWvyZ1NtXa+/L8ndg7g3C9gJaXFANqzOfrFyHtiwGNq0wzq1R8kZLcXzGyoi+D
-         vp59O7ATGMUkSpxgptVL++Uwiocey91O14afp9Z9Q7amf2rkHt0f5gTwm1uvctJ7nHC2
-         LRcVX9i1oYt+tljV0Xou0SD7s2eeUJ7tE8QqARpKDqV+GJ/ddB08VIrBNrsY0dAKYc2N
-         T2xw==
-X-Gm-Message-State: AOAM531rTtBCY2G7CeyzXDS2T4m2POg33SeXyM+b3O+8H7UfAQoiq22J
-        TdB9LP8J3SkK9IzVjUsahLs=
-X-Google-Smtp-Source: ABdhPJznN0h7KwcJtw/jowMO0Vfn2BJVS4GYS2C93zi1okD4NPM2j9RfwMPJWBRUshgfb1Yo9mNZYA==
-X-Received: by 2002:a7b:c0d9:: with SMTP id s25mr4037720wmh.175.1591098868301;
-        Tue, 02 Jun 2020 04:54:28 -0700 (PDT)
-Received: from Ansuel-XPS.localdomain (host9-254-dynamic.3-87-r.retail.telecomitalia.it. [87.3.254.9])
-        by smtp.googlemail.com with ESMTPSA id b18sm3273777wrn.88.2020.06.02.04.54.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 02 Jun 2020 04:54:27 -0700 (PDT)
-From:   Ansuel Smith <ansuelsmth@gmail.com>
-To:     Rob Herring <robh+dt@kernel.org>
-Cc:     Abhishek Sahu <absahu@codeaurora.org>,
-        Ansuel Smith <ansuelsmth@gmail.com>,
-        Rob Herring <robh@kernel.org>, Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v5 03/11] PCI: qcom: Change duplicate PCI reset to phy reset
-Date:   Tue,  2 Jun 2020 13:53:44 +0200
-Message-Id: <20200602115353.20143-4-ansuelsmth@gmail.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200602115353.20143-1-ansuelsmth@gmail.com>
-References: <20200602115353.20143-1-ansuelsmth@gmail.com>
+        id S1726130AbgFBMMd convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 2 Jun 2020 08:12:33 -0400
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2267 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725940AbgFBMMd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 2 Jun 2020 08:12:33 -0400
+Received: from lhreml721-chm.china.huawei.com (unknown [172.18.7.107])
+        by Forcepoint Email with ESMTP id 3829E36D873DF3B208A8;
+        Tue,  2 Jun 2020 13:12:31 +0100 (IST)
+Received: from lhreml710-chm.china.huawei.com (10.201.108.61) by
+ lhreml721-chm.china.huawei.com (10.201.108.72) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1913.5; Tue, 2 Jun 2020 13:12:31 +0100
+Received: from lhreml710-chm.china.huawei.com ([169.254.81.184]) by
+ lhreml710-chm.china.huawei.com ([169.254.81.184]) with mapi id
+ 15.01.1913.007; Tue, 2 Jun 2020 13:12:31 +0100
+From:   Shameerali Kolothum Thodi <shameerali.kolothum.thodi@huawei.com>
+To:     Jean-Philippe Brucker <jean-philippe@linaro.org>
+CC:     "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "kevin.tian@intel.com" <kevin.tian@intel.com>,
+        "fenghua.yu@intel.com" <fenghua.yu@intel.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "felix.kuehling@amd.com" <felix.kuehling@amd.com>,
+        "robin.murphy@arm.com" <robin.murphy@arm.com>,
+        "christian.koenig@amd.com" <christian.koenig@amd.com>,
+        "hch@infradead.org" <hch@infradead.org>,
+        "jgg@ziepe.ca" <jgg@ziepe.ca>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "zhangfei.gao@linaro.org" <zhangfei.gao@linaro.org>,
+        "will@kernel.org" <will@kernel.org>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>
+Subject: RE: [PATCH v7 21/24] iommu/arm-smmu-v3: Add stall support for
+ platform devices
+Thread-Topic: [PATCH v7 21/24] iommu/arm-smmu-v3: Add stall support for
+ platform devices
+Thread-Index: AQHWLgezl67to0Fq/kugWrIzT8tlbajDuzCQgAFbKgCAABJrcIAAETqAgAAUUMA=
+Date:   Tue, 2 Jun 2020 12:12:30 +0000
+Message-ID: <c165fe41230f49baba991f1a416a4739@huawei.com>
+References: <20200519175502.2504091-1-jean-philippe@linaro.org>
+ <20200519175502.2504091-22-jean-philippe@linaro.org>
+ <4741b6c45d1a43b69041ecb5ce0be0d5@huawei.com>
+ <20200602093836.GA1029680@myrica>
+ <1517c4d97b5849e6b6d32e7d7ed35289@huawei.com>
+ <20200602114611.GB1029680@myrica>
+In-Reply-To: <20200602114611.GB1029680@myrica>
+Accept-Language: en-GB, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [10.47.94.73]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Abhishek Sahu <absahu@codeaurora.org>
 
-The deinit issues reset_control_assert for PCI twice and does not contain
-phy reset.
 
-Signed-off-by: Abhishek Sahu <absahu@codeaurora.org>
-Signed-off-by: Ansuel Smith <ansuelsmth@gmail.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
----
- drivers/pci/controller/dwc/pcie-qcom.c | 18 ++++++++----------
- 1 file changed, 8 insertions(+), 10 deletions(-)
+> -----Original Message-----
+> From: linux-arm-kernel [mailto:linux-arm-kernel-bounces@lists.infradead.org]
+> On Behalf Of Jean-Philippe Brucker
+> Sent: 02 June 2020 12:46
+> To: Shameerali Kolothum Thodi <shameerali.kolothum.thodi@huawei.com>
+> Cc: devicetree@vger.kernel.org; kevin.tian@intel.com; fenghua.yu@intel.com;
+> linux-pci@vger.kernel.org; felix.kuehling@amd.com; robin.murphy@arm.com;
+> christian.koenig@amd.com; hch@infradead.org; jgg@ziepe.ca;
+> iommu@lists.linux-foundation.org; catalin.marinas@arm.com;
+> zhangfei.gao@linaro.org; will@kernel.org; linux-mm@kvack.org;
+> linux-arm-kernel@lists.infradead.org
+> Subject: Re: [PATCH v7 21/24] iommu/arm-smmu-v3: Add stall support for
+> platform devices
+> 
+> On Tue, Jun 02, 2020 at 10:31:29AM +0000, Shameerali Kolothum Thodi wrote:
+> > Hi Jean,
+> >
+> > > -----Original Message-----
+> > > From: linux-arm-kernel
+> > > [mailto:linux-arm-kernel-bounces@lists.infradead.org]
+> > > On Behalf Of Jean-Philippe Brucker
+> > > Sent: 02 June 2020 10:39
+> > > To: Shameerali Kolothum Thodi <shameerali.kolothum.thodi@huawei.com>
+> > > Cc: devicetree@vger.kernel.org; kevin.tian@intel.com;
+> > > will@kernel.org; fenghua.yu@intel.com; jgg@ziepe.ca;
+> > > linux-pci@vger.kernel.org; felix.kuehling@amd.com;
+> > > hch@infradead.org; linux-mm@kvack.org;
+> > > iommu@lists.linux-foundation.org; catalin.marinas@arm.com;
+> > > zhangfei.gao@linaro.org; robin.murphy@arm.com;
+> > > christian.koenig@amd.com; linux-arm-kernel@lists.infradead.org
+> > > Subject: Re: [PATCH v7 21/24] iommu/arm-smmu-v3: Add stall support
+> > > for platform devices
+> > >
+> > > Hi Shameer,
+> > >
+> > > On Mon, Jun 01, 2020 at 12:42:15PM +0000, Shameerali Kolothum Thodi
+> > > wrote:
+> > > > >  /* IRQ and event handlers */
+> > > > > +static int arm_smmu_handle_evt(struct arm_smmu_device *smmu,
+> > > > > +u64
+> > > > > +*evt) {
+> > > > > +	int ret;
+> > > > > +	u32 perm = 0;
+> > > > > +	struct arm_smmu_master *master;
+> > > > > +	bool ssid_valid = evt[0] & EVTQ_0_SSV;
+> > > > > +	u8 type = FIELD_GET(EVTQ_0_ID, evt[0]);
+> > > > > +	u32 sid = FIELD_GET(EVTQ_0_SID, evt[0]);
+> > > > > +	struct iommu_fault_event fault_evt = { };
+> > > > > +	struct iommu_fault *flt = &fault_evt.fault;
+> > > > > +
+> > > > > +	/* Stage-2 is always pinned at the moment */
+> > > > > +	if (evt[1] & EVTQ_1_S2)
+> > > > > +		return -EFAULT;
+> > > > > +
+> > > > > +	master = arm_smmu_find_master(smmu, sid);
+> > > > > +	if (!master)
+> > > > > +		return -EINVAL;
+> > > > > +
+> > > > > +	if (evt[1] & EVTQ_1_READ)
+> > > > > +		perm |= IOMMU_FAULT_PERM_READ;
+> > > > > +	else
+> > > > > +		perm |= IOMMU_FAULT_PERM_WRITE;
+> > > > > +
+> > > > > +	if (evt[1] & EVTQ_1_EXEC)
+> > > > > +		perm |= IOMMU_FAULT_PERM_EXEC;
+> > > > > +
+> > > > > +	if (evt[1] & EVTQ_1_PRIV)
+> > > > > +		perm |= IOMMU_FAULT_PERM_PRIV;
+> > > > > +
+> > > > > +	if (evt[1] & EVTQ_1_STALL) {
+> > > > > +		flt->type = IOMMU_FAULT_PAGE_REQ;
+> > > > > +		flt->prm = (struct iommu_fault_page_request) {
+> > > > > +			.flags = IOMMU_FAULT_PAGE_REQUEST_LAST_PAGE,
+> > > > > +			.pasid = FIELD_GET(EVTQ_0_SSID, evt[0]),
+> > > > > +			.grpid = FIELD_GET(EVTQ_1_STAG, evt[1]),
+> > > > > +			.perm = perm,
+> > > > > +			.addr = FIELD_GET(EVTQ_2_ADDR, evt[2]),
+> > > > > +		};
+> > > > > +
+> > > >
+> > > > > +		if (ssid_valid)
+> > > > > +			flt->prm.flags |=
+> > > IOMMU_FAULT_PAGE_REQUEST_PASID_VALID;
+> > > >
+> > > > Do we need to set this for STALL mode only support? I had an issue
+> > > > with this being set on a vSVA POC based on our D06 zip
+> > > > device(which is a "fake " pci dev that supports STALL mode but no
+> > > > PRI). The issue is, CMDQ_OP_RESUME doesn't have any ssid or SSV
+> > > > params and works on sid
+> > > and stag only.
+> > >
+> > > I don't understand the problem, arm_smmu_page_response() doesn't set
+> > > SSID or SSV when sending a CMDQ_OP_RESUME. Could you detail the flow
+> > > of a stall event and RESUME command in your prototype?  Are you
+> > > getting issues with the host driver or the guest driver?
+> >
+> > The issue is on the host side iommu_page_response(). The flow is
+> > something like below.
+> >
+> > Stall: Host:-
+> >
+> > arm_smmu_handle_evt()
+> >   iommu_report_device_fault()
+> >     vfio_pci_iommu_dev_fault_handler()
+> >
+> > Stall: Qemu:-
+> >
+> > vfio_dma_fault_notifier_handler()
+> >   inject_faults()
+> >     smmuv3_inject_faults()
+> >
+> > Stall: Guest:-
+> >
+> > arm_smmu_handle_evt()
+> >   iommu_report_device_fault()
+> >     iommu_queue_iopf
+> >   ...
+> >   iopf_handle_group()
+> >     iopf_handle_single()
+> >       handle_mm_fault()
+> >         iopf_complete()
+> >            iommu_page_response()
+> >              arm_smmu_page_response()
+> >                arm_smmu_cmdq_issue_cmd(CMDQ_OP_RESUME)
+> >
+> > Resume: Qemu:-
+> >
+> > smmuv3_cmdq_consume(SMMU_CMD_RESUME)
+> >   smmuv3_notify_page_resp()
+> >     vfio:ioctl(page_response)  --> struct iommu_page_response is filled
+> >                              with only version, grpid and code.
+> >
+> > Resume: Host:-
+> >   ioctl(page_response)
+> >     iommu_page_response()  --> fails as the pending req has PASID_VALID
+> flag
+> >                              set and it checks for a match.
+> 
+> I believe the fix needs to be here. It's also wrong for PRI since not all PCIe
+> endpoint require a PASID in the page response. Could you try the attached
+> patch?
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 4bf93ab8c7a7..4512c2c5f61c 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -280,14 +280,14 @@ static void qcom_pcie_deinit_2_1_0(struct qcom_pcie *pcie)
- {
- 	struct qcom_pcie_resources_2_1_0 *res = &pcie->res.v2_1_0;
- 
-+	clk_disable_unprepare(res->phy_clk);
- 	reset_control_assert(res->pci_reset);
- 	reset_control_assert(res->axi_reset);
- 	reset_control_assert(res->ahb_reset);
- 	reset_control_assert(res->por_reset);
--	reset_control_assert(res->pci_reset);
-+	reset_control_assert(res->phy_reset);
- 	clk_disable_unprepare(res->iface_clk);
- 	clk_disable_unprepare(res->core_clk);
--	clk_disable_unprepare(res->phy_clk);
- 	clk_disable_unprepare(res->aux_clk);
- 	clk_disable_unprepare(res->ref_clk);
- 	regulator_bulk_disable(ARRAY_SIZE(res->supplies), res->supplies);
-@@ -325,12 +325,6 @@ static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
- 		goto err_clk_core;
- 	}
- 
--	ret = clk_prepare_enable(res->phy_clk);
--	if (ret) {
--		dev_err(dev, "cannot prepare/enable phy clock\n");
--		goto err_clk_phy;
--	}
--
- 	ret = clk_prepare_enable(res->aux_clk);
- 	if (ret) {
- 		dev_err(dev, "cannot prepare/enable aux clock\n");
-@@ -383,6 +377,12 @@ static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
- 		return ret;
- 	}
- 
-+	ret = clk_prepare_enable(res->phy_clk);
-+	if (ret) {
-+		dev_err(dev, "cannot prepare/enable phy clock\n");
-+		goto err_deassert_ahb;
-+	}
-+
- 	/* wait for clock acquisition */
- 	usleep_range(1000, 1500);
- 
-@@ -400,8 +400,6 @@ static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
- err_clk_ref:
- 	clk_disable_unprepare(res->aux_clk);
- err_clk_aux:
--	clk_disable_unprepare(res->phy_clk);
--err_clk_phy:
- 	clk_disable_unprepare(res->core_clk);
- err_clk_core:
- 	clk_disable_unprepare(res->iface_clk);
--- 
-2.25.1
+Going through the patch, yes, that will definitely fix the issue. But isn't it better if
+the request itself indicate whether it expects a response msg with a valid pasid or
+not? The response msg can come from userspace as well(vSVA) and if for some reason
+doesn't set it for a req that expects pasid then it should be an error, right? In the temp
+fix I had, I introduced another flag to indicate the endpoint has PRI support or not and
+used that to verify the pasid requirement. But for the PRI case you mentioned 
+above, not sure it is easy to get that information or not. May be I am complicating things
+here :)
 
+Thanks,
+Shameer
+
+> Thanks,
+> Jean
+> 
+> >       arm_smmu_page_response()
+> >
+> > Hope the above is clear.
+> >
+> > > We do need to forward the SSV flag all the way to the guest driver,
+> > > so the guest can find the faulting address space using the SSID.
+> > > Once the guest handled the fault, then we don't send the SSID back
+> > > to the host as part of the RESUME command.
+> >
+> > True, the guest requires SSV flag to handle the page fault. But, as
+> > shown in the flow above, the issue is on the host side
+> > iommu_page_response() where it searches for a matching pending req
+> > based on pasid. Not sure we can bypass that and call
+> > arm_smmu_page_response() directly but then have to delete the pending req
+> from the list as well.
+> >
+> > Please let me know if there is a better way to handle the host side
+> > page response.
+> >
+> > Thanks,
+> > Shameer
+> >
+> > > Thanks,
+> > > Jean
+> > >
+> > > > Hence, it is difficult for
+> > > > Qemu SMMUv3 to populate this fields while preparing a page
+> > > > response. I can see that this flag is being checked in
+> > > > iopf_handle_single() (patch
+> > > > 04/24) as well. For POC, I used a temp fix[1] to work around this.
+> > > > Please let
+> > > me know your thoughts.
+> > > >
+> > > > Thanks,
+> > > > Shameer
+> > > >
+> > > > 1.
+> > > > https://github.com/hisilicon/kernel-dev/commit/99ff96146e924055f38
+> > > > d97a
+> > > > 5897e4becfa378d15
+> > > >
+> > >
+> > > _______________________________________________
+> > > linux-arm-kernel mailing list
+> > > linux-arm-kernel@lists.infradead.org
+> > > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
