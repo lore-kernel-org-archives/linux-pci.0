@@ -2,109 +2,138 @@ Return-Path: <SRS0=sUav=7Q=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97D01C433DF
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Jun 2020 17:54:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09A57C433E1
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Jun 2020 19:21:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7D866206A2
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Jun 2020 17:54:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E3E8020897
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Jun 2020 19:21:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="UmBok1CB"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="RPD7B4cG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726264AbgFCRy1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 3 Jun 2020 13:54:27 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:58988 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725601AbgFCRy0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 Jun 2020 13:54:26 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 053HooaU185764;
-        Wed, 3 Jun 2020 17:54:18 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=qViCArxFb3D3nOjejk6M1IcFSmBXLlIuD6LBS7MWpr8=;
- b=UmBok1CB3c4dz1BVnjBD7al72bsox3FA2FGn4usODEogVG5yX8Vioz7dxFtMfUEx1moY
- cuB8cVqjxCMLrbQpV66hQ8GtPQejWz+0JyJ13ruVG3guWJUN2R6z9ltVD/v3w/LRVM+o
- u15GWVjiSpj4D7IleyrbrCA5inx0HR9wLcwJyST5ar23pw65qg+WG43sSaoDGMoDdcX9
- lqmkgZqWo0gigrMkkw5iSqLGPXYkuWyycUqmzV1dC7cOWUUmv2QenJdSJJo9Vt0W6lls
- 8w6CPv7ZMMPqsLRBPpAi5vZcCbm/YT6hzVOZoQxGuBp+w/g4N/RBPKHXKuQgRYVjuTMW yg== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 31bfemam38-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 03 Jun 2020 17:54:18 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 053HnUjL167580;
-        Wed, 3 Jun 2020 17:52:17 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 31c12r85ex-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 03 Jun 2020 17:52:17 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 053HqG9f014853;
-        Wed, 3 Jun 2020 17:52:16 GMT
-Received: from mwanda (/41.57.98.10)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 03 Jun 2020 10:52:15 -0700
-Date:   Wed, 3 Jun 2020 20:52:07 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Masahiro Yamada <yamada.masahiro@socionext.com>,
-        linux-pci@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH] PCI: uniphier: Fix some error handling in
- uniphier_pcie_ep_probe()
-Message-ID: <20200603175207.GB18931@mwanda>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-Mailer: git-send-email haha only kidding
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9641 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 phishscore=0 malwarescore=0
- adultscore=0 suspectscore=0 spamscore=0 bulkscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2006030139
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9641 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 suspectscore=0
- mlxlogscore=999 priorityscore=1501 bulkscore=0 phishscore=0 clxscore=1011
- impostorscore=0 adultscore=0 spamscore=0 mlxscore=0 lowpriorityscore=0
- cotscore=-2147483648 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2006030138
+        id S1726239AbgFCTVc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 3 Jun 2020 15:21:32 -0400
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:43188 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726365AbgFCTVa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 Jun 2020 15:21:30 -0400
+Received: from mail-irv-17.broadcom.com (mail-irv-17.lvn.broadcom.net [10.75.242.48])
+        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id 6EFEB30DED1;
+        Wed,  3 Jun 2020 12:21:28 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com 6EFEB30DED1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
+        s=dkimrelay; t=1591212088;
+        bh=SQNKzCK4mr62bKG2SrKfDfRn2h9ZIykztTMQ5vnyIw8=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=RPD7B4cGXC+aKMwmZCs4ZGQx0EzCjQr5l9Kx3NHB2hGVvQcOvqND0S+35gnyHMLTR
+         Yix4RPo5PH7r/XG9Sb35nyRNRB4ZOZJc5nE+UqwjkxOidESznufxsgfh/YNARBGpSt
+         ubJNEQjC2Kw2Lix2moqZK5b/+1rc5vbwEDJZI7Ao=
+Received: from stbsrv-and-01.and.broadcom.net (stbsrv-and-01.and.broadcom.net [10.28.16.211])
+        by mail-irv-17.broadcom.com (Postfix) with ESMTP id 2BEFA140069;
+        Wed,  3 Jun 2020 12:21:27 -0700 (PDT)
+From:   Jim Quinlan <james.quinlan@broadcom.com>
+To:     linux-pci@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
+        bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com
+Cc:     Rob Herring <robh+dt@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>,
+        devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED
+        DEVICE TREE), linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v3 08/13] of: Include a dev param in of_dma_get_range()
+Date:   Wed,  3 Jun 2020 15:20:40 -0400
+Message-Id: <20200603192058.35296-9-james.quinlan@broadcom.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200603192058.35296-1-james.quinlan@broadcom.com>
+References: <20200603192058.35296-1-james.quinlan@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This code is checking the wrong variable.  It should be checking
-"clk_gio" instead of "clk".  The "priv->clk" pointer is NULL at this
-point so the condition is false.
+Currently there is only one caller of of_dma_get_range().  A struct device
+*dev param is needed For implementing multiple dma offsets.  This function
+will still work if dev == NULL.
 
-Fixes: 006564dee8253 ("PCI: uniphier: Add Socionext UniPhier Pro5 PCIe endpoint controller driver")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Jim Quinlan <james.quinlan@broadcom.com>
 ---
- drivers/pci/controller/dwc/pcie-uniphier-ep.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/of/address.c    | 4 +++-
+ drivers/of/device.c     | 2 +-
+ drivers/of/of_private.h | 8 ++++----
+ drivers/of/unittest.c   | 2 +-
+ 4 files changed, 9 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-uniphier-ep.c b/drivers/pci/controller/dwc/pcie-uniphier-ep.c
-index 0f36aa33d2e50..1483559600610 100644
---- a/drivers/pci/controller/dwc/pcie-uniphier-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-uniphier-ep.c
-@@ -324,8 +324,8 @@ static int uniphier_pcie_ep_probe(struct platform_device *pdev)
- 		return PTR_ERR(priv->base);
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index 8eea3f6e29a4..96d8cfb14a60 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -920,6 +920,7 @@ EXPORT_SYMBOL(of_io_request_and_map);
  
- 	priv->clk_gio = devm_clk_get(dev, "gio");
--	if (IS_ERR(priv->clk))
--		return PTR_ERR(priv->clk);
-+	if (IS_ERR(priv->clk_gio))
-+		return PTR_ERR(priv->clk_gio);
+ /**
+  * of_dma_get_range - Get DMA range info
++ * @dev:	device pointer; only needed for a corner case.
+  * @np:		device node to get DMA range info
+  * @dma_addr:	pointer to store initial DMA address of DMA range
+  * @paddr:	pointer to store initial CPU address of DMA range
+@@ -935,7 +936,8 @@ EXPORT_SYMBOL(of_io_request_and_map);
+  * It returns -ENODEV if "dma-ranges" property was not found
+  * for this device in DT.
+  */
+-int of_dma_get_range(struct device_node *np, u64 *dma_addr, u64 *paddr, u64 *size)
++int of_dma_get_range(struct device *dev, struct device_node *np, u64 *dma_addr,
++		     u64 *paddr, u64 *size)
+ {
+ 	struct device_node *node = of_node_get(np);
+ 	const __be32 *ranges = NULL;
+diff --git a/drivers/of/device.c b/drivers/of/device.c
+index 27203bfd0b22..ef6a741f9f0b 100644
+--- a/drivers/of/device.c
++++ b/drivers/of/device.c
+@@ -95,7 +95,7 @@ int of_dma_configure(struct device *dev, struct device_node *np, bool force_dma)
+ 	const struct iommu_ops *iommu;
+ 	u64 mask, end;
  
- 	priv->rst_gio = devm_reset_control_get_shared(dev, "gio");
- 	if (IS_ERR(priv->rst_gio))
+-	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
++	ret = of_dma_get_range(dev, np, &dma_addr, &paddr, &size);
+ 	if (ret < 0) {
+ 		/*
+ 		 * For legacy reasons, we have to assume some devices need
+diff --git a/drivers/of/of_private.h b/drivers/of/of_private.h
+index edc682249c00..7a83d3a81ab6 100644
+--- a/drivers/of/of_private.h
++++ b/drivers/of/of_private.h
+@@ -158,11 +158,11 @@ extern int of_bus_n_addr_cells(struct device_node *np);
+ extern int of_bus_n_size_cells(struct device_node *np);
+ 
+ #ifdef CONFIG_OF_ADDRESS
+-extern int of_dma_get_range(struct device_node *np, u64 *dma_addr,
+-			    u64 *paddr, u64 *size);
++extern int of_dma_get_range(struct device *dev, struct device_node *np,
++			    u64 *dma_addr, u64 *paddr, u64 *size);
+ #else
+-static inline int of_dma_get_range(struct device_node *np, u64 *dma_addr,
+-				   u64 *paddr, u64 *size)
++static inline int of_dma_get_range(struct device *dev, struct device_node *np,
++				   u64 *dma_addr, u64 *paddr, u64 *size)
+ {
+ 	return -ENODEV;
+ }
+diff --git a/drivers/of/unittest.c b/drivers/of/unittest.c
+index 398de04fd19c..57a22517c428 100644
+--- a/drivers/of/unittest.c
++++ b/drivers/of/unittest.c
+@@ -881,7 +881,7 @@ static void __init of_unittest_dma_ranges_one(const char *path,
+ 		return;
+ 	}
+ 
+-	rc = of_dma_get_range(np, &dma_addr, &paddr, &size);
++	rc = of_dma_get_range(NULL, np, &dma_addr, &paddr, &size);
+ 
+ 	unittest(!rc, "of_dma_get_range failed on node %pOF rc=%i\n", np, rc);
+ 	if (!rc) {
 -- 
-2.26.2
+2.17.1
 
