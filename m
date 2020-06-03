@@ -2,205 +2,116 @@ Return-Path: <SRS0=sUav=7Q=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D14AC433E6
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Jun 2020 19:22:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3893AC433E0
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Jun 2020 19:22:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E758B2067B
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Jun 2020 19:22:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1FCAF2067B
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Jun 2020 19:22:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="NtJkO7Me"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="hUGFjL20"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726123AbgFCTVV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 3 Jun 2020 15:21:21 -0400
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:42982 "EHLO
+        id S1726116AbgFCTWL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 3 Jun 2020 15:22:11 -0400
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:43002 "EHLO
         rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725922AbgFCTVT (ORCPT
+        by vger.kernel.org with ESMTP id S1725821AbgFCTVT (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Wed, 3 Jun 2020 15:21:19 -0400
 Received: from mail-irv-17.broadcom.com (mail-irv-17.lvn.broadcom.net [10.75.242.48])
-        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id 840DD30DD7D;
-        Wed,  3 Jun 2020 12:21:15 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com 840DD30DD7D
+        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id 86A1430DE78;
+        Wed,  3 Jun 2020 12:21:18 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com 86A1430DE78
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
-        s=dkimrelay; t=1591212075;
-        bh=/AQzYy/Wi51ZHDd+ThnXKaeww1EEOqsroMbykkRvvq8=;
-        h=From:To:Cc:Subject:Date:From;
-        b=NtJkO7MeFX9UJlK8NUNrIV5R9Mx4cOS08pLbxG4NPk/I+q5/V9FpPpuH5/7NTn4h6
-         oXzIRd7IOw07qiMAAfQWzxBn0ktMI+2Y0HHNBVaAG6rqUobHv9JpcCr/2jYvZ/IP1F
-         NUugsjaWJwj9/B8MokjcNqcee5TK7Khm/EE80QP0=
+        s=dkimrelay; t=1591212078;
+        bh=ghQG1exvCaXXlRvSsLKTAcuAVtnxwVxDWUkAuQvaBmQ=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=hUGFjL20ztebrMmFW3oApxdwPZY4ZB9vC/+wV6mwTRHQ/GsMi51O9+cBkANm/LS2e
+         GbRN40N2cpZV9474b+Ec4H8DsjCDLvVz6AOxW7/mXC99d1e+xS+OXIxewO/SVXf+J7
+         9eU1XBks+2eF/bQADXeuvKbysTuGc1m0feaWChqU=
 Received: from stbsrv-and-01.and.broadcom.net (stbsrv-and-01.and.broadcom.net [10.28.16.211])
-        by mail-irv-17.broadcom.com (Postfix) with ESMTP id 9DA8814008C;
-        Wed,  3 Jun 2020 12:21:11 -0700 (PDT)
+        by mail-irv-17.broadcom.com (Postfix) with ESMTP id 0527114008B;
+        Wed,  3 Jun 2020 12:21:16 -0700 (PDT)
 From:   Jim Quinlan <james.quinlan@broadcom.com>
 To:     linux-pci@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
         Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
         bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com
-Cc:     Alan Stern <stern@rowland.harvard.edu>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Arnd Bergmann <arnd@arndb.de>, Corey Minyard <minyard@acm.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        devel@driverdev.osuosl.org (open list:STAGING SUBSYSTEM),
-        devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED
-        DEVICE TREE),
-        dri-devel@lists.freedesktop.org (open list:DRM DRIVERS FOR ALLWINNER
-        A10), Florian Fainelli <f.fainelli@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+Cc:     Jim Quinlan <james.quinlan@broadcom.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Florian Fainelli <f.fainelli@gmail.com>,
         Hans de Goede <hdegoede@redhat.com>,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        iommu@lists.linux-foundation.org (open list:IOMMU DRIVERS),
-        Jens Axboe <axboe@kernel.dk>, Joerg Roedel <jroedel@suse.de>,
-        Julien Grall <julien.grall@arm.com>,
-        linux-acpi@vger.kernel.org (open list:ACPI FOR ARM64 (ACPI/arm64)),
-        linux-arm-kernel@lists.infradead.org (moderated list:ARM PORT),
         linux-ide@vger.kernel.org (open list:LIBATA SUBSYSTEM (Serial and
-        Parallel ATA drivers)), linux-kernel@vger.kernel.org (open list),
-        linux-media@vger.kernel.org (open list:ALLWINNER A10 CSI DRIVER),
-        linux-remoteproc@vger.kernel.org (open list:REMOTE PROCESSOR
-        (REMOTEPROC) SUBSYSTEM),
-        linux-rpi-kernel@lists.infradead.org (moderated list:BROADCOM
-        BCM2711/BCM2835 ARM ARCHITECTURE),
-        linux-sh@vger.kernel.org (open list:SUPERH),
-        linux-usb@vger.kernel.org (open list:USB SUBSYSTEM),
-        Mark Brown <broonie@kernel.org>,
-        Oliver Neukum <oneukum@suse.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Rob Herring <robh@kernel.org>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Saravana Kannan <saravanak@google.com>,
-        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Suzuki K Poulose <suzuki.poulose@arm.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>
-Subject: [PATCH v3 00/13] PCI: brcmstb: enable PCIe for STB chips
-Date:   Wed,  3 Jun 2020 15:20:32 -0400
-Message-Id: <20200603192058.35296-1-james.quinlan@broadcom.com>
+        Parallel ATA drivers)), linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v3 02/13] ata: ahci_brcm: Fix use of BCM7216 reset controller
+Date:   Wed,  3 Jun 2020 15:20:34 -0400
+Message-Id: <20200603192058.35296-3-james.quinlan@broadcom.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200603192058.35296-1-james.quinlan@broadcom.com>
+References: <20200603192058.35296-1-james.quinlan@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-v3:
-  Commit "device core: Introduce multiple dma pfn offsets"
-  Commit "arm: dma-mapping: Invoke dma offset func if needed"
-  -- The above two commits have been squashed.  More importantly,
-     the code has been modified so that the functionality for
-     multiple pfn offsets subsumes the use of dev->dma_pfn_offset.
-     In fact, dma_pfn_offset is removed and supplanted by
-     dma_pfn_offset_map, which is a pointer to an array.  The
-     more common case of a uniform offset is now handled as
-     a map with a single entry, while cases requiring multiple
-     pfn offsets use a map with multiple entries.  Code paths
-     that used to do this:
+From: Jim Quinlan <jquinlan@broadcom.com>
 
-         dev->dma_pfn_offset = mydrivers_pfn_offset;
+A reset controller "rescal" is shared between the AHCI driver and the PCIe
+driver for the BrcmSTB 7216 chip.  The code is modified to allow this
+sharing and to deassert() properly.
 
-     have been changed to do this:
+Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
 
-         attach_uniform_dma_pfn_offset(dev, pfn_offset);
+Fixes: 272ecd60a636 ("ata: ahci_brcm: BCM7216 reset is self de-asserting")
+Fixes: c345ec6a50e9 ("ata: ahci_brcm: Support BCM7216 reset controller
+name")
+---
+ drivers/ata/ahci_brcm.c | 14 +++++---------
+ 1 file changed, 5 insertions(+), 9 deletions(-)
 
-  Commit "dt-bindings: PCI: Add bindings for more Brcmstb chips"
-  -- Add if/then clause for required props: resets, reset-names (RobH)
-  -- Change compatible list from const to enum (RobH)
-  -- Change list of u32-tuples to u64 (RobH)
-
-  Commit "of: Include a dev param in of_dma_get_range()"
-  -- modify of/unittests.c to add NULL param in of_dma_get_range() call.
-
-  Commit "device core: Add ability to handle multiple dma offsets"
-  -- align comment in device.h (AndyS).
-  -- s/cpu_beg/cpu_start/ and s/dma_beg/dma_start/ in struct
-     dma_pfn_offset_region (AndyS).
-
-v2:
-Commit: "device core: Add ability to handle multiple dma offsets"
-  o Added helper func attach_dma_pfn_offset_map() in address.c (Chistoph)
-  o Helpers funcs added to __phys_to_dma() & __dma_to_phys() (Christoph)
-  o Added warning when multiple offsets are needed and !DMA_PFN_OFFSET_MAP
-  o dev->dma_pfn_map => dev->dma_pfn_offset_map
-  o s/frm/from/ for dma_pfn_offset_frm_{phys,dma}_addr() (Christoph)
-  o In device.h: s/const void */const struct dma_pfn_offset_region */
-  o removed 'unlikely' from unlikely(dev->dma_pfn_offset_map) since
-    guarded by CONFIG_DMA_PFN_OFFSET_MAP (Christoph)
-  o Since dev->dma_pfn_offset is copied in usb/core/{usb,message}.c, now
-    dev->dma_pfn_offset_map is copied as well.
-  o Merged two of the DMA commits into one (Christoph).
-
-Commit "arm: dma-mapping: Invoke dma offset func if needed":
-  o Use helper functions instead of #if CONFIG_DMA_PFN_OFFSET
-
-Other commits' changes:
-  o Removed need for carrying of_id var in priv (Nicolas)
-  o Commit message rewordings (Bjorn)
-  o Commit log messages filled to 75 chars (Bjorn)
-  o devm_reset_control_get_shared())
-    => devm_reset_control_get_optional_shared (Philipp)
-  o Add call to reset_control_assert() in PCIe remove routines (Philipp)
-
-v1:
-This patchset expands the usefulness of the Broadcom Settop Box PCIe
-controller by building upon the PCIe driver used currently by the
-Raspbery Pi.  Other forms of this patchset were submitted by me years
-ago and not accepted; the major sticking point was the code required
-for the DMA remapping needed for the PCIe driver to work [1].
-
-There have been many changes to the DMA and OF subsystems since that
-time, making a cleaner and less intrusive patchset possible.  This
-patchset implements a generalization of "dev->dma_pfn_offset", except
-that instead of a single scalar offset it provides for multiple
-offsets via a function which depends upon the "dma-ranges" property of
-the PCIe host controller.  This is required for proper functionality
-of the BrcmSTB PCIe controller and possibly some other devices.
-
-[1] https://lore.kernel.org/linux-arm-kernel/1516058925-46522-5-git-send-email-jim2101024@gmail.com/
-
-Jim Quinlan (13):
-  PCI: brcmstb: PCIE_BRCMSTB depends on ARCH_BRCMSTB
-  ata: ahci_brcm: Fix use of BCM7216 reset controller
-  dt-bindings: PCI: Add bindings for more Brcmstb chips
-  PCI: brcmstb: Add bcm7278 reigister info
-  PCI: brcmstb: Add suspend and resume pm_ops
-  PCI: brcmstb: Add bcm7278 PERST support
-  PCI: brcmstb: Add control of rescal reset
-  of: Include a dev param in of_dma_get_range()
-  device core: Introduce multiple dma pfn offsets
-  PCI: brcmstb: Set internal memory viewport sizes
-  PCI: brcmstb: Accommodate MSI for older chips
-  PCI: brcmstb: Set bus max burst size by chip type
-  PCI: brcmstb: Add bcm7211, bcm7216, bcm7445, bcm7278 to match list
-
- .../bindings/pci/brcm,stb-pcie.yaml           |  58 ++-
- arch/arm/include/asm/dma-mapping.h            |   9 +-
- arch/arm/mach-keystone/keystone.c             |   9 +-
- arch/sh/drivers/pci/pcie-sh7786.c             |   3 +-
- arch/sh/kernel/dma-coherent.c                 |  17 +-
- arch/x86/pci/sta2x11-fixup.c                  |   7 +-
- drivers/acpi/arm64/iort.c                     |   5 +-
- drivers/ata/ahci_brcm.c                       |  14 +-
- drivers/gpu/drm/sun4i/sun4i_backend.c         |   7 +-
- drivers/iommu/io-pgtable-arm.c                |   2 +-
- .../platform/sunxi/sun4i-csi/sun4i_csi.c      |   5 +-
- .../platform/sunxi/sun6i-csi/sun6i_csi.c      |   5 +-
- drivers/of/address.c                          |  97 ++++-
- drivers/of/device.c                           |  10 +-
- drivers/of/of_private.h                       |   8 +-
- drivers/of/unittest.c                         |   2 +-
- drivers/pci/controller/Kconfig                |   3 +-
- drivers/pci/controller/pcie-brcmstb.c         | 408 +++++++++++++++---
- drivers/remoteproc/remoteproc_core.c          |   2 +-
- .../staging/media/sunxi/cedrus/cedrus_hw.c    |   7 +-
- drivers/usb/core/message.c                    |   4 +-
- drivers/usb/core/usb.c                        |   2 +-
- include/linux/device.h                        |   4 +-
- include/linux/dma-direct.h                    |  16 +-
- include/linux/dma-mapping.h                   |  45 ++
- kernel/dma/coherent.c                         |  11 +-
- 26 files changed, 631 insertions(+), 129 deletions(-)
-
+diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
+index 6853dbb4131d..c4ea555573dd 100644
+--- a/drivers/ata/ahci_brcm.c
++++ b/drivers/ata/ahci_brcm.c
+@@ -428,7 +428,6 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+ {
+ 	const struct of_device_id *of_id;
+ 	struct device *dev = &pdev->dev;
+-	const char *reset_name = NULL;
+ 	struct brcm_ahci_priv *priv;
+ 	struct ahci_host_priv *hpriv;
+ 	struct resource *res;
+@@ -452,11 +451,11 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+ 
+ 	/* Reset is optional depending on platform and named differently */
+ 	if (priv->version == BRCM_SATA_BCM7216)
+-		reset_name = "rescal";
++		priv->rcdev = devm_reset_control_get_optional_shared(&pdev->dev,
++								     "rescal");
+ 	else
+-		reset_name = "ahci";
+-
+-	priv->rcdev = devm_reset_control_get_optional(&pdev->dev, reset_name);
++		priv->rcdev = devm_reset_control_get_optional(&pdev->dev,
++							      "ahci");
+ 	if (IS_ERR(priv->rcdev))
+ 		return PTR_ERR(priv->rcdev);
+ 
+@@ -479,10 +478,7 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+ 		break;
+ 	}
+ 
+-	if (priv->version == BRCM_SATA_BCM7216)
+-		ret = reset_control_reset(priv->rcdev);
+-	else
+-		ret = reset_control_deassert(priv->rcdev);
++	ret = reset_control_deassert(priv->rcdev);
+ 	if (ret)
+ 		return ret;
+ 
 -- 
 2.17.1
 
