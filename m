@@ -5,50 +5,48 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3893AC433E0
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Jun 2020 19:22:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9565CC433E2
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Jun 2020 19:22:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1FCAF2067B
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Jun 2020 19:22:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 74C4F207D0
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Jun 2020 19:22:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="hUGFjL20"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="m/Xcwdau"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726116AbgFCTWL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 3 Jun 2020 15:22:11 -0400
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:43002 "EHLO
+        id S1725959AbgFCTVS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 3 Jun 2020 15:21:18 -0400
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:42980 "EHLO
         rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725821AbgFCTVT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 Jun 2020 15:21:19 -0400
+        by vger.kernel.org with ESMTP id S1725821AbgFCTVS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 Jun 2020 15:21:18 -0400
 Received: from mail-irv-17.broadcom.com (mail-irv-17.lvn.broadcom.net [10.75.242.48])
-        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id 86A1430DE78;
-        Wed,  3 Jun 2020 12:21:18 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com 86A1430DE78
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
-        s=dkimrelay; t=1591212078;
-        bh=ghQG1exvCaXXlRvSsLKTAcuAVtnxwVxDWUkAuQvaBmQ=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=hUGFjL20ztebrMmFW3oApxdwPZY4ZB9vC/+wV6mwTRHQ/GsMi51O9+cBkANm/LS2e
-         GbRN40N2cpZV9474b+Ec4H8DsjCDLvVz6AOxW7/mXC99d1e+xS+OXIxewO/SVXf+J7
-         9eU1XBks+2eF/bQADXeuvKbysTuGc1m0feaWChqU=
-Received: from stbsrv-and-01.and.broadcom.net (stbsrv-and-01.and.broadcom.net [10.28.16.211])
-        by mail-irv-17.broadcom.com (Postfix) with ESMTP id 0527114008B;
+        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id ECA4F30DE4C;
         Wed,  3 Jun 2020 12:21:16 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com ECA4F30DE4C
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
+        s=dkimrelay; t=1591212077;
+        bh=+RISK9H7pt+O7/u9I4TR8f6+UZgf0oc463SOKeQOuXo=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=m/XcwdauavUFFzFKOMhN/tDmSzgXRBMzUG2uZvMbRwHRWR8Gw56VHl4JfyfehHpg3
+         Je42W2sRW2vdBOYGahiI8W7+FjgBCrsrOCpIeCgZVmEoGdvJjUZhSl4jQRxx+PD5bo
+         nYo/ci9/7rLY/JIzjXXCXarc/ru0f5C9O2hCbHTE=
+Received: from stbsrv-and-01.and.broadcom.net (stbsrv-and-01.and.broadcom.net [10.28.16.211])
+        by mail-irv-17.broadcom.com (Postfix) with ESMTP id 8B1D414008E;
+        Wed,  3 Jun 2020 12:21:15 -0700 (PDT)
 From:   Jim Quinlan <james.quinlan@broadcom.com>
 To:     linux-pci@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
         Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
         bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com
 Cc:     Jim Quinlan <james.quinlan@broadcom.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        linux-ide@vger.kernel.org (open list:LIBATA SUBSYSTEM (Serial and
-        Parallel ATA drivers)), linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v3 02/13] ata: ahci_brcm: Fix use of BCM7216 reset controller
-Date:   Wed,  3 Jun 2020 15:20:34 -0400
-Message-Id: <20200603192058.35296-3-james.quinlan@broadcom.com>
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v3 01/13] PCI: brcmstb: PCIE_BRCMSTB depends on ARCH_BRCMSTB
+Date:   Wed,  3 Jun 2020 15:20:33 -0400
+Message-Id: <20200603192058.35296-2-james.quinlan@broadcom.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200603192058.35296-1-james.quinlan@broadcom.com>
 References: <20200603192058.35296-1-james.quinlan@broadcom.com>
@@ -59,59 +57,32 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Jim Quinlan <jquinlan@broadcom.com>
 
-A reset controller "rescal" is shared between the AHCI driver and the PCIe
-driver for the BrcmSTB 7216 chip.  The code is modified to allow this
-sharing and to deassert() properly.
+Have PCIE_BRCMSTB depend on ARCH_BRCMSTB.  Also set the default value to
+ARCH_BRCMSTB.
 
 Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
-
-Fixes: 272ecd60a636 ("ata: ahci_brcm: BCM7216 reset is self de-asserting")
-Fixes: c345ec6a50e9 ("ata: ahci_brcm: Support BCM7216 reset controller
-name")
+Acked-by: Florian Fainelli <f.fainelli@gmail.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
 ---
- drivers/ata/ahci_brcm.c | 14 +++++---------
- 1 file changed, 5 insertions(+), 9 deletions(-)
+ drivers/pci/controller/Kconfig | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
-index 6853dbb4131d..c4ea555573dd 100644
---- a/drivers/ata/ahci_brcm.c
-+++ b/drivers/ata/ahci_brcm.c
-@@ -428,7 +428,6 @@ static int brcm_ahci_probe(struct platform_device *pdev)
- {
- 	const struct of_device_id *of_id;
- 	struct device *dev = &pdev->dev;
--	const char *reset_name = NULL;
- 	struct brcm_ahci_priv *priv;
- 	struct ahci_host_priv *hpriv;
- 	struct resource *res;
-@@ -452,11 +451,11 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+index 91bfdb784829..c0f3d4d10047 100644
+--- a/drivers/pci/controller/Kconfig
++++ b/drivers/pci/controller/Kconfig
+@@ -244,9 +244,10 @@ config VMD
  
- 	/* Reset is optional depending on platform and named differently */
- 	if (priv->version == BRCM_SATA_BCM7216)
--		reset_name = "rescal";
-+		priv->rcdev = devm_reset_control_get_optional_shared(&pdev->dev,
-+								     "rescal");
- 	else
--		reset_name = "ahci";
--
--	priv->rcdev = devm_reset_control_get_optional(&pdev->dev, reset_name);
-+		priv->rcdev = devm_reset_control_get_optional(&pdev->dev,
-+							      "ahci");
- 	if (IS_ERR(priv->rcdev))
- 		return PTR_ERR(priv->rcdev);
- 
-@@ -479,10 +478,7 @@ static int brcm_ahci_probe(struct platform_device *pdev)
- 		break;
- 	}
- 
--	if (priv->version == BRCM_SATA_BCM7216)
--		ret = reset_control_reset(priv->rcdev);
--	else
--		ret = reset_control_deassert(priv->rcdev);
-+	ret = reset_control_deassert(priv->rcdev);
- 	if (ret)
- 		return ret;
- 
+ config PCIE_BRCMSTB
+ 	tristate "Broadcom Brcmstb PCIe host controller"
+-	depends on ARCH_BCM2835 || COMPILE_TEST
++	depends on ARCH_BRCMSTB || ARCH_BCM2835 || COMPILE_TEST
+ 	depends on OF
+ 	depends on PCI_MSI_IRQ_DOMAIN
++	default ARCH_BRCMSTB
+ 	help
+ 	  Say Y here to enable PCIe host controller support for
+ 	  Broadcom STB based SoCs, like the Raspberry Pi 4.
 -- 
 2.17.1
 
