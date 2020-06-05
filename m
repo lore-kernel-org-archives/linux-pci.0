@@ -7,39 +7,40 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CDFBC433E6
-	for <linux-pci@archiver.kernel.org>; Fri,  5 Jun 2020 21:27:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7200C433DF
+	for <linux-pci@archiver.kernel.org>; Fri,  5 Jun 2020 21:27:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 29A68207D8
-	for <linux-pci@archiver.kernel.org>; Fri,  5 Jun 2020 21:27:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A4C76207D5
+	for <linux-pci@archiver.kernel.org>; Fri,  5 Jun 2020 21:27:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="iaX51n98"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="dTo2j8UG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728614AbgFEV1v (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 5 Jun 2020 17:27:51 -0400
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:38940 "EHLO
+        id S1728639AbgFEV1x (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 5 Jun 2020 17:27:53 -0400
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:38894 "EHLO
         rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728625AbgFEV1u (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 5 Jun 2020 17:27:50 -0400
+        by vger.kernel.org with ESMTP id S1728617AbgFEV1s (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 5 Jun 2020 17:27:48 -0400
 Received: from mail-irv-17.broadcom.com (mail-irv-17.lvn.broadcom.net [10.75.242.48])
-        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id 0D00930D85A;
-        Fri,  5 Jun 2020 14:27:49 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com 0D00930D85A
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
-        s=dkimrelay; t=1591392469;
-        bh=8FEz65bQoxeORMmqky+vo5W9886Kbt7oxwYJ+ALCY6k=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=iaX51n98p5kOYp4nGEhg4NqU2V/yb+zMlS0cgUPMklSpDEKqNkEmiRp03tBsIFywi
-         4Aa36qsgPPFBjHqzKeG/ZoX0N0TDiIcQvj734HyYHOIG0M9DvRlyHkhemKgrjTq5R5
-         lCEh7uoysRgxrGiYtJ37CVn7ThebFTTWwZ2GF3DM=
-Received: from stbsrv-and-01.and.broadcom.net (stbsrv-and-01.and.broadcom.net [10.28.16.211])
-        by mail-irv-17.broadcom.com (Postfix) with ESMTP id 8734314008B;
+        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id 800B130CFDD;
         Fri,  5 Jun 2020 14:27:47 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com 800B130CFDD
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
+        s=dkimrelay; t=1591392467;
+        bh=AlY3xR56YhXONm3RNs9ROpeBqTOSk8xtR8Q277mQq8Y=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=dTo2j8UG4BylLFWrf4JPj0mKG9tNXX/szjHpgXP5HTutBGi+KIDD6qVpEmIfdXbNZ
+         5xmEpMCAqFUCh3kpkw8QEILXTWmJJOwhXXyMMNTv7S2XKo6CDIjn2rN/Y1+Ahoz3m5
+         hL7h0FCkQ4xTPFP9+fblGEoS6GcZWRE3BpIHn1hw=
+Received: from stbsrv-and-01.and.broadcom.net (stbsrv-and-01.and.broadcom.net [10.28.16.211])
+        by mail-irv-17.broadcom.com (Postfix) with ESMTP id EF833140069;
+        Fri,  5 Jun 2020 14:27:45 -0700 (PDT)
 From:   Jim Quinlan <james.quinlan@broadcom.com>
 To:     linux-pci@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
         Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
         bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+Cc:     Jim Quinlan <james.quinlan@broadcom.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Rob Herring <robh@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Florian Fainelli <f.fainelli@gmail.com>,
@@ -48,9 +49,9 @@ Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM
         BCM2711/BCM2835 ARM ARCHITECTURE),
         linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v4 12/12] PCI: brcmstb: Add bcm7211, bcm7216, bcm7445, bcm7278 to match list
-Date:   Fri,  5 Jun 2020 17:26:52 -0400
-Message-Id: <20200605212706.7361-13-james.quinlan@broadcom.com>
+Subject: [PATCH v4 11/12] PCI: brcmstb: Set bus max burst size by chip type
+Date:   Fri,  5 Jun 2020 17:26:51 -0400
+Message-Id: <20200605212706.7361-12-james.quinlan@broadcom.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200605212706.7361-1-james.quinlan@broadcom.com>
 References: <20200605212706.7361-1-james.quinlan@broadcom.com>
@@ -59,29 +60,71 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Now that the support is in place with previous commits, we add several
-chips that use the BrcmSTB driver.
+From: Jim Quinlan <jquinlan@broadcom.com>
 
-Signed-off-by: Jim Quinlan <james.quinlan@broadcom.com>
+The proper value of the parameter SCB_MAX_BURST_SIZE varies per chip.  The
+2711 family requires 128B whereas other devices can employ 512.  The
+assignment is complicated by the fact that the values for this two-bit
+field have different meanings;
+
+  Value   Type_Generic    Type_7278
+
+     00       Reserved         128B
+     01           128B         256B
+     10           256B         512B
+     11           512B     Reserved
+
+Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
 Acked-by: Florian Fainelli <f.fainelli@gmail.com>
 ---
- drivers/pci/controller/pcie-brcmstb.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/pci/controller/pcie-brcmstb.c | 18 +++++++++++++++---
+ 1 file changed, 15 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
-index 7d068cec1ae2..0002752c4d74 100644
+index 0e92d322f581..7d068cec1ae2 100644
 --- a/drivers/pci/controller/pcie-brcmstb.c
 +++ b/drivers/pci/controller/pcie-brcmstb.c
-@@ -1189,6 +1189,10 @@ static int brcm_pcie_remove(struct platform_device *pdev)
+@@ -53,7 +53,7 @@
+ #define  PCIE_MISC_MISC_CTRL_SCB_ACCESS_EN_MASK		0x1000
+ #define  PCIE_MISC_MISC_CTRL_CFG_READ_UR_MODE_MASK	0x2000
+ #define  PCIE_MISC_MISC_CTRL_MAX_BURST_SIZE_MASK	0x300000
+-#define  PCIE_MISC_MISC_CTRL_MAX_BURST_SIZE_128		0x0
++
+ #define  PCIE_MISC_MISC_CTRL_SCB0_SIZE_MASK		0xf8000000
+ #define  PCIE_MISC_MISC_CTRL_SCB1_SIZE_MASK		0x07c00000
+ #define  PCIE_MISC_MISC_CTRL_SCB2_SIZE_MASK		0x0000001f
+@@ -848,7 +848,7 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
+ 	int num_out_wins = 0;
+ 	u16 nlw, cls, lnksta;
+ 	int i, ret, memc;
+-	u32 tmp, aspm_support;
++	u32 tmp, burst, aspm_support;
  
- static const struct of_device_id brcm_pcie_match[] = {
- 	{ .compatible = "brcm,bcm2711-pcie", .data = &bcm2711_cfg },
-+	{ .compatible = "brcm,bcm7211-pcie", .data = &generic_cfg },
-+	{ .compatible = "brcm,bcm7278-pcie", .data = &bcm7278_cfg },
-+	{ .compatible = "brcm,bcm7216-pcie", .data = &bcm7278_cfg },
-+	{ .compatible = "brcm,bcm7445-pcie", .data = &generic_cfg },
- 	{},
- };
+ 	/* Reset the bridge */
+ 	brcm_pcie_bridge_sw_init_set(pcie, 1);
+@@ -864,10 +864,22 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
+ 	/* Wait for SerDes to be stable */
+ 	usleep_range(100, 200);
+ 
++	/*
++	 * SCB_MAX_BURST_SIZE is a two bit field.  For GENERIC chips it
++	 * is encoded as 0=128, 1=256, 2=512, 3=Rsvd, for BCM7278 it
++	 * is encoded as 0=Rsvd, 1=128, 2=256, 3=512.
++	 */
++	if (pcie->type == BCM2711)
++		burst = 0x0; /* 128B */
++	else if (pcie->type == BCM7278)
++		burst = 0x3; /* 512 bytes */
++	else
++		burst = 0x2; /* 512 bytes */
++
+ 	/* Set SCB_MAX_BURST_SIZE, CFG_READ_UR_MODE, SCB_ACCESS_EN */
+ 	u32p_replace_bits(&tmp, 1, PCIE_MISC_MISC_CTRL_SCB_ACCESS_EN_MASK);
+ 	u32p_replace_bits(&tmp, 1, PCIE_MISC_MISC_CTRL_CFG_READ_UR_MODE_MASK);
+-	u32p_replace_bits(&tmp, PCIE_MISC_MISC_CTRL_MAX_BURST_SIZE_128,
++	u32p_replace_bits(&tmp, burst,
+ 			  PCIE_MISC_MISC_CTRL_MAX_BURST_SIZE_MASK);
+ 	writel(tmp, base + PCIE_MISC_MISC_CTRL);
  
 -- 
 2.17.1
