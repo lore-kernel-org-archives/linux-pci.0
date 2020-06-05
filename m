@@ -5,53 +5,52 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6290AC433E0
-	for <linux-pci@archiver.kernel.org>; Fri,  5 Jun 2020 21:27:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6D97C433E1
+	for <linux-pci@archiver.kernel.org>; Fri,  5 Jun 2020 21:27:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3FDAD2065C
-	for <linux-pci@archiver.kernel.org>; Fri,  5 Jun 2020 21:27:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 96EAA2065C
+	for <linux-pci@archiver.kernel.org>; Fri,  5 Jun 2020 21:27:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Uyub99ds"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="QBaWzyB6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728496AbgFEV1W (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 5 Jun 2020 17:27:22 -0400
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:38460 "EHLO
+        id S1728514AbgFEV1q (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 5 Jun 2020 17:27:46 -0400
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:38852 "EHLO
         rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728487AbgFEV1V (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 5 Jun 2020 17:27:21 -0400
+        by vger.kernel.org with ESMTP id S1728614AbgFEV1p (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 5 Jun 2020 17:27:45 -0400
 Received: from mail-irv-17.broadcom.com (mail-irv-17.lvn.broadcom.net [10.75.242.48])
-        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id D240E30CFDD;
-        Fri,  5 Jun 2020 14:27:19 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com D240E30CFDD
+        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id 566A230D82A;
+        Fri,  5 Jun 2020 14:27:44 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com 566A230D82A
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
-        s=dkimrelay; t=1591392439;
-        bh=xHVmdwrtES336ZD/pMaNwdQn2MdfztoEcmaxMbZqWYc=;
+        s=dkimrelay; t=1591392464;
+        bh=N3ihGYavphoq4B74C8dwv0lwT3z/t52A+nNbIyMaC8E=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Uyub99dsEdwI3bm001CAosFYB7VHqYJSwTs3D9Bu3gDQfJu8N8cYpJ3qkkgz8Bsyd
-         TngJkLzHslJ6/JVUOaHS8/ekpLJv9hasoRE9DRKMkwgEOXGRgINEFqwjmxXotxeRD1
-         uguzld5lcIOMQ+9DRTE1FWX/5MBncshksix+j6Is=
+        b=QBaWzyB6QmrOd6HLiVEY4XyLHAg8GaZKIVnOi/uQijh+P2jdLkfnj/HK83YwIYOX1
+         oSp5Tk7Yeh/Q6kiKCf5JL6CUuQ8GjVUkb+zNbMpgEg3w6ndNfdDFtLd9fftyVRCc/B
+         8EjYh7Gy6fnIv7vjPkMjOV0KIUYj6gQBMWQZKdHA=
 Received: from stbsrv-and-01.and.broadcom.net (stbsrv-and-01.and.broadcom.net [10.28.16.211])
-        by mail-irv-17.broadcom.com (Postfix) with ESMTP id 4DB53140069;
-        Fri,  5 Jun 2020 14:27:18 -0700 (PDT)
+        by mail-irv-17.broadcom.com (Postfix) with ESMTP id D9D1F140069;
+        Fri,  5 Jun 2020 14:27:42 -0700 (PDT)
 From:   Jim Quinlan <james.quinlan@broadcom.com>
 To:     linux-pci@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
         Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
         bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com
-Cc:     Jim Quinlan <james.quinlan@broadcom.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
+        Florian Fainelli <f.fainelli@gmail.com>,
         linux-rpi-kernel@lists.infradead.org (moderated list:BROADCOM
         BCM2711/BCM2835 ARM ARCHITECTURE),
         linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM
         BCM2711/BCM2835 ARM ARCHITECTURE),
-        devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED
-        DEVICE TREE BINDINGS), linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v4 03/12] dt-bindings: PCI: Add bindings for more Brcmstb chips
-Date:   Fri,  5 Jun 2020 17:26:43 -0400
-Message-Id: <20200605212706.7361-4-james.quinlan@broadcom.com>
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v4 09/12] PCI: brcmstb: Set internal memory viewport sizes
+Date:   Fri,  5 Jun 2020 17:26:49 -0400
+Message-Id: <20200605212706.7361-10-james.quinlan@broadcom.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200605212706.7361-1-james.quinlan@broadcom.com>
 References: <20200605212706.7361-1-james.quinlan@broadcom.com>
@@ -60,124 +59,140 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Jim Quinlan <jquinlan@broadcom.com>
+BrcmSTB PCIe controllers are intimately connected to the memory
+controller(s) on the SOC.  There is a "viewport" for each memory controller
+that allows inbound accesses to CPU memory.  Each viewport's size must be
+set to a power of two, and that size must be equal to or larger than the
+amount of memory each controller supports.
 
-- Add compatible strings for three more Broadcom STB chips: 7278, 7216,
-  7211 (STB version of RPi4).
-- add new property 'brcm,scb-sizes'
-- add new property 'resets'
-- add new property 'reset-names' for 7216 only
-- allow 'ranges' and 'dma-ranges' to have more than one item and update
-  the example to show this.
-
-Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
+Signed-off-by: Jim Quinlan <james.quinlan@broadcom.com>
+Acked-by: Florian Fainelli <f.fainelli@gmail.com>
 ---
- .../bindings/pci/brcm,stb-pcie.yaml           | 58 ++++++++++++++++---
- 1 file changed, 51 insertions(+), 7 deletions(-)
+ drivers/pci/controller/pcie-brcmstb.c | 67 ++++++++++++++++++++-------
+ 1 file changed, 49 insertions(+), 18 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml b/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
-index 8680a0f86c5a..4a012d77513f 100644
---- a/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
-@@ -9,12 +9,15 @@ title: Brcmstb PCIe Host Controller Device Tree Bindings
- maintainers:
-   - Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
+diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
+index ca825d7ca4fc..71e5d4326a79 100644
+--- a/drivers/pci/controller/pcie-brcmstb.c
++++ b/drivers/pci/controller/pcie-brcmstb.c
+@@ -55,6 +55,8 @@
+ #define  PCIE_MISC_MISC_CTRL_MAX_BURST_SIZE_MASK	0x300000
+ #define  PCIE_MISC_MISC_CTRL_MAX_BURST_SIZE_128		0x0
+ #define  PCIE_MISC_MISC_CTRL_SCB0_SIZE_MASK		0xf8000000
++#define  PCIE_MISC_MISC_CTRL_SCB1_SIZE_MASK		0x07c00000
++#define  PCIE_MISC_MISC_CTRL_SCB2_SIZE_MASK		0x0000001f
  
--allOf:
--  - $ref: /schemas/pci/pci-bus.yaml#
--
- properties:
-   compatible:
--    const: brcm,bcm2711-pcie # The Raspberry Pi 4
-+    items:
-+      - enum:
-+          - brcm,bcm2711-pcie # The Raspberry Pi 4
-+          - brcm,bcm7211-pcie # Broadcom STB version of RPi4
-+          - brcm,bcm7278-pcie # Broadcom 7278 Arm
-+          - brcm,bcm7216-pcie # Broadcom 7216 Arm
-+          - brcm,bcm7445-pcie # Broadcom 7445 Arm
+ #define PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LO		0x400c
+ #define PCIE_MEM_WIN0_LO(win)	\
+@@ -152,6 +154,7 @@
+ #define SSC_STATUS_OFFSET		0x1
+ #define SSC_STATUS_SSC_MASK		0x400
+ #define SSC_STATUS_PLL_LOCK_MASK	0x800
++#define PCIE_BRCM_MAX_MEMC		3
  
-   reg:
-     maxItems: 1
-@@ -34,10 +37,12 @@ properties:
-       - const: msi
+ /* Rescal registers */
+ #define PCIE_DVT_PMU_PCIE_PHY_CTRL				0xc700
+@@ -261,6 +264,8 @@ struct brcm_pcie {
+ 	const int		*reg_field_info;
+ 	enum pcie_type		type;
+ 	struct reset_control	*rescal;
++	int			num_memc;
++	u64			memc_size[PCIE_BRCM_MAX_MEMC];
+ };
  
-   ranges:
--    maxItems: 1
-+    minItems: 1
-+    maxItems: 4
+ /*
+@@ -717,22 +722,40 @@ static inline int brcm_pcie_get_rc_bar2_size_and_offset(struct brcm_pcie *pcie,
+ 							u64 *rc_bar2_offset)
+ {
+ 	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(pcie);
+-	struct device *dev = pcie->dev;
+ 	struct resource_entry *entry;
++	struct device *dev = pcie->dev;
++	u64 lowest_pcie_addr = ~(u64)0;
++	int ret, i = 0;
++	u64 size = 0;
  
-   dma-ranges:
--    maxItems: 1
-+    minItems: 1
-+    maxItems: 6
+-	entry = resource_list_first_type(&bridge->dma_ranges, IORESOURCE_MEM);
+-	if (!entry)
+-		return -ENODEV;
++	resource_list_for_each_entry(entry, &bridge->dma_ranges) {
++		u64 pcie_beg = entry->res->start - entry->offset;
  
-   clocks:
-     maxItems: 1
-@@ -58,8 +63,33 @@ properties:
++		size += entry->res->end - entry->res->start + 1;
++		if (pcie_beg < lowest_pcie_addr)
++			lowest_pcie_addr = pcie_beg;
++	}
  
-   aspm-no-l0s: true
- 
-+  resets:
-+    description: for "brcm,bcm7216-pcie", must be a valid reset
-+      phandle pointing to the RESCAL reset controller provider node.
-+    $ref: "/schemas/types.yaml#/definitions/phandle"
+-	/*
+-	 * The controller expects the inbound window offset to be calculated as
+-	 * the difference between PCIe's address space and CPU's. The offset
+-	 * provided by the firmware is calculated the opposite way, so we
+-	 * negate it.
+-	 */
+-	*rc_bar2_offset = -entry->offset;
+-	*rc_bar2_size = 1ULL << fls64(entry->res->end - entry->res->start);
++	ret = of_property_read_variable_u64_array(
++		pcie->np, "brcm,scb-sizes", pcie->memc_size, 1,
++		PCIE_BRCM_MAX_MEMC);
 +
-+  reset-names:
-+    items:
-+      - const: rescal
++	if (ret <= 0) {
++		/* Make an educated guess */
++		pcie->num_memc = 1;
++		pcie->memc_size[0] = 1 << fls64(size - 1);
++	} else {
++		pcie->num_memc = ret;
++	}
 +
-+  brcm,scb-sizes:
-+    description: u64 giving the 64bit PCIe memory
-+      viewport size of a memory controller.  There may be up to
-+      three controllers, and each size must be a power of two
-+      with a size greater or equal to the amount of memory the
-+      controller supports.  Note that each memory controller
-+      may have two component regions -- base and extended -- so
-+      this information cannot be deduced from the dma-ranges.
++	/* Each memc is viewed through a "port" that is a power of 2 */
++	for (i = 0, size = 0; i < pcie->num_memc; i++)
++		size += pcie->memc_size[i];
 +
-+    allOf:
-+      - $ref: /schemas/types.yaml#/definitions/uint64-array
-+      - items:
-+          minItems: 1
-+          maxItems: 3
-+
- required:
-   - reg
-+  - ranges
-   - dma-ranges
-   - "#interrupt-cells"
-   - interrupts
-@@ -68,6 +98,18 @@ required:
-   - interrupt-map
-   - msi-controller
++	/* System memory starts at this address in PCIe-space */
++	*rc_bar2_offset = lowest_pcie_addr;
++	/* The sum of all memc views must also be a power of 2 */
++	*rc_bar2_size = 1ULL << fls64(size - 1);
  
-+allOf:
-+  - $ref: /schemas/pci/pci-bus.yaml#
-+  - if:
-+      properties:
-+        compatible:
-+          contains:
-+            const: brcm,bcm7216-pcie
-+    then:
-+      required:
-+        - resets
-+        - reset-names
-+
- unevaluatedProperties: false
+ 	/*
+ 	 * We validate the inbound memory view even though we should trust
+@@ -784,12 +807,11 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
+ 	void __iomem *base = pcie->base;
+ 	struct device *dev = pcie->dev;
+ 	struct resource_entry *entry;
+-	unsigned int scb_size_val;
+ 	bool ssc_good = false;
+ 	struct resource *res;
+ 	int num_out_wins = 0;
+ 	u16 nlw, cls, lnksta;
+-	int i, ret;
++	int i, ret, memc;
+ 	u32 tmp, aspm_support;
  
- examples:
-@@ -93,7 +135,9 @@ examples:
-                     msi-parent = <&pcie0>;
-                     msi-controller;
-                     ranges = <0x02000000 0x0 0xf8000000 0x6 0x00000000 0x0 0x04000000>;
--                    dma-ranges = <0x02000000 0x0 0x00000000 0x0 0x00000000 0x0 0x80000000>;
-+                    dma-ranges = <0x42000000 0x1 0x00000000 0x0 0x40000000 0x0 0x80000000>,
-+                                 <0x42000000 0x1 0x80000000 0x3 0x00000000 0x0 0x80000000>;
-                     brcm,enable-ssc;
-+                    brcm,scb-sizes =  <0x0000000080000000 0x0000000080000000>;
-             };
-     };
+ 	/* Reset the bridge */
+@@ -825,11 +847,20 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
+ 	writel(upper_32_bits(rc_bar2_offset),
+ 	       base + PCIE_MISC_RC_BAR2_CONFIG_HI);
+ 
+-	scb_size_val = rc_bar2_size ?
+-		       ilog2(rc_bar2_size) - 15 : 0xf; /* 0xf is 1GB */
+ 	tmp = readl(base + PCIE_MISC_MISC_CTRL);
+-	u32p_replace_bits(&tmp, scb_size_val,
+-			  PCIE_MISC_MISC_CTRL_SCB0_SIZE_MASK);
++	for (memc = 0; memc < pcie->num_memc; memc++) {
++		u32 scb_size_val = ilog2(pcie->memc_size[memc]) - 15;
++
++		if (memc == 0)
++			u32p_replace_bits(&tmp, scb_size_val,
++					  PCIE_MISC_MISC_CTRL_SCB0_SIZE_MASK);
++		else if (memc == 1)
++			u32p_replace_bits(&tmp, scb_size_val,
++					  PCIE_MISC_MISC_CTRL_SCB1_SIZE_MASK);
++		else if (memc == 2)
++			u32p_replace_bits(&tmp, scb_size_val,
++					  PCIE_MISC_MISC_CTRL_SCB2_SIZE_MASK);
++	}
+ 	writel(tmp, base + PCIE_MISC_MISC_CTRL);
+ 
+ 	/*
 -- 
 2.17.1
 
