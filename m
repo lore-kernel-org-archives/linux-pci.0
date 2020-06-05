@@ -4,30 +4,29 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85A26C433E0
-	for <linux-pci@archiver.kernel.org>; Fri,  5 Jun 2020 09:44:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F729C433E1
+	for <linux-pci@archiver.kernel.org>; Fri,  5 Jun 2020 09:44:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 62988207DF
-	for <linux-pci@archiver.kernel.org>; Fri,  5 Jun 2020 09:44:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E032620897
+	for <linux-pci@archiver.kernel.org>; Fri,  5 Jun 2020 09:44:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726386AbgFEJoo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 5 Jun 2020 05:44:44 -0400
+        id S1726424AbgFEJot (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 5 Jun 2020 05:44:49 -0400
 Received: from mx.socionext.com ([202.248.49.38]:45675 "EHLO mx.socionext.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726277AbgFEJom (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 5 Jun 2020 05:44:42 -0400
-Received: from unknown (HELO kinkan-ex.css.socionext.com) ([172.31.9.52])
-  by mx.socionext.com with ESMTP; 05 Jun 2020 18:44:40 +0900
-Received: from mail.mfilter.local (m-filter-1 [10.213.24.61])
-        by kinkan-ex.css.socionext.com (Postfix) with ESMTP id 9648C18010B;
-        Fri,  5 Jun 2020 18:44:40 +0900 (JST)
-Received: from 172.31.9.51 (172.31.9.51) by m-FILTER with ESMTP; Fri, 5 Jun 2020 18:44:40 +0900
+        id S1726242AbgFEJop (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 5 Jun 2020 05:44:45 -0400
+Received: from unknown (HELO iyokan-ex.css.socionext.com) ([172.31.9.54])
+  by mx.socionext.com with ESMTP; 05 Jun 2020 18:44:43 +0900
+Received: from mail.mfilter.local (m-filter-2 [10.213.24.62])
+        by iyokan-ex.css.socionext.com (Postfix) with ESMTP id E79EF60066;
+        Fri,  5 Jun 2020 18:44:43 +0900 (JST)
+Received: from 172.31.9.51 (172.31.9.51) by m-FILTER with ESMTP; Fri, 5 Jun 2020 18:44:43 +0900
 Received: from plum.e01.socionext.com (unknown [10.213.132.32])
-        by kinkan.css.socionext.com (Postfix) with ESMTP id 35E6C1A12AD;
-        Fri,  5 Jun 2020 18:44:40 +0900 (JST)
+        by kinkan.css.socionext.com (Postfix) with ESMTP id 19FC01A12AD;
+        Fri,  5 Jun 2020 18:44:43 +0900 (JST)
 From:   Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -41,9 +40,9 @@ Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         Masami Hiramatsu <masami.hiramatsu@linaro.org>,
         Jassi Brar <jaswinder.singh@linaro.org>,
         Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-Subject: [PATCH v4 1/6] PCI: dwc: Add msi_host_isr() callback
-Date:   Fri,  5 Jun 2020 18:44:31 +0900
-Message-Id: <1591350276-15816-2-git-send-email-hayashi.kunihiko@socionext.com>
+Subject: [PATCH v4 3/6] dt-bindings: PCI: uniphier: Add iATU register description
+Date:   Fri,  5 Jun 2020 18:44:33 +0900
+Message-Id: <1591350276-15816-4-git-send-email-hayashi.kunihiko@socionext.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1591350276-15816-1-git-send-email-hayashi.kunihiko@socionext.com>
 References: <1591350276-15816-1-git-send-email-hayashi.kunihiko@socionext.com>
@@ -52,48 +51,27 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This adds msi_host_isr() callback function support to describe
-SoC-dependent service triggered by MSI.
+In the dt-bindings, "atu" reg-names is required to get the register space
+for iATU in Synopsys DWC version 4.80 or later.
 
-For example, when AER interrupt is triggered by MSI, the callback function
-reads SoC-dependent registers and detects that the interrupt is from AER,
-and invoke AER interrupts related to MSI.
-
-Cc: Marc Zyngier <maz@kernel.org>
-Cc: Jingoo Han <jingoohan1@gmail.com>
-Cc: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+Acked-by: Rob Herring <robh@kernel.org>
 ---
- drivers/pci/controller/dwc/pcie-designware-host.c | 3 +++
- drivers/pci/controller/dwc/pcie-designware.h      | 1 +
- 2 files changed, 4 insertions(+)
+ Documentation/devicetree/bindings/pci/uniphier-pcie.txt | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index 0a4a5aa..026edb1 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -83,6 +83,9 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
- 	u32 status, num_ctrls;
- 	irqreturn_t ret = IRQ_NONE;
- 
-+	if (pp->ops->msi_host_isr)
-+		pp->ops->msi_host_isr(pp);
-+
- 	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
- 
- 	for (i = 0; i < num_ctrls; i++) {
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 656e00f..e741967 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -170,6 +170,7 @@ struct dw_pcie_host_ops {
- 	void (*scan_bus)(struct pcie_port *pp);
- 	void (*set_num_vectors)(struct pcie_port *pp);
- 	int (*msi_host_init)(struct pcie_port *pp);
-+	void (*msi_host_isr)(struct pcie_port *pp);
- };
- 
- struct pcie_port {
+diff --git a/Documentation/devicetree/bindings/pci/uniphier-pcie.txt b/Documentation/devicetree/bindings/pci/uniphier-pcie.txt
+index 1fa2c59..c4b7381 100644
+--- a/Documentation/devicetree/bindings/pci/uniphier-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/uniphier-pcie.txt
+@@ -16,6 +16,7 @@ Required properties:
+     "dbi"    - controller configuration registers
+     "link"   - SoC-specific glue layer registers
+     "config" - PCIe configuration space
++    "atu"    - iATU registers for DWC version 4.80 or later
+ - clocks: A phandle to the clock gate for PCIe glue layer including
+ 	the host controller.
+ - resets: A phandle to the reset line for PCIe glue layer including
 -- 
 2.7.4
 
