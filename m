@@ -7,49 +7,49 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DE3DC433DF
-	for <linux-pci@archiver.kernel.org>; Mon,  8 Jun 2020 23:41:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A14AC433DF
+	for <linux-pci@archiver.kernel.org>; Mon,  8 Jun 2020 23:46:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1199D20659
-	for <linux-pci@archiver.kernel.org>; Mon,  8 Jun 2020 23:41:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4147820659
+	for <linux-pci@archiver.kernel.org>; Mon,  8 Jun 2020 23:46:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1591659695;
-	bh=+OqL3g/sf9U353eb2k/SFrF3QoYc+2uS+3VyI8316Iw=;
+	s=default; t=1591660005;
+	bh=ROXJ/dCfl2QDTiLF5kuqW9IcXc8XrfktjT2CXamAzmA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=HpWbWHwfi5hXs57cUym2lls/WQUzKoOBdHmbMA1EmTtt46L+yW4wSanqvrzjmB3sY
-	 BqYpgBUpPzxTgdgvS1DkscezhJffmeM4cLg0MpnTRph0LZ5i+13h2xnwo9pOftF662
-	 zGfSX7B0gdxoapCgwN24Dt1nFJ4boRmhhPnd7LTI=
+	b=wOEwRQUPmyCi4kT3s7TWhdVIBKeos2LhSw45N/CemXi44dCQ+33/RHIYpGcV/DEbW
+	 OP0HYpyoI4GfoH+6N4EmuC9kEBugqyY8cvuUsR7Ah849Y91LJaoB9+rTdTo6IT4kz0
+	 ctprhT7JazUAmTjeAMoZxV+USh1iGPLXJ4eYxwho=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732217AbgFHXl0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 8 Jun 2020 19:41:26 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56264 "EHLO mail.kernel.org"
+        id S2387613AbgFHXqY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 8 Jun 2020 19:46:24 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53844 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730349AbgFHX1j (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 8 Jun 2020 19:27:39 -0400
+        id S1731242AbgFHX0Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 8 Jun 2020 19:26:24 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C80332074B;
-        Mon,  8 Jun 2020 23:27:37 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 167E62074B;
+        Mon,  8 Jun 2020 23:26:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1591658858;
-        bh=+OqL3g/sf9U353eb2k/SFrF3QoYc+2uS+3VyI8316Iw=;
+        s=default; t=1591658783;
+        bh=ROXJ/dCfl2QDTiLF5kuqW9IcXc8XrfktjT2CXamAzmA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Ru0dPagHLRFnitfcO2lfy7rAXzkjKBXPwMHAsbnJIYGGyW+FkAQMfbEccD5sDzWeL
-         9d8YSRx9pMAjuT9qPhrz/Wt3CF6+zyAn73BldZpzeT/ajlmqH2vNy7BEJ2PVQ7b+Nw
-         BMVU8bKGOWbLA5TVrI/1v+SbM2qIL69gwfRiv1hg=
+        b=h+4nwy2pIs5FViw17fJboPl+6izCUk+Ae9S/LIn2/gAUsVMQAxm5BlIhkgDgejIeu
+         fZ1nq6Kng5Nf5r5Dhfoie0nyM+KXlK1Lt6Fmy3ziDz2h3jRQ0nwoOjWfVTngKByWEN
+         9ltXdjQlKCiglBfvnojnIAkn+OR+k6pzbMdd2laE=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Jiaxun Yang <jiaxun.yang@flygoat.com>,
         Bjorn Helgaas <helgaas@kernel.org>,
         Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 42/50] PCI: Don't disable decoding when mmio_always_on is set
-Date:   Mon,  8 Jun 2020 19:26:32 -0400
-Message-Id: <20200608232640.3370262-42-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 60/72] PCI: Don't disable decoding when mmio_always_on is set
+Date:   Mon,  8 Jun 2020 19:24:48 -0400
+Message-Id: <20200608232500.3369581-60-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200608232640.3370262-1-sashal@kernel.org>
-References: <20200608232640.3370262-1-sashal@kernel.org>
+In-Reply-To: <20200608232500.3369581-1-sashal@kernel.org>
+References: <20200608232500.3369581-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -78,10 +78,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 16611cf3aba4..be63f008167b 100644
+index e23bfd9845b1..92c3abe0b2b9 100644
 --- a/drivers/pci/probe.c
 +++ b/drivers/pci/probe.c
-@@ -1251,7 +1251,7 @@ int pci_setup_device(struct pci_dev *dev)
+@@ -1446,7 +1446,7 @@ int pci_setup_device(struct pci_dev *dev)
  	/* device class may be changed after fixup */
  	class = dev->class >> 8;
  
