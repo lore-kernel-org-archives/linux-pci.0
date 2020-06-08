@@ -2,93 +2,132 @@ Return-Path: <SRS0=HJ7y=7V=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57CADC433DF
-	for <linux-pci@archiver.kernel.org>; Mon,  8 Jun 2020 19:28:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88AE8C433E0
+	for <linux-pci@archiver.kernel.org>; Mon,  8 Jun 2020 19:43:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 33CC620760
-	for <linux-pci@archiver.kernel.org>; Mon,  8 Jun 2020 19:28:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 69FC9206D5
+	for <linux-pci@archiver.kernel.org>; Mon,  8 Jun 2020 19:43:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726452AbgFHT1b (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 8 Jun 2020 15:27:31 -0400
-Received: from mx2.suse.de ([195.135.220.15]:39542 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726406AbgFHT1a (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 8 Jun 2020 15:27:30 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id E1636AE41;
-        Mon,  8 Jun 2020 19:27:31 +0000 (UTC)
-From:   Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-To:     f.fainelli@gmail.com, gregkh@linuxfoundation.org, wahrenst@gmx.net,
-        robh@kernel.org, mathias.nyman@linux.intel.com,
-        Eric Anholt <eric@anholt.net>,
-        bcm-kernel-feedback-list@broadcom.com,
-        linux-rpi-kernel@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-usb@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org, tim.gover@raspberrypi.org,
-        helgaas@kernel.org, lorenzo.pieralisi@arm.com,
-        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-Subject: [PATCH 0/9] Raspberry Pi 4 USB firmware initialization rework
-Date:   Mon,  8 Jun 2020 21:26:52 +0200
-Message-Id: <20200608192701.18355-1-nsaenzjulienne@suse.de>
-X-Mailer: git-send-email 2.26.2
+        id S1726409AbgFHTnl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 8 Jun 2020 15:43:41 -0400
+Received: from relay3-d.mail.gandi.net ([217.70.183.195]:52999 "EHLO
+        relay3-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726406AbgFHTnl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 8 Jun 2020 15:43:41 -0400
+X-Originating-IP: 86.210.146.109
+Received: from windsurf (lfbn-tou-1-915-109.w86-210.abo.wanadoo.fr [86.210.146.109])
+        (Authenticated sender: thomas.petazzoni@bootlin.com)
+        by relay3-d.mail.gandi.net (Postfix) with ESMTPSA id 8305660005;
+        Mon,  8 Jun 2020 19:43:36 +0000 (UTC)
+Date:   Mon, 8 Jun 2020 21:43:35 +0200
+From:   Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+To:     Shmuel Hazan <sh@tkos.co.il>
+Cc:     Jason Cooper <jason@lakedaemon.net>,
+        Marek =?UTF-8?B?QmVow7pu?= <marek.behun@nic.cz>,
+        Baruch Siach <baruch@tkos.co.il>,
+        Chris ackham <chris.packham@alliedtelesis.co.nz>,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [RFC PATCH] pci: pci-mvebu: setup BAR0 to internal-regs
+Message-ID: <20200608214335.156baaaa@windsurf>
+In-Reply-To: <20200608144024.1161237-1-sh@tkos.co.il>
+References: <20200608144024.1161237-1-sh@tkos.co.il>
+Organization: Bootlin
+X-Mailer: Claws Mail 3.17.5 (GTK+ 2.24.32; x86_64-redhat-linux-gnu)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On the Raspberry Pi 4, after a PCI reset, VL805's firmware may either be
-loaded directly from an EEPROM or, if not present, by the SoC's
-co-processor, VideoCore. This series reworks how we handle this.
+On Mon,  8 Jun 2020 17:40:25 +0300
+Shmuel Hazan <sh@tkos.co.il> wrote:
 
-The previous solution makes use of PCI quirks and exporting platform
-specific functions. Albeit functional it feels pretty shoehorned. This
-proposes an alternative way of handling the triggering of the xHCI chip
-initialization trough means of a reset controller.
+> From: Shmuel H <sh@tkos.co.il>
+> 
+> Set the port's BAR0 address to the SOC's internal registers address. By default, this register will point to 0xd0000000, which is not correct.
+> 
+> Signed-off-by: Shmuel Hazan <sh@tkos.co.il>
+> ---
+> Sending again since I forgot to include a number of email addresses. 
+> 
+> Without this patch the wil6210 driver fails on interface up as follows:
+> 
+> # ip link set wlan0 up
+> [   46.142664] wil6210 0000:01:00.0 wlan0: wil_reset: Use firmware
+> <wil6210.fw> + board <wil6210.brd>
+> [   48.244216] wil6210 0000:01:00.0 wlan0: wil_wait_for_fw_ready:
+> Firmware not ready
+> ip: SIOCSIFFLAGS: Device timeout
 
-The benefits are pretty evident: less platform churn in core xHCI code,
-and no explicit device dependency management in pcie-brcmstb.
+Do you have any idea why this particular would not work, while many
+other PCIe devices do ?
 
-Note that patch #1 depend on another series[1].
+> 
+> With this patch, interface up succeeds:
+> 
+> # ip link set wlan0 up
+> [   53.632667] wil6210 0000:01:00.0 wlan0: wil_reset: Use firmware
+> <wil6210.fw> + board <wil6210.brd>
+> [   53.666560] wil6210 0000:01:00.0 wlan0: wmi_evt_ready: FW ver.
+> 5.2.0.18(SW 18); MAC 40:0e:85:c0:77:5c; 0 MID's
+> [   53.676636] wil6210 0000:01:00.0 wlan0: wil_wait_for_fw_ready: FW
+> ready after 20 ms. HW version 0x00000002
+> [   53.686478] wil6210 0000:01:00.0 wlan0:
+> wil_configure_interrupt_moderation: set ITR_TX_CNT_TRSH = 500 usec
+> [   53.696191] wil6210 0000:01:00.0 wlan0:
+> wil_configure_interrupt_moderation: set ITR_TX_IDL_CNT_TRSH = 13 usec
+> [   53.706156] wil6210 0000:01:00.0 wlan0:
+> wil_configure_interrupt_moderation: set ITR_RX_CNT_TRSH = 500 usec
+> [   53.715855] wil6210 0000:01:00.0 wlan0:
+> wil_configure_interrupt_moderation: set ITR_RX_IDL_CNT_TRSH = 13 usec
+> [   53.725819] wil6210 0000:01:00.0 wlan0: wil_refresh_fw_capabilities:
+> keep_radio_on_during_sleep (0)
+> 
+> Tested on Armada 38x based system.
+> 
+> Another related bit of information is this U-Boot commit:
+> 
+>   https://gitlab.denx.de/u-boot/u-boot/commit/193a1e9f196b7fb7e913a70936c8a49060a1859c
+> 
+> It looks like some other devices are also affected the BAR0
+> initialization.
+> However, by default, u-boot won't initialize any PCI bus. Which
+> will cause the BAR0 register to stay on its default value. 
 
-The series is based on next-20200605.
+Perhaps you want to include more of these details in the commit log.
 
-[1] https://lwn.net/ml/linux-kernel/cover.662a8d401787ef33780d91252a352de91dc4be10.1590594293.git-series.maxime@cerno.tech/
+> diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
+> index 153a64676bc9..4a00e1b81b4f 100644
+> --- a/drivers/pci/controller/pci-mvebu.c
+> +++ b/drivers/pci/controller/pci-mvebu.c
+> @@ -203,6 +203,11 @@ static void mvebu_pcie_setup_wins(struct mvebu_pcie_port *port)
+>  	mvebu_writel(port, 0, PCIE_BAR_HI_OFF(1));
+>  	mvebu_writel(port, ((size - 1) & 0xffff0000) | 1,
+>  		     PCIE_BAR_CTRL_OFF(1));
+> +	
+> +	/* Point BAR0 to the device's internal registers (internal-regs on 
+> +	 * a38x, orion and more) */
+> +	mvebu_writel(port, 0xf1000000, PCIE_BAR_LO_OFF(0));
 
----
+Some Armada 370/XP platforms really do use 0xd0000000 as the base
+address of the internal registers. This information is available in the
+DT. I think you could simply take the base address of the PCIe
+controller, round down to 1 MB (which is the size of the internal
+registers window) and that would give you the right address.
 
-Nicolas Saenz Julienne (9):
-  dt-bindings: reset: Add a binding for the RPi Firmware USB reset
-  reset: Add Raspberry Pi 4 firmware USB reset controller
-  ARM: dts: bcm2711: Add firmware usb reset node
-  ARM: dts: bcm2711: Add reset controller to xHCI node
-  usb: xhci-pci: Add support for reset controllers
-  Revert "USB: pci-quirks: Add Raspberry Pi 4 quirk"
-  usb: host: pci-quirks: Bypass xHCI quirks for Raspberry Pi 4
-  Revert "firmware: raspberrypi: Introduce vl805 init routine"
-  Revert "PCI: brcmstb: Wait for Raspberry Pi's firmware when present"
+However, it would be good to understand this a little bit better.
 
- .../arm/bcm/raspberrypi,bcm2835-firmware.yaml |  21 +++
- arch/arm/boot/dts/bcm2711-rpi-4-b.dts         |  12 ++
- drivers/firmware/Kconfig                      |   3 +-
- drivers/firmware/raspberrypi.c                |  61 ---------
- drivers/pci/controller/pcie-brcmstb.c         |  17 ---
- drivers/reset/Kconfig                         |   9 ++
- drivers/reset/Makefile                        |   1 +
- drivers/reset/reset-raspberrypi-usb.c         | 122 ++++++++++++++++++
- drivers/usb/host/pci-quirks.c                 |  22 ++--
- drivers/usb/host/xhci-pci.c                   |   9 ++
- include/soc/bcm2835/raspberrypi-firmware.h    |   7 -
- 11 files changed, 184 insertions(+), 100 deletions(-)
- create mode 100644 drivers/reset/reset-raspberrypi-usb.c
+Is this something you're seeing with mainline U-Boot only ? Or also
+with the vendor U-Boot ? Only with this specific PCIe device ?
 
+Thomas
 -- 
-2.26.2
-
+Thomas Petazzoni, CTO, Bootlin
+Embedded Linux and Kernel engineering
+https://bootlin.com
