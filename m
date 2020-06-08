@@ -2,136 +2,94 @@ Return-Path: <SRS0=HJ7y=7V=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3A41C433E2
-	for <linux-pci@archiver.kernel.org>; Mon,  8 Jun 2020 20:13:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8A6CC433DF
+	for <linux-pci@archiver.kernel.org>; Mon,  8 Jun 2020 23:38:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CB67820760
-	for <linux-pci@archiver.kernel.org>; Mon,  8 Jun 2020 20:13:49 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GxIa0nqH"
+	by mail.kernel.org (Postfix) with ESMTP id 98DC02074B
+	for <linux-pci@archiver.kernel.org>; Mon,  8 Jun 2020 23:38:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1591659484;
+	bh=VISYukPm7ye8bXDmblrcmepv+XIDapPrb/mUM23OnE0=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=b8o/Epv6zOKJxp+fsCQWYUsSHIz0QYT3kS7T6k2sAGYWqLC1cAnre3asUeK7oIeWc
+	 sQ5niXOcv/fLtF4W1eeni8vAzPjP7Pna/vw124JaMOj8ij8GY8Rc/zA644A6mC1gB/
+	 kSgxyhEFTahg/MonmXoJO9A19MCZE6v5XtPnnuJ0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726612AbgFHUNo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 8 Jun 2020 16:13:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39114 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726446AbgFHUNn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 8 Jun 2020 16:13:43 -0400
-Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10FA4C08C5C2;
-        Mon,  8 Jun 2020 13:13:43 -0700 (PDT)
-Received: by mail-wr1-x443.google.com with SMTP id h5so18864195wrc.7;
-        Mon, 08 Jun 2020 13:13:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=jVlgVc/GdIbK4y0NjDmH2j1F9bPmxyBu0CijBkevcuM=;
-        b=GxIa0nqH3YUvqdMVrSneYuxpK1li2NwjOC2tWa3ClFigHXItIT4pCIhWKCGPN2Bymx
-         Zg62Ie4jnV1UlyOpeipP+9nzTvFNmVqLlAhssoN2o9wqGjw/otPOjhmxKV0GLj2Hc0Im
-         vov50u7EGIh1TN9NEv5+NxVlULBtyE2M7GkVaBpV6vmDBNDTxAs1DFMZLQMi9R1UCNE5
-         uYGxTe4vRw2mmCAenIBFOdWLTY3KL05EHCLHzKw0Oob/Sz4GJstY9gIa388V83hDUUu9
-         sWlnW+1ZhVctL3goGD9+QZ8Dz3TavvBgXdQwKjqt9Gr/4K5D9C02vU0nY7XxmM+WVsSi
-         k40A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=jVlgVc/GdIbK4y0NjDmH2j1F9bPmxyBu0CijBkevcuM=;
-        b=eaobM8l49eojxux1vWIDI79wbgVQ9cbMt57nOtmwTPjs4Arv9d7NHoLAuhiZLmqQav
-         GwHcQhIX5t9yxN0lmdu37vvFkgyVCQ7jJncT0A0b3+kX0vbsB3pJP+OABe5RSe/KjOKn
-         DE6iEyVqI/NtHdGCE7Z+x+ZTDDUqOFY8FxQSyBA3cd1/TFEJ0pQ2f5PF8/sDV0DhWSSN
-         +iuMxG/uEGjTrQk5GFl3wCbGCaLRJHd3xdDLw35jM/uNqi6TzzubROByEnkq46scFbnE
-         nF8GReIwDBBQ2h1pzhO0Yj8Y+Wrd9+HB+Bcn/3uHGfbAIU4AIpq3fHPhOH1utBkmg2xK
-         dNyQ==
-X-Gm-Message-State: AOAM530XFLo+8pidssqQT+oz1Gn30AxgmQ9rWDXpHGgveUycE6tsIUSx
-        YBm/8HSl0esuw3iWm/MqjXE=
-X-Google-Smtp-Source: ABdhPJz8p+SkU30y3q1K8nACUgnVpvdsIVwmKe+81wFUlwKOO2+ifmHhPj6JqE0sNud54W5ZsPxS3Q==
-X-Received: by 2002:a5d:4c45:: with SMTP id n5mr474621wrt.341.1591647221781;
-        Mon, 08 Jun 2020 13:13:41 -0700 (PDT)
-Received: from [192.168.1.3] (ip68-111-84-250.oc.oc.cox.net. [68.111.84.250])
-        by smtp.gmail.com with ESMTPSA id r4sm813582wro.32.2020.06.08.13.13.37
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 08 Jun 2020 13:13:40 -0700 (PDT)
-Subject: Re: [PATCH 2/9] reset: Add Raspberry Pi 4 firmware USB reset
- controller
-To:     Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
-        f.fainelli@gmail.com, gregkh@linuxfoundation.org, wahrenst@gmx.net,
-        robh@kernel.org, mathias.nyman@linux.intel.com,
-        Eric Anholt <eric@anholt.net>,
-        bcm-kernel-feedback-list@broadcom.com,
-        linux-rpi-kernel@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
-        Philipp Zabel <p.zabel@pengutronix.de>
-Cc:     linux-kernel@vger.kernel.org, tim.gover@raspberrypi.org,
-        helgaas@kernel.org, lorenzo.pieralisi@arm.com
-References: <20200608192701.18355-1-nsaenzjulienne@suse.de>
- <20200608192701.18355-3-nsaenzjulienne@suse.de>
-From:   Florian Fainelli <f.fainelli@gmail.com>
-Message-ID: <7e88dd76-5b75-c326-6f89-42a69bfe1ede@gmail.com>
-Date:   Mon, 8 Jun 2020 13:13:36 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Firefox/68.0 Thunderbird/68.9.0
+        id S1731375AbgFHXh4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 8 Jun 2020 19:37:56 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58258 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732226AbgFHX2f (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 8 Jun 2020 19:28:35 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id B3F9D20897;
+        Mon,  8 Jun 2020 23:28:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1591658914;
+        bh=VISYukPm7ye8bXDmblrcmepv+XIDapPrb/mUM23OnE0=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=t9zeLKy/TRWBB2h5Y191VX5dMPOUwSTfRZ91WbdeE6vCpcGc/+gH2iScFDebRepuF
+         EaoM9ZFzQVqUl6mW6aXkSXVnKyQeoYGo3iP2vZQfV82EQFVzyLG57O0C0g+FovMJMZ
+         m3MrE2wMmp62NZmR2xtX4wRjBFrl62rVLpKakJLU=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Jiaxun Yang <jiaxun.yang@flygoat.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.4 31/37] PCI: Don't disable decoding when mmio_always_on is set
+Date:   Mon,  8 Jun 2020 19:27:43 -0400
+Message-Id: <20200608232750.3370747-31-sashal@kernel.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200608232750.3370747-1-sashal@kernel.org>
+References: <20200608232750.3370747-1-sashal@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20200608192701.18355-3-nsaenzjulienne@suse.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+From: Jiaxun Yang <jiaxun.yang@flygoat.com>
 
+[ Upstream commit b6caa1d8c80cb71b6162cb1f1ec13aa655026c9f ]
 
-On 6/8/2020 12:26 PM, Nicolas Saenz Julienne wrote:
-> The Raspberry Pi 4 gets its USB functionality from VL805, a PCIe chip
-> that implements the xHCI. After a PCI fundamental reset, VL805's
-> firmware may either be loaded directly from an EEPROM or, if not
-> present, by the SoC's co-processor, VideoCore. RPi4's VideoCore OS
-> contains both the non public firmware load logic and the VL805 firmware
-> blob.
-> 
-> We control this trough a reset controller device that's able to trigger
-> the aforementioned process when relevant.
-> 
-> Signed-off-by: Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-> ---
+Don't disable MEM/IO decoding when a device have both non_compliant_bars
+and mmio_always_on.
 
-[snip]
+That would allow us quirk devices with junk in BARs but can't disable
+their decoding.
 
-> +static int rpi_usb_reset_reset(struct reset_controller_dev *rcdev,
-> +				unsigned long id)
-> +{
-> +	struct rpi_usb_reset *priv = to_rpi_usb(rcdev);
-> +	u32 dev_addr;
-> +	int ret;
-> +
-> +	/*
-> +	 * The pci device address is expected like this:
-> +	 *
-> +	 * PCI_BUS << 20 | PCI_SLOT << 15 | PCI_FUNC << 12
-> +	 *
-> +	 * But since rpi's PCIe setup is hardwired, we know the address in
-> +	 * advance.
-> +	 */
-> +	dev_addr = 0x100000;
+Signed-off-by: Jiaxun Yang <jiaxun.yang@flygoat.com>
+Acked-by: Bjorn Helgaas <helgaas@kernel.org>
+Signed-off-by: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/pci/probe.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-You could encode the device address as part of the reset identifier,
-such that if we ever have more devices to reset, then we only need to
-define new identifiers for them, and internally within your reset
-controller provide you can resolve that reset identifier 0 is PCI_BUS <<
-20 | PCI_SLOT << 15 | PCI_FUN << 12 for instance.
-
-This would make your reset controller define a "#reset-cells" property
-to 1 now, such that no further DT ABI breakage would occur if you were
-to extend it later on.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 5f040619393f..46656322d23e 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1226,7 +1226,7 @@ int pci_setup_device(struct pci_dev *dev)
+ 	/* device class may be changed after fixup */
+ 	class = dev->class >> 8;
+ 
+-	if (dev->non_compliant_bars) {
++	if (dev->non_compliant_bars && !dev->mmio_always_on) {
+ 		pci_read_config_word(dev, PCI_COMMAND, &cmd);
+ 		if (cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
+ 			dev_info(&dev->dev, "device has non-compliant BARs; disabling IO/MEM decoding\n");
 -- 
-Florian
+2.25.1
+
