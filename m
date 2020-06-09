@@ -2,138 +2,133 @@ Return-Path: <SRS0=ztgn=7W=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59229C433E0
-	for <linux-pci@archiver.kernel.org>; Tue,  9 Jun 2020 16:49:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19E31C433E0
+	for <linux-pci@archiver.kernel.org>; Tue,  9 Jun 2020 18:08:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 329DB20812
-	for <linux-pci@archiver.kernel.org>; Tue,  9 Jun 2020 16:49:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1591721371;
-	bh=5Q7RvyofmbZbrB/I38g1tWmxg8QS/w1w0oFGJk1TAAE=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=ZLz9Wa30y4+SCnM7456bGeyeFKP8yy3BfTDn5RRZ8g1QjLrLQKChdkZJNhiACo56y
-	 /ozaM2B7pHMhYIdYqjyJGfJxuXy20DRqInIR7RR/7iGY4W2EjOgeC7A9VMlMQzlN1Y
-	 /rzm1iZpavnn2mw9DheMy9S+GMXD0G6Nv7S2eLlU=
+	by mail.kernel.org (Postfix) with ESMTP id EC82D20691
+	for <linux-pci@archiver.kernel.org>; Tue,  9 Jun 2020 18:08:01 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Udt/fSii"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731172AbgFIQta (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 9 Jun 2020 12:49:30 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51626 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731061AbgFIQt3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 9 Jun 2020 12:49:29 -0400
-Received: from localhost (mobile-166-170-222-206.mycingular.net [166.170.222.206])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3D1D420737;
-        Tue,  9 Jun 2020 16:49:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1591721368;
-        bh=5Q7RvyofmbZbrB/I38g1tWmxg8QS/w1w0oFGJk1TAAE=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=dvG4keriVYERu7ME7jmTxlggF24dPHuT8ZHwsHgyeBv8aHb5TopY1KdfJVDndSoXl
-         RxQiw2j9xiinR8ke3p9Ltba3X4AhyTf4XbSb9RwT2AqKWdKTjRg+cV7DgApD257z37
-         fAvyNM3ngOAOHRMuIGrK7cGIhRs7rGlN9Hoz8zWA=
-Date:   Tue, 9 Jun 2020 11:49:26 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Arnd Bergmann <arnd@arndb.de>
-Cc:     Zhangfei Gao <zhangfei.gao@linaro.org>,
-        Joerg Roedel <joro@8bytes.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Hanjun Guo <guohanjun@huawei.com>,
-        Sudeep Holla <sudeep.holla@arm.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        jean-philippe <jean-philippe@linaro.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        kenneth-lee-2012@foxmail.com, Wangzhou <wangzhou1@hisilicon.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "open list:HARDWARE RANDOM NUMBER GENERATOR CORE" 
-        <linux-crypto@vger.kernel.org>,
-        "open list:IOMMU DRIVERS" <iommu@lists.linux-foundation.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 0/2] Introduce PCI_FIXUP_IOMMU
-Message-ID: <20200609164926.GA1452092@bjorn-Precision-5520>
+        id S2388372AbgFISHv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 9 Jun 2020 14:07:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44136 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388365AbgFISHr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jun 2020 14:07:47 -0400
+Received: from mail-pl1-x643.google.com (mail-pl1-x643.google.com [IPv6:2607:f8b0:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 304EFC05BD1E;
+        Tue,  9 Jun 2020 11:07:47 -0700 (PDT)
+Received: by mail-pl1-x643.google.com with SMTP id t7so8350253plr.0;
+        Tue, 09 Jun 2020 11:07:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=leBIztLZS+gycW5tDPBUooZkb1WMMdh915dWRfvmIIw=;
+        b=Udt/fSiioTBFCo+SzRpdK9Rp4MHzgaXKP91jdrViNRrlf3IhivsOFcUPaKMGiH9qjc
+         fN2N0NcPwTucK5KypB17fl/nvm9CzspLJBO6als1XmamXHhSN9cnHCAsoZSvdpSWUKjN
+         l825sZT/YT998dqltM51cESrg12VV98CQw+82l9Sx9501dWw8E0kGfdx+uAbRJX5s3Rl
+         Z8XQaXJs3RnCd8h2jO9x5crfltFaO8epHxFzBjU/w4j25gpsNmWdSUSPAIdqP3DkhfZV
+         D8a9nzX7BcUNAGspW4kLUgZ+6E0TLKXVDqo+Z7bMwmIWZKGtnMp53TPDDzVbfCJ/1Lm/
+         sh/g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=leBIztLZS+gycW5tDPBUooZkb1WMMdh915dWRfvmIIw=;
+        b=ov2MTJ0azpv25KBz7YRK/ggZv2Uw6heqt7FTrYs6AEeGP1zgoRrdzqnfZkae8PInMM
+         wZ3podEvpd1ARD2H2jcUdvqPhEouE+svgvC0izmXZus21wLQHabmZ1v1RpiM0rjzQPhN
+         es7kRV0Pa+18IiwsC7AqpP5/oKFTrVAhtvbaWLihIxpZCuKcxAonEJtgAbGiJF7X2k93
+         W+LhZbs7FsHloEZrPyMSeEY+V3e8czukkvG2huAuAdUSx1PP8XNDOHDPgMglmv3N8zG1
+         eoNxIO575eSWCg3K2reeMTiW2M4LCRJ0JMT/tfaq74HqFBrbk+u782PERX8s9pe6y3nr
+         S6oQ==
+X-Gm-Message-State: AOAM533Q5gw6FKQ3ycMh8gOL4ar5me4Cv87jKOrUNgyvlYnz79rOpAJk
+        SgJ0szz4GWF17jtnaaxuJGmzFixn
+X-Google-Smtp-Source: ABdhPJw4by/dyQj/70rTpHEZGgpHl+ORIEEB5sxvU9/qLdJKKjKPZvj7a58YrGkamO5R6/SKn4HDQw==
+X-Received: by 2002:a17:902:ab81:: with SMTP id f1mr742977plr.321.1591726063862;
+        Tue, 09 Jun 2020 11:07:43 -0700 (PDT)
+Received: from [10.230.188.43] ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id o18sm11683012pfu.138.2020.06.09.11.07.41
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 09 Jun 2020 11:07:43 -0700 (PDT)
+Subject: Re: [PATCH v2 1/9] dt-bindings: reset: Add a binding for the RPi
+ Firmware reset controller
+To:     Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
+        gregkh@linuxfoundation.org, wahrenst@gmx.net,
+        p.zabel@pengutronix.de, linux-kernel@vger.kernel.org,
+        Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        bcm-kernel-feedback-list@broadcom.com,
+        Eric Anholt <eric@anholt.net>
+Cc:     linux-usb@vger.kernel.org, linux-rpi-kernel@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, tim.gover@raspberrypi.org,
+        linux-pci@vger.kernel.org, helgaas@kernel.org,
+        andy.shevchenko@gmail.com, mathias.nyman@linux.intel.com,
+        lorenzo.pieralisi@arm.com, Rob Herring <robh+dt@kernel.org>,
+        devicetree@vger.kernel.org
+References: <20200609175003.19793-1-nsaenzjulienne@suse.de>
+ <20200609175003.19793-2-nsaenzjulienne@suse.de>
+From:   Florian Fainelli <f.fainelli@gmail.com>
+Message-ID: <c3dc9b7e-4440-7e8a-3da8-b147c48c4c40@gmail.com>
+Date:   Tue, 9 Jun 2020 11:07:41 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Firefox/68.0 Thunderbird/68.9.0
 MIME-Version: 1.0
+In-Reply-To: <20200609175003.19793-2-nsaenzjulienne@suse.de>
 Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAK8P3a38bhE_VO_eVcsfsGKgED=gmSEntQmrhwbLkeA6Si0qaw@mail.gmail.com>
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jun 09, 2020 at 11:15:06AM +0200, Arnd Bergmann wrote:
-> On Tue, Jun 9, 2020 at 6:02 AM Zhangfei Gao <zhangfei.gao@linaro.org> wrote:
-> > On 2020/6/9 上午12:41, Bjorn Helgaas wrote:
-> > > On Mon, Jun 08, 2020 at 10:54:15AM +0800, Zhangfei Gao wrote:
-> > >> On 2020/6/6 上午7:19, Bjorn Helgaas wrote:
-> > >>>> +++ b/drivers/iommu/iommu.c
-> > >>>> @@ -2418,6 +2418,10 @@ int iommu_fwspec_init(struct device *dev, struct
-> > >>>> fwnode_handle *iommu_fwnode,
-> > >>>>           fwspec->iommu_fwnode = iommu_fwnode;
-> > >>>>           fwspec->ops = ops;
-> > >>>>           dev_iommu_fwspec_set(dev, fwspec);
-> > >>>> +
-> > >>>> +       if (dev_is_pci(dev))
-> > >>>> +               pci_fixup_device(pci_fixup_final, to_pci_dev(dev));
-> > >>>> +
-> > >>>>
-> > >>>> Then pci_fixup_final will be called twice, the first in pci_bus_add_device.
-> > >>>> Here in iommu_fwspec_init is the second time, specifically for iommu_fwspec.
-> > >>>> Will send this when 5.8-rc1 is open.
-> > >>> Wait, this whole fixup approach seems wrong to me.  No matter how you
-> > >>> do the fixup, it's still a fixup, which means it requires ongoing
-> > >>> maintenance.  Surely we don't want to have to add the Vendor/Device ID
-> > >>> for every new AMBA device that comes along, do we?
-> > >>>
-> > >> Here the fake pci device has standard PCI cfg space, but physical
-> > >> implementation is base on AMBA
-> > >> They can provide pasid feature.
-> > >> However,
-> > >> 1, does not support tlp since they are not real pci devices.
-> > >> 2. does not support pri, instead support stall (provided by smmu)
-> > >> And stall is not a pci feature, so it is not described in struct pci_dev,
-> > >> but in struct iommu_fwspec.
-> > >> So we use this fixup to tell pci system that the devices can support stall,
-> > >> and hereby support pasid.
-> > > This did not answer my question.  Are you proposing that we update a
-> > > quirk every time a new AMBA device is released?  I don't think that
-> > > would be a good model.
-> >
-> > Yes, you are right, but we do not have any better idea yet.
-> > Currently we have three fake pci devices, which support stall and pasid.
-> > We have to let pci system know the device can support pasid, because of
-> > stall feature, though not support pri.
-> > Do you have any other ideas?
+
+
+On 6/9/2020 10:49 AM, Nicolas Saenz Julienne wrote:
+> The firmware running on the RPi VideoCore can be used to reset and
+> initialize HW controlled by the firmware.
 > 
-> It sounds like the best way would be to allocate a PCI capability for it, so
-> detection can be done through config space, at least in future devices,
-> or possibly after a firmware update if the config space in your system
-> is controlled by firmware somewhere.  Once there is a proper mechanism
-> to do this, using fixups to detect the early devices that don't use that
-> should be uncontroversial. I have no idea what the process or timeline
-> is to add new capabilities into the PCIe specification, or if this one
-> would be acceptable to the PCI SIG at all.
+> Signed-off-by: Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
+> 
+> ---
+> 
+> Changes since v1:
+>  - Correct cells binding as per Florian's comment
+>  - Change compatible string to be more generic
+> 
+>  .../arm/bcm/raspberrypi,bcm2835-firmware.yaml | 21 +++++++++++++++++++
+>  1 file changed, 21 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/arm/bcm/raspberrypi,bcm2835-firmware.yaml b/Documentation/devicetree/bindings/arm/bcm/raspberrypi,bcm2835-firmware.yaml
+> index b48ed875eb8e..23a885af3a28 100644
+> --- a/Documentation/devicetree/bindings/arm/bcm/raspberrypi,bcm2835-firmware.yaml
+> +++ b/Documentation/devicetree/bindings/arm/bcm/raspberrypi,bcm2835-firmware.yaml
+> @@ -39,6 +39,22 @@ properties:
+>        - compatible
+>        - "#clock-cells"
+>  
+> +  reset:
+> +    type: object
+> +
+> +    properties:
+> +      compatible:
+> +        const: raspberrypi,firmware-reset
+> +
+> +      "#reset-cells":
+> +        const: 1
+> +        description: >
 
-That sounds like a possibility.  The spec already defines a
-Vendor-Specific Extended Capability (PCIe r5.0, sec 7.9.5) that might
-be a candidate.
+Is this a stray '>' character? If so, with that fixed:
 
-> If detection cannot be done through PCI config space, the next best
-> alternative is to pass auxiliary data through firmware. On DT based
-> machines, you can list non-hotpluggable PCIe devices and add custom
-> properties that could be read during device enumeration. I assume
-> ACPI has something similar, but I have not done that.
-
-ACPI has _DSM (ACPI v6.3, sec 9.1.1), which might be a candidate.  I
-like this better than a PCI capability because the property you need
-to expose is not a PCI property.
+Reviewed-by: Florian Fainelli <f.fainelli@gmail.com>
+-- 
+Florian
