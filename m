@@ -2,441 +2,164 @@ Return-Path: <SRS0=ztgn=7W=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF53EC433E4
-	for <linux-pci@archiver.kernel.org>; Tue,  9 Jun 2020 16:26:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8B77C433E0
+	for <linux-pci@archiver.kernel.org>; Tue,  9 Jun 2020 16:32:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AF18620774
-	for <linux-pci@archiver.kernel.org>; Tue,  9 Jun 2020 16:26:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 91D5420774
+	for <linux-pci@archiver.kernel.org>; Tue,  9 Jun 2020 16:32:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="vfKyVdxR"
+	dkim=pass (1024-bit key) header.d=intel.onmicrosoft.com header.i=@intel.onmicrosoft.com header.b="xPrjNax1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730066AbgFIQ0e (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 9 Jun 2020 12:26:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56702 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726286AbgFIQ0d (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jun 2020 12:26:33 -0400
-Received: from mail-ej1-x644.google.com (mail-ej1-x644.google.com [IPv6:2a00:1450:4864:20::644])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA4A4C05BD1E;
-        Tue,  9 Jun 2020 09:26:31 -0700 (PDT)
-Received: by mail-ej1-x644.google.com with SMTP id x1so23045745ejd.8;
-        Tue, 09 Jun 2020 09:26:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=L9wKymHH/v6YunAl/pZm4DJsFjD8Guav1ycXTwqFKww=;
-        b=vfKyVdxRxA4q52gnUsYFw4pFYUu4DGV+yk/EOOlEdBQxj1G7G1e+GMtG+CjjpiwCxe
-         vSnxDZqt1mh4wExaCTrlRinXa0vic9S4GhsstXDSJwblbn+mp5Znuf7l+bW5R5kWx6vp
-         vAvokFjnQU5q7N9lp1imkWvZ/U+6FzifXYKcHbDvBvsDP5NWMJHqUOpaPpsehEiLB5xt
-         RXx5Mj/k9PNoPYROGUwL3M6Lxf/+C8xuJKuMsMZM7Lo9kyFP7z8bOh2H36tTWamVeWHC
-         sL3BUGeUnkwL4FBc/sXmo7SUKqkzZzdCLTiebtsgtwCCIWRLEXILcX0YeJZQ10fKTJ2y
-         jntA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=L9wKymHH/v6YunAl/pZm4DJsFjD8Guav1ycXTwqFKww=;
-        b=jurxOI5v8xJakmB8krl4AxVGlycfZgCbwLUQbU24uMEJYUXeXp53vosTWxPC1qY4WD
-         OGuhmIEI8HuX8t8zuBq/Krn4A/ZhlbOPXM1VaGvYcIXsbI2qhH/NQsYpXjsCVYCGQdXg
-         BBaZVcROgseinsgedElzpBbLYHnWstc4jgA674bKcbM7pLUAvCygh+46Y0X0LGtanIoM
-         FTXNyDXA+Vc64BQCyrANDueyu+J2Gqu498ewHLqCIX6b/Q+0gUsiDkHN+p83LYQfSDqa
-         KrgpMAh/1MmWcpD271zYWnWANKRSRnXpAZr02e9RVyru9I/tUMEH2ztqf2P6hZv68ZrV
-         OpsQ==
-X-Gm-Message-State: AOAM533SLyfJTPHnwnKOLcO59WU5WRhXVwjsFl7gU9dEaMOio68jrxQW
-        u6acwCDKi79PbxZrbMAIxMc=
-X-Google-Smtp-Source: ABdhPJx4rgMVM78n7LsoCAFv0aB42Sqnt/xc+Emq8/snmpfRTfRhsfsSlFJPG8YDyDyIy9WJTrWyrQ==
-X-Received: by 2002:a17:906:aec3:: with SMTP id me3mr2000797ejb.94.1591719990308;
-        Tue, 09 Jun 2020 09:26:30 -0700 (PDT)
-Received: from localhost (pd9e51079.dip0.t-ipconnect.de. [217.229.16.121])
-        by smtp.gmail.com with ESMTPSA id cb6sm15374049edb.18.2020.06.09.09.26.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Jun 2020 09:26:29 -0700 (PDT)
-From:   Thierry Reding <thierry.reding@gmail.com>
-To:     Rob Herring <robh+dt@kernel.org>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH] dt-bindings: pci: iommu: Convert to json-schema
-Date:   Tue,  9 Jun 2020 18:26:28 +0200
-Message-Id: <20200609162628.1769705-1-thierry.reding@gmail.com>
-X-Mailer: git-send-email 2.24.1
+        id S1728170AbgFIQcC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 9 Jun 2020 12:32:02 -0400
+Received: from mga02.intel.com ([134.134.136.20]:25418 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725894AbgFIQcB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 9 Jun 2020 12:32:01 -0400
+IronPort-SDR: KjHqkLzKAnque62V01nkb44jAUB7kuDmvQI/kE04I140EOEn9qla2FvHxTzIqYcCX6WO3ZQfbW
+ c8o9883LdF5A==
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jun 2020 09:31:59 -0700
+IronPort-SDR: bUpJbnGXiDybGzK0EBL6u2mX0WWDJcWCF3fo1P4ptpYZ0Q4yy3VGXo0KLci0WMkU5G0lTsGsf6
+ PTDD4XMfFQvg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.73,492,1583222400"; 
+   d="scan'208";a="379786117"
+Received: from orsmsx110.amr.corp.intel.com ([10.22.240.8])
+  by fmsmga001.fm.intel.com with ESMTP; 09 Jun 2020 09:31:58 -0700
+Received: from orsmsx158.amr.corp.intel.com (10.22.240.20) by
+ ORSMSX110.amr.corp.intel.com (10.22.240.8) with Microsoft SMTP Server (TLS)
+ id 14.3.439.0; Tue, 9 Jun 2020 09:31:58 -0700
+Received: from ORSEDG002.ED.cps.intel.com (10.7.248.5) by
+ ORSMSX158.amr.corp.intel.com (10.22.240.20) with Microsoft SMTP Server (TLS)
+ id 14.3.439.0; Tue, 9 Jun 2020 09:31:57 -0700
+Received: from NAM10-DM6-obe.outbound.protection.outlook.com (104.47.58.108)
+ by edgegateway.intel.com (134.134.137.101) with Microsoft SMTP Server (TLS)
+ id 14.3.439.0; Tue, 9 Jun 2020 09:31:54 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=RY7ZLeOZsjI8RlZ/B7J+i909h3QIR1Aqs3RfcXEwpmCHgjB9/d/EuZZHAqyNG0CpqdKccng3M/avzEieJpXrJ/1Ceucmqce6qHy1gWH8Ed55cmMis7ZEpExy33l/qR3gSUYgVsMZwbbkHoD9uoqmfaaZLFsXDgCJyJRXSpSJBDuJid8cBH2UJNUzxs3Ohf0ClWar3g2KF7ZZFEkQSWheC9sTrmvznQZifag5aVQMY3zbSuwySPW99XOMjeGLeu1GKkmOUIt5+AlZCxxWZ24t2mceN5TVyi3RxXGc6Y4lzmjvAEG8m+zo5VYLz59w44lYS1Zpgu7gzm2KZUsers/uIw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=cN8UTs4yV6UhUHWVrmexrJmi+vfjBku0zHMtg98Z3v8=;
+ b=Xpa7ZYmtGR8D5wXL2At3DK8iqpXlNxdtWGO6oMbEvGn2afnvltPvlvRbiIWyh/R/kvTQOeR3ojYjZuI0oJhJU2ksDx6XdOftC4kUtzpSUbXZcZ/3y+29+HbZUxk8YdzY0Nf1TsbKkPTdqdbVY8l4FnKMS+Q2oXQNCXqmEDKxWdbTXjqS3F0TGgCeZyue/OuJoFHHozo4YF5R1gbjr6QPa5ZstZXIJdDqs14x+8ZCzfMRviqu9kPblnt+M1bvyZhfHZ1lyAVzKvVYkDzzavtHQZlimNkXD7W60njy5qaw9rsedELC5dQ5U5Cle/avhsc1dug3h1vqZzxSk63qPpyhKA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=intel.onmicrosoft.com;
+ s=selector2-intel-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=cN8UTs4yV6UhUHWVrmexrJmi+vfjBku0zHMtg98Z3v8=;
+ b=xPrjNax1gb/H1CX05Q0z6jfP2JtnElbHdtJXU1KXOxjsht6LAThD1PzEhJ7EgGOdL88xo/HT8+dWnPYPH4GX9z6iNw4SPr71zmgrRN3xPn3nYjzW2O+0anv4gF8KWRfN7hXP6mzS5hc1eItIOSh53aHRhhv1K19qtjMJmbLBI/A=
+Received: from CY4PR11MB1528.namprd11.prod.outlook.com (2603:10b6:910:d::12)
+ by CY4PR11MB0007.namprd11.prod.outlook.com (2603:10b6:910:79::16) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3066.20; Tue, 9 Jun
+ 2020 16:31:46 +0000
+Received: from CY4PR11MB1528.namprd11.prod.outlook.com
+ ([fe80::80a:cad3:9a37:28dd]) by CY4PR11MB1528.namprd11.prod.outlook.com
+ ([fe80::80a:cad3:9a37:28dd%11]) with mapi id 15.20.3066.023; Tue, 9 Jun 2020
+ 16:31:46 +0000
+From:   "Stankiewicz, Piotr" <piotr.stankiewicz@intel.com>
+To:     Christoph Hellwig <hch@infradead.org>
+CC:     Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Wysocki, Rafael J" <rafael.j.wysocki@intel.com>,
+        "Shevchenko, Andriy" <andriy.shevchenko@intel.com>,
+        Olof Johansson <olof@lixom.net>,
+        "Kuppuswamy Sathyanarayanan" 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>,
+        Kelvin Cao <kelvin.cao@microchip.com>,
+        Wesley Sheng <wesley.sheng@microchip.com>,
+        "Peter Zijlstra (Intel)" <peterz@infradead.org>,
+        Krzysztof Wilczynski <kw@linux.com>,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH v3 03/15] PCI: Use PCI_IRQ_MSI_TYPES where appropriate
+Thread-Topic: [PATCH v3 03/15] PCI: Use PCI_IRQ_MSI_TYPES where appropriate
+Thread-Index: AQHWPj7A77kHrlOHmUula0Gcdul1nqjQbyoAgAAJ5JA=
+Date:   Tue, 9 Jun 2020 16:31:29 +0000
+Deferred-Delivery: Tue, 9 Jun 2020 16:30:30 +0000
+Message-ID: <CY4PR11MB15282CD0C16F87E8179DAD6AF9820@CY4PR11MB1528.namprd11.prod.outlook.com>
+References: <20200609091148.32749-1-piotr.stankiewicz@intel.com>
+ <20200609091650.801-1-piotr.stankiewicz@intel.com>
+ <20200609155124.GB2597@infradead.org>
+In-Reply-To: <20200609155124.GB2597@infradead.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+dlp-reaction: no-action
+dlp-version: 11.2.0.6
+dlp-product: dlpe-windows
+x-ctpclassification: CTP_NT
+x-titus-metadata-40: eyJDYXRlZ29yeUxhYmVscyI6IiIsIk1ldGFkYXRhIjp7Im5zIjoiaHR0cDpcL1wvd3d3LnRpdHVzLmNvbVwvbnNcL0ludGVsMyIsImlkIjoiYjljODEwYjUtYmMwNC00YjU1LWJjY2EtYzY0ODRhZWY5MTgwIiwicHJvcHMiOlt7Im4iOiJDVFBDbGFzc2lmaWNhdGlvbiIsInZhbHMiOlt7InZhbHVlIjoiQ1RQX05UIn1dfV19LCJTdWJqZWN0TGFiZWxzIjpbXSwiVE1DVmVyc2lvbiI6IjE3LjEwLjE4MDQuNDkiLCJUcnVzdGVkTGFiZWxIYXNoIjoieGxRV3dLTzRkY054dDRTamtWbW9ucmNmT2FGekcxV2Y3eERoSFRrKzJNREtLNDF4MU14bEVyTEpWVU9xVnhxdiJ9
+authentication-results: infradead.org; dkim=none (message not signed)
+ header.d=none;infradead.org; dmarc=none action=none header.from=intel.com;
+x-originating-ip: [134.191.221.97]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: ac78d427-bbae-404f-89d0-08d80c929a45
+x-ms-traffictypediagnostic: CY4PR11MB0007:
+x-ld-processed: 46c98d88-e344-4ed4-8496-4ed7712e255d,ExtAddr
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <CY4PR11MB00077A3BE635779ED8E7052DF9820@CY4PR11MB0007.namprd11.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:8273;
+x-forefront-prvs: 042957ACD7
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: pPASrbfNPml25OYb1MtO14BWXINnd3wXdWk/X9dZjzGxH+HaHzUwvqsWCAxlwvWa09YaYsh9Uue68yxeFKlWyXebXeCAxOgtjv0JVQOxIItSNDq7CAULmfDDg/OSMfoXENBo9V+kWY20SiaRPST7pOg6GYewq28bdx3VEnL/4cHbdDkeyZ7MQHlAS+I9uM7+0XJt22GbMEYm7otjq17tS+yu0rHaFSEGjZGB0qzc2r7m6OG/rukLqNV3QCg1cTpk8wvCdw7wrdCB69TgF4IHn7ZYSICfZmkg7/ftX6+xk1TN72xmvXDbsIhA9m1AnmlTONxLg631m78Qo/o40lit3A==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY4PR11MB1528.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(366004)(39860400002)(136003)(396003)(346002)(376002)(186003)(66446008)(8676002)(9686003)(55016002)(7696005)(6506007)(83380400001)(2906002)(7416002)(478600001)(54906003)(26005)(64756008)(316002)(6916009)(5660300002)(76116006)(71200400001)(52536014)(66476007)(66556008)(6666004)(66946007)(86362001)(8936002)(4326008)(33656002)(4744005);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: L4PG+CL2KD1deHCPuC38wHPZBWmTQuYVzKFKNePYf5GPWaz/+KHSRkgGNby9CjMcEPPHVt0aaoz5R7XnNrQ69Vq1Rp7zzzmCEDFKh+dlA6wznVr7L7OJCOtvYNLA1YYzGZzVETW3+BnWy/isFbIPuq/zV9mRwCGxJkcizIFQzujLLh+tHMVEZ146Bm0GYFUlVqCBmjn9cljYPB2PnlGUemjkE17i7HQX/39QWcu9nxPKleAmRF9SkycUiV+U6+bPRkoQWJuY9EsY4fAi+xzS3ruJkJgX4MWeIAU0MtGZcQhkTedXfNFZo8vWYZvSiFm9aC7No+8WnThbhP1sb8uuwkza+LVqqHi1S9ydFOvsw6Tk51UiY318t6ewbt7yl8HRPsnEuEu6D+hzy9wkRu2u7ZONy9KZD9J6zwS0kKnZ9P0UHZ/6jbUm26EbTDfzzMV+4KbfubREcoLNbcS1+5wRy+cLYWXhJG3ncGdsJzZgXLisuvzYnxJCNrHUH9GGKVjc
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-Exchange-CrossTenant-Network-Message-Id: ac78d427-bbae-404f-89d0-08d80c929a45
+X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Jun 2020 16:31:46.5042
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 2rXenbqdqRPGedfJtvXbwi1y4XBRkm6oC+RrKLFZLr4CiLGFNsnQXnLZC5K3LGTq/ZT6Hqr9Pe5YwGxNiRZy89DRdhFe99HLhzs488RvzUs=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR11MB0007
+X-OriginatorOrg: intel.com
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Thierry Reding <treding@nvidia.com>
+> -----Original Message-----
+> From: Christoph Hellwig <hch@infradead.org>
+> Sent: Tuesday, June 9, 2020 5:51 PM
+>=20
+> On Tue, Jun 09, 2020 at 11:16:46AM +0200, Piotr Stankiewicz wrote:
+> > Seeing as there is shorthand available to use when asking for any type
+> > of interrupt, or any type of message signalled interrupt, leverage it.
+> >
+> > Signed-off-by: Piotr Stankiewicz <piotr.stankiewicz@intel.com>
+> > Reviewed-by: Andy Shevchenko <andriy.shevchenko@intel.com>
+> > Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
+>=20
+> The patch actually adding PCI_IRQ_MSI_TYPES still didn't show up on linux=
+-pci.
+>=20
 
-Convert the PCI IOMMU device tree bindings from free-form text format to
-json-schema.
+I'm not sure why it didn't get delivered. I just resent it, for sake of com=
+pleteness.
 
-Signed-off-by: Thierry Reding <treding@nvidia.com>
----
- .../devicetree/bindings/pci/pci-iommu.txt     | 171 ------------------
- .../devicetree/bindings/pci/pci-iommu.yaml    | 168 +++++++++++++++++
- 2 files changed, 168 insertions(+), 171 deletions(-)
- delete mode 100644 Documentation/devicetree/bindings/pci/pci-iommu.txt
- create mode 100644 Documentation/devicetree/bindings/pci/pci-iommu.yaml
-
-diff --git a/Documentation/devicetree/bindings/pci/pci-iommu.txt b/Documentation/devicetree/bindings/pci/pci-iommu.txt
-deleted file mode 100644
-index 0def586fdcdf..000000000000
---- a/Documentation/devicetree/bindings/pci/pci-iommu.txt
-+++ /dev/null
-@@ -1,171 +0,0 @@
--This document describes the generic device tree binding for describing the
--relationship between PCI(e) devices and IOMMU(s).
--
--Each PCI(e) device under a root complex is uniquely identified by its Requester
--ID (AKA RID). A Requester ID is a triplet of a Bus number, Device number, and
--Function number.
--
--For the purpose of this document, when treated as a numeric value, a RID is
--formatted such that:
--
--* Bits [15:8] are the Bus number.
--* Bits [7:3] are the Device number.
--* Bits [2:0] are the Function number.
--* Any other bits required for padding must be zero.
--
--IOMMUs may distinguish PCI devices through sideband data derived from the
--Requester ID. While a given PCI device can only master through one IOMMU, a
--root complex may split masters across a set of IOMMUs (e.g. with one IOMMU per
--bus).
--
--The generic 'iommus' property is insufficient to describe this relationship,
--and a mechanism is required to map from a PCI device to its IOMMU and sideband
--data.
--
--For generic IOMMU bindings, see
--Documentation/devicetree/bindings/iommu/iommu.txt.
--
--
--PCI root complex
--================
--
--Optional properties
---------------------
--
--- iommu-map: Maps a Requester ID to an IOMMU and associated IOMMU specifier
--  data.
--
--  The property is an arbitrary number of tuples of
--  (rid-base,iommu,iommu-base,length).
--
--  Any RID r in the interval [rid-base, rid-base + length) is associated with
--  the listed IOMMU, with the IOMMU specifier (r - rid-base + iommu-base).
--
--- iommu-map-mask: A mask to be applied to each Requester ID prior to being
--  mapped to an IOMMU specifier per the iommu-map property.
--
--
--Example (1)
--===========
--
--/ {
--	#address-cells = <1>;
--	#size-cells = <1>;
--
--	iommu: iommu@a {
--		reg = <0xa 0x1>;
--		compatible = "vendor,some-iommu";
--		#iommu-cells = <1>;
--	};
--
--	pci: pci@f {
--		reg = <0xf 0x1>;
--		compatible = "vendor,pcie-root-complex";
--		device_type = "pci";
--
--		/*
--		 * The sideband data provided to the IOMMU is the RID,
--		 * identity-mapped.
--		 */
--		iommu-map = <0x0 &iommu 0x0 0x10000>;
--	};
--};
--
--
--Example (2)
--===========
--
--/ {
--	#address-cells = <1>;
--	#size-cells = <1>;
--
--	iommu: iommu@a {
--		reg = <0xa 0x1>;
--		compatible = "vendor,some-iommu";
--		#iommu-cells = <1>;
--	};
--
--	pci: pci@f {
--		reg = <0xf 0x1>;
--		compatible = "vendor,pcie-root-complex";
--		device_type = "pci";
--
--		/*
--		 * The sideband data provided to the IOMMU is the RID with the
--		 * function bits masked out.
--		 */
--		iommu-map = <0x0 &iommu 0x0 0x10000>;
--		iommu-map-mask = <0xfff8>;
--	};
--};
--
--
--Example (3)
--===========
--
--/ {
--	#address-cells = <1>;
--	#size-cells = <1>;
--
--	iommu: iommu@a {
--		reg = <0xa 0x1>;
--		compatible = "vendor,some-iommu";
--		#iommu-cells = <1>;
--	};
--
--	pci: pci@f {
--		reg = <0xf 0x1>;
--		compatible = "vendor,pcie-root-complex";
--		device_type = "pci";
--
--		/*
--		 * The sideband data provided to the IOMMU is the RID,
--		 * but the high bits of the bus number are flipped.
--		 */
--		iommu-map = <0x0000 &iommu 0x8000 0x8000>,
--			    <0x8000 &iommu 0x0000 0x8000>;
--	};
--};
--
--
--Example (4)
--===========
--
--/ {
--	#address-cells = <1>;
--	#size-cells = <1>;
--
--	iommu_a: iommu@a {
--		reg = <0xa 0x1>;
--		compatible = "vendor,some-iommu";
--		#iommu-cells = <1>;
--	};
--
--	iommu_b: iommu@b {
--		reg = <0xb 0x1>;
--		compatible = "vendor,some-iommu";
--		#iommu-cells = <1>;
--	};
--
--	iommu_c: iommu@c {
--		reg = <0xc 0x1>;
--		compatible = "vendor,some-iommu";
--		#iommu-cells = <1>;
--	};
--
--	pci: pci@f {
--		reg = <0xf 0x1>;
--		compatible = "vendor,pcie-root-complex";
--		device_type = "pci";
--
--		/*
--		 * Devices with bus number 0-127 are mastered via IOMMU
--		 * a, with sideband data being RID[14:0].
--		 * Devices with bus number 128-255 are mastered via
--		 * IOMMU b, with sideband data being RID[14:0].
--		 * No devices master via IOMMU c.
--		 */
--		iommu-map = <0x0000 &iommu_a 0x0000 0x8000>,
--			    <0x8000 &iommu_b 0x0000 0x8000>;
--	};
--};
-diff --git a/Documentation/devicetree/bindings/pci/pci-iommu.yaml b/Documentation/devicetree/bindings/pci/pci-iommu.yaml
-new file mode 100644
-index 000000000000..8aaa8e657559
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/pci-iommu.yaml
-@@ -0,0 +1,168 @@
-+# SPDX-License-Identifier: GPL-2.0-only
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/pci/pci-iommu.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: PCI IOMMU bindings
-+
-+maintainers:
-+  - Rob Herring <robh+dt@kernel.org>
-+
-+description: |
-+  This document describes the generic device tree binding for describing the
-+  relationship between PCI(e) devices and IOMMU(s).
-+
-+  Each PCI(e) device under a root complex is uniquely identified by its
-+  Requester ID (AKA RID). A Requester ID is a triplet of a Bus number, Device
-+  number, and Function number.
-+
-+  For the purpose of this document, when treated as a numeric value, a RID is
-+  formatted such that:
-+
-+    * Bits [15:8] are the Bus number.
-+    * Bits [7:3] are the Device number.
-+    * Bits [2:0] are the Function number.
-+    * Any other bits required for padding must be zero.
-+
-+  IOMMUs may distinguish PCI devices through sideband data derived from the
-+  Requester ID. While a given PCI device can only master through one IOMMU, a
-+  root complex may split masters across a set of IOMMUs (e.g. with one IOMMU
-+  per bus).
-+
-+  The generic 'iommus' property is insufficient to describe this relationship,
-+  and a mechanism is required to map from a PCI device to its IOMMU and
-+  sideband data.
-+
-+  For generic IOMMU bindings, see
-+  Documentation/devicetree/bindings/iommu/iommu.txt.
-+
-+properties:
-+  iommu-map:
-+    $ref: "/schemas/types.yaml#/definitions/phandle-array"
-+    description: |
-+      Maps a Requester ID to an IOMMU and associated IOMMU specifier data.
-+
-+      The property is an arbitrary number of tuples of (rid-base, iommu,
-+      iommu-base, length).
-+
-+      Any RID r in the interval [rid-base, rid-base + length) is associated
-+      with the listed IOMMU, with the IOMMU specifier (r - rid-base +
-+      iommu-base).
-+
-+  iommu-map-mask:
-+    $ref: "/schemas/types.yaml#/definitions/uint32"
-+    description:
-+      A mask to be applied to each Requester ID prior to being mapped to an
-+      IOMMU specifier per the iommu-map property.
-+
-+examples:
-+  - |
-+    iommu0: iommu@a {
-+        reg = <0xa 0x1>;
-+        compatible = "vendor,some-iommu";
-+        #iommu-cells = <1>;
-+    };
-+
-+    pci@f {
-+        reg = <0xf 0x1>;
-+        compatible = "vendor,pcie-root-complex";
-+        device_type = "pci";
-+
-+        #address-cells = <3>;
-+        #size-cells = <2>;
-+        ranges = <0x02000000 0 0x00000000 0x00000000 0 0x00000000>;
-+
-+        /*
-+         * The sideband data provided to the IOMMU is the RID,
-+         * identity-mapped.
-+         */
-+        iommu-map = <0x0 &iommu0 0x0 0x10000>;
-+    };
-+
-+  - |
-+    iommu1: iommu@a {
-+        reg = <0xa 0x1>;
-+        compatible = "vendor,some-iommu";
-+        #iommu-cells = <1>;
-+    };
-+
-+    pci@f {
-+        reg = <0xf 0x1>;
-+        compatible = "vendor,pcie-root-complex";
-+        device_type = "pci";
-+
-+        #address-cells = <3>;
-+        #size-cells = <2>;
-+        ranges = <0x02000000 0 0x00000000 0x00000000 0 0x00000000>;
-+
-+        /*
-+         * The sideband data provided to the IOMMU is the RID with the
-+         * function bits masked out.
-+         */
-+        iommu-map = <0x0 &iommu 0x0 0x10000>;
-+        iommu-map-mask = <0xfff8>;
-+    };
-+
-+  - |
-+    iommu2: iommu@a {
-+        reg = <0xa 0x1>;
-+        compatible = "vendor,some-iommu";
-+        #iommu-cells = <1>;
-+    };
-+
-+    pci@f {
-+        reg = <0xf 0x1>;
-+        compatible = "vendor,pcie-root-complex";
-+        device_type = "pci";
-+
-+        #address-cells = <3>;
-+        #size-cells = <2>;
-+        ranges = <0x02000000 0 0x00000000 0x00000000 0 0x00000000>;
-+
-+        /*
-+         * The sideband data provided to the IOMMU is the RID,
-+         * but the high bits of the bus number are flipped.
-+         */
-+        iommu-map = <0x0000 &iommu2 0x8000 0x8000>,
-+                    <0x8000 &iommu2 0x0000 0x8000>;
-+    };
-+
-+  - |
-+    iommu_a: iommu@a {
-+        reg = <0xa 0x1>;
-+        compatible = "vendor,some-iommu";
-+        #iommu-cells = <1>;
-+    };
-+
-+    iommu_b: iommu@b {
-+        reg = <0xb 0x1>;
-+        compatible = "vendor,some-iommu";
-+        #iommu-cells = <1>;
-+    };
-+
-+    iommu_c: iommu@c {
-+        reg = <0xc 0x1>;
-+        compatible = "vendor,some-iommu";
-+        #iommu-cells = <1>;
-+    };
-+
-+    pci@f {
-+        reg = <0xf 0x1>;
-+        compatible = "vendor,pcie-root-complex";
-+        device_type = "pci";
-+
-+        #address-cells = <3>;
-+        #size-cells = <2>;
-+        ranges = <0x02000000 0 0x00000000 0x00000000 0 0x00000000>;
-+
-+        /*
-+         * Devices with bus number 0-127 are mastered via IOMMU
-+         * a, with sideband data being RID[14:0].
-+         * Devices with bus number 128-255 are mastered via
-+         * IOMMU b, with sideband data being RID[14:0].
-+         * No devices master via IOMMU c.
-+         */
-+        iommu-map = <0x0000 &iommu_a 0x0000 0x8000>,
-+                    <0x8000 &iommu_b 0x0000 0x8000>;
-+    };
--- 
-2.24.1
-
+> But from the person who added PCI_IRQ_*:
+>=20
+> NAK to the whole concept of PCI_IRQ_MSI_TYPES, I think this just makes th=
+e
+> code a lot more confusing.  Especially with the new IMS interrupt type, w=
+hich
+> really is a MSI-like interrupt but certainly shouldn't be added to this m=
+ask.
