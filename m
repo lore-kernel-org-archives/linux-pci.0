@@ -2,104 +2,116 @@ Return-Path: <SRS0=ztgn=7W=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0CC9C433E0
-	for <linux-pci@archiver.kernel.org>; Tue,  9 Jun 2020 16:36:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71342C433E0
+	for <linux-pci@archiver.kernel.org>; Tue,  9 Jun 2020 16:39:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7890E20774
-	for <linux-pci@archiver.kernel.org>; Tue,  9 Jun 2020 16:36:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4590D20737
+	for <linux-pci@archiver.kernel.org>; Tue,  9 Jun 2020 16:39:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="MMjuTPcO"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZrWLsJhn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728198AbgFIQgB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 9 Jun 2020 12:36:01 -0400
-Received: from ts18-13.vcr.istar.ca ([204.191.154.188]:42288 "EHLO
-        ale.deltatee.com" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-        with ESMTP id S1726100AbgFIQgB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jun 2020 12:36:01 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:Content-Transfer-Encoding:Content-Type:
-        In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Sender:
-        Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender
-        :Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=47m4c67NQmMGP0uYxblsl5MMn1YEfYJqTmyXbRAMT6Q=; b=MMjuTPcO6mYInDTkMJo18+PE5E
-        xNPOksnpi7UCnZ+KEUz5Cj5dgNur+uHjs9DZanlO0a5KD6Pd9vIRDqa6a2JYVOVMu7H84hQiKs1QX
-        0wIsOu1CsJZvMVITJ6+y2wLIY033ic6d6JK4VGJdZWXHEcx63J9r6tK0RMXn2MQ2XCR5ShlEgCB53
-        jrAwDj2Vx0lEDyDelg3CGZrJYcSQWskr/aNvabeLRJal9fHn0TB7sV4WzE9L9C4UNUiI1KCdxYyIV
-        2CEnMqqQKNqKvBpdXtr6rQV+NYQjWTVYC047MqBXl5Im3+bBCdFY/+L25PvIjUs+u8YFHGbl/C501
-        cBOVTrhw==;
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-        by ale.deltatee.com with esmtp (Exim 4.92)
-        (envelope-from <logang@deltatee.com>)
-        id 1jihE7-0006xw-6u; Tue, 09 Jun 2020 10:35:52 -0600
-To:     Christoph Hellwig <hch@infradead.org>,
-        Piotr Stankiewicz <piotr.stankiewicz@intel.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Andy Shevchenko <andriy.shevchenko@intel.com>,
-        Olof Johansson <olof@lixom.net>,
-        Kuppuswamy Sathyanarayanan 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>,
-        Kelvin Cao <kelvin.cao@microchip.com>,
-        Wesley Sheng <wesley.sheng@microchip.com>,
-        "Peter Zijlstra (Intel)" <peterz@infradead.org>,
-        Krzysztof Wilczynski <kw@linux.com>,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        linux-kernel@vger.kernel.org
-References: <20200609091148.32749-1-piotr.stankiewicz@intel.com>
- <20200609091650.801-1-piotr.stankiewicz@intel.com>
- <20200609155124.GB2597@infradead.org>
-From:   Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <e7ffab57-424d-e149-05b4-0a377f31b83d@deltatee.com>
-Date:   Tue, 9 Jun 2020 10:35:49 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
-MIME-Version: 1.0
-In-Reply-To: <20200609155124.GB2597@infradead.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-CA
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, bigeasy@linutronix.de, kw@linux.com, peterz@infradead.org, wesley.sheng@microchip.com, kelvin.cao@microchip.com, sathyanarayanan.kuppuswamy@linux.intel.com, olof@lixom.net, andriy.shevchenko@intel.com, rafael.j.wysocki@intel.com, mika.westerberg@linux.intel.com, kurt.schwemmer@microsemi.com, linux-pci@vger.kernel.org, bhelgaas@google.com, piotr.stankiewicz@intel.com, hch@infradead.org
-X-SA-Exim-Mail-From: logang@deltatee.com
-Subject: Re: [PATCH v3 03/15] PCI: Use PCI_IRQ_MSI_TYPES where appropriate
-X-SA-Exim-Version: 4.2.1 (built Wed, 08 May 2019 21:11:16 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+        id S1731143AbgFIQjg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 9 Jun 2020 12:39:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58730 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727820AbgFIQjf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jun 2020 12:39:35 -0400
+Received: from mail-ed1-x543.google.com (mail-ed1-x543.google.com [IPv6:2a00:1450:4864:20::543])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC83EC05BD1E
+        for <linux-pci@vger.kernel.org>; Tue,  9 Jun 2020 09:39:34 -0700 (PDT)
+Received: by mail-ed1-x543.google.com with SMTP id m32so11718597ede.8
+        for <linux-pci@vger.kernel.org>; Tue, 09 Jun 2020 09:39:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=Y/Rn6P843JcLKvVSPPaYzEvVVEqJRDu8PG/+Ap9EEWE=;
+        b=ZrWLsJhnUtq+jx4ANSkCp0Hzin89B93mnCMKpYUdRm5rDV1XO+BYLX0zuWoFY7816M
+         O5XbLGNPOmIi5VlEvQG9Bc9wqKblEPpVRQ2RB6O081Z4dqHwN2WzC5w1Nf1KrIcP1ax7
+         vDNhwaqk9OWGGOyaR8gP+7RFIYsnxBUqLkt1KOnUX1YaoLeNmfoY1LRW1fZUWzTlfPNa
+         FeYFDsRMn5GzQCcBLNbFT1mcmJj/p1VO3Z5VP/qrIXs7X/ZOcuhwCo8IdrpFTdTJJ3S4
+         euAzA7SfnlYC5sXLlUUhaZRqPVnIoO4JfccT+TKC/At7ZKmTlR0WKFscvER4JH+qh1bV
+         lEGw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=Y/Rn6P843JcLKvVSPPaYzEvVVEqJRDu8PG/+Ap9EEWE=;
+        b=g+TYkytSPCKXb9u5xsGO8RvQg4ajHEERkbcoVO2oauGetOfdDuVRU+zLefbwz6O8iQ
+         o9d5AJwf+w4zpogVuWYSqAOr07TdBVm8W9rprtmTXuHRlsweZZIBLrSKYKzUGPms6CQJ
+         KEYgQGQebp79tte12L6ZRjEP+ki0Je7ui+zffjiD1uQ8l42DArF0RBWGIRimKiz7hULc
+         uxgQLpSJmauSqP4jLWdqzT4B5ptN3K2e/zN/TiClIMStrSkRwd5tm63q95AMXs4Itmnj
+         GKX0SBlWj3TJDL95LwUC61uEV7CZSumvxYBiwd3h8kBFmNVARq1TC5dp6+dGX38vvlWu
+         0Ljg==
+X-Gm-Message-State: AOAM530r9lFsQB4XR9tJ2NtKoGaRn8SLc21OQ67XqfBpHYMbJNuFu0nM
+        6PcY+xPksMGrMzTBUwxFJNw=
+X-Google-Smtp-Source: ABdhPJxznGlO+MbDMLfO78Mc5TpdBSO2p73fIvgPKplgvRVowtv2kuZyj8qv52k/IJF9fYK3zVYVNg==
+X-Received: by 2002:a05:6402:1767:: with SMTP id da7mr28195744edb.90.1591720773338;
+        Tue, 09 Jun 2020 09:39:33 -0700 (PDT)
+Received: from net.saheed (0526DA6B.dsl.pool.telekom.hu. [5.38.218.107])
+        by smtp.gmail.com with ESMTPSA id ce25sm8822176edb.45.2020.06.09.09.39.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 09 Jun 2020 09:39:32 -0700 (PDT)
+From:   refactormyself@gmail.com
+To:     helgaas@kernel.org
+Cc:     Bolarinwa Olayemi Saheed <refactormyself@gmail.com>,
+        bjorn@helgaas.com, linux-pci@vger.kernel.org,
+        skhan@linuxfoundation.org
+Subject: [PATCH 0/8] PCI: Align return value of pcie capability accessors with other accessors
+Date:   Tue,  9 Jun 2020 17:39:42 +0200
+Message-Id: <20200609153950.8346-1-refactormyself@gmail.com>
+X-Mailer: git-send-email 2.18.2
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+From: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
+
+PATCH 1 to 7:
+
+PCIBIOS_ error codes have positive values and they are passed down the
+call heirarchy from accessors. For functions which are meant to return
+only a negative value on failure, passing on this value is a bug.
+
+To mitigate this, call pcibios_err_to_errno() before passing on return
+value from pcie capability accessors call heirarchy. This function
+converts any positive PCIBIOS_ error codes to negative non-PCI generic
+error values.
+
+PATCH 8:
+
+The pcie capability accessors can return 0, -EINVAL, or any PCIBIOS_ error
+code. The pci accessor on the other hand can only return 0 or any PCIBIOS_
+error code.This inconsistency among these accessor makes it harder for
+callers to check for errors.
+
+Return PCIBIOS_BAD_REGISTER_NUMBER instead of -EINVAL in all pcie
+capability accessors.
 
 
-On 2020-06-09 9:51 a.m., Christoph Hellwig wrote:
-> On Tue, Jun 09, 2020 at 11:16:46AM +0200, Piotr Stankiewicz wrote:
->> Seeing as there is shorthand available to use when asking for any type
->> of interrupt, or any type of message signalled interrupt, leverage it.
->>
->> Signed-off-by: Piotr Stankiewicz <piotr.stankiewicz@intel.com>
->> Reviewed-by: Andy Shevchenko <andriy.shevchenko@intel.com>
->> Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
-> 
-> The patch actually adding PCI_IRQ_MSI_TYPES still didn't show up on
-> linux-pci.
-> 
-> But from the person who added PCI_IRQ_*:
-> 
-> NAK to the whole concept of PCI_IRQ_MSI_TYPES, I think this just makes
-> the code a lot more confusing.  Especially with the new IMS interrupt
-> type, which really is a MSI-like interrupt but certainly shouldn't be
-> added to this mask.
+Bolarinwa Olayemi Saheed (8):
+  PCI: Convert PCIBIOS_ error codes to non-PCI generic error codes
+  PCI: Convert PCIBIOS_ error codes to non-PCI generic error codes
+  PCI: Convert PCIBIOS_ error codes to non-PCI generic error codes
+  PCI: Convert PCIBIOS_ error codes to non-PCI generic error codes
+  PCI: Convert PCIBIOS_ error codes to non-PCI generic error codes
+  PCI: Convert PCIBIOS_ error codes to non-PCI generic error codes
+  PCI: Convert PCIBIOS_ error codes to non-PCI generic error codes
+  PCI: Align return value of pcie capability accessors with other
+    accessors
 
-Yes, after cleaning up the first patch to not require the long messy
-conditional, this change doesn't seems like a win. I agree we should
-drop these patches.
+ drivers/dma/ioat/init.c               |  4 ++--
+ drivers/infiniband/hw/hfi1/pcie.c     | 18 +++++++++++++-----
+ drivers/pci/access.c                  |  8 ++++----
+ drivers/pci/pci.c                     | 10 ++++++++--
+ drivers/pci/pcie/aer.c                | 12 ++++++++++--
+ drivers/scsi/smartpqi/smartpqi_init.c |  6 +++++-
+ 6 files changed, 42 insertions(+), 16 deletions(-)
 
-Logan
+-- 
+2.18.2
+
