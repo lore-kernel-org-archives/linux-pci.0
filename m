@@ -2,157 +2,108 @@ Return-Path: <SRS0=TXaA=7X=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF868C433DF
-	for <linux-pci@archiver.kernel.org>; Wed, 10 Jun 2020 16:08:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9061C433E0
+	for <linux-pci@archiver.kernel.org>; Wed, 10 Jun 2020 16:12:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A06F32072E
-	for <linux-pci@archiver.kernel.org>; Wed, 10 Jun 2020 16:08:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A3EA72063A
+	for <linux-pci@archiver.kernel.org>; Wed, 10 Jun 2020 16:12:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="C+9URlX4"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="jUrjvI9w"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730485AbgFJQIO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 10 Jun 2020 12:08:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50596 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727813AbgFJQHQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Jun 2020 12:07:16 -0400
-Received: from mail-ej1-x644.google.com (mail-ej1-x644.google.com [IPv6:2a00:1450:4864:20::644])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA3A6C03E96F;
-        Wed, 10 Jun 2020 09:07:15 -0700 (PDT)
-Received: by mail-ej1-x644.google.com with SMTP id o15so3160545ejm.12;
-        Wed, 10 Jun 2020 09:07:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=s9klwDUAQHUdrbunE/kS0tb+TnD6OrjCFpNB//xZIAs=;
-        b=C+9URlX4DDs1ExBwdqCpKQePPhHXWLqg7VfMAB1p74sOH/oSGm81fKdRIqIQ2lbDNd
-         13zFYSQEl5Q27eSMuAWbg622Ir+PP06KG201o+vC9CR/dqIYSSht1ZTBD0RQmb/6FIJu
-         a6pofmnLWyIfZuEesX9Dh+Op5q7Xht9R4ZzyROXqps93PelML1K/nElH1DSmSROmxZft
-         cBwqrKxBG+dAXUIhHYjj2Ui4LqixTqk7ziLLyw9JkTynjVbpO/u7BlGnDYkmVvmXovTn
-         vs4jGLtfgH7mYBUKNg5gC+ruzunzRTmCkdHssTFHfyCRBd2g0drKEpZPI6V74Vn2zgt/
-         5EPA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=s9klwDUAQHUdrbunE/kS0tb+TnD6OrjCFpNB//xZIAs=;
-        b=pmk/9FI3PPrQ4NjbkpNuEK9VJViIFu05LXXkRGG1AOp1q8DiVl1jAGBPf9virT/QOC
-         uaooJTpKwovp3DayPOLew/DFolY9a92OMF/15ae587SjpggDovp4yT1d9vWPqqQfkmiU
-         yws0hE28YSTHNgeGEkA1PgeAeR/Aqr3oVTd0FrVMC63nxdvE5lRFTSG3QRZl+dNOFqFt
-         Iuu7Ra6ykjzbsGgFQJEXfZ7HYMwQuXllqyDL3azbZPF3pF5ZNl/e6kKh26vm9LBg+5lu
-         RQ9fRTF0SoLRY5CjeMvTgOL9FLFVozBtgkFesMST2YJFpN02CbubMaYwcpPlxWNi/cCa
-         DYaA==
-X-Gm-Message-State: AOAM531UvytO6TfLZzaBgsDrvzQNHxGyBGY7Wnd20gylYFXr956e20II
-        KLUHZmQ+/CmYtbko0jPX6cNLfPp18jTsEMgI
-X-Google-Smtp-Source: ABdhPJz996mO0a7CqiD4hWF2x1UtjKNsu/VbgUDj81kz742RAwI7WZqdB7LHe6rIz1UeYCp3P0+g/A==
-X-Received: by 2002:a17:906:1d1a:: with SMTP id n26mr3897465ejh.351.1591805234537;
-        Wed, 10 Jun 2020 09:07:14 -0700 (PDT)
-Received: from Ansuel-XPS.localdomain (host-79-35-249-242.retail.telecomitalia.it. [79.35.249.242])
-        by smtp.googlemail.com with ESMTPSA id ce25sm56067edb.45.2020.06.10.09.07.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 10 Jun 2020 09:07:13 -0700 (PDT)
-From:   Ansuel Smith <ansuelsmth@gmail.com>
-To:     Rob Herring <robh+dt@kernel.org>
-Cc:     Abhishek Sahu <absahu@codeaurora.org>,
-        Ansuel Smith <ansuelsmth@gmail.com>,
-        Rob Herring <robh@kernel.org>, Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v6 03/12] PCI: qcom: Change duplicate PCI reset to phy reset
-Date:   Wed, 10 Jun 2020 18:06:45 +0200
-Message-Id: <20200610160655.27799-4-ansuelsmth@gmail.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200610160655.27799-1-ansuelsmth@gmail.com>
-References: <20200610160655.27799-1-ansuelsmth@gmail.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        id S1728069AbgFJQM6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 10 Jun 2020 12:12:58 -0400
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:57014 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726219AbgFJQM6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Jun 2020 12:12:58 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1591805577;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:in-reply-to:in-reply-to:references:references;
+        bh=/xI/fxoF3iNFNky368q/BjisPF86sZAJhx5RKW1xvKU=;
+        b=jUrjvI9wKFupbD2z9RHJgRo44lDw9ZBRspJJ082QTSbOebMiYFwiEXQGqRkx8f0odoMhbD
+        Ci6tkwSFi23KxMPKXeAbtRx8QjnKQSl3IkhIv4q0R7jasctHVin4e6bXwOxFetv9+/734W
+        YBxUq/LnE9WdKn4lVe8RcRjKXIRk5gs=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-344-asJmdb5fPoGYYEeXXN00zw-1; Wed, 10 Jun 2020 12:12:55 -0400
+X-MC-Unique: asJmdb5fPoGYYEeXXN00zw-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9082618FE868;
+        Wed, 10 Jun 2020 16:12:53 +0000 (UTC)
+Received: from virtlab423.virt.lab.eng.bos.redhat.com (virtlab423.virt.lab.eng.bos.redhat.com [10.19.152.154])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 347897A8CD;
+        Wed, 10 Jun 2020 16:12:52 +0000 (UTC)
+From:   Nitesh Narayan Lal <nitesh@redhat.com>
+To:     linux-kernel@vger.kernel.org, linux-api@vger.kernel.org,
+        frederic@kernel.org, mtosatti@redhat.com, juri.lelli@redhat.com,
+        abelits@marvell.com, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, rostedt@goodmis.org, mingo@kernel.org,
+        peterz@infradead.org, tglx@linutronix.de
+Subject: [Patch v1 2/3] PCI: prevent work_on_cpu's probe to execute on isolated CPUs
+Date:   Wed, 10 Jun 2020 12:12:25 -0400
+Message-Id: <20200610161226.424337-3-nitesh@redhat.com>
+In-Reply-To: <20200610161226.424337-1-nitesh@redhat.com>
+References: <20200610161226.424337-1-nitesh@redhat.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Abhishek Sahu <absahu@codeaurora.org>
+From: Alex Belits <abelits@marvell.com>
 
-The deinit issues reset_control_assert for PCI twice and does not contain
-phy reset.
+pci_call_probe() prevents the nesting of work_on_cpu()
+for a scenario where a VF device is probed from work_on_cpu()
+of the Physical device.
+This patch replaces the cpumask used in pci_call_probe()
+from all online CPUs to only housekeeping CPUs. This is to
+ensure that there are no additional latency overheads
+caused due to the pinning of jobs on isolated CPUs.
 
-Signed-off-by: Abhishek Sahu <absahu@codeaurora.org>
-Signed-off-by: Ansuel Smith <ansuelsmth@gmail.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Alex Belits <abelits@marvell.com>
+Signed-off-by: Nitesh Narayan Lal <nitesh@redhat.com>
 ---
- drivers/pci/controller/dwc/pcie-qcom.c | 18 ++++++++----------
- 1 file changed, 8 insertions(+), 10 deletions(-)
+ drivers/pci/pci-driver.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 4bf93ab8c7a7..4512c2c5f61c 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -280,14 +280,14 @@ static void qcom_pcie_deinit_2_1_0(struct qcom_pcie *pcie)
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index da6510af1221..449466f71040 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -12,6 +12,7 @@
+ #include <linux/string.h>
+ #include <linux/slab.h>
+ #include <linux/sched.h>
++#include <linux/sched/isolation.h>
+ #include <linux/cpu.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/suspend.h>
+@@ -333,6 +334,7 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
+ 			  const struct pci_device_id *id)
  {
- 	struct qcom_pcie_resources_2_1_0 *res = &pcie->res.v2_1_0;
+ 	int error, node, cpu;
++	int hk_flags = HK_FLAG_DOMAIN | HK_FLAG_WQ;
+ 	struct drv_dev_and_id ddi = { drv, dev, id };
  
-+	clk_disable_unprepare(res->phy_clk);
- 	reset_control_assert(res->pci_reset);
- 	reset_control_assert(res->axi_reset);
- 	reset_control_assert(res->ahb_reset);
- 	reset_control_assert(res->por_reset);
--	reset_control_assert(res->pci_reset);
-+	reset_control_assert(res->phy_reset);
- 	clk_disable_unprepare(res->iface_clk);
- 	clk_disable_unprepare(res->core_clk);
--	clk_disable_unprepare(res->phy_clk);
- 	clk_disable_unprepare(res->aux_clk);
- 	clk_disable_unprepare(res->ref_clk);
- 	regulator_bulk_disable(ARRAY_SIZE(res->supplies), res->supplies);
-@@ -325,12 +325,6 @@ static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
- 		goto err_clk_core;
- 	}
+ 	/*
+@@ -353,7 +355,8 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
+ 	    pci_physfn_is_probed(dev))
+ 		cpu = nr_cpu_ids;
+ 	else
+-		cpu = cpumask_any_and(cpumask_of_node(node), cpu_online_mask);
++		cpu = cpumask_any_and(cpumask_of_node(node),
++				      housekeeping_cpumask(hk_flags));
  
--	ret = clk_prepare_enable(res->phy_clk);
--	if (ret) {
--		dev_err(dev, "cannot prepare/enable phy clock\n");
--		goto err_clk_phy;
--	}
--
- 	ret = clk_prepare_enable(res->aux_clk);
- 	if (ret) {
- 		dev_err(dev, "cannot prepare/enable aux clock\n");
-@@ -383,6 +377,12 @@ static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
- 		return ret;
- 	}
- 
-+	ret = clk_prepare_enable(res->phy_clk);
-+	if (ret) {
-+		dev_err(dev, "cannot prepare/enable phy clock\n");
-+		goto err_deassert_ahb;
-+	}
-+
- 	/* wait for clock acquisition */
- 	usleep_range(1000, 1500);
- 
-@@ -400,8 +400,6 @@ static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
- err_clk_ref:
- 	clk_disable_unprepare(res->aux_clk);
- err_clk_aux:
--	clk_disable_unprepare(res->phy_clk);
--err_clk_phy:
- 	clk_disable_unprepare(res->core_clk);
- err_clk_core:
- 	clk_disable_unprepare(res->iface_clk);
+ 	if (cpu < nr_cpu_ids)
+ 		error = work_on_cpu(cpu, local_pci_probe, &ddi);
 -- 
-2.25.1
+2.18.4
 
