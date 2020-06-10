@@ -8,59 +8,59 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B6ACC433DF
-	for <linux-pci@archiver.kernel.org>; Wed, 10 Jun 2020 16:07:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 656BDC433E4
+	for <linux-pci@archiver.kernel.org>; Wed, 10 Jun 2020 16:07:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E104920820
-	for <linux-pci@archiver.kernel.org>; Wed, 10 Jun 2020 16:07:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3FBA8207F9
+	for <linux-pci@archiver.kernel.org>; Wed, 10 Jun 2020 16:07:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FEePfPFg"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XZId+kqz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730554AbgFJQHr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 10 Jun 2020 12:07:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50672 "EHLO
+        id S1730533AbgFJQHh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 10 Jun 2020 12:07:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50656 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730538AbgFJQHj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Jun 2020 12:07:39 -0400
-Received: from mail-ed1-x541.google.com (mail-ed1-x541.google.com [IPv6:2a00:1450:4864:20::541])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7C89C03E96F;
-        Wed, 10 Jun 2020 09:07:38 -0700 (PDT)
-Received: by mail-ed1-x541.google.com with SMTP id o26so1800436edq.0;
-        Wed, 10 Jun 2020 09:07:38 -0700 (PDT)
+        with ESMTP id S1730528AbgFJQHe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Jun 2020 12:07:34 -0400
+Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6084C03E96F;
+        Wed, 10 Jun 2020 09:07:33 -0700 (PDT)
+Received: by mail-ej1-x642.google.com with SMTP id p20so3163769ejd.13;
+        Wed, 10 Jun 2020 09:07:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=dd+Z0yjxtztXOTLMBUJZUOa3hEnZCJ80Y/mxXHp3PO8=;
-        b=FEePfPFgVZZCcpcfMbca3kv5qq8lzcNem0TgiIVvPpHFnrRotBAN9YB5aQmHNhWhKQ
-         aLiTvuCsFYiGd9JQQ9svqpqieWGj3TSHdWevq2KLr3Rr55eiyL/KHbDEUurSZFeObQ62
-         cGbttj7Yr+7cZYP/G4BEtTokTTNmiKA3cG3yE0sV0Y6UpkohjfW28kTFhfGMnhsn38/z
-         HAIjsgcHlej5FedyfeIojDGj7G3ltRT6chJ5urtbVzVAZsSO2xbdeI5CC5yORrOYLh3C
-         lomqJr0d4/ObImbSj2hjtmPlPkzzODpO7QlGH65ZHXND2ugo+ED/8m/XVMDYshbP/9+f
-         TkCA==
+        bh=ZIcmPOVlQLoKdIP9dCKqwaemztdzBXHNcMiHg1REgA4=;
+        b=XZId+kqzhEi16ADYn9UF8ygFXk5SH0ej/H5Fbz/qBQO7EKQTbrA31hza5a9uuwg1qY
+         R2Ta2p/5jXwEbU8NKmjPt9XAKrE2lHnzuimLLZ4bN638YfuSZDLp3Y92yRgz6tEIeuaY
+         pZ327mRywwATOIbKGxpqCfIrhum5FOsNIYUldzEi0FtN7SNXIya9uQu+GKikYJQjSCYZ
+         2D8as6OSR1mL0nUBW4d0/sGaIwG/YLoVVP2Pvu0M16zqrOyuSRf9+aHUhcswiL0WTgb/
+         MOFPQdUlfb2J+79XZpujH3pmbCG/Wyi2omUnbltMdXlKzTrhJVXkxnuCAreKpvz+TVem
+         emKg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=dd+Z0yjxtztXOTLMBUJZUOa3hEnZCJ80Y/mxXHp3PO8=;
-        b=uGqyTlnme+mZZ29VW53rtyXmQkQxsKKQ0sTxp2ZNPfkrGcV8TBt7uZVA2g+QRB3q8a
-         YNQozaXIHO62QL1yKjeJ8iWndyRz8PK3FlDsg7o1Myv+Tmc3c8tkF65aC7HYVYmWvDwy
-         Lp+sIXvJ/y6aMJSaQcz8FdD52ObicsDroRDqoEciBZSps30/4zWygQ2Tz7Co5whmufxC
-         vFR6KQ1cRWnCsYijuf8qrS2t5iibORLbXJ1ZTMzuFAZogsi+0VU2SN3DGYHT2gzzTXoU
-         mO3tq0zyJtvD4hno8FnNk8mO6obrrphVtSUu9OjAn8A6rQ89WPYDLse4hznxWcREufhw
-         tMmQ==
-X-Gm-Message-State: AOAM533wb/AYM1ZFt3m8x04KcwqsklbryYB+qBRc/b5K3gSwQsqa70TV
-        HL+MhvRn/x83YJgLlfoR5y0=
-X-Google-Smtp-Source: ABdhPJy2QXHTerysK0MjqZYcEjsPjCtx7EmQmhU2ZSQ6TRAOctZNgcI5WHuK8Ee76OAhZaUlgdyklA==
-X-Received: by 2002:aa7:c752:: with SMTP id c18mr3034215eds.55.1591805257335;
-        Wed, 10 Jun 2020 09:07:37 -0700 (PDT)
+        bh=ZIcmPOVlQLoKdIP9dCKqwaemztdzBXHNcMiHg1REgA4=;
+        b=lD1TPohP2RrnQuX3w6dL+pXXNVTYNPPn0DmIsEVJqIaOzqbvJrAETle5nw2lGZa/IG
+         z50GCeK2J0GmKQa3R0LPqvhclfcFP+JSpn1ZxbV14dWl3O4lm01CxWm8fpbAlSuy3BBO
+         JXPH8tN62S3fSfdVZ4gonaStX2J6pku8TUANNzyy96i8HBa1TWTl4rkh4W9YAOIE3xyx
+         IRWySMYydNYwJgJDftQmTxhXouALDFCnowgR/yce5znkyKqrsPRX47LfFr+oSfkwdAds
+         HhmgvJ/Xq/GHdfFedaKcwUykuvhcXKhcuf5R07rlXUkW5am9DhEg8nd3Sdy7hKgJJJx9
+         c2Hw==
+X-Gm-Message-State: AOAM531ndZ9XIJw3fkks4ZvCOUe5IQO/6J4EkvzdcYhRqba0DSU+RGcF
+        /SMinsaoQ3sMz4oHg0CN+B8=
+X-Google-Smtp-Source: ABdhPJz/z0uv04oFo6Ksal5X8QjDiPKT0GLx7HBWK77h+M6TKECl0WPlUJd694bF0JH9Cml7V8haAQ==
+X-Received: by 2002:a17:906:e2d5:: with SMTP id gr21mr3905582ejb.219.1591805252537;
+        Wed, 10 Jun 2020 09:07:32 -0700 (PDT)
 Received: from Ansuel-XPS.localdomain (host-79-35-249-242.retail.telecomitalia.it. [79.35.249.242])
-        by smtp.googlemail.com with ESMTPSA id ce25sm56067edb.45.2020.06.10.09.07.35
+        by smtp.googlemail.com with ESMTPSA id ce25sm56067edb.45.2020.06.10.09.07.30
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 10 Jun 2020 09:07:36 -0700 (PDT)
+        Wed, 10 Jun 2020 09:07:31 -0700 (PDT)
 From:   Ansuel Smith <ansuelsmth@gmail.com>
 To:     Rob Herring <robh+dt@kernel.org>
-Cc:     Ansuel Smith <ansuelsmth@gmail.com>,
+Cc:     Ansuel Smith <ansuelsmth@gmail.com>, Rob Herring <robh@kernel.org>,
         Andy Gross <agross@kernel.org>,
         Bjorn Andersson <bjorn.andersson@linaro.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -71,9 +71,9 @@ Cc:     Ansuel Smith <ansuelsmth@gmail.com>,
         Philipp Zabel <p.zabel@pengutronix.de>,
         linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v6 12/12] PCI: qcom: Replace define with standard value
-Date:   Wed, 10 Jun 2020 18:06:54 +0200
-Message-Id: <20200610160655.27799-13-ansuelsmth@gmail.com>
+Subject: [PATCH v6 10/12] dt-bindings: PCI: qcom: Add ipq8064 rev 2 variant
+Date:   Wed, 10 Jun 2020 18:06:52 +0200
+Message-Id: <20200610160655.27799-11-ansuelsmth@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200610160655.27799-1-ansuelsmth@gmail.com>
 References: <20200610160655.27799-1-ansuelsmth@gmail.com>
@@ -84,60 +84,28 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Lots of define are actually already defined in pci_regs.h, directly use
-the standard defines.
+Document qcom,pcie-ipq8064-v2 needed to use different phy_tx0_term_offset.
+In ipq8064 phy_tx0_term_offset is 7. In ipq8064 v2 other SoC it's set to 0
+by default.
 
 Signed-off-by: Ansuel Smith <ansuelsmth@gmail.com>
+Acked-by: Rob Herring <robh@kernel.org>
 ---
- drivers/pci/controller/dwc/pcie-qcom.c | 15 +++++----------
- 1 file changed, 5 insertions(+), 10 deletions(-)
+ Documentation/devicetree/bindings/pci/qcom,pcie.txt | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index c40921589122..a23d3d886479 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -40,11 +40,6 @@
- #define L23_CLK_RMV_DIS				BIT(2)
- #define L1_CLK_RMV_DIS				BIT(1)
- 
--#define PCIE20_COMMAND_STATUS			0x04
--#define CMD_BME_VAL				0x4
--#define PCIE20_DEVICE_CONTROL2_STATUS2		0x98
--#define PCIE_CAP_CPL_TIMEOUT_DISABLE		0x10
--
- #define PCIE20_PARF_PHY_CTRL			0x40
- #define PHY_CTRL_PHY_TX0_TERM_OFFSET_MASK	GENMASK(20, 16)
- #define PHY_CTRL_PHY_TX0_TERM_OFFSET(x)		((x) << 16)
-@@ -73,8 +68,8 @@
- #define CFG_BRIDGE_SB_INIT			BIT(0)
- 
- #define PCIE20_CAP				0x70
--#define PCIE20_CAP_LINK_CAPABILITIES		(PCIE20_CAP + 0xC)
--#define PCIE20_CAP_ACTIVE_STATE_LINK_PM_SUPPORT	(BIT(10) | BIT(11))
-+#define PCIE20_DEVICE_CONTROL2_STATUS2		(PCIE20_CAP + PCI_EXP_DEVCTL2)
-+#define PCIE20_CAP_LINK_CAPABILITIES		(PCIE20_CAP + PCI_EXP_LNKCAP)
- #define PCIE20_CAP_LINK_1			(PCIE20_CAP + 0x14)
- #define PCIE_CAP_LINK1_VAL			0x2FD7F
- 
-@@ -1095,15 +1090,15 @@ static int qcom_pcie_init_2_3_3(struct qcom_pcie *pcie)
- 		pcie->parf + PCIE20_PARF_SYS_CTRL);
- 	writel(0, pcie->parf + PCIE20_PARF_Q2A_FLUSH);
- 
--	writel(CMD_BME_VAL, pci->dbi_base + PCIE20_COMMAND_STATUS);
-+	writel(PCI_COMMAND_MASTER, pci->dbi_base + PCI_COMMAND);
- 	writel(DBI_RO_WR_EN, pci->dbi_base + PCIE20_MISC_CONTROL_1_REG);
- 	writel(PCIE_CAP_LINK1_VAL, pci->dbi_base + PCIE20_CAP_LINK_1);
- 
- 	val = readl(pci->dbi_base + PCIE20_CAP_LINK_CAPABILITIES);
--	val &= ~PCIE20_CAP_ACTIVE_STATE_LINK_PM_SUPPORT;
-+	val &= ~PCI_EXP_LNKCAP_ASPMS;
- 	writel(val, pci->dbi_base + PCIE20_CAP_LINK_CAPABILITIES);
- 
--	writel(PCIE_CAP_CPL_TIMEOUT_DISABLE, pci->dbi_base +
-+	writel(PCI_EXP_DEVCTL2_COMP_TMOUT_DIS, pci->dbi_base +
- 		PCIE20_DEVICE_CONTROL2_STATUS2);
- 
- 	return 0;
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+index 6efcef040741..02bc81bb8b2d 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+@@ -5,6 +5,7 @@
+ 	Value type: <stringlist>
+ 	Definition: Value should contain
+ 			- "qcom,pcie-ipq8064" for ipq8064
++			- "qcom,pcie-ipq8064-v2" for ipq8064 rev 2 or ipq8065
+ 			- "qcom,pcie-apq8064" for apq8064
+ 			- "qcom,pcie-apq8084" for apq8084
+ 			- "qcom,pcie-msm8996" for msm8996 or apq8096
 -- 
 2.25.1
 
