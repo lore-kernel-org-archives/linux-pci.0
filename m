@@ -2,143 +2,81 @@ Return-Path: <SRS0=TXaA=7X=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7CB8C433E0
-	for <linux-pci@archiver.kernel.org>; Wed, 10 Jun 2020 16:13:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A96E1C433E0
+	for <linux-pci@archiver.kernel.org>; Wed, 10 Jun 2020 19:20:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8DF7A2072F
-	for <linux-pci@archiver.kernel.org>; Wed, 10 Jun 2020 16:13:17 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XG3pyBs/"
+	by mail.kernel.org (Postfix) with ESMTP id 7D8CC2072E
+	for <linux-pci@archiver.kernel.org>; Wed, 10 Jun 2020 19:20:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728131AbgFJQNB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 10 Jun 2020 12:13:01 -0400
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:27920 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728106AbgFJQNA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Jun 2020 12:13:00 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1591805579;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=/4nlWdsqI8fXiZ35bnUpG0b+i3WYAu7LgKqUCm475Os=;
-        b=XG3pyBs/f1SHFb7BEqH6UqeusRitsK/6IMg7Z3ZgstLutHhQQKPKZ6Ffr8f1TFBKLLLSsO
-        mcxALJl40rRZer1OhrucXKrIz876iacpMNxTDZKU35W//r5872MSu03KwADBGSsXBLBzWm
-        ZjlKIjajDNVUtdlXlIjl3HKEvuaxPA0=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-371-NpWOi9ykPG6jwYiZQbS9vw-1; Wed, 10 Jun 2020 12:12:52 -0400
-X-MC-Unique: NpWOi9ykPG6jwYiZQbS9vw-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 6380591164;
-        Wed, 10 Jun 2020 16:12:50 +0000 (UTC)
-Received: from virtlab423.virt.lab.eng.bos.redhat.com (virtlab423.virt.lab.eng.bos.redhat.com [10.19.152.154])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 526C4512FE;
-        Wed, 10 Jun 2020 16:12:46 +0000 (UTC)
-From:   Nitesh Narayan Lal <nitesh@redhat.com>
-To:     linux-kernel@vger.kernel.org, linux-api@vger.kernel.org,
-        frederic@kernel.org, mtosatti@redhat.com, juri.lelli@redhat.com,
-        abelits@marvell.com, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, rostedt@goodmis.org, mingo@kernel.org,
-        peterz@infradead.org, tglx@linutronix.de
-Subject: [PATCH v1 0/3] Preventing job distribution to isolated CPUs
-Date:   Wed, 10 Jun 2020 12:12:23 -0400
-Message-Id: <20200610161226.424337-1-nitesh@redhat.com>
+        id S1728111AbgFJTUm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 10 Jun 2020 15:20:42 -0400
+Received: from relay12.mail.gandi.net ([217.70.178.232]:58339 "EHLO
+        relay12.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726893AbgFJTUl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Jun 2020 15:20:41 -0400
+Received: from windsurf.home (lfbn-tou-1-915-109.w86-210.abo.wanadoo.fr [86.210.146.109])
+        (Authenticated sender: thomas.petazzoni@bootlin.com)
+        by relay12.mail.gandi.net (Postfix) with ESMTPSA id A3EB9200002;
+        Wed, 10 Jun 2020 19:20:38 +0000 (UTC)
+Date:   Wed, 10 Jun 2020 21:20:37 +0200
+From:   Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+To:     "Shmuel H." <sh@tkos.co.il>
+Cc:     Jason Cooper <jason@lakedaemon.net>,
+        Marek =?UTF-8?B?QmVow7pu?= <marek.behun@nic.cz>,
+        Baruch Siach <baruch@tkos.co.il>,
+        Chris ackham <chris.packham@alliedtelesis.co.nz>,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [RFC PATCH] pci: pci-mvebu: setup BAR0 to internal-regs
+Message-ID: <20200610212037.7fd32a43@windsurf.home>
+In-Reply-To: <ae84b87c-665b-7619-7cb0-a1fd58b17d8f@tkos.co.il>
+References: <20200608144024.1161237-1-sh@tkos.co.il>
+        <20200608214335.156baaaa@windsurf>
+        <ae84b87c-665b-7619-7cb0-a1fd58b17d8f@tkos.co.il>
+Organization: Bootlin
+X-Mailer: Claws Mail 3.17.5 (GTK+ 2.24.32; x86_64-redhat-linux-gnu)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This patch-set is originated from one of the patches that have been
-posted earlier as a part of "Task_isolation" mode [1] patch series
-by Alex Belits <abelits@marvell.com>. There are only a couple of
-changes that I am proposing in this patch-set compared to what Alex
-has posted earlier.
+On Wed, 10 Jun 2020 17:17:15 +0300
+"Shmuel H." <sh@tkos.co.il> wrote:
+
+> Apparently, the PCIe controller is outside of the internal registers space.
+
+No, it is not.
+
+It is outside of the internal-regs node in the DT because it needs more
+"ranges" properties, but the PCIe controller registers *are* within the
+internal registers window:
+
+                               <0x82000000 0 0x80000 MBUS_ID(0xf0, 0x01) 0x80000 0 0x00002000
+                                0x82000000 0 0x40000 MBUS_ID(0xf0, 0x01) 0x40000 0 0x00002000
+                                0x82000000 0 0x44000 MBUS_ID(0xf0, 0x01) 0x44000 0 0x00002000
+                                0x82000000 0 0x48000 MBUS_ID(0xf0, 0x01) 0x48000 0 0x00002000
 
 
-Context
-=======
-On a broad level, all three patches that are included in this patch
-set are meant to improve the driver/library to respect isolated
-CPUs by not pinning any job on it. Not doing so could impact
-the latency values in RT use-cases.
+> I could try to use a similar code as in
+> arch/arm/mach-mvebu/pm.c:mvebu_internal_reg_base or get the first child
+> of "internal-regs" and call of_translate_address on it with one zero cell.
+> 
+> Do you have a better solution?
 
+In mvebu_pcie_map_registers(), we retrieve the address of the PCIe
+registers for each port. You can take regs.start, round it down to 1
+MB, and you'll get your base address.
 
-Patches
-=======
-* Patch1:
-  The first patch is meant to make cpumask_local_spread()
-  aware of the isolated CPUs. It ensures that the CPUs that
-  are returned by this API only includes housekeeping CPUs.
+Best regards,
 
-* Patch2:
-  This patch ensures that a probe function that is called
-  using work_on_cpu() doesn't run any task on an isolated CPU.
-
-* Patch3:
-  This patch makes store_rps_map() aware of the isolated
-  CPUs so that rps don't queue any jobs on an isolated CPU.
-
-
-Changes
-=======
-To fix the above-mentioned issues Alex has used housekeeping_cpumask().
-The only changes that I am proposing here are:
-- Removing the dependency on CONFIG_TASK_ISOLATION that was proposed by Alex.
-  As it should be safe to rely on housekeeping_cpumask()
-  even when we don't have any isolated CPUs and we want
-  to fall back to using all available CPUs in any of the above scenarios.
-- Using both HK_FLAG_DOMAIN and HK_FLAG_WQ in all three patches, this is
-  because we would want the above fixes not only when we have isolcpus but
-  also with something like systemd's CPU affinity.
-
-
-Testing
-=======
-* Patch 1:
-  Fix for cpumask_local_spread() is tested by creating VFs, loading
-  iavf module and by adding a tracepoint to confirm that only housekeeping
-  CPUs are picked when an appropriate profile is set up and all remaining CPUs
-  when no CPU isolation is required/configured.
-
-* Patch 2:
-  To test the PCI fix, I hotplugged a virtio-net-pci from qemu console
-  and forced its addition to a specific node to trigger the code path that
-  includes the proposed fix and verified that only housekeeping CPUs
-  are included via tracepoint. I understand that this may not be the
-  best way to test it, hence, I am open to any suggestion to test this
-  fix in a better way if required.
-
-* Patch 3:
-  To test the fix in store_rps_map(), I tried configuring an isolated
-  CPU by writing to /sys/class/net/en*/queues/rx*/rps_cpus which
-  resulted in 'write error: Invalid argument' error. For the case
-  where a non-isolated CPU is writing in rps_cpus the above operation
-  succeeded without any error.
-
-[1] https://patchwork.ozlabs.org/project/netdev/patch/51102eebe62336c6a4e584c7a503553b9f90e01c.camel@marvell.com/
-
-Alex Belits (3):
-  lib: restricting cpumask_local_spread to only houskeeping CPUs
-  PCI: prevent work_on_cpu's probe to execute on isolated CPUs
-  net: restrict queuing of receive packets to housekeeping CPUs
-
- drivers/pci/pci-driver.c |  5 ++++-
- lib/cpumask.c            | 43 +++++++++++++++++++++++-----------------
- net/core/net-sysfs.c     | 10 +++++++++-
- 3 files changed, 38 insertions(+), 20 deletions(-)
-
---  
-
-
+Thomas
+-- 
+Thomas Petazzoni, CTO, Bootlin
+Embedded Linux and Kernel engineering
+https://bootlin.com
