@@ -5,64 +5,63 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0386C433DF
-	for <linux-pci@archiver.kernel.org>; Wed, 10 Jun 2020 16:07:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FC65C433DF
+	for <linux-pci@archiver.kernel.org>; Wed, 10 Jun 2020 16:07:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7F6F22063A
-	for <linux-pci@archiver.kernel.org>; Wed, 10 Jun 2020 16:07:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 594722063A
+	for <linux-pci@archiver.kernel.org>; Wed, 10 Jun 2020 16:07:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dv1+MAQe"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="k+bF1Whm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730473AbgFJQHN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 10 Jun 2020 12:07:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50580 "EHLO
+        id S1730493AbgFJQHZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 10 Jun 2020 12:07:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50614 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727813AbgFJQHM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Jun 2020 12:07:12 -0400
-Received: from mail-ed1-x543.google.com (mail-ed1-x543.google.com [IPv6:2a00:1450:4864:20::543])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3460C03E96B;
-        Wed, 10 Jun 2020 09:07:10 -0700 (PDT)
-Received: by mail-ed1-x543.google.com with SMTP id e12so1807923eds.2;
-        Wed, 10 Jun 2020 09:07:10 -0700 (PDT)
+        with ESMTP id S1730506AbgFJQHW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Jun 2020 12:07:22 -0400
+Received: from mail-ed1-x542.google.com (mail-ed1-x542.google.com [IPv6:2a00:1450:4864:20::542])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9D6BC03E96B;
+        Wed, 10 Jun 2020 09:07:20 -0700 (PDT)
+Received: by mail-ed1-x542.google.com with SMTP id q13so1806876edi.3;
+        Wed, 10 Jun 2020 09:07:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=2wtQFXbmzC4/d8oVsOGWU0M31JIOAZfPwOO9JlNgV6A=;
-        b=dv1+MAQei2yu8tc9NiXHkLyBVWamgfvo5hf7Ahs8ZyjcGI1rRUQJyLb4KhMwIbl3Ky
-         r8uYILKaDzbyCLJ7Qn5R7XQ3LBHXGFqtB9LvSEHpJLhHJwsPADJnlaFrhY3Y9zwE5RGP
-         V26rH3jLZ08D8pXWgVrxAL7ChENSwZ9OEIZVgl7EU5jcszt2vr4/3JeUyW+VNmXAW6kp
-         Eio2wgiGor/5R75FCRaYGzyD3/9Lv1nuYlT/e+ctC/D66UO9owkDHsyd9XpIFewBWhVe
-         UdVCAVH51oslV23eZDhRpiOcYRLlA1Ydq70ow0FDnUy3O/DhpaJmNIkWhg7QNEYCwnUu
-         l5+w==
+        bh=ioo9tN1eVsbgycuXVtXW3j/mdJh9pHsUFw60B6xaAJg=;
+        b=k+bF1WhmemJGb7/rN2yMZ3V5wpG5VUSckwq4ZFRcihddXrKOGEAhX/KLNFKfr8NIT9
+         2fqahGpki7zSY/17ubctHPUhyiGTOsUHEZsq2uLKwUGb+yrCujYIDO9Kphf5c6ry/iiv
+         xqL0qxh3R/bzrokrJ9jkQmfU6NvjMlnLButsFctB5riWzebSevP83kzuKcvXubwEmsfj
+         WNDQIDe/+/oQDZmsId5O1s8g7fsIaTvcFn/3kaBaIajCjQRXjfc97/Op//y7PlrA7jpH
+         waMtfx3qAe+fVNp7LVQHw3kwwO0DrQPZ1wx3vWZU1pA95/xQd2KMf2lm2NeV1g0bX0ND
+         AwUA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=2wtQFXbmzC4/d8oVsOGWU0M31JIOAZfPwOO9JlNgV6A=;
-        b=phQe8i4dZkdDubvzAIPTZgmL4BIn01BbEH5F9Dm2fDjKSozq+gyr0QMRPflL8W1EtQ
-         N2LBp/dwWVz2c4dtXwlXhIBfwwVtulLLxgMftgqkIBGM+pXFM/43IibIKuxcqrIw0Eq1
-         T9XZ4RhPBScRa1cDoyMpcRjLp1ySpnX6Pns5kEovxX5XMR3QmgNEPEnHt/4MMEgX4egc
-         35KxesmdNzLbTgZLGAm6aVBRvo5Vm0RwOQI0VybE0ZrVi31tK2Z0vkFFAY3PBneSyeLc
-         Ex+XonG5yyXSSjWjC+KGOUrTnj67no0eBYISyde4U1At2xv86fVl7OjvxqNSg6uqWu4S
-         R2Hw==
-X-Gm-Message-State: AOAM531SwGCJJNYgf2U+nw/3neJpJml0oKFGcgEKMbeSE3rTl0V+CWm7
-        74+xUgM4fBNacrl2W3+IvLc=
-X-Google-Smtp-Source: ABdhPJypmstF+84GTqUN05fLQyZM319vjxm1J2mVMRgUv3VAZi9aErb6Dn+C+VwbxhOeL3iQpyzoyQ==
-X-Received: by 2002:a50:d556:: with SMTP id f22mr3178103edj.307.1591805229333;
-        Wed, 10 Jun 2020 09:07:09 -0700 (PDT)
+        bh=ioo9tN1eVsbgycuXVtXW3j/mdJh9pHsUFw60B6xaAJg=;
+        b=WL9Mcv3i4RvmzTst9MfltiF4sd5gT9CufSUnf2VU3JNBOWmdBFYnMXxlLca5PD6ROx
+         RYPFX6ObxL8yFMXmsGOqGjv9ofaylI8Y4EmhbxLWCbj6QOWaoAmh3fXud3hlFSTDs/ji
+         6QOZdPeCuI27RP3BX0oB35FS4PO/2rfJM7mD0JQAfRjYF4hPb5+JnW8ybTlJJ/b6AUUQ
+         WDYDu1RI5mS9YyWM9hH1vpmA5mJCH0iuDylkk1vsC+w3VO8z2HZ86Yt/7yvcZ/HPhOAT
+         ztSeTBtCRKRRhdEXTCS3u3UXwRRje/L7qfwuf+ILVyJL5s/jAuUfQyfhu0pSmarqD64v
+         dPXA==
+X-Gm-Message-State: AOAM5331TN3aYyVGZdN9dn6dgh4NLZGGoRxPygw45fgHHh6ILf8dZEIS
+        CEtgDY3qykAyYl0qRd4Ahas=
+X-Google-Smtp-Source: ABdhPJwrLA8Bu4tlbBnnmWuLupJjY7NMw3oqzJ3tVY/+imD0cNevAFtZT9q8Xo4SuJqEIMy2yjlRNA==
+X-Received: by 2002:a50:ee08:: with SMTP id g8mr2917329eds.267.1591805239574;
+        Wed, 10 Jun 2020 09:07:19 -0700 (PDT)
 Received: from Ansuel-XPS.localdomain (host-79-35-249-242.retail.telecomitalia.it. [79.35.249.242])
-        by smtp.googlemail.com with ESMTPSA id ce25sm56067edb.45.2020.06.10.09.07.07
+        by smtp.googlemail.com with ESMTPSA id ce25sm56067edb.45.2020.06.10.09.07.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 10 Jun 2020 09:07:08 -0700 (PDT)
+        Wed, 10 Jun 2020 09:07:18 -0700 (PDT)
 From:   Ansuel Smith <ansuelsmth@gmail.com>
 To:     Rob Herring <robh+dt@kernel.org>
-Cc:     Ansuel Smith <ansuelsmth@gmail.com>,
-        Sham Muthayyan <smuthayy@codeaurora.org>,
-        Rob Herring <robh@kernel.org>, Andy Gross <agross@kernel.org>,
+Cc:     Ansuel Smith <ansuelsmth@gmail.com>, Rob Herring <robh@kernel.org>,
+        Andy Gross <agross@kernel.org>,
         Bjorn Andersson <bjorn.andersson@linaro.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Mark Rutland <mark.rutland@arm.com>,
@@ -72,9 +71,9 @@ Cc:     Ansuel Smith <ansuelsmth@gmail.com>,
         Philipp Zabel <p.zabel@pengutronix.de>,
         linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v6 01/12] PCI: qcom: Add missing ipq806x clocks in PCIe driver
-Date:   Wed, 10 Jun 2020 18:06:43 +0200
-Message-Id: <20200610160655.27799-2-ansuelsmth@gmail.com>
+Subject: [PATCH v6 05/12] dt-bindings: PCI: qcom: Add ext reset
+Date:   Wed, 10 Jun 2020 18:06:47 +0200
+Message-Id: <20200610160655.27799-6-ansuelsmth@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200610160655.27799-1-ansuelsmth@gmail.com>
 References: <20200610160655.27799-1-ansuelsmth@gmail.com>
@@ -85,103 +84,38 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Aux and Ref clk are missing in PCIe qcom driver. Add support for this
-optional clks for ipq8064/apq8064 SoC.
+Document ext reset used in ipq8064 SoC by qcom PCIe driver.
 
-Fixes: 82a823833f4e ("PCI: qcom: Add Qualcomm PCIe controller driver")
-Signed-off-by: Sham Muthayyan <smuthayy@codeaurora.org>
 Signed-off-by: Ansuel Smith <ansuelsmth@gmail.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
+Acked-by: Rob Herring <robh@kernel.org>
 ---
- drivers/pci/controller/dwc/pcie-qcom.c | 38 ++++++++++++++++++++++----
- 1 file changed, 33 insertions(+), 5 deletions(-)
+ Documentation/devicetree/bindings/pci/qcom,pcie.txt | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 5ea527a6bd9f..4bf93ab8c7a7 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -88,6 +88,8 @@ struct qcom_pcie_resources_2_1_0 {
- 	struct clk *iface_clk;
- 	struct clk *core_clk;
- 	struct clk *phy_clk;
-+	struct clk *aux_clk;
-+	struct clk *ref_clk;
- 	struct reset_control *pci_reset;
- 	struct reset_control *axi_reset;
- 	struct reset_control *ahb_reset;
-@@ -246,6 +248,14 @@ static int qcom_pcie_get_resources_2_1_0(struct qcom_pcie *pcie)
- 	if (IS_ERR(res->phy_clk))
- 		return PTR_ERR(res->phy_clk);
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+index becdbdc0fffa..6efcef040741 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+@@ -179,6 +179,7 @@
+ 			- "pwr"			PWR reset
+ 			- "ahb"			AHB reset
+ 			- "phy_ahb"		PHY AHB reset
++			- "ext"			EXT reset
  
-+	res->aux_clk = devm_clk_get_optional(dev, "aux");
-+	if (IS_ERR(res->aux_clk))
-+		return PTR_ERR(res->aux_clk);
-+
-+	res->ref_clk = devm_clk_get_optional(dev, "ref");
-+	if (IS_ERR(res->ref_clk))
-+		return PTR_ERR(res->ref_clk);
-+
- 	res->pci_reset = devm_reset_control_get_exclusive(dev, "pci");
- 	if (IS_ERR(res->pci_reset))
- 		return PTR_ERR(res->pci_reset);
-@@ -278,6 +288,8 @@ static void qcom_pcie_deinit_2_1_0(struct qcom_pcie *pcie)
- 	clk_disable_unprepare(res->iface_clk);
- 	clk_disable_unprepare(res->core_clk);
- 	clk_disable_unprepare(res->phy_clk);
-+	clk_disable_unprepare(res->aux_clk);
-+	clk_disable_unprepare(res->ref_clk);
- 	regulator_bulk_disable(ARRAY_SIZE(res->supplies), res->supplies);
- }
- 
-@@ -307,16 +319,28 @@ static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
- 		goto err_assert_ahb;
- 	}
- 
-+	ret = clk_prepare_enable(res->core_clk);
-+	if (ret) {
-+		dev_err(dev, "cannot prepare/enable core clock\n");
-+		goto err_clk_core;
-+	}
-+
- 	ret = clk_prepare_enable(res->phy_clk);
- 	if (ret) {
- 		dev_err(dev, "cannot prepare/enable phy clock\n");
- 		goto err_clk_phy;
- 	}
- 
--	ret = clk_prepare_enable(res->core_clk);
-+	ret = clk_prepare_enable(res->aux_clk);
- 	if (ret) {
--		dev_err(dev, "cannot prepare/enable core clock\n");
--		goto err_clk_core;
-+		dev_err(dev, "cannot prepare/enable aux clock\n");
-+		goto err_clk_aux;
-+	}
-+
-+	ret = clk_prepare_enable(res->ref_clk);
-+	if (ret) {
-+		dev_err(dev, "cannot prepare/enable ref clock\n");
-+		goto err_clk_ref;
- 	}
- 
- 	ret = reset_control_deassert(res->ahb_reset);
-@@ -372,10 +396,14 @@ static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
- 	return 0;
- 
- err_deassert_ahb:
--	clk_disable_unprepare(res->core_clk);
--err_clk_core:
-+	clk_disable_unprepare(res->ref_clk);
-+err_clk_ref:
-+	clk_disable_unprepare(res->aux_clk);
-+err_clk_aux:
- 	clk_disable_unprepare(res->phy_clk);
- err_clk_phy:
-+	clk_disable_unprepare(res->core_clk);
-+err_clk_core:
- 	clk_disable_unprepare(res->iface_clk);
- err_assert_ahb:
- 	regulator_bulk_disable(ARRAY_SIZE(res->supplies), res->supplies);
+ - reset-names:
+ 	Usage: required for ipq8074
+@@ -287,8 +288,9 @@
+ 			 <&gcc PCIE_HCLK_RESET>,
+ 			 <&gcc PCIE_POR_RESET>,
+ 			 <&gcc PCIE_PCI_RESET>,
+-			 <&gcc PCIE_PHY_RESET>;
+-		reset-names = "axi", "ahb", "por", "pci", "phy";
++			 <&gcc PCIE_PHY_RESET>,
++			 <&gcc PCIE_EXT_RESET>;
++		reset-names = "axi", "ahb", "por", "pci", "phy", "ext";
+ 		pinctrl-0 = <&pcie_pins_default>;
+ 		pinctrl-names = "default";
+ 	};
 -- 
 2.25.1
 
