@@ -2,172 +2,146 @@ Return-Path: <SRS0=MbFA=7Y=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A11F4C433E0
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Jun 2020 13:07:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34E89C433DF
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Jun 2020 13:17:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7F9B920691
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Jun 2020 13:07:17 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="WsjYugpw"
+	by mail.kernel.org (Postfix) with ESMTP id 1E16220691
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Jun 2020 13:17:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728149AbgFKNGJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 Jun 2020 09:06:09 -0400
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:57162 "EHLO
-        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728137AbgFKNGH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jun 2020 09:06:07 -0400
-Received: from lelv0266.itg.ti.com ([10.180.67.225])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 05BD5nps105539;
-        Thu, 11 Jun 2020 08:05:49 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1591880749;
-        bh=gyAi/y1q/HVFnEZ/DxfyY6kKa19doe82dLyhimZ2rxw=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=WsjYugpwnD30jNe9wflasaoCTDsGPaO4gSeiGo3RO5dKSKic3HF/UUvxDqhgeYYsM
-         QGM+kDMi0y37v4yuedi5L7vg2WQDHLxbpRwNtYYjnnlTnybFb0VNsZp+Qg2VIeLxpw
-         e6/MEmGP2VclVnMW/W9fX4L4+xwYoCKe7A/LIWoU=
-Received: from DFLE103.ent.ti.com (dfle103.ent.ti.com [10.64.6.24])
-        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 05BD5nJp121613
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 11 Jun 2020 08:05:49 -0500
-Received: from DFLE112.ent.ti.com (10.64.6.33) by DFLE103.ent.ti.com
- (10.64.6.24) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Thu, 11
- Jun 2020 08:05:48 -0500
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DFLE112.ent.ti.com
- (10.64.6.33) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
- Frontend Transport; Thu, 11 Jun 2020 08:05:48 -0500
-Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 05BD5PZ5082585;
-        Thu, 11 Jun 2020 08:05:44 -0500
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>, Jon Mason <jdmason@kudzu.us>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <allenbh@gmail.com>,
-        Tom Joseph <tjoseph@cadence.com>, Rob Herring <robh@kernel.org>
-CC:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-ntb@googlegroups.com>
-Subject: [PATCH v2 04/14] PCI: endpoint: Make *_free_bar() to return error codes on failure
-Date:   Thu, 11 Jun 2020 18:35:15 +0530
-Message-ID: <20200611130525.22746-5-kishon@ti.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200611130525.22746-1-kishon@ti.com>
-References: <20200611130525.22746-1-kishon@ti.com>
+        id S1728047AbgFKNRZ convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 Jun 2020 09:17:25 -0400
+Received: from mga07.intel.com ([134.134.136.100]:49921 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726159AbgFKNRZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 11 Jun 2020 09:17:25 -0400
+IronPort-SDR: 9R2trFvioucbU8xyZT5QAoRTxHZGzRSkamKM35CzKFb6cOGg3kCplC27cJqejCK+nmSvRNoGzq
+ Bgy/QYjE+I2A==
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jun 2020 06:17:24 -0700
+IronPort-SDR: 0RMRR5n95P1uk3MlcdKOxaQeBrPwufjj7jl7v3NUh8LU0cqZZtPToZs4jvC6LstL2Yf/qvG2VR
+ RN6MiYiRAYqw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.73,499,1583222400"; 
+   d="scan'208";a="289537525"
+Received: from fmsmsx105.amr.corp.intel.com ([10.18.124.203])
+  by orsmga002.jf.intel.com with ESMTP; 11 Jun 2020 06:17:24 -0700
+Received: from fmsmsx124.amr.corp.intel.com (10.18.125.39) by
+ FMSMSX105.amr.corp.intel.com (10.18.124.203) with Microsoft SMTP Server (TLS)
+ id 14.3.439.0; Thu, 11 Jun 2020 06:17:24 -0700
+Received: from fmsmsx107.amr.corp.intel.com ([169.254.6.74]) by
+ fmsmsx124.amr.corp.intel.com ([169.254.8.63]) with mapi id 14.03.0439.000;
+ Thu, 11 Jun 2020 06:17:24 -0700
+From:   "Ruhl, Michael J" <michael.j.ruhl@intel.com>
+To:     "Stankiewicz, Piotr" <piotr.stankiewicz@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC:     "Stankiewicz, Piotr" <piotr.stankiewicz@intel.com>,
+        "Dalessandro, Dennis" <dennis.dalessandro@intel.com>,
+        "Marciniszyn, Mike" <mike.marciniszyn@intel.com>,
+        Doug Ledford <dledford@redhat.com>,
+        "Jason Gunthorpe" <jgg@ziepe.ca>, Arnd Bergmann <arnd@arndb.de>,
+        "Shevchenko, Andriy" <andriy.shevchenko@intel.com>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH v3 08/15] IB/qib: Use PCI_IRQ_MSI_TYPES where appropriate
+Thread-Topic: [PATCH v3 08/15] IB/qib: Use PCI_IRQ_MSI_TYPES where
+ appropriate
+Thread-Index: AQHWPj8EsjfpQ0WavE+AvROCK2Jb1qjTZ31w
+Date:   Thu, 11 Jun 2020 13:17:22 +0000
+Message-ID: <14063C7AD467DE4B82DEDB5C278E8663010F35E258@fmsmsx107.amr.corp.intel.com>
+References: <20200609091148.32749-1-piotr.stankiewicz@intel.com>
+ <20200609091823.1346-1-piotr.stankiewicz@intel.com>
+In-Reply-To: <20200609091823.1346-1-piotr.stankiewicz@intel.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+dlp-product: dlpe-windows
+dlp-version: 11.2.0.6
+dlp-reaction: no-action
+x-originating-ip: [10.1.200.108]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Modify pci_epc_get_next_free_bar() and pci_epc_get_first_free_bar() to
-return error values if there are no free BARs available.
+>-----Original Message-----
+>From: linux-rdma-owner@vger.kernel.org <linux-rdma-
+>owner@vger.kernel.org> On Behalf Of Piotr Stankiewicz
+>Sent: Tuesday, June 9, 2020 5:18 AM
+>To: Bjorn Helgaas <bhelgaas@google.com>; linux-pci@vger.kernel.org
+>Cc: Stankiewicz, Piotr <piotr.stankiewicz@intel.com>; Dalessandro, Dennis
+><dennis.dalessandro@intel.com>; Marciniszyn, Mike
+><mike.marciniszyn@intel.com>; Doug Ledford <dledford@redhat.com>;
+>Jason Gunthorpe <jgg@ziepe.ca>; Arnd Bergmann <arnd@arndb.de>;
+>Shevchenko, Andriy <andriy.shevchenko@intel.com>; linux-
+>rdma@vger.kernel.org; linux-kernel@vger.kernel.org
+>Subject: [PATCH v3 08/15] IB/qib: Use PCI_IRQ_MSI_TYPES where appropriate
+>
+>Seeing as there is shorthand available to use when asking for any type
+>of interrupt, or any type of message signalled interrupt, leverage it.
+>
+>Signed-off-by: Piotr Stankiewicz <piotr.stankiewicz@intel.com>
+>Reviewed-by: Andy Shevchenko <andriy.shevchenko@intel.com>
+>---
+> drivers/infiniband/hw/qib/qib_pcie.c | 6 ++++--
+> 1 file changed, 4 insertions(+), 2 deletions(-)
+>
+>diff --git a/drivers/infiniband/hw/qib/qib_pcie.c
+>b/drivers/infiniband/hw/qib/qib_pcie.c
+>index 3dc6ce033319..caff44d2c12c 100644
+>--- a/drivers/infiniband/hw/qib/qib_pcie.c
+>+++ b/drivers/infiniband/hw/qib/qib_pcie.c
+>@@ -213,7 +213,7 @@ int qib_pcie_params(struct qib_devdata *dd, u32
+>minw, u32 *nent)
+> 	u16 linkstat, speed;
+> 	int nvec;
+> 	int maxvec;
+>-	unsigned int flags = PCI_IRQ_MSIX | PCI_IRQ_MSI;
+>+	unsigned int flags;
+>
+> 	if (!pci_is_pcie(dd->pcidev)) {
+> 		qib_dev_err(dd, "Can't find PCI Express capability!\n");
+>@@ -225,7 +225,9 @@ int qib_pcie_params(struct qib_devdata *dd, u32
+>minw, u32 *nent)
+> 	}
+>
+> 	if (dd->flags & QIB_HAS_INTX)
+>-		flags |= PCI_IRQ_LEGACY;
+>+		flags = PCI_IRQ_ALL_TYPES;
+>+	else
+>+		flags = PCI_IRQ_MSI_TYPES;
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/endpoint/functions/pci-epf-test.c |  2 ++
- drivers/pci/endpoint/pci-epc-core.c           | 12 ++++++------
- include/linux/pci-epc.h                       |  8 ++++----
- include/linux/pci-epf.h                       |  1 +
- 4 files changed, 13 insertions(+), 10 deletions(-)
+Thinking about lines of code, this patch could probably just be:
 
-diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-index c89a9561439f..8065ec289e6a 100644
---- a/drivers/pci/endpoint/functions/pci-epf-test.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-@@ -834,6 +834,8 @@ static int pci_epf_test_bind(struct pci_epf *epf)
- 		linkup_notifier = epc_features->linkup_notifier;
- 		core_init_notifier = epc_features->core_init_notifier;
- 		test_reg_bar = pci_epc_get_first_free_bar(epc_features);
-+		if (test_reg_bar < 0)
-+			return -EINVAL;
- 		pci_epf_configure_bar(epf, epc_features);
- 	}
- 
-diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
-index ba05e616a407..840b99213c9d 100644
---- a/drivers/pci/endpoint/pci-epc-core.c
-+++ b/drivers/pci/endpoint/pci-epc-core.c
-@@ -90,8 +90,8 @@ EXPORT_SYMBOL_GPL(pci_epc_get);
-  * Invoke to get the first unreserved BAR that can be used by the endpoint
-  * function. For any incorrect value in reserved_bar return '0'.
-  */
--unsigned int pci_epc_get_first_free_bar(const struct pci_epc_features
--					*epc_features)
-+enum pci_barno
-+pci_epc_get_first_free_bar(const struct pci_epc_features *epc_features)
- {
- 	return pci_epc_get_next_free_bar(epc_features, BAR_0);
- }
-@@ -105,13 +105,13 @@ EXPORT_SYMBOL_GPL(pci_epc_get_first_free_bar);
-  * Invoke to get the next unreserved BAR starting from @bar that can be used
-  * for endpoint function. For any incorrect value in reserved_bar return '0'.
-  */
--unsigned int pci_epc_get_next_free_bar(const struct pci_epc_features
--				       *epc_features, enum pci_barno bar)
-+enum pci_barno pci_epc_get_next_free_bar(const struct pci_epc_features
-+					 *epc_features, enum pci_barno bar)
- {
- 	unsigned long free_bar;
- 
- 	if (!epc_features)
--		return 0;
-+		return BAR_0;
- 
- 	/* If 'bar - 1' is a 64-bit BAR, move to the next BAR */
- 	if ((epc_features->bar_fixed_64bit << 1) & 1 << bar)
-@@ -126,7 +126,7 @@ unsigned int pci_epc_get_next_free_bar(const struct pci_epc_features
- 
- 	free_bar = find_next_zero_bit(&free_bar, 6, bar);
- 	if (free_bar > 5)
--		return 0;
-+		return NO_BAR;
- 
- 	return free_bar;
- }
-diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
-index cfe9b427e6b7..88d311bad984 100644
---- a/include/linux/pci-epc.h
-+++ b/include/linux/pci-epc.h
-@@ -201,10 +201,10 @@ int pci_epc_start(struct pci_epc *epc);
- void pci_epc_stop(struct pci_epc *epc);
- const struct pci_epc_features *pci_epc_get_features(struct pci_epc *epc,
- 						    u8 func_no);
--unsigned int pci_epc_get_first_free_bar(const struct pci_epc_features
--					*epc_features);
--unsigned int pci_epc_get_next_free_bar(const struct pci_epc_features
--				       *epc_features, enum pci_barno bar);
-+enum pci_barno
-+pci_epc_get_first_free_bar(const struct pci_epc_features *epc_features);
-+enum pci_barno pci_epc_get_next_free_bar(const struct pci_epc_features
-+					 *epc_features, enum pci_barno bar);
- struct pci_epc *pci_epc_get(const char *epc_name);
- void pci_epc_put(struct pci_epc *epc);
- 
-diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
-index 6644ff3b0702..fa3aca43eb19 100644
---- a/include/linux/pci-epf.h
-+++ b/include/linux/pci-epf.h
-@@ -21,6 +21,7 @@ enum pci_notify_event {
- };
- 
- enum pci_barno {
-+	NO_BAR = -1,
- 	BAR_0,
- 	BAR_1,
- 	BAR_2,
--- 
-2.17.1
+-	unsigned int flags = PCI_IRQ_MSIX | PCI_IRQ_MSI;
++	unsigned int flags = PCI_IRQ_MSI_TYPES;
+
+Or maybe even:
+
+-	unsigned int flags = PCI_IRQ_MSIX | PCI_IRQ_MSI;
++	unsigned int flags = PCI_IRQ_ALL_TYPES;
+
+- 	if (dd->flags & QIB_HAS_INTX)
+-		flags |= PCI_IRQ_LEGACY;
+
+?
+
+M
+
+> 	maxvec = (nent && *nent) ? *nent : 1;
+> 	nvec = pci_alloc_irq_vectors(dd->pcidev, 1, maxvec, flags);
+> 	if (nvec < 0)
+>--
+>2.17.2
 
