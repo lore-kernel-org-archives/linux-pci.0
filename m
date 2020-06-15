@@ -5,59 +5,59 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C757BC433E1
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Jun 2020 21:06:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BDA8C433E0
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Jun 2020 21:06:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9E9F420768
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Jun 2020 21:06:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2537E208D5
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Jun 2020 21:06:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UFAgJGy1"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FNs0CRYt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731729AbgFOVGa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 15 Jun 2020 17:06:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43056 "EHLO
+        id S1731648AbgFOVGl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 15 Jun 2020 17:06:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43084 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730995AbgFOVG3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jun 2020 17:06:29 -0400
-Received: from mail-ej1-x644.google.com (mail-ej1-x644.google.com [IPv6:2a00:1450:4864:20::644])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C8F5C08C5C2;
-        Mon, 15 Jun 2020 14:06:29 -0700 (PDT)
-Received: by mail-ej1-x644.google.com with SMTP id y13so18995494eju.2;
-        Mon, 15 Jun 2020 14:06:29 -0700 (PDT)
+        with ESMTP id S1731436AbgFOVGj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jun 2020 17:06:39 -0400
+Received: from mail-ed1-x543.google.com (mail-ed1-x543.google.com [IPv6:2a00:1450:4864:20::543])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09859C08C5C2;
+        Mon, 15 Jun 2020 14:06:39 -0700 (PDT)
+Received: by mail-ed1-x543.google.com with SMTP id x93so12565686ede.9;
+        Mon, 15 Jun 2020 14:06:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=7DFifidWmIfqxPGThJs01uWYMYz3TIPc9ydTq8/XkuQ=;
-        b=UFAgJGy1tM/qKFh3ShK0D4wmnZRDepfHos6eqaeYrVd62Ushgr8wWgoAFEi37bU5GP
-         eRXjwiR/EHtON/BGWAy8+c/J69ibQJYAAGpFyK6eOfiitEYtH/lqlaCOyRdWSUlSRgxP
-         zYQlUc4KPYPhHKQ61ECySddfCvIwJ3BdjIJBQuCmF/Z1vU924dbi5WnrEswd3mCQMY0n
-         eq+Kp3j+Jd1KM5ksJYbMEj+5Yztc3kPhAl7fal+qScF/efPsG+YLdzsnJjv4bDCcJEx6
-         LgYgj5sMtmywKPfuUMO9AeHTPQmoC31sjvQ7ccbUgmYpnFE6yu861b0uFeMH19zQex+r
-         fiFg==
+        bh=Bh2m7yBBFpphGSLnQ2t1Jsojy/ZnrrVmbVXPSEiIJns=;
+        b=FNs0CRYtsNATVl4vdOR9CODEwIZN1Vx9CWZ5LlImi+2sYEsQTsqPd9RFmHQfhC+UCE
+         qtR3JUHFUUaod2cYXXZfgCHzrpX8YekVGwIkJo+fWwKPJUUyrqZdgePpz0nqz9vLr/Ln
+         3SKXSFAzF2yXbzld3jvYv2qELiOeE3CFEqHbfq2GQXxg+woR0qSD4id0CcnbtAkEP1iP
+         g2LjPdgK9m/OMHDIM14qa12aBsAd+ar8rFJ8Vb1A1FPU5hrMFaLltDfT9YUfTpb/FdjT
+         AcvZZVBXteHIr8xK8+NaKbsxAMVB5s7z3b5B9mB67RNx1lPhKcDAf/ooKS4B0Ik6eXa6
+         LPyg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=7DFifidWmIfqxPGThJs01uWYMYz3TIPc9ydTq8/XkuQ=;
-        b=YL8HPUCR3laqkakRGCbFkf3/smNSEPvYR7urvud7oqFnsgUkAxAhwlyAIohpsuERas
-         QRbj90pwNDbdbNIOmFbXJJdMmb/4lPr14yBG8yOc6/hyBH13AtOkVL4fz1SSrfSb1QiB
-         LnucMlGxeAhYSrfsnz0/hqE9uoPwGf294YO2rXSPSbNe5c3RHIL7ZWkLBQ3WteZZ1XfN
-         ZrqhcnZ1wBKVZFeTngrYkquoXXahsjlza+7Sgz2EOOg58JGgocNOlaJ+4OwXft3Bd+vU
-         54bCbjD9n1t7aPotAFJMyIbBZfO6HZFveNomKvomTU884dUPg8Fx3LI1u/899WoyJ9Ag
-         t4yg==
-X-Gm-Message-State: AOAM5308N/BSvus48roRW1xBNRV4apdKsYbvpd9/Yyq+O1gpPxzGIK31
-        NBmOSJ6YTneM+sBdqb6PemM=
-X-Google-Smtp-Source: ABdhPJw3HHMFLh4xhfQ7ZMs2l1XV85zKNqiYIvzLJbgCoC6GuQcgmwO8eVf9crBewi+yUUIbhGNMpw==
-X-Received: by 2002:a17:906:4d42:: with SMTP id b2mr26928156ejv.34.1592255187982;
-        Mon, 15 Jun 2020 14:06:27 -0700 (PDT)
+        bh=Bh2m7yBBFpphGSLnQ2t1Jsojy/ZnrrVmbVXPSEiIJns=;
+        b=DvPWZLo683JJ9GArA9J7iRpw2DT7g5KlHMUNzRtR8t9QMhqhNZo5Q/LNd+k9b+wt6I
+         MZooq9D66XIPOivZ0uRJZsqFeG/KN12IlVrURTN7bCusH3JuFi4X/qqBhJJ6sxaO+n5L
+         zCKPHVxA2uChmSW+8aLb73QfhNbZiM0woghwltWRnl+bQDgsyuGfjE52W1ugZd5juDvW
+         SfjFbB65FVgg7DMU2VFf1eoDLcXTYztBVPYEGOkszwmKeByd5cyb3GpZ4RQgRtbUgDAH
+         2JjxnnDS34K55szldhf/3ZgxK80gJgNrBt1/3p4xDU+/WMFSBNatzzQtcyC8z86DduyX
+         cFfg==
+X-Gm-Message-State: AOAM533eoCJMlN+8xZsQlyqIwL1OTX9K6GgHmTvBQtmUD+YHNUeefwPU
+        1LilJnvAV4KzPsGOyWL9luk=
+X-Google-Smtp-Source: ABdhPJxnkeg+c6UmESzTHYxMxZgx+zykL2kfHKyWujkTe2BOlg5tGkinMQAAdEEVKgCMK2Gc5eoCBA==
+X-Received: by 2002:aa7:db51:: with SMTP id n17mr24696770edt.241.1592255197657;
+        Mon, 15 Jun 2020 14:06:37 -0700 (PDT)
 Received: from Ansuel-XPS.localdomain (host-95-238-254-39.retail.telecomitalia.it. [95.238.254.39])
-        by smtp.googlemail.com with ESMTPSA id d5sm9662226ejr.78.2020.06.15.14.06.26
+        by smtp.googlemail.com with ESMTPSA id d5sm9662226ejr.78.2020.06.15.14.06.35
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 15 Jun 2020 14:06:27 -0700 (PDT)
+        Mon, 15 Jun 2020 14:06:37 -0700 (PDT)
 From:   Ansuel Smith <ansuelsmth@gmail.com>
 To:     Rob Herring <robh+dt@kernel.org>
 Cc:     Vinod Koul <vkoul@kernel.org>, Ansuel Smith <ansuelsmth@gmail.com>,
@@ -71,9 +71,9 @@ Cc:     Vinod Koul <vkoul@kernel.org>, Ansuel Smith <ansuelsmth@gmail.com>,
         Philipp Zabel <p.zabel@pengutronix.de>,
         linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v7 06/12] PCI: qcom: Use bulk clk api and assert on error
-Date:   Mon, 15 Jun 2020 23:06:02 +0200
-Message-Id: <20200615210608.21469-7-ansuelsmth@gmail.com>
+Subject: [PATCH v7 10/12] dt-bindings: PCI: qcom: Add ipq8064 rev 2 variant
+Date:   Mon, 15 Jun 2020 23:06:06 +0200
+Message-Id: <20200615210608.21469-11-ansuelsmth@gmail.com>
 X-Mailer: git-send-email 2.27.0.rc0
 In-Reply-To: <20200615210608.21469-1-ansuelsmth@gmail.com>
 References: <20200615210608.21469-1-ansuelsmth@gmail.com>
@@ -84,224 +84,28 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Rework 2.1.0 revision to use bulk clk api and fix missing assert on
-reset_control_deassert error.
+Document qcom,pcie-ipq8064-v2 needed to use different phy_tx0_term_offset.
+In ipq8064 phy_tx0_term_offset is 7. In ipq8064 v2 other SoC it's set to 0
+by default.
 
 Signed-off-by: Ansuel Smith <ansuelsmth@gmail.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
+Acked-by: Rob Herring <robh@kernel.org>
 ---
- drivers/pci/controller/dwc/pcie-qcom.c | 131 +++++++++----------------
- 1 file changed, 46 insertions(+), 85 deletions(-)
+ Documentation/devicetree/bindings/pci/qcom,pcie.txt | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 4dab5ef630cc..f2ea1ab6f584 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -84,12 +84,9 @@
- #define DEVICE_TYPE_RC				0x4
- 
- #define QCOM_PCIE_2_1_0_MAX_SUPPLY	3
-+#define QCOM_PCIE_2_1_0_MAX_CLOCKS	5
- struct qcom_pcie_resources_2_1_0 {
--	struct clk *iface_clk;
--	struct clk *core_clk;
--	struct clk *phy_clk;
--	struct clk *aux_clk;
--	struct clk *ref_clk;
-+	struct clk_bulk_data clks[QCOM_PCIE_2_1_0_MAX_CLOCKS];
- 	struct reset_control *pci_reset;
- 	struct reset_control *axi_reset;
- 	struct reset_control *ahb_reset;
-@@ -237,25 +234,21 @@ static int qcom_pcie_get_resources_2_1_0(struct qcom_pcie *pcie)
- 	if (ret)
- 		return ret;
- 
--	res->iface_clk = devm_clk_get(dev, "iface");
--	if (IS_ERR(res->iface_clk))
--		return PTR_ERR(res->iface_clk);
--
--	res->core_clk = devm_clk_get(dev, "core");
--	if (IS_ERR(res->core_clk))
--		return PTR_ERR(res->core_clk);
--
--	res->phy_clk = devm_clk_get(dev, "phy");
--	if (IS_ERR(res->phy_clk))
--		return PTR_ERR(res->phy_clk);
-+	res->clks[0].id = "iface";
-+	res->clks[1].id = "core";
-+	res->clks[2].id = "phy";
-+	res->clks[3].id = "aux";
-+	res->clks[4].id = "ref";
- 
--	res->aux_clk = devm_clk_get_optional(dev, "aux");
--	if (IS_ERR(res->aux_clk))
--		return PTR_ERR(res->aux_clk);
-+	/* iface, core, phy are required */
-+	ret = devm_clk_bulk_get(dev, 3, res->clks);
-+	if (ret < 0)
-+		return ret;
- 
--	res->ref_clk = devm_clk_get_optional(dev, "ref");
--	if (IS_ERR(res->ref_clk))
--		return PTR_ERR(res->ref_clk);
-+	/* aux, ref are optional */
-+	ret = devm_clk_bulk_get_optional(dev, 2, res->clks + 3);
-+	if (ret < 0)
-+		return ret;
- 
- 	res->pci_reset = devm_reset_control_get_exclusive(dev, "pci");
- 	if (IS_ERR(res->pci_reset))
-@@ -285,17 +278,13 @@ static void qcom_pcie_deinit_2_1_0(struct qcom_pcie *pcie)
- {
- 	struct qcom_pcie_resources_2_1_0 *res = &pcie->res.v2_1_0;
- 
--	clk_disable_unprepare(res->phy_clk);
-+	clk_bulk_disable_unprepare(ARRAY_SIZE(res->clks), res->clks);
- 	reset_control_assert(res->pci_reset);
- 	reset_control_assert(res->axi_reset);
- 	reset_control_assert(res->ahb_reset);
- 	reset_control_assert(res->por_reset);
- 	reset_control_assert(res->ext_reset);
- 	reset_control_assert(res->phy_reset);
--	clk_disable_unprepare(res->iface_clk);
--	clk_disable_unprepare(res->core_clk);
--	clk_disable_unprepare(res->aux_clk);
--	clk_disable_unprepare(res->ref_clk);
- 	regulator_bulk_disable(ARRAY_SIZE(res->supplies), res->supplies);
- }
- 
-@@ -313,36 +302,6 @@ static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
- 		return ret;
- 	}
- 
--	ret = reset_control_assert(res->ahb_reset);
--	if (ret) {
--		dev_err(dev, "cannot assert ahb reset\n");
--		goto err_assert_ahb;
--	}
--
--	ret = clk_prepare_enable(res->iface_clk);
--	if (ret) {
--		dev_err(dev, "cannot prepare/enable iface clock\n");
--		goto err_assert_ahb;
--	}
--
--	ret = clk_prepare_enable(res->core_clk);
--	if (ret) {
--		dev_err(dev, "cannot prepare/enable core clock\n");
--		goto err_clk_core;
--	}
--
--	ret = clk_prepare_enable(res->aux_clk);
--	if (ret) {
--		dev_err(dev, "cannot prepare/enable aux clock\n");
--		goto err_clk_aux;
--	}
--
--	ret = clk_prepare_enable(res->ref_clk);
--	if (ret) {
--		dev_err(dev, "cannot prepare/enable ref clock\n");
--		goto err_clk_ref;
--	}
--
- 	ret = reset_control_deassert(res->ahb_reset);
- 	if (ret) {
- 		dev_err(dev, "cannot deassert ahb reset\n");
-@@ -352,48 +311,46 @@ static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
- 	ret = reset_control_deassert(res->ext_reset);
- 	if (ret) {
- 		dev_err(dev, "cannot deassert ext reset\n");
--		goto err_deassert_ahb;
-+		goto err_deassert_ext;
- 	}
- 
--	/* enable PCIe clocks and resets */
--	val = readl(pcie->parf + PCIE20_PARF_PHY_CTRL);
--	val &= ~BIT(0);
--	writel(val, pcie->parf + PCIE20_PARF_PHY_CTRL);
--
--	/* enable external reference clock */
--	val = readl(pcie->parf + PCIE20_PARF_PHY_REFCLK);
--	val |= BIT(16);
--	writel(val, pcie->parf + PCIE20_PARF_PHY_REFCLK);
--
- 	ret = reset_control_deassert(res->phy_reset);
- 	if (ret) {
- 		dev_err(dev, "cannot deassert phy reset\n");
--		return ret;
-+		goto err_deassert_phy;
- 	}
- 
- 	ret = reset_control_deassert(res->pci_reset);
- 	if (ret) {
- 		dev_err(dev, "cannot deassert pci reset\n");
--		return ret;
-+		goto err_deassert_pci;
- 	}
- 
- 	ret = reset_control_deassert(res->por_reset);
- 	if (ret) {
- 		dev_err(dev, "cannot deassert por reset\n");
--		return ret;
-+		goto err_deassert_por;
- 	}
- 
- 	ret = reset_control_deassert(res->axi_reset);
- 	if (ret) {
- 		dev_err(dev, "cannot deassert axi reset\n");
--		return ret;
-+		goto err_deassert_axi;
- 	}
- 
--	ret = clk_prepare_enable(res->phy_clk);
--	if (ret) {
--		dev_err(dev, "cannot prepare/enable phy clock\n");
--		goto err_deassert_ahb;
--	}
-+	ret = clk_bulk_prepare_enable(ARRAY_SIZE(res->clks), res->clks);
-+	if (ret)
-+		goto err_clks;
-+
-+	/* enable PCIe clocks and resets */
-+	val = readl(pcie->parf + PCIE20_PARF_PHY_CTRL);
-+	val &= ~BIT(0);
-+	writel(val, pcie->parf + PCIE20_PARF_PHY_CTRL);
-+
-+	/* enable external reference clock */
-+	val = readl(pcie->parf + PCIE20_PARF_PHY_REFCLK);
-+	val |= BIT(16);
-+	writel(val, pcie->parf + PCIE20_PARF_PHY_REFCLK);
- 
- 	/* wait for clock acquisition */
- 	usleep_range(1000, 1500);
-@@ -407,15 +364,19 @@ static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
- 
- 	return 0;
- 
-+err_clks:
-+	reset_control_assert(res->axi_reset);
-+err_deassert_axi:
-+	reset_control_assert(res->por_reset);
-+err_deassert_por:
-+	reset_control_assert(res->pci_reset);
-+err_deassert_pci:
-+	reset_control_assert(res->phy_reset);
-+err_deassert_phy:
-+	reset_control_assert(res->ext_reset);
-+err_deassert_ext:
-+	reset_control_assert(res->ahb_reset);
- err_deassert_ahb:
--	clk_disable_unprepare(res->ref_clk);
--err_clk_ref:
--	clk_disable_unprepare(res->aux_clk);
--err_clk_aux:
--	clk_disable_unprepare(res->core_clk);
--err_clk_core:
--	clk_disable_unprepare(res->iface_clk);
--err_assert_ahb:
- 	regulator_bulk_disable(ARRAY_SIZE(res->supplies), res->supplies);
- 
- 	return ret;
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+index 6efcef040741..02bc81bb8b2d 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+@@ -5,6 +5,7 @@
+ 	Value type: <stringlist>
+ 	Definition: Value should contain
+ 			- "qcom,pcie-ipq8064" for ipq8064
++			- "qcom,pcie-ipq8064-v2" for ipq8064 rev 2 or ipq8065
+ 			- "qcom,pcie-apq8064" for apq8064
+ 			- "qcom,pcie-apq8084" for apq8084
+ 			- "qcom,pcie-msm8996" for msm8996 or apq8096
 -- 
 2.27.0.rc0
 
