@@ -2,186 +2,165 @@ Return-Path: <SRS0=7FmT=74=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CA3BC433E0
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Jun 2020 21:07:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60D24C433E2
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Jun 2020 23:52:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 23398208FE
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Jun 2020 21:07:17 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aUUBpWle"
+	by mail.kernel.org (Postfix) with ESMTP id 424CD207D3
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Jun 2020 23:52:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1592265145;
+	bh=LAqX2guWt3SaWaTtIVptXEHktenJg7iaeDhOq75EGOc=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=DWFPhpIgq4sRWeO2tbmECduRHXg5cEH3M5EjcLT/6Tj6YzOYiTRcX858clqPSdU1A
+	 eS47hDLz1gEYtMAK72h5Pz0Ua0ejdLYPqVURabgkfVH6CHKGf/vgpzJnd/u1QbDheZ
+	 NBYSNzvHdp1Jo+RyULQh82WhgT9uni/JXMMB+e2U=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731476AbgFOVGS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 15 Jun 2020 17:06:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43012 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731170AbgFOVGR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jun 2020 17:06:17 -0400
-Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3361AC061A0E;
-        Mon, 15 Jun 2020 14:06:17 -0700 (PDT)
-Received: by mail-ej1-x642.google.com with SMTP id gl26so18940875ejb.11;
-        Mon, 15 Jun 2020 14:06:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=70CIEcja2iyHnz/U1cQIr7P6UHMVY2e5pchQ5AbwA7I=;
-        b=aUUBpWlet8KP9y4RqVMd1KAiGNAaB8U+KEIa068xc0e9oUZd8fBfHPvXaLp2M3Q750
-         I4nz2LNF5t2WXAFcOvOk+KioXYc0pV461xQRArmz2DtfEpDgMvCMjHNqW/t0sKaF0ZPh
-         7vY9N/YXd7e6tWdejjLfqIt+K+wGZx672tQC2R+ht+FgTMtAA0Q+7iEcyVU1l5Gk8oss
-         TQlfb6chlnO+6+HZU/tarSnXSf0L+Ds7SF4O0A2aNcEjcnWWK1TKDinXSQ3COeGU3N4Y
-         YiWx0msSf30KIvQEYrAeDZUdF8Wwc0i8A0zjIo/BAaAlar+N403YV7QuSA9kcXSFNT5m
-         A0/w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=70CIEcja2iyHnz/U1cQIr7P6UHMVY2e5pchQ5AbwA7I=;
-        b=BPKvGJJ+dNAsUlMtuBoRfM85nl55SNMwTp767ve0nA4W8JfRetHlbDUGsT0imn6t/W
-         W9aM7mMkXGgnZ+WRyAXKvGSB+Q2vSBUX4+2PSHsfarMFcH2YZp7V716QRrsPGirwq9x5
-         XGSx1v2DQxju6a9iu5ILwLzrF72DfThmKojdUtnsfhKJoLTmgU1g7jn2mImtBk/8XMNP
-         5k49K+p0dZezXIOF4+HhvX6IJlH/n1NGHCo0/p1ADaaggBp0XDiynfaLDHeXrdOtdIAW
-         tPtadQzgFxa5GO8tTqxSujhua9/ytMocuDWo8Ac84RdbIMU+0lXT26VRbKHaoua6WCCN
-         dhCA==
-X-Gm-Message-State: AOAM531whbldT1zyG/7IZvuLLUzhmsmFlSqMZJuv9KzBm36KdWEH/44v
-        hi5NgcWzaGjAZvrrrFoOpTA=
-X-Google-Smtp-Source: ABdhPJyRrjPzruVe1Gxw/CIlAVa1L7yOXOSXYZcwcm/+5ZYvmlysatqkcHsdszCM9Ngh9OxTvuARMg==
-X-Received: by 2002:a17:907:369:: with SMTP id rs9mr26749297ejb.187.1592255175887;
-        Mon, 15 Jun 2020 14:06:15 -0700 (PDT)
-Received: from Ansuel-XPS.localdomain (host-95-238-254-39.retail.telecomitalia.it. [95.238.254.39])
-        by smtp.googlemail.com with ESMTPSA id d5sm9662226ejr.78.2020.06.15.14.06.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 15 Jun 2020 14:06:15 -0700 (PDT)
-From:   Ansuel Smith <ansuelsmth@gmail.com>
-To:     Rob Herring <robh+dt@kernel.org>
-Cc:     Vinod Koul <vkoul@kernel.org>, Ansuel Smith <ansuelsmth@gmail.com>,
-        Sham Muthayyan <smuthayy@codeaurora.org>,
-        Rob Herring <robh@kernel.org>, Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        id S1726599AbgFOXwU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 15 Jun 2020 19:52:20 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60958 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725960AbgFOXwU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 15 Jun 2020 19:52:20 -0400
+Received: from localhost (mobile-166-170-222-206.mycingular.net [166.170.222.206])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id E6A7B2068E;
+        Mon, 15 Jun 2020 23:52:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1592265139;
+        bh=LAqX2guWt3SaWaTtIVptXEHktenJg7iaeDhOq75EGOc=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=g2QUd2ngXMfEz2LsTipBItohXSvpmTBaOTiRrZKoSwAIbpdN01pkaTau0u7EATsXD
+         1j1XCGLhCbt/rateSDFiTc7BcQViqtV3HMRlLm5J3nOOqe69N1HGAm870H7wKJjki0
+         S+aXFOYX7SF+nnBPJxZUEPmc9FAaD8Y6tEO8/hiU=
+Date:   Mon, 15 Jun 2020 18:52:17 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Zhangfei Gao <zhangfei.gao@linaro.org>
+Cc:     Arnd Bergmann <arnd@arndb.de>, Joerg Roedel <joro@8bytes.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v7 01/12] PCI: qcom: Add missing ipq806x clocks in PCIe driver
-Date:   Mon, 15 Jun 2020 23:05:57 +0200
-Message-Id: <20200615210608.21469-2-ansuelsmth@gmail.com>
-X-Mailer: git-send-email 2.27.0.rc0
-In-Reply-To: <20200615210608.21469-1-ansuelsmth@gmail.com>
-References: <20200615210608.21469-1-ansuelsmth@gmail.com>
+        Hanjun Guo <guohanjun@huawei.com>,
+        Sudeep Holla <sudeep.holla@arm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        jean-philippe <jean-philippe@linaro.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        kenneth-lee-2012@foxmail.com, Wangzhou <wangzhou1@hisilicon.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "open list:HARDWARE RANDOM NUMBER GENERATOR CORE" 
+        <linux-crypto@vger.kernel.org>,
+        "open list:IOMMU DRIVERS" <iommu@lists.linux-foundation.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Thanu Rangarajan <Thanu.Rangarajan@arm.com>,
+        Souvik Chakravarty <Souvik.Chakravarty@arm.com>
+Subject: Re: [PATCH 0/2] Introduce PCI_FIXUP_IOMMU
+Message-ID: <20200615235217.GA1921846@bjorn-Precision-5520>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <8f9f6a77-4a65-afeb-0af9-e4868b52d7ce@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Aux and Ref clk are missing in PCIe qcom driver. Add support for this
-optional clks for ipq8064/apq8064 SoC.
+On Sat, Jun 13, 2020 at 10:30:56PM +0800, Zhangfei Gao wrote:
+> On 2020/6/11 下午9:44, Bjorn Helgaas wrote:
+> > +++ b/drivers/iommu/iommu.c
+> > > > > > > > > > @@ -2418,6 +2418,10 @@ int iommu_fwspec_init(struct device *dev, struct
+> > > > > > > > > > fwnode_handle *iommu_fwnode,
+> > > > > > > > > >             fwspec->iommu_fwnode = iommu_fwnode;
+> > > > > > > > > >             fwspec->ops = ops;
+> > > > > > > > > >             dev_iommu_fwspec_set(dev, fwspec);
+> > > > > > > > > > +
+> > > > > > > > > > +       if (dev_is_pci(dev))
+> > > > > > > > > > +               pci_fixup_device(pci_fixup_final, to_pci_dev(dev));
+> > > > > > > > > > +
+> > > > > > > > > > 
+> > > > > > > > > > Then pci_fixup_final will be called twice, the first in pci_bus_add_device.
+> > > > > > > > > > Here in iommu_fwspec_init is the second time, specifically for iommu_fwspec.
+> > > > > > > > > > Will send this when 5.8-rc1 is open.
+> > > > > > > > > Wait, this whole fixup approach seems wrong to me.  No matter how you
+> > > > > > > > > do the fixup, it's still a fixup, which means it requires ongoing
+> > > > > > > > > maintenance.  Surely we don't want to have to add the Vendor/Device ID
+> > > > > > > > > for every new AMBA device that comes along, do we?
+> > > > > > > > > 
+> > > > > > > > Here the fake pci device has standard PCI cfg space, but physical
+> > > > > > > > implementation is base on AMBA
+> > > > > > > > They can provide pasid feature.
+> > > > > > > > However,
+> > > > > > > > 1, does not support tlp since they are not real pci devices.
+> > > > > > > > 2. does not support pri, instead support stall (provided by smmu)
+> > > > > > > > And stall is not a pci feature, so it is not described in struct pci_dev,
+> > > > > > > > but in struct iommu_fwspec.
+> > > > > > > > So we use this fixup to tell pci system that the devices can support stall,
+> > > > > > > > and hereby support pasid.
+> > > > > > > This did not answer my question.  Are you proposing that we update a
+> > > > > > > quirk every time a new AMBA device is released?  I don't think that
+> > > > > > > would be a good model.
+> > > > > > Yes, you are right, but we do not have any better idea yet.
+> > > > > > Currently we have three fake pci devices, which support stall and pasid.
+> > > > > > We have to let pci system know the device can support pasid, because of
+> > > > > > stall feature, though not support pri.
+> > > > > > Do you have any other ideas?
+> > > > > It sounds like the best way would be to allocate a PCI capability for it, so
+> > > > > detection can be done through config space, at least in future devices,
+> > > > > or possibly after a firmware update if the config space in your system
+> > > > > is controlled by firmware somewhere.  Once there is a proper mechanism
+> > > > > to do this, using fixups to detect the early devices that don't use that
+> > > > > should be uncontroversial. I have no idea what the process or timeline
+> > > > > is to add new capabilities into the PCIe specification, or if this one
+> > > > > would be acceptable to the PCI SIG at all.
+> > > > That sounds like a possibility.  The spec already defines a
+> > > > Vendor-Specific Extended Capability (PCIe r5.0, sec 7.9.5) that might
+> > > > be a candidate.
+> > > Will investigate this, thanks Bjorn
+> > FWIW, there's also a Vendor-Specific Capability that can appear in the
+> > first 256 bytes of config space (the Vendor-Specific Extended
+> > Capability must appear in the "Extended Configuration Space" from
+> > 0x100-0xfff).
+> Unfortunately our silicon does not have either Vendor-Specific Capability or
+> Vendor-Specific Extended Capability.
+> 
+> Studied commit 8531e283bee66050734fb0e89d53e85fd5ce24a4
+> Looks this method requires adding member (like can_stall) to struct pci_dev,
+> looks difficult.
 
-Fixes: 82a823833f4e ("PCI: qcom: Add Qualcomm PCIe controller driver")
-Signed-off-by: Sham Muthayyan <smuthayy@codeaurora.org>
-Signed-off-by: Ansuel Smith <ansuelsmth@gmail.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
----
- drivers/pci/controller/dwc/pcie-qcom.c | 38 ++++++++++++++++++++++----
- 1 file changed, 33 insertions(+), 5 deletions(-)
+The problem is that we don't want to add device IDs every time a new
+chip comes out.  Adding one or two device IDs for silicon that's
+already released is not a problem as long as you have a strategy for
+*future* devices so they don't require a quirk.
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 5ea527a6bd9f..4bf93ab8c7a7 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -88,6 +88,8 @@ struct qcom_pcie_resources_2_1_0 {
- 	struct clk *iface_clk;
- 	struct clk *core_clk;
- 	struct clk *phy_clk;
-+	struct clk *aux_clk;
-+	struct clk *ref_clk;
- 	struct reset_control *pci_reset;
- 	struct reset_control *axi_reset;
- 	struct reset_control *ahb_reset;
-@@ -246,6 +248,14 @@ static int qcom_pcie_get_resources_2_1_0(struct qcom_pcie *pcie)
- 	if (IS_ERR(res->phy_clk))
- 		return PTR_ERR(res->phy_clk);
- 
-+	res->aux_clk = devm_clk_get_optional(dev, "aux");
-+	if (IS_ERR(res->aux_clk))
-+		return PTR_ERR(res->aux_clk);
-+
-+	res->ref_clk = devm_clk_get_optional(dev, "ref");
-+	if (IS_ERR(res->ref_clk))
-+		return PTR_ERR(res->ref_clk);
-+
- 	res->pci_reset = devm_reset_control_get_exclusive(dev, "pci");
- 	if (IS_ERR(res->pci_reset))
- 		return PTR_ERR(res->pci_reset);
-@@ -278,6 +288,8 @@ static void qcom_pcie_deinit_2_1_0(struct qcom_pcie *pcie)
- 	clk_disable_unprepare(res->iface_clk);
- 	clk_disable_unprepare(res->core_clk);
- 	clk_disable_unprepare(res->phy_clk);
-+	clk_disable_unprepare(res->aux_clk);
-+	clk_disable_unprepare(res->ref_clk);
- 	regulator_bulk_disable(ARRAY_SIZE(res->supplies), res->supplies);
- }
- 
-@@ -307,16 +319,28 @@ static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
- 		goto err_assert_ahb;
- 	}
- 
-+	ret = clk_prepare_enable(res->core_clk);
-+	if (ret) {
-+		dev_err(dev, "cannot prepare/enable core clock\n");
-+		goto err_clk_core;
-+	}
-+
- 	ret = clk_prepare_enable(res->phy_clk);
- 	if (ret) {
- 		dev_err(dev, "cannot prepare/enable phy clock\n");
- 		goto err_clk_phy;
- 	}
- 
--	ret = clk_prepare_enable(res->core_clk);
-+	ret = clk_prepare_enable(res->aux_clk);
- 	if (ret) {
--		dev_err(dev, "cannot prepare/enable core clock\n");
--		goto err_clk_core;
-+		dev_err(dev, "cannot prepare/enable aux clock\n");
-+		goto err_clk_aux;
-+	}
-+
-+	ret = clk_prepare_enable(res->ref_clk);
-+	if (ret) {
-+		dev_err(dev, "cannot prepare/enable ref clock\n");
-+		goto err_clk_ref;
- 	}
- 
- 	ret = reset_control_deassert(res->ahb_reset);
-@@ -372,10 +396,14 @@ static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
- 	return 0;
- 
- err_deassert_ahb:
--	clk_disable_unprepare(res->core_clk);
--err_clk_core:
-+	clk_disable_unprepare(res->ref_clk);
-+err_clk_ref:
-+	clk_disable_unprepare(res->aux_clk);
-+err_clk_aux:
- 	clk_disable_unprepare(res->phy_clk);
- err_clk_phy:
-+	clk_disable_unprepare(res->core_clk);
-+err_clk_core:
- 	clk_disable_unprepare(res->iface_clk);
- err_assert_ahb:
- 	regulator_bulk_disable(ARRAY_SIZE(res->supplies), res->supplies);
--- 
-2.27.0.rc0
+> > > > > If detection cannot be done through PCI config space, the next best
+> > > > > alternative is to pass auxiliary data through firmware. On DT based
+> > > > > machines, you can list non-hotpluggable PCIe devices and add custom
+> > > > > properties that could be read during device enumeration. I assume
+> > > > > ACPI has something similar, but I have not done that.
+> > > Yes, thanks Arnd
+> > > > ACPI has _DSM (ACPI v6.3, sec 9.1.1), which might be a candidate.  I
+> > > > like this better than a PCI capability because the property you need
+> > > > to expose is not a PCI property.
+> > > _DSM may not workable, since it is working in runtime.
+> > > We need stall information in init stage, neither too early (after allocation
+> > > of iommu_fwspec)
+> > > nor too late (before arm_smmu_add_device ).
+> > I'm not aware of a restriction on when _DSM can be evaluated.  I'm
+> > looking at ACPI v6.3, sec 9.1.1.  Are you seeing something different?
+> DSM method seems requires vendor specific guid, and code would be vendor
+> specific.
 
+_DSM indeed requires a vendor-specific UUID, precisely *because*
+vendors are free to define their own functionality without requiring
+changes to the ACPI spec.  From the spec (ACPI v6.3, sec 9.1.1):
+
+  New UUIDs may also be created by OEMs and IHVs for custom devices
+  and other interface or device governing bodies (e.g. the PCI SIG),
+  as long as the UUID is different from other published UUIDs.
