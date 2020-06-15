@@ -2,136 +2,134 @@ Return-Path: <SRS0=7FmT=74=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 412B3C433E1
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Jun 2020 08:32:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A064C433DF
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Jun 2020 09:55:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2114520738
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Jun 2020 08:32:58 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="W/ldJLhC"
+	by mail.kernel.org (Postfix) with ESMTP id 72D612068E
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Jun 2020 09:55:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729171AbgFOIcu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 15 Jun 2020 04:32:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39220 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728773AbgFOIcp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jun 2020 04:32:45 -0400
-Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E687C05BD43;
-        Mon, 15 Jun 2020 01:32:45 -0700 (PDT)
-Received: by mail-wm1-x343.google.com with SMTP id o8so4266571wmh.4;
-        Mon, 15 Jun 2020 01:32:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=5N7OiTkpW2bbIsUq9FnRk9cirBO+6YwRec/YN067b5E=;
-        b=W/ldJLhCdUJj5d05mtV4pK65pjgE+/YRWMSLx9Ubvv++oDnBBIL5FwSU4I1vbGgwuG
-         S19kPYUbfK+bbLud6LxLvZOc0qwk3cInUEb4d9luu0OT5Yo1sinR3yBNWJ03r3oP/IgL
-         e+KCcuHvL8OqUgoioVPrwkT/CMV3p9DkA+8Nd12c7OI/ntMDv0QsL8hPJnyLTTYfR0Cr
-         ZrTtT/JhkbNzcrB4rt+M5vguZV0YJ6NManuAQmbeZHMQXLPFltrw8ilsv/t46Go6sg+Q
-         3mUSGrAahLu1bsuV4x8nlY8jsYO7zJtvYxSvk7PXWVqVbgKDgpUb74sxtkeaIxDqkQLH
-         pLZw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=5N7OiTkpW2bbIsUq9FnRk9cirBO+6YwRec/YN067b5E=;
-        b=i6Q5Xqbtw6L+iKokRrNMG+pvCo3/Yzr9pav1twJyWesHD0A3pz+g9ou2m1EeF5hCCV
-         r0mFRg/eg93yi0gEwlN88jObL7b8kBA6XPYkrpjFdudkTvWj6nbT88yJ8rSIvoD80bA+
-         35Vg7H2KVxxFbocUnm5lh7jC9KtaAi4A1La5qSKs4/QfKWO73T73Ly6Bx44O6NfRJORX
-         8tm8TQShYN6yTe8bMm4zX0EybBUeyvztdfwYlylXuXVsorKe3/qt5MNbLz06AdVPreU0
-         Udrh9qcVb8MflrO1xigc8OEFKB8m6G3RRl5zSreCmgeADsyfGFxSjf40LdeGrKyUHjet
-         6fXA==
-X-Gm-Message-State: AOAM531tXF/eLOmLILduEheR2JVYkVN5vMsT0ntKEt5XEMFDtzcs/rwq
-        eC5KotDRylnsbvm6hItiSXg=
-X-Google-Smtp-Source: ABdhPJyDOmxsWcHptOCXrlz2DfdRs3ToWlKFmU7sWKf2RWgc6Jg6hrJsDIU8bNUTt2KgGgbCPx8bcA==
-X-Received: by 2002:a7b:c76a:: with SMTP id x10mr12117201wmk.16.1592209964155;
-        Mon, 15 Jun 2020 01:32:44 -0700 (PDT)
-Received: from net.saheed (54006BB0.dsl.pool.telekom.hu. [84.0.107.176])
-        by smtp.gmail.com with ESMTPSA id z206sm21954745wmg.30.2020.06.15.01.32.43
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 15 Jun 2020 01:32:43 -0700 (PDT)
-From:   refactormyself@gmail.com
-To:     helgaas@kernel.org
-Cc:     Bolarinwa Olayemi Saheed <refactormyself@gmail.com>,
-        bjorn@helgaas.com, linux-pci@vger.kernel.org,
-        skhan@linuxfoundation.org,
-        linux-kernel-mentees@lists.linuxfoundation.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2 8/8] PCI: Align return values of PCIe capability and PCI accessors
-Date:   Mon, 15 Jun 2020 09:32:25 +0200
-Message-Id: <20200615073225.24061-9-refactormyself@gmail.com>
-X-Mailer: git-send-email 2.18.2
-In-Reply-To: <20200615073225.24061-1-refactormyself@gmail.com>
-References: <20200615073225.24061-1-refactormyself@gmail.com>
+        id S1728781AbgFOJza (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 15 Jun 2020 05:55:30 -0400
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2306 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726111AbgFOJza (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 15 Jun 2020 05:55:30 -0400
+Received: from lhreml715-chm.china.huawei.com (unknown [172.18.7.107])
+        by Forcepoint Email with ESMTP id 8056736B118F31A0D9D4;
+        Mon, 15 Jun 2020 10:55:28 +0100 (IST)
+Received: from DESKTOP-6T4S3DQ.china.huawei.com (10.47.26.179) by
+ lhreml715-chm.china.huawei.com (10.201.108.66) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1913.5; Mon, 15 Jun 2020 10:55:27 +0100
+From:   Shiju Jose <shiju.jose@huawei.com>
+To:     <linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <rjw@rjwysocki.net>,
+        <bp@alien8.de>, <james.morse@arm.com>, <lenb@kernel.org>,
+        <tony.luck@intel.com>, <dan.carpenter@oracle.com>,
+        <zhangliguang@linux.alibaba.com>,
+        <andriy.shevchenko@linux.intel.com>, <wangkefeng.wang@huawei.com>,
+        <jroedel@suse.de>
+CC:     <yangyicong@hisilicon.com>, <jonathan.cameron@huawei.com>,
+        <tanxiaofei@huawei.com>
+Subject: [PATCH v9 0/2] ACPI / APEI: Add support to notify the vendor specific HW errors
+Date:   Mon, 15 Jun 2020 10:53:10 +0100
+Message-ID: <20200615095312.398-1-shiju.jose@huawei.com>
+X-Mailer: git-send-email 2.26.0.windows.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.47.26.179]
+X-ClientProxiedBy: lhreml732-chm.china.huawei.com (10.201.108.83) To
+ lhreml715-chm.china.huawei.com (10.201.108.66)
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
+Presently the vendor drivers are unable to do the recovery for the
+vendor specific recoverable HW errors because APEI driver does not
+support reporting the error to the vendor drivers.
 
-The PCIe capability accessors can return 0, -EINVAL, or any PCIBIOS_ error
-code. PCIBIOS_ error codes have positive values. The PCI accessor on the
-other hand can only return 0 or any PCIBIOS_ error code. This
-inconsistency among these accessor makes it harder for callers to check 
-for errors.
+patch set
+1. add new interface to the APEI driver for reporting the 
+   vendor specific non-fatal HW errors to the drivers.
 
-Return PCIBIOS_BAD_REGISTER_NUMBER instead of -EINVAL in all PCIe
-capability accessors.
+2. add driver to handle HiSilicon hip PCIe controller's errors.
 
-Suggested-by: Bjorn Helgaas <bjorn@helgaas.com>
-Signed-off-by: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
----
- drivers/pci/access.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+V9:
+1. Fixed 2 improvements suggested by the kbuild test robot. 
+1.1 Change ghes_gdata_pool_init() as static function.
+1.2. Removed using buffer to store the error data for
+     logging in the hisi_pcie_handle_error()
 
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index 79c4a2ef269a..cbb3804903a0 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -409,7 +409,7 @@ int pcie_capability_read_word(struct pci_dev *dev, int pos, u16 *val)
- 
- 	*val = 0;
- 	if (pos & 1)
--		return -EINVAL;
-+		return PCIBIOS_BAD_REGISTER_NUMBER;
- 
- 	if (pcie_capability_reg_implemented(dev, pos)) {
- 		ret = pci_read_config_word(dev, pci_pcie_cap(dev) + pos, val);
-@@ -444,7 +444,7 @@ int pcie_capability_read_dword(struct pci_dev *dev, int pos, u32 *val)
- 
- 	*val = 0;
- 	if (pos & 3)
--		return -EINVAL;
-+		return PCIBIOS_BAD_REGISTER_NUMBER;
- 
- 	if (pcie_capability_reg_implemented(dev, pos)) {
- 		ret = pci_read_config_dword(dev, pci_pcie_cap(dev) + pos, val);
-@@ -469,7 +469,7 @@ EXPORT_SYMBOL(pcie_capability_read_dword);
- int pcie_capability_write_word(struct pci_dev *dev, int pos, u16 val)
- {
- 	if (pos & 1)
--		return -EINVAL;
-+		return PCIBIOS_BAD_REGISTER_NUMBER;
- 
- 	if (!pcie_capability_reg_implemented(dev, pos))
- 		return 0;
-@@ -481,7 +481,7 @@ EXPORT_SYMBOL(pcie_capability_write_word);
- int pcie_capability_write_dword(struct pci_dev *dev, int pos, u32 val)
- {
- 	if (pos & 3)
--		return -EINVAL;
-+		return PCIBIOS_BAD_REGISTER_NUMBER;
- 
- 	if (!pcie_capability_reg_implemented(dev, pos))
- 		return 0;
+V8:
+1. Removed reporting the standard errors through the interface
+   because of the conflict with the recent patches in the
+   memory error handling path.
+2. Fix comments by Dan Carpenter.
+   
+V7:
+1. Add changes in the APEI driver suggested by Borislav Petkov, for
+   queuing up all the non-fatal HW errors to the work queue and
+   notify the registered kernel drivers from the bottom half using
+   blocking notifier, common interface for both standard and
+   vendor-spcific errors.
+2. Fix for further feedbacks in v5 HIP PCIe error handler driver
+   by Bjorn Helgaas.
+
+V6:
+1. Fix few changes in the patch subject line suggested by Bjorn Helgaas.
+
+V5:
+1. Fix comments from James Morse.
+1.1 Changed the notification method to use the atomic_notifier_chain.
+1.2 Add the error handled status for the user space.  
+
+V4:
+1. Fix for the following smatch warning in the PCIe error driver,
+   reported by kbuild test robot<lkp@intel.com>:
+   warn: should '((((1))) << (9 + i))' be a 64 bit type?
+   if (err->val_bits & BIT(HISI_PCIE_LOCAL_VALID_ERR_MISC + i))
+	^^^ This should be BIT_ULL() because it goes up to 9 + 32.
+
+V3:
+1. Fix the comments from Bjorn Helgaas.
+
+V2:
+1. Changes in the HiSilicon PCIe controller's error handling driver
+   for the comments from Bjorn Helgaas.
+   
+2. Changes in the APEI interface to support reporting the vendor error
+   for module with multiple devices, but use the same section type.
+   In the error handler will use socket id/sub module id etc to distinguish
+   the device.
+
+V1:  
+1. Fix comments from James Morse.
+
+2. add driver to handle HiSilicon hip08 PCIe controller's errors,
+   which is an application of the above interface.
+
+Shiju Jose (1):
+  ACPI / APEI: Add support to notify the vendor specific HW errors
+
+Yicong Yang (1):
+  PCI: hip: Add handling of HiSilicon HIP PCIe controller errors
+
+ drivers/acpi/apei/ghes.c                 | 130 +++++++++-
+ drivers/pci/controller/Kconfig           |   8 +
+ drivers/pci/controller/Makefile          |   1 +
+ drivers/pci/controller/pcie-hisi-error.c | 305 +++++++++++++++++++++++
+ include/acpi/ghes.h                      |  28 +++
+ 5 files changed, 471 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/pci/controller/pcie-hisi-error.c
+
 -- 
-2.18.2
+2.17.1
+
 
