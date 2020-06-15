@@ -2,202 +2,172 @@ Return-Path: <SRS0=7FmT=74=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EDC01C433E0
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Jun 2020 14:33:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88222C433DF
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Jun 2020 17:48:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D955A2078A
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Jun 2020 14:33:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6551820810
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Jun 2020 17:48:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1592243335;
+	bh=re2k6orV5gMuJ1pAo7uM+A/UuzHEsVckHe7VfIeBl0s=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=lLVlY1TIUANWkn6laCJpPW6JNwXd/dTmyiJGdbPzfhtMNLDB4eZ2KUqZUz8oUfG7A
+	 kRJFgh89wLOH7aOYGzgX/vDhGYfRyPjC3FPFplUDq5Io/PfUK4yW/0rXU3d80ZvfRG
+	 N4p7Gg9EUTKeWkYN8vaVIISiCsNFfnqvB46JR7FA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729962AbgFOOdC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 15 Jun 2020 10:33:02 -0400
-Received: from youngberry.canonical.com ([91.189.89.112]:42921 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730197AbgFOOdB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jun 2020 10:33:01 -0400
-Received: from mail-qt1-f198.google.com ([209.85.160.198])
-        by youngberry.canonical.com with esmtps (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <ian.may@canonical.com>)
-        id 1jkqAV-0002Ke-4M
-        for linux-pci@vger.kernel.org; Mon, 15 Jun 2020 14:32:59 +0000
-Received: by mail-qt1-f198.google.com with SMTP id n37so14112149qtf.18
-        for <linux-pci@vger.kernel.org>; Mon, 15 Jun 2020 07:32:59 -0700 (PDT)
+        id S1731278AbgFORsv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 15 Jun 2020 13:48:51 -0400
+Received: from mail-il1-f193.google.com ([209.85.166.193]:32789 "EHLO
+        mail-il1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728585AbgFORsu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jun 2020 13:48:50 -0400
+Received: by mail-il1-f193.google.com with SMTP id z2so16133450ilq.0;
+        Mon, 15 Jun 2020 10:48:50 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=J9AjKxWVfbOqQdi3XlIEGWselV/PxzTZqqz7FB93vxw=;
-        b=UIiwYC5rdjZOgXtrjlBIq72eTIMRnvUupOvmBIF35E/F+SjZB8NwNnWNh8B0OLsm8V
-         uKREqd0bmsMKjiKQisTSxFEpopUzNWOdavUUTOho2mUqNJniuB763HrwpqmOnbWftlRm
-         YEOyZwt9GFfWm9tLeql4bq0fC35DBslzxMjs8M8KLtPMqx/otpmeX/7Y52kKQQAPQ3v0
-         9Ja7I50qj+sZYOWd2m7g7TY57zOCrIRAgH1Dwg2Kaim27PLlZg4FzSEnC4iBPSJZZf45
-         yRSnoz2S0HX1Vm0lQxs5jDTF88J9v+yM1gdyYDuFTW7gN/0tEmu6s1aWvfMKJI1znAlO
-         szYw==
-X-Gm-Message-State: AOAM530jL066H8Bubvtx8LcwpaLjjZ7/pxZbxWY0A2ciNQ8oVjSPoiQK
-        iW7ZImkWNxyJ8dERLZ+u1WjrchsKVUZIVPfrN8jFzOb4TA/EZEvd61j/mBfb8btaw34/NF/6lOY
-        /7SnGDq91zjMHa6NX7izGoOARYR1sPTf5oflK3A==
-X-Received: by 2002:a05:620a:13c6:: with SMTP id g6mr15196045qkl.453.1592231577727;
-        Mon, 15 Jun 2020 07:32:57 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJxvvKF0VO3lFLPjk6ftmgrsdwJ7qH3kImhpMd2IihGs0BnHl/RhrW/bEkbiEzmwcLFz5zygTw==
-X-Received: by 2002:a05:620a:13c6:: with SMTP id g6mr15196019qkl.453.1592231577433;
-        Mon, 15 Jun 2020 07:32:57 -0700 (PDT)
-Received: from localhost.localdomain ([2001:67c:1562:8007::aac:44bb])
-        by smtp.gmail.com with ESMTPSA id u10sm12744675qth.32.2020.06.15.07.32.56
-        for <linux-pci@vger.kernel.org>
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=7kn635n+A3EnYes4BFXu6QF7YNnmuVI9peNToiemopE=;
+        b=jzmCUB8gPiBXXg9Z+5ah+r/Gx3tI1u8/I3HTamCaM4GjS/MspRzVxABJWH3XBZj8dK
+         vuc7125g8kmjAi48zTc0ROdSR5bkzvDnCobiG/2Lbna2rl3WI1WMt/Zfhlke2t/tga4x
+         a4d/PsrWoLUMm+S3ZXW7LYYnUTGX47KNXm9C/8sxz+bZKVCLYbsYAYAg0F0yFUFOAmWt
+         6njmt7mbpY4NyD1Zjw604m/D+KrHAvQi8bGxb7aY7pSEX7Hn16xGYu+yfEp8pR/wXx9o
+         f1/mFTcGVmPqa6MHmhVZpJbiI0bAh6cVa2OoyPYiYNqky7DF4sQ4eopx+AAmSKA18Ok5
+         vDeA==
+X-Gm-Message-State: AOAM531zCMRioVhzWelZ2NwslpVRLnE5Cj7JkBph0qH9wnzZkkIn7qAx
+        YasmaZprMxEiCmPha7VFjA==
+X-Google-Smtp-Source: ABdhPJxw8ZUBrSdNoZ0KM84tqgOSaSJTSDg0ljmVjphSbOR1nFj9HkbHbjM55RFjiGVS/wkHkSpA7A==
+X-Received: by 2002:a92:c6cd:: with SMTP id v13mr26329867ilm.150.1592243329646;
+        Mon, 15 Jun 2020 10:48:49 -0700 (PDT)
+Received: from xps15 ([64.188.179.251])
+        by smtp.gmail.com with ESMTPSA id b13sm8297409ilq.20.2020.06.15.10.48.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 15 Jun 2020 07:32:56 -0700 (PDT)
-From:   Ian May <ian.may@canonical.com>
-To:     linux-pci@vger.kernel.org
-Subject: [PATCH 1/2] PCIe hotplug interrupt and AER deadlock with reset_lock and device_lock
-Date:   Mon, 15 Jun 2020 09:32:49 -0500
-Message-Id: <20200615143250.438252-2-ian.may@canonical.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200615143250.438252-1-ian.may@canonical.com>
-References: <20200615143250.438252-1-ian.may@canonical.com>
+        Mon, 15 Jun 2020 10:48:49 -0700 (PDT)
+Received: (nullmailer pid 2028876 invoked by uid 1000);
+        Mon, 15 Jun 2020 17:48:48 -0000
+Date:   Mon, 15 Jun 2020 11:48:48 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Jim Quinlan <james.quinlan@broadcom.com>
+Cc:     linux-pci@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
+        bcm-kernel-feedback-list@broadcom.com,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-rpi-kernel@lists.infradead.org>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v4 03/12] dt-bindings: PCI: Add bindings for more Brcmstb
+ chips
+Message-ID: <20200615174848.GA2023599@bogus>
+References: <20200605212706.7361-1-james.quinlan@broadcom.com>
+ <20200605212706.7361-4-james.quinlan@broadcom.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200605212706.7361-4-james.quinlan@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Currently when a hotplug interrupt and AER recovery triggers simultaneously
-the following deadlock can occur.
+On Fri, Jun 05, 2020 at 05:26:43PM -0400, Jim Quinlan wrote:
+> From: Jim Quinlan <jquinlan@broadcom.com>
+> 
+> - Add compatible strings for three more Broadcom STB chips: 7278, 7216,
+>   7211 (STB version of RPi4).
+> - add new property 'brcm,scb-sizes'
+> - add new property 'resets'
+> - add new property 'reset-names' for 7216 only
+> - allow 'ranges' and 'dma-ranges' to have more than one item and update
+>   the example to show this.
+> 
+> Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
+> ---
+>  .../bindings/pci/brcm,stb-pcie.yaml           | 58 ++++++++++++++++---
+>  1 file changed, 51 insertions(+), 7 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml b/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
+> index 8680a0f86c5a..4a012d77513f 100644
+> --- a/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
+> +++ b/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
+> @@ -9,12 +9,15 @@ title: Brcmstb PCIe Host Controller Device Tree Bindings
+>  maintainers:
+>    - Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
+>  
+> -allOf:
+> -  - $ref: /schemas/pci/pci-bus.yaml#
+> -
+>  properties:
+>    compatible:
+> -    const: brcm,bcm2711-pcie # The Raspberry Pi 4
+> +    items:
+> +      - enum:
+> +          - brcm,bcm2711-pcie # The Raspberry Pi 4
+> +          - brcm,bcm7211-pcie # Broadcom STB version of RPi4
+> +          - brcm,bcm7278-pcie # Broadcom 7278 Arm
+> +          - brcm,bcm7216-pcie # Broadcom 7216 Arm
+> +          - brcm,bcm7445-pcie # Broadcom 7445 Arm
+>  
+>    reg:
+>      maxItems: 1
+> @@ -34,10 +37,12 @@ properties:
+>        - const: msi
+>  
+>    ranges:
+> -    maxItems: 1
+> +    minItems: 1
+> +    maxItems: 4
+>  
+>    dma-ranges:
+> -    maxItems: 1
+> +    minItems: 1
+> +    maxItems: 6
+>  
+>    clocks:
+>      maxItems: 1
+> @@ -58,8 +63,33 @@ properties:
+>  
+>    aspm-no-l0s: true
+>  
+> +  resets:
+> +    description: for "brcm,bcm7216-pcie", must be a valid reset
+> +      phandle pointing to the RESCAL reset controller provider node.
+> +    $ref: "/schemas/types.yaml#/definitions/phandle"
+> +
+> +  reset-names:
+> +    items:
+> +      - const: rescal
+> +
+> +  brcm,scb-sizes:
+> +    description: u64 giving the 64bit PCIe memory
+> +      viewport size of a memory controller.  There may be up to
+> +      three controllers, and each size must be a power of two
+> +      with a size greater or equal to the amount of memory the
+> +      controller supports.  Note that each memory controller
+> +      may have two component regions -- base and extended -- so
+> +      this information cannot be deduced from the dma-ranges.
+> +
+> +    allOf:
+> +      - $ref: /schemas/types.yaml#/definitions/uint64-array
+> +      - items:
+> +          minItems: 1
+> +          maxItems: 3
 
-        Hotplug				       AER
-----------------------------       ---------------------------
-device_lock(&dev->dev)		   down_write(&ctrl->reset_lock)
-down_read(&ctrl->reset_lock)       device_lock(&dev->dev)
+This can be (dropping 'allOf'):
 
-This patch adds a reset_lock and reset_unlock hotplug_slot_op.  This would allow
-the controller reset_lock/reset_unlock to be moved from pciehp_reset_slot to
-pci_slot_reset function allowing the controller reset_lock to be acquired before
-the device lock allowing for both hotplug and AER to grab the reset_lock
-and device lock in proper order.
+$ref: /schemas/types.yaml#/definitions/uint64-array
+minItems: 1
+maxItems: 3
 
-Signed-off-by: Ian May <ian.may@canonical.com>
----
- drivers/pci/hotplug/pciehp.h      |  2 ++
- drivers/pci/hotplug/pciehp_core.c |  2 ++
- drivers/pci/hotplug/pciehp_hpc.c  | 21 ++++++++++++++++++---
- drivers/pci/pci.c                 |  6 ++++++
- include/linux/pci_hotplug.h       |  2 ++
- 5 files changed, 30 insertions(+), 3 deletions(-)
+With that,
 
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index e28b4fffd84d..1e98604cec83 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -183,6 +183,8 @@ void pciehp_release_ctrl(struct controller *ctrl);
- 
- int pciehp_sysfs_enable_slot(struct hotplug_slot *hotplug_slot);
- int pciehp_sysfs_disable_slot(struct hotplug_slot *hotplug_slot);
-+int pciehp_reset_lock(struct hotplug_slot *hotplug_slot);
-+int pciehp_reset_unlock(struct hotplug_slot *hotplug_slot);
- int pciehp_reset_slot(struct hotplug_slot *hotplug_slot, int probe);
- int pciehp_get_attention_status(struct hotplug_slot *hotplug_slot, u8 *status);
- int pciehp_set_raw_indicator_status(struct hotplug_slot *h_slot, u8 status);
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 4c032d75c874..a8da3e6a59b8 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -63,6 +63,8 @@ static int init_slot(struct controller *ctrl)
- 	ops->get_power_status = get_power_status;
- 	ops->get_adapter_status = get_adapter_status;
- 	ops->reset_slot = pciehp_reset_slot;
-+	ops->reset_lock = pciehp_reset_lock;
-+	ops->reset_unlock = pciehp_reset_unlock;
- 	if (MRL_SENS(ctrl))
- 		ops->get_latch_status = get_latch_status;
- 	if (ATTN_LED(ctrl)) {
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 81b23f07719e..185ec9d1b0d0 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -798,6 +798,24 @@ void pcie_disable_interrupt(struct controller *ctrl)
- 	pcie_write_cmd(ctrl, 0, mask);
- }
- 
-+int pciehp_reset_lock(struct hotplug_slot *hotplug_slot)
-+{
-+	struct controller *ctrl = to_ctrl(hotplug_slot);
-+
-+	down_write(&ctrl->reset_lock);
-+
-+	return 0;
-+}
-+
-+int pciehp_reset_unlock(struct hotplug_slot *hotplug_slot)
-+{
-+	struct controller *ctrl = to_ctrl(hotplug_slot);
-+
-+	up_write(&ctrl->reset_lock);
-+
-+	return 0;
-+}
-+
- /*
-  * pciehp has a 1:1 bus:slot relationship so we ultimately want a secondary
-  * bus reset of the bridge, but at the same time we want to ensure that it is
-@@ -816,8 +834,6 @@ int pciehp_reset_slot(struct hotplug_slot *hotplug_slot, int probe)
- 	if (probe)
- 		return 0;
- 
--	down_write(&ctrl->reset_lock);
--
- 	if (!ATTN_BUTTN(ctrl)) {
- 		ctrl_mask |= PCI_EXP_SLTCTL_PDCE;
- 		stat_mask |= PCI_EXP_SLTSTA_PDC;
-@@ -836,7 +852,6 @@ int pciehp_reset_slot(struct hotplug_slot *hotplug_slot, int probe)
- 	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
- 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, ctrl_mask);
- 
--	up_write(&ctrl->reset_lock);
- 	return rc;
- }
- 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index da21293f1111..e32c5a1a706e 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5228,14 +5228,20 @@ static int pci_slot_reset(struct pci_slot *slot, int probe)
- 		return -ENOTTY;
- 
- 	if (!probe)
-+	{
-+		slot->hotplug->ops->reset_lock(slot->hotplug);
- 		pci_slot_lock(slot);
-+	}
- 
- 	might_sleep();
- 
- 	rc = pci_reset_hotplug_slot(slot->hotplug, probe);
- 
- 	if (!probe)
-+	{
- 		pci_slot_unlock(slot);
-+		slot->hotplug->ops->reset_unlock(slot->hotplug);
-+	}
- 
- 	return rc;
- }
-diff --git a/include/linux/pci_hotplug.h b/include/linux/pci_hotplug.h
-index f694eb2ca978..fce5ad979346 100644
---- a/include/linux/pci_hotplug.h
-+++ b/include/linux/pci_hotplug.h
-@@ -45,6 +45,8 @@ struct hotplug_slot_ops {
- 	int (*get_latch_status)		(struct hotplug_slot *slot, u8 *value);
- 	int (*get_adapter_status)	(struct hotplug_slot *slot, u8 *value);
- 	int (*reset_slot)		(struct hotplug_slot *slot, int probe);
-+	int (*reset_lock)               (struct hotplug_slot *slot);
-+	int (*reset_unlock)             (struct hotplug_slot *slot);
- };
- 
- /**
--- 
-2.25.1
-
+Reviewed-by: Rob Herring <robh@kernel.org>
