@@ -2,125 +2,87 @@ Return-Path: <SRS0=/yVf=75=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2E1BC433E1
-	for <linux-pci@archiver.kernel.org>; Tue, 16 Jun 2020 20:05:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D85AC433E0
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Jun 2020 20:55:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9E44521475
-	for <linux-pci@archiver.kernel.org>; Tue, 16 Jun 2020 20:05:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592337953;
-	bh=9S2l7F1bJLuoWduI/Oax+k4EarI3OHINr4Tj9mZDTh4=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=XHWEYjtpWjG9KeuW3GRprT4vRrH1aRqxqshO8r69QaXu+8JwAZ8revkOuzRyaG2pk
-	 A1gKkyG1h9BBbSU6it8YDmfBbk7VoDQl2DykM9W6qjWI7euAEN+NUBo+BghDhMkCOE
-	 noMmaHtpOKOARJe7rhADoxxDSdePQqMAA5BtmH28=
+	by mail.kernel.org (Postfix) with ESMTP id 5F73D208B3
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Jun 2020 20:55:50 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="ViUF8mzW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729024AbgFPUFw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 16 Jun 2020 16:05:52 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54170 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728144AbgFPUFw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 16 Jun 2020 16:05:52 -0400
-Received: from localhost (mobile-166-170-222-206.mycingular.net [166.170.222.206])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A8410208B3;
-        Tue, 16 Jun 2020 20:05:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592337952;
-        bh=9S2l7F1bJLuoWduI/Oax+k4EarI3OHINr4Tj9mZDTh4=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=CUS/ORZplp+jgX29dZTDOoF6PiKCnPuGsSd+bWgZfVCW4LxzpyoJ0P877fMuf1jM/
-         3jiT/99zbk9Z1n0wx1uoDpjOR7Eqst7K4YAAjt17ofPAS6BecitS1kk6Ik4WajzSZv
-         2khhiUurye85ZDXpUUJRwzq9/vpE/RZisXaA5OxQ=
-Date:   Tue, 16 Jun 2020 15:05:50 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Nitesh Narayan Lal <nitesh@redhat.com>
-Cc:     linux-kernel@vger.kernel.org, linux-api@vger.kernel.org,
-        frederic@kernel.org, mtosatti@redhat.com, juri.lelli@redhat.com,
-        abelits@marvell.com, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, rostedt@goodmis.org, mingo@kernel.org,
-        peterz@infradead.org, tglx@linutronix.de
-Subject: Re: [Patch v1 2/3] PCI: prevent work_on_cpu's probe to execute on
- isolated CPUs
-Message-ID: <20200616200550.GA1977307@bjorn-Precision-5520>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200610161226.424337-3-nitesh@redhat.com>
+        id S1728175AbgFPUzt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 16 Jun 2020 16:55:49 -0400
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:33826 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726630AbgFPUzt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 Jun 2020 16:55:49 -0400
+Received: from mail-irv-17.broadcom.com (mail-irv-17.lvn.broadcom.net [10.75.242.48])
+        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id 4D28330D88D;
+        Tue, 16 Jun 2020 13:55:48 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com 4D28330D88D
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
+        s=dkimrelay; t=1592340948;
+        bh=3OXvA8PCBEsIpA3nCB4c0nzrfCkD8JiWghv65L3ox8A=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=ViUF8mzWpCVaY9qidj/hQmhK3bwcJK1jWitrwWgTDGlgsXQomrYhnyxsUFODUA5wT
+         unMHuxQEISgpY/v4ZgYkFwkPVNDwWd68GNq/aig5NTmFIdKVjWH3iXspafrgodghNI
+         727FL3C3/pFk9qRScIhfoyOXoeCay0LYYxSI1+U4=
+Received: from stbsrv-and-01.and.broadcom.net (stbsrv-and-01.and.broadcom.net [10.28.16.211])
+        by mail-irv-17.broadcom.com (Postfix) with ESMTP id E3EC114008B;
+        Tue, 16 Jun 2020 13:55:46 -0700 (PDT)
+From:   Jim Quinlan <james.quinlan@broadcom.com>
+To:     linux-pci@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
+        bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com
+Cc:     Jim Quinlan <james.quinlan@broadcom.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v5 01/12] PCI: brcmstb: PCIE_BRCMSTB depends on ARCH_BRCMSTB
+Date:   Tue, 16 Jun 2020 16:55:08 -0400
+Message-Id: <20200616205533.3513-2-james.quinlan@broadcom.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200616205533.3513-1-james.quinlan@broadcom.com>
+References: <20200616205533.3513-1-james.quinlan@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-"git log --oneline drivers/pci/pci-driver.c" tells you that the
-subject should be something like:
+From: Jim Quinlan <jquinlan@broadcom.com>
 
-  PCI: Restrict probe functions to housekeeping CPUs
+Have PCIE_BRCMSTB depend on ARCH_BRCMSTB.  Also set the default value to
+ARCH_BRCMSTB.
 
-On Wed, Jun 10, 2020 at 12:12:25PM -0400, Nitesh Narayan Lal wrote:
-> From: Alex Belits <abelits@marvell.com>
-> 
-> pci_call_probe() prevents the nesting of work_on_cpu()
-> for a scenario where a VF device is probed from work_on_cpu()
-> of the Physical device.
-> This patch replaces the cpumask used in pci_call_probe()
-> from all online CPUs to only housekeeping CPUs. This is to
-> ensure that there are no additional latency overheads
-> caused due to the pinning of jobs on isolated CPUs.
+Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
+Acked-by: Florian Fainelli <f.fainelli@gmail.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
+---
+ drivers/pci/controller/Kconfig | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-s/Physical/PF/ (since you used "VF" earlier, this should match that)
+diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+index adddf21fa381..c165328d5fbb 100644
+--- a/drivers/pci/controller/Kconfig
++++ b/drivers/pci/controller/Kconfig
+@@ -262,9 +262,10 @@ config VMD
+ 
+ config PCIE_BRCMSTB
+ 	tristate "Broadcom Brcmstb PCIe host controller"
+-	depends on ARCH_BCM2835 || COMPILE_TEST
++	depends on ARCH_BRCMSTB || ARCH_BCM2835 || COMPILE_TEST
+ 	depends on OF
+ 	depends on PCI_MSI_IRQ_DOMAIN
++	default ARCH_BRCMSTB
+ 	help
+ 	  Say Y here to enable PCIe host controller support for
+ 	  Broadcom STB based SoCs, like the Raspberry Pi 4.
+-- 
+2.17.1
 
-s/This patch replaces/Replace the/
-
-Please rewrap this to fill a 75 column line (so it doesn't overflow 80
-columns when "git log" adds 4 spaces).
-
-This should be two paragraphs; add a blank line between them.
-
-> Signed-off-by: Alex Belits <abelits@marvell.com>
-> Signed-off-by: Nitesh Narayan Lal <nitesh@redhat.com>
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-> ---
->  drivers/pci/pci-driver.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index da6510af1221..449466f71040 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -12,6 +12,7 @@
->  #include <linux/string.h>
->  #include <linux/slab.h>
->  #include <linux/sched.h>
-> +#include <linux/sched/isolation.h>
->  #include <linux/cpu.h>
->  #include <linux/pm_runtime.h>
->  #include <linux/suspend.h>
-> @@ -333,6 +334,7 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
->  			  const struct pci_device_id *id)
->  {
->  	int error, node, cpu;
-> +	int hk_flags = HK_FLAG_DOMAIN | HK_FLAG_WQ;
->  	struct drv_dev_and_id ddi = { drv, dev, id };
->  
->  	/*
-> @@ -353,7 +355,8 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
->  	    pci_physfn_is_probed(dev))
->  		cpu = nr_cpu_ids;
->  	else
-> -		cpu = cpumask_any_and(cpumask_of_node(node), cpu_online_mask);
-> +		cpu = cpumask_any_and(cpumask_of_node(node),
-> +				      housekeeping_cpumask(hk_flags));
->  
->  	if (cpu < nr_cpu_ids)
->  		error = work_on_cpu(cpu, local_pci_probe, &ddi);
-> -- 
-> 2.18.4
-> 
