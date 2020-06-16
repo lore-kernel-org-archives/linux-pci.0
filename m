@@ -2,75 +2,74 @@ Return-Path: <SRS0=/yVf=75=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.4 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_IN_DEF_DKIM_WL autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A75D4C433E0
-	for <linux-pci@archiver.kernel.org>; Tue, 16 Jun 2020 01:18:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04F04C433E0
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Jun 2020 01:25:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 828FE206F7
-	for <linux-pci@archiver.kernel.org>; Tue, 16 Jun 2020 01:18:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D7FD520776
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Jun 2020 01:25:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="cY5+g1xI"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="eL7N9Dz2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726872AbgFPBRx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 15 Jun 2020 21:17:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53412 "EHLO
+        id S1726841AbgFPBZM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 15 Jun 2020 21:25:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54536 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726855AbgFPBRw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jun 2020 21:17:52 -0400
-Received: from mail-qv1-xf49.google.com (mail-qv1-xf49.google.com [IPv6:2607:f8b0:4864:20::f49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8E74C08C5C2
-        for <linux-pci@vger.kernel.org>; Mon, 15 Jun 2020 18:17:50 -0700 (PDT)
-Received: by mail-qv1-xf49.google.com with SMTP id p18so14403386qvy.11
-        for <linux-pci@vger.kernel.org>; Mon, 15 Jun 2020 18:17:50 -0700 (PDT)
+        with ESMTP id S1726564AbgFPBZK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jun 2020 21:25:10 -0400
+Received: from mail-lj1-x243.google.com (mail-lj1-x243.google.com [IPv6:2a00:1450:4864:20::243])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37DC8C061A0E
+        for <linux-pci@vger.kernel.org>; Mon, 15 Jun 2020 18:25:09 -0700 (PDT)
+Received: by mail-lj1-x243.google.com with SMTP id c17so21476215lji.11
+        for <linux-pci@vger.kernel.org>; Mon, 15 Jun 2020 18:25:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
-        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=w48/vZpRpHgwBvOvRR4dLXxoxTIWLJ/Tbv3NQjwroMA=;
-        b=cY5+g1xIvZJv6zrortzaOeWv8O0xGNvfzNtSs5QO9rdIHlGVT63x/y8HsaA7Ib48Di
-         +zk6NkCUybBACqHinSCBe5fb681ZFWv7+SScnvQki/3J6tzCTkIcqCWzdk8i7ExNyt50
-         EEv3I0+v4Fz9g52dxJaxX8X425L7dd0CZB9zzvO7vdTTmwn3+XLNJskqQDiZWaCsF5xQ
-         59sc88DqoHxtpcAU/f2NRM1qX9hahvquMvjcGOWIR/tg6rVcSUfdF2J7zhQun5kLBJC8
-         qeRgb18EhgUZ4eNJLdyZmo8JGYMxGTgLHsgMdGy1FgS/10j2IUj4BbI9hZMUi1uTGqRP
-         vJQw==
+        bh=LP/aQidXnbqXBj86qiTpdN/LTXxXT/wIazu3HgfVB38=;
+        b=eL7N9Dz2T+SYzIevLVi3JbrAtfieo/YR/WWou6r/cNQw3wlPzPML5G2TUt+Or/AhJM
+         svjEFeuxsxGqWAB7UfciiWwSFtMhVOkkkXYZ+gpkNLdFIRe17YJTbN0msiMv0dKn2MzD
+         doLBAfuH313vdkrUY+gIMrGmltxObRSvY4AXjgRI4LkSGpnwnaFbzkzJuHoxzpfWCGa8
+         sr2FyxQ5IsA36pAhi0wsKzE4+zi+gj1C9ueu2Y7RgFyuhR79HTD8w/V15aj0pFje32ey
+         KHcRb8pwlDPhIu+JIpPkaxxPSv95SEyPDvvpNYTfxIp+KQmcwFuIE5F7h8H+iQKPMEEs
+         Vg2A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:in-reply-to:message-id:mime-version
-         :references:subject:from:to:cc;
-        bh=w48/vZpRpHgwBvOvRR4dLXxoxTIWLJ/Tbv3NQjwroMA=;
-        b=W+3OUljpqoCXHn0cMYFKzvaE0TJns2ClwsYBEzk3XF1Nx43gKxqZHricrbu8ZG+utL
-         ZPE0YEy9Ct43PANb5l2log5Vsf567YUhgcqb55nc64l5gG/Gr6w2DDDomEZwdEJU7Pbc
-         y23Og8k3mLjtr85Ln8XVtKcf0g+DVrD/MKOpg/7cl0UQIMyyATeaMWxZ9LNEOuBVgYqS
-         CvXJvgbo+om/JWvo3AchpfYN9nphZbjaoda/wScPb0HNPDtAVricE3eepeL+K64vRuFm
-         MDI17dMfLY30lnX6dtljn6mMw1e8mrL+4OTO6gSoh3+v70xzTSVu2F1hZy2JgHh64qEI
-         fI2w==
-X-Gm-Message-State: AOAM530ZsiUwMH/PIidzQMTFeub3wsNhrHEN64sRgAc77ic04iXwkdvu
-        5iE/hnp0PRci09vUKU9KLiCqNDlSYdx8
-X-Google-Smtp-Source: ABdhPJwZZbFOZsLZEoNiGS8uCk3JSEs+IYRXiB58zA0V9PGwAgSl+E0UZUh/CeZFnX4u8WZSP/gPN0YL5jNf
-X-Received: by 2002:a05:6214:b30:: with SMTP id w16mr6887qvj.28.1592270269984;
- Mon, 15 Jun 2020 18:17:49 -0700 (PDT)
-Date:   Mon, 15 Jun 2020 18:17:40 -0700
-In-Reply-To: <20200616011742.138975-1-rajatja@google.com>
-Message-Id: <20200616011742.138975-2-rajatja@google.com>
-Mime-Version: 1.0
-References: <20200616011742.138975-1-rajatja@google.com>
-X-Mailer: git-send-email 2.27.0.290.gba653c62da-goog
-Subject: [PATCH 2/4] pci: set "untrusted" flag for truly external devices only
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=LP/aQidXnbqXBj86qiTpdN/LTXxXT/wIazu3HgfVB38=;
+        b=qhxkXTzhRk07Di3jZBcJDXTLqT6pOmayOXADSTrBCBSBVp9hNOlcZ5RhrFgFXeBW7c
+         AKufgAnLNhENuCTi8/MPBrLx76uumLNt38BQQFJ9nQ6l633qkEPeJWtxFojrW/Z7N9zF
+         u6qUH5fWZZg1CoHVHJ20Ee+V5zPBGy6a7YsiCOUNyWW7WWPcXxra/A6dnlB06YKCacp7
+         CKzaTNapgr+xV9lzfrRazdhAmYbFeNXaO+QMiueyb0oKkZsKdfLNAnX+4d9y7vrP4Pnq
+         vF/FGg7NuSXgFn7hPqW1zuxOaeHcRRUYrQT1YQPYmSp2N71eOsAmGngbLqoihB71R1MF
+         nYzQ==
+X-Gm-Message-State: AOAM533BXGfiV0yqW9D6oA7p2h42s+hohyxFUBbLcY0O4jT3QHO3WIEX
+        lUPRf2ocbP52oT85f2FksGiAL82ft9DD459cs96iOA==
+X-Google-Smtp-Source: ABdhPJxF6oX/Hpl7j2LmDycbZUtjorwvc3ivf0y/ulSvOBeN9FDTVBd8MdJaYdN1qAokmmvmQP90S2+LbmZ2h+nNjl0=
+X-Received: by 2002:a2e:6f19:: with SMTP id k25mr163679ljc.247.1592270707239;
+ Mon, 15 Jun 2020 18:25:07 -0700 (PDT)
+MIME-Version: 1.0
+References: <20200607113632.GA49147@kroah.com> <20200609210400.GA1461839@bjorn-Precision-5520>
+ <CAOSf1CGMwHGSn18MeKYr2BESfLwq3Q8_0fC6yhiQRrAXeSosqQ@mail.gmail.com> <CAA93t1r37y-Shr+-oHoBoLSbE1vAguwdE2ak2F6L4Ecm5+3JKQ@mail.gmail.com>
+In-Reply-To: <CAA93t1r37y-Shr+-oHoBoLSbE1vAguwdE2ak2F6L4Ecm5+3JKQ@mail.gmail.com>
 From:   Rajat Jain <rajatja@google.com>
-To:     David Woodhouse <dwmw2@infradead.org>,
-        Lu Baolu <baolu.lu@linux.intel.com>,
-        Joerg Roedel <joro@8bytes.org>,
+Date:   Mon, 15 Jun 2020 18:24:30 -0700
+Message-ID: <CACK8Z6H-DZQYBMqtU5_H5TTwwn35Q7Yysm9a7Wj0twfQP8QBzA@mail.gmail.com>
+Subject: Re: [RFC] Restrict the untrusted devices, to bind to only a set of
+ "whitelisted" drivers
+To:     Rajat Jain <rajatxjain@gmail.com>
+Cc:     "Oliver O'Halloran" <oohall@gmail.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Raj, Ashok" <ashok.raj@intel.com>,
+        "Krishnakumar, Lalithambika" <lalithambika.krishnakumar@intel.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, iommu@lists.linux-foundation.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, Raj Ashok <ashok.raj@intel.com>,
-        lalithambika.krishnakumar@intel.com,
+        linux-pci <linux-pci@vger.kernel.org>,
         Mika Westerberg <mika.westerberg@linux.intel.com>,
         Jean-Philippe Brucker <jean-philippe@linaro.org>,
         Prashant Malani <pmalani@google.com>,
@@ -78,7 +77,7 @@ To:     David Woodhouse <dwmw2@infradead.org>,
         Todd Broch <tbroch@google.com>,
         Alex Levin <levinale@google.com>,
         Mattias Nissler <mnissler@google.com>,
-        Rajat Jain <rajatxjain@gmail.com>,
+        Zubin Mithra <zsm@google.com>,
         Bernie Keany <bernie.keany@intel.com>,
         Aaron Durbin <adurbin@google.com>,
         Diego Rivas <diegorivas@google.com>,
@@ -87,133 +86,87 @@ To:     David Woodhouse <dwmw2@infradead.org>,
         Jesse Barnes <jsbarnes@google.com>,
         Christian Kellner <christian@kellner.me>,
         Alex Williamson <alex.williamson@redhat.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        oohall@gmail.com
-Cc:     Rajat Jain <rajatja@google.com>
+        Joerg Roedel <joro@8bytes.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The "ExternalFacing" devices (root ports) are still internal devices
-that sit on the internal system fabric and thus trusted. Currently they
-were being marked untrusted - likely as an unintended border case.
+On Wed, Jun 10, 2020 at 12:57 PM Rajat Jain <rajatxjain@gmail.com> wrote:
+>
+> On Tue, Jun 9, 2020 at 6:34 PM Oliver O'Halloran <oohall@gmail.com> wrote:
+> >
+> > On Wed, Jun 10, 2020 at 7:04 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > >
+> > > To sketch this out, my understanding of how this would work is:
+> > >
+> > >   - Expose the PCI pdev->untrusted bit in sysfs.  We don't expose this
+> > >     today, but doing so would be trivial.  I think I would prefer a
+> > >     sysfs name like "external" so it's more descriptive and less of a
+> > >     judgment.
+> > >
+> > >     This comes from either the DT "external-facing" property or the
+> > >     ACPI "ExternalFacingPort" property.
+> >
+> > I don't think internal / external is the right distinction to be
+> > making. We have a similar trust issue with the BMC in servers even
+> > though they're internal devices. They're typically network accessible
+> > and infrequently updated so treating them as trustworthy isn't a great
+> > idea. We have been slowly de-privileging the BMC over the last few
+> > years, but the PCIe interface isn't locked down enough for my liking
+> > since the SoCs we use do allow software to set the VDID and perform
+> > arbitrary DMAs (thankfully limited to 32bit). If we're going to add in
+> > infrastructure for handling possibly untrustworthy PCI devices then
+> > I'd like to use that for BMCs too.
+> >
+> > >   - All devices present at boot are enumerated.  Any statically built
+> > >     drivers will bind to them before any userspace code runs.
+> > >
+> > >     If you want to keep statically built drivers from binding, you'd
+> > >     need to invent some mechanism so pci_driver_init() could clear
+> > >     drivers_autoprobe after registering pci_bus_type.
+> > >
+> > >   - Early userspace code prevents modular drivers from automatically
+> > >     binding to PCI devices:
+> > >
+> > >       echo 0 > /sys/bus/pci/drivers_autoprobe
+> > >
+> > >     This prevents modular drivers from binding to all devices, whether
+> > >     present at boot or hot-added.
+> >
+> > I don't see why this is preferable to just disabling autoprobe for
+> > untrusted devices. That would dovetail nicely with Rajat's whitelist
+> > idea if we want to go down that route and I think we might want to.
+> > The BMC usually provides some form of VGA console and we'd like that
+> > to continue working out-of-the-box without too much user (or distro)
+> > intervention.
+>
+> I wouldn't mind introducing a kernel parameter to disable auto-probing
+> of untrusted devices if there is a wider agreement here.
+> The only notch is that in my opinion, if present, that parameter
+> should disable auto-probing for "external" devices only (i.e.
+> "external-facing" devices should still be auto-probed).
 
-This patch uses the platform flag to identify the external facing devices
-and then use it to mark any downstream devices as "untrusted". The
-external-facing devices themselves are left as "trusted". This was
-discussed here: https://lkml.org/lkml/2020/6/10/1049
+So I looked around at my systems, and I realized that I will have to
+go this way (introduce a parameter to disable auto-probing of
+untrusted devices), because we do have systems on which we might not
+have control over what devices will show up when (external devices'
+PCI link may come up before the userspace gets a chance to run). I
+shall be sending out a patch soon. I've sent out a couple of other
+loosely related patches here:
 
-Signed-off-by: Rajat Jain <rajatja@google.com>
----
- drivers/iommu/intel/iommu.c |  2 +-
- drivers/pci/of.c            |  2 +-
- drivers/pci/pci-acpi.c      | 13 +++++++------
- drivers/pci/probe.c         |  2 +-
- include/linux/pci.h         |  8 ++++++++
- 5 files changed, 18 insertions(+), 9 deletions(-)
+https://lkml.org/lkml/2020/6/15/1447
 
-diff --git a/drivers/iommu/intel/iommu.c b/drivers/iommu/intel/iommu.c
-index 9129663a7406b..1256ca89fb519 100644
---- a/drivers/iommu/intel/iommu.c
-+++ b/drivers/iommu/intel/iommu.c
-@@ -4735,7 +4735,7 @@ static inline bool has_untrusted_dev(void)
- 	struct pci_dev *pdev = NULL;
- 
- 	for_each_pci_dev(pdev)
--		if (pdev->untrusted)
-+		if (pdev->untrusted || pdev->external_facing)
- 			return true;
- 
- 	return false;
-diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-index 27839cd2459f6..22727fc9558df 100644
---- a/drivers/pci/of.c
-+++ b/drivers/pci/of.c
-@@ -42,7 +42,7 @@ void pci_set_bus_of_node(struct pci_bus *bus)
- 	} else {
- 		node = of_node_get(bus->self->dev.of_node);
- 		if (node && of_property_read_bool(node, "external-facing"))
--			bus->self->untrusted = true;
-+			bus->self->external_facing = true;
- 	}
- 
- 	bus->dev.of_node = node;
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index 7224b1e5f2a83..492c07805caf8 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -1213,22 +1213,23 @@ static void pci_acpi_optimize_delay(struct pci_dev *pdev,
- 	ACPI_FREE(obj);
- }
- 
--static void pci_acpi_set_untrusted(struct pci_dev *dev)
-+static void pci_acpi_set_external_facing(struct pci_dev *dev)
- {
- 	u8 val;
- 
--	if (pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT)
-+	if (pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT &&
-+	    pci_pcie_type(dev) != PCI_EXP_TYPE_DOWNSTREAM)
- 		return;
- 	if (device_property_read_u8(&dev->dev, "ExternalFacingPort", &val))
- 		return;
- 
- 	/*
--	 * These root ports expose PCIe (including DMA) outside of the
--	 * system so make sure we treat them and everything behind as
-+	 * These root/down ports expose PCIe (including DMA) outside of the
-+	 * system so make sure we treat everything behind them as
- 	 * untrusted.
- 	 */
- 	if (val)
--		dev->untrusted = 1;
-+		dev->external_facing = 1;
- }
- 
- static void pci_acpi_setup(struct device *dev)
-@@ -1240,7 +1241,7 @@ static void pci_acpi_setup(struct device *dev)
- 		return;
- 
- 	pci_acpi_optimize_delay(pci_dev, adev->handle);
--	pci_acpi_set_untrusted(pci_dev);
-+	pci_acpi_set_external_facing(pci_dev);
- 	pci_acpi_add_edr_notifier(pci_dev);
- 
- 	pci_acpi_add_pm_notifier(adev, pci_dev);
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 6d87066a5ecc5..8c40c00413e74 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1552,7 +1552,7 @@ static void set_pcie_untrusted(struct pci_dev *dev)
- 	 * untrusted as well.
- 	 */
- 	parent = pci_upstream_bridge(dev);
--	if (parent && parent->untrusted)
-+	if (parent && (parent->untrusted || parent->external_facing))
- 		dev->untrusted = true;
- }
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index a26be5332bba6..fe1bc603fda40 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -432,6 +432,14 @@ struct pci_dev {
- 	 * mappings to make sure they cannot access arbitrary memory.
- 	 */
- 	unsigned int	untrusted:1;
-+	/*
-+	 * Devices are marked as external-facing using info from platform
-+	 * (ACPI / devicetree). An external-facing device is still an internal
-+	 * trusted device, but it faces external untrusted devices. Thus any
-+	 * devices enumerated downstream an external-facing device is marked
-+	 * as untrusted.
-+	 */
-+	unsigned int	external_facing:1;
- 	unsigned int	broken_intx_masking:1;	/* INTx masking can't be used */
- 	unsigned int	io_window_1k:1;		/* Intel bridge 1K I/O windows */
- 	unsigned int	irq_managed:1;
--- 
-2.27.0.290.gba653c62da-goog
+Thanks,
 
+Rajat
+
+>
+> Thanks,
+>
+> Rajat
+>
+> >
+> > Oliver
