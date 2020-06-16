@@ -5,57 +5,61 @@ X-Spam-Level:
 X-Spam-Status: No, score=-17.4 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT,
-	USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no version=3.4.0
+	USER_IN_DEF_DKIM_WL autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73D58C433E2
-	for <linux-pci@archiver.kernel.org>; Tue, 16 Jun 2020 01:17:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CEA1FC433E2
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Jun 2020 01:17:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4EA1E208D5
-	for <linux-pci@archiver.kernel.org>; Tue, 16 Jun 2020 01:17:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B0030206F1
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Jun 2020 01:17:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="G7acUJ56"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="K64yw4Ua"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726796AbgFPBRs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 15 Jun 2020 21:17:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53396 "EHLO
+        id S1726907AbgFPBR4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 15 Jun 2020 21:17:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53424 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726664AbgFPBRs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jun 2020 21:17:48 -0400
-Received: from mail-yb1-xb4a.google.com (mail-yb1-xb4a.google.com [IPv6:2607:f8b0:4864:20::b4a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26F5AC08C5C2
-        for <linux-pci@vger.kernel.org>; Mon, 15 Jun 2020 18:17:47 -0700 (PDT)
-Received: by mail-yb1-xb4a.google.com with SMTP id o84so23297134ybg.0
-        for <linux-pci@vger.kernel.org>; Mon, 15 Jun 2020 18:17:47 -0700 (PDT)
+        with ESMTP id S1726900AbgFPBRz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jun 2020 21:17:55 -0400
+Received: from mail-qv1-xf4a.google.com (mail-qv1-xf4a.google.com [IPv6:2607:f8b0:4864:20::f4a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E474C061A0E
+        for <linux-pci@vger.kernel.org>; Mon, 15 Jun 2020 18:17:54 -0700 (PDT)
+Received: by mail-qv1-xf4a.google.com with SMTP id o1so14404847qvq.14
+        for <linux-pci@vger.kernel.org>; Mon, 15 Jun 2020 18:17:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
-        h=date:message-id:mime-version:subject:from:to:cc;
-        bh=ARkZyYO+o9Di+xsnEpjaN82yE8rF9UgQLsZZ67rguNs=;
-        b=G7acUJ568cBMg8YbpPxn1//6Y1axOcfCkurGlhPRtytoeRGnUnrJnOVKYNQK9wMx/P
-         tweKatsnheJOeE/6qt8OuWzkrkWHAtciku31vTe/RiadXg+t4hXV98zcTFPwDJ9Y0lEs
-         DPDKxBJBG5Kvy9MdD894Cm9Zh1fHfi1xr4Mfi3g/puo6yeU4tFq0K8aMGar2/9ZiwG9N
-         4IDgrrr0jyhiHAgGDSTYrF58oOp1B/v0HrA9U2lv6t4qGKwj1tUB+BF63vePjNp3l87C
-         j5QzLRMuTDUgQ6znL8rrieX9L8BaAHpBXwjZdy3TxiDx6p2H8G1/QW9GUgiyg1mLHbn4
-         XJzQ==
+        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
+         :cc;
+        bh=/xX6nZw43qnrS5POTejrGqQ7NU/q6i+TSuGWkPxARP8=;
+        b=K64yw4UaVuSTB06zM70ynWO3Qe34OlpnWZDFtQx+XohI9pGel76JaZtLQSBoWSuTVn
+         iUzYet0x27iuRTb1k2C8psq+ocK+eUc+lbqn/lM4DjoyK8Lwthh6he1ErlgUVUwd2DYt
+         +Ye+ql9uWjMbbc98okBddDJZZSEPasbtsclPT6fSyzC2cMfQoctWhwgA1EprQkRAaKW3
+         kZpng1WUzZbMtCYVB9VeNUn8PkNpzWWpfDFshQHOc4eQsm4yRF+loPV3Fp3xPvwnmEqr
+         I9MkdliB1IiEzSTXoV4J1n+HUh2x8Vc310feGGYXQTOVnGd2k9zdRqFaiLC6Nf2wojul
+         zk3w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:message-id:mime-version:subject:from:to:cc;
-        bh=ARkZyYO+o9Di+xsnEpjaN82yE8rF9UgQLsZZ67rguNs=;
-        b=SItG9bJQwT3KvX9j2K46HzSoZ59UBzyBHSiT4Fto9CyhX5RR3hOs347GhgPY2gn1c5
-         XBCG/nJtSCqpQxy+7HNrbIV1FLNXhkfUKUQDD1krCV91mGx517YO2T5jgYEkkJusNFWf
-         xwT1kw3YTkY8lne4+6c5GxF8YaUqbPQ5tTkGhFS9ps3yFTQh+7lwph51lfQfmCDZfENq
-         E1TyZyzTTHkXp2vhyQYY0gjKc8Tbqy0dCVY8Or9jk6aLKG779lu+RFqxc0qBYQVaBwFk
-         /lQsHdj4dOcECr2UGWhXgh6LID725lFkFNLHaPglKVsJQIvF0bYKz4EzDJEWgu07Cm3j
-         d1/w==
-X-Gm-Message-State: AOAM533jijLSU6oxIc4Jr9dtp9rYgUIWcNNvQxW15nfBq2SS327I4tKV
-        pPHQ9vT05Mm0q2PKu5xa3KBCHTv27V7F
-X-Google-Smtp-Source: ABdhPJybcIF+tiZIKkl4H0LQjdd0GtwdJx/kkGSMA/T7KGNofz3k8iTUUAzgVf+Ss+MziR1K4JlCo0opnS9r
-X-Received: by 2002:a25:cf44:: with SMTP id f65mr500058ybg.368.1592270266200;
- Mon, 15 Jun 2020 18:17:46 -0700 (PDT)
-Date:   Mon, 15 Jun 2020 18:17:39 -0700
-Message-Id: <20200616011742.138975-1-rajatja@google.com>
+        h=x-gm-message-state:date:in-reply-to:message-id:mime-version
+         :references:subject:from:to:cc;
+        bh=/xX6nZw43qnrS5POTejrGqQ7NU/q6i+TSuGWkPxARP8=;
+        b=CV5QP/xDQObkScjYzjs4FvsYC6cOqOjcJd/RrCruEKvd+uGH+npmy0yTUo6Vgjwi7u
+         3tuF/Ct5Jz1Uho2/TrTCzzVSXF/7oTiozor5OD3IWqWX6AsfusiZ5HoFPRziApv4jkHf
+         kjOIjTFFyXZeRtFNAXX3KPYX2qr9b2HLNl4cY2h3EKHE+/0KQIIfvFEKc5il70QcYZrj
+         MQhj4Ocs1wnsLupqqrAIOVdhBYMmWRKTeBoManfHBcxXopuFdMi3Q+Cvm9M/n1yKZ54G
+         1igns3WpxQnboca3O3QQUDrtHcRY8jQCk1wLj5MGg9MlsGwiiy8puUlrl3dieu0HpYeM
+         VaGg==
+X-Gm-Message-State: AOAM533RBZvTqLLr+lM/hzfTh+Fbm2mvyrCQAO06uDVc3OxBbpMadU7P
+        MTsxk/sf6h6N/uJLvyrDTu4H0DGrQ2Mb
+X-Google-Smtp-Source: ABdhPJx/VShp5rkGDpPUGAg/FhXNCRybPGhdLZkWV0hxwM8Gk42L1iKKJC5+PkUN237Ww8vlTPH4HPEgQvLG
+X-Received: by 2002:ad4:4374:: with SMTP id u20mr548678qvt.144.1592270273220;
+ Mon, 15 Jun 2020 18:17:53 -0700 (PDT)
+Date:   Mon, 15 Jun 2020 18:17:41 -0700
+In-Reply-To: <20200616011742.138975-1-rajatja@google.com>
+Message-Id: <20200616011742.138975-3-rajatja@google.com>
 Mime-Version: 1.0
+References: <20200616011742.138975-1-rajatja@google.com>
 X-Mailer: git-send-email 2.27.0.290.gba653c62da-goog
-Subject: [PATCH 1/4] pci: Keep the ACS capability offset in device
+Subject: [PATCH 3/4] pci: acs: Enable PCI_ACS_TB for untrusted/external-facing devices
 From:   Rajat Jain <rajatja@google.com>
 To:     David Woodhouse <dwmw2@infradead.org>,
         Lu Baolu <baolu.lu@linux.intel.com>,
@@ -91,177 +95,61 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Currently this is being looked up at a number of places. Read
-and store it once at bootup so that it can be used by all later.
+When enabling ACS, currently the bit "translation blocking" was
+not getting changed at all. Set it to disable translation blocking
+too for all external facing or untrusted devices. This is OK
+because ATS is only allowed on internal devces.
 
 Signed-off-by: Rajat Jain <rajatja@google.com>
 ---
- drivers/pci/p2pdma.c |  2 +-
- drivers/pci/pci.c    | 21 +++++++++++++++++----
- drivers/pci/pci.h    |  2 +-
- drivers/pci/probe.c  |  2 +-
- drivers/pci/quirks.c |  8 ++++----
- include/linux/pci.h  |  1 +
- 6 files changed, 25 insertions(+), 11 deletions(-)
+ drivers/pci/pci.c    |  4 ++++
+ drivers/pci/quirks.c | 11 +++++++++++
+ 2 files changed, 15 insertions(+)
 
-diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-index e8e444eeb1cd2..f29a48f8fa594 100644
---- a/drivers/pci/p2pdma.c
-+++ b/drivers/pci/p2pdma.c
-@@ -253,7 +253,7 @@ static int pci_bridge_has_acs_redir(struct pci_dev *pdev)
- 	int pos;
- 	u16 ctrl;
- 
--	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ACS);
-+	pos = pdev->acs_cap;
- 	if (!pos)
- 		return 0;
- 
 diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index ce096272f52b1..d2ff987585855 100644
+index d2ff987585855..79853b52658a2 100644
 --- a/drivers/pci/pci.c
 +++ b/drivers/pci/pci.c
-@@ -51,6 +51,7 @@ EXPORT_SYMBOL(pci_pci_problems);
+@@ -3330,6 +3330,10 @@ static void pci_std_enable_acs(struct pci_dev *dev)
+ 	/* Upstream Forwarding */
+ 	ctrl |= (cap & PCI_ACS_UF);
  
- unsigned int pci_pm_d3_delay;
- 
-+static void pci_enable_acs(struct pci_dev *dev);
- static void pci_pme_list_scan(struct work_struct *work);
- 
- static LIST_HEAD(pci_pme_list);
-@@ -3284,7 +3285,7 @@ static void pci_disable_acs_redir(struct pci_dev *dev)
- 	if (!pci_dev_specific_disable_acs_redir(dev))
- 		return;
- 
--	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
-+	pos = dev->acs_cap;
- 	if (!pos) {
- 		pci_warn(dev, "cannot disable ACS redirect for this hardware as it does not have ACS capabilities\n");
- 		return;
-@@ -3310,7 +3311,7 @@ static void pci_std_enable_acs(struct pci_dev *dev)
- 	u16 cap;
- 	u16 ctrl;
- 
--	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
-+	pos = dev->acs_cap;
- 	if (!pos)
- 		return;
- 
-@@ -3336,7 +3337,7 @@ static void pci_std_enable_acs(struct pci_dev *dev)
-  * pci_enable_acs - enable ACS if hardware support it
-  * @dev: the PCI device
-  */
--void pci_enable_acs(struct pci_dev *dev)
-+static void pci_enable_acs(struct pci_dev *dev)
- {
- 	if (!pci_acs_enable)
- 		goto disable_acs_redir;
-@@ -3362,7 +3363,7 @@ static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
- 	int pos;
- 	u16 cap, ctrl;
- 
--	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ACS);
-+	pos = pdev->acs_cap;
- 	if (!pos)
- 		return false;
- 
-@@ -3487,6 +3488,18 @@ bool pci_acs_path_enabled(struct pci_dev *start,
- 	return true;
++	if (dev->external_facing || dev->untrusted)
++		/* Translation Blocking */
++		ctrl |= (cap & PCI_ACS_TB);
++
+ 	pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
  }
  
-+/**
-+ * pci_acs_init - Initialize if hardware supports it
-+ * @dev: the PCI device
-+ */
-+void pci_acs_init(struct pci_dev *dev)
-+{
-+	dev->acs_cap = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
-+
-+	if (dev->acs_cap)
-+		pci_enable_acs(dev);
-+}
-+
- /**
-  * pci_rebar_find_pos - find position of resize ctrl reg for BAR
-  * @pdev: PCI device
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 6d3f758671064..12fb79fbe29d3 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -532,7 +532,7 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
- 	return resource_alignment(res);
- }
- 
--void pci_enable_acs(struct pci_dev *dev);
-+void pci_acs_init(struct pci_dev *dev);
- #ifdef CONFIG_PCI_QUIRKS
- int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags);
- int pci_dev_specific_enable_acs(struct pci_dev *dev);
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 2f66988cea257..6d87066a5ecc5 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2390,7 +2390,7 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 	pci_ats_init(dev);		/* Address Translation Services */
- 	pci_pri_init(dev);		/* Page Request Interface */
- 	pci_pasid_init(dev);		/* Process Address Space ID */
--	pci_enable_acs(dev);		/* Enable ACS P2P upstream forwarding */
-+	pci_acs_init(dev);		/* Access Control Services */
- 	pci_ptm_init(dev);		/* Precision Time Measurement */
- 	pci_aer_init(dev);		/* Advanced Error Reporting */
- 	pci_dpc_init(dev);		/* Downstream Port Containment */
 diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 812bfc32ecb82..b341628e47527 100644
+index b341628e47527..6294adeac4049 100644
 --- a/drivers/pci/quirks.c
 +++ b/drivers/pci/quirks.c
-@@ -4653,7 +4653,7 @@ static int pci_quirk_intel_spt_pch_acs(struct pci_dev *dev, u16 acs_flags)
- 	if (!pci_quirk_intel_spt_pch_acs_match(dev))
- 		return -ENOTTY;
+@@ -4934,6 +4934,13 @@ static void pci_quirk_enable_intel_rp_mpc_acs(struct pci_dev *dev)
+ 	}
+ }
  
--	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
-+	pos = dev->acs_cap;
- 	if (!pos)
- 		return -ENOTTY;
++/*
++ * Currently this quirk does the equivalent of
++ * PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_SV
++ *
++ * Currently missing, it also needs to do equivalent of PCI_ACS_TB,
++ * if dev->external_facing || dev->untrusted
++ */
+ static int pci_quirk_enable_intel_pch_acs(struct pci_dev *dev)
+ {
+ 	if (!pci_quirk_intel_pch_acs_match(dev))
+@@ -4973,6 +4980,10 @@ static int pci_quirk_enable_intel_spt_pch_acs(struct pci_dev *dev)
+ 	ctrl |= (cap & PCI_ACS_CR);
+ 	ctrl |= (cap & PCI_ACS_UF);
  
-@@ -4961,7 +4961,7 @@ static int pci_quirk_enable_intel_spt_pch_acs(struct pci_dev *dev)
- 	if (!pci_quirk_intel_spt_pch_acs_match(dev))
- 		return -ENOTTY;
++	if (dev->external_facing || dev->untrusted)
++		/* Translation Blocking */
++		ctrl |= (cap & PCI_ACS_TB);
++
+ 	pci_write_config_dword(dev, pos + INTEL_SPT_ACS_CTRL, ctrl);
  
--	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
-+	pos = dev->acs_cap;
- 	if (!pos)
- 		return -ENOTTY;
- 
-@@ -4988,7 +4988,7 @@ static int pci_quirk_disable_intel_spt_pch_acs_redir(struct pci_dev *dev)
- 	if (!pci_quirk_intel_spt_pch_acs_match(dev))
- 		return -ENOTTY;
- 
--	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
-+	pos = dev->acs_cap;
- 	if (!pos)
- 		return -ENOTTY;
- 
-@@ -5355,7 +5355,7 @@ int pci_idt_bus_quirk(struct pci_bus *bus, int devfn, u32 *l, int timeout)
- 	bool found;
- 	struct pci_dev *bridge = bus->self;
- 
--	pos = pci_find_ext_capability(bridge, PCI_EXT_CAP_ID_ACS);
-+	pos = bridge->acs_cap;
- 
- 	/* Disable ACS SV before initial config reads */
- 	if (pos) {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index c79d83304e529..a26be5332bba6 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -486,6 +486,7 @@ struct pci_dev {
- #ifdef CONFIG_PCI_P2PDMA
- 	struct pci_p2pdma *p2pdma;
- #endif
-+	u16		acs_cap;	/* ACS Capability offset */
- 	phys_addr_t	rom;		/* Physical address if not from BAR */
- 	size_t		romlen;		/* Length if not from BAR */
- 	char		*driver_override; /* Driver name to force a match */
+ 	pci_info(dev, "Intel SPT PCH root port ACS workaround enabled\n");
 -- 
 2.27.0.290.gba653c62da-goog
 
