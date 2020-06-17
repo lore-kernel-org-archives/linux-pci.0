@@ -2,178 +2,211 @@ Return-Path: <SRS0=TvxF=76=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D98AC433E0
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Jun 2020 10:22:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0826C433DF
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Jun 2020 10:26:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4F53B20739
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Jun 2020 10:22:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ACB81208B3
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Jun 2020 10:26:18 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="tjVwfMzf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726280AbgFQKWQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 17 Jun 2020 06:22:16 -0400
-Received: from mx2.suse.de ([195.135.220.15]:36332 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725894AbgFQKWQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 17 Jun 2020 06:22:16 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id C9C2AAC50;
-        Wed, 17 Jun 2020 10:22:17 +0000 (UTC)
-Message-ID: <2b435e7fcf2c4600cf1618132f107a49d826d375.camel@suse.de>
-Subject: Re: [PATCH v3 1/9] dt-bindings: reset: Add a binding for the RPi
- Firmware reset controller
-From:   Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-To:     Philipp Zabel <p.zabel@pengutronix.de>, f.fainelli@gmail.com,
-        gregkh@linuxfoundation.org, wahrenst@gmx.net,
-        linux-kernel@vger.kernel.org, Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        bcm-kernel-feedback-list@broadcom.com,
-        Eric Anholt <eric@anholt.net>
-Cc:     linux-usb@vger.kernel.org, linux-rpi-kernel@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, tim.gover@raspberrypi.org,
-        linux-pci@vger.kernel.org, helgaas@kernel.org,
-        andy.shevchenko@gmail.com, mathias.nyman@linux.intel.com,
-        lorenzo.pieralisi@arm.com, Rob Herring <robh+dt@kernel.org>,
-        devicetree@vger.kernel.org
-Date:   Wed, 17 Jun 2020 12:22:10 +0200
-In-Reply-To: <babff895a0b5e2cd63082bd38f087bd1bc345671.camel@pengutronix.de>
-References: <20200612171334.26385-1-nsaenzjulienne@suse.de>
-         <20200612171334.26385-2-nsaenzjulienne@suse.de>
-         <babff895a0b5e2cd63082bd38f087bd1bc345671.camel@pengutronix.de>
-Content-Type: multipart/signed; micalg="pgp-sha256";
-        protocol="application/pgp-signature"; boundary="=-SUf4bLGSB+5z9632Byq0"
-User-Agent: Evolution 3.36.3 
+        id S1726642AbgFQK0G (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 17 Jun 2020 06:26:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49528 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726540AbgFQK0D (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 17 Jun 2020 06:26:03 -0400
+Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5DA98C061755;
+        Wed, 17 Jun 2020 03:26:02 -0700 (PDT)
+Received: by mail-wr1-x443.google.com with SMTP id x13so1745577wrv.4;
+        Wed, 17 Jun 2020 03:26:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=Q/9cfu2y0gUm+qAaNBhnFdIEQLZfDLxCjAKkGlm5DYM=;
+        b=tjVwfMzfezRS9AAHD0xn4ivcVdZGg3r8D9CRl1RnfK1KyELblhj6SXxCQ5kk48mYMH
+         xcmrHXWHJCQfLz2hjOLYgsmtIDFIOwolDGx0vscnJiM2AtwdNFs6fIM7tqiudIlrhTqm
+         +zHHnaVd5xscisFBy9wVpM4cox7afR+leCajS/7sj4fIhtS0WPPhlc3J7k83sajh7O9w
+         A4xVgX4OfQMrMjnVKiN3z9tNxeXwMYQ9ljsJrBn7oN4nK76jTzOIuGwT56f7j//a2EWZ
+         bN2Sag1m22Do6GYU3jfzXtMY9YPGpTf290fQh+bIrBOSXt2Buafp7FAocQ3tKFWR428r
+         Jmrg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=Q/9cfu2y0gUm+qAaNBhnFdIEQLZfDLxCjAKkGlm5DYM=;
+        b=sWxgP87vppnLYh1VY7DtjwAy+RUCRIvjbC+HLmoWFdFCOzjnIUpRBvoEZgoZoSegtR
+         3UwpN9chbesjsJKr3XVqDsww5R7F90/Le6LiWrJ5doWQkJassKe8TS5PFdlzfFVGwGmP
+         jGjf+2jMlzAA0b17J/V5ok6FNtmDQs7OqIDERL6EQw5aCMCtA6hZ0yiVF74luqN02DKK
+         w2VmdXCjfzO4mUPd4XrHIrQyXvdGOLHw2ZW8H04mxqmI+hfVPasRUA6EVaLc6Euaqm8X
+         aWX6z1kc6hHhEYsf7KJ6zWXPYXPRF+/Dz19rmT3HvP8LoAIw9MykS40JIDXqK0qJWz1b
+         37jA==
+X-Gm-Message-State: AOAM533aL17Xze2Ljwcmq8F/LHimt6mCn92tiFk65eMLd/REGWM2mD+m
+        DOryRTF//5y3tTQenxGO4ho8tRBIv6Vg4Q==
+X-Google-Smtp-Source: ABdhPJy/ZiXL9BtAh/Bj2+9q7KbP8dvVZ/6Ktgmt9Jva703q36iZ6hOovQyjRd+xQXH7qdkRqiCpZg==
+X-Received: by 2002:a5d:408c:: with SMTP id o12mr5274061wrp.412.1592389560920;
+        Wed, 17 Jun 2020 03:26:00 -0700 (PDT)
+Received: from skynet.lan (90.red-88-20-62.staticip.rima-tde.net. [88.20.62.90])
+        by smtp.gmail.com with ESMTPSA id z206sm7569847wmg.30.2020.06.17.03.26.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 17 Jun 2020 03:26:00 -0700 (PDT)
+From:   =?UTF-8?q?=C3=81lvaro=20Fern=C3=A1ndez=20Rojas?= 
+        <noltari@gmail.com>
+To:     bhelgaas@google.com, robh+dt@kernel.org, tsbogend@alpha.franken.de,
+        lorenzo.pieralisi@arm.com, p.zabel@pengutronix.de,
+        jiaxun.yang@flygoat.com, paulburton@kernel.org, info@metux.net,
+        allison@lohutok.net, kstewart@linuxfoundation.org,
+        tglx@linutronix.de, jonas.gorski@gmail.com, f.fainelli@gmail.com,
+        bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-mips@vger.kernel.org
+Cc:     =?UTF-8?q?=C3=81lvaro=20Fern=C3=A1ndez=20Rojas?= 
+        <noltari@gmail.com>
+Subject: [PATCH 2/3] dt-bindings: Document BCM6328 PCIe Host Controller
+Date:   Wed, 17 Jun 2020 12:25:55 +0200
+Message-Id: <20200617102556.3792821-3-noltari@gmail.com>
+X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20200617102556.3792821-1-noltari@gmail.com>
+References: <20200617102556.3792821-1-noltari@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+BCM6328 PCIe host controller is found on BCM6328, BCM6362 and BCM63268 SoCs.
 
---=-SUf4bLGSB+5z9632Byq0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Álvaro Fernández Rojas <noltari@gmail.com>
+---
+ .../bindings/pci/brcm,bcm6328-pcie.yaml       | 109 ++++++++++++++++++
+ 1 file changed, 109 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/brcm,bcm6328-pcie.yaml
 
-Hi,
-
-On Wed, 2020-06-17 at 11:55 +0200, Philipp Zabel wrote:
-> Hi Nicolas,
->=20
-> On Fri, 2020-06-12 at 19:13 +0200, Nicolas Saenz Julienne wrote:
-> > The firmware running on the RPi VideoCore can be used to reset and
-> > initialize HW controlled by the firmware.
-> >=20
-> > Signed-off-by: Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-> > Reviewed-by: Florian Fainelli <f.fainelli@gmail.com>
-> >=20
-> > ---
-> > Changes since v2:
-> >  - Add include file for reset IDs
-> >=20
-> > Changes since v1:
-> >  - Correct cells binding as per Florian's comment
-> >  - Change compatible string to be more generic
-> >=20
-> >  .../arm/bcm/raspberrypi,bcm2835-firmware.yaml | 21 +++++++++++++++++++
-> >  .../reset/raspberrypi,firmware-reset.h        | 13 ++++++++++++
-> >  2 files changed, 34 insertions(+)
-> >  create mode 100644 include/dt-bindings/reset/raspberrypi,firmware-rese=
-t.h
-> >=20
-> > diff --git a/Documentation/devicetree/bindings/arm/bcm/raspberrypi,bcm2=
-835-
-> > firmware.yaml
-> > b/Documentation/devicetree/bindings/arm/bcm/raspberrypi,bcm2835-
-> > firmware.yaml
-> > index b48ed875eb8e..23a885af3a28 100644
-> > --- a/Documentation/devicetree/bindings/arm/bcm/raspberrypi,bcm2835-
-> > firmware.yaml
-> > +++ b/Documentation/devicetree/bindings/arm/bcm/raspberrypi,bcm2835-
-> > firmware.yaml
-> > @@ -39,6 +39,22 @@ properties:
-> >        - compatible
-> >        - "#clock-cells"
-> > =20
-> > +  reset:
-> > +    type: object
-> > +
-> > +    properties:
-> > +      compatible:
-> > +        const: raspberrypi,firmware-reset
-> > +
-> > +      "#reset-cells":
-> > +        const: 1
-> > +        description: >
-> > +          The argument is the ID of the firmware reset line to affect.
-> > +
-> > +    required:
-> > +      - compatible
-> > +      - "#reset-cells"
-> > +
-> >      additionalProperties: false
-> > =20
-> >  required:
-> > @@ -55,5 +71,10 @@ examples:
-> >              compatible =3D "raspberrypi,firmware-clocks";
-> >              #clock-cells =3D <1>;
-> >          };
-> > +
-> > +        reset: reset {
-> > +            compatible =3D "raspberrypi,firmware-reset";
-> > +            #reset-cells =3D <1>;
-> > +        };
-> >      };
-> >  ...
-> > diff --git a/include/dt-bindings/reset/raspberrypi,firmware-reset.h
-> > b/include/dt-bindings/reset/raspberrypi,firmware-reset.h
-> > new file mode 100644
-> > index 000000000000..1a4f4c792723
-> > --- /dev/null
-> > +++ b/include/dt-bindings/reset/raspberrypi,firmware-reset.h
-> > @@ -0,0 +1,13 @@
-> > +/* SPDX-License-Identifier: GPL-2.0 */
-> > +/*
-> > + * Copyright (c) 2020 Nicolas Saenz Julienne
-> > + * Author: Nicolas Saenz Julienne <nsaenzjulienne@suse.com>
-> > + */
-> > +
-> > +#ifndef _DT_BINDINGS_RASPBERRYPI_FIRMWARE_RESET_H
-> > +#define _DT_BINDINGS_RASPBERRYPI_FIRMWARE_RESET_H
-> > +
-> > +#define RASPBERRYPI_FIRMWARE_RESET_ID_USB	0
-> > +#define RASPBERRYPI_FIRMWARE_RESET_NUM_IDS	1
-> > +
-> > +#endif
->=20
-> Are there going to be any more firmware controlled resets in the future?
-
-There are not right now, but it's likely some will show up in the future. I
-have some contenders in mind, which I'll request once we settle on a design
-here, but it ultimately depends on what the RPi people decide to implement.
-
-Regards,
-Nicolas
-
-
---=-SUf4bLGSB+5z9632Byq0
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCAAdFiEErOkkGDHCg2EbPcGjlfZmHno8x/4FAl7p7tIACgkQlfZmHno8
-x/5gbQf+NdkkGDqz0A6JT3txmSyClQsVqxhiMqgbCjdVtLi8EHQ6VKQLpz6o9Tfr
-BQY0MADjoJqdwne4+fryTGo6UPQqCRzitdc1RCPHX7YXnXK1x3tQZ39IqBf7hZqZ
-i/8dNQ7g057lEcxI8ZdS9E0DcBy7LuIqvROjPcgYyeoEkmg3WdzKSVOWBv6RLVC2
-/jSfNFWWvUu3a94VqQqORqVn63oYrmPdYMsE/KBgG925yvYmz3vCwSMOUmIyeLja
-N2edh+OTAMNtfof6a7LOnvFEI/0G2GOn6q0mTxrQP2M+8IgUOnSu5P2rOmn6lFo2
-9N2BwOQZ5Zy7RTqa/XQrEpqvnSF9Pw==
-=BLff
------END PGP SIGNATURE-----
-
---=-SUf4bLGSB+5z9632Byq0--
+diff --git a/Documentation/devicetree/bindings/pci/brcm,bcm6328-pcie.yaml b/Documentation/devicetree/bindings/pci/brcm,bcm6328-pcie.yaml
+new file mode 100644
+index 000000000000..d2bd4933a5fa
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/brcm,bcm6328-pcie.yaml
+@@ -0,0 +1,109 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/pci/brcm,bcm6328-pcie.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: BCM6328 PCIe Host Controller Device Tree Bindings
++
++maintainers:
++  - Álvaro Fernández Rojas <noltari@gmail.com>
++
++allOf:
++  - $ref: /schemas/pci/pci-bus.yaml#
++
++properties:
++  compatible:
++    enum:
++     - brcm,bcm6328-pcie
++     - brcm,bcm6362-pcie
++     - brcm,bcm63268-pcie
++
++  clocks:
++    maxItems: 1
++
++  clock-names:
++    items:
++      - const: pcie
++
++  "#interrupt-cells":
++    const: 1
++
++  interrupt-map-mask:
++    maxItems: 1
++
++  interrupt-map:
++    maxItems: 1
++
++  power-domains:
++    maxItems: 1
++
++  ranges:
++    maxItems: 1
++
++  reg:
++    maxItems: 1
++
++  resets:
++    maxItems: 4
++
++  reset-names:
++    items:
++      - const: pcie
++      - const: pcie-core
++      - const: pcie-ext
++      - const: pcie-hard
++
++required:
++  - brcm,serdes
++  - clocks
++  - clock-names
++  - "#interrupt-cells"
++  - interrupt-map-mask
++  - interrupt-map
++  - ranges
++  - reg
++  - resets
++  - reset-names
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    serdes_cntl: syscon@10001800 {
++      compatible = "syscon";
++      reg = <0x10001800 0x4>;
++      native-endian;
++    };
++
++    pcie: pcie@10e40000 {
++      compatible = "brcm,bcm6328-pcie";
++      reg = <0x10e40000 0x10000>;
++      #address-cells = <3>;
++      #size-cells = <2>;
++
++      device_type = "pci";
++      bus-range = <0x00 0x01>;
++      ranges = <0x2000000 0 0x10f00000 0x10f00000 0 0x100000>;
++      linux,pci-probe-only = <1>;
++
++      #interrupt-cells = <1>;
++      interrupt-map-mask = <0 0 0 0>;
++      interrupt-map = <0 0 0 0 &periph_intc BCM6328_IRQ_PCIE_RC 0>;
++
++      clocks = <&periph_clk BCM6328_CLK_PCIE>;
++      clock-names = "pcie";
++
++      resets = <&periph_rst BCM6328_RST_PCIE>,
++               <&periph_rst BCM6328_RST_PCIE_EXT>,
++               <&periph_rst BCM6328_RST_PCIE_CORE>,
++               <&periph_rst BCM6328_RST_PCIE_HARD>;
++      reset-names = "pcie",
++                    "pcie-ext",
++                    "pcie-core",
++                    "pcie-hard";
++
++      power-domains = <&periph_pwr BCM6328_POWER_DOMAIN_PCIE>;
++
++      brcm,serdes = <&serdes_cntl>;
++    };
+-- 
+2.27.0
 
