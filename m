@@ -4,48 +4,49 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA899C433E1
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 01:57:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 916FBC433E0
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 01:59:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B1F2622240
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 01:57:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 627D72223F
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 01:59:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592445476;
-	bh=cbsOnToRRppQ9WXfd8xqwYU+88S/SpmmMR+5bRuwVx8=;
+	s=default; t=1592445561;
+	bh=+oQMsV7gJQNLISPtRZwjamRghv+JL9im7YddGrtmLtw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=oAQXc/uQkV7j52X1Np7SxSmsT5B++Qqz+pRCJVWVLXpS9SVH3rSoT/nKu/O3UTPeR
-	 /osQlF1MMp/jLvUM38CkS0t+LwzFn4davXidI5nhognSVvMq50pAQ6EGZO2aSqo/3b
-	 0tGSvb1bWgHOhNagSef3bVPEoF6U5Lh0jywFD65k=
+	b=HayoIAssKnRwdG7lYXjjKqAykNrOcP4Fwuw9itRm7ek7EheQ7rkUYTROrnMcr5g+u
+	 UNoOG0igQi7wHeVFkIyU6Ch27xpRrbxmLCjtRKghFHAFTWO1+wTRr2taoGlyI+QOvB
+	 tCByn7eSB8G4FUQGkOIk5WkYveE2UrxyAolZoOWY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731343AbgFRBZE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 17 Jun 2020 21:25:04 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59974 "EHLO mail.kernel.org"
+        id S1731266AbgFRB7T (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 17 Jun 2020 21:59:19 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59346 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731339AbgFRBZD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 17 Jun 2020 21:25:03 -0400
+        id S1731257AbgFRBYk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 17 Jun 2020 21:24:40 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 50618221E9;
-        Thu, 18 Jun 2020 01:25:02 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id D2F8F221FB;
+        Thu, 18 Jun 2020 01:24:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592443503;
-        bh=cbsOnToRRppQ9WXfd8xqwYU+88S/SpmmMR+5bRuwVx8=;
+        s=default; t=1592443479;
+        bh=+oQMsV7gJQNLISPtRZwjamRghv+JL9im7YddGrtmLtw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=RSDL+E9gByTaYM2P3kfP62TYhH7NXLLc/GFTUh1WbCoF66XGvt7UVhNEfC9XK2648
-         Ax8i64eEOfM88AEcnyj8I4t0HTEFYC+FuIG5bQtA217DmgQ925jnWZtCkcXxbY3jQ/
-         BYnS/UgrNHBxLhRPP84C9JcL2p6ZQyA+PzkL6PG4=
+        b=0zkdEt+1HTasbE4YspKB2hitStQhJ6HFDqGhu4wzSyLVkdxh2w1aRDjXXh3pQZwL/
+         CHYMNzooOiTSg/J7LUvrxttz96mJvKAYd9uxUQ4nlcV6M8/EcmWw8Z92ZQMja3qAQ7
+         Pjl6I/6i73IDdescJ2in/X1U++8fCLbYXwGYmkFw=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Marcos Scriven <marcos@scriven.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
+Cc:     Marc Zyngier <maz@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 128/172] PCI: Avoid FLR for AMD Matisse HD Audio & USB 3.0
-Date:   Wed, 17 Jun 2020 21:21:34 -0400
-Message-Id: <20200618012218.607130-128-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 109/172] PCI: dwc: Fix inner MSI IRQ domain registration
+Date:   Wed, 17 Jun 2020 21:21:15 -0400
+Message-Id: <20200618012218.607130-109-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200618012218.607130-1-sashal@kernel.org>
 References: <20200618012218.607130-1-sashal@kernel.org>
@@ -58,60 +59,46 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Marcos Scriven <marcos@scriven.org>
+From: Marc Zyngier <maz@kernel.org>
 
-[ Upstream commit 0d14f06cd6657ba3446a5eb780672da487b068e7 ]
+[ Upstream commit 0414b93e78d87ecc24ae1a7e61fe97deb29fa2f4 ]
 
-The AMD Matisse HD Audio & USB 3.0 devices advertise Function Level Reset
-support, but hang when an FLR is triggered.
+On a system that uses the internal DWC MSI widget, I get this
+warning from debugfs when CONFIG_GENERIC_IRQ_DEBUGFS is selected:
 
-To reproduce the problem, attach the device to a VM, then detach and try to
-attach again.
+  debugfs: File ':soc:pcie@fc000000' in directory 'domains' already present!
 
-Rename the existing quirk_intel_no_flr(), which was not Intel-specific, to
-quirk_no_flr(), and apply it to prevent the use of FLR on these AMD
-devices.
+This is due to the fact that the DWC MSI code tries to register two
+IRQ domains for the same firmware node, without telling the low
+level code how to distinguish them (by setting a bus token). This
+further confuses debugfs which tries to create corresponding
+files for each domain.
 
-Link: https://lore.kernel.org/r/CAAri2DpkcuQZYbT6XsALhx2e6vRqPHwtbjHYeiH7MNp4zmt1RA@mail.gmail.com
-Signed-off-by: Marcos Scriven <marcos@scriven.org>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Fix it by tagging the inner domain as DOMAIN_BUS_NEXUS, which is
+the closest thing we have as to "generic MSI".
+
+Link: https://lore.kernel.org/r/20200501113921.366597-1-maz@kernel.org
+Signed-off-by: Marc Zyngier <maz@kernel.org>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Acked-by: Jingoo Han <jingoohan1@gmail.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/quirks.c | 18 ++++++++++++++----
- 1 file changed, 14 insertions(+), 4 deletions(-)
+ drivers/pci/controller/dwc/pcie-designware-host.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index ca41cff2e68c..788223fee75d 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4956,13 +4956,23 @@ static void quirk_intel_qat_vf_cap(struct pci_dev *pdev)
- }
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x443, quirk_intel_qat_vf_cap);
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index 6d4ef0101ef6..be62f654c8eb 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -285,6 +285,8 @@ int dw_pcie_allocate_domains(struct pcie_port *pp)
+ 		return -ENOMEM;
+ 	}
  
--/* FLR may cause some 82579 devices to hang */
--static void quirk_intel_no_flr(struct pci_dev *dev)
-+/*
-+ * FLR may cause the following to devices to hang:
-+ *
-+ * AMD Starship/Matisse HD Audio Controller 0x1487
-+ * AMD Matisse USB 3.0 Host Controller 0x149c
-+ * Intel 82579LM Gigabit Ethernet Controller 0x1502
-+ * Intel 82579V Gigabit Ethernet Controller 0x1503
-+ *
-+ */
-+static void quirk_no_flr(struct pci_dev *dev)
- {
- 	dev->dev_flags |= PCI_DEV_FLAGS_NO_FLR_RESET;
- }
--DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_intel_no_flr);
--DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_intel_no_flr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x1487, quirk_no_flr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x149c, quirk_no_flr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_no_flr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_no_flr);
- 
- static void quirk_no_ext_tags(struct pci_dev *pdev)
- {
++	irq_domain_update_bus_token(pp->irq_domain, DOMAIN_BUS_NEXUS);
++
+ 	pp->msi_domain = pci_msi_create_irq_domain(fwnode,
+ 						   &dw_pcie_msi_domain_info,
+ 						   pp->irq_domain);
 -- 
 2.25.1
 
