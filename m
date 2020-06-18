@@ -4,57 +4,52 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 486B0C433E0
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:05:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3CBDC433E0
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:13:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 26E3C22262
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:05:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8FF6020884
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:13:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592445903;
-	bh=ptpv6AaHe3Ar61d8PWH8ycxxaQqCbcDaY5LkOUNJEmI=;
+	s=default; t=1592446429;
+	bh=PN7vZoxSs59VEpACrp8hT5rx0yazfNPxZPl7VMzESdQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=hiRfzLlmDqOwGZ9ske2hDfbej2z8Urad9XGcNOalT9Y8Wr2yxUpd6qGNKh9QlMH0I
-	 NDB0iq0It3O7m6olrNH8XSjhpgOgaEiERF8S323vNe6fcDsT3LFs2hmSPXiPHXPSm2
-	 VutTrEkB/iaVx48mvd5GY+xavhU9UOzB9H5G+Sb8=
+	b=MAmQe5TroaoGqk9nqZsZcwljuSus2dPLuhXFlvASMh6u8qr2DvSGPMdP8R6kuDfjU
+	 ypBU5kSLlRH/jpfQqYhwpC6SZnBfPXP9oWJWhuVasBTVPRBBcn+y/92ZwBdpRELRFE
+	 4QAM7Is4BBv87i94HYoSeadwBrFZdVeT62QCEYNo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730271AbgFRCE6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 17 Jun 2020 22:04:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56112 "EHLO mail.kernel.org"
+        id S1730425AbgFRBU5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 17 Jun 2020 21:20:57 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53252 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730367AbgFRBWx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 17 Jun 2020 21:22:53 -0400
+        id S1730418AbgFRBU4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 17 Jun 2020 21:20:56 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 44B9B20663;
-        Thu, 18 Jun 2020 01:22:52 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A4B6020776;
+        Thu, 18 Jun 2020 01:20:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592443373;
-        bh=ptpv6AaHe3Ar61d8PWH8ycxxaQqCbcDaY5LkOUNJEmI=;
+        s=default; t=1592443256;
+        bh=PN7vZoxSs59VEpACrp8hT5rx0yazfNPxZPl7VMzESdQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=tvsEWH/GXosw17DHT7zf6Rt6Gd2qjIh8yvLXdn+HOBiyZylzr8V3e7PmFIeMUk4mb
-         hxQI+4XZ9O/8I3rQaNFhabFk46B0qTwKxVu9JBPq2LkebuUwn1+T6v9+Sa4SPOkW0S
-         ojnejE6wheRLsoRNVqRjeqVA9NoAxNvIzPx+fEfM=
+        b=WQ42ibHk8eyBsCSxF0JRyUTk7mDn99la3vi+p0BcBHV5Vo3vUGNt10wVVA7Fd32B1
+         f6lz/Ikfp2MjnyuU9c2895AIbAcKZ+299HTy6cEifkgysxNOtLkfns9h7RFUuX0kAD
+         jPFdsEoHr2B4fxpAMXAz5JK2Uk0Ce6on8cHWFUKk=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
-        Tomasz Maciej Nowak <tmn505@gmail.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH AUTOSEL 4.19 026/172] PCI: aardvark: Don't blindly enable ASPM L0s and don't write to read-only register
-Date:   Wed, 17 Jun 2020 21:19:52 -0400
-Message-Id: <20200618012218.607130-26-sashal@kernel.org>
+Cc:     Kevin Buettner <kevinb@redhat.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 204/266] PCI: Avoid FLR for AMD Starship USB 3.0
+Date:   Wed, 17 Jun 2020 21:15:29 -0400
+Message-Id: <20200618011631.604574-204-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200618012218.607130-1-sashal@kernel.org>
-References: <20200618012218.607130-1-sashal@kernel.org>
+In-Reply-To: <20200618011631.604574-1-sashal@kernel.org>
+References: <20200618011631.604574-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -63,63 +58,67 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Pali Rohár <pali@kernel.org>
+From: Kevin Buettner <kevinb@redhat.com>
 
-[ Upstream commit 90c6cb4a355e7befcb557d217d1d8b8bd5875a05 ]
+[ Upstream commit 5727043c73fdfe04597971b5f3f4850d879c1f4f ]
 
-Trying to change Link Status register does not have any effect as this
-is a read-only register. Trying to overwrite bits for Negotiated Link
-Width does not make sense.
+The AMD Starship USB 3.0 host controller advertises Function Level Reset
+support, but it apparently doesn't work.  Add a quirk to prevent use of FLR
+on this device.
 
-In future proper change of link width can be done via Lane Count Select
-bits in PCIe Control 0 register.
+Without this quirk, when attempting to assign (pass through) an AMD
+Starship USB 3.0 host controller to a guest OS, the system becomes
+increasingly unresponsive over the course of several minutes, eventually
+requiring a hard reset.  Shortly after attempting to start the guest, I see
+these messages:
 
-Trying to unconditionally enable ASPM L0s via ASPM Control bits in Link
-Control register is wrong. There should be at least some detection if
-endpoint supports L0s as isn't mandatory.
+  vfio-pci 0000:05:00.3: not ready 1023ms after FLR; waiting
+  vfio-pci 0000:05:00.3: not ready 2047ms after FLR; waiting
+  vfio-pci 0000:05:00.3: not ready 4095ms after FLR; waiting
+  vfio-pci 0000:05:00.3: not ready 8191ms after FLR; waiting
 
-Moreover ASPM Control bits in Link Control register are controlled by
-pcie/aspm.c code which sets it according to system ASPM settings,
-immediately after aardvark driver probes. So setting these bits by
-aardvark driver has no long running effect.
+And then eventually:
 
-Remove code which touches ASPM L0s bits from this driver and let
-kernel's ASPM implementation to set ASPM state properly.
+  vfio-pci 0000:05:00.3: not ready 65535ms after FLR; giving up
+  INFO: NMI handler (perf_event_nmi_handler) took too long to run: 0.000 msecs
+  perf: interrupt took too long (642744 > 2500), lowering kernel.perf_event_max_sample_rate to 1000
+  INFO: NMI handler (perf_event_nmi_handler) took too long to run: 82.270 msecs
+  INFO: NMI handler (perf_event_nmi_handler) took too long to run: 680.608 msecs
+  INFO: NMI handler (perf_event_nmi_handler) took too long to run: 100.952 msecs
+  ...
+  watchdog: BUG: soft lockup - CPU#3 stuck for 22s! [qemu-system-x86:7487]
 
-Some users are reporting issues that this code is problematic for some
-Intel wifi cards and removing it fixes them, see e.g.:
-https://bugzilla.kernel.org/show_bug.cgi?id=196339
+Tested on a Micro-Star International Co., Ltd. MS-7C59/Creator TRX40
+motherboard with an AMD Ryzen Threadripper 3970X.
 
-If problems with Intel wifi cards occur even after this commit, then
-pcie/aspm.c code could be modified / hooked to not enable ASPM L0s state
-for affected problematic cards.
-
-Link: https://lore.kernel.org/r/20200430080625.26070-3-pali@kernel.org
-Tested-by: Tomasz Maciej Nowak <tmn505@gmail.com>
-Signed-off-by: Pali Rohár <pali@kernel.org>
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Acked-by: Rob Herring <robh@kernel.org>
-Acked-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Link: https://lore.kernel.org/r/20200524003529.598434ff@f31-4.lan
+Signed-off-by: Kevin Buettner <kevinb@redhat.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/controller/pci-aardvark.c | 4 ----
- 1 file changed, 4 deletions(-)
+ drivers/pci/quirks.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index 6b4555ff2548..0235b6e7dcd1 100644
---- a/drivers/pci/controller/pci-aardvark.c
-+++ b/drivers/pci/controller/pci-aardvark.c
-@@ -321,10 +321,6 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
- 
- 	advk_pcie_wait_for_link(pcie);
- 
--	reg = PCIE_CORE_LINK_L0S_ENTRY |
--		(1 << PCIE_CORE_LINK_WIDTH_SHIFT);
--	advk_writel(pcie, reg, PCIE_CORE_LINK_CTRL_STAT_REG);
--
- 	reg = advk_readl(pcie, PCIE_CORE_CMD_STATUS_REG);
- 	reg |= PCIE_CORE_CMD_MEM_ACCESS_EN |
- 		PCIE_CORE_CMD_IO_ACCESS_EN |
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 3f89ba7fe7fb..de999f636a5f 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -5134,6 +5134,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x443, quirk_intel_qat_vf_cap);
+  * FLR may cause the following to devices to hang:
+  *
+  * AMD Starship/Matisse HD Audio Controller 0x1487
++ * AMD Starship USB 3.0 Host Controller 0x148c
+  * AMD Matisse USB 3.0 Host Controller 0x149c
+  * Intel 82579LM Gigabit Ethernet Controller 0x1502
+  * Intel 82579V Gigabit Ethernet Controller 0x1503
+@@ -5144,6 +5145,7 @@ static void quirk_no_flr(struct pci_dev *dev)
+ 	dev->dev_flags |= PCI_DEV_FLAGS_NO_FLR_RESET;
+ }
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x1487, quirk_no_flr);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x148c, quirk_no_flr);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x149c, quirk_no_flr);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_no_flr);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_no_flr);
 -- 
 2.25.1
 
