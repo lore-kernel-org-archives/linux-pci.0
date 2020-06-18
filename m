@@ -7,46 +7,49 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70CC5C433E0
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:41:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01A0CC433E0
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:42:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4160621927
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:41:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB13121D7A
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:42:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592448063;
-	bh=iWIUER23wzCOCeRHFFTexOPF6uNXNU87K8YRWhn08C4=;
+	s=default; t=1592448141;
+	bh=tSkrvnMpksnJQhC64AZxp0y0YhNgOq7eJDfG0aV9Ngs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=YmGgq4xfy/8RaeZMcS+jTjLm8Wkw07xoK1yVxFkbLcyGxSSSeRY+xWC9D2UzOHVpT
-	 gCQsxEUwAIsdG3IZTuKUGwzSSNS+7zPclFBJF6py6tlL7NanDGGo+aL+zo+xkVBiwK
-	 oMKhMI+Gp81oe+44U/OyoxWWB2dJH0Z8o95rO2yk=
+	b=Pf2jOwLbVkIZ+LNnJgIvlKvEnz8xkQ/c0YSdOFJEUihMUdvNJ1Gv9UQaOTI9tJF4T
+	 ug9ZM+eCNPx9jIgVXMj4HVSHzixkg/Kr+Pzi/HYCIx9KA6LhDshCWfOPtFOJQzKjwD
+	 wBsS8zSfhO12LasVFz+6uv6Mp6Igcf9b9zwGYKU4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728282AbgFRBMf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 17 Jun 2020 21:12:35 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41236 "EHLO mail.kernel.org"
+        id S1728849AbgFRBMI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 17 Jun 2020 21:12:08 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40494 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728937AbgFRBMd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 17 Jun 2020 21:12:33 -0400
+        id S1728847AbgFRBMF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 17 Jun 2020 21:12:05 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5FAF821924;
-        Thu, 18 Jun 2020 01:12:32 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id C0B1E21924;
+        Thu, 18 Jun 2020 01:12:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592442753;
-        bh=iWIUER23wzCOCeRHFFTexOPF6uNXNU87K8YRWhn08C4=;
+        s=default; t=1592442724;
+        bh=tSkrvnMpksnJQhC64AZxp0y0YhNgOq7eJDfG0aV9Ngs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=YxGi3Ef4agkir3pbcHRf73S3WusAoLb3uYlQ/ORNnCHTdBfE5jdNk8zcBBZvnSj4z
-         jjr4AT9d730tH1XIMZljeNS2ULAbtQSsHaxe7xPxbB14H9f0jg2aSDuLqG/kS5Vhii
-         6Ra5+Mpw20LrG3hnqsZqEvNHWjPkgf8RBncZ9plk=
+        b=YcRGsN56A8Ustpk3K5nxRYuyhwyI5psnJ1B1rarHSykTDwVWOUAh2dzVfPLX60Ac2
+         SVytTJGkciqdki3jNLAUagPDxhlbZ16CC//CJSUMeYWPj0fc1nRUphCNhsqn/3lw5f
+         BLrnHP6D0rJd25SW2h8tEzB6XYeWvxrj4PP+yJdE=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+Cc:     Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>, Sasha Levin <sashal@kernel.org>,
-        linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.7 204/388] PCI: Fix pci_register_host_bridge() device_register() error handling
-Date:   Wed, 17 Jun 2020 21:05:01 -0400
-Message-Id: <20200618010805.600873-204-sashal@kernel.org>
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Sasha Levin <sashal@kernel.org>,
+        bcm-kernel-feedback-list@broadcom.com,
+        linux-rpi-kernel@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.7 182/388] PCI: brcmstb: Assert fundamental reset on initialization
+Date:   Wed, 17 Jun 2020 21:04:39 -0400
+Message-Id: <20200618010805.600873-182-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200618010805.600873-1-sashal@kernel.org>
 References: <20200618010805.600873-1-sashal@kernel.org>
@@ -59,41 +62,38 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Rob Herring <robh@kernel.org>
+From: Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
 
-[ Upstream commit 1b54ae8327a4d630111c8d88ba7906483ec6010b ]
+[ Upstream commit 22e21e51ce755399fd42055a3f668ee4af370881 ]
 
-If device_register() has an error, we should bail out of
-pci_register_host_bridge() rather than continuing on.
+While preparing the driver for upstream this detail was missed.
 
-Fixes: 37d6a0a6f470 ("PCI: Add pci_register_host_bridge() interface")
-Link: https://lore.kernel.org/r/20200513223859.11295-1-robh@kernel.org
-Signed-off-by: Rob Herring <robh@kernel.org>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+If not asserted during the initialization process, devices connected on
+the bus will not be made aware of the internal reset happening. This,
+potentially resulting in unexpected behavior.
+
+Link: https://lore.kernel.org/r/20200507172020.18000-1-nsaenzjulienne@suse.de
+Fixes: c0452137034b ("PCI: brcmstb: Add Broadcom STB PCIe host controller driver")
+Signed-off-by: Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Acked-by: Florian Fainelli <f.fainelli@gmail.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/probe.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/pci/controller/pcie-brcmstb.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 77b8a145c39b..e21dc71b1907 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -909,9 +909,10 @@ static int pci_register_host_bridge(struct pci_host_bridge *bridge)
- 		goto free;
+diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
+index c9ecc4d639c1..2297910bf6e4 100644
+--- a/drivers/pci/controller/pcie-brcmstb.c
++++ b/drivers/pci/controller/pcie-brcmstb.c
+@@ -697,6 +697,7 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
  
- 	err = device_register(&bridge->dev);
--	if (err)
-+	if (err) {
- 		put_device(&bridge->dev);
--
-+		goto free;
-+	}
- 	bus->bridge = get_device(&bridge->dev);
- 	device_enable_async_suspend(bus->bridge);
- 	pci_set_bus_of_node(bus);
+ 	/* Reset the bridge */
+ 	brcm_pcie_bridge_sw_init_set(pcie, 1);
++	brcm_pcie_perst_set(pcie, 1);
+ 
+ 	usleep_range(100, 200);
+ 
 -- 
 2.25.1
 
