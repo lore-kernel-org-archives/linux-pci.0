@@ -4,51 +4,52 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C671C433E0
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 01:29:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DF43C433E0
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 01:37:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3C45B22209
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 01:29:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E2862192A
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 01:37:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592443774;
-	bh=kQxud7MSwkmirSk8sl1Z6U/M4EKYnQvsC+GuLnHvsI0=;
+	s=default; t=1592444251;
+	bh=pavhGKGyWx6CGwzqnnEJzC1BuJLEq611bP7n5T+QGDI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=AplF7/zG/z80Qw8Prnr4kmwERVbDfwpKpTfdtjnRgipgueuqiTygpS3bk/rtqHNvo
-	 isRDkAWwVIL5i5T1QdJRBimnDxxWtc4qfxXszjUmamcH7xriCfZfclHw6apwbqcmVh
-	 KhXW5ANBxcuxp2LtU6HXjKeDrecLRpWToEZGM+IM=
+	b=YezzQJjET+2h1uI59F0CuWF9brLGU6cf0rwVY43t5Na9OjCxxHHTw/5i/geb6zQmy
+	 IRVF89ifrVECYcYilkCL5Mh03ffJetdFIKIw8C//TcGvfPsX9Ex7VfaZQxXBA36ob1
+	 wWpLpaqy4XipMSd6KB2wDJjqPJMptH3O7qSq3GDU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731014AbgFRB3d (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 17 Jun 2020 21:29:33 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38996 "EHLO mail.kernel.org"
+        id S1732620AbgFRBas (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 17 Jun 2020 21:30:48 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41014 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732314AbgFRB3d (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 17 Jun 2020 21:29:33 -0400
+        id S1732616AbgFRBar (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 17 Jun 2020 21:30:47 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B076A2222D;
-        Thu, 18 Jun 2020 01:29:31 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8FF1D2224E;
+        Thu, 18 Jun 2020 01:30:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592443772;
-        bh=kQxud7MSwkmirSk8sl1Z6U/M4EKYnQvsC+GuLnHvsI0=;
+        s=default; t=1592443846;
+        bh=pavhGKGyWx6CGwzqnnEJzC1BuJLEq611bP7n5T+QGDI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=MpWeXuVuME3j52Ebco8AqvAKewtJZCVLdF+H3gds1IgrMQlC7h3vJyKPubm4eVZnw
-         bYodssLzSZT2BHk8zPMMUAWrqvAycsTajeTsB/6mrldBAhIueIY/RRF6WrEoOHEyNG
-         YBZfq8Iq4u3udH5pbKQMR/Mp0wP8H9RruH1w/amQ=
+        b=eHta+rBmeh5YD2/P9OLCkwUvriMd09snb804UVLTg7msI28JNHRaHmOhdQI9uLLZ+
+         Mt/XRfYsjfLIKiaa36Y4Jwm3PHlcNpcFzwM4RrHiBh2vP0p7iqQhfuGrQzkmcFOW8W
+         hSVXs5yGr1iuEIcn/eLHQOi0tgOYNV1tcJ6hHB+U=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Aditya Paluri <Venkata.AdityaPaluri@synopsys.com>,
+Cc:     Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 56/80] PCI/PTM: Inherit Switch Downstream Port PTM settings from Upstream Port
-Date:   Wed, 17 Jun 2020 21:27:55 -0400
-Message-Id: <20200618012819.609778-56-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 31/60] PCI/ASPM: Allow ASPM on links to PCIe-to-PCI/PCI-X Bridges
+Date:   Wed, 17 Jun 2020 21:29:35 -0400
+Message-Id: <20200618013004.610532-31-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200618012819.609778-1-sashal@kernel.org>
-References: <20200618012819.609778-1-sashal@kernel.org>
+In-Reply-To: <20200618013004.610532-1-sashal@kernel.org>
+References: <20200618013004.610532-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -58,75 +59,53 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+From: Kai-Heng Feng <kai.heng.feng@canonical.com>
 
-[ Upstream commit 7b38fd9760f51cc83d80eed2cfbde8b5ead9e93a ]
+[ Upstream commit 66ff14e59e8a30690755b08bc3042359703fb07a ]
 
-Except for Endpoints, we enable PTM at enumeration-time.  Previously we did
-not account for the fact that Switch Downstream Ports are not permitted to
-have a PTM capability; their PTM behavior is controlled by the Upstream
-Port (PCIe r5.0, sec 7.9.16).  Since Downstream Ports don't have a PTM
-capability, we did not mark them as "ptm_enabled", which meant that
-pci_enable_ptm() on an Endpoint failed because there was no PTM path to it.
+7d715a6c1ae5 ("PCI: add PCI Express ASPM support") added the ability for
+Linux to enable ASPM, but for some undocumented reason, it didn't enable
+ASPM on links where the downstream component is a PCIe-to-PCI/PCI-X Bridge.
 
-Mark Downstream Ports as "ptm_enabled" if their Upstream Port has PTM
-enabled.
+Remove this exclusion so we can enable ASPM on these links.
 
-Fixes: eec097d43100 ("PCI: Add pci_enable_ptm() for drivers to enable PTM on endpoints")
-Reported-by: Aditya Paluri <Venkata.AdityaPaluri@synopsys.com>
+The Dell OptiPlex 7080 mentioned in the bugzilla has a TI XIO2001
+PCIe-to-PCI Bridge.  Enabling ASPM on the link leading to it allows the
+Intel SoC to enter deeper Package C-states, which is a significant power
+savings.
+
+[bhelgaas: commit log]
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=207571
+Link: https://lore.kernel.org/r/20200505173423.26968-1-kai.heng.feng@canonical.com
+Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/pcie/ptm.c | 22 +++++++++++++++++-----
- 1 file changed, 17 insertions(+), 5 deletions(-)
+ drivers/pci/pcie/aspm.c | 10 ----------
+ 1 file changed, 10 deletions(-)
 
-diff --git a/drivers/pci/pcie/ptm.c b/drivers/pci/pcie/ptm.c
-index 3008bba360f3..ec6f6213960b 100644
---- a/drivers/pci/pcie/ptm.c
-+++ b/drivers/pci/pcie/ptm.c
-@@ -47,10 +47,6 @@ void pci_ptm_init(struct pci_dev *dev)
- 	if (!pci_is_pcie(dev))
- 		return;
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index c6a012b5ba39..966b6947e565 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -388,16 +388,6 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
  
--	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_PTM);
--	if (!pos)
--		return;
--
- 	/*
- 	 * Enable PTM only on interior devices (root ports, switch ports,
- 	 * etc.) on the assumption that it causes no link traffic until an
-@@ -60,6 +56,23 @@ void pci_ptm_init(struct pci_dev *dev)
- 	     pci_pcie_type(dev) == PCI_EXP_TYPE_RC_END))
- 		return;
+ 	/* Setup initial capable state. Will be updated later */
+ 	link->aspm_capable = link->aspm_support;
+-	/*
+-	 * If the downstream component has pci bridge function, don't
+-	 * do ASPM for now.
+-	 */
+-	list_for_each_entry(child, &linkbus->devices, bus_list) {
+-		if (pci_pcie_type(child) == PCI_EXP_TYPE_PCI_BRIDGE) {
+-			link->aspm_disable = ASPM_STATE_ALL;
+-			break;
+-		}
+-	}
  
-+	/*
-+	 * Switch Downstream Ports are not permitted to have a PTM
-+	 * capability; their PTM behavior is controlled by the Upstream
-+	 * Port (PCIe r5.0, sec 7.9.16).
-+	 */
-+	ups = pci_upstream_bridge(dev);
-+	if (pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM &&
-+	    ups && ups->ptm_enabled) {
-+		dev->ptm_granularity = ups->ptm_granularity;
-+		dev->ptm_enabled = 1;
-+		return;
-+	}
-+
-+	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_PTM);
-+	if (!pos)
-+		return;
-+
- 	pci_read_config_dword(dev, pos + PCI_PTM_CAP, &cap);
- 	local_clock = (cap & PCI_PTM_GRANULARITY_MASK) >> 8;
- 
-@@ -69,7 +82,6 @@ void pci_ptm_init(struct pci_dev *dev)
- 	 * the spec recommendation (PCIe r3.1, sec 7.32.3), select the
- 	 * furthest upstream Time Source as the PTM Root.
- 	 */
--	ups = pci_upstream_bridge(dev);
- 	if (ups && ups->ptm_enabled) {
- 		ctrl = PCI_PTM_CTRL_ENABLE;
- 		if (ups->ptm_granularity == 0)
+ 	/* Get and check endpoint acceptable latencies */
+ 	list_for_each_entry(child, &linkbus->devices, bus_list) {
 -- 
 2.25.1
 
