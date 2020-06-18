@@ -4,48 +4,49 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA0DCC433E2
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:34:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F275C433DF
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:37:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B798A2089D
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:34:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 04BAB21D7F
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:37:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592447676;
-	bh=uFpR+BxR1ZP8Le0s2244kM6IUY9wJds3BgH+c5MCtFs=;
+	s=default; t=1592447847;
+	bh=PGIajTLNvn1TlSKGVmd+/Ro+viHxJzQ4+cuGN8MOxDA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=iV5HcAZk4SYryBTRZKuguglcGXcIQ0VByTilchKZTeaQAnaBaBgOwJhqjSeIumyyh
-	 b8iUK7ZyzSx8uniMIpQ9UmTaApF3It+nk917eZf82hqd5dHYiikzB4rxswkBEesuCn
-	 2kh0xMcS4LVfLS0g/qfK28UUaOmOK44EpBvYZnhI=
+	b=08EpHXzB3BSY80npimoXQFjsrR6wVrOMUVNZ0yj3mMqhfI+ESsUsLq1pyX7CXkipJ
+	 dWAaUCDFEP833ZCWlgvsLc5nWxOzKRSEMbBrHk6y+LLwCF/kgU9BP+NrTxwdTSJTD9
+	 qzBVkFQv7lOBmjFki778+MZ/OmueazvAKf3oCYZE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728437AbgFRBOc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 17 Jun 2020 21:14:32 -0400
-Received: from mail.kernel.org ([198.145.29.99]:44148 "EHLO mail.kernel.org"
+        id S1729186AbgFRBNn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 17 Jun 2020 21:13:43 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42962 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729316AbgFRBOb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 17 Jun 2020 21:14:31 -0400
+        id S1729174AbgFRBNk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 17 Jun 2020 21:13:40 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4AB7B21D7B;
-        Thu, 18 Jun 2020 01:14:30 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6502F221EB;
+        Thu, 18 Jun 2020 01:13:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592442871;
-        bh=uFpR+BxR1ZP8Le0s2244kM6IUY9wJds3BgH+c5MCtFs=;
+        s=default; t=1592442820;
+        bh=PGIajTLNvn1TlSKGVmd+/Ro+viHxJzQ4+cuGN8MOxDA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=sfw9el2YZI8neXeeVT5UcHLysIzNuIXcHExhbDX2tu421fB272ZIC5LKbg9hgoVCH
-         2JCeIAV+3FYqUN2sru062w9PwId1CYEenpM/0usFxBXonoehsfIMu0lrtN8FjLACFE
-         ak0PHckaT8sKf2TQy/Yy8joBgxPP16h5MckCg9RQ=
+        b=fgmk6Tp5AmLgFnz+Vty6rmPTMvmLI+g0bKagi+CeTJc21J75LlUSdR6pzYG4GH/f1
+         k3LMYjVgajENzu2r97jv2qFDOpz2pxmlKd5M2ceTKHdhcbiwLFMRKGxniW3DaZCeKM
+         Cb2VYR+qVFZAuXp+Ye7CnwrTg+R05PE8YbguMVWM=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Marcos Scriven <marcos@scriven.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.7 297/388] PCI: Avoid FLR for AMD Matisse HD Audio & USB 3.0
-Date:   Wed, 17 Jun 2020 21:06:34 -0400
-Message-Id: <20200618010805.600873-297-sashal@kernel.org>
+Cc:     Wei Yongjun <weiyongjun1@huawei.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Sasha Levin <sashal@kernel.org>, linux-omap@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.7 257/388] PCI: dwc: pci-dra7xx: Use devm_platform_ioremap_resource_byname()
+Date:   Wed, 17 Jun 2020 21:05:54 -0400
+Message-Id: <20200618010805.600873-257-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200618010805.600873-1-sashal@kernel.org>
 References: <20200618010805.600873-1-sashal@kernel.org>
@@ -58,60 +59,50 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Marcos Scriven <marcos@scriven.org>
+From: Wei Yongjun <weiyongjun1@huawei.com>
 
-[ Upstream commit 0d14f06cd6657ba3446a5eb780672da487b068e7 ]
+[ Upstream commit c8a119779f5609de8dcd98630f71cc7f1b2e4e8c ]
 
-The AMD Matisse HD Audio & USB 3.0 devices advertise Function Level Reset
-support, but hang when an FLR is triggered.
+platform_get_resource() may fail and return NULL, so we had better
+check its return value to avoid a NULL pointer dereference a bit later
+in the code. Fix it to use devm_platform_ioremap_resource_byname()
+instead of calling platform_get_resource_byname() and devm_ioremap().
 
-To reproduce the problem, attach the device to a VM, then detach and try to
-attach again.
-
-Rename the existing quirk_intel_no_flr(), which was not Intel-specific, to
-quirk_no_flr(), and apply it to prevent the use of FLR on these AMD
-devices.
-
-Link: https://lore.kernel.org/r/CAAri2DpkcuQZYbT6XsALhx2e6vRqPHwtbjHYeiH7MNp4zmt1RA@mail.gmail.com
-Signed-off-by: Marcos Scriven <marcos@scriven.org>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Link: https://lore.kernel.org/r/20200429015027.134485-1-weiyongjun1@huawei.com
+Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+[lorenzo.pieralisi@arm.com: commit log]
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/quirks.c | 18 ++++++++++++++----
- 1 file changed, 14 insertions(+), 4 deletions(-)
+ drivers/pci/controller/dwc/pci-dra7xx.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index ca9ed5774eb1..43a0c2ce635e 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -5129,13 +5129,23 @@ static void quirk_intel_qat_vf_cap(struct pci_dev *pdev)
- }
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x443, quirk_intel_qat_vf_cap);
+diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
+index 3b0e58f2de58..6184ebc9392d 100644
+--- a/drivers/pci/controller/dwc/pci-dra7xx.c
++++ b/drivers/pci/controller/dwc/pci-dra7xx.c
+@@ -840,7 +840,6 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 	struct phy **phy;
+ 	struct device_link **link;
+ 	void __iomem *base;
+-	struct resource *res;
+ 	struct dw_pcie *pci;
+ 	struct dra7xx_pcie *dra7xx;
+ 	struct device *dev = &pdev->dev;
+@@ -877,10 +876,9 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 		return irq;
+ 	}
  
--/* FLR may cause some 82579 devices to hang */
--static void quirk_intel_no_flr(struct pci_dev *dev)
-+/*
-+ * FLR may cause the following to devices to hang:
-+ *
-+ * AMD Starship/Matisse HD Audio Controller 0x1487
-+ * AMD Matisse USB 3.0 Host Controller 0x149c
-+ * Intel 82579LM Gigabit Ethernet Controller 0x1502
-+ * Intel 82579V Gigabit Ethernet Controller 0x1503
-+ *
-+ */
-+static void quirk_no_flr(struct pci_dev *dev)
- {
- 	dev->dev_flags |= PCI_DEV_FLAGS_NO_FLR_RESET;
- }
--DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_intel_no_flr);
--DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_intel_no_flr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x1487, quirk_no_flr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x149c, quirk_no_flr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_no_flr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_no_flr);
+-	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ti_conf");
+-	base = devm_ioremap(dev, res->start, resource_size(res));
+-	if (!base)
+-		return -ENOMEM;
++	base = devm_platform_ioremap_resource_byname(pdev, "ti_conf");
++	if (IS_ERR(base))
++		return PTR_ERR(base);
  
- static void quirk_no_ext_tags(struct pci_dev *pdev)
- {
+ 	phy_count = of_property_count_strings(np, "phy-names");
+ 	if (phy_count < 0) {
 -- 
 2.25.1
 
