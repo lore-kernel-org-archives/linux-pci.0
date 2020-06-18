@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2667C433E2
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:01:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1812C433DF
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:01:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C73AF221F8
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:01:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C4E74214DB
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:01:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592445683;
-	bh=HXKLX0jkNW57FsNBXYExfJvymlWJBuJcGtHzUpPWnTI=;
+	s=default; t=1592445719;
+	bh=WsOZ0hclMww1QoUanOsrH/wc2GtAqh99srkXS0LT06c=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=rCHe182I8TOOlR3wO6S38LLaSvXwWW7yyjSZkULSym+OM66L4D/p4/p2yxTSE8v8h
-	 eBCj+PxHLq4odFoF2GOOTBuY0Lio7d12JgnMC+9P1zDH2FCFr94eHJEx/YffHLu/+e
-	 5LbCVUFvLUlX2xmA5COV2KUCUsAO5yfGh5YgNa5M=
+	b=C1/QrdXoGKx1leb3Cp7bxvnol3BBUMgLI5YTxB30AQzNW4jFzF6MRXkNA6de44ohO
+	 YQgYK0/j2CG1uPGLF6tpNj10bLXhCktK5+tMzvdobkSSgTMFah106HtswrZtp71IIC
+	 hiWMFP3Xi18BQEzAU7FtAXul3zCTQvIVEyAoW0S4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387428AbgFRCA5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 17 Jun 2020 22:00:57 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58600 "EHLO mail.kernel.org"
+        id S1731254AbgFRCBv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 17 Jun 2020 22:01:51 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58248 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731143AbgFRBYM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 17 Jun 2020 21:24:12 -0400
+        id S1729171AbgFRBYC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 17 Jun 2020 21:24:02 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BAC4721D82;
-        Thu, 18 Jun 2020 01:24:11 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 94D4F20776;
+        Thu, 18 Jun 2020 01:24:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592443452;
-        bh=HXKLX0jkNW57FsNBXYExfJvymlWJBuJcGtHzUpPWnTI=;
+        s=default; t=1592443442;
+        bh=WsOZ0hclMww1QoUanOsrH/wc2GtAqh99srkXS0LT06c=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=0oKLxFhaEM2B/ozVOIFurgtfBdXS5y35tFSBMkbvsgGvMWT3u09A02oPF7cdmX1if
-         71tnUv/ehCwxyT2mgzCV9mN/08l4NC+fBgSttl2p/g8m4elJrvztjxEg7n0S5GSc2V
-         qDVOYdgXKU9UN+kW/ea9zgrRo1Ulj1afkDXLdA54=
+        b=fAfnhKpVU0NEZWetVMzF990+KWTN7soa/z6Mxfa/9bxYqbOQxV+sP9dB+EXTzP11o
+         2b/k6FMY+E7z7jfIQwPobTzV+AZpT5Oe4sDPwefpAJ1Q+WXvhY8kcfARHkS3lSKkst
+         FcFHZi0Dy+lOzaTFkbh09cVJNU6yV5AiuZJE9U6U=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>, Sasha Levin <sashal@kernel.org>,
-        linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 087/172] PCI: Fix pci_register_host_bridge() device_register() error handling
-Date:   Wed, 17 Jun 2020 21:20:53 -0400
-Message-Id: <20200618012218.607130-87-sashal@kernel.org>
+Cc:     Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 079/172] PCI/ASPM: Allow ASPM on links to PCIe-to-PCI/PCI-X Bridges
+Date:   Wed, 17 Jun 2020 21:20:45 -0400
+Message-Id: <20200618012218.607130-79-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200618012218.607130-1-sashal@kernel.org>
 References: <20200618012218.607130-1-sashal@kernel.org>
@@ -59,41 +59,53 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Rob Herring <robh@kernel.org>
+From: Kai-Heng Feng <kai.heng.feng@canonical.com>
 
-[ Upstream commit 1b54ae8327a4d630111c8d88ba7906483ec6010b ]
+[ Upstream commit 66ff14e59e8a30690755b08bc3042359703fb07a ]
 
-If device_register() has an error, we should bail out of
-pci_register_host_bridge() rather than continuing on.
+7d715a6c1ae5 ("PCI: add PCI Express ASPM support") added the ability for
+Linux to enable ASPM, but for some undocumented reason, it didn't enable
+ASPM on links where the downstream component is a PCIe-to-PCI/PCI-X Bridge.
 
-Fixes: 37d6a0a6f470 ("PCI: Add pci_register_host_bridge() interface")
-Link: https://lore.kernel.org/r/20200513223859.11295-1-robh@kernel.org
-Signed-off-by: Rob Herring <robh@kernel.org>
+Remove this exclusion so we can enable ASPM on these links.
+
+The Dell OptiPlex 7080 mentioned in the bugzilla has a TI XIO2001
+PCIe-to-PCI Bridge.  Enabling ASPM on the link leading to it allows the
+Intel SoC to enter deeper Package C-states, which is a significant power
+savings.
+
+[bhelgaas: commit log]
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=207571
+Link: https://lore.kernel.org/r/20200505173423.26968-1-kai.heng.feng@canonical.com
+Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/probe.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/pci/pcie/aspm.c | 10 ----------
+ 1 file changed, 10 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index fa4c386c8cd8..b6f72f09442f 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -818,9 +818,10 @@ static int pci_register_host_bridge(struct pci_host_bridge *bridge)
- 		goto free;
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index db2efa219028..6e50f84733b7 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -633,16 +633,6 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
  
- 	err = device_register(&bridge->dev);
--	if (err)
-+	if (err) {
- 		put_device(&bridge->dev);
--
-+		goto free;
-+	}
- 	bus->bridge = get_device(&bridge->dev);
- 	device_enable_async_suspend(bus->bridge);
- 	pci_set_bus_of_node(bus);
+ 	/* Setup initial capable state. Will be updated later */
+ 	link->aspm_capable = link->aspm_support;
+-	/*
+-	 * If the downstream component has pci bridge function, don't
+-	 * do ASPM for now.
+-	 */
+-	list_for_each_entry(child, &linkbus->devices, bus_list) {
+-		if (pci_pcie_type(child) == PCI_EXP_TYPE_PCI_BRIDGE) {
+-			link->aspm_disable = ASPM_STATE_ALL;
+-			break;
+-		}
+-	}
+ 
+ 	/* Get and check endpoint acceptable latencies */
+ 	list_for_each_entry(child, &linkbus->devices, bus_list) {
 -- 
 2.25.1
 
