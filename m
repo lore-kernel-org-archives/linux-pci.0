@@ -4,48 +4,51 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83099C433E0
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:16:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B3FDC433E1
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:16:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 64A652088E
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:16:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EF01520853
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:16:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592446572;
-	bh=iplyPM27PcNRmVU8iO4tDZsu6oYuCl3PiRkC1vxjPIc=;
+	s=default; t=1592446576;
+	bh=KtA8mhHELH+n/ciQv/OODDDRgp1wxznsDrQScNAW2j8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=dt7fSkh4feoUoK7DXV50JWm4AkFbn1y04hiYllRol5RclpPL6a96gJSBPUcCbkbsi
-	 p6tY2pMIVd0729B/rPqDYIjwzPNwnS6heMS5nU6B7z0/6W/sbA9/Iil/+uIuVZFivi
-	 DFXq1qLIz+eQb+FTBhYLQ5tPDC2HQZUCDHyZSyt8=
+	b=JX64WKYIMGR6Pj3aHkJc0hLOAWz8dUE0Qs9IeoLlmpaks0CtIVlrtO/FVLtY1Z8hA
+	 U6p9QI+C3fcN2by8YbdkhfWBzvGKof9OyhCT1AyZPbSTO+8GweItywrqyHRE7cq09U
+	 z3Cb/nVeZYi8y5Iw9zu79iXume2WLG9gOtD4833g=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729322AbgFRBUW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 17 Jun 2020 21:20:22 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52426 "EHLO mail.kernel.org"
+        id S1732210AbgFRCQO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 17 Jun 2020 22:16:14 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52290 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729532AbgFRBUS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 17 Jun 2020 21:20:18 -0400
+        id S1730286AbgFRBUU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 17 Jun 2020 21:20:20 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D8B42206F1;
-        Thu, 18 Jun 2020 01:20:16 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 3EDC221D90;
+        Thu, 18 Jun 2020 01:20:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592443217;
-        bh=iplyPM27PcNRmVU8iO4tDZsu6oYuCl3PiRkC1vxjPIc=;
+        s=default; t=1592443220;
+        bh=KtA8mhHELH+n/ciQv/OODDDRgp1wxznsDrQScNAW2j8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=UIkRj8qPUV0l7ume2DeHkVsweRoIQy1KeEN+f+xRKlfaBgqjaXcX685Da7hvpK4zE
-         GQ1cYgZvQ4LM7bRxCPiNw7vjTQ6T4wZuOCS/MIzLqbhtMuF5pLLvbpN/XkV6/MokBQ
-         AV7O6/nf/lI70MK1IwiGSCaQnDTzUdmy3YEkqS8g=
+        b=sA/utWMrKWYOnCOwEZ5qajIxcUyV/GW7LXukdiwLWvJ+bxSU/T8oWV1XNySDUMRKr
+         EKgml2QTRxhmbHHvQibkKGeN43RbCj0Fzpj/K7vHVK/pNaylE62u3IqlP7HDcNhpX2
+         EEn7B5/1tDWg3YJAJQ+x+nARG7vK7Ftdq2jNEYNk=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Aditya Paluri <Venkata.AdityaPaluri@synopsys.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 173/266] PCI/PTM: Inherit Switch Downstream Port PTM settings from Upstream Port
-Date:   Wed, 17 Jun 2020 21:14:58 -0400
-Message-Id: <20200618011631.604574-173-sashal@kernel.org>
+Cc:     Marc Zyngier <maz@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Neil Armstrong <narmstrong@baylibre.com>,
+        Rob Herring <robh@kernel.org>, Sasha Levin <sashal@kernel.org>,
+        linux-pci@vger.kernel.org, linux-amlogic@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.4 175/266] PCI: amlogic: meson: Don't use FAST_LINK_MODE to set up link
+Date:   Wed, 17 Jun 2020 21:15:00 -0400
+Message-Id: <20200618011631.604574-175-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200618011631.604574-1-sashal@kernel.org>
 References: <20200618011631.604574-1-sashal@kernel.org>
@@ -58,75 +61,55 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+From: Marc Zyngier <maz@kernel.org>
 
-[ Upstream commit 7b38fd9760f51cc83d80eed2cfbde8b5ead9e93a ]
+[ Upstream commit 87dccf09323fc363bd0d072fcc12b96622ab8c69 ]
 
-Except for Endpoints, we enable PTM at enumeration-time.  Previously we did
-not account for the fact that Switch Downstream Ports are not permitted to
-have a PTM capability; their PTM behavior is controlled by the Upstream
-Port (PCIe r5.0, sec 7.9.16).  Since Downstream Ports don't have a PTM
-capability, we did not mark them as "ptm_enabled", which meant that
-pci_enable_ptm() on an Endpoint failed because there was no PTM path to it.
+The vim3l board does not work with a standard PCIe switch (ASM1184e),
+spitting all kind of errors - hinting at HW misconfiguration (no link,
+port enumeration issues, etc).
 
-Mark Downstream Ports as "ptm_enabled" if their Upstream Port has PTM
-enabled.
+According to the the Synopsys DWC PCIe Reference Manual, in the section
+dedicated to the PLCR register, bit 7 is described (FAST_LINK_MODE) as:
 
-Fixes: eec097d43100 ("PCI: Add pci_enable_ptm() for drivers to enable PTM on endpoints")
-Reported-by: Aditya Paluri <Venkata.AdityaPaluri@synopsys.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+"Sets all internal timers to fast mode for simulation purposes."
+
+it is sound to set this bit from a simulation perspective, but on actual
+silicon, which expects timers to have a nominal value, it is not.
+
+Make sure the FAST_LINK_MODE bit is cleared when configuring the RC
+to solve this problem.
+
+Link: https://lore.kernel.org/r/20200429164230.309922-1-maz@kernel.org
+Fixes: 9c0ef6d34fdb ("PCI: amlogic: Add the Amlogic Meson PCIe controller driver")
+Signed-off-by: Marc Zyngier <maz@kernel.org>
+[lorenzo.pieralisi@arm.com: commit log]
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Reviewed-by: Neil Armstrong <narmstrong@baylibre.com>
+Acked-by: Rob Herring <robh@kernel.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/pcie/ptm.c | 22 +++++++++++++++++-----
- 1 file changed, 17 insertions(+), 5 deletions(-)
+ drivers/pci/controller/dwc/pci-meson.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/pcie/ptm.c b/drivers/pci/pcie/ptm.c
-index 9361f3aa26ab..357a454cafa0 100644
---- a/drivers/pci/pcie/ptm.c
-+++ b/drivers/pci/pcie/ptm.c
-@@ -39,10 +39,6 @@ void pci_ptm_init(struct pci_dev *dev)
- 	if (!pci_is_pcie(dev))
- 		return;
+diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/controller/dwc/pci-meson.c
+index b927a92e3463..8c9f88704874 100644
+--- a/drivers/pci/controller/dwc/pci-meson.c
++++ b/drivers/pci/controller/dwc/pci-meson.c
+@@ -301,11 +301,11 @@ static void meson_pcie_init_dw(struct meson_pcie *mp)
+ 	meson_cfg_writel(mp, val, PCIE_CFG0);
  
--	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_PTM);
--	if (!pos)
--		return;
--
- 	/*
- 	 * Enable PTM only on interior devices (root ports, switch ports,
- 	 * etc.) on the assumption that it causes no link traffic until an
-@@ -52,6 +48,23 @@ void pci_ptm_init(struct pci_dev *dev)
- 	     pci_pcie_type(dev) == PCI_EXP_TYPE_RC_END))
- 		return;
+ 	val = meson_elb_readl(mp, PCIE_PORT_LINK_CTRL_OFF);
+-	val &= ~LINK_CAPABLE_MASK;
++	val &= ~(LINK_CAPABLE_MASK | FAST_LINK_MODE);
+ 	meson_elb_writel(mp, val, PCIE_PORT_LINK_CTRL_OFF);
  
-+	/*
-+	 * Switch Downstream Ports are not permitted to have a PTM
-+	 * capability; their PTM behavior is controlled by the Upstream
-+	 * Port (PCIe r5.0, sec 7.9.16).
-+	 */
-+	ups = pci_upstream_bridge(dev);
-+	if (pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM &&
-+	    ups && ups->ptm_enabled) {
-+		dev->ptm_granularity = ups->ptm_granularity;
-+		dev->ptm_enabled = 1;
-+		return;
-+	}
-+
-+	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_PTM);
-+	if (!pos)
-+		return;
-+
- 	pci_read_config_dword(dev, pos + PCI_PTM_CAP, &cap);
- 	local_clock = (cap & PCI_PTM_GRANULARITY_MASK) >> 8;
+ 	val = meson_elb_readl(mp, PCIE_PORT_LINK_CTRL_OFF);
+-	val |= LINK_CAPABLE_X1 | FAST_LINK_MODE;
++	val |= LINK_CAPABLE_X1;
+ 	meson_elb_writel(mp, val, PCIE_PORT_LINK_CTRL_OFF);
  
-@@ -61,7 +74,6 @@ void pci_ptm_init(struct pci_dev *dev)
- 	 * the spec recommendation (PCIe r3.1, sec 7.32.3), select the
- 	 * furthest upstream Time Source as the PTM Root.
- 	 */
--	ups = pci_upstream_bridge(dev);
- 	if (ups && ups->ptm_enabled) {
- 		ctrl = PCI_PTM_CTRL_ENABLE;
- 		if (ups->ptm_granularity == 0)
+ 	val = meson_elb_readl(mp, PCIE_GEN2_CTRL_OFF);
 -- 
 2.25.1
 
