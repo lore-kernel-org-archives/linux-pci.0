@@ -4,53 +4,57 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A237C433DF
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:49:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CBACC433E0
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:50:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 018622089D
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:49:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7BC542083B
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:50:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592448582;
-	bh=l54CqOz0uSs8AddQVZzgNs0xuz84Etvn0zA6jW/HTAs=;
+	s=default; t=1592448616;
+	bh=3Sxq9xEUjMoEAHJMR3O3vPC8exhvz74ULRwjGDQLRRU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=SiDfa2cPnZJfuSEGFMe+pT10o9089mZ7yfc7RNS/0+LtGHD/oQYuG5U+/Cm6d3iDd
-	 /xJB8m5wffU/FrMsBXxFzKnuW77e9PUcy8R3H4prQfMznIO6UNcBMRx/SpB221TfKt
-	 Cop9hNAwVGq2gxh833kcU5Ps4CHDMzHYsxZjz8eA=
+	b=0n7YXxuj2ZuicgDp5SPMYdo2qwJJy640HOKQP653lvQkOiTtXGCLuznQO1jZhvT+B
+	 3gl56IJg+6pOyDADDxorUPACu1Pw/B0SDUT+yeHYq/lTiLUD8zu+sLbpqIzLynSUbT
+	 +81TpYgadvi7pCKp0/W3rf00wvyn9RNzi0CeVTd4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727807AbgFRCtl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 17 Jun 2020 22:49:41 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35990 "EHLO mail.kernel.org"
+        id S1728135AbgFRBJX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 17 Jun 2020 21:09:23 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35652 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728212AbgFRBJd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 17 Jun 2020 21:09:33 -0400
+        id S1728127AbgFRBJW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 17 Jun 2020 21:09:22 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7402121D81;
-        Thu, 18 Jun 2020 01:09:32 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id D0F9E21BE5;
+        Thu, 18 Jun 2020 01:09:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592442573;
-        bh=l54CqOz0uSs8AddQVZzgNs0xuz84Etvn0zA6jW/HTAs=;
+        s=default; t=1592442561;
+        bh=3Sxq9xEUjMoEAHJMR3O3vPC8exhvz74ULRwjGDQLRRU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=W4AQNv58ibtWAcdcNvfYwYwcK07oNEpefqeHEjNxa5YMW9FWGsEPXYuLemZkoWMmu
-         5/jrIEobVCdSIGl2tOgrrr8k8XpCWF6o0xOggXEkOIg/oGmhtsnwkJPjfhsusf+l1s
-         mZX/lRkYi4dIHuZAZUtY5l2CGp8sWRPcPyJFB3lo=
+        b=fGuSW+Q2426utX2GDd1wrJRhtbaG/5B44+jEbLbMZ8S9KAAxz7g377R2Uh0o4qJ4K
+         vi7phIn37YboO12+4HNzu6G+XpWLdE79ulkgj8LWMh7WlLgThC38mvB9+X9ipoLv1c
+         DolWdQJ911siTbTm3YFkfZ1M53X8RsxgtHiZM/Tg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Jon Derrick <jonathan.derrick@intel.com>,
+Cc:     =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
+        Tomasz Maciej Nowak <tmn505@gmail.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>, Sasha Levin <sashal@kernel.org>,
-        linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.7 066/388] PCI: pci-bridge-emul: Fix PCIe bit conflicts
-Date:   Wed, 17 Jun 2020 21:02:43 -0400
-Message-Id: <20200618010805.600873-66-sashal@kernel.org>
+        Rob Herring <robh@kernel.org>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.7 057/388] PCI: aardvark: Don't blindly enable ASPM L0s and don't write to read-only register
+Date:   Wed, 17 Jun 2020 21:02:34 -0400
+Message-Id: <20200618010805.600873-57-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200618010805.600873-1-sashal@kernel.org>
 References: <20200618010805.600873-1-sashal@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -59,53 +63,63 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Jon Derrick <jonathan.derrick@intel.com>
+From: Pali Rohár <pali@kernel.org>
 
-[ Upstream commit c88d19181771bd189147681ef38fc1533ebeff4c ]
+[ Upstream commit 90c6cb4a355e7befcb557d217d1d8b8bd5875a05 ]
 
-This patch fixes two bit conflicts in the pci-bridge-emul driver:
+Trying to change Link Status register does not have any effect as this
+is a read-only register. Trying to overwrite bits for Negotiated Link
+Width does not make sense.
 
-1. Bit 3 of Device Status (19 of Device Control) is marked as both
-   Write-1-to-Clear and Read-Only. It should be Write-1-to-Clear.
-   The Read-Only and Reserved bitmasks are shifted by 1 bit due to this
-   error.
+In future proper change of link width can be done via Lane Count Select
+bits in PCIe Control 0 register.
 
-2. Bit 12 of Slot Control is marked as both Read-Write and Reserved.
-   It should be Read-Write.
+Trying to unconditionally enable ASPM L0s via ASPM Control bits in Link
+Control register is wrong. There should be at least some detection if
+endpoint supports L0s as isn't mandatory.
 
-Link: https://lore.kernel.org/r/20200511162117.6674-2-jonathan.derrick@intel.com
-Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+Moreover ASPM Control bits in Link Control register are controlled by
+pcie/aspm.c code which sets it according to system ASPM settings,
+immediately after aardvark driver probes. So setting these bits by
+aardvark driver has no long running effect.
+
+Remove code which touches ASPM L0s bits from this driver and let
+kernel's ASPM implementation to set ASPM state properly.
+
+Some users are reporting issues that this code is problematic for some
+Intel wifi cards and removing it fixes them, see e.g.:
+https://bugzilla.kernel.org/show_bug.cgi?id=196339
+
+If problems with Intel wifi cards occur even after this commit, then
+pcie/aspm.c code could be modified / hooked to not enable ASPM L0s state
+for affected problematic cards.
+
+Link: https://lore.kernel.org/r/20200430080625.26070-3-pali@kernel.org
+Tested-by: Tomasz Maciej Nowak <tmn505@gmail.com>
+Signed-off-by: Pali Rohár <pali@kernel.org>
 Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Acked-by: Rob Herring <robh@kernel.org>
+Acked-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/pci-bridge-emul.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/pci/controller/pci-aardvark.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/pci/pci-bridge-emul.c b/drivers/pci/pci-bridge-emul.c
-index 4f4f54bc732e..faa414655f33 100644
---- a/drivers/pci/pci-bridge-emul.c
-+++ b/drivers/pci/pci-bridge-emul.c
-@@ -185,8 +185,8 @@ static const struct pci_bridge_reg_behavior pcie_cap_regs_behavior[] = {
- 		 * RO, the rest is reserved
- 		 */
- 		.w1c = GENMASK(19, 16),
--		.ro = GENMASK(20, 19),
--		.rsvd = GENMASK(31, 21),
-+		.ro = GENMASK(21, 20),
-+		.rsvd = GENMASK(31, 22),
- 	},
+diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
+index 2a20b649f40c..3a6d07dc0a38 100644
+--- a/drivers/pci/controller/pci-aardvark.c
++++ b/drivers/pci/controller/pci-aardvark.c
+@@ -353,10 +353,6 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
  
- 	[PCI_EXP_LNKCAP / 4] = {
-@@ -226,7 +226,7 @@ static const struct pci_bridge_reg_behavior pcie_cap_regs_behavior[] = {
- 			PCI_EXP_SLTSTA_CC | PCI_EXP_SLTSTA_DLLSC) << 16,
- 		.ro = (PCI_EXP_SLTSTA_MRLSS | PCI_EXP_SLTSTA_PDS |
- 		       PCI_EXP_SLTSTA_EIS) << 16,
--		.rsvd = GENMASK(15, 12) | (GENMASK(15, 9) << 16),
-+		.rsvd = GENMASK(15, 13) | (GENMASK(15, 9) << 16),
- 	},
+ 	advk_pcie_wait_for_link(pcie);
  
- 	[PCI_EXP_RTCTL / 4] = {
+-	reg = PCIE_CORE_LINK_L0S_ENTRY |
+-		(1 << PCIE_CORE_LINK_WIDTH_SHIFT);
+-	advk_writel(pcie, reg, PCIE_CORE_LINK_CTRL_STAT_REG);
+-
+ 	reg = advk_readl(pcie, PCIE_CORE_CMD_STATUS_REG);
+ 	reg |= PCIE_CORE_CMD_MEM_ACCESS_EN |
+ 		PCIE_CORE_CMD_IO_ACCESS_EN |
 -- 
 2.25.1
 
