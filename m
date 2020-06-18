@@ -4,50 +4,49 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FF48C433DF
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:42:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E6E4C433E3
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:43:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F195321927
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:42:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0D26721534
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:43:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592448160;
-	bh=qETL6FZDyJQkLmfpP6vp9sPwcPD3ihNUu0hjmYnP98c=;
+	s=default; t=1592448191;
+	bh=iHZXshDP9yDONls9Yh/1OiWATdkd0Fiit1aCewERE8M=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=UdnYD3TLokqCxfQFIG+/lIteNK9+lRwt0tUVZ1h7lQG6WUnR6ZHLwB7ffIX60IvIv
-	 VwKuIoP9hsDzaij1pKOi+HnI/fs2rFBvw9CR/7bZFsX64mKA2wPs6lcOiTVnq9Ftox
-	 1kvl6O16tCVs3gO3JXWPOq3gdDaUg+515ZHtHUbw=
+	b=vCF49DMgz6dRhJNcMc7kUqfPMKRgG3NN6UOS6EAgvY4xMFi4OtfEVIb3JCegbRysi
+	 giBO6Ype2ULHflWZmJYVdED+9ke2BfVwtzn1adRNuzNCQykIPVH27iAejhz2LZ1Bm2
+	 l0v1G/QsNH9LWXLsnCGyY5wUThfsbVM7HRhP29Do=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728820AbgFRBL7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 17 Jun 2020 21:11:59 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40168 "EHLO mail.kernel.org"
+        id S1728256AbgFRCmu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 17 Jun 2020 22:42:50 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40038 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727828AbgFRBL5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 17 Jun 2020 21:11:57 -0400
+        id S1728029AbgFRBLx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 17 Jun 2020 21:11:53 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 33C4C20B1F;
-        Thu, 18 Jun 2020 01:11:56 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id CE9682193E;
+        Thu, 18 Jun 2020 01:11:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592442717;
-        bh=qETL6FZDyJQkLmfpP6vp9sPwcPD3ihNUu0hjmYnP98c=;
+        s=default; t=1592442713;
+        bh=iHZXshDP9yDONls9Yh/1OiWATdkd0Fiit1aCewERE8M=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=YgHKPNJht2iXx/rUGTT+U0vLKCTL0EuK+P2GZAJebyBM/gYADmfjMe2e0PViYyffw
-         DHV1y+S4qabr2xcTRBY851w+ARmTEiJV4Pvw978nc/kMX9i9+b85OvC3tWzxLi9s1Q
-         v+8OyND+smOHnTwLkdmqtL+p2xXNU61dEnD6jXqQ=
+        b=a0kehoPiwpzVqDTBs8dBPIMukHtktP7EL+1vneFQB+J5A7kfqWhtdR6Y9AaTeeenU
+         iKcjbpznlqK+O+ai7uVMu4A22MN9sOhhtE4MtmTasp+J2VGwanr1WiASKTYxQ5Eg6I
+         iHeam54R+iHgMzDbJ5eFG7pUBBBJaxXvIH4FwJTY=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Andrew Murray <andrew.murray@arm.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
+Cc:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.7 176/388] PCI: rcar: Fix incorrect programming of OB windows
-Date:   Wed, 17 Jun 2020 21:04:33 -0400
-Message-Id: <20200618010805.600873-176-sashal@kernel.org>
+        Linus Walleij <linus.walleij@linaro.org>,
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.7 173/388] PCI: v3-semi: Fix a memory leak in v3_pci_probe() error handling paths
+Date:   Wed, 17 Jun 2020 21:04:30 -0400
+Message-Id: <20200618010805.600873-173-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200618010805.600873-1-sashal@kernel.org>
 References: <20200618010805.600873-1-sashal@kernel.org>
@@ -60,72 +59,39 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Andrew Murray <andrew.murray@arm.com>
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 
-[ Upstream commit 2b9f217433e31d125fb697ca7974d3de3ecc3e92 ]
+[ Upstream commit bca718988b9008d0d5f504e2d318178fc84958c1 ]
 
-The outbound windows (PCIEPAUR(x), PCIEPALR(x)) describe a mapping between
-a CPU address (which is determined by the window number 'x') and a
-programmed PCI address - Thus allowing the controller to translate CPU
-accesses into PCI accesses.
+If we fails somewhere in 'v3_pci_probe()', we need to free 'host'.
 
-However the existing code incorrectly writes the CPU address - lets fix
-this by writing the PCI address instead.
+Use the managed version of 'pci_alloc_host_bridge()' to do that easily.
+The use of managed resources is already widely used in this driver.
 
-For memory transactions, existing DT users describe a 1:1 identity mapping
-and thus this change should have no effect. However the same isn't true for
-I/O.
-
-Link: https://lore.kernel.org/r/20191004132941.6660-1-andrew.murray@arm.com
-Fixes: c25da4778803 ("PCI: rcar: Add Renesas R-Car PCIe driver")
-Tested-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-Signed-off-by: Andrew Murray <andrew.murray@arm.com>
+Link: https://lore.kernel.org/r/20200418081637.1585-1-christophe.jaillet@wanadoo.fr
+Fixes: 68a15eb7bd0c ("PCI: v3-semi: Add V3 Semiconductor PCI host driver")
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+[lorenzo.pieralisi@arm.com: commit log]
 Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Reviewed-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+Acked-by: Linus Walleij <linus.walleij@linaro.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/controller/pcie-rcar.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ drivers/pci/controller/pci-v3-semi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/controller/pcie-rcar.c b/drivers/pci/controller/pcie-rcar.c
-index 759c6542c5c8..1bae6a4abaae 100644
---- a/drivers/pci/controller/pcie-rcar.c
-+++ b/drivers/pci/controller/pcie-rcar.c
-@@ -333,11 +333,12 @@ static struct pci_ops rcar_pcie_ops = {
- };
+diff --git a/drivers/pci/controller/pci-v3-semi.c b/drivers/pci/controller/pci-v3-semi.c
+index bd05221f5a22..ddcb4571a79b 100644
+--- a/drivers/pci/controller/pci-v3-semi.c
++++ b/drivers/pci/controller/pci-v3-semi.c
+@@ -720,7 +720,7 @@ static int v3_pci_probe(struct platform_device *pdev)
+ 	int irq;
+ 	int ret;
  
- static void rcar_pcie_setup_window(int win, struct rcar_pcie *pcie,
--				   struct resource *res)
-+				   struct resource_entry *window)
- {
- 	/* Setup PCIe address space mappings for each resource */
- 	resource_size_t size;
- 	resource_size_t res_start;
-+	struct resource *res = window->res;
- 	u32 mask;
+-	host = pci_alloc_host_bridge(sizeof(*v3));
++	host = devm_pci_alloc_host_bridge(dev, sizeof(*v3));
+ 	if (!host)
+ 		return -ENOMEM;
  
- 	rcar_pci_write_reg(pcie, 0x00000000, PCIEPTCTLR(win));
-@@ -351,9 +352,9 @@ static void rcar_pcie_setup_window(int win, struct rcar_pcie *pcie,
- 	rcar_pci_write_reg(pcie, mask << 7, PCIEPAMR(win));
- 
- 	if (res->flags & IORESOURCE_IO)
--		res_start = pci_pio_to_address(res->start);
-+		res_start = pci_pio_to_address(res->start) - window->offset;
- 	else
--		res_start = res->start;
-+		res_start = res->start - window->offset;
- 
- 	rcar_pci_write_reg(pcie, upper_32_bits(res_start), PCIEPAUR(win));
- 	rcar_pci_write_reg(pcie, lower_32_bits(res_start) & ~0x7F,
-@@ -382,7 +383,7 @@ static int rcar_pcie_setup(struct list_head *resource, struct rcar_pcie *pci)
- 		switch (resource_type(res)) {
- 		case IORESOURCE_IO:
- 		case IORESOURCE_MEM:
--			rcar_pcie_setup_window(i, pci, res);
-+			rcar_pcie_setup_window(i, pci, win);
- 			i++;
- 			break;
- 		case IORESOURCE_BUS:
 -- 
 2.25.1
 
