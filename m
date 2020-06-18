@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E9D8C433E1
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:16:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABF4BC433E0
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:17:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4400320885
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:16:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 860032098B
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:17:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592446577;
-	bh=8JyAkH6qXlEWTgDmDyyoHedmSsQIwvlwfRUXETdFmJo=;
+	s=default; t=1592446675;
+	bh=eDerT6a56T9SvO+lpq5m979RLoTvWTPGo9xTkVnIVjw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=wqYkt8ISt45stsDHUltcZHcYomq2cw6/dtH+S6u3QWTkWqmCEf9dbOdZAfkBR84SD
-	 81/gYzWTlzmfwVg2zVSromjmQqX0sE1/6OCqTMED89YUFFhrXQRV0cj8Use1hH/2pl
-	 2hLj8FeBsklGTyiPepNrNi0M1Dp7D/rY+fKbCgEg=
+	b=h0A3eCAY3qHBpu3I5Kq9oM73ZLcleY6ra5RmRXFlGcsdyuS8mkfqm5FdJ0jK+ENS5
+	 NLtqL7o//k2b77UyQfGD8m3KZd+wYuzZiXM/O71zrBVROkZ+w5pcNqebMrYHC0fQod
+	 dStVTsuZRC6qQSIkb/wff44naO2+Q5+PTiDmqo0s=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733154AbgFRCQP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 17 Jun 2020 22:16:15 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52462 "EHLO mail.kernel.org"
+        id S1730360AbgFRCRd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 17 Jun 2020 22:17:33 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51742 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728847AbgFRBUT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 17 Jun 2020 21:20:19 -0400
+        id S1730201AbgFRBTv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 17 Jun 2020 21:19:51 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 03FAD214DB;
-        Thu, 18 Jun 2020 01:20:17 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 18875221ED;
+        Thu, 18 Jun 2020 01:19:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592443218;
-        bh=8JyAkH6qXlEWTgDmDyyoHedmSsQIwvlwfRUXETdFmJo=;
+        s=default; t=1592443185;
+        bh=eDerT6a56T9SvO+lpq5m979RLoTvWTPGo9xTkVnIVjw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=gsQOL5DcnJjp6p2K1eAJO/20Yy1E1fCnp4RyHVJpBRFnoT33FZYU92j93xd/vst1y
-         z+9wgiwsyu0ru9H3EWJ08iqWUPzkelCMpau9CuO/92oq4+GiM4Dvt0z7w3fCDD3JyU
-         LoXJ/x1IwGZjcqc5fV6J7TS47gcZbU04ZEhZz0LQ=
+        b=SG4p7YFD7/2Q7SZRKOSuw1HMmhfhiMnWNCO5x4o/L5uQMSJdlW+AdrMZDqY4sOK/5
+         AY6uyXEpe1lm4tGjJHbBCqDIQwDK74RunCNIYGIHNV4ULun6f4ks1IguCZOTEgCmqj
+         ZYb6SLNdP3Uh5607zKZXOZHcdD1MHrkWgVBVBHAM=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Marc Zyngier <maz@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
+Cc:     Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 174/266] PCI: dwc: Fix inner MSI IRQ domain registration
-Date:   Wed, 17 Jun 2020 21:14:59 -0400
-Message-Id: <20200618011631.604574-174-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 147/266] PCI/PM: Assume ports without DLL Link Active train links in 100 ms
+Date:   Wed, 17 Jun 2020 21:14:32 -0400
+Message-Id: <20200618011631.604574-147-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200618011631.604574-1-sashal@kernel.org>
 References: <20200618011631.604574-1-sashal@kernel.org>
@@ -59,46 +59,111 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Marc Zyngier <maz@kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
 
-[ Upstream commit 0414b93e78d87ecc24ae1a7e61fe97deb29fa2f4 ]
+[ Upstream commit ec411e02b7a2e785a4ed9ed283207cd14f48699d ]
 
-On a system that uses the internal DWC MSI widget, I get this
-warning from debugfs when CONFIG_GENERIC_IRQ_DEBUGFS is selected:
+Kai-Heng Feng reported that it takes a long time (> 1 s) to resume
+Thunderbolt-connected devices from both runtime suspend and system sleep
+(s2idle).
 
-  debugfs: File ':soc:pcie@fc000000' in directory 'domains' already present!
+This was because some Downstream Ports that support > 5 GT/s do not also
+support Data Link Layer Link Active reporting.  Per PCIe r5.0 sec 6.6.1:
 
-This is due to the fact that the DWC MSI code tries to register two
-IRQ domains for the same firmware node, without telling the low
-level code how to distinguish them (by setting a bus token). This
-further confuses debugfs which tries to create corresponding
-files for each domain.
+  With a Downstream Port that supports Link speeds greater than 5.0 GT/s,
+  software must wait a minimum of 100 ms after Link training completes
+  before sending a Configuration Request to the device immediately below
+  that Port. Software can determine when Link training completes by polling
+  the Data Link Layer Link Active bit or by setting up an associated
+  interrupt (see Section 6.7.3.3).
 
-Fix it by tagging the inner domain as DOMAIN_BUS_NEXUS, which is
-the closest thing we have as to "generic MSI".
+Sec 7.5.3.6 requires such Ports to support DLL Link Active reporting, but
+at least the Intel JHL6240 Thunderbolt 3 Bridge [8086:15c0] and the Intel
+JHL7540 Thunderbolt 3 Bridge [8086:15ea] do not.
 
-Link: https://lore.kernel.org/r/20200501113921.366597-1-maz@kernel.org
-Signed-off-by: Marc Zyngier <maz@kernel.org>
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
+Previously we tried to wait for Link training to complete, but since there
+was no DLL Link Active reporting, all we could do was wait the worst-case
+1000 ms, then another 100 ms.
+
+Instead of using the supported speeds to determine whether to wait for Link
+training, check whether the port supports DLL Link Active reporting.  The
+Ports in question do not, so we'll wait only the 100 ms required for Ports
+that support Link speeds <= 5 GT/s.
+
+This of course assumes these Ports always train the Link within 100 ms even
+if they are operating at > 5 GT/s, which is not required by the spec.
+
+[bhelgaas: commit log, comment]
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=206837
+Link: https://lore.kernel.org/r/20200514133043.27429-1-mika.westerberg@linux.intel.com
+Reported-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+Tested-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/controller/dwc/pcie-designware-host.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/pci/pci.c | 30 +++++++++++++++++++++---------
+ 1 file changed, 21 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index 8615f1548882..fbcb211cceb4 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -263,6 +263,8 @@ int dw_pcie_allocate_domains(struct pcie_port *pp)
- 		return -ENOMEM;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index c73e8095a849..689f0280c038 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4608,7 +4608,8 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
+  * pcie_wait_for_link_delay - Wait until link is active or inactive
+  * @pdev: Bridge device
+  * @active: waiting for active or inactive?
+- * @delay: Delay to wait after link has become active (in ms)
++ * @delay: Delay to wait after link has become active (in ms). Specify %0
++ *	   for no delay.
+  *
+  * Use this to wait till link becomes active or inactive.
+  */
+@@ -4649,7 +4650,7 @@ static bool pcie_wait_for_link_delay(struct pci_dev *pdev, bool active,
+ 		msleep(10);
+ 		timeout -= 10;
  	}
+-	if (active && ret)
++	if (active && ret && delay)
+ 		msleep(delay);
+ 	else if (ret != active)
+ 		pci_info(pdev, "Data Link Layer Link Active not %s in 1000 msec\n",
+@@ -4770,17 +4771,28 @@ void pci_bridge_wait_for_secondary_bus(struct pci_dev *dev)
+ 	if (!pcie_downstream_port(dev))
+ 		return;
  
-+	irq_domain_update_bus_token(pp->irq_domain, DOMAIN_BUS_NEXUS);
-+
- 	pp->msi_domain = pci_msi_create_irq_domain(fwnode,
- 						   &dw_pcie_msi_domain_info,
- 						   pp->irq_domain);
+-	if (pcie_get_speed_cap(dev) <= PCIE_SPEED_5_0GT) {
+-		pci_dbg(dev, "waiting %d ms for downstream link\n", delay);
+-		msleep(delay);
+-	} else {
+-		pci_dbg(dev, "waiting %d ms for downstream link, after activation\n",
+-			delay);
+-		if (!pcie_wait_for_link_delay(dev, true, delay)) {
++	/*
++	 * Per PCIe r5.0, sec 6.6.1, for downstream ports that support
++	 * speeds > 5 GT/s, we must wait for link training to complete
++	 * before the mandatory delay.
++	 *
++	 * We can only tell when link training completes via DLL Link
++	 * Active, which is required for downstream ports that support
++	 * speeds > 5 GT/s (sec 7.5.3.6).  Unfortunately some common
++	 * devices do not implement Link Active reporting even when it's
++	 * required, so we'll check for that directly instead of checking
++	 * the supported link speed.  We assume devices without Link Active
++	 * reporting can train in 100 ms regardless of speed.
++	 */
++	if (dev->link_active_reporting) {
++		pci_dbg(dev, "waiting for link to train\n");
++		if (!pcie_wait_for_link_delay(dev, true, 0)) {
+ 			/* Did not train, no need to wait any further */
+ 			return;
+ 		}
+ 	}
++	pci_dbg(child, "waiting %d ms to become accessible\n", delay);
++	msleep(delay);
+ 
+ 	if (!pci_device_is_present(child)) {
+ 		pci_dbg(child, "waiting additional %d ms to become accessible\n", delay);
 -- 
 2.25.1
 
