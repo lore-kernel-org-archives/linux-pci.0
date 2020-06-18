@@ -2,69 +2,70 @@ Return-Path: <SRS0=agHd=77=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_IN_DEF_DKIM_WL autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9887AC433DF
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 15:04:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A2A5C433DF
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 15:39:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 77D0B20773
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 15:04:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 32FE7206FA
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 15:39:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="QIP0WJ0p"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nOpCbbD6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731280AbgFRPEa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 18 Jun 2020 11:04:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60598 "EHLO
+        id S1727841AbgFRPjj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 18 Jun 2020 11:39:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37918 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730930AbgFRPE2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jun 2020 11:04:28 -0400
-Received: from mail-lj1-x243.google.com (mail-lj1-x243.google.com [IPv6:2a00:1450:4864:20::243])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D74B1C0613ED
-        for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2020 08:04:27 -0700 (PDT)
-Received: by mail-lj1-x243.google.com with SMTP id 9so7650028ljc.8
-        for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2020 08:04:27 -0700 (PDT)
+        with ESMTP id S1731495AbgFRPji (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jun 2020 11:39:38 -0400
+Received: from mail-pl1-x643.google.com (mail-pl1-x643.google.com [IPv6:2607:f8b0:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9EF9CC06174E;
+        Thu, 18 Jun 2020 08:39:38 -0700 (PDT)
+Received: by mail-pl1-x643.google.com with SMTP id y18so2587786plr.4;
+        Thu, 18 Jun 2020 08:39:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
+        d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=e3AaxzkJKvuJF6KN/5uB+HjzXUCfsnMRb9K1Yv0qPEs=;
-        b=QIP0WJ0pNtpLo2KJbUw4+wbBhH7Nnk4+ZwOpPnliesoYCCasWqpMx0mMvynxG60m+Z
-         u9PE+P5aKkxeVIOwcEMeLon6Vxu0ScvNx/Niy7Yn8ML9ty8p1K5Wm8ci57YEPFHfrR4P
-         nuNnTB8kCWrogjZzQY7mXYIRdfoRzg01usyn60SP5OxOh7iWQEaYWfIvSZ3N8Zte4yZC
-         Rmwzx1CddNdJNUqFG/N0Uke9o/ae2SSRn86wCciYZsKbVFC/U3vXdqP1N9vMXMDCRKEZ
-         nivk6Tb2mzWBW2DcZpP2cyo8FA3tGarbAyFlHjAkABu/Oq6U36aYxnJ+PE3wuHAxS/BG
-         aYWg==
+        bh=GZJ6zrh+Y1Vsbn8ruHOrvITbkoXuvzfrfxu58pe7Zzk=;
+        b=nOpCbbD6xUCyUz1YyRFpYFHK9LWD7cjvIZxDiH+RHDIqnZOql6/HyXntIMdZRBmh6W
+         qpWKCdPmcmhXmDldMKpyNVRtvcF65untSTh7b5p1WI9usEorDqyqWi+2CMlzv8bzHvnL
+         dqwHRgzMvBKGZNXW3AWDlFOGQE2zB0mmd0nG8fJ7sq2Mbb/5W1+6ARarXpTXZ/T5Z7Fh
+         NNczurvr+OGHWixUQ43EDkmzuyUQu7NgUxXcjGQunTlZxsMEkwffmiWHpAJiBmVQMQ+O
+         PL8u/pNkmfjNg6/x1GGhte/FJXNgJRRoFUgl+zVauVs2zGcOpfx5XpLN7dEWqdjkSM8K
+         B3SQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=e3AaxzkJKvuJF6KN/5uB+HjzXUCfsnMRb9K1Yv0qPEs=;
-        b=gPuEv+DPOCmcdbKOu6A6xjJSOn7rsoNCEVHI+r4W62X314jfrIvOZCJBjZzd3hAKro
-         83WzqFbyRuJwNoUn1w24rE48sOVZK7FLS5Z+YwihvsDC2w5HbNjNFFV58kSM1SjzdyJC
-         hENIYvsxgXok2k2tO5ZcO/lrfBX5F3+2UBn54/vUzGBrgrKwr6/UU9exiL+0pvjk5Fr3
-         AO3XYsuiV5f656TIQUlxxOZtUb/I8YWgnRTGyAQifd6EnQZVwkFVtu5DNvOLd0U+OvHi
-         YJ/6so1U+5/f5ZzduMMTosNgenuwuvQcNEF7Fl7VSm+xlND44JjUd31/OpJZtMU5rw8B
-         Pcfw==
-X-Gm-Message-State: AOAM530GlGEFYnwlbW7D6CE65Y5Pta+asGoRknukGP3KQUuNhPld11F3
-        2OWC2z6VWury+QXNDwoRTGUbtXvjjPz8K2gXqIP8QA==
-X-Google-Smtp-Source: ABdhPJwvN0DsAWY3KYiObhTJs8ezFwVTnlVqyM1Aw6aFgxEL3CC4+lrTUDtkDUUgYpMKr67ZSTWxedjAX6xltpaE9DI=
-X-Received: by 2002:a2e:908f:: with SMTP id l15mr2330895ljg.307.1592492665864;
- Thu, 18 Jun 2020 08:04:25 -0700 (PDT)
+        bh=GZJ6zrh+Y1Vsbn8ruHOrvITbkoXuvzfrfxu58pe7Zzk=;
+        b=p17BIvnREAJDft6OnMGhhl5yA7MAuAjLZZCv6agajTzQq2ZSdsqn3WCRPlG6DZAaXS
+         r8353+3fuCPFLV0oRdXrHzcdvCooJEtKFKDJb5Q9r8AZEZ18tbWnnQhpUBL1MOtuqxTe
+         c4c6qn9f8pi0Au98ngPNZjFqwbYqJ0aDza2RTk6rH5sEiYS7k9hGsy9wrzRM5ovzM/w2
+         VCypvOQhpxeVo114Pqw/gfMOJ3SaK60v6nN/XADbkXIm2PoUMONPjbjYqblVp4WW7d0q
+         mdCRZ6EbvBgSCOkes4nX/28EA5dCs3Q4K/cmyeW06wI9+Z6pk0woTecteDm0sl3YweFS
+         kzvw==
+X-Gm-Message-State: AOAM533YO6q0ZDC1Vn/hboYnWQm/z/gFHV0GNzzYR7PQQAA+Zt41w9JJ
+        eSmjv/QHOrP3jjkNb2CpbbRdMsOzeS51pIeD/bQ=
+X-Google-Smtp-Source: ABdhPJxoaHYDZlEj8QJ3QkP/ek5K5pisD5wHKUkE1aXeH10OjnRC6dr0cGbGHcW/Er3YFyoGris7X1yJzT3Uyu0wy+o=
+X-Received: by 2002:a17:90a:ac05:: with SMTP id o5mr5004682pjq.228.1592494778159;
+ Thu, 18 Jun 2020 08:39:38 -0700 (PDT)
 MIME-Version: 1.0
 References: <20200616011742.138975-1-rajatja@google.com> <20200616011742.138975-4-rajatja@google.com>
  <20200616073249.GB30385@infradead.org> <CACK8Z6ELaM8KxbwPor=BUquWN7pALQmmHu5geSOc71P3KoJ1QA@mail.gmail.com>
  <20200617073100.GA14424@infradead.org> <CACK8Z6FecYkAYQh4sm4RbAQ1iwb9gexqgY9ExD9BH2p-5Usj=g@mail.gmail.com>
  <CAHp75Vc6eA33cyAQH-m+yixTuHqiobg6fo7nzbbb-J6vN6qFcA@mail.gmail.com>
  <20200618083646.GA1066967@kroah.com> <CAHp75Vf71f2s6yipHJ4Ys1oe1v7L4PiqBCEbo0uBcG7Wpcs5dQ@mail.gmail.com>
-In-Reply-To: <CAHp75Vf71f2s6yipHJ4Ys1oe1v7L4PiqBCEbo0uBcG7Wpcs5dQ@mail.gmail.com>
-From:   Rajat Jain <rajatja@google.com>
-Date:   Thu, 18 Jun 2020 08:03:49 -0700
-Message-ID: <CACK8Z6F2Ssj=EqhR2DZ114ETgQ-3PhzVi2rm2xxenCNOVH=60g@mail.gmail.com>
+ <CACK8Z6F2Ssj=EqhR2DZ114ETgQ-3PhzVi2rm2xxenCNOVH=60g@mail.gmail.com>
+In-Reply-To: <CACK8Z6F2Ssj=EqhR2DZ114ETgQ-3PhzVi2rm2xxenCNOVH=60g@mail.gmail.com>
+From:   Andy Shevchenko <andy.shevchenko@gmail.com>
+Date:   Thu, 18 Jun 2020 18:39:25 +0300
+Message-ID: <CAHp75Vf_gheXBZh-Mm7ME_eVWc5gPcwY98oCH1-QD920mK7gZw@mail.gmail.com>
 Subject: Re: [PATCH 4/4] pci: export untrusted attribute in sysfs
-To:     Andy Shevchenko <andy.shevchenko@gmail.com>
+To:     Rajat Jain <rajatja@google.com>
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Christoph Hellwig <hch@infradead.org>,
         David Woodhouse <dwmw2@infradead.org>,
@@ -101,70 +102,39 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hello,
+On Thu, Jun 18, 2020 at 6:04 PM Rajat Jain <rajatja@google.com> wrote:
+> On Thu, Jun 18, 2020 at 2:14 AM Andy Shevchenko
+> <andy.shevchenko@gmail.com> wrote:
 
-On Thu, Jun 18, 2020 at 2:14 AM Andy Shevchenko
-<andy.shevchenko@gmail.com> wrote:
+...
+
+> To clarify, the attribute exposed by the firmware today is
+> "ExternalFacingPort" and "external-facing" respectively:
 >
-> On Thu, Jun 18, 2020 at 11:36 AM Greg Kroah-Hartman
-> <gregkh@linuxfoundation.org> wrote:
+> 617654aae50e ("PCI / ACPI: Identify untrusted PCI devices")
+> 9cb30a71ac45d("PCI: OF: Support "external-facing" property")
+>
+> The kernel flag was named "untrusted" though, hence the assumption
+> that "external=untrusted" is currently baked into the kernel today.
+> IMHO, using "external" would fix that (The assumption can thus be
+> contained in the IOMMU drivers) and at the same time allow more use of
+> this attribute.
+
+That discussion had been held, IIRC, during introduction of the
+untrusted member in struct pci_dev...
+
+> > > Trust is different, yes, don't get the two mixed up please.  That should
+> > > be a different sysfs attribute for obvious reasons.
 > >
-> > On Thu, Jun 18, 2020 at 11:12:56AM +0300, Andy Shevchenko wrote:
-> > > On Wed, Jun 17, 2020 at 10:56 PM Rajat Jain <rajatja@google.com> wrote:
-> > > > On Wed, Jun 17, 2020 at 12:31 AM Christoph Hellwig <hch@infradead.org> wrote:
-> > >
-> > > ...
-> > >
-> > > > (and likely call it "external" instead of "untrusted".
-> > >
-> > > Which is not okay. 'External' to what? 'untrusted' has been carefully
-> > > chosen by the meaning of it.
-> > > What external does mean for M.2. WWAN card in my laptop? It's in ACPI
-> > > tables, but I can replace it.
-> >
-> > Then your ACPI tables should show this, there is an attribute for it,
-> > right?
+> > Yes, as a bottom line that's what I meant as well.
 >
-> There is a _PLD() method, but it's for the USB devices (or optional
-> for others, I don't remember by heart). So, most of the ACPI tables,
-> alas, don't show this.
->
-> > > This is only one example. Or if firmware of some device is altered,
-> > > and it's internal (whatever it means) is it trusted or not?
-> >
-> > That is what people are using policy for today, if you object to this,
-> > please bring it up to those developers :)
->
-> > > So, please leave it as is (I mean name).
-> >
-> > firmware today exports this attribute, why do you not want userspace to
-> > also know it?
+> So what is the consensus here? I don't have a strong opinion - but it
+> seemed to me Greg is saying "external" and Andy is saying "untrusted"?
 
-To clarify, the attribute exposed by the firmware today is
-"ExternalFacingPort" and "external-facing" respectively:
+...and a conclusion has been made as you may see. So, I would highly
+recommend to speak to the author(s) of the patch that introduced /
+adopted 'untrusted' member.
 
-617654aae50e ("PCI / ACPI: Identify untrusted PCI devices")
-9cb30a71ac45d("PCI: OF: Support "external-facing" property")
-
-The kernel flag was named "untrusted" though, hence the assumption
-that "external=untrusted" is currently baked into the kernel today.
-IMHO, using "external" would fix that (The assumption can thus be
-contained in the IOMMU drivers) and at the same time allow more use of
-this attribute.
-
-> >
-> > Trust is different, yes, don't get the two mixed up please.  That should
-> > be a different sysfs attribute for obvious reasons.
->
-> Yes, as a bottom line that's what I meant as well.
-
-So what is the consensus here? I don't have a strong opinion - but it
-seemed to me Greg is saying "external" and Andy is saying "untrusted"?
-
-Thanks,
-Rajat
-
->
-> --
-> With Best Regards,
-> Andy Shevchenko
+-- 
+With Best Regards,
+Andy Shevchenko
