@@ -7,45 +7,45 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9A44C433DF
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:14:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83099C433E0
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:16:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B86B620853
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:14:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 64A652088E
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 02:16:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592446441;
-	bh=jZ92myoh9p0SwxIy56nhQlfUDjZkGC29YAyAi+XrVCw=;
+	s=default; t=1592446572;
+	bh=iplyPM27PcNRmVU8iO4tDZsu6oYuCl3PiRkC1vxjPIc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=pFWgjntRmpRhBANWWH902hjBLMMHWAqN+LYOQScA171zEH+7gntzX2SJPLbDEO2p7
-	 hf0FiwSDPvwb/nE5cXVhxi5V8B3ug621ITFBryZJK36wkYpR65F3yR1bcnvvS073uU
-	 oYVWjvfzYKV3el8cg7lLjWWWdMUDRcJI3bHA2DQc=
+	b=dt7fSkh4feoUoK7DXV50JWm4AkFbn1y04hiYllRol5RclpPL6a96gJSBPUcCbkbsi
+	 p6tY2pMIVd0729B/rPqDYIjwzPNwnS6heMS5nU6B7z0/6W/sbA9/Iil/+uIuVZFivi
+	 DFXq1qLIz+eQb+FTBhYLQ5tPDC2HQZUCDHyZSyt8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731963AbgFRCN4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 17 Jun 2020 22:13:56 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53240 "EHLO mail.kernel.org"
+        id S1729322AbgFRBUW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 17 Jun 2020 21:20:22 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52426 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730410AbgFRBUz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 17 Jun 2020 21:20:55 -0400
+        id S1729532AbgFRBUS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 17 Jun 2020 21:20:18 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 8D5B520FC3;
-        Thu, 18 Jun 2020 01:20:54 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id D8B42206F1;
+        Thu, 18 Jun 2020 01:20:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592443255;
-        bh=jZ92myoh9p0SwxIy56nhQlfUDjZkGC29YAyAi+XrVCw=;
+        s=default; t=1592443217;
+        bh=iplyPM27PcNRmVU8iO4tDZsu6oYuCl3PiRkC1vxjPIc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=djTfkVbCas+38Y7Si6p1NacFON6GHeJ7osJz/zAXC7xJEV/8pxSielnNb9dQemgfY
-         JpEE409dhWac1JiblsJJfTjxDjEAC7wiJJZlHVvMHseCjEK2wW1U8ntkBPSuulhgya
-         fur3E3CWilMYRlB+EwBrInhvwUeipe4I+BoMM0HE=
+        b=UIkRj8qPUV0l7ume2DeHkVsweRoIQy1KeEN+f+xRKlfaBgqjaXcX685Da7hvpK4zE
+         GQ1cYgZvQ4LM7bRxCPiNw7vjTQ6T4wZuOCS/MIzLqbhtMuF5pLLvbpN/XkV6/MokBQ
+         AV7O6/nf/lI70MK1IwiGSCaQnDTzUdmy3YEkqS8g=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Marcos Scriven <marcos@scriven.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Aditya Paluri <Venkata.AdityaPaluri@synopsys.com>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 203/266] PCI: Avoid FLR for AMD Matisse HD Audio & USB 3.0
-Date:   Wed, 17 Jun 2020 21:15:28 -0400
-Message-Id: <20200618011631.604574-203-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 173/266] PCI/PTM: Inherit Switch Downstream Port PTM settings from Upstream Port
+Date:   Wed, 17 Jun 2020 21:14:58 -0400
+Message-Id: <20200618011631.604574-173-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200618011631.604574-1-sashal@kernel.org>
 References: <20200618011631.604574-1-sashal@kernel.org>
@@ -58,60 +58,75 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Marcos Scriven <marcos@scriven.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-[ Upstream commit 0d14f06cd6657ba3446a5eb780672da487b068e7 ]
+[ Upstream commit 7b38fd9760f51cc83d80eed2cfbde8b5ead9e93a ]
 
-The AMD Matisse HD Audio & USB 3.0 devices advertise Function Level Reset
-support, but hang when an FLR is triggered.
+Except for Endpoints, we enable PTM at enumeration-time.  Previously we did
+not account for the fact that Switch Downstream Ports are not permitted to
+have a PTM capability; their PTM behavior is controlled by the Upstream
+Port (PCIe r5.0, sec 7.9.16).  Since Downstream Ports don't have a PTM
+capability, we did not mark them as "ptm_enabled", which meant that
+pci_enable_ptm() on an Endpoint failed because there was no PTM path to it.
 
-To reproduce the problem, attach the device to a VM, then detach and try to
-attach again.
+Mark Downstream Ports as "ptm_enabled" if their Upstream Port has PTM
+enabled.
 
-Rename the existing quirk_intel_no_flr(), which was not Intel-specific, to
-quirk_no_flr(), and apply it to prevent the use of FLR on these AMD
-devices.
-
-Link: https://lore.kernel.org/r/CAAri2DpkcuQZYbT6XsALhx2e6vRqPHwtbjHYeiH7MNp4zmt1RA@mail.gmail.com
-Signed-off-by: Marcos Scriven <marcos@scriven.org>
+Fixes: eec097d43100 ("PCI: Add pci_enable_ptm() for drivers to enable PTM on endpoints")
+Reported-by: Aditya Paluri <Venkata.AdityaPaluri@synopsys.com>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/quirks.c | 18 ++++++++++++++----
- 1 file changed, 14 insertions(+), 4 deletions(-)
+ drivers/pci/pcie/ptm.c | 22 +++++++++++++++++-----
+ 1 file changed, 17 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 798e52051ecc..3f89ba7fe7fb 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -5130,13 +5130,23 @@ static void quirk_intel_qat_vf_cap(struct pci_dev *pdev)
- }
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x443, quirk_intel_qat_vf_cap);
+diff --git a/drivers/pci/pcie/ptm.c b/drivers/pci/pcie/ptm.c
+index 9361f3aa26ab..357a454cafa0 100644
+--- a/drivers/pci/pcie/ptm.c
++++ b/drivers/pci/pcie/ptm.c
+@@ -39,10 +39,6 @@ void pci_ptm_init(struct pci_dev *dev)
+ 	if (!pci_is_pcie(dev))
+ 		return;
  
--/* FLR may cause some 82579 devices to hang */
--static void quirk_intel_no_flr(struct pci_dev *dev)
-+/*
-+ * FLR may cause the following to devices to hang:
-+ *
-+ * AMD Starship/Matisse HD Audio Controller 0x1487
-+ * AMD Matisse USB 3.0 Host Controller 0x149c
-+ * Intel 82579LM Gigabit Ethernet Controller 0x1502
-+ * Intel 82579V Gigabit Ethernet Controller 0x1503
-+ *
-+ */
-+static void quirk_no_flr(struct pci_dev *dev)
- {
- 	dev->dev_flags |= PCI_DEV_FLAGS_NO_FLR_RESET;
- }
--DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_intel_no_flr);
--DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_intel_no_flr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x1487, quirk_no_flr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x149c, quirk_no_flr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_no_flr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_no_flr);
+-	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_PTM);
+-	if (!pos)
+-		return;
+-
+ 	/*
+ 	 * Enable PTM only on interior devices (root ports, switch ports,
+ 	 * etc.) on the assumption that it causes no link traffic until an
+@@ -52,6 +48,23 @@ void pci_ptm_init(struct pci_dev *dev)
+ 	     pci_pcie_type(dev) == PCI_EXP_TYPE_RC_END))
+ 		return;
  
- static void quirk_no_ext_tags(struct pci_dev *pdev)
- {
++	/*
++	 * Switch Downstream Ports are not permitted to have a PTM
++	 * capability; their PTM behavior is controlled by the Upstream
++	 * Port (PCIe r5.0, sec 7.9.16).
++	 */
++	ups = pci_upstream_bridge(dev);
++	if (pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM &&
++	    ups && ups->ptm_enabled) {
++		dev->ptm_granularity = ups->ptm_granularity;
++		dev->ptm_enabled = 1;
++		return;
++	}
++
++	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_PTM);
++	if (!pos)
++		return;
++
+ 	pci_read_config_dword(dev, pos + PCI_PTM_CAP, &cap);
+ 	local_clock = (cap & PCI_PTM_GRANULARITY_MASK) >> 8;
+ 
+@@ -61,7 +74,6 @@ void pci_ptm_init(struct pci_dev *dev)
+ 	 * the spec recommendation (PCIe r3.1, sec 7.32.3), select the
+ 	 * furthest upstream Time Source as the PTM Root.
+ 	 */
+-	ups = pci_upstream_bridge(dev);
+ 	if (ups && ups->ptm_enabled) {
+ 		ctrl = PCI_PTM_CTRL_ENABLE;
+ 		if (ups->ptm_granularity == 0)
 -- 
 2.25.1
 
