@@ -2,122 +2,98 @@ Return-Path: <SRS0=agHd=77=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6FD6C433DF
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 08:37:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BCF9C433E0
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 08:38:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ACA9B214DB
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 08:37:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592469422;
-	bh=ceL/T8t0nvr/U3tOjodwMKknS/aAxNJ8RojCHrLF1ok=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=K2I3nVQet2c8uQibr7laoKVEuw+fy/KGtEbb1y7aGAXlq2suBliR9I0hakBeVOc2q
-	 /XqqunIspHGcL2avEihAVuOT6iR8jdtksZVM35gM59wPzH/MXmt+9zy7JgUmRT48ys
-	 rjYOcStDjvt/7nsxv/YaIUNqrhYEitfZf8HYXhp4=
+	by mail.kernel.org (Postfix) with ESMTP id 1C87C21D91
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Jun 2020 08:38:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728496AbgFRIg6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 18 Jun 2020 04:36:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54142 "EHLO mail.kernel.org"
+        id S1728841AbgFRIib (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 18 Jun 2020 04:38:31 -0400
+Received: from mx.socionext.com ([202.248.49.38]:19342 "EHLO mx.socionext.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728585AbgFRIgy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 18 Jun 2020 04:36:54 -0400
-Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id EBE5F214DB;
-        Thu, 18 Jun 2020 08:36:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592469413;
-        bh=ceL/T8t0nvr/U3tOjodwMKknS/aAxNJ8RojCHrLF1ok=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=fhmVqgBm4oYl3kaigyXF+fjYbAtWBnSCDQ01zfS0JLYK3gukCSKFX5/7FuhT1Rddg
-         G+/nRvmR+h/ih67DEse6ah3ZJOIHmQNa/IrfpIzNqOgVLauwcJ4gL8gLuByIeLnTZe
-         XbWo06NX2QYRQYvzI3OU8jnZRnrWl3CjgdK+X07A=
-Date:   Thu, 18 Jun 2020 10:36:46 +0200
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc:     Rajat Jain <rajatja@google.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Lu Baolu <baolu.lu@linux.intel.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, iommu@lists.linux-foundation.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Raj Ashok <ashok.raj@intel.com>,
-        "Krishnakumar, Lalithambika" <lalithambika.krishnakumar@intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Jean-Philippe Brucker <jean-philippe@linaro.org>,
-        Prashant Malani <pmalani@google.com>,
-        Benson Leung <bleung@google.com>,
-        Todd Broch <tbroch@google.com>,
-        Alex Levin <levinale@google.com>,
-        Mattias Nissler <mnissler@google.com>,
-        Rajat Jain <rajatxjain@gmail.com>,
-        Bernie Keany <bernie.keany@intel.com>,
-        Aaron Durbin <adurbin@google.com>,
-        Diego Rivas <diegorivas@google.com>,
-        Duncan Laurie <dlaurie@google.com>,
-        Furquan Shaikh <furquan@google.com>,
-        Jesse Barnes <jsbarnes@google.com>,
-        Christian Kellner <christian@kellner.me>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Oliver O'Halloran <oohall@gmail.com>
-Subject: Re: [PATCH 4/4] pci: export untrusted attribute in sysfs
-Message-ID: <20200618083646.GA1066967@kroah.com>
-References: <20200616011742.138975-1-rajatja@google.com>
- <20200616011742.138975-4-rajatja@google.com>
- <20200616073249.GB30385@infradead.org>
- <CACK8Z6ELaM8KxbwPor=BUquWN7pALQmmHu5geSOc71P3KoJ1QA@mail.gmail.com>
- <20200617073100.GA14424@infradead.org>
- <CACK8Z6FecYkAYQh4sm4RbAQ1iwb9gexqgY9ExD9BH2p-5Usj=g@mail.gmail.com>
- <CAHp75Vc6eA33cyAQH-m+yixTuHqiobg6fo7nzbbb-J6vN6qFcA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAHp75Vc6eA33cyAQH-m+yixTuHqiobg6fo7nzbbb-J6vN6qFcA@mail.gmail.com>
+        id S1727839AbgFRIi0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 18 Jun 2020 04:38:26 -0400
+Received: from unknown (HELO kinkan-ex.css.socionext.com) ([172.31.9.52])
+  by mx.socionext.com with ESMTP; 18 Jun 2020 17:38:24 +0900
+Received: from mail.mfilter.local (m-filter-2 [10.213.24.62])
+        by kinkan-ex.css.socionext.com (Postfix) with ESMTP id 528D6180B51;
+        Thu, 18 Jun 2020 17:38:24 +0900 (JST)
+Received: from 172.31.9.51 (172.31.9.51) by m-FILTER with ESMTP; Thu, 18 Jun 2020 17:38:24 +0900
+Received: from plum.e01.socionext.com (unknown [10.213.132.32])
+        by kinkan.css.socionext.com (Postfix) with ESMTP id D09501A12AD;
+        Thu, 18 Jun 2020 17:38:23 +0900 (JST)
+From:   Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Masahiro Yamada <yamada.masahiro@socionext.com>,
+        Marc Zyngier <maz@kernel.org>
+Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Masami Hiramatsu <masami.hiramatsu@linaro.org>,
+        Jassi Brar <jaswinder.singh@linaro.org>,
+        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+Subject: [PATCH v5 1/6] PCI: dwc: Add msi_host_isr() callback
+Date:   Thu, 18 Jun 2020 17:38:08 +0900
+Message-Id: <1592469493-1549-2-git-send-email-hayashi.kunihiko@socionext.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1592469493-1549-1-git-send-email-hayashi.kunihiko@socionext.com>
+References: <1592469493-1549-1-git-send-email-hayashi.kunihiko@socionext.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Jun 18, 2020 at 11:12:56AM +0300, Andy Shevchenko wrote:
-> On Wed, Jun 17, 2020 at 10:56 PM Rajat Jain <rajatja@google.com> wrote:
-> > On Wed, Jun 17, 2020 at 12:31 AM Christoph Hellwig <hch@infradead.org> wrote:
-> 
-> ...
-> 
-> > (and likely call it "external" instead of "untrusted".
-> 
-> Which is not okay. 'External' to what? 'untrusted' has been carefully
-> chosen by the meaning of it.
-> What external does mean for M.2. WWAN card in my laptop? It's in ACPI
-> tables, but I can replace it.
+This adds msi_host_isr() callback function support to describe
+SoC-dependent service triggered by MSI.
 
-Then your ACPI tables should show this, there is an attribute for it,
-right?
+For example, when AER interrupt is triggered by MSI, the callback function
+reads SoC-dependent registers and detects that the interrupt is from AER,
+and invoke AER interrupts related to MSI.
 
-> This is only one example. Or if firmware of some device is altered,
-> and it's internal (whatever it means) is it trusted or not?
+Cc: Marc Zyngier <maz@kernel.org>
+Cc: Jingoo Han <jingoohan1@gmail.com>
+Cc: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+Acked-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+ drivers/pci/controller/dwc/pcie-designware-host.c | 3 +++
+ drivers/pci/controller/dwc/pcie-designware.h      | 1 +
+ 2 files changed, 4 insertions(+)
 
-That is what people are using policy for today, if you object to this,
-please bring it up to those developers :)
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index 0a4a5aa..026edb1 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -83,6 +83,9 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+ 	u32 status, num_ctrls;
+ 	irqreturn_t ret = IRQ_NONE;
+ 
++	if (pp->ops->msi_host_isr)
++		pp->ops->msi_host_isr(pp);
++
+ 	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
+ 
+ 	for (i = 0; i < num_ctrls; i++) {
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 656e00f..e741967 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -170,6 +170,7 @@ struct dw_pcie_host_ops {
+ 	void (*scan_bus)(struct pcie_port *pp);
+ 	void (*set_num_vectors)(struct pcie_port *pp);
+ 	int (*msi_host_init)(struct pcie_port *pp);
++	void (*msi_host_isr)(struct pcie_port *pp);
+ };
+ 
+ struct pcie_port {
+-- 
+2.7.4
 
-> So, please leave it as is (I mean name).
-
-firmware today exports this attribute, why do you not want userspace to
-also know it?
-
-Trust is different, yes, don't get the two mixed up please.  That should
-be a different sysfs attribute for obvious reasons.
-
-thanks,
-
-greg k-h
