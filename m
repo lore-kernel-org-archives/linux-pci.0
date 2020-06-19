@@ -2,149 +2,156 @@ Return-Path: <SRS0=kzLt=AA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DFFBC433E1
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Jun 2020 16:10:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09283C433E0
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Jun 2020 16:18:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8878321852
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Jun 2020 16:10:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DEAE72168B
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Jun 2020 16:18:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1592583488;
+	bh=M7PwrjrfdXODKnOalC4KUpH+lCIGVEORQmdBrMCqeqI=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=UwgFJpu0oNctqLwTlmpOp0jzA9d7MXHUXmfxCkkeRHJ56xjxkxzcIOCqxfDev2tq4
+	 p9YI3W77cUX5WEW37WNKLd58w5EDGa2D6GMrTuAMTVdY/gn+Igkeg/vhtiENY/nx3Y
+	 CLpdjSN1xMuclkQ2PYGektetheURMRro1mwaJF48=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391478AbgFSQKL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 19 Jun 2020 12:10:11 -0400
-Received: from mga03.intel.com ([134.134.136.65]:61879 "EHLO mga03.intel.com"
+        id S2390776AbgFSPCC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 19 Jun 2020 11:02:02 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58488 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2404125AbgFSQKK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 19 Jun 2020 12:10:10 -0400
-IronPort-SDR: TKMhlxq6sLTSpi9FX4kfvgLNITpE5/PdVeD9BsRnIYz78t+yJaMW5/SewWfbt1RcU7qqSSLnYN
- W9GP4tfEVi8A==
-X-IronPort-AV: E=McAfee;i="6000,8403,9657"; a="142922485"
-X-IronPort-AV: E=Sophos;i="5.75,255,1589266800"; 
-   d="scan'208";a="142922485"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Jun 2020 09:10:09 -0700
-IronPort-SDR: 7RubQq9VxRUfRzuPMeOWSStaHKgmrTEFu3KNxl6djYfk5OGCi6GIlI27lydbeTOfyd4+aOyEOX
- VW8+JfhjviTw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.75,255,1589266800"; 
-   d="scan'208";a="274323199"
-Received: from otc-nc-03.jf.intel.com (HELO otc-nc-03) ([10.54.39.25])
-  by orsmga003.jf.intel.com with ESMTP; 19 Jun 2020 09:10:09 -0700
-Date:   Fri, 19 Jun 2020 09:10:09 -0700
-From:   "Raj, Ashok" <ashok.raj@intel.com>
-To:     Rajat Jain <rajatja@google.com>
-Cc:     David Woodhouse <dwmw2@infradead.org>,
-        Lu Baolu <baolu.lu@linux.intel.com>,
-        Joerg Roedel <joro@8bytes.org>,
+        id S2390086AbgFSPCB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 19 Jun 2020 11:02:01 -0400
+Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5DE0820734;
+        Fri, 19 Jun 2020 15:02:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1592578920;
+        bh=M7PwrjrfdXODKnOalC4KUpH+lCIGVEORQmdBrMCqeqI=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=FRlvGArJgNPbN73sxC9ZAXAOscsCptuUkxUDPns+pOrbr/qAn7CnsmFXF5gkbp2Ez
+         LOm22lwu4+Sn+cXc+JlGscff01u6b6Vf7pSBSGmdJqkg1Envu2I7CwAUs9D3vM+t69
+         UITTOPKY6sdSQaOqB3w9sgc6mJA9UAMI3kLul3Dk=
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     linux-kernel@vger.kernel.org
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        stable@vger.kernel.org, Brian Woods <brian.woods@amd.com>,
+        Borislav Petkov <bp@suse.de>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, iommu@lists.linux-foundation.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, lalithambika.krishnakumar@intel.com,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Jean-Philippe Brucker <jean-philippe@linaro.org>,
-        Prashant Malani <pmalani@google.com>,
-        Benson Leung <bleung@google.com>,
-        Todd Broch <tbroch@google.com>,
-        Alex Levin <levinale@google.com>,
-        Mattias Nissler <mnissler@google.com>,
-        Rajat Jain <rajatxjain@gmail.com>,
-        Bernie Keany <bernie.keany@intel.com>,
-        Aaron Durbin <adurbin@google.com>,
-        Diego Rivas <diegorivas@google.com>,
-        Duncan Laurie <dlaurie@google.com>,
-        Furquan Shaikh <furquan@google.com>,
-        Jesse Barnes <jsbarnes@google.com>,
-        Christian Kellner <christian@kellner.me>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        oohall@gmail.com, Ashok Raj <ashok.raj@intel.com>
-Subject: Re: [PATCH 3/4] pci: acs: Enable PCI_ACS_TB for
- untrusted/external-facing devices
-Message-ID: <20200619161009.GH42799@otc-nc-03>
-References: <20200616011742.138975-1-rajatja@google.com>
- <20200616011742.138975-3-rajatja@google.com>
+        Clemens Ladisch <clemens@ladisch.de>,
+        Guenter Roeck <linux@roeck-us.net>,
+        "H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
+        Jean Delvare <jdelvare@suse.com>,
+        Jia Zhang <qianyue.zj@alibaba-inc.com>,
+        linux-hwmon@vger.kernel.org, linux-pci@vger.kernel.org,
+        Pu Wen <puwen@hygon.cn>, Thomas Gleixner <tglx@linutronix.de>,
+        x86-ml <x86@kernel.org>, Sasha Levin <sashal@kernel.org>
+Subject: [PATCH 4.19 207/267] x86/amd_nb: Add PCI device IDs for family 17h, model 30h
+Date:   Fri, 19 Jun 2020 16:33:12 +0200
+Message-Id: <20200619141658.664008157@linuxfoundation.org>
+X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20200619141648.840376470@linuxfoundation.org>
+References: <20200619141648.840376470@linuxfoundation.org>
+User-Agent: quilt/0.66
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200616011742.138975-3-rajatja@google.com>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Rajat
+From: Woods, Brian <Brian.Woods@amd.com>
+
+[ Upstream commit be3518a16ef270e3b030a6ae96055f83f51bd3dd ]
+
+Add the PCI device IDs for family 17h model 30h, since they are needed
+for accessing various registers via the data fabric/SMN interface.
+
+Signed-off-by: Brian Woods <brian.woods@amd.com>
+Signed-off-by: Borislav Petkov <bp@suse.de>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Clemens Ladisch <clemens@ladisch.de>
+CC: Guenter Roeck <linux@roeck-us.net>
+CC: "H. Peter Anvin" <hpa@zytor.com>
+CC: Ingo Molnar <mingo@redhat.com>
+CC: Jean Delvare <jdelvare@suse.com>
+CC: Jia Zhang <qianyue.zj@alibaba-inc.com>
+CC: <linux-hwmon@vger.kernel.org>
+CC: <linux-pci@vger.kernel.org>
+CC: Pu Wen <puwen@hygon.cn>
+CC: Thomas Gleixner <tglx@linutronix.de>
+CC: x86-ml <x86@kernel.org>
+Link: http://lkml.kernel.org/r/20181106200754.60722-4-brian.woods@amd.com
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ arch/x86/kernel/amd_nb.c | 6 ++++++
+ include/linux/pci_ids.h  | 1 +
+ 2 files changed, 7 insertions(+)
+
+diff --git a/arch/x86/kernel/amd_nb.c b/arch/x86/kernel/amd_nb.c
+index bf440af5ff9c..b95db8ce83bf 100644
+--- a/arch/x86/kernel/amd_nb.c
++++ b/arch/x86/kernel/amd_nb.c
+@@ -16,8 +16,10 @@
+ 
+ #define PCI_DEVICE_ID_AMD_17H_ROOT	0x1450
+ #define PCI_DEVICE_ID_AMD_17H_M10H_ROOT	0x15d0
++#define PCI_DEVICE_ID_AMD_17H_M30H_ROOT	0x1480
+ #define PCI_DEVICE_ID_AMD_17H_DF_F4	0x1464
+ #define PCI_DEVICE_ID_AMD_17H_M10H_DF_F4 0x15ec
++#define PCI_DEVICE_ID_AMD_17H_M30H_DF_F4 0x1494
+ 
+ /* Protect the PCI config register pairs used for SMN and DF indirect access. */
+ static DEFINE_MUTEX(smn_mutex);
+@@ -27,9 +29,11 @@ static u32 *flush_words;
+ static const struct pci_device_id amd_root_ids[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_17H_ROOT) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_17H_M10H_ROOT) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_17H_M30H_ROOT) },
+ 	{}
+ };
+ 
++
+ #define PCI_DEVICE_ID_AMD_CNB17H_F4     0x1704
+ 
+ const struct pci_device_id amd_nb_misc_ids[] = {
+@@ -43,6 +47,7 @@ const struct pci_device_id amd_nb_misc_ids[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_M30H_NB_F3) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_17H_DF_F3) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_17H_M10H_DF_F3) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_17H_M30H_DF_F3) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_CNB17H_F3) },
+ 	{}
+ };
+@@ -56,6 +61,7 @@ static const struct pci_device_id amd_nb_link_ids[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_M30H_NB_F4) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_17H_DF_F4) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_17H_M10H_DF_F4) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_17H_M30H_DF_F4) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_CNB17H_F4) },
+ 	{}
+ };
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 857cfd6281a0..81c7af243a31 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -547,6 +547,7 @@
+ #define PCI_DEVICE_ID_AMD_16H_M30H_NB_F4 0x1584
+ #define PCI_DEVICE_ID_AMD_17H_DF_F3	0x1463
+ #define PCI_DEVICE_ID_AMD_17H_M10H_DF_F3 0x15eb
++#define PCI_DEVICE_ID_AMD_17H_M30H_DF_F3 0x1493
+ #define PCI_DEVICE_ID_AMD_CNB17H_F3	0x1703
+ #define PCI_DEVICE_ID_AMD_LANCE		0x2000
+ #define PCI_DEVICE_ID_AMD_LANCE_HOME	0x2001
+-- 
+2.25.1
 
 
-On Mon, Jun 15, 2020 at 06:17:41PM -0700, Rajat Jain wrote:
-> When enabling ACS, currently the bit "translation blocking" was
-> not getting changed at all. Set it to disable translation blocking
 
-Maybe you meant "enable translation blocking" ?
-
-Keep the commit log simple:
-
-When enabling ACS, enable translation blocking for external facing ports
-and untrusted devices.
-
-> too for all external facing or untrusted devices. This is OK
-> because ATS is only allowed on internal devces.
-> 
-> Signed-off-by: Rajat Jain <rajatja@google.com>
-> ---
->  drivers/pci/pci.c    |  4 ++++
->  drivers/pci/quirks.c | 11 +++++++++++
->  2 files changed, 15 insertions(+)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index d2ff987585855..79853b52658a2 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3330,6 +3330,10 @@ static void pci_std_enable_acs(struct pci_dev *dev)
->  	/* Upstream Forwarding */
->  	ctrl |= (cap & PCI_ACS_UF);
->  
-> +	if (dev->external_facing || dev->untrusted)
-> +		/* Translation Blocking */
-> +		ctrl |= (cap & PCI_ACS_TB);
-> +
->  	pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
->  }
->  
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index b341628e47527..6294adeac4049 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -4934,6 +4934,13 @@ static void pci_quirk_enable_intel_rp_mpc_acs(struct pci_dev *dev)
->  	}
->  }
->  
-> +/*
-> + * Currently this quirk does the equivalent of
-> + * PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_SV
-> + *
-> + * Currently missing, it also needs to do equivalent of PCI_ACS_TB,
-> + * if dev->external_facing || dev->untrusted
-> + */
->  static int pci_quirk_enable_intel_pch_acs(struct pci_dev *dev)
->  {
->  	if (!pci_quirk_intel_pch_acs_match(dev))
-> @@ -4973,6 +4980,10 @@ static int pci_quirk_enable_intel_spt_pch_acs(struct pci_dev *dev)
->  	ctrl |= (cap & PCI_ACS_CR);
->  	ctrl |= (cap & PCI_ACS_UF);
->  
-> +	if (dev->external_facing || dev->untrusted)
-> +		/* Translation Blocking */
-> +		ctrl |= (cap & PCI_ACS_TB);
-> +
->  	pci_write_config_dword(dev, pos + INTEL_SPT_ACS_CTRL, ctrl);
->  
->  	pci_info(dev, "Intel SPT PCH root port ACS workaround enabled\n");
-> -- 
-> 2.27.0.290.gba653c62da-goog
-> 
