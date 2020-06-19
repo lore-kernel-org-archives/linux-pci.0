@@ -7,43 +7,45 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A971C433DF
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Jun 2020 08:24:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2487AC433E1
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Jun 2020 08:24:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DB9C2214D8
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Jun 2020 08:24:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0970220885
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Jun 2020 08:24:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731367AbgFSIXl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 19 Jun 2020 04:23:41 -0400
-Received: from foss.arm.com ([217.140.110.172]:47128 "EHLO foss.arm.com"
+        id S1731400AbgFSIXj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 19 Jun 2020 04:23:39 -0400
+Received: from foss.arm.com ([217.140.110.172]:47016 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731288AbgFSIVH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 19 Jun 2020 04:21:07 -0400
+        id S1731243AbgFSIVF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 19 Jun 2020 04:21:05 -0400
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 4DC7813A1;
-        Fri, 19 Jun 2020 01:20:59 -0700 (PDT)
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id C319A1435;
+        Fri, 19 Jun 2020 01:20:45 -0700 (PDT)
 Received: from red-moon.arm.com (unknown [10.57.58.158])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id E7EF53F71F;
-        Fri, 19 Jun 2020 01:20:56 -0700 (PDT)
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 477D03F71F;
+        Fri, 19 Jun 2020 01:20:43 -0700 (PDT)
 From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 To:     linux-arm-kernel@lists.infradead.org
-Cc:     Diana Craciun <diana.craciun@oss.nxp.com>,
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Joerg Roedel <joro@8bytes.org>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Marc Zyngier <maz@kernel.org>,
         iommu@lists.linux-foundation.org, linux-acpi@vger.kernel.org,
         devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        Rob Herring <robh+dt@kernel.org>,
         "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Joerg Roedel <joro@8bytes.org>,
         Hanjun Guo <guohanjun@huawei.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Sudeep Holla <sudeep.holla@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
         Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will@kernel.org>, Marc Zyngier <maz@kernel.org>,
+        Will Deacon <will@kernel.org>,
         Makarand Pawagi <makarand.pawagi@nxp.com>,
+        Diana Craciun <diana.craciun@oss.nxp.com>,
         Laurentiu Tudor <laurentiu.tudor@nxp.com>
-Subject: [PATCH v2 11/12] bus/fsl-mc: Refactor the MSI domain creation in the DPRC driver
-Date:   Fri, 19 Jun 2020 09:20:12 +0100
-Message-Id: <20200619082013.13661-12-lorenzo.pieralisi@arm.com>
+Subject: [PATCH v2 06/12] of/iommu: Make of_map_rid() PCI agnostic
+Date:   Fri, 19 Jun 2020 09:20:07 +0100
+Message-Id: <20200619082013.13661-7-lorenzo.pieralisi@arm.com>
 X-Mailer: git-send-email 2.26.1
 In-Reply-To: <20200619082013.13661-1-lorenzo.pieralisi@arm.com>
 References: <20200521130008.8266-1-lorenzo.pieralisi@arm.com>
@@ -55,199 +57,188 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Diana Craciun <diana.craciun@oss.nxp.com>
+There is nothing PCI specific (other than the RID - requester ID)
+in the of_map_rid() implementation, so the same function can be
+reused for input/output IDs mapping for other busses just as well.
 
-The DPRC driver is not taking into account the msi-map property
-and assumes that the icid is the same as the stream ID. Although
-this assumption is correct, generalize the code to include a
-translation between icid and streamID.
+Rename the RID instances/names to a generic "id" tag.
 
-Furthermore do not just copy the MSI domain from parent (for child
-containers), but use the information provided by the msi-map property.
+No functionality change intended.
 
-If the msi-map property is missing from the device tree retain the old
-behaviour for backward compatibility ie the child DPRC objects
-inherit the MSI domain from the parent.
-
-Signed-off-by: Diana Craciun <diana.craciun@oss.nxp.com>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Robin Murphy <robin.murphy@arm.com>
+Cc: Marc Zyngier <maz@kernel.org>
 ---
- drivers/bus/fsl-mc/dprc-driver.c            | 31 ++++++---------------
- drivers/bus/fsl-mc/fsl-mc-bus.c             |  4 +--
- drivers/bus/fsl-mc/fsl-mc-msi.c             | 31 +++++++++++++--------
- drivers/bus/fsl-mc/fsl-mc-private.h         |  6 ++--
- drivers/irqchip/irq-gic-v3-its-fsl-mc-msi.c | 15 +++++++++-
- 5 files changed, 47 insertions(+), 40 deletions(-)
+ drivers/iommu/of_iommu.c |  4 ++--
+ drivers/of/base.c        | 42 ++++++++++++++++++++--------------------
+ drivers/of/irq.c         |  2 +-
+ include/linux/of.h       |  4 ++--
+ 4 files changed, 26 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/bus/fsl-mc/dprc-driver.c b/drivers/bus/fsl-mc/dprc-driver.c
-index c8b1c3842c1a..189bff2115a8 100644
---- a/drivers/bus/fsl-mc/dprc-driver.c
-+++ b/drivers/bus/fsl-mc/dprc-driver.c
-@@ -592,6 +592,7 @@ static int dprc_probe(struct fsl_mc_device *mc_dev)
- 	bool mc_io_created = false;
- 	bool msi_domain_set = false;
- 	u16 major_ver, minor_ver;
-+	struct irq_domain *mc_msi_domain;
+diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+index 20738aacac89..016316244737 100644
+--- a/drivers/iommu/of_iommu.c
++++ b/drivers/iommu/of_iommu.c
+@@ -129,7 +129,7 @@ static int of_pci_iommu_init(struct pci_dev *pdev, u16 alias, void *data)
+ 	struct of_phandle_args iommu_spec = { .args_count = 1 };
+ 	int err;
  
- 	if (!is_fsl_mc_bus_dprc(mc_dev))
- 		return -EINVAL;
-@@ -621,31 +622,15 @@ static int dprc_probe(struct fsl_mc_device *mc_dev)
- 			return error;
+-	err = of_map_rid(info->np, alias, "iommu-map", "iommu-map-mask",
++	err = of_map_id(info->np, alias, "iommu-map", "iommu-map-mask",
+ 			 &iommu_spec.np, iommu_spec.args);
+ 	if (err)
+ 		return err == -ENODEV ? NO_IOMMU : err;
+@@ -145,7 +145,7 @@ static int of_fsl_mc_iommu_init(struct fsl_mc_device *mc_dev,
+ 	struct of_phandle_args iommu_spec = { .args_count = 1 };
+ 	int err;
  
- 		mc_io_created = true;
-+	}
+-	err = of_map_rid(master_np, mc_dev->icid, "iommu-map",
++	err = of_map_id(master_np, mc_dev->icid, "iommu-map",
+ 			 "iommu-map-mask", &iommu_spec.np,
+ 			 iommu_spec.args);
+ 	if (err)
+diff --git a/drivers/of/base.c b/drivers/of/base.c
+index ae03b1218b06..ea44fea99813 100644
+--- a/drivers/of/base.c
++++ b/drivers/of/base.c
+@@ -2201,15 +2201,15 @@ int of_find_last_cache_level(unsigned int cpu)
+ }
  
--		/*
--		 * Inherit parent MSI domain:
--		 */
--		dev_set_msi_domain(&mc_dev->dev,
--				   dev_get_msi_domain(parent_dev));
--		msi_domain_set = true;
-+	mc_msi_domain = fsl_mc_find_msi_domain(&mc_dev->dev);
-+	if (!mc_msi_domain) {
-+		dev_warn(&mc_dev->dev,
-+			 "WARNING: MC bus without interrupt support\n");
- 	} else {
--		/*
--		 * This is a root DPRC
--		 */
--		struct irq_domain *mc_msi_domain;
--
--		if (dev_is_fsl_mc(parent_dev))
--			return -EINVAL;
--
--		error = fsl_mc_find_msi_domain(parent_dev,
--					       &mc_msi_domain);
--		if (error < 0) {
--			dev_warn(&mc_dev->dev,
--				 "WARNING: MC bus without interrupt support\n");
--		} else {
--			dev_set_msi_domain(&mc_dev->dev, mc_msi_domain);
--			msi_domain_set = true;
--		}
-+		dev_set_msi_domain(&mc_dev->dev, mc_msi_domain);
-+		msi_domain_set = true;
- 	}
- 
- 	error = dprc_open(mc_dev->mc_io, 0, mc_dev->obj_desc.id,
-diff --git a/drivers/bus/fsl-mc/fsl-mc-bus.c b/drivers/bus/fsl-mc/fsl-mc-bus.c
-index 8ead3f0238f2..824ff77bbe86 100644
---- a/drivers/bus/fsl-mc/fsl-mc-bus.c
-+++ b/drivers/bus/fsl-mc/fsl-mc-bus.c
-@@ -370,8 +370,8 @@ EXPORT_SYMBOL_GPL(fsl_mc_get_version);
  /**
-  * fsl_mc_get_root_dprc - function to traverse to the root dprc
+- * of_map_rid - Translate a requester ID through a downstream mapping.
++ * of_map_id - Translate an ID through a downstream mapping.
+  * @np: root complex device node.
+- * @rid: device requester ID to map.
++ * @id: device ID to map.
+  * @map_name: property name of the map to use.
+  * @map_mask_name: optional property name of the mask to use.
+  * @target: optional pointer to a target device node.
+  * @id_out: optional pointer to receive the translated ID.
+  *
+- * Given a device requester ID, look up the appropriate implementation-defined
++ * Given a device ID, look up the appropriate implementation-defined
+  * platform ID and/or the target device which receives transactions on that
+  * ID, as per the "iommu-map" and "msi-map" bindings. Either of @target or
+  * @id_out may be NULL if only the other is required. If @target points to
+@@ -2219,11 +2219,11 @@ int of_find_last_cache_level(unsigned int cpu)
+  *
+  * Return: 0 on success or a standard error code on failure.
   */
--static void fsl_mc_get_root_dprc(struct device *dev,
--				 struct device **root_dprc_dev)
-+void fsl_mc_get_root_dprc(struct device *dev,
-+			 struct device **root_dprc_dev)
+-int of_map_rid(struct device_node *np, u32 rid,
++int of_map_id(struct device_node *np, u32 id,
+ 	       const char *map_name, const char *map_mask_name,
+ 	       struct device_node **target, u32 *id_out)
  {
- 	if (!dev) {
- 		*root_dprc_dev = NULL;
-diff --git a/drivers/bus/fsl-mc/fsl-mc-msi.c b/drivers/bus/fsl-mc/fsl-mc-msi.c
-index 8b9c66d7c4ff..e7bbff445a83 100644
---- a/drivers/bus/fsl-mc/fsl-mc-msi.c
-+++ b/drivers/bus/fsl-mc/fsl-mc-msi.c
-@@ -177,23 +177,30 @@ struct irq_domain *fsl_mc_msi_create_irq_domain(struct fwnode_handle *fwnode,
- 	return domain;
- }
+-	u32 map_mask, masked_rid;
++	u32 map_mask, masked_id;
+ 	int map_len;
+ 	const __be32 *map = NULL;
  
--int fsl_mc_find_msi_domain(struct device *mc_platform_dev,
--			   struct irq_domain **mc_msi_domain)
-+struct irq_domain *fsl_mc_find_msi_domain(struct device *dev)
- {
--	struct irq_domain *msi_domain;
--	struct device_node *mc_of_node = mc_platform_dev->of_node;
-+	struct irq_domain *msi_domain = NULL;
-+	struct fsl_mc_device *mc_dev = to_fsl_mc_device(dev);
- 
--	msi_domain = of_msi_get_domain(mc_platform_dev, mc_of_node,
--				       DOMAIN_BUS_FSL_MC_MSI);
--	if (!msi_domain) {
--		pr_err("Unable to find fsl-mc MSI domain for %pOF\n",
--		       mc_of_node);
-+	msi_domain = of_msi_map_get_device_domain(dev, mc_dev->icid,
-+						  DOMAIN_BUS_FSL_MC_MSI);
- 
--		return -ENOENT;
-+	/*
-+	 * if the msi-map property is missing assume that all the
-+	 * child containers inherit the domain from the parent
-+	 */
-+	if (!msi_domain) {
-+		struct device *root_dprc_dev;
-+		struct device *bus_dev;
-+
-+		fsl_mc_get_root_dprc(dev, &root_dprc_dev);
-+		bus_dev = root_dprc_dev->parent;
-+		msi_domain = of_msi_get_domain(bus_dev,
-+					       bus_dev->of_node,
-+					       DOMAIN_BUS_FSL_MC_MSI);
+@@ -2235,7 +2235,7 @@ int of_map_rid(struct device_node *np, u32 rid,
+ 		if (target)
+ 			return -ENODEV;
+ 		/* Otherwise, no map implies no translation */
+-		*id_out = rid;
++		*id_out = id;
+ 		return 0;
  	}
  
--	*mc_msi_domain = msi_domain;
--	return 0;
-+	return msi_domain;
+@@ -2255,22 +2255,22 @@ int of_map_rid(struct device_node *np, u32 rid,
+ 	if (map_mask_name)
+ 		of_property_read_u32(np, map_mask_name, &map_mask);
+ 
+-	masked_rid = map_mask & rid;
++	masked_id = map_mask & id;
+ 	for ( ; map_len > 0; map_len -= 4 * sizeof(*map), map += 4) {
+ 		struct device_node *phandle_node;
+-		u32 rid_base = be32_to_cpup(map + 0);
++		u32 id_base = be32_to_cpup(map + 0);
+ 		u32 phandle = be32_to_cpup(map + 1);
+ 		u32 out_base = be32_to_cpup(map + 2);
+-		u32 rid_len = be32_to_cpup(map + 3);
++		u32 id_len = be32_to_cpup(map + 3);
+ 
+-		if (rid_base & ~map_mask) {
+-			pr_err("%pOF: Invalid %s translation - %s-mask (0x%x) ignores rid-base (0x%x)\n",
++		if (id_base & ~map_mask) {
++			pr_err("%pOF: Invalid %s translation - %s-mask (0x%x) ignores id-base (0x%x)\n",
+ 				np, map_name, map_name,
+-				map_mask, rid_base);
++				map_mask, id_base);
+ 			return -EFAULT;
+ 		}
+ 
+-		if (masked_rid < rid_base || masked_rid >= rid_base + rid_len)
++		if (masked_id < id_base || masked_id >= id_base + id_len)
+ 			continue;
+ 
+ 		phandle_node = of_find_node_by_phandle(phandle);
+@@ -2288,20 +2288,20 @@ int of_map_rid(struct device_node *np, u32 rid,
+ 		}
+ 
+ 		if (id_out)
+-			*id_out = masked_rid - rid_base + out_base;
++			*id_out = masked_id - id_base + out_base;
+ 
+-		pr_debug("%pOF: %s, using mask %08x, rid-base: %08x, out-base: %08x, length: %08x, rid: %08x -> %08x\n",
+-			np, map_name, map_mask, rid_base, out_base,
+-			rid_len, rid, masked_rid - rid_base + out_base);
++		pr_debug("%pOF: %s, using mask %08x, id-base: %08x, out-base: %08x, length: %08x, id: %08x -> %08x\n",
++			np, map_name, map_mask, id_base, out_base,
++			id_len, id, masked_id - id_base + out_base);
+ 		return 0;
+ 	}
+ 
+-	pr_info("%pOF: no %s translation for rid 0x%x on %pOF\n", np, map_name,
+-		rid, target && *target ? *target : NULL);
++	pr_info("%pOF: no %s translation for id 0x%x on %pOF\n", np, map_name,
++		id, target && *target ? *target : NULL);
+ 
+ 	/* Bypasses translation */
+ 	if (id_out)
+-		*id_out = rid;
++		*id_out = id;
+ 	return 0;
+ }
+-EXPORT_SYMBOL_GPL(of_map_rid);
++EXPORT_SYMBOL_GPL(of_map_id);
+diff --git a/drivers/of/irq.c b/drivers/of/irq.c
+index a296eaf52a5b..d632bc5b3a2d 100644
+--- a/drivers/of/irq.c
++++ b/drivers/of/irq.c
+@@ -587,7 +587,7 @@ static u32 __of_msi_map_rid(struct device *dev, struct device_node **np,
+ 	 * "msi-map" property.
+ 	 */
+ 	for (parent_dev = dev; parent_dev; parent_dev = parent_dev->parent)
+-		if (!of_map_rid(parent_dev->of_node, rid_in, "msi-map",
++		if (!of_map_id(parent_dev->of_node, rid_in, "msi-map",
+ 				"msi-map-mask", np, &rid_out))
+ 			break;
+ 	return rid_out;
+diff --git a/include/linux/of.h b/include/linux/of.h
+index c669c0a4732f..60abe3f636ad 100644
+--- a/include/linux/of.h
++++ b/include/linux/of.h
+@@ -554,7 +554,7 @@ bool of_console_check(struct device_node *dn, char *name, int index);
+ 
+ extern int of_cpu_node_to_id(struct device_node *np);
+ 
+-int of_map_rid(struct device_node *np, u32 rid,
++int of_map_id(struct device_node *np, u32 id,
+ 	       const char *map_name, const char *map_mask_name,
+ 	       struct device_node **target, u32 *id_out);
+ 
+@@ -978,7 +978,7 @@ static inline int of_cpu_node_to_id(struct device_node *np)
+ 	return -ENODEV;
  }
  
- static void fsl_mc_msi_free_descs(struct device *dev)
-diff --git a/drivers/bus/fsl-mc/fsl-mc-private.h b/drivers/bus/fsl-mc/fsl-mc-private.h
-index 21ca8c756ee7..7a46a12eb747 100644
---- a/drivers/bus/fsl-mc/fsl-mc-private.h
-+++ b/drivers/bus/fsl-mc/fsl-mc-private.h
-@@ -595,8 +595,7 @@ int fsl_mc_msi_domain_alloc_irqs(struct device *dev,
- 
- void fsl_mc_msi_domain_free_irqs(struct device *dev);
- 
--int fsl_mc_find_msi_domain(struct device *mc_platform_dev,
--			   struct irq_domain **mc_msi_domain);
-+struct irq_domain *fsl_mc_find_msi_domain(struct device *dev);
- 
- int fsl_mc_populate_irq_pool(struct fsl_mc_bus *mc_bus,
- 			     unsigned int irq_count);
-@@ -613,6 +612,9 @@ void fsl_destroy_mc_io(struct fsl_mc_io *mc_io);
- 
- bool fsl_mc_is_root_dprc(struct device *dev);
- 
-+void fsl_mc_get_root_dprc(struct device *dev,
-+			 struct device **root_dprc_dev);
-+
- struct fsl_mc_device *fsl_mc_device_lookup(struct fsl_mc_obj_desc *obj_desc,
- 					   struct fsl_mc_device *mc_bus_dev);
- 
-diff --git a/drivers/irqchip/irq-gic-v3-its-fsl-mc-msi.c b/drivers/irqchip/irq-gic-v3-its-fsl-mc-msi.c
-index 606efa64adff..a5c8d577e424 100644
---- a/drivers/irqchip/irq-gic-v3-its-fsl-mc-msi.c
-+++ b/drivers/irqchip/irq-gic-v3-its-fsl-mc-msi.c
-@@ -23,6 +23,18 @@ static struct irq_chip its_msi_irq_chip = {
- 	.irq_set_affinity = msi_domain_set_affinity
- };
- 
-+static u32 fsl_mc_msi_domain_get_msi_id(struct irq_domain *domain,
-+					struct fsl_mc_device *mc_dev)
-+{
-+	struct device_node *of_node;
-+	u32 out_id;
-+
-+	of_node = irq_domain_get_of_node(domain);
-+	out_id = of_msi_map_id(&mc_dev->dev, of_node, mc_dev->icid);
-+
-+	return out_id;
-+}
-+
- static int its_fsl_mc_msi_prepare(struct irq_domain *msi_domain,
- 				  struct device *dev,
- 				  int nvec, msi_alloc_info_t *info)
-@@ -43,7 +55,8 @@ static int its_fsl_mc_msi_prepare(struct irq_domain *msi_domain,
- 	 * NOTE: This device id corresponds to the IOMMU stream ID
- 	 * associated with the DPRC object (ICID).
- 	 */
--	info->scratchpad[0].ul = mc_bus_dev->icid;
-+	info->scratchpad[0].ul = fsl_mc_msi_domain_get_msi_id(msi_domain,
-+							      mc_bus_dev);
- 	msi_info = msi_get_domain_info(msi_domain->parent);
- 
- 	/* Allocate at least 32 MSIs, and always as a power of 2 */
+-static inline int of_map_rid(struct device_node *np, u32 rid,
++static inline int of_map_id(struct device_node *np, u32 id,
+ 			     const char *map_name, const char *map_mask_name,
+ 			     struct device_node **target, u32 *id_out)
+ {
 -- 
 2.26.1
 
