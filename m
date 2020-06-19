@@ -2,103 +2,75 @@ Return-Path: <SRS0=kzLt=AA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC2A4C433E0
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Jun 2020 17:17:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BBBB5C433E0
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Jun 2020 18:18:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A57E32083B
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Jun 2020 17:17:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592587024;
-	bh=ZXqvXAmVATfcOFfYDgssdi24IIgo7rfGyS4R1yKWIB0=;
-	h=Subject:To:References:From:Date:In-Reply-To:List-ID:From;
-	b=gQ/jmVV6CS+t0uJC6MCR9yEQYOCrxiF79WhN0B9JsL5xaSf9vYsGpd+h/V1eDeEFt
-	 3BOjkyzkyO40l36kE4LNW9TutYER9LAGbYQykb/QyKyyNIfMhbcgUITOcpB7xYBaWz
-	 IeDaQpddiZTUipkvSiGKW84RlqGFmwNvWLBDV6O8=
+	by mail.kernel.org (Postfix) with ESMTP id A0AB121531
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Jun 2020 18:18:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731195AbgFSRRE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 19 Jun 2020 13:17:04 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49958 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729842AbgFSRRC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 19 Jun 2020 13:17:02 -0400
-Received: from [192.168.1.74] (75-58-59-55.lightspeed.rlghnc.sbcglobal.net [75.58.59.55])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5ED0120DD4;
-        Fri, 19 Jun 2020 17:17:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592587022;
-        bh=ZXqvXAmVATfcOFfYDgssdi24IIgo7rfGyS4R1yKWIB0=;
-        h=Subject:To:References:From:Date:In-Reply-To:From;
-        b=d78wgNJsoEVyI8veX7Z8JHTuu5+qT47of6JK7UQwqdGNtgoorNO6t9sgsZ45aMfcW
-         cLArwSQOeEaOU4+uXfwiliUP97QcEIZ90wvmEEJGAZ9bRSDY1+ixU48ZkayuafuX04
-         5vQyqOmXeLNuNALDkTVsl1UeclqvlEaztkvdql7k=
+        id S1732094AbgFSSSx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 19 Jun 2020 14:18:53 -0400
+Received: from smtprelay0110.hostedemail.com ([216.40.44.110]:33684 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1729580AbgFSSSw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jun 2020 14:18:52 -0400
+X-Greylist: delayed 580 seconds by postgrey-1.27 at vger.kernel.org; Fri, 19 Jun 2020 14:18:52 EDT
+Received: from smtprelay.hostedemail.com (10.5.19.251.rfc1918.com [10.5.19.251])
+        by smtpgrave06.hostedemail.com (Postfix) with ESMTP id 925128112757
+        for <linux-pci@vger.kernel.org>; Fri, 19 Jun 2020 18:09:11 +0000 (UTC)
+Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
+        by smtprelay02.hostedemail.com (Postfix) with ESMTP id DE1461313C2;
+        Fri, 19 Jun 2020 18:09:09 +0000 (UTC)
+X-Session-Marker: 6A6F6540706572636865732E636F6D
+X-HE-Tag: song67_620abc226e1b
+X-Filterd-Recvd-Size: 1591
+Received: from XPS-9350.home (unknown [47.151.133.149])
+        (Authenticated sender: joe@perches.com)
+        by omf03.hostedemail.com (Postfix) with ESMTPA;
+        Fri, 19 Jun 2020 18:09:08 +0000 (UTC)
+Message-ID: <a70251985203280662cd0db2de05a9a0b1c5de7d.camel@perches.com>
 Subject: Re: [PATCH] pci: pcie: AER: Fix logging of Correctable errors
-To:     Matt Jolly <Kangie@footclan.ninja>,
+From:   Joe Perches <joe@perches.com>
+To:     Sinan Kaya <okaya@kernel.org>, Matt Jolly <Kangie@footclan.ninja>,
         Russell Currey <ruscur@russell.cc>,
         Sam Bobroff <sbobroff@linux.ibm.com>,
         Oliver O'Halloran <oohall@gmail.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org
+Date:   Fri, 19 Jun 2020 11:09:07 -0700
+In-Reply-To: <d611dabd-b943-8492-a29e-0b7fb1980de8@kernel.org>
 References: <20200618155511.16009-1-Kangie@footclan.ninja>
-From:   Sinan Kaya <okaya@kernel.org>
-Autocrypt: addr=okaya@kernel.org; keydata=
- mQENBFrnOrUBCADGOL0kF21B6ogpOkuYvz6bUjO7NU99PKhXx1MfK/AzK+SFgxJF7dMluoF6
- uT47bU7zb7HqACH6itTgSSiJeSoq86jYoq5s4JOyaj0/18Hf3/YBah7AOuwk6LtV3EftQIhw
- 9vXqCnBwP/nID6PQ685zl3vH68yzF6FVNwbDagxUz/gMiQh7scHvVCjiqkJ+qu/36JgtTYYw
- 8lGWRcto6gr0eTF8Wd8f81wspmUHGsFdN/xPsZPKMw6/on9oOj3AidcR3P9EdLY4qQyjvcNC
- V9cL9b5I/Ud9ghPwW4QkM7uhYqQDyh3SwgEFudc+/RsDuxjVlg9CFnGhS0nPXR89SaQZABEB
- AAG0HVNpbmFuIEtheWEgPG9rYXlhQGtlcm5lbC5vcmc+iQFOBBMBCAA4FiEEYdOlMSE+a7/c
- ckrQvGF4I+4LAFcFAlztcAoCGwMFCwkIBwIGFQoJCAsCBBYCAwECHgECF4AACgkQvGF4I+4L
- AFfidAf/VKHInxep0Z96iYkIq42432HTZUrxNzG9IWk4HN7c3vTJKv2W+b9pgvBF1SmkyQSy
- 8SJ3Zd98CO6FOHA1FigFyZahVsme+T0GsS3/OF1kjrtMktoREr8t0rK0yKpCTYVdlkHadxmR
- Qs5xLzW1RqKlrNigKHI2yhgpMwrpzS+67F1biT41227sqFzW9urEl/jqGJXaB6GV+SRKSHN+
- ubWXgE1NkmfAMeyJPKojNT7ReL6eh3BNB/Xh1vQJew+AE50EP7o36UXghoUktnx6cTkge0ZS
- qgxuhN33cCOU36pWQhPqVSlLTZQJVxuCmlaHbYWvye7bBOhmiuNKhOzb3FcgT7kBDQRa5zq1
- AQgAyRq/7JZKOyB8wRx6fHE0nb31P75kCnL3oE+smKW/sOcIQDV3C7mZKLf472MWB1xdr4Tm
- eXeL/wT0QHapLn5M5wWghC80YvjjdolHnlq9QlYVtvl1ocAC28y43tKJfklhHiwMNDJfdZbw
- 9lQ2h+7nccFWASNUu9cqZOABLvJcgLnfdDpnSzOye09VVlKr3NHgRyRZa7me/oFJCxrJlKAl
- 2hllRLt0yV08o7i14+qmvxI2EKLX9zJfJ2rGWLTVe3EJBnCsQPDzAUVYSnTtqELu2AGzvDiM
- gatRaosnzhvvEK+kCuXuCuZlRWP7pWSHqFFuYq596RRG5hNGLbmVFZrCxQARAQABiQEfBBgB
- CAAJBQJa5zq1AhsMAAoJELxheCPuCwBX2UYH/2kkMC4mImvoClrmcMsNGijcZHdDlz8NFfCI
- gSb3NHkarnA7uAg8KJuaHUwBMk3kBhv2BGPLcmAknzBIehbZ284W7u3DT9o1Y5g+LDyx8RIi
- e7pnMcC+bE2IJExCVf2p3PB1tDBBdLEYJoyFz/XpdDjZ8aVls/pIyrq+mqo5LuuhWfZzPPec
- 9EiM2eXpJw+Rz+vKjSt1YIhg46YbdZrDM2FGrt9ve3YaM5H0lzJgq/JQPKFdbd5MB0X37Qc+
- 2m/A9u9SFnOovA42DgXUyC2cSbIJdPWOK9PnzfXqF3sX9Aol2eLUmQuLpThJtq5EHu6FzJ7Y
- L+s0nPaNMKwv/Xhhm6Y=
-Message-ID: <d611dabd-b943-8492-a29e-0b7fb1980de8@kernel.org>
-Date:   Fri, 19 Jun 2020 13:17:00 -0400
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.9.0
+         <d611dabd-b943-8492-a29e-0b7fb1980de8@kernel.org>
+Content-Type: text/plain; charset="ISO-8859-1"
+User-Agent: Evolution 3.36.2-0ubuntu1 
 MIME-Version: 1.0
-In-Reply-To: <20200618155511.16009-1-Kangie@footclan.ninja>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 6/18/2020 11:55 AM, Matt Jolly wrote:
+On Fri, 2020-06-19 at 13:17 -0400, Sinan Kaya wrote:
+> On 6/18/2020 11:55 AM, Matt Jolly wrote:
+> 
+> > +		pci_warn(dev, "  device [%04x:%04x] error status/mask=%08x/%08x\n",
+> > +			dev->vendor, dev->device,
+> > +			info->status, info->mask);
+> > +	} else {
+> 
+> <snip>
+> 
+> > +		pci_err(dev, "  device [%04x:%04x] error status/mask=%08x/%08x\n",
+> > +			dev->vendor, dev->device,
+> > +			info->status, info->mask);
+> 
+> Function pointers for pci_warn vs. pci_err ?
 
-> +		pci_warn(dev, "  device [%04x:%04x] error status/mask=%08x/%08x\n",
-> +			dev->vendor, dev->device,
-> +			info->status, info->mask);
-> +	} else {
-
-<snip>
-
-> +		pci_err(dev, "  device [%04x:%04x] error status/mask=%08x/%08x\n",
-> +			dev->vendor, dev->device,
-> +			info->status, info->mask);
+Not really possible as both are function-like macros.
 
 
-Function pointers for pci_warn vs. pci_err ?
-
-This looks like a lot of copy/paste.
