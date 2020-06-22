@@ -3,153 +3,145 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62C22C433DF
-	for <linux-pci@archiver.kernel.org>; Mon, 22 Jun 2020 23:26:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70F11C433E1
+	for <linux-pci@archiver.kernel.org>; Mon, 22 Jun 2020 23:46:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 432CF20720
-	for <linux-pci@archiver.kernel.org>; Mon, 22 Jun 2020 23:26:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592868381;
-	bh=z9oW+bNQE9z595itlOYPtEpmIp2zhxHxzEarExwecsk=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=rmJaEtHP398a17i5EWFSfTvePfw23s1VHsWf/ZIeY86j5uSYYS1jKiKXRrOCFB1i2
-	 zqFrMR3qrNSu6SrzEfw1CVXoulgqZDlMtvzBuMsnXho/n3vEwJEhaaYciQZPb/dUmr
-	 b62chorYkx/+vBKKcyhS2c3dfS9x5OWWRZguPemo=
+	by mail.kernel.org (Postfix) with ESMTP id 520D320720
+	for <linux-pci@archiver.kernel.org>; Mon, 22 Jun 2020 23:46:00 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="V22oKBjL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728967AbgFVX0U (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 22 Jun 2020 19:26:20 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34868 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727061AbgFVX0U (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 22 Jun 2020 19:26:20 -0400
-Received: from localhost (mobile-166-170-222-206.mycingular.net [166.170.222.206])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S1728781AbgFVXp7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 22 Jun 2020 19:45:59 -0400
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:59136 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1728775AbgFVXp7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 Jun 2020 19:45:59 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1592869557;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:in-reply-to:in-reply-to:references:references;
+        bh=qsEcJR/Z1zWhjEwFy+c1G0isIWJ9+FDcjerWFAR8WtI=;
+        b=V22oKBjLh4O5EpcIVm7odCRWFGoQFZufQu5DfWFbQFP9VFmat8yQVM5kokoiTSj8kLyHjb
+        MMxpW11wvTmelkzQrwDm7i7BvXly9PYLlLBPN1LHSH+Xyd21jPZQAiozgrU1f+T42N0Yru
+        +8wk/WnEuNr7nEKaGH46aNLavmhHUls=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-447-MxV-Nwm-OrSGPScBNX0p6w-1; Mon, 22 Jun 2020 19:45:55 -0400
+X-MC-Unique: MxV-Nwm-OrSGPScBNX0p6w-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 288302076E;
-        Mon, 22 Jun 2020 23:26:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592868379;
-        bh=z9oW+bNQE9z595itlOYPtEpmIp2zhxHxzEarExwecsk=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=jgdOF9rdaptKSp4ZjAAW+sCHGvJspXu72WwobdfTUVR9mD4TkB24XpQlBAMxhmkvb
-         C4A8j/HcMU0PGiIKsftuym+FEsEXem6IamFKuw2uEy1xwA2fDQE/ofRCOI50ynvi/n
-         wDWlAJ/ynmbQU+CfRRj14FVn5TaT/P5W2N9pI17o=
-Date:   Mon, 22 Jun 2020 18:26:17 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Sean V Kelley <sean.v.kelley@linux.intel.com>
-Cc:     mj@ucw.cz, bhelgaas@google.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] pciutils: Add decode support for RCECs
-Message-ID: <20200622232617.GA2334699@bjorn-Precision-5520>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200622230330.799259-1-sean.v.kelley@linux.intel.com>
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 229958014D4;
+        Mon, 22 Jun 2020 23:45:53 +0000 (UTC)
+Received: from virtlab423.virt.lab.eng.bos.redhat.com (virtlab423.virt.lab.eng.bos.redhat.com [10.19.152.154])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 7269D5C290;
+        Mon, 22 Jun 2020 23:45:51 +0000 (UTC)
+From:   Nitesh Narayan Lal <nitesh@redhat.com>
+To:     linux-kernel@vger.kernel.org, linux-api@vger.kernel.org,
+        frederic@kernel.org, mtosatti@redhat.com, juri.lelli@redhat.com,
+        abelits@marvell.com, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, rostedt@goodmis.org, mingo@kernel.org,
+        peterz@infradead.org, tglx@linutronix.de, davem@davemloft.net,
+        akpm@linux-foundation.org, sfr@canb.auug.org.au,
+        stephen@networkplumber.org, rppt@linux.vnet.ibm.com
+Subject: [Patch v2 1/3] lib: Restrict cpumask_local_spread to houskeeping CPUs
+Date:   Mon, 22 Jun 2020 19:45:08 -0400
+Message-Id: <20200622234510.240834-2-nitesh@redhat.com>
+In-Reply-To: <20200622234510.240834-1-nitesh@redhat.com>
+References: <20200622234510.240834-1-nitesh@redhat.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Jun 22, 2020 at 04:03:30PM -0700, Sean V Kelley wrote:
-> Root Complex Event Collectors provide support for terminating error
-> and PME messages from RCiEPs.  This patch provides basic decoding for
-> lspci RCEC Endpoint Association Extended Capability. See PCie 5.0-1,
-> sec 7.9.10 for further details.
+From: Alex Belits <abelits@marvell.com>
 
-s/lspci/the/
-s/PCie/PCIe/
+The current implementation of cpumask_local_spread() does not respect the
+isolated CPUs, i.e., even if a CPU has been isolated for Real-Time task,
+it will return it to the caller for pinning of its IRQ threads. Having
+these unwanted IRQ threads on an isolated CPU adds up to a latency
+overhead.
 
-> Signed-off-by: Sean V Kelley <sean.v.kelley@linux.intel.com>
-> ---
->  lib/header.h   |   8 +-
->  ls-ecaps.c     |  30 ++++-
->  setpci.c       |   2 +-
->  tests/cap-rcec | 299 +++++++++++++++++++++++++++++++++++++++++++++++++
->  4 files changed, 335 insertions(+), 4 deletions(-)
->  create mode 100644 tests/cap-rcec
-> 
-> diff --git a/lib/header.h b/lib/header.h
-> index 472816e..deb5150 100644
-> --- a/lib/header.h
-> +++ b/lib/header.h
-> @@ -219,7 +219,7 @@
->  #define PCI_EXT_CAP_ID_PB	0x04	/* Power Budgeting */
->  #define PCI_EXT_CAP_ID_RCLINK	0x05	/* Root Complex Link Declaration */
->  #define PCI_EXT_CAP_ID_RCILINK	0x06	/* Root Complex Internal Link Declaration */
-> -#define PCI_EXT_CAP_ID_RCECOLL	0x07	/* Root Complex Event Collector */
-> +#define PCI_EXT_CAP_ID_RCEC	0x07	/* Root Complex Event Collector */
+Restrict the CPUs that are returned for spreading IRQs only to the
+available housekeeping CPUs.
 
-OK, not super descriptive, but it does match the kernel's definition
-in pci_regs.h.
+Signed-off-by: Alex Belits <abelits@marvell.com>
+Signed-off-by: Nitesh Narayan Lal <nitesh@redhat.com>
+---
+ lib/cpumask.c | 43 +++++++++++++++++++++++++------------------
+ 1 file changed, 25 insertions(+), 18 deletions(-)
 
->  #define PCI_EXT_CAP_ID_MFVC	0x08	/* Multi-Function Virtual Channel */
->  #define PCI_EXT_CAP_ID_VC2	0x09	/* Virtual Channel (2nd ID) */
->  #define PCI_EXT_CAP_ID_RCRB	0x0a	/* Root Complex Register Block */
-> @@ -1048,6 +1048,12 @@
->  #define  PCI_RCLINK_LINK_ADDR	8	/* Link Entry: Address (64-bit) */
->  #define  PCI_RCLINK_LINK_SIZE	16	/* Link Entry: sizeof */
->  
-> +/* Root Complex Event Collector */
+diff --git a/lib/cpumask.c b/lib/cpumask.c
+index fb22fb266f93..cc4311a8c079 100644
+--- a/lib/cpumask.c
++++ b/lib/cpumask.c
+@@ -6,6 +6,7 @@
+ #include <linux/export.h>
+ #include <linux/memblock.h>
+ #include <linux/numa.h>
++#include <linux/sched/isolation.h>
+ 
+ /**
+  * cpumask_next - get the next cpu in a cpumask
+@@ -205,28 +206,34 @@ void __init free_bootmem_cpumask_var(cpumask_var_t mask)
+  */
+ unsigned int cpumask_local_spread(unsigned int i, int node)
+ {
+-	int cpu;
++	int cpu, m, n, hk_flags;
++	const struct cpumask *mask;
+ 
++	hk_flags = HK_FLAG_DOMAIN | HK_FLAG_WQ;
++	mask = housekeeping_cpumask(hk_flags);
++	m = cpumask_weight(mask);
+ 	/* Wrap: we always want a cpu. */
+-	i %= num_online_cpus();
++	n = i % m;
++	while (m-- > 0) {
++		if (node == NUMA_NO_NODE) {
++			for_each_cpu(cpu, mask)
++				if (n-- == 0)
++					return cpu;
++		} else {
++			/* NUMA first. */
++			for_each_cpu_and(cpu, cpumask_of_node(node), mask)
++				if (n-- == 0)
++					return cpu;
+ 
+-	if (node == NUMA_NO_NODE) {
+-		for_each_cpu(cpu, cpu_online_mask)
+-			if (i-- == 0)
+-				return cpu;
+-	} else {
+-		/* NUMA first. */
+-		for_each_cpu_and(cpu, cpumask_of_node(node), cpu_online_mask)
+-			if (i-- == 0)
+-				return cpu;
++			for_each_cpu(cpu, mask) {
++				/* Skip NUMA nodes, done above. */
++				if (cpumask_test_cpu(cpu,
++						     cpumask_of_node(node)))
++					continue;
+ 
+-		for_each_cpu(cpu, cpu_online_mask) {
+-			/* Skip NUMA nodes, done above. */
+-			if (cpumask_test_cpu(cpu, cpumask_of_node(node)))
+-				continue;
+-
+-			if (i-- == 0)
+-				return cpu;
++				if (n-- == 0)
++					return cpu;
++			}
+ 		}
+ 	}
+ 	BUG();
+-- 
+2.18.4
 
-This comment could mention "Endpoint Association", though.
-
-> +#define  PCI_RCEC_EP_CAP_VER(reg)	(((reg) >> 16) & 0xf)
-> +#define  PCI_RCEC_BUSN_REG_VER	0x02	/* as per PCIe sec 7.9.10.1 */
-> +#define  PCI_RCEC_RCIEP_BMAP	0x0004	/* as per PCIe sec 7.9.10.2 */
-> +#define  PCI_RCEC_BUSN_REG	0x0008	/* as per PCIe sec 7.9.10.3 */
-> +
->  /* PCIe Vendor-Specific Capability */
->  #define PCI_EVNDR_HEADER	4	/* Vendor-Specific Header */
->  #define PCI_EVNDR_REGISTERS	8	/* Vendor-Specific Registers */
-> diff --git a/ls-ecaps.c b/ls-ecaps.c
-> index e71209e..589332d 100644
-> --- a/ls-ecaps.c
-> +++ b/ls-ecaps.c
-> @@ -634,6 +634,32 @@ cap_rclink(struct device *d, int where)
->      }
->  }
->  
-> +static void
-> +cap_rcec(struct device *d, int where)
-> +{
-> +  printf("Root Complex Event Collector\n");
-
-This could mention "Endpoint Association", too.
-
-> +  if (verbose < 2)
-> +    return;
-> +
-> +  if (!config_fetch(d, where, 12))
-> +    return;
-> +
-> +  u32 hdr = get_conf_long(d, where);
-> +  byte cap_ver = PCI_RCEC_EP_CAP_VER(hdr);
-> +  u32 bmap = get_conf_long(d, where + PCI_RCEC_RCIEP_BMAP);
-> +  printf("\t\tDesc:\tCapabilityVersion=%02x RCiEPBitmap=%08x\n",
-> +    cap_ver,
-> +    bmap);
-
-I don't think "Desc:" is necessary.
-
-Isn't "cap_ver" already printed as part of the header?
-
-   Capabilities: [160 v2] Root Complex Event Collector
-                      ^^
-
-The "bmap" is a bitmap of device numbers of RCiEPs on the same bus as
-the RCEC that are associated with this RCEC.  Could be decoded as a
-list, e.g., "0, 1, 2, 8" or "0-3, 8".  Or maybe the hex bitmap is
-enough.  Not sure how much trouble this would be worth or if there are
-other examples in lspci to copy.
-
-> +  if (cap_ver < PCI_RCEC_BUSN_REG_VER)
-> +    return;
-> +
-> +  u32 busn = get_conf_long(d, where + PCI_RCEC_BUSN_REG);
-> +  printf("\t\t\tRCECLastBus=%02x RCECFirstBus=%02x\n",
-> +    BITS(busn, 16, 8),
-> +    BITS(busn, 8, 8));
-> +}
