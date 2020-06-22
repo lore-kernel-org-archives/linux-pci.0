@@ -2,75 +2,213 @@ Return-Path: <SRS0=6QlD=AD=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.0 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3333C433E0
-	for <linux-pci@archiver.kernel.org>; Mon, 22 Jun 2020 11:55:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BAFACC433E1
+	for <linux-pci@archiver.kernel.org>; Mon, 22 Jun 2020 12:07:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9AE5A2071A
-	for <linux-pci@archiver.kernel.org>; Mon, 22 Jun 2020 11:55:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A13F320708
+	for <linux-pci@archiver.kernel.org>; Mon, 22 Jun 2020 12:07:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727981AbgFVLzk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 22 Jun 2020 07:55:40 -0400
-Received: from 8bytes.org ([81.169.241.247]:48372 "EHLO theia.8bytes.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727799AbgFVLzk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 22 Jun 2020 07:55:40 -0400
-Received: by theia.8bytes.org (Postfix, from userid 1000)
-        id 746F636B; Mon, 22 Jun 2020 13:55:38 +0200 (CEST)
-Date:   Mon, 22 Jun 2020 13:55:37 +0200
-From:   Joerg Roedel <joro@8bytes.org>
-To:     Zhangfei Gao <zhangfei.gao@linaro.org>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Hanjun Guo <guohanjun@huawei.com>,
-        Sudeep Holla <sudeep.holla@arm.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        jean-philippe <jean-philippe@linaro.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        kenneth-lee-2012@foxmail.com, Wangzhou <wangzhou1@hisilicon.com>,
-        linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org,
-        iommu@lists.linux-foundation.org, linux-acpi@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 0/2] Introduce PCI_FIXUP_IOMMU
-Message-ID: <20200622115536.GH3701@8bytes.org>
-References: <20200601174104.GA734973@bjorn-Precision-5520>
- <779f4044-cf6a-b0d3-916f-0274450c07d3@linaro.org>
+        id S1728129AbgFVMHh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 22 Jun 2020 08:07:37 -0400
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2353 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726889AbgFVMHg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 22 Jun 2020 08:07:36 -0400
+Received: from lhreml715-chm.china.huawei.com (unknown [172.18.7.108])
+        by Forcepoint Email with ESMTP id 6F542F674EA362ED9CCC;
+        Mon, 22 Jun 2020 13:07:35 +0100 (IST)
+Received: from DESKTOP-6T4S3DQ.china.huawei.com (10.47.81.228) by
+ lhreml715-chm.china.huawei.com (10.201.108.66) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id
+ 15.1.1913.5; Mon, 22 Jun 2020 13:07:34 +0100
+From:   Shiju Jose <shiju.jose@huawei.com>
+To:     <linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <rjw@rjwysocki.net>,
+        <helgaas@kernel.org>, <bp@alien8.de>, <james.morse@arm.com>,
+        <lenb@kernel.org>, <tony.luck@intel.com>,
+        <dan.carpenter@oracle.com>, <zhangliguang@linux.alibaba.com>,
+        <andriy.shevchenko@linux.intel.com>, <wangkefeng.wang@huawei.com>,
+        <jroedel@suse.de>
+CC:     <linuxarm@huawei.com>, <yangyicong@hisilicon.com>,
+        <jonathan.cameron@huawei.com>, <tanxiaofei@huawei.com>
+Subject: [PATCH v11 1/2] ACPI / APEI: Add a notifier chain for unknown (vendor) CPER records
+Date:   Mon, 22 Jun 2020 13:05:26 +0100
+Message-ID: <20200622120527.690-2-shiju.jose@huawei.com>
+X-Mailer: git-send-email 2.26.0.windows.1
+In-Reply-To: <20200622120527.690-1-shiju.jose@huawei.com>
+References: <20200622120527.690-1-shiju.jose@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <779f4044-cf6a-b0d3-916f-0274450c07d3@linaro.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.47.81.228]
+X-ClientProxiedBy: lhreml706-chm.china.huawei.com (10.201.108.55) To
+ lhreml715-chm.china.huawei.com (10.201.108.66)
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Jun 04, 2020 at 09:33:07PM +0800, Zhangfei Gao wrote:
-> +++ b/drivers/iommu/iommu.c
-> @@ -2418,6 +2418,10 @@ int iommu_fwspec_init(struct device *dev, struct
-> fwnode_handle *iommu_fwnode,
->         fwspec->iommu_fwnode = iommu_fwnode;
->         fwspec->ops = ops;
->         dev_iommu_fwspec_set(dev, fwspec);
-> +
-> +       if (dev_is_pci(dev))
-> +               pci_fixup_device(pci_fixup_final, to_pci_dev(dev));
-> +
+CPER records describing a firmware-first error are identified by GUID.
+The ghes driver currently logs, but ignores any unknown CPER records.
+This prevents describing errors that can't be represented by a standard
+entry, that would otherwise allow a driver to recover from an error.
+The UEFI spec calls these 'Non-standard Section Body' (N.2.3 of
+version 2.8).
 
-That's not going to fly, I don't think we should run the fixups twice,
-and they should not be run from IOMMU code. Is the only reason for this
-second pass that iommu_fwspec is not yet allocated when it runs the
-first time? I ask because it might be easier to just allocate the struct
-earlier then.
+Add a notifier chain for these non-standard/vendor-records. Callers
+must identify their type of records by GUID.
 
-Regards,
+Record data is copied to memory from the ghes_estatus_pool to allow
+us to keep it until after the notifier has run.
 
-	Joerg
+Signed-off-by: Shiju Jose <shiju.jose@huawei.com>
+[ Removed kfifo and ghes_gdata_pool. Expanded commit message ]
+Signed-off-by: James Morse <james.morse@arm.com>
+---
+ drivers/acpi/apei/ghes.c | 63 ++++++++++++++++++++++++++++++++++++++++
+ include/acpi/ghes.h      | 27 +++++++++++++++++
+ 2 files changed, 90 insertions(+)
+
+diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
+index 81bf71b10d44..99df00f64306 100644
+--- a/drivers/acpi/apei/ghes.c
++++ b/drivers/acpi/apei/ghes.c
+@@ -79,6 +79,12 @@
+ 	((struct acpi_hest_generic_status *)				\
+ 	 ((struct ghes_estatus_node *)(estatus_node) + 1))
+ 
++#define GHES_VENDOR_ENTRY_LEN(gdata_len)                               \
++	(sizeof(struct ghes_vendor_record_entry) + (gdata_len))
++#define GHES_GDATA_FROM_VENDOR_ENTRY(vendor_entry)                     \
++	((struct acpi_hest_generic_data *)                              \
++	((struct ghes_vendor_record_entry *)(vendor_entry) + 1))
++
+ /*
+  *  NMI-like notifications vary by architecture, before the compiler can prune
+  *  unused static functions it needs a value for these enums.
+@@ -123,6 +129,12 @@ static DEFINE_MUTEX(ghes_list_mutex);
+  */
+ static DEFINE_SPINLOCK(ghes_notify_lock_irq);
+ 
++struct ghes_vendor_record_entry {
++	struct work_struct work;
++	int error_severity;
++	char vendor_record[];
++};
++
+ static struct gen_pool *ghes_estatus_pool;
+ static unsigned long ghes_estatus_pool_size_request;
+ 
+@@ -511,6 +523,56 @@ static void ghes_handle_aer(struct acpi_hest_generic_data *gdata)
+ #endif
+ }
+ 
++static BLOCKING_NOTIFIER_HEAD(vendor_record_notify_list);
++
++int ghes_register_vendor_record_notifier(struct notifier_block *nb)
++{
++	return blocking_notifier_chain_register(&vendor_record_notify_list, nb);
++}
++EXPORT_SYMBOL_GPL(ghes_register_vendor_record_notifier);
++
++void ghes_unregister_vendor_record_notifier(struct notifier_block *nb)
++{
++	blocking_notifier_chain_unregister(&vendor_record_notify_list, nb);
++}
++EXPORT_SYMBOL_GPL(ghes_unregister_vendor_record_notifier);
++
++static void ghes_vendor_record_work_func(struct work_struct *work)
++{
++	struct ghes_vendor_record_entry *entry;
++	struct acpi_hest_generic_data *gdata;
++	u32 len;
++
++	entry = container_of(work, struct ghes_vendor_record_entry, work);
++	gdata = GHES_GDATA_FROM_VENDOR_ENTRY(entry);
++
++	blocking_notifier_call_chain(&vendor_record_notify_list,
++				     entry->error_severity, gdata);
++
++	len = GHES_VENDOR_ENTRY_LEN(acpi_hest_get_record_size(gdata));
++	gen_pool_free(ghes_estatus_pool, (unsigned long)entry, len);
++}
++
++static void ghes_defer_non_standard_event(struct acpi_hest_generic_data *gdata,
++					  int sev)
++{
++	struct acpi_hest_generic_data *copied_gdata;
++	struct ghes_vendor_record_entry *entry;
++	u32 len;
++
++	len = GHES_VENDOR_ENTRY_LEN(acpi_hest_get_record_size(gdata));
++	entry = (void *)gen_pool_alloc(ghes_estatus_pool, len);
++	if (!entry)
++		return;
++
++	copied_gdata = GHES_GDATA_FROM_VENDOR_ENTRY(entry);
++	memcpy(copied_gdata, gdata, acpi_hest_get_record_size(gdata));
++	entry->error_severity = sev;
++
++	INIT_WORK(&entry->work, ghes_vendor_record_work_func);
++	schedule_work(&entry->work);
++}
++
+ static bool ghes_do_proc(struct ghes *ghes,
+ 			 const struct acpi_hest_generic_status *estatus)
+ {
+@@ -549,6 +611,7 @@ static bool ghes_do_proc(struct ghes *ghes,
+ 		} else {
+ 			void *err = acpi_hest_get_payload(gdata);
+ 
++			ghes_defer_non_standard_event(gdata, sev);
+ 			log_non_standard_event(sec_type, fru_id, fru_text,
+ 					       sec_sev, err,
+ 					       gdata->error_data_length);
+diff --git a/include/acpi/ghes.h b/include/acpi/ghes.h
+index 517a5231cc1b..ae0e8847fdd5 100644
+--- a/include/acpi/ghes.h
++++ b/include/acpi/ghes.h
+@@ -53,6 +53,33 @@ enum {
+ 	GHES_SEV_PANIC = 0x3,
+ };
+ 
++#ifdef CONFIG_ACPI_APEI_GHES
++/**
++ * ghes_register_vendor_record_notifier - register a notifier for vendor
++ * records that the kernel would otherwise ignore.
++ * @nb: pointer to the notifier_block structure of the event handler.
++ *
++ * return 0 : SUCCESS, non-zero : FAIL
++ */
++int ghes_register_vendor_record_notifier(struct notifier_block *nb);
++
++/**
++ * ghes_unregister_vendor_record_notifier - unregister the previously
++ * registered vendor record notifier.
++ * @nb: pointer to the notifier_block structure of the vendor record handler.
++ */
++void ghes_unregister_vendor_record_notifier(struct notifier_block *nb);
++#else
++static inline int ghes_register_vendor_record_notifier(struct notifier_block *nb)
++{
++	return -ENODEV;
++}
++
++static inline void ghes_unregister_vendor_record_notifier(struct notifier_block *nb)
++{
++}
++#endif
++
+ int ghes_estatus_pool_init(int num_ghes);
+ 
+ /* From drivers/edac/ghes_edac.c */
+-- 
+2.17.1
+
+
