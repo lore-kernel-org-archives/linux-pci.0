@@ -2,123 +2,91 @@ Return-Path: <SRS0=6QlD=AD=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.0 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21792C433E0
-	for <linux-pci@archiver.kernel.org>; Mon, 22 Jun 2020 15:51:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88507C433E0
+	for <linux-pci@archiver.kernel.org>; Mon, 22 Jun 2020 16:12:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F02EB20716
-	for <linux-pci@archiver.kernel.org>; Mon, 22 Jun 2020 15:51:17 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hEAGfP/n"
+	by mail.kernel.org (Postfix) with ESMTP id 62BB020716
+	for <linux-pci@archiver.kernel.org>; Mon, 22 Jun 2020 16:12:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729296AbgFVPvR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 22 Jun 2020 11:51:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41418 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728431AbgFVPvQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 Jun 2020 11:51:16 -0400
-Received: from mail-pj1-x1042.google.com (mail-pj1-x1042.google.com [IPv6:2607:f8b0:4864:20::1042])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90EDAC061573;
-        Mon, 22 Jun 2020 08:51:16 -0700 (PDT)
-Received: by mail-pj1-x1042.google.com with SMTP id ne5so17690pjb.5;
-        Mon, 22 Jun 2020 08:51:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=mpPb3+yNpxwCEjuPN9vujTShlReBQ2Dt+rrRa2Bp2DQ=;
-        b=hEAGfP/nFGOSzQuYQ+mVlTeEXfn4amAcGfX1VdaDPPQmPhJurXb8NVq8CRcydEKsIf
-         Duk388/QhD+XpCFwmhLON1Hz/96s2qi0NKnqqSzCxve7+E/C5RGASHaH+4ZJ1xzZdWMu
-         eaEQCRRKZXDh7ZRuIprzQVVkuHq9vwQrSpGbb0qrXjxEGUTHgAQupJhoNFpYmBnLAvF/
-         T8Rhl7XYv9bb/HokATYjbec6pMYvKYJ2MMgZa/NDvLOJ5VuKOjZHIIc2pG4Nwzxtd2yF
-         damyeMz2Q2TnjsT+xeW5nPUI5yfnrrIs14QbM9WYp5ODCbVpU8/G9NGA+ZVv8XhHHkPB
-         zQ3A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=mpPb3+yNpxwCEjuPN9vujTShlReBQ2Dt+rrRa2Bp2DQ=;
-        b=DjL83L0t7FZHKcqrnbegEyHkKt+cpGv4A1/8bHghC3ValMzMwX6QFA/i/3CDg7TmAv
-         Zb2Mi5zwfuMQKwhzp/9cGd4MJ+5cFyFAApeI/krFyqkUrCe22McPH6t/O5y5gVWakBI6
-         ny0dmVYnWa0ZVnhRFs6uiV5mdZMOFLecu25rjfsSqHQgHyXpDKoZZv80SrhO8Yl2VEWg
-         bgB8S8X3b9bwRGAgF15wwt6p5B9QMU7Htday2GgVgTd1vWNypdBZL5yvGnc42HL8NaMT
-         jhFDXN1GoH7u8oqAqodPWhxQbljCi10QcKuoOQnl92rDlLx3SCxcXt+KnQGRJPYb8Cfn
-         NUpw==
-X-Gm-Message-State: AOAM533MkocMW36wQi1HWR29XB2cGtbBF2DHxGdM1QzfWMA8DK+7yTv0
-        kOXCSwg3rZ/7G5qMXLdJFN9UVi6QmAMeY5FzQHE=
-X-Google-Smtp-Source: ABdhPJzv28LTfnWpJp82+S+pzs7++aNj/pUb9dRwcbTfTgiLWqmcLOfQ70fYghDtqny5H6ocNpkQ1poPDlTbaOtfe+I=
-X-Received: by 2002:a17:90a:ac05:: with SMTP id o5mr19471241pjq.228.1592841076136;
- Mon, 22 Jun 2020 08:51:16 -0700 (PDT)
+        id S1729497AbgFVQMv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 22 Jun 2020 12:12:51 -0400
+Received: from mga07.intel.com ([134.134.136.100]:39729 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729275AbgFVQMv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 22 Jun 2020 12:12:51 -0400
+IronPort-SDR: RPf/WDezMyZPclDOOogKwUXzbjMx8ETkk9rdigbpLp60XFueWoy77pPEwfLqbvjFvHfZg+gqsb
+ UhvwcdeXmX2A==
+X-IronPort-AV: E=McAfee;i="6000,8403,9660"; a="208998216"
+X-IronPort-AV: E=Sophos;i="5.75,267,1589266800"; 
+   d="scan'208";a="208998216"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jun 2020 09:12:51 -0700
+IronPort-SDR: MURvGteXMO4/GePV3Z5yoPHMUS1qzc1JUmAEvd+0whap3kbDVOETMqd9k503ivvW53epS04v0q
+ Cy1uTzqT8dQg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.75,267,1589266800"; 
+   d="scan'208";a="292896534"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by orsmga002.jf.intel.com with ESMTP; 22 Jun 2020 09:12:49 -0700
+Received: by black.fi.intel.com (Postfix, from userid 1001)
+        id C2F5711C; Mon, 22 Jun 2020 19:12:48 +0300 (EEST)
+From:   Mika Westerberg <mika.westerberg@linux.intel.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>
+Cc:     Kalle Valo <kvalo@codeaurora.org>,
+        Yicong Yang <yangyicong@hisilicon.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org
+Subject: [PATCH] PCI: Make pcie_find_root_port() work for PCIe root ports as well
+Date:   Mon, 22 Jun 2020 19:12:48 +0300
+Message-Id: <20200622161248.51099-1-mika.westerberg@linux.intel.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-References: <20200622103817.476-1-nsaenzjulienne@suse.de> <20200622103817.476-7-nsaenzjulienne@suse.de>
- <CAHp75Vcpo49BUe+cApfbB2BXFLz0SyLjWkO_6Uw=sYEcJEBMPg@mail.gmail.com> <0c0546cfe855eee1381c629b2ffd7f65427c7091.camel@suse.de>
-In-Reply-To: <0c0546cfe855eee1381c629b2ffd7f65427c7091.camel@suse.de>
-From:   Andy Shevchenko <andy.shevchenko@gmail.com>
-Date:   Mon, 22 Jun 2020 18:51:03 +0300
-Message-ID: <CAHp75Vcs=QZye_QPwpQ-9uwjOJnbvbyrHpRNjeTEG8X65fseeg@mail.gmail.com>
-Subject: Re: [PATCH v4 6/9] Revert "USB: pci-quirks: Add Raspberry Pi 4 quirk"
-To:     Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-Cc:     Florian Fainelli <f.fainelli@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Rob Herring <robh@kernel.org>,
-        Stefan Wahren <wahrenst@gmx.net>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        USB <linux-usb@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-rpi-kernel <linux-rpi-kernel@lists.infradead.org>,
-        linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>,
-        bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
-        tim.gover@raspberrypi.org, linux-pci <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Mathias Nyman <mathias.nyman@linux.intel.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Jun 22, 2020 at 6:11 PM Nicolas Saenz Julienne
-<nsaenzjulienne@suse.de> wrote:
-> On Mon, 2020-06-22 at 17:44 +0300, Andy Shevchenko wrote:
-> > On Mon, Jun 22, 2020 at 5:26 PM Nicolas Saenz Julienne
-> > <nsaenzjulienne@suse.de> wrote:
-> > > This reverts commit c65822fef4adc0ba40c37a47337376ce75f7a7bc.
-> > >
-> > > The initialization of Raspberry Pi 4's USB chip is now handled through a
-> > > reset controller. No need to directly call the firmware routine trough a
-> >
-> > trough -> through.
-> >
-> > > pci quirk.
-> >
-> > pci -> PCI.
-> >
->
-> Noted
->
-> > ...
-> >
-> > > -
-> > > -#include <soc/bcm2835/raspberrypi-firmware.h>
-> > > -
-> >
-> > Leave one blank line here.
->
-> This being a revert, does it make sense to do so? If we are 100% strict about
-> it, the space should come from a separate patch.
->
-> That said, if you insist I'll be happy to edit it.
+Commit 6ae72bfa656e ("PCI: Unify pcie_find_root_port() and
+pci_find_pcie_root_port()") unified the root port finding functionality
+into a single function but missed the fact that the passed in device may
+already be a root port. This causes the kernel to block power management
+of PCIe hierarchies in recent systems because ->bridge_d3 started to
+return false for such ports after the commit in question.
 
-Even though, this revert depends on the previous patches, so,
-considered as a new patch.
-I leave this to the maintainer to choose the best approach (update
-themselves, request new version, ...).
+Fixes: 6ae72bfa656e ("PCI: Unify pcie_find_root_port() and pci_find_pcie_root_port()")
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: stable@vger.kernel.org
+---
+ include/linux/pci.h | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index c79d83304e52..c17c24f5eeed 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -2169,8 +2169,13 @@ static inline int pci_pcie_type(const struct pci_dev *dev)
+  */
+ static inline struct pci_dev *pcie_find_root_port(struct pci_dev *dev)
+ {
+-	struct pci_dev *bridge = pci_upstream_bridge(dev);
++	struct pci_dev *bridge;
+ 
++	/* If dev is already root port */
++	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT)
++		return dev;
++
++	bridge = pci_upstream_bridge(dev);
+ 	while (bridge) {
+ 		if (pci_pcie_type(bridge) == PCI_EXP_TYPE_ROOT_PORT)
+ 			return bridge;
 -- 
-With Best Regards,
-Andy Shevchenko
+2.27.0
+
