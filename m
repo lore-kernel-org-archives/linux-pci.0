@@ -7,59 +7,59 @@ X-Spam-Status: No, score=-17.6 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT,
 	USER_IN_DEF_DKIM_WL autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EEF8AC433E0
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Jun 2020 20:33:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05487C433DF
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Jun 2020 20:33:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CD0B72080C
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Jun 2020 20:33:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DBB4C2080C
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Jun 2020 20:33:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="ZOpDZdrG"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="qDi1kJQp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2406604AbgFXUdh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 24 Jun 2020 16:33:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50672 "EHLO
+        id S2406623AbgFXUdo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 24 Jun 2020 16:33:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50674 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2406599AbgFXUdg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Jun 2020 16:33:36 -0400
-Received: from mail-qt1-x84a.google.com (mail-qt1-x84a.google.com [IPv6:2607:f8b0:4864:20::84a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5BE0EC061796
-        for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2020 13:33:35 -0700 (PDT)
-Received: by mail-qt1-x84a.google.com with SMTP id x6so2453328qtq.1
-        for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2020 13:33:35 -0700 (PDT)
+        with ESMTP id S2406610AbgFXUdj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Jun 2020 16:33:39 -0400
+Received: from mail-qv1-xf49.google.com (mail-qv1-xf49.google.com [IPv6:2607:f8b0:4864:20::f49])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C51A0C061797
+        for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2020 13:33:38 -0700 (PDT)
+Received: by mail-qv1-xf49.google.com with SMTP id da10so2517925qvb.2
+        for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2020 13:33:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=date:in-reply-to:message-id:mime-version:references:subject:from:to
          :cc;
-        bh=39oSk63TLcybcU14SgKvCDK3H6XzHtEtduXPCr/44ss=;
-        b=ZOpDZdrGdHh1ZJonf0E/5dDbHERSe6TbCFmdB2U6jPIiwcNANMbLkyJvmpov2k2xOy
-         UVWsqBFfeytL+Hgc/oR6FsAd9G11hUgAXJsCWawlND5MVBWd0mWD5Dc0EmC9ABVsRrwk
-         SuNrnMuN7GhuqelKUl2otkPK4jEY0L0Bm6whau77q3fZbpcyNGO1mB7+EOqkQJEsefdW
-         zLLLl7cpOUj8LxrFN5V51O7w7SPh0uXELCQRumvXzfHQsZ4xwEEn1hGOm5BLrbAhkADT
-         mOeNJdhYt+ZgbwtN0PEW0MGrw4iretwo3Lq6tyaoaAFryjr8t8wGNBEOp88gmFSQ4dk6
-         T0OA==
+        bh=tvg1Fbryi0kMABLSJZV+2LlG9cMfXZohRvKr2b10/ew=;
+        b=qDi1kJQp6Ay8PowzBhvgcAgfJKyEY22DJ3SehuRqjn/jA9tuCP3XgBFwyavVII/8H8
+         +qDUOb2y6OKXwsbI5cxksI3QZk1MHXAA03OHDhdjTbrRcF9EMaP1PLIUJPhY0/usboE5
+         WysdzKDHLGBWRBK078rHZqlAErXt2qVt2sq358db2q+vTaEhfb2Ztz8s+Npc56SUR/GU
+         zam+aC0Fi9TXcLLkm/vCwtmB9CZFKkHlUgIzUuWu5eMrmtKdAXKTOQSgFxHw8mPgwD7i
+         VrVAm6xkIce/iluM0BjvQMvc/W7Io0XF/CLOQ/Xz7mhbTAKzZSonAVtghl5cbcwT3k0W
+         qRXw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=39oSk63TLcybcU14SgKvCDK3H6XzHtEtduXPCr/44ss=;
-        b=kXHxc9m7cHSPFc3KH3HWfV5zULe1GIxs6G+u3mqVYcO5bxF/vmn4yZduXo5ZfVclAT
-         T12tNlIxOLcAixvBSwlhLx8KzJEcesx2a7zA20lBDYQCfiRmRQ6PRgNV1N5NH20o3ijE
-         QG9jVFm3wqCT2Jd/9mTGN7U0X/ZtvOcxIAI+ikhD42D3eF16QLgDZGsEmrXi5RBYQmDR
-         16wRN6eMk1yUOtLLu1GFGSGRLDLI3iEsZ4qlpo3rNbRTO3bYGdb+IyNQSdoWudeO6j0S
-         tmRw/KUnjbFS1k1ZgSwRN7Cs0JuLtV8FOqI/FTKYKT3vBazJQk0Qy4nZeoiPuJtlrSz1
-         E0DQ==
-X-Gm-Message-State: AOAM530S+98ixdT6Y4p2VIFPogzCrGEaoelXZdELjNY4lCs9SHP2ZN3R
-        LAkTFyczlzfg2B3a90ZKqc5fHngJopcTEsei0aY=
-X-Google-Smtp-Source: ABdhPJzI2BesdcUkxRPNmsNayE+wa07nV1TDxi5hKxZeEiEV2jo0nWBCJ/1Nmj0kWHXA23yigO5wL2sAexNblZcBJws=
-X-Received: by 2002:ad4:52e2:: with SMTP id p2mr33679309qvu.100.1593030814530;
- Wed, 24 Jun 2020 13:33:34 -0700 (PDT)
-Date:   Wed, 24 Jun 2020 13:31:58 -0700
+        bh=tvg1Fbryi0kMABLSJZV+2LlG9cMfXZohRvKr2b10/ew=;
+        b=G/WCZBRGTEatNxKnMFFEpn9Zw+fWweNh8ydBJx0tP0DbVxhpK5c1IsZoTGbiyO8F/A
+         hQmQywIIOGwj6a4r1qRF3BdLHhIg5Sfp/Kzu2Soy83/kXOLkzgioakKNELITUbTXXE2m
+         jdVTUb9TZMnYx4l4WyIygihZr2HZRCMvIMkXSr4QU9jN/QmPAefAWwqKcne9qcmZWndm
+         X4qagDaHKPCZwePkVvzod3a4b1eFu0EC8tK2Ee5zFUBOX9cmztJh4wPo86QAIDzDqYYc
+         Wf/b2m+JED7hBiRoHgIQyb8UjW9h2mRyP07MpTdV/j9fAH0/JQLHyWvqRcjbb21PLNCO
+         UJyg==
+X-Gm-Message-State: AOAM5321xxgywn+QhpnGKmIjsWiYKQ5Yv2GGTGWa0Dwwgue6I2M5ndFR
+        CeKEmCV63ZiBfCAYqY7Q/DsX4B6RrK+l1HnDJ4k=
+X-Google-Smtp-Source: ABdhPJyl5JOyQAzphL8fSerF19PzJDrN7smlmqxmskm8wB3636prwAzfuisg2Ek7D9XrgzzDEO8QBVxE0nwET9TpJnI=
+X-Received: by 2002:a05:6214:846:: with SMTP id dg6mr31350632qvb.210.1593030818021;
+ Wed, 24 Jun 2020 13:33:38 -0700 (PDT)
+Date:   Wed, 24 Jun 2020 13:32:00 -0700
 In-Reply-To: <20200624203200.78870-1-samitolvanen@google.com>
-Message-Id: <20200624203200.78870-21-samitolvanen@google.com>
+Message-Id: <20200624203200.78870-23-samitolvanen@google.com>
 Mime-Version: 1.0
 References: <20200624203200.78870-1-samitolvanen@google.com>
 X-Mailer: git-send-email 2.27.0.212.ge8ba1cc988-goog
-Subject: [PATCH 20/22] x86, ftrace: disable recordmcount for ftrace_make_nop
+Subject: [PATCH 22/22] x86, build: allow LTO_CLANG and THINLTO to be selected
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Masahiro Yamada <masahiroy@kernel.org>,
         Will Deacon <will@kernel.org>
@@ -78,25 +78,43 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Ignore mcount relocations in ftrace_make_nop.
+Allow CONFIG_LTO_CLANG and CONFIG_THINLTO to be enabled.
 
 Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
 ---
- arch/x86/kernel/ftrace.c | 1 +
- 1 file changed, 1 insertion(+)
+ arch/x86/Kconfig  | 2 ++
+ arch/x86/Makefile | 5 +++++
+ 2 files changed, 7 insertions(+)
 
-diff --git a/arch/x86/kernel/ftrace.c b/arch/x86/kernel/ftrace.c
-index 51504566b3a6..c3b28b81277b 100644
---- a/arch/x86/kernel/ftrace.c
-+++ b/arch/x86/kernel/ftrace.c
-@@ -121,6 +121,7 @@ ftrace_modify_code_direct(unsigned long ip, const char *old_code,
- 	return 0;
- }
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index 6a0cc524882d..df335b1f9c31 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -92,6 +92,8 @@ config X86
+ 	select ARCH_SUPPORTS_ACPI
+ 	select ARCH_SUPPORTS_ATOMIC_RMW
+ 	select ARCH_SUPPORTS_NUMA_BALANCING	if X86_64
++	select ARCH_SUPPORTS_LTO_CLANG		if X86_64
++	select ARCH_SUPPORTS_THINLTO		if X86_64
+ 	select ARCH_USE_BUILTIN_BSWAP
+ 	select ARCH_USE_QUEUED_RWLOCKS
+ 	select ARCH_USE_QUEUED_SPINLOCKS
+diff --git a/arch/x86/Makefile b/arch/x86/Makefile
+index 00e378de8bc0..a1abc1e081ad 100644
+--- a/arch/x86/Makefile
++++ b/arch/x86/Makefile
+@@ -188,6 +188,11 @@ ifdef CONFIG_X86_64
+ KBUILD_LDFLAGS += $(call ld-option, -z max-page-size=0x200000)
+ endif
  
-+__nomcount
- int ftrace_make_nop(struct module *mod, struct dyn_ftrace *rec, unsigned long addr)
- {
- 	unsigned long ip = rec->ip;
++ifdef CONFIG_LTO_CLANG
++KBUILD_LDFLAGS	+= -plugin-opt=-code-model=kernel \
++		   -plugin-opt=-stack-alignment=$(if $(CONFIG_X86_32),4,8)
++endif
++
+ # Workaround for a gcc prelease that unfortunately was shipped in a suse release
+ KBUILD_CFLAGS += -Wno-sign-compare
+ #
 -- 
 2.27.0.212.ge8ba1cc988-goog
 
