@@ -3,65 +3,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C0ADC433DF
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Jun 2020 19:39:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA8ADC433E0
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Jun 2020 19:51:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 720C32081A
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Jun 2020 19:39:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D65152080C
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Jun 2020 19:51:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391287AbgFXTjI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 24 Jun 2020 15:39:08 -0400
-Received: from mga02.intel.com ([134.134.136.20]:13095 "EHLO mga02.intel.com"
+        id S2406253AbgFXTvm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 24 Jun 2020 15:51:42 -0400
+Received: from mga04.intel.com ([192.55.52.120]:50809 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2391239AbgFXTjI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 24 Jun 2020 15:39:08 -0400
-IronPort-SDR: sh2HLpSHbWTmsQffGvS51YCwNwucBblOlJCFBUIOD9spQ/27dAJLPdIVeur5wzb9q5KQKQ/nR5
- a+DpjpvnG2nw==
-X-IronPort-AV: E=McAfee;i="6000,8403,9662"; a="133039948"
+        id S2406243AbgFXTvm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 24 Jun 2020 15:51:42 -0400
+IronPort-SDR: CJov8q8Y7s0zfuWbDwXb0Wpx8Le+qyaY1dL99SzkQqRhPcnOJXnJi6vK4uIZkI3CZqdTiyGlDx
+ MSorHsLbi63w==
+X-IronPort-AV: E=McAfee;i="6000,8403,9662"; a="142097929"
 X-IronPort-AV: E=Sophos;i="5.75,276,1589266800"; 
-   d="scan'208";a="133039948"
+   d="scan'208";a="142097929"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jun 2020 12:39:08 -0700
-IronPort-SDR: z6nfZQhPv6nuVQFeUgr2r64l76Au49sOAqbkao9966p02ZnG72vHFKXI02Sr/mMBU5QJql8KRS
- zGLWFpgHM0XA==
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jun 2020 12:51:41 -0700
+IronPort-SDR: 0HXStLgzbNaPqVGEZcN5pG+ymSki/qNqdVZRFuDBzuYsIYyFOTipKMQJ1s4kIvoJVp+hez2Ucx
+ Lt4SSke28oeQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.75,276,1589266800"; 
-   d="scan'208";a="275798065"
-Received: from linux.intel.com ([10.54.29.200])
-  by orsmga003.jf.intel.com with ESMTP; 24 Jun 2020 12:39:08 -0700
-Received: from debox1-desk1.jf.intel.com (debox1-desk1.jf.intel.com [10.7.201.137])
-        by linux.intel.com (Postfix) with ESMTP id 0257D5804D6;
-        Wed, 24 Jun 2020 12:39:08 -0700 (PDT)
-Message-ID: <06eff8e884b7bddd155fcaad5ef25b9db80a12d5.camel@linux.intel.com>
-Subject: Re: [PATCH V2 0/2] nvme: Add support for ACPI StorageD3Enable
- property
-From:   "David E. Box" <david.e.box@linux.intel.com>
-Reply-To: david.e.box@linux.intel.com
-To:     Dan Williams <dan.j.williams@intel.com>
-Cc:     "N, Shyjumon" <shyjumon.n@intel.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@fb.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org
-Date:   Wed, 24 Jun 2020 12:39:07 -0700
-In-Reply-To: <CAPcyv4iYGgjmAUiKUgFBF+nm=axamYFueCkN5Jyu7yQ6w1HxLg@mail.gmail.com>
-References: <20200428003214.3764-1-david.e.box@linux.intel.com>
-         <20200612204820.20111-1-david.e.box@linux.intel.com>
-         <12d36fdcdbcf438dd3aac7769e8366afd9d5aa1a.camel@linux.intel.com>
-         <CAPcyv4iYGgjmAUiKUgFBF+nm=axamYFueCkN5Jyu7yQ6w1HxLg@mail.gmail.com>
-Organization: David E. Box
+   d="scan'208";a="263728515"
+Received: from arpeshla-mobl.amr.corp.intel.com (HELO arch-ashland-svkelley) ([10.254.43.136])
+  by fmsmga007.fm.intel.com with ESMTP; 24 Jun 2020 12:51:41 -0700
+Message-ID: <c56b537ad4f13829d52ccfae73b5286090b01ad3.camel@linux.intel.com>
+Subject: Re: [PATCH v2] pciutils: Add decode support for RCECs
+From:   Sean V Kelley <sean.v.kelley@linux.intel.com>
+Reply-To: sean.v.kelley@linux.intel.com
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     mj@ucw.cz, bhelgaas@google.com, linux-pci@vger.kernel.org
+Date:   Wed, 24 Jun 2020 12:51:41 -0700
+In-Reply-To: <6672f7959e9737fbccfd3d12ef566c473dd127ea.camel@linux.intel.com>
+References: <20200624155727.GA2554730@bjorn-Precision-5520>
+         <6672f7959e9737fbccfd3d12ef566c473dd127ea.camel@linux.intel.com>
+Organization: Intel Corporation
 Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.3 (3.34.3-1.fc31) 
+User-Agent: Evolution 3.36.3 
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
@@ -69,14 +54,32 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, 2020-06-24 at 12:10 -0700, Dan Williams wrote:
-> On Wed, Jun 24, 2020 at 11:55 AM David E. Box
-> <david.e.box@linux.intel.com> wrote:
-> > Friendly reminder. Thanks.
+On Wed, 2020-06-24 at 12:44 -0700, Sean V Kelley wrote:
+> That works well, I can also add the hyphen if it is adjacent with
+> this,
+> I think:
 > 
-> Are you looking for this to be merged by ACPI with an NVMe ack, or
-> merged by NVMe with an ACPI ack? It sometimes helps to be explicit to
-> break the log jam.
+> for (int dev=0; dev < 32; dev++)
+>    {
+>      if (BITS(bmap, dev, 1))
+>        {
+>          if (!adjcount)
+>            printf("%s %u", (prevmatched) ? "," : "", dev);
+>          prevmatched=1;
+>          adjcount++;
+>          prevdev=dev;
+>        }
+>      else
+>        {
+>          if (adjcount > 1)
+>            printf("-%u", prevdev);
+>          adjacent=0;
 
-Ah. NVMe merge with ACPI ack. Thanks.
+Rather, I meant:
+adjcount=0; 
+
+>        }
+>    }
+> 
+> 
 
