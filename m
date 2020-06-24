@@ -5,61 +5,61 @@ X-Spam-Level:
 X-Spam-Status: No, score=-17.6 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT,
-	USER_IN_DEF_DKIM_WL autolearn=ham autolearn_force=no version=3.4.0
+	USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0F4DC433DF
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Jun 2020 20:34:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BAE27C433E1
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Jun 2020 20:34:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 810142080C
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Jun 2020 20:34:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 989BC20CC7
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Jun 2020 20:34:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="MpnW9sRj"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="QHLFKZjz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2406566AbgFXUeF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 24 Jun 2020 16:34:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50624 "EHLO
+        id S2406551AbgFXUeM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 24 Jun 2020 16:34:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50590 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2406561AbgFXUd3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Jun 2020 16:33:29 -0400
-Received: from mail-qv1-xf4a.google.com (mail-qv1-xf4a.google.com [IPv6:2607:f8b0:4864:20::f4a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7A3BC061573
-        for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2020 13:33:27 -0700 (PDT)
-Received: by mail-qv1-xf4a.google.com with SMTP id w3so2506383qvl.9
-        for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2020 13:33:27 -0700 (PDT)
+        with ESMTP id S1728281AbgFXUdZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Jun 2020 16:33:25 -0400
+Received: from mail-yb1-xb49.google.com (mail-yb1-xb49.google.com [IPv6:2607:f8b0:4864:20::b49])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17741C061797
+        for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2020 13:33:24 -0700 (PDT)
+Received: by mail-yb1-xb49.google.com with SMTP id s7so3503462ybg.10
+        for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2020 13:33:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=date:in-reply-to:message-id:mime-version:references:subject:from:to
          :cc;
-        bh=Y5ofKWtW7b37fMwYLfPdHt3IGKVdbeQxX7e2DATRt0o=;
-        b=MpnW9sRj+tNBN3TDOB0E4bCD73iqcMpQvhC/oM2fJsIoYTK0vvtDvbgVlrqJ4oIK0n
-         hUkrO/tMTdR+N69BPrGONWoZVqr/PGTcGNGx7KoFKTb76Da/RvpOWxtl8VBxl/EZOrgt
-         5F9d69yFBuUFcdmnwtkp0D0VXoRY0s2h1Yr7OuAvRe5TUtgm7VwUMLCUarJXBYi3YH1w
-         ecgv9j79/kdCnb16j6h9hpiIIbrE81Rw7ot9VeyVU18a4/rQr8YcJy/lwnjNPlRdogMZ
-         F7b/c1lcoIWNDz5L2rbw2gGQuBQXJi1K+B1Nnm4G09LoPyPmFpMaZH6DTHw/IetIWtiC
-         Gcqg==
+        bh=063/REsTpnFRr+cDI+sseVhgFckW5SG29uiho3UNZTY=;
+        b=QHLFKZjziQv1B4lTQJOFrFkeBBeD3vqMRAW+KU8uSJ0z8P5diTku752ppGYK+p1sHj
+         Tuqj5FmieFc5zewP3DRNS5iM40Pga5Yd012RZ1UJSub9OeGcQ/BjM9Xhswo2S+wawZKA
+         RoZrP4AKzJhPxHnp2kwUEq2iAcWJC9Jvd0o41DT/D0J5C0PT78vt0tH2KpFNFHvjKqOE
+         izzBiEOpzdtuThxfwOEyO+K5m3BsSaqVWi7OpscZsOWnWe/8qa7rh4O22Mfte1SMk6Qe
+         rW+Cnirb92ArG8+1lDPtjHVyv4CvsFhD6/kzdDW605IdVtQymCiQD3WRRYOvRlD/Mv+p
+         36IQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=Y5ofKWtW7b37fMwYLfPdHt3IGKVdbeQxX7e2DATRt0o=;
-        b=rX95kcoCltfCwknweJNgwFSXShT4zxWanKhkkoVp5TRCWuzN3Ey8OjwX8w7g7nkFJ2
-         CfMVWNx74CcNrklOo2S/uoiRdHRkSIFnc7K0yFRxh/742JPVm+72r4pC2GMTDFqyPZ8C
-         oLqTjkQgG/GlyBwVUxWw6zeYz5kNq5DYtagqWNijGuy3PCR9pM5nQXQCXNE23l58HLNH
-         AyekJGMTyDgzbHtBEteZKR/VCChWnEy4o0B6lYNo4sli3+y9/RsrQnoAqWKTIM+FKqgf
-         jGJJc9IFRZxiuK9aZwD1yyCaQObLCD6ESg926LkNmVV+bZYUfh9TNjH3N/7cj8pR/TsO
-         CQaQ==
-X-Gm-Message-State: AOAM530E1/b/4eghw5XGq2nM/LIvQ5QDUffOYlsMw40lrbapRC2hfnmX
-        Hp+d0WsnQJ9/0E2e1pM+HTXpdPI/cK04JaynqWk=
-X-Google-Smtp-Source: ABdhPJyJOTQdckiniPybTRC01pO0CmjbQctgmf229uGzKfKGpm1EtRROJM8c/GsGd5lxXSpfxv2hqLta+vkNePH8WAU=
-X-Received: by 2002:ad4:4ae1:: with SMTP id cp1mr752045qvb.91.1593030807024;
- Wed, 24 Jun 2020 13:33:27 -0700 (PDT)
-Date:   Wed, 24 Jun 2020 13:31:54 -0700
+        bh=063/REsTpnFRr+cDI+sseVhgFckW5SG29uiho3UNZTY=;
+        b=nKTZi0Kf4kP5nJuPzcAdD6veNTp4g/WMwFuekuJt/rqqC1RRK4IC0ZjAh7q3mf66+5
+         Dm5irE/KCen7nnvwhLc2INGFRlFXvME2dlhKRCfwxKVCSA9vxmjOev9VahRD6I2IbfFx
+         +aWGQ06OYcZkiLnKXqKKTLC1AIQiFTi3aXDLie7IfZZaJmdqFM+Hdiy0cp+8+LRFiWCf
+         Rc09me9SII1QJpJ1C8gWtbGRQg1w5V5DKSLcz4SwMo5+dBgeAGIb2bes4xwUHIitkX+h
+         3b+FUsHVK+JQsG/gemLloimb+L2oxgYXxeH4AXUVG6euf1LYg+/yQiF5p8jXl/a9SETj
+         OCdw==
+X-Gm-Message-State: AOAM530GOKRfCciLQRcq9aRSj+f7UfuBS6ohb8D8EeecfV8moUXmuC6p
+        9KQuqTuL4Rv6vLSE4BoWe6xaqFYWAcqBaPR9NCc=
+X-Google-Smtp-Source: ABdhPJxSD93X1bZbMxIVxbatDlNzo+plulwlXrP7mUhDGUyc2zpYsUnUjocqKRL/aFZ9kJnCfhHJEfDbrbY1YJULi70=
+X-Received: by 2002:a25:e8b:: with SMTP id 133mr46457083ybo.13.1593030803250;
+ Wed, 24 Jun 2020 13:33:23 -0700 (PDT)
+Date:   Wed, 24 Jun 2020 13:31:52 -0700
 In-Reply-To: <20200624203200.78870-1-samitolvanen@google.com>
-Message-Id: <20200624203200.78870-17-samitolvanen@google.com>
+Message-Id: <20200624203200.78870-15-samitolvanen@google.com>
 Mime-Version: 1.0
 References: <20200624203200.78870-1-samitolvanen@google.com>
 X-Mailer: git-send-email 2.27.0.212.ge8ba1cc988-goog
-Subject: [PATCH 16/22] arm64: export CC_USING_PATCHABLE_FUNCTION_ENTRY
+Subject: [PATCH 14/22] efi/libstub: disable LTO
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Masahiro Yamada <masahiroy@kernel.org>,
         Will Deacon <will@kernel.org>
@@ -78,27 +78,28 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Since arm64 does not use -pg in CC_FLAGS_FTRACE with
-DYNAMIC_FTRACE_WITH_REGS, skip running recordmcount by
-exporting CC_USING_PATCHABLE_FUNCTION_ENTRY.
+With CONFIG_LTO_CLANG, we produce LLVM bitcode instead of ELF object
+files. Since LTO is not really needed here and the Makefile assumes we
+produce an object file, disable LTO for libstub.
 
 Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
 ---
- arch/arm64/Makefile | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/firmware/efi/libstub/Makefile | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/arch/arm64/Makefile b/arch/arm64/Makefile
-index a0d94d063fa8..fc6c20a10291 100644
---- a/arch/arm64/Makefile
-+++ b/arch/arm64/Makefile
-@@ -115,6 +115,7 @@ endif
- ifeq ($(CONFIG_DYNAMIC_FTRACE_WITH_REGS),y)
-   KBUILD_CPPFLAGS += -DCC_USING_PATCHABLE_FUNCTION_ENTRY
-   CC_FLAGS_FTRACE := -fpatchable-function-entry=2
-+  export CC_USING_PATCHABLE_FUNCTION_ENTRY := 1
- endif
+diff --git a/drivers/firmware/efi/libstub/Makefile b/drivers/firmware/efi/libstub/Makefile
+index 75daaf20374e..95e12002cc7c 100644
+--- a/drivers/firmware/efi/libstub/Makefile
++++ b/drivers/firmware/efi/libstub/Makefile
+@@ -35,6 +35,8 @@ KBUILD_CFLAGS			:= $(cflags-y) -Os -DDISABLE_BRANCH_PROFILING \
  
- # Default value
+ # remove SCS flags from all objects in this directory
+ KBUILD_CFLAGS := $(filter-out $(CC_FLAGS_SCS), $(KBUILD_CFLAGS))
++# disable LTO
++KBUILD_CFLAGS := $(filter-out $(CC_FLAGS_LTO), $(KBUILD_CFLAGS))
+ 
+ GCOV_PROFILE			:= n
+ # Sanitizer runtimes are unavailable and cannot be linked here.
 -- 
 2.27.0.212.ge8ba1cc988-goog
 
