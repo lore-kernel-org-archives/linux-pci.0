@@ -2,64 +2,60 @@ Return-Path: <SRS0=JtJR=AF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.6 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT,
-	USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.6 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECBADC433E1
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Jun 2020 20:34:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA913C433DF
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Jun 2020 20:35:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BF3C32084D
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Jun 2020 20:34:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ABC9B206C0
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Jun 2020 20:35:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="IfZnlNH6"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Uawx1Hym"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2406717AbgFXUey (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 24 Jun 2020 16:34:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50512 "EHLO
+        id S1727981AbgFXUct (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 24 Jun 2020 16:32:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50398 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2406442AbgFXUdI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Jun 2020 16:33:08 -0400
-Received: from mail-qt1-x849.google.com (mail-qt1-x849.google.com [IPv6:2607:f8b0:4864:20::849])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8BD88C061795
-        for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2020 13:33:07 -0700 (PDT)
-Received: by mail-qt1-x849.google.com with SMTP id r25so2429147qtj.11
-        for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2020 13:33:07 -0700 (PDT)
+        with ESMTP id S2388332AbgFXUcs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Jun 2020 16:32:48 -0400
+Received: from mail-yb1-xb49.google.com (mail-yb1-xb49.google.com [IPv6:2607:f8b0:4864:20::b49])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0EF6DC061795
+        for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2020 13:32:48 -0700 (PDT)
+Received: by mail-yb1-xb49.google.com with SMTP id b135so3497242yba.11
+        for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2020 13:32:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
-        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
-         :cc;
-        bh=E72RKePZ9QWe5v89HuDG9dmOi1TM58THK6MPfXGAxFQ=;
-        b=IfZnlNH6VN1h5kv70OdYXiwpqxbG8Fsr0lLuwZMxg60FtsN9/VTg/yfhaEKY69+/+Y
-         hyTqsTQRwHJPTGJCgx79BwJ5QVcEKyLgdthjRqbiH95tnfQghy4dm0yUNuDWrYAYeuQK
-         bXlz5RTuRnG7qvLP46Ux6LdFVV3vgejq+f8vMdwP7C0ECe86rxVnbt4+28XS5oy0e//W
-         3PvqoaOrjXwuF1y+TVGpByJgFdYpZGp3bhGDnuXbGiV8bnYHuHTTFlOLOu5U7PsEVYbS
-         zVdr70MPwdtPFtMyvFviHewEzUoy8KN1TAyWLRedjTg9ydVnxrcpJqLiET5LocVJTpl1
-         qi7Q==
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=geZqQu8Pc2IZyEmyfjSbirVoyCHoNCVPX8WSrD5/a0I=;
+        b=Uawx1HymTuOmFuIsE6m0edc2JOJkrIL4ohCvAqVmbJ8lL51+F8GFU8Edzr7cqZcv2w
+         HodyjPnW3CEUXq8PkZVULO6ZyoUtxp9+p+vdtGUCMz8qqae3fj+ztQ8oZGg5KLQxzxtv
+         WsCNEibFNfuA+bNlcIR8b4sSEDOv2SkH85c5Dy7chvY+wP/aaRR1NsYEhp1bKM54GsoI
+         2QcLu0Jhfop40Tu+FeyQ89Qe5QVYishLUcPnbhRan/pilxFWfHclHWVyGJPxpvvrwTh0
+         JNHLSYYTI2a6tpFbw45+Zc3Ez5EH+jMImL6HifoQ7sZW+Y10m8LKlencaSHV2sNpKm9n
+         vXag==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:in-reply-to:message-id:mime-version
-         :references:subject:from:to:cc;
-        bh=E72RKePZ9QWe5v89HuDG9dmOi1TM58THK6MPfXGAxFQ=;
-        b=O93HLnrHvWAtmmIpJPgibQMefd8rxAWK18Gywl1Yb+Aw8/SkbS22+mjm3IP5sgzR5R
-         JZq/LKEpiGpqo0J5PoJ2qhOGMCKrHZS0aiHG3JfIeLhCASQ03l8tf2Cegd5qyrC+vOXr
-         9Rm1Jdo+UNrswyVKV4WaqH9enBs5bibkDQKdRv4SokjX1/G4LLkQ5MmBJgaiUYfrIsXB
-         ztFKqzWAVVuo0SXdGEE4drw5WvruymiLkFfAMRs2qdzw6FmFoei1Aw6LlKUjW/fdtzPn
-         E23EaMpMbTuBvUr0iOSwp67PiebI3XjaCG25sDHaukdWZGkjry2arJE98IFFlSlR5iwn
-         9zPw==
-X-Gm-Message-State: AOAM533tfpz765vRxskUWqje8Fg+X2Of1lnqnG4f0VDTxXP+gCqiOfMG
-        RsQSqVxxS/K5nIrDy5cGvb6B4DAdP56YB0chG5Q=
-X-Google-Smtp-Source: ABdhPJzd9lgxY2ziJprOU0r6YQs1Hj+qf3c3VygR/GB4VeUCqKevsyTn5UTRuuuhSmVDqX6i9sr8ukJjhli7wtRCXdI=
-X-Received: by 2002:a0c:85a3:: with SMTP id o32mr8043763qva.189.1593030786670;
- Wed, 24 Jun 2020 13:33:06 -0700 (PDT)
-Date:   Wed, 24 Jun 2020 13:31:43 -0700
-In-Reply-To: <20200624203200.78870-1-samitolvanen@google.com>
-Message-Id: <20200624203200.78870-6-samitolvanen@google.com>
+        h=x-gm-message-state:date:message-id:mime-version:subject:from:to:cc;
+        bh=geZqQu8Pc2IZyEmyfjSbirVoyCHoNCVPX8WSrD5/a0I=;
+        b=JLoUceF3EMlDP278tnGW1Miz8jQfHGPz3iq7WRI9FKVtuGm/bBZ7pZvEcLTRiaRrMa
+         PtE7XQje921xxbEBByUcsO/YfdZ34/02idfOQOlnIIfynMjo0nj6I9AD9hK2BMq71sX/
+         9uVWhA9MbHe8NEi527NGL+yjjwwplKBcPW2nsukgqn61RSMneG/RZZmDy1MknvJ4wnL+
+         F5fVHWk+iwpdDQPtOOfeakpOUQpbw634aAtTOK7Mgwn49r3hyUJ6YpRChr5Qtm1ql6yt
+         5mId7xHuBLmNrXNFaJIO+lnHuwTS0dGAYbyxchR8n051rTdNm5KP7bCx71ElplfW3YeA
+         jJbg==
+X-Gm-Message-State: AOAM530JWzt8s7OLvFS3a20IocaElcyJPWopfsy/Dq7QL8oat8drla3A
+        Ce2N/MA0Xp4ZoW0bvct1paR0R+k+VCm9HZ7eJGQ=
+X-Google-Smtp-Source: ABdhPJxWR9GEuM9Xe3hags9/hH99MHEAXvV4G6BQoWnGF1JJpG+hf2xaFzi6meCZqAzm99eCovUBw+L4m3sg7uT3BU4=
+X-Received: by 2002:a25:3342:: with SMTP id z63mr44129932ybz.200.1593030767109;
+ Wed, 24 Jun 2020 13:32:47 -0700 (PDT)
+Date:   Wed, 24 Jun 2020 13:31:38 -0700
+Message-Id: <20200624203200.78870-1-samitolvanen@google.com>
 Mime-Version: 1.0
-References: <20200624203200.78870-1-samitolvanen@google.com>
 X-Mailer: git-send-email 2.27.0.212.ge8ba1cc988-goog
-Subject: [PATCH 05/22] kbuild: lto: postpone objtool
+Subject: [PATCH 00/22] add support for Clang LTO
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Masahiro Yamada <masahiroy@kernel.org>,
         Will Deacon <will@kernel.org>
@@ -78,90 +74,85 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-With LTO, LLVM bitcode won't be compiled into native code until
-modpost_link, or modfinal for modules. This change postpones calls
-to objtool until after these steps.
+This patch series adds support for building x86_64 and arm64 kernels
+with Clang's Link Time Optimization (LTO).
 
-Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
----
- include/linux/compiler.h  |  2 +-
- lib/Kconfig.debug         |  2 +-
- scripts/Makefile.build    |  2 ++
- scripts/Makefile.modfinal | 15 +++++++++++++++
- 4 files changed, 19 insertions(+), 2 deletions(-)
+In addition to performance, the primary motivation for LTO is to allow
+Clang's Control-Flow Integrity (CFI) to be used in the kernel. Google's
+Pixel devices have shipped with LTO+CFI kernels since 2018.
 
-diff --git a/include/linux/compiler.h b/include/linux/compiler.h
-index 30827f82ad62..12b115152532 100644
---- a/include/linux/compiler.h
-+++ b/include/linux/compiler.h
-@@ -120,7 +120,7 @@ void ftrace_likely_update(struct ftrace_likely_data *f, int val,
- /* Annotate a C jump table to allow objtool to follow the code flow */
- #define __annotate_jump_table __section(.rodata..c_jump_table)
- 
--#ifdef CONFIG_DEBUG_ENTRY
-+#if defined(CONFIG_DEBUG_ENTRY) || defined(CONFIG_LTO_CLANG)
- /* Begin/end of an instrumentation safe region */
- #define instrumentation_begin() ({					\
- 	asm volatile("%c0:\n\t"						\
-diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
-index 9ad9210d70a1..9fdba71c135a 100644
---- a/lib/Kconfig.debug
-+++ b/lib/Kconfig.debug
-@@ -399,7 +399,7 @@ config STACK_VALIDATION
- 
- config VMLINUX_VALIDATION
- 	bool
--	depends on STACK_VALIDATION && DEBUG_ENTRY && !PARAVIRT
-+	depends on STACK_VALIDATION && (DEBUG_ENTRY || LTO_CLANG) && !PARAVIRT
- 	default y
- 
- config DEBUG_FORCE_WEAK_PER_CPU
-diff --git a/scripts/Makefile.build b/scripts/Makefile.build
-index 64e99f4baa5b..82977350f5a6 100644
---- a/scripts/Makefile.build
-+++ b/scripts/Makefile.build
-@@ -226,6 +226,7 @@ endif # CC_USING_PATCHABLE_FUNCTION_ENTRY
- endif # CONFIG_FTRACE_MCOUNT_RECORD
- 
- ifdef CONFIG_STACK_VALIDATION
-+ifndef CONFIG_LTO_CLANG
- ifneq ($(SKIP_STACK_VALIDATION),1)
- 
- __objtool_obj := $(objtree)/tools/objtool/objtool
-@@ -258,6 +259,7 @@ objtool_obj = $(if $(patsubst y%,, \
- 	$(__objtool_obj))
- 
- endif # SKIP_STACK_VALIDATION
-+endif # CONFIG_LTO_CLANG
- endif # CONFIG_STACK_VALIDATION
- 
- # Rebuild all objects when objtool changes, or is enabled/disabled.
-diff --git a/scripts/Makefile.modfinal b/scripts/Makefile.modfinal
-index d168f0cfe67c..9f1df2f1fab5 100644
---- a/scripts/Makefile.modfinal
-+++ b/scripts/Makefile.modfinal
-@@ -48,6 +48,21 @@ endif # CC_USING_PATCHABLE_FUNCTION_ENTRY
- endif # CC_USING_RECORD_MCOUNT
- endif # CONFIG_FTRACE_MCOUNT_RECORD
- 
-+ifdef CONFIG_STACK_VALIDATION
-+ifneq ($(SKIP_STACK_VALIDATION),1)
-+cmd_ld_ko_o +=								\
-+	$(objtree)/tools/objtool/objtool				\
-+		$(if $(CONFIG_UNWINDER_ORC),orc generate,check)		\
-+		--module						\
-+		$(if $(CONFIG_FRAME_POINTER),,--no-fp)			\
-+		$(if $(CONFIG_GCOV_KERNEL),--no-unreachable,)		\
-+		$(if $(CONFIG_RETPOLINE),--retpoline,)			\
-+		$(if $(CONFIG_X86_SMAP),--uaccess,)			\
-+		$(@:.ko=$(prelink-ext).o);
-+
-+endif # SKIP_STACK_VALIDATION
-+endif # CONFIG_STACK_VALIDATION
-+
- endif # CONFIG_LTO_CLANG
- 
- quiet_cmd_ld_ko_o = LD [M]  $@
+Most of the patches are build system changes for handling LLVM bitcode,
+which Clang produces with LTO instead of ELF object files, postponing
+ELF processing until a later stage, and ensuring initcall ordering.
+
+Note that first objtool patch in the series is already in linux-next,
+but as it's needed with LTO, I'm including it also here to make testing
+easier.
+
+Sami Tolvanen (22):
+  objtool: use sh_info to find the base for .rela sections
+  kbuild: add support for Clang LTO
+  kbuild: lto: fix module versioning
+  kbuild: lto: fix recordmcount
+  kbuild: lto: postpone objtool
+  kbuild: lto: limit inlining
+  kbuild: lto: merge module sections
+  kbuild: lto: remove duplicate dependencies from .mod files
+  init: lto: ensure initcall ordering
+  init: lto: fix PREL32 relocations
+  pci: lto: fix PREL32 relocations
+  modpost: lto: strip .lto from module names
+  scripts/mod: disable LTO for empty.c
+  efi/libstub: disable LTO
+  drivers/misc/lkdtm: disable LTO for rodata.o
+  arm64: export CC_USING_PATCHABLE_FUNCTION_ENTRY
+  arm64: vdso: disable LTO
+  arm64: allow LTO_CLANG and THINLTO to be selected
+  x86, vdso: disable LTO only for vDSO
+  x86, ftrace: disable recordmcount for ftrace_make_nop
+  x86, relocs: Ignore L4_PAGE_OFFSET relocations
+  x86, build: allow LTO_CLANG and THINLTO to be selected
+
+ .gitignore                            |   1 +
+ Makefile                              |  27 ++-
+ arch/Kconfig                          |  65 +++++++
+ arch/arm64/Kconfig                    |   2 +
+ arch/arm64/Makefile                   |   1 +
+ arch/arm64/kernel/vdso/Makefile       |   4 +-
+ arch/x86/Kconfig                      |   2 +
+ arch/x86/Makefile                     |   5 +
+ arch/x86/entry/vdso/Makefile          |   5 +-
+ arch/x86/kernel/ftrace.c              |   1 +
+ arch/x86/tools/relocs.c               |   1 +
+ drivers/firmware/efi/libstub/Makefile |   2 +
+ drivers/misc/lkdtm/Makefile           |   1 +
+ include/asm-generic/vmlinux.lds.h     |  12 +-
+ include/linux/compiler-clang.h        |   4 +
+ include/linux/compiler.h              |   2 +-
+ include/linux/compiler_types.h        |   4 +
+ include/linux/init.h                  |  78 +++++++-
+ include/linux/pci.h                   |  15 +-
+ kernel/trace/ftrace.c                 |   1 +
+ lib/Kconfig.debug                     |   2 +-
+ scripts/Makefile.build                |  55 +++++-
+ scripts/Makefile.lib                  |   6 +-
+ scripts/Makefile.modfinal             |  40 +++-
+ scripts/Makefile.modpost              |  26 ++-
+ scripts/generate_initcall_order.pl    | 270 ++++++++++++++++++++++++++
+ scripts/link-vmlinux.sh               | 100 +++++++++-
+ scripts/mod/Makefile                  |   1 +
+ scripts/mod/modpost.c                 |  16 +-
+ scripts/mod/modpost.h                 |   9 +
+ scripts/mod/sumversion.c              |   6 +-
+ scripts/module-lto.lds                |  26 +++
+ scripts/recordmcount.c                |   3 +-
+ tools/objtool/elf.c                   |   2 +-
+ 34 files changed, 737 insertions(+), 58 deletions(-)
+ create mode 100755 scripts/generate_initcall_order.pl
+ create mode 100644 scripts/module-lto.lds
+
+
+base-commit: 26e122e97a3d0390ebec389347f64f3730fdf48f
 -- 
 2.27.0.212.ge8ba1cc988-goog
 
