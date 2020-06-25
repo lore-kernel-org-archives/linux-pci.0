@@ -2,352 +2,116 @@ Return-Path: <SRS0=um5r=AG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.6 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_IN_DEF_DKIM_WL autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49E5EC433DF
-	for <linux-pci@archiver.kernel.org>; Thu, 25 Jun 2020 20:55:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72A81C433E0
+	for <linux-pci@archiver.kernel.org>; Thu, 25 Jun 2020 22:39:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1EE68207D8
-	for <linux-pci@archiver.kernel.org>; Thu, 25 Jun 2020 20:55:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 516B4206BE
+	for <linux-pci@archiver.kernel.org>; Thu, 25 Jun 2020 22:39:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="EpzjcATf"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="InCWQSC+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405334AbgFYUzC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 25 Jun 2020 16:55:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50298 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2405331AbgFYUzB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jun 2020 16:55:01 -0400
-Received: from mail-pj1-x1041.google.com (mail-pj1-x1041.google.com [IPv6:2607:f8b0:4864:20::1041])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 449CAC08C5DD
-        for <linux-pci@vger.kernel.org>; Thu, 25 Jun 2020 13:55:01 -0700 (PDT)
-Received: by mail-pj1-x1041.google.com with SMTP id ev7so3147243pjb.2
-        for <linux-pci@vger.kernel.org>; Thu, 25 Jun 2020 13:55:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=HCV92AuRvbw80BHFaZCrTSuoE9qKbEHrDwHHj8qVbjk=;
-        b=EpzjcATfHOlWNN51fD+FPClL2ILnY2pWsOQiUtQwDXRODiQO0Dq/mLVCvOgtrJ42q9
-         2zQ6QUkTaH77E2qPvQB+xzZsPHPinRv/TxQUSNTG6K2c7dh6u+XwedZ54suSXb/yiRgy
-         8GUfMY3QvmTTBslHF06lGkqrndG4+LG07pjeN22MkzJzr4174+dntReA8MtaQbJyUG5y
-         KvipZ1kqZcfU2pySr/OkzXbyVKIc3YhuU2txgZvjvz9LAX/KLYJ5TaF+lgWvGM0HMjz7
-         zmvgESfRN67Jq1zG7m28dza2375HdzOcMPAPsZ8Epp3iNNTSlm+LXYKmCoJLRD7ezQc1
-         Zzlw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=HCV92AuRvbw80BHFaZCrTSuoE9qKbEHrDwHHj8qVbjk=;
-        b=GWRJMN2Pz2k1IuZefV6I0TdFgeBd1I8GPrSwST3QLdthPDFBnyEjBYmP1qs7MGr69H
-         qaL+T19lH0kjulu/cIGyivkD0X5/6bHzUZEteB4Ndxxizd1E81Ui9tCFtqIRJHdULAEP
-         3ISMKjTKplSJFEgTH3xT0NQFEyxqxU6e+I5h32WzpwV2oBvUm8iIPkYZMhzZWm0vI1j6
-         kTBMfnutuBjRyM5T2tezfOvHlJn5xiLymIlRGvXLJsVWKvD7OAJBG23+2b4N3bgHtDza
-         aOsdi2W5aUfqeEIvrE61NynDiE8ctPxWDG/bki5xBG6E0P7sfurYXr6KbnbLLpdWndAE
-         CfnA==
-X-Gm-Message-State: AOAM533gYMVOK+vUySD7g+gPpJh0K+qmkwnZ1cpMWZbbX++MkycxNbIX
-        pYGwWQAedZqX4OdODiy1QuW0UimMboYx+f/NigkIDA==
-X-Google-Smtp-Source: ABdhPJxZdFSmcPt6RuW6kGEUHo6tjLBTLQpNLW8FddduxVa7bC2Gh1K7Wa/SnHFGGRqAoDDIi/lPW+sLteXbXx8SWSU=
-X-Received: by 2002:a17:902:ab8d:: with SMTP id f13mr23724588plr.119.1593118500279;
- Thu, 25 Jun 2020 13:55:00 -0700 (PDT)
-MIME-Version: 1.0
-References: <20200624203200.78870-1-samitolvanen@google.com>
- <20200624203200.78870-5-samitolvanen@google.com> <20200624212737.GV4817@hirez.programming.kicks-ass.net>
- <20200624214530.GA120457@google.com> <20200625074530.GW4817@hirez.programming.kicks-ass.net>
- <20200625161503.GB173089@google.com> <20200625200235.GQ4781@hirez.programming.kicks-ass.net>
-In-Reply-To: <20200625200235.GQ4781@hirez.programming.kicks-ass.net>
-From:   Nick Desaulniers <ndesaulniers@google.com>
-Date:   Thu, 25 Jun 2020 13:54:48 -0700
-Message-ID: <CAKwvOdmToWTaiaw0iX56FLeezW30k3S=pZLf97N2Ta7zJkSL0w@mail.gmail.com>
-Subject: Re: [RFC][PATCH] objtool,x86_64: Replace recordmcount with objtool
-To:     Peter Zijlstra <peterz@infradead.org>
-Cc:     Sami Tolvanen <samitolvanen@google.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Masahiro Yamada <masahiroy@kernel.org>,
-        Will Deacon <will@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Paul E. McKenney" <paulmck@kernel.org>,
-        Kees Cook <keescook@chromium.org>,
-        clang-built-linux <clang-built-linux@googlegroups.com>,
-        Kernel Hardening <kernel-hardening@lists.openwall.com>,
-        linux-arch <linux-arch@vger.kernel.org>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        Linux Kbuild mailing list <linux-kbuild@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-        "maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>,
-        Josh Poimboeuf <jpoimboe@redhat.com>, mhelsley@vmware.com
-Content-Type: text/plain; charset="UTF-8"
+        id S2407534AbgFYWjg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 25 Jun 2020 18:39:36 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:36709 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S2406647AbgFYWjf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jun 2020 18:39:35 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1593124774;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:in-reply-to:in-reply-to:references:references;
+        bh=tVsDsAmElVtmSpleihdn/aqK002mWcZ5/rdoWS26sdI=;
+        b=InCWQSC+s23rYUv1Z0te+1+V7xgVKqFoWX6wXLTBMtGoa1htHHMY9U1o8lp5KOljAJzT9s
+        koC8iATs6/Kl0u/hPKavhxt+oCYRpBrUS1X94AlvaYC1nFlvQQo+7wDzWUXZGN82kRXzQp
+        +Cp7gGDhcpsDupm/aeQZidjpXxi0ZjM=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-3-TVC9-u2dNW-QApCcICj-kw-1; Thu, 25 Jun 2020 18:39:29 -0400
+X-MC-Unique: TVC9-u2dNW-QApCcICj-kw-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 30743804001;
+        Thu, 25 Jun 2020 22:39:27 +0000 (UTC)
+Received: from virtlab423.virt.lab.eng.bos.redhat.com (virtlab423.virt.lab.eng.bos.redhat.com [10.19.152.154])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 870E67FEA6;
+        Thu, 25 Jun 2020 22:39:25 +0000 (UTC)
+From:   Nitesh Narayan Lal <nitesh@redhat.com>
+To:     linux-kernel@vger.kernel.org, linux-api@vger.kernel.org,
+        frederic@kernel.org, mtosatti@redhat.com, juri.lelli@redhat.com,
+        abelits@marvell.com, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, rostedt@goodmis.org, mingo@kernel.org,
+        peterz@infradead.org, tglx@linutronix.de, davem@davemloft.net,
+        akpm@linux-foundation.org, sfr@canb.auug.org.au,
+        stephen@networkplumber.org, rppt@linux.vnet.ibm.com,
+        jinyuqi@huawei.com, zhangshaokun@hisilicon.com
+Subject: [Patch v4 3/3] net: Restrict receive packets queuing to housekeeping CPUs
+Date:   Thu, 25 Jun 2020 18:34:43 -0400
+Message-Id: <20200625223443.2684-4-nitesh@redhat.com>
+In-Reply-To: <20200625223443.2684-1-nitesh@redhat.com>
+References: <20200625223443.2684-1-nitesh@redhat.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Jun 25, 2020 at 1:02 PM Peter Zijlstra <peterz@infradead.org> wrote:
->
-> On Thu, Jun 25, 2020 at 09:15:03AM -0700, Sami Tolvanen wrote:
-> > On Thu, Jun 25, 2020 at 09:45:30AM +0200, Peter Zijlstra wrote:
->
-> > > At least for x86_64 I can do a really quick take for a recordmcount pass
-> > > in objtool, but I suppose you also need this for ARM64 ?
-> >
-> > Sure, sounds good. arm64 uses -fpatchable-function-entry with clang, so we
-> > don't need recordmcount there.
->
-> This is on top of my local pile:
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/peterz/queue.git master
->
-> which notably includes the static_call series.
->
-> Not boot tested, but it generates the required sections and they look
-> more or less as expected, ymmv.
->
-> ---
->  arch/x86/Kconfig              |  1 -
->  scripts/Makefile.build        |  3 ++
->  scripts/link-vmlinux.sh       |  2 +-
->  tools/objtool/builtin-check.c |  9 ++---
->  tools/objtool/builtin.h       |  2 +-
->  tools/objtool/check.c         | 81 +++++++++++++++++++++++++++++++++++++++++++
->  tools/objtool/check.h         |  1 +
->  tools/objtool/objtool.h       |  1 +
->  8 files changed, 91 insertions(+), 9 deletions(-)
->
-> diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-> index a291823f3f26..189575c12434 100644
-> --- a/arch/x86/Kconfig
-> +++ b/arch/x86/Kconfig
-> @@ -174,7 +174,6 @@ config X86
->         select HAVE_EXIT_THREAD
->         select HAVE_FAST_GUP
->         select HAVE_FENTRY                      if X86_64 || DYNAMIC_FTRACE
-> -       select HAVE_FTRACE_MCOUNT_RECORD
->         select HAVE_FUNCTION_GRAPH_TRACER
->         select HAVE_FUNCTION_TRACER
->         select HAVE_GCC_PLUGINS
-> diff --git a/scripts/Makefile.build b/scripts/Makefile.build
-> index 2e8810b7e5ed..c774befc57da 100644
-> --- a/scripts/Makefile.build
-> +++ b/scripts/Makefile.build
-> @@ -227,6 +227,9 @@ endif
->  ifdef CONFIG_X86_SMAP
->    objtool_args += --uaccess
->  endif
-> +ifdef CONFIG_DYNAMIC_FTRACE
-> +  objtool_args += --mcount
-> +endif
->
->  # 'OBJECT_FILES_NON_STANDARD := y': skip objtool checking for a directory
->  # 'OBJECT_FILES_NON_STANDARD_foo.o := 'y': skip objtool checking for a file
-> diff --git a/scripts/link-vmlinux.sh b/scripts/link-vmlinux.sh
-> index 92dd745906f4..00c6e4f28a1a 100755
-> --- a/scripts/link-vmlinux.sh
-> +++ b/scripts/link-vmlinux.sh
-> @@ -60,7 +60,7 @@ objtool_link()
->         local objtoolopt;
->
->         if [ -n "${CONFIG_VMLINUX_VALIDATION}" ]; then
-> -               objtoolopt="check"
-> +               objtoolopt="check --vmlinux"
->                 if [ -z "${CONFIG_FRAME_POINTER}" ]; then
->                         objtoolopt="${objtoolopt} --no-fp"
->                 fi
-> diff --git a/tools/objtool/builtin-check.c b/tools/objtool/builtin-check.c
-> index 4896c5a89702..a6c3a3fba67d 100644
-> --- a/tools/objtool/builtin-check.c
-> +++ b/tools/objtool/builtin-check.c
-> @@ -18,7 +18,7 @@
->  #include "builtin.h"
->  #include "objtool.h"
->
-> -bool no_fp, no_unreachable, retpoline, module, backtrace, uaccess, stats, validate_dup, vmlinux, fpu;
-> +bool no_fp, no_unreachable, retpoline, module, backtrace, uaccess, stats, validate_dup, vmlinux, fpu, mcount;
->
->  static const char * const check_usage[] = {
->         "objtool check [<options>] file.o",
-> @@ -36,12 +36,13 @@ const struct option check_options[] = {
->         OPT_BOOLEAN('d', "duplicate", &validate_dup, "duplicate validation for vmlinux.o"),
->         OPT_BOOLEAN('l', "vmlinux", &vmlinux, "vmlinux.o validation"),
->         OPT_BOOLEAN('F', "fpu", &fpu, "validate FPU context"),
-> +       OPT_BOOLEAN('M', "mcount", &mcount, "generate __mcount_loc"),
->         OPT_END(),
->  };
->
->  int cmd_check(int argc, const char **argv)
->  {
-> -       const char *objname, *s;
-> +       const char *objname;
->
->         argc = parse_options(argc, argv, check_options, check_usage, 0);
->
-> @@ -50,9 +51,5 @@ int cmd_check(int argc, const char **argv)
->
->         objname = argv[0];
->
-> -       s = strstr(objname, "vmlinux.o");
-> -       if (s && !s[9])
-> -               vmlinux = true;
-> -
->         return check(objname, false);
->  }
-> diff --git a/tools/objtool/builtin.h b/tools/objtool/builtin.h
-> index 7158e09d4cc9..b51d883ec245 100644
-> --- a/tools/objtool/builtin.h
-> +++ b/tools/objtool/builtin.h
-> @@ -8,7 +8,7 @@
->  #include <subcmd/parse-options.h>
->
->  extern const struct option check_options[];
-> -extern bool no_fp, no_unreachable, retpoline, module, backtrace, uaccess, stats, validate_dup, vmlinux, fpu;
-> +extern bool no_fp, no_unreachable, retpoline, module, backtrace, uaccess, stats, validate_dup, vmlinux, fpu, mcount;
->
->  extern int cmd_check(int argc, const char **argv);
->  extern int cmd_orc(int argc, const char **argv);
-> diff --git a/tools/objtool/check.c b/tools/objtool/check.c
-> index 6647a8d1545b..ee99566bdae9 100644
-> --- a/tools/objtool/check.c
-> +++ b/tools/objtool/check.c
-> @@ -533,6 +533,65 @@ static int create_static_call_sections(struct objtool_file *file)
->         return 0;
->  }
->
-> +static int create_mcount_loc_sections(struct objtool_file *file)
-> +{
-> +       struct section *sec, *reloc_sec;
-> +       struct reloc *reloc;
-> +       unsigned long *loc;
-> +       struct instruction *insn;
-> +       int idx;
-> +
-> +       sec = find_section_by_name(file->elf, "__mcount_loc");
-> +       if (sec) {
-> +               INIT_LIST_HEAD(&file->mcount_loc_list);
-> +               WARN("file already has __mcount_loc section, skipping");
-> +               return 0;
-> +       }
-> +
-> +       if (list_empty(&file->mcount_loc_list))
-> +               return 0;
-> +
-> +       idx = 0;
-> +       list_for_each_entry(insn, &file->mcount_loc_list, mcount_loc_node)
-> +               idx++;
-> +
-> +       sec = elf_create_section(file->elf, "__mcount_loc", 0, sizeof(unsigned long), idx);
-> +       if (!sec)
-> +               return -1;
-> +
-> +       reloc_sec = elf_create_reloc_section(file->elf, sec, SHT_RELA);
-> +       if (!reloc_sec)
-> +               return -1;
-> +
-> +       idx = 0;
-> +       list_for_each_entry(insn, &file->mcount_loc_list, mcount_loc_node) {
-> +
-> +               loc = (unsigned long *)sec->data->d_buf + idx;
-> +               memset(loc, 0, sizeof(unsigned long));
-> +
-> +               reloc = malloc(sizeof(*reloc));
-> +               if (!reloc) {
-> +                       perror("malloc");
-> +                       return -1;
-> +               }
-> +               memset(reloc, 0, sizeof(*reloc));
+From: Alex Belits <abelits@marvell.com>
 
-calloc(1, sizeof(*reloc))?
+With the existing implementation of store_rps_map(), packets are queued
+in the receive path on the backlog queues of other CPUs irrespective of
+whether they are isolated or not. This could add a latency overhead to
+any RT workload that is running on the same CPU.
 
-> +
-> +               reloc->sym = insn->sec->sym;
-> +               reloc->addend = insn->offset;
-> +               reloc->type = R_X86_64_64;
-> +               reloc->offset = idx * sizeof(unsigned long);
-> +               reloc->sec = reloc_sec;
-> +               elf_add_reloc(file->elf, reloc);
-> +
-> +               idx++;
-> +       }
-> +
-> +       if (elf_rebuild_reloc_section(file->elf, reloc_sec))
-> +               return -1;
-> +
-> +       return 0;
-> +}
-> +
->  /*
->   * Warnings shouldn't be reported for ignored functions.
->   */
-> @@ -892,6 +951,22 @@ static int add_call_destinations(struct objtool_file *file)
->                         insn->type = INSN_NOP;
->                 }
->
-> +               if (mcount && !strcmp(insn->call_dest->name, "__fentry__")) {
-> +                       if (reloc) {
-> +                               reloc->type = R_NONE;
-> +                               elf_write_reloc(file->elf, reloc);
-> +                       }
-> +
-> +                       elf_write_insn(file->elf, insn->sec,
-> +                                      insn->offset, insn->len,
-> +                                      arch_nop_insn(insn->len));
-> +
-> +                       insn->type = INSN_NOP;
-> +
-> +                       list_add_tail(&insn->mcount_loc_node,
-> +                                     &file->mcount_loc_list);
-> +               }
-> +
->                 /*
->                  * Whatever stack impact regular CALLs have, should be undone
->                  * by the RETURN of the called function.
-> @@ -3004,6 +3079,7 @@ int check(const char *_objname, bool orc)
->         INIT_LIST_HEAD(&file.insn_list);
->         hash_init(file.insn_hash);
->         INIT_LIST_HEAD(&file.static_call_list);
-> +       INIT_LIST_HEAD(&file.mcount_loc_list);
->         file.c_file = !vmlinux && find_section_by_name(file.elf, ".comment");
->         file.ignore_unreachables = no_unreachable;
->         file.hints = false;
-> @@ -3056,6 +3132,11 @@ int check(const char *_objname, bool orc)
->                 goto out;
->         warnings += ret;
->
-> +       ret = create_mcount_loc_sections(&file);
-> +       if (ret < 0)
-> +               goto out;
-> +       warnings += ret;
-> +
->         if (orc) {
->                 ret = create_orc(&file);
->                 if (ret < 0)
-> diff --git a/tools/objtool/check.h b/tools/objtool/check.h
-> index cd95fca0d237..01f11b5da5dd 100644
-> --- a/tools/objtool/check.h
-> +++ b/tools/objtool/check.h
-> @@ -24,6 +24,7 @@ struct instruction {
->         struct list_head list;
->         struct hlist_node hash;
->         struct list_head static_call_node;
-> +       struct list_head mcount_loc_node;
->         struct section *sec;
->         unsigned long offset;
->         unsigned int len;
-> diff --git a/tools/objtool/objtool.h b/tools/objtool/objtool.h
-> index 9a7cd0b88bd8..f604b22d22cc 100644
-> --- a/tools/objtool/objtool.h
-> +++ b/tools/objtool/objtool.h
-> @@ -17,6 +17,7 @@ struct objtool_file {
->         struct list_head insn_list;
->         DECLARE_HASHTABLE(insn_hash, 20);
->         struct list_head static_call_list;
-> +       struct list_head mcount_loc_list;
->         bool ignore_unreachables, c_file, hints, rodata;
->  };
->
+Ensure that store_rps_map() only uses available housekeeping CPUs for
+storing the rps_map.
 
+Signed-off-by: Alex Belits <abelits@marvell.com>
+Signed-off-by: Nitesh Narayan Lal <nitesh@redhat.com>
+---
+ net/core/net-sysfs.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
+diff --git a/net/core/net-sysfs.c b/net/core/net-sysfs.c
+index e353b822bb15..677868fea316 100644
+--- a/net/core/net-sysfs.c
++++ b/net/core/net-sysfs.c
+@@ -11,6 +11,7 @@
+ #include <linux/if_arp.h>
+ #include <linux/slab.h>
+ #include <linux/sched/signal.h>
++#include <linux/sched/isolation.h>
+ #include <linux/nsproxy.h>
+ #include <net/sock.h>
+ #include <net/net_namespace.h>
+@@ -741,7 +742,7 @@ static ssize_t store_rps_map(struct netdev_rx_queue *queue,
+ {
+ 	struct rps_map *old_map, *map;
+ 	cpumask_var_t mask;
+-	int err, cpu, i;
++	int err, cpu, i, hk_flags;
+ 	static DEFINE_MUTEX(rps_map_mutex);
+ 
+ 	if (!capable(CAP_NET_ADMIN))
+@@ -756,6 +757,13 @@ static ssize_t store_rps_map(struct netdev_rx_queue *queue,
+ 		return err;
+ 	}
+ 
++	hk_flags = HK_FLAG_DOMAIN | HK_FLAG_WQ;
++	cpumask_and(mask, mask, housekeeping_cpumask(hk_flags));
++	if (cpumask_empty(mask)) {
++		free_cpumask_var(mask);
++		return -EINVAL;
++	}
++
+ 	map = kzalloc(max_t(unsigned int,
+ 			    RPS_MAP_SIZE(cpumask_weight(mask)), L1_CACHE_BYTES),
+ 		      GFP_KERNEL);
 -- 
-Thanks,
-~Nick Desaulniers
+2.18.4
+
