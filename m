@@ -1,134 +1,219 @@
-Return-Path: <SRS0=um5r=AG=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=ji5Z=AH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-17.6 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0239C433E1
-	for <linux-pci@archiver.kernel.org>; Thu, 25 Jun 2020 23:37:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98A86C433E1
+	for <linux-pci@archiver.kernel.org>; Fri, 26 Jun 2020 00:27:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AC53320885
-	for <linux-pci@archiver.kernel.org>; Thu, 25 Jun 2020 23:37:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6FC2E20767
+	for <linux-pci@archiver.kernel.org>; Fri, 26 Jun 2020 00:27:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=mm-sol.com header.i=@mm-sol.com header.b="JMDF18ck"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="paDQtPIb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726007AbgFYXhS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 25 Jun 2020 19:37:18 -0400
-Received: from ns.mm-sol.com ([37.157.136.199]:48715 "EHLO extserv.mm-sol.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725834AbgFYXhS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 25 Jun 2020 19:37:18 -0400
-Received: from [192.168.1.4] (212-5-158-60.ip.btc-net.bg [212.5.158.60])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client did not present a certificate)
-        by extserv.mm-sol.com (Postfix) with ESMTPSA id 1957DD003;
-        Fri, 26 Jun 2020 02:37:15 +0300 (EEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mm-sol.com; s=201706;
-        t=1593128235; bh=2o4ThUiC17gIWs0ufb7+F/ueW41D7qZqy5puUdqvWU4=;
-        h=From:Subject:To:Cc:Date:From;
-        b=JMDF18ckJMrpFD/qEgYoia47BeQf+czsLXWH61YW/9ZMLflz9MvtqP9LC4K3ID60E
-         A7lYDCSLOscR3e0KyZmgjU4TfRA0XUxH1eQvID65yNOCqxCAGrfObO1Ayfke702/mV
-         p6JaLwnUZgbSWbyfVB1U4caMdIkwo5GNiKYgyF64rQ4KetrdKx/gaHdv5nYtAjQ4bd
-         c5tYHOWB4W93OsSXbcZblT8+GROx0+swJf2goMclZ6GdmfnKJ17B3jW6uM/S8+P2ux
-         p+6THoER8dUfr2A9bTxj5Komen/b6DzV3ahyjT4KjoU1hjNOjKbnMZ5Z9yRDvlfPbu
-         p2HLLXkkT0knA==
-From:   Stanimir Varbanov <svarbanov@mm-sol.com>
-Subject: Re: [PATCH v7 00/12] Multiple fixes in PCIe qcom driver
-To:     Ansuel Smith <ansuelsmth@gmail.com>,
-        Rob Herring <robh+dt@kernel.org>
-Cc:     Vinod Koul <vkoul@kernel.org>, Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        id S1726106AbgFZA1V (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 25 Jun 2020 20:27:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54790 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725821AbgFZA1U (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jun 2020 20:27:20 -0400
+Received: from mail-pl1-x649.google.com (mail-pl1-x649.google.com [IPv6:2607:f8b0:4864:20::649])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F1C9C08C5DC
+        for <linux-pci@vger.kernel.org>; Thu, 25 Jun 2020 17:27:20 -0700 (PDT)
+Received: by mail-pl1-x649.google.com with SMTP id x8so4803122pll.19
+        for <linux-pci@vger.kernel.org>; Thu, 25 Jun 2020 17:27:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
+         :cc;
+        bh=EfF/SDXieMxdBzzRNR3vjXRP9ELsApXSIPoFiYsV8L8=;
+        b=paDQtPIbzZ2WSuFquOtQehWbSHMmSB+a126xQsSFdnJ+LWvXx9zh3xoaXaxtDIWPS1
+         aj+RavY/oV4sdZMGj+JxuTxWLKrxKs/vuctrDwS3ssgObe36pmdICn64FKPmAyRHjxwe
+         XtehEjQ0v87qVFGKmNVDHwVMoI5Pn9GxvrlDvItnji8r2/359JdayOqIPyCmWStKA9+v
+         5bmemCJMXczy9khjne/ZecgDVafiUFo3pgwAosZuPIctUt449NK/rI3VYJ1hM3BWMdSf
+         CUP5JOLmNVSWSZ/xqN/vEyuLzjYjfWCuHZX6swe8v49YWnPDTEIbd5ny/cAj9qxjVpkU
+         YbuQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:in-reply-to:message-id:mime-version
+         :references:subject:from:to:cc;
+        bh=EfF/SDXieMxdBzzRNR3vjXRP9ELsApXSIPoFiYsV8L8=;
+        b=J1KLckg278u6K6vbL34prGTDSOnGoh4ggAaWx4VNYijtfIK0NPhKaHuvA2v0IKt4VK
+         qAcRvsQN92lVigODKYkwPsqTmOlrqNV97LXyBH69yWArS79pNZMnZfV2O78rqADtKIpO
+         h4dhJVgExtlIySd8v8/1VQkg9x9375YzdpgbUpX6OacPRYGXJ4nANhcJjxRJlVwsewej
+         GILBFi4AZTWHr5AAcFc0ghvVp+yKLwNqyScf2Ns+4v449bLadYtqTV1qmi64vGC3S/06
+         m4N5hfh/OMTtYEJCM4nn0nDaATcT+yVwmDi7Hao+qsQFKMq24bYk+FfbvIeEHXbDYsl3
+         FHuQ==
+X-Gm-Message-State: AOAM5323qBGYSgEOgvFbECVCYQasqpUEClLrO7LN0A8tEiGO0pMVG7dI
+        aSuuKRrnBqu5yyZTPxM3qYnKB5nKHBx0
+X-Google-Smtp-Source: ABdhPJyg+Tx781kWCf0f1ygzfZiFbsIs8XO5OHEWZ3G9zVxZL03LpMQELqZK3FRDzjGcWC5sc5IvuWvWCLEp
+X-Received: by 2002:a17:90a:6343:: with SMTP id v3mr611640pjs.196.1593131239458;
+ Thu, 25 Jun 2020 17:27:19 -0700 (PDT)
+Date:   Thu, 25 Jun 2020 17:27:10 -0700
+In-Reply-To: <20200626002710.110200-1-rajatja@google.com>
+Message-Id: <20200626002710.110200-2-rajatja@google.com>
+Mime-Version: 1.0
+References: <20200626002710.110200-1-rajatja@google.com>
+X-Mailer: git-send-email 2.27.0.212.ge8ba1cc988-goog
+Subject: [PATCH 2/2] pci: Add parameter to disable attaching untrusted devices
+From:   Rajat Jain <rajatja@google.com>
+To:     David Woodhouse <dwmw2@infradead.org>,
+        Lu Baolu <baolu.lu@linux.intel.com>,
+        Joerg Roedel <joro@8bytes.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20200615210608.21469-1-ansuelsmth@gmail.com>
-Message-ID: <1dcf28c4-eb89-a5eb-52d8-b4356c3d0aaf@mm-sol.com>
-Date:   Fri, 26 Jun 2020 02:37:12 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
-MIME-Version: 1.0
-In-Reply-To: <20200615210608.21469-1-ansuelsmth@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>, iommu@lists.linux-foundation.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, Raj Ashok <ashok.raj@intel.com>,
+        lalithambika.krishnakumar@intel.com,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Jean-Philippe Brucker <jean-philippe@linaro.org>,
+        Prashant Malani <pmalani@google.com>,
+        Benson Leung <bleung@google.com>,
+        Todd Broch <tbroch@google.com>,
+        Alex Levin <levinale@google.com>,
+        Mattias Nissler <mnissler@google.com>,
+        Rajat Jain <rajatxjain@gmail.com>,
+        Bernie Keany <bernie.keany@intel.com>,
+        Aaron Durbin <adurbin@google.com>,
+        Diego Rivas <diegorivas@google.com>,
+        Duncan Laurie <dlaurie@google.com>,
+        Furquan Shaikh <furquan@google.com>,
+        Jesse Barnes <jsbarnes@google.com>,
+        Christian Kellner <christian@kellner.me>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        oohall@gmail.com
+Cc:     Rajat Jain <rajatja@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Ansuel,
+Introduce a PCI parameter that disables the automatic attachment of
+untrusted devices to their drivers.
 
-Thank you for the patience.
+Signed-off-by: Rajat Jain <rajatja@google.com>
+---
+Context:
 
-On 6/16/20 12:05 AM, Ansuel Smith wrote:
-> This contains multiple fix for PCIe qcom driver.
-> Some optional reset and clocks were missing.
-> Fix a problem with no PARF programming that cause kernel lock on load.
-> Add support to force gen 1 speed if needed. (due to hardware limitation)
-> Add ipq8064 rev 2 support that use a different tx termination offset.
-> 
-> v7:
-> * Rework GEN1 patch
-> 
-> v6:
-> * Replace custom define
-> * Move define not used in 07 to 08
-> 
-> v5:
-> * Split PCI: qcom: Add ipq8064 rev2 variant and set tx term offset
-> 
-> v4:
-> * Fix grammar error across all patch subject
-> * Use bulk api for clks
-> * Program PARF only in ipq8064 SoC
-> * Program tx term only in ipq8064 SoC
-> * Drop configurable tx-dempth rx-eq
-> * Make added clk optional
-> 
-> v3:
-> * Fix check reported by checkpatch --strict
-> * Rename force_gen1 to gen
-> 
-> v2:
-> * Drop iATU programming (already done in pcie init)
-> * Use max-link-speed instead of force-gen1 custom definition
-> * Drop MRRS to 256B (Can't find a realy reason why this was suggested)
-> * Introduce a new variant for different revision of ipq8064
-> 
-> Abhishek Sahu (1):
->   PCI: qcom: Change duplicate PCI reset to phy reset
-> 
-> Ansuel Smith (10):
->   PCI: qcom: Add missing ipq806x clocks in PCIe driver
->   dt-bindings: PCI: qcom: Add missing clks
->   PCI: qcom: Add missing reset for ipq806x
->   dt-bindings: PCI: qcom: Add ext reset
->   PCI: qcom: Use bulk clk api and assert on error
->   PCI: qcom: Define some PARF params needed for ipq8064 SoC
->   PCI: qcom: Add support for tx term offset for rev 2.1.0
->   PCI: qcom: Add ipq8064 rev2 variant
->   dt-bindings: PCI: qcom: Add ipq8064 rev 2 variant
->   PCI: qcom: Replace define with standard value
-> 
-> Sham Muthayyan (1):
->   PCI: qcom: Support pci speed set for ipq806x
-> 
->  .../devicetree/bindings/pci/qcom,pcie.txt     |  15 +-
->  drivers/pci/controller/dwc/pcie-qcom.c        | 186 +++++++++++-------
->  2 files changed, 128 insertions(+), 73 deletions(-)
-> 
+  I set out to implement the approach outlined in
+    https://lkml.org/lkml/2020/6/9/1331
+    https://lkml.org/lkml/2020/6/15/1453
 
-For the whole set:
+  But to my surprise, I found that the new hotplugged PCI devices
+  were getting automatically attached to drivers even though
+  /sys/bus/pci/drivers_autoprobe was set to 0.
 
-Acked-by: Stanimir Varbanov <svarbanov@mm-sol.com>
+  I realized that the device core's "drivers_autoprobe":
 
+  * only disables the *initial* probe of the device (i.e. from
+    device_add()). If a subsystem calls device_attach() explicitly
+    for its devices like PCI subsystem does, the drivers_autoprobe
+    setting does not matter. The core will attach device to the driver.
+    This looks like correct semantic behavior to me because PCI is
+    explicitly calling device_attach(), which is a way to explicitly
+    ask the core to find and attach a driver for a device.
+
+  * "drivers_autoprobe" cannot be controlled at boot time (to restrict
+    any drivers before userspace comes up).
+
+  The options I considered were:
+
+  1) Change device_attach() so that it takes into consideration the
+     drivers_autoprobe property. Not sure if this is semantically correct
+     thing to do though. If I do this, then the only way a driver can
+     be attached to the drivers would be via userspace
+     (/sys/bus/pci/drivers/bind) (Good for our use case though!).
+
+  2) Make the drivers_autoprobe property available to PCI to use
+     (currently it is private to device core). The PCI could use this
+     to determine whether or not to call device_attach(). This still
+     leaves the other problem (of not being able to set
+     drivers_autoprobe via command line open).
+
+  3) I found the pci_dev->match_driver, which seemed similar to what I
+     am trying to do, but can't be controlled from userspace. I considered
+     populating that field based on drivers_autoprobe (still need (2)).
+     But the problem is that there is the AMD IOMMU driver which is setting
+     this independently, so setting the match_driver based on
+     drivers_autoprobe may not be a good idea. May be we can populate it
+     for untrusted devicesi, based on the parameter that I'm introducing?
+
+  4) This patch was my option 4 that helps fix both the problems for me.
+
+ drivers/pci/bus.c | 11 ++++++++---
+ drivers/pci/pci.c |  9 +++++++++
+ drivers/pci/pci.h |  1 +
+ 3 files changed, 18 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 3cef835b375fd..336aeeb4c4ebf 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -321,9 +321,14 @@ void pci_bus_add_device(struct pci_dev *dev)
+ 	pci_bridge_d3_update(dev);
+ 
+ 	dev->match_driver = true;
+-	retval = device_attach(&dev->dev);
+-	if (retval < 0 && retval != -EPROBE_DEFER)
+-		pci_warn(dev, "device attach failed (%d)\n", retval);
++
++	if (dev->untrusted && pci_dont_attach_untrusted_devs) {
++		pci_info(dev, "not attaching untrusted device\n");
++	} else {
++		retval = device_attach(&dev->dev);
++		if (retval < 0 && retval != -EPROBE_DEFER)
++			pci_warn(dev, "device attach failed (%d)\n", retval);
++	}
+ 
+ 	pci_dev_assign_added(dev, true);
+ }
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index ce096272f52b1..dec1f9ef27d71 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -127,6 +127,13 @@ static bool pcie_ats_disabled;
+ /* If set, the PCI config space of each device is printed during boot. */
+ bool pci_early_dump;
+ 
++/*
++ * If set, the devices with "untrusted" flag shall not be attached automatically
++ * Userspace will need to attach them manually:
++ * echo <pci device>  > /sys/bus/pci/drivers/<driver>/bind
++ */
++bool pci_dont_attach_untrusted_devs;
++
+ bool pci_ats_disabled(void)
+ {
+ 	return pcie_ats_disabled;
+@@ -6522,6 +6529,8 @@ static int __init pci_setup(char *str)
+ 				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
+ 			} else if (!strncmp(str, "disable_acs_redir=", 18)) {
+ 				disable_acs_redir_param = str + 18;
++			} else if (!strcmp(str, "dont_attach_untrusted_devs")) {
++				pci_dont_attach_untrusted_devs = true;
+ 			} else {
+ 				pr_err("PCI: Unknown option `%s'\n", str);
+ 			}
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 6d3f758671064..30ffad047d926 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -13,6 +13,7 @@
+ 
+ extern const unsigned char pcie_link_speed[];
+ extern bool pci_early_dump;
++extern bool pci_dont_attach_untrusted_devs;
+ 
+ bool pcie_cap_has_lnkctl(const struct pci_dev *dev);
+ bool pcie_cap_has_rtctl(const struct pci_dev *dev);
 -- 
-regards,
-Stan
+2.27.0.212.ge8ba1cc988-goog
+
