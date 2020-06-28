@@ -1,266 +1,161 @@
-Return-Path: <SRS0=ROXx=AI=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=zxFR=AJ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.0 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA754C433DF
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Jun 2020 10:31:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2969C433E0
+	for <linux-pci@archiver.kernel.org>; Sun, 28 Jun 2020 04:17:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B1E2E208B6
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Jun 2020 10:31:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C6150208B6
+	for <linux-pci@archiver.kernel.org>; Sun, 28 Jun 2020 04:17:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726406AbgF0KbN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 27 Jun 2020 06:31:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58216 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725994AbgF0KbM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Jun 2020 06:31:12 -0400
-Received: from smtp.al2klimov.de (smtp.al2klimov.de [IPv6:2a01:4f8:c0c:1465::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5EEA7C03E979;
-        Sat, 27 Jun 2020 03:31:12 -0700 (PDT)
-Received: from authenticated-user (PRIMARY_HOSTNAME [PUBLIC_IP])
-        by smtp.al2klimov.de (Postfix) with ESMTPA id 7F30EBC140;
-        Sat, 27 Jun 2020 10:31:02 +0000 (UTC)
-From:   "Alexander A. Klimov" <grandmaster@al2klimov.de>
-To:     bhelgaas@google.com, corbet@lwn.net, robh+dt@kernel.org,
-        tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, x86@kernel.org,
-        hpa@zytor.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
-        hongxing.zhu@nxp.com, l.stach@pengutronix.de, shawnguo@kernel.org,
-        s.hauer@pengutronix.de, kernel@pengutronix.de, festevam@gmail.com,
-        linux-imx@nxp.com, m-karicheri2@ti.com, songxiaowei@hisilicon.com,
-        wangbinghui@hisilicon.com, amurray@thegoodpenguin.co.uk,
-        sathyanarayanan.kuppuswamy@linux.intel.com, hkallweit1@gmail.com,
-        rafael.j.wysocki@intel.com, rdunlap@infradead.org,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Cc:     "Alexander A. Klimov" <grandmaster@al2klimov.de>
-Subject: [PATCH] Replace HTTP links with HTTPS ones: PCI
-Date:   Sat, 27 Jun 2020 12:30:50 +0200
-Message-Id: <20200627103050.71712-1-grandmaster@al2klimov.de>
+        id S1725908AbgF1ERQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 28 Jun 2020 00:17:16 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:6323 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725844AbgF1ERQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 28 Jun 2020 00:17:16 -0400
+Received: from DGGEMS408-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id 04CB66A1A87053D56211;
+        Sun, 28 Jun 2020 12:17:10 +0800 (CST)
+Received: from [127.0.0.1] (10.174.187.83) by DGGEMS408-HUB.china.huawei.com
+ (10.3.19.208) with Microsoft SMTP Server id 14.3.487.0; Sun, 28 Jun 2020
+ 12:17:03 +0800
+Subject: Re: [PATCH v3] PCI: Lock the pci_cfg_wait queue for the consistency
+ of data
+To:     Bjorn Helgaas <helgaas@kernel.org>
+CC:     <bhelgaas@google.com>, <willy@infradead.org>,
+        <wangxiongfeng2@huawei.com>, <wanghaibin.wang@huawei.com>,
+        <guoheyi@huawei.com>, <yebiaoxiang@huawei.com>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <rjw@rjwysocki.net>, <tglx@linutronix.de>, <guohanjun@huawei.com>,
+        <yangyingliang@huawei.com>
+References: <20200624232309.GA2601999@bjorn-Precision-5520>
+From:   Xiang Zheng <zhengxiang9@huawei.com>
+Message-ID: <cf73da1d-aa6d-e2e0-36eb-ce30b83288a6@huawei.com>
+Date:   Sun, 28 Jun 2020 12:17:03 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Spamd-Bar: ++++++
-Authentication-Results: smtp.al2klimov.de;
-        auth=pass smtp.auth=aklimov@al2klimov.de smtp.mailfrom=grandmaster@al2klimov.de
-X-Spam: Yes
+In-Reply-To: <20200624232309.GA2601999@bjorn-Precision-5520>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.187.83]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Rationale:
-Reduces attack surface on kernel devs opening the links for MITM
-as HTTPS traffic is much harder to manipulate.
+Hi Bjorn,
 
-Deterministic algorithm:
-For each file:
-  If not .svg:
-    For each line:
-      If doesn't contain `\bxmlns\b`:
-        For each link, `\bhttp://[^# \t\r\n]*(?:\w|/)`:
-          If both the HTTP and HTTPS versions
-          return 200 OK and serve the same content:
-            Replace HTTP with HTTPS.
+Sorry for the late reply, I had Dragon Boat Festival these days.
 
-Signed-off-by: Alexander A. Klimov <grandmaster@al2klimov.de>
----
- If there are any URLs to be removed completely or at least not HTTPSified:
- Just clearly say so and I'll *undo my change*.
- See also https://lkml.org/lkml/2020/6/27/64
+On 2020/6/25 7:23, Bjorn Helgaas wrote:
+> On Tue, Dec 10, 2019 at 11:15:27AM +0800, Xiang Zheng wrote:
+>> 7ea7e98fd8d0 ("PCI: Block on access to temporarily unavailable pci
+>> device") suggests that the "pci_lock" is sufficient, and all the
+>> callers of pci_wait_cfg() are wrapped with the "pci_lock".
+>>
+>> However, since the commit cdcb33f98244 ("PCI: Avoid possible deadlock on
+>> pci_lock and p->pi_lock") merged, the accesses to the pci_cfg_wait queue
+>> are not safe anymore. This would cause kernel panic in a very low chance
+>> (See more detailed information from the below link). A "pci_lock" is
+>> insufficient and we need to hold an additional queue lock while read/write
+>> the wait queue.
+>>
+>> So let's use the add_wait_queue()/remove_wait_queue() instead of
+>> __add_wait_queue()/__remove_wait_queue(). Also move the wait queue
+>> functionality around the "schedule()" function to avoid reintroducing
+>> the deadlock addressed by "cdcb33f98244".
+> 
+> I see that add_wait_queue() acquires the wq_head->lock, while
+> __add_wait_queue() does not.
+> 
+> But I don't understand why the existing pci_lock is insufficient.  
+> pci_cfg_wait is only used in pci_wait_cfg() and
+> pci_cfg_access_unlock().
+> 
+> In pci_wait_cfg(), both __add_wait_queue() and __remove_wait_queue()
+> are called while holding pci_lock, so that doesn't seem like the
+> problem.
+> 
+> In pci_cfg_access_unlock(), we have:
+> 
+>   pci_cfg_access_unlock
+>     wake_up_all(&pci_cfg_wait)
+>       __wake_up(&pci_cfg_wait, ...)
+>         __wake_up_common_lock(&pci_cfg_wait, ...)
+> 	  spin_lock(&pci_cfg_wait->lock)
+> 	  __wake_up_common(&pci_cfg_wait, ...)
+> 	    list_for_each_entry_safe_from(...)
+> 	      list_add_tail(...)                <-- problem?
+> 	  spin_unlock(&pci_cfg_wait->lock)
+> 
+> Is the problem that the wake_up_all() modifies the pci_cfg_wait list
+> without holding pci_lock?
+> 
+> If so, I don't quite see how the patch below fixes it.  Oh, wait,
+> maybe I do ... by using add_wait_queue(), we protect the list using
+> the *same* lock used by __wake_up_common_lock.  Is that it?
+> 
 
- If there are any valid, but yet not changed URLs:
- See https://lkml.org/lkml/2020/6/26/837
+Yes, my patch just protects the wait queue list by using add_wait_queue().
+Simply using the add_wait_queue() instead of __add_wait_queue() will reintroduce
+the deadlock addressed by "cdcb33f98244". So I move add_wait_queue() and
+remote_wait_queue() around schedule() since they don't need to hold pci_lock.
 
- Documentation/PCI/pci.rst                     |  4 ++--
- Documentation/devicetree/bindings/pci/pci.txt |  4 ++--
- arch/x86/pci/fixup.c                          |  4 ++--
- drivers/pci/controller/dwc/pci-dra7xx.c       |  2 +-
- drivers/pci/controller/dwc/pci-imx6.c         |  2 +-
- drivers/pci/controller/dwc/pci-keystone.c     |  2 +-
- drivers/pci/controller/dwc/pcie-kirin.c       |  2 +-
- drivers/pci/pci-label.c                       |  2 +-
- drivers/pci/pcie/Kconfig                      |  2 +-
- drivers/pci/pcie/aer_inject.c                 |  2 +-
- drivers/pci/quirks.c                          | 10 +++++-----
- 11 files changed, 18 insertions(+), 18 deletions(-)
 
-diff --git a/Documentation/PCI/pci.rst b/Documentation/PCI/pci.rst
-index 8c016d8c9862..8abac7d5244b 100644
---- a/Documentation/PCI/pci.rst
-+++ b/Documentation/PCI/pci.rst
-@@ -17,7 +17,7 @@ PCI device drivers.
- A more complete resource is the third edition of "Linux Device Drivers"
- by Jonathan Corbet, Alessandro Rubini, and Greg Kroah-Hartman.
- LDD3 is available for free (under Creative Commons License) from:
--http://lwn.net/Kernel/LDD3/.
-+https://lwn.net/Kernel/LDD3/.
- 
- However, keep in mind that all documents are subject to "bit rot".
- Refer to the source code if things are not working as described here.
-@@ -514,7 +514,7 @@ your driver if they're helpful, or just use plain hex constants.
- The device IDs are arbitrary hex numbers (vendor controlled) and normally used
- only in a single location, the pci_device_id table.
- 
--Please DO submit new vendor/device IDs to http://pci-ids.ucw.cz/.
-+Please DO submit new vendor/device IDs to https://pci-ids.ucw.cz/.
- There are mirrors of the pci.ids file at http://pciids.sourceforge.net/
- and https://github.com/pciutils/pciids.
- 
-diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
-index 29bcbd88f457..6a8f2874a24d 100644
---- a/Documentation/devicetree/bindings/pci/pci.txt
-+++ b/Documentation/devicetree/bindings/pci/pci.txt
-@@ -1,12 +1,12 @@
- PCI bus bridges have standardized Device Tree bindings:
- 
- PCI Bus Binding to: IEEE Std 1275-1994
--http://www.devicetree.org/open-firmware/bindings/pci/pci2_1.pdf
-+https://www.devicetree.org/open-firmware/bindings/pci/pci2_1.pdf
- 
- And for the interrupt mapping part:
- 
- Open Firmware Recommended Practice: Interrupt Mapping
--http://www.devicetree.org/open-firmware/practice/imap/imap0_9d.pdf
-+https://www.devicetree.org/open-firmware/practice/imap/imap0_9d.pdf
- 
- Additionally to the properties specified in the above standards a host bridge
- driver implementation may support the following properties:
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index 0c67a5a94de3..b8c9a5b87f37 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -557,12 +557,12 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x27B9, twinhead_reserve_killing_z
-  * Device [8086:2fc0]
-  * Erratum HSE43
-  * CONFIG_TDP_NOMINAL CSR Implemented at Incorrect Offset
-- * http://www.intel.com/content/www/us/en/processors/xeon/xeon-e5-v3-spec-update.html
-+ * https://www.intel.com/content/www/us/en/processors/xeon/xeon-e5-v3-spec-update.html
-  *
-  * Devices [8086:6f60,6fa0,6fc0]
-  * Erratum BDF2
-  * PCI BARs in the Home Agent Will Return Non-Zero Values During Enumeration
-- * http://www.intel.com/content/www/us/en/processors/xeon/xeon-e5-v4-spec-update.html
-+ * https://www.intel.com/content/www/us/en/processors/xeon/xeon-e5-v4-spec-update.html
-  */
- static void pci_invalid_bar(struct pci_dev *dev)
- {
-diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
-index 6184ebc9392d..1b2e6e6fb818 100644
---- a/drivers/pci/controller/dwc/pci-dra7xx.c
-+++ b/drivers/pci/controller/dwc/pci-dra7xx.c
-@@ -2,7 +2,7 @@
- /*
-  * pcie-dra7xx - PCIe controller driver for TI DRA7xx SoCs
-  *
-- * Copyright (C) 2013-2014 Texas Instruments Incorporated - http://www.ti.com
-+ * Copyright (C) 2013-2014 Texas Instruments Incorporated - https://www.ti.com
-  *
-  * Authors: Kishon Vijay Abraham I <kishon@ti.com>
-  */
-diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index 8f08ae53f53e..4e5c379ae418 100644
---- a/drivers/pci/controller/dwc/pci-imx6.c
-+++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -3,7 +3,7 @@
-  * PCIe host controller driver for Freescale i.MX6 SoCs
-  *
-  * Copyright (C) 2013 Kosagi
-- *		http://www.kosagi.com
-+ *		https://www.kosagi.com
-  *
-  * Author: Sean Cross <xobs@kosagi.com>
-  */
-diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
-index 790679fdfa48..5191cad906ca 100644
---- a/drivers/pci/controller/dwc/pci-keystone.c
-+++ b/drivers/pci/controller/dwc/pci-keystone.c
-@@ -3,7 +3,7 @@
-  * PCIe host controller driver for Texas Instruments Keystone SoCs
-  *
-  * Copyright (C) 2013-2014 Texas Instruments., Ltd.
-- *		http://www.ti.com
-+ *		https://www.ti.com
-  *
-  * Author: Murali Karicheri <m-karicheri2@ti.com>
-  * Implementation based on pci-exynos.c and pcie-designware.c
-diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
-index c19617a912bd..7b86c1608b04 100644
---- a/drivers/pci/controller/dwc/pcie-kirin.c
-+++ b/drivers/pci/controller/dwc/pcie-kirin.c
-@@ -3,7 +3,7 @@
-  * PCIe host controller driver for Kirin Phone SoCs
-  *
-  * Copyright (C) 2017 HiSilicon Electronics Co., Ltd.
-- *		http://www.huawei.com
-+ *		https://www.huawei.com
-  *
-  * Author: Xiaowei Song <songxiaowei@huawei.com>
-  */
-diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
-index 707dd9808676..781e45cf60d1 100644
---- a/drivers/pci/pci-label.c
-+++ b/drivers/pci/pci-label.c
-@@ -18,7 +18,7 @@
-  * the instance number and string from the type 41 record and exports
-  * it to sysfs.
-  *
-- * Please see http://linux.dell.com/files/biosdevname/ for more
-+ * Please see https://linux.dell.com/files/biosdevname/ for more
-  * information.
-  */
- 
-diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
-index 9cd31331aee9..3946555a6042 100644
---- a/drivers/pci/pcie/Kconfig
-+++ b/drivers/pci/pcie/Kconfig
-@@ -43,7 +43,7 @@ config PCIEAER_INJECT
- 	  error injection can fake almost all kinds of errors with the
- 	  help of a user space helper tool aer-inject, which can be
- 	  gotten from:
--	     http://www.kernel.org/pub/linux/utils/pci/aer-inject/
-+	     https://www.kernel.org/pub/linux/utils/pci/aer-inject/
- 
- #
- # PCI Express ECRC
-diff --git a/drivers/pci/pcie/aer_inject.c b/drivers/pci/pcie/aer_inject.c
-index 21cc3d3387f7..c2cbf425afc5 100644
---- a/drivers/pci/pcie/aer_inject.c
-+++ b/drivers/pci/pcie/aer_inject.c
-@@ -6,7 +6,7 @@
-  * trigger various real hardware errors. Software based error
-  * injection can fake almost all kinds of errors with the help of a
-  * user space helper tool aer-inject, which can be gotten from:
-- *   http://www.kernel.org/pub/linux/utils/pci/aer-inject/
-+ *   https://www.kernel.org/pub/linux/utils/pci/aer-inject/
-  *
-  * Copyright 2009 Intel Corporation.
-  *     Huang Ying <ying.huang@intel.com>
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 812bfc32ecb8..54ebbef850be 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4620,11 +4620,11 @@ static int pci_quirk_al_acs(struct pci_dev *dev, u16 acs_flags)
-  *
-  * 0x9d10-0x9d1b PCI Express Root port #{1-12}
-  *
-- * [1] http://www.intel.com/content/www/us/en/chipsets/100-series-chipset-datasheet-vol-2.html
-- * [2] http://www.intel.com/content/www/us/en/chipsets/100-series-chipset-datasheet-vol-1.html
-- * [3] http://www.intel.com/content/www/us/en/chipsets/100-series-chipset-spec-update.html
-- * [4] http://www.intel.com/content/www/us/en/chipsets/200-series-chipset-pch-spec-update.html
-- * [5] http://www.intel.com/content/www/us/en/chipsets/200-series-chipset-pch-datasheet-vol-1.html
-+ * [1] https://www.intel.com/content/www/us/en/chipsets/100-series-chipset-datasheet-vol-2.html
-+ * [2] https://www.intel.com/content/www/us/en/chipsets/100-series-chipset-datasheet-vol-1.html
-+ * [3] https://www.intel.com/content/www/us/en/chipsets/100-series-chipset-spec-update.html
-+ * [4] https://www.intel.com/content/www/us/en/chipsets/200-series-chipset-pch-spec-update.html
-+ * [5] https://www.intel.com/content/www/us/en/chipsets/200-series-chipset-pch-datasheet-vol-1.html
-  * [6] https://www.intel.com/content/www/us/en/processors/core/7th-gen-core-family-mobile-u-y-processor-lines-i-o-spec-update.html
-  * [7] https://www.intel.com/content/www/us/en/processors/core/7th-gen-core-family-mobile-u-y-processor-lines-i-o-datasheet-vol-1.html
-  */
+>> Signed-off-by: Xiang Zheng <zhengxiang9@huawei.com>
+>> Cc: Heyi Guo <guoheyi@huawei.com>
+>> Cc: Biaoxiang Ye <yebiaoxiang@huawei.com>
+>> Link: https://lore.kernel.org/linux-pci/79827f2f-9b43-4411-1376-b9063b67aee3@huawei.com/
+>> ---
+>>
+>> v3:
+>>   Improve the commit subject and message.
+>>
+>> v2:
+>>   Move the wait queue functionality around the "schedule()".
+>>
+>> ---
+>>  drivers/pci/access.c | 4 ++--
+>>  1 file changed, 2 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+>> index 2fccb5762c76..09342a74e5ea 100644
+>> --- a/drivers/pci/access.c
+>> +++ b/drivers/pci/access.c
+>> @@ -207,14 +207,14 @@ static noinline void pci_wait_cfg(struct pci_dev *dev)
+>>  {
+>>  	DECLARE_WAITQUEUE(wait, current);
+>>  
+>> -	__add_wait_queue(&pci_cfg_wait, &wait);
+>>  	do {
+>>  		set_current_state(TASK_UNINTERRUPTIBLE);
+>>  		raw_spin_unlock_irq(&pci_lock);
+>> +		add_wait_queue(&pci_cfg_wait, &wait);
+>>  		schedule();
+>> +		remove_wait_queue(&pci_cfg_wait, &wait);
+>>  		raw_spin_lock_irq(&pci_lock);
+>>  	} while (dev->block_cfg_access);
+>> -	__remove_wait_queue(&pci_cfg_wait, &wait);
+>>  }
+>>  
+>>  /* Returns 0 on success, negative values indicate error. */
+>> -- 
+>> 2.19.1
+>>
+>>
+> 
+> .
+> 
+
 -- 
-2.27.0
+Thanks,
+Xiang
 
