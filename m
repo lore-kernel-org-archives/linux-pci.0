@@ -2,80 +2,101 @@ Return-Path: <SRS0=KX5l=AK=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.0 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA2FFC433E1
-	for <linux-pci@archiver.kernel.org>; Mon, 29 Jun 2020 21:17:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C081C433E3
+	for <linux-pci@archiver.kernel.org>; Mon, 29 Jun 2020 21:18:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BC023206A1
-	for <linux-pci@archiver.kernel.org>; Mon, 29 Jun 2020 21:17:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 49E12206A1
+	for <linux-pci@archiver.kernel.org>; Mon, 29 Jun 2020 21:18:35 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NhrbggVY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727062AbgF2Syq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 29 Jun 2020 14:54:46 -0400
-Received: from inva021.nxp.com ([92.121.34.21]:60456 "EHLO inva021.nxp.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726958AbgF2Syp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 29 Jun 2020 14:54:45 -0400
-Received: from inva021.nxp.com (localhost [127.0.0.1])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 066552010E3;
-        Mon, 29 Jun 2020 17:17:28 +0200 (CEST)
-Received: from invc005.ap-rdc01.nxp.com (invc005.ap-rdc01.nxp.com [165.114.16.14])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 36E3A2001CD;
-        Mon, 29 Jun 2020 17:17:17 +0200 (CEST)
-Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
-        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id E20BC402EE;
-        Mon, 29 Jun 2020 23:17:03 +0800 (SGT)
-From:   Anson Huang <Anson.Huang@nxp.com>
-To:     catalin.marinas@arm.com, will@kernel.org,
-        lorenzo.pieralisi@arm.com, robh@kernel.org, bhelgaas@google.com,
-        p.zabel@pengutronix.de, shawnguo@kernel.org,
-        s.hauer@pengutronix.de, kernel@pengutronix.de, festevam@gmail.com,
-        bjorn.andersson@linaro.org, leoyang.li@nxp.com, vkoul@kernel.org,
-        geert+renesas@glider.be, olof@lixom.net, treding@nvidia.com,
-        gustavo.pimentel@synopsys.com, amurray@thegoodpenguin.co.uk,
-        vidyas@nvidia.com, xiaowei.bao@nxp.com, jonnyc@amazon.com,
-        hayashi.kunihiko@socionext.com, eswara.kota@linux.intel.com,
-        krzk@kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Cc:     Linux-imx@nxp.com
-Subject: [PATCH V2 2/3] arm64: defconfig: Select CONFIG_RESET_IMX7 as module by default
-Date:   Mon, 29 Jun 2020 23:05:28 +0800
-Message-Id: <1593443129-18766-2-git-send-email-Anson.Huang@nxp.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1593443129-18766-1-git-send-email-Anson.Huang@nxp.com>
-References: <1593443129-18766-1-git-send-email-Anson.Huang@nxp.com>
-X-Virus-Scanned: ClamAV using ClamSMTP
+        id S1730703AbgF2VSL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 29 Jun 2020 17:18:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40050 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729795AbgF2Swu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 29 Jun 2020 14:52:50 -0400
+Received: from mail-pj1-x1043.google.com (mail-pj1-x1043.google.com [IPv6:2607:f8b0:4864:20::1043])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30FA7C030F19;
+        Mon, 29 Jun 2020 09:26:11 -0700 (PDT)
+Received: by mail-pj1-x1043.google.com with SMTP id i4so8248442pjd.0;
+        Mon, 29 Jun 2020 09:26:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=w+DmP+C5HpOoE0pF5Z5NBc0Vqj5wfx4GqPu5fUO5SGM=;
+        b=NhrbggVY5sSA7Uyq25kP4AEcu29RMFWffcjdoxn8fLYgfOV5WcqwQ+YNsQo+QMriEo
+         vBkbD0/gUBC4SMrWBXdHrfVIwe2gSA+ICRHqVuafLo9YZ8qmhSQVanuTROaYj5Pw7LJv
+         5S7uEacqlfYOmg1qQEHcf834yWYWQRAsGaPxYkxQyvpjJmnRI4n+C8tSrKNaoJ6VaGH2
+         yVUsvnNDIji/TzBiS2aYdSB4wozC0ZIpPYyZ37Om2hWvgzpVEp6kaZgIue60O01DKAQp
+         PujheshRs6shypUCOuemDko9Xkl6aVdsWJ1EetsmsFkAM5rsfOkbEWbeJqyEbNCn8XDb
+         lKFA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=w+DmP+C5HpOoE0pF5Z5NBc0Vqj5wfx4GqPu5fUO5SGM=;
+        b=T5btMXH3oGlE5XHM1I+kCQyJBYviGmqKhjhgdOlpPgMuk29RGxTWlfjijwGKLY8H1p
+         CtwGzgU2r9IeDjpwGjHnLgBAmBnCF7GOEgOUWMuD6OQAnCXBfQ3Z02ai5z77nk9B9E1l
+         ci9T36esAvJdQ5zeGPIbb1gUJHJYx/SIwcX5YPntdRRtOtRplybHqSSAre6/AKethiZW
+         Ow6UHMvA/9OXY+imvwhzshFSU7W5taPawwqnHgK0BvMW9dNKrGkonTVwtehNaw+eMVmn
+         L1ok8+6Pt3vUERqcXUtP+Q/3P2QD1Rq6Rqp/mv0sv7XoFHNC9sPYQwLKFYAJUPKpP+oj
+         uzPA==
+X-Gm-Message-State: AOAM532RNayVw5zCbfV0MAIa7oA1CP4bB4XY+ki+h3+Xa6zYR2NyQn4/
+        kurJLbhnP3cjOQPML+Wt6Fg=
+X-Google-Smtp-Source: ABdhPJwYMqR9MGGMB/wlqZcfyW8f9Ks2SubK7+20EyaN9ZO5KJ9PLbCQa+GSdhDr4AMPO4oeLPCiiw==
+X-Received: by 2002:a17:90b:f97:: with SMTP id ft23mr15508228pjb.21.1593447970738;
+        Mon, 29 Jun 2020 09:26:10 -0700 (PDT)
+Received: from [10.230.30.107] ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id x7sm206783pfp.96.2020.06.29.09.26.07
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 29 Jun 2020 09:26:09 -0700 (PDT)
+Subject: Re: [PATCH v5 4/9] ARM: dts: bcm2711: Add reset controller to xHCI
+ node
+To:     Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
+        f.fainelli@gmail.com, gregkh@linuxfoundation.org, robh@kernel.org,
+        wahrenst@gmx.net, p.zabel@pengutronix.de, andy.shevchenko@gmail.com
+Cc:     linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-rpi-kernel@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org,
+        bcm-kernel-feedback-list@broadcom.com, tim.gover@raspberrypi.org,
+        linux-pci@vger.kernel.org, helgaas@kernel.org,
+        mathias.nyman@linux.intel.com, lorenzo.pieralisi@arm.com
+References: <20200629161845.6021-1-nsaenzjulienne@suse.de>
+ <20200629161845.6021-5-nsaenzjulienne@suse.de>
+From:   Florian Fainelli <f.fainelli@gmail.com>
+Message-ID: <8490b6d4-1e9f-f7c4-71f1-8b04605924a9@gmail.com>
+Date:   Mon, 29 Jun 2020 09:26:07 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Firefox/68.0 Thunderbird/68.9.0
+MIME-Version: 1.0
+In-Reply-To: <20200629161845.6021-5-nsaenzjulienne@suse.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-i.MX7 reset driver now supports module build, it is no longer
-enabled by default, need to select it explicitly.
 
-Signed-off-by: Anson Huang <Anson.Huang@nxp.com>
----
-Changes since V1:
-	- use module build by default.
----
- arch/arm64/configs/defconfig | 1 +
- 1 file changed, 1 insertion(+)
 
-diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
-index 35f037f..454a1f2 100644
---- a/arch/arm64/configs/defconfig
-+++ b/arch/arm64/configs/defconfig
-@@ -909,6 +909,7 @@ CONFIG_PWM_SAMSUNG=y
- CONFIG_PWM_SUN4I=m
- CONFIG_PWM_TEGRA=m
- CONFIG_QCOM_PDC=y
-+CONFIG_RESET_IMX7=m
- CONFIG_RESET_QCOM_AOSS=y
- CONFIG_RESET_QCOM_PDC=m
- CONFIG_RESET_TI_SCI=y
+On 6/29/2020 9:18 AM, Nicolas Saenz Julienne wrote:
+> The chip is hardwired to the board's PCIe bus and needs to be properly
+> setup trough a firmware routine after a PCI fundamental reset. Pass the
+> reset controller phandle that takes care of triggering the
+> initialization to the relevant PCI device.
+> 
+> Signed-off-by: Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
+
+Reviewed-by: Florian Fainelli <f.fainelli@gmail.com>
 -- 
-2.7.4
-
+Florian
