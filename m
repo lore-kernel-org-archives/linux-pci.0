@@ -2,128 +2,93 @@ Return-Path: <SRS0=KX5l=AK=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A513C433DF
-	for <linux-pci@archiver.kernel.org>; Mon, 29 Jun 2020 18:35:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B120C433E4
+	for <linux-pci@archiver.kernel.org>; Mon, 29 Jun 2020 18:52:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 678BA255DA
-	for <linux-pci@archiver.kernel.org>; Mon, 29 Jun 2020 18:35:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DC38E20656
+	for <linux-pci@archiver.kernel.org>; Mon, 29 Jun 2020 18:52:27 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="SHCJ5JM/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726005AbgF2Se5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 29 Jun 2020 14:34:57 -0400
-Received: from foss.arm.com ([217.140.110.172]:34560 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725887AbgF2Se5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 29 Jun 2020 14:34:57 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 73384113E;
-        Mon, 29 Jun 2020 02:06:00 -0700 (PDT)
-Received: from e121166-lin.cambridge.arm.com (e121166-lin.cambridge.arm.com [10.1.196.255])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 0412D3F71E;
-        Mon, 29 Jun 2020 02:05:57 -0700 (PDT)
-Date:   Mon, 29 Jun 2020 10:05:51 +0100
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Hanjun Guo <guohanjun@huawei.com>
-Cc:     linux-arm-kernel@lists.infradead.org,
-        Will Deacon <will@kernel.org>,
-        Sudeep Holla <sudeep.holla@arm.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        iommu@lists.linux-foundation.org, linux-acpi@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        Rob Herring <robh+dt@kernel.org>,
-        Joerg Roedel <joro@8bytes.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Marc Zyngier <maz@kernel.org>,
-        Makarand Pawagi <makarand.pawagi@nxp.com>,
-        Diana Craciun <diana.craciun@oss.nxp.com>,
-        Laurentiu Tudor <laurentiu.tudor@nxp.com>
-Subject: Re: [PATCH v2 01/12] ACPI/IORT: Make iort_match_node_callback walk
- the ACPI namespace for NC
-Message-ID: <20200629090551.GA28873@e121166-lin.cambridge.arm.com>
-References: <20200521130008.8266-1-lorenzo.pieralisi@arm.com>
- <20200619082013.13661-1-lorenzo.pieralisi@arm.com>
- <20200619082013.13661-2-lorenzo.pieralisi@arm.com>
- <718cae1f-2f33-f6d9-f278-157300b73116@huawei.com>
+        id S1728456AbgF2Sv6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 29 Jun 2020 14:51:58 -0400
+Received: from hqnvemgate26.nvidia.com ([216.228.121.65]:18046 "EHLO
+        hqnvemgate26.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729702AbgF2Svx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 29 Jun 2020 14:51:53 -0400
+Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate26.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5ef9ed360000>; Mon, 29 Jun 2020 06:31:34 -0700
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate102.nvidia.com (PGP Universal service);
+  Mon, 29 Jun 2020 06:31:47 -0700
+X-PGP-Universal: processed;
+        by hqpgpgate102.nvidia.com on Mon, 29 Jun 2020 06:31:47 -0700
+Received: from [10.26.75.188] (10.124.1.5) by HQMAIL107.nvidia.com
+ (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Mon, 29 Jun
+ 2020 13:31:40 +0000
+Subject: Re: [PATCH V3 1/2] arm64: tegra: Re-order PCIe aperture mappings to
+ support ACPI boot
+To:     Vidya Sagar <vidyas@nvidia.com>, <bhelgaas@google.com>,
+        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
+        <lenb@kernel.org>, <andrew.murray@arm.com>, <treding@nvidia.com>
+CC:     <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <sagar.tv@gmail.com>
+References: <20200106082709.14370-1-vidyas@nvidia.com>
+ <20200110191500.9538-1-vidyas@nvidia.com>
+ <20200110191500.9538-2-vidyas@nvidia.com>
+From:   Jon Hunter <jonathanh@nvidia.com>
+Message-ID: <d52db35b-dbf8-a706-9611-95448cf6a69e@nvidia.com>
+Date:   Mon, 29 Jun 2020 14:31:38 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <718cae1f-2f33-f6d9-f278-157300b73116@huawei.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+In-Reply-To: <20200110191500.9538-2-vidyas@nvidia.com>
+X-Originating-IP: [10.124.1.5]
+X-ClientProxiedBy: HQMAIL101.nvidia.com (172.20.187.10) To
+ HQMAIL107.nvidia.com (172.20.187.13)
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1593437494; bh=Y32CfHcMUWKKF9wD0CLFw8La6QEVGFVAMOsFhmKdfEU=;
+        h=X-PGP-Universal:Subject:To:CC:References:From:Message-ID:Date:
+         User-Agent:MIME-Version:In-Reply-To:X-Originating-IP:
+         X-ClientProxiedBy:Content-Type:Content-Language:
+         Content-Transfer-Encoding;
+        b=SHCJ5JM/tbcA1imuBapYWSJr6z+o4OojHikk4j61y7FE/MkNF54FhwyT08IMnjadW
+         lHTOBpjK6/7Fj289JNT9INlUuWwXTI4Y+81NRoDs7DLuDK5EPg/dW/qU4MZ9DmvAVM
+         gfivYDmVRoUITMwz4H+8CmISt8nEBI9bJSy48Vxzfqo6sixPDGCsAOi0qEeAM2wAAc
+         PkYY7LbPQa7d8ZiPLf6HDYMfg4wYlUEIkOribMuqvsIMFnRfI2n1mCzvkn1F1e8VIj
+         lMpP0hNtbkeybDwNSPr8ubqADxgY+pBCDAy5o4lvgK4vnUiAVenSFo2B9sXKEgYsJ3
+         Z2KSQjp2XTjsg==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Jun 29, 2020 at 12:24:43PM +0800, Hanjun Guo wrote:
-> Hi Lorenzo,
+Hi Sagar,
+
+On 10/01/2020 19:14, Vidya Sagar wrote:
+> Re-order Tegra194's PCIe aperture mappings to have IO window moved to
+> 64-bit aperture and have the entire 32-bit aperture used for accessing
+> the configuration space. This makes it to use the entire 32MB of the 32-bit
+> aperture for ECAM purpose while booting through ACPI.
 > 
-> On 2020/6/19 16:20, Lorenzo Pieralisi wrote:
-> > When the iort_match_node_callback is invoked for a named component
-> > the match should be executed upon a device with an ACPI companion.
-> > 
-> > For devices with no ACPI companion set-up the ACPI device tree must be
-> > walked in order to find the first parent node with a companion set and
-> > check the parent node against the named component entry to check whether
-> > there is a match and therefore an IORT node describing the in/out ID
-> > translation for the device has been found.
-> > 
-> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > Cc: Will Deacon <will@kernel.org>
-> > Cc: Hanjun Guo <guohanjun@huawei.com>
-> > Cc: Sudeep Holla <sudeep.holla@arm.com>
-> > Cc: Catalin Marinas <catalin.marinas@arm.com>
-> > Cc: Robin Murphy <robin.murphy@arm.com>
-> > Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-> > ---
-> >   drivers/acpi/arm64/iort.c | 20 ++++++++++++++++++--
-> >   1 file changed, 18 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-> > index 28a6b387e80e..5eee81758184 100644
-> > --- a/drivers/acpi/arm64/iort.c
-> > +++ b/drivers/acpi/arm64/iort.c
-> > @@ -264,15 +264,31 @@ static acpi_status iort_match_node_callback(struct acpi_iort_node *node,
-> >   	if (node->type == ACPI_IORT_NODE_NAMED_COMPONENT) {
-> >   		struct acpi_buffer buf = { ACPI_ALLOCATE_BUFFER, NULL };
-> > -		struct acpi_device *adev = to_acpi_device_node(dev->fwnode);
-> > +		struct acpi_device *adev;
-> >   		struct acpi_iort_named_component *ncomp;
-> > +		struct device *nc_dev = dev;
-> > +
-> > +		/*
-> > +		 * Walk the device tree to find a device with an
-> > +		 * ACPI companion; there is no point in scanning
-> > +		 * IORT for a device matching a named component if
-> > +		 * the device does not have an ACPI companion to
-> > +		 * start with.
-> > +		 */
-> > +		do {
-> > +			adev = ACPI_COMPANION(nc_dev);
-> > +			if (adev)
-> > +				break;
-> > +
-> > +			nc_dev = nc_dev->parent;
-> > +		} while (nc_dev);
-> 
-> I'm lost here, we need the ACPI_COMPANION (the same as
-> to_acpi_device_node()) of the device, but why do we need to go
-> up to find the parent node?
+> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
 
-For devices that aren't described in the DSDT - IORT translations
-are determined by their ACPI parent device. Do you see/Have you
-found any issue with this approach ?
+Any reason why we should not merge this change, even if patch 2/2 is not
+accepted? If there is no harm in us merging this, this would be one less
+change for us to carry out-of-tree. If so, can you update and re-post
+for 5.9?
 
-> For a platform device, if I use its parent's full path name for
-> its named component entry, then it will match, but this will violate
-> the IORT spec.
+Cheers
+Jon
 
-Can you elaborate on this please I don't get the point you
-are making.
-
-Thanks,
-Lorenzo
+-- 
+nvpublic
