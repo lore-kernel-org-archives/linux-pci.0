@@ -4,93 +4,123 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4FCAC433E2
-	for <linux-pci@archiver.kernel.org>; Mon, 29 Jun 2020 20:09:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BC07C433E1
+	for <linux-pci@archiver.kernel.org>; Mon, 29 Jun 2020 20:11:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 88CF620760
-	for <linux-pci@archiver.kernel.org>; Mon, 29 Jun 2020 20:09:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 78EFE20675
+	for <linux-pci@archiver.kernel.org>; Mon, 29 Jun 2020 20:11:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726762AbgF2UJd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 29 Jun 2020 16:09:33 -0400
-Received: from mga14.intel.com ([192.55.52.115]:8203 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727938AbgF2UJ0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 29 Jun 2020 16:09:26 -0400
-IronPort-SDR: aDaW0t+7lHLm/T6o1YN2QMqnDoZpQHaJs+kop2Xt5YZf6w2z/7uRVwvr2XarJ6uFS6A7S+h6rz
- WEfRPwnnKpwg==
-X-IronPort-AV: E=McAfee;i="6000,8403,9666"; a="145126351"
-X-IronPort-AV: E=Sophos;i="5.75,295,1589266800"; 
-   d="scan'208";a="145126351"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jun 2020 13:09:26 -0700
-IronPort-SDR: PoVjz7Y+YLh6hCKpBiPEoY6bNJLo/ocBfnj+22m72VjMoPDZijXwyTfNOwYkLzxZUb6K2ThjD5
- CNfUtTHR8anQ==
-X-IronPort-AV: E=Sophos;i="5.75,295,1589266800"; 
-   d="scan'208";a="454315340"
-Received: from ddalessa-mobl.amr.corp.intel.com (HELO [10.254.206.102]) ([10.254.206.102])
-  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jun 2020 13:09:23 -0700
-From:   Dennis Dalessandro <dennis.dalessandro@intel.com>
-Subject: Re: [PATCH v2 2/8] IB/hfi1: Convert PCIBIOS_* errors to generic -E*
- errors
-To:     refactormyself@gmail.com, helgaas@kernel.org
-Cc:     bjorn@helgaas.com, linux-pci@vger.kernel.org,
-        skhan@linuxfoundation.org,
-        Mike Marciniszyn <mike.marciniszyn@intel.com>,
-        Doug Ledford <dledford@redhat.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>, linux-rdma@vger.kernel.org,
-        linux-kernel-mentees@lists.linuxfoundation.org,
-        linux-kernel@vger.kernel.org
-References: <20200615073225.24061-1-refactormyself@gmail.com>
- <20200615073225.24061-3-refactormyself@gmail.com>
-Message-ID: <9e2b006e-9a0a-19fb-5dab-52df8c0e8674@intel.com>
-Date:   Mon, 29 Jun 2020 16:09:21 -0400
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.9.0
+        id S1729828AbgF2ULN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 29 Jun 2020 16:11:13 -0400
+Received: from szxga06-in.huawei.com ([45.249.212.32]:34904 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1729379AbgF2ULB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 29 Jun 2020 16:11:01 -0400
+Received: from DGGEMS409-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id C36D583A98373F3E8DC4;
+        Mon, 29 Jun 2020 12:24:47 +0800 (CST)
+Received: from [127.0.0.1] (10.174.179.33) by DGGEMS409-HUB.china.huawei.com
+ (10.3.19.209) with Microsoft SMTP Server id 14.3.487.0; Mon, 29 Jun 2020
+ 12:24:44 +0800
+Subject: Re: [PATCH v2 01/12] ACPI/IORT: Make iort_match_node_callback walk
+ the ACPI namespace for NC
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        <linux-arm-kernel@lists.infradead.org>
+CC:     Will Deacon <will@kernel.org>, Sudeep Holla <sudeep.holla@arm.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        <iommu@lists.linux-foundation.org>, <linux-acpi@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Joerg Roedel <joro@8bytes.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Marc Zyngier <maz@kernel.org>,
+        Makarand Pawagi <makarand.pawagi@nxp.com>,
+        Diana Craciun <diana.craciun@oss.nxp.com>,
+        Laurentiu Tudor <laurentiu.tudor@nxp.com>
+References: <20200521130008.8266-1-lorenzo.pieralisi@arm.com>
+ <20200619082013.13661-1-lorenzo.pieralisi@arm.com>
+ <20200619082013.13661-2-lorenzo.pieralisi@arm.com>
+From:   Hanjun Guo <guohanjun@huawei.com>
+Message-ID: <718cae1f-2f33-f6d9-f278-157300b73116@huawei.com>
+Date:   Mon, 29 Jun 2020 12:24:43 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
+ Thunderbird/68.6.0
 MIME-Version: 1.0
-In-Reply-To: <20200615073225.24061-3-refactormyself@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+In-Reply-To: <20200619082013.13661-2-lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-GB
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.179.33]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 6/15/2020 3:32 AM, refactormyself@gmail.com wrote:
-> From: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
-> 
-> pcie_speeds() returns PCIBIOS_ error codes from PCIe capability accessors.
-> 
-> PCIBIOS_ error codes have positive values. Passing on these values is
-> inconsistent with functions which return only a negative value on failure.
-> 
-> Before passing on the return value of PCIe capability accessors, call
-> pcibios_err_to_errno() to convert any positive PCIBIOS_ error codes to
-> negative generic error values.
-> 
-> Suggested-by: Bjorn Helgaas <bjorn@helgaas.com>
-> Signed-off-by: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
-> ---
->   drivers/infiniband/hw/hfi1/pcie.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/infiniband/hw/hfi1/pcie.c b/drivers/infiniband/hw/hfi1/pcie.c
-> index 1a6268d61977..eb53781d0c6a 100644
-> --- a/drivers/infiniband/hw/hfi1/pcie.c
-> +++ b/drivers/infiniband/hw/hfi1/pcie.c
-> @@ -306,7 +306,7 @@ int pcie_speeds(struct hfi1_devdata *dd)
->   	ret = pcie_capability_read_dword(dd->pcidev, PCI_EXP_LNKCAP, &linkcap);
->   	if (ret) {
->   		dd_dev_err(dd, "Unable to read from PCI config\n");
-> -		return ret;
-> +		return pcibios_err_to_errno(ret);
->   	}
->   
->   	if ((linkcap & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_8_0GB) {
-> 
+Hi Lorenzo,
 
-Reviewed-by: Dennis Dalessandro <dennis.dalessandro@intel.com>
+On 2020/6/19 16:20, Lorenzo Pieralisi wrote:
+> When the iort_match_node_callback is invoked for a named component
+> the match should be executed upon a device with an ACPI companion.
+> 
+> For devices with no ACPI companion set-up the ACPI device tree must be
+> walked in order to find the first parent node with a companion set and
+> check the parent node against the named component entry to check whether
+> there is a match and therefore an IORT node describing the in/out ID
+> translation for the device has been found.
+> 
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Will Deacon <will@kernel.org>
+> Cc: Hanjun Guo <guohanjun@huawei.com>
+> Cc: Sudeep Holla <sudeep.holla@arm.com>
+> Cc: Catalin Marinas <catalin.marinas@arm.com>
+> Cc: Robin Murphy <robin.murphy@arm.com>
+> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+> ---
+>   drivers/acpi/arm64/iort.c | 20 ++++++++++++++++++--
+>   1 file changed, 18 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+> index 28a6b387e80e..5eee81758184 100644
+> --- a/drivers/acpi/arm64/iort.c
+> +++ b/drivers/acpi/arm64/iort.c
+> @@ -264,15 +264,31 @@ static acpi_status iort_match_node_callback(struct acpi_iort_node *node,
+>   
+>   	if (node->type == ACPI_IORT_NODE_NAMED_COMPONENT) {
+>   		struct acpi_buffer buf = { ACPI_ALLOCATE_BUFFER, NULL };
+> -		struct acpi_device *adev = to_acpi_device_node(dev->fwnode);
+> +		struct acpi_device *adev;
+>   		struct acpi_iort_named_component *ncomp;
+> +		struct device *nc_dev = dev;
+> +
+> +		/*
+> +		 * Walk the device tree to find a device with an
+> +		 * ACPI companion; there is no point in scanning
+> +		 * IORT for a device matching a named component if
+> +		 * the device does not have an ACPI companion to
+> +		 * start with.
+> +		 */
+> +		do {
+> +			adev = ACPI_COMPANION(nc_dev);
+> +			if (adev)
+> +				break;
+> +
+> +			nc_dev = nc_dev->parent;
+> +		} while (nc_dev);
+
+I'm lost here, we need the ACPI_COMPANION (the same as
+to_acpi_device_node()) of the device, but why do we need to go
+up to find the parent node?
+
+For a platform device, if I use its parent's full path name for
+its named component entry, then it will match, but this will violate
+the IORT spec.
+
+Thanks
+Hanjun
+
