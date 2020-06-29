@@ -2,111 +2,93 @@ Return-Path: <SRS0=KX5l=AK=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.0 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A3DBC433E0
-	for <linux-pci@archiver.kernel.org>; Mon, 29 Jun 2020 19:32:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAE64C433E0
+	for <linux-pci@archiver.kernel.org>; Mon, 29 Jun 2020 19:33:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 199DE206F1
-	for <linux-pci@archiver.kernel.org>; Mon, 29 Jun 2020 19:32:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AE605206F1
+	for <linux-pci@archiver.kernel.org>; Mon, 29 Jun 2020 19:33:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1593459219;
+	bh=S0YdjtPRSSlnoNdihph14QS32xSkaKxF4OYCSio0GLE=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=No62S8cFThJKpse19R/nxkExywsmtzKUMtBEod3EgwEC6zPqsMEl2nRm4J94bDnzD
+	 XncqeKl7WH4Anesw2xO7bsTdN9LXLiinscNLhaYXpvB+8SN4JiirnnWBx0p2xjVktT
+	 1NLRLfux4NsCJdHwPspXlsYihy/jSkNuxBIIqLtU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732725AbgF2TcT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 29 Jun 2020 15:32:19 -0400
-Received: from mx2.suse.de ([195.135.220.15]:36736 "EHLO mx2.suse.de"
+        id S1730409AbgF2Tdh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 29 Jun 2020 15:33:37 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42512 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1733154AbgF2Tb1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 29 Jun 2020 15:31:27 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id ECA7AAE6D;
-        Mon, 29 Jun 2020 16:18:57 +0000 (UTC)
-From:   Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-To:     f.fainelli@gmail.com, gregkh@linuxfoundation.org, robh@kernel.org,
-        wahrenst@gmx.net, p.zabel@pengutronix.de, andy.shevchenko@gmail.com
-Cc:     linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-rpi-kernel@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org,
-        bcm-kernel-feedback-list@broadcom.com, tim.gover@raspberrypi.org,
-        linux-pci@vger.kernel.org, helgaas@kernel.org,
-        mathias.nyman@linux.intel.com, lorenzo.pieralisi@arm.com,
-        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-Subject: [PATCH v5 4/9] ARM: dts: bcm2711: Add reset controller to xHCI node
-Date:   Mon, 29 Jun 2020 18:18:40 +0200
-Message-Id: <20200629161845.6021-5-nsaenzjulienne@suse.de>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20200629161845.6021-1-nsaenzjulienne@suse.de>
-References: <20200629161845.6021-1-nsaenzjulienne@suse.de>
+        id S1730482AbgF2TdT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 29 Jun 2020 15:33:19 -0400
+Received: from localhost (mobile-166-170-222-206.mycingular.net [166.170.222.206])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id BA31A206E2;
+        Mon, 29 Jun 2020 19:33:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1593459199;
+        bh=S0YdjtPRSSlnoNdihph14QS32xSkaKxF4OYCSio0GLE=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=opm5/3ZKjNT8OrAL+IyGlJIOqrB869sIflfMIebZ+o5mNYTqOegs/4sBzCzNYVZxI
+         Jm+XxAYDkrNFpAmyh04dupvYYCtLyFxJUJqAWShS8dXKFcBeH9nBs+z+ruWIQA5Yo6
+         EgXpkLslb1j2PttdG0sCiQRzqTqZ5B3NV2QBzujM=
+Date:   Mon, 29 Jun 2020 14:33:16 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Aya Levin <ayal@mellanox.com>
+Cc:     Jakub Kicinski <kuba@kernel.org>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        "mkubecek@suse.cz" <mkubecek@suse.cz>,
+        "davem@davemloft.net" <davem@davemloft.net>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        Tariq Toukan <tariqt@mellanox.com>, linux-pci@vger.kernel.org,
+        Alexander Duyck <alexander.h.duyck@linux.intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Ding Tianhong <dingtianhong@huawei.com>,
+        Casey Leedom <leedom@chelsio.com>
+Subject: Re: [net-next 10/10] net/mlx5e: Add support for PCI relaxed ordering
+Message-ID: <20200629193316.GA3283437@bjorn-Precision-5520>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ca121a18-8c11-5830-9840-51f353c3ddd2@mellanox.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The chip is hardwired to the board's PCIe bus and needs to be properly
-setup trough a firmware routine after a PCI fundamental reset. Pass the
-reset controller phandle that takes care of triggering the
-initialization to the relevant PCI device.
+[+cc Ashok, Ding, Casey]
 
-Signed-off-by: Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
+On Mon, Jun 29, 2020 at 12:32:44PM +0300, Aya Levin wrote:
+> I wanted to turn on RO on the ETH driver based on
+> pcie_relaxed_ordering_enabled().
+> From my experiments I see that pcie_relaxed_ordering_enabled() return true
+> on Intel(R) Xeon(R) CPU E5-2650 v3 @ 2.30GHz. This CPU is from Haswell
+> series which is known to have bug in RO implementation. In this case, I
+> expected pcie_relaxed_ordering_enabled() to return false, shouldn't it?
 
----
+Is there an erratum for this?  How do we know this device has a bug
+in relaxed ordering?
 
-Changes since v3:
- - Correctly define PCIe topology:
+> In addition, we are worried about future bugs in new CPUs which may result
+> in performance degradation while using RO, as long as the function
+> pcie_relaxed_ordering_enabled() will return true for these CPUs. 
 
-	[0000:00]---00.0-[01]----00.0  VIA Technologies, Inc. VL805 USB 3.0 Host Controller
+I'm worried about this too.  I do not want to add a Device ID to the
+quirk_relaxedordering_disable() list for every new Intel CPU.  That's
+a huge hassle and creates a real problem for old kernels running on
+those new CPUs, because things might work "most of the time" but not
+always.
 
-   Earlier versions were not taking into account the bridge between the
-   PCIe controller and xHCI controller. It worked, but out of luck...
+Maybe we need to prevent the use of relaxed ordering for *all* Intel
+CPUs.
 
-Changes since v2:
- - Use dt-bindings to access IDs
+> That's why
+> we thought of adding the feature on our card with default off and enable the
+> user to set it.
 
-Changes since v1:
- - Update to match new binding
-
- arch/arm/boot/dts/bcm2711-rpi-4-b.dts | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
-
-diff --git a/arch/arm/boot/dts/bcm2711-rpi-4-b.dts b/arch/arm/boot/dts/bcm2711-rpi-4-b.dts
-index 0cef95058fb0..5b54d2185893 100644
---- a/arch/arm/boot/dts/bcm2711-rpi-4-b.dts
-+++ b/arch/arm/boot/dts/bcm2711-rpi-4-b.dts
-@@ -4,6 +4,8 @@
- #include "bcm2835-rpi.dtsi"
- #include "bcm283x-rpi-usb-peripheral.dtsi"
- 
-+#include <dt-bindings/reset/raspberrypi,firmware-reset.h>
-+
- / {
- 	compatible = "raspberrypi,4-model-b", "brcm,bcm2711";
- 	model = "Raspberry Pi 4 Model B";
-@@ -207,6 +209,21 @@ phy1: ethernet-phy@1 {
- 	};
- };
- 
-+&pcie0 {
-+	pci@1,0 {
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		ranges;
-+
-+		reg = <0 0 0 0 0>;
-+
-+		usb@1,0 {
-+			reg = <0x10000 0 0 0 0>;
-+			resets = <&reset RASPBERRYPI_FIRMWARE_RESET_ID_USB>;
-+		};
-+	};
-+};
-+
- /* uart0 communicates with the BT module */
- &uart0 {
- 	pinctrl-names = "default";
--- 
-2.27.0
-
+Bjorn
