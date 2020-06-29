@@ -2,122 +2,130 @@ Return-Path: <SRS0=KX5l=AK=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.0 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE5BDC433E1
-	for <linux-pci@archiver.kernel.org>; Mon, 29 Jun 2020 19:31:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A061C433E0
+	for <linux-pci@archiver.kernel.org>; Mon, 29 Jun 2020 19:31:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 912662067D
-	for <linux-pci@archiver.kernel.org>; Mon, 29 Jun 2020 19:31:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 667F92067D
+	for <linux-pci@archiver.kernel.org>; Mon, 29 Jun 2020 19:31:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733176AbgF2Tb2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1733159AbgF2Tb2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Mon, 29 Jun 2020 15:31:28 -0400
-Received: from mx2.suse.de ([195.135.220.15]:36748 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:36750 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1733162AbgF2Tb2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 29 Jun 2020 15:31:28 -0400
+        id S1733164AbgF2Tb1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 29 Jun 2020 15:31:27 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 58867AE7A;
-        Mon, 29 Jun 2020 16:18:59 +0000 (UTC)
+        by mx2.suse.de (Postfix) with ESMTP id 5418FAD33;
+        Mon, 29 Jun 2020 15:19:59 +0000 (UTC)
+Message-ID: <9e6d34b0d31829f1b6760191c9424dda65963bcd.camel@suse.de>
+Subject: Re: [PATCH v3 2/9] reset: Add Raspberry Pi 4 firmware reset
+ controller
 From:   Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-To:     f.fainelli@gmail.com, gregkh@linuxfoundation.org, robh@kernel.org,
-        wahrenst@gmx.net, p.zabel@pengutronix.de, andy.shevchenko@gmail.com
-Cc:     linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-rpi-kernel@lists.infradead.org,
+To:     Philipp Zabel <p.zabel@pengutronix.de>, f.fainelli@gmail.com,
+        gregkh@linuxfoundation.org, wahrenst@gmx.net,
+        linux-kernel@vger.kernel.org
+Cc:     linux-usb@vger.kernel.org, linux-rpi-kernel@lists.infradead.org,
         linux-arm-kernel@lists.infradead.org,
         bcm-kernel-feedback-list@broadcom.com, tim.gover@raspberrypi.org,
         linux-pci@vger.kernel.org, helgaas@kernel.org,
-        mathias.nyman@linux.intel.com, lorenzo.pieralisi@arm.com,
-        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-Subject: [PATCH v5 6/9] Revert "USB: pci-quirks: Add Raspberry Pi 4 quirk"
-Date:   Mon, 29 Jun 2020 18:18:42 +0200
-Message-Id: <20200629161845.6021-7-nsaenzjulienne@suse.de>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20200629161845.6021-1-nsaenzjulienne@suse.de>
-References: <20200629161845.6021-1-nsaenzjulienne@suse.de>
+        andy.shevchenko@gmail.com, mathias.nyman@linux.intel.com,
+        lorenzo.pieralisi@arm.com
+Date:   Mon, 29 Jun 2020 17:19:57 +0200
+In-Reply-To: <6ddaf69d4f5ad188864f62dcdbfbbe32acef9820.camel@pengutronix.de>
+References: <20200612171334.26385-1-nsaenzjulienne@suse.de>
+         <20200612171334.26385-3-nsaenzjulienne@suse.de>
+         <c1ccb77ef0bc56b96a8ad991f8345d0ffbd76fc2.camel@pengutronix.de>
+         <b324122e8bd93302215a77d0dcf6d8b2897d3597.camel@suse.de>
+         <6ddaf69d4f5ad188864f62dcdbfbbe32acef9820.camel@pengutronix.de>
+Content-Type: multipart/signed; micalg="pgp-sha256";
+        protocol="application/pgp-signature"; boundary="=-pYGBGq9PFJmcLEyUIZhw"
+User-Agent: Evolution 3.36.3 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This reverts commit c65822fef4adc0ba40c37a47337376ce75f7a7bc.
 
-The initialization of Raspberry Pi 4's USB chip is now handled through a
-reset controller. No need to directly call the firmware routine through a
-PCI quirk.
+--=-pYGBGq9PFJmcLEyUIZhw
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-Reviewed-by: Florian Fainelli <f.fainelli@gmail.com>
+On Fri, 2020-06-26 at 12:43 +0200, Philipp Zabel wrote:
+> On Wed, 2020-06-17 at 12:44 +0200, Nicolas Saenz Julienne wrote:
+> > On Wed, 2020-06-17 at 12:02 +0200, Philipp Zabel wrote:
+> > > Hi Nicolas,
+> > >=20
+> > > On Fri, 2020-06-12 at 19:13 +0200, Nicolas Saenz Julienne wrote:
+> > > > Raspberry Pi 4's co-processor controls some of the board's HW
+> > > > initialization process, but it's up to Linux to trigger it when
+> > > > relevant. Introduce a reset controller capable of interfacing with
+> > > > RPi4's co-processor that models these firmware initialization routi=
+nes
+> > > > as
+> > > > reset lines.
+> > > >=20
+> > > > Signed-off-by: Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
+> > > > Reviewed-by: Florian Fainelli <f.fainelli@gmail.com>
+> > >=20
+> > > Reviewed-by: Philipp Zabel <p.zabel@pengutronix.de>
+> >=20
+> > Thanks!
+> >=20
+> > > If there is a good reason for the single DT specified reset id, I can
+> > > pick up patches 1 and 2.
+> >=20
+> > The idea here is to make sure we're reasonably covered against further
+> > changes
+> > in firmware. If we define constraints too narrow it can be a pain to su=
+pport
+> > new features without breaking backwards compatibility in dt.
+>=20
+> Ok.
+>=20
+> > > If you change the dts patch 4 to use a number instead of the reset id
+> > > define for now, there wouldn't even be a dependency between these res=
+et
+> > > and dts patches.
+> >=20
+> > I was under the impression that having an explicit definition was nice =
+to
+> > have.
+> > What's troubling about creating the dependency?
+>=20
+> Just that the last patch has to wait for the reset patches to be merged
+> before it can be applied.
 
----
+TBH there is no hurry, this only provides a better design on something that=
+'s
+already available upstream. USB works on RPi4, so I don't mind if this gets
+delayed a release.
 
-Changes since v4:
- - Correct typos in description
- - add space between include types
+Regards,
+Nicolas
 
- drivers/firmware/Kconfig      |  3 +--
- drivers/usb/host/pci-quirks.c | 15 ---------------
- 2 files changed, 1 insertion(+), 17 deletions(-)
 
-diff --git a/drivers/firmware/Kconfig b/drivers/firmware/Kconfig
-index fbd785dd0513..4843e94713a4 100644
---- a/drivers/firmware/Kconfig
-+++ b/drivers/firmware/Kconfig
-@@ -178,9 +178,8 @@ config ISCSI_IBFT
- 	  Otherwise, say N.
- 
- config RASPBERRYPI_FIRMWARE
--	bool "Raspberry Pi Firmware Driver"
-+	tristate "Raspberry Pi Firmware Driver"
- 	depends on BCM2835_MBOX
--	default USB_PCI
- 	help
- 	  This option enables support for communicating with the firmware on the
- 	  Raspberry Pi.
-diff --git a/drivers/usb/host/pci-quirks.c b/drivers/usb/host/pci-quirks.c
-index 0b949acfa258..358015328391 100644
---- a/drivers/usb/host/pci-quirks.c
-+++ b/drivers/usb/host/pci-quirks.c
-@@ -17,8 +17,6 @@
- #include <linux/acpi.h>
- #include <linux/dmi.h>
- 
--#include <soc/bcm2835/raspberrypi-firmware.h>
--
- #include "pci-quirks.h"
- #include "xhci-ext-caps.h"
- 
-@@ -1246,24 +1244,11 @@ static void quirk_usb_handoff_xhci(struct pci_dev *pdev)
- 
- static void quirk_usb_early_handoff(struct pci_dev *pdev)
- {
--	int ret;
--
- 	/* Skip Netlogic mips SoC's internal PCI USB controller.
- 	 * This device does not need/support EHCI/OHCI handoff
- 	 */
- 	if (pdev->vendor == 0x184e)	/* vendor Netlogic */
- 		return;
--
--	if (pdev->vendor == PCI_VENDOR_ID_VIA && pdev->device == 0x3483) {
--		ret = rpi_firmware_init_vl805(pdev);
--		if (ret) {
--			/* Firmware might be outdated, or something failed */
--			dev_warn(&pdev->dev,
--				 "Failed to load VL805's firmware: %d. Will continue to attempt to work, but bad things might happen. You should fix this...\n",
--				 ret);
--		}
--	}
--
- 	if (pdev->class != PCI_CLASS_SERIAL_USB_UHCI &&
- 			pdev->class != PCI_CLASS_SERIAL_USB_OHCI &&
- 			pdev->class != PCI_CLASS_SERIAL_USB_EHCI &&
--- 
-2.27.0
+--=-pYGBGq9PFJmcLEyUIZhw
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCAAdFiEErOkkGDHCg2EbPcGjlfZmHno8x/4FAl76Bp4ACgkQlfZmHno8
+x/4Ajwf+K267YktdZT35ap4okjOsWgkfqAIAwxP52bNAwkVqxoMvi5Bvt7bQiZhF
+6yW4hejw30Ynb5u18w0FNOECF0/hV8XCTPYHcBDqplrtVwDAJSvHkjRZ4Ta4yR0e
+afhITI1v66VKfk6fXq/6a3UEC0mZoUX1JY+eVo2M7tQEgGGQrNjU1kTUl9nwJkSb
+E9iYX4L+qtAfXtvirFebov4CrdX2zZRaaQpRPIFGh2ZMBpXFIFaOVVBe9DS4Wbav
+kIKuL2AIisi8ZY6yssQTxECJuzir//mqRN+yBvmOJaB8Va83E7AaE1pE1uN0JhhN
+/P/W9lzR8Ku7wbNuORr35TFIKyEiXg==
+=iSMN
+-----END PGP SIGNATURE-----
+
+--=-pYGBGq9PFJmcLEyUIZhw--
 
