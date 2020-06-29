@@ -2,93 +2,80 @@ Return-Path: <SRS0=KX5l=AK=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.0 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CAE64C433E0
-	for <linux-pci@archiver.kernel.org>; Mon, 29 Jun 2020 19:33:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 856C0C433E3
+	for <linux-pci@archiver.kernel.org>; Mon, 29 Jun 2020 19:34:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AE605206F1
-	for <linux-pci@archiver.kernel.org>; Mon, 29 Jun 2020 19:33:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1593459219;
-	bh=S0YdjtPRSSlnoNdihph14QS32xSkaKxF4OYCSio0GLE=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=No62S8cFThJKpse19R/nxkExywsmtzKUMtBEod3EgwEC6zPqsMEl2nRm4J94bDnzD
-	 XncqeKl7WH4Anesw2xO7bsTdN9LXLiinscNLhaYXpvB+8SN4JiirnnWBx0p2xjVktT
-	 1NLRLfux4NsCJdHwPspXlsYihy/jSkNuxBIIqLtU=
+	by mail.kernel.org (Postfix) with ESMTP id 69BF5206E2
+	for <linux-pci@archiver.kernel.org>; Mon, 29 Jun 2020 19:34:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730409AbgF2Tdh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 29 Jun 2020 15:33:37 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42512 "EHLO mail.kernel.org"
+        id S1730552AbgF2TcS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 29 Jun 2020 15:32:18 -0400
+Received: from mx2.suse.de ([195.135.220.15]:36744 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730482AbgF2TdT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 29 Jun 2020 15:33:19 -0400
-Received: from localhost (mobile-166-170-222-206.mycingular.net [166.170.222.206])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BA31A206E2;
-        Mon, 29 Jun 2020 19:33:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1593459199;
-        bh=S0YdjtPRSSlnoNdihph14QS32xSkaKxF4OYCSio0GLE=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=opm5/3ZKjNT8OrAL+IyGlJIOqrB869sIflfMIebZ+o5mNYTqOegs/4sBzCzNYVZxI
-         Jm+XxAYDkrNFpAmyh04dupvYYCtLyFxJUJqAWShS8dXKFcBeH9nBs+z+ruWIQA5Yo6
-         EgXpkLslb1j2PttdG0sCiQRzqTqZ5B3NV2QBzujM=
-Date:   Mon, 29 Jun 2020 14:33:16 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Aya Levin <ayal@mellanox.com>
-Cc:     Jakub Kicinski <kuba@kernel.org>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        "mkubecek@suse.cz" <mkubecek@suse.cz>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        Tariq Toukan <tariqt@mellanox.com>, linux-pci@vger.kernel.org,
-        Alexander Duyck <alexander.h.duyck@linux.intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Ding Tianhong <dingtianhong@huawei.com>,
-        Casey Leedom <leedom@chelsio.com>
-Subject: Re: [net-next 10/10] net/mlx5e: Add support for PCI relaxed ordering
-Message-ID: <20200629193316.GA3283437@bjorn-Precision-5520>
+        id S1733163AbgF2Tb1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 29 Jun 2020 15:31:27 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 481EFAE47;
+        Mon, 29 Jun 2020 16:18:57 +0000 (UTC)
+From:   Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
+To:     f.fainelli@gmail.com, gregkh@linuxfoundation.org, robh@kernel.org,
+        wahrenst@gmx.net, p.zabel@pengutronix.de, andy.shevchenko@gmail.com
+Cc:     linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-rpi-kernel@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org,
+        bcm-kernel-feedback-list@broadcom.com, tim.gover@raspberrypi.org,
+        linux-pci@vger.kernel.org, helgaas@kernel.org,
+        mathias.nyman@linux.intel.com, lorenzo.pieralisi@arm.com,
+        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
+Subject: [PATCH v5 3/9] ARM: dts: bcm2711: Add firmware usb reset node
+Date:   Mon, 29 Jun 2020 18:18:39 +0200
+Message-Id: <20200629161845.6021-4-nsaenzjulienne@suse.de>
+X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20200629161845.6021-1-nsaenzjulienne@suse.de>
+References: <20200629161845.6021-1-nsaenzjulienne@suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ca121a18-8c11-5830-9840-51f353c3ddd2@mellanox.com>
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc Ashok, Ding, Casey]
+Now that the reset driver exposing Raspberry Pi 4's firmware based USB
+reset routine is available, let's add the device tree node exposing it.
 
-On Mon, Jun 29, 2020 at 12:32:44PM +0300, Aya Levin wrote:
-> I wanted to turn on RO on the ETH driver based on
-> pcie_relaxed_ordering_enabled().
-> From my experiments I see that pcie_relaxed_ordering_enabled() return true
-> on Intel(R) Xeon(R) CPU E5-2650 v3 @ 2.30GHz. This CPU is from Haswell
-> series which is known to have bug in RO implementation. In this case, I
-> expected pcie_relaxed_ordering_enabled() to return false, shouldn't it?
+Signed-off-by: Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
+Reviewed-by: Florian Fainelli <f.fainelli@gmail.com>
 
-Is there an erratum for this?  How do we know this device has a bug
-in relaxed ordering?
+---
 
-> In addition, we are worried about future bugs in new CPUs which may result
-> in performance degradation while using RO, as long as the function
-> pcie_relaxed_ordering_enabled() will return true for these CPUs. 
+Changes since v1:
+ - Update cell nr to match new bindings
+---
+ arch/arm/boot/dts/bcm2711-rpi-4-b.dts | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-I'm worried about this too.  I do not want to add a Device ID to the
-quirk_relaxedordering_disable() list for every new Intel CPU.  That's
-a huge hassle and creates a real problem for old kernels running on
-those new CPUs, because things might work "most of the time" but not
-always.
+diff --git a/arch/arm/boot/dts/bcm2711-rpi-4-b.dts b/arch/arm/boot/dts/bcm2711-rpi-4-b.dts
+index c7f1d97e69bb..0cef95058fb0 100644
+--- a/arch/arm/boot/dts/bcm2711-rpi-4-b.dts
++++ b/arch/arm/boot/dts/bcm2711-rpi-4-b.dts
+@@ -83,6 +83,11 @@ expgpio: gpio {
+ 				  "";
+ 		status = "okay";
+ 	};
++
++	reset: reset {
++		compatible = "raspberrypi,firmware-reset";
++		#reset-cells = <1>;
++	};
+ };
+ 
+ &gpio {
+-- 
+2.27.0
 
-Maybe we need to prevent the use of relaxed ordering for *all* Intel
-CPUs.
-
-> That's why
-> we thought of adding the feature on our card with default off and enable the
-> user to set it.
-
-Bjorn
