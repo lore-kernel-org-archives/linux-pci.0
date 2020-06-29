@@ -2,126 +2,112 @@ Return-Path: <SRS0=KX5l=AK=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.0 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C561BC433E1
-	for <linux-pci@archiver.kernel.org>; Mon, 29 Jun 2020 19:35:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C45EBC433E2
+	for <linux-pci@archiver.kernel.org>; Mon, 29 Jun 2020 19:58:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AB192206E2
-	for <linux-pci@archiver.kernel.org>; Mon, 29 Jun 2020 19:35:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AEA2F20674
+	for <linux-pci@archiver.kernel.org>; Mon, 29 Jun 2020 19:58:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733063AbgF2Te7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 29 Jun 2020 15:34:59 -0400
-Received: from mx2.suse.de ([195.135.220.15]:36622 "EHLO mx2.suse.de"
+        id S2388399AbgF2T6R (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 29 Jun 2020 15:58:17 -0400
+Received: from mga03.intel.com ([134.134.136.65]:4583 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1733147AbgF2TbZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 29 Jun 2020 15:31:25 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 9E7FCADAA;
-        Mon, 29 Jun 2020 16:18:55 +0000 (UTC)
-From:   Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-To:     f.fainelli@gmail.com, gregkh@linuxfoundation.org, robh@kernel.org,
-        wahrenst@gmx.net, p.zabel@pengutronix.de, andy.shevchenko@gmail.com
-Cc:     linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-rpi-kernel@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org,
-        bcm-kernel-feedback-list@broadcom.com, tim.gover@raspberrypi.org,
-        linux-pci@vger.kernel.org, helgaas@kernel.org,
-        mathias.nyman@linux.intel.com, lorenzo.pieralisi@arm.com,
-        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-Subject: [PATCH v5 1/9] dt-bindings: reset: Add a binding for the RPi Firmware reset controller
-Date:   Mon, 29 Jun 2020 18:18:37 +0200
-Message-Id: <20200629161845.6021-2-nsaenzjulienne@suse.de>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20200629161845.6021-1-nsaenzjulienne@suse.de>
-References: <20200629161845.6021-1-nsaenzjulienne@suse.de>
+        id S1731831AbgF2T6A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 29 Jun 2020 15:58:00 -0400
+IronPort-SDR: jdaL4X3H6ayj4YPxBPJhNvvYueXdPlepPt5ov4whdBJQisQn93k6oxNXgsgP4uZryUXc9nBNdy
+ BZjmCxUNQBJg==
+X-IronPort-AV: E=McAfee;i="6000,8403,9666"; a="146049469"
+X-IronPort-AV: E=Sophos;i="5.75,295,1589266800"; 
+   d="scan'208";a="146049469"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jun 2020 12:57:59 -0700
+IronPort-SDR: Isw7lqr5zUf76ZtLl+jg9OWoaRngqL7x1PsdxLeDA8CeA8Pw57/bqNEtShR3jeKpXmk7UEpkmI
+ UH4WeOutFmfg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.75,295,1589266800"; 
+   d="scan'208";a="277183338"
+Received: from otc-nc-03.jf.intel.com (HELO otc-nc-03) ([10.54.39.25])
+  by orsmga003.jf.intel.com with ESMTP; 29 Jun 2020 12:57:59 -0700
+Date:   Mon, 29 Jun 2020 12:57:59 -0700
+From:   "Raj, Ashok" <ashok.raj@intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Aya Levin <ayal@mellanox.com>, Jakub Kicinski <kuba@kernel.org>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        "mkubecek@suse.cz" <mkubecek@suse.cz>,
+        "davem@davemloft.net" <davem@davemloft.net>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        Tariq Toukan <tariqt@mellanox.com>, linux-pci@vger.kernel.org,
+        Alexander Duyck <alexander.h.duyck@linux.intel.com>,
+        Ding Tianhong <dingtianhong@huawei.com>,
+        Casey Leedom <leedom@chelsio.com>,
+        Ashok Raj <ashok.raj@intel.com>
+Subject: Re: [net-next 10/10] net/mlx5e: Add support for PCI relaxed ordering
+Message-ID: <20200629195759.GA255688@otc-nc-03>
+References: <ca121a18-8c11-5830-9840-51f353c3ddd2@mellanox.com>
+ <20200629193316.GA3283437@bjorn-Precision-5520>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200629193316.GA3283437@bjorn-Precision-5520>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The firmware running on the RPi VideoCore can be used to reset and
-initialize HW controlled by the firmware.
+Hi Bjorn
 
-Signed-off-by: Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-Reviewed-by: Florian Fainelli <f.fainelli@gmail.com>
 
----
-Changes since v2:
- - Add include file for reset IDs
+On Mon, Jun 29, 2020 at 02:33:16PM -0500, Bjorn Helgaas wrote:
+> [+cc Ashok, Ding, Casey]
+> 
+> On Mon, Jun 29, 2020 at 12:32:44PM +0300, Aya Levin wrote:
+> > I wanted to turn on RO on the ETH driver based on
+> > pcie_relaxed_ordering_enabled().
+> > From my experiments I see that pcie_relaxed_ordering_enabled() return true
+> > on Intel(R) Xeon(R) CPU E5-2650 v3 @ 2.30GHz. This CPU is from Haswell
+> > series which is known to have bug in RO implementation. In this case, I
+> > expected pcie_relaxed_ordering_enabled() to return false, shouldn't it?
+> 
+> Is there an erratum for this?  How do we know this device has a bug
+> in relaxed ordering?
 
-Changes since v1:
- - Correct cells binding as per Florian's comment
- - Change compatible string to be more generic
+https://software.intel.com/content/www/us/en/develop/download/intel-64-and-ia-32-architectures-optimization-reference-manual.html
 
- .../arm/bcm/raspberrypi,bcm2835-firmware.yaml | 21 +++++++++++++++++++
- .../reset/raspberrypi,firmware-reset.h        | 13 ++++++++++++
- 2 files changed, 34 insertions(+)
- create mode 100644 include/dt-bindings/reset/raspberrypi,firmware-reset.h
+For some reason they weren't documented in the errata, but under
+Optimization manual :-)
 
-diff --git a/Documentation/devicetree/bindings/arm/bcm/raspberrypi,bcm2835-firmware.yaml b/Documentation/devicetree/bindings/arm/bcm/raspberrypi,bcm2835-firmware.yaml
-index b48ed875eb8e..23a885af3a28 100644
---- a/Documentation/devicetree/bindings/arm/bcm/raspberrypi,bcm2835-firmware.yaml
-+++ b/Documentation/devicetree/bindings/arm/bcm/raspberrypi,bcm2835-firmware.yaml
-@@ -39,6 +39,22 @@ properties:
-       - compatible
-       - "#clock-cells"
- 
-+  reset:
-+    type: object
-+
-+    properties:
-+      compatible:
-+        const: raspberrypi,firmware-reset
-+
-+      "#reset-cells":
-+        const: 1
-+        description: >
-+          The argument is the ID of the firmware reset line to affect.
-+
-+    required:
-+      - compatible
-+      - "#reset-cells"
-+
-     additionalProperties: false
- 
- required:
-@@ -55,5 +71,10 @@ examples:
-             compatible = "raspberrypi,firmware-clocks";
-             #clock-cells = <1>;
-         };
-+
-+        reset: reset {
-+            compatible = "raspberrypi,firmware-reset";
-+            #reset-cells = <1>;
-+        };
-     };
- ...
-diff --git a/include/dt-bindings/reset/raspberrypi,firmware-reset.h b/include/dt-bindings/reset/raspberrypi,firmware-reset.h
-new file mode 100644
-index 000000000000..1a4f4c792723
---- /dev/null
-+++ b/include/dt-bindings/reset/raspberrypi,firmware-reset.h
-@@ -0,0 +1,13 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/*
-+ * Copyright (c) 2020 Nicolas Saenz Julienne
-+ * Author: Nicolas Saenz Julienne <nsaenzjulienne@suse.com>
-+ */
-+
-+#ifndef _DT_BINDINGS_RASPBERRYPI_FIRMWARE_RESET_H
-+#define _DT_BINDINGS_RASPBERRYPI_FIRMWARE_RESET_H
-+
-+#define RASPBERRYPI_FIRMWARE_RESET_ID_USB	0
-+#define RASPBERRYPI_FIRMWARE_RESET_NUM_IDS	1
-+
-+#endif
--- 
-2.27.0
+Table 3-7. Intel Processor CPU RP Device IDs for Processors Optimizing PCIe
+Performance
+Processor CPU RP Device IDs
+Intel Xeon processors based on Broadwell microarchitecture 6F01H-6F0EH
+Intel Xeon processors based on Haswell microarchitecture 2F01H-2F0EH
+
+These are the two that were listed in the manual. drivers/pci/quirks.c also
+has an eloborate list of root ports where relaxed_ordering is disabled. Did
+you check if its not already covered here?
+
+Send lspci if its not already covered by this table.
+
+
+> 
+> > In addition, we are worried about future bugs in new CPUs which may result
+> > in performance degradation while using RO, as long as the function
+> > pcie_relaxed_ordering_enabled() will return true for these CPUs. 
+> 
+> I'm worried about this too.  I do not want to add a Device ID to the
+> quirk_relaxedordering_disable() list for every new Intel CPU.  That's
+> a huge hassle and creates a real problem for old kernels running on
+> those new CPUs, because things might work "most of the time" but not
+> always.
+
+I'll check when this is fixed, i was told newer ones should work properly.
+But I'll confirm.
+
 
