@@ -3,129 +3,119 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A061C433E0
-	for <linux-pci@archiver.kernel.org>; Mon, 29 Jun 2020 19:31:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09C1AC433DF
+	for <linux-pci@archiver.kernel.org>; Mon, 29 Jun 2020 19:32:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 667F92067D
-	for <linux-pci@archiver.kernel.org>; Mon, 29 Jun 2020 19:31:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DEDE02067D
+	for <linux-pci@archiver.kernel.org>; Mon, 29 Jun 2020 19:32:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733159AbgF2Tb2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 29 Jun 2020 15:31:28 -0400
-Received: from mx2.suse.de ([195.135.220.15]:36750 "EHLO mx2.suse.de"
+        id S1732346AbgF2Tb5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 29 Jun 2020 15:31:57 -0400
+Received: from mx2.suse.de ([195.135.220.15]:36738 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1733164AbgF2Tb1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 29 Jun 2020 15:31:27 -0400
+        id S1733166AbgF2Tb2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 29 Jun 2020 15:31:28 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 5418FAD33;
-        Mon, 29 Jun 2020 15:19:59 +0000 (UTC)
-Message-ID: <9e6d34b0d31829f1b6760191c9424dda65963bcd.camel@suse.de>
-Subject: Re: [PATCH v3 2/9] reset: Add Raspberry Pi 4 firmware reset
- controller
+        by mx2.suse.de (Postfix) with ESMTP id 30642ACDB;
+        Mon, 29 Jun 2020 16:18:55 +0000 (UTC)
 From:   Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-To:     Philipp Zabel <p.zabel@pengutronix.de>, f.fainelli@gmail.com,
-        gregkh@linuxfoundation.org, wahrenst@gmx.net,
-        linux-kernel@vger.kernel.org
-Cc:     linux-usb@vger.kernel.org, linux-rpi-kernel@lists.infradead.org,
+To:     f.fainelli@gmail.com, gregkh@linuxfoundation.org, robh@kernel.org,
+        wahrenst@gmx.net, p.zabel@pengutronix.de, andy.shevchenko@gmail.com
+Cc:     linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-rpi-kernel@lists.infradead.org,
         linux-arm-kernel@lists.infradead.org,
         bcm-kernel-feedback-list@broadcom.com, tim.gover@raspberrypi.org,
         linux-pci@vger.kernel.org, helgaas@kernel.org,
-        andy.shevchenko@gmail.com, mathias.nyman@linux.intel.com,
-        lorenzo.pieralisi@arm.com
-Date:   Mon, 29 Jun 2020 17:19:57 +0200
-In-Reply-To: <6ddaf69d4f5ad188864f62dcdbfbbe32acef9820.camel@pengutronix.de>
-References: <20200612171334.26385-1-nsaenzjulienne@suse.de>
-         <20200612171334.26385-3-nsaenzjulienne@suse.de>
-         <c1ccb77ef0bc56b96a8ad991f8345d0ffbd76fc2.camel@pengutronix.de>
-         <b324122e8bd93302215a77d0dcf6d8b2897d3597.camel@suse.de>
-         <6ddaf69d4f5ad188864f62dcdbfbbe32acef9820.camel@pengutronix.de>
-Content-Type: multipart/signed; micalg="pgp-sha256";
-        protocol="application/pgp-signature"; boundary="=-pYGBGq9PFJmcLEyUIZhw"
-User-Agent: Evolution 3.36.3 
+        mathias.nyman@linux.intel.com, lorenzo.pieralisi@arm.com,
+        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
+Subject: [PATCH v5 0/9] Raspberry Pi 4 USB firmware initialization rework
+Date:   Mon, 29 Jun 2020 18:18:36 +0200
+Message-Id: <20200629161845.6021-1-nsaenzjulienne@suse.de>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+On the Raspberry Pi 4, after a PCI reset, VL805's firmware may either be
+loaded directly from an EEPROM or, if not present, by the SoC's
+co-processor, VideoCore. This series reworks how we handle this.
 
---=-pYGBGq9PFJmcLEyUIZhw
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+The previous solution makes use of PCI quirks and exporting platform
+specific functions. Albeit functional it feels pretty shoehorned. This
+proposes an alternative way of handling the triggering of the xHCI chip
+initialization trough means of a reset controller.
 
-On Fri, 2020-06-26 at 12:43 +0200, Philipp Zabel wrote:
-> On Wed, 2020-06-17 at 12:44 +0200, Nicolas Saenz Julienne wrote:
-> > On Wed, 2020-06-17 at 12:02 +0200, Philipp Zabel wrote:
-> > > Hi Nicolas,
-> > >=20
-> > > On Fri, 2020-06-12 at 19:13 +0200, Nicolas Saenz Julienne wrote:
-> > > > Raspberry Pi 4's co-processor controls some of the board's HW
-> > > > initialization process, but it's up to Linux to trigger it when
-> > > > relevant. Introduce a reset controller capable of interfacing with
-> > > > RPi4's co-processor that models these firmware initialization routi=
-nes
-> > > > as
-> > > > reset lines.
-> > > >=20
-> > > > Signed-off-by: Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-> > > > Reviewed-by: Florian Fainelli <f.fainelli@gmail.com>
-> > >=20
-> > > Reviewed-by: Philipp Zabel <p.zabel@pengutronix.de>
-> >=20
-> > Thanks!
-> >=20
-> > > If there is a good reason for the single DT specified reset id, I can
-> > > pick up patches 1 and 2.
-> >=20
-> > The idea here is to make sure we're reasonably covered against further
-> > changes
-> > in firmware. If we define constraints too narrow it can be a pain to su=
-pport
-> > new features without breaking backwards compatibility in dt.
->=20
-> Ok.
->=20
-> > > If you change the dts patch 4 to use a number instead of the reset id
-> > > define for now, there wouldn't even be a dependency between these res=
-et
-> > > and dts patches.
-> >=20
-> > I was under the impression that having an explicit definition was nice =
-to
-> > have.
-> > What's troubling about creating the dependency?
->=20
-> Just that the last patch has to wait for the reset patches to be merged
-> before it can be applied.
+The benefits are pretty evident: less platform churn in core xHCI code,
+and no explicit device dependency management in pcie-brcmstb.
 
-TBH there is no hurry, this only provides a better design on something that=
-'s
-already available upstream. USB works on RPi4, so I don't mind if this gets
-delayed a release.
+Note that patch #1 depends on another series[1], that was just applied
+into the clk maintainer's tree.
 
-Regards,
-Nicolas
+The series is based on v5.8-rc3
 
+v3: https://www.spinics.net/lists/arm-kernel/msg813612.html
+v2: https://lkml.org/lkml/2020/6/9/875
+v1: https://lore.kernel.org/linux-usb/20200608192701.18355-1-nsaenzjulienne@suse.de/T/#t
 
---=-pYGBGq9PFJmcLEyUIZhw
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
+[1] https://lore.kernel.org/linux-clk/159304773261.62212.983376627029743900@swboyd.mtv.corp.google.com/T/#t
 
------BEGIN PGP SIGNATURE-----
+---
 
-iQEzBAABCAAdFiEErOkkGDHCg2EbPcGjlfZmHno8x/4FAl76Bp4ACgkQlfZmHno8
-x/4Ajwf+K267YktdZT35ap4okjOsWgkfqAIAwxP52bNAwkVqxoMvi5Bvt7bQiZhF
-6yW4hejw30Ynb5u18w0FNOECF0/hV8XCTPYHcBDqplrtVwDAJSvHkjRZ4Ta4yR0e
-afhITI1v66VKfk6fXq/6a3UEC0mZoUX1JY+eVo2M7tQEgGGQrNjU1kTUl9nwJkSb
-E9iYX4L+qtAfXtvirFebov4CrdX2zZRaaQpRPIFGh2ZMBpXFIFaOVVBe9DS4Wbav
-kIKuL2AIisi8ZY6yssQTxECJuzir//mqRN+yBvmOJaB8Va83E7AaE1pE1uN0JhhN
-/P/W9lzR8Ku7wbNuORr35TFIKyEiXg==
-=iSMN
------END PGP SIGNATURE-----
+Changes since v4:
+ - Adress Andy's comments
 
---=-pYGBGq9PFJmcLEyUIZhw--
+Changes since v3:
+ - Rework dt patch to include root bridge as a separate node
+ - Update xhci-pci patch now that the xhci dev has a dt node (it was
+   getting it in the past from its bus)
+
+Changes since v2:
+ - Add reset to resume routine in xhci-pci
+ - Correct of refcount in pci-quirks
+ - Correct typos
+ - Use include file to define firmware reset IDs
+
+Changes since v1:
+ - Rework reset controller so it's less USB centric
+ - Use correct reset controller API in xhci-pci
+ - Correct typos
+
+Nicolas Saenz Julienne (9):
+  dt-bindings: reset: Add a binding for the RPi Firmware reset
+    controller
+  reset: Add Raspberry Pi 4 firmware reset controller
+  ARM: dts: bcm2711: Add firmware usb reset node
+  ARM: dts: bcm2711: Add reset controller to xHCI node
+  usb: xhci-pci: Add support for reset controllers
+  Revert "USB: pci-quirks: Add Raspberry Pi 4 quirk"
+  usb: host: pci-quirks: Bypass xHCI quirks for Raspberry Pi 4
+  Revert "firmware: raspberrypi: Introduce vl805 init routine"
+  Revert "PCI: brcmstb: Wait for Raspberry Pi's firmware when present"
+
+ .../arm/bcm/raspberrypi,bcm2835-firmware.yaml |  21 +++
+ arch/arm/boot/dts/bcm2711-rpi-4-b.dts         |  22 ++++
+ drivers/firmware/Kconfig                      |   3 +-
+ drivers/firmware/raspberrypi.c                |  61 ---------
+ drivers/pci/controller/pcie-brcmstb.c         |  17 ---
+ drivers/reset/Kconfig                         |  11 ++
+ drivers/reset/Makefile                        |   1 +
+ drivers/reset/reset-raspberrypi.c             | 122 ++++++++++++++++++
+ drivers/usb/host/pci-quirks.c                 |  22 ++--
+ drivers/usb/host/xhci-pci.c                   |  10 ++
+ drivers/usb/host/xhci.h                       |   2 +
+ .../reset/raspberrypi,firmware-reset.h        |  13 ++
+ include/soc/bcm2835/raspberrypi-firmware.h    |   7 -
+ 13 files changed, 215 insertions(+), 97 deletions(-)
+ create mode 100644 drivers/reset/reset-raspberrypi.c
+ create mode 100644 include/dt-bindings/reset/raspberrypi,firmware-reset.h
+
+-- 
+2.27.0
 
