@@ -2,102 +2,169 @@ Return-Path: <SRS0=b4XB=AL=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AAACC433DF
-	for <linux-pci@archiver.kernel.org>; Tue, 30 Jun 2020 10:52:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E4E5C433DF
+	for <linux-pci@archiver.kernel.org>; Tue, 30 Jun 2020 12:31:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4CDC8207F9
-	for <linux-pci@archiver.kernel.org>; Tue, 30 Jun 2020 10:52:15 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="FQFTlaYR"
+	by mail.kernel.org (Postfix) with ESMTP id DF85520672
+	for <linux-pci@archiver.kernel.org>; Tue, 30 Jun 2020 12:31:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1593520308;
+	bh=PhXZOiHYFfQIlVAYlW6qFnQSXZojRskUV7lRHqn16QI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=K2oedlJHNcgD4NF5h0W7+1QqYnPtsPpjIpkByGi++JV6z8a4DYTDrDCCplBwHE9ha
+	 4IK+cllwh0nUVyIW/mx1ksAi+xtaGQziDjcyxcfg0iOauXse8+Tr5wu62IwRnaXpzf
+	 b4UM6rGkE9iGk+960M96aBAvPjPOidJaCNpFb+xo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732557AbgF3KwO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 30 Jun 2020 06:52:14 -0400
-Received: from hqnvemgate24.nvidia.com ([216.228.121.143]:2555 "EHLO
-        hqnvemgate24.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729377AbgF3KwO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Jun 2020 06:52:14 -0400
-Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate24.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5efb18fb0000>; Tue, 30 Jun 2020 03:50:35 -0700
-Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate102.nvidia.com (PGP Universal service);
-  Tue, 30 Jun 2020 03:52:13 -0700
-X-PGP-Universal: processed;
-        by hqpgpgate102.nvidia.com on Tue, 30 Jun 2020 03:52:13 -0700
-Received: from [10.25.72.87] (10.124.1.5) by HQMAIL107.nvidia.com
- (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 30 Jun
- 2020 10:52:06 +0000
-Subject: Re: [PATCH V3 1/2] arm64: tegra: Re-order PCIe aperture mappings to
- support ACPI boot
-To:     Jon Hunter <jonathanh@nvidia.com>, <bhelgaas@google.com>,
-        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
-        <lenb@kernel.org>, <andrew.murray@arm.com>, <treding@nvidia.com>
-CC:     <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <sagar.tv@gmail.com>
-References: <20200106082709.14370-1-vidyas@nvidia.com>
- <20200110191500.9538-1-vidyas@nvidia.com>
- <20200110191500.9538-2-vidyas@nvidia.com>
- <d52db35b-dbf8-a706-9611-95448cf6a69e@nvidia.com>
-X-Nvconfidentiality: public
-From:   Vidya Sagar <vidyas@nvidia.com>
-Message-ID: <7c946e2a-6fd4-f4c8-8afe-f9d0125fdaa0@nvidia.com>
-Date:   Tue, 30 Jun 2020 16:22:03 +0530
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
- Thunderbird/68.9.0
+        id S2387681AbgF3Mbs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 30 Jun 2020 08:31:48 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41128 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730095AbgF3Mbr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 30 Jun 2020 08:31:47 -0400
+Received: from pali.im (pali.im [31.31.79.79])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id B08BC20780;
+        Tue, 30 Jun 2020 12:31:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1593520306;
+        bh=PhXZOiHYFfQIlVAYlW6qFnQSXZojRskUV7lRHqn16QI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=cqHNnvn1lWCLKzNx58COqIF64R7i6pFEt/4LFtvh1Ej/N2dgN/Q+MWsoWC3ZNu5Fr
+         fJcY48jSvAkZZNEUk3EkwlqRFhITTJKiKqMCke3rrxcBk83U0HF0I1+QBipkFT1oEp
+         Q/L7EyKjSyu+aoYwUk/9qDLLHmTudgKe/qVS3pFo=
+Received: by pali.im (Postfix)
+        id 944ED81A; Tue, 30 Jun 2020 14:31:44 +0200 (CEST)
+Date:   Tue, 30 Jun 2020 14:31:44 +0200
+From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Andrew Murray <amurray@thegoodpenguin.co.uk>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Marek =?utf-8?B?QmVow7pu?= <marek.behun@nic.cz>,
+        Remi Pommarel <repk@triplefau.lt>,
+        Tomasz Maciej Nowak <tmn505@gmail.com>,
+        Xogium <contact@xogium.me>, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: aardvark: Don't touch PCIe registers if no card
+ connected
+Message-ID: <20200630123144.vllnun266i6n5q4d@pali>
+References: <20200528163809.54f5ldvphrjg3zg3@pali>
+ <20200528164938.GA325239@bjorn-Precision-5520>
+ <20200529083013.5cg7tvfemomnmvjd@pali>
 MIME-Version: 1.0
-In-Reply-To: <d52db35b-dbf8-a706-9611-95448cf6a69e@nvidia.com>
-X-Originating-IP: [10.124.1.5]
-X-ClientProxiedBy: HQMAIL101.nvidia.com (172.20.187.10) To
- HQMAIL107.nvidia.com (172.20.187.13)
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1593514235; bh=woO8ZH9Y+1NElM5TcwDg3TM1c41wMq5lOJNOoty2UYA=;
-        h=X-PGP-Universal:Subject:To:CC:References:X-Nvconfidentiality:From:
-         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
-         X-Originating-IP:X-ClientProxiedBy:Content-Type:Content-Language:
-         Content-Transfer-Encoding;
-        b=FQFTlaYRfwmaNdU+kPVebmW6vJX/LwHRxdHi//1NHs6JLKIgYR0P5NRG9C4y2VyYR
-         +cy+d800P/KZ+JwvEuh2rHPZCbrPi3PXHVIiZfKlIsLdLpQIubRjl/Nh1oN3RLZQhL
-         zCLeEJLfj/hhNbZi1UTXdpS2Bk+7k8nLXi5RqyfdvZqfvw052ELfBeU9GsQjO4hTUK
-         dhBGCa2evDTKsMlaUHC0gHZrTC4BNCoYVg1PxQGFqYosd0Y2ZKbjgRoaSbCye5gfDS
-         V4PkMFxxzhAE0+zOkkvMHIUzbgDrMsRIkM4dxCxNOTM5eheUVphvm5Xiga0wbGseC8
-         nsEwpvOvh1vkg==
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20200529083013.5cg7tvfemomnmvjd@pali>
+User-Agent: NeoMutt/20180716
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Hello!
 
+On Friday 29 May 2020 10:30:13 Pali Rohár wrote:
+> On Thursday 28 May 2020 11:49:38 Bjorn Helgaas wrote:
+> > On Thu, May 28, 2020 at 06:38:09PM +0200, Pali Rohár wrote:
+> > > On Thursday 28 May 2020 11:26:04 Bjorn Helgaas wrote:
+> > > > On Thu, May 28, 2020 at 04:31:41PM +0200, Pali Rohár wrote:
+> > > > > When there is no PCIe card connected and advk_pcie_rd_conf() or
+> > > > > advk_pcie_wr_conf() is called for PCI bus which doesn't belong to emulated
+> > > > > root bridge, the aardvark driver throws the following error message:
+> > > > > 
+> > > > >   advk-pcie d0070000.pcie: config read/write timed out
+> > > > > 
+> > > > > Obviously accessing PCIe registers of disconnected card is not possible.
+> > > > > 
+> > > > > Extend check in advk_pcie_valid_device() function for validating
+> > > > > availability of PCIe bus. If PCIe link is down, then the device is marked
+> > > > > as Not Found and the driver does not try to access these registers.
+> > > > > 
+> > > > > Signed-off-by: Pali Rohár <pali@kernel.org>
+> > > > > ---
+> > > > >  drivers/pci/controller/pci-aardvark.c | 3 +++
+> > > > >  1 file changed, 3 insertions(+)
+> > > > > 
+> > > > > diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
+> > > > > index 90ff291c24f0..53a4cfd7d377 100644
+> > > > > --- a/drivers/pci/controller/pci-aardvark.c
+> > > > > +++ b/drivers/pci/controller/pci-aardvark.c
+> > > > > @@ -644,6 +644,9 @@ static bool advk_pcie_valid_device(struct advk_pcie *pcie, struct pci_bus *bus,
+> > > > >  	if ((bus->number == pcie->root_bus_nr) && PCI_SLOT(devfn) != 0)
+> > > > >  		return false;
+> > > > >  
+> > > > > +	if (bus->number != pcie->root_bus_nr && !advk_pcie_link_up(pcie))
+> > > > > +		return false;
+> > > > 
+> > > > I don't think this is the right fix.  This makes it racy because the
+> > > > link may go down after we call advk_pcie_valid_device() but before we
+> > > > perform the config read.
+> > > 
+> > > Yes, it is racy, but I do not think it cause problems. Trying to read
+> > > PCIe registers when device is not connected cause just those timeouts,
+> > > printing error message and increased delay in advk_pcie_wait_pio() due
+> > > to polling loop. This patch reduce unnecessary access to PCIe registers
+> > > when advk_pcie_wait_pio() polling just fail.
+> > > 
+> > > I think it is a good idea to not call blocking advk_pcie_wait_pio() when
+> > > it is not needed. We could have faster enumeration of PCIe buses when
+> > > card is not connected.
+> > 
+> > Maybe advk_pcie_check_pio_status() and advk_pcie_wait_pio() could be
+> > combined so we could get the correct error status as soon as it's
+> > available, without waiting for a timeout?
+> 
+> Any idea how to achieve it?
+> 
+> First call is polling function advk_pcie_wait_pio() and second call is
+> advk_pcie_check_pio_status() which just reads status register and prints
+> error message to dmesg.
+> 
+> So for me it looks like that combining these two functions into one does
+> not change anything. We always need to call polling code prior to
+> checking status register. And therefore need to wait for timeout. Unless
+> something like in this proposed patch is not used (to skip whole
+> register access if it would fail).
 
-On 29-Jun-20 7:01 PM, Jon Hunter wrote:
-> Hi Sagar,
-> 
-> On 10/01/2020 19:14, Vidya Sagar wrote:
->> Re-order Tegra194's PCIe aperture mappings to have IO window moved to
->> 64-bit aperture and have the entire 32-bit aperture used for accessing
->> the configuration space. This makes it to use the entire 32MB of the 32-bit
->> aperture for ECAM purpose while booting through ACPI.
->>
->> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
-> 
-> Any reason why we should not merge this change, even if patch 2/2 is not
-> accepted? If there is no harm in us merging this, this would be one less
-> change for us to carry out-of-tree. If so, can you update and re-post
-> for 5.9?
-There is no issue in merging this change alone. I'll send a patch for 
-review for 5.9 soon.
+So to answer your question, correct status is possible to retrieve only
+after waiting for timeout. As status would be available only after
+timeout expires.
 
-Thanks,
-Vidya Sagar
+Therefore my proposed patch in this (or some other) form is needed if we
+want to prevent trying to read from registers and waiting for answer
+when card is disconnected.
 
+I would really like to see this issue fixed, so booting linux kernel on
+board without connected PCIe card would not be delayed.
+
+Thomas, Lorenzo, Bjorn: do you have any idea how to fix it differently?
+Or if not, could be my proposed patch accepted in some form?
+
+> > In any event, the "return PCIBIOS_SET_FAILED" needs to be fixed.  Most
+> > callers of config read do not check for failure, but most of the ones
+> > that do, check for "val == ~0".  Only a few check for a status of
+> > other than PCIBIOS_SUCCESSFUL.
+> > 
+> > > > I have no objection to removing the "config read/write timed out"
+> > > > message.  The "return PCIBIOS_SET_FAILED" in the read case probably
+> > > > should be augmented by setting "*val = 0xffffffff".
 > 
-> Cheers
-> Jon
-> 
+> Now I see, "*val = 0xffffffff" should be really set when function
+> advk_pcie_rd_conf() fails.
+
+I have already sent separate patch which fixes this issue.
+
+> > > > >  	return true;
+> > > > >  }
+> > > > >  
+> > > > > -- 
+> > > > > 2.20.1
+> > > > > 
