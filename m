@@ -5,62 +5,61 @@ X-Spam-Level:
 X-Spam-Status: No, score=-17.6 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT,
-	USER_IN_DEF_DKIM_WL autolearn=ham autolearn_force=no version=3.4.0
+	USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A704C433E2
-	for <linux-pci@archiver.kernel.org>; Tue, 30 Jun 2020 04:50:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4416DC433E6
+	for <linux-pci@archiver.kernel.org>; Tue, 30 Jun 2020 04:50:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 42E8F207D0
-	for <linux-pci@archiver.kernel.org>; Tue, 30 Jun 2020 04:50:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1AED7206A1
+	for <linux-pci@archiver.kernel.org>; Tue, 30 Jun 2020 04:50:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="pUFDPhuB"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="qKfJwCm7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729494AbgF3EuD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 30 Jun 2020 00:50:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48870 "EHLO
+        id S1729504AbgF3EuM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 30 Jun 2020 00:50:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48894 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729478AbgF3Et6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Jun 2020 00:49:58 -0400
-Received: from mail-qt1-x84a.google.com (mail-qt1-x84a.google.com [IPv6:2607:f8b0:4864:20::84a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2BE5FC061755
-        for <linux-pci@vger.kernel.org>; Mon, 29 Jun 2020 21:49:58 -0700 (PDT)
-Received: by mail-qt1-x84a.google.com with SMTP id z26so13682208qto.15
-        for <linux-pci@vger.kernel.org>; Mon, 29 Jun 2020 21:49:58 -0700 (PDT)
+        with ESMTP id S1729448AbgF3EuC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Jun 2020 00:50:02 -0400
+Received: from mail-pj1-x104a.google.com (mail-pj1-x104a.google.com [IPv6:2607:f8b0:4864:20::104a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32297C03E979
+        for <linux-pci@vger.kernel.org>; Mon, 29 Jun 2020 21:50:02 -0700 (PDT)
+Received: by mail-pj1-x104a.google.com with SMTP id fr7so9308233pjb.4
+        for <linux-pci@vger.kernel.org>; Mon, 29 Jun 2020 21:50:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=date:in-reply-to:message-id:mime-version:references:subject:from:to
          :cc;
-        bh=LmsPf5jTSure7oX6gJRaMQO8tovJK9Co8tSqz8HCgCs=;
-        b=pUFDPhuB/v2g/yvpNhhyyJ30IsV514WJIVZPfX5DchICNB/3GB3lrCK6wRqtA9Kdv1
-         KirdW6N6jhQU3OKtY9lACnobzV8sB8+2CkYIz1YnW+Loh1i2w3neTw5UWwOXfihNQ1ff
-         nA+KP13GeFBnWQp2ys6B8/qyELYdICgAPBmgVsWtLeEcU29Kws4iqqXBD7tOtSkYZdyu
-         urkBWk/wQDdyOy2xwdLQOSVBFa0eV3POZYDjntsphRtU0JA474jLJpe4ICxh6YiBV06Q
-         SQKxby71IyV7+sKNgl0upW0Pkq2p65CVWwppw1WE7mzrU9PiekhEdfP7SJASalXvti76
-         5afw==
+        bh=4vDncP2teZqEXBfb800/aEh0NO8oHsdmcXXXRRGWulY=;
+        b=qKfJwCm7AT0BlfktAUmwXkHFpGx7Oh79bjH+pxC9SFGuzzGtOsIQxWs5Yj5phY/cqR
+         45gYinm4T35G4tjqFwkV9aSr7wWQxsY1P4wUDPVSLq7L144QzVPw9Je6ohlEDpSLC9nm
+         Uqd6Gb5/YhRsTodxBhPYntMsn2Gfo/0bCSgfjk2MiN5Cc3Bivrb2skYwEKddwTq9qSSj
+         31cbZbHQz15k9yatl1muDzJiSkFI+87X7Xa5iBSnZami9myyuYwEW/ifoFJAh5sMur4H
+         zysOT+Xrvm66HaayFqV0f6nbFP2WrzQBAb4HBOufuAhGFqxcrqI+6IeKEiNqG8A/jaLj
+         KggQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=LmsPf5jTSure7oX6gJRaMQO8tovJK9Co8tSqz8HCgCs=;
-        b=tULniEN8B2o7TBRQpvpZz5QwhJrBFMUksi4uvobZBxdlIH4B2u93C2XFaX+d/D5WB/
-         mLYZ703W2XqadLC8qEMDJrFGcfndBP7cTAuzCf2YR6lNhlGxBm9f7qDc45d6NqSl6KRM
-         wyXEqhEv5EacQykivqgdlKOpu6n7N7seFbnXcxjtvMUD3D0diK2sjKMu5JlYAFQGUibJ
-         Zwzpw9AIvXj+5C0iVMwjPneaztpoovBhfLnBPV0vZ4wur0FmKQ9maq6yoGSQrTUFAMXf
-         HHcqpb2l7tKgfmy111/H4zklafjsXnYztd5wpDItmUULnJAhMMbodIKXks4EpJPmYIC4
-         ykNA==
-X-Gm-Message-State: AOAM531gjLEy4p5vok+Y37Jq41Wp+wD8Q7ab4o4w7o4OlYFfifOJCwFD
-        ZTAJcF5L0HMLKDHBKH89eqBCyqWNEeAq
-X-Google-Smtp-Source: ABdhPJy6mFvmXqDrITIrdGqh6QYCNW4V7diNoS4nldl3h9MgHWUBDraMbYOO32BHpWqaZ1XfnXNP7f0yffta
-X-Received: by 2002:a0c:83c4:: with SMTP id k62mr4468584qva.19.1593492597294;
- Mon, 29 Jun 2020 21:49:57 -0700 (PDT)
-Date:   Mon, 29 Jun 2020 21:49:41 -0700
+        bh=4vDncP2teZqEXBfb800/aEh0NO8oHsdmcXXXRRGWulY=;
+        b=bw6dpf79gnaNS471SXDImpw8HqQKx/pvUPIWV+BtQ2Ee3iUVuE2H/SfXbl9DHYTeOR
+         V5TBveyPWh1tERGcIuRCHkeaF0+0i26ysg/oaqDtUonx4uHLWQ/r/ADU4YzD4sJSQ1Gk
+         SyHKyXoshDOFhY7li+a2RM6fWg7cu6pI90JeC62ytdA5vurgXy0s+V3f1EQWW+xWv5R+
+         r0i8rQYm9jDIrQdVrQk3BxsqtuU+ZDuxnhnk6FoLblfZyIN17/toASmUFveryOHXYB4Y
+         6n/FNWYzNrfpXCmPXv+V00Qej726lmH/6TG2QqzSUwcvYE0HelF8u9Y0rG65+fMEoPhJ
+         +ndQ==
+X-Gm-Message-State: AOAM532odouNX0RWJfVKCjhU9/Mf2SdFsmr7NWdxIDdLPprONTq8S4da
+        U3aZxaqQFTw/jkP4eNOr7wpz5+FmNWm8
+X-Google-Smtp-Source: ABdhPJy7/9qcpqbednFkmBX9y9QX6DThdAm5Y+t91G8xTDRUtBBKWkL0VbqPTiirQl0bhQoYHnqP79Ft+Iel
+X-Received: by 2002:a17:90a:304:: with SMTP id 4mr20033768pje.219.1593492601508;
+ Mon, 29 Jun 2020 21:50:01 -0700 (PDT)
+Date:   Mon, 29 Jun 2020 21:49:43 -0700
 In-Reply-To: <20200630044943.3425049-1-rajatja@google.com>
-Message-Id: <20200630044943.3425049-6-rajatja@google.com>
+Message-Id: <20200630044943.3425049-8-rajatja@google.com>
 Mime-Version: 1.0
 References: <20200630044943.3425049-1-rajatja@google.com>
 X-Mailer: git-send-email 2.27.0.212.ge8ba1cc988-goog
-Subject: [PATCH v2 5/7] driver core: Add device location to "struct device"
- and expose it in sysfs
+Subject: [PATCH v2 7/7] PCI: Add parameter to disable attaching external devices
 From:   Rajat Jain <rajatja@google.com>
 To:     David Woodhouse <dwmw2@infradead.org>,
         Lu Baolu <baolu.lu@linux.intel.com>,
@@ -99,194 +98,93 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add a new (optional) field to denote the physical location of a device
-in the system, and expose it in sysfs. This was discussed here:
-https://lore.kernel.org/linux-acpi/20200618184621.GA446639@kroah.com/
+Introduce a PCI parameter that disables the automatic attachment of
+external devices to their drivers.
 
-(The primary choice for attribute name i.e. "location" is already
-exposed as an ABI elsewhere, so settled for "site"). Individual buses
-that want to support this new attribute can opt-in by setting a flag in
-bus_type, and then populating the location of device while enumerating
-it.
+This is needed to allow an admin to control which drivers he wants to
+allow on external ports. For more context, see threads at:
+https://lore.kernel.org/linux-pci/20200609210400.GA1461839@bjorn-Precision-5520/
+https://lore.kernel.org/linux-pci/CACK8Z6H-DZQYBMqtU5_H5TTwwn35Q7Yysm9a7Wj0twfQP8QBzA@mail.gmail.com/
+
+drivers_autoprobe can only be disabled after userspace comes up. So
+any external devices that were plugged in before boot may still bind
+to drivers before userspace gets a chance to clear drivers_autoprobe.
+Another problem is that even with drivers_autoprobe=0, the hot-added
+PCI devices are bound to drivers because PCI explicitly calls
+device_attach() asking driver core to find and attach a driver. This
+patch helps with both of these problems.
 
 Signed-off-by: Rajat Jain <rajatja@google.com>
 ---
-v2: (Initial version)
+v2: Use the newly introduced dev_is_external() from device core
+    commit log elaborated
 
- drivers/base/core.c        | 35 +++++++++++++++++++++++++++++++
- include/linux/device.h     | 42 ++++++++++++++++++++++++++++++++++++++
- include/linux/device/bus.h |  8 ++++++++
- 3 files changed, 85 insertions(+)
+ drivers/pci/bus.c | 11 ++++++++---
+ drivers/pci/pci.c |  9 +++++++++
+ drivers/pci/pci.h |  1 +
+ 3 files changed, 18 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/base/core.c b/drivers/base/core.c
-index 67d39a90b45c7..14c815526b7fa 100644
---- a/drivers/base/core.c
-+++ b/drivers/base/core.c
-@@ -1778,6 +1778,32 @@ static ssize_t online_store(struct device *dev, struct device_attribute *attr,
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 3cef835b375fd..c11725bccffb0 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -321,9 +321,14 @@ void pci_bus_add_device(struct pci_dev *dev)
+ 	pci_bridge_d3_update(dev);
+ 
+ 	dev->match_driver = true;
+-	retval = device_attach(&dev->dev);
+-	if (retval < 0 && retval != -EPROBE_DEFER)
+-		pci_warn(dev, "device attach failed (%d)\n", retval);
++
++	if (pci_dont_attach_external_devs && dev_is_external(&dev->dev)) {
++		pci_info(dev, "not attaching external device\n");
++	} else {
++		retval = device_attach(&dev->dev);
++		if (retval < 0 && retval != -EPROBE_DEFER)
++			pci_warn(dev, "device attach failed (%d)\n", retval);
++	}
+ 
+ 	pci_dev_assign_added(dev, true);
  }
- static DEVICE_ATTR_RW(online);
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 35f25ac39167b..3ebcfa8b33178 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -128,6 +128,13 @@ static bool pcie_ats_disabled;
+ /* If set, the PCI config space of each device is printed during boot. */
+ bool pci_early_dump;
  
-+static ssize_t site_show(struct device *dev, struct device_attribute *attr,
-+			 char *buf)
-+{
-+	const char *site;
-+
-+	device_lock(dev);
-+	switch (dev->site) {
-+	case SITE_INTERNAL:
-+		site = "INTERNAL";
-+		break;
-+	case SITE_EXTENDED:
-+		site = "EXTENDED";
-+		break;
-+	case SITE_EXTERNAL:
-+		site = "EXTERNAL";
-+		break;
-+	case SITE_UNKNOWN:
-+	default:
-+		site = "UNKNOWN";
-+		break;
-+	}
-+	device_unlock(dev);
-+	return sprintf(buf, "%s\n", site);
-+}
-+static DEVICE_ATTR_RO(site);
-+
- int device_add_groups(struct device *dev, const struct attribute_group **groups)
- {
- 	return sysfs_create_groups(&dev->kobj, groups);
-@@ -1949,8 +1975,16 @@ static int device_add_attrs(struct device *dev)
- 			goto err_remove_dev_groups;
- 	}
- 
-+	if (bus_supports_site(dev->bus)) {
-+		error = device_create_file(dev, &dev_attr_site);
-+		if (error)
-+			goto err_remove_dev_attr_online;
-+	}
-+
- 	return 0;
- 
-+ err_remove_dev_attr_online:
-+	device_remove_file(dev, &dev_attr_online);
-  err_remove_dev_groups:
- 	device_remove_groups(dev, dev->groups);
-  err_remove_type_groups:
-@@ -1968,6 +2002,7 @@ static void device_remove_attrs(struct device *dev)
- 	struct class *class = dev->class;
- 	const struct device_type *type = dev->type;
- 
-+	device_remove_file(dev, &dev_attr_site);
- 	device_remove_file(dev, &dev_attr_online);
- 	device_remove_groups(dev, dev->groups);
- 
-diff --git a/include/linux/device.h b/include/linux/device.h
-index 15460a5ac024a..a4143735ae712 100644
---- a/include/linux/device.h
-+++ b/include/linux/device.h
-@@ -428,6 +428,31 @@ enum dl_dev_state {
- 	DL_DEV_UNBINDING,
- };
- 
-+/**
-+ * enum device_site - Physical location of the device in the system.
-+ * The semantics of values depend on subsystem / bus:
-+ *
-+ * @SITE_UNKNOWN:  Location is Unknown (default)
-+ *
-+ * @SITE_INTERNAL: Device is internal to the system, and cannot be (easily)
-+ *                 removed. E.g. SoC internal devices, onboard soldered
-+ *                 devices, internal M.2 cards (that cannot be removed
-+ *                 without opening the chassis).
-+ * @SITE_EXTENDED: Device sits an extension of the system. E.g. devices
-+ *                 on external PCIe trays, docking stations etc. These
-+ *                 devices may be removable, but are generally housed
-+ *                 internally on an extension board, so they are removed
-+ *                 only when that whole extension board is removed.
-+ * @SITE_EXTERNAL: Devices truly external to the system (i.e. plugged on
-+ *                 an external port) that may be removed or added frequently.
++/*
++ * If set, the devices behind external-facing bridges (as marked by firmware)
++ * shall not be attached automatically. Userspace will need to attach them
++ * manually: echo <pci device>  > /sys/bus/pci/drivers/<driver>/bind
 + */
-+enum device_site {
-+	SITE_UNKNOWN = 0,
-+	SITE_INTERNAL,
-+	SITE_EXTENDED,
-+	SITE_EXTERNAL,
-+};
++bool pci_dont_attach_external_devs;
 +
- /**
-  * struct dev_links_info - Device data related to device links.
-  * @suppliers: List of links to supplier devices.
-@@ -513,6 +538,7 @@ struct dev_links_info {
-  * 		device (i.e. the bus driver that discovered the device).
-  * @iommu_group: IOMMU group the device belongs to.
-  * @iommu:	Per device generic IOMMU runtime data
-+ * @site:	Physical location of the device w.r.t. the system
-  *
-  * @offline_disabled: If set, the device is permanently online.
-  * @offline:	Set after successful invocation of bus type's .offline().
-@@ -613,6 +639,8 @@ struct device {
- 	struct iommu_group	*iommu_group;
- 	struct dev_iommu	*iommu;
+ bool pci_ats_disabled(void)
+ {
+ 	return pcie_ats_disabled;
+@@ -6539,6 +6546,8 @@ static int __init pci_setup(char *str)
+ 				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
+ 			} else if (!strncmp(str, "disable_acs_redir=", 18)) {
+ 				disable_acs_redir_param = str + 18;
++			} else if (!strcmp(str, "dont_attach_external_devs")) {
++				pci_dont_attach_external_devs = true;
+ 			} else {
+ 				pr_err("PCI: Unknown option `%s'\n", str);
+ 			}
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 12fb79fbe29d3..875fecb9b2612 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -13,6 +13,7 @@
  
-+	enum device_site	site;	/* Device physical location */
-+
- 	bool			offline_disabled:1;
- 	bool			offline:1;
- 	bool			of_node_reused:1;
-@@ -806,6 +834,20 @@ static inline bool dev_has_sync_state(struct device *dev)
- 	return false;
- }
+ extern const unsigned char pcie_link_speed[];
+ extern bool pci_early_dump;
++extern bool pci_dont_attach_external_devs;
  
-+static inline int dev_set_site(struct device *dev, enum device_site site)
-+{
-+	if (site < SITE_UNKNOWN || site > SITE_EXTERNAL)
-+		return -EINVAL;
-+
-+	dev->site = site;
-+	return 0;
-+}
-+
-+static inline bool dev_is_external(struct device *dev)
-+{
-+	return dev->site == SITE_EXTERNAL;
-+}
-+
- /*
-  * High level routines for use by the bus drivers
-  */
-diff --git a/include/linux/device/bus.h b/include/linux/device/bus.h
-index 1ea5e1d1545bd..e1079772e45af 100644
---- a/include/linux/device/bus.h
-+++ b/include/linux/device/bus.h
-@@ -69,6 +69,8 @@ struct fwnode_handle;
-  * @lock_key:	Lock class key for use by the lock validator
-  * @need_parent_lock:	When probing or removing a device on this bus, the
-  *			device core should lock the device's parent.
-+ * @supports_site:	Bus can differentiate between internal/external devices
-+ *			and thus supports the device "site" attribute.
-  *
-  * A bus is a channel between the processor and one or more devices. For the
-  * purposes of the device model, all devices are connected via a bus, even if
-@@ -112,6 +114,7 @@ struct bus_type {
- 	struct lock_class_key lock_key;
- 
- 	bool need_parent_lock;
-+	bool supports_site;
- };
- 
- extern int __must_check bus_register(struct bus_type *bus);
-@@ -246,6 +249,11 @@ bus_find_device_by_acpi_dev(struct bus_type *bus, const void *adev)
- }
- #endif
- 
-+static inline bool bus_supports_site(struct bus_type *bus)
-+{
-+	return bus && bus->supports_site;
-+}
-+
- struct device *subsys_find_device_by_id(struct bus_type *bus, unsigned int id,
- 					struct device *hint);
- int bus_for_each_drv(struct bus_type *bus, struct device_driver *start,
+ bool pcie_cap_has_lnkctl(const struct pci_dev *dev);
+ bool pcie_cap_has_rtctl(const struct pci_dev *dev);
 -- 
 2.27.0.212.ge8ba1cc988-goog
 
