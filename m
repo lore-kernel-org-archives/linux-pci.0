@@ -2,353 +2,137 @@ Return-Path: <SRS0=AC+G=AM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.0 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AEE3C433E0
-	for <linux-pci@archiver.kernel.org>; Wed,  1 Jul 2020 11:04:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87416C433E0
+	for <linux-pci@archiver.kernel.org>; Wed,  1 Jul 2020 11:08:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 077D7206CB
-	for <linux-pci@archiver.kernel.org>; Wed,  1 Jul 2020 11:04:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 71DD42067D
+	for <linux-pci@archiver.kernel.org>; Wed,  1 Jul 2020 11:08:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730269AbgGALES (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 1 Jul 2020 07:04:18 -0400
-Received: from mga17.intel.com ([192.55.52.151]:29868 "EHLO mga17.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730228AbgGALEP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 1 Jul 2020 07:04:15 -0400
-IronPort-SDR: QNTScKLFGbDu1ESDhAYMYrcaHcTDk/GmrWzBY3Oa1spnFFlzecV05wEEKZsAati9Y3PsE0a7ux
- Ex951+6kBLFA==
-X-IronPort-AV: E=McAfee;i="6000,8403,9668"; a="126632448"
-X-IronPort-AV: E=Sophos;i="5.75,300,1589266800"; 
-   d="scan'208";a="126632448"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Jul 2020 04:03:43 -0700
-IronPort-SDR: PNGGqd5yEDcKlWncZY3Yhvu12G6wVMMxt2NVVwcW0++48k8f3v36q+5AsmEVotlAb84kLAKfxU
- 765XDkehiO/A==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.75,300,1589266800"; 
-   d="scan'208";a="425557283"
-Received: from silpixa00400314.ir.intel.com (HELO silpixa00400314.ger.corp.intel.com) ([10.237.222.51])
-  by orsmga004.jf.intel.com with ESMTP; 01 Jul 2020 04:03:40 -0700
-From:   Giovanni Cabiddu <giovanni.cabiddu@intel.com>
-To:     alex.williamson@redhat.com, herbert@gondor.apana.org.au
-Cc:     cohuck@redhat.com, nhorman@redhat.com, vdronov@redhat.com,
-        bhelgaas@google.com, mark.a.chambers@intel.com,
-        gordon.mcfadden@intel.com, ahsan.atta@intel.com,
-        qat-linux@intel.com, kvm@vger.kernel.org,
-        linux-crypto@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Giovanni Cabiddu <giovanni.cabiddu@intel.com>
-Subject: [PATCH 4/5] crypto: qat - replace device ids defines
-Date:   Wed,  1 Jul 2020 12:03:01 +0100
-Message-Id: <20200701110302.75199-5-giovanni.cabiddu@intel.com>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20200701110302.75199-1-giovanni.cabiddu@intel.com>
-References: <20200701110302.75199-1-giovanni.cabiddu@intel.com>
+        id S1730318AbgGALIP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 1 Jul 2020 07:08:15 -0400
+Received: from jabberwock.ucw.cz ([46.255.230.98]:46708 "EHLO
+        jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730159AbgGALIP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Jul 2020 07:08:15 -0400
+Received: by jabberwock.ucw.cz (Postfix, from userid 1017)
+        id 949071C0C0A; Wed,  1 Jul 2020 13:08:13 +0200 (CEST)
+Date:   Wed, 1 Jul 2020 13:08:13 +0200
+From:   Pavel Machek <pavel@denx.de>
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     Pavel Machek <pavel@denx.de>, Jesse Barnes <jsbarnes@google.com>,
+        Rajat Jain <rajatja@google.com>,
+        Rajat Jain <rajatxjain@gmail.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        "Raj, Ashok" <ashok.raj@intel.com>,
+        "Krishnakumar, Lalithambika" <lalithambika.krishnakumar@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Jean-Philippe Brucker <jean-philippe@linaro.org>,
+        Prashant Malani <pmalani@google.com>,
+        Benson Leung <bleung@google.com>,
+        Todd Broch <tbroch@google.com>,
+        Alex Levin <levinale@google.com>,
+        Mattias Nissler <mnissler@google.com>,
+        Zubin Mithra <zsm@google.com>,
+        Bernie Keany <bernie.keany@intel.com>,
+        Aaron Durbin <adurbin@google.com>,
+        Diego Rivas <diegorivas@google.com>,
+        Duncan Laurie <dlaurie@google.com>,
+        Furquan Shaikh <furquan@google.com>,
+        Christian Kellner <christian@kellner.me>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC] Restrict the untrusted devices, to bind to only a set of
+ "whitelisted" drivers
+Message-ID: <20200701110813.GA11023@amd>
+References: <20200603121613.GA1488883@kroah.com>
+ <CACK8Z6EOGduHX1m7eyhFgsGV7CYiVN0en4U0cM4BEWJwk2bmoA@mail.gmail.com>
+ <20200605080229.GC2209311@kroah.com>
+ <CACK8Z6GR7-wseug=TtVyRarVZX_ao2geoLDNBwjtB+5Y7VWNEQ@mail.gmail.com>
+ <20200607113632.GA49147@kroah.com>
+ <CAJmaN=m5cGc8019LocvHTo-1U6beA9-h=T-YZtQEYEb_ry=b+Q@mail.gmail.com>
+ <20200630214559.GA7113@duo.ucw.cz>
+ <20200701065426.GC2044019@kroah.com>
+ <20200701084750.GA7144@amd>
+ <20200701105714.GA2098169@kroah.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="ew6BAiZeqk4r7MaW"
+Content-Disposition: inline
+In-Reply-To: <20200701105714.GA2098169@kroah.com>
+User-Agent: Mutt/1.5.23 (2014-03-12)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Replace device ids defined in the qat drivers with the ones in
-include/linux/pci_ids.h.
 
-Signed-off-by: Giovanni Cabiddu <giovanni.cabiddu@intel.com>
----
- drivers/crypto/qat/qat_c3xxx/adf_drv.c            | 6 +++---
- drivers/crypto/qat/qat_c3xxxvf/adf_drv.c          | 6 +++---
- drivers/crypto/qat/qat_c62x/adf_drv.c             | 6 +++---
- drivers/crypto/qat/qat_c62xvf/adf_drv.c           | 6 +++---
- drivers/crypto/qat/qat_common/adf_accel_devices.h | 6 ------
- drivers/crypto/qat/qat_common/qat_hal.c           | 7 ++++---
- drivers/crypto/qat/qat_common/qat_uclo.c          | 9 +++++----
- drivers/crypto/qat/qat_dh895xcc/adf_drv.c         | 6 +++---
- drivers/crypto/qat/qat_dh895xccvf/adf_drv.c       | 6 +++---
- 9 files changed, 27 insertions(+), 31 deletions(-)
+--ew6BAiZeqk4r7MaW
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/crypto/qat/qat_c3xxx/adf_drv.c b/drivers/crypto/qat/qat_c3xxx/adf_drv.c
-index 020d099409e5..bba0f142f7f6 100644
---- a/drivers/crypto/qat/qat_c3xxx/adf_drv.c
-+++ b/drivers/crypto/qat/qat_c3xxx/adf_drv.c
-@@ -22,7 +22,7 @@
- 	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, device_id)}
- 
- static const struct pci_device_id adf_pci_tbl[] = {
--	ADF_SYSTEM_DEVICE(ADF_C3XXX_PCI_DEVICE_ID),
-+	ADF_SYSTEM_DEVICE(PCI_DEVICE_ID_INTEL_QAT_C3XXX),
- 	{0,}
- };
- MODULE_DEVICE_TABLE(pci, adf_pci_tbl);
-@@ -58,7 +58,7 @@ static void adf_cleanup_accel(struct adf_accel_dev *accel_dev)
- 
- 	if (accel_dev->hw_device) {
- 		switch (accel_pci_dev->pci_dev->device) {
--		case ADF_C3XXX_PCI_DEVICE_ID:
-+		case PCI_DEVICE_ID_INTEL_QAT_C3XXX:
- 			adf_clean_hw_data_c3xxx(accel_dev->hw_device);
- 			break;
- 		default:
-@@ -83,7 +83,7 @@ static int adf_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	int ret;
- 
- 	switch (ent->device) {
--	case ADF_C3XXX_PCI_DEVICE_ID:
-+	case PCI_DEVICE_ID_INTEL_QAT_C3XXX:
- 		break;
- 	default:
- 		dev_err(&pdev->dev, "Invalid device 0x%x.\n", ent->device);
-diff --git a/drivers/crypto/qat/qat_c3xxxvf/adf_drv.c b/drivers/crypto/qat/qat_c3xxxvf/adf_drv.c
-index 11039fe55f61..b77a58886599 100644
---- a/drivers/crypto/qat/qat_c3xxxvf/adf_drv.c
-+++ b/drivers/crypto/qat/qat_c3xxxvf/adf_drv.c
-@@ -22,7 +22,7 @@
- 	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, device_id)}
- 
- static const struct pci_device_id adf_pci_tbl[] = {
--	ADF_SYSTEM_DEVICE(ADF_C3XXXIOV_PCI_DEVICE_ID),
-+	ADF_SYSTEM_DEVICE(PCI_DEVICE_ID_INTEL_QAT_C3XXX_VF),
- 	{0,}
- };
- MODULE_DEVICE_TABLE(pci, adf_pci_tbl);
-@@ -58,7 +58,7 @@ static void adf_cleanup_accel(struct adf_accel_dev *accel_dev)
- 
- 	if (accel_dev->hw_device) {
- 		switch (accel_pci_dev->pci_dev->device) {
--		case ADF_C3XXXIOV_PCI_DEVICE_ID:
-+		case PCI_DEVICE_ID_INTEL_QAT_C3XXX_VF:
- 			adf_clean_hw_data_c3xxxiov(accel_dev->hw_device);
- 			break;
- 		default:
-@@ -85,7 +85,7 @@ static int adf_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	int ret;
- 
- 	switch (ent->device) {
--	case ADF_C3XXXIOV_PCI_DEVICE_ID:
-+	case PCI_DEVICE_ID_INTEL_QAT_C3XXX_VF:
- 		break;
- 	default:
- 		dev_err(&pdev->dev, "Invalid device 0x%x.\n", ent->device);
-diff --git a/drivers/crypto/qat/qat_c62x/adf_drv.c b/drivers/crypto/qat/qat_c62x/adf_drv.c
-index 4ba9c14383af..722838ff03be 100644
---- a/drivers/crypto/qat/qat_c62x/adf_drv.c
-+++ b/drivers/crypto/qat/qat_c62x/adf_drv.c
-@@ -22,7 +22,7 @@
- 	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, device_id)}
- 
- static const struct pci_device_id adf_pci_tbl[] = {
--	ADF_SYSTEM_DEVICE(ADF_C62X_PCI_DEVICE_ID),
-+	ADF_SYSTEM_DEVICE(PCI_DEVICE_ID_INTEL_QAT_C62X),
- 	{0,}
- };
- MODULE_DEVICE_TABLE(pci, adf_pci_tbl);
-@@ -58,7 +58,7 @@ static void adf_cleanup_accel(struct adf_accel_dev *accel_dev)
- 
- 	if (accel_dev->hw_device) {
- 		switch (accel_pci_dev->pci_dev->device) {
--		case ADF_C62X_PCI_DEVICE_ID:
-+		case PCI_DEVICE_ID_INTEL_QAT_C62X:
- 			adf_clean_hw_data_c62x(accel_dev->hw_device);
- 			break;
- 		default:
-@@ -83,7 +83,7 @@ static int adf_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	int ret;
- 
- 	switch (ent->device) {
--	case ADF_C62X_PCI_DEVICE_ID:
-+	case PCI_DEVICE_ID_INTEL_QAT_C62X:
- 		break;
- 	default:
- 		dev_err(&pdev->dev, "Invalid device 0x%x.\n", ent->device);
-diff --git a/drivers/crypto/qat/qat_c62xvf/adf_drv.c b/drivers/crypto/qat/qat_c62xvf/adf_drv.c
-index b8b021d54bb5..a766cc18aae9 100644
---- a/drivers/crypto/qat/qat_c62xvf/adf_drv.c
-+++ b/drivers/crypto/qat/qat_c62xvf/adf_drv.c
-@@ -22,7 +22,7 @@
- 	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, device_id)}
- 
- static const struct pci_device_id adf_pci_tbl[] = {
--	ADF_SYSTEM_DEVICE(ADF_C62XIOV_PCI_DEVICE_ID),
-+	ADF_SYSTEM_DEVICE(PCI_DEVICE_ID_INTEL_QAT_C62X_VF),
- 	{0,}
- };
- MODULE_DEVICE_TABLE(pci, adf_pci_tbl);
-@@ -58,7 +58,7 @@ static void adf_cleanup_accel(struct adf_accel_dev *accel_dev)
- 
- 	if (accel_dev->hw_device) {
- 		switch (accel_pci_dev->pci_dev->device) {
--		case ADF_C62XIOV_PCI_DEVICE_ID:
-+		case PCI_DEVICE_ID_INTEL_QAT_C62X_VF:
- 			adf_clean_hw_data_c62xiov(accel_dev->hw_device);
- 			break;
- 		default:
-@@ -85,7 +85,7 @@ static int adf_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	int ret;
- 
- 	switch (ent->device) {
--	case ADF_C62XIOV_PCI_DEVICE_ID:
-+	case PCI_DEVICE_ID_INTEL_QAT_C62X_VF:
- 		break;
- 	default:
- 		dev_err(&pdev->dev, "Invalid device 0x%x.\n", ent->device);
-diff --git a/drivers/crypto/qat/qat_common/adf_accel_devices.h b/drivers/crypto/qat/qat_common/adf_accel_devices.h
-index c1db8c26afb6..06952ece53d9 100644
---- a/drivers/crypto/qat/qat_common/adf_accel_devices.h
-+++ b/drivers/crypto/qat/qat_common/adf_accel_devices.h
-@@ -15,12 +15,6 @@
- #define ADF_C62XVF_DEVICE_NAME "c6xxvf"
- #define ADF_C3XXX_DEVICE_NAME "c3xxx"
- #define ADF_C3XXXVF_DEVICE_NAME "c3xxxvf"
--#define ADF_DH895XCC_PCI_DEVICE_ID 0x435
--#define ADF_DH895XCCIOV_PCI_DEVICE_ID 0x443
--#define ADF_C62X_PCI_DEVICE_ID 0x37c8
--#define ADF_C62XIOV_PCI_DEVICE_ID 0x37c9
--#define ADF_C3XXX_PCI_DEVICE_ID 0x19e2
--#define ADF_C3XXXIOV_PCI_DEVICE_ID 0x19e3
- #define ADF_ERRSOU3 (0x3A000 + 0x0C)
- #define ADF_ERRSOU5 (0x3A000 + 0xD8)
- #define ADF_DEVICE_FUSECTL_OFFSET 0x40
-diff --git a/drivers/crypto/qat/qat_common/qat_hal.c b/drivers/crypto/qat/qat_common/qat_hal.c
-index fa467e0f8285..6b9d47682d04 100644
---- a/drivers/crypto/qat/qat_common/qat_hal.c
-+++ b/drivers/crypto/qat/qat_common/qat_hal.c
-@@ -2,6 +2,7 @@
- /* Copyright(c) 2014 - 2020 Intel Corporation */
- #include <linux/slab.h>
- #include <linux/delay.h>
-+#include <linux/pci_ids.h>
- 
- #include "adf_accel_devices.h"
- #include "adf_common_drv.h"
-@@ -412,7 +413,7 @@ static int qat_hal_init_esram(struct icp_qat_fw_loader_handle *handle)
- 	unsigned int csr_val;
- 	int times = 30;
- 
--	if (handle->pci_dev->device != ADF_DH895XCC_PCI_DEVICE_ID)
-+	if (handle->pci_dev->device != PCI_DEVICE_ID_INTEL_QAT_DH895XCC)
- 		return 0;
- 
- 	csr_val = ADF_CSR_RD(csr_addr, 0);
-@@ -672,13 +673,13 @@ int qat_hal_init(struct adf_accel_dev *accel_dev)
- 		(void __iomem *)((uintptr_t)handle->hal_cap_ae_xfer_csr_addr_v +
- 				 LOCAL_TO_XFER_REG_OFFSET);
- 	handle->pci_dev = pci_info->pci_dev;
--	if (handle->pci_dev->device == ADF_DH895XCC_PCI_DEVICE_ID) {
-+	if (handle->pci_dev->device == PCI_DEVICE_ID_INTEL_QAT_DH895XCC) {
- 		sram_bar =
- 			&pci_info->pci_bars[hw_data->get_sram_bar_id(hw_data)];
- 		handle->hal_sram_addr_v = sram_bar->virt_addr;
- 	}
- 	handle->fw_auth = (handle->pci_dev->device ==
--			   ADF_DH895XCC_PCI_DEVICE_ID) ? false : true;
-+			   PCI_DEVICE_ID_INTEL_QAT_DH895XCC) ? false : true;
- 	handle->hal_handle = kzalloc(sizeof(*handle->hal_handle), GFP_KERNEL);
- 	if (!handle->hal_handle)
- 		goto out_hal_handle;
-diff --git a/drivers/crypto/qat/qat_common/qat_uclo.c b/drivers/crypto/qat/qat_common/qat_uclo.c
-index 4cc1f436b075..bfe52e428650 100644
---- a/drivers/crypto/qat/qat_common/qat_uclo.c
-+++ b/drivers/crypto/qat/qat_common/qat_uclo.c
-@@ -4,6 +4,7 @@
- #include <linux/ctype.h>
- #include <linux/kernel.h>
- #include <linux/delay.h>
-+#include <linux/pci_ids.h>
- #include "adf_accel_devices.h"
- #include "adf_common_drv.h"
- #include "icp_qat_uclo.h"
-@@ -706,11 +707,11 @@ static unsigned int
- qat_uclo_get_dev_type(struct icp_qat_fw_loader_handle *handle)
- {
- 	switch (handle->pci_dev->device) {
--	case ADF_DH895XCC_PCI_DEVICE_ID:
-+	case PCI_DEVICE_ID_INTEL_QAT_DH895XCC:
- 		return ICP_QAT_AC_895XCC_DEV_TYPE;
--	case ADF_C62X_PCI_DEVICE_ID:
-+	case PCI_DEVICE_ID_INTEL_QAT_C62X:
- 		return ICP_QAT_AC_C62X_DEV_TYPE;
--	case ADF_C3XXX_PCI_DEVICE_ID:
-+	case PCI_DEVICE_ID_INTEL_QAT_C3XXX:
- 		return ICP_QAT_AC_C3XXX_DEV_TYPE;
- 	default:
- 		pr_err("QAT: unsupported device 0x%x\n",
-@@ -1386,7 +1387,7 @@ int qat_uclo_wr_mimage(struct icp_qat_fw_loader_handle *handle,
- 			status = qat_uclo_auth_fw(handle, desc);
- 		qat_uclo_ummap_auth_fw(handle, &desc);
- 	} else {
--		if (handle->pci_dev->device == ADF_C3XXX_PCI_DEVICE_ID) {
-+		if (handle->pci_dev->device == PCI_DEVICE_ID_INTEL_QAT_C3XXX) {
- 			pr_err("QAT: C3XXX doesn't support unsigned MMP\n");
- 			return -EINVAL;
- 		}
-diff --git a/drivers/crypto/qat/qat_dh895xcc/adf_drv.c b/drivers/crypto/qat/qat_dh895xcc/adf_drv.c
-index 4e877b75822b..4c3aea07f444 100644
---- a/drivers/crypto/qat/qat_dh895xcc/adf_drv.c
-+++ b/drivers/crypto/qat/qat_dh895xcc/adf_drv.c
-@@ -22,7 +22,7 @@
- 	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, device_id)}
- 
- static const struct pci_device_id adf_pci_tbl[] = {
--	ADF_SYSTEM_DEVICE(ADF_DH895XCC_PCI_DEVICE_ID),
-+	ADF_SYSTEM_DEVICE(PCI_DEVICE_ID_INTEL_QAT_DH895XCC),
- 	{0,}
- };
- MODULE_DEVICE_TABLE(pci, adf_pci_tbl);
-@@ -58,7 +58,7 @@ static void adf_cleanup_accel(struct adf_accel_dev *accel_dev)
- 
- 	if (accel_dev->hw_device) {
- 		switch (accel_pci_dev->pci_dev->device) {
--		case ADF_DH895XCC_PCI_DEVICE_ID:
-+		case PCI_DEVICE_ID_INTEL_QAT_DH895XCC:
- 			adf_clean_hw_data_dh895xcc(accel_dev->hw_device);
- 			break;
- 		default:
-@@ -83,7 +83,7 @@ static int adf_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	int ret;
- 
- 	switch (ent->device) {
--	case ADF_DH895XCC_PCI_DEVICE_ID:
-+	case PCI_DEVICE_ID_INTEL_QAT_DH895XCC:
- 		break;
- 	default:
- 		dev_err(&pdev->dev, "Invalid device 0x%x.\n", ent->device);
-diff --git a/drivers/crypto/qat/qat_dh895xccvf/adf_drv.c b/drivers/crypto/qat/qat_dh895xccvf/adf_drv.c
-index 7d6e1db272c2..673348ca5dea 100644
---- a/drivers/crypto/qat/qat_dh895xccvf/adf_drv.c
-+++ b/drivers/crypto/qat/qat_dh895xccvf/adf_drv.c
-@@ -22,7 +22,7 @@
- 	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, device_id)}
- 
- static const struct pci_device_id adf_pci_tbl[] = {
--	ADF_SYSTEM_DEVICE(ADF_DH895XCCIOV_PCI_DEVICE_ID),
-+	ADF_SYSTEM_DEVICE(PCI_DEVICE_ID_INTEL_QAT_DH895XCC_VF),
- 	{0,}
- };
- MODULE_DEVICE_TABLE(pci, adf_pci_tbl);
-@@ -58,7 +58,7 @@ static void adf_cleanup_accel(struct adf_accel_dev *accel_dev)
- 
- 	if (accel_dev->hw_device) {
- 		switch (accel_pci_dev->pci_dev->device) {
--		case ADF_DH895XCCIOV_PCI_DEVICE_ID:
-+		case PCI_DEVICE_ID_INTEL_QAT_DH895XCC_VF:
- 			adf_clean_hw_data_dh895xcciov(accel_dev->hw_device);
- 			break;
- 		default:
-@@ -85,7 +85,7 @@ static int adf_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	int ret;
- 
- 	switch (ent->device) {
--	case ADF_DH895XCCIOV_PCI_DEVICE_ID:
-+	case PCI_DEVICE_ID_INTEL_QAT_DH895XCC_VF:
- 		break;
- 	default:
- 		dev_err(&pdev->dev, "Invalid device 0x%x.\n", ent->device);
--- 
-2.26.2
+Hi!
 
+> > > Yes, it originally was designed that way, but again, the world has
+> > > changed so we have to change with it.  That is why USB has for a long
+> > > time now, allowed you to not bind drivers to devices that you do not
+> > > "trust", and that trust can be determined by userspace.  That all came
+> > > about thanks to the work done by the wireless USB spec people and ker=
+nel
+> > > authors, which showed that maybe you just don't want to trust any dev=
+ice
+> > > that comes within range of your system :)
+> >=20
+> > Again, not disagreeing; but note the scale here.
+> >=20
+> > It is mandatory to defend against malicious wireless USB devices.
+>=20
+> Turns out there are no more wireless USB devices in the world, and the
+> code for that is gone from Linux :)
+>=20
+> > We probably should work on robustness against malicious USB devices.
+>=20
+> We are, and do have, that support today.
+>=20
+> > Malicious PCI-express devices are lot less of concern.
+>=20
+> Not really, they are a lot of concern to some people.  Valid attacks are
+> out there today, see the thunderbolt attacks that numerous people have
+> done and published recently and for many years.
+
+In this case PCI-express meant internal cards in PCs. Yes, thunderbolt
+would be higher concern than internal card.
+
+> > Defending against malicious CPU/RAM does not make much sense.
+>=20
+> That's what the spectre and rowhammer fixes have been for :)
+
+Yeah, and that's why we have whitelist of working CPUs and only work
+on those, riiight? :-). [There's difference between "malicious" and
+"buggy".]
+
+								Pavel
+--=20
+DENX Software Engineering GmbH,      Managing Director: Wolfgang Denk
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+
+--ew6BAiZeqk4r7MaW
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iEYEARECAAYFAl78bp0ACgkQMOfwapXb+vIMwQCgxMUU2uCXMx6F3qqoXwrtOcsB
+PR4AoIv02DSIJXj0/Qp/43XbkGAtf5kj
+=O1gR
+-----END PGP SIGNATURE-----
+
+--ew6BAiZeqk4r7MaW--
