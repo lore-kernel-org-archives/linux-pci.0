@@ -2,87 +2,154 @@ Return-Path: <SRS0=AC+G=AM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01A6BC433E1
-	for <linux-pci@archiver.kernel.org>; Wed,  1 Jul 2020 21:23:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45DFBC433E0
+	for <linux-pci@archiver.kernel.org>; Wed,  1 Jul 2020 21:24:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D58DD20870
-	for <linux-pci@archiver.kernel.org>; Wed,  1 Jul 2020 21:23:00 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="MWYnl2OJ"
+	by mail.kernel.org (Postfix) with ESMTP id 19A8A20853
+	for <linux-pci@archiver.kernel.org>; Wed,  1 Jul 2020 21:24:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1593638685;
+	bh=y7Tj7NAUhvu0M9VijaEG0Jdd9zOA89epyoyiU3TDZxM=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=odY78Q5qCjdXnNSIFfMT7xi4v9xyP4cXRxrPgfRVhH+AuS42hdfUYJk1T6OScv6sS
+	 4f/8B86zzWeM5TFg546XIxQJ5/MlMh0uR2iPNbRlQChA9Rcs6XPPDPXo1kPASLIVog
+	 p0379C+WjbKT/IhAggObZfoiMQic8+eOjTYvB9t4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727069AbgGAVXA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 1 Jul 2020 17:23:00 -0400
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:43152 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727076AbgGAVWJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Jul 2020 17:22:09 -0400
-Received: from mail-irv-17.broadcom.com (mail-irv-17.lvn.broadcom.net [10.75.242.48])
-        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id AAC8F30C0D1;
-        Wed,  1 Jul 2020 14:22:08 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com AAC8F30C0D1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
-        s=dkimrelay; t=1593638528;
-        bh=3OXvA8PCBEsIpA3nCB4c0nzrfCkD8JiWghv65L3ox8A=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=MWYnl2OJWQhzFAECOyWBhMwac9Kea4CnXL8IoUijJT04IR9td8aU2wE5+yh5sku7w
-         L5GkDpUyKxntcuWqEj+jLEmiIRyvPN5/e18fHM4hrKkOfSEGSSTwsLg8tKTdHoORAS
-         FIzJQQ1lkRCxt3EfWgdgEcIGS+ws6kQi2MFYN268=
-Received: from stbsrv-and-01.and.broadcom.net (stbsrv-and-01.and.broadcom.net [10.28.16.211])
-        by mail-irv-17.broadcom.com (Postfix) with ESMTP id B04BE14008B;
-        Wed,  1 Jul 2020 14:22:06 -0700 (PDT)
-From:   Jim Quinlan <james.quinlan@broadcom.com>
-To:     linux-pci@vger.kernel.org,
-        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
-        bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com
-Cc:     Jim Quinlan <james.quinlan@broadcom.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v6 01/12] PCI: brcmstb: PCIE_BRCMSTB depends on ARCH_BRCMSTB
-Date:   Wed,  1 Jul 2020 17:21:31 -0400
-Message-Id: <20200701212155.37830-2-james.quinlan@broadcom.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200701212155.37830-1-james.quinlan@broadcom.com>
-References: <20200701212155.37830-1-james.quinlan@broadcom.com>
+        id S1727797AbgGAVYk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 1 Jul 2020 17:24:40 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38580 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725915AbgGAVYk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 1 Jul 2020 17:24:40 -0400
+Received: from localhost (mobile-166-175-191-139.mycingular.net [166.175.191.139])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id B3C9B2085B;
+        Wed,  1 Jul 2020 21:24:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1593638679;
+        bh=y7Tj7NAUhvu0M9VijaEG0Jdd9zOA89epyoyiU3TDZxM=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=j1Z+d1i5LcEvbJzOmf03DnZGUtej26H5zKgrH68wE1n1Gb5zYpaO77D08hZfYD3SA
+         a/bPOI2iSGCNdUI9smIf6JON7/ej/h0E5t3Dvq2CQtJqTqVbtAZuiFzFGEV9N7PDqU
+         kQHb7jW7OsaqMSAq9/65dw3B6Nwpfx4sdE3xXs/8=
+Date:   Wed, 1 Jul 2020 16:24:37 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Giovanni Cabiddu <giovanni.cabiddu@intel.com>
+Cc:     alex.williamson@redhat.com, herbert@gondor.apana.org.au,
+        cohuck@redhat.com, nhorman@redhat.com, vdronov@redhat.com,
+        bhelgaas@google.com, mark.a.chambers@intel.com,
+        gordon.mcfadden@intel.com, ahsan.atta@intel.com,
+        qat-linux@intel.com, kvm@vger.kernel.org,
+        linux-crypto@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/5] vfio/pci: add device blocklist
+Message-ID: <20200701212437.GA3660694@bjorn-Precision-5520>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200701110302.75199-3-giovanni.cabiddu@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Jim Quinlan <jquinlan@broadcom.com>
+On Wed, Jul 01, 2020 at 12:02:59PM +0100, Giovanni Cabiddu wrote:
+> Add blocklist of devices that by default are not probed by vfio-pci.
 
-Have PCIE_BRCMSTB depend on ARCH_BRCMSTB.  Also set the default value to
-ARCH_BRCMSTB.
+> Devices in this list may be susceptible to untrusted application, even
+> if the IOMMU is enabled. 
 
-Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
-Acked-by: Florian Fainelli <f.fainelli@gmail.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
----
- drivers/pci/controller/Kconfig | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+I can't quite parse this sentence.  I think it means something about
+these devices being able to bypass an IOMMU or otherwise cause
+problems via DMA.  It would be nice to know exactly what problem this
+is avoiding.
 
-diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
-index adddf21fa381..c165328d5fbb 100644
---- a/drivers/pci/controller/Kconfig
-+++ b/drivers/pci/controller/Kconfig
-@@ -262,9 +262,10 @@ config VMD
- 
- config PCIE_BRCMSTB
- 	tristate "Broadcom Brcmstb PCIe host controller"
--	depends on ARCH_BCM2835 || COMPILE_TEST
-+	depends on ARCH_BRCMSTB || ARCH_BCM2835 || COMPILE_TEST
- 	depends on OF
- 	depends on PCI_MSI_IRQ_DOMAIN
-+	default ARCH_BRCMSTB
- 	help
- 	  Say Y here to enable PCIe host controller support for
- 	  Broadcom STB based SoCs, like the Raspberry Pi 4.
--- 
-2.17.1
+I assume *all* applications are untrusted, right?  The wording above
+makes it sound like there may be a class of trusted applications in
+addition to the untrusted ones.  But I don't see anything like that in
+the patch.
 
+> To be accessed via vfio-pci, the user has to
+> explicitly disable the blocklist.
+> 
+> The blocklist can be disabled via the module parameter disable_blocklist.
+> 
+> Signed-off-by: Giovanni Cabiddu <giovanni.cabiddu@intel.com>
+> ---
+>  drivers/vfio/pci/vfio_pci.c | 33 +++++++++++++++++++++++++++++++++
+>  1 file changed, 33 insertions(+)
+> 
+> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+> index 7c0779018b1b..ea5904ca6cbf 100644
+> --- a/drivers/vfio/pci/vfio_pci.c
+> +++ b/drivers/vfio/pci/vfio_pci.c
+> @@ -60,6 +60,10 @@ module_param(enable_sriov, bool, 0644);
+>  MODULE_PARM_DESC(enable_sriov, "Enable support for SR-IOV configuration.  Enabling SR-IOV on a PF typically requires support of the userspace PF driver, enabling VFs without such support may result in non-functional VFs or PF.");
+>  #endif
+>  
+> +static bool disable_blocklist;
+> +module_param(disable_blocklist, bool, 0444);
+> +MODULE_PARM_DESC(disable_blocklist, "Disable device blocklist. If set, i.e. blocklist disabled, then blocklisted devices are allowed to be probed by vfio-pci.");
+> +
+>  static inline bool vfio_vga_disabled(void)
+>  {
+>  #ifdef CONFIG_VFIO_PCI_VGA
+> @@ -69,6 +73,29 @@ static inline bool vfio_vga_disabled(void)
+>  #endif
+>  }
+>  
+> +static bool vfio_pci_dev_in_blocklist(struct pci_dev *pdev)
+> +{
+> +	return false;
+> +}
+> +
+> +static bool vfio_pci_is_blocklisted(struct pci_dev *pdev)
+> +{
+> +	if (!vfio_pci_dev_in_blocklist(pdev))
+> +		return false;
+> +
+> +	if (disable_blocklist) {
+> +		pci_warn(pdev,
+> +			 "device blocklist disabled - allowing device %04x:%04x.\n",
+> +			 pdev->vendor, pdev->device);
+> +		return false;
+> +	}
+> +
+> +	pci_warn(pdev, "%04x:%04x is blocklisted - probe will fail.\n",
+> +		 pdev->vendor, pdev->device);
+> +
+> +	return true;
+> +}
+> +
+>  /*
+>   * Our VGA arbiter participation is limited since we don't know anything
+>   * about the device itself.  However, if the device is the only VGA device
+> @@ -1847,6 +1874,9 @@ static int vfio_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>  	struct iommu_group *group;
+>  	int ret;
+>  
+> +	if (vfio_pci_is_blocklisted(pdev))
+> +		return -EINVAL;
+> +
+>  	if (pdev->hdr_type != PCI_HEADER_TYPE_NORMAL)
+>  		return -EINVAL;
+>  
+> @@ -2336,6 +2366,9 @@ static int __init vfio_pci_init(void)
+>  
+>  	vfio_pci_fill_ids();
+>  
+> +	if (disable_blocklist)
+> +		pr_warn("device blocklist disabled.\n");
+> +
+>  	return 0;
+>  
+>  out_driver:
+> -- 
+> 2.26.2
+> 
