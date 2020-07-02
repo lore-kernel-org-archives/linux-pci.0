@@ -2,126 +2,111 @@ Return-Path: <SRS0=404H=AN=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 287B6C433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD224C433E4
 	for <linux-pci@archiver.kernel.org>; Thu,  2 Jul 2020 08:24:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 00D2420936
+	by mail.kernel.org (Postfix) with ESMTP id 8D1A720874
 	for <linux-pci@archiver.kernel.org>; Thu,  2 Jul 2020 08:24:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1593678274;
-	bh=A4x8rASu1MxlGaK4Uw98Lg3c9yofoP0D7gnk1mnvwQM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=eX8N1bhXuVNP1C9F9nJlycWUUcpYQnkn3XoOlCvf9TeOmxuLpDtz6vcbI3aIX/clq
-	 Cb8vhLL4w9ndn33U/FX+A+a4WZ21H8YwrCnO4FQXf9WTlzwI1dsS79bQKvp6Q2Y6x0
-	 aLB/xuJIt95Pbkye/rqQ0akiM3pFjyJCjN0GgUDs=
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="iCY0E9W7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728765AbgGBIYF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 2 Jul 2020 04:24:05 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50598 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728746AbgGBIYD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 2 Jul 2020 04:24:03 -0400
-Received: from pali.im (pali.im [31.31.79.79])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 635FF20720;
-        Thu,  2 Jul 2020 08:24:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1593678242;
-        bh=A4x8rASu1MxlGaK4Uw98Lg3c9yofoP0D7gnk1mnvwQM=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=x7OVPlAjY6MGQp6wnGj9/IFkiOBoc/jegOMFsboi3w/M/7o0WD9ubPagnMIcFwMyJ
-         6ruT2TpqQtkJGu5k2iETtFULovOrL+bhlfJqgN/oX3AczHJOtX8v2Cf5YpBhZsQ3U7
-         vnxCNNP9F5uS2V+vYf57H/iyktY5nVDHGvMzGNts=
-Received: by pali.im (Postfix)
-        id D496DE92; Thu,  2 Jul 2020 10:23:59 +0200 (CEST)
-Date:   Thu, 2 Jul 2020 10:23:59 +0200
-From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        id S1728263AbgGBIYd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 2 Jul 2020 04:24:33 -0400
+Received: from lelv0142.ext.ti.com ([198.47.23.249]:59768 "EHLO
+        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728755AbgGBIYF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jul 2020 04:24:05 -0400
+Received: from fllv0035.itg.ti.com ([10.64.41.0])
+        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 0628Nt6b082238;
+        Thu, 2 Jul 2020 03:23:55 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1593678235;
+        bh=2Ps3sR9VF/LqByb34nV2fM7x0C723HV4lrdTJSaPtuA=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References;
+        b=iCY0E9W7YtWImyjACut0NGZBKOpaf22G78SdPYYg8vG5CI0IfbPCrAZ/V5/Wqr0ek
+         8lX40jte/wRY2JN8ardU2oSSftFNtSPIesQSJizfY8pkyhecWg5VidgZWPsuJ9vn10
+         7CU7+V1dA0D5K+DoWGKlSxkziCwP9B9jOImc4hIc=
+Received: from DFLE103.ent.ti.com (dfle103.ent.ti.com [10.64.6.24])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0628NtLg087605;
+        Thu, 2 Jul 2020 03:23:55 -0500
+Received: from DFLE111.ent.ti.com (10.64.6.32) by DFLE103.ent.ti.com
+ (10.64.6.24) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Thu, 2 Jul
+ 2020 03:23:54 -0500
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DFLE111.ent.ti.com
+ (10.64.6.32) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
+ Frontend Transport; Thu, 2 Jul 2020 03:23:54 -0500
+Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0628LiYY006145;
+        Thu, 2 Jul 2020 03:23:49 -0500
+From:   Kishon Vijay Abraham I <kishon@ti.com>
+To:     Ohad Ben-Cohen <ohad@wizery.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Jon Mason <jdmason@kudzu.us>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <allenbh@gmail.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Andrew Murray <amurray@thegoodpenguin.co.uk>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Marek =?utf-8?B?QmVow7pu?= <marek.behun@nic.cz>,
-        Remi Pommarel <repk@triplefau.lt>,
-        Tomasz Maciej Nowak <tmn505@gmail.com>,
-        Xogium <contact@xogium.me>, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: aardvark: Don't touch PCIe registers if no card
- connected
-Message-ID: <20200702082359.h6f6r3hsr57fnquh@pali>
-References: <20200701082044.4494-1-pali@kernel.org>
- <20200701213442.GA3662456@bjorn-Precision-5520>
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
+        Stefano Garzarella <sgarzare@redhat.com>
+CC:     <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-remoteproc@vger.kernel.org>, <linux-ntb@googlegroups.com>,
+        <linux-pci@vger.kernel.org>, <kvm@vger.kernel.org>,
+        <virtualization@lists.linux-foundation.org>,
+        <netdev@vger.kernel.org>
+Subject: [RFC PATCH 22/22] NTB: Describe ntb_virtio and ntb_vhost client in the documentation
+Date:   Thu, 2 Jul 2020 13:51:43 +0530
+Message-ID: <20200702082143.25259-23-kishon@ti.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200702082143.25259-1-kishon@ti.com>
+References: <20200702082143.25259-1-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20200701213442.GA3662456@bjorn-Precision-5520>
-User-Agent: NeoMutt/20180716
+Content-Type: text/plain
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wednesday 01 July 2020 16:34:42 Bjorn Helgaas wrote:
-> On Wed, Jul 01, 2020 at 10:20:44AM +0200, Pali Rohár wrote:
-> > When there is no PCIe card connected and advk_pcie_rd_conf() or
-> > advk_pcie_wr_conf() is called for PCI bus which doesn't belong to emulated
-> > root bridge, the aardvark driver throws the following error message:
-> > 
-> >   advk-pcie d0070000.pcie: config read/write timed out
-> > 
-> > Obviously accessing PCIe registers of disconnected card is not possible.
-> > 
-> > Extend check in advk_pcie_valid_device() function for validating
-> > availability of PCIe bus. If PCIe link is down, then the device is marked
-> > as Not Found and the driver does not try to access these registers.
-> > 
-> > This is just an optimization to prevent accessing PCIe registers when card
-> > is disconnected. Trying to access PCIe registers of disconnected card does
-> > not cause any crash, kernel just needs to wait for a timeout. So if card
-> > disappear immediately after checking for PCIe link (before accessing PCIe
-> > registers), it does not cause any problems.
-> 
-> Thanks, this is good.  I'd really like a short comment in the code as
-> well, because this sort of link-up check tends to get copied to new
-> drivers where it shouldn't be used, e.g., something like this:
-> 
->   /*
->    * If the link goes down after we check for link-up, nothing bad
->    * happens but the config access times out.
->    */
+Add a blurb in Documentation/ntb.txt to describe the ntb_virtio and
+ntb_vhost client
 
-Ok, it makes sense! I will send a new patch version.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ Documentation/driver-api/ntb.rst | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-> > Signed-off-by: Pali Rohár <pali@kernel.org>
-> > 
-> > ---
-> > Changes in V2:
-> > * Update commit message, mention that this is optimization
-> > ---
-> >  drivers/pci/controller/pci-aardvark.c | 3 +++
-> >  1 file changed, 3 insertions(+)
-> > 
-> > diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-> > index 90ff291c24f0..53a4cfd7d377 100644
-> > --- a/drivers/pci/controller/pci-aardvark.c
-> > +++ b/drivers/pci/controller/pci-aardvark.c
-> > @@ -644,6 +644,9 @@ static bool advk_pcie_valid_device(struct advk_pcie *pcie, struct pci_bus *bus,
-> >  	if ((bus->number == pcie->root_bus_nr) && PCI_SLOT(devfn) != 0)
-> >  		return false;
-> >  
-> > +	if (bus->number != pcie->root_bus_nr && !advk_pcie_link_up(pcie))
-> > +		return false;
-> > +
-> >  	return true;
-> >  }
-> >  
-> > -- 
-> > 2.20.1
-> > 
+diff --git a/Documentation/driver-api/ntb.rst b/Documentation/driver-api/ntb.rst
+index 87d1372da879..f84b81625397 100644
+--- a/Documentation/driver-api/ntb.rst
++++ b/Documentation/driver-api/ntb.rst
+@@ -227,6 +227,17 @@ test client is interacted with through the debugfs filesystem:
+ 	specified peer. That peer's interrupt's occurrence file
+ 	should be incremented.
+ 
++NTB Vhost Client (ntb\_vhost) and NTB Virtio Client (ntb\_virtio)
++------------------------------------------------------------------
++
++When two hosts are connected via NTB, one of the hosts should use NTB Vhost
++Client and the other host should use NTB Virtio Client. The NTB Vhost client
++interfaces with the Linux Vhost Framework and lets it to be used with any
++vhost client driver. The NTB Virtio client interfaces with the Linux Virtio
++Framework and lets it to be used with any virtio client driver. The Vhost
++client driver and Virtio client driver creates a logic cink to exchange data
++with each other.
++
+ NTB Hardware Drivers
+ ====================
+ 
+-- 
+2.17.1
+
