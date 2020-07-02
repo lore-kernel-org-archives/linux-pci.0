@@ -2,48 +2,48 @@ Return-Path: <SRS0=404H=AN=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.0 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CAF5C433E2
-	for <linux-pci@archiver.kernel.org>; Thu,  2 Jul 2020 17:09:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9486C433E0
+	for <linux-pci@archiver.kernel.org>; Thu,  2 Jul 2020 17:09:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1AB962084C
-	for <linux-pci@archiver.kernel.org>; Thu,  2 Jul 2020 17:09:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B612E20760
+	for <linux-pci@archiver.kernel.org>; Thu,  2 Jul 2020 17:09:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726996AbgGBRJE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 2 Jul 2020 13:09:04 -0400
-Received: from mga12.intel.com ([192.55.52.136]:38715 "EHLO mga12.intel.com"
+        id S1727124AbgGBRJD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 2 Jul 2020 13:09:03 -0400
+Received: from mga12.intel.com ([192.55.52.136]:38710 "EHLO mga12.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727772AbgGBRJE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 2 Jul 2020 13:09:04 -0400
-IronPort-SDR: D2i86kJ6/RYRPOA3yJ1X4fHsfaOQtwn0JB/2MS98JSrBmjIMC3zge13EFC76AMso5f8Q7gH7+4
- HCoq8ldtPDTQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9670"; a="126587506"
+        id S1726297AbgGBRJC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 2 Jul 2020 13:09:02 -0400
+IronPort-SDR: +KK7p1tkNxgpf5luRU2WQWXz6WFTk/Q9kk/kySoWImA2qqumGxniry9YNDpdo6F3QgM5HlhByL
+ PSHYnHliF2Kw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9670"; a="126587471"
 X-IronPort-AV: E=Sophos;i="5.75,304,1589266800"; 
-   d="scan'208";a="126587506"
+   d="scan'208";a="126587471"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jul 2020 10:09:02 -0700
-IronPort-SDR: Pjp5X2Uc37/gx6NmEW9bhvmr6klonJndJUF6lvUu/ydVmGHB6KYJ/757q6gY04Df3HdwTbg/ZU
- oP4DqCxLL+2Q==
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jul 2020 10:08:58 -0700
+IronPort-SDR: p8FzhZu5/WmN7nevKDHLA8328vkrXsitogdQX6dhYQ0KsuInUWUe6zpg18lJVHQaVRInRU+kbo
+ dH0slAwiBvqA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.75,304,1589266800"; 
-   d="scan'208";a="481763231"
+   d="scan'208";a="481763195"
 Received: from otc-lr-04.jf.intel.com ([10.54.39.143])
-  by fmsmga006.fm.intel.com with ESMTP; 02 Jul 2020 10:09:01 -0700
+  by fmsmga006.fm.intel.com with ESMTP; 02 Jul 2020 10:08:57 -0700
 From:   kan.liang@linux.intel.com
 To:     peterz@infradead.org, bhelgaas@google.com, mingo@redhat.com,
         linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
 Cc:     jeffrey.t.kirsher@intel.com, olof@lixom.net,
         dan.j.williams@intel.com, ak@linux.intel.com,
         Kan Liang <kan.liang@linux.intel.com>
-Subject: [PATCH 5/7] perf/x86/intel/uncore: Factor out uncore_pci_pmu_unregister()
-Date:   Thu,  2 Jul 2020 10:05:15 -0700
-Message-Id: <1593709517-108857-6-git-send-email-kan.liang@linux.intel.com>
+Subject: [PATCH 2/7] perf/x86/intel/uncore: Factor out uncore_pci_get_die_info()
+Date:   Thu,  2 Jul 2020 10:05:12 -0700
+Message-Id: <1593709517-108857-3-git-send-email-kan.liang@linux.intel.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1593709517-108857-1-git-send-email-kan.liang@linux.intel.com>
 References: <1593709517-108857-1-git-send-email-kan.liang@linux.intel.com>
@@ -54,53 +54,62 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Kan Liang <kan.liang@linux.intel.com>
 
-The PMU unregistration of a platform device is similar as a PCI device.
+The socket and die information is required when probing the platform
+device.
 
-Factor out the codes of unregister a PCI PMU into a separate function. The
-function will be used later.
+Factor out the codes to get the socket and die information from a BUS
+number into a separate function. The function will be used later.
 
 There is no functional change.
 
 Signed-off-by: Kan Liang <kan.liang@linux.intel.com>
 ---
- arch/x86/events/intel/uncore.c | 17 ++++++++++++-----
- 1 file changed, 12 insertions(+), 5 deletions(-)
+ arch/x86/events/intel/uncore.c | 25 +++++++++++++++++--------
+ 1 file changed, 17 insertions(+), 8 deletions(-)
 
 diff --git a/arch/x86/events/intel/uncore.c b/arch/x86/events/intel/uncore.c
-index ccc90b0..b702dc3 100644
+index d5c6d3b..0651ab7 100644
 --- a/arch/x86/events/intel/uncore.c
 +++ b/arch/x86/events/intel/uncore.c
-@@ -1118,6 +1118,16 @@ static int uncore_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id
- 	return ret;
+@@ -988,6 +988,20 @@ uncore_types_init(struct intel_uncore_type **types, bool setid)
+ 	return 0;
  }
  
-+static void uncore_pci_pmu_unregister(struct intel_uncore_pmu *pmu,
-+				      struct intel_uncore_box *box)
++static int uncore_pci_get_die_info(struct pci_dev *pdev,
++				   int *phys_id, int *die)
 +{
-+	pmu->boxes[box->dieid] = NULL;
-+	if (atomic_dec_return(&pmu->activeboxes) == 0)
-+		uncore_pmu_unregister(pmu);
-+	uncore_box_exit(box);
-+	kfree(box);
++	*phys_id = uncore_pcibus_to_physid(pdev->bus);
++	if (*phys_id < 0)
++		return -ENODEV;
++
++	*die = (topology_max_die_per_package() > 1) ? *phys_id :
++				topology_phys_to_logical_pkg(*phys_id);
++	if (*die < 0)
++		return -EINVAL;
++
++	return 0;
 +}
-+
- static void uncore_pci_remove(struct pci_dev *pdev)
- {
+ /*
+  * add a pci uncore device
+  */
+@@ -998,14 +1012,9 @@ static int uncore_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id
  	struct intel_uncore_box *box;
-@@ -1145,11 +1155,8 @@ static void uncore_pci_remove(struct pci_dev *pdev)
- 		return;
+ 	int phys_id, die, ret;
  
- 	pci_set_drvdata(pdev, NULL);
--	pmu->boxes[box->dieid] = NULL;
--	if (atomic_dec_return(&pmu->activeboxes) == 0)
--		uncore_pmu_unregister(pmu);
--	uncore_box_exit(box);
--	kfree(box);
-+
-+	uncore_pci_pmu_unregister(pmu, box);
- }
+-	phys_id = uncore_pcibus_to_physid(pdev->bus);
+-	if (phys_id < 0)
+-		return -ENODEV;
+-
+-	die = (topology_max_die_per_package() > 1) ? phys_id :
+-					topology_phys_to_logical_pkg(phys_id);
+-	if (die < 0)
+-		return -EINVAL;
++	ret = uncore_pci_get_die_info(pdev, &phys_id, &die);
++	if (ret)
++		return ret;
  
- static int __init uncore_pci_init(void)
+ 	if (UNCORE_PCI_DEV_TYPE(id->driver_data) == UNCORE_EXTRA_PCI_DEV) {
+ 		int idx = UNCORE_PCI_DEV_IDX(id->driver_data);
 -- 
 2.7.4
 
