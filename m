@@ -2,69 +2,72 @@ Return-Path: <SRS0=404H=AN=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E925DC433E1
-	for <linux-pci@archiver.kernel.org>; Thu,  2 Jul 2020 16:27:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 865B8C433E0
+	for <linux-pci@archiver.kernel.org>; Thu,  2 Jul 2020 16:28:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C5D0220720
-	for <linux-pci@archiver.kernel.org>; Thu,  2 Jul 2020 16:27:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 662FA212CC
+	for <linux-pci@archiver.kernel.org>; Thu,  2 Jul 2020 16:28:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dc5QYiRb"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oXmeu34t"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726726AbgGBQ16 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 2 Jul 2020 12:27:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37744 "EHLO
+        id S1726790AbgGBQ2A (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 2 Jul 2020 12:28:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37760 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726199AbgGBQ14 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jul 2020 12:27:56 -0400
-Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09274C08C5C1;
-        Thu,  2 Jul 2020 09:27:56 -0700 (PDT)
-Received: by mail-ej1-x643.google.com with SMTP id dr13so30495589ejc.3;
-        Thu, 02 Jul 2020 09:27:55 -0700 (PDT)
+        with ESMTP id S1726779AbgGBQ17 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jul 2020 12:27:59 -0400
+Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 284DDC08C5C1;
+        Thu,  2 Jul 2020 09:27:59 -0700 (PDT)
+Received: by mail-ej1-x642.google.com with SMTP id n26so16546343ejx.0;
+        Thu, 02 Jul 2020 09:27:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=729wRp2/PBhbh0Gnc86Vq7P7Z2CAjYw3uUDYdxrU638=;
-        b=dc5QYiRbUgMXusOZ+GdrLCj6a0s03jHIZwIzI35u/J16JDM/e/zV5h1eOuO7qzz29w
-         LhFwjNVSsoswvAdbmPIUFa433B533j57PZzNcHehyEatS+5NDPNMmKzkJL0kRWGOzbPU
-         kJtApVxyPQLHfNZiQqKY1Erb3NlGv02bNk5/TeyrHsXdopFFh1U0WkE+vfcmbBrr2nz0
-         v3KW2jCRheh2S9c3IPLD8hrachGyQIG5rOnA1JFWcI3PDVnQB0NHvHP9klaSN1MTalMJ
-         oIVrNo+c9ofQw0i8P3LC5cKLBrTYeqz8Q6VNm3zbQ6Zan5u6CsNtiSMQRFRQxES7/KVR
-         cf6g==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=BKGyNwdE3y4ef1pbkDUWx2wEahUUqC/tey8vsP66t3k=;
+        b=oXmeu34tul/Eh7uALk3qd8uoJLsyESkwDkrlTEhQDnvTGG809iGcWCvYZ2j+ILjUqn
+         JqZrk62Ibi+SpIVMkR6J1oI4k1WXEwAxiJ6+9Yb0+GlECA4h5/ZKb4EaSMfLyTQZ4uuC
+         8WBb4havLLiRJbCifA811Zvi3+Mf4uOkrRpcyJbA0vfcDxOS7DhRT7QWbmNoIHPatlY5
+         3VgNFME8sgYVSRnaAyloi6snVT/coZIQ7ijlbZ+dL3HN2g9q4BfQiIJREVknD3Dh35/d
+         8YclbBRtRktjzIW3H1Cs690UjsUJ8VrgEeNmFu6PZOfq5M1tAuiVbiHsKhd9qd//6B+u
+         eIBw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=729wRp2/PBhbh0Gnc86Vq7P7Z2CAjYw3uUDYdxrU638=;
-        b=S+go2/+gIr6rElc32iLpNQqP2HwIMVjQ9FjCd1G6QDMXMuKuUTxOsPga1rThCNhIgl
-         45FeVzYCQT8Mr1yXgGQ0/R4SRmOU2U+ZvFkgL4Cb4h9CYO9Qjt45aJJgG6GnYdBqecX0
-         0jNX+gjHTOT4rZI78aLdk21UZXpiZU+6dubED10rovilpsxcWg0RpPQWfDvgxMgOExNH
-         7j3SMOKwsRDMdixyYD/vqbQLHCenIy/mdrkige89gVkfa81Kiikr82xOSmEVvz9bpytU
-         Lxrye1q2bM/UX/8Y4CBAekvZK96E3vwQyOoULquQTJcDF3WLX7lP3CYwrlwweKaQue5k
-         USNQ==
-X-Gm-Message-State: AOAM531cgltdNLRSji3oJqs7DQvp+7RCq74/CKGFwcXZJ7QgsENTYJpq
-        7WbzBLAIvODHaPUTpZK2kS8=
-X-Google-Smtp-Source: ABdhPJwaRSO710RvlavWWFdG8fe+JqiPzdhjZB/MKqEoqZiwGCKOn46Ki62yvGDk5nDITpwH5sW9uw==
-X-Received: by 2002:a17:906:fac1:: with SMTP id lu1mr23313087ejb.427.1593707274720;
-        Thu, 02 Jul 2020 09:27:54 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=BKGyNwdE3y4ef1pbkDUWx2wEahUUqC/tey8vsP66t3k=;
+        b=F9Z7tmYpQ+orsW2hDDh6DgPKYlDl8fP5baXcZbhDmn3ssXp3V/TOhRjHONogh7WI1z
+         G/vNu355G3BDGk79bhUPqm+sENsu/R+/I++2DWQHWAhpKBrWn9h4fpyfhU9iIQWBT+/2
+         HcBBxpI7z8FN92/5UeNlE6xiOc/Whvtvbmm8llryRtdiif/vpun5f3+U0F5tO7WFIvg/
+         IVV2JrtsSgjFejvQy9bTa4H3crsf7Gg5kql7PwAlDIzxx08EQbALH8zVUyIKrYl4YEAi
+         Msq6RyrDHna5kl4VtT66qbjbDAySuKbNGj3TOiMZNlkWqRhakH8jntkP65Dwia2IKmYb
+         d8dw==
+X-Gm-Message-State: AOAM533q+sfweLehP3M52n57Vh4NXY9sIFH8sE6H+v/ii1T9J90D1Exi
+        PgE+e2VVxlv4O7p+XPRmjG4=
+X-Google-Smtp-Source: ABdhPJwIDcSGwPz0FbI0llipZVkAtHj5PxwwFRXYEVZYr1hCckr2gQQXUIJ5Pq19jE6TG7TU84vHXA==
+X-Received: by 2002:a17:906:57da:: with SMTP id u26mr29223325ejr.157.1593707277882;
+        Thu, 02 Jul 2020 09:27:57 -0700 (PDT)
 Received: from localhost.localdomain ([2a02:a03f:b7f9:7600:4932:71ef:3c73:a14f])
-        by smtp.gmail.com with ESMTPSA id gu15sm7375188ejb.111.2020.07.02.09.27.52
+        by smtp.gmail.com with ESMTPSA id gu15sm7375188ejb.111.2020.07.02.09.27.57
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 02 Jul 2020 09:27:54 -0700 (PDT)
+        Thu, 02 Jul 2020 09:27:57 -0700 (PDT)
 From:   Luc Van Oostenryck <luc.vanoostenryck@gmail.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         Luc Van Oostenryck <luc.vanoostenryck@gmail.com>
-Subject: [PATCH v2 0/3] pci: enforce usage of 'pci_channel_state_t'
-Date:   Thu,  2 Jul 2020 18:26:48 +0200
-Message-Id: <20200702162651.49526-1-luc.vanoostenryck@gmail.com>
+Subject: [PATCH v2 3/3] pci: update to doc to use 'pci_channel_state_t'
+Date:   Thu,  2 Jul 2020 18:26:51 +0200
+Message-Id: <20200702162651.49526-4-luc.vanoostenryck@gmail.com>
 X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20200702162651.49526-1-luc.vanoostenryck@gmail.com>
+References: <20200702162651.49526-1-luc.vanoostenryck@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
@@ -72,68 +75,46 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The definition of pci_channel_io_normal and friends is relatively
-complicated and ugly:
-	typedef unsigned int __bitwise pci_channel_state_t;
-	enum pci_channel_state {
-		pci_channel_io_normal = (__force pci_channel_state_t) 1,
-		...
-	};
+The type used to describe the PCI channel state is a combination
+of a bitwise typedef 'pci_channel_state_t' and an enumeration
+of constant __force casted to this typedef: enum pci_channel_state.
 
-This is clearly motivated by a desire to have some strong typing
-for this constants but:
+It's a bit complex and quite ugly because:
 * in C enums are weakly typed (they're essentially the same as 'int')
 * sparse only allow to define bitwise ints, not bitwise enums.
+But the idea is clearly to enforce typechecking and thus to
+use 'pci_channel_state_t' everywhere.
 
-This series is a preparation step to introduce bitwise enums.
-This would allow to define these constant without having to use
-the force cast:
-	enum __bitwise pci_channel_state {
-		pci_channel_io_normal = 1,
-		...
-	};
-or, equivalently:
-	typedef enum __bitwise {
-		pci_channel_io_normal = 1,
-		...
-	} pci_channel_state_t;
+So, update the documentation to use 'pci_chanell_state_t' and hide
+'enum pci_channel_state' by showing a simplified but somehow equivalent
+definition:
+	typedef enum { ... } pci_channel_state_t;
+which makes abstraction of the '__bitwise' which would otherwise
+just bring unneeded complications here.
 
+Signed-off-by: Luc Van Oostenryck <luc.vanoostenryck@gmail.com>
+---
+ Documentation/PCI/pci-error-recovery.rst | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Note: the first patch is, I think, uncontroversial, the other ones
-      less so but can be safely dropped.
-
-
-Changes since v1:
-* add missing conversion
-* try to avoid using 'enum pci_channel_state' in include/linux/pci.h
-* try to avoid using 'enum pci_channel_state' in the documentation
-
-
-Luc Van Oostenryck (3):
-  pci: use 'pci_channel_state_t' instead of 'enum pci_channel_state'
-  pci: use anonymous 'enum' instead of 'enum pci_channel_state'
-  pci: update to doc to use 'pci_channel_state_t'
-
- Documentation/PCI/pci-error-recovery.rst    | 8 ++++----
- arch/powerpc/kernel/eeh_driver.c            | 2 +-
- drivers/block/rsxx/core.c                   | 2 +-
- drivers/dma/ioat/init.c                     | 2 +-
- drivers/media/pci/ngene/ngene-cards.c       | 2 +-
- drivers/misc/genwqe/card_base.c             | 2 +-
- drivers/net/ethernet/intel/i40e/i40e_main.c | 2 +-
- drivers/net/ethernet/intel/ice/ice_main.c   | 2 +-
- drivers/net/ethernet/intel/ixgb/ixgb_main.c | 4 ++--
- drivers/net/ethernet/sfc/efx.c              | 2 +-
- drivers/net/ethernet/sfc/falcon/efx.c       | 2 +-
- drivers/pci/pci.h                           | 2 +-
- drivers/pci/pcie/err.c                      | 4 ++--
- drivers/pci/pcie/portdrv_pci.c              | 2 +-
- drivers/scsi/aacraid/linit.c                | 2 +-
- drivers/scsi/sym53c8xx_2/sym_glue.c         | 2 +-
- drivers/staging/qlge/qlge_main.c            | 2 +-
- include/linux/pci.h                         | 4 ++--
- 18 files changed, 24 insertions(+), 24 deletions(-)
-
+diff --git a/Documentation/PCI/pci-error-recovery.rst b/Documentation/PCI/pci-error-recovery.rst
+index c055deec8c56..ccd713423133 100644
+--- a/Documentation/PCI/pci-error-recovery.rst
++++ b/Documentation/PCI/pci-error-recovery.rst
+@@ -87,11 +87,11 @@ This structure has the form::
+ 
+ The possible channel states are::
+ 
+-	enum pci_channel_state {
++	typedef enum {
+ 		pci_channel_io_normal,  /* I/O channel is in normal state */
+ 		pci_channel_io_frozen,  /* I/O to channel is blocked */
+ 		pci_channel_io_perm_failure, /* PCI card is dead */
+-	};
++	} pci_channel_state_t;
+ 
+ Possible return values are::
+ 
 -- 
 2.27.0
 
