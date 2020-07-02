@@ -2,88 +2,384 @@ Return-Path: <SRS0=404H=AN=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C705C433DF
-	for <linux-pci@archiver.kernel.org>; Thu,  2 Jul 2020 08:20:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B16ABC433E3
+	for <linux-pci@archiver.kernel.org>; Thu,  2 Jul 2020 08:22:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6002320720
-	for <linux-pci@archiver.kernel.org>; Thu,  2 Jul 2020 08:20:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 84D0320874
+	for <linux-pci@archiver.kernel.org>; Thu,  2 Jul 2020 08:22:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="QC3pfARo"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="NSF4RCGe"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726555AbgGBIUt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 2 Jul 2020 04:20:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46576 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726089AbgGBIUs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jul 2020 04:20:48 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62B3AC08C5C1;
-        Thu,  2 Jul 2020 01:20:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=lYeUH98ECIdWEh43yZAHKXD5kblKbjXwCRAczr7OF8g=; b=QC3pfARojKciVxMrZBOx7jz1mN
-        Pab8UojFGO1fmoOFkavzVJlTHdnSbAvvJmrl6qyTfz9JxQ0oVT9N3F3WQ8VDXAHtOt7Bhbc36Sn1D
-        bnEyFCZg5ygqz/hsNcsmBmq4lNF0bm5ijX0J2cmZBSWR0Q9CWFlcuZMu8ctLIW6o49m83sHRa6RbY
-        1MRzYZOf1YSuGKFdnptt9tybEqVUIQvpRKLyPHa++McjsktYpeEXl/KwxDq39uwxgXI3xJ6Oa9JYw
-        mE1EgZGIdy98yvLtver8lS2emXEaRZOoWRizYYr1UaUpeQRcOUWx1Aq0gYAVOe8/cl0TXWgoDv0aE
-        zeOwHtLg==;
-Received: from j217100.upc-j.chello.nl ([24.132.217.100] helo=noisy.programming.kicks-ass.net)
-        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jquSW-0008A7-R1; Thu, 02 Jul 2020 08:20:41 +0000
-Received: from hirez.programming.kicks-ass.net (hirez.programming.kicks-ass.net [192.168.1.225])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client did not present a certificate)
-        by noisy.programming.kicks-ass.net (Postfix) with ESMTPS id 30A843003D8;
-        Thu,  2 Jul 2020 10:20:40 +0200 (CEST)
-Received: by hirez.programming.kicks-ass.net (Postfix, from userid 1000)
-        id 0DBFD264F8CB3; Thu,  2 Jul 2020 10:20:40 +0200 (CEST)
-Date:   Thu, 2 Jul 2020 10:20:40 +0200
-From:   Peter Zijlstra <peterz@infradead.org>
-To:     "Paul E. McKenney" <paulmck@kernel.org>
-Cc:     Marco Elver <elver@google.com>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Sami Tolvanen <samitolvanen@google.com>,
-        Masahiro Yamada <masahiroy@kernel.org>,
-        Will Deacon <will@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kees Cook <keescook@chromium.org>,
-        clang-built-linux <clang-built-linux@googlegroups.com>,
-        Kernel Hardening <kernel-hardening@lists.openwall.com>,
-        linux-arch <linux-arch@vger.kernel.org>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        Linux Kbuild mailing list <linux-kbuild@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-        "maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>
-Subject: Re: [PATCH 00/22] add support for Clang LTO
-Message-ID: <20200702082040.GB4781@hirez.programming.kicks-ass.net>
-References: <20200625082433.GC117543@hirez.programming.kicks-ass.net>
- <20200625085745.GD117543@hirez.programming.kicks-ass.net>
- <20200630191931.GA884155@elver.google.com>
- <20200630201243.GD4817@hirez.programming.kicks-ass.net>
- <20200630203016.GI9247@paulmck-ThinkPad-P72>
- <CANpmjNP+7TtE0WPU=nX5zs3T2+4hPkkm08meUm2VDVY3RgsHDw@mail.gmail.com>
- <20200701114027.GO4800@hirez.programming.kicks-ass.net>
- <20200701140654.GL9247@paulmck-ThinkPad-P72>
- <20200701150512.GH4817@hirez.programming.kicks-ass.net>
- <20200701160338.GN9247@paulmck-ThinkPad-P72>
+        id S1726924AbgGBIWW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 2 Jul 2020 04:22:22 -0400
+Received: from lelv0143.ext.ti.com ([198.47.23.248]:55156 "EHLO
+        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726630AbgGBIWV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jul 2020 04:22:21 -0400
+Received: from lelv0265.itg.ti.com ([10.180.67.224])
+        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id 0628M8wT042184;
+        Thu, 2 Jul 2020 03:22:08 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1593678128;
+        bh=TQCRsl2Wf/cBX19r3WcTQDbCBoCPjZmiqMgNeLy0j10=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References;
+        b=NSF4RCGePLHDU0tzHbZrKqZoG859of6arKU3cKrky/sYT4eTNtFPFI4NM5vPQRxiZ
+         vOBQ8yN520SwoqiANq0vRnWfZ0Qp42jayyV3sx3r8p7FCbli86ovzpTRo2jHGAKYe4
+         HV475XJBbCwfBB1UM7wng253433f8KM4QI4tnv7Q=
+Received: from DLEE105.ent.ti.com (dlee105.ent.ti.com [157.170.170.35])
+        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 0628M8d7065901
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 2 Jul 2020 03:22:08 -0500
+Received: from DLEE109.ent.ti.com (157.170.170.41) by DLEE105.ent.ti.com
+ (157.170.170.35) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Thu, 2 Jul
+ 2020 03:22:07 -0500
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE109.ent.ti.com
+ (157.170.170.41) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
+ Frontend Transport; Thu, 2 Jul 2020 03:22:07 -0500
+Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0628LiYF006145;
+        Thu, 2 Jul 2020 03:22:02 -0500
+From:   Kishon Vijay Abraham I <kishon@ti.com>
+To:     Ohad Ben-Cohen <ohad@wizery.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Jon Mason <jdmason@kudzu.us>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <allenbh@gmail.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
+        Stefano Garzarella <sgarzare@redhat.com>
+CC:     <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-remoteproc@vger.kernel.org>, <linux-ntb@googlegroups.com>,
+        <linux-pci@vger.kernel.org>, <kvm@vger.kernel.org>,
+        <virtualization@lists.linux-foundation.org>,
+        <netdev@vger.kernel.org>
+Subject: [RFC PATCH 03/22] vhost: Add ops for the VHOST driver to configure VHOST device
+Date:   Thu, 2 Jul 2020 13:51:24 +0530
+Message-ID: <20200702082143.25259-4-kishon@ti.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200702082143.25259-1-kishon@ti.com>
+References: <20200702082143.25259-1-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200701160338.GN9247@paulmck-ThinkPad-P72>
+Content-Type: text/plain
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jul 01, 2020 at 09:03:38AM -0700, Paul E. McKenney wrote:
+Add "vhost_config_ops" in *struct vhost_driver* for the VHOST driver to
+configure VHOST device and add facility for VHOST device to notify
+VHOST driver (whenever VIRTIO sets a new status or finalize features).
+This is in preparation to use the same vhost_driver across different
+VHOST devices (like PCIe or NTB or platform device).
 
-> But it looks like we are going to have to tell the compiler.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/vhost/vhost.c | 185 ++++++++++++++++++++++++++++++++++++++++++
+ include/linux/vhost.h |  57 +++++++++++++
+ 2 files changed, 242 insertions(+)
 
-What does the current proposal look like? I can certainly annotate the
-seqcount latch users, but who knows what other code is out there....
+diff --git a/drivers/vhost/vhost.c b/drivers/vhost/vhost.c
+index fa2bc6e68be2..f959abb0b1bb 100644
+--- a/drivers/vhost/vhost.c
++++ b/drivers/vhost/vhost.c
+@@ -2558,6 +2558,190 @@ struct vhost_msg_node *vhost_dequeue_msg(struct vhost_dev *dev,
+ }
+ EXPORT_SYMBOL_GPL(vhost_dequeue_msg);
+ 
++/**
++ * vhost_create_vqs() - Invoke vhost_config_ops to create virtqueue
++ * @vdev: Vhost device that provides create_vqs() callback to create virtqueue
++ * @nvqs: Number of vhost virtqueues to be created
++ * @num_bufs: The number of buffers that should be supported by the vhost
++ *   virtqueue (number of descriptors in the vhost virtqueue)
++ * @vqs: Pointers to all the created vhost virtqueues
++ * @callback: Callback function associated with the virtqueue
++ * @names: Names associated with each virtqueue
++ *
++ * Wrapper that invokes vhost_config_ops to create virtqueue.
++ */
++int vhost_create_vqs(struct vhost_dev *vdev, unsigned int nvqs,
++		     unsigned int num_bufs, struct vhost_virtqueue *vqs[],
++		     vhost_vq_callback_t *callbacks[],
++		     const char * const names[])
++{
++	int ret;
++
++	if (IS_ERR_OR_NULL(vdev))
++		return -EINVAL;
++
++	if (!vdev->ops && !vdev->ops->create_vqs)
++		return -EINVAL;
++
++	mutex_lock(&vdev->mutex);
++	ret = vdev->ops->create_vqs(vdev, nvqs, num_bufs, vqs, callbacks,
++				    names);
++	mutex_unlock(&vdev->mutex);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(vhost_create_vqs);
++
++/* vhost_del_vqs - Invoke vhost_config_ops to delete the created virtqueues
++ * @vdev: Vhost device that provides del_vqs() callback to delete virtqueue
++ *
++ * Wrapper that invokes vhost_config_ops to delete all the virtqueues
++ * associated with the vhost device.
++ */
++void vhost_del_vqs(struct vhost_dev *vdev)
++{
++	if (IS_ERR_OR_NULL(vdev))
++		return;
++
++	if (!vdev->ops && !vdev->ops->del_vqs)
++		return;
++
++	mutex_lock(&vdev->mutex);
++	vdev->ops->del_vqs(vdev);
++	mutex_unlock(&vdev->mutex);
++}
++EXPORT_SYMBOL_GPL(vhost_del_vqs);
++
++/* vhost_write - Invoke vhost_config_ops to write data to buffer provided
++ *   by remote virtio driver
++ * @vdev: Vhost device that provides write() callback to write data
++ * @dst: Buffer address in the remote device provided by the remote virtio
++ *   driver
++ * @src: Buffer address in the local device provided by the vhost client driver
++ * @len: Length of the data to be copied from @src to @dst
++ *
++ * Wrapper that invokes vhost_config_ops to write data to buffer provided by
++ * remote virtio driver from buffer provided by vhost client driver.
++ */
++int vhost_write(struct vhost_dev *vdev, u64 vhost_dst, void *src, int len)
++{
++	if (IS_ERR_OR_NULL(vdev))
++		return -EINVAL;
++
++	if (!vdev->ops && !vdev->ops->write)
++		return -EINVAL;
++
++	return vdev->ops->write(vdev, vhost_dst, src, len);
++}
++EXPORT_SYMBOL_GPL(vhost_write);
++
++/* vhost_read - Invoke vhost_config_ops to read data from buffers provided by
++ *   remote virtio driver
++ * @vdev: Vhost device that provides read() callback to read data
++ * @dst: Buffer address in the local device provided by the vhost client driver
++ * @src: Buffer address in the remote device provided by the remote virtio
++ *   driver
++ * @len: Length of the data to be copied from @src to @dst
++ *
++ * Wrapper that invokes vhost_config_ops to read data from buffers provided by
++ * remote virtio driver to the address provided by vhost client driver.
++ */
++int vhost_read(struct vhost_dev *vdev, void *dst, u64 vhost_src, int len)
++{
++	if (IS_ERR_OR_NULL(vdev))
++		return -EINVAL;
++
++	if (!vdev->ops && !vdev->ops->read)
++		return -EINVAL;
++
++	return vdev->ops->read(vdev, dst, vhost_src, len);
++}
++EXPORT_SYMBOL_GPL(vhost_read);
++
++/* vhost_set_status - Invoke vhost_config_ops to set vhost device status
++ * @vdev: Vhost device that provides set_status() callback to set device status
++ * @status: Vhost device status configured by vhost client driver
++ *
++ * Wrapper that invokes vhost_config_ops to set vhost device status.
++ */
++int vhost_set_status(struct vhost_dev *vdev, u8 status)
++{
++	int ret;
++
++	if (IS_ERR_OR_NULL(vdev))
++		return -EINVAL;
++
++	if (!vdev->ops && !vdev->ops->set_status)
++		return -EINVAL;
++
++	mutex_lock(&vdev->mutex);
++	ret = vdev->ops->set_status(vdev, status);
++	mutex_unlock(&vdev->mutex);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(vhost_set_status);
++
++/* vhost_get_status - Invoke vhost_config_ops to get vhost device status
++ * @vdev: Vhost device that provides get_status() callback to get device status
++ *
++ * Wrapper that invokes vhost_config_ops to get vhost device status.
++ */
++u8 vhost_get_status(struct vhost_dev *vdev)
++{
++	u8 status;
++
++	if (IS_ERR_OR_NULL(vdev))
++		return -EINVAL;
++
++	if (!vdev->ops && !vdev->ops->get_status)
++		return -EINVAL;
++
++	mutex_lock(&vdev->mutex);
++	status = vdev->ops->get_status(vdev);
++	mutex_unlock(&vdev->mutex);
++
++	return status;
++}
++EXPORT_SYMBOL_GPL(vhost_get_status);
++
++/* vhost_set_features - Invoke vhost_config_ops to set vhost device features
++ * @vdev: Vhost device that provides set_features() callback to set device
++ *   features
++ *
++ * Wrapper that invokes vhost_config_ops to set device features.
++ */
++int vhost_set_features(struct vhost_dev *vdev, u64 device_features)
++{
++	int ret;
++
++	if (IS_ERR_OR_NULL(vdev))
++		return -EINVAL;
++
++	if (!vdev->ops && !vdev->ops->set_features)
++		return -EINVAL;
++
++	mutex_lock(&vdev->mutex);
++	ret = vdev->ops->set_features(vdev, device_features);
++	mutex_unlock(&vdev->mutex);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(vhost_set_features);
++
++/* vhost_register_notifier - Register notifier to receive notification from
++ *   vhost device
++ * @vdev: Vhost device from which notification has to be received.
++ * @nb: Notifier block holding the callback function
++ *
++ * Invoked by vhost client to receive notification from vhost device.
++ */
++int vhost_register_notifier(struct vhost_dev *vdev, struct notifier_block *nb)
++{
++	return blocking_notifier_chain_register(&vdev->notifier, nb);
++}
++EXPORT_SYMBOL_GPL(vhost_register_notifier);
++
+ static inline int vhost_id_match(const struct vhost_dev *vdev,
+ 				 const struct vhost_device_id *id)
+ {
+@@ -2669,6 +2853,7 @@ int vhost_register_device(struct vhost_dev *vdev)
+ 	device_initialize(dev);
+ 
+ 	dev_set_name(dev, "vhost%u", ret);
++	BLOCKING_INIT_NOTIFIER_HEAD(&vdev->notifier);
+ 
+ 	ret = device_add(dev);
+ 	if (ret) {
+diff --git a/include/linux/vhost.h b/include/linux/vhost.h
+index 16c374a8fa12..b22a19c66109 100644
+--- a/include/linux/vhost.h
++++ b/include/linux/vhost.h
+@@ -135,6 +135,37 @@ struct vhost_msg_node {
+   struct list_head node;
+ };
+ 
++enum vhost_notify_event {
++	NOTIFY_SET_STATUS,
++	NOTIFY_FINALIZE_FEATURES,
++	NOTIFY_RESET,
++};
++
++typedef void vhost_vq_callback_t(struct vhost_virtqueue *);
++/**
++ * struct vhost_config_ops - set of function pointers for performing vhost
++ *   device specific operation
++ * @create_vqs: ops to create vhost virtqueue
++ * @del_vqs: ops to delete vhost virtqueue
++ * @write: ops to write data to buffer provided by remote virtio driver
++ * @read: ops to read data from buffer provided by remote virtio driver
++ * @set_features: ops to set vhost device features
++ * @set_status: ops to set vhost device status
++ * @get_status: ops to get vhost device status
++ */
++struct vhost_config_ops {
++	int (*create_vqs)(struct vhost_dev *vdev, unsigned int nvqs,
++			  unsigned int num_bufs, struct vhost_virtqueue *vqs[],
++			  vhost_vq_callback_t *callbacks[],
++			  const char * const names[]);
++	void (*del_vqs)(struct vhost_dev *vdev);
++	int (*write)(struct vhost_dev *vdev, u64 vhost_dst, void *src, int len);
++	int (*read)(struct vhost_dev *vdev, void *dst, u64 vhost_src, int len);
++	int (*set_features)(struct vhost_dev *vdev, u64 device_features);
++	int (*set_status)(struct vhost_dev *vdev, u8 status);
++	u8 (*get_status)(struct vhost_dev *vdev);
++};
++
+ struct vhost_driver {
+ 	struct device_driver driver;
+ 	struct vhost_device_id *id_table;
+@@ -149,6 +180,8 @@ struct vhost_dev {
+ 	struct vhost_driver *driver;
+ 	struct vhost_device_id id;
+ 	int index;
++	const struct vhost_config_ops *ops;
++	struct blocking_notifier_head notifier;
+ 	struct mm_struct *mm;
+ 	struct mutex mutex;
+ 	struct vhost_virtqueue **vqs;
+@@ -173,11 +206,35 @@ struct vhost_dev {
+ 
+ #define to_vhost_dev(d) container_of((d), struct vhost_dev, dev)
+ 
++static inline void vhost_set_drvdata(struct vhost_dev *vdev, void *data)
++{
++	dev_set_drvdata(&vdev->dev, data);
++}
++
++static inline void *vhost_get_drvdata(struct vhost_dev *vdev)
++{
++	return dev_get_drvdata(&vdev->dev);
++}
++
+ int vhost_register_driver(struct vhost_driver *driver);
+ void vhost_unregister_driver(struct vhost_driver *driver);
+ int vhost_register_device(struct vhost_dev *vdev);
+ void vhost_unregister_device(struct vhost_dev *vdev);
+ 
++int vhost_create_vqs(struct vhost_dev *vdev, unsigned int nvqs,
++		     unsigned int num_bufs, struct vhost_virtqueue *vqs[],
++		     vhost_vq_callback_t *callbacks[],
++		     const char * const names[]);
++void vhost_del_vqs(struct vhost_dev *vdev);
++int vhost_write(struct vhost_dev *vdev, u64 vhost_dst, void *src, int len);
++int vhost_read(struct vhost_dev *vdev, void *dst, u64 vhost_src, int len);
++int vhost_set_features(struct vhost_dev *vdev, u64 device_features);
++u64 vhost_get_features(struct vhost_dev *vdev);
++int vhost_set_status(struct vhost_dev *vdev, u8 status);
++u8 vhost_get_status(struct vhost_dev *vdev);
++
++int vhost_register_notifier(struct vhost_dev *vdev, struct notifier_block *nb);
++
+ bool vhost_exceeds_weight(struct vhost_virtqueue *vq, int pkts, int total_len);
+ void vhost_dev_init(struct vhost_dev *, struct vhost_virtqueue **vqs,
+ 		    int nvqs, int iov_limit, int weight, int byte_weight,
+-- 
+2.17.1
+
