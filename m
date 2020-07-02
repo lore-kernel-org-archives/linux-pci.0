@@ -2,132 +2,265 @@ Return-Path: <SRS0=404H=AN=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.0 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3339AC433DF
-	for <linux-pci@archiver.kernel.org>; Thu,  2 Jul 2020 17:09:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2093AC433E0
+	for <linux-pci@archiver.kernel.org>; Thu,  2 Jul 2020 17:31:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 16E3820760
-	for <linux-pci@archiver.kernel.org>; Thu,  2 Jul 2020 17:09:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E7EDB20760
+	for <linux-pci@archiver.kernel.org>; Thu,  2 Jul 2020 17:31:43 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="dlardQB2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726738AbgGBRJa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 2 Jul 2020 13:09:30 -0400
-Received: from mga12.intel.com ([192.55.52.136]:38697 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727102AbgGBRJC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 2 Jul 2020 13:09:02 -0400
-IronPort-SDR: g8Pbnfpl3/TGz/jf/wG9T4f6sCKi5oPVRIbVKHhVpo31kg29HNBo0ID3INTRmKVvYW+F+tjjrN
- 29diOkSzBvkw==
-X-IronPort-AV: E=McAfee;i="6000,8403,9670"; a="126587489"
-X-IronPort-AV: E=Sophos;i="5.75,304,1589266800"; 
-   d="scan'208";a="126587489"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jul 2020 10:08:59 -0700
-IronPort-SDR: g27ZAUaruHNYawyGV8EZm+9GD+QKdwh9iwmV2dt8gwL+wpsu7UAWBz0MbmviLXvw3P1pToxC9q
- 7bsB+CZeykag==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.75,304,1589266800"; 
-   d="scan'208";a="481763212"
-Received: from otc-lr-04.jf.intel.com ([10.54.39.143])
-  by fmsmga006.fm.intel.com with ESMTP; 02 Jul 2020 10:08:58 -0700
-From:   kan.liang@linux.intel.com
-To:     peterz@infradead.org, bhelgaas@google.com, mingo@redhat.com,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Cc:     jeffrey.t.kirsher@intel.com, olof@lixom.net,
-        dan.j.williams@intel.com, ak@linux.intel.com,
-        Kan Liang <kan.liang@linux.intel.com>
-Subject: [PATCH 3/7] perf/x86/intel/uncore: Factor out uncore_find_pmu_by_pci_dev()
-Date:   Thu,  2 Jul 2020 10:05:13 -0700
-Message-Id: <1593709517-108857-4-git-send-email-kan.liang@linux.intel.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1593709517-108857-1-git-send-email-kan.liang@linux.intel.com>
-References: <1593709517-108857-1-git-send-email-kan.liang@linux.intel.com>
+        id S1727882AbgGBRbj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 2 Jul 2020 13:31:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47594 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727773AbgGBRbf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jul 2020 13:31:35 -0400
+Received: from mail-io1-xd43.google.com (mail-io1-xd43.google.com [IPv6:2607:f8b0:4864:20::d43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E262FC08C5E0
+        for <linux-pci@vger.kernel.org>; Thu,  2 Jul 2020 10:31:34 -0700 (PDT)
+Received: by mail-io1-xd43.google.com with SMTP id v8so29659684iox.2
+        for <linux-pci@vger.kernel.org>; Thu, 02 Jul 2020 10:31:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=qS9aKixWg8M2HwkRwLxIhre1iwIBiL08luFNH178zko=;
+        b=dlardQB2kRCLmJxUeHCCJ1I//DtST1JMzmk2zK2iYoauEZmj8YlzMayYjIs8nTaonS
+         etg4Ag4rCqNDLBYKFt2YxlJ7IsVmzeOEMu7xoCYebrrw/y9piCzD7+NrUIKt0Q/3l1UT
+         etQxxjV7IZ0iyC3qlWPNbBYh0mW28oml8cxYs6Kk3y4qDW/U1PsEGy5y3E8sFzC0EY0Q
+         Qb4GgY6BdqGv5MT61oqVVem0THpeS3KdnPmEKSeTGFRLV6076ASt+Ts3Sc5XHNA177VE
+         lj1Siv1c6nDNc06rawhTBbQpydFWRRhZsu2BedcpPsSsVW1t5HZRKlufOzdJzYGTbUak
+         5Ppg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=qS9aKixWg8M2HwkRwLxIhre1iwIBiL08luFNH178zko=;
+        b=dSO/gwftkVxyIt5MDWPVQgjVgYp6LUZGSiCpirGnAtE9A0/Pcn1yl0LRxOJSK1YidW
+         7Iw8HycI28OoqYJj8FrtYOcVDnohL6T0lo14gf3oEd7kw+Imh0QeihKLX8uBWZHWX/az
+         bM3gXsxUdopALVhZL0NL2BtcLMl/Os5SliP7AhM/cAKIP0K8Dz3x9JQysmb0nIh+Wyjm
+         uGjleK0TXf4Zgy9LFmt6YOp8DBXITP/H/NuQSNBuPuxk3mx7l/oCDX9FI6Cs+YqoYq06
+         obEHfE5HimuAoxWYLZqnQyNSOSaTojbwmBuyc7UkFaG1bCcp1o3H++JkVTLzMvaw0TIx
+         JuTQ==
+X-Gm-Message-State: AOAM530IJrX1eiz6fM5QxXIEEn6oD3msesZgaH9GdCVG6RTdqS510Smh
+        79e9Ac0+vPqgR3NejOGIPOTjcdAabT7yRucPMCO/og==
+X-Google-Smtp-Source: ABdhPJzLKR5y/4qxmdCN5zOuywjt8u2E+3dsyGdmjEwUOvRQTg/hQElVu0bbAUkE1Z5HPhVEQOaIOwv1coyY7vNqIl8=
+X-Received: by 2002:a02:7f89:: with SMTP id r131mr34382094jac.98.1593711094007;
+ Thu, 02 Jul 2020 10:31:34 -0700 (PDT)
+MIME-Version: 1.0
+References: <20200702082143.25259-1-kishon@ti.com> <20200702055026-mutt-send-email-mst@kernel.org>
+In-Reply-To: <20200702055026-mutt-send-email-mst@kernel.org>
+From:   Mathieu Poirier <mathieu.poirier@linaro.org>
+Date:   Thu, 2 Jul 2020 11:31:23 -0600
+Message-ID: <CANLsYky4ZrgYGZUyg4iVwbM3TQk5dvOSBwPFER8qofixjn4vyA@mail.gmail.com>
+Subject: Re: [RFC PATCH 00/22] Enhance VHOST to enable SoC-to-SoC communication
+To:     "Michael S. Tsirkin" <mst@redhat.com>
+Cc:     Kishon Vijay Abraham I <kishon@ti.com>,
+        Ohad Ben-Cohen <ohad@wizery.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Jon Mason <jdmason@kudzu.us>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <allenbh@gmail.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
+        Stefano Garzarella <sgarzare@redhat.com>,
+        "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-remoteproc <linux-remoteproc@vger.kernel.org>,
+        linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        kvm@vger.kernel.org, virtualization@lists.linux-foundation.org,
+        netdev@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Kan Liang <kan.liang@linux.intel.com>
+On Thu, 2 Jul 2020 at 03:51, Michael S. Tsirkin <mst@redhat.com> wrote:
+>
+> On Thu, Jul 02, 2020 at 01:51:21PM +0530, Kishon Vijay Abraham I wrote:
+> > This series enhances Linux Vhost support to enable SoC-to-SoC
+> > communication over MMIO. This series enables rpmsg communication between
+> > two SoCs using both PCIe RC<->EP and HOST1-NTB-HOST2
+> >
+> > 1) Modify vhost to use standard Linux driver model
+> > 2) Add support in vring to access virtqueue over MMIO
+> > 3) Add vhost client driver for rpmsg
+> > 4) Add PCIe RC driver (uses virtio) and PCIe EP driver (uses vhost) for
+> >    rpmsg communication between two SoCs connected to each other
+> > 5) Add NTB Virtio driver and NTB Vhost driver for rpmsg communication
+> >    between two SoCs connected via NTB
+> > 6) Add configfs to configure the components
+> >
+> > UseCase1 :
+> >
+> >  VHOST RPMSG                     VIRTIO RPMSG
+> >       +                               +
+> >       |                               |
+> >       |                               |
+> >       |                               |
+> >       |                               |
+> > +-----v------+                 +------v-------+
+> > |   Linux    |                 |     Linux    |
+> > |  Endpoint  |                 | Root Complex |
+> > |            <----------------->              |
+> > |            |                 |              |
+> > |    SOC1    |                 |     SOC2     |
+> > +------------+                 +--------------+
+> >
+> > UseCase 2:
+> >
+> >      VHOST RPMSG                                      VIRTIO RPMSG
+> >           +                                                 +
+> >           |                                                 |
+> >           |                                                 |
+> >           |                                                 |
+> >           |                                                 |
+> >    +------v------+                                   +------v------+
+> >    |             |                                   |             |
+> >    |    HOST1    |                                   |    HOST2    |
+> >    |             |                                   |             |
+> >    +------^------+                                   +------^------+
+> >           |                                                 |
+> >           |                                                 |
+> > +---------------------------------------------------------------------+
+> > |  +------v------+                                   +------v------+  |
+> > |  |             |                                   |             |  |
+> > |  |     EP      |                                   |     EP      |  |
+> > |  | CONTROLLER1 |                                   | CONTROLLER2 |  |
+> > |  |             <----------------------------------->             |  |
+> > |  |             |                                   |             |  |
+> > |  |             |                                   |             |  |
+> > |  |             |  SoC With Multiple EP Instances   |             |  |
+> > |  |             |  (Configured using NTB Function)  |             |  |
+> > |  +-------------+                                   +-------------+  |
+> > +---------------------------------------------------------------------+
+> >
+> > Software Layering:
+> >
+> > The high-level SW layering should look something like below. This series
+> > adds support only for RPMSG VHOST, however something similar should be
+> > done for net and scsi. With that any vhost device (PCI, NTB, Platform
+> > device, user) can use any of the vhost client driver.
+> >
+> >
+> >     +----------------+  +-----------+  +------------+  +----------+
+> >     |  RPMSG VHOST   |  | NET VHOST |  | SCSI VHOST |  |    X     |
+> >     +-------^--------+  +-----^-----+  +-----^------+  +----^-----+
+> >             |                 |              |              |
+> >             |                 |              |              |
+> >             |                 |              |              |
+> > +-----------v-----------------v--------------v--------------v----------+
+> > |                            VHOST CORE                                |
+> > +--------^---------------^--------------------^------------------^-----+
+> >          |               |                    |                  |
+> >          |               |                    |                  |
+> >          |               |                    |                  |
+> > +--------v-------+  +----v------+  +----------v----------+  +----v-----+
+> > |  PCI EPF VHOST |  | NTB VHOST |  |PLATFORM DEVICE VHOST|  |    X     |
+> > +----------------+  +-----------+  +---------------------+  +----------+
+> >
+> > This was initially proposed here [1]
+> >
+> > [1] -> https://lore.kernel.org/r/2cf00ec4-1ed6-f66e-6897-006d1a5b6390@ti.com
+>
+>
+> I find this very interesting. A huge patchset so will take a bit
+> to review, but I certainly plan to do that. Thanks!
 
-When a platform device is probed, the corresponding PMU has to be
-registered.
+Same here - it will take time.  This patchset is sizable and sits
+behind a few others that are equally big.
 
-Factor out the codes to find the corresponding PMU by comparing the
-pci_device_id table. The function will be used later.
-
-There is no functional change.
-
-Signed-off-by: Kan Liang <kan.liang@linux.intel.com>
----
- arch/x86/events/intel/uncore.c | 43 +++++++++++++++++++++++++++---------------
- 1 file changed, 28 insertions(+), 15 deletions(-)
-
-diff --git a/arch/x86/events/intel/uncore.c b/arch/x86/events/intel/uncore.c
-index 0651ab7..6a87c1a 100644
---- a/arch/x86/events/intel/uncore.c
-+++ b/arch/x86/events/intel/uncore.c
-@@ -1002,6 +1002,32 @@ static int uncore_pci_get_die_info(struct pci_dev *pdev,
- 
- 	return 0;
- }
-+
-+static struct intel_uncore_pmu *
-+uncore_find_pmu_by_pci_dev(struct pci_dev *pdev, const struct pci_device_id *ids)
-+{
-+	struct intel_uncore_pmu *pmu = NULL;
-+	struct intel_uncore_type *type;
-+	kernel_ulong_t data;
-+	unsigned int devfn;
-+
-+	while (ids && ids->vendor) {
-+		if ((ids->vendor == pdev->vendor) &&
-+		    (ids->device == pdev->device)) {
-+			data = ids->driver_data;
-+			devfn = PCI_DEVFN(UNCORE_PCI_DEV_DEV(data),
-+					  UNCORE_PCI_DEV_FUNC(data));
-+			if (devfn == pdev->devfn) {
-+				type = uncore_pci_uncores[UNCORE_PCI_DEV_TYPE(data)];
-+				pmu = &type->pmus[UNCORE_PCI_DEV_IDX(data)];
-+				break;
-+			}
-+		}
-+		ids++;
-+	}
-+	return pmu;
-+}
-+
- /*
-  * add a pci uncore device
-  */
-@@ -1033,21 +1059,8 @@ static int uncore_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id
- 	 */
- 	if (id->driver_data & ~0xffff) {
- 		struct pci_driver *pci_drv = pdev->driver;
--		const struct pci_device_id *ids = pci_drv->id_table;
--		unsigned int devfn;
--
--		while (ids && ids->vendor) {
--			if ((ids->vendor == pdev->vendor) &&
--			    (ids->device == pdev->device)) {
--				devfn = PCI_DEVFN(UNCORE_PCI_DEV_DEV(ids->driver_data),
--						  UNCORE_PCI_DEV_FUNC(ids->driver_data));
--				if (devfn == pdev->devfn) {
--					pmu = &type->pmus[UNCORE_PCI_DEV_IDX(ids->driver_data)];
--					break;
--				}
--			}
--			ids++;
--		}
-+
-+		pmu = uncore_find_pmu_by_pci_dev(pdev, pci_drv->id_table);
- 		if (pmu == NULL)
- 			return -ENODEV;
- 	} else {
--- 
-2.7.4
-
+>
+> >
+> > Kishon Vijay Abraham I (22):
+> >   vhost: Make _feature_ bits a property of vhost device
+> >   vhost: Introduce standard Linux driver model in VHOST
+> >   vhost: Add ops for the VHOST driver to configure VHOST device
+> >   vringh: Add helpers to access vring in MMIO
+> >   vhost: Add MMIO helpers for operations on vhost virtqueue
+> >   vhost: Introduce configfs entry for configuring VHOST
+> >   virtio_pci: Use request_threaded_irq() instead of request_irq()
+> >   rpmsg: virtio_rpmsg_bus: Disable receive virtqueue callback when
+> >     reading messages
+> >   rpmsg: Introduce configfs entry for configuring rpmsg
+> >   rpmsg: virtio_rpmsg_bus: Add Address Service Notification support
+> >   rpmsg: virtio_rpmsg_bus: Move generic rpmsg structure to
+> >     rpmsg_internal.h
+> >   virtio: Add ops to allocate and free buffer
+> >   rpmsg: virtio_rpmsg_bus: Use virtio_alloc_buffer() and
+> >     virtio_free_buffer()
+> >   rpmsg: Add VHOST based remote processor messaging bus
+> >   samples/rpmsg: Setup delayed work to send message
+> >   samples/rpmsg: Wait for address to be bound to rpdev for sending
+> >     message
+> >   rpmsg.txt: Add Documentation to configure rpmsg using configfs
+> >   virtio_pci: Add VIRTIO driver for VHOST on Configurable PCIe Endpoint
+> >     device
+> >   PCI: endpoint: Add EP function driver to provide VHOST interface
+> >   NTB: Add a new NTB client driver to implement VIRTIO functionality
+> >   NTB: Add a new NTB client driver to implement VHOST functionality
+> >   NTB: Describe the ntb_virtio and ntb_vhost client in the documentation
+> >
+> >  Documentation/driver-api/ntb.rst              |   11 +
+> >  Documentation/rpmsg.txt                       |   56 +
+> >  drivers/ntb/Kconfig                           |   18 +
+> >  drivers/ntb/Makefile                          |    2 +
+> >  drivers/ntb/ntb_vhost.c                       |  776 +++++++++++
+> >  drivers/ntb/ntb_virtio.c                      |  853 ++++++++++++
+> >  drivers/ntb/ntb_virtio.h                      |   56 +
+> >  drivers/pci/endpoint/functions/Kconfig        |   11 +
+> >  drivers/pci/endpoint/functions/Makefile       |    1 +
+> >  .../pci/endpoint/functions/pci-epf-vhost.c    | 1144 ++++++++++++++++
+> >  drivers/rpmsg/Kconfig                         |   10 +
+> >  drivers/rpmsg/Makefile                        |    3 +-
+> >  drivers/rpmsg/rpmsg_cfs.c                     |  394 ++++++
+> >  drivers/rpmsg/rpmsg_core.c                    |    7 +
+> >  drivers/rpmsg/rpmsg_internal.h                |  136 ++
+> >  drivers/rpmsg/vhost_rpmsg_bus.c               | 1151 +++++++++++++++++
+> >  drivers/rpmsg/virtio_rpmsg_bus.c              |  184 ++-
+> >  drivers/vhost/Kconfig                         |    1 +
+> >  drivers/vhost/Makefile                        |    2 +-
+> >  drivers/vhost/net.c                           |   10 +-
+> >  drivers/vhost/scsi.c                          |   24 +-
+> >  drivers/vhost/test.c                          |   17 +-
+> >  drivers/vhost/vdpa.c                          |    2 +-
+> >  drivers/vhost/vhost.c                         |  730 ++++++++++-
+> >  drivers/vhost/vhost_cfs.c                     |  341 +++++
+> >  drivers/vhost/vringh.c                        |  332 +++++
+> >  drivers/vhost/vsock.c                         |   20 +-
+> >  drivers/virtio/Kconfig                        |    9 +
+> >  drivers/virtio/Makefile                       |    1 +
+> >  drivers/virtio/virtio_pci_common.c            |   25 +-
+> >  drivers/virtio/virtio_pci_epf.c               |  670 ++++++++++
+> >  include/linux/mod_devicetable.h               |    6 +
+> >  include/linux/rpmsg.h                         |    6 +
+> >  {drivers/vhost => include/linux}/vhost.h      |  132 +-
+> >  include/linux/virtio.h                        |    3 +
+> >  include/linux/virtio_config.h                 |   42 +
+> >  include/linux/vringh.h                        |   46 +
+> >  samples/rpmsg/rpmsg_client_sample.c           |   32 +-
+> >  tools/virtio/virtio_test.c                    |    2 +-
+> >  39 files changed, 7083 insertions(+), 183 deletions(-)
+> >  create mode 100644 drivers/ntb/ntb_vhost.c
+> >  create mode 100644 drivers/ntb/ntb_virtio.c
+> >  create mode 100644 drivers/ntb/ntb_virtio.h
+> >  create mode 100644 drivers/pci/endpoint/functions/pci-epf-vhost.c
+> >  create mode 100644 drivers/rpmsg/rpmsg_cfs.c
+> >  create mode 100644 drivers/rpmsg/vhost_rpmsg_bus.c
+> >  create mode 100644 drivers/vhost/vhost_cfs.c
+> >  create mode 100644 drivers/virtio/virtio_pci_epf.c
+> >  rename {drivers/vhost => include/linux}/vhost.h (66%)
+> >
+> > --
+> > 2.17.1
+> >
+>
