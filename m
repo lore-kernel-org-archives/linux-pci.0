@@ -7,45 +7,45 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D350C433E1
-	for <linux-pci@archiver.kernel.org>; Thu,  2 Jul 2020 08:25:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8D04C433E0
+	for <linux-pci@archiver.kernel.org>; Thu,  2 Jul 2020 08:26:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E727420720
-	for <linux-pci@archiver.kernel.org>; Thu,  2 Jul 2020 08:25:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7D40520720
+	for <linux-pci@archiver.kernel.org>; Thu,  2 Jul 2020 08:26:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="UC+AmEhN"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="XSyOgQSE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727847AbgGBIWc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 2 Jul 2020 04:22:32 -0400
-Received: from lelv0143.ext.ti.com ([198.47.23.248]:55200 "EHLO
-        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726462AbgGBIWb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jul 2020 04:22:31 -0400
-Received: from lelv0266.itg.ti.com ([10.180.67.225])
-        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id 0628MJuo042209;
-        Thu, 2 Jul 2020 03:22:19 -0500
+        id S1728191AbgGBIWP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 2 Jul 2020 04:22:15 -0400
+Received: from lelv0142.ext.ti.com ([198.47.23.249]:59364 "EHLO
+        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726648AbgGBIWN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jul 2020 04:22:13 -0400
+Received: from lelv0265.itg.ti.com ([10.180.67.224])
+        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 0628M2Op081717;
+        Thu, 2 Jul 2020 03:22:02 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1593678139;
-        bh=Uhwq7t9xmJ09dppFbQNiaS41cCziAqDB/ZcJ4oUfEXo=;
+        s=ti-com-17Q1; t=1593678122;
+        bh=+aGJiU5V4G+i0lcwnv8aYxc6DjyYC/equHpyXkZ20Wk=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=UC+AmEhNh3aW86RcPHPX1bzomjjyeb4yGiNuHcVwomWqfxi27c57DQN6LFLaEaB03
-         X1y9lNs64MBrJRQQJ3r2u/Xgaust371pATFRpx89ycYyB/mfdagKqybKoItdeC7BrO
-         K1wC2lsJ6nZLGWKJU+PzA0JtSsehQnRsA7rzMwD8=
-Received: from DLEE103.ent.ti.com (dlee103.ent.ti.com [157.170.170.33])
-        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 0628MJW0065146
+        b=XSyOgQSElhUwnW2/1xSvHQA9tvtPgssdIiW9G1W3QtCRYlGnb7azt1GGTaN8xwU9m
+         nSSRfg9ajCMpfZlSJA2UJyL64XdQnIcWCuPVlYVK5Ef1aFxdLe0VeX82iX6Ycs9uPi
+         BO0073wwyl3CLiCxhUFW4ZKCOpto6QSAh7g43W2g=
+Received: from DLEE104.ent.ti.com (dlee104.ent.ti.com [157.170.170.34])
+        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 0628M21U065272
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 2 Jul 2020 03:22:19 -0500
-Received: from DLEE104.ent.ti.com (157.170.170.34) by DLEE103.ent.ti.com
- (157.170.170.33) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Thu, 2 Jul
- 2020 03:22:18 -0500
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE104.ent.ti.com
+        Thu, 2 Jul 2020 03:22:02 -0500
+Received: from DLEE112.ent.ti.com (157.170.170.23) by DLEE104.ent.ti.com
  (157.170.170.34) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Thu, 2 Jul
+ 2020 03:22:01 -0500
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE112.ent.ti.com
+ (157.170.170.23) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
- Frontend Transport; Thu, 2 Jul 2020 03:22:18 -0500
+ Frontend Transport; Thu, 2 Jul 2020 03:22:02 -0500
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0628LiYH006145;
-        Thu, 2 Jul 2020 03:22:13 -0500
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0628LiYE006145;
+        Thu, 2 Jul 2020 03:21:56 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Ohad Ben-Cohen <ohad@wizery.com>,
         Bjorn Andersson <bjorn.andersson@linaro.org>,
@@ -64,9 +64,9 @@ CC:     <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <linux-pci@vger.kernel.org>, <kvm@vger.kernel.org>,
         <virtualization@lists.linux-foundation.org>,
         <netdev@vger.kernel.org>
-Subject: [RFC PATCH 05/22] vhost: Add MMIO helpers for operations on vhost virtqueue
-Date:   Thu, 2 Jul 2020 13:51:26 +0530
-Message-ID: <20200702082143.25259-6-kishon@ti.com>
+Subject: [RFC PATCH 02/22] vhost: Introduce standard Linux driver model in VHOST
+Date:   Thu, 2 Jul 2020 13:51:23 +0530
+Message-ID: <20200702082143.25259-3-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200702082143.25259-1-kishon@ti.com>
 References: <20200702082143.25259-1-kishon@ti.com>
@@ -78,387 +78,381 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add helpers for VHOST drivers to read descriptor data from
-vhost_virtqueue for IN transfers or write descriptor data to
-vhost_virtqueue for OUT transfers respectively. Also add
-helpers to enable callback, disable callback and notify remote
-virtio for events on virtqueue.
-
-This adds helpers only for virtqueue in MMIO (helpers for virtqueue
-in kernel space and user space can be added later).
+Introduce standard driver model in VHOST. This will facilitate using
+multiple VHOST drivers (like net, scsi etc.,) over different VHOST
+devices using MMIO (like PCIe or NTB), using kernel pointers (like
+platform devices) or using userspace pointers.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/vhost/Kconfig |   1 +
- drivers/vhost/vhost.c | 292 ++++++++++++++++++++++++++++++++++++++++++
- include/linux/vhost.h |  22 ++++
- 3 files changed, 315 insertions(+)
+ drivers/vhost/net.c                      |   3 +-
+ drivers/vhost/scsi.c                     |   2 +-
+ drivers/vhost/test.c                     |   3 +-
+ drivers/vhost/vdpa.c                     |   2 +-
+ drivers/vhost/vhost.c                    | 157 ++++++++++++++++++++++-
+ drivers/vhost/vsock.c                    |   2 +-
+ include/linux/mod_devicetable.h          |   6 +
+ {drivers/vhost => include/linux}/vhost.h |  22 +++-
+ tools/virtio/virtio_test.c               |   2 +-
+ 9 files changed, 190 insertions(+), 9 deletions(-)
+ rename {drivers/vhost => include/linux}/vhost.h (93%)
 
-diff --git a/drivers/vhost/Kconfig b/drivers/vhost/Kconfig
-index c4f273793595..77e195a38469 100644
---- a/drivers/vhost/Kconfig
-+++ b/drivers/vhost/Kconfig
-@@ -24,6 +24,7 @@ config VHOST_DPN
+diff --git a/drivers/vhost/net.c b/drivers/vhost/net.c
+index 437126219116..3c57c345cbfd 100644
+--- a/drivers/vhost/net.c
++++ b/drivers/vhost/net.c
+@@ -18,6 +18,7 @@
+ #include <linux/slab.h>
+ #include <linux/sched/clock.h>
+ #include <linux/sched/signal.h>
++#include <linux/vhost.h>
+ #include <linux/vmalloc.h>
  
- config VHOST
- 	tristate
-+	select VHOST_RING
- 	select VHOST_IOTLB
- 	help
- 	  This option is selected by any driver which needs to access
+ #include <linux/net.h>
+@@ -33,7 +34,7 @@
+ #include <net/sock.h>
+ #include <net/xdp.h>
+ 
+-#include "vhost.h"
++#include <uapi/linux/vhost.h>
+ 
+ static int experimental_zcopytx = 0;
+ module_param(experimental_zcopytx, int, 0444);
+diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
+index f5138379659e..06898b7ce7dd 100644
+--- a/drivers/vhost/scsi.c
++++ b/drivers/vhost/scsi.c
+@@ -47,7 +47,7 @@
+ #include <linux/llist.h>
+ #include <linux/bitmap.h>
+ 
+-#include "vhost.h"
++#include <uapi/linux/vhost.h>
+ 
+ #define VHOST_SCSI_VERSION  "v0.1"
+ #define VHOST_SCSI_NAMELEN 256
+diff --git a/drivers/vhost/test.c b/drivers/vhost/test.c
+index 6518b48c0633..07508526182f 100644
+--- a/drivers/vhost/test.c
++++ b/drivers/vhost/test.c
+@@ -14,9 +14,10 @@
+ #include <linux/workqueue.h>
+ #include <linux/file.h>
+ #include <linux/slab.h>
++#include <linux/vhost.h>
++#include <uapi/linux/vhost.h>
+ 
+ #include "test.h"
+-#include "vhost.h"
+ 
+ /* Max number of bytes transferred before requeueing the job.
+  * Using this limit prevents one virtqueue from starving others. */
+diff --git a/drivers/vhost/vdpa.c b/drivers/vhost/vdpa.c
+index 0968361e3b77..61d90100db89 100644
+--- a/drivers/vhost/vdpa.c
++++ b/drivers/vhost/vdpa.c
+@@ -22,7 +22,7 @@
+ #include <linux/vhost.h>
+ #include <linux/virtio_net.h>
+ 
+-#include "vhost.h"
++#include <uapi/linux/vhost.h>
+ 
+ enum {
+ 	VHOST_VDPA_FEATURES =
 diff --git a/drivers/vhost/vhost.c b/drivers/vhost/vhost.c
-index f959abb0b1bb..8a3ad4698393 100644
+index 3c2633fb519d..fa2bc6e68be2 100644
 --- a/drivers/vhost/vhost.c
 +++ b/drivers/vhost/vhost.c
-@@ -2558,6 +2558,298 @@ struct vhost_msg_node *vhost_dequeue_msg(struct vhost_dev *dev,
+@@ -32,8 +32,6 @@
+ #include <linux/nospec.h>
+ #include <linux/kcov.h>
+ 
+-#include "vhost.h"
+-
+ static ushort max_mem_regions = 64;
+ module_param(max_mem_regions, ushort, 0444);
+ MODULE_PARM_DESC(max_mem_regions,
+@@ -43,6 +41,9 @@ module_param(max_iotlb_entries, int, 0444);
+ MODULE_PARM_DESC(max_iotlb_entries,
+ 	"Maximum number of iotlb entries. (default: 2048)");
+ 
++static DEFINE_IDA(vhost_index_ida);
++static DEFINE_MUTEX(vhost_index_mutex);
++
+ enum {
+ 	VHOST_MEMORY_F_LOG = 0x1,
+ };
+@@ -2557,14 +2558,166 @@ struct vhost_msg_node *vhost_dequeue_msg(struct vhost_dev *dev,
  }
  EXPORT_SYMBOL_GPL(vhost_dequeue_msg);
  
-+/**
-+ * vhost_virtqueue_disable_cb_mmio() - Write to used ring in virtio accessed
-+ *   using MMIO to stop notification
-+ * @vq: vhost_virtqueue for which callbacks have to be disabled
-+ *
-+ * Write to used ring in virtio accessed using MMIO to stop sending notification
-+ * to the vhost virtqueue.
-+ */
-+static void vhost_virtqueue_disable_cb_mmio(struct vhost_virtqueue *vq)
++static inline int vhost_id_match(const struct vhost_dev *vdev,
++				 const struct vhost_device_id *id)
 +{
-+	struct vringh *vringh;
-+
-+	vringh = &vq->vringh;
-+	vringh_notify_disable_mmio(vringh);
-+}
-+
-+/**
-+ * vhost_virtqueue_disable_cb() - Write to used ring in virtio to stop
-+ *   notification
-+ * @vq: vhost_virtqueue for which callbacks have to be disabled
-+ *
-+ * Wrapper to write to used ring in virtio to stop sending notification
-+ * to the vhost virtqueue.
-+ */
-+void vhost_virtqueue_disable_cb(struct vhost_virtqueue *vq)
-+{
-+	enum vhost_type type;
-+
-+	type = vq->type;
-+
-+	/* TODO: Add support for other VHOST TYPES */
-+	if (type == VHOST_TYPE_MMIO)
-+		return vhost_virtqueue_disable_cb_mmio(vq);
-+}
-+EXPORT_SYMBOL_GPL(vhost_virtqueue_disable_cb);
-+
-+/**
-+ * vhost_virtqueue_enable_cb_mmio() - Write to used ring in virtio accessed
-+ *   using MMIO to enable notification
-+ * @vq: vhost_virtqueue for which callbacks have to be enabled
-+ *
-+ * Write to used ring in virtio accessed using MMIO to enable notification
-+ * to the vhost virtqueue.
-+ */
-+static bool vhost_virtqueue_enable_cb_mmio(struct vhost_virtqueue *vq)
-+{
-+	struct vringh *vringh;
-+
-+	vringh = &vq->vringh;
-+	return vringh_notify_enable_mmio(vringh);
-+}
-+
-+/**
-+ * vhost_virtqueue_enable_cb() - Write to used ring in virtio to enable
-+ *   notification
-+ * @vq: vhost_virtqueue for which callbacks have to be enabled
-+ *
-+ * Wrapper to write to used ring in virtio to enable notification to the
-+ * vhost virtqueue.
-+ */
-+bool vhost_virtqueue_enable_cb(struct vhost_virtqueue *vq)
-+{
-+	enum vhost_type type;
-+
-+	type = vq->type;
-+
-+	/* TODO: Add support for other VHOST TYPES */
-+	if (type == VHOST_TYPE_MMIO)
-+		return vhost_virtqueue_enable_cb_mmio(vq);
-+
-+	return false;
-+}
-+EXPORT_SYMBOL_GPL(vhost_virtqueue_enable_cb);
-+
-+/**
-+ * vhost_virtqueue_notify() - Send notification to the remote virtqueue
-+ * @vq: vhost_virtqueue that sends the notification
-+ *
-+ * Invokes ->notify() callback to send notification to the remote virtqueue.
-+ */
-+void vhost_virtqueue_notify(struct vhost_virtqueue *vq)
-+{
-+	if (!vq->notify)
-+		return;
-+
-+	vq->notify(vq);
-+}
-+EXPORT_SYMBOL_GPL(vhost_virtqueue_notify);
-+
-+/**
-+ * vhost_virtqueue_kick_mmio() - Check if the remote virtqueue has enabled
-+ *   notification (by reading available ring in virtio accessed using MMIO)
-+ *   before sending notification
-+ * @vq: vhost_virtqueue that sends the notification
-+ *
-+ * Check if the remote virtqueue has enabled notification (by reading available
-+ * ring in virtio accessed using MMIO) and then invoke vhost_virtqueue_notify()
-+ * to send notification to the remote virtqueue.
-+ */
-+static void vhost_virtqueue_kick_mmio(struct vhost_virtqueue *vq)
-+{
-+	if (vringh_need_notify_mmio(&vq->vringh))
-+		vhost_virtqueue_notify(vq);
-+}
-+
-+/**
-+ * vhost_virtqueue_kick() - Check if the remote virtqueue has enabled
-+ *   notification before sending notification
-+ * @vq: vhost_virtqueue that sends the notification
-+ *
-+ * Wrapper to send notification to the remote virtqueue using
-+ * vhost_virtqueue_kick_mmio() that checks if the remote virtqueue has
-+ * enabled notification before sending the notification.
-+ */
-+void vhost_virtqueue_kick(struct vhost_virtqueue *vq)
-+{
-+	enum vhost_type type;
-+
-+	type = vq->type;
-+
-+	/* TODO: Add support for other VHOST TYPES */
-+	if (type == VHOST_TYPE_MMIO)
-+		return vhost_virtqueue_kick_mmio(vq);
-+}
-+EXPORT_SYMBOL_GPL(vhost_virtqueue_kick);
-+
-+/**
-+ * vhost_virtqueue_callback() - Invoke vhost virtqueue callback provided by
-+ *   vhost client driver
-+ * @vq: vhost_virtqueue for which the callback is invoked
-+ *
-+ * Invoked by the driver that creates vhost device when the remote virtio
-+ * driver sends notification to this virtqueue.
-+ */
-+void vhost_virtqueue_callback(struct vhost_virtqueue *vq)
-+{
-+	if (!vq->callback)
-+		return;
-+
-+	vq->callback(vq);
-+}
-+EXPORT_SYMBOL_GPL(vhost_virtqueue_callback);
-+
-+/**
-+ * vhost_virtqueue_get_outbuf_mmio() - Get the output buffer address by reading
-+ *   virtqueue descriptor accessed using MMIO
-+ * @vq: vhost_virtqueue used to access the descriptor
-+ * @head: head index for passing to vhost_virtqueue_put_buf()
-+ * @len: Length of the buffer
-+ *
-+ * Get the output buffer address by reading virtqueue descriptor accessed using
-+ * MMIO.
-+ */
-+static u64 vhost_virtqueue_get_outbuf_mmio(struct vhost_virtqueue *vq,
-+					   u16 *head, int *len)
-+{
-+	struct vringh_mmiov wiov;
-+	struct mmiovec *mmiovec;
-+	struct vringh *vringh;
-+	int desc;
-+
-+	vringh = &vq->vringh;
-+	vringh_mmiov_init(&wiov, NULL, 0);
-+
-+	desc = vringh_getdesc_mmio(vringh, NULL, &wiov, head, GFP_KERNEL);
-+	if (!desc)
++	if (id->device != vdev->id.device && id->device != VIRTIO_DEV_ANY_ID)
 +		return 0;
-+	mmiovec = &wiov.iov[0];
 +
-+	*len = mmiovec->iov_len;
-+	return mmiovec->iov_base;
++	return id->vendor == VIRTIO_DEV_ANY_ID || id->vendor == vdev->id.vendor;
 +}
 +
-+/**
-+ * vhost_virtqueue_get_outbuf() - Get the output buffer address by reading
-+ *   virtqueue descriptor
-+ * @vq: vhost_virtqueue used to access the descriptor
-+ * @head: head index for passing to vhost_virtqueue_put_buf()
-+ * @len: Length of the buffer
-+ *
-+ * Wrapper to get the output buffer address by reading virtqueue descriptor.
-+ */
-+u64 vhost_virtqueue_get_outbuf(struct vhost_virtqueue *vq, u16 *head, int *len)
++static int vhost_dev_match(struct device *dev, struct device_driver *drv)
 +{
-+	enum vhost_type type;
++	struct vhost_driver *driver = to_vhost_driver(drv);
++	struct vhost_dev *vdev = to_vhost_dev(dev);
++	const struct vhost_device_id *ids;
++	int i;
 +
-+	type = vq->type;
-+
-+	/* TODO: Add support for other VHOST TYPES */
-+	if (type == VHOST_TYPE_MMIO)
-+		return vhost_virtqueue_get_outbuf_mmio(vq, head, len);
++	ids = driver->id_table;
++	for (i = 0; ids[i].device; i++)
++		if (vhost_id_match(vdev, &ids[i]))
++			return 1;
 +
 +	return 0;
 +}
-+EXPORT_SYMBOL_GPL(vhost_virtqueue_get_outbuf);
 +
-+/**
-+ * vhost_virtqueue_get_inbuf_mmio() - Get the input buffer address by reading
-+ *   virtqueue descriptor accessed using MMIO
-+ * @vq: vhost_virtqueue used to access the descriptor
-+ * @head: Head index for passing to vhost_virtqueue_put_buf()
-+ * @len: Length of the buffer
-+ *
-+ * Get the input buffer address by reading virtqueue descriptor accessed using
-+ * MMIO.
-+ */
-+static u64 vhost_virtqueue_get_inbuf_mmio(struct vhost_virtqueue *vq,
-+					  u16 *head, int *len)
++static int vhost_dev_probe(struct device *dev)
 +{
-+	struct vringh_mmiov riov;
-+	struct mmiovec *mmiovec;
-+	struct vringh *vringh;
-+	int desc;
++	struct vhost_driver *driver = to_vhost_driver(dev->driver);
++	struct vhost_dev *vdev = to_vhost_dev(dev);
 +
-+	vringh = &vq->vringh;
-+	vringh_mmiov_init(&riov, NULL, 0);
++	if (!driver->probe)
++		return -ENODEV;
 +
-+	desc = vringh_getdesc_mmio(vringh, &riov, NULL, head, GFP_KERNEL);
-+	if (!desc)
-+		return 0;
++	vdev->driver = driver;
 +
-+	mmiovec = &riov.iov[0];
-+
-+	*len = mmiovec->iov_len;
-+	return mmiovec->iov_base;
++	return driver->probe(vdev);
 +}
 +
-+/**
-+ * vhost_virtqueue_get_inbuf() - Get the input buffer address by reading
-+ *   virtqueue descriptor
-+ * @vq: vhost_virtqueue used to access the descriptor
-+ * @head: head index for passing to vhost_virtqueue_put_buf()
-+ * @len: Length of the buffer
-+ *
-+ * Wrapper to get the input buffer address by reading virtqueue descriptor.
-+ */
-+u64 vhost_virtqueue_get_inbuf(struct vhost_virtqueue *vq, u16 *head, int *len)
++static int vhost_dev_remove(struct device *dev)
 +{
-+	enum vhost_type type;
++	struct vhost_driver *driver = to_vhost_driver(dev->driver);
++	struct vhost_dev *vdev = to_vhost_dev(dev);
++	int ret = 0;
 +
-+	type = vq->type;
++	if (driver->remove)
++		ret = driver->remove(vdev);
++	vdev->driver = NULL;
 +
-+	/* TODO: Add support for other VHOST TYPES */
-+	if (type == VHOST_TYPE_MMIO)
-+		return vhost_virtqueue_get_inbuf_mmio(vq, head, len);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(vhost_virtqueue_get_inbuf);
-+
-+/**
-+ * vhost_virtqueue_put_buf_mmio() - Publish to the remote virtio (update
-+ * used ring in virtio using MMIO) to indicate the buffer has been processed
-+ * @vq: vhost_virtqueue used to update the used ring
-+ * @head: Head index receive from vhost_virtqueue_get_*()
-+ * @len: Length of the buffer
-+ *
-+ * Publish to the remote virtio (update used ring in virtio using MMIO) to
-+ * indicate the buffer has been processed
-+ */
-+static void vhost_virtqueue_put_buf_mmio(struct vhost_virtqueue *vq,
-+					 u16 head, int len)
-+{
-+	struct vringh *vringh;
-+
-+	vringh = &vq->vringh;
-+
-+	vringh_complete_mmio(vringh, head, len);
++	return ret;
 +}
 +
-+/**
-+ * vhost_virtqueue_put_buf() - Publish to the remote virtio to indicate the
-+ *   buffer has been processed
-+ * @vq: vhost_virtqueue used to update the used ring
-+ * @head: Head index receive from vhost_virtqueue_get_*()
-+ * @len: Length of the buffer
-+ *
-+ * Wrapper to publish to the remote virtio to indicate the buffer has been
-+ * processed.
-+ */
-+void vhost_virtqueue_put_buf(struct vhost_virtqueue *vq, u16 head, int len)
-+{
-+	enum vhost_type type;
-+
-+	type = vq->type;
-+
-+	/* TODO: Add support for other VHOST TYPES */
-+	if (type == VHOST_TYPE_MMIO)
-+		return vhost_virtqueue_put_buf_mmio(vq, head, len);
-+}
-+EXPORT_SYMBOL_GPL(vhost_virtqueue_put_buf);
-+
- /**
-  * vhost_create_vqs() - Invoke vhost_config_ops to create virtqueue
-  * @vdev: Vhost device that provides create_vqs() callback to create virtqueue
-diff --git a/include/linux/vhost.h b/include/linux/vhost.h
-index b22a19c66109..8efb9829c1b1 100644
---- a/include/linux/vhost.h
-+++ b/include/linux/vhost.h
-@@ -10,6 +10,7 @@
- #include <linux/uio.h>
- #include <linux/virtio_config.h>
- #include <linux/virtio_ring.h>
-+#include <linux/vringh.h>
- #include <linux/atomic.h>
- #include <linux/vhost_iotlb.h>
- #include <uapi/linux/vhost.h>
-@@ -60,9 +61,20 @@ enum vhost_uaddr_type {
- 	VHOST_NUM_ADDRS = 3,
- };
- 
-+enum vhost_type {
-+	VHOST_TYPE_UNKNOWN,
-+	VHOST_TYPE_USER,
-+	VHOST_TYPE_KERN,
-+	VHOST_TYPE_MMIO,
++static struct bus_type vhost_bus_type = {
++	.name  = "vhost",
++	.match = vhost_dev_match,
++	.probe = vhost_dev_probe,
++	.remove = vhost_dev_remove,
 +};
 +
- /* The virtqueue structure describes a queue attached to a device. */
- struct vhost_virtqueue {
- 	struct vhost_dev *dev;
-+	enum vhost_type type;
-+	struct vringh vringh;
-+	void (*callback)(struct vhost_virtqueue *vq);
-+	void (*notify)(struct vhost_virtqueue *vq);
- 
- 	/* The actual ring of buffers. */
- 	struct mutex mutex;
-@@ -235,6 +247,16 @@ u8 vhost_get_status(struct vhost_dev *vdev);
- 
- int vhost_register_notifier(struct vhost_dev *vdev, struct notifier_block *nb);
- 
-+u64 vhost_virtqueue_get_outbuf(struct vhost_virtqueue *vq, u16 *head, int *len);
-+u64 vhost_virtqueue_get_inbuf(struct vhost_virtqueue *vq, u16 *head, int *len);
-+void vhost_virtqueue_put_buf(struct vhost_virtqueue *vq, u16 head, int len);
++/**
++ * vhost_register_driver() - Register a vhost driver
++ * @driver: Vhost driver that has to be registered
++ *
++ * Register a vhost driver.
++ */
++int vhost_register_driver(struct vhost_driver *driver)
++{
++	int ret;
 +
-+void vhost_virtqueue_disable_cb(struct vhost_virtqueue *vq);
-+bool vhost_virtqueue_enable_cb(struct vhost_virtqueue *vq);
-+void vhost_virtqueue_notify(struct vhost_virtqueue *vq);
-+void vhost_virtqueue_kick(struct vhost_virtqueue *vq);
-+void vhost_virtqueue_callback(struct vhost_virtqueue *vq);
++	driver->driver.bus = &vhost_bus_type;
++
++	ret = driver_register(&driver->driver);
++	if (ret)
++		return ret;
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(vhost_register_driver);
++
++/**
++ * vhost_unregister_driver() - Unregister a vhost driver
++ * @driver: Vhost driver that has to be un-registered
++ *
++ * Unregister a vhost driver.
++ */
++void vhost_unregister_driver(struct vhost_driver *driver)
++{
++	driver_unregister(&driver->driver);
++}
++EXPORT_SYMBOL_GPL(vhost_unregister_driver);
++
++/**
++ * vhost_register_device() - Register vhost device
++ * @vdev: Vhost device that has to be registered
++ *
++ * Allocate a ID and register vhost device.
++ */
++int vhost_register_device(struct vhost_dev *vdev)
++{
++	struct device *dev = &vdev->dev;
++	int ret;
++
++	mutex_lock(&vhost_index_mutex);
++	ret = ida_simple_get(&vhost_index_ida, 0, 0, GFP_KERNEL);
++	mutex_unlock(&vhost_index_mutex);
++	if (ret < 0)
++		return ret;
++
++	vdev->index = ret;
++	dev->bus = &vhost_bus_type;
++	device_initialize(dev);
++
++	dev_set_name(dev, "vhost%u", ret);
++
++	ret = device_add(dev);
++	if (ret) {
++		put_device(dev);
++		goto err;
++	}
++
++	return 0;
++
++err:
++	mutex_lock(&vhost_index_mutex);
++	ida_simple_remove(&vhost_index_ida, vdev->index);
++	mutex_unlock(&vhost_index_mutex);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(vhost_register_device);
++
++/**
++ * vhost_unregister_device() - Un-register vhost device
++ * @vdev: Vhost device that has to be un-registered
++ *
++ * Un-register vhost device and free the allocated ID.
++ */
++void vhost_unregister_device(struct vhost_dev *vdev)
++{
++	device_unregister(&vdev->dev);
++	mutex_lock(&vhost_index_mutex);
++	ida_simple_remove(&vhost_index_ida, vdev->index);
++	mutex_unlock(&vhost_index_mutex);
++}
++EXPORT_SYMBOL_GPL(vhost_unregister_device);
+ 
+ static int __init vhost_init(void)
+ {
++	int ret;
++
++	ret = bus_register(&vhost_bus_type);
++	if (ret) {
++		pr_err("failed to register vhost bus --> %d\n", ret);
++		return ret;
++	}
++
+ 	return 0;
+ }
+ 
+ static void __exit vhost_exit(void)
+ {
++	bus_unregister(&vhost_bus_type);
+ }
+ 
+ module_init(vhost_init);
+diff --git a/drivers/vhost/vsock.c b/drivers/vhost/vsock.c
+index 8317ad026e3d..5753048b7405 100644
+--- a/drivers/vhost/vsock.c
++++ b/drivers/vhost/vsock.c
+@@ -17,7 +17,7 @@
+ #include <linux/hashtable.h>
+ 
+ #include <net/af_vsock.h>
+-#include "vhost.h"
++#include <uapi/linux/vhost.h>
+ 
+ #define VHOST_VSOCK_DEFAULT_HOST_CID	2
+ /* Max number of bytes transferred before requeueing the job.
+diff --git a/include/linux/mod_devicetable.h b/include/linux/mod_devicetable.h
+index 8d764aab29de..c7df018989e3 100644
+--- a/include/linux/mod_devicetable.h
++++ b/include/linux/mod_devicetable.h
+@@ -430,6 +430,12 @@ struct virtio_device_id {
+ };
+ #define VIRTIO_DEV_ANY_ID	0xffffffff
+ 
++/* VHOST */
++struct vhost_device_id {
++	__u32 device;
++	__u32 vendor;
++};
++
+ /*
+  * For Hyper-V devices we use the device guid as the id.
+  */
+diff --git a/drivers/vhost/vhost.h b/include/linux/vhost.h
+similarity index 93%
+rename from drivers/vhost/vhost.h
+rename to include/linux/vhost.h
+index 5d1d00363e79..16c374a8fa12 100644
+--- a/drivers/vhost/vhost.h
++++ b/include/linux/vhost.h
+@@ -3,7 +3,6 @@
+ #define _VHOST_H
+ 
+ #include <linux/eventfd.h>
+-#include <linux/vhost.h>
+ #include <linux/mm.h>
+ #include <linux/mutex.h>
+ #include <linux/poll.h>
+@@ -13,6 +12,7 @@
+ #include <linux/virtio_ring.h>
+ #include <linux/atomic.h>
+ #include <linux/vhost_iotlb.h>
++#include <uapi/linux/vhost.h>
+ 
+ struct vhost_work;
+ typedef void (*vhost_work_fn_t)(struct vhost_work *work);
+@@ -135,7 +135,20 @@ struct vhost_msg_node {
+   struct list_head node;
+ };
+ 
++struct vhost_driver {
++	struct device_driver driver;
++	struct vhost_device_id *id_table;
++	int (*probe)(struct vhost_dev *dev);
++	int (*remove)(struct vhost_dev *dev);
++};
++
++#define to_vhost_driver(drv) (container_of((drv), struct vhost_driver, driver))
++
+ struct vhost_dev {
++	struct device dev;
++	struct vhost_driver *driver;
++	struct vhost_device_id id;
++	int index;
+ 	struct mm_struct *mm;
+ 	struct mutex mutex;
+ 	struct vhost_virtqueue **vqs;
+@@ -158,6 +171,13 @@ struct vhost_dev {
+ 			   struct vhost_iotlb_msg *msg);
+ };
+ 
++#define to_vhost_dev(d) container_of((d), struct vhost_dev, dev)
++
++int vhost_register_driver(struct vhost_driver *driver);
++void vhost_unregister_driver(struct vhost_driver *driver);
++int vhost_register_device(struct vhost_dev *vdev);
++void vhost_unregister_device(struct vhost_dev *vdev);
 +
  bool vhost_exceeds_weight(struct vhost_virtqueue *vq, int pkts, int total_len);
  void vhost_dev_init(struct vhost_dev *, struct vhost_virtqueue **vqs,
  		    int nvqs, int iov_limit, int weight, int byte_weight,
+diff --git a/tools/virtio/virtio_test.c b/tools/virtio/virtio_test.c
+index b427def67e7e..b13434d6c976 100644
+--- a/tools/virtio/virtio_test.c
++++ b/tools/virtio/virtio_test.c
+@@ -13,9 +13,9 @@
+ #include <fcntl.h>
+ #include <stdbool.h>
+ #include <linux/virtio_types.h>
+-#include <linux/vhost.h>
+ #include <linux/virtio.h>
+ #include <linux/virtio_ring.h>
++#include <uapi/linux/vhost.h>
+ #include "../../drivers/vhost/test.h"
+ 
+ /* Unused */
 -- 
 2.17.1
 
