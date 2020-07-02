@@ -2,245 +2,116 @@ Return-Path: <SRS0=404H=AN=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 629A7C433E1
-	for <linux-pci@archiver.kernel.org>; Thu,  2 Jul 2020 08:26:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0DEFC433E0
+	for <linux-pci@archiver.kernel.org>; Thu,  2 Jul 2020 08:31:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3E18A20899
-	for <linux-pci@archiver.kernel.org>; Thu,  2 Jul 2020 08:26:04 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="JYTSz6tC"
+	by mail.kernel.org (Postfix) with ESMTP id 8093120720
+	for <linux-pci@archiver.kernel.org>; Thu,  2 Jul 2020 08:31:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1593678686;
+	bh=QGpdAyRMoNsVdtVoCbNXP1VWmICFLyANXqWYO+rUTTs=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=YbgISxFzQjlm0RT/+4sidqZWNxVh+go4X2Pn6JB4m58/lXRBIsaNcAeHtn561Cikp
+	 YWf+YYjCAw6VcZyV4uYrLe/X1xWHKhIKIx8J19AzotEiFAs8hTpYVxmRvcanf/GALc
+	 fCMWqNNMc0CQRTmripNyEymV0mpaBET3iQRbkIe0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726978AbgGBIWI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 2 Jul 2020 04:22:08 -0400
-Received: from lelv0142.ext.ti.com ([198.47.23.249]:59346 "EHLO
-        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726362AbgGBIWI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jul 2020 04:22:08 -0400
-Received: from lelv0265.itg.ti.com ([10.180.67.224])
-        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 0628LuYq081675;
-        Thu, 2 Jul 2020 03:21:56 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1593678116;
-        bh=KmDEx84ZylqeHRRIg+ywtR6uqUDz71eDn9DrKmWcHRo=;
-        h=From:To:CC:Subject:Date;
-        b=JYTSz6tCbffjaS8p0R98jFdU890cGlFgkaOIUX73Isf6MRMb/U17YWcenQm9dERCa
-         uNWmCgLlLq60cM9CJqROng6gAsyNsVmRi/7u5UBoPIUD9KHejtBD55BvUyeeVEw5IC
-         /B77fRU9Di3zLD24jEuw3XemZ32TkSelC9dgTAEw=
-Received: from DFLE112.ent.ti.com (dfle112.ent.ti.com [10.64.6.33])
-        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 0628LoK6065017
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 2 Jul 2020 03:21:51 -0500
-Received: from DFLE109.ent.ti.com (10.64.6.30) by DFLE112.ent.ti.com
- (10.64.6.33) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Thu, 2 Jul
- 2020 03:21:50 -0500
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DFLE109.ent.ti.com
- (10.64.6.30) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
- Frontend Transport; Thu, 2 Jul 2020 03:21:50 -0500
-Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0628LiYC006145;
-        Thu, 2 Jul 2020 03:21:45 -0500
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-To:     Ohad Ben-Cohen <ohad@wizery.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Jon Mason <jdmason@kudzu.us>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <allenbh@gmail.com>,
+        id S1726362AbgGBIbZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 2 Jul 2020 04:31:25 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55754 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726292AbgGBIbZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 2 Jul 2020 04:31:25 -0400
+Received: from pali.im (pali.im [31.31.79.79])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 08AE8206A1;
+        Thu,  2 Jul 2020 08:31:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1593678685;
+        bh=QGpdAyRMoNsVdtVoCbNXP1VWmICFLyANXqWYO+rUTTs=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Z1epipgTDmBHHxSLs1kheGHs/9TjzD4Pzu+GyUKLJ143corYoaQnOjaV6M4AZG8Cl
+         yaZqpViNj9UGoHkMZv/XMoDNCfiECTq00dmdP1Qkv3FUTuZgvkP26Ki5JBNnQbBpYT
+         hGB4gfDrBgh7bdE3oezH9cl61u67W2SDkluwi/4g=
+Received: by pali.im (Postfix)
+        id 2A905E92; Thu,  2 Jul 2020 10:31:23 +0200 (CEST)
+From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
+To:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Andrew Murray <amurray@thegoodpenguin.co.uk>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        Jason Wang <jasowang@redhat.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Stefan Hajnoczi <stefanha@redhat.com>,
-        Stefano Garzarella <sgarzare@redhat.com>
-CC:     <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-remoteproc@vger.kernel.org>, <linux-ntb@googlegroups.com>,
-        <linux-pci@vger.kernel.org>, <kvm@vger.kernel.org>,
-        <virtualization@lists.linux-foundation.org>,
-        <netdev@vger.kernel.org>
-Subject: [RFC PATCH 00/22] Enhance VHOST to enable SoC-to-SoC communication
-Date:   Thu, 2 Jul 2020 13:51:21 +0530
-Message-ID: <20200702082143.25259-1-kishon@ti.com>
-X-Mailer: git-send-email 2.17.1
+        =?UTF-8?q?Marek=20Beh=C3=BAn?= <marek.behun@nic.cz>,
+        Remi Pommarel <repk@triplefau.lt>,
+        Tomasz Maciej Nowak <tmn505@gmail.com>,
+        Xogium <contact@xogium.me>
+Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v3] PCI: aardvark: Don't touch PCIe registers if no card connected
+Date:   Thu,  2 Jul 2020 10:30:36 +0200
+Message-Id: <20200702083036.12230-1-pali@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200528143141.29956-1-pali@kernel.org>
+References: <20200528143141.29956-1-pali@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This series enhances Linux Vhost support to enable SoC-to-SoC
-communication over MMIO. This series enables rpmsg communication between
-two SoCs using both PCIe RC<->EP and HOST1-NTB-HOST2
+When there is no PCIe card connected and advk_pcie_rd_conf() or
+advk_pcie_wr_conf() is called for PCI bus which doesn't belong to emulated
+root bridge, the aardvark driver throws the following error message:
 
-1) Modify vhost to use standard Linux driver model
-2) Add support in vring to access virtqueue over MMIO
-3) Add vhost client driver for rpmsg
-4) Add PCIe RC driver (uses virtio) and PCIe EP driver (uses vhost) for
-   rpmsg communication between two SoCs connected to each other
-5) Add NTB Virtio driver and NTB Vhost driver for rpmsg communication
-   between two SoCs connected via NTB
-6) Add configfs to configure the components
+  advk-pcie d0070000.pcie: config read/write timed out
 
-UseCase1 :
+Obviously accessing PCIe registers of disconnected card is not possible.
 
- VHOST RPMSG                     VIRTIO RPMSG
-      +                               +
-      |                               |
-      |                               |
-      |                               |
-      |                               |
-+-----v------+                 +------v-------+
-|   Linux    |                 |     Linux    |
-|  Endpoint  |                 | Root Complex |
-|            <----------------->              |
-|            |                 |              |
-|    SOC1    |                 |     SOC2     |
-+------------+                 +--------------+
+Extend check in advk_pcie_valid_device() function for validating
+availability of PCIe bus. If PCIe link is down, then the device is marked
+as Not Found and the driver does not try to access these registers.
 
-UseCase 2:
+This is just an optimization to prevent accessing PCIe registers when card
+is disconnected. Trying to access PCIe registers of disconnected card does
+not cause any crash, kernel just needs to wait for a timeout. So if card
+disappear immediately after checking for PCIe link (before accessing PCIe
+registers), it does not cause any problems.
 
-     VHOST RPMSG                                      VIRTIO RPMSG
-          +                                                 +
-          |                                                 |
-          |                                                 |
-          |                                                 |
-          |                                                 |
-   +------v------+                                   +------v------+
-   |             |                                   |             |
-   |    HOST1    |                                   |    HOST2    |
-   |             |                                   |             |
-   +------^------+                                   +------^------+
-          |                                                 |
-          |                                                 |
-+---------------------------------------------------------------------+
-|  +------v------+                                   +------v------+  |
-|  |             |                                   |             |  |
-|  |     EP      |                                   |     EP      |  |
-|  | CONTROLLER1 |                                   | CONTROLLER2 |  |
-|  |             <----------------------------------->             |  |
-|  |             |                                   |             |  |
-|  |             |                                   |             |  |
-|  |             |  SoC With Multiple EP Instances   |             |  |
-|  |             |  (Configured using NTB Function)  |             |  |
-|  +-------------+                                   +-------------+  |
-+---------------------------------------------------------------------+
+Signed-off-by: Pali Rohár <pali@kernel.org>
 
-Software Layering:
+---
+Changes in V3:
+* Add comment to the code
+Changes in V2:
+* Update commit message, mention that this is optimization
+---
+ drivers/pci/controller/pci-aardvark.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-The high-level SW layering should look something like below. This series
-adds support only for RPMSG VHOST, however something similar should be
-done for net and scsi. With that any vhost device (PCI, NTB, Platform
-device, user) can use any of the vhost client driver.
-
-
-    +----------------+  +-----------+  +------------+  +----------+
-    |  RPMSG VHOST   |  | NET VHOST |  | SCSI VHOST |  |    X     |
-    +-------^--------+  +-----^-----+  +-----^------+  +----^-----+
-            |                 |              |              |
-            |                 |              |              |
-            |                 |              |              |
-+-----------v-----------------v--------------v--------------v----------+
-|                            VHOST CORE                                |
-+--------^---------------^--------------------^------------------^-----+
-         |               |                    |                  |
-         |               |                    |                  |
-         |               |                    |                  |
-+--------v-------+  +----v------+  +----------v----------+  +----v-----+
-|  PCI EPF VHOST |  | NTB VHOST |  |PLATFORM DEVICE VHOST|  |    X     |
-+----------------+  +-----------+  +---------------------+  +----------+
-
-This was initially proposed here [1]
-
-[1] -> https://lore.kernel.org/r/2cf00ec4-1ed6-f66e-6897-006d1a5b6390@ti.com
-
-
-Kishon Vijay Abraham I (22):
-  vhost: Make _feature_ bits a property of vhost device
-  vhost: Introduce standard Linux driver model in VHOST
-  vhost: Add ops for the VHOST driver to configure VHOST device
-  vringh: Add helpers to access vring in MMIO
-  vhost: Add MMIO helpers for operations on vhost virtqueue
-  vhost: Introduce configfs entry for configuring VHOST
-  virtio_pci: Use request_threaded_irq() instead of request_irq()
-  rpmsg: virtio_rpmsg_bus: Disable receive virtqueue callback when
-    reading messages
-  rpmsg: Introduce configfs entry for configuring rpmsg
-  rpmsg: virtio_rpmsg_bus: Add Address Service Notification support
-  rpmsg: virtio_rpmsg_bus: Move generic rpmsg structure to
-    rpmsg_internal.h
-  virtio: Add ops to allocate and free buffer
-  rpmsg: virtio_rpmsg_bus: Use virtio_alloc_buffer() and
-    virtio_free_buffer()
-  rpmsg: Add VHOST based remote processor messaging bus
-  samples/rpmsg: Setup delayed work to send message
-  samples/rpmsg: Wait for address to be bound to rpdev for sending
-    message
-  rpmsg.txt: Add Documentation to configure rpmsg using configfs
-  virtio_pci: Add VIRTIO driver for VHOST on Configurable PCIe Endpoint
-    device
-  PCI: endpoint: Add EP function driver to provide VHOST interface
-  NTB: Add a new NTB client driver to implement VIRTIO functionality
-  NTB: Add a new NTB client driver to implement VHOST functionality
-  NTB: Describe the ntb_virtio and ntb_vhost client in the documentation
-
- Documentation/driver-api/ntb.rst              |   11 +
- Documentation/rpmsg.txt                       |   56 +
- drivers/ntb/Kconfig                           |   18 +
- drivers/ntb/Makefile                          |    2 +
- drivers/ntb/ntb_vhost.c                       |  776 +++++++++++
- drivers/ntb/ntb_virtio.c                      |  853 ++++++++++++
- drivers/ntb/ntb_virtio.h                      |   56 +
- drivers/pci/endpoint/functions/Kconfig        |   11 +
- drivers/pci/endpoint/functions/Makefile       |    1 +
- .../pci/endpoint/functions/pci-epf-vhost.c    | 1144 ++++++++++++++++
- drivers/rpmsg/Kconfig                         |   10 +
- drivers/rpmsg/Makefile                        |    3 +-
- drivers/rpmsg/rpmsg_cfs.c                     |  394 ++++++
- drivers/rpmsg/rpmsg_core.c                    |    7 +
- drivers/rpmsg/rpmsg_internal.h                |  136 ++
- drivers/rpmsg/vhost_rpmsg_bus.c               | 1151 +++++++++++++++++
- drivers/rpmsg/virtio_rpmsg_bus.c              |  184 ++-
- drivers/vhost/Kconfig                         |    1 +
- drivers/vhost/Makefile                        |    2 +-
- drivers/vhost/net.c                           |   10 +-
- drivers/vhost/scsi.c                          |   24 +-
- drivers/vhost/test.c                          |   17 +-
- drivers/vhost/vdpa.c                          |    2 +-
- drivers/vhost/vhost.c                         |  730 ++++++++++-
- drivers/vhost/vhost_cfs.c                     |  341 +++++
- drivers/vhost/vringh.c                        |  332 +++++
- drivers/vhost/vsock.c                         |   20 +-
- drivers/virtio/Kconfig                        |    9 +
- drivers/virtio/Makefile                       |    1 +
- drivers/virtio/virtio_pci_common.c            |   25 +-
- drivers/virtio/virtio_pci_epf.c               |  670 ++++++++++
- include/linux/mod_devicetable.h               |    6 +
- include/linux/rpmsg.h                         |    6 +
- {drivers/vhost => include/linux}/vhost.h      |  132 +-
- include/linux/virtio.h                        |    3 +
- include/linux/virtio_config.h                 |   42 +
- include/linux/vringh.h                        |   46 +
- samples/rpmsg/rpmsg_client_sample.c           |   32 +-
- tools/virtio/virtio_test.c                    |    2 +-
- 39 files changed, 7083 insertions(+), 183 deletions(-)
- create mode 100644 drivers/ntb/ntb_vhost.c
- create mode 100644 drivers/ntb/ntb_virtio.c
- create mode 100644 drivers/ntb/ntb_virtio.h
- create mode 100644 drivers/pci/endpoint/functions/pci-epf-vhost.c
- create mode 100644 drivers/rpmsg/rpmsg_cfs.c
- create mode 100644 drivers/rpmsg/vhost_rpmsg_bus.c
- create mode 100644 drivers/vhost/vhost_cfs.c
- create mode 100644 drivers/virtio/virtio_pci_epf.c
- rename {drivers/vhost => include/linux}/vhost.h (66%)
-
+diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
+index 90ff291c24f0..d18f389b36a1 100644
+--- a/drivers/pci/controller/pci-aardvark.c
++++ b/drivers/pci/controller/pci-aardvark.c
+@@ -644,6 +644,13 @@ static bool advk_pcie_valid_device(struct advk_pcie *pcie, struct pci_bus *bus,
+ 	if ((bus->number == pcie->root_bus_nr) && PCI_SLOT(devfn) != 0)
+ 		return false;
+ 
++	/*
++	 * If the link goes down after we check for link-up, nothing bad
++	 * happens but the config access times out.
++	 */
++	if (bus->number != pcie->root_bus_nr && !advk_pcie_link_up(pcie))
++		return false;
++
+ 	return true;
+ }
+ 
 -- 
-2.17.1
+2.20.1
 
