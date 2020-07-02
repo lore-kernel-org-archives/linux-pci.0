@@ -7,45 +7,45 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06FF1C433E2
-	for <linux-pci@archiver.kernel.org>; Thu,  2 Jul 2020 08:22:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53E7EC433DF
+	for <linux-pci@archiver.kernel.org>; Thu,  2 Jul 2020 08:23:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DA10F212CC
-	for <linux-pci@archiver.kernel.org>; Thu,  2 Jul 2020 08:22:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 200B820899
+	for <linux-pci@archiver.kernel.org>; Thu,  2 Jul 2020 08:23:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="jqWlLeQ9"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="NTB4WUvW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728413AbgGBIWp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 2 Jul 2020 04:22:45 -0400
-Received: from lelv0142.ext.ti.com ([198.47.23.249]:59442 "EHLO
-        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728405AbgGBIWo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jul 2020 04:22:44 -0400
+        id S1728556AbgGBIXK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 2 Jul 2020 04:23:10 -0400
+Received: from lelv0143.ext.ti.com ([198.47.23.248]:55304 "EHLO
+        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728550AbgGBIXJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jul 2020 04:23:09 -0400
 Received: from fllv0034.itg.ti.com ([10.64.40.246])
-        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 0628MVLp081794;
-        Thu, 2 Jul 2020 03:22:31 -0500
+        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id 0628MwtA042318;
+        Thu, 2 Jul 2020 03:22:58 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1593678151;
-        bh=IPYADznch2oF3OT/2Ql57mNeeC/uA2ZY2VCc9l5fLDQ=;
+        s=ti-com-17Q1; t=1593678178;
+        bh=JPB+vJhEmEbr7wwXfNji0ZXjBCp2o1x06a2a2R9o46s=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=jqWlLeQ9s6a2LzJ90q0eTRXI5o1EmG8SozWZzBplGqsuBatOB7Zko1A+JOTHZj22m
-         9DGm7+CujGMVyKRoLMYgkJHUNzoFaqWqAdgztVhdGI1jwaNFR+IxX+ZEnx9G/DHKPQ
-         2PbN+666Ca0qrF+bUCdRBfv2TAG8DeJST3AMvhxw=
-Received: from DFLE108.ent.ti.com (dfle108.ent.ti.com [10.64.6.29])
-        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 0628MV1X030784
+        b=NTB4WUvWIwRjwR4PEyvNndWbHFmbpB3bHQ/bjfZA4D488oQ/PPwZMpG8QVgVEECfl
+         GirS8Zv5wtU6kWNfh8qRzOwRe3jDX36NKWLH6IAzNFElVyTE8WUhGN+Gh+6mDie4th
+         ehSVLDopPkGuaZZq1dslHla/kif2QjPpAYyNCWHw=
+Received: from DFLE110.ent.ti.com (dfle110.ent.ti.com [10.64.6.31])
+        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 0628Mw7t031199
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 2 Jul 2020 03:22:31 -0500
-Received: from DFLE105.ent.ti.com (10.64.6.26) by DFLE108.ent.ti.com
- (10.64.6.29) with Microsoft SMTP Server (version=TLS1_2,
+        Thu, 2 Jul 2020 03:22:58 -0500
+Received: from DFLE112.ent.ti.com (10.64.6.33) by DFLE110.ent.ti.com
+ (10.64.6.31) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Thu, 2 Jul
- 2020 03:22:31 -0500
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DFLE105.ent.ti.com
- (10.64.6.26) with Microsoft SMTP Server (version=TLS1_2,
+ 2020 03:22:58 -0500
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DFLE112.ent.ti.com
+ (10.64.6.33) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
- Frontend Transport; Thu, 2 Jul 2020 03:22:31 -0500
+ Frontend Transport; Thu, 2 Jul 2020 03:22:58 -0500
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0628LiYJ006145;
-        Thu, 2 Jul 2020 03:22:24 -0500
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0628LiYO006145;
+        Thu, 2 Jul 2020 03:22:53 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Ohad Ben-Cohen <ohad@wizery.com>,
         Bjorn Andersson <bjorn.andersson@linaro.org>,
@@ -64,9 +64,9 @@ CC:     <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <linux-pci@vger.kernel.org>, <kvm@vger.kernel.org>,
         <virtualization@lists.linux-foundation.org>,
         <netdev@vger.kernel.org>
-Subject: [RFC PATCH 07/22] virtio_pci: Use request_threaded_irq() instead of request_irq()
-Date:   Thu, 2 Jul 2020 13:51:28 +0530
-Message-ID: <20200702082143.25259-8-kishon@ti.com>
+Subject: [RFC PATCH 12/22] virtio: Add ops to allocate and free buffer
+Date:   Thu, 2 Jul 2020 13:51:33 +0530
+Message-ID: <20200702082143.25259-13-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200702082143.25259-1-kishon@ti.com>
 References: <20200702082143.25259-1-kishon@ti.com>
@@ -78,74 +78,91 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Some of the virtio drivers (like virtio_rpmsg_bus.c) use sleeping
-functions like mutex_*() in the virtqueue callback. Use
-request_threaded_irq() instead of request_irq() in order for
-the virtqueue callbacks to be executed in thread context instead
-of interrupt context.
+Add ops to allocate and free buffer in struct virtio_config_ops.
+Certain vhost devices can have restriction on the range of memory
+it can access on the virtio. The virtio drivers attached to
+such vhost devices reserves memory that can be accessed by
+vhost. This function allocates buffer for such reserved region.
+
+For instance when virtio-vhost is used by two hosts connected to
+NTB, the vhost can access only memory exposed by memory windows
+and the size of the memory window can be limited. Here the NTB
+virtio driver can reserve a small region (few MBs) and provide
+buffer address from this pool whenever requested by virtio client
+driver.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/virtio/virtio_pci_common.c | 25 +++++++++++++------------
- 1 file changed, 13 insertions(+), 12 deletions(-)
+ include/linux/virtio_config.h | 42 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 42 insertions(+)
 
-diff --git a/drivers/virtio/virtio_pci_common.c b/drivers/virtio/virtio_pci_common.c
-index 222d630c41fc..60998b4f1f30 100644
---- a/drivers/virtio/virtio_pci_common.c
-+++ b/drivers/virtio/virtio_pci_common.c
-@@ -140,9 +140,9 @@ static int vp_request_msix_vectors(struct virtio_device *vdev, int nvectors,
- 	v = vp_dev->msix_used_vectors;
- 	snprintf(vp_dev->msix_names[v], sizeof *vp_dev->msix_names,
- 		 "%s-config", name);
--	err = request_irq(pci_irq_vector(vp_dev->pci_dev, v),
--			  vp_config_changed, 0, vp_dev->msix_names[v],
--			  vp_dev);
-+	err = request_threaded_irq(pci_irq_vector(vp_dev->pci_dev, v), 0,
-+				   vp_config_changed, 0, vp_dev->msix_names[v],
-+				   vp_dev);
- 	if (err)
- 		goto error;
- 	++vp_dev->msix_used_vectors;
-@@ -159,9 +159,9 @@ static int vp_request_msix_vectors(struct virtio_device *vdev, int nvectors,
- 		v = vp_dev->msix_used_vectors;
- 		snprintf(vp_dev->msix_names[v], sizeof *vp_dev->msix_names,
- 			 "%s-virtqueues", name);
--		err = request_irq(pci_irq_vector(vp_dev->pci_dev, v),
--				  vp_vring_interrupt, 0, vp_dev->msix_names[v],
--				  vp_dev);
-+		err = request_threaded_irq(pci_irq_vector(vp_dev->pci_dev, v),
-+					   0, vp_vring_interrupt, 0,
-+					   vp_dev->msix_names[v], vp_dev);
- 		if (err)
- 			goto error;
- 		++vp_dev->msix_used_vectors;
-@@ -336,10 +336,11 @@ static int vp_find_vqs_msix(struct virtio_device *vdev, unsigned nvqs,
- 			 sizeof *vp_dev->msix_names,
- 			 "%s-%s",
- 			 dev_name(&vp_dev->vdev.dev), names[i]);
--		err = request_irq(pci_irq_vector(vp_dev->pci_dev, msix_vec),
--				  vring_interrupt, 0,
--				  vp_dev->msix_names[msix_vec],
--				  vqs[i]);
-+		err = request_threaded_irq(pci_irq_vector(vp_dev->pci_dev,
-+							  msix_vec),
-+					   0, vring_interrupt, 0,
-+					   vp_dev->msix_names[msix_vec],
-+					   vqs[i]);
- 		if (err)
- 			goto error_find;
- 	}
-@@ -361,8 +362,8 @@ static int vp_find_vqs_intx(struct virtio_device *vdev, unsigned nvqs,
- 	if (!vp_dev->vqs)
- 		return -ENOMEM;
+diff --git a/include/linux/virtio_config.h b/include/linux/virtio_config.h
+index bb4cc4910750..419f733017c2 100644
+--- a/include/linux/virtio_config.h
++++ b/include/linux/virtio_config.h
+@@ -65,6 +65,9 @@ struct irq_affinity;
+  *      the caller can then copy.
+  * @set_vq_affinity: set the affinity for a virtqueue (optional).
+  * @get_vq_affinity: get the affinity for a virtqueue (optional).
++ * @alloc_buffer: Allocate and provide buffer addresses that can be
++ *      accessed by both virtio and vhost
++ * @free_buffer: Free the allocated buffer address
+  */
+ typedef void vq_callback_t(struct virtqueue *);
+ struct virtio_config_ops {
+@@ -88,6 +91,9 @@ struct virtio_config_ops {
+ 			       const struct cpumask *cpu_mask);
+ 	const struct cpumask *(*get_vq_affinity)(struct virtio_device *vdev,
+ 			int index);
++	void * (*alloc_buffer)(struct virtio_device *vdev, size_t size);
++	void (*free_buffer)(struct virtio_device *vdev, void *addr,
++			    size_t size);
+ };
  
--	err = request_irq(vp_dev->pci_dev->irq, vp_interrupt, IRQF_SHARED,
--			dev_name(&vdev->dev), vp_dev);
-+	err = request_threaded_irq(vp_dev->pci_dev->irq, 0, vp_interrupt,
-+				   IRQF_SHARED, dev_name(&vdev->dev), vp_dev);
- 	if (err)
- 		goto out_del_vqs;
+ /* If driver didn't advertise the feature, it will never appear. */
+@@ -232,6 +238,42 @@ const char *virtio_bus_name(struct virtio_device *vdev)
+ 	return vdev->config->bus_name(vdev);
+ }
  
++/**
++ * virtio_alloc_buffer - Allocate buffer from the reserved memory
++ * @vdev: Virtio device which manages the reserved memory
++ * @size: Size of the buffer to be allocated
++ *
++ * Certain vhost devices can have restriction on the range of memory
++ * it can access on the virtio. The virtio drivers attached to
++ * such vhost devices reserves memory that can be accessed by
++ * vhost. This function allocates buffer for such reserved region.
++ */
++static inline void *
++virtio_alloc_buffer(struct virtio_device *vdev, size_t size)
++{
++	if (!vdev->config->alloc_buffer)
++		return NULL;
++
++	return vdev->config->alloc_buffer(vdev, size);
++}
++
++/**
++ * virtio_free_buffer - Free the allocated buffer
++ * @vdev: Virtio device which manages the reserved memory
++ * @addr: Address returned by virtio_alloc_buffer()
++ * @size: Size of the buffer that has to be freed
++ *
++ * Free the allocated buffer address given by virtio_alloc_buffer().
++ */
++static inline void
++virtio_free_buffer(struct virtio_device *vdev, void *addr, size_t size)
++{
++	if (!vdev->config->free_buffer)
++		return;
++
++	return vdev->config->free_buffer(vdev, addr, size);
++}
++
+ /**
+  * virtqueue_set_affinity - setting affinity for a virtqueue
+  * @vq: the virtqueue
 -- 
 2.17.1
 
