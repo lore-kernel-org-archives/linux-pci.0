@@ -4,39 +4,39 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AA93C433E1
-	for <linux-pci@archiver.kernel.org>; Fri,  3 Jul 2020 21:22:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41968C433E0
+	for <linux-pci@archiver.kernel.org>; Fri,  3 Jul 2020 21:22:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EFBF720782
-	for <linux-pci@archiver.kernel.org>; Fri,  3 Jul 2020 21:22:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 15CB220782
+	for <linux-pci@archiver.kernel.org>; Fri,  3 Jul 2020 21:22:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="tOELBrB/"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="h8cSAQkT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726913AbgGCVWI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 3 Jul 2020 17:22:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49984 "EHLO
+        id S1726935AbgGCVWM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 3 Jul 2020 17:22:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49996 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726379AbgGCVWH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 3 Jul 2020 17:22:07 -0400
+        with ESMTP id S1726379AbgGCVWK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 3 Jul 2020 17:22:10 -0400
 Received: from merlin.infradead.org (merlin.infradead.org [IPv6:2001:8b0:10b:1231::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3494EC061794;
-        Fri,  3 Jul 2020 14:22:07 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F2F5C061794;
+        Fri,  3 Jul 2020 14:22:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=merlin.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=rMwSX67PivDpF6NsrAsev2yjrA5+1p667mZowINMO3w=; b=tOELBrB/oAo/w96ROmuUMkKJOr
-        SiqATKPQxAUGVClSuBi+KimWLLhNxM0dXtTy/3A0iI7EyURAcLSRHtteNvq5SPz90iRDR3CJHltbr
-        5EME6DGxuLZctOJcJpYu+FDvWlF8zZpa9XieGQaJ3ZB4/AGUNx+HK3UzGj7JlMl7vOC+RAeM2nl6e
-        L5sRk3jyE7VJ96OEY0vRYM3xkaf+Ql8tPindwpXJ/yVu9MMFZcixrKCeFVKW8lDLR5IAUiBuWQw+F
-        hYdbnUlorYmJG/GbESNnAkrrDkZFv8j9JpuiO6ECRC0D+g5l84b3jN/YawGcGve3gvJ+0Mp8l2kd2
-        Qy4qB4HA==;
+        bh=uLtSWlf/wl7gcoNSTGqlGLYfnZsXuKJLWSNWP3R9x8Y=; b=h8cSAQkTudBw8J96m8S+iDqOKv
+        5qP+rKDdiy3CYy1bpBf2HSPltlLnIteQ5AlPZ7I53jVg6NK6bebY0yQVguHdCriZatNUbz8d9MOOC
+        xa42XteSFljSGfvJt+hDlxtekPVTkWzLFEDNEhSCNfw8+Tz+proHnBk7oQ153hRNDjelm3Vcx0T29
+        S0EVLApvROAE7vVw5aeEbtgMD/foIi4sGx2KyxEUmaXCwZiRuGdgslktCMTbGuHgSb/sqfyWofYxK
+        z9SxU5HRd9cMC0vHNpf/ofv0dgLN+fsFCgBHnT3UbBCgUVCRkuRqI2bGkslS0pw3Z9uxuSDUf6TQ7
+        3c9Pi2zg==;
 Received: from [2601:1c0:6280:3f0::19c2] (helo=smtpauth.infradead.org)
         by merlin.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jrT8G-0005tj-PK; Fri, 03 Jul 2020 21:22:05 +0000
+        id 1jrT8K-0005tj-1t; Fri, 03 Jul 2020 21:22:08 +0000
 From:   Randy Dunlap <rdunlap@infradead.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Randy Dunlap <rdunlap@infradead.org>,
@@ -45,9 +45,9 @@ Cc:     Randy Dunlap <rdunlap@infradead.org>,
         Kishon Vijay Abraham I <kishon@ti.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         linux-pci@vger.kernel.org, Linas Vepstas <linasvepstas@gmail.com>
-Subject: [PATCH 1/4] Documentation: PCI: pci-endpoint-cfs: drop doubled words
-Date:   Fri,  3 Jul 2020 14:21:53 -0700
-Message-Id: <20200703212156.30453-2-rdunlap@infradead.org>
+Subject: [PATCH 2/4] Documentation: PCI: pci-endpoint: drop doubled words
+Date:   Fri,  3 Jul 2020 14:21:54 -0700
+Message-Id: <20200703212156.30453-3-rdunlap@infradead.org>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200703212156.30453-1-rdunlap@infradead.org>
 References: <20200703212156.30453-1-rdunlap@infradead.org>
@@ -58,7 +58,7 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Drop the doubled word "and".
+Drop the doubled word "the".
 
 Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
 Cc: Jonathan Corbet <corbet@lwn.net>
@@ -68,17 +68,17 @@ Cc: Kishon Vijay Abraham I <kishon@ti.com>
 Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc: linux-pci@vger.kernel.org
 ---
- Documentation/PCI/endpoint/pci-endpoint-cfs.rst |    2 +-
+ Documentation/PCI/endpoint/pci-endpoint.rst |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
---- linux-next-20200701.orig/Documentation/PCI/endpoint/pci-endpoint-cfs.rst
-+++ linux-next-20200701/Documentation/PCI/endpoint/pci-endpoint-cfs.rst
-@@ -24,7 +24,7 @@ Directory Structure
+--- linux-next-20200701.orig/Documentation/PCI/endpoint/pci-endpoint.rst
++++ linux-next-20200701/Documentation/PCI/endpoint/pci-endpoint.rst
+@@ -214,7 +214,7 @@ pci-ep-cfs.c can be used as reference fo
+ * pci_epf_create()
  
- The pci_ep configfs has two directories at its root: controllers and
- functions. Every EPC device present in the system will have an entry in
--the *controllers* directory and and every EPF driver present in the system
-+the *controllers* directory and every EPF driver present in the system
- will have an entry in the *functions* directory.
- ::
+    Create a new PCI EPF device by passing the name of the PCI EPF device.
+-   This name will be used to bind the the EPF device to a EPF driver.
++   This name will be used to bind the EPF device to a EPF driver.
+ 
+ * pci_epf_destroy()
  
