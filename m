@@ -4,26 +4,26 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69302C433EA
-	for <linux-pci@archiver.kernel.org>; Sun,  5 Jul 2020 09:18:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4475CC433E7
+	for <linux-pci@archiver.kernel.org>; Sun,  5 Jul 2020 09:18:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 500BE20772
-	for <linux-pci@archiver.kernel.org>; Sun,  5 Jul 2020 09:18:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2A5C020771
+	for <linux-pci@archiver.kernel.org>; Sun,  5 Jul 2020 09:18:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726857AbgGEJSx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 5 Jul 2020 05:18:53 -0400
-Received: from alexa-out-sd-02.qualcomm.com ([199.106.114.39]:22188 "EHLO
-        alexa-out-sd-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726629AbgGEJST (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 5 Jul 2020 05:18:19 -0400
-Received: from unknown (HELO ironmsg04-sd.qualcomm.com) ([10.53.140.144])
-  by alexa-out-sd-02.qualcomm.com with ESMTP; 05 Jul 2020 02:18:18 -0700
+        id S1726769AbgGEJSZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 5 Jul 2020 05:18:25 -0400
+Received: from alexa-out-sd-01.qualcomm.com ([199.106.114.38]:47006 "EHLO
+        alexa-out-sd-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726496AbgGEJSY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 5 Jul 2020 05:18:24 -0400
+Received: from unknown (HELO ironmsg03-sd.qualcomm.com) ([10.53.140.143])
+  by alexa-out-sd-01.qualcomm.com with ESMTP; 05 Jul 2020 02:18:23 -0700
 Received: from sivaprak-linux.qualcomm.com ([10.201.3.202])
-  by ironmsg04-sd.qualcomm.com with ESMTP; 05 Jul 2020 02:18:11 -0700
+  by ironmsg03-sd.qualcomm.com with ESMTP; 05 Jul 2020 02:18:17 -0700
 Received: by sivaprak-linux.qualcomm.com (Postfix, from userid 459349)
-        id 5BA1721185; Sun,  5 Jul 2020 14:48:09 +0530 (IST)
+        id F0F51213CC; Sun,  5 Jul 2020 14:48:09 +0530 (IST)
 From:   Sivaprakash Murugesan <sivaprak@codeaurora.org>
 To:     agross@kernel.org, bjorn.andersson@linaro.org, bhelgaas@google.com,
         robh+dt@kernel.org, kishon@ti.com, vkoul@kernel.org,
@@ -35,9 +35,9 @@ To:     agross@kernel.org, bjorn.andersson@linaro.org, bhelgaas@google.com,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-clk@vger.kernel.org
 Cc:     Selvam Sathappan Periakaruppan <speriaka@codeaurora.org>
-Subject: [PATCH 1/9] dt-bindings: pci: Add ipq8074 gen3 pci compatible
-Date:   Sun,  5 Jul 2020 14:47:52 +0530
-Message-Id: <1593940680-2363-2-git-send-email-sivaprak@codeaurora.org>
+Subject: [PATCH 7/9] pci: dwc: qcom: do phy power on before pcie init
+Date:   Sun,  5 Jul 2020 14:47:58 +0530
+Message-Id: <1593940680-2363-8-git-send-email-sivaprak@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1593940680-2363-1-git-send-email-sivaprak@codeaurora.org>
 References: <1593940680-2363-1-git-send-email-sivaprak@codeaurora.org>
@@ -46,81 +46,63 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-ipq8074 has two PCIe ports while the support for gen2 pcie port is
-already available add the support for gen3 binding.
+Commit cc1e06f033af ("phy: qcom: qmp: Use power_on/off ops for PCIe")
+changed phy ops from init/deinit to power on/off, due to this phy enable
+is getting called after pcie init.
 
+On some platforms like ipq8074 phy should be inited before accessing the
+pcie register space, otherwise the system would hang.
+
+So move phy_power_on API before pcie init API.
+
+Fixes: commit cc1e06f033af ("phy: qcom: qmp: Use power_on/off ops for PCIe")
 Co-developed-by: Selvam Sathappan Periakaruppan <speriaka@codeaurora.org>
 Signed-off-by: Selvam Sathappan Periakaruppan <speriaka@codeaurora.org>
 Signed-off-by: Sivaprakash Murugesan <sivaprak@codeaurora.org>
 ---
- .../devicetree/bindings/pci/qcom,pcie.yaml         | 47 ++++++++++++++++++++++
- 1 file changed, 47 insertions(+)
+ drivers/pci/controller/dwc/pcie-qcom.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-index b119ce4711b4..b5ec45df735e 100644
---- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-@@ -22,6 +22,7 @@ properties:
-       - qcom,pcie-ipq4019
-       - qcom,pcie-ipq8064
-       - qcom,pcie-ipq8074
-+      - qcom,pcie-ipq8074-gen3
-       - qcom,pcie-msm8996
-       - qcom,pcie-qcs404
-       - qcom,pcie-sdm845
-@@ -330,6 +331,52 @@ allOf:
-        compatible:
-          contains:
-            enum:
-+             - qcom,pcie-ipq8074-gen3
-+   then:
-+     properties:
-+       clocks:
-+         items:
-+           - description: sys noc interface clock
-+           - description: AXI master clock
-+           - description: AXI slave clock
-+           - description: AHB clock
-+           - description: Auxilary clock
-+           - description: AXI slave bridge clock
-+           - description: PCIe rchng clock
-+       clock-names:
-+         items:
-+           - const: iface
-+           - const: axi_m
-+           - const: axi_s
-+           - const: ahb
-+           - const: aux
-+           - const: axi_bridge
-+           - const: rchng
-+       resets:
-+         items:
-+           - description: PIPE reset
-+           - description: PCIe sleep reset
-+           - description: PCIe sticky reset
-+           - description: AXI master reset
-+           - description: AXI slave reset
-+           - description: AHB reset
-+           - description: AXI master sticky reset
-+           - description: AXI Slave sticky reset
-+       reset-names:
-+         items:
-+           - const: pipe
-+           - const: sleep
-+           - const: sticky
-+           - const: axi_m
-+           - const: axi_s
-+           - const: ahb
-+           - const: axi_m_sticky
-+           - const: axi_s_sticky
-+ - if:
-+     properties:
-+       compatible:
-+         contains:
-+           enum:
-              - qcom,pcie-msm8996
-    then:
-      properties:
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index 138e1a2d21cc..aa52a2124760 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -1222,18 +1222,18 @@ static int qcom_pcie_host_init(struct pcie_port *pp)
+ 
+ 	qcom_ep_reset_assert(pcie);
+ 
+-	ret = pcie->ops->init(pcie);
++	ret = phy_power_on(pcie->phy);
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = phy_power_on(pcie->phy);
++	ret = pcie->ops->init(pcie);
+ 	if (ret)
+-		goto err_deinit;
++		goto err_disable_phy;
+ 
+ 	if (pcie->ops->post_init) {
+ 		ret = pcie->ops->post_init(pcie);
+ 		if (ret)
+-			goto err_disable_phy;
++			goto err_deinit;
+ 	}
+ 
+ 	dw_pcie_setup_rc(pp);
+@@ -1252,10 +1252,10 @@ static int qcom_pcie_host_init(struct pcie_port *pp)
+ 	qcom_ep_reset_assert(pcie);
+ 	if (pcie->ops->post_deinit)
+ 		pcie->ops->post_deinit(pcie);
+-err_disable_phy:
+-	phy_power_off(pcie->phy);
+ err_deinit:
+ 	pcie->ops->deinit(pcie);
++err_disable_phy:
++	phy_power_off(pcie->phy);
+ 
+ 	return ret;
+ }
 -- 
 2.7.4
 
