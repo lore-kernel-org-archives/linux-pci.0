@@ -6,24 +6,24 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D89DC433EC
-	for <linux-pci@archiver.kernel.org>; Sun,  5 Jul 2020 09:19:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3CB4C433ED
+	for <linux-pci@archiver.kernel.org>; Sun,  5 Jul 2020 09:19:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 756A620C56
-	for <linux-pci@archiver.kernel.org>; Sun,  5 Jul 2020 09:19:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C97D020772
+	for <linux-pci@archiver.kernel.org>; Sun,  5 Jul 2020 09:19:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725901AbgGEJST (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 5 Jul 2020 05:18:19 -0400
-Received: from alexa-out-sd-01.qualcomm.com ([199.106.114.38]:46998 "EHLO
+        id S1726600AbgGEJSS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 5 Jul 2020 05:18:18 -0400
+Received: from alexa-out-sd-01.qualcomm.com ([199.106.114.38]:46989 "EHLO
         alexa-out-sd-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726496AbgGEJSS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 5 Jul 2020 05:18:18 -0400
-Received: from unknown (HELO ironmsg03-sd.qualcomm.com) ([10.53.140.143])
-  by alexa-out-sd-01.qualcomm.com with ESMTP; 05 Jul 2020 02:18:17 -0700
+        by vger.kernel.org with ESMTP id S1726494AbgGEJSR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 5 Jul 2020 05:18:17 -0400
+Received: from unknown (HELO ironmsg-SD-alpha.qualcomm.com) ([10.53.140.30])
+  by alexa-out-sd-01.qualcomm.com with ESMTP; 05 Jul 2020 02:18:16 -0700
 Received: from sivaprak-linux.qualcomm.com ([10.201.3.202])
-  by ironmsg03-sd.qualcomm.com with ESMTP; 05 Jul 2020 02:18:11 -0700
+  by ironmsg-SD-alpha.qualcomm.com with ESMTP; 05 Jul 2020 02:18:11 -0700
 Received: by sivaprak-linux.qualcomm.com (Postfix, from userid 459349)
-        id A85DB213B5; Sun,  5 Jul 2020 14:48:09 +0530 (IST)
+        id 6C0F6213B2; Sun,  5 Jul 2020 14:48:09 +0530 (IST)
 From:   Sivaprakash Murugesan <sivaprak@codeaurora.org>
 To:     agross@kernel.org, bjorn.andersson@linaro.org, bhelgaas@google.com,
         robh+dt@kernel.org, kishon@ti.com, vkoul@kernel.org,
@@ -35,9 +35,9 @@ To:     agross@kernel.org, bjorn.andersson@linaro.org, bhelgaas@google.com,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-clk@vger.kernel.org
 Cc:     Selvam Sathappan Periakaruppan <speriaka@codeaurora.org>
-Subject: [PATCH 4/9] clk: qcom: ipq8074: Add missing clocks for pcie
-Date:   Sun,  5 Jul 2020 14:47:55 +0530
-Message-Id: <1593940680-2363-5-git-send-email-sivaprak@codeaurora.org>
+Subject: [PATCH 2/9] dt-bindings: phy: qcom,qmp: Add dt-binding for ipq8074 gen3 pcie phy
+Date:   Sun,  5 Jul 2020 14:47:53 +0530
+Message-Id: <1593940680-2363-3-git-send-email-sivaprak@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1593940680-2363-1-git-send-email-sivaprak@codeaurora.org>
 References: <1593940680-2363-1-git-send-email-sivaprak@codeaurora.org>
@@ -46,100 +46,29 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add missing clocks and resets for pcie port0 of ipq8074 devices.
+ipq8074 has two different phy blocks for two pcie ports, with pcie gen2
+compatible already available, specify the pcie phy compatible
+for gen3 pcie port.
 
 Co-developed-by: Selvam Sathappan Periakaruppan <speriaka@codeaurora.org>
 Signed-off-by: Selvam Sathappan Periakaruppan <speriaka@codeaurora.org>
 Signed-off-by: Sivaprakash Murugesan <sivaprak@codeaurora.org>
 ---
- drivers/clk/qcom/gcc-ipq8074.c | 60 ++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 60 insertions(+)
+ Documentation/devicetree/bindings/phy/qcom,qmp-phy.yaml | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/clk/qcom/gcc-ipq8074.c b/drivers/clk/qcom/gcc-ipq8074.c
-index e01f5f591d1e..443e28cda8ed 100644
---- a/drivers/clk/qcom/gcc-ipq8074.c
-+++ b/drivers/clk/qcom/gcc-ipq8074.c
-@@ -4316,6 +4316,62 @@ static struct clk_branch gcc_gp3_clk = {
- 	},
- };
- 
-+struct freq_tbl ftbl_pcie_rchng_clk_src[] = {
-+	F(19200000, P_XO, 1, 0, 0),
-+	F(100000000, P_GPLL0, 8, 0, 0),
-+	{ }
-+};
-+
-+struct clk_rcg2 pcie0_rchng_clk_src = {
-+	.cmd_rcgr = 0x75070,
-+	.freq_tbl = ftbl_pcie_rchng_clk_src,
-+	.hid_width = 5,
-+	.parent_map = gcc_xo_gpll0_map,
-+	.clkr.hw.init = &(struct clk_init_data){
-+		.name = "pcie0_rchng_clk_src",
-+		.parent_hws = (const struct clk_hw *[]) {
-+				&gpll0.clkr.hw },
-+		.num_parents = 2,
-+		.ops = &clk_rcg2_ops,
-+	},
-+};
-+
-+static struct clk_branch gcc_pcie0_rchng_clk = {
-+	.halt_reg = 0x75070,
-+	.halt_bit = 31,
-+	.clkr = {
-+		.enable_reg = 0x75070,
-+		.enable_mask = BIT(1),
-+		.hw.init = &(struct clk_init_data){
-+			.name = "gcc_pcie0_rchng_clk",
-+			.parent_hws = (const struct clk_hw *[]){
-+				&pcie0_rchng_clk_src.clkr.hw,
-+			},
-+			.num_parents = 1,
-+			.flags = CLK_SET_RATE_PARENT,
-+			.ops = &clk_branch2_ops,
-+		},
-+	},
-+};
-+
-+static struct clk_branch gcc_pcie0_axi_s_bridge_clk = {
-+	.halt_reg = 0x75048,
-+	.halt_bit = 31,
-+	.clkr = {
-+		.enable_reg = 0x75048,
-+		.enable_mask = BIT(0),
-+		.hw.init = &(struct clk_init_data){
-+			.name = "gcc_pcie0_axi_s_bridge_clk",
-+			.parent_hws = (const struct clk_hw *[]){
-+				&pcie0_axi_clk_src.clkr.hw,
-+			},
-+			.num_parents = 1,
-+			.flags = CLK_SET_RATE_PARENT,
-+			.ops = &clk_branch2_ops,
-+		},
-+	},
-+};
-+
- static struct clk_hw *gcc_ipq8074_hws[] = {
- 	&gpll0_out_main_div2.hw,
- 	&gpll6_out_main_div2.hw,
-@@ -4551,6 +4607,9 @@ static struct clk_regmap *gcc_ipq8074_clks[] = {
- 	[GCC_GP1_CLK] = &gcc_gp1_clk.clkr,
- 	[GCC_GP2_CLK] = &gcc_gp2_clk.clkr,
- 	[GCC_GP3_CLK] = &gcc_gp3_clk.clkr,
-+	[GCC_PCIE0_RCHNG_CLK_SRC] = &pcie0_rchng_clk_src.clkr,
-+	[GCC_PCIE0_RCHNG_CLK] = &gcc_pcie0_rchng_clk.clkr,
-+	[GCC_PCIE0_AXI_S_BRIDGE_CLK] = &gcc_pcie0_axi_s_bridge_clk.clkr,
- };
- 
- static const struct qcom_reset_map gcc_ipq8074_resets[] = {
-@@ -4678,6 +4737,7 @@ static const struct qcom_reset_map gcc_ipq8074_resets[] = {
- 	[GCC_PCIE0_AXI_SLAVE_ARES] = { 0x75040, 4 },
- 	[GCC_PCIE0_AHB_ARES] = { 0x75040, 5 },
- 	[GCC_PCIE0_AXI_MASTER_STICKY_ARES] = { 0x75040, 6 },
-+	[GCC_PCIE0_AXI_SLAVE_STICKY_ARES] = { 0x75040, 7 },
- 	[GCC_PCIE1_PIPE_ARES] = { 0x76040, 0 },
- 	[GCC_PCIE1_SLEEP_ARES] = { 0x76040, 1 },
- 	[GCC_PCIE1_CORE_STICKY_ARES] = { 0x76040, 2 },
+diff --git a/Documentation/devicetree/bindings/phy/qcom,qmp-phy.yaml b/Documentation/devicetree/bindings/phy/qcom,qmp-phy.yaml
+index f80f8896d527..3e8681679f53 100644
+--- a/Documentation/devicetree/bindings/phy/qcom,qmp-phy.yaml
++++ b/Documentation/devicetree/bindings/phy/qcom,qmp-phy.yaml
+@@ -18,6 +18,7 @@ properties:
+   compatible:
+     enum:
+       - qcom,ipq8074-qmp-pcie-phy
++      - qcom,ipq8074-qmp-pcie-gen3-phy
+       - qcom,msm8996-qmp-pcie-phy
+       - qcom,msm8996-qmp-ufs-phy
+       - qcom,msm8996-qmp-usb3-phy
 -- 
 2.7.4
 
