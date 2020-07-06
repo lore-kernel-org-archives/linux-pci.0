@@ -2,153 +2,85 @@ Return-Path: <SRS0=T4wV=AR=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24001C433E0
-	for <linux-pci@archiver.kernel.org>; Mon,  6 Jul 2020 10:32:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4611C433E2
+	for <linux-pci@archiver.kernel.org>; Mon,  6 Jul 2020 10:46:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0271C207CD
-	for <linux-pci@archiver.kernel.org>; Mon,  6 Jul 2020 10:32:18 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TG4pzGRb"
+	by mail.kernel.org (Postfix) with ESMTP id B3F4420760
+	for <linux-pci@archiver.kernel.org>; Mon,  6 Jul 2020 10:46:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728968AbgGFKcO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 6 Jul 2020 06:32:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47154 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728929AbgGFKb4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jul 2020 06:31:56 -0400
-Received: from mail-wm1-x341.google.com (mail-wm1-x341.google.com [IPv6:2a00:1450:4864:20::341])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 27E09C061794;
-        Mon,  6 Jul 2020 03:31:56 -0700 (PDT)
-Received: by mail-wm1-x341.google.com with SMTP id q15so38663092wmj.2;
-        Mon, 06 Jul 2020 03:31:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=RPTa/b9ulSr2LIoV7+9N5nhgam/KG2MWD7MpfjJwUI4=;
-        b=TG4pzGRbEwH/BSJarGEyRYf1QP7euiq3ZvuQTcexU3ZoYSD+b8fqCNHTZEOCWFGXWf
-         FfSoXFkDiMaB+pSiKoOy6gl2ISBkzY6SenyTzPtviHoLi+PZSSC3+dbUqBIv64wSLyzm
-         l0L815djwPABf2iKVNWgUMkhl0Yu6//iDVLTkxJiy+M9FZQAt+fa9aGp4nPF3j0dptnL
-         TAmviTKz/G7eCqJ686+bgEzJGbI15po6Pwlk1VRKHHCjT+539hC3LuaA0aynuNXG41u8
-         I/O6EoGxYhVaVdls2XfiIzdklTWKIwJmOhKz9wYHDk5JmkqCw7WUMtJUFLSmRwxrf6su
-         qjog==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=RPTa/b9ulSr2LIoV7+9N5nhgam/KG2MWD7MpfjJwUI4=;
-        b=n+KjJPvbR3Y9HUPlnadPYwlW5CAdm/JGYqFprFJF06vDny/lmxDXlVEJa1q1Fqm8Xy
-         TKQGItJTnoOW5dnsctah9RKchLz85SddToTVIKHkpLSuPsfZxIpQq1uZAOG97jClWDvL
-         O6ktBo5ZOQ1urBeOpAoIQ6nyHi9d6zqCfxlXj3b9ixyE0ROl44cx3/nG1WZLo2wX8ZI1
-         1AaUCInB1BwoAAzuIjSQZlDfaKETZmtuOjGV/L4nQoy4Z7MJF7Sb5EAq8upJBWQ8lcnc
-         Uw0wtIh0jKXuBYj+kP1vvreZZXe1H7A1yPebbuh3zM9+K43UBnVsy0Bst7QO4PubFphl
-         YU2Q==
-X-Gm-Message-State: AOAM531wmeWobjY296S3Y3r6v9oQ2rasceK6jRIaBD2sumYRpB1XE5Xm
-        f+W4ePgdtDJWTYZQ4YGJ+IA=
-X-Google-Smtp-Source: ABdhPJywhsCbkbFGmRLpYBAbKoNOxH4X7OJZCSZcE5Hy9HRvf3pC50XF2xqZYYR9LVEyfSHQgxlr7A==
-X-Received: by 2002:a1c:9911:: with SMTP id b17mr44258657wme.135.1594031514919;
-        Mon, 06 Jul 2020 03:31:54 -0700 (PDT)
-Received: from net.saheed (51B7C2DF.dsl.pool.telekom.hu. [81.183.194.223])
-        by smtp.gmail.com with ESMTPSA id 22sm24216859wmb.11.2020.07.06.03.31.53
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 06 Jul 2020 03:31:54 -0700 (PDT)
-From:   Saheed Olayemi Bolarinwa <refactormyself@gmail.com>
-To:     helgaas@kernel.org
-Cc:     Bolarinwa Olayemi Saheed <refactormyself@gmail.com>,
-        bjorn@helgaas.com, skhan@linuxfoundation.org,
-        linux-pci@vger.kernel.org,
-        linux-kernel-mentees@lists.linuxfoundation.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 4/11 RFC] PCI: pciehp: Validate with the return value of pcie_capability_read_*()
-Date:   Mon,  6 Jul 2020 11:31:14 +0200
-Message-Id: <20200706093121.9731-5-refactormyself@gmail.com>
-X-Mailer: git-send-email 2.18.2
-In-Reply-To: <20200706093121.9731-1-refactormyself@gmail.com>
-References: <20200706093121.9731-1-refactormyself@gmail.com>
+        id S1728530AbgGFKqq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 6 Jul 2020 06:46:46 -0400
+Received: from foss.arm.com ([217.140.110.172]:56656 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728521AbgGFKqp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 6 Jul 2020 06:46:45 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id CB54530E;
+        Mon,  6 Jul 2020 03:46:44 -0700 (PDT)
+Received: from e121166-lin.cambridge.arm.com (e121166-lin.cambridge.arm.com [10.1.196.255])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 511D43F68F;
+        Mon,  6 Jul 2020 03:46:42 -0700 (PDT)
+Date:   Mon, 6 Jul 2020 11:46:39 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Xiaowei Bao <xiaowei.bao@nxp.com>
+Cc:     Zhiqiang.Hou@nxp.com, Minghuan.Lian@nxp.com, mingkai.hu@nxp.com,
+        bhelgaas@google.com, robh+dt@kernel.org, shawnguo@kernel.org,
+        leoyang.li@nxp.com, kishon@ti.com, roy.zang@nxp.com,
+        amurray@thegoodpenguin.co.uk, jingoohan1@gmail.com,
+        gustavo.pimentel@synopsys.com, andrew.murray@arm.com,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v6 00/11] Add the multiple PF support for DWC and
+ Layerscape
+Message-ID: <20200706104639.GC26377@e121166-lin.cambridge.arm.com>
+References: <20200314033038.24844-1-xiaowei.bao@nxp.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200314033038.24844-1-xiaowei.bao@nxp.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
+On Sat, Mar 14, 2020 at 11:30:27AM +0800, Xiaowei Bao wrote:
+> Add the PCIe EP multiple PF support for DWC and Layerscape, add
+> the doorbell MSIX function for DWC, use list to manage the PF of
+> one PCIe controller, and refactor the Layerscape EP driver due to
+> some platforms difference.
+> 
+> Xiaowei Bao (11):
+>   PCI: designware-ep: Add multiple PFs support for DWC
+>   PCI: designware-ep: Add the doorbell mode of MSI-X in EP mode
+>   PCI: designware-ep: Move the function of getting MSI capability
+>     forward
+>   PCI: designware-ep: Modify MSI and MSIX CAP way of finding
+>   dt-bindings: pci: layerscape-pci: Add compatible strings for ls1088a
+>     and ls2088a
+>   PCI: layerscape: Fix some format issue of the code
+>   PCI: layerscape: Modify the way of getting capability with different
+>     PEX
+>   PCI: layerscape: Modify the MSIX to the doorbell mode
+>   PCI: layerscape: Add EP mode support for ls1088a and ls2088a
+>   arm64: dts: layerscape: Add PCIe EP node for ls1088a
+>   misc: pci_endpoint_test: Add LS1088a in pci_device_id table
+> 
+>  .../devicetree/bindings/pci/layerscape-pci.txt     |   2 +
+>  arch/arm64/boot/dts/freescale/fsl-ls1088a.dtsi     |  31 +++
+>  drivers/misc/pci_endpoint_test.c                   |   2 +
+>  drivers/pci/controller/dwc/pci-layerscape-ep.c     | 100 ++++++--
+>  drivers/pci/controller/dwc/pcie-designware-ep.c    | 255 +++++++++++++++++----
+>  drivers/pci/controller/dwc/pcie-designware.c       |  59 +++--
+>  drivers/pci/controller/dwc/pcie-designware.h       |  48 +++-
+>  7 files changed, 404 insertions(+), 93 deletions(-)
 
-On failure pcie_capability_read_dword() sets it's last parameter,
-val to 0. 
-However, with Patch 11/11, it is possible that val is set to ~0 on
-failure. This would introduce a bug because (x & x) == (~0 & x).
+Can you rebase it against v5.8-rc1 please ?
 
-This bug can be avoided if the return value of pcie_capability_read_dword
-is checked to confirm success.
-
-Check the return value of pcie_capability_read_dword() to ensure success.
-Return a value that indicate the result of pcie_capability_read_dword().
-
-Suggested-by: Bjorn Helgaas <bjorn@helgaas.com>
-Signed-off-by: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
----
- drivers/pci/hotplug/pciehp_hpc.c | 15 +++++++++------
- 1 file changed, 9 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 5af281d97d4f..0b691e37fd04 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -277,10 +277,11 @@ static void pcie_wait_for_presence(struct pci_dev *pdev)
- {
- 	int timeout = 1250;
- 	u16 slot_status;
-+	int ret;
- 
- 	do {
--		pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
--		if (slot_status & PCI_EXP_SLTSTA_PDS)
-+		ret = pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
-+		if (!ret && (slot_status & PCI_EXP_SLTSTA_PDS))
- 			return;
- 		msleep(10);
- 		timeout -= 10;
-@@ -354,12 +355,13 @@ int pciehp_get_raw_indicator_status(struct hotplug_slot *hotplug_slot,
- 	struct controller *ctrl = to_ctrl(hotplug_slot);
- 	struct pci_dev *pdev = ctrl_dev(ctrl);
- 	u16 slot_ctrl;
-+	int ret;
- 
- 	pci_config_pm_runtime_get(pdev);
--	pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &slot_ctrl);
-+	ret = pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &slot_ctrl);
- 	pci_config_pm_runtime_put(pdev);
- 	*status = (slot_ctrl & (PCI_EXP_SLTCTL_AIC | PCI_EXP_SLTCTL_PIC)) >> 6;
--	return 0;
-+	return pcibios_err_to_errno(ret);
- }
- 
- int pciehp_get_attention_status(struct hotplug_slot *hotplug_slot, u8 *status)
-@@ -367,9 +369,10 @@ int pciehp_get_attention_status(struct hotplug_slot *hotplug_slot, u8 *status)
- 	struct controller *ctrl = to_ctrl(hotplug_slot);
- 	struct pci_dev *pdev = ctrl_dev(ctrl);
- 	u16 slot_ctrl;
-+	int ret;
- 
- 	pci_config_pm_runtime_get(pdev);
--	pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &slot_ctrl);
-+	ret = pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &slot_ctrl);
- 	pci_config_pm_runtime_put(pdev);
- 	ctrl_dbg(ctrl, "%s: SLOTCTRL %x, value read %x\n", __func__,
- 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, slot_ctrl);
-@@ -389,7 +392,7 @@ int pciehp_get_attention_status(struct hotplug_slot *hotplug_slot, u8 *status)
- 		break;
- 	}
- 
--	return 0;
-+	return pcibios_err_to_errno(ret);
- }
- 
- void pciehp_get_power_status(struct controller *ctrl, u8 *status)
--- 
-2.18.2
-
+Thanks,
+Lorenzo
