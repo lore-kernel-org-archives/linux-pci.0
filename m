@@ -5,68 +5,86 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3E40C433E2
-	for <linux-pci@archiver.kernel.org>; Tue,  7 Jul 2020 23:03:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DF66C433E0
+	for <linux-pci@archiver.kernel.org>; Tue,  7 Jul 2020 23:04:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B80E7207C4
-	for <linux-pci@archiver.kernel.org>; Tue,  7 Jul 2020 23:03:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 19B252065D
+	for <linux-pci@archiver.kernel.org>; Tue,  7 Jul 2020 23:04:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="u3N9d6hC"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PD50e4vM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729085AbgGGXD5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 7 Jul 2020 19:03:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47882 "EHLO
+        id S1729302AbgGGXED (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 7 Jul 2020 19:04:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47898 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729222AbgGGXD4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jul 2020 19:03:56 -0400
-Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1AE9CC08C5DC;
-        Tue,  7 Jul 2020 16:03:56 -0700 (PDT)
-Received: by mail-ej1-x643.google.com with SMTP id l12so48402111ejn.10;
-        Tue, 07 Jul 2020 16:03:56 -0700 (PDT)
+        with ESMTP id S1729241AbgGGXEB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jul 2020 19:04:01 -0400
+Received: from mail-ej1-x644.google.com (mail-ej1-x644.google.com [IPv6:2a00:1450:4864:20::644])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E509C061755;
+        Tue,  7 Jul 2020 16:04:01 -0700 (PDT)
+Received: by mail-ej1-x644.google.com with SMTP id a1so48441840ejg.12;
+        Tue, 07 Jul 2020 16:04:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=f/B4HaDZi62ogJlh08lcWMmSiX6wkYFX1xrKwTFme60=;
-        b=u3N9d6hCgIpQgfYzzGXPRkz1ZTG/1pQBpqSLbagX8deaZEK6GwT/f5YofPnMGAhCpj
-         jMEmBCOysnn6iplide8DVqj9Rk5/wYSgBz8XUNgRcfq467+K8cP3pLcMTP+1ZclauTxl
-         EFGflAgSfytNgs8CPs8r8plR+LLc36a5KzZXCU1ENiAOjwAkPxr/2hmWEzLM+r2k2Q+p
-         J2ikUVjmPm6Y2lfLLowar3aDxrV43FWTzYc+MVWNUmHtLtHZoI73N5j9IbUpC8DNHLaI
-         NUtfEpIFSa8Zm076y46HLNeHhpVoB5RtQ/Lbe2IfqN1rmC3JWbtduZCPNbNqU6NJby4L
-         gI1g==
+        bh=TDNee8GVeUeyBsCjyc6danC/ynEOptI+9KXBNHn5gUo=;
+        b=PD50e4vMzFR5le1ao1Ae6vuTHCknkbfKAiLbDT70l8X7nzwML3pjQqA/vBosHSFuHD
+         G/LmYKcCftSPXGToiWf2pSbxg58KVWi8a9p117WWcHau/A7enRJRWV/wGFL9vKWZagej
+         aVVo7PLCLbdnDwnv5hvhukqzop+1wL1PClfZ/fuZE8Z27Mna7vdlk3vbB5yUurj2KXxf
+         piFaUYZZmp5oAUkoR1GPB9tSDp+AbcdaQoIXkRhNNiBiIOjdbUazjlJh0ZtSx0QMpi7x
+         PJp3pV9sVay5rgP9GqI/ABxAKS4wW3STZIWur29NuukyNc4xcJ3Y3XC7CaduhYn5ha1x
+         4sUQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=f/B4HaDZi62ogJlh08lcWMmSiX6wkYFX1xrKwTFme60=;
-        b=YtZ/HoV1f8yfl5zEc5Bs+zuhJXrMxmCj5QGYNgdMQYZOhhNc6CXVFNzwS6fqSGgzPz
-         4dYKZVDHng3p4CpoxYiEeu3SoDRyv3gLefmYVAbmmHjRYANtQXRew1A6W8OeWiQ+COnz
-         o8kxWDO5xvP/ajbQ5vA1GJTI0I12La7g30bK5506TYwH4FTUx6DovQOAJsM8V4jhlYhX
-         Rdqhxm6BReDEeHyvOhQ0mlzhU6sfDDMOFo2UEqBamH722E947c/avoPC6T3S0dONb0/2
-         GgkY9X8dEHUUM01J9TIwDTyKaGI+6oR7Eqp3gn0WpDEwfuWHepTb4FFxHkqfxJ+m+45d
-         z11Q==
-X-Gm-Message-State: AOAM533zK7fpXdreqUQj2/O/zAmuYx5DPsYiLLpdpLoswDmPudA0JR7X
-        sNBxCRrcifnaAQGgrPbbcxM=
-X-Google-Smtp-Source: ABdhPJxcUkYOw0lGYX67bP1BOohxsee8oTZucPB5u8KaCV/qb40Dm3kbZN1Qls//mxUdquiye7UKNg==
-X-Received: by 2002:a17:907:41dc:: with SMTP id og20mr26187442ejb.183.1594163034810;
-        Tue, 07 Jul 2020 16:03:54 -0700 (PDT)
+        bh=TDNee8GVeUeyBsCjyc6danC/ynEOptI+9KXBNHn5gUo=;
+        b=IhA1Mb+8fub+0mdi5w5rW+VQ2Bkz50wSVIUY7ujpBKrs6+vELFK5dBeafVb4NIY6gO
+         QYzrSP17K+O1BkNKraTLw9ih2FbJLeuzMxILKIIWNF70vOIBknpbZvhV5pP8IbJS+X8Q
+         dw2+/VoWBkrRL65+OBVKj/G3/ygDB48pfH4j6WF3x+hQmgk2mhV6R6A8Azt6YxF+stlu
+         VXp9SsPzGLvvrQvyrioQXIMF6ko6bkkTxeWrKFfUPhbfydcWyd5NBhShScIh3udc9IaN
+         Jj5IxXHUvp9Vtkf7bxg3LGnbaxp1YJvMWoYFknUGewClDdoDfHgyKac8Wv41+OAFwfu2
+         U42Q==
+X-Gm-Message-State: AOAM530DRcx+gomMssPrLly9AEPEkylCDgV590H7G01Apc2vR5XpWAkG
+        CIwYOFylWsJdkqLgxIvaGVY=
+X-Google-Smtp-Source: ABdhPJy5RfHewjT0dnWFda9i0XhBHF0l10D3kiKEqleSJ0mL94SUpk1lTLn4o9t2bQPzn68Xo9d2yw==
+X-Received: by 2002:a17:906:d217:: with SMTP id w23mr38205012ejz.292.1594163039774;
+        Tue, 07 Jul 2020 16:03:59 -0700 (PDT)
 Received: from net.saheed (54007186.dsl.pool.telekom.hu. [84.0.113.134])
-        by smtp.gmail.com with ESMTPSA id f10sm27096310edx.5.2020.07.07.16.03.53
+        by smtp.gmail.com with ESMTPSA id f10sm27096310edx.5.2020.07.07.16.03.57
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 07 Jul 2020 16:03:54 -0700 (PDT)
+        Tue, 07 Jul 2020 16:03:58 -0700 (PDT)
 From:   Saheed Olayemi Bolarinwa <refactormyself@gmail.com>
 To:     helgaas@kernel.org
 Cc:     Bolarinwa Olayemi Saheed <refactormyself@gmail.com>,
         bjorn@helgaas.com, skhan@linuxfoundation.org,
         linux-pci@vger.kernel.org,
         linux-kernel-mentees@lists.linuxfoundation.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 10/13] PCI/PM: Check return value of pcie_capability_read_*()
-Date:   Wed,  8 Jul 2020 00:03:21 +0200
-Message-Id: <20200707220324.8425-11-refactormyself@gmail.com>
+        linux-kernel@vger.kernel.org, Russell Currey <ruscur@russell.cc>,
+        Sam Bobroff <sbobroff@linux.ibm.com>,
+        "Oliver O'Halloran" <oohall@gmail.com>,
+        linuxppc-dev@lists.ozlabs.org,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
+        linux-acpi@vger.kernel.org,
+        Mike Marciniszyn <mike.marciniszyn@intel.com>,
+        Dennis Dalessandro <dennis.dalessandro@intel.com>,
+        Doug Ledford <dledford@redhat.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>, linux-rdma@vger.kernel.org,
+        Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Jakub Kicinski <kuba@kernel.org>,
+        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: [PATCH 13/13] PCI: Remove '*val = 0' from pcie_capability_read_*()
+Date:   Wed,  8 Jul 2020 00:03:24 +0200
+Message-Id: <20200707220324.8425-14-refactormyself@gmail.com>
 X-Mailer: git-send-email 2.18.2
 In-Reply-To: <20200707220324.8425-1-refactormyself@gmail.com>
 References: <20200707220324.8425-1-refactormyself@gmail.com>
@@ -77,181 +95,89 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
 
-On failure pcie_capability_read_dword() sets it's last parameter,
-val to 0.
-However, with Patch 13/13, it is possible that val is set to ~0 on
-failure. This would introduce a bug because (x & x) == (~0 & x).
+There are several reasons why a PCI capability read may fail whether the
+device is present or not. If this happens, pcie_capability_read_*() will
+return -EINVAL/PCIBIOS_BAD_REGISTER_NUMBER or PCIBIOS_DEVICE_NOT_FOUND
+and *val is set to 0.
 
-This bug can be avoided if the return value of pcie_capability_read_dword
-is checked to confirm success.
+This behaviour if further ensured by this code inside
+pcie_capability_read_*()
 
-Check the return value of pcie_capability_read_dword() to ensure success.
+ ret = pci_read_config_dword(dev, pci_pcie_cap(dev) + pos, val);
+ /*
+  * Reset *val to 0 if pci_read_config_dword() fails, it may
+  * have been written as 0xFFFFFFFF if hardware error happens
+  * during pci_read_config_dword().
+  */
+ if (ret)
+	 *val = 0;
+ return ret;
+
+a) Since all pci_generic_config_read() does is read a register value,
+it may return success after reading a ~0 which *may* have been fabricated
+by the PCI host bridge due to a read timeout. Hence pci_read_config_*() 
+will return success with a fabricated ~0 in *val, indicating a problem.
+In this case, the assumed behaviour of  pcie_capability_read_*() will be
+wrong. To avoid error slipping through, more checks are necessary.
+
+b) pci_read_config_*() will return PCIBIOS_DEVICE_NOT_FOUND only if 
+dev->error_state = pci_channel_io_perm_failure (i.e. 
+pci_dev_is_disconnected()) or if pci_generic_config_read() can't find the
+device. In both cases *val is initially set to ~0 but as shown in the code
+above pcie_capability_read_*() resets it back to 0. Even with this effort,
+drivers still have to perform validation checks more so if 0 is a valid
+value.
+
+Most drivers only consider the case (b) and in some cases, there is the 
+expectation that on timeout *val has a fabricated value of ~0, which *may*
+not always be true as explained in (a).
+
+In any case, checks need to be done to validate the value read and maybe
+confirm which error has occurred. It is better left to the drivers to do.
+
+Remove the reset of *val to 0 when pci_read_config_*() fails.
 
 Suggested-by: Bjorn Helgaas <bjorn@helgaas.com>
 Signed-off-by: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
 ---
- drivers/pci/pci.c | 52 ++++++++++++++++++++++++++++++-----------------
- 1 file changed, 33 insertions(+), 19 deletions(-)
+This patch  depends on all of the preceeding patches in this series,
+otherwise it will introduce bugs as pointed out in the commit message
+of each.
+ drivers/pci/access.c | 14 --------------
+ 1 file changed, 14 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index ce096272f52b..9f18ffbf7bd4 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3207,6 +3207,7 @@ void pci_configure_ari(struct pci_dev *dev)
- {
- 	u32 cap;
- 	struct pci_dev *bridge;
-+	int ret;
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index 79c4a2ef269a..ec95edbb1ac8 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -413,13 +413,6 @@ int pcie_capability_read_word(struct pci_dev *dev, int pos, u16 *val)
  
- 	if (pcie_ari_disabled || !pci_is_pcie(dev) || dev->devfn)
- 		return;
-@@ -3215,8 +3216,8 @@ void pci_configure_ari(struct pci_dev *dev)
- 	if (!bridge)
- 		return;
+ 	if (pcie_capability_reg_implemented(dev, pos)) {
+ 		ret = pci_read_config_word(dev, pci_pcie_cap(dev) + pos, val);
+-		/*
+-		 * Reset *val to 0 if pci_read_config_word() fails, it may
+-		 * have been written as 0xFFFF if hardware error happens
+-		 * during pci_read_config_word().
+-		 */
+-		if (ret)
+-			*val = 0;
+ 		return ret;
+ 	}
  
--	pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap);
--	if (!(cap & PCI_EXP_DEVCAP2_ARI))
-+	ret = pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap);
-+	if (ret || !(cap & PCI_EXP_DEVCAP2_ARI))
- 		return;
+@@ -448,13 +441,6 @@ int pcie_capability_read_dword(struct pci_dev *dev, int pos, u32 *val)
  
- 	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ARI)) {
-@@ -3606,6 +3607,7 @@ int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 cap_mask)
- 	struct pci_bus *bus = dev->bus;
- 	struct pci_dev *bridge;
- 	u32 cap, ctl2;
-+	int ret;
+ 	if (pcie_capability_reg_implemented(dev, pos)) {
+ 		ret = pci_read_config_dword(dev, pci_pcie_cap(dev) + pos, val);
+-		/*
+-		 * Reset *val to 0 if pci_read_config_dword() fails, it may
+-		 * have been written as 0xFFFFFFFF if hardware error happens
+-		 * during pci_read_config_dword().
+-		 */
+-		if (ret)
+-			*val = 0;
+ 		return ret;
+ 	}
  
- 	if (!pci_is_pcie(dev))
- 		return -EINVAL;
-@@ -3629,28 +3631,29 @@ int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 cap_mask)
- 	while (bus->parent) {
- 		bridge = bus->self;
- 
--		pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap);
-+		ret = pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2,
-+								&cap);
- 
- 		switch (pci_pcie_type(bridge)) {
- 		/* Ensure switch ports support AtomicOp routing */
- 		case PCI_EXP_TYPE_UPSTREAM:
- 		case PCI_EXP_TYPE_DOWNSTREAM:
--			if (!(cap & PCI_EXP_DEVCAP2_ATOMIC_ROUTE))
-+			if (ret || !(cap & PCI_EXP_DEVCAP2_ATOMIC_ROUTE))
- 				return -EINVAL;
- 			break;
- 
- 		/* Ensure root port supports all the sizes we care about */
- 		case PCI_EXP_TYPE_ROOT_PORT:
--			if ((cap & cap_mask) != cap_mask)
-+			if (ret || ((cap & cap_mask) != cap_mask))
- 				return -EINVAL;
- 			break;
- 		}
- 
- 		/* Ensure upstream ports don't block AtomicOps on egress */
- 		if (pci_pcie_type(bridge) == PCI_EXP_TYPE_UPSTREAM) {
--			pcie_capability_read_dword(bridge, PCI_EXP_DEVCTL2,
--						   &ctl2);
--			if (ctl2 & PCI_EXP_DEVCTL2_ATOMIC_EGRESS_BLOCK)
-+			ret = pcie_capability_read_dword(bridge,
-+						PCI_EXP_DEVCTL2, &ctl2);
-+			if (!ret && (ctl2 & PCI_EXP_DEVCTL2_ATOMIC_EGRESS_BLOCK)
- 				return -EINVAL;
- 		}
- 
-@@ -4507,12 +4510,13 @@ EXPORT_SYMBOL(pci_wait_for_pending_transaction);
- bool pcie_has_flr(struct pci_dev *dev)
- {
- 	u32 cap;
-+	int ret;
- 
- 	if (dev->dev_flags & PCI_DEV_FLAGS_NO_FLR_RESET)
- 		return false;
- 
--	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &cap);
--	return cap & PCI_EXP_DEVCAP_FLR;
-+	ret = pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &cap);
-+	return (!ret && !!(cap & PCI_EXP_DEVCAP_FLR));
- }
- EXPORT_SYMBOL_GPL(pcie_has_flr);
- 
-@@ -4672,7 +4676,7 @@ static bool pcie_wait_for_link_delay(struct pci_dev *pdev, bool active,
- 		msleep(20);
- 	for (;;) {
- 		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
--		ret = !!(lnk_status & PCI_EXP_LNKSTA_DLLLA);
-+		ret = !!(!ret && (lnk_status & PCI_EXP_LNKSTA_DLLLA));
- 		if (ret == active)
- 			break;
- 		if (timeout <= 0)
-@@ -5774,6 +5778,7 @@ u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev **limiting_dev,
- 	enum pci_bus_speed next_speed;
- 	enum pcie_link_width next_width;
- 	u32 bw, next_bw;
-+	int ret;
- 
- 	if (speed)
- 		*speed = PCI_SPEED_UNKNOWN;
-@@ -5783,7 +5788,12 @@ u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev **limiting_dev,
- 	bw = 0;
- 
- 	while (dev) {
--		pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnksta);
-+		ret = pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnksta);
-+
-+		if (ret) {
-+			dev = pci_upstream_bridge(dev);
-+			continue;
-+		}
- 
- 		next_speed = pcie_link_speed[lnksta & PCI_EXP_LNKSTA_CLS];
- 		next_width = (lnksta & PCI_EXP_LNKSTA_NLW) >>
-@@ -5820,6 +5830,7 @@ EXPORT_SYMBOL(pcie_bandwidth_available);
- enum pci_bus_speed pcie_get_speed_cap(struct pci_dev *dev)
- {
- 	u32 lnkcap2, lnkcap;
-+	int ret;
- 
- 	/*
- 	 * Link Capabilities 2 was added in PCIe r3.0, sec 7.8.18.  The
-@@ -5830,16 +5841,18 @@ enum pci_bus_speed pcie_get_speed_cap(struct pci_dev *dev)
- 	 * should use the Supported Link Speeds field in Link Capabilities,
- 	 * where only 2.5 GT/s and 5.0 GT/s speeds were defined.
- 	 */
--	pcie_capability_read_dword(dev, PCI_EXP_LNKCAP2, &lnkcap2);
-+	ret = pcie_capability_read_dword(dev, PCI_EXP_LNKCAP2, &lnkcap2);
- 
- 	/* PCIe r3.0-compliant */
--	if (lnkcap2)
-+	if (!ret && lnkcap2)
- 		return PCIE_LNKCAP2_SLS2SPEED(lnkcap2);
- 
--	pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &lnkcap);
--	if ((lnkcap & PCI_EXP_LNKCAP_SLS) == PCI_EXP_LNKCAP_SLS_5_0GB)
-+	ret = pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &lnkcap);
-+	if (!ret &&
-+		((lnkcap & PCI_EXP_LNKCAP_SLS) == PCI_EXP_LNKCAP_SLS_5_0GB))
- 		return PCIE_SPEED_5_0GT;
--	else if ((lnkcap & PCI_EXP_LNKCAP_SLS) == PCI_EXP_LNKCAP_SLS_2_5GB)
-+	else if (!ret &&
-+		((lnkcap & PCI_EXP_LNKCAP_SLS) == PCI_EXP_LNKCAP_SLS_2_5GB))
- 		return PCIE_SPEED_2_5GT;
- 
- 	return PCI_SPEED_UNKNOWN;
-@@ -5856,9 +5869,10 @@ EXPORT_SYMBOL(pcie_get_speed_cap);
- enum pcie_link_width pcie_get_width_cap(struct pci_dev *dev)
- {
- 	u32 lnkcap;
-+	int ret;
- 
--	pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &lnkcap);
--	if (lnkcap)
-+	ret = pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &lnkcap);
-+	if (!ret && lnkcap)
- 		return (lnkcap & PCI_EXP_LNKCAP_MLW) >> 4;
- 
- 	return PCIE_LNK_WIDTH_UNKNOWN;
 -- 
 2.18.2
 
