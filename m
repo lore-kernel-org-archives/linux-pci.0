@@ -2,384 +2,256 @@ Return-Path: <SRS0=39P4=AS=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.4 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT,
-	USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1187DC433E0
-	for <linux-pci@archiver.kernel.org>; Tue,  7 Jul 2020 22:46:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3E40C433E2
+	for <linux-pci@archiver.kernel.org>; Tue,  7 Jul 2020 23:03:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DAC7320773
-	for <linux-pci@archiver.kernel.org>; Tue,  7 Jul 2020 22:46:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B80E7207C4
+	for <linux-pci@archiver.kernel.org>; Tue,  7 Jul 2020 23:03:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="eBoPjreR"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="u3N9d6hC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729441AbgGGWqJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 7 Jul 2020 18:46:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45106 "EHLO
+        id S1729085AbgGGXD5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 7 Jul 2020 19:03:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47882 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729314AbgGGWqJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jul 2020 18:46:09 -0400
-Received: from mail-yb1-xb49.google.com (mail-yb1-xb49.google.com [IPv6:2607:f8b0:4864:20::b49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B924DC08C5E1
-        for <linux-pci@vger.kernel.org>; Tue,  7 Jul 2020 15:46:08 -0700 (PDT)
-Received: by mail-yb1-xb49.google.com with SMTP id p22so49075310ybg.21
-        for <linux-pci@vger.kernel.org>; Tue, 07 Jul 2020 15:46:08 -0700 (PDT)
+        with ESMTP id S1729222AbgGGXD4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jul 2020 19:03:56 -0400
+Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1AE9CC08C5DC;
+        Tue,  7 Jul 2020 16:03:56 -0700 (PDT)
+Received: by mail-ej1-x643.google.com with SMTP id l12so48402111ejn.10;
+        Tue, 07 Jul 2020 16:03:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:message-id:mime-version:subject:from:to:cc;
-        bh=IEfZLZ78xcvl63YOGXYJYdTw/XucW2SRwmLFdcRTwIE=;
-        b=eBoPjreRWiU8NjeW0Fu/7efs7C8GadIPXxLb/b4W5z53Uu77vk+4febcwq1JkQeMf2
-         4H/ljOzw8mCmTooOmnt6GTFSbciL3mt1aeUEH4vXypwvYUAt/br50PHlR9O93yw1uz50
-         P5Z3GylpA0obhYQ4nFfgyViY67nhALdrKqOadGfpMwgmh/wg4DJQWkH6oiXAXR1+hk66
-         JVswL/NopEugGFHnkAXeD9cuoksXiQqw5s9qdAYbVgxJsaBCyu15+e//XDy+MSlpV3XL
-         7yAgS1UvTX8hmQd3/1kGtTB7NBQRMFzrH8jTJjOSbDe2ogGDcE4PST808XY3R4jmRHol
-         VzpA==
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=f/B4HaDZi62ogJlh08lcWMmSiX6wkYFX1xrKwTFme60=;
+        b=u3N9d6hCgIpQgfYzzGXPRkz1ZTG/1pQBpqSLbagX8deaZEK6GwT/f5YofPnMGAhCpj
+         jMEmBCOysnn6iplide8DVqj9Rk5/wYSgBz8XUNgRcfq467+K8cP3pLcMTP+1ZclauTxl
+         EFGflAgSfytNgs8CPs8r8plR+LLc36a5KzZXCU1ENiAOjwAkPxr/2hmWEzLM+r2k2Q+p
+         J2ikUVjmPm6Y2lfLLowar3aDxrV43FWTzYc+MVWNUmHtLtHZoI73N5j9IbUpC8DNHLaI
+         NUtfEpIFSa8Zm076y46HLNeHhpVoB5RtQ/Lbe2IfqN1rmC3JWbtduZCPNbNqU6NJby4L
+         gI1g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:message-id:mime-version:subject:from:to:cc;
-        bh=IEfZLZ78xcvl63YOGXYJYdTw/XucW2SRwmLFdcRTwIE=;
-        b=DE44QUUN9s+lE/ZCE+gCS60eDbpDlp3X+rywDBRaUd1TEx0vTIRel5HyQP0G1ZIPBZ
-         e9YDjKqMYc9J9R72WgNTG6VSelBk3AdggttsmQJKLpD46tYaa2xmvnWRcI89Qil3dcHz
-         Sy9/veEMDZ86MJqwziDXu2Spu4k7D4QQHkEZyuSrq0wKZmB9xc69lvGA9jOZmW3D02ig
-         44sgGcdjU+fSeWlCJzBNqtm+55FT3sPtm8Kx/RqiUd9Q3Uw7x70VRSmrRqTJe71BClO6
-         Ym2ltA/fPh1NCr98wrI5fXdayhg55bRtXv2b/bhVZ0fzvgHXQQn7kgQUmt7YJGDhasuO
-         772Q==
-X-Gm-Message-State: AOAM531bytmqyYTlbejJOOw6ctfxp4eaoeRDXgwYK3KXrb3p7+H3irUV
-        jUxVkdtjSeliIcJ/uN/q+G7Ex5kooqqZ
-X-Google-Smtp-Source: ABdhPJz62vzOsYrjFc5Vg2wRsVItzBkR3EFMlTaNhnQrwZLPYqgptPIriecmFQNCxJnn+co+nTLjrfOxXlzl
-X-Received: by 2002:a25:7755:: with SMTP id s82mr34709305ybc.275.1594161967387;
- Tue, 07 Jul 2020 15:46:07 -0700 (PDT)
-Date:   Tue,  7 Jul 2020 15:46:01 -0700
-Message-Id: <20200707224604.3737893-1-rajatja@google.com>
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.27.0.383.g050319c2ae-goog
-Subject: [PATCH v4 1/4] PCI: Move pci_enable_acs() and its dependencies up in pci.c
-From:   Rajat Jain <rajatja@google.com>
-To:     David Woodhouse <dwmw2@infradead.org>,
-        Lu Baolu <baolu.lu@linux.intel.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, iommu@lists.linux-foundation.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, Raj Ashok <ashok.raj@intel.com>,
-        lalithambika.krishnakumar@intel.com,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Jean-Philippe Brucker <jean-philippe@linaro.org>,
-        Prashant Malani <pmalani@google.com>,
-        Benson Leung <bleung@google.com>,
-        Todd Broch <tbroch@google.com>,
-        Alex Levin <levinale@google.com>,
-        Mattias Nissler <mnissler@google.com>,
-        Rajat Jain <rajatxjain@gmail.com>,
-        Bernie Keany <bernie.keany@intel.com>,
-        Aaron Durbin <adurbin@google.com>,
-        Diego Rivas <diegorivas@google.com>,
-        Duncan Laurie <dlaurie@google.com>,
-        Furquan Shaikh <furquan@google.com>,
-        Jesse Barnes <jsbarnes@google.com>,
-        Christian Kellner <christian@kellner.me>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        oohall@gmail.com, Saravana Kannan <saravanak@google.com>,
-        Suzuki K Poulose <suzuki.poulose@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Heikki Krogerus <heikki.krogerus@linux.intel.com>
-Cc:     Rajat Jain <rajatja@google.com>
-Content-Type: text/plain; charset="UTF-8"
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=f/B4HaDZi62ogJlh08lcWMmSiX6wkYFX1xrKwTFme60=;
+        b=YtZ/HoV1f8yfl5zEc5Bs+zuhJXrMxmCj5QGYNgdMQYZOhhNc6CXVFNzwS6fqSGgzPz
+         4dYKZVDHng3p4CpoxYiEeu3SoDRyv3gLefmYVAbmmHjRYANtQXRew1A6W8OeWiQ+COnz
+         o8kxWDO5xvP/ajbQ5vA1GJTI0I12La7g30bK5506TYwH4FTUx6DovQOAJsM8V4jhlYhX
+         Rdqhxm6BReDEeHyvOhQ0mlzhU6sfDDMOFo2UEqBamH722E947c/avoPC6T3S0dONb0/2
+         GgkY9X8dEHUUM01J9TIwDTyKaGI+6oR7Eqp3gn0WpDEwfuWHepTb4FFxHkqfxJ+m+45d
+         z11Q==
+X-Gm-Message-State: AOAM533zK7fpXdreqUQj2/O/zAmuYx5DPsYiLLpdpLoswDmPudA0JR7X
+        sNBxCRrcifnaAQGgrPbbcxM=
+X-Google-Smtp-Source: ABdhPJxcUkYOw0lGYX67bP1BOohxsee8oTZucPB5u8KaCV/qb40Dm3kbZN1Qls//mxUdquiye7UKNg==
+X-Received: by 2002:a17:907:41dc:: with SMTP id og20mr26187442ejb.183.1594163034810;
+        Tue, 07 Jul 2020 16:03:54 -0700 (PDT)
+Received: from net.saheed (54007186.dsl.pool.telekom.hu. [84.0.113.134])
+        by smtp.gmail.com with ESMTPSA id f10sm27096310edx.5.2020.07.07.16.03.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 07 Jul 2020 16:03:54 -0700 (PDT)
+From:   Saheed Olayemi Bolarinwa <refactormyself@gmail.com>
+To:     helgaas@kernel.org
+Cc:     Bolarinwa Olayemi Saheed <refactormyself@gmail.com>,
+        bjorn@helgaas.com, skhan@linuxfoundation.org,
+        linux-pci@vger.kernel.org,
+        linux-kernel-mentees@lists.linuxfoundation.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 10/13] PCI/PM: Check return value of pcie_capability_read_*()
+Date:   Wed,  8 Jul 2020 00:03:21 +0200
+Message-Id: <20200707220324.8425-11-refactormyself@gmail.com>
+X-Mailer: git-send-email 2.18.2
+In-Reply-To: <20200707220324.8425-1-refactormyself@gmail.com>
+References: <20200707220324.8425-1-refactormyself@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Move pci_enable_acs() and the functions it depends on, further up in the
-source code to avoid having to forward declare it when we make it static
-in near future (next patch).
+From: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
 
-No functional changes intended.
+On failure pcie_capability_read_dword() sets it's last parameter,
+val to 0.
+However, with Patch 13/13, it is possible that val is set to ~0 on
+failure. This would introduce a bug because (x & x) == (~0 & x).
 
-Signed-off-by: Rajat Jain <rajatja@google.com>
+This bug can be avoided if the return value of pcie_capability_read_dword
+is checked to confirm success.
+
+Check the return value of pcie_capability_read_dword() to ensure success.
+
+Suggested-by: Bjorn Helgaas <bjorn@helgaas.com>
+Signed-off-by: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
 ---
-v4: Same as v3
-v3: Initial version of the patch, created per Bjorn's suggestion
-
- drivers/pci/pci.c | 254 +++++++++++++++++++++++-----------------------
- 1 file changed, 127 insertions(+), 127 deletions(-)
+ drivers/pci/pci.c | 52 ++++++++++++++++++++++++++++++-----------------
+ 1 file changed, 33 insertions(+), 19 deletions(-)
 
 diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index ce096272f52b1..eec625f0e594e 100644
+index ce096272f52b..9f18ffbf7bd4 100644
 --- a/drivers/pci/pci.c
 +++ b/drivers/pci/pci.c
-@@ -777,6 +777,133 @@ int pci_wait_for_pending(struct pci_dev *dev, int pos, u16 mask)
- 	return 0;
- }
- 
-+static int pci_acs_enable;
-+
-+/**
-+ * pci_request_acs - ask for ACS to be enabled if supported
-+ */
-+void pci_request_acs(void)
-+{
-+	pci_acs_enable = 1;
-+}
-+
-+static const char *disable_acs_redir_param;
-+
-+/**
-+ * pci_disable_acs_redir - disable ACS redirect capabilities
-+ * @dev: the PCI device
-+ *
-+ * For only devices specified in the disable_acs_redir parameter.
-+ */
-+static void pci_disable_acs_redir(struct pci_dev *dev)
-+{
-+	int ret = 0;
-+	const char *p;
-+	int pos;
-+	u16 ctrl;
-+
-+	if (!disable_acs_redir_param)
-+		return;
-+
-+	p = disable_acs_redir_param;
-+	while (*p) {
-+		ret = pci_dev_str_match(dev, p, &p);
-+		if (ret < 0) {
-+			pr_info_once("PCI: Can't parse disable_acs_redir parameter: %s\n",
-+				     disable_acs_redir_param);
-+
-+			break;
-+		} else if (ret == 1) {
-+			/* Found a match */
-+			break;
-+		}
-+
-+		if (*p != ';' && *p != ',') {
-+			/* End of param or invalid format */
-+			break;
-+		}
-+		p++;
-+	}
-+
-+	if (ret != 1)
-+		return;
-+
-+	if (!pci_dev_specific_disable_acs_redir(dev))
-+		return;
-+
-+	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
-+	if (!pos) {
-+		pci_warn(dev, "cannot disable ACS redirect for this hardware as it does not have ACS capabilities\n");
-+		return;
-+	}
-+
-+	pci_read_config_word(dev, pos + PCI_ACS_CTRL, &ctrl);
-+
-+	/* P2P Request & Completion Redirect */
-+	ctrl &= ~(PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_EC);
-+
-+	pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
-+
-+	pci_info(dev, "disabled ACS redirect\n");
-+}
-+
-+/**
-+ * pci_std_enable_acs - enable ACS on devices using standard ACS capabilities
-+ * @dev: the PCI device
-+ */
-+static void pci_std_enable_acs(struct pci_dev *dev)
-+{
-+	int pos;
-+	u16 cap;
-+	u16 ctrl;
-+
-+	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
-+	if (!pos)
-+		return;
-+
-+	pci_read_config_word(dev, pos + PCI_ACS_CAP, &cap);
-+	pci_read_config_word(dev, pos + PCI_ACS_CTRL, &ctrl);
-+
-+	/* Source Validation */
-+	ctrl |= (cap & PCI_ACS_SV);
-+
-+	/* P2P Request Redirect */
-+	ctrl |= (cap & PCI_ACS_RR);
-+
-+	/* P2P Completion Redirect */
-+	ctrl |= (cap & PCI_ACS_CR);
-+
-+	/* Upstream Forwarding */
-+	ctrl |= (cap & PCI_ACS_UF);
-+
-+	pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
-+}
-+
-+/**
-+ * pci_enable_acs - enable ACS if hardware support it
-+ * @dev: the PCI device
-+ */
-+void pci_enable_acs(struct pci_dev *dev)
-+{
-+	if (!pci_acs_enable)
-+		goto disable_acs_redir;
-+
-+	if (!pci_dev_specific_enable_acs(dev))
-+		goto disable_acs_redir;
-+
-+	pci_std_enable_acs(dev);
-+
-+disable_acs_redir:
-+	/*
-+	 * Note: pci_disable_acs_redir() must be called even if ACS was not
-+	 * enabled by the kernel because it may have been enabled by
-+	 * platform firmware.  So if we are told to disable it, we should
-+	 * always disable it after setting the kernel's default
-+	 * preferences.
-+	 */
-+	pci_disable_acs_redir(dev);
-+}
-+
- /**
-  * pci_restore_bars - restore a device's BAR values (e.g. after wake-up)
-  * @dev: PCI device to have its BARs restored
-@@ -3230,133 +3357,6 @@ void pci_configure_ari(struct pci_dev *dev)
- 	}
- }
- 
--static int pci_acs_enable;
--
--/**
-- * pci_request_acs - ask for ACS to be enabled if supported
-- */
--void pci_request_acs(void)
--{
--	pci_acs_enable = 1;
--}
--
--static const char *disable_acs_redir_param;
--
--/**
-- * pci_disable_acs_redir - disable ACS redirect capabilities
-- * @dev: the PCI device
-- *
-- * For only devices specified in the disable_acs_redir parameter.
-- */
--static void pci_disable_acs_redir(struct pci_dev *dev)
--{
--	int ret = 0;
--	const char *p;
--	int pos;
--	u16 ctrl;
--
--	if (!disable_acs_redir_param)
--		return;
--
--	p = disable_acs_redir_param;
--	while (*p) {
--		ret = pci_dev_str_match(dev, p, &p);
--		if (ret < 0) {
--			pr_info_once("PCI: Can't parse disable_acs_redir parameter: %s\n",
--				     disable_acs_redir_param);
--
--			break;
--		} else if (ret == 1) {
--			/* Found a match */
--			break;
--		}
--
--		if (*p != ';' && *p != ',') {
--			/* End of param or invalid format */
--			break;
--		}
--		p++;
--	}
--
--	if (ret != 1)
--		return;
--
--	if (!pci_dev_specific_disable_acs_redir(dev))
--		return;
--
--	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
--	if (!pos) {
--		pci_warn(dev, "cannot disable ACS redirect for this hardware as it does not have ACS capabilities\n");
--		return;
--	}
--
--	pci_read_config_word(dev, pos + PCI_ACS_CTRL, &ctrl);
--
--	/* P2P Request & Completion Redirect */
--	ctrl &= ~(PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_EC);
--
--	pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
--
--	pci_info(dev, "disabled ACS redirect\n");
--}
--
--/**
-- * pci_std_enable_acs - enable ACS on devices using standard ACS capabilities
-- * @dev: the PCI device
-- */
--static void pci_std_enable_acs(struct pci_dev *dev)
--{
--	int pos;
--	u16 cap;
--	u16 ctrl;
--
--	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
--	if (!pos)
--		return;
--
--	pci_read_config_word(dev, pos + PCI_ACS_CAP, &cap);
--	pci_read_config_word(dev, pos + PCI_ACS_CTRL, &ctrl);
--
--	/* Source Validation */
--	ctrl |= (cap & PCI_ACS_SV);
--
--	/* P2P Request Redirect */
--	ctrl |= (cap & PCI_ACS_RR);
--
--	/* P2P Completion Redirect */
--	ctrl |= (cap & PCI_ACS_CR);
--
--	/* Upstream Forwarding */
--	ctrl |= (cap & PCI_ACS_UF);
--
--	pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
--}
--
--/**
-- * pci_enable_acs - enable ACS if hardware support it
-- * @dev: the PCI device
-- */
--void pci_enable_acs(struct pci_dev *dev)
--{
--	if (!pci_acs_enable)
--		goto disable_acs_redir;
--
--	if (!pci_dev_specific_enable_acs(dev))
--		goto disable_acs_redir;
--
--	pci_std_enable_acs(dev);
--
--disable_acs_redir:
--	/*
--	 * Note: pci_disable_acs_redir() must be called even if ACS was not
--	 * enabled by the kernel because it may have been enabled by
--	 * platform firmware.  So if we are told to disable it, we should
--	 * always disable it after setting the kernel's default
--	 * preferences.
--	 */
--	pci_disable_acs_redir(dev);
--}
--
- static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
+@@ -3207,6 +3207,7 @@ void pci_configure_ari(struct pci_dev *dev)
  {
- 	int pos;
+ 	u32 cap;
+ 	struct pci_dev *bridge;
++	int ret;
+ 
+ 	if (pcie_ari_disabled || !pci_is_pcie(dev) || dev->devfn)
+ 		return;
+@@ -3215,8 +3216,8 @@ void pci_configure_ari(struct pci_dev *dev)
+ 	if (!bridge)
+ 		return;
+ 
+-	pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap);
+-	if (!(cap & PCI_EXP_DEVCAP2_ARI))
++	ret = pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap);
++	if (ret || !(cap & PCI_EXP_DEVCAP2_ARI))
+ 		return;
+ 
+ 	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ARI)) {
+@@ -3606,6 +3607,7 @@ int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 cap_mask)
+ 	struct pci_bus *bus = dev->bus;
+ 	struct pci_dev *bridge;
+ 	u32 cap, ctl2;
++	int ret;
+ 
+ 	if (!pci_is_pcie(dev))
+ 		return -EINVAL;
+@@ -3629,28 +3631,29 @@ int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 cap_mask)
+ 	while (bus->parent) {
+ 		bridge = bus->self;
+ 
+-		pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap);
++		ret = pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2,
++								&cap);
+ 
+ 		switch (pci_pcie_type(bridge)) {
+ 		/* Ensure switch ports support AtomicOp routing */
+ 		case PCI_EXP_TYPE_UPSTREAM:
+ 		case PCI_EXP_TYPE_DOWNSTREAM:
+-			if (!(cap & PCI_EXP_DEVCAP2_ATOMIC_ROUTE))
++			if (ret || !(cap & PCI_EXP_DEVCAP2_ATOMIC_ROUTE))
+ 				return -EINVAL;
+ 			break;
+ 
+ 		/* Ensure root port supports all the sizes we care about */
+ 		case PCI_EXP_TYPE_ROOT_PORT:
+-			if ((cap & cap_mask) != cap_mask)
++			if (ret || ((cap & cap_mask) != cap_mask))
+ 				return -EINVAL;
+ 			break;
+ 		}
+ 
+ 		/* Ensure upstream ports don't block AtomicOps on egress */
+ 		if (pci_pcie_type(bridge) == PCI_EXP_TYPE_UPSTREAM) {
+-			pcie_capability_read_dword(bridge, PCI_EXP_DEVCTL2,
+-						   &ctl2);
+-			if (ctl2 & PCI_EXP_DEVCTL2_ATOMIC_EGRESS_BLOCK)
++			ret = pcie_capability_read_dword(bridge,
++						PCI_EXP_DEVCTL2, &ctl2);
++			if (!ret && (ctl2 & PCI_EXP_DEVCTL2_ATOMIC_EGRESS_BLOCK)
+ 				return -EINVAL;
+ 		}
+ 
+@@ -4507,12 +4510,13 @@ EXPORT_SYMBOL(pci_wait_for_pending_transaction);
+ bool pcie_has_flr(struct pci_dev *dev)
+ {
+ 	u32 cap;
++	int ret;
+ 
+ 	if (dev->dev_flags & PCI_DEV_FLAGS_NO_FLR_RESET)
+ 		return false;
+ 
+-	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &cap);
+-	return cap & PCI_EXP_DEVCAP_FLR;
++	ret = pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &cap);
++	return (!ret && !!(cap & PCI_EXP_DEVCAP_FLR));
+ }
+ EXPORT_SYMBOL_GPL(pcie_has_flr);
+ 
+@@ -4672,7 +4676,7 @@ static bool pcie_wait_for_link_delay(struct pci_dev *pdev, bool active,
+ 		msleep(20);
+ 	for (;;) {
+ 		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
+-		ret = !!(lnk_status & PCI_EXP_LNKSTA_DLLLA);
++		ret = !!(!ret && (lnk_status & PCI_EXP_LNKSTA_DLLLA));
+ 		if (ret == active)
+ 			break;
+ 		if (timeout <= 0)
+@@ -5774,6 +5778,7 @@ u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev **limiting_dev,
+ 	enum pci_bus_speed next_speed;
+ 	enum pcie_link_width next_width;
+ 	u32 bw, next_bw;
++	int ret;
+ 
+ 	if (speed)
+ 		*speed = PCI_SPEED_UNKNOWN;
+@@ -5783,7 +5788,12 @@ u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev **limiting_dev,
+ 	bw = 0;
+ 
+ 	while (dev) {
+-		pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnksta);
++		ret = pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnksta);
++
++		if (ret) {
++			dev = pci_upstream_bridge(dev);
++			continue;
++		}
+ 
+ 		next_speed = pcie_link_speed[lnksta & PCI_EXP_LNKSTA_CLS];
+ 		next_width = (lnksta & PCI_EXP_LNKSTA_NLW) >>
+@@ -5820,6 +5830,7 @@ EXPORT_SYMBOL(pcie_bandwidth_available);
+ enum pci_bus_speed pcie_get_speed_cap(struct pci_dev *dev)
+ {
+ 	u32 lnkcap2, lnkcap;
++	int ret;
+ 
+ 	/*
+ 	 * Link Capabilities 2 was added in PCIe r3.0, sec 7.8.18.  The
+@@ -5830,16 +5841,18 @@ enum pci_bus_speed pcie_get_speed_cap(struct pci_dev *dev)
+ 	 * should use the Supported Link Speeds field in Link Capabilities,
+ 	 * where only 2.5 GT/s and 5.0 GT/s speeds were defined.
+ 	 */
+-	pcie_capability_read_dword(dev, PCI_EXP_LNKCAP2, &lnkcap2);
++	ret = pcie_capability_read_dword(dev, PCI_EXP_LNKCAP2, &lnkcap2);
+ 
+ 	/* PCIe r3.0-compliant */
+-	if (lnkcap2)
++	if (!ret && lnkcap2)
+ 		return PCIE_LNKCAP2_SLS2SPEED(lnkcap2);
+ 
+-	pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &lnkcap);
+-	if ((lnkcap & PCI_EXP_LNKCAP_SLS) == PCI_EXP_LNKCAP_SLS_5_0GB)
++	ret = pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &lnkcap);
++	if (!ret &&
++		((lnkcap & PCI_EXP_LNKCAP_SLS) == PCI_EXP_LNKCAP_SLS_5_0GB))
+ 		return PCIE_SPEED_5_0GT;
+-	else if ((lnkcap & PCI_EXP_LNKCAP_SLS) == PCI_EXP_LNKCAP_SLS_2_5GB)
++	else if (!ret &&
++		((lnkcap & PCI_EXP_LNKCAP_SLS) == PCI_EXP_LNKCAP_SLS_2_5GB))
+ 		return PCIE_SPEED_2_5GT;
+ 
+ 	return PCI_SPEED_UNKNOWN;
+@@ -5856,9 +5869,10 @@ EXPORT_SYMBOL(pcie_get_speed_cap);
+ enum pcie_link_width pcie_get_width_cap(struct pci_dev *dev)
+ {
+ 	u32 lnkcap;
++	int ret;
+ 
+-	pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &lnkcap);
+-	if (lnkcap)
++	ret = pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &lnkcap);
++	if (!ret && lnkcap)
+ 		return (lnkcap & PCI_EXP_LNKCAP_MLW) >> 4;
+ 
+ 	return PCIE_LNK_WIDTH_UNKNOWN;
 -- 
-2.27.0.212.ge8ba1cc988-goog
+2.18.2
 
