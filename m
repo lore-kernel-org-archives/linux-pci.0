@@ -2,45 +2,67 @@ Return-Path: <SRS0=39P4=AS=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.4 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT,
+	USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62718C433E0
-	for <linux-pci@archiver.kernel.org>; Tue,  7 Jul 2020 22:36:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6D7DC433E1
+	for <linux-pci@archiver.kernel.org>; Tue,  7 Jul 2020 22:46:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 40D8F20675
-	for <linux-pci@archiver.kernel.org>; Tue,  7 Jul 2020 22:36:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1594161402;
-	bh=XNyL4Knjloue7Zmtlah/X6qQu06hR830oaTwsSUXTHg=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=k//qTzBnQHbDiBZVJ1ed/yZ9Yqn5kX9W3+8poCG7NwtfBkgNqywIhh66Nf3oM4ykW
-	 R7y9G6SUuk2MY/sGFTenKAY+oP3joNWFQSv0rIBYq0hmDT8zBAEiXsSrbGaYE6zrKm
-	 VjXRnD5Z3rpqCb91bJmpVG1WprdUJuLzUtdjYEO0=
+	by mail.kernel.org (Postfix) with ESMTP id B2CB62075B
+	for <linux-pci@archiver.kernel.org>; Tue,  7 Jul 2020 22:46:21 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Gc/SRTnI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728612AbgGGWgi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 7 Jul 2020 18:36:38 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54210 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728299AbgGGWgi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 7 Jul 2020 18:36:38 -0400
-Received: from localhost (mobile-166-175-191-139.mycingular.net [166.175.191.139])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D3EB320675;
-        Tue,  7 Jul 2020 22:36:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1594161397;
-        bh=XNyL4Knjloue7Zmtlah/X6qQu06hR830oaTwsSUXTHg=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=xetdEKJ5aWdBTllQu7iCldcr2gL0pHQD1391STAhb/ZytwPjQ3LkU7pnMm4aRcFwP
-         E8Ui4PxHIhfM839vwO2yKQkjGPz5EfvczV0Vo07a1qGBZlagfuWVisiGO8Fna15qob
-         nc7qm4xvca7SwrnNClgxex/yUGc1KWYI8CZyXaJc=
-Date:   Tue, 7 Jul 2020 17:36:34 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Rajat Jain <rajatja@google.com>
-Cc:     David Woodhouse <dwmw2@infradead.org>,
+        id S1729472AbgGGWqV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 7 Jul 2020 18:46:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45134 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729455AbgGGWqN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jul 2020 18:46:13 -0400
+Received: from mail-yb1-xb49.google.com (mail-yb1-xb49.google.com [IPv6:2607:f8b0:4864:20::b49])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE6B1C08C5DC
+        for <linux-pci@vger.kernel.org>; Tue,  7 Jul 2020 15:46:13 -0700 (PDT)
+Received: by mail-yb1-xb49.google.com with SMTP id r17so48933221ybj.22
+        for <linux-pci@vger.kernel.org>; Tue, 07 Jul 2020 15:46:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
+         :cc;
+        bh=n09L38FqLziZB80XiEEa4U3Rbl7E07buKJV52yFHq04=;
+        b=Gc/SRTnIxUHoSJi+odkT9ED/cAZBziEF60Mve91fM9ATmPS3FGriWKvJORZEl5Z0i6
+         Rt1q9Vj5DMEAtIDwvsa0svlN3MYRac1QJf+VBjUzkBJ22HvTQa8Now99YUMjCbAmUArG
+         5X+9HsquJ7uXVe4Pxn4vmk60HOhkEddPfyOyNrHxPW1zHyAcQIwk3gp0EqwnVfa3GZY4
+         q4JcOTH38ilJwF+ZrP6i0omqbEBDlm/Qojb6gfUCxgu5Ue6rglL1jV4JOPjCNpS+ODQj
+         hyRyy82rMnXmypFgaIK9L3UolmGvLn5iAPdb1li5GfA7hM9hQC5Y3D/8RLFnLgvk5HSZ
+         pO1w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:in-reply-to:message-id:mime-version
+         :references:subject:from:to:cc;
+        bh=n09L38FqLziZB80XiEEa4U3Rbl7E07buKJV52yFHq04=;
+        b=BTDvIgou4erDBx03KPYMH8OEl12VKJ2o4KIcK67ZCVgHdRKNFU/SAsFV1YVQMc2Hx9
+         nuYyTyxXjvk9tCcV5qHUvNi1hXqFn5fBVCdGKGXtvWznV/6Mii1tPkXnkDWpoyCEifLv
+         JtGLWQ8rWVqkmbGiM9M8gKzTl/nBGCXMbaDFgM4R9uo8oyhAkLb0r8W2vWzmj2EKlXwU
+         HIm2SpbcqVAX3M2OgC4FyZ1geV6aCTGrykEWoMFjboU/ajULn7xEhQG6e8u6r/1ntETE
+         snKucGg+uK667hut0itAr3n20CrJqL72jCKvKPwBWTtwh2cZkNZkh6y6z0SuAj/1csbj
+         8g7A==
+X-Gm-Message-State: AOAM530OCxT6uJcjA2MYkUUXMPOSrSjpuLfts2fCi/zAaTJIwJISi8G1
+        MILsIytz5aaUngQ20VT2AV/HS3wt9yLq
+X-Google-Smtp-Source: ABdhPJyqUZg0SfkVxfU/L4DX91czSrlqUnkerJoAkpXyDw0tpSP0A/Ld1JaoBY9wWt59l+/b2cp9XcCWy7MR
+X-Received: by 2002:a25:8007:: with SMTP id m7mr31698114ybk.60.1594161972909;
+ Tue, 07 Jul 2020 15:46:12 -0700 (PDT)
+Date:   Tue,  7 Jul 2020 15:46:04 -0700
+In-Reply-To: <20200707224604.3737893-1-rajatja@google.com>
+Message-Id: <20200707224604.3737893-4-rajatja@google.com>
+Mime-Version: 1.0
+References: <20200707224604.3737893-1-rajatja@google.com>
+X-Mailer: git-send-email 2.27.0.383.g050319c2ae-goog
+Subject: [PATCH v4 4/4] PCI/ACS: Enable PCI_ACS_TB for untrusted/external-facing
+ devices
+From:   Rajat Jain <rajatja@google.com>
+To:     David Woodhouse <dwmw2@infradead.org>,
         Lu Baolu <baolu.lu@linux.intel.com>,
         Joerg Roedel <joro@8bytes.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -69,56 +91,81 @@ Cc:     David Woodhouse <dwmw2@infradead.org>,
         oohall@gmail.com, Saravana Kannan <saravanak@google.com>,
         Suzuki K Poulose <suzuki.poulose@arm.com>,
         Arnd Bergmann <arnd@arndb.de>,
-        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-        stable@vger.kernel.org
-Subject: Re: [PATCH RESEND v2] PCI: Add device even if driver attach failed
-Message-ID: <20200707223634.GA392692@bjorn-Precision-5520>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200706233240.3245512-1-rajatja@google.com>
+        Heikki Krogerus <heikki.krogerus@linux.intel.com>
+Cc:     Rajat Jain <rajatja@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Jul 06, 2020 at 04:32:40PM -0700, Rajat Jain wrote:
-> device_attach() returning failure indicates a driver error while trying to
-> probe the device. In such a scenario, the PCI device should still be added
-> in the system and be visible to the user.
-> 
-> This patch partially reverts:
-> commit ab1a187bba5c ("PCI: Check device_attach() return value always")
-> 
-> Signed-off-by: Rajat Jain <rajatja@google.com>
-> Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> ---
-> Resending to stable, independent from other patches per Greg's suggestion
-> v2: Add Greg's reviewed by, fix commit log
+When enabling ACS, enable translation blocking for external facing ports
+and untrusted devices.
 
-Applied to pci/enumeration for v5.8 with stable tag, thanks!
+Signed-off-by: Rajat Jain <rajatja@google.com>
+---
+v4: Add braces to avoid warning from kernel robot
+    print warning for only external-facing devices.
+v3: print warning if ACS_TB not supported on external-facing/untrusted ports.
+    Minor code comments fixes.
+v2: Commit log change
 
->  drivers/pci/bus.c | 6 +-----
->  1 file changed, 1 insertion(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> index 8e40b3e6da77d..3cef835b375fd 100644
-> --- a/drivers/pci/bus.c
-> +++ b/drivers/pci/bus.c
-> @@ -322,12 +322,8 @@ void pci_bus_add_device(struct pci_dev *dev)
->  
->  	dev->match_driver = true;
->  	retval = device_attach(&dev->dev);
-> -	if (retval < 0 && retval != -EPROBE_DEFER) {
-> +	if (retval < 0 && retval != -EPROBE_DEFER)
->  		pci_warn(dev, "device attach failed (%d)\n", retval);
-> -		pci_proc_detach_device(dev);
-> -		pci_remove_sysfs_dev_files(dev);
-> -		return;
-> -	}
->  
->  	pci_dev_assign_added(dev, true);
->  }
-> -- 
-> 2.27.0.212.ge8ba1cc988-goog
-> 
+ drivers/pci/pci.c    |  8 ++++++++
+ drivers/pci/quirks.c | 15 +++++++++++++++
+ 2 files changed, 23 insertions(+)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 73a8627822140..a5a6bea7af7ce 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -876,6 +876,14 @@ static void pci_std_enable_acs(struct pci_dev *dev)
+ 	/* Upstream Forwarding */
+ 	ctrl |= (cap & PCI_ACS_UF);
+ 
++	/* Enable Translation Blocking for external devices */
++	if (dev->external_facing || dev->untrusted) {
++		if (cap & PCI_ACS_TB)
++			ctrl |= PCI_ACS_TB;
++		else if (dev->external_facing)
++			pci_warn(dev, "ACS: No Translation Blocking on external-facing dev\n");
++	}
++
+ 	pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
+ }
+ 
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index b341628e47527..bb22b46c1d719 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4934,6 +4934,13 @@ static void pci_quirk_enable_intel_rp_mpc_acs(struct pci_dev *dev)
+ 	}
+ }
+ 
++/*
++ * Currently this quirk does the equivalent of
++ * PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF
++ *
++ * TODO: This quirk also needs to do equivalent of PCI_ACS_TB,
++ * if dev->external_facing || dev->untrusted
++ */
+ static int pci_quirk_enable_intel_pch_acs(struct pci_dev *dev)
+ {
+ 	if (!pci_quirk_intel_pch_acs_match(dev))
+@@ -4973,6 +4980,14 @@ static int pci_quirk_enable_intel_spt_pch_acs(struct pci_dev *dev)
+ 	ctrl |= (cap & PCI_ACS_CR);
+ 	ctrl |= (cap & PCI_ACS_UF);
+ 
++	/* Enable Translation Blocking for external devices */
++	if (dev->external_facing || dev->untrusted) {
++		if (cap & PCI_ACS_TB)
++			ctrl |= PCI_ACS_TB;
++		else if (dev->external_facing)
++			pci_warn(dev, "ACS: No Translation Blocking on external-facing dev\n");
++	}
++
+ 	pci_write_config_dword(dev, pos + INTEL_SPT_ACS_CTRL, ctrl);
+ 
+ 	pci_info(dev, "Intel SPT PCH root port ACS workaround enabled\n");
+-- 
+2.27.0.212.ge8ba1cc988-goog
+
