@@ -2,273 +2,267 @@ Return-Path: <SRS0=KP8T=AT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1B8EC433E2
-	for <linux-pci@archiver.kernel.org>; Wed,  8 Jul 2020 19:32:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D0DAC433E1
+	for <linux-pci@archiver.kernel.org>; Wed,  8 Jul 2020 19:33:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AF512206E2
-	for <linux-pci@archiver.kernel.org>; Wed,  8 Jul 2020 19:32:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 05AF220720
+	for <linux-pci@archiver.kernel.org>; Wed,  8 Jul 2020 19:33:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="drvkI27/"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="U/PXvulD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726506AbgGHTcz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 8 Jul 2020 15:32:55 -0400
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:60736 "EHLO
+        id S1726477AbgGHTc6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 8 Jul 2020 15:32:58 -0400
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:33028 "EHLO
         rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725903AbgGHTc1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jul 2020 15:32:27 -0400
+        by vger.kernel.org with ESMTP id S1726269AbgGHTc5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jul 2020 15:32:57 -0400
 Received: from mail-irv-17.broadcom.com (mail-irv-17.lvn.broadcom.net [10.75.242.48])
-        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id 8117D30C0C0;
-        Wed,  8 Jul 2020 12:32:25 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com 8117D30C0C0
+        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id 553F730C0CD;
+        Wed,  8 Jul 2020 12:32:56 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com 553F730C0CD
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
-        s=dkimrelay; t=1594236745;
-        bh=EwUpHpRkQBD8sV+nVCn/MQ7dk/rrClGaFM9+jr1cZU8=;
-        h=From:To:Cc:Subject:Date:From;
-        b=drvkI27/fHhYXEkdId7+vJ5i7ud2y2ikwR+y7AE/J9w55EFR8sPGecnB7IsWGC5uz
-         QYnOtjYQKHGABcozhyAcYfAE4G1Ji4EbwN/BE2eVF+TGJcKtGInC4j8GhvM9G92paa
-         KZakrRTm8TE2epxp2zFEUFWeyuw6NGfh/Z+0hNrk=
+        s=dkimrelay; t=1594236776;
+        bh=udtd++0EdLnIE9REhaA6P4f2EyfKeKwHNXRuNbZQ35I=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=U/PXvulDfpDGqTwrmaTDu8O1/ZxcIUUnl/JTZFeUi35ePOuCGMP3uQmXrpdJBdeQa
+         eW2aNFxp49KipEkhrg8yJCL6q+WABrc2/7280NABa/bsiH8CPBF8R+rFnOREYJMZdO
+         H3x/roaZNIQiINMcU8G+lKPH7WHBtk6D0JxynYU4=
 Received: from stbsrv-and-01.and.broadcom.net (stbsrv-and-01.and.broadcom.net [10.28.16.211])
-        by mail-irv-17.broadcom.com (Postfix) with ESMTP id 039BE140069;
-        Wed,  8 Jul 2020 12:32:21 -0700 (PDT)
+        by mail-irv-17.broadcom.com (Postfix) with ESMTP id CE73F14008B;
+        Wed,  8 Jul 2020 12:32:54 -0700 (PDT)
 From:   Jim Quinlan <james.quinlan@broadcom.com>
 To:     linux-pci@vger.kernel.org,
         Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
         bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com
-Cc:     Alan Stern <stern@rowland.harvard.edu>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Dan Williams <dan.j.williams@intel.com>,
-        devel@driverdev.osuosl.org (open list:STAGING SUBSYSTEM),
-        devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED
-        DEVICE TREE),
-        dri-devel@lists.freedesktop.org (open list:DRM DRIVERS FOR ALLWINNER
-        A10), Florian Fainelli <f.fainelli@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        iommu@lists.linux-foundation.org (open list:IOMMU DRIVERS),
-        Jens Axboe <axboe@kernel.dk>, Joerg Roedel <jroedel@suse.de>,
-        Julien Grall <julien.grall@arm.com>,
-        linux-acpi@vger.kernel.org (open list:ACPI FOR ARM64 (ACPI/arm64)),
-        linux-arm-kernel@lists.infradead.org (moderated list:ARM PORT),
-        linux-ide@vger.kernel.org (open list:LIBATA SUBSYSTEM (Serial and
-        Parallel ATA drivers)), linux-kernel@vger.kernel.org (open list),
-        linux-media@vger.kernel.org (open list:ALLWINNER A10 CSI DRIVER),
-        linux-remoteproc@vger.kernel.org (open list:REMOTE PROCESSOR
-        (REMOTEPROC) SUBSYSTEM),
+Cc:     Jim Quinlan <james.quinlan@broadcom.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
         linux-rpi-kernel@lists.infradead.org (moderated list:BROADCOM
         BCM2711/BCM2835 ARM ARCHITECTURE),
-        linux-sh@vger.kernel.org (open list:SUPERH),
-        linux-usb@vger.kernel.org (open list:USB SUBSYSTEM),
-        Oliver Neukum <oneukum@suse.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Rob Herring <robh@kernel.org>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Saravana Kannan <saravanak@google.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Suzuki K Poulose <suzuki.poulose@arm.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>
-Subject: [PATCH v7 00/12] PCI: brcmstb: enable PCIe for STB chips
-Date:   Wed,  8 Jul 2020 15:31:53 -0400
-Message-Id: <20200708193219.47134-1-james.quinlan@broadcom.com>
+        linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM
+        BCM2711/BCM2835 ARM ARCHITECTURE),
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v7 10/12] PCI: brcmstb: Accommodate MSI for older chips
+Date:   Wed,  8 Jul 2020 15:32:03 -0400
+Message-Id: <20200708193219.47134-11-james.quinlan@broadcom.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200708193219.47134-1-james.quinlan@broadcom.com>
+References: <20200708193219.47134-1-james.quinlan@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+From: Jim Quinlan <jquinlan@broadcom.com>
 
-Patchset Summary:
-  Enhance a PCIe host controller driver.  Because of its unusual design
-  we are foced to change dev->dma_pfn_offset into a more general role
-  allowing multiple offsets.  See the 'v1' notes below for more info.
+Older BrcmSTB chips do not have a separate register for MSI interrupts; the
+MSIs are in a register that also contains unrelated interrupts.  In
+addition, the interrupts lie in bits [31..24] for these legacy chips.  This
+commit provides common code for both legacy and non-legacy MSI interrupt
+registers.
 
-v7:
-  Commit: "device core: Introduce DMA range map, supplanting ..."
-  -- remove second kcalloc/copy in device.c (AndyS)
-  -- use PTR_ERR_OR_ZERO() and PHYS_PFN() (AndyS)
-  -- indentation, sizeof(struct ...) => sizeof(*r) (AndyS)
-  -- add pfn.h definitions: PFN_DMA_ADDR(), DMA_ADDR_PFN() (AndyS)
-  -- Fixed compile error in "sun6i_csi.c" (kernel test robot)
-  Commit "ata: ahci_brcm: Fix use of BCM7216 reset controller"
-  -- correct name of function in the commit msg (SergeiS)
-  
-v6:
-  Commit "device core: Introduce DMA range map":
-  -- of_dma_get_range() now takes a single argument and returns either
-     NULL, a valid map, or an ERR_PTR. (Robin)
-  -- offsets are no longer a PFN value but an actual address. (Robin)
-  -- the bus_dma_region struct stores the range size instead of
-     the cpu_end and pci_end values. (Robin)
-  -- devices that were setting a single offset with no boundaries
-     have been modified to have boundaries; in a few places
-     where this informatino was unavilable a /* FIXME: ... */
-     comment was added. (Robin)
-  -- dma_attach_offset_range() can be called when an offset
-     map already exists; if it's range is already present
-     nothing is done and success is returned. (Robin)
-  All commits:
-  -- Man name/style/corrections/etc changed (Bjorn)
-  -- rebase to Torvalds master
+Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
+Acked-by: Florian Fainelli <f.fainelli@gmail.com>
+---
+ drivers/pci/controller/pcie-brcmstb.c | 71 +++++++++++++++++++--------
+ 1 file changed, 50 insertions(+), 21 deletions(-)
 
-v5:
-  Commit "device core: Introduce multiple dma pfn offsets"
-  -- in of/address.c: "map_size = 0" => "*map_size = 0"
-  -- use kcalloc instead of kzalloc (AndyS)
-  -- use PHYS_ADDR_MAX instead of "~(phys_addr_t)0"
-  Commit "PCI: brcmstb: Set internal memory viewport sizes"
-  -- now gives error on missing dma-ranges property.
-  Commit "dt-bindings: PCI: Add bindings for more Brcmstb chips"
-  -- removed "Allof:" from brcm,scb-sizes definition (RobH)
-  All Commits:
-  -- indentation style, use max chars 100 (AndyS)
-  -- rebased to torvalds master
-
-v4:
-  Commit "device core: Introduce multiple dma pfn offsets"
-  -- of_dma_get_range() does not take a dev param but instead
-     takes two "out" params: map and map_size.  We do this so
-     that the code that parses dma-ranges is separate from
-     the code that modifies 'dev'.   (Nicolas)
-  -- the separate case of having a single pfn offset has
-     been removed and is now processed by going through the
-     map array. (Nicolas)
-  -- move attach_uniform_dma_pfn_offset() from of/address.c to
-     dma/mapping.c so that it does not depend on CONFIG_OF. (Nicolas)
-  -- devm_kcalloc => devm_kzalloc (DanC)
-  -- add/fix assignment to dev->dma_pfn_offset_map for func
-     attach_uniform_dma_pfn_offset() (DanC, Nicolas)
-  -- s/struct dma_pfn_offset_region/struct bus_dma_region/ (Nicolas)
-  -- s/attach_uniform_dma_pfn_offset/dma_attach_uniform_pfn_offset/
-  -- s/attach_dma_pfn_offset_map/dma_attach_pfn_offset_map/
-  -- More use of PFN_{PHYS,DOWN,UP}. (AndyS)
-  Commit "of: Include a dev param in of_dma_get_range()"
-  -- this commit was sqaushed with "device core: Introduce ..."
-
-v3:
-  Commit "device core: Introduce multiple dma pfn offsets"
-  Commit "arm: dma-mapping: Invoke dma offset func if needed"
-  -- The above two commits have been squashed.  More importantly,
-     the code has been modified so that the functionality for
-     multiple pfn offsets subsumes the use of dev->dma_pfn_offset.
-     In fact, dma_pfn_offset is removed and supplanted by
-     dma_pfn_offset_map, which is a pointer to an array.  The
-     more common case of a uniform offset is now handled as
-     a map with a single entry, while cases requiring multiple
-     pfn offsets use a map with multiple entries.  Code paths
-     that used to do this:
-
-         dev->dma_pfn_offset = mydrivers_pfn_offset;
-
-     have been changed to do this:
-
-         attach_uniform_dma_pfn_offset(dev, pfn_offset);
-
-  Commit "dt-bindings: PCI: Add bindings for more Brcmstb chips"
-  -- Add if/then clause for required props: resets, reset-names (RobH)
-  -- Change compatible list from const to enum (RobH)
-  -- Change list of u32-tuples to u64 (RobH)
-
-  Commit "of: Include a dev param in of_dma_get_range()"
-  -- modify of/unittests.c to add NULL param in of_dma_get_range() call.
-
-  Commit "device core: Add ability to handle multiple dma offsets"
-  -- align comment in device.h (AndyS).
-  -- s/cpu_beg/cpu_start/ and s/dma_beg/dma_start/ in struct
-     dma_pfn_offset_region (AndyS).
-
-v2:
-Commit: "device core: Add ability to handle multiple dma offsets"
-  o Added helper func attach_dma_pfn_offset_map() in address.c (Chistoph)
-  o Helpers funcs added to __phys_to_dma() & __dma_to_phys() (Christoph)
-  o Added warning when multiple offsets are needed and !DMA_PFN_OFFSET_MAP
-  o dev->dma_pfn_map => dev->dma_pfn_offset_map
-  o s/frm/from/ for dma_pfn_offset_frm_{phys,dma}_addr() (Christoph)
-  o In device.h: s/const void */const struct dma_pfn_offset_region */
-  o removed 'unlikely' from unlikely(dev->dma_pfn_offset_map) since
-    guarded by CONFIG_DMA_PFN_OFFSET_MAP (Christoph)
-  o Since dev->dma_pfn_offset is copied in usb/core/{usb,message}.c, now
-    dev->dma_pfn_offset_map is copied as well.
-  o Merged two of the DMA commits into one (Christoph).
-
-Commit "arm: dma-mapping: Invoke dma offset func if needed":
-  o Use helper functions instead of #if CONFIG_DMA_PFN_OFFSET
-
-Other commits' changes:
-  o Removed need for carrying of_id var in priv (Nicolas)
-  o Commit message rewordings (Bjorn)
-  o Commit log messages filled to 75 chars (Bjorn)
-  o devm_reset_control_get_shared())
-    => devm_reset_control_get_optional_shared (Philipp)
-  o Add call to reset_control_assert() in PCIe remove routines (Philipp)
-
-v1:
-This patchset expands the usefulness of the Broadcom Settop Box PCIe
-controller by building upon the PCIe driver used currently by the
-Raspbery Pi.  Other forms of this patchset were submitted by me years
-ago and not accepted; the major sticking point was the code required
-for the DMA remapping needed for the PCIe driver to work [1].
-
-There have been many changes to the DMA and OF subsystems since that
-time, making a cleaner and less intrusive patchset possible.  This
-patchset implements a generalization of "dev->dma_pfn_offset", except
-that instead of a single scalar offset it provides for multiple
-offsets via a function which depends upon the "dma-ranges" property of
-the PCIe host controller.  This is required for proper functionality
-of the BrcmSTB PCIe controller and possibly some other devices.
-
-[1] https://lore.kernel.org/linux-arm-kernel/1516058925-46522-5-git-send-email-jim2101024@gmail.com/
-
-Jim Quinlan (12):
-  PCI: brcmstb: PCIE_BRCMSTB depends on ARCH_BRCMSTB
-  ata: ahci_brcm: Fix use of BCM7216 reset controller
-  dt-bindings: PCI: Add bindings for more Brcmstb chips
-  PCI: brcmstb: Add bcm7278 register info
-  PCI: brcmstb: Add suspend and resume pm_ops
-  PCI: brcmstb: Add bcm7278 PERST# support
-  PCI: brcmstb: Add control of rescal reset
-  device core: Introduce DMA range map, supplanting dma_pfn_offset
-  PCI: brcmstb: Set additional internal memory DMA viewport sizes
-  PCI: brcmstb: Accommodate MSI for older chips
-  PCI: brcmstb: Set bus max burst size by chip type
-  PCI: brcmstb: Add bcm7211, bcm7216, bcm7445, bcm7278 to match list
-
- .../bindings/pci/brcm,stb-pcie.yaml           |  56 ++-
- arch/arm/include/asm/dma-mapping.h            |   9 +-
- arch/arm/mach-keystone/keystone.c             |  17 +-
- arch/sh/drivers/pci/pcie-sh7786.c             |   9 +-
- arch/sh/kernel/dma-coherent.c                 |  16 +-
- arch/x86/pci/sta2x11-fixup.c                  |   7 +-
- drivers/acpi/arm64/iort.c                     |   5 +-
- drivers/ata/ahci_brcm.c                       |  11 +-
- drivers/gpu/drm/sun4i/sun4i_backend.c         |   7 +-
- drivers/iommu/io-pgtable-arm.c                |   2 +-
- .../platform/sunxi/sun4i-csi/sun4i_csi.c      |   6 +-
- .../platform/sunxi/sun6i-csi/sun6i_csi.c      |   5 +-
- drivers/of/address.c                          |  95 ++--
- drivers/of/device.c                           |  47 +-
- drivers/of/of_private.h                       |   9 +-
- drivers/of/unittest.c                         |  35 +-
- drivers/pci/controller/Kconfig                |   3 +-
- drivers/pci/controller/pcie-brcmstb.c         | 408 +++++++++++++++---
- drivers/remoteproc/remoteproc_core.c          |   2 +-
- .../staging/media/sunxi/cedrus/cedrus_hw.c    |   8 +-
- drivers/usb/core/message.c                    |   4 +-
- drivers/usb/core/usb.c                        |   2 +-
- include/linux/device.h                        |   4 +-
- include/linux/dma-direct.h                    |  10 +-
- include/linux/dma-mapping.h                   |  37 ++
- include/linux/pfn.h                           |   2 +
- kernel/dma/coherent.c                         |  10 +-
- kernel/dma/mapping.c                          |  53 +++
- 28 files changed, 682 insertions(+), 197 deletions(-)
-
+diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
+index a65ce8d3580f..3fb468de4f6f 100644
+--- a/drivers/pci/controller/pcie-brcmstb.c
++++ b/drivers/pci/controller/pcie-brcmstb.c
+@@ -82,7 +82,8 @@
+ #define PCIE_MISC_MSI_BAR_CONFIG_HI			0x4048
+ 
+ #define PCIE_MISC_MSI_DATA_CONFIG			0x404c
+-#define  PCIE_MISC_MSI_DATA_CONFIG_VAL			0xffe06540
++#define  PCIE_MISC_MSI_DATA_CONFIG_VAL_32		0xffe06540
++#define  PCIE_MISC_MSI_DATA_CONFIG_VAL_8		0xfff86540
+ 
+ #define PCIE_MISC_PCIE_CTRL				0x4064
+ #define  PCIE_MISC_PCIE_CTRL_PCIE_L23_REQUEST_MASK	0x1
+@@ -94,6 +95,9 @@
+ #define  PCIE_MISC_PCIE_STATUS_PCIE_PHYLINKUP_MASK	0x10
+ #define  PCIE_MISC_PCIE_STATUS_PCIE_LINK_IN_L23_MASK	0x40
+ 
++#define PCIE_MISC_REVISION				0x406c
++#define  BRCM_PCIE_HW_REV_33				0x0303
++
+ #define PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT		0x4070
+ #define  PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT_LIMIT_MASK	0xfff00000
+ #define  PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT_BASE_MASK	0xfff0
+@@ -114,10 +118,14 @@
+ #define  PCIE_MISC_HARD_PCIE_HARD_DEBUG_CLKREQ_DEBUG_ENABLE_MASK	0x2
+ #define  PCIE_MISC_HARD_PCIE_HARD_DEBUG_SERDES_IDDQ_MASK		0x08000000
+ 
+-#define PCIE_MSI_INTR2_STATUS				0x4500
+-#define PCIE_MSI_INTR2_CLR				0x4508
+-#define PCIE_MSI_INTR2_MASK_SET				0x4510
+-#define PCIE_MSI_INTR2_MASK_CLR				0x4514
++
++#define PCIE_INTR2_CPU_BASE		0x4300
++#define PCIE_MSI_INTR2_BASE		0x4500
++/* Offsets from PCIE_INTR2_CPU_BASE and PCIE_MSI_INTR2_BASE */
++#define  MSI_INT_STATUS			0x0
++#define  MSI_INT_CLR			0x8
++#define  MSI_INT_MASK_SET		0x10
++#define  MSI_INT_MASK_CLR		0x14
+ 
+ #define PCIE_EXT_CFG_DATA				0x8000
+ 
+@@ -132,6 +140,8 @@
+ /* PCIe parameters */
+ #define BRCM_NUM_PCIE_OUT_WINS		0x4
+ #define BRCM_INT_PCI_MSI_NR		32
++#define BRCM_INT_PCI_MSI_LEGACY_NR	8
++#define BRCM_INT_PCI_MSI_SHIFT		0
+ 
+ /* MSI target adresses */
+ #define BRCM_MSI_TARGET_ADDR_LT_4GB	0x0fffffffcULL
+@@ -246,6 +256,12 @@ struct brcm_msi {
+ 	int			irq;
+ 	/* used indicates which MSI interrupts have been alloc'd */
+ 	unsigned long		used;
++	bool			legacy;
++	/* Some chips have MSIs in bits [31..24] of a shared register. */
++	int			legacy_shift;
++	int			nr; /* No. of MSI available, depends on chip */
++	/* This is the base pointer for interrupt status/set/clr regs */
++	void __iomem		*intr_base;
+ };
+ 
+ /* Internal PCIe Host Controller Information.*/
+@@ -265,6 +281,7 @@ struct brcm_pcie {
+ 	struct reset_control	*rescal;
+ 	int			num_memc;
+ 	u64			memc_size[PCIE_BRCM_MAX_MEMC];
++	u32			hw_rev;
+ };
+ 
+ /*
+@@ -455,8 +472,10 @@ static void brcm_pcie_msi_isr(struct irq_desc *desc)
+ 	msi = irq_desc_get_handler_data(desc);
+ 	dev = msi->dev;
+ 
+-	status = readl(msi->base + PCIE_MSI_INTR2_STATUS);
+-	for_each_set_bit(bit, &status, BRCM_INT_PCI_MSI_NR) {
++	status = readl(msi->intr_base + MSI_INT_STATUS);
++	status >>= msi->legacy_shift;
++
++	for_each_set_bit(bit, &status, msi->nr) {
+ 		virq = irq_find_mapping(msi->inner_domain, bit);
+ 		if (virq)
+ 			generic_handle_irq(virq);
+@@ -473,7 +492,7 @@ static void brcm_msi_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+ 
+ 	msg->address_lo = lower_32_bits(msi->target_addr);
+ 	msg->address_hi = upper_32_bits(msi->target_addr);
+-	msg->data = (0xffff & PCIE_MISC_MSI_DATA_CONFIG_VAL) | data->hwirq;
++	msg->data = (0xffff & PCIE_MISC_MSI_DATA_CONFIG_VAL_32) | data->hwirq;
+ }
+ 
+ static int brcm_msi_set_affinity(struct irq_data *irq_data,
+@@ -485,8 +504,9 @@ static int brcm_msi_set_affinity(struct irq_data *irq_data,
+ static void brcm_msi_ack_irq(struct irq_data *data)
+ {
+ 	struct brcm_msi *msi = irq_data_get_irq_chip_data(data);
++	const int shift_amt = data->hwirq + msi->legacy_shift;
+ 
+-	writel(1 << data->hwirq, msi->base + PCIE_MSI_INTR2_CLR);
++	writel(1 << shift_amt, msi->intr_base + MSI_INT_CLR);
+ }
+ 
+ 
+@@ -502,7 +522,7 @@ static int brcm_msi_alloc(struct brcm_msi *msi)
+ 	int hwirq;
+ 
+ 	mutex_lock(&msi->lock);
+-	hwirq = bitmap_find_free_region(&msi->used, BRCM_INT_PCI_MSI_NR, 0);
++	hwirq = bitmap_find_free_region(&msi->used, msi->nr, 0);
+ 	mutex_unlock(&msi->lock);
+ 
+ 	return hwirq;
+@@ -551,8 +571,7 @@ static int brcm_allocate_domains(struct brcm_msi *msi)
+ 	struct fwnode_handle *fwnode = of_node_to_fwnode(msi->np);
+ 	struct device *dev = msi->dev;
+ 
+-	msi->inner_domain = irq_domain_add_linear(NULL, BRCM_INT_PCI_MSI_NR,
+-						  &msi_domain_ops, msi);
++	msi->inner_domain = irq_domain_add_linear(NULL, msi->nr, &msi_domain_ops, msi);
+ 	if (!msi->inner_domain) {
+ 		dev_err(dev, "failed to create IRQ domain\n");
+ 		return -ENOMEM;
+@@ -589,7 +608,10 @@ static void brcm_msi_remove(struct brcm_pcie *pcie)
+ 
+ static void brcm_msi_set_regs(struct brcm_msi *msi)
+ {
+-	writel(0xffffffff, msi->base + PCIE_MSI_INTR2_MASK_CLR);
++	u32 val = __GENMASK(31, msi->legacy_shift);
++
++	writel(val, msi->intr_base + MSI_INT_MASK_CLR);
++	writel(val, msi->intr_base + MSI_INT_CLR);
+ 
+ 	/*
+ 	 * The 0 bit of PCIE_MISC_MSI_BAR_CONFIG_LO is repurposed to MSI
+@@ -600,8 +622,8 @@ static void brcm_msi_set_regs(struct brcm_msi *msi)
+ 	writel(upper_32_bits(msi->target_addr),
+ 	       msi->base + PCIE_MISC_MSI_BAR_CONFIG_HI);
+ 
+-	writel(PCIE_MISC_MSI_DATA_CONFIG_VAL,
+-	       msi->base + PCIE_MISC_MSI_DATA_CONFIG);
++	val = msi->legacy ? PCIE_MISC_MSI_DATA_CONFIG_VAL_8 : PCIE_MISC_MSI_DATA_CONFIG_VAL_32;
++	writel(val, msi->base + PCIE_MISC_MSI_DATA_CONFIG);
+ }
+ 
+ static int brcm_pcie_enable_msi(struct brcm_pcie *pcie)
+@@ -626,6 +648,17 @@ static int brcm_pcie_enable_msi(struct brcm_pcie *pcie)
+ 	msi->np = pcie->np;
+ 	msi->target_addr = pcie->msi_target_addr;
+ 	msi->irq = irq;
++	msi->legacy = pcie->hw_rev < BRCM_PCIE_HW_REV_33;
++
++	if (msi->legacy) {
++		msi->intr_base = msi->base + PCIE_INTR2_CPU_BASE;
++		msi->nr = BRCM_INT_PCI_MSI_LEGACY_NR;
++		msi->legacy_shift = 24;
++	} else {
++		msi->intr_base = msi->base + PCIE_MSI_INTR2_BASE;
++		msi->nr = BRCM_INT_PCI_MSI_NR;
++		msi->legacy_shift = 0;
++	}
+ 
+ 	ret = brcm_allocate_domains(msi);
+ 	if (ret)
+@@ -888,12 +921,6 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
+ 	tmp &= ~PCIE_MISC_RC_BAR3_CONFIG_LO_SIZE_MASK;
+ 	writel(tmp, base + PCIE_MISC_RC_BAR3_CONFIG_LO);
+ 
+-	/* Mask all interrupts since we are not handling any yet */
+-	writel(0xffffffff, pcie->base + PCIE_MSI_INTR2_MASK_SET);
+-
+-	/* clear any interrupts we find on boot */
+-	writel(0xffffffff, pcie->base + PCIE_MSI_INTR2_CLR);
+-
+ 	if (pcie->gen)
+ 		brcm_pcie_set_gen(pcie, pcie->gen);
+ 
+@@ -1236,6 +1263,8 @@ static int brcm_pcie_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		goto fail;
+ 
++	pcie->hw_rev = readl(pcie->base + PCIE_MISC_REVISION);
++
+ 	msi_np = of_parse_phandle(pcie->np, "msi-parent", 0);
+ 	if (pci_msi_enabled() && msi_np == pcie->np) {
+ 		ret = brcm_pcie_enable_msi(pcie);
 -- 
 2.17.1
 
