@@ -2,122 +2,112 @@ Return-Path: <SRS0=KP8T=AT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+X-Spam-Status: No, score=-13.2 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FA9BC433E2
-	for <linux-pci@archiver.kernel.org>; Wed,  8 Jul 2020 15:01:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00CCCC433DF
+	for <linux-pci@archiver.kernel.org>; Wed,  8 Jul 2020 15:24:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 28CCB20720
-	for <linux-pci@archiver.kernel.org>; Wed,  8 Jul 2020 15:01:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D792720836
+	for <linux-pci@archiver.kernel.org>; Wed,  8 Jul 2020 15:24:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729950AbgGHPBo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 8 Jul 2020 11:01:44 -0400
-Received: from foss.arm.com ([217.140.110.172]:45422 "EHLO foss.arm.com"
+        id S1729988AbgGHPYl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 8 Jul 2020 11:24:41 -0400
+Received: from foss.arm.com ([217.140.110.172]:46630 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729868AbgGHPBo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 8 Jul 2020 11:01:44 -0400
+        id S1729022AbgGHPYk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 8 Jul 2020 11:24:40 -0400
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id C33951FB;
-        Wed,  8 Jul 2020 08:01:42 -0700 (PDT)
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 257D01FB;
+        Wed,  8 Jul 2020 08:24:40 -0700 (PDT)
 Received: from e121166-lin.cambridge.arm.com (e121166-lin.cambridge.arm.com [10.1.196.255])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id DDC1C3F237;
-        Wed,  8 Jul 2020 08:01:41 -0700 (PDT)
-Date:   Wed, 8 Jul 2020 16:01:35 +0100
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 9361C3F237;
+        Wed,  8 Jul 2020 08:24:38 -0700 (PDT)
+Date:   Wed, 8 Jul 2020 16:24:36 +0100
 From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Anand Moon <linux.amoon@gmail.com>
-Cc:     Shawn Lin <shawn.lin@rock-chips.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Simon Xue <xxm@rock-chips.com>,
-        linux-rockchip@lists.infradead.org
-Subject: Re: [PATCH 1/2] PCI: rockchip: =?utf-8?Q?E?=
- =?utf-8?B?bmFibGUgSU8gYmFzZSBhbmQgbGltaXQgcmVnaXN0ZXJz44CQ6K+35rOo5oSP?=
- =?utf-8?B?77yM6YKu5Lu255SxbGludXgtcm9ja2NoaXAtYm91bmNlcytzaGF3bi5saW49?=
- =?utf-8?B?cm9jay1jaGlwcy5jb21AbGlzdHMuaW5mcmFkZWFkLm9yZ+S7o+WPkeOAkQ==?=
-Message-ID: <20200708150135.GA4238@e121166-lin.cambridge.arm.com>
-References: <1590023130-137406-1-git-send-email-shawn.lin@rock-chips.com>
- <CANAwSgRXuMQaytB4BXL89JQAmU=XutBXj6iMhfKdZp3JwM9a4g@mail.gmail.com>
- <eb0acd3d-92d0-db00-78e4-8a17033f7f0a@rock-chips.com>
- <CANAwSgSzoc5TaO6ks9kdN7W+xDo1STbtsA0dUpsk8hqP6swkYg@mail.gmail.com>
+To:     wu000273@umn.edu
+Cc:     svarbanov@mm-sol.com, agross@kernel.org,
+        bjorn.andersson@linaro.org, robh@kernel.org, helgaas@google.com,
+        p.zabel@pengutronix.de, linux-pci@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Markus.Elfring@web.de, kjlu@umn.edu
+Subject: Re: [PATCH V2] PCI: qcom: Improve exception handling in
+ qcom_pcie_probe().
+Message-ID: <20200708152436.GB4238@e121166-lin.cambridge.arm.com>
+References: <20200527025531.32357-1-wu000273@umn.edu>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CANAwSgSzoc5TaO6ks9kdN7W+xDo1STbtsA0dUpsk8hqP6swkYg@mail.gmail.com>
+In-Reply-To: <20200527025531.32357-1-wu000273@umn.edu>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, May 22, 2020 at 05:59:14PM +0530, Anand Moon wrote:
-> Hi Shawn
+On Tue, May 26, 2020 at 09:55:31PM -0500, wu000273@umn.edu wrote:
+> From: Qiushi Wu <wu000273@umn.edu>
 > 
-> On Fri, 22 May 2020 at 08:30, Shawn Lin <shawn.lin@rock-chips.com> wrote:
-> >
-> >
-> > 在 2020/5/21 18:51, Anand Moon 写道:
-> > > Hi Shawn,
-> > >
-> > > On Thu, 21 May 2020 at 06:35, Shawn Lin <shawn.lin@rock-chips.com> wrote:
-> > >>
-> > >> According to RK3399 user manual, bit 9 in PCIE_RC_BAR_CONF should
-> > >> be set, otherwise accessing to IO base and limit registers would
-> > >> fail.
-> > >>
-> > >> [    0.411318] pci_bus 0000:00: root bus resource [bus 00-1f]
-> > >> [    0.411822] pci_bus 0000:00: root bus resource [mem 0xfa000000-0xfbdfffff]
-> > >> [    0.412440] pci_bus 0000:00: root bus resource [io  0x0000-0xfffff] (bus address [0xfbe00000-0xfbefffff])
-> > >> [    0.413665] pci 0000:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-> > >> [    0.414698] pci 0000:01:00.0: reg 0x10: initial BAR value 0x00000000 invalid
-> > >> [    0.415412] pci 0000:01:00.0: reg 0x18: initial BAR value 0x00000000 invalid
-> > >> [    0.418456] pci 0000:00:00.0: BAR 8: assigned [mem 0xfa000000-0xfa0fffff]
-> > >> [    0.419065] pci 0000:01:00.0: BAR 1: assigned [mem 0xfa000000-0xfa007fff pref]
-> > >> [    0.419728] pci 0000:01:00.0: BAR 6: assigned [mem 0xfa008000-0xfa00ffff pref]
-> > >> [    0.420377] pci 0000:01:00.0: BAR 0: no space for [io  size 0x0100]
-> > >> [    0.420935] pci 0000:01:00.0: BAR 0: failed to assign [io  size 0x0100]
-> > >> [    0.421526] pci 0000:01:00.0: BAR 2: no space for [io  size 0x0004]
-> > >> [    0.422084] pci 0000:01:00.0: BAR 2: failed to assign [io  size 0x0004]
-> > >> [    0.422687] pci 0000:00:00.0: PCI bridge to [bus 01]
-> > >> [    0.423135] pci 0000:00:00.0:   bridge window [mem 0xfa000000-0xfa0fffff]
-> > >> [    0.423794] pcieport 0000:00:00.0: enabling device (0000 -> 0002)
-> > >> [    0.424566] pcieport 0000:00:00.0: Signaling PME through PCIe PME interrupt
-> > >> [    0.425182] pci 0000:01:00.0: Signaling PME through PCIe PME interrupt
-> > >>
-> > >> 01:00.0 Class 0700: Device 1c00:3853 (rev 10) (prog-if 05)
-> > >>          Subsystem: Device 1c00:3853
-> > >>          Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-> > >>          Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-> > >>          Interrupt: pin A routed to IRQ 230
-> > >>          Region 0: I/O ports at <unassigned> [disabled]
-> > >>          Region 1: Memory at fa000000 (32-bit, prefetchable) [disabled] [size=32K]
-> > >>          Region 2: I/O ports at <unassigned> [disabled]
-> > >>          [virtual] Expansion ROM at fa008000 [disabled] [size=32K]
-> > >>
-> > >> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> > >> ---
-> > >
-> > > I have old development board Odroid N1 (RK3399),  It has onboard PCIe
-> > > 2 dual sata bridge.
-> > > I have tested this patch, but I am still getting following log on
-> > > Odroid N1 board.
-> > > Is their any more configuration needed for sata ports ?
-> >
-> > Thanks for testing. I made a mistake that it should be bit 19, so
-> > can you try using BIT(19)?
-> >
-> 
-> Nop enable this bit dose not solve the issue see at my end.
-> 
-> But as per RK3399 TMR  17.6.7.1.45 Root Complex BAR Configuration Register
-> their are many bits that are not tuned correctly.
-> I tried to set some bit to BAR Configuration register. but it dose not
-> work at my end.
-> I feel some more core configuration is missing.
-> If I have some update I will share it with you.
+> This function contained improvable implementation details according to
+> exception handling.
+> 1. pm_runtime_put() should be called after pm_runtime_get_sync() failed,
+> because the reference count will be increased despite of the failure.
+> Thus add the missed function call.
+> 2. pm_runtime_disable() are called twice, after the call of phy_init() and
+> dw_pcie_host_init() failed. Thus remove redundant function calls.
 
-What's the status of this discussion and therefore this series ?
+Can you send a patch fixing (2) based on my pci/runtime-pm branch:
 
-Thanks,
-Lorenzo
+git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/pci.git
+
+pci/runtime-pm
+
+Note that (1) is fixed by
+
+https://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/pci.git/commit/?h=pci/runtime-pm&id=cb52a40202420d3886b84ea13dba699c9da13eb0
+
+> 
+> Fixes: 6e5da6f7d824 ("PCI: qcom: Fix error handling in runtime PM support")
+> Co-developed-by: Markus Elfring <Markus.Elfring@web.de>
+> Signed-off-by: Markus Elfring <Markus.Elfring@web.de>
+> Signed-off-by: Qiushi Wu <wu000273@umn.edu>
+> ---
+>  V2: words adjustments and fix some typos 
+>  drivers/pci/controller/dwc/pcie-qcom.c | 5 +----
+>  1 file changed, 1 insertion(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+> index 138e1a2d21cc..10393ab607bf 100644
+> --- a/drivers/pci/controller/dwc/pcie-qcom.c
+> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+> @@ -1340,8 +1340,7 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+>  	pm_runtime_enable(dev);
+>  	ret = pm_runtime_get_sync(dev);
+>  	if (ret < 0) {
+> -		pm_runtime_disable(dev);
+> -		return ret;
+> +		goto err_pm_runtime_put;
+>  	}
+>  
+>  	pci->dev = dev;
+> @@ -1401,7 +1400,6 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+>  
+>  	ret = phy_init(pcie->phy);
+>  	if (ret) {
+> -		pm_runtime_disable(&pdev->dev);
+>  		goto err_pm_runtime_put;
+>  	}
+>  
+> @@ -1410,7 +1408,6 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+>  	ret = dw_pcie_host_init(pp);
+>  	if (ret) {
+>  		dev_err(dev, "cannot initialize host\n");
+> -		pm_runtime_disable(&pdev->dev);
+>  		goto err_pm_runtime_put;
+>  	}
+>  
+> -- 
+> 2.17.1
+> 
