@@ -2,49 +2,50 @@ Return-Path: <SRS0=KP8T=AT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3633C433E6
-	for <linux-pci@archiver.kernel.org>; Wed,  8 Jul 2020 09:31:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C91BBC433E0
+	for <linux-pci@archiver.kernel.org>; Wed,  8 Jul 2020 09:31:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D434F2065D
-	for <linux-pci@archiver.kernel.org>; Wed,  8 Jul 2020 09:31:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A75FE20739
+	for <linux-pci@archiver.kernel.org>; Wed,  8 Jul 2020 09:31:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="jdmWFLo3"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="AlegthQt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728508AbgGHJbT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 8 Jul 2020 05:31:19 -0400
-Received: from lelv0143.ext.ti.com ([198.47.23.248]:59386 "EHLO
-        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728502AbgGHJbS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jul 2020 05:31:18 -0400
-Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id 0689V2LD103123;
-        Wed, 8 Jul 2020 04:31:02 -0500
+        id S1727115AbgGHJah (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 8 Jul 2020 05:30:37 -0400
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:58094 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726006AbgGHJah (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jul 2020 05:30:37 -0400
+Received: from lelv0265.itg.ti.com ([10.180.67.224])
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 0689UNaM077776;
+        Wed, 8 Jul 2020 04:30:23 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1594200662;
-        bh=o7DMocX7rlMLQL03fwQQZCPBjquUDY+oSrh6N/Sv4XY=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=jdmWFLo3qdWhee844IiFpfEVrLKl3+vZc1hLFb6fNqmAgFnEsFbQ2aOB9ETiwmxMe
-         n4MLqZAqVCrgU8LdcOt2Worm7K7qc6PXafUShEy4/N23keTpnfjxONMu0sKFV7hTYe
-         VtM/1IhW8UVu58qHco73jI45cRDKeVftYX+dd9vE=
-Received: from DLEE100.ent.ti.com (dlee100.ent.ti.com [157.170.170.30])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0689V26h022256;
-        Wed, 8 Jul 2020 04:31:02 -0500
-Received: from DLEE111.ent.ti.com (157.170.170.22) by DLEE100.ent.ti.com
- (157.170.170.30) with Microsoft SMTP Server (version=TLS1_2,
+        s=ti-com-17Q1; t=1594200623;
+        bh=Kas+0rUJBSTuH/SLqAXCuvyvNDqkm+n4QvnlkqsGJgs=;
+        h=From:To:CC:Subject:Date;
+        b=AlegthQtbF6AoiACWt4XUU68yNRngtYkYow8Kt+eF2SOOSmiq04jHHTaY/Rb8rdUp
+         g+UKwX0C4n0clzpk6vmr7tv74OZSuQb1zDgxQhwHVAl81AUJ28c1NASId+9YNlm1sC
+         DAtFwcbRVAUw2aWqvJB4DPGm6cnFLBFc8ZcxScHw=
+Received: from DFLE103.ent.ti.com (dfle103.ent.ti.com [10.64.6.24])
+        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 0689UNHq102498
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 8 Jul 2020 04:30:23 -0500
+Received: from DFLE114.ent.ti.com (10.64.6.35) by DFLE103.ent.ti.com
+ (10.64.6.24) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Wed, 8 Jul
- 2020 04:31:02 -0500
-Received: from fllv0040.itg.ti.com (10.64.41.20) by DLEE111.ent.ti.com
- (157.170.170.22) with Microsoft SMTP Server (version=TLS1_2,
+ 2020 04:30:23 -0500
+Received: from fllv0040.itg.ti.com (10.64.41.20) by DFLE114.ent.ti.com
+ (10.64.6.35) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
- Frontend Transport; Wed, 8 Jul 2020 04:31:02 -0500
+ Frontend Transport; Wed, 8 Jul 2020 04:30:23 -0500
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0689UJER098512;
-        Wed, 8 Jul 2020 04:30:58 -0500
+        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0689UJEH098512;
+        Wed, 8 Jul 2020 04:30:19 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Tom Joseph <tjoseph@cadence.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -56,12 +57,10 @@ CC:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v6 10/14] dt-bindings: PCI: Add host mode dt-bindings for TI's J721E SoC
-Date:   Wed, 8 Jul 2020 15:00:14 +0530
-Message-ID: <20200708093018.28474-11-kishon@ti.com>
+Subject: [PATCH v6 00/14] Add PCIe support to TI's J721E SoC
+Date:   Wed, 8 Jul 2020 15:00:04 +0530
+Message-ID: <20200708093018.28474-1-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200708093018.28474-1-kishon@ti.com>
-References: <20200708093018.28474-1-kishon@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
@@ -70,134 +69,106 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add host mode dt-bindings for TI's J721E SoC.
+TI's J721E SoC uses Cadence PCIe core to implement both RC mode
+and EP mode.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
----
- .../bindings/pci/ti,j721e-pci-host.yaml       | 113 ++++++++++++++++++
- 1 file changed, 113 insertions(+)
+The high level features are:
+  *) Supports Legacy, MSI and MSI-X interrupt
+  *) Supports upto GEN4 speed mode
+  *) Supports SR-IOV
+  *) Supports multiple physical function
+  *) Ability to route all transactions via SMMU
+
+This patch series
+  *) Add support in Cadence PCIe core to be used for TI's J721E SoC
+  *) Add a driver for J721E PCIe wrapper
+
+v1 of the series can be found @ [1]
+v2 of the series can be found @ [2]
+v3 of the series can be found @ [5]
+v4 of the series can be found @ [6]
+v5 of the series can be found @ [7]
+
+Changes from v5:
+1) Added Reviewed-by: for PATCH #6
+2) Protect writes to PCI_STATUS with spin_lock during raising interrupts
+   in EP mode to reduce the time between read and write of RMW.
+
+Changes from v4:
+1) Added Reviewed-by: & Acked-by: tags from RobH
+2) Removed un-used accessors for pcie-cadence.h and removed having ops
+   for read/write accessors
+3) Updated cdns,cdns-pcie-host.yaml to remove "mem" from reg
+
+Changes from v3:
+1) Changed the order of files in MAINTAINTERS file to fix Joe's comments
+2) Fixed indentation and added Reviewed-by: Rob Herring <robh@kernel.org>
+3) Cleaned up computing msix_tbl
+4) Fixed RobH's comment on J721E driver
+
+Changes from v2:
+1) Converting Cadence binding to YAML schema was done as a
+   separate series [3] & [4]. [3] is merged and [4] is
+   pending.
+2) Included MSI-X support in this series
+3) Added link down interrupt handling (only error message)
+4) Rebased to latest 5.7-rc1
+5) Adapted TI J721E binding to [3] & [4]
+
+Changes from v1:
+1) Added DT schemas cdns-pcie-host.yaml, cdns-pcie-ep.yaml and
+   cdns-pcie.yaml for Cadence PCIe core and included it in
+   TI's PCIe DT schema.
+2) Added cpu_addr_fixup() for Cadence Platform driver.
+3) Fixed subject/description/renamed functions as commented by
+   Andrew Murray.
+
+[1] -> http://lore.kernel.org/r/20191209092147.22901-1-kishon@ti.com
+[2] -> http://lore.kernel.org/r/20200106102058.19183-1-kishon@ti.com
+[3] -> http://lore.kernel.org/r/20200305103017.16706-1-kishon@ti.com
+[4] -> http://lore.kernel.org/r/20200417114322.31111-1-kishon@ti.com
+[5] -> http://lore.kernel.org/r/20200417125753.13021-1-kishon@ti.com
+[6] -> http://lore.kernel.org/r/20200506151429.12255-1-kishon@ti.com
+[7] -> http://lore.kernel.org/r/20200522033631.32574-1-kishon@ti.com
+
+Alan Douglas (1):
+  PCI: cadence: Add MSI-X support to Endpoint driver
+
+Kishon Vijay Abraham I (13):
+  PCI: cadence: Fix cdns_pcie_{host|ep}_setup() error path
+  linux/kernel.h: Add PTR_ALIGN_DOWN macro
+  PCI: cadence: Convert all r/w accessors to perform only 32-bit
+    accesses
+  PCI: cadence: Add support to start link and verify link status
+  PCI: cadence: Allow pci_host_bridge to have custom pci_ops
+  dt-bindings: PCI: cadence: Remove "mem" from reg binding
+  PCI: cadence: Add new *ops* for CPU addr fixup
+  PCI: cadence: Fix updating Vendor ID and Subsystem Vendor ID register
+  dt-bindings: PCI: Add host mode dt-bindings for TI's J721E SoC
+  dt-bindings: PCI: Add EP mode dt-bindings for TI's J721E SoC
+  PCI: j721e: Add TI J721E PCIe driver
+  misc: pci_endpoint_test: Add J721E in pci_device_id table
+  MAINTAINERS: Add Kishon Vijay Abraham I for TI J721E SoC PCIe
+
+ .../bindings/pci/cdns,cdns-pcie-host.yaml     |   8 +-
+ .../bindings/pci/ti,j721e-pci-ep.yaml         |  89 ++++
+ .../bindings/pci/ti,j721e-pci-host.yaml       | 113 ++++
+ MAINTAINERS                                   |   4 +-
+ drivers/misc/pci_endpoint_test.c              |   9 +
+ drivers/pci/controller/cadence/Kconfig        |  23 +
+ drivers/pci/controller/cadence/Makefile       |   1 +
+ drivers/pci/controller/cadence/pci-j721e.c    | 493 ++++++++++++++++++
+ .../pci/controller/cadence/pcie-cadence-ep.c  | 129 ++++-
+ .../controller/cadence/pcie-cadence-host.c    |  59 ++-
+ .../controller/cadence/pcie-cadence-plat.c    |  13 +
+ drivers/pci/controller/cadence/pcie-cadence.c |   8 +-
+ drivers/pci/controller/cadence/pcie-cadence.h | 133 ++++-
+ include/linux/kernel.h                        |   1 +
+ 14 files changed, 1030 insertions(+), 53 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
  create mode 100644 Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
+ create mode 100644 drivers/pci/controller/cadence/pci-j721e.c
 
-diff --git a/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml b/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
-new file mode 100644
-index 000000000000..d7b60487c6c3
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
-@@ -0,0 +1,113 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+# Copyright (C) 2019 Texas Instruments Incorporated - http://www.ti.com/
-+%YAML 1.2
-+---
-+$id: "http://devicetree.org/schemas/pci/ti,j721e-pci-host.yaml#"
-+$schema: "http://devicetree.org/meta-schemas/core.yaml#"
-+
-+title: TI J721E PCI Host (PCIe Wrapper)
-+
-+maintainers:
-+  - Kishon Vijay Abraham I <kishon@ti.com>
-+
-+allOf:
-+  - $ref: "cdns-pcie-host.yaml#"
-+
-+properties:
-+  compatible:
-+    enum:
-+      - ti,j721e-pcie-host
-+
-+  reg:
-+    maxItems: 4
-+
-+  reg-names:
-+    items:
-+      - const: intd_cfg
-+      - const: user_cfg
-+      - const: reg
-+      - const: cfg
-+
-+  ti,syscon-pcie-ctrl:
-+    description: Phandle to the SYSCON entry required for configuring PCIe mode
-+      and link speed.
-+    allOf:
-+      - $ref: /schemas/types.yaml#/definitions/phandle
-+
-+  power-domains:
-+    maxItems: 1
-+
-+  clocks:
-+    maxItems: 1
-+    description: clock-specifier to represent input to the PCIe
-+
-+  clock-names:
-+    items:
-+      - const: fck
-+
-+  vendor-id:
-+    const: 0x104c
-+
-+  device-id:
-+    const: 0xb00d
-+
-+  msi-map: true
-+
-+required:
-+  - compatible
-+  - reg
-+  - reg-names
-+  - ti,syscon-pcie-ctrl
-+  - max-link-speed
-+  - num-lanes
-+  - power-domains
-+  - clocks
-+  - clock-names
-+  - vendor-id
-+  - device-id
-+  - msi-map
-+  - dma-coherent
-+  - dma-ranges
-+  - ranges
-+  - reset-gpios
-+  - phys
-+  - phy-names
-+
-+examples:
-+  - |
-+    #include <dt-bindings/soc/ti,sci_pm_domain.h>
-+    #include <dt-bindings/gpio/gpio.h>
-+
-+    bus {
-+        #address-cells = <2>;
-+        #size-cells = <2>;
-+
-+        pcie0_rc: pcie@2900000 {
-+            compatible = "ti,j721e-pcie-host";
-+            reg = <0x00 0x02900000 0x00 0x1000>,
-+                  <0x00 0x02907000 0x00 0x400>,
-+                  <0x00 0x0d000000 0x00 0x00800000>,
-+                  <0x00 0x10000000 0x00 0x00001000>;
-+            reg-names = "intd_cfg", "user_cfg", "reg", "cfg";
-+            ti,syscon-pcie-ctrl = <&pcie0_ctrl>;
-+            max-link-speed = <3>;
-+            num-lanes = <2>;
-+            power-domains = <&k3_pds 239 TI_SCI_PD_EXCLUSIVE>;
-+            clocks = <&k3_clks 239 1>;
-+            clock-names = "fck";
-+            device_type = "pci";
-+            #address-cells = <3>;
-+            #size-cells = <2>;
-+            bus-range = <0x0 0xf>;
-+            vendor-id = <0x104c>;
-+            device-id = <0xb00d>;
-+            msi-map = <0x0 &gic_its 0x0 0x10000>;
-+            dma-coherent;
-+            reset-gpios = <&exp1 6 GPIO_ACTIVE_HIGH>;
-+            phys = <&serdes0_pcie_link>;
-+            phy-names = "pcie-phy";
-+            ranges = <0x01000000 0x0 0x10001000  0x00 0x10001000  0x0 0x0010000>,
-+                     <0x02000000 0x0 0x10011000  0x00 0x10011000  0x0 0x7fef000>;
-+            dma-ranges = <0x02000000 0x0 0x0 0x0 0x0 0x10000 0x0>;
-+        };
-+    };
 -- 
 2.17.1
 
