@@ -7,44 +7,45 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B033FC433E5
-	for <linux-pci@archiver.kernel.org>; Wed,  8 Jul 2020 09:31:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD548C433DF
+	for <linux-pci@archiver.kernel.org>; Wed,  8 Jul 2020 09:31:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8FE632065D
-	for <linux-pci@archiver.kernel.org>; Wed,  8 Jul 2020 09:31:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 961652065D
+	for <linux-pci@archiver.kernel.org>; Wed,  8 Jul 2020 09:31:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="UNExrCnR"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="i/KslzbF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728449AbgGHJbI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 8 Jul 2020 05:31:08 -0400
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:39032 "EHLO
+        id S1728349AbgGHJaw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 8 Jul 2020 05:30:52 -0400
+Received: from fllv0015.ext.ti.com ([198.47.19.141]:38926 "EHLO
         fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726973AbgGHJbG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jul 2020 05:31:06 -0400
-Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 0689Us6N109489;
-        Wed, 8 Jul 2020 04:30:54 -0500
+        with ESMTP id S1726445AbgGHJav (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jul 2020 05:30:51 -0400
+Received: from fllv0034.itg.ti.com ([10.64.40.246])
+        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 0689UcY4109455;
+        Wed, 8 Jul 2020 04:30:38 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1594200654;
-        bh=oDHixXQpSiTZez44a8+8lE4nJpgDYDjM303UR0TQSis=;
+        s=ti-com-17Q1; t=1594200638;
+        bh=MZf42sPBwBopHgxh/3zJoW1MM7sBcf1j/itzNs7qpps=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=UNExrCnRq/70xH4/LUjTSGYx9q5Y+kcahjQJgM8n5KhuRfU4Zjfo9MXZ4RNwN2PKK
-         EiPf2bYV0LTYNj2WmjvT1CCX0UPZE8ApT8yibOqpv0SWm3Rasyrt4sENeTtkqGiQ5U
-         GTdXky8D3oXLQStBbiQB8p6Vhq4IIJ60RZGTThkM=
-Received: from DFLE105.ent.ti.com (dfle105.ent.ti.com [10.64.6.26])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0689UsPa022079;
-        Wed, 8 Jul 2020 04:30:54 -0500
-Received: from DFLE112.ent.ti.com (10.64.6.33) by DFLE105.ent.ti.com
- (10.64.6.26) with Microsoft SMTP Server (version=TLS1_2,
+        b=i/KslzbFcr01l4BlPbqXIPHif/xZ8ESa/x4+fXWWCM1fm8F3lQubBu/oX/OyNZ8om
+         fJ+CkoyFFFYbVZB4dS4StrG8q2cH3KfhIt7C43cOFvuelbIOobzAebLDK7Kfhj6ML2
+         8SCskCRcKTSiMwwDQYRiscTsDIDiympzti4YV5ko=
+Received: from DLEE105.ent.ti.com (dlee105.ent.ti.com [157.170.170.35])
+        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 0689Uc0k043589
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 8 Jul 2020 04:30:38 -0500
+Received: from DLEE108.ent.ti.com (157.170.170.38) by DLEE105.ent.ti.com
+ (157.170.170.35) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Wed, 8 Jul
- 2020 04:30:54 -0500
-Received: from fllv0040.itg.ti.com (10.64.41.20) by DFLE112.ent.ti.com
- (10.64.6.33) with Microsoft SMTP Server (version=TLS1_2,
+ 2020 04:30:38 -0500
+Received: from fllv0040.itg.ti.com (10.64.41.20) by DLEE108.ent.ti.com
+ (157.170.170.38) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
- Frontend Transport; Wed, 8 Jul 2020 04:30:54 -0500
+ Frontend Transport; Wed, 8 Jul 2020 04:30:38 -0500
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0689UJEP098512;
-        Wed, 8 Jul 2020 04:30:51 -0500
+        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0689UJEL098512;
+        Wed, 8 Jul 2020 04:30:35 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Tom Joseph <tjoseph@cadence.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -56,9 +57,9 @@ CC:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v6 08/14] PCI: cadence: Fix updating Vendor ID and Subsystem Vendor ID register
-Date:   Wed, 8 Jul 2020 15:00:12 +0530
-Message-ID: <20200708093018.28474-9-kishon@ti.com>
+Subject: [PATCH v6 04/14] PCI: cadence: Add support to start link and verify link status
+Date:   Wed, 8 Jul 2020 15:00:08 +0530
+Message-ID: <20200708093018.28474-5-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200708093018.28474-1-kishon@ti.com>
 References: <20200708093018.28474-1-kishon@ti.com>
@@ -70,47 +71,175 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Commit 1b79c5284439 ("PCI: cadence: Add host driver for Cadence PCIe
-controller") in order to update Vendor ID, directly wrote to
-PCI_VENDOR_ID register. However PCI_VENDOR_ID in root port configuration
-space is read-only register and writing to it will have no effect.
-Use local management register to configure Vendor ID and Subsystem Vendor
-ID.
+Add cdns_pcie_ops to start link and verify link status. The registers
+to start link and to check link status is in Platform specific PCIe
+wrapper. Add support for platform specific drivers to add callback
+functions for the PCIe Cadence core to start link and verify link status.
 
-Fixes: 1b79c5284439 ("PCI: cadence: Add host driver for Cadence PCIe controller")
-Reviewed-by: Rob Herring <robh@kernel.org>
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
 ---
- drivers/pci/controller/cadence/pcie-cadence-host.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+ .../pci/controller/cadence/pcie-cadence-ep.c  |  8 ++++
+ .../controller/cadence/pcie-cadence-host.c    | 28 ++++++++++++++
+ drivers/pci/controller/cadence/pcie-cadence.h | 37 ++++++++++++++++++-
+ 3 files changed, 72 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-host.c b/drivers/pci/controller/cadence/pcie-cadence-host.c
-index 10127ea71b83..8935f7a37e5a 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-host.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence-host.c
-@@ -82,6 +82,7 @@ static int cdns_pcie_host_init_root_port(struct cdns_pcie_rc *rc)
+diff --git a/drivers/pci/controller/cadence/pcie-cadence-ep.c b/drivers/pci/controller/cadence/pcie-cadence-ep.c
+index c6eb2db94680..034cb3cf726e 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence-ep.c
++++ b/drivers/pci/controller/cadence/pcie-cadence-ep.c
+@@ -357,8 +357,10 @@ static int cdns_pcie_ep_start(struct pci_epc *epc)
  {
- 	struct cdns_pcie *pcie = &rc->pcie;
- 	u32 value, ctrl;
-+	u32 id;
+ 	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
+ 	struct cdns_pcie *pcie = &ep->pcie;
++	struct device *dev = pcie->dev;
+ 	struct pci_epf *epf;
+ 	u32 cfg;
++	int ret;
  
  	/*
- 	 * Set the root complex BAR configuration register:
-@@ -101,8 +102,12 @@ static int cdns_pcie_host_init_root_port(struct cdns_pcie_rc *rc)
- 	cdns_pcie_writel(pcie, CDNS_PCIE_LM_RC_BAR_CFG, value);
+ 	 * BIT(0) is hardwired to 1, hence function 0 is always enabled
+@@ -369,6 +371,12 @@ static int cdns_pcie_ep_start(struct pci_epc *epc)
+ 		cfg |= BIT(epf->func_no);
+ 	cdns_pcie_writel(pcie, CDNS_PCIE_LM_EP_FUNC_CFG, cfg);
  
- 	/* Set root port configuration space */
--	if (rc->vendor_id != 0xffff)
--		cdns_pcie_rp_writew(pcie, PCI_VENDOR_ID, rc->vendor_id);
-+	if (rc->vendor_id != 0xffff) {
-+		id = CDNS_PCIE_LM_ID_VENDOR(rc->vendor_id) |
-+			CDNS_PCIE_LM_ID_SUBSYS(rc->vendor_id);
-+		cdns_pcie_writel(pcie, CDNS_PCIE_LM_ID, id);
++	ret = cdns_pcie_start_link(pcie);
++	if (ret) {
++		dev_err(dev, "Failed to start link\n");
++		return ret;
 +	}
 +
- 	if (rc->device_id != 0xffff)
- 		cdns_pcie_rp_writew(pcie, PCI_DEVICE_ID, rc->device_id);
+ 	return 0;
+ }
  
+diff --git a/drivers/pci/controller/cadence/pcie-cadence-host.c b/drivers/pci/controller/cadence/pcie-cadence-host.c
+index 030e828bfd4c..de02fadc4809 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence-host.c
++++ b/drivers/pci/controller/cadence/pcie-cadence-host.c
+@@ -3,6 +3,7 @@
+ // Cadence PCIe host controller driver.
+ // Author: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+ 
++#include <linux/delay.h>
+ #include <linux/kernel.h>
+ #include <linux/list_sort.h>
+ #include <linux/of_address.h>
+@@ -419,6 +420,23 @@ static int cdns_pcie_host_init(struct device *dev,
+ 	return err;
+ }
+ 
++static int cdns_pcie_host_wait_for_link(struct cdns_pcie *pcie)
++{
++	struct device *dev = pcie->dev;
++	int retries;
++
++	/* Check if the link is up or not */
++	for (retries = 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
++		if (cdns_pcie_link_up(pcie)) {
++			dev_info(dev, "Link up\n");
++			return 0;
++		}
++		usleep_range(LINK_WAIT_USLEEP_MIN, LINK_WAIT_USLEEP_MAX);
++	}
++
++	return -ETIMEDOUT;
++}
++
+ int cdns_pcie_host_setup(struct cdns_pcie_rc *rc)
+ {
+ 	struct device *dev = rc->pcie.dev;
+@@ -467,6 +485,16 @@ int cdns_pcie_host_setup(struct cdns_pcie_rc *rc)
+ 
+ 	pcie->mem_res = res;
+ 
++	ret = cdns_pcie_start_link(pcie);
++	if (ret) {
++		dev_err(dev, "Failed to start link\n");
++		return ret;
++	}
++
++	ret = cdns_pcie_host_wait_for_link(pcie);
++	if (ret)
++		dev_dbg(dev, "PCIe link never came up\n");
++
+ 	for (bar = RP_BAR0; bar <= RP_NO_BAR; bar++)
+ 		rc->avail_ib_bar[bar] = true;
+ 
+diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
+index a45c11158f49..54e10caf2d4b 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence.h
++++ b/drivers/pci/controller/cadence/pcie-cadence.h
+@@ -10,6 +10,11 @@
+ #include <linux/pci.h>
+ #include <linux/phy/phy.h>
+ 
++/* Parameters for the waiting for link up routine */
++#define LINK_WAIT_MAX_RETRIES	10
++#define LINK_WAIT_USLEEP_MIN	90000
++#define LINK_WAIT_USLEEP_MAX	100000
++
+ /*
+  * Local Management Registers
+  */
+@@ -245,12 +250,20 @@ enum cdns_pcie_msg_routing {
+ 	MSG_ROUTING_GATHER,
+ };
+ 
++struct cdns_pcie_ops {
++	int	(*start_link)(struct cdns_pcie *pcie);
++	void	(*stop_link)(struct cdns_pcie *pcie);
++	bool	(*link_up)(struct cdns_pcie *pcie);
++};
++
+ /**
+  * struct cdns_pcie - private data for Cadence PCIe controller drivers
+  * @reg_base: IO mapped register base
+  * @mem_res: start/end offsets in the physical system memory to map PCI accesses
+  * @is_rc: tell whether the PCIe controller mode is Root Complex or Endpoint.
+  * @bus: In Root Complex mode, the bus number
++ * @ops: Platform specific ops to control various inputs from Cadence PCIe
++ *       wrapper
+  */
+ struct cdns_pcie {
+ 	void __iomem		*reg_base;
+@@ -261,7 +274,7 @@ struct cdns_pcie {
+ 	int			phy_count;
+ 	struct phy		**phy;
+ 	struct device_link	**link;
+-	const struct cdns_pcie_common_ops *ops;
++	const struct cdns_pcie_ops *ops;
+ };
+ 
+ /**
+@@ -426,6 +439,28 @@ static inline u32 cdns_pcie_ep_fn_readl(struct cdns_pcie *pcie, u8 fn, u32 reg)
+ 	return readl(pcie->reg_base + CDNS_PCIE_EP_FUNC_BASE(fn) + reg);
+ }
+ 
++static inline int cdns_pcie_start_link(struct cdns_pcie *pcie)
++{
++	if (pcie->ops->start_link)
++		return pcie->ops->start_link(pcie);
++
++	return 0;
++}
++
++static inline void cdns_pcie_stop_link(struct cdns_pcie *pcie)
++{
++	if (pcie->ops->stop_link)
++		pcie->ops->stop_link(pcie);
++}
++
++static inline bool cdns_pcie_link_up(struct cdns_pcie *pcie)
++{
++	if (pcie->ops->link_up)
++		return pcie->ops->link_up(pcie);
++
++	return true;
++}
++
+ #ifdef CONFIG_PCIE_CADENCE_HOST
+ int cdns_pcie_host_setup(struct cdns_pcie_rc *rc);
+ #else
 -- 
 2.17.1
 
