@@ -2,61 +2,61 @@ Return-Path: <SRS0=O/bX=AV=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D39E5C4345C
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Jul 2020 22:20:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BEAA4C433DF
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Jul 2020 22:20:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A3CC02068F
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Jul 2020 22:20:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9C0DB207FC
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Jul 2020 22:20:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ed5gwn4T"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aG717Mh+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726815AbgGJWUo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 10 Jul 2020 18:20:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60174 "EHLO
+        id S1726729AbgGJWUV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 10 Jul 2020 18:20:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60164 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726751AbgGJWUX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jul 2020 18:20:23 -0400
-Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97B08C08C5DC;
-        Fri, 10 Jul 2020 15:20:22 -0700 (PDT)
-Received: by mail-wm1-x342.google.com with SMTP id a6so9340992wmm.0;
-        Fri, 10 Jul 2020 15:20:22 -0700 (PDT)
+        with ESMTP id S1726715AbgGJWUU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jul 2020 18:20:20 -0400
+Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41AAFC08C5DC;
+        Fri, 10 Jul 2020 15:20:20 -0700 (PDT)
+Received: by mail-wr1-x442.google.com with SMTP id o11so7350365wrv.9;
+        Fri, 10 Jul 2020 15:20:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=/DGPoUKfitACThlLV4LP7NGjasXKQ1tYflzyCbCjHy8=;
-        b=ed5gwn4TL9l6C2hiNge5RZpFsA3eH8Iphd/yN7KO/OEDmm0/OSkvJI4TCYu/rzQnYy
-         0hyFq0ogXey3cZKxUvgeTPTs/hHUXW9/Vra3kb4T7oqh4Rq0PKSYLKAZZVD7N0/YdZri
-         o4pY0AafSoWv/ld1mPCMM40Ysb1qqNrorEylEsXqfbi8jrrBBvpZkgioI+UbW+pX3KOy
-         UGp1uGHS+r5gJJ9cvYLS5usc37+cPk7luqVtbwn9usBa+1oGAAyG+JHvt8mx1q71xuS5
-         Qf7uWVrXkrai9JcSXa2KhvDd2u1heIIhby4m4sVfaqwry1ZxAw9wUIQmnDzShMn0ukX3
-         PFKQ==
+        bh=Aw1VsrtSYtcq2poBq51sXMfz6dSvwXJUJRkwZAWrd10=;
+        b=aG717Mh+yfnVzffccC3T0g+foEBFsfS7f2qjhmFbKfu/ee4DvajkEXLibWdoOSN7Gy
+         O2NlqE/yED1WCoVri14mxo1nA/DhbC4TfFlh+gDBhkTm1i++nEIvYhUnzX75RuLHVhxn
+         N5qjIWWQTLGympOy6JJWc3WCP5U9JJE8x4rilTRv6CObWA2Npbxl8MILdn1cGUsg8uSf
+         IcFSnILXaC+/DetMjFrcZg99zlfx/4nMgcNCPUU1OEUwYVeKbACTIARFV52P8VyaIUjL
+         xRZYffbDwY9H9ssJZP1M7fjNvV9Hb7XepWAyzFgoN8RL4oGs+tKFrYDoFvFNAalnk/1b
+         xxtQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=/DGPoUKfitACThlLV4LP7NGjasXKQ1tYflzyCbCjHy8=;
-        b=mrn68kyFKAIue/UbqL6a5WdLNuXSkhCKj94MYL8voZ5X4JxelyD9G2jmlt42wYSiZi
-         O0DUGr5x8pnnHTtR+rXCyvQo5c9Ptl5F1q4MXs4uN6O90mV6xlKv6P387jRavRyOF2Dl
-         AKjBblQmI+ghwq9KgoP1NcG+AxRn7tO0ANGoyI8TFWBEq9Nlc5e2gE2CwXm/J9BbqmsY
-         uu9Or1/hgBiHP/Y6R+5A6Bkwj4PGzxwvjj4MTNJySvrraYuRESG2QgPfDcMiSLXZlZpS
-         G1Z3t/lSDShwvCDogr7pKaJVWNvlp38cWqLJI4cfH5HYV++gGpVoZXzIUbUzSghEnS9N
-         jSBA==
-X-Gm-Message-State: AOAM531FOcYvmkzTTT+7c/z3K+jvNVlefXInaIIOLz9Ac3/OKVP+aJQb
-        UjoYxOefR1qHKnzOQTaBpdk=
-X-Google-Smtp-Source: ABdhPJx1ZcaQfkFJ2dxuru9m9ZjdAi9ZYjp4N9+6ITauNzxYltGNvZLsptAH6OhVGB2ky+/up1DUQQ==
-X-Received: by 2002:a1c:6706:: with SMTP id b6mr6726758wmc.167.1594419621287;
-        Fri, 10 Jul 2020 15:20:21 -0700 (PDT)
+        bh=Aw1VsrtSYtcq2poBq51sXMfz6dSvwXJUJRkwZAWrd10=;
+        b=iVVqeHAizx2Kvp3Pyl+syFjEYMKCt8j2ASEjJHSF33ZXAzuoZNrKaLG6nzGkzrDmiW
+         Mh6dXzYjswdLQSC2sbDbJ9dWZUpPcOVfk/0wAhcsBj/EUTbtOyC4JZ6K0r6RD8+Xi58x
+         oZ+HHCUHh3u9bfjtHhiVIpo8fdt4juGxrsyylf1QSzF6AJVKkcxy34mRdy/5jDpt29Ev
+         /cTN7D0Wr9OV0kMXfwQjTDw+7COWw7TctB5pRqNfexz/PwhNn8OHC/WX14iKY/NFDxH+
+         /G/Un3LuJ6QUpiCzIyvZ3TN4VHVcYMvz9zRiKPFjy0r09j6YhHp+a3ZIAYnPJifCm5vg
+         vQPg==
+X-Gm-Message-State: AOAM531ZEdFq0ei0A21hWCFYVKKh0vLW3MbmBXXngKJR06qN5ZLK8dSy
+        NsoGNnb3rFleZvqyhBOvivE=
+X-Google-Smtp-Source: ABdhPJyv0JZcNwPCwOQC9NfYv6P2Yb1NOOR9kLooOJDcTnXEuQTTkqbzAPMkpAORzJE7k8uyZ+FXmg==
+X-Received: by 2002:a5d:66ca:: with SMTP id k10mr58545944wrw.244.1594419619001;
+        Fri, 10 Jul 2020 15:20:19 -0700 (PDT)
 Received: from net.saheed (54007186.dsl.pool.telekom.hu. [84.0.113.134])
-        by smtp.gmail.com with ESMTPSA id l18sm12170281wrm.52.2020.07.10.15.20.20
+        by smtp.gmail.com with ESMTPSA id l18sm12170281wrm.52.2020.07.10.15.20.18
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 10 Jul 2020 15:20:20 -0700 (PDT)
+        Fri, 10 Jul 2020 15:20:18 -0700 (PDT)
 From:   Saheed Olayemi Bolarinwa <refactormyself@gmail.com>
 To:     helgaas@kernel.org
 Cc:     Bolarinwa Olayemi Saheed <refactormyself@gmail.com>,
@@ -64,9 +64,9 @@ Cc:     Bolarinwa Olayemi Saheed <refactormyself@gmail.com>,
         linux-pci@vger.kernel.org,
         linux-kernel-mentees@lists.linuxfoundation.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 11/14 v3] PCI/PM: Check return value of pcie_capability_read_*()
-Date:   Fri, 10 Jul 2020 23:20:23 +0200
-Message-Id: <20200710212026.27136-12-refactormyself@gmail.com>
+Subject: [PATCH 9/14 v3] PCI: pciehp: Check return value of pcie_capability_read_*()
+Date:   Fri, 10 Jul 2020 23:20:21 +0200
+Message-Id: <20200710212026.27136-10-refactormyself@gmail.com>
 X-Mailer: git-send-email 2.18.2
 In-Reply-To: <20200710212026.27136-1-refactormyself@gmail.com>
 References: <20200710212026.27136-1-refactormyself@gmail.com>
@@ -78,180 +78,77 @@ X-Mailing-List: linux-pci@vger.kernel.org
 From: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
 
 On failure pcie_capability_read_dword() sets it's last parameter,
-val to 0.
+val to 0. 
 However, with Patch 14/14, it is possible that val is set to ~0 on
 failure. This would introduce a bug because (x & x) == (~0 & x).
 
-This bug can be avoided if the return value of pcie_capability_read_dword
+This bug can be avoided if the return value of pcie_capability_read_word
 is checked to confirm success.
 
 Check the return value of pcie_capability_read_dword() to ensure success.
+Return a value that indicate the result of pcie_capability_read_word().
 
 Suggested-by: Bjorn Helgaas <bjorn@helgaas.com>
 Signed-off-by: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
 ---
- drivers/pci/pci.c | 52 ++++++++++++++++++++++++++++++-----------------
- 1 file changed, 33 insertions(+), 19 deletions(-)
+ drivers/pci/hotplug/pciehp_hpc.c | 15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index ce096272f52b..9f18ffbf7bd4 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3207,6 +3207,7 @@ void pci_configure_ari(struct pci_dev *dev)
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 5af281d97d4f..0b691e37fd04 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -277,10 +277,11 @@ static void pcie_wait_for_presence(struct pci_dev *pdev)
  {
- 	u32 cap;
- 	struct pci_dev *bridge;
+ 	int timeout = 1250;
+ 	u16 slot_status;
 +	int ret;
  
- 	if (pcie_ari_disabled || !pci_is_pcie(dev) || dev->devfn)
- 		return;
-@@ -3215,8 +3216,8 @@ void pci_configure_ari(struct pci_dev *dev)
- 	if (!bridge)
- 		return;
- 
--	pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap);
--	if (!(cap & PCI_EXP_DEVCAP2_ARI))
-+	ret = pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap);
-+	if (ret || !(cap & PCI_EXP_DEVCAP2_ARI))
- 		return;
- 
- 	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ARI)) {
-@@ -3606,6 +3607,7 @@ int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 cap_mask)
- 	struct pci_bus *bus = dev->bus;
- 	struct pci_dev *bridge;
- 	u32 cap, ctl2;
+ 	do {
+-		pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
+-		if (slot_status & PCI_EXP_SLTSTA_PDS)
++		ret = pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
++		if (!ret && (slot_status & PCI_EXP_SLTSTA_PDS))
+ 			return;
+ 		msleep(10);
+ 		timeout -= 10;
+@@ -354,12 +355,13 @@ int pciehp_get_raw_indicator_status(struct hotplug_slot *hotplug_slot,
+ 	struct controller *ctrl = to_ctrl(hotplug_slot);
+ 	struct pci_dev *pdev = ctrl_dev(ctrl);
+ 	u16 slot_ctrl;
 +	int ret;
  
- 	if (!pci_is_pcie(dev))
- 		return -EINVAL;
-@@ -3629,28 +3631,29 @@ int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 cap_mask)
- 	while (bus->parent) {
- 		bridge = bus->self;
- 
--		pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap);
-+		ret = pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2,
-+								&cap);
- 
- 		switch (pci_pcie_type(bridge)) {
- 		/* Ensure switch ports support AtomicOp routing */
- 		case PCI_EXP_TYPE_UPSTREAM:
- 		case PCI_EXP_TYPE_DOWNSTREAM:
--			if (!(cap & PCI_EXP_DEVCAP2_ATOMIC_ROUTE))
-+			if (ret || !(cap & PCI_EXP_DEVCAP2_ATOMIC_ROUTE))
- 				return -EINVAL;
- 			break;
- 
- 		/* Ensure root port supports all the sizes we care about */
- 		case PCI_EXP_TYPE_ROOT_PORT:
--			if ((cap & cap_mask) != cap_mask)
-+			if (ret || ((cap & cap_mask) != cap_mask))
- 				return -EINVAL;
- 			break;
- 		}
- 
- 		/* Ensure upstream ports don't block AtomicOps on egress */
- 		if (pci_pcie_type(bridge) == PCI_EXP_TYPE_UPSTREAM) {
--			pcie_capability_read_dword(bridge, PCI_EXP_DEVCTL2,
--						   &ctl2);
--			if (ctl2 & PCI_EXP_DEVCTL2_ATOMIC_EGRESS_BLOCK)
-+			ret = pcie_capability_read_dword(bridge,
-+						PCI_EXP_DEVCTL2, &ctl2);
-+			if (!ret && (ctl2 & PCI_EXP_DEVCTL2_ATOMIC_EGRESS_BLOCK)
- 				return -EINVAL;
- 		}
- 
-@@ -4507,12 +4510,13 @@ EXPORT_SYMBOL(pci_wait_for_pending_transaction);
- bool pcie_has_flr(struct pci_dev *dev)
- {
- 	u32 cap;
-+	int ret;
- 
- 	if (dev->dev_flags & PCI_DEV_FLAGS_NO_FLR_RESET)
- 		return false;
- 
--	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &cap);
--	return cap & PCI_EXP_DEVCAP_FLR;
-+	ret = pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &cap);
-+	return (!ret && !!(cap & PCI_EXP_DEVCAP_FLR));
+ 	pci_config_pm_runtime_get(pdev);
+-	pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &slot_ctrl);
++	ret = pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &slot_ctrl);
+ 	pci_config_pm_runtime_put(pdev);
+ 	*status = (slot_ctrl & (PCI_EXP_SLTCTL_AIC | PCI_EXP_SLTCTL_PIC)) >> 6;
+-	return 0;
++	return pcibios_err_to_errno(ret);
  }
- EXPORT_SYMBOL_GPL(pcie_has_flr);
  
-@@ -4672,7 +4676,7 @@ static bool pcie_wait_for_link_delay(struct pci_dev *pdev, bool active,
- 		msleep(20);
- 	for (;;) {
- 		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
--		ret = !!(lnk_status & PCI_EXP_LNKSTA_DLLLA);
-+		ret = !!(!ret && (lnk_status & PCI_EXP_LNKSTA_DLLLA));
- 		if (ret == active)
- 			break;
- 		if (timeout <= 0)
-@@ -5774,6 +5778,7 @@ u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev **limiting_dev,
- 	enum pci_bus_speed next_speed;
- 	enum pcie_link_width next_width;
- 	u32 bw, next_bw;
+ int pciehp_get_attention_status(struct hotplug_slot *hotplug_slot, u8 *status)
+@@ -367,9 +369,10 @@ int pciehp_get_attention_status(struct hotplug_slot *hotplug_slot, u8 *status)
+ 	struct controller *ctrl = to_ctrl(hotplug_slot);
+ 	struct pci_dev *pdev = ctrl_dev(ctrl);
+ 	u16 slot_ctrl;
 +	int ret;
  
- 	if (speed)
- 		*speed = PCI_SPEED_UNKNOWN;
-@@ -5783,7 +5788,12 @@ u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev **limiting_dev,
- 	bw = 0;
+ 	pci_config_pm_runtime_get(pdev);
+-	pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &slot_ctrl);
++	ret = pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &slot_ctrl);
+ 	pci_config_pm_runtime_put(pdev);
+ 	ctrl_dbg(ctrl, "%s: SLOTCTRL %x, value read %x\n", __func__,
+ 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, slot_ctrl);
+@@ -389,7 +392,7 @@ int pciehp_get_attention_status(struct hotplug_slot *hotplug_slot, u8 *status)
+ 		break;
+ 	}
  
- 	while (dev) {
--		pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnksta);
-+		ret = pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnksta);
-+
-+		if (ret) {
-+			dev = pci_upstream_bridge(dev);
-+			continue;
-+		}
+-	return 0;
++	return pcibios_err_to_errno(ret);
+ }
  
- 		next_speed = pcie_link_speed[lnksta & PCI_EXP_LNKSTA_CLS];
- 		next_width = (lnksta & PCI_EXP_LNKSTA_NLW) >>
-@@ -5820,6 +5830,7 @@ EXPORT_SYMBOL(pcie_bandwidth_available);
- enum pci_bus_speed pcie_get_speed_cap(struct pci_dev *dev)
- {
- 	u32 lnkcap2, lnkcap;
-+	int ret;
- 
- 	/*
- 	 * Link Capabilities 2 was added in PCIe r3.0, sec 7.8.18.  The
-@@ -5830,16 +5841,18 @@ enum pci_bus_speed pcie_get_speed_cap(struct pci_dev *dev)
- 	 * should use the Supported Link Speeds field in Link Capabilities,
- 	 * where only 2.5 GT/s and 5.0 GT/s speeds were defined.
- 	 */
--	pcie_capability_read_dword(dev, PCI_EXP_LNKCAP2, &lnkcap2);
-+	ret = pcie_capability_read_dword(dev, PCI_EXP_LNKCAP2, &lnkcap2);
- 
- 	/* PCIe r3.0-compliant */
--	if (lnkcap2)
-+	if (!ret && lnkcap2)
- 		return PCIE_LNKCAP2_SLS2SPEED(lnkcap2);
- 
--	pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &lnkcap);
--	if ((lnkcap & PCI_EXP_LNKCAP_SLS) == PCI_EXP_LNKCAP_SLS_5_0GB)
-+	ret = pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &lnkcap);
-+	if (!ret &&
-+		((lnkcap & PCI_EXP_LNKCAP_SLS) == PCI_EXP_LNKCAP_SLS_5_0GB))
- 		return PCIE_SPEED_5_0GT;
--	else if ((lnkcap & PCI_EXP_LNKCAP_SLS) == PCI_EXP_LNKCAP_SLS_2_5GB)
-+	else if (!ret &&
-+		((lnkcap & PCI_EXP_LNKCAP_SLS) == PCI_EXP_LNKCAP_SLS_2_5GB))
- 		return PCIE_SPEED_2_5GT;
- 
- 	return PCI_SPEED_UNKNOWN;
-@@ -5856,9 +5869,10 @@ EXPORT_SYMBOL(pcie_get_speed_cap);
- enum pcie_link_width pcie_get_width_cap(struct pci_dev *dev)
- {
- 	u32 lnkcap;
-+	int ret;
- 
--	pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &lnkcap);
--	if (lnkcap)
-+	ret = pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &lnkcap);
-+	if (!ret && lnkcap)
- 		return (lnkcap & PCI_EXP_LNKCAP_MLW) >> 4;
- 
- 	return PCIE_LNK_WIDTH_UNKNOWN;
+ void pciehp_get_power_status(struct controller *ctrl, u8 *status)
 -- 
 2.18.2
 
