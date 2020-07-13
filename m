@@ -8,44 +8,45 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8AFCC43464
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Jul 2020 11:03:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E17D7C433F4
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Jul 2020 11:03:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 976DB207F9
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Jul 2020 11:03:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C1DB4207F9
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Jul 2020 11:03:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="DA6YaZqJ"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="OZ+68DQT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729729AbgGMLCe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 13 Jul 2020 07:02:34 -0400
-Received: from lelv0142.ext.ti.com ([198.47.23.249]:47008 "EHLO
+        id S1729701AbgGMLCZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 13 Jul 2020 07:02:25 -0400
+Received: from lelv0142.ext.ti.com ([198.47.23.249]:46940 "EHLO
         lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729727AbgGMLCe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jul 2020 07:02:34 -0400
-Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 06DB2OnT071601;
-        Mon, 13 Jul 2020 06:02:24 -0500
+        with ESMTP id S1729692AbgGMLCX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jul 2020 07:02:23 -0400
+Received: from fllv0034.itg.ti.com ([10.64.40.246])
+        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 06DB2D2u071555;
+        Mon, 13 Jul 2020 06:02:13 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1594638144;
-        bh=o7DMocX7rlMLQL03fwQQZCPBjquUDY+oSrh6N/Sv4XY=;
+        s=ti-com-17Q1; t=1594638133;
+        bh=E77KBnhlOmnDDHPLdMADx+mf8l8Xf4xjtOuMeJCziWM=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=DA6YaZqJexQU1tj4/4laZBdRUtY/HyKqXkNcvk6Jzs4Xsw4O0P0f3TzepQavJy8iG
-         Xy04hMdUBNADbOctVnklh+B5PfI4IJXzONhKJKi6/ec+xgot+3se6ajsMKjUKX7Qkr
-         neGabss7uNEdi7ToEOiMLSPCo50cjL5rw6WIFsEk=
-Received: from DLEE100.ent.ti.com (dlee100.ent.ti.com [157.170.170.30])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id 06DB2OpY005673;
-        Mon, 13 Jul 2020 06:02:24 -0500
-Received: from DLEE106.ent.ti.com (157.170.170.36) by DLEE100.ent.ti.com
- (157.170.170.30) with Microsoft SMTP Server (version=TLS1_2,
+        b=OZ+68DQTIiQw9Zq4P57Mpup5+JYsTmE4E+PXPvQfDFvtyK/E6Kj5IZ6vVrR1s8ZrH
+         t2qjTVvieRGvKlSQjsC5Jkasebk3F/txDheVvPvcersISlKBd8M5iSeSNaqHa3xRyX
+         XZz9P07X9gSWluXE9qwqIxmf2eM/BGOEVmTp2AG0=
+Received: from DLEE103.ent.ti.com (dlee103.ent.ti.com [157.170.170.33])
+        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 06DB2CCd108836
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 13 Jul 2020 06:02:12 -0500
+Received: from DLEE113.ent.ti.com (157.170.170.24) by DLEE103.ent.ti.com
+ (157.170.170.33) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Mon, 13
- Jul 2020 06:02:23 -0500
-Received: from fllv0040.itg.ti.com (10.64.41.20) by DLEE106.ent.ti.com
- (157.170.170.36) with Microsoft SMTP Server (version=TLS1_2,
+ Jul 2020 06:02:12 -0500
+Received: from fllv0040.itg.ti.com (10.64.41.20) by DLEE113.ent.ti.com
+ (157.170.170.24) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
- Frontend Transport; Mon, 13 Jul 2020 06:02:23 -0500
+ Frontend Transport; Mon, 13 Jul 2020 06:02:12 -0500
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 06DB1gVk031460;
-        Mon, 13 Jul 2020 06:02:20 -0500
+        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 06DB1gVh031460;
+        Mon, 13 Jul 2020 06:02:09 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Tom Joseph <tjoseph@cadence.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -57,9 +58,9 @@ CC:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v7 10/14] dt-bindings: PCI: Add host mode dt-bindings for TI's J721E SoC
-Date:   Mon, 13 Jul 2020 16:31:37 +0530
-Message-ID: <20200713110141.13156-11-kishon@ti.com>
+Subject: [PATCH v7 07/14] PCI: cadence: Add new *ops* for CPU addr fixup
+Date:   Mon, 13 Jul 2020 16:31:34 +0530
+Message-ID: <20200713110141.13156-8-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200713110141.13156-1-kishon@ti.com>
 References: <20200713110141.13156-1-kishon@ti.com>
@@ -71,134 +72,152 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add host mode dt-bindings for TI's J721E SoC.
+Cadence driver uses "mem" memory resource to obtain the offset of
+configuration space address region, memory space address region and
+message space address region. The obtained offset is used to program
+the Address Translation Unit (ATU). However certain platforms like TI's
+J721E SoC require the absolute address to be programmed in the ATU and
+not just the offset. Add new *ops* for CPU addr fixup for the platform
+drivers to provide the correct address to be programmed in the ATU.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
 ---
- .../bindings/pci/ti,j721e-pci-host.yaml       | 113 ++++++++++++++++++
- 1 file changed, 113 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
+ .../pci/controller/cadence/pcie-cadence-host.c    | 15 ++++-----------
+ .../pci/controller/cadence/pcie-cadence-plat.c    | 13 +++++++++++++
+ drivers/pci/controller/cadence/pcie-cadence.c     |  8 ++++++--
+ drivers/pci/controller/cadence/pcie-cadence.h     |  1 +
+ 4 files changed, 24 insertions(+), 13 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml b/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
-new file mode 100644
-index 000000000000..d7b60487c6c3
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
-@@ -0,0 +1,113 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+# Copyright (C) 2019 Texas Instruments Incorporated - http://www.ti.com/
-+%YAML 1.2
-+---
-+$id: "http://devicetree.org/schemas/pci/ti,j721e-pci-host.yaml#"
-+$schema: "http://devicetree.org/meta-schemas/core.yaml#"
+diff --git a/drivers/pci/controller/cadence/pcie-cadence-host.c b/drivers/pci/controller/cadence/pcie-cadence-host.c
+index a8303258874c..10127ea71b83 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence-host.c
++++ b/drivers/pci/controller/cadence/pcie-cadence-host.c
+@@ -327,15 +327,14 @@ static int cdns_pcie_host_map_dma_ranges(struct cdns_pcie_rc *rc)
+ static int cdns_pcie_host_init_address_translation(struct cdns_pcie_rc *rc)
+ {
+ 	struct cdns_pcie *pcie = &rc->pcie;
+-	struct resource *mem_res = pcie->mem_res;
+ 	struct resource *bus_range = rc->bus_range;
+ 	struct resource *cfg_res = rc->cfg_res;
+ 	struct device *dev = pcie->dev;
+ 	struct device_node *np = dev->of_node;
+ 	struct of_pci_range_parser parser;
++	u64 cpu_addr = cfg_res->start;
+ 	struct of_pci_range range;
+ 	u32 addr0, addr1, desc1;
+-	u64 cpu_addr;
+ 	int r, err;
+ 
+ 	/*
+@@ -348,7 +347,9 @@ static int cdns_pcie_host_init_address_translation(struct cdns_pcie_rc *rc)
+ 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_PCI_ADDR1(0), addr1);
+ 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_DESC1(0), desc1);
+ 
+-	cpu_addr = cfg_res->start - mem_res->start;
++	if (pcie->ops->cpu_addr_fixup)
++		cpu_addr = pcie->ops->cpu_addr_fixup(pcie, cpu_addr);
 +
-+title: TI J721E PCI Host (PCIe Wrapper)
+ 	addr0 = CDNS_PCIE_AT_OB_REGION_CPU_ADDR0_NBITS(12) |
+ 		(lower_32_bits(cpu_addr) & GENMASK(31, 8));
+ 	addr1 = upper_32_bits(cpu_addr);
+@@ -477,14 +478,6 @@ int cdns_pcie_host_setup(struct cdns_pcie_rc *rc)
+ 	}
+ 	rc->cfg_res = res;
+ 
+-	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "mem");
+-	if (!res) {
+-		dev_err(dev, "missing \"mem\"\n");
+-		return -EINVAL;
+-	}
+-
+-	pcie->mem_res = res;
+-
+ 	ret = cdns_pcie_start_link(pcie);
+ 	if (ret) {
+ 		dev_err(dev, "Failed to start link\n");
+diff --git a/drivers/pci/controller/cadence/pcie-cadence-plat.c b/drivers/pci/controller/cadence/pcie-cadence-plat.c
+index f5c6bf6dfcb8..6f5f07b3eed1 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence-plat.c
++++ b/drivers/pci/controller/cadence/pcie-cadence-plat.c
+@@ -13,6 +13,8 @@
+ #include <linux/of_device.h>
+ #include "pcie-cadence.h"
+ 
++#define CDNS_PLAT_CPU_TO_BUS_ADDR	0x0FFFFFFF
 +
-+maintainers:
-+  - Kishon Vijay Abraham I <kishon@ti.com>
+ /**
+  * struct cdns_plat_pcie - private data for this PCIe platform driver
+  * @pcie: Cadence PCIe controller
+@@ -30,6 +32,15 @@ struct cdns_plat_pcie_of_data {
+ 
+ static const struct of_device_id cdns_plat_pcie_of_match[];
+ 
++static u64 cdns_plat_cpu_addr_fixup(struct cdns_pcie *pcie, u64 cpu_addr)
++{
++	return cpu_addr & CDNS_PLAT_CPU_TO_BUS_ADDR;
++}
 +
-+allOf:
-+  - $ref: "cdns-pcie-host.yaml#"
++static const struct cdns_pcie_ops cdns_plat_ops = {
++	.cpu_addr_fixup = cdns_plat_cpu_addr_fixup,
++};
 +
-+properties:
-+  compatible:
-+    enum:
-+      - ti,j721e-pcie-host
+ static int cdns_plat_pcie_probe(struct platform_device *pdev)
+ {
+ 	const struct cdns_plat_pcie_of_data *data;
+@@ -66,6 +77,7 @@ static int cdns_plat_pcie_probe(struct platform_device *pdev)
+ 
+ 		rc = pci_host_bridge_priv(bridge);
+ 		rc->pcie.dev = dev;
++		rc->pcie.ops = &cdns_plat_ops;
+ 		cdns_plat_pcie->pcie = &rc->pcie;
+ 		cdns_plat_pcie->is_rc = is_rc;
+ 
+@@ -93,6 +105,7 @@ static int cdns_plat_pcie_probe(struct platform_device *pdev)
+ 			return -ENOMEM;
+ 
+ 		ep->pcie.dev = dev;
++		ep->pcie.ops = &cdns_plat_ops;
+ 		cdns_plat_pcie->pcie = &ep->pcie;
+ 		cdns_plat_pcie->is_rc = is_rc;
+ 
+diff --git a/drivers/pci/controller/cadence/pcie-cadence.c b/drivers/pci/controller/cadence/pcie-cadence.c
+index cd795f6fc1e2..8a02981fd456 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence.c
++++ b/drivers/pci/controller/cadence/pcie-cadence.c
+@@ -73,7 +73,9 @@ void cdns_pcie_set_outbound_region(struct cdns_pcie *pcie, u8 fn,
+ 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_DESC1(r), desc1);
+ 
+ 	/* Set the CPU address */
+-	cpu_addr -= pcie->mem_res->start;
++	if (pcie->ops->cpu_addr_fixup)
++		cpu_addr = pcie->ops->cpu_addr_fixup(pcie, cpu_addr);
 +
-+  reg:
-+    maxItems: 4
+ 	addr0 = CDNS_PCIE_AT_OB_REGION_CPU_ADDR0_NBITS(nbits) |
+ 		(lower_32_bits(cpu_addr) & GENMASK(31, 8));
+ 	addr1 = upper_32_bits(cpu_addr);
+@@ -100,7 +102,9 @@ void cdns_pcie_set_outbound_region_for_normal_msg(struct cdns_pcie *pcie, u8 fn,
+ 	}
+ 
+ 	/* Set the CPU address */
+-	cpu_addr -= pcie->mem_res->start;
++	if (pcie->ops->cpu_addr_fixup)
++		cpu_addr = pcie->ops->cpu_addr_fixup(pcie, cpu_addr);
 +
-+  reg-names:
-+    items:
-+      - const: intd_cfg
-+      - const: user_cfg
-+      - const: reg
-+      - const: cfg
-+
-+  ti,syscon-pcie-ctrl:
-+    description: Phandle to the SYSCON entry required for configuring PCIe mode
-+      and link speed.
-+    allOf:
-+      - $ref: /schemas/types.yaml#/definitions/phandle
-+
-+  power-domains:
-+    maxItems: 1
-+
-+  clocks:
-+    maxItems: 1
-+    description: clock-specifier to represent input to the PCIe
-+
-+  clock-names:
-+    items:
-+      - const: fck
-+
-+  vendor-id:
-+    const: 0x104c
-+
-+  device-id:
-+    const: 0xb00d
-+
-+  msi-map: true
-+
-+required:
-+  - compatible
-+  - reg
-+  - reg-names
-+  - ti,syscon-pcie-ctrl
-+  - max-link-speed
-+  - num-lanes
-+  - power-domains
-+  - clocks
-+  - clock-names
-+  - vendor-id
-+  - device-id
-+  - msi-map
-+  - dma-coherent
-+  - dma-ranges
-+  - ranges
-+  - reset-gpios
-+  - phys
-+  - phy-names
-+
-+examples:
-+  - |
-+    #include <dt-bindings/soc/ti,sci_pm_domain.h>
-+    #include <dt-bindings/gpio/gpio.h>
-+
-+    bus {
-+        #address-cells = <2>;
-+        #size-cells = <2>;
-+
-+        pcie0_rc: pcie@2900000 {
-+            compatible = "ti,j721e-pcie-host";
-+            reg = <0x00 0x02900000 0x00 0x1000>,
-+                  <0x00 0x02907000 0x00 0x400>,
-+                  <0x00 0x0d000000 0x00 0x00800000>,
-+                  <0x00 0x10000000 0x00 0x00001000>;
-+            reg-names = "intd_cfg", "user_cfg", "reg", "cfg";
-+            ti,syscon-pcie-ctrl = <&pcie0_ctrl>;
-+            max-link-speed = <3>;
-+            num-lanes = <2>;
-+            power-domains = <&k3_pds 239 TI_SCI_PD_EXCLUSIVE>;
-+            clocks = <&k3_clks 239 1>;
-+            clock-names = "fck";
-+            device_type = "pci";
-+            #address-cells = <3>;
-+            #size-cells = <2>;
-+            bus-range = <0x0 0xf>;
-+            vendor-id = <0x104c>;
-+            device-id = <0xb00d>;
-+            msi-map = <0x0 &gic_its 0x0 0x10000>;
-+            dma-coherent;
-+            reset-gpios = <&exp1 6 GPIO_ACTIVE_HIGH>;
-+            phys = <&serdes0_pcie_link>;
-+            phy-names = "pcie-phy";
-+            ranges = <0x01000000 0x0 0x10001000  0x00 0x10001000  0x0 0x0010000>,
-+                     <0x02000000 0x0 0x10011000  0x00 0x10011000  0x0 0x7fef000>;
-+            dma-ranges = <0x02000000 0x0 0x0 0x0 0x0 0x10000 0x0>;
-+        };
-+    };
+ 	addr0 = CDNS_PCIE_AT_OB_REGION_CPU_ADDR0_NBITS(17) |
+ 		(lower_32_bits(cpu_addr) & GENMASK(31, 8));
+ 	addr1 = upper_32_bits(cpu_addr);
+diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
+index 54e10caf2d4b..1d2bdc4e08e4 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence.h
++++ b/drivers/pci/controller/cadence/pcie-cadence.h
+@@ -254,6 +254,7 @@ struct cdns_pcie_ops {
+ 	int	(*start_link)(struct cdns_pcie *pcie);
+ 	void	(*stop_link)(struct cdns_pcie *pcie);
+ 	bool	(*link_up)(struct cdns_pcie *pcie);
++	u64     (*cpu_addr_fixup)(struct cdns_pcie *pcie, u64 cpu_addr);
+ };
+ 
+ /**
 -- 
 2.17.1
 
