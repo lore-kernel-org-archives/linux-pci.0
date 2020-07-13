@@ -8,66 +8,65 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3235C4363E
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Jul 2020 13:24:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 970A0C433E7
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Jul 2020 13:24:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BFFED206F4
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Jul 2020 13:24:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6F53D2072D
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Jul 2020 13:24:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="e7SRK/ds"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="R7fqTYEe"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730178AbgGMNYm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 13 Jul 2020 09:24:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47562 "EHLO
+        id S1729947AbgGMNXB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 13 Jul 2020 09:23:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47540 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729961AbgGMNXF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jul 2020 09:23:05 -0400
-Received: from mail-ed1-x541.google.com (mail-ed1-x541.google.com [IPv6:2a00:1450:4864:20::541])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86EF6C061755;
-        Mon, 13 Jul 2020 06:23:04 -0700 (PDT)
-Received: by mail-ed1-x541.google.com with SMTP id z17so13651943edr.9;
-        Mon, 13 Jul 2020 06:23:04 -0700 (PDT)
+        with ESMTP id S1729941AbgGMNW7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jul 2020 09:22:59 -0400
+Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69FE8C061794;
+        Mon, 13 Jul 2020 06:22:59 -0700 (PDT)
+Received: by mail-ej1-x643.google.com with SMTP id lx13so17142431ejb.4;
+        Mon, 13 Jul 2020 06:22:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=Od1uE36VZZcVYLn0QSD8NtzuxQxsefbubYclE4nvIkY=;
-        b=e7SRK/dskLXTgSYSlQ2o7Q4GwDjhmiP9X6vyk4ZKZEDu/qgVrpUvAqt9H0nYD8+O6G
-         tS9IxLNysoC0AJatrwEo44o4SAxid1FlUkUtT0nJX2TYfohWaenFiCs0a+bBJoPZ4PrQ
-         olkimNUMz/4c2WhWYTiMwpSVPAxiMCziBsQ1kHrgdn1HkxRuu4IMfbWw8/CJ3QROjQOj
-         kmSCNf1U1Jh9w/9rKB7mUu3WCIIc/quDAXu4oBtvdAJaugj9OAo5B/Olh3qgInDhjr0W
-         kZ9WFKb+55kYxv090/oS2lbVBG/glVDJxIHRBePzwE74mGECDU7wwOU4oYCIY1k3Arja
-         1khg==
+        bh=tczYCFdS3/cJq1nOdmzHC0tWFoQ+QsE/iL94vlXviGU=;
+        b=R7fqTYEesFmsZR8cnid/s+sdOfqo+j8ibuFpW6vdh+YRJ4gFsdHihYvV7hMXEzRzNr
+         rK3uboChKJI7yf3viTPCBaYKlheR1K2wc/wMdcX2HSqtpwuBxu0tebqqqOOIoKKpgx+5
+         D1VNntZQRD0d3UDkQBYV52zN2qtwENMN+7O/Cj0Z8NSmPYtH8UubaeaauJJT/6ouVBrc
+         Po7kfwVfE7DiPOIjQ8rutCzl81VQLaiFYGVNDSkVvGAXzwIBy0aS8DQ9g2JYwc0wl8iq
+         hy/o1FYEnUYXOAKctA5QN4uPHAoi9IVixu+b57RxQJcYwxUljfR7YDA2zk5ew9UqaIUv
+         J43g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=Od1uE36VZZcVYLn0QSD8NtzuxQxsefbubYclE4nvIkY=;
-        b=oxk7hlzXsUbGG75z38ScGWBp/6FacRpa79zDqNQk2XOvw3fQyjchVgHYtaugniEmj0
-         89iXDs6pti7Gw4sPfYtAshmHFrfjduV4VgHy9j1A8KoMe7/joRfPZHBvYyN11XA+Iajc
-         nZ56SwEFf3MnAuS37lSPzumnikNb50nKPH3AJfbCKMmR4Q3iAnFW71jMn89Ej8vJ5McN
-         ROhl1gIwy69PVW8hk6tPj4/WcX8sDKfJft7UYxafNuDjf7Y8rpK3KXw/amFg9oF/LtEA
-         7CKAeucgFtu17nG2xRhq6djMpyEMFUyauy5420P1OgEPA7qidRLcKVGm6DpcVtoYQezX
-         McQg==
-X-Gm-Message-State: AOAM53134dvafH8epqpW2a4mXN2dFDSW/nzaAEjNCXST9IAAPLjWBQ5m
-        Fdx7KynyGBEc4rdPxbLDuZY=
-X-Google-Smtp-Source: ABdhPJxpNR6rRgsPQS5aE3w3IDF8VLZSwN1M0ZM5Th2IbtF+Dj00cjehb0zQNQGy6XXrKpQDJRU0Hw==
-X-Received: by 2002:aa7:da8a:: with SMTP id q10mr29025674eds.139.1594646583291;
-        Mon, 13 Jul 2020 06:23:03 -0700 (PDT)
+        bh=tczYCFdS3/cJq1nOdmzHC0tWFoQ+QsE/iL94vlXviGU=;
+        b=GZZeEIUgL7clR1Gpq7RL0h+xP5EYqjF3zDndw8WHyTxKEtP/FjLpkikVR15NGCjUE/
+         MVlwjZJ6U65uoh576mKPsKN6hI3zu4MWBxHf/z/f5cVbh5MOGNQY0wF7LStclUemWtZn
+         fv8NOI00wqwU7q87bMQieGm8g/Zzr2tWruifbivsWTxim6/VHeJrOpp/jccUr4JlO2m0
+         VuHY73FIY4rXtCiKuR7UMOypizCUhVTUsL2L852ghvk4i542xovtzXpT5HohWlxjmTgX
+         WWJH32nkcr1wIEB0NS5jG1XT+tfPVjZeWN2pLu3gZZnMmOQlB5eWX9fsx4NBykPn4gy9
+         HBfw==
+X-Gm-Message-State: AOAM531lcjTvnfPb/t4C+/YE2fmqThdrmXdkaQhWJNS3ZNmTwyIxI9Dy
+        BqLp+5RB5f1RY9lnmbk8EEg=
+X-Google-Smtp-Source: ABdhPJyi7kdKnWKidhuD/7S0rUnuO695mifL4kwQQRb/qclwiEU741xbCG8OqefW8KfutA+tJMt2Xg==
+X-Received: by 2002:a17:906:ef2:: with SMTP id x18mr71342560eji.547.1594646578134;
+        Mon, 13 Jul 2020 06:22:58 -0700 (PDT)
 Received: from net.saheed (54007186.dsl.pool.telekom.hu. [84.0.113.134])
-        by smtp.gmail.com with ESMTPSA id n9sm11806540edr.46.2020.07.13.06.23.02
+        by smtp.gmail.com with ESMTPSA id n9sm11806540edr.46.2020.07.13.06.22.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Jul 2020 06:23:02 -0700 (PDT)
+        Mon, 13 Jul 2020 06:22:57 -0700 (PDT)
 From:   "Saheed O. Bolarinwa" <refactormyself@gmail.com>
-To:     helgaas@kernel.org, Chas Williams <3chas3@gmail.com>
+To:     helgaas@kernel.org, Jean Delvare <jdelvare@suse.com>
 Cc:     "Saheed O. Bolarinwa" <refactormyself@gmail.com>,
         bjorn@helgaas.com, skhan@linuxfoundation.org,
         linux-pci@vger.kernel.org,
         linux-kernel-mentees@lists.linuxfoundation.org,
-        linux-kernel@vger.kernel.org,
-        linux-atm-general@lists.sourceforge.net, netdev@vger.kernel.org
-Subject: [RFC PATCH 19/35] atm: Change PCIBIOS_SUCCESSFUL to 0
-Date:   Mon, 13 Jul 2020 14:22:31 +0200
-Message-Id: <20200713122247.10985-20-refactormyself@gmail.com>
+        linux-kernel@vger.kernel.org, linux-i2c@vger.kernel.org
+Subject: [RFC PATCH 15/35] i2c/busses: Tidy Success/Failure checks
+Date:   Mon, 13 Jul 2020 14:22:27 +0200
+Message-Id: <20200713122247.10985-16-refactormyself@gmail.com>
 X-Mailer: git-send-email 2.18.2
 In-Reply-To: <20200713122247.10985-1-refactormyself@gmail.com>
 References: <20200713122247.10985-1-refactormyself@gmail.com>
@@ -76,67 +75,87 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In reference to the PCI spec (Chapter 2), PCIBIOS* is an x86 concept.
-Their scope should be limited within arch/x86.
-
-Change all PCIBIOS_SUCCESSFUL to 0
+Remove unnecessary check for 0.
 
 Signed-off-by: "Saheed O. Bolarinwa" <refactormyself@gmail.com>
 ---
- drivers/atm/iphase.c | 4 ++--
- drivers/atm/lanai.c  | 6 +++---
- 2 files changed, 5 insertions(+), 5 deletions(-)
+This patch depends on PATCH 15/35
 
-diff --git a/drivers/atm/iphase.c b/drivers/atm/iphase.c
-index 8c7a996d1f16..b01cc491540d 100644
---- a/drivers/atm/iphase.c
-+++ b/drivers/atm/iphase.c
-@@ -2296,12 +2296,12 @@ static int reset_sar(struct atm_dev *dev)
- 	iadev = INPH_IA_DEV(dev);  
- 	for(i=0; i<64; i++)  
- 	  if ((error = pci_read_config_dword(iadev->pci,  
--				i*4, &pci[i])) != PCIBIOS_SUCCESSFUL)  
-+				i*4, &pci[i])) != 0)
-   	      return error;  
- 	writel(0, iadev->reg+IPHASE5575_EXT_RESET);  
- 	for(i=0; i<64; i++)  
- 	  if ((error = pci_write_config_dword(iadev->pci,  
--					i*4, pci[i])) != PCIBIOS_SUCCESSFUL)  
-+					i*4, pci[i])) != 0)
- 	    return error;  
- 	udelay(5);  
- 	return 0;  
-diff --git a/drivers/atm/lanai.c b/drivers/atm/lanai.c
-index 645a6bc1df88..2b82ae30dd74 100644
---- a/drivers/atm/lanai.c
-+++ b/drivers/atm/lanai.c
-@@ -1098,7 +1098,7 @@ static void pcistatus_check(struct lanai_dev *lanai, int clearonly)
- 	u16 s;
- 	int result;
- 	result = pci_read_config_word(lanai->pci, PCI_STATUS, &s);
--	if (result != PCIBIOS_SUCCESSFUL) {
-+	if (result != 0) {
- 		printk(KERN_ERR DEV_LABEL "(itf %d): can't read PCI_STATUS: "
- 		    "%d\n", lanai->number, result);
- 		return;
-@@ -1109,7 +1109,7 @@ static void pcistatus_check(struct lanai_dev *lanai, int clearonly)
- 	if (s == 0)
- 		return;
- 	result = pci_write_config_word(lanai->pci, PCI_STATUS, s);
--	if (result != PCIBIOS_SUCCESSFUL)
-+	if (result != 0)
- 		printk(KERN_ERR DEV_LABEL "(itf %d): can't write PCI_STATUS: "
- 		    "%d\n", lanai->number, result);
- 	if (clearonly)
-@@ -1949,7 +1949,7 @@ static int lanai_pci_start(struct lanai_dev *lanai)
- 		return result;
- 	/* Set latency timer to zero as per lanai docs */
- 	result = pci_write_config_byte(pci, PCI_LATENCY_TIMER, 0);
--	if (result != PCIBIOS_SUCCESSFUL) {
-+	if (result != 0) {
- 		printk(KERN_ERR DEV_LABEL "(itf %d): can't write "
- 		    "PCI_LATENCY_TIMER: %d\n", lanai->number, result);
- 		return -EINVAL;
+ drivers/i2c/busses/i2c-ali15x3.c |  5 ++---
+ drivers/i2c/busses/i2c-nforce2.c |  3 +--
+ drivers/i2c/busses/i2c-sis5595.c | 15 +++++----------
+ 3 files changed, 8 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/i2c/busses/i2c-ali15x3.c b/drivers/i2c/busses/i2c-ali15x3.c
+index 359ee3e0864a..c9e779cc184e 100644
+--- a/drivers/i2c/busses/i2c-ali15x3.c
++++ b/drivers/i2c/busses/i2c-ali15x3.c
+@@ -167,11 +167,10 @@ static int ali15x3_setup(struct pci_dev *ALI15X3_dev)
+ 	if(force_addr) {
+ 		dev_info(&ALI15X3_dev->dev, "forcing ISA address 0x%04X\n",
+ 			ali15x3_smba);
+-		if (0 != pci_write_config_word(ALI15X3_dev,
+-								SMBBA,
++		if (pci_write_config_word(ALI15X3_dev, SMBBA,
+ 								ali15x3_smba))
+ 			goto error;
+-		if (0 != pci_read_config_word(ALI15X3_dev,
++		if (pci_read_config_word(ALI15X3_dev,
+ 								SMBBA, &a))
+ 			goto error;
+ 		if ((a & ~(ALI15X3_SMB_IOSIZE - 1)) != ali15x3_smba) {
+diff --git a/drivers/i2c/busses/i2c-nforce2.c b/drivers/i2c/busses/i2c-nforce2.c
+index 385f4f446f36..54d2985b7aaf 100644
+--- a/drivers/i2c/busses/i2c-nforce2.c
++++ b/drivers/i2c/busses/i2c-nforce2.c
+@@ -327,8 +327,7 @@ static int nforce2_probe_smb(struct pci_dev *dev, int bar, int alt_reg,
+ 		/* Older incarnations of the device used non-standard BARs */
+ 		u16 iobase;
+ 
+-		if (pci_read_config_word(dev, alt_reg, &iobase)
+-		    != 0) {
++		if (pci_read_config_word(dev, alt_reg, &iobase)) {
+ 			dev_err(&dev->dev, "Error reading PCI config for %s\n",
+ 				name);
+ 			return -EIO;
+diff --git a/drivers/i2c/busses/i2c-sis5595.c b/drivers/i2c/busses/i2c-sis5595.c
+index fbe3ee31eae3..b016f48519d3 100644
+--- a/drivers/i2c/busses/i2c-sis5595.c
++++ b/drivers/i2c/busses/i2c-sis5595.c
+@@ -175,11 +175,9 @@ static int sis5595_setup(struct pci_dev *SIS5595_dev)
+ 
+ 	if (force_addr) {
+ 		dev_info(&SIS5595_dev->dev, "forcing ISA address 0x%04X\n", sis5595_base);
+-		if (pci_write_config_word(SIS5595_dev, ACPI_BASE, sis5595_base)
+-		    != 0)
++		if (pci_write_config_word(SIS5595_dev, ACPI_BASE, sis5595_base))
+ 			goto error;
+-		if (pci_read_config_word(SIS5595_dev, ACPI_BASE, &a)
+-		    != 0)
++		if (pci_read_config_word(SIS5595_dev, ACPI_BASE, &a))
+ 			goto error;
+ 		if ((a & ~(SIS5595_EXTENT - 1)) != sis5595_base) {
+ 			/* doesn't work for some chips! */
+@@ -188,16 +186,13 @@ static int sis5595_setup(struct pci_dev *SIS5595_dev)
+ 		}
+ 	}
+ 
+-	if (pci_read_config_byte(SIS5595_dev, SIS5595_ENABLE_REG, &val)
+-	    != 0)
++	if (pci_read_config_byte(SIS5595_dev, SIS5595_ENABLE_REG, &val))
+ 		goto error;
+ 	if ((val & 0x80) == 0) {
+ 		dev_info(&SIS5595_dev->dev, "enabling ACPI\n");
+-		if (pci_write_config_byte(SIS5595_dev, SIS5595_ENABLE_REG, val | 0x80)
+-		    != 0)
++		if (pci_write_config_byte(SIS5595_dev, SIS5595_ENABLE_REG, val | 0x80))
+ 			goto error;
+-		if (pci_read_config_byte(SIS5595_dev, SIS5595_ENABLE_REG, &val)
+-		    != 0)
++		if (pci_read_config_byte(SIS5595_dev, SIS5595_ENABLE_REG, &val))
+ 			goto error;
+ 		if ((val & 0x80) == 0) {
+ 			/* doesn't work for some chips? */
 -- 
 2.18.2
 
