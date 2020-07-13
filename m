@@ -8,65 +8,65 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54107C4361A
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Jul 2020 13:23:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80D65C433E5
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Jul 2020 13:23:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2BFF0206F4
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Jul 2020 13:23:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5F10B20771
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Jul 2020 13:23:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NJ0hp1NN"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hA2Advwg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729856AbgGMNXi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 13 Jul 2020 09:23:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47634 "EHLO
+        id S1730021AbgGMNXV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 13 Jul 2020 09:23:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47614 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730033AbgGMNXW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jul 2020 09:23:22 -0400
-Received: from mail-ej1-x641.google.com (mail-ej1-x641.google.com [IPv6:2a00:1450:4864:20::641])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 296C4C08C5DE;
-        Mon, 13 Jul 2020 06:23:22 -0700 (PDT)
-Received: by mail-ej1-x641.google.com with SMTP id n26so17186390ejx.0;
-        Mon, 13 Jul 2020 06:23:22 -0700 (PDT)
+        with ESMTP id S1729821AbgGMNXR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jul 2020 09:23:17 -0400
+Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58A83C061794;
+        Mon, 13 Jul 2020 06:23:17 -0700 (PDT)
+Received: by mail-ej1-x643.google.com with SMTP id y10so17169951eje.1;
+        Mon, 13 Jul 2020 06:23:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=Q0DdfK+UqqJL8YcIl12EqmY6PSz1+/PN6RVfEMMF3Q4=;
-        b=NJ0hp1NNApuQU8bw6tjVSWHitDg1vIDtFUaeiDmwx+ow60WBbHEGBeAnEHj2j8qP02
-         osWR34BF9/0x8PP9hyxdf/f30PfvtWe+O+aml4jtazke07Tlc8rIfTA/0UyD53kV/T0S
-         rWlpmKn5qM3eaFqMksBujvyYkHysClu8JPEN4xHZOp3xZ5xRgzdKkinh7WhCxvY5JY3Y
-         fi7mzT8DuGLOGVZz2ptsFk4NskphYU8XMgi3rCJu7VPwP/nDmOJP6fv3IlmWScA3Jgip
-         NZMp29fPPm1OhZBhqAwiUhNo+exFWu5DYVBfDT19KBqUrNYPzkbNZqWnzLY0/B5iuezX
-         3aBQ==
+        bh=srnOr+oWrll92VFUDRSxv+y9DkOgl2yMHs+bARSxTtw=;
+        b=hA2Advwg9sPYlSG9PVyUZ2WxXF2yoKE51xpWubaLGvH0fSblpcRpOX7e6gGzjKV04x
+         PMFVOsT0MkAAWHx/FNBm7u+ko/ASFkGJxc26fYHAg1vB6uPjWj33Ye1n4cHZrpXXbaRx
+         nhZM8JRv3BAsf3daoqySITIQioWtOixUOHScO7N/T+1fau8RNPEchPtffv6+cIY97p0A
+         eAJh12CTy0jakb/slMUfM+jjHRINUVVY3p9U6FLZ1gVHvv7eFB+K1zWa5We3M/VrwWjy
+         YYy9yms4BEUIE0AFFnl6IE4d3AA4Egtge7EmhM4QLUcjfFMwcjEwHeibMNPRKjAO2aqm
+         rosw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=Q0DdfK+UqqJL8YcIl12EqmY6PSz1+/PN6RVfEMMF3Q4=;
-        b=mTFbGknyNZ9ExnaULfz7Ix6NSGub33vS45L3Pnmw/b2uNeEdjAyWD/UfAI+LYBHxEv
-         LwRVoHx/3U7lBkLcyL1AlIgj5ZkNao0lIZqn3bsBOErxcpDXZllqwCCrGAeXguCvOz/G
-         5kD7oz5AGOutffnrRkYC8yDvfknRC9TH1umc6vYulAZlx8FlBTu8L7h+2eHklZ6yF9Wm
-         5F73dagXNKjDuQt7ZCGRvStFcD0YlrFx1nBPRK5iOaeX4iDEBn78K+eGv3qwAwTGS1lp
-         kSb4KwbfR+nHh5IIxN8jXs0jWW6WqX34G+ExC1E4YqwrNwu67b9RKvJWM4hjVzv9RRUT
-         ZuDQ==
-X-Gm-Message-State: AOAM532YPIyu38NF5RYEyJN3K9/IF4RAQD9BE2cLY6AkTFb8GvtnhRFM
-        hNBOBZfxq6GC09BK5UaaO1gtB825jeqzCA==
-X-Google-Smtp-Source: ABdhPJwnEBexXFGQz22NWjdykgIfoLXjIHNBfzIIKQCDH2Im79N2tI7W18NL0nmBRmj7cAZNYPAT3w==
-X-Received: by 2002:a17:906:9387:: with SMTP id l7mr70963250ejx.274.1594646600908;
-        Mon, 13 Jul 2020 06:23:20 -0700 (PDT)
+        bh=srnOr+oWrll92VFUDRSxv+y9DkOgl2yMHs+bARSxTtw=;
+        b=hGGltrDQCz4rJiNdm+QMwbqH3VMr1GAepcuh2BhT1zWejKcPdyOP8etxWCp6AlTCZp
+         bTUKJ5QUkvXjUHiXnobW3gXdvzMri9alN6HEyM1bcCeK0J1+MYcXh+Rchyfl5QDo4zid
+         GwjRJlBl21LuvY8l9jtidppqg/ikK+X2M9tuMoOCN+gSbepCyME4kSSdxgWK2lglkh4C
+         4Qdt9kIR+xVXZpU2CIEMCoCrajo4sfE3eh++HRAR4RGMbhjcE5xUPj3FmqzUqTvyZGNL
+         xS6a69yszMdh0nHUXArnnJ34a+ACK322fVr06GWjKomIvypDkQB+9FlbhqxqsIh0d8zF
+         /SeQ==
+X-Gm-Message-State: AOAM533uFVmwy6Q4VfmJ8d5Q0bW4dOvZhQc4/BbSeEy7l2LpVqNHcs67
+        k9bMkXLgO0fMilrWUFpoLTU=
+X-Google-Smtp-Source: ABdhPJzvG9XEXrWjvWtZEu7yzcF9rZLh2zOC+Ra/3eYp8pyZIsCiFH715AqPn92Kt0ycrF58CyNztg==
+X-Received: by 2002:a17:906:743:: with SMTP id z3mr9388063ejb.216.1594646596068;
+        Mon, 13 Jul 2020 06:23:16 -0700 (PDT)
 Received: from net.saheed (54007186.dsl.pool.telekom.hu. [84.0.113.134])
-        by smtp.gmail.com with ESMTPSA id n9sm11806540edr.46.2020.07.13.06.23.19
+        by smtp.gmail.com with ESMTPSA id n9sm11806540edr.46.2020.07.13.06.23.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Jul 2020 06:23:20 -0700 (PDT)
+        Mon, 13 Jul 2020 06:23:15 -0700 (PDT)
 From:   "Saheed O. Bolarinwa" <refactormyself@gmail.com>
-To:     helgaas@kernel.org, Russell King <linux@armlinux.org.uk>
+To:     helgaas@kernel.org, Thomas Bogendoerfer <tsbogend@alpha.franken.de>
 Cc:     "Saheed O. Bolarinwa" <refactormyself@gmail.com>,
         bjorn@helgaas.com, skhan@linuxfoundation.org,
         linux-pci@vger.kernel.org,
         linux-kernel-mentees@lists.linuxfoundation.org,
-        linux-kernel@vger.kernel.org
-Subject: [RFC PATCH 33/35] arm/PCI: Tidy Success/Failure checks
-Date:   Mon, 13 Jul 2020 14:22:45 +0200
-Message-Id: <20200713122247.10985-34-refactormyself@gmail.com>
+        linux-kernel@vger.kernel.org, linux-mips@vger.kernel.org
+Subject: [RFC PATCH 29/35] mips: Tidy Success/Failure checks
+Date:   Mon, 13 Jul 2020 14:22:41 +0200
+Message-Id: <20200713122247.10985-30-refactormyself@gmail.com>
 X-Mailer: git-send-email 2.18.2
 In-Reply-To: <20200713122247.10985-1-refactormyself@gmail.com>
 References: <20200713122247.10985-1-refactormyself@gmail.com>
@@ -79,24 +79,63 @@ Remove unnecessary check for 0.
 
 Signed-off-by: "Saheed O. Bolarinwa" <refactormyself@gmail.com>
 ---
-This patch depends on PATCH 32/35
+This patch depends on PATCH 28/35
 
- arch/arm/mach-cns3xxx/pcie.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ arch/mips/pci/ops-bcm63xx.c  | 2 +-
+ arch/mips/pci/pci-ar2315.c   | 5 ++---
+ arch/mips/txx9/generic/pci.c | 3 +--
+ 3 files changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/arch/arm/mach-cns3xxx/pcie.c b/arch/arm/mach-cns3xxx/pcie.c
-index 7020071a2dc5..c249d4cbf4f0 100644
---- a/arch/arm/mach-cns3xxx/pcie.c
-+++ b/arch/arm/mach-cns3xxx/pcie.c
-@@ -92,7 +92,7 @@ static int cns3xxx_pci_read_config(struct pci_bus *bus, unsigned int devfn,
+diff --git a/arch/mips/pci/ops-bcm63xx.c b/arch/mips/pci/ops-bcm63xx.c
+index 3e88e4869f37..f2810af4fa24 100644
+--- a/arch/mips/pci/ops-bcm63xx.c
++++ b/arch/mips/pci/ops-bcm63xx.c
+@@ -295,7 +295,7 @@ static int fake_cb_bridge_write(int where, int size, u32 val)
+ 	int ret;
  
- 	ret = pci_generic_config_read(bus, devfn, where, size, val);
+ 	ret = fake_cb_bridge_read((where & ~0x3), 4, &data);
+-	if (ret != 0)
++	if (ret)
+ 		return ret;
  
--	if (ret == 0 && !bus->number && !devfn &&
-+	if (!ret && !bus->number && !devfn &&
- 	    (where & 0xffc) == PCI_CLASS_REVISION)
- 		/*
- 		 * RC's class is 0xb, but Linux PCI driver needs 0x604
+ 	data = preprocess_write(data, val, where, size);
+diff --git a/arch/mips/pci/pci-ar2315.c b/arch/mips/pci/pci-ar2315.c
+index 2268b63d20e8..c2b9e62fbc18 100644
+--- a/arch/mips/pci/pci-ar2315.c
++++ b/arch/mips/pci/pci-ar2315.c
+@@ -259,8 +259,7 @@ static int ar2315_pci_cfg_access(struct ar2315_pci_ctrl *apc, unsigned devfn,
+ 	ar2315_pci_reg_mask(apc, AR2315_PCI_MISC_CONFIG, AR2315_PCIMISC_CFG_SEL,
+ 			    0);
+ 
+-	return isr & AR2315_PCI_INT_ABORT ? PCIBIOS_DEVICE_NOT_FOUND :
+-					    0;
++	return isr & AR2315_PCI_INT_ABORT ? PCIBIOS_DEVICE_NOT_FOUND : 0;
+ }
+ 
+ static inline int ar2315_pci_local_cfg_rd(struct ar2315_pci_ctrl *apc,
+@@ -311,7 +310,7 @@ static int ar2315_pci_host_setup(struct ar2315_pci_ctrl *apc)
+ 	u32 id;
+ 
+ 	res = ar2315_pci_local_cfg_rd(apc, devfn, PCI_VENDOR_ID, &id);
+-	if (res != 0 || id != AR2315_PCI_HOST_DEVID)
++	if (res || id != AR2315_PCI_HOST_DEVID)
+ 		return -ENODEV;
+ 
+ 	/* Program MBARs */
+diff --git a/arch/mips/txx9/generic/pci.c b/arch/mips/txx9/generic/pci.c
+index bdff45b6b57d..9da38f8fa036 100644
+--- a/arch/mips/txx9/generic/pci.c
++++ b/arch/mips/txx9/generic/pci.c
+@@ -61,8 +61,7 @@ int __init txx9_pci66_check(struct pci_controller *hose, int top_bus,
+ 		if (PCI_FUNC(pci_devfn))
+ 			continue;
+ 		if (early_read_config_word(hose, top_bus, current_bus,
+-					   pci_devfn, PCI_VENDOR_ID, &vid) !=
+-		    0)
++					   pci_devfn, PCI_VENDOR_ID, &vid))
+ 			continue;
+ 		if (vid == 0xffff)
+ 			continue;
 -- 
 2.18.2
 
