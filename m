@@ -2,125 +2,84 @@ Return-Path: <SRS0=O4QG=AY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63553C433E1
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Jul 2020 18:35:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89933C433E0
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Jul 2020 19:44:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 394A120773
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Jul 2020 18:35:46 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HVHCGlJR"
+	by mail.kernel.org (Postfix) with ESMTP id 6F05220758
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Jul 2020 19:44:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726306AbgGMSfp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 13 Jul 2020 14:35:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39584 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726058AbgGMSfp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jul 2020 14:35:45 -0400
-Received: from mail-oi1-x241.google.com (mail-oi1-x241.google.com [IPv6:2607:f8b0:4864:20::241])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50679C061755;
-        Mon, 13 Jul 2020 11:35:45 -0700 (PDT)
-Received: by mail-oi1-x241.google.com with SMTP id e4so11835306oib.1;
-        Mon, 13 Jul 2020 11:35:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=pfifxRNrRUR2T4uYGwKiE9RMe487XzOwMSNlNFzce1k=;
-        b=HVHCGlJRjYfmXT7uQQTMqziIBypODRZa7gCfW4kTMKTzzuv3te+ebl9nfo5ikRkY3g
-         ZZBk3lmPazFumhe2INJfkq16MDSGwl3YCJbANDNbzBuY440EXwvbyuBmTTeWi27pcykR
-         m9FfjxokzGaBlJ4wGVcVYTMGaZ2uin1SB7zCs+pU/gAj8SGFpjX4B0mf3i5NSVriEFty
-         713nUE12sid3xqDCL4x2RfdeME6g9f674IZLzWyNgUGKfpplb0VOozAdowMbcfVrLu4/
-         M91CXZTtp1kK1zfoa5Bh0AM+tWHWWrIev+fp8655BD3GtZtFknvVp93t1EYQ0apE+d23
-         kKhA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
-         :date:user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=pfifxRNrRUR2T4uYGwKiE9RMe487XzOwMSNlNFzce1k=;
-        b=IlfE3o/MAlf2nSFY5uJZjnNzlUXdoPqereaz6dRBBdkoDyqgMHsoN8qaO1OQUqe3Uk
-         9qd/DMhUkF7L28DeAD1YgGe4d2PlLxw1KDU9Lzqp6FkegFUFonvQ8N85beXkPim2ohM6
-         jfz+YCk1Ujc/AXEdkrUMZ7rbBk3JZUwqpILOksex0ppL/Oy4FEjU3DcvQXO67B9ryCAS
-         I8naNuADhf2sb384Mk8aJS4jQeULwpasxhL1z9GS/DyoVIHj3MKXLTmZ0P8yakfS/Csm
-         9gHiMxrWaB+wTz9ekPp/ZdEUC/AfMUvHTaH5bqvJO6I0s4tkbHtpEAhDsZCCNwCwoSNU
-         HK3w==
-X-Gm-Message-State: AOAM531l62gD34w9kLLFqPOFofaBrnyF2FXmIc2ZKAxK9dl43meOg5ox
-        kyEWtAyW3KgRMFWtTYUeAs+xCjl4
-X-Google-Smtp-Source: ABdhPJz3GQ+85yUO/+PkLfsc+YTRMOpRwB45jn1PhyabY7CvTaSczcOYsYChj491oYeq1eXtgklM+g==
-X-Received: by 2002:aca:4e16:: with SMTP id c22mr648602oib.53.1594665344656;
-        Mon, 13 Jul 2020 11:35:44 -0700 (PDT)
-Received: from localhost.localdomain (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
-        by smtp.gmail.com with ESMTPSA id n84sm2957528oih.9.2020.07.13.11.35.43
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 13 Jul 2020 11:35:44 -0700 (PDT)
-Subject: Re: [RFC PATCH 02/35] ssb: Change PCIBIOS_SUCCESSFUL to 0
-To:     Saheed Bolarinwa <refactormyself@gmail.com>, helgaas@kernel.org,
-        Michael Buesch <m@bues.ch>
-Cc:     bjorn@helgaas.com, skhan@linuxfoundation.org,
-        linux-pci@vger.kernel.org,
-        linux-kernel-mentees@lists.linuxfoundation.org,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-References: <20200713122247.10985-1-refactormyself@gmail.com>
- <20200713122247.10985-3-refactormyself@gmail.com>
- <70e57af0-6a8c-a893-67c9-0181af16ae2b@lwfinger.net>
- <78b52ad5-015f-4452-0cd0-dbb2c8597672@gmail.com>
-From:   Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <886881ac-37c6-596e-5f68-07242ed1d2e0@lwfinger.net>
-Date:   Mon, 13 Jul 2020 13:35:43 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S1726332AbgGMTow (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 13 Jul 2020 15:44:52 -0400
+Received: from mga05.intel.com ([192.55.52.43]:1454 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726150AbgGMTow (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 13 Jul 2020 15:44:52 -0400
+IronPort-SDR: tusoCMWoQYjktk/tfw+FL1/vBcz5qpxh4421kz3YHcPgWvY/7mMUeGt6UsXjP+prD8R0dc0CNz
+ Zy5SjMiuayLw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9681"; a="233561346"
+X-IronPort-AV: E=Sophos;i="5.75,348,1589266800"; 
+   d="scan'208";a="233561346"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jul 2020 12:44:42 -0700
+IronPort-SDR: ZtpPevMLxKEDVPqfS8nlOT3z7v3Ryrn9YI2Ivmi8dhFjmEBPzQ9GY8+1+OgJFFTDDJDseYBLND
+ hseLdfM67N1w==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.75,348,1589266800"; 
+   d="scan'208";a="316159780"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by orsmga008.jf.intel.com with ESMTP; 13 Jul 2020 12:44:39 -0700
+Received: by black.fi.intel.com (Postfix, from userid 1003)
+        id 418BDCB; Mon, 13 Jul 2020 22:44:38 +0300 (EEST)
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>, x86@kernel.org,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        "H. Peter Anvin" <hpa@zytor.com>, linux-pci@vger.kernel.org
+Cc:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 2/2] x86/PCI: Describe @reg for type1_access_ok()
+Date:   Mon, 13 Jul 2020 22:44:37 +0300
+Message-Id: <20200713194437.11325-2-andriy.shevchenko@linux.intel.com>
+X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20200713194437.11325-1-andriy.shevchenko@linux.intel.com>
+References: <20200713194437.11325-1-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <78b52ad5-015f-4452-0cd0-dbb2c8597672@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 7/13/20 2:13 PM, Saheed Bolarinwa wrote:
-> Hello Larry,
-> 
-> On 7/13/20 7:16 PM, Larry Finger wrote:
->> On 7/13/20 7:22 AM, Saheed O. Bolarinwa wrote:
->>> In reference to the PCI spec (Chapter 2), PCIBIOS* is an x86 concept.
->>> Their scope should be limited within arch/x86.
->>>
->>> Change all PCIBIOS_SUCCESSFUL to 0
->>>
->>> Signed-off-by: "Saheed O. Bolarinwa" <refactormyself@gmail.com>
->>
->> Could you please tell me what difference this makes? It looks like source 
->> churn rather than a substantive change. The symbol is defined in pci.h and is 
->> used in many architures. Certainly, PCIBIOS_SUCCESSFUL indicates success even 
->> more clearly than 0 does.
->>
-> It is a trivial first step towards a probably significant task. I explained in 
-> the Cover Letter, I can see it didn't get through but I Cc linux-wireless 
-> (properly this time). Probably, too many addresses.
-> 
-> I have resent it. It is here 
-> https://lore.kernel.org/linux-wireless/20200713185559.31967-1-refactormyself@gmail.com/T/#u 
-> 
-> 
->> Why is your name inside quotes in your s-o-b?
->>
-> To keep me company before I get to know my way within the kernel.
-> 
-> I saw people with >2 names do it, so I did! Please let me know if it is odd.
-> 
+Describe missed parameter in documentation of type1_access_ok().
+Otherwise we get the following warning:
 
-Thank you for the explanations. The cover letter did help.
+  CHECK   arch/x86/pci/intel_mid_pci.c
+  CC      arch/x86/pci/intel_mid_pci.o
+  arch/x86/pci/intel_mid_pci.c:152: warning: Function parameter or member 'reg' not described in 'type1_access_ok'
 
-For both SSB and BMCA changes,
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ arch/x86/pci/intel_mid_pci.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
-
-Larry
+diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
+index d8af4787e616..f855e12d7bed 100644
+--- a/arch/x86/pci/intel_mid_pci.c
++++ b/arch/x86/pci/intel_mid_pci.c
+@@ -141,6 +141,7 @@ static int pci_device_update_fixed(struct pci_bus *bus, unsigned int devfn,
+  * type1_access_ok - check whether to use type 1
+  * @bus: bus number
+  * @devfn: device & function in question
++ * @reg: configuration register offset
+  *
+  * If the bus is on a Lincroft chip and it exists, or is not on a Lincroft at
+  * all, the we can go ahead with any reads & writes.  If it's on a Lincroft,
+-- 
+2.27.0
 
