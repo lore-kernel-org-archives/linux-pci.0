@@ -5,70 +5,70 @@ X-Spam-Level:
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7796BC433E0
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Jul 2020 13:22:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66A59C433FE
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Jul 2020 13:22:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4A34F20771
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Jul 2020 13:22:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3EACB2077D
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Jul 2020 13:22:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DOSHDGVm"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oDiXLMMy"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729722AbgGMNWj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 13 Jul 2020 09:22:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47460 "EHLO
+        id S1729924AbgGMNWx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 13 Jul 2020 09:22:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47510 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729873AbgGMNWj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jul 2020 09:22:39 -0400
-Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C43B5C061755;
-        Mon, 13 Jul 2020 06:22:38 -0700 (PDT)
-Received: by mail-ej1-x643.google.com with SMTP id p20so17105650ejd.13;
-        Mon, 13 Jul 2020 06:22:38 -0700 (PDT)
+        with ESMTP id S1729919AbgGMNWw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jul 2020 09:22:52 -0400
+Received: from mail-ej1-x641.google.com (mail-ej1-x641.google.com [IPv6:2a00:1450:4864:20::641])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B0F3C061755;
+        Mon, 13 Jul 2020 06:22:52 -0700 (PDT)
+Received: by mail-ej1-x641.google.com with SMTP id w6so17135306ejq.6;
+        Mon, 13 Jul 2020 06:22:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=z4DbCQASJpB18XYS7ktJTNc93Wbe31Dke4XqE2e1oq0=;
-        b=DOSHDGVmk30fZFiz3WKd7zMCSK69f3jEL1u8AsUJjxB2mBuvUr1qBHCx969bF8n9Q2
-         KtbdMAJyAt3EFUnpKPSIMJbXHWkN6pnl/9Tnrb3Gl0n+kYXCTO2h5BNyruT2BHFjgl+g
-         wH9iQCx1EI7m7ZrVqhRyZdNkYPv0uZXHNRXI4H3ZgM4nssEF6Z4+vhCyAINKoOna9COA
-         2vQ/UXMl3YhqVXxT1k4grDXlx/GMqUZZFWedx8icvuVMGE/cnpL+73qZzJoFpLnQEXqM
-         kKNEdCxwfmXyA7RuYT4PGHN4OQXUHW+RCFO60LXxoSfPzZmiOAwLoId6GJoDAnwMnMXf
-         6VkA==
+        bh=pbRPI5T6+CQlcjE3Ve13l43uBQozAmlKN702iYI4+CA=;
+        b=oDiXLMMy3B0TEHpeLRAA8vNGcLzfduiAQ+QAJdNsEevV2wQyULi7h1rsVLBU0QBd8y
+         4LjXS26jKI0uEsMZ3UdV/cg+efVFpxA8EO0JRJtvjwrfx9wDZNmSEAkJedi2rmcmkC6H
+         IrZ0p9UJ3D8udE+6aKJUN/HcHK/A5s+unm9YnDwz/kgjWAY0+6+vxGd4t9UQUf2g0TmK
+         gP/D4CB0DB+UwLz0Pn0O0iHxIM6U8KNLOmW6Kt5dW5DyPHBZqcrUWBZRRCIMAcxoUPBb
+         CaIinXEHJ1jIAy4Z+NwSNDbb1xsx4djmFhPfF2P68dm1y6syHOuz+H/xwyqAifzy/izP
+         Q7OQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=z4DbCQASJpB18XYS7ktJTNc93Wbe31Dke4XqE2e1oq0=;
-        b=VGODV6+w8pm3BED+mlkJTkLoiPiT2PQOix909FzobWVuQPJ/ckL+JClUhHHZrN/4Ng
-         JKXWFn8iUjL812r/K8SreK1/U8CtRqXLEpQpT9ZEg5CVKuHg4wVRpfoxaxe7ArX/rqtd
-         NbAD+iJr8dxnIgRDHrCieUZ0/Xjqabn4AU1NIqdP2bRFwSJeqDiO+9b16kth8JTImsiz
-         sxIe9cqF92le73rQT0XeUO72vXpnG2UGw/OiSGJB/yY5gsJSRo7YXox+2JYuYhjlS8tu
-         gc9lmSVwCd7kx22nfYBU2MRaA7q+EtNc1ORf5NJS5GxD0ERF1jclBxRgKXHAbypC5VbU
-         e17w==
-X-Gm-Message-State: AOAM530vhEVApyA+HZEwVHGAue2wJSX3nrd/BFWsX7WoIEx2nZWQHA67
-        ITTBn0MuGPSTVEkaNbhCt3U=
-X-Google-Smtp-Source: ABdhPJyNJ+2A+7vhlimkJ5sh3qnTf4AmYHcIfFpOxzTngMqwIMgJRuRgZYpxdl6ypR4zISe0e31EHw==
-X-Received: by 2002:a17:906:4dd4:: with SMTP id f20mr77154689ejw.170.1594646557469;
-        Mon, 13 Jul 2020 06:22:37 -0700 (PDT)
+        bh=pbRPI5T6+CQlcjE3Ve13l43uBQozAmlKN702iYI4+CA=;
+        b=iWVEICT2IPrayVtBvTqdIzLZ0WWle67cp2IjvypAsbzDt6GGq+9p5A8vH6pe1KgICt
+         2hMMrMUvZMEmNn07OtWWY9paIxUsZgHpd6UX3st6pIk2o4GVADkEZo07bZiWHf+tLjgh
+         9jRWtSeaMSKKsMCNcZHIqLStcjzl9m/Ink5/UuCLvDoxku9uF0z7uaW/hhR76eBTNCXD
+         oKKBb+H9Jil7F3J9XpYLgnKS/9Msy1nTf9qyBm9yVvN4REBT6EgSJn3OvpJ5fzn6tNoN
+         TUnRzT2sHyLgzB+vEqmt79ED8RWHhvwUmKJhNaT/O1DarcvwTBrxh76FnEkwD2FXQTFn
+         kRMg==
+X-Gm-Message-State: AOAM533V15iEqe275HrRuFymWZzIyb6BZ3yzNnO/AkCD98vXimDWXIW6
+        fmhkAboFWcVg+wdHK5vzVjc=
+X-Google-Smtp-Source: ABdhPJzLFoiuIquHARFKdvDNBo7G8zRr4UNzS9o5abkca8STc4RB8fWWh2+zFSwtRcAtOf/6bGWDbA==
+X-Received: by 2002:a17:906:cd19:: with SMTP id oz25mr72103030ejb.36.1594646570989;
+        Mon, 13 Jul 2020 06:22:50 -0700 (PDT)
 Received: from net.saheed (54007186.dsl.pool.telekom.hu. [84.0.113.134])
-        by smtp.gmail.com with ESMTPSA id n9sm11806540edr.46.2020.07.13.06.22.36
+        by smtp.gmail.com with ESMTPSA id n9sm11806540edr.46.2020.07.13.06.22.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Jul 2020 06:22:37 -0700 (PDT)
+        Mon, 13 Jul 2020 06:22:50 -0700 (PDT)
 From:   "Saheed O. Bolarinwa" <refactormyself@gmail.com>
-To:     helgaas@kernel.org, Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Juergen Gross <jgross@suse.com>,
-        Stefano Stabellini <sstabellini@kernel.org>
+To:     helgaas@kernel.org, Keith Busch <kbusch@kernel.org>,
+        Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>
 Cc:     "Saheed O. Bolarinwa" <refactormyself@gmail.com>,
         bjorn@helgaas.com, skhan@linuxfoundation.org,
         linux-pci@vger.kernel.org,
         linux-kernel-mentees@lists.linuxfoundation.org,
-        linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org
-Subject: [RFC PATCH 01/35] xen-pciback: Change PCIBIOS_SUCCESSFUL to 0
-Date:   Mon, 13 Jul 2020 14:22:13 +0200
-Message-Id: <20200713122247.10985-2-refactormyself@gmail.com>
+        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org
+Subject: [RFC PATCH 10/35] nvme-pci: Tidy Success/Failure checks
+Date:   Mon, 13 Jul 2020 14:22:22 +0200
+Message-Id: <20200713122247.10985-11-refactormyself@gmail.com>
 X-Mailer: git-send-email 2.18.2
 In-Reply-To: <20200713122247.10985-1-refactormyself@gmail.com>
 References: <20200713122247.10985-1-refactormyself@gmail.com>
@@ -77,29 +77,28 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In reference to the PCI spec (Chapter 2), PCIBIOS* is an x86 concept.
-Their scope should be limited within arch/x86.
-
-Change all PCIBIOS_SUCCESSFUL to 0
+Remove unnecessary check for 0.
 
 Signed-off-by: "Saheed O. Bolarinwa" <refactormyself@gmail.com>
 ---
- drivers/xen/xen-pciback/conf_space.c | 2 +-
+This patch depends on PATCH 09/35
+
+ drivers/nvme/host/pci.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/xen/xen-pciback/conf_space.c b/drivers/xen/xen-pciback/conf_space.c
-index 059de92aea7d..0e7577f16f78 100644
---- a/drivers/xen/xen-pciback/conf_space.c
-+++ b/drivers/xen/xen-pciback/conf_space.c
-@@ -130,7 +130,7 @@ static inline u32 merge_value(u32 val, u32 new_val, u32 new_val_mask,
- static int xen_pcibios_err_to_errno(int err)
- {
- 	switch (err) {
--	case PCIBIOS_SUCCESSFUL:
-+	case 0:
- 		return XEN_PCI_ERR_success;
- 	case PCIBIOS_DEVICE_NOT_FOUND:
- 		return XEN_PCI_ERR_dev_not_found;
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index d426efb53f44..a04f2d0375de 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -1185,7 +1185,7 @@ static void nvme_warn_reset(struct nvme_dev *dev, u32 csts)
+ 
+ 	result = pci_read_config_word(to_pci_dev(dev->dev), PCI_STATUS,
+ 				      &pci_status);
+-	if (result == 0)
++	if (!result)
+ 		dev_warn(dev->ctrl.device,
+ 			 "controller is down; will reset: CSTS=0x%x, PCI_STATUS=0x%hx\n",
+ 			 csts, pci_status);
 -- 
 2.18.2
 
