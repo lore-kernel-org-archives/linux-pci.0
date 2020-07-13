@@ -2,140 +2,119 @@ Return-Path: <SRS0=O4QG=AY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03715C433E4
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Jul 2020 16:45:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3E4EC433F1
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Jul 2020 16:55:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D39C120738
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Jul 2020 16:45:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BBBA72067D
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Jul 2020 16:55:25 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QThq7T/N"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730198AbgGMQpz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 13 Jul 2020 12:45:55 -0400
-Received: from foss.arm.com ([217.140.110.172]:46670 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729593AbgGMQpz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 13 Jul 2020 12:45:55 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 45EF21FB;
-        Mon, 13 Jul 2020 09:45:54 -0700 (PDT)
-Received: from e121166-lin.cambridge.arm.com (e121166-lin.cambridge.arm.com [10.1.196.255])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 45F953F7D8;
-        Mon, 13 Jul 2020 09:45:53 -0700 (PDT)
-Date:   Mon, 13 Jul 2020 17:45:51 +0100
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Anand Moon <linux.amoon@gmail.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Cc:     Shawn Lin <shawn.lin@rock-chips.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Simon Xue <xxm@rock-chips.com>,
-        linux-rockchip@lists.infradead.org
-Subject: Re: [PATCH 1/2] PCI: rockchip: =?utf-8?Q?E?=
- =?utf-8?B?bmFibGUgSU8gYmFzZSBhbmQgbGltaXQgcmVnaXN0ZXJz44CQ6K+35rOo5oSP?=
- =?utf-8?B?77yM6YKu5Lu255SxbGludXgtcm9ja2NoaXAtYm91bmNlcytzaGF3bi5saW49?=
- =?utf-8?B?cm9jay1jaGlwcy5jb21AbGlzdHMuaW5mcmFkZWFkLm9yZ+S7o+WPkeOAkQ==?=
-Message-ID: <20200713164550.GB29307@e121166-lin.cambridge.arm.com>
-References: <1590023130-137406-1-git-send-email-shawn.lin@rock-chips.com>
- <CANAwSgRXuMQaytB4BXL89JQAmU=XutBXj6iMhfKdZp3JwM9a4g@mail.gmail.com>
- <eb0acd3d-92d0-db00-78e4-8a17033f7f0a@rock-chips.com>
- <CANAwSgSzoc5TaO6ks9kdN7W+xDo1STbtsA0dUpsk8hqP6swkYg@mail.gmail.com>
- <20200708150135.GA4238@e121166-lin.cambridge.arm.com>
- <CANAwSgQO0yNOT6c+Bchfj08w1+aOqKzzTHMmrud-j7-Q=uDFjg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CANAwSgQO0yNOT6c+Bchfj08w1+aOqKzzTHMmrud-j7-Q=uDFjg@mail.gmail.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+        id S1730354AbgGMQzT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 13 Jul 2020 12:55:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52276 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730343AbgGMQzR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jul 2020 12:55:17 -0400
+Received: from mail-ed1-x542.google.com (mail-ed1-x542.google.com [IPv6:2a00:1450:4864:20::542])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88B9AC061755;
+        Mon, 13 Jul 2020 09:55:17 -0700 (PDT)
+Received: by mail-ed1-x542.google.com with SMTP id z17so14273825edr.9;
+        Mon, 13 Jul 2020 09:55:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=Vg5seoeyahxUOJ1a2of2OSXbNHc8+N6IhRiLy4XR8Ps=;
+        b=QThq7T/NhE4spupA48w9flKBPIUZMsJ+uy1wChEjqmd9cLUhJNeozt9BNv1EslTKul
+         9FzUYVh1psv92TVnmY05kmXxx7YOjo4zsDzZUATn9e4zIhaa/IU/l64wBzjWvrwDbAdT
+         yMVtRLi35HfG89vS3VWmX51PcL78Kumuk1a4Y+mb2X5zojZOcrMRGnHmOxMBpNMDphyn
+         WM6skKGt7eauq9PMF4fMY/WlqUw991iJ1Ytz1rk4085GlJxA7KXFCo39uIxgjXQ9fuJN
+         3z5H1aRueRaa67gizAbiKT/8yQ6CvE9P5qTMm1ibl2NWyp9eZcuTPcv+4+0VHPs7z+dy
+         9v1Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=Vg5seoeyahxUOJ1a2of2OSXbNHc8+N6IhRiLy4XR8Ps=;
+        b=p9vjV2MKRvlqajgS93jCup4a4AxeGVHwFFW7YNsz3qfg6oMFr8TqULjK49VgeYZIeV
+         3zVorZouWzQyOnQbSOmxf5I2j0IcMwU6RUmToHdmkmfxBNb0K1e5qu2HJVj4ncagDN6Y
+         NUn5MP72QBQ1NxMHk2p4qNLHmun/H/liXRM6WJR+VxUV/8SkS4kha7gmalUtcqIzXvyl
+         pwn9oRMz0QpojhV1/zFU3M0Wz+wA9jbgom4P7FGMdTLdpSwKDCK/eICWV2+YXtdSkkhW
+         ak4iOEPN8B9Pqvw7d+dNXZhGd5erxl9R3yaiPF+rmGQiuIm0zfPERr+x7zxrzA7WinL7
+         5RzQ==
+X-Gm-Message-State: AOAM532YEcQPprq+ll+v4y50QS9T7QBXFhDLJd7CT3QNAG960gK5QsFh
+        YHT3HZcMG2dzaOCpOGn0izM=
+X-Google-Smtp-Source: ABdhPJwiuJGYBhFGQzVTlihXWfzHv/j6TtpsUC2ukWbQvIDZs82x6qtdrhI4g0KTxQkpdk5UBwbo4Q==
+X-Received: by 2002:aa7:d58c:: with SMTP id r12mr365600edq.160.1594659316271;
+        Mon, 13 Jul 2020 09:55:16 -0700 (PDT)
+Received: from net.saheed (54007186.dsl.pool.telekom.hu. [84.0.113.134])
+        by smtp.gmail.com with ESMTPSA id w3sm11838938edq.65.2020.07.13.09.55.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 13 Jul 2020 09:55:15 -0700 (PDT)
+From:   "Saheed O. Bolarinwa" <refactormyself@gmail.com>
+To:     skhan@linuxfoundation.org, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org,
+        linux-kernel-mentees@lists.linuxfoundation.org,
+        linux-kernel@vger.kernel.org
+Cc:     Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
+Subject: [PATCH 12/14 v3] PCI/AER: Check the return value of pcie_capability_read_*()
+Date:   Mon, 13 Jul 2020 19:55:29 +0200
+Message-Id: <20200713175529.29715-5-refactormyself@gmail.com>
+X-Mailer: git-send-email 2.18.2
+In-Reply-To: <20200713175529.29715-1-refactormyself@gmail.com>
+References: <20200713175529.29715-1-refactormyself@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Jul 09, 2020 at 09:18:27AM +0530, Anand Moon wrote:
-> hi Lorenzo,
-> 
-> On Wed, 8 Jul 2020 at 20:31, Lorenzo Pieralisi
-> <lorenzo.pieralisi@arm.com> wrote:
-> >
-> > On Fri, May 22, 2020 at 05:59:14PM +0530, Anand Moon wrote:
-> > > Hi Shawn
-> > >
-> > > On Fri, 22 May 2020 at 08:30, Shawn Lin <shawn.lin@rock-chips.com> wrote:
-> > > >
-> > > >
-> > > > 在 2020/5/21 18:51, Anand Moon 写道:
-> > > > > Hi Shawn,
-> > > > >
-> > > > > On Thu, 21 May 2020 at 06:35, Shawn Lin <shawn.lin@rock-chips.com> wrote:
-> > > > >>
-> > > > >> According to RK3399 user manual, bit 9 in PCIE_RC_BAR_CONF should
-> > > > >> be set, otherwise accessing to IO base and limit registers would
-> > > > >> fail.
-> > > > >>
-> > > > >> [    0.411318] pci_bus 0000:00: root bus resource [bus 00-1f]
-> > > > >> [    0.411822] pci_bus 0000:00: root bus resource [mem 0xfa000000-0xfbdfffff]
-> > > > >> [    0.412440] pci_bus 0000:00: root bus resource [io  0x0000-0xfffff] (bus address [0xfbe00000-0xfbefffff])
-> > > > >> [    0.413665] pci 0000:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-> > > > >> [    0.414698] pci 0000:01:00.0: reg 0x10: initial BAR value 0x00000000 invalid
-> > > > >> [    0.415412] pci 0000:01:00.0: reg 0x18: initial BAR value 0x00000000 invalid
-> > > > >> [    0.418456] pci 0000:00:00.0: BAR 8: assigned [mem 0xfa000000-0xfa0fffff]
-> > > > >> [    0.419065] pci 0000:01:00.0: BAR 1: assigned [mem 0xfa000000-0xfa007fff pref]
-> > > > >> [    0.419728] pci 0000:01:00.0: BAR 6: assigned [mem 0xfa008000-0xfa00ffff pref]
-> > > > >> [    0.420377] pci 0000:01:00.0: BAR 0: no space for [io  size 0x0100]
-> > > > >> [    0.420935] pci 0000:01:00.0: BAR 0: failed to assign [io  size 0x0100]
-> > > > >> [    0.421526] pci 0000:01:00.0: BAR 2: no space for [io  size 0x0004]
-> > > > >> [    0.422084] pci 0000:01:00.0: BAR 2: failed to assign [io  size 0x0004]
-> > > > >> [    0.422687] pci 0000:00:00.0: PCI bridge to [bus 01]
-> > > > >> [    0.423135] pci 0000:00:00.0:   bridge window [mem 0xfa000000-0xfa0fffff]
-> > > > >> [    0.423794] pcieport 0000:00:00.0: enabling device (0000 -> 0002)
-> > > > >> [    0.424566] pcieport 0000:00:00.0: Signaling PME through PCIe PME interrupt
-> > > > >> [    0.425182] pci 0000:01:00.0: Signaling PME through PCIe PME interrupt
-> > > > >>
-> > > > >> 01:00.0 Class 0700: Device 1c00:3853 (rev 10) (prog-if 05)
-> > > > >>          Subsystem: Device 1c00:3853
-> > > > >>          Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-> > > > >>          Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-> > > > >>          Interrupt: pin A routed to IRQ 230
-> > > > >>          Region 0: I/O ports at <unassigned> [disabled]
-> > > > >>          Region 1: Memory at fa000000 (32-bit, prefetchable) [disabled] [size=32K]
-> > > > >>          Region 2: I/O ports at <unassigned> [disabled]
-> > > > >>          [virtual] Expansion ROM at fa008000 [disabled] [size=32K]
-> > > > >>
-> > > > >> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> > > > >> ---
-> > > > >
-> > > > > I have old development board Odroid N1 (RK3399),  It has onboard PCIe
-> > > > > 2 dual sata bridge.
-> > > > > I have tested this patch, but I am still getting following log on
-> > > > > Odroid N1 board.
-> > > > > Is their any more configuration needed for sata ports ?
-> > > >
-> > > > Thanks for testing. I made a mistake that it should be bit 19, so
-> > > > can you try using BIT(19)?
-> > > >
-> > >
-> > > Nop enable this bit dose not solve the issue see at my end.
-> > >
-> > > But as per RK3399 TMR  17.6.7.1.45 Root Complex BAR Configuration Register
-> > > their are many bits that are not tuned correctly.
-> > > I tried to set some bit to BAR Configuration register. but it dose not
-> > > work at my end.
-> > > I feel some more core configuration is missing.
-> > > If I have some update I will share it with you.
-> >
-> > What's the status of this discussion and therefore this series ?
-> >
-> > Thanks,
-> > Lorenzo
-> 
-> Well I have looked into the RK3399 TRM  (Rockchip RK3399 TRM V1.3 Part2.pdf)
-> There seems to be some core configuration missing, but I could not
-> resolve this on my board.
+From: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
 
-So what are we going to do with this series ?
+On failure pcie_capability_read_dword() sets it's last parameter,
+val to 0.
+However, with Patch 14/14, it is possible that val is set to ~0 on
+failure. This would introduce a bug because (x & x) == (~0 & x).
 
-Lorenzo
+This bug can be avoided if the return value of pcie_capability_read_word
+is checked to confirm success.
+
+Check the return value of pcie_capability_read_word() to ensure success.
+
+Suggested-by: Bjorn Helgaas <bjorn@helgaas.com>
+Signed-off-by: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
+---
+ drivers/pci/pcie/aer.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index 3acf56683915..f4beb47c622c 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -800,6 +800,7 @@ static bool is_error_source(struct pci_dev *dev, struct aer_err_info *e_info)
+ 	int aer = dev->aer_cap;
+ 	u32 status, mask;
+ 	u16 reg16;
++	int ret;
+ 
+ 	/*
+ 	 * When bus id is equal to 0, it might be a bad id
+@@ -828,8 +829,8 @@ static bool is_error_source(struct pci_dev *dev, struct aer_err_info *e_info)
+ 		return false;
+ 
+ 	/* Check if AER is enabled */
+-	pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &reg16);
+-	if (!(reg16 & PCI_EXP_AER_FLAGS))
++	ret = pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &reg16);
++	if (ret || !(reg16 & PCI_EXP_AER_FLAGS))
+ 		return false;
+ 
+ 	if (!aer)
+-- 
+2.18.2
+
