@@ -2,79 +2,104 @@ Return-Path: <SRS0=O4QG=AY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3EE2C433DF
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Jul 2020 13:14:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7796BC433E0
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Jul 2020 13:22:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CE3B9206F0
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Jul 2020 13:14:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4A34F20771
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Jul 2020 13:22:40 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DOSHDGVm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729545AbgGMNO3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 13 Jul 2020 09:14:29 -0400
-Received: from 8bytes.org ([81.169.241.247]:52542 "EHLO theia.8bytes.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729523AbgGMNO3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 13 Jul 2020 09:14:29 -0400
-Received: by theia.8bytes.org (Postfix, from userid 1000)
-        id 9B18D36B; Mon, 13 Jul 2020 15:14:27 +0200 (CEST)
-Date:   Mon, 13 Jul 2020 15:14:26 +0200
-From:   Joerg Roedel <joro@8bytes.org>
-To:     Robin Murphy <robin.murphy@arm.com>
-Cc:     hch@lst.de, iommu@lists.linux-foundation.org,
-        jonathan.lemon@gmail.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, baolu.lu@linux.intel.com,
-        dwmw2@infradead.org, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 2/2] iommu/dma: Avoid SAC address trick for PCIe devices
-Message-ID: <20200713131426.GQ27672@8bytes.org>
-References: <e583fc6dd1fb4ffc90310ff4372ee776f9cc7a3c.1594207679.git.robin.murphy@arm.com>
- <d412c292d222eb36469effd338e985f9d9e24cd6.1594207679.git.robin.murphy@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d412c292d222eb36469effd338e985f9d9e24cd6.1594207679.git.robin.murphy@arm.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        id S1729722AbgGMNWj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 13 Jul 2020 09:22:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47460 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729873AbgGMNWj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jul 2020 09:22:39 -0400
+Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C43B5C061755;
+        Mon, 13 Jul 2020 06:22:38 -0700 (PDT)
+Received: by mail-ej1-x643.google.com with SMTP id p20so17105650ejd.13;
+        Mon, 13 Jul 2020 06:22:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=z4DbCQASJpB18XYS7ktJTNc93Wbe31Dke4XqE2e1oq0=;
+        b=DOSHDGVmk30fZFiz3WKd7zMCSK69f3jEL1u8AsUJjxB2mBuvUr1qBHCx969bF8n9Q2
+         KtbdMAJyAt3EFUnpKPSIMJbXHWkN6pnl/9Tnrb3Gl0n+kYXCTO2h5BNyruT2BHFjgl+g
+         wH9iQCx1EI7m7ZrVqhRyZdNkYPv0uZXHNRXI4H3ZgM4nssEF6Z4+vhCyAINKoOna9COA
+         2vQ/UXMl3YhqVXxT1k4grDXlx/GMqUZZFWedx8icvuVMGE/cnpL+73qZzJoFpLnQEXqM
+         kKNEdCxwfmXyA7RuYT4PGHN4OQXUHW+RCFO60LXxoSfPzZmiOAwLoId6GJoDAnwMnMXf
+         6VkA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=z4DbCQASJpB18XYS7ktJTNc93Wbe31Dke4XqE2e1oq0=;
+        b=VGODV6+w8pm3BED+mlkJTkLoiPiT2PQOix909FzobWVuQPJ/ckL+JClUhHHZrN/4Ng
+         JKXWFn8iUjL812r/K8SreK1/U8CtRqXLEpQpT9ZEg5CVKuHg4wVRpfoxaxe7ArX/rqtd
+         NbAD+iJr8dxnIgRDHrCieUZ0/Xjqabn4AU1NIqdP2bRFwSJeqDiO+9b16kth8JTImsiz
+         sxIe9cqF92le73rQT0XeUO72vXpnG2UGw/OiSGJB/yY5gsJSRo7YXox+2JYuYhjlS8tu
+         gc9lmSVwCd7kx22nfYBU2MRaA7q+EtNc1ORf5NJS5GxD0ERF1jclBxRgKXHAbypC5VbU
+         e17w==
+X-Gm-Message-State: AOAM530vhEVApyA+HZEwVHGAue2wJSX3nrd/BFWsX7WoIEx2nZWQHA67
+        ITTBn0MuGPSTVEkaNbhCt3U=
+X-Google-Smtp-Source: ABdhPJyNJ+2A+7vhlimkJ5sh3qnTf4AmYHcIfFpOxzTngMqwIMgJRuRgZYpxdl6ypR4zISe0e31EHw==
+X-Received: by 2002:a17:906:4dd4:: with SMTP id f20mr77154689ejw.170.1594646557469;
+        Mon, 13 Jul 2020 06:22:37 -0700 (PDT)
+Received: from net.saheed (54007186.dsl.pool.telekom.hu. [84.0.113.134])
+        by smtp.gmail.com with ESMTPSA id n9sm11806540edr.46.2020.07.13.06.22.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 13 Jul 2020 06:22:37 -0700 (PDT)
+From:   "Saheed O. Bolarinwa" <refactormyself@gmail.com>
+To:     helgaas@kernel.org, Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Juergen Gross <jgross@suse.com>,
+        Stefano Stabellini <sstabellini@kernel.org>
+Cc:     "Saheed O. Bolarinwa" <refactormyself@gmail.com>,
+        bjorn@helgaas.com, skhan@linuxfoundation.org,
+        linux-pci@vger.kernel.org,
+        linux-kernel-mentees@lists.linuxfoundation.org,
+        linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org
+Subject: [RFC PATCH 01/35] xen-pciback: Change PCIBIOS_SUCCESSFUL to 0
+Date:   Mon, 13 Jul 2020 14:22:13 +0200
+Message-Id: <20200713122247.10985-2-refactormyself@gmail.com>
+X-Mailer: git-send-email 2.18.2
+In-Reply-To: <20200713122247.10985-1-refactormyself@gmail.com>
+References: <20200713122247.10985-1-refactormyself@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jul 08, 2020 at 12:32:42PM +0100, Robin Murphy wrote:
-> As for the intel-iommu implementation, relegate the opportunistic
-> attempt to allocate a SAC address to the domain of conventional PCI
-> devices only, to avoid it increasingly causing far more performance
-> issues than possible benefits on modern PCI Express systems.
-> 
-> Signed-off-by: Robin Murphy <robin.murphy@arm.com>
-> ---
->  drivers/iommu/dma-iommu.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/iommu/dma-iommu.c b/drivers/iommu/dma-iommu.c
-> index 4959f5df21bd..0ff124f16ad4 100644
-> --- a/drivers/iommu/dma-iommu.c
-> +++ b/drivers/iommu/dma-iommu.c
-> @@ -426,7 +426,8 @@ static dma_addr_t iommu_dma_alloc_iova(struct iommu_domain *domain,
->  		dma_limit = min(dma_limit, (u64)domain->geometry.aperture_end);
->  
->  	/* Try to get PCI devices a SAC address */
-> -	if (dma_limit > DMA_BIT_MASK(32) && dev_is_pci(dev))
-> +	if (dma_limit > DMA_BIT_MASK(32) &&
-> +	    dev_is_pci(dev) && !pci_is_pcie(to_pci_dev(dev)))
->  		iova = alloc_iova_fast(iovad, iova_len,
->  				       DMA_BIT_MASK(32) >> shift, false);
->  
+In reference to the PCI spec (Chapter 2), PCIBIOS* is an x86 concept.
+Their scope should be limited within arch/x86.
 
-Unfortunatly this patch causes XHCI initialization failures on my AMD
-Ryzen system. I will remove both from the IOMMU tree for now.
+Change all PCIBIOS_SUCCESSFUL to 0
 
-I guess the XHCI chip in my system does not support full 64bit dma
-addresses and needs a quirk or something like that. But until this is
-resolved its better to not change the IOVA allocation behavior.
+Signed-off-by: "Saheed O. Bolarinwa" <refactormyself@gmail.com>
+---
+ drivers/xen/xen-pciback/conf_space.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Regards,
+diff --git a/drivers/xen/xen-pciback/conf_space.c b/drivers/xen/xen-pciback/conf_space.c
+index 059de92aea7d..0e7577f16f78 100644
+--- a/drivers/xen/xen-pciback/conf_space.c
++++ b/drivers/xen/xen-pciback/conf_space.c
+@@ -130,7 +130,7 @@ static inline u32 merge_value(u32 val, u32 new_val, u32 new_val_mask,
+ static int xen_pcibios_err_to_errno(int err)
+ {
+ 	switch (err) {
+-	case PCIBIOS_SUCCESSFUL:
++	case 0:
+ 		return XEN_PCI_ERR_success;
+ 	case PCIBIOS_DEVICE_NOT_FOUND:
+ 		return XEN_PCI_ERR_dev_not_found;
+-- 
+2.18.2
 
-	Joerg
