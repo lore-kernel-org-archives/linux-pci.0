@@ -2,109 +2,76 @@ Return-Path: <SRS0=Y43U=AZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E5A2C433E2
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Jul 2020 15:28:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23A0AC433DF
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Jul 2020 15:40:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 72AB322209
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Jul 2020 15:28:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1594740505;
-	bh=0qquT16fbcjpcUrLJKMrlKrFGQbbIFMbuB4UG5jOkoQ=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=uFu9TId8PXpUyh4//UKnKJyPsJDo9Tt4RqVD3IcylN4FHFxXbP01oSrHOQxJc6PhX
-	 y4J0Bh3rmuxVTAhQj15jMQCeA38iIcZPFmcsD0geItbLvDbTF1TzvDdTuwgCd10qOz
-	 7XlN3lfVe9CbhtAR7A19t9ybjKvoYLjvFzGJzZN0=
+	by mail.kernel.org (Postfix) with ESMTP id E3C192222E
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Jul 2020 15:40:39 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="PLO92HE7";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="7z5SMSaA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725955AbgGNP2V (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 Jul 2020 11:28:21 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48328 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725280AbgGNP2V (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 14 Jul 2020 11:28:21 -0400
-Received: from localhost (mobile-166-175-191-139.mycingular.net [166.175.191.139])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 35C4F221EF;
-        Tue, 14 Jul 2020 15:28:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1594740500;
-        bh=0qquT16fbcjpcUrLJKMrlKrFGQbbIFMbuB4UG5jOkoQ=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=s1oowI9A4zRjsuRhByPYU2IrrGnkDzB0e+M9tL3W4uY4Rz+xdKSfXXT4Ue6GjN2qv
-         k3EdVfrMqa/6dnaH9VVyFBbnQlhp00QqYfN6yPhYsbyjQnA/oiP9zs3o9bygbRQqsm
-         +6CcnZaGf485FQr8AgvdkPuTOpEYayWlrnj6c85k=
-Date:   Tue, 14 Jul 2020 10:28:18 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Giovanni Cabiddu <giovanni.cabiddu@intel.com>
-Cc:     alex.williamson@redhat.com, herbert@gondor.apana.org.au,
-        cohuck@redhat.com, nhorman@redhat.com, vdronov@redhat.com,
-        bhelgaas@google.com, mark.a.chambers@intel.com,
-        gordon.mcfadden@intel.com, ahsan.atta@intel.com,
-        qat-linux@intel.com, kvm@vger.kernel.org,
-        linux-crypto@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 1/5] PCI: Add Intel QuickAssist device IDs
-Message-ID: <20200714152818.GA395763@bjorn-Precision-5520>
+        id S1726780AbgGNPkj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Jul 2020 11:40:39 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:44552 "EHLO
+        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725890AbgGNPkj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2020 11:40:39 -0400
+From:   Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1594741236;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=0uPhzHq4qVcpZoidpzCvLlU0JqwbUaoesqtBDTqjKBY=;
+        b=PLO92HE7/OrFI76NkdCtdM347N4vVgYqABAguWpWwl3ejCAfppCAw6s/d6DP5XXf0WzVb6
+        SeSEQDr6PgoCnCaS99Nifzf/47LrGXLiZERsKr5snbRfajeGiZeVsEpt40DQ5spQboWxNK
+        GMzKzOa7dMx0oo31q+yV6xqnwn0I8/oxykuL3Rljwu64J7m35qoE8wvN73kjyf2LikEGry
+        D2yiGmdnOAm/XKPNbO09aEsp0bwT+KWYaUwtyo3Sl2q1gXIqS3ZtnUOOYnWvRVQXDLzuA8
+        xYly8d8C4i6aOadk8L42Dn75iISFDsz0sRXM200vL4SG/uI76Ja11bj0/YvW8g==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1594741236;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=0uPhzHq4qVcpZoidpzCvLlU0JqwbUaoesqtBDTqjKBY=;
+        b=7z5SMSaAIrIxPEdOiIM2SJSSEWAY7dHrxXAmHBts6tGDnNJSlcALzBN+Yn+aC1cfBEodHU
+        m3RhVFEPXLdlItBg==
+To:     "Derrick\, Jonathan" <jonathan.derrick@intel.com>,
+        "andriy.shevchenko\@linux.intel.com" 
+        <andriy.shevchenko@linux.intel.com>,
+        "helgaas\@kernel.org" <helgaas@kernel.org>
+Cc:     "Kalakota\, SushmaX" <sushmax.kalakota@intel.com>,
+        "lorenzo.pieralisi\@arm.com" <lorenzo.pieralisi@arm.com>,
+        "linux-pci\@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI: vmd: Keep fwnode allocated through VMD irqdomain life
+In-Reply-To: <225256cc0ef63a3e149bcac97999d06381c52830.camel@intel.com>
+References: <20200630163332.GA3437879@bjorn-Precision-5520> <225256cc0ef63a3e149bcac97999d06381c52830.camel@intel.com>
+Date:   Tue, 14 Jul 2020 17:40:36 +0200
+Message-ID: <87lfjmumtn.fsf@nanos.tec.linutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200714063610.849858-2-giovanni.cabiddu@intel.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jul 14, 2020 at 07:36:06AM +0100, Giovanni Cabiddu wrote:
-> Add device IDs for the following Intel QuickAssist devices: DH895XCC,
-> C3XXX and C62X.
-> 
-> The defines in this patch are going to be referenced in two independent
-> drivers, qat and vfio-pci.
-> 
-> Signed-off-by: Giovanni Cabiddu <giovanni.cabiddu@intel.com>
+"Derrick, Jonathan" <jonathan.derrick@intel.com> writes:
+> On Tue, 2020-06-30 at 11:33 -0500, Bjorn Helgaas wrote:
+> I see that struct irqchip_fwid contains the actual fwnode structure and
+> when that is freed, it's causes the issue.
+>
+> I'm noticing in each caller of irq_domain_free_fwnode, we have the
+> domain itself available. It seems like it should be up to the caller to
+> deal with the fwnode pointer, but we could just do:
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Why? The fwnode pointer handling is inconsistent for the various fwnode
+types. We really don't want to go back to that state.
 
-> ---
->  include/linux/pci_ids.h | 6 ++++++
->  1 file changed, 6 insertions(+)
-> 
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index 0ad57693f392..f3166b1425ca 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -2659,6 +2659,8 @@
->  #define PCI_DEVICE_ID_INTEL_80332_1	0x0332
->  #define PCI_DEVICE_ID_INTEL_80333_0	0x0370
->  #define PCI_DEVICE_ID_INTEL_80333_1	0x0372
-> +#define PCI_DEVICE_ID_INTEL_QAT_DH895XCC	0x0435
-> +#define PCI_DEVICE_ID_INTEL_QAT_DH895XCC_VF	0x0443
->  #define PCI_DEVICE_ID_INTEL_82375	0x0482
->  #define PCI_DEVICE_ID_INTEL_82424	0x0483
->  #define PCI_DEVICE_ID_INTEL_82378	0x0484
-> @@ -2708,6 +2710,8 @@
->  #define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_4C_NHI     0x1577
->  #define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_4C_BRIDGE  0x1578
->  #define PCI_DEVICE_ID_INTEL_80960_RP	0x1960
-> +#define PCI_DEVICE_ID_INTEL_QAT_C3XXX	0x19e2
-> +#define PCI_DEVICE_ID_INTEL_QAT_C3XXX_VF	0x19e3
->  #define PCI_DEVICE_ID_INTEL_82840_HB	0x1a21
->  #define PCI_DEVICE_ID_INTEL_82845_HB	0x1a30
->  #define PCI_DEVICE_ID_INTEL_IOAT	0x1a38
-> @@ -2924,6 +2928,8 @@
->  #define PCI_DEVICE_ID_INTEL_IOAT_JSF7	0x3717
->  #define PCI_DEVICE_ID_INTEL_IOAT_JSF8	0x3718
->  #define PCI_DEVICE_ID_INTEL_IOAT_JSF9	0x3719
-> +#define PCI_DEVICE_ID_INTEL_QAT_C62X	0x37c8
-> +#define PCI_DEVICE_ID_INTEL_QAT_C62X_VF	0x37c9
->  #define PCI_DEVICE_ID_INTEL_ICH10_0	0x3a14
->  #define PCI_DEVICE_ID_INTEL_ICH10_1	0x3a16
->  #define PCI_DEVICE_ID_INTEL_ICH10_2	0x3a18
-> -- 
-> 2.26.2
-> 
+Thanks,
+
+        tglx
