@@ -2,138 +2,110 @@ Return-Path: <SRS0=Y43U=AZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36E72C4345B
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Jul 2020 06:37:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C23C9C433E0
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Jul 2020 07:38:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 19B72221F0
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Jul 2020 06:37:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A943C2084C
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Jul 2020 07:38:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726945AbgGNGgv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 Jul 2020 02:36:51 -0400
-Received: from mga06.intel.com ([134.134.136.31]:13263 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726942AbgGNGgu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 14 Jul 2020 02:36:50 -0400
-IronPort-SDR: asnV7qex4pWT+nEBhN7DvVhRQmdW/PvtB3hWahBxBqBaoZKk3X1PSfXRy1we6e4cYcbXDphSk2
- gn7DZC7xSLBw==
-X-IronPort-AV: E=McAfee;i="6000,8403,9681"; a="210355838"
-X-IronPort-AV: E=Sophos;i="5.75,350,1589266800"; 
-   d="scan'208";a="210355838"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jul 2020 23:36:49 -0700
-IronPort-SDR: 8iJ3H4LEE9axovPwmLmrxX1dmgjtemI62YSFo+gPmAmRAiE0okjkL2R7TM/n6q9kEO+pb9U3dQ
- 71+PEbWiQG4A==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.75,350,1589266800"; 
-   d="scan'208";a="299435545"
-Received: from silpixa00400314.ir.intel.com (HELO silpixa00400314.ger.corp.intel.com) ([10.237.222.51])
-  by orsmga002.jf.intel.com with ESMTP; 13 Jul 2020 23:36:44 -0700
-From:   Giovanni Cabiddu <giovanni.cabiddu@intel.com>
-To:     alex.williamson@redhat.com, herbert@gondor.apana.org.au
-Cc:     cohuck@redhat.com, nhorman@redhat.com, vdronov@redhat.com,
-        bhelgaas@google.com, mark.a.chambers@intel.com,
-        gordon.mcfadden@intel.com, ahsan.atta@intel.com,
-        qat-linux@intel.com, kvm@vger.kernel.org,
-        linux-crypto@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Giovanni Cabiddu <giovanni.cabiddu@intel.com>
-Subject: [PATCH v2 2/5] vfio/pci: Add device blocklist
-Date:   Tue, 14 Jul 2020 07:36:07 +0100
-Message-Id: <20200714063610.849858-3-giovanni.cabiddu@intel.com>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20200714063610.849858-1-giovanni.cabiddu@intel.com>
-References: <20200714063610.849858-1-giovanni.cabiddu@intel.com>
+        id S1725801AbgGNHiL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Jul 2020 03:38:11 -0400
+Received: from mail.loongson.cn ([114.242.206.163]:46872 "EHLO loongson.cn"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725601AbgGNHiL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 14 Jul 2020 03:38:11 -0400
+Received: from [10.130.0.75] (unknown [113.200.148.30])
+        by mail.loongson.cn (Coremail) with SMTP id AQAAf9CxwNbPYA1f8EsEAA--.5225S3;
+        Tue, 14 Jul 2020 15:37:52 +0800 (CST)
+Subject: Re: [PATCH v2] PCI: loongson: Use DECLARE_PCI_FIXUP_EARLY for
+ bridge_class_quirk()
+To:     Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>, Huacai Chen <chenhc@lemote.com>,
+        Jiaxun Yang <jiaxun.yang@flygoat.com>
+References: <1591925417-27665-1-git-send-email-yangtiezhu@loongson.cn>
+Cc:     linux-mips@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Xuefeng Li <lixuefeng@loongson.cn>
+From:   Tiezhu Yang <yangtiezhu@loongson.cn>
+Message-ID: <43b4409d-ff0f-9711-0b8f-1cfb19d31f24@loongson.cn>
+Date:   Tue, 14 Jul 2020 15:37:51 +0800
+User-Agent: Mozilla/5.0 (X11; Linux mips64; rv:45.0) Gecko/20100101
+ Thunderbird/45.4.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <1591925417-27665-1-git-send-email-yangtiezhu@loongson.cn>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID: AQAAf9CxwNbPYA1f8EsEAA--.5225S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7Cw13ArW8JFy3trWDAFy7Jrb_yoW8XFWfpr
+        15Aa17KF4FqFs8C3ZrX3yqgasxuF93C34kCFW5u3ZFkasxX3WUWrnFk3ZYvr4UJrWkXay7
+        ZaykC345Aa15ur7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUBF14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+        6r4UJwA2z4x0Y4vEx4A2jsIE14v26r4UJVWxJr1l84ACjcxK6I8E87Iv6xkF7I0E14v26F
+        4UJVW0owAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv
+        7VC0I7IYx2IY67AKxVWUAVWUtwAv7VC2z280aVAFwI0_Gr0_Cr1lOx8S6xCaFVCjc4AY6r
+        1j6r4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628v
+        n2kIc2xKxwCYjI0SjxkI62AI1cAE67vIY487MxkIecxEwVAFwVW8CwCF04k20xvY0x0EwI
+        xGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480
+        Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7
+        IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k2
+        6cxKx2IYs7xG6rWUJVWrZr1UMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7
+        CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUheOJUUUUU=
+X-CM-SenderInfo: p1dqw3xlh2x3gn0dqz5rrqw2lrqou0/
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add blocklist of devices that by default are not probed by vfio-pci.
-Devices in this list may be susceptible to untrusted application, even
-if the IOMMU is enabled. To be accessed via vfio-pci, the user has to
-explicitly disable the blocklist.
+On 06/12/2020 09:30 AM, Tiezhu Yang wrote:
+> Use DECLARE_PCI_FIXUP_EARLY instead of DECLARE_PCI_FIXUP_HEADER
+> for bridge_class_quirk() in pci-loongson.c, otherwise the fixup
+> has no effect.
+>
+> Fixes: 1f58cca5cf2b ("PCI: Add Loongson PCI Controller support")
+> Signed-off-by: Tiezhu Yang <yangtiezhu@loongson.cn>
+> ---
+>
+> v2:
+>    - modify the patch subject used with lower case "loongson"
+>
+> This patch is based on mips-next tree.
+>
+>   drivers/pci/controller/pci-loongson.c | 6 +++---
+>   1 file changed, 3 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/pci/controller/pci-loongson.c b/drivers/pci/controller/pci-loongson.c
+> index 459009c..58b862a 100644
+> --- a/drivers/pci/controller/pci-loongson.c
+> +++ b/drivers/pci/controller/pci-loongson.c
+> @@ -37,11 +37,11 @@ static void bridge_class_quirk(struct pci_dev *dev)
+>   {
+>   	dev->class = PCI_CLASS_BRIDGE_PCI << 8;
+>   }
+> -DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LOONGSON,
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_LOONGSON,
+>   			DEV_PCIE_PORT_0, bridge_class_quirk);
+> -DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LOONGSON,
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_LOONGSON,
+>   			DEV_PCIE_PORT_1, bridge_class_quirk);
+> -DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LOONGSON,
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_LOONGSON,
+>   			DEV_PCIE_PORT_2, bridge_class_quirk);
+>   
+>   static void system_bus_quirk(struct pci_dev *pdev)
 
-The blocklist can be disabled via the module parameter disable_blocklist.
+Hi,
 
-Signed-off-by: Giovanni Cabiddu <giovanni.cabiddu@intel.com>
----
- drivers/vfio/pci/vfio_pci.c | 33 +++++++++++++++++++++++++++++++++
- 1 file changed, 33 insertions(+)
+Any comments?
+Could you please apply this patch?
 
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index 7c0779018b1b..ea5904ca6cbf 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -60,6 +60,10 @@ module_param(enable_sriov, bool, 0644);
- MODULE_PARM_DESC(enable_sriov, "Enable support for SR-IOV configuration.  Enabling SR-IOV on a PF typically requires support of the userspace PF driver, enabling VFs without such support may result in non-functional VFs or PF.");
- #endif
- 
-+static bool disable_blocklist;
-+module_param(disable_blocklist, bool, 0444);
-+MODULE_PARM_DESC(disable_blocklist, "Disable device blocklist. If set, i.e. blocklist disabled, then blocklisted devices are allowed to be probed by vfio-pci.");
-+
- static inline bool vfio_vga_disabled(void)
- {
- #ifdef CONFIG_VFIO_PCI_VGA
-@@ -69,6 +73,29 @@ static inline bool vfio_vga_disabled(void)
- #endif
- }
- 
-+static bool vfio_pci_dev_in_blocklist(struct pci_dev *pdev)
-+{
-+	return false;
-+}
-+
-+static bool vfio_pci_is_blocklisted(struct pci_dev *pdev)
-+{
-+	if (!vfio_pci_dev_in_blocklist(pdev))
-+		return false;
-+
-+	if (disable_blocklist) {
-+		pci_warn(pdev,
-+			 "device blocklist disabled - allowing device %04x:%04x.\n",
-+			 pdev->vendor, pdev->device);
-+		return false;
-+	}
-+
-+	pci_warn(pdev, "%04x:%04x is blocklisted - probe will fail.\n",
-+		 pdev->vendor, pdev->device);
-+
-+	return true;
-+}
-+
- /*
-  * Our VGA arbiter participation is limited since we don't know anything
-  * about the device itself.  However, if the device is the only VGA device
-@@ -1847,6 +1874,9 @@ static int vfio_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	struct iommu_group *group;
- 	int ret;
- 
-+	if (vfio_pci_is_blocklisted(pdev))
-+		return -EINVAL;
-+
- 	if (pdev->hdr_type != PCI_HEADER_TYPE_NORMAL)
- 		return -EINVAL;
- 
-@@ -2336,6 +2366,9 @@ static int __init vfio_pci_init(void)
- 
- 	vfio_pci_fill_ids();
- 
-+	if (disable_blocklist)
-+		pr_warn("device blocklist disabled.\n");
-+
- 	return 0;
- 
- out_driver:
--- 
-2.26.2
+Thanks,
+Tiezhu
 
