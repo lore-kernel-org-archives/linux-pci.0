@@ -4,165 +4,186 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C5B1C433E0
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Jul 2020 23:08:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C470C433E1
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Jul 2020 23:18:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 355012071B
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Jul 2020 23:08:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 103D22072D
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Jul 2020 23:18:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1594768087;
-	bh=50NGcG7PTBsEuD+JIw7+r+6rrm7C47cIsguIyorgA+U=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=hthpaMqMZTfMwuc3b5dA3u/ePG9vzYKUGc5sbvL8MJpOb1xLX9hwn538TvZwljTV+
-	 dUO1CTgujfnVS4qfgI9g+hk++ZxOp21EB/lS688x38YMUvECVonWY1Rjn3PufxV5AA
-	 LbdcRaSXJtCgFFk/mVr1+lIy1zivB19FA/pzBqT4=
+	s=default; t=1594768711;
+	bh=WbHcOuCS+rj4obHCGdLyDlzJy258Ll6RBipsjc9gqhs=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=Y/znmQ78bHJIxeIvLwI4z+1LI6PU3UUaf4mqh6uTV3nJRCBIqMLSUAE9/AC5uOIn3
+	 ZWua7U6oUBlvwrPaUY2qPmun3H0Qfxw6HGdlW+r7jwglyB/WeyzDkZ1MqrRhvNp7i5
+	 SSVliveHB4ekysjTmMl8lbxXpz3ZWnot9XDCV+qw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725977AbgGNXIG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 Jul 2020 19:08:06 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46600 "EHLO mail.kernel.org"
+        id S1726479AbgGNXS3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Jul 2020 19:18:29 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49946 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725955AbgGNXIG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 14 Jul 2020 19:08:06 -0400
-Received: from localhost (mobile-166-175-191-139.mycingular.net [166.175.191.139])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S1726187AbgGNXS2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 14 Jul 2020 19:18:28 -0400
+Received: from mail-ot1-f47.google.com (mail-ot1-f47.google.com [209.85.210.47])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 35F752065E;
-        Tue, 14 Jul 2020 23:08:05 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8583D2074B;
+        Tue, 14 Jul 2020 23:18:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1594768085;
-        bh=50NGcG7PTBsEuD+JIw7+r+6rrm7C47cIsguIyorgA+U=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=dCePTbovhLGakx5PakWD/j6cC7xbxIH7Q92dSlIlVISjtA1AQLWQoOY8gtUZ1Nh4P
-         ZlfggI5XhMpA+tkobe8q39WcLsvDGxuXP+mqMlhGmr/MC5V7+rqYr2IcrH3+2LX9L1
-         NkeBMGsK5iT7cIiPs9sGTrvnqVIQFE6g/5P5borE=
-Date:   Tue, 14 Jul 2020 18:08:03 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     sathyanarayanan.kuppuswamy@linux.intel.com
-Cc:     bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, ashok.raj@intel.com,
-        Jay Vosburgh <jay.vosburgh@canonical.com>
-Subject: Re: [PATCH v2 1/2] PCI/ERR: Fix fatal error recovery for non-hotplug
- capable devices
-Message-ID: <20200714230803.GA92891@bjorn-Precision-5520>
+        s=default; t=1594768707;
+        bh=WbHcOuCS+rj4obHCGdLyDlzJy258Ll6RBipsjc9gqhs=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=OTYv7SW64RJ7rcBLNLixgDhz1BOtm1ZlPfGu0RW7CKMz/+ee2kQZnsPya33XRsqSZ
+         NSY9JKrQ2FHqtYIo/G1nklBOWhlXLpB3Bb80i2eXAScH3Qkvmz4gkSVFZ3xyOmHSB2
+         fS1zjaVyGJOhZPsVcQWQD09xHBVeLAHPlnAO/7HE=
+Received: by mail-ot1-f47.google.com with SMTP id h13so68081otr.0;
+        Tue, 14 Jul 2020 16:18:27 -0700 (PDT)
+X-Gm-Message-State: AOAM531sTp1Rzu6UUNRYLmVqQbl0CpurZMh5yerLiQhkx5Ucm1Hde/hl
+        nUGH9qkEQoMlwdLXNKEmpqSFXENueBn9VUlgcQ==
+X-Google-Smtp-Source: ABdhPJzamyUgo6UiqW59FuZ+b+pvPCuOFw/T+vorF7nM8Yc7QjaPRAdppkgkTdGO/rge6EQOKevq7Mn09VhM3JKnhr0=
+X-Received: by 2002:a9d:4002:: with SMTP id m2mr6332092ote.129.1594768706856;
+ Tue, 14 Jul 2020 16:18:26 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ce417fbf81a8a46a89535f44b9224ee9fbb55a29.1591307288.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+References: <20200612171334.26385-1-nsaenzjulienne@suse.de>
+ <20200612171334.26385-2-nsaenzjulienne@suse.de> <20200713182356.GA413630@bogus>
+ <ed42e27eaf48fd19cc8ccccd15b0b25ba1d836ae.camel@suse.de> <20200714210708.GA2897216@bogus>
+ <925bab2c-91e0-bf60-9ec4-286eb53f72ab@gmail.com>
+In-Reply-To: <925bab2c-91e0-bf60-9ec4-286eb53f72ab@gmail.com>
+From:   Rob Herring <robh@kernel.org>
+Date:   Tue, 14 Jul 2020 17:18:15 -0600
+X-Gmail-Original-Message-ID: <CAL_Jsq+BvM+Z_QNkB47_8AQzZ6R3LOCjNWd5MA-9avxp0HHG2w@mail.gmail.com>
+Message-ID: <CAL_Jsq+BvM+Z_QNkB47_8AQzZ6R3LOCjNWd5MA-9avxp0HHG2w@mail.gmail.com>
+Subject: Re: [PATCH v3 1/9] dt-bindings: reset: Add a binding for the RPi
+ Firmware reset controller
+To:     Florian Fainelli <f.fainelli@gmail.com>
+Cc:     Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Stefan Wahren <wahrenst@gmx.net>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        "maintainer:BROADCOM BCM7XXX ARM ARCHITECTURE" 
+        <bcm-kernel-feedback-list@broadcom.com>,
+        Eric Anholt <eric@anholt.net>,
+        Linux USB List <linux-usb@vger.kernel.org>,
+        "moderated list:BROADCOM BCM2835 ARM ARCHITECTURE" 
+        <linux-rpi-kernel@lists.infradead.org>,
+        "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>, tim.gover@raspberrypi.org,
+        PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Mathias Nyman <mathias.nyman@linux.intel.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        devicetree@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Jun 04, 2020 at 02:50:01PM -0700, sathyanarayanan.kuppuswamy@linux.intel.com wrote:
-> From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-> 
-> Fatal (DPC) error recovery is currently broken for non-hotplug
-> capable devices. With current implementation, after successful
-> fatal error recovery, non-hotplug capable device state won't be
-> restored properly. You can find related issues in following links.
-> 
-> https://lkml.org/lkml/2020/5/27/290
-> https://lore.kernel.org/linux-pci/12115.1588207324@famine/
-> https://lkml.org/lkml/2020/3/28/328
+On Tue, Jul 14, 2020 at 3:18 PM Florian Fainelli <f.fainelli@gmail.com> wrote:
+>
+>
+>
+> On 7/14/2020 2:07 PM, Rob Herring wrote:
+> > On Tue, Jul 14, 2020 at 01:59:21PM +0200, Nicolas Saenz Julienne wrote:
+> >> On Mon, 2020-07-13 at 12:23 -0600, Rob Herring wrote:
+> >>> On Fri, Jun 12, 2020 at 07:13:25PM +0200, Nicolas Saenz Julienne wrote:
+> >>>> The firmware running on the RPi VideoCore can be used to reset and
+> >>>> initialize HW controlled by the firmware.
+> >>>>
+> >>>> Signed-off-by: Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
+> >>>> Reviewed-by: Florian Fainelli <f.fainelli@gmail.com>
+> >>>>
+> >>>> ---
+> >>>> Changes since v2:
+> >>>>  - Add include file for reset IDs
+> >>>>
+> >>>> Changes since v1:
+> >>>>  - Correct cells binding as per Florian's comment
+> >>>>  - Change compatible string to be more generic
+> >>>>
+> >>>>  .../arm/bcm/raspberrypi,bcm2835-firmware.yaml | 21 +++++++++++++++++++
+> >>>>  .../reset/raspberrypi,firmware-reset.h        | 13 ++++++++++++
+> >>>>  2 files changed, 34 insertions(+)
+> >>>>  create mode 100644 include/dt-bindings/reset/raspberrypi,firmware-reset.h
+> >>>>
+> >>>> diff --git a/Documentation/devicetree/bindings/arm/bcm/raspberrypi,bcm2835-
+> >>>> firmware.yaml
+> >>>> b/Documentation/devicetree/bindings/arm/bcm/raspberrypi,bcm2835-
+> >>>> firmware.yaml
+> >>>> index b48ed875eb8e..23a885af3a28 100644
+> >>>> --- a/Documentation/devicetree/bindings/arm/bcm/raspberrypi,bcm2835-
+> >>>> firmware.yaml
+> >>>> +++ b/Documentation/devicetree/bindings/arm/bcm/raspberrypi,bcm2835-
+> >>>> firmware.yaml
+> >>>> @@ -39,6 +39,22 @@ properties:
+> >>>>        - compatible
+> >>>>        - "#clock-cells"
+> >>>>
+> >>>> +  reset:
+> >>>
+> >>> I'm not really thrilled how this is evolving with a node per provider.
+> >>> There's no reason you can't just add #clock-cells and #reset-cells to
+> >>> the parent firmware node.
+> >>
+> >> What are the downsides? The way I see it there is not much difference. And this
+> >> way of handling things is feels more intuitive and flexible (overlays can
+> >> control what to enable easily, we can take advantage of the platform device
+> >> core).
+> >
+> > What the OS wants can evolve, so designing around the current needs of
+> > the OS is not how bindings should be done.
+> >
+> > Using overlays to add clocks or resets wouldn't really work given they
+> > are spread out over the tree. And with clocks in particular, you'd have
+> > to replace dummy fixed clocks with actual firmware clocks. Sounds
+> > fragile and messy...
+> >
+> >>> I probably should have complained with the clocks node, but that's only
+> >>> pending for 5.9.
+> >>
+> >> Note that there are more users for this pattern: "raspberrypi,firmware-ts" and
+> >> "raspberrypi,firmware-gpio". Actually you were the one to originally propose
+> >> this it[1]. :P
+> >
+> > Sigh, this is why I dislike incomplete examples...
+> >
+> > Based on that,
+> >
+> > Acked-by: Rob Herring <robh@kernel.org>
+> >
+> > And please get gpio and ts converted to schema and referenced here
+> > before the next time I look at this.
+> >
+> >> There already is a fair amount of churn in these drivers because of all the DT
+> >> changes we did in the past, and if we need to change how we integrate these
+> >> again, I'd really like it to be for good.
+> >>
+> >>> The bigger issue is this stuff is just trickling in one bit at a time
+> >>> which gives no context for review. What's next? Is it really a mystery
+> >>> as to what functions the firmware provides?
+> >>
+> >> We have no control over it, RPi engineers integrate new designs and new
+> >> firmware interfaces show up. This is a good example of it.
+> >>
+> >> I proposed them to use SCMI as it covers most of what they are already
+> >> providing here. But no luck so far.
+> >
+> > Once we get tired of supporting all the different firmware interfaces
+> > and the mess they become, we'll just have to start refusing custom ones.
+> > Worked for PSCI.
+>
+> In this particular case, the Raspberry Pi Foundation VPU firmware should
+> just implement SCMI and that would avoid having to write new client
+> drivers for Linux, it is not clear to me why this has not been done yet.
 
-Can you please convert these all to lore.kernel.org links?  lkml.org
-is not quite as useful or reliable.
+Writing drivers is fun?
 
-> Current fatal error recovery implementation relies on hotplug handler
-> for detaching/re-enumerating the affected devices/drivers on DLLSC
-> state changes. 
+Perhaps we should start refusing new firmware interfaces now.
 
-Can you remind us exactly how this relies on hotplug?  I know it
-*does*, but I can't remember how.  It would sure be nice if we could
-decouple this from pciehp somehow.
-
-> So when dealing with non-hotplug capable devices,
-> recovery code does not restore the state of the affected devices
-> correctly. Correct implementation should call report_slot_reset()
-> function after resetting the link to restore the state of the
-> device/driver.
-
-We don't restore the state correctly.  What does this look like to the
-user?  Does the device not work?
-
-> So use PCI_ERS_RESULT_NEED_RESET as error status for successful
-> reset_link() operation and use PCI_ERS_RESULT_DISCONNECT for failure
-> case. PCI_ERS_RESULT_NEED_RESET error state will ensure slot_reset()
-> is called after reset link operation which will also fix the above
-> mentioned issue.
-
-I think PCI_ERS_RESULT_NEED_RESET results in calling driver
-->slot_reset() callbacks, right?  Where does the state restoration
-happen?
-
-No, I guess it must be something in the hotplug driver that restores
-the state, because you said devices below hotplug-capable ports work
-correctly, but others don't.
-
-> [original patch is from jay.vosburgh@canonical.com]
-> [original patch link https://lore.kernel.org/linux-pci/12115.1588207324@famine/]
-> Fixes: 6d2c89441571 ("PCI/ERR: Update error status after reset_link()")
-> Signed-off-by: Jay Vosburgh <jay.vosburgh@canonical.com>
-> Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-> ---
->  drivers/pci/pcie/err.c | 24 ++++++++++++++++++++++--
->  1 file changed, 22 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-> index 14bb8f54723e..5fe8561c7185 100644
-> --- a/drivers/pci/pcie/err.c
-> +++ b/drivers/pci/pcie/err.c
-> @@ -165,8 +165,28 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
->  	pci_dbg(dev, "broadcast error_detected message\n");
->  	if (state == pci_channel_io_frozen) {
->  		pci_walk_bus(bus, report_frozen_detected, &status);
-> -		status = reset_link(dev);
-> -		if (status != PCI_ERS_RESULT_RECOVERED) {
-> +		/*
-> +		 * After resetting the link using reset_link() call, the
-> +		 * possible value of error status is either
-> +		 * PCI_ERS_RESULT_DISCONNECT (failure case) or
-> +		 * PCI_ERS_RESULT_NEED_RESET (success case).
-> +		 * So ignore the return value of report_error_detected()
-> +		 * call for fatal errors. Instead use
-> +		 * PCI_ERS_RESULT_NEED_RESET as initial status value.
-> +		 *
-> +		 * Ignoring the status return value of report_error_detected()
-> +		 * call will also help in case of EDR mode based error
-> +		 * recovery. In EDR mode AER and DPC Capabilities are owned by
-> +		 * firmware and hence report_error_detected() call will possibly
-> +		 * return PCI_ERS_RESULT_NO_AER_DRIVER. So if we don't ignore
-> +		 * the return value of report_error_detected() then
-> +		 * pcie_do_recovery() would report incorrect status after
-> +		 * successful recovery. Ignoring PCI_ERS_RESULT_NO_AER_DRIVER
-> +		 * in non EDR case should not have any functional impact.
-
-I can't make sense out of the comment.  We already ignore the "status"
-from pci_walk_bus(bus, report_frozen_detected, &status).
-
-No idea what to make of the second paragraph.  If we make the commit
-log make sense, maybe some summary of that would be useful here.
-
-I think this code is equivalent and makes the patch much clearer:
-
-  status = reset_link(dev);
-  if (status == PCI_ERS_RESULT_RECOVERED) {
-    status = PCI_ERS_RESULT_NEED_RESET;
-  } else {
-    status = PCI_ERS_RESULT_DISCONNECT;
-    goto failed;
-  }
-
-> +		 */
-> +		status = PCI_ERS_RESULT_NEED_RESET;
-> +		if (reset_link(dev) != PCI_ERS_RESULT_RECOVERED) {
-> +			status = PCI_ERS_RESULT_DISCONNECT;
->  			pci_warn(dev, "link reset failed\n");
->  			goto failed;
->  		}
-> -- 
-> 2.17.1
-> 
+Rob
