@@ -2,204 +2,157 @@ Return-Path: <SRS0=Y43U=AZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EFE4BC433F1
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Jul 2020 18:56:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E770EC433E2
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Jul 2020 19:02:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C553E22B4E
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Jul 2020 18:56:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C77AE22B4E
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Jul 2020 19:02:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1594752987;
-	bh=1I0jIPo3SZCaMFdDVykFs1GKYtGMomQMM+VqNQstfJg=;
+	s=default; t=1594753366;
+	bh=1zE7IbOBwcqh4svaHsYnN4HZmHGYulpj9QshjtrfmTM=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=HVS0kr2xOOSbzM/c0a2Dls3lqtG+UhXZeqgU2qBRGI1Sb3o6E89m4CpAy2vPgZmM8
-	 qWLQru6DafpYAxBHtxLglpp8+/qoTpyCB0cYx375eQmBx36dccz6cFxc1LlOzUQ7mX
-	 JGt+juWs2Rr9a3f5NINoEgOXOBALG6B+9O7lea/Q=
+	b=irm/p7NWMoGFvM9e73ASzi3MgPvPZ64Hbtg4B6zpkEhRm3/Fy+hABcR6Xl3iGW0YA
+	 vaeYaQih4MK4aUWDPT1SpO6g5Iwfk4AcEyp5E/oF/XGJMQ66T0KjIcBxzUxnvIOG4M
+	 v3ubTbSh2Qh0z2iYvhkBGtJSod4P5mOEpuWnhB2U=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730980AbgGNS40 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 Jul 2020 14:56:26 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54326 "EHLO mail.kernel.org"
+        id S1730365AbgGNTCp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Jul 2020 15:02:45 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33070 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729896AbgGNS4Z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 14 Jul 2020 14:56:25 -0400
+        id S1730317AbgGNTCo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 14 Jul 2020 15:02:44 -0400
 Received: from localhost (mobile-166-175-191-139.mycingular.net [166.175.191.139])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 0D38622AAB;
-        Tue, 14 Jul 2020 18:56:23 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1BB6A207F5;
+        Tue, 14 Jul 2020 19:02:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1594752984;
-        bh=1I0jIPo3SZCaMFdDVykFs1GKYtGMomQMM+VqNQstfJg=;
+        s=default; t=1594753363;
+        bh=1zE7IbOBwcqh4svaHsYnN4HZmHGYulpj9QshjtrfmTM=;
         h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=dgtA8cR+j01hdstpLlBLDb9TdhIStnYKNavj+wqqyuH3EJj3686EnGrrwRI1wqa/r
-         VF70QJU9tQG0jSn0ew7XrdV2+Cb8SD31SbqLEBYFUL8biYPtSXwG+4PgmUoM3ylMSb
-         vmT5ApqX+4CqbX3W0qBvhlg/FhjdDjRDJLE/SOoA=
-Date:   Tue, 14 Jul 2020 13:56:22 -0500
+        b=h/W7FnQ25ep6sZ4rfaO391pDHfGcJKZe1XsaVkAnl0427u5RN5lGaekPdMgWyA2+4
+         08Due3hFQMLV2EjcxvUmHpF1SLWTBCkWMxwkQvlD2xa8MtybWF1rzN0WsEOCwZUHGs
+         HeRhRinKrgPI7elL/oBgkBYwR2BZZNx//upHKip0=
+Date:   Tue, 14 Jul 2020 14:02:41 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Edward Cree <ecree@solarflare.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>
-Cc:     kbuild-all@lists.01.org, linux-renesas-soc@vger.kernel.org,
-        Luc Van Oostenryck <luc.vanoostenryck@gmail.com>,
-        linux-pci@vger.kernel.org
-Subject: Re: [renesas-drivers:master 69/80]
- drivers/net/ethernet/sfc/efx_common.c:1232:19: sparse: sparse: incompatible
- types for operation (==):
-Message-ID: <20200714185622.GA408711@bjorn-Precision-5520>
+To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>, x86@kernel.org,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        "H. Peter Anvin" <hpa@zytor.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v1 1/2] x86/PCI: Get rid of custom x86 model comparison
+Message-ID: <20200714190241.GA409572@bjorn-Precision-5520>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <202007150206.kfukZxuy%lkp@intel.com>
+In-Reply-To: <20200714093801.GI3703480@smile.fi.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc Luc, linux-pci]
+On Tue, Jul 14, 2020 at 12:38:01PM +0300, Andy Shevchenko wrote:
+> On Mon, Jul 13, 2020 at 04:02:01PM -0500, Bjorn Helgaas wrote:
+> > On Mon, Jul 13, 2020 at 10:44:36PM +0300, Andy Shevchenko wrote:
+> > > Switch the platform code to use x86_id_table and accompanying API
+> > > instead of custom comparison against x86 CPU model.
+> > > 
+> > > Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> > > ---
+> > >  arch/x86/pci/intel_mid_pci.c | 17 +++++++++++++++--
+> > >  1 file changed, 15 insertions(+), 2 deletions(-)
+> > > 
+> > > diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
+> > > index 00c62115f39c..d8af4787e616 100644
+> > > --- a/arch/x86/pci/intel_mid_pci.c
+> > > +++ b/arch/x86/pci/intel_mid_pci.c
+> > > @@ -28,10 +28,12 @@
+> > >  #include <linux/io.h>
+> > >  #include <linux/smp.h>
+> > >  
+> > > +#include <asm/cpu_device_id.h>
+> > >  #include <asm/segment.h>
+> > >  #include <asm/pci_x86.h>
+> > >  #include <asm/hw_irq.h>
+> > >  #include <asm/io_apic.h>
+> > > +#include <asm/intel-family.h>
+> > >  #include <asm/intel-mid.h>
+> > >  
+> > >  #define PCIE_CAP_OFFSET	0x100
+> > > @@ -211,9 +213,16 @@ static int pci_write(struct pci_bus *bus, unsigned int devfn, int where,
+> > >  			       where, size, value);
+> > >  }
+> > >  
+> > > +static const struct x86_cpu_id intel_mid_cpu_ids[] = {
+> > > +	X86_MATCH_INTEL_FAM6_MODEL(ATOM_SILVERMONT_MID, NULL),
+> > > +	{}
+> > > +};
+> > > +
+> > >  static int intel_mid_pci_irq_enable(struct pci_dev *dev)
+> > >  {
+> > > +	const struct x86_cpu_id *id;
+> > >  	struct irq_alloc_info info;
+> > > +	u16 model = 0;
+> > >  	int polarity;
+> > >  	int ret;
+> > >  	u8 gsi;
+> > > @@ -227,8 +236,12 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
+> > >  		return ret;
+> > >  	}
+> > >  
+> > > -	switch (intel_mid_identify_cpu()) {
+> > > -	case INTEL_MID_CPU_CHIP_TANGIER:
+> > > +	id = x86_match_cpu(intel_mid_cpu_ids);
+> > > +	if (id)
+> > > +		model = id->model;
+> > > +
+> > > +	switch (model) {
+> > > +	case INTEL_FAM6_ATOM_SILVERMONT_MID:
+> > 
+> > Is there a magic decoder ring somewhere that connects
+> > INTEL_MID_CPU_CHIP_TANGIER and INTEL_FAM6_ATOM_SILVERMONT_MID?
+> 
+> Yes. And the idea is to get rid of it.
 
-On Wed, Jul 15, 2020 at 02:02:11AM +0800, kernel test robot wrote:
-> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/geert/renesas-drivers.git master
-> head:   541708cc1e6ad29fdb4c294831dfa855bd64487b
-> commit: 428d2a440d43ba81b698ec71de5125e4aeddf752 [69/80] Merge remote-tracking branch 'pci/next' into renesas-drivers
-> config: parisc-randconfig-s031-20200714 (attached as .config)
-> compiler: hppa-linux-gcc (GCC) 9.3.0
-> reproduce:
->         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
->         chmod +x ~/bin/make.cross
->         # apt-get install sparse
->         # sparse version: v0.6.2-41-g14e84ffc-dirty
->         git checkout 428d2a440d43ba81b698ec71de5125e4aeddf752
->         # save the attached .config to linux build tree
->         COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-9.3.0 make.cross C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__' ARCH=parisc 
-> 
-> If you fix the issue, kindly add following tag as appropriate
-> Reported-by: kernel test robot <lkp@intel.com>
-> 
-> 
-> sparse warnings: (new ones prefixed by >>)
-> 
-> >> drivers/net/ethernet/sfc/efx_common.c:1232:19: sparse: sparse: incompatible types for operation (==):
-> >> drivers/net/ethernet/sfc/efx_common.c:1232:19: sparse:    incomplete type enum pci_channel_state state
-> >> drivers/net/ethernet/sfc/efx_common.c:1232:19: sparse:    restricted pci_channel_state_t
-> >> drivers/net/ethernet/sfc/efx_common.c:1308:27: sparse: sparse: incorrect type in initializer (incompatible argument 2 (different base types)) @@     expected restricted pci_ers_result_t ( *error_detected )( ... ) @@     got restricted pci_ers_result_t ( * )( ... ) @@
-> >> drivers/net/ethernet/sfc/efx_common.c:1308:27: sparse:     expected restricted pci_ers_result_t ( *error_detected )( ... )
-> >> drivers/net/ethernet/sfc/efx_common.c:1308:27: sparse:     got restricted pci_ers_result_t ( * )( ... )
+OK.  You don't want to even include a mention of it in the commit log
+to help people connect the dots and verify that this change is
+correct?
 
-I think what's necessary here is to replace "enum pci_channel_state
-state" with "pci_channel_state_t state", as in 16d79cd4e23b ("PCI: Use
-'pci_channel_state_t' instead of 'enum pci_channel_state'"):
-
-https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?id=16d79cd4e23b
-
-This change should be safe even without 16d79cd4e23b, so there won't
-be a revlock if you make it in the renesas-drivers tree.
-
-> vim +1232 drivers/net/ethernet/sfc/efx_common.c
+> > I don't know how to verify that the new code is equivalent to the old.
+> > 
+> > Or maybe the new code is *better* than the old, in which case the
+> > subject/commit log should mention that it's fixing or improving
+> > something.
+> > 
+> > Also, there are a number of other places that check for
+> > "intel_mid_identify_cpu() == INTEL_MID_CPU_CHIP_TANGIER":
+> > 
+> >   mrfld_pinctrl_init
+> >   register_mrfld_power_btn
+> >   mrfld_legacy_rtc_init
+> >   mrfld_sd_init
+> >   spidev_platform_data
+> >   register_mid_wdt
+> >   sfi_parse_devs
 > 
-> 21ea21252eddb3c Edward Cree 2020-06-29  1221  
-> 21ea21252eddb3c Edward Cree 2020-06-29  1222  /* A PCI error affecting this device was detected.
-> 21ea21252eddb3c Edward Cree 2020-06-29  1223   * At this point MMIO and DMA may be disabled.
-> 21ea21252eddb3c Edward Cree 2020-06-29  1224   * Stop the software path and request a slot reset.
-> 21ea21252eddb3c Edward Cree 2020-06-29  1225   */
-> 21ea21252eddb3c Edward Cree 2020-06-29  1226  static pci_ers_result_t efx_io_error_detected(struct pci_dev *pdev,
-> 21ea21252eddb3c Edward Cree 2020-06-29  1227  					      enum pci_channel_state state)
-> 21ea21252eddb3c Edward Cree 2020-06-29  1228  {
-> 21ea21252eddb3c Edward Cree 2020-06-29  1229  	pci_ers_result_t status = PCI_ERS_RESULT_RECOVERED;
-> 21ea21252eddb3c Edward Cree 2020-06-29  1230  	struct efx_nic *efx = pci_get_drvdata(pdev);
-> 21ea21252eddb3c Edward Cree 2020-06-29  1231  
-> 21ea21252eddb3c Edward Cree 2020-06-29 @1232  	if (state == pci_channel_io_perm_failure)
-> 21ea21252eddb3c Edward Cree 2020-06-29  1233  		return PCI_ERS_RESULT_DISCONNECT;
-> 21ea21252eddb3c Edward Cree 2020-06-29  1234  
-> 21ea21252eddb3c Edward Cree 2020-06-29  1235  	rtnl_lock();
-> 21ea21252eddb3c Edward Cree 2020-06-29  1236  
-> 21ea21252eddb3c Edward Cree 2020-06-29  1237  	if (efx->state != STATE_DISABLED) {
-> 21ea21252eddb3c Edward Cree 2020-06-29  1238  		efx->state = STATE_RECOVERY;
-> 21ea21252eddb3c Edward Cree 2020-06-29  1239  		efx->reset_pending = 0;
-> 21ea21252eddb3c Edward Cree 2020-06-29  1240  
-> 21ea21252eddb3c Edward Cree 2020-06-29  1241  		efx_device_detach_sync(efx);
-> 21ea21252eddb3c Edward Cree 2020-06-29  1242  
-> 21ea21252eddb3c Edward Cree 2020-06-29  1243  		efx_stop_all(efx);
-> 21ea21252eddb3c Edward Cree 2020-06-29  1244  		efx_disable_interrupts(efx);
-> 21ea21252eddb3c Edward Cree 2020-06-29  1245  
-> 21ea21252eddb3c Edward Cree 2020-06-29  1246  		status = PCI_ERS_RESULT_NEED_RESET;
-> 21ea21252eddb3c Edward Cree 2020-06-29  1247  	} else {
-> 21ea21252eddb3c Edward Cree 2020-06-29  1248  		/* If the interface is disabled we don't want to do anything
-> 21ea21252eddb3c Edward Cree 2020-06-29  1249  		 * with it.
-> 21ea21252eddb3c Edward Cree 2020-06-29  1250  		 */
-> 21ea21252eddb3c Edward Cree 2020-06-29  1251  		status = PCI_ERS_RESULT_RECOVERED;
-> 21ea21252eddb3c Edward Cree 2020-06-29  1252  	}
-> 21ea21252eddb3c Edward Cree 2020-06-29  1253  
-> 21ea21252eddb3c Edward Cree 2020-06-29  1254  	rtnl_unlock();
-> 21ea21252eddb3c Edward Cree 2020-06-29  1255  
-> 21ea21252eddb3c Edward Cree 2020-06-29  1256  	pci_disable_device(pdev);
-> 21ea21252eddb3c Edward Cree 2020-06-29  1257  
-> 21ea21252eddb3c Edward Cree 2020-06-29  1258  	return status;
-> 21ea21252eddb3c Edward Cree 2020-06-29  1259  }
-> 21ea21252eddb3c Edward Cree 2020-06-29  1260  
-> 21ea21252eddb3c Edward Cree 2020-06-29  1261  /* Fake a successful reset, which will be performed later in efx_io_resume. */
-> 21ea21252eddb3c Edward Cree 2020-06-29  1262  static pci_ers_result_t efx_io_slot_reset(struct pci_dev *pdev)
-> 21ea21252eddb3c Edward Cree 2020-06-29  1263  {
-> 21ea21252eddb3c Edward Cree 2020-06-29  1264  	struct efx_nic *efx = pci_get_drvdata(pdev);
-> 21ea21252eddb3c Edward Cree 2020-06-29  1265  	pci_ers_result_t status = PCI_ERS_RESULT_RECOVERED;
-> 21ea21252eddb3c Edward Cree 2020-06-29  1266  
-> 21ea21252eddb3c Edward Cree 2020-06-29  1267  	if (pci_enable_device(pdev)) {
-> 21ea21252eddb3c Edward Cree 2020-06-29  1268  		netif_err(efx, hw, efx->net_dev,
-> 21ea21252eddb3c Edward Cree 2020-06-29  1269  			  "Cannot re-enable PCI device after reset.\n");
-> 21ea21252eddb3c Edward Cree 2020-06-29  1270  		status =  PCI_ERS_RESULT_DISCONNECT;
-> 21ea21252eddb3c Edward Cree 2020-06-29  1271  	}
-> 21ea21252eddb3c Edward Cree 2020-06-29  1272  
-> 21ea21252eddb3c Edward Cree 2020-06-29  1273  	return status;
-> 21ea21252eddb3c Edward Cree 2020-06-29  1274  }
-> 21ea21252eddb3c Edward Cree 2020-06-29  1275  
-> 21ea21252eddb3c Edward Cree 2020-06-29  1276  /* Perform the actual reset and resume I/O operations. */
-> 21ea21252eddb3c Edward Cree 2020-06-29  1277  static void efx_io_resume(struct pci_dev *pdev)
-> 21ea21252eddb3c Edward Cree 2020-06-29  1278  {
-> 21ea21252eddb3c Edward Cree 2020-06-29  1279  	struct efx_nic *efx = pci_get_drvdata(pdev);
-> 21ea21252eddb3c Edward Cree 2020-06-29  1280  	int rc;
-> 21ea21252eddb3c Edward Cree 2020-06-29  1281  
-> 21ea21252eddb3c Edward Cree 2020-06-29  1282  	rtnl_lock();
-> 21ea21252eddb3c Edward Cree 2020-06-29  1283  
-> 21ea21252eddb3c Edward Cree 2020-06-29  1284  	if (efx->state == STATE_DISABLED)
-> 21ea21252eddb3c Edward Cree 2020-06-29  1285  		goto out;
-> 21ea21252eddb3c Edward Cree 2020-06-29  1286  
-> 21ea21252eddb3c Edward Cree 2020-06-29  1287  	rc = efx_reset(efx, RESET_TYPE_ALL);
-> 21ea21252eddb3c Edward Cree 2020-06-29  1288  	if (rc) {
-> 21ea21252eddb3c Edward Cree 2020-06-29  1289  		netif_err(efx, hw, efx->net_dev,
-> 21ea21252eddb3c Edward Cree 2020-06-29  1290  			  "efx_reset failed after PCI error (%d)\n", rc);
-> 21ea21252eddb3c Edward Cree 2020-06-29  1291  	} else {
-> 21ea21252eddb3c Edward Cree 2020-06-29  1292  		efx->state = STATE_READY;
-> 21ea21252eddb3c Edward Cree 2020-06-29  1293  		netif_dbg(efx, hw, efx->net_dev,
-> 21ea21252eddb3c Edward Cree 2020-06-29  1294  			  "Done resetting and resuming IO after PCI error.\n");
-> 21ea21252eddb3c Edward Cree 2020-06-29  1295  	}
-> 21ea21252eddb3c Edward Cree 2020-06-29  1296  
-> 21ea21252eddb3c Edward Cree 2020-06-29  1297  out:
-> 21ea21252eddb3c Edward Cree 2020-06-29  1298  	rtnl_unlock();
-> 21ea21252eddb3c Edward Cree 2020-06-29  1299  }
-> 21ea21252eddb3c Edward Cree 2020-06-29  1300  
-> 21ea21252eddb3c Edward Cree 2020-06-29  1301  /* For simplicity and reliability, we always require a slot reset and try to
-> 21ea21252eddb3c Edward Cree 2020-06-29  1302   * reset the hardware when a pci error affecting the device is detected.
-> 21ea21252eddb3c Edward Cree 2020-06-29  1303   * We leave both the link_reset and mmio_enabled callback unimplemented:
-> 21ea21252eddb3c Edward Cree 2020-06-29  1304   * with our request for slot reset the mmio_enabled callback will never be
-> 21ea21252eddb3c Edward Cree 2020-06-29  1305   * called, and the link_reset callback is not used by AER or EEH mechanisms.
-> 21ea21252eddb3c Edward Cree 2020-06-29  1306   */
-> 21ea21252eddb3c Edward Cree 2020-06-29  1307  const struct pci_error_handlers efx_err_handlers = {
-> 21ea21252eddb3c Edward Cree 2020-06-29 @1308  	.error_detected = efx_io_error_detected,
-> 21ea21252eddb3c Edward Cree 2020-06-29  1309  	.slot_reset	= efx_io_slot_reset,
-> 21ea21252eddb3c Edward Cree 2020-06-29  1310  	.resume		= efx_io_resume,
-> 21ea21252eddb3c Edward Cree 2020-06-29  1311  };
-> 2d73515a1ce4ef8 Edward Cree 2020-06-30  1312  
+> >   atomisp_css_input_set_mode
 > 
-> :::::: The code at line 1232 was first introduced by commit
-> :::::: 21ea21252eddb3cea56845f58f87208062799bef sfc: commonise PCI error handlers
+> This has been pending in Mauro's tree.
 > 
-> :::::: TO: Edward Cree <ecree@solarflare.com>
-> :::::: CC: David S. Miller <davem@davemloft.net>
+> > Maybe they should all be changed together?  Or maybe this needs an
+> > explanation about why some places need intel_mid_identify_cpu() and
+> > others need x86_match_cpu()?
 > 
-> ---
-> 0-DAY CI Kernel Test Service, Intel Corporation
-> https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+> No. The rest is subject to huge clean up (complete removal) in the future.
+> I don't want to waste time on something which I will remove for sure.
 
+OK, I'll leave this to the x86 guys.  If I were merging it I would
+want a little more explanation, but this isn't PCI-related at all and
+I'm sure they understand this better than I do.
 
+Bjorn
