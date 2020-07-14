@@ -2,181 +2,194 @@ Return-Path: <SRS0=Y43U=AZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38343C433E6
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Jul 2020 09:44:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43F1DC433E2
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Jul 2020 10:04:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1950D221F2
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Jul 2020 09:44:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 21C8121D7A
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Jul 2020 10:04:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jM+qX4Ti"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bJw/CWfE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726834AbgGNJoY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 Jul 2020 05:44:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37936 "EHLO
+        id S1726761AbgGNKEe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Jul 2020 06:04:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41074 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725816AbgGNJoW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2020 05:44:22 -0400
-Received: from mail-il1-x141.google.com (mail-il1-x141.google.com [IPv6:2607:f8b0:4864:20::141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E32BC061755;
-        Tue, 14 Jul 2020 02:44:22 -0700 (PDT)
-Received: by mail-il1-x141.google.com with SMTP id t18so13704797ilh.2;
-        Tue, 14 Jul 2020 02:44:22 -0700 (PDT)
+        with ESMTP id S1725906AbgGNKEd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2020 06:04:33 -0400
+Received: from mail-ed1-x543.google.com (mail-ed1-x543.google.com [IPv6:2a00:1450:4864:20::543])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4EBAEC061755;
+        Tue, 14 Jul 2020 03:04:33 -0700 (PDT)
+Received: by mail-ed1-x543.google.com with SMTP id b15so16402548edy.7;
+        Tue, 14 Jul 2020 03:04:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:reply-to:from:date:message-id
-         :subject:to:cc:content-transfer-encoding;
-        bh=Tgm0OYoDMREUwKgBzALPWRuGGwcOUHZ7yNd5VzH1jD8=;
-        b=jM+qX4Ti315cOlTJ+VUcYkhq8TZ1sJD7ftmO0JD5IpsN8kCQahF698aWFTAOXFdT0Q
-         HcDziCsqjsfy5XRD7ebTVvXA0N4xNmaGvq6fOOT6qMPZuI73C8jaNL3mnrBCo8bsbQN9
-         HCbT6Xj3sLKNEa/9227nfI3t6zFXABnX5mVasdpVha9E7WNX6tAQZtRxmEi2BGCPKpNx
-         oJegoUqWcsUe9furKYA2lgMTtioEX3+qFXCIAf+97ygpi9aM5MLPr/JnMwXeBTizXXtU
-         waO68KXJ9Wgaxb4YyPuCWZUOe+nXpxyILWdmdz9StZGYXG14HxqClZ9yJXs6EAp9KNMK
-         YRJQ==
+        h=from:to:cc:subject:date:message-id;
+        bh=Z9A/niHETTJ6sG1YCidrVIts+5Cm3jRqOKxgMwZf804=;
+        b=bJw/CWfEaGdgNEsvB+E0Pil+beiADxQRlYxFucL33vnzGqhY657FC8SLKndNCYmWBW
+         RG5pWkJLTJi7uV42p3TsQHKr/zZfidLqtMJ6mhYMNC7lnI8wL9ob0ZHPC/oUfDh7idx9
+         YzZ5BPoKFaD4VIy/72jiqKG0NxCQQ/8/m0foHD5mlcSJx45cFGCE0ILJ//80+HYv7hgW
+         vQPwbztXczFxvfH8naRy5OzPhS16kn4sp5IQ1SShba7JIk1FYKiSmcPbBnzuxhJPin52
+         zs+2qK4Yl/c3Za2m01tJx2/dAlc7v3zAHdgKWQuYZnn8eWzCtCNQsxS2ZxmznDCviBeh
+         Aeng==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:reply-to
-         :from:date:message-id:subject:to:cc:content-transfer-encoding;
-        bh=Tgm0OYoDMREUwKgBzALPWRuGGwcOUHZ7yNd5VzH1jD8=;
-        b=YzelWiUbzRv3bK4uEDSkP8Om1KGXG6c0cPzxRe62M9vE9S2cSdDN71KprFJtUadlNP
-         msdlpNIHJ8nehFaLsCLMK2kzQvSkk3puKeafGIeKOlDSHHnNUsvvE4/ZYuoXFdOevbC2
-         5Cfhwq4xW0SpzAfVb24QvQJVuvVHplQ/Gd3huSFZSOCnPR7MbO3xR7kXDQSoeaYl787r
-         MbzlPT64c6BvVXcENq6wvllhebgOqvlDucy3AhBEgIknTWJ3Byh9ENDl7Wlxpjfl2Fka
-         B27lioTqg7MuJXndAv7c7SFNHmdDsdeG3Evvj7jIWcldZSweIsg75t1Av9a9GelaPeNZ
-         oDdA==
-X-Gm-Message-State: AOAM530ZrGExbNgcQ8CmW9f2KTNVU0TYYoT00o09TPj+GbW5t7Xi8Vn/
-        E4DcWPSek/Yj2zew1pmL5WQRsSsqUam/wO8Nm6ymd+A7snE=
-X-Google-Smtp-Source: ABdhPJz+ivIV1Co3GNe6TDuCaK8ew/gDSSyhbGfaADNu+YjF9UfRP+y0tlFcRKz3l9JpO1zT8YmnCV67sZd69ABTNZc=
-X-Received: by 2002:a92:290a:: with SMTP id l10mr4174366ilg.204.1594719861754;
- Tue, 14 Jul 2020 02:44:21 -0700 (PDT)
-MIME-Version: 1.0
-References: <20200624203200.78870-1-samitolvanen@google.com>
- <671d8923-ed43-4600-2628-33ae7cb82ccb@molgen.mpg.de> <CA+icZUXPB_C1bjA13zi3OLFCpiZh+GsgHT0y6kumzVRavs4LkQ@mail.gmail.com>
- <20200712184041.GA1838@Ryzen-9-3900X.localdomain>
-In-Reply-To: <20200712184041.GA1838@Ryzen-9-3900X.localdomain>
-Reply-To: sedat.dilek@gmail.com
-From:   Sedat Dilek <sedat.dilek@gmail.com>
-Date:   Tue, 14 Jul 2020 11:44:10 +0200
-Message-ID: <CA+icZUWyqb8jdzTAophvBKuX3e2NvG7vQPnMW+SRW5v0PmU7TA@mail.gmail.com>
-Subject: Re: [PATCH 00/22] add support for Clang LTO
-To:     Nathan Chancellor <natechancellor@gmail.com>
-Cc:     Paul Menzel <pmenzel@molgen.mpg.de>,
-        Sami Tolvanen <samitolvanen@google.com>,
-        Masahiro Yamada <masahiroy@kernel.org>,
-        Will Deacon <will@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Paul E. McKenney" <paulmck@kernel.org>,
-        Kees Cook <keescook@chromium.org>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Clang-Built-Linux ML <clang-built-linux@googlegroups.com>,
-        kernel-hardening@lists.openwall.com, linux-arch@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kbuild@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        x86@kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=Z9A/niHETTJ6sG1YCidrVIts+5Cm3jRqOKxgMwZf804=;
+        b=XuRXw8XqR/Djz3HSx4juHq98axkx/Mwh8ty51ATn0Hx9h0CiYZEEuCBXWRLz8CnIRO
+         gWXw5vBAxy4dQRtIe5ELCc9dThMX8CyRN7PZz10mHi8AeJz6Ux4euMYm/kA3d2uPahXq
+         whcro/SOCP5B0VTVu4nIAEm/ZFOvOX9QDrw65bDj+BXBAB6fLxke/OAe3wJa8EYADMdP
+         47SUbaUOn/34Yyuge6MugsBEa6APZtw2KvNZoxsd+Z+SeyoTbukMntROW44ASow9uE7U
+         ZExIy53JkLZyCjOS/mWWBZ82382TK0xaShgKTnz5BLfUDtNcPTmi0FzctoGaZXPIR5bX
+         BZvQ==
+X-Gm-Message-State: AOAM5333Epmbh62lMNj8C+1zspjPT0EaGyk63vZMZ6DObgjHNjY3+cz7
+        VBQRilY7I3NxL6BU6EYA0Q8=
+X-Google-Smtp-Source: ABdhPJz5BLx6UNGp+PcUoVcl9C9PveBd35/nU0renWNn761chkn0KvLT9qpMImrdubKCO2n43ShSeQ==
+X-Received: by 2002:a05:6402:176e:: with SMTP id da14mr3798086edb.262.1594721071939;
+        Tue, 14 Jul 2020 03:04:31 -0700 (PDT)
+Received: from net.saheed (54007186.dsl.pool.telekom.hu. [84.0.113.134])
+        by smtp.gmail.com with ESMTPSA id bs18sm14137672edb.38.2020.07.14.03.04.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 14 Jul 2020 03:04:31 -0700 (PDT)
+From:   Saheed Olayemi Bolarinwa <refactormyself@gmail.com>
+To:     helgaas@kernel.org
+Cc:     Bolarinwa Olayemi Saheed <refactormyself@gmail.com>,
+        bjorn@helgaas.com, skhan@linuxfoundation.org,
+        linux-pci@vger.kernel.org,
+        linux-kernel-mentees@lists.linuxfoundation.org,
+        linux-kernel@vger.kernel.org,
+        Mike Marciniszyn <mike.marciniszyn@intel.com>,
+        Dennis Dalessandro <dennis.dalessandro@intel.com>,
+        Doug Ledford <dledford@redhat.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>, linux-rdma@vger.kernel.org
+Subject: [PATCH 0/14 v4] PCI: Remove '*val = 0' from pcie_capability_read_*()
+Date:   Tue, 14 Jul 2020 13:04:42 +0200
+Message-Id: <20200714110445.32605-1-refactormyself@gmail.com>
+X-Mailer: git-send-email 2.18.2
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sun, Jul 12, 2020 at 8:40 PM Nathan Chancellor
-<natechancellor@gmail.com> wrote:
->
-> On Sun, Jul 12, 2020 at 10:59:17AM +0200, Sedat Dilek wrote:
-> > On Sat, Jul 11, 2020 at 6:32 PM Paul Menzel <pmenzel@molgen.mpg.de> wro=
-te:
-> > >
-> > > Dear Sami,
-> > >
-> > >
-> > > Am 24.06.20 um 22:31 schrieb Sami Tolvanen:
-> > > > This patch series adds support for building x86_64 and arm64 kernel=
-s
-> > > > with Clang's Link Time Optimization (LTO).
-> > > >
-> > > > In addition to performance, the primary motivation for LTO is to al=
-low
-> > > > Clang's Control-Flow Integrity (CFI) to be used in the kernel. Goog=
-le's
-> > > > Pixel devices have shipped with LTO+CFI kernels since 2018.
-> > > >
-> > > > Most of the patches are build system changes for handling LLVM bitc=
-ode,
-> > > > which Clang produces with LTO instead of ELF object files, postponi=
-ng
-> > > > ELF processing until a later stage, and ensuring initcall ordering.
-> > > >
-> > > > Note that first objtool patch in the series is already in linux-nex=
-t,
-> > > > but as it's needed with LTO, I'm including it also here to make tes=
-ting
-> > > > easier.
-> > >
-> > > [=E2=80=A6]
-> > >
-> > > Thank you very much for sending these changes.
-> > >
-> > > Do you have a branch, where your current work can be pulled from? You=
-r
-> > > branch on GitHub [1] seems 15 months old.
-> > >
-> >
-> > Agreed it's easier to git-pull.
-> > I have seen [1] - not sure if this is the latest version.
-> > Alternatively, you can check patchwork LKML by searching for $submitter=
-.
-> > ( You can open patch 01/22 and download the whole patch-series by
-> > following the link "series", see [3]. )
-> >
-> > - Sedat -
-> >
-> > [1] https://git.kernel.org/pub/scm/linux/kernel/git/masahiroy/linux-kbu=
-ild.git/log/?h=3Dlto
-> > [2] https://lore.kernel.org/patchwork/project/lkml/list/?series=3D&subm=
-itter=3D19676
-> > [3] https://lore.kernel.org/patchwork/series/450026/mbox/
-> >
->
-> Sami tagged this series on his GitHub:
->
-> https://github.com/samitolvanen/linux/releases/tag/lto-v1
->
-> git pull https://github.com/samitolvanen/linux lto-v1
->
-> Otherwise, he is updating the clang-cfi branch that includes both the
-> LTO and CFI patchsets. You can pull that and just turn on
-> CONFIG_LTO_CLANG.
->
-> Lastly, for the future, I would recommend grabbing b4 to easily apply
-> patches (specifically full series) from lore.kernel.org.
->
-> https://git.kernel.org/pub/scm/utils/b4/b4.git/
-> https://git.kernel.org/pub/scm/utils/b4/b4.git/tree/README.rst
->
-> You could grab this series and apply it easily by either downloading the
-> mbox file and following the instructions it gives for applying the mbox
-> file:
->
-> $ b4 am 20200624203200.78870-1-samitolvanen@google.com
->
-> or I prefer piping so that I don't have to clean up later:
->
-> $ b4 am -o - 20200624203200.78870-1-samitolvanen@google.com | git am
->
+From: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
 
-It is always a pleasure to read your replies and enrich my know-how
-beyond Linux-kernel hacking :-).
+v4 CHANGES:
+- Remove unnecessary boolean conversion
+- fix bugs introduced by previous version in PATCH 11/14
 
-Thanks for the tip with "b4" tool.
-Might add this to our ClangBuiltLinux wiki "Command line tips and tricks"?
+v3 CHANGES:
+- Split previous PATCH 6/13 into two : PATCH 6/14 and PATCH 7/14
+- Fix commit message of PATCH 5/14
+- Update Patch numbering and Commit messages
+- Add 'Acked by Greg KH' to PATCH 2/14
+- Add PATCH version
 
-- Sedat -
+v2 CHANGES:
+- Fix missing comma, causing the email cc error
+- Fix typos and numbering errors in commit messages
+- Add commit message to 13/13
+- Add two more patches: PATCH 3/13 and PATCH 4/13
 
-[1] https://github.com/ClangBuiltLinux/linux/wiki/Command-line-tips-and-tri=
-cks
+MERGING:
+Patch 7/14 depends on Patch 6/14. However Patch 6/14 has no dependency.
+Please, merge PATCH 7/14 only after Patch 6/14.
+Patch 14/14 depend on all preceeding patchs. Except for Patch 6/14 and
+Patch 7/14, all other patches are independent of one another. Hence,
+please merge Patch 14/14 only after other patches in this series have
+been merged.
+
+
+PATCH 6/14:
+Make the function set status to "Power On" by default and only set to
+Set "Power Off" only if pcie_capability_read_word() is successful and
+(slot_ctrl & PCI_EXP_SLTCTL_PCC) == PCI_EXP_SLTCTL_PWR_OFF. 
+
+PATCH 1/14 to 13/14:
+Check the return value of pcie_capability_read_*() to ensure success or
+confirm failure. While maintaining these functions, this ensures that the
+changes in PATCH 14/14 does not introduce any bug. 
+
+PATCH 14/14:
+There are several reasons why a PCI capability read may fail whether the
+device is present or not. If this happens, pcie_capability_read_*() will
+return -EINVAL/PCIBIOS_BAD_REGISTER_NUMBER or PCIBIOS_DEVICE_NOT_FOUND
+and *val is set to 0.
+
+This behaviour if further ensured by this code inside
+pcie_capability_read_*()
+
+ ret = pci_read_config_dword(dev, pci_pcie_cap(dev) + pos, val);
+ /*
+  * Reset *val to 0 if pci_read_config_dword() fails, it may
+  * have been written as 0xFFFFFFFF if hardware error happens
+  * during pci_read_config_dword().
+  */
+ if (ret)
+	 *val = 0;
+ return ret;
+
+a) Since all pci_generic_config_read() does is read a register value,
+it may return success after reading a ~0 which *may* have been fabricated
+by the PCI host bridge due to a read timeout. Hence pci_read_config_*() 
+will return success with a fabricated ~0 in *val, indicating a problem.
+In this case, the assumed behaviour of  pcie_capability_read_*() will be
+wrong. To avoid error slipping through, more checks are necessary.
+
+b) pci_read_config_*() will return PCIBIOS_DEVICE_NOT_FOUND only if 
+dev->error_state = pci_channel_io_perm_failure (i.e. 
+pci_dev_is_disconnected()) or if pci_generic_config_read() can't find the
+device. In both cases *val is initially set to ~0 but as shown in the code
+above pcie_capability_read_*() resets it back to 0. Even with this effort,
+drivers still have to perform validation checks more so if 0 is a valid
+value.
+
+Most drivers only consider the case (b) and in some cases, there is the 
+expectation that on timeout *val has a fabricated value of ~0, which *may*
+not always be true as explained in (a).
+
+In any case, checks need to be done to validate the value read and maybe
+confirm which error has occurred. It is better left to the drivers to do.
+
+Check the return value of pcie_capability_read_dword() to ensure success
+and avoid bug as a result of Patch 14/14.
+Remove the reset of *val to 0 when pci_read_config_*() fails.
+
+
+Bolarinwa Olayemi Saheed (14):
+  IB/hfi1: Check the return value of pcie_capability_read_*()
+  misc: rtsx: Check the return value of pcie_capability_read_*()
+  ath9k: Check the return value of pcie_capability_read_*()
+  iwlegacy: Check the return value of pcie_capability_read_*()
+  PCI: pciehp: Check the return value of pcie_capability_read_*()
+  PCI: pciehp: Make "Power On" the default 
+  PCI: pciehp: Check the return value of pcie_capability_read_*()
+  PCI/ACPI: Check the return value of pcie_capability_read_*()
+  PCI: pciehp: Check the return value of pcie_capability_read_*()
+  PCI: Check the return value of pcie_capability_read_*()
+  PCI/PM: Check return value of pcie_capability_read_*()
+  PCI/AER: Check the return value of pcie_capability_read_*()
+  PCI/ASPM: Check the return value of pcie_capability_read_*()
+  PCI: Remove '*val = 0' from pcie_capability_read_*()
+
+ drivers/net/wireless/ath/ath9k/pci.c         | 5 +++--
+ drivers/net/wireless/intel/iwlegacy/common.c | 4 ++--
+ drivers/infiniband/hw/hfi1/aspm.c | 7 ++++---
+ drivers/misc/cardreader/rts5227.c | 5 +++--
+ drivers/misc/cardreader/rts5249.c | 5 +++--
+ drivers/misc/cardreader/rts5260.c | 5 +++--
+ drivers/misc/cardreader/rts5261.c | 5 +++--
+ drivers/pci/pcie/aer.c  |  5 +++--
+ drivers/pci/pcie/aspm.c | 33 +++++++++++++++++----------------
+ drivers/pci/hotplug/pciehp_hpc.c | 47 ++++++++++++++++----------------
+ drivers/pci/pci-acpi.c           | 10 ++++---
+ drivers/pci/probe.c              | 29 ++++++++++++--------
+ drivers/pci/access.c | 14 --------------
+ 13 files changed, 87 insertions(+), 87 deletions(-)
+
+-- 
+2.18.2
+
