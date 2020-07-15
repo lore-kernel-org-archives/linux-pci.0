@@ -2,128 +2,94 @@ Return-Path: <SRS0=02Cu=A2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35E62C433E1
-	for <linux-pci@archiver.kernel.org>; Wed, 15 Jul 2020 16:21:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BEB7FC433DF
+	for <linux-pci@archiver.kernel.org>; Wed, 15 Jul 2020 16:47:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1A3722065E
-	for <linux-pci@archiver.kernel.org>; Wed, 15 Jul 2020 16:21:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9B4E92065D
+	for <linux-pci@archiver.kernel.org>; Wed, 15 Jul 2020 16:47:54 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="AqujZETE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725798AbgGOQVN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 15 Jul 2020 12:21:13 -0400
-Received: from foss.arm.com ([217.140.110.172]:54384 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725792AbgGOQVN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 15 Jul 2020 12:21:13 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 7F3E531B;
-        Wed, 15 Jul 2020 09:21:12 -0700 (PDT)
-Received: from e121166-lin.cambridge.arm.com (e121166-lin.cambridge.arm.com [10.1.196.255])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 119153F718;
-        Wed, 15 Jul 2020 09:21:10 -0700 (PDT)
-Date:   Wed, 15 Jul 2020 17:21:08 +0100
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>
-Cc:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Marek =?iso-8859-1?Q?Beh=FAn?= <marek.behun@nic.cz>,
-        Remi Pommarel <repk@triplefau.lt>,
-        Tomasz Maciej Nowak <tmn505@gmail.com>,
-        Xogium <contact@xogium.me>, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3] PCI: aardvark: Don't touch PCIe registers if no card
- connected
-Message-ID: <20200715162108.GB3432@e121166-lin.cambridge.arm.com>
-References: <20200528143141.29956-1-pali@kernel.org>
- <20200702083036.12230-1-pali@kernel.org>
- <20200709113509.GB19638@e121166-lin.cambridge.arm.com>
- <20200709122208.rmfeuu6zgbwh3fr5@pali>
- <20200709144701.GA21760@e121166-lin.cambridge.arm.com>
- <20200709150959.wq6zfkcy4m6hvvpl@pali>
- <20200710091800.GA3419@e121166-lin.cambridge.arm.com>
- <20200713082747.e3q3ml3wpbszn4j7@pali>
- <20200713112325.GA25865@e121166-lin.cambridge.arm.com>
- <20200715121726.eh4xglkdbcqkh7td@pali>
+        id S1726905AbgGOQry (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 15 Jul 2020 12:47:54 -0400
+Received: from mail29.static.mailgun.info ([104.130.122.29]:32247 "EHLO
+        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726160AbgGOQrx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jul 2020 12:47:53 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1594831673; h=Date: Message-Id: Cc: To: References:
+ In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
+ Content-Type: Sender; bh=0YNgags7lBPRj9aPsnUXN6sVUi5iHlWg3RNlkFMPnIg=;
+ b=AqujZETEar7TLAmlO/QkX7hrE7wSo2eAwuB5m0CJ+YjTbD+DiQI8amHFKCuFfFcNxJkzsrf5
+ +cW/kcX+GbaJBqz2fbA18VIqvZX8s3fGWlAHcNDI5wUpWuYZJFMYNTQpTd/gdeaZOENx9rOO
+ hXL9ZY5AE/FcXF1C3F8zkeAS4uo=
+X-Mailgun-Sending-Ip: 104.130.122.29
+X-Mailgun-Sid: WyI2YzdiNyIsICJsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnIiwgImJlOWU0YSJd
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n16.prod.us-west-2.postgun.com with SMTP id
+ 5f0f3338512812c070a22a4a (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 15 Jul 2020 16:47:52
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 8CED9C43391; Wed, 15 Jul 2020 16:47:52 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 57945C433C9;
+        Wed, 15 Jul 2020 16:47:50 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 57945C433C9
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20200715121726.eh4xglkdbcqkh7td@pali>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH 4/14 v3] iwlegacy: Check the return value of
+ pcie_capability_read_*()
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20200713175529.29715-3-refactormyself@gmail.com>
+References: <20200713175529.29715-3-refactormyself@gmail.com>
+To:     "Saheed O. Bolarinwa" <refactormyself@gmail.com>
+Cc:     skhan@linuxfoundation.org, linux-pci@vger.kernel.org,
+        linux-kernel-mentees@lists.linuxfoundation.org,
+        linux-kernel@vger.kernel.org, Stanislaw Gruszka <stf_xl@wp.pl>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
+User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
+Message-Id: <20200715164752.8CED9C43391@smtp.codeaurora.org>
+Date:   Wed, 15 Jul 2020 16:47:52 +0000 (UTC)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jul 15, 2020 at 02:17:26PM +0200, Pali Rohár wrote:
-> On Monday 13 July 2020 12:23:25 Lorenzo Pieralisi wrote:
-> > On Mon, Jul 13, 2020 at 10:27:47AM +0200, Pali Rohár wrote:
-> > > On Friday 10 July 2020 10:18:00 Lorenzo Pieralisi wrote:
-> > > > On Thu, Jul 09, 2020 at 05:09:59PM +0200, Pali Rohár wrote:
-> > > > > > I understand that but the bridge bus resource can be trimmed to just
-> > > > > > contain the root bus because that's the only one where there is a
-> > > > > > chance you can enumerate a device.
-> > > > > 
-> > > > > It is possible to register only root bridge without endpoint?
-> > > > 
-> > > > It is possible to register the root bridge with a trimmed IORESOURCE_BUS
-> > > > so that you don't enumerate anything other than the root port.
-> > > 
-> > > Hello Lorenzo! I really do not know how to achieve it. From code it
-> > > looks like that pci/probe.c scans child buses unconditionally.
-> > > 
-> > > pci-aardvark.c calls pci_host_probe() which calls functions
-> > > pci_scan_root_bus_bridge() which calls pci_scan_child_bus() which calls
-> > > pci_scan_child_bus_extend() which calls pci_scan_bridge_extend() (bridge
-> > > needs to be reconfigured) which then try to probe child bus via
-> > > pci_scan_child_bus_extend() because bridge is not card bus.
-> > > 
-> > > In function pci_scan_bridge_extend() I do not see a way how to skip
-> > > probing for child buses which would avoid enumerating aardvark root
-> > > bridge when PCIe device is not connected.
-> > > 
-> > > dmesg output contains:
-> > > 
-> > >   advk-pcie d0070000.pcie: link never came up
-> > >   advk-pcie d0070000.pcie: PCI host bridge to bus 0000:00
-> > >   pci_bus 0000:00: root bus resource [bus 00-ff]
-> > 
-> > This resource can be limited to the root bus number only before calling
-> > pci_host_probe() (ie see pci_parse_request_of_pci_ranges() and code in
-> > pci_scan_bridge_extend() that programs primary/secondary/subordinate
-> > busses) but I think that only papers over the issue, it does not fix it.
+"Saheed O. Bolarinwa" <refactormyself@gmail.com> wrote:
+
+> From: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
 > 
-> I looked at the code in pci/probe.c again and I do not think it is
-> possible to avoid scanning devices. pci_scan_child_bus_extend() is
-> unconditionally calling pci_scan_slot() for devfn=0 as the first thing.
-> And this function unconditionally calls pci_scan_device() which is
-> directly trying to read vendor id from config register.
+> On failure pcie_capability_read_dword() sets it's last parameter, val
+> to 0. However, with Patch 14/14, it is possible that val is set to ~0 on
+> failure. This would introduce a bug because (x & x) == (~0 & x).
 > 
-> So for me it looks like that kernel expects that can read vendor id and
-> device id from config register for device which is not connected.
+> This bug can be avoided without changing the function's behaviour if the
+> return value of pcie_capability_read_dword is checked to confirm success.
+> 
+> Check the return value of pcie_capability_read_dword() to ensure success.
+> 
+> Suggested-by: Bjorn Helgaas <bjorn@helgaas.com>
+> Signed-off-by: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
 
-Not if it is connected to a bus that the root port does not decode,
-that's what I am saying.
+Patch applied to wireless-drivers-next.git, thanks.
 
-> And trying to read config register would cause those timeouts in
-> aardvark.
+9018fd7f2a73 iwlegacy: Check the return value of pcie_capability_read_*()
 
-The root port (which effectively works as PCI bridge from this
-standpoint) does not issue config cycles for busses that aren't within
-its decoded bus range, which in turn is determined by the firmware
-IORESOURCE_BUS resource.
+-- 
+https://patchwork.kernel.org/patch/11660739/
 
-This issue is caused by devices that are connected downstream to
-the root port.
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
-Anyway - patch merged but I would be happy to keep this discussion
-going, somehow.
-
-If the LPC20 VFIO/IOMMU/PCI microconference is approved it can be a
-good venue for this to happen.
-
-Lorenzo
