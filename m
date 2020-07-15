@@ -7,29 +7,29 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2549C433E1
-	for <linux-pci@archiver.kernel.org>; Wed, 15 Jul 2020 14:26:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41F15C433EC
+	for <linux-pci@archiver.kernel.org>; Wed, 15 Jul 2020 14:26:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 85541205CB
-	for <linux-pci@archiver.kernel.org>; Wed, 15 Jul 2020 14:26:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 17109205CB
+	for <linux-pci@archiver.kernel.org>; Wed, 15 Jul 2020 14:26:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=nic.cz header.i=@nic.cz header.b="bU8BR010"
+	dkim=pass (1024-bit key) header.d=nic.cz header.i=@nic.cz header.b="RiKFvyZe"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728428AbgGOO0C (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 15 Jul 2020 10:26:02 -0400
-Received: from lists.nic.cz ([217.31.204.67]:34852 "EHLO mail.nic.cz"
+        id S1728517AbgGOO0L (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 15 Jul 2020 10:26:11 -0400
+Received: from mail.nic.cz ([217.31.204.67]:34942 "EHLO mail.nic.cz"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725819AbgGOO0A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 15 Jul 2020 10:26:00 -0400
+        id S1727908AbgGOO0C (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 15 Jul 2020 10:26:02 -0400
 Received: from dellmb.labs.office.nic.cz (unknown [IPv6:2001:1488:fffe:6:cac7:3539:7f1f:463])
-        by mail.nic.cz (Postfix) with ESMTP id 2FDD21405F6;
+        by mail.nic.cz (Postfix) with ESMTP id C1379140A65;
         Wed, 15 Jul 2020 16:25:58 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=nic.cz; s=default;
-        t=1594823158; bh=XjDxcdcVGrz+d5OePWpf+or5ePv31N9WBkAeqAIKxek=;
+        t=1594823158; bh=nerKxigHkObaiHyzNmlG4HvrbXZtheySdo4ELo3MtiU=;
         h=From:To:Date;
-        b=bU8BR0101pBkUmKJVcgQ51wZNhxpmIWt0MDyLAsrmrPDg1by3oLYvfdz3Z23/NFFb
-         anAk2UB9AVdFC2UMYSNlaJ4+UearZa+q78qEJmLnyveufFAhBQdIzXk7/aBQVCMIX5
-         kGyrc4VNQUyTSJnHvxZvEYmHTuJBHVz9G3HXiX1s=
+        b=RiKFvyZeKuolRbIZ6r+QCzpKswnOUAAVlUxo/xEZt5U21d6Vv/0XenaIaOSatf+fz
+         RoRbs3+oj74UxucsV/ZqHpb1V3jJmAGWF3O/mFgZHx4CExSrvcoOjf/vYFJECPJmYH
+         3TW98AiC/tzPomO2p7a0XzSygyWS/V0ozDX4raMQ=
 From:   =?UTF-8?q?Marek=20Beh=C3=BAn?= <marek.behun@nic.cz>
 To:     linux-pci@vger.kernel.org
 Cc:     Tomasz Maciej Nowak <tmn505@gmail.com>,
@@ -39,11 +39,10 @@ Cc:     Tomasz Maciej Nowak <tmn505@gmail.com>,
         linux-kernel@vger.kernel.org, Andrew Lunn <andrew@lunn.ch>,
         Xogium <contact@xogium.me>,
         =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
-        kernel test robot <lkp@intel.com>,
         =?UTF-8?q?Marek=20Beh=C3=BAn?= <marek.behun@nic.cz>
-Subject: [PATCH 1/5] PCI: aardvark: Fix compilation on s390
-Date:   Wed, 15 Jul 2020 16:25:53 +0200
-Message-Id: <20200715142557.17115-2-marek.behun@nic.cz>
+Subject: [PATCH 5/5] PCI: aardvark: Move PCIe reset card code to advk_pcie_train_link()
+Date:   Wed, 15 Jul 2020 16:25:57 +0200
+Message-Id: <20200715142557.17115-6-marek.behun@nic.cz>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200715142557.17115-1-marek.behun@nic.cz>
 References: <20200715142557.17115-1-marek.behun@nic.cz>
@@ -60,37 +59,122 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Pali Rohár <pali@kernel.org>
 
-Include linux/gpio/consumer.h instead of linux/gpio.h, as is said in the
-latter file.
+Move code which belongs to link training (delays and resets) into
+advk_pcie_train_link() function, so everything related to link training,
+including timings is at one place.
 
-This was reported by kernel test bot when compiling for s390.
+After experiments it can be observed that link training in aardvark
+hardware is very sensitive to timings and delays, so it is a good idea to
+have this code at the same place as link training calls.
 
-  drivers/pci/controller/pci-aardvark.c:350:2: error: implicit declaration of function 'gpiod_set_value_cansleep' [-Werror,-Wimplicit-function-declaration]
-  drivers/pci/controller/pci-aardvark.c:1074:21: error: implicit declaration of function 'devm_gpiod_get_from_of_node' [-Werror,-Wimplicit-function-declaration]
-  drivers/pci/controller/pci-aardvark.c:1076:14: error: use of undeclared identifier 'GPIOD_OUT_LOW'
+This patch does not change behavior of aardvark initialization.
 
-Link: https://lore.kernel.org/r/202006211118.LxtENQfl%25lkp@intel.com
-Reported-by: kernel test robot <lkp@intel.com>
-Fixes: 5169a9851da ("PCI: aardvark: Issue PERST via GPIO")
 Signed-off-by: Pali Rohár <pali@kernel.org>
-Reviewed-by: Marek Behún <marek.behun@nic.cz>
+Tested-by: Marek Behún <marek.behun@nic.cz>
 ---
- drivers/pci/controller/pci-aardvark.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/controller/pci-aardvark.c | 64 ++++++++++++++-------------
+ 1 file changed, 34 insertions(+), 30 deletions(-)
 
 diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index 90ff291c24f0..8caa80b19cf8 100644
+index 0a5aa6d77f5d..ab39b01474e8 100644
 --- a/drivers/pci/controller/pci-aardvark.c
 +++ b/drivers/pci/controller/pci-aardvark.c
-@@ -9,7 +9,7 @@
-  */
+@@ -253,6 +253,25 @@ static void advk_pcie_wait_for_retrain(struct advk_pcie *pcie)
+ 	}
+ }
  
- #include <linux/delay.h>
--#include <linux/gpio.h>
-+#include <linux/gpio/consumer.h>
- #include <linux/interrupt.h>
- #include <linux/irq.h>
- #include <linux/irqdomain.h>
++static void advk_pcie_issue_perst(struct advk_pcie *pcie)
++{
++	u32 reg;
++
++	if (!pcie->reset_gpio)
++		return;
++
++	/* PERST does not work for some cards when link training is enabled */
++	reg = advk_readl(pcie, PCIE_CORE_CTRL0_REG);
++	reg &= ~LINK_TRAINING_EN;
++	advk_writel(pcie, reg, PCIE_CORE_CTRL0_REG);
++
++	/* 10ms delay is needed for some cards */
++	dev_info(&pcie->pdev->dev, "issuing PERST via reset GPIO for 10ms\n");
++	gpiod_set_value_cansleep(pcie->reset_gpio, 1);
++	usleep_range(10000, 11000);
++	gpiod_set_value_cansleep(pcie->reset_gpio, 0);
++}
++
+ static int advk_pcie_train_at_gen(struct advk_pcie *pcie, int gen)
+ {
+ 	int ret, neg_gen;
+@@ -300,6 +319,21 @@ static void advk_pcie_train_link(struct advk_pcie *pcie)
+ 	struct device *dev = &pcie->pdev->dev;
+ 	int neg_gen = -1, gen;
+ 
++	/*
++	 * Reset PCIe card via PERST# signal. Some cards are not detected
++	 * during link training when they are in some non-initial state.
++	 */
++	advk_pcie_issue_perst(pcie);
++
++	/*
++	 * PERST# signal could have been asserted by pinctrl subsystem before
++	 * probe() callback has been called or issued explicitly by reset gpio
++	 * function advk_pcie_issue_perst(), making the endpoint going into
++	 * fundamental reset. As required by PCI Express spec a delay for at
++	 * least 100ms after such a reset before link training is needed.
++	 */
++	msleep(PCI_PM_D3COLD_WAIT);
++
+ 	/*
+ 	 * Try link training at link gen specified by device tree property
+ 	 * 'max-link-speed'. If this fails, iteratively train at lower gen.
+@@ -332,31 +366,10 @@ static void advk_pcie_train_link(struct advk_pcie *pcie)
+ 	dev_err(dev, "link never came up\n");
+ }
+ 
+-static void advk_pcie_issue_perst(struct advk_pcie *pcie)
+-{
+-	u32 reg;
+-
+-	if (!pcie->reset_gpio)
+-		return;
+-
+-	/* PERST does not work for some cards when link training is enabled */
+-	reg = advk_readl(pcie, PCIE_CORE_CTRL0_REG);
+-	reg &= ~LINK_TRAINING_EN;
+-	advk_writel(pcie, reg, PCIE_CORE_CTRL0_REG);
+-
+-	/* 10ms delay is needed for some cards */
+-	dev_info(&pcie->pdev->dev, "issuing PERST via reset GPIO for 10ms\n");
+-	gpiod_set_value_cansleep(pcie->reset_gpio, 1);
+-	usleep_range(10000, 11000);
+-	gpiod_set_value_cansleep(pcie->reset_gpio, 0);
+-}
+-
+ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
+ {
+ 	u32 reg;
+ 
+-	advk_pcie_issue_perst(pcie);
+-
+ 	/* Enable TX */
+ 	reg = advk_readl(pcie, PCIE_CORE_REF_CLK_REG);
+ 	reg |= PCIE_CORE_REF_CLK_TX_ENABLE;
+@@ -433,15 +446,6 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
+ 	reg |= PIO_CTRL_ADDR_WIN_DISABLE;
+ 	advk_writel(pcie, reg, PIO_CTRL);
+ 
+-	/*
+-	 * PERST# signal could have been asserted by pinctrl subsystem before
+-	 * probe() callback has been called or issued explicitly by reset gpio
+-	 * function advk_pcie_issue_perst(), making the endpoint going into
+-	 * fundamental reset. As required by PCI Express spec a delay for at
+-	 * least 100ms after such a reset before link training is needed.
+-	 */
+-	msleep(PCI_PM_D3COLD_WAIT);
+-
+ 	advk_pcie_train_link(pcie);
+ 
+ 	/*
 -- 
 2.26.2
 
