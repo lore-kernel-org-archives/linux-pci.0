@@ -2,114 +2,105 @@ Return-Path: <SRS0=02Cu=A2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 631A7C433DF
-	for <linux-pci@archiver.kernel.org>; Wed, 15 Jul 2020 13:05:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D183C433E0
+	for <linux-pci@archiver.kernel.org>; Wed, 15 Jul 2020 14:26:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3FD5C2076C
-	for <linux-pci@archiver.kernel.org>; Wed, 15 Jul 2020 13:05:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1594818311;
-	bh=/JbnkKca9isth2Byqb4RT/WZLJphSaAVAFp0XT01uu0=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:List-ID:From;
-	b=LOeX/ii+p2iCOji/UpUnQwLy0ucsJqjOlClN5Yv2coYh7ayil80+np2f7HYUWnBye
-	 oLf/uS6QayFms4OYxSafin3HaHQLLFUSj3xl7ca5Nm2NpAxm44WJ6LAtwR+hAtRyR+
-	 PgvvUcGQiQiPWQczF7dLFVXXrYGH5tImzseds0Eo=
+	by mail.kernel.org (Postfix) with ESMTP id B1081205CB
+	for <linux-pci@archiver.kernel.org>; Wed, 15 Jul 2020 14:26:00 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=nic.cz header.i=@nic.cz header.b="A6FljPmO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731130AbgGONFK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 15 Jul 2020 09:05:10 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56456 "EHLO mail.kernel.org"
+        id S1728264AbgGOO0A (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 15 Jul 2020 10:26:00 -0400
+Received: from lists.nic.cz ([217.31.204.67]:34900 "EHLO mail.nic.cz"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729900AbgGONFK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 15 Jul 2020 09:05:10 -0400
-Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 659CC20657;
-        Wed, 15 Jul 2020 13:05:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1594818309;
-        bh=/JbnkKca9isth2Byqb4RT/WZLJphSaAVAFp0XT01uu0=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=11WLdv3zamDVHmM6A7sD3vIrgCjWwh2+roNC+ngAh1r1bKzwRyZN5Hv+dK7odXwI5
-         Z96N6IXf1vw98heHULxcTXjVl85NZfzyR30Aywy25KKdwDK5SlEJumKgoTpN0pRPd3
-         3TcKkQHsxLcEAqtcWXhh1ufg29KGZjgEkTtjUSf0=
-Received: from disco-boy.misterjones.org ([51.254.78.96] helo=www.loen.fr)
-        by disco-boy.misterjones.org with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.92)
-        (envelope-from <maz@kernel.org>)
-        id 1jvh5v-00BzoN-VJ; Wed, 15 Jul 2020 14:05:08 +0100
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Wed, 15 Jul 2020 14:05:07 +0100
-From:   Marc Zyngier <maz@kernel.org>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     linux-arm-kernel@lists.infradead.org,
-        Diana Craciun <diana.craciun@oss.nxp.com>,
-        iommu@lists.linux-foundation.org, linux-acpi@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        Rob Herring <robh+dt@kernel.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Joerg Roedel <joro@8bytes.org>,
-        Hanjun Guo <guohanjun@huawei.com>,
+        id S1727908AbgGOOZ7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 15 Jul 2020 10:25:59 -0400
+Received: from dellmb.labs.office.nic.cz (unknown [IPv6:2001:1488:fffe:6:cac7:3539:7f1f:463])
+        by mail.nic.cz (Postfix) with ESMTP id 79497140A5D;
+        Wed, 15 Jul 2020 16:25:58 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=nic.cz; s=default;
+        t=1594823158; bh=sQp6sw1pd1H2vwHpvza0rOe5XDLopPj0Q2DKS+BS2DA=;
+        h=From:To:Date;
+        b=A6FljPmOlB1YnkZW/BHqu5LZjzNogxWbG6hQ4nOYYzJrD1Am/M3LlZiDZ2b0DXsez
+         sZoEMejCL3j/AsKLsfB5iooPQu+6uJOrT31E4d9Si8bLSSUTP3YFxkXJ0V/cwUCtEI
+         yUXc/6PHDHH3kQOBR12cZ/gv1fWgz6J/DQepYB3M=
+From:   =?UTF-8?q?Marek=20Beh=C3=BAn?= <marek.behun@nic.cz>
+To:     linux-pci@vger.kernel.org
+Cc:     Tomasz Maciej Nowak <tmn505@gmail.com>,
+        Gregory Clement <gregory.clement@bootlin.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Sudeep Holla <sudeep.holla@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will@kernel.org>,
-        Makarand Pawagi <makarand.pawagi@nxp.com>,
-        Laurentiu Tudor <laurentiu.tudor@nxp.com>
-Subject: Re: [PATCH v2 11/12] bus/fsl-mc: Refactor the MSI domain creation in
- the DPRC driver
-In-Reply-To: <20200619082013.13661-12-lorenzo.pieralisi@arm.com>
-References: <20200521130008.8266-1-lorenzo.pieralisi@arm.com>
- <20200619082013.13661-1-lorenzo.pieralisi@arm.com>
- <20200619082013.13661-12-lorenzo.pieralisi@arm.com>
-User-Agent: Roundcube Webmail/1.4.5
-Message-ID: <bd07f44dad1d029e0d023202cbf5fc94@kernel.org>
-X-Sender: maz@kernel.org
-X-SA-Exim-Connect-IP: 51.254.78.96
-X-SA-Exim-Rcpt-To: lorenzo.pieralisi@arm.com, linux-arm-kernel@lists.infradead.org, diana.craciun@oss.nxp.com, iommu@lists.linux-foundation.org, linux-acpi@vger.kernel.org, devicetree@vger.kernel.org, linux-pci@vger.kernel.org, robh+dt@kernel.org, rjw@rjwysocki.net, joro@8bytes.org, guohanjun@huawei.com, bhelgaas@google.com, sudeep.holla@arm.com, robin.murphy@arm.com, catalin.marinas@arm.com, will@kernel.org, makarand.pawagi@nxp.com, laurentiu.tudor@nxp.com
-X-SA-Exim-Mail-From: maz@kernel.org
-X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-kernel@vger.kernel.org, Andrew Lunn <andrew@lunn.ch>,
+        Xogium <contact@xogium.me>,
+        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
+        =?UTF-8?q?Marek=20Beh=C3=BAn?= <marek.behun@nic.cz>
+Subject: [PATCH 3/5] PCI: pci-bridge-emul: Export API functions
+Date:   Wed, 15 Jul 2020 16:25:55 +0200
+Message-Id: <20200715142557.17115-4-marek.behun@nic.cz>
+X-Mailer: git-send-email 2.26.2
+In-Reply-To: <20200715142557.17115-1-marek.behun@nic.cz>
+References: <20200715142557.17115-1-marek.behun@nic.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Spamd-Bar: /
+X-Virus-Scanned: clamav-milter 0.102.2 at mail
+X-Virus-Status: Clean
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 2020-06-19 09:20, Lorenzo Pieralisi wrote:
-> From: Diana Craciun <diana.craciun@oss.nxp.com>
-> 
-> The DPRC driver is not taking into account the msi-map property
-> and assumes that the icid is the same as the stream ID. Although
-> this assumption is correct, generalize the code to include a
-> translation between icid and streamID.
-> 
-> Furthermore do not just copy the MSI domain from parent (for child
-> containers), but use the information provided by the msi-map property.
-> 
-> If the msi-map property is missing from the device tree retain the old
-> behaviour for backward compatibility ie the child DPRC objects
-> inherit the MSI domain from the parent.
-> 
-> Signed-off-by: Diana Craciun <diana.craciun@oss.nxp.com>
-> ---
->  drivers/bus/fsl-mc/dprc-driver.c            | 31 ++++++---------------
->  drivers/bus/fsl-mc/fsl-mc-bus.c             |  4 +--
->  drivers/bus/fsl-mc/fsl-mc-msi.c             | 31 +++++++++++++--------
->  drivers/bus/fsl-mc/fsl-mc-private.h         |  6 ++--
->  drivers/irqchip/irq-gic-v3-its-fsl-mc-msi.c | 15 +++++++++-
->  5 files changed, 47 insertions(+), 40 deletions(-)
+From: Pali Rohár <pali@kernel.org>
 
-For this patch and the following one:
+It allows kernel modules which are not compiled into kernel image to use
+pci-bridge-emul API functions.
 
-Acked-by: Marc Zyngier <maz@kernel.org>
+Signed-off-by: Pali Rohár <pali@kernel.org>
+Reviewed-by: Marek Behún <marek.behun@nic.cz>
+---
+ drivers/pci/pci-bridge-emul.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-         M.
+diff --git a/drivers/pci/pci-bridge-emul.c b/drivers/pci/pci-bridge-emul.c
+index ccf26d12ec61..139869d50eb2 100644
+--- a/drivers/pci/pci-bridge-emul.c
++++ b/drivers/pci/pci-bridge-emul.c
+@@ -294,6 +294,7 @@ int pci_bridge_emul_init(struct pci_bridge_emul *bridge,
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(pci_bridge_emul_init);
+ 
+ /*
+  * Cleanup a pci_bridge_emul structure that was previously initialized
+@@ -305,6 +306,7 @@ void pci_bridge_emul_cleanup(struct pci_bridge_emul *bridge)
+ 		kfree(bridge->pcie_cap_regs_behavior);
+ 	kfree(bridge->pci_regs_behavior);
+ }
++EXPORT_SYMBOL_GPL(pci_bridge_emul_cleanup);
+ 
+ /*
+  * Should be called by the PCI controller driver when reading the PCI
+@@ -366,6 +368,7 @@ int pci_bridge_emul_conf_read(struct pci_bridge_emul *bridge, int where,
+ 
+ 	return PCIBIOS_SUCCESSFUL;
+ }
++EXPORT_SYMBOL_GPL(pci_bridge_emul_conf_read);
+ 
+ /*
+  * Should be called by the PCI controller driver when writing the PCI
+@@ -430,3 +433,4 @@ int pci_bridge_emul_conf_write(struct pci_bridge_emul *bridge, int where,
+ 
+ 	return PCIBIOS_SUCCESSFUL;
+ }
++EXPORT_SYMBOL_GPL(pci_bridge_emul_conf_write);
 -- 
-Jazz is not dead. It just smells funny...
+2.26.2
+
