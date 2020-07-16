@@ -2,81 +2,94 @@ Return-Path: <SRS0=+2wZ=A3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28F50C38158
-	for <linux-pci@archiver.kernel.org>; Thu, 16 Jul 2020 17:21:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 516D0C43470
+	for <linux-pci@archiver.kernel.org>; Thu, 16 Jul 2020 17:21:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 03A4B2070E
-	for <linux-pci@archiver.kernel.org>; Thu, 16 Jul 2020 17:21:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 29E2A2070E
+	for <linux-pci@archiver.kernel.org>; Thu, 16 Jul 2020 17:21:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729418AbgGPRTC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 16 Jul 2020 13:19:02 -0400
-Received: from relmlor1.renesas.com ([210.160.252.171]:25037 "EHLO
-        relmlie5.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1729364AbgGPRTB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 16 Jul 2020 13:19:01 -0400
-X-IronPort-AV: E=Sophos;i="5.75,360,1589209200"; 
-   d="scan'208";a="52318898"
-Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie5.idc.renesas.com with ESMTP; 17 Jul 2020 02:18:57 +0900
-Received: from localhost.localdomain (unknown [10.226.36.204])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id C6A0A40B55DE;
-        Fri, 17 Jul 2020 02:18:52 +0900 (JST)
-From:   Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-To:     Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
-        Vinod Koul <vkoul@kernel.org>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Mark Brown <broonie@kernel.org>,
-        Niklas <niklas.soderlund@ragnatech.se>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Liam Girdwood <lgirdwood@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Magnus Damm <magnus.damm@gmail.com>, devicetree@vger.kernel.org
-Cc:     linux-ide@vger.kernel.org, dmaengine@vger.kernel.org,
-        linux-i2c@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
-        alsa-devel@alsa-project.org, linux-renesas-soc@vger.kernel.org,
-        linux-usb@vger.kernel.org, Prabhakar <prabhakar.csengg@gmail.com>,
-        Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-Subject: [PATCH 03/20] dt-bindings: ata: renesas,rcar-sata: Add r8a774e1 support
-Date:   Thu, 16 Jul 2020 18:18:18 +0100
-Message-Id: <1594919915-5225-4-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1594919915-5225-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
-References: <1594919915-5225-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
+        id S1729334AbgGPRSu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 16 Jul 2020 13:18:50 -0400
+Received: from mga11.intel.com ([192.55.52.93]:10449 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729313AbgGPRSs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 16 Jul 2020 13:18:48 -0400
+IronPort-SDR: LMGdHxlnO9xPDX7Hg9H8zkYvo+Us96z69yAFkPded5gOLuD4Zf3w21HVUwL3+Ir82iFGpNnAF4
+ g8X4eP+NIwsQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9684"; a="147437683"
+X-IronPort-AV: E=Sophos;i="5.75,360,1589266800"; 
+   d="scan'208";a="147437683"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Jul 2020 10:18:47 -0700
+IronPort-SDR: 7QSD0mIFZV35GRaqBa9TP6Fa8zQ8z3ynWR9ZmO2bMYDAPb6uT49V05gYbuiY2WiH71Hf1nF44t
+ ekUDmyuR2Lrg==
+X-IronPort-AV: E=Sophos;i="5.75,360,1589266800"; 
+   d="scan'208";a="286550453"
+Received: from ahduyck-mobl1.amr.corp.intel.com (HELO [10.209.124.206]) ([10.209.124.206])
+  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Jul 2020 10:18:47 -0700
+Subject: Re: [PATCH V3 1/3] PCI: Add defines for Designated Vendor-Specific
+ Capability
+To:     Randy Dunlap <rdunlap@infradead.org>,
+        "David E. Box" <david.e.box@linux.intel.com>, lee.jones@linaro.org,
+        dvhart@infradead.org, andy@infradead.org, bhelgaas@google.com
+Cc:     linux-kernel@vger.kernel.org, platform-driver-x86@vger.kernel.org,
+        linux-pci@vger.kernel.org
+References: <20200508021844.6911-1-david.e.box@linux.intel.com>
+ <20200714062323.19990-2-david.e.box@linux.intel.com>
+ <3f490460-62f8-8b49-0735-ad29653bfbc0@infradead.org>
+From:   Alexander Duyck <alexander.h.duyck@linux.intel.com>
+Message-ID: <dc459a96-1434-16bf-80d2-06b0680f9fda@linux.intel.com>
+Date:   Thu, 16 Jul 2020 10:18:33 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
+MIME-Version: 1.0
+In-Reply-To: <3f490460-62f8-8b49-0735-ad29653bfbc0@infradead.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Document SATA support for the RZ/G2H, no driver change required.
 
-Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-Reviewed-by: Marian-Cristian Rotariu <marian-cristian.rotariu.rb@bp.renesas.com>
----
- Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml | 1 +
- 1 file changed, 1 insertion(+)
 
-diff --git a/Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml b/Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml
-index d06096a7ba4b..2ad2444f1042 100644
---- a/Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml
-+++ b/Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml
-@@ -26,6 +26,7 @@ properties:
-       - items:
-           - enum:
-               - renesas,sata-r8a774b1     # RZ/G2N
-+              - renesas,sata-r8a774e1     # RZ/G2H
-               - renesas,sata-r8a7795      # R-Car H3
-               - renesas,sata-r8a77965     # R-Car M3-N
-           - const: renesas,rcar-gen3-sata # generic R-Car Gen3 or RZ/G2
--- 
-2.17.1
+On 7/15/2020 7:55 PM, Randy Dunlap wrote:
+> On 7/13/20 11:23 PM, David E. Box wrote:
+>> Add PCIe DVSEC extended capability ID and defines for the header offsets.
+>> Defined in PCIe r5.0, sec 7.9.6.
+>>
+>> Signed-off-by: David E. Box <david.e.box@linux.intel.com>
+>> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>> ---
+>>   include/uapi/linux/pci_regs.h | 5 +++++
+>>   1 file changed, 5 insertions(+)
+>>
+>> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+>> index f9701410d3b5..09daa9f07b6b 100644
+>> --- a/include/uapi/linux/pci_regs.h
+>> +++ b/include/uapi/linux/pci_regs.h
+>> @@ -720,6 +720,7 @@
+>> +#define PCI_EXT_CAP_ID_DVSEC	0x23	/* Designated Vendor-Specific */
+>> @@ -1062,6 +1063,10 @@
+>> +/* Designated Vendor-Specific (DVSEC, PCI_EXT_CAP_ID_DVSEC) */
+>> +#define PCI_DVSEC_HEADER1		0x4 /* Vendor-Specific Header1 */
+>> +#define PCI_DVSEC_HEADER2		0x8 /* Vendor-Specific Header2 */
+> 
+> Just a little comment: It would make more sense to me to
+> s/DVSEC/DVSPEC/g.
+> 
+> But then I don't have the PCIe documentation.
 
+Arguably some of the confusion might be from the patch title. DVSEC is 
+acronym for Designated Vendor-Specific Extended Capability if I recall 
+correctly. It would probably be best to call that out since the extended 
+implies it lives in the config space accessible via the memory mapped 
+config.
