@@ -2,94 +2,143 @@ Return-Path: <SRS0=+2wZ=A3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 516D0C43470
-	for <linux-pci@archiver.kernel.org>; Thu, 16 Jul 2020 17:21:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BD60C4361A
+	for <linux-pci@archiver.kernel.org>; Thu, 16 Jul 2020 17:21:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 29E2A2070E
-	for <linux-pci@archiver.kernel.org>; Thu, 16 Jul 2020 17:21:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5B77020787
+	for <linux-pci@archiver.kernel.org>; Thu, 16 Jul 2020 17:21:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1594920114;
+	bh=ctSOUR51zUNLOTRs5i7BKOjlKSkDjPbwBTLa6Z1gzwQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=Rnwa/ZXP1PD57z6ueqvtX71oD+EgBJz1LMn9h10OLFWbTWZ7vff1rO2f/XgMZSqYe
+	 w6OylKqMwaYdgdkBKd7/SsXES7w5foKlBPGqx7tzFJ5aQs2vWzw49KsmmDYuf57U9R
+	 5pbGLUT4ZPKV/rFwWyDnSVAl+O3ndG7xeohVEPzA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729334AbgGPRSu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 16 Jul 2020 13:18:50 -0400
-Received: from mga11.intel.com ([192.55.52.93]:10449 "EHLO mga11.intel.com"
+        id S1729383AbgGPRVu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 16 Jul 2020 13:21:50 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34532 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729313AbgGPRSs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 16 Jul 2020 13:18:48 -0400
-IronPort-SDR: LMGdHxlnO9xPDX7Hg9H8zkYvo+Us96z69yAFkPded5gOLuD4Zf3w21HVUwL3+Ir82iFGpNnAF4
- g8X4eP+NIwsQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9684"; a="147437683"
-X-IronPort-AV: E=Sophos;i="5.75,360,1589266800"; 
-   d="scan'208";a="147437683"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Jul 2020 10:18:47 -0700
-IronPort-SDR: 7QSD0mIFZV35GRaqBa9TP6Fa8zQ8z3ynWR9ZmO2bMYDAPb6uT49V05gYbuiY2WiH71Hf1nF44t
- ekUDmyuR2Lrg==
-X-IronPort-AV: E=Sophos;i="5.75,360,1589266800"; 
-   d="scan'208";a="286550453"
-Received: from ahduyck-mobl1.amr.corp.intel.com (HELO [10.209.124.206]) ([10.209.124.206])
-  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Jul 2020 10:18:47 -0700
-Subject: Re: [PATCH V3 1/3] PCI: Add defines for Designated Vendor-Specific
- Capability
-To:     Randy Dunlap <rdunlap@infradead.org>,
-        "David E. Box" <david.e.box@linux.intel.com>, lee.jones@linaro.org,
-        dvhart@infradead.org, andy@infradead.org, bhelgaas@google.com
-Cc:     linux-kernel@vger.kernel.org, platform-driver-x86@vger.kernel.org,
-        linux-pci@vger.kernel.org
-References: <20200508021844.6911-1-david.e.box@linux.intel.com>
- <20200714062323.19990-2-david.e.box@linux.intel.com>
- <3f490460-62f8-8b49-0735-ad29653bfbc0@infradead.org>
-From:   Alexander Duyck <alexander.h.duyck@linux.intel.com>
-Message-ID: <dc459a96-1434-16bf-80d2-06b0680f9fda@linux.intel.com>
-Date:   Thu, 16 Jul 2020 10:18:33 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S1728807AbgGPRVu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 16 Jul 2020 13:21:50 -0400
+Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8BD3420657;
+        Thu, 16 Jul 2020 17:21:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1594920109;
+        bh=ctSOUR51zUNLOTRs5i7BKOjlKSkDjPbwBTLa6Z1gzwQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=HZeRoY0aGb1fLAHBnoI42rOigziBskvvTO+Qpo3p4wN2ZLO0Kznsn3NuJbyxLybz9
+         T8CKkfj/YzPBQOEGbP5r/Dc+icJ5pS81q30niNjoEEPrvX6eGBssXZTZrUNgUjLRu1
+         0Z7GOjq7tVQf+Jik+vu/bTZiBvZqmCLNVU52/3L8=
+Date:   Thu, 16 Jul 2020 19:21:41 +0200
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     Ulf Hansson <ulf.hansson@linaro.org>
+Cc:     "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>, Arnd Bergmann <arnd@arndb.de>,
+        Rui Feng <rui_feng@realsil.com.cn>,
+        linux-nvme@lists.infradead.org,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Adrian Hunter <adrian.hunter@intel.com>
+Subject: Re: [PATCH] mmc: core: Initial support for SD express card/host
+Message-ID: <20200716172141.GA3143216@kroah.com>
+References: <20200716141534.30241-1-ulf.hansson@linaro.org>
+ <20200716161358.GA3135454@kroah.com>
+ <CAPDyKFr6eSZr2V-=YvAEZH9SmsE2SZ9j5ZS5zZEFHBqwyWRfpw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <3f490460-62f8-8b49-0735-ad29653bfbc0@infradead.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAPDyKFr6eSZr2V-=YvAEZH9SmsE2SZ9j5ZS5zZEFHBqwyWRfpw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-
-
-On 7/15/2020 7:55 PM, Randy Dunlap wrote:
-> On 7/13/20 11:23 PM, David E. Box wrote:
->> Add PCIe DVSEC extended capability ID and defines for the header offsets.
->> Defined in PCIe r5.0, sec 7.9.6.
->>
->> Signed-off-by: David E. Box <david.e.box@linux.intel.com>
->> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->> ---
->>   include/uapi/linux/pci_regs.h | 5 +++++
->>   1 file changed, 5 insertions(+)
->>
->> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
->> index f9701410d3b5..09daa9f07b6b 100644
->> --- a/include/uapi/linux/pci_regs.h
->> +++ b/include/uapi/linux/pci_regs.h
->> @@ -720,6 +720,7 @@
->> +#define PCI_EXT_CAP_ID_DVSEC	0x23	/* Designated Vendor-Specific */
->> @@ -1062,6 +1063,10 @@
->> +/* Designated Vendor-Specific (DVSEC, PCI_EXT_CAP_ID_DVSEC) */
->> +#define PCI_DVSEC_HEADER1		0x4 /* Vendor-Specific Header1 */
->> +#define PCI_DVSEC_HEADER2		0x8 /* Vendor-Specific Header2 */
+On Thu, Jul 16, 2020 at 07:04:21PM +0200, Ulf Hansson wrote:
+> On Thu, 16 Jul 2020 at 18:14, Greg Kroah-Hartman
+> <gregkh@linuxfoundation.org> wrote:
+> >
+> > On Thu, Jul 16, 2020 at 04:15:34PM +0200, Ulf Hansson wrote:
+> > > +int mmc_send_if_cond_pcie(struct mmc_host *host, u32 ocr)
+> > > +{
+> > > +     u32 resp = 0;
+> > > +     u8 pcie_bits = 0;
+> > > +     int ret;
+> > > +
+> > > +     if (host->caps2 & MMC_CAP2_SD_EXP) {
+> > > +             /* Probe card for SD express support via PCIe. */
+> > > +             pcie_bits = 0x10;
+> > > +             if (host->caps2 & MMC_CAP2_SD_EXP_1_2V)
+> > > +                     /* Probe also for 1.2V support. */
+> > > +                     pcie_bits = 0x30;
+> > > +     }
+> > > +
+> > > +     ret = __mmc_send_if_cond(host, ocr, pcie_bits, &resp);
+> > > +     if (ret)
+> > > +             return 0;
+> > > +
+> > > +     /* Continue with the SD express init, if the card supports it. */
+> > > +     resp &= 0x3000;
+> > > +     if (pcie_bits && resp) {
+> > > +             if (resp == 0x3000)
+> >
+> > 0x3000 should be some defined value, right?  Otherwise it just looks
+> > like magic bits :)
 > 
-> Just a little comment: It would make more sense to me to
-> s/DVSEC/DVSPEC/g.
+> Yeah, I was considering that, but there are already lots of magic bits
+> around here in this code. On top of that, the bits are shifted,
+> depending on how they are used.
 > 
-> But then I don't have the PCIe documentation.
+> We should probably look into doing a cleanup, so this gets clearer overall.
+> 
+> >
+> > > --- a/include/linux/mmc/host.h
+> > > +++ b/include/linux/mmc/host.h
+> > > @@ -60,6 +60,8 @@ struct mmc_ios {
+> > >  #define MMC_TIMING_MMC_DDR52 8
+> > >  #define MMC_TIMING_MMC_HS200 9
+> > >  #define MMC_TIMING_MMC_HS400 10
+> > > +#define MMC_TIMING_SD_EXP    11
+> > > +#define MMC_TIMING_SD_EXP_1_2V       12
+> > >
+> > >       unsigned char   signal_voltage;         /* signalling voltage (1.8V or 3.3V) */
+> > >
+> > > @@ -172,6 +174,9 @@ struct mmc_host_ops {
+> > >        */
+> > >       int     (*multi_io_quirk)(struct mmc_card *card,
+> > >                                 unsigned int direction, int blk_size);
+> > > +
+> > > +     /* Initialize an SD express card, mandatory for MMC_CAP2_SD_EXP. */
+> > > +     int     (*init_sd_express)(struct mmc_host *host, struct mmc_ios *ios);
+> > >  };
+> > >
+> > >  struct mmc_cqe_ops {
+> > > @@ -357,6 +362,8 @@ struct mmc_host {
+> > >  #define MMC_CAP2_HS200_1_2V_SDR      (1 << 6)        /* can support */
+> > >  #define MMC_CAP2_HS200               (MMC_CAP2_HS200_1_8V_SDR | \
+> > >                                MMC_CAP2_HS200_1_2V_SDR)
+> > > +#define MMC_CAP2_SD_EXP              (1 << 7)        /* SD express via PCIe */
+> >
+> > BIT(7)?
+> >
+> > > +#define MMC_CAP2_SD_EXP_1_2V (1 << 8)        /* SD express 1.2V */
+> >
+> > BIT(8)?
+> 
+> I can change to that, but it wouldn't be consistent with existing
+> code. Again, probably better targeted as a separate bigger cleanup on
+> top.
 
-Arguably some of the confusion might be from the patch title. DVSEC is 
-acronym for Designated Vendor-Specific Extended Capability if I recall 
-correctly. It would probably be best to call that out since the extended 
-implies it lives in the config space accessible via the memory mapped 
-config.
+Ah, good point.
+
+Ok, no objection from me!
+
+Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
