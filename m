@@ -7,150 +7,199 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1C49C433E1
-	for <linux-pci@archiver.kernel.org>; Fri, 17 Jul 2020 20:01:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12D7FC433E0
+	for <linux-pci@archiver.kernel.org>; Fri, 17 Jul 2020 20:11:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BF20F2074B
-	for <linux-pci@archiver.kernel.org>; Fri, 17 Jul 2020 20:01:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D59FB2074B
+	for <linux-pci@archiver.kernel.org>; Fri, 17 Jul 2020 20:11:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1595016093;
-	bh=LRG+TGJORIulFB++nyK9lTvfOFTTv5C3kISOBY0t8iY=;
+	s=default; t=1595016687;
+	bh=tfETmY2kzcabHaWuDq17jMljgiTJ65kMRX+WppyLeX4=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=XGj/+fK1U3qTxdhoDHvW4+koJ4CGG/ojqBOsH6C/ho7wSpfrFGm7ASf9P54eko9s8
-	 04wePSoTdKQYhQQ1ZBJ9yP0fgnGpdYhvaJJep7eps2egZphmQfdr/9MNwQdeopq6Nt
-	 rdu/Tvq9K/IHB9eAzrZtKeAvZ8F2wNzqdSFtPm4c=
+	b=M39TGRcFsbpZzo981bxj93WRmK7CDX+wnL8CKOZhiHPSfxbB9eaupDOvnyXfZKAeD
+	 QYyXr205t75tPQ/63uceKncmSJhewIh+pWOGaXBI5RsD6EF5LGTTGQw2yha9BlzcuC
+	 QNfnV40DzX4W0DtNV82mwR9uhouvAPNBtfEnXzVs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728202AbgGQUBd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 17 Jul 2020 16:01:33 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55394 "EHLO mail.kernel.org"
+        id S1727871AbgGQUL1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 17 Jul 2020 16:11:27 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57046 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726771AbgGQUBd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 17 Jul 2020 16:01:33 -0400
+        id S1726771AbgGQUL1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 17 Jul 2020 16:11:27 -0400
 Received: from localhost (mobile-166-175-191-139.mycingular.net [166.175.191.139])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BF8822070E;
-        Fri, 17 Jul 2020 20:01:31 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id DB95C20704;
+        Fri, 17 Jul 2020 20:11:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1595016092;
-        bh=LRG+TGJORIulFB++nyK9lTvfOFTTv5C3kISOBY0t8iY=;
+        s=default; t=1595016686;
+        bh=tfETmY2kzcabHaWuDq17jMljgiTJ65kMRX+WppyLeX4=;
         h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=zbdANefNPLVv8nIfgk4x2+yKpY+DKoqe/iY0UEd+WkavWu+Sv7JNbUKqARbr8c1TZ
-         G8s2Lye+J1A8LrECic1Quzyv5PRIBUWk3V4v62AsvqZ/V9YJVGckT1uX532g8ZMPVk
-         mpoBDZ/eCfTeJaV4/xSBPneb57mBo9jsz516fguA=
-Date:   Fri, 17 Jul 2020 15:01:29 -0500
+        b=n8AOiC/htwoUxgp0wROuMdNc2kuVDX11SvXqRzYpqVHPk/MUu+wjOYz90wYGjTK7c
+         y0vhk5S5sJkHWea+JYaKnyCbiu/EOKpGSZYwYPyj6gVE9AziBLt2WLciH8R0kZznkC
+         gBZ3ob6reEaJZY+/wQkOlukoCqtCvoF72P8q8WEE=
+Date:   Fri, 17 Jul 2020 15:11:24 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Cc:     linux-pci@vger.kernel.org,
-        Kuppuswamy Sathyanarayanan 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>,
-        Sean Kelley <sean.v.kelley@linux.intel.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linuxarm@huawei.com, Austin Bolen <Austin.Bolen@dell.com>
-Subject: Re: [PATCH v2] PCI/AER: Do not reset the port device status if doing
- firmware first handling.
-Message-ID: <20200717200129.GA671299@bjorn-Precision-5520>
+To:     Wei Hu <weh@microsoft.com>
+Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        wei.liu@kernel.org, lorenzo.pieralisi@arm.com, robh@kernel.org,
+        bhelgaas@google.com, linux-hyperv@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        decui@microsoft.com, mikelley@microsoft.com
+Subject: Re: [PATCH v2] PCI: hv: Fix a timing issue which causes kdump to
+ fail occasionally
+Message-ID: <20200717201124.GA767548@bjorn-Precision-5520>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200622113523.891666-1-Jonathan.Cameron@huawei.com>
+In-Reply-To: <20200717025528.3093-1-weh@microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc Austin, _OSC expert]
+On Fri, Jul 17, 2020 at 10:55:28AM +0800, Wei Hu wrote:
+> Kdump could fail sometime on HyperV guest over Accerlated Network
+> interface. This is because the retry in hv_pci_enter_d0() relies on
+> an asynchronous host event to arrive guest before calling
+> hv_send_resources_allocated(). This fixes the problem by moving retry
+> to hv_pci_probe(), removing this dependence and making the calling
+> sequence synchronous.
 
-On Mon, Jun 22, 2020 at 07:35:23PM +0800, Jonathan Cameron wrote:
-> pci_aer_clear_device_status() currently resets the device status
-> (PCI_EXP_DEVSTA) on the downstream port above a device, or the port itself
-> if the port is the reported AER error source.  This happens even when error
-> handling is firmware first.
+Lorenzo, if you apply this, can you fix this typo?
+
+  s/Accerlated/Accelerated/
+
+and maybe even
+
+  s/HyperV/Hyper-V/
+  s/This fixes the problem/Fix the problem/
+  s/this dependence/this dependency/
+
+Not sure if "relies on ... event to arrive guest" means "relies on ...
+event arriving in the guest"?  Or maybe "relies on ... event arriving
+before the guest calls ..."?
+
+This would probably all make perfect sense to me if I understood more
+about Hyper-V :)
+
+> v2: Adding Fixes tag according to Michael Kelley's review comment.
+
+There's no need to include this "v2" comment in the commit log.  I
+think if you put it after a line containing only "---" (or maybe
+"--"?), it will be in the email but not in the commit log.
+
+> Fixes: c81992e7f4aa ("PCI: hv: Retry PCI bus D0 entry on invalid device state")
+> Signed-off-by: Wei Hu <weh@microsoft.com>
+> ---
+>  drivers/pci/controller/pci-hyperv.c | 66 ++++++++++++++---------------
+>  1 file changed, 32 insertions(+), 34 deletions(-)
 > 
-> Our interpretation is that firmware first handling means that the firmware
-> will deal with clearing all relevant error reporting registers
-> including this one.
-
-IMO "firmware-first" is meaningless to the kernel.  I see the bit
-defined in the ACPI HEST records (ACPI v6.3, sec 18.3.2.4), but there
-is no indication of anything the OS needs to *do* with it.  It does
-not influence the result of pcie_aer_is_native().  So I don't want to
-mention it in the subject or commit log.
-
-But I think what the _OSC negotiation for AER ownership is relevant,
-and that's what your patch tests, so I think this is the right thing
-to do.
-
-So I applied this as below to pci/error for v5.8, thanks a lot!
-
-Oh, I also propose a preliminary patch (posted and cc'd to you) to
-rename pci_aer_clear_device_status():
-
-  https://lore.kernel.org/r/20200717195619.766662-1-helgaas@kernel.org
-
-commit d6c8d24e3d5d ("PCI/ERR: Clear PCIe Device Status errors only if OS owns AER")
-Author: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Date:   Mon Jun 22 19:35:23 2020 +0800
-
-    PCI/ERR: Clear PCIe Device Status errors only if OS owns AER
-    
-    pcie_clear_device_status() resets the error bits in the PCIe Device Status
-    Register (PCI_EXP_DEVSTA).
-    
-    Previously we did this unconditionally, but on ACPI systems, the _OSC AER
-    bit negotiates control of the AER capability.  Per sec 4.5.1 of the System
-    Firmware Intermediary _OSC and DPC Updates ECN [1], this bit also covers
-    other error enable/status bits including the following:
-    
-      Correctable Error Reporting Enable
-      Non-Fatal Error Reporting Enable
-      Fatal Error Reporting Enable
-      Unsupported Request Reporting Enable
-    
-    These bits are all in the PCIe Device Control register (the ECN omitted
-    "Reporting", but I think that's a typo), so by implication the _OSC AER bit
-    also applies to the error status bits in the PCIe Device Status register:
-    
-      Correctable Error Detected
-      Non-Fatal Error Detected
-      Fatal Error Detected
-      Unsupported Request Detected
-    
-    Clear the PCIe Device Status error bits only when the OS controls the AER
-    capability and related error enable/status bits.  If platform firmware
-    controls the AER capability, firmware is responsible for clearing these
-    bits.
-    
-    One call path leading here is:
-    
-      ghes_do_proc
-        ghes_handle_aer
-          aer_recover_queue
-            schedule_work(&aer_recover_work)
-      ...
-      aer_recover_work_func
-        pcie_do_recovery
-          pcie_clear_device_status
-    
-    [1] System Firmware Intermediary (SFI) _OSC and DPC Updates ECN, Feb 24,
-        2020, affecting PCI Firmware Specification, Rev. 3.2
-        https://members.pcisig.com/wg/PCI-SIG/document/14076
-    [bhelgaas: commit log]
-    Link: https://lore.kernel.org/r/20200622113523.891666-1-Jonathan.Cameron@huawei.com
-    Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index d3ea667c8520..34bfea5c52b3 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -245,6 +245,9 @@ void pcie_clear_device_status(struct pci_dev *dev)
- {
- 	u16 sta;
- 
-+	if (!pcie_aer_is_native(dev))
-+		return;
-+
- 	pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &sta);
- 	pcie_capability_write_word(dev, PCI_EXP_DEVSTA, sta);
- }
+> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+> index bf40ff09c99d..738ee30f3334 100644
+> --- a/drivers/pci/controller/pci-hyperv.c
+> +++ b/drivers/pci/controller/pci-hyperv.c
+> @@ -2759,10 +2759,8 @@ static int hv_pci_enter_d0(struct hv_device *hdev)
+>  	struct pci_bus_d0_entry *d0_entry;
+>  	struct hv_pci_compl comp_pkt;
+>  	struct pci_packet *pkt;
+> -	bool retry = true;
+>  	int ret;
+>  
+> -enter_d0_retry:
+>  	/*
+>  	 * Tell the host that the bus is ready to use, and moved into the
+>  	 * powered-on state.  This includes telling the host which region
+> @@ -2789,38 +2787,6 @@ static int hv_pci_enter_d0(struct hv_device *hdev)
+>  	if (ret)
+>  		goto exit;
+>  
+> -	/*
+> -	 * In certain case (Kdump) the pci device of interest was
+> -	 * not cleanly shut down and resource is still held on host
+> -	 * side, the host could return invalid device status.
+> -	 * We need to explicitly request host to release the resource
+> -	 * and try to enter D0 again.
+> -	 */
+> -	if (comp_pkt.completion_status < 0 && retry) {
+> -		retry = false;
+> -
+> -		dev_err(&hdev->device, "Retrying D0 Entry\n");
+> -
+> -		/*
+> -		 * Hv_pci_bus_exit() calls hv_send_resource_released()
+> -		 * to free up resources of its child devices.
+> -		 * In the kdump kernel we need to set the
+> -		 * wslot_res_allocated to 255 so it scans all child
+> -		 * devices to release resources allocated in the
+> -		 * normal kernel before panic happened.
+> -		 */
+> -		hbus->wslot_res_allocated = 255;
+> -
+> -		ret = hv_pci_bus_exit(hdev, true);
+> -
+> -		if (ret == 0) {
+> -			kfree(pkt);
+> -			goto enter_d0_retry;
+> -		}
+> -		dev_err(&hdev->device,
+> -			"Retrying D0 failed with ret %d\n", ret);
+> -	}
+> -
+>  	if (comp_pkt.completion_status < 0) {
+>  		dev_err(&hdev->device,
+>  			"PCI Pass-through VSP failed D0 Entry with status %x\n",
+> @@ -3058,6 +3024,7 @@ static int hv_pci_probe(struct hv_device *hdev,
+>  	struct hv_pcibus_device *hbus;
+>  	u16 dom_req, dom;
+>  	char *name;
+> +	bool enter_d0_retry = true;
+>  	int ret;
+>  
+>  	/*
+> @@ -3178,11 +3145,42 @@ static int hv_pci_probe(struct hv_device *hdev,
+>  	if (ret)
+>  		goto free_fwnode;
+>  
+> +retry:
+>  	ret = hv_pci_query_relations(hdev);
+>  	if (ret)
+>  		goto free_irq_domain;
+>  
+>  	ret = hv_pci_enter_d0(hdev);
+> +	/*
+> +	 * In certain case (Kdump) the pci device of interest was
+> +	 * not cleanly shut down and resource is still held on host
+> +	 * side, the host could return invalid device status.
+> +	 * We need to explicitly request host to release the resource
+> +	 * and try to enter D0 again.
+> +	 * The retry should start from hv_pci_query_relations() call.
+> +	 */
+> +	if (ret == -EPROTO && enter_d0_retry) {
+> +		enter_d0_retry = false;
+> +
+> +		dev_err(&hdev->device, "Retrying D0 Entry\n");
+> +
+> +		/*
+> +		 * Hv_pci_bus_exit() calls hv_send_resources_released()
+> +		 * to free up resources of its child devices.
+> +		 * In the kdump kernel we need to set the
+> +		 * wslot_res_allocated to 255 so it scans all child
+> +		 * devices to release resources allocated in the
+> +		 * normal kernel before panic happened.
+> +		 */
+> +		hbus->wslot_res_allocated = 255;
+> +		ret = hv_pci_bus_exit(hdev, true);
+> +
+> +		if (ret == 0)
+> +			goto retry;
+> +
+> +		dev_err(&hdev->device,
+> +			"Retrying D0 failed with ret %d\n", ret);
+> +	}
+>  	if (ret)
+>  		goto free_irq_domain;
+>  
+> -- 
+> 2.20.1
+> 
