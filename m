@@ -2,125 +2,145 @@ Return-Path: <SRS0=0+Fi=A4=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B47DC433E2
-	for <linux-pci@archiver.kernel.org>; Fri, 17 Jul 2020 20:11:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99E9AC433E0
+	for <linux-pci@archiver.kernel.org>; Fri, 17 Jul 2020 20:20:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 369F920704
-	for <linux-pci@archiver.kernel.org>; Fri, 17 Jul 2020 20:11:34 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ubDyEgHV"
+	by mail.kernel.org (Postfix) with ESMTP id 7D3ED2065F
+	for <linux-pci@archiver.kernel.org>; Fri, 17 Jul 2020 20:20:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728521AbgGQULd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 17 Jul 2020 16:11:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40714 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726771AbgGQULd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jul 2020 16:11:33 -0400
-Received: from mail-pg1-x543.google.com (mail-pg1-x543.google.com [IPv6:2607:f8b0:4864:20::543])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 207F8C0619D2;
-        Fri, 17 Jul 2020 13:11:33 -0700 (PDT)
-Received: by mail-pg1-x543.google.com with SMTP id z5so7195403pgb.6;
-        Fri, 17 Jul 2020 13:11:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=gj+SF1uP1XQufJCq7QqUYQaIKzzxk/s/GrmcfjtHR50=;
-        b=ubDyEgHV9Y2tDnKO+NB95LzoOB4OlcjoCTsJa+SW+xzZUvgGNzqi43o34HmU/VnILQ
-         OEYQofz+2m8X1sb8sKABioeV4PeVOZAI/DvGnIkW9EAOHglOGj6d1oPuP9wzIU6m/IY0
-         rPqhkRqifTT1eNErmPOsKHbi2svxa56Uor9JcEBUHLwa8sPo9XT+MeDwbrQ8l2bfO1Ii
-         InTtIfnSeF8E90O7ugxTdipNtUtejDpsMjztGGCUh3/MhO+7KVqqjpQ+NhHb8BVK7B9E
-         chF2xH/Oi2w/N9WIiFbeDDEvio8MXqTzlL8fg8BwIJRa03xl9yyGdp+gCclzLkW35wlg
-         A1cw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=gj+SF1uP1XQufJCq7QqUYQaIKzzxk/s/GrmcfjtHR50=;
-        b=L3Nb1uUTGdLSVVKkWWj7opbvTYPeiVV0v86y/ei6qVYK0j5Km9xbaWOAARB2/rgq0L
-         fRAlAkiYg7Kv5VnW67gnpX3kNE+MOhLwgxtudAgrRJNA1flxZWoer1dNOP+2X7iWhhj8
-         n5x2ChcmvOd1254hTR4mdVjBqLYOUtfl25D1M6MDkLXwBkDISPcDdKxfK9sie9yFBtqC
-         moIhgUaYZqHtoEJ4oafJTqQ5/Mo838PcA2m2NHPTmOr04EHKB8eYsYU5RGy0z9ZxTGLf
-         VtQK8PRzr6UmS6YZPHo7nOv5VeZgzvnd3vO7eb5KUA0JUiJ5e7c0w6eowDWxSM6LkeAW
-         Rv0A==
-X-Gm-Message-State: AOAM532yyOz1sWNB4gc1dHL3NydpzlTcHZosTYvAU6rhTi/gtKJomrpX
-        eqm1M7wN3CAZhLFYM7k2WDcvTQR2c+CwcapApulB3hbE
-X-Google-Smtp-Source: ABdhPJx2lC7BmaEzpn7uXGLICSdt0Ct9vd/TU65OMo/eECbb17lBMT9bNBH/5FKY6swD+AJ4Ue0pdNur7WBnmP3ivL8=
-X-Received: by 2002:aa7:8bcb:: with SMTP id s11mr9175270pfd.170.1595016692513;
- Fri, 17 Jul 2020 13:11:32 -0700 (PDT)
+        id S1728285AbgGQUUY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 17 Jul 2020 16:20:24 -0400
+Received: from mga17.intel.com ([192.55.52.151]:44166 "EHLO mga17.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726771AbgGQUUX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 17 Jul 2020 16:20:23 -0400
+IronPort-SDR: 88PfWby2AeNsuquskwwhlnLPkkPnr9MKmUIo70/1SnmUo2vTGcUimAHIGFH5WIFSc4R3dfNo9u
+ p4q7soQwy2Eg==
+X-IronPort-AV: E=McAfee;i="6000,8403,9685"; a="129751324"
+X-IronPort-AV: E=Sophos;i="5.75,364,1589266800"; 
+   d="scan'208";a="129751324"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jul 2020 13:20:23 -0700
+IronPort-SDR: p4yUaDfPSPz9A38C7vdgN0+hqvDVPOAUVtv4PWPU8KQAlgfIqc5jnlUqz6cDWmEXwIVadqNHmD
+ sZ6xvf1jmO5g==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.75,364,1589266800"; 
+   d="scan'208";a="460961618"
+Received: from jmharral-mobl.amr.corp.intel.com (HELO [10.254.77.39]) ([10.254.77.39])
+  by orsmga005.jf.intel.com with ESMTP; 17 Jul 2020 13:20:22 -0700
+Subject: Re: [PATCH] PCI/ERR: Rename pci_aer_clear_device_status() to
+ pcie_clear_device_status()
+To:     Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
+Cc:     Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        Sean Kelley <sean.v.kelley@linux.intel.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linuxarm@huawei.com, Bjorn Helgaas <bhelgaas@google.com>
+References: <20200717195619.766662-1-helgaas@kernel.org>
+From:   "Kuppuswamy, Sathyanarayanan" 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>
+Message-ID: <0cee203b-3ba9-3e42-0caa-92d12b9086fe@linux.intel.com>
+Date:   Fri, 17 Jul 2020 13:20:22 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-References: <20200714062323.19990-1-david.e.box@linux.intel.com> <20200717190620.29821-2-david.e.box@linux.intel.com>
-In-Reply-To: <20200717190620.29821-2-david.e.box@linux.intel.com>
-From:   Andy Shevchenko <andy.shevchenko@gmail.com>
-Date:   Fri, 17 Jul 2020 23:11:16 +0300
-Message-ID: <CAHp75Vd3-Mc0=K+pDzpeB9MeHLFCni_4PbmsFTaXXzFMSmVgbg@mail.gmail.com>
-Subject: Re: [PATCH V4 1/3] PCI: Add defines for Designated Vendor-Specific
- Extended Capability
-To:     "David E. Box" <david.e.box@linux.intel.com>
-Cc:     Lee Jones <lee.jones@linaro.org>,
-        Darren Hart <dvhart@infradead.org>,
-        Andy Shevchenko <andy@infradead.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Alexander Duyck <alexander.h.duyck@linux.intel.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Platform Driver <platform-driver-x86@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20200717195619.766662-1-helgaas@kernel.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Jul 17, 2020 at 10:05 PM David E. Box
-<david.e.box@linux.intel.com> wrote:
->
-> Add PCIe Designated Vendor-Specific Extended Capability (DVSEC) and defines
-> for the header offsets. Defined in PCIe r5.0, sec 7.9.6.
->
+Hi Bjorn,
 
-FWIW,
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
-
-> Signed-off-by: David E. Box <david.e.box@linux.intel.com>
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+On 7/17/20 12:56 PM, Bjorn Helgaas wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> pci_aer_clear_device_status() clears the error bits in the PCIe Device
+> Status Register (PCI_EXP_DEVSTA).  Every PCIe device has this register,
+> regardless of whether it supports AER.
+Since its not related to AER, can we move it out of AER driver ? May be
+to pci.c ?
+> 
+> Rename pci_aer_clear_device_status() to pcie_clear_device_status() to make
+> clear that it is PCIe-specific but not AER-specific.  No functional change
+> intended.
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 > ---
->  include/uapi/linux/pci_regs.h | 5 +++++
->  1 file changed, 5 insertions(+)
->
-> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-> index f9701410d3b5..beafeee39e44 100644
-> --- a/include/uapi/linux/pci_regs.h
-> +++ b/include/uapi/linux/pci_regs.h
-> @@ -720,6 +720,7 @@
->  #define PCI_EXT_CAP_ID_DPC     0x1D    /* Downstream Port Containment */
->  #define PCI_EXT_CAP_ID_L1SS    0x1E    /* L1 PM Substates */
->  #define PCI_EXT_CAP_ID_PTM     0x1F    /* Precision Time Measurement */
-> +#define PCI_EXT_CAP_ID_DVSEC   0x23    /* Designated Vendor-Specific */
->  #define PCI_EXT_CAP_ID_DLF     0x25    /* Data Link Feature */
->  #define PCI_EXT_CAP_ID_PL_16GT 0x26    /* Physical Layer 16.0 GT/s */
->  #define PCI_EXT_CAP_ID_MAX     PCI_EXT_CAP_ID_PL_16GT
-> @@ -1062,6 +1063,10 @@
->  #define  PCI_L1SS_CTL1_LTR_L12_TH_SCALE        0xe0000000  /* LTR_L1.2_THRESHOLD_Scale */
->  #define PCI_L1SS_CTL2          0x0c    /* Control 2 Register */
->
-> +/* Designated Vendor-Specific (DVSEC, PCI_EXT_CAP_ID_DVSEC) */
-> +#define PCI_DVSEC_HEADER1              0x4 /* Designated Vendor-Specific Header1 */
-> +#define PCI_DVSEC_HEADER2              0x8 /* Designated Vendor-Specific Header2 */
-> +
->  /* Data Link Feature */
->  #define PCI_DLF_CAP            0x04    /* Capabilities Register */
->  #define  PCI_DLF_EXCHANGE_ENABLE       0x80000000  /* Data Link Feature Exchange Enable */
-> --
-> 2.20.1
->
-
+>   drivers/pci/pci.h      | 4 ++--
+>   drivers/pci/pcie/aer.c | 4 ++--
+>   drivers/pci/pcie/err.c | 2 +-
+>   3 files changed, 5 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index c6c0c455f59f..c5f271e6e276 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -657,16 +657,16 @@ void pci_no_aer(void);
+>   void pci_aer_init(struct pci_dev *dev);
+>   void pci_aer_exit(struct pci_dev *dev);
+>   extern const struct attribute_group aer_stats_attr_group;
+> +void pcie_clear_device_status(struct pci_dev *dev);
+>   void pci_aer_clear_fatal_status(struct pci_dev *dev);
+> -void pci_aer_clear_device_status(struct pci_dev *dev);
+>   int pci_aer_clear_status(struct pci_dev *dev);
+>   int pci_aer_raw_clear_status(struct pci_dev *dev);
+>   #else
+>   static inline void pci_no_aer(void) { }
+>   static inline void pci_aer_init(struct pci_dev *d) { }
+>   static inline void pci_aer_exit(struct pci_dev *d) { }
+> +static inline void pcie_clear_device_status(struct pci_dev *dev) { }
+>   static inline void pci_aer_clear_fatal_status(struct pci_dev *dev) { }
+> -static inline void pci_aer_clear_device_status(struct pci_dev *dev) { }
+>   static inline int pci_aer_clear_status(struct pci_dev *dev) { return -EINVAL; }
+>   static inline int pci_aer_raw_clear_status(struct pci_dev *dev) { return -EINVAL; }
+>   #endif
+> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+> index ca886bf91fd9..d3ea667c8520 100644
+> --- a/drivers/pci/pcie/aer.c
+> +++ b/drivers/pci/pcie/aer.c
+> @@ -241,7 +241,7 @@ int pci_disable_pcie_error_reporting(struct pci_dev *dev)
+>   }
+>   EXPORT_SYMBOL_GPL(pci_disable_pcie_error_reporting);
+>   
+> -void pci_aer_clear_device_status(struct pci_dev *dev)
+> +void pcie_clear_device_status(struct pci_dev *dev)
+>   {
+>   	u16 sta;
+>   
+> @@ -947,7 +947,7 @@ static void handle_error_source(struct pci_dev *dev, struct aer_err_info *info)
+>   		if (aer)
+>   			pci_write_config_dword(dev, aer + PCI_ERR_COR_STATUS,
+>   					info->status);
+> -		pci_aer_clear_device_status(dev);
+> +		pcie_clear_device_status(dev);
+>   	} else if (info->severity == AER_NONFATAL)
+>   		pcie_do_recovery(dev, pci_channel_io_normal, aer_root_reset);
+>   	else if (info->severity == AER_FATAL)
+> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+> index 467686ee2d8b..55755bc493f1 100644
+> --- a/drivers/pci/pcie/err.c
+> +++ b/drivers/pci/pcie/err.c
+> @@ -197,7 +197,7 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+>   	pci_dbg(dev, "broadcast resume message\n");
+>   	pci_walk_bus(bus, report_resume, &status);
+>   
+> -	pci_aer_clear_device_status(dev);
+> +	pcie_clear_device_status(dev);
+>   	pci_aer_clear_nonfatal_status(dev);
+>   	pci_info(dev, "device recovery successful\n");
+>   	return status;
+> 
 
 -- 
-With Best Regards,
-Andy Shevchenko
+Sathyanarayanan Kuppuswamy
+Linux Kernel Developer
