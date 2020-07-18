@@ -7,25 +7,25 @@ X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9898EC433E0
-	for <linux-pci@archiver.kernel.org>; Sat, 18 Jul 2020 05:09:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38B5AC433E1
+	for <linux-pci@archiver.kernel.org>; Sat, 18 Jul 2020 05:17:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7FACE22B49
-	for <linux-pci@archiver.kernel.org>; Sat, 18 Jul 2020 05:09:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 214DD207FB
+	for <linux-pci@archiver.kernel.org>; Sat, 18 Jul 2020 05:17:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726066AbgGRFJb convert rfc822-to-8bit (ORCPT
+        id S1726249AbgGRFRl convert rfc822-to-8bit (ORCPT
         <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 18 Jul 2020 01:09:31 -0400
-Received: from szxga03-in.huawei.com ([45.249.212.189]:2981 "EHLO huawei.com"
+        Sat, 18 Jul 2020 01:17:41 -0400
+Received: from szxga02-in.huawei.com ([45.249.212.188]:2581 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725887AbgGRFJb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 18 Jul 2020 01:09:31 -0400
-Received: from dggemi404-hub.china.huawei.com (unknown [172.30.72.53])
-        by Forcepoint Email with ESMTP id 6CC67F0EEEC0DF655046;
-        Sat, 18 Jul 2020 13:09:27 +0800 (CST)
+        id S1726087AbgGRFRl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 18 Jul 2020 01:17:41 -0400
+Received: from dggemi402-hub.china.huawei.com (unknown [172.30.72.55])
+        by Forcepoint Email with ESMTP id 82573EA0382B11CA0321;
+        Sat, 18 Jul 2020 13:17:35 +0800 (CST)
 Received: from DGGEMI525-MBS.china.huawei.com ([169.254.6.52]) by
- dggemi404-hub.china.huawei.com ([10.3.17.142]) with mapi id 14.03.0487.000;
- Sat, 18 Jul 2020 13:09:17 +0800
+ dggemi402-hub.china.huawei.com ([10.3.17.135]) with mapi id 14.03.0487.000;
+ Sat, 18 Jul 2020 13:17:28 +0800
 From:   "Song Bao Hua (Barry Song)" <song.bao.hua@hisilicon.com>
 To:     Jonathan Cameron <jonathan.cameron@huawei.com>,
         "linux-mm@kvack.org" <linux-mm@kvack.org>,
@@ -44,16 +44,16 @@ CC:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Thomas Gleixner <tglx@linutronix.de>,
         Linuxarm <linuxarm@huawei.com>,
         Dan Williams <dan.j.williams@intel.com>
-Subject: RE: [PATCH v2 1/6] ACPI: Add out of bounds and numa_off protections
- to pxm_to_node
-Thread-Topic: [PATCH v2 1/6] ACPI: Add out of bounds and numa_off
- protections to pxm_to_node
-Thread-Index: AQHWXGREtKO5c5ALFUyDHE/x3auv/qkMybkQ
-Date:   Sat, 18 Jul 2020 05:09:16 +0000
-Message-ID: <B926444035E5E2439431908E3842AFD2593D39@DGGEMI525-MBS.china.huawei.com>
+Subject: RE: [PATCH v2 5/6] ACPI: Remove side effect of partly creating a
+ node in acpi_get_node
+Thread-Topic: [PATCH v2 5/6] ACPI: Remove side effect of partly creating a
+ node in acpi_get_node
+Thread-Index: AQHWXGSNF+e0kQICqE2z4MI85n/Qt6kMy9pQ
+Date:   Sat, 18 Jul 2020 05:17:27 +0000
+Message-ID: <B926444035E5E2439431908E3842AFD2593D5E@DGGEMI525-MBS.china.huawei.com>
 References: <20200717175959.899775-1-Jonathan.Cameron@huawei.com>
- <20200717175959.899775-2-Jonathan.Cameron@huawei.com>
-In-Reply-To: <20200717175959.899775-2-Jonathan.Cameron@huawei.com>
+ <20200717175959.899775-6-Jonathan.Cameron@huawei.com>
+In-Reply-To: <20200717175959.899775-6-Jonathan.Cameron@huawei.com>
 Accept-Language: en-GB, en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
@@ -83,16 +83,21 @@ X-Mailing-List: linux-pci@vger.kernel.org
 > Williams <dan.j.williams@intel.com>; Song Bao Hua (Barry Song)
 > <song.bao.hua@hisilicon.com>; Jonathan Cameron
 > <jonathan.cameron@huawei.com>
-> Subject: [PATCH v2 1/6] ACPI: Add out of bounds and numa_off protections to
-> pxm_to_node
+> Subject: [PATCH v2 5/6] ACPI: Remove side effect of partly creating a node in
+> acpi_get_node
 > 
-> The function should check the validity of the pxm value before using
-> it to index the pxm_to_node_map array.
+> acpi_get_node calls acpi_get_pxm to evaluate the _PXM AML method for
+> entries found in DSDT/SSDT. ACPI 6.3 sec 6.2.14 states
+> "_PXM evaluates to an integer that identifies a device as belonging to
+>  a Proximity Domain defined in the System Resource Affinity Table (SRAT)."
 > 
-> Whilst hardening this code may be good in general, the main intent
-> here is to enable following patches that use this function to replace
-> acpi_map_pxm_to_node for non SRAT usecases which should return
-> NO_NUMA_NODE for PXM entries not matching with those in SRAT.
+> Hence a _PXM method should not result in creation of a new NUMA node.
+> Before this patch, _PXM could result in partial instantiation of
+> NUMA node, missing elements such as zone lists.  A call to devm_kzalloc
+> for example results in a null pointer dereference.
+> 
+> This patch therefore replaces the acpi_map_pxm_to_node with a call
+> to pxm_to_node.
 > 
 > Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 
@@ -103,18 +108,17 @@ Reviewed-by: Barry Song <song.bao.hua@hisilicon.com>
 >  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
 > diff --git a/drivers/acpi/numa/srat.c b/drivers/acpi/numa/srat.c
-> index 5be5a977da1b..8ef44ee0d76b 100644
+> index 8ef44ee0d76b..697a5c9e2eb5 100644
 > --- a/drivers/acpi/numa/srat.c
 > +++ b/drivers/acpi/numa/srat.c
-> @@ -31,7 +31,7 @@ int acpi_numa __initdata;
+> @@ -444,6 +444,6 @@ int acpi_get_node(acpi_handle handle)
 > 
->  int pxm_to_node(int pxm)
->  {
-> -	if (pxm < 0)
-> +	if (pxm < 0 || pxm >= MAX_PXM_DOMAINS || numa_off)
->  		return NUMA_NO_NODE;
->  	return pxm_to_node_map[pxm];
+>  	pxm = acpi_get_pxm(handle);
+> 
+> -	return acpi_map_pxm_to_node(pxm);
+> +	return pxm_to_node(pxm);
 >  }
+>  EXPORT_SYMBOL(acpi_get_node);
 > --
 > 2.19.1
 
