@@ -1,142 +1,97 @@
-Return-Path: <SRS0=9ytz=A5=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=vii7=A6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6ADCCC433E5
-	for <linux-pci@archiver.kernel.org>; Sat, 18 Jul 2020 20:04:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4724AC433DF
+	for <linux-pci@archiver.kernel.org>; Sun, 19 Jul 2020 09:19:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 47E992076A
-	for <linux-pci@archiver.kernel.org>; Sat, 18 Jul 2020 20:04:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2171C20B1F
+	for <linux-pci@archiver.kernel.org>; Sun, 19 Jul 2020 09:19:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rupq1Mcd"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rC2GFMbM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728071AbgGRUEq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 18 Jul 2020 16:04:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33712 "EHLO
+        id S1726404AbgGSJTe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 19 Jul 2020 05:19:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42078 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726798AbgGRUEp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 18 Jul 2020 16:04:45 -0400
-Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A51EEC0619D2;
-        Sat, 18 Jul 2020 13:04:45 -0700 (PDT)
-Received: by mail-wr1-x443.google.com with SMTP id r12so14194388wrj.13;
-        Sat, 18 Jul 2020 13:04:45 -0700 (PDT)
+        with ESMTP id S1726038AbgGSJTe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 19 Jul 2020 05:19:34 -0400
+Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17DC3C0619D2
+        for <linux-pci@vger.kernel.org>; Sun, 19 Jul 2020 02:19:34 -0700 (PDT)
+Received: by mail-pj1-x102b.google.com with SMTP id cv18so5164938pjb.1
+        for <linux-pci@vger.kernel.org>; Sun, 19 Jul 2020 02:19:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=6iOmVRoMVbU4qIjJZMlbcTETVfsHT39IuIHdkQtrsZM=;
-        b=rupq1Mcd02Am9QpslDBvv9BvBLAWI3XaIjp8CXahnwPEU4u2vDw1NdsSCFqRtnC/q2
-         kEhbrawoocZE14sCY1S722viEoU365QLzhvMMQj8Mr/4Z7dr9XTmte16uuPPOfXioT2D
-         ouUVKomLIghO4nc+7Q9yJ22x96rIgkfcKmdZQxREZc1gy+S00KNb9LqOAGGB5Qbb/mK9
-         0PCVoBquQwzDCGx/6DAxrxLua/XSwJ4I8saRwsPA+ejk7fWD2QDRSIwpKTz55fjzroaN
-         qR/1QxvPcBurfddRlqhxJgpkSCMyrDQkPNmLuWIdSt9MZIr8D4WqyzHjA62etaQHTHEN
-         jfAg==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=OWbYFYIu0qmpjpMid4/cfRGsYGBLqRNDtWeBkoqnf5A=;
+        b=rC2GFMbMxjpanuQEyU77O8+3zi1kZc8k8jQBHQAf8DpBIY0sGoarQmDx7HUPuwhNw8
+         UMdGr9CDreP4AS0c7TrC9rBX56IDMERQsewgZViXdC0hIV6s3nDNKmYUbm1bhhIw/N3u
+         nKd4nAfy2KyaxgDR+W0Mgrt7Mb9SoXFO1JY9nd/h2WtaU/ls77Wa6ommXenIBiWmvbLh
+         Ux3tPOe0fLIZ/5ntBpVHKASHueSdonvoCB+i+wtraxyl2hLfTfQTDV+3CVGuwDxaBLFM
+         m6cvp9KnnFT5DTVpld/QNYtZa0Trkn3l0tf829u+LIpBk96bbimM+cfeN0DggPNFgoJr
+         K0Rw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=6iOmVRoMVbU4qIjJZMlbcTETVfsHT39IuIHdkQtrsZM=;
-        b=m6XT3z7GprwJb23VLe+o2gGLy2UsksWlmRGo6YSi6QmgjBcrDR1zOZge9KmpztWvXk
-         aWAgZQkePttHsfgZP1SFW2SmQcPtcyOTqBKr+GfVeRMkXloa2rN4eVDL9UAe0/sI//nz
-         U/pGvs/2Ltcgtwfcaz4sHE96JoYbH7hQtFUAklBv4vBud1N6hNaO8e+HI6kolFLqt7bp
-         4XFSk8vmCYtnuoOQbrpwJMdmI7fQKhdB0N/9SnJ4igVQl9CBxTZVE8PnjYj48IT2HEdQ
-         jOG4DCeh/GWOgiha8oLrKSGIRggxOKm/qmWGtvqxYLOA7E2x+ruEyb+chA5uAX3DVw+Q
-         0pEg==
-X-Gm-Message-State: AOAM531CDXbDIQXZzyzol1XlPQP8akwpqPTh/s7wNrs5D2CM5cRyQEmX
-        ojGSeQCyt5TnDx4SHSqZfxIZGsj50rQYDA==
-X-Google-Smtp-Source: ABdhPJyIPgcYzZrlIDWvCmxIBQ+wXZNKSfXDuNrUb2LIjS1hZaqXB6MrhLcULcS0HRe7RH5epxWP5w==
-X-Received: by 2002:adf:e6ce:: with SMTP id y14mr15559924wrm.401.1595102683993;
-        Sat, 18 Jul 2020 13:04:43 -0700 (PDT)
-Received: from net.saheed (540018D7.dsl.pool.telekom.hu. [84.0.24.215])
-        by smtp.gmail.com with ESMTPSA id o7sm8289049wrv.50.2020.07.18.13.04.42
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 18 Jul 2020 13:04:43 -0700 (PDT)
-Subject: Re: [RFC PATCH 14/35] i2c/busses: Change PCIBIOS_SUCCESSFUL to 0
-To:     Jean Delvare <jdelvare@suse.de>
-Cc:     helgaas@kernel.org, bjorn@helgaas.com, skhan@linuxfoundation.org,
-        linux-pci@vger.kernel.org,
-        linux-kernel-mentees@lists.linuxfoundation.org,
-        linux-kernel@vger.kernel.org, linux-i2c@vger.kernel.org
-References: <20200713122247.10985-1-refactormyself@gmail.com>
- <20200713122247.10985-15-refactormyself@gmail.com>
- <20200717165820.6b5318ad@endymion>
-From:   Saheed Bolarinwa <refactormyself@gmail.com>
-Message-ID: <44eecce1-7c2d-32c8-865e-e80aa6c3a891@gmail.com>
-Date:   Sat, 18 Jul 2020 21:05:08 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.9.0
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=OWbYFYIu0qmpjpMid4/cfRGsYGBLqRNDtWeBkoqnf5A=;
+        b=KMfCnAEHxi3kv1Wn9gNPZ56qO9o5tVZHykVcr1Iwc5Z1IFQW+ZiRDzq0NxpkYLqb6o
+         odhzAyAnNDLrBBgarwfZSts7C/EahbncOKVEC3hl5mbTzXhYC1lzEXuePom/eI6w0gV3
+         M5NBe91fzcKST6Y2y0rPmHz4BIw391s7Jj+5GnpPPf2gD3Vr5JJ+0yvs0yoe1HVesOQO
+         Xj1h+yCm3sdIBdwHHQefRmcsD20AYnbnOunhty5F5ptg67u8yzQCy4Wg8dsVhOzzJx0k
+         rUuK+Pkl9BqMYEoFaRP2KLV4tT3D1FhtSOnLHpwHcI42RlOrd5s8J5+IJkNcsLBtwhFB
+         FlwQ==
+X-Gm-Message-State: AOAM533YFWuhxBRgiZExBlCsxEnOJZQxBFxJWuw+iSkrUmHe3E8Aagd2
+        EcetwB/UawGbTxLnadPOFdppOWOt
+X-Google-Smtp-Source: ABdhPJwAXKUYaWVNPxCUmds5HcpiXZAFEG/x3gxMolkVKLxl5HOSSXLF3fAX1lVImFgYyxyjDQ3lTg==
+X-Received: by 2002:a17:902:d68f:: with SMTP id v15mr13853753ply.109.1595150372359;
+        Sun, 19 Jul 2020 02:19:32 -0700 (PDT)
+Received: from localhost.localdomain ([124.253.248.36])
+        by smtp.googlemail.com with ESMTPSA id s10sm11138270pjf.3.2020.07.19.02.19.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 19 Jul 2020 02:19:31 -0700 (PDT)
+From:   Puranjay Mohan <puranjay12@gmail.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>
+Cc:     Puranjay Mohan <puranjay12@gmail.com>, linux-pci@vger.kernel.org
+Subject: [PATCH] PCI: Add _DSM Function definiton for Latency Tolerance Reporting
+Date:   Sun, 19 Jul 2020 14:49:11 +0530
+Message-Id: <20200719091911.20395-1-puranjay12@gmail.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-In-Reply-To: <20200717165820.6b5318ad@endymion>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+PCI Firmware spec rev 3.2 defines function index 6 for LTR _DSM
+Add a define for usage in LTR mechanism.
 
-On 7/17/20 4:58 PM, Jean Delvare wrote:
+Signed-off-by: Puranjay Mohan <puranjay12@gmail.com>
+---
+ include/linux/pci-acpi.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-> Which PCI specification are you talking about here. In my "PCI Local
-> Bus Revision 2.3" specification (March 29, 2002), chapter 2 is about
-> Signal Definition and has nothing to do with the BIOS.
-http://read.pudn.com/downloads211/doc/comm/994029/pcifw_r3_0_updated.pdf
->> Change all PCIBIOS_SUCCESSFUL to 0
->>
->> Signed-off-by: "Saheed O. Bolarinwa" <refactormyself@gmail.com>
->> ---
->>   drivers/i2c/busses/i2c-ali15x3.c |  4 ++--
->>   drivers/i2c/busses/i2c-nforce2.c |  2 +-
->>   drivers/i2c/busses/i2c-sis5595.c | 10 +++++-----
->>   3 files changed, 8 insertions(+), 8 deletions(-)
-> Hmmm. That seems to be a lot of changes to solve an essentially
-> theoretical problem (if a problem at all). I am not familiar enough
-> with the PCI subsystem to claim that it is fundamentally wrong, but
-> enough to say I'm skeptical.
->
-> PCI is a cross-architecture standard, and we can't possibly have the
-> return value of core functions such as pci_write_config_word follow
-> different conventions depending on the architecture, can we? Does
-> pci_write_config_word() currently return PCIBIOS_SUCCESSFUL on success
-> on x86 and 0 on success on other architectures? What about errors, do
-> we return positive, "PCIBIOS-specific" error codes on x86 and negative,
-> unix-like error codes on other architectures?
-
-Unfortunately, the cover letter did not go through. I have resent it now:
-
-https://lore.kernel.org/linux-i2c/20200718184558.110942-1-refactormyself@gmail.com/T/#u
-
-Here is a discussion thread on it:
-
-https://lore.kernel.org/linux-pci/fb40545a8de8df8914df40d7d6167752c5244ce6.camel@kernel.crashing.org/T/#t
-
->> diff --git a/drivers/i2c/busses/i2c-ali15x3.c b/drivers/i2c/busses/i2c-ali15x3.c
->> index 02185a1cfa77..359ee3e0864a 100644
->> --- a/drivers/i2c/busses/i2c-ali15x3.c
->> +++ b/drivers/i2c/busses/i2c-ali15x3.c
->> @@ -167,11 +167,11 @@ static int ali15x3_setup(struct pci_dev *ALI15X3_dev)
->>   	if(force_addr) {
->>   		dev_info(&ALI15X3_dev->dev, "forcing ISA address 0x%04X\n",
->>   			ali15x3_smba);
->> -		if (PCIBIOS_SUCCESSFUL != pci_write_config_word(ALI15X3_dev,
->> +		if (0 != pci_write_config_word(ALI15X3_dev,
->>   								SMBBA,
->>   								ali15x3_smba))
->>   			goto error;
-> This leaves the code horribly aligned.
-
-Sorry about that, lessons learnt.
-
-Thank you for the review.
-
-- Saheed
+diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+index 5ba475ca9078..2889bf7f2a39 100644
+--- a/include/linux/pci-acpi.h
++++ b/include/linux/pci-acpi.h
+@@ -110,6 +110,7 @@ extern const guid_t pci_acpi_dsm_guid;
+ 
+ /* _DSM Definitions for PCI */
+ #define DSM_PCI_PRESERVE_BOOT_CONFIG		0x05
++#define DSM_PCI_LTR				0x06
+ #define DSM_PCI_DEVICE_NAME			0x07
+ #define DSM_PCI_POWER_ON_RESET_DELAY		0x08
+ #define DSM_PCI_DEVICE_READINESS_DURATIONS	0x09
+-- 
+2.27.0
 
