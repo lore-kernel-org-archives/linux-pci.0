@@ -1,99 +1,109 @@
-Return-Path: <SRS0=vii7=A6=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=HEqo=A7=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92FA9C433E0
-	for <linux-pci@archiver.kernel.org>; Sun, 19 Jul 2020 09:21:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FDB4C433DF
+	for <linux-pci@archiver.kernel.org>; Mon, 20 Jul 2020 02:02:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 62CBC20734
-	for <linux-pci@archiver.kernel.org>; Sun, 19 Jul 2020 09:21:21 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IUVH9hYd"
+	by mail.kernel.org (Postfix) with ESMTP id 79BFF22BF5
+	for <linux-pci@archiver.kernel.org>; Mon, 20 Jul 2020 02:02:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726021AbgGSJVU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 19 Jul 2020 05:21:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42352 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725988AbgGSJVU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 19 Jul 2020 05:21:20 -0400
-Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61BE1C0619D2
-        for <linux-pci@vger.kernel.org>; Sun, 19 Jul 2020 02:21:20 -0700 (PDT)
-Received: by mail-pj1-x102b.google.com with SMTP id a9so2975933pjd.3
-        for <linux-pci@vger.kernel.org>; Sun, 19 Jul 2020 02:21:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=OWbYFYIu0qmpjpMid4/cfRGsYGBLqRNDtWeBkoqnf5A=;
-        b=IUVH9hYdYtKdmEr0iL7kFbFPAoYNKsQUo9o3D7vRj/LRtCEjaIiOK+/ZpYLkPsKCSw
-         LNvC77PektZN0gD4G7hezWii5cmrwZpUuFjbqzGrljbQWw7o9DBtZdft9p79v/D1BdTr
-         zoEro0gnT7J0JC5EUKFZjkCDKDDq3E19wODbX7nCgusPybXLQiAsruNLwlJ7bEOKUiPU
-         25IrxNRjWJd8uJ4OGZf8cRUswu8FOHHZROuwxFsChSqDCPX8s36RPSUgF5kkyKKQHpDL
-         No2pvA+TyuCIctP71IySo/55gyRG5bae2WH8maI0fVBotDRs+PFFra8R+JvyqCxJotOS
-         t34A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=OWbYFYIu0qmpjpMid4/cfRGsYGBLqRNDtWeBkoqnf5A=;
-        b=irK77h5bipG7lD3RtrdCW+HuE76IJLloBVHXuFmYK6nNqkktAhWNtM3vrnkH416B50
-         D6NtNQQw1MaHyL4iQW2HWo0Mrcbj5KoGrtjjU5d7Bpxf80g9/pVTg1tcFbJ2Me/l6thK
-         JB9XkMHD9EhZQBiI1nTAuiFtlm2h6LegaLJRTXtXWiNLfgXi0g9P2TXQ7m+ZCKZ8qIDZ
-         q5ktOfy8upnhvdYn9BKer6E2BpH5C6fuPHcCiGhFt9qPn2vxE79T5XyvzRvCZWSDOnX5
-         Qdl2hqsvtY9T/V7MnpRf7ucP0ZDRNQUOiTrdrayFVTArmxBDucF+dytkxcjOjhhClaKD
-         IWQQ==
-X-Gm-Message-State: AOAM533qNPj8QMOFy85VGjTJDddqv5YzQc13P+NswVqC1WfMPBkT0BN7
-        cdSiQan0QXJ+J7WuXcAgm64=
-X-Google-Smtp-Source: ABdhPJz/cm9/Ert5FZhVfv5koR2QvbD+NIBbWfvRk7/Gkcle9QzzGZo+yDtuqUuMeBrFuIli+t/9mQ==
-X-Received: by 2002:a17:90b:102:: with SMTP id p2mr18831244pjz.227.1595150479861;
-        Sun, 19 Jul 2020 02:21:19 -0700 (PDT)
-Received: from localhost.localdomain ([124.253.248.36])
-        by smtp.googlemail.com with ESMTPSA id s10sm11145207pjf.3.2020.07.19.02.21.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 19 Jul 2020 02:21:19 -0700 (PDT)
-From:   Puranjay Mohan <puranjay12@gmail.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Puranjay Mohan <puranjay12@gmail.com>, linux-pci@vger.kernel.org,
-        skhan@linuxfoundation.org,
-        linux-kernel-mentees@lists.linuxfoundation.org
-Subject: [PATCH] PCI: Add _DSM Function definiton for Latency Tolerance Reporting
-Date:   Sun, 19 Jul 2020 14:51:09 +0530
-Message-Id: <20200719092109.21762-1-puranjay12@gmail.com>
-X-Mailer: git-send-email 2.27.0
+        id S1726312AbgGTCC5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 19 Jul 2020 22:02:57 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:51734 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726225AbgGTCC4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 19 Jul 2020 22:02:56 -0400
+Received: from DGGEMS414-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id C24A7AB957D3D94B7215;
+        Mon, 20 Jul 2020 10:02:53 +0800 (CST)
+Received: from [127.0.0.1] (10.174.179.33) by DGGEMS414-HUB.china.huawei.com
+ (10.3.19.214) with Microsoft SMTP Server id 14.3.487.0; Mon, 20 Jul 2020
+ 10:02:43 +0800
+Subject: Re: [PATCH v2 0/6] ACPI: Only create NUMA nodes from entries in SRAT
+ or SRAT emulation.
+To:     Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        <linux-mm@kvack.org>, <linux-acpi@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>, <x86@kernel.org>
+CC:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        <linux-pci@vger.kernel.org>, <martin@geanix.com>,
+        "Ingo Molnar" <mingo@redhat.com>, <linux-ia64@vger.kernel.org>,
+        Tony Luck <tony.luck@intel.com>,
+        Fenghua Yu <fenghua.yu@intel.com>,
+        Thomas Gleixner <tglx@linutronix.de>, <linuxarm@huawei.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Song Bao Hua <song.bao.hua@hisilicon.com>
+References: <20200717175959.899775-1-Jonathan.Cameron@huawei.com>
+From:   Hanjun Guo <guohanjun@huawei.com>
+Message-ID: <9b679614-083b-cec4-e0de-34e1a66b103a@huawei.com>
+Date:   Mon, 20 Jul 2020 10:02:42 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
+ Thunderbird/68.6.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20200717175959.899775-1-Jonathan.Cameron@huawei.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-GB
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.179.33]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PCI Firmware spec rev 3.2 defines function index 6 for LTR _DSM
-Add a define for usage in LTR mechanism.
+On 2020/7/18 1:59, Jonathan Cameron wrote:
+> Here, I will use the term Proximity Domains for the ACPI description and
+> NUMA Nodes for the in kernel representation.
+> 
+> ACPI 6.3 included a clarification that only Static Resource Allocation
+> Structures in SRAT may define the existence of proximity domains
+> (sec 5.2.16). This clarification closed a possible interpretation that
+> other parts of ACPI (e.g. DSDT _PXM, NFIT etc) could define new proximity
+> domains that were not also mentioned in SRAT structures.
+> 
+> In practice the kernel has never allowed this alternative interpretation as
+> such nodes are only partially initialized. This is architecture specific
+> but to take an example, on x86 alloc_node_data has not been called.
+> Any use of them for node specific allocation, will result in a crash as the
+> infrastructure to fallback to a node with memory is not setup.
+> 
+> We ran into a problem when enabling _PXM handling for PCI devices and found
+> there were boards out there advertising devices in proximity domains that
+> didn't exist [2].
+> 
+> The fix suggested in this series is to replace instances that should not
+> 'create' new nodes with pxm_to_node.  This function needs a some additional
+> hardening against invalid inputs to make sure it is safe for use in these
+> new callers.
+> 
+> Patch 1 Hardens pxm_to_node() against numa_off, and pxm entry being too large.
+> 
+> Patch 2-4 change the various callers not related to SRAT entries so that they
+> set this parameter to false, so do not attempt to initialize a new NUMA node
+> if the relevant one does not already exist.
+> 
+> Patch 5 is a function rename to reflect change in functionality of
+> acpi_map_pxm_to_online_node() as it no longer creates a new map, but just does a
+> lookup of existing maps.
+> 
+> Patch 6 covers the one place we do not allow the full flexibility defined
+> in the ACPI spec.  For SRAT GIC Interrupt Translation Service (ITS) Affinity
+> Structures, on ARM64, the driver currently makes an additional pass of SRAT
+> later in the boot than the one used to identify NUMA domains.
+> Note, this currently means that an ITS placed in a proximity domain that is
+> not defined by another SRAT structure will result in the a crash.
+> 
+> To avoid this crash with minimal changes we do not create new NUMA nodes based
+> on this particular entry type.  Any current platform trying to do this will not
+> boot, so this is an improvement, if perhaps not a perfect solution.
 
-Signed-off-by: Puranjay Mohan <puranjay12@gmail.com>
----
- include/linux/pci-acpi.h | 1 +
- 1 file changed, 1 insertion(+)
+Make sense to me,
 
-diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-index 5ba475ca9078..2889bf7f2a39 100644
---- a/include/linux/pci-acpi.h
-+++ b/include/linux/pci-acpi.h
-@@ -110,6 +110,7 @@ extern const guid_t pci_acpi_dsm_guid;
- 
- /* _DSM Definitions for PCI */
- #define DSM_PCI_PRESERVE_BOOT_CONFIG		0x05
-+#define DSM_PCI_LTR				0x06
- #define DSM_PCI_DEVICE_NAME			0x07
- #define DSM_PCI_POWER_ON_RESET_DELAY		0x08
- #define DSM_PCI_DEVICE_READINESS_DURATIONS	0x09
--- 
-2.27.0
+Reviewed-by: Hanjun Guo <guohanjun@huawei.com>
 
