@@ -7,36 +7,35 @@ X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39C53C433E3
-	for <linux-pci@archiver.kernel.org>; Tue, 21 Jul 2020 16:03:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CC30C43458
+	for <linux-pci@archiver.kernel.org>; Tue, 21 Jul 2020 16:03:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 19E0520720
-	for <linux-pci@archiver.kernel.org>; Tue, 21 Jul 2020 16:03:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 60FBA20720
+	for <linux-pci@archiver.kernel.org>; Tue, 21 Jul 2020 16:03:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730192AbgGUQC5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 21 Jul 2020 12:02:57 -0400
-Received: from mga14.intel.com ([192.55.52.115]:23714 "EHLO mga14.intel.com"
+        id S1730129AbgGUQCt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 21 Jul 2020 12:02:49 -0400
+Received: from mga17.intel.com ([192.55.52.151]:14231 "EHLO mga17.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730140AbgGUQC4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 21 Jul 2020 12:02:56 -0400
-IronPort-SDR: kbCCVJltOLY8VGmPSxWdZPWScdMb0etBSijwkv2NRGVzzfIaaO5v4nRSvNCdFS4YwhK7fcxqQH
- M/fGnOvuV+9A==
-X-IronPort-AV: E=McAfee;i="6000,8403,9689"; a="149317914"
+        id S1730139AbgGUQCs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 21 Jul 2020 12:02:48 -0400
+IronPort-SDR: MaW+NAXVH5JP4iDk8R9v6n6yHU6eduCJvZfv/kC0DiJajCq81fhs8ofSFg1uApEJC9gEFOrr7s
+ X2paKqT64Y7Q==
+X-IronPort-AV: E=McAfee;i="6000,8403,9689"; a="130239369"
 X-IronPort-AV: E=Sophos;i="5.75,379,1589266800"; 
-   d="scan'208";a="149317914"
+   d="scan'208";a="130239369"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jul 2020 09:02:56 -0700
-IronPort-SDR: TzPGTcZN9zlLB4fucHhhO1H9cnoXBW7xAE2Mbe+z2aDFCVbwFodYlgtqbeblCcXecZ2xQPB7uY
- yCxSAnwHxaug==
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jul 2020 09:02:37 -0700
+IronPort-SDR: zAO5KWIqCygedZ3OIT58lFgYN7+LChU1kvZ5X+6TvCo3X48M/w5pIteqyX4F9vMRGP1xUTEvMc
+ oFAqy0Qc5TOA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.75,379,1589266800"; 
-   d="scan'208";a="310293518"
+   d="scan'208";a="319951866"
 Received: from djiang5-desk3.ch.intel.com ([143.182.136.137])
-  by fmsmga004.fm.intel.com with ESMTP; 21 Jul 2020 09:02:54 -0700
-Subject: [PATCH RFC v2 06/18] dmaengine: idxd: add interrupt handle request
- support
+  by fmsmga002.fm.intel.com with ESMTP; 21 Jul 2020 09:02:35 -0700
+Subject: [PATCH RFC v2 03/18] irq/dev-msi: Create IR-DEV-MSI irq domain
 From:   Dave Jiang <dave.jiang@intel.com>
 To:     vkoul@kernel.org, megha.dey@intel.com, maz@kernel.org,
         bhelgaas@google.com, rafael@kernel.org, gregkh@linuxfoundation.org,
@@ -51,8 +50,8 @@ To:     vkoul@kernel.org, megha.dey@intel.com, maz@kernel.org,
         pbonzini@redhat.com, samuel.ortiz@intel.com, mona.hossain@intel.com
 Cc:     dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org,
         x86@kernel.org, linux-pci@vger.kernel.org, kvm@vger.kernel.org
-Date:   Tue, 21 Jul 2020 09:02:54 -0700
-Message-ID: <159534737478.28840.15476839290532682395.stgit@djiang5-desk3.ch.intel.com>
+Date:   Tue, 21 Jul 2020 09:02:35 -0700
+Message-ID: <159534735519.28840.10435935598386192252.stgit@djiang5-desk3.ch.intel.com>
 In-Reply-To: <159534667974.28840.2045034360240786644.stgit@djiang5-desk3.ch.intel.com>
 References: <159534667974.28840.2045034360240786644.stgit@djiang5-desk3.ch.intel.com>
 User-Agent: StGit/unknown-version
@@ -64,257 +63,240 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add support for requesting interrupt handle from the device. The interrupt
-handle is put in the interrupt handle field of a descriptor for the device
-to determine which interrupt vector to use be it MSI-X or IMS. On the host
-device, the interrupt handle is indexed to the MSI-X table. This allows a
-descriptor to program the interrupt handle 1:1 with the MSI-X index without
-getting it from the request interrupt handle device command. For a guest
-device, the index can be any index that the host assigned for the IMS
-table, and therefore it must be requested from the virtual device during
-MSI-X setup by the driver running on the guest.
+From: Megha Dey <megha.dey@intel.com>
 
-On the actual hardware the MSIX vector 0 is misc interrupt and handles
-events such as administrative command completion, error reporting,
-performance monitor overflow, and etc. The MSIX vectors 1...N
-are used for descriptor completion interrupts. On the guest kernel,
-the MSIX interrupts are backed by the mediated device through emulation
-or IMS vectors. Vector 0 is handled through emulation by the host vdcm.
-It only requires the host driver to send the signal to qemu. The vector 1
-(and more may be supported later) is backed by IMS.
+When DEV_MSI is enabled, the dev_msi_default_domain is updated to the
+base DEV-MSI irq  domain. If interrupt remapping is enabled, we create
+a new IR-DEV-MSI irq domain and update the dev_msi_default domain to
+the same.
 
+For X86, introduce a new irq_alloc_type which will be used by the
+interrupt remapping driver.
+
+Reviewed-by: Dan Williams <dan.j.williams@intel.com>
+Signed-off-by: Megha Dey <megha.dey@intel.com>
 Signed-off-by: Dave Jiang <dave.jiang@intel.com>
-Reviewed-by: Kevin Tian <kevin.tian@intel.com>
 ---
- drivers/dma/idxd/device.c    |   30 ++++++++++++++++++++++++++++++
- drivers/dma/idxd/idxd.h      |   11 +++++++++++
- drivers/dma/idxd/init.c      |   29 +++++++++++++++++++++++++++++
- drivers/dma/idxd/registers.h |    4 +++-
- drivers/dma/idxd/submit.c    |   29 ++++++++++++++++++++++-------
- 5 files changed, 95 insertions(+), 8 deletions(-)
+ arch/x86/include/asm/hw_irq.h       |    1 +
+ arch/x86/kernel/apic/msi.c          |   12 ++++++
+ drivers/base/dev-msi.c              |   66 +++++++++++++++++++++++++++++++----
+ drivers/iommu/intel/irq_remapping.c |   11 +++++-
+ include/linux/intel-iommu.h         |    1 +
+ include/linux/irqdomain.h           |   11 ++++++
+ include/linux/msi.h                 |    3 ++
+ 7 files changed, 96 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/dma/idxd/device.c b/drivers/dma/idxd/device.c
-index 7531ed9c1b81..2b4e8ab99ebd 100644
---- a/drivers/dma/idxd/device.c
-+++ b/drivers/dma/idxd/device.c
-@@ -502,6 +502,36 @@ void idxd_device_drain_pasid(struct idxd_device *idxd, int pasid)
- 	dev_dbg(dev, "pasid %d drained\n", pasid);
- }
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index 8ecd7570589d..bdddd63add41 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -40,6 +40,7 @@ enum irq_alloc_type {
+ 	X86_IRQ_ALLOC_TYPE_MSIX,
+ 	X86_IRQ_ALLOC_TYPE_DMAR,
+ 	X86_IRQ_ALLOC_TYPE_UV,
++	X86_IRQ_ALLOC_TYPE_DEV_MSI,
+ };
  
-+#define INT_HANDLE_IMS_TABLE	0x10000
-+int idxd_device_request_int_handle(struct idxd_device *idxd, int idx,
-+				   int *handle, enum idxd_interrupt_type irq_type)
+ struct irq_alloc_info {
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index 5cbaca58af95..8b25cadbae09 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -507,3 +507,15 @@ int hpet_assign_irq(struct irq_domain *domain, struct hpet_channel *hc,
+ 	return irq_domain_alloc_irqs(domain, 1, NUMA_NO_NODE, &info);
+ }
+ #endif
++
++#ifdef CONFIG_DEV_MSI
++int dev_msi_prepare(struct irq_domain *domain, struct device *dev,
++			   int nvec, msi_alloc_info_t *arg)
 +{
-+	struct device *dev = &idxd->pdev->dev;
-+	u32 operand, status;
++	memset(arg, 0, sizeof(*arg));
 +
-+	if (!(idxd->hw.cmd_cap & BIT(IDXD_CMD_REQUEST_INT_HANDLE)))
-+		return -EOPNOTSUPP;
++	arg->type = X86_IRQ_ALLOC_TYPE_DEV_MSI;
 +
-+	dev_dbg(dev, "get int handle, idx %d\n", idx);
-+
-+	operand = idx & 0xffff;
-+	if (irq_type == IDXD_IRQ_IMS)
-+		operand |= INT_HANDLE_IMS_TABLE;
-+	dev_dbg(dev, "cmd: %u operand: %#x\n",
-+		IDXD_CMD_REQUEST_INT_HANDLE, operand);
-+	idxd_cmd_exec(idxd, IDXD_CMD_REQUEST_INT_HANDLE, operand, &status);
-+
-+	if ((status & 0xff) != IDXD_CMDSTS_SUCCESS) {
-+		dev_dbg(dev, "request int handle failed: %#x\n", status);
-+		return -ENXIO;
-+	}
-+
-+	*handle = (status >> 8) & 0xffff;
-+
-+	dev_dbg(dev, "int handle acquired: %u\n", *handle);
 +	return 0;
 +}
-+
- /* Device configuration bits */
- static void idxd_group_config_write(struct idxd_group *group)
++#endif
+diff --git a/drivers/base/dev-msi.c b/drivers/base/dev-msi.c
+index 240ccc353933..43d6ed3ba10f 100644
+--- a/drivers/base/dev-msi.c
++++ b/drivers/base/dev-msi.c
+@@ -5,6 +5,7 @@
+  * Author: Megha Dey <megha.dey@intel.com>
+  */
+ 
++#include <linux/device.h>
+ #include <linux/irq.h>
+ #include <linux/irqdomain.h>
+ #include <linux/msi.h>
+@@ -32,7 +33,7 @@ static void dev_msi_set_desc(msi_alloc_info_t *arg, struct msi_desc *desc)
+ 	arg->hwirq = dev_msi_calc_hwirq(desc);
+ }
+ 
+-static int dev_msi_prepare(struct irq_domain *domain, struct device *dev,
++int __weak dev_msi_prepare(struct irq_domain *domain, struct device *dev,
+ 			   int nvec, msi_alloc_info_t *arg)
  {
-diff --git a/drivers/dma/idxd/idxd.h b/drivers/dma/idxd/idxd.h
-index fcea8bc060f5..2cd190a3da73 100644
---- a/drivers/dma/idxd/idxd.h
-+++ b/drivers/dma/idxd/idxd.h
-@@ -138,6 +138,7 @@ struct idxd_hw {
- 	union group_cap_reg group_cap;
- 	union engine_cap_reg engine_cap;
- 	struct opcap opcap;
-+	u32 cmd_cap;
- };
+ 	memset(arg, 0, sizeof(*arg));
+@@ -81,15 +82,66 @@ static int __init create_dev_msi_domain(void)
+ 	if (!fn)
+ 		return -ENXIO;
  
- enum idxd_device_state {
-@@ -201,6 +202,8 @@ struct idxd_device {
- 	struct dma_device dma_dev;
- 	struct workqueue_struct *wq;
- 	struct work_struct work;
-+
-+	int *int_handles;
- };
- 
- /* IDXD software descriptor */
-@@ -214,6 +217,7 @@ struct idxd_desc {
- 	struct list_head list;
- 	int id;
- 	int cpu;
-+	unsigned int vec_ptr;
- 	struct idxd_wq *wq;
- };
- 
-@@ -242,6 +246,11 @@ enum idxd_portal_prot {
- 	IDXD_PORTAL_LIMITED,
- };
- 
-+enum idxd_interrupt_type {
-+	IDXD_IRQ_MSIX = 0,
-+	IDXD_IRQ_IMS,
-+};
-+
- static inline int idxd_get_wq_portal_offset(enum idxd_portal_prot prot)
- {
- 	return prot * 0x1000;
-@@ -307,6 +316,8 @@ int idxd_device_config(struct idxd_device *idxd);
- void idxd_device_wqs_clear_state(struct idxd_device *idxd);
- void idxd_device_drain_pasid(struct idxd_device *idxd, int pasid);
- int idxd_device_load_config(struct idxd_device *idxd);
-+int idxd_device_request_int_handle(struct idxd_device *idxd, int idx, int *handle,
-+				   enum idxd_interrupt_type irq_type);
- 
- /* work queue control */
- int idxd_wq_alloc_resources(struct idxd_wq *wq);
-diff --git a/drivers/dma/idxd/init.c b/drivers/dma/idxd/init.c
-index 50c68de6b4ab..9fd505a03444 100644
---- a/drivers/dma/idxd/init.c
-+++ b/drivers/dma/idxd/init.c
-@@ -132,6 +132,22 @@ static int idxd_setup_interrupts(struct idxd_device *idxd)
- 		}
- 		dev_dbg(dev, "Allocated idxd-msix %d for vector %d\n",
- 			i, msix->vector);
-+
-+		if (idxd->hw.cmd_cap & BIT(IDXD_CMD_REQUEST_INT_HANDLE)) {
-+			/*
-+			 * The MSIX vector enumeration starts at 1 with vector 0 being the
-+			 * misc interrupt that handles non I/O completion events. The
-+			 * interrupt handles are for IMS enumeration on guest. The misc
-+			 * interrupt vector does not require a handle and therefore we start
-+			 * the int_handles at index 0. Since 'i' starts at 1, the first
-+			 * int_handles index will be 0.
-+			 */
-+			rc = idxd_device_request_int_handle(idxd, i, &idxd->int_handles[i - 1],
-+							    IDXD_IRQ_MSIX);
-+			if (rc < 0)
-+				goto err_no_irq;
-+			dev_dbg(dev, "int handle requested: %u\n", idxd->int_handles[i - 1]);
+-	dev_msi_default_domain = msi_create_irq_domain(fn, &dev_msi_domain_info, parent);
++	/*
++	 * This initcall may come after remap code is initialized. Ensure that
++	 * dev_msi_default domain is updated correctly.
++	 */
+ 	if (!dev_msi_default_domain) {
+-		pr_warn("failed to initialize irqdomain for DEV-MSI.\n");
+-		return -ENXIO;
++		dev_msi_default_domain = msi_create_irq_domain(fn, &dev_msi_domain_info, parent);
++		if (!dev_msi_default_domain) {
++			pr_warn("failed to initialize irqdomain for DEV-MSI.\n");
++			return -ENXIO;
 +		}
++
++		irq_domain_update_bus_token(dev_msi_default_domain, DOMAIN_BUS_PLATFORM_MSI);
++		irq_domain_free_fwnode(fn);
  	}
  
- 	idxd_unmask_error_interrupts(idxd);
-@@ -159,6 +175,13 @@ static int idxd_setup_internals(struct idxd_device *idxd)
- 	int i;
- 
- 	init_waitqueue_head(&idxd->cmd_waitq);
-+
-+	if (idxd->hw.cmd_cap & BIT(IDXD_CMD_REQUEST_INT_HANDLE)) {
-+		idxd->int_handles = devm_kcalloc(dev, idxd->max_wqs, sizeof(int), GFP_KERNEL);
-+		if (!idxd->int_handles)
-+			return -ENOMEM;
-+	}
-+
- 	idxd->groups = devm_kcalloc(dev, idxd->max_groups,
- 				    sizeof(struct idxd_group), GFP_KERNEL);
- 	if (!idxd->groups)
-@@ -230,6 +253,12 @@ static void idxd_read_caps(struct idxd_device *idxd)
- 	/* reading generic capabilities */
- 	idxd->hw.gen_cap.bits = ioread64(idxd->reg_base + IDXD_GENCAP_OFFSET);
- 	dev_dbg(dev, "gen_cap: %#llx\n", idxd->hw.gen_cap.bits);
-+
-+	if (idxd->hw.gen_cap.cmd_cap) {
-+		idxd->hw.cmd_cap = ioread32(idxd->reg_base + IDXD_CMDCAP_OFFSET);
-+		dev_dbg(dev, "cmd_cap: %#x\n", idxd->hw.cmd_cap);
-+	}
-+
- 	idxd->max_xfer_bytes = 1ULL << idxd->hw.gen_cap.max_xfer_shift;
- 	dev_dbg(dev, "max xfer size: %llu bytes\n", idxd->max_xfer_bytes);
- 	idxd->max_batch_size = 1U << idxd->hw.gen_cap.max_batch_shift;
-diff --git a/drivers/dma/idxd/registers.h b/drivers/dma/idxd/registers.h
-index a0df4f3fe1fb..ace7248ee195 100644
---- a/drivers/dma/idxd/registers.h
-+++ b/drivers/dma/idxd/registers.h
-@@ -23,8 +23,8 @@ union gen_cap_reg {
- 		u64 overlap_copy:1;
- 		u64 cache_control_mem:1;
- 		u64 cache_control_cache:1;
-+		u64 cmd_cap:1;
- 		u64 rsvd:3;
--		u64 int_handle_req:1;
- 		u64 dest_readback:1;
- 		u64 drain_readback:1;
- 		u64 rsvd2:6;
-@@ -223,6 +223,8 @@ enum idxd_cmdsts_err {
- 	IDXD_CMDSTS_ERR_NO_HANDLE,
- };
- 
-+#define IDXD_CMDCAP_OFFSET		0xb0
-+
- #define IDXD_SWERR_OFFSET		0xc0
- #define IDXD_SWERR_VALID		0x00000001
- #define IDXD_SWERR_OVERFLOW		0x00000002
-diff --git a/drivers/dma/idxd/submit.c b/drivers/dma/idxd/submit.c
-index 3e63d820a98e..70c7703a4495 100644
---- a/drivers/dma/idxd/submit.c
-+++ b/drivers/dma/idxd/submit.c
-@@ -22,11 +22,17 @@ static struct idxd_desc *__get_desc(struct idxd_wq *wq, int idx, int cpu)
- 		desc->hw->pasid = idxd->pasid;
- 
- 	/*
--	 * Descriptor completion vectors are 1-8 for MSIX. We will round
--	 * robin through the 8 vectors.
-+	 * Descriptor completion vectors are 1...N for MSIX. We will round
-+	 * robin through the N vectors.
- 	 */
- 	wq->vec_ptr = (wq->vec_ptr % idxd->num_wq_irqs) + 1;
--	desc->hw->int_handle = wq->vec_ptr;
-+	if (!idxd->int_handles) {
-+		desc->hw->int_handle = wq->vec_ptr;
-+	} else {
-+		desc->vec_ptr = wq->vec_ptr;
-+		desc->hw->int_handle = idxd->int_handles[desc->vec_ptr];
-+	}
-+
- 	return desc;
- }
- 
-@@ -79,7 +85,6 @@ void idxd_free_desc(struct idxd_wq *wq, struct idxd_desc *desc)
- int idxd_submit_desc(struct idxd_wq *wq, struct idxd_desc *desc)
- {
- 	struct idxd_device *idxd = wq->idxd;
--	int vec = desc->hw->int_handle;
- 	void __iomem *portal;
- 
- 	if (idxd->state != IDXD_DEV_ENABLED)
-@@ -110,9 +115,19 @@ int idxd_submit_desc(struct idxd_wq *wq, struct idxd_desc *desc)
- 	 * Pending the descriptor to the lockless list for the irq_entry
- 	 * that we designated the descriptor to.
- 	 */
--	if (desc->hw->flags & IDXD_OP_FLAG_RCI)
--		llist_add(&desc->llnode,
--			  &idxd->irq_entries[vec].pending_llist);
-+	if (desc->hw->flags & IDXD_OP_FLAG_RCI) {
-+		int vec;
-+
-+		/*
-+		 * If the driver is on host kernel, it would be the value
-+		 * assigned to interrupt handle, which is index for MSIX
-+		 * vector. If it's guest then can't use the int_handle since
-+		 * that is the index to IMS for the entire device. The guest
-+		 * device local index will be used.
-+		 */
-+		vec = !idxd->int_handles ? desc->hw->int_handle : desc->vec_ptr;
-+		llist_add(&desc->llnode, &idxd->irq_entries[vec].pending_llist);
-+	}
- 
+-	irq_domain_update_bus_token(dev_msi_default_domain, DOMAIN_BUS_PLATFORM_MSI);
+-	irq_domain_free_fwnode(fn);
+-
  	return 0;
  }
+ device_initcall(create_dev_msi_domain);
++
++#ifdef CONFIG_IRQ_REMAP
++static struct irq_chip dev_msi_ir_controller = {
++	.name			= "IR-DEV-MSI",
++	.irq_unmask		= platform_msi_unmask_irq,
++	.irq_mask		= platform_msi_mask_irq,
++	.irq_write_msi_msg	= platform_msi_write_msg,
++	.irq_ack		= irq_chip_ack_parent,
++	.irq_retrigger		= irq_chip_retrigger_hierarchy,
++	.irq_set_vcpu_affinity	= irq_chip_set_vcpu_affinity_parent,
++	.flags			= IRQCHIP_SKIP_SET_WAKE,
++};
++
++static struct msi_domain_info dev_msi_ir_domain_info = {
++	.flags		= MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS,
++	.ops		= &dev_msi_domain_ops,
++	.chip		= &dev_msi_ir_controller,
++	.handler	= handle_edge_irq,
++	.handler_name	= "edge",
++};
++
++struct irq_domain *create_remap_dev_msi_irq_domain(struct irq_domain *parent,
++						   const char *name)
++{
++	struct fwnode_handle *fn;
++	struct irq_domain *domain;
++
++	fn = irq_domain_alloc_named_fwnode(name);
++	if (!fn)
++		return NULL;
++
++	domain = msi_create_irq_domain(fn, &dev_msi_ir_domain_info, parent);
++	if (!domain) {
++		pr_warn("failed to initialize irqdomain for IR-DEV-MSI.\n");
++		return ERR_PTR(-ENXIO);
++	}
++
++	irq_domain_update_bus_token(domain, DOMAIN_BUS_PLATFORM_MSI);
++
++	if (!dev_msi_default_domain)
++		dev_msi_default_domain = domain;
++
++	return domain;
++}
++#endif
+diff --git a/drivers/iommu/intel/irq_remapping.c b/drivers/iommu/intel/irq_remapping.c
+index 7f8769800815..51872aabe5f8 100644
+--- a/drivers/iommu/intel/irq_remapping.c
++++ b/drivers/iommu/intel/irq_remapping.c
+@@ -573,6 +573,10 @@ static int intel_setup_irq_remapping(struct intel_iommu *iommu)
+ 						 "INTEL-IR-MSI",
+ 						 iommu->seq_id);
+ 
++	iommu->ir_dev_msi_domain =
++		create_remap_dev_msi_irq_domain(iommu->ir_domain,
++						"INTEL-IR-DEV-MSI");
++
+ 	ir_table->base = page_address(pages);
+ 	ir_table->bitmap = bitmap;
+ 	iommu->ir_table = ir_table;
+@@ -1299,9 +1303,10 @@ static void intel_irq_remapping_prepare_irte(struct intel_ir_data *data,
+ 	case X86_IRQ_ALLOC_TYPE_HPET:
+ 	case X86_IRQ_ALLOC_TYPE_MSI:
+ 	case X86_IRQ_ALLOC_TYPE_MSIX:
++	case X86_IRQ_ALLOC_TYPE_DEV_MSI:
+ 		if (info->type == X86_IRQ_ALLOC_TYPE_HPET)
+ 			set_hpet_sid(irte, info->hpet_id);
+-		else
++		else if (info->type != X86_IRQ_ALLOC_TYPE_DEV_MSI)
+ 			set_msi_sid(irte, info->msi_dev);
+ 
+ 		msg->address_hi = MSI_ADDR_BASE_HI;
+@@ -1353,8 +1358,10 @@ static int intel_irq_remapping_alloc(struct irq_domain *domain,
+ 
+ 	if (!info || !iommu)
+ 		return -EINVAL;
++
+ 	if (nr_irqs > 1 && info->type != X86_IRQ_ALLOC_TYPE_MSI &&
+-	    info->type != X86_IRQ_ALLOC_TYPE_MSIX)
++	    info->type != X86_IRQ_ALLOC_TYPE_MSIX &&
++	    info->type != X86_IRQ_ALLOC_TYPE_DEV_MSI)
+ 		return -EINVAL;
+ 
+ 	/*
+diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
+index d129baf7e0b8..3b868d1c43df 100644
+--- a/include/linux/intel-iommu.h
++++ b/include/linux/intel-iommu.h
+@@ -596,6 +596,7 @@ struct intel_iommu {
+ 	struct ir_table *ir_table;	/* Interrupt remapping info */
+ 	struct irq_domain *ir_domain;
+ 	struct irq_domain *ir_msi_domain;
++	struct irq_domain *ir_dev_msi_domain;
+ #endif
+ 	struct iommu_device iommu;  /* IOMMU core code handle */
+ 	int		node;
+diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
+index b37350c4fe37..e537d7b50cee 100644
+--- a/include/linux/irqdomain.h
++++ b/include/linux/irqdomain.h
+@@ -589,6 +589,17 @@ irq_domain_hierarchical_is_msi_remap(struct irq_domain *domain)
+ }
+ #endif	/* CONFIG_IRQ_DOMAIN_HIERARCHY */
+ 
++#if defined(CONFIG_DEV_MSI) && defined(CONFIG_IRQ_REMAP)
++extern struct irq_domain *create_remap_dev_msi_irq_domain(struct irq_domain *parent,
++							  const char *name);
++#else
++static inline struct irq_domain *create_remap_dev_msi_irq_domain(struct irq_domain *parent,
++								 const char *name)
++{
++	return NULL;
++}
++#endif
++
+ #else /* CONFIG_IRQ_DOMAIN */
+ static inline void irq_dispose_mapping(unsigned int virq) { }
+ static inline struct irq_domain *irq_find_matching_fwnode(
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 1da97f905720..7098ba566bcd 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -378,6 +378,9 @@ void *platform_msi_get_host_data(struct irq_domain *domain);
+ void platform_msi_write_msg(struct irq_data *data, struct msi_msg *msg);
+ void platform_msi_unmask_irq(struct irq_data *data);
+ void platform_msi_mask_irq(struct irq_data *data);
++
++int dev_msi_prepare(struct irq_domain *domain, struct device *dev,
++                           int nvec, msi_alloc_info_t *arg);
+ #endif /* CONFIG_GENERIC_MSI_IRQ_DOMAIN */
+ 
+ #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
 
