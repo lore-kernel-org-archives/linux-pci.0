@@ -2,144 +2,79 @@ Return-Path: <SRS0=Bif1=BA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0809CC433E6
-	for <linux-pci@archiver.kernel.org>; Tue, 21 Jul 2020 10:48:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DE07C433E2
+	for <linux-pci@archiver.kernel.org>; Tue, 21 Jul 2020 11:24:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E00DF2080D
-	for <linux-pci@archiver.kernel.org>; Tue, 21 Jul 2020 10:48:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6305A20702
+	for <linux-pci@archiver.kernel.org>; Tue, 21 Jul 2020 11:24:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726611AbgGUKsK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 21 Jul 2020 06:48:10 -0400
-Received: from foss.arm.com ([217.140.110.172]:35834 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726089AbgGUKsK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 21 Jul 2020 06:48:10 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 9C364106F;
-        Tue, 21 Jul 2020 03:48:09 -0700 (PDT)
-Received: from e121166-lin.cambridge.arm.com (e121166-lin.cambridge.arm.com [10.1.196.255])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 2D8533F66E;
-        Tue, 21 Jul 2020 03:48:08 -0700 (PDT)
-Date:   Tue, 21 Jul 2020 11:48:02 +0100
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>
-Cc:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Marek =?iso-8859-1?Q?Beh=FAn?= <marek.behun@nic.cz>,
-        Remi Pommarel <repk@triplefau.lt>,
-        Tomasz Maciej Nowak <tmn505@gmail.com>,
-        Xogium <contact@xogium.me>, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3] PCI: aardvark: Don't touch PCIe registers if no card
- connected
-Message-ID: <20200721104802.GA2618@e121166-lin.cambridge.arm.com>
-References: <20200709113509.GB19638@e121166-lin.cambridge.arm.com>
- <20200709122208.rmfeuu6zgbwh3fr5@pali>
- <20200709144701.GA21760@e121166-lin.cambridge.arm.com>
- <20200709150959.wq6zfkcy4m6hvvpl@pali>
- <20200710091800.GA3419@e121166-lin.cambridge.arm.com>
- <20200713082747.e3q3ml3wpbszn4j7@pali>
- <20200713112325.GA25865@e121166-lin.cambridge.arm.com>
- <20200715121726.eh4xglkdbcqkh7td@pali>
- <20200715162108.GB3432@e121166-lin.cambridge.arm.com>
- <20200721085713.p2rbmucpk5ra3quw@pali>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20200721085713.p2rbmucpk5ra3quw@pali>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+        id S1729286AbgGULYy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 21 Jul 2020 07:24:54 -0400
+Received: from bmailout1.hostsharing.net ([83.223.95.100]:46827 "EHLO
+        bmailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726415AbgGULYy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jul 2020 07:24:54 -0400
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (Client CN "*.hostsharing.net", Issuer "COMODO RSA Domain Validation Secure Server CA" (not verified))
+        by bmailout1.hostsharing.net (Postfix) with ESMTPS id C0FA03000225E;
+        Tue, 21 Jul 2020 13:24:50 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+        id 902012E581; Tue, 21 Jul 2020 13:24:50 +0200 (CEST)
+Message-Id: <c6aab5af096f7b1b3db57f6335cebba8f0fcca89.1595330431.git.lukas@wunner.de>
+From:   Lukas Wunner <lukas@wunner.de>
+Date:   Tue, 21 Jul 2020 13:24:51 +0200
+Subject: [PATCH] PCI: Simplify pci_dev_reset_slot_function()
+To:     Bjorn Helgaas <bhelgaas@google.com>
+Cc:     Alex Williamson <alex.williamson@redhat.com>,
+        Keith Busch <kbusch@kernel.org>, linux-pci@vger.kernel.org
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jul 21, 2020 at 10:57:13AM +0200, Pali Rohár wrote:
-> On Wednesday 15 July 2020 17:21:08 Lorenzo Pieralisi wrote:
-> > On Wed, Jul 15, 2020 at 02:17:26PM +0200, Pali Rohár wrote:
-> > > On Monday 13 July 2020 12:23:25 Lorenzo Pieralisi wrote:
-> > > > On Mon, Jul 13, 2020 at 10:27:47AM +0200, Pali Rohár wrote:
-> > > > > On Friday 10 July 2020 10:18:00 Lorenzo Pieralisi wrote:
-> > > > > > On Thu, Jul 09, 2020 at 05:09:59PM +0200, Pali Rohár wrote:
-> > > > > > > > I understand that but the bridge bus resource can be trimmed to just
-> > > > > > > > contain the root bus because that's the only one where there is a
-> > > > > > > > chance you can enumerate a device.
-> > > > > > > 
-> > > > > > > It is possible to register only root bridge without endpoint?
-> > > > > > 
-> > > > > > It is possible to register the root bridge with a trimmed IORESOURCE_BUS
-> > > > > > so that you don't enumerate anything other than the root port.
-> > > > > 
-> > > > > Hello Lorenzo! I really do not know how to achieve it. From code it
-> > > > > looks like that pci/probe.c scans child buses unconditionally.
-> > > > > 
-> > > > > pci-aardvark.c calls pci_host_probe() which calls functions
-> > > > > pci_scan_root_bus_bridge() which calls pci_scan_child_bus() which calls
-> > > > > pci_scan_child_bus_extend() which calls pci_scan_bridge_extend() (bridge
-> > > > > needs to be reconfigured) which then try to probe child bus via
-> > > > > pci_scan_child_bus_extend() because bridge is not card bus.
-> > > > > 
-> > > > > In function pci_scan_bridge_extend() I do not see a way how to skip
-> > > > > probing for child buses which would avoid enumerating aardvark root
-> > > > > bridge when PCIe device is not connected.
-> > > > > 
-> > > > > dmesg output contains:
-> > > > > 
-> > > > >   advk-pcie d0070000.pcie: link never came up
-> > > > >   advk-pcie d0070000.pcie: PCI host bridge to bus 0000:00
-> > > > >   pci_bus 0000:00: root bus resource [bus 00-ff]
-> > > > 
-> > > > This resource can be limited to the root bus number only before calling
-> > > > pci_host_probe() (ie see pci_parse_request_of_pci_ranges() and code in
-> > > > pci_scan_bridge_extend() that programs primary/secondary/subordinate
-> > > > busses) but I think that only papers over the issue, it does not fix it.
-> > > 
-> > > I looked at the code in pci/probe.c again and I do not think it is
-> > > possible to avoid scanning devices. pci_scan_child_bus_extend() is
-> > > unconditionally calling pci_scan_slot() for devfn=0 as the first thing.
-> > > And this function unconditionally calls pci_scan_device() which is
-> > > directly trying to read vendor id from config register.
-> > > 
-> > > So for me it looks like that kernel expects that can read vendor id and
-> > > device id from config register for device which is not connected.
-> > 
-> > Not if it is connected to a bus that the root port does not decode,
-> > that's what I am saying.
-> > 
-> > > And trying to read config register would cause those timeouts in
-> > > aardvark.
-> > 
-> > The root port (which effectively works as PCI bridge from this
-> > standpoint) does not issue config cycles for busses that aren't within
-> > its decoded bus range, which in turn is determined by the firmware
-> > IORESOURCE_BUS resource.
-> > 
-> > This issue is caused by devices that are connected downstream to
-> > the root port.
-> > 
-> > Anyway - patch merged
-> 
-> Could you send me a link to git commit? I have looked into
-> lpieralisi/pci.git repository, but I do not see it here.
+pci_dev_reset_slot_function() refuses to reset a hotplug slot if it is
+shared by multiple pci_devs.  That's the case if and only if the slot is
+occupied by a multifunction device.
 
-Apologies - I did not push it out, I have pushed it out on
-pci/aardvark now.
+Simplify the function to check the device's multifunction flag instead
+of iterating over the devices on the bus.  (Iterating over the devices
+requires holding pci_bus_sem, which the function erroneously does not
+acquire.)
 
-> > but I would be happy to keep this discussion going, somehow.
-> 
-> Ok, no problem. As I said if anybody has any idea or would like to see
-> some tests from me, I can do it and provide results.
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Cc: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/pci.c | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
 
-Sounds good, I will let you know, thanks.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 455da72..b406611 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4914,16 +4914,10 @@ static int pci_reset_hotplug_slot(struct hotplug_slot *hotplug, int probe)
+ 
+ static int pci_dev_reset_slot_function(struct pci_dev *dev, int probe)
+ {
+-	struct pci_dev *pdev;
+-
+-	if (dev->subordinate || !dev->slot ||
++	if (dev->multifunction || dev->subordinate || !dev->slot ||
+ 	    dev->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET)
+ 		return -ENOTTY;
+ 
+-	list_for_each_entry(pdev, &dev->bus->devices, bus_list)
+-		if (pdev != dev && pdev->slot == dev->slot)
+-			return -ENOTTY;
+-
+ 	return pci_reset_hotplug_slot(dev->slot->hotplug, probe);
+ }
+ 
+-- 
+2.27.0
 
-Lorenzo
-
-> > If the LPC20 VFIO/IOMMU/PCI microconference is approved it can be a
-> > good venue for this to happen.
-> > 
-> > Lorenzo
