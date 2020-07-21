@@ -2,119 +2,98 @@ Return-Path: <SRS0=Bif1=BA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F325FC433DF
-	for <linux-pci@archiver.kernel.org>; Tue, 21 Jul 2020 15:02:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B47C4C433E0
+	for <linux-pci@archiver.kernel.org>; Tue, 21 Jul 2020 15:07:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CD00420709
-	for <linux-pci@archiver.kernel.org>; Tue, 21 Jul 2020 15:02:02 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Nda5Gaqh"
+	by mail.kernel.org (Postfix) with ESMTP id 90962206E3
+	for <linux-pci@archiver.kernel.org>; Tue, 21 Jul 2020 15:07:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728391AbgGUPCC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 21 Jul 2020 11:02:02 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:54542 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728064AbgGUPCB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jul 2020 11:02:01 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1595343720;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=mSIJqWa6gC/bRdgGTlEg6I1iiFHrJPO8X4/n8B0VJ9k=;
-        b=Nda5GaqhA26gAUvQOiiVuv5CLb1nMr/9We8VKvxj1kezCWbLFkwDKZkU6MVLH1Ldj4B43z
-        /exCwjMzKtEhIZmaArgCevLjTafzeTxg5W3i+ilaPGEjEiw7W+wjcphRDpAm6C2kq7L879
-        +b4lHQFzsVn9UBIOTUqeas+caVWWx/k=
-Received: from mail-qv1-f72.google.com (mail-qv1-f72.google.com
- [209.85.219.72]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-275-yEpAqgPUPzKkLeGXLHa-8Q-1; Tue, 21 Jul 2020 11:01:58 -0400
-X-MC-Unique: yEpAqgPUPzKkLeGXLHa-8Q-1
-Received: by mail-qv1-f72.google.com with SMTP id g17so12521340qvw.0
-        for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2020 08:01:58 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:organization:user-agent:mime-version
-         :content-transfer-encoding;
-        bh=mSIJqWa6gC/bRdgGTlEg6I1iiFHrJPO8X4/n8B0VJ9k=;
-        b=mgWgr6zHlgCLFIED3N6zlSAydWXVDDiWkmaDc6aUNBkZYGNM1TbrCSK19XQUbxZ3ya
-         oqahPM3M9m4X2z93tbimLwSDeV7adFs6Zahx4Y0a0cjXmE+E/v4cznTI3tXUgleZR1eK
-         5saldYYpjY7HxdB41ufci0u0UwNHCVpyXwZiVFx40gq5zqGyAwkA08HrrA8wGjcbqaiB
-         hjsER9tXgxeqo5J1hTEcKyo31r5E/0rDs87aNr0uXKFdTE+pgvIKDb9FBVngdHN6Y1vP
-         DBfzPfCrk3/IMQ5i+BlIx88HBONRDI6UsXrW/tMo6+/pyaZjc3rNj6ZVFTnraOEW6/ci
-         bBvQ==
-X-Gm-Message-State: AOAM532lfGAiwvpYngvJf1NEEPggy5sMciUUJ+Vxsau89rg4Nc0Oa9ue
-        AroG2ezE8GV8nk9HJxVerDs8J1F1l/XGNItc16hU/LaDP4prCv2m2VGjuhp7TlS+obbdyurfoi6
-        iFz0UqSWglqJbxBOkr/5m
-X-Received: by 2002:a37:a51:: with SMTP id 78mr16530740qkk.121.1595343717905;
-        Tue, 21 Jul 2020 08:01:57 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJxJH5IxpTv0tqc1DLQ+iSUR4KYz9tNO0jJWsz8BvtZ9Y/QpYN7MJ20Jq9ljgK+EQmQWXFPL4g==
-X-Received: by 2002:a37:a51:: with SMTP id 78mr16530715qkk.121.1595343717650;
-        Tue, 21 Jul 2020 08:01:57 -0700 (PDT)
-Received: from Ruby.lyude.net (pool-108-49-102-102.bstnma.fios.verizon.net. [108.49.102.102])
-        by smtp.gmail.com with ESMTPSA id f4sm22024521qtp.38.2020.07.21.08.01.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 21 Jul 2020 08:01:57 -0700 (PDT)
-Message-ID: <f951fba07ca7fa2fdfd590cd5023d1b31f515fa2.camel@redhat.com>
-Subject: Re: nouveau regression with 5.7 caused by "PCI/PM: Assume ports
- without DLL Link Active train links in 100 ms"
-From:   Lyude Paul <lyude@redhat.com>
-To:     Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Karol Herbst <kherbst@redhat.com>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Ben Skeggs <bskeggs@redhat.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        nouveau <nouveau@lists.freedesktop.org>,
-        dri-devel <dri-devel@lists.freedesktop.org>,
-        Patrick Volkerding <volkerdi@gmail.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Sasha Levin <sashal@kernel.org>
-Date:   Tue, 21 Jul 2020 11:01:55 -0400
-In-Reply-To: <20200721122247.GI5180@lahna.fi.intel.com>
-References: <CACO55tuA+XMgv=GREf178NzTLTHri4kyD5mJjKuDpKxExauvVg@mail.gmail.com>
-         <20200716235440.GA675421@bjorn-Precision-5520>
-         <CACO55tuVJHjEbsW657ToczN++_iehXA8pimPAkzc=NOnx4Ztnw@mail.gmail.com>
-         <CACO55tso5SVipAR=AZfqhp6GGkKO9angv6f+nd61wvgAJtrOKg@mail.gmail.com>
-         <20200721122247.GI5180@lahna.fi.intel.com>
-Organization: Red Hat
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.36.3 (3.36.3-1.fc32) 
+        id S1728527AbgGUPH4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 21 Jul 2020 11:07:56 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:8348 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728362AbgGUPHz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 21 Jul 2020 11:07:55 -0400
+Received: from DGGEMS407-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id 67FEC4F408849D84850E;
+        Tue, 21 Jul 2020 23:07:47 +0800 (CST)
+Received: from kernelci-master.huawei.com (10.175.101.6) by
+ DGGEMS407-HUB.china.huawei.com (10.3.19.207) with Microsoft SMTP Server id
+ 14.3.487.0; Tue, 21 Jul 2020 23:07:38 +0800
+From:   Wei Yongjun <weiyongjun1@huawei.com>
+To:     Hulk Robot <hulkci@huawei.com>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Tyrel Datwyler <tyreld@linux.ibm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC:     Wei Yongjun <weiyongjun1@huawei.com>, <linux-pci@vger.kernel.org>,
+        <linuxppc-dev@lists.ozlabs.org>
+Subject: [PATCH -next] PCI: rpadlpar: Make some functions static
+Date:   Tue, 21 Jul 2020 23:17:35 +0800
+Message-ID: <20200721151735.41181-1-weiyongjun1@huawei.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.175.101.6]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Sure thing. Also, feel free to let me know if you'd like access to one of the
-systems we saw breaking with this patch - I'm fairly sure I've got one of them
-locally at my apartment and don't mind setting up AMT/KVM/SSH
+The sparse tool report build warnings as follows:
 
-On Tue, 2020-07-21 at 15:22 +0300, Mika Westerberg wrote:
-> Hi,
-> 
-> [Sorry for the delay, I was on vacation]
-> 
-> On Fri, Jul 17, 2020 at 01:32:10PM +0200, Karol Herbst wrote:
-> > Filed at https://bugzilla.kernel.org/show_bug.cgi?id=208597
-> 
-> Thanks for reporting.
-> 
-> I'll check your logs and try to figure if there is something we can do
-> to make both nouveau and TBT working at the same time.
-> 
-> > oddly enough I wasn't able to reproduce it on my XPS 9560, will ping
-> > once something breaks.
--- 
-Cheers,
-	Lyude Paul (she/her)
-	Software Engineer at Red Hat
+drivers/pci/hotplug/rpadlpar_core.c:355:5: warning:
+ symbol 'dlpar_remove_pci_slot' was not declared. Should it be static?
+drivers/pci/hotplug/rpadlpar_core.c:461:12: warning:
+ symbol 'rpadlpar_io_init' was not declared. Should it be static?
+drivers/pci/hotplug/rpadlpar_core.c:473:6: warning:
+ symbol 'rpadlpar_io_exit' was not declared. Should it be static?
+
+Those functions are not used outside of this file, so marks them
+static.
+Also mark rpadlpar_io_exit() as __exit.
+
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+---
+ drivers/pci/hotplug/rpadlpar_core.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/hotplug/rpadlpar_core.c b/drivers/pci/hotplug/rpadlpar_core.c
+index c5eb509c72f0..f979b7098acf 100644
+--- a/drivers/pci/hotplug/rpadlpar_core.c
++++ b/drivers/pci/hotplug/rpadlpar_core.c
+@@ -352,7 +352,7 @@ static int dlpar_remove_vio_slot(char *drc_name, struct device_node *dn)
+  * -ENODEV		Not a valid drc_name
+  * -EIO			Internal PCI Error
+  */
+-int dlpar_remove_pci_slot(char *drc_name, struct device_node *dn)
++static int dlpar_remove_pci_slot(char *drc_name, struct device_node *dn)
+ {
+ 	struct pci_bus *bus;
+ 	struct slot *slot;
+@@ -458,7 +458,7 @@ static inline int is_dlpar_capable(void)
+ 	return (int) (rc != RTAS_UNKNOWN_SERVICE);
+ }
+ 
+-int __init rpadlpar_io_init(void)
++static int __init rpadlpar_io_init(void)
+ {
+ 
+ 	if (!is_dlpar_capable()) {
+@@ -470,7 +470,7 @@ int __init rpadlpar_io_init(void)
+ 	return dlpar_sysfs_init();
+ }
+ 
+-void rpadlpar_io_exit(void)
++static void __exit rpadlpar_io_exit(void)
+ {
+ 	dlpar_sysfs_exit();
+ }
 
