@@ -2,41 +2,41 @@ Return-Path: <SRS0=Bif1=BA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB9E7C433E1
-	for <linux-pci@archiver.kernel.org>; Tue, 21 Jul 2020 16:02:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 655D4C433EB
+	for <linux-pci@archiver.kernel.org>; Tue, 21 Jul 2020 16:02:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C87FC20720
-	for <linux-pci@archiver.kernel.org>; Tue, 21 Jul 2020 16:02:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 45EAA2077D
+	for <linux-pci@archiver.kernel.org>; Tue, 21 Jul 2020 16:02:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728219AbgGUQCT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 21 Jul 2020 12:02:19 -0400
-Received: from mga06.intel.com ([134.134.136.31]:36437 "EHLO mga06.intel.com"
+        id S1730102AbgGUQCg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 21 Jul 2020 12:02:36 -0400
+Received: from mga09.intel.com ([134.134.136.24]:17457 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726919AbgGUQCS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 21 Jul 2020 12:02:18 -0400
-IronPort-SDR: Ikg01JIzU+9DmhvfZXnh7DgMu7ahluJn9lmpdhH04xbEGB/PhPB9MKk1kM+BU7wvrlppmOIs3c
- cC7KQvKplMWg==
-X-IronPort-AV: E=McAfee;i="6000,8403,9689"; a="211707972"
+        id S1726919AbgGUQCg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 21 Jul 2020 12:02:36 -0400
+IronPort-SDR: V6IFSudYNmCLSXEcZ/jYk7RzdhsJYEJLenDRqrBO+J8Sbv/WYUzzNuATja3h10Rp1BrrOTksvz
+ LBqNlx9jnrQg==
+X-IronPort-AV: E=McAfee;i="6000,8403,9689"; a="151498642"
 X-IronPort-AV: E=Sophos;i="5.75,379,1589266800"; 
-   d="scan'208";a="211707972"
+   d="scan'208";a="151498642"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jul 2020 09:02:16 -0700
-IronPort-SDR: JMHzcjiPLeplMQlR4VYW9anJCqZ4TvwDn6hOSJgme6gv93lU3gu/moN1zQvfsvX+pglT4mvjLF
- beoMO0yTIbDA==
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jul 2020 09:02:30 -0700
+IronPort-SDR: 4k8m5pBgp08yDsi4xMHaA6oG98O0aTlsV3haxLcdE7QZf9FErdMZXolXxI+MPte1CBcmU5Jo8P
+ /Shn8Fgt7K5Q==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.75,379,1589266800"; 
-   d="scan'208";a="271755813"
+   d="scan'208";a="287967356"
 Received: from djiang5-desk3.ch.intel.com ([143.182.136.137])
-  by fmsmga008.fm.intel.com with ESMTP; 21 Jul 2020 09:02:15 -0700
-Subject: [PATCH RFC v2 00/18] Add VFIO mediated device support and DEV-MSI
- support for the idxd driver 
+  by orsmga006.jf.intel.com with ESMTP; 21 Jul 2020 09:02:28 -0700
+Subject: [PATCH RFC v2 02/18] irq/dev-msi: Add support for a new DEV_MSI irq
+ domain
 From:   Dave Jiang <dave.jiang@intel.com>
 To:     vkoul@kernel.org, megha.dey@intel.com, maz@kernel.org,
         bhelgaas@google.com, rafael@kernel.org, gregkh@linuxfoundation.org,
@@ -51,8 +51,10 @@ To:     vkoul@kernel.org, megha.dey@intel.com, maz@kernel.org,
         pbonzini@redhat.com, samuel.ortiz@intel.com, mona.hossain@intel.com
 Cc:     dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org,
         x86@kernel.org, linux-pci@vger.kernel.org, kvm@vger.kernel.org
-Date:   Tue, 21 Jul 2020 09:02:15 -0700
-Message-ID: <159534667974.28840.2045034360240786644.stgit@djiang5-desk3.ch.intel.com>
+Date:   Tue, 21 Jul 2020 09:02:28 -0700
+Message-ID: <159534734833.28840.10067945890695808535.stgit@djiang5-desk3.ch.intel.com>
+In-Reply-To: <159534667974.28840.2045034360240786644.stgit@djiang5-desk3.ch.intel.com>
+References: <159534667974.28840.2045034360240786644.stgit@djiang5-desk3.ch.intel.com>
 User-Agent: StGit/unknown-version
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -62,178 +64,305 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-v2:
-IMS (now dev-msi):
-With recommendations from Jason/Thomas/Dan on making IMS more generic:
-Pass a non-pci generic device(struct device) for IMS management instead of mdev
-Remove all references to mdev and symbol_get/put
-Remove all references to IMS in common code and replace with dev-msi
-remove dynamic allocation of platform-msi interrupts: no groups,no new msi list or list helpers
-Create a generic dev-msi domain with and without interrupt remapping enabled.
-Introduce dev_msi_domain_alloc_irqs and dev_msi_domain_free_irqs apis
+From: Megha Dey <megha.dey@intel.com>
 
-mdev: 
-Removing unrelated bits from SVA enabling that’s not necessary for the submission. (Kevin)
-Restructured entire mdev driver series to make reviewing easier (Kevin)
-Made rw emulation more robust (Kevin)
-Removed uuid wq type and added single dedicated wq type (Kevin)
-Locking fixes for vdev (Yan Zhao)
-VFIO MSIX trigger fixes (Yan Zhao)
+Add support for the creation of a new DEV_MSI irq domain. It creates a
+new irq chip associated with the DEV_MSI domain and adds the necessary
+domain operations to it.
 
-Link to previous discussions with Jason:
-https://lore.kernel.org/lkml/57296ad1-20fe-caf2-b83f-46d823ca0b5f@intel.com/
-The emulation part that can be moved to user space is very small due to the majority of the
-emulations being control bits and need to reside in the kernel. We can revisit the necessity of
-moving the small emulation part to userspace and required architectural changes at a later time.
+Add a new config option DEV_MSI which must be enabled by any
+driver that wants to support device-specific message-signaled-interrupts
+outside of PCI-MSI(-X).
 
-This RFC series has been reviewed by Dan Williams <dan.j.williams@intel.com>
+Lastly, add device specific mask/unmask callbacks in addition to a write
+function to the platform_msi_ops.
 
-The actual code can be independent of the stage 2 driver code submission that adds support for SVM,
-ENQCMD(S), PASID, and shared workqueues. This code series will match the support of the 5.6 kernel
-(stage 1) driver but on guest. The code is dependent on Baolu’s iommu aux-domain API extensions
-patches that’s still in process of being reviewed:
-https://lkml.org/lkml/2020/7/14/48
-
-Stage 1 of the driver has been accepted in v5.6 kernel. It supports dedicated workqueue (wq)
-without Shared Virtual Memory (SVM) support. Stage 2 supports shared wq and SVM. It is pending
-upstream review and targeting kernel v5.9.
-
-VFIO mediated device framework allows vendor drivers to wrap a portion of device resources into
-virtual devices (mdev). Each mdev can be assigned to different guest using the same set of VFIO
-uAPIs as assigning a physical device. Accessing to the mdev resource is served with mixed policies.
-For example, vendor drivers typically mark data-path interface as pass-through for fast guest
-operations, and then trap-and-mediate the control-path interface to avoid undesired interference
-between mdevs. Some level of emulation is necessary behind vfio mdev to compose the virtual device
-interface. 
-
-This series brings mdev to idxd driver to enable Intel Scalable IOV (SIOV), a hardware-assisted
-mediated pass-through technology. SIOV makes each DSA wq independently assignable through
-PASID-granular resource/DMA isolation. It helps improve scalability and reduces mediation
-complexity against purely software-based mdev implementations. Each assigned wq is configured by
-host and exposed to the guest in a read-only configuration mode, which allows the guest to use the
-wq w/o additional setup. This design greatly reduces the emulation bits to focus on handling
-commands from guests.
-
-Introducing mdev types “1dwq” type. This mdev type allows allocation of a single dedicated wq from
-available dedicated wqs. After a workqueue (wq) is enabled, the user will generate an uuid. On mdev
-creation, the mdev driver code will find a dwq depending on the mdev type. When the create operation
-is successful, the user generated uuid can be passed to qemu. When the guest boots up, it should
-discover a DSA device when doing PCI discovery.
-
-For example of “1dwq” type:
-1. Enable wq with “mdev” wq type
-2. A user generated uuid.
-3. The uuid is written to the mdev class sysfs path:
-echo $UUID > /sys/class/mdev_bus/0000\:00\:0a.0/mdev_supported_types/idxd-wq/create
-4. Pass the following parameter to qemu:
-"-device vfio-pci,sysfsdev=/sys/bus/pci/devices/0000:00:0a.0/$UUID"
- 
-The wq exported through mdev will have the read only config bit set for configuration. This means
-that the device does not require the typical configuration. After enabling the device, the user
-must set the WQ type and name. That is all is necessary to enable the WQ and start using it. The
-single wq configuration is not the only way to create the mdev. Multi wqs support for mdev will be
-in the future works.
- 
-The mdev utilizes Interrupt Message Store or IMS[3], a device-specific MSI implementation, instead
-of MSIX for interrupts for the guest. This preserves MSIX for host usages and also allows a
-significantly larger number of interrupt vectors for guest usage.
-
-The idxd driver implements IMS as on-device memory mapped unified storage. Each interrupt message
-is stored as a DWORD size data payload and a 64-bit address (same as MSI-X). Access to the IMS is
-through the host idxd driver.
-
-This patchset extends the existing platform-msi framework (which provides a generic mechanism to
-support non-PCI compliant MSI interrupts) to benefit any driver which wants to allocate
-msi-like(dev-msi) interrupts and provide its own ops functions (mask/unmask etc.)
-
-Call-back functions defined by the kernel and implemented by the driver are used to
-1. program the interrupt addr/data values instead of the kernel directly programming them.
-2. mask/unmask the interrupt source
-
-The kernel can specify the requirements for these callback functions (e.g., the driver is not
-expected to block, or not expected to take a lock in the callback function).
-
-Support for 2 new IRQ chip/domain is added(with and without IRQ_REMAP support- DEV-MSI/IR-DEV-MSI).
-
-[1]: https://lore.kernel.org/lkml/157965011794.73301.15960052071729101309.stgit@djiang5-desk3.ch.intel.com/
-[2]: https://software.intel.com/en-us/articles/intel-sdm
-[3]: https://software.intel.com/en-us/download/intel-scalable-io-virtualization-technical-specification
-[4]: https://software.intel.com/en-us/download/intel-data-streaming-accelerator-preliminary-architecture-specification
-[5]: https://01.org/blogs/2019/introducing-intel-data-streaming-accelerator
-[6]: https://intel.github.io/idxd/
-[7]: https://github.com/intel/idxd-driver idxd-stage2.5
-
+Reviewed-by: Dan Williams <dan.j.williams@intel.com>
+Signed-off-by: Megha Dey <megha.dey@intel.com>
+Signed-off-by: Dave Jiang <dave.jiang@intel.com>
 ---
-
-Dave Jiang (13):
-      dmaengine: idxd: add support for readonly config devices
-      dmaengine: idxd: add interrupt handle request support
-      dmaengine: idxd: add DEV-MSI support in base driver
-      dmaengine: idxd: add device support functions in prep for mdev
-      dmaengine: idxd: add basic mdev registration and helper functions
-      dmaengine: idxd: add emulation rw routines
-      dmaengine: idxd: prep for virtual device commands
-      dmaengine: idxd: virtual device commands emulation
-      dmaengine: idxd: ims setup for the vdcm
-      dmaengine: idxd: add mdev type as a new wq type
-      dmaengine: idxd: add dedicated wq mdev type
-      dmaengine: idxd: add new wq state for mdev
-      dmaengine: idxd: add error notification from host driver to mediated device
-
-Jing Lin (1):
-      dmaengine: idxd: add ABI documentation for mediated device support
-
-Megha Dey (4):
-      platform-msi: Introduce platform_msi_ops
-      irq/dev-msi: Add support for a new DEV_MSI irq domain
-      irq/dev-msi: Create IR-DEV-MSI irq domain
-      irq/dev-msi: Introduce APIs to allocate/free dev-msi interrupts
-
-
- Documentation/ABI/stable/sysfs-driver-dma-idxd |   15 
- arch/x86/include/asm/hw_irq.h                  |    6 
- arch/x86/kernel/apic/msi.c                     |   12 
- drivers/base/Kconfig                           |    7 
- drivers/base/Makefile                          |    1 
- drivers/base/dev-msi.c                         |  170 ++++
- drivers/base/platform-msi.c                    |   62 +
- drivers/base/platform-msi.h                    |   23 
- drivers/dma/Kconfig                            |    7 
- drivers/dma/idxd/Makefile                      |    2 
- drivers/dma/idxd/cdev.c                        |    6 
- drivers/dma/idxd/device.c                      |  266 +++++-
- drivers/dma/idxd/idxd.h                        |   62 +
- drivers/dma/idxd/ims.c                         |  174 ++++
- drivers/dma/idxd/ims.h                         |   17 
- drivers/dma/idxd/init.c                        |  100 ++
- drivers/dma/idxd/irq.c                         |    6 
- drivers/dma/idxd/mdev.c                        | 1106 ++++++++++++++++++++++++
- drivers/dma/idxd/mdev.h                        |  118 +++
- drivers/dma/idxd/registers.h                   |   24 -
- drivers/dma/idxd/submit.c                      |   37 +
- drivers/dma/idxd/sysfs.c                       |   55 +
- drivers/dma/idxd/vdev.c                        |  962 +++++++++++++++++++++
- drivers/dma/idxd/vdev.h                        |   28 +
- drivers/dma/mv_xor_v2.c                        |    6 
- drivers/dma/qcom/hidma.c                       |    6 
- drivers/iommu/arm-smmu-v3.c                    |    6 
- drivers/iommu/intel/irq_remapping.c            |   11 
- drivers/irqchip/irq-mbigen.c                   |    8 
- drivers/irqchip/irq-mvebu-icu.c                |    6 
- drivers/mailbox/bcm-flexrm-mailbox.c           |    6 
- drivers/perf/arm_smmuv3_pmu.c                  |    6 
- include/linux/intel-iommu.h                    |    1 
- include/linux/irqdomain.h                      |   11 
- include/linux/msi.h                            |   35 +
- include/uapi/linux/idxd.h                      |    2 
- 36 files changed, 3270 insertions(+), 100 deletions(-)
+ arch/x86/include/asm/hw_irq.h |    5 ++
+ drivers/base/Kconfig          |    7 +++
+ drivers/base/Makefile         |    1 
+ drivers/base/dev-msi.c        |   95 +++++++++++++++++++++++++++++++++++++++++
+ drivers/base/platform-msi.c   |   45 +++++++++++++------
+ drivers/base/platform-msi.h   |   23 ++++++++++
+ include/linux/msi.h           |    8 +++
+ 7 files changed, 168 insertions(+), 16 deletions(-)
  create mode 100644 drivers/base/dev-msi.c
  create mode 100644 drivers/base/platform-msi.h
- create mode 100644 drivers/dma/idxd/ims.c
- create mode 100644 drivers/dma/idxd/ims.h
- create mode 100644 drivers/dma/idxd/mdev.c
- create mode 100644 drivers/dma/idxd/mdev.h
- create mode 100644 drivers/dma/idxd/vdev.c
- create mode 100644 drivers/dma/idxd/vdev.h
 
---
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index 74c12437401e..8ecd7570589d 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -61,6 +61,11 @@ struct irq_alloc_info {
+ 			irq_hw_number_t	msi_hwirq;
+ 		};
+ #endif
++#ifdef CONFIG_DEV_MSI
++		struct {
++			irq_hw_number_t hwirq;
++		};
++#endif
+ #ifdef	CONFIG_X86_IO_APIC
+ 		struct {
+ 			int		ioapic_id;
+diff --git a/drivers/base/Kconfig b/drivers/base/Kconfig
+index 8d7001712062..f00901bac056 100644
+--- a/drivers/base/Kconfig
++++ b/drivers/base/Kconfig
+@@ -210,4 +210,11 @@ config GENERIC_ARCH_TOPOLOGY
+ 	  appropriate scaling, sysfs interface for reading capacity values at
+ 	  runtime.
+ 
++config DEV_MSI
++	bool "Device Specific Interrupt Messages"
++	select IRQ_DOMAIN_HIERARCHY
++	select GENERIC_MSI_IRQ_DOMAIN
++	help
++	  Allow device drivers to generate device-specific interrupt messages
++	  for devices independent of PCI MSI/-X.
+ endmenu
+diff --git a/drivers/base/Makefile b/drivers/base/Makefile
+index 157452080f3d..ca1e4d39164e 100644
+--- a/drivers/base/Makefile
++++ b/drivers/base/Makefile
+@@ -21,6 +21,7 @@ obj-$(CONFIG_REGMAP)	+= regmap/
+ obj-$(CONFIG_SOC_BUS) += soc.o
+ obj-$(CONFIG_PINCTRL) += pinctrl.o
+ obj-$(CONFIG_DEV_COREDUMP) += devcoredump.o
++obj-$(CONFIG_DEV_MSI) += dev-msi.o
+ obj-$(CONFIG_GENERIC_MSI_IRQ_DOMAIN) += platform-msi.o
+ obj-$(CONFIG_GENERIC_ARCH_TOPOLOGY) += arch_topology.o
+ 
+diff --git a/drivers/base/dev-msi.c b/drivers/base/dev-msi.c
+new file mode 100644
+index 000000000000..240ccc353933
+--- /dev/null
++++ b/drivers/base/dev-msi.c
+@@ -0,0 +1,95 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Copyright © 2020 Intel Corporation.
++ *
++ * Author: Megha Dey <megha.dey@intel.com>
++ */
++
++#include <linux/irq.h>
++#include <linux/irqdomain.h>
++#include <linux/msi.h>
++#include "platform-msi.h"
++
++struct irq_domain *dev_msi_default_domain;
++
++static irq_hw_number_t dev_msi_get_hwirq(struct msi_domain_info *info,
++					 msi_alloc_info_t *arg)
++{
++	return arg->hwirq;
++}
++
++static irq_hw_number_t dev_msi_calc_hwirq(struct msi_desc *desc)
++{
++	u32 devid;
++
++	devid = desc->platform.msi_priv_data->devid;
++
++	return (devid << (32 - DEV_ID_SHIFT)) | desc->platform.msi_index;
++}
++
++static void dev_msi_set_desc(msi_alloc_info_t *arg, struct msi_desc *desc)
++{
++	arg->hwirq = dev_msi_calc_hwirq(desc);
++}
++
++static int dev_msi_prepare(struct irq_domain *domain, struct device *dev,
++			   int nvec, msi_alloc_info_t *arg)
++{
++	memset(arg, 0, sizeof(*arg));
++
++	return 0;
++}
++
++static struct msi_domain_ops dev_msi_domain_ops = {
++	.get_hwirq      = dev_msi_get_hwirq,
++	.set_desc       = dev_msi_set_desc,
++	.msi_prepare	= dev_msi_prepare,
++};
++
++static struct irq_chip dev_msi_controller = {
++	.name                   = "DEV-MSI",
++	.irq_unmask             = platform_msi_unmask_irq,
++	.irq_mask               = platform_msi_mask_irq,
++	.irq_write_msi_msg      = platform_msi_write_msg,
++	.irq_ack                = irq_chip_ack_parent,
++	.irq_retrigger          = irq_chip_retrigger_hierarchy,
++	.flags                  = IRQCHIP_SKIP_SET_WAKE,
++};
++
++static struct msi_domain_info dev_msi_domain_info = {
++	.flags          = MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS,
++	.ops            = &dev_msi_domain_ops,
++	.chip           = &dev_msi_controller,
++	.handler        = handle_edge_irq,
++	.handler_name   = "edge",
++};
++
++static int __init create_dev_msi_domain(void)
++{
++	struct irq_domain *parent = NULL;
++	struct fwnode_handle *fn;
++
++	/*
++	 * Modern code should never have to use irq_get_default_host. But since
++	 * dev-msi is invisible to DT/ACPI, this is an exception case.
++	 */
++	parent = irq_get_default_host();
++	if (!parent)
++		return -ENXIO;
++
++	fn = irq_domain_alloc_named_fwnode("DEV_MSI");
++	if (!fn)
++		return -ENXIO;
++
++	dev_msi_default_domain = msi_create_irq_domain(fn, &dev_msi_domain_info, parent);
++	if (!dev_msi_default_domain) {
++		pr_warn("failed to initialize irqdomain for DEV-MSI.\n");
++		return -ENXIO;
++	}
++
++	irq_domain_update_bus_token(dev_msi_default_domain, DOMAIN_BUS_PLATFORM_MSI);
++	irq_domain_free_fwnode(fn);
++
++	return 0;
++}
++device_initcall(create_dev_msi_domain);
+diff --git a/drivers/base/platform-msi.c b/drivers/base/platform-msi.c
+index 9d94cd699468..5e1f210d65ee 100644
+--- a/drivers/base/platform-msi.c
++++ b/drivers/base/platform-msi.c
+@@ -12,21 +12,7 @@
+ #include <linux/irqdomain.h>
+ #include <linux/msi.h>
+ #include <linux/slab.h>
+-
+-#define DEV_ID_SHIFT	21
+-#define MAX_DEV_MSIS	(1 << (32 - DEV_ID_SHIFT))
+-
+-/*
+- * Internal data structure containing a (made up, but unique) devid
+- * and the platform-msi ops
+- */
+-struct platform_msi_priv_data {
+-	struct device			*dev;
+-	void				*host_data;
+-	msi_alloc_info_t		arg;
+-	const struct platform_msi_ops	*ops;
+-	int				devid;
+-};
++#include "platform-msi.h"
+ 
+ /* The devid allocator */
+ static DEFINE_IDA(platform_msi_devid_ida);
+@@ -76,7 +62,7 @@ static void platform_msi_update_dom_ops(struct msi_domain_info *info)
+ 		ops->set_desc = platform_msi_set_desc;
+ }
+ 
+-static void platform_msi_write_msg(struct irq_data *data, struct msi_msg *msg)
++void platform_msi_write_msg(struct irq_data *data, struct msi_msg *msg)
+ {
+ 	struct msi_desc *desc = irq_data_get_msi_desc(data);
+ 	struct platform_msi_priv_data *priv_data;
+@@ -86,6 +72,33 @@ static void platform_msi_write_msg(struct irq_data *data, struct msi_msg *msg)
+ 	priv_data->ops->write_msg(desc, msg);
+ }
+ 
++static void __platform_msi_desc_mask_unmask_irq(struct msi_desc *desc, u32 mask)
++{
++	const struct platform_msi_ops *ops;
++
++	ops = desc->platform.msi_priv_data->ops;
++	if (!ops)
++		return;
++
++	if (mask) {
++		if (ops->irq_mask)
++			ops->irq_mask(desc);
++	} else {
++		if (ops->irq_unmask)
++			ops->irq_unmask(desc);
++	}
++}
++
++void platform_msi_mask_irq(struct irq_data *data)
++{
++	__platform_msi_desc_mask_unmask_irq(irq_data_get_msi_desc(data), 1);
++}
++
++void platform_msi_unmask_irq(struct irq_data *data)
++{
++	__platform_msi_desc_mask_unmask_irq(irq_data_get_msi_desc(data), 0);
++}
++
+ static void platform_msi_update_chip_ops(struct msi_domain_info *info)
+ {
+ 	struct irq_chip *chip = info->chip;
+diff --git a/drivers/base/platform-msi.h b/drivers/base/platform-msi.h
+new file mode 100644
+index 000000000000..1de8c2874218
+--- /dev/null
++++ b/drivers/base/platform-msi.h
+@@ -0,0 +1,23 @@
++/* SPDX-License-Identifier: GPL-2.0-only */
++/*
++ * Copyright © 2020 Intel Corporation.
++ *
++ * Author: Megha Dey <megha.dey@intel.com>
++ */
++
++#include <linux/msi.h>
++
++#define DEV_ID_SHIFT    21
++#define MAX_DEV_MSIS	(1 << (32 - DEV_ID_SHIFT))
++
++/*
++ * Data structure containing a (made up, but unique) devid
++ * and the platform-msi ops.
++ */
++struct platform_msi_priv_data {
++	struct device			*dev;
++	void				*host_data;
++	msi_alloc_info_t		arg;
++	const struct platform_msi_ops	*ops;
++	int				devid;
++};
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 7f6a8eb51aca..1da97f905720 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -323,9 +323,13 @@ enum {
+ 
+ /*
+  * platform_msi_ops - Callbacks for platform MSI ops
++ * @irq_mask:   mask an interrupt source
++ * @irq_unmask: unmask an interrupt source
+  * @write_msg:	write message content
+  */
+ struct platform_msi_ops {
++	unsigned int            (*irq_mask)(struct msi_desc *desc);
++	unsigned int            (*irq_unmask)(struct msi_desc *desc);
+ 	irq_write_msi_msg_t	write_msg;
+ };
+ 
+@@ -370,6 +374,10 @@ int platform_msi_domain_alloc(struct irq_domain *domain, unsigned int virq,
+ void platform_msi_domain_free(struct irq_domain *domain, unsigned int virq,
+ 			      unsigned int nvec);
+ void *platform_msi_get_host_data(struct irq_domain *domain);
++
++void platform_msi_write_msg(struct irq_data *data, struct msi_msg *msg);
++void platform_msi_unmask_irq(struct irq_data *data);
++void platform_msi_mask_irq(struct irq_data *data);
+ #endif /* CONFIG_GENERIC_MSI_IRQ_DOMAIN */
+ 
+ #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
+
