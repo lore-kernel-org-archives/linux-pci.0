@@ -2,88 +2,99 @@ Return-Path: <SRS0=NVP0=BB=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BAD95C433F2
-	for <linux-pci@archiver.kernel.org>; Wed, 22 Jul 2020 11:01:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A42FC433F4
+	for <linux-pci@archiver.kernel.org>; Wed, 22 Jul 2020 11:03:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 95BB920771
-	for <linux-pci@archiver.kernel.org>; Wed, 22 Jul 2020 11:01:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0A4DC2080D
+	for <linux-pci@archiver.kernel.org>; Wed, 22 Jul 2020 11:03:58 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="WVlLlgHZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726381AbgGVLBw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 22 Jul 2020 07:01:52 -0400
-Received: from mga06.intel.com ([134.134.136.31]:11667 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727060AbgGVLBv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 22 Jul 2020 07:01:51 -0400
-IronPort-SDR: UReT7caanMw9IHtcaEd87zqu8/s3REOF84lWI53fpCuoQVCNlXJL3/49A7S4nPHAfoKh9ra8S4
- vuCkb262bJfw==
-X-IronPort-AV: E=McAfee;i="6000,8403,9689"; a="211850855"
-X-IronPort-AV: E=Sophos;i="5.75,381,1589266800"; 
-   d="scan'208";a="211850855"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jul 2020 04:01:50 -0700
-IronPort-SDR: fZ6SHTvlHEVgZkFC8IVm371dDSplTZvMaC1Ev2OyawvRSN3MATnVwd7nbi0DVmj583oEBWGavv
- /7Iw3ESiI8tQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.75,381,1589266800"; 
-   d="scan'208";a="487951806"
-Received: from smile.fi.intel.com (HELO smile) ([10.237.68.40])
-  by fmsmga006.fm.intel.com with ESMTP; 22 Jul 2020 04:01:46 -0700
-Received: from andy by smile with local (Exim 4.94)
-        (envelope-from <andriy.shevchenko@linux.intel.com>)
-        id 1jyCVO-003F9Z-48; Wed, 22 Jul 2020 14:01:46 +0300
-Date:   Wed, 22 Jul 2020 14:01:46 +0300
-From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To:     Shiju Jose <shiju.jose@huawei.com>
-Cc:     linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, rjw@rjwysocki.net,
-        helgaas@kernel.org, bp@alien8.de, james.morse@arm.com,
-        lenb@kernel.org, tony.luck@intel.com, dan.carpenter@oracle.com,
-        zhangliguang@linux.alibaba.com, wangkefeng.wang@huawei.com,
-        jroedel@suse.de, linuxarm@huawei.com, yangyicong@hisilicon.com,
-        jonathan.cameron@huawei.com, tanxiaofei@huawei.com
-Subject: Re: [PATCH v13 1/2] ACPI / APEI: Add a notifier chain for unknown
- (vendor) CPER records
-Message-ID: <20200722110146.GW3703480@smile.fi.intel.com>
-References: <20200722103952.1009-1-shiju.jose@huawei.com>
- <20200722103952.1009-2-shiju.jose@huawei.com>
+        id S1730142AbgGVLD5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 22 Jul 2020 07:03:57 -0400
+Received: from lelv0143.ext.ti.com ([198.47.23.248]:39042 "EHLO
+        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726916AbgGVLD4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Jul 2020 07:03:56 -0400
+Received: from lelv0265.itg.ti.com ([10.180.67.224])
+        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id 06MB3kXL070467;
+        Wed, 22 Jul 2020 06:03:46 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1595415826;
+        bh=CWIKltqarvAYPvUpTOXv+9gnETqUvut1kE2gYgu5r3Y=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References;
+        b=WVlLlgHZwSLmqulvzYYYbqtc9qPWVRwK4YiltrUMoSQh60Pca8RUYh9OwQmIsRG1i
+         tmdpkIb7CXgP9zy2ZBjPGsYbCCRPfaLimGvkrAjZbb53fwvyHPapYlu2a5q5fyw37s
+         nAzcQWWokWEzVmp8wYQvY85H7nbTnnYeMEWHy1wg=
+Received: from DFLE105.ent.ti.com (dfle105.ent.ti.com [10.64.6.26])
+        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 06MB3k3Q005837
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 22 Jul 2020 06:03:46 -0500
+Received: from DFLE103.ent.ti.com (10.64.6.24) by DFLE105.ent.ti.com
+ (10.64.6.26) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Wed, 22
+ Jul 2020 06:03:45 -0500
+Received: from fllv0040.itg.ti.com (10.64.41.20) by DFLE103.ent.ti.com
+ (10.64.6.24) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
+ Frontend Transport; Wed, 22 Jul 2020 06:03:45 -0500
+Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
+        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 06MB3IFe078616;
+        Wed, 22 Jul 2020 06:03:42 -0500
+From:   Kishon Vijay Abraham I <kishon@ti.com>
+To:     Tom Joseph <tjoseph@cadence.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Arnd Bergmann <arnd@arndb.de>
+CC:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v8 06/15] PCI: cadence: Allow pci_host_bridge to have custom pci_ops
+Date:   Wed, 22 Jul 2020 16:33:08 +0530
+Message-ID: <20200722110317.4744-7-kishon@ti.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200722110317.4744-1-kishon@ti.com>
+References: <20200722110317.4744-1-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200722103952.1009-2-shiju.jose@huawei.com>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+Content-Type: text/plain
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jul 22, 2020 at 11:39:51AM +0100, Shiju Jose wrote:
-> CPER records describing a firmware-first error are identified by GUID.
-> The ghes driver currently logs, but ignores any unknown CPER records.
-> This prevents describing errors that can't be represented by a standard
-> entry, that would otherwise allow a driver to recover from an error.
-> The UEFI spec calls these 'Non-standard Section Body' (N.2.3 of
-> version 2.8).
-> 
-> Add a notifier chain for these non-standard/vendor-records. Callers
-> must identify their type of records by GUID.
-> 
-> Record data is copied to memory from the ghes_estatus_pool to allow
-> us to keep it until after the notifier has run.
-> 
-> Co-developed-by: James Morse <james.morse@arm.com>
+Certain platforms like TI's J721E allows only 32-bit configuration
+space access. In such cases pci_generic_config_read and
+pci_generic_config_write cannot be used. Add support in Cadence core
+to let pci_host_bridge have custom pci_ops.
 
-Co-developed-by: is going _in conjunction with_ SoB tag which is missing here.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/controller/cadence/pcie-cadence-host.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-> Signed-off-by: Shiju Jose <shiju.jose@huawei.com>
-
+diff --git a/drivers/pci/controller/cadence/pcie-cadence-host.c b/drivers/pci/controller/cadence/pcie-cadence-host.c
+index de02fadc4809..a8303258874c 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence-host.c
++++ b/drivers/pci/controller/cadence/pcie-cadence-host.c
+@@ -505,7 +505,8 @@ int cdns_pcie_host_setup(struct cdns_pcie_rc *rc)
+ 	list_splice_init(&resources, &bridge->windows);
+ 	bridge->dev.parent = dev;
+ 	bridge->busnr = pcie->bus;
+-	bridge->ops = &cdns_pcie_host_ops;
++	if (!bridge->ops)
++		bridge->ops = &cdns_pcie_host_ops;
+ 	bridge->map_irq = of_irq_parse_and_map_pci;
+ 	bridge->swizzle_irq = pci_common_swizzle;
+ 
 -- 
-With Best Regards,
-Andy Shevchenko
-
+2.17.1
 
