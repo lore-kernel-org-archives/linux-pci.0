@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9ED2C433DF
-	for <linux-pci@archiver.kernel.org>; Wed, 22 Jul 2020 02:25:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03C19C43445
+	for <linux-pci@archiver.kernel.org>; Wed, 22 Jul 2020 02:25:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 994D720714
-	for <linux-pci@archiver.kernel.org>; Wed, 22 Jul 2020 02:25:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D6AC3207CD
+	for <linux-pci@archiver.kernel.org>; Wed, 22 Jul 2020 02:25:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1595384743;
-	bh=ezEQXqs0wsurndDEdS001UlkOwmNXXGxGDEz+9ZZEWs=;
+	s=default; t=1595384751;
+	bh=1EYRUlIsoboL8Mmyg9YkkxZ2rShCu+9n0nDfRXPc18w=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=lUP5Iysk30QpjWM/H9YQPzUSCZ4KMFu5VGXvv7dZJKmfl6e/H2GZIK8gTByCqwyjR
-	 Cum7xhmgsOZtmcdyiFR+dURuRu3751sX6HarR1hZ35Z/0jPaAScvwCrD6AWgVnfiWq
-	 WeWSI9fgEGm+fLKdiZ/Ru0SlkgUm9IxkwZJhKir8=
+	b=oB5mBYk1HlPM1OXlDOd4jEJCC4WJvY60GoP0bzgVoRVM4J3V9EHdAsHwQVX67TbxM
+	 zpTtIuoegsOus9gFUsW3AQmrDQGCkHeAYxbbZbBFRnhUI2OtXtMPq8syGOkogTm3CM
+	 3+x/eYvtkp7BGbTdnpS+xE8PmiluL2AJTVwEZAvM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731796AbgGVCZm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 21 Jul 2020 22:25:42 -0400
-Received: from mail-io1-f67.google.com ([209.85.166.67]:33045 "EHLO
-        mail-io1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731764AbgGVCZk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jul 2020 22:25:40 -0400
-Received: by mail-io1-f67.google.com with SMTP id d18so895356ion.0;
-        Tue, 21 Jul 2020 19:25:40 -0700 (PDT)
+        id S1731810AbgGVCZv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 21 Jul 2020 22:25:51 -0400
+Received: from mail-io1-f66.google.com ([209.85.166.66]:36413 "EHLO
+        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731053AbgGVCZu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jul 2020 22:25:50 -0400
+Received: by mail-io1-f66.google.com with SMTP id t131so879661iod.3;
+        Tue, 21 Jul 2020 19:25:49 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=yZX8GtxzIvI0BLawXOSy34dS8zpbVsqdHlUxTpQVpL8=;
-        b=Oyz1NoMyNxs0QLSMOyLx73Mjh8W2f2ly36fcautVg1Dnpw0zDsjq34RW0hBRhbWSMT
-         OwKns5W30wvhBSAfzUB+qmI3KsfWP3fyN/6UHxDoLE6jOq0FJAKF7v2eqJLXPXwFPvHG
-         BW6saQaqw18mKO/omo3lYtL3yqUsZ0zyc00S5sc+JLrIfAwcXGSKnW4/ntC0jHCkdQIi
-         J8JTxDJ5PyRuZlbxF+DZCKtE8k/DQnPD4+YTBGEP3RwE2aGiOcH1BCaDAAto5Zu4DZMA
-         L4ffVV1YqSZwIl4LilJQ+u7R/YvyrpN0CnqF9SP2zGWnkYlQ3q+KATJYeyB1d0triDV0
-         uavw==
-X-Gm-Message-State: AOAM5336Rte40r0Ns9VUr5j+RbXuXwQmLxFrOd77T1VgKelxwpSbwjxp
-        bC91JkI2DltsfpfXWyebwQ==
-X-Google-Smtp-Source: ABdhPJz4sGi9luyOXYk58mq4r4siCaMJWINiGTp2AvzN9kAFUT92PuxemaSvg8HDlZCOqn4NVsZ7Ww==
-X-Received: by 2002:a6b:5502:: with SMTP id j2mr492985iob.204.1595384739849;
-        Tue, 21 Jul 2020 19:25:39 -0700 (PDT)
+        bh=np3nvy9/fZz73VqXI9ThmVn27stIXuKqAUSjtJ/i32Y=;
+        b=i8kyif0yUjC3G3YhILH6iWz7ovb3EQWKzg66x0swTuq0Jc2ZAw/oJniS3ReBqPAxSn
+         sXbwsgNNp4zLwdP5m7b956MsvfOLZT9pS07ywyGoi38cS2qKfkHVAu8n8dapo+cf58NB
+         +7yeke2Ibe0wL9Abd3zyRwWsFVaB98FeZcs7v+RH+Mgy2wI5Y6HQS+Sv6BKkAxCwCiHV
+         OASwRrdr4/r2MwYBndQ4KKnBLbr1TEEZ7PLQoo2MElRJS80jnCz9T4AuJWmgJPgF7DwR
+         7MbOkrcMJkidUTOgBUevgRcufaQPOjI7k3MEtYspCgSLiXzY1GBhwigY/He2p2ntljjU
+         DIBQ==
+X-Gm-Message-State: AOAM532ntMINf6QL1l1GlOVK/jJdnD4cgo41ouqq2Wk1QePW+iwicIvh
+        OVqx8DM5IS+ILbd3GkTlaw==
+X-Google-Smtp-Source: ABdhPJxOOSSVvaL0MVT3rmsUbxxwRG1d0ASvsh0fZr4SPfQAI5vPpcBrPK1VmklnoR/sUruUvTcbZA==
+X-Received: by 2002:a05:6638:22d0:: with SMTP id j16mr34632125jat.92.1595384749012;
+        Tue, 21 Jul 2020 19:25:49 -0700 (PDT)
 Received: from xps15.herring.priv ([64.188.179.252])
-        by smtp.googlemail.com with ESMTPSA id y2sm11687981iox.22.2020.07.21.19.25.35
+        by smtp.googlemail.com with ESMTPSA id y2sm11687981iox.22.2020.07.21.19.25.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 21 Jul 2020 19:25:39 -0700 (PDT)
+        Tue, 21 Jul 2020 19:25:48 -0700 (PDT)
 From:   Rob Herring <robh@kernel.org>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
@@ -79,9 +79,9 @@ Cc:     Fabio Estevam <festevam@gmail.com>,
         linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org,
         linux-renesas-soc@vger.kernel.org,
         linux-rockchip@lists.infradead.org, linux-tegra@vger.kernel.org
-Subject: [PATCH 06/19] PCI: mobiveil: Use pci_is_root_bus() to check if bus is root bus
-Date:   Tue, 21 Jul 2020 20:25:01 -0600
-Message-Id: <20200722022514.1283916-7-robh@kernel.org>
+Subject: [PATCH 09/19] PCI: rockchip: Use pci_is_root_bus() to check if bus is root bus
+Date:   Tue, 21 Jul 2020 20:25:04 -0600
+Message-Id: <20200722022514.1283916-10-robh@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200722022514.1283916-1-robh@kernel.org>
 References: <20200722022514.1283916-1-robh@kernel.org>
@@ -97,70 +97,111 @@ determine if the bus is the root bus or not. This removes storing
 duplicated data as well as the need for the host bridge driver to have
 to care about the bus numbers in most cases.
 
-Cc: Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>
-Cc: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Also, bridge->busnr is never set so effectively the root bus must be 0.
+This will be fixed by a subsequent commit.
+
+Cc: Shawn Lin <shawn.lin@rock-chips.com>
 Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Heiko Stuebner <heiko@sntech.de>
+Cc: linux-rockchip@lists.infradead.org
 Signed-off-by: Rob Herring <robh@kernel.org>
 ---
- drivers/pci/controller/mobiveil/pcie-mobiveil-host.c | 10 +++-------
- drivers/pci/controller/mobiveil/pcie-mobiveil.h      |  1 -
- 2 files changed, 3 insertions(+), 8 deletions(-)
+ drivers/pci/controller/pcie-rockchip-host.c | 17 +++++++----------
+ drivers/pci/controller/pcie-rockchip.h      |  1 -
+ 2 files changed, 7 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/pci/controller/mobiveil/pcie-mobiveil-host.c b/drivers/pci/controller/mobiveil/pcie-mobiveil-host.c
-index 705542b4bd21..7250b84a7efe 100644
---- a/drivers/pci/controller/mobiveil/pcie-mobiveil-host.c
-+++ b/drivers/pci/controller/mobiveil/pcie-mobiveil-host.c
-@@ -29,18 +29,15 @@
- 
- static bool mobiveil_pcie_valid_device(struct pci_bus *bus, unsigned int devfn)
+diff --git a/drivers/pci/controller/pcie-rockchip-host.c b/drivers/pci/controller/pcie-rockchip-host.c
+index fb88030161f2..9a30d08976d8 100644
+--- a/drivers/pci/controller/pcie-rockchip-host.c
++++ b/drivers/pci/controller/pcie-rockchip-host.c
+@@ -72,14 +72,14 @@ static int rockchip_pcie_valid_device(struct rockchip_pcie *rockchip,
+ 				      struct pci_bus *bus, int dev)
  {
--	struct mobiveil_pcie *pcie = bus->sysdata;
--	struct mobiveil_root_port *rp = &pcie->rp;
--
- 	/* Only one device down on each root port */
--	if ((bus->number == rp->root_bus_nr) && (devfn > 0))
-+	if (pci_is_root_bus(bus) && (devfn > 0))
- 		return false;
+ 	/* access only one slot on each root port */
+-	if (bus->number == rockchip->root_bus_nr && dev > 0)
++	if (pci_is_root_bus(bus) && dev > 0)
+ 		return 0;
  
  	/*
- 	 * Do not read more than one device on the bus directly
- 	 * attached to RC
+ 	 * do not read more than one device on the bus directly attached
+ 	 * to RC's downstream side.
  	 */
--	if ((bus->primary == rp->root_bus_nr) && (PCI_SLOT(devfn) > 0))
-+	if ((bus->primary == to_pci_host_bridge(bus->bridge)->busnr) && (PCI_SLOT(devfn) > 0))
- 		return false;
+-	if (bus->primary == rockchip->root_bus_nr && dev > 0)
++	if (pci_is_root_bus(bus->parent) && dev > 0)
+ 		return 0;
  
- 	return true;
-@@ -61,7 +58,7 @@ static void __iomem *mobiveil_pcie_map_bus(struct pci_bus *bus,
- 		return NULL;
+ 	return 1;
+@@ -170,7 +170,7 @@ static int rockchip_pcie_rd_other_conf(struct rockchip_pcie *rockchip,
+ 		return PCIBIOS_BAD_REGISTER_NUMBER;
+ 	}
  
- 	/* RC config access */
--	if (bus->number == rp->root_bus_nr)
+-	if (bus->parent->number == rockchip->root_bus_nr)
++	if (pci_is_root_bus(bus->parent))
+ 		rockchip_pcie_cfg_configuration_accesses(rockchip,
+ 						AXI_WRAPPER_TYPE0_CFG);
+ 	else
+@@ -201,7 +201,7 @@ static int rockchip_pcie_wr_other_conf(struct rockchip_pcie *rockchip,
+ 	if (!IS_ALIGNED(busdev, size))
+ 		return PCIBIOS_BAD_REGISTER_NUMBER;
+ 
+-	if (bus->parent->number == rockchip->root_bus_nr)
++	if (pci_is_root_bus(bus->parent))
+ 		rockchip_pcie_cfg_configuration_accesses(rockchip,
+ 						AXI_WRAPPER_TYPE0_CFG);
+ 	else
+@@ -230,7 +230,7 @@ static int rockchip_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 	}
+ 
+-	if (bus->number == rockchip->root_bus_nr)
 +	if (pci_is_root_bus(bus))
- 		return pcie->csr_axi_slave_base + where;
+ 		return rockchip_pcie_rd_own_conf(rockchip, where, size, val);
  
- 	/*
-@@ -606,7 +603,6 @@ int mobiveil_pcie_host_probe(struct mobiveil_pcie *pcie)
+ 	return rockchip_pcie_rd_other_conf(rockchip, bus, devfn, where, size,
+@@ -245,7 +245,7 @@ static int rockchip_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+ 	if (!rockchip_pcie_valid_device(rockchip, bus, PCI_SLOT(devfn)))
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
  
- 	/* Initialize bridge */
- 	bridge->sysdata = pcie;
--	bridge->busnr = rp->root_bus_nr;
- 	bridge->ops = &mobiveil_pcie_ops;
- 	bridge->map_irq = of_irq_parse_and_map_pci;
- 	bridge->swizzle_irq = pci_common_swizzle;
-diff --git a/drivers/pci/controller/mobiveil/pcie-mobiveil.h b/drivers/pci/controller/mobiveil/pcie-mobiveil.h
-index 767e36a8522d..6082b8afbc31 100644
---- a/drivers/pci/controller/mobiveil/pcie-mobiveil.h
-+++ b/drivers/pci/controller/mobiveil/pcie-mobiveil.h
-@@ -149,7 +149,6 @@ struct mobiveil_rp_ops {
- };
+-	if (bus->number == rockchip->root_bus_nr)
++	if (pci_is_root_bus(bus))
+ 		return rockchip_pcie_wr_own_conf(rockchip, where, size, val);
  
- struct mobiveil_root_port {
--	char root_bus_nr;
- 	void __iomem *config_axi_slave_base;	/* endpoint config base */
- 	struct resource *ob_io_res;
- 	struct mobiveil_rp_ops *ops;
+ 	return rockchip_pcie_wr_other_conf(rockchip, bus, devfn, where, size,
+@@ -950,7 +950,6 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 	struct rockchip_pcie *rockchip;
+ 	struct device *dev = &pdev->dev;
+ 	struct pci_host_bridge *bridge;
+-	struct resource *bus_res;
+ 	int err;
+ 
+ 	if (!dev->of_node)
+@@ -991,12 +990,10 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 		goto err_deinit_port;
+ 
+ 	err = pci_parse_request_of_pci_ranges(dev, &bridge->windows,
+-					      &bridge->dma_ranges, &bus_res);
++					      &bridge->dma_ranges, NULL);
+ 	if (err)
+ 		goto err_remove_irq_domain;
+ 
+-	rockchip->root_bus_nr = bus_res->start;
+-
+ 	err = rockchip_pcie_cfg_atu(rockchip);
+ 	if (err)
+ 		goto err_remove_irq_domain;
+diff --git a/drivers/pci/controller/pcie-rockchip.h b/drivers/pci/controller/pcie-rockchip.h
+index 4012543bafbe..c7d0178fc8c2 100644
+--- a/drivers/pci/controller/pcie-rockchip.h
++++ b/drivers/pci/controller/pcie-rockchip.h
+@@ -298,7 +298,6 @@ struct rockchip_pcie {
+ 	struct	gpio_desc *ep_gpio;
+ 	u32	lanes;
+ 	u8      lanes_map;
+-	u8	root_bus_nr;
+ 	int	link_gen;
+ 	struct	device *dev;
+ 	struct	irq_domain *irq_domain;
 -- 
 2.25.1
 
