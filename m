@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE8EEC43457
-	for <linux-pci@archiver.kernel.org>; Wed, 22 Jul 2020 02:25:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9536FC4345C
+	for <linux-pci@archiver.kernel.org>; Wed, 22 Jul 2020 02:26:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CD797207BB
-	for <linux-pci@archiver.kernel.org>; Wed, 22 Jul 2020 02:25:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 72DA0207BB
+	for <linux-pci@archiver.kernel.org>; Wed, 22 Jul 2020 02:26:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1595384753;
-	bh=hbs0jzDEjss+HAbBdFPscN/lvdmcJF5HomryWxEDHG0=;
+	s=default; t=1595384763;
+	bh=HnDI9YcW6U99wlbZxKCtQ1xcPrnlCx7JQumTdNshHX0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=CttwJ1P0GtMHqq9eE+PLoVFdJuu/gPmLKoukkOjZ75UKXBFOqh0w51IauCuwTxX9R
-	 EofkPjsynMjZaEkYX57Gkx941DmevqiY/2EQbguykEzz7cMnMlkjC6/eOLHD6/gstb
-	 lzToU4OEg7iisKNmc7Aoz3FyJS7CE3Eu99pD1fGc=
+	b=rXvH7XkkLy50oxznaoYPbBYBmrn6qD8whoLzNfqlRekj8OXTN4nyw2f3BjIhteZUt
+	 W5SdwRot3rtwHQd6eaVNEwIytzQcuS2D0SZVWPEIM7Szl1PseU4lEpVPTQPnZJior/
+	 7VXFTZfv5viakyrzoaWvZayYkRRkxalM0IJJFg7c=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731811AbgGVCZx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 21 Jul 2020 22:25:53 -0400
-Received: from mail-io1-f68.google.com ([209.85.166.68]:36422 "EHLO
-        mail-io1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731053AbgGVCZw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jul 2020 22:25:52 -0400
-Received: by mail-io1-f68.google.com with SMTP id t131so879803iod.3;
-        Tue, 21 Jul 2020 19:25:52 -0700 (PDT)
+        id S1731817AbgGVC0C (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 21 Jul 2020 22:26:02 -0400
+Received: from mail-io1-f65.google.com ([209.85.166.65]:34591 "EHLO
+        mail-io1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731782AbgGVC0C (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jul 2020 22:26:02 -0400
+Received: by mail-io1-f65.google.com with SMTP id q74so892444iod.1;
+        Tue, 21 Jul 2020 19:26:01 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=JR3yCDURRRB9CMW6k6M1NZAeXdyv2WOTtRYEb08qPM8=;
-        b=Zg4IrIPoVhxl+n0yHNIuc0mQ2DFh0vWqquJBR2wDpff1w2JLLgbLgcYhxFFoICEyBq
-         r5w5boyLEeYoEg9DgejNxo3aDBrzSXs0sgJ2A8ZfAANmxoE5ZzGc8L3vqEBd1xRARgvB
-         SwIA35AtL9l1w3uvC0caR9wNtaODQDd6lsUNhEqQkGAafAjmLjQ9uHkt6GRH0tlGdmK4
-         D6FbuZwaleduRHM11th++m2dDGznQJSwy5OMXlCuT6Ovydh9SgrpopHklFR7KjeZXmCd
-         BtYxo7DLsCl5DgBusk3pXXg8Wx/yg82R1XZCml7Ehp9kxRC8maT/Lns9d57J40tiODu9
-         GRpA==
-X-Gm-Message-State: AOAM533K4JWSFNP93S7uFuN2R+ud+MVaxPjiyKIDSXagPEeU2cYuYU7d
-        mBI3OKzs3bsh9POu1pS8zw==
-X-Google-Smtp-Source: ABdhPJzml2tF082UAvEzJCr4xKgGe/WHUKeAlheKtAfO4iCpGmzBe+KJwCilqQNoTsfj2ulcrePV7A==
-X-Received: by 2002:a02:3f41:: with SMTP id c1mr1706694jaf.29.1595384751707;
-        Tue, 21 Jul 2020 19:25:51 -0700 (PDT)
+        bh=ccw7aFBBvUSTsPhiZooV3eXUT4cuUiS9mQQvtImdqBg=;
+        b=J2Jm01HhOEaUbNJDAsixBc/yKYRt1FdzmOx2QIGjBWVbLwIHHgHCWAxMF6j7uQevjF
+         kzpnZTjs5waHf5gtRGDtSbEphZEoOTYJMmNxTMxc6SJQw30kc/ohhGTfkbEHOWXCKKxF
+         qbL513AodBUsGqGqLhD2RH8vEmLXw6Dfs4s+q2FoQgngyznk4bebkvW07huQCz4tolcz
+         liqYc9xrF+CqXlfB2JgSKf5TswomriIAF3x4Eebohoi0r1RgwFx0co5POcMRtfy+J/yt
+         RpUIjLaye3OWNY07NN8rny5UWjAV+mM4USyrJJWUxp/c65w+kHz9WpfSFtDKmRQFJUTf
+         TtOg==
+X-Gm-Message-State: AOAM533JePXAWIRh2ZkuhesiGvogFDKJH6Ab09ARsQGrBloyAdfIvLIE
+        iuJfmGsVEQP8PCTP7OaDJLufL0UyzQ==
+X-Google-Smtp-Source: ABdhPJzG+g+FJ+7V/G0ulxl4gKTGV/ybyBwv8ARgKlZN6HgZPREI6DZWoupZ+Y7XgS/uX9htijqVDA==
+X-Received: by 2002:a92:db44:: with SMTP id w4mr29799590ilq.306.1595384761267;
+        Tue, 21 Jul 2020 19:26:01 -0700 (PDT)
 Received: from xps15.herring.priv ([64.188.179.252])
-        by smtp.googlemail.com with ESMTPSA id y2sm11687981iox.22.2020.07.21.19.25.49
+        by smtp.googlemail.com with ESMTPSA id y2sm11687981iox.22.2020.07.21.19.25.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 21 Jul 2020 19:25:51 -0700 (PDT)
+        Tue, 21 Jul 2020 19:26:00 -0700 (PDT)
 From:   Rob Herring <robh@kernel.org>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
@@ -79,9 +79,9 @@ Cc:     Fabio Estevam <festevam@gmail.com>,
         linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org,
         linux-renesas-soc@vger.kernel.org,
         linux-rockchip@lists.infradead.org, linux-tegra@vger.kernel.org
-Subject: [PATCH 10/19] PCI: rcar: Use pci_is_root_bus() to check if bus is root bus
-Date:   Tue, 21 Jul 2020 20:25:05 -0600
-Message-Id: <20200722022514.1283916-11-robh@kernel.org>
+Subject: [PATCH 12/19] PCI: cadence: Use bridge resources for outbound window setup
+Date:   Tue, 21 Jul 2020 20:25:07 -0600
+Message-Id: <20200722022514.1283916-13-robh@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200722022514.1283916-1-robh@kernel.org>
 References: <20200722022514.1283916-1-robh@kernel.org>
@@ -92,92 +92,80 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Use pci_is_root_bus() rather than tracking the root bus number to
-determine if the bus is the root bus or not. This removes storing
-duplicated data as well as the need for the host bridge driver to have
-to care about the bus numbers in most cases.
+Instead of parsing 'ranges' from DT again, use the bridge window
+resources.
 
-Cc: Marek Vasut <marek.vasut+renesas@gmail.com>
-Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Cc: Tom Joseph <tjoseph@cadence.com>
 Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-renesas-soc@vger.kernel.org
 Signed-off-by: Rob Herring <robh@kernel.org>
 ---
- drivers/pci/controller/pcie-rcar-host.c | 19 +++++--------------
- 1 file changed, 5 insertions(+), 14 deletions(-)
+ .../controller/cadence/pcie-cadence-host.c    | 37 ++++++++-----------
+ 1 file changed, 16 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/pci/controller/pcie-rcar-host.c b/drivers/pci/controller/pcie-rcar-host.c
-index 3a8e749b4904..bf10f1cf04f4 100644
---- a/drivers/pci/controller/pcie-rcar-host.c
-+++ b/drivers/pci/controller/pcie-rcar-host.c
-@@ -54,7 +54,6 @@ struct rcar_pcie_host {
- 	struct phy		*phy;
- 	void __iomem		*base;
- 	struct list_head	resources;
--	int			root_bus_nr;
- 	struct clk		*bus_clk;
- 	struct			rcar_msi msi;
- 	int			(*phy_init_fn)(struct rcar_pcie_host *host);
-@@ -100,22 +99,14 @@ static int rcar_pcie_config_access(struct rcar_pcie_host *host,
- 		if (dev != 0)
- 			return PCIBIOS_DEVICE_NOT_FOUND;
+diff --git a/drivers/pci/controller/cadence/pcie-cadence-host.c b/drivers/pci/controller/cadence/pcie-cadence-host.c
+index 84aaf8834e11..f485c0405fb5 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence-host.c
++++ b/drivers/pci/controller/cadence/pcie-cadence-host.c
+@@ -104,16 +104,14 @@ static int cdns_pcie_host_init_root_port(struct cdns_pcie_rc *rc)
+ static int cdns_pcie_host_init_address_translation(struct cdns_pcie_rc *rc)
+ {
+ 	struct cdns_pcie *pcie = &rc->pcie;
++	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(rc);
+ 	struct resource *mem_res = pcie->mem_res;
+ 	struct resource *bus_range = rc->bus_range;
+ 	struct resource *cfg_res = rc->cfg_res;
+-	struct device *dev = pcie->dev;
+-	struct device_node *np = dev->of_node;
+-	struct of_pci_range_parser parser;
+-	struct of_pci_range range;
++	struct resource_entry *entry;
+ 	u32 addr0, addr1, desc1;
+ 	u64 cpu_addr;
+-	int r, err;
++	int r;
  
--		if (access_type == RCAR_PCI_ACCESS_READ) {
-+		if (access_type == RCAR_PCI_ACCESS_READ)
- 			*data = rcar_pci_read_reg(pcie, PCICONF(index));
--		} else {
--			/* Keep an eye out for changes to the root bus number */
--			if (pci_is_root_bus(bus) && (reg == PCI_PRIMARY_BUS))
--				host->root_bus_nr = *data & 0xff;
+ 	/*
+ 	 * Reserve region 0 for PCI configure space accesses:
+@@ -132,25 +130,22 @@ static int cdns_pcie_host_init_address_translation(struct cdns_pcie_rc *rc)
+ 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR0(0), addr0);
+ 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR1(0), addr1);
+ 
+-	err = of_pci_range_parser_init(&parser, np);
+-	if (err)
+-		return err;
 -
-+		else
- 			rcar_pci_write_reg(pcie, *data, PCICONF(index));
--		}
+ 	r = 1;
+-	for_each_of_pci_range(&parser, &range) {
+-		bool is_io;
+-
+-		if ((range.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_MEM)
+-			is_io = false;
+-		else if ((range.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_IO)
+-			is_io = true;
++	resource_list_for_each_entry(entry, &bridge->windows) {
++		struct resource *res = entry->res;
++		u64 pci_addr = res->start - entry->offset;
++
++		if (resource_type(res) == IORESOURCE_IO)
++			cdns_pcie_set_outbound_region(pcie, 0, r, true,
++						      pci_pio_to_address(res->start),
++						      pci_addr,
++						      resource_size(res));
+ 		else
+-			continue;
++			cdns_pcie_set_outbound_region(pcie, 0, r, false,
++						      res->start,
++						      pci_addr,
++						      resource_size(res));
  
- 		return PCIBIOS_SUCCESSFUL;
+-		cdns_pcie_set_outbound_region(pcie, 0, r, is_io,
+-					      range.cpu_addr,
+-					      range.pci_addr,
+-					      range.size);
+ 		r++;
  	}
  
--	if (host->root_bus_nr < 0)
--		return PCIBIOS_DEVICE_NOT_FOUND;
--
- 	/* Clear errors */
- 	rcar_pci_write_reg(pcie, rcar_pci_read_reg(pcie, PCIEERRFR), PCIEERRFR);
- 
-@@ -124,7 +115,7 @@ static int rcar_pcie_config_access(struct rcar_pcie_host *host,
- 		PCIE_CONF_DEV(dev) | PCIE_CONF_FUNC(func) | reg, PCIECAR);
- 
- 	/* Enable the configuration access */
--	if (bus->parent->number == host->root_bus_nr)
-+	if (pci_is_root_bus(bus->parent))
- 		rcar_pci_write_reg(pcie, CONFIG_SEND_ENABLE | TYPE0, PCIECCTLR);
- 	else
- 		rcar_pci_write_reg(pcie, CONFIG_SEND_ENABLE | TYPE1, PCIECCTLR);
-@@ -215,6 +206,7 @@ static struct pci_ops rcar_pcie_ops = {
- static int rcar_pcie_setup(struct list_head *resource,
- 			   struct rcar_pcie_host *host)
- {
-+	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(host);
- 	struct resource_entry *win;
- 	int i = 0;
- 
-@@ -232,7 +224,7 @@ static int rcar_pcie_setup(struct list_head *resource,
- 			i++;
- 			break;
- 		case IORESOURCE_BUS:
--			host->root_bus_nr = res->start;
-+			bridge->busnr = res->start;
- 			break;
- 		default:
- 			continue;
-@@ -338,7 +330,6 @@ static int rcar_pcie_enable(struct rcar_pcie_host *host)
- 	pci_add_flags(PCI_REASSIGN_ALL_BUS);
- 
- 	bridge->sysdata = host;
--	bridge->busnr = host->root_bus_nr;
- 	bridge->ops = &rcar_pcie_ops;
- 	bridge->map_irq = of_irq_parse_and_map_pci;
- 	bridge->swizzle_irq = pci_common_swizzle;
 -- 
 2.25.1
 
