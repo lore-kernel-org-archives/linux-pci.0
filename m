@@ -2,143 +2,115 @@ Return-Path: <SRS0=xidA=BC=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01B1FC433DF
-	for <linux-pci@archiver.kernel.org>; Thu, 23 Jul 2020 20:19:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD8E9C433E4
+	for <linux-pci@archiver.kernel.org>; Thu, 23 Jul 2020 20:31:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C8BA520792
-	for <linux-pci@archiver.kernel.org>; Thu, 23 Jul 2020 20:19:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B440F2065F
+	for <linux-pci@archiver.kernel.org>; Thu, 23 Jul 2020 20:31:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oRFGlag/"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="AMgEn6YS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725979AbgGWUTF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 23 Jul 2020 16:19:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47124 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725894AbgGWUTF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 23 Jul 2020 16:19:05 -0400
-Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B035CC0619DC;
-        Thu, 23 Jul 2020 13:19:04 -0700 (PDT)
-Received: by mail-wm1-x343.google.com with SMTP id 184so6349034wmb.0;
-        Thu, 23 Jul 2020 13:19:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=Jz1lbK5bI0Ctyh4QZXH3ZtjdTMxnzW49HE2H6bVsMxw=;
-        b=oRFGlag/zGU4CXXJ7XIQD7fPt8RRB94r0orMm2ytu8XHkavznqsppVIxVYbFUJ4DB0
-         IfMmUYmi7xuRXPTKzbqCXimVAZUaIddCNZMWWNCXg0YVl08GSZU1uLAxxZZnMGYNMemJ
-         lMi8RLkggLbM+U/a/ETnsoVAz2UHCnbVKiScXHLbI6T3FvividfJGqKaXYAvUQq33u5Y
-         uCyAuMZ6u0kE2Rjxv8KhezALPo9NmunRoMPN3gT77vNWNgozYC5Utxu9VNy+T1+IXJ5f
-         1gLPmCqmmnYIgn4b1fTLaMkHzVMRVHq4lhXBUoUPec+Ead0WNuo8hS1Tab/pEarMxiuP
-         aIeg==
+        id S1727930AbgGWUbO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 23 Jul 2020 16:31:14 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:42651 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726146AbgGWUbO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 23 Jul 2020 16:31:14 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1595536272;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=40t+4qcg6UR1VcXiSRsIIDp9z0DXZ4q6WAM4TN0/6lk=;
+        b=AMgEn6YSwmFSRGl/JNSbgBMBusMoo0rw8ptxRhhnDe951tpeadcqXiRqQSkTLaVLRKnst8
+        Jla9uFleOus1dtV3OVjr5SP+jqTUFVX1o/SfOFAIuQKJogGiecQ+n+KXFNFweeVLQw/73p
+        Ij9EH1watsSvsTygoxAQZxkc3+/rN4c=
+Received: from mail-qv1-f71.google.com (mail-qv1-f71.google.com
+ [209.85.219.71]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-321-nH7jXmUgPrm17BPG1qi28g-1; Thu, 23 Jul 2020 16:31:10 -0400
+X-MC-Unique: nH7jXmUgPrm17BPG1qi28g-1
+Received: by mail-qv1-f71.google.com with SMTP id r19so4375918qvz.7
+        for <linux-pci@vger.kernel.org>; Thu, 23 Jul 2020 13:31:10 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=Jz1lbK5bI0Ctyh4QZXH3ZtjdTMxnzW49HE2H6bVsMxw=;
-        b=kA9gzklvJSWsmtFbkx0P2Vplz9vyTYaF/BCskyQbiwJQ5Gh18SoZZ2c7COgqcRirdS
-         IL87bqrRJGthg/+nw8YBIqEXqAk254nQimy2eDxiYcI0e10L1HAPwCObgXsW/ZucYjYu
-         3/kO9vHiQxV5Ic1pV7brQWkrinD332S+3tF0MiFXWJichVdz08KVcZ1sAiiRTNQ9sIyv
-         +0f9C4XX0UfiX+H+ZUgo/tjbK7GIDZ+LCia1QWV2MzYd+Hya9IBvgsAjNDVEWrn/k4UY
-         2+5ohG0jI5GYcmwUJTPBCnJy5LK3Ypeg0hOdSMC6ucaftf4Mr79siV6MRPBGzsi7Ap8i
-         /FJQ==
-X-Gm-Message-State: AOAM530oN6GHEuaLQCiGUfTRJ39gCB9dvu5is8tmbLnGccPR1N9LKGcv
-        KHaIUpDJ8fRHMpVGJABcJfJ1rOfjilw2szxNG0V2FA==
-X-Google-Smtp-Source: ABdhPJwZ5ghVcpzgVD08jYmYRCKFxzaZXDMoXDwAnKc3VkUnx6aeY1yMm+lsM5vVRo5/EFxZ4Bj5gue9yJUmkyUiL10=
-X-Received: by 2002:a1c:2:: with SMTP id 2mr5654439wma.79.1595535543473; Thu,
- 23 Jul 2020 13:19:03 -0700 (PDT)
+         :message-id:subject:to:cc;
+        bh=40t+4qcg6UR1VcXiSRsIIDp9z0DXZ4q6WAM4TN0/6lk=;
+        b=ppcfVLWhgyfjkpulL8DkEmtEVt2rzH1eP4txw+PsbEaQx1L3LjantgobkJ4gjSPIFe
+         kXGFi0x79P1kdJKWup62MpglTaOSuQi5LfxVup1RcF2cRBJjd424HOdhQbMpEUZgFcrg
+         0LVvX63RqdK7t01TGkjCWN2hImyORNKXJQ6W10n7F+ltcju32ErhgH2rqaPKpbxRg8yF
+         pPgf2TCM41V+P3otAej1Xkq7fhKVuTZdvqwj1ZdJD0B79q9zjlHn39c3b6igdXlaE/d+
+         DDYbaVgh/ej1fB80gMpBaN4mTBlvNkfou+P42sk+hNkYljMMfMAqSmH/Nz45JDXrjoU2
+         eszQ==
+X-Gm-Message-State: AOAM530x7lVgezK+hPmgYPoYRGyWTHNkyrmErlnoLckKz477xKFYx7UY
+        XcxoWNULM/KJEto6K0Us6koOfgg9cdVCtHXgbEJ3oBgzEqJweAQ0DXMd49LciPZ5XEbBjmnEhPB
+        Mmv6pA4fuaptxsOle+4/H88uXBbFq4CFdhDdE
+X-Received: by 2002:a37:5c04:: with SMTP id q4mr7263418qkb.192.1595536270056;
+        Thu, 23 Jul 2020 13:31:10 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJxaz+FKwj1+Qpe9+JR57Hg1bCOgF5rhbZUwIe/feWxQzxhiCYW2p0q4YNTbBH3ZcWu7BRmV4VUvG7uvN9PukuM=
+X-Received: by 2002:a37:5c04:: with SMTP id q4mr7263386qkb.192.1595536269773;
+ Thu, 23 Jul 2020 13:31:09 -0700 (PDT)
 MIME-Version: 1.0
-References: <20200723195742.GA1447143@bjorn-Precision-5520> <89d853d1-9e45-1ba5-5be7-4bbce79c7fb8@deltatee.com>
-In-Reply-To: <89d853d1-9e45-1ba5-5be7-4bbce79c7fb8@deltatee.com>
-From:   Alex Deucher <alexdeucher@gmail.com>
-Date:   Thu, 23 Jul 2020 16:18:52 -0400
-Message-ID: <CADnq5_NMKK83GaNA+w85MR8bqDbFqvcdvn9MCqZtLwctJKmOUw@mail.gmail.com>
-Subject: Re: [PATCH] PCI/P2PDMA: Add AMD Zen 2 root complex to the list of
- allowed bridges
-To:     Logan Gunthorpe <logang@deltatee.com>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
+References: <CACO55tuA+XMgv=GREf178NzTLTHri4kyD5mJjKuDpKxExauvVg@mail.gmail.com>
+ <20200716235440.GA675421@bjorn-Precision-5520> <CACO55tuVJHjEbsW657ToczN++_iehXA8pimPAkzc=NOnx4Ztnw@mail.gmail.com>
+ <CACO55tso5SVipAR=AZfqhp6GGkKO9angv6f+nd61wvgAJtrOKg@mail.gmail.com>
+ <20200721122247.GI5180@lahna.fi.intel.com> <f951fba07ca7fa2fdfd590cd5023d1b31f515fa2.camel@redhat.com>
+ <20200721152737.GS5180@lahna.fi.intel.com> <d3253a47-09ff-8bc7-3ca1-a80bdc09d1c2@gmail.com>
+ <20200722092507.GC5180@lahna.fi.intel.com>
+In-Reply-To: <20200722092507.GC5180@lahna.fi.intel.com>
+From:   Karol Herbst <kherbst@redhat.com>
+Date:   Thu, 23 Jul 2020 22:30:58 +0200
+Message-ID: <CACO55tsv63VP93F7xJ3nfZ7SkOk0c6WkgvuP+8fY14gypmn4Fg@mail.gmail.com>
+Subject: Re: nouveau regression with 5.7 caused by "PCI/PM: Assume ports
+ without DLL Link Active train links in 100 ms"
+To:     Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc:     Patrick Volkerding <volkerdi@gmail.com>,
+        Lyude Paul <lyude@redhat.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
         Linux PCI <linux-pci@vger.kernel.org>,
+        Ben Skeggs <bskeggs@redhat.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
-        Huang Rui <ray.huang@amd.com>,
-        Andrew Maier <andrew.maier@eideticom.com>,
-        "H. Peter Anvin" <hpa@zytor.com>
+        nouveau <nouveau@lists.freedesktop.org>,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Sasha Levin <sashal@kernel.org>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Jul 23, 2020 at 4:11 PM Logan Gunthorpe <logang@deltatee.com> wrote=
-:
+On Wed, Jul 22, 2020 at 11:25 AM Mika Westerberg
+<mika.westerberg@linux.intel.com> wrote:
 >
->
->
-> On 2020-07-23 1:57 p.m., Bjorn Helgaas wrote:
-> > [+cc Andrew, Armen, hpa]
+> On Tue, Jul 21, 2020 at 01:37:12PM -0500, Patrick Volkerding wrote:
+> > On 7/21/20 10:27 AM, Mika Westerberg wrote:
+> > > On Tue, Jul 21, 2020 at 11:01:55AM -0400, Lyude Paul wrote:
+> > >> Sure thing. Also, feel free to let me know if you'd like access to one of the
+> > >> systems we saw breaking with this patch - I'm fairly sure I've got one of them
+> > >> locally at my apartment and don't mind setting up AMT/KVM/SSH
+> > > Probably no need for remote access (thanks for the offer, though). I
+> > > attached a test patch to the bug report:
+> > >
+> > >   https://bugzilla.kernel.org/show_bug.cgi?id=208597
+> > >
+> > > that tries to work it around (based on the ->pm_cap == 0). I wonder if
+> > > anyone would have time to try it out.
 > >
-> > On Thu, Jul 23, 2020 at 02:01:17PM -0400, Alex Deucher wrote:
-> >> On Thu, Jul 23, 2020 at 1:43 PM Logan Gunthorpe <logang@deltatee.com> =
-wrote:
-> >>>
-> >>> The AMD Zen 2 root complex (Starship/Matisse) was tested for P2PDMA
-> >>> transactions between root ports and found to work. Therefore add it
-> >>> to the list.
-> >>>
-> >>> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-> >>> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> >>> Cc: Christian K=C3=B6nig <christian.koenig@amd.com>
-> >>> Cc: Huang Rui <ray.huang@amd.com>
-> >>> Cc: Alex Deucher <alexdeucher@gmail.com>
-> >>
-> >> Starting with Zen, all AMD platforms support P2P for reads and writes.
 > >
-> > What's the plan for getting out of the cycle of "update this list for
-> > every new chip"?  Any new _DSMs planned, for instance?
->
-> Well there was an effort to add capabilities in the PCI spec to describe
-> this but, as far as I know, they never got anywhere, and hardware still
-> doesn't self describe with this.
->
-> > A continuous trickle of updates like this is not really appealing.  So
-> > far we have:
+> > Hi Mika,
 > >
-> >   7d5b10fcb81e ("PCI/P2PDMA: Add AMD Zen Raven and Renoir Root Ports to=
- whitelist")
-> >   7b94b53db34f ("PCI/P2PDMA: Add Intel Sky Lake-E Root Ports B, C, D to=
- the whitelist")
-> >   bc123a515cb7 ("PCI/P2PDMA: Add Intel SkyLake-E to the whitelist")
-> >   494d63b0d5d0 ("PCI/P2PDMA: Whitelist some Intel host bridges")
-> >   0f97da831026 ("PCI/P2PDMA: Allow P2P DMA between any devices under AM=
-D ZEN Root Complex")
-> >
-> > And that's just from the last year, not including this patch.
+> > I can confirm that this patch applied to 5.4.52 fixes the issue with
+> > hybrid graphics on the Thinkpad X1 Extreme gen2.
 >
-> Yes, it's not ideal. But most of these are adding old devices as people
-> test and care about running on those platforms -- a lot of this is
-> bootstrapping the list. I'd expect this to slow down a bit as by now we
-> have hopefully got a lot of the existing platforms people care about.
-> But we'd still probably expect to be adding a new Intel and AMD devices
-> about once a year as they produce new hardware designs.
+> Great, thanks for testing!
 >
-> Unless, the Intel and AMD folks know of a way to detect this, or even to
-> query if a root complex is newer than a certain generation, I'm not sure
-> what else we can do here.
 
-I started a thread internally to see if I can find a way.  FWIW,
-pre-ZEN parts also support p2p DMA, but only for writes.  If I can get
-a definitive list, maybe we could switch to a blacklist for the old
-ones?
+yeah, works on the P1G2 as well.
 
-Alex
-
->
-> Logan
