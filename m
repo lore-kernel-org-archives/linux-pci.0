@@ -2,168 +2,102 @@ Return-Path: <SRS0=3jnD=BD=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58172C433E1
-	for <linux-pci@archiver.kernel.org>; Fri, 24 Jul 2020 11:02:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1ED30C433E1
+	for <linux-pci@archiver.kernel.org>; Fri, 24 Jul 2020 12:17:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2C4CA2074B
-	for <linux-pci@archiver.kernel.org>; Fri, 24 Jul 2020 11:02:46 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ULjTfKn6"
+	by mail.kernel.org (Postfix) with ESMTP id E6CDB2065E
+	for <linux-pci@archiver.kernel.org>; Fri, 24 Jul 2020 12:17:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726987AbgGXLCp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 24 Jul 2020 07:02:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42946 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726953AbgGXLCo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 24 Jul 2020 07:02:44 -0400
-Received: from mail-pj1-x1042.google.com (mail-pj1-x1042.google.com [IPv6:2607:f8b0:4864:20::1042])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF975C0619D3;
-        Fri, 24 Jul 2020 04:02:44 -0700 (PDT)
-Received: by mail-pj1-x1042.google.com with SMTP id k5so5044236pjg.3;
-        Fri, 24 Jul 2020 04:02:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=FfesR7ZT5qXcTi29yTDLUUd3CkRzbDIr3gddgJd2pEA=;
-        b=ULjTfKn6wgQjuRYnfk8arHeojc4it0s3Z02NGt8se0n375u4P9/6ZpQJaMQDGIFQKn
-         btV9lnLarheBlK4BIPbxANr+sZ7BTv5TU0gO5NhHRd9pqUhIxsM7Q+9Ez+hO1TKrIaDY
-         YWBOHIiQsEknnUh5tqbM2HZECVwUOcuRt68ouJQ9v60+H/lmbbIDZ+TPQD9iKtNeJpLc
-         f/aqzZ85NGNeLoJFJSBfgXRMPqCap5M6gGuD+wwiNz+fkLXoRHudH3NBGakI1i88uEDp
-         9WJ0dubTZAkauBJUhVfRi+Vc2/0TPmN/RrALdDQXtGNspj61LV7p3qiwsHVEzSz0zE/d
-         0chA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=FfesR7ZT5qXcTi29yTDLUUd3CkRzbDIr3gddgJd2pEA=;
-        b=OdIKUDZ1ghyldwhaWiPpZMLWXBndywxlz3UaZYmfLdv1Q2bFvNmKMNVa2qRowNZAGA
-         Pl8n4DAQfD5/Xe1/SMhEzdUK/Dc/SY9KPh97THGx/L6DWmBYZXb3epAeqGSUGJ0CTRDr
-         2tLS71MxgVNMzm686vCvsc7wfeixik6RzMyoP5f8dgrIO+r9VENehXwxP1MWzl+v/T7L
-         aduL1YzOA3R1Gra7YN1bdbuu7hDtGYzpfedDbAX6mMu3GtBSU3WKcBs4gNdQ0FLn3YZz
-         ZS4bpzB045twPbaxJnpF2eYWgnumeOu+6mP/WdlxBLfcmrtxLyLxDCQHXiXLZBOkCfTk
-         a3gw==
-X-Gm-Message-State: AOAM530JETJ23Jt64sIAjGB1uPYJX3pKcESc/WRTf0h5c56mkE/pQvlt
-        +e3oM1la2cDyIyrHrzeTvSVG31fGT+NP+7Jl4Zs=
-X-Google-Smtp-Source: ABdhPJwYcmTO2+w+O+IAx4ADzupDHHlyAIJOZJ9tCjeFSztHK+LtA282fIxvP10WiGCMf0PxilSuIy5I/vXfX09D5BY=
-X-Received: by 2002:a17:902:8491:: with SMTP id c17mr7580569plo.262.1595588563901;
- Fri, 24 Jul 2020 04:02:43 -0700 (PDT)
+        id S1726280AbgGXMRk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 24 Jul 2020 08:17:40 -0400
+Received: from mga03.intel.com ([134.134.136.65]:14038 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726258AbgGXMRk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 24 Jul 2020 08:17:40 -0400
+IronPort-SDR: hymydJP0ZFSSws7fLxC44KuZRyZesJi86UZTpulGY1e19r8ZtLp1GzPKlSYjXOUBD21yB+0jXF
+ 0Ns/pC6AjEaw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9691"; a="150684438"
+X-IronPort-AV: E=Sophos;i="5.75,390,1589266800"; 
+   d="scan'208";a="150684438"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jul 2020 05:17:39 -0700
+IronPort-SDR: QQQu+DgdSARCQ5/VmmnjlZrL7cW1iyhfIQwdbxY6CB/y5sWIlCbH7hS8RhIZ86kEHSj3xYsRxV
+ LUFZ8oeW/V9A==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.75,390,1589266800"; 
+   d="scan'208";a="288975674"
+Received: from smile.fi.intel.com (HELO smile) ([10.237.68.40])
+  by orsmga006.jf.intel.com with ESMTP; 24 Jul 2020 05:17:35 -0700
+Received: from andy by smile with local (Exim 4.94)
+        (envelope-from <andriy.shevchenko@linux.intel.com>)
+        id 1jywdq-003nw4-Ql; Fri, 24 Jul 2020 15:17:34 +0300
+Date:   Fri, 24 Jul 2020 15:17:34 +0300
+From:   "andriy.shevchenko@linux.intel.com" 
+        <andriy.shevchenko@linux.intel.com>
+To:     Shiju Jose <shiju.jose@huawei.com>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+        "bp@alien8.de" <bp@alien8.de>,
+        "james.morse@arm.com" <james.morse@arm.com>,
+        "lenb@kernel.org" <lenb@kernel.org>,
+        "tony.luck@intel.com" <tony.luck@intel.com>,
+        "dan.carpenter@oracle.com" <dan.carpenter@oracle.com>,
+        "zhangliguang@linux.alibaba.com" <zhangliguang@linux.alibaba.com>,
+        "Wangkefeng (OS Kernel Lab)" <wangkefeng.wang@huawei.com>,
+        "jroedel@suse.de" <jroedel@suse.de>,
+        Linuxarm <linuxarm@huawei.com>,
+        yangyicong <yangyicong@huawei.com>,
+        Jonathan Cameron <jonathan.cameron@huawei.com>,
+        tanxiaofei <tanxiaofei@huawei.com>
+Subject: Re: [PATCH v13 0/2] ACPI / APEI: Add support to notify the vendor
+ specific HW errors
+Message-ID: <20200724121734.GC3703480@smile.fi.intel.com>
+References: <20200722104245.1060-1-shiju.jose@huawei.com>
+ <20200723232301.GA1468407@bjorn-Precision-5520>
+ <5c86b434fe3a47eaabf488dea14efd25@huawei.com>
 MIME-Version: 1.0
-References: <20200724105600.10814-1-giovanni.cabiddu@intel.com>
-In-Reply-To: <20200724105600.10814-1-giovanni.cabiddu@intel.com>
-From:   Andy Shevchenko <andy.shevchenko@gmail.com>
-Date:   Fri, 24 Jul 2020 14:02:27 +0300
-Message-ID: <CAHp75VduFnt=5eBiyUgV-B+Kes-JgkKvxMQ_YQOCGv4j5=qx6g@mail.gmail.com>
-Subject: Re: [PATCH v5 0/5] vfio/pci: add denylist and disable qat
-To:     Giovanni Cabiddu <giovanni.cabiddu@intel.com>
-Cc:     Alex Williamson <alex.williamson@redhat.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        Cornelia Huck <cohuck@redhat.com>, nhorman@redhat.com,
-        vdronov@redhat.com, Bjorn Helgaas <bhelgaas@google.com>,
-        mark.a.chambers@intel.com, gordon.mcfadden@intel.com,
-        ahsan.atta@intel.com, fiona.trahe@intel.com, qat-linux@intel.com,
-        "open list:VFIO DRIVER" <kvm@vger.kernel.org>,
-        linux-crypto <linux-crypto@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <5c86b434fe3a47eaabf488dea14efd25@huawei.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Jul 24, 2020 at 1:59 PM Giovanni Cabiddu
-<giovanni.cabiddu@intel.com> wrote:
->
-> This patchset defines a denylist of devices in the vfio-pci module and ad=
-ds
-> the current generation of Intel(R) QuickAssist devices to it as they are
-> not designed to run in an untrusted environment.
->
-> By default, if a device is in the denylist, the probe of vfio-pci fails.
-> If a user wants to use a device in the denylist, he needs to disable the
-> full denylist providing the option disable_denylist=3D1 at the load of
-> vfio-pci or specifying that parameter in a config file in /etc/modprobe.d=
-.
->
-> This series also moves the device ids definitions present in the qat driv=
-er
-> to linux/pci_ids.h since they will be shared between the vfio-pci and the=
- qat
-> drivers and replaces the custom ADF_SYSTEM_DEVICE macro with PCI_VDEVICE.
->
-> The series is applicable to Herbert's tree. Patches 1 to 3 apply also to
-> Alex's tree (next). Patches 4 and 5 are optional and can be applied at a =
-later
-> stage.
+On Fri, Jul 24, 2020 at 09:08:16AM +0000, Shiju Jose wrote:
+> >-----Original Message-----
+> >From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> >Sent: 24 July 2020 00:23
+> >On Wed, Jul 22, 2020 at 11:42:43AM +0100, Shiju Jose wrote:
 
-Thanks!
-FWIW,
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+...
 
+> >This series is ill-formed:
 
-> Changes from v4:
->  - Patch #2: added Reviewed-by tag from Cornelia Huck
->  - Patch #5: added Suggested-by tag as this change was suggested internal=
-ly
->    by Andy Shevchenko
->  - Patches 1-5: added Reviewed-by tag from Fiona Trahe
->
-> Changes from v3:
->  - Patch #1: included Acked-by tag, after ack from Bjorn Helgaas
->  - Patch #2: s/prevents/allows/ in module parameter description
->
-> Changes from v2:
->  - Renamed blocklist in denylist
->  - Patch #2: reworded module parameter description to clarify why a devic=
-e is
->    in the denylist
->  - Patch #2: reworded warning that occurs when denylist is enabled and de=
-vice
->    is present in that list
->
-> Changes from v1:
->  - Reworked commit messages:
->    Patches #1, #2 and #3: capitalized first character after column to com=
-ply to
->    subject line convention
->    Patch #3: Capitalized QAT acronym and added link and doc number for do=
-cument
->    "Intel=C2=AE QuickAssist Technology (Intel=C2=AE QAT) Software for Lin=
-ux"
->
->
-> Giovanni Cabiddu (5):
->   PCI: Add Intel QuickAssist device IDs
->   vfio/pci: Add device denylist
->   vfio/pci: Add QAT devices to denylist
->   crypto: qat - replace device ids defines
->   crypto: qat - use PCI_VDEVICE
->
->  drivers/crypto/qat/qat_c3xxx/adf_drv.c        | 11 ++---
->  drivers/crypto/qat/qat_c3xxxvf/adf_drv.c      | 11 ++---
->  drivers/crypto/qat/qat_c62x/adf_drv.c         | 11 ++---
->  drivers/crypto/qat/qat_c62xvf/adf_drv.c       | 11 ++---
->  .../crypto/qat/qat_common/adf_accel_devices.h |  6 ---
->  drivers/crypto/qat/qat_common/qat_hal.c       |  7 +--
->  drivers/crypto/qat/qat_common/qat_uclo.c      |  9 ++--
->  drivers/crypto/qat/qat_dh895xcc/adf_drv.c     | 11 ++---
->  drivers/crypto/qat/qat_dh895xccvf/adf_drv.c   | 11 ++---
->  drivers/vfio/pci/vfio_pci.c                   | 48 +++++++++++++++++++
->  include/linux/pci_ids.h                       |  6 +++
->  11 files changed, 87 insertions(+), 55 deletions(-)
->
-> --
-> 2.26.2
->
+I confirm this.
 
+> >  - Jul 22  5:39 Shiju Jose      [PATCH v13 0/2] ACPI / APEI: Add support to not
+> >  - Jul 22  5:39 Shiju Jose      └─>[PATCH v13 1/2] ACPI / APEI: Add a notifier
+> >  - Jul 22  5:42 Shiju Jose      [PATCH v13 0/2] ACPI / APEI: Add support to not
+> >  - Jul 22  5:42 Shiju Jose      └─>[PATCH v13 2/2] PCI: hip: Add handling of Hi
+> git send-email failed to send out one patch each time in the patch series
+> due to some internal error. 
 
---=20
+You have to fix your tools...
+
+-- 
 With Best Regards,
 Andy Shevchenko
+
+
