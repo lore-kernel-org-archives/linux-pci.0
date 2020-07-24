@@ -2,164 +2,65 @@ Return-Path: <SRS0=3jnD=BD=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0068EC433E3
-	for <linux-pci@archiver.kernel.org>; Fri, 24 Jul 2020 13:32:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5DEEC433E1
+	for <linux-pci@archiver.kernel.org>; Fri, 24 Jul 2020 13:44:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DC9DD2074F
-	for <linux-pci@archiver.kernel.org>; Fri, 24 Jul 2020 13:32:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B8BDC206D8
+	for <linux-pci@archiver.kernel.org>; Fri, 24 Jul 2020 13:44:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726326AbgGXNcz convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 24 Jul 2020 09:32:55 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2524 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726235AbgGXNcy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 24 Jul 2020 09:32:54 -0400
-Received: from lhreml720-chm.china.huawei.com (unknown [172.18.7.108])
-        by Forcepoint Email with ESMTP id 8578F17D3DDB922F41EF;
-        Fri, 24 Jul 2020 14:32:52 +0100 (IST)
-Received: from lhreml715-chm.china.huawei.com (10.201.108.66) by
- lhreml720-chm.china.huawei.com (10.201.108.71) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1913.5; Fri, 24 Jul 2020 14:32:52 +0100
-Received: from lhreml715-chm.china.huawei.com ([10.201.108.66]) by
- lhreml715-chm.china.huawei.com ([10.201.108.66]) with mapi id 15.01.1913.007;
- Fri, 24 Jul 2020 14:32:52 +0100
-From:   Shiju Jose <shiju.jose@huawei.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-CC:     "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        id S1726667AbgGXNol (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 24 Jul 2020 09:44:41 -0400
+Received: from verein.lst.de ([213.95.11.211]:35740 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726326AbgGXNok (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 24 Jul 2020 09:44:40 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 9A94A68AFE; Fri, 24 Jul 2020 15:44:37 +0200 (CEST)
+Date:   Fri, 24 Jul 2020 15:44:37 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Arnd Bergmann <arnd@arndb.de>
+Cc:     Ulf Hansson <ulf.hansson@linaro.org>,
+        linux-mmc <linux-mmc@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Rui Feng <rui_feng@realsil.com.cn>,
+        linux-nvme@lists.infradead.org,
+        linux-pci <linux-pci@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
-        "bp@alien8.de" <bp@alien8.de>,
-        "james.morse@arm.com" <james.morse@arm.com>,
-        "lenb@kernel.org" <lenb@kernel.org>,
-        "tony.luck@intel.com" <tony.luck@intel.com>,
-        "dan.carpenter@oracle.com" <dan.carpenter@oracle.com>,
-        "zhangliguang@linux.alibaba.com" <zhangliguang@linux.alibaba.com>,
-        "andriy.shevchenko@linux.intel.com" 
-        <andriy.shevchenko@linux.intel.com>,
-        "Wangkefeng (OS Kernel Lab)" <wangkefeng.wang@huawei.com>,
-        "jroedel@suse.de" <jroedel@suse.de>,
-        Linuxarm <linuxarm@huawei.com>,
-        yangyicong <yangyicong@huawei.com>,
-        Jonathan Cameron <jonathan.cameron@huawei.com>,
-        tanxiaofei <tanxiaofei@huawei.com>
-Subject: RE: [PATCH v13 1/2] ACPI / APEI: Add a notifier chain for unknown
- (vendor) CPER records
-Thread-Topic: [PATCH v13 1/2] ACPI / APEI: Add a notifier chain for unknown
- (vendor) CPER records
-Thread-Index: AQHWYUfqroZbmVDLlEO3jLbzt/fllakWZmIggAA5R4CAABpXQA==
-Date:   Fri, 24 Jul 2020 13:32:52 +0000
-Message-ID: <bb7c23fae649486aa0720c619fef2e8b@huawei.com>
-References: <b76444fed0a2468983b2a2c45d7d31b2@huawei.com>
- <20200724125357.GA1510118@bjorn-Precision-5520>
-In-Reply-To: <20200724125357.GA1510118@bjorn-Precision-5520>
-Accept-Language: en-GB, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [10.47.85.142]
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH] mmc: core: Initial support for SD express card/host
+Message-ID: <20200724134437.GB3152@lst.de>
+References: <20200716141534.30241-1-ulf.hansson@linaro.org> <CAK8P3a1+rwY5uFpUMijgET_W78Tj+tqqKDevgqstjUmmhxdKuA@mail.gmail.com> <CAPDyKFp3D8xZCSGNMm2ZOpa5f5wMwderCuAA5yLMXdjoKFoxQw@mail.gmail.com> <CAK8P3a3wLPv58uqTqyXk7+0Cxoe4vdfahzCxXOp2pdGZDkeFsw@mail.gmail.com>
 MIME-Version: 1.0
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAK8P3a3wLPv58uqTqyXk7+0Cxoe4vdfahzCxXOp2pdGZDkeFsw@mail.gmail.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
->-----Original Message-----
->From: Bjorn Helgaas [mailto:helgaas@kernel.org]
->Sent: 24 July 2020 13:54
->To: Shiju Jose <shiju.jose@huawei.com>
->Cc: linux-acpi@vger.kernel.org; linux-pci@vger.kernel.org; linux-
->kernel@vger.kernel.org; rjw@rjwysocki.net; bp@alien8.de;
->james.morse@arm.com; lenb@kernel.org; tony.luck@intel.com;
->dan.carpenter@oracle.com; zhangliguang@linux.alibaba.com;
->andriy.shevchenko@linux.intel.com; Wangkefeng (OS Kernel Lab)
-><wangkefeng.wang@huawei.com>; jroedel@suse.de; Linuxarm
-><linuxarm@huawei.com>; yangyicong <yangyicong@huawei.com>; Jonathan
->Cameron <jonathan.cameron@huawei.com>; tanxiaofei
-><tanxiaofei@huawei.com>
->Subject: Re: [PATCH v13 1/2] ACPI / APEI: Add a notifier chain for unknown
->(vendor) CPER records
->
->On Fri, Jul 24, 2020 at 09:00:41AM +0000, Shiju Jose wrote:
->> >-----Original Message-----
->> >From: Bjorn Helgaas [mailto:helgaas@kernel.org]
->> >Sent: 24 July 2020 00:21
->> >To: Shiju Jose <shiju.jose@huawei.com>
->> >Cc: linux-acpi@vger.kernel.org; linux-pci@vger.kernel.org; linux-
->> >kernel@vger.kernel.org; rjw@rjwysocki.net; bp@alien8.de;
->> >james.morse@arm.com; lenb@kernel.org; tony.luck@intel.com;
->> >dan.carpenter@oracle.com; zhangliguang@linux.alibaba.com;
->> >andriy.shevchenko@linux.intel.com; Wangkefeng (OS Kernel Lab)
->> ><wangkefeng.wang@huawei.com>; jroedel@suse.de; Linuxarm
->> ><linuxarm@huawei.com>; yangyicong <yangyicong@huawei.com>;
->Jonathan
->> >Cameron <jonathan.cameron@huawei.com>; tanxiaofei
->> ><tanxiaofei@huawei.com>
->> >Subject: Re: [PATCH v13 1/2] ACPI / APEI: Add a notifier chain for
->> >unknown
->> >(vendor) CPER records
->> >
->> >On Wed, Jul 22, 2020 at 11:39:51AM +0100, Shiju Jose wrote:
->> >> CPER records describing a firmware-first error are identified by GUID.
->> >> The ghes driver currently logs, but ignores any unknown CPER records.
->> >> This prevents describing errors that can't be represented by a
->> >> standard entry, that would otherwise allow a driver to recover from
->> >> an
->> >error.
->> >> The UEFI spec calls these 'Non-standard Section Body' (N.2.3 of
->> >> version 2.8).
->> >
->> >> +#ifdef CONFIG_ACPI_APEI_GHES
->> >> +/**
->> >> + * ghes_register_vendor_record_notifier - register a notifier for
->> >> +vendor
->> >> + * records that the kernel would otherwise ignore.
->> >> + * @nb: pointer to the notifier_block structure of the event handler.
->> >> + *
->> >> + * return 0 : SUCCESS, non-zero : FAIL  */ int
->> >> +ghes_register_vendor_record_notifier(struct notifier_block *nb);
->> >> +
->> >> +/**
->> >> + * ghes_unregister_vendor_record_notifier - unregister the
->> >> +previously
->> >> + * registered vendor record notifier.
->> >> + * @nb: pointer to the notifier_block structure of the vendor
->> >> +record
->> >handler.
->> >> + */
->> >> +void ghes_unregister_vendor_record_notifier(struct notifier_block
->> >> +*nb); #else static inline int
->> >> +ghes_register_vendor_record_notifier(struct notifier_block *nb) {
->> >> +	return -ENODEV;
->> >> +}
->> >> +
->> >> +static inline void ghes_unregister_vendor_record_notifier(struct
->> >> +notifier_block *nb) { }
->> >
->> >If you made CONFIG_PCIE_HISI_ERR depend on CONFIG_ACPI_APEI_GHES,
->> >you'd be able to get rid of these stubs, wouldn't you?  It doesn't
->> >look like there's any point in building pcie-hisi-error.c at all
->> >unless CONFIG_ACPI_APEI_GHES is enabled.
->>
->> The stub is added because this interface is expected to use by the
->> other drivers as well.  Some drivers may not want add the build depend
->> on the CONFIG_ACPI_APEI_GHES if the error reporting has less priority
->> in the driver.  However we can add dependency on
->CONFIG_ACPI_APEI_GHES
->> for building pcie-hisi-error.c.
->
->The usual route is to add stubs when they're needed, not just in anticipation
->of some need that may never materialize.
-ok. I will change in the next version.
+On Fri, Jul 24, 2020 at 03:35:47PM +0200, Arnd Bergmann wrote:
+> Starting simple is generally a good idea, yes.
+> 
+> It would be good to have feedback from the nvme driver maintainers.
+> 
+> One way I can see the handshake working would be to have
+> an sdexpress class_driver that provides interfaces for both mmc
+> and nvme to link against. The mmc core can then create a
+> class device when it finds an sd-express device and that
+> class device contains a simple state machine that keeps track of
+> what either side think is going on, possibly also providing
+> a way to perform callbacks between the two sides.
 
-Thanks,
-Shiju
+None of this is in scope for the NVMe spec, so I don't really want
+to deal with it in the NVMe driver in any way.  Given that a SD
+express card just turns into a normal PCIe link if you really want
+to check that something probed I think you'd want to track if any
+PCIe driver is bound to the device.  Or just wait and see if we really
+need anything after all.
