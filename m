@@ -7,42 +7,42 @@ X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98D12C433E4
-	for <linux-pci@archiver.kernel.org>; Fri, 24 Jul 2020 17:23:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF4C9C43457
+	for <linux-pci@archiver.kernel.org>; Fri, 24 Jul 2020 17:23:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7B3A12070B
-	for <linux-pci@archiver.kernel.org>; Fri, 24 Jul 2020 17:23:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AF849206F6
+	for <linux-pci@archiver.kernel.org>; Fri, 24 Jul 2020 17:23:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726730AbgGXRWl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 24 Jul 2020 13:22:41 -0400
+        id S1726877AbgGXRWb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 24 Jul 2020 13:22:31 -0400
 Received: from mga17.intel.com ([192.55.52.151]:2758 "EHLO mga17.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726945AbgGXRWj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 24 Jul 2020 13:22:39 -0400
-IronPort-SDR: BkukYgPkn6XacsUxygO4x3Cd5mJ4N4NuwWIK0PoD7ffnIqZz93jRWtMWXETRmx/jeOrU8dJWew
- GgxQaC4bDujg==
-X-IronPort-AV: E=McAfee;i="6000,8403,9692"; a="130823270"
+        id S1726553AbgGXRWa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 24 Jul 2020 13:22:30 -0400
+IronPort-SDR: iom1tFWo+f7GA+6Oat+YV0gk/vKJmrUP/cqh3LrP14fXazXKbBb9E1QW1pGTJVgOQP8jFL0dAn
+ hZH4vHkBWWyA==
+X-IronPort-AV: E=McAfee;i="6000,8403,9692"; a="130823244"
 X-IronPort-AV: E=Sophos;i="5.75,391,1589266800"; 
-   d="scan'208";a="130823270"
+   d="scan'208";a="130823244"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jul 2020 10:22:39 -0700
-IronPort-SDR: nMKT3c0WGGcFpScrbNG6GdI4n11/A/XThPsjBJBTNvKG81lynQQjwmArP66fW/ywqVpv/P8oD5
- sng9g3Ylovaw==
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jul 2020 10:22:30 -0700
+IronPort-SDR: 9O8vtli5y+nZdsVOSbnTk6bWsPxd5MqQ7GUWcjS0oy557P5BpoSCxHE1+LsmRoAOMgei5GA2hR
+ /Jg3/X1J6vaQ==
 X-IronPort-AV: E=Sophos;i="5.75,391,1589266800"; 
-   d="scan'208";a="302730306"
+   d="scan'208";a="302730265"
 Received: from seokjaeb-mobl1.amr.corp.intel.com (HELO arch-ashland-svkelley.intel.com) ([10.254.24.239])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jul 2020 10:22:37 -0700
+  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jul 2020 10:22:29 -0700
 From:   Sean V Kelley <sean.v.kelley@intel.com>
 To:     bhelgaas@google.com, Jonathan.Cameron@huawei.com,
         rjw@rjwysocki.net, ashok.raj@kernel.org, tony.luck@intel.com,
         sathyanarayanan.kuppuswamy@linux.intel.com
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         Qiuxu Zhuo <qiuxu.zhuo@intel.com>
-Subject: [RFC PATCH 5/9] PCI/AER: Apply function level reset to RCiEP on fatal error
-Date:   Fri, 24 Jul 2020 10:22:19 -0700
-Message-Id: <20200724172223.145608-6-sean.v.kelley@intel.com>
+Subject: [RFC PATCH 1/9] pci_ids: Add class code and extended capability for RCEC
+Date:   Fri, 24 Jul 2020 10:22:15 -0700
+Message-Id: <20200724172223.145608-2-sean.v.kelley@intel.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20200724172223.145608-1-sean.v.kelley@intel.com>
 References: <20200724172223.145608-1-sean.v.kelley@intel.com>
@@ -55,63 +55,51 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
 
-Attempt to do function level reset for an RCiEP associated with an
-RCEC device on fatal error.
+A PCIe Root Complex Event Collector(RCEC) has the base class 0x08,
+sub-class 0x07, and programming interface 0x00. Add the class code
+0x0807 to identify RCEC devices and add the defines for the RCEC
+Endpoint Association Extended Capability.
+
+See PCI Express Base Specification, version 5.0-1, section "1.3.4
+Root Complex Event Collector" and section "7.9.10 Root Complex
+Event Collector Endpoint Association Extended Capability"
 
 Signed-off-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
 ---
- drivers/pci/pcie/err.c | 31 ++++++++++++++++++++++---------
- 1 file changed, 22 insertions(+), 9 deletions(-)
+ include/linux/pci_ids.h       | 1 +
+ include/uapi/linux/pci_regs.h | 7 +++++++
+ 2 files changed, 8 insertions(+)
 
-diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index 044df004f20b..9b3ec94bdf1d 100644
---- a/drivers/pci/pcie/err.c
-+++ b/drivers/pci/pcie/err.c
-@@ -170,6 +170,17 @@ static void pci_walk_dev_affected(struct pci_dev *dev, int (*cb)(struct pci_dev
- 	}
- }
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 0ad57693f392..de8dff1fb176 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -81,6 +81,7 @@
+ #define PCI_CLASS_SYSTEM_RTC		0x0803
+ #define PCI_CLASS_SYSTEM_PCI_HOTPLUG	0x0804
+ #define PCI_CLASS_SYSTEM_SDHCI		0x0805
++#define PCI_CLASS_SYSTEM_RCEC		0x0807
+ #define PCI_CLASS_SYSTEM_OTHER		0x0880
  
-+static enum pci_channel_state flr_on_rciep(struct pci_dev *dev)
-+{
-+	if (!pcie_has_flr(dev))
-+		return PCI_ERS_RESULT_NONE;
+ #define PCI_BASE_CLASS_INPUT		0x09
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index f9701410d3b5..f335f65f65d6 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -828,6 +828,13 @@
+ #define  PCI_PWR_CAP_BUDGET(x)	((x) & 1)	/* Included in system budget */
+ #define PCI_EXT_CAP_PWR_SIZEOF	16
+ 
++/* Root Complex Event Collector Endpoint Association  */
++#define PCI_RCEC_RCIEP_BITMAP	4	/* Associated Bitmap for RCiEPs */
++#define PCI_RCEC_BUSN		8	/* RCEC Associated Bus Numbers */
++#define  PCI_RCEC_BUSN_REG_VER	0x02	/* Least capability version that BUSN present */
++#define  PCI_RCEC_BUSN_NEXT(x)	(((x) >> 8) & 0xff)
++#define  PCI_RCEC_BUSN_LAST(x)	(((x) >> 16) & 0xff)
 +
-+	if (pcie_flr(dev))
-+		return PCI_ERS_RESULT_DISCONNECT;
-+
-+	return PCI_ERS_RESULT_RECOVERED;
-+}
-+
- pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
- 			enum pci_channel_state state,
- 			pci_ers_result_t (*reset_link)(struct pci_dev *pdev))
-@@ -191,15 +202,17 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
- 	if (state == pci_channel_io_frozen) {
- 		pci_walk_dev_affected(dev, report_frozen_detected, &status);
- 		if (pci_pcie_type(dev) == PCI_EXP_TYPE_RC_END) {
--			pci_warn(dev, "link reset not possible for RCiEP\n");
--			status = PCI_ERS_RESULT_NONE;
--			goto failed;
--		}
--
--		status = reset_link(dev);
--		if (status != PCI_ERS_RESULT_RECOVERED) {
--			pci_warn(dev, "link reset failed\n");
--			goto failed;
-+			status = flr_on_rciep(dev);
-+			if (status != PCI_ERS_RESULT_RECOVERED) {
-+				pci_warn(dev, "function level reset failed\n");
-+				goto failed;
-+			}
-+		} else {
-+			status = reset_link(dev);
-+			if (status != PCI_ERS_RESULT_RECOVERED) {
-+				pci_warn(dev, "link reset failed\n");
-+				goto failed;
-+			}
- 		}
- 	} else {
- 		pci_walk_dev_affected(dev, report_normal_detected, &status);
+ /* Vendor-Specific (VSEC, PCI_EXT_CAP_ID_VNDR) */
+ #define PCI_VNDR_HEADER		4	/* Vendor-Specific Header */
+ #define  PCI_VNDR_HEADER_ID(x)	((x) & 0xffff)
 -- 
 2.27.0
 
