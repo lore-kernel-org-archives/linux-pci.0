@@ -2,144 +2,84 @@ Return-Path: <SRS0=HLP7=BE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,LONGWORDS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBE1AC433E1
-	for <linux-pci@archiver.kernel.org>; Sat, 25 Jul 2020 07:56:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FD8EC433E1
+	for <linux-pci@archiver.kernel.org>; Sat, 25 Jul 2020 09:10:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C0F23206D7
-	for <linux-pci@archiver.kernel.org>; Sat, 25 Jul 2020 07:56:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E897320719
+	for <linux-pci@archiver.kernel.org>; Sat, 25 Jul 2020 09:10:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726676AbgGYH47 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 25 Jul 2020 03:56:59 -0400
-Received: from mga01.intel.com ([192.55.52.88]:11493 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726434AbgGYH47 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 25 Jul 2020 03:56:59 -0400
-IronPort-SDR: h3vIfnOyjQtjkABz1bc/U8An7egyDh/5NlXsJuInKHO11TcPWL6TMpcBhbeQQUFKUZhx6bU+Hp
- YPqbgNeC+5mg==
-X-IronPort-AV: E=McAfee;i="6000,8403,9692"; a="168947244"
-X-IronPort-AV: E=Sophos;i="5.75,392,1589266800"; 
-   d="scan'208";a="168947244"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Jul 2020 00:56:58 -0700
-IronPort-SDR: kEqtB7DWjt57k84HZRpEBJCBJ8zTFbcaBGT+nMfcSQZr7fX4tdO/NYJ9MkuyU2BmYqyn80FLEX
- UPyayXlNxmog==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.75,392,1589266800"; 
-   d="scan'208";a="363585944"
-Received: from lkp-server01.sh.intel.com (HELO df0563f96c37) ([10.239.97.150])
-  by orsmga001.jf.intel.com with ESMTP; 25 Jul 2020 00:56:56 -0700
-Received: from kbuild by df0563f96c37 with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1jzF3A-0000pS-9m; Sat, 25 Jul 2020 07:56:56 +0000
-Date:   Sat, 25 Jul 2020 15:55:59 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci@vger.kernel.org
-Subject: [pci:pci/virtualization] BUILD SUCCESS
- 3f9a7a13fe4cb6e119e4e4745fbf975d30bfac9b
-Message-ID: <5f1be58f.zojedW/OxISrbFAp%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        id S1726593AbgGYJKS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 25 Jul 2020 05:10:18 -0400
+Received: from szxga06-in.huawei.com ([45.249.212.32]:48648 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726583AbgGYJKS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 25 Jul 2020 05:10:18 -0400
+Received: from DGGEMS411-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id 63500437AB6D9D7E53AA;
+        Sat, 25 Jul 2020 17:09:58 +0800 (CST)
+Received: from kernelci-master.huawei.com (10.175.101.6) by
+ DGGEMS411-HUB.china.huawei.com (10.3.19.211) with Microsoft SMTP Server id
+ 14.3.487.0; Sat, 25 Jul 2020 17:09:52 +0800
+From:   Wei Yongjun <weiyongjun1@huawei.com>
+To:     Hulk Robot <hulkci@huawei.com>, Tom Joseph <tjoseph@cadence.com>,
+        "Lorenzo Pieralisi" <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Douglas <adouglas@cadence.com>
+CC:     Wei Yongjun <weiyongjun1@huawei.com>, <linux-pci@vger.kernel.org>
+Subject: [PATCH -next] PCI: cadence: Fix unused-but-set-variable warning
+Date:   Sat, 25 Jul 2020 17:19:45 +0800
+Message-ID: <20200725091945.75176-1-weiyongjun1@huawei.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.175.101.6]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git  pci/virtualization
-branch HEAD: 3f9a7a13fe4cb6e119e4e4745fbf975d30bfac9b  PCI/ATS: Add pci_pri_supported() to check device or associated PF
+Gcc report warning as followings:
 
-elapsed time: 938m
+drivers/pci/controller/cadence/pcie-cadence-ep.c:390:33: warning:
+ variable 'vec_ctrl' set but not used [-Wunused-but-set-variable]
+  390 |  u32 tbl_offset, msg_data, reg, vec_ctrl;
+      |                                 ^~~~~~~~
 
-configs tested: 74
-configs skipped: 1
+This variable is not used so this commit removing it.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-arm                                 defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-arm                               allnoconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm64                            allmodconfig
-arm64                             allnoconfig
-i386                             allyesconfig
-i386                                defconfig
-i386                              debian-10.3
-i386                              allnoconfig
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                              allnoconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                              allnoconfig
-m68k                           sun3_defconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nios2                               defconfig
-nios2                            allyesconfig
-openrisc                            defconfig
-c6x                              allyesconfig
-c6x                               allnoconfig
-openrisc                         allyesconfig
-nds32                               defconfig
-nds32                             allnoconfig
-csky                             allyesconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-h8300                            allmodconfig
-xtensa                              defconfig
-arc                                 defconfig
-arc                              allyesconfig
-sh                               allmodconfig
-sh                                allnoconfig
-microblaze                        allnoconfig
-mips                             allyesconfig
-mips                              allnoconfig
-mips                             allmodconfig
-parisc                            allnoconfig
-parisc                              defconfig
-parisc                           allyesconfig
-parisc                           allmodconfig
-powerpc                             defconfig
-powerpc                          allyesconfig
-powerpc                          rhel-kconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-riscv                            allyesconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                            allmodconfig
-s390                             allyesconfig
-s390                              allnoconfig
-s390                             allmodconfig
-s390                                defconfig
-sparc                            allyesconfig
-sparc                               defconfig
-sparc64                             defconfig
-sparc64                           allnoconfig
-sparc64                          allyesconfig
-sparc64                          allmodconfig
-x86_64                    rhel-7.6-kselftests
-x86_64                               rhel-8.3
-x86_64                                  kexec
-x86_64                                   rhel
-x86_64                                    lkp
-x86_64                              fedora-25
-
+Fixes: dae15ff2c7a9 ("PCI: cadence: Add MSI-X support to Endpoint driver")
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
 ---
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+ drivers/pci/controller/cadence/pcie-cadence-ep.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/pci/controller/cadence/pcie-cadence-ep.c b/drivers/pci/controller/cadence/pcie-cadence-ep.c
+index 87c76341eab4..ec1306da301f 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence-ep.c
++++ b/drivers/pci/controller/cadence/pcie-cadence-ep.c
+@@ -387,7 +387,7 @@ static int cdns_pcie_ep_send_msix_irq(struct cdns_pcie_ep *ep, u8 fn,
+ 				      u16 interrupt_num)
+ {
+ 	u32 cap = CDNS_PCIE_EP_FUNC_MSIX_CAP_OFFSET;
+-	u32 tbl_offset, msg_data, reg, vec_ctrl;
++	u32 tbl_offset, msg_data, reg;
+ 	struct cdns_pcie *pcie = &ep->pcie;
+ 	struct pci_epf_msix_tbl *msix_tbl;
+ 	struct cdns_pcie_epf *epf;
+@@ -410,7 +410,6 @@ static int cdns_pcie_ep_send_msix_irq(struct cdns_pcie_ep *ep, u8 fn,
+ 	msix_tbl = epf->epf_bar[bir]->addr + tbl_offset;
+ 	msg_addr = msix_tbl[(interrupt_num - 1)].msg_addr;
+ 	msg_data = msix_tbl[(interrupt_num - 1)].msg_data;
+-	vec_ctrl = msix_tbl[(interrupt_num - 1)].vector_ctrl;
+ 
+ 	/* Set the outbound region if needed. */
+ 	if (ep->irq_pci_addr != (msg_addr & ~pci_addr_mask) ||
+
