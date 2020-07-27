@@ -2,127 +2,125 @@ Return-Path: <SRS0=kfIp=BG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_2 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C496AC433E1
-	for <linux-pci@archiver.kernel.org>; Mon, 27 Jul 2020 13:10:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE10DC433E8
+	for <linux-pci@archiver.kernel.org>; Mon, 27 Jul 2020 14:04:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ADBE6206D8
-	for <linux-pci@archiver.kernel.org>; Mon, 27 Jul 2020 13:10:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D3FBA2070B
+	for <linux-pci@archiver.kernel.org>; Mon, 27 Jul 2020 14:04:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728599AbgG0NKO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 27 Jul 2020 09:10:14 -0400
-Received: from out30-131.freemail.mail.aliyun.com ([115.124.30.131]:56100 "EHLO
-        out30-131.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728141AbgG0NKO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jul 2020 09:10:14 -0400
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R111e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e01422;MF=shile.zhang@linux.alibaba.com;NM=1;PH=DS;RN=8;SR=0;TI=SMTPD_---0U3zRBsO_1595855409;
-Received: from B-J2UMLVDL-1650.local(mailfrom:shile.zhang@linux.alibaba.com fp:SMTPD_---0U3zRBsO_1595855409)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Mon, 27 Jul 2020 21:10:10 +0800
-Subject: Re: [PATCH v2] virtio_ring: use alloc_pages_node for NUMA-aware
- allocation
-From:   Shile Zhang <shile.zhang@linux.alibaba.com>
-To:     "Michael S. Tsirkin" <mst@redhat.com>
-Cc:     Jason Wang <jasowang@redhat.com>,
-        virtualization@lists.linux-foundation.org,
-        linux-kernel@vger.kernel.org, kernel test robot <lkp@intel.com>,
-        Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-        bhelgaas@google.com
-References: <20200721070013.62894-1-shile.zhang@linux.alibaba.com>
- <20200721041550-mutt-send-email-mst@kernel.org>
- <d16c8191-3837-8734-8cdf-ae6dd75725f7@linux.alibaba.com>
-Message-ID: <222b40f1-a36c-0375-e965-cd949e8b9eeb@linux.alibaba.com>
-Date:   Mon, 27 Jul 2020 21:10:09 +0800
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.10.0
+        id S1726247AbgG0OEb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 27 Jul 2020 10:04:31 -0400
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2538 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726222AbgG0OEb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 27 Jul 2020 10:04:31 -0400
+Received: from lhreml710-chm.china.huawei.com (unknown [172.18.7.106])
+        by Forcepoint Email with ESMTP id 4F2AE8D2104DF16A698C;
+        Mon, 27 Jul 2020 15:04:27 +0100 (IST)
+Received: from localhost (10.227.96.57) by lhreml710-chm.china.huawei.com
+ (10.201.108.61) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Mon, 27 Jul
+ 2020 15:04:27 +0100
+Date:   Mon, 27 Jul 2020 15:04:26 +0100
+From:   Jonathan Cameron <Jonathan.Cameron@huawei.com>
+To:     Sean V Kelley <sean.v.kelley@intel.com>
+CC:     <bhelgaas@google.com>, <rjw@rjwysocki.net>, <ashok.raj@kernel.org>,
+        <tony.luck@intel.com>,
+        <sathyanarayanan.kuppuswamy@linux.intel.com>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC PATCH 4/9] PCI/AER: Extend AER error handling to RCECs
+Message-ID: <20200727150426.00005cde@huawei.com>
+In-Reply-To: <20200724172223.145608-5-sean.v.kelley@intel.com>
+References: <20200724172223.145608-1-sean.v.kelley@intel.com>
+        <20200724172223.145608-5-sean.v.kelley@intel.com>
+Organization: Huawei tech. R&D (UK)  Ltd.
+X-Mailer: Claws Mail 3.17.4 (GTK+ 2.24.32; i686-w64-mingw32)
 MIME-Version: 1.0
-In-Reply-To: <d16c8191-3837-8734-8cdf-ae6dd75725f7@linux.alibaba.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.227.96.57]
+X-ClientProxiedBy: lhreml719-chm.china.huawei.com (10.201.108.70) To
+ lhreml710-chm.china.huawei.com (10.201.108.61)
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+On Fri, 24 Jul 2020 10:22:18 -0700
+Sean V Kelley <sean.v.kelley@intel.com> wrote:
+
+> From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+> 
+> Currently the kernel does not handle AER errors for Root Complex integrated
+> End Points (RCiEPs)[0]. These devices sit on a root bus within the Root Complex
+> (RC). AER handling is performed by a Root Complex Event Collector (RCEC) [1]
+> which is a effectively a type of RCiEP on the same root bus.
+> 
+> For an RCEC (technically not a Bridge), error messages "received" from
+> associated RCiEPs must be enabled for "transmission" in order to cause a
+> System Error via the Root Control register or (when the Advanced Error
+> Reporting Capability is present) reporting via the Root Error Command
+> register and logging in the Root Error Status register and Error Source
+> Identification register.
+> 
+> In addition to the defined OS level handling of the reset flow for the
+> associated RCiEPs of an RCEC, it is possible to also have a firmware first
+> model. In that case there is no need to take any actions on the RCEC because
+> the firmware is responsible for them. This is true where APEI [2] is used
+> to report the AER errors via a GHES[v2] HEST entry [3] and relevant
+> AER CPER record [4] and Firmware First handling is in use.
+> 
+> We effectively end up with two different types of discovery for
+> purposes of handling AER errors:
+> 
+> 1) Normal bus walk - we pass the downstream port above a bus to which
+> the device is attached and it walks everything below that point.
+> 
+> 2) An RCiEP with no visible association with an RCEC as there is no need to
+> walk devices. In that case, the flow is to just call the callbacks for the actual
+> device.
+> 
+> A new walk function, similar to pci_bus_walk is provided that takes a pci_dev
+> instead of a bus. If that dev corresponds to a downstream port it will walk
+> the subordinate bus of that downstream port. If the dev does not then it
+> will call the function on that device alone.
+> 
+> [0] ACPI PCI Express Base Specification 5.0-1 1.3.2.3 Root Complex Integrated
+>     Endpoint Rules.
+> [1] ACPI PCI Express Base Specification 5.0-1 6.2 Error Signalling and Logging
+> [2] ACPI Specification 6.3 Chapter 18 ACPI Platform Error Interface (APEI)
+> [3] ACPI Specification 6.3 18.2.3.7 Generic Hardware Error Source
+> [4] UEFI Specification 2.8, N.2.7 PCI Express Error Section
+> 
+> Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+> Signed-off-by: Sean V Kelley <sean.v.kelley@intel.com>
+> ---
+...
 
 
-On 2020/7/21 19:28, Shile Zhang wrote:
-> 
-> 
-> On 2020/7/21 16:18, Michael S. Tsirkin wrote:
->> On Tue, Jul 21, 2020 at 03:00:13PM +0800, Shile Zhang wrote:
->>> Use alloc_pages_node() allocate memory for vring queue with proper
->>> NUMA affinity.
->>>
->>> Reported-by: kernel test robot <lkp@intel.com>
->>> Suggested-by: Jiang Liu <liuj97@gmail.com>
->>> Signed-off-by: Shile Zhang <shile.zhang@linux.alibaba.com>
->>
->> Do you observe any performance gains from this patch?
-> 
-> Thanks for your comments!
-> Yes, the bandwidth can boost more than doubled (from 30Gbps to 80GBps) 
-> with this changes in my test env (8 numa nodes), with netperf test.
-> 
->>
->> I also wonder why isn't the probe code run on the correct numa node?
->> That would fix a wide class of issues like this without need to tweak
->> drivers.
-> 
-> Good point, I'll check this, thanks!
+>  	pci_dbg(dev, "broadcast resume message\n");
+> -	pci_walk_bus(bus, report_resume, &status);
+> +	pci_walk_dev_affected(dev, report_resume, &status);
+>  
+> -	pci_aer_clear_device_status(dev);
+> -	pci_aer_clear_nonfatal_status(dev);
 
-Sorry, I have no idea about how the probe code to grab the appropriate 
-NUMA node.
+This code had changed a little in Bjorn's pci/next branch so do a rebase on that
+before v2.
 
-> 
->>
->> Bjorn, what do you think? Was this considered?
+> +	if ((pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
+> +	     pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM ||
+> +	     pci_pcie_type(dev) == PCI_EXP_TYPE_RC_EC)) {
+> +		pci_aer_clear_device_status(dev);
+> +		pci_aer_clear_nonfatal_status(dev);
+> +	}
+>  	pci_info(dev, "device recovery successful\n");
+>  	return status;
+>  
 
-Hi Bjorn, Could you please give any comments about this issue?
-Thanks!
-
->>
->>> ---
->>> Changelog
->>> v1 -> v2:
->>> - fixed compile warning reported by LKP.
->>> ---
->>>   drivers/virtio/virtio_ring.c | 10 ++++++----
->>>   1 file changed, 6 insertions(+), 4 deletions(-)
->>>
->>> diff --git a/drivers/virtio/virtio_ring.c b/drivers/virtio/virtio_ring.c
->>> index 58b96baa8d48..d38fd6872c8c 100644
->>> --- a/drivers/virtio/virtio_ring.c
->>> +++ b/drivers/virtio/virtio_ring.c
->>> @@ -276,9 +276,11 @@ static void *vring_alloc_queue(struct 
->>> virtio_device *vdev, size_t size,
->>>           return dma_alloc_coherent(vdev->dev.parent, size,
->>>                         dma_handle, flag);
->>>       } else {
->>> -        void *queue = alloc_pages_exact(PAGE_ALIGN(size), flag);
->>> -
->>> -        if (queue) {
->>> +        void *queue = NULL;
->>> +        struct page *page = 
->>> alloc_pages_node(dev_to_node(vdev->dev.parent),
->>> +                             flag, get_order(size));
->>> +        if (page) {
->>> +            queue = page_address(page);
->>>               phys_addr_t phys_addr = virt_to_phys(queue);
->>>               *dma_handle = (dma_addr_t)phys_addr;
->>> @@ -308,7 +310,7 @@ static void vring_free_queue(struct virtio_device 
->>> *vdev, size_t size,
->>>       if (vring_use_dma_api(vdev))
->>>           dma_free_coherent(vdev->dev.parent, size, queue, dma_handle);
->>>       else
->>> -        free_pages_exact(queue, PAGE_ALIGN(size));
->>> +        free_pages((unsigned long)queue, get_order(size));
->>>   }
->>>   /*
->>> -- 
->>> 2.24.0.rc2
