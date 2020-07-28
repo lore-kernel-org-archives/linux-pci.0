@@ -7,34 +7,34 @@ X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CFBAC433E5
-	for <linux-pci@archiver.kernel.org>; Tue, 28 Jul 2020 20:07:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09532C433EB
+	for <linux-pci@archiver.kernel.org>; Tue, 28 Jul 2020 20:07:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F1A582070B
-	for <linux-pci@archiver.kernel.org>; Tue, 28 Jul 2020 20:07:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DC46620656
+	for <linux-pci@archiver.kernel.org>; Tue, 28 Jul 2020 20:07:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728599AbgG1UHG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 28 Jul 2020 16:07:06 -0400
+        id S1728871AbgG1UHM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 28 Jul 2020 16:07:12 -0400
 Received: from mga03.intel.com ([134.134.136.65]:63202 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728421AbgG1UHF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 28 Jul 2020 16:07:05 -0400
-IronPort-SDR: uv+JI5eEbsTkgzlWxgaRUQqaOk8HS+YSN9ffry8LLrM7WBZSrVe3gCCFQOpfYifTKqE1UnJuKp
- 9EE+2/0PoKoQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9696"; a="151287327"
+        id S1728706AbgG1UHI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 28 Jul 2020 16:07:08 -0400
+IronPort-SDR: lPHTDD/HWHsIxct83nthN577ev17ntMbojdJuCF5UeTMBWZqoUdhDaNM7oJ774mpw46hLZxXt8
+ w5ZeZaD7RSSA==
+X-IronPort-AV: E=McAfee;i="6000,8403,9696"; a="151287342"
 X-IronPort-AV: E=Sophos;i="5.75,407,1589266800"; 
-   d="scan'208";a="151287327"
+   d="scan'208";a="151287342"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jul 2020 13:07:03 -0700
-IronPort-SDR: 27nCk82vQTr6XvoYppITQDkHqjYZLDtGbmecCHbwPGBzPWuY1yaWCnoWqE0ddMzHtE8gmVKQV3
- +CF6CsUA2Alw==
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jul 2020 13:07:05 -0700
+IronPort-SDR: Fq4gMepYuWN6M0hm96kpzt8hMhQKMAh5cShDgNCNJINrLWJZArgcc2ohwC5TtMl3y8sK6Rh8qf
+ Omi3lCixh21g==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.75,407,1589266800"; 
-   d="scan'208";a="312756374"
+   d="scan'208";a="312756390"
 Received: from unknown (HELO nsgsw-wilsonpoint.lm.intel.com) ([10.232.116.124])
-  by fmsmga004.fm.intel.com with ESMTP; 28 Jul 2020 13:07:03 -0700
+  by fmsmga004.fm.intel.com with ESMTP; 28 Jul 2020 13:07:05 -0700
 From:   Jon Derrick <jonathan.derrick@intel.com>
 To:     <linux-pci@vger.kernel.org>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
@@ -44,9 +44,9 @@ Cc:     Bjorn Helgaas <helgaas@kernel.org>, Christoph Hellwig <hch@lst.de>,
         <linux-kernel@vger.kernel.org>, <x86@kernel.org>,
         Jon Derrick <jonathan.derrick@intel.com>,
         Andy Shevchenko <andriy.shevchenko@intel.com>
-Subject: [PATCH 1/6] PCI: vmd: Create physical offset helper
-Date:   Tue, 28 Jul 2020 13:49:40 -0600
-Message-Id: <20200728194945.14126-2-jonathan.derrick@intel.com>
+Subject: [PATCH 5/6] x86/apic/msi: Use Real PCI DMA device when configuring IRTE
+Date:   Tue, 28 Jul 2020 13:49:44 -0600
+Message-Id: <20200728194945.14126-6-jonathan.derrick@intel.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20200728194945.14126-1-jonathan.derrick@intel.com>
 References: <20200728194945.14126-1-jonathan.derrick@intel.com>
@@ -57,146 +57,30 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Moves the guest-passthrough physical offset discovery code to a new
-helper. No functional changes.
+VMD retransmits child device MSI/X with the VMD endpoint's requester-id.
+In order to support direct interrupt remapping of VMD child devices,
+ensure that the IRTE is programmed with the VMD endpoint's requester-id
+using pci_real_dma_dev().
 
 Reviewed-by: Andy Shevchenko <andriy.shevchenko@intel.com>
 Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
 ---
- drivers/pci/controller/vmd.c | 105 +++++++++++++++++++++--------------
- 1 file changed, 62 insertions(+), 43 deletions(-)
+ arch/x86/kernel/apic/msi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-index f69ef8c89f72..44b2db789eff 100644
---- a/drivers/pci/controller/vmd.c
-+++ b/drivers/pci/controller/vmd.c
-@@ -417,6 +417,60 @@ static int vmd_find_free_domain(void)
- 	return domain + 1;
- }
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index c2b2911feeef..7ca271b8d891 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -189,7 +189,7 @@ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
  
-+static int vmd_get_phys_offsets(struct vmd_dev *vmd, bool native_hint,
-+				resource_size_t *offset1,
-+				resource_size_t *offset2)
-+{
-+	struct pci_dev *dev = vmd->dev;
-+	u64 phys1, phys2;
-+
-+	if (native_hint) {
-+		u32 vmlock;
-+		int ret;
-+
-+		ret = pci_read_config_dword(dev, PCI_REG_VMLOCK, &vmlock);
-+		if (ret || vmlock == ~0)
-+			return -ENODEV;
-+
-+		if (MB2_SHADOW_EN(vmlock)) {
-+			void __iomem *membar2;
-+
-+			membar2 = pci_iomap(dev, VMD_MEMBAR2, 0);
-+			if (!membar2)
-+				return -ENOMEM;
-+			phys1 = readq(membar2 + MB2_SHADOW_OFFSET);
-+			phys2 = readq(membar2 + MB2_SHADOW_OFFSET + 8);
-+			pci_iounmap(dev, membar2);
-+		} else
-+			return 0;
-+	} else {
-+		/* Hypervisor-Emulated Vendor-Specific Capability */
-+		int pos = pci_find_capability(dev, PCI_CAP_ID_VNDR);
-+		u32 reg, regu;
-+
-+		pci_read_config_dword(dev, pos + 4, &reg);
-+
-+		/* "SHDW" */
-+		if (pos && reg == 0x53484457) {
-+			pci_read_config_dword(dev, pos + 8, &reg);
-+			pci_read_config_dword(dev, pos + 12, &regu);
-+			phys1 = (u64) regu << 32 | reg;
-+
-+			pci_read_config_dword(dev, pos + 16, &reg);
-+			pci_read_config_dword(dev, pos + 20, &regu);
-+			phys2 = (u64) regu << 32 | reg;
-+		} else
-+			return 0;
-+	}
-+
-+	*offset1 = dev->resource[VMD_MEMBAR1].start -
-+			(phys1 & PCI_BASE_ADDRESS_MEM_MASK);
-+	*offset2 = dev->resource[VMD_MEMBAR2].start -
-+			(phys2 & PCI_BASE_ADDRESS_MEM_MASK);
-+
-+	return 0;
-+}
-+
- static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
- {
- 	struct pci_sysdata *sd = &vmd->sysdata;
-@@ -428,6 +482,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
- 	resource_size_t offset[2] = {0};
- 	resource_size_t membar2_offset = 0x2000;
- 	struct pci_bus *child;
-+	int ret;
+ 	init_irq_alloc_info(&info, NULL);
+ 	info.type = X86_IRQ_ALLOC_TYPE_MSI;
+-	info.msi_dev = dev;
++	info.msi_dev = pci_real_dma_dev(dev);
  
- 	/*
- 	 * Shadow registers may exist in certain VMD device ids which allow
-@@ -436,50 +491,14 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
- 	 * or 0, depending on an enable bit in the VMD device.
- 	 */
- 	if (features & VMD_FEAT_HAS_MEMBAR_SHADOW) {
--		u32 vmlock;
--		int ret;
--
- 		membar2_offset = MB2_SHADOW_OFFSET + MB2_SHADOW_SIZE;
--		ret = pci_read_config_dword(vmd->dev, PCI_REG_VMLOCK, &vmlock);
--		if (ret || vmlock == ~0)
--			return -ENODEV;
--
--		if (MB2_SHADOW_EN(vmlock)) {
--			void __iomem *membar2;
--
--			membar2 = pci_iomap(vmd->dev, VMD_MEMBAR2, 0);
--			if (!membar2)
--				return -ENOMEM;
--			offset[0] = vmd->dev->resource[VMD_MEMBAR1].start -
--					(readq(membar2 + MB2_SHADOW_OFFSET) &
--					 PCI_BASE_ADDRESS_MEM_MASK);
--			offset[1] = vmd->dev->resource[VMD_MEMBAR2].start -
--					(readq(membar2 + MB2_SHADOW_OFFSET + 8) &
--					 PCI_BASE_ADDRESS_MEM_MASK);
--			pci_iounmap(vmd->dev, membar2);
--		}
--	}
--
--	if (features & VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP) {
--		int pos = pci_find_capability(vmd->dev, PCI_CAP_ID_VNDR);
--		u32 reg, regu;
--
--		pci_read_config_dword(vmd->dev, pos + 4, &reg);
--
--		/* "SHDW" */
--		if (pos && reg == 0x53484457) {
--			pci_read_config_dword(vmd->dev, pos + 8, &reg);
--			pci_read_config_dword(vmd->dev, pos + 12, &regu);
--			offset[0] = vmd->dev->resource[VMD_MEMBAR1].start -
--					(((u64) regu << 32 | reg) &
--					 PCI_BASE_ADDRESS_MEM_MASK);
--
--			pci_read_config_dword(vmd->dev, pos + 16, &reg);
--			pci_read_config_dword(vmd->dev, pos + 20, &regu);
--			offset[1] = vmd->dev->resource[VMD_MEMBAR2].start -
--					(((u64) regu << 32 | reg) &
--					 PCI_BASE_ADDRESS_MEM_MASK);
--		}
-+		ret = vmd_get_phys_offsets(vmd, true, &offset[0], &offset[1]);
-+		if (ret)
-+			return ret;
-+	} else if (features & VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP) {
-+		ret = vmd_get_phys_offsets(vmd, false, &offset[0], &offset[1]);
-+		if (ret)
-+			return ret;
- 	}
- 
- 	/*
+ 	domain = irq_remapping_get_irq_domain(&info);
+ 	if (domain == NULL)
 -- 
 2.27.0
 
