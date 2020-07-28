@@ -4,153 +4,149 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE785C433E0
-	for <linux-pci@archiver.kernel.org>; Tue, 28 Jul 2020 16:22:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26F81C433E8
+	for <linux-pci@archiver.kernel.org>; Tue, 28 Jul 2020 16:31:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D6A502083B
-	for <linux-pci@archiver.kernel.org>; Tue, 28 Jul 2020 16:22:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B3232083B
+	for <linux-pci@archiver.kernel.org>; Tue, 28 Jul 2020 16:31:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731306AbgG1QWV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 28 Jul 2020 12:22:21 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2545 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1730679AbgG1QWV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 28 Jul 2020 12:22:21 -0400
-Received: from lhreml710-chm.china.huawei.com (unknown [172.18.7.107])
-        by Forcepoint Email with ESMTP id 1F0292967315FFD4EDF5;
-        Tue, 28 Jul 2020 17:22:17 +0100 (IST)
-Received: from localhost (10.52.121.35) by lhreml710-chm.china.huawei.com
- (10.201.108.61) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Tue, 28 Jul
- 2020 17:22:16 +0100
-Date:   Tue, 28 Jul 2020 17:20:52 +0100
-From:   Jonathan Cameron <Jonathan.Cameron@Huawei.com>
-To:     <linux-mm@kvack.org>, <linux-acpi@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>, <x86@kernel.org>
-CC:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        <linux-pci@vger.kernel.org>, <martin@geanix.com>,
-        Ingo Molnar <mingo@redhat.com>, <linux-ia64@vger.kernel.org>,
-        Tony Luck <tony.luck@intel.com>,
-        Fenghua Yu <fenghua.yu@intel.com>,
-        Thomas Gleixner <tglx@linutronix.de>, <linuxarm@huawei.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Song Bao Hua <song.bao.hua@hisilicon.com>
-Subject: Re: [PATCH v2 0/6] ACPI: Only create NUMA nodes from entries in
- SRAT or SRAT emulation.
-Message-ID: <20200728172052.00007848@Huawei.com>
-In-Reply-To: <20200717175959.899775-1-Jonathan.Cameron@huawei.com>
-References: <20200717175959.899775-1-Jonathan.Cameron@huawei.com>
-Organization: Huawei Technologies Research and Development (UK) Ltd.
-X-Mailer: Claws Mail 3.17.4 (GTK+ 2.24.32; i686-w64-mingw32)
+        id S1731385AbgG1QbW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 28 Jul 2020 12:31:22 -0400
+Received: from mga11.intel.com ([192.55.52.93]:43593 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731070AbgG1QbW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 28 Jul 2020 12:31:22 -0400
+IronPort-SDR: A1KLpSDw7n/8uQjaYkQUHZDNIyvUOWw9pdA3O6jR6My5SM880iYmXzh+VDlBQL3/lOXgtPY+m2
+ u4YsR/cp9ssA==
+X-IronPort-AV: E=McAfee;i="6000,8403,9696"; a="149115433"
+X-IronPort-AV: E=Sophos;i="5.75,406,1589266800"; 
+   d="scan'208";a="149115433"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jul 2020 09:31:20 -0700
+IronPort-SDR: FVqAeH1LLFVhb4Lu6gBvZkqAQJvIrGgzbbkNoTPQdFgSd4E1/g0DVdAUfKN0IQuFjFhKOgaADS
+ 3xF7Ml2zbh7g==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.75,406,1589266800"; 
+   d="scan'208";a="272366761"
+Received: from otc-nc-03.jf.intel.com (HELO otc-nc-03) ([10.54.39.25])
+  by fmsmga007.fm.intel.com with ESMTP; 28 Jul 2020 09:31:20 -0700
+Date:   Tue, 28 Jul 2020 09:31:20 -0700
+From:   "Raj, Ashok" <ashok.raj@intel.com>
+To:     Sasha Levin <sashal@kernel.org>
+Cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Joerg Roedel <joro@8bytes.com>, Lu Baolu <baolu.lu@intel.com>,
+        stable@vger.kernel.org, linux-kernel@vger.kernel.org,
+        iommu@lists.linux-foundation.org, Ashok Raj <ashok.raj@intel.com>
+Subject: Re: [PATCH v3 1/1] PCI/ATS: Check PRI supported on the PF device
+ when SRIOV is enabled
+Message-ID: <20200728163120.GA31231@otc-nc-03>
+References: <1595543849-19692-1-git-send-email-ashok.raj@intel.com>
+ <20200727212436.03103207BB@mail.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.52.121.35]
-X-ClientProxiedBy: lhreml716-chm.china.huawei.com (10.201.108.67) To
- lhreml710-chm.china.huawei.com (10.201.108.61)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200727212436.03103207BB@mail.kernel.org>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sat, 18 Jul 2020 01:59:53 +0800
-Jonathan Cameron <Jonathan.Cameron@huawei.com> wrote:
+Hi Sasha
 
-> Here, I will use the term Proximity Domains for the ACPI description and
-> NUMA Nodes for the in kernel representation.
+On Mon, Jul 27, 2020 at 09:24:35PM +0000, Sasha Levin wrote:
+> Hi
 > 
-> ACPI 6.3 included a clarification that only Static Resource Allocation
-> Structures in SRAT may define the existence of proximity domains
-> (sec 5.2.16). This clarification closed a possible interpretation that
-> other parts of ACPI (e.g. DSDT _PXM, NFIT etc) could define new proximity
-> domains that were not also mentioned in SRAT structures.
+> [This is an automated email]
 > 
-> In practice the kernel has never allowed this alternative interpretation as
-> such nodes are only partially initialized. This is architecture specific
-> but to take an example, on x86 alloc_node_data has not been called.
-> Any use of them for node specific allocation, will result in a crash as the
-> infrastructure to fallback to a node with memory is not setup.
+> This commit has been processed because it contains a "Fixes:" tag
+> fixing commit: b16d0cb9e2fc ("iommu/vt-d: Always enable PASID/PRI PCI capabilities before ATS").
 > 
-> We ran into a problem when enabling _PXM handling for PCI devices and found
-> there were boards out there advertising devices in proximity domains that
-> didn't exist [2].
-> 
-> The fix suggested in this series is to replace instances that should not
-> 'create' new nodes with pxm_to_node.  This function needs a some additional
-> hardening against invalid inputs to make sure it is safe for use in these
-> new callers.
-> 
-> Patch 1 Hardens pxm_to_node() against numa_off, and pxm entry being too large.
-> 
-> Patch 2-4 change the various callers not related to SRAT entries so that they
-> set this parameter to false, so do not attempt to initialize a new NUMA node
-> if the relevant one does not already exist.
-> 
-> Patch 5 is a function rename to reflect change in functionality of
-> acpi_map_pxm_to_online_node() as it no longer creates a new map, but just does a
-> lookup of existing maps.
-> 
-> Patch 6 covers the one place we do not allow the full flexibility defined
-> in the ACPI spec.  For SRAT GIC Interrupt Translation Service (ITS) Affinity
-> Structures, on ARM64, the driver currently makes an additional pass of SRAT
-> later in the boot than the one used to identify NUMA domains.
-> Note, this currently means that an ITS placed in a proximity domain that is
-> not defined by another SRAT structure will result in the a crash.
-> 
-> To avoid this crash with minimal changes we do not create new NUMA nodes based
-> on this particular entry type.  Any current platform trying to do this will not
-> boot, so this is an improvement, if perhaps not a perfect solution.
-> 
-> [1] Note in ACPI Specification 6.3 5.2.16 System Resource Affinity Table (SRAT)
-> [2] https://patchwork.kernel.org/patch/10597777/
-> 
-> Thanks to Bjorn Helgaas for review of v1 and Barry Song for internal reviews that
-> lead to a slightly different approach for this v2.
+> The bot has tested the following trees: v5.7.10, v5.4.53, v4.19.134, v4.14.189, v4.9.231, v4.4.231.
 
-Thanks Barry / Hanjun,
+Looks like the dependency is making this more involved with the backport. I
 
-Anyone else have time to take a look?
+We could pursue a simpler fix for these older versions where there is a
+conflict, but I'm not sure if that's recommended. 
 
-I'm happy to bring it back after the merge window closes, but would like to know
-if people are happy with the general approach.  I'm keen to finally be able to
-resolve that issue with _PXM and PCI. 
-
-Thanks,
-
-Jonathan
+In addition from our perspective 5.7 and above if there are other products
+that require PASID/PRI on prior versions for SRIOV devices  we can drop the
+backports. I see the same issue with other IOMMU's, for e.g. AMD as
+well, I'm not sure if there are real regressions. 
 
 > 
-> Changes since v1.
-> * Use pxm_to_node for what was previously the path using acpi_map_pxm_to_node
->   with create==false. (Barry)
-> * Broke patch up into an initial noop stage followed by patches (Bjorn)
->   to update each type of case in which partial creation of NUMA nodes is prevented.
-> * Added patch 5 to rename function to reflect change of functionality.
-> * Updated descriptions (now mostly in individual patches) inline with Bjorn's comments.
+> v5.7.10: Build OK!
+> v5.4.53: Failed to apply! Possible dependencies:
+>     2b0ae7cc3bfc ("PCI/ATS: Handle sharing of PF PASID Capability with all VFs")
+>     751035b8dc06 ("PCI/ATS: Cache PASID Capability offset")
+>     8cbb8a9374a2 ("PCI/ATS: Move pci_prg_resp_pasid_required() to CONFIG_PCI_PRI")
+>     9bf49e36d718 ("PCI/ATS: Handle sharing of PF PRI Capability with all VFs")
+>     c065190bbcd4 ("PCI/ATS: Cache PRI Capability offset")
+>     e5adf79a1d80 ("PCI/ATS: Cache PRI PRG Response PASID Required bit")
 > 
-> Jonathan Cameron (6):
->   ACPI: Add out of bounds and numa_off protections to pxm_to_node
->   ACPI: Do not create new NUMA domains from ACPI static tables that are
->     not SRAT
->   ACPI: Remove side effect of partly creating a node in
->     acpi_map_pxm_to_online_node
->   ACPI: rename acpi_map_pxm_to_online_node to pxm_to_online_node
->   ACPI: Remove side effect of partly creating a node in acpi_get_node
->   irq-chip/gic-v3-its: Fix crash if ITS is in a proximity domain without
->     processor or memory
+> v4.19.134: Failed to apply! Possible dependencies:
+>     2b0ae7cc3bfc ("PCI/ATS: Handle sharing of PF PASID Capability with all VFs")
+>     4f802170a861 ("PCI/DPC: Save and restore config state")
+>     6e1ffbb7c2ab ("PCI: Move ATS declarations outside of CONFIG_PCI")
+>     751035b8dc06 ("PCI/ATS: Cache PASID Capability offset")
+>     8c938ddc6df3 ("PCI/ATS: Add pci_ats_page_aligned() interface")
+>     8cbb8a9374a2 ("PCI/ATS: Move pci_prg_resp_pasid_required() to CONFIG_PCI_PRI")
+>     9bf49e36d718 ("PCI/ATS: Handle sharing of PF PRI Capability with all VFs")
+>     9c2120090586 ("PCI: Provide pci_match_id() with CONFIG_PCI=n")
+>     b92b512a435d ("PCI: Make pci_ats_init() private")
+>     c065190bbcd4 ("PCI/ATS: Cache PRI Capability offset")
+>     e5567f5f6762 ("PCI/ATS: Add pci_prg_resp_pasid_required() interface.")
+>     e5adf79a1d80 ("PCI/ATS: Cache PRI PRG Response PASID Required bit")
+>     fff42928ade5 ("PCI/ATS: Add inline to pci_prg_resp_pasid_required()")
 > 
->  drivers/acpi/arm64/iort.c        |  2 +-
->  drivers/acpi/nfit/core.c         |  6 ++----
->  drivers/acpi/numa/hmat.c         |  4 ++--
->  drivers/acpi/numa/srat.c         |  4 ++--
->  drivers/iommu/intel/dmar.c       |  2 +-
->  drivers/irqchip/irq-gic-v3-its.c |  7 ++++++-
->  include/linux/acpi.h             | 15 +++++++--------
->  7 files changed, 21 insertions(+), 19 deletions(-)
+> v4.14.189: Failed to apply! Possible dependencies:
+>     1b79c5284439 ("PCI: cadence: Add host driver for Cadence PCIe controller")
+>     1e4511604dfa ("PCI/AER: Expose internal API for obtaining AER information")
+>     3133e6dd07ed ("PCI: Tidy Makefiles")
+>     37dddf14f1ae ("PCI: cadence: Add EndPoint Controller driver for Cadence PCIe controller")
+>     4696b828ca37 ("PCI/AER: Hoist aerdrv.c, aer_inject.c up to drivers/pci/pcie/")
+>     4f802170a861 ("PCI/DPC: Save and restore config state")
+>     8c938ddc6df3 ("PCI/ATS: Add pci_ats_page_aligned() interface")
+>     8cbb8a9374a2 ("PCI/ATS: Move pci_prg_resp_pasid_required() to CONFIG_PCI_PRI")
+>     9bf49e36d718 ("PCI/ATS: Handle sharing of PF PRI Capability with all VFs")
+>     9de0eec29c07 ("PCI: Regroup all PCI related entries into drivers/pci/Makefile")
+>     b92b512a435d ("PCI: Make pci_ats_init() private")
+>     c065190bbcd4 ("PCI/ATS: Cache PRI Capability offset")
+>     d3252ace0bc6 ("PCI: Restore resized BAR state on resume")
+>     e5567f5f6762 ("PCI/ATS: Add pci_prg_resp_pasid_required() interface.")
+>     e5adf79a1d80 ("PCI/ATS: Cache PRI PRG Response PASID Required bit")
+>     fff42928ade5 ("PCI/ATS: Add inline to pci_prg_resp_pasid_required()")
 > 
-
-
+> v4.9.231: Failed to apply! Possible dependencies:
+>     4ebeb1ec56d4 ("PCI: Restore PRI and PASID state after Function-Level Reset")
+>     8c938ddc6df3 ("PCI/ATS: Add pci_ats_page_aligned() interface")
+>     8cbb8a9374a2 ("PCI/ATS: Move pci_prg_resp_pasid_required() to CONFIG_PCI_PRI")
+>     9bf49e36d718 ("PCI/ATS: Handle sharing of PF PRI Capability with all VFs")
+>     a4f4fa681add ("PCI: Cache PRI and PASID bits in pci_dev")
+>     c065190bbcd4 ("PCI/ATS: Cache PRI Capability offset")
+>     e5567f5f6762 ("PCI/ATS: Add pci_prg_resp_pasid_required() interface.")
+>     e5adf79a1d80 ("PCI/ATS: Cache PRI PRG Response PASID Required bit")
+>     fff42928ade5 ("PCI/ATS: Add inline to pci_prg_resp_pasid_required()")
+> 
+> v4.4.231: Failed to apply! Possible dependencies:
+>     2a2aca316aed ("PCI: Include <asm/dma.h> for isa_dma_bridge_buggy")
+>     4d3f13845957 ("PCI: Add pci_unmap_iospace() to unmap I/O resources")
+>     4ebeb1ec56d4 ("PCI: Restore PRI and PASID state after Function-Level Reset")
+>     8cbb8a9374a2 ("PCI/ATS: Move pci_prg_resp_pasid_required() to CONFIG_PCI_PRI")
+>     9bf49e36d718 ("PCI/ATS: Handle sharing of PF PRI Capability with all VFs")
+>     a4f4fa681add ("PCI: Cache PRI and PASID bits in pci_dev")
+>     c5076cfe7689 ("PCI, of: Move PCI I/O space management to PCI core code")
+>     e5567f5f6762 ("PCI/ATS: Add pci_prg_resp_pasid_required() interface.")
+> 
+> 
+> NOTE: The patch will not be queued to stable trees until it is upstream.
+> 
+> How should we proceed with this patch?
+> 
+> -- 
+> Thanks
+> Sasha
