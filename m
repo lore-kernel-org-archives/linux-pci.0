@@ -2,140 +2,89 @@ Return-Path: <SRS0=zOpN=BH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D774C433E3
-	for <linux-pci@archiver.kernel.org>; Tue, 28 Jul 2020 19:24:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 600B5C433E3
+	for <linux-pci@archiver.kernel.org>; Tue, 28 Jul 2020 20:07:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3F4F920656
-	for <linux-pci@archiver.kernel.org>; Tue, 28 Jul 2020 19:24:45 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="Wujqx8gq"
+	by mail.kernel.org (Postfix) with ESMTP id 3C3DE21D95
+	for <linux-pci@archiver.kernel.org>; Tue, 28 Jul 2020 20:07:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732797AbgG1TYl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 28 Jul 2020 15:24:41 -0400
-Received: from ale.deltatee.com ([204.191.154.188]:37918 "EHLO
-        ale.deltatee.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728435AbgG1TYl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jul 2020 15:24:41 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:Content-Transfer-Encoding:MIME-Version:
-        Message-Id:Date:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=HBU/yajmJTUr7b5CjuR1Ew6UpYj43svK56Zc/b1nrgE=; b=Wujqx8gqtDTMQ2QRYEbLKQNs1C
-        pecvlvTR8U6QtGsqyZfZXRpOi8qBR3pYwuUcUrOmfywOE+MuB7/1ge1XcuGxZkGqEvWSzAATVyls9
-        SbO3Dub1EGLKIkUGe6KWYhy336nNhMcR9iJmG/tpzaNqNcEWwqrz1aDvJ9600O7J3KwjHyM7OY9o5
-        Ke9USSNkBG9SpQTexHxlzhPFdh3jtVb24oxZKVUPtIARgu/brX5gtgW8XWRp6hhPYWdx2zqtBwAJT
-        l076kuyDRdzKprOQ1/XnPWs024NWkCuXkWQfUUQ4EsKK4L76XsrvKImxXieE+Icwru2m1BjkDWJXC
-        cB0pScKg==;
-Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
-        by ale.deltatee.com with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1k0VDK-00017D-K5; Tue, 28 Jul 2020 13:24:39 -0600
-Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.92)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1k0VDI-0004x5-Pb; Tue, 28 Jul 2020 13:24:36 -0600
-From:   Logan Gunthorpe <logang@deltatee.com>
-To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Kelvin.Cao@microchip.com, Logan Gunthorpe <logang@deltatee.com>
-Date:   Tue, 28 Jul 2020 13:24:33 -0600
-Message-Id: <20200728192434.18993-1-logang@deltatee.com>
-X-Mailer: git-send-email 2.20.1
+        id S1728431AbgG1UHE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 28 Jul 2020 16:07:04 -0400
+Received: from mga03.intel.com ([134.134.136.65]:63202 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728053AbgG1UHE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 28 Jul 2020 16:07:04 -0400
+IronPort-SDR: I476TLL5f/Aom0cr2Dxh9J5X/aQPYkvNNaJrS/bxBVEmIZnfu7sXgNXk41oKd4HBoXooBOIajy
+ pxzSY+M/8rFQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9696"; a="151287325"
+X-IronPort-AV: E=Sophos;i="5.75,407,1589266800"; 
+   d="scan'208";a="151287325"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jul 2020 13:07:03 -0700
+IronPort-SDR: TO+0uiPdkYj4iseKQ3HuEWf0eq30qM/DaBxXGP7ml9lx553Xu2n5b7PM1/q/upIBbj22MxqHSb
+ ZZuRphpZZsuQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.75,407,1589266800"; 
+   d="scan'208";a="312756371"
+Received: from unknown (HELO nsgsw-wilsonpoint.lm.intel.com) ([10.232.116.124])
+  by fmsmga004.fm.intel.com with ESMTP; 28 Jul 2020 13:07:02 -0700
+From:   Jon Derrick <jonathan.derrick@intel.com>
+To:     <linux-pci@vger.kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>, Christoph Hellwig <hch@lst.de>,
+        Andrzej Jakowski <andrzej.jakowski@linux.intel.com>,
+        Sushma Kalakota <sushmax.kalakota@intel.com>,
+        <linux-kernel@vger.kernel.org>, <x86@kernel.org>,
+        Jon Derrick <jonathan.derrick@intel.com>
+Subject: [PATCH 0/6] VMD MSI Remapping Bypass
+Date:   Tue, 28 Jul 2020 13:49:39 -0600
+Message-Id: <20200728194945.14126-1-jonathan.derrick@intel.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, bhelgaas@google.com, Kelvin.Cao@microchip.com, logang@deltatee.com
-X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH 1/2] PCI/switechtec: Add missing __iomem and __user tags to fix sparse warnings
-X-SA-Exim-Version: 4.2.1 (built Wed, 08 May 2019 21:11:16 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Fix a number of missing __iomem and __user tags in the ioctl functions of
-the switchtec driver. This fixes a number of sparse warnings of the form:
+The Intel Volume Management Device acts similar to a PCI-to-PCI bridge in that
+it changes downstream devices' requester-ids to its own. As VMD supports PCIe
+devices, it has its own MSI/X table and transmits child device MSI/X by
+remapping child device MSI/X and handling like a demultiplexer.
 
-  sparse: sparse: incorrect type in ... (different address spaces)
+Some newer VMD devices (Icelake Server and client) have an option to bypass the
+VMD MSI/X remapping table. This allows for better performance scaling as the
+child device MSI/X won't be limited by VMD's MSI/X count and IRQ handler.
 
-Fixes: 52eabba5bcdb ("switchtec: Add IOCTLs to the Switchtec driver")
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+It's expected that most users don't want MSI/X remapping when they can get
+better performance without this limitation. This set includes some long overdue
+cleanup of overgrown VMD code and introduces the MSI/X remapping disable.
 
----
+Applies on top of e3beca48a45b ("irqdomain/treewide: Keep firmware node
+unconditionally allocated") and ec0160891e38 ("irqdomain/treewide: Free
+firmware node after domain removal") in tip/urgent
 
-Here are a couple quick patches to fix some sparse warnings I was
-notified about a couple weeks ago.
 
-I've split them into two patches based on Fixes tag, but they could be
-squashed depending on the preference.
+Jon Derrick (6):
+  PCI: vmd: Create physical offset helper
+  PCI: vmd: Create bus offset configuration helper
+  PCI: vmd: Create IRQ Domain configuration helper
+  PCI: vmd: Create IRQ allocation helper
+  x86/apic/msi: Use Real PCI DMA device when configuring IRTE
+  PCI: vmd: Disable MSI/X remapping when possible
 
-Thanks!
+ arch/x86/kernel/apic/msi.c   |   2 +-
+ drivers/pci/controller/vmd.c | 344 +++++++++++++++++++++++------------
+ 2 files changed, 224 insertions(+), 122 deletions(-)
 
-drivers/pci/switch/switchtec.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
-index 850cfeb74608..3d5da7f44378 100644
---- a/drivers/pci/switch/switchtec.c
-+++ b/drivers/pci/switch/switchtec.c
-@@ -940,7 +940,7 @@ static u32 __iomem *event_hdr_addr(struct switchtec_dev *stdev,
- 	size_t off;
+base-commit: ec0160891e387f4771f953b888b1fe951398e5d9
+-- 
+2.27.0
 
- 	if (event_id < 0 || event_id >= SWITCHTEC_IOCTL_MAX_EVENTS)
--		return ERR_PTR(-EINVAL);
-+		return (u32 __iomem *)ERR_PTR(-EINVAL);
-
- 	off = event_regs[event_id].offset;
-
-@@ -948,10 +948,10 @@ static u32 __iomem *event_hdr_addr(struct switchtec_dev *stdev,
- 		if (index == SWITCHTEC_IOCTL_EVENT_LOCAL_PART_IDX)
- 			index = stdev->partition;
- 		else if (index < 0 || index >= stdev->partition_count)
--			return ERR_PTR(-EINVAL);
-+			return (u32 __iomem *)ERR_PTR(-EINVAL);
- 	} else if (event_regs[event_id].map_reg == pff_ev_reg) {
- 		if (index < 0 || index >= stdev->pff_csr_count)
--			return ERR_PTR(-EINVAL);
-+			return (u32 __iomem *)ERR_PTR(-EINVAL);
- 	}
-
- 	return event_regs[event_id].map_reg(stdev, off, index);
-@@ -1057,11 +1057,11 @@ static int ioctl_event_ctl(struct switchtec_dev *stdev,
- }
-
- static int ioctl_pff_to_port(struct switchtec_dev *stdev,
--			     struct switchtec_ioctl_pff_port *up)
-+			     struct switchtec_ioctl_pff_port __user *up)
- {
- 	int i, part;
- 	u32 reg;
--	struct part_cfg_regs *pcfg;
-+	struct part_cfg_regs __iomem *pcfg;
- 	struct switchtec_ioctl_pff_port p;
-
- 	if (copy_from_user(&p, up, sizeof(p)))
-@@ -1104,10 +1104,10 @@ static int ioctl_pff_to_port(struct switchtec_dev *stdev,
- }
-
- static int ioctl_port_to_pff(struct switchtec_dev *stdev,
--			     struct switchtec_ioctl_pff_port *up)
-+			     struct switchtec_ioctl_pff_port __user *up)
- {
- 	struct switchtec_ioctl_pff_port p;
--	struct part_cfg_regs *pcfg;
-+	struct part_cfg_regs __iomem *pcfg;
-
- 	if (copy_from_user(&p, up, sizeof(p)))
- 		return -EFAULT;
-
-base-commit: 92ed301919932f777713b9172e525674157e983d
---
-2.20.1
