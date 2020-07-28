@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D1E0C433F7
-	for <linux-pci@archiver.kernel.org>; Tue, 28 Jul 2020 20:07:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31145C433FB
+	for <linux-pci@archiver.kernel.org>; Tue, 28 Jul 2020 20:07:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 245992070B
-	for <linux-pci@archiver.kernel.org>; Tue, 28 Jul 2020 20:07:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1881C2070B
+	for <linux-pci@archiver.kernel.org>; Tue, 28 Jul 2020 20:07:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728671AbgG1UHW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 28 Jul 2020 16:07:22 -0400
-Received: from mga03.intel.com ([134.134.136.65]:63207 "EHLO mga03.intel.com"
+        id S1728829AbgG1UHX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 28 Jul 2020 16:07:23 -0400
+Received: from mga03.intel.com ([134.134.136.65]:63202 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728568AbgG1UHG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1728559AbgG1UHG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Tue, 28 Jul 2020 16:07:06 -0400
-IronPort-SDR: I2cMD3r8E2SaLG6/KX5qErQAx2JUNxM2fLRGBLZdyiwBwEla7s0ReZCOw2+mfYTCvkyemUZx39
- PSoMth2H6zOg==
-X-IronPort-AV: E=McAfee;i="6000,8403,9696"; a="151287338"
+IronPort-SDR: RxBq11cZZvcabAlWhpewH031HLbiXj+LfH2BrIAfJ1k0X9VMsfeNuyCZ8jneu2LOagjkBDqtop
+ hr3G4LSyA6gg==
+X-IronPort-AV: E=McAfee;i="6000,8403,9696"; a="151287334"
 X-IronPort-AV: E=Sophos;i="5.75,407,1589266800"; 
-   d="scan'208";a="151287338"
+   d="scan'208";a="151287334"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jul 2020 13:07:05 -0700
-IronPort-SDR: tGra9B13nfi/LhtvV1fjMB9SKuqSjw11Y+DgSmNYygxEgFB/MzQtvwbVBmvYjINVUN8KiEi359
- OG/XVFQwsIwA==
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jul 2020 13:07:04 -0700
+IronPort-SDR: mnK6quD5Piabw1hA8WNqAwRt8dGmUuKQhUaAjzgXJUuAwwX51XU82pmri4V6kyCjdN+xHlaipv
+ cHPlOMBX2srg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.75,407,1589266800"; 
-   d="scan'208";a="312756385"
+   d="scan'208";a="312756381"
 Received: from unknown (HELO nsgsw-wilsonpoint.lm.intel.com) ([10.232.116.124])
   by fmsmga004.fm.intel.com with ESMTP; 28 Jul 2020 13:07:04 -0700
 From:   Jon Derrick <jonathan.derrick@intel.com>
@@ -44,9 +44,9 @@ Cc:     Bjorn Helgaas <helgaas@kernel.org>, Christoph Hellwig <hch@lst.de>,
         <linux-kernel@vger.kernel.org>, <x86@kernel.org>,
         Jon Derrick <jonathan.derrick@intel.com>,
         Andy Shevchenko <andriy.shevchenko@intel.com>
-Subject: [PATCH 4/6] PCI: vmd: Create IRQ allocation helper
-Date:   Tue, 28 Jul 2020 13:49:43 -0600
-Message-Id: <20200728194945.14126-5-jonathan.derrick@intel.com>
+Subject: [PATCH 3/6] PCI: vmd: Create IRQ Domain configuration helper
+Date:   Tue, 28 Jul 2020 13:49:42 -0600
+Message-Id: <20200728194945.14126-4-jonathan.derrick@intel.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20200728194945.14126-1-jonathan.derrick@intel.com>
 References: <20200728194945.14126-1-jonathan.derrick@intel.com>
@@ -57,137 +57,116 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Moves the IRQ allocation and SRCU initialization code to a new helper.
-No functional changes.
+Moves the IRQ and MSI Domain configuration code to new helpers. No
+functional changes.
 
 Reviewed-by: Andy Shevchenko <andriy.shevchenko@intel.com>
 Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
 ---
- drivers/pci/controller/vmd.c | 94 ++++++++++++++++++++----------------
- 1 file changed, 53 insertions(+), 41 deletions(-)
+ drivers/pci/controller/vmd.c | 52 ++++++++++++++++++++++++------------
+ 1 file changed, 35 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-index 703c48171993..3214d785fa5d 100644
+index a462719af12a..703c48171993 100644
 --- a/drivers/pci/controller/vmd.c
 +++ b/drivers/pci/controller/vmd.c
-@@ -528,6 +528,55 @@ static int vmd_get_bus_number_start(struct vmd_dev *vmd)
- 	return 0;
- }
+@@ -298,6 +298,34 @@ static struct msi_domain_info vmd_msi_domain_info = {
+ 	.chip		= &vmd_msi_controller,
+ };
  
-+static irqreturn_t vmd_irq(int irq, void *data)
++static int vmd_create_irq_domain(struct vmd_dev *vmd)
 +{
-+	struct vmd_irq_list *irqs = data;
-+	struct vmd_irq *vmdirq;
-+	int idx;
++	struct fwnode_handle *fn;
 +
-+	idx = srcu_read_lock(&irqs->srcu);
-+	list_for_each_entry_rcu(vmdirq, &irqs->irq_list, node)
-+		generic_handle_irq(vmdirq->virq);
-+	srcu_read_unlock(&irqs->srcu, idx);
-+
-+	return IRQ_HANDLED;
-+}
-+
-+static int vmd_alloc_irqs(struct vmd_dev *vmd)
-+{
-+	struct pci_dev *dev = vmd->dev;
-+	int i, err;
-+
-+	vmd->msix_count = pci_msix_vec_count(dev);
-+	if (vmd->msix_count < 0)
++	fn = irq_domain_alloc_named_id_fwnode("VMD-MSI", vmd->sysdata.domain);
++	if (!fn)
 +		return -ENODEV;
 +
-+	vmd->msix_count = pci_alloc_irq_vectors(dev, 1, vmd->msix_count,
-+						PCI_IRQ_MSIX);
-+	if (vmd->msix_count < 0)
-+		return vmd->msix_count;
-+
-+	vmd->irqs = devm_kcalloc(&dev->dev, vmd->msix_count, sizeof(*vmd->irqs),
-+				 GFP_KERNEL);
-+	if (!vmd->irqs)
-+		return -ENOMEM;
-+
-+	for (i = 0; i < vmd->msix_count; i++) {
-+		err = init_srcu_struct(&vmd->irqs[i].srcu);
-+		if (err)
-+			return err;
-+
-+		INIT_LIST_HEAD(&vmd->irqs[i].irq_list);
-+		err = devm_request_irq(&dev->dev, pci_irq_vector(dev, i),
-+				       vmd_irq, IRQF_NO_THREAD,
-+				       "vmd", &vmd->irqs[i]);
-+		if (err)
-+			return err;
++	vmd->irq_domain = pci_msi_create_irq_domain(fn, &vmd_msi_domain_info,
++						    x86_vector_domain);
++	if (!vmd->irq_domain) {
++		irq_domain_free_fwnode(fn);
++		return -ENODEV;
 +	}
 +
 +	return 0;
 +}
 +
++static void vmd_remove_irq_domain(struct vmd_dev *vmd)
++{
++	if (vmd->irq_domain) {
++		struct fwnode_handle *fn = vmd->irq_domain->fwnode;
++
++		irq_domain_remove(vmd->irq_domain);
++		irq_domain_free_fwnode(fn);
++	}
++}
++
+ static char __iomem *vmd_cfg_addr(struct vmd_dev *vmd, struct pci_bus *bus,
+ 				  unsigned int devfn, int reg, int len)
+ {
+@@ -503,7 +531,6 @@ static int vmd_get_bus_number_start(struct vmd_dev *vmd)
  static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
  {
  	struct pci_sysdata *sd = &vmd->sysdata;
-@@ -663,24 +712,10 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
- 	return 0;
- }
+-	struct fwnode_handle *fn;
+ 	struct resource *res;
+ 	u32 upper_bits;
+ 	unsigned long flags;
+@@ -598,16 +625,9 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
  
--static irqreturn_t vmd_irq(int irq, void *data)
--{
--	struct vmd_irq_list *irqs = data;
--	struct vmd_irq *vmdirq;
--	int idx;
--
--	idx = srcu_read_lock(&irqs->srcu);
--	list_for_each_entry_rcu(vmdirq, &irqs->irq_list, node)
--		generic_handle_irq(vmdirq->virq);
--	srcu_read_unlock(&irqs->srcu, idx);
--
--	return IRQ_HANDLED;
--}
--
- static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
- {
- 	struct vmd_dev *vmd;
--	int i, err;
-+	int err;
+ 	sd->node = pcibus_to_node(vmd->dev->bus);
  
- 	if (resource_size(&dev->resource[VMD_CFGBAR]) < (1 << 20))
- 		return -ENOMEM;
-@@ -703,32 +738,9 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
- 	    dma_set_mask_and_coherent(&dev->dev, DMA_BIT_MASK(32)))
- 		return -ENODEV;
- 
--	vmd->msix_count = pci_msix_vec_count(dev);
--	if (vmd->msix_count < 0)
+-	fn = irq_domain_alloc_named_id_fwnode("VMD-MSI", vmd->sysdata.domain);
+-	if (!fn)
 -		return -ENODEV;
 -
--	vmd->msix_count = pci_alloc_irq_vectors(dev, 1, vmd->msix_count,
--					PCI_IRQ_MSIX);
--	if (vmd->msix_count < 0)
--		return vmd->msix_count;
--
--	vmd->irqs = devm_kcalloc(&dev->dev, vmd->msix_count, sizeof(*vmd->irqs),
--				 GFP_KERNEL);
--	if (!vmd->irqs)
--		return -ENOMEM;
--
--	for (i = 0; i < vmd->msix_count; i++) {
--		err = init_srcu_struct(&vmd->irqs[i].srcu);
--		if (err)
--			return err;
--
--		INIT_LIST_HEAD(&vmd->irqs[i].irq_list);
--		err = devm_request_irq(&dev->dev, pci_irq_vector(dev, i),
--				       vmd_irq, IRQF_NO_THREAD,
--				       "vmd", &vmd->irqs[i]);
--		if (err)
--			return err;
+-	vmd->irq_domain = pci_msi_create_irq_domain(fn, &vmd_msi_domain_info,
+-						    x86_vector_domain);
+-	if (!vmd->irq_domain) {
+-		irq_domain_free_fwnode(fn);
+-		return -ENODEV;
 -	}
-+	err = vmd_alloc_irqs(vmd);
-+	if (err)
-+		return err;
++	ret = vmd_create_irq_domain(vmd);
++	if (ret)
++		return ret;
  
- 	spin_lock_init(&vmd->cfg_lock);
- 	pci_set_drvdata(dev, vmd);
+ 	pci_add_resource(&resources, &vmd->resources[0]);
+ 	pci_add_resource_offset(&resources, &vmd->resources[1], offset[0]);
+@@ -617,13 +637,13 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
+ 				       &vmd_ops, sd, &resources);
+ 	if (!vmd->bus) {
+ 		pci_free_resource_list(&resources);
+-		irq_domain_remove(vmd->irq_domain);
+-		irq_domain_free_fwnode(fn);
++		vmd_remove_irq_domain(vmd);
+ 		return -ENODEV;
+ 	}
+ 
+ 	vmd_attach_resources(vmd);
+-	dev_set_msi_domain(&vmd->bus->dev, vmd->irq_domain);
++	if (vmd->irq_domain)
++		dev_set_msi_domain(&vmd->bus->dev, vmd->irq_domain);
+ 
+ 	pci_scan_child_bus(vmd->bus);
+ 	pci_assign_unassigned_bus_resources(vmd->bus);
+@@ -732,15 +752,13 @@ static void vmd_cleanup_srcu(struct vmd_dev *vmd)
+ static void vmd_remove(struct pci_dev *dev)
+ {
+ 	struct vmd_dev *vmd = pci_get_drvdata(dev);
+-	struct fwnode_handle *fn = vmd->irq_domain->fwnode;
+ 
+ 	sysfs_remove_link(&vmd->dev->dev.kobj, "domain");
+ 	pci_stop_root_bus(vmd->bus);
+ 	pci_remove_root_bus(vmd->bus);
+ 	vmd_cleanup_srcu(vmd);
+ 	vmd_detach_resources(vmd);
+-	irq_domain_remove(vmd->irq_domain);
+-	irq_domain_free_fwnode(fn);
++	vmd_remove_irq_domain(vmd);
+ }
+ 
+ #ifdef CONFIG_PM_SLEEP
 -- 
 2.27.0
 
