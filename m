@@ -2,254 +2,127 @@ Return-Path: <SRS0=zOpN=BH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EF0BC433E0
-	for <linux-pci@archiver.kernel.org>; Tue, 28 Jul 2020 11:30:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FE6AC433E8
+	for <linux-pci@archiver.kernel.org>; Tue, 28 Jul 2020 12:48:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F2C662065C
-	for <linux-pci@archiver.kernel.org>; Tue, 28 Jul 2020 11:30:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B46C207E8
+	for <linux-pci@archiver.kernel.org>; Tue, 28 Jul 2020 12:48:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729081AbgG1Lak (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 28 Jul 2020 07:30:40 -0400
-Received: from mailout1.hostsharing.net ([83.223.95.204]:57679 "EHLO
-        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729079AbgG1Lak (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jul 2020 07:30:40 -0400
-X-Greylist: delayed 355 seconds by postgrey-1.27 at vger.kernel.org; Tue, 28 Jul 2020 07:30:38 EDT
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client CN "*.hostsharing.net", Issuer "COMODO RSA Domain Validation Secure Server CA" (not verified))
-        by mailout1.hostsharing.net (Postfix) with ESMTPS id 52AED101903A3;
-        Tue, 28 Jul 2020 13:24:39 +0200 (CEST)
-Received: from localhost (unknown [87.130.102.138])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
-        (No client certificate requested)
-        by h08.hostsharing.net (Postfix) with ESMTPSA id 0DC7B6040B87;
-        Tue, 28 Jul 2020 13:24:39 +0200 (CEST)
-X-Mailbox-Line: From b45e46fd8a6aa6930aaac9d7718c2e4b787a4e5e Mon Sep 17 00:00:00 2001
-Message-Id: <b45e46fd8a6aa6930aaac9d7718c2e4b787a4e5e.1595935071.git.lukas@wunner.de>
-From:   Lukas Wunner <lukas@wunner.de>
-Date:   Tue, 28 Jul 2020 13:24:10 +0200
-Subject: [PATCH] PCI: pciehp: Reduce noisiness on hot removal
-To:     Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Stuart Hayes <stuart.w.hayes@gmail.com>,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        John Garry <john.garry@huawei.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Keith Busch <kbusch@kernel.org>, linux-pci@vger.kernel.org
+        id S1729907AbgG1Msr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 28 Jul 2020 08:48:47 -0400
+Received: from foss.arm.com ([217.140.110.172]:34550 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729379AbgG1Msp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 28 Jul 2020 08:48:45 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 5ED431FB;
+        Tue, 28 Jul 2020 05:48:44 -0700 (PDT)
+Received: from e121166-lin.cambridge.arm.com (e121166-lin.cambridge.arm.com [10.1.196.255])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 2DD4A3F718;
+        Tue, 28 Jul 2020 05:48:42 -0700 (PDT)
+Date:   Tue, 28 Jul 2020 13:48:35 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     linux-arm-kernel@lists.infradead.org,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc:     Will Deacon <will@kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
+        Sudeep Holla <sudeep.holla@arm.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        iommu@lists.linux-foundation.org, linux-acpi@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        Rob Herring <robh+dt@kernel.org>,
+        Joerg Roedel <joro@8bytes.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Marc Zyngier <maz@kernel.org>,
+        Makarand Pawagi <makarand.pawagi@nxp.com>,
+        Diana Craciun <diana.craciun@oss.nxp.com>,
+        Laurentiu Tudor <laurentiu.tudor@nxp.com>
+Subject: Re: [PATCH v2 05/12] ACPI/IORT: Add an input ID to
+ acpi_dma_configure()
+Message-ID: <20200728124835.GA14596@e121166-lin.cambridge.arm.com>
+References: <20200521130008.8266-1-lorenzo.pieralisi@arm.com>
+ <20200619082013.13661-1-lorenzo.pieralisi@arm.com>
+ <20200619082013.13661-6-lorenzo.pieralisi@arm.com>
+ <20200709093514.GC18149@e121166-lin.cambridge.arm.com>
+ <20200715091326.GA30074@e121166-lin.cambridge.arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200715091326.GA30074@e121166-lin.cambridge.arm.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-When a PCIe card is hot-removed, the Presence Detect State and Data Link
-Layer Link Active bits often do not clear simultaneously.  I've seen
-delays of up to 244 msec between the two events with Thunderbolt.
+On Wed, Jul 15, 2020 at 10:13:26AM +0100, Lorenzo Pieralisi wrote:
+> On Thu, Jul 09, 2020 at 10:35:14AM +0100, Lorenzo Pieralisi wrote:
+> > On Fri, Jun 19, 2020 at 09:20:06AM +0100, Lorenzo Pieralisi wrote:
+> > > Some HW devices are created as child devices of proprietary busses,
+> > > that have a bus specific policy defining how the child devices
+> > > wires representing the devices ID are translated into IOMMU and
+> > > IRQ controllers device IDs.
+> > > 
+> > > Current IORT code provides translations for:
+> > > 
+> > > - PCI devices, where the device ID is well identified at bus level
+> > >   as the requester ID (RID)
+> > > - Platform devices that are endpoint devices where the device ID is
+> > >   retrieved from the ACPI object IORT mappings (Named components single
+> > >   mappings). A platform device is represented in IORT as a named
+> > >   component node
+> > > 
+> > > For devices that are child devices of proprietary busses the IORT
+> > > firmware represents the bus node as a named component node in IORT
+> > > and it is up to that named component node to define in/out bus
+> > > specific ID translations for the bus child devices that are
+> > > allocated and created in a bus specific manner.
+> > > 
+> > > In order to make IORT ID translations available for proprietary
+> > > bus child devices, the current ACPI (and IORT) code must be
+> > > augmented to provide an additional ID parameter to acpi_dma_configure()
+> > > representing the child devices input ID. This ID is bus specific
+> > > and it is retrieved in bus specific code.
+> > > 
+> > > By adding an ID parameter to acpi_dma_configure(), the IORT
+> > > code can map the child device ID to an IOMMU stream ID through
+> > > the IORT named component representing the bus in/out ID mappings.
+> > > 
+> > > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > > Cc: Will Deacon <will@kernel.org>
+> > > Cc: Hanjun Guo <guohanjun@huawei.com>
+> > > Cc: Sudeep Holla <sudeep.holla@arm.com>
+> > > Cc: Catalin Marinas <catalin.marinas@arm.com>
+> > > Cc: Robin Murphy <robin.murphy@arm.com>
+> > > Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+> > > ---
+> > >  drivers/acpi/arm64/iort.c | 59 +++++++++++++++++++++++++++++----------
+> > >  drivers/acpi/scan.c       |  8 ++++--
+> > >  include/acpi/acpi_bus.h   |  9 ++++--
+> > >  include/linux/acpi.h      |  7 +++++
+> > >  include/linux/acpi_iort.h |  7 +++--
+> > >  5 files changed, 67 insertions(+), 23 deletions(-)
+> > 
+> > Hi Rafael,
+> > 
+> > just to ask if the ACPI core changes in this patch are OK with you,
+> > thank you very much.
+> 
+> Hi Rafael,
+> 
+> are you OK with ACPI core changes in this patch ?
+> 
+> Please let me know, thanks.
 
-After pciehp has brought down the slot in response to the first event,
-the other bit may still be set.  It's not discernible whether it's set
-because a new card is already in the slot or if it will soon clear.
-So pciehp tries to bring up the slot and in the latter case fails with
-a bunch of messages, some of them at KERN_ERR severity.  The messages
-are false positives if the slot is no longer occupied and annoy users.
+Hi Rafael,
 
-Stuart Hayes reports the following splat on hot removal:
+gentle ping, I think we are missing v5.9, we would need your feedback
+on this please.
 
-KERN_INFO pcieport 0000:3c:06.0: pciehp: Slot(180): Link Up
-KERN_INFO pcieport 0000:3c:06.0: pciehp: Timeout waiting for Presence Detect
-KERN_ERR  pcieport 0000:3c:06.0: pciehp: link training error: status 0x0001
-KERN_ERR  pcieport 0000:3c:06.0: pciehp: Failed to check link status
-
-Dongdong Liu complains about a similar splat:
-
-KERN_INFO pciehp 0000:80:10.0:pcie004: Slot(36): Link Down
-KERN_INFO iommu: Removing device 0000:87:00.0 from group 12
-KERN_INFO pciehp 0000:80:10.0:pcie004: Slot(36): Card present
-KERN_INFO pcieport 0000:80:10.0: Data Link Layer Link Active not set in 1000 msec
-KERN_ERR  pciehp 0000:80:10.0:pcie004: Failed to check link status
-
-Users are particularly irritated to see a bringup attempt even though
-the slot was explicitly brought down via sysfs.  In a perfect world, we
-could avoid this by setting Link Disable on slot bringdown and
-re-enabling it upon a Presence Detect State change.  In reality however,
-there are broken hotplug ports which hardwire Presence Detect to zero,
-see 80696f991424 ("PCI: pciehp: Tolerate Presence Detect hardwired to
-zero").  Conversely, PCIe r1.0 hotplug ports hardwire Link Active to
-zero because Link Active Reporting wasn't specified before PCIe r1.1.
-On unplug, some ports first clear Presence then Link (see Stuart Hayes'
-splat) whereas others use the inverse order (see Dongdong Liu's splat).
-To top it off, there are hotplug ports which flap the Presence and Link
-bits on slot bringup, see 6c35a1ac3da6 ("PCI: pciehp: Tolerate initially
-unstable link").
-
-pciehp is designed to work with all of these variants.  Surplus attempts
-at slot bringup are a lesser evil than not being able to bring up slots
-at all.  Although we could try to perfect the behavior for specific
-hotplug controllers, we'd risk breaking others or increasing code
-complexity.
-
-But we can certainly minimize annoyance by emitting only a single
-message with KERN_INFO severity if bringup is unsuccessful:
-
-* Drop the "Timeout waiting for Presence Detect" message in
-  pcie_wait_for_presence().  The sole caller of that function,
-  pciehp_check_link_status(), ignores the timeout and carries on.
-  It emits error messages of its own and I don't think this particular
-  message adds much value.
-
-* There's a single error condition in pciehp_check_link_status() which
-  does not emit a message.  Adding one allows dropping the "Failed to
-  check link status" message emitted by board_added() if
-  pciehp_check_link_status() returns a non-zero integer.
-
-* Tone down all messages in pciehp_check_link_status() to KERN_INFO
-  severity and rephrase them to look as innocuous as possible.  To this
-  end, move the message emitted by pcie_wait_for_link_delay() to its
-  callers.
-
-As a result, Stuart Hayes' splat becomes:
-
-KERN_INFO pcieport 0000:3c:06.0: pciehp: Slot(180): Link Up
-KERN_INFO pcieport 0000:3c:06.0: pciehp: Slot(180): Cannot train link: status 0x0001
-
-Dongdong Liu's splat becomes:
-
-KERN_INFO pciehp 0000:80:10.0:pcie004: Slot(36): Card present
-KERN_INFO pciehp 0000:80:10.0:pcie004: Slot(36): No link
-
-The messages now merely serve as information that presence or link bits
-were set a little longer than expected.  Bringup failures which are not
-false positives are still reported, albeit no longer at KERN_ERR
-severity.
-
-Link: https://lore.kernel.org/linux-pci/20200310182100.102987-1-stuart.w.hayes@gmail.com/
-Link: https://lore.kernel.org/linux-pci/1547649064-19019-1-git-send-email-liudongdong3@huawei.com/
-Reported-by: Stuart Hayes <stuart.w.hayes@gmail.com>
-Reported-by: Dongdong Liu <liudongdong3@huawei.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- drivers/pci/hotplug/pciehp_ctrl.c |  4 +---
- drivers/pci/hotplug/pciehp_hpc.c  | 15 +++++++++------
- drivers/pci/pci.c                 |  5 ++---
- drivers/pci/pcie/dpc.c            |  7 +++++--
- 4 files changed, 17 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index 6503d15effbbd..2f5f4bb42dcc6 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -73,10 +73,8 @@ static int board_added(struct controller *ctrl)
- 
- 	/* Check link training status */
- 	retval = pciehp_check_link_status(ctrl);
--	if (retval) {
--		ctrl_err(ctrl, "Failed to check link status\n");
-+	if (retval)
- 		goto err_exit;
--	}
- 
- 	/* Check for a power fault */
- 	if (ctrl->power_fault_detected || pciehp_query_power_fault(ctrl)) {
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 53433b37e1812..fb3840e222add 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -283,8 +283,6 @@ static void pcie_wait_for_presence(struct pci_dev *pdev)
- 		msleep(10);
- 		timeout -= 10;
- 	} while (timeout > 0);
--
--	pci_info(pdev, "Timeout waiting for Presence Detect\n");
- }
- 
- int pciehp_check_link_status(struct controller *ctrl)
-@@ -293,8 +291,10 @@ int pciehp_check_link_status(struct controller *ctrl)
- 	bool found;
- 	u16 lnk_status;
- 
--	if (!pcie_wait_for_link(pdev, true))
-+	if (!pcie_wait_for_link(pdev, true)) {
-+		ctrl_info(ctrl, "Slot(%s): No link\n", slot_name(ctrl));
- 		return -1;
-+	}
- 
- 	if (ctrl->inband_presence_disabled)
- 		pcie_wait_for_presence(pdev);
-@@ -311,15 +311,18 @@ int pciehp_check_link_status(struct controller *ctrl)
- 	ctrl_dbg(ctrl, "%s: lnk_status = %x\n", __func__, lnk_status);
- 	if ((lnk_status & PCI_EXP_LNKSTA_LT) ||
- 	    !(lnk_status & PCI_EXP_LNKSTA_NLW)) {
--		ctrl_err(ctrl, "link training error: status %#06x\n",
--			 lnk_status);
-+		ctrl_info(ctrl, "Slot(%s): Cannot train link: status %#06x\n",
-+			  slot_name(ctrl), lnk_status);
- 		return -1;
- 	}
- 
- 	pcie_update_link_speed(ctrl->pcie->port->subordinate, lnk_status);
- 
--	if (!found)
-+	if (!found) {
-+		ctrl_info(ctrl, "Slot(%s): No device found\n",
-+			  slot_name(ctrl));
- 		return -1;
-+	}
- 
- 	return 0;
- }
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 501035cc0409e..f369934867a06 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4702,9 +4702,7 @@ static bool pcie_wait_for_link_delay(struct pci_dev *pdev, bool active,
- 	}
- 	if (active && ret && delay)
- 		msleep(delay);
--	else if (ret != active)
--		pci_info(pdev, "Data Link Layer Link Active not %s in 1000 msec\n",
--			active ? "set" : "cleared");
-+
- 	return ret == active;
- }
- 
-@@ -4838,6 +4836,7 @@ void pci_bridge_wait_for_secondary_bus(struct pci_dev *dev)
- 		pci_dbg(dev, "waiting for link to train\n");
- 		if (!pcie_wait_for_link_delay(dev, true, 0)) {
- 			/* Did not train, no need to wait any further */
-+			pci_info(dev, "Data Link Layer Link Active not set in 1000 msec\n");
- 			return;
- 		}
- 	}
-diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-index daa9a4153776c..e05aba86a3179 100644
---- a/drivers/pci/pcie/dpc.c
-+++ b/drivers/pci/pcie/dpc.c
-@@ -103,7 +103,8 @@ pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
- 	 * Wait until the Link is inactive, then clear DPC Trigger Status
- 	 * to allow the Port to leave DPC.
- 	 */
--	pcie_wait_for_link(pdev, false);
-+	if (!pcie_wait_for_link(pdev, false))
-+		pci_info(pdev, "Data Link Layer Link Active not cleared in 1000 msec\n");
- 
- 	if (pdev->dpc_rp_extensions && dpc_wait_rp_inactive(pdev))
- 		return PCI_ERS_RESULT_DISCONNECT;
-@@ -111,8 +112,10 @@ pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
- 	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
- 			      PCI_EXP_DPC_STATUS_TRIGGER);
- 
--	if (!pcie_wait_for_link(pdev, true))
-+	if (!pcie_wait_for_link(pdev, true)) {
-+		pci_info(pdev, "Data Link Layer Link Active not set in 1000 msec\n");
- 		return PCI_ERS_RESULT_DISCONNECT;
-+	}
- 
- 	return PCI_ERS_RESULT_RECOVERED;
- }
--- 
-2.27.0
-
+Thanks,
+Lorenzo
