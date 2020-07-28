@@ -2,186 +2,95 @@ Return-Path: <SRS0=zOpN=BH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-12.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8008C433EA
-	for <linux-pci@archiver.kernel.org>; Tue, 28 Jul 2020 16:31:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BF57C433E0
+	for <linux-pci@archiver.kernel.org>; Tue, 28 Jul 2020 17:01:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BEAEC207FC
-	for <linux-pci@archiver.kernel.org>; Tue, 28 Jul 2020 16:31:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3B5B020786
+	for <linux-pci@archiver.kernel.org>; Tue, 28 Jul 2020 17:01:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731437AbgG1Qbu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 28 Jul 2020 12:31:50 -0400
-Received: from mga09.intel.com ([134.134.136.24]:34128 "EHLO mga09.intel.com"
+        id S1731523AbgG1RBj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 28 Jul 2020 13:01:39 -0400
+Received: from mail.kernel.org ([198.145.29.99]:32840 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731383AbgG1Qbt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 28 Jul 2020 12:31:49 -0400
-IronPort-SDR: 7Ksq8ImbIzMdX5bYfxub3ocr4icRkY/YxzDslyI90dejYtyngIHqsOQH73vxiDQrSi3SBowU6q
- UPL7T6BHMlAg==
-X-IronPort-AV: E=McAfee;i="6000,8403,9696"; a="152502173"
-X-IronPort-AV: E=Sophos;i="5.75,406,1589266800"; 
-   d="scan'208";a="152502173"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jul 2020 09:31:48 -0700
-IronPort-SDR: +QPBZKUrDVcXs3SicE62wIDczzMz+XCl3W2rJsusKE+NuUOdigJBcjIXvxVnQhAGp1LHubJJbJ
- E0irz+pILeUg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.75,406,1589266800"; 
-   d="scan'208";a="464536516"
-Received: from unknown (HELO localhost.lm.intel.com) ([10.232.116.74])
-  by orsmga005.jf.intel.com with ESMTP; 28 Jul 2020 09:31:45 -0700
-From:   Jon Derrick <jonathan.derrick@intel.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-pm@vger.kernel.org>
-Cc:     Jon Derrick <jonathan.derrick@intel.com>,
-        You-Sheng Yang <vicamo.yang@canonical.com>
-Subject: [RFC] PCI: vmd: Enable ASPM if BIOS requests it
-Date:   Tue, 28 Jul 2020 12:13:21 -0400
-Message-Id: <20200728161321.38229-1-jonathan.derrick@intel.com>
-X-Mailer: git-send-email 2.18.1
+        id S1731478AbgG1RBj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 28 Jul 2020 13:01:39 -0400
+Received: from localhost.localdomain (unknown [95.146.230.158])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6971C2053B;
+        Tue, 28 Jul 2020 17:01:35 +0000 (UTC)
+From:   Catalin Marinas <catalin.marinas@arm.com>
+To:     linux-arm-kernel@lists.infradead.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     Will Deacon <will@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        Marc Zyngier <maz@kernel.org>,
+        Hanjun Guo <guohanjun@huawei.com>,
+        Makarand Pawagi <makarand.pawagi@nxp.com>,
+        Diana Craciun <diana.craciun@oss.nxp.com>,
+        iommu@lists.linux-foundation.org,
+        Laurentiu Tudor <laurentiu.tudor@nxp.com>,
+        linux-pci@vger.kernel.org, Robin Murphy <robin.murphy@arm.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Sudeep Holla <sudeep.holla@arm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Joerg Roedel <joro@8bytes.org>, devicetree@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v2 00/12] ACPI/OF: Upgrade MSI/IOMMU ID mapping APIs
+Date:   Tue, 28 Jul 2020 18:01:33 +0100
+Message-Id: <159595564192.31263.3059824977932788766.b4-ty@arm.com>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200619082013.13661-1-lorenzo.pieralisi@arm.com>
+References: <20200521130008.8266-1-lorenzo.pieralisi@arm.com> <20200619082013.13661-1-lorenzo.pieralisi@arm.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-VMD domains are not ACPI-managed devices and do not have the necessary
-ACPI hooks to enable ASPM. However if the BIOS has requested ASPM
-enablement, we should try to honor that request regardless. This patch
-adds the ASPM support to VMD child devices if requested by the FADT
-table.
+On Fri, 19 Jun 2020 09:20:01 +0100, Lorenzo Pieralisi wrote:
+> This series is a v2 of a previous posting:
+> 
+> v1 -> v2
+> 
+> - Removed _rid() wrappers
+> - Fixed !CONFIG_ACPI compilation issue
+> - Converted of_pci_iommu_init() to use of_iommu_configure_dev_id()
+> 
+> [...]
 
-Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
-Signed-off-by: You-Sheng Yang <vicamo.yang@canonical.com>
----
+Applied to arm64 (for-next/msi-iommu), thanks!
 
+[01/12] ACPI/IORT: Make iort_match_node_callback walk the ACPI namespace for NC
+        https://git.kernel.org/arm64/c/07d2e59f27cd
+[02/12] ACPI/IORT: Make iort_get_device_domain IRQ domain agnostic
+        https://git.kernel.org/arm64/c/d1718a1b7a86
+[03/12] ACPI/IORT: Make iort_msi_map_rid() PCI agnostic
+        https://git.kernel.org/arm64/c/39c3cf566cea
+[04/12] ACPI/IORT: Remove useless PCI bus walk
+        https://git.kernel.org/arm64/c/3a3d208beede
+[05/12] ACPI/IORT: Add an input ID to acpi_dma_configure()
+        https://git.kernel.org/arm64/c/b8e069a2a8da
+[06/12] of/iommu: Make of_map_rid() PCI agnostic
+        https://git.kernel.org/arm64/c/746a71d02b5d
+[07/12] of/device: Add input id to of_dma_configure()
+        https://git.kernel.org/arm64/c/a081bd4af4ce
+[08/12] dt-bindings: arm: fsl: Add msi-map device-tree binding for fsl-mc bus
+        https://git.kernel.org/arm64/c/5bda70c6162d
+[09/12] of/irq: make of_msi_map_get_device_domain() bus agnostic
+        https://git.kernel.org/arm64/c/6f881aba0110
+[10/12] of/irq: Make of_msi_map_rid() PCI bus agnostic
+        https://git.kernel.org/arm64/c/2bcdd8f2c07f
+[11/12] bus/fsl-mc: Refactor the MSI domain creation in the DPRC driver
+        https://git.kernel.org/arm64/c/998fb7badf03
+[12/12] bus: fsl-mc: Add ACPI support for fsl-mc
+        https://git.kernel.org/arm64/c/6305166c8771
 
-Hi,
-
-My knowledge on these kinds of power modes is limited, and we are having
-trouble bringing the Root Port child device out of L1 with this patch.
-
-Can you help me understand the correct flow for bringing the Root Port
-device out of L1 with kernel flow, and what I might be missing here?
-
-
-
- drivers/pci/controller/vmd.c |  9 ++++++++-
- drivers/pci/pcie/aspm.c      | 19 ++-----------------
- include/linux/pci.h          | 17 +++++++++++++++++
- 3 files changed, 27 insertions(+), 18 deletions(-)
-
-diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-index 76d8acbee7d5..f1b058efb642 100644
---- a/drivers/pci/controller/vmd.c
-+++ b/drivers/pci/controller/vmd.c
-@@ -14,6 +14,7 @@
- #include <linux/srcu.h>
- #include <linux/rculist.h>
- #include <linux/rcupdate.h>
-+#include <linux/acpi.h>
- 
- #include <asm/irqdomain.h>
- #include <asm/device.h>
-@@ -601,8 +602,14 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
- 	 * and will fail pcie_bus_configure_settings() early. It can instead be
- 	 * run on each of the real root ports.
- 	 */
--	list_for_each_entry(child, &vmd->bus->children, node)
-+	list_for_each_entry(child, &vmd->bus->children, node) {
-+#if IS_ENABLED(CONFIG_PCIEASPM)
-+		if (!(acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM))
-+			pcie_config_aspm_link(child->self->link_state,
-+					      ASPM_STATE_ALL);
-+#endif
- 		pcie_bus_configure_settings(child);
-+	}
- 
- 	pci_bus_add_devices(vmd->bus);
- 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 253c30cc1967..04cdb0b5a672 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -25,22 +25,6 @@
- #endif
- #define MODULE_PARAM_PREFIX "pcie_aspm."
- 
--/* Note: those are not register definitions */
--#define ASPM_STATE_L0S_UP	(1)	/* Upstream direction L0s state */
--#define ASPM_STATE_L0S_DW	(2)	/* Downstream direction L0s state */
--#define ASPM_STATE_L1		(4)	/* L1 state */
--#define ASPM_STATE_L1_1		(8)	/* ASPM L1.1 state */
--#define ASPM_STATE_L1_2		(0x10)	/* ASPM L1.2 state */
--#define ASPM_STATE_L1_1_PCIPM	(0x20)	/* PCI PM L1.1 state */
--#define ASPM_STATE_L1_2_PCIPM	(0x40)	/* PCI PM L1.2 state */
--#define ASPM_STATE_L1_SS_PCIPM	(ASPM_STATE_L1_1_PCIPM | ASPM_STATE_L1_2_PCIPM)
--#define ASPM_STATE_L1_2_MASK	(ASPM_STATE_L1_2 | ASPM_STATE_L1_2_PCIPM)
--#define ASPM_STATE_L1SS		(ASPM_STATE_L1_1 | ASPM_STATE_L1_1_PCIPM |\
--				 ASPM_STATE_L1_2_MASK)
--#define ASPM_STATE_L0S		(ASPM_STATE_L0S_UP | ASPM_STATE_L0S_DW)
--#define ASPM_STATE_ALL		(ASPM_STATE_L0S | ASPM_STATE_L1 |	\
--				 ASPM_STATE_L1SS)
--
- struct aspm_latency {
- 	u32 l0s;			/* L0s latency (nsec) */
- 	u32 l1;				/* L1 latency (nsec) */
-@@ -748,7 +732,7 @@ static void pcie_config_aspm_dev(struct pci_dev *pdev, u32 val)
- 					   PCI_EXP_LNKCTL_ASPMC, val);
- }
- 
--static void pcie_config_aspm_link(struct pcie_link_state *link, u32 state)
-+void pcie_config_aspm_link(struct pcie_link_state *link, u32 state)
- {
- 	u32 upstream = 0, dwstream = 0;
- 	struct pci_dev *child = link->downstream, *parent = link->pdev;
-@@ -798,6 +782,7 @@ static void pcie_config_aspm_link(struct pcie_link_state *link, u32 state)
- 
- 	link->aspm_enabled = state;
- }
-+EXPORT_SYMBOL_GPL(pcie_config_aspm_link);
- 
- static void pcie_config_aspm_path(struct pcie_link_state *link)
- {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 7a40cd5caed0..1c41781b160a 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -377,6 +377,22 @@ struct pci_dev {
- 	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
- 
- #ifdef CONFIG_PCIEASPM
-+/* Note: those are not register definitions */
-+#define ASPM_STATE_L0S_UP	(1)	/* Upstream direction L0s state */
-+#define ASPM_STATE_L0S_DW	(2)	/* Downstream direction L0s state */
-+#define ASPM_STATE_L1		(4)	/* L1 state */
-+#define ASPM_STATE_L1_1		(8)	/* ASPM L1.1 state */
-+#define ASPM_STATE_L1_2		(0x10)	/* ASPM L1.2 state */
-+#define ASPM_STATE_L1_1_PCIPM	(0x20)	/* PCI PM L1.1 state */
-+#define ASPM_STATE_L1_2_PCIPM	(0x40)	/* PCI PM L1.2 state */
-+#define ASPM_STATE_L1_SS_PCIPM	(ASPM_STATE_L1_1_PCIPM | ASPM_STATE_L1_2_PCIPM)
-+#define ASPM_STATE_L1_2_MASK	(ASPM_STATE_L1_2 | ASPM_STATE_L1_2_PCIPM)
-+#define ASPM_STATE_L1SS		(ASPM_STATE_L1_1 | ASPM_STATE_L1_1_PCIPM |\
-+				 ASPM_STATE_L1_2_MASK)
-+#define ASPM_STATE_L0S		(ASPM_STATE_L0S_UP | ASPM_STATE_L0S_DW)
-+#define ASPM_STATE_ALL		(ASPM_STATE_L0S | ASPM_STATE_L1 |	\
-+				 ASPM_STATE_L1SS)
-+
- 	struct pcie_link_state	*link_state;	/* ASPM link state */
- 	unsigned int	ltr_path:1;	/* Latency Tolerance Reporting
- 					   supported from root to here */
-@@ -1577,6 +1593,7 @@ extern bool pcie_ports_native;
- #define PCIE_LINK_STATE_L1_2_PCIPM	BIT(6)
- 
- #ifdef CONFIG_PCIEASPM
-+void pcie_config_aspm_link(struct pcie_link_state *link, u32 state);
- int pci_disable_link_state(struct pci_dev *pdev, int state);
- int pci_disable_link_state_locked(struct pci_dev *pdev, int state);
- void pcie_no_aspm(void);
 -- 
-2.18.1
+Catalin
 
