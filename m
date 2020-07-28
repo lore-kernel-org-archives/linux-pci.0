@@ -2,77 +2,91 @@ Return-Path: <SRS0=zOpN=BH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93219C433E1
-	for <linux-pci@archiver.kernel.org>; Tue, 28 Jul 2020 19:20:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AAE3C433DF
+	for <linux-pci@archiver.kernel.org>; Tue, 28 Jul 2020 19:24:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 618F120656
-	for <linux-pci@archiver.kernel.org>; Tue, 28 Jul 2020 19:20:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EF2012065C
+	for <linux-pci@archiver.kernel.org>; Tue, 28 Jul 2020 19:24:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QRMnQHC9"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="myYva4PK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732779AbgG1TUn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 28 Jul 2020 15:20:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52548 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729851AbgG1TUn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jul 2020 15:20:43 -0400
-Received: from mail-ej1-x633.google.com (mail-ej1-x633.google.com [IPv6:2a00:1450:4864:20::633])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A535C061794
-        for <linux-pci@vger.kernel.org>; Tue, 28 Jul 2020 12:20:43 -0700 (PDT)
-Received: by mail-ej1-x633.google.com with SMTP id dk23so9911365ejb.11
-        for <linux-pci@vger.kernel.org>; Tue, 28 Jul 2020 12:20:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=to:cc:from:subject:message-id:date:user-agent:mime-version
-         :content-language:content-transfer-encoding;
-        bh=DmxU1ZQHeM+W9godv/svS5pNW8bD5o2Izj6jcWA5jpI=;
-        b=QRMnQHC96h4kJz8z6AQO/D9yEs9RK2pmR5clsbFgmniit6RXSbM+V8uA8hgAh+l6fZ
-         tPbsMA2y27+8r4pF6206ZJbU9/PlNA0HSvII033MXty6wO6XtAduFvutuQMVpbhCmvXN
-         hdgHY49ROnwcABfor/WnXc8NaOkjlGEbW/dzoXhBvjm15WxpJYJ0+GSm9HjUM9DJUcCi
-         gqJgjt2U9dWiWNL46C04kfXsW+0pgEUlsblJx2hHPor20lPatC5In5sKLwnfhB8OLbRd
-         JTfC2ocw7mN8NN58tGAO5Oh5MichETG6vk50pXR1IdPatVpDA4fL/5LSgeaTXdsXKh5i
-         O6MA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
-         :mime-version:content-language:content-transfer-encoding;
-        bh=DmxU1ZQHeM+W9godv/svS5pNW8bD5o2Izj6jcWA5jpI=;
-        b=BJWQtlaqa8SlqwFAg3uGQGmkYbqlk0zbREi1l1Ph6VpS7WwnAlXl2COAtHWy0QIcRG
-         E0u5abFAwiPStphzt4J/t839ajb0pvDyXH56NcXC0ue1Fl0OK9dLffECW27gTL1Q5ayZ
-         XIi+Fb316aweuHzD+0zuQaGaZBYD3fcgADGdR4Z4L//zGvwxP7q36MB7ZHp6mudt1KBm
-         lPuyNVIMY65u9VDP4/FNWbUbXzJk74DCShV8nWu9arxggm++QfOOOmIAuLzlhitJWS+M
-         XB3mpleEDJ7HFuIu836yfPH4ciyhuQTKS/yd1MJCj3Qp6qt+lc7pDnbkHi3+nCkPURDc
-         J51A==
-X-Gm-Message-State: AOAM531oBW4TyT1T5kdd28bMMafwOFzvjX5NKlaC9113r8Jr++wj5a7o
-        0qvK76lIXSkEHO822cia+ecElOP7e1Y=
-X-Google-Smtp-Source: ABdhPJwkTER2qdWVtegQ1SmnEnGrp/gzd1SFj43vPRL9zQb7QFW4cu3KpXUVvXtspV5dLadXnyATcg==
-X-Received: by 2002:a17:906:2816:: with SMTP id r22mr3136715ejc.215.1595964041807;
-        Tue, 28 Jul 2020 12:20:41 -0700 (PDT)
-Received: from ?IPv6:2003:ea:8f23:5700:908b:a51b:1175:f3b2? (p200300ea8f235700908ba51b1175f3b2.dip0.t-ipconnect.de. [2003:ea:8f23:5700:908b:a51b:1175:f3b2])
-        by smtp.googlemail.com with ESMTPSA id e10sm9123269edu.51.2020.07.28.12.20.41
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 28 Jul 2020 12:20:41 -0700 (PDT)
-To:     Bjorn Helgaas <bhelgaas@google.com>
-Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-From:   Heiner Kallweit <hkallweit1@gmail.com>
-Subject: pci_lost_interrupt still needed?
-Message-ID: <f5eba931-6e27-8f50-d018-7d51a983bfb8@gmail.com>
-Date:   Tue, 28 Jul 2020 21:20:34 +0200
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S1729860AbgG1TYl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 28 Jul 2020 15:24:41 -0400
+Received: from ale.deltatee.com ([204.191.154.188]:37916 "EHLO
+        ale.deltatee.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728334AbgG1TYl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jul 2020 15:24:41 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=deltatee.com; s=20200525; h=Subject:Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From:
+        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=kVGNoG+MJI4rM6HTew7uFrFowsLOmfKHPl5e6Ri5JTE=; b=myYva4PKGKUvQk6qKd+dUMnhSE
+        PmvXmKB2MXRTY0tN/vTtWsj8wpKCufXXCwCSg6aNU6aczeav8e479QtFx4ZgdYUHomcRY1YmquHe9
+        2m2AG2EmdaZNZGI/LnEE/SucBtATmGadyTEnexTpl9JyZ+vqPTlmSZtr3C/dSJZ/X8JwKepEcCyRF
+        YSJpBGzALtYDxH8agA28KBX44vzL+3QnJ2e4BGgtp69jb6WtptK/WPkPz2xQQHPZ5phe5h4t88h8e
+        Xnw3s/mKympr3iNkqf/iu0DmXwWIPUsT33kA1JLXFH8yJMCBVHyx2dCppPwfYumDlvrfijLFnT2ox
+        8Xs2DTdQ==;
+Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
+        by ale.deltatee.com with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <gunthorp@deltatee.com>)
+        id 1k0VDK-00017E-K5; Tue, 28 Jul 2020 13:24:39 -0600
+Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.92)
+        (envelope-from <gunthorp@deltatee.com>)
+        id 1k0VDI-0004x7-UV; Tue, 28 Jul 2020 13:24:36 -0600
+From:   Logan Gunthorpe <logang@deltatee.com>
+To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc:     Kelvin.Cao@microchip.com, Logan Gunthorpe <logang@deltatee.com>
+Date:   Tue, 28 Jul 2020 13:24:34 -0600
+Message-Id: <20200728192434.18993-2-logang@deltatee.com>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200728192434.18993-1-logang@deltatee.com>
+References: <20200728192434.18993-1-logang@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 172.16.1.31
+X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, bhelgaas@google.com, Kelvin.Cao@microchip.com, logang@deltatee.com
+X-SA-Exim-Mail-From: gunthorp@deltatee.com
+Subject: [PATCH 2/2] PCI/switechtec: Add missing __iomem tag to fix sparse warnings
+X-SA-Exim-Version: 4.2.1 (built Wed, 08 May 2019 21:11:16 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Seems that pci_lost_interrupt() has no user. Do we still need this function?
-Same applies for related enum pci_lost_interrupt_reason.
+Fix a missing __iomem tag in the init_pfn() function. This fixes a
+sparse warning of the form:
+
+   sparse: sparse: incorrect type assignment(different address spaces)
+
+Fixes: 080b47def5e5 ("MicroSemi Switchtec management interface driver")
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+---
+ drivers/pci/switch/switchtec.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+index 3d5da7f44378..ba52459928f7 100644
+--- a/drivers/pci/switch/switchtec.c
++++ b/drivers/pci/switch/switchtec.c
+@@ -1484,7 +1484,7 @@ static void init_pff(struct switchtec_dev *stdev)
+ {
+ 	int i;
+ 	u32 reg;
+-	struct part_cfg_regs *pcfg = stdev->mmio_part_cfg;
++	struct part_cfg_regs __iomem *pcfg = stdev->mmio_part_cfg;
+ 
+ 	for (i = 0; i < SWITCHTEC_MAX_PFF_CSR; i++) {
+ 		reg = ioread16(&stdev->mmio_pff_csr[i].vendor_id);
+-- 
+2.20.1
+
