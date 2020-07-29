@@ -2,29 +2,28 @@ Return-Path: <SRS0=EmHj=BI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DDE1C433E3
-	for <linux-pci@archiver.kernel.org>; Wed, 29 Jul 2020 15:31:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95C56C433E5
+	for <linux-pci@archiver.kernel.org>; Wed, 29 Jul 2020 15:31:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6946920809
-	for <linux-pci@archiver.kernel.org>; Wed, 29 Jul 2020 15:31:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7714720809
+	for <linux-pci@archiver.kernel.org>; Wed, 29 Jul 2020 15:31:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727015AbgG2Pb3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 29 Jul 2020 11:31:29 -0400
-Received: from alexa-out-sd-01.qualcomm.com ([199.106.114.38]:10011 "EHLO
+        id S1727050AbgG2Pbe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 29 Jul 2020 11:31:34 -0400
+Received: from alexa-out-sd-01.qualcomm.com ([199.106.114.38]:10005 "EHLO
         alexa-out-sd-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726054AbgG2PbH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jul 2020 11:31:07 -0400
+        by vger.kernel.org with ESMTP id S1726365AbgG2PbG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jul 2020 11:31:06 -0400
 Received: from unknown (HELO ironmsg02-sd.qualcomm.com) ([10.53.140.142])
   by alexa-out-sd-01.qualcomm.com with ESMTP; 29 Jul 2020 08:31:04 -0700
 Received: from sivaprak-linux.qualcomm.com ([10.201.3.202])
   by ironmsg02-sd.qualcomm.com with ESMTP; 29 Jul 2020 08:30:56 -0700
 Received: by sivaprak-linux.qualcomm.com (Postfix, from userid 459349)
-        id BB28021149; Wed, 29 Jul 2020 21:00:54 +0530 (IST)
+        id A89C42114B; Wed, 29 Jul 2020 21:00:54 +0530 (IST)
 From:   Sivaprakash Murugesan <sivaprak@codeaurora.org>
 To:     agross@kernel.org, bjorn.andersson@linaro.org, bhelgaas@google.com,
         robh+dt@kernel.org, kishon@ti.com, vkoul@kernel.org,
@@ -34,94 +33,58 @@ To:     agross@kernel.org, bjorn.andersson@linaro.org, bhelgaas@google.com,
         varada@codeaurora.org, linux-arm-msm@vger.kernel.org,
         linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Cc:     Selvam Sathappan Periakaruppan <speriaka@codeaurora.org>
-Subject: [PATCH V2 1/7] dt-bindings: PCI: qcom: Add ipq8074 Gen3 PCIe compatible
-Date:   Wed, 29 Jul 2020 21:00:01 +0530
-Message-Id: <1596036607-11877-2-git-send-email-sivaprak@codeaurora.org>
+Subject: [PATCH V2 0/7] Add PCIe support for IPQ8074
+Date:   Wed, 29 Jul 2020 21:00:00 +0530
+Message-Id: <1596036607-11877-1-git-send-email-sivaprak@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1596036607-11877-1-git-send-email-sivaprak@codeaurora.org>
-References: <1596036607-11877-1-git-send-email-sivaprak@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-ipq8074 has two PCIe ports while the support for Gen2 PCIe port is
-already available add the support for Gen3 binding.
+IPQ8074 has two PCIe ports both are based on synopsis designware PCIe
+controller. while it was assumed that PCIe support for IPQ8074 was already
+available, it was not functional until now.
 
-Co-developed-by: Selvam Sathappan Periakaruppan <speriaka@codeaurora.org>
-Signed-off-by: Selvam Sathappan Periakaruppan <speriaka@codeaurora.org>
-Reviewed-by: Rob Herring <robh@kernel.org>
-Signed-off-by: Sivaprakash Murugesan <sivaprak@codeaurora.org>
----
- .../devicetree/bindings/pci/qcom,pcie.yaml         | 47 ++++++++++++++++++++++
- 1 file changed, 47 insertions(+)
+This patch series adds support for PCIe ports on IPQ8074.
 
-diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-index 2eef6d5..e0559dd 100644
---- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-@@ -23,6 +23,7 @@ properties:
-       - qcom,pcie-ipq8064
-       - qcom,pcie-ipq8064-v2
-       - qcom,pcie-ipq8074
-+      - qcom,pcie-ipq8074-gen3
-       - qcom,pcie-msm8996
-       - qcom,pcie-qcs404
-       - qcom,pcie-sdm845
-@@ -295,6 +296,52 @@ allOf:
-        compatible:
-          contains:
-            enum:
-+             - qcom,pcie-ipq8074-gen3
-+   then:
-+     properties:
-+       clocks:
-+         items:
-+           - description: sys noc interface clock
-+           - description: AXI master clock
-+           - description: AXI secondary clock
-+           - description: AHB clock
-+           - description: Auxilary clock
-+           - description: AXI secondary bridge clock
-+           - description: PCIe rchng clock
-+       clock-names:
-+         items:
-+           - const: iface
-+           - const: axi_m
-+           - const: axi_s
-+           - const: ahb
-+           - const: aux
-+           - const: axi_bridge
-+           - const: rchng
-+       resets:
-+         items:
-+           - description: PIPE reset
-+           - description: PCIe sleep reset
-+           - description: PCIe sticky reset
-+           - description: AXI master reset
-+           - description: AXI secondary reset
-+           - description: AHB reset
-+           - description: AXI master sticky reset
-+           - description: AXI secondary sticky reset
-+       reset-names:
-+         items:
-+           - const: pipe
-+           - const: sleep
-+           - const: sticky
-+           - const: axi_m
-+           - const: axi_s
-+           - const: ahb
-+           - const: axi_m_sticky
-+           - const: axi_s_sticky
-+ - if:
-+     properties:
-+       compatible:
-+         contains:
-+           enum:
-              - qcom,pcie-msm8996
-    then:
-      properties:
+First PCIe port is of Gen2 synposis version is 2_3_2 which has already been
+enabled. But it had some problems on phy init and needed dt updates.
+
+Second PCIe port is Gen3 synopsis version is 2_9_0. This series adds
+support for this PCIe port while fixing dt nodes.
+
+Patch 1 on this series depends on qcom PCIe bindings patch
+https://lkml.org/lkml/2020/6/24/162
+
+[V2]
+ * Fixed commit headers and messages to have PCIe and Gen[2-3]
+ * Addressed Vinod's review comments on phy init
+ * Patches are rebased on linux-next to resolve dependencies with recent
+   PCI patches
+ * Patch 1 depends on https://lkml.org/lkml/2020/7/28/1462
+ * Dropped clock patches as it has picked up by Stephen
+
+Sivaprakash Murugesan (7):
+  dt-bindings: PCI: qcom: Add ipq8074 Gen3 PCIe compatible
+  dt-bindings: phy: qcom,qmp: Add ipq8074 PCIe Gen3 phy
+  phy: qcom-qmp: Use correct values for ipq8074 PCIe Gen2 PHY init
+  phy: qcom-qmp: Add compatible for ipq8074 PCIe Gen3 qmp phy
+  PCI: qcom: Do PHY power on before PCIe init
+  PCI: qcom: Add ipq8074 PCIe controller support
+  arm64: dts: ipq8074: Fixup PCIe dts nodes
+
+ .../devicetree/bindings/pci/qcom,pcie.yaml         |  47 +++++
+ .../devicetree/bindings/phy/qcom,qmp-phy.yaml      |   1 +
+ arch/arm64/boot/dts/qcom/ipq8074-hk01.dts          |   8 +-
+ arch/arm64/boot/dts/qcom/ipq8074.dtsi              | 109 ++++++++----
+ drivers/pci/controller/dwc/pcie-qcom.c             | 189 ++++++++++++++++++++-
+ drivers/phy/qualcomm/phy-qcom-pcie3-qmp.h          | 139 +++++++++++++++
+ drivers/phy/qualcomm/phy-qcom-qmp.c                | 187 +++++++++++++++++++-
+ drivers/phy/qualcomm/phy-qcom-qmp.h                |   2 +
+ 8 files changed, 627 insertions(+), 55 deletions(-)
+ create mode 100644 drivers/phy/qualcomm/phy-qcom-pcie3-qmp.h
+
 -- 
 2.7.4
 
