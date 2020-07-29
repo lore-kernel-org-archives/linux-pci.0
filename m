@@ -2,123 +2,72 @@ Return-Path: <SRS0=EmHj=BI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC6F3C433DF
-	for <linux-pci@archiver.kernel.org>; Wed, 29 Jul 2020 15:26:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3DA2C433E0
+	for <linux-pci@archiver.kernel.org>; Wed, 29 Jul 2020 15:31:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B971820809
-	for <linux-pci@archiver.kernel.org>; Wed, 29 Jul 2020 15:26:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1596036383;
-	bh=e1IZGk2HLbSVU9AcuM8GnjZfSFc5InB7KRTY0ZrYV5I=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=NzjJV+61YgVEExwZ/JOD7G+Jfl0lMT02Bcxbct4oHRmjjTVEicBrb5ycbx0LBA4iX
-	 rp+Sx94G4VDC+K4l+SeD4K5A82Nvbji7yfju3B9uJYHC4LLay83tS7pAecy/rkARMo
-	 3BhnLdsW5c3s1sPbUSpyr2rl2Lva5g16RlEJ3KAA=
+	by mail.kernel.org (Postfix) with ESMTP id C06212083E
+	for <linux-pci@archiver.kernel.org>; Wed, 29 Jul 2020 15:31:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726480AbgG2P0X (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 29 Jul 2020 11:26:23 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59492 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726449AbgG2P0W (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 29 Jul 2020 11:26:22 -0400
-Received: from mail-oo1-f50.google.com (mail-oo1-f50.google.com [209.85.161.50])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3A0D822BEA;
-        Wed, 29 Jul 2020 15:26:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1596036382;
-        bh=e1IZGk2HLbSVU9AcuM8GnjZfSFc5InB7KRTY0ZrYV5I=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=t3epJ9JgT70OxRHY9SR0cQhqzIwOkOkPFeVJF5ioZisTS105rlxyeVdprT+2yhYo5
-         JAi69THnCauCt76IoxxgsfIKXND4ja9JKr0GMtVC76v7aJaSIi+Ovja8TMTjDqIhWo
-         KL5HRjx3iPyOutLs9RESRlLoevnlz8FnwCrEce/g=
-Received: by mail-oo1-f50.google.com with SMTP id x1so2422466oox.6;
-        Wed, 29 Jul 2020 08:26:22 -0700 (PDT)
-X-Gm-Message-State: AOAM530T6+mPn2hqL5TVm3/DWCnfL0UiIn/c7RUGUJJrJerS3hJhg4M7
-        AKCXE8QHZ2jtHD0PZJFzyhzz3sNqhZ7GxSNkIQ==
-X-Google-Smtp-Source: ABdhPJyHJnvAb/U1N/MkxmKfSNlaFzpRh95wJ6AQkIeYAkMZZkRld+tazFAGbEN9i2pfBjAX0CU9GBAveAt1MMRDXaQ=
-X-Received: by 2002:a4a:ae07:: with SMTP id z7mr28490313oom.25.1596036381394;
- Wed, 29 Jul 2020 08:26:21 -0700 (PDT)
-MIME-Version: 1.0
-References: <1595254921-26050-1-git-send-email-Anson.Huang@nxp.com> <1595254921-26050-3-git-send-email-Anson.Huang@nxp.com>
-In-Reply-To: <1595254921-26050-3-git-send-email-Anson.Huang@nxp.com>
-From:   Rob Herring <robh@kernel.org>
-Date:   Wed, 29 Jul 2020 09:26:10 -0600
-X-Gmail-Original-Message-ID: <CAL_JsqLXGduym51-Ej8Td4yOyP-UfGP-WCh2xeP_V90Yabm4XA@mail.gmail.com>
-Message-ID: <CAL_JsqLXGduym51-Ej8Td4yOyP-UfGP-WCh2xeP_V90Yabm4XA@mail.gmail.com>
-Subject: Re: [PATCH V3 3/3] pci: imx: Select RESET_IMX7 by default
-To:     Anson Huang <Anson.Huang@nxp.com>
-Cc:     Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        Shawn Guo <shawnguo@kernel.org>,
-        Sascha Hauer <s.hauer@pengutronix.de>,
-        Sascha Hauer <kernel@pengutronix.de>,
-        Fabio Estevam <festevam@gmail.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Yang-Leo Li <leoyang.li@nxp.com>, Vinod <vkoul@kernel.org>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Olof Johansson <olof@lixom.net>,
-        Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        Thierry Reding <treding@nvidia.com>,
-        Vidya Sagar <vidyas@nvidia.com>,
-        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
-        Jonathan Chocron <jonnyc@amazon.com>,
-        Dilip Kota <eswara.kota@linux.intel.com>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        PCI <linux-pci@vger.kernel.org>,
-        NXP Linux Team <Linux-imx@nxp.com>
-Content-Type: text/plain; charset="UTF-8"
+        id S1726509AbgG2PbG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 29 Jul 2020 11:31:06 -0400
+Received: from alexa-out-sd-02.qualcomm.com ([199.106.114.39]:50912 "EHLO
+        alexa-out-sd-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726054AbgG2PbF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jul 2020 11:31:05 -0400
+Received: from unknown (HELO ironmsg04-sd.qualcomm.com) ([10.53.140.144])
+  by alexa-out-sd-02.qualcomm.com with ESMTP; 29 Jul 2020 08:31:04 -0700
+Received: from sivaprak-linux.qualcomm.com ([10.201.3.202])
+  by ironmsg04-sd.qualcomm.com with ESMTP; 29 Jul 2020 08:30:56 -0700
+Received: by sivaprak-linux.qualcomm.com (Postfix, from userid 459349)
+        id DDE50219AB; Wed, 29 Jul 2020 21:00:54 +0530 (IST)
+From:   Sivaprakash Murugesan <sivaprak@codeaurora.org>
+To:     agross@kernel.org, bjorn.andersson@linaro.org, bhelgaas@google.com,
+        robh+dt@kernel.org, kishon@ti.com, vkoul@kernel.org,
+        svarbanov@mm-sol.com, lorenzo.pieralisi@arm.com,
+        p.zabel@pengutronix.de, sivaprak@codeaurora.org,
+        mgautam@codeaurora.org, smuthayy@codeaurora.org,
+        varada@codeaurora.org, linux-arm-msm@vger.kernel.org,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     Selvam Sathappan Periakaruppan <speriaka@codeaurora.org>
+Subject: [PATCH V2 2/7] dt-bindings: phy: qcom,qmp: Add ipq8074 PCIe Gen3 phy
+Date:   Wed, 29 Jul 2020 21:00:02 +0530
+Message-Id: <1596036607-11877-3-git-send-email-sivaprak@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1596036607-11877-1-git-send-email-sivaprak@codeaurora.org>
+References: <1596036607-11877-1-git-send-email-sivaprak@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Jul 20, 2020 at 8:26 AM Anson Huang <Anson.Huang@nxp.com> wrote:
->
-> i.MX7 reset driver now supports module build and it is no longer
-> built in by default, so i.MX PCI driver needs to select it explicitly
-> due to it is NOT supporting loadable module currently.
->
-> Signed-off-by: Anson Huang <Anson.Huang@nxp.com>
-> ---
-> No change.
-> ---
->  drivers/pci/controller/dwc/Kconfig | 1 +
->  1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-> index 044a376..bcf63ce 100644
-> --- a/drivers/pci/controller/dwc/Kconfig
-> +++ b/drivers/pci/controller/dwc/Kconfig
-> @@ -90,6 +90,7 @@ config PCI_EXYNOS
->
->  config PCI_IMX6
->         bool "Freescale i.MX6/7/8 PCIe controller"
-> +       select RESET_IMX7
+Add PCIe phy compatible for Gen3 PCIe port found in ipq8074 devices.
 
-This will break as select will not cause all of RESET_IMX7's
-dependencies to be met. It also doesn't scale. Are you going to do the
-same thing for clocks, pinctrl, gpio, etc.?
+Co-developed-by: Selvam Sathappan Periakaruppan <speriaka@codeaurora.org>
+Signed-off-by: Selvam Sathappan Periakaruppan <speriaka@codeaurora.org>
+Acked-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Sivaprakash Murugesan <sivaprak@codeaurora.org>
+---
+ Documentation/devicetree/bindings/phy/qcom,qmp-phy.yaml | 1 +
+ 1 file changed, 1 insertion(+)
 
-You should make the PCI driver work as a module.
+diff --git a/Documentation/devicetree/bindings/phy/qcom,qmp-phy.yaml b/Documentation/devicetree/bindings/phy/qcom,qmp-phy.yaml
+index e4cd4a1..63025b0 100644
+--- a/Documentation/devicetree/bindings/phy/qcom,qmp-phy.yaml
++++ b/Documentation/devicetree/bindings/phy/qcom,qmp-phy.yaml
+@@ -18,6 +18,7 @@ properties:
+   compatible:
+     enum:
+       - qcom,ipq8074-qmp-pcie-phy
++      - qcom,ipq8074-qmp-pcie-gen3-phy
+       - qcom,ipq8074-qmp-usb3-phy
+       - qcom,msm8996-qmp-pcie-phy
+       - qcom,msm8996-qmp-ufs-phy
+-- 
+2.7.4
 
-Rob
-
->         depends on ARCH_MXC || COMPILE_TEST
->         depends on PCI_MSI_IRQ_DOMAIN
->         select PCIE_DW_HOST
-> --
-> 2.7.4
->
