@@ -7,24 +7,24 @@ X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F0C0C433E3
-	for <linux-pci@archiver.kernel.org>; Wed, 29 Jul 2020 15:31:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DE4DC433E8
+	for <linux-pci@archiver.kernel.org>; Wed, 29 Jul 2020 15:31:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 519D52083B
-	for <linux-pci@archiver.kernel.org>; Wed, 29 Jul 2020 15:31:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 04DB120809
+	for <linux-pci@archiver.kernel.org>; Wed, 29 Jul 2020 15:31:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726970AbgG2PbS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 29 Jul 2020 11:31:18 -0400
-Received: from alexa-out-sd-01.qualcomm.com ([199.106.114.38]:10017 "EHLO
+        id S1726802AbgG2PbH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 29 Jul 2020 11:31:07 -0400
+Received: from alexa-out-sd-01.qualcomm.com ([199.106.114.38]:10011 "EHLO
         alexa-out-sd-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726790AbgG2PbJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jul 2020 11:31:09 -0400
-Received: from unknown (HELO ironmsg02-sd.qualcomm.com) ([10.53.140.142])
-  by alexa-out-sd-01.qualcomm.com with ESMTP; 29 Jul 2020 08:31:07 -0700
+        by vger.kernel.org with ESMTP id S1726709AbgG2PbH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jul 2020 11:31:07 -0400
+Received: from unknown (HELO ironmsg01-sd.qualcomm.com) ([10.53.140.141])
+  by alexa-out-sd-01.qualcomm.com with ESMTP; 29 Jul 2020 08:31:04 -0700
 Received: from sivaprak-linux.qualcomm.com ([10.201.3.202])
-  by ironmsg02-sd.qualcomm.com with ESMTP; 29 Jul 2020 08:31:02 -0700
+  by ironmsg01-sd.qualcomm.com with ESMTP; 29 Jul 2020 08:30:56 -0700
 Received: by sivaprak-linux.qualcomm.com (Postfix, from userid 459349)
-        id 5D7C621A0C; Wed, 29 Jul 2020 21:00:55 +0530 (IST)
+        id 005A9219A9; Wed, 29 Jul 2020 21:00:54 +0530 (IST)
 From:   Sivaprakash Murugesan <sivaprak@codeaurora.org>
 To:     agross@kernel.org, bjorn.andersson@linaro.org, bhelgaas@google.com,
         robh+dt@kernel.org, kishon@ti.com, vkoul@kernel.org,
@@ -34,9 +34,11 @@ To:     agross@kernel.org, bjorn.andersson@linaro.org, bhelgaas@google.com,
         varada@codeaurora.org, linux-arm-msm@vger.kernel.org,
         linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH V2 6/7] PCI: qcom: Add ipq8074 PCIe controller support
-Date:   Wed, 29 Jul 2020 21:00:06 +0530
-Message-Id: <1596036607-11877-7-git-send-email-sivaprak@codeaurora.org>
+Cc:     stable@vger.kernel.org,
+        Selvam Sathappan Periakaruppan <speriaka@codeaurora.org>
+Subject: [PATCH V2 3/7] phy: qcom-qmp: Use correct values for ipq8074 PCIe Gen2 PHY init
+Date:   Wed, 29 Jul 2020 21:00:03 +0530
+Message-Id: <1596036607-11877-4-git-send-email-sivaprak@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1596036607-11877-1-git-send-email-sivaprak@codeaurora.org>
 References: <1596036607-11877-1-git-send-email-sivaprak@codeaurora.org>
@@ -45,271 +47,111 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add support for PCIe Gen3 port found in ipq8074 devices.
+There were some problem in ipq8074 Gen2 PCIe phy init sequence.
 
+1. Few register values were wrongly updated in the phy init sequence.
+2. The register QSERDES_RX_SIGDET_CNTRL is a RX tuning parameter
+   register which is added in serdes table causing the wrong register
+   was getting updated.
+3. Clocks and resets were not added in the phy init.
+
+Fix these to make Gen2 PCIe port on ipq8074 devices to work.
+
+Fixes: eef243d04b2b6 ("phy: qcom-qmp: Add support for IPQ8074")
+
+Cc: stable@vger.kernel.org
+Co-developed-by: Selvam Sathappan Periakaruppan <speriaka@codeaurora.org>
+Signed-off-by: Selvam Sathappan Periakaruppan <speriaka@codeaurora.org>
 Signed-off-by: Sivaprakash Murugesan <sivaprak@codeaurora.org>
 ---
- drivers/pci/controller/dwc/pcie-qcom.c | 177 ++++++++++++++++++++++++++++++++-
- 1 file changed, 176 insertions(+), 1 deletion(-)
+[V2]
+ * Fixed commit message as commented by Vinod
+ drivers/phy/qualcomm/phy-qcom-qmp.c | 16 +++++++++-------
+ drivers/phy/qualcomm/phy-qcom-qmp.h |  2 ++
+ 2 files changed, 11 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index e1b5651..3bddfcff 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -40,6 +40,14 @@
- #define L23_CLK_RMV_DIS				BIT(2)
- #define L1_CLK_RMV_DIS				BIT(1)
- 
-+#define PCIE_ATU_CR1_OUTBOUND_6_GEN3		0xC00
-+#define PCIE_ATU_CR2_OUTBOUND_6_GEN3		0xC04
-+#define PCIE_ATU_LIMIT_OUTBOUND_6_GEN3		0xC10
-+#define PCIE_ATU_CR1_OUTBOUND_7_GEN3		0xE00
-+#define PCIE_ATU_CR2_OUTBOUND_7_GEN3		0xE04
-+#define PCIE_ATU_LOWER_BASE_OUTBOUND_7_GEN3	0xE08
-+#define PCIE_ATU_LIMIT_OUTBOUND_7_GEN3		0xE10
-+
- #define PCIE20_PARF_PHY_CTRL			0x40
- #define PHY_CTRL_PHY_TX0_TERM_OFFSET_MASK	GENMASK(20, 16)
- #define PHY_CTRL_PHY_TX0_TERM_OFFSET(x)		((x) << 16)
-@@ -58,6 +66,13 @@
- #define PCIE20_PARF_BDF_TRANSLATE_CFG		0x24C
- #define PCIE20_PARF_DEVICE_TYPE			0x1000
- 
-+#define AHB_CLK_EN				BIT(0)
-+#define MSTR_AXI_CLK_EN				BIT(1)
-+#define BYPASS					BIT(4)
-+
-+#define PCIE20_PARF_BDF_TO_SID_TABLE		0x2000
-+#define BDF_TO_SID_TABLE_SIZE			0x100
-+
- #define PCIE20_ELBI_SYS_CTRL			0x04
- #define PCIE20_ELBI_SYS_CTRL_LT_ENABLE		BIT(0)
- 
-@@ -68,11 +83,13 @@
- #define CFG_BRIDGE_SB_INIT			BIT(0)
- 
- #define PCIE20_CAP				0x70
--#define PCIE20_DEVICE_CONTROL2_STATUS2		(PCIE20_CAP + PCI_EXP_DEVCTL2)
- #define PCIE20_CAP_LINK_CAPABILITIES		(PCIE20_CAP + PCI_EXP_LNKCAP)
- #define PCIE20_CAP_LINK_1			(PCIE20_CAP + 0x14)
- #define PCIE_CAP_LINK1_VAL			0x2FD7F
- 
-+#define PCIE20_DEVICE_CONTROL2_STATUS2		(PCIE20_CAP + PCI_EXP_DEVCTL2)
-+#define PCIE_CAP_CPL_TIMEOUT_DISABLE           0x10
-+
- #define PCIE20_PARF_Q2A_FLUSH			0x1AC
- 
- #define PCIE20_MISC_CONTROL_1_REG		0x8BC
-@@ -96,9 +113,15 @@
- #define SLV_ADDR_SPACE_SZ			0x10000000
- 
- #define PCIE20_LNK_CONTROL2_LINK_STATUS2	0xa0
-+#define PCIE_CAP_CURR_DEEMPHASIS		BIT(16)
-+#define SPEED_GEN3				0x3
- 
- #define DEVICE_TYPE_RC				0x4
- 
-+#define PCIE30_GEN3_RELATED_OFF			0x890
-+#define RXEQ_RGRDLESS_RXTS			BIT(13)
-+#define GEN3_ZRXDC_NONCOMPL			BIT(0)
-+
- #define QCOM_PCIE_2_1_0_MAX_SUPPLY	3
- #define QCOM_PCIE_2_1_0_MAX_CLOCKS	5
- struct qcom_pcie_resources_2_1_0 {
-@@ -165,6 +188,11 @@ struct qcom_pcie_resources_2_7_0 {
- 	struct clk *pipe_clk;
+diff --git a/drivers/phy/qualcomm/phy-qcom-qmp.c b/drivers/phy/qualcomm/phy-qcom-qmp.c
+index 562053c..6e6f992 100644
+--- a/drivers/phy/qualcomm/phy-qcom-qmp.c
++++ b/drivers/phy/qualcomm/phy-qcom-qmp.c
+@@ -604,8 +604,8 @@ static const struct qmp_phy_init_tbl ipq8074_pcie_serdes_tbl[] = {
+ 	QMP_PHY_INIT_CFG(QSERDES_COM_BG_TRIM, 0xf),
+ 	QMP_PHY_INIT_CFG(QSERDES_COM_LOCK_CMP_EN, 0x1),
+ 	QMP_PHY_INIT_CFG(QSERDES_COM_VCO_TUNE_MAP, 0x0),
+-	QMP_PHY_INIT_CFG(QSERDES_COM_VCO_TUNE_TIMER1, 0x1f),
+-	QMP_PHY_INIT_CFG(QSERDES_COM_VCO_TUNE_TIMER2, 0x3f),
++	QMP_PHY_INIT_CFG(QSERDES_COM_VCO_TUNE_TIMER1, 0xff),
++	QMP_PHY_INIT_CFG(QSERDES_COM_VCO_TUNE_TIMER2, 0x1f),
+ 	QMP_PHY_INIT_CFG(QSERDES_COM_CMN_CONFIG, 0x6),
+ 	QMP_PHY_INIT_CFG(QSERDES_COM_PLL_IVCO, 0xf),
+ 	QMP_PHY_INIT_CFG(QSERDES_COM_HSCLK_SEL, 0x0),
+@@ -631,7 +631,6 @@ static const struct qmp_phy_init_tbl ipq8074_pcie_serdes_tbl[] = {
+ 	QMP_PHY_INIT_CFG(QSERDES_COM_INTEGLOOP_GAIN1_MODE0, 0x0),
+ 	QMP_PHY_INIT_CFG(QSERDES_COM_INTEGLOOP_GAIN0_MODE0, 0x80),
+ 	QMP_PHY_INIT_CFG(QSERDES_COM_BIAS_EN_CTRL_BY_PSM, 0x1),
+-	QMP_PHY_INIT_CFG(QSERDES_COM_VCO_TUNE_CTRL, 0xa),
+ 	QMP_PHY_INIT_CFG(QSERDES_COM_SSC_EN_CENTER, 0x1),
+ 	QMP_PHY_INIT_CFG(QSERDES_COM_SSC_PER1, 0x31),
+ 	QMP_PHY_INIT_CFG(QSERDES_COM_SSC_PER2, 0x1),
+@@ -640,7 +639,6 @@ static const struct qmp_phy_init_tbl ipq8074_pcie_serdes_tbl[] = {
+ 	QMP_PHY_INIT_CFG(QSERDES_COM_SSC_STEP_SIZE1, 0x2f),
+ 	QMP_PHY_INIT_CFG(QSERDES_COM_SSC_STEP_SIZE2, 0x19),
+ 	QMP_PHY_INIT_CFG(QSERDES_COM_CLK_EP_DIV, 0x19),
+-	QMP_PHY_INIT_CFG(QSERDES_RX_SIGDET_CNTRL, 0x7),
  };
  
-+struct qcom_pcie_resources_2_9_0 {
-+	struct clk_bulk_data clks[7];
-+	struct reset_control *rst[8];
+ static const struct qmp_phy_init_tbl ipq8074_pcie_tx_tbl[] = {
+@@ -648,6 +646,8 @@ static const struct qmp_phy_init_tbl ipq8074_pcie_tx_tbl[] = {
+ 	QMP_PHY_INIT_CFG(QSERDES_TX_LANE_MODE, 0x6),
+ 	QMP_PHY_INIT_CFG(QSERDES_TX_RES_CODE_LANE_OFFSET, 0x2),
+ 	QMP_PHY_INIT_CFG(QSERDES_TX_RCV_DETECT_LVL_2, 0x12),
++	QMP_PHY_INIT_CFG(QSERDES_TX_EMP_POST1_LVL, 0x36),
++	QMP_PHY_INIT_CFG(QSERDES_TX_SLEW_CNTL, 0x0a),
+ };
+ 
+ static const struct qmp_phy_init_tbl ipq8074_pcie_rx_tbl[] = {
+@@ -658,7 +658,6 @@ static const struct qmp_phy_init_tbl ipq8074_pcie_rx_tbl[] = {
+ 	QMP_PHY_INIT_CFG(QSERDES_RX_RX_EQU_ADAPTOR_CNTRL4, 0xdb),
+ 	QMP_PHY_INIT_CFG(QSERDES_RX_UCDR_SO_SATURATION_AND_ENABLE, 0x4b),
+ 	QMP_PHY_INIT_CFG(QSERDES_RX_UCDR_SO_GAIN, 0x4),
+-	QMP_PHY_INIT_CFG(QSERDES_RX_UCDR_SO_GAIN_HALF, 0x4),
+ };
+ 
+ static const struct qmp_phy_init_tbl ipq8074_pcie_pcs_tbl[] = {
+@@ -2046,6 +2045,9 @@ static const struct qmp_phy_cfg msm8996_usb3phy_cfg = {
+ 	.pwrdn_ctrl		= SW_PWRDN,
+ };
+ 
++static const char * const ipq8074_pciephy_clk_l[] = {
++	"aux", "cfg_ahb",
 +};
-+
- union qcom_pcie_resources {
- 	struct qcom_pcie_resources_1_0_0 v1_0_0;
- 	struct qcom_pcie_resources_2_1_0 v2_1_0;
-@@ -172,6 +200,7 @@ union qcom_pcie_resources {
- 	struct qcom_pcie_resources_2_3_3 v2_3_3;
- 	struct qcom_pcie_resources_2_4_0 v2_4_0;
- 	struct qcom_pcie_resources_2_7_0 v2_7_0;
-+	struct qcom_pcie_resources_2_9_0 v2_9_0;
- };
+ /* list of resets */
+ static const char * const ipq8074_pciephy_reset_l[] = {
+ 	"phy", "common",
+@@ -2063,8 +2065,8 @@ static const struct qmp_phy_cfg ipq8074_pciephy_cfg = {
+ 	.rx_tbl_num		= ARRAY_SIZE(ipq8074_pcie_rx_tbl),
+ 	.pcs_tbl		= ipq8074_pcie_pcs_tbl,
+ 	.pcs_tbl_num		= ARRAY_SIZE(ipq8074_pcie_pcs_tbl),
+-	.clk_list		= NULL,
+-	.num_clks		= 0,
++	.clk_list		= ipq8074_pciephy_clk_l,
++	.num_clks		= ARRAY_SIZE(ipq8074_pciephy_clk_l),
+ 	.reset_list		= ipq8074_pciephy_reset_l,
+ 	.num_resets		= ARRAY_SIZE(ipq8074_pciephy_reset_l),
+ 	.vreg_list		= NULL,
+diff --git a/drivers/phy/qualcomm/phy-qcom-qmp.h b/drivers/phy/qualcomm/phy-qcom-qmp.h
+index 4277f59..904b80a 100644
+--- a/drivers/phy/qualcomm/phy-qcom-qmp.h
++++ b/drivers/phy/qualcomm/phy-qcom-qmp.h
+@@ -77,6 +77,8 @@
+ #define QSERDES_COM_CORECLK_DIV_MODE1			0x1bc
  
- struct qcom_pcie;
-@@ -1250,6 +1279,134 @@ static void qcom_pcie_post_deinit_2_7_0(struct qcom_pcie *pcie)
- 	clk_disable_unprepare(res->pipe_clk);
- }
- 
-+static int qcom_pcie_get_resources_2_9_0(struct qcom_pcie *pcie)
-+{
-+	struct qcom_pcie_resources_2_9_0 *res = &pcie->res.v2_9_0;
-+	struct dw_pcie *pci = pcie->pci;
-+	struct device *dev = pci->dev;
-+	int ret, i;
-+	const char *rst_names[] = { "pipe", "sleep", "sticky", "axi_m",
-+				    "axi_s", "ahb", "axi_m_sticky",
-+				    "axi_s_sticky" };
-+
-+	res->clks[0].id = "iface";
-+	res->clks[1].id = "axi_m";
-+	res->clks[2].id = "axi_s";
-+	res->clks[3].id = "ahb";
-+	res->clks[4].id = "aux";
-+	res->clks[5].id = "axi_bridge";
-+	res->clks[6].id = "rchng";
-+
-+	ret = devm_clk_bulk_get(dev, ARRAY_SIZE(res->clks), res->clks);
-+	if (ret < 0)
-+		return ret;
-+
-+	for (i = 0; i < ARRAY_SIZE(rst_names); i++) {
-+		res->rst[i] = devm_reset_control_get(dev, rst_names[i]);
-+		if (IS_ERR(res->rst[i]))
-+			return PTR_ERR(res->rst[i]);
-+	}
-+
-+	return 0;
-+}
-+
-+static int qcom_pcie_init_2_9_0(struct qcom_pcie *pcie)
-+{
-+	struct qcom_pcie_resources_2_9_0 *res = &pcie->res.v2_9_0;
-+	struct dw_pcie *pci = pcie->pci;
-+	struct device *dev = pci->dev;
-+	int i, ret;
-+	u32 val;
-+	u32 bus_master_en = PCI_COMMAND_IO | PCI_COMMAND_MEMORY | PCI_COMMAND_MASTER;
-+
-+	for (i = 0; i < ARRAY_SIZE(res->rst); i++) {
-+		ret = reset_control_assert(res->rst[i]);
-+		if (ret) {
-+			dev_err(dev, "reset #%d assert failed (%d)\n", i, ret);
-+			return ret;
-+		}
-+	}
-+
-+	usleep_range(2000, 2500);
-+
-+	for (i = 0; i < ARRAY_SIZE(res->rst); i++) {
-+		ret = reset_control_deassert(res->rst[i]);
-+		if (ret) {
-+			dev_err(dev, "reset #%d deassert failed (%d)\n", i,
-+				ret);
-+			return ret;
-+		}
-+	}
-+
-+	/*
-+	 * Don't have a way to see if the reset has completed.
-+	 * Wait for some time.
-+	 */
-+	usleep_range(2000, 2500);
-+
-+	ret = clk_bulk_prepare_enable(ARRAY_SIZE(res->clks), res->clks);
-+	if (ret)
-+		return ret;
-+
-+	/* Parf config */
-+	writel(SLV_ADDR_SPACE_SZ,
-+	       pcie->parf + PCIE20_v3_PARF_SLV_ADDR_SPACE_SIZE);
-+
-+	val = readl(pcie->parf + PCIE20_PARF_PHY_CTRL);
-+	val &= ~BIT(0);
-+	writel(val, pcie->parf + PCIE20_PARF_PHY_CTRL);
-+
-+	writel(0, pcie->parf + PCIE20_PARF_DBI_BASE_ADDR);
-+	writel(DEVICE_TYPE_RC, pcie->parf + PCIE20_PARF_DEVICE_TYPE);
-+	writel(BYPASS | MSTR_AXI_CLK_EN | AHB_CLK_EN,
-+	       pcie->parf + PCIE20_PARF_MHI_CLOCK_RESET_CTRL);
-+
-+	writel(RXEQ_RGRDLESS_RXTS | GEN3_ZRXDC_NONCOMPL,
-+	       pci->dbi_base + PCIE30_GEN3_RELATED_OFF);
-+	writel(MST_WAKEUP_EN | SLV_WAKEUP_EN | MSTR_ACLK_CGC_DIS
-+		| SLV_ACLK_CGC_DIS | CORE_CLK_CGC_DIS |
-+		AUX_PWR_DET | L23_CLK_RMV_DIS | L1_CLK_RMV_DIS,
-+		pcie->parf + PCIE20_PARF_SYS_CTRL);
-+	writel(0, pcie->parf + PCIE20_PARF_Q2A_FLUSH);
-+
-+	/* DBI config */
-+	writel(bus_master_en, pci->dbi_base + PCI_COMMAND);
-+
-+	writel(DBI_RO_WR_EN, pci->dbi_base + PCIE20_MISC_CONTROL_1_REG);
-+	writel(PCIE_CAP_LINK1_VAL, pci->dbi_base + PCIE20_CAP_LINK_1);
-+
-+	/* Configure PCIe link capabilities for ASPM */
-+	val = readl(pci->dbi_base + PCIE20_CAP_LINK_CAPABILITIES);
-+	val &= ~PCI_EXP_LNKCAP_ASPMS;
-+	writel(val, pci->dbi_base + PCIE20_CAP_LINK_CAPABILITIES);
-+
-+	writel(PCIE_CAP_CPL_TIMEOUT_DISABLE, pci->dbi_base +
-+		PCIE20_DEVICE_CONTROL2_STATUS2);
-+
-+	writel(PCIE_CAP_CURR_DEEMPHASIS | SPEED_GEN3,
-+	       pci->dbi_base + PCIE20_LNK_CONTROL2_LINK_STATUS2);
-+
-+	for (i = 0 ; i < BDF_TO_SID_TABLE_SIZE ; i++)
-+		writel(0x0, pcie->parf + PCIE20_PARF_BDF_TO_SID_TABLE + (4 * i));
-+
-+	writel(0x4, pci->atu_base + PCIE_ATU_CR1_OUTBOUND_6_GEN3);
-+	writel(0x90000000, pci->atu_base + PCIE_ATU_CR2_OUTBOUND_6_GEN3);
-+	writel(0x00107FFFF, pci->atu_base + PCIE_ATU_LIMIT_OUTBOUND_6_GEN3);
-+	writel(0x5, pci->atu_base + PCIE_ATU_CR1_OUTBOUND_7_GEN3);
-+	writel(0x90000000, pci->atu_base + PCIE_ATU_CR2_OUTBOUND_7_GEN3);
-+	writel(0x200000, pci->atu_base + PCIE_ATU_LOWER_BASE_OUTBOUND_7_GEN3);
-+	writel(0x7FFFFF, pci->atu_base + PCIE_ATU_LIMIT_OUTBOUND_7_GEN3);
-+
-+	return 0;
-+}
-+
-+static void qcom_pcie_deinit_2_9_0(struct qcom_pcie *pcie)
-+{
-+	struct qcom_pcie_resources_2_9_0 *res = &pcie->res.v2_9_0;
-+
-+	clk_bulk_disable_unprepare(ARRAY_SIZE(res->clks), res->clks);
-+}
-+
- static int qcom_pcie_link_up(struct dw_pcie *pci)
- {
- 	u16 val = readw(pci->dbi_base + PCIE20_CAP + PCI_EXP_LNKSTA);
-@@ -1359,6 +1516,14 @@ static const struct qcom_pcie_ops ops_2_7_0 = {
- 	.post_deinit = qcom_pcie_post_deinit_2_7_0,
- };
- 
-+/* Qcom IP rev.: 2.9.0	Synopsys IP rev.: 5.00a */
-+static const struct qcom_pcie_ops ops_2_9_0 = {
-+	.get_resources = qcom_pcie_get_resources_2_9_0,
-+	.init = qcom_pcie_init_2_9_0,
-+	.deinit = qcom_pcie_deinit_2_9_0,
-+	.ltssm_enable = qcom_pcie_2_3_2_ltssm_enable,
-+};
-+
- static const struct dw_pcie_ops dw_pcie_ops = {
- 	.link_up = qcom_pcie_link_up,
- };
-@@ -1399,6 +1564,15 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 		goto err_pm_runtime_put;
- 	}
- 
-+	if (pcie->ops == &ops_2_9_0) {
-+		res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "atu");
-+		pci->atu_base = devm_pci_remap_cfg_resource(dev, res);
-+		if (IS_ERR(pci->atu_base)) {
-+			ret = PTR_ERR(pci->atu_base);
-+			goto err_pm_runtime_put;
-+		}
-+	}
-+
- 	pcie->gen = of_pci_get_max_link_speed(pdev->dev.of_node);
- 	if (pcie->gen < 0)
- 		pcie->gen = 2;
-@@ -1476,6 +1650,7 @@ static const struct of_device_id qcom_pcie_match[] = {
- 	{ .compatible = "qcom,pcie-ipq4019", .data = &ops_2_4_0 },
- 	{ .compatible = "qcom,pcie-qcs404", .data = &ops_2_4_0 },
- 	{ .compatible = "qcom,pcie-sdm845", .data = &ops_2_7_0 },
-+	{ .compatible = "qcom,pcie-ipq8074-gen3", .data = &ops_2_9_0 },
- 	{ }
- };
- 
+ /* Only for QMP V2 PHY - TX registers */
++#define QSERDES_TX_EMP_POST1_LVL			0x018
++#define QSERDES_TX_SLEW_CNTL				0x040
+ #define QSERDES_TX_RES_CODE_LANE_OFFSET			0x054
+ #define QSERDES_TX_DEBUG_BUS_SEL			0x064
+ #define QSERDES_TX_HIGHZ_TRANSCEIVEREN_BIAS_DRVR_EN	0x068
 -- 
 2.7.4
 
