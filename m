@@ -2,173 +2,167 @@ Return-Path: <SRS0=ks55=BJ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3B5CC433DF
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Jul 2020 03:38:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F02BEC433E0
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Jul 2020 04:31:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D2FC422B4B
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Jul 2020 03:38:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CCA2E2072A
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Jul 2020 04:31:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=alliedtelesis.co.nz header.i=@alliedtelesis.co.nz header.b="MOSOkalM"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="htBsbUAC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728503AbgG3DiG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 29 Jul 2020 23:38:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39828 "EHLO
+        id S1728090AbgG3Eb6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 30 Jul 2020 00:31:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48074 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728499AbgG3DiG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jul 2020 23:38:06 -0400
-Received: from gate2.alliedtelesis.co.nz (gate2.alliedtelesis.co.nz [IPv6:2001:df5:b000:5::4])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F5B9C0619D5
-        for <linux-pci@vger.kernel.org>; Wed, 29 Jul 2020 20:38:05 -0700 (PDT)
-Received: from mmarshal3.atlnz.lc (mmarshal3.atlnz.lc [10.32.18.43])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client did not present a certificate)
-        by gate2.alliedtelesis.co.nz (Postfix) with ESMTPS id 7494A891AD;
-        Thu, 30 Jul 2020 15:38:00 +1200 (NZST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alliedtelesis.co.nz;
-        s=mail181024; t=1596080280;
-        bh=YeyiC4Wu/Uu6RclpPH7B15lEUocwEtXXxu8/RyKOIpE=;
-        h=From:To:Cc:Subject:Date;
-        b=MOSOkalMNZDIEz/AzPSRcDz8YirOPqIyxHhtWoz/btlpahHWVzB2miKlAfp8sMIfN
-         htGpmPvN3UBrpy4Ait8Z+/w84wMqTGNk9A0zTs+Ilqr9G31xNcG4XZxRmeNNbiAGJP
-         qzqYfXZs02+iMHY/EOjgRWpNXAExjgHb52UCRZlOXgFk4UOWB8nL9Gp5MalY7fZdBM
-         i7pXyeoyOpRYmulEn3a5qhEKkr8Dm1C8zAP8rNLtK4OhJnU01SmNZ9pmd+fJZZ41GI
-         75trd+PRdoVcwYfBRpPGB1f/XwEm3jyRNLE1JnbbkPc3Te8VU5gNpLQ/M8lmPSDvI/
-         aHuYo4r9nzisA==
-Received: from smtp (Not Verified[10.32.16.33]) by mmarshal3.atlnz.lc with Trustwave SEG (v7,5,8,10121)
-        id <B5f2240990002>; Thu, 30 Jul 2020 15:38:01 +1200
-Received: from markto-dl.ws.atlnz.lc (markto-dl.ws.atlnz.lc [10.33.23.25])
-        by smtp (Postfix) with ESMTP id F363813EEB7;
-        Thu, 30 Jul 2020 15:37:59 +1200 (NZST)
-Received: by markto-dl.ws.atlnz.lc (Postfix, from userid 1155)
-        id 3A1C8341092; Thu, 30 Jul 2020 15:38:00 +1200 (NZST)
-From:   Mark Tomlinson <mark.tomlinson@alliedtelesis.co.nz>
-To:     bhelgaas@google.com, rjui@broadcom.com, sbranden@broadcom.com,
-        f.fainelli@gmail.com
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Mark Tomlinson <mark.tomlinson@alliedtelesis.co.nz>
-Subject: [PATCH 1/3] PCI: iproc: Add bus number parameter to read/write functions
-Date:   Thu, 30 Jul 2020 15:37:45 +1200
-Message-Id: <20200730033747.18931-1-mark.tomlinson@alliedtelesis.co.nz>
-X-Mailer: git-send-email 2.28.0
+        with ESMTP id S1725765AbgG3Eb5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jul 2020 00:31:57 -0400
+Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71CA1C061794;
+        Wed, 29 Jul 2020 21:31:57 -0700 (PDT)
+Received: by mail-wm1-x342.google.com with SMTP id c80so4515263wme.0;
+        Wed, 29 Jul 2020 21:31:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=0RjPi2QHDN+CaGl6MBAqqXZ/X0Cghv1F5XYMZ8Gsh1w=;
+        b=htBsbUACoP3Op+yOzWaVkw+7rGgTzI3a89FBoY7eSNknA4vgMnZ3aUMBjX0boe+JiH
+         o++pnbaiEZtyJy2j/Z6H8LKs/+9NNp1v22f2zP6oMGbN4UtvH2/i1QW/dkUJevgFJfhR
+         YyiPOREAFOS9BFdCROIGjvGP8sgHg8MnbOdGNc0k+LLrxNRf4OBFKhHN6Sd6oyCLOe5y
+         6gPHlH/rOLb52Q8qUgiuLeYDXzBAqAQPFnuz4SzeFMmJqSbyBxCjfVkvAXbTbMq8TLow
+         XFU+VFeq4lvH5Wj8f72/2t/rscjdK4PCcyiXMnwQAYn8ma3LMqDkzo4N7drmKLxjDuwH
+         0USA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=0RjPi2QHDN+CaGl6MBAqqXZ/X0Cghv1F5XYMZ8Gsh1w=;
+        b=q86eUykXmeS+J3rp81Hypuc363ZIjCgt5koDdJqUHy2SPFk/OVsgoRZG80x80Yg7x/
+         PzUTWNjkgJZWAbsLEiMktwaB/wnOAqEBaKYuCKmgndrixxLhmP5BbO1iEYiaDnB6XfBC
+         VI8Ebvn+bKYCAYVqlprBAUki/mPL4O97ohspQUp9vSVFuaAVZZJ7iOdYOayxmbUwbcC8
+         l1gXjJkGpfUXDiQr48QDqLDoXyx65xn8cny8vczKGKUEMAt8nez2phNAMTRQNW2WeUN2
+         pbgpeeg1QT5cnP/bUAJCGbAnAFhxj7hLRLlomaKaMQ2Eo8lvryjS2L3KbCsR6Bl6CAL+
+         hLGg==
+X-Gm-Message-State: AOAM530o/3h6CeLAICXRMupNawjtkL4x81KAC3fWTeqQ5hUIRKQgevAv
+        Cd0lUbpngmuM07+eAvZArtsowKUyULCvCdfnEQE=
+X-Google-Smtp-Source: ABdhPJxZEOthf3UUgAgW5HJXhdjEOsBx23XqAEk0Qlu8lzNoaQ1zMoTYiSJIcm6gkLqdtdeD2ZixQd16qmewZlQNu4M=
+X-Received: by 2002:a7b:c941:: with SMTP id i1mr11390517wml.73.1596083515979;
+ Wed, 29 Jul 2020 21:31:55 -0700 (PDT)
 MIME-Version: 1.0
+References: <20200729231844.4653-1-logang@deltatee.com>
+In-Reply-To: <20200729231844.4653-1-logang@deltatee.com>
+From:   Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu, 30 Jul 2020 00:31:44 -0400
+Message-ID: <CADnq5_OZMiK21niDFSUgptv2vtBj4vyyxBTafWnFwWuEV6VB7w@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI/P2PDMA: Allow P2PDMA on all AMD CPUs newer than
+ the Zen family
+To:     Logan Gunthorpe <logang@deltatee.com>
+Cc:     LKML <linux-kernel@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+        Huang Rui <ray.huang@amd.com>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-x-atlnz-ls: pat
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This makes the read/write functions more generic, allowing them to be
-used from other places.
+On Wed, Jul 29, 2020 at 7:18 PM Logan Gunthorpe <logang@deltatee.com> wrote=
+:
+>
+> In order to avoid needing to add every new AMD CPU host bridge to the lis=
+t
+> every cycle, allow P2PDMA if the CPUs vendor is AMD and family is
+> greater than 0x17 (Zen).
 
-Signed-off-by: Mark Tomlinson <mark.tomlinson@alliedtelesis.co.nz>
----
- drivers/pci/controller/pcie-iproc.c | 23 ++++++++++++-----------
- 1 file changed, 12 insertions(+), 11 deletions(-)
+Might want to say "greater than or equal to" to clarify that all Zen
+parts (Zen1, Zen2, etc.) support p2p.  With that clarified,
+Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
 
-diff --git a/drivers/pci/controller/pcie-iproc.c b/drivers/pci/controller=
-/pcie-iproc.c
-index 8c7f875acf7f..2c836eede42c 100644
---- a/drivers/pci/controller/pcie-iproc.c
-+++ b/drivers/pci/controller/pcie-iproc.c
-@@ -660,13 +660,13 @@ static void __iomem *iproc_pcie_bus_map_cfg_bus(str=
-uct pci_bus *bus,
- 				      where);
- }
-=20
--static int iproc_pci_raw_config_read32(struct iproc_pcie *pcie,
-+static int iproc_pci_raw_config_read32(struct iproc_pcie *pcie, int busn=
-o,
- 				       unsigned int devfn, int where,
- 				       int size, u32 *val)
- {
- 	void __iomem *addr;
-=20
--	addr =3D iproc_pcie_map_cfg_bus(pcie, 0, devfn, where & ~0x3);
-+	addr =3D iproc_pcie_map_cfg_bus(pcie, busno, devfn, where & ~0x3);
- 	if (!addr) {
- 		*val =3D ~0;
- 		return PCIBIOS_DEVICE_NOT_FOUND;
-@@ -680,14 +680,14 @@ static int iproc_pci_raw_config_read32(struct iproc=
-_pcie *pcie,
- 	return PCIBIOS_SUCCESSFUL;
- }
-=20
--static int iproc_pci_raw_config_write32(struct iproc_pcie *pcie,
-+static int iproc_pci_raw_config_write32(struct iproc_pcie *pcie, int bus=
-no,
- 					unsigned int devfn, int where,
- 					int size, u32 val)
- {
- 	void __iomem *addr;
- 	u32 mask, tmp;
-=20
--	addr =3D iproc_pcie_map_cfg_bus(pcie, 0, devfn, where & ~0x3);
-+	addr =3D iproc_pcie_map_cfg_bus(pcie, busno, devfn, where & ~0x3);
- 	if (!addr)
- 		return PCIBIOS_DEVICE_NOT_FOUND;
-=20
-@@ -793,7 +793,7 @@ static int iproc_pcie_check_link(struct iproc_pcie *p=
-cie)
- 	}
-=20
- 	/* make sure we are not in EP mode */
--	iproc_pci_raw_config_read32(pcie, 0, PCI_HEADER_TYPE, 1, &hdr_type);
-+	iproc_pci_raw_config_read32(pcie, 0, 0, PCI_HEADER_TYPE, 1, &hdr_type);
- 	if ((hdr_type & 0x7f) !=3D PCI_HEADER_TYPE_BRIDGE) {
- 		dev_err(dev, "in EP mode, hdr=3D%#02x\n", hdr_type);
- 		return -EFAULT;
-@@ -803,15 +803,16 @@ static int iproc_pcie_check_link(struct iproc_pcie =
-*pcie)
- #define PCI_BRIDGE_CTRL_REG_OFFSET	0x43c
- #define PCI_CLASS_BRIDGE_MASK		0xffff00
- #define PCI_CLASS_BRIDGE_SHIFT		8
--	iproc_pci_raw_config_read32(pcie, 0, PCI_BRIDGE_CTRL_REG_OFFSET,
-+	iproc_pci_raw_config_read32(pcie, 0, 0, PCI_BRIDGE_CTRL_REG_OFFSET,
- 				    4, &class);
- 	class &=3D ~PCI_CLASS_BRIDGE_MASK;
- 	class |=3D (PCI_CLASS_BRIDGE_PCI << PCI_CLASS_BRIDGE_SHIFT);
--	iproc_pci_raw_config_write32(pcie, 0, PCI_BRIDGE_CTRL_REG_OFFSET,
-+	iproc_pci_raw_config_write32(pcie, 0, 0, PCI_BRIDGE_CTRL_REG_OFFSET,
- 				     4, class);
-=20
- 	/* check link status to see if link is active */
--	iproc_pci_raw_config_read32(pcie, 0, IPROC_PCI_EXP_CAP + PCI_EXP_LNKSTA=
-,
-+	iproc_pci_raw_config_read32(pcie, 0, 0,
-+				    IPROC_PCI_EXP_CAP + PCI_EXP_LNKSTA,
- 				    2, &link_status);
- 	if (link_status & PCI_EXP_LNKSTA_NLW)
- 		link_is_active =3D true;
-@@ -821,19 +822,19 @@ static int iproc_pcie_check_link(struct iproc_pcie =
-*pcie)
- #define PCI_TARGET_LINK_SPEED_MASK	0xf
- #define PCI_TARGET_LINK_SPEED_GEN2	0x2
- #define PCI_TARGET_LINK_SPEED_GEN1	0x1
--		iproc_pci_raw_config_read32(pcie, 0,
-+		iproc_pci_raw_config_read32(pcie, 0, 0,
- 					    IPROC_PCI_EXP_CAP + PCI_EXP_LNKCTL2,
- 					    4, &link_ctrl);
- 		if ((link_ctrl & PCI_TARGET_LINK_SPEED_MASK) =3D=3D
- 		    PCI_TARGET_LINK_SPEED_GEN2) {
- 			link_ctrl &=3D ~PCI_TARGET_LINK_SPEED_MASK;
- 			link_ctrl |=3D PCI_TARGET_LINK_SPEED_GEN1;
--			iproc_pci_raw_config_write32(pcie, 0,
-+			iproc_pci_raw_config_write32(pcie, 0, 0,
- 					IPROC_PCI_EXP_CAP + PCI_EXP_LNKCTL2,
- 					4, link_ctrl);
- 			msleep(100);
-=20
--			iproc_pci_raw_config_read32(pcie, 0,
-+			iproc_pci_raw_config_read32(pcie, 0, 0,
- 					IPROC_PCI_EXP_CAP + PCI_EXP_LNKSTA,
- 					2, &link_status);
- 			if (link_status & PCI_EXP_LNKSTA_NLW)
---=20
-2.28.0
-
+>
+> This should cut down a bunch of the churn adding to the list of allowed
+> host bridges.
+>
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Alex Deucher <alexdeucher@gmail.com>
+> Cc: Christian K=C3=B6nig <christian.koenig@amd.com>
+> Cc: Huang Rui <ray.huang@amd.com>
+>
+> ---
+>
+> Here's a reworked patch to enable P2PDMA on Zen2 (and in fact all
+> subsequent Zen platforms).
+>
+> This should remove all the churn on the list for the AMD side. Still
+> don't have a good solution for Intel.
+>
+>  drivers/pci/p2pdma.c | 26 ++++++++++++++++++++------
+>  1 file changed, 20 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+> index e8e444eeb1cd..f1cab2c50595 100644
+> --- a/drivers/pci/p2pdma.c
+> +++ b/drivers/pci/p2pdma.c
+> @@ -273,6 +273,24 @@ static void seq_buf_print_bus_devfn(struct seq_buf *=
+buf, struct pci_dev *pdev)
+>         seq_buf_printf(buf, "%s;", pci_name(pdev));
+>  }
+>
+> +#ifdef CONFIG_X86
+> +static bool cpu_supports_p2pdma(void)
+> +{
+> +       struct cpuinfo_x86 *c =3D &cpu_data(0);
+> +
+> +       /* Any AMD CPU who's family id is newer than Zen will support p2p=
+dma */
+> +       if (c->x86_vendor =3D=3D X86_VENDOR_AMD && c->x86 >=3D 0x17)
+> +               return true;
+> +
+> +       return false;
+> +}
+> +#else
+> +static bool cpu_supports_p2pdma(void)
+> +{
+> +       return false;
+> +}
+> +#endif
+> +
+>  static const struct pci_p2pdma_whitelist_entry {
+>         unsigned short vendor;
+>         unsigned short device;
+> @@ -280,11 +298,6 @@ static const struct pci_p2pdma_whitelist_entry {
+>                 REQ_SAME_HOST_BRIDGE    =3D 1 << 0,
+>         } flags;
+>  } pci_p2pdma_whitelist[] =3D {
+> -       /* AMD ZEN */
+> -       {PCI_VENDOR_ID_AMD,     0x1450, 0},
+> -       {PCI_VENDOR_ID_AMD,     0x15d0, 0},
+> -       {PCI_VENDOR_ID_AMD,     0x1630, 0},
+> -
+>         /* Intel Xeon E5/Core i7 */
+>         {PCI_VENDOR_ID_INTEL,   0x3c00, REQ_SAME_HOST_BRIDGE},
+>         {PCI_VENDOR_ID_INTEL,   0x3c01, REQ_SAME_HOST_BRIDGE},
+> @@ -473,7 +486,8 @@ upstream_bridge_distance(struct pci_dev *provider, st=
+ruct pci_dev *client,
+>                                               acs_redirects, acs_list);
+>
+>         if (map_type =3D=3D PCI_P2PDMA_MAP_THRU_HOST_BRIDGE) {
+> -               if (!host_bridge_whitelist(provider, client))
+> +               if (!cpu_supports_p2pdma() &&
+> +                   !host_bridge_whitelist(provider, client))
+>                         map_type =3D PCI_P2PDMA_MAP_NOT_SUPPORTED;
+>         }
+>
+>
+> base-commit: 92ed301919932f777713b9172e525674157e983d
+> --
+> 2.20.1
