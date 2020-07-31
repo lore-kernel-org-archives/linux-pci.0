@@ -5,143 +5,172 @@ X-Spam-Level:
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B23EC433E0
-	for <linux-pci@archiver.kernel.org>; Fri, 31 Jul 2020 12:43:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80F0FC433E1
+	for <linux-pci@archiver.kernel.org>; Fri, 31 Jul 2020 12:43:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5EBA322B3F
-	for <linux-pci@archiver.kernel.org>; Fri, 31 Jul 2020 12:43:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5B2EC21744
+	for <linux-pci@archiver.kernel.org>; Fri, 31 Jul 2020 12:43:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="t0dpG410"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Boub8lNC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733153AbgGaMnL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 31 Jul 2020 08:43:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34278 "EHLO
+        id S1733303AbgGaMnR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 31 Jul 2020 08:43:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34302 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1733101AbgGaMnL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 31 Jul 2020 08:43:11 -0400
-Received: from mail-ed1-x544.google.com (mail-ed1-x544.google.com [IPv6:2a00:1450:4864:20::544])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CFAE3C061574;
-        Fri, 31 Jul 2020 05:43:10 -0700 (PDT)
-Received: by mail-ed1-x544.google.com with SMTP id i26so18944731edv.4;
-        Fri, 31 Jul 2020 05:43:10 -0700 (PDT)
+        with ESMTP id S1733294AbgGaMnQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 31 Jul 2020 08:43:16 -0400
+Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39046C061574;
+        Fri, 31 Jul 2020 05:43:16 -0700 (PDT)
+Received: by mail-ej1-x643.google.com with SMTP id a26so5480429ejc.2;
+        Fri, 31 Jul 2020 05:43:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=kTEKWlV4nOSheNgHEWqv/22qBE+Vx8ikH8s2qmj4c7s=;
-        b=t0dpG410UoQ/AaCrJfLmpl35pb7gf3W1ueoUC8Kx/JGEDzX7QhXn5oMP733MHTQBAs
-         4LHic3AIM6xJiSRqq86G0JWPXwCyYpMFkw1J37Hgzea7FX23P8viHUNdV3GNCMT2+KyH
-         30SP4kpBZIQ7kkMIRQBBtv/0a0tqGNdn7OGEPahzFad8ybt4zUqY/+DIhgIkc4MH7WBE
-         Ipg+7wJV93OZWFJfr80g3CHPMHWQlOpprwu9VAiS83J2a5O9VqKZzPcK9J7TRQ4wD5Eh
-         ClijEVwOSSt5Ab03vnsaD5eKXzsZszfeQxc31WMyDT2QiXIB5oa54S3zN/3m8F1OluCA
-         +QkQ==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=Z7WaVDyC31Xqp9aG4vaiaHbvwp6b775oA7lj7CzrKBo=;
+        b=Boub8lNC8OOZzaDP7HakRmCigQ9s+TmAZKT/FvTXISovow+eY1+3iv9s7tVr5dADQb
+         tIF5zqqI08ULoL0yyrXmhoapYfXxmRW0lyX2RCJXcewDU1EB9xdyPBrZABXn08aJJ28c
+         Ix6TlonWfWSChmEA3cZnWfApy3SwFu1s8TocFkM7yBDwtH78cBXTAF1xTDgYs+VIg8UE
+         kcTAWODekL0CEEpa/XJHHc7Z1xM6Zm5QjgRxMYhQQz3mO4eSz2plfe9QNw1SAJHLLj1J
+         ZA6BNEbFTnFQK6vaB1h+hfyveE/uv2QDJ4RmDfBaoT3ERtSvXRg9SGL9BruBwod71w3x
+         jyzw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=kTEKWlV4nOSheNgHEWqv/22qBE+Vx8ikH8s2qmj4c7s=;
-        b=nwYo8B/lD+q4CkN1IQMnYPdG0Mx6EH6sKJnoyC95KIMzeN0l/0aulw7FtVi6nJOwS9
-         q+Eq3Koew9N5/yvDH2/Kh/kLVJCAMkUSO8CIIyEn3V7HVrDeqSnWZaECYfJ8VLl06VX2
-         EddxUqXX9f4qFTOVidds5h0g9/pRuH7Lpmqfe3Ml28P00vjqat+6FL5+3ZhMX6v92v5v
-         CMRTGTXB8qH6lXeUj+F5mu1itapJbtbrTso7ZaSE77n/V/aN0kcQP1J1XYfopdbGXSxC
-         aqjeTVfXue7/n8n4Z6HvP8HDRTzjPmA31uYRwD2VGPBXamHNPbuMaTHZxEwG/TOzcNNJ
-         dtwA==
-X-Gm-Message-State: AOAM5314rgExP9jC4NxyxKdpJOYUfyyrhSM5VxiGrlRVA+AkuXs+E6Un
-        rW8eFpETwgxvrlhnV5/UeDs=
-X-Google-Smtp-Source: ABdhPJx87fnYc/ryc1eaPTpKu9cM5/FUxmCOhynUIBbPcaF0NGu/M6CJK7gWLKoZuQT408yhWdXUOA==
-X-Received: by 2002:aa7:c45a:: with SMTP id n26mr3749694edr.45.1596199389154;
-        Fri, 31 Jul 2020 05:43:09 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=Z7WaVDyC31Xqp9aG4vaiaHbvwp6b775oA7lj7CzrKBo=;
+        b=odC0C2Z8qjc/R3Sxg0m4I69+a65FMfT2PdfWwCtNsIWoRrbgPdA+xt0zGud2eEx0/5
+         ngabfGy3s7C4W9vCCQ0o1gmzVhzDwrJHa+wrLnWQIZayyjumBn8lNQRm3lYMXBMtA584
+         LBXgkCEGQh2jyKGcN9NghACKAH4M7awzVYg1VpZs3kayTb10Qn+5lo/f00IJ9C41ipul
+         jiZdEfgvwsirvdJvFev6GW5oGPl5s3uN+oJbhsoXzVbvVl5nWXJL4eBGM0NZvzTv44zI
+         FPZvuIULjyCzNbGLSbnhZq93NPV4mixtQKviRH9hWBdcgs9bLaB4sAdkYnqQYEs/cU9h
+         8+Vg==
+X-Gm-Message-State: AOAM532XKTpbopjI5UTUXS/eMRcU41K8ehA6w8GKqZdSMzL3D1mGOAqk
+        tM+vhD+Xftju+LX5tijJ6sc=
+X-Google-Smtp-Source: ABdhPJz2I4wMlXEMP6P1KRM4mmo8+jpv64fXNEUIP720yCcVBp2o7uTyVYR6ab20bRx5VLVhSw6mFA==
+X-Received: by 2002:a17:906:3281:: with SMTP id 1mr3932259ejw.132.1596199394967;
+        Fri, 31 Jul 2020 05:43:14 -0700 (PDT)
 Received: from net.saheed (95C84E0A.dsl.pool.telekom.hu. [149.200.78.10])
-        by smtp.gmail.com with ESMTPSA id g23sm8668514ejb.24.2020.07.31.05.43.07
+        by smtp.gmail.com with ESMTPSA id g23sm8668514ejb.24.2020.07.31.05.43.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 31 Jul 2020 05:43:08 -0700 (PDT)
+        Fri, 31 Jul 2020 05:43:14 -0700 (PDT)
 From:   "Saheed O. Bolarinwa" <refactormyself@gmail.com>
 To:     helgaas@kernel.org
 Cc:     "Saheed O. Bolarinwa" <refactormyself@gmail.com>,
         bjorn@helgaas.com, skhan@linuxfoundation.org,
-        linux-pci@vger.kernel.org,
         linux-kernel-mentees@lists.linuxfoundation.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v4 08/12] PCI: Check if pcie_capability_read_*() reads ~0
-Date:   Fri, 31 Jul 2020 13:43:25 +0200
-Message-Id: <20200731114329.100848-1-refactormyself@gmail.com>
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-rdma@vger.kernel.org,
+        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-acpi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        Mike Marciniszyn <mike.marciniszyn@intel.com>,
+        Dennis Dalessandro <dennis.dalessandro@intel.com>,
+        Doug Ledford <dledford@redhat.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>, Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Jakub Kicinski <kuba@kernel.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Russell Currey <ruscur@russell.cc>,
+        Sam Bobroff <sbobroff@linux.ibm.com>,
+        "Oliver O'Halloran" <oohall@gmail.com>
+Subject: [PATCH v4 12/12] PCI: Remove '*val = 0' from pcie_capability_read_*()
+Date:   Fri, 31 Jul 2020 13:43:29 +0200
+Message-Id: <20200731114329.100848-5-refactormyself@gmail.com>
 X-Mailer: git-send-email 2.18.4
+In-Reply-To: <20200731114329.100848-1-refactormyself@gmail.com>
+References: <20200731114329.100848-1-refactormyself@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On failure pcie_capability_read_*() sets it's last parameter, val
-to 0. However, with Patch 12/12, it is possible that val is set
-to ~0 on failure. This would introduce a bug because
-(x & x) == (~0 & x).
+There are several reasons why a PCI capability read may fail whether the
+device is present or not. If this happens, pcie_capability_read_*() will
+return -EINVAL/PCIBIOS_BAD_REGISTER_NUMBER or PCIBIOS_DEVICE_NOT_FOUND
+and *val is set to 0.
 
-Since ~0 is an invalid value in here,
+This behaviour if further ensured by this code inside
+pcie_capability_read_*()
 
-Add extra check for ~0 in the if condition to ensure success or
-failure.
+ ret = pci_read_config_dword(dev, pci_pcie_cap(dev) + pos, val);
+ /*
+  * Reset *val to 0 if pci_read_config_dword() fails, it may
+  * have been written as 0xFFFFFFFF if hardware error happens
+  * during pci_read_config_dword().
+  */
+ if (ret)
+	 *val = 0;
+ return ret;
+
+a) Since all pci_generic_config_read() does is read a register value,
+it may return success after reading a ~0 which *may* have been fabricated
+by the PCI host bridge due to a read timeout. Hence pci_read_config_*()
+will return success with a fabricated ~0 in *val, indicating a problem.
+In this case, the assumed behaviour of  pcie_capability_read_*() will be
+wrong. To avoid error slipping through, more checks are necessary.
+
+b) pci_read_config_*() will return PCIBIOS_DEVICE_NOT_FOUND only if
+dev->error_state = pci_channel_io_perm_failure (i.e.
+pci_dev_is_disconnected()) or if pci_generic_config_read() can't find the
+device. In both cases *val is initially set to ~0 but as shown in the code
+above pcie_capability_read_*() resets it back to 0. Even with this effort,
+drivers still have to perform validation checks more so if 0 is a valid
+value.
+
+Most drivers only consider the case (b) and in some cases, there is the
+expectation that on timeout *val has a fabricated value of ~0, which *may*
+not always be true as explained in (a).
+
+In any case, checks need to be done to validate the value read and maybe
+confirm which error has occurred. It is better left to the drivers to do.
+
+Remove the reset of *val to 0 when pci_read_config_*() fails.
 
 Suggested-by: Bjorn Helgaas <bjorn@helgaas.com>
 Signed-off-by: Saheed O. Bolarinwa <refactormyself@gmail.com>
 ---
- drivers/pci/probe.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/pci/access.c | 14 --------------
+ 1 file changed, 14 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 2f66988cea25..af95f67c19a7 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1124,7 +1124,7 @@ static void pci_enable_crs(struct pci_dev *pdev)
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index 79c4a2ef269a..ec95edbb1ac8 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -413,13 +413,6 @@ int pcie_capability_read_word(struct pci_dev *dev, int pos, u16 *val)
  
- 	/* Enable CRS Software Visibility if supported */
- 	pcie_capability_read_word(pdev, PCI_EXP_RTCAP, &root_cap);
--	if (root_cap & PCI_EXP_RTCAP_CRSVIS)
-+	if ((root_cap != (u16)~0) && (root_cap & PCI_EXP_RTCAP_CRSVIS))
- 		pcie_capability_set_word(pdev, PCI_EXP_RTCTL,
- 					 PCI_EXP_RTCTL_CRSSVE);
- }
-@@ -1521,7 +1521,7 @@ void set_pcie_hotplug_bridge(struct pci_dev *pdev)
- 	u32 reg32;
+ 	if (pcie_capability_reg_implemented(dev, pos)) {
+ 		ret = pci_read_config_word(dev, pci_pcie_cap(dev) + pos, val);
+-		/*
+-		 * Reset *val to 0 if pci_read_config_word() fails, it may
+-		 * have been written as 0xFFFF if hardware error happens
+-		 * during pci_read_config_word().
+-		 */
+-		if (ret)
+-			*val = 0;
+ 		return ret;
+ 	}
  
- 	pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &reg32);
--	if (reg32 & PCI_EXP_SLTCAP_HPC)
-+	if ((reg32 != (u32)~0) && (reg32 & PCI_EXP_SLTCAP_HPC))
- 		pdev->is_hotplug_bridge = 1;
- }
+@@ -448,13 +441,6 @@ int pcie_capability_read_dword(struct pci_dev *dev, int pos, u32 *val)
  
-@@ -2060,7 +2060,7 @@ bool pcie_relaxed_ordering_enabled(struct pci_dev *dev)
+ 	if (pcie_capability_reg_implemented(dev, pos)) {
+ 		ret = pci_read_config_dword(dev, pci_pcie_cap(dev) + pos, val);
+-		/*
+-		 * Reset *val to 0 if pci_read_config_dword() fails, it may
+-		 * have been written as 0xFFFFFFFF if hardware error happens
+-		 * during pci_read_config_dword().
+-		 */
+-		if (ret)
+-			*val = 0;
+ 		return ret;
+ 	}
  
- 	pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &v);
- 
--	return !!(v & PCI_EXP_DEVCTL_RELAX_EN);
-+	return ((v != (u16)~0) && (v & PCI_EXP_DEVCTL_RELAX_EN));
- }
- EXPORT_SYMBOL(pcie_relaxed_ordering_enabled);
- 
-@@ -2101,11 +2101,11 @@ static void pci_configure_ltr(struct pci_dev *dev)
- 		return;
- 
- 	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP2, &cap);
--	if (!(cap & PCI_EXP_DEVCAP2_LTR))
-+	if ((cap == (u32)~0) || !(cap & PCI_EXP_DEVCAP2_LTR))
- 		return;
- 
- 	pcie_capability_read_dword(dev, PCI_EXP_DEVCTL2, &ctl);
--	if (ctl & PCI_EXP_DEVCTL2_LTR_EN) {
-+	if ((ctl != (u32)~0) && (ctl & PCI_EXP_DEVCTL2_LTR_EN)) {
- 		if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) {
- 			dev->ltr_path = 1;
- 			return;
-@@ -2147,7 +2147,7 @@ static void pci_configure_eetlp_prefix(struct pci_dev *dev)
- 		return;
- 
- 	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP2, &cap);
--	if (!(cap & PCI_EXP_DEVCAP2_EE_PREFIX))
-+	if ((cap == (u32)~0) || !(cap & PCI_EXP_DEVCAP2_EE_PREFIX))
- 		return;
- 
- 	pcie_type = pci_pcie_type(dev);
 -- 
 2.18.4
 
