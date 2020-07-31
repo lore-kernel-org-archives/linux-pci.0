@@ -8,55 +8,55 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30770C433DF
-	for <linux-pci@archiver.kernel.org>; Fri, 31 Jul 2020 12:43:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92DDBC433E1
+	for <linux-pci@archiver.kernel.org>; Fri, 31 Jul 2020 12:43:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0E0E621744
-	for <linux-pci@archiver.kernel.org>; Fri, 31 Jul 2020 12:43:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7176321744
+	for <linux-pci@archiver.kernel.org>; Fri, 31 Jul 2020 12:43:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ld0t00pE"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GMfvm+H2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733289AbgGaMnQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 31 Jul 2020 08:43:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34294 "EHLO
+        id S1733254AbgGaMnM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 31 Jul 2020 08:43:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34282 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1733281AbgGaMnO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 31 Jul 2020 08:43:14 -0400
-Received: from mail-ej1-x641.google.com (mail-ej1-x641.google.com [IPv6:2a00:1450:4864:20::641])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1BD4EC061574;
-        Fri, 31 Jul 2020 05:43:14 -0700 (PDT)
-Received: by mail-ej1-x641.google.com with SMTP id kq25so18332432ejb.3;
-        Fri, 31 Jul 2020 05:43:14 -0700 (PDT)
+        with ESMTP id S1733101AbgGaMnL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 31 Jul 2020 08:43:11 -0400
+Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92B9AC061574;
+        Fri, 31 Jul 2020 05:43:11 -0700 (PDT)
+Received: by mail-ej1-x642.google.com with SMTP id w9so31265152ejc.8;
+        Fri, 31 Jul 2020 05:43:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=W3jrzpfEeWtPMNu6ebBkWvuMrQ1sgOT+1rw4Pu7mEnM=;
-        b=ld0t00pEM0MZcb/2HS5Hxc5/1Alb6cpV0465TUImsXBfXqlUiXv3qgnP5THp7GdyWt
-         8PN897B99gz/5u30giINZNvDMT6/mWuvIXe+TcNMuLxTvnH9PCytRwpSraftTJMgQpWe
-         spoy/g9Lh0dsyUDMi87W9NTpVJ2/JlZ3B2T3++DAouHdqUuMr4fStgrbobkymQoX5/nx
-         LG/NUMGNDA29W4D704MLbhgeamT2vFggAA15Dd8orS57Vd6d1CNKgfLP7fpy87FzJkLH
-         UPK/9ubqDzWSkKxoO8jdts69q2aW31ePssin6RT9S8aPsvQphdqn8XgF5w3oA6zSoxmE
-         Dw9g==
+        bh=mu3KVS+jjnoE6TtDYHUGs04kgKz7VUXIOhtqaMe4L8k=;
+        b=GMfvm+H2DwlxEhK0B+zbV8ssTcAL/5E/KjNfTanwFqrgfEUOmkR2UszOuUm7NVCrQN
+         H2yKipSG9Y/TmMbjseu0nl0keYDGluJ3fDRpgdZMJeRxgqTstTW1wzvsWGDuVuoDlVaG
+         bFRd5gafMnXo9eD/Euk/xm9KE8aw4gVr92jhqjEGso5l+IGn0sc4KAhJwkE5lN3sZ9Ww
+         tLF3HFcNAuCgtTL7/81bU/WDHJahrvkMneLlHmiZpZgEuiTaOEBcpzcnrcI68OL9WVn+
+         6m93gwcBBdMRa2MIn6d7Il9Aus1rFT1xzX9fJLS00rEOMyzvX5yoky8uGiW+iKYQci1j
+         PHKA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=W3jrzpfEeWtPMNu6ebBkWvuMrQ1sgOT+1rw4Pu7mEnM=;
-        b=UjJdcjDUKeH2U/VGuQ92H9MlzmpTciwNYvS81MamMaxEVXXF+zcZ+FAPBqdQ1lZXRW
-         DYVRIgvGJIT25G4GnvCI3Z6HobcRakFqTIId36WHbfKOwpdOllaDGsIvUMDBaEGTTTqU
-         J+bbk4ZycEtJ6SV5tYhLGc+GS2MXbcciRr0xdlvCqWqpt0jgQXRcapeXqjjLUZkfLXI3
-         EaV8CtygCkBzB1E1zTbvdkylnmw85gkWqefza0VIJ39o3LKQY1QUAe72T3CJB9zLZZK7
-         i9kVHP/UVU3cbW0bFFYhWbKDC0IaLZ22eKfa/X6MZgQjqRugmqL1pX3205LKmLZaBa/m
-         W+cA==
-X-Gm-Message-State: AOAM531R7adiB8z2rn2pXQ2jm/sJr+H54x3es+HLwp3jQRdQ4a3GYu/2
-        9WBtKCWu3fbqnQHr0L4MFI1CvACss45Ytw==
-X-Google-Smtp-Source: ABdhPJyJ0iZIhz348o3l6wmkHxHvqln6F0gnPCiag58gIVbti5JjZMxnOWyTHRJJZGkCk1hWy3BckA==
-X-Received: by 2002:a17:906:1f53:: with SMTP id d19mr3799144ejk.327.1596199392870;
-        Fri, 31 Jul 2020 05:43:12 -0700 (PDT)
+        bh=mu3KVS+jjnoE6TtDYHUGs04kgKz7VUXIOhtqaMe4L8k=;
+        b=Tn2hy4p6XxwT+i5z9e3bhH+rFz75HgArbwgTvkHXE7FaB/EI6Wsl8Xm7yCq2ymD/Vp
+         MMsl79pqFkvJAIj8bpdK7vgB7s7IN07qHNL+OlKfbjhR8qtWjbHdek+pVlWKX1veN4Ki
+         96ImNksy9a4xCyhCRQJQj7n+VxalhUmZR8FWiRxTQY1TQJd94h8P7o6kJ3RMydZ6oWLX
+         1acBlMROOAv4Ma89/svbzSqkZwyUnqHy7RHbQFtitsFx/JMN5sDh9uL7JQrm4Ihe7umg
+         M7uxAUSk7vE8fLxZ/12I8EnBlHq6z1yDskAq5jEGs82vgWFQ05NEo/B1MthAgjB9dDHp
+         njbQ==
+X-Gm-Message-State: AOAM533fmf1c/DT7QI70oFwKZwnc1yEfDg9opXvPTSesLBWG5INO93oa
+        F4jmAFNjnQzI2EPMyNnIedU=
+X-Google-Smtp-Source: ABdhPJzFvrIqdL0TTLhGyuFNtlAocl0tVTusk/30IvWSRwDYeEoMZH80mm/NNJqy7fAqpVg+0+r2Gg==
+X-Received: by 2002:a17:906:26d6:: with SMTP id u22mr4066761ejc.271.1596199390289;
+        Fri, 31 Jul 2020 05:43:10 -0700 (PDT)
 Received: from net.saheed (95C84E0A.dsl.pool.telekom.hu. [149.200.78.10])
-        by smtp.gmail.com with ESMTPSA id g23sm8668514ejb.24.2020.07.31.05.43.11
+        by smtp.gmail.com with ESMTPSA id g23sm8668514ejb.24.2020.07.31.05.43.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 31 Jul 2020 05:43:12 -0700 (PDT)
+        Fri, 31 Jul 2020 05:43:09 -0700 (PDT)
 From:   "Saheed O. Bolarinwa" <refactormyself@gmail.com>
 To:     helgaas@kernel.org
 Cc:     "Saheed O. Bolarinwa" <refactormyself@gmail.com>,
@@ -64,9 +64,9 @@ Cc:     "Saheed O. Bolarinwa" <refactormyself@gmail.com>,
         linux-pci@vger.kernel.org,
         linux-kernel-mentees@lists.linuxfoundation.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH v4 11/12] PCI/ASPM: Check if pcie_capability_read_*() reads ~0
-Date:   Fri, 31 Jul 2020 13:43:28 +0200
-Message-Id: <20200731114329.100848-4-refactormyself@gmail.com>
+Subject: [PATCH v4 09/12] PCI/PM: Check if pcie_capability_read_*() reads ~0
+Date:   Fri, 31 Jul 2020 13:43:26 +0200
+Message-Id: <20200731114329.100848-2-refactormyself@gmail.com>
 X-Mailer: git-send-email 2.18.4
 In-Reply-To: <20200731114329.100848-1-refactormyself@gmail.com>
 References: <20200731114329.100848-1-refactormyself@gmail.com>
@@ -82,55 +82,142 @@ to ~0 on failure. This would introduce a bug because
 
 Since ~0 is an invalid value in here,
 
-Add extra check for ~0 to the if condition to confirm failure.
+Add extra check for ~0 to ensure success or failure.
+
+pci_enable_atomic_ops_to_root():
+Continue looping through the device heirarchy on failure.
+
+pcie_wait_for_link_delay():
+Add extra check for ~0 to the condition for breaking out of the
+loop. Delay only on success otherwise report error and return
+false.
+
+pcie_bandwidth_available():
+On read failure move up the device heirarchy and continue.
+
+pcie_get_speed_cap():
+On read failure, report error and return PCI_SPEED_UNKNOWN
 
 Suggested-by: Bjorn Helgaas <bjorn@helgaas.com>
 Signed-off-by: Saheed O. Bolarinwa <refactormyself@gmail.com>
 ---
- drivers/pci/pcie/aspm.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/pci/pci.c | 34 ++++++++++++++++++++++++----------
+ 1 file changed, 24 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index b17e5ffd31b1..5e84a5ee94b0 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -223,7 +223,7 @@ static bool pcie_retrain_link(struct pcie_link_state *link)
- 	end_jiffies = jiffies + LINK_RETRAIN_TIMEOUT;
- 	do {
- 		pcie_capability_read_word(parent, PCI_EXP_LNKSTA, &reg16);
--		if (!(reg16 & PCI_EXP_LNKSTA_LT))
-+		if ((reg16 == (u16)~0) || !(reg16 & PCI_EXP_LNKSTA_LT))
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index c9338f914a0e..1dd3659f1388 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3216,7 +3216,7 @@ void pci_configure_ari(struct pci_dev *dev)
+ 		return;
+ 
+ 	pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap);
+-	if (!(cap & PCI_EXP_DEVCAP2_ARI))
++	if ((cap == (u32)~0) || !(cap & PCI_EXP_DEVCAP2_ARI))
+ 		return;
+ 
+ 	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ARI)) {
+@@ -3635,13 +3635,13 @@ int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 cap_mask)
+ 		/* Ensure switch ports support AtomicOp routing */
+ 		case PCI_EXP_TYPE_UPSTREAM:
+ 		case PCI_EXP_TYPE_DOWNSTREAM:
+-			if (!(cap & PCI_EXP_DEVCAP2_ATOMIC_ROUTE))
++			if ((cap == (u32)~0) || !(cap & PCI_EXP_DEVCAP2_ATOMIC_ROUTE))
+ 				return -EINVAL;
  			break;
- 		msleep(1);
- 	} while (time_before(jiffies, end_jiffies));
-@@ -250,23 +250,23 @@ static void pcie_aspm_configure_common_clock(struct pcie_link_state *link)
  
- 	/* Check downstream component if bit Slot Clock Configuration is 1 */
- 	pcie_capability_read_word(child, PCI_EXP_LNKSTA, &reg16);
--	if (!(reg16 & PCI_EXP_LNKSTA_SLC))
-+	if ((reg16 == (u16)~0) || !(reg16 & PCI_EXP_LNKSTA_SLC))
- 		same_clock = 0;
+ 		/* Ensure root port supports all the sizes we care about */
+ 		case PCI_EXP_TYPE_ROOT_PORT:
+-			if ((cap & cap_mask) != cap_mask)
++			if ((cap == (u32)~0) || ((cap & cap_mask) != cap_mask)
+ 				return -EINVAL;
+ 			break;
+ 		}
+@@ -3650,7 +3650,7 @@ int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 cap_mask)
+ 		if (pci_pcie_type(bridge) == PCI_EXP_TYPE_UPSTREAM) {
+ 			pcie_capability_read_dword(bridge, PCI_EXP_DEVCTL2,
+ 						   &ctl2);
+-			if (ctl2 & PCI_EXP_DEVCTL2_ATOMIC_EGRESS_BLOCK)
++			if ((ctl2 != (u32)~0) && (ctl2 & PCI_EXP_DEVCTL2_ATOMIC_EGRESS_BLOCK))
+ 				return -EINVAL;
+ 		}
  
- 	/* Check upstream component if bit Slot Clock Configuration is 1 */
- 	pcie_capability_read_word(parent, PCI_EXP_LNKSTA, &reg16);
--	if (!(reg16 & PCI_EXP_LNKSTA_SLC))
-+	if ((reg16 == (u16)~0) || !(reg16 & PCI_EXP_LNKSTA_SLC))
- 		same_clock = 0;
+@@ -4512,7 +4512,7 @@ bool pcie_has_flr(struct pci_dev *dev)
+ 		return false;
  
- 	/* Port might be already in common clock mode */
- 	pcie_capability_read_word(parent, PCI_EXP_LNKCTL, &reg16);
--	if (same_clock && (reg16 & PCI_EXP_LNKCTL_CCC)) {
-+	if ((reg16 != (u16)~0) && same_clock && (reg16 & PCI_EXP_LNKCTL_CCC)) {
- 		bool consistent = true;
+ 	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &cap);
+-	return cap & PCI_EXP_DEVCAP_FLR;
++	return ((cap != (u32)~0) && (cap & PCI_EXP_DEVCAP_FLR));
+ }
+ EXPORT_SYMBOL_GPL(pcie_has_flr);
  
- 		list_for_each_entry(child, &linkbus->devices, bus_list) {
- 			pcie_capability_read_word(child, PCI_EXP_LNKCTL,
- 						  &reg16);
--			if (!(reg16 & PCI_EXP_LNKCTL_CCC)) {
-+			if ((reg16 == (u16)~0) || !(reg16 & PCI_EXP_LNKCTL_CCC)) {
- 				consistent = false;
- 				break;
- 			}
+@@ -4672,19 +4672,19 @@ static bool pcie_wait_for_link_delay(struct pci_dev *pdev, bool active,
+ 	for (;;) {
+ 		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
+ 		ret = !!(lnk_status & PCI_EXP_LNKSTA_DLLLA);
+-		if (ret == active)
++		if ((lnk_status != (u16)~0) && (ret == active))
+ 			break;
+ 		if (timeout <= 0)
+ 			break;
+ 		msleep(10);
+ 		timeout -= 10;
+ 	}
+-	if (active && ret)
++	if ((lnk_status != (u16)~0) && active && ret)
+ 		msleep(delay);
+-	else if (ret != active)
++	else if ((lnk_status == (u16)~0) || (ret != active))
+ 		pci_info(pdev, "Data Link Layer Link Active not %s in 1000 msec\n",
+ 			active ? "set" : "cleared");
+-	return ret == active;
++	return ((lnk_status != (u16)~0) && (ret == active));
+ }
+ 
+ /**
+@@ -5773,6 +5773,11 @@ u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev **limiting_dev,
+ 	while (dev) {
+ 		pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnksta);
+ 
++		if (lnksta == (u16)~0) {
++			dev = pci_upstream_bridge(dev);
++			continue;
++		}
++
+ 		next_speed = pcie_link_speed[lnksta & PCI_EXP_LNKSTA_CLS];
+ 		next_width = (lnksta & PCI_EXP_LNKSTA_NLW) >>
+ 			PCI_EXP_LNKSTA_NLW_SHIFT;
+@@ -5819,12 +5824,21 @@ enum pci_bus_speed pcie_get_speed_cap(struct pci_dev *dev)
+ 	 * where only 2.5 GT/s and 5.0 GT/s speeds were defined.
+ 	 */
+ 	pcie_capability_read_dword(dev, PCI_EXP_LNKCAP2, &lnkcap2);
++	if (lnkcap2 == (u32)~0) {
++		dev_err(dev, "Read link speed capability has failed.\n");
++		return PCI_SPEED_UNKNOWN;
++	}
+ 
+ 	/* PCIe r3.0-compliant */
+ 	if (lnkcap2)
+ 		return PCIE_LNKCAP2_SLS2SPEED(lnkcap2);
+ 
+ 	pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &lnkcap);
++	if (lnkcap == (u32)~0) {
++		dev_err(dev, "Read link speed capability has failed.\n");
++		return PCI_SPEED_UNKNOWN;
++	}
++
+ 	if ((lnkcap & PCI_EXP_LNKCAP_SLS) == PCI_EXP_LNKCAP_SLS_5_0GB)
+ 		return PCIE_SPEED_5_0GT;
+ 	else if ((lnkcap & PCI_EXP_LNKCAP_SLS) == PCI_EXP_LNKCAP_SLS_2_5GB)
+@@ -5846,7 +5860,7 @@ enum pcie_link_width pcie_get_width_cap(struct pci_dev *dev)
+ 	u32 lnkcap;
+ 
+ 	pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &lnkcap);
+-	if (lnkcap)
++	if (lnkcap && (lnkcap != (u32)~0))
+ 		return (lnkcap & PCI_EXP_LNKCAP_MLW) >> 4;
+ 
+ 	return PCIE_LNK_WIDTH_UNKNOWN;
 -- 
 2.18.4
 
