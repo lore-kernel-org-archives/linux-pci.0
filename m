@@ -2,125 +2,112 @@ Return-Path: <SRS0=SxF6=BK=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35BD4C433E0
-	for <linux-pci@archiver.kernel.org>; Fri, 31 Jul 2020 09:08:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3ED6C433E3
+	for <linux-pci@archiver.kernel.org>; Fri, 31 Jul 2020 12:02:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0C8132173E
-	for <linux-pci@archiver.kernel.org>; Fri, 31 Jul 2020 09:08:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 804E022B40
+	for <linux-pci@archiver.kernel.org>; Fri, 31 Jul 2020 12:02:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=renesasgroup.onmicrosoft.com header.i=@renesasgroup.onmicrosoft.com header.b="N62qO5wG"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="q1ELpRRF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732010AbgGaJIS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 31 Jul 2020 05:08:18 -0400
-Received: from mail-eopbgr1300112.outbound.protection.outlook.com ([40.107.130.112]:3296
-        "EHLO APC01-HK2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728437AbgGaJIR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 31 Jul 2020 05:08:17 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=SpFvtDHQxCGg7cINZIGnZkvlMAFjKxbESrkPPaKdtJWIF/o3f3PP6OI2FUqhOcRzo8HzpZEpuYJGNU0aavmo2WuBsovtcMdYKpkpjSK8Hgklfzvsf2K2DYguEiWADEvPGC92gPWQOZ0n+O+gUSLoevEU+tovQYloT12DZKmeouGgcw9lqNjbl8w3B9Wr7LbYbOKT/Cshmr+Da6dvv+c9V6pqAu5qK8wnNtGKxYGH+Xrs7/+droE/1KJmarlaKiIeIDXQQqCqoi0u/B2yxVHu87LaLq5OMAXRZ9YbKUchfsmgfu5Ih6ss6wbJnwgzuNhYD2EBwdpYs6EOgunBrzrDYQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=YZe+GeX8gEp3tpKSIQYaiQmaKoTTBNCq9uZ9jj4YTw4=;
- b=bmEYOQyhQcF+T0Nxg/KuF9pHJI3JtQsT/cY7Ne8mDK48GUd/SZDR7HapsrDBxaoXb5hpAn0wTQqnR7lorzQBXw8AmT4SjqFq+gcWKYf0KXAHdoGc7kpnWd/n0mL3xvKFSYubPQPqVuUUomdveILM9kmdXxhFj3cmgUGrDSnTTHlKX8WThV+EgtA7Aooa/Yy/agfKNEPChIB/br428pdezmiYP44xIciGEwqes6MJlMSyqFJbot+Cwb19yOFxHkHh/3Zm2GcpCsl/uPWnJVFdvczkdaFq8pFxjFMaNXL7jyw8F1NqiOR0KhgAY0IOxbWGos4SlUXKX6qPpQILNKbAYQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=renesas.com; dmarc=pass action=none header.from=renesas.com;
- dkim=pass header.d=renesas.com; arc=none
+        id S1733034AbgGaMC1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 31 Jul 2020 08:02:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56220 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1733029AbgGaMCZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 31 Jul 2020 08:02:25 -0400
+Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60CA1C061575;
+        Fri, 31 Jul 2020 05:02:25 -0700 (PDT)
+Received: by mail-ej1-x642.google.com with SMTP id g19so17353807ejc.9;
+        Fri, 31 Jul 2020 05:02:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=renesasgroup.onmicrosoft.com; s=selector2-renesasgroup-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=YZe+GeX8gEp3tpKSIQYaiQmaKoTTBNCq9uZ9jj4YTw4=;
- b=N62qO5wGMDAZHI0muPlDlawZ6RRHtlBuhCKskfifd/rPxKg2UDdiCXqEZmAiJu010ZvsZiKWqrtP8UMPL+E41PEhOUDyzIWYKmJ0Pl84gH7XuGOR/Ldngv80xDt37bHPhZi3s7zZGdW3YhmrTXnC2qNzKRw+pxR2wiabA7j9EUs=
-Received: from TY2PR01MB3692.jpnprd01.prod.outlook.com (2603:1096:404:d5::22)
- by TY2PR01MB3515.jpnprd01.prod.outlook.com (2603:1096:404:d6::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3239.20; Fri, 31 Jul
- 2020 09:08:12 +0000
-Received: from TY2PR01MB3692.jpnprd01.prod.outlook.com
- ([fe80::9083:6001:8090:9f3]) by TY2PR01MB3692.jpnprd01.prod.outlook.com
- ([fe80::9083:6001:8090:9f3%6]) with mapi id 15.20.3239.017; Fri, 31 Jul 2020
- 09:08:11 +0000
-From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-renesas-soc@vger.kernel.org" 
-        <linux-renesas-soc@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: RE: [PATCH v2][next] PCI: rcar-gen2: Use fallthrough pseudo-keyword
-Thread-Topic: [PATCH v2][next] PCI: rcar-gen2: Use fallthrough pseudo-keyword
-Thread-Index: AQHWX9dxg3v+SSLQ3Uetc/hFRqLsz6khdGEw
-Date:   Fri, 31 Jul 2020 09:08:10 +0000
-Message-ID: <TY2PR01MB369218139A78BB84DB6B2FDAD84E0@TY2PR01MB3692.jpnprd01.prod.outlook.com>
-References: <20200722032851.GA4251@embeddedor>
-In-Reply-To: <20200722032851.GA4251@embeddedor>
-Accept-Language: ja-JP, en-US
-Content-Language: ja-JP
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: kernel.org; dkim=none (message not signed)
- header.d=none;kernel.org; dmarc=none action=none header.from=renesas.com;
-x-originating-ip: [240f:60:5f3e:1:7d28:3e82:377f:8a0]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 5d623a29-132d-4257-4963-08d835314034
-x-ms-traffictypediagnostic: TY2PR01MB3515:
-x-microsoft-antispam-prvs: <TY2PR01MB3515BE6E83C386B42C5EC7D5D84E0@TY2PR01MB3515.jpnprd01.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:5797;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: lplCsK/T9b29Boqiod+W7QaesWeguRnsEM8UQWkiaGp6O2GPtOKBDjrRh0IzkJR+NJ+e7qCFyjwKnHhTDCSRT34m1LH98obSQ5VrWetz8LPtdlePDcnLiaHa7wh5mOzLlfCydSQ8Y6GhVZDckTLzSCwF4cJ6tGmUj5pqt75PlgLySMPFZvpPitoN6HwOFw0fYzuyayUTc1JSk98CgJoH4Ftzd6dGauYYfSm8Va+1GhosmAzwzO9P5yQS5I3hPT5HOgiP6SnPOVfe2h9epjoZ9J4fg4f9EdhfVcynhnL5DmDG+9ms/5N9UusLPOVsoleT1DLXn1q4kTos5bxwEKmAn1vYXigBFGL3ut0V88+gt/qoNMYrT96omlDoMdUOEiSfx6uTZXALneDbr8+ZnNvCMA==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY2PR01MB3692.jpnprd01.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(376002)(396003)(39860400002)(346002)(366004)(136003)(33656002)(86362001)(71200400001)(9686003)(966005)(55016002)(110136005)(5660300002)(4744005)(66946007)(66556008)(66446008)(76116006)(52536014)(478600001)(64756008)(66476007)(8676002)(54906003)(7696005)(2906002)(7416002)(316002)(186003)(8936002)(4326008)(6506007);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: S0mWKjs+hZjnCkWiQQ+x6uq+rGrVD72haST3vhF/TH0GjfkA9Ckhh8wowOqqIi4lCcWo2h5f22qR6DqU5ywvS90FjMHqcXQqXQOLeXqNs5BVnOTYQJTDr8oILfl5vfaTEQZF0GE/ncra7SKQ5ijkQ+fXJcRaHgwtb6/BOTE9BteUq/QXCssfUJmtL9O+q8vuGJP4IGSSDCjyKN17DegkI3/lYUD/FTatelrQEj8CLr8M+3abKzvPZ1vvRdBXb8x7toIWmpr2NJprqzNcMvhBpZHHcOCirxhcQRqdQDVz5L3kzofLawHECQyCocveeiN6JzGqIuIcf/12scNlp+eUxOJW8llPvmJ0GqSG6NMTQDUSqbdY6k5I2wdfbdLAFhMTmm81PY01defnY6K4YQoTqD4d8UiX6dA7dSDnk6Q/xB9OLwP/4Ks1rLEFK1piHBtb0t/FNtgdMUW9vuTktJ0LSX47R1zqeLKUxERPjLtNr0XXpH6DsPfHZZoRNA3GtdOid8UFR95Lu21waHZF7JnTF5nnHP+pn0isIrQ7yCHetq6Cdu1n5WJ+cL0+XmgsyDngef5e62yskEt4WBhWJdN/k3s9Fih3PoJj421d1yKwA742OJaIHswwGhVc7MenDVxomc1PaKZnm5PE0pcT4htD27CF88VGD1vayZoNkgeAhyJJHKpNY6up1o/x6SPDbIB+RJxR4I2pOVE43tosZ+U0wQ==
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-MIME-Version: 1.0
-X-OriginatorOrg: renesas.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: TY2PR01MB3692.jpnprd01.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5d623a29-132d-4257-4963-08d835314034
-X-MS-Exchange-CrossTenant-originalarrivaltime: 31 Jul 2020 09:08:11.5036
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 53d82571-da19-47e4-9cb4-625a166a4a2a
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: b55ULJNfF7qYu2VBeYMQMj2W8zH0/gEZHrSMWt+2uEu2HeJEu9OD8KxenVAyGvImVdir2rTcdtSYmnc612W6dVftlFIRIqgKisOXrzuozzCAx5XWx1I1G84kewRruhDE
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TY2PR01MB3515
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=+B0ZiRGGkQHGfacBVvFgt+7CbN36ujRN2OQHpeuEl8Q=;
+        b=q1ELpRRFFJl8UZ7DlKSBerPXQVxyKAd4T3Rh0sn2R47QsC0y9Bjo6tJovpznNhS8yR
+         1ky2nz6HbkWcz/wRA3cUSi86NBcbDAf4+sQAuPbHZ8KjHOPop1D8Cs+efmggmlP6kaTE
+         cejWvPxN+7BdWCABfsSrVCZ4a5ZrEbPMMx43Rj6x8ChHzQReQfKVL+7BtF+0ppl8pHIg
+         OL7ouoqnTXagdt4YbGlYplW9EAo5EKk4QJ1SbxuVOJbBf7HvSjYGpb3GROvrXv/pNevl
+         XjTzuyStpqPFCaHph9dgTIXXlp1veqq0qMTJH3ugoZ/2xMD+1DQd5SwmH+/K6LZVIxpl
+         iQSg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=+B0ZiRGGkQHGfacBVvFgt+7CbN36ujRN2OQHpeuEl8Q=;
+        b=fzWphx4Ujf37TII2q03MipMpictfkM3Yqkwu+mu6iJqcvNtjI1hRAN1DFt0nhonxCD
+         ueXbWJ6Zu7fpFbW6j/GR2+pIBz78VZoOLuf2qhSx4z9BClPWf5+gaJxJJ7GRNoFep8P1
+         W73nk9cEW10plqGsMffmWf7Njnh2yR4rGWKdtHIOQvYeg6cQTUXh/gPI4YCSoYAxkal9
+         NxZlmpWE026lRKd/tMXuXG+2NIJMmHzK2uUMCnYdkSN5/FoGoq+Btp6sQJF5lsUA1J3f
+         YxYZgGyLpIkV5Lfn0JdzbG80dgeD1WroAZRdinQKX4Kv2efl6cwXQQvZNZ6ImGk5qRNc
+         NY4g==
+X-Gm-Message-State: AOAM533IHQS426NleByawD7pFIc54XMruY2bLlX7YgoJTuhm0OSr3oeJ
+        m5/iLipUg1ynm29iNl4VZjA=
+X-Google-Smtp-Source: ABdhPJxgR17bqYSQeGy025fhxigm0MVrq5A7QiKas69UQZRDtn4IPk1fEsdjUzNRp0lVrz4itO5j9Q==
+X-Received: by 2002:a17:906:3756:: with SMTP id e22mr3810103ejc.487.1596196944109;
+        Fri, 31 Jul 2020 05:02:24 -0700 (PDT)
+Received: from net.saheed (95C84E0A.dsl.pool.telekom.hu. [149.200.78.10])
+        by smtp.gmail.com with ESMTPSA id j5sm9091734ejk.87.2020.07.31.05.02.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 31 Jul 2020 05:02:23 -0700 (PDT)
+From:   "Saheed O. Bolarinwa" <refactormyself@gmail.com>
+To:     helgaas@kernel.org
+Cc:     "Saheed O. Bolarinwa" <refactormyself@gmail.com>,
+        bjorn@helgaas.com, skhan@linuxfoundation.org,
+        linux-pci@vger.kernel.org,
+        linux-kernel-mentees@lists.linuxfoundation.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v4 05/12] PCI: pciehp: Set "Power On" as the default get_power_status
+Date:   Fri, 31 Jul 2020 13:02:33 +0200
+Message-Id: <20200731110240.98326-6-refactormyself@gmail.com>
+X-Mailer: git-send-email 2.18.4
+In-Reply-To: <20200731110240.98326-1-refactormyself@gmail.com>
+References: <20200731110240.98326-1-refactormyself@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
+The default case of the switch statement is redundant since
+PCI_EXP_SLTCTL_PCC is only a single bit.
 
-> From: Gustavo A. R. Silva, Sent: Wednesday, July 22, 2020 12:29 PM
->=20
-> Replace the existing /* fall through */ comments and its variants with
-> the new pseudo-keyword macro fallthrough[1].
->=20
-> [1]
-> https://www.kernel.org/doc/html/v5.7/process/deprecated.html?highlight=3D=
-fallthrough#implicit-switch-case-fall-through
->=20
-> Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
-> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+Set the default case in the switch-statement to set status
+to "Power On"
 
-Thank you for the patch!
+Suggested-by: Bjorn Helgaas <bjorn@helgaas.com>
+Signed-off-by: Saheed O. Bolarinwa <refactormyself@gmail.com>
+---
+ drivers/pci/hotplug/pciehp_hpc.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-Reviewed-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-
-Best regards,
-Yoshihiro Shimoda
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 53433b37e181..b89c9ee4a3b5 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -400,14 +400,12 @@ void pciehp_get_power_status(struct controller *ctrl, u8 *status)
+ 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, slot_ctrl);
+ 
+ 	switch (slot_ctrl & PCI_EXP_SLTCTL_PCC) {
+-	case PCI_EXP_SLTCTL_PWR_ON:
+-		*status = 1;	/* On */
+-		break;
+ 	case PCI_EXP_SLTCTL_PWR_OFF:
+ 		*status = 0;	/* Off */
+ 		break;
++	case PCI_EXP_SLTCTL_PWR_ON:
+ 	default:
+-		*status = 0xFF;
++		*status = 1;	/* On */
+ 		break;
+ 	}
+ }
+-- 
+2.18.4
 
