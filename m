@@ -8,68 +8,66 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CDB6C433E0
-	for <linux-pci@archiver.kernel.org>; Sat,  1 Aug 2020 12:25:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFB95C433E3
+	for <linux-pci@archiver.kernel.org>; Sat,  1 Aug 2020 12:25:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E4A7B2080C
-	for <linux-pci@archiver.kernel.org>; Sat,  1 Aug 2020 12:25:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9EB2E2076A
+	for <linux-pci@archiver.kernel.org>; Sat,  1 Aug 2020 12:25:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TPXE0MeF"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iYcYgSrZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729103AbgHAMZJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 1 Aug 2020 08:25:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54246 "EHLO
+        id S1728505AbgHAMZO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 1 Aug 2020 08:25:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54224 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728505AbgHAMYo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 1 Aug 2020 08:24:44 -0400
-Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA247C06179E;
-        Sat,  1 Aug 2020 05:24:43 -0700 (PDT)
-Received: by mail-ej1-x642.google.com with SMTP id c16so13635623ejx.12;
-        Sat, 01 Aug 2020 05:24:43 -0700 (PDT)
+        with ESMTP id S1729043AbgHAMYi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 1 Aug 2020 08:24:38 -0400
+Received: from mail-ed1-x542.google.com (mail-ed1-x542.google.com [IPv6:2a00:1450:4864:20::542])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 865C7C06174A;
+        Sat,  1 Aug 2020 05:24:38 -0700 (PDT)
+Received: by mail-ed1-x542.google.com with SMTP id c2so18272473edx.8;
+        Sat, 01 Aug 2020 05:24:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=SrhDN2Qf8+lE/P1EU/TJXEXFld12zPt7dPQFf412LUk=;
-        b=TPXE0MeFmNEeYfTarS0h6lEu6T0txCu1b9KgvIqoPjxSgbUjX4ba/CalHwh+XNV9EE
-         zlXi4oKFUnZZ5zVHu3WsUdEEvPp6L05on/HWX3VkVM77SKuj2FlpD86dH5NZ0QEzjtTg
-         K6Nhr9ENw+lKNFgRQijLjk+mW5c0pk5ZeQxpTHze7A4BQdrPzxltjjv/Vjb6Z0Aox8Ed
-         VEDJwMbimBqhxR0PWwCryl7i42bAF/Lj23OoFongQc7qaNfxcZ19cdJVnPclf3scGhyn
-         SuPxs1q4uD+8x4GNtXQxh8OWpVwFNMLSH/5l5QbhWZdIK8bLxs9GcQ3rDUmnwv4+7V1h
-         dxZg==
+        bh=bdwFdqR8uTJkBxeLE6+6M0ZT6V7Ev5F6Fk3j55l8Z9k=;
+        b=iYcYgSrZmWlo3R6AUjHZkTUqWlOCuvWQfp9o/jYHquATEwsySoI7qb/5R298C4XuP6
+         41LiSJR2F+wAaeJbMOPDCVFPHsL0+Fo4vxG7q9em4PQJboP6PNqu/EZa36fMsM/zZbBz
+         JCHW/o6zUF9a2HzOkDNo+9vZ2c5PCBRDQeUpdDN2BOT+MMhqCt4g8i2V0lS4IiBQw05V
+         he5n2kloQO33fgxJyOaPrLYN0f7EOtJSixf210mNPyBCU5yXE9oEPpuWtwkow02lziQ5
+         AygMJ24A5io1qUJTTJ+itzp+4YiuCii7XbUXLOjJXwTJ52oP7dmycNBHJfJeLprStDPf
+         kBJA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=SrhDN2Qf8+lE/P1EU/TJXEXFld12zPt7dPQFf412LUk=;
-        b=B568GJ76mBI7AaPi6AiwVC4s176YHNnwnHUjQD6HvaBRnTpC3wTJK7/c7hkD2WOecy
-         mbEDrGEnW5grXQuMAEpA0Plwsymfi0+bRE+Poc9ggYyqf26N0sXAjJcJtiIvgmBEILl/
-         gaFxOWLK9kIpPzrMEU7FeC14bSGpdxkH5oPb4S3sz8sJuxgo860UfhUSFuGJLxf3FDbM
-         5YBUPkiqY2nrNCsryhFJioiPCOlkdkRvnkH76GiUTAnQ9bwVpbJoAwTD/yX1z4eBLv7b
-         9EMJFQ+UrGJTPe0zqR5S2Zl4bNqerwlHq3TetrT6+p2tWCtVUtE7QllIHF6lr1pIm/wz
-         24jA==
-X-Gm-Message-State: AOAM530fqa3GVkqrzmmwwox6mX9wVLxjdLtv1VDC2rZTvhMct9/CVDyI
-        8frxfd8F9BM8vmszEUdH/Pk=
-X-Google-Smtp-Source: ABdhPJwCqcTSSFI7x9YZQM/IwvnR14OpHVv8jfwf8XU/U7ZA+HW+nlMkfVJ1UJTfn+AVXi9rMi5gOw==
-X-Received: by 2002:a17:906:3616:: with SMTP id q22mr8872560ejb.79.1596284682629;
-        Sat, 01 Aug 2020 05:24:42 -0700 (PDT)
+        bh=bdwFdqR8uTJkBxeLE6+6M0ZT6V7Ev5F6Fk3j55l8Z9k=;
+        b=KrafF9SmbGjuxxq3QxgHGbOCL5EmkaHdjHj6jgJnrzUm2qRWpBoAiM6RBohiT+4VLS
+         WL+diT2bZyw0e98zwMy+5pAOaizCtRJyo23fKLMGVtsC/HagT/re9IRZbA4m/24REg7R
+         zcH8vBY6kFfFK5rdnMG2HEwALs/nl4wPozQVrkwQpOlzCrA+m+qCu8JBIg3clQfLxvfG
+         UPvHDeZ5lKanJhYVBz164790R0oMabsObbouCL142l0pO3WTncUMRSJwNccySZNrdUay
+         j56fbf6QqrkKOjuUQFXc5nA6ZravwdLN4ee9R3x1jeNK40Ub/5jExVXFqY0iyjaQFSL9
+         f8Bg==
+X-Gm-Message-State: AOAM531ql9NwKa4bBaCWZA6N05ppjS7ovsKDTCStcaje6mF1+kTmdMaX
+        Yg+n+fk6oLoedpxQUx8NlvJCcsMW4VmPrQ==
+X-Google-Smtp-Source: ABdhPJwD7rV3Z2sHm2Urux9ibnAQJLnjp5J8GSKRJQtu26ivkTzM9jU1IBe5MLhlZErz7vNjd6oCBw==
+X-Received: by 2002:aa7:da0e:: with SMTP id r14mr8200605eds.236.1596284677325;
+        Sat, 01 Aug 2020 05:24:37 -0700 (PDT)
 Received: from net.saheed (95C84E0A.dsl.pool.telekom.hu. [149.200.78.10])
-        by smtp.gmail.com with ESMTPSA id a101sm12083131edf.76.2020.08.01.05.24.41
+        by smtp.gmail.com with ESMTPSA id a101sm12083131edf.76.2020.08.01.05.24.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 01 Aug 2020 05:24:42 -0700 (PDT)
+        Sat, 01 Aug 2020 05:24:36 -0700 (PDT)
 From:   "Saheed O. Bolarinwa" <refactormyself@gmail.com>
-To:     helgaas@kernel.org, Mike Marciniszyn <mike.marciniszyn@intel.com>,
-        Dennis Dalessandro <dennis.dalessandro@intel.com>,
-        Doug Ledford <dledford@redhat.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>
+To:     helgaas@kernel.org, Jean Delvare <jdelvare@suse.com>,
+        Guenter Roeck <linux@roeck-us.net>
 Cc:     "Saheed O. Bolarinwa" <refactormyself@gmail.com>,
         bjorn@helgaas.com, skhan@linuxfoundation.org,
         linux-kernel-mentees@lists.linuxfoundation.org,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-rdma@vger.kernel.org
-Subject: [RFC PATCH 14/17] IB: Drop uses of pci_read_config_*() return value
-Date:   Sat,  1 Aug 2020 13:24:43 +0200
-Message-Id: <20200801112446.149549-15-refactormyself@gmail.com>
+        linux-hwmon@vger.kernel.org
+Subject: [RFC PATCH 10/17] hwmon: Drop uses of pci_read_config_*() return value
+Date:   Sat,  1 Aug 2020 13:24:39 +0200
+Message-Id: <20200801112446.149549-11-refactormyself@gmail.com>
 X-Mailer: git-send-email 2.18.4
 In-Reply-To: <20200801112446.149549-1-refactormyself@gmail.com>
 References: <20200801112446.149549-1-refactormyself@gmail.com>
@@ -94,145 +92,72 @@ value thus it indicates some kind of error.
 Suggested-by: Bjorn Helgaas <bjorn@helgaas.com>
 Signed-off-by: Saheed O. Bolarinwa <refactormyself@gmail.com>
 ---
- drivers/infiniband/hw/hfi1/pcie.c         | 38 +++++++++++------------
- drivers/infiniband/hw/mthca/mthca_reset.c | 19 ++++++------
- 2 files changed, 29 insertions(+), 28 deletions(-)
+ drivers/hwmon/i5k_amb.c | 12 ++++++++----
+ drivers/hwmon/vt8231.c  |  8 ++++----
+ 2 files changed, 12 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/infiniband/hw/hfi1/pcie.c b/drivers/infiniband/hw/hfi1/pcie.c
-index 1a6268d61977..11cf7dde873d 100644
---- a/drivers/infiniband/hw/hfi1/pcie.c
-+++ b/drivers/infiniband/hw/hfi1/pcie.c
-@@ -392,24 +392,24 @@ int restore_pci_variables(struct hfi1_devdata *dd)
- /* Save BARs and command to rewrite after device reset */
- int save_pci_variables(struct hfi1_devdata *dd)
- {
--	int ret = 0;
-+	int ret = -ENODEV;
+diff --git a/drivers/hwmon/i5k_amb.c b/drivers/hwmon/i5k_amb.c
+index eeac4b04df27..b7497510323c 100644
+--- a/drivers/hwmon/i5k_amb.c
++++ b/drivers/hwmon/i5k_amb.c
+@@ -427,11 +427,13 @@ static int i5k_find_amb_registers(struct i5k_amb_data *data,
+ 	if (!pcidev)
+ 		return -ENODEV;
  
--	ret = pci_read_config_dword(dd->pcidev, PCI_BASE_ADDRESS_0,
-+	pci_read_config_dword(dd->pcidev, PCI_BASE_ADDRESS_0,
- 				    &dd->pcibar0);
--	if (ret)
-+	if (dd->pcibar0 == (u32)~0)
- 		goto error;
+-	if (pci_read_config_dword(pcidev, I5K_REG_AMB_BASE_ADDR, &val32))
++	pci_read_config_dword(pcidev, I5K_REG_AMB_BASE_ADDR, &val32);
++	if (val32 == (u32)~0)
+ 		goto out;
+ 	data->amb_base = val32;
  
--	ret = pci_read_config_dword(dd->pcidev, PCI_BASE_ADDRESS_1,
-+	pci_read_config_dword(dd->pcidev, PCI_BASE_ADDRESS_1,
- 				    &dd->pcibar1);
--	if (ret)
-+	if (dd->pcibar1 == (u32)~0)
- 		goto error;
+-	if (pci_read_config_dword(pcidev, I5K_REG_AMB_LEN_ADDR, &val32))
++	pci_read_config_dword(pcidev, I5K_REG_AMB_LEN_ADDR, &val32);
++	if (val32 == (u32)~0)
+ 		goto out;
+ 	data->amb_len = val32;
  
--	ret = pci_read_config_dword(dd->pcidev, PCI_ROM_ADDRESS, &dd->pci_rom);
--	if (ret)
-+	pci_read_config_dword(dd->pcidev, PCI_ROM_ADDRESS, &dd->pci_rom);
-+	if (dd->pci_rom == (u32)~0)
- 		goto error;
+@@ -458,11 +460,13 @@ static int i5k_channel_probe(u16 *amb_present, unsigned long dev_id)
+ 	if (!pcidev)
+ 		return -ENODEV;
  
--	ret = pci_read_config_word(dd->pcidev, PCI_COMMAND, &dd->pci_command);
--	if (ret)
-+	pci_read_config_word(dd->pcidev, PCI_COMMAND, &dd->pci_command);
-+	if (dd->pci_command == (u16)~0)
- 		goto error;
+-	if (pci_read_config_word(pcidev, I5K_REG_CHAN0_PRESENCE_ADDR, &val16))
++	pci_read_config_word(pcidev, I5K_REG_CHAN0_PRESENCE_ADDR, &val16);
++	if (val16 == (u16)~0)
+ 		goto out;
+ 	amb_present[0] = val16;
  
- 	ret = pcie_capability_read_word(dd->pcidev, PCI_EXP_DEVCTL,
-@@ -427,14 +427,14 @@ int save_pci_variables(struct hfi1_devdata *dd)
- 	if (ret)
- 		goto error;
+-	if (pci_read_config_word(pcidev, I5K_REG_CHAN1_PRESENCE_ADDR, &val16))
++	pci_read_config_word(pcidev, I5K_REG_CHAN1_PRESENCE_ADDR, &val16);
++	if (val16 == (u16)~0)
+ 		goto out;
+ 	amb_present[1] = val16;
  
--	ret = pci_read_config_dword(dd->pcidev, PCI_CFG_MSIX0, &dd->pci_msix0);
--	if (ret)
-+	pci_read_config_dword(dd->pcidev, PCI_CFG_MSIX0, &dd->pci_msix0);
-+	if (dd->pci_command == (u32)~0)
- 		goto error;
- 
- 	if (pci_find_ext_capability(dd->pcidev, PCI_EXT_CAP_ID_TPH)) {
--		ret = pci_read_config_dword(dd->pcidev, PCIE_CFG_TPH2,
-+		pci_read_config_dword(dd->pcidev, PCIE_CFG_TPH2,
- 					    &dd->pci_tph2);
--		if (ret)
-+		if (dd->pci_tph2 == (u32)~0)
- 			goto error;
+diff --git a/drivers/hwmon/vt8231.c b/drivers/hwmon/vt8231.c
+index 2335d440f72d..6603727e15a0 100644
+--- a/drivers/hwmon/vt8231.c
++++ b/drivers/hwmon/vt8231.c
+@@ -992,8 +992,8 @@ static int vt8231_pci_probe(struct pci_dev *dev,
+ 			return -ENODEV;
  	}
- 	return 0;
-@@ -783,9 +783,9 @@ static int load_eq_table(struct hfi1_devdata *dd, const u8 eq[11][3], u8 fs,
- 		pci_write_config_dword(pdev, PCIE_CFG_REG_PL102,
- 				       eq_value(c_minus1, c0, c_plus1));
- 		/* check if these coefficients violate EQ rules */
--		ret = pci_read_config_dword(dd->pcidev,
-+		pci_read_config_dword(dd->pcidev,
- 					    PCIE_CFG_REG_PL105, &violation);
--		if (ret) {
-+		if (violation == (32)~0) {
- 			dd_dev_err(dd, "Unable to read from PCI config\n");
- 			hit_error = 1;
- 			break;
-@@ -1322,8 +1322,8 @@ int do_pcie_gen3_transition(struct hfi1_devdata *dd)
- 	/* step 10: decide what to do next */
  
- 	/* check if we can read PCI space */
--	ret = pci_read_config_word(dd->pcidev, PCI_VENDOR_ID, &vendor);
--	if (ret) {
-+	pci_read_config_word(dd->pcidev, PCI_VENDOR_ID, &vendor);
-+	if (vendor == (u16)~0) {
- 		dd_dev_info(dd,
- 			    "%s: read of VendorID failed after SBR, err %d\n",
- 			    __func__, ret);
-@@ -1376,8 +1376,8 @@ int do_pcie_gen3_transition(struct hfi1_devdata *dd)
- 	setextled(dd, 0);
+-	if (PCIBIOS_SUCCESSFUL != pci_read_config_word(dev, VT8231_BASE_REG,
+-							&val))
++	pci_read_config_word(dev, VT8231_BASE_REG, &val);
++	if (val == (u16)~0)
+ 		return -ENODEV;
  
- 	/* check for any per-lane errors */
--	ret = pci_read_config_dword(dd->pcidev, PCIE_CFG_SPCIE2, &reg32);
--	if (ret) {
-+	pci_read_config_dword(dd->pcidev, PCIE_CFG_SPCIE2, &reg32);
-+	if (reg32 == (u32)~0) {
- 		dd_dev_err(dd, "Unable to read from PCI config\n");
- 		return_error = 1;
- 		goto done;
-diff --git a/drivers/infiniband/hw/mthca/mthca_reset.c b/drivers/infiniband/hw/mthca/mthca_reset.c
-index 2a6979e4ae1c..5f09d5312472 100644
---- a/drivers/infiniband/hw/mthca/mthca_reset.c
-+++ b/drivers/infiniband/hw/mthca/mthca_reset.c
-@@ -102,7 +102,10 @@ int mthca_reset(struct mthca_dev *mdev)
- 	for (i = 0; i < 64; ++i) {
- 		if (i == 22 || i == 23)
- 			continue;
--		if (pci_read_config_dword(mdev->pdev, i * 4, hca_header + i)) {
-+
-+		pci_read_config_dword(mdev->pdev, i * 4,
-+						hca_header + i);
-+		if (*(hca_header + i) == (u32)~0) {
- 			err = -ENODEV;
- 			mthca_err(mdev, "Couldn't save HCA "
- 				  "PCI header, aborting.\n");
-@@ -123,7 +126,10 @@ int mthca_reset(struct mthca_dev *mdev)
- 		for (i = 0; i < 64; ++i) {
- 			if (i == 22 || i == 23)
- 				continue;
--			if (pci_read_config_dword(bridge, i * 4, bridge_header + i)) {
-+
-+			pci_read_config_dword(bridge, i * 4,
-+							bridge_header + i);
-+			if (*(bridge_header + i) == (u32)~0) {
- 				err = -ENODEV;
- 				mthca_err(mdev, "Couldn't save HCA bridge "
- 					  "PCI header, aborting.\n");
-@@ -164,13 +170,8 @@ int mthca_reset(struct mthca_dev *mdev)
- 		int c = 0;
+ 	address = val & ~(VT8231_EXTENT - 1);
+@@ -1002,8 +1002,8 @@ static int vt8231_pci_probe(struct pci_dev *dev,
+ 		return -ENODEV;
+ 	}
  
- 		for (c = 0; c < 100; ++c) {
--			if (pci_read_config_dword(bridge ? bridge : mdev->pdev, 0, &v)) {
--				err = -ENODEV;
--				mthca_err(mdev, "Couldn't access HCA after reset, "
--					  "aborting.\n");
--				goto free_bh;
--			}
--
-+			pci_read_config_dword(bridge ? bridge : mdev->pdev, 0,
-+									&v);
- 			if (v != 0xffffffff)
- 				goto good;
+-	if (PCIBIOS_SUCCESSFUL != pci_read_config_word(dev, VT8231_ENABLE_REG,
+-							&val))
++	pci_read_config_word(dev, VT8231_ENABLE_REG, &val);
++	if (val == (u16)~0)
+ 		return -ENODEV;
  
+ 	if (!(val & 0x0001)) {
 -- 
 2.18.4
 
