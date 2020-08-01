@@ -5,72 +5,68 @@ X-Spam-Level:
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28A6EC433E0
-	for <linux-pci@archiver.kernel.org>; Sat,  1 Aug 2020 12:24:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60677C433DF
+	for <linux-pci@archiver.kernel.org>; Sat,  1 Aug 2020 12:25:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F30D72076A
-	for <linux-pci@archiver.kernel.org>; Sat,  1 Aug 2020 12:24:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3EEDF2080C
+	for <linux-pci@archiver.kernel.org>; Sat,  1 Aug 2020 12:25:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="puciVruZ"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ncnCAE+5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729135AbgHAMYu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 1 Aug 2020 08:24:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54262 "EHLO
+        id S1729099AbgHAMYp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 1 Aug 2020 08:24:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54240 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729126AbgHAMYt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 1 Aug 2020 08:24:49 -0400
+        with ESMTP id S1729086AbgHAMYm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 1 Aug 2020 08:24:42 -0400
 Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 080F3C06174A;
-        Sat,  1 Aug 2020 05:24:49 -0700 (PDT)
-Received: by mail-ej1-x642.google.com with SMTP id a26so8221192ejc.2;
-        Sat, 01 Aug 2020 05:24:48 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75837C061757;
+        Sat,  1 Aug 2020 05:24:42 -0700 (PDT)
+Received: by mail-ej1-x642.google.com with SMTP id bo3so11390591ejb.11;
+        Sat, 01 Aug 2020 05:24:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=WuEfbc6tXTSPxgYhc8GBlrhIgPKHPNIokCc6jcbGrnA=;
-        b=puciVruZjSj58crrBaPOvKOFovdmwjton2ViDkAJyXSDsbH8S5wJxOHfMtUqv0lnvK
-         UbzqzW8Sw74URsHUOZuVVnmeJFtusJ7sP7gVy9SKne9ZoWNsdiwXkBj0ECAq1CHwPmIO
-         reMg2wCxUhVWSbkj6jSC/fzluoGV8fnAM3wy2+eCMIqhlGsCAE/zYXiseP7GDtf2rwpQ
-         sH54wyQ/QX+TE/5jtzRPmS9EmeJKWowCukWlbSl9s0QLXogmlXZn3RyX7zqzgbPaZuiB
-         z3bPxmwfp+pWZo+EkqHlCyJeSpotz1fGxShfzxiB7Q1gEumoOUdz4bp7+Rm73oNtinsu
-         ImfQ==
+        bh=f7EHkSWbrjhplB2d+YIJIh5vLQH5GmykUiEqLTIStB4=;
+        b=ncnCAE+5L7BB5/YjIaWKdov1rz6HP5TvXA9nZA3PXndUUW1xK5+ufbrRdCYCwHcqHm
+         t1EMuhi4tuEBdBJ5YsN9BB5sxWFTI0+q//E8z9o5Ck0ZyU+V5BrrZ5nZXdtol4sWPkxZ
+         b9MIFjQEbPFh3ySpTdLCOFWSkzspCjS2kD4irjY0YxXuW38z5ndkVpebr288Yek4HTE7
+         +2vr3ZHRUJaZVRsq+jCq8P6pvvPOtSBdlH0LEq1DjZSQP5YlhLmDT7iewerLkZWaqc/g
+         VR8PYab69Ni5ovDIAYK7FvMde3VGmx+R28fsxL9Zyq9QmFLaLLeo+1pPbnbJL/G3y8oR
+         c/IA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=WuEfbc6tXTSPxgYhc8GBlrhIgPKHPNIokCc6jcbGrnA=;
-        b=hYQvpLmDlcSSVvCG+Kg7WG7IEJkBYHiIb/v4O9MWWHYJFFWZMWLODODieLUR9nyiv+
-         xWbEfDIxIM5xYrnENyu+t+RWVlp4cHUOhEZaUVFlKisvagz2mYYqJ6QGw1jNpllWZItc
-         kSwOA4LtWP+NFVL9qArSCTowIkCzD9TZXB6G4Rc93/rF8TGayJJEtEKAxRlnHFrxlf6e
-         KoxCf6ogViKZOj0GFDVOQalm9SMBtfDoGuifmqbmWEp7GZoYKErRtoS/YuShp36QI2Qj
-         b3fTDZbrl0iXgf9N1yw+N4cGaTUW6g6Fn0wyL5HIOgN12QeP7ulYsa1kGmzb36BfbsNm
-         CWYA==
-X-Gm-Message-State: AOAM530CbqqZV8La6XpLBrMyCJj8JO/aMf2kHeESu7GdjQox04fWa/PK
-        gn/Ee/LsqZa5L56lpp7jmgQ=
-X-Google-Smtp-Source: ABdhPJwWT9TZbxDhqkMVpM+iCmur7AgDN5wt9JmA4+V0x7td71JPi8yIMDJT1uKV5t2/nsl3f9ZyYw==
-X-Received: by 2002:a17:906:9356:: with SMTP id p22mr8260889ejw.119.1596284687686;
-        Sat, 01 Aug 2020 05:24:47 -0700 (PDT)
+        bh=f7EHkSWbrjhplB2d+YIJIh5vLQH5GmykUiEqLTIStB4=;
+        b=Bhcu03CrvCaJhpZJX2C9eo2m2HsoOPftZ8cNgV+Fpwzv9tOYt2Lzi0CQJbhEnNsJWB
+         mQn+d4uy3gJpjwI3gnqRiCkvH4Sxd1F86PvRUy9PtXUtxlYXMMWic9/ovyNXAXfAFoA+
+         zneJIJCCt3/iT6OL4RBFM43GL9CLgFQ7BzHBAQVS0Q8fH62lVCpofXQQJI/ZNirhZu3G
+         uhKsLjuz5cGZ3NfarXidsdCrI9oWLnSdfjgk3VoytxVYGBGIUiB+HI3FD/YrjkwDgqRz
+         Upa+A1kCJS28fXBakfA1n3HjwICaA6S4UEQcfvTV2cDSmwvZV3nCjn1YuwRjWenOG0jW
+         QYbA==
+X-Gm-Message-State: AOAM531PtDbv4Hr3UCV4hSRBN4RQ1xhyaKmBGXFdg76c0H+8JBoFaP6u
+        GJK+ARPilP/Ut1874jMXHaI=
+X-Google-Smtp-Source: ABdhPJxK6QsCLubg/13FQ7axRtOuPxj8lfRiykbHYiquSlkMilSMcUUDzaC4VkaClUghhqDZwK4BZw==
+X-Received: by 2002:a17:906:c002:: with SMTP id e2mr8812396ejz.244.1596284681233;
+        Sat, 01 Aug 2020 05:24:41 -0700 (PDT)
 Received: from net.saheed (95C84E0A.dsl.pool.telekom.hu. [149.200.78.10])
-        by smtp.gmail.com with ESMTPSA id a101sm12083131edf.76.2020.08.01.05.24.46
+        by smtp.gmail.com with ESMTPSA id a101sm12083131edf.76.2020.08.01.05.24.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 01 Aug 2020 05:24:47 -0700 (PDT)
+        Sat, 01 Aug 2020 05:24:40 -0700 (PDT)
 From:   "Saheed O. Bolarinwa" <refactormyself@gmail.com>
-To:     helgaas@kernel.org, "David S. Miller" <davem@davemloft.net>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Wolfgang Grandegger <wg@grandegger.com>,
-        Marc Kleine-Budde <mkl@pengutronix.de>
+To:     helgaas@kernel.org, "David S. Miller" <davem@davemloft.net>
 Cc:     "Saheed O. Bolarinwa" <refactormyself@gmail.com>,
         bjorn@helgaas.com, skhan@linuxfoundation.org,
         linux-kernel-mentees@lists.linuxfoundation.org,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [RFC PATCH 17/17] net: Drop uses of pci_read_config_*() return value
-Date:   Sat,  1 Aug 2020 13:24:46 +0200
-Message-Id: <20200801112446.149549-18-refactormyself@gmail.com>
+        linux-ide@vger.kernel.org
+Subject: [RFC PATCH 13/17] ide: Drop uses of pci_read_config_*() return value
+Date:   Sat,  1 Aug 2020 13:24:42 +0200
+Message-Id: <20200801112446.149549-14-refactormyself@gmail.com>
 X-Mailer: git-send-email 2.18.4
 In-Reply-To: <20200801112446.149549-1-refactormyself@gmail.com>
 References: <20200801112446.149549-1-refactormyself@gmail.com>
@@ -89,298 +85,126 @@ dependency on the return value of these functions is removed, then it
 can later be made to return void.
 
 Remove all uses of the return value of pci_read_config_*().
-Check the actual value read for ~0. In this case, ~0 is an invalid
-value thus it indicates some kind of error.
+Check the actual value read for ~0. In this case, ~0 is an invalid value
+thus it indicates some kind of error.
+
+drivers/ide/cs5536.c cs5536_read() :
+None of the callers of cs5536_read() uses the return value. The obtained
+value can be checked for validity to confirm success.
+
+Change the return type of cs5536_read() to void.
 
 Suggested-by: Bjorn Helgaas <bjorn@helgaas.com>
 Signed-off-by: Saheed O. Bolarinwa <refactormyself@gmail.com>
 ---
- drivers/net/can/peak_canfd/peak_pciefd_main.c     |  6 ++++--
- drivers/net/can/sja1000/peak_pci.c                |  6 ++++--
- drivers/net/ethernet/agere/et131x.c               | 11 +++++++----
- .../net/ethernet/broadcom/bnx2x/bnx2x_ethtool.c   |  5 +++--
- .../ethernet/cavium/liquidio/cn23xx_pf_device.c   |  4 ++--
- drivers/net/ethernet/marvell/sky2.c               |  5 +++--
- drivers/net/ethernet/mellanox/mlx4/catas.c        |  7 +------
- drivers/net/ethernet/mellanox/mlx4/reset.c        | 10 ++++++----
- drivers/net/ethernet/myricom/myri10ge/myri10ge.c  |  4 ++--
- drivers/net/wan/farsync.c                         |  5 +++--
- .../wireless/broadcom/brcm80211/brcmfmac/pcie.c   |  4 ++--
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c   | 15 ++++++++++-----
- 12 files changed, 47 insertions(+), 35 deletions(-)
+ drivers/ide/cs5536.c    |  6 +++---
+ drivers/ide/rz1000.c    |  3 ++-
+ drivers/ide/setup-pci.c | 26 ++++++++++++++++----------
+ 3 files changed, 21 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/can/peak_canfd/peak_pciefd_main.c b/drivers/net/can/peak_canfd/peak_pciefd_main.c
-index 6ad83a881039..484a214fc1f1 100644
---- a/drivers/net/can/peak_canfd/peak_pciefd_main.c
-+++ b/drivers/net/can/peak_canfd/peak_pciefd_main.c
-@@ -730,9 +730,11 @@ static int peak_pciefd_probe(struct pci_dev *pdev,
- 		goto err_disable_pci;
+diff --git a/drivers/ide/cs5536.c b/drivers/ide/cs5536.c
+index 8b5ca145191b..58d1cf37c013 100644
+--- a/drivers/ide/cs5536.c
++++ b/drivers/ide/cs5536.c
+@@ -55,16 +55,16 @@ enum {
  
- 	/* the number of channels depends on sub-system id */
--	err = pci_read_config_word(pdev, PCI_SUBSYSTEM_ID, &sub_sys_id);
--	if (err)
-+	pci_read_config_word(pdev, PCI_SUBSYSTEM_ID, &sub_sys_id);
-+	if (sub_sys_id == (u16)~0) {
-+		err = -ENODEV;
- 		goto err_release_regions;
-+	}
+ static int use_msr;
  
- 	dev_dbg(&pdev->dev, "probing device %04x:%04x:%04x\n",
- 		pdev->vendor, pdev->device, sub_sys_id);
-diff --git a/drivers/net/can/sja1000/peak_pci.c b/drivers/net/can/sja1000/peak_pci.c
-index 8c0244f51059..d25a99ad08da 100644
---- a/drivers/net/can/sja1000/peak_pci.c
-+++ b/drivers/net/can/sja1000/peak_pci.c
-@@ -560,9 +560,11 @@ static int peak_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	if (err)
- 		goto failure_disable_pci;
+-static int cs5536_read(struct pci_dev *pdev, int reg, u32 *val)
++static void cs5536_read(struct pci_dev *pdev, int reg, u32 *val)
+ {
+ 	if (unlikely(use_msr)) {
+ 		u32 dummy;
  
--	err = pci_read_config_word(pdev, 0x2e, &sub_sys_id);
--	if (err)
-+	pci_read_config_word(pdev, 0x2e, &sub_sys_id);
-+	if (sub_sys_id == (u16)~0) {
-+		err = -ENODEV;
- 		goto failure_release_regions;
-+	}
- 
- 	dev_dbg(&pdev->dev, "probing device %04x:%04x:%04x\n",
- 		pdev->vendor, pdev->device, sub_sys_id);
-diff --git a/drivers/net/ethernet/agere/et131x.c b/drivers/net/ethernet/agere/et131x.c
-index 865892c1f23f..6b0e5f193e73 100644
---- a/drivers/net/ethernet/agere/et131x.c
-+++ b/drivers/net/ethernet/agere/et131x.c
-@@ -505,7 +505,8 @@ static int eeprom_wait_ready(struct pci_dev *pdev, u32 *status)
- 	 *    to 1 prior to starting a single byte read/write
- 	 */
- 	for (i = 0; i < MAX_NUM_REGISTER_POLLS; i++) {
--		if (pci_read_config_dword(pdev, LBCIF_DWORD1_GROUP, &reg))
-+		pci_read_config_dword(pdev, LBCIF_DWORD1_GROUP, &reg);
-+		if (reg == (u32)~0)
- 			return -EIO;
- 
- 		/* I2C idle and Phy Queue Avail both true */
-@@ -679,7 +680,8 @@ static int et131x_init_eeprom(struct et131x_adapter *adapter)
- 	 * function, because I thought there could be some time conditions
- 	 * but it didn't work. Call the whole function twice also work.
- 	 */
--	if (pci_read_config_byte(pdev, ET1310_PCI_EEPROM_STATUS, &eestatus)) {
-+	pci_read_config_byte(pdev, ET1310_PCI_EEPROM_STATUS, &eestatus);
-+	if (eestatus == (u8)~0) {
- 		dev_err(&pdev->dev,
- 			"Could not read PCI config space for EEPROM Status\n");
- 		return -EIO;
-@@ -3059,8 +3061,9 @@ static int et131x_pci_init(struct et131x_adapter *adapter,
+ 		rdmsr(MSR_IDE_CFG + reg, *val, dummy);
+-		return 0;
++		return;
  	}
  
- 	for (i = 0; i < ETH_ALEN; i++) {
--		if (pci_read_config_byte(pdev, ET1310_PCI_MAC_ADDRESS + i,
--					 adapter->rom_addr + i)) {
-+		pci_read_config_byte(pdev, ET1310_PCI_MAC_ADDRESS + i,
-+					 adapter->rom_addr + i);
-+		if (*(adapter->rom_addr + i) == (u8)~0) {
- 			dev_err(&pdev->dev, "Could not read PCI config space for MAC address\n");
- 			goto err_out;
- 		}
-diff --git a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_ethtool.c b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_ethtool.c
-index 7cea33803f7f..5962a1d2dffc 100644
---- a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_ethtool.c
-+++ b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_ethtool.c
-@@ -1463,14 +1463,15 @@ static int bnx2x_nvram_read32(struct bnx2x *bp, u32 offset, u32 *buf,
- 
- static bool bnx2x_is_nvm_accessible(struct bnx2x *bp)
- {
--	int rc = 1;
-+	bool rc = true;
- 	u16 pm = 0;
- 	struct net_device *dev = pci_get_drvdata(bp->pdev);
- 
- 	if (bp->pdev->pm_cap)
--		rc = pci_read_config_word(bp->pdev,
-+		pci_read_config_word(bp->pdev,
- 					  bp->pdev->pm_cap + PCI_PM_CTRL, &pm);
- 
-+	rc = (pm == (u16)~0);
- 	if ((rc && !netif_running(dev)) ||
- 	    (!rc && ((pm & PCI_PM_CTRL_STATE_MASK) != (__force u16)PCI_D0)))
- 		return false;
-diff --git a/drivers/net/ethernet/cavium/liquidio/cn23xx_pf_device.c b/drivers/net/ethernet/cavium/liquidio/cn23xx_pf_device.c
-index 43d11c38b38a..cf52d6cc2a46 100644
---- a/drivers/net/ethernet/cavium/liquidio/cn23xx_pf_device.c
-+++ b/drivers/net/ethernet/cavium/liquidio/cn23xx_pf_device.c
-@@ -1162,8 +1162,8 @@ static int cn23xx_get_pf_num(struct octeon_device *oct)
- 	ret = 0;
- 
- 	/** Read Function Dependency Link reg to get the function number */
--	if (pci_read_config_dword(oct->pci_dev, CN23XX_PCIE_SRIOV_FDL,
--				  &fdl_bit) == 0) {
-+	pci_read_config_dword(oct->pci_dev, CN23XX_PCIE_SRIOV_FDL, &fdl_bit);
-+	if (fdl_bit != (u32)~0) {
- 		oct->pf_num = ((fdl_bit >> CN23XX_PCIE_SRIOV_FDL_BIT_POS) &
- 			       CN23XX_PCIE_SRIOV_FDL_MASK);
- 	} else {
-diff --git a/drivers/net/ethernet/marvell/sky2.c b/drivers/net/ethernet/marvell/sky2.c
-index fe54764caea9..1042bfd0ff70 100644
---- a/drivers/net/ethernet/marvell/sky2.c
-+++ b/drivers/net/ethernet/marvell/sky2.c
-@@ -4964,8 +4964,9 @@ static int sky2_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	 *       other PCI access through shared memory for speed and to
- 	 *	 avoid MMCONFIG problems.
- 	 */
--	err = pci_read_config_dword(pdev, PCI_DEV_REG2, &reg);
--	if (err) {
-+	pci_read_config_dword(pdev, PCI_DEV_REG2, &reg);
-+	if (reg == (u32)~0) {
-+		err = -ENODEV;
- 		dev_err(&pdev->dev, "PCI read config failed\n");
- 		goto err_out_disable;
- 	}
-diff --git a/drivers/net/ethernet/mellanox/mlx4/catas.c b/drivers/net/ethernet/mellanox/mlx4/catas.c
-index 5b11557f1ae4..1e774a181133 100644
---- a/drivers/net/ethernet/mellanox/mlx4/catas.c
-+++ b/drivers/net/ethernet/mellanox/mlx4/catas.c
-@@ -52,12 +52,7 @@ static int read_vendor_id(struct mlx4_dev *dev)
- 	u16 vendor_id = 0;
- 	int ret;
- 
--	ret = pci_read_config_word(dev->persist->pdev, 0, &vendor_id);
--	if (ret) {
--		mlx4_err(dev, "Failed to read vendor ID, ret=%d\n", ret);
--		return ret;
--	}
--
-+	pci_read_config_word(dev->persist->pdev, 0, &vendor_id);
- 	if (vendor_id == 0xffff) {
- 		mlx4_err(dev, "PCI can't be accessed to read vendor id\n");
- 		return -EINVAL;
-diff --git a/drivers/net/ethernet/mellanox/mlx4/reset.c b/drivers/net/ethernet/mellanox/mlx4/reset.c
-index 0076d88587ca..f0b9af99aa26 100644
---- a/drivers/net/ethernet/mellanox/mlx4/reset.c
-+++ b/drivers/net/ethernet/mellanox/mlx4/reset.c
-@@ -81,8 +81,9 @@ int mlx4_reset(struct mlx4_dev *dev)
- 	for (i = 0; i < 64; ++i) {
- 		if (i == 22 || i == 23)
- 			continue;
--		if (pci_read_config_dword(dev->persist->pdev, i * 4,
--					  hca_header + i)) {
-+		pci_read_config_dword(dev->persist->pdev, i * 4,
-+							hca_header + i);
-+		if (*(hca_header + i) == (u32)~0) {
- 			err = -ENODEV;
- 			mlx4_err(dev, "Couldn't save HCA PCI header, aborting\n");
- 			goto out;
-@@ -124,8 +125,9 @@ int mlx4_reset(struct mlx4_dev *dev)
- 
- 	end = jiffies + MLX4_RESET_TIMEOUT_JIFFIES;
- 	do {
--		if (!pci_read_config_word(dev->persist->pdev, PCI_VENDOR_ID,
--					  &vendor) && vendor != 0xffff)
-+		pci_read_config_word(dev->persist->pdev, PCI_VENDOR_ID,
-+					&vendor);
-+		if (vendor != 0xffff)
- 			break;
- 
- 		msleep(1);
-diff --git a/drivers/net/ethernet/myricom/myri10ge/myri10ge.c b/drivers/net/ethernet/myricom/myri10ge/myri10ge.c
-index e1e1f4e3639e..b1b055f8ac47 100644
---- a/drivers/net/ethernet/myricom/myri10ge/myri10ge.c
-+++ b/drivers/net/ethernet/myricom/myri10ge/myri10ge.c
-@@ -3090,8 +3090,8 @@ static void myri10ge_enable_ecrc(struct myri10ge_priv *mgp)
- 	if (!cap)
- 		return;
- 
--	ret = pci_read_config_dword(bridge, cap + PCI_ERR_CAP, &err_cap);
--	if (ret) {
-+	pci_read_config_dword(bridge, cap + PCI_ERR_CAP, &err_cap);
-+	if (err_cap == (u32)~0) {
- 		dev_err(dev, "failed reading ext-conf-space of %s\n",
- 			pci_name(bridge));
- 		dev_err(dev, "\t pci=nommconf in use? "
-diff --git a/drivers/net/wan/farsync.c b/drivers/net/wan/farsync.c
-index 7916efce7188..8981334d9f82 100644
---- a/drivers/net/wan/farsync.c
-+++ b/drivers/net/wan/farsync.c
-@@ -678,8 +678,9 @@ fst_cpureset(struct fst_card_info *card)
- 	unsigned int regval;
- 
- 	if (card->family == FST_FAMILY_TXU) {
--		if (pci_read_config_byte
--		    (card->device, PCI_INTERRUPT_LINE, &interrupt_line_register)) {
-+		pci_read_config_byte
-+		    (card->device, PCI_INTERRUPT_LINE, &interrupt_line_register);
-+		if (interrupt_line_register == (u8)~0) {
- 			dbg(DBG_ASS,
- 			    "Error in reading interrupt line register\n");
- 		}
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-index 39381cbde89e..f501b4759630 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-@@ -544,8 +544,8 @@ brcmf_pcie_select_core(struct brcmf_pciedev_info *devinfo, u16 coreid)
- 	if (core) {
- 		bar0_win = core->base;
- 		pci_write_config_dword(pdev, BRCMF_PCIE_BAR0_WINDOW, bar0_win);
--		if (pci_read_config_dword(pdev, BRCMF_PCIE_BAR0_WINDOW,
--					  &bar0_win) == 0) {
-+		pci_read_config_dword(pdev, BRCMF_PCIE_BAR0_WINDOW, &bar0_win);
-+		if (bar0_win != (u32)~0) {
- 			if (bar0_win != core->base) {
- 				bar0_win = core->base;
- 				pci_write_config_dword(pdev,
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index e5160d620868..caafad424aa7 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -122,7 +122,8 @@ void iwl_trans_pcie_dump_regs(struct iwl_trans *trans)
- 	sprintf(prefix, "iwlwifi %s: ", pci_name(pdev));
- 	IWL_ERR(trans, "iwlwifi device config registers:\n");
- 	for (i = 0, ptr = buf; i < PCI_DUMP_SIZE; i += 4, ptr++)
--		if (pci_read_config_dword(pdev, i, ptr))
-+		pci_read_config_dword(pdev, i, ptr);
-+		if (*ptr == (u32)~0)
- 			goto err_read;
- 	print_hex_dump(KERN_ERR, prefix, DUMP_PREFIX_OFFSET, 32, 4, buf, i, 0);
- 
-@@ -135,7 +136,8 @@ void iwl_trans_pcie_dump_regs(struct iwl_trans *trans)
- 	if (pos) {
- 		IWL_ERR(trans, "iwlwifi device AER capability structure:\n");
- 		for (i = 0, ptr = buf; i < PCI_ERR_ROOT_COMMAND; i += 4, ptr++)
--			if (pci_read_config_dword(pdev, pos + i, ptr))
-+			pci_read_config_dword(pdev, pos + i, ptr);
-+			if (*ptr == (u32)~0)
- 				goto err_read;
- 		print_hex_dump(KERN_ERR, prefix, DUMP_PREFIX_OFFSET,
- 			       32, 4, buf, i, 0);
-@@ -151,7 +153,8 @@ void iwl_trans_pcie_dump_regs(struct iwl_trans *trans)
- 	IWL_ERR(trans, "iwlwifi parent port (%s) config registers:\n",
- 		pci_name(pdev));
- 	for (i = 0, ptr = buf; i < PCI_PARENT_DUMP_SIZE; i += 4, ptr++)
--		if (pci_read_config_dword(pdev, i, ptr))
-+		pci_read_config_dword(pdev, i, ptr);
-+		if (*ptr == (u32)~0)
- 			goto err_read;
- 	print_hex_dump(KERN_ERR, prefix, DUMP_PREFIX_OFFSET, 32, 4, buf, i, 0);
- 
-@@ -165,7 +168,8 @@ void iwl_trans_pcie_dump_regs(struct iwl_trans *trans)
- 			pci_name(pdev));
- 		sprintf(prefix, "iwlwifi %s: ", pci_name(pdev));
- 		for (i = 0, ptr = buf; i <= PCI_ERR_ROOT_ERR_SRC; i += 4, ptr++)
--			if (pci_read_config_dword(pdev, pos + i, ptr))
-+			pci_read_config_dword(pdev, pos + i, ptr);
-+			if (*ptr == (u32)~0)
- 				goto err_read;
- 		print_hex_dump(KERN_ERR, prefix, DUMP_PREFIX_OFFSET, 32,
- 			       4, buf, i, 0);
-@@ -2191,8 +2195,9 @@ static int iwl_trans_pcie_write_mem(struct iwl_trans *trans, u32 addr,
- static int iwl_trans_pcie_read_config32(struct iwl_trans *trans, u32 ofs,
- 					u32 *val)
- {
--	return pci_read_config_dword(IWL_TRANS_GET_PCIE_TRANS(trans)->pci_dev,
-+	pci_read_config_dword(IWL_TRANS_GET_PCIE_TRANS(trans)->pci_dev,
- 				     ofs, val);
-+	return (*val == (u32)~0) ? -ENODEV : 0;
+-	return pci_read_config_dword(pdev, PCI_IDE_CFG + reg * 4, val);
++	pci_read_config_dword(pdev, PCI_IDE_CFG + reg * 4, val);
  }
  
- static void iwl_trans_pcie_freeze_txq_timer(struct iwl_trans *trans,
+ static int cs5536_write(struct pci_dev *pdev, int reg, int val)
+diff --git a/drivers/ide/rz1000.c b/drivers/ide/rz1000.c
+index fce2b7de5a19..19ac4328e707 100644
+--- a/drivers/ide/rz1000.c
++++ b/drivers/ide/rz1000.c
+@@ -27,7 +27,8 @@ static int rz1000_disable_readahead(struct pci_dev *dev)
+ {
+ 	u16 reg;
+ 
+-	if (!pci_read_config_word (dev, 0x40, &reg) &&
++	pci_read_config_word(dev, 0x40, &reg);
++	if ((reg != (u16)~0) &&
+ 	    !pci_write_config_word(dev, 0x40, reg & 0xdfff)) {
+ 		printk(KERN_INFO "%s: disabled chipset read-ahead "
+ 			"(buggy RZ1000/RZ1001)\n", pci_name(dev));
+diff --git a/drivers/ide/setup-pci.c b/drivers/ide/setup-pci.c
+index fdc8e813170c..a7b93ccd55d1 100644
+--- a/drivers/ide/setup-pci.c
++++ b/drivers/ide/setup-pci.c
+@@ -37,7 +37,8 @@ static int ide_setup_pci_baseregs(struct pci_dev *dev, const char *name)
+ 	/*
+ 	 * Place both IDE interfaces into PCI "native" mode:
+ 	 */
+-	if (pci_read_config_byte(dev, PCI_CLASS_PROG, &progif) ||
++	pci_read_config_byte(dev, PCI_CLASS_PROG, &progif);
++	if ((progif == (u8)~0) ||
+ 			 (progif & 5) != 5) {
+ 		if ((progif & 0xa) != 0xa) {
+ 			printk(KERN_INFO "%s %s: device not capable of full "
+@@ -47,7 +48,8 @@ static int ide_setup_pci_baseregs(struct pci_dev *dev, const char *name)
+ 		printk(KERN_INFO "%s %s: placing both ports into native PCI "
+ 			"mode\n", name, pci_name(dev));
+ 		(void) pci_write_config_byte(dev, PCI_CLASS_PROG, progif|5);
+-		if (pci_read_config_byte(dev, PCI_CLASS_PROG, &progif) ||
++		pci_read_config_byte(dev, PCI_CLASS_PROG, &progif);
++		if ((progif == (u8)~0) ||
+ 		    (progif & 5) != 5) {
+ 			printk(KERN_ERR "%s %s: rewrite of PROGIF failed, "
+ 				"wanted 0x%04x, got 0x%04x\n",
+@@ -251,7 +253,8 @@ static int ide_pci_configure(struct pci_dev *dev, const struct ide_port_info *d)
+ 			d->name, pci_name(dev));
+ 		return -ENODEV;
+ 	}
+-	if (pci_read_config_word(dev, PCI_COMMAND, &pcicmd)) {
++	pci_read_config_word(dev, PCI_COMMAND, &pcicmd);
++	if (pcicmd == (u16)~0) {
+ 		printk(KERN_ERR "%s %s: error accessing PCI regs\n",
+ 			d->name, pci_name(dev));
+ 		return -EIO;
+@@ -415,8 +418,8 @@ static int ide_setup_pci_controller(struct pci_dev *dev, int bars,
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	ret = pci_read_config_word(dev, PCI_COMMAND, &pcicmd);
+-	if (ret < 0) {
++	pci_read_config_word(dev, PCI_COMMAND, &pcicmd);
++	if (pcicmd == (u16)~0) {
+ 		printk(KERN_ERR "%s %s: error accessing PCI regs\n",
+ 			d->name, pci_name(dev));
+ 		goto out_free_bars;
+@@ -466,11 +469,14 @@ void ide_pci_setup_ports(struct pci_dev *dev, const struct ide_port_info *d,
+ 	for (port = 0; port < channels; ++port) {
+ 		const struct ide_pci_enablebit *e = &d->enablebits[port];
+ 
+-		if (e->reg && (pci_read_config_byte(dev, e->reg, &tmp) ||
+-		    (tmp & e->mask) != e->val)) {
+-			printk(KERN_INFO "%s %s: IDE port disabled\n",
+-				d->name, pci_name(dev));
+-			continue;	/* port not enabled */
++		if (e->reg) {
++			pci_read_config_byte(dev, e->reg, &tmp);
++
++			if ((tmp == (u8)~0) || ((tmp & e->mask) != e->val)) {
++				printk(KERN_INFO "%s %s: IDE port disabled\n",
++					d->name, pci_name(dev));
++				continue;	/* port not enabled */
++			}
+ 		}
+ 
+ 		if (ide_hw_configure(dev, d, port, hw + port))
 -- 
 2.18.4
 
