@@ -2,143 +2,99 @@ Return-Path: <SRS0=ePXr=BL=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35ECFC433DF
-	for <linux-pci@archiver.kernel.org>; Sat,  1 Aug 2020 12:25:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC095C433E4
+	for <linux-pci@archiver.kernel.org>; Sat,  1 Aug 2020 12:56:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 11D9F2076A
-	for <linux-pci@archiver.kernel.org>; Sat,  1 Aug 2020 12:25:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 801E72080C
+	for <linux-pci@archiver.kernel.org>; Sat,  1 Aug 2020 12:56:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QHi5Tbht"
+	dkim=pass (1024-bit key) header.d=alien8.de header.i=@alien8.de header.b="n/7VNWjN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729259AbgHAMZn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 1 Aug 2020 08:25:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54176 "EHLO
+        id S1728885AbgHAM4r (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 1 Aug 2020 08:56:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59100 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728949AbgHAMY0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 1 Aug 2020 08:24:26 -0400
-Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71499C06174A;
-        Sat,  1 Aug 2020 05:24:26 -0700 (PDT)
-Received: by mail-ej1-x643.google.com with SMTP id o23so6562719ejr.1;
-        Sat, 01 Aug 2020 05:24:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=BywL0jlhvMnVFDfC0ze8h5LlMNFaT8aAv2rtyExEJSw=;
-        b=QHi5Tbht062uQl2CgFExEPFUSOMEeggyKWMdFMaxe6+Ih4MGawd4RuVAGo9gayKr/D
-         2yHM3GwaZiead9mkPgX6CmWqtJbVMVrs1ivY/NsgsQYDy259Sl3XZbv/YgzUgCEEqs/l
-         1wsrUeMhNsz49YAxVBQhfhiIj9RG9ULztEQd4Q8H0R1duiNIIlpXMswb/m7QfOuNR+W7
-         PzhiKRCjDzvqB1woNt4nMSfQ4i7ZYPwKrKGD1c4qVxpaPGDRJJa1GAWZwDRByPlEFt8o
-         ZwW6DJ21TN+PbO9dKjKlAV0aNVKmWm6tq8l2jd4PPsh2rNZxPgV7qhiiUwBiy6U/4PQq
-         iFbw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=BywL0jlhvMnVFDfC0ze8h5LlMNFaT8aAv2rtyExEJSw=;
-        b=WwMuk4MJhSn/Z5RPIZ57fVWY8yEB4a8yze6sf0DNdA+h1WurNiHWkzxpXodZrLxxAR
-         yM3UkKhLkjW6kKkqN3ysA8Gi8h0CwZ+rTBUscqSuGsBqewK+tL89k6rf4T88ek+CaNIC
-         HerMYnHx3/hFoMFExtWL0cDfGx8PEMjrSMc/jxra72kDuKNNoNdwUQYXngIGFtMfj8DE
-         hUKW+vwyVHNfN/u9PeibbnYaOi7LkuvA5XO5TLpAiwpUwAcWb6AmANqLL9KIVOHT9JFb
-         8wcHjuytOOjeIBkS7PnmetfIHwV47/yzNNTXvcKg/dpffrWKCfXG6WMRMCMUfvUvRxPc
-         ihJQ==
-X-Gm-Message-State: AOAM533cb3gYLjraMelXrRdK3j7o/WQZJoaO68aW2kJI3SRkWyNPxdRR
-        ZGBAf0OJbjNr12dtWn3Sm+E=
-X-Google-Smtp-Source: ABdhPJz7rYxC2q7EJUBMGW38zssfKtQqC5IyJS7xjTc/otiniFOliqfObCiKTOcL0cPPw/LW53NfQw==
-X-Received: by 2002:a17:906:1756:: with SMTP id d22mr8343053eje.29.1596284665171;
-        Sat, 01 Aug 2020 05:24:25 -0700 (PDT)
-Received: from net.saheed (95C84E0A.dsl.pool.telekom.hu. [149.200.78.10])
-        by smtp.gmail.com with ESMTPSA id a101sm12083131edf.76.2020.08.01.05.24.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 01 Aug 2020 05:24:24 -0700 (PDT)
-From:   "Saheed O. Bolarinwa" <refactormyself@gmail.com>
-To:     helgaas@kernel.org, Jens Axboe <axboe@kernel.dk>
-Cc:     "Saheed O. Bolarinwa" <refactormyself@gmail.com>,
-        bjorn@helgaas.com, skhan@linuxfoundation.org,
+        with ESMTP id S1726471AbgHAM4q (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 1 Aug 2020 08:56:46 -0400
+Received: from mail.skyhub.de (mail.skyhub.de [IPv6:2a01:4f8:190:11c2::b:1457])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 666AAC06174A;
+        Sat,  1 Aug 2020 05:56:46 -0700 (PDT)
+Received: from nazgul.tnic (unknown [78.130.214.198])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.skyhub.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id B8CAE1EC02FA;
+        Sat,  1 Aug 2020 14:56:41 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=dkim;
+        t=1596286602;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:in-reply-to:in-reply-to:  references:references;
+        bh=NfmlZOrLaBmBGlzbXE5z6x4RKpqqJJmlzC4+91fmYUA=;
+        b=n/7VNWjNwrVYldmM5JNyqQEVZd3Vp3hpjJSMuFhfSkrW8mQhIHtpfasKy9w1BEromsKKyZ
+        /CdJ8nlcvZTCqyn05aBVgUH+WGtmqEhe61zMEoDcH8PmujGuHYORgBg9sVbSuZSh5qLljK
+        uihuEhdcnAWg6tPbjyrRXoOKhqTEw/0=
+Date:   Sat, 1 Aug 2020 14:56:57 +0200
+From:   Borislav Petkov <bp@alien8.de>
+To:     "Saheed O. Bolarinwa" <refactormyself@gmail.com>
+Cc:     helgaas@kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Wolfgang Grandegger <wg@grandegger.com>,
+        Marc Kleine-Budde <mkl@pengutronix.de>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        Richard Weinberger <richard@nod.at>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        Joerg Roedel <joro@8bytes.org>, bjorn@helgaas.com,
+        skhan@linuxfoundation.org,
         linux-kernel-mentees@lists.linuxfoundation.org,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org
-Subject: [RFC PATCH 01/17] ata: Drop uses of pci_read_config_*() return value
-Date:   Sat,  1 Aug 2020 13:24:30 +0200
-Message-Id: <20200801112446.149549-2-refactormyself@gmail.com>
-X-Mailer: git-send-email 2.18.4
-In-Reply-To: <20200801112446.149549-1-refactormyself@gmail.com>
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-mtd@lists.infradead.org, iommu@lists.linux-foundation.org,
+        linux-rdma@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-i2c@vger.kernel.org, linux-hwmon@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
+        linux-gpio@vger.kernel.org, linux-fpga@vger.kernel.org,
+        linux-edac@vger.kernel.org, dmaengine@vger.kernel.org,
+        linux-crypto@vger.kernel.org,
+        linux-atm-general@lists.sourceforge.net
+Subject: Re: [RFC PATCH 00/17] Drop uses of pci_read_config_*() return value
+Message-ID: <20200801125657.GA25391@nazgul.tnic>
 References: <20200801112446.149549-1-refactormyself@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20200801112446.149549-1-refactormyself@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The return value of pci_read_config_*() may not indicate a device error.
-However, the value read by these functions is more likely to indicate
-this kind of error. This presents two overlapping ways of reporting
-errors and complicates error checking.
+On Sat, Aug 01, 2020 at 01:24:29PM +0200, Saheed O. Bolarinwa wrote:
+> The return value of pci_read_config_*() may not indicate a device error.
+> However, the value read by these functions is more likely to indicate
+> this kind of error. This presents two overlapping ways of reporting
+> errors and complicates error checking.
 
-It is possible to move to one single way of checking for error if the
-dependency on the return value of these functions is removed, then it
-can later be made to return void.
+So why isn't the *value check done in the pci_read_config_* functions
+instead of touching gazillion callers?
 
-Remove all uses of the return value of pci_read_config_*().
-Check the actual value read for ~0. In this case, ~0 is an invalid value
-thus it indicates some kind of error.
+For example, pci_conf{1,2}_read() could check whether the u32 *value it
+just read depending on the access method, whether that value is ~0 and
+return proper PCIBIOS_ error in that case.
 
-drivers/ata/pata_cs5536.c cs5536_read() :
-None of the callers of cs5536_read() uses the return value. The obtained
-value can be checked for validity to confirm success.
+The check you're replicating
 
-Change the return type of cs5536_read() to void.
+	if (val32 == (u32)~0)
 
-Suggested-by: Bjorn Helgaas <bjorn@helgaas.com>
-Signed-off-by: Saheed O. Bolarinwa <refactormyself@gmail.com>
----
- drivers/ata/pata_cs5536.c | 6 +++---
- drivers/ata/pata_rz1000.c | 3 ++-
- 2 files changed, 5 insertions(+), 4 deletions(-)
+everywhere, instead, is just ugly and tests a naked value ~0 which
+doesn't mean anything...
 
-diff --git a/drivers/ata/pata_cs5536.c b/drivers/ata/pata_cs5536.c
-index 760ac6e65216..c204215e239f 100644
---- a/drivers/ata/pata_cs5536.c
-+++ b/drivers/ata/pata_cs5536.c
-@@ -83,16 +83,16 @@ static const struct dmi_system_id udma_quirk_dmi_table[] = {
- 	{ }
- };
- 
--static int cs5536_read(struct pci_dev *pdev, int reg, u32 *val)
-+static void cs5536_read(struct pci_dev *pdev, int reg, u32 *val)
- {
- 	if (unlikely(use_msr)) {
- 		u32 dummy __maybe_unused;
- 
- 		rdmsr(MSR_IDE_CFG + reg, *val, dummy);
--		return 0;
-+		return;
- 	}
- 
--	return pci_read_config_dword(pdev, PCI_IDE_CFG + reg * 4, val);
-+	pci_read_config_dword(pdev, PCI_IDE_CFG + reg * 4, val);
- }
- 
- static int cs5536_write(struct pci_dev *pdev, int reg, int val)
-diff --git a/drivers/ata/pata_rz1000.c b/drivers/ata/pata_rz1000.c
-index 3722a67083fd..e0b3de376357 100644
---- a/drivers/ata/pata_rz1000.c
-+++ b/drivers/ata/pata_rz1000.c
-@@ -64,7 +64,8 @@ static int rz1000_fifo_disable(struct pci_dev *pdev)
- {
- 	u16 reg;
- 	/* Be exceptionally paranoid as we must be sure to apply the fix */
--	if (pci_read_config_word(pdev, 0x40, &reg) != 0)
-+	pci_read_config_word(pdev, 0x40, &reg);
-+	if (reg == (u16)~0)
- 		return -1;
- 	reg &= 0xDFFF;
- 	if (pci_write_config_word(pdev, 0x40, reg) != 0)
 -- 
-2.18.4
+Regards/Gruss,
+    Boris.
 
+https://people.kernel.org/tglx/notes-about-netiquette
