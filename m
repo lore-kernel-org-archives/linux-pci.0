@@ -5,76 +5,71 @@ X-Spam-Level:
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A91C0C433E1
-	for <linux-pci@archiver.kernel.org>; Sat,  1 Aug 2020 12:25:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B5F2C433DF
+	for <linux-pci@archiver.kernel.org>; Sat,  1 Aug 2020 12:25:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 86AC52076A
-	for <linux-pci@archiver.kernel.org>; Sat,  1 Aug 2020 12:25:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DE8A322BF5
+	for <linux-pci@archiver.kernel.org>; Sat,  1 Aug 2020 12:25:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Z1fsyewn"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="P98yQ73Q"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729253AbgHAMZ3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1729263AbgHAMZ3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Sat, 1 Aug 2020 08:25:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54188 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54208 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728991AbgHAMY3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 1 Aug 2020 08:24:29 -0400
-Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04FAAC06174A;
-        Sat,  1 Aug 2020 05:24:29 -0700 (PDT)
-Received: by mail-ej1-x643.google.com with SMTP id o18so34004786eje.7;
-        Sat, 01 Aug 2020 05:24:28 -0700 (PDT)
+        with ESMTP id S1729012AbgHAMYe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 1 Aug 2020 08:24:34 -0400
+Received: from mail-ej1-x644.google.com (mail-ej1-x644.google.com [IPv6:2a00:1450:4864:20::644])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75374C06179E;
+        Sat,  1 Aug 2020 05:24:34 -0700 (PDT)
+Received: by mail-ej1-x644.google.com with SMTP id l4so33946565ejd.13;
+        Sat, 01 Aug 2020 05:24:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=0Hm0xl1/zOdRxUCQdh+5jYfhueeXY+Q37DPWRkan6/c=;
-        b=Z1fsyewnXQPs1lEotbQp/siATWa4jPRJDiJOVvbugGAkrgk71MteS23QotXjqzoO6o
-         Djbxi2UnNQBeRQetCyJcsmj7XEkbkjEUsrBRRb6SSdxo55cJ1ZZw3oOBTdeEG+T9gawB
-         kqNWywFCaiN15ibTWf1BBqrYlc4eZxFrmTcx+hCY6rhOR32GwDODZtJzWI8oqbxgWDev
-         ReSpEHfAs2jsheSPy+jkWL96hPBZOWdpyEMcDEoPotp6vo8kMCyYZuAgCYRUcmJsRwj8
-         4++uigvxKo2XWAIiON6LohksmU20urMe65RhsLkFj4Tv65j0t+uef+LixeYj3ogSaNCl
-         FujQ==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=I8dAqn3oyLTlTqhf29Z52aIjqvD0eEwBI3IdJNmTAKE=;
+        b=P98yQ73QpNAHyJH0DhgL+VteQsL8cJWvez4VBskT+6Zy0ViH186MuBu4nRvGYARUqd
+         PDUMf38OLCl5PvGAT/41B7GiPvDcOBsaM4Y1R+BKMYY18/LuAuqv44mpAEG6r1fYWcfY
+         QMKLZygpMvWntgZg8e/oF7zNlaPq9OSG4dNlG19C7ej6vNjo4PPJFjvpXAMHr399/xBl
+         DpMbGY848f6RaiM4HfSP1a5QFTkzZ4mmVUxFUE7Gz2pAIE0+Lq9sZeuQW4ZeMeTnwEFo
+         1ZSzd6yuE5ADI8ephhkCQ2Wubpv7kQZm+Cihm/tzF0n0DyDFoVPmGuUYNiBglsxS6GpR
+         f1fQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=0Hm0xl1/zOdRxUCQdh+5jYfhueeXY+Q37DPWRkan6/c=;
-        b=raCIMhZ2RshNCSiW2hXwT1c/N/uJ8AChSr76HJG3zQn237f1lm/gBytUhCTf+EHK5I
-         9s1yJiyK/oNtaIzgOIW0oEM63m3DJrd8s1nwheGxlKTSgaTmMoeCjiUKvoQyibFyfsX/
-         m4AosNrprzH349i7O93RK0srRid+/hroGgeSIiCPZQrAM5782J8KUCg00IUqBfimIO9y
-         7K3WFtpsQizxsv6gjGgqeqVIiiCSMHLJGCqLap46OuvjfZiqNLnUsOjU5lmVGnC3Ltqg
-         hhXCO+8WokeUIoXzwNnApv+A5S75FAZE4WtO14SSomvvLZ6AtmZkHGWuB4XbqhdjqtNY
-         /g2A==
-X-Gm-Message-State: AOAM531oCoq6FCnNDI3LvV3qII3tWiNBBBhhcFgFrr2uBUC1QaTOsIzl
-        RXyG6dhrnseL+ndo9ahmPlU=
-X-Google-Smtp-Source: ABdhPJyuINeMO/fLzFyuKElJkCfpuhowBNnZHWiajwgeM00jZQZtTv2sANzv6LrgYELawrptxq0bLw==
-X-Received: by 2002:a17:906:7743:: with SMTP id o3mr8213034ejn.224.1596284667784;
-        Sat, 01 Aug 2020 05:24:27 -0700 (PDT)
+         :references;
+        bh=I8dAqn3oyLTlTqhf29Z52aIjqvD0eEwBI3IdJNmTAKE=;
+        b=r7xOiiXnrp1GqNkyZZUCZd041mhMXrTUzS5SRHaX3kS8TLomgPuNYX9/qNTGercbBU
+         DK7ksOUBQjJd4gcFc855O7qi8HAAWXAiGiiwSwTh/yGY9DVa4zM58i7NR1VSPrCx8FVN
+         K3zOf2m0OtEYso9dT5AdNX99y7Pzw2hPf/gVYCZg+J+ub7L/WwO0RLsi8gE8SERgoQlX
+         vo7bx9j7BO15t+dEF9Ry257Kghtvn0aZ1Dc1yhDOvyRmpEhFbcOELeO1La94lXVaaCv5
+         n6uN1CKTPsW997QrlUO/bXQ0ed+CFqknnwiGh0IwYVPVlaD0GwoXxjX+d4ACIVr50/MZ
+         yUYQ==
+X-Gm-Message-State: AOAM532ElYbnRbZaFLQcLaL+CKuBEutbB4eGTpn+m0E8g+poqmAnnKMD
+        j63gSkDqLNa6W5wqwm797BM=
+X-Google-Smtp-Source: ABdhPJyaQUgDgaB0qqpXNRYm/8ED4kbE0a2gf50gNexDXYKCzC2jeZw2r4pLhpg9owqfBDJdG1DmpA==
+X-Received: by 2002:a17:906:6a5b:: with SMTP id n27mr8123629ejs.221.1596284673233;
+        Sat, 01 Aug 2020 05:24:33 -0700 (PDT)
 Received: from net.saheed (95C84E0A.dsl.pool.telekom.hu. [149.200.78.10])
-        by smtp.gmail.com with ESMTPSA id a101sm12083131edf.76.2020.08.01.05.24.26
+        by smtp.gmail.com with ESMTPSA id a101sm12083131edf.76.2020.08.01.05.24.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 01 Aug 2020 05:24:27 -0700 (PDT)
+        Sat, 01 Aug 2020 05:24:32 -0700 (PDT)
 From:   "Saheed O. Bolarinwa" <refactormyself@gmail.com>
-To:     helgaas@kernel.org,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To:     helgaas@kernel.org, Moritz Fischer <mdf@kernel.org>
 Cc:     "Saheed O. Bolarinwa" <refactormyself@gmail.com>,
         bjorn@helgaas.com, skhan@linuxfoundation.org,
         linux-kernel-mentees@lists.linuxfoundation.org,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: [RFC PATCH 03/17] bcma: Drop uses of pci_read_config_*() return value
-Date:   Sat,  1 Aug 2020 13:24:32 +0200
-Message-Id: <20200801112446.149549-4-refactormyself@gmail.com>
+        linux-fpga@vger.kernel.org
+Subject: [RFC PATCH 07/17] fpga: altera-cvp: Drop uses of pci_read_config_*() return value
+Date:   Sat,  1 Aug 2020 13:24:36 +0200
+Message-Id: <20200801112446.149549-8-refactormyself@gmail.com>
 X-Mailer: git-send-email 2.18.4
 In-Reply-To: <20200801112446.149549-1-refactormyself@gmail.com>
 References: <20200801112446.149549-1-refactormyself@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
@@ -96,27 +91,33 @@ value thus it indicates some kind of error.
 Suggested-by: Bjorn Helgaas <bjorn@helgaas.com>
 Signed-off-by: Saheed O. Bolarinwa <refactormyself@gmail.com>
 ---
- drivers/bcma/host_pci.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/fpga/altera-cvp.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
-index 69c10a7b7c61..912d5311a444 100644
---- a/drivers/bcma/host_pci.c
-+++ b/drivers/bcma/host_pci.c
-@@ -372,9 +372,11 @@ int bcma_host_pci_irq_ctl(struct bcma_bus *bus, struct bcma_device *core,
+diff --git a/drivers/fpga/altera-cvp.c b/drivers/fpga/altera-cvp.c
+index 4e0edb60bfba..99c6e0754f8b 100644
+--- a/drivers/fpga/altera-cvp.c
++++ b/drivers/fpga/altera-cvp.c
+@@ -96,15 +96,15 @@ struct cvp_priv {
+ static int altera_read_config_byte(struct altera_cvp_conf *conf,
+ 				   int where, u8 *val)
+ {
+-	return pci_read_config_byte(conf->pci_dev, conf->vsec_offset + where,
+-				    val);
++	pci_read_config_byte(conf->pci_dev, conf->vsec_offset + where, val);
++	return (val == (u8)~0) ? -ENODEV : 0;
+ }
  
- 	pdev = bus->host_pci;
+ static int altera_read_config_dword(struct altera_cvp_conf *conf,
+ 				    int where, u32 *val)
+ {
+-	return pci_read_config_dword(conf->pci_dev, conf->vsec_offset + where,
+-				     val);
++	pci_read_config_dword(conf->pci_dev, conf->vsec_offset + where, val);
++	return (val == (u32)~0) ? -ENODEV : 0;
+ }
  
--	err = pci_read_config_dword(pdev, BCMA_PCI_IRQMASK, &tmp);
--	if (err)
-+	pci_read_config_dword(pdev, BCMA_PCI_IRQMASK, &tmp);
-+	if (tmp == (u32)~0) {
-+		err = -ENODEV;
- 		goto out;
-+	}
- 
- 	coremask = BIT(core->core_index) << 8;
- 	if (enable)
+ static int altera_write_config_dword(struct altera_cvp_conf *conf,
 -- 
 2.18.4
 
