@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B481C433F4
-	for <linux-pci@archiver.kernel.org>; Sun,  2 Aug 2020 14:26:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB505C433EC
+	for <linux-pci@archiver.kernel.org>; Sun,  2 Aug 2020 14:26:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0F36220759
-	for <linux-pci@archiver.kernel.org>; Sun,  2 Aug 2020 14:26:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B0E9220759
+	for <linux-pci@archiver.kernel.org>; Sun,  2 Aug 2020 14:26:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725780AbgHBO0P (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 2 Aug 2020 10:26:15 -0400
-Received: from mail-lj1-f193.google.com ([209.85.208.193]:34522 "EHLO
-        mail-lj1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726396AbgHBO0O (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 2 Aug 2020 10:26:14 -0400
-Received: by mail-lj1-f193.google.com with SMTP id q7so37011012ljm.1;
-        Sun, 02 Aug 2020 07:26:12 -0700 (PDT)
+        id S1726533AbgHBO0V (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 2 Aug 2020 10:26:21 -0400
+Received: from mail-lf1-f67.google.com ([209.85.167.67]:36759 "EHLO
+        mail-lf1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726300AbgHBO0U (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 2 Aug 2020 10:26:20 -0400
+Received: by mail-lf1-f67.google.com with SMTP id c15so1838480lfi.3;
+        Sun, 02 Aug 2020 07:26:18 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=eygfm9r/GaNHVAKMUv8+SfoTHGAl/cjm4d2m8xjT5bc=;
-        b=eSAVVT8Se1/eLAu3B/IhsAOSd1uL4wgqqJRwhWt9f3Dyd3dpaBwrC3+1OmcRe5NCwN
-         /LvXVROYL5Bo0hA7tPXhlZq+ump5OkwvfbPzJ4myh1+HnaXeslsgi1TYdhELaodHIXKe
-         7sKWT/xlOc1oh4CrBye1b37cc3bLWWxVlaaUQodQ9L5KqqDHBduHf4pPbHf/bC5TNArw
-         ufhD60tT/DltI3HZ5+94LKa7cge/cGwlOnLs8Jrt9zFkDGPgYzv5lVIDj3cD/jDiFs1Q
-         F6mMfsVQQkU5H+qtQiESj5mcd/96jVAhAFlJKa1CNwkj9JY1RAhK3lYfQRipdvE1cdYb
-         oImA==
-X-Gm-Message-State: AOAM533dVA0usFAolcWTdAmn77vOjDcuUMU4+XpeornmgwfaNcNrr9l0
-        wp8omAQ8UmCQ26UBcCCXM1o=
-X-Google-Smtp-Source: ABdhPJzSmhttbDUgORpKlM914FzAS2b2KYbghno6w3+rxNJphXxD2jUo/xd+iwrLQer40nK+OI29Pw==
-X-Received: by 2002:a05:651c:31b:: with SMTP id a27mr5541281ljp.455.1596378371517;
-        Sun, 02 Aug 2020 07:26:11 -0700 (PDT)
+        bh=/S75/rZPVtT/la0J520uvq4mcrCeNFGU2um+3tul+rI=;
+        b=eGYxKagEb+QN5Q7HCeGhnyhJKXIWmSd8RBVimVWipR+irMxje/N7qFbEo9bJg1Wjfr
+         /73rkoJLOwd6N5dnh3ZampC3gj12TE0GCc70OOJocJCMMdtceSvoWa2clFkVtfz42tfc
+         NVTbE3gDGn7bsADcEQq84BzSGxMRIHt9HfI+r2PzD42AqbYnIjjZfJbcHwXQnHr2aqu1
+         nV218QolJDfI8X1OyUZ1XhjebAyle3QGdgOg4XslQkNGxWl7gSMjpGEVoWy61YEdBC7i
+         e2/D2KSAFJiWtMIQqnOqpX6L3lLESHhiZ0Qjf+B9NExEmrDzEU/1KuhGueyXTVODCXmW
+         FQtw==
+X-Gm-Message-State: AOAM531OOYSQb6OEx2x8ckJJvP4MZ5XEzBRGm3PyMlBahdSl5ewxwwXr
+        XEM3Bp1fOAkrCKSRINjS+H4=
+X-Google-Smtp-Source: ABdhPJzNpdAF9CCzGfP8sG9ncd25/FPuC6g6AByGverT5oAgx7TlVWh8xE/g3DI5YXBMEkYyIP2c8Q==
+X-Received: by 2002:a19:189:: with SMTP id 131mr6399805lfb.128.1596378377807;
+        Sun, 02 Aug 2020 07:26:17 -0700 (PDT)
 Received: from workstation.lan ([95.155.85.46])
-        by smtp.gmail.com with ESMTPSA id 193sm4214136lfa.90.2020.08.02.07.26.10
+        by smtp.gmail.com with ESMTPSA id 193sm4214136lfa.90.2020.08.02.07.26.16
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 02 Aug 2020 07:26:11 -0700 (PDT)
+        Sun, 02 Aug 2020 07:26:17 -0700 (PDT)
 From:   =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>
 Cc:     Jingoo Han <jingoohan1@gmail.com>, Kukjin Kim <kgene@kernel.org>,
@@ -68,9 +68,9 @@ Cc:     Jingoo Han <jingoohan1@gmail.com>, Kukjin Kim <kgene@kernel.org>,
         linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
         linux-samsung-soc@vger.kernel.org, linux-tegra@vger.kernel.org,
         rfi@lists.rocketboards.org
-Subject: [PATCH 05/10] PCI: host-generic: Remove dev_err() when handing an error from platform_get_irq()
-Date:   Sun,  2 Aug 2020 14:25:57 +0000
-Message-Id: <20200802142601.1635926-6-kw@linux.com>
+Subject: [PATCH 09/10] PCI: rockchip: Remove dev_err() when handing an error from platform_get_irq()
+Date:   Sun,  2 Aug 2020 14:26:01 +0000
+Message-Id: <20200802142601.1635926-10-kw@linux.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20200802142601.1635926-1-kw@linux.com>
 References: <20200802142601.1635926-1-kw@linux.com>
@@ -89,31 +89,60 @@ appropriate error message in case of a failure.
 
 This change is as per suggestion from Coccinelle:
 
-  drivers/pci/controller/pcie-tango.c:277:2-9: line 277 is redundant
-  because platform_get_irq() already prints an error
+  drivers/pci/controller/pcie-rockchip-host.c:553:2-9: line 553 is
+  redundant because platform_get_irq() already prints an error
+
+  drivers/pci/controller/pcie-rockchip-host.c:566:2-9: line 566 is
+  redundant because platform_get_irq() already prints an error
+
+  drivers/pci/controller/pcie-rockchip-host.c:576:2-9: line 576 is
+  redundant because platform_get_irq() already prints an error
 
 Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
 Signed-off-by: Krzysztof Wilczyński <kw@linux.com>
 ---
- drivers/pci/controller/pcie-tango.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/pci/controller/pcie-rockchip-host.c | 12 +++---------
+ 1 file changed, 3 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/pci/controller/pcie-tango.c b/drivers/pci/controller/pcie-tango.c
-index 8f640c70f936..d093a8ce4bb1 100644
---- a/drivers/pci/controller/pcie-tango.c
-+++ b/drivers/pci/controller/pcie-tango.c
-@@ -273,10 +273,8 @@ static int tango_pcie_probe(struct platform_device *pdev)
- 		writel_relaxed(0, pcie->base + SMP8759_ENABLE + offset);
+diff --git a/drivers/pci/controller/pcie-rockchip-host.c b/drivers/pci/controller/pcie-rockchip-host.c
+index 94af6f5828a3..eebe05ab354f 100644
+--- a/drivers/pci/controller/pcie-rockchip-host.c
++++ b/drivers/pci/controller/pcie-rockchip-host.c
+@@ -549,10 +549,8 @@ static int rockchip_pcie_setup_irq(struct rockchip_pcie *rockchip)
+ 	struct platform_device *pdev = to_platform_device(dev);
  
- 	virq = platform_get_irq(pdev, 1);
--	if (virq < 0) {
--		dev_err(dev, "Failed to map IRQ\n");
-+	if (virq < 0)
- 		return virq;
+ 	irq = platform_get_irq_byname(pdev, "sys");
+-	if (irq < 0) {
+-		dev_err(dev, "missing sys IRQ resource\n");
++	if (irq < 0)
+ 		return irq;
 -	}
  
- 	irq_dom = irq_domain_create_linear(fwnode, MSI_MAX, &dom_ops, pcie);
- 	if (!irq_dom) {
+ 	err = devm_request_irq(dev, irq, rockchip_pcie_subsys_irq_handler,
+ 			       IRQF_SHARED, "pcie-sys", rockchip);
+@@ -562,20 +560,16 @@ static int rockchip_pcie_setup_irq(struct rockchip_pcie *rockchip)
+ 	}
+ 
+ 	irq = platform_get_irq_byname(pdev, "legacy");
+-	if (irq < 0) {
+-		dev_err(dev, "missing legacy IRQ resource\n");
++	if (irq < 0)
+ 		return irq;
+-	}
+ 
+ 	irq_set_chained_handler_and_data(irq,
+ 					 rockchip_pcie_legacy_int_handler,
+ 					 rockchip);
+ 
+ 	irq = platform_get_irq_byname(pdev, "client");
+-	if (irq < 0) {
+-		dev_err(dev, "missing client IRQ resource\n");
++	if (irq < 0)
+ 		return irq;
+-	}
+ 
+ 	err = devm_request_irq(dev, irq, rockchip_pcie_client_irq_handler,
+ 			       IRQF_SHARED, "pcie-client", rockchip);
 -- 
 2.27.0
 
