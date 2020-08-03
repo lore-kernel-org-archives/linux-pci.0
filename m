@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7B07C43468
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 21:02:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03944C433DF
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 21:02:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E355F22BED
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 21:02:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 13D9C22CA1
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 21:02:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1596488558;
-	bh=wNAortPHAA6pASw+U8qHcUy9YXqHf1T5fCjZn0oDeAg=;
+	s=default; t=1596488533;
+	bh=+KaPQm1MXR+V+lMZDvZbXB+1i8Q4A/sb6UJ6R4odpNU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=w0ocPB2jDYiNF3RnXN/dEDdHreEE8OnbbiV3NGJWcVBDR96BJa/qXe7moroHTeaCa
-	 dFPciDUF+RAbFw3Yvm3Oc+YxdZc+xoF9UQTQ+D529MEKsQxHTalVgk0ACbJpdba0wq
-	 JoF3nY4hgbLFKzYi+8q0Mi2oXA3x05PEOqyo5B+k=
+	b=CoA0m5KU2qGmTj9QETAX1aAaFUj/l90RxC/W07v3m4RGAeFXJazLJTHvh3S/wdOEf
+	 d7kNrXIrSGTCSz0OleO09Aouk6spKal2A/M0Pqp1VNC23Tv22vPSV8iX35Qz4jufYR
+	 Ty0z0POxAFpjRrV0OHF/VxECvmISNHyOly8YUOF8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729138AbgHCVCh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 3 Aug 2020 17:02:37 -0400
-Received: from mail-io1-f65.google.com ([209.85.166.65]:43788 "EHLO
-        mail-io1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728570AbgHCVCg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Aug 2020 17:02:36 -0400
-Received: by mail-io1-f65.google.com with SMTP id k23so39951531iom.10;
-        Mon, 03 Aug 2020 14:02:35 -0700 (PDT)
+        id S1729428AbgHCVCM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 3 Aug 2020 17:02:12 -0400
+Received: from mail-io1-f66.google.com ([209.85.166.66]:46785 "EHLO
+        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729421AbgHCVCL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Aug 2020 17:02:11 -0400
+Received: by mail-io1-f66.google.com with SMTP id a5so24747179ioa.13;
+        Mon, 03 Aug 2020 14:02:10 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=5V63dl5D15U/c4aTTJinxu1IGbYXot5HyJAyQBAcQN8=;
-        b=lf+K0Ql0HCqhJcyF4kai/etIqiUZ5bNVUJd1+XspolRaUPLVLF6HBHldF/eAGa4TuT
-         pxPeu7ETiPIkjyXkvnU3ZWVZdmXznDyHHSy93nOnTCrIYV2cy9EMWm8FCWdKvKRFDDSj
-         bj95yG17VJ9ktftMRMUw+bhcIOpKW/KbyJqppiMFA8wpr8TkW8D7ozmuY1evdMp484Jq
-         kVog3G7VEvBV+dIiF+cuEHt5FunipPMYC9l+3Pxo4oDYhz+7klGu1zcZ0tydwv08girF
-         uOf7Z2qnsEIfEYSqg6hT/M9BaaVd62Lkk2tTBr6so+m8bb3+CqlPIlE3dQM1Fo1ZD7y+
-         pxAQ==
-X-Gm-Message-State: AOAM533M199Z9L1ErQJW2xeBpdskJyMIwQUIg32k+YS0Kxx2VA2t/H6O
-        86r7O0LE3m2qQzGF9QN+6A==
-X-Google-Smtp-Source: ABdhPJye2Mo2SgL9U7MmsN235jpxm7lOgHdwxN7y4uIMz2vtYYQ/vzsM/p/WbFYNk1hakIOySw24tA==
-X-Received: by 2002:a6b:c504:: with SMTP id v4mr1853953iof.20.1596488554927;
-        Mon, 03 Aug 2020 14:02:34 -0700 (PDT)
+        bh=TMmKGLqxoIiv5nH6EL2xp/hSv/Gz0ReZ5qtRf7b9+lE=;
+        b=OGoWRMwxyC0QG6kO81r6XWFPwqO1jIZDeKowVnEEw+v/njlDA32MwI2PfpR5UM7NUz
+         mIlg7i/KzpeWjKgwQdvjfqFFsbzh+fdGnEPE1B3NfHnXM1AKSgiJ+WWXAiT/4s0kA2/E
+         nFwL5+hzjmv2hZS0CQTVDvv2yRSfQPj0WerLc5iATxdWRjxuuB9cGr7ROtiJS8CJXXo0
+         LpVgtKSGpOI57NCP67CeTANtvGUmYThU+rn4UW9uhG4DwRk7fB2oVRVYv6s0N3IjUfP8
+         ymc/Ytpwu6aaKvJZ7y6T0vTROzBBx8XKaWbNNpZxVYNKgnTH1CXpaj5NtVvj4cq2/KBO
+         anNg==
+X-Gm-Message-State: AOAM532axCo+eTiu4iI1DhEnysoz/ZfUK+IuVm33WqnQMZOxBfRS9DhF
+        WlCEoFplw5Ng7PGC2g9+yQ==
+X-Google-Smtp-Source: ABdhPJxeiUiiXL4Rua4Fu69Vg+K0w1bnYWMxWGlLFPHzRqQHvNY5emITrazErXZ1fYfEY9jR9WKX5A==
+X-Received: by 2002:a05:6638:1005:: with SMTP id r5mr1866400jab.116.1596488530148;
+        Mon, 03 Aug 2020 14:02:10 -0700 (PDT)
 Received: from xps15.herring.priv ([64.188.179.252])
-        by smtp.googlemail.com with ESMTPSA id r6sm9292280iod.7.2020.08.03.14.02.32
+        by smtp.googlemail.com with ESMTPSA id r6sm9292280iod.7.2020.08.03.14.02.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 03 Aug 2020 14:02:34 -0700 (PDT)
+        Mon, 03 Aug 2020 14:02:09 -0700 (PDT)
 From:   Rob Herring <robh@kernel.org>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
@@ -81,9 +81,9 @@ Cc:     Binghui Wang <wangbinghui@hisilicon.com>,
         Thierry Reding <thierry.reding@gmail.com>,
         Xiaowei Song <songxiaowei@hisilicon.com>,
         Yue Wang <yue.wang@Amlogic.com>
-Subject: [RFC 27/27] PCI: dwc/tegra: Use common Designware port logic register definitions
-Date:   Mon,  3 Aug 2020 15:01:16 -0600
-Message-Id: <20200803210116.3132633-28-robh@kernel.org>
+Subject: [RFC 20/27] PCI: dwc/keystone: Drop duplicated 'num-viewport'
+Date:   Mon,  3 Aug 2020 15:01:09 -0600
+Message-Id: <20200803210116.3132633-21-robh@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200803210116.3132633-1-robh@kernel.org>
 References: <20200803210116.3132633-1-robh@kernel.org>
@@ -94,141 +94,70 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The Tegra driver has its own defines for common Designware Port Logic
-registers. Convert it to use the standard register definitions.
+The DWC core driver already parses and stores the 'num-viewport' DT
+property, so there is no need for the Keystone driver to store it.
 
-Cc: Jingoo Han <jingoohan1@gmail.com>
-Cc: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Cc: Murali Karicheri <m-karicheri2@ti.com>
 Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thierry Reding <thierry.reding@gmail.com>
-Cc: Jonathan Hunter <jonathanh@nvidia.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-tegra@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org
 Signed-off-by: Rob Herring <robh@kernel.org>
 ---
- drivers/pci/controller/dwc/pcie-designware.h |  6 +++
- drivers/pci/controller/dwc/pcie-tegra194.c   | 56 ++++++++------------
- 2 files changed, 28 insertions(+), 34 deletions(-)
+ drivers/pci/controller/dwc/pci-keystone.c | 11 +----------
+ 1 file changed, 1 insertion(+), 10 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index b18a9a5f48d2..3bd322db69a6 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -32,7 +32,13 @@
- /* Synopsys-specific PCIe configuration registers */
- #define PCIE_PORT_AFR			0x70C
- #define PORT_AFR_N_FTS_MASK		GENMASK(15, 8)
-+#define PORT_AFR_N_FTS(n)		FIELD_PREP(PORT_AFR_N_FTS_MASK, n)
- #define PORT_AFR_CC_N_FTS_MASK		GENMASK(23, 16)
-+#define PORT_AFR_ENTER_ASPM		BIT(30)
-+#define PORT_AFR_L0S_ENTRANCE_LAT_SHIFT	24
-+#define PORT_AFR_L0S_ENTRANCE_LAT_MASK	GENMASK(26, 24)
-+#define PORT_AFR_L1_ENTRANCE_LAT_SHIFT	27
-+#define PORT_AFR_L1_ENTRANCE_LAT_MASK	GENMASK(29, 27)
+diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
+index e9028c98d6c0..205754a6bc3c 100644
+--- a/drivers/pci/controller/dwc/pci-keystone.c
++++ b/drivers/pci/controller/dwc/pci-keystone.c
+@@ -123,7 +123,6 @@ struct keystone_pcie {
  
- #define PCIE_PORT_LINK_CONTROL		0x710
- #define PORT_LINK_DLL_LINK_EN		BIT(5)
-diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-index c567c9c09ff6..ad295c854853 100644
---- a/drivers/pci/controller/dwc/pcie-tegra194.c
-+++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-@@ -183,19 +183,7 @@
- #define EVENT_COUNTER_GROUP_SEL_SHIFT	24
- #define EVENT_COUNTER_GROUP_5		0x5
- 
--#define PORT_LOGIC_ACK_F_ASPM_CTRL			0x70C
--#define ENTER_ASPM					BIT(30)
--#define L0S_ENTRANCE_LAT_SHIFT				24
--#define L0S_ENTRANCE_LAT_MASK				GENMASK(26, 24)
--#define L1_ENTRANCE_LAT_SHIFT				27
--#define L1_ENTRANCE_LAT_MASK				GENMASK(29, 27)
--#define N_FTS_SHIFT					8
--#define N_FTS_MASK					GENMASK(7, 0)
- #define N_FTS_VAL					52
--
--#define PORT_LOGIC_GEN2_CTRL				0x80C
--#define PORT_LOGIC_GEN2_CTRL_DIRECT_SPEED_CHANGE	BIT(17)
--#define FTS_MASK					GENMASK(7, 0)
- #define FTS_VAL						52
- 
- #define PORT_LOGIC_MSI_CTRL_INT_0_EN		0x828
-@@ -401,9 +389,9 @@ static irqreturn_t tegra_pcie_rp_irq_handler(int irq, void *arg)
- 			val |= APPL_CAR_RESET_OVRD_CYA_OVERRIDE_CORE_RST_N;
- 			appl_writel(pcie, val, APPL_CAR_RESET_OVRD);
- 
--			val = dw_pcie_readl_dbi(pci, PORT_LOGIC_GEN2_CTRL);
--			val |= PORT_LOGIC_GEN2_CTRL_DIRECT_SPEED_CHANGE;
--			dw_pcie_writel_dbi(pci, PORT_LOGIC_GEN2_CTRL, val);
-+			val = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
-+			val |= PORT_LOGIC_SPEED_CHANGE;
-+			dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, val);
+ 	int			msi_host_irq;
+ 	int			num_lanes;
+-	u32			num_viewport;
+ 	struct phy		**phy;
+ 	struct device_link	**link;
+ 	struct			device_node *msi_intc_np;
+@@ -397,9 +396,9 @@ static void ks_pcie_clear_dbi_mode(struct keystone_pcie *ks_pcie)
+ static void ks_pcie_setup_rc_app_regs(struct keystone_pcie *ks_pcie)
+ {
+ 	u32 val;
+-	u32 num_viewport = ks_pcie->num_viewport;
+ 	struct dw_pcie *pci = ks_pcie->pci;
+ 	struct pcie_port *pp = &pci->pp;
++	u32 num_viewport = pci->num_viewport;
+ 	u64 start, end;
+ 	struct resource *mem;
+ 	int i;
+@@ -1199,7 +1198,6 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+ 	struct resource *res;
+ 	unsigned int version;
+ 	void __iomem *base;
+-	u32 num_viewport;
+ 	struct phy **phy;
+ 	int link_speed;
+ 	u32 num_lanes;
+@@ -1352,12 +1350,6 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+ 			goto err_get_sync;
  		}
- 	}
  
-@@ -694,11 +682,11 @@ static void init_host_aspm(struct tegra_pcie_dw *pcie)
- 	dw_pcie_writel_dbi(pci, pcie->cfg_link_cap_l1sub, val);
+-		ret = of_property_read_u32(np, "num-viewport", &num_viewport);
+-		if (ret < 0) {
+-			dev_err(dev, "unable to read *num-viewport* property\n");
+-			goto err_get_sync;
+-		}
+-
+ 		/*
+ 		 * "Power Sequencing and Reset Signal Timings" table in
+ 		 * PCI EXPRESS CARD ELECTROMECHANICAL SPECIFICATION, REV. 2.0
+@@ -1371,7 +1363,6 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+ 			gpiod_set_value_cansleep(gpiod, 1);
+ 		}
  
- 	/* Program L0s and L1 entrance latencies */
--	val = dw_pcie_readl_dbi(pci, PORT_LOGIC_ACK_F_ASPM_CTRL);
--	val &= ~L0S_ENTRANCE_LAT_MASK;
--	val |= (pcie->aspm_l0s_enter_lat << L0S_ENTRANCE_LAT_SHIFT);
--	val |= ENTER_ASPM;
--	dw_pcie_writel_dbi(pci, PORT_LOGIC_ACK_F_ASPM_CTRL, val);
-+	val = dw_pcie_readl_dbi(pci, PCIE_PORT_AFR);
-+	val &= ~PORT_AFR_L0S_ENTRANCE_LAT_MASK;
-+	val |= (pcie->aspm_l0s_enter_lat << PORT_AFR_L0S_ENTRANCE_LAT_SHIFT);
-+	val |= PORT_AFR_ENTER_ASPM;
-+	dw_pcie_writel_dbi(pci, PCIE_PORT_AFR, val);
- }
- 
- static int init_debugfs(struct tegra_pcie_dw *pcie)
-@@ -895,15 +883,15 @@ static void tegra_pcie_prepare_host(struct pcie_port *pp)
- 	dw_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_0, 0);
- 
- 	/* Configure FTS */
--	val = dw_pcie_readl_dbi(pci, PORT_LOGIC_ACK_F_ASPM_CTRL);
--	val &= ~(N_FTS_MASK << N_FTS_SHIFT);
--	val |= N_FTS_VAL << N_FTS_SHIFT;
--	dw_pcie_writel_dbi(pci, PORT_LOGIC_ACK_F_ASPM_CTRL, val);
-+	val = dw_pcie_readl_dbi(pci, PCIE_PORT_AFR);
-+	val &= ~PORT_AFR_N_FTS_MASK;
-+	val |= PORT_AFR_N_FTS(N_FTS_VAL);
-+	dw_pcie_writel_dbi(pci, PCIE_PORT_AFR, val);
- 
--	val = dw_pcie_readl_dbi(pci, PORT_LOGIC_GEN2_CTRL);
--	val &= ~FTS_MASK;
-+	val = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
-+	val &= ~PORT_LOGIC_N_FTS_MASK;
- 	val |= FTS_VAL;
--	dw_pcie_writel_dbi(pci, PORT_LOGIC_GEN2_CTRL, val);
-+	dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, val);
- 
- 	/* Enable as 0xFFFF0001 response for CRS */
- 	val = dw_pcie_readl_dbi(pci, PORT_LOGIC_AMBA_ERROR_RESPONSE_DEFAULT);
-@@ -1820,15 +1808,15 @@ static void pex_ep_event_pex_rst_deassert(struct tegra_pcie_dw *pcie)
- 	dw_pcie_writel_dbi(pci, GEN3_RELATED_OFF, val);
- 
- 	/* Configure N_FTS & FTS */
--	val = dw_pcie_readl_dbi(pci, PORT_LOGIC_ACK_F_ASPM_CTRL);
--	val &= ~(N_FTS_MASK << N_FTS_SHIFT);
--	val |= N_FTS_VAL << N_FTS_SHIFT;
--	dw_pcie_writel_dbi(pci, PORT_LOGIC_ACK_F_ASPM_CTRL, val);
-+	val = dw_pcie_readl_dbi(pci, PCIE_PORT_AFR);
-+	val &= ~PORT_AFR_N_FTS_MASK;
-+	val |= PORT_AFR_N_FTS(FTS_VAL);
-+	dw_pcie_writel_dbi(pci, PCIE_PORT_AFR, val);
- 
--	val = dw_pcie_readl_dbi(pci, PORT_LOGIC_GEN2_CTRL);
--	val &= ~FTS_MASK;
-+	val = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
-+	val &= ~PORT_LOGIC_N_FTS_MASK;
- 	val |= FTS_VAL;
--	dw_pcie_writel_dbi(pci, PORT_LOGIC_GEN2_CTRL, val);
-+	dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, val);
- 
- 	/* Configure Max Speed from DT */
- 	if (pcie->max_speed && pcie->max_speed != -EINVAL) {
+-		ks_pcie->num_viewport = num_viewport;
+ 		pci->pp.ops = host_ops;
+ 		ret = ks_pcie_add_pcie_port(ks_pcie, pdev);
+ 		if (ret < 0)
 -- 
 2.25.1
 
