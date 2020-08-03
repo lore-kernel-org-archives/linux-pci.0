@@ -2,52 +2,52 @@ Return-Path: <SRS0=9hNM=BN=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53467C433E3
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 21:01:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AB47C433E0
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 21:01:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5C94122C9F
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 21:01:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5692B22BED
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 21:01:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1596488489;
-	bh=9yW8+bWyb4npVBPrR8j1Q1lMEmSn2kThWinmlIM9pFI=;
+	s=default; t=1596488492;
+	bh=wk2UQbife8WWy3Zcpra6VeQRa3MzU6w9zgTEphtMY2M=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=XUQZ/2R6obqBnn/wc8ozlXLdMYBr6WRRcaRvp+37ApTTiZhDkcBnXeIdF/66boEBO
-	 kO4Zk/Bx5LE+opoPimySS+wvAyisXX8OoPDiHeVqwhEQ4bibPpydr2Del/0FsQjtbU
-	 cg+ybUg/uwgnerv2NbCpm+ABKubMn7+GpDU9fzl8=
+	b=XnjlyhoTuFL+rRu2fmvWTD08r14Fpy7mxVk2eAmQSE/Mwn1m3J3V06lCwN1b6+W3V
+	 +b15nzhsv5pD0VLzuzt5M6YCfMmwTrL6CB7kT1eawlZwf2gce7gbsn/gHPVnjRxlUC
+	 ww/ys04sak06we1daGB8ePFo1veT9gJ3GeInH39g=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729342AbgHCVB0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 3 Aug 2020 17:01:26 -0400
-Received: from mail-il1-f194.google.com ([209.85.166.194]:32825 "EHLO
-        mail-il1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728889AbgHCVBZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Aug 2020 17:01:25 -0400
-Received: by mail-il1-f194.google.com with SMTP id p16so21555130ile.0;
-        Mon, 03 Aug 2020 14:01:24 -0700 (PDT)
+        id S1729354AbgHCVBa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 3 Aug 2020 17:01:30 -0400
+Received: from mail-io1-f68.google.com ([209.85.166.68]:43651 "EHLO
+        mail-io1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729040AbgHCVB3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Aug 2020 17:01:29 -0400
+Received: by mail-io1-f68.google.com with SMTP id k23so39948190iom.10;
+        Mon, 03 Aug 2020 14:01:29 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=bKkfbqtFs4Kbwg3DVrwD4EpvIH0b0CJsDrYNB8t8wYc=;
-        b=K4K81kwhURZLjBoN5skJTJbRLhzsDfzeasnLbCI5VohAbnP5ZH+/SfT0Vm9Bu+p09N
-         muOOqweLvp0EjYPJPsDSMi4w/sQIDQW11EMhUQXaXw1ZXRT66qCMDsitu9isybSc2uW6
-         Q/dgho82FhzK4tgYVxcy+q4Eq2yFci6fWIHFEvMcDUU8CIIarmSOK5kTffI5Knwt/hzs
-         nlJ4TnjplXj9KsSV3MWjyTtUylkh3zr375+zzcxKuDvFl1mlTF0numuNjFDaBwOfM4jX
-         GO2gCYSakP5dmo9iFEPd/sa1s3TtwjanXGL98hA4jqsAY3QXnUEJ55YaRxPZaWTqvzp5
-         gvTg==
-X-Gm-Message-State: AOAM532hLjx2c/TyIX1/luReVd8P2M8XEiF4ODujkPWBaIMuIMWkTpXK
-        vB81LwUKgQBFIgIprq1YSg==
-X-Google-Smtp-Source: ABdhPJw4WMAKi84yjvuB4NlTKVq4hN/CQshetql5tZed0XuQCt7CLqL/x/eQ7de+2ioPLWoU6nJ9fg==
-X-Received: by 2002:a92:a112:: with SMTP id v18mr1292705ili.124.1596488484082;
-        Mon, 03 Aug 2020 14:01:24 -0700 (PDT)
+        bh=iogw0PHdW281Zilh8Ybv/eHK0mtpVLAHgw0xblz2JaM=;
+        b=Y+G2v9urpYl/zFtdG3UZYy7xrppuQDw4XuVOJnC+YA1KSSOiIgf3tQh6V2qHshLntD
+         xXG3yq5Kw/+74OYr3fWMaSjmr6qZFiU+kEjL8liXnId16rLCSTW4wHsYmF6zW1eR2sNp
+         nZBVHw0nzVPcc/lofqPmwnywFw/aYDPhIlx13HVrEQUKkbHnIHG17t4YdBXLRHLfsNT/
+         Ns/x3yGacAY9h22ajXgWiKkjU+nnrZ3vrbMOs+LxSkvmrT0JGz8oAwKC8cyAAXfVlWan
+         Y168V6JPNJkR8QePx3brLcY+IdQrrm4DusWfiznfyWgaYpNDYGyUInL2eqP5gktOYj4n
+         MEbA==
+X-Gm-Message-State: AOAM530Zt6IRkNcoPaDkDcVX4RCQKZPXY85uO8wvzbj3pHI6/1w17vS/
+        Hd/7blXodU0WArYVg8czgA==
+X-Google-Smtp-Source: ABdhPJzvA+ZR7sxoZ88i2XSskORxkOa+8bB7U69jJSZRKahou6ztK7tanUL8FCvVfOXfz7EcTwHx3A==
+X-Received: by 2002:a6b:c504:: with SMTP id v4mr1848864iof.20.1596488488493;
+        Mon, 03 Aug 2020 14:01:28 -0700 (PDT)
 Received: from xps15.herring.priv ([64.188.179.252])
-        by smtp.googlemail.com with ESMTPSA id r6sm9292280iod.7.2020.08.03.14.01.21
+        by smtp.googlemail.com with ESMTPSA id r6sm9292280iod.7.2020.08.03.14.01.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 03 Aug 2020 14:01:23 -0700 (PDT)
+        Mon, 03 Aug 2020 14:01:27 -0700 (PDT)
 From:   Rob Herring <robh@kernel.org>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
@@ -81,9 +81,9 @@ Cc:     Binghui Wang <wangbinghui@hisilicon.com>,
         Thierry Reding <thierry.reding@gmail.com>,
         Xiaowei Song <songxiaowei@hisilicon.com>,
         Yue Wang <yue.wang@Amlogic.com>
-Subject: [RFC 02/27] PCI: dwc: Use DBI accessors instead of own config accessors
-Date:   Mon,  3 Aug 2020 15:00:51 -0600
-Message-Id: <20200803210116.3132633-3-robh@kernel.org>
+Subject: [RFC 04/27] PCI: dwc: Add a default pci_ops.map_bus for root port
+Date:   Mon,  3 Aug 2020 15:00:53 -0600
+Message-Id: <20200803210116.3132633-5-robh@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200803210116.3132633-1-robh@kernel.org>
 References: <20200803210116.3132633-1-robh@kernel.org>
@@ -94,13 +94,9 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The Designware DBI space contains the root bus bridge config space.
-Platforms needing custom {rd,wr}_own_conf functions are also the ones
-needing custom {read,write}_dbi ops functions and the access sequences
-are the same.
-
-Replace all dw_pcie_{rd,wr}_own_conf() calls with the DBI variants in
-preparation to remove dw_pcie_{rd,wr}_own_conf().
+The Designware root port config space is memory mapped accesses via the
+DBI space by default. Add a common implementation
+dw_pcie_own_conf_map_bus() for platforms to use.
 
 Cc: Jingoo Han <jingoohan1@gmail.com>
 Cc: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
@@ -108,161 +104,45 @@ Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>
 Signed-off-by: Rob Herring <robh@kernel.org>
 ---
- .../pci/controller/dwc/pcie-designware-host.c | 55 +++++++------------
- 1 file changed, 19 insertions(+), 36 deletions(-)
+ drivers/pci/controller/dwc/pcie-designware-host.c | 11 +++++++++++
+ drivers/pci/controller/dwc/pcie-designware.h      |  2 ++
+ 2 files changed, 13 insertions(+)
 
 diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index 0a4a5aa6fe46..6232aefbbdb4 100644
+index 7cd8c9528d4c..e9d31c341881 100644
 --- a/drivers/pci/controller/dwc/pcie-designware-host.c
 +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -82,13 +82,13 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
- 	unsigned long val;
- 	u32 status, num_ctrls;
- 	irqreturn_t ret = IRQ_NONE;
+@@ -615,6 +615,17 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+ 	return dw_pcie_wr_other_conf(pp, bus, devfn, where, size, val);
+ }
+ 
++void __iomem *dw_pcie_own_conf_map_bus(struct pci_bus *bus, unsigned int devfn, int where)
++{
++	struct pcie_port *pp = bus->sysdata;
 +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 
- 	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
- 
- 	for (i = 0; i < num_ctrls; i++) {
--		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS +
--					(i * MSI_REG_CTRL_BLOCK_SIZE),
--				    4, &status);
-+		status = dw_pcie_readl_dbi(pci, PCIE_MSI_INTR0_STATUS +
-+					   (i * MSI_REG_CTRL_BLOCK_SIZE));
- 		if (!status)
- 			continue;
- 
-@@ -148,6 +148,7 @@ static int dw_pci_msi_set_affinity(struct irq_data *d,
- static void dw_pci_bottom_mask(struct irq_data *d)
++
++	if (PCI_SLOT(devfn) > 0)
++		return NULL;
++
++	return pci->dbi_base + where;
++}
++
+ static struct pci_ops dw_pcie_ops = {
+ 	.read = dw_pcie_rd_conf,
+ 	.write = dw_pcie_wr_conf,
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index bad3cddab28e..dbe53e464e11 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -378,6 +378,8 @@ void dw_pcie_setup_rc(struct pcie_port *pp);
+ int dw_pcie_host_init(struct pcie_port *pp);
+ void dw_pcie_host_deinit(struct pcie_port *pp);
+ int dw_pcie_allocate_domains(struct pcie_port *pp);
++void __iomem *dw_pcie_own_conf_map_bus(struct pci_bus *bus, unsigned int devfn,
++				       int where);
+ #else
+ static inline irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
  {
- 	struct pcie_port *pp = irq_data_get_irq_chip_data(d);
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 	unsigned int res, bit, ctrl;
- 	unsigned long flags;
- 
-@@ -158,8 +159,7 @@ static void dw_pci_bottom_mask(struct irq_data *d)
- 	bit = d->hwirq % MAX_MSI_IRQS_PER_CTRL;
- 
- 	pp->irq_mask[ctrl] |= BIT(bit);
--	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_MASK + res, 4,
--			    pp->irq_mask[ctrl]);
-+	dw_pcie_writel_dbi(pci, PCIE_MSI_INTR0_MASK + res, pp->irq_mask[ctrl]);
- 
- 	raw_spin_unlock_irqrestore(&pp->lock, flags);
- }
-@@ -167,6 +167,7 @@ static void dw_pci_bottom_mask(struct irq_data *d)
- static void dw_pci_bottom_unmask(struct irq_data *d)
- {
- 	struct pcie_port *pp = irq_data_get_irq_chip_data(d);
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 	unsigned int res, bit, ctrl;
- 	unsigned long flags;
- 
-@@ -177,8 +178,7 @@ static void dw_pci_bottom_unmask(struct irq_data *d)
- 	bit = d->hwirq % MAX_MSI_IRQS_PER_CTRL;
- 
- 	pp->irq_mask[ctrl] &= ~BIT(bit);
--	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_MASK + res, 4,
--			    pp->irq_mask[ctrl]);
-+	dw_pcie_writel_dbi(pci, PCIE_MSI_INTR0_MASK + res, pp->irq_mask[ctrl]);
- 
- 	raw_spin_unlock_irqrestore(&pp->lock, flags);
- }
-@@ -186,13 +186,14 @@ static void dw_pci_bottom_unmask(struct irq_data *d)
- static void dw_pci_bottom_ack(struct irq_data *d)
- {
- 	struct pcie_port *pp  = irq_data_get_irq_chip_data(d);
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 	unsigned int res, bit, ctrl;
- 
- 	ctrl = d->hwirq / MAX_MSI_IRQS_PER_CTRL;
- 	res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
- 	bit = d->hwirq % MAX_MSI_IRQS_PER_CTRL;
- 
--	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS + res, 4, BIT(bit));
-+	dw_pcie_writel_dbi(pci, PCIE_MSI_INTR0_STATUS + res, BIT(bit));
- }
- 
- static struct irq_chip dw_pci_msi_bottom_irq_chip = {
-@@ -310,10 +311,8 @@ void dw_pcie_msi_init(struct pcie_port *pp)
- 	msi_target = (u64)pp->msi_data;
- 
- 	/* Program the msi_data */
--	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
--			    lower_32_bits(msi_target));
--	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4,
--			    upper_32_bits(msi_target));
-+	dw_pcie_writel_dbi(pci, PCIE_MSI_ADDR_LO, lower_32_bits(msi_target));
-+	dw_pcie_writel_dbi(pci, PCIE_MSI_ADDR_HI, upper_32_bits(msi_target));
- }
- EXPORT_SYMBOL_GPL(dw_pcie_msi_init);
- 
-@@ -327,7 +326,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	struct pci_bus *child;
- 	struct pci_host_bridge *bridge;
- 	struct resource *cfg_res;
--	u32 hdr_type;
- 	int ret;
- 
- 	raw_spin_lock_init(&pci->pp.lock);
-@@ -458,21 +456,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 			goto err_free_msi;
- 	}
- 
--	ret = dw_pcie_rd_own_conf(pp, PCI_HEADER_TYPE, 1, &hdr_type);
--	if (ret != PCIBIOS_SUCCESSFUL) {
--		dev_err(pci->dev, "Failed reading PCI_HEADER_TYPE cfg space reg (ret: 0x%x)\n",
--			ret);
--		ret = pcibios_err_to_errno(ret);
--		goto err_free_msi;
--	}
--	if (hdr_type != PCI_HEADER_TYPE_BRIDGE) {
--		dev_err(pci->dev,
--			"PCIe controller is not set to bridge type (hdr_type: 0x%x)!\n",
--			hdr_type);
--		ret = -EIO;
--		goto err_free_msi;
--	}
--
- 	pp->root_bus_nr = pp->busn->start;
- 
- 	bridge->dev.parent = dev;
-@@ -651,12 +634,12 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 		/* Initialize IRQ Status array */
- 		for (ctrl = 0; ctrl < num_ctrls; ctrl++) {
- 			pp->irq_mask[ctrl] = ~0;
--			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_MASK +
-+			dw_pcie_writel_dbi(pci, PCIE_MSI_INTR0_MASK +
- 					    (ctrl * MSI_REG_CTRL_BLOCK_SIZE),
--					    4, pp->irq_mask[ctrl]);
--			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE +
-+					    pp->irq_mask[ctrl]);
-+			dw_pcie_writel_dbi(pci, PCIE_MSI_INTR0_ENABLE +
- 					    (ctrl * MSI_REG_CTRL_BLOCK_SIZE),
--					    4, ~0);
-+					    ~0);
- 		}
- 	}
- 
-@@ -698,14 +681,14 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 						  pp->io_bus_addr, pp->io_size);
- 	}
- 
--	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
-+	dw_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_0, 0);
- 
- 	/* Program correct class for RC */
--	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
-+	dw_pcie_writew_dbi(pci, PCI_CLASS_DEVICE, PCI_CLASS_BRIDGE_PCI);
- 
--	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
-+	val = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
- 	val |= PORT_LOGIC_SPEED_CHANGE;
--	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
-+	dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, val);
- 
- 	dw_pcie_dbi_ro_wr_dis(pci);
- }
 -- 
 2.25.1
 
