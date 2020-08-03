@@ -5,49 +5,49 @@ X-Spam-Level:
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38C73C43446
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 21:01:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C61DC433DF
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 21:01:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 48D0022BED
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 21:01:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9C01522C9F
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 21:01:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1596488507;
-	bh=QKtb5HUTNBzigO5h1QtjMaG1Tmi5SCKDULaGVmPvZRE=;
+	s=default; t=1596488504;
+	bh=c2Hy7IGw+0ks5TnBLCVB5XK/gl2QGV5g33Lueac+Dg0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=YxFX/DOZnLYMnqDF1NVv/yi2KQ2Oj+xWx6239i1hzIsdDUhlNqUK428Yzz9fQMSEM
-	 Tw8+ulunZPqNmGsXdO6F9noaOf8VJggBttS/ZO2+jX8qimSLSJfR2fl4ETDKfGilM1
-	 DsCShuy8atq7Wqc4eDEqdHFy671EH5vdH6dgp5ig=
+	b=WYW3TtyXQ52YdkhRM7oIKrdQDMvSPE6MZYfBkEmuUFXYbCYVDWpiDrpP+eCwA+rvx
+	 qG5INwzTq0DwMn4Fpfx/aLb7OOd8VVtOSWwH5EqPIMesxBT8Zz5v3WAwJNEZrPFEna
+	 DaOEk9kuNvCvaU5iOLms3B7TfQ8ZPDpBA1tjhrzs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729389AbgHCVBp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 3 Aug 2020 17:01:45 -0400
-Received: from mail-io1-f65.google.com ([209.85.166.65]:45714 "EHLO
-        mail-io1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729372AbgHCVBp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Aug 2020 17:01:45 -0400
-Received: by mail-io1-f65.google.com with SMTP id u126so2717602iod.12;
-        Mon, 03 Aug 2020 14:01:44 -0700 (PDT)
+        id S1729373AbgHCVBn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 3 Aug 2020 17:01:43 -0400
+Received: from mail-il1-f194.google.com ([209.85.166.194]:38507 "EHLO
+        mail-il1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729372AbgHCVBn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Aug 2020 17:01:43 -0400
+Received: by mail-il1-f194.google.com with SMTP id 77so3879440ilc.5;
+        Mon, 03 Aug 2020 14:01:42 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=cgcVbPqzxoZQ8BD2LBqh5z0DmxU5aGMCc3S38te1hMk=;
-        b=T1xN1SiG8Sv7G3fzMq84RCcYSYLkz39xYzkCcIZKo0JnYQk+HIjOoWES7b00a9wCuf
-         Ok9Iu37SKtGYVe7OJcry4VkBKLmxY9f0zy/J10yIOPuiBTBlOtC2ndJQR/igPGIhahPl
-         XvBVCekC2wlrYOSf5WZQMuuZSFV69IlEx5kuveC8NMMpT/GiAuC1KQkaHBVOEleasb5T
-         GB7oxJmLdFMzI/E9vnfqTdJOT80m0f/riQiwtEIN7bWf07H4xkz+CmGEpynoKcve+Vo5
-         z4q7/G5lNpX8ANjlsAUSJmdjC+4qNu4mSU6mZyoqtcaye4bfNWha3v4zREYM7nWa/CYx
-         a1Dg==
-X-Gm-Message-State: AOAM530/YJ5pKJ8/nchtXz0NI00U+/cKYPew8evKPfLZl3OfOymBQEHB
-        K1rMVCVvnuCyk1wqM1iiDw==
-X-Google-Smtp-Source: ABdhPJwZ2v3QRbVXEHElHg+0cQOqL+nUwqS+NoWUw+dR20bJGFNYxn6FK+LKQ0Ij90nYJuTJGr2nyQ==
-X-Received: by 2002:a05:6638:1690:: with SMTP id f16mr1822826jat.91.1596488504104;
-        Mon, 03 Aug 2020 14:01:44 -0700 (PDT)
+        bh=w74e1Ztc1qAn6gEbliDEy8D1xkphK6dVWVgtaNcLV4w=;
+        b=q1kAxFAcUcChwZzscN/BtqszSs41IJB+QrwM+exX6dedGv3CStCdg/RVz2KB+JVNTd
+         4IzBPkm0KWUVoQ4ol9qkscOv5vrBQudfo1+NfI9m0Ie9QPrCbL1FWFvWGIoHbsrrhZ7o
+         Ag1BMDk25H9rYpGDvjxrHwK5Q1JAiPIeymUp/zuRaZisSurn+DxHc1OdJVwfvyMS5LTj
+         emC/ivP3X7FimUFw7DQL9RBvzs7V66EsWDpqY/6jAfE+5Gr+AjZr8iDaNI/egBBWDGJh
+         ZpJSCfRz4Q8V8LarXXLf8Q3BIMjaaxvwFWHCAOIN0zRX4W3u+nA95bg1XdzlcJ8PsIFF
+         FWvw==
+X-Gm-Message-State: AOAM531GjW4M+HLPRoK3DZq9YUI5T4TS4b27JHPhELLBJo/mJY7g9u+i
+        nC2l1dGg0OPiwySPF6Ii8A==
+X-Google-Smtp-Source: ABdhPJxfAjXpg9S6OMpw6Nsv1iLQNUvPbf7BO8gLdDkl8+aUBf9YmuX7VSlCNgb+o/i5Ag3SVp1l9g==
+X-Received: by 2002:a92:1b42:: with SMTP id b63mr1415959ilb.76.1596488501865;
+        Mon, 03 Aug 2020 14:01:41 -0700 (PDT)
 Received: from xps15.herring.priv ([64.188.179.252])
-        by smtp.googlemail.com with ESMTPSA id r6sm9292280iod.7.2020.08.03.14.01.42
+        by smtp.googlemail.com with ESMTPSA id r6sm9292280iod.7.2020.08.03.14.01.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 03 Aug 2020 14:01:43 -0700 (PDT)
+        Mon, 03 Aug 2020 14:01:41 -0700 (PDT)
 From:   Rob Herring <robh@kernel.org>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
@@ -80,11 +80,10 @@ Cc:     Binghui Wang <wangbinghui@hisilicon.com>,
         Stanimir Varbanov <svarbanov@mm-sol.com>,
         Thierry Reding <thierry.reding@gmail.com>,
         Xiaowei Song <songxiaowei@hisilicon.com>,
-        Yue Wang <yue.wang@Amlogic.com>,
-        Shawn Guo <shawn.guo@linaro.org>
-Subject: [RFC 11/27] PCI: dwc: histb: Use pci_ops for root config space accessors
-Date:   Mon,  3 Aug 2020 15:01:00 -0600
-Message-Id: <20200803210116.3132633-12-robh@kernel.org>
+        Yue Wang <yue.wang@Amlogic.com>
+Subject: [RFC 10/27] PCI: dwc: exynos: Use pci_ops for root config space accessors
+Date:   Mon,  3 Aug 2020 15:00:59 -0600
+Message-Id: <20200803210116.3132633-11-robh@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200803210116.3132633-1-robh@kernel.org>
 References: <20200803210116.3132633-1-robh@kernel.org>
@@ -96,91 +95,97 @@ List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 Now that DWC drivers can setup their own pci_ops for the root and child
-buses, convert the HiSilicon histb driver to use the standard pci_ops
-for root bus config accesses.
+buses, convert the Samsung Exynos driver to use the standard pci_ops for
+root bus config accesses.
 
-Cc: Shawn Guo <shawn.guo@linaro.org>
+Cc: Jingoo Han <jingoohan1@gmail.com>
 Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Kukjin Kim <kgene@kernel.org>
+Cc: Krzysztof Kozlowski <krzk@kernel.org>
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-samsung-soc@vger.kernel.org
 Signed-off-by: Rob Herring <robh@kernel.org>
 ---
- drivers/pci/controller/dwc/pcie-histb.c | 41 ++++++++++++++-----------
- 1 file changed, 23 insertions(+), 18 deletions(-)
+ drivers/pci/controller/dwc/pci-exynos.c | 45 ++++++++++++++-----------
+ 1 file changed, 25 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-histb.c b/drivers/pci/controller/dwc/pcie-histb.c
-index 811b5c6d62ea..0d93088deea3 100644
---- a/drivers/pci/controller/dwc/pcie-histb.c
-+++ b/drivers/pci/controller/dwc/pcie-histb.c
-@@ -122,32 +122,37 @@ static void histb_pcie_write_dbi(struct dw_pcie *pci, void __iomem *base,
- 	histb_pcie_dbi_w_mode(&pci->pp, false);
+diff --git a/drivers/pci/controller/dwc/pci-exynos.c b/drivers/pci/controller/dwc/pci-exynos.c
+index c5043d951e80..d5d37cffa441 100644
+--- a/drivers/pci/controller/dwc/pci-exynos.c
++++ b/drivers/pci/controller/dwc/pci-exynos.c
+@@ -338,32 +338,37 @@ static void exynos_pcie_write_dbi(struct dw_pcie *pci, void __iomem *base,
+ 	exynos_pcie_sideband_dbi_w_mode(ep, false);
  }
  
--static int histb_pcie_rd_own_conf(struct pcie_port *pp, int where,
--				  int size, u32 *val)
-+static int histb_pcie_rd_own_conf(struct pci_bus *bus, unsigned int devfn,
-+				  int where, int size, u32 *val)
+-static int exynos_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+-				u32 *val)
++static int exynos_pcie_rd_own_conf(struct pci_bus *bus, unsigned int devfn,
++				   int where, int size, u32 *val)
  {
 -	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+-	struct exynos_pcie *ep = to_exynos_pcie(pci);
 -	int ret;
 +	struct dw_pcie *pci = to_dw_pcie_from_pp(bus->sysdata);
  
--	histb_pcie_dbi_r_mode(pp, true);
+-	exynos_pcie_sideband_dbi_r_mode(ep, true);
 -	ret = dw_pcie_read(pci->dbi_base + where, size, val);
--	histb_pcie_dbi_r_mode(pp, false);
+-	exynos_pcie_sideband_dbi_r_mode(ep, false);
+-	return ret;
 +	if (PCI_SLOT(devfn)) {
 +		*val = ~0;
 +		return PCIBIOS_DEVICE_NOT_FOUND;
 +	}
- 
--	return ret;
++
 +	*val = dw_pcie_read_dbi(pci, where, size);
 +	return PCIBIOS_SUCCESSFUL;
  }
  
--static int histb_pcie_wr_own_conf(struct pcie_port *pp, int where,
--				  int size, u32 val)
-+static int histb_pcie_wr_own_conf(struct pci_bus *bus, unsigned int devfn,
-+				  int where, int size, u32 val)
+-static int exynos_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
+-				u32 val)
++static int exynos_pcie_wr_own_conf(struct pci_bus *bus, unsigned int devfn,
++				   int where, int size, u32 val)
  {
 -	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+-	struct exynos_pcie *ep = to_exynos_pcie(pci);
 -	int ret;
 +	struct dw_pcie *pci = to_dw_pcie_from_pp(bus->sysdata);
  
--	histb_pcie_dbi_w_mode(pp, true);
+-	exynos_pcie_sideband_dbi_w_mode(ep, true);
 -	ret = dw_pcie_write(pci->dbi_base + where, size, val);
--	histb_pcie_dbi_w_mode(pp, false);
+-	exynos_pcie_sideband_dbi_w_mode(ep, false);
+-	return ret;
 +	if (PCI_SLOT(devfn))
 +		return PCIBIOS_DEVICE_NOT_FOUND;
- 
--	return ret;
++
 +	dw_pcie_write_dbi(pci, where, size, val);
 +	return PCIBIOS_SUCCESSFUL;
  }
  
-+static struct pci_ops histb_pci_ops = {
-+	.read = histb_pcie_rd_own_conf,
-+	.write = histb_pcie_wr_own_conf,
++static struct pci_ops exynos_pci_ops = {
++	.read = exynos_pcie_rd_own_conf,
++	.write = exynos_pcie_wr_own_conf,
 +};
 +
- static int histb_pcie_link_up(struct dw_pcie *pci)
+ static int exynos_pcie_link_up(struct dw_pcie *pci)
  {
- 	struct histb_pcie *hipcie = to_histb_pcie(pci);
-@@ -194,6 +199,8 @@ static int histb_pcie_establish_link(struct pcie_port *pp)
+ 	struct exynos_pcie *ep = to_exynos_pcie(pci);
+@@ -381,6 +386,8 @@ static int exynos_pcie_host_init(struct pcie_port *pp)
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	struct exynos_pcie *ep = to_exynos_pcie(pci);
  
- static int histb_pcie_host_init(struct pcie_port *pp)
- {
-+	pp->bridge->ops = &histb_pci_ops;
++	pp->bridge->ops = &exynos_pci_ops;
 +
- 	histb_pcie_establish_link(pp);
+ 	exynos_pcie_establish_link(ep);
+ 	exynos_pcie_enable_interrupts(ep);
  
- 	if (IS_ENABLED(CONFIG_PCI_MSI))
-@@ -203,8 +210,6 @@ static int histb_pcie_host_init(struct pcie_port *pp)
+@@ -388,8 +395,6 @@ static int exynos_pcie_host_init(struct pcie_port *pp)
  }
  
- static const struct dw_pcie_host_ops histb_pcie_host_ops = {
--	.rd_own_conf = histb_pcie_rd_own_conf,
--	.wr_own_conf = histb_pcie_wr_own_conf,
- 	.host_init = histb_pcie_host_init,
+ static const struct dw_pcie_host_ops exynos_pcie_host_ops = {
+-	.rd_own_conf = exynos_pcie_rd_own_conf,
+-	.wr_own_conf = exynos_pcie_wr_own_conf,
+ 	.host_init = exynos_pcie_host_init,
  };
  
 -- 
