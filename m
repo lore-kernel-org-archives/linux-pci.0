@@ -2,247 +2,157 @@ Return-Path: <SRS0=9hNM=BN=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 621B8C433E0
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 19:46:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38105C433E0
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 20:00:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EC66C22CAD
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 19:46:16 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="hKoQokvI"
+	by mail.kernel.org (Postfix) with ESMTP id D3B4822CB1
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 20:00:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1596484851;
+	bh=WW/ReI2Lpo+10NCbAObpKYY3zIWS1mXg+dJ8PJcCqI0=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=Lom5WEQE/4YC0VeFTyvTGEd47jAJY+1uudL9k7AJ1RgcQhNfD4J5JtEA/rOm1n3ud
+	 Mxs+o8w/LKfHCqGQlBG9RnCqNahYwphW1vk2vr03gC1Q72RBQajLqPIzWPwBUIWW4g
+	 qLP9Jvmuj2M+vA22dA7cSsLQ/rbCaA0Xc1pmREeI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728307AbgHCTqF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 3 Aug 2020 15:46:05 -0400
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:40144 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728448AbgHCTqE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Aug 2020 15:46:04 -0400
-Received: from mail-irv-17.broadcom.com (mail-irv-17.lvn.broadcom.net [10.75.242.48])
-        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id C118430C149;
-        Mon,  3 Aug 2020 12:44:35 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com C118430C149
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
-        s=dkimrelay; t=1596483875;
-        bh=1EHDgk40/Aa+4zbPiQtcmu4xZYbFGPkFfGJE7AaKWjg=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=hKoQokvIqw/z3XxFgY/KYWnGnN7E3q1PYUYcAkGAbHZSHfH6c1OMTK5HYrYU91i0f
-         Ivq0kKy+n23kG8gJPkU9TMSrjps//xMRzBmjr1xXonpYXOmhK43VYEhGgsYZdCCrEc
-         GYkc9zq56dyXxg73XZUgj60twJsJ7ZKQrdH9+MpE=
-Received: from stbsrv-and-01.and.broadcom.net (stbsrv-and-01.and.broadcom.net [10.28.16.211])
-        by mail-irv-17.broadcom.com (Postfix) with ESMTP id 23C0A14008C;
-        Mon,  3 Aug 2020 12:46:01 -0700 (PDT)
-From:   Jim Quinlan <james.quinlan@broadcom.com>
-To:     linux-pci@vger.kernel.org,
-        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
-        Christoph Hellwig <hch@lst.de>,
-        Robin Murphy <robin.murphy@arm.com>,
-        bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
+        id S1728102AbgHCUAv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 3 Aug 2020 16:00:51 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34054 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727091AbgHCUAu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 3 Aug 2020 16:00:50 -0400
+Received: from mail-oi1-f175.google.com (mail-oi1-f175.google.com [209.85.167.175])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id E9A0222CAF;
+        Mon,  3 Aug 2020 20:00:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1596484850;
+        bh=WW/ReI2Lpo+10NCbAObpKYY3zIWS1mXg+dJ8PJcCqI0=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=JUcqzFd4A6yl5wjgxnvJtEqMsDIiLvFPojugVgGJCT+6YI378h8bswSw/TMYJNDO/
+         vcNeg5RjtuSF7vaCWxj8I20jj1akQOQCP42jHQmzp1H1dl8HtbMQH+N85y8yfIa56S
+         /kxD3Z/HLIAr98KvZAeuRajVevjOpt3MqUm+lVFY=
+Received: by mail-oi1-f175.google.com with SMTP id l204so5573235oib.3;
+        Mon, 03 Aug 2020 13:00:49 -0700 (PDT)
+X-Gm-Message-State: AOAM5307lHMBZ7srFqBes80CwlqEoR2bs0u+LTWrCRsGBaVBrYciRyES
+        bs/kL8o4Lpg3t82IyUlZKEs7NBaCCPK19m1Twg==
+X-Google-Smtp-Source: ABdhPJyWYwSBeWPX0Ikotw5BNtaMvn06MWvQpkwp8XBO1ywypqx8qlrtD9/CrTrHCN1+zeAP+fEy8K2k1MNq4ZAB5f4=
+X-Received: by 2002:aca:190c:: with SMTP id l12mr807066oii.147.1596484849037;
+ Mon, 03 Aug 2020 13:00:49 -0700 (PDT)
+MIME-Version: 1.0
+References: <20200715142557.17115-1-marek.behun@nic.cz> <20200715142557.17115-5-marek.behun@nic.cz>
+ <20200729184809.GA569408@bogus> <20200803144634.nr5cjddyvdnv3lxo@pali>
+In-Reply-To: <20200803144634.nr5cjddyvdnv3lxo@pali>
+From:   Rob Herring <robh@kernel.org>
+Date:   Mon, 3 Aug 2020 14:00:37 -0600
+X-Gmail-Original-Message-ID: <CAL_JsqLvqt9VneSm3Up9ib0AH7jWytA9fss_QMfJwd8xrVEp4A@mail.gmail.com>
+Message-ID: <CAL_JsqLvqt9VneSm3Up9ib0AH7jWytA9fss_QMfJwd8xrVEp4A@mail.gmail.com>
+Subject: Re: [PATCH 4/5] PCI: aardvark: Implement driver 'remove' function and
+ allow to build it as module
+To:     =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali@kernel.org>
+Cc:     =?UTF-8?B?TWFyZWsgQmVow7pu?= <marek.behun@nic.cz>,
+        PCI <linux-pci@vger.kernel.org>,
+        Tomasz Maciej Nowak <tmn505@gmail.com>,
+        Gregory Clement <gregory.clement@bootlin.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        linux-rpi-kernel@lists.infradead.org (moderated list:BROADCOM
-        BCM2711/BCM2835 ARM ARCHITECTURE),
-        linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM
-        BCM2711/BCM2835 ARM ARCHITECTURE),
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v10 08/11] PCI: brcmstb: Set additional internal memory DMA viewport sizes
-Date:   Mon,  3 Aug 2020 15:45:13 -0400
-Message-Id: <20200803194529.32357-9-james.quinlan@broadcom.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200803194529.32357-1-james.quinlan@broadcom.com>
-References: <20200803194529.32357-1-james.quinlan@broadcom.com>
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Andrew Lunn <andrew@lunn.ch>, Xogium <contact@xogium.me>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The Raspberry Pi (RPI) is currently the only chip using this driver
-(pcie-brcmstb.c).  There, only one memory controller is used, without an
-extension region, and the SCB0 viewport size is set to the size of the
-first and only dma-range region.  Other BrcmSTB SOCs have more complicated
-memory configurations that require setting additional viewport sizes.
+On Mon, Aug 3, 2020 at 8:46 AM Pali Roh=C3=A1r <pali@kernel.org> wrote:
+>
+> On Wednesday 29 July 2020 12:48:09 Rob Herring wrote:
+> > On Wed, Jul 15, 2020 at 04:25:56PM +0200, Marek Beh=C3=BAn wrote:
+> > > From: Pali Roh=C3=A1r <pali@kernel.org>
+> > >
+> > > Providing driver's 'remove' function allows kernel to bind and unbind=
+ devices
+> > > from aardvark driver. It also allows to build aardvark driver as a mo=
+dule.
+> > >
+> > > Compiling aardvark as a module simplifies development and debugging o=
+f
+> > > this driver as it can be reloaded at runtime without the need to rebo=
+ot
+> > > to new kernel.
+> > >
+> > > Signed-off-by: Pali Roh=C3=A1r <pali@kernel.org>
+> > > Reviewed-by: Marek Beh=C3=BAn <marek.behun@nic.cz>
+> > > ---
+> > >  drivers/pci/controller/Kconfig        |  2 +-
+> > >  drivers/pci/controller/pci-aardvark.c | 25 ++++++++++++++++++++++---
+> > >  2 files changed, 23 insertions(+), 4 deletions(-)
+> > >
+> > > diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/=
+Kconfig
+> > > index adddf21fa381..f9da5ff2c517 100644
+> > > --- a/drivers/pci/controller/Kconfig
+> > > +++ b/drivers/pci/controller/Kconfig
+> > > @@ -12,7 +12,7 @@ config PCI_MVEBU
+> > >     select PCI_BRIDGE_EMUL
+> > >
+> > >  config PCI_AARDVARK
+> > > -   bool "Aardvark PCIe controller"
+> > > +   tristate "Aardvark PCIe controller"
+> > >     depends on (ARCH_MVEBU && ARM64) || COMPILE_TEST
+> > >     depends on OF
+> > >     depends on PCI_MSI_IRQ_DOMAIN
+> > > diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/cont=
+roller/pci-aardvark.c
+> > > index d5f58684d962..0a5aa6d77f5d 100644
+> > > --- a/drivers/pci/controller/pci-aardvark.c
+> > > +++ b/drivers/pci/controller/pci-aardvark.c
+> > > @@ -14,6 +14,7 @@
+> > >  #include <linux/irq.h>
+> > >  #include <linux/irqdomain.h>
+> > >  #include <linux/kernel.h>
+> > > +#include <linux/module.h>
+> > >  #include <linux/pci.h>
+> > >  #include <linux/init.h>
+> > >  #include <linux/phy/phy.h>
+> > > @@ -1114,6 +1115,7 @@ static int advk_pcie_probe(struct platform_devi=
+ce *pdev)
+> > >
+> > >     pcie =3D pci_host_bridge_priv(bridge);
+> > >     pcie->pdev =3D pdev;
+> > > +   platform_set_drvdata(pdev, pcie);
+> > >
+> > >     res =3D platform_get_resource(pdev, IORESOURCE_MEM, 0);
+> > >     pcie->base =3D devm_ioremap_resource(dev, res);
+> > > @@ -1204,18 +1206,35 @@ static int advk_pcie_probe(struct platform_de=
+vice *pdev)
+> > >     return 0;
+> > >  }
+> > >
+> > > +static int advk_pcie_remove(struct platform_device *pdev)
+> > > +{
+> > > +   struct advk_pcie *pcie =3D platform_get_drvdata(pdev);
+> > > +   struct pci_host_bridge *bridge =3D pci_host_bridge_from_priv(pcie=
+);
+> > > +
+> > > +   pci_stop_root_bus(bridge->bus);
+> > > +   pci_remove_root_bus(bridge->bus);
+> >
+> > Based on pci_host_common_remove() implementation, doesn't this need a
+> > lock around it (pci_lock_rescan_remove)?
+>
+> Well, I'm not sure. I looked into other pci drivers and none of
+> following drivers pci-tegra.c, pcie-altera.c, pcie-brcmstb.c,
+> pcie-iproc.c, pcie-mediatek.c, pcie-rockchip-host.c calls
+> pci_lock_rescan_remove() and pci_unlock_rescan_remove().
 
-BrcmSTB PCIe controllers are intimately connected to the memory
-controller(s) on the SOC.  The SOC may have one to three memory
-controllers; they are indicated by the term SCBi.  Each controller has a
-base region and an optional extension region.  In physical memory, the base
-and extension regions of a controller are not adjacent, but in PCIe-space
-they are.
+The mutex protects the bus->devices list, so yes I believe it is needed.
 
-There is a "viewport" for each memory controller that allows DMA from
-endpoint devices.  Each viewport's size must be set to a power of two, and
-that size must be equal to or larger than the amount of memory each
-controller supports which is the sum of base region and its optional
-extension.  Further, the 1-3 viewports are also adjacent in PCIe-space.
-
-Unfortunately the viewport sizes cannot be ascertained from the
-"dma-ranges" property so they have their own property, "brcm,scb-sizes".
-This is because dma-range information does not indicate what memory
-controller it is associated.  For example, consider the following case
-where the size of one dma-range is 2GB and the second dma-range is 1GB:
-
-    /* Case 1: SCB0 size set to 4GB */
-    dma-range0: 2GB (from memc0-base)
-    dma-range1: 1GB (from memc0-extension)
-
-    /* Case 2: SCB0 size set to 2GB, SCB1 size set to 1GB */
-    dma-range0: 2GB (from memc0-base)
-    dma-range1: 1GB (from memc0-extension)
-
-By just looking at the dma-ranges information, one cannot tell which
-situation applies. That is why an additional property is needed.  Its
-length indicates the number of memory controllers being used and each value
-indicates the viewport size.
-
-Note that the RPI DT does not have a "brcm,scb-sizes" property value,
-as it is assumed that it only requires one memory controller and no
-extension.  So the optional use of "brcm,scb-sizes" will be backwards
-compatible.
-
-One last layer of complexity exists: all of the viewports sizes must be
-added and rounded up to a power of two to determine what the "BAR" size is.
-Further, an offset must be given that indicates the base PCIe address of
-this "BAR".  The use of the term BAR is typically associated with endpoint
-devices, and the term is used here because the PCIe HW may be used as an RC
-or an EP.  In the former case, all of the system memory appears in a single
-"BAR" region in PCIe memory.  As it turns out, BrcmSTB PCIe HW is rarely
-used in the EP role and its system of mapping memory is an artifact that
-requires multiple dma-ranges regions.
-
-Signed-off-by: Jim Quinlan <james.quinlan@broadcom.com>
-Acked-by: Florian Fainelli <f.fainelli@gmail.com>
----
- drivers/pci/controller/pcie-brcmstb.c | 68 ++++++++++++++++++++-------
- 1 file changed, 50 insertions(+), 18 deletions(-)
-
-diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
-index 8dacb9d3b7b6..ffcb733e3ec5 100644
---- a/drivers/pci/controller/pcie-brcmstb.c
-+++ b/drivers/pci/controller/pcie-brcmstb.c
-@@ -57,6 +57,8 @@
- #define  PCIE_MISC_MISC_CTRL_MAX_BURST_SIZE_MASK	0x300000
- #define  PCIE_MISC_MISC_CTRL_MAX_BURST_SIZE_128		0x0
- #define  PCIE_MISC_MISC_CTRL_SCB0_SIZE_MASK		0xf8000000
-+#define  PCIE_MISC_MISC_CTRL_SCB1_SIZE_MASK		0x07c00000
-+#define  PCIE_MISC_MISC_CTRL_SCB2_SIZE_MASK		0x0000001f
- 
- #define PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LO		0x400c
- #define PCIE_MEM_WIN0_LO(win)	\
-@@ -154,6 +156,7 @@
- #define SSC_STATUS_OFFSET		0x1
- #define SSC_STATUS_SSC_MASK		0x400
- #define SSC_STATUS_PLL_LOCK_MASK	0x800
-+#define PCIE_BRCM_MAX_MEMC		3
- 
- #define IDX_ADDR(pcie)			(pcie->reg_offsets[EXT_CFG_INDEX])
- #define DATA_ADDR(pcie)			(pcie->reg_offsets[EXT_CFG_DATA])
-@@ -260,6 +263,8 @@ struct brcm_pcie {
- 	const int		*reg_field_info;
- 	enum pcie_type		type;
- 	struct reset_control	*rescal;
-+	int			num_memc;
-+	u64			memc_size[PCIE_BRCM_MAX_MEMC];
- };
- 
- /*
-@@ -715,22 +720,44 @@ static inline int brcm_pcie_get_rc_bar2_size_and_offset(struct brcm_pcie *pcie,
- 							u64 *rc_bar2_offset)
- {
- 	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(pcie);
--	struct device *dev = pcie->dev;
- 	struct resource_entry *entry;
-+	struct device *dev = pcie->dev;
-+	u64 lowest_pcie_addr = ~(u64)0;
-+	int ret, i = 0;
-+	u64 size = 0;
- 
--	entry = resource_list_first_type(&bridge->dma_ranges, IORESOURCE_MEM);
--	if (!entry)
--		return -ENODEV;
-+	resource_list_for_each_entry(entry, &bridge->dma_ranges) {
-+		u64 pcie_beg = entry->res->start - entry->offset;
- 
-+		size += entry->res->end - entry->res->start + 1;
-+		if (pcie_beg < lowest_pcie_addr)
-+			lowest_pcie_addr = pcie_beg;
-+	}
- 
--	/*
--	 * The controller expects the inbound window offset to be calculated as
--	 * the difference between PCIe's address space and CPU's. The offset
--	 * provided by the firmware is calculated the opposite way, so we
--	 * negate it.
--	 */
--	*rc_bar2_offset = -entry->offset;
--	*rc_bar2_size = 1ULL << fls64(entry->res->end - entry->res->start);
-+	if (lowest_pcie_addr == ~(u64)0) {
-+		dev_err(dev, "DT node has no dma-ranges\n");
-+		return -EINVAL;
-+	}
-+
-+	ret = of_property_read_variable_u64_array(pcie->np, "brcm,scb-sizes", pcie->memc_size, 1,
-+						  PCIE_BRCM_MAX_MEMC);
-+
-+	if (ret <= 0) {
-+		/* Make an educated guess */
-+		pcie->num_memc = 1;
-+		pcie->memc_size[0] = 1ULL << fls64(size - 1);
-+	} else {
-+		pcie->num_memc = ret;
-+	}
-+
-+	/* Each memc is viewed through a "port" that is a power of 2 */
-+	for (i = 0, size = 0; i < pcie->num_memc; i++)
-+		size += pcie->memc_size[i];
-+
-+	/* System memory starts at this address in PCIe-space */
-+	*rc_bar2_offset = lowest_pcie_addr;
-+	/* The sum of all memc views must also be a power of 2 */
-+	*rc_bar2_size = 1ULL << fls64(size - 1);
- 
- 	/*
- 	 * We validate the inbound memory view even though we should trust
-@@ -782,12 +809,11 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
- 	void __iomem *base = pcie->base;
- 	struct device *dev = pcie->dev;
- 	struct resource_entry *entry;
--	unsigned int scb_size_val;
- 	bool ssc_good = false;
- 	struct resource *res;
- 	int num_out_wins = 0;
- 	u16 nlw, cls, lnksta;
--	int i, ret;
-+	int i, ret, memc;
- 	u32 tmp, aspm_support;
- 
- 	/* Reset the bridge */
-@@ -827,11 +853,17 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
- 	writel(upper_32_bits(rc_bar2_offset),
- 	       base + PCIE_MISC_RC_BAR2_CONFIG_HI);
- 
--	scb_size_val = rc_bar2_size ?
--		       ilog2(rc_bar2_size) - 15 : 0xf; /* 0xf is 1GB */
- 	tmp = readl(base + PCIE_MISC_MISC_CTRL);
--	u32p_replace_bits(&tmp, scb_size_val,
--			  PCIE_MISC_MISC_CTRL_SCB0_SIZE_MASK);
-+	for (memc = 0; memc < pcie->num_memc; memc++) {
-+		u32 scb_size_val = ilog2(pcie->memc_size[memc]) - 15;
-+
-+		if (memc == 0)
-+			u32p_replace_bits(&tmp, scb_size_val, PCIE_MISC_MISC_CTRL_SCB0_SIZE_MASK);
-+		else if (memc == 1)
-+			u32p_replace_bits(&tmp, scb_size_val, PCIE_MISC_MISC_CTRL_SCB1_SIZE_MASK);
-+		else if (memc == 2)
-+			u32p_replace_bits(&tmp, scb_size_val, PCIE_MISC_MISC_CTRL_SCB2_SIZE_MASK);
-+	}
- 	writel(tmp, base + PCIE_MISC_MISC_CTRL);
- 
- 	/*
--- 
-2.17.1
-
+Rob
