@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7A40C433F4
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 21:02:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A569CC43446
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 21:02:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D59A222CB3
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 21:02:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AFD3C22CB2
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 21:02:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1596488544;
-	bh=gBOfUsjbGL4kYFEyaSqt2m8t5ikvGwxCI9sj2xgePf0=;
+	s=default; t=1596488552;
+	bh=IN4qqXLj/8KCT+Ufzx0L8fCPFaHBxDyK7hfmOljbUJU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=aPvCRoeUNbEJqqQEvp2Tj8XrgUogdTRxbn1g6uy3IKYB89/Hka3W/v3BOI9aQU0vj
-	 6HrCaMNpvTWFss44fNu1LpxgSFlojNUs7gmxGXdKZvPwTQaj5D8Li0o5JsJjLJj2Mc
-	 AIG8gw07nniTmhVoaC3lSv/2I47qKCZHxZPGr5Ow=
+	b=I3ZSfkNgCCQka/zIkSpRIeyh1WlYlLlqaNW7nGS4fmKEpsg5pVIXMrvePy2llSdqX
+	 cdWJVQXleKXXqSpP3huSNoHtdZsEnOrtBVSgjqAbjdQSWwkA3dSyi+RmMf4d7npCk5
+	 9xlArCqczdUvuHAI73xDJSKbAglH5++V9wfMn/2k=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729455AbgHCVCY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 3 Aug 2020 17:02:24 -0400
-Received: from mail-io1-f65.google.com ([209.85.166.65]:33153 "EHLO
-        mail-io1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729103AbgHCVCW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Aug 2020 17:02:22 -0400
-Received: by mail-io1-f65.google.com with SMTP id g14so2509436iom.0;
-        Mon, 03 Aug 2020 14:02:22 -0700 (PDT)
+        id S1729118AbgHCVCb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 3 Aug 2020 17:02:31 -0400
+Received: from mail-io1-f68.google.com ([209.85.166.68]:40326 "EHLO
+        mail-io1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728570AbgHCVCa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Aug 2020 17:02:30 -0400
+Received: by mail-io1-f68.google.com with SMTP id l17so40001373iok.7;
+        Mon, 03 Aug 2020 14:02:30 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=bEN9vVsE3mU2Nyqo3uVsRwOE6mBebuJzlr8xG6a6d4M=;
-        b=gvlZ85rNLI4mgSE7YxG4Q0KiemuST2J48lyVHCiY+PD/HkVNhJJeVF9iNU9j+8IQmA
-         m7RZlm8jqvU/xvqtd9qXD3jCxIEGFPXJ215cUFJZfmk7q85O+SWGeLcYhRozUKOQB20E
-         3lypsIO/PIMIq6wFTTqsMH8smaBVIeAccdeOcp1p34QjkYuYMDjxMW/QhzyQ/aFpV+zs
-         BcIdQWmrsFL08Tj8HKJ5T9IntAeb0VAgtM72j92rAc0ek4lZBlfUIR4zVOJT0xudrgrI
-         ggu+PN1ng44B7cXiAICRF/sdUdyK8LwW5IllpxmaZ/yMl3XwfymoyW80U2tB3qWjQViJ
-         6Fow==
-X-Gm-Message-State: AOAM532rDbMpmjaGbpD+D13MkBENq9zkSYqmBgywDILaw+rD5kp1SKuA
-        HVVY1x77VoWi1WEwiT7ong==
-X-Google-Smtp-Source: ABdhPJzc5blExyVY0xBSjialU7rbyHIo6WdVKug3iv8C/bQYaB+qRckTphLyP0HPoPp/7SDACilwzg==
-X-Received: by 2002:a02:a584:: with SMTP id b4mr1758886jam.68.1596488541762;
-        Mon, 03 Aug 2020 14:02:21 -0700 (PDT)
+        bh=VwFTr4t0lrmNy8f4Fgv3/l49uahHgczW7Wdy7hSwZ1w=;
+        b=LORzLGQCc25xfattQ/r/eucxR1jhevA1boxWsnpFezxp4FAJH8zXFAS55YebAQxt49
+         h7OtBc4Rk3Es3JBBHnKpfKL+HGl0MiW0fDRZpCCLs1kEM/T4tdr3CviNX8FNvuWwplVw
+         0syBl5MkVIX8PJVjRD4ejJo7rxJ87n2tlAj8De73inJKZZvIgOFpabtSSa/btmXiVOwW
+         5cfjhryp9Sa5+CUY6Mee1jqIK5Ip5g8WdUvaf+UcHMhBXSvFHaoVklyZfwFpN6DfeF05
+         tK452SW3+4DSxiIqaGUViYGYCv0m8+KMtJcLbNJiFLOZvNX/X2f4tZyAAwxG7w8V2TUI
+         4x0A==
+X-Gm-Message-State: AOAM530dT9iH43Gsh1KoPGuU1LF4DdqnW7pOPVXRL5Iw+uEISKFI9hbG
+        4lWsoCqdtNi1jAa2AUaeeQ==
+X-Google-Smtp-Source: ABdhPJzMEhzv37+IQcarhuMxavAyD+FE8gqZIx02+KuoDY977KQ4tDj1eOPm1iwpPoPc4bKstznlOA==
+X-Received: by 2002:a5d:9b96:: with SMTP id r22mr1878334iom.66.1596488549634;
+        Mon, 03 Aug 2020 14:02:29 -0700 (PDT)
 Received: from xps15.herring.priv ([64.188.179.252])
-        by smtp.googlemail.com with ESMTPSA id r6sm9292280iod.7.2020.08.03.14.02.17
+        by smtp.googlemail.com with ESMTPSA id r6sm9292280iod.7.2020.08.03.14.02.25
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 03 Aug 2020 14:02:21 -0700 (PDT)
+        Mon, 03 Aug 2020 14:02:29 -0700 (PDT)
 From:   Rob Herring <robh@kernel.org>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
@@ -80,10 +80,10 @@ Cc:     Binghui Wang <wangbinghui@hisilicon.com>,
         Stanimir Varbanov <svarbanov@mm-sol.com>,
         Thierry Reding <thierry.reding@gmail.com>,
         Xiaowei Song <songxiaowei@hisilicon.com>,
-        Yue Wang <yue.wang@Amlogic.com>
-Subject: [RFC 23/27] PCI: dwc/meson: Drop unnecessary RC config space initialization
-Date:   Mon,  3 Aug 2020 15:01:12 -0600
-Message-Id: <20200803210116.3132633-24-robh@kernel.org>
+        Yue Wang <yue.wang@Amlogic.com>, Andy Gross <agross@kernel.org>
+Subject: [RFC 25/27] PCI: dwc/qcom: Use common PCI register definitions
+Date:   Mon,  3 Aug 2020 15:01:14 -0600
+Message-Id: <20200803210116.3132633-26-robh@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200803210116.3132633-1-robh@kernel.org>
 References: <20200803210116.3132633-1-robh@kernel.org>
@@ -94,76 +94,91 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The common Designware init already initializes the RC PCI_COMMAND, BAR0
-and BAR1 registers.
+The QCom driver has its own defines for common PCI config space
+registers. It also hard codes the capability register offsets which are
+discoverable. Convert it to use the standard register definitions.
 
-The only difference here is the common code sets SERR. If clearing SERR
-is what's desired, then the Meson driver should do that instead.
-
-Cc: Yue Wang <yue.wang@Amlogic.com>
+Cc: Stanimir Varbanov <svarbanov@mm-sol.com>
+Cc: Andy Gross <agross@kernel.org>
+Cc: Bjorn Andersson <bjorn.andersson@linaro.org>
 Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Kevin Hilman <khilman@baylibre.com>
 Cc: linux-pci@vger.kernel.org
-Cc: linux-amlogic@lists.infradead.org
-Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-arm-msm@vger.kernel.org
 Signed-off-by: Rob Herring <robh@kernel.org>
 ---
- drivers/pci/controller/dwc/pci-meson.c | 20 --------------------
- 1 file changed, 20 deletions(-)
+ drivers/pci/controller/dwc/pcie-qcom.c | 27 ++++++++++----------------
+ 1 file changed, 10 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/controller/dwc/pci-meson.c
-index cbde683d107f..d1cfc65f0a69 100644
---- a/drivers/pci/controller/dwc/pci-meson.c
-+++ b/drivers/pci/controller/dwc/pci-meson.c
-@@ -34,15 +34,6 @@
- #define NUM_OF_LANES_X1			BIT(8)
- #define DIRECT_SPEED_CHANGE		BIT(17)
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index 9f1d3ba686fa..dba5f7d7f727 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -39,11 +39,6 @@
+ #define L23_CLK_RMV_DIS				BIT(2)
+ #define L1_CLK_RMV_DIS				BIT(1)
  
--#define TYPE1_HDR_OFFSET		0x0
--#define PCIE_STATUS_COMMAND		(TYPE1_HDR_OFFSET + 0x04)
--#define PCI_IO_EN			BIT(0)
--#define PCI_MEM_SPACE_EN		BIT(1)
--#define PCI_BUS_MASTER_EN		BIT(2)
+-#define PCIE20_COMMAND_STATUS			0x04
+-#define CMD_BME_VAL				0x4
+-#define PCIE20_DEVICE_CONTROL2_STATUS2		0x98
+-#define PCIE_CAP_CPL_TIMEOUT_DISABLE		0x10
 -
--#define PCIE_BASE_ADDR0			(TYPE1_HDR_OFFSET + 0x10)
--#define PCIE_BASE_ADDR1			(TYPE1_HDR_OFFSET + 0x14)
--
- #define PCIE_CAP_OFFSET			0x70
- #define PCIE_DEV_CTRL_DEV_STUS		(PCIE_CAP_OFFSET + 0x08)
- #define PCIE_CAP_MAX_PAYLOAD_MASK	GENMASK(7, 5)
-@@ -303,9 +294,6 @@ static void meson_pcie_init_dw(struct meson_pcie *mp)
- 	val = meson_elb_readl(mp, PCIE_GEN2_CTRL_OFF);
- 	val |= NUM_OF_LANES_X1 | DIRECT_SPEED_CHANGE;
- 	meson_elb_writel(mp, val, PCIE_GEN2_CTRL_OFF);
--
--	meson_elb_writel(mp, 0x0, PCIE_BASE_ADDR0);
--	meson_elb_writel(mp, 0x0, PCIE_BASE_ADDR1);
- }
+ #define PCIE20_PARF_PHY_CTRL			0x40
+ #define PCIE20_PARF_PHY_REFCLK			0x4C
+ #define PCIE20_PARF_DBI_BASE_ADDR		0x168
+@@ -65,10 +60,6 @@
+ #define PCIE20_AXI_MSTR_RESP_COMP_CTRL1		0x81c
+ #define CFG_BRIDGE_SB_INIT			BIT(0)
  
- static int meson_size_to_payload(struct meson_pcie *mp, int size)
-@@ -353,13 +341,6 @@ static void meson_set_max_rd_req_size(struct meson_pcie *mp, int size)
- 	meson_elb_writel(mp, val, PCIE_DEV_CTRL_DEV_STUS);
- }
+-#define PCIE20_CAP				0x70
+-#define PCIE20_CAP_LINK_CAPABILITIES		(PCIE20_CAP + 0xC)
+-#define PCIE20_CAP_ACTIVE_STATE_LINK_PM_SUPPORT	(BIT(10) | BIT(11))
+-#define PCIE20_CAP_LINK_1			(PCIE20_CAP + 0x14)
+ #define PCIE_CAP_LINK1_VAL			0x2FD7F
  
--static inline void meson_enable_memory_space(struct meson_pcie *mp)
--{
--	/* Set the RC Bus Master, Memory Space and I/O Space enables */
--	meson_elb_writel(mp, PCI_IO_EN | PCI_MEM_SPACE_EN | PCI_BUS_MASTER_EN,
--			 PCIE_STATUS_COMMAND);
--}
--
- static int meson_pcie_establish_link(struct meson_pcie *mp)
+ #define PCIE20_PARF_Q2A_FLUSH			0x1AC
+@@ -974,6 +965,7 @@ static int qcom_pcie_init_2_3_3(struct qcom_pcie *pcie)
+ 	struct qcom_pcie_resources_2_3_3 *res = &pcie->res.v2_3_3;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct device *dev = pci->dev;
++	u16 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+ 	int i, ret;
+ 	u32 val;
+ 
+@@ -1047,16 +1039,16 @@ static int qcom_pcie_init_2_3_3(struct qcom_pcie *pcie)
+ 		pcie->parf + PCIE20_PARF_SYS_CTRL);
+ 	writel(0, pcie->parf + PCIE20_PARF_Q2A_FLUSH);
+ 
+-	writel(CMD_BME_VAL, pci->dbi_base + PCIE20_COMMAND_STATUS);
++	writel(PCI_COMMAND_MASTER, pci->dbi_base + PCI_COMMAND);
+ 	writel(DBI_RO_WR_EN, pci->dbi_base + PCIE20_MISC_CONTROL_1_REG);
+-	writel(PCIE_CAP_LINK1_VAL, pci->dbi_base + PCIE20_CAP_LINK_1);
++	writel(PCIE_CAP_LINK1_VAL, pci->dbi_base + offset + PCI_EXP_SLTCAP);
+ 
+-	val = readl(pci->dbi_base + PCIE20_CAP_LINK_CAPABILITIES);
+-	val &= ~PCIE20_CAP_ACTIVE_STATE_LINK_PM_SUPPORT;
+-	writel(val, pci->dbi_base + PCIE20_CAP_LINK_CAPABILITIES);
++	val = readl(pci->dbi_base + offset + PCI_EXP_LNKCAP);
++	val &= ~PCI_EXP_LNKCAP_ASPMS;
++	writel(val, pci->dbi_base + offset + PCI_EXP_LNKCAP);
+ 
+-	writel(PCIE_CAP_CPL_TIMEOUT_DISABLE, pci->dbi_base +
+-		PCIE20_DEVICE_CONTROL2_STATUS2);
++	writel(PCI_EXP_DEVCTL2_COMP_TMOUT_DIS, pci->dbi_base + offset +
++		PCI_EXP_DEVCTL2);
+ 
+ 	return 0;
+ 
+@@ -1209,7 +1201,8 @@ static void qcom_pcie_post_deinit_2_7_0(struct qcom_pcie *pcie)
+ 
+ static int qcom_pcie_link_up(struct dw_pcie *pci)
  {
- 	struct dw_pcie *pci = &mp->pci;
-@@ -370,7 +351,6 @@ static int meson_pcie_establish_link(struct meson_pcie *mp)
- 	meson_set_max_rd_req_size(mp, MAX_READ_REQ_SIZE);
+-	u16 val = readw(pci->dbi_base + PCIE20_CAP + PCI_EXP_LNKSTA);
++	u16 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
++	u16 val = readw(pci->dbi_base + offset + PCI_EXP_LNKSTA);
  
- 	dw_pcie_setup_rc(pp);
--	meson_enable_memory_space(mp);
- 
- 	meson_pcie_assert_reset(mp);
- 
+ 	return !!(val & PCI_EXP_LNKSTA_DLLLA);
+ }
 -- 
 2.25.1
 
