@@ -2,317 +2,218 @@ Return-Path: <SRS0=9hNM=BN=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9A20C433DF
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 11:46:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C52CC433E0
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 12:41:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BCE3920738
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 11:46:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E953E20781
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 12:41:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="azYzpy5g"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="ZRjMJ9i+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726169AbgHCLqn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 3 Aug 2020 07:46:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36212 "EHLO
+        id S1728816AbgHCMlH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 3 Aug 2020 08:41:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44514 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726752AbgHCLqf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Aug 2020 07:46:35 -0400
-Received: from mail-qt1-x842.google.com (mail-qt1-x842.google.com [IPv6:2607:f8b0:4864:20::842])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A4E66C06174A;
-        Mon,  3 Aug 2020 04:46:33 -0700 (PDT)
-Received: by mail-qt1-x842.google.com with SMTP id d27so27904225qtg.4;
-        Mon, 03 Aug 2020 04:46:33 -0700 (PDT)
+        with ESMTP id S1728814AbgHCMkk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Aug 2020 08:40:40 -0400
+Received: from mail-wm1-x341.google.com (mail-wm1-x341.google.com [IPv6:2a00:1450:4864:20::341])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06D8EC06174A
+        for <linux-pci@vger.kernel.org>; Mon,  3 Aug 2020 05:40:40 -0700 (PDT)
+Received: by mail-wm1-x341.google.com with SMTP id k8so15311242wma.2
+        for <linux-pci@vger.kernel.org>; Mon, 03 Aug 2020 05:40:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
+        d=broadcom.com; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=v9w9fbn7yNkef9TLs+zTkzQZ7s1zWhU0/ovW77dwUdg=;
-        b=azYzpy5gBWy177C2zEz3nN8T4CAY59qloyuh1SPx61pASUlcEu3g4Ah2btjKaENBAO
-         ktyNtc2EgorVTn3Ys2vzLcrbORPK6HckUVmWfSL7D6YlKA5WFkWGM1Kysmn51x7RrJsB
-         mRNbCggdhgHJAuzvNXtXb3jv3wsqq/Lh/Fc3Ai4hbv8v+NZ/RhWUV1BYaCKO+RCD0TsU
-         7oaGZmCN4ph2etPxyWqaFPGXsEL8f2wsXAxWCGEfSRvdc1jiisy4yeWbu4G9lN9RuZqd
-         0rEmHyQ9kVPuY9O5zToguFyU01CNyB7e8R8lq4iL95BMHkVn5j3MtxnaEFRXiIuKZ/24
-         0Deg==
+        bh=mkm6CObS36SJAMkOLwAunKXfddEBXbzFKEGDTTUK8x8=;
+        b=ZRjMJ9i+3XtHFlvWGHZ8k1OJSiJIwYiuaYJjTSDvBsQo7p5Lw2lHEoeMLsDrOtbo5t
+         Y/L6ct5WPSxA6i5eDn+OJ1XtcPhING+tXhwhkyjJXP10dSlFTTYrNBfbMF0GZXXGSSzG
+         KHPqqWfMuDAAl6hwmgPB5+nYUkFTDd+lylEYs=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=v9w9fbn7yNkef9TLs+zTkzQZ7s1zWhU0/ovW77dwUdg=;
-        b=BhdvfWo0jLecLuaHWp0I7rIWtBqGxUCdFJcN1YzpYDLyWQNAd7eQ/kkhoMT0n73Bzf
-         Uvg5HcJt5Ubnk20nRsggPhO/i2qy+vdLon6TkdOYV/KMFes4GKLoPYwmluvkvHc00SbS
-         J4UQ/XDhr7JGEZ9BEJUNciVRN7dYVI2P9Md+IX4Y4N9Fx2Hw5E+egOQ6zhlev+rcAFyt
-         ikWE73ijr6kda/z4QpRoS+R/OwTOpZtiZg4/SQfqpqxENtEdBN/go+wvlVYks/NU7+bP
-         T8g4pGzy6Q5pxV04zrtfa4SGz+58Q07694wCkrUjYKPylNRB060mDdRmI8T7Y9HsAqu+
-         afkA==
-X-Gm-Message-State: AOAM533WQQKaPGEOBFT/o57dHbGiUdih5YtpUCe5WQMN884W20pVGKm9
-        seKSbfy0E52oiKOzd9psON/h/po5mu8fUbIgg4M=
-X-Google-Smtp-Source: ABdhPJy6gn2ytTr6DFZ70N7zNh22A3+ulj9QDSMWwwPeofE/1A22C8/kgSZ6X3X+Ddv4X0eRYpIXJKAkFUV3CAgvKlk=
-X-Received: by 2002:aed:33a5:: with SMTP id v34mr16035859qtd.262.1596455192588;
- Mon, 03 Aug 2020 04:46:32 -0700 (PDT)
+        bh=mkm6CObS36SJAMkOLwAunKXfddEBXbzFKEGDTTUK8x8=;
+        b=tGa82d1M9ztH6mcYS/Jb1EtL8Ax2ruMtfEeM4QyMxt5BnU7QiFkjzSZO/daHd6p07F
+         3GZeHaXzw2Zd2rKz4VxHZutYmBzuLG4JSLEOqbQ9RmZk9sjB9cdd2OWggtiJ4MGwsq6I
+         K1Q6lNFwvv9I1GmA2Y7w2CZN6/luiA0M+QpGqw2D/LA1hv0LIoNYisiw0TXSk3ul1lB4
+         WRiY9momUfixmKcM6LS1jinvLxM2Oe2SeL3l2tgK+cfoJ2xRuU23vY88wWvCW29xYMBE
+         QLgdBdUKwC94BQY/nrvw0K+HYIzq8Y4N5ILKBPqDStI3bF6RjYEtHxIjZ5thvwx8FwJE
+         pR2Q==
+X-Gm-Message-State: AOAM530d+qtQod2GKvajJ97m6gAI9IZtAKTCGfv511/nCFS1zPTy/sk3
+        MUC9mV3p4ZRPLUG/IdRzzF6+hnJNY8ItXdEerQ+xtQ==
+X-Google-Smtp-Source: ABdhPJyhgboxKbPjxQ++0E3wx9USPAXOub0gcy5KJOARS+aCf/xp/ODALT+aGA7/GIEB4C7d3o1nsP0GO/rZzwXoO+I=
+X-Received: by 2002:a7b:c1c3:: with SMTP id a3mr16280931wmj.111.1596458438572;
+ Mon, 03 Aug 2020 05:40:38 -0700 (PDT)
 MIME-Version: 1.0
-References: <20200731110240.98326-2-refactormyself@gmail.com> <20200731135523.GA3717@bjorn-Precision-5520>
-In-Reply-To: <20200731135523.GA3717@bjorn-Precision-5520>
-From:   Ian Kumlien <ian.kumlien@gmail.com>
-Date:   Mon, 3 Aug 2020 13:46:21 +0200
-Message-ID: <CAA85sZt1_dwpxXMrjHc+5wEH-1w9X4km95UvCzEXqJ_o-OS6Hw@mail.gmail.com>
-Subject: Re: [PATCH v4 01/12] IB/hfi1: Check if pcie_capability_read_*() reads ~0
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     "Saheed O. Bolarinwa" <refactormyself@gmail.com>,
-        Mike Marciniszyn <mike.marciniszyn@intel.com>,
-        Dennis Dalessandro <dennis.dalessandro@intel.com>,
-        Doug Ledford <dledford@redhat.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>, bjorn@helgaas.com,
-        skhan@linuxfoundation.org,
-        linux-kernel-mentees@lists.linuxfoundation.org,
-        linux-pci@vger.kernel.org,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-rdma@vger.kernel.org,
-        "Michael J. Ruhl" <michael.j.ruhl@intel.com>,
-        Ashutosh Dixit <ashutosh.dixit@intel.com>,
-        Puranjay Mohan <puranjay12@gmail.com>
-Content-Type: multipart/mixed; boundary="000000000000a7ee6b05abf7b098"
+References: <20200724203407.16972-1-james.quinlan@broadcom.com>
+ <20200724203407.16972-10-james.quinlan@broadcom.com> <e37ff97826cf006bf1c9a3e0a134847f8030c79a.camel@suse.de>
+In-Reply-To: <e37ff97826cf006bf1c9a3e0a134847f8030c79a.camel@suse.de>
+From:   Jim Quinlan <james.quinlan@broadcom.com>
+Date:   Mon, 3 Aug 2020 08:40:26 -0400
+Message-ID: <CA+-6iNyzD9DEqKw+w+Cx9ZXpc9j9RF3JS=avF7fk7CsCaTz=og@mail.gmail.com>
+Subject: Re: [PATCH v9 09/12] PCI: brcmstb: Set additional internal memory DMA
+ viewport sizes
+To:     Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
+Cc:     "open list:PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS" 
+        <linux-pci@vger.kernel.org>, Christoph Hellwig <hch@lst.de>,
+        Robin Murphy <robin.murphy@arm.com>,
+        "maintainer:BROADCOM BCM7XXX ARM ARCHITECTURE" 
+        <bcm-kernel-feedback-list@broadcom.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-rpi-kernel@lists.infradead.org>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>,
+        open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
---000000000000a7ee6b05abf7b098
-Content-Type: text/plain; charset="UTF-8"
-
-On Fri, Jul 31, 2020 at 3:55 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+fls64
+On Sat, Aug 1, 2020 at 1:39 PM Nicolas Saenz Julienne
+<nsaenzjulienne@suse.de> wrote:
 >
-> [+cc Michael, Ashutosh, Ian, Puranjay]
+> Hi Jim,
 >
-> On Fri, Jul 31, 2020 at 01:02:29PM +0200, Saheed O. Bolarinwa wrote:
-> > On failure pcie_capability_read_dword() sets it's last parameter,
-> > val to 0. In this case dn and up will be 0, so aspm_hw_l1_supported()
-> > will return false.
-> > However, with Patch 12/12, it is possible that val is set to ~0 on
-> > failure. This would introduce a bug because (x & x) == (~0 & x). So
-> > with dn and up being 0x02, a true value is return when the read has
-> > actually failed.
+> On Fri, 2020-07-24 at 16:33 -0400, Jim Quinlan wrote:
+> > The Raspberry Pi (RPI) is currently the only chip using this driver
+> > (pcie-brcmstb.c).  There, only one memory controller is used, without an
+> > extension region, and the SCB0 viewport size is set to the size of the
+> > first and only dma-range region.  Other BrcmSTB SOCs have more complicated
+> > memory configurations that require setting additional viewport sizes.
 > >
-> > Since, the value ~0 is invalid here,
+> > BrcmSTB PCIe controllers are intimately connected to the memory
+> > controller(s) on the SOC.  The SOC may have one to three memory
+> > controllers; they are indicated by the term SCBi.  Each controller has a
+> > base region and an optional extension region.  In physical memory, the base
+> > and extension regions of a controller are not adjacent, but in PCIe-space
+> > they are.
 > >
-> > Reset dn and up to 0 when a value of ~0 is read into them, this
-> > ensures false is returned on failure in this case.
+> > There is a "viewport" for each memory controller that allows DMA from
+> > endpoint devices.  Each viewport's size must be set to a power of two, and
+> > that size must be equal to or larger than the amount of memory each
+> > controller supports which is the sum of base region and its optional
+> > extension.  Further, the 1-3 viewports are also adjacent in PCIe-space.
 > >
-> > Suggested-by: Bjorn Helgaas <bjorn@helgaas.com>
-> > Signed-off-by: Saheed O. Bolarinwa <refactormyself@gmail.com>
+> > Unfortunately the viewport sizes cannot be ascertained from the
+> > "dma-ranges" property so they have their own property, "brcm,scb-sizes".
+> > This is because dma-range information does not indicate what memory
+> > controller it is associated.  For example, consider the following case
+> > where the size of one dma-range is 2GB and the second dma-range is 1GB:
+> >
+> >     /* Case 1: SCB0 size set to 4GB */
+> >     dma-range0: 2GB (from memc0-base)
+> >     dma-range1: 1GB (from memc0-extension)
+> >
+> >     /* Case 2: SCB0 size set to 2GB, SCB1 size set to 1GB */
+> >     dma-range0: 2GB (from memc0-base)
+> >     dma-range1: 1GB (from memc0-extension)
+> >
+> > By just looking at the dma-ranges information, one cannot tell which
+> > situation applies. That is why an additional property is needed.  Its
+> > length indicates the number of memory controllers being used and each value
+> > indicates the viewport size.
+> >
+> > Note that the RPI DT does not have a "brcm,scb-sizes" property value,
+> > as it is assumed that it only requires one memory controller and no
+> > extension.  So the optional use of "brcm,scb-sizes" will be backwards
+> > compatible.
+> >
+> > One last layer of complexity exists: all of the viewports sizes must be
+> > added and rounded up to a power of two to determine what the "BAR" size is.
+> > Further, an offset must be given that indicates the base PCIe address of
+> > this "BAR".  The use of the term BAR is typically associated with endpoint
+> > devices, and the term is used here because the PCIe HW may be used as an RC
+> > or an EP.  In the former case, all of the system memory appears in a single
+> > "BAR" region in PCIe memory.  As it turns out, BrcmSTB PCIe HW is rarely
+> > used in the EP role and its system of mapping memory is an artifact that
+> > requires multiple dma-ranges regions.
+> >
+> > Signed-off-by: Jim Quinlan <james.quinlan@broadcom.com>
+> > Acked-by: Florian Fainelli <f.fainelli@gmail.com>
 > > ---
+> >  drivers/pci/controller/pcie-brcmstb.c | 68 ++++++++++++++++++++-------
+> >  1 file changed, 50 insertions(+), 18 deletions(-)
 > >
-> >  drivers/infiniband/hw/hfi1/aspm.c | 6 +++---
-> >  1 file changed, 3 insertions(+), 3 deletions(-)
+> > diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
+> > index 8dacb9d3b7b6..3ef2d37cc43b 100644
+> > --- a/drivers/pci/controller/pcie-brcmstb.c
+> > +++ b/drivers/pci/controller/pcie-brcmstb.c
+> > @@ -715,22 +720,44 @@ static inline int brcm_pcie_get_rc_bar2_size_and_offset(struct brcm_pcie *pcie,
+> >                                                       u64 *rc_bar2_offset)
+> >  {
+> >       struct pci_host_bridge *bridge = pci_host_bridge_from_priv(pcie);
+> > -     struct device *dev = pcie->dev;
+> >       struct resource_entry *entry;
+> > +     struct device *dev = pcie->dev;
+> > +     u64 lowest_pcie_addr = ~(u64)0;
+> > +     int ret, i = 0;
+> > +     u64 size = 0;
 > >
-> > diff --git a/drivers/infiniband/hw/hfi1/aspm.c b/drivers/infiniband/hw/hfi1/aspm.c
-> > index a3c53be4072c..9605b2145d19 100644
-> > --- a/drivers/infiniband/hw/hfi1/aspm.c
-> > +++ b/drivers/infiniband/hw/hfi1/aspm.c
-> > @@ -33,13 +33,13 @@ static bool aspm_hw_l1_supported(struct hfi1_devdata *dd)
-> >               return false;
+> > -     entry = resource_list_first_type(&bridge->dma_ranges, IORESOURCE_MEM);
+> > -     if (!entry)
+> > -             return -ENODEV;
+> > +     resource_list_for_each_entry(entry, &bridge->dma_ranges) {
+> > +             u64 pcie_beg = entry->res->start - entry->offset;
 > >
-> >       pcie_capability_read_dword(dd->pcidev, PCI_EXP_LNKCAP, &dn);
-> > -     dn = ASPM_L1_SUPPORTED(dn);
-> > +     dn = (dn == (u32)~0) ? 0 : ASPM_L1_SUPPORTED(dn);
+> > +             size += entry->res->end - entry->res->start + 1;
+> > +             if (pcie_beg < lowest_pcie_addr)
+> > +                     lowest_pcie_addr = pcie_beg;
+> > +     }
 > >
-> >       pcie_capability_read_dword(parent, PCI_EXP_LNKCAP, &up);
-> > -     up = ASPM_L1_SUPPORTED(up);
-> > +     up = (up == (u32)~0) ? 0 : ASPM_L1_SUPPORTED(up);
+> > -     /*
+> > -      * The controller expects the inbound window offset to be calculated as
+> > -      * the difference between PCIe's address space and CPU's. The offset
+> > -      * provided by the firmware is calculated the opposite way, so we
+> > -      * negate it.
+> > -      */
+> > -     *rc_bar2_offset = -entry->offset;
+> > -     *rc_bar2_size = 1ULL << fls64(entry->res->end - entry->res->start);
+> > +     if (lowest_pcie_addr == ~(u64)0) {
+> > +             dev_err(dev, "DT node has no dma-ranges\n");
+> > +             return -EINVAL;
+> > +     }
+> > +
+> > +     ret = of_property_read_variable_u64_array(pcie->np, "brcm,scb-sizes", pcie->memc_size, 1,
+> > +                                               PCIE_BRCM_MAX_MEMC);
+> > +
+> > +     if (ret <= 0) {
+> > +             /* Make an educated guess */
+> > +             pcie->num_memc = 1;
+> > +             pcie->memc_size[0] = 1 << fls64(size - 1);
 >
-> I don't want to change this.  The driver shouldn't be mucking with
-> ASPM at all.  The PCI core should take care of this automatically.  If
-> it doesn't, we need to fix the core.
+> You need to 1ULL here.
+Got it.
+Thanks,
+Jim
 >
-> If the driver needs to disable ASPM to work around device errata or
-> something, the core has an interface for that.  But the driver should
-> not override the system-wide policy for managing ASPM.
+> Regards,
+> Nicolas
 >
-> Ah, some archaeology finds affa48de8417 ("staging/rdma/hfi1: Add
-> support for enabling/disabling PCIe ASPM"), which says:
->
->   hfi1 HW has a high PCIe ASPM L1 exit latency and also advertises an
->   acceptable latency less than actual ASPM latencies.
->
-> That suggests that either there is a device defect, e.g., advertising
-> incorrect ASPM latencies, or a PCI core defect, e.g., incorrectly
-> enabling ASPM when the path exit latency exceeds that hfi1 can
-> tolerate.
->
-> Coincidentally, Ian recently debugged a problem in how the PCI core
-> computes exit latencies over a path [1].
->
-> Can anybody supply details about the hfi1 ASPM parameters, e.g., the
-> output of "sudo lspci -vv"?  Any details about the configuration where
-> the problem occurs?  Is there a switch in the path?
->
-> [1] https://lore.kernel.org/r/20200727213045.2117855-1-ian.kumlien@gmail.com
->
-> >       /* ASPM works on A-step but is reported as not supported */
-> > -     return (!!dn || is_ax(dd)) && !!up;
-> > +     return (dn || is_ax(dd)) && up;
-> >  }
+> > +     } else {
+> > +             pcie->num_memc = ret;
+> > +     }
+> > +
+> > +     /* Each memc is viewed through a "port" that is a power of 2 */
+> > +     for (i = 0, size = 0; i < pcie->num_memc; i++)
+> > +             size += pcie->memc_size[i];
+> > +
+> > +     /* System memory starts at this address in PCIe-space */
+> > +     *rc_bar2_offset = lowest_pcie_addr;
+> > +     /* The sum of all memc views must also be a power of 2 */
+> > +     *rc_bar2_size = 1ULL << fls64(size - 1);
 > >
-> >  /* Set L1 entrance latency for slower entry to L1 */
-> > --
-> > 2.18.4
-> >
-
-My experience with pcie is very limited, but the more I look at things
-the more I get worried...
-
-Anyway, I have made some changes, could you try the attached patch and
-see if it makes a difference?
-
-Changes:
-L0s and L1 should only apply to links that actually has it enabled,
-don't store or increase values if they don't.
-Work on L0s as well, currently it clobbers since I'm not certain about
-upstream/downstream distinctions.
-
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index b17e5ffd31b1..0d93ae065f73 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -434,7 +434,8 @@ static void pcie_get_aspm_reg(struct pci_dev *pdev,
-
- static void pcie_aspm_check_latency(struct pci_dev *endpoint)
- {
--       u32 latency, l1_switch_latency = 0;
-+       u32 latency, l1_max_latency = 0, l1_switch_latency = 0,
-+               l0s_max_latency = 0;
-        struct aspm_latency *acceptable;
-        struct pcie_link_state *link;
-
-@@ -447,15 +448,24 @@ static void pcie_aspm_check_latency(struct
-pci_dev *endpoint)
-        acceptable = &link->acceptable[PCI_FUNC(endpoint->devfn)];
-
-        while (link) {
--               /* Check upstream direction L0s latency */
--               if ((link->aspm_capable & ASPM_STATE_L0S_UP) &&
--                   (link->latency_up.l0s > acceptable->l0s))
--                       link->aspm_capable &= ~ASPM_STATE_L0S_UP;
--
--               /* Check downstream direction L0s latency */
--               if ((link->aspm_capable & ASPM_STATE_L0S_DW) &&
--                   (link->latency_dw.l0s > acceptable->l0s))
--                       link->aspm_capable &= ~ASPM_STATE_L0S_DW;
-+               if (link->aspm_capable & ASPM_STATE_L0S) {
-+                       u32 l0s_up = 0, l0s_dw = 0;
-+
-+                       /* Check upstream direction L0s latency */
-+                       if (link->aspm_capable & ASPM_STATE_L0S_UP)
-+                               l0s_up = link->latency_up.l0s;
-+
-+                       /* Check downstream direction L0s latency */
-+                       if (link->aspm_capable & ASPM_STATE_L0S_DW)
-+                               l0s_dw = link->latency_dw.l0s;
-+
-+                       l0s_max_latency += max_t(u32, l0s_up, l0s_dw);
-+
-+                       /* If the latency exceeds, disable both */
-+                       if (l0s_max_latency > acceptable->l0s)
-+                               link->aspm_capable &= ~ASPM_STATE_L0S;
-+               }
-+
-                /*
-                 * Check L1 latency.
-                 * Every switch on the path to root complex need 1
-@@ -469,11 +479,13 @@ static void pcie_aspm_check_latency(struct
-pci_dev *endpoint)
-                 * L1 exit latencies advertised by a device include L1
-                 * substate latencies (and hence do not do any check).
-                 */
--               latency = max_t(u32, link->latency_up.l1, link->latency_dw.l1);
--               if ((link->aspm_capable & ASPM_STATE_L1) &&
--                   (latency + l1_switch_latency > acceptable->l1))
--                       link->aspm_capable &= ~ASPM_STATE_L1;
--               l1_switch_latency += 1000;
-+               if (link->aspm_capable & ASPM_STATE_L1) {
-+                       latency = max_t(u32, link->latency_up.l1,
-link->latency_dw.l1);
-+                       l1_max_latency = max_t(u32, latency, l1_max_latency);
-+                       if (l1_max_latency + l1_switch_latency > acceptable->l1)
-+                               link->aspm_capable &= ~ASPM_STATE_L1;
-+                       l1_switch_latency += 1000;
-+               }
-
-                link = link->parent;
-        }
-
---000000000000a7ee6b05abf7b098
-Content-Type: text/x-patch; charset="US-ASCII"; 
-	name="0001-Use-maximum-latency-when-determining-L1-L0s-ASPM.patch"
-Content-Disposition: attachment; 
-	filename="0001-Use-maximum-latency-when-determining-L1-L0s-ASPM.patch"
-Content-Transfer-Encoding: base64
-Content-ID: <f_kdeg1dxx0>
-X-Attachment-Id: f_kdeg1dxx0
-
-RnJvbSA5NzE3MzViZDMyZDdhOGNiN2NkMWE4ZDQzMTZmYzJhMmUxOTJmOGUyIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBJYW4gS3VtbGllbiA8aWFuLmt1bWxpZW5AZ21haWwuY29tPgpE
-YXRlOiBTdW4sIDI2IEp1bCAyMDIwIDE2OjAxOjE1ICswMjAwClN1YmplY3Q6IFtQQVRDSF0gVXNl
-IG1heGltdW0gbGF0ZW5jeSB3aGVuIGRldGVybWluaW5nIEwxL0wwcyBBU1BNCgpDdXJyZW50bHkg
-d2UgY2hlY2sgdGhlIG1heGltdW0gbGF0ZW5jeSBvZiB1cHN0cmVhbSBhbmQgZG93bnN0cmVhbQpw
-ZXIgbGluaywgbm90IHRoZSBtYXhpbXVtIGZvciB0aGUgcGF0aAoKVGhpcyB3b3VsZCB3b3JrIGlm
-IGFsbCBsaW5rcyBoYXZlIHRoZSBzYW1lIGxhdGVuY3ksIGJ1dDoKZW5kcG9pbnQgLT4gYyAtPiBi
-IC0+IGEgLT4gcm9vdCAgKGluIHRoZSBvcmRlciB3ZSB3YWxrIHRoZSBwYXRoKQoKSWYgYyBvciBi
-IGhhcyB0aGUgaGlnZXN0IGxhdGVuY3ksIGl0IHdpbGwgbm90IHJlZ2lzdGVyCgpGaXggdGhpcyBi
-eSBtYWludGFpbmluZyB0aGUgbWF4aW11bSBsYXRlbmN5IHZhbHVlIGZvciB0aGUgcGF0aAoKQWxz
-bywgTDBzIHNlZW1zIHRvIGJlIGEgY3VtdWxhdGl2ZSBtYXhpbXVtIG92ZXIgdGhlIHBhdGgsIGZp
-eCB0aGlzIGFzCndlbGwKClRoaXMgY2hhbmdlIGZpeGVzIGEgcmVncmVzc2lvbiBpbnRyb2R1Y2Vk
-IChidXQgbm90IGNhdXNlZCkgYnk6CjY2ZmYxNGU1OWU4YSAoUENJL0FTUE06IEFsbG93IEFTUE0g
-b24gbGlua3MgdG8gUENJZS10by1QQ0kvUENJLVggQnJpZGdlcykKClNpZ25lZC1vZmYtYnk6IElh
-biBLdW1saWVuIDxpYW4ua3VtbGllbkBnbWFpbC5jb20+Ci0tLQogZHJpdmVycy9wY2kvcGNpZS9h
-c3BtLmMgfCA0MiArKysrKysrKysrKysrKysrKysrKysrKysrKy0tLS0tLS0tLS0tLS0tLQogMSBm
-aWxlIGNoYW5nZWQsIDI3IGluc2VydGlvbnMoKyksIDE1IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdp
-dCBhL2RyaXZlcnMvcGNpL3BjaWUvYXNwbS5jIGIvZHJpdmVycy9wY2kvcGNpZS9hc3BtLmMKaW5k
-ZXggYjE3ZTVmZmQzMWIxLi4wZDkzYWUwNjVmNzMgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvcGNpL3Bj
-aWUvYXNwbS5jCisrKyBiL2RyaXZlcnMvcGNpL3BjaWUvYXNwbS5jCkBAIC00MzQsNyArNDM0LDgg
-QEAgc3RhdGljIHZvaWQgcGNpZV9nZXRfYXNwbV9yZWcoc3RydWN0IHBjaV9kZXYgKnBkZXYsCiAK
-IHN0YXRpYyB2b2lkIHBjaWVfYXNwbV9jaGVja19sYXRlbmN5KHN0cnVjdCBwY2lfZGV2ICplbmRw
-b2ludCkKIHsKLQl1MzIgbGF0ZW5jeSwgbDFfc3dpdGNoX2xhdGVuY3kgPSAwOworCXUzMiBsYXRl
-bmN5LCBsMV9tYXhfbGF0ZW5jeSA9IDAsIGwxX3N3aXRjaF9sYXRlbmN5ID0gMCwKKwkJbDBzX21h
-eF9sYXRlbmN5ID0gMDsKIAlzdHJ1Y3QgYXNwbV9sYXRlbmN5ICphY2NlcHRhYmxlOwogCXN0cnVj
-dCBwY2llX2xpbmtfc3RhdGUgKmxpbms7CiAKQEAgLTQ0NywxNSArNDQ4LDI0IEBAIHN0YXRpYyB2
-b2lkIHBjaWVfYXNwbV9jaGVja19sYXRlbmN5KHN0cnVjdCBwY2lfZGV2ICplbmRwb2ludCkKIAlh
-Y2NlcHRhYmxlID0gJmxpbmstPmFjY2VwdGFibGVbUENJX0ZVTkMoZW5kcG9pbnQtPmRldmZuKV07
-CiAKIAl3aGlsZSAobGluaykgewotCQkvKiBDaGVjayB1cHN0cmVhbSBkaXJlY3Rpb24gTDBzIGxh
-dGVuY3kgKi8KLQkJaWYgKChsaW5rLT5hc3BtX2NhcGFibGUgJiBBU1BNX1NUQVRFX0wwU19VUCkg
-JiYKLQkJICAgIChsaW5rLT5sYXRlbmN5X3VwLmwwcyA+IGFjY2VwdGFibGUtPmwwcykpCi0JCQls
-aW5rLT5hc3BtX2NhcGFibGUgJj0gfkFTUE1fU1RBVEVfTDBTX1VQOwotCi0JCS8qIENoZWNrIGRv
-d25zdHJlYW0gZGlyZWN0aW9uIEwwcyBsYXRlbmN5ICovCi0JCWlmICgobGluay0+YXNwbV9jYXBh
-YmxlICYgQVNQTV9TVEFURV9MMFNfRFcpICYmCi0JCSAgICAobGluay0+bGF0ZW5jeV9kdy5sMHMg
-PiBhY2NlcHRhYmxlLT5sMHMpKQotCQkJbGluay0+YXNwbV9jYXBhYmxlICY9IH5BU1BNX1NUQVRF
-X0wwU19EVzsKKwkJaWYgKGxpbmstPmFzcG1fY2FwYWJsZSAmIEFTUE1fU1RBVEVfTDBTKSB7CisJ
-CQl1MzIgbDBzX3VwID0gMCwgbDBzX2R3ID0gMDsKKworCQkJLyogQ2hlY2sgdXBzdHJlYW0gZGly
-ZWN0aW9uIEwwcyBsYXRlbmN5ICovCisJCQlpZiAobGluay0+YXNwbV9jYXBhYmxlICYgQVNQTV9T
-VEFURV9MMFNfVVApCisJCQkJbDBzX3VwID0gbGluay0+bGF0ZW5jeV91cC5sMHM7CisKKwkJCS8q
-IENoZWNrIGRvd25zdHJlYW0gZGlyZWN0aW9uIEwwcyBsYXRlbmN5ICovCisJCQlpZiAobGluay0+
-YXNwbV9jYXBhYmxlICYgQVNQTV9TVEFURV9MMFNfRFcpCisJCQkJbDBzX2R3ID0gbGluay0+bGF0
-ZW5jeV9kdy5sMHM7CisKKwkJCWwwc19tYXhfbGF0ZW5jeSArPSBtYXhfdCh1MzIsIGwwc191cCwg
-bDBzX2R3KTsKKworCQkJLyogSWYgdGhlIGxhdGVuY3kgZXhjZWVkcywgZGlzYWJsZSBib3RoICov
-CisJCQlpZiAobDBzX21heF9sYXRlbmN5ID4gYWNjZXB0YWJsZS0+bDBzKQorCQkJCWxpbmstPmFz
-cG1fY2FwYWJsZSAmPSB+QVNQTV9TVEFURV9MMFM7CisJCX0KKwogCQkvKgogCQkgKiBDaGVjayBM
-MSBsYXRlbmN5LgogCQkgKiBFdmVyeSBzd2l0Y2ggb24gdGhlIHBhdGggdG8gcm9vdCBjb21wbGV4
-IG5lZWQgMQpAQCAtNDY5LDExICs0NzksMTMgQEAgc3RhdGljIHZvaWQgcGNpZV9hc3BtX2NoZWNr
-X2xhdGVuY3koc3RydWN0IHBjaV9kZXYgKmVuZHBvaW50KQogCQkgKiBMMSBleGl0IGxhdGVuY2ll
-cyBhZHZlcnRpc2VkIGJ5IGEgZGV2aWNlIGluY2x1ZGUgTDEKIAkJICogc3Vic3RhdGUgbGF0ZW5j
-aWVzIChhbmQgaGVuY2UgZG8gbm90IGRvIGFueSBjaGVjaykuCiAJCSAqLwotCQlsYXRlbmN5ID0g
-bWF4X3QodTMyLCBsaW5rLT5sYXRlbmN5X3VwLmwxLCBsaW5rLT5sYXRlbmN5X2R3LmwxKTsKLQkJ
-aWYgKChsaW5rLT5hc3BtX2NhcGFibGUgJiBBU1BNX1NUQVRFX0wxKSAmJgotCQkgICAgKGxhdGVu
-Y3kgKyBsMV9zd2l0Y2hfbGF0ZW5jeSA+IGFjY2VwdGFibGUtPmwxKSkKLQkJCWxpbmstPmFzcG1f
-Y2FwYWJsZSAmPSB+QVNQTV9TVEFURV9MMTsKLQkJbDFfc3dpdGNoX2xhdGVuY3kgKz0gMTAwMDsK
-KwkJaWYgKGxpbmstPmFzcG1fY2FwYWJsZSAmIEFTUE1fU1RBVEVfTDEpIHsKKwkJCWxhdGVuY3kg
-PSBtYXhfdCh1MzIsIGxpbmstPmxhdGVuY3lfdXAubDEsIGxpbmstPmxhdGVuY3lfZHcubDEpOwor
-CQkJbDFfbWF4X2xhdGVuY3kgPSBtYXhfdCh1MzIsIGxhdGVuY3ksIGwxX21heF9sYXRlbmN5KTsK
-KwkJCWlmIChsMV9tYXhfbGF0ZW5jeSArIGwxX3N3aXRjaF9sYXRlbmN5ID4gYWNjZXB0YWJsZS0+
-bDEpCisJCQkJbGluay0+YXNwbV9jYXBhYmxlICY9IH5BU1BNX1NUQVRFX0wxOworCQkJbDFfc3dp
-dGNoX2xhdGVuY3kgKz0gMTAwMDsKKwkJfQogCiAJCWxpbmsgPSBsaW5rLT5wYXJlbnQ7CiAJfQot
-LSAKMi4yOC4wCgo=
---000000000000a7ee6b05abf7b098--
+> >       /*
+> >        * We validate the inbound memory view even though we should trust
+>
