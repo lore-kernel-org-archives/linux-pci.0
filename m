@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9ED81C433EC
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 21:01:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3775BC433E8
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 21:02:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AD2C222CA1
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 21:01:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4501B22BED
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 21:02:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1596488514;
-	bh=dzn5wjcpfX9d4fVfOncIIjXn4ZCfKD1OYNl6hzfH8T8=;
+	s=default; t=1596488521;
+	bh=PrcCOya3p06TwfD0R99TTK6UZhDpMvglwZS8PPa+Dvk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=zmMo8YxCGvs26jwcYOVgi9Fy5jaJjMQd4TaueA7vJkfwwGuKALGMMdbwOL7V9G92r
-	 sS7VKvJfdC2BMtsI4lT88+SPKrbVTOeKXKaIBapuHdtYwbNq3p6mSBke/oa1SsNji6
-	 CQU0E08UTtJIcWoNk0+FwaEsv9NJl4X80FzTFCuE=
+	b=Yi9oIHQtmPwcnqss824Bri70hOidAzN9VMXOGN6K3bKxxmj9H0PoyTR5jA1FAmIAs
+	 FKUSDzhF+97PF81+x8+p/1lH8vtMZPfk4JSZY1NrBbZ3X1ki/S3Sl7NU5Ex1zWtZP6
+	 9IfmYZIfiS6pM1K26JTu9i4F/LqojU6iiOblGWGU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729392AbgHCVBx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 3 Aug 2020 17:01:53 -0400
-Received: from mail-il1-f194.google.com ([209.85.166.194]:32872 "EHLO
-        mail-il1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729064AbgHCVBx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Aug 2020 17:01:53 -0400
-Received: by mail-il1-f194.google.com with SMTP id p16so21556272ile.0;
-        Mon, 03 Aug 2020 14:01:52 -0700 (PDT)
+        id S1729402AbgHCVCA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 3 Aug 2020 17:02:00 -0400
+Received: from mail-io1-f66.google.com ([209.85.166.66]:45747 "EHLO
+        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729064AbgHCVCA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Aug 2020 17:02:00 -0400
+Received: by mail-io1-f66.google.com with SMTP id u126so2718395iod.12;
+        Mon, 03 Aug 2020 14:01:59 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=saXc7GUoDkesF20I7UFsdi9hPtbZ6gcBdE2OHbCMpCA=;
-        b=AeuRLWSgFcKQKmcANc4PQpwnG/FfjVS5DBAAZmtpNLJ2Lz2mTjil0TYg78nbYTcf1c
-         PBCRbI4wkh8CDQuvRQm5vwU8KNy0g6Uvw4ajb9GgJoRdiRN/z3d9q/wyw81CxC2PJAXe
-         6SKg4I2awpPeU669tvQW6/jZLaqzDfO+zI4A93vQ+K9p6ZEYrIqL+A8U94ixzGxfzlo4
-         /qeF5z0Ql/truWgtft41t+ZIBYK5nplUtDy7vp2LIvMU5nuS15h/RlyNkkldqP9JeYzz
-         RpMSJe2VRJXZZ12AH9RaJHGxuU19CQpdnJpD73M707LV5fh56ep5wqVnAFT1PGCipylL
-         6k9A==
-X-Gm-Message-State: AOAM530kyD9aBgA8kgPBFWtk/Ymwuoeg79HyUu+VzQWFbDeM8HCSGCYv
-        h1+P37VmaH7SCDdNkxDlRA==
-X-Google-Smtp-Source: ABdhPJyvv0uRK79mfofQnWPAX/lrUkNhl98uSGAQALtBwC5yCmLzPHG/gk1AEvK1d658EgveC+qAIg==
-X-Received: by 2002:a92:d1ce:: with SMTP id u14mr1318029ilg.270.1596488511699;
-        Mon, 03 Aug 2020 14:01:51 -0700 (PDT)
+        bh=+G09sVWmLiEk+qlmhnIPsi/B/n4JiVilLbMwDzTJ8Fc=;
+        b=PaoWVWjJPXhqL4kgjd3GLb0n3DyC2PeyL+cfvdOJEGt8nunuxRHj2H5NQ9PSdaxTnM
+         oHEeOiK1lAtlgw6N+pXTQhsFucGqIo5dC1ab+c7oyD+IIuyk96GMq4ohyLSI+YE+E5+N
+         EyjUO165ow6j8kEUf+ZAaGTwwzkNmIOTdmzyX9cjlibmB6iSMj1ezTVwQd5lMYN1xxA9
+         i57z+MDAtmdkmOyFt2MYO5+A1+AokobryHc89++mOOFuajqBZIMU7jPgoj+NEZ6sg/Ql
+         5b03x00Gk8/Q5MhR83hg5b/IzROudK5Y0fNuIEcdJXpmlpu0s3SA51cCp8tUyE0wWJTV
+         q6kQ==
+X-Gm-Message-State: AOAM530l8j86JMGgWWVQ1mB5HyjTi6Dwzga5Z8VGxyLlZdGkB8FHfvaW
+        82hSUIwIq+E0JBITbt6P4g==
+X-Google-Smtp-Source: ABdhPJwMMkdyajQxcuVfgyMatvkAGgozf6l/jhIrQdnBe0B3HLM8TfQxbxa+NUmVrm7WcBb9dbLq7Q==
+X-Received: by 2002:a5e:c311:: with SMTP id a17mr1821353iok.12.1596488518872;
+        Mon, 03 Aug 2020 14:01:58 -0700 (PDT)
 Received: from xps15.herring.priv ([64.188.179.252])
-        by smtp.googlemail.com with ESMTPSA id r6sm9292280iod.7.2020.08.03.14.01.47
+        by smtp.googlemail.com with ESMTPSA id r6sm9292280iod.7.2020.08.03.14.01.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 03 Aug 2020 14:01:51 -0700 (PDT)
+        Mon, 03 Aug 2020 14:01:58 -0700 (PDT)
 From:   Rob Herring <robh@kernel.org>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
@@ -81,9 +81,9 @@ Cc:     Binghui Wang <wangbinghui@hisilicon.com>,
         Thierry Reding <thierry.reding@gmail.com>,
         Xiaowei Song <songxiaowei@hisilicon.com>,
         Yue Wang <yue.wang@Amlogic.com>
-Subject: [RFC 13/27] PCI: dwc: Use generic config accessors
-Date:   Mon,  3 Aug 2020 15:01:02 -0600
-Message-Id: <20200803210116.3132633-14-robh@kernel.org>
+Subject: [RFC 15/27] PCI: dwc: keystone: Convert .scan_bus() callback to use add_bus
+Date:   Mon,  3 Aug 2020 15:01:04 -0600
+Message-Id: <20200803210116.3132633-16-robh@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200803210116.3132633-1-robh@kernel.org>
 References: <20200803210116.3132633-1-robh@kernel.org>
@@ -94,216 +94,69 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Now that all the platforms with custom config access handling define
-their own pci_ops, let's split the default config accessors to use
-different pci_ops for root and child buses. With this, we can use the
-generic config accessors. The child bus accesses mainly require a
-.map_bus() hook to reconfigure the iATU on each config space access.
+TI keystone is the only Designware driver using .scan_bus(). This
+function pointer is the only thing preventing the Designware driver from
+using pci_host_probe(). Let's use the pci_ops.add_bus hook instead.
 
-BTW, if there are only 2 viewports which means config space and I/O
-accesses are mutually exclusive because the iATU window is shared,
-how are accesses serialized? That seems broken...
-
-Cc: Jingoo Han <jingoohan1@gmail.com>
-Cc: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Cc: Murali Karicheri <m-karicheri2@ti.com>
 Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arm-kernel@lists.infradead.org
 Signed-off-by: Rob Herring <robh@kernel.org>
 ---
- .../pci/controller/dwc/pcie-designware-host.c | 120 ++++++------------
- 1 file changed, 42 insertions(+), 78 deletions(-)
+ drivers/pci/controller/dwc/pci-keystone.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index 6e9f106e8e05..e9778f8ee955 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -20,24 +20,7 @@
- #include "pcie-designware.h"
- 
- static struct pci_ops dw_pcie_ops;
--
--static int dw_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
--			       u32 *val)
--{
--	struct dw_pcie *pci;
--
--	pci = to_dw_pcie_from_pp(pp);
--	return dw_pcie_read(pci->dbi_base + where, size, val);
--}
--
--static int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
--			       u32 val)
--{
--	struct dw_pcie *pci;
--
--	pci = to_dw_pcie_from_pp(pp);
--	return dw_pcie_write(pci->dbi_base + where, size, val);
--}
-+static struct pci_ops dw_child_pcie_ops;
- 
- static void dw_msi_ack_irq(struct irq_data *d)
- {
-@@ -448,7 +431,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 
- 	/* Set default bus ops */
- 	bridge->ops = &dw_pcie_ops;
--	bridge->child_ops = &dw_pcie_ops;
-+	bridge->child_ops = &dw_child_pcie_ops;
- 
- 	if (pp->ops->host_init) {
- 		ret = pp->ops->host_init(pp);
-@@ -498,14 +481,14 @@ void dw_pcie_host_deinit(struct pcie_port *pp)
- }
- EXPORT_SYMBOL_GPL(dw_pcie_host_deinit);
- 
--static int dw_pcie_access_other_conf(struct pcie_port *pp, struct pci_bus *bus,
--				     u32 devfn, int where, int size, u32 *val,
--				     bool write)
-+static void __iomem *dw_pcie_other_conf_map_bus(struct pci_bus *bus,
-+						unsigned int devfn, int where)
- {
--	int ret, type;
-+	int type;
- 	u32 busdev, cfg_size;
- 	u64 cpu_addr;
- 	void __iomem *va_cfg_base;
-+	struct pcie_port *pp = bus->sysdata;
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 
- 	busdev = PCIE_ATU_BUS(bus->number) | PCIE_ATU_DEV(PCI_SLOT(devfn)) |
-@@ -526,79 +509,59 @@ static int dw_pcie_access_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 	dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX1,
- 				  type, cpu_addr,
- 				  busdev, cfg_size);
--	if (write)
--		ret = dw_pcie_write(va_cfg_base + where, size, *val);
--	else
--		ret = dw_pcie_read(va_cfg_base + where, size, val);
- 
--	if (pci->num_viewport <= 2)
--		dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX1,
--					  PCIE_ATU_TYPE_IO, pp->io_base,
--					  pp->io_bus_addr, pp->io_size);
--
--	return ret;
--}
--
--static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
--				 u32 devfn, int where, int size, u32 *val)
--{
--	return dw_pcie_access_other_conf(pp, bus, devfn, where, size, val,
--					 false);
-+	return va_cfg_base + where;
- }
- 
--static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
--				 u32 devfn, int where, int size, u32 val)
--{
--	return dw_pcie_access_other_conf(pp, bus, devfn, where, size, &val,
--					 true);
--}
--
--static int dw_pcie_valid_device(struct pcie_port *pp, struct pci_bus *bus,
--				int dev)
-+static int dw_pcie_rd_other_conf(struct pci_bus *bus, unsigned int devfn,
-+				 int where, int size, u32 *val)
- {
-+	int ret;
-+	struct pcie_port *pp = bus->sysdata;
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 
--	/* If there is no link, then there is no device */
--	if (bus->number != pp->root_bus_nr) {
--		if (!dw_pcie_link_up(pci))
--			return 0;
--	}
-+	ret = pci_generic_config_read(bus, devfn, where, size, val);
- 
--	/* Access only one slot on each root port */
--	if (bus->number == pp->root_bus_nr && dev > 0)
--		return 0;
-+	if (!ret && pci->num_viewport <= 2)
-+		dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX1,
-+					  PCIE_ATU_TYPE_IO, pp->io_base,
-+					  pp->io_bus_addr, pp->io_size);
- 
--	return 1;
-+	return ret;
- }
- 
--static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
--			   int size, u32 *val)
-+static int dw_pcie_wr_other_conf(struct pci_bus *bus, unsigned int devfn,
-+				 int where, int size, u32 val)
- {
-+	int ret;
- 	struct pcie_port *pp = bus->sysdata;
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 
--	if (!dw_pcie_valid_device(pp, bus, PCI_SLOT(devfn))) {
--		*val = 0xffffffff;
--		return PCIBIOS_DEVICE_NOT_FOUND;
--	}
-+	ret = pci_generic_config_write(bus, devfn, where, size, val);
- 
--	if (bus->number == pp->root_bus_nr)
--		return dw_pcie_rd_own_conf(pp, where, size, val);
-+	if (!ret && pci->num_viewport <= 2)
-+		dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX1,
-+					  PCIE_ATU_TYPE_IO, pp->io_base,
-+					  pp->io_bus_addr, pp->io_size);
- 
--	return dw_pcie_rd_other_conf(pp, bus, devfn, where, size, val);
-+	return ret;
- }
- 
--static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
--			   int where, int size, u32 val)
-+static struct pci_ops dw_child_pcie_ops = {
-+	.map_bus = dw_pcie_other_conf_map_bus,
-+	.read = dw_pcie_rd_other_conf,
-+	.write = dw_pcie_wr_other_conf,
-+};
-+
-+void __iomem *dw_pcie_own_conf_map_bus(struct pci_bus *bus, unsigned int devfn, int where)
- {
- 	struct pcie_port *pp = bus->sysdata;
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 
--	if (!dw_pcie_valid_device(pp, bus, PCI_SLOT(devfn)))
--		return PCIBIOS_DEVICE_NOT_FOUND;
--
--	if (bus->number == pp->root_bus_nr)
--		return dw_pcie_wr_own_conf(pp, where, size, val);
-+	if (PCI_SLOT(devfn) > 0)
-+		return NULL;
- 
--	return dw_pcie_wr_other_conf(pp, bus, devfn, where, size, val);
-+	return pci->dbi_base + where;
- }
- 
- void __iomem *dw_pcie_own_conf_map_bus(struct pci_bus *bus, unsigned int devfn, int where)
-@@ -613,8 +576,9 @@ void __iomem *dw_pcie_own_conf_map_bus(struct pci_bus *bus, unsigned int devfn,
- }
- 
- static struct pci_ops dw_pcie_ops = {
--	.read = dw_pcie_rd_conf,
--	.write = dw_pcie_wr_conf,
-+	.map_bus = dw_pcie_own_conf_map_bus,
-+	.read = pci_generic_config_read,
-+	.write = pci_generic_config_write,
+diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
+index df1194d186bc..17271b21fb7d 100644
+--- a/drivers/pci/controller/dwc/pci-keystone.c
++++ b/drivers/pci/controller/dwc/pci-keystone.c
+@@ -454,15 +454,19 @@ static struct pci_ops ks_child_pcie_ops = {
  };
  
- void dw_pcie_setup_rc(struct pcie_port *pp)
-@@ -673,7 +637,7 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 	 * the platform uses its own address translation component rather than
- 	 * ATU, so we should not program the ATU here.
- 	 */
--	if (pp->bridge->child_ops == &dw_pcie_ops && !pp->ops->rd_other_conf) {
-+	if (pp->bridge->child_ops == &dw_child_pcie_ops) {
- 		dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX0,
- 					  PCIE_ATU_TYPE_MEM, pp->mem_base,
- 					  pp->mem_bus_addr, pp->mem_size);
+ /**
+- * ks_pcie_v3_65_scan_bus() - keystone scan_bus post initialization
++ * ks_pcie_v3_65_add_bus() - keystone add_bus post initialization
+  *
+  * This sets BAR0 to enable inbound access for MSI_IRQ register
+  */
+-static void ks_pcie_v3_65_scan_bus(struct pcie_port *pp)
++static int ks_pcie_v3_65_add_bus(struct pci_bus *bus)
+ {
++	struct pcie_port *pp = bus->sysdata;
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	struct keystone_pcie *ks_pcie = to_keystone_pcie(pci);
+ 
++	if (!pci_is_root_bus(bus))
++		return 0;
++
+ 	/* Configure and set up BAR0 */
+ 	ks_pcie_set_dbi_mode(ks_pcie);
+ 
+@@ -477,12 +481,15 @@ static void ks_pcie_v3_65_scan_bus(struct pcie_port *pp)
+ 	  * be sufficient.  Use physical address to avoid any conflicts.
+ 	  */
+ 	dw_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_0, ks_pcie->app.start);
++
++	return 0;
+ }
+ 
+ static struct pci_ops ks_pcie_ops = {
+ 	.map_bus = dw_pcie_own_conf_map_bus,
+ 	.read = pci_generic_config_read,
+ 	.write = pci_generic_config_write,
++	.add_bus = ks_pcie_v3_65_add_bus,
+ };
+ 
+ /**
+@@ -842,7 +849,6 @@ static int __init ks_pcie_host_init(struct pcie_port *pp)
+ static const struct dw_pcie_host_ops ks_pcie_host_ops = {
+ 	.host_init = ks_pcie_host_init,
+ 	.msi_host_init = ks_pcie_msi_host_init,
+-	.scan_bus = ks_pcie_v3_65_scan_bus,
+ };
+ 
+ static const struct dw_pcie_host_ops ks_pcie_am654_host_ops = {
 -- 
 2.25.1
 
