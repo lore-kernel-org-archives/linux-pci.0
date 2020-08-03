@@ -2,101 +2,124 @@ Return-Path: <SRS0=9hNM=BN=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12BBAC433E0
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 03:42:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BE14C433DF
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 03:53:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E48E0206E2
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 03:42:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A2052075A
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 03:53:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=alliedtelesis.co.nz header.i=@alliedtelesis.co.nz header.b="F+hHrVSF"
+	dkim=pass (2048-bit key) header.d=alliedtelesis.co.nz header.i=@alliedtelesis.co.nz header.b="GBFoFTF8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726772AbgHCDmu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 2 Aug 2020 23:42:50 -0400
-Received: from gate2.alliedtelesis.co.nz ([202.36.163.20]:60541 "EHLO
+        id S1725863AbgHCDxN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 2 Aug 2020 23:53:13 -0400
+Received: from gate2.alliedtelesis.co.nz ([202.36.163.20]:60580 "EHLO
         gate2.alliedtelesis.co.nz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726707AbgHCDmu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 2 Aug 2020 23:42:50 -0400
+        with ESMTP id S1725840AbgHCDxN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 2 Aug 2020 23:53:13 -0400
 Received: from mmarshal3.atlnz.lc (mmarshal3.atlnz.lc [10.32.18.43])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (Client did not present a certificate)
-        by gate2.alliedtelesis.co.nz (Postfix) with ESMTPS id 4FB80891B4;
-        Mon,  3 Aug 2020 15:42:46 +1200 (NZST)
+        by gate2.alliedtelesis.co.nz (Postfix) with ESMTPS id 43EC2891B2;
+        Mon,  3 Aug 2020 15:53:09 +1200 (NZST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alliedtelesis.co.nz;
-        s=mail181024; t=1596426166;
-        bh=UK5Yesl8PcfKR6GB5T/S8h+q9R2i2f165crNPy23iy4=;
-        h=From:To:CC:Subject:Date:References:In-Reply-To;
-        b=F+hHrVSFbu5hVas+QLi1cBPyg3l02W5jRa8QR9fnlkEVchnd5kYiDDA8eNQubZ91X
-         xID8SAGmd9pf8SFkV/GsSlVC5e1zclRnblA9f3LjyOsts/4gYZRt5yE8JW+pK+2lmm
-         H4NhXMf775ezWF9R4W5nqdwIzY8oLlgWLClQiRR/ftNDRbZIlcYTWY0wn5o21CM/py
-         22tzY8I8rpkGEASYcL7JienBC4qiU5faKM+pHPxA7JrfuvnBMghCrBkUuDTTOo877q
-         qYeMPZ/ZSe4tfOXsw3AHwCPHQw26shSejDSbG88kDCVBAC6rMDKa81Qscx5P40Fv2p
-         GqeycldDkzFZg==
-Received: from svr-chch-ex1.atlnz.lc (Not Verified[10.32.16.77]) by mmarshal3.atlnz.lc with Trustwave SEG (v7,5,8,10121)
-        id <B5f2787b60000>; Mon, 03 Aug 2020 15:42:46 +1200
-Received: from svr-chch-ex1.atlnz.lc (2001:df5:b000:bc8::77) by
- svr-chch-ex1.atlnz.lc (2001:df5:b000:bc8::77) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Mon, 3 Aug 2020 15:42:44 +1200
-Received: from svr-chch-ex1.atlnz.lc ([fe80::409d:36f5:8899:92e8]) by
- svr-chch-ex1.atlnz.lc ([fe80::409d:36f5:8899:92e8%12]) with mapi id
- 15.00.1497.006; Mon, 3 Aug 2020 15:42:44 +1200
-From:   Mark Tomlinson <Mark.Tomlinson@alliedtelesis.co.nz>
-To:     "robh@kernel.org" <robh@kernel.org>
-CC:     "ray.jui@broadcom.com" <ray.jui@broadcom.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "f.fainelli@gmail.com" <f.fainelli@gmail.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "sbranden@broadcom.com" <sbranden@broadcom.com>,
-        "helgaas@kernel.org" <helgaas@kernel.org>
-Subject: Re: [PATCH v2 2/2] PCI: Reduce warnings on possible RW1C corruption
-Thread-Topic: [PATCH v2 2/2] PCI: Reduce warnings on possible RW1C corruption
-Thread-Index: AQHWZuxKf5vjrrPtKkak35HkNMZ1kakhCJAAgAPwtwA=
-Date:   Mon, 3 Aug 2020 03:42:44 +0000
-Message-ID: <3dd532237ef5e332fc87d60c3a680e1c085f622e.camel@alliedtelesis.co.nz>
-References: <20200731033956.6058-1-mark.tomlinson@alliedtelesis.co.nz>
-         <20200731033956.6058-2-mark.tomlinson@alliedtelesis.co.nz>
-         <CAL_JsqJgD_Ys3xjoJYuQ3R9bL7gUC+NKwkq71eTngj5uvcpk6Q@mail.gmail.com>
-In-Reply-To: <CAL_JsqJgD_Ys3xjoJYuQ3R9bL7gUC+NKwkq71eTngj5uvcpk6Q@mail.gmail.com>
-Accept-Language: en-NZ, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
-x-ms-exchange-messagesentrepresentingtype: 1
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [2001:df5:b000:23:6972:428b:bb4b:5f2c]
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <1C6A70295E38EA438D1BA4660595426D@atlnz.lc>
-Content-Transfer-Encoding: base64
+        s=mail181024; t=1596426789;
+        bh=QyXhMPzrP1ywAXT26zbyvUCAWusApigo/oSgJG0v9js=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References;
+        b=GBFoFTF8xKLnQzXrkjkMC6ZrPXQWLUR57g6iInsgJnpL8G7YcnbjRWF1vm8fGKba0
+         Jf/05B6kxWJaMiLLkyAhTKv9hBF+g1nuvGFG7f76cQE2WspZJIunYvPuttV1dODUkp
+         Yd9BnRWax7MS3AWTCmW87CN5zHG7XXzK4gre+4t6vrmESCCXFVRFWzrrvagt7Ret+K
+         WcgPjkGsUFJqdP8PWrOtMXrUMpDHBzovPpGmGVAXlTxHo6udLZD08gC89XjtOPD2RT
+         yYKglyP5MBoZ2lI0biu3cGRb5pMP8/KxTLEFdz8V71yjkIEWDfZbbHmnm7L1ANJxru
+         1Cz4JbxHbAqCA==
+Received: from smtp (Not Verified[10.32.16.33]) by mmarshal3.atlnz.lc with Trustwave SEG (v7,5,8,10121)
+        id <B5f278a250001>; Mon, 03 Aug 2020 15:53:09 +1200
+Received: from markto-dl.ws.atlnz.lc (markto-dl.ws.atlnz.lc [10.33.23.25])
+        by smtp (Postfix) with ESMTP id 3EA9213EEDE;
+        Mon,  3 Aug 2020 15:53:08 +1200 (NZST)
+Received: by markto-dl.ws.atlnz.lc (Postfix, from userid 1155)
+        id 1FBBD33EB8D; Mon,  3 Aug 2020 15:53:09 +1200 (NZST)
+From:   Mark Tomlinson <mark.tomlinson@alliedtelesis.co.nz>
+To:     ray.jui@broadcom.com, helgaas@kernel.org, sbranden@broadcom.com,
+        f.fainelli@gmail.com, lorenzo.pieralisi@arm.com, robh@kernel.org
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Mark Tomlinson <mark.tomlinson@alliedtelesis.co.nz>
+Subject: [PATCH v3 2/2] PCI: Reduce warnings on possible RW1C corruption
+Date:   Mon,  3 Aug 2020 15:52:41 +1200
+Message-Id: <20200803035241.7737-2-mark.tomlinson@alliedtelesis.co.nz>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200803035241.7737-1-mark.tomlinson@alliedtelesis.co.nz>
+References: <20200803035241.7737-1-mark.tomlinson@alliedtelesis.co.nz>
 MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+x-atlnz-ls: pat
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-T24gRnJpLCAyMDIwLTA3LTMxIGF0IDA5OjMyIC0wNjAwLCBSb2IgSGVycmluZyB3cm90ZToNCj4g
-DQo+IElmIHdlIGRvbid0IHdhbnQgdG8ganVzdCB3YXJuIHdoZW4gYSA4IG9yIDE2IGJpdCBhY2Nl
-c3Mgb2NjdXJzIChJJ20NCj4gbm90IHN1cmUgaWYgMzItYml0IG9ubHkgYWNjZXNzZXMgaXMgcG9z
-c2libGUgb3IgY29tbW9uLiBTZWVtcyBsaWtlDQo+IFBDSV9DT01NQU5EIHdvdWxkIGFsd2F5cyBn
-ZXQgd3JpdHRlbj8pLCB0aGVuIGEgc2ltcGxlIHdheSB0byBkbyB0aGlzDQo+IGlzIGp1c3QgbW92
-ZSB0aGlzIG91dCBvZiBsaW5lIGFuZCBkbyBzb21ldGhpbmcgbGlrZSB0aGlzIHdoZXJlIHRoZSBi
-dXMNCj4gb3IgZGV2aWNlIGlzIGNyZWF0ZWQvcmVnaXN0ZXJlZDoNCj4gDQo+IGlmIChidXMtPm9w
-cy0+d3JpdGUgPT0gcGNpX2dlbmVyaWNfY29uZmlnX3dyaXRlMzIpDQo+ICAgICB3YXJuKCkNCj4g
-DQpUaGlzIGRvZXNuJ3Qgd29yayBmb3IgbWFueSBvZiB0aGUgUENJIGRyaXZlcnMsIHNpbmNlIHRo
-ZXkgd3JhcCB0aGUgY2FsbA0KdG8gcGNpX2dlbmVyaWNfY29uZmlnX3dyaXRlMzIoKSBpbiB0aGVp
-ciBvd24gZnVuY3Rpb24uDQoNCj4gPiANCj4gPiBkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC9w
-Y2kuaCBiL2luY2x1ZGUvbGludXgvcGNpLmgNCj4gPiBpbmRleCAzNGMxYzRmNDUyODguLjViNmFi
-NTkzYWUwOSAxMDA2NDQNCj4gPiAtLS0gYS9pbmNsdWRlL2xpbnV4L3BjaS5oDQo+ID4gKysrIGIv
-aW5jbHVkZS9saW51eC9wY2kuaA0KPiA+IEBAIC02MTMsNiArNjEzLDcgQEAgc3RydWN0IHBjaV9i
-dXMgew0KPiA+ICAgICAgICAgdW5zaWduZWQgY2hhciAgIHByaW1hcnk7ICAgICAgICAvKiBOdW1i
-ZXIgb2YgcHJpbWFyeSBicmlkZ2UgKi8NCj4gPiAgICAgICAgIHVuc2lnbmVkIGNoYXIgICBtYXhf
-YnVzX3NwZWVkOyAgLyogZW51bSBwY2lfYnVzX3NwZWVkICovDQo+ID4gICAgICAgICB1bnNpZ25l
-ZCBjaGFyICAgY3VyX2J1c19zcGVlZDsgIC8qIGVudW0gcGNpX2J1c19zcGVlZCAqLw0KPiA+ICsg
-ICAgICAgYm9vbCAgICAgICAgICAgIHVuc2FmZV93YXJuOyAgICAvKiB3YXJuZWQgYWJvdXQgUlcx
-QyBjb25maWcgd3JpdGUgKi8NCj4gDQo+IE1ha2UgdGhpcyBhIGJpdGZpZWxkIG5leHQgdG8gJ2lz
-X2FkZGVkJy4NCg0KV2lsbCBkbywgdGhhbmtzLg0KDQoNCg==
+For hardware that only supports 32-bit writes to PCI there is the
+possibility of clearing RW1C (write-one-to-clear) bits. A rate-limited
+messages was introduced by fb2659230120, but rate-limiting is not the
+best choice here. Some devices may not show the warnings they should if
+another device has just produced a bunch of warnings. Also, the number
+of messages can be a nuisance on devices which are otherwise working
+fine.
+
+This patch changes the ratelimit to a single warning per bus. This
+ensures no bus is 'starved' of emitting a warning and also that there
+isn't a continuous stream of warnings. It would be preferable to have a
+warning per device, but the pci_dev structure is not available here, and
+a lookup from devfn would be far too slow.
+
+Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
+Fixes: fb2659230120 ("PCI: Warn on possible RW1C corruption for sub-32 bi=
+t config writes")
+Signed-off-by: Mark Tomlinson <mark.tomlinson@alliedtelesis.co.nz>
+---
+ drivers/pci/access.c | 9 ++++++---
+ include/linux/pci.h  | 1 +
+ 2 files changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index 79c4a2ef269a..ab85cb7df9b6 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -160,9 +160,12 @@ int pci_generic_config_write32(struct pci_bus *bus, =
+unsigned int devfn,
+ 	 * write happen to have any RW1C (write-one-to-clear) bits set, we
+ 	 * just inadvertently cleared something we shouldn't have.
+ 	 */
+-	dev_warn_ratelimited(&bus->dev, "%d-byte config write to %04x:%02x:%02x=
+.%d offset %#x may corrupt adjacent RW1C bits\n",
+-			     size, pci_domain_nr(bus), bus->number,
+-			     PCI_SLOT(devfn), PCI_FUNC(devfn), where);
++	if (!bus->unsafe_warn) {
++		dev_warn(&bus->dev, "%d-byte config write to %04x:%02x:%02x.%d offset =
+%#x may corrupt adjacent RW1C bits\n",
++			 size, pci_domain_nr(bus), bus->number,
++			 PCI_SLOT(devfn), PCI_FUNC(devfn), where);
++		bus->unsafe_warn =3D true;
++	}
+=20
+ 	mask =3D ~(((1 << (size * 8)) - 1) << ((where & 0x3) * 8));
+ 	tmp =3D readl(addr) & mask;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 34c1c4f45288..5b6ab593ae09 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -613,6 +613,7 @@ struct pci_bus {
+ 	unsigned char	primary;	/* Number of primary bridge */
+ 	unsigned char	max_bus_speed;	/* enum pci_bus_speed */
+ 	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
++	bool		unsafe_warn;	/* warned about RW1C config write */
+ #ifdef CONFIG_PCI_DOMAINS_GENERIC
+ 	int		domain_nr;
+ #endif
+--=20
+2.28.0
+
