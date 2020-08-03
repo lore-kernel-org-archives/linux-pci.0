@@ -8,34 +8,34 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86B4FC433E0
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 19:45:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AFC5C433DF
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 19:45:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2267B22CAE
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 19:45:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 08AA422CAD
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 19:45:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="eZu0buRT"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="TLtR9QoX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728779AbgHCTpn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 3 Aug 2020 15:45:43 -0400
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:39778 "EHLO
+        id S1728766AbgHCTpj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 3 Aug 2020 15:45:39 -0400
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:39716 "EHLO
         rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728596AbgHCTpm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Aug 2020 15:45:42 -0400
+        by vger.kernel.org with ESMTP id S1728753AbgHCTpj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Aug 2020 15:45:39 -0400
 Received: from mail-irv-17.broadcom.com (mail-irv-17.lvn.broadcom.net [10.75.242.48])
-        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id 781D630C14D;
-        Mon,  3 Aug 2020 12:44:14 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com 781D630C14D
+        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id 0B64630C146;
+        Mon,  3 Aug 2020 12:44:11 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com 0B64630C146
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
-        s=dkimrelay; t=1596483854;
-        bh=iwvBHnllAMckovF6ltNCNQi+jMXHwnBrRf5LtKVSL+Q=;
+        s=dkimrelay; t=1596483851;
+        bh=GSqFzmHeOiSek+62bFpDJcfrtOQWQUrThlJG71lclKo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=eZu0buRT/4YKFncyQoNqbpzHlj1Q36BBEJMgcVAa4dawHUhZ1MZI7J/yaBEXR63zt
-         eEZhk4gLIZrVpqDHd97UtLiCfHnWT1OYEFlMSKkH6g14dzgfauoNsHGU+IN9Wi1nz5
-         Bza84wGeRMxhi+ThaNbIJ8EYQ6IkLlH3NYX0BN00=
+        b=TLtR9QoXWDqmR6pywZiRxp4rVkRrmZ2x9FFnTHtSoZTVzQPKe1xEt3HfcpY0qmNai
+         JeRGdyxIeDogpDRzZsgBGS1Eqiap0nJ1qK7IX6gLyR9NRq7SDYDgvqTB6UbGLck8oW
+         yk/wexoWSOp9XW6D8GUG7zG0lQhYuswo5WmuQsNQ=
 Received: from stbsrv-and-01.and.broadcom.net (stbsrv-and-01.and.broadcom.net [10.28.16.211])
-        by mail-irv-17.broadcom.com (Postfix) with ESMTP id C5AA014008B;
-        Mon,  3 Aug 2020 12:45:39 -0700 (PDT)
+        by mail-irv-17.broadcom.com (Postfix) with ESMTP id 59A6914008B;
+        Mon,  3 Aug 2020 12:45:36 -0700 (PDT)
 From:   Jim Quinlan <james.quinlan@broadcom.com>
 To:     linux-pci@vger.kernel.org,
         Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
@@ -43,18 +43,18 @@ To:     linux-pci@vger.kernel.org,
         Robin Murphy <robin.murphy@arm.com>,
         bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com
 Cc:     Jim Quinlan <james.quinlan@broadcom.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
         Florian Fainelli <f.fainelli@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM BCM7XXX
+        ARM ARCHITECTURE),
         linux-rpi-kernel@lists.infradead.org (moderated list:BROADCOM
         BCM2711/BCM2835 ARM ARCHITECTURE),
-        linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM
-        BCM2711/BCM2835 ARM ARCHITECTURE),
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v10 04/11] PCI: brcmstb: Add suspend and resume pm_ops
-Date:   Mon,  3 Aug 2020 15:45:09 -0400
-Message-Id: <20200803194529.32357-5-james.quinlan@broadcom.com>
+        devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED
+        DEVICE TREE BINDINGS), linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v10 02/11] dt-bindings: PCI: Add bindings for more Brcmstb chips
+Date:   Mon,  3 Aug 2020 15:45:07 -0400
+Message-Id: <20200803194529.32357-3-james.quinlan@broadcom.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200803194529.32357-1-james.quinlan@broadcom.com>
 References: <20200803194529.32357-1-james.quinlan@broadcom.com>
@@ -65,86 +65,121 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Jim Quinlan <jquinlan@broadcom.com>
 
-Broadcom Set-top (BrcmSTB) boards typically support S2, S3, and S5 suspend
-and resume.  Now the PCIe driver may do so as well.
+- Add compatible strings for three more Broadcom STB chips: 7278, 7216,
+  7211 (STB version of RPi4).
+- Add new property 'brcm,scb-sizes'.
+- Add new property 'resets'.
+- Add new property 'reset-names' for 7216 only.
+- Allow 'ranges' and 'dma-ranges' to have more than one item and update
+  the example to show this.
 
 Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
-Acked-by: Florian Fainelli <f.fainelli@gmail.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
 ---
- drivers/pci/controller/pcie-brcmstb.c | 47 +++++++++++++++++++++++++++
- 1 file changed, 47 insertions(+)
+ .../bindings/pci/brcm,stb-pcie.yaml           | 56 ++++++++++++++++---
+ 1 file changed, 49 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
-index b7a222fde3c4..7c148eb65170 100644
---- a/drivers/pci/controller/pcie-brcmstb.c
-+++ b/drivers/pci/controller/pcie-brcmstb.c
-@@ -979,6 +979,47 @@ static void brcm_pcie_turn_off(struct brcm_pcie *pcie)
- 	brcm_pcie_bridge_sw_init_set(pcie, 1);
- }
+diff --git a/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml b/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
+index 8680a0f86c5a..807694b4f41f 100644
+--- a/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
+@@ -9,12 +9,15 @@ title: Brcmstb PCIe Host Controller Device Tree Bindings
+ maintainers:
+   - Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
  
-+static int brcm_pcie_suspend(struct device *dev)
-+{
-+	struct brcm_pcie *pcie = dev_get_drvdata(dev);
-+
-+	brcm_pcie_turn_off(pcie);
-+	clk_disable_unprepare(pcie->clk);
-+
-+	return 0;
-+}
-+
-+static int brcm_pcie_resume(struct device *dev)
-+{
-+	struct brcm_pcie *pcie = dev_get_drvdata(dev);
-+	void __iomem *base;
-+	u32 tmp;
-+	int ret;
-+
-+	base = pcie->base;
-+	clk_prepare_enable(pcie->clk);
-+
-+	/* Take bridge out of reset so we can access the SERDES reg */
-+	brcm_pcie_bridge_sw_init_set(pcie, 0);
-+
-+	/* SERDES_IDDQ = 0 */
-+	tmp = readl(base + PCIE_MISC_HARD_PCIE_HARD_DEBUG);
-+	u32p_replace_bits(&tmp, 0, PCIE_MISC_HARD_PCIE_HARD_DEBUG_SERDES_IDDQ_MASK);
-+	writel(tmp, base + PCIE_MISC_HARD_PCIE_HARD_DEBUG);
-+
-+	/* wait for serdes to be stable */
-+	udelay(100);
-+
-+	ret = brcm_pcie_setup(pcie);
-+	if (ret)
-+		return ret;
-+
-+	if (pcie->msi)
-+		brcm_msi_set_regs(pcie->msi);
-+
-+	return 0;
-+}
-+
- static void __brcm_pcie_remove(struct brcm_pcie *pcie)
- {
- 	brcm_msi_remove(pcie);
-@@ -1110,12 +1151,18 @@ static int brcm_pcie_probe(struct platform_device *pdev)
+-allOf:
+-  - $ref: /schemas/pci/pci-bus.yaml#
+-
+ properties:
+   compatible:
+-    const: brcm,bcm2711-pcie # The Raspberry Pi 4
++    items:
++      - enum:
++          - brcm,bcm2711-pcie # The Raspberry Pi 4
++          - brcm,bcm7211-pcie # Broadcom STB version of RPi4
++          - brcm,bcm7278-pcie # Broadcom 7278 Arm
++          - brcm,bcm7216-pcie # Broadcom 7216 Arm
++          - brcm,bcm7445-pcie # Broadcom 7445 Arm
  
- MODULE_DEVICE_TABLE(of, brcm_pcie_match);
+   reg:
+     maxItems: 1
+@@ -34,10 +37,12 @@ properties:
+       - const: msi
  
-+static const struct dev_pm_ops brcm_pcie_pm_ops = {
-+	.suspend_noirq = brcm_pcie_suspend,
-+	.resume_noirq = brcm_pcie_resume,
-+};
+   ranges:
+-    maxItems: 1
++    minItems: 1
++    maxItems: 4
+ 
+   dma-ranges:
+-    maxItems: 1
++    minItems: 1
++    maxItems: 6
+ 
+   clocks:
+     maxItems: 1
+@@ -58,8 +63,31 @@ properties:
+ 
+   aspm-no-l0s: true
+ 
++  resets:
++    description: for "brcm,bcm7216-pcie", must be a valid reset
++      phandle pointing to the RESCAL reset controller provider node.
++    $ref: "/schemas/types.yaml#/definitions/phandle"
 +
- static struct platform_driver brcm_pcie_driver = {
- 	.probe = brcm_pcie_probe,
- 	.remove = brcm_pcie_remove,
- 	.driver = {
- 		.name = "brcm-pcie",
- 		.of_match_table = brcm_pcie_match,
-+		.pm = &brcm_pcie_pm_ops,
- 	},
- };
- module_platform_driver(brcm_pcie_driver);
++  reset-names:
++    items:
++      - const: rescal
++
++  brcm,scb-sizes:
++    description: u64 giving the 64bit PCIe memory
++      viewport size of a memory controller.  There may be up to
++      three controllers, and each size must be a power of two
++      with a size greater or equal to the amount of memory the
++      controller supports.  Note that each memory controller
++      may have two component regions -- base and extended -- so
++      this information cannot be deduced from the dma-ranges.
++    $ref: /schemas/types.yaml#/definitions/uint64-array
++    items:
++      minItems: 1
++      maxItems: 3
++
+ required:
+   - reg
++  - ranges
+   - dma-ranges
+   - "#interrupt-cells"
+   - interrupts
+@@ -68,6 +96,18 @@ required:
+   - interrupt-map
+   - msi-controller
+ 
++allOf:
++  - $ref: /schemas/pci/pci-bus.yaml#
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: brcm,bcm7216-pcie
++    then:
++      required:
++        - resets
++        - reset-names
++
+ unevaluatedProperties: false
+ 
+ examples:
+@@ -93,7 +133,9 @@ examples:
+                     msi-parent = <&pcie0>;
+                     msi-controller;
+                     ranges = <0x02000000 0x0 0xf8000000 0x6 0x00000000 0x0 0x04000000>;
+-                    dma-ranges = <0x02000000 0x0 0x00000000 0x0 0x00000000 0x0 0x80000000>;
++                    dma-ranges = <0x42000000 0x1 0x00000000 0x0 0x40000000 0x0 0x80000000>,
++                                 <0x42000000 0x1 0x80000000 0x3 0x00000000 0x0 0x80000000>;
+                     brcm,enable-ssc;
++                    brcm,scb-sizes =  <0x0000000080000000 0x0000000080000000>;
+             };
+     };
 -- 
 2.17.1
 
