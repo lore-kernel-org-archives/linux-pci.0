@@ -4,50 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A569CC43446
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 21:02:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE65AC4345E
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 21:02:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AFD3C22CB2
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 21:02:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CDD9622CA1
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 21:02:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1596488552;
-	bh=IN4qqXLj/8KCT+Ufzx0L8fCPFaHBxDyK7hfmOljbUJU=;
+	s=default; t=1596488540;
+	bh=xNZjEAsViny31s1Kn0N68RLkO8bEyapjY79LMA49GjU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=I3ZSfkNgCCQka/zIkSpRIeyh1WlYlLlqaNW7nGS4fmKEpsg5pVIXMrvePy2llSdqX
-	 cdWJVQXleKXXqSpP3huSNoHtdZsEnOrtBVSgjqAbjdQSWwkA3dSyi+RmMf4d7npCk5
-	 9xlArCqczdUvuHAI73xDJSKbAglH5++V9wfMn/2k=
+	b=F3wnY4ZSeWXNWeOzHDgpGj+yIEwfIFBt333ChJsr2AHkWEOROKiPr3Amy/2TwsTTF
+	 PeEXCfjgCWH+U13s2TYhQs5UJpllwWJLv1FAWZqX4EUPrmtuhJA/ahspPU9tJohgdz
+	 ZHXXkEDJyXNReE+VgKhzx3dQyLX9+4fbLwksUEdY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729118AbgHCVCb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 3 Aug 2020 17:02:31 -0400
-Received: from mail-io1-f68.google.com ([209.85.166.68]:40326 "EHLO
-        mail-io1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728570AbgHCVCa (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Aug 2020 17:02:30 -0400
-Received: by mail-io1-f68.google.com with SMTP id l17so40001373iok.7;
-        Mon, 03 Aug 2020 14:02:30 -0700 (PDT)
+        id S1729458AbgHCVCT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 3 Aug 2020 17:02:19 -0400
+Received: from mail-io1-f65.google.com ([209.85.166.65]:45789 "EHLO
+        mail-io1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728570AbgHCVCS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Aug 2020 17:02:18 -0400
+Received: by mail-io1-f65.google.com with SMTP id u126so2719389iod.12;
+        Mon, 03 Aug 2020 14:02:18 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=VwFTr4t0lrmNy8f4Fgv3/l49uahHgczW7Wdy7hSwZ1w=;
-        b=LORzLGQCc25xfattQ/r/eucxR1jhevA1boxWsnpFezxp4FAJH8zXFAS55YebAQxt49
-         h7OtBc4Rk3Es3JBBHnKpfKL+HGl0MiW0fDRZpCCLs1kEM/T4tdr3CviNX8FNvuWwplVw
-         0syBl5MkVIX8PJVjRD4ejJo7rxJ87n2tlAj8De73inJKZZvIgOFpabtSSa/btmXiVOwW
-         5cfjhryp9Sa5+CUY6Mee1jqIK5Ip5g8WdUvaf+UcHMhBXSvFHaoVklyZfwFpN6DfeF05
-         tK452SW3+4DSxiIqaGUViYGYCv0m8+KMtJcLbNJiFLOZvNX/X2f4tZyAAwxG7w8V2TUI
-         4x0A==
-X-Gm-Message-State: AOAM530dT9iH43Gsh1KoPGuU1LF4DdqnW7pOPVXRL5Iw+uEISKFI9hbG
-        4lWsoCqdtNi1jAa2AUaeeQ==
-X-Google-Smtp-Source: ABdhPJzMEhzv37+IQcarhuMxavAyD+FE8gqZIx02+KuoDY977KQ4tDj1eOPm1iwpPoPc4bKstznlOA==
-X-Received: by 2002:a5d:9b96:: with SMTP id r22mr1878334iom.66.1596488549634;
-        Mon, 03 Aug 2020 14:02:29 -0700 (PDT)
+        bh=yeVh4LY4Ol0sFEbqSsJcffa7f//z27paKHgfSp0xtxI=;
+        b=PRxnPLGjDqHtLZhyyfH0d3hVBWgx6ENJDH2v8rbBdzDz8WvI2bv3DxRsayKghBvaLr
+         et58lDEMVgpvs9peb7FXlDYGNJpHfz6VTdjV5cf3Ktqy5XhITlEQ15Cdwg/vfhg6bBWC
+         KKN/aeiPF54OSzB9/qiQLjGrONIKjt5BupoGzFkujXOo7y4Q318vSuxKWVVaFyeRP8Ce
+         c3rnc6e2fYknq2FcW75uu9Txm8LZ8fslt2H4nAJhP30/gVRjrAelNGdRCfJ7+AUq7vOK
+         3Mx5px8snzwGRqyw6/PRk+hDSC9kZ6K4N+Dj/EerPkIm5RJTx18LN40CMy+VVlIjZzLm
+         0SkA==
+X-Gm-Message-State: AOAM532dXE+PdD82jUDZ0HDBO2ET4azXc2YfWsOQAEHh8lgklpbDm26H
+        ptF4uHxeQEbkNywjVr7ybA==
+X-Google-Smtp-Source: ABdhPJxHdYdH6fpt0x+gUcwdUAm9TdIxKmfEPs100vcr5aCcB5zinD7L8bd5gBFg5DUxhkQoFWaU1g==
+X-Received: by 2002:a5e:c30f:: with SMTP id a15mr1845040iok.184.1596488537676;
+        Mon, 03 Aug 2020 14:02:17 -0700 (PDT)
 Received: from xps15.herring.priv ([64.188.179.252])
-        by smtp.googlemail.com with ESMTPSA id r6sm9292280iod.7.2020.08.03.14.02.25
+        by smtp.googlemail.com with ESMTPSA id r6sm9292280iod.7.2020.08.03.14.02.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 03 Aug 2020 14:02:29 -0700 (PDT)
+        Mon, 03 Aug 2020 14:02:17 -0700 (PDT)
 From:   Rob Herring <robh@kernel.org>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
@@ -80,10 +80,10 @@ Cc:     Binghui Wang <wangbinghui@hisilicon.com>,
         Stanimir Varbanov <svarbanov@mm-sol.com>,
         Thierry Reding <thierry.reding@gmail.com>,
         Xiaowei Song <songxiaowei@hisilicon.com>,
-        Yue Wang <yue.wang@Amlogic.com>, Andy Gross <agross@kernel.org>
-Subject: [RFC 25/27] PCI: dwc/qcom: Use common PCI register definitions
-Date:   Mon,  3 Aug 2020 15:01:14 -0600
-Message-Id: <20200803210116.3132633-26-robh@kernel.org>
+        Yue Wang <yue.wang@Amlogic.com>
+Subject: [RFC 22/27] PCI: dwc/imx6: Remove duplicate define PCIE_LINK_WIDTH_SPEED_CONTROL
+Date:   Mon,  3 Aug 2020 15:01:11 -0600
+Message-Id: <20200803210116.3132633-23-robh@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200803210116.3132633-1-robh@kernel.org>
 References: <20200803210116.3132633-1-robh@kernel.org>
@@ -94,91 +94,38 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The QCom driver has its own defines for common PCI config space
-registers. It also hard codes the capability register offsets which are
-discoverable. Convert it to use the standard register definitions.
+PCIE_LINK_WIDTH_SPEED_CONTROL is already defined in pcie-designware.h,
+so remove it from the i.MX6 driver.
 
-Cc: Stanimir Varbanov <svarbanov@mm-sol.com>
-Cc: Andy Gross <agross@kernel.org>
-Cc: Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc: Richard Zhu <hongxing.zhu@nxp.com>
+Cc: Lucas Stach <l.stach@pengutronix.de>
 Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Shawn Guo <shawnguo@kernel.org>
+Cc: Sascha Hauer <s.hauer@pengutronix.de>
+Cc: Pengutronix Kernel Team <kernel@pengutronix.de>
+Cc: Fabio Estevam <festevam@gmail.com>
+Cc: NXP Linux Team <linux-imx@nxp.com>
 Cc: linux-pci@vger.kernel.org
-Cc: linux-arm-msm@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org
 Signed-off-by: Rob Herring <robh@kernel.org>
 ---
- drivers/pci/controller/dwc/pcie-qcom.c | 27 ++++++++++----------------
- 1 file changed, 10 insertions(+), 17 deletions(-)
+ drivers/pci/controller/dwc/pci-imx6.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 9f1d3ba686fa..dba5f7d7f727 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -39,11 +39,6 @@
- #define L23_CLK_RMV_DIS				BIT(2)
- #define L1_CLK_RMV_DIS				BIT(1)
+diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+index 7b526f4f85ce..64e694f04dce 100644
+--- a/drivers/pci/controller/dwc/pci-imx6.c
++++ b/drivers/pci/controller/dwc/pci-imx6.c
+@@ -116,8 +116,6 @@ struct imx6_pcie {
+ #define PCIE_PHY_STAT (PL_OFFSET + 0x110)
+ #define PCIE_PHY_STAT_ACK		BIT(16)
  
--#define PCIE20_COMMAND_STATUS			0x04
--#define CMD_BME_VAL				0x4
--#define PCIE20_DEVICE_CONTROL2_STATUS2		0x98
--#define PCIE_CAP_CPL_TIMEOUT_DISABLE		0x10
+-#define PCIE_LINK_WIDTH_SPEED_CONTROL	0x80C
 -
- #define PCIE20_PARF_PHY_CTRL			0x40
- #define PCIE20_PARF_PHY_REFCLK			0x4C
- #define PCIE20_PARF_DBI_BASE_ADDR		0x168
-@@ -65,10 +60,6 @@
- #define PCIE20_AXI_MSTR_RESP_COMP_CTRL1		0x81c
- #define CFG_BRIDGE_SB_INIT			BIT(0)
- 
--#define PCIE20_CAP				0x70
--#define PCIE20_CAP_LINK_CAPABILITIES		(PCIE20_CAP + 0xC)
--#define PCIE20_CAP_ACTIVE_STATE_LINK_PM_SUPPORT	(BIT(10) | BIT(11))
--#define PCIE20_CAP_LINK_1			(PCIE20_CAP + 0x14)
- #define PCIE_CAP_LINK1_VAL			0x2FD7F
- 
- #define PCIE20_PARF_Q2A_FLUSH			0x1AC
-@@ -974,6 +965,7 @@ static int qcom_pcie_init_2_3_3(struct qcom_pcie *pcie)
- 	struct qcom_pcie_resources_2_3_3 *res = &pcie->res.v2_3_3;
- 	struct dw_pcie *pci = pcie->pci;
- 	struct device *dev = pci->dev;
-+	u16 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
- 	int i, ret;
- 	u32 val;
- 
-@@ -1047,16 +1039,16 @@ static int qcom_pcie_init_2_3_3(struct qcom_pcie *pcie)
- 		pcie->parf + PCIE20_PARF_SYS_CTRL);
- 	writel(0, pcie->parf + PCIE20_PARF_Q2A_FLUSH);
- 
--	writel(CMD_BME_VAL, pci->dbi_base + PCIE20_COMMAND_STATUS);
-+	writel(PCI_COMMAND_MASTER, pci->dbi_base + PCI_COMMAND);
- 	writel(DBI_RO_WR_EN, pci->dbi_base + PCIE20_MISC_CONTROL_1_REG);
--	writel(PCIE_CAP_LINK1_VAL, pci->dbi_base + PCIE20_CAP_LINK_1);
-+	writel(PCIE_CAP_LINK1_VAL, pci->dbi_base + offset + PCI_EXP_SLTCAP);
- 
--	val = readl(pci->dbi_base + PCIE20_CAP_LINK_CAPABILITIES);
--	val &= ~PCIE20_CAP_ACTIVE_STATE_LINK_PM_SUPPORT;
--	writel(val, pci->dbi_base + PCIE20_CAP_LINK_CAPABILITIES);
-+	val = readl(pci->dbi_base + offset + PCI_EXP_LNKCAP);
-+	val &= ~PCI_EXP_LNKCAP_ASPMS;
-+	writel(val, pci->dbi_base + offset + PCI_EXP_LNKCAP);
- 
--	writel(PCIE_CAP_CPL_TIMEOUT_DISABLE, pci->dbi_base +
--		PCIE20_DEVICE_CONTROL2_STATUS2);
-+	writel(PCI_EXP_DEVCTL2_COMP_TMOUT_DIS, pci->dbi_base + offset +
-+		PCI_EXP_DEVCTL2);
- 
- 	return 0;
- 
-@@ -1209,7 +1201,8 @@ static void qcom_pcie_post_deinit_2_7_0(struct qcom_pcie *pcie)
- 
- static int qcom_pcie_link_up(struct dw_pcie *pci)
- {
--	u16 val = readw(pci->dbi_base + PCIE20_CAP + PCI_EXP_LNKSTA);
-+	u16 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
-+	u16 val = readw(pci->dbi_base + offset + PCI_EXP_LNKSTA);
- 
- 	return !!(val & PCI_EXP_LNKSTA_DLLLA);
- }
+ /* PHY registers (not memory-mapped) */
+ #define PCIE_PHY_ATEOVRD			0x10
+ #define  PCIE_PHY_ATEOVRD_EN			BIT(2)
 -- 
 2.25.1
 
