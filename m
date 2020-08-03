@@ -2,52 +2,52 @@ Return-Path: <SRS0=9hNM=BN=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4973C43458
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 21:02:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58ED2C43457
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 21:02:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DFB5722CAD
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 21:02:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6471522CA1
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 21:02:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1596488555;
-	bh=vWvB1/mB/1BmqBrmAEz00ALPlgiESElBWg6H+JyyMkk=;
+	s=default; t=1596488550;
+	bh=ga9IPiIiRhVx8miYkpRLWB6BnsCWSn0hkdFM06MoOLo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=pt6vog62NvyGdsU1IbM9wEoYXJgKrcwgm22nK2mZkJsgrQlhP/8vC9+VJiNK/got3
-	 t66AY8KHXPET5SRg5ax9IvqcY7AwLjSJ0I1GDo088alNFnRpFrCIGKfiw3tRYrzlnV
-	 GeAWCE9W8mO7XQXNi1zZlcN/l/wLtsU3Bik0OS8w=
+	b=OGqlaRUITPscqSdILXl4WLLUuhL/MijJGlgMm8DpMsU8WMsR3QlDWR1EcDNmUq/dT
+	 955tOuv3nGqQqKPRXMzF15k7PC34yIEgjJqJC1Knu1au/ZFrMwZHYrVaLouHUEAG44
+	 tjUk66aGMeaSDv8GHHBZxZD9TGYnyRHDDnlkWjao=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729165AbgHCVCe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 3 Aug 2020 17:02:34 -0400
-Received: from mail-il1-f195.google.com ([209.85.166.195]:42462 "EHLO
-        mail-il1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728570AbgHCVCe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Aug 2020 17:02:34 -0400
-Received: by mail-il1-f195.google.com with SMTP id i138so26418165ild.9;
-        Mon, 03 Aug 2020 14:02:32 -0700 (PDT)
+        id S1729470AbgHCVC3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 3 Aug 2020 17:02:29 -0400
+Received: from mail-io1-f68.google.com ([209.85.166.68]:35000 "EHLO
+        mail-io1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728570AbgHCVC1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Aug 2020 17:02:27 -0400
+Received: by mail-io1-f68.google.com with SMTP id s189so32774718iod.2;
+        Mon, 03 Aug 2020 14:02:25 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=L06mAH8VA/IGeAefhzubwBSDxwj6YYC6qe74xf8W5J0=;
-        b=uFuql2o52z3hJdVklnXHk/cwlxvZEfKGarlcVuO8vom/H5UTx8+JwICK+MHz26rnhy
-         nAiEp7cZkZ8Bbfwob/MWu41yPuCygaSEXJ390hspWsW3rKiDFECBXfNwCIg6VBJDP2FB
-         1ROYjlRCrZpd9fW0O4ZFTN5cmC3BmU79isUMPKQpQ1Df5wJwxsAmjfFMlkMmM7w3yKhM
-         +2M8wmpqfDXkS5CIqY4Q2IJ69XWtbXMnU7WffBKZS2qADMEhRnGTGb+7X+TFzwFFDyk5
-         2P7xVrpHjXGim2VkXkFK45z+PbxQ2se0OFI8JOj4m7rmydsETPpCp7X0669oUb50iiY9
-         UVsQ==
-X-Gm-Message-State: AOAM533mjdRWNecBwgPI7fYrEluQ2kb83Z0Dsfp0WLdWYgBMVw9aI88w
-        Z6L34MjuPtt8MG4QL/onqg==
-X-Google-Smtp-Source: ABdhPJyaj3PFM+CFdCy6mV1i58kFekEGMqO1UowSfypEY5AIM4vaGx5gSsEY/QdqAhmg5ntfqWZ6EQ==
-X-Received: by 2002:a05:6e02:ea2:: with SMTP id u2mr1371612ilj.140.1596488552257;
-        Mon, 03 Aug 2020 14:02:32 -0700 (PDT)
+        bh=PM8zrR6BXOfDRWMk7IOmZATjTEqDEPOnq1HMPd0fm+I=;
+        b=Pth5GiV2sgoMtDvU2E4+9rNu7QJOQZUekMh3rDsA8pW6bM0JolDGZZr+g799xUvu9/
+         /2LM0bbqqfFODyPdR+6eZBVjWP/gk4FW37w6MUFrupXG2wmrRrg4k+XQcADoGdLmHHUN
+         GsOEIO1z1xBwq4FXVFC0uRRO8K/qiy+OKD3q7+X+9iTIv6LTTWLIlTs8RbxMFyJ30bKX
+         RyaDp8hpQDuI/UoquvTYtzf3fzUMOY2naCc9kmSvcsjtou6S+ULgC/KXD/IP5gLdtfWK
+         NiLkVhFAYqL9vvL/gFLo4CC0BhMU1hgVj80G4F1tmWudYO4idbyyCiE0GKCez7aZ62eR
+         80pw==
+X-Gm-Message-State: AOAM530UjJ5dl0/7cC2WG4lNn33pQ+3feEVsh3guR39+6ikoiepvAwD9
+        RmmfX8zVWX8FxUdp86kwVQ==
+X-Google-Smtp-Source: ABdhPJw96k8lyNK11/NlxPpmp4xlor/b3WWjFcRtY1Ld3dnCdpoOVounuLgtCLR+q/EA7hpBdE6Lnw==
+X-Received: by 2002:a05:6638:1690:: with SMTP id f16mr1826708jat.91.1596488544963;
+        Mon, 03 Aug 2020 14:02:24 -0700 (PDT)
 Received: from xps15.herring.priv ([64.188.179.252])
-        by smtp.googlemail.com with ESMTPSA id r6sm9292280iod.7.2020.08.03.14.02.29
+        by smtp.googlemail.com with ESMTPSA id r6sm9292280iod.7.2020.08.03.14.02.21
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 03 Aug 2020 14:02:31 -0700 (PDT)
+        Mon, 03 Aug 2020 14:02:24 -0700 (PDT)
 From:   Rob Herring <robh@kernel.org>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
@@ -81,9 +81,9 @@ Cc:     Binghui Wang <wangbinghui@hisilicon.com>,
         Thierry Reding <thierry.reding@gmail.com>,
         Xiaowei Song <songxiaowei@hisilicon.com>,
         Yue Wang <yue.wang@Amlogic.com>
-Subject: [RFC 26/27] PCI: dwc: Remove hardcoded PCI_CAP_ID_EXP offset
-Date:   Mon,  3 Aug 2020 15:01:15 -0600
-Message-Id: <20200803210116.3132633-27-robh@kernel.org>
+Subject: [RFC 24/27] PCI: dwc/meson: Rework PCI config and DW port logic register accesses
+Date:   Mon,  3 Aug 2020 15:01:13 -0600
+Message-Id: <20200803210116.3132633-25-robh@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200803210116.3132633-1-robh@kernel.org>
 References: <20200803210116.3132633-1-robh@kernel.org>
@@ -94,110 +94,245 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-While the Designware controller appears to hard code the PCI_CAP_ID_EXP
-capability register at 0x70, there's no need to hard code this in the
-driver as it is discoverable.
+The meson 'elbi' registers are just the Designware 'dbi' space and all
+the registers accessed are either standard PCI config space or DWC port
+logic registers. Convert the accesses to use the common defines and
+register accessors.
 
-Cc: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Yue Wang <yue.wang@Amlogic.com>
 Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Murali Karicheri <m-karicheri2@ti.com>
-Cc: Pratyush Anand <pratyush.anand@gmail.com>
-Cc: linux-omap@vger.kernel.org
+Cc: Kevin Hilman <khilman@baylibre.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>
+Cc: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 Cc: linux-pci@vger.kernel.org
+Cc: linux-amlogic@lists.infradead.org
 Cc: linux-arm-kernel@lists.infradead.org
 Signed-off-by: Rob Herring <robh@kernel.org>
 ---
- drivers/pci/controller/dwc/pci-dra7xx.c     |  4 +---
- drivers/pci/controller/dwc/pci-keystone.c   | 11 +++++------
- drivers/pci/controller/dwc/pcie-spear13xx.c |  4 +---
- 3 files changed, 7 insertions(+), 12 deletions(-)
+ drivers/pci/controller/dwc/pci-meson.c       | 113 +++++++------------
+ drivers/pci/controller/dwc/pcie-designware.h |   1 +
+ 2 files changed, 39 insertions(+), 75 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
-index 6184ebc9392d..b4508c3ffe96 100644
---- a/drivers/pci/controller/dwc/pci-dra7xx.c
-+++ b/drivers/pci/controller/dwc/pci-dra7xx.c
-@@ -73,8 +73,6 @@
- #define	LINK_UP						BIT(16)
- #define	DRA7XX_CPU_TO_BUS_ADDR				0x0FFFFFFF
+diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/controller/dwc/pci-meson.c
+index d1cfc65f0a69..734aace62173 100644
+--- a/drivers/pci/controller/dwc/pci-meson.c
++++ b/drivers/pci/controller/dwc/pci-meson.c
+@@ -22,23 +22,7 @@
  
--#define EXP_CAP_ID_OFFSET				0x70
+ #define to_meson_pcie(x) dev_get_drvdata((x)->dev)
+ 
+-/* External local bus interface registers */
+-#define PLR_OFFSET			0x700
+-#define PCIE_PORT_LINK_CTRL_OFF		(PLR_OFFSET + 0x10)
+-#define FAST_LINK_MODE			BIT(7)
+-#define LINK_CAPABLE_MASK		GENMASK(21, 16)
+-#define LINK_CAPABLE_X1			BIT(16)
 -
- #define	PCIECTRL_TI_CONF_INTX_ASSERT			0x0124
- #define	PCIECTRL_TI_CONF_INTX_DEASSERT			0x0128
- 
-@@ -142,7 +140,7 @@ static int dra7xx_pcie_establish_link(struct dw_pcie *pci)
- 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
- 	struct device *dev = pci->dev;
- 	u32 reg;
--	u32 exp_cap_off = EXP_CAP_ID_OFFSET;
-+	u32 exp_cap_off = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
- 
- 	if (dw_pcie_link_up(pci)) {
- 		dev_err(dev, "link is already up\n");
-diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
-index 205754a6bc3c..d2eca3afebdb 100644
---- a/drivers/pci/controller/dwc/pci-keystone.c
-+++ b/drivers/pci/controller/dwc/pci-keystone.c
-@@ -96,8 +96,6 @@
- #define LEG_EP				0x1
- #define RC				0x2
- 
--#define EXP_CAP_ID_OFFSET		0x70
+-#define PCIE_GEN2_CTRL_OFF		(PLR_OFFSET + 0x10c)
+-#define NUM_OF_LANES_MASK		GENMASK(12, 8)
+-#define NUM_OF_LANES_X1			BIT(8)
+-#define DIRECT_SPEED_CHANGE		BIT(17)
 -
- #define KS_PCIE_SYSCLOCKOUTEN		BIT(0)
+-#define PCIE_CAP_OFFSET			0x70
+-#define PCIE_DEV_CTRL_DEV_STUS		(PCIE_CAP_OFFSET + 0x08)
+-#define PCIE_CAP_MAX_PAYLOAD_MASK	GENMASK(7, 5)
+ #define PCIE_CAP_MAX_PAYLOAD_SIZE(x)	((x) << 5)
+-#define PCIE_CAP_MAX_READ_REQ_MASK	GENMASK(14, 12)
+ #define PCIE_CAP_MAX_READ_REQ_SIZE(x)	((x) << 12)
  
- #define AM654_PCIE_DEV_TYPE_MASK	0x3
-@@ -1125,22 +1123,23 @@ static int ks_pcie_am654_set_mode(struct device *dev,
- static void ks_pcie_set_link_speed(struct dw_pcie *pci, int link_speed)
+ /* PCIe specific config registers */
+@@ -68,11 +52,6 @@ enum pcie_data_rate {
+ 	PCIE_GEN4
+ };
+ 
+-struct meson_pcie_mem_res {
+-	void __iomem *elbi_base;
+-	void __iomem *cfg_base;
+-};
+-
+ struct meson_pcie_clk_res {
+ 	struct clk *clk;
+ 	struct clk *port_clk;
+@@ -86,7 +65,7 @@ struct meson_pcie_rc_reset {
+ 
+ struct meson_pcie {
+ 	struct dw_pcie pci;
+-	struct meson_pcie_mem_res mem_res;
++	void __iomem *cfg_base;
+ 	struct meson_pcie_clk_res clk_res;
+ 	struct meson_pcie_rc_reset mrst;
+ 	struct gpio_desc *reset_gpio;
+@@ -125,28 +104,18 @@ static int meson_pcie_get_resets(struct meson_pcie *mp)
+ 	return 0;
+ }
+ 
+-static void __iomem *meson_pcie_get_mem(struct platform_device *pdev,
+-					struct meson_pcie *mp,
+-					const char *id)
+-{
+-	struct device *dev = mp->pci.dev;
+-	struct resource *res;
+-
+-	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, id);
+-
+-	return devm_ioremap_resource(dev, res);
+-}
+-
+ static int meson_pcie_get_mems(struct platform_device *pdev,
+ 			       struct meson_pcie *mp)
  {
- 	u32 val;
-+	u32 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+-	mp->mem_res.elbi_base = meson_pcie_get_mem(pdev, mp, "elbi");
+-	if (IS_ERR(mp->mem_res.elbi_base))
+-		return PTR_ERR(mp->mem_res.elbi_base);
++	struct dw_pcie *pci = &mp->pci;
  
- 	dw_pcie_dbi_ro_wr_en(pci);
+-	mp->mem_res.cfg_base = meson_pcie_get_mem(pdev, mp, "cfg");
+-	if (IS_ERR(mp->mem_res.cfg_base))
+-		return PTR_ERR(mp->mem_res.cfg_base);
++	pci->dbi_base = devm_platform_ioremap_resource_byname(pdev, "elbi");
++	if (IS_ERR(pci->dbi_base))
++		return PTR_ERR(pci->dbi_base);
++
++	mp->cfg_base = devm_platform_ioremap_resource_byname(pdev, "cfg");
++	if (IS_ERR(mp->cfg_base))
++		return PTR_ERR(mp->cfg_base);
  
--	val = dw_pcie_readl_dbi(pci, EXP_CAP_ID_OFFSET + PCI_EXP_LNKCAP);
-+	val = dw_pcie_readl_dbi(pci, offset + PCI_EXP_LNKCAP);
- 	if ((val & PCI_EXP_LNKCAP_SLS) != link_speed) {
- 		val &= ~((u32)PCI_EXP_LNKCAP_SLS);
- 		val |= link_speed;
--		dw_pcie_writel_dbi(pci, EXP_CAP_ID_OFFSET + PCI_EXP_LNKCAP,
-+		dw_pcie_writel_dbi(pci, offset + PCI_EXP_LNKCAP,
- 				   val);
- 	}
+ 	return 0;
+ }
+@@ -244,24 +213,14 @@ static int meson_pcie_probe_clocks(struct meson_pcie *mp)
+ 	return 0;
+ }
  
--	val = dw_pcie_readl_dbi(pci, EXP_CAP_ID_OFFSET + PCI_EXP_LNKCTL2);
-+	val = dw_pcie_readl_dbi(pci, offset + PCI_EXP_LNKCTL2);
- 	if ((val & PCI_EXP_LNKCAP_SLS) != link_speed) {
- 		val &= ~((u32)PCI_EXP_LNKCAP_SLS);
- 		val |= link_speed;
--		dw_pcie_writel_dbi(pci, EXP_CAP_ID_OFFSET + PCI_EXP_LNKCTL2,
-+		dw_pcie_writel_dbi(pci, offset + PCI_EXP_LNKCTL2,
- 				   val);
- 	}
- 
-diff --git a/drivers/pci/controller/dwc/pcie-spear13xx.c b/drivers/pci/controller/dwc/pcie-spear13xx.c
-index 7d0cdfd8138b..a4303148e8b1 100644
---- a/drivers/pci/controller/dwc/pcie-spear13xx.c
-+++ b/drivers/pci/controller/dwc/pcie-spear13xx.c
-@@ -65,8 +65,6 @@ struct pcie_app_reg {
- /* CR6 */
- #define MSI_CTRL_INT				(1 << 26)
- 
--#define EXP_CAP_ID_OFFSET			0x70
+-static inline void meson_elb_writel(struct meson_pcie *mp, u32 val, u32 reg)
+-{
+-	writel(val, mp->mem_res.elbi_base + reg);
+-}
 -
- #define to_spear13xx_pcie(x)	dev_get_drvdata((x)->dev)
+-static inline u32 meson_elb_readl(struct meson_pcie *mp, u32 reg)
+-{
+-	return readl(mp->mem_res.elbi_base + reg);
+-}
+-
+ static inline u32 meson_cfg_readl(struct meson_pcie *mp, u32 reg)
+ {
+-	return readl(mp->mem_res.cfg_base + reg);
++	return readl(mp->cfg_base + reg);
+ }
  
- static int spear13xx_pcie_establish_link(struct spear13xx_pcie *spear13xx_pcie)
-@@ -75,7 +73,7 @@ static int spear13xx_pcie_establish_link(struct spear13xx_pcie *spear13xx_pcie)
- 	struct pcie_port *pp = &pci->pp;
- 	struct pcie_app_reg *app_reg = spear13xx_pcie->app_base;
+ static inline void meson_cfg_writel(struct meson_pcie *mp, u32 val, u32 reg)
+ {
+-	writel(val, mp->mem_res.cfg_base + reg);
++	writel(val, mp->cfg_base + reg);
+ }
+ 
+ static void meson_pcie_assert_reset(struct meson_pcie *mp)
+@@ -273,27 +232,28 @@ static void meson_pcie_assert_reset(struct meson_pcie *mp)
+ 
+ static void meson_pcie_init_dw(struct meson_pcie *mp)
+ {
++	struct dw_pcie *pci = &mp->pci;
  	u32 val;
--	u32 exp_cap_off = EXP_CAP_ID_OFFSET;
-+	u32 exp_cap_off = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
  
- 	if (dw_pcie_link_up(pci)) {
- 		dev_err(pci->dev, "link already up\n");
+ 	val = meson_cfg_readl(mp, PCIE_CFG0);
+ 	val |= APP_LTSSM_ENABLE;
+ 	meson_cfg_writel(mp, val, PCIE_CFG0);
+ 
+-	val = meson_elb_readl(mp, PCIE_PORT_LINK_CTRL_OFF);
+-	val &= ~(LINK_CAPABLE_MASK | FAST_LINK_MODE);
+-	meson_elb_writel(mp, val, PCIE_PORT_LINK_CTRL_OFF);
++	val = dw_pcie_readl_dbi(pci, PCIE_PORT_LINK_CONTROL);
++	val &= ~(PORT_LINK_MODE_MASK | PORT_LINK_FAST_LINK_MODE);
++	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, val);
+ 
+-	val = meson_elb_readl(mp, PCIE_PORT_LINK_CTRL_OFF);
+-	val |= LINK_CAPABLE_X1;
+-	meson_elb_writel(mp, val, PCIE_PORT_LINK_CTRL_OFF);
++	val = dw_pcie_readl_dbi(pci, PCIE_PORT_LINK_CONTROL);
++	val |= PORT_LINK_MODE_1_LANES;
++	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, val);
+ 
+-	val = meson_elb_readl(mp, PCIE_GEN2_CTRL_OFF);
+-	val &= ~NUM_OF_LANES_MASK;
+-	meson_elb_writel(mp, val, PCIE_GEN2_CTRL_OFF);
++	val = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
++	val &= ~PORT_LOGIC_LINK_WIDTH_MASK;
++	dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, val);
+ 
+-	val = meson_elb_readl(mp, PCIE_GEN2_CTRL_OFF);
+-	val |= NUM_OF_LANES_X1 | DIRECT_SPEED_CHANGE;
+-	meson_elb_writel(mp, val, PCIE_GEN2_CTRL_OFF);
++	val = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
++	val |= PORT_LOGIC_LINK_WIDTH_1_LANES | PORT_LOGIC_SPEED_CHANGE;
++	dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, val);
+ }
+ 
+ static int meson_size_to_payload(struct meson_pcie *mp, int size)
+@@ -315,30 +275,34 @@ static int meson_size_to_payload(struct meson_pcie *mp, int size)
+ 
+ static void meson_set_max_payload(struct meson_pcie *mp, int size)
+ {
++	struct dw_pcie *pci = &mp->pci;
+ 	u32 val;
++	u16 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+ 	int max_payload_size = meson_size_to_payload(mp, size);
+ 
+-	val = meson_elb_readl(mp, PCIE_DEV_CTRL_DEV_STUS);
+-	val &= ~PCIE_CAP_MAX_PAYLOAD_MASK;
+-	meson_elb_writel(mp, val, PCIE_DEV_CTRL_DEV_STUS);
++	val = dw_pcie_readl_dbi(pci, offset + PCI_EXP_DEVCTL);
++	val &= ~PCI_EXP_DEVCTL_PAYLOAD;
++	dw_pcie_writel_dbi(pci, offset + PCI_EXP_DEVCTL, val);
+ 
+-	val = meson_elb_readl(mp, PCIE_DEV_CTRL_DEV_STUS);
++	val = dw_pcie_readl_dbi(pci, offset + PCI_EXP_DEVCTL);
+ 	val |= PCIE_CAP_MAX_PAYLOAD_SIZE(max_payload_size);
+-	meson_elb_writel(mp, val, PCIE_DEV_CTRL_DEV_STUS);
++	dw_pcie_writel_dbi(pci, offset + PCI_EXP_DEVCTL, val);
+ }
+ 
+ static void meson_set_max_rd_req_size(struct meson_pcie *mp, int size)
+ {
++	struct dw_pcie *pci = &mp->pci;
+ 	u32 val;
++	u16 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+ 	int max_rd_req_size = meson_size_to_payload(mp, size);
+ 
+-	val = meson_elb_readl(mp, PCIE_DEV_CTRL_DEV_STUS);
+-	val &= ~PCIE_CAP_MAX_READ_REQ_MASK;
+-	meson_elb_writel(mp, val, PCIE_DEV_CTRL_DEV_STUS);
++	val = dw_pcie_readl_dbi(pci, offset + PCI_EXP_DEVCTL);
++	val &= ~PCI_EXP_DEVCTL_READRQ;
++	dw_pcie_writel_dbi(pci, offset + PCI_EXP_DEVCTL, val);
+ 
+-	val = meson_elb_readl(mp, PCIE_DEV_CTRL_DEV_STUS);
++	val = dw_pcie_readl_dbi(pci, offset + PCI_EXP_DEVCTL);
+ 	val |= PCIE_CAP_MAX_READ_REQ_SIZE(max_rd_req_size);
+-	meson_elb_writel(mp, val, PCIE_DEV_CTRL_DEV_STUS);
++	dw_pcie_writel_dbi(pci, offset + PCI_EXP_DEVCTL, val);
+ }
+ 
+ static int meson_pcie_establish_link(struct meson_pcie *mp)
+@@ -466,7 +430,6 @@ static int meson_add_pcie_port(struct meson_pcie *mp,
+ 	}
+ 
+ 	pp->ops = &meson_pcie_host_ops;
+-	pci->dbi_base = mp->mem_res.elbi_base;
+ 
+ 	ret = dw_pcie_host_init(pp);
+ 	if (ret) {
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 2db6f52dfe81..b18a9a5f48d2 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -36,6 +36,7 @@
+ 
+ #define PCIE_PORT_LINK_CONTROL		0x710
+ #define PORT_LINK_DLL_LINK_EN		BIT(5)
++#define PORT_LINK_FAST_LINK_MODE	BIT(7)
+ #define PORT_LINK_MODE_MASK		GENMASK(21, 16)
+ #define PORT_LINK_MODE(n)		FIELD_PREP(PORT_LINK_MODE_MASK, n)
+ #define PORT_LINK_MODE_1_LANES		PORT_LINK_MODE(0x1)
 -- 
 2.25.1
 
