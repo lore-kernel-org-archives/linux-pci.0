@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C27FEC43464
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 21:02:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7A40C433F4
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 21:02:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D11E522CB1
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 21:02:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D59A222CB3
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 21:02:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1596488539;
-	bh=/HaikqJVx9levcR+yuPCXxmhod6TcoJko+XGXeLXB+c=;
+	s=default; t=1596488544;
+	bh=gBOfUsjbGL4kYFEyaSqt2m8t5ikvGwxCI9sj2xgePf0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=A+9vk1UFcJD4Zf9LcIJCwoG69Ab/biQui1ZvKz8YqgP096uNH5WIklAnfLH+eaWqY
-	 MVLgPd7R+uL8QYZh1YgwqAZFdpNIe1bNq0TCQlaE6jIxmcYv6/HP6+BJnHsaleuSr7
-	 xmAEGxsMSfwN3uiMeeRDtA8DFUG13t4igT/fg05E=
+	b=aPvCRoeUNbEJqqQEvp2Tj8XrgUogdTRxbn1g6uy3IKYB89/Hka3W/v3BOI9aQU0vj
+	 6HrCaMNpvTWFss44fNu1LpxgSFlojNUs7gmxGXdKZvPwTQaj5D8Li0o5JsJjLJj2Mc
+	 AIG8gw07nniTmhVoaC3lSv/2I47qKCZHxZPGr5Ow=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729447AbgHCVCS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 3 Aug 2020 17:02:18 -0400
-Received: from mail-il1-f196.google.com ([209.85.166.196]:41451 "EHLO
-        mail-il1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729421AbgHCVCP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Aug 2020 17:02:15 -0400
-Received: by mail-il1-f196.google.com with SMTP id c16so20531153ils.8;
-        Mon, 03 Aug 2020 14:02:14 -0700 (PDT)
+        id S1729455AbgHCVCY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 3 Aug 2020 17:02:24 -0400
+Received: from mail-io1-f65.google.com ([209.85.166.65]:33153 "EHLO
+        mail-io1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729103AbgHCVCW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Aug 2020 17:02:22 -0400
+Received: by mail-io1-f65.google.com with SMTP id g14so2509436iom.0;
+        Mon, 03 Aug 2020 14:02:22 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=4tVnhS6O+K590csRd4/lSa2PYfRPYOAvm58gPgPLsFY=;
-        b=evvNIFAW0o50ANfN2d5JvFz8cvW8j7I4oaXsj232Lq6ZKZDOzFZ8Awm0TNXJTTfnRO
-         igJ3457wNYfzZ/XtvBNOaxfnEmQD1o2FInR+bLQ/3BPPZkhtF3V/aFQS9Ywauw3yUw8g
-         HFlObAFW7I6WPYYYVZSjujqwTaxDLdLawy91pkezIQMk70YFd7nUVui3fcYTdhpmyx5B
-         ekPvWv5pG57ytZFmag3lkyhkCY/ikgmV89Gu/si0zcv7RJJ7aj8bf3lYYMDpgf1QX8bI
-         iGqvLYS8Fi9z/tONIAww5y+xO8xxOKI/Szo/fCV4yDjlKdoUGnorehibbYMxESCGhNjX
-         HjGw==
-X-Gm-Message-State: AOAM5330oh/pWYnxZrOfwxKs7Lxmmb4xEeEr8dpnn+VzM50GR6kdtagP
-        wmm2p/NXpUA7QPU1tr4KZA==
-X-Google-Smtp-Source: ABdhPJxrPD8UFPm240Z1CyA8Fd4/vL+RyL0sOj2CDP3xiqnUbs/cuHBijh90alAfV3wjw6im7IrWBQ==
-X-Received: by 2002:a92:999a:: with SMTP id t26mr1365750ilk.145.1596488533931;
-        Mon, 03 Aug 2020 14:02:13 -0700 (PDT)
+        bh=bEN9vVsE3mU2Nyqo3uVsRwOE6mBebuJzlr8xG6a6d4M=;
+        b=gvlZ85rNLI4mgSE7YxG4Q0KiemuST2J48lyVHCiY+PD/HkVNhJJeVF9iNU9j+8IQmA
+         m7RZlm8jqvU/xvqtd9qXD3jCxIEGFPXJ215cUFJZfmk7q85O+SWGeLcYhRozUKOQB20E
+         3lypsIO/PIMIq6wFTTqsMH8smaBVIeAccdeOcp1p34QjkYuYMDjxMW/QhzyQ/aFpV+zs
+         BcIdQWmrsFL08Tj8HKJ5T9IntAeb0VAgtM72j92rAc0ek4lZBlfUIR4zVOJT0xudrgrI
+         ggu+PN1ng44B7cXiAICRF/sdUdyK8LwW5IllpxmaZ/yMl3XwfymoyW80U2tB3qWjQViJ
+         6Fow==
+X-Gm-Message-State: AOAM532rDbMpmjaGbpD+D13MkBENq9zkSYqmBgywDILaw+rD5kp1SKuA
+        HVVY1x77VoWi1WEwiT7ong==
+X-Google-Smtp-Source: ABdhPJzc5blExyVY0xBSjialU7rbyHIo6WdVKug3iv8C/bQYaB+qRckTphLyP0HPoPp/7SDACilwzg==
+X-Received: by 2002:a02:a584:: with SMTP id b4mr1758886jam.68.1596488541762;
+        Mon, 03 Aug 2020 14:02:21 -0700 (PDT)
 Received: from xps15.herring.priv ([64.188.179.252])
-        by smtp.googlemail.com with ESMTPSA id r6sm9292280iod.7.2020.08.03.14.02.10
+        by smtp.googlemail.com with ESMTPSA id r6sm9292280iod.7.2020.08.03.14.02.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 03 Aug 2020 14:02:13 -0700 (PDT)
+        Mon, 03 Aug 2020 14:02:21 -0700 (PDT)
 From:   Rob Herring <robh@kernel.org>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
@@ -80,10 +80,10 @@ Cc:     Binghui Wang <wangbinghui@hisilicon.com>,
         Stanimir Varbanov <svarbanov@mm-sol.com>,
         Thierry Reding <thierry.reding@gmail.com>,
         Xiaowei Song <songxiaowei@hisilicon.com>,
-        Yue Wang <yue.wang@Amlogic.com>, Andy Gross <agross@kernel.org>
-Subject: [RFC 21/27] PCI: dwc: Check CONFIG_PCI_MSI inside dw_pcie_msi_init()
-Date:   Mon,  3 Aug 2020 15:01:10 -0600
-Message-Id: <20200803210116.3132633-22-robh@kernel.org>
+        Yue Wang <yue.wang@Amlogic.com>
+Subject: [RFC 23/27] PCI: dwc/meson: Drop unnecessary RC config space initialization
+Date:   Mon,  3 Aug 2020 15:01:12 -0600
+Message-Id: <20200803210116.3132633-24-robh@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200803210116.3132633-1-robh@kernel.org>
 References: <20200803210116.3132633-1-robh@kernel.org>
@@ -94,206 +94,76 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Move the IS_ENABLED(CONFIG_PCI_MSI) check into dw_pcie_msi_init()
-instead of duplicating it in all the drivers.
+The common Designware init already initializes the RC PCI_COMMAND, BAR0
+and BAR1 registers.
 
-Cc: Richard Zhu <hongxing.zhu@nxp.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>
+The only difference here is the common code sets SERR. If clearing SERR
+is what's desired, then the Meson driver should do that instead.
+
+Cc: Yue Wang <yue.wang@Amlogic.com>
 Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Shawn Guo <shawnguo@kernel.org>
-Cc: Sascha Hauer <s.hauer@pengutronix.de>
-Cc: Pengutronix Kernel Team <kernel@pengutronix.de>
-Cc: Fabio Estevam <festevam@gmail.com>
-Cc: NXP Linux Team <linux-imx@nxp.com>
-Cc: Yue Wang <yue.wang@Amlogic.com>
 Cc: Kevin Hilman <khilman@baylibre.com>
-Cc: Jesper Nilsson <jesper.nilsson@axis.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>
-Cc: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Cc: Xiaowei Song <songxiaowei@hisilicon.com>
-Cc: Binghui Wang <wangbinghui@hisilicon.com>
-Cc: Stanimir Varbanov <svarbanov@mm-sol.com>
-Cc: Andy Gross <agross@kernel.org>
-Cc: Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-Cc: Masahiro Yamada <yamada.masahiro@socionext.com>
 Cc: linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org
 Cc: linux-amlogic@lists.infradead.org
-Cc: linux-arm-kernel@axis.com
-Cc: linux-arm-msm@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org
 Signed-off-by: Rob Herring <robh@kernel.org>
 ---
- drivers/pci/controller/dwc/pci-imx6.c             |  4 +---
- drivers/pci/controller/dwc/pci-meson.c            |  8 +-------
- drivers/pci/controller/dwc/pcie-artpec6.c         | 11 +----------
- drivers/pci/controller/dwc/pcie-designware-host.c |  3 +++
- drivers/pci/controller/dwc/pcie-designware-plat.c |  4 +---
- drivers/pci/controller/dwc/pcie-histb.c           |  4 +---
- drivers/pci/controller/dwc/pcie-kirin.c           |  4 +---
- drivers/pci/controller/dwc/pcie-qcom.c            |  4 +---
- drivers/pci/controller/dwc/pcie-uniphier.c        |  3 +--
- 9 files changed, 11 insertions(+), 34 deletions(-)
+ drivers/pci/controller/dwc/pci-meson.c | 20 --------------------
+ 1 file changed, 20 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index 8f08ae53f53e..7b526f4f85ce 100644
---- a/drivers/pci/controller/dwc/pci-imx6.c
-+++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -847,9 +847,7 @@ static int imx6_pcie_host_init(struct pcie_port *pp)
- 	imx6_setup_phy_mpll(imx6_pcie);
- 	dw_pcie_setup_rc(pp);
- 	imx6_pcie_establish_link(imx6_pcie);
--
--	if (IS_ENABLED(CONFIG_PCI_MSI))
--		dw_pcie_msi_init(pp);
-+	dw_pcie_msi_init(pp);
- 
- 	return 0;
- }
 diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/controller/dwc/pci-meson.c
-index 54ce3369d963..cbde683d107f 100644
+index cbde683d107f..d1cfc65f0a69 100644
 --- a/drivers/pci/controller/dwc/pci-meson.c
 +++ b/drivers/pci/controller/dwc/pci-meson.c
-@@ -377,12 +377,6 @@ static int meson_pcie_establish_link(struct meson_pcie *mp)
- 	return dw_pcie_wait_for_link(pci);
+@@ -34,15 +34,6 @@
+ #define NUM_OF_LANES_X1			BIT(8)
+ #define DIRECT_SPEED_CHANGE		BIT(17)
+ 
+-#define TYPE1_HDR_OFFSET		0x0
+-#define PCIE_STATUS_COMMAND		(TYPE1_HDR_OFFSET + 0x04)
+-#define PCI_IO_EN			BIT(0)
+-#define PCI_MEM_SPACE_EN		BIT(1)
+-#define PCI_BUS_MASTER_EN		BIT(2)
+-
+-#define PCIE_BASE_ADDR0			(TYPE1_HDR_OFFSET + 0x10)
+-#define PCIE_BASE_ADDR1			(TYPE1_HDR_OFFSET + 0x14)
+-
+ #define PCIE_CAP_OFFSET			0x70
+ #define PCIE_DEV_CTRL_DEV_STUS		(PCIE_CAP_OFFSET + 0x08)
+ #define PCIE_CAP_MAX_PAYLOAD_MASK	GENMASK(7, 5)
+@@ -303,9 +294,6 @@ static void meson_pcie_init_dw(struct meson_pcie *mp)
+ 	val = meson_elb_readl(mp, PCIE_GEN2_CTRL_OFF);
+ 	val |= NUM_OF_LANES_X1 | DIRECT_SPEED_CHANGE;
+ 	meson_elb_writel(mp, val, PCIE_GEN2_CTRL_OFF);
+-
+-	meson_elb_writel(mp, 0x0, PCIE_BASE_ADDR0);
+-	meson_elb_writel(mp, 0x0, PCIE_BASE_ADDR1);
  }
  
--static void meson_pcie_enable_interrupts(struct meson_pcie *mp)
+ static int meson_size_to_payload(struct meson_pcie *mp, int size)
+@@ -353,13 +341,6 @@ static void meson_set_max_rd_req_size(struct meson_pcie *mp, int size)
+ 	meson_elb_writel(mp, val, PCIE_DEV_CTRL_DEV_STUS);
+ }
+ 
+-static inline void meson_enable_memory_space(struct meson_pcie *mp)
 -{
--	if (IS_ENABLED(CONFIG_PCI_MSI))
--		dw_pcie_msi_init(&mp->pci.pp);
+-	/* Set the RC Bus Master, Memory Space and I/O Space enables */
+-	meson_elb_writel(mp, PCI_IO_EN | PCI_MEM_SPACE_EN | PCI_BUS_MASTER_EN,
+-			 PCIE_STATUS_COMMAND);
 -}
 -
- static int meson_pcie_rd_own_conf(struct pci_bus *bus, u32 devfn,
- 				  int where, int size, u32 *val)
+ static int meson_pcie_establish_link(struct meson_pcie *mp)
  {
-@@ -466,7 +460,7 @@ static int meson_pcie_host_init(struct pcie_port *pp)
- 	if (ret)
- 		return ret;
- 
--	meson_pcie_enable_interrupts(mp);
-+	dw_pcie_msi_init(pp);
- 
- 	return 0;
- }
-diff --git a/drivers/pci/controller/dwc/pcie-artpec6.c b/drivers/pci/controller/dwc/pcie-artpec6.c
-index 28d5a1095200..969f217c5675 100644
---- a/drivers/pci/controller/dwc/pcie-artpec6.c
-+++ b/drivers/pci/controller/dwc/pcie-artpec6.c
-@@ -346,15 +346,6 @@ static void artpec6_pcie_deassert_core_reset(struct artpec6_pcie *artpec6_pcie)
- 	usleep_range(100, 200);
- }
- 
--static void artpec6_pcie_enable_interrupts(struct artpec6_pcie *artpec6_pcie)
--{
--	struct dw_pcie *pci = artpec6_pcie->pci;
--	struct pcie_port *pp = &pci->pp;
--
--	if (IS_ENABLED(CONFIG_PCI_MSI))
--		dw_pcie_msi_init(pp);
--}
--
- static int artpec6_pcie_host_init(struct pcie_port *pp)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-@@ -368,7 +359,7 @@ static int artpec6_pcie_host_init(struct pcie_port *pp)
- 	dw_pcie_setup_rc(pp);
- 	artpec6_pcie_establish_link(pci);
- 	dw_pcie_wait_for_link(pci);
--	artpec6_pcie_enable_interrupts(artpec6_pcie);
-+	dw_pcie_msi_init(pp);
- 
- 	return 0;
- }
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index 1ff4702595b6..0e62bed7f6cb 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -276,6 +276,9 @@ void dw_pcie_msi_init(struct pcie_port *pp)
- 	struct device *dev = pci->dev;
- 	u64 msi_target;
- 
-+	if (!IS_ENABLED(CONFIG_PCI_MSI))
-+		return;
-+
- 	pp->msi_page = alloc_page(GFP_KERNEL);
- 	pp->msi_data = dma_map_page(dev, pp->msi_page, 0, PAGE_SIZE,
- 				    DMA_FROM_DEVICE);
-diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
-index 73646b677aff..4990cd010983 100644
---- a/drivers/pci/controller/dwc/pcie-designware-plat.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
-@@ -39,9 +39,7 @@ static int dw_plat_pcie_host_init(struct pcie_port *pp)
+ 	struct dw_pcie *pci = &mp->pci;
+@@ -370,7 +351,6 @@ static int meson_pcie_establish_link(struct meson_pcie *mp)
+ 	meson_set_max_rd_req_size(mp, MAX_READ_REQ_SIZE);
  
  	dw_pcie_setup_rc(pp);
- 	dw_pcie_wait_for_link(pci);
--
--	if (IS_ENABLED(CONFIG_PCI_MSI))
--		dw_pcie_msi_init(pp);
-+	dw_pcie_msi_init(pp);
+-	meson_enable_memory_space(mp);
  
- 	return 0;
- }
-diff --git a/drivers/pci/controller/dwc/pcie-histb.c b/drivers/pci/controller/dwc/pcie-histb.c
-index 0d93088deea3..c97c37c6314e 100644
---- a/drivers/pci/controller/dwc/pcie-histb.c
-+++ b/drivers/pci/controller/dwc/pcie-histb.c
-@@ -202,9 +202,7 @@ static int histb_pcie_host_init(struct pcie_port *pp)
- 	pp->bridge->ops = &histb_pci_ops;
+ 	meson_pcie_assert_reset(mp);
  
- 	histb_pcie_establish_link(pp);
--
--	if (IS_ENABLED(CONFIG_PCI_MSI))
--		dw_pcie_msi_init(pp);
-+	dw_pcie_msi_init(pp);
- 
- 	return 0;
- }
-diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
-index 1680dc72b416..0be17db42f56 100644
---- a/drivers/pci/controller/dwc/pcie-kirin.c
-+++ b/drivers/pci/controller/dwc/pcie-kirin.c
-@@ -434,9 +434,7 @@ static int kirin_pcie_host_init(struct pcie_port *pp)
- 	pp->bridge->ops = &kirin_pci_ops;
- 
- 	kirin_pcie_establish_link(pp);
--
--	if (IS_ENABLED(CONFIG_PCI_MSI))
--		dw_pcie_msi_init(pp);
-+	dw_pcie_msi_init(pp);
- 
- 	return 0;
- }
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 138e1a2d21cc..9f1d3ba686fa 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -1237,9 +1237,7 @@ static int qcom_pcie_host_init(struct pcie_port *pp)
- 	}
- 
- 	dw_pcie_setup_rc(pp);
--
--	if (IS_ENABLED(CONFIG_PCI_MSI))
--		dw_pcie_msi_init(pp);
-+	dw_pcie_msi_init(pp);
- 
- 	qcom_ep_reset_deassert(pcie);
- 
-diff --git a/drivers/pci/controller/dwc/pcie-uniphier.c b/drivers/pci/controller/dwc/pcie-uniphier.c
-index a5401a0b1e58..07ba2d833941 100644
---- a/drivers/pci/controller/dwc/pcie-uniphier.c
-+++ b/drivers/pci/controller/dwc/pcie-uniphier.c
-@@ -322,8 +322,7 @@ static int uniphier_pcie_host_init(struct pcie_port *pp)
- 	if (ret)
- 		return ret;
- 
--	if (IS_ENABLED(CONFIG_PCI_MSI))
--		dw_pcie_msi_init(pp);
-+	dw_pcie_msi_init(pp);
- 
- 	return 0;
- }
 -- 
 2.25.1
 
