@@ -1,338 +1,167 @@
-Return-Path: <SRS0=9hNM=BN=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=QtGK=BO=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58ED2C43457
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 21:02:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1B70C433E0
+	for <linux-pci@archiver.kernel.org>; Tue,  4 Aug 2020 02:49:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6471522CA1
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Aug 2020 21:02:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1596488550;
-	bh=ga9IPiIiRhVx8miYkpRLWB6BnsCWSn0hkdFM06MoOLo=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=OGqlaRUITPscqSdILXl4WLLUuhL/MijJGlgMm8DpMsU8WMsR3QlDWR1EcDNmUq/dT
-	 955tOuv3nGqQqKPRXMzF15k7PC34yIEgjJqJC1Knu1au/ZFrMwZHYrVaLouHUEAG44
-	 tjUk66aGMeaSDv8GHHBZxZD9TGYnyRHDDnlkWjao=
+	by mail.kernel.org (Postfix) with ESMTP id 01D792177B
+	for <linux-pci@archiver.kernel.org>; Tue,  4 Aug 2020 02:49:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729470AbgHCVC3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 3 Aug 2020 17:02:29 -0400
-Received: from mail-io1-f68.google.com ([209.85.166.68]:35000 "EHLO
-        mail-io1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728570AbgHCVC1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Aug 2020 17:02:27 -0400
-Received: by mail-io1-f68.google.com with SMTP id s189so32774718iod.2;
-        Mon, 03 Aug 2020 14:02:25 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=PM8zrR6BXOfDRWMk7IOmZATjTEqDEPOnq1HMPd0fm+I=;
-        b=Pth5GiV2sgoMtDvU2E4+9rNu7QJOQZUekMh3rDsA8pW6bM0JolDGZZr+g799xUvu9/
-         /2LM0bbqqfFODyPdR+6eZBVjWP/gk4FW37w6MUFrupXG2wmrRrg4k+XQcADoGdLmHHUN
-         GsOEIO1z1xBwq4FXVFC0uRRO8K/qiy+OKD3q7+X+9iTIv6LTTWLIlTs8RbxMFyJ30bKX
-         RyaDp8hpQDuI/UoquvTYtzf3fzUMOY2naCc9kmSvcsjtou6S+ULgC/KXD/IP5gLdtfWK
-         NiLkVhFAYqL9vvL/gFLo4CC0BhMU1hgVj80G4F1tmWudYO4idbyyCiE0GKCez7aZ62eR
-         80pw==
-X-Gm-Message-State: AOAM530UjJ5dl0/7cC2WG4lNn33pQ+3feEVsh3guR39+6ikoiepvAwD9
-        RmmfX8zVWX8FxUdp86kwVQ==
-X-Google-Smtp-Source: ABdhPJw96k8lyNK11/NlxPpmp4xlor/b3WWjFcRtY1Ld3dnCdpoOVounuLgtCLR+q/EA7hpBdE6Lnw==
-X-Received: by 2002:a05:6638:1690:: with SMTP id f16mr1826708jat.91.1596488544963;
-        Mon, 03 Aug 2020 14:02:24 -0700 (PDT)
-Received: from xps15.herring.priv ([64.188.179.252])
-        by smtp.googlemail.com with ESMTPSA id r6sm9292280iod.7.2020.08.03.14.02.21
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 03 Aug 2020 14:02:24 -0700 (PDT)
-From:   Rob Herring <robh@kernel.org>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     Binghui Wang <wangbinghui@hisilicon.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Fabio Estevam <festevam@gmail.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        Jonathan Chocron <jonnyc@amazon.com>,
-        Jonathan Hunter <jonathanh@nvidia.com>,
-        Kevin Hilman <khilman@baylibre.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        Kukjin Kim <kgene@kernel.org>,
-        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
-        linux-amlogic@lists.infradead.org, linux-arm-kernel@axis.com,
-        linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, linux-omap@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-        linux-tegra@vger.kernel.org, Lucas Stach <l.stach@pengutronix.de>,
-        Masahiro Yamada <yamada.masahiro@socionext.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        NXP Linux Team <linux-imx@nxp.com>,
-        Pengutronix Kernel Team <kernel@pengutronix.de>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Sascha Hauer <s.hauer@pengutronix.de>,
-        Shawn Guo <shawnguo@kernel.org>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        Yue Wang <yue.wang@Amlogic.com>
-Subject: [RFC 24/27] PCI: dwc/meson: Rework PCI config and DW port logic register accesses
-Date:   Mon,  3 Aug 2020 15:01:13 -0600
-Message-Id: <20200803210116.3132633-25-robh@kernel.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200803210116.3132633-1-robh@kernel.org>
-References: <20200803210116.3132633-1-robh@kernel.org>
+        id S1730090AbgHDCtj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 3 Aug 2020 22:49:39 -0400
+Received: from mga01.intel.com ([192.55.52.88]:44388 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729888AbgHDCtj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 3 Aug 2020 22:49:39 -0400
+IronPort-SDR: 7CJ1eIo2KUy6AzQWPuK6tpZlmyg9EgsnYtsPWFT7cX31uGc+aLD1p66vHrbzjM1dYQqlj0HzdS
+ d1yX7k46ZTzw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9702"; a="170326640"
+X-IronPort-AV: E=Sophos;i="5.75,432,1589266800"; 
+   d="scan'208";a="170326640"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Aug 2020 19:49:38 -0700
+IronPort-SDR: /DNJdKJ7ZOG9Cex3N+zBTZhD0mZ440z5AJmsDzpiyUZOIQPM1V1XYhOot56u8W3uz3MuwgyXyL
+ lp3TPp6szG7Q==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.75,432,1589266800"; 
+   d="scan'208";a="275653037"
+Received: from lkp-server02.sh.intel.com (HELO 84ccfe698a63) ([10.239.97.151])
+  by fmsmga008.fm.intel.com with ESMTP; 03 Aug 2020 19:49:36 -0700
+Received: from kbuild by 84ccfe698a63 with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1k2n1D-0000NK-Cd; Tue, 04 Aug 2020 02:49:35 +0000
+Date:   Tue, 04 Aug 2020 10:48:35 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     linux-pci@vger.kernel.org
+Subject: [pci:pci/irq-error] BUILD SUCCESS
+ caecb05c800081c57907749f787f05f62011564e
+Message-ID: <5f28cc83.NQywWI6/eiQ9eixQ%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The meson 'elbi' registers are just the Designware 'dbi' space and all
-the registers accessed are either standard PCI config space or DWC port
-logic registers. Convert the accesses to use the common defines and
-register accessors.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git  pci/irq-error
+branch HEAD: caecb05c800081c57907749f787f05f62011564e  PCI: Remove dev_err() when handing an error from platform_get_irq()
 
-Cc: Yue Wang <yue.wang@Amlogic.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Kevin Hilman <khilman@baylibre.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>
-Cc: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-amlogic@lists.infradead.org
-Cc: linux-arm-kernel@lists.infradead.org
-Signed-off-by: Rob Herring <robh@kernel.org>
+elapsed time: 724m
+
+configs tested: 96
+configs skipped: 5
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+ia64                        generic_defconfig
+m68k                       bvme6000_defconfig
+arm                          pxa168_defconfig
+h8300                     edosk2674_defconfig
+arm                        shmobile_defconfig
+c6x                                 defconfig
+arm                            mmp2_defconfig
+arm                         lubbock_defconfig
+arc                     nsimosci_hs_defconfig
+arm                       aspeed_g4_defconfig
+arc                          axs101_defconfig
+powerpc                    amigaone_defconfig
+sh                   sh7770_generic_defconfig
+mips                        bcm47xx_defconfig
+h8300                    h8300h-sim_defconfig
+nds32                             allnoconfig
+powerpc                          alldefconfig
+mips                      bmips_stb_defconfig
+arm                        magician_defconfig
+arm                             pxa_defconfig
+sh                             sh03_defconfig
+mips                         db1xxx_defconfig
+arm                        trizeps4_defconfig
+parisc                           alldefconfig
+mips                           ip32_defconfig
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nios2                               defconfig
+arc                              allyesconfig
+c6x                              allyesconfig
+nds32                               defconfig
+nios2                            allyesconfig
+csky                                defconfig
+alpha                               defconfig
+alpha                            allyesconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+parisc                              defconfig
+s390                             allyesconfig
+parisc                           allyesconfig
+s390                                defconfig
+i386                             allyesconfig
+sparc                            allyesconfig
+sparc                               defconfig
+i386                                defconfig
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+powerpc                             defconfig
+i386                 randconfig-a004-20200803
+i386                 randconfig-a005-20200803
+i386                 randconfig-a001-20200803
+i386                 randconfig-a002-20200803
+i386                 randconfig-a003-20200803
+i386                 randconfig-a006-20200803
+x86_64               randconfig-a013-20200803
+x86_64               randconfig-a011-20200803
+x86_64               randconfig-a012-20200803
+x86_64               randconfig-a016-20200803
+x86_64               randconfig-a015-20200803
+x86_64               randconfig-a014-20200803
+i386                 randconfig-a011-20200803
+i386                 randconfig-a012-20200803
+i386                 randconfig-a015-20200803
+i386                 randconfig-a014-20200803
+i386                 randconfig-a013-20200803
+i386                 randconfig-a016-20200803
+x86_64               randconfig-a006-20200804
+x86_64               randconfig-a001-20200804
+x86_64               randconfig-a004-20200804
+x86_64               randconfig-a005-20200804
+x86_64               randconfig-a002-20200804
+x86_64               randconfig-a003-20200804
+riscv                            allyesconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                            allmodconfig
+x86_64                                   rhel
+x86_64                           allyesconfig
+x86_64                    rhel-7.6-kselftests
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                                  kexec
+
 ---
- drivers/pci/controller/dwc/pci-meson.c       | 113 +++++++------------
- drivers/pci/controller/dwc/pcie-designware.h |   1 +
- 2 files changed, 39 insertions(+), 75 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/controller/dwc/pci-meson.c
-index d1cfc65f0a69..734aace62173 100644
---- a/drivers/pci/controller/dwc/pci-meson.c
-+++ b/drivers/pci/controller/dwc/pci-meson.c
-@@ -22,23 +22,7 @@
- 
- #define to_meson_pcie(x) dev_get_drvdata((x)->dev)
- 
--/* External local bus interface registers */
--#define PLR_OFFSET			0x700
--#define PCIE_PORT_LINK_CTRL_OFF		(PLR_OFFSET + 0x10)
--#define FAST_LINK_MODE			BIT(7)
--#define LINK_CAPABLE_MASK		GENMASK(21, 16)
--#define LINK_CAPABLE_X1			BIT(16)
--
--#define PCIE_GEN2_CTRL_OFF		(PLR_OFFSET + 0x10c)
--#define NUM_OF_LANES_MASK		GENMASK(12, 8)
--#define NUM_OF_LANES_X1			BIT(8)
--#define DIRECT_SPEED_CHANGE		BIT(17)
--
--#define PCIE_CAP_OFFSET			0x70
--#define PCIE_DEV_CTRL_DEV_STUS		(PCIE_CAP_OFFSET + 0x08)
--#define PCIE_CAP_MAX_PAYLOAD_MASK	GENMASK(7, 5)
- #define PCIE_CAP_MAX_PAYLOAD_SIZE(x)	((x) << 5)
--#define PCIE_CAP_MAX_READ_REQ_MASK	GENMASK(14, 12)
- #define PCIE_CAP_MAX_READ_REQ_SIZE(x)	((x) << 12)
- 
- /* PCIe specific config registers */
-@@ -68,11 +52,6 @@ enum pcie_data_rate {
- 	PCIE_GEN4
- };
- 
--struct meson_pcie_mem_res {
--	void __iomem *elbi_base;
--	void __iomem *cfg_base;
--};
--
- struct meson_pcie_clk_res {
- 	struct clk *clk;
- 	struct clk *port_clk;
-@@ -86,7 +65,7 @@ struct meson_pcie_rc_reset {
- 
- struct meson_pcie {
- 	struct dw_pcie pci;
--	struct meson_pcie_mem_res mem_res;
-+	void __iomem *cfg_base;
- 	struct meson_pcie_clk_res clk_res;
- 	struct meson_pcie_rc_reset mrst;
- 	struct gpio_desc *reset_gpio;
-@@ -125,28 +104,18 @@ static int meson_pcie_get_resets(struct meson_pcie *mp)
- 	return 0;
- }
- 
--static void __iomem *meson_pcie_get_mem(struct platform_device *pdev,
--					struct meson_pcie *mp,
--					const char *id)
--{
--	struct device *dev = mp->pci.dev;
--	struct resource *res;
--
--	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, id);
--
--	return devm_ioremap_resource(dev, res);
--}
--
- static int meson_pcie_get_mems(struct platform_device *pdev,
- 			       struct meson_pcie *mp)
- {
--	mp->mem_res.elbi_base = meson_pcie_get_mem(pdev, mp, "elbi");
--	if (IS_ERR(mp->mem_res.elbi_base))
--		return PTR_ERR(mp->mem_res.elbi_base);
-+	struct dw_pcie *pci = &mp->pci;
- 
--	mp->mem_res.cfg_base = meson_pcie_get_mem(pdev, mp, "cfg");
--	if (IS_ERR(mp->mem_res.cfg_base))
--		return PTR_ERR(mp->mem_res.cfg_base);
-+	pci->dbi_base = devm_platform_ioremap_resource_byname(pdev, "elbi");
-+	if (IS_ERR(pci->dbi_base))
-+		return PTR_ERR(pci->dbi_base);
-+
-+	mp->cfg_base = devm_platform_ioremap_resource_byname(pdev, "cfg");
-+	if (IS_ERR(mp->cfg_base))
-+		return PTR_ERR(mp->cfg_base);
- 
- 	return 0;
- }
-@@ -244,24 +213,14 @@ static int meson_pcie_probe_clocks(struct meson_pcie *mp)
- 	return 0;
- }
- 
--static inline void meson_elb_writel(struct meson_pcie *mp, u32 val, u32 reg)
--{
--	writel(val, mp->mem_res.elbi_base + reg);
--}
--
--static inline u32 meson_elb_readl(struct meson_pcie *mp, u32 reg)
--{
--	return readl(mp->mem_res.elbi_base + reg);
--}
--
- static inline u32 meson_cfg_readl(struct meson_pcie *mp, u32 reg)
- {
--	return readl(mp->mem_res.cfg_base + reg);
-+	return readl(mp->cfg_base + reg);
- }
- 
- static inline void meson_cfg_writel(struct meson_pcie *mp, u32 val, u32 reg)
- {
--	writel(val, mp->mem_res.cfg_base + reg);
-+	writel(val, mp->cfg_base + reg);
- }
- 
- static void meson_pcie_assert_reset(struct meson_pcie *mp)
-@@ -273,27 +232,28 @@ static void meson_pcie_assert_reset(struct meson_pcie *mp)
- 
- static void meson_pcie_init_dw(struct meson_pcie *mp)
- {
-+	struct dw_pcie *pci = &mp->pci;
- 	u32 val;
- 
- 	val = meson_cfg_readl(mp, PCIE_CFG0);
- 	val |= APP_LTSSM_ENABLE;
- 	meson_cfg_writel(mp, val, PCIE_CFG0);
- 
--	val = meson_elb_readl(mp, PCIE_PORT_LINK_CTRL_OFF);
--	val &= ~(LINK_CAPABLE_MASK | FAST_LINK_MODE);
--	meson_elb_writel(mp, val, PCIE_PORT_LINK_CTRL_OFF);
-+	val = dw_pcie_readl_dbi(pci, PCIE_PORT_LINK_CONTROL);
-+	val &= ~(PORT_LINK_MODE_MASK | PORT_LINK_FAST_LINK_MODE);
-+	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, val);
- 
--	val = meson_elb_readl(mp, PCIE_PORT_LINK_CTRL_OFF);
--	val |= LINK_CAPABLE_X1;
--	meson_elb_writel(mp, val, PCIE_PORT_LINK_CTRL_OFF);
-+	val = dw_pcie_readl_dbi(pci, PCIE_PORT_LINK_CONTROL);
-+	val |= PORT_LINK_MODE_1_LANES;
-+	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, val);
- 
--	val = meson_elb_readl(mp, PCIE_GEN2_CTRL_OFF);
--	val &= ~NUM_OF_LANES_MASK;
--	meson_elb_writel(mp, val, PCIE_GEN2_CTRL_OFF);
-+	val = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
-+	val &= ~PORT_LOGIC_LINK_WIDTH_MASK;
-+	dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, val);
- 
--	val = meson_elb_readl(mp, PCIE_GEN2_CTRL_OFF);
--	val |= NUM_OF_LANES_X1 | DIRECT_SPEED_CHANGE;
--	meson_elb_writel(mp, val, PCIE_GEN2_CTRL_OFF);
-+	val = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
-+	val |= PORT_LOGIC_LINK_WIDTH_1_LANES | PORT_LOGIC_SPEED_CHANGE;
-+	dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, val);
- }
- 
- static int meson_size_to_payload(struct meson_pcie *mp, int size)
-@@ -315,30 +275,34 @@ static int meson_size_to_payload(struct meson_pcie *mp, int size)
- 
- static void meson_set_max_payload(struct meson_pcie *mp, int size)
- {
-+	struct dw_pcie *pci = &mp->pci;
- 	u32 val;
-+	u16 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
- 	int max_payload_size = meson_size_to_payload(mp, size);
- 
--	val = meson_elb_readl(mp, PCIE_DEV_CTRL_DEV_STUS);
--	val &= ~PCIE_CAP_MAX_PAYLOAD_MASK;
--	meson_elb_writel(mp, val, PCIE_DEV_CTRL_DEV_STUS);
-+	val = dw_pcie_readl_dbi(pci, offset + PCI_EXP_DEVCTL);
-+	val &= ~PCI_EXP_DEVCTL_PAYLOAD;
-+	dw_pcie_writel_dbi(pci, offset + PCI_EXP_DEVCTL, val);
- 
--	val = meson_elb_readl(mp, PCIE_DEV_CTRL_DEV_STUS);
-+	val = dw_pcie_readl_dbi(pci, offset + PCI_EXP_DEVCTL);
- 	val |= PCIE_CAP_MAX_PAYLOAD_SIZE(max_payload_size);
--	meson_elb_writel(mp, val, PCIE_DEV_CTRL_DEV_STUS);
-+	dw_pcie_writel_dbi(pci, offset + PCI_EXP_DEVCTL, val);
- }
- 
- static void meson_set_max_rd_req_size(struct meson_pcie *mp, int size)
- {
-+	struct dw_pcie *pci = &mp->pci;
- 	u32 val;
-+	u16 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
- 	int max_rd_req_size = meson_size_to_payload(mp, size);
- 
--	val = meson_elb_readl(mp, PCIE_DEV_CTRL_DEV_STUS);
--	val &= ~PCIE_CAP_MAX_READ_REQ_MASK;
--	meson_elb_writel(mp, val, PCIE_DEV_CTRL_DEV_STUS);
-+	val = dw_pcie_readl_dbi(pci, offset + PCI_EXP_DEVCTL);
-+	val &= ~PCI_EXP_DEVCTL_READRQ;
-+	dw_pcie_writel_dbi(pci, offset + PCI_EXP_DEVCTL, val);
- 
--	val = meson_elb_readl(mp, PCIE_DEV_CTRL_DEV_STUS);
-+	val = dw_pcie_readl_dbi(pci, offset + PCI_EXP_DEVCTL);
- 	val |= PCIE_CAP_MAX_READ_REQ_SIZE(max_rd_req_size);
--	meson_elb_writel(mp, val, PCIE_DEV_CTRL_DEV_STUS);
-+	dw_pcie_writel_dbi(pci, offset + PCI_EXP_DEVCTL, val);
- }
- 
- static int meson_pcie_establish_link(struct meson_pcie *mp)
-@@ -466,7 +430,6 @@ static int meson_add_pcie_port(struct meson_pcie *mp,
- 	}
- 
- 	pp->ops = &meson_pcie_host_ops;
--	pci->dbi_base = mp->mem_res.elbi_base;
- 
- 	ret = dw_pcie_host_init(pp);
- 	if (ret) {
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 2db6f52dfe81..b18a9a5f48d2 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -36,6 +36,7 @@
- 
- #define PCIE_PORT_LINK_CONTROL		0x710
- #define PORT_LINK_DLL_LINK_EN		BIT(5)
-+#define PORT_LINK_FAST_LINK_MODE	BIT(7)
- #define PORT_LINK_MODE_MASK		GENMASK(21, 16)
- #define PORT_LINK_MODE(n)		FIELD_PREP(PORT_LINK_MODE_MASK, n)
- #define PORT_LINK_MODE_1_LANES		PORT_LINK_MODE(0x1)
--- 
-2.25.1
-
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
