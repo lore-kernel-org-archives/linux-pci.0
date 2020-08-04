@@ -7,43 +7,43 @@ X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E1EDC433E1
-	for <linux-pci@archiver.kernel.org>; Tue,  4 Aug 2020 19:41:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B549C433DF
+	for <linux-pci@archiver.kernel.org>; Tue,  4 Aug 2020 19:41:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3322122BED
-	for <linux-pci@archiver.kernel.org>; Tue,  4 Aug 2020 19:41:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5CECA2076E
+	for <linux-pci@archiver.kernel.org>; Tue,  4 Aug 2020 19:41:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728624AbgHDTl3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 4 Aug 2020 15:41:29 -0400
-Received: from mga18.intel.com ([134.134.136.126]:29273 "EHLO mga18.intel.com"
+        id S1728371AbgHDTlK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 4 Aug 2020 15:41:10 -0400
+Received: from mga18.intel.com ([134.134.136.126]:29261 "EHLO mga18.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728462AbgHDTlN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 4 Aug 2020 15:41:13 -0400
-IronPort-SDR: 6LAbpK2NEiPAelWxbtC/inVuSTjCHWKX7BQggLv1tUZJiPnMIByGc5AH8cIQf1HnEa8c+WR4jB
- 6uKflVhy8hRQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9703"; a="139991130"
+        id S1728270AbgHDTlH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 4 Aug 2020 15:41:07 -0400
+IronPort-SDR: y/KTXzLmttNAz3ogHcO7pGL8zLaFDjyzJqjQakWadhhTt+tgk98S0cnRzfTb7rgIGAqanoCXd6
+ sSPyogW3C/GQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9703"; a="139991100"
 X-IronPort-AV: E=Sophos;i="5.75,434,1589266800"; 
-   d="scan'208";a="139991130"
+   d="scan'208";a="139991100"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2020 12:41:11 -0700
-IronPort-SDR: LgLHdeAYYWkofiImhXp9dVHytvDJBva3dmil3eBuoDI02FYPqLmta18nJU1F6EXwCD0gFND5G3
- slyyLXn7BDdw==
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2020 12:41:07 -0700
+IronPort-SDR: s2P1ls1ValU185pYYZ5NlKXOyc7Fi0qp+U9ywdFlaUOpv/mMdNhalzhgyg2zuEEX4/VLtbZkl7
+ ZLpQy2nnbByg==
 X-IronPort-AV: E=Sophos;i="5.75,434,1589266800"; 
-   d="scan'208";a="467199278"
+   d="scan'208";a="467199230"
 Received: from viveksh1-mobl.amr.corp.intel.com (HELO arch-ashland-svkelley.intel.com) ([10.255.83.117])
-  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2020 12:41:11 -0700
+  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2020 12:41:06 -0700
 From:   Sean V Kelley <sean.v.kelley@intel.com>
 To:     bhelgaas@google.com, Jonathan.Cameron@huawei.com,
         rjw@rjwysocki.net, ashok.raj@intel.com, tony.luck@intel.com,
         sathyanarayanan.kuppuswamy@linux.intel.com
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Sean V Kelley <sean.v.kelley@intel.com>,
-        Qiuxu Zhuo <qiuxu.zhuo@intel.com>
-Subject: [PATCH V2 8/9] PCI/PME: Add RCEC PME handling
-Date:   Tue,  4 Aug 2020 12:40:51 -0700
-Message-Id: <20200804194052.193272-9-sean.v.kelley@intel.com>
+        Qiuxu Zhuo <qiuxu.zhuo@intel.com>,
+        Sean V Kelley <sean.v.kelley@intel.com>
+Subject: [PATCH V2 3/9] PCI/portdrv: Add pcie_walk_rcec() to walk RCiEPs associated with RCEC
+Date:   Tue,  4 Aug 2020 12:40:46 -0700
+Message-Id: <20200804194052.193272-4-sean.v.kelley@intel.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20200804194052.193272-1-sean.v.kelley@intel.com>
 References: <20200804194052.193272-1-sean.v.kelley@intel.com>
@@ -54,67 +54,135 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The Root Complex Event Collectors(RCEC) appear as peers of Root Ports
-and also have the PME capability. So add RCEC support to the current PME
-service driver and attach the PME service driver to the RCEC device.
+From: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
 
-Co-developed-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
-Signed-off-by: Sean V Kelley <sean.v.kelley@intel.com>
+When an RCEC device signals error(s) to a CPU core, the CPU core
+needs to walk all the RCiEPs associated with that RCEC to check
+errors. So add the function pcie_walk_rcec() to walk all RCiEPs
+associated with the RCEC device.
+
+Co-developed-by: Sean V Kelley <sean.v.kelley@intel.com>
 Signed-off-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+Signed-off-by: Sean V Kelley <sean.v.kelley@intel.com>
+Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 ---
- drivers/pci/pcie/pme.c | 15 +++++++++++----
- 1 file changed, 11 insertions(+), 4 deletions(-)
+ drivers/pci/pcie/portdrv.h      |  2 +
+ drivers/pci/pcie/portdrv_core.c | 82 +++++++++++++++++++++++++++++++++
+ 2 files changed, 84 insertions(+)
 
-diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
-index 6a32970bb731..87799166c96a 100644
---- a/drivers/pci/pcie/pme.c
-+++ b/drivers/pci/pcie/pme.c
-@@ -310,7 +310,10 @@ static int pcie_pme_can_wakeup(struct pci_dev *dev, void *ign)
- static void pcie_pme_mark_devices(struct pci_dev *port)
- {
- 	pcie_pme_can_wakeup(port, NULL);
--	if (port->subordinate)
-+
-+	if (pci_pcie_type(port) == PCI_EXP_TYPE_RC_EC)
-+		pcie_walk_rcec(port, pcie_pme_can_wakeup, NULL);
-+	else if (port->subordinate)
- 		pci_walk_bus(port->subordinate, pcie_pme_can_wakeup, NULL);
+diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
+index af7cf237432a..c11d5ecbad76 100644
+--- a/drivers/pci/pcie/portdrv.h
++++ b/drivers/pci/pcie/portdrv.h
+@@ -116,6 +116,8 @@ void pcie_port_service_unregister(struct pcie_port_service_driver *new);
+ 
+ extern struct bus_type pcie_port_bus_type;
+ int pcie_port_device_register(struct pci_dev *dev);
++void pcie_walk_rcec(struct pci_dev *rcec, int (*cb)(struct pci_dev *, void *),
++		    void *userdata);
+ #ifdef CONFIG_PM
+ int pcie_port_device_suspend(struct device *dev);
+ int pcie_port_device_resume_noirq(struct device *dev);
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index 5d4a400094fc..daa2dfa83a0b 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -14,6 +14,7 @@
+ #include <linux/pm_runtime.h>
+ #include <linux/string.h>
+ #include <linux/slab.h>
++#include <linux/bitops.h>
+ #include <linux/aer.h>
+ 
+ #include "../pci.h"
+@@ -365,6 +366,87 @@ int pcie_port_device_register(struct pci_dev *dev)
+ 	return status;
  }
  
-@@ -320,10 +323,15 @@ static void pcie_pme_mark_devices(struct pci_dev *port)
-  */
- static int pcie_pme_probe(struct pcie_device *srv)
- {
--	struct pci_dev *port;
-+	struct pci_dev *port = srv->port;
- 	struct pcie_pme_service_data *data;
- 	int ret;
- 
-+	/* Limit to Root Ports or Root Complex Event Collectors */
-+	if ((pci_pcie_type(port) != PCI_EXP_TYPE_RC_EC) &&
-+	    (pci_pcie_type(port) != PCI_EXP_TYPE_ROOT_PORT))
-+		return -ENODEV;
++static int pcie_walk_rciep_devfn(struct pci_bus *pbus, int (*cb)(struct pci_dev *, void *),
++				 void *userdata, unsigned long bitmap)
++{
++	unsigned int dev, fn;
++	struct pci_dev *pdev;
++	int retval;
 +
- 	data = kzalloc(sizeof(*data), GFP_KERNEL);
- 	if (!data)
- 		return -ENOMEM;
-@@ -333,7 +341,6 @@ static int pcie_pme_probe(struct pcie_device *srv)
- 	data->srv = srv;
- 	set_service_data(srv, data);
++	for_each_set_bit(dev, &bitmap, 32) {
++		for (fn = 0; fn < 8; fn++) {
++			pdev = pci_get_slot(pbus, PCI_DEVFN(dev, fn));
++
++			if (!pdev || pci_pcie_type(pdev) != PCI_EXP_TYPE_RC_END)
++				continue;
++
++			retval = cb(pdev, userdata);
++			if (retval)
++				return retval;
++		}
++	}
++
++	return 0;
++}
++
++/**
++ * pcie_walk_rcec - Walk RCiEP devices associating with RCEC and call callback.
++ * @rcec     RCEC whose RCiEP devices should be walked.
++ * @cb       Callback to be called for each RCiEP device found.
++ * @userdata Arbitrary pointer to be passed to callback.
++ *
++ * Walk the given RCEC. Call the provided callback on each RCiEP device found.
++ *
++ * We check the return of @cb each time. If it returns anything
++ * other than 0, we break out.
++ */
++void pcie_walk_rcec(struct pci_dev *rcec, int (*cb)(struct pci_dev *, void *),
++		    void *userdata)
++{
++	u32 pos, bitmap, hdr, busn;
++	u8 ver, nextbusn, lastbusn;
++	struct pci_bus *pbus;
++	unsigned int bnr;
++
++	pos = pci_find_ext_capability(rcec, PCI_EXT_CAP_ID_RCEC);
++	if (!pos)
++		return;
++
++	pbus = pci_find_bus(pci_domain_nr(rcec->bus), rcec->bus->number);
++	if (!pbus)
++		return;
++
++	pci_read_config_dword(rcec, pos + PCI_RCEC_RCIEP_BITMAP, &bitmap);
++
++	/* Find RCiEP devices on the same bus as the RCEC */
++	if (pcie_walk_rciep_devfn(pbus, cb, userdata, (unsigned long)bitmap))
++		return;
++
++	/* Check whether RCEC BUSN register is present */
++	pci_read_config_dword(rcec, pos, &hdr);
++	ver = PCI_EXT_CAP_VER(hdr);
++	if (ver < PCI_RCEC_BUSN_REG_VER)
++		return;
++
++	pci_read_config_dword(rcec, pos + PCI_RCEC_BUSN, &busn);
++	nextbusn = PCI_RCEC_BUSN_NEXT(busn);
++	lastbusn = PCI_RCEC_BUSN_LAST(busn);
++
++	/* All RCiEP devices are on the same bus as the RCEC */
++	if (nextbusn == 0xff && lastbusn == 0x00)
++		return;
++
++	for (bnr = nextbusn; bnr <= lastbusn; bnr++) {
++		pbus = pci_find_bus(pci_domain_nr(rcec->bus), bnr);
++		if (!pbus)
++			continue;
++
++		/* Find RCiEP devices on the given bus */
++		if (pcie_walk_rciep_devfn(pbus, cb, userdata, 0xffffffff))
++			return;
++	}
++}
++
+ #ifdef CONFIG_PM
+ typedef int (*pcie_pm_callback_t)(struct pcie_device *);
  
--	port = srv->port;
- 	pcie_pme_interrupt_enable(port, false);
- 	pcie_clear_root_pme_status(port);
- 
-@@ -445,7 +452,7 @@ static void pcie_pme_remove(struct pcie_device *srv)
- 
- static struct pcie_port_service_driver pcie_pme_driver = {
- 	.name		= "pcie_pme",
--	.port_type	= PCI_EXP_TYPE_ROOT_PORT,
-+	.port_type	= PCIE_ANY_PORT,
- 	.service	= PCIE_PORT_SERVICE_PME,
- 
- 	.probe		= pcie_pme_probe,
 -- 
 2.27.0
 
