@@ -2,182 +2,214 @@ Return-Path: <SRS0=QtGK=BO=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A440DC433E0
-	for <linux-pci@archiver.kernel.org>; Tue,  4 Aug 2020 12:00:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC111C433E0
+	for <linux-pci@archiver.kernel.org>; Tue,  4 Aug 2020 12:19:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8375B2086A
-	for <linux-pci@archiver.kernel.org>; Tue,  4 Aug 2020 12:00:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1596542427;
-	bh=99nktUwJy6UmKxOxLJSyDUqszlYQ5GoCmXS2m/hZl2o=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=b95mCHOvVGU3fNJLSoXBWugM0h5wvSq2ddSHWZJvZXfUOjZFS/Pc+HIxeN4gQlegU
-	 4H8atGxMMSVPnQ3AHJ1on/+FEvAjSCkIjNWjaI5ExnhluCkylr7i0fb1zQDAbtoKZa
-	 fGlksIr+GuxHJnQ8iqHEKKCGkybAPIcysaeepaHY=
+	by mail.kernel.org (Postfix) with ESMTP id 8FBD42177B
+	for <linux-pci@archiver.kernel.org>; Tue,  4 Aug 2020 12:19:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730469AbgHDL7P (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 4 Aug 2020 07:59:15 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40176 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730443AbgHDL63 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 4 Aug 2020 07:58:29 -0400
-Received: from pali.im (pali.im [31.31.79.79])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BA3152086A;
-        Tue,  4 Aug 2020 11:58:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1596542291;
-        bh=99nktUwJy6UmKxOxLJSyDUqszlYQ5GoCmXS2m/hZl2o=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=IMSgottE1Dpruui4gxofELhKrtngabO0FunBqvNsARVzfnDVFsx2rhHJDHGC7tMCc
-         U6oBTKK3lWrMuLiqbIhU6lYjuAIgpQnWr78uovNF4b0YL4MWYwGfXmvvhy9t+L/shj
-         /4N54nK28a/UIgxgIvkRNXNqdLZDLNzpk1AU/GFc=
-Received: by pali.im (Postfix)
-        id 1ECB07FD; Tue,  4 Aug 2020 13:58:10 +0200 (CEST)
-From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
-To:     linux-pci@vger.kernel.org
-Cc:     Tomasz Maciej Nowak <tmn505@gmail.com>,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-kernel@vger.kernel.org, Andrew Lunn <andrew@lunn.ch>,
-        Xogium <contact@xogium.me>, marek.behun@nic.cz
-Subject: [PATCH v2 5/5] PCI: aardvark: Move PCIe reset card code to advk_pcie_train_link()
-Date:   Tue,  4 Aug 2020 13:57:47 +0200
-Message-Id: <20200804115747.7078-6-pali@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200804115747.7078-1-pali@kernel.org>
-References: <20200804115747.7078-1-pali@kernel.org>
+        id S1727862AbgHDMSB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 4 Aug 2020 08:18:01 -0400
+Received: from mail-oi1-f194.google.com ([209.85.167.194]:41596 "EHLO
+        mail-oi1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727819AbgHDMM5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Aug 2020 08:12:57 -0400
+Received: by mail-oi1-f194.google.com with SMTP id b22so10175441oic.8;
+        Tue, 04 Aug 2020 05:12:56 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=PO9J9HS1PBC7NzRFj8oPcc40kwBpzKOr6JMPb3RGCwI=;
+        b=hUIdV4tR9w2d2zrhAUA9oOz4fjenr9ML2nDylWdCzKTtdlKMk5r4iDPLzE9ij77NE0
+         8P1DiviPLADWeU3okUxU8eWaSGZexmshSFVJpQFQ8VFMbB1D8gNqqVy7hhE8ASQQim73
+         3uzoyV9Se5XBf0YsLep10GwQKTO6bL5nn+i5ZHhS8OCMWiw7BmV7W65fK3moyq/MMLgb
+         ep10VH9zkzlABaplS+/inPYrsNntSuQ7+2i6urc7bfTwukeRo5Lq07dYn8f93QAlV1H8
+         dgGYuxC9iv/0aHUmiB7qWH6i+rf9Uq6LS/PK/ikcDA5vZQY8y3a5kpa1SOULYcaPTyKT
+         6ZHg==
+X-Gm-Message-State: AOAM530vig0+dFFWyHw+/rY6zONX96GnHLVZAOSYBWws3bVxZd8TJ4bN
+        qKAnLfFLdtYpYcGnsi77hVjxlkTrikr6XGwQh54=
+X-Google-Smtp-Source: ABdhPJy+qMQTRq8deo5ciXBpF5zQuAaoPjC6/y+Q96LkXpV5AoEfncTl+6PXLfMnptNO7gLF0ZxNsXi3fVsvVuIVsak=
+X-Received: by 2002:aca:adc4:: with SMTP id w187mr2923237oie.153.1596543176297;
+ Tue, 04 Aug 2020 05:12:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+References: <20200722022514.1283916-1-robh@kernel.org> <20200722022514.1283916-18-robh@kernel.org>
+In-Reply-To: <20200722022514.1283916-18-robh@kernel.org>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Tue, 4 Aug 2020 14:12:44 +0200
+Message-ID: <CAMuHMdWVWoQDc3MMv9LjA+hA1EoXQjVM-JfO_hVqnDf0tC8LJg@mail.gmail.com>
+Subject: Re: [PATCH 17/19] PCI: rcar-gen2: Convert to use modern host bridge
+ probe functions
+To:     Rob Herring <robh@kernel.org>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Fabio Estevam <festevam@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        NXP Linux Team <linux-imx@nxp.com>,
+        Pengutronix Kernel Team <kernel@pengutronix.de>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Shawn Guo <shawnguo@kernel.org>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Tom Joseph <tjoseph@cadence.com>,
+        Will Deacon <will@kernel.org>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        linux-mediatek@lists.infradead.org,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        "open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
+        linux-tegra <linux-tegra@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Move code which belongs to link training (delays and resets) into
-advk_pcie_train_link() function, so everything related to link training,
-including timings is at one place.
+Hi Rob,
 
-After experiments it can be observed that link training in aardvark
-hardware is very sensitive to timings and delays, so it is a good idea to
-have this code at the same place as link training calls.
+On Wed, Jul 22, 2020 at 4:26 AM Rob Herring <robh@kernel.org> wrote:
+> The rcar-gen2 host driver still uses the old Arm PCI setup function
+> pci_common_init_dev(). Let's update it to use the modern
+> devm_pci_alloc_host_bridge(), pci_parse_request_of_pci_ranges() and
+> pci_host_probe() functions.
+>
+> Cc: Marek Vasut <marek.vasut+renesas@gmail.com>
+> Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-renesas-soc@vger.kernel.org
+> Signed-off-by: Rob Herring <robh@kernel.org>
 
-This patch does not change behavior of aardvark initialization.
+This is now commit 92d69cc6275845a7 ("PCI: rcar-gen2: Convert to use
+modern host bridge probe functions"), and causes a crash on r8a7791/koelsch:
 
-Signed-off-by: Pali Rohár <pali@kernel.org>
-Tested-by: Marek Behún <marek.behun@nic.cz>
----
- drivers/pci/controller/pci-aardvark.c | 64 ++++++++++++++-------------
- 1 file changed, 34 insertions(+), 30 deletions(-)
+    Unable to handle kernel NULL pointer dereference at virtual address 00000008
+    pgd = (ptrval)
+    [00000008] *pgd=00000000
+    Internal error: Oops: 5 [#1] SMP ARM
+    CPU: 0 PID: 1 Comm: swapper/0 Not tainted
+5.8.0-rc1-shmobile-00035-g92d69cc6275845a7 #645
+    Hardware name: Generic R-Car Gen2 (Flattened Device Tree)
+    PC is at rcar_pci_probe+0x154/0x340
+    LR is at _raw_spin_unlock_irqrestore+0x18/0x20
 
-diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index f5c1d231b0e2..fcea300fbcc0 100644
---- a/drivers/pci/controller/pci-aardvark.c
-+++ b/drivers/pci/controller/pci-aardvark.c
-@@ -253,6 +253,25 @@ static void advk_pcie_wait_for_retrain(struct advk_pcie *pcie)
- 	}
- }
- 
-+static void advk_pcie_issue_perst(struct advk_pcie *pcie)
-+{
-+	u32 reg;
-+
-+	if (!pcie->reset_gpio)
-+		return;
-+
-+	/* PERST does not work for some cards when link training is enabled */
-+	reg = advk_readl(pcie, PCIE_CORE_CTRL0_REG);
-+	reg &= ~LINK_TRAINING_EN;
-+	advk_writel(pcie, reg, PCIE_CORE_CTRL0_REG);
-+
-+	/* 10ms delay is needed for some cards */
-+	dev_info(&pcie->pdev->dev, "issuing PERST via reset GPIO for 10ms\n");
-+	gpiod_set_value_cansleep(pcie->reset_gpio, 1);
-+	usleep_range(10000, 11000);
-+	gpiod_set_value_cansleep(pcie->reset_gpio, 0);
-+}
-+
- static int advk_pcie_train_at_gen(struct advk_pcie *pcie, int gen)
- {
- 	int ret, neg_gen;
-@@ -300,6 +319,21 @@ static void advk_pcie_train_link(struct advk_pcie *pcie)
- 	struct device *dev = &pcie->pdev->dev;
- 	int neg_gen = -1, gen;
- 
-+	/*
-+	 * Reset PCIe card via PERST# signal. Some cards are not detected
-+	 * during link training when they are in some non-initial state.
-+	 */
-+	advk_pcie_issue_perst(pcie);
-+
-+	/*
-+	 * PERST# signal could have been asserted by pinctrl subsystem before
-+	 * probe() callback has been called or issued explicitly by reset gpio
-+	 * function advk_pcie_issue_perst(), making the endpoint going into
-+	 * fundamental reset. As required by PCI Express spec a delay for at
-+	 * least 100ms after such a reset before link training is needed.
-+	 */
-+	msleep(PCI_PM_D3COLD_WAIT);
-+
- 	/*
- 	 * Try link training at link gen specified by device tree property
- 	 * 'max-link-speed'. If this fails, iteratively train at lower gen.
-@@ -332,31 +366,10 @@ static void advk_pcie_train_link(struct advk_pcie *pcie)
- 	dev_err(dev, "link never came up\n");
- }
- 
--static void advk_pcie_issue_perst(struct advk_pcie *pcie)
--{
--	u32 reg;
--
--	if (!pcie->reset_gpio)
--		return;
--
--	/* PERST does not work for some cards when link training is enabled */
--	reg = advk_readl(pcie, PCIE_CORE_CTRL0_REG);
--	reg &= ~LINK_TRAINING_EN;
--	advk_writel(pcie, reg, PCIE_CORE_CTRL0_REG);
--
--	/* 10ms delay is needed for some cards */
--	dev_info(&pcie->pdev->dev, "issuing PERST via reset GPIO for 10ms\n");
--	gpiod_set_value_cansleep(pcie->reset_gpio, 1);
--	usleep_range(10000, 11000);
--	gpiod_set_value_cansleep(pcie->reset_gpio, 0);
--}
--
- static void advk_pcie_setup_hw(struct advk_pcie *pcie)
- {
- 	u32 reg;
- 
--	advk_pcie_issue_perst(pcie);
--
- 	/* Enable TX */
- 	reg = advk_readl(pcie, PCIE_CORE_REF_CLK_REG);
- 	reg |= PCIE_CORE_REF_CLK_TX_ENABLE;
-@@ -433,15 +446,6 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
- 	reg |= PIO_CTRL_ADDR_WIN_DISABLE;
- 	advk_writel(pcie, reg, PIO_CTRL);
- 
--	/*
--	 * PERST# signal could have been asserted by pinctrl subsystem before
--	 * probe() callback has been called or issued explicitly by reset gpio
--	 * function advk_pcie_issue_perst(), making the endpoint going into
--	 * fundamental reset. As required by PCI Express spec a delay for at
--	 * least 100ms after such a reset before link training is needed.
--	 */
--	msleep(PCI_PM_D3COLD_WAIT);
--
- 	advk_pcie_train_link(pcie);
- 
- 	/*
+> --- a/drivers/pci/controller/pci-rcar-gen2.c
+> +++ b/drivers/pci/controller/pci-rcar-gen2.c
+> @@ -189,19 +170,33 @@ static inline void rcar_pci_setup_errirq(struct rcar_pci_priv *priv) { }
+>  #endif
+>
+>  /* PCI host controller setup */
+> -static int rcar_pci_setup(int nr, struct pci_sys_data *sys)
+> +static void rcar_pci_setup(struct rcar_pci_priv *priv)
+>  {
+> -       struct rcar_pci_priv *priv = sys->private_data;
+> +       struct pci_host_bridge *bridge = pci_host_bridge_from_priv(priv);
+>         struct device *dev = priv->dev;
+>         void __iomem *reg = priv->reg;
+> +       struct resource_entry *entry;
+> +       unsigned long window_size;
+> +       unsigned long window_addr;
+> +       unsigned long window_pci;
+>         u32 val;
+> -       int ret;
+> +
+> +       entry = resource_list_first_type(&bridge->dma_ranges, IORESOURCE_MEM);
+
+bridge->dma_ranges is not initialized => BOOM.
+
+>  static int rcar_pci_probe(struct platform_device *pdev)
+>  {
+>         struct device *dev = &pdev->dev;
+>         struct resource *cfg_res, *mem_res;
+>         struct rcar_pci_priv *priv;
+> +       struct pci_host_bridge *bridge;
+>         void __iomem *reg;
+> -       struct hw_pci hw;
+> -       void *hw_private[1];
+> +       int ret;
+> +
+> +       bridge = devm_pci_alloc_host_bridge(dev, sizeof(*priv));
+> +       if (!bridge)
+> +               return -ENOMEM;
+> +
+> +       priv = pci_host_bridge_priv(bridge);
+
+This is the "new" priv instance.
+
+> +       bridge->sysdata = priv;
+>
+>         cfg_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+>         reg = devm_ioremap_resource(dev, cfg_res);
+
+However, the "old" instance is still allocated below, and should be removed.
+
+I've send a patch to fix that, which should appear soon at
+https://lore.kernel.org/r/20200804120430.9253-1-geert+renesas@glider.be
+
+BTW, the conversion has the following impact on r8a7791/koelsch:
+
+    -pci-rcar-gen2 ee090000.pci: PCI: bus0 revision 11
+    +pci-rcar-gen2 ee090000.pci: host bridge /soc/pci@ee090000 ranges:
+    +pci-rcar-gen2 ee090000.pci:      MEM 0x00ee080000..0x00ee08ffff
+-> 0x00ee080000
+    +pci-rcar-gen2 ee090000.pci: PCI: revision 11
+     pci-rcar-gen2 ee090000.pci: PCI host bridge to bus 0000:00
+    -pci_bus 0000:00: root bus resource [mem 0xee080000-0xee0810ff]
+                                             ^^^^^^^^^^^^^^^^^^^^^
+    -pci_bus 0000:00: No busn resource found for root bus, will use [bus 00-ff]
+    +pci_bus 0000:00: root bus resource [bus 00]
+    +pci_bus 0000:00: root bus resource [mem 0xee080000-0xee08ffff]
+                                             ^^^^^^^^^^^^^^^^^^^^^
+
+    pci0: pci@ee090000 {
+            ...
+            reg = <0 0xee090000 0 0xc00>,
+                  <0 0xee080000 0 0x1100>;
+            ...
+            ranges = <0x02000000 0 0xee080000 0 0xee080000 0 0x00010000>;
+            ...
+            usb@1,0 {
+                    reg = <0x800 0 0 0 0>;
+                    ...
+            };
+
+            usb@2,0 {
+                    reg = <0x1000 0 0 0 0>;
+                    ...
+            };
+
+    }
+
+The old root bus resource size was based on the "reg" property.
+The new root bus resource size is based on the "ranges" property.
+
+Given the only children are hardcoded, I guess that is OK?
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
 -- 
-2.20.1
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
