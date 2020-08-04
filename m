@@ -7,39 +7,39 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7630BC433E1
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF2E7C433E3
 	for <linux-pci@archiver.kernel.org>; Tue,  4 Aug 2020 11:59:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5131F208C7
+	by mail.kernel.org (Postfix) with ESMTP id C94342086A
 	for <linux-pci@archiver.kernel.org>; Tue,  4 Aug 2020 11:59:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=default; t=1596542357;
-	bh=1cpl4cueW3TfrufysjqTxDM1ImHIUS1uP6sSuXLgEtQ=;
+	bh=u2oXaoc7c+xMcnLIk0vwD7jCP4vTDO56YfP1bb9hufI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Cb79udfdT4G+LypkwAFSqiT+64SF0l7p6MIhbYkRzW4uZYbmJFzy/9J7pO0wRlaRR
-	 IJsnMYF1y32dKMDJTWAxlsQtkaNOQtwD+eeLBV/AM9GWbJ7CM8TZWXS6bmq+PS0Kal
-	 TymaB0KCTSS//wPFJ2mzaVKi+m1dF2em0Ora1zT0=
+	b=qWKnDuWP4hC+bkfPfjqM3OUhJs0LRI9+0Ximyh5Rx+EBDY8UobOJvx32pLykaOKrU
+	 1Gg0Zt96l1g/IL/KCe/yt+AbOqfcPPVbcEn9b3JGPUvIAXD0ui9s1l3JZojkxNQY+M
+	 TEN0WxvCyMqQH4gMhDTNjc0SLH1yOuueZugX8Tjg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730472AbgHDL7P (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 4 Aug 2020 07:59:15 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40104 "EHLO mail.kernel.org"
+        id S1730474AbgHDL7Q (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 4 Aug 2020 07:59:16 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40002 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730422AbgHDL6H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 4 Aug 2020 07:58:07 -0400
+        id S1730413AbgHDL6E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 4 Aug 2020 07:58:04 -0400
 Received: from pali.im (pali.im [31.31.79.79])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 935B620A8B;
-        Tue,  4 Aug 2020 11:58:07 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A90FF208A9;
+        Tue,  4 Aug 2020 11:58:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1596542287;
-        bh=1cpl4cueW3TfrufysjqTxDM1ImHIUS1uP6sSuXLgEtQ=;
+        s=default; t=1596542283;
+        bh=u2oXaoc7c+xMcnLIk0vwD7jCP4vTDO56YfP1bb9hufI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=lPnaylwnSDG3JU4Xto1Y/eNJvrAua5ybDzLLBRdfaUa+z6BrZ1woIhHP87g5PEECs
-         eCh5Hr6TpyEuwlGfvXe6lowR7b9gTgTNbo5z3GKhqXQLMXtxLYhCFMAeGn4N0nzTan
-         EJ18I/U+FFvbB4TV0pTgViL7HADN0BJ7M4o/KzUo=
+        b=mfG7DuDLq+xepRSrnpwffkwaB9c+AuW3vEtLJ7a1ASMIvzJXS6EjaqlcRdeszZ9ay
+         CQiX0cnV3NKlzVsw6qGj7NjH7L8uT0iLiMA6lm5vbi43h8Kzw6/aHLJ/faIS86MWOy
+         w+FEUg7Pw3f2VAw8fP/eVXPXYomKpzmmEywdfO/k=
 Received: by pali.im (Postfix)
-        id BC339AE3; Tue,  4 Aug 2020 13:58:05 +0200 (CEST)
+        id F08587FD; Tue,  4 Aug 2020 13:58:01 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     linux-pci@vger.kernel.org
 Cc:     Tomasz Maciej Nowak <tmn505@gmail.com>,
@@ -48,9 +48,9 @@ Cc:     Tomasz Maciej Nowak <tmn505@gmail.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         linux-kernel@vger.kernel.org, Andrew Lunn <andrew@lunn.ch>,
         Xogium <contact@xogium.me>, marek.behun@nic.cz
-Subject: [PATCH v2 3/5] PCI: pci-bridge-emul: Export API functions
-Date:   Tue,  4 Aug 2020 13:57:45 +0200
-Message-Id: <20200804115747.7078-4-pali@kernel.org>
+Subject: [PATCH v2 1/5] PCI: aardvark: Fix compilation on s390
+Date:   Tue,  4 Aug 2020 13:57:43 +0200
+Message-Id: <20200804115747.7078-2-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200804115747.7078-1-pali@kernel.org>
 References: <20200804115747.7078-1-pali@kernel.org>
@@ -62,48 +62,37 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-It allows kernel modules which are not compiled into kernel image to use
-pci-bridge-emul API functions.
+Include linux/gpio/consumer.h instead of linux/gpio.h, as is said in the
+latter file.
 
+This was reported by kernel test bot when compiling for s390.
+
+  drivers/pci/controller/pci-aardvark.c:350:2: error: implicit declaration of function 'gpiod_set_value_cansleep' [-Werror,-Wimplicit-function-declaration]
+  drivers/pci/controller/pci-aardvark.c:1074:21: error: implicit declaration of function 'devm_gpiod_get_from_of_node' [-Werror,-Wimplicit-function-declaration]
+  drivers/pci/controller/pci-aardvark.c:1076:14: error: use of undeclared identifier 'GPIOD_OUT_LOW'
+
+Link: https://lore.kernel.org/r/202006211118.LxtENQfl%25lkp@intel.com
+Reported-by: kernel test robot <lkp@intel.com>
+Fixes: 5169a9851da ("PCI: aardvark: Issue PERST via GPIO")
 Signed-off-by: Pali Rohár <pali@kernel.org>
 Reviewed-by: Marek Behún <marek.behun@nic.cz>
 ---
- drivers/pci/pci-bridge-emul.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/pci/controller/pci-aardvark.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pci-bridge-emul.c b/drivers/pci/pci-bridge-emul.c
-index ccf26d12ec61..139869d50eb2 100644
---- a/drivers/pci/pci-bridge-emul.c
-+++ b/drivers/pci/pci-bridge-emul.c
-@@ -294,6 +294,7 @@ int pci_bridge_emul_init(struct pci_bridge_emul *bridge,
+diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
+index 90ff291c24f0..8caa80b19cf8 100644
+--- a/drivers/pci/controller/pci-aardvark.c
++++ b/drivers/pci/controller/pci-aardvark.c
+@@ -9,7 +9,7 @@
+  */
  
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(pci_bridge_emul_init);
- 
- /*
-  * Cleanup a pci_bridge_emul structure that was previously initialized
-@@ -305,6 +306,7 @@ void pci_bridge_emul_cleanup(struct pci_bridge_emul *bridge)
- 		kfree(bridge->pcie_cap_regs_behavior);
- 	kfree(bridge->pci_regs_behavior);
- }
-+EXPORT_SYMBOL_GPL(pci_bridge_emul_cleanup);
- 
- /*
-  * Should be called by the PCI controller driver when reading the PCI
-@@ -366,6 +368,7 @@ int pci_bridge_emul_conf_read(struct pci_bridge_emul *bridge, int where,
- 
- 	return PCIBIOS_SUCCESSFUL;
- }
-+EXPORT_SYMBOL_GPL(pci_bridge_emul_conf_read);
- 
- /*
-  * Should be called by the PCI controller driver when writing the PCI
-@@ -430,3 +433,4 @@ int pci_bridge_emul_conf_write(struct pci_bridge_emul *bridge, int where,
- 
- 	return PCIBIOS_SUCCESSFUL;
- }
-+EXPORT_SYMBOL_GPL(pci_bridge_emul_conf_write);
+ #include <linux/delay.h>
+-#include <linux/gpio.h>
++#include <linux/gpio/consumer.h>
+ #include <linux/interrupt.h>
+ #include <linux/irq.h>
+ #include <linux/irqdomain.h>
 -- 
 2.20.1
 
