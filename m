@@ -2,92 +2,168 @@ Return-Path: <SRS0=QtGK=BO=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 393FBC433E3
-	for <linux-pci@archiver.kernel.org>; Tue,  4 Aug 2020 12:30:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D279C433E0
+	for <linux-pci@archiver.kernel.org>; Tue,  4 Aug 2020 12:46:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1FEFD22CB3
-	for <linux-pci@archiver.kernel.org>; Tue,  4 Aug 2020 12:30:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E5F3F22C9F
+	for <linux-pci@archiver.kernel.org>; Tue,  4 Aug 2020 12:46:16 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="T8YDxwS+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726789AbgHDMaN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 4 Aug 2020 08:30:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38924 "EHLO
+        id S1725932AbgHDMqK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 4 Aug 2020 08:46:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41194 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726533AbgHDMaB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Aug 2020 08:30:01 -0400
-Received: from xavier.telenet-ops.be (xavier.telenet-ops.be [IPv6:2a02:1800:120:4::f00:14])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13390C06179E
-        for <linux-pci@vger.kernel.org>; Tue,  4 Aug 2020 05:04:39 -0700 (PDT)
-Received: from ramsan ([84.195.186.194])
-        by xavier.telenet-ops.be with bizsmtp
-        id BQ4b2300g4C55Sk01Q4bRa; Tue, 04 Aug 2020 14:04:36 +0200
-Received: from rox.of.borg ([192.168.97.57])
-        by ramsan with esmtp (Exim 4.90_1)
-        (envelope-from <geert@linux-m68k.org>)
-        id 1k2vgJ-0000fz-Qm; Tue, 04 Aug 2020 14:04:35 +0200
-Received: from geert by rox.of.borg with local (Exim 4.90_1)
-        (envelope-from <geert@linux-m68k.org>)
-        id 1k2vgJ-0002Q0-Nm; Tue, 04 Aug 2020 14:04:35 +0200
-From:   Geert Uytterhoeven <geert+renesas@glider.be>
-To:     Rob Herring <robh@kernel.org>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Geert Uytterhoeven <geert+renesas@glider.be>
-Subject: [PATCH] PCI: rcar-gen2: Fix crash in resource_list_first_type()
-Date:   Tue,  4 Aug 2020 14:04:30 +0200
-Message-Id: <20200804120430.9253-1-geert+renesas@glider.be>
-X-Mailer: git-send-email 2.17.1
+        with ESMTP id S1728322AbgHDMoa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Aug 2020 08:44:30 -0400
+Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67D46C0617A1
+        for <linux-pci@vger.kernel.org>; Tue,  4 Aug 2020 05:44:24 -0700 (PDT)
+Received: by mail-wm1-x344.google.com with SMTP id 184so2790051wmb.0
+        for <linux-pci@vger.kernel.org>; Tue, 04 Aug 2020 05:44:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=bN3d8Ia77BH2nBiHDQ6zBNPByWQO01hAGf1Nc3k/FjU=;
+        b=T8YDxwS+GAi/l87EqEDVnHA6L2vWdoJLRomogp4zswguktwRhtfY6a3S80oC+la+7Y
+         uBOGZPkWUazcUyhEPQsfO3QZ16muTbOfxNxa4uXdYwfXdmkfVzoMRSW4m/T7f0i4RLf7
+         dX+k8C7kUSi09yoGq/WkXRUuQWQIUOu80qSJ8B9K9QLhl5toYoFUrNUqUcTwdRw8GrmH
+         fMUA0SnmjEveRBv57i02a+TxYyxNXCrEDBzYs7JuFuOONWrjDdCFY0ND5r47wpeLc24V
+         fJMl0bur8BNgusZj++pQeoEnXBDmf1q7b4PbFj3Wzq0ri29fof8CCFp8ai4icK9pDdY1
+         JhtQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=bN3d8Ia77BH2nBiHDQ6zBNPByWQO01hAGf1Nc3k/FjU=;
+        b=LZwCiyGMQGrKtHNN22v8lqd64ACLv9Twbv3X9b2yrlNXX2IOpHHWKwxJtJQI344tAO
+         q4tvYDmA2QUoeYG0dN5Km+nBfpw2Z9iSgP6dctxRr+Qel9lsYVCKVDbPtuWtIIor9aWO
+         SWheKOWpqnGR5Lxn8OoudMj9moKy+8gjiMKtSmGwRlXXaFsSq/n3Hqvps53veFMjzUDV
+         eSZcXu2Y11OIGIkKEPFkuwxsmmF861l0YQhJ/7pMx+tTFg9AY8QxgBrpYVEW6IXx/y5i
+         uLMKUK6uN1UwO+xzrzUJKfMQrs1iZ1VDuoandJTUhiI0z+KOcPmevAb3QEh7Ai93vAj2
+         tOCA==
+X-Gm-Message-State: AOAM530DXgjS7sLVfn3ZtyHTbYtdmhk9U50G/L84ztd279DS0qNI29ds
+        bHh8Hdy6FZFkRkr2KtL+YegN0A==
+X-Google-Smtp-Source: ABdhPJz9A0fUr0s+57vaSQaPT8GQEVwMIBWtT6cib6RQGYxAGZypLJ4R2NHV8/yEEKGRo0R1n0bqCQ==
+X-Received: by 2002:a7b:c257:: with SMTP id b23mr3829607wmj.164.1596545062751;
+        Tue, 04 Aug 2020 05:44:22 -0700 (PDT)
+Received: from zen.linaroharston ([51.148.130.216])
+        by smtp.gmail.com with ESMTPSA id b137sm4843577wmb.9.2020.08.04.05.44.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 04 Aug 2020 05:44:18 -0700 (PDT)
+Received: from zen.lan (localhost [127.0.0.1])
+        by zen.linaroharston (Postfix) with ESMTP id 860581FF87;
+        Tue,  4 Aug 2020 13:44:17 +0100 (BST)
+From:   =?UTF-8?q?Alex=20Benn=C3=A9e?= <alex.bennee@linaro.org>
+To:     kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Cc:     linux-kernel@vger.kernel.org, kvmarm@lists.cs.columbia.edu,
+        christoffer.dall@arm.com, maz@kernel.org,
+        =?UTF-8?q?Alex=20Benn=C3=A9e?= <alex.bennee@linaro.org>,
+        Robert Richter <rrichter@marvell.com>,
+        linux-pci@vger.kernel.org
+Subject: [PATCH  v1 1/3] arm64: allow de-selection of ThunderX PCI controllers
+Date:   Tue,  4 Aug 2020 13:44:15 +0100
+Message-Id: <20200804124417.27102-2-alex.bennee@linaro.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200804124417.27102-1-alex.bennee@linaro.org>
+References: <20200804124417.27102-1-alex.bennee@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The conversion to modern host bridge probing made the driver allocate
-its private data using devm_pci_alloc_host_bridge(), but forgot to
-remove the old allocation.  Hence part of the driver initialization is
-done using the new instance, while another part is done using the old
-instance, leading to a crash due to uninitialized bridge DMA ranges:
+For a pure VirtIO guest bringing in all the PCI quirk handling adds a
+significant amount of bloat to kernel we don't need. Solve this by
+adding a CONFIG symbol for the ThunderX PCI devices and allowing it to
+be turned off. Saving over 300k from the uncompressed vmlinux:
 
-    Unable to handle kernel NULL pointer dereference at virtual address 00000008
-    pgd = (ptrval)
-    [00000008] *pgd=00000000
-    Internal error: Oops: 5 [#1] SMP ARM
-    CPU: 0 PID: 1 Comm: swapper/0 Not tainted 5.8.0-rc1-shmobile-00035-g92d69cc6275845a7 #645
-    Hardware name: Generic R-Car Gen2 (Flattened Device Tree)
-    PC is at rcar_pci_probe+0x154/0x340
-    LR is at _raw_spin_unlock_irqrestore+0x18/0x20
+  -rwxr-xr-x 1 alex alex  85652472 Aug  3 16:48 vmlinux*
+  -rwxr-xr-x 1 alex alex  86033880 Aug  3 16:39 vmlinux.orig*
 
-Fix this by dropping the old allocation.
-
-Fixes: 92d69cc6275845a7 ("PCI: rcar-gen2: Convert to use modern host bridge probe functions")
-Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Alex Bennée <alex.bennee@linaro.org>
+Cc: Robert Richter <rrichter@marvell.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org
 ---
- drivers/pci/controller/pci-rcar-gen2.c | 4 ----
- 1 file changed, 4 deletions(-)
+ arch/arm64/Kconfig.platforms    | 2 ++
+ arch/arm64/configs/defconfig    | 1 +
+ drivers/pci/controller/Kconfig  | 7 +++++++
+ drivers/pci/controller/Makefile | 4 ++--
+ 4 files changed, 12 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/controller/pci-rcar-gen2.c b/drivers/pci/controller/pci-rcar-gen2.c
-index 046965d284a6d54e..c9530038ca9a53fc 100644
---- a/drivers/pci/controller/pci-rcar-gen2.c
-+++ b/drivers/pci/controller/pci-rcar-gen2.c
-@@ -302,10 +302,6 @@ static int rcar_pci_probe(struct platform_device *pdev)
- 	if (mem_res->start & 0xFFFF)
- 		return -EINVAL;
+diff --git a/arch/arm64/Kconfig.platforms b/arch/arm64/Kconfig.platforms
+index 8dd05b2a925c..a328eebdaa59 100644
+--- a/arch/arm64/Kconfig.platforms
++++ b/arch/arm64/Kconfig.platforms
+@@ -253,12 +253,14 @@ config ARCH_SPRD
  
--	priv = devm_kzalloc(dev, sizeof(struct rcar_pci_priv), GFP_KERNEL);
--	if (!priv)
--		return -ENOMEM;
--
- 	priv->mem_res = *mem_res;
- 	priv->cfg_res = cfg_res;
+ config ARCH_THUNDER
+ 	bool "Cavium Inc. Thunder SoC Family"
++        select PCI_THUNDER
+ 	help
+ 	  This enables support for Cavium's Thunder Family of SoCs.
  
+ config ARCH_THUNDER2
+ 	bool "Cavium ThunderX2 Server Processors"
+ 	select GPIOLIB
++        select PCI_THUNDER
+ 	help
+ 	  This enables support for Cavium's ThunderX2 CN99XX family of
+ 	  server processors.
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 2ca7ba69c318..d840cba99941 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -199,6 +199,7 @@ CONFIG_PCI_HOST_GENERIC=y
+ CONFIG_PCI_XGENE=y
+ CONFIG_PCIE_ALTERA=y
+ CONFIG_PCIE_ALTERA_MSI=y
++CONFIG_PCI_THUNDER=y
+ CONFIG_PCI_HOST_THUNDER_PEM=y
+ CONFIG_PCI_HOST_THUNDER_ECAM=y
+ CONFIG_PCIE_ROCKCHIP_HOST=m
+diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+index adddf21fa381..28335ffa5d48 100644
+--- a/drivers/pci/controller/Kconfig
++++ b/drivers/pci/controller/Kconfig
+@@ -286,6 +286,13 @@ config PCI_LOONGSON
+ 	  Say Y here if you want to enable PCI controller support on
+ 	  Loongson systems.
+ 
++config PCI_THUNDER
++       bool "Thunder X PCIE controllers"
++       depends on ARM64
++       select PCI_QUIRKS
++       help
++          Say Y here to enable ThunderX ECAM and PEM PCI controllers.
++
+ source "drivers/pci/controller/dwc/Kconfig"
+ source "drivers/pci/controller/mobiveil/Kconfig"
+ source "drivers/pci/controller/cadence/Kconfig"
+diff --git a/drivers/pci/controller/Makefile b/drivers/pci/controller/Makefile
+index efd9733ead26..8fad4781a5d3 100644
+--- a/drivers/pci/controller/Makefile
++++ b/drivers/pci/controller/Makefile
+@@ -45,8 +45,8 @@ obj-y				+= mobiveil/
+ # ARM64 and use internal ifdefs to only build the pieces we need
+ # depending on whether ACPI, the DT driver, or both are enabled.
+ 
++obj-$(CONFIG_PCI_THUNDER) += pci-thunder-ecam.o
++obj-$(CONFIG_PCI_THUNDER) += pci-thunder-pem.o
+ ifdef CONFIG_PCI
+-obj-$(CONFIG_ARM64) += pci-thunder-ecam.o
+-obj-$(CONFIG_ARM64) += pci-thunder-pem.o
+ obj-$(CONFIG_ARM64) += pci-xgene.o
+ endif
 -- 
-2.17.1
+2.20.1
 
