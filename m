@@ -2,217 +2,218 @@ Return-Path: <SRS0=Z6n5=BP=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6348BC433DF
-	for <linux-pci@archiver.kernel.org>; Wed,  5 Aug 2020 19:16:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5FF8C433DF
+	for <linux-pci@archiver.kernel.org>; Wed,  5 Aug 2020 19:19:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 34ABF2068F
-	for <linux-pci@archiver.kernel.org>; Wed,  5 Aug 2020 19:16:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1596654984;
-	bh=eaSKaq7jKQvkKuz0XPzzBEPB27hIZ62m3oOhE/XHOEI=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=ZtKNCjph68DWn6eJYns4Ly5vAGba6Ewcv8JT80tDWAGNaMU5iVGyerw8hNRryRzxg
-	 R7JTNzjZmvj02P236b/SWjHFmg4vxhWbvIBWvZJjFRB6ESN+Wl+hzMBP2i8/jqsIfP
-	 PDR0XxvQkEQYP71biQQmUvQAHB4g3bUK4VgZ3nvU=
+	by mail.kernel.org (Postfix) with ESMTP id A50DA2068F
+	for <linux-pci@archiver.kernel.org>; Wed,  5 Aug 2020 19:19:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728623AbgHETQT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 5 Aug 2020 15:16:19 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46982 "EHLO mail.kernel.org"
+        id S1728469AbgHETTD convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 5 Aug 2020 15:19:03 -0400
+Received: from mga06.intel.com ([134.134.136.31]:25621 "EHLO mga06.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729146AbgHESAn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 5 Aug 2020 14:00:43 -0400
-Received: from localhost (mobile-166-175-186-42.mycingular.net [166.175.186.42])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4887221D95;
-        Wed,  5 Aug 2020 18:00:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1596650442;
-        bh=eaSKaq7jKQvkKuz0XPzzBEPB27hIZ62m3oOhE/XHOEI=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=fIyZusMrHX4zid5kO97lCYRpmzbz1CFPgZ9MndWP+x4s16Z6WMb5OmI3VOhm0Q8TO
-         Wkhz34Aku78zk0ShcWh3ItyMnuwav25ZRDf6NuWgK2yepETFsI/xvmLu0KyFSu4ccq
-         CB0U3aHnwX4TwCpQf2ODafc3WfH4H6pY2ChO11Es=
-Date:   Wed, 5 Aug 2020 13:00:35 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Sean V Kelley <sean.v.kelley@intel.com>
-Cc:     bhelgaas@google.com, Jonathan.Cameron@huawei.com,
-        rjw@rjwysocki.net, ashok.raj@intel.com, tony.luck@intel.com,
-        sathyanarayanan.kuppuswamy@linux.intel.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Sean V Kelley <sean.v.kelley@linux.intel.com>
-Subject: Re: [PATCH V2 0/9] Add RCEC handling to PCI/AER
-Message-ID: <20200805180035.GA522190@bjorn-Precision-5520>
+        id S1726386AbgHETSq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 5 Aug 2020 15:18:46 -0400
+IronPort-SDR: G9zt/VUL2z3CtH1on6OKpniqUk2TCzWtOjUgmQF1oaZzeSDkUFx2H4PvEDqW2i8wR9BaXbF3Ci
+ zltPsqZC1/dw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9704"; a="214158511"
+X-IronPort-AV: E=Sophos;i="5.75,438,1589266800"; 
+   d="scan'208";a="214158511"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Aug 2020 12:18:45 -0700
+IronPort-SDR: D0Vk6xev7JAvmeUfynzY+1BEcxv9Z8Bxnl7g4j/s5Q2ig5FW8QRbtY+zFR2Ns5n3z4J95TIZGX
+ WJv71hfu1s4Q==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.75,438,1589266800"; 
+   d="scan'208";a="467570191"
+Received: from orsmsx604.amr.corp.intel.com ([10.22.229.17])
+  by orsmga005.jf.intel.com with ESMTP; 05 Aug 2020 12:18:41 -0700
+Received: from orsmsx610.amr.corp.intel.com (10.22.229.23) by
+ ORSMSX604.amr.corp.intel.com (10.22.229.17) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1713.5; Wed, 5 Aug 2020 12:18:41 -0700
+Received: from orsmsx612.amr.corp.intel.com (10.22.229.25) by
+ ORSMSX610.amr.corp.intel.com (10.22.229.23) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1713.5; Wed, 5 Aug 2020 12:18:40 -0700
+Received: from orsmsx612.amr.corp.intel.com ([10.22.229.25]) by
+ ORSMSX612.amr.corp.intel.com ([10.22.229.25]) with mapi id 15.01.1713.004;
+ Wed, 5 Aug 2020 12:18:40 -0700
+From:   "Dey, Megha" <megha.dey@intel.com>
+To:     Jason Gunthorpe <jgg@mellanox.com>, Marc Zyngier <maz@kernel.org>
+CC:     "Jiang, Dave" <dave.jiang@intel.com>,
+        "vkoul@kernel.org" <vkoul@kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "rafael@kernel.org" <rafael@kernel.org>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        "tglx@linutronix.de" <tglx@linutronix.de>,
+        "hpa@zytor.com" <hpa@zytor.com>,
+        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+        "Pan, Jacob jun" <jacob.jun.pan@intel.com>,
+        "Raj, Ashok" <ashok.raj@intel.com>,
+        "Liu, Yi L" <yi.l.liu@intel.com>, "Lu, Baolu" <baolu.lu@intel.com>,
+        "Tian, Kevin" <kevin.tian@intel.com>,
+        "Kumar, Sanjay K" <sanjay.k.kumar@intel.com>,
+        "Luck, Tony" <tony.luck@intel.com>,
+        "Lin, Jing" <jing.lin@intel.com>,
+        "Williams, Dan J" <dan.j.williams@intel.com>,
+        "kwankhede@nvidia.com" <kwankhede@nvidia.com>,
+        "eric.auger@redhat.com" <eric.auger@redhat.com>,
+        "parav@mellanox.com" <parav@mellanox.com>,
+        "Hansen, Dave" <dave.hansen@intel.com>,
+        "netanelg@mellanox.com" <netanelg@mellanox.com>,
+        "shahafs@mellanox.com" <shahafs@mellanox.com>,
+        "yan.y.zhao@linux.intel.com" <yan.y.zhao@linux.intel.com>,
+        "pbonzini@redhat.com" <pbonzini@redhat.com>,
+        "Ortiz, Samuel" <samuel.ortiz@intel.com>,
+        "Hossain, Mona" <mona.hossain@intel.com>,
+        "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "x86@kernel.org" <x86@kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>
+Subject: RE: [PATCH RFC v2 02/18] irq/dev-msi: Add support for a new DEV_MSI
+ irq domain
+Thread-Topic: [PATCH RFC v2 02/18] irq/dev-msi: Add support for a new DEV_MSI
+ irq domain
+Thread-Index: AQHWX3hgWhQMXvQig0qc4n40fOCoeakUaOyAgAASsgCAFXzAsA==
+Date:   Wed, 5 Aug 2020 19:18:39 +0000
+Message-ID: <96a1eb5ccc724790b5404a642583919d@intel.com>
+References: <159534667974.28840.2045034360240786644.stgit@djiang5-desk3.ch.intel.com>
+ <159534734833.28840.10067945890695808535.stgit@djiang5-desk3.ch.intel.com>
+ <878sfbxtzi.wl-maz@kernel.org> <20200722195928.GN2021248@mellanox.com>
+In-Reply-To: <20200722195928.GN2021248@mellanox.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+dlp-product: dlpe-windows
+dlp-reaction: no-action
+dlp-version: 11.5.1.3
+x-originating-ip: [10.22.254.132]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200804194052.193272-1-sean.v.kelley@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Aug 04, 2020 at 12:40:43PM -0700, Sean V Kelley wrote:
-> From: Sean V Kelley <sean.v.kelley@linux.intel.com>
-> 
-> On the use of FLR on RCiEPs for the fatal case, still interested in more
-> feedback from the earlier discussion here [1]:
-> 
-> [1] https://lore.kernel.org/linux-pci/C21C050B-48B1-4429-B019-C81F3AB8E843@intel.com/
-> 
-> There is also the question of the absence of an FLR for non-fatal error.
-> If the device driver tells us that it needs "PCI_ERS_RESULT_NEED_RESET" by
-> the callback report_normal_detected() then we should try FLR on the device
-> as well.
-> 
-> On the use of variables with RP centric names such as the attributes
-> dev_attr_aer_rootport_total_err_..., one concern is the ripple effect on code
-> churn due to renaming. Open to suggestions, but trying to co-habitate so to
-> speak RCECs with RPs in the same drivers has trade-offs.
-> 
-> Changes since v1 [2]:
-> 
-> - Make PME capability of RCEC discoverable in get_port_device_capability().
-> - Replace the check on bnr with <= lastbusn in pcie_walk_rcec().
-> - Fix comment header for pcie_walk_rcec().
-> - Fix comment header for pci_walk_dev_affected().
-> - Fix spurious newline.
-> - Add sanity checks on dev->rcec.
-> - Use pci_dbg() in place of pci_info() for discovered RCiEPs.
-> - Remove AER RCEC AP FOUND message (accidently left in previously).
-> - Remove the check for RC_END from set_device_error_reporting() since
-> only Ports and RCECs are being passed.
-> (Jonathan Cameron)
-> - Fix the return type for flr_on_rciep().
-> (reported by lkp on DEC Alpha arch.)
-> 
-> [1] https://lore.kernel.org/linux-pci/20200724172223.145608-1-sean.v.kelley@intel.com/
-> 
-> Root Complex Event Collectors (RCEC) provide support for terminating error
-> and PME messages from Root Complex Integrated Endpoints (RCiEPs).  An RCEC
-> resides on a Bus in the Root Complex. Multiple RCECs can in fact reside on
-> a single bus. An RCEC will explicitly declare supported RCiEPs through the
-> Root Complex Endpoint Association Extended Capability.
-> 
-> (See PCIe 5.0-1, sections 1.3.2.3 (RCiEP), and 7.9.10 (RCEC Ext. Cap.))
-> 
-> The kernel lacks handling for these RCECs and the error messages received
-> from their respective associated RCiEPs. More recently, a new CPU
-> interconnect, Compute eXpress Link (CXL) depends on RCEC capabilities for
-> purposes of error messaging from CXL 1.1 supported RCiEP devices.
-> 
-> DocLink: https://www.computeexpresslink.org/
-> 
-> This use case is not limited to CXL. Existing hardware today includes
-> support for RCECs, such as the Denverton microserver product
-> family. Future hardware will be forthcoming.
-> 
-> (See Intel Document, Order number: 33061-003US)
-> 
-> So services such as AER or PME could be associated with an RCEC driver.
-> In the case of CXL, if an RCiEP (i.e., CXL 1.1 device) is associated with a
-> platform's RCEC it shall signal PME and AER error conditions through that
-> RCEC.
-> 
-> Towards the above use cases, add the missing RCEC class and extend the
-> PCIe Root Port and service drivers to allow association of RCiEPs to their
-> respective parent RCEC and facilitate handling of terminating error and PME
-> messages.
-> 
-> 
-> AER Test Results:
-> 1) Inject a correctable error to the RCiEP 0000:e9:00.0
->     Run ./aer_inject <a parameter file as below>:
->     AER
->     PCI_ID 0000:e9:00.0
->     COR_STATUS BAD_TLP
->     HEADER_LOG 0 1 2 3
-> 
->     Log:
-> [   76.155963] pcieport 0000:e8:00.4: aer_inject: Injecting errors 00000040/00000000 into device 0000:e9:00.0
-> [   76.166966] pcieport 0000:e8:00.4: AER: Corrected error received: 0000:e9:00.0
-> [   76.175253] pci 0000:e9:00.0: PCIe Bus Error: severity=Corrected, type=Data Link Layer, (Receiver ID)
-> [   76.185633] pci 0000:e9:00.0:   device [8086:4940] error status/mask=00000040/00002000
-> [   76.194604] pci 0000:e9:00.0:    [ 6] BadTLP
+Hi Jason,
 
-If you remove the timestamps, there will be less distraction here.  As
-I'm sure you know, the 0/n cover letter text doesn't really go
-anywhere except the email archives.  If this is potentially useful in
-the future, it should be in the actual patch commit logs.
-
-> 2) Inject a non-fatal error to the RCiEP 0000:e8:01.0
->     Run ./aer_inject <a parameter file as below>:
->     AER
->     PCI_ID 0000:e8:01.0
->     UNCOR_STATUS COMP_ABORT
->     HEADER_LOG 0 1 2 3
-
-I think maybe this could be written in a way that could be cut and
-pasted?
-
->     Log:
-> [  117.791854] pcieport 0000:e8:00.4: aer_inject: Injecting errors 00000000/00008000 into device 0000:e8:01.0
-> [  117.804244] pcieport 0000:e8:00.4: AER: Uncorrected (Non-Fatal) error received: 0000:e8:01.0
-> [  117.814652] igen6_edac 0000:e8:01.0: PCIe Bus Error: severity=Uncorrected (Non-Fatal), type=Transaction Layer, (Completer ID)
-> [  117.828511] igen6_edac 0000:e8:01.0:   device [8086:0b25] error status/mask=00008000/00100000
-> [  117.839189] igen6_edac 0000:e8:01.0:    [15] CmpltAbrt
-> [  117.847365] igen6_edac 0000:e8:01.0: AER:   TLP Header: 00000000 00000001 00000002 00000003
-> [  117.857775] igen6_edac 0000:e8:01.0: AER: device recovery successful
+> -----Original Message-----
+> From: Jason Gunthorpe <jgg@mellanox.com>
+> Sent: Wednesday, July 22, 2020 12:59 PM
+> To: Marc Zyngier <maz@kernel.org>
+> Cc: Jiang, Dave <dave.jiang@intel.com>; vkoul@kernel.org; Dey, Megha
+> <megha.dey@intel.com>; bhelgaas@google.com; rafael@kernel.org;
+> gregkh@linuxfoundation.org; tglx@linutronix.de; hpa@zytor.com;
+> alex.williamson@redhat.com; Pan, Jacob jun <jacob.jun.pan@intel.com>; Raj,
+> Ashok <ashok.raj@intel.com>; Liu, Yi L <yi.l.liu@intel.com>; Lu, Baolu
+> <baolu.lu@intel.com>; Tian, Kevin <kevin.tian@intel.com>; Kumar, Sanjay K
+> <sanjay.k.kumar@intel.com>; Luck, Tony <tony.luck@intel.com>; Lin, Jing
+> <jing.lin@intel.com>; Williams, Dan J <dan.j.williams@intel.com>;
+> kwankhede@nvidia.com; eric.auger@redhat.com; parav@mellanox.com;
+> Hansen, Dave <dave.hansen@intel.com>; netanelg@mellanox.com;
+> shahafs@mellanox.com; yan.y.zhao@linux.intel.com; pbonzini@redhat.com;
+> Ortiz, Samuel <samuel.ortiz@intel.com>; Hossain, Mona
+> <mona.hossain@intel.com>; dmaengine@vger.kernel.org; linux-
+> kernel@vger.kernel.org; x86@kernel.org; linux-pci@vger.kernel.org;
+> kvm@vger.kernel.org
+> Subject: Re: [PATCH RFC v2 02/18] irq/dev-msi: Add support for a new DEV_MSI
+> irq domain
 > 
-> 3) Inject a fatal error to the RCiEP 0000:ed:01.0
->     Run ./aer_inject <a parameter file as below>:
->     AER
->     PCI_ID 0000:ed:01.0
->     UNCOR_STATUS MALF_TLP
->     HEADER_LOG 0 1 2 3
+> On Wed, Jul 22, 2020 at 07:52:33PM +0100, Marc Zyngier wrote:
 > 
->     Log:
-> [  131.511623] pcieport 0000:ed:00.4: aer_inject: Injecting errors 00000000/00040000 into device 0000:ed:01.0
-> [  131.523259] pcieport 0000:ed:00.4: AER: Uncorrected (Fatal) error received: 0000:ed:01.0
-> [  131.533842] igen6_edac 0000:ed:01.0: AER: PCIe Bus Error: severity=Uncorrected (Fatal), type=Inaccessible, (Unregistered Agent ID)
-> [  131.655618] igen6_edac 0000:ed:01.0: AER: device recovery successful
+> > Which is exactly what platform-MSI already does. Why do we need
+> > something else?
 > 
-> Jonathan Cameron (1):
->   PCI/AER: Extend AER error handling to RCECs
+> It looks to me like all the code is around managing the
+> dev->msi_domain of the devices.
 > 
-> Qiuxu Zhuo (6):
->   pci_ids: Add class code and extended capability for RCEC
->   PCI: Extend Root Port Driver to support RCEC
->   PCI/portdrv: Add pcie_walk_rcec() to walk RCiEPs associated with RCEC
->   PCI/AER: Apply function level reset to RCiEP on fatal error
->   PCI: Add 'rcec' field to pci_dev for associated RCiEPs
->   PCI/AER: Add RCEC AER error injection support
+> The intended use would have PCI drivers create children devices using mdev or
+> virtbus and those devices wouldn't have a msi_domain from the platform. Looks
+> like platform_msi_alloc_priv_data() fails immediately because dev->msi_domain
+> will be NULL for these kinds of devices.
 > 
-> Sean V Kelley (2):
->   PCI/AER: Add RCEC AER handling
->   PCI/PME: Add RCEC PME handling
+> Maybe that issue should be handled directly instead of wrappering
+> platform_msi_*?
 > 
+> For instance a trivial addition to the platform_msi API:
+> 
+>   platform_msi_assign_domain(struct_device *newly_created_virtual_device,
+>                              struct device *physical_device);
+> 
+> Which could set the msi_domain of new device using the topology of
+> physical_device to deduce the correct domain?
+> 
+> Then the question is how to properly create a domain within the hardware
+> topology of physical_device with the correct parameters for the platform.
+> 
+> Why do we need a dummy msi_domain anyhow? Can this just use
+> physical_device->msi_domain directly? (I'm at my limit here of how much of this
+> I remember, sorry)
+> 
+> If you solve that it should solve the remapping problem too, as the
+> physical_device is already assigned by the platform to a remapping irq domain if
+> that is what the platform wants.
 
->  drivers/pci/pcie/aer.c          | 36 +++++++++----
->  drivers/pci/pcie/aer_inject.c   |  5 +-
->  drivers/pci/pcie/err.c          | 90 +++++++++++++++++++++++++++------
->  drivers/pci/pcie/pme.c          | 15 ++++--
->  drivers/pci/pcie/portdrv.h      |  2 +
->  drivers/pci/pcie/portdrv_core.c | 90 +++++++++++++++++++++++++++++++--
->  drivers/pci/pcie/portdrv_pci.c  | 20 +++++++-
->  include/linux/pci.h             |  3 ++
->  include/linux/pci_ids.h         |  1 +
->  include/uapi/linux/pci_regs.h   |  7 +++
->  10 files changed, 233 insertions(+), 36 deletions(-)
+Yeah most of what you said is right. For the most part, we are simply introducing a new IRQ domain
+which provides specific domain info ops for the classes of devices which want to provide custom
+mask/unmask callbacks..
 
-I always apply patches to topic branches based at my "master" branch
-(typically -rc1, so currently v5.8-rc1, but will soon be v5.9-rc1).
+Also, from your other comments, I've realized the same IRQ domain can be used when interrupt
+remapping is enabled/disabled.
 
-If your series doesn't apply there (as this one doesn't), it saves me
-time if you tell me where it does apply.  I figured out that this
-applies cleanly on top of my pci/error branch, which does make sense.
+Hence we will only have one create_dev_msi_domain which can be called by any device driver that
+wants to use the dev-msi IRQ domain to alloc/free IRQs. It would be the responsibility of the device
+driver to provide the correct device and update the dev->msi_domain.
+  
+> 
+> >> +	parent = irq_get_default_host();
+> > Really? How is it going to work once you have devices sending their
+> > MSIs to two different downstream blocks? This looks rather
+> > short-sighted.
+> 
+> .. and fix this too, the parent domain should be derived from the topology of the
+> physical_device which is originating the interrupt messages.
+> 
+Yes
 
-I'd actually *rather* have patches based on "master", even if I have
-to resolve conflicts, because that gives me the flexibility to squash
-in fixes and re-merge the topic branches.
+> > On the other hand, masking an interrupt is an irqchip operation, and
+> > only concerns the irqchip level. Here, you seem to be making it an
+> > end-point operation, which doesn't really make sense to me. Or is this
+> > device its own interrupt controller as well? That would be extremely
+> > surprising, and I'd expect some block downstream of the device to be
+> > able to control the masking of the interrupt.
+> 
+> These are message interrupts so they originate directly from the device and
+> generally travel directly to the CPU APIC. On the wire there is no difference
+> between a MSI, MSI-X and a device using the dev-msi approach.
+> 
+> IIRC on Intel/AMD at least once a MSI is launched it is not maskable.
+> 
+> So the model for MSI is always "mask at source". The closest mapping to the
+> Linux IRQ model is to say the end device has a irqchip that encapsulates the
+> ability of the device to generate the MSI in the first place.
+> 
+> It looks like existing platform_msi drivers deal with "masking"
+> implicitly by halting the device interrupt generation before releasing the
+> interrupt and have no way for the generic irqchip layer to mask the interrupt.
+> 
+> I suppose the motivation to make it explicit is related to vfio using the generic
+> mask/unmask functionality?
+> 
+> Explicit seems better, IMHO.
 
-Bjorn
+I don't think I understand this fully, ive still kept the device specific mask/unmask calls in the next
+patch series, please let me know if it needs further modifications.
+> 
+> Jason
