@@ -2,48 +2,49 @@ Return-Path: <SRS0=Z6n5=BP=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,DATE_IN_PAST_03_06,
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,DATE_IN_PAST_06_12,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
 	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AEEFC433DF
-	for <linux-pci@archiver.kernel.org>; Wed,  5 Aug 2020 17:24:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4168C433E0
+	for <linux-pci@archiver.kernel.org>; Wed,  5 Aug 2020 17:41:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F030322CF8
-	for <linux-pci@archiver.kernel.org>; Wed,  5 Aug 2020 17:24:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 91243206B6
+	for <linux-pci@archiver.kernel.org>; Wed,  5 Aug 2020 17:41:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728561AbgHERXn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 5 Aug 2020 13:23:43 -0400
-Received: from mail-ua1-f66.google.com ([209.85.222.66]:45990 "EHLO
-        mail-ua1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728524AbgHERQJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Aug 2020 13:16:09 -0400
-Received: by mail-ua1-f66.google.com with SMTP id p27so9758806uaa.12;
-        Wed, 05 Aug 2020 10:16:08 -0700 (PDT)
+        id S1728888AbgHERlk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 5 Aug 2020 13:41:40 -0400
+Received: from mail-ot1-f68.google.com ([209.85.210.68]:43119 "EHLO
+        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728707AbgHERdc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Aug 2020 13:33:32 -0400
+Received: by mail-ot1-f68.google.com with SMTP id r21so23438915ota.10;
+        Wed, 05 Aug 2020 10:33:32 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=AXKpgsbLcw7z2C6ljXHBYtvVN+NDPtHizk0roOICInI=;
-        b=HDxvQeBHBH6wHy2UhDpdh7Ye5pVuATgudTrV0WGoTKTtsB3KmrmihTUKbNbD0yrdDO
-         dHVa3LL4WMOVGQA52EuDPmV6DSLYnCHQHie11WNUCa523R2vtlAY3QCvzd1MkEHJTrkv
-         2DunOy3wZpxELNXhwogS+tMhpNgkznSi4FYNuP01t5INSR+nrzI9ay6aahOW4VN0mTVi
-         xIGVm1agQrl0VdPuKd6SccG/1OGT4MdFbbztZmJqeVsYnSLpoul3oRmY7TQi8C8ltqFo
-         DKn2AxAOyG37mcw1iV3mNalzmTa22t/ipLkSLfpcNlnJOuXqWN8UBPGVutfCUMcQ3VnE
-         YJPg==
-X-Gm-Message-State: AOAM530DutCgMwXmD0tg9LxU/xBiukDGat3oRtPSkCwIz6TjfKhV20Pm
-        QzJrAvBOTfTj+UvCIbucaEXV4vKNPPV4ixWH7bPld1gx
-X-Google-Smtp-Source: ABdhPJwV3n8tOAcfpMHynj9j+mQfpTpf9DYt0YtMCyg/CBd6L07ZVwpSWSi6SSwkA6/AmBSX9QS/9q9S3w/0cDUPDdY=
-X-Received: by 2002:a05:6830:1b79:: with SMTP id d25mr2057730ote.107.1596626350552;
- Wed, 05 Aug 2020 04:19:10 -0700 (PDT)
+        bh=nGe/Je8IarDkuCxG/u56QffSTYctpnR0YPw4MQUjy6A=;
+        b=rST3AuFgwVSXUW3gEpFnjQUuP+b9s0ZTn6PGbKOKO0OK/j1Bz2VXk0llZOWxlZuVO0
+         9oIMGAghTHl7Je5+n5+2DXDu/GznsnJ4YNQOMq5PtIygh1yiaj8pArkwAmdJGmw8t7vV
+         y8yVoeNhoS3DYIqAsy4Gt6Y1yh5ITWzLCzU1shD/pXIGj70jEE7glN6xEDbz2IORtivs
+         WWjD+NIisqKh2drx89yWWNp/pgChSLiBCf9nJaimJgGRP2okuj6v03kDhH2XQucahukI
+         6ZDcExgwrTEUAt5FKxmlIh2ncsblVHaIKbyGltSkjVye87qelLo/EG/OHkS4skdvIjpS
+         +5RQ==
+X-Gm-Message-State: AOAM530uffkeniOlIrjfH8CawBS6dbRM7pQSfv6ViYuOMMS6DLOMtgfK
+        /66F6f4Ls6S2Wp3IhNdRu6md7VSYEPbJdtBJFCPm8E5j
+X-Google-Smtp-Source: ABdhPJy6BJnijQ4U9574JZCK6kDHqx7/zV93wpejrM8Eh19/YBjLybIlzjjbGdFEBSswTARB1GJ4M2QmhRRIOA+7jHM=
+X-Received: by 2002:a9d:1b0d:: with SMTP id l13mr2076468otl.145.1596625795521;
+ Wed, 05 Aug 2020 04:09:55 -0700 (PDT)
 MIME-Version: 1.0
 References: <1594919915-5225-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <1594919915-5225-21-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
-In-Reply-To: <1594919915-5225-21-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
+ <1594919915-5225-7-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
+In-Reply-To: <1594919915-5225-7-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
 From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Wed, 5 Aug 2020 13:18:59 +0200
-Message-ID: <CAMuHMdVriWnPK8-=w=0mq8yj9+1jbsg9yH8aV=ygyHsQ0f-CQQ@mail.gmail.com>
-Subject: Re: [PATCH 20/20] arm64: dts: renesas: r8a774e1: Add VIN and CSI-2 nodes
+Date:   Wed, 5 Aug 2020 13:09:43 +0200
+Message-ID: <CAMuHMdWhmQS56j4vkZhK94qQVkVhCA1eceZRNW1XipX-Sr6+8A@mail.gmail.com>
+Subject: Re: [PATCH 06/20] arm64: dts: renesas: r8a774e1: Add USB2.0 phy and
+ host (EHCI/OHCI) device nodes
 To:     Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
 Cc:     Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
         Vinod Koul <vkoul@kernel.org>,
@@ -74,63 +75,21 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Prabhakar,
-
-On Thu, Jul 16, 2020 at 7:20 PM Lad Prabhakar
+On Thu, Jul 16, 2020 at 7:19 PM Lad Prabhakar
 <prabhakar.mahadev-lad.rj@bp.renesas.com> wrote:
-> Add VIN and CSI-2 nodes to RZ/G2H (R8A774E1) SoC dtsi.
+> Add USB2.0 phy and host (EHCI/OHCI) device nodes on RZ/G2H SoC dtsi.
 >
 > Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
 > Reviewed-by: Marian-Cristian Rotariu <marian-cristian.rotariu.rb@bp.renesas.com>
 
 Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
-
-However, before I queue this in renesas-devel for v5.10, I'd like to
-have some clarification about the issue below.
-
-> --- a/arch/arm64/boot/dts/renesas/r8a774e1.dtsi
-> +++ b/arch/arm64/boot/dts/renesas/r8a774e1.dtsi
-
-> +               vin4: video@e6ef4000 {
-> +                       compatible = "renesas,vin-r8a774e1";
-> +                       reg = <0 0xe6ef4000 0 0x1000>;
-> +                       interrupts = <GIC_SPI 174 IRQ_TYPE_LEVEL_HIGH>;
-> +                       clocks = <&cpg CPG_MOD 807>;
-> +                       power-domains = <&sysc R8A774E1_PD_ALWAYS_ON>;
-> +                       resets = <&cpg 807>;
-> +                       renesas,id = <4>;
-> +                       status = "disabled";
-> +
-> +                       ports {
-> +                               #address-cells = <1>;
-> +                               #size-cells = <0>;
-> +
-> +                               port@1 {
-> +                                       #address-cells = <1>;
-> +                                       #size-cells = <0>;
-
-"make dtbs W=1" says:
-
-    arch/arm64/boot/dts/renesas/r8a774e1.dtsi:1562.12-1572.7: Warning
-(graph_child_address): /soc/video@e6ef4000/ports/port@1: graph node
-has single child node 'endpoint@0', #address-cells/#size-cells are not
-necessary
-
-(same for vin5-7 below)
-
-> +
-> +                                       reg = <1>;
-> +
-> +                                       vin4csi20: endpoint@0 {
-> +                                               reg = <0>;
-> +                                               remote-endpoint = <&csi20vin4>;
-> +                                       };
+i.e. will queue in renesas-devel for v5.10.
 
 Gr{oetje,eeting}s,
 
                         Geert
 
---
+-- 
 Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
 In personal conversations with technical people, I call myself a hacker. But
