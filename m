@@ -2,149 +2,139 @@ Return-Path: <SRS0=o3DQ=BQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,DATE_IN_PAST_03_06,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34E9CC433E3
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Aug 2020 17:55:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4993EC433E0
+	for <linux-pci@archiver.kernel.org>; Thu,  6 Aug 2020 17:56:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8C07A206B2
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Aug 2020 17:55:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9AB86206B2
+	for <linux-pci@archiver.kernel.org>; Thu,  6 Aug 2020 17:56:06 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="aiclBWRQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727933AbgHFQaU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 6 Aug 2020 12:30:20 -0400
-Received: from mail-ot1-f68.google.com ([209.85.210.68]:41904 "EHLO
-        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725783AbgHFQ3Z (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2020 12:29:25 -0400
-Received: by mail-ot1-f68.google.com with SMTP id a65so27461392otc.8;
-        Thu, 06 Aug 2020 09:28:59 -0700 (PDT)
+        id S1728027AbgHFR4F (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 6 Aug 2020 13:56:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53600 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729592AbgHFR4A (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2020 13:56:00 -0400
+Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 881AAC061574
+        for <linux-pci@vger.kernel.org>; Thu,  6 Aug 2020 10:55:59 -0700 (PDT)
+Received: by mail-wr1-x442.google.com with SMTP id f1so44301173wro.2
+        for <linux-pci@vger.kernel.org>; Thu, 06 Aug 2020 10:55:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding:content-language;
+        bh=VLToQkSGb9Fyj+rMmCyIoE12BtD4sRvLhirgEOkP9W4=;
+        b=aiclBWRQsaqlr4rxoQqEFfHk424DkMeqTmreM/zu7IQoemedoiGmY1RO05MmpZR6+P
+         w7xGe9fU76E3VMZ7Isj9CVyq5FEg4I8VDs+q0YobHeP9Ohy4GB5+BKuoR/WEUbUXJdph
+         UquQ9WkUAjpPvjtyL6o6gTPDC/x9qzlzrlEYI=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=GfRNKclYJY9TFgLDludWTlpzguMceCfSaUZal/qDN6s=;
-        b=mucsV4XvZdLPQxIuifzETBesBUCVGlX5wh10vA6hs7DMJcqfZEeJRoYFy0Qstdp26z
-         dWDzFflwqajIGQk9ckIz++zQujOWL7HagizIRPK2zskVRYX9S8qqvgysDqX0acWwFpjP
-         hM/jzjBXUwNTLWPdPzBJTJ6l7lQL7hNVZ3Fbtf5AfmuPebkufn5i5pHbj0bdfsf9hFEC
-         zOg5SGURrR9Are5To1UFdHcB8modghHZmbkHjTIYClw4lhRXBgk22yR6A4lfHpkDMElN
-         FVmBpqqNdfcDvQiSH/rARb8NlhDS96slJgFrXwuPOVYHJF5QBkHNGAcqETd2PunleUAf
-         X+Fg==
-X-Gm-Message-State: AOAM533oCfizdYpwXQIXOZH0VxdJFyWGAcA1wczlg6qDS29Nn2k77/DE
-        7yWF52kGbJXnYuU+mOG4a/gvI3L46lf74I7tARo8Euib
-X-Google-Smtp-Source: ABdhPJxsjDZTTqPo+9e6awj5yV1LG1Imzyw5Civ8gt7ap18JuUVGKty3JozPE/qiMGjuARTMT9EOZFY2swizOMfqf1E=
-X-Received: by 2002:a05:6830:1b79:: with SMTP id d25mr6431613ote.107.1596714489705;
- Thu, 06 Aug 2020 04:48:09 -0700 (PDT)
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding
+         :content-language;
+        bh=VLToQkSGb9Fyj+rMmCyIoE12BtD4sRvLhirgEOkP9W4=;
+        b=S+sjxR5bUikN14upeM3XQaRgzaeeZzj+HWpX7W5Q2qAtD71EIskvoSgNp6S1yGSbyI
+         9h45le7ppGzxph/jgPwfUS6jRL8goURpyAEoXNV2Nvxz4RsxwEcTuwx+hTodSy/OC6tu
+         YagpdOlkHEeW4330PrLSj9teF8GM70fe57dZcE5XDl2c2pO4F9pU9GvmHm3YRI7/juRs
+         j30akNE1xVkYGFjliF3zfpAR2USuBYaBReD9hT+IIaCrbKEfd9JpmhlkaGaWsQUm1n8q
+         4niuq1YZQ/0TpUQieNb/MoXleq+psQJFTZP9bNGEU2EWpAYa9kdGb9XwHE7FC5reQJ3X
+         AfAQ==
+X-Gm-Message-State: AOAM532Pz+qWHIg2IRGVIw/4QXOV8TxeJRllaUJRLX6HzpuKpTS4/xeI
+        hhVW30h8GF3FUBmazdVEbk32Ow==
+X-Google-Smtp-Source: ABdhPJzbtHnvN2YvogoQjvg6Nr1wWat0eDA9t2hrW3lsNiU9zCFscq1A7+T3HDp3Wo7bjV+9E+cWiQ==
+X-Received: by 2002:adf:bb07:: with SMTP id r7mr8403518wrg.102.1596736558012;
+        Thu, 06 Aug 2020 10:55:58 -0700 (PDT)
+Received: from [10.136.13.65] ([192.19.228.250])
+        by smtp.gmail.com with ESMTPSA id l11sm6978590wme.11.2020.08.06.10.55.55
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 06 Aug 2020 10:55:57 -0700 (PDT)
+Subject: Re: [PATCH v4] PCI: Reduce warnings on possible RW1C corruption
+To:     Mark Tomlinson <mark.tomlinson@alliedtelesis.co.nz>,
+        ray.jui@broadcom.com, helgaas@kernel.org, sbranden@broadcom.com,
+        f.fainelli@gmail.com, lorenzo.pieralisi@arm.com, robh@kernel.org
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20200806041455.11070-1-mark.tomlinson@alliedtelesis.co.nz>
+From:   Scott Branden <scott.branden@broadcom.com>
+Message-ID: <16cbd3f5-722a-cf8b-487e-82a0bbf95053@broadcom.com>
+Date:   Thu, 6 Aug 2020 10:55:53 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-References: <1594919915-5225-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <1594919915-5225-21-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <CAMuHMdVriWnPK8-=w=0mq8yj9+1jbsg9yH8aV=ygyHsQ0f-CQQ@mail.gmail.com> <CA+V-a8vXjhV-EeQb=bBhoRmuVA=0GSuFiV33N9nkhi39VNN6oA@mail.gmail.com>
-In-Reply-To: <CA+V-a8vXjhV-EeQb=bBhoRmuVA=0GSuFiV33N9nkhi39VNN6oA@mail.gmail.com>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Thu, 6 Aug 2020 13:47:58 +0200
-Message-ID: <CAMuHMdXie+GfKBO22mFrn4oG_y7YUxU9ekQdWnp1hn-6z2mLuQ@mail.gmail.com>
-Subject: Re: [PATCH 20/20] arm64: dts: renesas: r8a774e1: Add VIN and CSI-2 nodes
-To:     "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
-Cc:     Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
-        Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
-        Vinod Koul <vkoul@kernel.org>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Mark Brown <broonie@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Liam Girdwood <lgirdwood@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Magnus Damm <magnus.damm@gmail.com>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>, linux-ide@vger.kernel.org,
-        dmaengine <dmaengine@vger.kernel.org>,
-        Linux I2C <linux-i2c@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Media Mailing List <linux-media@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        ALSA Development Mailing List <alsa-devel@alsa-project.org>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
-        USB list <linux-usb@vger.kernel.org>,
-        =?UTF-8?Q?Niklas_S=C3=B6derlund?= <niklas.soderlund@ragnatech.se>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20200806041455.11070-1-mark.tomlinson@alliedtelesis.co.nz>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Content-Language: en-CA
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Prabhakar,
+Looks good.
 
-On Thu, Aug 6, 2020 at 1:17 PM Lad, Prabhakar
-<prabhakar.csengg@gmail.com> wrote:
-> On Wed, Aug 5, 2020 at 12:19 PM Geert Uytterhoeven <geert@linux-m68k.org> wrote:
-> > On Thu, Jul 16, 2020 at 7:20 PM Lad Prabhakar
-> > <prabhakar.mahadev-lad.rj@bp.renesas.com> wrote:
-> > > Add VIN and CSI-2 nodes to RZ/G2H (R8A774E1) SoC dtsi.
-> > >
-> > > Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-> > > Reviewed-by: Marian-Cristian Rotariu <marian-cristian.rotariu.rb@bp.renesas.com>
-> >
-> > Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
-> >
-> > However, before I queue this in renesas-devel for v5.10, I'd like to
-> > have some clarification about the issue below.
-> >
-> > > --- a/arch/arm64/boot/dts/renesas/r8a774e1.dtsi
-> > > +++ b/arch/arm64/boot/dts/renesas/r8a774e1.dtsi
-> >
-> > > +               vin4: video@e6ef4000 {
-> > > +                       compatible = "renesas,vin-r8a774e1";
-> > > +                       reg = <0 0xe6ef4000 0 0x1000>;
-> > > +                       interrupts = <GIC_SPI 174 IRQ_TYPE_LEVEL_HIGH>;
-> > > +                       clocks = <&cpg CPG_MOD 807>;
-> > > +                       power-domains = <&sysc R8A774E1_PD_ALWAYS_ON>;
-> > > +                       resets = <&cpg 807>;
-> > > +                       renesas,id = <4>;
-> > > +                       status = "disabled";
-> > > +
-> > > +                       ports {
-> > > +                               #address-cells = <1>;
-> > > +                               #size-cells = <0>;
-> > > +
-> > > +                               port@1 {
-> > > +                                       #address-cells = <1>;
-> > > +                                       #size-cells = <0>;
-> >
-> > "make dtbs W=1" says:
-> >
-> >     arch/arm64/boot/dts/renesas/r8a774e1.dtsi:1562.12-1572.7: Warning
-> > (graph_child_address): /soc/video@e6ef4000/ports/port@1: graph node
-> > has single child node 'endpoint@0', #address-cells/#size-cells are not
-> > necessary
-> >
-> > (same for vin5-7 below)
-> >
-> Referring to commit 5e53dbf4edb4d ("arm64: dts: renesas: r8a77990: Fix
-> VIN endpoint numbering") we definitely need endpoint numbering.
-> Probably the driver needs to be fixed to handle such cases.
+On 2020-08-05 9:14 p.m., Mark Tomlinson wrote:
+> For hardware that only supports 32-bit writes to PCI there is the
+> possibility of clearing RW1C (write-one-to-clear) bits. A rate-limited
+> messages was introduced by fb2659230120, but rate-limiting is not the
+> best choice here. Some devices may not show the warnings they should if
+> another device has just produced a bunch of warnings. Also, the number
+> of messages can be a nuisance on devices which are otherwise working
+> fine.
+>
+> This patch changes the ratelimit to a single warning per bus. This
+> ensures no bus is 'starved' of emitting a warning and also that there
+> isn't a continuous stream of warnings. It would be preferable to have a
+> warning per device, but the pci_dev structure is not available here, and
+> a lookup from devfn would be far too slow.
+>
+> Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
+> Fixes: fb2659230120 ("PCI: Warn on possible RW1C corruption for sub-32 bit config writes")
+> Signed-off-by: Mark Tomlinson <mark.tomlinson@alliedtelesis.co.nz>
+Acked-by: Scott Branden <scott.branden@broadcom.com>
+> ---
+> changes in v4:
+>  - Use bitfield rather than bool to save memory (was meant to be in v3).
+>
+>  drivers/pci/access.c | 9 ++++++---
+>  include/linux/pci.h  | 1 +
+>  2 files changed, 7 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+> index 79c4a2ef269a..b452467fd133 100644
+> --- a/drivers/pci/access.c
+> +++ b/drivers/pci/access.c
+> @@ -160,9 +160,12 @@ int pci_generic_config_write32(struct pci_bus *bus, unsigned int devfn,
+>  	 * write happen to have any RW1C (write-one-to-clear) bits set, we
+>  	 * just inadvertently cleared something we shouldn't have.
+>  	 */
+> -	dev_warn_ratelimited(&bus->dev, "%d-byte config write to %04x:%02x:%02x.%d offset %#x may corrupt adjacent RW1C bits\n",
+> -			     size, pci_domain_nr(bus), bus->number,
+> -			     PCI_SLOT(devfn), PCI_FUNC(devfn), where);
+> +	if (!bus->unsafe_warn) {
+> +		dev_warn(&bus->dev, "%d-byte config write to %04x:%02x:%02x.%d offset %#x may corrupt adjacent RW1C bits\n",
+> +			 size, pci_domain_nr(bus), bus->number,
+> +			 PCI_SLOT(devfn), PCI_FUNC(devfn), where);
+> +		bus->unsafe_warn = 1;
+> +	}
+>  
+>  	mask = ~(((1 << (size * 8)) - 1) << ((where & 0x3) * 8));
+>  	tmp = readl(addr) & mask;
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 34c1c4f45288..85211a787f8b 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -626,6 +626,7 @@ struct pci_bus {
+>  	struct bin_attribute	*legacy_io;	/* Legacy I/O for this bus */
+>  	struct bin_attribute	*legacy_mem;	/* Legacy mem */
+>  	unsigned int		is_added:1;
+> +	unsigned int		unsafe_warn:1;	/* warned about RW1C config write */
+>  };
+>  
+>  #define to_pci_bus(n)	container_of(n, struct pci_bus, dev)
 
-> > > +
-> > > +                                       reg = <1>;
-> > > +
-> > > +                                       vin4csi20: endpoint@0 {
-> > > +                                               reg = <0>;
-> > > +                                               remote-endpoint = <&csi20vin4>;
-
-On R-Car E3, the single endpoint is at address 2, so "make dtbs W=1"doesn't
-complain. Here it is at address 0.
-
-Niklas?
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
