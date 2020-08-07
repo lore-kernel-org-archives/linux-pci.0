@@ -7,51 +7,51 @@ X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF783C433E0
-	for <linux-pci@archiver.kernel.org>; Fri,  7 Aug 2020 15:22:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DFB2C433E1
+	for <linux-pci@archiver.kernel.org>; Fri,  7 Aug 2020 16:48:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8886921744
-	for <linux-pci@archiver.kernel.org>; Fri,  7 Aug 2020 15:22:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 572F922CAE
+	for <linux-pci@archiver.kernel.org>; Fri,  7 Aug 2020 16:48:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="4EQlx0KM";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="snOYMyry"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="NFL3dVXc";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="wGmpZV5B"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726058AbgHGPWr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 7 Aug 2020 11:22:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53668 "EHLO
+        id S1726762AbgHGQry (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 7 Aug 2020 12:47:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38492 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725993AbgHGPWq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 7 Aug 2020 11:22:46 -0400
+        with ESMTP id S1725893AbgHGQry (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 7 Aug 2020 12:47:54 -0400
 Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D6AAC061756;
-        Fri,  7 Aug 2020 08:22:46 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 84665C061756;
+        Fri,  7 Aug 2020 09:47:53 -0700 (PDT)
 From:   Thomas Gleixner <tglx@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1596813755;
+        s=2020; t=1596818871;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=NVumAgezZv+7SVfB6Q2/Q8X5jlsIYt1eVjkbA1gdAYw=;
-        b=4EQlx0KMb0meqiPGzR18ImjZq7WryZlWL+Wk7/0XxpI9c6/yULykLFr3nu6YZveprK0jmQ
-        2hc/eLkG/qsh+mXKa61yIcVVPRhV8BLJFvhJ8P1ZRJum5AsynK7ZbfOOWyea+jCzK7NVEC
-        SbNXq1fNSunkpoMw60WEF94xSccakAhh7MZHhvlHXiKcBIOJN5IQR+5bENh9jLeEU+3+Ta
-        I5dLC6u+27CZhHOVbwaRoMkNMdsHK0VAVdaJfYqOsdJENLFg1W9zRdj9TuD7SQ7GPjBoXL
-        phOY9PTQYgmjbwLVdmUwV2P+h88yDTUCPhqTV4r5h9Gi/jPPIejCXB2Gf3YnRw==
+        bh=C4D6q6BH0UW7RcquNhEbypnm+YCcNqzmSG8cWhZrYzo=;
+        b=NFL3dVXc8as4snv68s35F937lz3UhNjhxnxSdP6v0uD6N6pvXz/2CvDeslZIF2x/+Bkol4
+        eNT+P1arxUIHxzJUpZmz73rDLB4X+DTitRojtmrV/Zr68KNMBWlcjGqt1uB1Ri3NDtIpfC
+        /p0KfoxPcB32Y0O/ecx9ahEY92hM/+i9aAE3AU6+N9RzwD0dSPK4mNDdticALQ+OMWNBUL
+        U6d5x/cubDHDIoCXYuAKW1nkd+4Iyvc4d2XWX9JFHI8RZBA0ZNPpH7RPzirnOiHCusAKbg
+        5U829Gc4P7R/qn00MVdtEDoxJGxBaMFg8oBh81Eq7S2y13I7HDSsqMXlS3rVfg==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1596813755;
+        s=2020e; t=1596818871;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=NVumAgezZv+7SVfB6Q2/Q8X5jlsIYt1eVjkbA1gdAYw=;
-        b=snOYMyrybLgc0p11pj36AhN+M0Ea0tL3D1T62sjEyZSxQB9iW8Bt1kc8zPiAhMnhZywXor
-        B5a75eWk7dW5XNBA==
-To:     Jason Gunthorpe <jgg@nvidia.com>
+        bh=C4D6q6BH0UW7RcquNhEbypnm+YCcNqzmSG8cWhZrYzo=;
+        b=wGmpZV5BlDXngCsY4St47Icmd8oWncMdBdSTSbtStu83dFxc0Ue46GfPvBwyusyCNvxxsw
+        G3sIQK9wlJ+NzRBA==
+To:     Jason Gunthorpe <jgg@nvidia.com>,
+        "gregkh\@linuxfoundation.org" <gregkh@linuxfoundation.org>
 Cc:     "Dey\, Megha" <megha.dey@intel.com>, Marc Zyngier <maz@kernel.org>,
         "Jiang\, Dave" <dave.jiang@intel.com>,
         "vkoul\@kernel.org" <vkoul@kernel.org>,
         "bhelgaas\@google.com" <bhelgaas@google.com>,
         "rafael\@kernel.org" <rafael@kernel.org>,
-        "gregkh\@linuxfoundation.org" <gregkh@linuxfoundation.org>,
         "hpa\@zytor.com" <hpa@zytor.com>,
         "alex.williamson\@redhat.com" <alex.williamson@redhat.com>,
         "Pan\, Jacob jun" <jacob.jun.pan@intel.com>,
@@ -79,10 +79,10 @@ Cc:     "Dey\, Megha" <megha.dey@intel.com>, Marc Zyngier <maz@kernel.org>,
         "linux-pci\@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "kvm\@vger.kernel.org" <kvm@vger.kernel.org>
 Subject: Re: [PATCH RFC v2 02/18] irq/dev-msi: Add support for a new DEV_MSI irq domain
-In-Reply-To: <20200807120650.GR16789@nvidia.com>
-References: <96a1eb5ccc724790b5404a642583919d@intel.com> <20200805221548.GK19097@mellanox.com> <70465fd3a7ae428a82e19f98daa779e8@intel.com> <20200805225330.GL19097@mellanox.com> <630e6a4dc17b49aba32675377f5a50e0@intel.com> <20200806001927.GM19097@mellanox.com> <c6a1c065ab9b46bbaf9f5713462085a5@intel.com> <87tuxfhf9u.fsf@nanos.tec.linutronix.de> <014ffe59-38d3-b770-e065-dfa2d589adc6@intel.com> <87h7tfh6fc.fsf@nanos.tec.linutronix.de> <20200807120650.GR16789@nvidia.com>
-Date:   Fri, 07 Aug 2020 17:22:34 +0200
-Message-ID: <87y2mqfpl1.fsf@nanos.tec.linutronix.de>
+In-Reply-To: <20200807133428.GT16789@nvidia.com>
+References: <70465fd3a7ae428a82e19f98daa779e8@intel.com> <20200805225330.GL19097@mellanox.com> <630e6a4dc17b49aba32675377f5a50e0@intel.com> <20200806001927.GM19097@mellanox.com> <c6a1c065ab9b46bbaf9f5713462085a5@intel.com> <87tuxfhf9u.fsf@nanos.tec.linutronix.de> <014ffe59-38d3-b770-e065-dfa2d589adc6@intel.com> <87h7tfh6fc.fsf@nanos.tec.linutronix.de> <20200807120650.GR16789@nvidia.com> <20200807123831.GA645281@kroah.com> <20200807133428.GT16789@nvidia.com>
+Date:   Fri, 07 Aug 2020 18:47:40 +0200
+Message-ID: <87v9hufln7.fsf@nanos.tec.linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
@@ -90,99 +90,74 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Jason,
-
 Jason Gunthorpe <jgg@nvidia.com> writes:
-> On Thu, Aug 06, 2020 at 10:21:11PM +0200, Thomas Gleixner wrote:
+> Though it is more of a rational and a cookbook on how to combine
+> existing technology pieces. (eg PASID, platform_msi, etc)
 >
->> Optionally? Please tell the hardware folks to make this mandatory. We
->> have enough pain with non maskable MSI interrupts already so introducing
->> yet another non maskable interrupt trainwreck is not an option.
+> The basic approach of SIOV's IMS is that there is no longer a generic
+> interrupt indirection from numbers to addr/data pairs like
+> IOAPIC/MSI/MSI-X owned by the common OS code.
 >
-> Can you elaborate on the flows where Linux will need to trigger
-> masking?
-
-1) disable/enable_irq() obviously needs masking
-   
-2) Affinity changes are preferrably done with masking to avoid a
-   boatload of nasty side effect. We have a "fix" for 32bit addressing
-   mode which works by chance due to the layout but it would fail
-   miserably with 64bit addressing mode. 64bit addressing mode is only
-   relevant for more than 256 CPUs which requires X2APIC which in turn
-   requires interrupt remapping. Interrupt remappind saves us here
-   because the interrupt can be disabled at the remapping level.
-
-3) The ability to shutdown an irq at the interrupt level in case of
-   malfunction. Of course that's pure paranoia because devices are
-   perfect and never misbehave :)
-
-So it's nowhere in the hot path of interrupt handling itself.
-
-> I expect that masking will be available in our NIC HW too - but it
-> will require a spin loop if masking has to be done in an atomic
-> context.
-
-Yes, it's all in atomic context.
-
-We have functionality in the interrupt core to do #1 and #2 from task
-context (requires the caller to be in task context as well). #3 not so
-much.
-
->> It's more than a decade now that I tell HW people not to repeat the
->> non-maskable MSI failure, but obviously they still think that
->> non-maskable interrupts are a brilliant idea. I know that HW folks
->> believe that everything they omit can be fixed in software, but they
->> have to finally understand that this particular issue _cannot_ be fixed
->> at all.
+> Instead the driver itself is responsible to set the addr/data pair
+> into the device in a device specific way, deal with masking, etc.
 >
-> Sure, the CPU should always be able to shut off an interrupt!
-
-Oh yes!
-
-> Maybe explaining the goals would help understand the HW perspective.
+> This lets the device use an implementation that is not limited by the
+> harsh MSI-X semantics.
 >
-> Today HW can process > 100k queues of work at once. Interrupt delivery
-> works by having a MSI index in each queue's metadata and the interrupt
-> indirects through a MSI-X table on-chip which has the
-> addr/data/mask/etc.
->
-> What IMS proposes is that the interrupt data can move into the queue
-> meta data (which is not required to be on-chip), eg along side the
-> producer/consumer pointers, and the central MSI-X table is not
-> needed. This is necessary because the PCI spec has very harsh design
-> requirements for a MSI-X table that make scaling it prohibitive.
+> In Linux we already have 'IMS' it is called platform_msi and a few
+> embedded drivers already work like this. The idea here is to bring it
+> to PCI.
 
-I know.
+platform_msi as it exists today is a crutch and in hindsight I should
+have payed more attention back then and shoot it down before it got
+merged.
 
-> So an IRQ can be silenced by deleting or stopping the queue(s)
-> triggering it.
+IMS can be somehow mapped to platform MSI but the proposed approach to
+extend platform MSI with the extra bolts for IMS (valid for one
+particular incarnation) is just going into the wrong direction.
 
-We cannot do that from the interrupt layer without squaring the
-circle and violating all locking and layering rules in one go.
+We've been there and the main reason why hierarchical irq domains exist
+is that we needed to make a clear cut between the involved hardware
+pieces and their drivers. The pre hierarchy model was a maze of stuff
+calling back and forth between layers with lots of duct tape added to
+make it "work". This finally fell apart when Intel tried to support
+I/O-APIC hotplug. The ARM people had similar issues with all the special
+irq related SoC specific IP blocks which are placed between the CPU
+level interrupt controller and the device.
 
-> It can be masked by including masking in the queue metadata. We can
-> detect pending by checking the producer/consumer values.
->
-> However synchronizing all the HW and all the state is now more
-> complicated than just writing a mask bit via MMIO to an on-die memory.
+The hierarchy strictly seperates the per layer resource management and
+each layer can work mostly independent of the actual available parent
+layer.
 
-That's one of the reasons why I think that the IMS handling has to be a
-per device irqdomain with it's own interrupt chip because the way how
-IMS is managed is completely device specific.
+Now looking at IMS. It's a subsystem inside a physical device. It has
+slot management (where to place the Message) and mask/unmask. Resource
+management at that level is what irq domains are for and mask/unmask is
+what a irq chip handles.
 
-There is certainly opportunity for sharing some of the functionality and
-code, but not by creating a pseudo-shared entity which is customized per
-device with indirections and magic storage plus device specific IMS slot
-management glued at it as a wart. Such concepts fall apart in no time or
-end up in a completely unmaintainable mess.
+So the right thing to do is to create shared infrastructure which is
+utilized by the device drivers by providing a few bog standard data
+structures and the handful of device specific domain and irq functions.
 
-Coming back to mask/unmask. We could lift that requirement if and only
-if irq remapping is mandatory to make use of those magic devices because
-the remapping unit allows us to do the masking. That still would not
-justify the pseudo-shared irqdomain because the IMS slot management
-still stays per device.
+That keeps the functionality common, but avoids that we end up with
+
+  - msi_desc becoming a dump ground for random driver data
+
+  - a zoo of platform callbacks
+  
+  - glued on driver specific resource management
+
+and all the great hacks which it requires to work on hundreds of
+different devices which all implement IMS differently.
+
+I'm all for sharing code and making the life of driver writers simple
+because that makes my life simple as well, but not by creating a layer
+at the wrong level and then hacking it into submission until it finally
+collapses.
+
+Designing the infrastructure following the clear layering rules of
+hierarchical domains so it works for IMS and also replaces the platform
+MSI hack is the only sane way to go forward, not the other way round.
 
 Thanks,
 
         tglx
-
