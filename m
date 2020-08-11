@@ -2,31 +2,32 @@ Return-Path: <SRS0=FxIG=BV=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 864E4C433E0
-	for <linux-pci@archiver.kernel.org>; Tue, 11 Aug 2020 10:02:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB37DC433DF
+	for <linux-pci@archiver.kernel.org>; Tue, 11 Aug 2020 10:02:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6B7C72075D
-	for <linux-pci@archiver.kernel.org>; Tue, 11 Aug 2020 10:02:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CA17C20716
+	for <linux-pci@archiver.kernel.org>; Tue, 11 Aug 2020 10:02:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728346AbgHKKCB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 11 Aug 2020 06:02:01 -0400
-Received: from inva021.nxp.com ([92.121.34.21]:41462 "EHLO inva021.nxp.com"
+        id S1728456AbgHKKCH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 11 Aug 2020 06:02:07 -0400
+Received: from inva020.nxp.com ([92.121.34.13]:45308 "EHLO inva020.nxp.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728265AbgHKKCB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 11 Aug 2020 06:02:01 -0400
-Received: from inva021.nxp.com (localhost [127.0.0.1])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id AA0C8201EED;
-        Tue, 11 Aug 2020 12:01:59 +0200 (CEST)
+        id S1728451AbgHKKCG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 11 Aug 2020 06:02:06 -0400
+Received: from inva020.nxp.com (localhost [127.0.0.1])
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id DDA061A1982;
+        Tue, 11 Aug 2020 12:02:03 +0200 (CEST)
 Received: from invc005.ap-rdc01.nxp.com (invc005.ap-rdc01.nxp.com [165.114.16.14])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id C2059201E80;
-        Tue, 11 Aug 2020 12:01:52 +0200 (CEST)
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id A037E1A196D;
+        Tue, 11 Aug 2020 12:01:56 +0200 (CEST)
 Received: from localhost.localdomain (mega.ap.freescale.net [10.192.208.232])
-        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id EF188402DD;
-        Tue, 11 Aug 2020 12:01:43 +0200 (CEST)
+        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id 662DE40243;
+        Tue, 11 Aug 2020 12:01:47 +0200 (CEST)
 From:   Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
 To:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
@@ -36,53 +37,97 @@ To:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         gustavo.pimentel@synopsys.com, roy.zang@nxp.com,
         jingoohan1@gmail.com, andrew.murray@arm.com
 Cc:     mingkai.hu@nxp.com, minghuan.Lian@nxp.com,
+        Xiaowei Bao <xiaowei.bao@nxp.com>,
         Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Subject: [PATCHv7 00/12]PCI: dwc: Add the multiple PF support for DWC and Layerscape
-Date:   Tue, 11 Aug 2020 17:54:29 +0800
-Message-Id: <20200811095441.7636-1-Zhiqiang.Hou@nxp.com>
+Subject: [PATCHv7 02/12] PCI: designware-ep: Add the doorbell mode of MSI-X in EP mode
+Date:   Tue, 11 Aug 2020 17:54:31 +0800
+Message-Id: <20200811095441.7636-3-Zhiqiang.Hou@nxp.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200811095441.7636-1-Zhiqiang.Hou@nxp.com>
+References: <20200811095441.7636-1-Zhiqiang.Hou@nxp.com>
 X-Virus-Scanned: ClamAV using ClamSMTP
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+From: Xiaowei Bao <xiaowei.bao@nxp.com>
 
-Add the PCIe EP multiple PF support for DWC and Layerscape, and use
-a list to manage the PFs of each PCIe controller; add the doorbell
-MSIX function for DWC; and refactor the Layerscape EP driver due to
-some difference in Layercape platforms PCIe integration.
+Add the doorbell mode of MSI-X in DWC EP driver.
 
-Hou Zhiqiang (1):
-  misc: pci_endpoint_test: Add driver data for Layerscape PCIe
-    controllers
+Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
+Reviewed-by: Andrew Murray <andrew.murray@arm.com>
+Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+---
+V7:
+ - Rebase the patch without functionality change.
 
-Xiaowei Bao (11):
-  PCI: designware-ep: Add multiple PFs support for DWC
-  PCI: designware-ep: Add the doorbell mode of MSI-X in EP mode
-  PCI: designware-ep: Move the function of getting MSI capability
-    forward
-  PCI: designware-ep: Modify MSI and MSIX CAP way of finding
-  dt-bindings: pci: layerscape-pci: Add compatible strings for ls1088a
-    and ls2088a
-  PCI: layerscape: Fix some format issue of the code
-  PCI: layerscape: Modify the way of getting capability with different
-    PEX
-  PCI: layerscape: Modify the MSIX to the doorbell mode
-  PCI: layerscape: Add EP mode support for ls1088a and ls2088a
-  arm64: dts: layerscape: Add PCIe EP node for ls1088a
-  misc: pci_endpoint_test: Add LS1088a in pci_device_id table
+ drivers/pci/controller/dwc/pcie-designware-ep.c | 14 ++++++++++++++
+ drivers/pci/controller/dwc/pcie-designware.h    | 12 ++++++++++++
+ 2 files changed, 26 insertions(+)
 
- .../bindings/pci/layerscape-pci.txt           |   2 +
- .../arm64/boot/dts/freescale/fsl-ls1088a.dtsi |  31 +++
- drivers/misc/pci_endpoint_test.c              |   8 +-
- .../pci/controller/dwc/pci-layerscape-ep.c    | 100 +++++--
- .../pci/controller/dwc/pcie-designware-ep.c   | 258 ++++++++++++++----
- drivers/pci/controller/dwc/pcie-designware.c  |  59 ++--
- drivers/pci/controller/dwc/pcie-designware.h  |  48 +++-
- 7 files changed, 410 insertions(+), 96 deletions(-)
-
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index e5bd3a5ef380..e76b504ed465 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -471,6 +471,20 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 	return 0;
+ }
+ 
++int dw_pcie_ep_raise_msix_irq_doorbell(struct dw_pcie_ep *ep, u8 func_no,
++				       u16 interrupt_num)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	u32 msg_data;
++
++	msg_data = (func_no << PCIE_MSIX_DOORBELL_PF_SHIFT) |
++		   (interrupt_num - 1);
++
++	dw_pcie_writel_dbi(pci, PCIE_MSIX_DOORBELL, msg_data);
++
++	return 0;
++}
++
+ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 			      u16 interrupt_num)
+ {
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 89f8271ec5ee..745b4938225a 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -97,6 +97,9 @@
+ #define PCIE_MISC_CONTROL_1_OFF		0x8BC
+ #define PCIE_DBI_RO_WR_EN		BIT(0)
+ 
++#define PCIE_MSIX_DOORBELL		0x948
++#define PCIE_MSIX_DOORBELL_PF_SHIFT	24
++
+ #define PCIE_PL_CHK_REG_CONTROL_STATUS			0xB20
+ #define PCIE_PL_CHK_REG_CHK_REG_START			BIT(0)
+ #define PCIE_PL_CHK_REG_CHK_REG_CONTINUOUS		BIT(1)
+@@ -434,6 +437,8 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 			     u8 interrupt_num);
+ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 			     u16 interrupt_num);
++int dw_pcie_ep_raise_msix_irq_doorbell(struct dw_pcie_ep *ep, u8 func_no,
++				       u16 interrupt_num);
+ void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar);
+ #else
+ static inline void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
+@@ -475,6 +480,13 @@ static inline int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 	return 0;
+ }
+ 
++static inline int dw_pcie_ep_raise_msix_irq_doorbell(struct dw_pcie_ep *ep,
++						     u8 func_no,
++						     u16 interrupt_num)
++{
++	return 0;
++}
++
+ static inline void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
+ {
+ }
 -- 
 2.17.1
 
