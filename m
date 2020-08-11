@@ -7,27 +7,27 @@ X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04B4CC433DF
-	for <linux-pci@archiver.kernel.org>; Tue, 11 Aug 2020 10:02:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B93CC433E1
+	for <linux-pci@archiver.kernel.org>; Tue, 11 Aug 2020 10:02:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D5A2B2076C
-	for <linux-pci@archiver.kernel.org>; Tue, 11 Aug 2020 10:02:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DD0FD20768
+	for <linux-pci@archiver.kernel.org>; Tue, 11 Aug 2020 10:02:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728586AbgHKKCY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 11 Aug 2020 06:02:24 -0400
-Received: from inva021.nxp.com ([92.121.34.21]:42446 "EHLO inva021.nxp.com"
+        id S1728607AbgHKKCc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 11 Aug 2020 06:02:32 -0400
+Received: from inva020.nxp.com ([92.121.34.13]:45808 "EHLO inva020.nxp.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728541AbgHKKCW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 11 Aug 2020 06:02:22 -0400
-Received: from inva021.nxp.com (localhost [127.0.0.1])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 64A00201F46;
-        Tue, 11 Aug 2020 12:02:20 +0200 (CEST)
+        id S1728561AbgHKKCT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 11 Aug 2020 06:02:19 -0400
+Received: from inva020.nxp.com (localhost [127.0.0.1])
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 79CF31A196F;
+        Tue, 11 Aug 2020 12:02:17 +0200 (CEST)
 Received: from invc005.ap-rdc01.nxp.com (invc005.ap-rdc01.nxp.com [165.114.16.14])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 83AA4201EEF;
-        Tue, 11 Aug 2020 12:02:13 +0200 (CEST)
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 36F301A1970;
+        Tue, 11 Aug 2020 12:02:10 +0200 (CEST)
 Received: from localhost.localdomain (mega.ap.freescale.net [10.192.208.232])
-        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id B45DD40243;
-        Tue, 11 Aug 2020 12:02:04 +0200 (CEST)
+        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id 41A174030E;
+        Tue, 11 Aug 2020 12:02:01 +0200 (CEST)
 From:   Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
 To:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
@@ -37,10 +37,11 @@ To:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         gustavo.pimentel@synopsys.com, roy.zang@nxp.com,
         jingoohan1@gmail.com, andrew.murray@arm.com
 Cc:     mingkai.hu@nxp.com, minghuan.Lian@nxp.com,
+        Xiaowei Bao <xiaowei.bao@nxp.com>,
         Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Subject: [PATCHv7 12/12] misc: pci_endpoint_test: Add driver data for Layerscape PCIe controllers
-Date:   Tue, 11 Aug 2020 17:54:41 +0800
-Message-Id: <20200811095441.7636-13-Zhiqiang.Hou@nxp.com>
+Subject: [PATCHv7 10/12] arm64: dts: layerscape: Add PCIe EP node for ls1088a
+Date:   Tue, 11 Aug 2020 17:54:39 +0800
+Message-Id: <20200811095441.7636-11-Zhiqiang.Hou@nxp.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200811095441.7636-1-Zhiqiang.Hou@nxp.com>
 References: <20200811095441.7636-1-Zhiqiang.Hou@nxp.com>
@@ -50,41 +51,76 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+From: Xiaowei Bao <xiaowei.bao@nxp.com>
 
-The commit 0a121f9bc3f5 ("misc: pci_endpoint_test: Use streaming DMA
-APIs for buffer allocation") changed to use streaming DMA APIs, however,
-dma_map_single() might not return a 4KB aligned address, so add the
-default_data as driver data for Layerscape PCIe controllers to make it
-4KB aligned.
+Add PCIe EP node for ls1088a to support EP mode.
 
+Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
+Reviewed-by: Andrew Murray <andrew.murray@arm.com>
 Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 ---
 V7:
- - New patch.
+ - Rebase the patch without functionality change.
 
- drivers/misc/pci_endpoint_test.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ .../arm64/boot/dts/freescale/fsl-ls1088a.dtsi | 31 +++++++++++++++++++
+ 1 file changed, 31 insertions(+)
 
-diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index 4a17f08de60f..70a790cd14c5 100644
---- a/drivers/misc/pci_endpoint_test.c
-+++ b/drivers/misc/pci_endpoint_test.c
-@@ -946,8 +946,12 @@ static const struct pci_device_id pci_endpoint_test_tbl[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA72x),
- 	  .driver_data = (kernel_ulong_t)&default_data,
- 	},
--	{ PCI_DEVICE(PCI_VENDOR_ID_FREESCALE, 0x81c0) },
--	{ PCI_DEVICE(PCI_VENDOR_ID_FREESCALE, PCI_DEVICE_ID_LS1088A) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_FREESCALE, 0x81c0),
-+	  .driver_data = (kernel_ulong_t)&default_data,
-+	},
-+	{ PCI_DEVICE(PCI_VENDOR_ID_FREESCALE, PCI_DEVICE_ID_LS1088A),
-+	  .driver_data = (kernel_ulong_t)&default_data,
-+	},
- 	{ PCI_DEVICE_DATA(SYNOPSYS, EDDA, NULL) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_AM654),
- 	  .driver_data = (kernel_ulong_t)&am654_data
+diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1088a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls1088a.dtsi
+index 169f4742ae3b..915592141f1b 100644
+--- a/arch/arm64/boot/dts/freescale/fsl-ls1088a.dtsi
++++ b/arch/arm64/boot/dts/freescale/fsl-ls1088a.dtsi
+@@ -499,6 +499,17 @@
+ 			status = "disabled";
+ 		};
+ 
++		pcie_ep@3400000 {
++			compatible = "fsl,ls1088a-pcie-ep","fsl,ls-pcie-ep";
++			reg = <0x00 0x03400000 0x0 0x00100000
++			       0x20 0x00000000 0x8 0x00000000>;
++			reg-names = "regs", "addr_space";
++			num-ib-windows = <24>;
++			num-ob-windows = <128>;
++			max-functions = /bits/ 8 <2>;
++			status = "disabled";
++		};
++
+ 		pcie@3500000 {
+ 			compatible = "fsl,ls1088a-pcie";
+ 			reg = <0x00 0x03500000 0x0 0x00100000   /* controller registers */
+@@ -525,6 +536,16 @@
+ 			status = "disabled";
+ 		};
+ 
++		pcie_ep@3500000 {
++			compatible = "fsl,ls1088a-pcie-ep","fsl,ls-pcie-ep";
++			reg = <0x00 0x03500000 0x0 0x00100000
++			       0x28 0x00000000 0x8 0x00000000>;
++			reg-names = "regs", "addr_space";
++			num-ib-windows = <6>;
++			num-ob-windows = <8>;
++			status = "disabled";
++		};
++
+ 		pcie@3600000 {
+ 			compatible = "fsl,ls1088a-pcie";
+ 			reg = <0x00 0x03600000 0x0 0x00100000   /* controller registers */
+@@ -551,6 +572,16 @@
+ 			status = "disabled";
+ 		};
+ 
++		pcie_ep@3600000 {
++			compatible = "fsl,ls1088a-pcie-ep","fsl,ls-pcie-ep";
++			reg = <0x00 0x03600000 0x0 0x00100000
++			       0x30 0x00000000 0x8 0x00000000>;
++			reg-names = "regs", "addr_space";
++			num-ib-windows = <6>;
++			num-ob-windows = <8>;
++			status = "disabled";
++		};
++
+ 		smmu: iommu@5000000 {
+ 			compatible = "arm,mmu-500";
+ 			reg = <0 0x5000000 0 0x800000>;
 -- 
 2.17.1
 
