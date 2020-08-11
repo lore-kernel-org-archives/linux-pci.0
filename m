@@ -4,30 +4,30 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4875C433E1
-	for <linux-pci@archiver.kernel.org>; Tue, 11 Aug 2020 10:02:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6E33C433E3
+	for <linux-pci@archiver.kernel.org>; Tue, 11 Aug 2020 10:02:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9C5A120782
-	for <linux-pci@archiver.kernel.org>; Tue, 11 Aug 2020 10:02:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 993FC20716
+	for <linux-pci@archiver.kernel.org>; Tue, 11 Aug 2020 10:02:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728532AbgHKKCP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 11 Aug 2020 06:02:15 -0400
-Received: from inva021.nxp.com ([92.121.34.21]:42054 "EHLO inva021.nxp.com"
+        id S1728574AbgHKKCV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 11 Aug 2020 06:02:21 -0400
+Received: from inva020.nxp.com ([92.121.34.13]:45920 "EHLO inva020.nxp.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728515AbgHKKCO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 11 Aug 2020 06:02:14 -0400
-Received: from inva021.nxp.com (localhost [127.0.0.1])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id B4792201F22;
-        Tue, 11 Aug 2020 12:02:12 +0200 (CEST)
+        id S1728568AbgHKKCV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 11 Aug 2020 06:02:21 -0400
+Received: from inva020.nxp.com (localhost [127.0.0.1])
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 68A0F1A1982;
+        Tue, 11 Aug 2020 12:02:19 +0200 (CEST)
 Received: from invc005.ap-rdc01.nxp.com (invc005.ap-rdc01.nxp.com [165.114.16.14])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 465F2201EEF;
-        Tue, 11 Aug 2020 12:02:05 +0200 (CEST)
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id F12ED1A196D;
+        Tue, 11 Aug 2020 12:02:11 +0200 (CEST)
 Received: from localhost.localdomain (mega.ap.freescale.net [10.192.208.232])
-        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id 13636402A5;
-        Tue, 11 Aug 2020 12:01:56 +0200 (CEST)
+        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id F05E3402EB;
+        Tue, 11 Aug 2020 12:02:02 +0200 (CEST)
 From:   Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
 To:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
@@ -39,9 +39,9 @@ To:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
 Cc:     mingkai.hu@nxp.com, minghuan.Lian@nxp.com,
         Xiaowei Bao <xiaowei.bao@nxp.com>,
         Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Subject: [PATCHv7 07/12] PCI: layerscape: Modify the way of getting capability with different PEX
-Date:   Tue, 11 Aug 2020 17:54:36 +0800
-Message-Id: <20200811095441.7636-8-Zhiqiang.Hou@nxp.com>
+Subject: [PATCHv7 11/12] misc: pci_endpoint_test: Add LS1088a in pci_device_id table
+Date:   Tue, 11 Aug 2020 17:54:40 +0800
+Message-Id: <20200811095441.7636-12-Zhiqiang.Hou@nxp.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200811095441.7636-1-Zhiqiang.Hou@nxp.com>
 References: <20200811095441.7636-1-Zhiqiang.Hou@nxp.com>
@@ -53,102 +53,39 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Xiaowei Bao <xiaowei.bao@nxp.com>
 
-The different PCIe controller in one board may be have different
-capability of MSI or MSIX, so change the way of getting the MSI
-capability, make it more flexible.
+Add LS1088a in pci_device_id table so that pci-epf-test can be used
+for testing PCIe EP in LS1088a.
 
 Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
+Reviewed-by: Andrew Murray <andrew.murray@arm.com>
 Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 ---
 V7:
  - Rebase the patch without functionality change.
 
- .../pci/controller/dwc/pci-layerscape-ep.c    | 31 ++++++++++++++-----
- 1 file changed, 23 insertions(+), 8 deletions(-)
+ drivers/misc/pci_endpoint_test.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/pci-layerscape-ep.c b/drivers/pci/controller/dwc/pci-layerscape-ep.c
-index 0691d9ad1356..9601f9c09cb1 100644
---- a/drivers/pci/controller/dwc/pci-layerscape-ep.c
-+++ b/drivers/pci/controller/dwc/pci-layerscape-ep.c
-@@ -22,6 +22,7 @@
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index e060796f9caa..4a17f08de60f 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -70,6 +70,7 @@
  
- struct ls_pcie_ep {
- 	struct dw_pcie		*pci;
-+	struct pci_epc_features	*ls_epc;
- };
+ #define PCI_DEVICE_ID_TI_J721E			0xb00d
+ #define PCI_DEVICE_ID_TI_AM654			0xb00c
++#define PCI_DEVICE_ID_LS1088A			0x80c0
  
- #define to_ls_pcie_ep(x)	dev_get_drvdata((x)->dev)
-@@ -40,26 +41,31 @@ static const struct of_device_id ls_pcie_ep_of_match[] = {
- 	{ },
- };
- 
--static const struct pci_epc_features ls_pcie_epc_features = {
--	.linkup_notifier = false,
--	.msi_capable = true,
--	.msix_capable = false,
--	.bar_fixed_64bit = (1 << BAR_2) | (1 << BAR_4),
--};
--
- static const struct pci_epc_features*
- ls_pcie_ep_get_features(struct dw_pcie_ep *ep)
- {
--	return &ls_pcie_epc_features;
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	struct ls_pcie_ep *pcie = to_ls_pcie_ep(pci);
-+
-+	return pcie->ls_epc;
- }
- 
- static void ls_pcie_ep_init(struct dw_pcie_ep *ep)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	struct ls_pcie_ep *pcie = to_ls_pcie_ep(pci);
-+	struct dw_pcie_ep_func *ep_func;
- 	enum pci_barno bar;
- 
-+	ep_func = dw_pcie_ep_get_func_from_ep(ep, 0);
-+	if (!ep_func)
-+		return;
-+
- 	for (bar = 0; bar < PCI_STD_NUM_BARS; bar++)
- 		dw_pcie_ep_reset_bar(pci, bar);
-+
-+	pcie->ls_epc->msi_capable = ep_func->msi_cap ? true : false;
-+	pcie->ls_epc->msix_capable = ep_func->msix_cap ? true : false;
- }
- 
- static int ls_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
-@@ -119,6 +125,7 @@ static int __init ls_pcie_ep_probe(struct platform_device *pdev)
- 	struct device *dev = &pdev->dev;
- 	struct dw_pcie *pci;
- 	struct ls_pcie_ep *pcie;
-+	struct pci_epc_features *ls_epc;
- 	struct resource *dbi_base;
- 	int ret;
- 
-@@ -130,6 +137,10 @@ static int __init ls_pcie_ep_probe(struct platform_device *pdev)
- 	if (!pci)
- 		return -ENOMEM;
- 
-+	ls_epc = devm_kzalloc(dev, sizeof(*ls_epc), GFP_KERNEL);
-+	if (!ls_epc)
-+		return -ENOMEM;
-+
- 	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "regs");
- 	pci->dbi_base = devm_pci_remap_cfg_resource(dev, dbi_base);
- 	if (IS_ERR(pci->dbi_base))
-@@ -140,6 +151,10 @@ static int __init ls_pcie_ep_probe(struct platform_device *pdev)
- 	pci->ops = &ls_pcie_ep_ops;
- 	pcie->pci = pci;
- 
-+	ls_epc->bar_fixed_64bit = (1 << BAR_2) | (1 << BAR_4),
-+
-+	pcie->ls_epc = ls_epc;
-+
- 	platform_set_drvdata(pdev, pcie);
- 
- 	ret = ls_add_pcie_ep(pcie, pdev);
+ #define is_am654_pci_dev(pdev)		\
+ 		((pdev)->device == PCI_DEVICE_ID_TI_AM654)
+@@ -946,6 +947,7 @@ static const struct pci_device_id pci_endpoint_test_tbl[] = {
+ 	  .driver_data = (kernel_ulong_t)&default_data,
+ 	},
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_FREESCALE, 0x81c0) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_FREESCALE, PCI_DEVICE_ID_LS1088A) },
+ 	{ PCI_DEVICE_DATA(SYNOPSYS, EDDA, NULL) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_AM654),
+ 	  .driver_data = (kernel_ulong_t)&am654_data
 -- 
 2.17.1
 
