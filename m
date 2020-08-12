@@ -2,128 +2,173 @@ Return-Path: <SRS0=67if=BW=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E911CC433E0
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Aug 2020 16:48:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 847BEC433E0
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Aug 2020 18:04:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D37C62076C
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Aug 2020 16:48:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5ABEB20771
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Aug 2020 18:04:24 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="b4ZpXqdp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726941AbgHLQsD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 12 Aug 2020 12:48:03 -0400
-Received: from mga12.intel.com ([192.55.52.136]:33828 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726515AbgHLQrJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Aug 2020 12:47:09 -0400
-IronPort-SDR: PLd8YpKRkvi4LRRkeQHXkGyvYpFvwXULLjj72yUpfDEDghQLH0Pmc6zrr1Jt/OZ5SC4qN8bzvA
- 8wj8F4NNM2bQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9711"; a="133538407"
-X-IronPort-AV: E=Sophos;i="5.76,305,1592895600"; 
-   d="scan'208";a="133538407"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Aug 2020 09:47:08 -0700
-IronPort-SDR: VJy/qUjKBiSitXn1k39kLkfO8iLO7E3q/Msk0m572NgQrTH+aIvVwpYmucDHcCrKM8l9ES3GoU
- CLAcB0gJQmjQ==
-X-IronPort-AV: E=Sophos;i="5.76,305,1592895600"; 
-   d="scan'208";a="439442616"
-Received: from ticede-or-099.amr.corp.intel.com (HELO arch-ashland-svkelley.intel.com) ([10.254.58.97])
-  by orsmga004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Aug 2020 09:47:07 -0700
-From:   Sean V Kelley <sean.v.kelley@intel.com>
-To:     bhelgaas@google.com, Jonathan.Cameron@huawei.com,
-        rjw@rjwysocki.net, ashok.raj@intel.com, tony.luck@intel.com,
-        sathyanarayanan.kuppuswamy@linux.intel.com, qiuxu.zhuo@intel.com
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Sean V Kelley <sean.v.kelley@intel.com>
-Subject: [PATCH v3 02/10] PCI/RCEC: Bind RCEC devices to the Root Port driver
-Date:   Wed, 12 Aug 2020 09:46:51 -0700
-Message-Id: <20200812164659.1118946-3-sean.v.kelley@intel.com>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200812164659.1118946-1-sean.v.kelley@intel.com>
-References: <20200812164659.1118946-1-sean.v.kelley@intel.com>
+        id S1726518AbgHLSEM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 12 Aug 2020 14:04:12 -0400
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:58106 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726512AbgHLSEL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Aug 2020 14:04:11 -0400
+Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 07CI2GHJ165546;
+        Wed, 12 Aug 2020 14:04:08 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=pp1;
+ bh=SRzTkpxr5LdPeSrEjmAc06YCSZqbsTO5DEVlTIu4cU0=;
+ b=b4ZpXqdpAH2PFfAAoDPtHG0UcBz+cEHJ6ggcX7qzNo7jsAFL34dqGN7sb62kkEvBfJdD
+ dPv4SlBxymgPimGCPt6TV92Ze9d5H/A0uSKpGpsyFToE31FoKhN5sPLwa6ECOkml1k1z
+ 2+358E3niYhsNS8joH4WDNO0C37ZKVtIb9K0LSLjebMIzIEDeRYzlIpCJpKwxyAgKRTi
+ bFQ1nxhUW8cFoZ8dE/AjxZEJgC0Tg/I6E9JwVebdKq3kCBuXj2B7MaL0Umx2AFrfjolE
+ AE6PrInBUu6QQMVs4qlYWmH/FcWOSi9lC5aUoSwPL9qgXKyPwyd4iPdXk98/8b4F7e+Y aw== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 32v83c61ne-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 12 Aug 2020 14:04:07 -0400
+Received: from m0098404.ppops.net (m0098404.ppops.net [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 07CI3hY0173359;
+        Wed, 12 Aug 2020 14:04:07 -0400
+Received: from ppma04dal.us.ibm.com (7a.29.35a9.ip4.static.sl-reverse.com [169.53.41.122])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 32v83c61kx-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 12 Aug 2020 14:04:06 -0400
+Received: from pps.filterd (ppma04dal.us.ibm.com [127.0.0.1])
+        by ppma04dal.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 07CHj3ZL001961;
+        Wed, 12 Aug 2020 18:04:05 GMT
+Received: from b03cxnp08027.gho.boulder.ibm.com (b03cxnp08027.gho.boulder.ibm.com [9.17.130.19])
+        by ppma04dal.us.ibm.com with ESMTP id 32skp9cdh2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 12 Aug 2020 18:04:05 +0000
+Received: from b03ledav006.gho.boulder.ibm.com (b03ledav006.gho.boulder.ibm.com [9.17.130.237])
+        by b03cxnp08027.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 07CI406h31654290
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 12 Aug 2020 18:04:01 GMT
+Received: from b03ledav006.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 9811FC6063;
+        Wed, 12 Aug 2020 18:04:03 +0000 (GMT)
+Received: from b03ledav006.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id E5054C6055;
+        Wed, 12 Aug 2020 18:04:01 +0000 (GMT)
+Received: from oc4221205838.ibm.com (unknown [9.163.7.238])
+        by b03ledav006.gho.boulder.ibm.com (Postfix) with ESMTP;
+        Wed, 12 Aug 2020 18:04:01 +0000 (GMT)
+Subject: Re: [PATCH] PCI: Introduce flag for detached virtual functions
+To:     Alex Williamson <alex.williamson@redhat.com>
+Cc:     bhelgaas@google.com, schnelle@linux.ibm.com, pmorel@linux.ibm.com,
+        mpe@ellerman.id.au, oohall@gmail.com, linux-s390@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
+        linux-pci@vger.kernel.org
+References: <1597243817-3468-1-git-send-email-mjrosato@linux.ibm.com>
+ <1597243817-3468-2-git-send-email-mjrosato@linux.ibm.com>
+ <20200812104351.3668cc0f@x1.home>
+From:   Matthew Rosato <mjrosato@linux.ibm.com>
+Message-ID: <05c46459-7d00-c01c-6387-68bc7d6c4f63@linux.ibm.com>
+Date:   Wed, 12 Aug 2020 14:04:01 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20200812104351.3668cc0f@x1.home>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
+ definitions=2020-08-12_13:2020-08-11,2020-08-12 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999 mlxscore=0
+ lowpriorityscore=0 spamscore=0 bulkscore=0 impostorscore=0 phishscore=0
+ malwarescore=0 clxscore=1015 suspectscore=0 adultscore=0
+ priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2008120114
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+On 8/12/20 12:43 PM, Alex Williamson wrote:
+> On Wed, 12 Aug 2020 10:50:17 -0400
+> Matthew Rosato <mjrosato@linux.ibm.com> wrote:
+> 
+>> s390x has the notion of providing VFs to the kernel in a manner
+>> where the associated PF is inaccessible other than via firmware.
+>> These are not treated as typical VFs and access to them is emulated
+>> by underlying firmware which can still access the PF.  After
+>> abafbc55 however these detached VFs were no longer able to work
+>> with vfio-pci as the firmware does not provide emulation of the
+>> PCI_COMMAND_MEMORY bit.  In this case, let's explicitly recognize
+>> these detached VFs so that vfio-pci can allow memory access to
+>> them again.
+>>
+>> Signed-off-by: Matthew Rosato <mjrosato@linux.ibm.com>
+>> Reviewed-by: Pierre Morel <pmorel@linux.ibm.com>
+>> Reviewed-by: Niklas Schnelle <schnelle@linux.ibm.com>
+>> ---
+>>   arch/s390/pci/pci.c                | 8 ++++++++
+>>   drivers/vfio/pci/vfio_pci_config.c | 3 ++-
+>>   include/linux/pci.h                | 1 +
+>>   3 files changed, 11 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+>> index 3902c9f..04ac76d 100644
+>> --- a/arch/s390/pci/pci.c
+>> +++ b/arch/s390/pci/pci.c
+>> @@ -581,6 +581,14 @@ int pcibios_enable_device(struct pci_dev *pdev, int mask)
+>>   {
+>>   	struct zpci_dev *zdev = to_zpci(pdev);
+>>   
+>> +	/*
+>> +	 * If we have a VF on a non-multifunction bus, it must be a VF that is
+>> +	 * detached from its parent PF.  We rely on firmware emulation to
+>> +	 * provide underlying PF details.
+>> +	 */
+>> +	if (zdev->vfn && !zdev->zbus->multifunction)
+>> +		pdev->detached_vf = 1;
+>> +
+>>   	zpci_debug_init_device(zdev, dev_name(&pdev->dev));
+>>   	zpci_fmb_enable_device(zdev);
+>>   
+>> diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
+>> index d98843f..17845fc 100644
+>> --- a/drivers/vfio/pci/vfio_pci_config.c
+>> +++ b/drivers/vfio/pci/vfio_pci_config.c
+>> @@ -406,7 +406,8 @@ bool __vfio_pci_memory_enabled(struct vfio_pci_device *vdev)
+>>   	 * PF SR-IOV capability, there's therefore no need to trigger
+>>   	 * faults based on the virtual value.
+>>   	 */
+>> -	return pdev->is_virtfn || (cmd & PCI_COMMAND_MEMORY);
+>> +	return pdev->is_virtfn || pdev->detached_vf ||
+>> +	       (cmd & PCI_COMMAND_MEMORY);
+>>   }
+>>   
+>>   /*
+> 
+> Wouldn't we also want to enable the is_virtfn related code in
+> vfio_basic_config_read() and at least the initial setting of the
+> command register in vfio_config_init()?  Otherwise we're extending the
+> incomplete emulation out to userspace.  Thanks,
+> 
 
-If a Root Complex Integrated Endpoint (RCiEP) is implemented, errors may
-optionally be sent to a corresponding Root Complex Event Collector (RCEC).
-Each RCiEP must be associated with no more than one RCEC. Interface errors
-are reported to the OS by RCECs.
+We had discussed doing this internally and I ultimately left it out of 
+this patch to keep the changes small...  But I agree that it makes sense 
+to fix the emulation for userspace.  I can add the changes you suggest + 
+would also need to change vfio_restore_bar() with:
 
-For an RCEC (technically not a Bridge), error messages "received" from
-associated RCiEPs must be enabled for "transmission" in order to cause a
-System Error via the Root Control register or (when the Advanced Error
-Reporting Capability is present) reporting via the Root Error Command
-register and logging in the Root Error Status register and Error Source
-Identification register.
+-       if (pdev->is_virtfn)
++       if (pdev->is_virtfn || pdev->detached_vf)
+                 return;
 
-Given the commonality with Root Ports and the need to also support AER
-and PME services for RCECs, extend the Root Port driver to support RCEC
-devices through the addition of the RCEC Class ID to the driver
-structure.
+to prevent the config changes from tripping the restore code.
 
-Co-developed-by: Sean V Kelley <sean.v.kelley@intel.com>
-Signed-off-by: Sean V Kelley <sean.v.kelley@intel.com>
-Signed-off-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
----
- drivers/pci/pcie/portdrv_core.c | 8 ++++----
- drivers/pci/pcie/portdrv_pci.c  | 5 ++++-
- 2 files changed, 8 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 50a9522ab07d..99769c636775 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -234,11 +234,11 @@ static int get_port_device_capability(struct pci_dev *dev)
- #endif
- 
- 	/*
--	 * Root ports are capable of generating PME too.  Root Complex
--	 * Event Collectors can also generate PMEs, but we don't handle
--	 * those yet.
-+	 * Root ports and Root Complex Event Collectors are capable
-+	 * of generating PME.
- 	 */
--	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT &&
-+	if ((pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
-+	     pci_pcie_type(dev) == PCI_EXP_TYPE_RC_EC) &&
- 	    (pcie_ports_native || host->native_pme)) {
- 		services |= PCIE_PORT_SERVICE_PME;
- 
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index 3acf151ae015..d5b109499b10 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -106,7 +106,8 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
- 	if (!pci_is_pcie(dev) ||
- 	    ((pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT) &&
- 	     (pci_pcie_type(dev) != PCI_EXP_TYPE_UPSTREAM) &&
--	     (pci_pcie_type(dev) != PCI_EXP_TYPE_DOWNSTREAM)))
-+	     (pci_pcie_type(dev) != PCI_EXP_TYPE_DOWNSTREAM) &&
-+	     (pci_pcie_type(dev) != PCI_EXP_TYPE_RC_EC)))
- 		return -ENODEV;
- 
- 	status = pcie_port_device_register(dev);
-@@ -195,6 +196,8 @@ static const struct pci_device_id port_pci_ids[] = {
- 	{ PCI_DEVICE_CLASS(((PCI_CLASS_BRIDGE_PCI << 8) | 0x00), ~0) },
- 	/* subtractive decode PCI-to-PCI bridge, class type is 060401h */
- 	{ PCI_DEVICE_CLASS(((PCI_CLASS_BRIDGE_PCI << 8) | 0x01), ~0) },
-+	/* handle any Root Complex Event Collector */
-+	{ PCI_DEVICE_CLASS(((PCI_CLASS_SYSTEM_RCEC << 8) | 0x00), ~0) },
- 	{ },
- };
- 
--- 
-2.28.0
+I'll send a V2 with this included.
 
