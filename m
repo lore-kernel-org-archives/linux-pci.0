@@ -7,41 +7,42 @@ X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97FF9C433E0
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Aug 2020 16:47:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37699C433E1
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Aug 2020 16:47:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7F7A62076C
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Aug 2020 16:47:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1EA44207DA
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Aug 2020 16:47:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726673AbgHLQrQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 12 Aug 2020 12:47:16 -0400
-Received: from mga12.intel.com ([192.55.52.136]:33838 "EHLO mga12.intel.com"
+        id S1726664AbgHLQrv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 12 Aug 2020 12:47:51 -0400
+Received: from mga12.intel.com ([192.55.52.136]:33856 "EHLO mga12.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726658AbgHLQrP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Aug 2020 12:47:15 -0400
-IronPort-SDR: LSW3x6iVjQkYPT8nSmdxZNIPSdHJ/3iLJ+foDi6Q6gq7aEw9SJyGuNScr7fiL40BkgRTC3s4/p
- URmn79nj4HYg==
-X-IronPort-AV: E=McAfee;i="6000,8403,9711"; a="133538471"
+        id S1726816AbgHLQrY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Aug 2020 12:47:24 -0400
+IronPort-SDR: UIARZ50YjkfBY6Vz3RZzf61/I89sGxNBxb1HQKdGm2PqAeEmjdox+CoWIHtbqPFee/kuso+rm9
+ F28CXUO4xkhg==
+X-IronPort-AV: E=McAfee;i="6000,8403,9711"; a="133538566"
 X-IronPort-AV: E=Sophos;i="5.76,305,1592895600"; 
-   d="scan'208";a="133538471"
+   d="scan'208";a="133538566"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Aug 2020 09:47:13 -0700
-IronPort-SDR: eM0D08NxoFH0wa2lP+KXgaTWauOydyTUqplnsAun0g0EhMja4aFY223BYz6QmcUtBErGbIpkAx
- 3RcN4KVLhM7A==
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Aug 2020 09:47:23 -0700
+IronPort-SDR: 7sgPFqLLhM0D6StT99Hvfk8YpH8q7PJOBXJ/iIFi941Gg5+u9AmuYZLlWJDacEuiscNW/d5c4e
+ u1gvFrpItoXA==
 X-IronPort-AV: E=Sophos;i="5.76,305,1592895600"; 
-   d="scan'208";a="439442661"
+   d="scan'208";a="439442708"
 Received: from ticede-or-099.amr.corp.intel.com (HELO arch-ashland-svkelley.intel.com) ([10.254.58.97])
-  by orsmga004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Aug 2020 09:47:12 -0700
+  by orsmga004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Aug 2020 09:47:21 -0700
 From:   Sean V Kelley <sean.v.kelley@intel.com>
 To:     bhelgaas@google.com, Jonathan.Cameron@huawei.com,
         rjw@rjwysocki.net, ashok.raj@intel.com, tony.luck@intel.com,
         sathyanarayanan.kuppuswamy@linux.intel.com, qiuxu.zhuo@intel.com
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v3 06/10] PCI/AER: Apply function level reset to RCiEP on fatal error
-Date:   Wed, 12 Aug 2020 09:46:55 -0700
-Message-Id: <20200812164659.1118946-7-sean.v.kelley@intel.com>
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Sean V Kelley <sean.v.kelley@intel.com>
+Subject: [PATCH v3 10/10] PCI/AER: Add RCEC AER error injection support
+Date:   Wed, 12 Aug 2020 09:46:59 -0700
+Message-Id: <20200812164659.1118946-11-sean.v.kelley@intel.com>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200812164659.1118946-1-sean.v.kelley@intel.com>
 References: <20200812164659.1118946-1-sean.v.kelley@intel.com>
@@ -54,63 +55,34 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
 
-Attempt to do function level reset for an RCiEP associated with an
-RCEC device on fatal error.
+The Root Complex Event Collectors(RCEC) appear as peers to Root Ports
+and also have the AER capability. So add RCEC support to the current AER
+error injection driver.
 
 Signed-off-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+Co-developed-by: Sean V Kelley <sean.v.kelley@intel.com>
+Signed-off-by: Sean V Kelley <sean.v.kelley@intel.com>
 ---
- drivers/pci/pcie/err.c | 31 ++++++++++++++++++++++---------
- 1 file changed, 22 insertions(+), 9 deletions(-)
+ drivers/pci/pcie/aer_inject.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index f4cfb37c26c1..04528b57876b 100644
---- a/drivers/pci/pcie/err.c
-+++ b/drivers/pci/pcie/err.c
-@@ -169,6 +169,17 @@ static void pci_walk_dev_affected(struct pci_dev *dev, int (*cb)(struct pci_dev
- 		cb(dev, userdata);
- }
- 
-+static enum pci_ers_result flr_on_rciep(struct pci_dev *dev)
-+{
-+	if (!pcie_has_flr(dev))
-+		return PCI_ERS_RESULT_NONE;
-+
-+	if (pcie_flr(dev))
-+		return PCI_ERS_RESULT_DISCONNECT;
-+
-+	return PCI_ERS_RESULT_RECOVERED;
-+}
-+
- pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
- 			enum pci_channel_state state,
- 			pci_ers_result_t (*reset_link)(struct pci_dev *pdev))
-@@ -190,15 +201,17 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
- 	if (state == pci_channel_io_frozen) {
- 		pci_walk_dev_affected(dev, report_frozen_detected, &status);
- 		if (pci_pcie_type(dev) == PCI_EXP_TYPE_RC_END) {
--			pci_warn(dev, "link reset not possible for RCiEP\n");
--			status = PCI_ERS_RESULT_NONE;
--			goto failed;
--		}
--
--		status = reset_link(dev);
--		if (status != PCI_ERS_RESULT_RECOVERED) {
--			pci_warn(dev, "link reset failed\n");
--			goto failed;
-+			status = flr_on_rciep(dev);
-+			if (status != PCI_ERS_RESULT_RECOVERED) {
-+				pci_warn(dev, "function level reset failed\n");
-+				goto failed;
-+			}
-+		} else {
-+			status = reset_link(dev);
-+			if (status != PCI_ERS_RESULT_RECOVERED) {
-+				pci_warn(dev, "link reset failed\n");
-+				goto failed;
-+			}
- 		}
- 	} else {
- 		pci_walk_dev_affected(dev, report_normal_detected, &status);
+diff --git a/drivers/pci/pcie/aer_inject.c b/drivers/pci/pcie/aer_inject.c
+index 21cc3d3387f7..8107e782546a 100644
+--- a/drivers/pci/pcie/aer_inject.c
++++ b/drivers/pci/pcie/aer_inject.c
+@@ -333,8 +333,11 @@ static int aer_inject(struct aer_error_inj *einj)
+ 	if (!dev)
+ 		return -ENODEV;
+ 	rpdev = pcie_find_root_port(dev);
++	/* If Root port not found, try to find an RCEC */
++	if (!rpdev)
++		rpdev = dev->rcec;
+ 	if (!rpdev) {
+-		pci_err(dev, "Root port not found\n");
++		pci_err(dev, "Neither root port nor RCEC found\n");
+ 		ret = -ENODEV;
+ 		goto out_put;
+ 	}
 -- 
 2.28.0
 
