@@ -7,42 +7,41 @@ X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6D14C433DF
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Aug 2020 16:47:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97FF9C433E0
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Aug 2020 16:47:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D09742076C
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Aug 2020 16:47:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7F7A62076C
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Aug 2020 16:47:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726841AbgHLQr3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 12 Aug 2020 12:47:29 -0400
-Received: from mga12.intel.com ([192.55.52.136]:33855 "EHLO mga12.intel.com"
+        id S1726673AbgHLQrQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 12 Aug 2020 12:47:16 -0400
+Received: from mga12.intel.com ([192.55.52.136]:33838 "EHLO mga12.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726795AbgHLQrW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Aug 2020 12:47:22 -0400
-IronPort-SDR: GGGgJkOyIhRcctK33uRe6veTaQIYE1pAV39jrhNwGn16LIn51gIjDacoSRBgfUfqYsW6VigTqu
- 0vi0ogfZ4knA==
-X-IronPort-AV: E=McAfee;i="6000,8403,9711"; a="133538552"
+        id S1726658AbgHLQrP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Aug 2020 12:47:15 -0400
+IronPort-SDR: LSW3x6iVjQkYPT8nSmdxZNIPSdHJ/3iLJ+foDi6Q6gq7aEw9SJyGuNScr7fiL40BkgRTC3s4/p
+ URmn79nj4HYg==
+X-IronPort-AV: E=McAfee;i="6000,8403,9711"; a="133538471"
 X-IronPort-AV: E=Sophos;i="5.76,305,1592895600"; 
-   d="scan'208";a="133538552"
+   d="scan'208";a="133538471"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Aug 2020 09:47:21 -0700
-IronPort-SDR: cbLKL/8WIAyoNtrb1KYcOslIR5+hmpOtPpKmEAkaYntd+htkN81wVjtvKsicM4NbACBST50e1b
- pgHWVU0Ik4RA==
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Aug 2020 09:47:13 -0700
+IronPort-SDR: eM0D08NxoFH0wa2lP+KXgaTWauOydyTUqplnsAun0g0EhMja4aFY223BYz6QmcUtBErGbIpkAx
+ 3RcN4KVLhM7A==
 X-IronPort-AV: E=Sophos;i="5.76,305,1592895600"; 
-   d="scan'208";a="439442694"
+   d="scan'208";a="439442661"
 Received: from ticede-or-099.amr.corp.intel.com (HELO arch-ashland-svkelley.intel.com) ([10.254.58.97])
-  by orsmga004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Aug 2020 09:47:18 -0700
+  by orsmga004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Aug 2020 09:47:12 -0700
 From:   Sean V Kelley <sean.v.kelley@intel.com>
 To:     bhelgaas@google.com, Jonathan.Cameron@huawei.com,
         rjw@rjwysocki.net, ashok.raj@intel.com, tony.luck@intel.com,
         sathyanarayanan.kuppuswamy@linux.intel.com, qiuxu.zhuo@intel.com
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Sean V Kelley <sean.v.kelley@intel.com>
-Subject: [PATCH v3 09/10] PCI/PME: Add RCEC PME handling
-Date:   Wed, 12 Aug 2020 09:46:58 -0700
-Message-Id: <20200812164659.1118946-10-sean.v.kelley@intel.com>
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v3 06/10] PCI/AER: Apply function level reset to RCiEP on fatal error
+Date:   Wed, 12 Aug 2020 09:46:55 -0700
+Message-Id: <20200812164659.1118946-7-sean.v.kelley@intel.com>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200812164659.1118946-1-sean.v.kelley@intel.com>
 References: <20200812164659.1118946-1-sean.v.kelley@intel.com>
@@ -53,68 +52,65 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The Root Complex Event Collectors(RCEC) appear as peers of Root Ports
-and also have the PME capability. So add RCEC support to the current PME
-service driver and attach the PME service driver to the RCEC device.
+From: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
 
-Co-developed-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+Attempt to do function level reset for an RCiEP associated with an
+RCEC device on fatal error.
+
 Signed-off-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
-Signed-off-by: Sean V Kelley <sean.v.kelley@intel.com>
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 ---
- drivers/pci/pcie/pme.c | 15 +++++++++++----
- 1 file changed, 11 insertions(+), 4 deletions(-)
+ drivers/pci/pcie/err.c | 31 ++++++++++++++++++++++---------
+ 1 file changed, 22 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
-index 6a32970bb731..87799166c96a 100644
---- a/drivers/pci/pcie/pme.c
-+++ b/drivers/pci/pcie/pme.c
-@@ -310,7 +310,10 @@ static int pcie_pme_can_wakeup(struct pci_dev *dev, void *ign)
- static void pcie_pme_mark_devices(struct pci_dev *port)
- {
- 	pcie_pme_can_wakeup(port, NULL);
--	if (port->subordinate)
-+
-+	if (pci_pcie_type(port) == PCI_EXP_TYPE_RC_EC)
-+		pcie_walk_rcec(port, pcie_pme_can_wakeup, NULL);
-+	else if (port->subordinate)
- 		pci_walk_bus(port->subordinate, pcie_pme_can_wakeup, NULL);
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index f4cfb37c26c1..04528b57876b 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -169,6 +169,17 @@ static void pci_walk_dev_affected(struct pci_dev *dev, int (*cb)(struct pci_dev
+ 		cb(dev, userdata);
  }
  
-@@ -320,10 +323,15 @@ static void pcie_pme_mark_devices(struct pci_dev *port)
-  */
- static int pcie_pme_probe(struct pcie_device *srv)
- {
--	struct pci_dev *port;
-+	struct pci_dev *port = srv->port;
- 	struct pcie_pme_service_data *data;
- 	int ret;
- 
-+	/* Limit to Root Ports or Root Complex Event Collectors */
-+	if ((pci_pcie_type(port) != PCI_EXP_TYPE_RC_EC) &&
-+	    (pci_pcie_type(port) != PCI_EXP_TYPE_ROOT_PORT))
-+		return -ENODEV;
++static enum pci_ers_result flr_on_rciep(struct pci_dev *dev)
++{
++	if (!pcie_has_flr(dev))
++		return PCI_ERS_RESULT_NONE;
 +
- 	data = kzalloc(sizeof(*data), GFP_KERNEL);
- 	if (!data)
- 		return -ENOMEM;
-@@ -333,7 +341,6 @@ static int pcie_pme_probe(struct pcie_device *srv)
- 	data->srv = srv;
- 	set_service_data(srv, data);
- 
--	port = srv->port;
- 	pcie_pme_interrupt_enable(port, false);
- 	pcie_clear_root_pme_status(port);
- 
-@@ -445,7 +452,7 @@ static void pcie_pme_remove(struct pcie_device *srv)
- 
- static struct pcie_port_service_driver pcie_pme_driver = {
- 	.name		= "pcie_pme",
--	.port_type	= PCI_EXP_TYPE_ROOT_PORT,
-+	.port_type	= PCIE_ANY_PORT,
- 	.service	= PCIE_PORT_SERVICE_PME,
- 
- 	.probe		= pcie_pme_probe,
++	if (pcie_flr(dev))
++		return PCI_ERS_RESULT_DISCONNECT;
++
++	return PCI_ERS_RESULT_RECOVERED;
++}
++
+ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+ 			enum pci_channel_state state,
+ 			pci_ers_result_t (*reset_link)(struct pci_dev *pdev))
+@@ -190,15 +201,17 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+ 	if (state == pci_channel_io_frozen) {
+ 		pci_walk_dev_affected(dev, report_frozen_detected, &status);
+ 		if (pci_pcie_type(dev) == PCI_EXP_TYPE_RC_END) {
+-			pci_warn(dev, "link reset not possible for RCiEP\n");
+-			status = PCI_ERS_RESULT_NONE;
+-			goto failed;
+-		}
+-
+-		status = reset_link(dev);
+-		if (status != PCI_ERS_RESULT_RECOVERED) {
+-			pci_warn(dev, "link reset failed\n");
+-			goto failed;
++			status = flr_on_rciep(dev);
++			if (status != PCI_ERS_RESULT_RECOVERED) {
++				pci_warn(dev, "function level reset failed\n");
++				goto failed;
++			}
++		} else {
++			status = reset_link(dev);
++			if (status != PCI_ERS_RESULT_RECOVERED) {
++				pci_warn(dev, "link reset failed\n");
++				goto failed;
++			}
+ 		}
+ 	} else {
+ 		pci_walk_dev_affected(dev, report_normal_detected, &status);
 -- 
 2.28.0
 
