@@ -2,138 +2,99 @@ Return-Path: <SRS0=UuFS=BX=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0445EC433E3
-	for <linux-pci@archiver.kernel.org>; Thu, 13 Aug 2020 15:41:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8A2EC433E3
+	for <linux-pci@archiver.kernel.org>; Thu, 13 Aug 2020 17:57:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CF83D2087C
-	for <linux-pci@archiver.kernel.org>; Thu, 13 Aug 2020 15:41:06 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="MXl677QC"
+	by mail.kernel.org (Postfix) with ESMTP id 893942078D
+	for <linux-pci@archiver.kernel.org>; Thu, 13 Aug 2020 17:57:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726773AbgHMPk7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 13 Aug 2020 11:40:59 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:60028 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726131AbgHMPk6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Aug 2020 11:40:58 -0400
-Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 07DFVrD8134486;
-        Thu, 13 Aug 2020 11:40:52 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
- : date : message-id; s=pp1;
- bh=Dvgq+CZDKhUP01c00QbT4Vc/o4cdqzwBrzo+M+z0pfs=;
- b=MXl677QCSmPqHzfhKEUjnIKgCnDjglOFx/8nrLck4kGTCBE9NRFKwLhsbganywtycp8w
- v6/06HWYqE8pipQbHqwcQJpnUnYEHpMUjgBw+axmjwhoWhuPg/euufttbSqIqvnS0GZh
- FPvqGWiB5LSoZ40uW4AZRfg9TeHvv6PR/dG+C7aZiZnHSefE9hm7vbFOrKp28ebfIn08
- 7+DpU5R0Iter99hTVmriBn1li9Kwk6usXqe5HMZEoqop8CJUVW3IaD9WqEA84uHQ4dky
- aYXPzA/7/5+Ngv5TqkS8mQtbhmZuYi/2wklPez3goZncYbu8/f2rsucrVel/ATqbVpXx Gg== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 32w706366d-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 13 Aug 2020 11:40:51 -0400
-Received: from m0098419.ppops.net (m0098419.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 07DFVxmQ135117;
-        Thu, 13 Aug 2020 11:40:50 -0400
-Received: from ppma03dal.us.ibm.com (b.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.11])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 32w706365v-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 13 Aug 2020 11:40:50 -0400
-Received: from pps.filterd (ppma03dal.us.ibm.com [127.0.0.1])
-        by ppma03dal.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 07DFLCHB002809;
-        Thu, 13 Aug 2020 15:40:50 GMT
-Received: from b01cxnp22033.gho.pok.ibm.com (b01cxnp22033.gho.pok.ibm.com [9.57.198.23])
-        by ppma03dal.us.ibm.com with ESMTP id 32skp9nx30-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 13 Aug 2020 15:40:50 +0000
-Received: from b01ledav005.gho.pok.ibm.com (b01ledav005.gho.pok.ibm.com [9.57.199.110])
-        by b01cxnp22033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 07DFenh651773752
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 13 Aug 2020 15:40:49 GMT
-Received: from b01ledav005.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 2BA04AE063;
-        Thu, 13 Aug 2020 15:40:49 +0000 (GMT)
-Received: from b01ledav005.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id A6DA1AE066;
-        Thu, 13 Aug 2020 15:40:46 +0000 (GMT)
-Received: from oc4221205838.ibm.com (unknown [9.163.7.238])
-        by b01ledav005.gho.pok.ibm.com (Postfix) with ESMTP;
-        Thu, 13 Aug 2020 15:40:46 +0000 (GMT)
-From:   Matthew Rosato <mjrosato@linux.ibm.com>
-To:     alex.williamson@redhat.com, bhelgaas@google.com
-Cc:     schnelle@linux.ibm.com, pmorel@linux.ibm.com, mpe@ellerman.id.au,
-        oohall@gmail.com, linux-s390@vger.kernel.org,
-        linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH v3] PCI: Identifying detached virtual functions
-Date:   Thu, 13 Aug 2020 11:40:42 -0400
-Message-Id: <1597333243-29483-1-git-send-email-mjrosato@linux.ibm.com>
-X-Mailer: git-send-email 1.8.3.1
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
- definitions=2020-08-13_14:2020-08-13,2020-08-13 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 clxscore=1015
- mlxscore=0 bulkscore=0 priorityscore=1501 impostorscore=0 phishscore=0
- lowpriorityscore=0 suspectscore=0 adultscore=0 malwarescore=0
- mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2008130114
+        id S1726334AbgHMR5d (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 13 Aug 2020 13:57:33 -0400
+Received: from mga12.intel.com ([192.55.52.136]:7942 "EHLO mga12.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726167AbgHMR5d (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 13 Aug 2020 13:57:33 -0400
+IronPort-SDR: Gn10vtem+ZBKbevB+5atryy2lLyXmMU//VMJRNMzPZ2drNYKy4GPmAnZc4/Uw+6uXLspsivCu6
+ altjr5uca3xQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9712"; a="133815478"
+X-IronPort-AV: E=Sophos;i="5.76,309,1592895600"; 
+   d="scan'208";a="133815478"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Aug 2020 10:57:33 -0700
+IronPort-SDR: pPx9TCv2xPXd7OwMhhvVfxONdW5+WmygyhEDRtlXZWG0JysxxEE42r9zLf319XgPEq7ksoqXIQ
+ Fmc76sc0NFwQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.76,309,1592895600"; 
+   d="scan'208";a="495474439"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by fmsmga006.fm.intel.com with ESMTP; 13 Aug 2020 10:57:31 -0700
+Received: by black.fi.intel.com (Postfix, from userid 1003)
+        id 606E4348; Thu, 13 Aug 2020 20:57:30 +0300 (EEST)
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
+Cc:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Kuppuswamy Sathyanarayanan 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: [PATCH v1 3/7] resource: Introduce resource_union() for overlapping resources
+Date:   Thu, 13 Aug 2020 20:57:25 +0300
+Message-Id: <20200813175729.15088-3-andriy.shevchenko@linux.intel.com>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200813175729.15088-1-andriy.shevchenko@linux.intel.com>
+References: <20200813175729.15088-1-andriy.shevchenko@linux.intel.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Changes for v3:
-- Moved detached_vf setting to pcibios_bus_add_device
-- Extended the change in vfio_config_init to be generic (include 
-  vendor / device ID / INTx emulation)
-- Added a dev_is_vf macro in the same style as dev_is_pf to
-  encapsualate the checking of is_virtfn || detached_vf
+Some already present users may utilize resource_union() helper.
+Provide it for them and for wider use in the future.
 
-Changes for v2:
-- Added code to vfio_basic_config_read() and vfio_config_init() to
-  extend emulation to userspace
-- Added detached_vf check to vfio_bar_restore()
-- @Niklas/@Pierre, I removed your review tags since I made changes,
-  please have another look
+Deliberately avoid min()/max() macro as they are still parts of
+kernel.h which is quite a burden to be included here in order
+to avoid circular dependencies.
 
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+---
+ include/linux/ioport.h | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-As discussed previously in a qemu-devel thread:
-
-https://www.mail-archive.com/qemu-devel@nongnu.org/msg725141.html
-
-s390x has the notion of unlinked VFs being available at the LPAR-level
-(Virtual Functions where the kernel does not have access to the associated
-Physical Function).  These devices are currently not marked as is_virtfn.
-There seems to be some precedent (ex: in powerpc, eeh_debugfs_break_device())
-where pdev->is_virtfn && pdev->physfn == 0 is used to detect these sort of
-detached VFs.  We toyed with the idea of doing this but it causes additional
-fallout as various other areas of kernel code have an expectation that
-is_virtfn=1 implies there is a linked PF available to the kernel. 
-
-In the s390x case, the firmware layer underneath handles the VF emulation
-as it still has access to the PF that the LPAR (and thus the kernel) cannot
-see.  But one thing this firmware layer does not do is emulate the
-PCI_COMMAND_MEMORY bit, which was OK until vfio-pci started enforcing it
-via abafbc55.  The vfio-pci check is waived for VFs as of ebfa440c, but
-vfio-pci can't actually tell that these particular devices are VFs.
-
-The proposed patch attempts to identify these detached VFs and subsequently
-provide this information to vfio-pci so that it knows to also accept the
-lack of PCI_COMMAND_MEMORY for these sorts of devices.  For now the bit is
-only set for s390x but other architectures could opt in to it as well if
-needed.
-
-Matthew Rosato (1):
-  PCI: Introduce flag for detached virtual functions
-
- arch/s390/pci/pci_bus.c            | 13 +++++++++++++
- drivers/vfio/pci/vfio_pci_config.c |  8 ++++----
- include/linux/pci.h                |  4 ++++
- 3 files changed, 21 insertions(+), 4 deletions(-)
-
+diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+index 0193987b9968..c98df0ec7422 100644
+--- a/include/linux/ioport.h
++++ b/include/linux/ioport.h
+@@ -232,6 +232,16 @@ static inline bool resource_overlaps(struct resource *r1, struct resource *r2)
+        return (r1->start <= r2->end && r1->end >= r2->start);
+ }
+ 
++static inline bool
++resource_union(struct resource *r1, struct resource *r2, struct resource *r)
++{
++	if (!resource_overlaps(r1, r2))
++		return false;
++	r->start = r2->start < r1->start ? r2->start : r1->start;
++	r->end = r2->end > r1->end ? r2->end : r1->end;
++	return true;
++}
++
+ /* Convenience shorthand with allocation */
+ #define request_region(start,n,name)		__request_region(&ioport_resource, (start), (n), (name), 0)
+ #define request_muxed_region(start,n,name)	__request_region(&ioport_resource, (start), (n), (name), IORESOURCE_MUXED)
 -- 
-1.8.3.1
+2.28.0
 
