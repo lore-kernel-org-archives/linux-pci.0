@@ -2,110 +2,176 @@ Return-Path: <SRS0=84+a=BY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-8.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 688B6C433DF
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Aug 2020 06:11:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A80DAC433E1
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Aug 2020 08:08:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4470320708
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Aug 2020 06:11:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 81894207DA
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Aug 2020 08:08:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1597385474;
-	bh=sXqxn17Ji4agz3DcSXOOpYy8haJnA9Hug1dQgMfh6LA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=yk8ghwdVLbaz5X3CwL+uw/gZIiupPlk/TvRUaxN85OeLWmIIHFildilI87Uniwv22
-	 D1qkJFvjZpyMAuxccuOZIGe5ZneJ9KuYOatIGViErKyRIPiQNnNv7UByYovArVXLkI
-	 t9QAOHkKUhYAMUANvdX/e75kjEV5xgWNFzZ6cfwY=
+	s=default; t=1597392508;
+	bh=/LfkcEwmvc6XJiPP0cDp9JvhIhtwfzMlxBKzfvk7Bc4=;
+	h=Date:From:To:Subject:References:In-Reply-To:List-ID:From;
+	b=duoXzqGo+n17CC882Y5iJZTd0mDVerk7HjxOVlyYL/T/aYWrci438HqFNw13d130t
+	 Go4uz+mzzqo8mZDn174OTx6nlxYnGbgBiOJrFZ9DeKRi/cOj358oE7Zg8W6rrweqg1
+	 sdzbFOLpsJj5l/xq+SQlsnMBUAuVClhEQMqRd6HM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726151AbgHNGLJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 14 Aug 2020 02:11:09 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60570 "EHLO mail.kernel.org"
+        id S1726935AbgHNII1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 14 Aug 2020 04:08:27 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52376 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726139AbgHNGLI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 14 Aug 2020 02:11:08 -0400
-Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
+        id S1726124AbgHNII1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 14 Aug 2020 04:08:27 -0400
+Received: from pali.im (pali.im [31.31.79.79])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 73B0B20708;
-        Fri, 14 Aug 2020 06:11:07 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 432412068E;
+        Fri, 14 Aug 2020 08:08:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1597385468;
-        bh=sXqxn17Ji4agz3DcSXOOpYy8haJnA9Hug1dQgMfh6LA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=fjkvJBkNFtRmFsrkuQO3mQq9UPvk/L+JCX3yfli0s3CgT/bnDh+LDirmFLmjNxLBk
-         4myKFL0kMUEsAvSY7GF/d7xVQy9P8IjZKuSfS2CwEsSs2qMMi6Z94COImcbBbttqBu
-         llok/yhehuEZmnKBjdiAuUdk8J3ehd3s5APM7W0Q=
-Date:   Fri, 14 Aug 2020 08:11:05 +0200
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Florian Fainelli <f.fainelli@gmail.com>
-Cc:     Nicolas Saenz Julienne <nsaenzjulienne@suse.de>, robh@kernel.org,
-        wahrenst@gmx.net, p.zabel@pengutronix.de,
-        andy.shevchenko@gmail.com, linux-usb@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-rpi-kernel@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org,
-        bcm-kernel-feedback-list@broadcom.com, tim.gover@raspberrypi.org,
-        linux-pci@vger.kernel.org, helgaas@kernel.org,
-        mathias.nyman@linux.intel.com, lorenzo.pieralisi@arm.com
-Subject: Re: [PATCH v5 0/9] Raspberry Pi 4 USB firmware initialization rework
-Message-ID: <20200814061105.GG1409566@kroah.com>
-References: <20200629161845.6021-1-nsaenzjulienne@suse.de>
- <a6aecb7a4d270cb23430d25850c85a332555af55.camel@suse.de>
- <01e4b87c-d287-fd72-9f9c-545539127a50@gmail.com>
+        s=default; t=1597392506;
+        bh=/LfkcEwmvc6XJiPP0cDp9JvhIhtwfzMlxBKzfvk7Bc4=;
+        h=Date:From:To:Subject:References:In-Reply-To:From;
+        b=KWrsGMWDdvdqnJDi46ZFlqdVaP+kdiwEbPnWj1hr9tfUjT6Y87vwZAq1c+a/fUIH8
+         MVvrA10PXtObKYyVLh4ROJkSzea/eFmdGX0NEK/ffyP7Dhe+szp5dyzwZcLFqrMUcT
+         /zJRksXAz4vgBtc0jFq8loeo5Rb5NhEpRf0B0bX8=
+Received: by pali.im (Postfix)
+        id 7F25ABD5; Fri, 14 Aug 2020 10:08:24 +0200 (CEST)
+Date:   Fri, 14 Aug 2020 10:08:24 +0200
+From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
+To:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: PCI: Race condition in pci_create_sysfs_dev_files
+Message-ID: <20200814080824.dg57kmbimyf3ushe@pali>
+References: <20200716110423.xtfyb3n6tn5ixedh@pali>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <01e4b87c-d287-fd72-9f9c-545539127a50@gmail.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20200716110423.xtfyb3n6tn5ixedh@pali>
+User-Agent: NeoMutt/20180716
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Aug 13, 2020 at 12:17:49PM -0700, Florian Fainelli wrote:
-> 
-> 
-> On 8/13/2020 3:01 AM, Nicolas Saenz Julienne wrote:
-> > Hi everyone.
-> > 
-> > On Mon, 2020-06-29 at 18:18 +0200, Nicolas Saenz Julienne wrote:
-> > > On the Raspberry Pi 4, after a PCI reset, VL805's firmware may either be
-> > > loaded directly from an EEPROM or, if not present, by the SoC's
-> > > co-processor, VideoCore. This series reworks how we handle this.
-> > > 
-> > > The previous solution makes use of PCI quirks and exporting platform
-> > > specific functions. Albeit functional it feels pretty shoehorned. This
-> > > proposes an alternative way of handling the triggering of the xHCI chip
-> > > initialization trough means of a reset controller.
-> > > 
-> > > The benefits are pretty evident: less platform churn in core xHCI code,
-> > > and no explicit device dependency management in pcie-brcmstb.
-> > > 
-> > > Note that patch #1 depends on another series[1], that was just applied
-> > > into the clk maintainer's tree.
-> > > 
-> > > The series is based on v5.8-rc3
-> > > 
-> > > v3: https://www.spinics.net/lists/arm-kernel/msg813612.html
-> > > v2: https://lkml.org/lkml/2020/6/9/875
-> > > v1: https://lore.kernel.org/linux-usb/20200608192701.18355-1-nsaenzjulienne@suse.de/T/#t
-> > > 
-> > > [1] https://lore.kernel.org/linux-clk/159304773261.62212.983376627029743900@swboyd.mtv.corp.google.com/T/#t
-> > > 
-> > > ---
-> > 
-> > We were waiting on a dependency to be merged upstream to get this. They are now
-> > in, so could we move things forward?
-> > 
-> > I can take the device tree patches, I guess philipp can take the reset
-> > controller code. But I'm not so sure who should be taking the PCI/USB
-> > counterparts.
-> 
-> Should we route everything through the USB tree since that is where the
-> changes that do require synchronization with other subsystems and DTS is
-> needed the most?
-> -- 
-> Florian
+Hello! I would like to remind this issue which I reported month ago.
 
-That's fine with me, if everyone else is ok with it :)
+On Thursday 16 July 2020 13:04:23 Pali Rohár wrote:
+> Hello Bjorn!
+> 
+> I see following error message in dmesg which looks like a race condition:
+> 
+> sysfs: cannot create duplicate filename '/devices/platform/soc/d0070000.pcie/pci0000:00/0000:00:00.0/config'
+> 
+> I looked at it deeper and found out that in PCI subsystem code is race
+> condition between pci_bus_add_device() and pci_sysfs_init() calls. Both
+> of these functions calls pci_create_sysfs_dev_files() and calling this
+> function more times for same pci device throws above error message.
+> 
+> There can be two different race conditions:
+> 
+> 1. pci_bus_add_device() called pcibios_bus_add_device() or
+> pci_fixup_device() but have not called pci_create_sysfs_dev_files() yet.
+> Meanwhile pci_sysfs_init() is running and pci_create_sysfs_dev_files()
+> was called for newly registered device. In this case function
+> pci_create_sysfs_dev_files() is called two times, ones from
+> pci_bus_add_device() and once from pci_sysfs_init().
+> 
+> 2. pci_sysfs_init() is called. It first sets sysfs_initialized to 1
+> which unblock calling pci_create_sysfs_dev_files(). Then another bus
+> registers new PCI device and calls pci_bus_add_device() which calls
+> pci_create_sysfs_dev_files() and registers sysfs files. Function
+> pci_sysfs_init() continues execution and calls function
+> pci_create_sysfs_dev_files() also for this newly registered device. So
+> pci_create_sysfs_dev_files() is again called two times.
+> 
+> 
+> I workaround both race conditions I created following hack patch. After
+> applying it I'm not getting that 'sysfs: cannot create duplicate filename'
+> error message anymore.
+> 
+> Can you look at it how to fix both race conditions in proper way?
+
+Is this workaround diff enough? Or are you going to prepare something better?
+
+Please let me know if I should send this diff as regular patch.
+
+> 
+> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+> index 8e40b3e6da77..691be2258c4e 100644
+> --- a/drivers/pci/bus.c
+> +++ b/drivers/pci/bus.c
+> @@ -316,7 +316,7 @@ void pci_bus_add_device(struct pci_dev *dev)
+>  	 */
+>  	pcibios_bus_add_device(dev);
+>  	pci_fixup_device(pci_fixup_final, dev);
+> -	pci_create_sysfs_dev_files(dev);
+> +	pci_create_sysfs_dev_files(dev, false);
+>  	pci_proc_attach_device(dev);
+>  	pci_bridge_d3_update(dev);
+>  
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 6d78df981d41..b0c4852a51dd 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -1328,13 +1328,13 @@ static int pci_create_capabilities_sysfs(struct pci_dev *dev)
+>  	return retval;
+>  }
+>  
+> -int __must_check pci_create_sysfs_dev_files(struct pci_dev *pdev)
+> +int __must_check pci_create_sysfs_dev_files(struct pci_dev *pdev, bool sysfs_initializing)
+>  {
+>  	int retval;
+>  	int rom_size;
+>  	struct bin_attribute *attr;
+>  
+> -	if (!sysfs_initialized)
+> +	if (!sysfs_initializing && !sysfs_initialized)
+>  		return -EACCES;
+>  
+>  	if (pdev->cfg_size > PCI_CFG_SPACE_SIZE)
+> @@ -1437,18 +1437,21 @@ void pci_remove_sysfs_dev_files(struct pci_dev *pdev)
+>  static int __init pci_sysfs_init(void)
+>  {
+>  	struct pci_dev *pdev = NULL;
+> -	int retval;
+> +	int retval = 0;
+>  
+> -	sysfs_initialized = 1;
+>  	for_each_pci_dev(pdev) {
+> -		retval = pci_create_sysfs_dev_files(pdev);
+> +		if (!pci_dev_is_added(pdev))
+> +			continue;
+> +		retval = pci_create_sysfs_dev_files(pdev, true);
+>  		if (retval) {
+>  			pci_dev_put(pdev);
+> -			return retval;
+> +			goto out;
+>  		}
+>  	}
+>  
+> -	return 0;
+> +out:
+> +	sysfs_initialized = 1;
+> +	return retval;
+>  }
+>  late_initcall(pci_sysfs_init);
+>  
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 6d3f75867106..304294c7171e 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -19,7 +19,7 @@ bool pcie_cap_has_rtctl(const struct pci_dev *dev);
+>  
+>  /* Functions internal to the PCI core code */
+>  
+> -int pci_create_sysfs_dev_files(struct pci_dev *pdev);
+> +int pci_create_sysfs_dev_files(struct pci_dev *pdev, bool sysfs_initializing);
+>  void pci_remove_sysfs_dev_files(struct pci_dev *pdev);
+>  #if !defined(CONFIG_DMI) && !defined(CONFIG_ACPI)
+>  static inline void pci_create_firmware_label_files(struct pci_dev *pdev)
+> 
