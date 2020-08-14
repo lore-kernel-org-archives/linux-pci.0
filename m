@@ -4,28 +4,28 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19A23C433E1
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Aug 2020 17:32:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B50E7C433E3
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Aug 2020 17:33:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E34A620855
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Aug 2020 17:32:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9AC7820829
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Aug 2020 17:33:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728018AbgHNRcU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 14 Aug 2020 13:32:20 -0400
-Received: from relmlor1.renesas.com ([210.160.252.171]:26577 "EHLO
+        id S1728425AbgHNRc6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 14 Aug 2020 13:32:58 -0400
+Received: from relmlor1.renesas.com ([210.160.252.171]:39396 "EHLO
         relmlie5.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726270AbgHNRcU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Aug 2020 13:32:20 -0400
+        by vger.kernel.org with ESMTP id S1726270AbgHNRc5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Aug 2020 13:32:57 -0400
 X-IronPort-AV: E=Sophos;i="5.76,313,1592838000"; 
-   d="scan'208";a="54596868"
+   d="scan'208";a="54596882"
 Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
-  by relmlie5.idc.renesas.com with ESMTP; 15 Aug 2020 02:32:18 +0900
+  by relmlie5.idc.renesas.com with ESMTP; 15 Aug 2020 02:32:55 +0900
 Received: from localhost.localdomain (unknown [10.226.36.204])
-        by relmlir5.idc.renesas.com (Postfix) with ESMTP id 3845640062AC;
-        Sat, 15 Aug 2020 02:32:15 +0900 (JST)
+        by relmlir5.idc.renesas.com (Postfix) with ESMTP id 9F1D9400C42E;
+        Sat, 15 Aug 2020 02:32:52 +0900 (JST)
 From:   Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
 To:     Geert Uytterhoeven <geert+renesas@glider.be>,
         Marek Vasut <marek.vasut+renesas@gmail.com>,
@@ -42,9 +42,9 @@ Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
         Prabhakar <prabhakar.csengg@gmail.com>,
         Biju Das <biju.das.jz@bp.renesas.com>
-Subject: [PATCH 1/5] dt-bindings: pci: rcar-pci-ep: Document r8a774a1 and r8a774b1
-Date:   Fri, 14 Aug 2020 18:30:33 +0100
-Message-Id: <20200814173037.17822-2-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Subject: [PATCH 2/5] misc: pci_endpoint_test: Add Device ID for RZ/G2M and RZ/G2N PCIe controllers
+Date:   Fri, 14 Aug 2020 18:30:34 +0100
+Message-Id: <20200814173037.17822-3-prabhakar.mahadev-lad.rj@bp.renesas.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200814173037.17822-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
 References: <20200814173037.17822-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
@@ -53,37 +53,40 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Document the support for R-Car PCIe EP on R8A774A1 and R8A774B1 SoC
-devices.
-
-Also constify "renesas,rcar-gen3-pcie-ep" so that it can be used as
-fallback compatible string for R-Car Gen3 and RZ/G2 devices as the
-PCIe module is identical.
+Add Renesas R8A774A1 and R8A774B1 in pci_device_id table so that
+pci-epf-test can be used for testing PCIe EP on RZ/G2M and RZ/G2N.
 
 Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
 Reviewed-by: Biju Das <biju.das.jz@bp.renesas.com>
 ---
- Documentation/devicetree/bindings/pci/rcar-pci-ep.yaml | 7 +++++--
+ drivers/misc/pci_endpoint_test.c | 7 +++++--
  1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/rcar-pci-ep.yaml b/Documentation/devicetree/bindings/pci/rcar-pci-ep.yaml
-index aa483c7f27fd..70c45f72ab20 100644
---- a/Documentation/devicetree/bindings/pci/rcar-pci-ep.yaml
-+++ b/Documentation/devicetree/bindings/pci/rcar-pci-ep.yaml
-@@ -14,8 +14,11 @@ maintainers:
- properties:
-   compatible:
-     items:
--      - const: renesas,r8a774c0-pcie-ep
--      - const: renesas,rcar-gen3-pcie-ep
-+      - enum:
-+          - renesas,r8a774a1-pcie-ep     # RZ/G2M
-+          - renesas,r8a774b1-pcie-ep     # RZ/G2N
-+          - renesas,r8a774c0-pcie-ep     # RZ/G2E
-+      - const: renesas,rcar-gen3-pcie-ep # R-Car Gen3 and RZ/G2
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index e060796f9caa..ba654f42dc10 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -74,6 +74,8 @@
+ #define is_am654_pci_dev(pdev)		\
+ 		((pdev)->device == PCI_DEVICE_ID_TI_AM654)
  
-   reg:
-     maxItems: 5
++#define PCI_DEVICE_ID_RENESAS_R8A774A1		0x0028
++#define PCI_DEVICE_ID_RENESAS_R8A774B1		0x002b
+ #define PCI_DEVICE_ID_RENESAS_R8A774C0		0x002d
+ 
+ static DEFINE_IDA(pci_endpoint_test_ida);
+@@ -950,8 +952,9 @@ static const struct pci_device_id pci_endpoint_test_tbl[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_AM654),
+ 	  .driver_data = (kernel_ulong_t)&am654_data
+ 	},
+-	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774C0),
+-	},
++	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774A1),},
++	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774B1),},
++	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774C0),},
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_J721E),
+ 	  .driver_data = (kernel_ulong_t)&j721e_data,
+ 	},
 -- 
 2.17.1
 
