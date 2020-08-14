@@ -2,102 +2,83 @@ Return-Path: <SRS0=84+a=BY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08150C433E3
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Aug 2020 17:17:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E7F9C433E1
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Aug 2020 17:31:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CB51A206B6
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Aug 2020 17:17:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1597425451;
-	bh=JEPjRYh8Kl+9n+Lri8/V1w42KNmPNTQpqIrD1QsRHsE=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=Dt+PjtaEZZcbckVd2DneEru0jrwi+aUwwxLDIX6ZaDthJraoHgb6rVNlvVPlJzvpF
-	 XZhlSkx/5g6m61dNgz6Hf+DoVtZO0MBDgXXgkwzg4h86smhAJvB9dgZh3il/NPiPE7
-	 I7hQzA4f/O4LqXULHk6uYbeyxGFDcJySojz7OELQ=
+	by mail.kernel.org (Postfix) with ESMTP id 2A32520838
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Aug 2020 17:31:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728018AbgHNRRb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 14 Aug 2020 13:17:31 -0400
-Received: from mail-oi1-f196.google.com ([209.85.167.196]:35337 "EHLO
-        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727894AbgHNRRa (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Aug 2020 13:17:30 -0400
-Received: by mail-oi1-f196.google.com with SMTP id k4so8756348oik.2;
-        Fri, 14 Aug 2020 10:17:30 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=JEPjRYh8Kl+9n+Lri8/V1w42KNmPNTQpqIrD1QsRHsE=;
-        b=XOa1A/Qaw2sdmn2/GvRfkhKfGCEdkBLrQ81zGuEjhwuyLhnAXw8GuAH0R2TYd5UHbS
-         qzVG/OChRFlt0fjuIJPTW8jKdtWjEm6MybiENIlEEl5dBktgnmOi/+EhHrCAMfePGTLD
-         w8zGla3saeXIHucTqnLPzLi4+Ii9Urhx+1vmMHDAK7sa6pXeiseny5hq1LBKX7D1haj4
-         q9MWZ0lKynl4LRBBHLYUrOtZAUiZhlbDeWNtoQltBCZBKWJdYju3Kme8QZW+7QCf5Miy
-         IEd5kgris4uPMKrz/kaYkET1lXqFF4rqWYvW1U3NsnMFDCzhqfD/h1O+6thbD39kfncq
-         mpqQ==
-X-Gm-Message-State: AOAM5311JWYonjJA52Cth05JoSO32Dr7Vo94911Hs9SruCgY65CFkjaw
-        vw8zWCkHnL/UbCaxm/oGlvTyPn9W+gdO5jFvjjI=
-X-Google-Smtp-Source: ABdhPJwpzS3w68ReJWWFC7mK5Vs3vGN0qfG81GoUZLL9J1Ybrb7+dHqt4NrILMWR4JcG4c0exXNETFSEvu9wSRf/X+k=
-X-Received: by 2002:aca:a88e:: with SMTP id r136mr2253582oie.110.1597425449673;
- Fri, 14 Aug 2020 10:17:29 -0700 (PDT)
-MIME-Version: 1.0
-References: <20200813175729.15088-1-andriy.shevchenko@linux.intel.com>
- <20200813175729.15088-3-andriy.shevchenko@linux.intel.com>
- <CAJZ5v0iDZ6UZK_WW6pvWCqsrUH3uqfjRXSoMDTsAcbXoBuMYqw@mail.gmail.com>
- <20200814153730.GQ1891694@smile.fi.intel.com> <CAJZ5v0jOA30iL6AQq3BEY=N3xQdvpC0BJEcLzz2Frv+CByKhPQ@mail.gmail.com>
- <20200814162105.GX1891694@smile.fi.intel.com>
-In-Reply-To: <20200814162105.GX1891694@smile.fi.intel.com>
-From:   "Rafael J. Wysocki" <rafael@kernel.org>
-Date:   Fri, 14 Aug 2020 19:17:18 +0200
-Message-ID: <CAJZ5v0j_tSuGrEmFb-WYLpjS+AviwQ2zJmHmN-u_MzVAkf7HrA@mail.gmail.com>
-Subject: Re: [PATCH v1 3/7] resource: Introduce resource_union() for
- overlapping resources
-To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc:     "Rafael J. Wysocki" <rafael@kernel.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Kuppuswamy Sathyanarayanan 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>,
+        id S1728482AbgHNRbr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 14 Aug 2020 13:31:47 -0400
+Received: from relmlor2.renesas.com ([210.160.252.172]:58950 "EHLO
+        relmlie6.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1728346AbgHNRbq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Aug 2020 13:31:46 -0400
+X-IronPort-AV: E=Sophos;i="5.76,313,1592838000"; 
+   d="scan'208";a="54383282"
+Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
+  by relmlie6.idc.renesas.com with ESMTP; 15 Aug 2020 02:31:44 +0900
+Received: from localhost.localdomain (unknown [10.226.36.204])
+        by relmlir5.idc.renesas.com (Postfix) with ESMTP id B7E5F40061B7;
+        Sat, 15 Aug 2020 02:31:40 +0900 (JST)
+From:   Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+To:     Geert Uytterhoeven <geert+renesas@glider.be>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Linux PCI <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Rob Herring <robh+dt@kernel.org>,
+        Magnus Damm <magnus.damm@gmail.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+        Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
+        Prabhakar <prabhakar.csengg@gmail.com>,
+        Biju Das <biju.das.jz@bp.renesas.com>
+Subject: [PATCH 0/5] Add PCIe EP nodes on RZ/G2[EMN]
+Date:   Fri, 14 Aug 2020 18:30:32 +0100
+Message-Id: <20200814173037.17822-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Aug 14, 2020 at 6:23 PM Andy Shevchenko
-<andriy.shevchenko@linux.intel.com> wrote:
->
-> On Fri, Aug 14, 2020 at 06:09:53PM +0200, Rafael J. Wysocki wrote:
-> > On Fri, Aug 14, 2020 at 5:37 PM Andy Shevchenko
-> > <andriy.shevchenko@linux.intel.com> wrote:
-> > > On Fri, Aug 14, 2020 at 05:23:07PM +0200, Rafael J. Wysocki wrote:
-> > > > On Thu, Aug 13, 2020 at 7:57 PM Andy Shevchenko
-> > > > <andriy.shevchenko@linux.intel.com> wrote:
->
-> ...
->
-> > > > Well, what about using min() and max() here?
-> > >
-> > > I devoted one paragraph in the commit message to answer this. The kernel.h
-> > > (which I'm planning to split at some point) is a monster which brings more pain
-> > > than solves here. Note, this is a header file and it's quite clean from
-> > > dependencies perspective.
-> >
-> > But this is code duplication (even if really small) and it is not
-> > entirely clean too.
-> >
-> > Maybe move the definitions of min() and max() to a separate header file?
->
-> That is the plan in the kernel.h splitting project. But do you want me to do it
-> here? I can try to bring that patch into this series.
+Hi All,
 
-Well, ostensibly the purpose of this series is to reduce code
-duplication, but if it adds code duplication, that kind of defeats the
-purpose IMO.
+This patch series adds support for PCIe EP nodes to Renesas r8a774a1,
+r8a774b1 and r8a774c0 SoC's.
+
+Patches are based on top of [1].
+
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/
+    pci.git/log/?h=next
+
+Cheers,
+Prabhakar
+
+Lad Prabhakar (5):
+  dt-bindings: pci: rcar-pci-ep: Document r8a774a1 and r8a774b1
+  misc: pci_endpoint_test: Add Device ID for RZ/G2M and RZ/G2N PCIe
+    controllers
+  arm64: dts: renesas: r8a774a1: Add PCIe EP nodes
+  arm64: dts: renesas: r8a774b1: Add PCIe EP nodes
+  arm64: dts: renesas: r8a774c0: Add PCIe EP node
+
+ .../devicetree/bindings/pci/rcar-pci-ep.yaml  |  7 +++-
+ arch/arm64/boot/dts/renesas/r8a774a1.dtsi     | 38 +++++++++++++++++++
+ arch/arm64/boot/dts/renesas/r8a774b1.dtsi     | 38 +++++++++++++++++++
+ arch/arm64/boot/dts/renesas/r8a774c0.dtsi     | 19 ++++++++++
+ drivers/misc/pci_endpoint_test.c              |  7 +++-
+ 5 files changed, 105 insertions(+), 4 deletions(-)
+
+-- 
+2.17.1
+
