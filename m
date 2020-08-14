@@ -2,30 +2,30 @@ Return-Path: <SRS0=84+a=BY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E7F9C433E1
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Aug 2020 17:31:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19A23C433E1
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Aug 2020 17:32:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2A32520838
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Aug 2020 17:31:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E34A620855
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Aug 2020 17:32:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728482AbgHNRbr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 14 Aug 2020 13:31:47 -0400
-Received: from relmlor2.renesas.com ([210.160.252.172]:58950 "EHLO
-        relmlie6.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728346AbgHNRbq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Aug 2020 13:31:46 -0400
+        id S1728018AbgHNRcU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 14 Aug 2020 13:32:20 -0400
+Received: from relmlor1.renesas.com ([210.160.252.171]:26577 "EHLO
+        relmlie5.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726270AbgHNRcU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Aug 2020 13:32:20 -0400
 X-IronPort-AV: E=Sophos;i="5.76,313,1592838000"; 
-   d="scan'208";a="54383282"
+   d="scan'208";a="54596868"
 Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
-  by relmlie6.idc.renesas.com with ESMTP; 15 Aug 2020 02:31:44 +0900
+  by relmlie5.idc.renesas.com with ESMTP; 15 Aug 2020 02:32:18 +0900
 Received: from localhost.localdomain (unknown [10.226.36.204])
-        by relmlir5.idc.renesas.com (Postfix) with ESMTP id B7E5F40061B7;
-        Sat, 15 Aug 2020 02:31:40 +0900 (JST)
+        by relmlir5.idc.renesas.com (Postfix) with ESMTP id 3845640062AC;
+        Sat, 15 Aug 2020 02:32:15 +0900 (JST)
 From:   Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
 To:     Geert Uytterhoeven <geert+renesas@glider.be>,
         Marek Vasut <marek.vasut+renesas@gmail.com>,
@@ -42,43 +42,48 @@ Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
         Prabhakar <prabhakar.csengg@gmail.com>,
         Biju Das <biju.das.jz@bp.renesas.com>
-Subject: [PATCH 0/5] Add PCIe EP nodes on RZ/G2[EMN]
-Date:   Fri, 14 Aug 2020 18:30:32 +0100
-Message-Id: <20200814173037.17822-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Subject: [PATCH 1/5] dt-bindings: pci: rcar-pci-ep: Document r8a774a1 and r8a774b1
+Date:   Fri, 14 Aug 2020 18:30:33 +0100
+Message-Id: <20200814173037.17822-2-prabhakar.mahadev-lad.rj@bp.renesas.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200814173037.17822-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
+References: <20200814173037.17822-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi All,
+Document the support for R-Car PCIe EP on R8A774A1 and R8A774B1 SoC
+devices.
 
-This patch series adds support for PCIe EP nodes to Renesas r8a774a1,
-r8a774b1 and r8a774c0 SoC's.
+Also constify "renesas,rcar-gen3-pcie-ep" so that it can be used as
+fallback compatible string for R-Car Gen3 and RZ/G2 devices as the
+PCIe module is identical.
 
-Patches are based on top of [1].
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Biju Das <biju.das.jz@bp.renesas.com>
+---
+ Documentation/devicetree/bindings/pci/rcar-pci-ep.yaml | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-[1] https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/
-    pci.git/log/?h=next
-
-Cheers,
-Prabhakar
-
-Lad Prabhakar (5):
-  dt-bindings: pci: rcar-pci-ep: Document r8a774a1 and r8a774b1
-  misc: pci_endpoint_test: Add Device ID for RZ/G2M and RZ/G2N PCIe
-    controllers
-  arm64: dts: renesas: r8a774a1: Add PCIe EP nodes
-  arm64: dts: renesas: r8a774b1: Add PCIe EP nodes
-  arm64: dts: renesas: r8a774c0: Add PCIe EP node
-
- .../devicetree/bindings/pci/rcar-pci-ep.yaml  |  7 +++-
- arch/arm64/boot/dts/renesas/r8a774a1.dtsi     | 38 +++++++++++++++++++
- arch/arm64/boot/dts/renesas/r8a774b1.dtsi     | 38 +++++++++++++++++++
- arch/arm64/boot/dts/renesas/r8a774c0.dtsi     | 19 ++++++++++
- drivers/misc/pci_endpoint_test.c              |  7 +++-
- 5 files changed, 105 insertions(+), 4 deletions(-)
-
+diff --git a/Documentation/devicetree/bindings/pci/rcar-pci-ep.yaml b/Documentation/devicetree/bindings/pci/rcar-pci-ep.yaml
+index aa483c7f27fd..70c45f72ab20 100644
+--- a/Documentation/devicetree/bindings/pci/rcar-pci-ep.yaml
++++ b/Documentation/devicetree/bindings/pci/rcar-pci-ep.yaml
+@@ -14,8 +14,11 @@ maintainers:
+ properties:
+   compatible:
+     items:
+-      - const: renesas,r8a774c0-pcie-ep
+-      - const: renesas,rcar-gen3-pcie-ep
++      - enum:
++          - renesas,r8a774a1-pcie-ep     # RZ/G2M
++          - renesas,r8a774b1-pcie-ep     # RZ/G2N
++          - renesas,r8a774c0-pcie-ep     # RZ/G2E
++      - const: renesas,rcar-gen3-pcie-ep # R-Car Gen3 and RZ/G2
+ 
+   reg:
+     maxItems: 5
 -- 
 2.17.1
 
