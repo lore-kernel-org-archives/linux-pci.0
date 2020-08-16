@@ -2,135 +2,141 @@ Return-Path: <SRS0=Emip=B2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3490C433E1
-	for <linux-pci@archiver.kernel.org>; Sun, 16 Aug 2020 10:40:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53FEFC433DF
+	for <linux-pci@archiver.kernel.org>; Sun, 16 Aug 2020 16:35:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A6D9F20716
-	for <linux-pci@archiver.kernel.org>; Sun, 16 Aug 2020 10:40:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1597574409;
-	bh=BrDq/zSYv3kdnFUzq+Kq8soHq2wInZuv6tFhet1DF0o=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:List-ID:From;
-	b=rGdvviM+I3dTXYOUxPfkOU5QMF6udDNfe8iwGKqENv2FSk1M720jXTpYNIKwJ1tEX
-	 ARcxO7JgBpwpX/uFOhzfdroOlEYBplIECHgopUlGe05eglkNQl+haYZ+XnLSA2UeUU
-	 4zQ75KcBFWFJ01kXGhomTLXORSLMEe1zBQxue5UI=
+	by mail.kernel.org (Postfix) with ESMTP id 24FD420708
+	for <linux-pci@archiver.kernel.org>; Sun, 16 Aug 2020 16:35:57 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="ARCL9m6b"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728105AbgHPKkI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 16 Aug 2020 06:40:08 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53334 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727908AbgHPKkE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 16 Aug 2020 06:40:04 -0400
-Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 0BBDD20716;
-        Sun, 16 Aug 2020 10:40:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1597574403;
-        bh=BrDq/zSYv3kdnFUzq+Kq8soHq2wInZuv6tFhet1DF0o=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=PtCHVeBlT2QOuB+fSkSF5ps8lT1KdfZ3g81khr+LcMhs1WewxNsgaesYc6zHfK2iJ
-         W3Dm/9aoDx9PavYOyki29zndkUSQPUQaoitccpLPW2koviYylJRpLSpQispU4BX8ic
-         hEnSTu4yQeXhTh5xgjjLbp/DAp1qkmi4BD/nx7TY=
-Received: from 78.163-31-62.static.virginmediabusiness.co.uk ([62.31.163.78] helo=wait-a-minute.misterjones.org)
-        by disco-boy.misterjones.org with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <maz@kernel.org>)
-        id 1k7G52-003Hor-Qa; Sun, 16 Aug 2020 11:40:00 +0100
-Date:   Sun, 16 Aug 2020 11:39:53 +0100
-Message-ID: <87pn7qnabq.wl-maz@kernel.org>
-From:   Marc Zyngier <maz@kernel.org>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Rob Herring <robh@kernel.org>,
+        id S1726855AbgHPQfy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 16 Aug 2020 12:35:54 -0400
+Received: from mail-am6eur05on2058.outbound.protection.outlook.com ([40.107.22.58]:62880
+        "EHLO EUR05-AM6-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726407AbgHPQfu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 16 Aug 2020 12:35:50 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=lIk8TPM3QA+v7Qxo69x3KDjEpyGwg776c+A1x9Spog+mgvqCUiShQ9pT7/aJOb22VHZG/q5l5jXTVevRticBn7dPhyyMjoYq/Y69/0I+YrB7WmGc9EN25tQM8QV2TWdI3WJXr26/4iiIoDl7Ip7WGWoq7KzhOxbk1iT/KMDLT0j9Z45BTnACpqiGXVUy926aMdKNzip+B74D/zOnRU91Vee2Gkc5F7yjany2dKzd/5vDvFtB7UuetZTbCwIo1tXodIVOaqpludpdXosWOzy93FHWuziqLWowX3Qefot6IgRPc72sYUf3Y8+fFWslmaLrkWELCDuuqTncSBiHP7OK3g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=FuNNBz1Z0cWReIvq7uHZtwTdcEHoJxX9kWDOxaYP/5M=;
+ b=TitZuZChDUAyRs7qR0Rn0HGK6uGNaasm831ogBBfo61cj1xbUCc1EvYJs9ZBgmnMyiNs9MdPWngxbKlNdsqPcSU8FE9hGpBuEudl0cmOUr++HPEXDUNGmFCpYJc0Gre8EUM4ZgcnYJFBYuZUSEgwE/KjqY2z4lQKj1G8faeJjdrntvbx3bVmluhtgKt/ADCOy8F4oW8TVXw5jvlgYiif7XQN+tzu/2UFuAynzYghYNAEt1TmvrMvdx/4g+F0VaZrNcB4o0JfeAm7c3hYZ2XmMobbbyHtRpIOg7JVC3h3tGJRSRsiJEQZtsRZp/ZyOT/FTLNc1SyH5vqQ9YRcHfRY+A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=FuNNBz1Z0cWReIvq7uHZtwTdcEHoJxX9kWDOxaYP/5M=;
+ b=ARCL9m6bucXv2ZB5kq4z2xQI32uj7XwDuoIulJ+iuPkrFmPhmFZHcZdTIXp2etDSUZpbl+gj2qAXFXC8gXF8n/Dv2J9Ttt9FyC/BcMpD63HdhyepTkx1znUanQG0sLsqhwjZWEDDw7gSEdTPArerlTngE2EllY/qLza4fo4Jx2w=
+Received: from HE1PR0402MB3371.eurprd04.prod.outlook.com (2603:10a6:7:85::27)
+ by HE1PR0402MB3578.eurprd04.prod.outlook.com (2603:10a6:7:84::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3283.23; Sun, 16 Aug
+ 2020 16:35:44 +0000
+Received: from HE1PR0402MB3371.eurprd04.prod.outlook.com
+ ([fe80::525:4554:3b4f:321d]) by HE1PR0402MB3371.eurprd04.prod.outlook.com
+ ([fe80::525:4554:3b4f:321d%2]) with mapi id 15.20.3283.027; Sun, 16 Aug 2020
+ 16:35:44 +0000
+From:   "Z.q. Hou" <zhiqiang.hou@nxp.com>
+To:     Rob Herring <robh@kernel.org>
+CC:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        PCI <linux-pci@vger.kernel.org>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Heiko Stuebner <heiko@sntech.de>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Roh Herring <robh+dt@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, kernel-team@android.com
-Subject: Re: [PATCH 1/2] PCI: rockchip: Work around missing device_type property in DT
-In-Reply-To: <20200815232228.GA1325245@bjorn-Precision-5520>
-References: <20200815125112.462652-2-maz@kernel.org>
-        <20200815232228.GA1325245@bjorn-Precision-5520>
-User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
- FLIM/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL/10.8 EasyPG/1.0.0 Emacs/26.3
- (x86_64-pc-linux-gnu) MULE/6.0 (HANACHIRUSATO)
-MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
-Content-Type: text/plain; charset=US-ASCII
-X-SA-Exim-Connect-IP: 62.31.163.78
-X-SA-Exim-Rcpt-To: helgaas@kernel.org, linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, robh@kernel.org, lorenzo.pieralisi@arm.com, heiko@sntech.de, shawn.lin@rock-chips.com, robh+dt@kernel.org, bhelgaas@google.com, kernel-team@android.com
-X-SA-Exim-Mail-From: maz@kernel.org
-X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Andrew Murray <amurray@thegoodpenguin.co.uk>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: RE: [PATCH] PCI: designware-ep: Fix the Header Type check
+Thread-Topic: [PATCH] PCI: designware-ep: Fix the Header Type check
+Thread-Index: AQHWchMU/epatx3sk0yrfgSC9wePyqk3wTkAgAMwdHA=
+Date:   Sun, 16 Aug 2020 16:35:44 +0000
+Message-ID: <HE1PR0402MB3371A9E1DDC8C6F2CFE71968845E0@HE1PR0402MB3371.eurprd04.prod.outlook.com>
+References: <20200814080813.8070-1-Zhiqiang.Hou@nxp.com>
+ <CAL_Jsq+a7kRVgnRhOxffZedz3M3s3DPcB6Q_tc4_Vu-WT55ZDQ@mail.gmail.com>
+In-Reply-To: <CAL_Jsq+a7kRVgnRhOxffZedz3M3s3DPcB6Q_tc4_Vu-WT55ZDQ@mail.gmail.com>
+Accept-Language: zh-CN, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: kernel.org; dkim=none (message not signed)
+ header.d=none;kernel.org; dmarc=none action=none header.from=nxp.com;
+x-originating-ip: [92.121.68.129]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 3ccefb29-8330-4e35-0408-08d842026c3c
+x-ms-traffictypediagnostic: HE1PR0402MB3578:
+x-microsoft-antispam-prvs: <HE1PR0402MB3578CF6C04A7DA8EF577C0C0845E0@HE1PR0402MB3578.eurprd04.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:4125;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: t9W6VJZJ0t6FV8gu25QjQ5xDgpnjTh60B66ivXygTQD/mRvFaPDMnEgDteEaJ3y1vm5tE4mQ3J7EbbGSSc0mQhOBXU4bWLxH4wE2I4h8UNNw7Z3Bjthx9hYNqlWJucpHnU01qUEa2FqKl7MECW8mfzBvpkV1xa4H56UrK0eW6SAqIQYvueAZPaUrvESA7zpdMC/xAfkir/It+wV5jXHwdYhdKvguNTwLdvUQQT8QQNbTZuB+QsPZBCYTdAmGFYNU2AmfL26XqHbquEE05U5LkNahjsHUVPl9bPUQe49r72w7ju8OIytFx80FijPfrVQU
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:HE1PR0402MB3371.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(346002)(396003)(136003)(376002)(366004)(39850400004)(5660300002)(55016002)(6506007)(9686003)(33656002)(4326008)(186003)(71200400001)(478600001)(26005)(8936002)(2906002)(7696005)(53546011)(66446008)(64756008)(66476007)(83380400001)(8676002)(86362001)(52536014)(66946007)(76116006)(6916009)(54906003)(66556008)(316002);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata: /HGrIgu4Z03DLmtAdq++VQxnsRimjmdQZYULAUsSsD4AHagwrhAGHG8d7XfasL5DrR+PHmu5+5oU1yPg3APS/gsye2SOi+WPtiqvlU8pw4KU8TkaxuyCkd2/fwlg71WAmhD7KNeJRgmEgv5dOVFY1Zp3rnUvJvvyBW7dDpkaA1T6CauMacPO798asJB1r+DBsdDYikvxT5wk979TvTt78qtsMuqvnRZAV1oOq0triTCV786uAXszsNo+5OGhNNiyht2weEDD5y7x6YND8nzaKM/z99t5WtmPc/WFTJMUYZWcyeCI9kV93m+md3xzzqaJrrFwu7EuusnAWVXQWwgXx/Walvl+hMkgjdKzUv3LzL1CtJzDd8WYyaV0OjXdPI1esfHuMO577HHnaExk1IAqc3pQ5PL0jQrU3HLHuYlV73uIe6ENcOjoeUnb1DwhWRMAGWmgwOycHVCqLeOi0X55B5d5HPGbLQYIxLjGqzqtnXspBYediB0qMAKP5jl4AYz+Spra/Ht0IXosI+OT4O1EbnRDYzLzOiO6D1Yq4BXqCatWR5ahAzYcphx77EOD2OP24f9iqMv0G/zZsCf+nI0itHpS3WWbJGWHJI2jvJjeEWgA6zX7G0/wNrKrYArS3zRgiH9LF+wl6nXHuOSuL+grNQ==
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: HE1PR0402MB3371.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3ccefb29-8330-4e35-0408-08d842026c3c
+X-MS-Exchange-CrossTenant-originalarrivaltime: 16 Aug 2020 16:35:44.3954
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: UuzHUNbEH++9P81rMEgVV8dwUlqnbdtUH4f+7Qvx30u0h4BTC5VDk4IgnyekeiDdWdeKK0YHbebAke62j9jjoA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: HE1PR0402MB3578
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sun, 16 Aug 2020 00:22:28 +0100,
-Bjorn Helgaas <helgaas@kernel.org> wrote:
-> 
-> On Sat, Aug 15, 2020 at 01:51:11PM +0100, Marc Zyngier wrote:
-> > Recent changes to the DT PCI bus parsing made it mandatory for
-> > device tree nodes describing a PCI controller to have the
-> > 'device_type = "pci"' property for the node to be matched.
-> > 
-> > Although this follows the letter of the specification, it
-> > breaks existing device-trees that have been working fine
-> > for years.  Rockchip rk3399-based systems are a prime example
-> > of such collateral damage, and have stopped discovering their
-> > PCI bus.
-> > 
-> > In order to paper over the blunder, let's add a workaround
-> > to the pcie-rockchip driver, adding the missing property when
-> > none is found at boot time. A warning will hopefully nudge the
-> > user into updating their DT to a fixed version if they can, but
-> > the insentive is obviously pretty small.
-> 
-> s/insentive/incentive/ (Lorenzo or I can fix this up)
-> 
-> > Fixes: 2f96593ecc37 ("of_address: Add bus type match for pci ranges parser")
-> > Suggested-by: Roh Herring <robh+dt@kernel.org>
-> 
-> s/Roh/Rob/ (similarly)
-
-Clearly not my day when it comes to proofreading commit messages.
-Thanks for pointing this out, and in advance for fixing it up.
-
-> 
-> > Signed-off-by: Marc Zyngier <maz@kernel.org>
-> 
-> This looks like a candidate for v5.9, since 2f96593ecc37 was merged
-> during the v5.9 merge window, right?
-
-Absolutely.
-
-> I wonder how many other DTs are similarly broken?  Maybe Rob's DT
-> checker has already looked?
-
-I've just managed to run the checker, which comes up with all kinds of
-goodies. Apart from the above, it also spots the following:
-
-- arch/arm64/boot/dts/mediatek/mt7622.dtsi: Has a device_type property
-  in its main PCIe node, but not in the child nodes. It isn't obvious
-  to me whether that's a violation or not (the spec doesn't say
-  whether the property should be set on a per-port basis). Rob?
-
-- arch/arm64/boot/dts/qcom/msm8996.dtsi: Only one out of the three
-  PCIe nodes has the device_type property, probably broken similarly
-  to rk3399.
-
-I could move the workaround to drivers/pci/of.c, and have it called
-from the individual drivers. I don't have the HW to test those though.
-
-Thoughts?
-
-	M.
-
--- 
-Without deviation from the norm, progress is not possible.
+SGkgUm9iLA0KDQpUaGFua3MgYSBsb3QgZm9yIHlvdXIgY29tbWVudHMhDQoNCj4gLS0tLS1Pcmln
+aW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogUm9iIEhlcnJpbmcgW21haWx0bzpyb2JoQGtlcm5l
+bC5vcmddDQo+IFNlbnQ6IDIwMjDlubQ45pyIMTTml6UgMjM6NTENCj4gVG86IFoucS4gSG91IDx6
+aGlxaWFuZy5ob3VAbnhwLmNvbT4NCj4gQ2M6IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7
+IFBDSSA8bGludXgtcGNpQHZnZXIua2VybmVsLm9yZz47IExvcmVuem8NCj4gUGllcmFsaXNpIDxs
+b3JlbnpvLnBpZXJhbGlzaUBhcm0uY29tPjsgQmpvcm4gSGVsZ2Fhcw0KPiA8YmhlbGdhYXNAZ29v
+Z2xlLmNvbT47IEFuZHJldyBNdXJyYXkgPGFtdXJyYXlAdGhlZ29vZHBlbmd1aW4uY28udWs+Ow0K
+PiBKaW5nb28gSGFuIDxqaW5nb29oYW4xQGdtYWlsLmNvbT47IEd1c3Rhdm8gUGltZW50ZWwNCj4g
+PGd1c3Rhdm8ucGltZW50ZWxAc3lub3BzeXMuY29tPg0KPiBTdWJqZWN0OiBSZTogW1BBVENIXSBQ
+Q0k6IGRlc2lnbndhcmUtZXA6IEZpeCB0aGUgSGVhZGVyIFR5cGUgY2hlY2sNCj4gDQo+IE9uIEZy
+aSwgQXVnIDE0LCAyMDIwIGF0IDI6MTUgQU0gWmhpcWlhbmcgSG91IDxaaGlxaWFuZy5Ib3VAbnhw
+LmNvbT4NCj4gd3JvdGU6DQo+ID4NCj4gPiBGcm9tOiBIb3UgWmhpcWlhbmcgPFpoaXFpYW5nLkhv
+dUBueHAuY29tPg0KPiA+DQo+ID4gVGhlIGN1cnJlbnQgY2hlY2sgd2lsbCByZXN1bHQgaW4gdGhl
+IG11bHRpcGxlIGZ1bmN0aW9uIGRldmljZSBmYWlscyB0bw0KPiA+IGluaXRpYWxpemUuIFNvIGZp
+eCB0aGUgY2hlY2sgYnkgbWFza2luZyBvdXQgdGhlIG11bHRpcGxlIGZ1bmN0aW9uIGJpdC4NCj4g
+Pg0KPiA+IEZpeGVzOiAwYjI0MTM0Zjc4ODggKCJQQ0k6IGR3YzogQWRkIHZhbGlkYXRpb24gdGhh
+dCBQQ0llIGNvcmUgaXMgc2V0DQo+ID4gdG8gY29ycmVjdCBtb2RlIikNCj4gPiBTaWduZWQtb2Zm
+LWJ5OiBIb3UgWmhpcWlhbmcgPFpoaXFpYW5nLkhvdUBueHAuY29tPg0KPiA+IC0tLQ0KPiA+ICBk
+cml2ZXJzL3BjaS9jb250cm9sbGVyL2R3Yy9wY2llLWRlc2lnbndhcmUtZXAuYyB8IDIgKy0NCj4g
+PiAgMSBmaWxlIGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCspLCAxIGRlbGV0aW9uKC0pDQo+ID4NCj4g
+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvY29udHJvbGxlci9kd2MvcGNpZS1kZXNpZ253YXJl
+LWVwLmMNCj4gPiBiL2RyaXZlcnMvcGNpL2NvbnRyb2xsZXIvZHdjL3BjaWUtZGVzaWdud2FyZS1l
+cC5jDQo+ID4gaW5kZXggNDY4MGE1MWM0OWMwLi40YjdhYmZiMWU2NjkgMTAwNjQ0DQo+ID4gLS0t
+IGEvZHJpdmVycy9wY2kvY29udHJvbGxlci9kd2MvcGNpZS1kZXNpZ253YXJlLWVwLmMNCj4gPiAr
+KysgYi9kcml2ZXJzL3BjaS9jb250cm9sbGVyL2R3Yy9wY2llLWRlc2lnbndhcmUtZXAuYw0KPiA+
+IEBAIC02NTQsNyArNjU0LDcgQEAgaW50IGR3X3BjaWVfZXBfaW5pdF9jb21wbGV0ZShzdHJ1Y3Qg
+ZHdfcGNpZV9lcA0KPiAqZXApDQo+ID4gICAgICAgICBpbnQgaTsNCj4gPg0KPiA+ICAgICAgICAg
+aGRyX3R5cGUgPSBkd19wY2llX3JlYWRiX2RiaShwY2ksIFBDSV9IRUFERVJfVFlQRSk7DQo+ID4g
+LSAgICAgICBpZiAoaGRyX3R5cGUgIT0gUENJX0hFQURFUl9UWVBFX05PUk1BTCkgew0KPiA+ICsg
+ICAgICAgaWYgKGhkcl90eXBlICYgMHg3ZiAhPSBQQ0lfSEVBREVSX1RZUEVfTk9STUFMKSB7DQo+
+IA0KPiBTaG91bGQgaGF2ZSAoKSBhcm91bmQgJ2hkcl90eXBlICYgMHg3ZicuDQo+IA0KPiA+ICAg
+ICAgICAgICAgICAgICBkZXZfZXJyKHBjaS0+ZGV2LA0KPiA+ICAgICAgICAgICAgICAgICAgICAg
+ICAgICJQQ0llIGNvbnRyb2xsZXIgaXMgbm90IHNldCB0byBFUCBtb2RlDQo+IChoZHJfdHlwZTow
+eCV4KSFcbiIsDQo+ID4gICAgICAgICAgICAgICAgICAgICAgICAgaGRyX3R5cGUpOw0KPiANCj4g
+SG93ZXZlciwgc2hvdWxkbid0IHRoZSBwcmludGVkIHZhbHVlIGJlIG1hc2tlZCB0b28/IEknZCBq
+dXN0IGRvOg0KPiANCj4gaGRyX3R5cGUgPSBkd19wY2llX3JlYWRiX2RiaShwY2ksIFBDSV9IRUFE
+RVJfVFlQRSkgJiAweDdmOw0KPiANCj4gUGVyaGFwcyBhZGQgYSAjZGVmaW5lIHRvby4gJzB4N2Yn
+IGlzIHVzZWQgaW4gc2V2ZXJhbCBwbGFjZXMuDQoNCkFsbCB0aGVzZSBhcmUgZ29vZCBzdWdnZXN0
+aW9ucywgd2lsbCBtYWtlIGl0IGluIG5leHQgdmVyc2lvbi4NCg0KVGhhbmtzLA0KWmhpcWlhbmcN
+CiANCj4gDQo+IFJvYg0K
