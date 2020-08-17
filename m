@@ -2,153 +2,108 @@ Return-Path: <SRS0=TyEb=B3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29C19C433DF
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Aug 2020 17:48:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A44F8C433E1
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Aug 2020 19:51:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0880920716
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Aug 2020 17:48:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7CD3B20716
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Aug 2020 19:51:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1597686512;
-	bh=gOa0eYxDEsJl2GQzrDLlhSJ5bJ/ZSXUtDonvSlh0ISI=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=mq6GogAPX9HQ4nDVNXMLIU7QD6ohhnUZJzvFXJq0209zviJ1THAeXLT4Wm9NtDq4Q
-	 ZlNOCoWjkpD3ue1PhnTe8V5+w/a4RoI+zkrDAW0cLpZY/SGAwl5mBh0NdvCm0CmKJr
-	 a9DKLoWW45d6qfe4JWJY1+O19cUmMGqtcA/y33D8=
+	s=default; t=1597693917;
+	bh=0rp3HaYyrFqjqOgeBKmXfxkTYZRRN21khxtx5T7t3kM=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=vi2SOLAQzGyw4sUiqiMtnw38ntoRjIoABjekjfj+dMeWsRlpKzOQpRh2jsrVbPC1f
+	 6jPXz0k24au4f7WXuRQiMdjP5mr+aG1BwdSc0TJg1m25cI4pGq2GS0cgaOQGJ+tAie
+	 3TOz8zOIhyIyD5ymS9eSdxVV8FJK2rWiixKoIV7k=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389578AbgHQRsQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 Aug 2020 13:48:16 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46942 "EHLO mail.kernel.org"
+        id S1729088AbgHQTv4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 Aug 2020 15:51:56 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48558 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388746AbgHQQNM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 17 Aug 2020 12:13:12 -0400
-Received: from mail-ot1-f43.google.com (mail-ot1-f43.google.com [209.85.210.43])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1729126AbgHQTvz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 17 Aug 2020 15:51:55 -0400
+Received: from localhost (104.sub-72-107-126.myvzw.com [72.107.126.104])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E72C820882;
-        Mon, 17 Aug 2020 16:13:10 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 0766320658;
+        Mon, 17 Aug 2020 19:51:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1597680791;
-        bh=gOa0eYxDEsJl2GQzrDLlhSJ5bJ/ZSXUtDonvSlh0ISI=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=vLRATeCcDCX/WCszaMIH4H6QE5Q8qaxo+6lOPhJY3rU/qC3/KnPHOgpGDtINee7Gq
-         VcWIayKF3Q5vcKl+04xcwMH7/dbSBKTxAP7wJHZxqdCIaZTaY9H7oqkp8AkQMziwc8
-         C466cFsSL7D9DSNpN4oisiuWqbgpp5MlAwUUJYj4=
-Received: by mail-ot1-f43.google.com with SMTP id h22so13818866otq.11;
-        Mon, 17 Aug 2020 09:13:10 -0700 (PDT)
-X-Gm-Message-State: AOAM531NhY7Wt0pAoz/CGBobj3yGVukH2RMWCgIJe/MsLh2Zs4iCYRgU
-        XEGus4Y64M0JWEZhp8O1r0TWjGYLEjztDfWyJw==
-X-Google-Smtp-Source: ABdhPJyXcxsLxb+WyZgDqUvX+ZXB5O5RvpOgmleI0+UY8O6F4IJdy3paAveojUJFPRMuv9DQhsNQTGig0iW3qRkFcQI=
-X-Received: by 2002:a9d:7f84:: with SMTP id t4mr11916864otp.192.1597680790121;
- Mon, 17 Aug 2020 09:13:10 -0700 (PDT)
+        s=default; t=1597693912;
+        bh=0rp3HaYyrFqjqOgeBKmXfxkTYZRRN21khxtx5T7t3kM=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=svuShRSH9NtUvVZYhoTJxgYctTstz9KTB/SbGbCiWgit7JKJxQbK5mZO8LXoJHoaw
+         S4+9fQEsC4V7UBo4p3vOPLNBvtHp/DEDq191ohqem6L8yjfMlZOFdavskrONrzmfuC
+         lzg3NBqcbzJU4fZMC00WsmTJdtjtfnHGfXUYNCXA=
+Date:   Mon, 17 Aug 2020 14:51:50 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     logang@deltatee.com, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH] PCI/P2PDMA: fix build without dma ops
+Message-ID: <20200817195150.GA1437811@bjorn-Precision-5520>
 MIME-Version: 1.0
-References: <20200815125112.462652-2-maz@kernel.org> <20200815232228.GA1325245@bjorn-Precision-5520>
- <87pn7qnabq.wl-maz@kernel.org>
-In-Reply-To: <87pn7qnabq.wl-maz@kernel.org>
-From:   Rob Herring <robh@kernel.org>
-Date:   Mon, 17 Aug 2020 10:12:58 -0600
-X-Gmail-Original-Message-ID: <CAL_Jsq+fDNa60+6+s9MwVjUFUPAuc43+uMx4Fm2nZhUgrV7LEg@mail.gmail.com>
-Message-ID: <CAL_Jsq+fDNa60+6+s9MwVjUFUPAuc43+uMx4Fm2nZhUgrV7LEg@mail.gmail.com>
-Subject: Re: [PATCH 1/2] PCI: rockchip: Work around missing device_type
- property in DT
-To:     Marc Zyngier <maz@kernel.org>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>,
-        PCI <linux-pci@vger.kernel.org>,
-        "open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
-        "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Heiko Stuebner <heiko@sntech.de>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Android Kernel Team <kernel-team@android.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200810124843.1532738-1-hch@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sun, Aug 16, 2020 at 4:40 AM Marc Zyngier <maz@kernel.org> wrote:
->
-> On Sun, 16 Aug 2020 00:22:28 +0100,
-> Bjorn Helgaas <helgaas@kernel.org> wrote:
-> >
-> > On Sat, Aug 15, 2020 at 01:51:11PM +0100, Marc Zyngier wrote:
-> > > Recent changes to the DT PCI bus parsing made it mandatory for
-> > > device tree nodes describing a PCI controller to have the
-> > > 'device_type = "pci"' property for the node to be matched.
-> > >
-> > > Although this follows the letter of the specification, it
-> > > breaks existing device-trees that have been working fine
-> > > for years.  Rockchip rk3399-based systems are a prime example
-> > > of such collateral damage, and have stopped discovering their
-> > > PCI bus.
-> > >
-> > > In order to paper over the blunder, let's add a workaround
-> > > to the pcie-rockchip driver, adding the missing property when
-> > > none is found at boot time. A warning will hopefully nudge the
-> > > user into updating their DT to a fixed version if they can, but
-> > > the insentive is obviously pretty small.
-> >
-> > s/insentive/incentive/ (Lorenzo or I can fix this up)
-> >
-> > > Fixes: 2f96593ecc37 ("of_address: Add bus type match for pci ranges parser")
-> > > Suggested-by: Roh Herring <robh+dt@kernel.org>
-> >
-> > s/Roh/Rob/ (similarly)
->
-> Clearly not my day when it comes to proofreading commit messages.
-> Thanks for pointing this out, and in advance for fixing it up.
->
-> >
-> > > Signed-off-by: Marc Zyngier <maz@kernel.org>
-> >
-> > This looks like a candidate for v5.9, since 2f96593ecc37 was merged
-> > during the v5.9 merge window, right?
->
-> Absolutely.
->
-> > I wonder how many other DTs are similarly broken?  Maybe Rob's DT
-> > checker has already looked?
->
-> I've just managed to run the checker, which comes up with all kinds of
-> goodies. Apart from the above, it also spots the following:
->
-> - arch/arm64/boot/dts/mediatek/mt7622.dtsi: Has a device_type property
->   in its main PCIe node, but not in the child nodes. It isn't obvious
->   to me whether that's a violation or not (the spec doesn't say
->   whether the property should be set on a per-port basis). Rob?
+On Mon, Aug 10, 2020 at 02:48:43PM +0200, Christoph Hellwig wrote:
+> My commit to make dma ops support optional missed the reference in
+> the p2pdma code.  And while the build bot didn't manage to find a config
+> where this can happen, Matthew did.  Fix this by replacing two IS_ENABLED
+> checks with ifdefs.
+> 
+> Fixes: 2f9237d4f6d ("dma-mapping: make support for dma ops optional")
+> Reported-by: Matthew Wilcox <willy@infradead.org>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-The rule is bridge nodes should have 'device_type = "pci"'. But what's
-needed to fix these cases is setting device_type where we are parsing
-ranges or dma-ranges which we're not doing on the child ndes.
-Otherwise, I don't think it matters in this case unless you have child
-(grandchild here) nodes for PCI devices. If you did have child nodes,
-the address translation was already broken before this change.
+Applied with Logan's reviewed-by to for-linus for v5.9, thanks!
 
-> - arch/arm64/boot/dts/qcom/msm8996.dtsi: Only one out of the three
->   PCIe nodes has the device_type property, probably broken similarly
->   to rk3399.
-
-The only upstream board is DB820c, so probably not as wide an impact...
-
-There are also 92 (lots of duplicates due to multiple boards) more
-cases in arch/arm/. A log is here[1].
-
-> I could move the workaround to drivers/pci/of.c, and have it called
-> from the individual drivers. I don't have the HW to test those though.
->
-> Thoughts?
-
-I think we should go with my other suggestion of looking at the node
-name. Looks like just checking 'pcie' is enough. We can skip 'pci' as
-I don't see any cases.
-
-Rob
-
-[1] https://gitlab.com/robherring/linux-dt-bindings/-/jobs/688752562
+> ---
+>  drivers/pci/p2pdma.c | 10 ++++++----
+>  1 file changed, 6 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+> index 64ebed129dbf5f..f357f9a32b3a57 100644
+> --- a/drivers/pci/p2pdma.c
+> +++ b/drivers/pci/p2pdma.c
+> @@ -556,13 +556,14 @@ int pci_p2pdma_distance_many(struct pci_dev *provider, struct device **clients,
+>  		return -1;
+>  
+>  	for (i = 0; i < num_clients; i++) {
+> -		if (IS_ENABLED(CONFIG_DMA_VIRT_OPS) &&
+> -		    clients[i]->dma_ops == &dma_virt_ops) {
+> +#ifdef CONFIG_DMA_VIRT_OPS
+> +		if (clients[i]->dma_ops == &dma_virt_ops) {
+>  			if (verbose)
+>  				dev_warn(clients[i],
+>  					 "cannot be used for peer-to-peer DMA because the driver makes use of dma_virt_ops\n");
+>  			return -1;
+>  		}
+> +#endif
+>  
+>  		pci_client = find_parent_pci_dev(clients[i]);
+>  		if (!pci_client) {
+> @@ -842,9 +843,10 @@ static int __pci_p2pdma_map_sg(struct pci_p2pdma_pagemap *p2p_pgmap,
+>  	 * this should never happen because it will be prevented
+>  	 * by the check in pci_p2pdma_distance_many()
+>  	 */
+> -	if (WARN_ON_ONCE(IS_ENABLED(CONFIG_DMA_VIRT_OPS) &&
+> -			 dev->dma_ops == &dma_virt_ops))
+> +#ifdef CONFIG_DMA_VIRT_OPS
+> +	if (WARN_ON_ONCE(dev->dma_ops == &dma_virt_ops))
+>  		return 0;
+> +#endif
+>  
+>  	for_each_sg(sg, s, nents, i) {
+>  		paddr = sg_phys(s);
+> -- 
+> 2.28.0
+> 
