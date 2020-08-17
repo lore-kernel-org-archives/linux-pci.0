@@ -2,169 +2,108 @@ Return-Path: <SRS0=TyEb=B3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2584EC433EC
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Aug 2020 17:12:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C76EC433E1
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Aug 2020 17:34:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F1F892067C
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Aug 2020 17:12:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1597684330;
-	bh=BFKmMwm3OgowIDbWwU9+GxfmhcLKDlOgozUQDhUzMwE=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=0BsT6W62AQEmWW3v88FYRBQCgjnOFFwvI/P4gS9Va9D8l2cMNPrv69Frlg7M5f2bV
-	 6lnl8EUaLAFiaaZ1732ou+TYh2yxReVpkMuhbBsdnm66ZBdAzDN8XbNNwwnrjuJBw6
-	 SOB68Z454EZwtuCnGwcPKhb5sMC1+Y5LPZwewYFc=
+	by mail.kernel.org (Postfix) with ESMTP id 1CBBD2063A
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Aug 2020 17:34:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388620AbgHQRMF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 Aug 2020 13:12:05 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48680 "EHLO mail.kernel.org"
+        id S1731140AbgHQReY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 Aug 2020 13:34:24 -0400
+Received: from mga06.intel.com ([134.134.136.31]:23627 "EHLO mga06.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389308AbgHQRMB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 17 Aug 2020 13:12:01 -0400
-Received: from localhost (104.sub-72-107-126.myvzw.com [72.107.126.104])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C44AF2067C;
-        Mon, 17 Aug 2020 17:12:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1597684321;
-        bh=BFKmMwm3OgowIDbWwU9+GxfmhcLKDlOgozUQDhUzMwE=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=I0l69/eVcqo9XoM5DNTMT2IHtJeSrEZ38TqHPaQ/MVg8ogXat9uYkR7vEL1h7hC/z
-         4cLCk8F86byzwpWkE5mzd9DLMcDhX/pCeCX3FeDhyRFWxlZX5zhabrxqFjID+r4yxO
-         t824qZlf+pcCGkc+eCBMReSoEY+74OYfzcbpY05c=
-Date:   Mon, 17 Aug 2020 12:11:59 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Alex =?iso-8859-1?Q?Benn=E9e?= <alex.bennee@linaro.org>
-Cc:     kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org, kvmarm@lists.cs.columbia.edu,
-        christoffer.dall@arm.com, maz@kernel.org,
-        Robert Richter <rrichter@marvell.com>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH  v1 1/3] arm64: allow de-selection of ThunderX PCI
- controllers
-Message-ID: <20200817171159.GA1426023@bjorn-Precision-5520>
+        id S2388854AbgHQQhR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 17 Aug 2020 12:37:17 -0400
+IronPort-SDR: q+rzcPlq90Auq/aRPLAqlDPeH5GJT3VVQz+mWjVNSDqeJKKzsh40NnKWiSgkCOSaD7WCgZTn4L
+ Kl0jiT2yyU3Q==
+X-IronPort-AV: E=McAfee;i="6000,8403,9716"; a="216269420"
+X-IronPort-AV: E=Sophos;i="5.76,324,1592895600"; 
+   d="scan'208";a="216269420"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Aug 2020 09:36:50 -0700
+IronPort-SDR: 6VDQ7tEzI4M1L/xzj1ckwh8odXomutyoBpGCJ9nkA6cYDqM3x0JDySAeufqtdAIucOWs7C+VAH
+ M8OATdHytvbQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.76,324,1592895600"; 
+   d="scan'208";a="296541466"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by orsmga006.jf.intel.com with ESMTP; 17 Aug 2020 09:36:48 -0700
+Received: by black.fi.intel.com (Postfix, from userid 1003)
+        id D68BA250; Mon, 17 Aug 2020 19:36:47 +0300 (EEST)
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
+Cc:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Kuppuswamy Sathyanarayanan 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: [PATCH v2 4/8] resource: Introduce resource_union() for overlapping resources
+Date:   Mon, 17 Aug 2020 19:36:43 +0300
+Message-Id: <20200817163647.48982-4-andriy.shevchenko@linux.intel.com>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200817163647.48982-1-andriy.shevchenko@linux.intel.com>
+References: <20200817163647.48982-1-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20200804124417.27102-2-alex.bennee@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Aug 04, 2020 at 01:44:15PM +0100, Alex Bennée wrote:
-> For a pure VirtIO guest bringing in all the PCI quirk handling adds a
-> significant amount of bloat to kernel we don't need. Solve this by
-> adding a CONFIG symbol for the ThunderX PCI devices and allowing it to
-> be turned off. Saving over 300k from the uncompressed vmlinux:
+Some already present users may utilize resource_union() helper.
+Provide it for them and for wider use in the future.
 
-It *looks* like just turning off CONFIG_PCI_QUIRKS should be
-sufficient because pci-thunder-ecam.c and pci-thunder-pem.c are
-wrapped with:
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+---
+v2: reused min/max (Rafael)
+ include/linux/ioport.h | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
 
-  #if defined(CONFIG_PCI_HOST_THUNDER_PEM) || (defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS))
+diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+index 50fed618d3fb..a7d50b9a3406 100644
+--- a/include/linux/ioport.h
++++ b/include/linux/ioport.h
+@@ -10,9 +10,10 @@
+ #define _LINUX_IOPORT_H
+ 
+ #ifndef __ASSEMBLY__
++#include <linux/bits.h>
+ #include <linux/compiler.h>
++#include <linux/minmax.h>
+ #include <linux/types.h>
+-#include <linux/bits.h>
+ /*
+  * Resources are tree-like, allowing
+  * nesting etc..
+@@ -232,6 +233,16 @@ static inline bool resource_overlaps(struct resource *r1, struct resource *r2)
+        return r1->start <= r2->end && r1->end >= r2->start;
+ }
+ 
++static inline bool
++resource_union(struct resource *r1, struct resource *r2, struct resource *r)
++{
++	if (!resource_overlaps(r1, r2))
++		return false;
++	r->start = min(r1->start, r2->start);
++	r->end = max(r1->end, r2->end);
++	return true;
++}
++
+ /* Convenience shorthand with allocation */
+ #define request_region(start,n,name)		__request_region(&ioport_resource, (start), (n), (name), 0)
+ #define request_muxed_region(start,n,name)	__request_region(&ioport_resource, (start), (n), (name), IORESOURCE_MUXED)
+-- 
+2.28.0
 
-so if you turn off CONFIG_PCI_HOST_THUNDER_ECAM,
-CONFIG_PCI_HOST_THUNDER_PEM, and CONFIG_PCI_QUIRKS that should omit
-pci-thunder-ecam.o and pci-thunder-pem.o.  But I must be missing
-something.
-
->   -rwxr-xr-x 1 alex alex  85652472 Aug  3 16:48 vmlinux*
->   -rwxr-xr-x 1 alex alex  86033880 Aug  3 16:39 vmlinux.orig*
-> 
-> Signed-off-by: Alex Bennée <alex.bennee@linaro.org>
-> Cc: Robert Richter <rrichter@marvell.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-arm-kernel@lists.infradead.org
-> ---
->  arch/arm64/Kconfig.platforms    | 2 ++
->  arch/arm64/configs/defconfig    | 1 +
->  drivers/pci/controller/Kconfig  | 7 +++++++
->  drivers/pci/controller/Makefile | 4 ++--
->  4 files changed, 12 insertions(+), 2 deletions(-)
-> 
-> diff --git a/arch/arm64/Kconfig.platforms b/arch/arm64/Kconfig.platforms
-> index 8dd05b2a925c..a328eebdaa59 100644
-> --- a/arch/arm64/Kconfig.platforms
-> +++ b/arch/arm64/Kconfig.platforms
-> @@ -253,12 +253,14 @@ config ARCH_SPRD
->  
->  config ARCH_THUNDER
->  	bool "Cavium Inc. Thunder SoC Family"
-> +        select PCI_THUNDER
->  	help
->  	  This enables support for Cavium's Thunder Family of SoCs.
->  
->  config ARCH_THUNDER2
->  	bool "Cavium ThunderX2 Server Processors"
->  	select GPIOLIB
-> +        select PCI_THUNDER
-
-Indent these with tabs, not spaces, to be consistent with other
-whitespace usage in this file.
-
->  	help
->  	  This enables support for Cavium's ThunderX2 CN99XX family of
->  	  server processors.
-> diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
-> index 2ca7ba69c318..d840cba99941 100644
-> --- a/arch/arm64/configs/defconfig
-> +++ b/arch/arm64/configs/defconfig
-> @@ -199,6 +199,7 @@ CONFIG_PCI_HOST_GENERIC=y
->  CONFIG_PCI_XGENE=y
->  CONFIG_PCIE_ALTERA=y
->  CONFIG_PCIE_ALTERA_MSI=y
-> +CONFIG_PCI_THUNDER=y
->  CONFIG_PCI_HOST_THUNDER_PEM=y
->  CONFIG_PCI_HOST_THUNDER_ECAM=y
->  CONFIG_PCIE_ROCKCHIP_HOST=m
-> diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
-> index adddf21fa381..28335ffa5d48 100644
-> --- a/drivers/pci/controller/Kconfig
-> +++ b/drivers/pci/controller/Kconfig
-> @@ -286,6 +286,13 @@ config PCI_LOONGSON
->  	  Say Y here if you want to enable PCI controller support on
->  	  Loongson systems.
->  
-> +config PCI_THUNDER
-> +       bool "Thunder X PCIE controllers"
-> +       depends on ARM64
-> +       select PCI_QUIRKS
-> +       help
-> +          Say Y here to enable ThunderX ECAM and PEM PCI controllers.
-
-Indent with tabs, not spaces.
-
-The existing Kconfig help text refers to simply "Thunder", not
-"Thunder X", so both of these references should probably follow suit.
-
-s/PCIE controllers/PCIe controllers/
-
->  source "drivers/pci/controller/dwc/Kconfig"
->  source "drivers/pci/controller/mobiveil/Kconfig"
->  source "drivers/pci/controller/cadence/Kconfig"
-> diff --git a/drivers/pci/controller/Makefile b/drivers/pci/controller/Makefile
-> index efd9733ead26..8fad4781a5d3 100644
-> --- a/drivers/pci/controller/Makefile
-> +++ b/drivers/pci/controller/Makefile
-> @@ -45,8 +45,8 @@ obj-y				+= mobiveil/
->  # ARM64 and use internal ifdefs to only build the pieces we need
->  # depending on whether ACPI, the DT driver, or both are enabled.
->  
-> +obj-$(CONFIG_PCI_THUNDER) += pci-thunder-ecam.o
-> +obj-$(CONFIG_PCI_THUNDER) += pci-thunder-pem.o
->  ifdef CONFIG_PCI
-> -obj-$(CONFIG_ARM64) += pci-thunder-ecam.o
-> -obj-$(CONFIG_ARM64) += pci-thunder-pem.o
->  obj-$(CONFIG_ARM64) += pci-xgene.o
->  endif
-> -- 
-> 2.20.1
-> 
