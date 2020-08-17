@@ -5,37 +5,37 @@ X-Spam-Level:
 X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DBCEC433F1
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Aug 2020 21:54:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9452C433F4
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Aug 2020 21:55:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 318752072E
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Aug 2020 21:54:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B62AD20738
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Aug 2020 21:55:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="pUsl79CX"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="qd1ME3Qf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728930AbgHQVyw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 Aug 2020 17:54:52 -0400
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:47652 "EHLO
+        id S1728814AbgHQVxp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 Aug 2020 17:53:45 -0400
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:47522 "EHLO
         rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726552AbgHQVxu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Aug 2020 17:53:50 -0400
+        by vger.kernel.org with ESMTP id S1728801AbgHQVxk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Aug 2020 17:53:40 -0400
 Received: from mail-irv-17.broadcom.com (mail-irv-17.lvn.broadcom.net [10.75.242.48])
-        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id AD4B530C201;
-        Mon, 17 Aug 2020 14:51:26 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com AD4B530C201
+        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id 9B80830C210;
+        Mon, 17 Aug 2020 14:51:16 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com 9B80830C210
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
-        s=dkimrelay; t=1597701086;
-        bh=YPD2dF98lpuCW/BOOZImKipjCsV1GRYP277611vcxHs=;
+        s=dkimrelay; t=1597701076;
+        bh=SCeymgfmidxWNTewp2CUtXHPgRiJmtVBtU2BuTPYLFs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=pUsl79CXK1Mu5Hnf7ZoOyUhN4pzn2+ULcWewxJORciANtBPL+Y8D7tIdQn9XZiwMP
-         +3naEJvjLA8xOsH597nb3aLUJdK9PFd3Gd002zbptYedQNUKco9nfK3AZMtyWsjO6T
-         pIM3f53our/pgS+nLOxgOhiv2jOB+AmLpjRjcJJg=
+        b=qd1ME3Qf44YjINzWPCjmeP0ShPnLhxS0WhC+LKigbKbJ5Uas0A+ahySFOQD9Ah4yg
+         wRGVl29ZTN3ib6/Uy1wCyCkLnqRPzPMVuSpvn1YrMt+KdC8ljns4T9UD8pBxQb/USD
+         vRkjTAFDTQBID0iJeUS8Qu0wJYPzdI5AA0rvbX+4=
 Received: from stbsrv-and-01.and.broadcom.net (stbsrv-and-01.and.broadcom.net [10.28.16.211])
-        by mail-irv-17.broadcom.com (Postfix) with ESMTP id 5A245140069;
-        Mon, 17 Aug 2020 14:53:42 -0700 (PDT)
+        by mail-irv-17.broadcom.com (Postfix) with ESMTP id 7F69E14008B;
+        Mon, 17 Aug 2020 14:53:37 -0700 (PDT)
 From:   Jim Quinlan <james.quinlan@broadcom.com>
 To:     linux-pci@vger.kernel.org,
         Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
@@ -47,15 +47,14 @@ Cc:     Jim Quinlan <james.quinlan@broadcom.com>,
         Rob Herring <robh@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Florian Fainelli <f.fainelli@gmail.com>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
         linux-rpi-kernel@lists.infradead.org (moderated list:BROADCOM
         BCM2711/BCM2835 ARM ARCHITECTURE),
         linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM
         BCM2711/BCM2835 ARM ARCHITECTURE),
         linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH RESEND v10 06/11] PCI: brcmstb: Add control of rescal reset
-Date:   Mon, 17 Aug 2020 17:53:08 -0400
-Message-Id: <20200817215326.30912-7-james.quinlan@broadcom.com>
+Subject: [PATCH RESEND v10 03/11] PCI: brcmstb: Add bcm7278 register info
+Date:   Mon, 17 Aug 2020 17:53:05 -0400
+Message-Id: <20200817215326.30912-4-james.quinlan@broadcom.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200817215326.30912-1-james.quinlan@broadcom.com>
 References: <20200817215326.30912-1-james.quinlan@broadcom.com>
@@ -66,164 +65,199 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Jim Quinlan <jquinlan@broadcom.com>
 
-Some STB chips have a special purpose reset controller named RESCAL (reset
-calibration).  The PCIe HW can now control RESCAL to start and stop its
-operation.  On probe(), the RESCAL is deasserted and the driver goes
-through the sequence of setting registers and reading status in order to
-start the internal PHY that is required for the PCIe.
+Add in compatibility strings and code for three Broadcom STB chips.  Some
+of the register locations, shifts, and masks are different for certain
+chips, requiring the use of different constants based on of_id.
+
+We would like to add the following at this time to the match list but we
+need to wait until the end of this patchset so that everything works.
+
+    { .compatible = "brcm,bcm7211-pcie", .data = &generic_cfg },
+    { .compatible = "brcm,bcm7278-pcie", .data = &bcm7278_cfg },
+    { .compatible = "brcm,bcm7216-pcie", .data = &bcm7278_cfg },
+    { .compatible = "brcm,bcm7445-pcie", .data = &generic_cfg },
 
 Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
 Acked-by: Florian Fainelli <f.fainelli@gmail.com>
 ---
- drivers/pci/controller/pcie-brcmstb.c | 82 ++++++++++++++++++++++++++-
- 1 file changed, 81 insertions(+), 1 deletion(-)
+ drivers/pci/controller/pcie-brcmstb.c | 105 +++++++++++++++++++++++---
+ 1 file changed, 93 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
-index e5e7f7d82eda..8dacb9d3b7b6 100644
+index 7730ea845ff2..b7a222fde3c4 100644
 --- a/drivers/pci/controller/pcie-brcmstb.c
 +++ b/drivers/pci/controller/pcie-brcmstb.c
-@@ -23,6 +23,7 @@
- #include <linux/of_platform.h>
- #include <linux/pci.h>
- #include <linux/printk.h>
-+#include <linux/reset.h>
- #include <linux/sizes.h>
- #include <linux/slab.h>
- #include <linux/string.h>
-@@ -158,6 +159,16 @@
- #define DATA_ADDR(pcie)			(pcie->reg_offsets[EXT_CFG_DATA])
- #define PCIE_RGR1_SW_INIT_1(pcie)	(pcie->reg_offsets[RGR1_SW_INIT_1])
+@@ -122,9 +122,8 @@
+ #define  PCIE_EXT_SLOT_SHIFT				15
+ #define  PCIE_EXT_FUNC_SHIFT				12
  
-+/* Rescal registers */
-+#define PCIE_DVT_PMU_PCIE_PHY_CTRL				0xc700
-+#define  PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_NFLDS			0x3
-+#define  PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_DIG_RESET_MASK		0x4
-+#define  PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_DIG_RESET_SHIFT	0x2
-+#define  PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_RESET_MASK		0x2
-+#define  PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_RESET_SHIFT		0x1
-+#define  PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_PWRDN_MASK		0x1
-+#define  PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_PWRDN_SHIFT		0x0
+-#define PCIE_RGR1_SW_INIT_1				0x9210
+ #define  PCIE_RGR1_SW_INIT_1_PERST_MASK			0x1
+-#define  PCIE_RGR1_SW_INIT_1_INIT_MASK			0x2
++#define  PCIE_RGR1_SW_INIT_1_PERST_SHIFT		0x0
+ 
+ /* PCIe parameters */
+ #define BRCM_NUM_PCIE_OUT_WINS		0x4
+@@ -154,6 +153,73 @@
+ #define SSC_STATUS_SSC_MASK		0x400
+ #define SSC_STATUS_PLL_LOCK_MASK	0x800
+ 
++#define IDX_ADDR(pcie)			(pcie->reg_offsets[EXT_CFG_INDEX])
++#define DATA_ADDR(pcie)			(pcie->reg_offsets[EXT_CFG_DATA])
++#define PCIE_RGR1_SW_INIT_1(pcie)	(pcie->reg_offsets[RGR1_SW_INIT_1])
 +
- enum {
- 	RGR1_SW_INIT_1,
- 	EXT_CFG_INDEX,
-@@ -248,6 +259,7 @@ struct brcm_pcie {
- 	const int		*reg_offsets;
- 	const int		*reg_field_info;
- 	enum pcie_type		type;
-+	struct reset_control	*rescal;
++enum {
++	RGR1_SW_INIT_1,
++	EXT_CFG_INDEX,
++	EXT_CFG_DATA,
++};
++
++enum {
++	RGR1_SW_INIT_1_INIT_MASK,
++	RGR1_SW_INIT_1_INIT_SHIFT,
++};
++
++enum pcie_type {
++	GENERIC,
++	BCM7278,
++	BCM2711,
++};
++
++struct pcie_cfg_data {
++	const int *reg_field_info;
++	const int *offsets;
++	const enum pcie_type type;
++};
++
++static const int pcie_reg_field_info[] = {
++	[RGR1_SW_INIT_1_INIT_MASK] = 0x2,
++	[RGR1_SW_INIT_1_INIT_SHIFT] = 0x1,
++};
++
++static const int pcie_reg_field_info_bcm7278[] = {
++	[RGR1_SW_INIT_1_INIT_MASK] = 0x1,
++	[RGR1_SW_INIT_1_INIT_SHIFT] = 0x0,
++};
++
++static const int pcie_offsets[] = {
++	[RGR1_SW_INIT_1] = 0x9210,
++	[EXT_CFG_INDEX]  = 0x9000,
++	[EXT_CFG_DATA]   = 0x9004,
++};
++
++static const struct pcie_cfg_data generic_cfg = {
++	.reg_field_info	= pcie_reg_field_info,
++	.offsets	= pcie_offsets,
++	.type		= GENERIC,
++};
++
++static const int pcie_offset_bcm7278[] = {
++	[RGR1_SW_INIT_1] = 0xc010,
++	[EXT_CFG_INDEX] = 0x9000,
++	[EXT_CFG_DATA] = 0x9004,
++};
++
++static const struct pcie_cfg_data bcm7278_cfg = {
++	.reg_field_info = pcie_reg_field_info_bcm7278,
++	.offsets	= pcie_offset_bcm7278,
++	.type		= BCM7278,
++};
++
++static const struct pcie_cfg_data bcm2711_cfg = {
++	.reg_field_info	= pcie_reg_field_info,
++	.offsets	= pcie_offsets,
++	.type		= BCM2711,
++};
++
+ struct brcm_msi {
+ 	struct device		*dev;
+ 	void __iomem		*base;
+@@ -178,6 +244,9 @@ struct brcm_pcie {
+ 	int			gen;
+ 	u64			msi_target_addr;
+ 	struct brcm_msi		*msi;
++	const int		*reg_offsets;
++	const int		*reg_field_info;
++	enum pcie_type		type;
  };
  
  /*
-@@ -966,6 +978,47 @@ static void brcm_pcie_enter_l23(struct brcm_pcie *pcie)
- 		dev_err(pcie->dev, "failed to enter low-power link state\n");
+@@ -604,20 +673,21 @@ static struct pci_ops brcm_pcie_ops = {
+ 
+ static inline void brcm_pcie_bridge_sw_init_set(struct brcm_pcie *pcie, u32 val)
+ {
+-	u32 tmp;
++	u32 tmp, mask =  pcie->reg_field_info[RGR1_SW_INIT_1_INIT_MASK];
++	u32 shift = pcie->reg_field_info[RGR1_SW_INIT_1_INIT_SHIFT];
+ 
+-	tmp = readl(pcie->base + PCIE_RGR1_SW_INIT_1);
+-	u32p_replace_bits(&tmp, val, PCIE_RGR1_SW_INIT_1_INIT_MASK);
+-	writel(tmp, pcie->base + PCIE_RGR1_SW_INIT_1);
++	tmp = readl(pcie->base + PCIE_RGR1_SW_INIT_1(pcie));
++	tmp = (tmp & ~mask) | ((val << shift) & mask);
++	writel(tmp, pcie->base + PCIE_RGR1_SW_INIT_1(pcie));
  }
  
-+static int brcm_phy_cntl(struct brcm_pcie *pcie, const int start)
-+{
-+	static const u32 shifts[PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_NFLDS] = {
-+		PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_PWRDN_SHIFT,
-+		PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_RESET_SHIFT,
-+		PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_DIG_RESET_SHIFT,};
-+	static const u32 masks[PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_NFLDS] = {
-+		PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_PWRDN_MASK,
-+		PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_RESET_MASK,
-+		PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_DIG_RESET_MASK,};
-+	const int beg = start ? 0 : PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_NFLDS - 1;
-+	const int end = start ? PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_NFLDS : -1;
-+	u32 tmp, combined_mask = 0;
-+	u32 val = !!start;
-+	void __iomem *base = pcie->base;
-+	int i;
-+
-+	for (i = beg; i != end; start ? i++ : i--) {
-+		tmp = readl(base + PCIE_DVT_PMU_PCIE_PHY_CTRL);
-+		tmp = (tmp & ~masks[i]) | ((val << shifts[i]) & masks[i]);
-+		writel(tmp, base + PCIE_DVT_PMU_PCIE_PHY_CTRL);
-+		usleep_range(50, 200);
-+		combined_mask |= masks[i];
-+	}
-+
-+	tmp = readl(base + PCIE_DVT_PMU_PCIE_PHY_CTRL);
-+	val = start ? combined_mask : 0;
-+
-+	return (tmp & combined_mask) == val ? 0 : -EIO;
-+}
-+
-+static inline int brcm_phy_start(struct brcm_pcie *pcie)
-+{
-+	return pcie->rescal ? brcm_phy_cntl(pcie, 1) : 0;
-+}
-+
-+static inline int brcm_phy_stop(struct brcm_pcie *pcie)
-+{
-+	return pcie->rescal ? brcm_phy_cntl(pcie, 0) : 0;
-+}
-+
- static void brcm_pcie_turn_off(struct brcm_pcie *pcie)
+ static inline void brcm_pcie_perst_set(struct brcm_pcie *pcie, u32 val)
  {
- 	void __iomem *base = pcie->base;
-@@ -993,11 +1046,15 @@ static void brcm_pcie_turn_off(struct brcm_pcie *pcie)
- static int brcm_pcie_suspend(struct device *dev)
- {
- 	struct brcm_pcie *pcie = dev_get_drvdata(dev);
-+	int ret;
+ 	u32 tmp;
  
- 	brcm_pcie_turn_off(pcie);
-+	ret = brcm_phy_stop(pcie);
-+	if (ret)
-+		dev_err(pcie->dev, "failed to stop phy\n");
- 	clk_disable_unprepare(pcie->clk);
- 
--	return 0;
-+	return ret;
+-	tmp = readl(pcie->base + PCIE_RGR1_SW_INIT_1);
++	tmp = readl(pcie->base + PCIE_RGR1_SW_INIT_1(pcie));
+ 	u32p_replace_bits(&tmp, val, PCIE_RGR1_SW_INIT_1_PERST_MASK);
+-	writel(tmp, pcie->base + PCIE_RGR1_SW_INIT_1);
++	writel(tmp, pcie->base + PCIE_RGR1_SW_INIT_1(pcie));
  }
  
- static int brcm_pcie_resume(struct device *dev)
-@@ -1010,6 +1067,12 @@ static int brcm_pcie_resume(struct device *dev)
- 	base = pcie->base;
- 	clk_prepare_enable(pcie->clk);
- 
-+	ret = brcm_phy_start(pcie);
-+	if (ret) {
-+		dev_err(pcie->dev, "failed to start phy\n");
-+		return ret;
-+	}
-+
- 	/* Take bridge out of reset so we can access the SERDES reg */
- 	brcm_pcie_bridge_sw_init_set(pcie, 0);
- 
-@@ -1035,6 +1098,9 @@ static void __brcm_pcie_remove(struct brcm_pcie *pcie)
- {
- 	brcm_msi_remove(pcie);
- 	brcm_pcie_turn_off(pcie);
-+	if (brcm_phy_stop(pcie))
-+		dev_err(pcie->dev, "failed to stop phy\n");
-+	reset_control_assert(pcie->rescal);
- 	clk_disable_unprepare(pcie->clk);
+ static inline int brcm_pcie_get_rc_bar2_size_and_offset(struct brcm_pcie *pcie,
+@@ -927,11 +997,17 @@ static int brcm_pcie_remove(struct platform_device *pdev)
+ 	return 0;
  }
  
-@@ -1120,6 +1186,20 @@ static int brcm_pcie_probe(struct platform_device *pdev)
- 		dev_err(&pdev->dev, "could not enable clock\n");
- 		return ret;
- 	}
-+	pcie->rescal = devm_reset_control_get_optional_shared(&pdev->dev, "rescal");
-+	if (IS_ERR(pcie->rescal))
-+		return PTR_ERR(pcie->rescal);
++static const struct of_device_id brcm_pcie_match[] = {
++	{ .compatible = "brcm,bcm2711-pcie", .data = &bcm2711_cfg },
++	{},
++};
 +
-+	ret = reset_control_deassert(pcie->rescal);
-+	if (ret)
-+		dev_err(&pdev->dev, "failed to deassert 'rescal'\n");
-+
-+	ret = brcm_phy_start(pcie);
-+	if (ret) {
-+		dev_err(pcie->dev, "failed to start phy\n");
-+		reset_control_assert(pcie->rescal);
-+		return ret;
-+	}
+ static int brcm_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct device_node *np = pdev->dev.of_node, *msi_np;
+ 	struct pci_host_bridge *bridge;
+ 	struct device_node *fw_np;
++	const struct pcie_cfg_data *data;
+ 	struct brcm_pcie *pcie;
+ 	struct pci_bus *child;
+ 	struct resource *res;
+@@ -955,9 +1031,18 @@ static int brcm_pcie_probe(struct platform_device *pdev)
+ 	if (!bridge)
+ 		return -ENOMEM;
  
- 	ret = brcm_pcie_setup(pcie);
- 	if (ret)
++	data = of_device_get_match_data(&pdev->dev);
++	if (!data) {
++		pr_err("failed to look up compatible string\n");
++		return -EINVAL;
++	}
++
+ 	pcie = pci_host_bridge_priv(bridge);
+ 	pcie->dev = &pdev->dev;
+ 	pcie->np = np;
++	pcie->reg_offsets = data->offsets;
++	pcie->reg_field_info = data->reg_field_info;
++	pcie->type = data->type;
+ 
+ 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+ 	pcie->base = devm_ioremap_resource(&pdev->dev, res);
+@@ -1023,10 +1108,6 @@ static int brcm_pcie_probe(struct platform_device *pdev)
+ 	return ret;
+ }
+ 
+-static const struct of_device_id brcm_pcie_match[] = {
+-	{ .compatible = "brcm,bcm2711-pcie" },
+-	{},
+-};
+ MODULE_DEVICE_TABLE(of, brcm_pcie_match);
+ 
+ static struct platform_driver brcm_pcie_driver = {
 -- 
 2.17.1
 
