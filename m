@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4AF8C433DF
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Aug 2020 12:02:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15129C433E3
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Aug 2020 12:02:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A7A982075E
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Aug 2020 12:02:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E13BE206DA
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Aug 2020 12:02:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728499AbgHSL7a (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 19 Aug 2020 07:59:30 -0400
+        id S1728068AbgHSMCk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 19 Aug 2020 08:02:40 -0400
 Received: from mga05.intel.com ([192.55.52.43]:49550 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728409AbgHSL7R (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Aug 2020 07:59:17 -0400
-IronPort-SDR: Xm7ZGRSNj94zajWBfKi4BIzHJdynwp7wB/+rlRNW5GwM8Da2AACoGquuDQ+HPbOHpizpKc8weX
- /hICI7GRNa/g==
-X-IronPort-AV: E=McAfee;i="6000,8403,9717"; a="239922667"
+        id S1728490AbgHSL7X (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Aug 2020 07:59:23 -0400
+IronPort-SDR: PuSeqyQr/q0KizfHJUuvlehAgLjvmVXGjmyaUtYjRFK58r+1A1liW+9kW8tJOCV3FY5HUIUNJe
+ 8ycoN/zSEbwQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9717"; a="239922671"
 X-IronPort-AV: E=Sophos;i="5.76,331,1592895600"; 
-   d="scan'208";a="239922667"
+   d="scan'208";a="239922671"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from fmsmga002.fm.intel.com ([10.253.24.26])
   by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Aug 2020 04:59:14 -0700
-IronPort-SDR: +wZIaCmcceJ/nNxrZd5PHt1REUyEaecsb4eqtyJOril7LjqKk9j8IdkSWu9cJeQ7hMHKIFHDh0
- TAOVRmQggITw==
+IronPort-SDR: BeDZnOWaqfnl4JgJphoLH1l/+9bRLuDcmINtHUYnxJDJJOKiPC0Ujg/WnHwXv924P/2yue77Zw
+ bUYjKahQtsjg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.76,331,1592895600"; 
-   d="scan'208";a="329310755"
+   d="scan'208";a="329310760"
 Received: from black.fi.intel.com ([10.237.72.28])
   by fmsmga002.fm.intel.com with ESMTP; 19 Aug 2020 04:59:11 -0700
 Received: by black.fi.intel.com (Postfix, from userid 1001)
-        id A1A3E463; Wed, 19 Aug 2020 14:59:06 +0300 (EEST)
+        id D76666BF; Wed, 19 Aug 2020 14:59:06 +0300 (EEST)
 From:   Mika Westerberg <mika.westerberg@linux.intel.com>
 To:     linux-usb@vger.kernel.org
 Cc:     Michael Jamet <michael.jamet@intel.com>,
@@ -51,9 +51,9 @@ Cc:     Michael Jamet <michael.jamet@intel.com>,
         Len Brown <lenb@kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH 08/19] thunderbolt: Tear down DP tunnels when suspending
-Date:   Wed, 19 Aug 2020 14:58:54 +0300
-Message-Id: <20200819115905.59834-9-mika.westerberg@linux.intel.com>
+Subject: [PATCH 14/19] thunderbolt: Disable lane 1 for XDomain connection
+Date:   Wed, 19 Aug 2020 14:59:00 +0300
+Message-Id: <20200819115905.59834-15-mika.westerberg@linux.intel.com>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200819115905.59834-1-mika.westerberg@linux.intel.com>
 References: <20200819115905.59834-1-mika.westerberg@linux.intel.com>
@@ -64,59 +64,125 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-DP tunnels do not need the same kind of treatment as others because they
-are created based on hot-plug events on DP adapter ports, and the
-display stack does not need the tunnels to be enabled when resuming from
-suspend. Also Tiger Lake Thunderbolt controller sends unplug event on D3
-exit so this avoids that as well.
+USB4 spec mandates that the lane 1 should be disabled if lanes are not
+bonded. For host-to-host connections (XDomain) we don't support lane
+bonding so in order to be compatible with the spec, disable lane 1 when
+another host is connected.
 
 Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 ---
- drivers/thunderbolt/tb.c | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+ drivers/thunderbolt/switch.c  | 44 +++++++++++++++++++++++++++++++++++
+ drivers/thunderbolt/tb.c      |  8 +++++++
+ drivers/thunderbolt/tb.h      |  2 ++
+ drivers/thunderbolt/tb_regs.h |  1 +
+ 4 files changed, 55 insertions(+)
 
-diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
-index a6da2d0567ae..c35d5fec48f4 100644
---- a/drivers/thunderbolt/tb.c
-+++ b/drivers/thunderbolt/tb.c
-@@ -910,6 +910,29 @@ static void tb_dp_resource_available(struct tb *tb, struct tb_port *port)
- 	tb_tunnel_dp(tb);
+diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
+index 1c45f8baf487..a8df25dae57b 100644
+--- a/drivers/thunderbolt/switch.c
++++ b/drivers/thunderbolt/switch.c
+@@ -673,6 +673,50 @@ int tb_port_unlock(struct tb_port *port)
+ 	return 0;
  }
  
-+static void tb_disconnect_and_release_dp(struct tb *tb)
++static int __tb_port_enable(struct tb_port *port, bool enable)
 +{
-+	struct tb_cm *tcm = tb_priv(tb);
-+	struct tb_tunnel *tunnel, *n;
++	int ret;
++	u32 phy;
 +
-+	/*
-+	 * Tear down all DP tunnels and release their resources. They
-+	 * will be re-established after resume based on plug events.
-+	 */
-+	list_for_each_entry_safe_reverse(tunnel, n, &tcm->tunnel_list, list) {
-+		if (tb_tunnel_is_dp(tunnel))
-+			tb_deactivate_and_free_tunnel(tunnel);
-+	}
++	if (!tb_port_is_null(port))
++		return -EINVAL;
 +
-+	while (!list_empty(&tcm->dp_resources)) {
-+		struct tb_port *port;
++	ret = tb_port_read(port, &phy, TB_CFG_PORT,
++			   port->cap_phy + LANE_ADP_CS_1, 1);
++	if (ret)
++		return ret;
 +
-+		port = list_first_entry(&tcm->dp_resources,
-+					struct tb_port, list);
-+		list_del_init(&port->list);
-+	}
++	if (enable)
++		phy &= ~LANE_ADP_CS_1_LD;
++	else
++		phy |= LANE_ADP_CS_1_LD;
++
++	return tb_port_write(port, &phy, TB_CFG_PORT,
++			     port->cap_phy + LANE_ADP_CS_1, 1);
 +}
 +
- static int tb_tunnel_pci(struct tb *tb, struct tb_switch *sw)
- {
- 	struct tb_port *up, *down, *port;
-@@ -1226,6 +1249,7 @@ static int tb_suspend_noirq(struct tb *tb)
- 	struct tb_cm *tcm = tb_priv(tb);
++/**
++ * tb_port_enable() - Enable lane adapter
++ * @port: Port to enable (can be %NULL)
++ *
++ * This is used for lane 0 and 1 adapters to enable it.
++ */
++int tb_port_enable(struct tb_port *port)
++{
++	return __tb_port_enable(port, true);
++}
++
++/**
++ * tb_port_disable() - Disable lane adapter
++ * @port: Port to disable (can be %NULL)
++ *
++ * This is used for lane 0 and 1 adapters to disable it.
++ */
++int tb_port_disable(struct tb_port *port)
++{
++	return __tb_port_enable(port, false);
++}
++
+ /**
+  * tb_init_port() - initialize a port
+  *
+diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
+index 602e00e0b45e..214e47656be6 100644
+--- a/drivers/thunderbolt/tb.c
++++ b/drivers/thunderbolt/tb.c
+@@ -142,6 +142,12 @@ static void tb_discover_tunnels(struct tb_switch *sw)
  
- 	tb_dbg(tb, "suspending...\n");
-+	tb_disconnect_and_release_dp(tb);
- 	tb_switch_suspend(tb->root_switch);
- 	tcm->hotplug_active = false; /* signal tb_handle_hotplug to quit */
- 	tb_dbg(tb, "suspend finished\n");
+ static int tb_port_configure_xdomain(struct tb_port *port)
+ {
++	/*
++	 * XDomain paths currently only support single lane so we must
++	 * disable the other lane according to USB4 spec.
++	 */
++	tb_port_disable(port->dual_link_port);
++
+ 	if (tb_switch_is_usb4(port->sw))
+ 		return usb4_port_configure_xdomain(port);
+ 	return tb_lc_configure_xdomain(port);
+@@ -153,6 +159,8 @@ static void tb_port_unconfigure_xdomain(struct tb_port *port)
+ 		usb4_port_unconfigure_xdomain(port);
+ 	else
+ 		tb_lc_unconfigure_xdomain(port);
++
++	tb_port_enable(port->dual_link_port);
+ }
+ 
+ static void tb_scan_xdomain(struct tb_port *port)
+diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
+index dbe332c3e95e..f58cd3fa98ea 100644
+--- a/drivers/thunderbolt/tb.h
++++ b/drivers/thunderbolt/tb.h
+@@ -790,6 +790,8 @@ int tb_port_add_nfc_credits(struct tb_port *port, int credits);
+ int tb_port_set_initial_credits(struct tb_port *port, u32 credits);
+ int tb_port_clear_counter(struct tb_port *port, int counter);
+ int tb_port_unlock(struct tb_port *port);
++int tb_port_enable(struct tb_port *port);
++int tb_port_disable(struct tb_port *port);
+ int tb_port_alloc_in_hopid(struct tb_port *port, int hopid, int max_hopid);
+ void tb_port_release_in_hopid(struct tb_port *port, int hopid);
+ int tb_port_alloc_out_hopid(struct tb_port *port, int hopid, int max_hopid);
+diff --git a/drivers/thunderbolt/tb_regs.h b/drivers/thunderbolt/tb_regs.h
+index a553be24f1c0..d1a40baa63d2 100644
+--- a/drivers/thunderbolt/tb_regs.h
++++ b/drivers/thunderbolt/tb_regs.h
+@@ -279,6 +279,7 @@ struct tb_regs_port_header {
+ #define LANE_ADP_CS_1_TARGET_WIDTH_SHIFT	4
+ #define LANE_ADP_CS_1_TARGET_WIDTH_SINGLE	0x1
+ #define LANE_ADP_CS_1_TARGET_WIDTH_DUAL		0x3
++#define LANE_ADP_CS_1_LD			BIT(14)
+ #define LANE_ADP_CS_1_LB			BIT(15)
+ #define LANE_ADP_CS_1_CURRENT_SPEED_MASK	GENMASK(19, 16)
+ #define LANE_ADP_CS_1_CURRENT_SPEED_SHIFT	16
 -- 
 2.28.0
 
