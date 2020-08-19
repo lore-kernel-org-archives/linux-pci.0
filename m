@@ -4,39 +4,39 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15129C433E3
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Aug 2020 12:02:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F853C433DF
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Aug 2020 12:02:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E13BE206DA
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Aug 2020 12:02:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 29B1D206DA
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Aug 2020 12:02:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728068AbgHSMCk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 19 Aug 2020 08:02:40 -0400
-Received: from mga05.intel.com ([192.55.52.43]:49550 "EHLO mga05.intel.com"
+        id S1728344AbgHSMCm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 19 Aug 2020 08:02:42 -0400
+Received: from mga17.intel.com ([192.55.52.151]:31808 "EHLO mga17.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728490AbgHSL7X (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1728207AbgHSL7X (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Wed, 19 Aug 2020 07:59:23 -0400
-IronPort-SDR: PuSeqyQr/q0KizfHJUuvlehAgLjvmVXGjmyaUtYjRFK58r+1A1liW+9kW8tJOCV3FY5HUIUNJe
- 8ycoN/zSEbwQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9717"; a="239922671"
+IronPort-SDR: sllUySao0ywIFGadz6FChHZ5kXMZ1jlEoYJ3CXav293cTSsiOLhp7NguaCLg7rwhDaXo1PINc2
+ yeIt0AnqYgqw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9717"; a="135160298"
 X-IronPort-AV: E=Sophos;i="5.76,331,1592895600"; 
-   d="scan'208";a="239922671"
+   d="scan'208";a="135160298"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Aug 2020 04:59:14 -0700
-IronPort-SDR: BeDZnOWaqfnl4JgJphoLH1l/+9bRLuDcmINtHUYnxJDJJOKiPC0Ujg/WnHwXv924P/2yue77Zw
- bUYjKahQtsjg==
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Aug 2020 04:59:18 -0700
+IronPort-SDR: I3mHLQ458sXJ0BmYOldWmReT6cu6jLc8dWFPPmytU/IVfDO5Txqt/4xqIVVqL59Ae4TeKNhd5G
+ rbNr1Ov53rHQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.76,331,1592895600"; 
-   d="scan'208";a="329310760"
+   d="scan'208";a="336938694"
 Received: from black.fi.intel.com ([10.237.72.28])
-  by fmsmga002.fm.intel.com with ESMTP; 19 Aug 2020 04:59:11 -0700
+  by orsmga007.jf.intel.com with ESMTP; 19 Aug 2020 04:59:14 -0700
 Received: by black.fi.intel.com (Postfix, from userid 1001)
-        id D76666BF; Wed, 19 Aug 2020 14:59:06 +0300 (EEST)
+        id 07C2F7C5; Wed, 19 Aug 2020 14:59:07 +0300 (EEST)
 From:   Mika Westerberg <mika.westerberg@linux.intel.com>
 To:     linux-usb@vger.kernel.org
 Cc:     Michael Jamet <michael.jamet@intel.com>,
@@ -51,9 +51,9 @@ Cc:     Michael Jamet <michael.jamet@intel.com>,
         Len Brown <lenb@kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH 14/19] thunderbolt: Disable lane 1 for XDomain connection
-Date:   Wed, 19 Aug 2020 14:59:00 +0300
-Message-Id: <20200819115905.59834-15-mika.westerberg@linux.intel.com>
+Subject: [PATCH 18/19] thunderbolt: Create device links from ACPI description
+Date:   Wed, 19 Aug 2020 14:59:04 +0300
+Message-Id: <20200819115905.59834-19-mika.westerberg@linux.intel.com>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200819115905.59834-1-mika.westerberg@linux.intel.com>
 References: <20200819115905.59834-1-mika.westerberg@linux.intel.com>
@@ -64,125 +64,218 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-USB4 spec mandates that the lane 1 should be disabled if lanes are not
-bonded. For host-to-host connections (XDomain) we don't support lane
-bonding so in order to be compatible with the spec, disable lane 1 when
-another host is connected.
+The new way to describe relationship between tunneled ports and USB4 NHI
+(Native Host Interface) is with ACPI _DSD looking like below for a PCIe
+downstream port:
 
+    Scope (\_SB.PCI0)
+    {
+        Device (NHI0) { } // Thunderbolt NHI
+
+        Device (DSB0) // Hotplug downstream port
+        {
+            Name (_DSD, Package () {
+                ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
+                Package () {
+                    Package () {"usb4-host-interface", \_SB.PCI0.NHI0},
+                    ...
+                }
+            })
+        }
+    }
+
+This is "documented" in these [1] USB-IF slides and being used on
+systems that ship with Windows.
+
+The _DSD can be added to tunneled USB3 and PCIe ports, and is needed to
+make sure the USB4 NHI is resumed before any of the tunneled ports so
+the protocol tunnels get established properly before the actual port
+itself is resumed. Othwerwise the USB/PCI core find the link may not be
+established and starts tearing down the device stack.
+
+This parses the ACPI description each time NHI is probed and tries to
+find devices that has the property and it references the NHI in
+question. For each matching device a device link from that device to the
+NHI is created.
+
+Since USB3 ports themselves do not get runtime suspended with the parent
+device (hub) we do not add the link from the USB3 port to USB4 NHI but
+instead we add the link from the xHCI device. This makes the device link
+usable for runtime PM as well.
+
+[1] https://www.usb.org/sites/default/files/D1T2-2%20-%20USB4%20on%20Windows.pdf
+
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 ---
- drivers/thunderbolt/switch.c  | 44 +++++++++++++++++++++++++++++++++++
- drivers/thunderbolt/tb.c      |  8 +++++++
- drivers/thunderbolt/tb.h      |  2 ++
- drivers/thunderbolt/tb_regs.h |  1 +
- 4 files changed, 55 insertions(+)
+ drivers/thunderbolt/Makefile |   2 +
+ drivers/thunderbolt/acpi.c   | 117 +++++++++++++++++++++++++++++++++++
+ drivers/thunderbolt/nhi.c    |   1 +
+ drivers/thunderbolt/tb.h     |   6 ++
+ 4 files changed, 126 insertions(+)
+ create mode 100644 drivers/thunderbolt/acpi.c
 
-diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
-index 1c45f8baf487..a8df25dae57b 100644
---- a/drivers/thunderbolt/switch.c
-+++ b/drivers/thunderbolt/switch.c
-@@ -673,6 +673,50 @@ int tb_port_unlock(struct tb_port *port)
- 	return 0;
- }
+diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
+index 4ab5bfad7bfd..754a529aa132 100644
+--- a/drivers/thunderbolt/Makefile
++++ b/drivers/thunderbolt/Makefile
+@@ -4,4 +4,6 @@ thunderbolt-objs := nhi.o nhi_ops.o ctl.o tb.o switch.o cap.o path.o tunnel.o ee
+ thunderbolt-objs += domain.o dma_port.o icm.o property.o xdomain.o lc.o tmu.o usb4.o
+ thunderbolt-objs += nvm.o retimer.o quirks.o
  
-+static int __tb_port_enable(struct tb_port *port, bool enable)
++thunderbolt-${CONFIG_ACPI} += acpi.o
++
+ obj-${CONFIG_USB4_KUNIT_TEST} += test.o
+diff --git a/drivers/thunderbolt/acpi.c b/drivers/thunderbolt/acpi.c
+new file mode 100644
+index 000000000000..a5f988a9f948
+--- /dev/null
++++ b/drivers/thunderbolt/acpi.c
+@@ -0,0 +1,117 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * ACPI support
++ *
++ * Copyright (C) 2020, Intel Corporation
++ * Author: Mika Westerberg <mika.westerberg@linux.intel.com>
++ */
++
++#include <linux/acpi.h>
++
++#include "tb.h"
++
++static acpi_status tb_acpi_add_link(acpi_handle handle, u32 level, void *data,
++				    void **return_value)
 +{
++	struct fwnode_reference_args args;
++	struct fwnode_handle *fwnode;
++	struct tb_nhi *nhi = data;
++	struct acpi_device *adev;
++	struct pci_dev *pdev;
++	struct device *dev;
 +	int ret;
-+	u32 phy;
 +
-+	if (!tb_port_is_null(port))
-+		return -EINVAL;
++	if (acpi_bus_get_device(handle, &adev))
++		return AE_OK;
 +
-+	ret = tb_port_read(port, &phy, TB_CFG_PORT,
-+			   port->cap_phy + LANE_ADP_CS_1, 1);
++	fwnode = acpi_fwnode_handle(adev);
++	ret = fwnode_property_get_reference_args(fwnode, "usb4-host-interface",
++						 NULL, 0, 0, &args);
 +	if (ret)
-+		return ret;
++		return AE_OK;
 +
-+	if (enable)
-+		phy &= ~LANE_ADP_CS_1_LD;
-+	else
-+		phy |= LANE_ADP_CS_1_LD;
++	/* It needs to reference this NHI */
++	if (nhi->pdev->dev.fwnode != args.fwnode)
++		goto out_put;
 +
-+	return tb_port_write(port, &phy, TB_CFG_PORT,
-+			     port->cap_phy + LANE_ADP_CS_1, 1);
-+}
-+
-+/**
-+ * tb_port_enable() - Enable lane adapter
-+ * @port: Port to enable (can be %NULL)
-+ *
-+ * This is used for lane 0 and 1 adapters to enable it.
-+ */
-+int tb_port_enable(struct tb_port *port)
-+{
-+	return __tb_port_enable(port, true);
-+}
-+
-+/**
-+ * tb_port_disable() - Disable lane adapter
-+ * @port: Port to disable (can be %NULL)
-+ *
-+ * This is used for lane 0 and 1 adapters to disable it.
-+ */
-+int tb_port_disable(struct tb_port *port)
-+{
-+	return __tb_port_enable(port, false);
-+}
-+
- /**
-  * tb_init_port() - initialize a port
-  *
-diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
-index 602e00e0b45e..214e47656be6 100644
---- a/drivers/thunderbolt/tb.c
-+++ b/drivers/thunderbolt/tb.c
-@@ -142,6 +142,12 @@ static void tb_discover_tunnels(struct tb_switch *sw)
- 
- static int tb_port_configure_xdomain(struct tb_port *port)
- {
 +	/*
-+	 * XDomain paths currently only support single lane so we must
-+	 * disable the other lane according to USB4 spec.
++	 * Try to find physical device walking upwards to the hierarcy.
++	 * We need to do this because the xHCI driver might not yet be
++	 * bound so the USB3 SuperSpeed ports are not yet created.
 +	 */
-+	tb_port_disable(port->dual_link_port);
++	dev = acpi_get_first_physical_node(adev);
++	while (!dev) {
++		adev = adev->parent;
++		if (!adev)
++			break;
++		dev = acpi_get_first_physical_node(adev);
++	}
 +
- 	if (tb_switch_is_usb4(port->sw))
- 		return usb4_port_configure_xdomain(port);
- 	return tb_lc_configure_xdomain(port);
-@@ -153,6 +159,8 @@ static void tb_port_unconfigure_xdomain(struct tb_port *port)
- 		usb4_port_unconfigure_xdomain(port);
- 	else
- 		tb_lc_unconfigure_xdomain(port);
++	if (!dev)
++		goto out_put;
 +
-+	tb_port_enable(port->dual_link_port);
- }
++	/*
++	 * Check that the device is PCIe. This is because USB3
++	 * SuperSpeed ports have this property and they are not power
++	 * managed with the xHCI and the SuperSpeed hub so we create the
++	 * link from xHCI instead.
++	 */
++	while (!dev_is_pci(dev))
++		dev = dev->parent;
++
++	if (!dev)
++		goto out_put;
++
++	/*
++	 * Check that this actually matches the type of device we
++	 * expect. It should either be xHCI or PCIe root/downstream
++	 * port.
++	 */
++	pdev = to_pci_dev(dev);
++	if (pdev->class == PCI_CLASS_SERIAL_USB_XHCI ||
++	    (pci_is_pcie(pdev) &&
++		(pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT ||
++		 pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM))) {
++		const struct device_link *link;
++
++		link = device_link_add(&pdev->dev, &nhi->pdev->dev,
++				       DL_FLAG_AUTOREMOVE_SUPPLIER |
++				       DL_FLAG_PM_RUNTIME);
++		if (link) {
++			dev_dbg(&nhi->pdev->dev, "created link from %s\n",
++				dev_name(&pdev->dev));
++		} else {
++			dev_warn(&nhi->pdev->dev, "device link creation from %s failed\n",
++				 dev_name(&pdev->dev));
++		}
++	}
++
++out_put:
++	fwnode_handle_put(args.fwnode);
++	return AE_OK;
++}
++
++/**
++ * tb_acpi_add_links() - Add device links based on ACPI description
++ * @nhi: Pointer to NHI
++ *
++ * Goes over ACPI namespace finding tunneled ports that reference to
++ * @nhi ACPI node. For each reference a device link is added. The link
++ * is automatically removed by the driver core.
++ */
++void tb_acpi_add_links(struct tb_nhi *nhi)
++{
++	acpi_status status;
++
++	if (!has_acpi_companion(&nhi->pdev->dev))
++		return;
++
++	/*
++	 * Find all devices that have usb4-host-controller interface
++	 * property that references to this NHI.
++	 */
++	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, ACPI_ROOT_OBJECT, 32,
++				     tb_acpi_add_link, NULL, nhi, NULL);
++	if (ACPI_FAILURE(status))
++		dev_warn(&nhi->pdev->dev, "failed to enumerate tunneled ports\n");
++}
+diff --git a/drivers/thunderbolt/nhi.c b/drivers/thunderbolt/nhi.c
+index e499fe78756b..bd24e8254336 100644
+--- a/drivers/thunderbolt/nhi.c
++++ b/drivers/thunderbolt/nhi.c
+@@ -1199,6 +1199,7 @@ static int nhi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	}
  
- static void tb_scan_xdomain(struct tb_port *port)
+ 	tb_apple_add_links(nhi);
++	tb_acpi_add_links(nhi);
+ 
+ 	tb = icm_probe(nhi);
+ 	if (!tb)
 diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
-index dbe332c3e95e..f58cd3fa98ea 100644
+index 847accd91bfa..dbcfa24caaf1 100644
 --- a/drivers/thunderbolt/tb.h
 +++ b/drivers/thunderbolt/tb.h
-@@ -790,6 +790,8 @@ int tb_port_add_nfc_credits(struct tb_port *port, int credits);
- int tb_port_set_initial_credits(struct tb_port *port, u32 credits);
- int tb_port_clear_counter(struct tb_port *port, int counter);
- int tb_port_unlock(struct tb_port *port);
-+int tb_port_enable(struct tb_port *port);
-+int tb_port_disable(struct tb_port *port);
- int tb_port_alloc_in_hopid(struct tb_port *port, int hopid, int max_hopid);
- void tb_port_release_in_hopid(struct tb_port *port, int hopid);
- int tb_port_alloc_out_hopid(struct tb_port *port, int hopid, int max_hopid);
-diff --git a/drivers/thunderbolt/tb_regs.h b/drivers/thunderbolt/tb_regs.h
-index a553be24f1c0..d1a40baa63d2 100644
---- a/drivers/thunderbolt/tb_regs.h
-+++ b/drivers/thunderbolt/tb_regs.h
-@@ -279,6 +279,7 @@ struct tb_regs_port_header {
- #define LANE_ADP_CS_1_TARGET_WIDTH_SHIFT	4
- #define LANE_ADP_CS_1_TARGET_WIDTH_SINGLE	0x1
- #define LANE_ADP_CS_1_TARGET_WIDTH_DUAL		0x3
-+#define LANE_ADP_CS_1_LD			BIT(14)
- #define LANE_ADP_CS_1_LB			BIT(15)
- #define LANE_ADP_CS_1_CURRENT_SPEED_MASK	GENMASK(19, 16)
- #define LANE_ADP_CS_1_CURRENT_SPEED_SHIFT	16
+@@ -967,4 +967,10 @@ int usb4_usb3_port_release_bandwidth(struct tb_port *port, int *upstream_bw,
+ 
+ void tb_check_quirks(struct tb_switch *sw);
+ 
++#ifdef CONFIG_ACPI
++void tb_acpi_add_links(struct tb_nhi *nhi);
++#else
++static inline void tb_acpi_add_links(struct tb_nhi *nhi) { }
++#endif
++
+ #endif
 -- 
 2.28.0
 
