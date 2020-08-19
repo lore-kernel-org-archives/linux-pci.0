@@ -2,76 +2,95 @@ Return-Path: <SRS0=4iR6=B5=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC11FC433E1
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Aug 2020 17:42:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8FDCC433E1
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Aug 2020 18:01:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9D56021734
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Aug 2020 17:42:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A8CE520786
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Aug 2020 18:01:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726707AbgHSRmA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 19 Aug 2020 13:42:00 -0400
-Received: from mga11.intel.com ([192.55.52.93]:64742 "EHLO mga11.intel.com"
+        id S1726977AbgHSSBZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 19 Aug 2020 14:01:25 -0400
+Received: from mga11.intel.com ([192.55.52.93]:2356 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726702AbgHSRl7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Aug 2020 13:41:59 -0400
-IronPort-SDR: 9GePG7TSx19MVHI3q5n9VMrar3WGx+855WPW8fTQBhKkVDMgJzZ5PDcaP3qBOQVPj1GVy8jkOk
- zDQrE7Mbhpvw==
-X-IronPort-AV: E=McAfee;i="6000,8403,9718"; a="152775787"
+        id S1726992AbgHSSBU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Aug 2020 14:01:20 -0400
+IronPort-SDR: 9hsscYuO870rSjeq8pBQOigOoiIRebdOPKrOVfA/BHbIy5OIdJLHAsU9C4V37P9kO8Gtupxmfu
+ vkQmi3MZ0BGw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9718"; a="152781498"
 X-IronPort-AV: E=Sophos;i="5.76,332,1592895600"; 
-   d="scan'208";a="152775787"
+   d="scan'208";a="152781498"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Aug 2020 10:41:58 -0700
-IronPort-SDR: /Gw14F3T8MavSsw3w+CZqaHM4PiaxwU3a5v7JUXi420k8E2r9jXx2lHUbjBfc2ZPH65C/BQLuH
- iWMvySpupPaA==
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Aug 2020 11:01:20 -0700
+IronPort-SDR: hpkV4fWWp61Zz6Qpd852odPJRX9I9jLSZOsqpB6mVV9kCxI8FF3dHSxtUiDgiVVd7UsoRXFlli
+ IldNPf/QAFPA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.76,332,1592895600"; 
-   d="scan'208";a="327159666"
-Received: from smile.fi.intel.com (HELO smile) ([10.237.68.40])
-  by orsmga008.jf.intel.com with ESMTP; 19 Aug 2020 10:41:56 -0700
-Received: from andy by smile with local (Exim 4.94)
-        (envelope-from <andriy.shevchenko@linux.intel.com>)
-        id 1k8S3s-009w8o-L8; Wed, 19 Aug 2020 20:39:44 +0300
-Date:   Wed, 19 Aug 2020 20:39:44 +0300
-From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To:     Fabio Estevam <festevam@gmail.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        iommu@lists.linux-foundation.org, Christoph Hellwig <hch@lst.de>,
-        Marek Szyprowski <m.szyprowski@samsung.com>, x86@kernel.org,
-        Robin Murphy <robin.murphy@arm.com>
-Subject: Re: [PATCH v1 1/3] swiotlb: Use %pa to print phys_addr_t variables
-Message-ID: <20200819173944.GR1891694@smile.fi.intel.com>
-References: <20200819171326.35931-1-andriy.shevchenko@linux.intel.com>
- <CAOMZO5B9FGqSsnQcw1hhyOQnvkgxXK_xAkvNbjdtNuH+5V8kBA@mail.gmail.com>
+   d="scan'208";a="472326193"
+Received: from linux.intel.com ([10.54.29.200])
+  by orsmga005.jf.intel.com with ESMTP; 19 Aug 2020 11:01:20 -0700
+Received: from debox1-desk2.jf.intel.com (debox1-desk2.jf.intel.com [10.54.75.16])
+        by linux.intel.com (Postfix) with ESMTP id 271BF58081E;
+        Wed, 19 Aug 2020 11:01:20 -0700 (PDT)
+From:   "David E. Box" <david.e.box@linux.intel.com>
+To:     lee.jones@linaro.org, david.e.box@linux.intel.com,
+        dvhart@infradead.org, andy@infradead.org, bhelgaas@google.com,
+        alexander.h.duyck@linux.intel.com
+Cc:     linux-kernel@vger.kernel.org, platform-driver-x86@vger.kernel.org,
+        linux-pci@vger.kernel.org,
+        Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: [PATCH V5 1/3] PCI: Add defines for Designated Vendor-Specific Extended Capability
+Date:   Wed, 19 Aug 2020 11:02:53 -0700
+Message-Id: <20200819180255.11770-2-david.e.box@linux.intel.com>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200819180255.11770-1-david.e.box@linux.intel.com>
+References: <20200819180255.11770-1-david.e.box@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOMZO5B9FGqSsnQcw1hhyOQnvkgxXK_xAkvNbjdtNuH+5V8kBA@mail.gmail.com>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Aug 19, 2020 at 02:24:10PM -0300, Fabio Estevam wrote:
-> On Wed, Aug 19, 2020 at 2:16 PM Andy Shevchenko
-> <andriy.shevchenko@linux.intel.com> wrote:
-> 
-> > -       unsigned long bytes = io_tlb_nslabs << IO_TLB_SHIFT;
-> > +       unsigned long mb = (io_tlb_nslabs << IO_TLB_SHIFT) >> 20;
-> 
-> Looks like an unrelated change.
+Add PCIe Designated Vendor-Specific Extended Capability (DVSEC) and defines
+for the header offsets. Defined in PCIe r5.0, sec 7.9.6.
 
-To put pr_info() onto one (not so long) line. But of course, can leave it.
+Signed-off-by: David E. Box <david.e.box@linux.intel.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+---
+ include/uapi/linux/pci_regs.h | 5 +++++
+ 1 file changed, 5 insertions(+)
 
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index f9701410d3b5..beafeee39e44 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -720,6 +720,7 @@
+ #define PCI_EXT_CAP_ID_DPC	0x1D	/* Downstream Port Containment */
+ #define PCI_EXT_CAP_ID_L1SS	0x1E	/* L1 PM Substates */
+ #define PCI_EXT_CAP_ID_PTM	0x1F	/* Precision Time Measurement */
++#define PCI_EXT_CAP_ID_DVSEC	0x23	/* Designated Vendor-Specific */
+ #define PCI_EXT_CAP_ID_DLF	0x25	/* Data Link Feature */
+ #define PCI_EXT_CAP_ID_PL_16GT	0x26	/* Physical Layer 16.0 GT/s */
+ #define PCI_EXT_CAP_ID_MAX	PCI_EXT_CAP_ID_PL_16GT
+@@ -1062,6 +1063,10 @@
+ #define  PCI_L1SS_CTL1_LTR_L12_TH_SCALE	0xe0000000  /* LTR_L1.2_THRESHOLD_Scale */
+ #define PCI_L1SS_CTL2		0x0c	/* Control 2 Register */
+ 
++/* Designated Vendor-Specific (DVSEC, PCI_EXT_CAP_ID_DVSEC) */
++#define PCI_DVSEC_HEADER1		0x4 /* Designated Vendor-Specific Header1 */
++#define PCI_DVSEC_HEADER2		0x8 /* Designated Vendor-Specific Header2 */
++
+ /* Data Link Feature */
+ #define PCI_DLF_CAP		0x04	/* Capabilities Register */
+ #define  PCI_DLF_EXCHANGE_ENABLE	0x80000000  /* Data Link Feature Exchange Enable */
 -- 
-With Best Regards,
-Andy Shevchenko
-
+2.20.1
 
