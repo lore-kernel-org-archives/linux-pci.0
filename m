@@ -2,75 +2,96 @@ Return-Path: <SRS0=W/B3=B6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E814C433DF
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Aug 2020 08:16:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FAB8C433E3
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Aug 2020 13:13:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6A952208DB
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Aug 2020 08:16:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E2BA22BEA
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Aug 2020 13:13:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726793AbgHTIQp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 20 Aug 2020 04:16:45 -0400
-Received: from bmailout1.hostsharing.net ([83.223.95.100]:36653 "EHLO
-        bmailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725824AbgHTINW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Aug 2020 04:13:22 -0400
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client CN "*.hostsharing.net", Issuer "COMODO RSA Domain Validation Secure Server CA" (not verified))
-        by bmailout1.hostsharing.net (Postfix) with ESMTPS id 4566C30000CCE;
-        Thu, 20 Aug 2020 10:13:15 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-        id E4AED16038D; Thu, 20 Aug 2020 10:13:14 +0200 (CEST)
-Date:   Thu, 20 Aug 2020 10:13:14 +0200
-From:   Lukas Wunner <lukas@wunner.de>
-To:     Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Karol Herbst <kherbst@redhat.com>,
-        Lyude Paul <lyude@redhat.com>,
-        Patrick Volkerding <volkerdi@gmail.com>,
-        Ben Skeggs <bskeggs@redhat.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI/PM: Assume ports without DLL Link Active train links
- in 100 ms
-Message-ID: <20200820081314.l25cjoehbnvbjbrk@wunner.de>
-References: <20200819130625.12778-1-mika.westerberg@linux.intel.com>
+        id S1728676AbgHTNNw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 20 Aug 2020 09:13:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35158 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728724AbgHTNNX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Aug 2020 09:13:23 -0400
+X-Greylist: delayed 1176 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 20 Aug 2020 06:13:22 PDT
+Received: from tartarus.angband.pl (tartarus.angband.pl [IPv6:2001:41d0:602:dbe::8])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9393AC061386
+        for <linux-pci@vger.kernel.org>; Thu, 20 Aug 2020 06:13:21 -0700 (PDT)
+Received: from [2a02:a31c:8245:f980::4] (helo=valinor.angband.pl)
+        by tartarus.angband.pl with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <kilobyte@angband.pl>)
+        id 1k8k4J-0002dR-Q1; Thu, 20 Aug 2020 14:53:25 +0200
+Received: from kilobyte by valinor.angband.pl with local (Exim 4.94)
+        (envelope-from <kilobyte@valinor.angband.pl>)
+        id 1k8k4J-0002ba-9U; Thu, 20 Aug 2020 14:53:23 +0200
+From:   Adam Borowski <kilobyte@angband.pl>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        x86@kernel.org, linux-pci@vger.kernel.org
+Cc:     Adam Borowski <kilobyte@angband.pl>
+Date:   Thu, 20 Aug 2020 14:53:20 +0200
+Message-Id: <20200820125320.9967-1-kilobyte@angband.pl>
+X-Mailer: git-send-email 2.28.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200819130625.12778-1-mika.westerberg@linux.intel.com>
-User-Agent: NeoMutt/20170113 (1.7.2)
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 2a02:a31c:8245:f980::4
+X-SA-Exim-Mail-From: kilobyte@angband.pl
+Subject: [PATCH] x86/pci: don't set acpi stuff if !CONFIG_ACPI
+X-SA-Exim-Version: 4.2.1 (built Wed, 08 May 2019 21:11:16 +0000)
+X-SA-Exim-Scanned: Yes (on tartarus.angband.pl)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Aug 19, 2020 at 04:06:25PM +0300, Mika Westerberg wrote:
-> Sec 7.5.3.6 requires such Ports to support DLL Link Active reporting, but
-> at least the Intel JHL6240 Thunderbolt 3 Bridge [8086:15c0] and the Intel
-> JHL7540 Thunderbolt 3 Bridge [8086:15ea] do not.
-[...]
-> +	 * Also do the same for devices that have power management disabled
-> +	 * by their driver and are completely power managed through the
-> +	 * root port power resource instead. This is a special case for
-> +	 * nouveau.
->  	 */
-> -	if (!pci_is_pcie(dev)) {
-> +	if (!pci_is_pcie(dev) || !child->pm_cap) {
+Not that x86 without ACPI sees any real use...
 
-It sounds like the above-mentioned Thunderbolt controllers are broken,
-not the Nvidia cards, so to me (as an outside observer) it would seem
-more logical that a quirk for the former is needed.  The code comment
-suggests that nouveau somehow has a problem, but that doesn't seem to
-be the case (IIUC).  Also, it's a little ugly to have references to
-specific drivers in PCI core code.
+Signed-off-by: Adam Borowski <kilobyte@angband.pl>
+---
+Found by randconfig builds.
 
-Maybe this can be fixed with quirks for the Thunderbolt controllers
-which set a flag, and that flag causes the 1000 msec wait to be skipped?
+ arch/x86/pci/intel_mid_pci.c | 2 ++
+ arch/x86/pci/xen.c           | 2 ++
+ 2 files changed, 4 insertions(+)
 
-Thanks,
+diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
+index 00c62115f39c..f14a911f0d06 100644
+--- a/arch/x86/pci/intel_mid_pci.c
++++ b/arch/x86/pci/intel_mid_pci.c
+@@ -299,8 +299,10 @@ int __init intel_mid_pci_init(void)
+ 	pcibios_disable_irq = intel_mid_pci_irq_disable;
+ 	pci_root_ops = intel_mid_pci_ops;
+ 	pci_soc_mode = 1;
++#ifdef CONFIG_ACPI
+ 	/* Continue with standard init */
+ 	acpi_noirq_set();
++#endif
+ 	return 1;
+ }
+ 
+diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
+index 9f9aad42ccff..681eb5c34c03 100644
+--- a/arch/x86/pci/xen.c
++++ b/arch/x86/pci/xen.c
+@@ -406,8 +406,10 @@ int __init pci_xen_init(void)
+ 	pcibios_enable_irq = xen_pcifront_enable_irq;
+ 	pcibios_disable_irq = NULL;
+ 
++#ifdef CONFIG_ACPI
+ 	/* Keep ACPI out of the picture */
+ 	acpi_noirq_set();
++#endif
+ 
+ #ifdef CONFIG_PCI_MSI
+ 	x86_msi.setup_msi_irqs = xen_setup_msi_irqs;
+-- 
+2.28.0
 
-Lukas
