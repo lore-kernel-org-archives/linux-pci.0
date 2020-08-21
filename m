@@ -2,201 +2,183 @@ Return-Path: <SRS0=IRj4=B7=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+X-Spam-Status: No, score=-12.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BEA13C433E1
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Aug 2020 02:20:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC9D0C433E4
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Aug 2020 03:54:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8FEDD20720
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Aug 2020 02:20:38 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="hduGjMZb";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="54vZUbSC"
+	by mail.kernel.org (Postfix) with ESMTP id BBF84208DB
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Aug 2020 03:54:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1597982070;
+	bh=Gk6wv7QLotp6FAdyTvDkKHGlnKmIR+s56Sgvxjzdu70=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=RBka9DvzcZ6t2Dj++IpVO7pRyrDPVvzAAi3MvXjatzMhkyqYb7YhvmZiSxVOp4Fub
+	 4K8YLj4ETNnn5+VRQQaSM6MUaXMLrhDWF33HQIbUq1LQciUOGenH44qetRKPtn51GV
+	 15qztDJAhumhh4vCl3yhDFtFiHtkRdRpbzbPAfmY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728391AbgHUCUL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 20 Aug 2020 22:20:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43466 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727125AbgHUCQq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Aug 2020 22:16:46 -0400
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1DE0C061386;
-        Thu, 20 Aug 2020 19:16:44 -0700 (PDT)
-Message-Id: <20200821002945.695825784@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1597976203;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=n+9JzjgCW829xt57cBjdIpc/3IF3JudgknsVK2IiGtk=;
-        b=hduGjMZbM0/qwLquCj86fWVEcSBPc0Iv1xA1asxyvWI+3WaJk/FZv3obiS9pdKi2N4Xi55
-        g2B24e5RBCG7WKFAQnorS3FWxwuVXn4z6S30wQ9GCVD8rtp+77IWCQCGVnhsf3znLjLhSM
-        aQmZw2lG8elAmC//IGUjNVWAb+xaLL0KKz9IZ14ZS5Czuz7wC08nu5Y+pBKinVQ49JiyCU
-        CXbMGhzaoeBIvlaaHMr23nvutvRUEOUuFrM649Lo5JGWcrMEOw972tIYLaoecwN/uLHyl2
-        R6g+Wh1VCvbaQYIhXKJhJnK8aiSLIDvD0enema4nF0KLI5Yj7n1BELeKwzCgbA==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1597976203;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=n+9JzjgCW829xt57cBjdIpc/3IF3JudgknsVK2IiGtk=;
-        b=54vZUbSCVLbmLl/kEHzdwLB30JzHXmmLwe5GfkEeAMeKUbcsXnsiboZQzVlzf/vQeQ28JW
-        WkKbSmHVLKTXoHDw==
-Date:   Fri, 21 Aug 2020 02:24:28 +0200
-From:   Thomas Gleixner <tglx@linutronix.de>
-To:     LKML <linux-kernel@vger.kernel.org>
-Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
-        linux-hyperv@vger.kernel.org, iommu@lists.linux-foundation.org,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Jon Derrick <jonathan.derrick@intel.com>,
-        Lu Baolu <baolu.lu@linux.intel.com>,
-        Wei Liu <wei.liu@kernel.org>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Steve Wahl <steve.wahl@hpe.com>,
-        Dimitri Sivanich <sivanich@hpe.com>,
-        Russ Anderson <rja@hpe.com>, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Jonathan Derrick <jonathan.derrick@intel.com>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        xen-devel@lists.xenproject.org, Juergen Gross <jgross@suse.com>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Marc Zyngier <maz@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Megha Dey <megha.dey@intel.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Jacob Pan <jacob.jun.pan@intel.com>,
-        Baolu Lu <baolu.lu@intel.com>,
-        Kevin Tian <kevin.tian@intel.com>,
-        Dan Williams <dan.j.williams@intel.com>
-Subject: [patch RFC 04/38] x86/irq: Add allocation type for parent domain retrieval
-References: <20200821002424.119492231@linutronix.de>
+        id S1727084AbgHUDy1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 20 Aug 2020 23:54:27 -0400
+Received: from mail-io1-f68.google.com ([209.85.166.68]:39107 "EHLO
+        mail-io1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727066AbgHUDy0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Aug 2020 23:54:26 -0400
+Received: by mail-io1-f68.google.com with SMTP id z17so470442ioi.6;
+        Thu, 20 Aug 2020 20:54:25 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=3xQSyuidDHE000cQW3ruY29YdVzjzemLhdUCUqMHH4g=;
+        b=uoec5P7k+QAy4T9/nm7pq0b8CZje786rS41068pS6CuvKKElqVH0zc86wKhU1rkXSe
+         ge4AYyvkGT10QcwxPl5s4FNn3zXyEh88p3p7pnatrqZhv+8a0fAED8IrnyN0dOuA0dP3
+         FoJu6YDc31iTC92MApZVcmxVDWZMOXpghYkKpthOhc5K6RqEKpd4hPOY76gUymCZH13d
+         ADQ4fUteyv4DoXI3X+A6sOndgAcxHQdQar6paKB5HJNIkWA7rPzYxpLn+Gyxuayc5Eeq
+         2Ug4CDQwa90FUQtT0CiLaNF8vHAlG96DLJDiHRO8Pv0SM6bnnDFX27RUyoJkpf04SbF9
+         Wzxg==
+X-Gm-Message-State: AOAM5328FtueSOGCteuIevaPKX7ePcTf/Z+LVefPGpw5+H6RkW6wmSme
+        yR4WJssPaXKPcUZ+tWasnA==
+X-Google-Smtp-Source: ABdhPJwWDZ2uF1UR52gyVwJrVKI7xgxX5Bug8MFl6x6tEW09K4V+Q0/1o3ijFf216rQPvCw1DGjTMQ==
+X-Received: by 2002:a6b:e70d:: with SMTP id b13mr795565ioh.141.1597982065025;
+        Thu, 20 Aug 2020 20:54:25 -0700 (PDT)
+Received: from xps15.herring.priv ([64.188.179.249])
+        by smtp.googlemail.com with ESMTPSA id 79sm413923ilc.9.2020.08.20.20.54.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 20 Aug 2020 20:54:24 -0700 (PDT)
+From:   Rob Herring <robh@kernel.org>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     linux-pci@vger.kernel.org, Andy Gross <agross@kernel.org>,
+        Binghui Wang <wangbinghui@hisilicon.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Dilip Kota <eswara.kota@linux.intel.com>,
+        Fabio Estevam <festevam@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Jerome Brunet <jbrunet@baylibre.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Jonathan Chocron <jonnyc@amazon.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        Kevin Hilman <khilman@baylibre.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Kukjin Kim <kgene@kernel.org>,
+        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Masahiro Yamada <yamada.masahiro@socionext.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Neil Armstrong <narmstrong@baylibre.com>,
+        NXP Linux Team <linux-imx@nxp.com>,
+        Pengutronix Kernel Team <kernel@pengutronix.de>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Shawn Guo <shawnguo@kernel.org>,
+        Shawn Guo <shawn.guo@linaro.org>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        Yue Wang <yue.wang@Amlogic.com>, Marc Zyngier <maz@kernel.org>,
+        linux-amlogic@lists.infradead.org, linux-arm-kernel@axis.com,
+        linux-arm-kernel@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, linux-omap@vger.kernel.org,
+        linux-samsung-soc@vger.kernel.org, linux-tegra@vger.kernel.org
+Subject: [PATCH v2 00/40] PCI: dwc: Driver clean-ups
+Date:   Thu, 20 Aug 2020 21:53:40 -0600
+Message-Id: <20200821035420.380495-1-robh@kernel.org>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Disposition: inline;
- filename="x86-irq--Add-allocation-flag-for-domain-retrieval.patch"
-Content-transfer-encoding: 8-bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-irq_remapping_ir_irq_domain() is used to retrieve the remapping parent
-domain for an allocation type. irq_remapping_irq_domain() is for retrieving
-the actual device domain for allocating interrupts for a device.
+This is a series of clean-ups for the Designware PCI driver. The series
+initially reworks the config space accessors to use the existing pci_ops
+struct. Then there's removal of various private data that's also present
+in the pci_host_bridge struct. There's also some duplicated common (PCI
+and DWC) register defines which I converted to use the common defines.
+Finally, the initialization for speed/gen, number of lanes, and N_FTS
+are all moved to the common DWC code.
 
-The two functions are similar and can be unified by using explicit modes
-for parent irq domain retrieval.
+This is compile tested only as I don't have any DWC based h/w, so any
+testing would be helpful. A branch is here[1].
 
-Add X86_IRQ_ALLOC_TYPE_IOAPIC/HPET_GET_PARENT and use it in the iommu
-implementations. Drop the parent domain retrieval for PCI_MSI/X as that is
-unused.
+Rob
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: x86@kernel.org
-Cc: linux-hyperv@vger.kernel.org
-Cc: iommu@lists.linux-foundation.org
-Cc: Haiyang Zhang <haiyangz@microsoft.com>
-Cc: Jon Derrick <jonathan.derrick@intel.com>
-Cc: Lu Baolu <baolu.lu@linux.intel.com>
----
- arch/x86/include/asm/hw_irq.h       |    2 ++
- arch/x86/kernel/apic/io_apic.c      |    2 +-
- arch/x86/kernel/apic/msi.c          |    2 +-
- drivers/iommu/amd/iommu.c           |    8 ++++++++
- drivers/iommu/hyperv-iommu.c        |    2 +-
- drivers/iommu/intel/irq_remapping.c |    8 ++------
- 6 files changed, 15 insertions(+), 9 deletions(-)
+[1] git://git.kernel.org/pub/scm/linux/kernel/git/robh/linux.git pci-dw-cleanups
 
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -40,6 +40,8 @@ enum irq_alloc_type {
- 	X86_IRQ_ALLOC_TYPE_PCI_MSIX,
- 	X86_IRQ_ALLOC_TYPE_DMAR,
- 	X86_IRQ_ALLOC_TYPE_UV,
-+	X86_IRQ_ALLOC_TYPE_IOAPIC_GET_PARENT,
-+	X86_IRQ_ALLOC_TYPE_HPET_GET_PARENT,
- };
- 
- struct irq_alloc_info {
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -2296,7 +2296,7 @@ static int mp_irqdomain_create(int ioapi
- 		return 0;
- 
- 	init_irq_alloc_info(&info, NULL);
--	info.type = X86_IRQ_ALLOC_TYPE_IOAPIC;
-+	info.type = X86_IRQ_ALLOC_TYPE_IOAPIC_GET_PARENT;
- 	info.ioapic_id = mpc_ioapic_id(ioapic);
- 	parent = irq_remapping_get_ir_irq_domain(&info);
- 	if (!parent)
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -476,7 +476,7 @@ struct irq_domain *hpet_create_irq_domai
- 	domain_info->data = (void *)(long)hpet_id;
- 
- 	init_irq_alloc_info(&info, NULL);
--	info.type = X86_IRQ_ALLOC_TYPE_HPET;
-+	info.type = X86_IRQ_ALLOC_TYPE_HPET_GET_PARENT;
- 	info.hpet_id = hpet_id;
- 	parent = irq_remapping_get_ir_irq_domain(&info);
- 	if (parent == NULL)
---- a/drivers/iommu/amd/iommu.c
-+++ b/drivers/iommu/amd/iommu.c
-@@ -3534,6 +3534,14 @@ static struct irq_domain *get_ir_irq_dom
- 	if (!info)
- 		return NULL;
- 
-+	switch (info->type) {
-+	case X86_IRQ_ALLOC_TYPE_IOAPIC_GET_PARENT:
-+	case X86_IRQ_ALLOC_TYPE_HPET_GET_PARENT:
-+		break;
-+	default:
-+		return NULL;
-+	}
-+
- 	devid = get_devid(info);
- 	if (devid >= 0) {
- 		iommu = amd_iommu_rlookup_table[devid];
---- a/drivers/iommu/hyperv-iommu.c
-+++ b/drivers/iommu/hyperv-iommu.c
-@@ -184,7 +184,7 @@ static int __init hyperv_enable_irq_rema
- 
- static struct irq_domain *hyperv_get_ir_irq_domain(struct irq_alloc_info *info)
- {
--	if (info->type == X86_IRQ_ALLOC_TYPE_IOAPIC)
-+	if (info->type == X86_IRQ_ALLOC_TYPE_IOAPIC_GET_PARENT)
- 		return ioapic_ir_domain;
- 	else
- 		return NULL;
---- a/drivers/iommu/intel/irq_remapping.c
-+++ b/drivers/iommu/intel/irq_remapping.c
-@@ -1109,16 +1109,12 @@ static struct irq_domain *intel_get_ir_i
- 		return NULL;
- 
- 	switch (info->type) {
--	case X86_IRQ_ALLOC_TYPE_IOAPIC:
-+	case X86_IRQ_ALLOC_TYPE_IOAPIC_GET_PARENT:
- 		iommu = map_ioapic_to_ir(info->ioapic_id);
- 		break;
--	case X86_IRQ_ALLOC_TYPE_HPET:
-+	case X86_IRQ_ALLOC_TYPE_HPET_GET_PARENT:
- 		iommu = map_hpet_to_ir(info->hpet_id);
- 		break;
--	case X86_IRQ_ALLOC_TYPE_PCI_MSI:
--	case X86_IRQ_ALLOC_TYPE_PCI_MSIX:
--		iommu = map_dev_to_ir(info->msi_dev);
--		break;
- 	default:
- 		BUG_ON(1);
- 		break;
+Rob Herring (40):
+  PCI: Allow root and child buses to have different pci_ops
+  PCI: dwc: Use DBI accessors instead of own config accessors
+  PCI: dwc: Allow overriding bridge pci_ops
+  PCI: dwc: Add a default pci_ops.map_bus for root port
+  PCI: dwc: al: Use pci_ops for child config space accessors
+  PCI: dwc: keystone: Use pci_ops for config space accessors
+  PCI: dwc: tegra: Use pci_ops for root config space accessors
+  PCI: dwc: meson: Use pci_ops for root config space accessors
+  PCI: dwc: kirin: Use pci_ops for root config space accessors
+  PCI: dwc: exynos: Use pci_ops for root config space accessors
+  PCI: dwc: histb: Use pci_ops for root config space accessors
+  PCI: dwc: Remove dwc specific config accessor ops
+  PCI: dwc: Use generic config accessors
+  PCI: Also call .add_bus() callback for root bus
+  PCI: dwc: keystone: Convert .scan_bus() callback to use add_bus
+  PCI: dwc: Convert to use pci_host_probe()
+  PCI: dwc: Remove root_bus pointer
+  PCI: dwc: Remove storing of PCI resources
+  PCI: dwc: Simplify config space handling
+  PCI: dwc/keystone: Drop duplicated 'num-viewport'
+  PCI: dwc: Check CONFIG_PCI_MSI inside dw_pcie_msi_init()
+  PCI: dwc/imx6: Remove duplicate define PCIE_LINK_WIDTH_SPEED_CONTROL
+  PCI: dwc: Add a 'num_lanes' field to struct dw_pcie
+  PCI: dwc: Ensure FAST_LINK_MODE is cleared
+  PCI: dwc/meson: Drop the duplicate number of lanes setup
+  PCI: dwc/meson: Drop unnecessary RC config space initialization
+  PCI: dwc/meson: Rework PCI config and DW port logic register accesses
+  PCI: dwc/imx6: Use common PCI register definitions
+  PCI: dwc/qcom: Use common PCI register definitions
+  PCI: dwc: Remove hardcoded PCI_CAP_ID_EXP offset
+  PCI: dwc/tegra: Use common Designware port logic register definitions
+  PCI: dwc: Remove read_dbi2 code
+  PCI: dwc: Make ATU accessors private
+  PCI: dwc: Centralize link gen setting
+  PCI: dwc: Set PORT_LINK_DLL_LINK_EN in common setup code
+  PCI: dwc/intel-gw: Drop unnecessary checking of DT 'device_type'
+    property
+  PCI: dwc/intel-gw: Move getting PCI_CAP_ID_EXP offset to
+    intel_pcie_link_setup()
+  PCI: dwc/intel-gw: Drop unused max_width
+  PCI: dwc: Move N_FTS setup to common setup
+  PCI: dwc: Use DBI accessors
 
+ drivers/pci/controller/dwc/pci-dra7xx.c       |  29 +-
+ drivers/pci/controller/dwc/pci-exynos.c       |  45 +--
+ drivers/pci/controller/dwc/pci-imx6.c         |  52 +--
+ drivers/pci/controller/dwc/pci-keystone.c     | 126 ++-----
+ drivers/pci/controller/dwc/pci-meson.c        | 156 ++-------
+ drivers/pci/controller/dwc/pcie-al.c          |  70 +---
+ drivers/pci/controller/dwc/pcie-artpec6.c     |  48 +--
+ .../pci/controller/dwc/pcie-designware-ep.c   |  11 +-
+ .../pci/controller/dwc/pcie-designware-host.c | 319 ++++++------------
+ .../pci/controller/dwc/pcie-designware-plat.c |   4 +-
+ drivers/pci/controller/dwc/pcie-designware.c  | 104 +++---
+ drivers/pci/controller/dwc/pcie-designware.h  |  54 +--
+ drivers/pci/controller/dwc/pcie-histb.c       |  45 +--
+ drivers/pci/controller/dwc/pcie-intel-gw.c    |  65 +---
+ drivers/pci/controller/dwc/pcie-kirin.c       |  43 +--
+ drivers/pci/controller/dwc/pcie-qcom.c        |  33 +-
+ drivers/pci/controller/dwc/pcie-spear13xx.c   |  39 +--
+ drivers/pci/controller/dwc/pcie-tegra194.c    | 120 ++-----
+ drivers/pci/controller/dwc/pcie-uniphier.c    |   3 +-
+ drivers/pci/probe.c                           |  14 +-
+ include/linux/pci.h                           |   1 +
+ 21 files changed, 443 insertions(+), 938 deletions(-)
+
+--
+2.25.1
