@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21BA5C433E3
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C594EC433ED
 	for <linux-pci@archiver.kernel.org>; Fri, 21 Aug 2020 03:55:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 00F3920714
+	by mail.kernel.org (Postfix) with ESMTP id 9702920714
 	for <linux-pci@archiver.kernel.org>; Fri, 21 Aug 2020 03:55:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=default; t=1597982145;
-	bh=WN/jiU/DAihQz/5q4rAUNyCxXDBHM8w0ZG8aqyAfbkA=;
+	bh=ImRUZx6HF2aQBQ+1jT9HtjVvrFZJFWf7HAtjs4n2naM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=blj4nlfZii4tPfZcP8/hVbAxYtbdJbaJ4xdCekMJDe7p7JknBR7341ajyPwsksBY8
-	 WlNZvVP+BfXo2yzK/pIyUAkVeanEp5LwfVlN2mRYJvEIXx6Pxy8i5L+4aWCSs6UM6E
-	 jObBcdu4CovGlVBg7eou60byjr4h723CcaO+qggc=
+	b=HY6vFIIgop745h6qGJWnN1i1f5UNRdHsnQ71m+UsssMwvGj8qk78cQGyoleY35eTz
+	 KXTAOVjXVb+LdejPt2P1lhqUk+E/sIdMCurny+J4YuyteVZlEZ2K7+KyWyWo44xGV6
+	 mFXAIvfENU/Lp5W6M9wGBHcKh79hv2Sy+5b0D2Jo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727979AbgHUDzm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 20 Aug 2020 23:55:42 -0400
-Received: from mail-io1-f68.google.com ([209.85.166.68]:36520 "EHLO
-        mail-io1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727780AbgHUDzc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Aug 2020 23:55:32 -0400
-Received: by mail-io1-f68.google.com with SMTP id t15so483525iob.3;
-        Thu, 20 Aug 2020 20:55:31 -0700 (PDT)
+        id S1727971AbgHUDzh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 20 Aug 2020 23:55:37 -0400
+Received: from mail-il1-f195.google.com ([209.85.166.195]:35122 "EHLO
+        mail-il1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727955AbgHUDzZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Aug 2020 23:55:25 -0400
+Received: by mail-il1-f195.google.com with SMTP id q14so348596ilm.2;
+        Thu, 20 Aug 2020 20:55:24 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=eFXUpgtvn+rwMzgxFaofhzgT1ZGHQN0vFhCrA/SPcm0=;
-        b=t8F5UOE8Al852FXiT/4yrOQEdAZz2OaPTncJITnuDx6ilkdZWlFk5VmXzF1u9brXY2
-         oyeplWQtZDpcAm2JDDzg8YxE+9ghjaYziVDOaNbw5Bpkvdi0059piWfd3Fhc5nq2RuLY
-         zexZrkrZvSzurkX9jEG6b2yVi+P7r2EFyS3dvTIZSFc7RS5EuAvx0FmkRa3M7na0jcXT
-         oVaLv6DG3I5e43J9HAqyBdMLgPS2ZUBjgiEjxcU24AvalUkuvGAxxfk3/lpS8BLYWCP+
-         ylZal9vZWq3D2w5rsDEtBNqP5U3PkBNkzdbl4HH+uXm/OX/LAOFQpFOI1/rb8Cg1RDXp
-         f/CA==
-X-Gm-Message-State: AOAM531mAUWvZE2HYRaq1jCN9H02c4h/j5p6yxgzIn8WpfsNYWuIsgmE
-        6zmT3PLFCzJep1jFeaf85w==
-X-Google-Smtp-Source: ABdhPJz9Cz36+anjfd85YKbaf2q062W+zrGMwvr+OxCyKKkArm368LLNcvPDR62l3V/N8uzBXYzXxw==
-X-Received: by 2002:a05:6602:13d3:: with SMTP id o19mr929935iov.32.1597982131299;
-        Thu, 20 Aug 2020 20:55:31 -0700 (PDT)
+        bh=0qdov0F91JWjBX0RDvms+7RoXkdqALpZh74Eq1hAWng=;
+        b=MURMi4WvW1yjixnVPs3ndqs9KksVRtp/OhdtbZLIY2qvXBLrnW8HGY0AG3JrjTwJF8
+         DfmkPf67X9UnHaYQSU5Rq6mpkNOHBTPkF+loAbupfVq9W5Sa1gYfxoNY3vxUPw5ekT6w
+         r9eegYr4aXRQsSEHzWvXbCdkWxkpw9m86QgGQevObnG57bQ0fBrd6WZMYDSL+gEGFQP2
+         Y2tdpYc4YTawZLXm6o+3+2BvM9/CQdaniGHq06b3KrJz2692wp0oRD+rX3sMhqE0g0xe
+         7+q0Xlq11tTxxhR0Dzm1BGZ1IjgoVCLghHiuoZ5pAwlQ2VJz+2t/ki1Pw7BsvMDR/h2I
+         CX3Q==
+X-Gm-Message-State: AOAM532+lQcgOath9TB/RD93FWHzVl5bcqfoDEXP7xpjzGUOoz2qxZDc
+        W1XOHmgEazspz6Au6LMHtA==
+X-Google-Smtp-Source: ABdhPJxWfa3WQm5y8iByx2YiSDizCP8lwHMdCpOAAyhD1GwWnlqkAP+HsAEkjue1fkD8tbEL/F4XFg==
+X-Received: by 2002:a92:dd85:: with SMTP id g5mr1026111iln.210.1597982124146;
+        Thu, 20 Aug 2020 20:55:24 -0700 (PDT)
 Received: from xps15.herring.priv ([64.188.179.249])
-        by smtp.googlemail.com with ESMTPSA id 79sm413923ilc.9.2020.08.20.20.55.26
+        by smtp.googlemail.com with ESMTPSA id 79sm413923ilc.9.2020.08.20.20.55.21
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 20 Aug 2020 20:55:30 -0700 (PDT)
+        Thu, 20 Aug 2020 20:55:23 -0700 (PDT)
 From:   Rob Herring <robh@kernel.org>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
@@ -87,9 +87,9 @@ Cc:     linux-pci@vger.kernel.org, Andy Gross <agross@kernel.org>,
         linux-arm-kernel@lists.infradead.org,
         linux-arm-msm@vger.kernel.org, linux-omap@vger.kernel.org,
         linux-samsung-soc@vger.kernel.org, linux-tegra@vger.kernel.org
-Subject: [PATCH v2 17/40] PCI: dwc: Remove root_bus pointer
-Date:   Thu, 20 Aug 2020 21:53:57 -0600
-Message-Id: <20200821035420.380495-18-robh@kernel.org>
+Subject: [PATCH v2 15/40] PCI: dwc: keystone: Convert .scan_bus() callback to use add_bus
+Date:   Thu, 20 Aug 2020 21:53:55 -0600
+Message-Id: <20200821035420.380495-16-robh@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200821035420.380495-1-robh@kernel.org>
 References: <20200821035420.380495-1-robh@kernel.org>
@@ -100,67 +100,68 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The pci_host_bridge struct already has a pointer to its pci_bus, so
-let's convert the one user to use the bridge struct and remove the
-private 'root_bus' pointer.
+TI keystone is the only Designware driver using .scan_bus(). This
+function pointer is the only thing preventing the Designware driver from
+using pci_host_probe(). Let's use the pci_ops.add_bus hook instead.
 
-Cc: Jingoo Han <jingoohan1@gmail.com>
-Cc: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Cc: Murali Karicheri <m-karicheri2@ti.com>
 Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thierry Reding <thierry.reding@gmail.com>
-Cc: Jonathan Hunter <jonathanh@nvidia.com>
-Cc: linux-tegra@vger.kernel.org
 Signed-off-by: Rob Herring <robh@kernel.org>
 ---
- drivers/pci/controller/dwc/pcie-designware-host.c | 4 ++--
- drivers/pci/controller/dwc/pcie-designware.h      | 1 -
- drivers/pci/controller/dwc/pcie-tegra194.c        | 4 ++--
- 3 files changed, 4 insertions(+), 5 deletions(-)
+ drivers/pci/controller/dwc/pci-keystone.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index 42b13a7a7383..0f348b951ec3 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -448,8 +448,8 @@ EXPORT_SYMBOL_GPL(dw_pcie_host_init);
+diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
+index 2b0906e1e0d3..fd000384fd2a 100644
+--- a/drivers/pci/controller/dwc/pci-keystone.c
++++ b/drivers/pci/controller/dwc/pci-keystone.c
+@@ -454,15 +454,19 @@ static struct pci_ops ks_child_pcie_ops = {
+ };
  
- void dw_pcie_host_deinit(struct pcie_port *pp)
+ /**
+- * ks_pcie_v3_65_scan_bus() - keystone scan_bus post initialization
++ * ks_pcie_v3_65_add_bus() - keystone add_bus post initialization
+  *
+  * This sets BAR0 to enable inbound access for MSI_IRQ register
+  */
+-static void ks_pcie_v3_65_scan_bus(struct pcie_port *pp)
++static int ks_pcie_v3_65_add_bus(struct pci_bus *bus)
  {
--	pci_stop_root_bus(pp->root_bus);
--	pci_remove_root_bus(pp->root_bus);
-+	pci_stop_root_bus(pp->bridge->bus);
-+	pci_remove_root_bus(pp->bridge->bus);
- 	if (pci_msi_enabled() && !pp->ops->msi_host_init)
- 		dw_pcie_free_msi(pp);
- }
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 6cd61892f24f..78243909d2c5 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -192,7 +192,6 @@ struct pcie_port {
- 	struct irq_chip		*msi_irq_chip;
- 	u32			num_vectors;
- 	u32			irq_mask[MAX_MSI_CTRLS];
--	struct pci_bus		*root_bus;
- 	struct pci_host_bridge  *bridge;
- 	raw_spinlock_t		lock;
- 	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
-diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-index b723c9f3ece4..a5dce56b3b7a 100644
---- a/drivers/pci/controller/dwc/pcie-tegra194.c
-+++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-@@ -1264,9 +1264,9 @@ static void tegra_pcie_downstream_dev_to_D0(struct tegra_pcie_dw *pcie)
- 	 * 5.2 Link State Power Management (Page #428).
- 	 */
++	struct pcie_port *pp = bus->sysdata;
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	struct keystone_pcie *ks_pcie = to_keystone_pcie(pci);
  
--	list_for_each_entry(child, &pp->root_bus->children, node) {
-+	list_for_each_entry(child, &pp->bridge->bus->children, node) {
- 		/* Bring downstream devices to D0 if they are not already in */
--		if (child->parent == pp->root_bus) {
-+		if (child->parent == pp->bridge->bus) {
- 			root_bus = child;
- 			break;
- 		}
++	if (!pci_is_root_bus(bus))
++		return 0;
++
+ 	/* Configure and set up BAR0 */
+ 	ks_pcie_set_dbi_mode(ks_pcie);
+ 
+@@ -477,12 +481,15 @@ static void ks_pcie_v3_65_scan_bus(struct pcie_port *pp)
+ 	  * be sufficient.  Use physical address to avoid any conflicts.
+ 	  */
+ 	dw_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_0, ks_pcie->app.start);
++
++	return 0;
+ }
+ 
+ static struct pci_ops ks_pcie_ops = {
+ 	.map_bus = dw_pcie_own_conf_map_bus,
+ 	.read = pci_generic_config_read,
+ 	.write = pci_generic_config_write,
++	.add_bus = ks_pcie_v3_65_add_bus,
+ };
+ 
+ /**
+@@ -842,7 +849,6 @@ static int __init ks_pcie_host_init(struct pcie_port *pp)
+ static const struct dw_pcie_host_ops ks_pcie_host_ops = {
+ 	.host_init = ks_pcie_host_init,
+ 	.msi_host_init = ks_pcie_msi_host_init,
+-	.scan_bus = ks_pcie_v3_65_scan_bus,
+ };
+ 
+ static const struct dw_pcie_host_ops ks_pcie_am654_host_ops = {
 -- 
 2.25.1
 
