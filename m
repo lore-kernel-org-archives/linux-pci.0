@@ -7,55 +7,56 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8849FC433DF
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Aug 2020 02:16:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69620C433E1
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Aug 2020 02:17:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 620F6207BB
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Aug 2020 02:16:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4981F2075E
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Aug 2020 02:17:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="VO5VGkAj";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="Juw/16bM"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="FiLeH5k1";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="vXln3vkM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727824AbgHUCQy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 20 Aug 2020 22:16:54 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:52522 "EHLO
+        id S1727866AbgHUCRD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 20 Aug 2020 22:17:03 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:52488 "EHLO
         galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727787AbgHUCQu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Aug 2020 22:16:50 -0400
-Message-Id: <20200821002945.992750750@linutronix.de>
+        with ESMTP id S1727116AbgHUCQ4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Aug 2020 22:16:56 -0400
+Message-Id: <20200821002946.594509001@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1597976206;
+        s=2020; t=1597976214;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=08gHalbpGGDCN4mhRavSvWN/hPadHuFy3soEotqowwI=;
-        b=VO5VGkAjH9r2ALe1X8UAQPlYGQOuDOVb0mHWVE3eldniJ7l1GIP82Fu9y2gk+1eUKLSSU/
-        TfGlgz7KO+FuqyvNW7mF2trtvUfpad0jlDTS/tDY3OJLNa/Gzv2yomJb8bcCre/u1xQmhm
-        fBQYXbF5BVHG6zLbNjyWtlULeEO9xrRdz7SK5n8oVe6B202tY7yzQv5+0GjDRXPgo706nH
-        Y16WfHJgck7nS4gv3cRNGsuJ+vQB8uPqRulyrTT7sGINkuqikAuNEzMlBdCU/V+kSt8ifl
-        S0knuL4TMs7CKpggEPDLrI2M0EH8eIwViE7vZ/QXg3ONJHx+b8dqtA4tN47McA==
+        bh=F0DCbonLQEL0D8Df9OCMfcJxjv/hy8xJtmzGkTlqTvs=;
+        b=FiLeH5k11k/JQk52LH07+Ha7hk2n6XQvR9iMpdcvrX0tGljFYc9Qi7o0vZeoI2pUpr7GAQ
+        gWARnz+Dyy0o3UBEGQr7w05ek4rV/jDbOjy9VUToJ3LYHQk6KxCN+kV2Z5XvNluJsq3ZQJ
+        Ux4MZW6mDOuO0i5C+v696sSuJt9PUm1WyLWZFnLnChKRx7Ml9Gc11Q+UPrRLV1BSljsAu8
+        MFMNC756vte58E3bXdW0eBuOu1wEsLayoglkGDRvYc1qTKxi3JMTcMQaUH4uAHrFmwyU76
+        cwolBKYJBVyvOzB7TinHMZvwR2GuMsDX8+KplK43DzRvVoVZFiWeBehrxcNVLw==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1597976206;
+        s=2020e; t=1597976214;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=08gHalbpGGDCN4mhRavSvWN/hPadHuFy3soEotqowwI=;
-        b=Juw/16bMTphkE8b9E9cjCckz1/9ORrGofLrjGGkmOO/l+gCU7ULxTKjuA+hvWjQmIuTGTD
-        JsqOwIvquOGzshAw==
-Date:   Fri, 21 Aug 2020 02:24:31 +0200
+        bh=F0DCbonLQEL0D8Df9OCMfcJxjv/hy8xJtmzGkTlqTvs=;
+        b=vXln3vkM6Fevc/JOETlWU1DSFXrQ25Mc+B9Hb6i6fwkV0etAyK5QBWjFXhdiu4LrVkOWQu
+        2f7XTKsxazS0bBCA==
+Date:   Fri, 21 Aug 2020 02:24:37 +0200
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
-Cc:     x86@kernel.org, Wei Liu <wei.liu@kernel.org>,
-        Joerg Roedel <joro@8bytes.org>, linux-hyperv@vger.kernel.org,
-        iommu@lists.linux-foundation.org,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
+Cc:     x86@kernel.org, linux-pci@vger.kernel.org,
+        Joerg Roedel <joro@8bytes.org>,
+        iommu@lists.linux-foundation.org, linux-hyperv@vger.kernel.org,
         Haiyang Zhang <haiyangz@microsoft.com>,
         Jon Derrick <jonathan.derrick@intel.com>,
         Lu Baolu <baolu.lu@linux.intel.com>,
+        Wei Liu <wei.liu@kernel.org>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
         Stephen Hemminger <sthemmin@microsoft.com>,
         Steve Wahl <steve.wahl@hpe.com>,
         Dimitri Sivanich <sivanich@hpe.com>,
-        Russ Anderson <rja@hpe.com>, linux-pci@vger.kernel.org,
+        Russ Anderson <rja@hpe.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Jonathan Derrick <jonathan.derrick@intel.com>,
@@ -74,176 +75,85 @@ Cc:     x86@kernel.org, Wei Liu <wei.liu@kernel.org>,
         Baolu Lu <baolu.lu@intel.com>,
         Kevin Tian <kevin.tian@intel.com>,
         Dan Williams <dan.j.williams@intel.com>
-Subject: [patch RFC 07/38] iommu/irq_remapping: Consolidate irq domain lookup
+Subject: [patch RFC 13/38] PCI: MSI: Rework pci_msi_domain_calc_hwirq()
 References: <20200821002424.119492231@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Disposition: inline;
- filename="iommu-irq_remapping--Consolidate-irq-domain-lookup.patch"
+ filename="PCI--MSI--Rework-pci_msi_domain_calc_hwirq--.patch"
 Content-transfer-encoding: 8-bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Now that the iommu implementations handle the X86_*_GET_PARENT_DOMAIN
-types, consolidate the two getter functions. 
+Retrieve the PCI device from the msi descriptor instead of doing so at the
+call sites.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Wei Liu <wei.liu@kernel.org>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: linux-hyperv@vger.kernel.org
-Cc: iommu@lists.linux-foundation.org
-Cc: "K. Y. Srinivasan" <kys@microsoft.com>
-Cc: Haiyang Zhang <haiyangz@microsoft.com>
-Cc: Jon Derrick <jonathan.derrick@intel.com>
-Cc: Lu Baolu <baolu.lu@linux.intel.com>
+Cc: linux-pci@vger.kernel.org
 ---
- arch/x86/include/asm/irq_remapping.h |    8 --------
- arch/x86/kernel/apic/io_apic.c       |    2 +-
- arch/x86/kernel/apic/msi.c           |    2 +-
- drivers/iommu/amd/iommu.c            |    1 -
- drivers/iommu/hyperv-iommu.c         |    4 ++--
- drivers/iommu/intel/irq_remapping.c  |    1 -
- drivers/iommu/irq_remapping.c        |   23 +----------------------
- drivers/iommu/irq_remapping.h        |    5 +----
- 8 files changed, 6 insertions(+), 40 deletions(-)
+ arch/x86/kernel/apic/msi.c |    2 +-
+ drivers/pci/msi.c          |   13 ++++++-------
+ include/linux/msi.h        |    3 +--
+ 3 files changed, 8 insertions(+), 10 deletions(-)
 
---- a/arch/x86/include/asm/irq_remapping.h
-+++ b/arch/x86/include/asm/irq_remapping.h
-@@ -45,8 +45,6 @@ extern int irq_remap_enable_fault_handli
- extern void panic_if_irq_remap(const char *msg);
- 
- extern struct irq_domain *
--irq_remapping_get_ir_irq_domain(struct irq_alloc_info *info);
--extern struct irq_domain *
- irq_remapping_get_irq_domain(struct irq_alloc_info *info);
- 
- /* Create PCI MSI/MSIx irqdomain, use @parent as the parent irqdomain. */
-@@ -74,12 +72,6 @@ static inline void panic_if_irq_remap(co
- }
- 
- static inline struct irq_domain *
--irq_remapping_get_ir_irq_domain(struct irq_alloc_info *info)
--{
--	return NULL;
--}
--
--static inline struct irq_domain *
- irq_remapping_get_irq_domain(struct irq_alloc_info *info)
- {
- 	return NULL;
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -2298,7 +2298,7 @@ static int mp_irqdomain_create(int ioapi
- 	init_irq_alloc_info(&info, NULL);
- 	info.type = X86_IRQ_ALLOC_TYPE_IOAPIC_GET_PARENT;
- 	info.ioapic_id = mpc_ioapic_id(ioapic);
--	parent = irq_remapping_get_ir_irq_domain(&info);
-+	parent = irq_remapping_get_irq_domain(&info);
- 	if (!parent)
- 		parent = x86_vector_domain;
- 	else
 --- a/arch/x86/kernel/apic/msi.c
 +++ b/arch/x86/kernel/apic/msi.c
-@@ -478,7 +478,7 @@ struct irq_domain *hpet_create_irq_domai
- 	init_irq_alloc_info(&info, NULL);
- 	info.type = X86_IRQ_ALLOC_TYPE_HPET_GET_PARENT;
- 	info.hpet_id = hpet_id;
--	parent = irq_remapping_get_ir_irq_domain(&info);
-+	parent = irq_remapping_get_irq_domain(&info);
- 	if (parent == NULL)
- 		parent = x86_vector_domain;
- 	else
---- a/drivers/iommu/amd/iommu.c
-+++ b/drivers/iommu/amd/iommu.c
-@@ -3561,7 +3561,6 @@ struct irq_remap_ops amd_iommu_irq_ops =
- 	.disable		= amd_iommu_disable,
- 	.reenable		= amd_iommu_reenable,
- 	.enable_faulting	= amd_iommu_enable_faulting,
--	.get_ir_irq_domain	= get_irq_domain,
- 	.get_irq_domain		= get_irq_domain,
- };
+@@ -232,7 +232,7 @@ EXPORT_SYMBOL_GPL(pci_msi_prepare);
  
---- a/drivers/iommu/hyperv-iommu.c
-+++ b/drivers/iommu/hyperv-iommu.c
-@@ -182,7 +182,7 @@ static int __init hyperv_enable_irq_rema
- 	return IRQ_REMAP_X2APIC_MODE;
- }
- 
--static struct irq_domain *hyperv_get_ir_irq_domain(struct irq_alloc_info *info)
-+static struct irq_domain *hyperv_get_irq_domain(struct irq_alloc_info *info)
+ void pci_msi_set_desc(msi_alloc_info_t *arg, struct msi_desc *desc)
  {
- 	if (info->type == X86_IRQ_ALLOC_TYPE_IOAPIC_GET_PARENT)
- 		return ioapic_ir_domain;
-@@ -193,7 +193,7 @@ static struct irq_domain *hyperv_get_ir_
- struct irq_remap_ops hyperv_irq_remap_ops = {
- 	.prepare		= hyperv_prepare_irq_remapping,
- 	.enable			= hyperv_enable_irq_remapping,
--	.get_ir_irq_domain	= hyperv_get_ir_irq_domain,
-+	.get_irq_domain		= hyperv_get_irq_domain,
- };
- 
- #endif
---- a/drivers/iommu/intel/irq_remapping.c
-+++ b/drivers/iommu/intel/irq_remapping.c
-@@ -1131,7 +1131,6 @@ struct irq_remap_ops intel_irq_remap_ops
- 	.disable		= disable_irq_remapping,
- 	.reenable		= reenable_irq_remapping,
- 	.enable_faulting	= enable_drhd_fault_handling,
--	.get_ir_irq_domain	= intel_get_irq_domain,
- 	.get_irq_domain		= intel_get_irq_domain,
- };
- 
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -160,33 +160,12 @@ void panic_if_irq_remap(const char *msg)
+-	arg->msi_hwirq = pci_msi_domain_calc_hwirq(arg->msi_dev, desc);
++	arg->msi_hwirq = pci_msi_domain_calc_hwirq(desc);
  }
+ EXPORT_SYMBOL_GPL(pci_msi_set_desc);
+ 
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1346,17 +1346,17 @@ void pci_msi_domain_write_msg(struct irq
  
  /**
-- * irq_remapping_get_ir_irq_domain - Get the irqdomain associated with the IOMMU
-- *				     device serving request @info
-- * @info: interrupt allocation information, used to identify the IOMMU device
-- *
-- * It's used to get parent irqdomain for HPET and IOAPIC irqdomains.
-- * Returns pointer to IRQ domain, or NULL on failure.
-- */
--struct irq_domain *
--irq_remapping_get_ir_irq_domain(struct irq_alloc_info *info)
--{
--	if (!remap_ops || !remap_ops->get_ir_irq_domain)
--		return NULL;
--
--	return remap_ops->get_ir_irq_domain(info);
--}
--
--/**
-  * irq_remapping_get_irq_domain - Get the irqdomain serving the request @info
-  * @info: interrupt allocation information, used to identify the IOMMU device
+  * pci_msi_domain_calc_hwirq - Generate a unique ID for an MSI source
+- * @dev:	Pointer to the PCI device
+  * @desc:	Pointer to the MSI descriptor
   *
-- * There will be one PCI MSI/MSIX irqdomain associated with each interrupt
-- * remapping device, so this interface is used to retrieve the PCI MSI/MSIX
-- * irqdomain serving request @info.
-  * Returns pointer to IRQ domain, or NULL on failure.
+  * The ID number is only used within the irqdomain.
   */
--struct irq_domain *
--irq_remapping_get_irq_domain(struct irq_alloc_info *info)
-+struct irq_domain *irq_remapping_get_irq_domain(struct irq_alloc_info *info)
+-irq_hw_number_t pci_msi_domain_calc_hwirq(struct pci_dev *dev,
+-					  struct msi_desc *desc)
++irq_hw_number_t pci_msi_domain_calc_hwirq(struct msi_desc *desc)
  {
- 	if (!remap_ops || !remap_ops->get_irq_domain)
- 		return NULL;
---- a/drivers/iommu/irq_remapping.h
-+++ b/drivers/iommu/irq_remapping.h
-@@ -43,10 +43,7 @@ struct irq_remap_ops {
- 	/* Enable fault handling */
- 	int  (*enable_faulting)(void);
++	struct pci_dev *pdev = msi_desc_to_pci_dev(desc);
++
+ 	return (irq_hw_number_t)desc->msi_attrib.entry_nr |
+-		pci_dev_id(dev) << 11 |
+-		(pci_domain_nr(dev->bus) & 0xFFFFFFFF) << 27;
++		pci_dev_id(pdev) << 11 |
++		(pci_domain_nr(pdev->bus) & 0xFFFFFFFF) << 27;
+ }
  
--	/* Get the irqdomain associated the IOMMU device */
--	struct irq_domain *(*get_ir_irq_domain)(struct irq_alloc_info *);
--
--	/* Get the MSI irqdomain associated with the IOMMU device */
-+	/* Get the irqdomain associated to IOMMU device */
- 	struct irq_domain *(*get_irq_domain)(struct irq_alloc_info *);
- };
- 
+ static inline bool pci_msi_desc_is_multi_msi(struct msi_desc *desc)
+@@ -1406,8 +1406,7 @@ static void pci_msi_domain_set_desc(msi_
+ 				    struct msi_desc *desc)
+ {
+ 	arg->desc = desc;
+-	arg->hwirq = pci_msi_domain_calc_hwirq(msi_desc_to_pci_dev(desc),
+-					       desc);
++	arg->hwirq = pci_msi_domain_calc_hwirq(desc);
+ }
+ #else
+ #define pci_msi_domain_set_desc		NULL
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -369,8 +369,7 @@ void pci_msi_domain_write_msg(struct irq
+ struct irq_domain *pci_msi_create_irq_domain(struct fwnode_handle *fwnode,
+ 					     struct msi_domain_info *info,
+ 					     struct irq_domain *parent);
+-irq_hw_number_t pci_msi_domain_calc_hwirq(struct pci_dev *dev,
+-					  struct msi_desc *desc);
++irq_hw_number_t pci_msi_domain_calc_hwirq(struct msi_desc *desc);
+ int pci_msi_domain_check_cap(struct irq_domain *domain,
+ 			     struct msi_domain_info *info, struct device *dev);
+ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev);
 
