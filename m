@@ -6,143 +6,105 @@ X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA75FC433E3
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Aug 2020 17:58:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CF8CC433E1
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Aug 2020 19:03:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9BF9720702
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Aug 2020 17:58:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6ED6B2075E
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Aug 2020 19:03:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1598032682;
-	bh=SY9zNs4J6t0vv72iGwx5CHsqBISRbTZU9+hhKRgBuhc=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=yW0BWBgoDHjIz5YzwFaEZFQiWqYoMwmxOvQGOaL30yViYfr2SzWUo3dpLopWWo/kq
-	 gqhh7mZg5USc505R44ZcjtG2tAj+Frt6fjH9nO0tgDb2uw0H+Ss8ISPXJS+CFCKs19
-	 fk0jFEIRif0XNwBbrcChQtaFUyLOEREMND0KNY4g=
+	s=default; t=1598036619;
+	bh=mobFhjUuZBrTxeSb27VlPLsjpmZe6i7fkoS3n8QFR34=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=htTwYnx/lRtpXeWhDP85lqm/wjDW/rYTkMGrzjdX4pLsYePwwroRhqft/g9mt1EIb
+	 eXYLBtFDmjW+IaZewZbTubh1TNj6RBXfhXiAcSrYVDePW92G0JoP1tDRoIkKArQV6L
+	 wZQBAOw78Lae/Nrk7S5vlCsKh+Ph7chJ2RQAA3eI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726793AbgHUR6B (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 21 Aug 2020 13:58:01 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43332 "EHLO mail.kernel.org"
+        id S1726804AbgHUTDc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 21 Aug 2020 15:03:32 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34930 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726723AbgHUR6A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 21 Aug 2020 13:58:00 -0400
-Received: from mail-oi1-f174.google.com (mail-oi1-f174.google.com [209.85.167.174])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1726630AbgHUTDc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 21 Aug 2020 15:03:32 -0400
+Received: from localhost (104.sub-72-107-126.myvzw.com [72.107.126.104])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BDDEF2076E;
-        Fri, 21 Aug 2020 17:57:59 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 666CF2075E;
+        Fri, 21 Aug 2020 19:03:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1598032679;
-        bh=SY9zNs4J6t0vv72iGwx5CHsqBISRbTZU9+hhKRgBuhc=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=QZDE8vCDkAA5jlse0gEYh+PmM32pHu7oq7I5mhX53QFRvulP+td24khjIHsDQR8JC
-         2Vz6TmZQtxsFZnwsBmRHXT5tFLTqSGZqulb3JUWDhvj+q7KcyzhoInrC2qXuS5FTOM
-         HL8EaOM65oHoT6eTbvyU+OA7SkeBPiX9ugSGXD5k=
-Received: by mail-oi1-f174.google.com with SMTP id l204so2245559oib.3;
-        Fri, 21 Aug 2020 10:57:59 -0700 (PDT)
-X-Gm-Message-State: AOAM532dC7ftBN8FTNgfCkcPTcDtINLaUOce+4mqGkVv1hK2gCkaBb9X
-        l+GzdKxGCmtwvYctelWXIO038v7ZbpLpXRaezg==
-X-Google-Smtp-Source: ABdhPJy56tMaoq7RPfeWnbGfE9RwrzQuC1O2g9otVdT7rq5KiAI44AsUU8Hy6kvdvNrjgZTmUbM4NN+8SLtytcLnC+Q=
-X-Received: by 2002:aca:c3d8:: with SMTP id t207mr2564623oif.152.1598032679079;
- Fri, 21 Aug 2020 10:57:59 -0700 (PDT)
-MIME-Version: 1.0
-References: <d007193ce73677713436c39684602f679d7623e4.camel@microchip.com> <20200820181018.GA1551400@bjorn-Precision-5520>
-In-Reply-To: <20200820181018.GA1551400@bjorn-Precision-5520>
-From:   Rob Herring <robh@kernel.org>
-Date:   Fri, 21 Aug 2020 11:57:47 -0600
-X-Gmail-Original-Message-ID: <CAL_JsqL1FiQ1CxTeOcEV8Y=p1yZKkXLq5Zz3qZ+xiJqkvH+RxA@mail.gmail.com>
-Message-ID: <CAL_JsqL1FiQ1CxTeOcEV8Y=p1yZKkXLq5Zz3qZ+xiJqkvH+RxA@mail.gmail.com>
-Subject: Re: [PATCH v15 2/2] PCI: microchip: Add host driver for Microchip
- PCIe controller
-To:     Bjorn Helgaas <helgaas@kernel.org>,
-        Daire McNamara <Daire.McNamara@microchip.com>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        s=default; t=1598036610;
+        bh=mobFhjUuZBrTxeSb27VlPLsjpmZe6i7fkoS3n8QFR34=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=d47nr9y1hi0vy9vzISm94HRnub0xDqtMTKqZq3FQRWtN3RtNgsm5Y+hvQPVhvjKcN
+         VP44tFF83D1l8gGqVk8IdT5tIbB6wpOMc1e7m8wBZ/72Pky2mD+XALP7aa11AqDDI/
+         3gLt6TZRyninR4Jf758I9jj9Icy2kKN39Qm3URcQ=
+Date:   Fri, 21 Aug 2020 14:03:28 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Rob Herring <robh@kernel.org>
+Cc:     Daire McNamara <Daire.McNamara@microchip.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         PCI <linux-pci@vger.kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         devicetree@vger.kernel.org, david.abdurachmanov@gmail.com
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: [PATCH v15 2/2] PCI: microchip: Add host driver for Microchip
+ PCIe controller
+Message-ID: <20200821190328.GA1689493@bjorn-Precision-5520>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAL_JsqL1FiQ1CxTeOcEV8Y=p1yZKkXLq5Zz3qZ+xiJqkvH+RxA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Aug 20, 2020 at 12:10 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
->
-> On Wed, Aug 19, 2020 at 04:33:10PM +0000, Daire.McNamara@microchip.com wrote:
->
-> > + *   pcie-altera.c
-> > + */
->
-> Add a blank line here.
->
-> > +#include <linux/irqchip/chained_irq.h>
-> > +#include <linux/module.h>
->
-> > +static struct mc_port *port;
->
-> This file scope item is not ideal.  It might work in your situation if
-> you can never have more than one device, but it's not a pattern we
-> want other people to copy.
+On Fri, Aug 21, 2020 at 11:57:47AM -0600, Rob Herring wrote:
+> On Thu, Aug 20, 2020 at 12:10 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> >
+> > On Wed, Aug 19, 2020 at 04:33:10PM +0000, Daire.McNamara@microchip.com wrote:
+> >
+> > > +static struct mc_port *port;
+> >
+> > This file scope item is not ideal.  It might work in your situation if
+> > you can never have more than one device, but it's not a pattern we
+> > want other people to copy.
+> 
+> Indeed.
+> 
+> > I think I sort of see how it works:
+> >
+> >   mc_pci_host_probe
+> >     pci_host_common_probe
+> >       ops = of_device_get_match_data()              # mc_ecam_ops
+> >       gen_pci_init(..., ops)
+> >         pci_ecam_create(..., ops)
+> >           ops->init                                 # mc_ecam_ops.init
+> >             mc_platform_init(pci_config_window *)
+> >               port = devm_kzalloc(...)              # initialized
+> >     mc_setup_windows
+> >       bridge_base_addr = port->axi_base_addr + ...  # used
+> >
+> > And you're using the file scope "port" because mc_platform_init()
+> > doesn't have a pointer to the platform_device.
+> 
+> This is a simple fix. Move platform_set_drvdata to just after
+> devm_pci_alloc_host_bridge() in pci_host_common_probe(). (Don't fall
+> into the 'platform problem'[1] and work-around the core code.)
+> 
+> Then pci_host_common_probe can be called directly and mc_setup_windows
+> can be moved to mc_platform_init().
+> 
+> > But I think this
+> > abuses the pci_ecam_ops design to do host bridge initialization that
+> > it is not intended for.
+> 
+> What init should be done then? IMO, given this driver is using ECAM
+> support already and it's all one time init that fits into init(), it
+> seems like a fit to me.
 
-Indeed.
+Oh, OK.  If you can solve this as you outlined above, that's fine with
+me.  It didn't look like a common pattern yet, but maybe it will be.
 
-> I think I sort of see how it works:
->
->   mc_pci_host_probe
->     pci_host_common_probe
->       ops = of_device_get_match_data()              # mc_ecam_ops
->       gen_pci_init(..., ops)
->         pci_ecam_create(..., ops)
->           ops->init                                 # mc_ecam_ops.init
->             mc_platform_init(pci_config_window *)
->               port = devm_kzalloc(...)              # initialized
->     mc_setup_windows
->       bridge_base_addr = port->axi_base_addr + ...  # used
->
-> And you're using the file scope "port" because mc_platform_init()
-> doesn't have a pointer to the platform_device.
+Thanks for chiming in.  I didn't have a good idea for how to fix the
+file-scope variable problem.
 
-This is a simple fix. Move platform_set_drvdata to just after
-devm_pci_alloc_host_bridge() in pci_host_common_probe(). (Don't fall
-into the 'platform problem'[1] and work-around the core code.)
-
-Then pci_host_common_probe can be called directly and mc_setup_windows
-can be moved to mc_platform_init().
-
-> But I think this
-> abuses the pci_ecam_ops design to do host bridge initialization that
-> it is not intended for.
-
-What init should be done then? IMO, given this driver is using ECAM
-support already and it's all one time init that fits into init(), it
-seems like a fit to me.
-
-> I'd suggest copying the host bridge init design from somewhere else.
-> tango_pcie_probe() also calls pci_host_common_probe(), so maybe that's
-> a good place.  But the fact that it's the *only* such caller makes me
-> think it might not be the best thing to copy.
->
-> Rob has been working in this area and probably has better insight.
-
-It was my suggestion to move to the ECAM init. Prior versions had its own probe.
-
-One question I've been wrestling with is if we can do all the firmware
-setup for 'generic ECAM' on the same h/w we have drivers for, then
-shouldn't we make the kernel driver create an ECAM setup? There's also
-the question of why do root port config accesses go thru standard ECAM
-config space in ECAM mode, but use different address space for
-non-ECAM setup? DWC for example can probably do ECAM on more
-platforms. There's some that can't which are generally ones w/o the
-iATU or enough iATU entries or not enough memory space. The difference
-from a config space standpoint is just DT configuration (in the case
-of DWC with an iATU, the config space and memory space DT entries are
-just iATU configuration not h/w constraints).
-
-I think we have drivers too much in control of their initialization
-ordering and things should be more the other way around with core code
-calling h/w ops to do specific things. I don't have any grand plan
-yet, but perhaps the generic/common host stuff evolves beyond just
-ECAM and almost ECAM. The generic host would just have no h/w ops.
-
-Rob
-
-[1] https://lwn.net/Articles/443531/
+Bjorn
