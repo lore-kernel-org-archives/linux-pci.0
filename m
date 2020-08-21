@@ -4,50 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B6E7C433E1
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Aug 2020 17:08:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5163BC433DF
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Aug 2020 17:19:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E42DD20656
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Aug 2020 17:08:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 20C2520738
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Aug 2020 17:19:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1598029718;
-	bh=K/MM1GET4CasELsCqsZ8Mipc/P3JztMHfXvKlOMiCTI=;
+	s=default; t=1598030364;
+	bh=xTayRYR+0/7bfA/ll1+zs0Ae21gKdBtoCwtMXuu8Mts=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=PCbmvMEK710SAuWXqyHkV5Y0Aj/MEMzfv9N7OTV2cMftSgnkWehJ+xhOy8wDb4bQv
-	 xqmRndqVdZhS7NDEAjFjXEkHQqK/3bfSxIoQkdvpw8jNgSH+HeM6CZ/g+L+feTtm0i
-	 2RmTw86e+7zezgX9lN2uhkQPqZSODpOYB471nutg=
+	b=gW0HqzUWj+hobMzORkkwLtiKazrZWU6oXEKLz1iJRXtFKJkPTTRtYzHamJhvNsuP9
+	 a+z4WJAgDDnxFFJrQ01lQqqB6vzL1NLAQaGmpfC6jMmI4QA6knQSF1aaiV/w0u/bAH
+	 bhKViDJfp8pcDe6mypgVu4Jz79a5uxxH289QsF5o=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728909AbgHURIg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 21 Aug 2020 13:08:36 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50912 "EHLO mail.kernel.org"
+        id S1725991AbgHURQN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 21 Aug 2020 13:16:13 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49910 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725866AbgHUQRl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 21 Aug 2020 12:17:41 -0400
+        id S1728088AbgHUQQd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 21 Aug 2020 12:16:33 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5F5E420578;
-        Fri, 21 Aug 2020 16:17:40 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5084A208DB;
+        Fri, 21 Aug 2020 16:16:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1598026661;
-        bh=K/MM1GET4CasELsCqsZ8Mipc/P3JztMHfXvKlOMiCTI=;
+        s=default; t=1598026593;
+        bh=xTayRYR+0/7bfA/ll1+zs0Ae21gKdBtoCwtMXuu8Mts=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Ix5xTCji3crbLCDYwC5fQi+X+8ALxjwN4Yb/hSH3BvAQ6sTq0MpDmPwD3+7lj2Kkq
-         +oZ80RbNNFdXFbiL7LiAmFyrqRpBZgeY0L57E7flW6/CY3cau3ViyhNyxWHxoFCFTy
-         KzHtzGSSGUd4Jd/8Lz/mbFrIkkjuELgT4c7TIibg=
+        b=zSnZvAQN/tekEP1EWGLirpKzzhkSQ70ATb7vdocdxK5ROl6sGpv+KEZJ0s4UpVLv4
+         QJHWTljyKfgwkuOBgxYLt3VBmCUmuy178nafDUV7JFUOCT5LpyCEvIsUPtjaMWU05v
+         tFV98bhH/OrHXmH6ml5w/KvkIJbZymg1v9CVlfIc=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Qiushi Wu <wu000273@umn.edu>, Bjorn Helgaas <bhelgaas@google.com>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 28/48] PCI: Fix pci_create_slot() reference count leak
-Date:   Fri, 21 Aug 2020 12:16:44 -0400
-Message-Id: <20200821161704.348164-28-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.7 37/61] PCI: Fix pci_create_slot() reference count leak
+Date:   Fri, 21 Aug 2020 12:15:21 -0400
+Message-Id: <20200821161545.347622-37-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200821161704.348164-1-sashal@kernel.org>
-References: <20200821161704.348164-1-sashal@kernel.org>
+In-Reply-To: <20200821161545.347622-1-sashal@kernel.org>
+References: <20200821161545.347622-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -79,10 +79,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
-index ae4aa0e1f2f42..1f087746b7bb0 100644
+index cc386ef2fa122..3861505741e6d 100644
 --- a/drivers/pci/slot.c
 +++ b/drivers/pci/slot.c
-@@ -304,13 +304,16 @@ struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
+@@ -268,13 +268,16 @@ struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
  	slot_name = make_slot_name(name);
  	if (!slot_name) {
  		err = -ENOMEM;
@@ -100,7 +100,7 @@ index ae4aa0e1f2f42..1f087746b7bb0 100644
  
  	INIT_LIST_HEAD(&slot->list);
  	list_add(&slot->list, &parent->slots);
-@@ -329,7 +332,6 @@ struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
+@@ -293,7 +296,6 @@ struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
  	mutex_unlock(&pci_slot_mutex);
  	return slot;
  err:
