@@ -2,112 +2,147 @@ Return-Path: <SRS0=IRj4=B7=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E2BEC433E4
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Aug 2020 17:26:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA75FC433E3
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Aug 2020 17:58:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2EB7C22CAF
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Aug 2020 17:26:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9BF9720702
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Aug 2020 17:58:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1598030780;
-	bh=xTayRYR+0/7bfA/ll1+zs0Ae21gKdBtoCwtMXuu8Mts=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=tYvmFpX/AR5ENZFb6wo1pq5Bo9JKYuZh2LtCjtcJyjJiY/JzW/hlkxxS3q9G0UYuL
-	 7HnCeVzrgd43lfFgzsPRyQyOFy4dZ6VEvmfOd/UTBlO0ixmaHNlLhCRyTawBCGuW5f
-	 9Nm44dXeNW1HUko67WBHQbJ+WMpVDCoEJCtaPgMc=
+	s=default; t=1598032682;
+	bh=SY9zNs4J6t0vv72iGwx5CHsqBISRbTZU9+hhKRgBuhc=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=yW0BWBgoDHjIz5YzwFaEZFQiWqYoMwmxOvQGOaL30yViYfr2SzWUo3dpLopWWo/kq
+	 gqhh7mZg5USc505R44ZcjtG2tAj+Frt6fjH9nO0tgDb2uw0H+Ss8ISPXJS+CFCKs19
+	 fk0jFEIRif0XNwBbrcChQtaFUyLOEREMND0KNY4g=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727991AbgHURZw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 21 Aug 2020 13:25:52 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47626 "EHLO mail.kernel.org"
+        id S1726793AbgHUR6B (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 21 Aug 2020 13:58:01 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43332 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727885AbgHUQPN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 21 Aug 2020 12:15:13 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        id S1726723AbgHUR6A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 21 Aug 2020 13:58:00 -0400
+Received: from mail-oi1-f174.google.com (mail-oi1-f174.google.com [209.85.167.174])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5E66021741;
-        Fri, 21 Aug 2020 16:15:12 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id BDDEF2076E;
+        Fri, 21 Aug 2020 17:57:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1598026513;
-        bh=xTayRYR+0/7bfA/ll1+zs0Ae21gKdBtoCwtMXuu8Mts=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=u/n9kgGgquyKu31H0Hh6KCxKrR7Nn62AaJc3gCc+zFldX8A0tHxPbBKIVpblSgxdc
-         pY25Goj0je4oi1fztHVxTYt+zZ3L/kp0CKsfWwra6R//Vl470ff4XLKcnK3MjsMl4i
-         q9xblGX7Nk1+FL6/Op2edEcajle2TmWxla3F45kY=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Qiushi Wu <wu000273@umn.edu>, Bjorn Helgaas <bhelgaas@google.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.8 38/62] PCI: Fix pci_create_slot() reference count leak
-Date:   Fri, 21 Aug 2020 12:13:59 -0400
-Message-Id: <20200821161423.347071-38-sashal@kernel.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200821161423.347071-1-sashal@kernel.org>
-References: <20200821161423.347071-1-sashal@kernel.org>
+        s=default; t=1598032679;
+        bh=SY9zNs4J6t0vv72iGwx5CHsqBISRbTZU9+hhKRgBuhc=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=QZDE8vCDkAA5jlse0gEYh+PmM32pHu7oq7I5mhX53QFRvulP+td24khjIHsDQR8JC
+         2Vz6TmZQtxsFZnwsBmRHXT5tFLTqSGZqulb3JUWDhvj+q7KcyzhoInrC2qXuS5FTOM
+         HL8EaOM65oHoT6eTbvyU+OA7SkeBPiX9ugSGXD5k=
+Received: by mail-oi1-f174.google.com with SMTP id l204so2245559oib.3;
+        Fri, 21 Aug 2020 10:57:59 -0700 (PDT)
+X-Gm-Message-State: AOAM532dC7ftBN8FTNgfCkcPTcDtINLaUOce+4mqGkVv1hK2gCkaBb9X
+        l+GzdKxGCmtwvYctelWXIO038v7ZbpLpXRaezg==
+X-Google-Smtp-Source: ABdhPJy56tMaoq7RPfeWnbGfE9RwrzQuC1O2g9otVdT7rq5KiAI44AsUU8Hy6kvdvNrjgZTmUbM4NN+8SLtytcLnC+Q=
+X-Received: by 2002:aca:c3d8:: with SMTP id t207mr2564623oif.152.1598032679079;
+ Fri, 21 Aug 2020 10:57:59 -0700 (PDT)
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+References: <d007193ce73677713436c39684602f679d7623e4.camel@microchip.com> <20200820181018.GA1551400@bjorn-Precision-5520>
+In-Reply-To: <20200820181018.GA1551400@bjorn-Precision-5520>
+From:   Rob Herring <robh@kernel.org>
+Date:   Fri, 21 Aug 2020 11:57:47 -0600
+X-Gmail-Original-Message-ID: <CAL_JsqL1FiQ1CxTeOcEV8Y=p1yZKkXLq5Zz3qZ+xiJqkvH+RxA@mail.gmail.com>
+Message-ID: <CAL_JsqL1FiQ1CxTeOcEV8Y=p1yZKkXLq5Zz3qZ+xiJqkvH+RxA@mail.gmail.com>
+Subject: Re: [PATCH v15 2/2] PCI: microchip: Add host driver for Microchip
+ PCIe controller
+To:     Bjorn Helgaas <helgaas@kernel.org>,
+        Daire McNamara <Daire.McNamara@microchip.com>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        devicetree@vger.kernel.org, david.abdurachmanov@gmail.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Qiushi Wu <wu000273@umn.edu>
+On Thu, Aug 20, 2020 at 12:10 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+> On Wed, Aug 19, 2020 at 04:33:10PM +0000, Daire.McNamara@microchip.com wrote:
+>
+> > + *   pcie-altera.c
+> > + */
+>
+> Add a blank line here.
+>
+> > +#include <linux/irqchip/chained_irq.h>
+> > +#include <linux/module.h>
+>
+> > +static struct mc_port *port;
+>
+> This file scope item is not ideal.  It might work in your situation if
+> you can never have more than one device, but it's not a pattern we
+> want other people to copy.
 
-[ Upstream commit 8a94644b440eef5a7b9c104ac8aa7a7f413e35e5 ]
+Indeed.
 
-kobject_init_and_add() takes a reference even when it fails.  If it returns
-an error, kobject_put() must be called to clean up the memory associated
-with the object.
+> I think I sort of see how it works:
+>
+>   mc_pci_host_probe
+>     pci_host_common_probe
+>       ops = of_device_get_match_data()              # mc_ecam_ops
+>       gen_pci_init(..., ops)
+>         pci_ecam_create(..., ops)
+>           ops->init                                 # mc_ecam_ops.init
+>             mc_platform_init(pci_config_window *)
+>               port = devm_kzalloc(...)              # initialized
+>     mc_setup_windows
+>       bridge_base_addr = port->axi_base_addr + ...  # used
+>
+> And you're using the file scope "port" because mc_platform_init()
+> doesn't have a pointer to the platform_device.
 
-When kobject_init_and_add() fails, call kobject_put() instead of kfree().
+This is a simple fix. Move platform_set_drvdata to just after
+devm_pci_alloc_host_bridge() in pci_host_common_probe(). (Don't fall
+into the 'platform problem'[1] and work-around the core code.)
 
-b8eb718348b8 ("net-sysfs: Fix reference count leak in
-rx|netdev_queue_add_kobject") fixed a similar problem.
+Then pci_host_common_probe can be called directly and mc_setup_windows
+can be moved to mc_platform_init().
 
-Link: https://lore.kernel.org/r/20200528021322.1984-1-wu000273@umn.edu
-Signed-off-by: Qiushi Wu <wu000273@umn.edu>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/pci/slot.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+> But I think this
+> abuses the pci_ecam_ops design to do host bridge initialization that
+> it is not intended for.
 
-diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
-index cc386ef2fa122..3861505741e6d 100644
---- a/drivers/pci/slot.c
-+++ b/drivers/pci/slot.c
-@@ -268,13 +268,16 @@ struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
- 	slot_name = make_slot_name(name);
- 	if (!slot_name) {
- 		err = -ENOMEM;
-+		kfree(slot);
- 		goto err;
- 	}
- 
- 	err = kobject_init_and_add(&slot->kobj, &pci_slot_ktype, NULL,
- 				   "%s", slot_name);
--	if (err)
-+	if (err) {
-+		kobject_put(&slot->kobj);
- 		goto err;
-+	}
- 
- 	INIT_LIST_HEAD(&slot->list);
- 	list_add(&slot->list, &parent->slots);
-@@ -293,7 +296,6 @@ struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
- 	mutex_unlock(&pci_slot_mutex);
- 	return slot;
- err:
--	kfree(slot);
- 	slot = ERR_PTR(err);
- 	goto out;
- }
--- 
-2.25.1
+What init should be done then? IMO, given this driver is using ECAM
+support already and it's all one time init that fits into init(), it
+seems like a fit to me.
 
+> I'd suggest copying the host bridge init design from somewhere else.
+> tango_pcie_probe() also calls pci_host_common_probe(), so maybe that's
+> a good place.  But the fact that it's the *only* such caller makes me
+> think it might not be the best thing to copy.
+>
+> Rob has been working in this area and probably has better insight.
+
+It was my suggestion to move to the ECAM init. Prior versions had its own probe.
+
+One question I've been wrestling with is if we can do all the firmware
+setup for 'generic ECAM' on the same h/w we have drivers for, then
+shouldn't we make the kernel driver create an ECAM setup? There's also
+the question of why do root port config accesses go thru standard ECAM
+config space in ECAM mode, but use different address space for
+non-ECAM setup? DWC for example can probably do ECAM on more
+platforms. There's some that can't which are generally ones w/o the
+iATU or enough iATU entries or not enough memory space. The difference
+from a config space standpoint is just DT configuration (in the case
+of DWC with an iATU, the config space and memory space DT entries are
+just iATU configuration not h/w constraints).
+
+I think we have drivers too much in control of their initialization
+ordering and things should be more the other way around with core code
+calling h/w ops to do specific things. I don't have any grand plan
+yet, but perhaps the generic/common host stuff evolves beyond just
+ECAM and almost ECAM. The generic host would just have no h/w ops.
+
+Rob
+
+[1] https://lwn.net/Articles/443531/
