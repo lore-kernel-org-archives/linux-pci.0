@@ -2,97 +2,112 @@ Return-Path: <SRS0=IRj4=B7=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE6E7C433E1
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Aug 2020 15:51:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6154C433E1
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Aug 2020 16:33:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A8AFF207C3
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Aug 2020 15:51:30 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=amazon.com header.i=@amazon.com header.b="K8Kgv433"
+	by mail.kernel.org (Postfix) with ESMTP id 89A9522B47
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Aug 2020 16:33:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1598027590;
+	bh=lhPzxAMtGiGwqFgokTYuR2htwCTnKmFaZukK5H3J0RU=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=n79UvgIkkEwWJF4pCgqTwKXjoyVygjbD6IjFrWJcDBTU5Ni7tcfqkgc91amabUVXV
+	 bJqgSvd/P0eKpXZlBrNq0+FK/2K+z+Y3zqTZf41VVtNau7/2h25EHgx8bP6GqsT69e
+	 CzG/nrjN2ZRGXw1ibXU3YntAMScyUH86svqrasNY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727123AbgHUPv3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 21 Aug 2020 11:51:29 -0400
-Received: from smtp-fw-4101.amazon.com ([72.21.198.25]:23946 "EHLO
-        smtp-fw-4101.amazon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727072AbgHUPv1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Aug 2020 11:51:27 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=amazon.com; i=@amazon.com; q=dns/txt; s=amazon201209;
-  t=1598025087; x=1629561087;
-  h=date:from:to:cc:subject:message-id:mime-version;
-  bh=mMfyeCMSGaXRjB0JFBU0lC28bZQxam9wWm7w0OU2PK4=;
-  b=K8Kgv433aQuhaAtSctp3+v/oVcddgQdkHEK5W78URTEIjOE9Vx8/E5yv
-   PVrBiFg8W1eFArvl20sIfFUHfNZXZ2oowC0zIY2yXdPnOBsTU/p5AlpUZ
-   aHyBugHSIzxu/zlLEYDV+IOV1ZwfLT3rD6kImg0CcirB1/mkrTW2+tRGo
-   0=;
-X-IronPort-AV: E=Sophos;i="5.76,337,1592870400"; 
-   d="scan'208";a="49341840"
-Received: from iad12-co-svc-p1-lb1-vlan3.amazon.com (HELO email-inbound-relay-1d-5dd976cd.us-east-1.amazon.com) ([10.43.8.6])
-  by smtp-border-fw-out-4101.iad4.amazon.com with ESMTP; 21 Aug 2020 15:51:25 +0000
-Received: from EX13MTAUWA001.ant.amazon.com (iad55-ws-svc-p15-lb9-vlan2.iad.amazon.com [10.40.159.162])
-        by email-inbound-relay-1d-5dd976cd.us-east-1.amazon.com (Postfix) with ESMTPS id 38E05A2300;
-        Fri, 21 Aug 2020 15:51:23 +0000 (UTC)
-Received: from EX13D01UWA002.ant.amazon.com (10.43.160.74) by
- EX13MTAUWA001.ant.amazon.com (10.43.160.118) with Microsoft SMTP Server (TLS)
- id 15.0.1497.2; Fri, 21 Aug 2020 15:51:22 +0000
-Received: from EX13MTAUWA001.ant.amazon.com (10.43.160.58) by
- EX13d01UWA002.ant.amazon.com (10.43.160.74) with Microsoft SMTP Server (TLS)
- id 15.0.1497.2; Fri, 21 Aug 2020 15:51:21 +0000
-Received: from dev-dsk-csbisa-2a-37939146.us-west-2.amazon.com (172.19.34.216)
- by mail-relay.amazon.com (10.43.160.118) with Microsoft SMTP Server id
- 15.0.1497.2 via Frontend Transport; Fri, 21 Aug 2020 15:51:22 +0000
-Received: by dev-dsk-csbisa-2a-37939146.us-west-2.amazon.com (Postfix, from userid 800212)
-        id 56BC5903A; Fri, 21 Aug 2020 15:51:21 +0000 (UTC)
-Date:   Fri, 21 Aug 2020 15:51:21 +0000
-From:   Clint Sbisa <csbisa@amazon.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Jiri Kosina <trivial@kernel.org>
-CC:     Clint Sbisa <csbisa@amazon.com>,
-        Benjamin Herrenschmidt <benh@amazon.com>,
-        Ali Saidi <alisaidi@amazon.com>,
-        David Woodhouse <dwmw@amazon.co.uk>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH] PCI: Trivial comment fixup for PCI mmap ifdefs
-Message-ID: <20200821155121.nzxjeeoze4h5pone@amazon.com>
+        id S1728461AbgHUQdI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 21 Aug 2020 12:33:08 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50212 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726734AbgHUQVb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 21 Aug 2020 12:21:31 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1F7FC207BB;
+        Fri, 21 Aug 2020 16:20:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1598026831;
+        bh=lhPzxAMtGiGwqFgokTYuR2htwCTnKmFaZukK5H3J0RU=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=N7FXC1o0yxNcLIkolrPkLoD37W14+I9u3cnoEg4nHd6MQbBrLRI+Hq477SpzCER62
+         enMwmRWDHe7cx75OHxV84YjqN1clrAryd8XGyMY3btr5V0LhgTBmRNMwgcr2qQypIe
+         bRYC//T0YvXYNp+DT4oDU7GS1Hw+1Q893fE1Fndk=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Qiushi Wu <wu000273@umn.edu>, Bjorn Helgaas <bhelgaas@google.com>,
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.4 13/22] PCI: Fix pci_create_slot() reference count leak
+Date:   Fri, 21 Aug 2020 12:20:05 -0400
+Message-Id: <20200821162014.349506-13-sashal@kernel.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200821162014.349506-1-sashal@kernel.org>
+References: <20200821162014.349506-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The else/endif comments for pci_{create,remove}_resource_files were
-not updated in commit f719582435afe9c7985206e42d804ea6aa315d33 ("PCI:
-Add pci_mmap_resource_range() and use it for ARM64").
+From: Qiushi Wu <wu000273@umn.edu>
 
-Signed-off-by: Clint Sbisa <csbisa@amazon.com>
+[ Upstream commit 8a94644b440eef5a7b9c104ac8aa7a7f413e35e5 ]
+
+kobject_init_and_add() takes a reference even when it fails.  If it returns
+an error, kobject_put() must be called to clean up the memory associated
+with the object.
+
+When kobject_init_and_add() fails, call kobject_put() instead of kfree().
+
+b8eb718348b8 ("net-sysfs: Fix reference count leak in
+rx|netdev_queue_add_kobject") fixed a similar problem.
+
+Link: https://lore.kernel.org/r/20200528021322.1984-1-wu000273@umn.edu
+Signed-off-by: Qiushi Wu <wu000273@umn.edu>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/pci-sysfs.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/pci/slot.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 6d78df981d41..cfc67b208616 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -1196,10 +1196,10 @@ static int pci_create_resource_files(struct pci_dev *pdev)
+diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
+index 429d34c348b9f..01a343ad7155c 100644
+--- a/drivers/pci/slot.c
++++ b/drivers/pci/slot.c
+@@ -303,13 +303,16 @@ struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
+ 	slot_name = make_slot_name(name);
+ 	if (!slot_name) {
+ 		err = -ENOMEM;
++		kfree(slot);
+ 		goto err;
  	}
- 	return 0;
- }
--#else /* !HAVE_PCI_MMAP */
-+#else /* ! (defined(HAVE_PCI_MMAP) || defined(ARCH_GENERIC_PCI_MMAP_RESOURCE)) */
- int __weak pci_create_resource_files(struct pci_dev *dev) { return 0; }
- void __weak pci_remove_resource_files(struct pci_dev *dev) { return; }
--#endif /* HAVE_PCI_MMAP */
-+#endif /* defined(HAVE_PCI_MMAP) || defined(ARCH_GENERIC_PCI_MMAP_RESOURCE) */
  
- /**
-  * pci_write_rom - used to enable access to the PCI ROM display
+ 	err = kobject_init_and_add(&slot->kobj, &pci_slot_ktype, NULL,
+ 				   "%s", slot_name);
+-	if (err)
++	if (err) {
++		kobject_put(&slot->kobj);
+ 		goto err;
++	}
+ 
+ 	INIT_LIST_HEAD(&slot->list);
+ 	list_add(&slot->list, &parent->slots);
+@@ -328,7 +331,6 @@ struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
+ 	mutex_unlock(&pci_slot_mutex);
+ 	return slot;
+ err:
+-	kfree(slot);
+ 	slot = ERR_PTR(err);
+ 	goto out;
+ }
 -- 
-2.23.3
+2.25.1
 
