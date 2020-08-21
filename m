@@ -7,54 +7,51 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 072FAC433E3
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Aug 2020 02:16:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8849FC433DF
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Aug 2020 02:16:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D48CA207DE
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Aug 2020 02:16:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 620F6207BB
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Aug 2020 02:16:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="Kq3VTSX8";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="ASAU7xfB"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="VO5VGkAj";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="Juw/16bM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727783AbgHUCQq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 20 Aug 2020 22:16:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43452 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727118AbgHUCQm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Aug 2020 22:16:42 -0400
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4DF74C061386;
-        Thu, 20 Aug 2020 19:16:42 -0700 (PDT)
-Message-Id: <20200821002945.441137487@linutronix.de>
+        id S1727824AbgHUCQy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 20 Aug 2020 22:16:54 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:52522 "EHLO
+        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727787AbgHUCQu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Aug 2020 22:16:50 -0400
+Message-Id: <20200821002945.992750750@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1597976200;
+        s=2020; t=1597976206;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=+IgASHQdqPCnOTucPcGX02wYMC5pdn/nyOwg+ouAU7Y=;
-        b=Kq3VTSX8uKjpioBzzueTkN79nNBO2I0XUAh6jd71XwTySEooE4uoZ7HkYYujC26KxfiByj
-        vj/umpMZyxUbQTfEwQEQJx7Nu0JBttvca8e0D+yDHETVbvQ7Ef5eIIglB0we9V36cMBnyT
-        zCkjrT+YImdEjrxWFJshsLvIFDur7OnZtXRW8WFNyhZ5/30P/l0sWafQCCn5R6Or0tO8x1
-        G1GHFZ91C4ttID0SK06vuZMb8GKmiNN29i25BygZZJo7Ioo/h9219SPZtsE3nV23yqglAP
-        8nD7vKolbLJZ0c8QYpdewxwfG5hksiFcVSYd3eve0E8mNhSCa43lKd8UBggBWA==
+        bh=08gHalbpGGDCN4mhRavSvWN/hPadHuFy3soEotqowwI=;
+        b=VO5VGkAjH9r2ALe1X8UAQPlYGQOuDOVb0mHWVE3eldniJ7l1GIP82Fu9y2gk+1eUKLSSU/
+        TfGlgz7KO+FuqyvNW7mF2trtvUfpad0jlDTS/tDY3OJLNa/Gzv2yomJb8bcCre/u1xQmhm
+        fBQYXbF5BVHG6zLbNjyWtlULeEO9xrRdz7SK5n8oVe6B202tY7yzQv5+0GjDRXPgo706nH
+        Y16WfHJgck7nS4gv3cRNGsuJ+vQB8uPqRulyrTT7sGINkuqikAuNEzMlBdCU/V+kSt8ifl
+        S0knuL4TMs7CKpggEPDLrI2M0EH8eIwViE7vZ/QXg3ONJHx+b8dqtA4tN47McA==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1597976200;
+        s=2020e; t=1597976206;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=+IgASHQdqPCnOTucPcGX02wYMC5pdn/nyOwg+ouAU7Y=;
-        b=ASAU7xfBpU57hwXmRkSKAraaHaBXoaaWxjHGByCWVurZfPFoa1OO+VM698eeg4/bGLoGHL
-        RYRF87iRi7qicEAw==
-Date:   Fri, 21 Aug 2020 02:24:26 +0200
+        bh=08gHalbpGGDCN4mhRavSvWN/hPadHuFy3soEotqowwI=;
+        b=Juw/16bMTphkE8b9E9cjCckz1/9ORrGofLrjGGkmOO/l+gCU7ULxTKjuA+hvWjQmIuTGTD
+        JsqOwIvquOGzshAw==
+Date:   Fri, 21 Aug 2020 02:24:31 +0200
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
-Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
-        iommu@lists.linux-foundation.org, linux-hyperv@vger.kernel.org,
+Cc:     x86@kernel.org, Wei Liu <wei.liu@kernel.org>,
+        Joerg Roedel <joro@8bytes.org>, linux-hyperv@vger.kernel.org,
+        iommu@lists.linux-foundation.org,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
         Haiyang Zhang <haiyangz@microsoft.com>,
         Jon Derrick <jonathan.derrick@intel.com>,
         Lu Baolu <baolu.lu@linux.intel.com>,
-        Wei Liu <wei.liu@kernel.org>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
         Stephen Hemminger <sthemmin@microsoft.com>,
         Steve Wahl <steve.wahl@hpe.com>,
         Dimitri Sivanich <sivanich@hpe.com>,
@@ -77,172 +74,176 @@ Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
         Baolu Lu <baolu.lu@intel.com>,
         Kevin Tian <kevin.tian@intel.com>,
         Dan Williams <dan.j.williams@intel.com>
-Subject: [patch RFC 02/38] x86/init: Remove unused init ops
+Subject: [patch RFC 07/38] iommu/irq_remapping: Consolidate irq domain lookup
 References: <20200821002424.119492231@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Disposition: inline; filename=x86-init--Remove-unused-init-ops.patch
+Content-Disposition: inline;
+ filename="iommu-irq_remapping--Consolidate-irq-domain-lookup.patch"
 Content-transfer-encoding: 8-bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Some past platform removal forgot to get rid of this unused ballast.
+Now that the iommu implementations handle the X86_*_GET_PARENT_DOMAIN
+types, consolidate the two getter functions. 
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Cc: Wei Liu <wei.liu@kernel.org>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: linux-hyperv@vger.kernel.org
+Cc: iommu@lists.linux-foundation.org
+Cc: "K. Y. Srinivasan" <kys@microsoft.com>
+Cc: Haiyang Zhang <haiyangz@microsoft.com>
+Cc: Jon Derrick <jonathan.derrick@intel.com>
+Cc: Lu Baolu <baolu.lu@linux.intel.com>
 ---
- arch/x86/include/asm/mpspec.h   |   10 ----------
- arch/x86/include/asm/x86_init.h |   10 ----------
- arch/x86/kernel/mpparse.c       |   26 ++++----------------------
- arch/x86/kernel/x86_init.c      |    4 ----
- 4 files changed, 4 insertions(+), 46 deletions(-)
+ arch/x86/include/asm/irq_remapping.h |    8 --------
+ arch/x86/kernel/apic/io_apic.c       |    2 +-
+ arch/x86/kernel/apic/msi.c           |    2 +-
+ drivers/iommu/amd/iommu.c            |    1 -
+ drivers/iommu/hyperv-iommu.c         |    4 ++--
+ drivers/iommu/intel/irq_remapping.c  |    1 -
+ drivers/iommu/irq_remapping.c        |   23 +----------------------
+ drivers/iommu/irq_remapping.h        |    5 +----
+ 8 files changed, 6 insertions(+), 40 deletions(-)
 
---- a/arch/x86/include/asm/mpspec.h
-+++ b/arch/x86/include/asm/mpspec.h
-@@ -67,21 +67,11 @@ static inline void find_smp_config(void)
- #ifdef CONFIG_X86_MPPARSE
- extern void e820__memblock_alloc_reserved_mpc_new(void);
- extern int enable_update_mptable;
--extern int default_mpc_apic_id(struct mpc_cpu *m);
--extern void default_smp_read_mpc_oem(struct mpc_table *mpc);
--# ifdef CONFIG_X86_IO_APIC
--extern void default_mpc_oem_bus_info(struct mpc_bus *m, char *str);
--# else
--#  define default_mpc_oem_bus_info NULL
--# endif
- extern void default_find_smp_config(void);
- extern void default_get_smp_config(unsigned int early);
- #else
- static inline void e820__memblock_alloc_reserved_mpc_new(void) { }
- #define enable_update_mptable 0
--#define default_mpc_apic_id NULL
--#define default_smp_read_mpc_oem NULL
--#define default_mpc_oem_bus_info NULL
- #define default_find_smp_config x86_init_noop
- #define default_get_smp_config x86_init_uint_noop
- #endif
---- a/arch/x86/include/asm/x86_init.h
-+++ b/arch/x86/include/asm/x86_init.h
-@@ -11,22 +11,12 @@ struct cpuinfo_x86;
+--- a/arch/x86/include/asm/irq_remapping.h
++++ b/arch/x86/include/asm/irq_remapping.h
+@@ -45,8 +45,6 @@ extern int irq_remap_enable_fault_handli
+ extern void panic_if_irq_remap(const char *msg);
  
- /**
-  * struct x86_init_mpparse - platform specific mpparse ops
-- * @mpc_record:			platform specific mpc record accounting
-  * @setup_ioapic_ids:		platform specific ioapic id override
-- * @mpc_apic_id:		platform specific mpc apic id assignment
-- * @smp_read_mpc_oem:		platform specific oem mpc table setup
-- * @mpc_oem_pci_bus:		platform specific pci bus setup (default NULL)
-- * @mpc_oem_bus_info:		platform specific mpc bus info
-  * @find_smp_config:		find the smp configuration
-  * @get_smp_config:		get the smp configuration
-  */
- struct x86_init_mpparse {
--	void (*mpc_record)(unsigned int mode);
- 	void (*setup_ioapic_ids)(void);
--	int (*mpc_apic_id)(struct mpc_cpu *m);
--	void (*smp_read_mpc_oem)(struct mpc_table *mpc);
--	void (*mpc_oem_pci_bus)(struct mpc_bus *m);
--	void (*mpc_oem_bus_info)(struct mpc_bus *m, char *name);
- 	void (*find_smp_config)(void);
- 	void (*get_smp_config)(unsigned int early);
- };
---- a/arch/x86/kernel/mpparse.c
-+++ b/arch/x86/kernel/mpparse.c
-@@ -46,11 +46,6 @@ static int __init mpf_checksum(unsigned
- 	return sum & 0xFF;
+ extern struct irq_domain *
+-irq_remapping_get_ir_irq_domain(struct irq_alloc_info *info);
+-extern struct irq_domain *
+ irq_remapping_get_irq_domain(struct irq_alloc_info *info);
+ 
+ /* Create PCI MSI/MSIx irqdomain, use @parent as the parent irqdomain. */
+@@ -74,12 +72,6 @@ static inline void panic_if_irq_remap(co
  }
  
--int __init default_mpc_apic_id(struct mpc_cpu *m)
+ static inline struct irq_domain *
+-irq_remapping_get_ir_irq_domain(struct irq_alloc_info *info)
 -{
--	return m->apicid;
+-	return NULL;
 -}
 -
- static void __init MP_processor_info(struct mpc_cpu *m)
+-static inline struct irq_domain *
+ irq_remapping_get_irq_domain(struct irq_alloc_info *info)
  {
- 	int apicid;
-@@ -61,7 +56,7 @@ static void __init MP_processor_info(str
- 		return;
- 	}
+ 	return NULL;
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -2298,7 +2298,7 @@ static int mp_irqdomain_create(int ioapi
+ 	init_irq_alloc_info(&info, NULL);
+ 	info.type = X86_IRQ_ALLOC_TYPE_IOAPIC_GET_PARENT;
+ 	info.ioapic_id = mpc_ioapic_id(ioapic);
+-	parent = irq_remapping_get_ir_irq_domain(&info);
++	parent = irq_remapping_get_irq_domain(&info);
+ 	if (!parent)
+ 		parent = x86_vector_domain;
+ 	else
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -478,7 +478,7 @@ struct irq_domain *hpet_create_irq_domai
+ 	init_irq_alloc_info(&info, NULL);
+ 	info.type = X86_IRQ_ALLOC_TYPE_HPET_GET_PARENT;
+ 	info.hpet_id = hpet_id;
+-	parent = irq_remapping_get_ir_irq_domain(&info);
++	parent = irq_remapping_get_irq_domain(&info);
+ 	if (parent == NULL)
+ 		parent = x86_vector_domain;
+ 	else
+--- a/drivers/iommu/amd/iommu.c
++++ b/drivers/iommu/amd/iommu.c
+@@ -3561,7 +3561,6 @@ struct irq_remap_ops amd_iommu_irq_ops =
+ 	.disable		= amd_iommu_disable,
+ 	.reenable		= amd_iommu_reenable,
+ 	.enable_faulting	= amd_iommu_enable_faulting,
+-	.get_ir_irq_domain	= get_irq_domain,
+ 	.get_irq_domain		= get_irq_domain,
+ };
  
--	apicid = x86_init.mpparse.mpc_apic_id(m);
-+	apicid = m->apicid;
- 
- 	if (m->cpuflag & CPU_BOOTPROCESSOR) {
- 		bootup_cpu = " (Bootup-CPU)";
-@@ -73,7 +68,7 @@ static void __init MP_processor_info(str
+--- a/drivers/iommu/hyperv-iommu.c
++++ b/drivers/iommu/hyperv-iommu.c
+@@ -182,7 +182,7 @@ static int __init hyperv_enable_irq_rema
+ 	return IRQ_REMAP_X2APIC_MODE;
  }
  
- #ifdef CONFIG_X86_IO_APIC
--void __init default_mpc_oem_bus_info(struct mpc_bus *m, char *str)
-+static void __init mpc_oem_bus_info(struct mpc_bus *m, char *str)
+-static struct irq_domain *hyperv_get_ir_irq_domain(struct irq_alloc_info *info)
++static struct irq_domain *hyperv_get_irq_domain(struct irq_alloc_info *info)
  {
- 	memcpy(str, m->bustype, 6);
- 	str[6] = 0;
-@@ -84,7 +79,7 @@ static void __init MP_bus_info(struct mp
- {
- 	char str[7];
+ 	if (info->type == X86_IRQ_ALLOC_TYPE_IOAPIC_GET_PARENT)
+ 		return ioapic_ir_domain;
+@@ -193,7 +193,7 @@ static struct irq_domain *hyperv_get_ir_
+ struct irq_remap_ops hyperv_irq_remap_ops = {
+ 	.prepare		= hyperv_prepare_irq_remapping,
+ 	.enable			= hyperv_enable_irq_remapping,
+-	.get_ir_irq_domain	= hyperv_get_ir_irq_domain,
++	.get_irq_domain		= hyperv_get_irq_domain,
+ };
  
--	x86_init.mpparse.mpc_oem_bus_info(m, str);
-+	mpc_oem_bus_info(m, str);
- 
- #if MAX_MP_BUSSES < 256
- 	if (m->busid >= MAX_MP_BUSSES) {
-@@ -100,9 +95,6 @@ static void __init MP_bus_info(struct mp
- 		mp_bus_id_to_type[m->busid] = MP_BUS_ISA;
  #endif
- 	} else if (strncmp(str, BUSTYPE_PCI, sizeof(BUSTYPE_PCI) - 1) == 0) {
--		if (x86_init.mpparse.mpc_oem_pci_bus)
--			x86_init.mpparse.mpc_oem_pci_bus(m);
--
- 		clear_bit(m->busid, mp_bus_not_pci);
- #ifdef CONFIG_EISA
- 		mp_bus_id_to_type[m->busid] = MP_BUS_PCI;
-@@ -198,8 +190,6 @@ static void __init smp_dump_mptable(stru
- 			1, mpc, mpc->length, 1);
+--- a/drivers/iommu/intel/irq_remapping.c
++++ b/drivers/iommu/intel/irq_remapping.c
+@@ -1131,7 +1131,6 @@ struct irq_remap_ops intel_irq_remap_ops
+ 	.disable		= disable_irq_remapping,
+ 	.reenable		= reenable_irq_remapping,
+ 	.enable_faulting	= enable_drhd_fault_handling,
+-	.get_ir_irq_domain	= intel_get_irq_domain,
+ 	.get_irq_domain		= intel_get_irq_domain,
+ };
+ 
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -160,33 +160,12 @@ void panic_if_irq_remap(const char *msg)
  }
  
--void __init default_smp_read_mpc_oem(struct mpc_table *mpc) { }
+ /**
+- * irq_remapping_get_ir_irq_domain - Get the irqdomain associated with the IOMMU
+- *				     device serving request @info
+- * @info: interrupt allocation information, used to identify the IOMMU device
+- *
+- * It's used to get parent irqdomain for HPET and IOAPIC irqdomains.
+- * Returns pointer to IRQ domain, or NULL on failure.
+- */
+-struct irq_domain *
+-irq_remapping_get_ir_irq_domain(struct irq_alloc_info *info)
+-{
+-	if (!remap_ops || !remap_ops->get_ir_irq_domain)
+-		return NULL;
 -
- static int __init smp_read_mpc(struct mpc_table *mpc, unsigned early)
+-	return remap_ops->get_ir_irq_domain(info);
+-}
+-
+-/**
+  * irq_remapping_get_irq_domain - Get the irqdomain serving the request @info
+  * @info: interrupt allocation information, used to identify the IOMMU device
+  *
+- * There will be one PCI MSI/MSIX irqdomain associated with each interrupt
+- * remapping device, so this interface is used to retrieve the PCI MSI/MSIX
+- * irqdomain serving request @info.
+  * Returns pointer to IRQ domain, or NULL on failure.
+  */
+-struct irq_domain *
+-irq_remapping_get_irq_domain(struct irq_alloc_info *info)
++struct irq_domain *irq_remapping_get_irq_domain(struct irq_alloc_info *info)
  {
- 	char str[16];
-@@ -218,14 +208,7 @@ static int __init smp_read_mpc(struct mp
- 	if (early)
- 		return 1;
+ 	if (!remap_ops || !remap_ops->get_irq_domain)
+ 		return NULL;
+--- a/drivers/iommu/irq_remapping.h
++++ b/drivers/iommu/irq_remapping.h
+@@ -43,10 +43,7 @@ struct irq_remap_ops {
+ 	/* Enable fault handling */
+ 	int  (*enable_faulting)(void);
  
--	if (mpc->oemptr)
--		x86_init.mpparse.smp_read_mpc_oem(mpc);
+-	/* Get the irqdomain associated the IOMMU device */
+-	struct irq_domain *(*get_ir_irq_domain)(struct irq_alloc_info *);
 -
--	/*
--	 *      Now process the configuration blocks.
--	 */
--	x86_init.mpparse.mpc_record(0);
--
-+	/* Now process the configuration blocks. */
- 	while (count < mpc->length) {
- 		switch (*mpt) {
- 		case MP_PROCESSOR:
-@@ -256,7 +239,6 @@ static int __init smp_read_mpc(struct mp
- 			count = mpc->length;
- 			break;
- 		}
--		x86_init.mpparse.mpc_record(1);
- 	}
+-	/* Get the MSI irqdomain associated with the IOMMU device */
++	/* Get the irqdomain associated to IOMMU device */
+ 	struct irq_domain *(*get_irq_domain)(struct irq_alloc_info *);
+ };
  
- 	if (!num_processors)
---- a/arch/x86/kernel/x86_init.c
-+++ b/arch/x86/kernel/x86_init.c
-@@ -67,11 +67,7 @@ struct x86_init_ops x86_init __initdata
- 	},
- 
- 	.mpparse = {
--		.mpc_record		= x86_init_uint_noop,
- 		.setup_ioapic_ids	= x86_init_noop,
--		.mpc_apic_id		= default_mpc_apic_id,
--		.smp_read_mpc_oem	= default_smp_read_mpc_oem,
--		.mpc_oem_bus_info	= default_mpc_oem_bus_info,
- 		.find_smp_config	= default_find_smp_config,
- 		.get_smp_config		= default_get_smp_config,
- 	},
 
