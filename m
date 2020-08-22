@@ -2,102 +2,209 @@ Return-Path: <SRS0=dq5y=CA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19A58C433E1
-	for <linux-pci@archiver.kernel.org>; Sat, 22 Aug 2020 09:38:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15FFFC433E3
+	for <linux-pci@archiver.kernel.org>; Sat, 22 Aug 2020 14:19:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D9899207DF
-	for <linux-pci@archiver.kernel.org>; Sat, 22 Aug 2020 09:38:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1598089110;
-	bh=oZNt87juyUph93Ar3dAdKT06sYZuhi9gBt4yTFyhVjU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=R0ZNIa20+ky0YGmHAJeeDvvKGTgOHQphx+nLmiKuj64d22XbW9IZqPqcJHBGHDwWs
-	 yx1AWyKHaeqr6nulXtFYnfebvWNKPq27dJLqyxv1A6/I5SIAwIJFs6Wp2tgtcdKWT1
-	 Mo84xqVvCCenpdO0wo1Hs7hmfZw9HFWrdu9aVsNg=
+	by mail.kernel.org (Postfix) with ESMTP id EF3632080D
+	for <linux-pci@archiver.kernel.org>; Sat, 22 Aug 2020 14:19:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726169AbgHVJi3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 22 Aug 2020 05:38:29 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54454 "EHLO mail.kernel.org"
+        id S1728019AbgHVOTO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 22 Aug 2020 10:19:14 -0400
+Received: from mx2.suse.de ([195.135.220.15]:60122 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725864AbgHVJi3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 22 Aug 2020 05:38:29 -0400
-Received: from pali.im (pali.im [31.31.79.79])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 00A5520738;
-        Sat, 22 Aug 2020 09:38:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1598089109;
-        bh=oZNt87juyUph93Ar3dAdKT06sYZuhi9gBt4yTFyhVjU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=dem8q0qAS/gWNFLCDlEZghrJDUCVF2j2Ho4Kp8K7HX+lJdwvOqj+3+6ZIDb7LKi99
-         pTlBNQltltZJ6kyioRDDHtBarPL//kZpesEczNKpj8lSnfWfQpD6UdDLHEkE/KrAVG
-         7xoBEDBS5Piwqer66i0bZAzXIgrD/0QGInq2UKl8=
-Received: by pali.im (Postfix)
-        id 9E62C860; Sat, 22 Aug 2020 11:38:26 +0200 (CEST)
-Date:   Sat, 22 Aug 2020 11:38:26 +0200
-From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
-To:     linux-pci@vger.kernel.org
-Cc:     Tomasz Maciej Nowak <tmn505@gmail.com>,
-        Gregory Clement <gregory.clement@bootlin.com>,
+        id S1727899AbgHVOTO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 22 Aug 2020 10:19:14 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id D6EE5ABE9;
+        Sat, 22 Aug 2020 14:19:40 +0000 (UTC)
+Subject: Re: [patch RFC 00/38] x86, PCI, XEN, genirq ...: Prepare for device
+ MSI
+To:     Thomas Gleixner <tglx@linutronix.de>,
+        LKML <linux-kernel@vger.kernel.org>
+Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
+        iommu@lists.linux-foundation.org, linux-hyperv@vger.kernel.org,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Jon Derrick <jonathan.derrick@intel.com>,
+        Lu Baolu <baolu.lu@linux.intel.com>,
+        Wei Liu <wei.liu@kernel.org>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Steve Wahl <steve.wahl@hpe.com>,
+        Dimitri Sivanich <sivanich@hpe.com>,
+        Russ Anderson <rja@hpe.com>, linux-pci@vger.kernel.org,
         Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-kernel@vger.kernel.org, Andrew Lunn <andrew@lunn.ch>,
-        Xogium <contact@xogium.me>, marek.behun@nic.cz
-Subject: Re: [PATCH v2 0/5] PCIe aardvark controller improvements
-Message-ID: <20200822093826.7fzchbwpmvdgpqbf@pali>
-References: <20200804115747.7078-1-pali@kernel.org>
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        xen-devel@lists.xenproject.org,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Marc Zyngier <maz@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Megha Dey <megha.dey@intel.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Jacob Pan <jacob.jun.pan@intel.com>,
+        Baolu Lu <baolu.lu@intel.com>,
+        Kevin Tian <kevin.tian@intel.com>,
+        Dan Williams <dan.j.williams@intel.com>
+References: <20200821002424.119492231@linutronix.de>
+From:   =?UTF-8?B?SsO8cmdlbiBHcm/Dnw==?= <jgross@suse.com>
+Message-ID: <863e2e57-97a4-5625-4aaf-901092e673b1@suse.com>
+Date:   Sat, 22 Aug 2020 16:19:09 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.11.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20200804115747.7078-1-pali@kernel.org>
-User-Agent: NeoMutt/20180716
+In-Reply-To: <20200821002424.119492231@linutronix.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tuesday 04 August 2020 13:57:42 Pali Rohár wrote:
-> Hi,
+On 21.08.20 02:24, Thomas Gleixner wrote:
+> First of all, sorry for the horrible long Cc list, which was
+> unfortunately unavoidable as this touches the world and some more.
 > 
-> we have some more improvements for PCIe aardvark controller (Armada 3720
-> SOC - EspressoBIN and Turris MOX).
+> This patch series aims to provide a base to support device MSI (non
+> PCI based) in a halfways architecture independent way.
 > 
-> The main improvement is that with these patches the driver can be compiled
-> as a module, and can be reloaded at runtime.
+> It's a mixed bag of bug fixes, cleanups and general improvements which
+> are worthwhile independent of the device MSI stuff. Unfortunately this
+> also comes with an evil abuse of the irqdomain system to coerce XEN on
+> x86 into compliance without rewriting XEN from scratch.
 > 
-> This series applies on top of Linus' master branch.
+> As discussed in length in this mail thread:
 > 
-> Marek & Pali
+>    https://lore.kernel.org/r/87h7tcgbs2.fsf@nanos.tec.linutronix.de
 > 
+> the initial attempt of piggypacking device MSI support on platform MSI
+> is doomed for various reasons, but creating independent interrupt
+> domains for these upcoming magic PCI subdevices which are not PCI, but
+> might be exposed as PCI devices is not as trivial as it seems.
+> 
+> The initially suggested and evaluated approach of extending platform
+> MSI turned out to be the completely wrong direction and in fact
+> platform MSI should be rewritten on top of device MSI or completely
+> replaced by it.
+> 
+> One of the main issues is that x86 does not support the concept of irq
+> domains associations stored in device::msi_domain and still relies on
+> the arch_*_msi_irqs() fallback implementations which has it's own set
+> of problems as outlined in
+> 
+>    https://lore.kernel.org/r/87bljg7u4f.fsf@nanos.tec.linutronix.de/
+> 
+> in the very same thread.
+> 
+> The main obstacle of storing that pointer is XEN which has it's own
+> historical notiion of handling PCI MSI interupts.
+> 
+> This series tries to address these issues in several steps:
+> 
+>   1) Accidental bug fixes
+> 	iommu/amd: Prevent NULL pointer dereference
+> 
+>   2) Janitoring
+> 	x86/init: Remove unused init ops
+> 
+>   3) Simplification of the x86 specific interrupt allocation mechanism
+> 
+> 	x86/irq: Rename X86_IRQ_ALLOC_TYPE_MSI* to reflect PCI dependency
+> 	x86/irq: Add allocation type for parent domain retrieval
+> 	iommu/vt-d: Consolidate irq domain getter
+> 	iommu/amd: Consolidate irq domain getter
+> 	iommu/irq_remapping: Consolidate irq domain lookup
+> 
+>   4) Consolidation of the X86 specific interrupt allocation mechanism to be as close
+>      as possible to the generic MSI allocation mechanism which allows to get rid
+>      of quite a bunch of x86'isms which are pointless
+> 
+> 	x86/irq: Prepare consolidation of irq_alloc_info
+> 	x86/msi: Consolidate HPET allocation
+> 	x86/ioapic: Consolidate IOAPIC allocation
+> 	x86/irq: Consolidate DMAR irq allocation
+> 	x86/irq: Consolidate UV domain allocation
+> 	PCI: MSI: Rework pci_msi_domain_calc_hwirq()
+> 	x86/msi: Consolidate MSI allocation
+> 	x86/msi: Use generic MSI domain ops
+> 
+>    5) x86 specific cleanups to remove the dependency on arch_*_msi_irqs()
+> 
+> 	x86/irq: Move apic_post_init() invocation to one place
+> 	z86/pci: Reducde #ifdeffery in PCI init code
+> 	x86/irq: Initialize PCI/MSI domain at PCI init time
+> 	irqdomain/msi: Provide DOMAIN_BUS_VMD_MSI
+> 	PCI: vmd: Mark VMD irqdomain with DOMAIN_BUS_VMD_MSI
+> 	PCI: MSI: Provide pci_dev_has_special_msi_domain() helper
+> 	x86/xen: Make xen_msi_init() static and rename it to xen_hvm_msi_init()
+> 	x86/xen: Rework MSI teardown
+> 	x86/xen: Consolidate XEN-MSI init
+> 	irqdomain/msi: Allow to override msi_domain_alloc/free_irqs()
+> 	x86/xen: Wrap XEN MSI management into irqdomain
+> 	iommm/vt-d: Store irq domain in struct device
+> 	iommm/amd: Store irq domain in struct device
+> 	x86/pci: Set default irq domain in pcibios_add_device()
+> 	PCI/MSI: Allow to disable arch fallbacks
+> 	x86/irq: Cleanup the arch_*_msi_irqs() leftovers
+> 	x86/irq: Make most MSI ops XEN private
+> 
+>      This one is paving the way to device MSI support, but it comes
+>      with an ugly and evil hack. The ability of overriding the default
+>      allocation/free functions of an MSI irq domain is useful in general as
+>      (hopefully) demonstrated with the device MSI POC, but the abuse
+>      in context of XEN is evil. OTOH without enough XENology and without
+>      rewriting XEN from scratch wrapping XEN MSI handling into a pseudo
+>      irq domain is a reasonable step forward for mere mortals with severly
+>      limited XENology. One day the XEN folks might make it a real irq domain.
+>      Perhaps when they have to support the same mess on other architectures.
+>      Hope dies last...
+> 
+>      At least the mechanism to override alloc/free turned out to be useful
+>      for implementing the base infrastructure for device MSI. So it's not a
+>      completely lost case.
+> 
+>    6) X86 specific preparation for device MSI
+> 
+>         x86/irq: Add DEV_MSI allocation type
+>         x86/msi: Let pci_msi_prepare() handle non-PCI MSI
+> 
+>    7) Generic device MSI infrastructure
+> 
+>         platform-msi: Provide default irq_chip:ack
+>         platform-msi: Add device MSI infrastructure
+> 
+>    8) Infrastructure for and a POC of an IMS (Interrupt Message
+>       Storm) irq domain and irqchip implementation
+> 
+>         irqdomain/msi: Provide msi_alloc/free_store() callbacks
+>         irqchip: Add IMS array driver - NOT FOR MERGING
+> 
+> The whole lot is also available from git:
+> 
+>     git://git.kernel.org/pub/scm/linux/kernel/git/tglx/devel.git device-msi
+> 
+> This has been tested on Intel/AMD/KVM but lacks testing on:
+> 
+>      - HYPERV (-ENODEV)
+>      - VMD enabled systems (-ENODEV)
+>      - XEN (-ENOCLUE)
 
-Hello! I would like to remind this patch series.
+Tested to work in Xen dom0. Network is running fine with eth0 MSI
+interrupts being routed through Xen.
 
-Lorenzo, could you please look at it?
+You can add my:
 
-> Changes in V2 for patch 4/5:
-> * Protect pci_stop_root_bus() and pci_remove_root_bus() function calls by
->   pci_lock_rescan_remove() and pci_unlock_rescan_remove()
-> 
-> 
-> Pali Rohár (5):
->   PCI: aardvark: Fix compilation on s390
->   PCI: aardvark: Check for errors from pci_bridge_emul_init() call
->   PCI: pci-bridge-emul: Export API functions
->   PCI: aardvark: Implement driver 'remove' function and allow to build
->     it as module
->   PCI: aardvark: Move PCIe reset card code to advk_pcie_train_link()
-> 
->  drivers/pci/controller/Kconfig        |   2 +-
->  drivers/pci/controller/pci-aardvark.c | 104 ++++++++++++++++----------
->  drivers/pci/pci-bridge-emul.c         |   4 +
->  3 files changed, 71 insertions(+), 39 deletions(-)
-> 
-> -- 
-> 2.20.1
-> 
+Tested-by: Juergen Gross <jgross@suse.com>
+
+
+Juergen
