@@ -5,39 +5,39 @@ X-Spam-Level:
 X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7272FC433E3
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Aug 2020 08:48:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7939C433DF
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Aug 2020 08:58:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4856B206F0
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Aug 2020 08:48:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A34CA2087D
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Aug 2020 08:58:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1598258925;
-	bh=jRgIWyY0b4yL1+iU+rEN7X0YTkrV7SA7WEWwegKb4Wo=;
+	s=default; t=1598259539;
+	bh=39BZSNOZ3YCtH8xHE/nc+9Glh3GPa0Ojog1NJQhchpA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=2Yfchlw2Y1/DzffLo9oVuXztyxKoNTx+70Qlwd97+5m1h42h3x4srnjx20Cv+achO
-	 JbR1s7+EHbg5JFH2/n4/NCFi/xCXtIuilR7qR6rmmkAXpeJl2aJHM9jCjJ9dfWvyoE
-	 fM89JQB14F2B9r3cc9Ht9i+CWP8HvumK7R0EygKA=
+	b=hKEMJJ5ZsiH5KSZNFaeB8AJL5o+GWN2Sl/S4sG5lNkKx+Fa/4D8YEwFkxFgRbabLK
+	 e/k5Ho3FYlfW5Fa/a2aLCmjoXC1L3Jftb/+ExlPkXfct1KWBnvER6quKCF7DnDfIG0
+	 +Ag7rne0O7RNEMBJ4npp+fCRPAi6BwIeDhvVz6NI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729597AbgHXIso (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 24 Aug 2020 04:48:44 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50200 "EHLO mail.kernel.org"
+        id S1729137AbgHXI6q (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 24 Aug 2020 04:58:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46092 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729589AbgHXIsn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 24 Aug 2020 04:48:43 -0400
+        id S1730462AbgHXI6J (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 24 Aug 2020 04:58:09 -0400
 Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3CEB721741;
-        Mon, 24 Aug 2020 08:48:42 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id D74C42074D;
+        Mon, 24 Aug 2020 08:58:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1598258922;
-        bh=jRgIWyY0b4yL1+iU+rEN7X0YTkrV7SA7WEWwegKb4Wo=;
+        s=default; t=1598259488;
+        bh=39BZSNOZ3YCtH8xHE/nc+9Glh3GPa0Ojog1NJQhchpA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=C2CVBvgK8EgKPjWqphrXn5t1r25wMAM4aX4wG+87SkIZmwFRFP1zlWIk2Z2hbIcGH
-         r/29mpG0vAVTE3AD8wewpRjXkykWqV8gJAJqGpotsw7+U1aNThuZZnJhUm9MYH5XDa
-         HczkWczVH/pAE++bYJXZZnfGzOzYkwBqN/4Pwqns=
+        b=2bJvJLnkU+RhmReazxHF08V6S1+y9xIIhBv9RUzIxhG8bEPmOg3gQlIdEOBHZ+quR
+         RvxLaVluwPso0FYAZo16kLRHt5zIyfhzmXQkwuJscO0+NUBIeaLZSTzHhdI6vKP8Io
+         2lqy0KGvw62Cz5zdG440pHvyFmX5ub0UM+1BPRig=
 From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -48,12 +48,12 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
         xen-devel@lists.xenproject.org, linux-pci@vger.kernel.org,
         Sasha Levin <sashal@kernel.org>
-Subject: [PATCH 5.4 093/107] Fix build error when CONFIG_ACPI is not set/enabled:
-Date:   Mon, 24 Aug 2020 10:30:59 +0200
-Message-Id: <20200824082409.704889057@linuxfoundation.org>
+Subject: [PATCH 4.19 57/71] Fix build error when CONFIG_ACPI is not set/enabled:
+Date:   Mon, 24 Aug 2020 10:31:48 +0200
+Message-Id: <20200824082358.762937348@linuxfoundation.org>
 X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200824082405.020301642@linuxfoundation.org>
-References: <20200824082405.020301642@linuxfoundation.org>
+In-Reply-To: <20200824082355.848475917@linuxfoundation.org>
+References: <20200824082355.848475917@linuxfoundation.org>
 User-Agent: quilt/0.66
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -86,10 +86,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+)
 
 diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
-index 91220cc258547..5c11ae66b5d8e 100644
+index 9112d1cb397bb..22da9bfd8a458 100644
 --- a/arch/x86/pci/xen.c
 +++ b/arch/x86/pci/xen.c
-@@ -26,6 +26,7 @@
+@@ -25,6 +25,7 @@
  #include <asm/xen/pci.h>
  #include <asm/xen/cpuid.h>
  #include <asm/apic.h>
