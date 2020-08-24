@@ -2,122 +2,359 @@ Return-Path: <SRS0=Vpie=CC=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71D7EC433E1
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Aug 2020 05:20:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02AC7C433DF
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Aug 2020 06:34:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4888E2071E
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Aug 2020 05:20:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B93C020720
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Aug 2020 06:34:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="vcT2u1US"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Nc6vsHNo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727872AbgHXFUm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 24 Aug 2020 01:20:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60214 "EHLO
+        id S1725946AbgHXGeg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 24 Aug 2020 02:34:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43202 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725998AbgHXFUl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Aug 2020 01:20:41 -0400
-Received: from mail-pg1-x544.google.com (mail-pg1-x544.google.com [IPv6:2607:f8b0:4864:20::544])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6E78C061573;
-        Sun, 23 Aug 2020 22:20:41 -0700 (PDT)
-Received: by mail-pg1-x544.google.com with SMTP id d19so3997093pgl.10;
-        Sun, 23 Aug 2020 22:20:41 -0700 (PDT)
+        with ESMTP id S1725850AbgHXGee (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Aug 2020 02:34:34 -0400
+Received: from mail-ua1-x944.google.com (mail-ua1-x944.google.com [IPv6:2607:f8b0:4864:20::944])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F9E5C061574
+        for <linux-pci@vger.kernel.org>; Sun, 23 Aug 2020 23:34:34 -0700 (PDT)
+Received: by mail-ua1-x944.google.com with SMTP id g11so2279191ual.2
+        for <linux-pci@vger.kernel.org>; Sun, 23 Aug 2020 23:34:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=a9FIkUYppAnd6RkZ+nRY1Ky5mZ+w/qdsOn9YUv8jqCk=;
-        b=vcT2u1USQjCJsI84bF5cjPilghWnbfilgNMMkMOXcDM3+2zDyX7Lns15utnFh2rqfP
-         VHaAlDe8TsZVVa++LzJtyzBwXew92XmzyNlNcqbsUnWPhANqxhbh2HpdPKLi/upCu8+5
-         ifADSYRQKXBCs03uXsBnmUjYdjh66TUE/EiEQgFHN7Knt9yygNqd3Jh9RxMzarGzDzrd
-         iumBOYL4vGbiTAcz687oPEHbBouDdyUtKvjzcsaE+c7z4bePcfF1S4oLf1m45Q9bPIRv
-         4HRbS6jv6S50y3knrjSpKpsG+mqRPOn42sLY+ijVnMGByOfiAWQ2JdCnV7zL8Y06pmPw
-         B9Mg==
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=g0O7JTTEG8zhra8Bmg9qzPY8D1AcZ5n76o6w8ixndyc=;
+        b=Nc6vsHNoA7tyvTeoyEk/516QqWonlIVTa5PIghtJCkIBB60ctW7pnM6s1MxqOYQRzj
+         9flK76JLPqsVr6jgcvEENxKMZhBMdpyVoz46hcu7lELf8vbsU+U0P8W6krU52IU0IE7c
+         y8Aizy9JTOnPM7Qf7hTY1hltjtojdKO7qWriIEWDJS5MI2/L0tkV0tBHLQn6IWc+DJzs
+         xESjMdyDNixzBEK8TXDNbQB0+SsO9CSRn4g2tGoDi4VKi138BqetjefnMfS1HwlFE78X
+         XLE4wmIEHeBSmK99rJxKE4oxirb97De0wSCI9XTBfzsXh1KACd+3xTrGw6evmXQdyN0G
+         czAA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=a9FIkUYppAnd6RkZ+nRY1Ky5mZ+w/qdsOn9YUv8jqCk=;
-        b=uWAh+dMtKrMpuDgTcFTA1M0CaxQs7leQypG6tZcxMkEa5VYH3/bWjsG9NcHkDGL08+
-         OzGp7FT6EhuxfGlr8BSLm8JgYDhq9JbXugblPe5Bib2JarLo306YzTsCjIgIY1sHMady
-         hNfH3ga9GesoUsYSVXsMt2PG6Xz2MuFl9hNQ6mS4cXtUcVN1cdkoAeoXKboVjKCSTu9x
-         9fnvs7mgtL6mzsvfUAhooZ8Y1HhJtpEqF48rR4PyOm0mscU9vH0t24hKJPWyYtnL+aQV
-         iECc9yYISjilFURizExnCzA1knODMKSd7D+/pe5IYe8A5BhPqNs5X4hsoG/6tG7/TEsB
-         P04w==
-X-Gm-Message-State: AOAM533YbpLLJdzIxhhj8+2S909qfZjpbe5F6CPRP/EElA8chbPIPpsC
-        EeUvyC718jt1v3Yqkq5WmMU=
-X-Google-Smtp-Source: ABdhPJwrhBJIL1QKHKD5mrhI0EjX1niAo/OIICj66vRZDhcyJOkkIdWNaYT3wCsw7VuN9syQevZA4A==
-X-Received: by 2002:aa7:9e4e:: with SMTP id z14mr3017901pfq.60.1598246441144;
-        Sun, 23 Aug 2020 22:20:41 -0700 (PDT)
-Received: from localhost.localdomain ([103.7.29.9])
-        by smtp.gmail.com with ESMTPSA id r134sm9964167pfc.1.2020.08.23.22.20.38
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 23 Aug 2020 22:20:40 -0700 (PDT)
-From:   Jiang Biao <benbjiang@gmail.com>
-X-Google-Original-From: Jiang Biao <benbjiang@tencent.com>
-To:     bhelgaas@google.com
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jiang Biao <benbjiang@tencent.com>,
-        Bin Lai <robinlai@tencent.com>
-Subject: [PATCH] driver/pci: reduce the single block time in pci_read_config
-Date:   Mon, 24 Aug 2020 13:20:25 +0800
-Message-Id: <20200824052025.48362-1-benbjiang@tencent.com>
-X-Mailer: git-send-email 2.21.0
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=g0O7JTTEG8zhra8Bmg9qzPY8D1AcZ5n76o6w8ixndyc=;
+        b=p3FWsniiTV+YzR/9qEct+SxcEp4mvQ5xO/QPqOzzjPLNV7LdjYbQ3jIhSxU1mmdczD
+         lQsu2XonPaM7iUNvYxBKba9r7fDrxffc2YFJ0h7ZUx9lzsvzNwzwB6JyirYovOTDblqV
+         UUI3C+1zb/1u0C1WJDvycHsEAOuN2v1oL3nqO0yz+8ka7Sq2MBTN1xLNLuLocwtC/Idu
+         kaTkH5fq3TvEwSOQ3udcc8fyI4Sj8gU0dcGmEHZtfxzbu+JaxscLCVvwuola/YKN33DA
+         XP8Cl6INEQvZIL9zWdA8+wIxHt/UQtqmbcfom/O+nVew2CefLR4Ii8p1MxYSN2Nw7AdS
+         WwLA==
+X-Gm-Message-State: AOAM53068aJfVmFm3c9g+wow3ETDKrYtZ00i4tMDcMr+j4WoHRCKbjhQ
+        O1ACBmXWF2Y/+b/1lyEMeFLSD08PNiIqAnTMNYGXag==
+X-Google-Smtp-Source: ABdhPJzUK/zzpLyTaZNUq3D08AEPc3DpsY8FmM6IbHqVYAv0DvFNoLUEzWRZ5xuxYKq6Rno77e4i5E7HnKfw3Agv8hI=
+X-Received: by 2002:ab0:3a85:: with SMTP id r5mr1733713uaw.100.1598250873271;
+ Sun, 23 Aug 2020 23:34:33 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20200716141534.30241-1-ulf.hansson@linaro.org>
+ <CAPDyKFr5WQ1kpFguDe2e8G7t7p_99CFbqwRQFZPCSuMV2eYsMQ@mail.gmail.com> <f4d74498a8c246a595e56b8daa09ece8@realsil.com.cn>
+In-Reply-To: <f4d74498a8c246a595e56b8daa09ece8@realsil.com.cn>
+From:   Ulf Hansson <ulf.hansson@linaro.org>
+Date:   Mon, 24 Aug 2020 08:33:57 +0200
+Message-ID: <CAPDyKFqwcQO2E2b4h7kmgHYRBQJAJ5N1RgW3Kk5hR2ccZ34VAA@mail.gmail.com>
+Subject: Re: [PATCH] mmc: core: Initial support for SD express card/host
+To:     =?UTF-8?B?5Yav6ZSQ?= <rui_feng@realsil.com.cn>
+Cc:     Christoph Hellwig <hch@lst.de>, Arnd Bergmann <arnd@arndb.de>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Jiang Biao <benbjiang@tencent.com>
+On Mon, 24 Aug 2020 at 03:04, =E5=86=AF=E9=94=90 <rui_feng@realsil.com.cn> =
+wrote:
+>
+> Hi Hansson:
+>
+> If this patch will not be changed, I will post a patch for rtsx driver ac=
+cording your patch.
 
-pci_read_config() could block several ms in kernel space, mainly
-caused by the while loop to call pci_user_read_config_dword().
-Singel pci_user_read_config_dword() loop could consume 130us+,
-              |    pci_user_read_config_dword() {
-              |      _raw_spin_lock_irq() {
-! 136.698 us  |        native_queued_spin_lock_slowpath();
-! 137.582 us  |      }
-              |      pci_read() {
-              |        raw_pci_read() {
-              |          pci_conf1_read() {
-  0.230 us    |            _raw_spin_lock_irqsave();
-  0.035 us    |            _raw_spin_unlock_irqrestore();
-  8.476 us    |          }
-  8.790 us    |        }
-  9.091 us    |      }
-! 147.263 us  |    }
-and dozens of the loop could consume ms+.
+I don't think there is any change needed, unless you think so.
 
-If we execute some lspci commands concurrently, ms+ scheduling
-latency could be detected.
+Kind regards
+Uffe
 
-Add scheduling chance in the loop to improve the latency.
-
-Reported-by: Bin Lai <robinlai@tencent.com>
-Signed-off-by: Jiang Biao <benbjiang@tencent.com>
----
- drivers/pci/pci-sysfs.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 6d78df9..3b9f63d 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -708,6 +708,7 @@ static ssize_t pci_read_config(struct file *filp, struct kobject *kobj,
- 		data[off - init_off + 3] = (val >> 24) & 0xff;
- 		off += 4;
- 		size -= 4;
-+		cond_resched();
- 	}
- 
- 	if (size >= 2) {
--- 
-1.8.3.1
-
+>
+> >
+> > Rui,
+> >
+> > On Thu, 16 Jul 2020 at 16:16, Ulf Hansson <ulf.hansson@linaro.org> wrot=
+e:
+> > >
+> > > In the SD specification v7.10 the SD express card has been added. Thi=
+s
+> > > new type of removable SD card, can be managed via a PCIe/NVMe based
+> > > interface, while also allowing backwards compatibility towards the
+> > > legacy SD interface.
+> > >
+> > > To keep the backwards compatibility, it's required to start the
+> > > initialization through the legacy SD interface. If it turns out that
+> > > the mmc host and the SD card, both supports the PCIe/NVMe interface,
+> > > then a switch should be allowed.
+> > >
+> > > Therefore, let's introduce some basic support for this type of SD
+> > > cards to the mmc core. The mmc host, should set MMC_CAP2_SD_EXP if it
+> > > supports this interface and MMC_CAP2_SD_EXP_1_2V, if also 1.2V is
+> > > supported, as to inform the core about it.
+> > >
+> > > To deal with the switch to the PCIe/NVMe interface, the mmc host is
+> > > required to implement a new host ops, ->init_sd_express(). Based on
+> > > the initial communication between the host and the card,
+> > > host->ios.timing is set to either MMC_TIMING_SD_EXP or
+> > > MMC_TIMING_SD_EXP_1_2V, depending on if 1.2V is supported or not. In
+> > > this way, the mmc host can check these values in its ->init_sd_expres=
+s() ops,
+> > to know how to proceed with the handover.
+> > >
+> > > Note that, to manage card insert/removal, the mmc core sticks with
+> > > using the ->get_cd() callback, which means it's the host's
+> > > responsibility to make sure it provides valid data, even if the card
+> > > may be managed by PCIe/NVMe at the moment. As long as the card seems
+> > > to be present, the mmc core keeps the card powered on.
+> > >
+> > > Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> > > Cc: Arnd Bergmann <arnd@arndb.de>
+> > > Cc: Christoph Hellwig <hch@lst.de>
+> > > Cc: Rui Feng <rui_feng@realsil.com.cn>
+> > > Signed-off-by: Ulf Hansson <ulf.hansson@linaro.org>
+> >
+> > Rui, did you manage to get some time to look at $subject patch?
+> >
+> > If you need some help to understand what's needed to implement the
+> > corresponding support in drivers/mmc/host/rtsx_pci_sdmmc.c, then please
+> > just ask.
+> >
+> > I think it would make sense to queue changes for rtsx_pci at the same p=
+oint as
+> > the mmc core changes. That's because I don't want to maintain code in t=
+he
+> > mmc core that's left unused.
+> >
+> > Kind regards
+> > Uffe
+> >
+> > > ---
+> > >  drivers/mmc/core/core.c   | 15 ++++++++++--
+> > >  drivers/mmc/core/host.h   |  6 +++++
+> > >  drivers/mmc/core/sd_ops.c | 49
+> > > +++++++++++++++++++++++++++++++++++++--
+> > >  drivers/mmc/core/sd_ops.h |  1 +
+> > >  include/linux/mmc/host.h  |  7 ++++++
+> > >  5 files changed, 74 insertions(+), 4 deletions(-)
+> > >
+> > > diff --git a/drivers/mmc/core/core.c b/drivers/mmc/core/core.c index
+> > > 8ccae6452b9c..6673c0f33cc7 100644
+> > > --- a/drivers/mmc/core/core.c
+> > > +++ b/drivers/mmc/core/core.c
+> > > @@ -2137,8 +2137,12 @@ static int mmc_rescan_try_freq(struct
+> > mmc_host
+> > > *host, unsigned freq)
+> > >
+> > >         mmc_go_idle(host);
+> > >
+> > > -       if (!(host->caps2 & MMC_CAP2_NO_SD))
+> > > -               mmc_send_if_cond(host, host->ocr_avail);
+> > > +       if (!(host->caps2 & MMC_CAP2_NO_SD)) {
+> > > +               if (mmc_send_if_cond_pcie(host, host->ocr_avail))
+> > > +                       goto out;
+> > > +               if (mmc_card_sd_express(host))
+> > > +                       return 0;
+> > > +       }
+> > >
+> > >         /* Order's important: probe SDIO, then SD, then MMC */
+> > >         if (!(host->caps2 & MMC_CAP2_NO_SDIO)) @@ -2153,6 +2157,7
+> > @@
+> > > static int mmc_rescan_try_freq(struct mmc_host *host, unsigned freq)
+> > >                 if (!mmc_attach_mmc(host))
+> > >                         return 0;
+> > >
+> > > +out:
+> > >         mmc_power_off(host);
+> > >         return -EIO;
+> > >  }
+> > > @@ -2280,6 +2285,12 @@ void mmc_rescan(struct work_struct *work)
+> > >                 goto out;
+> > >         }
+> > >
+> > > +       /* If an SD express card is present, then leave it as is. */
+> > > +       if (mmc_card_sd_express(host)) {
+> > > +               mmc_release_host(host);
+> > > +               goto out;
+> > > +       }
+> > > +
+> > >         for (i =3D 0; i < ARRAY_SIZE(freqs); i++) {
+> > >                 unsigned int freq =3D freqs[i];
+> > >                 if (freq > host->f_max) { diff --git
+> > > a/drivers/mmc/core/host.h b/drivers/mmc/core/host.h index
+> > > 5e3b9534ffb2..ba407617ed23 100644
+> > > --- a/drivers/mmc/core/host.h
+> > > +++ b/drivers/mmc/core/host.h
+> > > @@ -77,5 +77,11 @@ static inline bool mmc_card_hs400es(struct
+> > mmc_card *card)
+> > >         return card->host->ios.enhanced_strobe;  }
+> > >
+> > > +static inline bool mmc_card_sd_express(struct mmc_host *host) {
+> > > +       return host->ios.timing =3D=3D MMC_TIMING_SD_EXP ||
+> > > +               host->ios.timing =3D=3D MMC_TIMING_SD_EXP_1_2V; }
+> > > +
+> > >  #endif
+> > >
+> > > diff --git a/drivers/mmc/core/sd_ops.c b/drivers/mmc/core/sd_ops.c
+> > > index 22bf528294b9..d61ff811218c 100644
+> > > --- a/drivers/mmc/core/sd_ops.c
+> > > +++ b/drivers/mmc/core/sd_ops.c
+> > > @@ -158,7 +158,8 @@ int mmc_send_app_op_cond(struct mmc_host *host,
+> > u32 ocr, u32 *rocr)
+> > >         return err;
+> > >  }
+> > >
+> > > -int mmc_send_if_cond(struct mmc_host *host, u32 ocr)
+> > > +static int __mmc_send_if_cond(struct mmc_host *host, u32 ocr, u8
+> > pcie_bits,
+> > > +                             u32 *resp)
+> > >  {
+> > >         struct mmc_command cmd =3D {};
+> > >         int err;
+> > > @@ -171,7 +172,7 @@ int mmc_send_if_cond(struct mmc_host *host, u32
+> > ocr)
+> > >          * SD 1.0 cards.
+> > >          */
+> > >         cmd.opcode =3D SD_SEND_IF_COND;
+> > > -       cmd.arg =3D ((ocr & 0xFF8000) !=3D 0) << 8 | test_pattern;
+> > > +       cmd.arg =3D ((ocr & 0xFF8000) !=3D 0) << 8 | pcie_bits << 8 |
+> > > + test_pattern;
+> > >         cmd.flags =3D MMC_RSP_SPI_R7 | MMC_RSP_R7 |
+> > MMC_CMD_BCR;
+> > >
+> > >         err =3D mmc_wait_for_cmd(host, &cmd, 0); @@ -186,6 +187,50
+> > @@
+> > > int mmc_send_if_cond(struct mmc_host *host, u32 ocr)
+> > >         if (result_pattern !=3D test_pattern)
+> > >                 return -EIO;
+> > >
+> > > +       if (resp)
+> > > +               *resp =3D cmd.resp[0];
+> > > +
+> > > +       return 0;
+> > > +}
+> > > +
+> > > +int mmc_send_if_cond(struct mmc_host *host, u32 ocr) {
+> > > +       return __mmc_send_if_cond(host, ocr, 0, NULL); }
+> > > +
+> > > +int mmc_send_if_cond_pcie(struct mmc_host *host, u32 ocr) {
+> > > +       u32 resp =3D 0;
+> > > +       u8 pcie_bits =3D 0;
+> > > +       int ret;
+> > > +
+> > > +       if (host->caps2 & MMC_CAP2_SD_EXP) {
+> > > +               /* Probe card for SD express support via PCIe. */
+> > > +               pcie_bits =3D 0x10;
+> > > +               if (host->caps2 & MMC_CAP2_SD_EXP_1_2V)
+> > > +                       /* Probe also for 1.2V support. */
+> > > +                       pcie_bits =3D 0x30;
+> > > +       }
+> > > +
+> > > +       ret =3D __mmc_send_if_cond(host, ocr, pcie_bits, &resp);
+> > > +       if (ret)
+> > > +               return 0;
+> > > +
+> > > +       /* Continue with the SD express init, if the card supports it=
+. */
+> > > +       resp &=3D 0x3000;
+> > > +       if (pcie_bits && resp) {
+> > > +               if (resp =3D=3D 0x3000)
+> > > +                       host->ios.timing =3D
+> > MMC_TIMING_SD_EXP_1_2V;
+> > > +               else
+> > > +                       host->ios.timing =3D MMC_TIMING_SD_EXP;
+> > > +
+> > > +               /*
+> > > +                * According to the spec the clock shall also be gate=
+d, but
+> > > +                * let's leave this to the host driver for more flexi=
+bility.
+> > > +                */
+> > > +               return host->ops->init_sd_express(host, &host->ios);
+> > > +       }
+> > > +
+> > >         return 0;
+> > >  }
+> > >
+> > > diff --git a/drivers/mmc/core/sd_ops.h b/drivers/mmc/core/sd_ops.h
+> > > index 2194cabfcfc5..3ba7b3cf4652 100644
+> > > --- a/drivers/mmc/core/sd_ops.h
+> > > +++ b/drivers/mmc/core/sd_ops.h
+> > > @@ -16,6 +16,7 @@ struct mmc_host;
+> > >  int mmc_app_set_bus_width(struct mmc_card *card, int width);  int
+> > > mmc_send_app_op_cond(struct mmc_host *host, u32 ocr, u32 *rocr);  int
+> > > mmc_send_if_cond(struct mmc_host *host, u32 ocr);
+> > > +int mmc_send_if_cond_pcie(struct mmc_host *host, u32 ocr);
+> > >  int mmc_send_relative_addr(struct mmc_host *host, unsigned int *rca)=
+;
+> > > int mmc_app_send_scr(struct mmc_card *card);  int mmc_sd_switch(struc=
+t
+> > > mmc_card *card, int mode, int group, diff --git
+> > > a/include/linux/mmc/host.h b/include/linux/mmc/host.h index
+> > > c5b6e97cb21a..905cddc5e6f3 100644
+> > > --- a/include/linux/mmc/host.h
+> > > +++ b/include/linux/mmc/host.h
+> > > @@ -60,6 +60,8 @@ struct mmc_ios {
+> > >  #define MMC_TIMING_MMC_DDR52   8
+> > >  #define MMC_TIMING_MMC_HS200   9
+> > >  #define MMC_TIMING_MMC_HS400   10
+> > > +#define MMC_TIMING_SD_EXP      11
+> > > +#define MMC_TIMING_SD_EXP_1_2V 12
+> > >
+> > >         unsigned char   signal_voltage;         /* signalling voltage
+> > (1.8V or 3.3V) */
+> > >
+> > > @@ -172,6 +174,9 @@ struct mmc_host_ops {
+> > >          */
+> > >         int     (*multi_io_quirk)(struct mmc_card *card,
+> > >                                   unsigned int direction, int
+> > > blk_size);
+> > > +
+> > > +       /* Initialize an SD express card, mandatory for MMC_CAP2_SD_E=
+XP.
+> > */
+> > > +       int     (*init_sd_express)(struct mmc_host *host, struct
+> > mmc_ios *ios);
+> > >  };
+> > >
+> > >  struct mmc_cqe_ops {
+> > > @@ -357,6 +362,8 @@ struct mmc_host {
+> > >  #define MMC_CAP2_HS200_1_2V_SDR        (1 << 6)        /* can
+> > support */
+> > >  #define MMC_CAP2_HS200         (MMC_CAP2_HS200_1_8V_SDR | \
+> > >                                  MMC_CAP2_HS200_1_2V_SDR)
+> > > +#define MMC_CAP2_SD_EXP                (1 << 7)        /* SD
+> > express via PCIe */
+> > > +#define MMC_CAP2_SD_EXP_1_2V   (1 << 8)        /* SD express 1.2V
+> > */
+> > >  #define MMC_CAP2_CD_ACTIVE_HIGH        (1 << 10)       /*
+> > Card-detect signal active high */
+> > >  #define MMC_CAP2_RO_ACTIVE_HIGH        (1 << 11)       /*
+> > Write-protect signal active high */
+> > >  #define MMC_CAP2_NO_PRESCAN_POWERUP (1 << 14)  /* Don't power
+> > up
+> > > before scan */
+> > > --
+> > > 2.20.1
+> > >
+> >
+> > ------Please consider the environment before printing this e-mail.
