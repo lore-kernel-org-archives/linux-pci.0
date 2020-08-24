@@ -2,102 +2,134 @@ Return-Path: <SRS0=Vpie=CC=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E87D5C433E3
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Aug 2020 10:24:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59552C433E5
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Aug 2020 11:40:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A92022075B
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Aug 2020 10:24:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1598264684;
-	bh=C3YTLiTEJrWGnbRCgydH4Jhh5WgGVJ9rPOEaMGjkFBo=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=xgMPY/Oyak8A9im6vgiMTkksYowTSmcz8eKmO+8oQwMee8SbhBN362MSkAx3hELNM
-	 kxi86I1SLJ5myYcZ0QRLNj7UZpcFzXjalXznPqKHF6pd3LT8zipw2TYk/ByDUob54A
-	 iEyhQfU2x5gZMBCT8W2Pi6OlSI5rM2iHB0wKzAGk=
+	by mail.kernel.org (Postfix) with ESMTP id 361602078D
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Aug 2020 11:40:58 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=renesasgroup.onmicrosoft.com header.i=@renesasgroup.onmicrosoft.com header.b="MHSTdM0x"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727021AbgHXKYh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 24 Aug 2020 06:24:37 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50208 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726483AbgHXKXx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 24 Aug 2020 06:23:53 -0400
-Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id AD6292075B;
-        Mon, 24 Aug 2020 10:23:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1598264632;
-        bh=C3YTLiTEJrWGnbRCgydH4Jhh5WgGVJ9rPOEaMGjkFBo=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=N00I6fphgD0Z14HF7FvDHj7L1K0/1d/gVI3mkDIxMrhi9ow+9ekc/wIc+XWUkjubQ
-         kM1M5QXZCN8KEYaoccd4niRlTKE5uIJqlAwzqIO7gZpizpaXs3mDVvzFLkaM5c3VIW
-         y/t28V7i7BYnOEAZPKfZcu5784lUO0AwLH6fhmoI=
-Received: from 78.163-31-62.static.virginmediabusiness.co.uk ([62.31.163.78] helo=why.lan)
-        by disco-boy.misterjones.org with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <maz@kernel.org>)
-        id 1kA9dn-006BQc-5k; Mon, 24 Aug 2020 11:23:51 +0100
-From:   Marc Zyngier <maz@kernel.org>
-To:     linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        Jason Cooper <jason@lakedaemon.net>,
-        Laurentiu Tudor <laurentiu.tudor@nxp.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Valentin Schneider <valentin.schneider@arm.com>
-Subject: [PATCH 2/9] irqchip/git-v3-its: Implement irq_retrigger callback for device-triggered LPIs
-Date:   Mon, 24 Aug 2020 11:23:10 +0100
-Message-Id: <20200824102317.1038259-3-maz@kernel.org>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20200824102317.1038259-1-maz@kernel.org>
-References: <20200824102317.1038259-1-maz@kernel.org>
+        id S1726983AbgHXLgr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 24 Aug 2020 07:36:47 -0400
+Received: from mail-eopbgr1400130.outbound.protection.outlook.com ([40.107.140.130]:13696
+        "EHLO JPN01-TY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726645AbgHXLgA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 24 Aug 2020 07:36:00 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=NQ9KwdboSR3AmnNWXttHOo4DAm20Ab8jZu3uWeDev+D4/UNJV07yLYaDuS9Qts9uiGv8iEa37VCn9kwVmUyRRqhLx2SuvHJdySwT7gmQqMUkpcBUM+zFi0k2CAaMVfMenUZkjtAndUeOMeo+uqRsGto6rUzcT1GRr01p1e3V9QSOgwNX/2pvx6z/ZydfoL0MqJZiDGT/i3qLAYyTntl0+3UaSXhWlB4c9mGAKNdVgdK+FrtUHpvtSXYCy06TIRhs2DWcVrkk1st9dJQx0BjM7Q/n/9jTLodJxFVLCHmlQXuky+sAw4BMRh00VKmwJ0fBP37eLIqnJiqy4EAEAGU8Hg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=DTNKgN/48GvUqERfgyYHUU094eeLnn8elfIgl0FJpJo=;
+ b=AAZ4KYd6jmwOVQcfN367MqE8q0baPkl6RcLhNJx+I3Z9A5vwUALRJhwYEqCusYggQGVJTdJUmv3HX/jW4tmm2dFZfA9gn4ZZeE9uZv31rdD2Vb+LE3KRF6CAeBv6COPu71RkpbOlVmIzjxsF4VLub0+z8VLk7ZM1/vsEjt7OP67E3AYkEztVf2XaBQJjI/EsFSM5yh+RIMrpB9XiP61E1oJLSdFU0lwCJV0EmmNb+BIuOqnc5YhghuwKoNygI1AmRHsw2+pRyprIYuNbJ3BPLl4SyUHL+thgxOC0Rk+wc/GyhADeq6U3pgdTege62mzc4s/bjmfHQum+seCOxU+BWA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=renesas.com; dmarc=pass action=none header.from=renesas.com;
+ dkim=pass header.d=renesas.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=renesasgroup.onmicrosoft.com; s=selector2-renesasgroup-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=DTNKgN/48GvUqERfgyYHUU094eeLnn8elfIgl0FJpJo=;
+ b=MHSTdM0xEofn6a208scJXqpjwQHH0EKbuC32DUsh8NV4cdFRw/JCM1L9rBN8spNs8ezUmSRrDMix0jzK9M7mUmZl5/MdVNFs2LioDqS2Ofoq9zs5IrId3QbV4/dLOgMIJj1pjDXJFnh6x0SRVKDSktW3bDUZdbvhIv0xt2RP1k0=
+Received: from TY2PR01MB3692.jpnprd01.prod.outlook.com (2603:1096:404:d5::22)
+ by TYXPR01MB1550.jpnprd01.prod.outlook.com (2603:1096:403:10::23) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3305.26; Mon, 24 Aug
+ 2020 11:35:56 +0000
+Received: from TY2PR01MB3692.jpnprd01.prod.outlook.com
+ ([fe80::9083:6001:8090:9f3]) by TY2PR01MB3692.jpnprd01.prod.outlook.com
+ ([fe80::9083:6001:8090:9f3%6]) with mapi id 15.20.3305.026; Mon, 24 Aug 2020
+ 11:35:56 +0000
+From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+To:     Prabhakar Mahadev Lad <prabhakar.mahadev-lad.rj@bp.renesas.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Magnus Damm <magnus.damm@gmail.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-renesas-soc@vger.kernel.org" 
+        <linux-renesas-soc@vger.kernel.org>,
+        Prabhakar Mahadev Lad <prabhakar.mahadev-lad.rj@bp.renesas.com>,
+        Prabhakar <prabhakar.csengg@gmail.com>,
+        Biju Das <biju.das.jz@bp.renesas.com>
+Subject: RE: [PATCH 1/5] dt-bindings: pci: rcar-pci-ep: Document r8a774a1 and
+ r8a774b1
+Thread-Topic: [PATCH 1/5] dt-bindings: pci: rcar-pci-ep: Document r8a774a1 and
+ r8a774b1
+Thread-Index: AQHWcmDcJvg+g1OZekuouK9eHA4EtKlHMBgA
+Date:   Mon, 24 Aug 2020 11:35:56 +0000
+Message-ID: <TY2PR01MB36924E483AD458BB5DA2F0A1D8560@TY2PR01MB3692.jpnprd01.prod.outlook.com>
+References: <20200814173037.17822-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
+ <20200814173037.17822-2-prabhakar.mahadev-lad.rj@bp.renesas.com>
+In-Reply-To: <20200814173037.17822-2-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Accept-Language: ja-JP, en-US
+Content-Language: ja-JP
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: bp.renesas.com; dkim=none (message not signed)
+ header.d=none;bp.renesas.com; dmarc=none action=none header.from=renesas.com;
+x-originating-ip: [124.210.22.195]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 9c6e3267-89d9-40a5-d6bc-08d84821ddef
+x-ms-traffictypediagnostic: TYXPR01MB1550:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <TYXPR01MB15501C0AA121F21C393F2FE4D8560@TYXPR01MB1550.jpnprd01.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:3383;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: o151cMKDY3E1XvdL9/Dk1+k/p9zoE6fx6fLQRhfwtufnqK4eQ7YF6SLQXA6Lrpmn+7e0B6Yr7b7V2sWht3FIUnoOAIuhnffZxkVcRy52el6cC7APhfUShoHPRgD2ufJwShvtuuZ/Qwcb8QaMGyQTjafMXvGTI5RRCAP+DLUwa1v6Seg97uMIoeDAlIvYPvVdPqbC7M45o1zkjWNM0daI6//y7fnrMF2AsTkK4R7oQP0jBXeyGIHaVOExWZ8DVVkq6isucWmK+kN+8T63of9Cpc0sdvYl0hgYmJClSAAiXW57850HHNFd29gpfpPDIdCz0Nw858Wv4rJ+v8U/eVro9UpGT87dOq523m3ygnGdGwbmm+lEj5sYCbpJhhZVqOCf31I8SI1VTUyZwZyhTLcaN8HztUBBI6t3Fme8KfsL1Rw=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY2PR01MB3692.jpnprd01.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(396003)(136003)(366004)(376002)(39860400002)(346002)(7416002)(86362001)(186003)(4744005)(478600001)(26005)(71200400001)(107886003)(5660300002)(52536014)(55236004)(316002)(33656002)(6506007)(4326008)(9686003)(7696005)(66446008)(64756008)(66476007)(76116006)(66946007)(2906002)(110136005)(66556008)(54906003)(55016002)(8936002)(8676002)(138113003)(98903001)(921003);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: vZd2xeIi/qAGLhK3E9ZTft2UOWIT5NdzC9VadLP0dGsVTtVVRB1XstHhIE/MuidWqZBSlgv/7WNVJTnXRcY1o01SolFrjp+qT4C+OVl4JtFYCqTtBMy0UqWWmTNxX2wDac7UwBL0bwDsSTE/NgPNI9zm+AnV4Zh5uF8W5IxX5Av/T7ZV0NUEwkdSygLIlDnFrofl37ocpqV4Zz7YZfCLr6jocS0ui4OelNnDnXE0evj2G7Ox2DEbG+g02Zymcp6xKfdPdYY8M/wm/g28zdYmvHYcwLZSAbVBmljntKgQV4nMuBjjc2MV6qgNQ1Lu4RDqUk8ZG9sejLq+/6pYPmsen5APpbXtmsuuoYOCXFoYw8PZmqyFqcORUmsztHa9dVyK7WW5bH+5NOudTC9fKINgicRxy/lL2MlnIDstbi4t45N308z+Pi9BltbMWLigmSPAV1s+5ivP5jqySCaEbzTbVdu6JUTmpEEQFM0z9HbnW6FRwzouBSM5Y/afHde2zy3hxX3rqeCKJ9TkouehlxgyuE2A+YDuQ0pmJDmBnZBWkkwtgFS0D3q7uPKsBvklW0KKfVE/qkplHR5Yg+hxb+68JdSxpx+9lc1SDnXyGCH04OXYV48/5xlkgyxQxqr+KQ7qurb7rcTT37NOXXWoeVpVVw==
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 62.31.163.78
-X-SA-Exim-Rcpt-To: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, bhelgaas@google.com, gregory.clement@bootlin.com, jason@lakedaemon.net, laurentiu.tudor@nxp.com, tglx@linutronix.de, valentin.schneider@arm.com
-X-SA-Exim-Mail-From: maz@kernel.org
-X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
+X-OriginatorOrg: renesas.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: TY2PR01MB3692.jpnprd01.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9c6e3267-89d9-40a5-d6bc-08d84821ddef
+X-MS-Exchange-CrossTenant-originalarrivaltime: 24 Aug 2020 11:35:56.6039
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 53d82571-da19-47e4-9cb4-625a166a4a2a
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: IRdjyQKRxjpda8srvb7qEJrwFiKrZ0Gb00KADLnpPUNXQjAbJ7nrZrhQg9WVfaINOrpqtfVc5kCIwFOdTBu1dCBl3hnCXOPH/i/O4LU/ypRNVtzr3QWMo4RfVgTSl8ur
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYXPR01MB1550
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Signed-off-by: Marc Zyngier <maz@kernel.org>
----
- drivers/irqchip/irq-gic-v3-its.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+Hi Lad-san,
 
-diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
-index 95f097448f97..2808545a963e 100644
---- a/drivers/irqchip/irq-gic-v3-its.c
-+++ b/drivers/irqchip/irq-gic-v3-its.c
-@@ -1720,6 +1720,11 @@ static int its_irq_set_irqchip_state(struct irq_data *d,
- 	return 0;
- }
- 
-+static int its_irq_retrigger(struct irq_data *d)
-+{
-+	return !its_irq_set_irqchip_state(d, IRQCHIP_STATE_PENDING, true);
-+}
-+
- /*
-  * Two favourable cases:
-  *
-@@ -1971,6 +1976,7 @@ static struct irq_chip its_irq_chip = {
- 	.irq_set_affinity	= its_set_affinity,
- 	.irq_compose_msi_msg	= its_irq_compose_msi_msg,
- 	.irq_set_irqchip_state	= its_irq_set_irqchip_state,
-+	.irq_retrigger		= its_irq_retrigger,
- 	.irq_set_vcpu_affinity	= its_irq_set_vcpu_affinity,
- };
- 
--- 
-2.27.0
+> From: Lad Prabhakar, Sent: Saturday, August 15, 2020 2:31 AM
+>=20
+> Document the support for R-Car PCIe EP on R8A774A1 and R8A774B1 SoC
+> devices.
+>=20
+> Also constify "renesas,rcar-gen3-pcie-ep" so that it can be used as
+> fallback compatible string for R-Car Gen3 and RZ/G2 devices as the
+> PCIe module is identical.
+>=20
+> Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+> Reviewed-by: Biju Das <biju.das.jz@bp.renesas.com>
+
+Thank you for the patch!
+
+Reviewed-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+
+Best regards,
+Yoshihiro Shimoda
 
