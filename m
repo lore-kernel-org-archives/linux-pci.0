@@ -7,42 +7,42 @@ X-Spam-Status: No, score=-14.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5178FC433E1
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC1C4C433DF
 	for <linux-pci@archiver.kernel.org>; Mon, 24 Aug 2020 10:24:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1C4CC2075B
+	by mail.kernel.org (Postfix) with ESMTP id 89A3620738
 	for <linux-pci@archiver.kernel.org>; Mon, 24 Aug 2020 10:24:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=default; t=1598264642;
-	bh=qQLRqcw1hna/ly45S3xl2gW2vdko3+2aJQbithHj/G4=;
+	bh=GZdA5HCIlfgbKxXzpIFDaTeBnffKtFhol+GS3YOjvgI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=sqt9hHEH9uGFRSA/PLsuk7XyiHjSWwz7DiIEQZatV5aG8DQTU6O/tEmv9mU/AI7+D
-	 0uj07HwbGmBJyDVBTanmRq81pqJECihZYshxVsVoGsh3sOrUNR/cZC58vjJ42m1YLx
-	 kVtkJ/SEz4Qk7xpvrsN8cvMXIBQU5wYK2WW4+bgI=
+	b=lg57mPxmGpUeK+nDVl2QyTU1+RcY8waD+DAiW0qt1logosq2N63ueDyv466OjxGsk
+	 dh9ySqVK01fR9J0Aj+JCtOd/kO3qHTWfz5bi7yGVQdLauhDDeygU04Mo9IV+05UYNM
+	 0cF+GPfaaBOe+JfxxBeFSiMig6VdmpQvs0ZhTpfQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726664AbgHXKX5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 24 Aug 2020 06:23:57 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50244 "EHLO mail.kernel.org"
+        id S1726709AbgHXKYA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 24 Aug 2020 06:24:00 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50400 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726531AbgHXKXx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 24 Aug 2020 06:23:53 -0400
+        id S1726635AbgHXKX5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 24 Aug 2020 06:23:57 -0400
 Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5138D207D3;
-        Mon, 24 Aug 2020 10:23:53 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A212222B47;
+        Mon, 24 Aug 2020 10:23:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1598264633;
-        bh=qQLRqcw1hna/ly45S3xl2gW2vdko3+2aJQbithHj/G4=;
+        s=default; t=1598264636;
+        bh=GZdA5HCIlfgbKxXzpIFDaTeBnffKtFhol+GS3YOjvgI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=PsaAJmFc/7WLwZYJnL+pXjeECv3gSO7mWkS5ODgcAbOelXBC3jIZbUQTcH6SrnL/F
-         yCfH35wLPg01Qv2aAqzS2hH/NrNmZjB2AP5BYVq4Jdeixk6ZBOG0bwb05LzXxsUqBf
-         RP2SLsnnZjk/Z7rcqTcUXpHvd/WDuJ+s7MxSJewU=
+        b=2FByOjxou4XMr/sefw8Uwt573lXr+Ji0tlM+ZED8MxqIUhRFhoYbQlrq22IsH1Ben
+         dlX4VHMlYfNvYdxfQKWxKTEhNRgAI+XJ/Wc5QHA9y4G1oy+IDYn7Et9W118N2AncJA
+         DMFY1bWdsw8vvXBpCuhpOv+M+NXlhcKvm6hZHZs0=
 Received: from 78.163-31-62.static.virginmediabusiness.co.uk ([62.31.163.78] helo=why.lan)
         by disco-boy.misterjones.org with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <maz@kernel.org>)
-        id 1kA9dn-006BQc-Px; Mon, 24 Aug 2020 11:23:51 +0100
+        id 1kA9dr-006BQc-5Y; Mon, 24 Aug 2020 11:23:55 +0100
 From:   Marc Zyngier <maz@kernel.org>
 To:     linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
         linux-pci@vger.kernel.org
@@ -52,9 +52,9 @@ Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         Laurentiu Tudor <laurentiu.tudor@nxp.com>,
         Thomas Gleixner <tglx@linutronix.de>,
         Valentin Schneider <valentin.schneider@arm.com>
-Subject: [PATCH 3/9] PCI/MSI: Provide default retrigger callback
-Date:   Mon, 24 Aug 2020 11:23:11 +0100
-Message-Id: <20200824102317.1038259-4-maz@kernel.org>
+Subject: [PATCH 5/9] fsl-msi: Provide default retrigger callback
+Date:   Mon, 24 Aug 2020 11:23:13 +0100
+Message-Id: <20200824102317.1038259-6-maz@kernel.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20200824102317.1038259-1-maz@kernel.org>
 References: <20200824102317.1038259-1-maz@kernel.org>
@@ -71,17 +71,17 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 Signed-off-by: Marc Zyngier <maz@kernel.org>
 ---
- drivers/pci/msi.c | 2 ++
+ drivers/bus/fsl-mc/fsl-mc-msi.c | 2 ++
  1 file changed, 2 insertions(+)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 30ae4ffda5c1..c4d31ce2d951 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1446,6 +1446,8 @@ static void pci_msi_domain_update_chip_ops(struct msi_domain_info *info)
- 		chip->irq_mask = pci_msi_mask_irq;
- 	if (!chip->irq_unmask)
- 		chip->irq_unmask = pci_msi_unmask_irq;
+diff --git a/drivers/bus/fsl-mc/fsl-mc-msi.c b/drivers/bus/fsl-mc/fsl-mc-msi.c
+index 8edadf05cbb7..5306ba7dea3e 100644
+--- a/drivers/bus/fsl-mc/fsl-mc-msi.c
++++ b/drivers/bus/fsl-mc/fsl-mc-msi.c
+@@ -144,6 +144,8 @@ static void fsl_mc_msi_update_chip_ops(struct msi_domain_info *info)
+ 	 */
+ 	if (!chip->irq_write_msi_msg)
+ 		chip->irq_write_msi_msg = fsl_mc_msi_write_msg;
 +	if (!chip->irq_retrigger)
 +		chip->irq_retrigger = irq_chip_retrigger_hierarchy;
  }
