@@ -2,103 +2,105 @@ Return-Path: <SRS0=Vpie=CC=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6354C433E1
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Aug 2020 09:53:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C04ABC433DF
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Aug 2020 10:23:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7B9C1206BE
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Aug 2020 09:53:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9C8D9214F1
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Aug 2020 10:23:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1598262780;
-	bh=5rCPgPz6PKWeJJUZKAZcRahrkgbdtSYJ1zW8YvcIakw=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=YHWrQ+FZ9uDsGKOEvs2t02aKRdnCIGCUvHpHlV8hHPO4pcRuxwhvaA0XJtXq64rs4
-	 iK2+09iEKvTrZtosg9i5IrsA7zBOyQnO3u1+K0HasBZleJ0pP0KOT6dP4eP3SnFRTn
-	 ZNVdQ6UIuj5EsLDt261YNdzKP51B8x4pdYbfQKYE=
+	s=default; t=1598264634;
+	bh=4+OzVArS4T+WesA/uA9lGqHjid58hKksVXjy0kXV8vs=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=0cXFWpO4vs5+wML7zvNWtQajGjEQAmXWkFi/j6LMwS7KhDtsmMZfqc3hDJ3EugCe5
+	 rLW2oA5Xp6zhNVPWyOZH6MWOLAH/BN5Tjw9/8YUNFuvaqe5fv/UoBtU3c05JzSc26x
+	 aGolWL1jSxd9E9+7s5Edtmlx+06pDulo1vw1pz8M=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728381AbgHXJw6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 24 Aug 2020 05:52:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53012 "EHLO mail.kernel.org"
+        id S1725962AbgHXKXx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 24 Aug 2020 06:23:53 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50144 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727851AbgHXIi1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 24 Aug 2020 04:38:27 -0400
-Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
+        id S1726024AbgHXKXx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 24 Aug 2020 06:23:53 -0400
+Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 0E5DC20FC3;
-        Mon, 24 Aug 2020 08:38:26 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 77AB420738;
+        Mon, 24 Aug 2020 10:23:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1598258306;
-        bh=5rCPgPz6PKWeJJUZKAZcRahrkgbdtSYJ1zW8YvcIakw=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=GGAV53v83vnvehqrzz9nLYDibLITIQ5Yi+WSJBpS1fxJGUjQz2Tt8I82nWIq1is0V
-         zplvkrEYMJ29kSx3R76fwJInNbYdDkM7AxPAzU2vxhRprKN9kdOZwBj/CqY7HS/1Wh
-         DlbK6ipk7ApuIV1rFcMnVBI+D77qmsx3MvVTHngM=
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     linux-kernel@vger.kernel.org
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        stable@vger.kernel.org, Randy Dunlap <rdunlap@infradead.org>,
-        Juergen Gross <jgross@suse.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        xen-devel@lists.xenproject.org, linux-pci@vger.kernel.org,
-        Sasha Levin <sashal@kernel.org>
-Subject: [PATCH 5.8 121/148] Fix build error when CONFIG_ACPI is not set/enabled:
-Date:   Mon, 24 Aug 2020 10:30:19 +0200
-Message-Id: <20200824082419.808605775@linuxfoundation.org>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200824082413.900489417@linuxfoundation.org>
-References: <20200824082413.900489417@linuxfoundation.org>
-User-Agent: quilt/0.66
+        s=default; t=1598264631;
+        bh=4+OzVArS4T+WesA/uA9lGqHjid58hKksVXjy0kXV8vs=;
+        h=From:To:Cc:Subject:Date:From;
+        b=MRWZQp+uZ+FB7DjduS4Zuds1HNvbh9QWfE0Vp08WFnWF0jW1xWxgX8/rilbSSx2Ts
+         LMnYKzyU5j7bnly3Rs9TMukbnW68uERw7Lb1PuVjsVwjfBeNOVA/BYt9W0nC1UNb23
+         W/uIbsHyKSX/aKdGytK4HPBU6dBOEN5m02pygg30=
+Received: from 78.163-31-62.static.virginmediabusiness.co.uk ([62.31.163.78] helo=why.lan)
+        by disco-boy.misterjones.org with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <maz@kernel.org>)
+        id 1kA9dl-006BQc-Ld; Mon, 24 Aug 2020 11:23:50 +0100
+From:   Marc Zyngier <maz@kernel.org>
+To:     linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        Jason Cooper <jason@lakedaemon.net>,
+        Laurentiu Tudor <laurentiu.tudor@nxp.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Valentin Schneider <valentin.schneider@arm.com>
+Subject: [PATCH 0/9] irqchip/gic: generalize use of HW-based retriggering
+Date:   Mon, 24 Aug 2020 11:23:08 +0100
+Message-Id: <20200824102317.1038259-1-maz@kernel.org>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 62.31.163.78
+X-SA-Exim-Rcpt-To: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, bhelgaas@google.com, gregory.clement@bootlin.com, jason@lakedaemon.net, laurentiu.tudor@nxp.com, tglx@linutronix.de, valentin.schneider@arm.com
+X-SA-Exim-Mail-From: maz@kernel.org
+X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Randy Dunlap <rdunlap@infradead.org>
+Valentin recently pointed out that that relying on SW-based retrigger
+with any of the GIC interrupt controller is both inefficient and
+slightly broken, as it messes the GIC's own state machine.
 
-[ Upstream commit ee87e1557c42dc9c2da11c38e11b87c311569853 ]
+In order to move the GIC over to use its natural HW-based triggering
+mechanism, we need to teach all the stacked interrupt controllers that
+can pile on a GIC to use the hierarchy-based retrigger helper. This
+includes the bus-specific irqchips, such as PCI, FSL-MC, and the funky
+platform-MSI.
 
-../arch/x86/pci/xen.c: In function ‘pci_xen_init’:
-../arch/x86/pci/xen.c:410:2: error: implicit declaration of function ‘acpi_noirq_set’; did you mean ‘acpi_irq_get’? [-Werror=implicit-function-declaration]
-  acpi_noirq_set();
+Marc Zyngier (7):
+  irqchip/git-v3-its: Implement irq_retrigger callback for
+    device-triggered LPIs
+  PCI/MSI: Provide default retrigger callback
+  platform-msi: Provide default retrigger callback
+  fsl-msi: Provide default retrigger callback
+  irqchip/mbigen: Use hierarchy retrigger helper
+  irqchip/mvebu-icu: Use hierarchy retrigger helper
+  irqchip/mvebu-sei: Use hierarchy retrigger helper
 
-Fixes: 88e9ca161c13 ("xen/pci: Use acpi_noirq_set() helper to avoid #ifdef")
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-Reviewed-by: Juergen Gross <jgross@suse.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: xen-devel@lists.xenproject.org
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Juergen Gross <jgross@suse.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- arch/x86/pci/xen.c | 1 +
- 1 file changed, 1 insertion(+)
+Valentin Schneider (2):
+  irqchip/gic-v2, v3: Implement irq_chip->irq_retrigger()
+  irqchip/gic-v2, v3: Prevent SW resends entirely
 
-diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
-index e3f1ca3160684..db34fee931388 100644
---- a/arch/x86/pci/xen.c
-+++ b/arch/x86/pci/xen.c
-@@ -26,6 +26,7 @@
- #include <asm/xen/pci.h>
- #include <asm/xen/cpuid.h>
- #include <asm/apic.h>
-+#include <asm/acpi.h>
- #include <asm/i8259.h>
- 
- static int xen_pcifront_enable_irq(struct pci_dev *dev)
+ drivers/base/platform-msi.c      |  2 ++
+ drivers/bus/fsl-mc/fsl-mc-msi.c  |  2 ++
+ drivers/irqchip/irq-gic-v3-its.c |  6 ++++++
+ drivers/irqchip/irq-gic-v3.c     | 12 +++++++++++-
+ drivers/irqchip/irq-gic.c        | 12 +++++++++++-
+ drivers/irqchip/irq-mbigen.c     |  1 +
+ drivers/irqchip/irq-mvebu-icu.c  |  2 ++
+ drivers/irqchip/irq-mvebu-sei.c  |  2 ++
+ drivers/pci/msi.c                |  2 ++
+ 9 files changed, 39 insertions(+), 2 deletions(-)
+
 -- 
-2.25.1
-
-
+2.27.0
 
