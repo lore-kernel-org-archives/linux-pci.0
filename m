@@ -2,188 +2,103 @@ Return-Path: <SRS0=Vpie=CC=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42DB8C433E8
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Aug 2020 06:40:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7272FC433E3
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Aug 2020 08:48:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CEE5023106
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Aug 2020 06:21:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4856B206F0
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Aug 2020 08:48:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1598258925;
+	bh=jRgIWyY0b4yL1+iU+rEN7X0YTkrV7SA7WEWwegKb4Wo=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=2Yfchlw2Y1/DzffLo9oVuXztyxKoNTx+70Qlwd97+5m1h42h3x4srnjx20Cv+achO
+	 JbR1s7+EHbg5JFH2/n4/NCFi/xCXtIuilR7qR6rmmkAXpeJl2aJHM9jCjJ9dfWvyoE
+	 fM89JQB14F2B9r3cc9Ht9i+CWP8HvumK7R0EygKA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725770AbgHXGVI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 24 Aug 2020 02:21:08 -0400
-Received: from mx2.suse.de ([195.135.220.15]:60512 "EHLO mx2.suse.de"
+        id S1729597AbgHXIso (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 24 Aug 2020 04:48:44 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50200 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725781AbgHXGVI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 24 Aug 2020 02:21:08 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id C1123AC3F;
-        Mon, 24 Aug 2020 06:21:36 +0000 (UTC)
-Subject: Re: [patch RFC 26/38] x86/xen: Wrap XEN MSI management into irqdomain
-To:     Thomas Gleixner <tglx@linutronix.de>,
-        LKML <linux-kernel@vger.kernel.org>
-Cc:     x86@kernel.org, linux-pci@vger.kernel.org,
-        xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
-        iommu@lists.linux-foundation.org, linux-hyperv@vger.kernel.org,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Jon Derrick <jonathan.derrick@intel.com>,
-        Lu Baolu <baolu.lu@linux.intel.com>,
-        Wei Liu <wei.liu@kernel.org>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Steve Wahl <steve.wahl@hpe.com>,
-        Dimitri Sivanich <sivanich@hpe.com>,
-        Russ Anderson <rja@hpe.com>,
+        id S1729589AbgHXIsn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 24 Aug 2020 04:48:43 -0400
+Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 3CEB721741;
+        Mon, 24 Aug 2020 08:48:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1598258922;
+        bh=jRgIWyY0b4yL1+iU+rEN7X0YTkrV7SA7WEWwegKb4Wo=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=C2CVBvgK8EgKPjWqphrXn5t1r25wMAM4aX4wG+87SkIZmwFRFP1zlWIk2Z2hbIcGH
+         r/29mpG0vAVTE3AD8wewpRjXkykWqV8gJAJqGpotsw7+U1aNThuZZnJhUm9MYH5XDa
+         HczkWczVH/pAE++bYJXZZnfGzOzYkwBqN/4Pwqns=
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     linux-kernel@vger.kernel.org
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        stable@vger.kernel.org, Randy Dunlap <rdunlap@infradead.org>,
+        Juergen Gross <jgross@suse.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Marc Zyngier <maz@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Megha Dey <megha.dey@intel.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Jacob Pan <jacob.jun.pan@intel.com>,
-        Baolu Lu <baolu.lu@intel.com>,
-        Kevin Tian <kevin.tian@intel.com>,
-        Dan Williams <dan.j.williams@intel.com>
-References: <20200821002424.119492231@linutronix.de>
- <20200821002947.868727656@linutronix.de>
-From:   =?UTF-8?B?SsO8cmdlbiBHcm/Dnw==?= <jgross@suse.com>
-Message-ID: <8860c7bc-67ab-ce64-0340-1458d2483a39@suse.com>
-Date:   Mon, 24 Aug 2020 08:21:05 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.11.0
+        xen-devel@lists.xenproject.org, linux-pci@vger.kernel.org,
+        Sasha Levin <sashal@kernel.org>
+Subject: [PATCH 5.4 093/107] Fix build error when CONFIG_ACPI is not set/enabled:
+Date:   Mon, 24 Aug 2020 10:30:59 +0200
+Message-Id: <20200824082409.704889057@linuxfoundation.org>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200824082405.020301642@linuxfoundation.org>
+References: <20200824082405.020301642@linuxfoundation.org>
+User-Agent: quilt/0.66
 MIME-Version: 1.0
-In-Reply-To: <20200821002947.868727656@linutronix.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 21.08.20 02:24, Thomas Gleixner wrote:
-> To allow utilizing the irq domain pointer in struct device it is necessary
-> to make XEN/MSI irq domain compatible.
-> 
-> While the right solution would be to truly convert XEN to irq domains, this
-> is an exercise which is not possible for mere mortals with limited XENology.
-> 
-> Provide a plain irqdomain wrapper around XEN. While this is blatant
-> violation of the irqdomain design, it's the only solution for a XEN igorant
-> person to make progress on the issue which triggered this change.
-> 
-> Signed-off-by: Thomas Gleixner<tglx@linutronix.de>
-> Cc:linux-pci@vger.kernel.org
-> Cc:xen-devel@lists.xenproject.org
+From: Randy Dunlap <rdunlap@infradead.org>
 
-Acked-by: Juergen Gross <jgross@suse.com>
+[ Upstream commit ee87e1557c42dc9c2da11c38e11b87c311569853 ]
 
-Looking into https://www.kernel.org/doc/Documentation/IRQ-domain.txt (is
-this still valid?) I believe Xen should be able to use the "No Map"
-approach, as Xen only ever uses software IRQs (at least those are the
-only ones visible to any driver). The (virtualized) hardware interrupts
-are Xen events after all.
+../arch/x86/pci/xen.c: In function ‘pci_xen_init’:
+../arch/x86/pci/xen.c:410:2: error: implicit declaration of function ‘acpi_noirq_set’; did you mean ‘acpi_irq_get’? [-Werror=implicit-function-declaration]
+  acpi_noirq_set();
 
-So maybe morphing Xen into supporting irqdomains in a sane way isn't
-that complicated. Maybe I'm missing the main complexities, though.
+Fixes: 88e9ca161c13 ("xen/pci: Use acpi_noirq_set() helper to avoid #ifdef")
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Reviewed-by: Juergen Gross <jgross@suse.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: xen-devel@lists.xenproject.org
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Juergen Gross <jgross@suse.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ arch/x86/pci/xen.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
+index 91220cc258547..5c11ae66b5d8e 100644
+--- a/arch/x86/pci/xen.c
++++ b/arch/x86/pci/xen.c
+@@ -26,6 +26,7 @@
+ #include <asm/xen/pci.h>
+ #include <asm/xen/cpuid.h>
+ #include <asm/apic.h>
++#include <asm/acpi.h>
+ #include <asm/i8259.h>
+ 
+ static int xen_pcifront_enable_irq(struct pci_dev *dev)
+-- 
+2.25.1
 
 
-Juergen
-
-> ---
-> Note: This is completely untested, but it compiles so it must be perfect.
-> ---
->   arch/x86/pci/xen.c |   63 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->   1 file changed, 63 insertions(+)
-> 
-> --- a/arch/x86/pci/xen.c
-> +++ b/arch/x86/pci/xen.c
-> @@ -406,6 +406,63 @@ static void xen_teardown_msi_irq(unsigne
->   	WARN_ON_ONCE(1);
->   }
->   
-> +static int xen_msi_domain_alloc_irqs(struct irq_domain *domain,
-> +				     struct device *dev,  int nvec)
-> +{
-> +	int type;
-> +
-> +	if (WARN_ON_ONCE(!dev_is_pci(dev)))
-> +		return -EINVAL;
-> +
-> +	if (first_msi_entry(dev)->msi_attrib.is_msix)
-> +		type = PCI_CAP_ID_MSIX;
-> +	else
-> +		type = PCI_CAP_ID_MSI;
-> +
-> +	return x86_msi.setup_msi_irqs(to_pci_dev(dev), nvec, type);
-> +}
-> +
-> +static void xen_msi_domain_free_irqs(struct irq_domain *domain,
-> +				     struct device *dev)
-> +{
-> +	if (WARN_ON_ONCE(!dev_is_pci(dev)))
-> +		return;
-> +
-> +	x86_msi.teardown_msi_irqs(to_pci_dev(dev));
-> +}
-> +
-> +static struct msi_domain_ops xen_pci_msi_domain_ops = {
-> +	.domain_alloc_irqs	= xen_msi_domain_alloc_irqs,
-> +	.domain_free_irqs	= xen_msi_domain_free_irqs,
-> +};
-> +
-> +static struct msi_domain_info xen_pci_msi_domain_info = {
-> +	.ops			= &xen_pci_msi_domain_ops,
-> +};
-> +
-> +/*
-> + * This irq domain is a blatant violation of the irq domain design, but
-> + * distangling XEN into real irq domains is not a job for mere mortals with
-> + * limited XENology. But it's the least dangerous way for a mere mortal to
-> + * get rid of the arch_*_msi_irqs() hackery in order to store the irq
-> + * domain pointer in struct device. This irq domain wrappery allows to do
-> + * that without breaking XEN terminally.
-> + */
-> +static __init struct irq_domain *xen_create_pci_msi_domain(void)
-> +{
-> +	struct irq_domain *d = NULL;
-> +	struct fwnode_handle *fn;
-> +
-> +	fn = irq_domain_alloc_named_fwnode("XEN-MSI");
-> +	if (fn)
-> +		d = msi_create_irq_domain(fn, &xen_pci_msi_domain_info, NULL);
-> +
-> +	/* FIXME: No idea how to survive if this fails */
-> +	BUG_ON(!d);
-> +
-> +	return d;
-> +}
-> +
->   static __init void xen_setup_pci_msi(void)
->   {
->   	if (xen_initial_domain()) {
-> @@ -426,6 +483,12 @@ static __init void xen_setup_pci_msi(voi
->   	}
->   
->   	x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
-> +
-> +	/*
-> +	 * Override the PCI/MSI irq domain init function. No point
-> +	 * in allocating the native domain and never use it.
-> +	 */
-> +	x86_init.irqs.create_pci_msi_domain = xen_create_pci_msi_domain;
->   }
->   
->   #else /* CONFIG_PCI_MSI */
-> 
 
