@@ -2,269 +2,120 @@ Return-Path: <SRS0=Vpie=CC=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD51AC433E3
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Aug 2020 19:31:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD843C433DF
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Aug 2020 21:21:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A984820738
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Aug 2020 19:31:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9D38220706
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Aug 2020 21:21:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="dHlrU1ux"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="Pv4WTzw8";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="cN6eYBny"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727942AbgHXTbX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 24 Aug 2020 15:31:23 -0400
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:43330 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727047AbgHXTbK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Aug 2020 15:31:10 -0400
-Received: from mail-irv-17.broadcom.com (mail-irv-17.lvn.broadcom.net [10.75.242.48])
-        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id F1AED30C58C;
-        Mon, 24 Aug 2020 12:28:18 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com F1AED30C58C
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
-        s=dkimrelay; t=1598297299;
-        bh=weKVtPsl3nD6MErs+oi0Sg1Gv3q7Xp4ScQoKGU7qb34=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=dHlrU1uxP3LP7Hez5ZDjqlM2VH70hseRFPaj+L+43VJye1S9u8aRwAap4zelbCMc8
-         6b0bDu3CAUKOOPV0LjZNHbsOXyQwPjFRcPmsj9K2PnN+LotUe7VWvzxApATUBax7LR
-         7wDZInJBNptsrN0bBERTah7mgBxzJtfaTGuD4dJg=
-Received: from stbsrv-and-01.and.broadcom.net (stbsrv-and-01.and.broadcom.net [10.28.16.211])
-        by mail-irv-17.broadcom.com (Postfix) with ESMTP id 6DBBF140069;
-        Mon, 24 Aug 2020 12:31:07 -0700 (PDT)
-From:   Jim Quinlan <james.quinlan@broadcom.com>
-To:     linux-pci@vger.kernel.org,
-        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
-        Christoph Hellwig <hch@lst.de>,
-        Robin Murphy <robin.murphy@arm.com>,
-        bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com
-Cc:     Jim Quinlan <james.quinlan@broadcom.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
+        id S1727872AbgHXVV0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 24 Aug 2020 17:21:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41788 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726845AbgHXVVX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Aug 2020 17:21:23 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3AEFC061574;
+        Mon, 24 Aug 2020 14:21:22 -0700 (PDT)
+From:   Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1598304080;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=X6NJ+kPKGl5Nf3jE9xklx6hH03TKpnofr8g96HAw8Ck=;
+        b=Pv4WTzw87H6NCx71gJqPiRampyZmRAAfWJrVk0KJysnfqzFan/ccSk8LSOb7qVVuPkbB8z
+        tGoDrp+2ju8a/cTr5MMPgifcmaB8n9M75wctO+lZ606ZWdfd053SzbNlGzcK9jw30ur2mH
+        TDbLQHXk1Dh9ueKmK3Go6nRfjv8zoHatFiZuH0z15JhWa7zd1dbxSJs0yBdpWRdSBTq9V2
+        X9XEPWc+RvXUBns4bi7L9OdG3sThW5qDimMJb9E+VvYLGZjxixChT1oUzdf/dlLTqSoUaU
+        EspLZ6f4CF2x6Rx5EjvdF4GfJ2iyzgouZQbm5KkIt6/C6cpdCkAuu4GovEYy3Q==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1598304080;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=X6NJ+kPKGl5Nf3jE9xklx6hH03TKpnofr8g96HAw8Ck=;
+        b=cN6eYBnyeUaRAodJ5n9Kq1Of1A3DDOOMFul6xvKSp6P4/ZL9J+JfpPUvxxWGcEA5BgckeU
+        I2Edk8IuxDhtxSCg==
+To:     =?utf-8?B?SsO8cmdlbiBHcm/Dnw==?= <jgross@suse.com>,
+        LKML <linux-kernel@vger.kernel.org>
+Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
+        iommu@lists.linux-foundation.org, linux-hyperv@vger.kernel.org,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Jon Derrick <jonathan.derrick@intel.com>,
+        Lu Baolu <baolu.lu@linux.intel.com>,
+        Wei Liu <wei.liu@kernel.org>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Steve Wahl <steve.wahl@hpe.com>,
+        Dimitri Sivanich <sivanich@hpe.com>,
+        Russ Anderson <rja@hpe.com>, linux-pci@vger.kernel.org,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        linux-rpi-kernel@lists.infradead.org (moderated list:BROADCOM
-        BCM2711/BCM2835 ARM ARCHITECTURE),
-        linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM
-        BCM2711/BCM2835 ARM ARCHITECTURE),
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v11 09/11] PCI: brcmstb: Accommodate MSI for older chips
-Date:   Mon, 24 Aug 2020 15:30:22 -0400
-Message-Id: <20200824193036.6033-10-james.quinlan@broadcom.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200824193036.6033-1-james.quinlan@broadcom.com>
-References: <20200824193036.6033-1-james.quinlan@broadcom.com>
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        xen-devel@lists.xenproject.org,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Marc Zyngier <maz@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Megha Dey <megha.dey@intel.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Jacob Pan <jacob.jun.pan@intel.com>,
+        Baolu Lu <baolu.lu@intel.com>,
+        Kevin Tian <kevin.tian@intel.com>,
+        Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [patch RFC 24/38] x86/xen: Consolidate XEN-MSI init
+In-Reply-To: <5caec213-8f56-9f12-34db-a29de8326f95@suse.com>
+References: <20200821002424.119492231@linutronix.de> <20200821002947.667887608@linutronix.de> <5caec213-8f56-9f12-34db-a29de8326f95@suse.com>
+Date:   Mon, 24 Aug 2020 23:21:19 +0200
+Message-ID: <87tuwr68q8.fsf@nanos.tec.linutronix.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Jim Quinlan <jquinlan@broadcom.com>
+On Mon, Aug 24 2020 at 06:59, J=C3=BCrgen Gro=C3=9F wrote:
+> On 21.08.20 02:24, Thomas Gleixner wrote:
+>> +static __init void xen_setup_pci_msi(void)
+>> +{
+>> +	if (xen_initial_domain()) {
+>> +		x86_msi.setup_msi_irqs =3D xen_initdom_setup_msi_irqs;
+>> +		x86_msi.teardown_msi_irqs =3D xen_teardown_msi_irqs;
+>> +		x86_msi.restore_msi_irqs =3D xen_initdom_restore_msi_irqs;
+>> +		pci_msi_ignore_mask =3D 1;
+>
+> This is wrong, as a PVH initial domain shouldn't do the pv settings.
+>
+> The "if (xen_initial_domain())" should be inside the pv case, like:
+>
+> if (xen_pv_domain()) {
+> 	if (xen_initial_domain()) {
+> 		...
+> 	} else {
+> 		...
+> 	}
+> } else if (xen_hvm_domain()) {
+> 	...
 
-Older BrcmSTB chips do not have a separate register for MSI interrupts; the
-MSIs are in a register that also contains unrelated interrupts.  In
-addition, the interrupts lie in bits [31..24] for these legacy chips.  This
-commit provides common code for both legacy and non-legacy MSI interrupt
-registers.
+I still think it does the right thing depending on the place it is
+called from, but even if so, it's completely unreadable gunk. I'll fix
+that proper.
 
-Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
-Acked-by: Florian Fainelli <f.fainelli@gmail.com>
----
- drivers/pci/controller/pcie-brcmstb.c | 71 +++++++++++++++++++--------
- 1 file changed, 50 insertions(+), 21 deletions(-)
+Thanks,
 
-diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
-index 7150eaa803c2..61c1be766522 100644
---- a/drivers/pci/controller/pcie-brcmstb.c
-+++ b/drivers/pci/controller/pcie-brcmstb.c
-@@ -82,7 +82,8 @@
- #define PCIE_MISC_MSI_BAR_CONFIG_HI			0x4048
- 
- #define PCIE_MISC_MSI_DATA_CONFIG			0x404c
--#define  PCIE_MISC_MSI_DATA_CONFIG_VAL			0xffe06540
-+#define  PCIE_MISC_MSI_DATA_CONFIG_VAL_32		0xffe06540
-+#define  PCIE_MISC_MSI_DATA_CONFIG_VAL_8		0xfff86540
- 
- #define PCIE_MISC_PCIE_CTRL				0x4064
- #define  PCIE_MISC_PCIE_CTRL_PCIE_L23_REQUEST_MASK	0x1
-@@ -94,6 +95,9 @@
- #define  PCIE_MISC_PCIE_STATUS_PCIE_PHYLINKUP_MASK	0x10
- #define  PCIE_MISC_PCIE_STATUS_PCIE_LINK_IN_L23_MASK	0x40
- 
-+#define PCIE_MISC_REVISION				0x406c
-+#define  BRCM_PCIE_HW_REV_33				0x0303
-+
- #define PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT		0x4070
- #define  PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT_LIMIT_MASK	0xfff00000
- #define  PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT_BASE_MASK	0xfff0
-@@ -114,10 +118,14 @@
- #define  PCIE_MISC_HARD_PCIE_HARD_DEBUG_CLKREQ_DEBUG_ENABLE_MASK	0x2
- #define  PCIE_MISC_HARD_PCIE_HARD_DEBUG_SERDES_IDDQ_MASK		0x08000000
- 
--#define PCIE_MSI_INTR2_STATUS				0x4500
--#define PCIE_MSI_INTR2_CLR				0x4508
--#define PCIE_MSI_INTR2_MASK_SET				0x4510
--#define PCIE_MSI_INTR2_MASK_CLR				0x4514
-+
-+#define PCIE_INTR2_CPU_BASE		0x4300
-+#define PCIE_MSI_INTR2_BASE		0x4500
-+/* Offsets from PCIE_INTR2_CPU_BASE and PCIE_MSI_INTR2_BASE */
-+#define  MSI_INT_STATUS			0x0
-+#define  MSI_INT_CLR			0x8
-+#define  MSI_INT_MASK_SET		0x10
-+#define  MSI_INT_MASK_CLR		0x14
- 
- #define PCIE_EXT_CFG_DATA				0x8000
- 
-@@ -132,6 +140,8 @@
- /* PCIe parameters */
- #define BRCM_NUM_PCIE_OUT_WINS		0x4
- #define BRCM_INT_PCI_MSI_NR		32
-+#define BRCM_INT_PCI_MSI_LEGACY_NR	8
-+#define BRCM_INT_PCI_MSI_SHIFT		0
- 
- /* MSI target adresses */
- #define BRCM_MSI_TARGET_ADDR_LT_4GB	0x0fffffffcULL
-@@ -246,6 +256,12 @@ struct brcm_msi {
- 	int			irq;
- 	/* used indicates which MSI interrupts have been alloc'd */
- 	unsigned long		used;
-+	bool			legacy;
-+	/* Some chips have MSIs in bits [31..24] of a shared register. */
-+	int			legacy_shift;
-+	int			nr; /* No. of MSI available, depends on chip */
-+	/* This is the base pointer for interrupt status/set/clr regs */
-+	void __iomem		*intr_base;
- };
- 
- /* Internal PCIe Host Controller Information.*/
-@@ -264,6 +280,7 @@ struct brcm_pcie {
- 	struct reset_control	*rescal;
- 	int			num_memc;
- 	u64			memc_size[PCIE_BRCM_MAX_MEMC];
-+	u32			hw_rev;
- };
- 
- /*
-@@ -454,8 +471,10 @@ static void brcm_pcie_msi_isr(struct irq_desc *desc)
- 	msi = irq_desc_get_handler_data(desc);
- 	dev = msi->dev;
- 
--	status = readl(msi->base + PCIE_MSI_INTR2_STATUS);
--	for_each_set_bit(bit, &status, BRCM_INT_PCI_MSI_NR) {
-+	status = readl(msi->intr_base + MSI_INT_STATUS);
-+	status >>= msi->legacy_shift;
-+
-+	for_each_set_bit(bit, &status, msi->nr) {
- 		virq = irq_find_mapping(msi->inner_domain, bit);
- 		if (virq)
- 			generic_handle_irq(virq);
-@@ -472,7 +491,7 @@ static void brcm_msi_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
- 
- 	msg->address_lo = lower_32_bits(msi->target_addr);
- 	msg->address_hi = upper_32_bits(msi->target_addr);
--	msg->data = (0xffff & PCIE_MISC_MSI_DATA_CONFIG_VAL) | data->hwirq;
-+	msg->data = (0xffff & PCIE_MISC_MSI_DATA_CONFIG_VAL_32) | data->hwirq;
- }
- 
- static int brcm_msi_set_affinity(struct irq_data *irq_data,
-@@ -484,8 +503,9 @@ static int brcm_msi_set_affinity(struct irq_data *irq_data,
- static void brcm_msi_ack_irq(struct irq_data *data)
- {
- 	struct brcm_msi *msi = irq_data_get_irq_chip_data(data);
-+	const int shift_amt = data->hwirq + msi->legacy_shift;
- 
--	writel(1 << data->hwirq, msi->base + PCIE_MSI_INTR2_CLR);
-+	writel(1 << shift_amt, msi->intr_base + MSI_INT_CLR);
- }
- 
- 
-@@ -501,7 +521,7 @@ static int brcm_msi_alloc(struct brcm_msi *msi)
- 	int hwirq;
- 
- 	mutex_lock(&msi->lock);
--	hwirq = bitmap_find_free_region(&msi->used, BRCM_INT_PCI_MSI_NR, 0);
-+	hwirq = bitmap_find_free_region(&msi->used, msi->nr, 0);
- 	mutex_unlock(&msi->lock);
- 
- 	return hwirq;
-@@ -550,8 +570,7 @@ static int brcm_allocate_domains(struct brcm_msi *msi)
- 	struct fwnode_handle *fwnode = of_node_to_fwnode(msi->np);
- 	struct device *dev = msi->dev;
- 
--	msi->inner_domain = irq_domain_add_linear(NULL, BRCM_INT_PCI_MSI_NR,
--						  &msi_domain_ops, msi);
-+	msi->inner_domain = irq_domain_add_linear(NULL, msi->nr, &msi_domain_ops, msi);
- 	if (!msi->inner_domain) {
- 		dev_err(dev, "failed to create IRQ domain\n");
- 		return -ENOMEM;
-@@ -588,7 +607,10 @@ static void brcm_msi_remove(struct brcm_pcie *pcie)
- 
- static void brcm_msi_set_regs(struct brcm_msi *msi)
- {
--	writel(0xffffffff, msi->base + PCIE_MSI_INTR2_MASK_CLR);
-+	u32 val = __GENMASK(31, msi->legacy_shift);
-+
-+	writel(val, msi->intr_base + MSI_INT_MASK_CLR);
-+	writel(val, msi->intr_base + MSI_INT_CLR);
- 
- 	/*
- 	 * The 0 bit of PCIE_MISC_MSI_BAR_CONFIG_LO is repurposed to MSI
-@@ -599,8 +621,8 @@ static void brcm_msi_set_regs(struct brcm_msi *msi)
- 	writel(upper_32_bits(msi->target_addr),
- 	       msi->base + PCIE_MISC_MSI_BAR_CONFIG_HI);
- 
--	writel(PCIE_MISC_MSI_DATA_CONFIG_VAL,
--	       msi->base + PCIE_MISC_MSI_DATA_CONFIG);
-+	val = msi->legacy ? PCIE_MISC_MSI_DATA_CONFIG_VAL_8 : PCIE_MISC_MSI_DATA_CONFIG_VAL_32;
-+	writel(val, msi->base + PCIE_MISC_MSI_DATA_CONFIG);
- }
- 
- static int brcm_pcie_enable_msi(struct brcm_pcie *pcie)
-@@ -625,6 +647,17 @@ static int brcm_pcie_enable_msi(struct brcm_pcie *pcie)
- 	msi->np = pcie->np;
- 	msi->target_addr = pcie->msi_target_addr;
- 	msi->irq = irq;
-+	msi->legacy = pcie->hw_rev < BRCM_PCIE_HW_REV_33;
-+
-+	if (msi->legacy) {
-+		msi->intr_base = msi->base + PCIE_INTR2_CPU_BASE;
-+		msi->nr = BRCM_INT_PCI_MSI_LEGACY_NR;
-+		msi->legacy_shift = 24;
-+	} else {
-+		msi->intr_base = msi->base + PCIE_MSI_INTR2_BASE;
-+		msi->nr = BRCM_INT_PCI_MSI_NR;
-+		msi->legacy_shift = 0;
-+	}
- 
- 	ret = brcm_allocate_domains(msi);
- 	if (ret)
-@@ -887,12 +920,6 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
- 	tmp &= ~PCIE_MISC_RC_BAR3_CONFIG_LO_SIZE_MASK;
- 	writel(tmp, base + PCIE_MISC_RC_BAR3_CONFIG_LO);
- 
--	/* Mask all interrupts since we are not handling any yet */
--	writel(0xffffffff, pcie->base + PCIE_MSI_INTR2_MASK_SET);
--
--	/* clear any interrupts we find on boot */
--	writel(0xffffffff, pcie->base + PCIE_MSI_INTR2_CLR);
--
- 	if (pcie->gen)
- 		brcm_pcie_set_gen(pcie, pcie->gen);
- 
-@@ -1229,6 +1256,8 @@ static int brcm_pcie_probe(struct platform_device *pdev)
- 	if (ret)
- 		goto fail;
- 
-+	pcie->hw_rev = readl(pcie->base + PCIE_MISC_REVISION);
-+
- 	msi_np = of_parse_phandle(pcie->np, "msi-parent", 0);
- 	if (pci_msi_enabled() && msi_np == pcie->np) {
- 		ret = brcm_pcie_enable_msi(pcie);
--- 
-2.17.1
-
+        tglx
