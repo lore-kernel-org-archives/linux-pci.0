@@ -2,47 +2,47 @@ Return-Path: <SRS0=kS8R=CE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3067C433E1
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:14:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 654C3C433E1
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:14:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 781B120838
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:14:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 405C32071E
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:14:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="CcZtqL4l";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="K2Lxyzsd"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="itgEGCH2";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="jQX1nfcb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729972AbgHZMNq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 26 Aug 2020 08:13:46 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:57540 "EHLO
+        id S1729692AbgHZMOh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 26 Aug 2020 08:14:37 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:56968 "EHLO
         galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729379AbgHZMBV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Aug 2020 08:01:21 -0400
-Message-Id: <20200826112331.343103175@linutronix.de>
+        with ESMTP id S1729363AbgHZMBC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Aug 2020 08:01:02 -0400
+Message-Id: <20200826111628.794979401@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1598443263;
+        s=2020; t=1598443255;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=yUak3m0NwlqIqsF9vwdOVEDgjCYRdAN21F8d0mSMKGQ=;
-        b=CcZtqL4lvptBr6O8tkmhEQLyN2lRF7B9yfOWJiZHdO44k0wdGsKpl6eWdq06TDejigd6ob
-        JDCD52HZX+tsL5/rUPRGCwvIyqDA9zwUQ2VDiaoYgWK0cvpU2nAZUW+oVwywZr9FEINxUi
-        VPGA2iy3zrIyWLUAGs4V3oB5DonOhA2FxuFQIi3d7LuHT+Gama3dCMZ8JahfFfHkRfxJm7
-        D5UltiIvHeZ+/SpaNlhpYmHQ8lJWZdq24exfT4lKNQ2AeVtmjerFG05h04YY3WFDo4H3z5
-        aBwORx/I0HI+GncAXRYaJ2j9Pv6KAcTg9Xj39PuKxCKBAvV3TCHZdRxCwy5kqw==
+         content-transfer-encoding:content-transfer-encoding;
+        bh=1dVHGWlVLKe8Qbq+hsxoxDKyLgFehj4bg/2iuhvz548=;
+        b=itgEGCH2EzpbaFlCSN0K2oYg5CLEFENc6q3co7bhBruz4euEviEZAzZO5a/j+gLiSTVNYi
+        3VbpDIuO0f71j8jusJl+pz8zfoOKAPxl0ZiBSKO8hAOHE2808wxZR4DLH3Q57bnO9gbygy
+        nN6nh3CZL2WeZyV2bc6JFQXFwgcf6kQcwSbeBBFXPbKGHX/DJCyUz5PXbE+gKlr/tIKFIL
+        8YRsRO1izHB+wsCmHWwcn/mtGfRA/AVPhXtma7nQ8VDHQ3EDaHY+FrrXT6fbPBAWXingVv
+        Ybpb3NGiWx9eomJIsuWMLmcM1uG5/+DDmvRMR/InX6WcXy8QMIcaoFMTKEZyhw==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1598443263;
+        s=2020e; t=1598443255;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=yUak3m0NwlqIqsF9vwdOVEDgjCYRdAN21F8d0mSMKGQ=;
-        b=K2Lxyzsd9n0HFLhQ7NLh5Km/SSUSbbyJ7SJ4NwtKLHNFB2UnCTgLYIOtfVN93n9DYdKBau
-        Z3yoeEu2w5MuXuDg==
-Date:   Wed, 26 Aug 2020 13:16:35 +0200
+         content-transfer-encoding:content-transfer-encoding;
+        bh=1dVHGWlVLKe8Qbq+hsxoxDKyLgFehj4bg/2iuhvz548=;
+        b=jQX1nfcbMl4rnDTp2/mDJdszSt8UAxcBp/X1rcZbQLBpuHBU67ldyCtMUmpEbCjrwlsJCm
+        LETm99a7F7lunACQ==
+Date:   Wed, 26 Aug 2020 13:16:28 +0200
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
@@ -73,186 +73,112 @@ Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
         Baolu Lu <baolu.lu@intel.com>,
         Kevin Tian <kevin.tian@intel.com>,
         Dan Williams <dan.j.williams@intel.com>
-Subject: [patch V2 07/46] x86/irq: Rename X86_IRQ_ALLOC_TYPE_MSI* to reflect
- PCI dependency
-References: <20200826111628.794979401@linutronix.de>
+Subject: [patch V2 00/46] x86, PCI, XEN, genirq ...: Prepare for device MSI
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-transfer-encoding: 8-bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Thomas Gleixner <tglx@linutronix.de>
-
-No functional change.
-
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-
----
- arch/x86/include/asm/hw_irq.h       |    4 ++--
- arch/x86/kernel/apic/msi.c          |    6 +++---
- drivers/iommu/amd/iommu.c           |   24 ++++++++++++------------
- drivers/iommu/intel/irq_remapping.c |   18 +++++++++---------
- 4 files changed, 26 insertions(+), 26 deletions(-)
-
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -36,8 +36,8 @@ struct msi_desc;
- enum irq_alloc_type {
- 	X86_IRQ_ALLOC_TYPE_IOAPIC = 1,
- 	X86_IRQ_ALLOC_TYPE_HPET,
--	X86_IRQ_ALLOC_TYPE_MSI,
--	X86_IRQ_ALLOC_TYPE_MSIX,
-+	X86_IRQ_ALLOC_TYPE_PCI_MSI,
-+	X86_IRQ_ALLOC_TYPE_PCI_MSIX,
- 	X86_IRQ_ALLOC_TYPE_DMAR,
- 	X86_IRQ_ALLOC_TYPE_UV,
- };
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -188,7 +188,7 @@ int native_setup_msi_irqs(struct pci_dev
- 	struct irq_alloc_info info;
- 
- 	init_irq_alloc_info(&info, NULL);
--	info.type = X86_IRQ_ALLOC_TYPE_MSI;
-+	info.type = X86_IRQ_ALLOC_TYPE_PCI_MSI;
- 	info.msi_dev = dev;
- 
- 	domain = irq_remapping_get_irq_domain(&info);
-@@ -220,9 +220,9 @@ int pci_msi_prepare(struct irq_domain *d
- 	init_irq_alloc_info(arg, NULL);
- 	arg->msi_dev = pdev;
- 	if (desc->msi_attrib.is_msix) {
--		arg->type = X86_IRQ_ALLOC_TYPE_MSIX;
-+		arg->type = X86_IRQ_ALLOC_TYPE_PCI_MSIX;
- 	} else {
--		arg->type = X86_IRQ_ALLOC_TYPE_MSI;
-+		arg->type = X86_IRQ_ALLOC_TYPE_PCI_MSI;
- 		arg->flags |= X86_IRQ_ALLOC_CONTIGUOUS_VECTORS;
- 	}
- 
---- a/drivers/iommu/amd/iommu.c
-+++ b/drivers/iommu/amd/iommu.c
-@@ -3514,8 +3514,8 @@ static int get_devid(struct irq_alloc_in
- 	case X86_IRQ_ALLOC_TYPE_HPET:
- 		devid     = get_hpet_devid(info->hpet_id);
- 		break;
--	case X86_IRQ_ALLOC_TYPE_MSI:
--	case X86_IRQ_ALLOC_TYPE_MSIX:
-+	case X86_IRQ_ALLOC_TYPE_PCI_MSI:
-+	case X86_IRQ_ALLOC_TYPE_PCI_MSIX:
- 		devid = get_device_id(&info->msi_dev->dev);
- 		break;
- 	default:
-@@ -3553,8 +3553,8 @@ static struct irq_domain *get_irq_domain
- 		return NULL;
- 
- 	switch (info->type) {
--	case X86_IRQ_ALLOC_TYPE_MSI:
--	case X86_IRQ_ALLOC_TYPE_MSIX:
-+	case X86_IRQ_ALLOC_TYPE_PCI_MSI:
-+	case X86_IRQ_ALLOC_TYPE_PCI_MSIX:
- 		devid = get_device_id(&info->msi_dev->dev);
- 		if (devid < 0)
- 			return NULL;
-@@ -3615,8 +3615,8 @@ static void irq_remapping_prepare_irte(s
- 		break;
- 
- 	case X86_IRQ_ALLOC_TYPE_HPET:
--	case X86_IRQ_ALLOC_TYPE_MSI:
--	case X86_IRQ_ALLOC_TYPE_MSIX:
-+	case X86_IRQ_ALLOC_TYPE_PCI_MSI:
-+	case X86_IRQ_ALLOC_TYPE_PCI_MSIX:
- 		msg->address_hi = MSI_ADDR_BASE_HI;
- 		msg->address_lo = MSI_ADDR_BASE_LO;
- 		msg->data = irte_info->index;
-@@ -3660,15 +3660,15 @@ static int irq_remapping_alloc(struct ir
- 
- 	if (!info)
- 		return -EINVAL;
--	if (nr_irqs > 1 && info->type != X86_IRQ_ALLOC_TYPE_MSI &&
--	    info->type != X86_IRQ_ALLOC_TYPE_MSIX)
-+	if (nr_irqs > 1 && info->type != X86_IRQ_ALLOC_TYPE_PCI_MSI &&
-+	    info->type != X86_IRQ_ALLOC_TYPE_PCI_MSIX)
- 		return -EINVAL;
- 
- 	/*
- 	 * With IRQ remapping enabled, don't need contiguous CPU vectors
- 	 * to support multiple MSI interrupts.
- 	 */
--	if (info->type == X86_IRQ_ALLOC_TYPE_MSI)
-+	if (info->type == X86_IRQ_ALLOC_TYPE_PCI_MSI)
- 		info->flags &= ~X86_IRQ_ALLOC_CONTIGUOUS_VECTORS;
- 
- 	devid = get_devid(info);
-@@ -3700,9 +3700,9 @@ static int irq_remapping_alloc(struct ir
- 		} else {
- 			index = -ENOMEM;
- 		}
--	} else if (info->type == X86_IRQ_ALLOC_TYPE_MSI ||
--		   info->type == X86_IRQ_ALLOC_TYPE_MSIX) {
--		bool align = (info->type == X86_IRQ_ALLOC_TYPE_MSI);
-+	} else if (info->type == X86_IRQ_ALLOC_TYPE_PCI_MSI ||
-+		   info->type == X86_IRQ_ALLOC_TYPE_PCI_MSIX) {
-+		bool align = (info->type == X86_IRQ_ALLOC_TYPE_PCI_MSI);
- 
- 		index = alloc_irq_index(devid, nr_irqs, align, info->msi_dev);
- 	} else {
---- a/drivers/iommu/intel/irq_remapping.c
-+++ b/drivers/iommu/intel/irq_remapping.c
-@@ -1115,8 +1115,8 @@ static struct irq_domain *intel_get_ir_i
- 	case X86_IRQ_ALLOC_TYPE_HPET:
- 		iommu = map_hpet_to_ir(info->hpet_id);
- 		break;
--	case X86_IRQ_ALLOC_TYPE_MSI:
--	case X86_IRQ_ALLOC_TYPE_MSIX:
-+	case X86_IRQ_ALLOC_TYPE_PCI_MSI:
-+	case X86_IRQ_ALLOC_TYPE_PCI_MSIX:
- 		iommu = map_dev_to_ir(info->msi_dev);
- 		break;
- 	default:
-@@ -1135,8 +1135,8 @@ static struct irq_domain *intel_get_irq_
- 		return NULL;
- 
- 	switch (info->type) {
--	case X86_IRQ_ALLOC_TYPE_MSI:
--	case X86_IRQ_ALLOC_TYPE_MSIX:
-+	case X86_IRQ_ALLOC_TYPE_PCI_MSI:
-+	case X86_IRQ_ALLOC_TYPE_PCI_MSIX:
- 		iommu = map_dev_to_ir(info->msi_dev);
- 		if (iommu)
- 			return iommu->ir_msi_domain;
-@@ -1306,8 +1306,8 @@ static void intel_irq_remapping_prepare_
- 		break;
- 
- 	case X86_IRQ_ALLOC_TYPE_HPET:
--	case X86_IRQ_ALLOC_TYPE_MSI:
--	case X86_IRQ_ALLOC_TYPE_MSIX:
-+	case X86_IRQ_ALLOC_TYPE_PCI_MSI:
-+	case X86_IRQ_ALLOC_TYPE_PCI_MSIX:
- 		if (info->type == X86_IRQ_ALLOC_TYPE_HPET)
- 			set_hpet_sid(irte, info->hpet_id);
- 		else
-@@ -1362,15 +1362,15 @@ static int intel_irq_remapping_alloc(str
- 
- 	if (!info || !iommu)
- 		return -EINVAL;
--	if (nr_irqs > 1 && info->type != X86_IRQ_ALLOC_TYPE_MSI &&
--	    info->type != X86_IRQ_ALLOC_TYPE_MSIX)
-+	if (nr_irqs > 1 && info->type != X86_IRQ_ALLOC_TYPE_PCI_MSI &&
-+	    info->type != X86_IRQ_ALLOC_TYPE_PCI_MSIX)
- 		return -EINVAL;
- 
- 	/*
- 	 * With IRQ remapping enabled, don't need contiguous CPU vectors
- 	 * to support multiple MSI interrupts.
- 	 */
--	if (info->type == X86_IRQ_ALLOC_TYPE_MSI)
-+	if (info->type == X86_IRQ_ALLOC_TYPE_PCI_MSI)
- 		info->flags &= ~X86_IRQ_ALLOC_CONTIGUOUS_VECTORS;
- 
- 	ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
-
-
+VGhpcyBpcyB0aGUgc2Vjb25kIHZlcnNpb24gb2YgcHJvdmlkaW5nIGEgYmFzZSB0byBzdXBwb3J0
+IGRldmljZSBNU0kgKG5vbgpQQ0kgYmFzZWQpIGFuZCBvbiB0b3Agb2YgdGhhdCBzdXBwb3J0IGZv
+ciBJTVMgKEludGVycnVwdCBNZXNzYWdlIFN0b3JtKQpiYXNlZCBkZXZpY2VzIGluIGEgaGFsZndh
+eXMgYXJjaGl0ZWN0dXJlIGluZGVwZW5kZW50IHdheS4KClRoZSBmaXJzdCB2ZXJzaW9uIGNhbiBi
+ZSBmb3VuZCBoZXJlOgoKICAgIGh0dHBzOi8vbG9yZS5rZXJuZWwub3JnL3IvMjAyMDA4MjEwMDI0
+MjQuMTE5NDkyMjMxQGxpbnV0cm9uaXguZGUKCkl0J3Mgc3RpbGwgYSBtaXhlZCBiYWcgb2YgYnVn
+IGZpeGVzLCBjbGVhbnVwcyBhbmQgZ2VuZXJhbCBpbXByb3ZlbWVudHMKd2hpY2ggYXJlIHdvcnRo
+d2hpbGUgaW5kZXBlbmRlbnQgb2YgZGV2aWNlIE1TSS4KClRoZXJlIGFyZSBxdWl0ZSBhIGJ1bmNo
+IG9mIGlzc3VlcyB0byBzb2x2ZToKCiAgLSBYODYgZG9lcyBub3QgdXNlIHRoZSBkZXZpY2U6Om1z
+aV9kb21haW4gcG9pbnRlciBmb3IgaGlzdG9yaWNhbCByZWFzb25zCiAgICBhbmQgZHVlIHRvIFhF
+Tiwgd2hpY2ggbWFrZXMgaXQgaW1wb3NzaWJsZSB0byBjcmVhdGUgYW4gYXJjaGl0ZWN0dXJlCiAg
+ICBhZ25vc3RpYyBkZXZpY2UgTVNJIGluZnJhc3RydWN0dXJlLgoKICAtIFg4NiBoYXMgaXQncyBv
+d24gbXNpX2FsbG9jX2luZm8gZGF0YSB0eXBlIHdoaWNoIGlzIHBvaW50bGVzc2x5CiAgICBkaWZm
+ZXJlbnQgZnJvbSB0aGUgZ2VuZXJpYyB2ZXJzaW9uIGFuZCBkb2VzIG5vdCBhbGxvdyB0byBzaGFy
+ZSBjb2RlLgoKICAtIFRoZSBsb2dpYyBvZiBjb21wb3NpbmcgTVNJIG1lc3NhZ2VzIGluIGFuIGhp
+ZXJhcmNoeSBpcyBidXN0ZWQgYXQgdGhlCiAgICBjb3JlIGxldmVsIGFuZCBvZiBjb3Vyc2Ugc29t
+ZSAoeDg2KSBkcml2ZXJzIGRlcGVuZCBvbiB0aGF0LgoKICAtIEEgZmV3IG1pbm9yIHNob3J0Y29t
+aW5ncyBhcyB1c3VhbAoKVGhpcyBzZXJpZXMgYWRkcmVzc2VzIHRoYXQgaW4gc2V2ZXJhbCBzdGVw
+czoKCiAxKSBBY2NpZGVudGFsIGJ1ZyBmaXhlcwoKICAgICAgaW9tbXUvYW1kOiBQcmV2ZW50IE5V
+TEwgcG9pbnRlciBkZXJlZmVyZW5jZQoKIDIpIEphbml0b3JpbmcKCiAgICAgIHg4Ni9pbml0OiBS
+ZW1vdmUgdW51c2VkIGluaXQgb3BzCiAgICAgIFBDSTogdm1kOiBEb250IGFidXNlIHZlY3RvciBp
+cnFvbWFpbiBhcyBwYXJlbnQKICAgICAgeDg2L21zaTogUmVtb3ZlIHBvaW50bGVzcyB2Y3B1X2Fm
+ZmluaXR5IGNhbGxiYWNrCgogMykgU2FuaXRpemluZyB0aGUgY29tcG9zaXRpb24gb2YgTVNJIG1l
+c3NhZ2VzIGluIGEgaGllcmFyY2h5CiAKICAgICAgZ2VuaXJxL2NoaXA6IFVzZSB0aGUgZmlyc3Qg
+Y2hpcCBpbiBpcnFfY2hpcF9jb21wb3NlX21zaV9tc2coKQogICAgICB4ODYvbXNpOiBNb3ZlIGNv
+bXBvc2UgbWVzc2FnZSBjYWxsYmFjayB3aGVyZSBpdCBiZWxvbmdzCgogNCkgU2ltcGxpZmljYXRp
+b24gb2YgdGhlIHg4NiBzcGVjaWZpYyBpbnRlcnJ1cHQgYWxsb2NhdGlvbiBtZWNoYW5pc20KCiAg
+ICAgIHg4Ni9pcnE6IFJlbmFtZSBYODZfSVJRX0FMTE9DX1RZUEVfTVNJKiB0byByZWZsZWN0IFBD
+SSBkZXBlbmRlbmN5CiAgICAgIHg4Ni9pcnE6IEFkZCBhbGxvY2F0aW9uIHR5cGUgZm9yIHBhcmVu
+dCBkb21haW4gcmV0cmlldmFsCiAgICAgIGlvbW11L3Z0LWQ6IENvbnNvbGlkYXRlIGlycSBkb21h
+aW4gZ2V0dGVyCiAgICAgIGlvbW11L2FtZDogQ29uc29saWRhdGUgaXJxIGRvbWFpbiBnZXR0ZXIK
+ICAgICAgaW9tbXUvaXJxX3JlbWFwcGluZzogQ29uc29saWRhdGUgaXJxIGRvbWFpbiBsb29rdXAK
+CiA1KSBDb25zb2xpZGF0aW9uIG9mIHRoZSBYODYgc3BlY2lmaWMgaW50ZXJydXB0IGFsbG9jYXRp
+b24gbWVjaGFuaXNtIHRvIGJlIGFzIGNsb3NlCiAgICBhcyBwb3NzaWJsZSB0byB0aGUgZ2VuZXJp
+YyBNU0kgYWxsb2NhdGlvbiBtZWNoYW5pc20gd2hpY2ggYWxsb3dzIHRvIGdldCByaWQKICAgIG9m
+IHF1aXRlIGEgYnVuY2ggb2YgeDg2J2lzbXMgd2hpY2ggYXJlIHBvaW50bGVzcwoKICAgICAgeDg2
+L2lycTogUHJlcGFyZSBjb25zb2xpZGF0aW9uIG9mIGlycV9hbGxvY19pbmZvCiAgICAgIHg4Ni9t
+c2k6IENvbnNvbGlkYXRlIEhQRVQgYWxsb2NhdGlvbgogICAgICB4ODYvaW9hcGljOiBDb25zb2xp
+ZGF0ZSBJT0FQSUMgYWxsb2NhdGlvbgogICAgICB4ODYvaXJxOiBDb25zb2xpZGF0ZSBETUFSIGly
+cSBhbGxvY2F0aW9uCiAgICAgIHg4Ni9pcnE6IENvbnNvbGlkYXRlIFVWIGRvbWFpbiBhbGxvY2F0
+aW9uCiAgICAgIFBDSS9NU0k6IFJld29yayBwY2lfbXNpX2RvbWFpbl9jYWxjX2h3aXJxKCkKICAg
+ICAgeDg2L21zaTogQ29uc29saWRhdGUgTVNJIGFsbG9jYXRpb24KICAgICAgeDg2L21zaTogVXNl
+IGdlbmVyaWMgTVNJIGRvbWFpbiBvcHMKCiAgNikgeDg2IHNwZWNpZmljIGNsZWFudXBzIHRvIHJl
+bW92ZSB0aGUgZGVwZW5kZW5jeSBvbiBhcmNoXypfbXNpX2lycXMoKQoKICAgICAgeDg2L2lycTog
+TW92ZSBhcGljX3Bvc3RfaW5pdCgpIGludm9jYXRpb24gdG8gb25lIHBsYWNlCiAgICAgIHg4Ni9w
+Y2k6IFJlZHVjZGUgI2lmZGVmZmVyeSBpbiBQQ0kgaW5pdCBjb2RlCiAgICAgIHg4Ni9pcnE6IElu
+aXRpYWxpemUgUENJL01TSSBkb21haW4gYXQgUENJIGluaXQgdGltZQogICAgICBpcnFkb21haW4v
+bXNpOiBQcm92aWRlIERPTUFJTl9CVVNfVk1EX01TSQogICAgICBQQ0k6IHZtZDogTWFyayBWTUQg
+aXJxZG9tYWluIHdpdGggRE9NQUlOX0JVU19WTURfTVNJCiAgICAgIFBDSS9NU0k6IFByb3ZpZGUg
+cGNpX2Rldl9oYXNfc3BlY2lhbF9tc2lfZG9tYWluKCkgaGVscGVyCiAgICAgIHg4Ni94ZW46IE1h
+a2UgeGVuX21zaV9pbml0KCkgc3RhdGljIGFuZCByZW5hbWUgaXQgdG8geGVuX2h2bV9tc2lfaW5p
+dCgpCiAgICAgIHg4Ni94ZW46IFJld29yayBNU0kgdGVhcmRvd24KICAgICAgeDg2L3hlbjogQ29u
+c29saWRhdGUgWEVOLU1TSSBpbml0CiAgICAgIGlycWRvbWFpbi9tc2k6IEFsbG93IHRvIG92ZXJy
+aWRlIG1zaV9kb21haW5fYWxsb2MvZnJlZV9pcnFzKCkKICAgICAgeDg2L3hlbjogV3JhcCBYRU4g
+TVNJIG1hbmFnZW1lbnQgaW50byBpcnFkb21haW4KICAgICAgaW9tbW0vdnQtZDogU3RvcmUgaXJx
+IGRvbWFpbiBpbiBzdHJ1Y3QgZGV2aWNlCiAgICAgIGlvbW1tL2FtZDogU3RvcmUgaXJxIGRvbWFp
+biBpbiBzdHJ1Y3QgZGV2aWNlCiAgICAgIHg4Ni9wY2k6IFNldCBkZWZhdWx0IGlycSBkb21haW4g
+aW4gcGNpYmlvc19hZGRfZGV2aWNlKCkKICAgICAgUENJL01TSTogTWFrZSBhcmNoXy4qX21zaV9p
+cnFbc10gZmFsbGJhY2tzIHNlbGVjdGFibGUKICAgICAgeDg2L2lycTogQ2xlYW51cCB0aGUgYXJj
+aF8qX21zaV9pcnFzKCkgbGVmdG92ZXJzCiAgICAgIHg4Ni9pcnE6IE1ha2UgbW9zdCBNU0kgb3Bz
+IFhFTiBwcml2YXRlCiAgICAgIGlvbW11L3Z0LWQ6IFJlbW92ZSBkb21haW4gc2VhcmNoIGZvciBQ
+Q0kvTVNJW1hdCiAgICAgIGlvbW11L2FtZDogUmVtb3ZlIGRvbWFpbiBzZWFyY2ggZm9yIFBDSS9N
+U0kKCiAgNykgWDg2IHNwZWNpZmljIHByZXBhcmF0aW9uIGZvciBkZXZpY2UgTVNJCgogICAgICB4
+ODYvaXJxOiBBZGQgREVWX01TSSBhbGxvY2F0aW9uIHR5cGUKICAgICAgeDg2L21zaTogUmVuYW1l
+IGFuZCByZXdvcmsgcGNpX21zaV9wcmVwYXJlKCkgdG8gY292ZXIgbm9uLVBDSSBNU0kKCiAgOCkg
+R2VuZXJpYyBkZXZpY2UgTVNJIGluZnJhc3RydWN0dXJlCiAgICAgIHBsYXRmb3JtLW1zaTogUHJv
+dmlkZSBkZWZhdWx0IGlycV9jaGlwOjogQWNrCiAgICAgIGdlbmlycS9wcm9jOiBUYWtlIGJ1c2xv
+Y2sgb24gYWZmaW5pdHkgd3JpdGUKICAgICAgZ2VuaXJxL21zaTogUHJvdmlkZSBhbmQgdXNlIG1z
+aV9kb21haW5fc2V0X2RlZmF1bHRfaW5mb19mbGFncygpCiAgICAgIHBsYXRmb3JtLW1zaTogQWRk
+IGRldmljZSBNU0kgaW5mcmFzdHJ1Y3R1cmUKICAgICAgaXJxZG9tYWluL21zaTogUHJvdmlkZSBt
+c2lfYWxsb2MvZnJlZV9zdG9yZSgpIGNhbGxiYWNrcwoKICA5KSBQT0Mgb2YgSU1TIChJbnRlcnJ1
+cHQgTWVzc2FnZSBTdG9ybSkgaXJxIGRvbWFpbiBhbmQgaXJxY2hpcAogICAgIGltcGxlbWVudGF0
+aW9ucyBmb3IgYm90aCBkZXZpY2UgYXJyYXkgYW5kIHF1ZXVlIHN0b3JhZ2UuCgogICAgICBpcnFj
+aGlwOiBBZGQgSU1TIChJbnRlcnJ1cHQgTWVzc2FnZSBTdG9ybSkgZHJpdmVyIC0gTk9UIEZPUiBN
+RVJHSU5HCgpDaGFuZ2VzIHZzLiBWMToKCiAgIC0gQWRkcmVzc2VkIHZhcmlvdXMgcmV2aWV3IGNv
+bW1lbnRzIGFuZCBhZGRyZXNzZWQgdGhlIDBkYXkgZmFsbG91dC4KICAgICAtIENvcnJlY3RlZCB0
+aGUgWEVOIGxvZ2ljIChKw7xyZ2VuKQogICAgIC0gTWFrZSB0aGUgYXJjaCBmYWxsYmFjayBpbiBQ
+Q0kvTVNJIG9wdC1pbiBub3Qgb3B0LW91dCAoQmpvcm4pCgogICAtIEZpeGVkIHRoZSBjb21wb3Nl
+IE1TSSBtZXNzYWdlIGluY29uc2lzdGVuY3kKCiAgIC0gRW5zdXJlIHRoYXQgdGhlIG5lY2Vzc2Fy
+eSBmbGFncyBhcmUgc2V0IGZvciBkZXZpY2UgU01JCgogICAtIE1ha2UgdGhlIGlycSBidXMgbG9n
+aWMgd29yayBmb3IgYWZmaW5pdHkgc2V0dGluZyB0byBwcmVwYXJlCiAgICAgc3VwcG9ydCBmb3Ig
+SU1TIHN0b3JhZ2UgaW4gcXVldWUgbWVtb3J5LiBJdCB0dXJuZWQgb3V0IHRvIGJlCiAgICAgbGVz
+cyBzY2FyeSB0aGFuIEkgZmVhcmVkLgoKICAgLSBSZW1vdmUgbGVmdG92ZXJzIGluIGlvbW11L2lu
+dGVsfGFtZAoKICAgLSBSZXdvcmtlZCB0aGUgSU1TIFBPQyBkcml2ZXIgdG8gY292ZXIgcXVldWUg
+c3RvcmFnZSBzbyBKYXNvbiBjYW4gaGF2ZSBhCiAgICAgbG9vayB3aGV0aGVyIHRoYXQgZml0cyB0
+aGUgbmVlZHMgb2YgTUxYIGRldmljZXMuCgpUaGUgd2hvbGUgbG90IGlzIGFsc28gYXZhaWxhYmxl
+IGZyb20gZ2l0OgoKICAgZ2l0Oi8vZ2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51eC9rZXJuZWwv
+Z2l0L3RnbHgvZGV2ZWwuZ2l0IGRldmljZS1tc2kKClRoaXMgaGFzIGJlZW4gdGVzdGVkIG9uIElu
+dGVsL0FNRC9LVk0gYnV0IGxhY2tzIHRlc3Rpbmcgb246CgogICAgLSBIWVBFUlYgKC1FTk9ERVYp
+CiAgICAtIFZNRCBlbmFibGVkIHN5c3RlbXMgKC1FTk9ERVYpCiAgICAtIFhFTiAoLUVOT0NMVUUp
+CiAgICAtIElNUyAoLUVOT0RFVikKCiAgICAtIEFueSBub24tWDg2IGNvZGUgd2hpY2ggbWlnaHQg
+ZGVwZW5kIG9uIHRoZSBicm9rZW4gY29tcG9zZSBNU0kgbWVzc2FnZQogICAgICBsb2dpYy4gTWFy
+YyBleGNwZWN0cyBub3QgbXVjaCBmYWxsb3V0LCBidXQgYWdyZWVzIHRoYXQgd2UgbmVlZCB0byBm
+aXgKICAgICAgaXQgYW55d2F5LgoKIzEgLSAjMyBzaG91bGQgYmUgYXBwbGllZCB1bmNvbmRpdGlv
+bmFsbHkgZm9yIG9idmlvdXMgcmVhc29ucwojNCAtICM2IGFyZSB3b3J0d2hpbGUgY2xlYW51cHMg
+d2hpY2ggc2hvdWxkIGJlIGRvbmUgaW5kZXBlbmRlbnQgb2YgZGV2aWNlIE1TSQoKIzcgLSAjOCBs
+b29rIHByb21pc2luZyB0byBjbGVhbnVwIHRoZSBwbGF0Zm9ybSBNU0kgaW1wbGVtZW50YXRpb24K
+ICAgICAJaW5kZXBlbmRlbnQgb2YgIzgsIGJ1dCBJIG5laXRoZXIgaGFkIGN5Y2xlcyBub3IgdGhl
+IHN0b21hY2ggdG8KICAgICAJdGFja2xlIHRoYXQuCgojOQlpcyBvYnZpb3VzbHkganVzdCBmb3Ig
+dGhlIGZvbGtzIGludGVyZXN0ZWQgaW4gSU1TCgpUaGFua3MsCgoJdGdseAo=
