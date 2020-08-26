@@ -7,42 +7,42 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 718FEC433DF
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:11:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1BD5C433E1
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:12:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 509682087D
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:11:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BBEB02087C
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:12:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="eJn39pF+";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="hT/OBr4e"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="AFAYy1AZ";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="u2ouyFH0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729888AbgHZMLP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 26 Aug 2020 08:11:15 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:57606 "EHLO
+        id S1729885AbgHZMLO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 26 Aug 2020 08:11:14 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:57542 "EHLO
         galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729392AbgHZMBd (ORCPT
+        with ESMTP id S1729394AbgHZMBd (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Aug 2020 08:01:33 -0400
-Message-Id: <20200826112332.954409970@linutronix.de>
+Message-Id: <20200826112333.139387358@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1598443283;
+        s=2020; t=1598443286;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=ua6NqpYSmZApI6uP+18lDgw4EnjAETLTuYc3KhfX2+w=;
-        b=eJn39pF++R7y4RiJv9aME9HZXKzf7AMtx9gOIQ/KZhoM3Ld0hlH/DnKGJSmV3hVK7ueYqX
-        g1TpG290lPqFhzmAKo6hqVmPwqEyrX7rt/PhmQiixSoeLrqPBxlBTb7V5nlKo9FeeO68w9
-        P+nP/kWZ0Q3FfsrwOaftJfMc0rekm49YPAwe1NBLe4ss62eDgjZkUMH5SBARbrLVSeCsHW
-        9wSFLRhkhyvmHyqMypfoAkbY6kL/Y1hZFdrfo2aarMJtV0+1qhqRZ+WGFKj/hsCV4En27V
-        zyFSS2ZxL7C8PQ53C1/a/Tt9WRdp2fAapfBPmUw2+7K8K2Qi+jcv21W0IVT5RQ==
+        bh=+WzR5MCuCex7ytf6rjsXfS+TP5lRyvSEuqbO3kY2ypY=;
+        b=AFAYy1AZODdBAXiQF7D/2Af8hjoA4F8whD1dpfxhZK0wDTkBf3sx/VW4O7HKpqAFQF6LfQ
+        XqAnO4Jday9Dy+ZAnDZuaZIcexHC5k39FSw5iwposD/R9Hh5EubsWwJv9/VREawRgyHgD0
+        CJrI9TXEVoVnmeZEEdDR73bytPy2vid/IRs7h2lro8AX8dn3PHz6Up96z37+dXPCe9s8FO
+        Jbf8kKTgVcXc0g9b3oirnxBiTzC21Iy1eeEsFbcC6bnLXB7fls4O14ynXejBtmZBynS/cT
+        nqFa+ajT5XGYIQYNicdr9NM1gu9bnuAyf5ubP6NEsBw3LzgzK18Bvd4eQmq+Dg==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1598443283;
+        s=2020e; t=1598443286;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=ua6NqpYSmZApI6uP+18lDgw4EnjAETLTuYc3KhfX2+w=;
-        b=hT/OBr4eTGEXyMwMWWHmsjom0DAsmwGAPtkbOlxE5LrlE3lHi77XHAXMud4bbKn68MLXI3
-        kEfd4yz3w6MRPuDQ==
-Date:   Wed, 26 Aug 2020 13:16:51 +0200
+        bh=+WzR5MCuCex7ytf6rjsXfS+TP5lRyvSEuqbO3kY2ypY=;
+        b=u2ouyFH0DTUgP45ogWuZh8vqAlI+1eKXuHYVXRV5MEZcJUmzJuBp+ygWAV3omQ2ec9yiFP
+        sQTZJqjSD3yBN0Dw==
+Date:   Wed, 26 Aug 2020 13:16:53 +0200
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
@@ -73,7 +73,7 @@ Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
         Baolu Lu <baolu.lu@intel.com>,
         Kevin Tian <kevin.tian@intel.com>,
         Dan Williams <dan.j.williams@intel.com>
-Subject: [patch V2 23/46] irqdomain/msi: Provide DOMAIN_BUS_VMD_MSI
+Subject: [patch V2 25/46] PCI/MSI: Provide pci_dev_has_special_msi_domain() helper
 References: <20200826111628.794979401@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -85,47 +85,55 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Thomas Gleixner <tglx@linutronix.de>
 
-PCI devices behind a VMD bus are not subject to interrupt remapping, but
-the irq domain for VMD MSI cannot be distinguished from a regular PCI/MSI
-irq domain.
-
-Add a new domain bus token and allow it in the bus token check in
-msi_check_reservation_mode() to keep the functionality the same once VMD
-uses this token.
+Provide a helper function to check whether a PCI device is handled by a
+non-standard PCI/MSI domain. This will be used to exclude such devices
+which hang of a special bus, e.g. VMD, to be excluded from the irq domain
+override in irq remapping.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- include/linux/irqdomain.h |    1 +
- kernel/irq/msi.c          |    7 ++++++-
- 2 files changed, 7 insertions(+), 1 deletion(-)
+ drivers/pci/msi.c   |   22 ++++++++++++++++++++++
+ include/linux/msi.h |    1 +
+ 2 files changed, 23 insertions(+)
 
---- a/include/linux/irqdomain.h
-+++ b/include/linux/irqdomain.h
-@@ -84,6 +84,7 @@ enum irq_domain_bus_token {
- 	DOMAIN_BUS_FSL_MC_MSI,
- 	DOMAIN_BUS_TI_SCI_INTA_MSI,
- 	DOMAIN_BUS_WAKEUP,
-+	DOMAIN_BUS_VMD_MSI,
- };
- 
- /**
---- a/kernel/irq/msi.c
-+++ b/kernel/irq/msi.c
-@@ -370,8 +370,13 @@ static bool msi_check_reservation_mode(s
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1553,4 +1553,26 @@ struct irq_domain *pci_msi_get_device_do
+ 					     DOMAIN_BUS_PCI_MSI);
+ 	return dom;
+ }
++
++/**
++ * pci_dev_has_special_msi_domain - Check whether the device is handled by
++ *				    a non-standard PCI-MSI domain
++ * @pdev:	The PCI device to check.
++ *
++ * Returns: True if the device irqdomain or the bus irqdomain is
++ * non-standard PCI/MSI.
++ */
++bool pci_dev_has_special_msi_domain(struct pci_dev *pdev)
++{
++	struct irq_domain *dom = dev_get_msi_domain(&pdev->dev);
++
++	if (!dom)
++		dom = dev_get_msi_domain(&pdev->bus->dev);
++
++	if (!dom)
++		return true;
++
++	return dom->bus_token != DOMAIN_BUS_PCI_MSI;
++}
++
+ #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -374,6 +374,7 @@ int pci_msi_domain_check_cap(struct irq_
+ 			     struct msi_domain_info *info, struct device *dev);
+ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev);
+ struct irq_domain *pci_msi_get_device_domain(struct pci_dev *pdev);
++bool pci_dev_has_special_msi_domain(struct pci_dev *pdev);
+ #else
+ static inline struct irq_domain *pci_msi_get_device_domain(struct pci_dev *pdev)
  {
- 	struct msi_desc *desc;
- 
--	if (domain->bus_token != DOMAIN_BUS_PCI_MSI)
-+	switch(domain->bus_token) {
-+	case DOMAIN_BUS_PCI_MSI:
-+	case DOMAIN_BUS_VMD_MSI:
-+		break;
-+	default:
- 		return false;
-+	}
- 
- 	if (!(info->flags & MSI_FLAG_MUST_REACTIVATE))
- 		return false;
-
 
