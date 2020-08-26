@@ -7,42 +7,45 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED151C433E5
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:09:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22254C433E1
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:10:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CA5D62087D
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:09:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E9F9720786
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:10:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="r3vMcCO5";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="OaLcOn7v"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="QsDwGGbW";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="HEnQTgsb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729840AbgHZMJn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 26 Aug 2020 08:09:43 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:58070 "EHLO
-        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729407AbgHZMBk (ORCPT
+        id S1729409AbgHZMKW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 26 Aug 2020 08:10:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35532 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729334AbgHZMBk (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Aug 2020 08:01:40 -0400
-Message-Id: <20200826112333.992429909@linutronix.de>
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23F2BC061796;
+        Wed, 26 Aug 2020 05:01:33 -0700 (PDT)
+Message-Id: <20200826112333.526797548@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1598443297;
+        s=2020; t=1598443291;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=uyV0Ooe8la51Jnp77nt5kHoXNowVvxYDrd/gBP6ezcA=;
-        b=r3vMcCO5kVJoLxyaJXMRvQSRf0p5/OGnF/WKafYbVkxf73vWkXM4WpLDagC8RIussDA9FA
-        Z87sCOntwSOkvEvcfa23hhyGS8N5+rQKjn6N3DXV6zRu0SehipqRnVtQk6thMW0cRHJCQw
-        s6AbtG7QZZjCDyVIZe4sremiWbKPKkkBZWJYYVYg0y/0R/DJTubkggNm9bF6bhi1Fr+VS6
-        esCTxRDlbM7pOE9L9f87wTeSuQe5JVr7e7G21g7yr4MP/PrrJgmbkFGYfMRYmdSx5MnKFS
-        Jhhm7doKaaGdC0Vxt7yUbhc4feRODqr8cyK4hlcJdNzQKlaHb+b9BtpLWbDUQg==
+        bh=bK7ZqVQ6iMkx1gqgQjuQHJCX2QxvMSr2QyxB/xDUg4Q=;
+        b=QsDwGGbWaMG2wwc117O54sbOpk8efms0M3Nr4YA0eNjQM3hv9UKze8X/XR5zxvkuuZi3nR
+        LWFMkYzhq4JiIIISrU0dWXqCSoOWOZOwUDbSrw3uO5lurbM6aLUbiJMf7AaMUbkDUPRqr/
+        gdec9aaEtSjX0JqeohnxPSC5mF1dHkgqjI1Ety8ChEAIBQx3iHlx8S/y5b+H/bkXdbZuDd
+        Y4+Bfd7s3Cs1t7hfNelEX0T+KhVWPQVMy6aGdKaKw2XY+71IbY4wQE2KbCUKcBNTpaRaDb
+        EavmVH18LUcAILyq4F81jTwxO/GWo30HaTwbVIVhpsYsAXdIJnf7Ejv0u7sXTg==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1598443297;
+        s=2020e; t=1598443291;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=uyV0Ooe8la51Jnp77nt5kHoXNowVvxYDrd/gBP6ezcA=;
-        b=OaLcOn7vpa94RSWbulmNHe5y7ULz7MCbpuIZVBMKBxG+dioNO9BaYdtsZsuaf5DNzpPKZr
-        aa38DKgbmHeoijDw==
-Date:   Wed, 26 Aug 2020 13:17:02 +0200
+        bh=bK7ZqVQ6iMkx1gqgQjuQHJCX2QxvMSr2QyxB/xDUg4Q=;
+        b=HEnQTgsbWzmNFS64UHrIApl6jg+KplQGavsM2VXZa8ffOFUDwsCwo+67VrHOs/L/kiaCH0
+        wlYSvrN8HSX1M+AQ==
+Date:   Wed, 26 Aug 2020 13:16:57 +0200
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
@@ -73,7 +76,8 @@ Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
         Baolu Lu <baolu.lu@intel.com>,
         Kevin Tian <kevin.tian@intel.com>,
         Dan Williams <dan.j.williams@intel.com>
-Subject: [patch V2 34/46] PCI/MSI: Make arch_.*_msi_irq[s] fallbacks selectable
+Subject: [patch V2 29/46] irqdomain/msi: Allow to override
+ msi_domain_alloc/free_irqs()
 References: <20200826111628.794979401@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -85,198 +89,201 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Thomas Gleixner <tglx@linutronix.de>
 
-The arch_.*_msi_irq[s] fallbacks are compiled in whether an architecture
-requires them or not. Architectures which are fully utilizing hierarchical
-irq domains should never call into that code.
+To support MSI irq domains which do not fit at all into the regular MSI
+irqdomain scheme, like the XEN MSI interrupt management for PV/HVM/DOM0,
+it's necessary to allow to override the alloc/free implementation.
 
-It's not only architectures which depend on that by implementing one or
-more of the weak functions, there is also a bunch of drivers which relies
-on the weak functions which invoke msi_controller::setup_irq[s] and
-msi_controller::teardown_irq.
+This is a preperatory step to switch X86 away from arch_*_msi_irqs() and
+store the irq domain pointer right in struct device.
 
-Make the architectures and drivers which rely on them select them in Kconfig
-and if not selected replace them by stub functions which emit a warning and
-fail the PCI/MSI interrupt allocation.
+No functional change for existing MSI irq domain users.
+
+Aside of the evil XEN wrapper this is also useful for special MSI domains
+which need to do extra alloc/free work before/after calling the generic
+core function. Work like allocating/freeing MSI descriptors, MSI storage
+space etc.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
----
-V2: Make the architectures (and drivers) which need the fallbacks select them
-    and not the other way round (Bjorn).
----
- arch/ia64/Kconfig              |    1 +
- arch/mips/Kconfig              |    1 +
- arch/powerpc/Kconfig           |    1 +
- arch/s390/Kconfig              |    1 +
- arch/sparc/Kconfig             |    1 +
- arch/x86/Kconfig               |    1 +
- drivers/pci/Kconfig            |    3 +++
- drivers/pci/controller/Kconfig |    3 +++
- drivers/pci/msi.c              |    3 ++-
- include/linux/msi.h            |   31 ++++++++++++++++++++++++++-----
- 10 files changed, 40 insertions(+), 6 deletions(-)
 
---- a/arch/ia64/Kconfig
-+++ b/arch/ia64/Kconfig
-@@ -56,6 +56,7 @@ config IA64
- 	select NEED_DMA_MAP_STATE
- 	select NEED_SG_DMA_LENGTH
- 	select NUMA if !FLATMEM
-+	select PCI_MSI_ARCH_FALLBACKS
- 	default y
- 	help
- 	  The Itanium Processor Family is Intel's 64-bit successor to
---- a/arch/mips/Kconfig
-+++ b/arch/mips/Kconfig
-@@ -86,6 +86,7 @@ config MIPS
- 	select MODULES_USE_ELF_REL if MODULES
- 	select MODULES_USE_ELF_RELA if MODULES && 64BIT
- 	select PERF_USE_VMALLOC
-+	select PCI_MSI_ARCH_FALLBACKS
- 	select RTC_LIB
- 	select SYSCTL_EXCEPTION_TRACE
- 	select VIRT_TO_BUS
---- a/arch/powerpc/Kconfig
-+++ b/arch/powerpc/Kconfig
-@@ -246,6 +246,7 @@ config PPC
- 	select OLD_SIGACTION			if PPC32
- 	select OLD_SIGSUSPEND
- 	select PCI_DOMAINS			if PCI
-+	select PCI_MSI_ARCH_FALLBACKS
- 	select PCI_SYSCALL			if PCI
- 	select PPC_DAWR				if PPC64
- 	select RTC_LIB
---- a/arch/s390/Kconfig
-+++ b/arch/s390/Kconfig
-@@ -185,6 +185,7 @@ config S390
- 	select OLD_SIGSUSPEND3
- 	select PCI_DOMAINS		if PCI
- 	select PCI_MSI			if PCI
-+	select PCI_MSI_ARCH_FALLBACKS
- 	select SPARSE_IRQ
- 	select SYSCTL_EXCEPTION_TRACE
- 	select THREAD_INFO_IN_TASK
---- a/arch/sparc/Kconfig
-+++ b/arch/sparc/Kconfig
-@@ -43,6 +43,7 @@ config SPARC
- 	select GENERIC_STRNLEN_USER
- 	select MODULES_USE_ELF_RELA
- 	select PCI_SYSCALL if PCI
-+	select PCI_MSI_ARCH_FALLBACKS
- 	select ODD_RT_SIGACTION
- 	select OLD_SIGSUSPEND
- 	select CPU_NO_EFFICIENT_FFS
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -225,6 +225,7 @@ config X86
- 	select NEED_SG_DMA_LENGTH
- 	select PCI_DOMAINS			if PCI
- 	select PCI_LOCKLESS_CONFIG		if PCI
-+	select PCI_MSI_ARCH_FALLBACKS
- 	select PERF_EVENTS
- 	select RTC_LIB
- 	select RTC_MC146818_LIB
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -56,6 +56,9 @@ config PCI_MSI_IRQ_DOMAIN
- 	depends on PCI_MSI
- 	select GENERIC_MSI_IRQ_DOMAIN
- 
-+config PCI_MSI_ARCH_FALLBACKS
-+	bool
-+
- config PCI_QUIRKS
- 	default y
- 	bool "Enable PCI quirk workarounds" if EXPERT
---- a/drivers/pci/controller/Kconfig
-+++ b/drivers/pci/controller/Kconfig
-@@ -41,6 +41,7 @@ config PCI_TEGRA
- 	bool "NVIDIA Tegra PCIe controller"
- 	depends on ARCH_TEGRA || COMPILE_TEST
- 	depends on PCI_MSI_IRQ_DOMAIN
-+	select PCI_MSI_ARCH_FALLBACKS
- 	help
- 	  Say Y here if you want support for the PCIe host controller found
- 	  on NVIDIA Tegra SoCs.
-@@ -67,6 +68,7 @@ config PCIE_RCAR_HOST
- 	bool "Renesas R-Car PCIe host controller"
- 	depends on ARCH_RENESAS || COMPILE_TEST
- 	depends on PCI_MSI_IRQ_DOMAIN
-+	select PCI_MSI_ARCH_FALLBACKS
- 	help
- 	  Say Y here if you want PCIe controller support on R-Car SoCs in host
- 	  mode.
-@@ -103,6 +105,7 @@ config PCIE_XILINX_CPM
- 	bool "Xilinx Versal CPM host bridge support"
- 	depends on ARCH_ZYNQMP || COMPILE_TEST
- 	select PCI_HOST_COMMON
-+	select PCI_MSI_ARCH_FALLBACKS
- 	help
- 	  Say 'Y' here if you want kernel support for the
- 	  Xilinx Versal CPM host bridge.
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -58,8 +58,8 @@ static void pci_msi_teardown_msi_irqs(st
- #define pci_msi_teardown_msi_irqs	arch_teardown_msi_irqs
- #endif
- 
-+#ifdef CONFIG_PCI_MSI_ARCH_FALLBACKS
- /* Arch hooks */
--
- int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
- {
- 	struct msi_controller *chip = dev->bus->msi;
-@@ -132,6 +132,7 @@ void __weak arch_teardown_msi_irqs(struc
- {
- 	return default_teardown_msi_irqs(dev);
- }
-+#endif /* CONFIG_PCI_MSI_ARCH_FALLBACKS */
- 
- static void default_restore_msi_irq(struct pci_dev *dev, int irq)
- {
+---
+ include/linux/msi.h |   27 ++++++++++++++++++++
+ kernel/irq/msi.c    |   70 +++++++++++++++++++++++++++++++++++-----------------
+ 2 files changed, 75 insertions(+), 22 deletions(-)
+
 --- a/include/linux/msi.h
 +++ b/include/linux/msi.h
-@@ -193,17 +193,38 @@ void pci_msi_mask_irq(struct irq_data *d
- void pci_msi_unmask_irq(struct irq_data *data);
- 
- /*
-- * The arch hooks to setup up msi irqs. Those functions are
-- * implemented as weak symbols so that they /can/ be overriden by
-- * architecture specific code if needed.
-+ * The arch hooks to setup up msi irqs. Default functions are implemented
-+ * as weak symbols so that they /can/ be overriden by architecture specific
-+ * code if needed. These hooks must be enabled by the architecture or by
-+ * drivers which depend on them via msi_controller based MSI handling.
+@@ -241,6 +241,10 @@ struct msi_domain_info;
+  * @msi_finish:		Optional callback to finalize the allocation
+  * @set_desc:		Set the msi descriptor for an interrupt
+  * @handle_error:	Optional error handler if the allocation fails
++ * @domain_alloc_irqs:	Optional function to override the default allocation
++ *			function.
++ * @domain_free_irqs:	Optional function to override the default free
++ *			function.
+  *
+  * @get_hwirq, @msi_init and @msi_free are callbacks used by
+  * msi_create_irq_domain() and related interfaces
+@@ -248,6 +252,22 @@ struct msi_domain_info;
+  * @msi_check, @msi_prepare, @msi_finish, @set_desc and @handle_error
+  * are callbacks used by msi_domain_alloc_irqs() and related
+  * interfaces which are based on msi_desc.
 + *
-+ * If CONFIG_PCI_MSI_ARCH_FALLBACKS is not selected they are replaced by
-+ * stubs with warnings.
++ * @domain_alloc_irqs, @domain_free_irqs can be used to override the
++ * default allocation/free functions (__msi_domain_alloc/free_irqs). This
++ * is initially for a wrapper around XENs seperate MSI universe which can't
++ * be wrapped into the regular irq domains concepts by mere mortals.  This
++ * allows to universally use msi_domain_alloc/free_irqs without having to
++ * special case XEN all over the place.
++ *
++ * Contrary to other operations @domain_alloc_irqs and @domain_free_irqs
++ * are set to the default implementation if NULL and even when
++ * MSI_FLAG_USE_DEF_DOM_OPS is not set to avoid breaking existing users and
++ * because these callbacks are obviously mandatory.
++ *
++ * This is NOT meant to be abused, but it can be useful to build wrappers
++ * for specialized MSI irq domains which need extra work before and after
++ * calling __msi_domain_alloc_irqs()/__msi_domain_free_irqs().
   */
-+#ifdef CONFIG_PCI_MSI_DISABLE_ARCH_FALLBACKS
- int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc);
- void arch_teardown_msi_irq(unsigned int irq);
- int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
- void arch_teardown_msi_irqs(struct pci_dev *dev);
--void arch_restore_msi_irqs(struct pci_dev *dev);
--
- void default_teardown_msi_irqs(struct pci_dev *dev);
-+#else
-+static inline int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-+{
-+	WARN_ON_ONCE(1);
-+	return -ENODEV;
-+}
-+
-+static inline void arch_teardown_msi_irqs(struct pci_dev *dev)
-+{
-+	WARN_ON_ONCE(1);
-+}
-+#endif
-+
-+/*
-+ * The restore hooks are still available as they are useful even
-+ * for fully irq domain based setups. Courtesy to XEN/X86.
-+ */
-+void arch_restore_msi_irqs(struct pci_dev *dev);
- void default_restore_msi_irqs(struct pci_dev *dev);
+ struct msi_domain_ops {
+ 	irq_hw_number_t	(*get_hwirq)(struct msi_domain_info *info,
+@@ -270,6 +290,10 @@ struct msi_domain_ops {
+ 				    struct msi_desc *desc);
+ 	int		(*handle_error)(struct irq_domain *domain,
+ 					struct msi_desc *desc, int error);
++	int		(*domain_alloc_irqs)(struct irq_domain *domain,
++					     struct device *dev, int nvec);
++	void		(*domain_free_irqs)(struct irq_domain *domain,
++					    struct device *dev);
+ };
  
- struct msi_controller {
+ /**
+@@ -327,8 +351,11 @@ int msi_domain_set_affinity(struct irq_d
+ struct irq_domain *msi_create_irq_domain(struct fwnode_handle *fwnode,
+ 					 struct msi_domain_info *info,
+ 					 struct irq_domain *parent);
++int __msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
++			    int nvec);
+ int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
+ 			  int nvec);
++void __msi_domain_free_irqs(struct irq_domain *domain, struct device *dev);
+ void msi_domain_free_irqs(struct irq_domain *domain, struct device *dev);
+ struct msi_domain_info *msi_get_domain_info(struct irq_domain *domain);
+ 
+--- a/kernel/irq/msi.c
++++ b/kernel/irq/msi.c
+@@ -229,11 +229,13 @@ static int msi_domain_ops_check(struct i
+ }
+ 
+ static struct msi_domain_ops msi_domain_ops_default = {
+-	.get_hwirq	= msi_domain_ops_get_hwirq,
+-	.msi_init	= msi_domain_ops_init,
+-	.msi_check	= msi_domain_ops_check,
+-	.msi_prepare	= msi_domain_ops_prepare,
+-	.set_desc	= msi_domain_ops_set_desc,
++	.get_hwirq		= msi_domain_ops_get_hwirq,
++	.msi_init		= msi_domain_ops_init,
++	.msi_check		= msi_domain_ops_check,
++	.msi_prepare		= msi_domain_ops_prepare,
++	.set_desc		= msi_domain_ops_set_desc,
++	.domain_alloc_irqs	= __msi_domain_alloc_irqs,
++	.domain_free_irqs	= __msi_domain_free_irqs,
+ };
+ 
+ static void msi_domain_update_dom_ops(struct msi_domain_info *info)
+@@ -245,6 +247,14 @@ static void msi_domain_update_dom_ops(st
+ 		return;
+ 	}
+ 
++	if (ops->domain_alloc_irqs == NULL)
++		ops->domain_alloc_irqs = msi_domain_ops_default.domain_alloc_irqs;
++	if (ops->domain_free_irqs == NULL)
++		ops->domain_free_irqs = msi_domain_ops_default.domain_free_irqs;
++
++	if (!(info->flags & MSI_FLAG_USE_DEF_DOM_OPS))
++		return;
++
+ 	if (ops->get_hwirq == NULL)
+ 		ops->get_hwirq = msi_domain_ops_default.get_hwirq;
+ 	if (ops->msi_init == NULL)
+@@ -278,8 +288,7 @@ struct irq_domain *msi_create_irq_domain
+ {
+ 	struct irq_domain *domain;
+ 
+-	if (info->flags & MSI_FLAG_USE_DEF_DOM_OPS)
+-		msi_domain_update_dom_ops(info);
++	msi_domain_update_dom_ops(info);
+ 	if (info->flags & MSI_FLAG_USE_DEF_CHIP_OPS)
+ 		msi_domain_update_chip_ops(info);
+ 
+@@ -386,17 +395,8 @@ static bool msi_check_reservation_mode(s
+ 	return desc->msi_attrib.is_msix || desc->msi_attrib.maskbit;
+ }
+ 
+-/**
+- * msi_domain_alloc_irqs - Allocate interrupts from a MSI interrupt domain
+- * @domain:	The domain to allocate from
+- * @dev:	Pointer to device struct of the device for which the interrupts
+- *		are allocated
+- * @nvec:	The number of interrupts to allocate
+- *
+- * Returns 0 on success or an error code.
+- */
+-int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
+-			  int nvec)
++int __msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
++			    int nvec)
+ {
+ 	struct msi_domain_info *info = domain->host_data;
+ 	struct msi_domain_ops *ops = info->ops;
+@@ -490,12 +490,24 @@ int msi_domain_alloc_irqs(struct irq_dom
+ }
+ 
+ /**
+- * msi_domain_free_irqs - Free interrupts from a MSI interrupt @domain associated tp @dev
+- * @domain:	The domain to managing the interrupts
++ * msi_domain_alloc_irqs - Allocate interrupts from a MSI interrupt domain
++ * @domain:	The domain to allocate from
+  * @dev:	Pointer to device struct of the device for which the interrupts
+- *		are free
++ *		are allocated
++ * @nvec:	The number of interrupts to allocate
++ *
++ * Returns 0 on success or an error code.
+  */
+-void msi_domain_free_irqs(struct irq_domain *domain, struct device *dev)
++int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
++			  int nvec)
++{
++	struct msi_domain_info *info = domain->host_data;
++	struct msi_domain_ops *ops = info->ops;
++
++	return ops->domain_alloc_irqs(domain, dev, nvec);
++}
++
++void __msi_domain_free_irqs(struct irq_domain *domain, struct device *dev)
+ {
+ 	struct msi_desc *desc;
+ 
+@@ -513,6 +525,20 @@ void msi_domain_free_irqs(struct irq_dom
+ }
+ 
+ /**
++ * __msi_domain_free_irqs - Free interrupts from a MSI interrupt @domain associated tp @dev
++ * @domain:	The domain to managing the interrupts
++ * @dev:	Pointer to device struct of the device for which the interrupts
++ *		are free
++ */
++void msi_domain_free_irqs(struct irq_domain *domain, struct device *dev)
++{
++	struct msi_domain_info *info = domain->host_data;
++	struct msi_domain_ops *ops = info->ops;
++
++	return ops->domain_free_irqs(domain, dev);
++}
++
++/**
+  * msi_get_domain_info - Get the MSI interrupt domain info for @domain
+  * @domain:	The interrupt domain to retrieve data from
+  *
+
 
