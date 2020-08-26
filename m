@@ -7,45 +7,42 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0696C433E1
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:09:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D540C433DF
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:09:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8E40520786
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:09:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DD83B214F1
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:09:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="S31zf4KR";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="VRfG8jWe"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="g7xv50AT";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="YlpLIMOq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729790AbgHZMIq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 26 Aug 2020 08:08:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35508 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729420AbgHZMBt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Aug 2020 08:01:49 -0400
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8DE6C061799;
-        Wed, 26 Aug 2020 05:01:48 -0700 (PDT)
-Message-Id: <20200826112334.795343913@linutronix.de>
+        id S1729538AbgHZMJU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 26 Aug 2020 08:09:20 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:58198 "EHLO
+        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729411AbgHZMBo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Aug 2020 08:01:44 -0400
+Message-Id: <20200826112334.400700807@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1598443307;
+        s=2020; t=1598443302;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=++RJAb0XwXR6HGwCiKdimUJ+P96gsDP2cTuWDbVCwn8=;
-        b=S31zf4KRdKSl+c/54qaBKf9wiJkWSKJKFVO3xb0t8u3lZOBrM+cgNH7LKEKYWzT/y/HwU0
-        mI4r8a/uksNI5Vj9EC+f4ho50SX72FhEgvzxuRqkIKlIH5X37IGajDxfGALbvPrnnix18L
-        XYH6svrlZFlPJJoWtNXPqV4SuQjzyJuaNpdeRlu/0jh6J9Y5Am5xrIBHDLjgy0Atbv2JoJ
-        HN7ySGpQ4wwoj91aEaCckv39Gll7Pv8enAqSOUDLnY7IBSWqKio6eCPc6y+A8zKjrzUQIw
-        1fleRXIy5jKI+RdfMzzmocRDunkz9kLkt8ibCm7I0U1OH3q5r64Bp5MTrt68Bg==
+        bh=XS2OtPL63+BbeAwrgOvQZ62jjX8dKd2NUee/RefW/jE=;
+        b=g7xv50ATWyf0Y9KZtfd5GDP7gv+ub4Reyp3zzVcltJZHJTLFQiFFXZP+cdXkZqtXlfvIpG
+        tdDcnRDMiB+NAD5pfoxdVPRDMENd5IGhIAds5207sNs7ZFUbnwlncbC9MFo6M3VyfOi/E2
+        sTAtg0h0YKOOz9nDA3vW1m6MWO8ZCD3zzYaI7xVc9jcBd/G5iYloQEx+PRC6EaWAe2KhaK
+        owm1ZICVZYAXvrQzrjTMUaGTpQ4IZGqclzgFWEqg5L8qaWofCWb0s81fNwQhQPAj02rxjV
+        cyoLMosaH14iqtGJnoLcXp3hzvcc4rpt7+YOBBmYbBg+vQie4RgCA7KB9JgMBQ==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1598443307;
+        s=2020e; t=1598443302;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=++RJAb0XwXR6HGwCiKdimUJ+P96gsDP2cTuWDbVCwn8=;
-        b=VRfG8jWe0BEQR76gNnsKVNJRq1rafZxZ4YVg3rty4q0d1NS7xGqWPCzx5Fhj9EVpwoneik
-        IgeTkQyy30POemBw==
-Date:   Wed, 26 Aug 2020 13:17:10 +0200
+        bh=XS2OtPL63+BbeAwrgOvQZ62jjX8dKd2NUee/RefW/jE=;
+        b=YlpLIMOqrorOG1iP3fEgl8h8huJ+SEm1UgkOPUBIUHdgsvpjhvsDnVL85p8wf3l/OswF4l
+        3rF6X4dWCwWuIwAQ==
+Date:   Wed, 26 Aug 2020 13:17:06 +0200
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
@@ -76,7 +73,7 @@ Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
         Baolu Lu <baolu.lu@intel.com>,
         Kevin Tian <kevin.tian@intel.com>,
         Dan Williams <dan.j.williams@intel.com>
-Subject: [patch V2 42/46] genirq/proc: Take buslock on affinity write
+Subject: [patch V2 38/46] iommu/amd: Remove domain search for PCI/MSI
 References: <20200826111628.794979401@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -86,61 +83,26 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Until now interrupt chips which support setting affinity are nit locking
-the associated bus lock for two reasons:
-
- - All chips which support affinity setting do not use buslock because they just
-   can operated directly on the hardware.
-
- - All chips which use buslock do not support affinity setting because
-   their interrupt chips are not capable. These chips are usually connected
-   over a bus like I2C, SPI etc. and have an interrupt output which is
-   conneted to CPU interrupt of some sort. So there is no way to set the
-   affinity on the chip itself.
-
-Upcoming hardware which is PCIE based sports a non standard MSI(X) variant
-which stores the MSI message in RAM which is associated to e.g. a device
-queue. The device manages this RAM and writes have to be issued via command
-queues or similar mechanisms which is obviously not possible from interrupt
-disabled, raw spinlock held context.
-
-The buslock mechanism of irq chips can be utilized to support that. The
-affinity write to the chip writes to shadow state, marks it pending and the
-irq chip's irq_bus_sync_unlock() callback handles the command queue and
-wait for completion similar to the other chip operations on I2C or SPI
-busses.
-
-Change the locking in irq_set_affinity() to bus_lock/unlock to help with
-that. There are a few other callers than the proc interface, but none of
-them is affected by this change as none of them affects an irq chip with
-bus lock support.
+Now that the domain can be retrieved through device::msi_domain the domain
+search for PCI_MSI[X] is not longer required. Remove it.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
 V2: New patch
 ---
- kernel/irq/manage.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
---- a/kernel/irq/manage.c
-+++ b/kernel/irq/manage.c
-@@ -373,16 +373,16 @@ int irq_set_affinity_locked(struct irq_d
- 
- int __irq_set_affinity(unsigned int irq, const struct cpumask *mask, bool force)
- {
--	struct irq_desc *desc = irq_to_desc(irq);
-+	struct irq_desc *desc;
- 	unsigned long flags;
- 	int ret;
- 
-+	desc = irq_get_desc_buslock(irq, &flags, IRQ_GET_DESC_CHECK_GLOBAL);
- 	if (!desc)
- 		return -EINVAL;
- 
--	raw_spin_lock_irqsave(&desc->lock, flags);
- 	ret = irq_set_affinity_locked(irq_desc_get_irq_data(desc), mask, force);
--	raw_spin_unlock_irqrestore(&desc->lock, flags);
-+	irq_put_desc_busunlock(desc, flags);
- 	return ret;
- }
- 
+ drivers/iommu/amd/iommu.c |    3 ---
+ 1 file changed, 3 deletions(-)
+
+--- a/drivers/iommu/amd/iommu.c
++++ b/drivers/iommu/amd/iommu.c
+@@ -3548,9 +3548,6 @@ static struct irq_domain *get_irq_domain
+ 	case X86_IRQ_ALLOC_TYPE_IOAPIC_GET_PARENT:
+ 	case X86_IRQ_ALLOC_TYPE_HPET_GET_PARENT:
+ 		return iommu->ir_domain;
+-	case X86_IRQ_ALLOC_TYPE_PCI_MSI:
+-	case X86_IRQ_ALLOC_TYPE_PCI_MSIX:
+-		return iommu->msi_domain;
+ 	default:
+ 		WARN_ON_ONCE(1);
+ 		return NULL;
 
