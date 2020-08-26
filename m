@@ -7,42 +7,45 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13AF2C433DF
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:13:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1039C433DF
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:13:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E2C132087D
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:13:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A08952071E
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:13:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="bi6ae+Qa";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="poejXw+K"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="yBa1jZyq";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="X+rqdbCz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729970AbgHZMNg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 26 Aug 2020 08:13:36 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:57672 "EHLO
-        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729383AbgHZMB0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Aug 2020 08:01:26 -0400
-Message-Id: <20200826112332.054367732@linutronix.de>
+        id S1729980AbgHZMNs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 26 Aug 2020 08:13:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35472 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729380AbgHZMBV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Aug 2020 08:01:21 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B4F71C061574;
+        Wed, 26 Aug 2020 05:01:20 -0700 (PDT)
+Message-Id: <20200826112331.157603198@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1598443272;
+        s=2020; t=1598443261;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=q9vSKDrOqohKYkNeLD6ODziVu1rzRk8Arbz67bnnio8=;
-        b=bi6ae+QaPxPwTrkC1XzSaha+eHYyP2bT20czS0jsMguEfISjmf7otsqdVqgibsvsA2E8Gi
-        f0bEiZRTPd152XFHWBab3KVNwmR5YczoVSx6DATUtsoG1C07Ew3uwLbIVh92dQeq66Ae5Q
-        usD1zAy7oF5SKhR4yVPmk9ncqhZSXsdQN0mm7CyFX7kpdPU8O3X8QYtIW6cRJdDC+o+/Xl
-        BE+ZwLKKeh2SrxoooymsRG9jncvLloS9a3oQnCDgNUWXyeTywZng5RXX2lMKJop4wllLs/
-        ECDidwRGwbayVE6MmFkmM+NCBBBcTaldxWv3bUe7hwV6fT+6VD42q6GWgL/4Qg==
+        bh=6S+VPwjCO4/0/sg5O/D8yGF7mUxRzB6iCmAEo7WLFeY=;
+        b=yBa1jZyq19hlxKFJk3xxqm7DyS+GDm5bb0xsGOflfAgTKxIfxMWsOquHJO8oAmDg57DS2O
+        lOd5gVhWE33CpyLZ98lEY6XLD8VUMPfnergrf924inK2Y0VoOUDpqLwrNon8BZkDdz3+RZ
+        yX47Hb4PiDkN+/QsBNEh9UPVPiX3u0mN3awXLTF4/59iOyWlV4bQiBwP1s4Iy1rkRwPWcl
+        0sRWk8UdH9fpJKD4wOajIaX4OIEMEwGSfYibyYvgtipQmWu1nChRU0L9O3ofQCESFnO2r0
+        /O1UWsUyXWAh1MgcFvs4LyhV7tN+dM6a3oK2zVsEshW1p5maB74zT8l4pFyB8w==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1598443272;
+        s=2020e; t=1598443261;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=q9vSKDrOqohKYkNeLD6ODziVu1rzRk8Arbz67bnnio8=;
-        b=poejXw+KTzJSfgaTLN9lf9WY/x0Tlcm1yHRKEe8PkTFY1cihmFuUVWATYb8SwgzTqADr7p
-        b5I+PHy14NPpNtDQ==
-Date:   Wed, 26 Aug 2020 13:16:42 +0200
+        bh=6S+VPwjCO4/0/sg5O/D8yGF7mUxRzB6iCmAEo7WLFeY=;
+        b=X+rqdbCzEwcm50ULD6Yd1kuRe0Xhd7Md4D5DV2hlhjFcxaDeRH1iXqy0ovLxzi9/fl9LUK
+        RmgSqOyBQ/HmJiAQ==
+Date:   Wed, 26 Aug 2020 13:16:33 +0200
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
@@ -73,7 +76,7 @@ Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
         Baolu Lu <baolu.lu@intel.com>,
         Kevin Tian <kevin.tian@intel.com>,
         Dan Williams <dan.j.williams@intel.com>
-Subject: [patch V2 14/46] x86/ioapic: Consolidate IOAPIC allocation
+Subject: [patch V2 05/46] x86/msi: Move compose message callback where it belongs
 References: <20200826111628.794979401@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -83,351 +86,103 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Thomas Gleixner <tglx@linutronix.de>
+Composing the MSI message at the MSI chip level is wrong because the
+underlying parent domain is the one which knows how the message should be
+composed for the direct vector delivery or the interrupt remapping table
+entry.
 
-Move the IOAPIC specific fields into their own struct and reuse the common
-devid. Get rid of the #ifdeffery as it does not matter at all whether the
-alloc info is a couple of bytes longer or not.
+The interrupt remapping aware PCI/MSI chip does that already. Make the
+direct delivery chip do the same and move the composition of the direct
+delivery MSI message to the vector domain irq chip.
+
+This prepares for the upcoming device MSI support to avoid having
+architecture specific knowledge in the device MSI domain irq chips.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-
 ---
- arch/x86/include/asm/hw_irq.h       |   23 ++++++-----
- arch/x86/kernel/apic/io_apic.c      |   70 ++++++++++++++++++------------------
- arch/x86/kernel/devicetree.c        |    4 +-
- drivers/iommu/amd/iommu.c           |   14 +++----
- drivers/iommu/hyperv-iommu.c        |    2 -
- drivers/iommu/intel/irq_remapping.c |   18 ++++-----
- 6 files changed, 66 insertions(+), 65 deletions(-)
+V2: New patch
+---
+ arch/x86/include/asm/apic.h   |    8 ++++++++
+ arch/x86/kernel/apic/msi.c    |   12 +++---------
+ arch/x86/kernel/apic/vector.c |    1 +
+ 3 files changed, 12 insertions(+), 9 deletions(-)
 
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -44,6 +44,15 @@ enum irq_alloc_type {
- 	X86_IRQ_ALLOC_TYPE_HPET_GET_PARENT,
- };
- 
-+struct ioapic_alloc_info {
-+	int				pin;
-+	int				node;
-+	u32				trigger : 1;
-+	u32				polarity : 1;
-+	u32				valid : 1;
-+	struct IO_APIC_route_entry	*entry;
-+};
-+
- /**
-  * irq_alloc_info - X86 specific interrupt allocation info
-  * @type:	X86 specific allocation type
-@@ -53,6 +62,8 @@ enum irq_alloc_type {
-  * @mask:	CPU mask for vector allocation
-  * @desc:	Pointer to msi descriptor
-  * @data:	Allocation specific data
-+ *
-+ * @ioapic:	IOAPIC specific allocation data
-  */
- struct irq_alloc_info {
- 	enum irq_alloc_type	type;
-@@ -64,6 +75,7 @@ struct irq_alloc_info {
- 	void			*data;
- 
- 	union {
-+		struct ioapic_alloc_info	ioapic;
- 		int		unused;
- #ifdef	CONFIG_PCI_MSI
- 		struct {
-@@ -71,17 +83,6 @@ struct irq_alloc_info {
- 			irq_hw_number_t	msi_hwirq;
- 		};
+--- a/arch/x86/include/asm/apic.h
++++ b/arch/x86/include/asm/apic.h
+@@ -519,6 +519,14 @@ static inline bool apic_id_is_primary_th
+ static inline void apic_smt_update(void) { }
  #endif
--#ifdef	CONFIG_X86_IO_APIC
--		struct {
--			int		ioapic_id;
--			int		ioapic_pin;
--			int		ioapic_node;
--			u32		ioapic_trigger : 1;
--			u32		ioapic_polarity : 1;
--			u32		ioapic_valid : 1;
--			struct IO_APIC_route_entry *ioapic_entry;
--		};
--#endif
- #ifdef	CONFIG_DMAR_TABLE
- 		struct {
- 			int		dmar_id;
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -860,10 +860,10 @@ void ioapic_set_alloc_attr(struct irq_al
+ 
++struct msi_msg;
++
++#ifdef CONFIG_PCI_MSI
++void x86_vector_msi_compose_msg(struct irq_data *data, struct msi_msg *msg);
++#else
++# define x86_vector_msi_compose_msg NULL
++#endif
++
+ extern void ioapic_zap_locks(void);
+ 
+ #endif /* _ASM_X86_APIC_H */
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -45,7 +45,7 @@ static void __irq_msi_compose_msg(struct
+ 		MSI_DATA_VECTOR(cfg->vector);
+ }
+ 
+-static void irq_msi_compose_msg(struct irq_data *data, struct msi_msg *msg)
++void x86_vector_msi_compose_msg(struct irq_data *data, struct msi_msg *msg)
  {
- 	init_irq_alloc_info(info, NULL);
- 	info->type = X86_IRQ_ALLOC_TYPE_IOAPIC;
--	info->ioapic_node = node;
--	info->ioapic_trigger = trigger;
--	info->ioapic_polarity = polarity;
--	info->ioapic_valid = 1;
-+	info->ioapic.node = node;
-+	info->ioapic.trigger = trigger;
-+	info->ioapic.polarity = polarity;
-+	info->ioapic.valid = 1;
+ 	__irq_msi_compose_msg(irqd_cfg(data), msg);
  }
- 
- #ifndef CONFIG_ACPI
-@@ -878,32 +878,32 @@ static void ioapic_copy_alloc_attr(struc
- 
- 	copy_irq_alloc_info(dst, src);
- 	dst->type = X86_IRQ_ALLOC_TYPE_IOAPIC;
--	dst->ioapic_id = mpc_ioapic_id(ioapic_idx);
--	dst->ioapic_pin = pin;
--	dst->ioapic_valid = 1;
--	if (src && src->ioapic_valid) {
--		dst->ioapic_node = src->ioapic_node;
--		dst->ioapic_trigger = src->ioapic_trigger;
--		dst->ioapic_polarity = src->ioapic_polarity;
-+	dst->devid = mpc_ioapic_id(ioapic_idx);
-+	dst->ioapic.pin = pin;
-+	dst->ioapic.valid = 1;
-+	if (src && src->ioapic.valid) {
-+		dst->ioapic.node = src->ioapic.node;
-+		dst->ioapic.trigger = src->ioapic.trigger;
-+		dst->ioapic.polarity = src->ioapic.polarity;
- 	} else {
--		dst->ioapic_node = NUMA_NO_NODE;
-+		dst->ioapic.node = NUMA_NO_NODE;
- 		if (acpi_get_override_irq(gsi, &trigger, &polarity) >= 0) {
--			dst->ioapic_trigger = trigger;
--			dst->ioapic_polarity = polarity;
-+			dst->ioapic.trigger = trigger;
-+			dst->ioapic.polarity = polarity;
- 		} else {
- 			/*
- 			 * PCI interrupts are always active low level
- 			 * triggered.
- 			 */
--			dst->ioapic_trigger = IOAPIC_LEVEL;
--			dst->ioapic_polarity = IOAPIC_POL_LOW;
-+			dst->ioapic.trigger = IOAPIC_LEVEL;
-+			dst->ioapic.polarity = IOAPIC_POL_LOW;
- 		}
- 	}
- }
- 
- static int ioapic_alloc_attr_node(struct irq_alloc_info *info)
- {
--	return (info && info->ioapic_valid) ? info->ioapic_node : NUMA_NO_NODE;
-+	return (info && info->ioapic.valid) ? info->ioapic.node : NUMA_NO_NODE;
- }
- 
- static void mp_register_handler(unsigned int irq, unsigned long trigger)
-@@ -933,14 +933,14 @@ static bool mp_check_pin_attr(int irq, s
- 	 * pin with real trigger and polarity attributes.
- 	 */
- 	if (irq < nr_legacy_irqs() && data->count == 1) {
--		if (info->ioapic_trigger != data->trigger)
--			mp_register_handler(irq, info->ioapic_trigger);
--		data->entry.trigger = data->trigger = info->ioapic_trigger;
--		data->entry.polarity = data->polarity = info->ioapic_polarity;
-+		if (info->ioapic.trigger != data->trigger)
-+			mp_register_handler(irq, info->ioapic.trigger);
-+		data->entry.trigger = data->trigger = info->ioapic.trigger;
-+		data->entry.polarity = data->polarity = info->ioapic.polarity;
- 	}
- 
--	return data->trigger == info->ioapic_trigger &&
--	       data->polarity == info->ioapic_polarity;
-+	return data->trigger == info->ioapic.trigger &&
-+	       data->polarity == info->ioapic.polarity;
- }
- 
- static int alloc_irq_from_domain(struct irq_domain *domain, int ioapic, u32 gsi,
-@@ -1002,7 +1002,7 @@ static int alloc_isa_irq_from_domain(str
- 		if (!mp_check_pin_attr(irq, info))
- 			return -EBUSY;
- 		if (__add_pin_to_irq_node(irq_data->chip_data, node, ioapic,
--					  info->ioapic_pin))
-+					  info->ioapic.pin))
- 			return -ENOMEM;
- 	} else {
- 		info->flags |= X86_IRQ_ALLOC_LEGACY;
-@@ -2092,8 +2092,8 @@ static int mp_alloc_timer_irq(int ioapic
- 		struct irq_alloc_info info;
- 
- 		ioapic_set_alloc_attr(&info, NUMA_NO_NODE, 0, 0);
--		info.ioapic_id = mpc_ioapic_id(ioapic);
--		info.ioapic_pin = pin;
-+		info.devid = mpc_ioapic_id(ioapic);
-+		info.ioapic.pin = pin;
- 		mutex_lock(&ioapic_mutex);
- 		irq = alloc_isa_irq_from_domain(domain, 0, ioapic, pin, &info);
- 		mutex_unlock(&ioapic_mutex);
-@@ -2297,7 +2297,7 @@ static int mp_irqdomain_create(int ioapi
- 
- 	init_irq_alloc_info(&info, NULL);
- 	info.type = X86_IRQ_ALLOC_TYPE_IOAPIC_GET_PARENT;
--	info.ioapic_id = mpc_ioapic_id(ioapic);
-+	info.devid = mpc_ioapic_id(ioapic);
- 	parent = irq_remapping_get_irq_domain(&info);
- 	if (!parent)
+@@ -177,7 +177,6 @@ static struct irq_chip pci_msi_controlle
+ 	.irq_mask		= pci_msi_mask_irq,
+ 	.irq_ack		= irq_chip_ack_parent,
+ 	.irq_retrigger		= irq_chip_retrigger_hierarchy,
+-	.irq_compose_msi_msg	= irq_msi_compose_msg,
+ 	.irq_set_affinity	= msi_set_affinity,
+ 	.flags			= IRQCHIP_SKIP_SET_WAKE,
+ };
+@@ -321,7 +320,6 @@ static struct irq_chip dmar_msi_controll
+ 	.irq_ack		= irq_chip_ack_parent,
+ 	.irq_set_affinity	= msi_domain_set_affinity,
+ 	.irq_retrigger		= irq_chip_retrigger_hierarchy,
+-	.irq_compose_msi_msg	= irq_msi_compose_msg,
+ 	.irq_write_msi_msg	= dmar_msi_write_msg,
+ 	.flags			= IRQCHIP_SKIP_SET_WAKE,
+ };
+@@ -419,7 +417,6 @@ static struct irq_chip hpet_msi_controll
+ 	.irq_ack = irq_chip_ack_parent,
+ 	.irq_set_affinity = msi_domain_set_affinity,
+ 	.irq_retrigger = irq_chip_retrigger_hierarchy,
+-	.irq_compose_msi_msg = irq_msi_compose_msg,
+ 	.irq_write_msi_msg = hpet_msi_write_msg,
+ 	.flags = IRQCHIP_SKIP_SET_WAKE,
+ };
+@@ -479,13 +476,10 @@ struct irq_domain *hpet_create_irq_domai
+ 	info.type = X86_IRQ_ALLOC_TYPE_HPET;
+ 	info.hpet_id = hpet_id;
+ 	parent = irq_remapping_get_ir_irq_domain(&info);
+-	if (parent == NULL) {
++	if (parent == NULL)
  		parent = x86_vector_domain;
-@@ -2932,9 +2932,9 @@ int mp_ioapic_registered(u32 gsi_base)
- static void mp_irqdomain_get_attr(u32 gsi, struct mp_chip_data *data,
- 				  struct irq_alloc_info *info)
- {
--	if (info && info->ioapic_valid) {
--		data->trigger = info->ioapic_trigger;
--		data->polarity = info->ioapic_polarity;
-+	if (info && info->ioapic.valid) {
-+		data->trigger = info->ioapic.trigger;
-+		data->polarity = info->ioapic.polarity;
- 	} else if (acpi_get_override_irq(gsi, &data->trigger,
- 					 &data->polarity) < 0) {
- 		/* PCI interrupts are always active low level triggered. */
-@@ -2980,7 +2980,7 @@ int mp_irqdomain_alloc(struct irq_domain
- 		return -EINVAL;
+-	} else {
++	else
+ 		hpet_msi_controller.name = "IR-HPET-MSI";
+-		/* Temporary fix: Will go away */
+-		hpet_msi_controller.irq_compose_msi_msg = NULL;
+-	}
  
- 	ioapic = mp_irqdomain_ioapic_idx(domain);
--	pin = info->ioapic_pin;
-+	pin = info->ioapic.pin;
- 	if (irq_find_mapping(domain, (irq_hw_number_t)pin) > 0)
- 		return -EEXIST;
- 
-@@ -2988,7 +2988,7 @@ int mp_irqdomain_alloc(struct irq_domain
- 	if (!data)
- 		return -ENOMEM;
- 
--	info->ioapic_entry = &data->entry;
-+	info->ioapic.entry = &data->entry;
- 	ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, info);
- 	if (ret < 0) {
- 		kfree(data);
-@@ -2996,7 +2996,7 @@ int mp_irqdomain_alloc(struct irq_domain
- 	}
- 
- 	INIT_LIST_HEAD(&data->irq_2_pin);
--	irq_data->hwirq = info->ioapic_pin;
-+	irq_data->hwirq = info->ioapic.pin;
- 	irq_data->chip = (domain->parent == x86_vector_domain) ?
- 			  &ioapic_chip : &ioapic_ir_chip;
- 	irq_data->chip_data = data;
-@@ -3006,8 +3006,8 @@ int mp_irqdomain_alloc(struct irq_domain
- 	add_pin_to_irq_node(data, ioapic_alloc_attr_node(info), ioapic, pin);
- 
- 	local_irq_save(flags);
--	if (info->ioapic_entry)
--		mp_setup_entry(cfg, data, info->ioapic_entry);
-+	if (info->ioapic.entry)
-+		mp_setup_entry(cfg, data, info->ioapic.entry);
- 	mp_register_handler(virq, data->trigger);
- 	if (virq < nr_legacy_irqs())
- 		legacy_pic->mask(virq);
---- a/arch/x86/kernel/devicetree.c
-+++ b/arch/x86/kernel/devicetree.c
-@@ -229,8 +229,8 @@ static int dt_irqdomain_alloc(struct irq
- 
- 	it = &of_ioapic_type[type_index];
- 	ioapic_set_alloc_attr(&tmp, NUMA_NO_NODE, it->trigger, it->polarity);
--	tmp.ioapic_id = mpc_ioapic_id(mp_irqdomain_ioapic_idx(domain));
--	tmp.ioapic_pin = fwspec->param[0];
-+	tmp.devid = mpc_ioapic_id(mp_irqdomain_ioapic_idx(domain));
-+	tmp.ioapic.pin = fwspec->param[0];
- 
- 	return mp_irqdomain_alloc(domain, virq, nr_irqs, &tmp);
- }
---- a/drivers/iommu/amd/iommu.c
-+++ b/drivers/iommu/amd/iommu.c
-@@ -3508,7 +3508,7 @@ static int get_devid(struct irq_alloc_in
- 	switch (info->type) {
- 	case X86_IRQ_ALLOC_TYPE_IOAPIC:
- 	case X86_IRQ_ALLOC_TYPE_IOAPIC_GET_PARENT:
--		return get_ioapic_devid(info->ioapic_id);
-+		return get_ioapic_devid(info->devid);
- 	case X86_IRQ_ALLOC_TYPE_HPET:
- 	case X86_IRQ_ALLOC_TYPE_HPET_GET_PARENT:
- 		return get_hpet_devid(info->devid);
-@@ -3586,15 +3586,15 @@ static void irq_remapping_prepare_irte(s
- 	switch (info->type) {
- 	case X86_IRQ_ALLOC_TYPE_IOAPIC:
- 		/* Setup IOAPIC entry */
--		entry = info->ioapic_entry;
--		info->ioapic_entry = NULL;
-+		entry = info->ioapic.entry;
-+		info->ioapic.entry = NULL;
- 		memset(entry, 0, sizeof(*entry));
- 		entry->vector        = index;
- 		entry->mask          = 0;
--		entry->trigger       = info->ioapic_trigger;
--		entry->polarity      = info->ioapic_polarity;
-+		entry->trigger       = info->ioapic.trigger;
-+		entry->polarity      = info->ioapic.polarity;
- 		/* Mask level triggered irqs. */
--		if (info->ioapic_trigger)
-+		if (info->ioapic.trigger)
- 			entry->mask = 1;
- 		break;
- 
-@@ -3680,7 +3680,7 @@ static int irq_remapping_alloc(struct ir
- 					iommu->irte_ops->set_allocated(table, i);
- 			}
- 			WARN_ON(table->min_index != 32);
--			index = info->ioapic_pin;
-+			index = info->ioapic.pin;
- 		} else {
- 			index = -ENOMEM;
- 		}
---- a/drivers/iommu/hyperv-iommu.c
-+++ b/drivers/iommu/hyperv-iommu.c
-@@ -101,7 +101,7 @@ static int hyperv_irq_remapping_alloc(st
- 	 * in the chip_data and hyperv_irq_remapping_activate()/hyperv_ir_set_
- 	 * affinity() set vector and dest_apicid directly into IO-APIC entry.
- 	 */
--	irq_data->chip_data = info->ioapic_entry;
-+	irq_data->chip_data = info->ioapic.entry;
- 
- 	/*
- 	 * Hypver-V IO APIC irq affinity should be in the scope of
---- a/drivers/iommu/intel/irq_remapping.c
-+++ b/drivers/iommu/intel/irq_remapping.c
-@@ -1113,7 +1113,7 @@ static struct irq_domain *intel_get_irq_
- 
- 	switch (info->type) {
- 	case X86_IRQ_ALLOC_TYPE_IOAPIC_GET_PARENT:
--		return map_ioapic_to_ir(info->ioapic_id);
-+		return map_ioapic_to_ir(info->devid);
- 	case X86_IRQ_ALLOC_TYPE_HPET_GET_PARENT:
- 		return map_hpet_to_ir(info->devid);
- 	case X86_IRQ_ALLOC_TYPE_PCI_MSI:
-@@ -1254,16 +1254,16 @@ static void intel_irq_remapping_prepare_
- 	switch (info->type) {
- 	case X86_IRQ_ALLOC_TYPE_IOAPIC:
- 		/* Set source-id of interrupt request */
--		set_ioapic_sid(irte, info->ioapic_id);
-+		set_ioapic_sid(irte, info->devid);
- 		apic_printk(APIC_VERBOSE, KERN_DEBUG "IOAPIC[%d]: Set IRTE entry (P:%d FPD:%d Dst_Mode:%d Redir_hint:%d Trig_Mode:%d Dlvry_Mode:%X Avail:%X Vector:%02X Dest:%08X SID:%04X SQ:%X SVT:%X)\n",
--			info->ioapic_id, irte->present, irte->fpd,
-+			info->devid, irte->present, irte->fpd,
- 			irte->dst_mode, irte->redir_hint,
- 			irte->trigger_mode, irte->dlvry_mode,
- 			irte->avail, irte->vector, irte->dest_id,
- 			irte->sid, irte->sq, irte->svt);
- 
--		entry = (struct IR_IO_APIC_route_entry *)info->ioapic_entry;
--		info->ioapic_entry = NULL;
-+		entry = (struct IR_IO_APIC_route_entry *)info->ioapic.entry;
-+		info->ioapic.entry = NULL;
- 		memset(entry, 0, sizeof(*entry));
- 		entry->index2	= (index >> 15) & 0x1;
- 		entry->zero	= 0;
-@@ -1273,11 +1273,11 @@ static void intel_irq_remapping_prepare_
- 		 * IO-APIC RTE will be configured with virtual vector.
- 		 * irq handler will do the explicit EOI to the io-apic.
- 		 */
--		entry->vector	= info->ioapic_pin;
-+		entry->vector	= info->ioapic.pin;
- 		entry->mask	= 0;			/* enable IRQ */
--		entry->trigger	= info->ioapic_trigger;
--		entry->polarity	= info->ioapic_polarity;
--		if (info->ioapic_trigger)
-+		entry->trigger	= info->ioapic.trigger;
-+		entry->polarity	= info->ioapic.polarity;
-+		if (info->ioapic.trigger)
- 			entry->mask = 1; /* Mask level triggered irqs. */
- 		break;
+ 	fn = irq_domain_alloc_named_id_fwnode(hpet_msi_controller.name,
+ 					      hpet_id);
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -823,6 +823,7 @@ static struct irq_chip lapic_controller
+ 	.name			= "APIC",
+ 	.irq_ack		= apic_ack_edge,
+ 	.irq_set_affinity	= apic_set_affinity,
++	.irq_compose_msi_msg	= x86_vector_msi_compose_msg,
+ 	.irq_retrigger		= apic_retrigger_irq,
+ };
  
 
