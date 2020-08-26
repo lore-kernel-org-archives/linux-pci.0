@@ -7,45 +7,42 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2089DC433E3
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:02:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2AF8C433E1
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:02:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EE3F220786
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:02:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 82F3C20FC3
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:02:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="vRQXfv32";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="74Nj30mT"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="sGq7w5Vv";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="wIUepu9R"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729434AbgHZMCD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 26 Aug 2020 08:02:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35546 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729415AbgHZMBn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Aug 2020 08:01:43 -0400
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17127C061798;
-        Wed, 26 Aug 2020 05:01:35 -0700 (PDT)
-Message-Id: <20200826112333.714566121@linutronix.de>
+        id S1729450AbgHZMCe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 26 Aug 2020 08:02:34 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:58436 "EHLO
+        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729425AbgHZMB5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Aug 2020 08:01:57 -0400
+Message-Id: <20200826112335.092521442@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1598443293;
+        s=2020; t=1598443311;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=lYvnoAPQWUQ+lzpgP+IiwnNeH1MqCUGgXZQosJYDQY0=;
-        b=vRQXfv327OIRrmBpatce9zJYvVSKGz9rxbKVO9yT1yZnm6MAF6kqafQ5Ay88u1vp4j2WKf
-        w1HKMPXq393uNFPMWAFwUrUnSGPfLNNupRnyNvd7TH+Fl8J9uLvWs6P/g0ycISyoIs+Tcb
-        Xt6VcPt1dmdoKxe5p3MOCjNBijQ102S2vBENRLBkHbnr1AEN02Hq+R0SIED2ZUbcUbevk9
-        v+LiIefGVV2qKYRfUnTSFxpchJDd7EsXz35rR2S2waJZLdik0ZbN4vMG1SAjwdWH/A/M2L
-        FgvDphPLESUO8O0ALaV+pVF2iWsyvxNjwOgliwpa1V8+7AboY1HO3WCFQFmepQ==
+        bh=b69SWJ3Ur45XxM77SmSu/tsjVczGdpPRTUPeP/VD4Ik=;
+        b=sGq7w5VvBLEz68W/6n3xv/ju+gIZDsclrMN42Kbt+Lek2xpknqP50K1/N3zLQ3qy/tSs8i
+        5FUrDzJiUCLsdEJZ4ovTq/PJQFLtIf/MfxmxW+nu6cwW9IfZO+2nncmzTnjpEbrV3MH6tj
+        9b3brF3GgBQbP9y2bmXgCU8M4zoc2GmpJnNPYPngl4Q3CAXCKlffOoU2TbmM1e7rBtgxG5
+        I955rjrk1V8U3FHUiSZO6UvjD62oqONm2qhsAdvpgboUJlslC/n2D3AmOJoiDXEw8WOFvk
+        k66LV22FAJnV0xR9tR25lKLopG2+yp6AUrfyM0um/WMR7J6qyoLFz+U0tt9W2Q==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1598443293;
+        s=2020e; t=1598443311;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=lYvnoAPQWUQ+lzpgP+IiwnNeH1MqCUGgXZQosJYDQY0=;
-        b=74Nj30mT4kacCMUvrAOn6Ir2cuRq9elzCKoOuyST4heReMM9HfcFNpttWcNgI6Q6Y5FKkP
-        jIh2F+rccKFEAbDA==
-Date:   Wed, 26 Aug 2020 13:16:59 +0200
+        bh=b69SWJ3Ur45XxM77SmSu/tsjVczGdpPRTUPeP/VD4Ik=;
+        b=wIUepu9R9BwJrfL5hHLBQrW187phV08auxKlkm3THVUKZ6T3NRDo7Cxcy1mizpDRZnSQiD
+        b3u1CTDbJZZ/EOBg==
+Date:   Wed, 26 Aug 2020 13:17:13 +0200
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
@@ -76,7 +73,7 @@ Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
         Baolu Lu <baolu.lu@intel.com>,
         Kevin Tian <kevin.tian@intel.com>,
         Dan Williams <dan.j.williams@intel.com>
-Subject: [patch V2 31/46] iommm/vt-d: Store irq domain in struct device
+Subject: [patch V2 45/46] irqdomain/msi: Provide msi_alloc/free_store() callbacks
 References: <20200826111628.794979401@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -88,86 +85,83 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Thomas Gleixner <tglx@linutronix.de>
 
-As a first step to make X86 utilize the direct MSI irq domain operations
-store the irq domain pointer in the device struct when a device is probed.
+For devices which don't have a standard storage for MSI messages like the
+upcoming IMS (Interrupt Message Storm) it's required to allocate storage
+space before allocating interrupts and after freeing them.
 
-This is done from dmar_pci_bus_add_dev() because it has to work even when
-DMA remapping is disabled. It only overrides the irqdomain of devices which
-are handled by a regular PCI/MSI irq domain which protects PCI devices
-behind special busses like VMD which have their own irq domain.
+This could be achieved with the existing callbacks, but that would be
+awkward because they operate on msi_alloc_info_t which is not uniform
+accross architectures. Also these callbacks are invoked per interrupt but
+the allocation might have bulk requirements depending on the device.
 
-No functional change. It just avoids the redirection through
-arch_*_msi_irqs() and allows the PCI/MSI core to directly invoke the irq
-domain alloc/free functions instead of having to look up the irq domain for
-every single MSI interupt.
+As such devices can operate on different architectures it is simpler to
+have seperate callbacks which operate on struct device. The resulting
+storage information has to be stored in struct msi_desc so the underlying
+irq chip implementation can retrieve it for the relevant operations.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
----
-V2: Add missing forward declaration
----
- drivers/iommu/intel/dmar.c          |    3 +++
- drivers/iommu/intel/irq_remapping.c |   16 ++++++++++++++++
- include/linux/intel-iommu.h         |    7 +++++++
- 3 files changed, 26 insertions(+)
 
---- a/drivers/iommu/intel/dmar.c
-+++ b/drivers/iommu/intel/dmar.c
-@@ -316,6 +316,9 @@ static int dmar_pci_bus_add_dev(struct d
- 	if (ret < 0 && dmar_dev_scope_status == 0)
- 		dmar_dev_scope_status = ret;
+---
+ include/linux/msi.h |    8 ++++++++
+ kernel/irq/msi.c    |   11 +++++++++++
+ 2 files changed, 19 insertions(+)
+
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -279,6 +279,10 @@ struct msi_domain_info;
+  *			function.
+  * @domain_free_irqs:	Optional function to override the default free
+  *			function.
++ * @msi_alloc_store:	Optional callback to allocate storage in a device
++ *			specific non-standard MSI store
++ * @msi_alloc_free:	Optional callback to free storage in a device
++ *			specific non-standard MSI store
+  *
+  * @get_hwirq, @msi_init and @msi_free are callbacks used by
+  * msi_create_irq_domain() and related interfaces
+@@ -328,6 +332,10 @@ struct msi_domain_ops {
+ 					     struct device *dev, int nvec);
+ 	void		(*domain_free_irqs)(struct irq_domain *domain,
+ 					    struct device *dev);
++	int		(*msi_alloc_store)(struct irq_domain *domain,
++					   struct device *dev, int nvec);
++	void		(*msi_free_store)(struct irq_domain *domain,
++					    struct device *dev);
+ };
  
-+	if (ret >= 0)
-+		intel_irq_remap_add_device(info);
-+
- 	return ret;
- }
+ /**
+--- a/kernel/irq/msi.c
++++ b/kernel/irq/msi.c
+@@ -434,6 +434,12 @@ int __msi_domain_alloc_irqs(struct irq_d
+ 	if (ret)
+ 		return ret;
  
---- a/drivers/iommu/intel/irq_remapping.c
-+++ b/drivers/iommu/intel/irq_remapping.c
-@@ -1086,6 +1086,22 @@ static int reenable_irq_remapping(int ei
- 	return -1;
- }
++	if (ops->msi_alloc_store) {
++		ret = ops->msi_alloc_store(domain, dev, nvec);
++		if (ret)
++			return ret;
++	}
++
+ 	for_each_msi_entry(desc, dev) {
+ 		ops->set_desc(&arg, desc);
  
-+/*
-+ * Store the MSI remapping domain pointer in the device if enabled.
-+ *
-+ * This is called from dmar_pci_bus_add_dev() so it works even when DMA
-+ * remapping is disabled. Only update the pointer if the device is not
-+ * already handled by a non default PCI/MSI interrupt domain. This protects
-+ * e.g. VMD devices.
-+ */
-+void intel_irq_remap_add_device(struct dmar_pci_notify_info *info)
-+{
-+	if (!irq_remapping_enabled || pci_dev_has_special_msi_domain(info->dev))
-+		return;
-+
-+	dev_set_msi_domain(&info->dev->dev, map_dev_to_ir(info->dev));
-+}
-+
- static void prepare_irte(struct irte *irte, int vector, unsigned int dest)
+@@ -533,6 +539,8 @@ int msi_domain_alloc_irqs(struct irq_dom
+ 
+ void __msi_domain_free_irqs(struct irq_domain *domain, struct device *dev)
  {
- 	memset(irte, 0, sizeof(*irte));
---- a/include/linux/intel-iommu.h
-+++ b/include/linux/intel-iommu.h
-@@ -425,6 +425,8 @@ struct q_inval {
- 	int             free_cnt;
- };
++	struct msi_domain_info *info = domain->host_data;
++	struct msi_domain_ops *ops = info->ops;
+ 	struct msi_desc *desc;
  
-+struct dmar_pci_notify_info;
+ 	for_each_msi_entry(desc, dev) {
+@@ -546,6 +554,9 @@ void __msi_domain_free_irqs(struct irq_d
+ 			desc->irq = 0;
+ 		}
+ 	}
 +
- #ifdef CONFIG_IRQ_REMAP
- /* 1MB - maximum possible interrupt remapping table size */
- #define INTR_REMAP_PAGE_ORDER	8
-@@ -439,6 +441,11 @@ struct ir_table {
- 	struct irte *base;
- 	unsigned long *bitmap;
- };
-+
-+void intel_irq_remap_add_device(struct dmar_pci_notify_info *info);
-+#else
-+static inline void
-+intel_irq_remap_add_device(struct dmar_pci_notify_info *info) { }
- #endif
++	if (ops->msi_free_store)
++		ops->msi_free_store(domain, dev);
+ }
  
- struct iommu_flush {
+ /**
 
