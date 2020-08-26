@@ -2,47 +2,47 @@ Return-Path: <SRS0=kS8R=CE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38121C433E3
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:01:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FBCEC433E1
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:01:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1330B2087D
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:01:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3A2FF20838
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:01:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="Y/9S15/F";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="DFd6NyEp"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="kcbYH/xL";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="iI5qSUQD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729414AbgHZMBn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 26 Aug 2020 08:01:43 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:57670 "EHLO
+        id S1729429AbgHZMBy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 26 Aug 2020 08:01:54 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:57906 "EHLO
         galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729382AbgHZMBZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Aug 2020 08:01:25 -0400
-Message-Id: <20200826112332.163462706@linutronix.de>
+        with ESMTP id S1729395AbgHZMBe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Aug 2020 08:01:34 -0400
+Message-Id: <20200826112331.530546013@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1598443273;
+        s=2020; t=1598443266;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=mqnIcRU+8mJ14Mkki/W6mS6K78Mp2NlN7l+CkgxD+8o=;
-        b=Y/9S15/F+/l+sIoxpjKT+lKY2eH9kcch+ZUeDE0/p5MBKA41C4FbGZzCr2P40FwJs+b8kH
-        aP3m68Yo7e9VGLYMb7lowUb7k4nT04PUU39uphOc/8R8Aroe90mmvDy6wgiMmRn7bASjLj
-        kNwm9CILE9qJXAfoDjG9Q2H9mS8mfofKpj+omGNLDF/Ti6AOkRqT/z2/s8EQRcdADxh1h4
-        mNzYep3t8S6A1xmp8v0RaTVEMGCHbEw/AALmCjZ94qb8nGr7UmRmi4pUhhIECgm8RNKE7a
-        zkbZRkbuTyEq14qthAKtwgAl8JKfXNRycTxUwM1LW8QwiL7iP4/GzuGSd0ywOw==
+        bh=u1yYqnSZZDMMoV9tW/nQF0JmP98FzCrk6ksyf7BvRgs=;
+        b=kcbYH/xLrUAPJ6fWejOeJmxHcJDtKvq9rSmjVFfexK1fGAerVZEcPvhUq/Yew/wTSQUxQA
+        nYDgNz2x9gVWr9YdEQXXW0/VcVXT6+SYH6p8Pyg8LMws06CpAnLkPedYCmO3f2I9OLqFZC
+        16SjJaTyVMLuhEx4zWaHmggPOa/fosS1Fq7g8m+hzqpJbS1dA17hIkTlOSEM+4V1C3Wna4
+        KXGIFDSYKSWp2EXIYFP8vuYyh2bqmw9EgsOEgcMI4J/Dvpl40jcQyeoFMFpF2CAHjFrcVJ
+        TwP8ELN56HifujjCfZXWP2+C1SEu5/OwFOCAvmXbM99ahdOwcMZQk1h/7bsxwg==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1598443273;
+        s=2020e; t=1598443266;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=mqnIcRU+8mJ14Mkki/W6mS6K78Mp2NlN7l+CkgxD+8o=;
-        b=DFd6NyEpm6qkQ9xT3f5z9cx+wU0ADabSVM33TuNvaWV/8ZV1/ExDQnOGUkzJskUPW+kXTJ
-        lBCvwjVIBiOvpBBQ==
-Date:   Wed, 26 Aug 2020 13:16:43 +0200
+        bh=u1yYqnSZZDMMoV9tW/nQF0JmP98FzCrk6ksyf7BvRgs=;
+        b=iI5qSUQDjqoguOE0M0yhLqFGsfgkjHhT91vZR8ljMovSZDUawcj8oW/wubtZ3EtOdx3Jc7
+        jK0U+RgVJOpYeYAg==
+Date:   Wed, 26 Aug 2020 13:16:37 +0200
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
@@ -73,7 +73,7 @@ Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
         Baolu Lu <baolu.lu@intel.com>,
         Kevin Tian <kevin.tian@intel.com>,
         Dan Williams <dan.j.williams@intel.com>
-Subject: [patch V2 15/46] x86/irq: Consolidate DMAR irq allocation
+Subject: [patch V2 09/46] iommu/vt-d: Consolidate irq domain getter
 References: <20200826111628.794979401@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -85,61 +85,141 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Thomas Gleixner <tglx@linutronix.de>
 
-None of the DMAR specific fields are required.
+The irq domain request mode is now indicated in irq_alloc_info::type.
+
+Consolidate the two getter functions into one.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 
 ---
- arch/x86/include/asm/hw_irq.h |    6 ------
- arch/x86/kernel/apic/msi.c    |   10 +++++-----
- 2 files changed, 5 insertions(+), 11 deletions(-)
+ drivers/iommu/intel/irq_remapping.c |   67 ++++++++++++------------------------
+ 1 file changed, 24 insertions(+), 43 deletions(-)
 
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -83,12 +83,6 @@ struct irq_alloc_info {
- 			irq_hw_number_t	msi_hwirq;
- 		};
- #endif
--#ifdef	CONFIG_DMAR_TABLE
--		struct {
--			int		dmar_id;
--			void		*dmar_data;
--		};
--#endif
- #ifdef	CONFIG_X86_UV
- 		struct {
- 			int		uv_limit;
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -329,15 +329,15 @@ static struct irq_chip dmar_msi_controll
- static irq_hw_number_t dmar_msi_get_hwirq(struct msi_domain_info *info,
- 					  msi_alloc_info_t *arg)
+--- a/drivers/iommu/intel/irq_remapping.c
++++ b/drivers/iommu/intel/irq_remapping.c
+@@ -204,35 +204,40 @@ static int modify_irte(struct irq_2_iomm
+ 	return rc;
+ }
+ 
+-static struct intel_iommu *map_hpet_to_ir(u8 hpet_id)
++static struct irq_domain *map_hpet_to_ir(u8 hpet_id)
  {
--	return arg->dmar_id;
-+	return arg->hwirq;
+ 	int i;
+ 
+-	for (i = 0; i < MAX_HPET_TBS; i++)
++	for (i = 0; i < MAX_HPET_TBS; i++) {
+ 		if (ir_hpet[i].id == hpet_id && ir_hpet[i].iommu)
+-			return ir_hpet[i].iommu;
++			return ir_hpet[i].iommu->ir_domain;
++	}
+ 	return NULL;
  }
  
- static int dmar_msi_init(struct irq_domain *domain,
- 			 struct msi_domain_info *info, unsigned int virq,
- 			 irq_hw_number_t hwirq, msi_alloc_info_t *arg)
+-static struct intel_iommu *map_ioapic_to_ir(int apic)
++static struct intel_iommu *map_ioapic_to_iommu(int apic)
  {
--	irq_domain_set_info(domain, virq, arg->dmar_id, info->chip, NULL,
--			    handle_edge_irq, arg->dmar_data, "edge");
-+	irq_domain_set_info(domain, virq, arg->devid, info->chip, NULL,
-+			    handle_edge_irq, arg->data, "edge");
+ 	int i;
  
- 	return 0;
+-	for (i = 0; i < MAX_IO_APICS; i++)
++	for (i = 0; i < MAX_IO_APICS; i++) {
+ 		if (ir_ioapic[i].id == apic && ir_ioapic[i].iommu)
+ 			return ir_ioapic[i].iommu;
++	}
+ 	return NULL;
  }
-@@ -384,8 +384,8 @@ int dmar_alloc_hwirq(int id, int node, v
  
- 	init_irq_alloc_info(&info, NULL);
- 	info.type = X86_IRQ_ALLOC_TYPE_DMAR;
--	info.dmar_id = id;
--	info.dmar_data = arg;
-+	info.devid = id;
-+	info.data = arg;
+-static struct intel_iommu *map_dev_to_ir(struct pci_dev *dev)
++static struct irq_domain *map_ioapic_to_ir(int apic)
+ {
+-	struct dmar_drhd_unit *drhd;
++	struct intel_iommu *iommu = map_ioapic_to_iommu(apic);
  
- 	return irq_domain_alloc_irqs(domain, 1, node, &info);
+-	drhd = dmar_find_matched_drhd_unit(dev);
+-	if (!drhd)
+-		return NULL;
++	return iommu ? iommu->ir_domain : NULL;
++}
++
++static struct irq_domain *map_dev_to_ir(struct pci_dev *dev)
++{
++	struct dmar_drhd_unit *drhd = dmar_find_matched_drhd_unit(dev);
+ 
+-	return drhd->iommu;
++	return drhd ? drhd->iommu->ir_msi_domain : NULL;
  }
+ 
+ static int clear_entries(struct irq_2_iommu *irq_iommu)
+@@ -996,7 +1001,7 @@ static int __init parse_ioapics_under_ir
+ 
+ 	for (ioapic_idx = 0; ioapic_idx < nr_ioapics; ioapic_idx++) {
+ 		int ioapic_id = mpc_ioapic_id(ioapic_idx);
+-		if (!map_ioapic_to_ir(ioapic_id)) {
++		if (!map_ioapic_to_iommu(ioapic_id)) {
+ 			pr_err(FW_BUG "ioapic %d has no mapping iommu, "
+ 			       "interrupt remapping will be disabled\n",
+ 			       ioapic_id);
+@@ -1101,47 +1106,23 @@ static void prepare_irte(struct irte *ir
+ 	irte->redir_hint = 1;
+ }
+ 
+-static struct irq_domain *intel_get_ir_irq_domain(struct irq_alloc_info *info)
++static struct irq_domain *intel_get_irq_domain(struct irq_alloc_info *info)
+ {
+-	struct intel_iommu *iommu = NULL;
+-
+ 	if (!info)
+ 		return NULL;
+ 
+ 	switch (info->type) {
+ 	case X86_IRQ_ALLOC_TYPE_IOAPIC_GET_PARENT:
+-		iommu = map_ioapic_to_ir(info->ioapic_id);
+-		break;
++		return map_ioapic_to_ir(info->ioapic_id);
+ 	case X86_IRQ_ALLOC_TYPE_HPET_GET_PARENT:
+-		iommu = map_hpet_to_ir(info->hpet_id);
+-		break;
+-	default:
+-		BUG_ON(1);
+-		break;
+-	}
+-
+-	return iommu ? iommu->ir_domain : NULL;
+-}
+-
+-static struct irq_domain *intel_get_irq_domain(struct irq_alloc_info *info)
+-{
+-	struct intel_iommu *iommu;
+-
+-	if (!info)
+-		return NULL;
+-
+-	switch (info->type) {
++		return map_hpet_to_ir(info->hpet_id);
+ 	case X86_IRQ_ALLOC_TYPE_PCI_MSI:
+ 	case X86_IRQ_ALLOC_TYPE_PCI_MSIX:
+-		iommu = map_dev_to_ir(info->msi_dev);
+-		if (iommu)
+-			return iommu->ir_msi_domain;
+-		break;
++		return map_dev_to_ir(info->msi_dev);
+ 	default:
+-		break;
++		WARN_ON_ONCE(1);
++		return NULL;
+ 	}
+-
+-	return NULL;
+ }
+ 
+ struct irq_remap_ops intel_irq_remap_ops = {
+@@ -1150,7 +1131,7 @@ struct irq_remap_ops intel_irq_remap_ops
+ 	.disable		= disable_irq_remapping,
+ 	.reenable		= reenable_irq_remapping,
+ 	.enable_faulting	= enable_drhd_fault_handling,
+-	.get_ir_irq_domain	= intel_get_ir_irq_domain,
++	.get_ir_irq_domain	= intel_get_irq_domain,
+ 	.get_irq_domain		= intel_get_irq_domain,
+ };
+ 
 
 
