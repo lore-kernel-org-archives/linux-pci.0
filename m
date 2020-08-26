@@ -7,45 +7,42 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1039C433DF
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:13:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD9CFC433E1
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:13:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A08952071E
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:13:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8C3BB2071E
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:13:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="yBa1jZyq";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="X+rqdbCz"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="ioAWTpDP";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="0eV1hNfW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729980AbgHZMNs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 26 Aug 2020 08:13:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35472 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729380AbgHZMBV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Aug 2020 08:01:21 -0400
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B4F71C061574;
-        Wed, 26 Aug 2020 05:01:20 -0700 (PDT)
-Message-Id: <20200826112331.157603198@linutronix.de>
+        id S1729299AbgHZMNv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 26 Aug 2020 08:13:51 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:57542 "EHLO
+        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729378AbgHZMBU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Aug 2020 08:01:20 -0400
+Message-Id: <20200826112331.436350257@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1598443261;
+        s=2020; t=1598443265;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=6S+VPwjCO4/0/sg5O/D8yGF7mUxRzB6iCmAEo7WLFeY=;
-        b=yBa1jZyq19hlxKFJk3xxqm7DyS+GDm5bb0xsGOflfAgTKxIfxMWsOquHJO8oAmDg57DS2O
-        lOd5gVhWE33CpyLZ98lEY6XLD8VUMPfnergrf924inK2Y0VoOUDpqLwrNon8BZkDdz3+RZ
-        yX47Hb4PiDkN+/QsBNEh9UPVPiX3u0mN3awXLTF4/59iOyWlV4bQiBwP1s4Iy1rkRwPWcl
-        0sRWk8UdH9fpJKD4wOajIaX4OIEMEwGSfYibyYvgtipQmWu1nChRU0L9O3ofQCESFnO2r0
-        /O1UWsUyXWAh1MgcFvs4LyhV7tN+dM6a3oK2zVsEshW1p5maB74zT8l4pFyB8w==
+        bh=LUY6bepF5eim7BkWUhA3OwSWPbqokviVOoRM/Igptr8=;
+        b=ioAWTpDPlTteMzT1FEkboO63d5kq9hA1V+HXhkkXU/cJBtUIqlh0H5GJpaONmKMx01dkVC
+        cXLH8uDJKuqu6WJN8NqpjxKLQ6DEzsr/wu1O3AMNEwnJ5AdtrDNTmWChZFw14rroM9UORX
+        vhBrWXM5j4b7/5Ch5voZC1EAQlIHqUEk9621/7pwq0qdtyFz0spYN49aYibIQfgNfbpdXU
+        JL41HRyN1Bfw3dcGoXYrhckaLb6Pep/MNBZc7m/tQUuXU+f+dJOGhpUabTpO/wPeLP+Dxv
+        1O5ykMdao0srwY8Q42I8uveNL0+DGF4vu2tGBhJNCzTvz9KOy3lOJOy2NK6CpA==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1598443261;
+        s=2020e; t=1598443265;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=6S+VPwjCO4/0/sg5O/D8yGF7mUxRzB6iCmAEo7WLFeY=;
-        b=X+rqdbCzEwcm50ULD6Yd1kuRe0Xhd7Md4D5DV2hlhjFcxaDeRH1iXqy0ovLxzi9/fl9LUK
-        RmgSqOyBQ/HmJiAQ==
-Date:   Wed, 26 Aug 2020 13:16:33 +0200
+        bh=LUY6bepF5eim7BkWUhA3OwSWPbqokviVOoRM/Igptr8=;
+        b=0eV1hNfWxwm4e+VS9L+QCLBWyodY+aOtuxJmr2j4yW1nKHrZNOrCVU4B114C71sSnoFFD4
+        eFjXZ9OCOIEXjbBQ==
+Date:   Wed, 26 Aug 2020 13:16:36 +0200
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
@@ -76,7 +73,7 @@ Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
         Baolu Lu <baolu.lu@intel.com>,
         Kevin Tian <kevin.tian@intel.com>,
         Dan Williams <dan.j.williams@intel.com>
-Subject: [patch V2 05/46] x86/msi: Move compose message callback where it belongs
+Subject: [patch V2 08/46] x86/irq: Add allocation type for parent domain retrieval
 References: <20200826111628.794979401@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -86,103 +83,111 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Composing the MSI message at the MSI chip level is wrong because the
-underlying parent domain is the one which knows how the message should be
-composed for the direct vector delivery or the interrupt remapping table
-entry.
+From: Thomas Gleixner <tglx@linutronix.de>
 
-The interrupt remapping aware PCI/MSI chip does that already. Make the
-direct delivery chip do the same and move the composition of the direct
-delivery MSI message to the vector domain irq chip.
+irq_remapping_ir_irq_domain() is used to retrieve the remapping parent
+domain for an allocation type. irq_remapping_irq_domain() is for retrieving
+the actual device domain for allocating interrupts for a device.
 
-This prepares for the upcoming device MSI support to avoid having
-architecture specific knowledge in the device MSI domain irq chips.
+The two functions are similar and can be unified by using explicit modes
+for parent irq domain retrieval.
+
+Add X86_IRQ_ALLOC_TYPE_IOAPIC/HPET_GET_PARENT and use it in the iommu
+implementations. Drop the parent domain retrieval for PCI_MSI/X as that is
+unused.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
----
-V2: New patch
----
- arch/x86/include/asm/apic.h   |    8 ++++++++
- arch/x86/kernel/apic/msi.c    |   12 +++---------
- arch/x86/kernel/apic/vector.c |    1 +
- 3 files changed, 12 insertions(+), 9 deletions(-)
 
---- a/arch/x86/include/asm/apic.h
-+++ b/arch/x86/include/asm/apic.h
-@@ -519,6 +519,14 @@ static inline bool apic_id_is_primary_th
- static inline void apic_smt_update(void) { }
- #endif
+---
+ arch/x86/include/asm/hw_irq.h       |    2 ++
+ arch/x86/kernel/apic/io_apic.c      |    2 +-
+ arch/x86/kernel/apic/msi.c          |    2 +-
+ drivers/iommu/amd/iommu.c           |    8 ++++++++
+ drivers/iommu/hyperv-iommu.c        |    2 +-
+ drivers/iommu/intel/irq_remapping.c |    8 ++------
+ 6 files changed, 15 insertions(+), 9 deletions(-)
+
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -40,6 +40,8 @@ enum irq_alloc_type {
+ 	X86_IRQ_ALLOC_TYPE_PCI_MSIX,
+ 	X86_IRQ_ALLOC_TYPE_DMAR,
+ 	X86_IRQ_ALLOC_TYPE_UV,
++	X86_IRQ_ALLOC_TYPE_IOAPIC_GET_PARENT,
++	X86_IRQ_ALLOC_TYPE_HPET_GET_PARENT,
+ };
  
-+struct msi_msg;
-+
-+#ifdef CONFIG_PCI_MSI
-+void x86_vector_msi_compose_msg(struct irq_data *data, struct msi_msg *msg);
-+#else
-+# define x86_vector_msi_compose_msg NULL
-+#endif
-+
- extern void ioapic_zap_locks(void);
+ struct irq_alloc_info {
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -2296,7 +2296,7 @@ static int mp_irqdomain_create(int ioapi
+ 		return 0;
  
- #endif /* _ASM_X86_APIC_H */
+ 	init_irq_alloc_info(&info, NULL);
+-	info.type = X86_IRQ_ALLOC_TYPE_IOAPIC;
++	info.type = X86_IRQ_ALLOC_TYPE_IOAPIC_GET_PARENT;
+ 	info.ioapic_id = mpc_ioapic_id(ioapic);
+ 	parent = irq_remapping_get_ir_irq_domain(&info);
+ 	if (!parent)
 --- a/arch/x86/kernel/apic/msi.c
 +++ b/arch/x86/kernel/apic/msi.c
-@@ -45,7 +45,7 @@ static void __irq_msi_compose_msg(struct
- 		MSI_DATA_VECTOR(cfg->vector);
- }
+@@ -476,7 +476,7 @@ struct irq_domain *hpet_create_irq_domai
+ 	domain_info->data = (void *)(long)hpet_id;
  
--static void irq_msi_compose_msg(struct irq_data *data, struct msi_msg *msg)
-+void x86_vector_msi_compose_msg(struct irq_data *data, struct msi_msg *msg)
- {
- 	__irq_msi_compose_msg(irqd_cfg(data), msg);
- }
-@@ -177,7 +177,6 @@ static struct irq_chip pci_msi_controlle
- 	.irq_mask		= pci_msi_mask_irq,
- 	.irq_ack		= irq_chip_ack_parent,
- 	.irq_retrigger		= irq_chip_retrigger_hierarchy,
--	.irq_compose_msi_msg	= irq_msi_compose_msg,
- 	.irq_set_affinity	= msi_set_affinity,
- 	.flags			= IRQCHIP_SKIP_SET_WAKE,
- };
-@@ -321,7 +320,6 @@ static struct irq_chip dmar_msi_controll
- 	.irq_ack		= irq_chip_ack_parent,
- 	.irq_set_affinity	= msi_domain_set_affinity,
- 	.irq_retrigger		= irq_chip_retrigger_hierarchy,
--	.irq_compose_msi_msg	= irq_msi_compose_msg,
- 	.irq_write_msi_msg	= dmar_msi_write_msg,
- 	.flags			= IRQCHIP_SKIP_SET_WAKE,
- };
-@@ -419,7 +417,6 @@ static struct irq_chip hpet_msi_controll
- 	.irq_ack = irq_chip_ack_parent,
- 	.irq_set_affinity = msi_domain_set_affinity,
- 	.irq_retrigger = irq_chip_retrigger_hierarchy,
--	.irq_compose_msi_msg = irq_msi_compose_msg,
- 	.irq_write_msi_msg = hpet_msi_write_msg,
- 	.flags = IRQCHIP_SKIP_SET_WAKE,
- };
-@@ -479,13 +476,10 @@ struct irq_domain *hpet_create_irq_domai
- 	info.type = X86_IRQ_ALLOC_TYPE_HPET;
+ 	init_irq_alloc_info(&info, NULL);
+-	info.type = X86_IRQ_ALLOC_TYPE_HPET;
++	info.type = X86_IRQ_ALLOC_TYPE_HPET_GET_PARENT;
  	info.hpet_id = hpet_id;
  	parent = irq_remapping_get_ir_irq_domain(&info);
--	if (parent == NULL) {
-+	if (parent == NULL)
- 		parent = x86_vector_domain;
--	} else {
-+	else
- 		hpet_msi_controller.name = "IR-HPET-MSI";
--		/* Temporary fix: Will go away */
--		hpet_msi_controller.irq_compose_msi_msg = NULL;
--	}
+ 	if (parent == NULL)
+--- a/drivers/iommu/amd/iommu.c
++++ b/drivers/iommu/amd/iommu.c
+@@ -3534,6 +3534,14 @@ static struct irq_domain *get_ir_irq_dom
+ 	if (!info)
+ 		return NULL;
  
- 	fn = irq_domain_alloc_named_id_fwnode(hpet_msi_controller.name,
- 					      hpet_id);
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -823,6 +823,7 @@ static struct irq_chip lapic_controller
- 	.name			= "APIC",
- 	.irq_ack		= apic_ack_edge,
- 	.irq_set_affinity	= apic_set_affinity,
-+	.irq_compose_msi_msg	= x86_vector_msi_compose_msg,
- 	.irq_retrigger		= apic_retrigger_irq,
- };
++	switch (info->type) {
++	case X86_IRQ_ALLOC_TYPE_IOAPIC_GET_PARENT:
++	case X86_IRQ_ALLOC_TYPE_HPET_GET_PARENT:
++		break;
++	default:
++		return NULL;
++	}
++
+ 	devid = get_devid(info);
+ 	if (devid >= 0) {
+ 		iommu = amd_iommu_rlookup_table[devid];
+--- a/drivers/iommu/hyperv-iommu.c
++++ b/drivers/iommu/hyperv-iommu.c
+@@ -184,7 +184,7 @@ static int __init hyperv_enable_irq_rema
  
+ static struct irq_domain *hyperv_get_ir_irq_domain(struct irq_alloc_info *info)
+ {
+-	if (info->type == X86_IRQ_ALLOC_TYPE_IOAPIC)
++	if (info->type == X86_IRQ_ALLOC_TYPE_IOAPIC_GET_PARENT)
+ 		return ioapic_ir_domain;
+ 	else
+ 		return NULL;
+--- a/drivers/iommu/intel/irq_remapping.c
++++ b/drivers/iommu/intel/irq_remapping.c
+@@ -1109,16 +1109,12 @@ static struct irq_domain *intel_get_ir_i
+ 		return NULL;
+ 
+ 	switch (info->type) {
+-	case X86_IRQ_ALLOC_TYPE_IOAPIC:
++	case X86_IRQ_ALLOC_TYPE_IOAPIC_GET_PARENT:
+ 		iommu = map_ioapic_to_ir(info->ioapic_id);
+ 		break;
+-	case X86_IRQ_ALLOC_TYPE_HPET:
++	case X86_IRQ_ALLOC_TYPE_HPET_GET_PARENT:
+ 		iommu = map_hpet_to_ir(info->hpet_id);
+ 		break;
+-	case X86_IRQ_ALLOC_TYPE_PCI_MSI:
+-	case X86_IRQ_ALLOC_TYPE_PCI_MSIX:
+-		iommu = map_dev_to_ir(info->msi_dev);
+-		break;
+ 	default:
+ 		BUG_ON(1);
+ 		break;
+
 
