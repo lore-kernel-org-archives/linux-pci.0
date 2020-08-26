@@ -7,45 +7,45 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05EB9C433E5
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:12:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 386F9C433E1
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:12:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D95A62087C
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:12:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 143FB2087C
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Aug 2020 12:12:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="cRxNY6q4";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="qSPUnSes"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="cZkMF/YW";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="c+I8epgL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729420AbgHZMLL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 26 Aug 2020 08:11:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35514 "EHLO
+        id S1729753AbgHZMMn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 26 Aug 2020 08:12:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35512 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729402AbgHZMBd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Aug 2020 08:01:33 -0400
+        with ESMTP id S1729398AbgHZMBc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Aug 2020 08:01:32 -0400
 Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 145FFC061795;
-        Wed, 26 Aug 2020 05:01:33 -0700 (PDT)
-Message-Id: <20200826112332.658496557@linutronix.de>
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8830C061786;
+        Wed, 26 Aug 2020 05:01:31 -0700 (PDT)
+Message-Id: <20200826112331.634777249@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1598443280;
+        s=2020; t=1598443267;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=b4bGIil7bipa/5kRCGwLR6ysbuS705o3f6zVCEpgylA=;
-        b=cRxNY6q4LD/qHQC5Xo0FZAvJhkMhdFi+cHQ4Jj7FlYWljEI49HYpMgeULtRuZ4BnVjs7du
-        mvAren+Txod753wg+6pyzdEQg/Z596Zf0s0EImMYDPCN0TucaGcDFZKa31K6/ZQaZZxVRW
-        6bVlvZWqJTEAHcTNGb+tNnOVHkP07vPvDT3DOSv+m0qWFbLWC5Jtn1AcRGfjyw5aDwIttl
-        dM2ajV3sBaH8zQbs3Qga0yV5zHBpraCiSLRPf/aA3sRPVyszjgcqimWSj6lJoWyexV70yT
-        QCRcEx+/PcnvfQwSHz2Ju6mwxxFx7nKha8ZZYUB5hr1Vq52e6/uSd6XA9Ikx5g==
+        bh=uwvQNHvaNg/Fdy2Gl3KxXB78ZUpQmA3m1yJB61BHx4U=;
+        b=cZkMF/YWULZ4Uotab3k3IXi4r4hFFnpiFtt6iNZpjY2glC7/xkFk3cB9PgaOU/8JGRxOjj
+        S7I9iF8wESVzg+xDMZUKVy8Vbe6zq6LwxfCfOp+LsiBpSu672pJYhA6gZdh8IxY2xC6rKX
+        3u6zI+8BnB3zMleeiIPXmH/Awu4yF5kC4ReV65SghuOIimGB2BYzAAK9x10MHqSwRaGKkj
+        LB3rdDrHqSkWruYzPDa2OvgoiLXf78uxrzp0kxWXqNqww4EKoeJth428QKttN0aAkXjd92
+        XLLJA91DUCN7cD4uJ1Gh1vWIc9GqgAIi7jZWF3Ewak/+mo/C3yFdrghRZhkL4g==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1598443280;
+        s=2020e; t=1598443267;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=b4bGIil7bipa/5kRCGwLR6ysbuS705o3f6zVCEpgylA=;
-        b=qSPUnSeslpA0/D/c0Wds3lF32+rYjaFAhwCnjhz0P2c0Mmhu1EcCv1mmL4jo7S0ApmHD+F
-        95+es/w/dVUH7hDQ==
-Date:   Wed, 26 Aug 2020 13:16:48 +0200
+        bh=uwvQNHvaNg/Fdy2Gl3KxXB78ZUpQmA3m1yJB61BHx4U=;
+        b=c+I8epgL/HK82KFtaXiIHgczMaYB4MS5Q6XB/264Q9Abn3goTn6OI8aEnTusT/a/dZRKM7
+        fW0BwXcA8NuxczDQ==
+Date:   Wed, 26 Aug 2020 13:16:38 +0200
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
@@ -76,7 +76,7 @@ Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
         Baolu Lu <baolu.lu@intel.com>,
         Kevin Tian <kevin.tian@intel.com>,
         Dan Williams <dan.j.williams@intel.com>
-Subject: [patch V2 20/46] x86/irq: Move apic_post_init() invocation to one place
+Subject: [patch V2 10/46] iommu/amd: Consolidate irq domain getter
 References: <20200826111628.794979401@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -88,52 +88,124 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Thomas Gleixner <tglx@linutronix.de>
 
-No point to call it from both 32bit and 64bit implementations of
-default_setup_apic_routing(). Move it to the caller.
+The irq domain request mode is now indicated in irq_alloc_info::type.
+
+Consolidate the two getter functions into one.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 
 ---
- arch/x86/kernel/apic/apic.c     |    3 +++
- arch/x86/kernel/apic/probe_32.c |    3 ---
- arch/x86/kernel/apic/probe_64.c |    3 ---
- 3 files changed, 3 insertions(+), 6 deletions(-)
+ drivers/iommu/amd/iommu.c |   65 ++++++++++++++--------------------------------
+ 1 file changed, 21 insertions(+), 44 deletions(-)
 
---- a/arch/x86/kernel/apic/apic.c
-+++ b/arch/x86/kernel/apic/apic.c
-@@ -1429,6 +1429,9 @@ void __init apic_intr_mode_init(void)
- 		break;
- 	}
+--- a/drivers/iommu/amd/iommu.c
++++ b/drivers/iommu/amd/iommu.c
+@@ -3505,77 +3505,54 @@ static void irte_ga_clear_allocated(stru
  
-+	if (x86_platform.apic_post_init)
-+		x86_platform.apic_post_init();
-+
- 	apic_bsp_setup(upmode);
- }
- 
---- a/arch/x86/kernel/apic/probe_32.c
-+++ b/arch/x86/kernel/apic/probe_32.c
-@@ -170,9 +170,6 @@ void __init default_setup_apic_routing(v
- 
- 	if (apic->setup_apic_routing)
- 		apic->setup_apic_routing();
+ static int get_devid(struct irq_alloc_info *info)
+ {
+-	int devid = -1;
 -
--	if (x86_platform.apic_post_init)
--		x86_platform.apic_post_init();
- }
- 
- void __init generic_apic_probe(void)
---- a/arch/x86/kernel/apic/probe_64.c
-+++ b/arch/x86/kernel/apic/probe_64.c
-@@ -32,9 +32,6 @@ void __init default_setup_apic_routing(v
- 			break;
- 		}
+ 	switch (info->type) {
+ 	case X86_IRQ_ALLOC_TYPE_IOAPIC:
+-		devid     = get_ioapic_devid(info->ioapic_id);
+-		break;
++	case X86_IRQ_ALLOC_TYPE_IOAPIC_GET_PARENT:
++		return get_ioapic_devid(info->ioapic_id);
+ 	case X86_IRQ_ALLOC_TYPE_HPET:
+-		devid     = get_hpet_devid(info->hpet_id);
+-		break;
++	case X86_IRQ_ALLOC_TYPE_HPET_GET_PARENT:
++		return get_hpet_devid(info->hpet_id);
+ 	case X86_IRQ_ALLOC_TYPE_PCI_MSI:
+ 	case X86_IRQ_ALLOC_TYPE_PCI_MSIX:
+-		devid = get_device_id(&info->msi_dev->dev);
+-		break;
++		return get_device_id(&info->msi_dev->dev);
+ 	default:
+-		BUG_ON(1);
+-		break;
++		WARN_ON_ONCE(1);
++		return -1;
  	}
 -
--	if (x86_platform.apic_post_init)
--		x86_platform.apic_post_init();
+-	return devid;
  }
  
- int __init default_acpi_madt_oem_check(char *oem_id, char *oem_table_id)
+-static struct irq_domain *get_ir_irq_domain(struct irq_alloc_info *info)
++static struct irq_domain *get_irq_domain_for_devid(struct irq_alloc_info *info,
++						   int devid)
+ {
+-	struct amd_iommu *iommu;
+-	int devid;
++	struct amd_iommu *iommu = amd_iommu_rlookup_table[devid];
+ 
+-	if (!info)
++	if (!iommu)
+ 		return NULL;
+ 
+ 	switch (info->type) {
+ 	case X86_IRQ_ALLOC_TYPE_IOAPIC_GET_PARENT:
+ 	case X86_IRQ_ALLOC_TYPE_HPET_GET_PARENT:
+-		break;
++		return iommu->ir_domain;
++	case X86_IRQ_ALLOC_TYPE_PCI_MSI:
++	case X86_IRQ_ALLOC_TYPE_PCI_MSIX:
++		return iommu->msi_domain;
+ 	default:
++		WARN_ON_ONCE(1);
+ 		return NULL;
+ 	}
+-
+-	devid = get_devid(info);
+-	if (devid >= 0) {
+-		iommu = amd_iommu_rlookup_table[devid];
+-		if (iommu)
+-			return iommu->ir_domain;
+-	}
+-
+-	return NULL;
+ }
+ 
+ static struct irq_domain *get_irq_domain(struct irq_alloc_info *info)
+ {
+-	struct amd_iommu *iommu;
+ 	int devid;
+ 
+ 	if (!info)
+ 		return NULL;
+ 
+-	switch (info->type) {
+-	case X86_IRQ_ALLOC_TYPE_PCI_MSI:
+-	case X86_IRQ_ALLOC_TYPE_PCI_MSIX:
+-		devid = get_device_id(&info->msi_dev->dev);
+-		if (devid < 0)
+-			return NULL;
+-
+-		iommu = amd_iommu_rlookup_table[devid];
+-		if (iommu)
+-			return iommu->msi_domain;
+-		break;
+-	default:
+-		break;
+-	}
+-
+-	return NULL;
++	devid = get_devid(info);
++	if (devid < 0)
++		return NULL;
++	return get_irq_domain_for_devid(info, devid);
+ }
+ 
+ struct irq_remap_ops amd_iommu_irq_ops = {
+@@ -3584,7 +3561,7 @@ struct irq_remap_ops amd_iommu_irq_ops =
+ 	.disable		= amd_iommu_disable,
+ 	.reenable		= amd_iommu_reenable,
+ 	.enable_faulting	= amd_iommu_enable_faulting,
+-	.get_ir_irq_domain	= get_ir_irq_domain,
++	.get_ir_irq_domain	= get_irq_domain,
+ 	.get_irq_domain		= get_irq_domain,
+ };
+ 
 
 
