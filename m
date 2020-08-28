@@ -2,117 +2,114 @@ Return-Path: <SRS0=bCfW=CG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BAF1C433E2
-	for <linux-pci@archiver.kernel.org>; Fri, 28 Aug 2020 11:03:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0BFFC433E2
+	for <linux-pci@archiver.kernel.org>; Fri, 28 Aug 2020 11:23:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 28FE6207DF
-	for <linux-pci@archiver.kernel.org>; Fri, 28 Aug 2020 11:03:00 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="YrriV/Zp"
+	by mail.kernel.org (Postfix) with ESMTP id B783D2087D
+	for <linux-pci@archiver.kernel.org>; Fri, 28 Aug 2020 11:23:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729175AbgH1K4J (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 28 Aug 2020 06:56:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50470 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729168AbgH1Kx3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 28 Aug 2020 06:53:29 -0400
-Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7168C06121B
-        for <linux-pci@vger.kernel.org>; Fri, 28 Aug 2020 03:53:08 -0700 (PDT)
-Received: by mail-wm1-x344.google.com with SMTP id b79so488563wmb.4
-        for <linux-pci@vger.kernel.org>; Fri, 28 Aug 2020 03:53:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=e6iXM6C5sJ3FBz3LIMthXRBWXK9iTp3RhCVsBFe2ot4=;
-        b=YrriV/ZpxSVeR1zNRjbVh0hZsksEyHhLgrOl31e0w2SDO/H8Bjh/dcb34Qq3dSVt8h
-         uiOhYVGDo6GywbGQ453rFe6xo1Yo4hMj+KVM1hv/A6Wm1QY6rBkeJ7BrYrrj4p7aUjn1
-         BO/Cn7KyMnoVy5Ka6E+TfXreZM2tII4pyNxLPM2QKyIQ8+xV541NqaHAPOYwePYBuTbX
-         sD+tbJf0KJvFjKoikZg7/vVmIdZQctlcrnzpPzhWe0x0ApPVnwsSuTwYgFVJHE8MmpBy
-         M12aXSVVQjbNuvEwKf2gUCy7mVf7wXrDAaKk7Tp/hz3zPA7ndKo2EXfLC3QcA+wayEfv
-         utTg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=e6iXM6C5sJ3FBz3LIMthXRBWXK9iTp3RhCVsBFe2ot4=;
-        b=LV8P8xEc7wL3hyNpn5dXbtIfEa7Uio4lA+McsjXz7TRHbbf0dNJtBKf+3oo7xsGpMw
-         KHc+DB4ks7GYF3XMkQmXtCp3mPouONE6FG6gzOtnQYH5zKE3rejwtprwYmtp56GZ6/so
-         C530JRmHvO7JUjikCZk/QGrkSHy10r0j3tiVw+Mpfug/WadK34jwVH+kg4mu4r++zbw+
-         DBHMAVIQ4lp4+GsRILxFrs81kZAcI+9/U5BT5wQilLX3dZbLbjR8k/6QZfxmXFbbHrhd
-         nmImPv0yXZKZdLcEfMSKFCMsot/LCTrrBcZwn8MTXIr7aLysmMiIsxdgnH9RaWYLDCIw
-         zvoQ==
-X-Gm-Message-State: AOAM530SzYZxxfHIzLLAAIQGMbYctg05rlwc4/91tepItEsZy349nC7A
-        EufPOqRC44q4PoKgAegqu+raMQ==
-X-Google-Smtp-Source: ABdhPJzQxd25rKg5eLhiITlNvNOcRWPIr5L602jIp3qY0aHNYmrx4NqgdS61UJZebGJa7RWwd6OJsA==
-X-Received: by 2002:a1c:a506:: with SMTP id o6mr1019921wme.3.1598611987242;
-        Fri, 28 Aug 2020 03:53:07 -0700 (PDT)
-Received: from dell ([91.110.221.141])
-        by smtp.gmail.com with ESMTPSA id r129sm1531390wmr.40.2020.08.28.03.53.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 28 Aug 2020 03:53:06 -0700 (PDT)
-Date:   Fri, 28 Aug 2020 11:53:04 +0100
-From:   Lee Jones <lee.jones@linaro.org>
-To:     "David E. Box" <david.e.box@linux.intel.com>
-Cc:     dvhart@infradead.org, andy@infradead.org, bhelgaas@google.com,
-        alexander.h.duyck@linux.intel.com, linux-kernel@vger.kernel.org,
-        platform-driver-x86@vger.kernel.org, linux-pci@vger.kernel.org,
-        Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: Re: [PATCH V5 2/3] mfd: Intel Platform Monitoring Technology support
-Message-ID: <20200828105304.GS1826686@dell>
-References: <20200819180255.11770-1-david.e.box@linux.intel.com>
- <20200819180255.11770-3-david.e.box@linux.intel.com>
+        id S1729205AbgH1LXi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 28 Aug 2020 07:23:38 -0400
+Received: from foss.arm.com ([217.140.110.172]:46836 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729178AbgH1LWs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 28 Aug 2020 07:22:48 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 10BC931B;
+        Fri, 28 Aug 2020 04:21:52 -0700 (PDT)
+Received: from e121166-lin.cambridge.arm.com (e121166-lin.cambridge.arm.com [10.1.196.255])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 03F763F66B;
+        Fri, 28 Aug 2020 04:21:47 -0700 (PDT)
+Date:   Fri, 28 Aug 2020 12:21:42 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Thomas Gleixner <tglx@linutronix.de>,
+        LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+        Joerg Roedel <joro@8bytes.org>,
+        iommu@lists.linux-foundation.org, linux-hyperv@vger.kernel.org,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Jon Derrick <jonathan.derrick@intel.com>,
+        Lu Baolu <baolu.lu@linux.intel.com>,
+        Wei Liu <wei.liu@kernel.org>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Steve Wahl <steve.wahl@hpe.com>,
+        Dimitri Sivanich <sivanich@hpe.com>,
+        Russ Anderson <rja@hpe.com>, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        xen-devel@lists.xenproject.org, Juergen Gross <jgross@suse.com>,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Marc Zyngier <maz@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Megha Dey <megha.dey@intel.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Jacob Pan <jacob.jun.pan@intel.com>,
+        Baolu Lu <baolu.lu@intel.com>,
+        Kevin Tian <kevin.tian@intel.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Rob Herring <robh@kernel.org>
+Subject: Re: [patch V2 34/46] PCI/MSI: Make arch_.*_msi_irq[s] fallbacks
+ selectable
+Message-ID: <20200828112142.GA14208@e121166-lin.cambridge.arm.com>
+References: <20200826112333.992429909@linutronix.de>
+ <20200827182040.GA2049623@bjorn-Precision-5520>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20200819180255.11770-3-david.e.box@linux.intel.com>
+In-Reply-To: <20200827182040.GA2049623@bjorn-Precision-5520>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, 19 Aug 2020, David E. Box wrote:
+On Thu, Aug 27, 2020 at 01:20:40PM -0500, Bjorn Helgaas wrote:
 
-> Intel Platform Monitoring Technology (PMT) is an architecture for
-> enumerating and accessing hardware monitoring facilities. PMT supports
-> multiple types of monitoring capabilities. This driver creates platform
-> devices for each type so that they may be managed by capability specific
-> drivers (to be introduced). Capabilities are discovered using PCIe DVSEC
-> ids. Support is included for the 3 current capability types, Telemetry,
-> Watcher, and Crashlog. The features are available on new Intel platforms
-> starting from Tiger Lake for which support is added.
+[...]
+
+> And I can't figure out what's special about tegra, rcar, and xilinx
+> that makes them need it as well.  Is there something I could grep for
+> to identify them?  Is there a way to convert them so they don't need
+> it?
+
+I think DT binding and related firmware support are needed to setup the
+MSI IRQ domains correctly, there is nothing special about tegra, rcar
+and xilinx AFAIK (well, all native host controllers MSI handling is
+*special* just to be polite but let's gloss over this for the time
+being).
+
+struct msi_controller, to answer the first question.
+
+I have doubts about pci_mvebu too, they do allocate an msi_controller
+but without methods so it looks pretty much useless.
+
+Hyper-V code too seems questionable, maybe there is room for more
+clean-ups.
+
+Lorenzo
+
+> > --- a/include/linux/msi.h
+> > +++ b/include/linux/msi.h
+> > @@ -193,17 +193,38 @@ void pci_msi_mask_irq(struct irq_data *d
+> >  void pci_msi_unmask_irq(struct irq_data *data);
+> >  
+> >  /*
+> > - * The arch hooks to setup up msi irqs. Those functions are
+> > - * implemented as weak symbols so that they /can/ be overriden by
+> > - * architecture specific code if needed.
+> > + * The arch hooks to setup up msi irqs. Default functions are implemented
 > 
-> Also add a quirk mechanism for several early hardware differences and bugs.
-> For Tiger Lake, do not support Watcher and Crashlog capabilities since they
-> will not be compatible with future product. Also, fix use a quirk to fix
-> the discovery table offset.
+> s/msi/MSI/ to match the one below.
 > 
-> Co-developed-by: Alexander Duyck <alexander.h.duyck@linux.intel.com>
-> Signed-off-by: Alexander Duyck <alexander.h.duyck@linux.intel.com>
-> Signed-off-by: David E. Box <david.e.box@linux.intel.com>
-> Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
-> ---
->  MAINTAINERS             |   5 +
->  drivers/mfd/Kconfig     |  10 ++
->  drivers/mfd/Makefile    |   1 +
->  drivers/mfd/intel_pmt.c | 220 ++++++++++++++++++++++++++++++++++++++++
->  4 files changed, 236 insertions(+)
->  create mode 100644 drivers/mfd/intel_pmt.c
-
-For my own reference (apply this as-is to your sign-off block):
-
-  Acked-for-MFD-by: Lee Jones <lee.jones@linaro.org>
-
--- 
-Lee Jones [李琼斯]
-Senior Technical Lead - Developer Services
-Linaro.org │ Open source software for Arm SoCs
-Follow Linaro: Facebook | Twitter | Blog
+> > + * as weak symbols so that they /can/ be overriden by architecture specific
+> > + * code if needed. These hooks must be enabled by the architecture or by
+> > + * drivers which depend on them via msi_controller based MSI handling.
