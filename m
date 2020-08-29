@@ -2,87 +2,159 @@ Return-Path: <SRS0=J3VU=CH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F987C433E2
-	for <linux-pci@archiver.kernel.org>; Sat, 29 Aug 2020 07:24:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C82ACC433E7
+	for <linux-pci@archiver.kernel.org>; Sat, 29 Aug 2020 11:42:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 61806207BB
-	for <linux-pci@archiver.kernel.org>; Sat, 29 Aug 2020 07:24:14 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="pLldZGWX"
+	by mail.kernel.org (Postfix) with ESMTP id B1A2620B80
+	for <linux-pci@archiver.kernel.org>; Sat, 29 Aug 2020 11:42:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726105AbgH2HYN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 29 Aug 2020 03:24:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43604 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726083AbgH2HYM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 29 Aug 2020 03:24:12 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECAEEC061236;
-        Sat, 29 Aug 2020 00:24:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=b660aar3g6/JJYoLm+eUfNa34ts9ix4M3QDleqnb3gw=; b=pLldZGWXJimg9P6mCsRrKFdTvx
-        +tWqoU3zirJpqHj3nuY9IUdwAoEZ8YOdTXpXJWJtn9vvTq/wqjz41X/A/k2SYiOsqE4IUDymkW8DO
-        xUYByzEanMFhZnR3d7nZvrz5zl05p9eCYDHPcCf1L86lgms0eK3T6ypnKnZJWC2AThGDDT3jAp5+8
-        XXQRTrWOljEIBxOAq7tKEILzHXZ/qONGxGMGuBT8j4ke8Ag3Mgm4yFf3hhbW+xDNnLKBNlkB0yEU/
-        MJQaMlooU3V6aQYg3TP7bin0Ow487p2hXtDdW57xRAhHa+rddzTvDyu3OP1lt+6kQejtHiLIUxjtk
-        q2cL9stg==;
-Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kBvDZ-0001qk-Bp; Sat, 29 Aug 2020 07:24:05 +0000
-Date:   Sat, 29 Aug 2020 08:24:05 +0100
-From:   "hch@infradead.org" <hch@infradead.org>
-To:     "Limonciello, Mario" <Mario.Limonciello@dell.com>
-Cc:     "hch@infradead.org" <hch@infradead.org>,
-        "Derrick, Jonathan" <jonathan.derrick@intel.com>,
-        "wangxiongfeng2@huawei.com" <wangxiongfeng2@huawei.com>,
-        "kw@linux.com" <kw@linux.com>,
-        "hkallweit1@gmail.com" <hkallweit1@gmail.com>,
-        "kai.heng.feng@canonical.com" <kai.heng.feng@canonical.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Williams, Dan J" <dan.j.williams@intel.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "Huffman, Amber" <amber.huffman@intel.com>,
-        "Wysocki, Rafael J" <rafael.j.wysocki@intel.com>
-Subject: Re: [PATCH] PCI/ASPM: Enable ASPM for links under VMD domain
-Message-ID: <20200829072405.GB6704@infradead.org>
-References: <20200821123222.32093-1-kai.heng.feng@canonical.com>
- <20200825062320.GA27116@infradead.org>
- <cd5aa2fef13f14b30c139d03d5256cf93c7195dc.camel@intel.com>
- <20200827063406.GA13738@infradead.org>
- <660c8671a51eec447dc7fab22bacbc9c600508d9.camel@intel.com>
- <20200827162333.GA6822@infradead.org>
- <DM6PR19MB2636ACECA16E43638B502A6DFA550@DM6PR19MB2636.namprd19.prod.outlook.com>
+        id S1728087AbgH2LmX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 29 Aug 2020 07:42:23 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:10345 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728022AbgH2Ljw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 29 Aug 2020 07:39:52 -0400
+Received: from DGGEMS414-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id 3ED9D451245007F87673;
+        Sat, 29 Aug 2020 19:22:31 +0800 (CST)
+Received: from linux-ioko.site (10.78.228.23) by
+ DGGEMS414-HUB.china.huawei.com (10.3.19.214) with Microsoft SMTP Server id
+ 14.3.487.0; Sat, 29 Aug 2020 19:22:21 +0800
+From:   Dongdong Liu <liudongdong3@huawei.com>
+To:     <mj@ucw.cz>
+CC:     <helgaas@kernel.org>, <linux-pci@vger.kernel.org>,
+        <linuxarm@huawei.com>
+Subject: [PATCH V2 1/2] lspci: Adjust PCI_EXP_DEV2_* to PCI_EXP_DEVCTL2_* macro definition
+Date:   Sat, 29 Aug 2020 18:58:41 +0800
+Message-ID: <1598698722-126013-2-git-send-email-liudongdong3@huawei.com>
+X-Mailer: git-send-email 1.9.1
+In-Reply-To: <1598698722-126013-1-git-send-email-liudongdong3@huawei.com>
+References: <1598698722-126013-1-git-send-email-liudongdong3@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <DM6PR19MB2636ACECA16E43638B502A6DFA550@DM6PR19MB2636.namprd19.prod.outlook.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain
+X-Originating-IP: [10.78.228.23]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Aug 27, 2020 at 05:49:40PM +0000, Limonciello, Mario wrote:
-> Can you further elaborate what exactly you're wanting here?  VMD enable/disable
-> is something that is configured in firmware setup as the firmware does the early
-> configuration for the silicon related to it.  So it's up to the OEM whether to
-> offer the knob to an end user.
-> 
-> At least for Dell this setting also does export to sysfs and can be turned on/off
-> around a reboot cycle via this: https://patchwork.kernel.org/patch/11693231/.
-> 
-> As was mentioned earlier in this thread VMD is likely to be defaulting to "on"
-> for many machines with the upcoming silicon.  Making it work well on Linux is
-> preferable to again having to change firmware settings between operating systems
-> like the NVME remapping thing from earlier silicon required.
+Adjust PCI_EXP_DEV2_* to PCI_EXP_DEVCTL2_* macro definition to keep the
+same style between the Linux kernel source [1] and lspci.
 
-And the right answer is to turn it off, but we really need to do that
-at runtime, and not over a reboot cycle..
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/uapi/linux/pci_regs.h#n651
+
+Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
+Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+---
+ lib/header.h | 26 ++++++++++++++------------
+ ls-caps.c    | 20 ++++++++++----------
+ 2 files changed, 24 insertions(+), 22 deletions(-)
+
+diff --git a/lib/header.h b/lib/header.h
+index 472816e..b5d8863 100644
+--- a/lib/header.h
++++ b/lib/header.h
+@@ -873,6 +873,13 @@
+ #define  PCI_EXP_RTSTA_PME_STATUS  0x00010000 /* PME Status */
+ #define  PCI_EXP_RTSTA_PME_PENDING 0x00020000 /* PME is Pending */
+ #define PCI_EXP_DEVCAP2			0x24	/* Device capabilities 2 */
++#define  PCI_EXP_DEVCAP2_TIMEOUT_RANGE(x)	((x) & 0xf) /* Completion Timeout Ranges Supported */
++#define  PCI_EXP_DEVCAP2_TIMEOUT_DIS	0x0010	/* Completion Timeout Disable Supported */
++#define  PCI_EXP_DEVCAP2_ARI		0x0020	/* ARI Forwarding Supported */
++#define  PCI_EXP_DEVCAP2_ATOMICOP_ROUTING	0x0040	/* AtomicOp Routing Supported */
++#define  PCI_EXP_DEVCAP2_32BIT_ATOMICOP_COMP	0x0080	/* 32bit AtomicOp Completer Supported */
++#define  PCI_EXP_DEVCAP2_64BIT_ATOMICOP_COMP	0x0100	/* 64bit AtomicOp Completer Supported */
++#define  PCI_EXP_DEVCAP2_128BIT_CAS_COMP	0x0200	/* 128bit CAS Completer Supported */
+ #define  PCI_EXP_DEVCAP2_NROPRPRP	0x0400 /* No RO-enabled PR-PR Passing */
+ #define  PCI_EXP_DEVCAP2_LTR		0x0800	/* LTR supported */
+ #define  PCI_EXP_DEVCAP2_TPH_COMP(x)	(((x) >> 12) & 3) /* TPH Completer Supported */
+@@ -887,18 +894,13 @@
+ #define  PCI_EXP_DEVCAP2_EPR_INIT	0x04000000 /* Emergency Power Reduction Initialization Required */
+ #define  PCI_EXP_DEVCAP2_FRS		0x80000000 /* FRS supported */
+ #define PCI_EXP_DEVCTL2			0x28	/* Device Control */
+-#define  PCI_EXP_DEV2_TIMEOUT_RANGE(x)	((x) & 0xf) /* Completion Timeout Ranges Supported */
+-#define  PCI_EXP_DEV2_TIMEOUT_VALUE(x)	((x) & 0xf) /* Completion Timeout Value */
+-#define  PCI_EXP_DEV2_TIMEOUT_DIS	0x0010	/* Completion Timeout Disable Supported */
+-#define  PCI_EXP_DEV2_ATOMICOP_REQUESTER_EN	0x0040	/* AtomicOp RequesterEnable */
+-#define  PCI_EXP_DEV2_ATOMICOP_EGRESS_BLOCK	0x0080	/* AtomicOp Egress Blocking */
+-#define  PCI_EXP_DEV2_ARI		0x0020	/* ARI Forwarding */
+-#define  PCI_EXP_DEVCAP2_ATOMICOP_ROUTING	0x0040	/* AtomicOp Routing Supported */
+-#define  PCI_EXP_DEVCAP2_32BIT_ATOMICOP_COMP	0x0080	/* 32bit AtomicOp Completer Supported */
+-#define  PCI_EXP_DEVCAP2_64BIT_ATOMICOP_COMP	0x0100	/* 64bit AtomicOp Completer Supported */
+-#define  PCI_EXP_DEVCAP2_128BIT_CAS_COMP	0x0200	/* 128bit CAS Completer Supported */
+-#define  PCI_EXP_DEV2_LTR		0x0400	/* LTR enabled */
+-#define  PCI_EXP_DEV2_OBFF(x)		(((x) >> 13) & 3) /* OBFF enabled */
++#define  PCI_EXP_DEVCTL2_TIMEOUT_VALUE(x)	((x) & 0xf) /* Completion Timeout Value */
++#define  PCI_EXP_DEVCTL2_TIMEOUT_DIS	0x0010	/* Completion Timeout Disable */
++#define  PCI_EXP_DEVCTL2_ARI		0x0020	/* ARI Forwarding */
++#define  PCI_EXP_DEVCTL2_ATOMICOP_REQUESTER_EN	0x0040	/* AtomicOp RequesterEnable */
++#define  PCI_EXP_DEVCTL2_ATOMICOP_EGRESS_BLOCK	0x0080	/* AtomicOp Egress Blocking */
++#define  PCI_EXP_DEVCTL2_LTR		0x0400	/* LTR enabled */
++#define  PCI_EXP_DEVCTL2_OBFF(x)		(((x) >> 13) & 3) /* OBFF enabled */
+ #define PCI_EXP_DEVSTA2			0x2a	/* Device Status */
+ #define PCI_EXP_LNKCAP2			0x2c	/* Link Capabilities */
+ #define  PCI_EXP_LNKCAP2_SPEED(x)	(((x) >> 1) & 0x7f)
+diff --git a/ls-caps.c b/ls-caps.c
+index a09b0cf..a068fd3 100644
+--- a/ls-caps.c
++++ b/ls-caps.c
+@@ -1085,8 +1085,8 @@ static void cap_express_dev2(struct device *d, int where, int type)
+ 
+   l = get_conf_long(d, where + PCI_EXP_DEVCAP2);
+   printf("\t\tDevCap2: Completion Timeout: %s, TimeoutDis%c NROPrPrP%c LTR%c",
+-        cap_express_dev2_timeout_range(PCI_EXP_DEV2_TIMEOUT_RANGE(l)),
+-        FLAG(l, PCI_EXP_DEV2_TIMEOUT_DIS),
++        cap_express_dev2_timeout_range(PCI_EXP_DEVCAP2_TIMEOUT_RANGE(l)),
++        FLAG(l, PCI_EXP_DEVCAP2_TIMEOUT_DIS),
+ 	FLAG(l, PCI_EXP_DEVCAP2_NROPRPRP),
+         FLAG(l, PCI_EXP_DEVCAP2_LTR));
+   printf("\n\t\t\t 10BitTagComp%c 10BitTagReq%c OBFF %s, ExtFmt%c EETLPPrefix%c",
+@@ -1115,7 +1115,7 @@ static void cap_express_dev2(struct device *d, int where, int type)
+     printf(" %s", cap_express_devcap2_tphcomp(PCI_EXP_DEVCAP2_TPH_COMP(l)));
+ 
+   if (type == PCI_EXP_TYPE_ROOT_PORT || type == PCI_EXP_TYPE_DOWNSTREAM)
+-    printf(" ARIFwd%c\n", FLAG(l, PCI_EXP_DEV2_ARI));
++    printf(" ARIFwd%c\n", FLAG(l, PCI_EXP_DEVCAP2_ARI));
+   else
+     printf("\n");
+   if (type == PCI_EXP_TYPE_ROOT_PORT || type == PCI_EXP_TYPE_UPSTREAM ||
+@@ -1135,12 +1135,12 @@ static void cap_express_dev2(struct device *d, int where, int type)
+ 
+   w = get_conf_word(d, where + PCI_EXP_DEVCTL2);
+   printf("\t\tDevCtl2: Completion Timeout: %s, TimeoutDis%c LTR%c OBFF %s,",
+-	cap_express_dev2_timeout_value(PCI_EXP_DEV2_TIMEOUT_VALUE(w)),
+-	FLAG(w, PCI_EXP_DEV2_TIMEOUT_DIS),
+-	FLAG(w, PCI_EXP_DEV2_LTR),
+-	cap_express_devctl2_obff(PCI_EXP_DEV2_OBFF(w)));
++	cap_express_dev2_timeout_value(PCI_EXP_DEVCTL2_TIMEOUT_VALUE(w)),
++	FLAG(w, PCI_EXP_DEVCTL2_TIMEOUT_DIS),
++	FLAG(w, PCI_EXP_DEVCTL2_LTR),
++	cap_express_devctl2_obff(PCI_EXP_DEVCTL2_OBFF(w)));
+   if (type == PCI_EXP_TYPE_ROOT_PORT || type == PCI_EXP_TYPE_DOWNSTREAM)
+-    printf(" ARIFwd%c\n", FLAG(w, PCI_EXP_DEV2_ARI));
++    printf(" ARIFwd%c\n", FLAG(w, PCI_EXP_DEVCTL2_ARI));
+   else
+     printf("\n");
+   if (type == PCI_EXP_TYPE_ROOT_PORT || type == PCI_EXP_TYPE_UPSTREAM ||
+@@ -1150,10 +1150,10 @@ static void cap_express_dev2(struct device *d, int where, int type)
+       printf("\t\t\t AtomicOpsCtl:");
+       if (type == PCI_EXP_TYPE_ROOT_PORT || type == PCI_EXP_TYPE_ENDPOINT ||
+           type == PCI_EXP_TYPE_ROOT_INT_EP || type == PCI_EXP_TYPE_LEG_END)
+-        printf(" ReqEn%c", FLAG(w, PCI_EXP_DEV2_ATOMICOP_REQUESTER_EN));
++        printf(" ReqEn%c", FLAG(w, PCI_EXP_DEVCTL2_ATOMICOP_REQUESTER_EN));
+       if (type == PCI_EXP_TYPE_ROOT_PORT || type == PCI_EXP_TYPE_UPSTREAM ||
+           type == PCI_EXP_TYPE_DOWNSTREAM)
+-        printf(" EgressBlck%c", FLAG(w, PCI_EXP_DEV2_ATOMICOP_EGRESS_BLOCK));
++        printf(" EgressBlck%c", FLAG(w, PCI_EXP_DEVCTL2_ATOMICOP_EGRESS_BLOCK));
+       printf("\n");
+     }
+ }
+-- 
+1.9.1
+
