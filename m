@@ -2,214 +2,202 @@ Return-Path: <SRS0=gw0l=CJ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,RCVD_ILLEGAL_IP,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9A6AC433E6
-	for <linux-pci@archiver.kernel.org>; Mon, 31 Aug 2020 09:31:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09903C433E7
+	for <linux-pci@archiver.kernel.org>; Mon, 31 Aug 2020 14:40:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A7903206F0
-	for <linux-pci@archiver.kernel.org>; Mon, 31 Aug 2020 09:31:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CF41A20767
+	for <linux-pci@archiver.kernel.org>; Mon, 31 Aug 2020 14:40:01 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="jnuDORv6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726249AbgHaJbw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 31 Aug 2020 05:31:52 -0400
-Received: from mga03.intel.com ([134.134.136.65]:4518 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725915AbgHaJbw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 31 Aug 2020 05:31:52 -0400
-IronPort-SDR: 8kcdCnD+ZikQ9YJIbebsp06Vk6xeyYLzDb+t8s2wQTK/1Q/S0tIdBO5t8B8GWAEA7sJxuhZXDv
- zoEpYRiGjX1w==
-X-IronPort-AV: E=McAfee;i="6000,8403,9729"; a="156939453"
-X-IronPort-AV: E=Sophos;i="5.76,375,1592895600"; 
-   d="scan'208";a="156939453"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Aug 2020 02:31:51 -0700
-IronPort-SDR: 5awQIconP4xVJd1GDs5C7bZNL8aVxcVSaNk5PHA0/n7R3ytOx0IHAU63WFngPn8R20vdd2nqPM
- NLJaIN2Mptyw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.76,375,1592895600"; 
-   d="scan'208";a="445644041"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by orsmga004.jf.intel.com with ESMTP; 31 Aug 2020 02:31:49 -0700
-Received: by black.fi.intel.com (Postfix, from userid 1001)
-        id 2F9EE16D; Mon, 31 Aug 2020 12:31:47 +0300 (EEST)
-From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Karol Herbst <kherbst@redhat.com>,
-        Lyude Paul <lyude@redhat.com>,
-        Patrick Volkerding <volkerdi@gmail.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Ben Skeggs <bskeggs@redhat.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org
-Subject: [PATCH] PCI: Add a quirk to skip 1000 ms default link activation delay on some devices
-Date:   Mon, 31 Aug 2020 12:31:47 +0300
-Message-Id: <20200831093147.36775-1-mika.westerberg@linux.intel.com>
-X-Mailer: git-send-email 2.28.0
+        id S1726821AbgHaOj7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 31 Aug 2020 10:39:59 -0400
+Received: from hqnvemgate25.nvidia.com ([216.228.121.64]:6317 "EHLO
+        hqnvemgate25.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726384AbgHaOjz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 Aug 2020 10:39:55 -0400
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate25.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5f4d0b8d0000>; Mon, 31 Aug 2020 07:39:09 -0700
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate101.nvidia.com (PGP Universal service);
+  Mon, 31 Aug 2020 07:39:54 -0700
+X-PGP-Universal: processed;
+        by hqpgpgate101.nvidia.com on Mon, 31 Aug 2020 07:39:54 -0700
+Received: from HQMAIL109.nvidia.com (172.20.187.15) by HQMAIL107.nvidia.com
+ (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Mon, 31 Aug
+ 2020 14:39:44 +0000
+Received: from NAM11-CO1-obe.outbound.protection.outlook.com (104.47.56.169)
+ by HQMAIL109.nvidia.com (172.20.187.15) with Microsoft SMTP Server (TLS) id
+ 15.0.1473.3 via Frontend Transport; Mon, 31 Aug 2020 14:39:43 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Tmr++x5+Vbf5vD1kJspOAz7AdYDTLrEq7qaDUqws1rzgSTRfHnEcCbKwKvhs5GentmccuIjW5+ilxbCygykL7wDwCg/Qc5vXO2kKvv3jWD6bVwwe0ErpAWkmmdNobnRmbfC9h/U4Rr1Anrhc6I5zI3W0zPgZDeRkvhbJyiH8Ourt8OiWocc58a94Cgj64kOtiHp9rt/8ABiebpXEUVfVN7Vv1EOVlDZUwHfYZG0RNvSfy/VmEEgBfVn4vwer8yMvG6u0dFB0VZbaAAet1qcEnngFE9VQIebeV8SuZV8T7wQYDsoBF/p/QG4IiTHjZl0vryRS3FhGygwMTT5RO+/+uA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=CtpMo07Km2SIPag4AslKp4fwjafs5NXGuZAuwMjt+fg=;
+ b=B/JQ2qSnNNMvGrRuxA/sCR9ef+9jYfnMupo5CorXHvdARN1MEZz+Hb0DyIMRHE9GM9qrXhyIqgYhSNU7kDH7/Q/GBeTkVMUOYEM3FxY4KN6iY+JAJ1YCHVt19k7ISFVGnIHi6JkAd6U3DmfLn5pMQrpk2SCqEhW9t7jzP8jOIGsjjIpjmeXdJuHdzPsySvV4KQ+UqKXillP5SO/Vlvx28UvGXTY90dNwlBt+LvgcMsCZeLwAcBZmuLaZO4U2OaH27zTBJ1KRNEfSwlchfLTisXAEfzal3zek+c9dQfMFHckImwUlUKzPj0PbXQKXtMvC0Sjizey2R2ySO2FMnFaeJQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+Authentication-Results: linutronix.de; dkim=none (message not signed)
+ header.d=none;linutronix.de; dmarc=none action=none header.from=nvidia.com;
+Received: from DM6PR12MB3834.namprd12.prod.outlook.com (2603:10b6:5:14a::12)
+ by DM5PR12MB1242.namprd12.prod.outlook.com (2603:10b6:3:6d::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3326.23; Mon, 31 Aug
+ 2020 14:39:42 +0000
+Received: from DM6PR12MB3834.namprd12.prod.outlook.com
+ ([fe80::2d79:7f96:6406:6c76]) by DM6PR12MB3834.namprd12.prod.outlook.com
+ ([fe80::2d79:7f96:6406:6c76%3]) with mapi id 15.20.3326.025; Mon, 31 Aug 2020
+ 14:39:42 +0000
+Date:   Mon, 31 Aug 2020 11:39:40 -0300
+From:   Jason Gunthorpe <jgg@nvidia.com>
+To:     Thomas Gleixner <tglx@linutronix.de>,
+        Jon Derrick <jonathan.derrick@intel.com>
+CC:     LKML <linux-kernel@vger.kernel.org>, <x86@kernel.org>,
+        Joerg Roedel <joro@8bytes.org>,
+        <iommu@lists.linux-foundation.org>, <linux-hyperv@vger.kernel.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "Lu Baolu" <baolu.lu@linux.intel.com>,
+        Wei Liu <wei.liu@kernel.org>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Steve Wahl <steve.wahl@hpe.com>,
+        Dimitri Sivanich <sivanich@hpe.com>,
+        "Russ Anderson" <rja@hpe.com>, <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        "Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+        <xen-devel@lists.xenproject.org>, Juergen Gross <jgross@suse.com>,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Marc Zyngier <maz@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        "Megha Dey" <megha.dey@intel.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        "Alex Williamson" <alex.williamson@redhat.com>,
+        Jacob Pan <jacob.jun.pan@intel.com>,
+        Baolu Lu <baolu.lu@intel.com>,
+        Kevin Tian <kevin.tian@intel.com>,
+        Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [patch V2 24/46] PCI: vmd: Mark VMD irqdomain with
+ DOMAIN_BUS_VMD_MSI
+Message-ID: <20200831143940.GA1152540@nvidia.com>
+References: <20200826111628.794979401@linutronix.de>
+ <20200826112333.047315047@linutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20200826112333.047315047@linutronix.de>
+X-ClientProxiedBy: BL0PR02CA0038.namprd02.prod.outlook.com
+ (2603:10b6:207:3d::15) To DM6PR12MB3834.namprd12.prod.outlook.com
+ (2603:10b6:5:14a::12)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from 255.255.255.255 (255.255.255.255) by BL0PR02CA0038.namprd02.prod.outlook.com (2603:10b6:207:3d::15) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3326.19 via Frontend Transport; Mon, 31 Aug 2020 14:39:41 +0000
+Received: from jgg by mlx with local (Exim 4.94)        (envelope-from <jgg@nvidia.com>)        id 1kCkyC-002PdM-Iv; Mon, 31 Aug 2020 11:39:40 -0300
+X-Originating-IP: [156.34.48.30]
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: be9ffedb-3468-418b-02f9-08d84dbbb257
+X-MS-TrafficTypeDiagnostic: DM5PR12MB1242:
+X-LD-Processed: 43083d15-7273-40c1-b7db-39efd9ccc17a,ExtAddr
+X-Microsoft-Antispam-PRVS: <DM5PR12MB12422A1A6F712F44B286D45BC2510@DM5PR12MB1242.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:10000;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: uk16JUfslcI0kmV58qp2qxXucnTazEqlQ48EoOZFJGBmBm7AP1CXgkRLTd1erKIm2mVQ1n51956OkmtDqfMzcN1uWte6s/X5DW/Kd1G7jhQ0SnHUM42dM+bMir/OxzlT/gg2xf3v4EgYbp8dTbegrRJJ/885Cd6T3zIjGJhsBQNRcJmhWThulw3k4V6YGSVsSszKH3x63W8h6ymgeqaJ9vZ6u3XSBJMceywxBKoFrolsJAMV23YcbkpjPDB7AGAkn+McbZ+iNCPsoiBqCNtIyTNdBymo81FmScmtgg92bA3nEkwW+XHEqV6OuV/ZAmNWwFS1la8QsEseHuChw/juWw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR12MB3834.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(136003)(346002)(39860400002)(376002)(396003)(366004)(7416002)(186003)(2906002)(4326008)(8936002)(9786002)(7406005)(9746002)(33656002)(8676002)(478600001)(36756003)(1076003)(54906003)(110136005)(26005)(66946007)(2616005)(426003)(5660300002)(66476007)(66556008)(83380400001)(316002)(86362001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: spbfQ0GQp+zMhXQ8hEtknnASP2zVAJ/yzj2o957++J3ENP/+uziF5gWpUXXdGPzgy1XG4N2koOMgvy9qIQ5dj61H7D9QoN3E5rgR5fLjRBCkkOduEko/U5ZPZYPBkzM/yrI1hx6xA0Ioii49hwUz/2muzZLVgXIm2Ovz8H4347MJba2fvbDfELRMXNA1096LInsEw8zJwUcZi0rW9UNyKh1VsNE93du99SU51qd2qHlC+SvbO9WH/ur6ev30MuPCN9fmckRp8PYXDD97BcYAu01uFwIVYU5wDRd1mD0LLYaf6h9NLPsTY/GsV2uli9xxyAlRp46MS/JwhWaf8MlIMs4zE9kt99I9VNhTRJzR86vxAC0q9A7VnCLYlsY/Pdn5X5KKx92gEbEdxBGFZJOudNOI0RJ0RkcjY/GniZ/83UdniOI93WRp3Ij/HcL0oPTDTBqqT9N3noNCI1a5HQRwaOdtGjBn8PH2e0l9GCunsX08zMtp/LQgsgDBQNWNVUscZ1mlOEazIZ/3NbS6oh2IkKYbqoEue15tzeiS/MsZbziMBVyLLDe2i5uUw5HmKJPUQMwxFk/E6x+mzHRAw/Mb0a/qjx7c8PxIR6ZjYoUnmZxrPJqGTNC6iASbVgO68G6JaQjUNJFpRYsXEMDDUEfhSw==
+X-MS-Exchange-CrossTenant-Network-Message-Id: be9ffedb-3468-418b-02f9-08d84dbbb257
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR12MB3834.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 31 Aug 2020 14:39:42.4492
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: ZqLtL18jBG5zGvqm6J8O/WuT/CP52glkHZAeq4W8lA+IOD2RhvR+U4RT9CJdc3yK
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR12MB1242
+X-OriginatorOrg: Nvidia.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1598884749; bh=CtpMo07Km2SIPag4AslKp4fwjafs5NXGuZAuwMjt+fg=;
+        h=X-PGP-Universal:ARC-Seal:ARC-Message-Signature:
+         ARC-Authentication-Results:Authentication-Results:Date:From:To:CC:
+         Subject:Message-ID:References:Content-Type:Content-Disposition:
+         In-Reply-To:X-ClientProxiedBy:MIME-Version:
+         X-MS-Exchange-MessageSentRepresentingType:X-Originating-IP:
+         X-MS-PublicTrafficType:X-MS-Office365-Filtering-Correlation-Id:
+         X-MS-TrafficTypeDiagnostic:X-LD-Processed:
+         X-Microsoft-Antispam-PRVS:X-MS-Oob-TLC-OOBClassifiers:
+         X-MS-Exchange-SenderADCheck:X-Microsoft-Antispam:
+         X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
+         X-MS-Exchange-AntiSpam-MessageData:
+         X-MS-Exchange-CrossTenant-Network-Message-Id:
+         X-MS-Exchange-CrossTenant-AuthSource:
+         X-MS-Exchange-CrossTenant-AuthAs:
+         X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+         X-MS-Exchange-CrossTenant-FromEntityHeader:
+         X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
+         X-MS-Exchange-CrossTenant-UserPrincipalName:
+         X-MS-Exchange-Transport-CrossTenantHeadersStamped:X-OriginatorOrg;
+        b=jnuDORv6yIJSuAq1yn5XdAk7UHVLehs5OHxMMifKRFHUljG++BY2rH5/UwjMi4eVa
+         SUNIFwrq+5yBTbLV+Ihii+1yAofOBU4RLoJgzwZTCffltNZ6NFhadaQPUJTrO76b3h
+         rbjBP5bG5+7zdB4qJD+4FGtNRk9mqF/6LtpYnAUbm1Bonl4kTjVEdoHCa3I/zYpbkK
+         stI9wpatUsH4Rjge8Dnzw2W+lEhuzOmQm5vHI+Amhpf0ENUM29Pzrliz4sgyOAp/Lc
+         zZCtQ1tgkDyPqHhUbUKVjKf6fcTUNYySsOdJqz86h9jqy2fgaInUSHVyX08g5ukg4b
+         IDpCeszqT7FNA==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Kai-Heng Feng reported that it takes a long time (> 1 s) to resume
-Thunderbolt-connected devices from both runtime suspend and system sleep
-(s2idle).
+On Wed, Aug 26, 2020 at 01:16:52PM +0200, Thomas Gleixner wrote:
+> From: Thomas Gleixner <tglx@linutronix.de>
+> 
+> Devices on the VMD bus use their own MSI irq domain, but it is not
+> distinguishable from regular PCI/MSI irq domains. This is required
+> to exclude VMD devices from getting the irq domain pointer set by
+> interrupt remapping.
+> 
+> Override the default bus token.
+> 
+> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>  drivers/pci/controller/vmd.c |    6 ++++++
+>  1 file changed, 6 insertions(+)
+> 
+> +++ b/drivers/pci/controller/vmd.c
+> @@ -579,6 +579,12 @@ static int vmd_enable_domain(struct vmd_
+>  		return -ENODEV;
+>  	}
+>  
+> +	/*
+> +	 * Override the irq domain bus token so the domain can be distinguished
+> +	 * from a regular PCI/MSI domain.
+> +	 */
+> +	irq_domain_update_bus_token(vmd->irq_domain, DOMAIN_BUS_VMD_MSI);
+> +
 
-This was because some Downstream Ports that support > 5 GT/s do not also
-support Data Link Layer Link Active reporting.  Per PCIe r5.0 sec 6.6.1:
+Having the non-transparent-bridge hold a MSI table and
+multiplex/de-multiplex IRQs looks like another good use case for
+something close to pci_subdevice_msi_create_irq_domain()?
 
-  With a Downstream Port that supports Link speeds greater than 5.0 GT/s,
-  software must wait a minimum of 100 ms after Link training completes
-  before sending a Configuration Request to the device immediately below
-  that Port. Software can determine when Link training completes by
-  polling the Data Link Layer Link Active bit or by setting up an
-  associated interrupt (see Section 6.7.3.3).
+If each device could have its own internal MSI-X table programmed
+properly things would work alot better. Disable capture/remap of the
+MSI range in the NTB.
 
-Sec 7.5.3.6 requires such Ports to support DLL Link Active reporting,
-but at least the Intel JHL6240 Thunderbolt 3 Bridge [8086:15c0] and
-Intel JHL7540 Thunderbolt 3 Bridge [8086:15e7, 8086:15ea, 8086:15ef] do
-not.
+Then each device could have a proper non-multiplexed interrupt
+delivered to the CPU.. Affinity would work properly, no need to share
+IRQs (eg vmd_irq() goes away)/etc.
 
-This adds a quirk for these devices that skips the the 1000 ms default
-link activation delay.
+Something for the VMD maintainers to think about at least.
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=206837
-Link: https://lore.kernel.org/r/20200514133043.27429-1-mika.westerberg@linux.intel.com
-Reported-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
-Hi all,
+As I hear more about NTB these days a full MSI scheme for NTB seems
+interesting to have in the PCI-E core code..
 
-The previous version of the patch can be found below:
-
-  https://www.spinics.net/lists/linux-pci/msg97860.html
-
-This version adds a quirk instead covering the two devices Kai-Heng Feng
-reported. I added Titan Ridge DD and 2C because I think they are affected
-as well.
-
-Since the PCI IDs of these devices are now used in two places, I moved them
-from TBT driver to pci_ids.h.
-
-@Kai-Heng, if you still have access to this hardware, it would be great if
-you could try this out.
-
- drivers/pci/pci.c         |  2 ++
- drivers/pci/quirks.c      | 23 +++++++++++++++++++++++
- drivers/thunderbolt/nhi.h |  4 ----
- include/linux/pci.h       |  5 +++++
- include/linux/pci_ids.h   |  4 ++++
- 5 files changed, 34 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index e39c5499770f..16b61def1d46 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4674,6 +4674,8 @@ static bool pcie_wait_for_link_delay(struct pci_dev *pdev, bool active,
- 	 * case, we wait for 1000 ms + any delay requested by the caller.
- 	 */
- 	if (!pdev->link_active_reporting) {
-+		if (active && pdev->skip_default_link_activation_delay)
-+			timeout = 0;
- 		msleep(timeout + delay);
- 		return true;
- 	}
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 2a589b6d6ed8..9269abb6455d 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3621,6 +3621,29 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_PORT_RIDGE,
- 			quirk_thunderbolt_hotplug_msi);
- 
-+/*
-+ * https://bugzilla.kernel.org/show_bug.cgi?id=206837
-+ *
-+ * Non-hotplug PCIe downstream ports of these devices do not support active
-+ * link reporting but they are known to train the link within 100ms.
-+ */
-+static void quirk_skip_default_link_activation_delay(struct pci_dev *pdev)
-+{
-+	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM &&
-+	    !pdev->link_active_reporting && !pdev->is_hotplug_bridge) {
-+		pci_dbg(pdev, "skipping 1000 ms default link activation delay\n");
-+		pdev->skip_default_link_activation_delay = true;
-+	}
-+}
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_LP_BRIDGE,
-+			quirk_skip_default_link_activation_delay);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_TITAN_RIDGE_2C_BRIDGE,
-+			quirk_skip_default_link_activation_delay);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_TITAN_RIDGE_4C_BRIDGE,
-+			quirk_skip_default_link_activation_delay);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_TITAN_RIDGE_DD_BRIDGE,
-+			quirk_skip_default_link_activation_delay);
-+
- #ifdef CONFIG_ACPI
- /*
-  * Apple: Shutdown Cactus Ridge Thunderbolt controller.
-diff --git a/drivers/thunderbolt/nhi.h b/drivers/thunderbolt/nhi.h
-index 80162e4b013f..c023091f6b4e 100644
---- a/drivers/thunderbolt/nhi.h
-+++ b/drivers/thunderbolt/nhi.h
-@@ -58,7 +58,6 @@ extern const struct tb_nhi_ops icl_nhi_ops;
- #define PCI_DEVICE_ID_INTEL_WIN_RIDGE_2C_NHI            0x157d
- #define PCI_DEVICE_ID_INTEL_WIN_RIDGE_2C_BRIDGE         0x157e
- #define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_LP_NHI		0x15bf
--#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_LP_BRIDGE	0x15c0
- #define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_C_4C_NHI	0x15d2
- #define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_C_4C_BRIDGE	0x15d3
- #define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_C_2C_NHI	0x15d9
-@@ -66,11 +65,8 @@ extern const struct tb_nhi_ops icl_nhi_ops;
- #define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_LP_USBONLY_NHI	0x15dc
- #define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_USBONLY_NHI	0x15dd
- #define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_C_USBONLY_NHI	0x15de
--#define PCI_DEVICE_ID_INTEL_TITAN_RIDGE_2C_BRIDGE	0x15e7
- #define PCI_DEVICE_ID_INTEL_TITAN_RIDGE_2C_NHI		0x15e8
--#define PCI_DEVICE_ID_INTEL_TITAN_RIDGE_4C_BRIDGE	0x15ea
- #define PCI_DEVICE_ID_INTEL_TITAN_RIDGE_4C_NHI		0x15eb
--#define PCI_DEVICE_ID_INTEL_TITAN_RIDGE_DD_BRIDGE	0x15ef
- #define PCI_DEVICE_ID_INTEL_ICL_NHI1			0x8a0d
- #define PCI_DEVICE_ID_INTEL_ICL_NHI0			0x8a17
- #define PCI_DEVICE_ID_INTEL_TGL_NHI0			0x9a1b
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 835530605c0d..c44ee4337a2a 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -444,6 +444,11 @@ struct pci_dev {
- 	unsigned int	non_compliant_bars:1;	/* Broken BARs; ignore them */
- 	unsigned int	is_probed:1;		/* Device probing in progress */
- 	unsigned int	link_active_reporting:1;/* Device capable of reporting link active */
-+	/*
-+	 * Skip default 1000 ms wait on ports that do not support active
-+	 * link reporting (link_active_reporting == 0).
-+	 */
-+	unsigned int	skip_default_link_activation_delay:1;
- 	unsigned int	no_vf_scan:1;		/* Don't scan for VFs after IOV enablement */
- 	pci_dev_flags_t dev_flags;
- 	atomic_t	enable_cnt;	/* pci_enable_device has been called */
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 1ab1e24bcbce..315b555b3444 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2711,6 +2711,10 @@
- #define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_2C_BRIDGE  0x1576
- #define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_4C_NHI     0x1577
- #define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_4C_BRIDGE  0x1578
-+#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_LP_BRIDGE  0x15c0
-+#define PCI_DEVICE_ID_INTEL_TITAN_RIDGE_2C_BRIDGE   0x15e7
-+#define PCI_DEVICE_ID_INTEL_TITAN_RIDGE_4C_BRIDGE   0x15ea
-+#define PCI_DEVICE_ID_INTEL_TITAN_RIDGE_DD_BRIDGE   0x15ef
- #define PCI_DEVICE_ID_INTEL_80960_RP	0x1960
- #define PCI_DEVICE_ID_INTEL_QAT_C3XXX	0x19e2
- #define PCI_DEVICE_ID_INTEL_QAT_C3XXX_VF	0x19e3
--- 
-2.28.0
-
+Jason
