@@ -7,41 +7,41 @@ X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AFEBC433E2
-	for <linux-pci@archiver.kernel.org>; Tue,  1 Sep 2020 06:48:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2A7FC433E6
+	for <linux-pci@archiver.kernel.org>; Tue,  1 Sep 2020 06:50:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 34DA22087D
-	for <linux-pci@archiver.kernel.org>; Tue,  1 Sep 2020 06:48:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A244C2087D
+	for <linux-pci@archiver.kernel.org>; Tue,  1 Sep 2020 06:50:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726044AbgIAGsI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 1 Sep 2020 02:48:08 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:52981 "EHLO
+        id S1726091AbgIAGu6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 1 Sep 2020 02:50:58 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:53224 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726006AbgIAGsI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Sep 2020 02:48:08 -0400
+        with ESMTP id S1726085AbgIAGu5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Sep 2020 02:50:57 -0400
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 0816llbY7011666, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 0816odLZ3012292, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 0816llbY7011666
+        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 0816odLZ3012292
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Tue, 1 Sep 2020 14:47:47 +0800
+        Tue, 1 Sep 2020 14:50:39 +0800
 Received: from RTEXMB01.realtek.com.tw (172.21.6.94) by
  RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Tue, 1 Sep 2020 14:47:47 +0800
+ 15.1.1779.2; Tue, 1 Sep 2020 14:50:38 +0800
 Received: from localhost (172.22.88.222) by RTEXMB01.realtek.com.tw
  (172.21.6.94) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2044.4; Tue, 1 Sep 2020
- 14:47:46 +0800
+ 14:50:37 +0800
 From:   <ricky_wu@realtek.com>
 To:     <arnd@arndb.de>, <gregkh@linuxfoundation.org>,
-        <ricky_wu@realtek.com>, <ulf_hansson@linaro.org>,
+        <ricky_wu@realtek.com>, <ulf.hansson@linaro.org>,
         <bhelgaas@google.com>, <rui_feng@realsil.com.cn>,
         <vailbhavgupta40@gamail.com>, <linux-pci@vger.kernel.org>,
         <puranjay12@gmail.com>, <linux-kernel@vger.kernel.org>
 Subject: [PATCH v2] misc: rtsx: add power saving function and bios guide options
-Date:   Tue, 1 Sep 2020 14:47:39 +0800
-Message-ID: <20200901064739.3037-1-ricky_wu@realtek.com>
+Date:   Tue, 1 Sep 2020 14:50:31 +0800
+Message-ID: <20200901065031.3126-1-ricky_wu@realtek.com>
 X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
 Content-Type: text/plain
