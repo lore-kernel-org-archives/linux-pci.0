@@ -2,87 +2,127 @@ Return-Path: <SRS0=cO2L=CL=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF3EBC433E7
-	for <linux-pci@archiver.kernel.org>; Wed,  2 Sep 2020 19:00:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D77BC433E7
+	for <linux-pci@archiver.kernel.org>; Wed,  2 Sep 2020 19:46:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A30C3207EA
-	for <linux-pci@archiver.kernel.org>; Wed,  2 Sep 2020 19:00:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0C4EA20758
+	for <linux-pci@archiver.kernel.org>; Wed,  2 Sep 2020 19:46:57 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="bf62Hpk9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727894AbgIBTAQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 2 Sep 2020 15:00:16 -0400
-Received: from mga14.intel.com ([192.55.52.115]:13795 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726124AbgIBTAN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 2 Sep 2020 15:00:13 -0400
-IronPort-SDR: 8rYD2QRTfnvoft5TSKxE84+MC6Ob6MSgmbgdfHQGhMnsbY/Zio3kyIKzcY26qSRbYqMuulJcFO
- x7iCL5G4HdYQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9732"; a="156732189"
-X-IronPort-AV: E=Sophos;i="5.76,383,1592895600"; 
-   d="scan'208";a="156732189"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2020 12:00:08 -0700
-IronPort-SDR: j7OW7/avDkeZ25iDhgtv9HUhGze9v/ClP85tjLQYiuYANapdL8uJ9iUaxLxJo5mgXkSezY4yb4
- jb3gCjapUwPA==
-X-IronPort-AV: E=Sophos;i="5.76,383,1592895600"; 
-   d="scan'208";a="325895891"
-Received: from acduong-mobl2.amr.corp.intel.com (HELO [10.254.87.179]) ([10.254.87.179])
-  by fmsmga004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2020 12:00:06 -0700
-Subject: Re: [PATCH v4 8/8] Revert "PCI/ERR: Update error status after
- reset_link()"
-To:     Andrey Grodzovsky <andrey.grodzovsky@amd.com>,
-        amd-gfx@lists.freedesktop.org, linux-pci@vger.kernel.org
-Cc:     alexander.deucher@amd.com, nirmodas@amd.com, Dennis.Li@amd.com,
-        christian.koenig@amd.com, luben.tuikov@amd.com, bhelgaas@google.com
-References: <1599072130-10043-1-git-send-email-andrey.grodzovsky@amd.com>
- <1599072130-10043-9-git-send-email-andrey.grodzovsky@amd.com>
-From:   "Kuppuswamy, Sathyanarayanan" 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>
-Message-ID: <75db5bfb-5a53-31cf-8f89-2a884d6be595@linux.intel.com>
-Date:   Wed, 2 Sep 2020 12:00:05 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
-MIME-Version: 1.0
-In-Reply-To: <1599072130-10043-9-git-send-email-andrey.grodzovsky@amd.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        id S1726247AbgIBTq4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 2 Sep 2020 15:46:56 -0400
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:37260 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726140AbgIBTqy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Sep 2020 15:46:54 -0400
+Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 082JgPHx042469;
+        Wed, 2 Sep 2020 15:46:47 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : in-reply-to : references; s=pp1;
+ bh=3++UIndG1m1KM9xZicSr0DVbIof7t1DVHs7Tsd9oytE=;
+ b=bf62Hpk9JRVtlwLb0KoRpdEItjn6x1+I9PpvwvmPCTrL5SMAM0MK7HHOr7WbGzI5vHWP
+ ObLkDKhqjjkmrClDJsikByG8ysSteRzJmpD6fLCB4ev/jQzBZBec5z/WcvPuBzrMgiAe
+ SFtNOIAWbJzOmACz6UrbuSVafi7dFfvOgxIMNEX6pDAnu+UIH5abObLhbxNYGl6OC8ng
+ sgmknhQMU7Y8TCZ/g6j553PRVpDMkxvYAxjGStMiyRxEGZBPEcV58gcdYOg/oL6lwJaA
+ jQyfdP27iTaWrI48fRuP7+rSkaBJjzduOOPyTI8g6htx5NPnyToaPF7tdURDHzaHxtU7 7g== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 33ahsfg4kr-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 02 Sep 2020 15:46:47 -0400
+Received: from m0098409.ppops.net (m0098409.ppops.net [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 082Jklcn056649;
+        Wed, 2 Sep 2020 15:46:47 -0400
+Received: from ppma03wdc.us.ibm.com (ba.79.3fa9.ip4.static.sl-reverse.com [169.63.121.186])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 33ahsfg4k4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 02 Sep 2020 15:46:47 -0400
+Received: from pps.filterd (ppma03wdc.us.ibm.com [127.0.0.1])
+        by ppma03wdc.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 082JgoD1006123;
+        Wed, 2 Sep 2020 19:46:46 GMT
+Received: from b01cxnp22036.gho.pok.ibm.com (b01cxnp22036.gho.pok.ibm.com [9.57.198.26])
+        by ppma03wdc.us.ibm.com with ESMTP id 337en9jdq9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 02 Sep 2020 19:46:46 +0000
+Received: from b01ledav001.gho.pok.ibm.com (b01ledav001.gho.pok.ibm.com [9.57.199.106])
+        by b01cxnp22036.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 082JkjX13212272
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 2 Sep 2020 19:46:45 GMT
+Received: from b01ledav001.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 8BAEE2805A;
+        Wed,  2 Sep 2020 19:46:45 +0000 (GMT)
+Received: from b01ledav001.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id A0F0828059;
+        Wed,  2 Sep 2020 19:46:43 +0000 (GMT)
+Received: from oc4221205838.ibm.com (unknown [9.163.10.164])
+        by b01ledav001.gho.pok.ibm.com (Postfix) with ESMTP;
+        Wed,  2 Sep 2020 19:46:43 +0000 (GMT)
+From:   Matthew Rosato <mjrosato@linux.ibm.com>
+To:     alex.williamson@redhat.com, bhelgaas@google.com
+Cc:     schnelle@linux.ibm.com, pmorel@linux.ibm.com, mpe@ellerman.id.au,
+        oohall@gmail.com, cohuck@redhat.com, kevin.tian@intel.com,
+        linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kvm@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v4 1/3] PCI/IOV: Mark VFs as not implementing MSE bit
+Date:   Wed,  2 Sep 2020 15:46:34 -0400
+Message-Id: <1599075996-9826-2-git-send-email-mjrosato@linux.ibm.com>
+X-Mailer: git-send-email 1.8.3.1
+In-Reply-To: <1599075996-9826-1-git-send-email-mjrosato@linux.ibm.com>
+References: <1599075996-9826-1-git-send-email-mjrosato@linux.ibm.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
+ definitions=2020-09-02_14:2020-09-02,2020-09-02 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
+ priorityscore=1501 mlxlogscore=999 clxscore=1011 lowpriorityscore=0
+ spamscore=0 phishscore=0 malwarescore=0 adultscore=0 mlxscore=0
+ bulkscore=0 suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009020178
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Per the PCIe spec, VFs cannot implement the MSE bit
+AKA PCI_COMMAND_MEMORY, and it must be hard-wired to 0.
+Use a dev_flags bit to signify this requirement.
 
+Signed-off-by: Matthew Rosato <mjrosato@linux.ibm.com>
+---
+ drivers/pci/iov.c   | 1 +
+ include/linux/pci.h | 2 ++
+ 2 files changed, 3 insertions(+)
 
-On 9/2/20 11:42 AM, Andrey Grodzovsky wrote:
-> This reverts commit 6d2c89441571ea534d6240f7724f518936c44f8d.
-> 
-> In the code bellow
-> 
->                  pci_walk_bus(bus, report_frozen_detected, &status);
-> -               if (reset_link(dev, service) != PCI_ERS_RESULT_RECOVERED)
-> +               status = reset_link(dev, service);
-> 
-> status returned from report_frozen_detected is unconditionally masked
-> by status returned from reset_link which is wrong.
-> 
-> This breaks error recovery implementation for AMDGPU driver
-> by masking PCI_ERS_RESULT_NEED_RESET returned from amdgpu_pci_error_detected
-> and hence skiping slot reset callback which is necessary for proper
-> ASIC recovery. Effectively no other callback besides resume callback will
-> be called after link reset the way it is implemented now regardless of what
-> value error_detected callback returns.
-> 
-	}
-
-Instead of reverting this change, can you try following patch ?
-https://lore.kernel.org/linux-pci/56ad4901-725f-7b88-2117-b124b28b027f@linux.intel.com/T/#me8029c04f63c21f9d1cb3b1ba2aeffbca3a60df5
-
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index b37e08c..2bec77c 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -180,6 +180,7 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id)
+ 	virtfn->device = iov->vf_device;
+ 	virtfn->is_virtfn = 1;
+ 	virtfn->physfn = pci_dev_get(dev);
++	virtfn->dev_flags |= PCI_DEV_FLAGS_FORCE_COMMAND_MEM;
+ 
+ 	if (id == 0)
+ 		pci_read_vf_config_common(virtfn);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 8355306..9316cce 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -227,6 +227,8 @@ enum pci_dev_flags {
+ 	PCI_DEV_FLAGS_NO_FLR_RESET = (__force pci_dev_flags_t) (1 << 10),
+ 	/* Don't use Relaxed Ordering for TLPs directed at this device */
+ 	PCI_DEV_FLAGS_NO_RELAXED_ORDERING = (__force pci_dev_flags_t) (1 << 11),
++	/* Device does not implement PCI_COMMAND_MEMORY (e.g. a VF) */
++	PCI_DEV_FLAGS_FORCE_COMMAND_MEM = (__force pci_dev_flags_t) (1 << 12),
+ };
+ 
+ enum pci_irq_reroute_variant {
 -- 
-Sathyanarayanan Kuppuswamy
-Linux Kernel Developer
+1.8.3.1
+
