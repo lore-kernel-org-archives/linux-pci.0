@@ -2,91 +2,103 @@ Return-Path: <SRS0=cO2L=CL=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1033C433E7
-	for <linux-pci@archiver.kernel.org>; Wed,  2 Sep 2020 14:45:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F833C433E7
+	for <linux-pci@archiver.kernel.org>; Wed,  2 Sep 2020 16:15:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AF6E82078E
-	for <linux-pci@archiver.kernel.org>; Wed,  2 Sep 2020 14:45:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1599057920;
-	bh=PKHjUtAreXfWb++VphGeoWKV+TcuA+RY4EiaozG6fBk=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=fUhFvliwucaeFdbAfYOPG57nwEzxT1RxXwaJnNVdCtKBWPVqYluXcjLfUBd0sgpSN
-	 Dy6YrSaq7uRu6UxnA9XCHQLGPXZJqKO3AjL87GV627TmKHA5K6hGeigZzWYPYXAtt1
-	 MPyZEIRV4146qnJgqYPl/5u4hUSpYlPxEaL26OEI=
+	by mail.kernel.org (Postfix) with ESMTP id 4B64E20639
+	for <linux-pci@archiver.kernel.org>; Wed,  2 Sep 2020 16:15:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727907AbgIBOpC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 2 Sep 2020 10:45:02 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59168 "EHLO mail.kernel.org"
+        id S1727825AbgIBQPz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 2 Sep 2020 12:15:55 -0400
+Received: from vps0.lunn.ch ([185.16.172.187]:38396 "EHLO vps0.lunn.ch"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727924AbgIBOo2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 2 Sep 2020 10:44:28 -0400
-Received: from pali.im (pali.im [31.31.79.79])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 54F7320767;
-        Wed,  2 Sep 2020 14:44:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1599057847;
-        bh=PKHjUtAreXfWb++VphGeoWKV+TcuA+RY4EiaozG6fBk=;
-        h=From:To:Cc:Subject:Date:From;
-        b=tL0jebnX5Prxdd++Cm7XmzFmxmOr88Sg43klka4x49j57xFUpqR5AmDWbQh6VE6lf
-         bPND0fKd3z38QErZUJkQBn+6HxsLtZj+dFbO5LBDEsLH7fjyIRf0cYnoTNvv2OZ8hG
-         bTfUzk0ZPTALjYJvIeiC19QBRJVLUDYyKsxbTaGM=
-Received: by pali.im (Postfix)
-        id E7D777BF; Wed,  2 Sep 2020 16:44:04 +0200 (CEST)
-From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        id S1727943AbgIBQNk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 2 Sep 2020 12:13:40 -0400
+Received: from andrew by vps0.lunn.ch with local (Exim 4.94)
+        (envelope-from <andrew@lunn.ch>)
+        id 1kDVO4-00Cud1-AA; Wed, 02 Sep 2020 18:13:28 +0200
+Date:   Wed, 2 Sep 2020 18:13:28 +0200
+From:   Andrew Lunn <andrew@lunn.ch>
+To:     Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Rob Herring <robh@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Miquel Raynal <miquel.raynal@bootlin.com>,
         Kishon Vijay Abraham I <kishon@ti.com>,
         Vinod Koul <vkoul@kernel.org>,
-        =?UTF-8?q?Marek=20Beh=C3=BAn?= <marek.behun@nic.cz>,
-        Tomasz Maciej Nowak <tmn505@gmail.com>
-Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 0/2] PCI: aardvark: Fix comphy with old ATF
-Date:   Wed,  2 Sep 2020 16:43:42 +0200
-Message-Id: <20200902144344.16684-1-pali@kernel.org>
-X-Mailer: git-send-email 2.20.1
+        Marek =?iso-8859-1?Q?Beh=FAn?= <marek.behun@nic.cz>,
+        Tomasz Maciej Nowak <tmn505@gmail.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 1/2] phy: marvell: comphy: Convert internal SMCC firmware
+ return codes to errno
+Message-ID: <20200902161328.GE3050651@lunn.ch>
+References: <20200902144344.16684-1-pali@kernel.org>
+ <20200902144344.16684-2-pali@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20200902144344.16684-2-pali@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This patch series fixes regression introduced in commit 366697018c9a
-("PCI: aardvark: Add PHY support") which caused aardvark driver
-initialization failure on EspressoBin board with factory version of
-Arm Trusted Firmware provided by Marvell.
+On Wed, Sep 02, 2020 at 04:43:43PM +0200, Pali Roh·r wrote:
+> Driver ->power_on and ->power_off callbacks leaks internal SMCC firmware
+> return codes to phy caller. This patch converts SMCC error codes to
+> standard linux errno codes. Include file linux/arm-smccc.h already provides
+> defines for SMCC error codes, so use them instead of custom driver defines.
+> Note that return value is signed 32bit, but stored in unsigned long type
+> with zero padding.
+> 
+> Signed-off-by: Pali Roh·r <pali@kernel.org>
+> ---
+>  drivers/phy/marvell/phy-mvebu-a3700-comphy.c | 14 +++++++++++---
+>  drivers/phy/marvell/phy-mvebu-cp110-comphy.c | 14 +++++++++++---
+>  2 files changed, 22 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/phy/marvell/phy-mvebu-a3700-comphy.c b/drivers/phy/marvell/phy-mvebu-a3700-comphy.c
+> index 1a138be8bd6a..810f25a47632 100644
+> --- a/drivers/phy/marvell/phy-mvebu-a3700-comphy.c
+> +++ b/drivers/phy/marvell/phy-mvebu-a3700-comphy.c
+> @@ -26,7 +26,6 @@
+>  #define COMPHY_SIP_POWER_ON			0x82000001
+>  #define COMPHY_SIP_POWER_OFF			0x82000002
+>  #define COMPHY_SIP_PLL_LOCK			0x82000003
+> -#define COMPHY_FW_NOT_SUPPORTED			(-1)
+>  
+>  #define COMPHY_FW_MODE_SATA			0x1
+>  #define COMPHY_FW_MODE_SGMII			0x2
+> @@ -112,10 +111,19 @@ static int mvebu_a3700_comphy_smc(unsigned long function, unsigned long lane,
+>  				  unsigned long mode)
+>  {
+>  	struct arm_smccc_res res;
+> +	s32 ret;
+>  
+>  	arm_smccc_smc(function, lane, mode, 0, 0, 0, 0, 0, &res);
+> +	ret = res.a0;
+>  
+> -	return res.a0;
 
-Second patch depends on the first patch, so please add appropriate
-Fixes/Cc:stable@ tags to have both patches correctly backported to
-stable kernels.
+> +	switch (ret) {
+> +	case SMCCC_RET_SUCCESS:
+> +		return 0;
+> +	case SMCCC_RET_NOT_SUPPORTED:
+> +		return -EOPNOTSUPP;
+> +	default:
+> +		return -EINVAL;
+> +	}
+>  }
 
-I have tested both patches with Marvell ATF firmware ebin-17.10-uart.zip
-and with upstream ATF+uboot and aardvark was initialized successfully.
-Without this patch series on ebin-17.10-uart.zip aardvark initialization
-failed.
+Hi Pali
 
-Pali Roh√°r (2):
-  phy: marvell: comphy: Convert internal SMCC firmware return codes to
-    errno
-  PCI: aardvark: Fix initialization with old Marvell's Arm Trusted
-    Firmware
+Maybe this should be a global helper translating SMCCC_RET_* into a
+standard errno value?
 
- drivers/pci/controller/pci-aardvark.c        |  4 +++-
- drivers/phy/marvell/phy-mvebu-a3700-comphy.c | 14 +++++++++++---
- drivers/phy/marvell/phy-mvebu-cp110-comphy.c | 14 +++++++++++---
- 3 files changed, 25 insertions(+), 7 deletions(-)
-
--- 
-2.20.1
-
+	 Andrew
