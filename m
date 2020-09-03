@@ -1,84 +1,209 @@
-Return-Path: <SRS0=cO2L=CL=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=cWhH=CM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C45BCC433E7
-	for <linux-pci@archiver.kernel.org>; Wed,  2 Sep 2020 23:09:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F7EDC433E2
+	for <linux-pci@archiver.kernel.org>; Thu,  3 Sep 2020 00:35:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9E1B120773
-	for <linux-pci@archiver.kernel.org>; Wed,  2 Sep 2020 23:09:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CF152207D3
+	for <linux-pci@archiver.kernel.org>; Thu,  3 Sep 2020 00:35:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726310AbgIBXJZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 2 Sep 2020 19:09:25 -0400
-Received: from kernel.crashing.org ([76.164.61.194]:53484 "EHLO
-        kernel.crashing.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726247AbgIBXH0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Sep 2020 19:07:26 -0400
-Received: from localhost (gate.crashing.org [63.228.1.57])
-        (authenticated bits=0)
-        by kernel.crashing.org (8.14.7/8.14.7) with ESMTP id 082N72VH005449
-        (version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-        Wed, 2 Sep 2020 18:07:06 -0500
-Message-ID: <edae1eeb0da578d941cfa5ad550eb0a0eda5f98e.camel@kernel.crashing.org>
-Subject: Re: [PATCH] arm64: Enable PCI write-combine resources under sysfs
-From:   Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Clint Sbisa <csbisa@amazon.com>
-Cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
-        linux-arm-kernel@lists.infradead.org, will@kernel.org,
-        catalin.marinas@arm.com
-Date:   Thu, 03 Sep 2020 09:07:00 +1000
-In-Reply-To: <20200902164702.GA30611@e121166-lin.cambridge.arm.com>
-References: <20200831151827.pumm2p54fyj7fz5s@amazon.com>
-         <20200902113207.GA27676@e121166-lin.cambridge.arm.com>
-         <20200902142922.xc4x6m33unkzewuh@amazon.com>
-         <20200902164702.GA30611@e121166-lin.cambridge.arm.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
-Mime-Version: 1.0
+        id S1726922AbgICAf5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 2 Sep 2020 20:35:57 -0400
+Received: from mga04.intel.com ([192.55.52.120]:40853 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726814AbgICAf4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 2 Sep 2020 20:35:56 -0400
+IronPort-SDR: Xq5GO3K0Az7nrkVUnLqI3rXsiAG0JCy+0xli1a9XtH+WXTu6L0TO3OfCUdeegM49I/vKig0F6u
+ Fmra8Z+O33mw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9732"; a="154901418"
+X-IronPort-AV: E=Sophos;i="5.76,384,1592895600"; 
+   d="scan'208";a="154901418"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2020 17:35:55 -0700
+IronPort-SDR: 6FCE0fX+qVA1ICldmJG1EhzFRIjtIQZh2gHSR4m9e2i9oLGurZqVS3/eMMrFdhgxNO5Kn7M1q6
+ gOL+z9HtCooA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.76,384,1592895600"; 
+   d="scan'208";a="283912076"
+Received: from lkp-server02.sh.intel.com (HELO eb469fda2af7) ([10.239.97.151])
+  by fmsmga008.fm.intel.com with ESMTP; 02 Sep 2020 17:35:54 -0700
+Received: from kbuild by eb469fda2af7 with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1kDdEI-0000Ji-3F; Thu, 03 Sep 2020 00:35:54 +0000
+Date:   Thu, 03 Sep 2020 08:35:19 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     linux-pci@vger.kernel.org
+Subject: [pci:next] BUILD SUCCESS 88f66c6817809ce9705efe376b65b93fdbdb7f35
+Message-ID: <5f503a47.TRKAqysXjCv6xS3L%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, 2020-09-02 at 17:47 +0100, Lorenzo Pieralisi wrote:
-> Yes I do and I expressed them.
-> 
-> The first concern is the WC ambiguity on non-x86 systems, it looks
-> like write combinining means everything and nothing at the same time
-> on != x86 arches.
-> 
-> On x86 prefetchable BAR == WC mapping (still conditional on arch
-> features ie PAT, not a blanket enable). On ARM64 WC mapping currently
-> corresponds to normal NC memory and the PCIe specs allow read
-> side-effects BAR to be marked as prefetchable, I need to force PCI
-> sig
-> to remove the section I mentioned from the specifications because
-> there
-> is NO way it can be detected if a prefetchable BAR maps to read
-> side-effects memory.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git  next
+branch HEAD: 88f66c6817809ce9705efe376b65b93fdbdb7f35  Merge branch 'pci/pm'
 
-Im not sure I understand your sentence. It's been a long accepted rule
-in PCI land that "prefetchable" BARs means "no side effects" and in
-fact allows much more than just prefetching :-)
+elapsed time: 721m
 
-> A kernel device driver would (hopefully) know, sysfs code that just
-> checks the prefetchable attribute and exports resource_WC does not.
->
-> As I mentioned, if the mapping is done in a device specific driver it
-> can be vetted and there are not many drivers mapping BARs as
-> ioremap_wc().
+configs tested: 137
+configs skipped: 10
 
-It's been what other architectures have been doing for mroe than a
-decade without significant issues... I don't think you should worry too
-much about this.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-Cheers,
-Ben.
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+x86_64                           alldefconfig
+xtensa                    xip_kc705_defconfig
+nios2                            allyesconfig
+arc                 nsimosci_hs_smp_defconfig
+arm                         s5pv210_defconfig
+m68k                        mvme147_defconfig
+openrisc                 simple_smp_defconfig
+arm                             pxa_defconfig
+xtensa                generic_kc705_defconfig
+arm                         bcm2835_defconfig
+x86_64                              defconfig
+m68k                            mac_defconfig
+arm                       imx_v4_v5_defconfig
+sh                           se7712_defconfig
+mips                          rb532_defconfig
+sh                            hp6xx_defconfig
+arm                           h5000_defconfig
+arm                           sunxi_defconfig
+sh                           se7721_defconfig
+mips                           ip28_defconfig
+openrisc                         alldefconfig
+arm                          iop32x_defconfig
+sh                        sh7785lcr_defconfig
+i386                             allyesconfig
+arm                             mxs_defconfig
+sh                   sh7770_generic_defconfig
+mips                      loongson3_defconfig
+powerpc                      tqm8xx_defconfig
+c6x                              alldefconfig
+sh                         ecovec24_defconfig
+arm                          collie_defconfig
+m68k                          multi_defconfig
+mips                        workpad_defconfig
+c6x                        evmc6457_defconfig
+mips                          rm200_defconfig
+h8300                            alldefconfig
+sh                      rts7751r2d1_defconfig
+mips                     cu1830-neo_defconfig
+mips                        omega2p_defconfig
+mips                        nlm_xlp_defconfig
+powerpc                  mpc885_ads_defconfig
+mips                      pic32mzda_defconfig
+mips                       capcella_defconfig
+alpha                               defconfig
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nios2                               defconfig
+arc                              allyesconfig
+nds32                             allnoconfig
+c6x                              allyesconfig
+nds32                               defconfig
+csky                                defconfig
+alpha                            allyesconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+parisc                              defconfig
+s390                             allyesconfig
+parisc                           allyesconfig
+s390                                defconfig
+sparc                            allyesconfig
+sparc                               defconfig
+i386                                defconfig
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                             defconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+x86_64               randconfig-a004-20200901
+x86_64               randconfig-a006-20200901
+x86_64               randconfig-a003-20200901
+x86_64               randconfig-a005-20200901
+x86_64               randconfig-a001-20200901
+x86_64               randconfig-a002-20200901
+i386                 randconfig-a004-20200902
+i386                 randconfig-a005-20200902
+i386                 randconfig-a006-20200902
+i386                 randconfig-a002-20200902
+i386                 randconfig-a001-20200902
+i386                 randconfig-a003-20200902
+i386                 randconfig-a004-20200901
+i386                 randconfig-a005-20200901
+i386                 randconfig-a006-20200901
+i386                 randconfig-a002-20200901
+i386                 randconfig-a001-20200901
+i386                 randconfig-a003-20200901
+x86_64               randconfig-a013-20200902
+x86_64               randconfig-a016-20200902
+x86_64               randconfig-a011-20200902
+x86_64               randconfig-a012-20200902
+x86_64               randconfig-a015-20200902
+x86_64               randconfig-a014-20200902
+i386                 randconfig-a016-20200903
+i386                 randconfig-a015-20200903
+i386                 randconfig-a011-20200903
+i386                 randconfig-a013-20200903
+i386                 randconfig-a014-20200903
+i386                 randconfig-a012-20200903
+i386                 randconfig-a016-20200902
+i386                 randconfig-a015-20200902
+i386                 randconfig-a011-20200902
+i386                 randconfig-a013-20200902
+i386                 randconfig-a014-20200902
+i386                 randconfig-a012-20200902
+riscv                            allyesconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                            allmodconfig
+x86_64                                   rhel
+x86_64                           allyesconfig
+x86_64                    rhel-7.6-kselftests
+x86_64                               rhel-8.3
+x86_64                                  kexec
 
+clang tested configs:
+x86_64               randconfig-a004-20200902
+x86_64               randconfig-a006-20200902
+x86_64               randconfig-a003-20200902
+x86_64               randconfig-a005-20200902
+x86_64               randconfig-a001-20200902
+x86_64               randconfig-a002-20200902
+x86_64               randconfig-a013-20200903
+x86_64               randconfig-a016-20200903
+x86_64               randconfig-a011-20200903
+x86_64               randconfig-a012-20200903
+x86_64               randconfig-a015-20200903
+x86_64               randconfig-a014-20200903
+x86_64               randconfig-a013-20200901
 
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
