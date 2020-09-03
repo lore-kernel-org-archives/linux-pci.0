@@ -2,67 +2,65 @@ Return-Path: <SRS0=cWhH=CM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
-	DKIM_ADSP_CUSTOM_MED,DKIM_INVALID,DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_ADSP_CUSTOM_MED,
+	DKIM_INVALID,DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 986CAC2D0E4
-	for <linux-pci@archiver.kernel.org>; Thu,  3 Sep 2020 20:40:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 231D7C2D0E0
+	for <linux-pci@archiver.kernel.org>; Thu,  3 Sep 2020 20:40:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 74E4F2071B
-	for <linux-pci@archiver.kernel.org>; Thu,  3 Sep 2020 20:40:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 05DFD20678
+	for <linux-pci@archiver.kernel.org>; Thu,  3 Sep 2020 20:40:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=google.com header.i=@google.com header.b="r6if3o8k"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=google.com header.i=@google.com header.b="h0+Pz1Cs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729491AbgICUkN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 3 Sep 2020 16:40:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35508 "EHLO
+        id S1729375AbgICUkb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 3 Sep 2020 16:40:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35484 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729376AbgICUbH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 Sep 2020 16:31:07 -0400
-Received: from mail-pg1-x549.google.com (mail-pg1-x549.google.com [IPv6:2607:f8b0:4864:20::549])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E334C061247
-        for <linux-pci@vger.kernel.org>; Thu,  3 Sep 2020 13:31:00 -0700 (PDT)
-Received: by mail-pg1-x549.google.com with SMTP id f25so2503699pgf.3
-        for <linux-pci@vger.kernel.org>; Thu, 03 Sep 2020 13:31:00 -0700 (PDT)
+        with ESMTP id S1728382AbgICUbA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 Sep 2020 16:31:00 -0400
+Received: from mail-qk1-x749.google.com (mail-qk1-x749.google.com [IPv6:2607:f8b0:4864:20::749])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA77EC06125E
+        for <linux-pci@vger.kernel.org>; Thu,  3 Sep 2020 13:30:55 -0700 (PDT)
+Received: by mail-qk1-x749.google.com with SMTP id 205so2330119qkd.2
+        for <linux-pci@vger.kernel.org>; Thu, 03 Sep 2020 13:30:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=sender:date:in-reply-to:message-id:mime-version:references:subject
          :from:to:cc;
-        bh=Wz9KEqPe6jynvYZUGVwJeRVVfJ6wC2gosaUL7BUwAA8=;
-        b=r6if3o8knJySaJfoQ4JTngFUI0d1h6vp5qLxz+Vvlc8q1cbeT5KkqtSOVWg7ghFfQV
-         qsMG7kKX9nNp1jnuolNpkrvj9xT183rdg77MJJBWQgGF5csZOMvL+2NyKRIdITpZuiaB
-         aMoTZEyAcj84fqVuNMqyTh/tD9qLUaPUgC9twAC5d7Kdh6bPIQBWLn/6fQPd3H+tBLIS
-         BHX9rtxDfsQSWDSPW1p36oUHIyzyQDklpIkkB7aCEYC6BbMCgcOM/tjTbDaj/3jq2r+b
-         YRmbX2nQcBS9pgUkuhLEj0IiOREm6aVewLODSFBUooZ+BFlVjDMARblfxZE/gz5AgH8E
-         PfQQ==
+        bh=nGr4msUS0dEW75ogQM/nhSlm97UUOCMWXorkodmMp40=;
+        b=h0+Pz1CszWOumbWEcLmAC3O2sDpreVbpYTU/LLeX71N9riUhico9+tp5lrxUEUaJUq
+         9/9jya3977ohpQ/UFatz+tG09iq0m7MVC3DPVvg75x+pJc1eEY0ZcnS0k1+FD0W4xfb0
+         0s+GpFY0ECMdosU7iEgPv+ytcGRd+QAMRWGomwTGMAF/oKYGdOMzrdSAXUCcyTbSDzPs
+         dbV5UeBXLgGB51pRx1q2svY0VUeB76G3YYFH4HGDmwpMrISfVfQK8Ou5NlhZ+ph++gno
+         1f2227PbyNuZ6U1XezgTQhhRcqLNB/aPe/L1HXGAltrVeTWBZQOgom9iMWye5PZNH9er
+         DUZA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:sender:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=Wz9KEqPe6jynvYZUGVwJeRVVfJ6wC2gosaUL7BUwAA8=;
-        b=FywMGmhc45Jffhodb5KfEA8dIgkwhkFjP0rZ1O4NmvVUGp5oU6XZD4ot1Fm9mDnDXK
-         Tnqr61AxmLstfMLxE4is0NogX5mrAYnxI+crhmP8B5XFL/lkIP8P4n3G43E6tQLEq7zw
-         NLxdFaqLv1gLQszrqmStn7d0HnxALL8I3OmJWM7LbMVowZDs4GDrt1VssQ9Z9vTSm5X8
-         3oz3u7dFIWGx9fG4wSTNw7eXTwYFk0FxjBrTLOCvEb90i8+yTyoJ5ACU3zxaSWJFP35y
-         nPFzWW0EqBk2J1Q9Un/sFJ9uus4F893/1CbyhVkjk6L74nk8Zglb7fkKn4+JcHeqHvpA
-         5/GA==
-X-Gm-Message-State: AOAM532QoNd2bf3G9lbc9bi+9878o+sss8+UYgmoFFJeCDblCyhunJiq
-        1bFWL07D0A+v3FHdgze1rx/xr50jRf5Iz7ODmOM=
-X-Google-Smtp-Source: ABdhPJx1LZYXiaw/GwusQ9gBkXNPhAc7NSMNU+Bf/gMurElFCbaIO17NmgnX7OhagTFary4oUp+SEuBx/fIdC4iS/ag=
+        bh=nGr4msUS0dEW75ogQM/nhSlm97UUOCMWXorkodmMp40=;
+        b=qfGRsLGNMOLuFjIFW6HmrgazwOUC6qpmdntkRKHpXM7YKLNCHsqGOSi7h+IIGUty2F
+         VGqupk9WzkJtB16AO8FiFFOxP98DRNe62Sx7fDlPMClUZz3OMuCBdf0bHKGLGnTIOrPk
+         9LUPD4DmyxoL79WxZ7ZfO3jkyJyes5Ow6srn3Amldr6Hvhe1t344RVHxY6HcnC1GkE5c
+         vp4jpz98FL+RKNjbjExiu6cPorLFNiRykgfZ6m97StNuHyZjumMAp45AWC0/kRq0vIJr
+         pV4KIDiw8ZKltga6IowlSNT7BUVqfY2CaT6++YEviUAJppjMEPwJj/EgWiM4PhtWjyh2
+         BYug==
+X-Gm-Message-State: AOAM531URxYkQxCgwwQEZzQEq3/XmcLhdSbNHGzI/mRUsru16FBrb4I3
+        SX/QceUQyz8zIS5CpywrZ2w7LwR1a0kLakzd5Hs=
+X-Google-Smtp-Source: ABdhPJxH0RX0szKuHKPur3enUKVPJmiZ5UDvXRtv8sxJrR42cHWJcizyyc12gG2V+M5Plv1Dslq7MnG2DtQcSDaz1iU=
 X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:f693:9fff:fef4:1b6d])
- (user=samitolvanen job=sendgmr) by 2002:a62:14c5:0:b029:13c:1611:658a with
- SMTP id 188-20020a6214c50000b029013c1611658amr3803962pfu.7.1599165058704;
- Thu, 03 Sep 2020 13:30:58 -0700 (PDT)
-Date:   Thu,  3 Sep 2020 13:30:27 -0700
-In-Reply-To: <20200903203053.3411268-1-samitolvanen@google.com>
-Message-Id: <20200903203053.3411268-3-samitolvanen@google.com>
+ (user=samitolvanen job=sendgmr) by 2002:a0c:d803:: with SMTP id
+ h3mr3572282qvj.0.1599165054814; Thu, 03 Sep 2020 13:30:54 -0700 (PDT)
+Date:   Thu,  3 Sep 2020 13:30:25 -0700
+In-Reply-To: <20200624203200.78870-1-samitolvanen@google.com>
+Message-Id: <20200903203053.3411268-1-samitolvanen@google.com>
 Mime-Version: 1.0
-References: <20200624203200.78870-1-samitolvanen@google.com> <20200903203053.3411268-1-samitolvanen@google.com>
+References: <20200624203200.78870-1-samitolvanen@google.com>
 X-Mailer: git-send-email 2.28.0.526.ge36021eeef-goog
-Subject: [PATCH v2 02/28] x86/asm: Replace __force_order with memory clobber
+Subject: [PATCH v2 00/28] Add support for Clang LTO
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Masahiro Yamada <masahiroy@kernel.org>,
         Will Deacon <will@kernel.org>
@@ -76,175 +74,139 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         kernel-hardening@lists.openwall.com, linux-arch@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-kbuild@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        x86@kernel.org, Arvind Sankar <nivedita@alum.mit.edu>
+        x86@kernel.org, Sami Tolvanen <samitolvanen@google.com>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Arvind Sankar <nivedita@alum.mit.edu>
+This patch series adds support for building x86_64 and arm64 kernels
+with Clang's Link Time Optimization (LTO).
 
-The CRn accessor functions use __force_order as a dummy operand to
-prevent the compiler from reordering CRn reads/writes with respect to
-each other.
+In addition to performance, the primary motivation for LTO is
+to allow Clang's Control-Flow Integrity (CFI) to be used in the
+kernel. Google has shipped millions of Pixel devices running three
+major kernel versions with LTO+CFI since 2018.
 
-The fact that the asm is volatile should be enough to prevent this:
-volatile asm statements should be executed in program order. However GCC
-4.9.x and 5.x have a bug that might result in reordering. This was fixed
-in 8.1, 7.3 and 6.5. Versions prior to these, including 5.x and 4.9.x,
-may reorder volatile asm statements with respect to each other.
+Most of the patches are build system changes for handling LLVM
+bitcode, which Clang produces with LTO instead of ELF object files,
+postponing ELF processing until a later stage, and ensuring initcall
+ordering.
 
-There are some issues with __force_order as implemented:
-- It is used only as an input operand for the write functions, and hence
-  doesn't do anything additional to prevent reordering writes.
-- It allows memory accesses to be cached/reordered across write
-  functions, but CRn writes affect the semantics of memory accesses, so
-  this could be dangerous.
-- __force_order is not actually defined in the kernel proper, but the
-  LLVM toolchain can in some cases require a definition: LLVM (as well
-  as GCC 4.9) requires it for PIE code, which is why the compressed
-  kernel has a definition, but also the clang integrated assembler may
-  consider the address of __force_order to be significant, resulting in
-  a reference that requires a definition.
+Note that patches 1-4 are not directly related to LTO, but are
+needed to compile LTO kernels with ToT Clang, so I'm including them
+in the series for your convenience:
 
-Fix this by:
-- Using a memory clobber for the write functions to additionally prevent
-  caching/reordering memory accesses across CRn writes.
-- Using a dummy input operand with an arbitrary constant address for the
-  read functions, instead of a global variable. This will prevent reads
-  from being reordered across writes, while allowing memory loads to be
-  cached/reordered across CRn reads, which should be safe.
+ - Patches 1-3 are required for building the kernel with ToT Clang,
+   and IAS, and patch 4 is needed to build allmodconfig with LTO.
 
-Signed-off-by: Arvind Sankar <nivedita@alum.mit.edu>
-Tested-by: Nathan Chancellor <natechancellor@gmail.com>
-Tested-by: Sedat Dilek <sedat.dilek@gmail.com>
-Link: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=82602
-Link: https://lore.kernel.org/lkml/20200527135329.1172644-1-arnd@arndb.de/
+ - Patches 3-4 are already in linux-next, but not yet in 5.9-rc.
+
 ---
- arch/x86/boot/compressed/pgtable_64.c |  9 ---------
- arch/x86/include/asm/special_insns.h  | 28 ++++++++++++++-------------
- arch/x86/kernel/cpu/common.c          |  4 ++--
- 3 files changed, 17 insertions(+), 24 deletions(-)
+Changes in v2:
 
-diff --git a/arch/x86/boot/compressed/pgtable_64.c b/arch/x86/boot/compressed/pgtable_64.c
-index c8862696a47b..7d0394f4ebf9 100644
---- a/arch/x86/boot/compressed/pgtable_64.c
-+++ b/arch/x86/boot/compressed/pgtable_64.c
-@@ -5,15 +5,6 @@
- #include "pgtable.h"
- #include "../string.h"
- 
--/*
-- * __force_order is used by special_insns.h asm code to force instruction
-- * serialization.
-- *
-- * It is not referenced from the code, but GCC < 5 with -fPIE would fail
-- * due to an undefined symbol. Define it to make these ancient GCCs work.
-- */
--unsigned long __force_order;
--
- #define BIOS_START_MIN		0x20000U	/* 128K, less than this is insane */
- #define BIOS_START_MAX		0x9f000U	/* 640K, absolute maximum */
- 
-diff --git a/arch/x86/include/asm/special_insns.h b/arch/x86/include/asm/special_insns.h
-index 59a3e13204c3..d6e3bb9363d2 100644
---- a/arch/x86/include/asm/special_insns.h
-+++ b/arch/x86/include/asm/special_insns.h
-@@ -11,45 +11,47 @@
- #include <linux/jump_label.h>
- 
- /*
-- * Volatile isn't enough to prevent the compiler from reordering the
-- * read/write functions for the control registers and messing everything up.
-- * A memory clobber would solve the problem, but would prevent reordering of
-- * all loads stores around it, which can hurt performance. Solution is to
-- * use a variable and mimic reads and writes to it to enforce serialization
-+ * The compiler should not reorder volatile asm statements with respect to each
-+ * other: they should execute in program order. However GCC 4.9.x and 5.x have
-+ * a bug (which was fixed in 8.1, 7.3 and 6.5) where they might reorder
-+ * volatile asm. The write functions are not affected since they have memory
-+ * clobbers preventing reordering. To prevent reads from being reordered with
-+ * respect to writes, use a dummy memory operand.
-  */
--extern unsigned long __force_order;
-+
-+#define __FORCE_ORDER "m"(*(unsigned int *)0x1000UL)
- 
- void native_write_cr0(unsigned long val);
- 
- static inline unsigned long native_read_cr0(void)
- {
- 	unsigned long val;
--	asm volatile("mov %%cr0,%0\n\t" : "=r" (val), "=m" (__force_order));
-+	asm volatile("mov %%cr0,%0\n\t" : "=r" (val) : __FORCE_ORDER);
- 	return val;
- }
- 
- static __always_inline unsigned long native_read_cr2(void)
- {
- 	unsigned long val;
--	asm volatile("mov %%cr2,%0\n\t" : "=r" (val), "=m" (__force_order));
-+	asm volatile("mov %%cr2,%0\n\t" : "=r" (val) : __FORCE_ORDER);
- 	return val;
- }
- 
- static __always_inline void native_write_cr2(unsigned long val)
- {
--	asm volatile("mov %0,%%cr2": : "r" (val), "m" (__force_order));
-+	asm volatile("mov %0,%%cr2": : "r" (val) : "memory");
- }
- 
- static inline unsigned long __native_read_cr3(void)
- {
- 	unsigned long val;
--	asm volatile("mov %%cr3,%0\n\t" : "=r" (val), "=m" (__force_order));
-+	asm volatile("mov %%cr3,%0\n\t" : "=r" (val) : __FORCE_ORDER);
- 	return val;
- }
- 
- static inline void native_write_cr3(unsigned long val)
- {
--	asm volatile("mov %0,%%cr3": : "r" (val), "m" (__force_order));
-+	asm volatile("mov %0,%%cr3": : "r" (val) : "memory");
- }
- 
- static inline unsigned long native_read_cr4(void)
-@@ -64,10 +66,10 @@ static inline unsigned long native_read_cr4(void)
- 	asm volatile("1: mov %%cr4, %0\n"
- 		     "2:\n"
- 		     _ASM_EXTABLE(1b, 2b)
--		     : "=r" (val), "=m" (__force_order) : "0" (0));
-+		     : "=r" (val) : "0" (0), __FORCE_ORDER);
- #else
- 	/* CR4 always exists on x86_64. */
--	asm volatile("mov %%cr4,%0\n\t" : "=r" (val), "=m" (__force_order));
-+	asm volatile("mov %%cr4,%0\n\t" : "=r" (val) : __FORCE_ORDER);
- #endif
- 	return val;
- }
-diff --git a/arch/x86/kernel/cpu/common.c b/arch/x86/kernel/cpu/common.c
-index c5d6f17d9b9d..178499f90366 100644
---- a/arch/x86/kernel/cpu/common.c
-+++ b/arch/x86/kernel/cpu/common.c
-@@ -359,7 +359,7 @@ void native_write_cr0(unsigned long val)
- 	unsigned long bits_missing = 0;
- 
- set_register:
--	asm volatile("mov %0,%%cr0": "+r" (val), "+m" (__force_order));
-+	asm volatile("mov %0,%%cr0": "+r" (val) : : "memory");
- 
- 	if (static_branch_likely(&cr_pinning)) {
- 		if (unlikely((val & X86_CR0_WP) != X86_CR0_WP)) {
-@@ -378,7 +378,7 @@ void native_write_cr4(unsigned long val)
- 	unsigned long bits_changed = 0;
- 
- set_register:
--	asm volatile("mov %0,%%cr4": "+r" (val), "+m" (cr4_pinned_bits));
-+	asm volatile("mov %0,%%cr4": "+r" (val) : : "memory");
- 
- 	if (static_branch_likely(&cr_pinning)) {
- 		if (unlikely((val & cr4_pinned_mask) != cr4_pinned_bits)) {
+  - Fixed -Wmissing-prototypes warnings with W=1.
+
+  - Dropped cc-option from -fsplit-lto-unit and added .thinlto-cache
+    scrubbing to make distclean.
+
+  - Added a comment about Clang >=11 being required.
+
+  - Added a patch to disable LTO for the arm64 KVM nVHE code.
+
+  - Disabled objtool's noinstr validation with LTO unless enabled.
+
+  - Included Peter's proposed objtool mcount patch in the series
+    and replaced recordmcount with the objtool pass to avoid
+    whitelisting relocations that are not calls.
+
+  - Updated several commit messages with better explanations.
+
+
+Arvind Sankar (2):
+  x86/boot/compressed: Disable relocation relaxation
+  x86/asm: Replace __force_order with memory clobber
+
+Luca Stefani (1):
+  RAS/CEC: Fix cec_init() prototype
+
+Nick Desaulniers (1):
+  lib/string.c: implement stpcpy
+
+Peter Zijlstra (1):
+  objtool: Add a pass for generating __mcount_loc
+
+Sami Tolvanen (23):
+  objtool: Don't autodetect vmlinux.o
+  kbuild: add support for objtool mcount
+  x86, build: use objtool mcount
+  kbuild: add support for Clang LTO
+  kbuild: lto: fix module versioning
+  kbuild: lto: postpone objtool
+  kbuild: lto: limit inlining
+  kbuild: lto: merge module sections
+  kbuild: lto: remove duplicate dependencies from .mod files
+  init: lto: ensure initcall ordering
+  init: lto: fix PREL32 relocations
+  PCI: Fix PREL32 relocations for LTO
+  modpost: lto: strip .lto from module names
+  scripts/mod: disable LTO for empty.c
+  efi/libstub: disable LTO
+  drivers/misc/lkdtm: disable LTO for rodata.o
+  arm64: export CC_USING_PATCHABLE_FUNCTION_ENTRY
+  arm64: vdso: disable LTO
+  KVM: arm64: disable LTO for the nVHE directory
+  arm64: allow LTO_CLANG and THINLTO to be selected
+  x86, vdso: disable LTO only for vDSO
+  x86, relocs: Ignore L4_PAGE_OFFSET relocations
+  x86, build: allow LTO_CLANG and THINLTO to be selected
+
+ .gitignore                            |   1 +
+ Makefile                              |  65 ++++++-
+ arch/Kconfig                          |  67 +++++++
+ arch/arm64/Kconfig                    |   2 +
+ arch/arm64/Makefile                   |   1 +
+ arch/arm64/kernel/vdso/Makefile       |   4 +-
+ arch/arm64/kvm/hyp/nvhe/Makefile      |   4 +-
+ arch/x86/Kconfig                      |   3 +
+ arch/x86/Makefile                     |   5 +
+ arch/x86/boot/compressed/Makefile     |   2 +
+ arch/x86/boot/compressed/pgtable_64.c |   9 -
+ arch/x86/entry/vdso/Makefile          |   5 +-
+ arch/x86/include/asm/special_insns.h  |  28 +--
+ arch/x86/kernel/cpu/common.c          |   4 +-
+ arch/x86/tools/relocs.c               |   1 +
+ drivers/firmware/efi/libstub/Makefile |   2 +
+ drivers/misc/lkdtm/Makefile           |   1 +
+ drivers/ras/cec.c                     |   9 +-
+ include/asm-generic/vmlinux.lds.h     |  11 +-
+ include/linux/init.h                  |  79 +++++++-
+ include/linux/pci.h                   |  19 +-
+ kernel/trace/Kconfig                  |   5 +
+ lib/string.c                          |  24 +++
+ scripts/Makefile.build                |  55 +++++-
+ scripts/Makefile.lib                  |   6 +-
+ scripts/Makefile.modfinal             |  31 ++-
+ scripts/Makefile.modpost              |  26 ++-
+ scripts/generate_initcall_order.pl    | 270 ++++++++++++++++++++++++++
+ scripts/link-vmlinux.sh               |  94 ++++++++-
+ scripts/mod/Makefile                  |   1 +
+ scripts/mod/modpost.c                 |  16 +-
+ scripts/mod/modpost.h                 |   9 +
+ scripts/mod/sumversion.c              |   6 +-
+ scripts/module-lto.lds                |  26 +++
+ tools/objtool/builtin-check.c         |  13 +-
+ tools/objtool/builtin.h               |   2 +-
+ tools/objtool/check.c                 |  83 ++++++++
+ tools/objtool/check.h                 |   1 +
+ tools/objtool/objtool.h               |   1 +
+ 39 files changed, 883 insertions(+), 108 deletions(-)
+ create mode 100755 scripts/generate_initcall_order.pl
+ create mode 100644 scripts/module-lto.lds
+
+
+base-commit: e28f0104343d0c132fa37f479870c9e43355fee4
 -- 
 2.28.0.402.g5ffc5be6b7-goog
 
