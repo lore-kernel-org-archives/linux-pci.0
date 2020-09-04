@@ -2,74 +2,95 @@ Return-Path: <SRS0=2Jyt=CN=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6ABEC38155
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Sep 2020 18:10:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 176BCC433E2
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Sep 2020 18:55:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 763BB248D5
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Sep 2020 18:03:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BF95A20665
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Sep 2020 18:55:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1599245712;
+	bh=i8O7u3HqWp1gqN3thqoJWvEdSlSh2vSIHRzh1/oKX9E=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=dtGMMN3hlwdaNVMFoC1NW9B4IiNWdqmi8BWW/6rpmnqk9Nhof7g7F0apTmuP+tyxB
+	 1r/7WgTyn4MBpJSOuCQdt/HCRoLGqJ38RNM4IFahhfl6HQT4EhKM4WpZo04LMfvslt
+	 IWDcZS1s5k5/M+AdPz5Nd3rUtEtaC5R3TK/1XVlo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726667AbgIDRIq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 4 Sep 2020 13:08:46 -0400
-Received: from foss.arm.com ([217.140.110.172]:54094 "EHLO foss.arm.com"
+        id S1726277AbgIDSzL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 4 Sep 2020 14:55:11 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33104 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725966AbgIDRIp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 4 Sep 2020 13:08:45 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id CCB621045;
-        Fri,  4 Sep 2020 10:08:44 -0700 (PDT)
-Received: from mammon-tx2.austin.arm.com (mammon-tx2.austin.arm.com [10.118.28.62])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPA id B9D393F66F;
-        Fri,  4 Sep 2020 10:08:44 -0700 (PDT)
-From:   Jeremy Linton <jeremy.linton@arm.com>
-To:     linux-acpi@vger.kernel.org
-Cc:     tn@semihalf.com, bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        steven.price@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        sudeep.holla@arm.com, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Jeremy Linton <jeremy.linton@arm.com>
-Subject: [PATCH] PCI/ACPI: Suppress missing MCFG message
-Date:   Fri,  4 Sep 2020 12:08:29 -0500
-Message-Id: <20200904170829.431900-1-jeremy.linton@arm.com>
-X-Mailer: git-send-email 2.25.4
+        id S1726221AbgIDSzK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 4 Sep 2020 14:55:10 -0400
+Received: from mail-oi1-f181.google.com (mail-oi1-f181.google.com [209.85.167.181])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 2C483206B7
+        for <linux-pci@vger.kernel.org>; Fri,  4 Sep 2020 18:55:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1599245710;
+        bh=i8O7u3HqWp1gqN3thqoJWvEdSlSh2vSIHRzh1/oKX9E=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=Gu1EuGsloz83y8fKjLqPKOCQXpdTwXOUeUElDOYQsiZLPeh6z3Wo9qD+9zDH2S6nG
+         1zs6DclhjZl95Cy59mYbUQQ1WblJ7KoZYNPDp0kn9bwouSv7HP+MWurRzUyiCkVXhy
+         mu5Ruic7aFFN3R2YqtxznIsgpEGJF7NiH3c0sdaE=
+Received: by mail-oi1-f181.google.com with SMTP id w16so7483950oia.2
+        for <linux-pci@vger.kernel.org>; Fri, 04 Sep 2020 11:55:10 -0700 (PDT)
+X-Gm-Message-State: AOAM533NTGVs2D+xTBajJ7NUmms88no/xxRT0cq5uiVbHTBxTzAc31Kr
+        6x8+mfalca7FiDlvrZ6YLOqB8XwEzAYQZpP32w==
+X-Google-Smtp-Source: ABdhPJxuIOuSQjWModMalFgqxXPB0QIQz9a2SuXzhvdHMYgV5RX3YmToPpqoM9Zo/G9j8nH7clnd7ou5pkNLCHDBHSg=
+X-Received: by 2002:aca:4cc7:: with SMTP id z190mr6328397oia.147.1599245709496;
+ Fri, 04 Sep 2020 11:55:09 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20200904140904.944-1-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20200904140904.944-1-lorenzo.pieralisi@arm.com>
+From:   Rob Herring <robh@kernel.org>
+Date:   Fri, 4 Sep 2020 12:54:58 -0600
+X-Gmail-Original-Message-ID: <CAL_Jsq+CcY-50NgwyF9Mh2uvgLF_rd0pfjyo=v=X0JAGJcs++A@mail.gmail.com>
+Message-ID: <CAL_Jsq+CcY-50NgwyF9Mh2uvgLF_rd0pfjyo=v=X0JAGJcs++A@mail.gmail.com>
+Subject: Re: [PATCH] PCI: rockchip: Fix bus checks in rockchip_pcie_valid_device()
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     PCI <linux-pci@vger.kernel.org>,
+        Samuel Dionne-Riel <samuel@dionne-riel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-MCFG is an optional ACPI table. Given there are machines
-without PCI(e) (or it is hidden) we have been receiving
-queries/complaints about what this message means given
-its being presented as an error.
+On Fri, Sep 4, 2020 at 8:09 AM Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+>
+> The root bus checks rework in:
+>
+> commit d84c572de1a3 ("PCI: rockchip: Use pci_is_root_bus() to check if bus is root bus")
+>
+> caused a regression whereby in rockchip_pcie_valid_device() if
+> the bus parameter is the root bus and the dev value == 0 the
+> function should return 1 (ie true) without checking if the
+> bus->parent pointer is a root bus because that triggers a NULL
+> pointer dereference.
+>
+> Fix this by streamlining the root bus detection.
+>
+> Fixes: d84c572de1a3 ("PCI: rockchip: Use pci_is_root_bus() to check if bus is root bus")
+> Reported-by: Samuel Dionne-Riel <samuel@dionne-riel.com>
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Rob Herring <robh@kernel.org>
+> Cc: Shawn Lin <shawn.lin@rock-chips.com>
+> ---
+>  drivers/pci/controller/pcie-rockchip-host.c | 11 ++++-------
+>  1 file changed, 4 insertions(+), 7 deletions(-)
 
-Lets only print an error if something is wrong with the
-the given table/etc. The ACPI table list printed at boot
-will continue to provide a way to detect when the table
-is missing.
+Even better than my broken version.
 
-Signed-off-by: Jeremy Linton <jeremy.linton@arm.com>
----
- drivers/acpi/pci_mcfg.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-index 54b36b7ad47d..0bc8c012f157 100644
---- a/drivers/acpi/pci_mcfg.c
-+++ b/drivers/acpi/pci_mcfg.c
-@@ -279,6 +279,6 @@ static __init int pci_mcfg_parse(struct acpi_table_header *header)
- void __init pci_mmcfg_late_init(void)
- {
- 	int err = acpi_table_parse(ACPI_SIG_MCFG, pci_mcfg_parse);
--	if (err)
-+	if (err && err != -ENODEV)
- 		pr_err("Failed to parse MCFG (%d)\n", err);
- }
--- 
-2.25.4
-
+Reviewed-by: Rob Herring <robh@kernel.org>
