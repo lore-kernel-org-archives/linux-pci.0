@@ -2,465 +2,233 @@ Return-Path: <SRS0=2Jyt=CN=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70744C2BC84
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Sep 2020 07:53:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33859C43461
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Sep 2020 07:53:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 345C3206A5
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Sep 2020 07:53:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E809E206A5
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Sep 2020 07:53:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="wp9iFOh6"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Nq2T1guw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729870AbgIDHvu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 4 Sep 2020 03:51:50 -0400
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:43586 "EHLO
-        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729832AbgIDHvs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 4 Sep 2020 03:51:48 -0400
-Received: from lelv0265.itg.ti.com ([10.180.67.224])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 0847pVRm090591;
-        Fri, 4 Sep 2020 02:51:31 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1599205891;
-        bh=61uFu7DXWol1ihX5PVE9vYllDbMmKz2Vc4edreznYPg=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=wp9iFOh6aWNfUx8hPEt5TWCdnIvK6utSirv4TQoWB4ragLWDmpEm0A67Qf/nHFsz9
-         YohfrSwjBY70KuzD9BeBM/f2ckXNDY4jpFM8pfhyk+CTc4X2yRaqx90Rw1rHYwcgtM
-         YvIrodcj+f1lFEz0aPVkXe+emVyEFrx8Dg0HkqI8=
-Received: from DLEE104.ent.ti.com (dlee104.ent.ti.com [157.170.170.34])
-        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 0847pVH9025758
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 4 Sep 2020 02:51:31 -0500
-Received: from DLEE110.ent.ti.com (157.170.170.21) by DLEE104.ent.ti.com
- (157.170.170.34) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Fri, 4 Sep
- 2020 02:51:31 -0500
-Received: from lelv0326.itg.ti.com (10.180.67.84) by DLEE110.ent.ti.com
- (157.170.170.21) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
- Frontend Transport; Fri, 4 Sep 2020 02:51:31 -0500
-Received: from a0393678-ssd.ent.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0847osN7058796;
-        Fri, 4 Sep 2020 02:51:26 -0500
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Jon Mason <jdmason@kudzu.us>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <allenbh@gmail.com>, Rob Herring <robh@kernel.org>
-CC:     Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Tom Joseph <tjoseph@cadence.com>, <linux-pci@vger.kernel.org>,
-        <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-ntb@googlegroups.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>
-Subject: [PATCH v3 06/17] PCI: endpoint: Add support to associate secondary EPC with EPF
-Date:   Fri, 4 Sep 2020 13:20:41 +0530
-Message-ID: <20200904075052.8911-7-kishon@ti.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200904075052.8911-1-kishon@ti.com>
-References: <20200904075052.8911-1-kishon@ti.com>
+        id S1729751AbgIDHxz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 4 Sep 2020 03:53:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55470 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726415AbgIDHxv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 4 Sep 2020 03:53:51 -0400
+Received: from mail-ot1-x342.google.com (mail-ot1-x342.google.com [IPv6:2607:f8b0:4864:20::342])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13F33C061244;
+        Fri,  4 Sep 2020 00:53:50 -0700 (PDT)
+Received: by mail-ot1-x342.google.com with SMTP id c10so5083189otm.13;
+        Fri, 04 Sep 2020 00:53:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:reply-to:from:date:message-id
+         :subject:to:cc;
+        bh=ocqyzNbaVOZzIdeNzDcK80VX4YtlWAaQQv8brVA+uok=;
+        b=Nq2T1guwkVW6AjrlGB9fPWghdM0XIdzmNU+vWvRDonxY/2F48APQtj4A9ML40oPSWE
+         gNy8jSSGdU/uh49Nuan13e7J01chRakHa4cvFV++kD5GeMvnRK1PDFvkGNc11TFwom7Y
+         X9gk1f6AN8nHnX/8jO+ovjwlYDnt3SAXJthIpS7uYfZmc8twAz/gjOTHw685POv0Jv7t
+         oLDono45aa0F3e/AIav+77dHNgpenH801GxKxi70IabKBrJOGTmp5Z8C8a62JfBwA/NG
+         vIKTVveaTADqVm296iwl2bKAzCQxo7MrtbLxsNRjrVkJS+tWusn1LVp3UFBKfFzXbACg
+         fq5Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:reply-to
+         :from:date:message-id:subject:to:cc;
+        bh=ocqyzNbaVOZzIdeNzDcK80VX4YtlWAaQQv8brVA+uok=;
+        b=G1PcEh8H+WISVvAMdLiHzWhvnSeAGaZlXYMrgwHtgMsqLyIAW+wgkKwRH8yga+CS95
+         EoaT7jGWW4q1r2aPqHvgCrh6GUCJV1IpZYzAIfE9LRrzgabc2i7cH0h++lZtwq6F+47z
+         WsVF2c/LQVxDsRSGdhwEpnL2oOkGUnjVxdwcJgGuS8x/ozqAKlHEMSnlj+9JUUjIJ8Ka
+         32ycPtelzTAvwkP6UZOEDQzO+UuxEeZhcYIts5KTtaLy/5oXGSc1vQzYEp+VS+RZfFT7
+         Lj3DFBVNyKJQ+IbCyPSy+UzH2tmM0WEdC91RmtznkQM4WqY0X/tZdlT5Ek4UBm33IEDG
+         dMpA==
+X-Gm-Message-State: AOAM533qTAy1WlRxZUmIKqUKJDs/QfDpp9NCc3rSGS1M5rG5iyMyUddn
+        vrBd8MdLut7qm1fr5FtG5JUciVh8UvkKU8e5fnQ=
+X-Google-Smtp-Source: ABdhPJx8Fu6Q8WDEpmADLpI04M/+EN/6EVFvaEQovvgjSVbHG1rjYRSusAY1dEH9lP0YugsHKl4rs5v2AOHao6YXKcg=
+X-Received: by 2002:a9d:7656:: with SMTP id o22mr4302332otl.109.1599206029992;
+ Fri, 04 Sep 2020 00:53:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+References: <20200624203200.78870-1-samitolvanen@google.com> <20200903203053.3411268-1-samitolvanen@google.com>
+In-Reply-To: <20200903203053.3411268-1-samitolvanen@google.com>
+Reply-To: sedat.dilek@gmail.com
+From:   Sedat Dilek <sedat.dilek@gmail.com>
+Date:   Fri, 4 Sep 2020 09:53:38 +0200
+Message-ID: <CA+icZUW_=L5n4gAPV_sL+TaLJ0SMZOWHSNOpWD9M3fSLDCv_kw@mail.gmail.com>
+Subject: Re: [PATCH v2 00/28] Add support for Clang LTO
+To:     Sami Tolvanen <samitolvanen@google.com>
+Cc:     Masahiro Yamada <masahiroy@kernel.org>,
+        Will Deacon <will@kernel.org>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Paul E. McKenney" <paulmck@kernel.org>,
+        Kees Cook <keescook@chromium.org>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        Clang-Built-Linux ML <clang-built-linux@googlegroups.com>,
+        kernel-hardening@lists.openwall.com, linux-arch@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kbuild@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        x86@kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In the case of standard endpoint functions, only one endpoint
-controller (EPC) will be associated with an endpoint function
-(EPF). However for providing NTB (non transparent bridge)
-functionality, two EPCs should be associated with a single EPF.
-Add support to associate secondary EPC with EPF. This is in
-preparation for adding NTB endpoint function driver.
+On Thu, Sep 3, 2020 at 10:30 PM 'Sami Tolvanen' via Clang Built Linux
+<clang-built-linux@googlegroups.com> wrote:
+>
+> This patch series adds support for building x86_64 and arm64 kernels
+> with Clang's Link Time Optimization (LTO).
+>
+> In addition to performance, the primary motivation for LTO is
+> to allow Clang's Control-Flow Integrity (CFI) to be used in the
+> kernel. Google has shipped millions of Pixel devices running three
+> major kernel versions with LTO+CFI since 2018.
+>
+> Most of the patches are build system changes for handling LLVM
+> bitcode, which Clang produces with LTO instead of ELF object files,
+> postponing ELF processing until a later stage, and ensuring initcall
+> ordering.
+>
+> Note that patches 1-4 are not directly related to LTO, but are
+> needed to compile LTO kernels with ToT Clang, so I'm including them
+> in the series for your convenience:
+>
+>  - Patches 1-3 are required for building the kernel with ToT Clang,
+>    and IAS, and patch 4 is needed to build allmodconfig with LTO.
+>
+>  - Patches 3-4 are already in linux-next, but not yet in 5.9-rc.
+>
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/endpoint/functions/pci-epf-test.c | 11 ++--
- drivers/pci/endpoint/pci-ep-cfs.c             |  6 +-
- drivers/pci/endpoint/pci-epc-core.c           | 50 ++++++++++++----
- drivers/pci/endpoint/pci-epf-core.c           | 57 +++++++++++++------
- include/linux/pci-epc.h                       | 25 +++++++-
- include/linux/pci-epf.h                       | 17 +++++-
- 6 files changed, 128 insertions(+), 38 deletions(-)
+I jumped to Sami's clang-cfi Git tree which includes clang-lto v2.
 
-diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-index 7a1f3abfde48..c0ac4e9cbe72 100644
---- a/drivers/pci/endpoint/functions/pci-epf-test.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-@@ -619,7 +619,8 @@ static void pci_epf_test_unbind(struct pci_epf *epf)
- 
- 		if (epf_test->reg[bar]) {
- 			pci_epc_clear_bar(epc, epf->func_no, epf_bar);
--			pci_epf_free_space(epf, epf_test->reg[bar], bar);
-+			pci_epf_free_space(epf, epf_test->reg[bar], bar,
-+					   PRIMARY_INTERFACE);
- 		}
- 	}
- }
-@@ -651,7 +652,8 @@ static int pci_epf_test_set_bar(struct pci_epf *epf)
- 
- 		ret = pci_epc_set_bar(epc, epf->func_no, epf_bar);
- 		if (ret) {
--			pci_epf_free_space(epf, epf_test->reg[bar], bar);
-+			pci_epf_free_space(epf, epf_test->reg[bar], bar,
-+					   PRIMARY_INTERFACE);
- 			dev_err(dev, "Failed to set BAR%d\n", bar);
- 			if (bar == test_reg_bar)
- 				return ret;
-@@ -771,7 +773,7 @@ static int pci_epf_test_alloc_space(struct pci_epf *epf)
- 	}
- 
- 	base = pci_epf_alloc_space(epf, test_reg_size, test_reg_bar,
--				   epc_features->align);
-+				   epc_features->align, PRIMARY_INTERFACE);
- 	if (!base) {
- 		dev_err(dev, "Failed to allocated register space\n");
- 		return -ENOMEM;
-@@ -789,7 +791,8 @@ static int pci_epf_test_alloc_space(struct pci_epf *epf)
- 			continue;
- 
- 		base = pci_epf_alloc_space(epf, bar_size[bar], bar,
--					   epc_features->align);
-+					   epc_features->align,
-+					   PRIMARY_INTERFACE);
- 		if (!base)
- 			dev_err(dev, "Failed to allocate space for BAR%d\n",
- 				bar);
-diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
-index 3710adf51912..6ca9e2f92460 100644
---- a/drivers/pci/endpoint/pci-ep-cfs.c
-+++ b/drivers/pci/endpoint/pci-ep-cfs.c
-@@ -94,13 +94,13 @@ static int pci_epc_epf_link(struct config_item *epc_item,
- 	struct pci_epc *epc = epc_group->epc;
- 	struct pci_epf *epf = epf_group->epf;
- 
--	ret = pci_epc_add_epf(epc, epf);
-+	ret = pci_epc_add_epf(epc, epf, PRIMARY_INTERFACE);
- 	if (ret)
- 		return ret;
- 
- 	ret = pci_epf_bind(epf);
- 	if (ret) {
--		pci_epc_remove_epf(epc, epf);
-+		pci_epc_remove_epf(epc, epf, PRIMARY_INTERFACE);
- 		return ret;
- 	}
- 
-@@ -120,7 +120,7 @@ static void pci_epc_epf_unlink(struct config_item *epc_item,
- 	epc = epc_group->epc;
- 	epf = epf_group->epf;
- 	pci_epf_unbind(epf);
--	pci_epc_remove_epf(epc, epf);
-+	pci_epc_remove_epf(epc, epf, PRIMARY_INTERFACE);
- }
- 
- static struct configfs_item_operations pci_epc_item_ops = {
-diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
-index ea7e7465ce7a..0f6e2364ae6f 100644
---- a/drivers/pci/endpoint/pci-epc-core.c
-+++ b/drivers/pci/endpoint/pci-epc-core.c
-@@ -493,22 +493,32 @@ EXPORT_SYMBOL_GPL(pci_epc_write_header);
-  * pci_epc_add_epf() - bind PCI endpoint function to an endpoint controller
-  * @epc: the EPC device to which the endpoint function should be added
-  * @epf: the endpoint function to be added
-+ * @type: Identifies if the EPC is connected to the primary or secondary
-+ *        interface of EPF
-  *
-  * A PCI endpoint device can have one or more functions. In the case of PCIe,
-  * the specification allows up to 8 PCIe endpoint functions. Invoke
-  * pci_epc_add_epf() to add a PCI endpoint function to an endpoint controller.
-  */
--int pci_epc_add_epf(struct pci_epc *epc, struct pci_epf *epf)
-+int pci_epc_add_epf(struct pci_epc *epc, struct pci_epf *epf,
-+		    enum pci_epc_interface_type type)
- {
-+	struct list_head *list;
- 	u32 func_no;
- 	int ret = 0;
- 
--	if (epf->epc)
--		return -EBUSY;
--
- 	if (IS_ERR(epc))
- 		return -EINVAL;
- 
-+	if (epf->func_no > epc->max_functions - 1)
-+		return -EINVAL;
-+
-+	if (type == PRIMARY_INTERFACE && epf->epc)
-+		return -EBUSY;
-+
-+	if (type == SECONDARY_INTERFACE && epf->sec_epc)
-+		return -EBUSY;
-+
- 	mutex_lock(&epc->lock);
- 	func_no = find_first_zero_bit(&epc->function_num_map,
- 				      BITS_PER_LONG);
-@@ -524,11 +534,17 @@ int pci_epc_add_epf(struct pci_epc *epc, struct pci_epf *epf)
- 	}
- 
- 	set_bit(func_no, &epc->function_num_map);
--	epf->func_no = func_no;
--	epf->epc = epc;
--
--	list_add_tail(&epf->list, &epc->pci_epf);
-+	if (type == PRIMARY_INTERFACE) {
-+		epf->func_no = func_no;
-+		epf->epc = epc;
-+		list = &epf->list;
-+	} else {
-+		epf->sec_epc_func_no = func_no;
-+		epf->sec_epc = epc;
-+		list = &epf->sec_epc_list;
-+	}
- 
-+	list_add_tail(list, &epc->pci_epf);
- ret:
- 	mutex_unlock(&epc->lock);
- 
-@@ -543,14 +559,26 @@ EXPORT_SYMBOL_GPL(pci_epc_add_epf);
-  *
-  * Invoke to remove PCI endpoint function from the endpoint controller.
-  */
--void pci_epc_remove_epf(struct pci_epc *epc, struct pci_epf *epf)
-+void pci_epc_remove_epf(struct pci_epc *epc, struct pci_epf *epf,
-+			enum pci_epc_interface_type type)
- {
-+	struct list_head *list;
-+	u32 func_no = 0;
-+
- 	if (!epc || IS_ERR(epc) || !epf)
- 		return;
- 
-+	if (type == PRIMARY_INTERFACE) {
-+		func_no = epf->func_no;
-+		list = &epf->list;
-+	} else {
-+		func_no = epf->sec_epc_func_no;
-+		list = &epf->sec_epc_list;
-+	}
-+
- 	mutex_lock(&epc->lock);
--	clear_bit(epf->func_no, &epc->function_num_map);
--	list_del(&epf->list);
-+	clear_bit(func_no, &epc->function_num_map);
-+	list_del(list);
- 	epf->epc = NULL;
- 	mutex_unlock(&epc->lock);
- }
-diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
-index e44a317a2a2a..79329ec6373c 100644
---- a/drivers/pci/endpoint/pci-epf-core.c
-+++ b/drivers/pci/endpoint/pci-epf-core.c
-@@ -74,24 +74,37 @@ EXPORT_SYMBOL_GPL(pci_epf_bind);
-  * @epf: the EPF device from whom to free the memory
-  * @addr: the virtual address of the PCI EPF register space
-  * @bar: the BAR number corresponding to the register space
-+ * @type: Identifies if the allocated space is for primary EPC or secondary EPC
-  *
-  * Invoke to free the allocated PCI EPF register space.
-  */
--void pci_epf_free_space(struct pci_epf *epf, void *addr, enum pci_barno bar)
-+void pci_epf_free_space(struct pci_epf *epf, void *addr, enum pci_barno bar,
-+			enum pci_epc_interface_type type)
- {
- 	struct device *dev = epf->epc->dev.parent;
-+	struct pci_epf_bar *epf_bar;
-+	struct pci_epc *epc;
- 
- 	if (!addr)
- 		return;
- 
--	dma_free_coherent(dev, epf->bar[bar].size, addr,
--			  epf->bar[bar].phys_addr);
-+	if (type == PRIMARY_INTERFACE) {
-+		epc = epf->epc;
-+		epf_bar = epf->bar;
-+	} else {
-+		epc = epf->sec_epc;
-+		epf_bar = epf->sec_epc_bar;
-+	}
-+
-+	dev = epc->dev.parent;
-+	dma_free_coherent(dev, epf_bar[bar].size, addr,
-+			  epf_bar[bar].phys_addr);
- 
--	epf->bar[bar].phys_addr = 0;
--	epf->bar[bar].addr = NULL;
--	epf->bar[bar].size = 0;
--	epf->bar[bar].barno = 0;
--	epf->bar[bar].flags = 0;
-+	epf_bar[bar].phys_addr = 0;
-+	epf_bar[bar].addr = NULL;
-+	epf_bar[bar].size = 0;
-+	epf_bar[bar].barno = 0;
-+	epf_bar[bar].flags = 0;
- }
- EXPORT_SYMBOL_GPL(pci_epf_free_space);
- 
-@@ -101,15 +114,18 @@ EXPORT_SYMBOL_GPL(pci_epf_free_space);
-  * @size: the size of the memory that has to be allocated
-  * @bar: the BAR number corresponding to the allocated register space
-  * @align: alignment size for the allocation region
-+ * @type: Identifies if the allocation is for primary EPC or secondary EPC
-  *
-  * Invoke to allocate memory for the PCI EPF register space.
-  */
- void *pci_epf_alloc_space(struct pci_epf *epf, size_t size, enum pci_barno bar,
--			  size_t align)
-+			  size_t align, enum pci_epc_interface_type type)
- {
--	void *space;
--	struct device *dev = epf->epc->dev.parent;
-+	struct pci_epf_bar *epf_bar;
- 	dma_addr_t phys_addr;
-+	struct pci_epc *epc;
-+	struct device *dev;
-+	void *space;
- 
- 	if (size < 128)
- 		size = 128;
-@@ -119,17 +135,26 @@ void *pci_epf_alloc_space(struct pci_epf *epf, size_t size, enum pci_barno bar,
- 	else
- 		size = roundup_pow_of_two(size);
- 
-+	if (type == PRIMARY_INTERFACE) {
-+		epc = epf->epc;
-+		epf_bar = epf->bar;
-+	} else {
-+		epc = epf->sec_epc;
-+		epf_bar = epf->sec_epc_bar;
-+	}
-+
-+	dev = epc->dev.parent;
- 	space = dma_alloc_coherent(dev, size, &phys_addr, GFP_KERNEL);
- 	if (!space) {
- 		dev_err(dev, "failed to allocate mem space\n");
- 		return NULL;
- 	}
- 
--	epf->bar[bar].phys_addr = phys_addr;
--	epf->bar[bar].addr = space;
--	epf->bar[bar].size = size;
--	epf->bar[bar].barno = bar;
--	epf->bar[bar].flags |= upper_32_bits(size) ?
-+	epf_bar[bar].phys_addr = phys_addr;
-+	epf_bar[bar].addr = space;
-+	epf_bar[bar].size = size;
-+	epf_bar[bar].barno = bar;
-+	epf_bar[bar].flags |= upper_32_bits(size) ?
- 				PCI_BASE_ADDRESS_MEM_TYPE_64 :
- 				PCI_BASE_ADDRESS_MEM_TYPE_32;
- 
-diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
-index 88d311bad984..d9cb3944fb87 100644
---- a/include/linux/pci-epc.h
-+++ b/include/linux/pci-epc.h
-@@ -13,6 +13,12 @@
- 
- struct pci_epc;
- 
-+enum pci_epc_interface_type {
-+	UNKNOWN_INTERFACE = -1,
-+	PRIMARY_INTERFACE,
-+	SECONDARY_INTERFACE,
-+};
-+
- enum pci_epc_irq_type {
- 	PCI_EPC_IRQ_UNKNOWN,
- 	PCI_EPC_IRQ_LEGACY,
-@@ -20,6 +26,19 @@ enum pci_epc_irq_type {
- 	PCI_EPC_IRQ_MSIX,
- };
- 
-+static inline const char *
-+pci_epc_interface_string(enum pci_epc_interface_type type)
-+{
-+	switch (type) {
-+	case PRIMARY_INTERFACE:
-+		return "primary";
-+	case SECONDARY_INTERFACE:
-+		return "secondary";
-+	default:
-+		return "UNKNOWN interface";
-+	}
-+}
-+
- /**
-  * struct pci_epc_ops - set of function pointers for performing EPC operations
-  * @write_header: ops to populate configuration space header
-@@ -175,10 +194,12 @@ __pci_epc_create(struct device *dev, const struct pci_epc_ops *ops,
- 		 struct module *owner);
- void devm_pci_epc_destroy(struct device *dev, struct pci_epc *epc);
- void pci_epc_destroy(struct pci_epc *epc);
--int pci_epc_add_epf(struct pci_epc *epc, struct pci_epf *epf);
-+int pci_epc_add_epf(struct pci_epc *epc, struct pci_epf *epf,
-+		    enum pci_epc_interface_type type);
- void pci_epc_linkup(struct pci_epc *epc);
- void pci_epc_init_notify(struct pci_epc *epc);
--void pci_epc_remove_epf(struct pci_epc *epc, struct pci_epf *epf);
-+void pci_epc_remove_epf(struct pci_epc *epc, struct pci_epf *epf,
-+			enum pci_epc_interface_type type);
- int pci_epc_write_header(struct pci_epc *epc, u8 func_no,
- 			 struct pci_epf_header *hdr);
- int pci_epc_set_bar(struct pci_epc *epc, u8 func_no,
-diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
-index f373a134ac04..1dc66824f5a8 100644
---- a/include/linux/pci-epf.h
-+++ b/include/linux/pci-epf.h
-@@ -14,6 +14,7 @@
- #include <linux/pci.h>
- 
- struct pci_epf;
-+enum pci_epc_interface_type;
- 
- enum pci_notify_event {
- 	CORE_INIT,
-@@ -119,6 +120,11 @@ struct pci_epf_bar {
-  * @list: to add pci_epf as a list of PCI endpoint functions to pci_epc
-  * @nb: notifier block to notify EPF of any EPC events (like linkup)
-  * @lock: mutex to protect pci_epf_ops
-+ * @sec_epc: the secondary EPC device to which this EPF device is bound
-+ * @sec_epc_list: to add pci_epf as list of PCI endpoint functions to secondary
-+ *   EPC device
-+ * @sec_epc_bar: represents the BAR of EPF device associated with secondary EPC
-+ * @sec_epc_func_no: unique (physical) function number within the secondary EPC
-  */
- struct pci_epf {
- 	struct device		dev;
-@@ -135,6 +141,12 @@ struct pci_epf {
- 	struct notifier_block   nb;
- 	/* mutex to protect against concurrent access of pci_epf_ops */
- 	struct mutex		lock;
-+
-+	/* Below members are to attach secondary EPC to an endpoint function */
-+	struct pci_epc		*sec_epc;
-+	struct list_head	sec_epc_list;
-+	struct pci_epf_bar	sec_epc_bar[6];
-+	u8			sec_epc_func_no;
- };
- 
- /**
-@@ -171,8 +183,9 @@ int __pci_epf_register_driver(struct pci_epf_driver *driver,
- 			      struct module *owner);
- void pci_epf_unregister_driver(struct pci_epf_driver *driver);
- void *pci_epf_alloc_space(struct pci_epf *epf, size_t size, enum pci_barno bar,
--			  size_t align);
--void pci_epf_free_space(struct pci_epf *epf, void *addr, enum pci_barno bar);
-+			  size_t align, enum pci_epc_interface_type type);
-+void pci_epf_free_space(struct pci_epf *epf, void *addr, enum pci_barno bar,
-+			enum pci_epc_interface_type type);
- int pci_epf_bind(struct pci_epf *epf);
- void pci_epf_unbind(struct pci_epf *epf);
- #endif /* __LINUX_PCI_EPF_H */
--- 
-2.17.1
+My LLVM toolchain is version 11.0.0.0-rc2+ more precisely git
+97ac9e82002d6b12831ca2c78f739cca65a4fa05.
 
+If this is OK, feel free to add my...
+
+Tested-by: Sedat Dilek <sedat.dilek@gmail.com>
+
+- Sedat -
+
+[1] https://github.com/samitolvanen/linux/commits/clang-cfi
+
+> ---
+> Changes in v2:
+>
+>   - Fixed -Wmissing-prototypes warnings with W=1.
+>
+>   - Dropped cc-option from -fsplit-lto-unit and added .thinlto-cache
+>     scrubbing to make distclean.
+>
+>   - Added a comment about Clang >=11 being required.
+>
+>   - Added a patch to disable LTO for the arm64 KVM nVHE code.
+>
+>   - Disabled objtool's noinstr validation with LTO unless enabled.
+>
+>   - Included Peter's proposed objtool mcount patch in the series
+>     and replaced recordmcount with the objtool pass to avoid
+>     whitelisting relocations that are not calls.
+>
+>   - Updated several commit messages with better explanations.
+>
+>
+> Arvind Sankar (2):
+>   x86/boot/compressed: Disable relocation relaxation
+>   x86/asm: Replace __force_order with memory clobber
+>
+> Luca Stefani (1):
+>   RAS/CEC: Fix cec_init() prototype
+>
+> Nick Desaulniers (1):
+>   lib/string.c: implement stpcpy
+>
+> Peter Zijlstra (1):
+>   objtool: Add a pass for generating __mcount_loc
+>
+> Sami Tolvanen (23):
+>   objtool: Don't autodetect vmlinux.o
+>   kbuild: add support for objtool mcount
+>   x86, build: use objtool mcount
+>   kbuild: add support for Clang LTO
+>   kbuild: lto: fix module versioning
+>   kbuild: lto: postpone objtool
+>   kbuild: lto: limit inlining
+>   kbuild: lto: merge module sections
+>   kbuild: lto: remove duplicate dependencies from .mod files
+>   init: lto: ensure initcall ordering
+>   init: lto: fix PREL32 relocations
+>   PCI: Fix PREL32 relocations for LTO
+>   modpost: lto: strip .lto from module names
+>   scripts/mod: disable LTO for empty.c
+>   efi/libstub: disable LTO
+>   drivers/misc/lkdtm: disable LTO for rodata.o
+>   arm64: export CC_USING_PATCHABLE_FUNCTION_ENTRY
+>   arm64: vdso: disable LTO
+>   KVM: arm64: disable LTO for the nVHE directory
+>   arm64: allow LTO_CLANG and THINLTO to be selected
+>   x86, vdso: disable LTO only for vDSO
+>   x86, relocs: Ignore L4_PAGE_OFFSET relocations
+>   x86, build: allow LTO_CLANG and THINLTO to be selected
+>
+>  .gitignore                            |   1 +
+>  Makefile                              |  65 ++++++-
+>  arch/Kconfig                          |  67 +++++++
+>  arch/arm64/Kconfig                    |   2 +
+>  arch/arm64/Makefile                   |   1 +
+>  arch/arm64/kernel/vdso/Makefile       |   4 +-
+>  arch/arm64/kvm/hyp/nvhe/Makefile      |   4 +-
+>  arch/x86/Kconfig                      |   3 +
+>  arch/x86/Makefile                     |   5 +
+>  arch/x86/boot/compressed/Makefile     |   2 +
+>  arch/x86/boot/compressed/pgtable_64.c |   9 -
+>  arch/x86/entry/vdso/Makefile          |   5 +-
+>  arch/x86/include/asm/special_insns.h  |  28 +--
+>  arch/x86/kernel/cpu/common.c          |   4 +-
+>  arch/x86/tools/relocs.c               |   1 +
+>  drivers/firmware/efi/libstub/Makefile |   2 +
+>  drivers/misc/lkdtm/Makefile           |   1 +
+>  drivers/ras/cec.c                     |   9 +-
+>  include/asm-generic/vmlinux.lds.h     |  11 +-
+>  include/linux/init.h                  |  79 +++++++-
+>  include/linux/pci.h                   |  19 +-
+>  kernel/trace/Kconfig                  |   5 +
+>  lib/string.c                          |  24 +++
+>  scripts/Makefile.build                |  55 +++++-
+>  scripts/Makefile.lib                  |   6 +-
+>  scripts/Makefile.modfinal             |  31 ++-
+>  scripts/Makefile.modpost              |  26 ++-
+>  scripts/generate_initcall_order.pl    | 270 ++++++++++++++++++++++++++
+>  scripts/link-vmlinux.sh               |  94 ++++++++-
+>  scripts/mod/Makefile                  |   1 +
+>  scripts/mod/modpost.c                 |  16 +-
+>  scripts/mod/modpost.h                 |   9 +
+>  scripts/mod/sumversion.c              |   6 +-
+>  scripts/module-lto.lds                |  26 +++
+>  tools/objtool/builtin-check.c         |  13 +-
+>  tools/objtool/builtin.h               |   2 +-
+>  tools/objtool/check.c                 |  83 ++++++++
+>  tools/objtool/check.h                 |   1 +
+>  tools/objtool/objtool.h               |   1 +
+>  39 files changed, 883 insertions(+), 108 deletions(-)
+>  create mode 100755 scripts/generate_initcall_order.pl
+>  create mode 100644 scripts/module-lto.lds
+>
+>
+> base-commit: e28f0104343d0c132fa37f479870c9e43355fee4
+> --
+> 2.28.0.402.g5ffc5be6b7-goog
+>
+> --
+> You received this message because you are subscribed to the Google Groups "Clang Built Linux" group.
+> To unsubscribe from this group and stop receiving emails from it, send an email to clang-built-linux+unsubscribe@googlegroups.com.
+> To view this discussion on the web visit https://groups.google.com/d/msgid/clang-built-linux/20200903203053.3411268-1-samitolvanen%40google.com.
