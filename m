@@ -2,88 +2,99 @@ Return-Path: <SRS0=6voe=CP=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 721AAC433E2
-	for <linux-pci@archiver.kernel.org>; Sun,  6 Sep 2020 12:20:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68C58C43461
+	for <linux-pci@archiver.kernel.org>; Sun,  6 Sep 2020 18:27:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2095E21481
-	for <linux-pci@archiver.kernel.org>; Sun,  6 Sep 2020 12:20:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1599394843;
-	bh=5xaQtgEEunxFpWtPQFx1XI1o7Fy2z6eCD7GptBgqF50=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=Pi98Ep+Kq0ym1XrN6JNDlX6IzIi5qyTtzTo6oh764r9fteB08QztcRfzwqMl/g8Df
-	 sYA+rF8MLxR5Zb6bbreqwNOfLgw7ptiKl/N1BaMfhiZlJ4EVLX1hgbk7qEKQm4ZyV8
-	 G6Cyx5MHW75QBRhvzSLtxT7KsMnOZ5Bj934zVz+E=
+	by mail.kernel.org (Postfix) with ESMTP id 210C82078E
+	for <linux-pci@archiver.kernel.org>; Sun,  6 Sep 2020 18:27:17 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=gmx.net header.i=@gmx.net header.b="KBLRcTLJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728688AbgIFMUk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 6 Sep 2020 08:20:40 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53288 "EHLO mail.kernel.org"
+        id S1729094AbgIFS1Q (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 6 Sep 2020 14:27:16 -0400
+Received: from mout.gmx.net ([212.227.15.19]:59137 "EHLO mout.gmx.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728692AbgIFMT6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 6 Sep 2020 08:19:58 -0400
-Received: from mail-ed1-f53.google.com (mail-ed1-f53.google.com [209.85.208.53])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A4CC221473;
-        Sun,  6 Sep 2020 12:19:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1599394797;
-        bh=5xaQtgEEunxFpWtPQFx1XI1o7Fy2z6eCD7GptBgqF50=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=xMhmkk2X4elrWy0fOJOtdYnKbgJN/smaIaC4RalV+1J8HOMZvzAScGVjfw7LTZsRi
-         LEnxY8+5Shd6CqobnrF/+xhoheBxHKiEuAF0eqZTrDOdywWD77CF23mYfqbACesMkS
-         GhgQ86hz2PsT/SYo+eiAVK8Vm/cqsOICoa3HbmhI=
-Received: by mail-ed1-f53.google.com with SMTP id ay8so10021558edb.8;
-        Sun, 06 Sep 2020 05:19:57 -0700 (PDT)
-X-Gm-Message-State: AOAM531KmN8Fegumyn0+BtyP9biFuph1MWuYcWF4CAyxUNF+e3p4yDWc
-        PZu/m98/ZfLpH+xY+2R+rLqxmaV1aQE7AR4pxz8=
-X-Google-Smtp-Source: ABdhPJzhE4/GdY6BaMfAPnBjEdqyt0ywFD/ZbYQ6CquCBoV7lSB+t44y0FR4eIb5g8MemGWEaTPnAwx/ja7wgiV1m3c=
-X-Received: by 2002:a05:6402:180a:: with SMTP id g10mr16867999edy.18.1599394796310;
- Sun, 06 Sep 2020 05:19:56 -0700 (PDT)
+        id S1728969AbgIFS1N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 6 Sep 2020 14:27:13 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.net;
+        s=badeba3b8450; t=1599416804;
+        bh=2Ppyix6Y9pVqwAOomMgrqfY0I+MRBSmelBiqaDpZmwM=;
+        h=X-UI-Sender-Class:Subject:To:Cc:References:Reply-To:From:Date:
+         In-Reply-To;
+        b=KBLRcTLJOt8YinkXmAmvSvtSwK7m96mWN+HQ99a2lGlgh7sl/knXD53R0I+w1+fG3
+         7w/lh+VKG7iJQdcW8lMe4FALXDVJBjwAnDtu6dGbl6LT8otJPODgUiF+oBp5U7VbZs
+         KZrnxa5ijfSyEFVaYB1GipVu5LyZQxS1C5iEXVsc=
+X-UI-Sender-Class: 01bb95c1-4bf8-414a-932a-4f6e2808ef9c
+Received: from mandree.no-ip.org ([84.160.55.91]) by mail.gmx.com (mrgmx004
+ [212.227.17.190]) with ESMTPSA (Nemesis) id 1MRTRH-1jrhjN2t6L-00NTgm; Sun, 06
+ Sep 2020 20:26:44 +0200
+Received: from ryzen.an3e.de (localhost [IPv6:::1])
+        by ryzen.an3e.de (Postfix) with ESMTP id BA277120106;
+        Sun,  6 Sep 2020 20:26:41 +0200 (CEST)
+Subject: Re: pcieport 0000:00:01.0: PME: Spurious native interrupt (nvidia
+ with nouveau and thunderbolt on thinkpad P73)
+To:     Marc MERLIN <marc_nouveau@merlins.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>, nouveau@lists.freedesktop.org,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
+        Keith Busch <keith.busch@intel.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Paul Menzel <pmenzel@molgen.mpg.de>,
+        Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20191004123947.11087-1-mika.westerberg@linux.intel.com>
+ <20191004123947.11087-2-mika.westerberg@linux.intel.com>
+ <20200808202202.GA12007@merlins.org> <20200906181852.GC13955@merlins.org>
+Reply-To: invalid@invalid.invalid
+From:   Matthias Andree <matthias.andree@gmx.de>
+Message-ID: <83a84ca8-1f61-962e-4329-1a5e85e64dab@gmx.de>
+Date:   Sun, 6 Sep 2020 20:26:41 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.11.0
 MIME-Version: 1.0
-References: <20200904185609.171636-1-alex.dewar90@gmail.com>
-In-Reply-To: <20200904185609.171636-1-alex.dewar90@gmail.com>
-From:   Krzysztof Kozlowski <krzk@kernel.org>
-Date:   Sun, 6 Sep 2020 14:19:44 +0200
-X-Gmail-Original-Message-ID: <CAJKOXPdjev5gMFBX8q6Q7ZZ1s3aBiGKOqfmrCQKTMGeXDeAoTA@mail.gmail.com>
-Message-ID: <CAJKOXPdjev5gMFBX8q6Q7ZZ1s3aBiGKOqfmrCQKTMGeXDeAoTA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: keystone: Enable compile-testing on !ARM
-To:     Alex Dewar <alex.dewar90@gmail.com>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Thierry Reding <treding@nvidia.com>,
-        Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        Vidya Sagar <vidyas@nvidia.com>,
-        Dilip Kota <eswara.kota@linux.intel.com>,
-        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
-        Jonathan Chocron <jonnyc@amazon.com>,
-        linux-pci@vger.kernel.org,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20200906181852.GC13955@merlins.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+X-Provags-ID: V03:K1:pcuxN8MATZXEDYk6XIomOMPYxsUCRK4B4jiQ41qoH+xG0lXn4ZH
+ beUhbkTTeVPibDBDU1POsQ4BIHkExSNLupSujeqSLV+24mCfKR59v8NlECuvWVB5vfeC6vB
+ bINs6tqv5euXY/GkuDumkC9fSnGS/Vq84drPmqWpbYt0obQyU4KGm05xVx4Xu2yLHIPNwcc
+ s91m0gaSJBD4gO44U0lgQ==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:q0j6mXjJslo=:XzbW+8WyG6CvL0hx+bMKNF
+ hTogB5PUcfv4RidxWHk+a4q3F8Xru3lQUK8W9bPPcvdkUoG3XTSJoo82YA013NfqI3il1NaYX
+ APcGGJFIsfi6+RaxNxAFeDY/r8kk1Yes3uUx/pj67RbRGTm0VJvYD6RqW0jvV56PWLLl9bh6E
+ 8U1qhKoAHBpmg06SksR/tfIZTNAOyfKw13SaeSVhYYH/cRaRWfOAKANJyaenzCyVvZ2M9KFRn
+ /ABxCIN6aUN++Wonj32tdVI0LKx/IcJWtUJ+MrV4lRowdaK1SxFWdevKN9Q6CHNvjVkqOQGaa
+ 1TC0kKXLn/r3AngUTUeOT0BjU+Y3YpXYzobaGEcGcfvlDZP6N7YYbi8noHRuN5nRTAePBpseB
+ MEKvr844jiaxqce9KFDP0XP6JVzMQbrOyfAdG9oTrSuf0tZj4Pue4/6YH62bmmaVnpNkzi9cJ
+ d6Ksb0ESZiwbNFH0+VuP3/o+ckFe7idAN4UzNbBl0pNzF0yZ2HcQcxoIshNipj8Oy2mZRJ9be
+ jQMDB1fBuTMIpNxpXNLSGXKywQYbKKemu6Pn9CtT9z3jmqAE2sBBJywsZfONIj9mPpVTpNCC0
+ 1fPgZSzPVvAXBkRkmogBlvfFPmAxWW/VmGO5qd3bNyjNPG0BYfMZ5CODLfzth5bnryLSa9KS0
+ 9YBXLSbtdqStF39RxFWYokvtVfHCatkJIUaN27WNOySpV4noA/oMiGo72jZhcuhZQHMYJ122H
+ fwbqJQQg9ih3zVUUX80GoU8/y0Q5hCIve4+ebVc4rc2ycdsPxh3Bpjd+vSPUOw8/T+lCtSaoc
+ ZFr2KsQD3xrQzAdHhEIl5d7NWcgiLiLr3D6drVg4fEVjBGydzd8NCJYB6ZDZ+aJm+HGvByitN
+ BVzQbRIu9Jjrg/6famV0oqEAgQNW3kxzOLF61xKacFZIdBuqjjvmyY0Ov3qE3Cuqa63hcq8WN
+ GjxDD7zXY+EVYNmvb3EHiBpMFEgwfl3uojZlyjeHT26LJ0aqmlInzsi3ck3juOrtTr4ETunzu
+ Ejgpyt2q6ro6IbYYl4m6eB6B8tEi/8i5c55qtLSrItVZVN90EFFnCseU8/7r9M3b85yrMKKmB
+ 9yNUcV1wKyWyYYE6/nWp9FsJsoemhgn47WnMox3MalF0xrJkAYJhfb9SH4ohj5/tCq1rkZ1Xm
+ 6Fvm5sk+/F28FmBKrCnay6rnI7ghdO3gzOyKq5VIu7tauxDy9pWi83FiY5py0+7lv7NI6Q814
+ O91zqWQI6RK9GOwffMEARtex5lTuxCzLp0Ci/5g==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, 4 Sep 2020 at 20:56, Alex Dewar <alex.dewar90@gmail.com> wrote:
->
-> Currently the Keystone driver can only be compile-tested on ARM, but
-> this restriction seems unnecessary. Get rid of it to increase test
-> coverage.
->
-> Build-tested on x86 with allyesconfig.
+Please everyone stop Cc:ing me on this discussion, I have no interest
+and nothing to contribute here.
 
-You should at least build it on x86_64, powerpc and MIPS. These are
-widely available (e.g. in most of distros, or here:
-https://mirrors.edge.kernel.org/pub/tools/crosstool/). Useful is also
-riscv and sh (specially sh lacks certain headers/features).
+I have set an invalid Reply-To: just in case...
 
-Best regards,
-Krzysztof
+
