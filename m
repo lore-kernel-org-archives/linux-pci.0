@@ -2,83 +2,107 @@ Return-Path: <SRS0=zisR=CQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 412F6C433E2
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Sep 2020 16:28:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D70F3C433E2
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Sep 2020 16:31:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0923A207DE
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Sep 2020 16:28:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 99B00207DE
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Sep 2020 16:31:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730596AbgIGQZ6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 7 Sep 2020 12:25:58 -0400
-Received: from foss.arm.com ([217.140.110.172]:37268 "EHLO foss.arm.com"
+        id S1729884AbgIGQbT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 7 Sep 2020 12:31:19 -0400
+Received: from foss.arm.com ([217.140.110.172]:37068 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729910AbgIGOcx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 7 Sep 2020 10:32:53 -0400
+        id S1729831AbgIGOYS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 7 Sep 2020 10:24:18 -0400
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 3DE7A31B;
-        Mon,  7 Sep 2020 07:32:11 -0700 (PDT)
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id B64751045;
+        Mon,  7 Sep 2020 07:24:17 -0700 (PDT)
 Received: from e121166-lin.cambridge.arm.com (e121166-lin.cambridge.arm.com [10.1.196.255])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 0901D3F73C;
-        Mon,  7 Sep 2020 07:32:09 -0700 (PDT)
-Date:   Mon, 7 Sep 2020 15:32:07 +0100
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id F00903F73C;
+        Mon,  7 Sep 2020 07:24:15 -0700 (PDT)
+Date:   Mon, 7 Sep 2020 15:24:13 +0100
 From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Jon Derrick <jonathan.derrick@intel.com>
-Cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Andrzej Jakowski <andrzej.jakowski@linux.intel.com>,
-        Sushma Kalakota <sushmax.kalakota@intel.com>,
-        linux-kernel@vger.kernel.org, x86@kernel.org,
-        Andy Shevchenko <andriy.shevchenko@intel.com>
-Subject: Re: [PATCH 5/6] x86/apic/msi: Use Real PCI DMA device when
- configuring IRTE
-Message-ID: <20200907143207.GC9474@e121166-lin.cambridge.arm.com>
-References: <20200728194945.14126-1-jonathan.derrick@intel.com>
- <20200728194945.14126-6-jonathan.derrick@intel.com>
+To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Cc:     Richard Zhu <hongxing.zhu@nxp.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Shawn Guo <shawnguo@kernel.org>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Pengutronix Kernel Team <kernel@pengutronix.de>,
+        Fabio Estevam <festevam@gmail.com>,
+        NXP Linux Team <linux-imx@nxp.com>,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: Re: [PATCH v2][next] PCI: imx6: Use fallthrough pseudo-keyword
+Message-ID: <20200907142413.GB9474@e121166-lin.cambridge.arm.com>
+References: <20200722031903.GA3711@embeddedor>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200728194945.14126-6-jonathan.derrick@intel.com>
+In-Reply-To: <20200722031903.GA3711@embeddedor>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jul 28, 2020 at 01:49:44PM -0600, Jon Derrick wrote:
-> VMD retransmits child device MSI/X with the VMD endpoint's requester-id.
-> In order to support direct interrupt remapping of VMD child devices,
-> ensure that the IRTE is programmed with the VMD endpoint's requester-id
-> using pci_real_dma_dev().
+On Tue, Jul 21, 2020 at 10:19:03PM -0500, Gustavo A. R. Silva wrote:
+> Replace the existing /* fall through */ comments and its variants with
+> the new pseudo-keyword macro fallthrough[1]. Also, remove unnecessary
+> fall-through markings when it is the case.
 > 
-> Reviewed-by: Andy Shevchenko <andriy.shevchenko@intel.com>
-> Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+> [1] https://www.kernel.org/doc/html/v5.7/process/deprecated.html?highlight=fallthrough#implicit-switch-case-fall-through
+> 
+> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 > ---
->  arch/x86/kernel/apic/msi.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> Changes in v2:
+>  - Update URL. Use proper URL to Linux v5.7 documentation.
+> 
+>  drivers/pci/controller/dwc/pci-imx6.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
 
-I'd need an x86 maintainer ACK on this patch.
+Applied to pci/imx6, thanks.
 
-Thanks,
 Lorenzo
 
-> diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-> index c2b2911feeef..7ca271b8d891 100644
-> --- a/arch/x86/kernel/apic/msi.c
-> +++ b/arch/x86/kernel/apic/msi.c
-> @@ -189,7 +189,7 @@ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
->  
->  	init_irq_alloc_info(&info, NULL);
->  	info.type = X86_IRQ_ALLOC_TYPE_MSI;
-> -	info.msi_dev = dev;
-> +	info.msi_dev = pci_real_dma_dev(dev);
->  
->  	domain = irq_remapping_get_irq_domain(&info);
->  	if (domain == NULL)
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+> index 8f08ae53f53e..6c78903b49be 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> @@ -439,7 +439,7 @@ static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6_pcie)
+>  		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+>  				   IMX6SX_GPR12_PCIE_TEST_POWERDOWN, 0);
+>  		break;
+> -	case IMX6QP:		/* FALLTHROUGH */
+> +	case IMX6QP:
+>  	case IMX6Q:
+>  		/* power up core phy and enable ref clock */
+>  		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> @@ -642,7 +642,7 @@ static void imx6_pcie_init_phy(struct imx6_pcie *imx6_pcie)
+>  		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+>  				   IMX6SX_GPR12_PCIE_RX_EQ_MASK,
+>  				   IMX6SX_GPR12_PCIE_RX_EQ_2);
+> -		/* FALLTHROUGH */
+> +		fallthrough;
+>  	default:
+>  		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+>  				   IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
+> @@ -1107,7 +1107,7 @@ static int imx6_pcie_probe(struct platform_device *pdev)
+>  			dev_err(dev, "pcie_aux clock source missing or invalid\n");
+>  			return PTR_ERR(imx6_pcie->pcie_aux);
+>  		}
+> -		/* fall through */
+> +		fallthrough;
+>  	case IMX7D:
+>  		if (dbi_base->start == IMX8MQ_PCIE2_BASE_ADDR)
+>  			imx6_pcie->controller_id = 1;
 > -- 
 > 2.27.0
 > 
