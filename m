@@ -7,27 +7,27 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D26DAC433E2
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Sep 2020 05:46:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC300C433E2
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Sep 2020 05:46:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A37212137B
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Sep 2020 05:46:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A32AE216C4
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Sep 2020 05:46:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726917AbgIGFqR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 7 Sep 2020 01:46:17 -0400
-Received: from inva021.nxp.com ([92.121.34.21]:33192 "EHLO inva021.nxp.com"
+        id S1726837AbgIGFqI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 7 Sep 2020 01:46:08 -0400
+Received: from inva020.nxp.com ([92.121.34.13]:44188 "EHLO inva020.nxp.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726913AbgIGFqP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 7 Sep 2020 01:46:15 -0400
-Received: from inva021.nxp.com (localhost [127.0.0.1])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 66D42200C66;
-        Mon,  7 Sep 2020 07:46:10 +0200 (CEST)
+        id S1726780AbgIGFqE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 7 Sep 2020 01:46:04 -0400
+Received: from inva020.nxp.com (localhost [127.0.0.1])
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 3C23E1A0F84;
+        Mon,  7 Sep 2020 07:46:02 +0200 (CEST)
 Received: from invc005.ap-rdc01.nxp.com (invc005.ap-rdc01.nxp.com [165.114.16.14])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 3229C2000E9;
-        Mon,  7 Sep 2020 07:46:05 +0200 (CEST)
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 094541A0E54;
+        Mon,  7 Sep 2020 07:45:57 +0200 (CEST)
 Received: from localhost.localdomain (mega.ap.freescale.net [10.192.208.232])
-        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id 1C04C402EB;
-        Mon,  7 Sep 2020 07:45:54 +0200 (CEST)
+        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id 36603402DD;
+        Mon,  7 Sep 2020 07:45:50 +0200 (CEST)
 From:   Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
 To:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org, bhelgaas@google.com,
@@ -35,9 +35,9 @@ To:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         lorenzo.pieralisi@arm.com, gustavo.pimentel@synopsys.com
 Cc:     minghuan.Lian@nxp.com, mingkai.hu@nxp.com, roy.zang@nxp.com,
         Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Subject: [PATCH 6/7] dts: arm64: ls1043a: Add SCFG phandle for PCIe nodes
-Date:   Mon,  7 Sep 2020 13:38:00 +0800
-Message-Id: <20200907053801.22149-7-Zhiqiang.Hou@nxp.com>
+Subject: [PATCH 3/7] dt-bindings: pci: layerscape-pci: Add a optional property big-endian
+Date:   Mon,  7 Sep 2020 13:37:57 +0800
+Message-Id: <20200907053801.22149-4-Zhiqiang.Hou@nxp.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200907053801.22149-1-Zhiqiang.Hou@nxp.com>
 References: <20200907053801.22149-1-Zhiqiang.Hou@nxp.com>
@@ -49,43 +49,30 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-The LS1043A PCIe controller has some control registers
-in SCFG block, so add the SCFG phandle for each PCIe
-controller DT node.
+This property is to indicate the endianness when accessing the
+PEX_LUT and PF register block, so if these registers are
+implemented in big-endian, specify this property.
 
 Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 ---
- arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi | 3 +++
- 1 file changed, 3 insertions(+)
+ Documentation/devicetree/bindings/pci/layerscape-pci.txt | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi
-index 70e07612da12..30ccf1fdb851 100644
---- a/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi
-+++ b/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi
-@@ -822,6 +822,7 @@
- 			interrupts = <0 118 0x4>, /* controller interrupt */
- 				     <0 117 0x4>; /* PME interrupt */
- 			interrupt-names = "intr", "pme";
-+			fsl,pcie-scfg = <&scfg 0>;
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
-@@ -849,6 +850,7 @@
- 			interrupts = <0 128 0x4>,
- 				     <0 127 0x4>;
- 			interrupt-names = "intr", "pme";
-+			fsl,pcie-scfg = <&scfg 1>;
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
-@@ -876,6 +878,7 @@
- 			interrupts = <0 162 0x4>,
- 				     <0 161 0x4>;
- 			interrupt-names = "intr", "pme";
-+			fsl,pcie-scfg = <&scfg 2>;
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
+diff --git a/Documentation/devicetree/bindings/pci/layerscape-pci.txt b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+index 99a386ea691c..2236d3f3089b 100644
+--- a/Documentation/devicetree/bindings/pci/layerscape-pci.txt
++++ b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+@@ -37,6 +37,10 @@ Required properties:
+   of the data transferred from/to the IP block. This can avoid the software
+   cache flush/invalid actions, and improve the performance significantly.
+ 
++Optional properties:
++- big-endian: If the PEX_LUT and PF register block is in big-endian, specify
++  this property.
++
+ Example:
+ 
+ 	pcie@3400000 {
 -- 
 2.17.1
 
