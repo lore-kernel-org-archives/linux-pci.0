@@ -2,85 +2,79 @@ Return-Path: <SRS0=zisR=CQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D808C433E2
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Sep 2020 11:25:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BE47C43461
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Sep 2020 12:06:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 61590206D4
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Sep 2020 11:25:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EAB512137B
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Sep 2020 12:06:05 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="mQjGozUK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729005AbgIGLZj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 7 Sep 2020 07:25:39 -0400
-Received: from foss.arm.com ([217.140.110.172]:33210 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728999AbgIGLZ1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 7 Sep 2020 07:25:27 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 81E7B11D4;
-        Mon,  7 Sep 2020 04:25:23 -0700 (PDT)
-Received: from e121166-lin.cambridge.arm.com (e121166-lin.cambridge.arm.com [10.1.196.255])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 86AD33F66E;
-        Mon,  7 Sep 2020 04:25:21 -0700 (PDT)
-Date:   Mon, 7 Sep 2020 12:25:19 +0100
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-Cc:     Geert Uytterhoeven <geert+renesas@glider.be>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
+        id S1729204AbgIGMFR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 7 Sep 2020 08:05:17 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:47633 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1729208AbgIGMEo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Sep 2020 08:04:44 -0400
+X-UUID: 211cb11decbd4b71941aff5112ad8cb0-20200907
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=NSF/4NM5uAVLuEnB9EhXhboZR792opTOFNFJm6U+KMM=;
+        b=mQjGozUKt5stGY54anpUlfZbak+fxeTqvVai4MeSjwWUtBqWm9W2RdV2APjE5oWP4M3kfcd1a3TKS0bE4bZYQdGKZ0cvdSQGX/hMkAFZpS4BlN2xsNlFVz9nFXsuV+jttj4LHM6fcDgztk+KhEdW+usF5JYIfmgS/qMTSgdTr1c=;
+X-UUID: 211cb11decbd4b71941aff5112ad8cb0-20200907
+Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw02.mediatek.com
+        (envelope-from <jianjun.wang@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 1145564618; Mon, 07 Sep 2020 20:04:33 +0800
+Received: from mtkcas07.mediatek.inc (172.21.101.84) by
+ mtkmbs08n1.mediatek.inc (172.21.101.55) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Mon, 7 Sep 2020 20:04:30 +0800
+Received: from localhost.localdomain (10.17.3.153) by mtkcas07.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Mon, 7 Sep 2020 20:04:30 +0800
+From:   Jianjun Wang <jianjun.wang@mediatek.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
         Rob Herring <robh+dt@kernel.org>,
-        Magnus Damm <magnus.damm@gmail.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Biju Das <biju.das.jz@bp.renesas.com>,
-        Prabhakar <prabhakar.csengg@gmail.com>
-Subject: Re: [PATCH 0/3] Add PCIe EP to RZ/G2H
-Message-ID: <20200907112519.GB7573@e121166-lin.cambridge.arm.com>
-References: <20200904103851.3946-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Ryder Lee <ryder.lee@mediatek.com>
+CC:     Philipp Zabel <p.zabel@pengutronix.de>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        <davem@davemloft.net>, <linux-pci@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        Sj Huang <sj.huang@mediatek.com>,
+        Jianjun Wang <jianjun.wang@mediatek.com>
+Subject: [PATCH 3/3] MAINTAINERS: update entry for MediaTek PCIe controller
+Date:   Mon, 7 Sep 2020 20:01:18 +0800
+Message-ID: <20200907120118.11667-3-jianjun.wang@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20200907120118.11667-1-jianjun.wang@mediatek.com>
+References: <20200907120118.11667-1-jianjun.wang@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200904103851.3946-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+Content-Type: text/plain
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Sep 04, 2020 at 11:38:48AM +0100, Lad Prabhakar wrote:
-> Hi All,
-> 
-> This patch series adds PCIe EP support to R8A774E1 SoC.
-> 
-> patch 2/3 applies on top of [1] and patch 3/3 is dependent
-> on series [2].
-> 
-> [1] https://git.kernel.org/pub/scm/linux/kernel/git/geert/
->     renesas-devel.git/log/?h=renesas-arm-dt-for-v5.10
-> [2] https://patchwork.kernel.org/project/linux-pci/list/
->     ?series=332849&submitter=&state=&q=&archive=&delegate=
-> 
-> Cheers,
-> Prabhakar
-> 
-> 
-> Lad Prabhakar (3):
->   dt-bindings: pci: rcar-pci-ep: Document r8a774e1
->   arm64: dts: renesas: r8a774e1: Add PCIe EP nodes
->   misc: pci_endpoint_test: Add Device ID for RZ/G2H PCIe controller
-> 
->  .../devicetree/bindings/pci/rcar-pci-ep.yaml  |  1 +
->  arch/arm64/boot/dts/renesas/r8a774e1.dtsi     | 38 +++++++++++++++++++
->  drivers/misc/pci_endpoint_test.c              |  2 +
->  3 files changed, 41 insertions(+)
+QWRkIG1haW50YWluZXIgZm9yIE1lZGlhVGVrIFBDSWUgY29udHJvbGxlciBkcml2ZXIuDQoNClNp
+Z25lZC1vZmYtYnk6IEppYW5qdW4gV2FuZyA8amlhbmp1bi53YW5nQG1lZGlhdGVrLmNvbT4NCi0t
+LQ0KIE1BSU5UQUlORVJTIHwgMSArDQogMSBmaWxlIGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCspDQoN
+CmRpZmYgLS1naXQgYS9NQUlOVEFJTkVSUyBiL01BSU5UQUlORVJTDQppbmRleCBkZWFhZmI2MTcz
+NjEuLjVjNjExMDQ2ODUyNiAxMDA2NDQNCi0tLSBhL01BSU5UQUlORVJTDQorKysgYi9NQUlOVEFJ
+TkVSUw0KQEAgLTEzNDU5LDYgKzEzNDU5LDcgQEAgRjoJZHJpdmVycy9wY2kvY29udHJvbGxlci9k
+d2MvcGNpZS1oaXN0Yi5jDQogDQogUENJRSBEUklWRVIgRk9SIE1FRElBVEVLDQogTToJUnlkZXIg
+TGVlIDxyeWRlci5sZWVAbWVkaWF0ZWsuY29tPg0KK006CUppYW5qdW4gV2FuZyA8amlhbmp1bi53
+YW5nQG1lZGlhdGVrLmNvbT4NCiBMOglsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnDQogTDoJbGlu
+dXgtbWVkaWF0ZWtAbGlzdHMuaW5mcmFkZWFkLm9yZw0KIFM6CVN1cHBvcnRlZA0KLS0gDQoyLjE4
+LjANCg==
 
-Took patches (1) and (3) in pci/rcar, thanks.
-
-Lorenzo
