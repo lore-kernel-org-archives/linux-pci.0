@@ -2,131 +2,93 @@ Return-Path: <SRS0=zisR=CQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2706C433E2
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Sep 2020 05:46:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2425AC43461
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Sep 2020 08:43:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 84DC02137B
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Sep 2020 05:46:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E8DCD21481
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Sep 2020 08:43:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726850AbgIGFqo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 7 Sep 2020 01:46:44 -0400
-Received: from inva021.nxp.com ([92.121.34.21]:33044 "EHLO inva021.nxp.com"
+        id S1727921AbgIGIny (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 7 Sep 2020 04:43:54 -0400
+Received: from mga05.intel.com ([192.55.52.43]:24709 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726800AbgIGFqF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 7 Sep 2020 01:46:05 -0400
-Received: from inva021.nxp.com (localhost [127.0.0.1])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 7173C200D6A;
-        Mon,  7 Sep 2020 07:46:03 +0200 (CEST)
-Received: from invc005.ap-rdc01.nxp.com (invc005.ap-rdc01.nxp.com [165.114.16.14])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 41779200D48;
-        Mon,  7 Sep 2020 07:45:58 +0200 (CEST)
-Received: from localhost.localdomain (mega.ap.freescale.net [10.192.208.232])
-        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id 817DC402DF;
-        Mon,  7 Sep 2020 07:45:51 +0200 (CEST)
-From:   Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-To:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, bhelgaas@google.com,
-        robh+dt@kernel.org, shawnguo@kernel.org, leoyang.li@nxp.com,
-        lorenzo.pieralisi@arm.com, gustavo.pimentel@synopsys.com
-Cc:     minghuan.Lian@nxp.com, mingkai.hu@nxp.com, roy.zang@nxp.com,
-        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Subject: [PATCH 4/7] arm64: dts: layerscape: Add big-endian property for PCIe nodes
-Date:   Mon,  7 Sep 2020 13:37:58 +0800
-Message-Id: <20200907053801.22149-5-Zhiqiang.Hou@nxp.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200907053801.22149-1-Zhiqiang.Hou@nxp.com>
-References: <20200907053801.22149-1-Zhiqiang.Hou@nxp.com>
-X-Virus-Scanned: ClamAV using ClamSMTP
+        id S1726978AbgIGInx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 7 Sep 2020 04:43:53 -0400
+IronPort-SDR: lTEYkIKZBjKEoVeFtMFelD9XK3/EWGJUgNrLxH903l+hi+h8aYg+Gk2TuqDIMJVtAbidqVLaid
+ RuvFB9D8Dn9w==
+X-IronPort-AV: E=McAfee;i="6000,8403,9736"; a="242789756"
+X-IronPort-AV: E=Sophos;i="5.76,401,1592895600"; 
+   d="scan'208";a="242789756"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Sep 2020 01:43:52 -0700
+IronPort-SDR: OZ4NI3funrdLD5Nm8UUcbwwVuX37opK1MYw6pXMy5H0l4SoKOu++904l4qnNZ65aFbiQAEB0VQ
+ z8EFOVdIaBEg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.76,401,1592895600"; 
+   d="scan'208";a="406774494"
+Received: from lahna.fi.intel.com (HELO lahna) ([10.237.72.163])
+  by fmsmga001.fm.intel.com with SMTP; 07 Sep 2020 01:43:49 -0700
+Received: by lahna (sSMTP sendmail emulation); Mon, 07 Sep 2020 11:43:49 +0300
+Date:   Mon, 7 Sep 2020 11:43:49 +0300
+From:   Mika Westerberg <mika.westerberg@linux.intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Karol Herbst <kherbst@redhat.com>,
+        Lyude Paul <lyude@redhat.com>,
+        Patrick Volkerding <volkerdi@gmail.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Ben Skeggs <bskeggs@redhat.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: Add a quirk to skip 1000 ms default link activation
+ delay on some devices
+Message-ID: <20200907084349.GZ2495@lahna.fi.intel.com>
+References: <20200831093147.36775-1-mika.westerberg@linux.intel.com>
+ <20200903181122.GA313490@bjorn-Precision-5520>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200903181122.GA313490@bjorn-Precision-5520>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Hi,
 
-Add the big-endian property for LS1012A, LS1043A and LS1046A
-PCIe devicetree nodes.
+On Thu, Sep 03, 2020 at 01:11:22PM -0500, Bjorn Helgaas wrote:
+> On Mon, Aug 31, 2020 at 12:31:47PM +0300, Mika Westerberg wrote:
+> > Kai-Heng Feng reported that it takes a long time (> 1 s) to resume
+> > Thunderbolt-connected devices from both runtime suspend and system sleep
+> > (s2idle).
+> > 
+> > This was because some Downstream Ports that support > 5 GT/s do not also
+> > support Data Link Layer Link Active reporting.  Per PCIe r5.0 sec 6.6.1:
+> > 
+> >   With a Downstream Port that supports Link speeds greater than 5.0 GT/s,
+> >   software must wait a minimum of 100 ms after Link training completes
+> >   before sending a Configuration Request to the device immediately below
+> >   that Port. Software can determine when Link training completes by
+> >   polling the Data Link Layer Link Active bit or by setting up an
+> >   associated interrupt (see Section 6.7.3.3).
+> > 
+> > Sec 7.5.3.6 requires such Ports to support DLL Link Active reporting,
+> > but at least the Intel JHL6240 Thunderbolt 3 Bridge [8086:15c0] and
+> > Intel JHL7540 Thunderbolt 3 Bridge [8086:15e7, 8086:15ea, 8086:15ef] do
+> > not.
+> 
+> Is there any erratum about this?  I'm just hoping to avoid the
+> maintenance hassle of adding new devices to the quirk.  If Intel
+> acknowledges this as a defect and has a plan to fix it, that would
+> help a lot.  If they *don't* think it's a defect, then maybe they have
+> a hint about how we should handle this generically.
 
-Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
----
- arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi | 1 +
- arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi | 3 +++
- arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi | 3 +++
- 3 files changed, 7 insertions(+)
-
-diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi
-index ff19ec415b60..77a0d401c177 100644
---- a/arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi
-+++ b/arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi
-@@ -511,6 +511,7 @@
- 					<0000 0 0 2 &gic 0 111 IRQ_TYPE_LEVEL_HIGH>,
- 					<0000 0 0 3 &gic 0 112 IRQ_TYPE_LEVEL_HIGH>,
- 					<0000 0 0 4 &gic 0 113 IRQ_TYPE_LEVEL_HIGH>;
-+			big-endian;
- 			status = "disabled";
- 		};
- 
-diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi
-index 5c2e370f6316..70e07612da12 100644
---- a/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi
-+++ b/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi
-@@ -837,6 +837,7 @@
- 					<0000 0 0 2 &gic 0 111 0x4>,
- 					<0000 0 0 3 &gic 0 112 0x4>,
- 					<0000 0 0 4 &gic 0 113 0x4>;
-+			big-endian;
- 			status = "disabled";
- 		};
- 
-@@ -863,6 +864,7 @@
- 					<0000 0 0 2 &gic 0 121 0x4>,
- 					<0000 0 0 3 &gic 0 122 0x4>,
- 					<0000 0 0 4 &gic 0 123 0x4>;
-+			big-endian;
- 			status = "disabled";
- 		};
- 
-@@ -889,6 +891,7 @@
- 					<0000 0 0 2 &gic 0 155 0x4>,
- 					<0000 0 0 3 &gic 0 156 0x4>,
- 					<0000 0 0 4 &gic 0 157 0x4>;
-+			big-endian;
- 			status = "disabled";
- 		};
- 
-diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi
-index 0246d975a206..efcbfe8e5e1d 100644
---- a/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi
-+++ b/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi
-@@ -741,6 +741,7 @@
- 					<0000 0 0 2 &gic GIC_SPI 110 IRQ_TYPE_LEVEL_HIGH>,
- 					<0000 0 0 3 &gic GIC_SPI 110 IRQ_TYPE_LEVEL_HIGH>,
- 					<0000 0 0 4 &gic GIC_SPI 110 IRQ_TYPE_LEVEL_HIGH>;
-+			big-endian;
- 			status = "disabled";
- 		};
- 
-@@ -777,6 +778,7 @@
- 					<0000 0 0 2 &gic GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>,
- 					<0000 0 0 3 &gic GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>,
- 					<0000 0 0 4 &gic GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
-+			big-endian;
- 			status = "disabled";
- 		};
- 
-@@ -813,6 +815,7 @@
- 					<0000 0 0 2 &gic GIC_SPI 154 IRQ_TYPE_LEVEL_HIGH>,
- 					<0000 0 0 3 &gic GIC_SPI 154 IRQ_TYPE_LEVEL_HIGH>,
- 					<0000 0 0 4 &gic GIC_SPI 154 IRQ_TYPE_LEVEL_HIGH>;
-+			big-endian;
- 			status = "disabled";
- 		};
- 
--- 
-2.17.1
-
+I don't think there is any public documentation about these chips so
+probably no errata either. I did ask our TBT HW folks about this but so
+far did not get any answer.
