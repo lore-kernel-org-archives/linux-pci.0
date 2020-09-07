@@ -4,98 +4,81 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB927C43461
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Sep 2020 16:16:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 412F6C433E2
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Sep 2020 16:28:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B346D20757
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Sep 2020 16:16:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0923A207DE
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Sep 2020 16:28:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730507AbgIGQQk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 7 Sep 2020 12:16:40 -0400
-Received: from foss.arm.com ([217.140.110.172]:40042 "EHLO foss.arm.com"
+        id S1730596AbgIGQZ6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 7 Sep 2020 12:25:58 -0400
+Received: from foss.arm.com ([217.140.110.172]:37268 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729973AbgIGQQg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 7 Sep 2020 12:16:36 -0400
+        id S1729910AbgIGOcx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 7 Sep 2020 10:32:53 -0400
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 2845831B;
-        Mon,  7 Sep 2020 09:16:29 -0700 (PDT)
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 3DE7A31B;
+        Mon,  7 Sep 2020 07:32:11 -0700 (PDT)
 Received: from e121166-lin.cambridge.arm.com (e121166-lin.cambridge.arm.com [10.1.196.255])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 0DBE93F68F;
-        Mon,  7 Sep 2020 09:16:27 -0700 (PDT)
-Date:   Mon, 7 Sep 2020 17:16:25 +0100
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 0901D3F73C;
+        Mon,  7 Sep 2020 07:32:09 -0700 (PDT)
+Date:   Mon, 7 Sep 2020 15:32:07 +0100
 From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Mark Tomlinson <mark.tomlinson@alliedtelesis.co.nz>
-Cc:     ray.jui@broadcom.com, helgaas@kernel.org, sbranden@broadcom.com,
-        f.fainelli@gmail.com, robh@kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 1/2] PCI: iproc: Set affinity mask on MSI interrupts
-Message-ID: <20200907161625.GB10272@e121166-lin.cambridge.arm.com>
-References: <20200803035241.7737-1-mark.tomlinson@alliedtelesis.co.nz>
+To:     Jon Derrick <jonathan.derrick@intel.com>
+Cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Andrzej Jakowski <andrzej.jakowski@linux.intel.com>,
+        Sushma Kalakota <sushmax.kalakota@intel.com>,
+        linux-kernel@vger.kernel.org, x86@kernel.org,
+        Andy Shevchenko <andriy.shevchenko@intel.com>
+Subject: Re: [PATCH 5/6] x86/apic/msi: Use Real PCI DMA device when
+ configuring IRTE
+Message-ID: <20200907143207.GC9474@e121166-lin.cambridge.arm.com>
+References: <20200728194945.14126-1-jonathan.derrick@intel.com>
+ <20200728194945.14126-6-jonathan.derrick@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200803035241.7737-1-mark.tomlinson@alliedtelesis.co.nz>
+In-Reply-To: <20200728194945.14126-6-jonathan.derrick@intel.com>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Aug 03, 2020 at 03:52:40PM +1200, Mark Tomlinson wrote:
-> The core interrupt code expects the irq_set_affinity call to update the
-> effective affinity for the interrupt. This was not being done, so update
-> iproc_msi_irq_set_affinity() to do so.
+On Tue, Jul 28, 2020 at 01:49:44PM -0600, Jon Derrick wrote:
+> VMD retransmits child device MSI/X with the VMD endpoint's requester-id.
+> In order to support direct interrupt remapping of VMD child devices,
+> ensure that the IRTE is programmed with the VMD endpoint's requester-id
+> using pci_real_dma_dev().
 > 
-> Fixes: 3bc2b2348835 ("PCI: iproc: Add iProc PCIe MSI support")
-> Signed-off-by: Mark Tomlinson <mark.tomlinson@alliedtelesis.co.nz>
+> Reviewed-by: Andy Shevchenko <andriy.shevchenko@intel.com>
+> Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
 > ---
-> changes in v2:
->  - Patch 1/2 Added Fixes tag
->  - Patch 2/2 Replace original change with change suggested by Bjorn
->    Helgaas.
-> 
-> changes in v3:
->  - Use bitfield rather than bool to save memory.
-> 
->  drivers/pci/controller/pcie-iproc-msi.c | 13 +++++++++----
->  1 file changed, 9 insertions(+), 4 deletions(-)
+>  arch/x86/kernel/apic/msi.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-Applied to pci/qcom, thanks.
+I'd need an x86 maintainer ACK on this patch.
 
+Thanks,
 Lorenzo
 
-> diff --git a/drivers/pci/controller/pcie-iproc-msi.c b/drivers/pci/controller/pcie-iproc-msi.c
-> index 3176ad3ab0e5..908475d27e0e 100644
-> --- a/drivers/pci/controller/pcie-iproc-msi.c
-> +++ b/drivers/pci/controller/pcie-iproc-msi.c
-> @@ -209,15 +209,20 @@ static int iproc_msi_irq_set_affinity(struct irq_data *data,
->  	struct iproc_msi *msi = irq_data_get_irq_chip_data(data);
->  	int target_cpu = cpumask_first(mask);
->  	int curr_cpu;
-> +	int ret;
+> diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+> index c2b2911feeef..7ca271b8d891 100644
+> --- a/arch/x86/kernel/apic/msi.c
+> +++ b/arch/x86/kernel/apic/msi.c
+> @@ -189,7 +189,7 @@ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
 >  
->  	curr_cpu = hwirq_to_cpu(msi, data->hwirq);
->  	if (curr_cpu == target_cpu)
-> -		return IRQ_SET_MASK_OK_DONE;
-> +		ret = IRQ_SET_MASK_OK_DONE;
-> +	else {
-> +		/* steer MSI to the target CPU */
-> +		data->hwirq = hwirq_to_canonical_hwirq(msi, data->hwirq) + target_cpu;
-> +		ret = IRQ_SET_MASK_OK;
-> +	}
+>  	init_irq_alloc_info(&info, NULL);
+>  	info.type = X86_IRQ_ALLOC_TYPE_MSI;
+> -	info.msi_dev = dev;
+> +	info.msi_dev = pci_real_dma_dev(dev);
 >  
-> -	/* steer MSI to the target CPU */
-> -	data->hwirq = hwirq_to_canonical_hwirq(msi, data->hwirq) + target_cpu;
-> +	irq_data_update_effective_affinity(data, cpumask_of(target_cpu));
->  
-> -	return IRQ_SET_MASK_OK;
-> +	return ret;
->  }
->  
->  static void iproc_msi_irq_compose_msi_msg(struct irq_data *data,
+>  	domain = irq_remapping_get_irq_domain(&info);
+>  	if (domain == NULL)
 > -- 
-> 2.28.0
+> 2.27.0
 > 
