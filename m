@@ -2,123 +2,148 @@ Return-Path: <SRS0=zisR=CQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=ham
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96A04C43461
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Sep 2020 17:29:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E2BAC433E2
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Sep 2020 17:46:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 57C50206E6
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Sep 2020 17:29:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DC8E7206E7
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Sep 2020 17:46:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=dionne-riel-com.20150623.gappssmtp.com header.i=@dionne-riel-com.20150623.gappssmtp.com header.b="jrwGfytV"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="A0Stn/cy"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729517AbgIGR3i (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 7 Sep 2020 13:29:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42754 "EHLO
+        id S1729620AbgIGRps (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 7 Sep 2020 13:45:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45182 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729574AbgIGR3a (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Sep 2020 13:29:30 -0400
-Received: from mail-qk1-x744.google.com (mail-qk1-x744.google.com [IPv6:2607:f8b0:4864:20::744])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E70F1C061573
-        for <linux-pci@vger.kernel.org>; Mon,  7 Sep 2020 10:29:29 -0700 (PDT)
-Received: by mail-qk1-x744.google.com with SMTP id 16so3823787qkf.4
-        for <linux-pci@vger.kernel.org>; Mon, 07 Sep 2020 10:29:29 -0700 (PDT)
+        with ESMTP id S1730586AbgIGRoF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Sep 2020 13:44:05 -0400
+Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC62EC061756
+        for <linux-pci@vger.kernel.org>; Mon,  7 Sep 2020 10:44:03 -0700 (PDT)
+Received: by mail-wm1-x342.google.com with SMTP id a9so14897147wmm.2
+        for <linux-pci@vger.kernel.org>; Mon, 07 Sep 2020 10:44:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=dionne-riel-com.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=O3kwXj89Yh9dEdlh52K/qRxoxl+rESWZenHBVCslYH8=;
-        b=jrwGfytVrcuygqGHIER9iz2wPV/g6TUHZ6ZHbWFNgrYNCzV7n075KCgcuqM87ufZNp
-         gu+r7Ec5zpTtx3JtnTPx11Oal010u4mKgrt5l7aWarknkPffdhRksqsB6VG0TKA1zowF
-         VFv28I0TVj5md2YV8nLqXkq6JVcUJgtxnTbfO/AbRaIzNllC3HRk8jfnvOTA0jMlWa2q
-         O3GAokfHCL6209TmrnbODA2KdumhvzkPYHYYnqFcsEWNi+2fjZKxHDW4u6raQvRFYpL7
-         Z/p3+vJA/Qpc/0kvOcBZosaQzZ6JsShzVH5y7Wk3W69ZueOsYCUypPWns/LB2DzeNFOG
-         7jPQ==
+        d=broadcom.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=TtLg9Y4dgEBmAcytToxU0LrQsMgfNF7OgoEHJZ2Q+vw=;
+        b=A0Stn/cyvojbDX7w3lzbvMIO7gTwe43sZAGbFpuAEdS5sHSClH8/IZ2AifZ+YY+VOX
+         UVwM/aA+6tWtgJSEoCDO1PW617SUSIQB8k6b0bPqqeB7dxfGKJQUxNBeFtcQo9e3Ascw
+         6zhcNnrpuccjT086HR4puL61ghnrcI3EOoQm8=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=O3kwXj89Yh9dEdlh52K/qRxoxl+rESWZenHBVCslYH8=;
-        b=iJ3AbWvx3gNtZrLF1eDddvuctsjGooWsUzf88DL+jz1e9VjEKOnhB0k86vkXGmrgKT
-         06SnakF1zZojVQActRta8joxzkjSz60qBT/3shQFtiT6LFLpc6cgRc0y2SjxoYxo8XRi
-         0KNrZjqo0XH2KZzDiUDsGudVj48su4OnicR5MquCwh2sLzESJg7X1qShz41ef53lp1UD
-         sIGbRALfgGDkCCLmHPb7y2qYwpZZB//T1Z/pqmqOShQuBNIJUpQpPmyqAlNl6uYOsTRh
-         yNSnzr8Wo+LakIftgrE6mBRF74IfEsnIxnHWvBkDaU/aVpxY755hSGnlSkUyFvFrudmk
-         X1CQ==
-X-Gm-Message-State: AOAM532Eqnnvp8kME1dxaudyDJ37FGo0E3rcekqg8O827b8NITYewebA
-        nD6bV/Z1zx/5aSXVBrl34lBpPw==
-X-Google-Smtp-Source: ABdhPJw33XS5uaiOB/0gMwFN0ZG5DEyUAcgxGf6NM84ZW49PWTXHcRhsszMplWr32J5FujnTlCrTYA==
-X-Received: by 2002:ae9:f306:: with SMTP id p6mr18636285qkg.104.1599499769017;
-        Mon, 07 Sep 2020 10:29:29 -0700 (PDT)
-Received: from DUFFMAN (135-23-195-85.cpe.pppoe.ca. [135.23.195.85])
-        by smtp.gmail.com with ESMTPSA id y1sm11793217qti.40.2020.09.07.10.29.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Sep 2020 10:29:28 -0700 (PDT)
-Date:   Mon, 7 Sep 2020 13:29:26 -0400
-From:   Samuel Dionne-Riel <samuel@dionne-riel.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh@kernel.org>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH] PCI: rockchip: Fix bus checks in
- rockchip_pcie_valid_device()
-Message-ID: <20200907132926.27d0da14@DUFFMAN>
-In-Reply-To: <20200907102016.GH6428@e121166-lin.cambridge.arm.com>
-References: <20200904140904.944-1-lorenzo.pieralisi@arm.com>
-        <20200907102016.GH6428@e121166-lin.cambridge.arm.com>
-X-Mailer: Claws Mail 3.17.4 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=TtLg9Y4dgEBmAcytToxU0LrQsMgfNF7OgoEHJZ2Q+vw=;
+        b=ovw+isEcwgqadoxahn4eEzL4Zrw+yfLfuLy8VhRW81vSA2YE3n83kysPkeSZ7C8DBI
+         Ff1jyk1kKIG18Mxu+AK5jdjQiYCYNMupVKae2vXKiHcICvNgEheFjPBEpqT9Hd5umVRC
+         fdGIkCePfYKVO3YI1po5sW8lZEnsuy6fagRVi4XIk1EUciFmWuxgQc/K9lR7qZwMa8lG
+         sGbUy05dohnp5nr0ZlpW6EpwE2VCWS8EL+yEbgdaqh1vAdggL99gy2mMtTAe80lVwgZx
+         U7yHoVSOm7bHXotenxkwePK80RnWy5uYkOecRV/5twsb7eoq+HgQ9WNjccpOUIpxu0ES
+         J7jw==
+X-Gm-Message-State: AOAM531ec1wgPgzVDvmCEuPufVR39hEyrTmEDs2fEJCE77weahG2r7xG
+        qQtJwpTy8ks+uAV1Rckevm8HkSa2QEWSCJkAddds4w==
+X-Google-Smtp-Source: ABdhPJyNQsBm1Y3/ieHSfjO664M9CBhnY/ZnuJjayy1tYR+ob0ku/Wpd26F5nf8H2/xl9/84D4TcAGvzrj4IPjrxwfU=
+X-Received: by 2002:a1c:bad5:: with SMTP id k204mr408820wmf.111.1599500642170;
+ Mon, 07 Sep 2020 10:44:02 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+References: <20200824193036.6033-1-james.quinlan@broadcom.com>
+ <b19bc982-a0c4-c6ff-d8f5-650f2b3a83c8@gmail.com> <20200827063517.GA4637@lst.de>
+ <CA+-6iNy3U9pO0Bykzgvb9n9fcsBi6FiatLdpA1s0HgQNWZ49mg@mail.gmail.com> <20200907091649.GA6428@e121166-lin.cambridge.arm.com>
+In-Reply-To: <20200907091649.GA6428@e121166-lin.cambridge.arm.com>
+From:   Jim Quinlan <james.quinlan@broadcom.com>
+Date:   Mon, 7 Sep 2020 13:43:23 -0400
+Message-ID: <CA+-6iNzoz3pM2pJksXogeuou6wB9W-59rN-amCLERFLuY5zLMg@mail.gmail.com>
+Subject: Re: [PATCH v11 00/11] PCI: brcmstb: enable PCIe for STB chips
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        "open list:PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS" 
+        <linux-pci@vger.kernel.org>,
+        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
+        Robin Murphy <robin.murphy@arm.com>,
+        "maintainer:BROADCOM BCM7XXX ARM ARCHITECTURE" 
+        <bcm-kernel-feedback-list@broadcom.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Bartosz Golaszewski <bgolaszewski@baylibre.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        "open list:STAGING SUBSYSTEM" <devel@driverdev.osuosl.org>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE" 
+        <devicetree@vger.kernel.org>,
+        "open list:DRM DRIVERS FOR ALLWINNER A10" 
+        <dri-devel@lists.freedesktop.org>, Felipe Balbi <balbi@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        "open list:IOMMU DRIVERS" <iommu@lists.linux-foundation.org>,
+        Joerg Roedel <jroedel@suse.de>,
+        Julien Grall <julien.grall@arm.com>,
+        "open list:ACPI FOR ARM64 (ACPI/arm64)" <linux-acpi@vger.kernel.org>,
+        "moderated list:ARM PORT" <linux-arm-kernel@lists.infradead.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        "open list:ALLWINNER A10 CSI DRIVER" <linux-media@vger.kernel.org>,
+        "open list:REMOTE PROCESSOR (REMOTEPROC) SUBSYSTEM" 
+        <linux-remoteproc@vger.kernel.org>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-rpi-kernel@lists.infradead.org>,
+        "open list:SUPERH" <linux-sh@vger.kernel.org>,
+        "open list:USB SUBSYSTEM" <linux-usb@vger.kernel.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        Saravana Kannan <saravanak@google.com>,
+        Stefano Stabellini <sstabellini@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, 7 Sep 2020 11:20:16 +0100
-Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
+On Mon, Sep 7, 2020 at 5:16 AM Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+>
+> On Thu, Aug 27, 2020 at 09:29:59AM -0400, Jim Quinlan wrote:
+> > On Thu, Aug 27, 2020 at 2:35 AM Christoph Hellwig <hch@lst.de> wrote:
+> > >
+> > > On Tue, Aug 25, 2020 at 10:40:27AM -0700, Florian Fainelli wrote:
+> > > > Hi,
+> > > >
+> > > > On 8/24/2020 12:30 PM, Jim Quinlan wrote:
+> > > >>
+> > > >> Patchset Summary:
+> > > >>    Enhance a PCIe host controller driver.  Because of its unusual design
+> > > >>    we are foced to change dev->dma_pfn_offset into a more general role
+> > > >>    allowing multiple offsets.  See the 'v1' notes below for more info.
+> > > >
+> > > > We are version 11 and counting, and it is not clear to me whether there is
+> > > > any chance of getting these patches reviewed and hopefully merged for the
+> > > > 5.10 merge window.
+> > > >
+> > > > There are a lot of different files being touched, so what would be the
+> > > > ideal way of routing those changes towards inclusion?
+> > >
+> > > FYI, I offered to take the dma-mapping bits through the dma-mapping tree.
+> > > I have a bit of a backlog, but plan to review and if Jim is ok with that
+> > > apply the current version.
+> > Sounds good to me.
+>
+> Hi Jim,
+>
+> is the dependency now solved ? Should we review/take this series as
+> is for v5.10 through the PCI tree ?
+Hello Lorenzo,
 
-> On Fri, Sep 04, 2020 at 03:09:04PM +0100, Lorenzo Pieralisi wrote:
-> > The root bus checks rework in:
-> > 
-> > commit d84c572de1a3 ("PCI: rockchip: Use pci_is_root_bus() to check
-> > if bus is root bus")
-> > 
-> > caused a regression whereby in rockchip_pcie_valid_device() if
-> > the bus parameter is the root bus and the dev value == 0 the
-> > function should return 1 (ie true) without checking if the
-> > bus->parent pointer is a root bus because that triggers a NULL
-> > pointer dereference.
-> > 
-> > Fix this by streamlining the root bus detection.
-> > 
-> > Fixes: d84c572de1a3 ("PCI: rockchip: Use pci_is_root_bus() to check
-> > if bus is root bus") Reported-by: Samuel Dionne-Riel
-> > <samuel@dionne-riel.com> Signed-off-by: Lorenzo Pieralisi
-> > <lorenzo.pieralisi@arm.com> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Rob Herring <robh@kernel.org>
-> > Cc: Shawn Lin <shawn.lin@rock-chips.com>
-> > ---
-> >  drivers/pci/controller/pcie-rockchip-host.c | 11 ++++-------
-> >  1 file changed, 4 insertions(+), 7 deletions(-)  
-> 
-> Hi Samuel,
-> 
-> I would kindly ask you please to test it since I changed the code,
-> I need your Tested-by before asking Bjorn to merge it.
-> 
+We are still working out a regression with the DMA offset commit on
+the RaspberryPi.  Nicolas has found the root cause and we are now
+devising a solution.
 
-Hi,
+Thanks,
+Jim Quinlan
+Broadcom STB
 
-I'm sorry, I had tested it, but didn't reply back as it worked. Not
-being familiar with the customs of the mailing list.
-
-Again, just in case, verified to work and fix the issue on top of
-v5.9-rc3.
-
--- 
-Samuel Dionne-Riel
+>
+> Thanks,
+> Lorenzo
