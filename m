@@ -2,108 +2,106 @@ Return-Path: <SRS0=qE/B=CR=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF278C433E2
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Sep 2020 14:05:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 494AEC2D0A8
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Sep 2020 14:53:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A3C4423C42
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Sep 2020 14:05:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1599573914;
-	bh=oGTEDsIfTJdVk8O2q/FQavYlusM9/mf0yOcnMB6oJJ4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=y4gFm3W2WjBuWAq3uBUCpK3Sc8ulFeQU851AbUeGPHD4HVv910o/EYZc0gugZkkEl
-	 7DKxLArnqH55fsLh+WWcaax1vr11kStQYny3Sgxzy6aV/RDQQic55iS9XolK5pCCrs
-	 WNjKabj9e9/1kMwTpND8dlGtYG4rTXy6wQhDWbNw=
+	by mail.kernel.org (Postfix) with ESMTP id 1585F21D91
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Sep 2020 14:53:44 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="l1Aw0Yd/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729753AbgIHOEb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Sep 2020 10:04:31 -0400
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:51341 "EHLO
-        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729635AbgIHN6e (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Sep 2020 09:58:34 -0400
-Received: by mail-wm1-f67.google.com with SMTP id w2so17380309wmi.1;
-        Tue, 08 Sep 2020 06:50:27 -0700 (PDT)
+        id S1729633AbgIHO0C (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Sep 2020 10:26:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38832 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729305AbgIHOYv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Sep 2020 10:24:51 -0400
+Received: from mail-pf1-x442.google.com (mail-pf1-x442.google.com [IPv6:2607:f8b0:4864:20::442])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB4CDC0619C7;
+        Tue,  8 Sep 2020 06:47:29 -0700 (PDT)
+Received: by mail-pf1-x442.google.com with SMTP id o68so11006871pfg.2;
+        Tue, 08 Sep 2020 06:47:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=desmngMEhq+Bl6GRnZjRLKp5/Ig6cW8Nd4zeE2+dVOc=;
+        b=l1Aw0Yd/TChtCxJhjaAzLpudFcBidJhdzobIQBiONKCPU+qpeJhWJQLTI/tFIrhokQ
+         QgDtTJ5YTFZ0xB0l0tZRQNSXwV9Mrtnezr8alEj0OqEWxEsrZ/SbPMVRVzy40DqqkzpJ
+         eCBtZQnkOEaTfYPHAFVed2pAJHqLcjcLcZX9NI3BjpIzAD8AvhFM5BePPYVjq+GsSPUe
+         JfXqOJ1pgh4VH6RzJ3DZ0fyzP9+j0dLKPP5dWVusN0GWz69IdCnPwKzB1WAcq4ztmKtK
+         aE3PHF/ni+0jVEpqMy8HcaS3mv3YI/mqb/+70C8flGcHqaKiSG2Oq9gImD7zTStyLEkC
+         18Vw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=L+q7scp9xjjgch+ap+Le4uzp4lwNvS0O3pZwHfl5AC4=;
-        b=aOu8A6hyp/iXMXXlOXTdEIN5Ds/WAgE2y0p6rAvUxZt/M29OQ/oMxixcVHXyvIcA6b
-         8e0KRwIu5g+rF8yS6Ohtm/ECOQNCplV4YJSHJ0DWMTR+JK1amL5m+rdxTwAEsyzZE0jU
-         S79fu0yYvHYxYt/Al5t1fWsXyo4lhZFYn60W4CEcMEexZi2QxUizOzzfr0UWQcf0KQAn
-         BqwfekN+OxjoYqJ7cF3a/JaDmsqotvXDXqtB2a2NaaQNTVSavOtpplF1/VTJNBPczDyu
-         QvTX17DaSme1vYR1qRXi2+9IPO4Xxz2df8wMCE+maVehXn50FJLlrbB4mX8JWtekIB8z
-         k51Q==
-X-Gm-Message-State: AOAM530ffjxbY5SEaiJyZBnh/md0KbOpW2ziQjSSlLcYVcOXtuK/uQO5
-        KP0P/T1wns1Y+TAldcMUmf+zolzPReh+HA==
-X-Google-Smtp-Source: ABdhPJzYi9ehfaPBVSXymEhhuH1GTRlLQTD8B0hsU4d7EUccdQ6mwISG5Qg1ixAsK4hgy2OnnuC5uw==
-X-Received: by 2002:a7b:c2aa:: with SMTP id c10mr4463133wmk.86.1599572119661;
-        Tue, 08 Sep 2020 06:35:19 -0700 (PDT)
-Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
-        by smtp.gmail.com with ESMTPSA id p18sm14414596wrx.47.2020.09.08.06.35.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Sep 2020 06:35:18 -0700 (PDT)
-Date:   Tue, 8 Sep 2020 13:35:17 +0000
-From:   Wei Liu <wei.liu@kernel.org>
-To:     Thomas Gleixner <tglx@linutronix.de>
-Cc:     LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-        Joerg Roedel <joro@8bytes.org>,
-        iommu@lists.linux-foundation.org, linux-hyperv@vger.kernel.org,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Jon Derrick <jonathan.derrick@intel.com>,
-        Lu Baolu <baolu.lu@linux.intel.com>,
-        Wei Liu <wei.liu@kernel.org>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Steve Wahl <steve.wahl@hpe.com>,
-        Dimitri Sivanich <sivanich@hpe.com>,
-        Russ Anderson <rja@hpe.com>, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        xen-devel@lists.xenproject.org, Juergen Gross <jgross@suse.com>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Marc Zyngier <maz@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Megha Dey <megha.dey@intel.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Jacob Pan <jacob.jun.pan@intel.com>,
-        Baolu Lu <baolu.lu@intel.com>,
-        Kevin Tian <kevin.tian@intel.com>,
-        Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [patch V2 14/46] x86/ioapic: Consolidate IOAPIC allocation
-Message-ID: <20200908133517.nrqweaycr2erqscd@liuwe-devbox-debian-v2>
-References: <20200826111628.794979401@linutronix.de>
- <20200826112332.054367732@linutronix.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200826112332.054367732@linutronix.de>
-User-Agent: NeoMutt/20180716
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=desmngMEhq+Bl6GRnZjRLKp5/Ig6cW8Nd4zeE2+dVOc=;
+        b=mS5ZZarigDYGOPbuyzdD5d5DAtElRjkrLrEl8iCMmFvKEsLR7RqvZqRJ7/hj8cVSEH
+         uiHaXQr0tyjPSm1bJo3trt68s4Nyofi6ricxLMdWLuS17gwZ3X6t+osF+p3LG2z1iPQF
+         cPx0OWwt5DBOg5e3xupJlS3jm9jpT1nKtwFSxxTZEOMTnY4MZXVs5YaQeqSzcyyx1qG1
+         lhLhWAMKv6orPveTeEby75kVLKOL4dMiC9rQfFiPttjHiKh7OmJLKpC3VMyEyPU33L69
+         pHB1VDNABkf167CZeKlwR6sJeNF8bgCxKRK7xVJyyMIYXKVjDR450Y2yJomhHO8p6E2Y
+         E1wA==
+X-Gm-Message-State: AOAM532WqkvJjf3/xWu2XlmK4tmOOOfEJ9a0yCyc/UyfJVCHgevK0gdd
+        Cgf1F3Gsz6JTsvtMwmM0JqsIgYg0csM=
+X-Google-Smtp-Source: ABdhPJxSvaO2jI1NLiCtPBZfROkieHeDyd8FUtXyfbKpJq3gy9asID9vNMGjM7NxOcmigxIi/LQ6dw==
+X-Received: by 2002:a63:64c2:: with SMTP id y185mr13694809pgb.125.1599572849347;
+        Tue, 08 Sep 2020 06:47:29 -0700 (PDT)
+Received: from sh05419pcu.spreadtrum.com ([117.18.48.82])
+        by smtp.gmail.com with ESMTPSA id j35sm14852313pgi.91.2020.09.08.06.47.25
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 08 Sep 2020 06:47:28 -0700 (PDT)
+From:   Hongtao Wu <wuht06@gmail.com>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh+dt@kernel.org>
+Cc:     Orson Zhai <orsonzhai@gmail.com>,
+        Baolin Wang <baolin.wang7@gmail.com>,
+        Chunyan Zhang <zhang.lyra@gmail.com>,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Billows Wu <billows.wu@unisoc.com>
+Subject: [PATCH v2 0/2] PCI: Add new Unisoc PCIe driver
+Date:   Tue,  8 Sep 2020 21:47:19 +0800
+Message-Id: <1599572841-2652-1-git-send-email-wuht06@gmail.com>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Aug 26, 2020 at 01:16:42PM +0200, Thomas Gleixner wrote:
-...
-> --- a/drivers/iommu/hyperv-iommu.c
-> +++ b/drivers/iommu/hyperv-iommu.c
-> @@ -101,7 +101,7 @@ static int hyperv_irq_remapping_alloc(st
->  	 * in the chip_data and hyperv_irq_remapping_activate()/hyperv_ir_set_
->  	 * affinity() set vector and dest_apicid directly into IO-APIC entry.
->  	 */
-> -	irq_data->chip_data = info->ioapic_entry;
-> +	irq_data->chip_data = info->ioapic.entry;
+From: Billows Wu <billows.wu@unisoc.com>
 
-Not sure if it is required for such a trivial change but here you go:
+This series adds PCIe controller driver for Unisoc SoCs.
+This controller is based on DesignWare PCIe IP.
 
-Acked-by: Wei Liu <wei.liu@kernel.org>
+Changes from v1:
+1) Test this patch on top of Rob Herring's 40 part series of DWC clean-ups:
+   https://lore.kernel.org/linux-pci/20200821035420.380495-1-robh@kernel.org/
+
+2) Delete empty function
+
+3) Document property "sprd,pcie-poweron-syscons" and
+   'sprd,pcie-poweroff-syscons'
+
+4) Delete runtime suspend/resume function
+
+5) Add COMPILE_TEST which CONFIG_PCIE_SPRD depends on
+
+Billows Wu (2):
+  dt-bindings: PCI: sprd: Document Unisoc PCIe RC host controller
+  PCI: sprd: Add support for Unisoc SoCs' PCIe controller
+
+ .../devicetree/bindings/pci/sprd-pcie.yaml         | 101 +++++++++
+ drivers/pci/controller/dwc/Kconfig                 |  13 ++
+ drivers/pci/controller/dwc/Makefile                |   1 +
+ drivers/pci/controller/dwc/pcie-sprd.c             | 231 +++++++++++++++++++++
+ 4 files changed, 346 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/sprd-pcie.yaml
+ create mode 100644 drivers/pci/controller/dwc/pcie-sprd.c
+
+-- 
+2.7.4
+
