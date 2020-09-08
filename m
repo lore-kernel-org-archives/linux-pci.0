@@ -8,57 +8,57 @@ X-Spam-Status: No, score=-14.7 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_IN_DEF_DKIM_WL autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C323C433E2
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Sep 2020 17:14:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB9D7C43461
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Sep 2020 17:31:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 516E620936
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Sep 2020 17:14:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9359C2076C
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Sep 2020 17:31:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="l8TFfPPi"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="AzIN32ul"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731812AbgIHROf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Sep 2020 13:14:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38236 "EHLO
+        id S1731734AbgIHRbZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Sep 2020 13:31:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40754 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728360AbgIHROS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Sep 2020 13:14:18 -0400
-Received: from mail-pj1-x1044.google.com (mail-pj1-x1044.google.com [IPv6:2607:f8b0:4864:20::1044])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9DF5C061757
-        for <linux-pci@vger.kernel.org>; Tue,  8 Sep 2020 10:14:18 -0700 (PDT)
-Received: by mail-pj1-x1044.google.com with SMTP id n3so44209pjq.1
-        for <linux-pci@vger.kernel.org>; Tue, 08 Sep 2020 10:14:18 -0700 (PDT)
+        with ESMTP id S1731928AbgIHRao (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Sep 2020 13:30:44 -0400
+Received: from mail-pg1-x541.google.com (mail-pg1-x541.google.com [IPv6:2607:f8b0:4864:20::541])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47BA4C061573
+        for <linux-pci@vger.kernel.org>; Tue,  8 Sep 2020 10:30:44 -0700 (PDT)
+Received: by mail-pg1-x541.google.com with SMTP id 5so46551pgl.4
+        for <linux-pci@vger.kernel.org>; Tue, 08 Sep 2020 10:30:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=/gCc+KLpNK9ExlVMZwWTulckz89Pa9STYRhLISVmRXE=;
-        b=l8TFfPPi8zCMxO4dQ+cL2mPjwdbrYknGcvJ3S7KeMVYr2Q/H76gUGB/4DPzblBc4wL
-         Z/kVUs7HQzPp6jHkL4co16aB0o/g9Ki0Ci0aIB0eJoVFKyQw8ebfadzXTbu4V+oR00+P
-         Y0GX8EGtn/TLhA7swJKiiBEOKxyP30iGgiknVXfiRggge5Bv6Ynx3A+1F897oXDNaoVR
-         kVH5X1H8mEjwr96L9W1aE7R55Kb7ZR5yUxkKFHGYbtAPNMDgXY7WU4juuRBrpC4IgkSf
-         Q6Y88UZSHorH9uaE9yPAgcDEGg9XIEKFsGjNzLTMMT0/0Jx0dHHH+2sXVL5BjPJrknNp
-         m0mw==
+        bh=/5WUqOjLHPAdLAI0MKh9zhuMyV7IC1nlysZjintZ/W0=;
+        b=AzIN32ulFSn0Cg8a7U6pqoMQp2nPeaRLHJAx4wWGA8CJaevtEmegxP/Z/uIxm/mEpu
+         QVOrS/Ir/CxKvGymkWaSrXUyeKbbg65sx4q09ssmoAXIt6bm8jV1LH45TsyB5/QvO6Qe
+         pSg9MqH9AVTpVpXvwoaCFmKjx/m6VIWugbAKBCS/XL0KnFFDPP0JrCP80TKO4jQk1l8S
+         wZd7N9m2+fYup3wy0GHLd7qSFjvCk9cqS0RN9Ik5g/nfu3wKrjCUUWhivmYZDrkqWnnn
+         OxFDZvlGFT0EA/qrpHwZR1QXKjTo0BlWMq5+aAWrCKqvUbyJyaxDNVHcgxbFAvzgGEAS
+         e78g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=/gCc+KLpNK9ExlVMZwWTulckz89Pa9STYRhLISVmRXE=;
-        b=aWIW77ECof8apSRSYnCjdpwg2oBEE49N/TbjiXM7hSEsW8UofIm0OXK55fAIdeCnnh
-         YuZM7e7if2P3KXxWQgQMnSYvpR3K0J3ln5dYBnGTJQy6jqPWAEiS2mm+C2dXCOqoEn75
-         lLXLfMscHnCDICJLrx8RTQ5gFae6mmvX5Yq7OWFCIuJEBXag0gBYJwGu9+UQpUmnghDe
-         KJgBzSlGWuQyoSLarRIHMmPxkFJWgM9jKFElnjpKyacz5UvooRgTR0CXKs6zNLYWwMRR
-         o2EUEk+740Tfox4LiD+ul78I+RGhP31DKfSfmChVjpcnd3EYuKOKsoAMXMMlH2GUdOeH
-         dhgg==
-X-Gm-Message-State: AOAM533GL8P1QUhsPtz9UQ9Gqtmeq2yh9yLgERepHALHN4zWoDS25lVM
-        4YiKL0AXoovLdBDSnkDCsMBw0w==
-X-Google-Smtp-Source: ABdhPJwIjKawnMHTj/rRnXjnjsmCJjseMt/B3KoD/9OR2ojGQkPMO3BFzGgdcfjb98S269z1QHdN5g==
-X-Received: by 2002:a17:90a:ea0c:: with SMTP id w12mr105528pjy.65.1599585257422;
-        Tue, 08 Sep 2020 10:14:17 -0700 (PDT)
+        bh=/5WUqOjLHPAdLAI0MKh9zhuMyV7IC1nlysZjintZ/W0=;
+        b=lT/RKVTbi73hODmv1NWSH1X5KOe+DVNJ21/D9MrvqJV+/j6K7wlV2sGYG6fHMG8UJN
+         gcVp6eLcTMBL9o+hgalgl9pyJTAgp1+0kYtLIujxaHdG+ndO7sT/lfCBLdIaX/51z2kD
+         oLX6m6Cnvhk8BMCGHjbapu+/MsO3fkRnJbSes+MLlHcC4Z65K/OP3umYTl/WPrqgPBaT
+         YQDNMYpxqAEMOJFZrVZ5h+gXO7OSqkaTN27RW9oVHQWEtYEvM8G7JUVGCl/6TRIDTo/n
+         cFwmxOkXBDoVjovJRuCDAD6wOfgxb9XxYzDoaG+FYpN4VmxJqh3lwsp2x9CVtSJNqI1+
+         YBaA==
+X-Gm-Message-State: AOAM531yMcgd/XEEkeo/WOHXN1nsNpjlfL24zsQ8gzAXrtsq54pSx77R
+        XQ+i0LNr6PTcQ6UJmauz8JMdjg==
+X-Google-Smtp-Source: ABdhPJzOBlE39s5MhGzUGu96iQjHpMxBRxzAFujrD+zw10TmjrKYdMPOuT7bZ60x6uln4rayX4+T8w==
+X-Received: by 2002:a63:ca0c:: with SMTP id n12mr18009749pgi.209.1599586243396;
+        Tue, 08 Sep 2020 10:30:43 -0700 (PDT)
 Received: from google.com ([2620:15c:201:2:f693:9fff:fef4:1b6d])
-        by smtp.gmail.com with ESMTPSA id z18sm9322pfn.186.2020.09.08.10.14.16
+        by smtp.gmail.com with ESMTPSA id w185sm60365pfc.36.2020.09.08.10.30.42
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Sep 2020 10:14:16 -0700 (PDT)
-Date:   Tue, 8 Sep 2020 10:14:11 -0700
+        Tue, 08 Sep 2020 10:30:42 -0700 (PDT)
+Date:   Tue, 8 Sep 2020 10:30:36 -0700
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Masahiro Yamada <masahiroy@kernel.org>
 Cc:     Will Deacon <will@kernel.org>,
@@ -76,21 +76,21 @@ Cc:     Will Deacon <will@kernel.org>,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         linux-pci@vger.kernel.org, X86 ML <x86@kernel.org>
 Subject: Re: [PATCH v2 09/28] kbuild: add support for Clang LTO
-Message-ID: <20200908171411.GC2743468@google.com>
+Message-ID: <20200908173036.GD2743468@google.com>
 References: <20200624203200.78870-1-samitolvanen@google.com>
  <20200903203053.3411268-1-samitolvanen@google.com>
  <20200903203053.3411268-10-samitolvanen@google.com>
- <CAK7LNASTtxJ7OCMM_KxmaoSL3CDfTY-65Pu=-MYkMo7iz-_NOQ@mail.gmail.com>
+ <CAK7LNAR7SbBPz06s5Gf2d+zry+Px1=jcUrC9c=_zQiCJLttY3A@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAK7LNASTtxJ7OCMM_KxmaoSL3CDfTY-65Pu=-MYkMo7iz-_NOQ@mail.gmail.com>
+In-Reply-To: <CAK7LNAR7SbBPz06s5Gf2d+zry+Px1=jcUrC9c=_zQiCJLttY3A@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sun, Sep 06, 2020 at 05:17:32AM +0900, Masahiro Yamada wrote:
+On Tue, Sep 08, 2020 at 12:30:14AM +0900, Masahiro Yamada wrote:
 > On Fri, Sep 4, 2020 at 5:31 AM Sami Tolvanen <samitolvanen@google.com> wrote:
 > >
 > > This change adds build system support for Clang's Link Time
@@ -145,38 +145,62 @@ On Sun, Sep 06, 2020 at 05:17:32AM +0900, Masahiro Yamada wrote:
 > >  scripts/Makefile.modpost          | 24 ++++++++++-
 > >  scripts/link-vmlinux.sh           | 32 +++++++++++----
 > >  7 files changed, 154 insertions(+), 17 deletions(-)
+> 
+> 
+> 
+> >  #define TEXT_MAIN .text
+> > diff --git a/scripts/Makefile.build b/scripts/Makefile.build
+> > index 6ecf30c70ced..a5f4b5d407e6 100644
+> > --- a/scripts/Makefile.build
+> > +++ b/scripts/Makefile.build
+> > @@ -111,7 +111,7 @@ endif
+> >  # ---------------------------------------------------------------------------
 > >
-> > diff --git a/Makefile b/Makefile
-> > index a9dae26c93b5..dd49eaea7c25 100644
-> > --- a/Makefile
-> > +++ b/Makefile
-> > @@ -909,6 +909,22 @@ KBUILD_CFLAGS      += $(CC_FLAGS_SCS)
-> >  export CC_FLAGS_SCS
-> >  endif
+> >  quiet_cmd_cc_s_c = CC $(quiet_modtag)  $@
+> > -      cmd_cc_s_c = $(CC) $(filter-out $(DEBUG_CFLAGS), $(c_flags)) $(DISABLE_LTO) -fverbose-asm -S -o $@ $<
+> > +      cmd_cc_s_c = $(CC) $(filter-out $(DEBUG_CFLAGS) $(CC_FLAGS_LTO), $(c_flags)) -fverbose-asm -S -o $@ $<
 > >
+> >  $(obj)/%.s: $(src)/%.c FORCE
+> >         $(call if_changed_dep,cc_s_c)
+> > @@ -428,8 +428,15 @@ $(obj)/lib.a: $(lib-y) FORCE
+> >  # Do not replace $(filter %.o,^) with $(real-prereqs). When a single object
+> >  # module is turned into a multi object module, $^ will contain header file
+> >  # dependencies recorded in the .*.cmd file.
 > > +ifdef CONFIG_LTO_CLANG
-> > +ifdef CONFIG_THINLTO
-> > +CC_FLAGS_LTO_CLANG := -flto=thin -fsplit-lto-unit
-> > +KBUILD_LDFLAGS += --thinlto-cache-dir=.thinlto-cache
-> > +else
-> > +CC_FLAGS_LTO_CLANG := -flto
-> > +endif
-> > +CC_FLAGS_LTO_CLANG += -fvisibility=default
-> > +endif
-> > +
-> > +ifdef CONFIG_LTO
-> > +CC_FLAGS_LTO   := $(CC_FLAGS_LTO_CLANG)
+> > +quiet_cmd_link_multi-m = AR [M]  $@
+> > +cmd_link_multi-m =                                             \
+> > +       rm -f $@;                                               \
+> > +       $(AR) rcsTP$(KBUILD_ARFLAGS) $@ $(filter %.o,$^)
 > 
 > 
-> $(CC_FLAGS_LTO_CLANG) is not used elsewhere.
-> 
-> Why didn't you add the flags to CC_FLAGS_LTO
-> directly?
-> 
-> Will it be useful if LTO_GCC is supported ?
+> KBUILD_ARFLAGS no longer exists in the mainline.
+> (commit 13dc8c029cabf52ba95f60c56eb104d4d95d5889)
 
-The idea was to allow compiler-specific LTO flags to be filtered out
-separately if needed, but you're right, this is not really necessary
-right now. I'll drop CC_FLAGS_LTO_CLANG in v3.
+Thanks, I'll drop this in the next version.
+
+> > +ifdef CONFIG_LTO_CLANG
+> > +# With CONFIG_LTO_CLANG, .o files might be LLVM bitcode,
+> 
+> or, .o files might be even thin archives.
+
+Right, and with LTO the thin archive might also point to a mix of bitcode
+and ELF to further complicate things.
+
+> For example,
+> 
+> $ file net/ipv6/netfilter/nf_defrag_ipv6.o
+> net/ipv6/netfilter/nf_defrag_ipv6.o: thin archive with 6 symbol entries
+> 
+> 
+> Now we have 3 possibilities for .o files:
+> 
+>   - ELF  (real .o)
+>   - LLVM bitcode (.bc)
+>   - Thin archive (.a)
+> 
+> 
+> Let me discuss how to proceed with this...
+
+Did you have something in mind to make this cleaner?
 
 Sami
