@@ -2,86 +2,148 @@ Return-Path: <SRS0=qE/B=CR=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,DATE_IN_PAST_03_06,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,FSL_HELO_FAKE,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_IN_DEF_DKIM_WL autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D13BCC43461
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Sep 2020 16:44:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B0BAC43461
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Sep 2020 17:03:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8D116206E7
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Sep 2020 16:44:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D5C00207DE
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Sep 2020 17:03:14 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="pKJ8j7uK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732029AbgIHQoc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Sep 2020 12:44:32 -0400
-Received: from verein.lst.de ([213.95.11.211]:53340 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731773AbgIHQoU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 8 Sep 2020 12:44:20 -0400
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 026F868B02; Tue,  8 Sep 2020 14:20:45 +0200 (CEST)
-Date:   Tue, 8 Sep 2020 14:20:45 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     Florian Fainelli <f.fainelli@gmail.com>,
-        Jim Quinlan <james.quinlan@broadcom.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "open list:PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS" 
-        <linux-pci@vger.kernel.org>,
-        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
-        Robin Murphy <robin.murphy@arm.com>,
-        "maintainer:BROADCOM BCM7XXX ARM ARCHITECTURE" 
-        <bcm-kernel-feedback-list@broadcom.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Bartosz Golaszewski <bgolaszewski@baylibre.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        "open list:STAGING SUBSYSTEM" <devel@driverdev.osuosl.org>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE" 
-        <devicetree@vger.kernel.org>,
-        "open list:DRM DRIVERS FOR ALLWINNER A10" 
-        <dri-devel@lists.freedesktop.org>, Felipe Balbi <balbi@kernel.org>,
+        id S1731849AbgIHRDN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Sep 2020 13:03:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36466 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732064AbgIHRDD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Sep 2020 13:03:03 -0400
+Received: from mail-pf1-x444.google.com (mail-pf1-x444.google.com [IPv6:2607:f8b0:4864:20::444])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E151C061786
+        for <linux-pci@vger.kernel.org>; Tue,  8 Sep 2020 10:03:03 -0700 (PDT)
+Received: by mail-pf1-x444.google.com with SMTP id v196so11484534pfc.1
+        for <linux-pci@vger.kernel.org>; Tue, 08 Sep 2020 10:03:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=TS+pFAf+gXvyICCIZ7exDi0/Gxg54q8UJXDvRO7l168=;
+        b=pKJ8j7uKJcb7uVWaQ5j/SnvkaAx4KCY55KCie8OQaygCpy1OPF8cDgeNH1qrPaLMvG
+         8srfgOOgbosqJmTceeQvjWZChA+6j/LEIRcay7cMsXtBzLKxqoBwUcyD/WziBOgMhTht
+         H95mhfOyXrIvUmREbH1YWzNRx8qhfoLUnK6vxg72nBJz4Zsryt8ZJJ5SgRHKxhMkN6NG
+         dtOewrVFqRwrzOeM6o0lzzlRd9V3/io+BfvvategCuZpFKOLhdC7d/WJPglYjH7skxA9
+         mFBhEsZ3kh8WuUPDicHPjHktAGiGpoaEUWzf67bzqCSOGx192KG66jA3O0NwWTFIar6q
+         WtYA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=TS+pFAf+gXvyICCIZ7exDi0/Gxg54q8UJXDvRO7l168=;
+        b=bT7tCNXIKFtYxqHyD5UZ7qj5m7ltxvx9iEuBPY1VxHefJpjLj4QaLbnYAmICxBk7PQ
+         c07flOm37NBfBY2xfOE8vfBBq/g0Td+91HU5HaIkXQumezO1rzep9U8Cc/i11VZSMRm0
+         bdqH1p+YW9eqKu9mvfzdanMQcMdCRsZzViLWlYJJUw3VLTERNZv3gYStp7hBQWFBiWmX
+         gVF+Pad3YzAjGIU79TbInhLeIutlh9jyZ7z+3ZkkLxfEdZfH+I7Wfm56FWZ9oGc00TU9
+         dm8a03oX1R6jx06fFSYZD9FtxsIvY+z0gKNT2qRp9lNf0BbAufLg8mBbdQvzUfTDxWXN
+         ZxEw==
+X-Gm-Message-State: AOAM5325s8Tn0spyAU5lV80bphAvWgbmz6ig/JktJIUajznUyNwAr7Cs
+        AaWHIgbYHgp5OLq5Tn3+KjkWcQ==
+X-Google-Smtp-Source: ABdhPJypTa9m8baYyH7KtZLmA6Dhp5bWpLPg7YpbRm1G9HK65/WnGTkmsSsfgelDtI+oA1WrmQRR/g==
+X-Received: by 2002:a17:902:d714:b029:d0:cbe1:e738 with SMTP id w20-20020a170902d714b02900d0cbe1e738mr2106530ply.19.1599584582581;
+        Tue, 08 Sep 2020 10:03:02 -0700 (PDT)
+Received: from google.com ([2620:15c:201:2:f693:9fff:fef4:1b6d])
+        by smtp.gmail.com with ESMTPSA id t15sm19413909pfl.175.2020.09.08.10.03.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 08 Sep 2020 10:03:01 -0700 (PDT)
+Date:   Tue, 8 Sep 2020 10:02:56 -0700
+From:   Sami Tolvanen <samitolvanen@google.com>
+To:     Kees Cook <keescook@chromium.org>
+Cc:     Masahiro Yamada <masahiroy@kernel.org>,
+        Will Deacon <will@kernel.org>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        "open list:IOMMU DRIVERS" <iommu@lists.linux-foundation.org>,
-        Joerg Roedel <jroedel@suse.de>,
-        Julien Grall <julien.grall@arm.com>,
-        "open list:ACPI FOR ARM64 (ACPI/arm64)" <linux-acpi@vger.kernel.org>,
-        "moderated list:ARM PORT" <linux-arm-kernel@lists.infradead.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        "open list:ALLWINNER A10 CSI DRIVER" <linux-media@vger.kernel.org>,
-        "open list:REMOTE PROCESSOR (REMOTEPROC) SUBSYSTEM" 
-        <linux-remoteproc@vger.kernel.org>,
-        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
-        <linux-rpi-kernel@lists.infradead.org>,
-        "open list:SUPERH" <linux-sh@vger.kernel.org>,
-        "open list:USB SUBSYSTEM" <linux-usb@vger.kernel.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Rob Herring <robh@kernel.org>,
-        Saravana Kannan <saravanak@google.com>,
-        Stefano Stabellini <sstabellini@kernel.org>
-Subject: Re: [PATCH v11 00/11] PCI: brcmstb: enable PCIe for STB chips
-Message-ID: <20200908122045.GA31727@lst.de>
-References: <20200824193036.6033-1-james.quinlan@broadcom.com> <b19bc982-a0c4-c6ff-d8f5-650f2b3a83c8@gmail.com> <20200827063517.GA4637@lst.de> <CA+-6iNy3U9pO0Bykzgvb9n9fcsBi6FiatLdpA1s0HgQNWZ49mg@mail.gmail.com> <20200907091649.GA6428@e121166-lin.cambridge.arm.com> <CA+-6iNzoz3pM2pJksXogeuou6wB9W-59rN-amCLERFLuY5zLMg@mail.gmail.com> <00e49acb-c659-de10-3e87-76bfd82e4a76@gmail.com> <20200908104226.GB22909@e121166-lin.cambridge.arm.com>
+        "Paul E. McKenney" <paulmck@kernel.org>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        clang-built-linux@googlegroups.com,
+        kernel-hardening@lists.openwall.com, linux-arch@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kbuild@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        x86@kernel.org
+Subject: Re: [PATCH v2 09/28] kbuild: add support for Clang LTO
+Message-ID: <20200908170256.GA2743468@google.com>
+References: <20200624203200.78870-1-samitolvanen@google.com>
+ <20200903203053.3411268-1-samitolvanen@google.com>
+ <20200903203053.3411268-10-samitolvanen@google.com>
+ <202009031504.07098D6F8@keescook>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200908104226.GB22909@e121166-lin.cambridge.arm.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <202009031504.07098D6F8@keescook>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Sep 08, 2020 at 11:42:26AM +0100, Lorenzo Pieralisi wrote:
-> > Maybe we can parallelize the PCIe driver review while the DMA changes
-> > are being worked on in Christoph's branch. Lorenzo, are you fine with
-> > the PCIe changes proper?
+On Thu, Sep 03, 2020 at 03:08:59PM -0700, Kees Cook wrote:
+> On Thu, Sep 03, 2020 at 01:30:34PM -0700, Sami Tolvanen wrote:
+> > This change adds build system support for Clang's Link Time
+> > Optimization (LTO). With -flto, instead of ELF object files, Clang
+> > produces LLVM bitcode, which is compiled into native code at link
+> > time, allowing the final binary to be optimized globally. For more
+> > details, see:
+> > 
+> >   https://llvm.org/docs/LinkTimeOptimization.html
+> > 
+> > The Kconfig option CONFIG_LTO_CLANG is implemented as a choice,
+> > which defaults to LTO being disabled. To use LTO, the architecture
+> > must select ARCH_SUPPORTS_LTO_CLANG and support:
+> > 
+> >   - compiling with Clang,
+> >   - compiling inline assembly with Clang's integrated assembler,
+> >   - and linking with LLD.
+> > 
+> > While using full LTO results in the best runtime performance, the
+> > compilation is not scalable in time or memory. CONFIG_THINLTO
+> > enables ThinLTO, which allows parallel optimization and faster
+> > incremental builds. ThinLTO is used by default if the architecture
+> > also selects ARCH_SUPPORTS_THINLTO:
+> > 
+> >   https://clang.llvm.org/docs/ThinLTO.html
+> > 
+> > To enable LTO, LLVM tools must be used to handle bitcode files. The
+> > easiest way is to pass the LLVM=1 option to make:
+> > 
+> >   $ make LLVM=1 defconfig
+> >   $ scripts/config -e LTO_CLANG
+> >   $ make LLVM=1
+> > 
+> > Alternatively, at least the following LLVM tools must be used:
+> > 
+> >   CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm
+> > 
+> > To prepare for LTO support with other compilers, common parts are
+> > gated behind the CONFIG_LTO option, and LTO can be disabled for
+> > specific files by filtering out CC_FLAGS_LTO.
+> > 
+> > Note that support for DYNAMIC_FTRACE and MODVERSIONS are added in
+> > follow-up patches.
+> > 
+> > Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
 > 
-> I will have a look - the main contentious point was about the DMA
-> changes - if Christoph is happy with them I am OK with them
-> too - I hope there is not anything controversial in the host
-> bridge driver itself but I will look into it.
+> I remain crazy excited about being able to use this in upstream. :)
+> 
+> The only suggestion I have here, if it might help with clarity, would be
+> to remove DISABLE_LTO globally as a separate patch, since it's entirely
+> unused in the kernel right now. This series removes it as it goes, which
+> I think is fine, but it might cause some reviewers to ponder "what's
+> this DISABLE_LTO thing? Don't we need that?" without realizing currently
+> unused in the kernel.
 
-I'm pretty happy with the overall shape.  Now we just need to squeeze
-out the regressions..
+Sure, that makes sense. I'll add a patch to remove DISABLE_LTO treewide
+in v3.
+
+Sami
