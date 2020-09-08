@@ -2,105 +2,66 @@ Return-Path: <SRS0=qE/B=CR=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AD39C2D0E1
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Sep 2020 19:51:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20296C2BC11
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Sep 2020 19:52:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D9BCC2166E
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Sep 2020 19:51:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D78F52166E
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Sep 2020 19:52:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1599594675;
-	bh=2FbA+8w4I8VzJCTSJ5LRAQ6vl6vNO9M2Vg25Tc7mPhs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=pWwOyvGvxInK4vP+q+DWoCfRczYwwHj7oWjNYH01xM4e63xNWzsfB/ku5uUbAiF2K
-	 GK/Uqmsp20ny4TF0AchcZB7DlNqwwkN9DvkQ7RPkhUtRqLyDJsKAkwCiLc4tma74il
-	 3jQOcAnpMp26N7dmtUmCEPE7xHrVhm2EJcisaggI=
+	s=default; t=1599594736;
+	bh=mULXzfnS3APhi3N2dq0E+DMdisvzv4rccw8WftfDozc=;
+	h=Date:From:To:Cc:Subject:List-ID:From;
+	b=CdIQGt/p4GZpAHoKszBlvag8IJdj6u1JXBquYBn62Uk8QgTcCo7LN9MWRndqPOakU
+	 nipqaUkPUQ8CnSwXP3AruwE9UIyB+TRAtS8ALcr9dSvP7cWCpDBNDCOCorNqoqpFi7
+	 sEn5XHyemNzYCODUFGN543OtdI5GhloO8lSAQpdw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730329AbgIHTvO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Sep 2020 15:51:14 -0400
-Received: from mail-il1-f196.google.com ([209.85.166.196]:33514 "EHLO
-        mail-il1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730788AbgIHTuz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Sep 2020 15:50:55 -0400
-Received: by mail-il1-f196.google.com with SMTP id x2so118163ilm.0;
-        Tue, 08 Sep 2020 12:50:54 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=wYZEjLQwTXY96HNLGsdoKgvmcXxudxUg3/wdAMNlCKY=;
-        b=WQ5z5eajOMRavRHOCddVz/byDz6J7OM3LKhbYG4HZNroRTD5aM36XwohMi46Ch3ghY
-         QqITxXDjPv90A3EqewXT3QPSQYo9s8Nw/ddfk2H5QF3ZZeyaIvoIpMNscz8MWYJl8a74
-         qPdLk2VxzdsDW8wJNv5UwIJohqtxEI5fmkM+UTdtmUTZy8NWzT5CPlpwYux7TDF7JcQJ
-         wvTqUHeB6avZiRA4FWebVTIciSNU0HhoWlQlDs40bE4SltAOcV0aQfgellEkDI92/3qO
-         FM1TJnLs6hw0++12887WNjOfPjtBkI22AzpQII7EkC2LJ2K7leLHTFCAoG4VwIx5ipmU
-         q+2g==
-X-Gm-Message-State: AOAM5321g1qnd9Q7cfe1LmumPP3LOUmSHv5Lrjm30sMokjufNlHn5qE9
-        MA9ao7Zj5eFHqbw3H2WfaA==
-X-Google-Smtp-Source: ABdhPJyOWElQls0b423Yc43EIQ2uJbnV85nXzCnrhQNpnp/WEIa0eqADRr+RFWsXeGWmMLnRWyzVbA==
-X-Received: by 2002:a92:189:: with SMTP id 131mr425929ilb.40.1599594654188;
-        Tue, 08 Sep 2020 12:50:54 -0700 (PDT)
-Received: from xps15 ([64.188.179.251])
-        by smtp.gmail.com with ESMTPSA id q23sm156327iob.19.2020.09.08.12.50.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Sep 2020 12:50:53 -0700 (PDT)
-Received: (nullmailer pid 795761 invoked by uid 1000);
-        Tue, 08 Sep 2020 19:50:50 -0000
-Date:   Tue, 8 Sep 2020 13:50:50 -0600
-From:   Rob Herring <robh@kernel.org>
-To:     Jianjun Wang <jianjun.wang@mediatek.com>
-Cc:     davem@davemloft.net, Philipp Zabel <p.zabel@pengutronix.de>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
-        linux-pci@vger.kernel.org,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Sj Huang <sj.huang@mediatek.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [v1,1/3] dt-bindings: Add YAML schemas for Gen3 PCIe controller
-Message-ID: <20200908195050.GA795070@bogus>
-References: <20200907120852.12090-1-jianjun.wang@mediatek.com>
- <20200907120852.12090-2-jianjun.wang@mediatek.com>
+        id S1730734AbgIHTwP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Sep 2020 15:52:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49720 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730939AbgIHTwA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 8 Sep 2020 15:52:00 -0400
+Received: from localhost (35.sub-72-107-115.myvzw.com [72.107.115.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id E8F1920658;
+        Tue,  8 Sep 2020 19:51:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1599594720;
+        bh=mULXzfnS3APhi3N2dq0E+DMdisvzv4rccw8WftfDozc=;
+        h=Date:From:To:Cc:Subject:From;
+        b=hxURh5O0P4g+eHQp8b16ufLINfkIVcrcQUFePC3Ih4y9mTLErRy86vq2Y3v1qTJv1
+         54ZYMeKGJ7zEMlbeWGA3ekdK62dhkpShdS9+YsN8sn6ImdGNJiRZ+pWljyHvzxajlf
+         um371hDpe8iS2DkUxVKGUfnwNEz3FoNIfh08eG88=
+Date:   Tue, 8 Sep 2020 14:51:58 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Kishon Vijay Abraham I <kishon@ti.com>
+Cc:     linux-pci@vger.kernel.org
+Subject: pci-epf-test.c sparse warnings
+Message-ID: <20200908195158.GA627339@bjorn-Precision-5520>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200907120852.12090-2-jianjun.wang@mediatek.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, 07 Sep 2020 20:08:50 +0800, Jianjun Wang wrote:
-> Add YAML schemas documentation for Gen3 PCIe controller on
-> MediaTek SoCs.
-> 
-> Acked-by: Ryder Lee <ryder.lee@mediatek.com>
-> Signed-off-by: Jianjun Wang <jianjun.wang@mediatek.com>
-> ---
->  .../bindings/pci/mediatek-pcie-gen3.yaml      | 158 ++++++++++++++++++
->  1 file changed, 158 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
-> 
+FYI, got these warnings with "make C=2 drivers/pci/":
 
+  CHECK   drivers/pci/endpoint/functions/pci-epf-test.c
+drivers/pci/endpoint/functions/pci-epf-test.c:288:24: warning: incorrect type in argument 1 (different address spaces)
+drivers/pci/endpoint/functions/pci-epf-test.c:288:24:    expected void *to
+drivers/pci/endpoint/functions/pci-epf-test.c:288:24:    got void [noderef] __iomem *[assigned] dst_addr
+drivers/pci/endpoint/functions/pci-epf-test.c:288:34: warning: incorrect type in argument 2 (different address spaces)
+drivers/pci/endpoint/functions/pci-epf-test.c:288:34:    expected void const *from
+drivers/pci/endpoint/functions/pci-epf-test.c:288:34:    got void [noderef] __iomem *[assigned] src_addr
 
-My bot found errors running 'make dt_binding_check' on your patch:
+This is on my "next" branch, but I don't think this file has changed
+since v5.9-rc1.
 
-Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.example.dts:55.56-59.19: Warning (pci_device_reg): /example-0/bus/pcie@11230000/legacy-interrupt-controller: missing PCI reg property
-
-
-See https://patchwork.ozlabs.org/patch/1359119
-
-If you already ran 'make dt_binding_check' and didn't see the above
-error(s), then make sure dt-schema is up to date:
-
-pip3 install git+https://github.com/devicetree-org/dt-schema.git@master --upgrade
-
-Please check and re-submit.
-
+Bjorn
