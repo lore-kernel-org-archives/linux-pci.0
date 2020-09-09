@@ -2,209 +2,181 @@ Return-Path: <SRS0=VqUt=CS=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02F6AC10DAA
-	for <linux-pci@archiver.kernel.org>; Wed,  9 Sep 2020 17:13:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D6CBC433E2
+	for <linux-pci@archiver.kernel.org>; Wed,  9 Sep 2020 17:17:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B16F321919
-	for <linux-pci@archiver.kernel.org>; Wed,  9 Sep 2020 17:13:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DCAA421919
+	for <linux-pci@archiver.kernel.org>; Wed,  9 Sep 2020 17:17:29 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="PYtIlYC3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731065AbgIIRMC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 9 Sep 2020 13:12:02 -0400
-Received: from mga06.intel.com ([134.134.136.31]:21863 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729993AbgIIPcj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 9 Sep 2020 11:32:39 -0400
-IronPort-SDR: ely5vO4QadqE3HXRJmmrrBCkehEdn+bKEEi3BCCC9gShvIBVgbCSpUSxyYQnU+etvErdPbHurm
- acvye/RhaMlg==
-X-IronPort-AV: E=McAfee;i="6000,8403,9739"; a="219905492"
-X-IronPort-AV: E=Sophos;i="5.76,409,1592895600"; 
-   d="scan'208";a="219905492"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Sep 2020 08:13:15 -0700
-IronPort-SDR: IuEnGuAzJv0C6oRVLNxl+IkyIcO3DVCYUVXQa+Io5XkgjDr4Ya/nsPVUKCT8AtkyDPSim7m8Ax
- F6JM139C1dJg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.76,409,1592895600"; 
-   d="scan'208";a="449231885"
-Received: from lkp-server01.sh.intel.com (HELO 12ff3cf3f2e9) ([10.239.97.150])
-  by orsmga004.jf.intel.com with ESMTP; 09 Sep 2020 08:13:14 -0700
-Received: from kbuild by 12ff3cf3f2e9 with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1kG1mb-0000Tp-RS; Wed, 09 Sep 2020 15:13:13 +0000
-Date:   Wed, 09 Sep 2020 23:12:34 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci@vger.kernel.org
-Subject: [pci:for-linus] BUILD SUCCESS
- e338eecf3fe79054e8a31b8c39a1234b5acfdabe
-Message-ID: <5f58f0e2.masS6cavl8YXivMU%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        id S1728611AbgIIRR3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 9 Sep 2020 13:17:29 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:33803 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1730127AbgIIP2B (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Sep 2020 11:28:01 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1599665239;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=gAOxADskf6N6kLtooyF1uApbBx1RmVCuz5XULPdPjeA=;
+        b=PYtIlYC3XJYn0R2rA9+IISZfB5Y4kHVf+suT1xN7QgfDtPJJfWNF60gkx3LK8iXl1aywbH
+        4Q4Lol1eZ54P0addlA8omtenvdG7MraBIto0tzlLA/VHFTT4xpFfvJprp5+LngQlnPbP5+
+        AxKbYwX2yu/bHBO2Q9gMqZGQO6oZng4=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-211-18YBVbHtMxS_2Zr8MQBqVA-1; Wed, 09 Sep 2020 11:09:05 -0400
+X-MC-Unique: 18YBVbHtMxS_2Zr8MQBqVA-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 080818030A2;
+        Wed,  9 Sep 2020 15:09:03 +0000 (UTC)
+Received: from wsfd-advnetlab06.anl.lab.eng.bos.redhat.com (wsfd-advnetlab06.anl.lab.eng.bos.redhat.com [10.19.107.15])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 5CCE019C4F;
+        Wed,  9 Sep 2020 15:09:01 +0000 (UTC)
+From:   Nitesh Narayan Lal <nitesh@redhat.com>
+To:     linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org, frederic@kernel.org,
+        mtosatti@redhat.com, sassmann@redhat.com,
+        jeffrey.t.kirsher@intel.com, jacob.e.keller@intel.com,
+        jlelli@redhat.com, hch@infradead.org, bhelgaas@google.com,
+        mike.marciniszyn@intel.com, dennis.dalessandro@intel.com,
+        thomas.lendacky@amd.com, jerinj@marvell.com,
+        mathias.nyman@intel.com, jiri@nvidia.com
+Subject: [RFC] [PATCH v1 0/3] isolation: limit msix vectors based on housekeeping CPUs
+Date:   Wed,  9 Sep 2020 11:08:15 -0400
+Message-Id: <20200909150818.313699-1-nitesh@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git  for-linus
-branch HEAD: e338eecf3fe79054e8a31b8c39a1234b5acfdabe  PCI: rockchip: Fix bus checks in rockchip_pcie_valid_device()
+This is a follow-up posting for "[v1] i40e: limit the msix vectors based on
+housekeeping CPUs" [1] (It took longer than expected for me to get back to
+this).
 
-elapsed time: 723m
 
-configs tested: 136
-configs skipped: 14
+Issue
+=====
+With the current implementation device drivers while creating their MSIX
+vectors only takes num_online_cpus() into consideration which works quite well
+for a non-RT environment, but in an RT environment that has a large number of
+isolated CPUs and a very few housekeeping CPUs this could lead to a problem.
+The problem will be triggered when something like tuned will try to move all
+the IRQs from isolated CPUs to the limited number of housekeeping CPUs to
+prevent interruptions for a latency sensitive workload that will be runing on
+the isolated CPUs. This failure is caused because of the per CPU vector
+limitation.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
 
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-powerpc                     mpc5200_defconfig
-sh                   sh7724_generic_defconfig
-arm                          simpad_defconfig
-c6x                              allyesconfig
-arm                         shannon_defconfig
-sh                          rsk7269_defconfig
-sh                             sh03_defconfig
-arm                            lart_defconfig
-parisc                generic-32bit_defconfig
-mips                           ci20_defconfig
-i386                             allyesconfig
-c6x                        evmc6678_defconfig
-arm                        vexpress_defconfig
-c6x                        evmc6472_defconfig
-m68k                       m5475evb_defconfig
-mips                     decstation_defconfig
-h8300                    h8300h-sim_defconfig
-arm                            zeus_defconfig
-sh                           se7705_defconfig
-riscv                    nommu_k210_defconfig
-arm                       spear13xx_defconfig
-nds32                            alldefconfig
-sh                          kfr2r09_defconfig
-arm                        spear6xx_defconfig
-mips                           xway_defconfig
-ia64                          tiger_defconfig
-mips                        nlm_xlp_defconfig
-mips                         tb0287_defconfig
-riscv                            alldefconfig
-m68k                         amcore_defconfig
-arm                           h5000_defconfig
-sh                          lboxre2_defconfig
-sh                   secureedge5410_defconfig
-um                            kunit_defconfig
-sh                                  defconfig
-arm                              zx_defconfig
-arm                  colibri_pxa270_defconfig
-arm                          pxa168_defconfig
-mips                        workpad_defconfig
-m68k                            mac_defconfig
-arc                        nsimosci_defconfig
-mips                         bigsur_defconfig
-mips                      loongson3_defconfig
-m68k                                defconfig
-s390                                defconfig
-mips                          rm200_defconfig
-powerpc                          alldefconfig
-sh                  sh7785lcr_32bit_defconfig
-sh                   rts7751r2dplus_defconfig
-sh                          rsk7264_defconfig
-c6x                         dsk6455_defconfig
-arm                        mini2440_defconfig
-mips                         rt305x_defconfig
-arm                         s3c2410_defconfig
-m68k                        stmark2_defconfig
-arm                         hackkit_defconfig
-nds32                               defconfig
-arm                      tct_hammer_defconfig
-sh                           se7721_defconfig
-powerpc                           allnoconfig
-powerpc                  mpc885_ads_defconfig
-mips                           ip28_defconfig
-sh                         apsh4a3a_defconfig
-xtensa                generic_kc705_defconfig
-sparc                               defconfig
-arm                         s5pv210_defconfig
-h8300                               defconfig
-mips                malta_kvm_guest_defconfig
-arm                        magician_defconfig
-arm                         assabet_defconfig
-xtensa                       common_defconfig
-powerpc                          allyesconfig
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                             allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allyesconfig
-parisc                           allyesconfig
-sparc                            allyesconfig
-i386                                defconfig
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                             defconfig
-powerpc                          allmodconfig
-x86_64               randconfig-a004-20200909
-x86_64               randconfig-a006-20200909
-x86_64               randconfig-a003-20200909
-x86_64               randconfig-a001-20200909
-x86_64               randconfig-a005-20200909
-x86_64               randconfig-a002-20200909
-i386                 randconfig-a004-20200909
-i386                 randconfig-a005-20200909
-i386                 randconfig-a006-20200909
-i386                 randconfig-a002-20200909
-i386                 randconfig-a001-20200909
-i386                 randconfig-a003-20200909
-i386                 randconfig-a016-20200909
-i386                 randconfig-a015-20200909
-i386                 randconfig-a011-20200909
-i386                 randconfig-a013-20200909
-i386                 randconfig-a014-20200909
-i386                 randconfig-a012-20200909
-riscv                            allyesconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                            allmodconfig
-x86_64                                   rhel
-x86_64                           allyesconfig
-x86_64                    rhel-7.6-kselftests
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                                  kexec
+Proposed Fix
+============
+In this patch-set, the following changes are proposed:
+- A generic API num_housekeeping_cpus() which is meant to return the available
+  housekeeping CPUs in an environment with isolated CPUs and all online CPUs
+  otherwise.
+- i40e: Specifically for the i40e driver the num_online_cpus() used in 
+  i40e_init_msix() to calculate numbers msix vectors is replaced with the above
+  defined API. This is done to restrict the number of msix vectors for i40e in
+  RT environments.
+- pci_alloc_irq_vector(): With the help of num_housekeeping_cpus() the max_vecs
+  passed in pci_alloc_irq_vector() is restricted only to the available
+  housekeeping CPUs only in an environment that has isolated CPUs. However, if
+  the min_vecs exceeds the num_housekeeping_cpus(), no change is made to make
+  sure that a device initialization is not prevented due to lack of
+  housekeeping CPUs.
 
-clang tested configs:
-x86_64               randconfig-a013-20200909
-x86_64               randconfig-a016-20200909
-x86_64               randconfig-a011-20200909
-x86_64               randconfig-a012-20200909
-x86_64               randconfig-a015-20200909
-x86_64               randconfig-a014-20200909
 
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+
+Reproducing the Issue
+=====================
+I have triggered this issue on a setup that had a total of 72 cores among which
+68 were isolated and only 4 were left for housekeeping tasks. I was using
+tuned's realtime-virtual-host profile to configure the system. In this
+scenario, Tuned reported the error message 'Failed to set SMP affinity of IRQ
+xxx to '00000040,00000010,00000005': [Errno 28] No space left on the device'
+for several IRQs in tuned.log due to the per CPU vector limit.
+
+
+Testing
+=======
+Functionality:
+- To test that the issue is resolved with i40e change I added a tracepoint
+  in i40e_init_msix() to find the number of CPUs derived for vector creation
+  with and without tuned's realtime-virtual-host profile. As per expectation
+  with the profile applied I was only getting the number of housekeeping CPUs
+  and all available CPUs without it.
+
+Performance:
+- To analyze the performance impact I have targetted the change introduced in 
+  pci_alloc_irq_vectors() and compared the results against a vanilla kernel
+  (5.9.0-rc3) results.
+
+  Setup Information:
+  + I had a couple of 24-core machines connected back to back via a couple of
+    mlx5 NICs and I analyzed the average bitrate for server-client TCP and UDP
+    transmission via iperf. 
+  + To minimize the Bitrate variation of iperf TCP and UDP stream test I have
+    applied the tuned's network-throughput profile and disabled HT.
+ Test Information:
+  + For the environment that had no isolated CPUs:
+    I have tested with single stream and 24 streams (same as that of online
+    CPUs).
+  + For the environment that had 20 isolated CPUs:
+    I have tested with single stream, 4 streams (same as that the number of
+    housekeeping) and 24 streams (same as that of online CPUs).
+
+ Results:
+  # UDP Stream Test:
+    + There was no degradation observed in UDP stream tests in both
+      environments. (With isolated CPUs and without isolated CPUs after the
+      introduction of the patches).
+  # TCP Stream Test - No isolated CPUs:
+    + No noticeable degradation was observed.
+  # TCP Stream Test - With isolated CPUs:
+    + Multiple Stream (4)  - Average degradation of around 5-6%
+    + Multiple Stream (24) - Average degradation of around 2-3%
+    + Single Stream        - Even on a vanilla kernel the Bitrate observed for
+                             a TCP single stream test seem to vary
+                             significantly across different runs (eg. the %
+                             variation between the best and the worst case on
+                             a vanilla kernel was around 8-10%). A similar
+                             variation was observed with the kernel that
+                             included my patches. No additional degradation
+                             was observed.
+
+Since the change specifically for pci_alloc_irq_vectors is going to impact
+several drivers I have posted this patch-set as RFC. I would be happy to
+perform more testing based on any suggestions or incorporate any comments to
+ensure that the change is not breaking anything.
+
+[1] https://lore.kernel.org/patchwork/patch/1256308/ 
+
+Nitesh Narayan Lal (3):
+  sched/isolation: API to get num of hosekeeping CPUs
+  i40e: limit msix vectors based on housekeeping CPUs
+  PCI: Limit pci_alloc_irq_vectors as per housekeeping CPUs
+
+ drivers/net/ethernet/intel/i40e/i40e_main.c |  3 ++-
+ include/linux/pci.h                         | 16 ++++++++++++++
+ include/linux/sched/isolation.h             |  7 +++++++
+ kernel/sched/isolation.c                    | 23 +++++++++++++++++++++
+ 4 files changed, 48 insertions(+), 1 deletion(-)
+
+-- 
+2.27.0
+
+
+
