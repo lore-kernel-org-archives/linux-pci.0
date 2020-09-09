@@ -1,187 +1,81 @@
-Return-Path: <SRS0=qE/B=CR=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=VqUt=CS=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,FSL_HELO_FAKE,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_IN_DEF_DKIM_WL autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5907EC43461
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Sep 2020 23:46:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDDAFC43461
+	for <linux-pci@archiver.kernel.org>; Wed,  9 Sep 2020 01:00:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 155202145D
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Sep 2020 23:46:56 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="o7AAPg2t"
+	by mail.kernel.org (Postfix) with ESMTP id 9082521D46
+	for <linux-pci@archiver.kernel.org>; Wed,  9 Sep 2020 01:00:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728463AbgIHXqz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Sep 2020 19:46:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43216 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727935AbgIHXqu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Sep 2020 19:46:50 -0400
-Received: from mail-pg1-x543.google.com (mail-pg1-x543.google.com [IPv6:2607:f8b0:4864:20::543])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BCBF0C061755
-        for <linux-pci@vger.kernel.org>; Tue,  8 Sep 2020 16:46:50 -0700 (PDT)
-Received: by mail-pg1-x543.google.com with SMTP id 34so658972pgo.13
-        for <linux-pci@vger.kernel.org>; Tue, 08 Sep 2020 16:46:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=z8KgGGQx1h7YczMCEetfx/jb92oxBiLV/4DApZXEdSc=;
-        b=o7AAPg2tGIBeoDCy+SKZSPrMh90LWzBsQz7vIgRgf0gXKcazYi7dMUuiHS6pkeEhe3
-         72U8LTqKCD+Y0nvZWHnSCPgKx22WrkcnXsI1zBTHp65y4SK7sUDb96k8i08E7N1I3ndK
-         MAbE+qSMIBBIRaP4TaKmNwhLB/bhB54qsZiAh3Ur4seHsvyrTB8t5y34VNrcKVW/C66L
-         l7cjL+k9FUiFppFSh3huLQBHCcZYt8E1otUR46Y0GfuzwzhPLhut+2yC5pR2SQvSs0VL
-         ilFTrWMA4JBjFg121/n2oGTyDANdfOuIpPL/4ZyE02D71+D1zpI6L2df8XB6haMHzveL
-         5RSQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=z8KgGGQx1h7YczMCEetfx/jb92oxBiLV/4DApZXEdSc=;
-        b=kd6HuzSVLuNXfxqTa4l+Sh+vHTXkeJI8/Vv7F7635FA9gZT45hWdMzq8OqVBfZjfVv
-         fX1g9o9tuWL39hTRAkL4W/Gc8yChDzsZOZ88XN7GxpW7t0OMepmm+PVJLbFxh34UJ3Qj
-         cl7ZQc4RnsruQSZl9J1564uj9nqwpGh8anFX6IUqvsmiVqkM0Jwh6pBqoBZo03nQ55N3
-         gqFFvwZ+drDgIZra6e+FfHG3DUiDcopVA6gfJGB+TFJrub3faMvjGBenYMY5pQoyWy1e
-         iewMjtgctFlaIvtfKkjchmbytMSL2sMHuxddylmsb3pD7+dHIwN7gWWWMiO4odtz65Hz
-         EhSQ==
-X-Gm-Message-State: AOAM532hrEbe6zBoEeIWT/RfYt4fEL1UGWeRfhZQ8m6QrBCGiOgYj661
-        IhledcNHepCfJIUWihFYQW0ntA==
-X-Google-Smtp-Source: ABdhPJyPXjsg2EPOqZVE0HrEMh1e+YhXcjhHaIFb+FoC7uPh34ggtt3CwAG5NZI9KmvOFhjBQ3KjBw==
-X-Received: by 2002:a63:4664:: with SMTP id v36mr859465pgk.194.1599608809917;
-        Tue, 08 Sep 2020 16:46:49 -0700 (PDT)
-Received: from google.com ([2620:15c:201:2:f693:9fff:fef4:1b6d])
-        by smtp.gmail.com with ESMTPSA id n67sm332121pgn.14.2020.09.08.16.46.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Sep 2020 16:46:49 -0700 (PDT)
-Date:   Tue, 8 Sep 2020 16:46:43 -0700
-From:   Sami Tolvanen <samitolvanen@google.com>
-To:     Masahiro Yamada <masahiroy@kernel.org>
-Cc:     Will Deacon <will@kernel.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Paul E. McKenney" <paulmck@kernel.org>,
-        Kees Cook <keescook@chromium.org>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        clang-built-linux <clang-built-linux@googlegroups.com>,
-        Kernel Hardening <kernel-hardening@lists.openwall.com>,
-        linux-arch <linux-arch@vger.kernel.org>,
-        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-        Linux Kbuild mailing list <linux-kbuild@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org, X86 ML <x86@kernel.org>
-Subject: Re: [PATCH v2 00/28] Add support for Clang LTO
-Message-ID: <20200908234643.GF1060586@google.com>
-References: <20200624203200.78870-1-samitolvanen@google.com>
- <20200903203053.3411268-1-samitolvanen@google.com>
- <CAK7LNASDUkyJMDD0a5K_HT=1q5NEc6dcN4=FUb330yK0BCKcTw@mail.gmail.com>
+        id S1726726AbgIIBAF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Sep 2020 21:00:05 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:10851 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726699AbgIIBAE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 8 Sep 2020 21:00:04 -0400
+Received: from DGGEMS413-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id DACEB96FF17F7E8EE840;
+        Wed,  9 Sep 2020 09:00:02 +0800 (CST)
+Received: from [127.0.0.1] (10.174.179.33) by DGGEMS413-HUB.china.huawei.com
+ (10.3.19.213) with Microsoft SMTP Server id 14.3.487.0; Wed, 9 Sep 2020
+ 09:00:00 +0800
+Subject: Re: [PATCH v2] PCI/ACPI: Suppress missing MCFG message
+To:     Jeremy Linton <jeremy.linton@arm.com>, <linux-acpi@vger.kernel.org>
+CC:     <tn@semihalf.com>, <bhelgaas@google.com>,
+        <lorenzo.pieralisi@arm.com>, <steven.price@arm.com>,
+        <rjw@rjwysocki.net>, <lenb@kernel.org>, <sudeep.holla@arm.com>,
+        <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+References: <20200908210359.569294-1-jeremy.linton@arm.com>
+From:   Hanjun Guo <guohanjun@huawei.com>
+Message-ID: <f7d5522a-9e44-236e-ad9f-44d3fd5c5ade@huawei.com>
+Date:   Wed, 9 Sep 2020 08:59:59 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
+ Thunderbird/68.6.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAK7LNASDUkyJMDD0a5K_HT=1q5NEc6dcN4=FUb330yK0BCKcTw@mail.gmail.com>
+In-Reply-To: <20200908210359.569294-1-jeremy.linton@arm.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-GB
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.179.33]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sun, Sep 06, 2020 at 09:24:38AM +0900, Masahiro Yamada wrote:
-> On Fri, Sep 4, 2020 at 5:30 AM Sami Tolvanen <samitolvanen@google.com> wrote:
-> >
-> > This patch series adds support for building x86_64 and arm64 kernels
-> > with Clang's Link Time Optimization (LTO).
-> >
-> > In addition to performance, the primary motivation for LTO is
-> > to allow Clang's Control-Flow Integrity (CFI) to be used in the
-> > kernel. Google has shipped millions of Pixel devices running three
-> > major kernel versions with LTO+CFI since 2018.
-> >
-> > Most of the patches are build system changes for handling LLVM
-> > bitcode, which Clang produces with LTO instead of ELF object files,
-> > postponing ELF processing until a later stage, and ensuring initcall
-> > ordering.
-> >
-> > Note that patches 1-4 are not directly related to LTO, but are
-> > needed to compile LTO kernels with ToT Clang, so I'm including them
-> > in the series for your convenience:
-> >
-> >  - Patches 1-3 are required for building the kernel with ToT Clang,
-> >    and IAS, and patch 4 is needed to build allmodconfig with LTO.
-> >
-> >  - Patches 3-4 are already in linux-next, but not yet in 5.9-rc.
-> >
+On 2020/9/9 5:03, Jeremy Linton wrote:
+> MCFG is an optional ACPI table. Given there are machines
+> without PCI(e) (or it is hidden) we have been receiving
+> queries/complaints about what this message means given
+> its being presented as an error.
 > 
+> Lets reduce the severity, the ACPI table list printed at
+> boot will continue to provide another way to detect when
+> the table is missing.
 > 
-> I still do not understand how this patch set works.
-> (only me?)
+> Signed-off-by: Jeremy Linton <jeremy.linton@arm.com>
+> ---
+>   drivers/acpi/pci_mcfg.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> Please let me ask fundamental questions.
+> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+> index 54b36b7ad47d..c8ef3bb5aa00 100644
+> --- a/drivers/acpi/pci_mcfg.c
+> +++ b/drivers/acpi/pci_mcfg.c
+> @@ -280,5 +280,5 @@ void __init pci_mmcfg_late_init(void)
+>   {
+>   	int err = acpi_table_parse(ACPI_SIG_MCFG, pci_mcfg_parse);
+>   	if (err)
+> -		pr_err("Failed to parse MCFG (%d)\n", err);
+> +		pr_debug("Failed to parse MCFG (%d)\n", err);
+>   }
 > 
-> 
-> 
-> I applied this series on top of Linus' tree,
-> and compiled for ARCH=arm64.
-> 
-> I compared the kernel size with/without LTO.
-> 
-> 
-> 
-> [1] No LTO  (arm64 defconfig, CONFIG_LTO_NONE)
-> 
-> $ llvm-size   vmlinux
->    text    data     bss     dec     hex filename
-> 15848692 10099449 493060 26441201 19375f1 vmlinux
-> 
-> 
-> 
-> [2] Clang LTO  (arm64 defconfig + CONFIG_LTO_CLANG)
-> 
-> $ llvm-size   vmlinux
->    text    data     bss     dec     hex filename
-> 15906864 10197445 490804 26595113 195cf29 vmlinux
-> 
-> 
-> I compared the size of raw binary, arch/arm64/boot/Image.
-> Its size increased too.
-> 
-> 
-> 
-> So, in my experiment, enabling CONFIG_LTO_CLANG
-> increases the kernel size.
-> Is this correct?
 
-Yes. LTO does produce larger binaries, mostly due to function
-inlining between translation units, I believe. The compiler people
-can probably give you a more detailed answer here. Without -mllvm
--import-instr-limit, the binaries would be even larger.
+Reviewed-by: Hanjun Guo <guohanjun@huawei.com>
 
-> One more thing, could you teach me
-> how Clang LTO optimizes the code against
-> relocatable objects?
-> 
-> 
-> 
-> When I learned Clang LTO first, I read this document:
-> https://llvm.org/docs/LinkTimeOptimization.html
-> 
-> It is easy to confirm the final executable
-> does not contain foo2, foo3...
-> 
-> 
-> 
-> In contrast to userspace programs,
-> kernel modules are basically relocatable objects.
-> 
-> Does Clang drop unused symbols from relocatable objects?
-> If so, how?
-
-I don't think the compiler can legally drop global symbols from
-relocatable objects, but it can rename and possibly even drop static
-functions. This is why we need global wrappers for initcalls, for
-example, to have stable symbol names.
-
-Sami
