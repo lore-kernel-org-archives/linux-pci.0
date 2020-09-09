@@ -2,121 +2,146 @@ Return-Path: <SRS0=VqUt=CS=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 675C0C433E2
-	for <linux-pci@archiver.kernel.org>; Wed,  9 Sep 2020 17:18:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03C5EC433E2
+	for <linux-pci@archiver.kernel.org>; Wed,  9 Sep 2020 17:38:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0AD3F2166E
-	for <linux-pci@archiver.kernel.org>; Wed,  9 Sep 2020 17:18:12 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UXJ67XSB"
+	by mail.kernel.org (Postfix) with ESMTP id CA44C21D7A
+	for <linux-pci@archiver.kernel.org>; Wed,  9 Sep 2020 17:38:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730206AbgIIRR3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 9 Sep 2020 13:17:29 -0400
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:39855 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1730168AbgIIP2A (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Sep 2020 11:28:00 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1599665250;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=+BCz3wPlVfUrMQm65Je9XbtrGnOGZT7lnY6dkRWqnmM=;
-        b=UXJ67XSBfhoW0sPqHv+AhMU4/udt5w6wdlmNsoq3DelZA8V0qJ9aAfSToWCRfkoohT9P5+
-        0kYs0ZATv8JkqR96BvTwzn9zyH/MDNqmcpUH9nlWEJKP+RkRal8wlcUlQfUnNTYPlSGcSF
-        Id2BmOGmwj9mbTNZbfCLjmnU891/WgU=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-359-6B6-ByPUO9KRZAKC5KxUow-1; Wed, 09 Sep 2020 11:09:14 -0400
-X-MC-Unique: 6B6-ByPUO9KRZAKC5KxUow-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 6D82318BA290;
-        Wed,  9 Sep 2020 15:09:12 +0000 (UTC)
-Received: from wsfd-advnetlab06.anl.lab.eng.bos.redhat.com (wsfd-advnetlab06.anl.lab.eng.bos.redhat.com [10.19.107.15])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 5242A19C4F;
-        Wed,  9 Sep 2020 15:09:06 +0000 (UTC)
-From:   Nitesh Narayan Lal <nitesh@redhat.com>
-To:     linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-pci@vger.kernel.org, frederic@kernel.org,
-        mtosatti@redhat.com, sassmann@redhat.com,
-        jeffrey.t.kirsher@intel.com, jacob.e.keller@intel.com,
-        jlelli@redhat.com, hch@infradead.org, bhelgaas@google.com,
-        mike.marciniszyn@intel.com, dennis.dalessandro@intel.com,
-        thomas.lendacky@amd.com, jerinj@marvell.com,
-        mathias.nyman@intel.com, jiri@nvidia.com
-Subject: [RFC][Patch v1 3/3] PCI: Limit pci_alloc_irq_vectors as per housekeeping CPUs
-Date:   Wed,  9 Sep 2020 11:08:18 -0400
-Message-Id: <20200909150818.313699-4-nitesh@redhat.com>
-In-Reply-To: <20200909150818.313699-1-nitesh@redhat.com>
-References: <20200909150818.313699-1-nitesh@redhat.com>
+        id S1728443AbgIIRiC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 9 Sep 2020 13:38:02 -0400
+Received: from foss.arm.com ([217.140.110.172]:45962 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727856AbgIIRh5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 9 Sep 2020 13:37:57 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id D80F0101E;
+        Wed,  9 Sep 2020 10:37:56 -0700 (PDT)
+Received: from e121166-lin.cambridge.arm.com (e121166-lin.cambridge.arm.com [10.1.196.255])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id A28B23F68F;
+        Wed,  9 Sep 2020 10:37:55 -0700 (PDT)
+Date:   Wed, 9 Sep 2020 18:37:49 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Catalin Marinas <catalin.marinas@arm.com>
+Cc:     George Cherian <gcherian@marvell.com>,
+        Yang Yingliang <yangyingliang@huawei.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "guohanjun@huawei.com" <guohanjun@huawei.com>
+Subject: Re: [PATCH] arm64: PCI: fix memleak when calling pci_iomap/unmap()
+Message-ID: <20200909173749.GA11781@e121166-lin.cambridge.arm.com>
+References: <20200907104546.GC26513@gaia>
+ <BYAPR18MB267959E6FE4BEF38D0A4611EC5280@BYAPR18MB2679.namprd18.prod.outlook.com>
+ <20200907112118.GD26513@gaia>
+ <20200909113613.GB6384@e121166-lin.cambridge.arm.com>
+ <20200909135400.GB13047@gaia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200909135400.GB13047@gaia>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This patch limits the pci_alloc_irq_vectors max vectors that is passed on
-by the caller based on the available housekeeping CPUs by only using the
-minimum of the two.
+On Wed, Sep 09, 2020 at 02:54:01PM +0100, Catalin Marinas wrote:
+> On Wed, Sep 09, 2020 at 12:36:13PM +0100, Lorenzo Pieralisi wrote:
+> > On Mon, Sep 07, 2020 at 12:21:19PM +0100, Catalin Marinas wrote:
+> > > On Mon, Sep 07, 2020 at 10:51:21AM +0000, George Cherian wrote:
+> > > > Catalin Marinas <catalin.marinas@arm.com> wrote:
+> > > > > On Sat, Sep 05, 2020 at 10:48:11AM +0800, Yang Yingliang wrote:
+> > > > > > diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c index
+> > > > > > 1006ed2d7c604..ddfa1c53def48 100644
+> > > > > > --- a/arch/arm64/kernel/pci.c
+> > > > > > +++ b/arch/arm64/kernel/pci.c
+> > > > > > @@ -217,4 +217,9 @@ void pcibios_remove_bus(struct pci_bus *bus)
+> > > > > >  	acpi_pci_remove_bus(bus);
+> > > > > >  }
+> > > > > >
+> > > > > > +void pci_iounmap(struct pci_dev *dev, void __iomem *addr) {
+> > > > > > +	iounmap(addr);
+> > > > > > +}
+> > > > > > +EXPORT_SYMBOL(pci_iounmap);
+> > > > > 
+> > > > > So, what's wrong with the generic pci_iounmap() implementation?
+> > > > > Shouldn't it call iounmap() already?
+> > > > 
+> > > > Since ARM64 selects CONFIG_GENERIC_PCI_IOMAP and not
+> > > > CONFIG_GENERIC_IOMAP,  the pci_iounmap function is reduced to a NULL
+> > > > function. Due to this, even the managed release variants or even the explicit
+> > > > pci_iounmap calls doesn't really remove the mappings leading to leak.
+> > > 
+> > > Ah, I missed the fact that pci_iounmap() depends on a different
+> > > config option.
+> > > 
+> > > > https://lkml.org/lkml/2020/8/20/28
+> > > 
+> > > So is this going to be fixed in the generic code? That would be my
+> > > preference.
+> > > 
+> > > A problem with the iounmap() in the proposed patch is that the region
+> > > may have been an I/O port, so we could end up unmapping the I/O space.
+> > 
+> > It boils down to finding a way to match a VA to a BAR resource so that
+> > we can mirror on pci_iounmap() what's done in pci_iomap_range() (ie
+> > check BAR resource flags to define how/if to unmap them), that would do
+> > as a generic pci_iounmap() implementation.
+> 
+> In the !CONFIG_GENERIC_IOMAP case (arm64), for IORESOURCE_IO,
+> pci_iomap_range() calls __pci_ioport_map() which, with the default
+> ioport_map(), it ends up with a simple PCI_IOBASE + (port &
+> IO_SPACE_LIMIT).
+> 
+> pci_iounmap() could check whether the pointer is in the PCI_IOBASE -
+> PCI_IOBASE+IO_SPACE_LIMIT range before calling ioremap(), unless the
+> arch code re-defined ioport_map. Something like below (not even
+> compiled):
 
-A minimum of the max_vecs passed and available housekeeping CPUs is
-derived to ensure that we don't create excess vectors which can be
-problematic specifically in an RT environment. This is because for an RT
-environment unwanted IRQs are moved to the housekeeping CPUs from
-isolated CPUs to keep the latency overhead to a minimum. If the number of
-housekeeping CPUs are significantly lower than that of the isolated CPUs
-we can run into failures while moving these IRQs to housekeeping due to
-per CPU vector limit.
+I gave it some thought - with the current state of affairs (which is not
+ideal - this *_IOMAP stuff is ways too complex) it is likely to be the
+safest/only way we can have this in generic code, short of implementing
+what I mentioned (but that implies keeping track of BAR VA mappings)
+or cleaning up this nest of defines.
 
-Signed-off-by: Nitesh Narayan Lal <nitesh@redhat.com>
----
- include/linux/pci.h | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+Lorenzo
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 835530605c0d..750ba927d963 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -38,6 +38,7 @@
- #include <linux/interrupt.h>
- #include <linux/io.h>
- #include <linux/resource_ext.h>
-+#include <linux/sched/isolation.h>
- #include <uapi/linux/pci.h>
- 
- #include <linux/pci_ids.h>
-@@ -1797,6 +1798,21 @@ static inline int
- pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
- 		      unsigned int max_vecs, unsigned int flags)
- {
-+	unsigned int num_housekeeping = num_housekeeping_cpus();
-+	unsigned int num_online = num_online_cpus();
-+
-+	/*
-+	 * Try to be conservative and at max only ask for the same number of
-+	 * vectors as there are housekeeping CPUs. However, skip any
-+	 * modification to the of max vectors in two conditions:
-+	 * 1. If the min_vecs requested are higher than that of the
-+	 *    housekeeping CPUs as we don't want to prevent the initialization
-+	 *    of a device.
-+	 * 2. If there are no isolated CPUs as in this case the driver should
-+	 *    already have taken online CPUs into consideration.
-+	 */
-+	if (min_vecs < num_housekeeping && num_housekeeping != num_online)
-+		max_vecs = min_t(int, max_vecs, num_housekeeping);
- 	return pci_alloc_irq_vectors_affinity(dev, min_vecs, max_vecs, flags,
- 					      NULL);
- }
--- 
-2.27.0
-
+> diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
+> index dabf8cb7203b..fada420c9cd6 100644
+> --- a/include/asm-generic/io.h
+> +++ b/include/asm-generic/io.h
+> @@ -919,6 +919,11 @@ extern void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long max);
+>  #define pci_iounmap pci_iounmap
+>  static inline void pci_iounmap(struct pci_dev *dev, void __iomem *p)
+>  {
+> +#ifndef ARCH_HAS_IOPORT_MAP
+> +	if (p >= PCI_IOBASE && p < PCI_IOBASE + IO_SPACE_LIMIT)
+> +		return;
+> +	iounmap(p);
+> +#endif
+>  }
+>  #endif
+>  #endif /* CONFIG_GENERIC_IOMAP */
+> @@ -1009,7 +1014,9 @@ static inline void __iomem *ioremap_uc(phys_addr_t offset, size_t size)
+>  
+>  #ifdef CONFIG_HAS_IOPORT_MAP
+>  #ifndef CONFIG_GENERIC_IOMAP
+> -#ifndef ioport_map
+> +#ifdef ioport_map
+> +#define ARCH_HAS_IOPORT_MAP
+> +#else
+>  #define ioport_map ioport_map
+>  static inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
+>  {
+> 
+> -- 
+> Catalin
