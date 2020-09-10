@@ -2,176 +2,159 @@ Return-Path: <SRS0=01Vy=CT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70F68C433E2
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 02:24:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BAF2C43461
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 02:31:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3BA2A21D7F
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 02:24:47 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LTtp8Ud1"
+	by mail.kernel.org (Postfix) with ESMTP id 309AD20C09
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 02:31:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1599705079;
+	bh=rpK5TImbUwxuczxPgKi/2SEW4+zwGKS4ZV3zurp+kWI=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=lW+H3btq27v6sb3Ale4iU4CGs5cGMsMgVq0dcN1JCqvEntYYAvr0yUWg+AFhG35rI
+	 xkUFxLK8FbT/d+Bl+6ABtXDIWTG1k+EAHKxj3aBPlgrK8n3SscM9vRaQlchpp8DbiB
+	 ZrCCpRTVzEzRJQshzXXnijHg1Bv6wsDyTa5+Cz00=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730684AbgIJCYo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 9 Sep 2020 22:24:44 -0400
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:32603 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1730668AbgIJCId (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Sep 2020 22:08:33 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1599703711;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=9lUmVHlRg0jPhlantuCk3hiT6WHd/nIzITZFw+wGi90=;
-        b=LTtp8Ud1EekyMH0PGpMWJGlJTqAkF1SWn5bqK+soxWpH8E28oQQw6KsoNE4qWWuIzw+piU
-        alvnxuk2w3B56i2Fcv9NFVUaQ13Yi0XViNnK/zM+fIs1Up1YmBhgrxbW5nk1DFzwKg5iWo
-        IA8oLbyx0dTfhqcjcxzc7d1Y58w4ZO4=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-381-PdjO5lmxOoqImIc6M2pBzA-1; Wed, 09 Sep 2020 19:07:52 -0400
-X-MC-Unique: PdjO5lmxOoqImIc6M2pBzA-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1730401AbgIJCbI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 9 Sep 2020 22:31:08 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39898 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730799AbgIJC0B (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 9 Sep 2020 22:26:01 -0400
+Received: from localhost (52.sub-72-107-123.myvzw.com [72.107.123.52])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 97082801F98;
-        Wed,  9 Sep 2020 23:07:50 +0000 (UTC)
-Received: from w520.home (ovpn-112-71.phx2.redhat.com [10.3.112.71])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 209F57EED4;
-        Wed,  9 Sep 2020 23:07:48 +0000 (UTC)
-Date:   Wed, 9 Sep 2020 17:07:46 -0600
-From:   Alex Williamson <alex.williamson@redhat.com>
-To:     Matthew Rosato <mjrosato@linux.ibm.com>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>, bhelgaas@google.com,
-        schnelle@linux.ibm.com, pmorel@linux.ibm.com, mpe@ellerman.id.au,
-        oohall@gmail.com, cohuck@redhat.com, kevin.tian@intel.com,
-        linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kvm@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4 1/3] PCI/IOV: Mark VFs as not implementing MSE bit
-Message-ID: <20200909170746.2286b83a@w520.home>
-In-Reply-To: <38f95349-237e-34e2-66ef-e626cd4aec25@linux.ibm.com>
-References: <20200903164117.GA312152@bjorn-Precision-5520>
-        <38f95349-237e-34e2-66ef-e626cd4aec25@linux.ibm.com>
+        by mail.kernel.org (Postfix) with ESMTPSA id 7D3932087C;
+        Thu, 10 Sep 2020 02:25:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1599704756;
+        bh=rpK5TImbUwxuczxPgKi/2SEW4+zwGKS4ZV3zurp+kWI=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=PfsuGjB1ZZycbitXyUFlPfMo/QY6sApLvwh7m3bf3/9cAVIR1Ro3aEcvpb4B5ZhQt
+         iz249d9uvinV+ET9qjh7c5Fg8FxFfu6xckptcBxeauUujIxVBThhe059vyFOkyo47O
+         PeA7Vp+4CWkJrbHQpUxo4GrA9VDtfY5pLYxfGAQo=
+Date:   Wed, 9 Sep 2020 21:25:55 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Jim Quinlan <james.quinlan@broadcom.com>
+Cc:     linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [RESEND PATCH v1] PCI: pcie_bus_config can be set at build time
+Message-ID: <20200910022555.GA749829@bjorn-Precision-5520>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200908163248.14330-1-james.quinlan@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 3 Sep 2020 13:10:02 -0400
-Matthew Rosato <mjrosato@linux.ibm.com> wrote:
+On Tue, Sep 08, 2020 at 12:32:48PM -0400, Jim Quinlan wrote:
+> The Kconfig is modified so that the pcie_bus_config setting can be done at
+> build time in the same manner as the CONFIG_PCIEASPM_XXXX choice.  The
+> pci_bus_config setting may still be overridden by the bootline param.
 
-> On 9/3/20 12:41 PM, Bjorn Helgaas wrote:
-> > On Wed, Sep 02, 2020 at 03:46:34PM -0400, Matthew Rosato wrote:  
-> >> Per the PCIe spec, VFs cannot implement the MSE bit
-> >> AKA PCI_COMMAND_MEMORY, and it must be hard-wired to 0.
-> >> Use a dev_flags bit to signify this requirement.  
-> > 
-> > This approach seems sensible to me, but
-> > 
-> >    - This is confusing because while the spec does not use "MSE" to
-> >      refer to the Command Register "Memory Space Enable" bit
-> >      (PCI_COMMAND_MEMORY), it *does* use "MSE" in the context of the
-> >      "VF MSE" bit, which is in the PF SR-IOV Capability.  But of
-> >      course, you're not talking about that here.  Maybe something like
-> >      this?
-> > 
-> >        For VFs, the Memory Space Enable bit in the Command Register is
-> >        hard-wired to 0.
-> > 
-> >        Add a dev_flags bit to signify devices where the Command
-> >        Register Memory Space Enable bit does not control the device's
-> >        response to MMIO accesses.  
-> 
-> Will do.  I'll change the usage of the MSE acronym in the other patches 
-> as well.
-> 
-> > 
-> >    - "PCI_DEV_FLAGS_FORCE_COMMAND_MEM" says something about how you
-> >      plan to *use* this, but I'd rather use a term that describes the
-> >      hardware, e.g., "PCI_DEV_FLAGS_NO_COMMAND_MEMORY".  
-> 
-> Sure, I will change.
-> 
-> > 
-> >    - How do we decide whether to use dev_flags vs a bitfield like
-> >      dev->is_virtfn?  The latter seems simpler unless there's a reason
-> >      to use dev_flags.  If there's a reason, maybe we could add a
-> >      comment at pci_dev_flags for future reference.
-> >   
-> 
-> Something like:
-> 
-> /*
->   * Device does not implement PCI_COMMAND_MEMORY - this is true for any
->   * device marked is_virtfn, but is also true for any VF passed-through
->   * a lower-level hypervisor where emulation of the Memory Space Enable
->   * bit was not provided.
->   */
-> PCI_DEV_FLAGS_NO_COMMAND_MEMORY = (__force pci_dev_flags_t) (1 << 12),
-> 
-> ?
-> 
-> >    - Wrap the commit log to fill a 75-char line.  It's arbitrary, but
-> >      that's what I use for consistency.  
-> 
-> Sure, will do.  I'll roll up a new version once I have feedback from 
-> Alex on the vfio changes.
+I guess...  I really hate these build-time config settings for both
+ASPM and MPS/MRRS.  But Linux just isn't smart or flexible enough to
+do the right thing at run-time, so I guess we're kind of stuck.
 
-The usage of MSE threw me a bit too, as Bjorn notes that's specific to
-the SR-IOV capability.  I think this also uncovers a latent bug in our
-calling of vfio_bar_restore(), it really doesn't do a good job of
-determining whether an enable bit is implemented, regardless of whether
-it's a VF or the device simply doesn't use that address space.  For
-example I imagine you could reproduce triggering a reset recovery on
-s390 by trying to write the VF command register to 1 with setpci from a
-guest (since you won't have is_virtfn to bail out of the recovery
-function).  I think we'll still need this dev_flag to differentiate
-unimplmented and enabled versus simply unimplemented to resolve that
-though, so the change looks ok to me. Thanks,
+I guess you have systems where you need a different default?
 
-Alex
+It'd be nice if we could put a little more detail in the Kconfig to
+help users choose the correct one.  "Ensure MPS matches upstream
+bridge" is *accurate*, but it doesn't really tell me why I would
+choose this rather than a different one.
 
-> >> Signed-off-by: Matthew Rosato <mjrosato@linux.ibm.com>
-> >> ---
-> >>   drivers/pci/iov.c   | 1 +
-> >>   include/linux/pci.h | 2 ++
-> >>   2 files changed, 3 insertions(+)
-> >>
-> >> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> >> index b37e08c..2bec77c 100644
-> >> --- a/drivers/pci/iov.c
-> >> +++ b/drivers/pci/iov.c
-> >> @@ -180,6 +180,7 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id)
-> >>   	virtfn->device = iov->vf_device;
-> >>   	virtfn->is_virtfn = 1;
-> >>   	virtfn->physfn = pci_dev_get(dev);
-> >> +	virtfn->dev_flags |= PCI_DEV_FLAGS_FORCE_COMMAND_MEM;
-> >>   
-> >>   	if (id == 0)
-> >>   		pci_read_vf_config_common(virtfn);
-> >> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> >> index 8355306..9316cce 100644
-> >> --- a/include/linux/pci.h
-> >> +++ b/include/linux/pci.h
-> >> @@ -227,6 +227,8 @@ enum pci_dev_flags {
-> >>   	PCI_DEV_FLAGS_NO_FLR_RESET = (__force pci_dev_flags_t) (1 << 10),
-> >>   	/* Don't use Relaxed Ordering for TLPs directed at this device */
-> >>   	PCI_DEV_FLAGS_NO_RELAXED_ORDERING = (__force pci_dev_flags_t) (1 << 11),
-> >> +	/* Device does not implement PCI_COMMAND_MEMORY (e.g. a VF) */
-> >> +	PCI_DEV_FLAGS_FORCE_COMMAND_MEM = (__force pci_dev_flags_t) (1 << 12),
-> >>   };
-> >>   
-> >>   enum pci_irq_reroute_variant {
-> >> -- 
-> >> 1.8.3.1
-> >>  
+Maybe we could mention the corresponding command-line parameters,
+e.g., "This is the same as booting with 'pci=pcie_bus_tune_off'"?
+
+> Signed-off-by: Jim Quinlan <james.quinlan@broadcom.com>
+> ---
+>  drivers/pci/Kconfig | 40 ++++++++++++++++++++++++++++++++++++++++
+>  drivers/pci/pci.c   | 12 ++++++++++++
+>  2 files changed, 52 insertions(+)
 > 
-
+> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+> index 4bef5c2bae9f..efe69b0d9f7f 100644
+> --- a/drivers/pci/Kconfig
+> +++ b/drivers/pci/Kconfig
+> @@ -187,6 +187,46 @@ config PCI_HYPERV
+>  	  The PCI device frontend driver allows the kernel to import arbitrary
+>  	  PCI devices from a PCI backend to support PCI driver domains.
+>  
+> +choice
+> +	prompt "PCIE default bus config setting"
+> +	default PCIE_BUS_DEFAULT
+> +	depends on PCI
+> +	help
+> +	  One of the following choices will set the pci_bus_config at
+> +	  compile time.  This will still be overridden by the appropriate
+> +	  pci bootline parameter.
+> +
+> +config PCIE_BUS_TUNE_OFF
+> +	bool "Tune Off"
+> +	depends on PCI
+> +	help
+> +	  Use the BIOS defaults; doesn't touch MPS at all.
+> +
+> +config PCIE_BUS_DEFAULT
+> +	bool "Default"
+> +	depends on PCI
+> +	help
+> +	  Ensure MPS matches upstream bridge.
+> +
+> +config PCIE_BUS_SAFE
+> +	bool "Safe"
+> +	depends on PCI
+> +	help
+> +	  Use largest MPS boot-time devices support.
+> +
+> +config PCIE_BUS_PERFORMANCE
+> +	bool "Performance"
+> +	depends on PCI
+> +	help
+> +	  Use MPS and MRRS for best performance.
+> +
+> +config PCIE_BUS_PEER2PEER
+> +	bool "Peer2peer"
+> +	depends on PCI
+> +	help
+> +	  Set MPS = 128 for all devices.
+> +endchoice
+> +
+>  source "drivers/pci/hotplug/Kconfig"
+>  source "drivers/pci/controller/Kconfig"
+>  source "drivers/pci/endpoint/Kconfig"
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index e39c5499770f..dfb52ed4a931 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -101,7 +101,19 @@ unsigned long pci_hotplug_mmio_pref_size = DEFAULT_HOTPLUG_MMIO_PREF_SIZE;
+>  #define DEFAULT_HOTPLUG_BUS_SIZE	1
+>  unsigned long pci_hotplug_bus_size = DEFAULT_HOTPLUG_BUS_SIZE;
+>  
+> +
+> +/* PCIE bus config, can be overridden by bootline param */
+> +#ifdef CONFIG_PCIE_BUS_TUNE_OFF
+> +enum pcie_bus_config_types pcie_bus_config = PCIE_BUS_TUNE_OFF;
+> +#elif defined CONFIG_PCIE_BUS_SAFE
+> +enum pcie_bus_config_types pcie_bus_config = PCIE_BUS_SAFE;
+> +#elif defined CONFIG_PCIE_BUS_PERFORMANCE
+> +enum pcie_bus_config_types pcie_bus_config = PCIE_BUS_PERFORMANCE;
+> +#elif defined CONFIG_PCIE_BUS_PEER2PEER
+> +enum pcie_bus_config_types pcie_bus_config = PCIE_BUS_PEER2PEER;
+> +#else
+>  enum pcie_bus_config_types pcie_bus_config = PCIE_BUS_DEFAULT;
+> +#endif
+>  
+>  /*
+>   * The default CLS is used if arch didn't set CLS explicitly and not
+> -- 
+> 2.17.1
+> 
