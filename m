@@ -2,165 +2,90 @@ Return-Path: <SRS0=01Vy=CT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E907BC43461
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 02:51:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D4EAC43461
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 02:52:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B39E821D6C
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 02:51:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 07B7521D7F
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 02:52:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1599706290;
-	bh=0pv/t21ONbGS8OMxlG8e+YQCpa0mHZfiPXOrYCKcUDQ=;
+	s=default; t=1599706343;
+	bh=DUreE3/B8B60ExKVpkn5deA+5RXtXj3rT/zpM+ipKM8=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=AKVPDndMEJhdScod+eAWwEdy3TdDhtSAIj1SlUwmZMY5fU0czFEdD2h4W91YVIREs
-	 QCjABt52+DiXqeOH0nJZ/lHyeYA73w2LKwBBcgd6AXDHJFjD7MTW+ZbZqM3R9oXTYw
-	 Q5InxNIxpYqNb0rHNOCI/0oSoaQ77K0zmOeC+scw=
+	b=wFYs9NhcIB4dZ9hBKKscAuJ23D08LtPIRgXIhpREtn+KKbHrZQ6EcIE2Ava5Iguu1
+	 xM8B3re4kWXc03KEwEX99gQI3w/dvaVlotTrKuSPYkXGQNzhyi5i92lxMmD6M1mCr1
+	 tpqG4DfPQ/2yfBIWf5smuumDXOcZnO6LrwmL9IlY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730260AbgIJB6e (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 9 Sep 2020 21:58:34 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34908 "EHLO mail.kernel.org"
+        id S1726714AbgIJB6a (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 9 Sep 2020 21:58:30 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34244 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730187AbgIJB4K (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 9 Sep 2020 21:56:10 -0400
+        id S1730175AbgIJBza (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 9 Sep 2020 21:55:30 -0400
 Received: from localhost (52.sub-72-107-123.myvzw.com [72.107.123.52])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 873F6206DB;
-        Thu, 10 Sep 2020 01:55:59 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 38D5E22204;
+        Thu, 10 Sep 2020 00:39:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1599702960;
-        bh=0pv/t21ONbGS8OMxlG8e+YQCpa0mHZfiPXOrYCKcUDQ=;
+        s=default; t=1599698358;
+        bh=DUreE3/B8B60ExKVpkn5deA+5RXtXj3rT/zpM+ipKM8=;
         h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=vKwkjxl2TiEvihJm3uVP3drewJd4xUtplcDOkYzAJLmgGQlLBrOXwolosBYEX5ewJ
-         LFC2tuLsRFvwMchTyRQGNkePt5RuEO+72fVXhWKm2eVLiJKlLRiOxmJS/JUharUWoB
-         Zid13h3j9O6nqjX0dpOxnJqBFLCtGrD7buFXwfkI=
-Date:   Wed, 9 Sep 2020 20:55:58 -0500
+        b=fxbGvae5PiiQEAyf5ZOsc1H1PIbu/Dtuxhr4F+6DiH4VkMLBe6b8vAQvKMaITSQTk
+         lEZycuYgzorka6kWEpyiTs/w+GnoMbixvkjYtFueggSDVnfjsYIpwv0dMs2CU8jlJ/
+         Sxkfy16axgN5dv42JNKPDgfSrCN+JbHDZlGTfmbI=
+Date:   Wed, 9 Sep 2020 19:39:16 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Kai-Heng Feng <kai.heng.feng@canonical.com>
-Cc:     bhelgaas@google.com, jonathan.derrick@intel.com,
-        Mario.Limonciello@dell.com, Heiner Kallweit <hkallweit1@gmail.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Xiongfeng Wang <wangxiongfeng2@huawei.com>,
-        Krzysztof Wilczynski <kw@linux.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "Saheed O. Bolarinwa" <refactormyself@gmail.com>
-Subject: Re: [PATCH] PCI/ASPM: Enable ASPM for links under VMD domain
-Message-ID: <20200910015558.GA746864@bjorn-Precision-5520>
+To:     Matthew Rosato <mjrosato@linux.ibm.com>
+Cc:     alex.williamson@redhat.com, bhelgaas@google.com,
+        schnelle@linux.ibm.com, pmorel@linux.ibm.com, mpe@ellerman.id.au,
+        oohall@gmail.com, cohuck@redhat.com, kevin.tian@intel.com,
+        linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kvm@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v4 1/3] PCI/IOV: Mark VFs as not implementing MSE bit
+Message-ID: <20200910003916.GA741660@bjorn-Precision-5520>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200821123222.32093-1-kai.heng.feng@canonical.com>
+In-Reply-To: <38f95349-237e-34e2-66ef-e626cd4aec25@linux.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc Saheed]
+On Thu, Sep 03, 2020 at 01:10:02PM -0400, Matthew Rosato wrote:
+> On 9/3/20 12:41 PM, Bjorn Helgaas wrote:
 
-On Fri, Aug 21, 2020 at 08:32:20PM +0800, Kai-Heng Feng wrote:
-> New Intel laptops with VMD cannot reach deeper power saving state,
-> renders very short battery time.
+> >    - How do we decide whether to use dev_flags vs a bitfield like
+> >      dev->is_virtfn?  The latter seems simpler unless there's a reason
+> >      to use dev_flags.  If there's a reason, maybe we could add a
+> >      comment at pci_dev_flags for future reference.
 > 
-> As BIOS may not be able to program the config space for devices under
-> VMD domain, ASPM needs to be programmed manually by software. This is
-> also the case under Windows.
+> Something like:
 > 
-> The VMD controller itself is a root complex integrated endpoint that
-> doesn't have ASPM capability, so we can't propagate the ASPM settings to
-> devices under it. Hence, simply apply ASPM_STATE_ALL to the links under
-> VMD domain, unsupported states will be cleared out anyway.
-> 
-> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
-> ---
->  drivers/pci/pcie/aspm.c |  3 ++-
->  drivers/pci/quirks.c    | 11 +++++++++++
->  include/linux/pci.h     |  2 ++
->  3 files changed, 15 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index 253c30cc1967..dcc002dbca19 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -624,7 +624,8 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
->  		aspm_calc_l1ss_info(link, &upreg, &dwreg);
->  
->  	/* Save default state */
-> -	link->aspm_default = link->aspm_enabled;
-> +	link->aspm_default = parent->dev_flags & PCI_DEV_FLAGS_ENABLE_ASPM ?
-> +			     ASPM_STATE_ALL : link->aspm_enabled;
+> /*
+>  * Device does not implement PCI_COMMAND_MEMORY - this is true for any
+>  * device marked is_virtfn, but is also true for any VF passed-through
+>  * a lower-level hypervisor where emulation of the Memory Space Enable
+>  * bit was not provided.
+>  */
+> PCI_DEV_FLAGS_NO_COMMAND_MEMORY = (__force pci_dev_flags_t) (1 << 12),
 
-This function is ridiculously complicated already, and I really don't
-want to make it worse.
+Sorry, I wasn't clear about this.  I was trying to suggest that if
+there are some situations where we need to use pci_dev_flags instead
+of a bitfield, it would be useful to have a generic comment to help
+decide between them.
 
-What exactly is the PCIe topology here?  Apparently the VMD controller
-is a Root Complex Integrated Endpoint, so it's a Type 0 (non-bridge)
-device.  And it has no Link, hence no Link Capabilities or Control and
-hence no ASPM-related bits.  Right?
+I don't know that there *is* a good reason, and unless somebody can
+think of one, I'd like to get rid of pci_dev_flags completely and
+convert them all to bitfields.
 
-And the devices under the VMD controller?  I guess they are regular
-PCIe Endpoints, Switch Ports, etc?  Obviously there's a Link involved
-somewhere.  Does the VMD controller have some magic, non-architected
-Port on the downstream side?
+Given that, my preference would be to just add a new bitfield,
+something like this:
 
-Does this patch enable ASPM on this magic Link between VMD and the
-next device?  Configuring ASPM correctly requires knowledge and knobs
-from both ends of the Link, and apparently we don't have those for the
-VMD end.
-
-Or is it for Links deeper in the hierarchy?  I assume those should
-just work already, although there might be issues with latency
-computation, etc., because we may not be able to account for the part
-of the path above VMD.
-
-I want aspm.c to eventually get out of the business of managing struct
-pcie_link_state.  I think it should manage *device* state for each end
-of the link.  Maybe that's a path forward, e.g., if we cache the Link
-Capabilities during enumeration, quirks could modify that directly,
-and aspm.c could just consume that cached information.  I think Saheed
-(cc'd) is already working on patches in this direction.
-
-I'm still not sure how this works if VMD is the upstream end of a
-Link, though.
-
->  	/* Setup initial capable state. Will be updated later */
->  	link->aspm_capable = link->aspm_support;
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index bdf9b52567e0..2e2f525bd892 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -5632,3 +5632,14 @@ static void apex_pci_fixup_class(struct pci_dev *pdev)
->  }
->  DECLARE_PCI_FIXUP_CLASS_HEADER(0x1ac1, 0x089a,
->  			       PCI_CLASS_NOT_DEFINED, 8, apex_pci_fixup_class);
-> +
-> +/*
-> + * Device [8086:9a09]
-> + * BIOS may not be able to access config space of devices under VMD domain, so
-> + * it relies on software to enable ASPM for links under VMD.
-> + */
-> +static void pci_fixup_enable_aspm(struct pci_dev *pdev)
-> +{
-> +	pdev->dev_flags |= PCI_DEV_FLAGS_ENABLE_ASPM;
-> +}
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x9a09, pci_fixup_enable_aspm);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 835530605c0d..66a45916c7c6 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -227,6 +227,8 @@ enum pci_dev_flags {
->  	PCI_DEV_FLAGS_NO_FLR_RESET = (__force pci_dev_flags_t) (1 << 10),
->  	/* Don't use Relaxed Ordering for TLPs directed at this device */
->  	PCI_DEV_FLAGS_NO_RELAXED_ORDERING = (__force pci_dev_flags_t) (1 << 11),
-> +	/* Enable ASPM regardless of how LnkCtl is programmed */
-> +	PCI_DEV_FLAGS_ENABLE_ASPM = (__force pci_dev_flags_t) (1 << 12),
->  };
->  
->  enum pci_irq_reroute_variant {
-> -- 
-> 2.17.1
-> 
+  struct pci_dev {
+    ...
+    unsigned int no_command_memory:1;  /* No PCI_COMMAND_MEMORY */
