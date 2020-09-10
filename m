@@ -2,90 +2,81 @@ Return-Path: <SRS0=01Vy=CT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D4EAC43461
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 02:52:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A054C43461
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 02:52:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 07B7521D7F
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 02:52:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1599706343;
-	bh=DUreE3/B8B60ExKVpkn5deA+5RXtXj3rT/zpM+ipKM8=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=wFYs9NhcIB4dZ9hBKKscAuJ23D08LtPIRgXIhpREtn+KKbHrZQ6EcIE2Ava5Iguu1
-	 xM8B3re4kWXc03KEwEX99gQI3w/dvaVlotTrKuSPYkXGQNzhyi5i92lxMmD6M1mCr1
-	 tpqG4DfPQ/2yfBIWf5smuumDXOcZnO6LrwmL9IlY=
+	by mail.kernel.org (Postfix) with ESMTP id F1C9621D80
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 02:52:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726714AbgIJB6a (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 9 Sep 2020 21:58:30 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34244 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730175AbgIJBza (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 9 Sep 2020 21:55:30 -0400
-Received: from localhost (52.sub-72-107-123.myvzw.com [72.107.123.52])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 38D5E22204;
-        Thu, 10 Sep 2020 00:39:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1599698358;
-        bh=DUreE3/B8B60ExKVpkn5deA+5RXtXj3rT/zpM+ipKM8=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=fxbGvae5PiiQEAyf5ZOsc1H1PIbu/Dtuxhr4F+6DiH4VkMLBe6b8vAQvKMaITSQTk
-         lEZycuYgzorka6kWEpyiTs/w+GnoMbixvkjYtFueggSDVnfjsYIpwv0dMs2CU8jlJ/
-         Sxkfy16axgN5dv42JNKPDgfSrCN+JbHDZlGTfmbI=
-Date:   Wed, 9 Sep 2020 19:39:16 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Matthew Rosato <mjrosato@linux.ibm.com>
-Cc:     alex.williamson@redhat.com, bhelgaas@google.com,
-        schnelle@linux.ibm.com, pmorel@linux.ibm.com, mpe@ellerman.id.au,
-        oohall@gmail.com, cohuck@redhat.com, kevin.tian@intel.com,
-        linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kvm@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4 1/3] PCI/IOV: Mark VFs as not implementing MSE bit
-Message-ID: <20200910003916.GA741660@bjorn-Precision-5520>
+        id S1730244AbgIJB60 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 9 Sep 2020 21:58:26 -0400
+Received: from szxga06-in.huawei.com ([45.249.212.32]:38792 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1729717AbgIJBmA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 9 Sep 2020 21:42:00 -0400
+Received: from DGGEMS411-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id 1F70173F049F34145939;
+        Thu, 10 Sep 2020 09:41:53 +0800 (CST)
+Received: from localhost.localdomain (10.69.192.56) by
+ DGGEMS411-HUB.china.huawei.com (10.3.19.211) with Microsoft SMTP Server id
+ 14.3.487.0; Thu, 10 Sep 2020 09:41:46 +0800
+From:   Tian Tao <tiantao6@hisilicon.com>
+To:     <jingoohan1@gmail.com>, <gustavo.pimentel@synopsys.com>,
+        <lorenzo.pieralisi@arm.com>, <robh@kernel.org>,
+        <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+CC:     <linuxarm@huawei.com>
+Subject: [PATCH] PCI: dwc: Do not export local function dw_pcie_link_set_max_speed
+Date:   Thu, 10 Sep 2020 09:39:26 +0800
+Message-ID: <1599701966-38778-1-git-send-email-tiantao6@hisilicon.com>
+X-Mailer: git-send-email 2.7.4
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <38f95349-237e-34e2-66ef-e626cd4aec25@linux.ibm.com>
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.56]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Sep 03, 2020 at 01:10:02PM -0400, Matthew Rosato wrote:
-> On 9/3/20 12:41 PM, Bjorn Helgaas wrote:
+WARNING: modpost: "dw_pcie_link_set_max_speed" [vmlinux] is a static
+EXPORT_SYMBOL_GPL
+Fixes: 3af45d34d30c ("PCI: dwc: Centralize link gen setting")
 
-> >    - How do we decide whether to use dev_flags vs a bitfield like
-> >      dev->is_virtfn?  The latter seems simpler unless there's a reason
-> >      to use dev_flags.  If there's a reason, maybe we could add a
-> >      comment at pci_dev_flags for future reference.
-> 
-> Something like:
-> 
-> /*
->  * Device does not implement PCI_COMMAND_MEMORY - this is true for any
->  * device marked is_virtfn, but is also true for any VF passed-through
->  * a lower-level hypervisor where emulation of the Memory Space Enable
->  * bit was not provided.
->  */
-> PCI_DEV_FLAGS_NO_COMMAND_MEMORY = (__force pci_dev_flags_t) (1 << 12),
+Signed-off-by: Tian Tao <tiantao6@hisilicon.com>
+---
+ drivers/pci/controller/dwc/pcie-designware.c | 1 -
+ mm/madvise.c                                 | 1 -
+ 2 files changed, 2 deletions(-)
 
-Sorry, I wasn't clear about this.  I was trying to suggest that if
-there are some situations where we need to use pci_dev_flags instead
-of a bitfield, it would be useful to have a generic comment to help
-decide between them.
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index 4d105ef..3c3a4d1 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -508,7 +508,6 @@ static void dw_pcie_link_set_max_speed(struct dw_pcie *pci, u32 link_gen)
+ 	dw_pcie_writel_dbi(pci, offset + PCI_EXP_LNKCAP, cap | link_speed);
+ 
+ }
+-EXPORT_SYMBOL_GPL(dw_pcie_link_set_max_speed);
+ 
+ static u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
+ {
+diff --git a/mm/madvise.c b/mm/madvise.c
+index c5acc2b..8c175f9 100644
+--- a/mm/madvise.c
++++ b/mm/madvise.c
+@@ -30,7 +30,6 @@
+ #include <linux/swapops.h>
+ #include <linux/shmem_fs.h>
+ #include <linux/mmu_notifier.h>
+-#include <linux/sched/mm.h>
+ 
+ #include <asm/tlb.h>
+ 
+-- 
+2.7.4
 
-I don't know that there *is* a good reason, and unless somebody can
-think of one, I'd like to get rid of pci_dev_flags completely and
-convert them all to bitfields.
-
-Given that, my preference would be to just add a new bitfield,
-something like this:
-
-  struct pci_dev {
-    ...
-    unsigned int no_command_memory:1;  /* No PCI_COMMAND_MEMORY */
