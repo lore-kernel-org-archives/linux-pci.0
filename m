@@ -2,173 +2,105 @@ Return-Path: <SRS0=01Vy=CT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84B7FC433E2
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 19:19:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8696C43461
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 19:22:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 37E5921D81
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 19:19:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 85C42206DB
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 19:22:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1599765568;
-	bh=mCK9lYBNZqSn4KSAm3WuF8IQaNvd1jqOlTKFBZbL4L0=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=zuhDUF5wv3GfKT01JdQ0nyj12qBPMC3fBWviaYMOx5twHhoZjGG3MdVc4E0Qdz93w
-	 eFauBzmhs8fPHRBvD98pezekmCJsoMAIqbwdgU5sQtW8FsBjGX9SJgngn9Ef88wa10
-	 lWaYlSfOD31sTsm/ViwKo0v3shTY9Evgk0+7aLkY=
+	s=default; t=1599765720;
+	bh=MBYb+G6ZR9qZvRGiKB8EyZH8pHRv+f6dt1gmCTS1Itg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=IECT3MBXBFJktfyawEqRT0MJG+gr7Qz4UMWFtMsJGh/ZEqzV4wUYuqvMWEXltel+2
+	 iB8CiyQ4XH6BhznLaaRHm/2H/NSZvHmWpYz7ThbsXLu63u7aZIET58YV1l64XYliVc
+	 jGx0aCJRhwgUVpScTjUPzQtgxIigW4ujeb2cd87Q=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726293AbgIJTSe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 10 Sep 2020 15:18:34 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43904 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726789AbgIJTRv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 10 Sep 2020 15:17:51 -0400
-Received: from localhost (52.sub-72-107-123.myvzw.com [72.107.123.52])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BE877214F1;
-        Thu, 10 Sep 2020 19:17:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1599765462;
-        bh=mCK9lYBNZqSn4KSAm3WuF8IQaNvd1jqOlTKFBZbL4L0=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=vFg3UGl7sW9LPijHXHUL4vz/4VrdD8lFwQsBPEeUE0rb65k+7taHWFdym6lxxLku7
-         qWkjO15KlkV/G1nqxCsr+cKt1OePexPt9Ckf8T9wQzj/lmXkHr+5guqRxIWC9kJBqu
-         o/b3mBtIka+bHp7l6yTgntYDI0Ytwq012pTiTFIo=
-Date:   Thu, 10 Sep 2020 14:17:40 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     "Derrick, Jonathan" <jonathan.derrick@intel.com>
-Cc:     "wangxiongfeng2@huawei.com" <wangxiongfeng2@huawei.com>,
-        "kw@linux.com" <kw@linux.com>,
-        "hkallweit1@gmail.com" <hkallweit1@gmail.com>,
-        "kai.heng.feng@canonical.com" <kai.heng.feng@canonical.com>,
-        "refactormyself@gmail.com" <refactormyself@gmail.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>,
-        "Mario.Limonciello@dell.com" <Mario.Limonciello@dell.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "Wysocki, Rafael J" <rafael.j.wysocki@intel.com>
-Subject: Re: [PATCH] PCI/ASPM: Enable ASPM for links under VMD domain
-Message-ID: <20200910191740.GA806068@bjorn-Precision-5520>
+        id S1726738AbgIJTUf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 10 Sep 2020 15:20:35 -0400
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:39849 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731454AbgIJPwd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2020 11:52:33 -0400
+Received: by mail-pf1-f193.google.com with SMTP id n14so4870571pff.6;
+        Thu, 10 Sep 2020 08:52:33 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=Yt6inZ4UVSNp7xfQ5Plp2PnI8YcMVVKMln56iwBh8fs=;
+        b=F0qPmPKaR71w7SxVOhw3Hj46grlXMK8kT5UdunY/7kwzLLUSEKQw7oS1UFGPdRe6C3
+         pptJp2O1VyL1kCOg/m6YnSDQFaDoxdRn5eMuwCMLseK/E4CwBXQ+NQY0xXzQz0x7/OeC
+         tLMGp7ppwuWoO+CdyAaC5anTasnnKk9v4qwijLi9ZnoAJyURzpYAxaD9oo2mHayDizq2
+         iTLT/b20GUAKtb/IAv2pz1hGhYlPRHe7h776lcxLKtqrkgZq+cYwrOe3JygWT+Q6lysc
+         L13x7UZuVFskF/WyJCHBzhQHlKY8fiX9KiAaKxiCCqGdKRBgNBQ1J4dr8Ux3P0fi1Yd4
+         EpxA==
+X-Gm-Message-State: AOAM533i2S4SviFv8mcW67sIp/ArakZr0eErpYHMvwAEBiJTmhytREd4
+        PzV9Qw46BiP1u1vEQeEhjE6gMR1hk/Zj
+X-Google-Smtp-Source: ABdhPJz6scHFdf953mHrwXN0AX9Pbo0NXFqGtbx0EruBY0rGXTEyV/UoIGrIfI2nDFwWE4bP1rfySg==
+X-Received: by 2002:a5d:928a:: with SMTP id s10mr7999788iom.166.1599752680735;
+        Thu, 10 Sep 2020 08:44:40 -0700 (PDT)
+Received: from xps15 ([64.188.179.251])
+        by smtp.gmail.com with ESMTPSA id m87sm3388997ilb.58.2020.09.10.08.44.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 10 Sep 2020 08:44:40 -0700 (PDT)
+Received: (nullmailer pid 423370 invoked by uid 1000);
+        Thu, 10 Sep 2020 15:44:37 -0000
+Date:   Thu, 10 Sep 2020 09:44:37 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Jim Quinlan <james.quinlan@broadcom.com>
+Cc:     linux-pci@vger.kernel.org,
+        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
+        Christoph Hellwig <hch@lst.de>,
+        Robin Murphy <robin.murphy@arm.com>,
+        bcm-kernel-feedback-list@broadcom.com,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-rpi-kernel@lists.infradead.org>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v11 03/11] PCI: brcmstb: Add bcm7278 register info
+Message-ID: <20200910154437.GA415514@bogus>
+References: <20200824193036.6033-1-james.quinlan@broadcom.com>
+ <20200824193036.6033-4-james.quinlan@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <0f902d555deb423ef1c79835b23c917be2633162.camel@intel.com>
+In-Reply-To: <20200824193036.6033-4-james.quinlan@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Sep 10, 2020 at 06:52:48PM +0000, Derrick, Jonathan wrote:
-> On Thu, 2020-09-10 at 12:38 -0500, Bjorn Helgaas wrote:
-> > On Thu, Sep 10, 2020 at 04:33:39PM +0000, Derrick, Jonathan wrote:
-> > > On Wed, 2020-09-09 at 20:55 -0500, Bjorn Helgaas wrote:
-> > > > On Fri, Aug 21, 2020 at 08:32:20PM +0800, Kai-Heng Feng wrote:
-> > > > > New Intel laptops with VMD cannot reach deeper power saving state,
-> > > > > renders very short battery time.
-> > > > > 
-> > > > > As BIOS may not be able to program the config space for devices under
-> > > > > VMD domain, ASPM needs to be programmed manually by software. This is
-> > > > > also the case under Windows.
-> > > > > 
-> > > > > The VMD controller itself is a root complex integrated endpoint that
-> > > > > doesn't have ASPM capability, so we can't propagate the ASPM settings to
-> > > > > devices under it. Hence, simply apply ASPM_STATE_ALL to the links under
-> > > > > VMD domain, unsupported states will be cleared out anyway.
-> > > > > 
-> > > > > Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
-> > > > > ---
-> > > > >  drivers/pci/pcie/aspm.c |  3 ++-
-> > > > >  drivers/pci/quirks.c    | 11 +++++++++++
-> > > > >  include/linux/pci.h     |  2 ++
-> > > > >  3 files changed, 15 insertions(+), 1 deletion(-)
-> > > > > 
-> > > > > diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> > > > > index 253c30cc1967..dcc002dbca19 100644
-> > > > > --- a/drivers/pci/pcie/aspm.c
-> > > > > +++ b/drivers/pci/pcie/aspm.c
-> > > > > @@ -624,7 +624,8 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
-> > > > >  		aspm_calc_l1ss_info(link, &upreg, &dwreg);
-> > > > >  
-> > > > >  	/* Save default state */
-> > > > > -	link->aspm_default = link->aspm_enabled;
-> > > > > +	link->aspm_default = parent->dev_flags & PCI_DEV_FLAGS_ENABLE_ASPM ?
-> > > > > +			     ASPM_STATE_ALL : link->aspm_enabled;
-> > > > 
-> > > > This function is ridiculously complicated already, and I really don't
-> > > > want to make it worse.
-> > > > 
-> > > > What exactly is the PCIe topology here?  Apparently the VMD controller
-> > > > is a Root Complex Integrated Endpoint, so it's a Type 0 (non-bridge)
-> > > > device.  And it has no Link, hence no Link Capabilities or Control and
-> > > > hence no ASPM-related bits.  Right?
-> > > 
-> > > That's correct. VMD is the Type 0 device providing config/mmio
-> > > apertures to another segment and MSI/X remapping. No link and no ASPM
-> > > related bits.
-> > > 
-> > > Hierarchy is usually something like:
-> > > 
-> > > Segment 0           | VMD segment
-> > > Root Complex -> VMD | Type 0 (RP/Bridge; physical slot) - Type 1
-> > >                     | Type 0 (RP/Bridge; physical slot) - Type 1
-> > > 
-> > > > And the devices under the VMD controller?  I guess they are regular
-> > > > PCIe Endpoints, Switch Ports, etc?  Obviously there's a Link involved
-> > > > somewhere.  Does the VMD controller have some magic, non-architected
-> > > > Port on the downstream side?
-> > > 
-> > > Correct: Type 0 and Type 1 devices, and any number of Switch ports as
-> > > it's usually pinned out to physical slot.
-> > > 
-> > > > Does this patch enable ASPM on this magic Link between VMD and the
-> > > > next device?  Configuring ASPM correctly requires knowledge and knobs
-> > > > from both ends of the Link, and apparently we don't have those for the
-> > > > VMD end.
-> > > 
-> > > VMD itself doesn't have the link to it's domain. It's really just the
-> > > config/mmio aperture and MSI/X remapper. The PCIe link is between the
-> > > Type 0 and Type 1 devices on the VMD domain. So fortunately the VMD
-> > > itself is not the upstream part of the link.
-> > > 
-> > > > Or is it for Links deeper in the hierarchy?  I assume those should
-> > > > just work already, although there might be issues with latency
-> > > > computation, etc., because we may not be able to account for the part
-> > > > of the path above VMD.
-> > > 
-> > > That's correct. This is for the links within the domain itself, such as
-> > > between a type 0 and NVMe device.
-> > 
-> > OK, great.  So IIUC, below the VMD, there is a Root Port, and the Root
-> > Port has a link to some Endpoint or Switch, e.g., an NVMe device.  And
-> > we just want to enable ASPM on that link.
-> > 
-> > That should not be a special case; we should be able to make this so
-> > it Just Works.  Based on this patch, I guess the reason it doesn't
-> > work is because link->aspm_enabled for that link isn't set correctly.
-> > 
-> > So is this just a consequence of us depending on the initial Link
-> > Control value from BIOS?  That seems like something we shouldn't
-> > really depend on.
-> > 
-> That's the crux. There's always pcie_aspm=force.
-> Something I've wondered is if there is a way we could 'discover' if the
-> link is ASPM safe?
+On Mon, Aug 24, 2020 at 03:30:16PM -0400, Jim Quinlan wrote:
+> From: Jim Quinlan <jquinlan@broadcom.com>
+> 
+> Add in compatibility strings and code for three Broadcom STB chips.  Some
+> of the register locations, shifts, and masks are different for certain
+> chips, requiring the use of different constants based on of_id.
+> 
+> We would like to add the following at this time to the match list but we
+> need to wait until the end of this patchset so that everything works.
+> 
+>     { .compatible = "brcm,bcm7211-pcie", .data = &generic_cfg },
+>     { .compatible = "brcm,bcm7278-pcie", .data = &bcm7278_cfg },
+>     { .compatible = "brcm,bcm7216-pcie", .data = &bcm7278_cfg },
+>     { .compatible = "brcm,bcm7445-pcie", .data = &generic_cfg },
+> 
+> Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
+> Acked-by: Florian Fainelli <f.fainelli@gmail.com>
+> ---
+>  drivers/pci/controller/pcie-brcmstb.c | 105 +++++++++++++++++++++++---
+>  1 file changed, 93 insertions(+), 12 deletions(-)
 
-Sure.  Link Capabilities is supposed to tell us that.  If aspm.c
-depends on the BIOS settings, I think that's a design mistake.
+I think a better abstraction would be to have 2 versions of the 2 
+functions that need to be different. But as-is is fine.
 
-But what CONFIG_PCIEASPM_* setting are you using?  The default
-is CONFIG_PCIEASPM_DEFAULT, which literally means "Use the BIOS
-defaults".  If you're using that, and BIOS doesn't enable ASPM below
-VMD, I guess aspm.c will leave it disabled, and that seems like it
-would be the expected behavior.
-
-Does "pcie_aspm=force" really help you?  I don't see any uses of it
-that should apply to your situation.
-
-Bjorn
+Acked-by: Rob Herring <robh@kernel.org>
