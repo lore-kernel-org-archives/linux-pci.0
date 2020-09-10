@@ -1,115 +1,226 @@
-Return-Path: <SRS0=VqUt=CS=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=01Vy=CT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30C82C43461
-	for <linux-pci@archiver.kernel.org>; Wed,  9 Sep 2020 20:41:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 234A0C433E2
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 01:58:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E110821D46
-	for <linux-pci@archiver.kernel.org>; Wed,  9 Sep 2020 20:41:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CF4F220708
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 01:58:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1599684060;
-	bh=XYTJIX+UX5+9hkTZ1JmQGWBSE1wnXfxEBbc2SLTvbLI=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=cflc0y0Jx7JyunvCSdCEBWr8nK+tRggScyrz8jFHFkLCIUCr1hSvNpn4aZAqPl7io
-	 VVcTzd+MCsH+dEMBwqH291ejGk/VIT/k5ucVcrGWkYcOxlxRXMtN6vihnKRp4ceFWv
-	 YZP0XHuFn7ddM5Mo4/1HCypNfFudguq2nMGKAvLI=
+	s=default; t=1599703111;
+	bh=4srfk3CxiksU+zpReTs9UrGRntjmhs5oHVzXmS3T7uI=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=NHpBlBehctQyy+GgbEqZCL4/H6MeekPsMzy0tOaQVG3yT1hCOrLAeufehzNuGSqvp
+	 jOj88H4pCgM8QchpEzPYsG5GI4/odzNBzTbPhqL+VBOJ4G3ktupAD7W9R7LzncjFVH
+	 nXWlTc/0+EHyf7Tcdbi5X+2mjmmOyXAB7Cwvpzm8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728971AbgIIUlA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 9 Sep 2020 16:41:00 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54012 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726414AbgIIUlA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 9 Sep 2020 16:41:00 -0400
-Received: from localhost (52.sub-72-107-123.myvzw.com [72.107.123.52])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E5C4B2064B;
-        Wed,  9 Sep 2020 20:40:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1599684059;
-        bh=XYTJIX+UX5+9hkTZ1JmQGWBSE1wnXfxEBbc2SLTvbLI=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=doAj1CwRVbRE50VuDa0NRPzX3puwcNhH10PkIoMJlZ7VDX3J9Cpv7+Xu8Str2rpMp
-         Duyf5ETzvgvpOayzw8I6cdDNzZUgfA5LXZHANt1OAYXDMuRtnJeoYx6BVRCwrzTwl+
-         +gjVdbDN5g3o6OLchOJSLhiZ4czH+k8PKVD1rqk0=
-Date:   Wed, 9 Sep 2020 15:40:57 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Lukas Wunner <lukas@wunner.de>,
-        Rick Farrington <ricardo.farrington@cavium.com>
-Cc:     kernel test robot <lkp@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Juergen Gross <jgross@suse.com>,
-        Michael Haeuptle <michael.haeuptle@hpe.com>,
-        Ian May <ian.may@canonical.com>,
-        Keith Busch <kbusch@kernel.org>, linux-pci@vger.kernel.org,
-        Cornelia Huck <cohuck@redhat.com>, kvm@vger.kernel.org,
-        Derek Chickles <dchickles@marvell.com>,
-        Satanand Burla <sburla@marvell.com>,
-        Felix Manlunas <fmanlunas@marvell.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        xen-devel@lists.xenproject.org,
-        Govinda Tatti <govinda.tatti@oracle.com>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        LKML <linux-kernel@vger.kernel.org>, lkp@lists.01.org
-Subject: Re: [PCI] 3233e41d3e:
- WARNING:at_drivers/pci/pci.c:#pci_reset_hotplug_slot
-Message-ID: <20200909204057.GA724236@bjorn-Precision-5520>
+        id S1730223AbgIJB6Z (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 9 Sep 2020 21:58:25 -0400
+Received: from condef-04.nifty.com ([202.248.20.69]:52990 "EHLO
+        condef-04.nifty.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727075AbgIJBf3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Sep 2020 21:35:29 -0400
+Received: from conssluserg-04.nifty.com ([10.126.8.83])by condef-04.nifty.com with ESMTP id 08A1J0mu023902;
+        Thu, 10 Sep 2020 10:19:00 +0900
+Received: from mail-pg1-f169.google.com (mail-pg1-f169.google.com [209.85.215.169]) (authenticated)
+        by conssluserg-04.nifty.com with ESMTP id 08A1IhTb013561;
+        Thu, 10 Sep 2020 10:18:43 +0900
+DKIM-Filter: OpenDKIM Filter v2.10.3 conssluserg-04.nifty.com 08A1IhTb013561
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nifty.com;
+        s=dec2015msa; t=1599700724;
+        bh=x2qUAAqVWiePSrCzfI1IEP4eafAB9yee8r8ckQho/u8=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=WGjr5LVsquWsgfjbUw8zsVNV+eA8G4HhcuX7mJ53BwE1QXEJLWsiBBR8lguwcOerT
+         d71o9nfLv7ija30NHqQedE2CfJD68H7zHtYLQdmNLNYavfgBOdGEVAam0QzLlPx5Q2
+         6EJvPCcYrNNyDZNKB0TNqWiS2LuxTF6IL0ttSnkDcBELKjgx7TEBTYnWbGAc/tZbYZ
+         ZMn59+M37cpTDQVmqeXbYfFIZ/VUmlVU6FP4rP8nFvJoOjs3HFc/LbGKo4YdWIQOK6
+         KSbHxjj2F61Imz4LpNo5mWBjeXerF0bjYZRmNxbsHsNpkA4wxyCBw0p6bFOn5d+i5j
+         eYvVVaetEFYKg==
+X-Nifty-SrcIP: [209.85.215.169]
+Received: by mail-pg1-f169.google.com with SMTP id g29so3356898pgl.2;
+        Wed, 09 Sep 2020 18:18:43 -0700 (PDT)
+X-Gm-Message-State: AOAM530F73TwB0Fmzr4rQbsyBv8w417djTI0Bd+yBGyIznSW6IwvbMEQ
+        aqn88/qrsnbMbTZ6JBfWJ29DykE++eZe+uEIKeE=
+X-Google-Smtp-Source: ABdhPJw3+uiV59rG6EDJ8QWqM7TRK95TtkCpF/iAWICblIOjIFopt/zBNTTyCv+Bm880c1rm+ZI8WQaujb2+mHAsSEI=
+X-Received: by 2002:a63:f546:: with SMTP id e6mr2466312pgk.7.1599700722672;
+ Wed, 09 Sep 2020 18:18:42 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200723095152.nf3fmfzrjlpoi35h@wunner.de>
+References: <20200624203200.78870-1-samitolvanen@google.com>
+ <20200903203053.3411268-1-samitolvanen@google.com> <CAK7LNASDUkyJMDD0a5K_HT=1q5NEc6dcN4=FUb330yK0BCKcTw@mail.gmail.com>
+ <20200908234643.GF1060586@google.com>
+In-Reply-To: <20200908234643.GF1060586@google.com>
+From:   Masahiro Yamada <masahiroy@kernel.org>
+Date:   Thu, 10 Sep 2020 10:18:05 +0900
+X-Gmail-Original-Message-ID: <CAK7LNAR9zzP0ZU3b__PZv8gRtKrwz6-8GE1zG5UyFx1wDpOBzQ@mail.gmail.com>
+Message-ID: <CAK7LNAR9zzP0ZU3b__PZv8gRtKrwz6-8GE1zG5UyFx1wDpOBzQ@mail.gmail.com>
+Subject: Re: [PATCH v2 00/28] Add support for Clang LTO
+To:     Sami Tolvanen <samitolvanen@google.com>
+Cc:     Will Deacon <will@kernel.org>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Paul E. McKenney" <paulmck@kernel.org>,
+        Kees Cook <keescook@chromium.org>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        clang-built-linux <clang-built-linux@googlegroups.com>,
+        Kernel Hardening <kernel-hardening@lists.openwall.com>,
+        linux-arch <linux-arch@vger.kernel.org>,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        Linux Kbuild mailing list <linux-kbuild@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org, X86 ML <x86@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Jul 23, 2020 at 11:51:52AM +0200, Lukas Wunner wrote:
-> On Thu, Jul 23, 2020 at 05:13:06PM +0800, kernel test robot wrote:
-> > FYI, we noticed the following commit (built with gcc-9):
-> [...]
-> > commit: 3233e41d3e8ebcd44e92da47ffed97fd49b84278 ("[PATCH] PCI: pciehp: Fix AB-BA deadlock between reset_lock and device_lock")
-> [...]
-> > caused below changes (please refer to attached dmesg/kmsg for entire log/backtrace):
-> > [    0.971752] WARNING: CPU: 0 PID: 1 at drivers/pci/pci.c:4905 pci_reset_hotplug_slot+0x70/0x80
-> 
-> Thank you, trusty robot.
-> 
-> I botched the call to lockdep_assert_held_write(), it should have been
-> conditional on "if (probe)".
-> 
-> Happy to respin the patch, but I'd like to hear opinions on the locking
-> issues surrounding xen and octeon (and the patch in general).
+On Wed, Sep 9, 2020 at 8:46 AM Sami Tolvanen <samitolvanen@google.com> wrote:
+>
+> On Sun, Sep 06, 2020 at 09:24:38AM +0900, Masahiro Yamada wrote:
+> > On Fri, Sep 4, 2020 at 5:30 AM Sami Tolvanen <samitolvanen@google.com> wrote:
+> > >
+> > > This patch series adds support for building x86_64 and arm64 kernels
+> > > with Clang's Link Time Optimization (LTO).
+> > >
+> > > In addition to performance, the primary motivation for LTO is
+> > > to allow Clang's Control-Flow Integrity (CFI) to be used in the
+> > > kernel. Google has shipped millions of Pixel devices running three
+> > > major kernel versions with LTO+CFI since 2018.
+> > >
+> > > Most of the patches are build system changes for handling LLVM
+> > > bitcode, which Clang produces with LTO instead of ELF object files,
+> > > postponing ELF processing until a later stage, and ensuring initcall
+> > > ordering.
+> > >
+> > > Note that patches 1-4 are not directly related to LTO, but are
+> > > needed to compile LTO kernels with ToT Clang, so I'm including them
+> > > in the series for your convenience:
+> > >
+> > >  - Patches 1-3 are required for building the kernel with ToT Clang,
+> > >    and IAS, and patch 4 is needed to build allmodconfig with LTO.
+> > >
+> > >  - Patches 3-4 are already in linux-next, but not yet in 5.9-rc.
+> > >
+> >
+> >
+> > I still do not understand how this patch set works.
+> > (only me?)
+> >
+> > Please let me ask fundamental questions.
+> >
+> >
+> >
+> > I applied this series on top of Linus' tree,
+> > and compiled for ARCH=arm64.
+> >
+> > I compared the kernel size with/without LTO.
+> >
+> >
+> >
+> > [1] No LTO  (arm64 defconfig, CONFIG_LTO_NONE)
+> >
+> > $ llvm-size   vmlinux
+> >    text    data     bss     dec     hex filename
+> > 15848692 10099449 493060 26441201 19375f1 vmlinux
+> >
+> >
+> >
+> > [2] Clang LTO  (arm64 defconfig + CONFIG_LTO_CLANG)
+> >
+> > $ llvm-size   vmlinux
+> >    text    data     bss     dec     hex filename
+> > 15906864 10197445 490804 26595113 195cf29 vmlinux
+> >
+> >
+> > I compared the size of raw binary, arch/arm64/boot/Image.
+> > Its size increased too.
+> >
+> >
+> >
+> > So, in my experiment, enabling CONFIG_LTO_CLANG
+> > increases the kernel size.
+> > Is this correct?
+>
+> Yes. LTO does produce larger binaries, mostly due to function
+> inlining between translation units, I believe. The compiler people
+> can probably give you a more detailed answer here. Without -mllvm
+> -import-instr-limit, the binaries would be even larger.
+>
+> > One more thing, could you teach me
+> > how Clang LTO optimizes the code against
+> > relocatable objects?
+> >
+> >
+> >
+> > When I learned Clang LTO first, I read this document:
+> > https://llvm.org/docs/LinkTimeOptimization.html
+> >
+> > It is easy to confirm the final executable
+> > does not contain foo2, foo3...
+> >
+> >
+> >
+> > In contrast to userspace programs,
+> > kernel modules are basically relocatable objects.
+> >
+> > Does Clang drop unused symbols from relocatable objects?
+> > If so, how?
+>
+> I don't think the compiler can legally drop global symbols from
+> relocatable objects, but it can rename and possibly even drop static
+> functions.
 
-I wish liquidio/octeon weren't a special case.  Why should that driver
-reset the device when unbinding when no other drivers do?
 
-Looks like this was added by 70535350e26f ("liquidio: with embedded
-f/w, don't reload f/w, issue pf flr at exit").  Maybe Rick will chime
-in.
+Compilers can drop static functions without LTO.
+Rather, it is a compiler warning
+(-Wunused-function), so the code should be cleaned up.
 
-> In particular, would a solution be entertained wherein the pci_dev is
-> reset by the PCI core after driver unbinding, contingent on a flag which
-> is set by a PCI driver to indicate that the pci_dev is returned to the
-> core in an unclean state?
 
-How would we do this?  The PCI core isn't called after unbinding, is
-it?  So I guess we'd have to have a queue and a worker thread to
-process it?
 
-Device removal also has nasty locking issues, and a queue might help
-solve those, too.  Might also help in the problematic case of
-40f11adc7cd9 ("PCI: Avoid race while enabling upstream bridges"),
-which we had to revert.
+> This is why we need global wrappers for initcalls, for
+> example, to have stable symbol names.
+>
+> Sami
 
-> Also, why does xen require a device reset on bind?
-> 
-> Thanks!
-> 
-> Lukas
+
+
+At first, I thought the motivation of LTO
+was to remove unused global symbols, and
+to perform further optimization.
+
+
+It is true for userspace programs.
+In fact, the example of
+https://llvm.org/docs/LinkTimeOptimization.html
+produces a smaller binary.
+
+
+In contrast, this patch set produces a bigger kernel
+because LTO cannot remove any unused symbol.
+
+So, I do not understand what the benefit is.
+
+
+Is inlining beneficial?
+I am not sure.
+
+
+Documentation/process/coding-style.rst
+"15) The inline disease"
+mentions that inlining is not always
+a good thing.
+
+
+As a whole, I still do not understand
+the motivation of this patch set.
+
+
+-- 
+Best Regards
+Masahiro Yamada
