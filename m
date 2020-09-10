@@ -2,62 +2,73 @@ Return-Path: <SRS0=01Vy=CT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BE2FC433E2
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 19:06:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCBF3C43461
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 19:09:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C8E40207DE
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 19:06:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1599764771;
-	bh=6lYfWnZpg5wgDzaHO8tqBnJ7ackQhXePehPKLPPrNVw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=nim+n5BgfDsFEJxCmhhJVz1b/0gdNEucxJ5PW8UekOdhmcKCfMPQZJO5l6nwDWmdU
-	 GXks+835eNzrOcbftO+1qeMhD6Z4rbhomF6Y0O0CxJVEGp5ksdD2ccEYki2+KhiFUK
-	 egkfoRWflZMV/1vOihg4SPOv5y97pa9gRcR/0jMg=
+	by mail.kernel.org (Postfix) with ESMTP id 7E5ED21D91
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 19:09:24 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="b4jMa7dn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726474AbgIJTF5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 10 Sep 2020 15:05:57 -0400
-Received: from mail-il1-f195.google.com ([209.85.166.195]:45252 "EHLO
-        mail-il1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731490AbgIJQES (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2020 12:04:18 -0400
-Received: by mail-il1-f195.google.com with SMTP id q6so6107072ild.12;
-        Thu, 10 Sep 2020 09:04:16 -0700 (PDT)
+        id S1726588AbgIJTJR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 10 Sep 2020 15:09:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43326 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727789AbgIJTIF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2020 15:08:05 -0400
+Received: from mail-pf1-x444.google.com (mail-pf1-x444.google.com [IPv6:2607:f8b0:4864:20::444])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10CFDC061573;
+        Thu, 10 Sep 2020 12:08:05 -0700 (PDT)
+Received: by mail-pf1-x444.google.com with SMTP id z19so5211330pfn.8;
+        Thu, 10 Sep 2020 12:08:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=dwnpM8JLZbBKIkQgOLZZmnOg2dEyjob2l7NHK0msXlE=;
+        b=b4jMa7dn0K2TKjty1oEv4pSKKxhN/pZpU9t6puz8KR6lVKbaYXRGzjXA+RiPbWeVBP
+         udH0RaAToStag+dEd7hCRA9oTka1aDGdXBR0BSY0A6Y0eFYcKr0zjU0mH+UdhEgXQagN
+         bCO2hecd3FWV0oj1BILyVN0hjm4bkA4wbMFG6baAeXtDOETDKX24d+BrOKsqhFtIHovT
+         QCvk4Nq17lU9V/BlGsGNBGoq4JI8fAp21ns0pq0N7DLfvsZmWiExvotFYYhEHNzUSi/O
+         W43O42D82m8KZewecXfWBMd6xbUMl/1CqdAFfospOkue5EN28FXWZsVYiCtXReVjkslj
+         UOCA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=ebp5z+46rHgEspLwslVPrPQpZSFjnRSho3Me2D+xH8o=;
-        b=T/eCReFLd2aPNzyT7ZHj2N/pB6N+N6GsdfSCtpIWCA3oUUPXT/XTzBRZVziCM/4kch
-         oHxZYl9M9GcuoYdluXs+n1lzdBPVIFlWK3H+RPXl20yYfbT2YqNbhHtEFCUzHBDWlOOU
-         VyAOlUbFkhs8E682dQf9xUfjGvZw9ZdzXk7rz9pwn96YpMZTtUoRr7eLN0R8+WNb5EaG
-         ZvW3rzaeDQzP5pG+2gb/Iw5AdzLuXi9vQE0O0DZ6Tp+eUpHOBnIo1lhtBYloN7WnbSZa
-         XqvODt5lH7QxmwEbXc8EpssNy3FY8sOkG0LUo/adr0CdXoLDs3kCOpqzICtTd+3tJr3b
-         +nnA==
-X-Gm-Message-State: AOAM531y4ZlgwRMDnUmdhd3YnXE+z5iw6r9pFvwOYkAIUq+bH78t2G1y
-        nm9zJ4LyjF2O8Hj9KsfBLI3AT9Im1uYL
-X-Google-Smtp-Source: ABdhPJwEriHzybxiHldBLmDpi2mvi2cZg5tHwCiO7MmmEqZLF4YSjxhJdd6BIxqEmm2n29ddo/Nobg==
-X-Received: by 2002:a92:906:: with SMTP id y6mr8750650ilg.106.1599753852523;
-        Thu, 10 Sep 2020 09:04:12 -0700 (PDT)
-Received: from xps15 ([64.188.179.251])
-        by smtp.gmail.com with ESMTPSA id e22sm3035082ioc.43.2020.09.10.09.04.11
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 10 Sep 2020 09:04:12 -0700 (PDT)
-Received: (nullmailer pid 449332 invoked by uid 1000);
-        Thu, 10 Sep 2020 16:04:11 -0000
-Date:   Thu, 10 Sep 2020 10:04:11 -0600
-From:   Rob Herring <robh@kernel.org>
-To:     Jim Quinlan <james.quinlan@broadcom.com>
-Cc:     linux-pci@vger.kernel.org,
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=dwnpM8JLZbBKIkQgOLZZmnOg2dEyjob2l7NHK0msXlE=;
+        b=pVXfXEktrBqv3n+iFrYl7pD2RSh/K+2h2GmoASflImklZb2Etni+otAuzd5V27gv+6
+         xCIoivPsmftfBDGQi9QB/P3ym9lg5tHh2Cl37k2SGeu70edCbTEkhINqEFz4LAFZ3Mjj
+         rQdKgMRcvAojEceuf02XkLSDiNr6aiZt//stvKQFD6rHVFvyKRrnvFpC6JKLRUMS0ZTL
+         BX9uYIPiy5EW4POPslwwG+nPYcXrOtDjEjUu64aQstBuDVFOx6mgXYtFtUqdJJLv5Gxn
+         cc7xEYxaDlrLNC4YFmyLJsyBT1vOOPdjfG4Pu+Zjfdeofs8ExsOkR6QcQ7Jt/yHLuWnu
+         KRDQ==
+X-Gm-Message-State: AOAM533G9mO+xFUp16dFdELl8V7aXbjZ4d/0apykumcd3v9qV77sB372
+        TCc0stVMLTsRuuZN6nXLMUnZv5k+oko=
+X-Google-Smtp-Source: ABdhPJyukXJbwjvFKYrra3HXc9hr35P0awBCdafHP3LXlMZghA/JirNZoF+3l0EF+sjyWDBOggm7Qg==
+X-Received: by 2002:a63:384b:: with SMTP id h11mr5820171pgn.113.1599764884416;
+        Thu, 10 Sep 2020 12:08:04 -0700 (PDT)
+Received: from [192.168.1.3] (ip68-111-84-250.oc.oc.cox.net. [68.111.84.250])
+        by smtp.gmail.com with ESMTPSA id n127sm6441841pfn.155.2020.09.10.12.07.58
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 10 Sep 2020 12:08:03 -0700 (PDT)
+Subject: Re: [PATCH v11 04/11] PCI: brcmstb: Add suspend and resume pm_ops
+To:     Jim Quinlan <james.quinlan@broadcom.com>,
+        Rob Herring <robh@kernel.org>
+Cc:     "open list:PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS" 
+        <linux-pci@vger.kernel.org>,
         Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
         Christoph Hellwig <hch@lst.de>,
         Robin Murphy <robin.murphy@arm.com>,
-        bcm-kernel-feedback-list@broadcom.com,
+        "maintainer:BROADCOM BCM7XXX ARM ARCHITECTURE" 
+        <bcm-kernel-feedback-list@broadcom.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Florian Fainelli <f.fainelli@gmail.com>,
@@ -66,92 +77,128 @@ Cc:     linux-pci@vger.kernel.org,
         "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
         <linux-arm-kernel@lists.infradead.org>,
         open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v11 05/11] PCI: brcmstb: Add bcm7278 PERST# support
-Message-ID: <20200910160411.GA439527@bogus>
 References: <20200824193036.6033-1-james.quinlan@broadcom.com>
- <20200824193036.6033-6-james.quinlan@broadcom.com>
+ <20200824193036.6033-5-james.quinlan@broadcom.com>
+ <20200910155637.GA423872@bogus>
+ <CA+-6iNy9g8fhJvd7SOKtc-SZcL8_gLLN1HEs-W8fe-=q6n430A@mail.gmail.com>
+ <CAL_JsqJR4wALnsFKKPQ8h2y-o-933rzxHbV29zGXiptgYuuHTg@mail.gmail.com>
+ <CA+-6iNwcLZcQcge2E6GUi71rveFaneeCBwxBTfn8MipwhaPvEQ@mail.gmail.com>
+From:   Florian Fainelli <f.fainelli@gmail.com>
+Message-ID: <3c6a0acc-8966-fd38-1613-8da7bece81c7@gmail.com>
+Date:   Thu, 10 Sep 2020 12:07:56 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Firefox/78.0 Thunderbird/78.2.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200824193036.6033-6-james.quinlan@broadcom.com>
+In-Reply-To: <CA+-6iNwcLZcQcge2E6GUi71rveFaneeCBwxBTfn8MipwhaPvEQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Aug 24, 2020 at 03:30:18PM -0400, Jim Quinlan wrote:
-> From: Jim Quinlan <jquinlan@broadcom.com>
-> 
-> The PERST# bit was moved to a different register in 7278-type STB chips.
-> In addition, the polarity of the bit was also changed; for other chips
-> writing a 1 specified assert; for 7278-type chips, writing a 0 specifies
-> assert.
-> 
-> Of course, PERST# is a PCIe asserted-low signal.
-> 
-> Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
-> Acked-by: Florian Fainelli <f.fainelli@gmail.com>
-> ---
->  drivers/pci/controller/pcie-brcmstb.c | 19 +++++++++++++++----
->  1 file changed, 15 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
-> index 3d588ab7a6dd..acf2239b0251 100644
-> --- a/drivers/pci/controller/pcie-brcmstb.c
-> +++ b/drivers/pci/controller/pcie-brcmstb.c
-> @@ -83,6 +83,7 @@
->  
->  #define PCIE_MISC_PCIE_CTRL				0x4064
->  #define  PCIE_MISC_PCIE_CTRL_PCIE_L23_REQUEST_MASK	0x1
-> +#define PCIE_MISC_PCIE_CTRL_PCIE_PERSTB_MASK		0x4
->  
->  #define PCIE_MISC_PCIE_STATUS				0x4068
->  #define  PCIE_MISC_PCIE_STATUS_PCIE_PORT_MASK		0x80
-> @@ -684,9 +685,16 @@ static inline void brcm_pcie_perst_set(struct brcm_pcie *pcie, u32 val)
->  {
->  	u32 tmp;
->  
-> -	tmp = readl(pcie->base + PCIE_RGR1_SW_INIT_1(pcie));
-> -	u32p_replace_bits(&tmp, val, PCIE_RGR1_SW_INIT_1_PERST_MASK);
-> -	writel(tmp, pcie->base + PCIE_RGR1_SW_INIT_1(pcie));
-> +	if (pcie->type == BCM7278) {
-> +		/* Perst bit has moved and assert value is 0 */
-> +		tmp = readl(pcie->base + PCIE_MISC_PCIE_CTRL);
-> +		u32p_replace_bits(&tmp, !val, PCIE_MISC_PCIE_CTRL_PCIE_PERSTB_MASK);
-> +		writel(tmp, pcie->base +  PCIE_MISC_PCIE_CTRL);
-> +	} else {
-> +		tmp = readl(pcie->base + PCIE_RGR1_SW_INIT_1(pcie));
-> +		u32p_replace_bits(&tmp, val, PCIE_RGR1_SW_INIT_1_PERST_MASK);
-> +		writel(tmp, pcie->base + PCIE_RGR1_SW_INIT_1(pcie));
 
-Humm, now we have a mixture of a code path based on the chip and 
-variables to abstract the register details. Just do a function per chip.
 
-I have some notion to abstract out the PERST# handling from the host 
-bridges. We have several cases of GPIO based handling and random 
-assertion times. So having an ops function here will move in that 
-direction.
+On 9/10/2020 12:05 PM, Jim Quinlan wrote:
+> On Thu, Sep 10, 2020 at 2:50 PM Rob Herring <robh@kernel.org> wrote:
+>>
+>> On Thu, Sep 10, 2020 at 10:42 AM Jim Quinlan <james.quinlan@broadcom.com> wrote:
+>>>
+>>> On Thu, Sep 10, 2020 at 11:56 AM Rob Herring <robh@kernel.org> wrote:
+>>>>
+>>>> On Mon, Aug 24, 2020 at 03:30:17PM -0400, Jim Quinlan wrote:
+>>>>> From: Jim Quinlan <jquinlan@broadcom.com>
+>>>>>
+>>>>> Broadcom Set-top (BrcmSTB) boards typically support S2, S3, and S5 suspend
+>>>>> and resume.  Now the PCIe driver may do so as well.
+>>>>>
+>>>>> Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
+>>>>> Acked-by: Florian Fainelli <f.fainelli@gmail.com>
+>>>>> ---
+>>>>>   drivers/pci/controller/pcie-brcmstb.c | 47 +++++++++++++++++++++++++++
+>>>>>   1 file changed, 47 insertions(+)
+>>>>>
+>>>>> diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
+>>>>> index c2b3d2946a36..3d588ab7a6dd 100644
+>>>>> --- a/drivers/pci/controller/pcie-brcmstb.c
+>>>>> +++ b/drivers/pci/controller/pcie-brcmstb.c
+>>>>> @@ -978,6 +978,47 @@ static void brcm_pcie_turn_off(struct brcm_pcie *pcie)
+>>>>>        brcm_pcie_bridge_sw_init_set(pcie, 1);
+>>>>>   }
+>>>>>
+>>>>> +static int brcm_pcie_suspend(struct device *dev)
+>>>>> +{
+>>>>> +     struct brcm_pcie *pcie = dev_get_drvdata(dev);
+>>>>> +
+>>>>> +     brcm_pcie_turn_off(pcie);
+>>>>> +     clk_disable_unprepare(pcie->clk);
+>>>>> +
+>>>>> +     return 0;
+>>>>> +}
+>>>>> +
+>>>>> +static int brcm_pcie_resume(struct device *dev)
+>>>>> +{
+>>>>> +     struct brcm_pcie *pcie = dev_get_drvdata(dev);
+>>>>> +     void __iomem *base;
+>>>>> +     u32 tmp;
+>>>>> +     int ret;
+>>>>> +
+>>>>> +     base = pcie->base;
+>>>>> +     clk_prepare_enable(pcie->clk);
+>>>>> +
+>>>>> +     /* Take bridge out of reset so we can access the SERDES reg */
+>>>>> +     brcm_pcie_bridge_sw_init_set(pcie, 0);
+>>>>> +
+>>>>> +     /* SERDES_IDDQ = 0 */
+>>>>> +     tmp = readl(base + PCIE_MISC_HARD_PCIE_HARD_DEBUG);
+>>>>> +     u32p_replace_bits(&tmp, 0, PCIE_MISC_HARD_PCIE_HARD_DEBUG_SERDES_IDDQ_MASK);
+>>>>> +     writel(tmp, base + PCIE_MISC_HARD_PCIE_HARD_DEBUG);
+>>>>> +
+>>>>> +     /* wait for serdes to be stable */
+>>>>> +     udelay(100);
+>>>>
+>>>> Really needs to be a spinloop?
+>>>>
+>>>>> +
+>>>>> +     ret = brcm_pcie_setup(pcie);
+>>>>> +     if (ret)
+>>>>> +             return ret;
+>>>>> +
+>>>>> +     if (pcie->msi)
+>>>>> +             brcm_msi_set_regs(pcie->msi);
+>>>>> +
+>>>>> +     return 0;
+>>>>> +}
+>>>>> +
+>>>>>   static void __brcm_pcie_remove(struct brcm_pcie *pcie)
+>>>>>   {
+>>>>>        brcm_msi_remove(pcie);
+>>>>> @@ -1087,12 +1128,18 @@ static int brcm_pcie_probe(struct platform_device *pdev)
+>>>>>
+>>>>>   MODULE_DEVICE_TABLE(of, brcm_pcie_match);
+>>>>>
+>>>>> +static const struct dev_pm_ops brcm_pcie_pm_ops = {
+>>>>> +     .suspend_noirq = brcm_pcie_suspend,
+>>>>> +     .resume_noirq = brcm_pcie_resume,
+>>>>
+>>>> Why do you need interrupts disabled? There's 39 cases of .suspend_noirq
+>>>> and 1352 of .suspend in the tree.
+>>>
+>>> I will test switching this to  suspend_late/resume_early.
+>>
+>> Why not just the 'regular' flavor suspend/resume?
+>>
+>> Rob
+> We must have our PCIe driver suspend last and resume first because our
+> current driver turns off/on the power for the EPs.  Note that this
+> code isn't in the driver as we are still figuring out a way to make it
+> upstreamable.
 
-> +	}
->  }
->  
->  static inline int brcm_pcie_get_rc_bar2_size_and_offset(struct brcm_pcie *pcie,
-> @@ -771,7 +779,10 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
->  
->  	/* Reset the bridge */
->  	brcm_pcie_bridge_sw_init_set(pcie, 1);
-> -	brcm_pcie_perst_set(pcie, 1);
-
-If these 2 functions are always called together, then you just need 1 
-per chip function.
-
-> +
-> +	/* BCM7278 fails when PERST# is set here */
-> +	if (pcie->type != BCM7278)
-> +		brcm_pcie_perst_set(pcie, 1);
->  
->  	usleep_range(100, 200);
->  
-> -- 
-> 2.17.1
-> 
+The suspend/resume ordering should be guaranteed by the Linux device 
+driver model though if not, this is a bug that ought to be fixed. The 
+PCI bridge sits at the top of the pci_device list and all EPs should be 
+child devices, so the suspend order should be from EPs down to the 
+bridge, and the resume the converse.
+-- 
+Florian
