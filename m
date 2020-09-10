@@ -2,92 +2,129 @@ Return-Path: <SRS0=01Vy=CT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 321BAC07548
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 18:25:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E2CFC43461
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 18:30:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D79CF2076C
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 18:25:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1599762356;
-	bh=VWExKt7J4nN//ndqe8lsU57dT1p5AT2cTlunuRXbPik=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=txV5sDg8M4O0zZOAqGnjqSUHSmPyCyBdJu8ekjXI3Ih5/yoKhMvq+QJxrmH9GLy/J
-	 7Or4Z6DCjHu+AMkqGrobXmyD5evVHFhq6J/7rhd3w014ktlhsagKy3Accw//z+WPUD
-	 XyDAqe1VvFJEkD3GE7EMNXDVpEEvcwR0T+vPTXgo=
+	by mail.kernel.org (Postfix) with ESMTP id EED1C21941
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 18:30:42 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="UCp+FppW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726287AbgIJSZw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 10 Sep 2020 14:25:52 -0400
-Received: from mail-il1-f196.google.com ([209.85.166.196]:39200 "EHLO
-        mail-il1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726937AbgIJSYm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2020 14:24:42 -0400
-Received: by mail-il1-f196.google.com with SMTP id u20so6632102ilk.6;
-        Thu, 10 Sep 2020 11:24:41 -0700 (PDT)
+        id S1726853AbgIJSac (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 10 Sep 2020 14:30:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37316 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726515AbgIJS3m (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2020 14:29:42 -0400
+Received: from mail-pj1-x1043.google.com (mail-pj1-x1043.google.com [IPv6:2607:f8b0:4864:20::1043])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D225DC061573
+        for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2020 11:29:40 -0700 (PDT)
+Received: by mail-pj1-x1043.google.com with SMTP id s2so435366pjr.4
+        for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2020 11:29:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=wjAWuNbVBoEPyXn+QBzLMnCnG3b1YEYkoDZS6EgQpPI=;
+        b=UCp+FppW+25RCEWuidrdmD2H7oNwJWAPscXMA2ljdT7Hwfc6emJQQRXJKlonqRXwCr
+         ZNZwT1diexj1oIPFx0vZRCKp8ePiBMfI0fNJK+PDlwitnt2/pXVXXfcmv7xMHDx85MGD
+         jjgpGgVOnGdOdetQ71hUdu1jBGb560fU84u+I=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=Ruc06lsfRVERcSDxNB2fAhTkJv2X63wPXUzyD97ULN8=;
-        b=Sfz6Buih9nOnMA3Zzk/mpbGme296f72xeGt/356NfxwrxZnda9j2e7V8ZgsPZm2Lai
-         1svcgXI4AzXQY4TUZforiPWuVisFAbiI3Kt8ToNkz11kuMZZzt8+LXOVdANopf0mS/5L
-         6h08HQr4RSIz+JwUSS9knXl3A1M5Txn9nEyyz7Hsn/C/7jWJCksC0vM4XTqaDMGrDkzE
-         6KWZJxU9z+FzSQlx7y7EVj19qsLxCs7ezB8wN5ULI6SW4ZKcn6+SOuJJLSVxHA2HG3+y
-         FdWAOX9dLjFEHgGUntLqHLTjrgTlHJCvbw84NLs8ocT5u4AuMj17C678QDJu0LGLKfAh
-         UybQ==
-X-Gm-Message-State: AOAM5323J+MTTMNRZ9J7KeMgNIDCyVodE9mML2a2lX5g9kH8Iih3961V
-        Q74VZlvd2nbThX0UaQS3dA==
-X-Google-Smtp-Source: ABdhPJylVxfTh7SN41FPrdfTYFYOn2PGCxv3gdukB/jAYoB9si69LFWM0c7m/iT5duHJ6q98EYibnQ==
-X-Received: by 2002:a92:d184:: with SMTP id z4mr7038898ilz.181.1599762280913;
-        Thu, 10 Sep 2020 11:24:40 -0700 (PDT)
-Received: from xps15 ([64.188.179.251])
-        by smtp.gmail.com with ESMTPSA id a11sm3485910ilh.20.2020.09.10.11.24.38
+        bh=wjAWuNbVBoEPyXn+QBzLMnCnG3b1YEYkoDZS6EgQpPI=;
+        b=mWgLvu+mX/kyRWMe1pje6BFONEiTYJsxyPiqUoEvQhK4G7aE0zmlBX6o5NphBe0RsR
+         pvj7TfwdqZegzibp5sH8EKE1acKm8yrmmsi7XP3Mcbk+ohesfn1nt9dDCZeIPHfYmaZp
+         +vf0CUrdua0foUjVF51OweJnXHEO1e9pXEeI4T8OJtFlZAv4iVN2NRCMXERXJKQUSHJZ
+         O/QMR7MyG/6xngX61EWbLsspySkj+uARGzXci+YSghuXfzX9JkOayM7sIuReL/qyU8C5
+         laN+P8Ak2zQlUCFukVGf27olJK+J9nycbtK6vJQmsw9N1sTPFKexGHRkTVQWvEjsPfFd
+         Q4tg==
+X-Gm-Message-State: AOAM5311CHK9HaH2yPcSj0itdxwKLrRfB4SGAX+clsRrS4sF8CP5OLGd
+        4cjdAVlMnmFIgtsGNJ7nXYekTA==
+X-Google-Smtp-Source: ABdhPJwQHia5IxoItB0v8TFyFBQYaMjt9d9oEodKfnuR8Fqxq3O6+WSooIjqvBiG9AzcqTroMIMGDQ==
+X-Received: by 2002:a17:90b:3717:: with SMTP id mg23mr1229702pjb.42.1599762580221;
+        Thu, 10 Sep 2020 11:29:40 -0700 (PDT)
+Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
+        by smtp.gmail.com with ESMTPSA id z9sm6606733pfk.118.2020.09.10.11.29.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 10 Sep 2020 11:24:40 -0700 (PDT)
-Received: (nullmailer pid 631588 invoked by uid 1000);
-        Thu, 10 Sep 2020 18:24:36 -0000
-Date:   Thu, 10 Sep 2020 12:24:36 -0600
-From:   Rob Herring <robh@kernel.org>
-To:     Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Masami Hiramatsu <masami.hiramatsu@linaro.org>,
-        Jassi Brar <jaswinder.singh@linaro.org>,
-        linux-pci@vger.kernel.org,
-        Masahiro Yamada <yamada.masahiro@socionext.com>,
-        linux-arm-kernel@lists.infradead.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Marc Zyngier <maz@kernel.org>, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v6 6/6] PCI: uniphier: Add error message when failed to
- get phy
-Message-ID: <20200910182436.GA631540@bogus>
-References: <1596795922-705-1-git-send-email-hayashi.kunihiko@socionext.com>
- <1596795922-705-7-git-send-email-hayashi.kunihiko@socionext.com>
+        Thu, 10 Sep 2020 11:29:39 -0700 (PDT)
+Date:   Thu, 10 Sep 2020 11:29:38 -0700
+From:   Kees Cook <keescook@chromium.org>
+To:     Steven Rostedt <rostedt@goodmis.org>
+Cc:     Sami Tolvanen <samitolvanen@google.com>, peterz@infradead.org,
+        Masahiro Yamada <masahiroy@kernel.org>,
+        Will Deacon <will@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Paul E. McKenney" <paulmck@kernel.org>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        clang-built-linux <clang-built-linux@googlegroups.com>,
+        Kernel Hardening <kernel-hardening@lists.openwall.com>,
+        linux-arch <linux-arch@vger.kernel.org>,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        linux-kbuild <linux-kbuild@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+        X86 ML <x86@kernel.org>
+Subject: Re: [PATCH v2 05/28] objtool: Add a pass for generating __mcount_loc
+Message-ID: <202009101127.28B4414D2A@keescook>
+References: <20200624203200.78870-1-samitolvanen@google.com>
+ <20200903203053.3411268-1-samitolvanen@google.com>
+ <20200903203053.3411268-6-samitolvanen@google.com>
+ <202009031450.31C71DB@keescook>
+ <CABCJKueF1RbpOKHsA8yS_yMujzHi8dzAVz8APwpMJyMTTGhmDA@mail.gmail.com>
+ <20200904093104.GH1362448@hirez.programming.kicks-ass.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1596795922-705-7-git-send-email-hayashi.kunihiko@socionext.com>
+In-Reply-To: <20200904093104.GH1362448@hirez.programming.kicks-ass.net>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, 07 Aug 2020 19:25:22 +0900, Kunihiko Hayashi wrote:
-> Even if phy driver doesn't probe, the error message can't be distinguished
-> from other errors. This displays error message caused by the phy driver
-> explicitly.
+On Fri, Sep 04, 2020 at 11:31:04AM +0200, peterz@infradead.org wrote:
+> On Thu, Sep 03, 2020 at 03:03:30PM -0700, Sami Tolvanen wrote:
+> > On Thu, Sep 3, 2020 at 2:51 PM Kees Cook <keescook@chromium.org> wrote:
+> > >
+> > > On Thu, Sep 03, 2020 at 01:30:30PM -0700, Sami Tolvanen wrote:
+> > > > From: Peter Zijlstra <peterz@infradead.org>
+> > > >
+> > > > Add the --mcount option for generating __mcount_loc sections
+> > > > needed for dynamic ftrace. Using this pass requires the kernel to
+> > > > be compiled with -mfentry and CC_USING_NOP_MCOUNT to be defined
+> > > > in Makefile.
+> > > >
+> > > > Link: https://lore.kernel.org/lkml/20200625200235.GQ4781@hirez.programming.kicks-ass.net/
+> > > > Signed-off-by: Peter Zijlstra <peterz@infradead.org>
+> > >
+> > > Hmm, I'm not sure why this hasn't gotten picked up yet. Is this expected
+> > > to go through -tip or something else?
+> > 
+> > Note that I picked up this patch from Peter's original email, to which
+> > I included a link in the commit message, but it wasn't officially
+> > submitted as a patch. However, the previous discussion seems to have
+> > died, so I included the patch in this series, as it cleanly solves the
+> > problem of whitelisting non-call references to __fentry__. I was
+> > hoping for Peter and Steven to comment on how they prefer to proceed
+> > here.
 > 
-> Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-> ---
->  drivers/pci/controller/dwc/pcie-uniphier.c | 8 ++++++--
->  1 file changed, 6 insertions(+), 2 deletions(-)
-> 
+> Right; so I'm obviously fine with this patch and I suppose I can pick it
+> (and the next) into tip/objtool/core, provided Steve is okay with this
+> approach.
 
-Reviewed-by: Rob Herring <robh@kernel.org>
+Hello Steven-of-the-future-after-4000-emails![1] ;)
+
+Getting your Ack on this would be very welcome, and would unblock a
+portion of this series.
+
+Thanks! :)
+
+[1] https://twitter.com/srostedt/status/1303697650592755712
+
+-- 
+Kees Cook
