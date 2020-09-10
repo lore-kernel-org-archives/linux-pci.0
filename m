@@ -7,63 +7,60 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FFB9C43461
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 19:09:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45599C433E2
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 19:12:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C5C8A21556
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 19:09:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F12A220882
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 19:12:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="MpSXkEL/"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="P3rKpow+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727095AbgIJTJu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 10 Sep 2020 15:09:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43564 "EHLO
+        id S1727058AbgIJTMG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 10 Sep 2020 15:12:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42962 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726898AbgIJTJb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2020 15:09:31 -0400
-Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9CDBFC061757
-        for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2020 12:09:30 -0700 (PDT)
-Received: by mail-wm1-x342.google.com with SMTP id b79so1441179wmb.4
-        for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2020 12:09:30 -0700 (PDT)
+        with ESMTP id S1726683AbgIJTFv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2020 15:05:51 -0400
+Received: from mail-wm1-x341.google.com (mail-wm1-x341.google.com [IPv6:2a00:1450:4864:20::341])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E1ADC061799
+        for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2020 12:05:46 -0700 (PDT)
+Received: by mail-wm1-x341.google.com with SMTP id k18so1417261wmj.5
+        for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2020 12:05:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=P7OrKzbfR9xtqdSHIMvXmUQeAVkw7RF8IhuSUGVC+Ps=;
-        b=MpSXkEL/wiQ8XfBs94ZM0hzW0nGplPDHAqB/oXWtd/GEl7HWw+QUoiP+znsY8xoD4e
-         0UOOZte8H0Z/8cIjyw1Ey61n3oznWN6bNh2Tfg2TgA8BulEp9HpMCearKuyqtndJqtJS
-         Lad7MQT3lnm+Q3ZZGef1jbqi0YRk6goQVfSJI=
+        bh=WRUHE/AydYo5vOxyT2VUVM5i8lZCHEUzn94q4M0/Iss=;
+        b=P3rKpow+CQ5n1vbRSttoaCFyW3I3Kj2uZEiMuokGl21m5Rgsu96ZrMoumx1kR/I1WL
+         VDnWqObJtQ4TPcUYjYRuBXeQLNmc3xLAxjk7WaguSfIO/e9yapU60iBA/DAlmLox/ii2
+         O908pxTJkZdLeAtfwfBD6+dqQrOxR7EalkPlM=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=P7OrKzbfR9xtqdSHIMvXmUQeAVkw7RF8IhuSUGVC+Ps=;
-        b=grlSrHQ+CeOFSFbS2/1zHym/7XddbU2iOxJaDhVf8T8Oh4+tI2HhYUuezeSBfSzZcl
-         5+ZkE66o7tQFGaANsRuO0x+q7jR+VOIiwckciwUBScyyp6GWnQmn/E+AUuDPFkmlO/Q8
-         V8+cxlguowYyyYVroJsHw4jU1ET5Dp24+SN2EGtcvsXUHwx7bqNw/ekJNurOJXzQ1+R/
-         X+lrvlN6jE0jMY/nfzqK/ZtHDRefay4TNPaSPrqGs3Up09aiF9ljcrNWgsd3c1XBCcVH
-         VkUuYfBv9lztOvYFW+Oanr/NxejSPtUj7YFjGwjwmPkYfB/oVYIhuSwmcxC4unXiLoNJ
-         I4rQ==
-X-Gm-Message-State: AOAM532UmC6rKJrflM6CVXlG2UE1bw+/CvAr6UvLscLZk+6lF8ODnSFL
-        +1s8fI/0p9jg4fPOjkgMJR4qzfGMCv7fjFRxmOznZw==
-X-Google-Smtp-Source: ABdhPJwzs36aj1sjc++Pnam87auA8iF/tLJfweQbDE2WUAisFry+UZZLK/sNBdzcVgjeP2hiFYoj4BDrOdNX9Mlk8SI=
-X-Received: by 2002:a1c:bad5:: with SMTP id k204mr1520296wmf.111.1599764968373;
- Thu, 10 Sep 2020 12:09:28 -0700 (PDT)
+        bh=WRUHE/AydYo5vOxyT2VUVM5i8lZCHEUzn94q4M0/Iss=;
+        b=rp4pMULo0+ENvnYmhzctskseRzoKsDimhTdnCwdDOll9kQaNX0IqpYHrxUE+uJZf5j
+         P8gFVWXwrbtkRCb18+WboK/eTzGo7KO54P1bga+AQg2Gsiy6oPlHfvNi/EL/EpHV58of
+         LWQag3cfoL4p0BK5r7Hrq8z3uCxHneDoECgmNb7hLWsJzPLpPL6s3PTlVAc6ZGqbeExW
+         b1cNbu4vjnrK3IGYWdQh8lVtrHrLuOCSJIRtbtGZAKb/q/eb/xzeKaSCau0NrqNC7nUg
+         5Udz5DxSnh7ukaF7CXAcqxRvM0Wq3RK1lo4FiUO7/U2KLP07l3FI8yb5MN5U/eDohK1L
+         C+aQ==
+X-Gm-Message-State: AOAM532A6S5l84pGTUuqvn0wYzNkSbLPV7IlTOGW5Wi4Ci8K9FbVYju2
+        b5kmAFejfpSv4Oqs7JwtrM8zd4yTnxPxmloiFI8q2Q==
+X-Google-Smtp-Source: ABdhPJwlD5Q8lj0SVn7hyv2oM08lwqVl9n3zHuU4m0J6RFUUa3UT7tAEeix8XxulZJFNFcxbZaGYBHG0hpS+ZuHN8gk=
+X-Received: by 2002:a1c:2dc6:: with SMTP id t189mr1545489wmt.92.1599764744932;
+ Thu, 10 Sep 2020 12:05:44 -0700 (PDT)
 MIME-Version: 1.0
 References: <20200824193036.6033-1-james.quinlan@broadcom.com>
  <20200824193036.6033-5-james.quinlan@broadcom.com> <20200910155637.GA423872@bogus>
- <CA+-6iNy9g8fhJvd7SOKtc-SZcL8_gLLN1HEs-W8fe-=q6n430A@mail.gmail.com>
- <CAL_JsqJR4wALnsFKKPQ8h2y-o-933rzxHbV29zGXiptgYuuHTg@mail.gmail.com>
- <CA+-6iNwcLZcQcge2E6GUi71rveFaneeCBwxBTfn8MipwhaPvEQ@mail.gmail.com> <3c6a0acc-8966-fd38-1613-8da7bece81c7@gmail.com>
-In-Reply-To: <3c6a0acc-8966-fd38-1613-8da7bece81c7@gmail.com>
+ <CA+-6iNy9g8fhJvd7SOKtc-SZcL8_gLLN1HEs-W8fe-=q6n430A@mail.gmail.com> <CAL_JsqJR4wALnsFKKPQ8h2y-o-933rzxHbV29zGXiptgYuuHTg@mail.gmail.com>
+In-Reply-To: <CAL_JsqJR4wALnsFKKPQ8h2y-o-933rzxHbV29zGXiptgYuuHTg@mail.gmail.com>
 From:   Jim Quinlan <james.quinlan@broadcom.com>
-Date:   Thu, 10 Sep 2020 15:09:15 -0400
-Message-ID: <CA+-6iNxfDuTREDj3_MWwKuNYfq8YgBT1hghKjh=GQjkzdbH+hA@mail.gmail.com>
+Date:   Thu, 10 Sep 2020 15:05:31 -0400
+Message-ID: <CA+-6iNwcLZcQcge2E6GUi71rveFaneeCBwxBTfn8MipwhaPvEQ@mail.gmail.com>
 Subject: Re: [PATCH v11 04/11] PCI: brcmstb: Add suspend and resume pm_ops
-To:     Florian Fainelli <f.fainelli@gmail.com>
-Cc:     Rob Herring <robh@kernel.org>,
-        "open list:PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS" 
+To:     Rob Herring <robh@kernel.org>
+Cc:     "open list:PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS" 
         <linux-pci@vger.kernel.org>,
         Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
         Christoph Hellwig <hch@lst.de>,
@@ -72,131 +69,119 @@ Cc:     Rob Herring <robh@kernel.org>,
         <bcm-kernel-feedback-list@broadcom.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
         "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
         <linux-rpi-kernel@lists.infradead.org>,
         "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
         <linux-arm-kernel@lists.infradead.org>,
         open list <linux-kernel@vger.kernel.org>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000b0dafe05aefa4ede"
+        boundary="0000000000005e9a9605aefa4116"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
---000000000000b0dafe05aefa4ede
+--0000000000005e9a9605aefa4116
 Content-Type: text/plain; charset="UTF-8"
 
-On Thu, Sep 10, 2020 at 3:08 PM Florian Fainelli <f.fainelli@gmail.com> wrote:
+On Thu, Sep 10, 2020 at 2:50 PM Rob Herring <robh@kernel.org> wrote:
 >
+> On Thu, Sep 10, 2020 at 10:42 AM Jim Quinlan <james.quinlan@broadcom.com> wrote:
+> >
+> > On Thu, Sep 10, 2020 at 11:56 AM Rob Herring <robh@kernel.org> wrote:
+> > >
+> > > On Mon, Aug 24, 2020 at 03:30:17PM -0400, Jim Quinlan wrote:
+> > > > From: Jim Quinlan <jquinlan@broadcom.com>
+> > > >
+> > > > Broadcom Set-top (BrcmSTB) boards typically support S2, S3, and S5 suspend
+> > > > and resume.  Now the PCIe driver may do so as well.
+> > > >
+> > > > Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
+> > > > Acked-by: Florian Fainelli <f.fainelli@gmail.com>
+> > > > ---
+> > > >  drivers/pci/controller/pcie-brcmstb.c | 47 +++++++++++++++++++++++++++
+> > > >  1 file changed, 47 insertions(+)
+> > > >
+> > > > diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
+> > > > index c2b3d2946a36..3d588ab7a6dd 100644
+> > > > --- a/drivers/pci/controller/pcie-brcmstb.c
+> > > > +++ b/drivers/pci/controller/pcie-brcmstb.c
+> > > > @@ -978,6 +978,47 @@ static void brcm_pcie_turn_off(struct brcm_pcie *pcie)
+> > > >       brcm_pcie_bridge_sw_init_set(pcie, 1);
+> > > >  }
+> > > >
+> > > > +static int brcm_pcie_suspend(struct device *dev)
+> > > > +{
+> > > > +     struct brcm_pcie *pcie = dev_get_drvdata(dev);
+> > > > +
+> > > > +     brcm_pcie_turn_off(pcie);
+> > > > +     clk_disable_unprepare(pcie->clk);
+> > > > +
+> > > > +     return 0;
+> > > > +}
+> > > > +
+> > > > +static int brcm_pcie_resume(struct device *dev)
+> > > > +{
+> > > > +     struct brcm_pcie *pcie = dev_get_drvdata(dev);
+> > > > +     void __iomem *base;
+> > > > +     u32 tmp;
+> > > > +     int ret;
+> > > > +
+> > > > +     base = pcie->base;
+> > > > +     clk_prepare_enable(pcie->clk);
+> > > > +
+> > > > +     /* Take bridge out of reset so we can access the SERDES reg */
+> > > > +     brcm_pcie_bridge_sw_init_set(pcie, 0);
+> > > > +
+> > > > +     /* SERDES_IDDQ = 0 */
+> > > > +     tmp = readl(base + PCIE_MISC_HARD_PCIE_HARD_DEBUG);
+> > > > +     u32p_replace_bits(&tmp, 0, PCIE_MISC_HARD_PCIE_HARD_DEBUG_SERDES_IDDQ_MASK);
+> > > > +     writel(tmp, base + PCIE_MISC_HARD_PCIE_HARD_DEBUG);
+> > > > +
+> > > > +     /* wait for serdes to be stable */
+> > > > +     udelay(100);
+> > >
+> > > Really needs to be a spinloop?
+> > >
+> > > > +
+> > > > +     ret = brcm_pcie_setup(pcie);
+> > > > +     if (ret)
+> > > > +             return ret;
+> > > > +
+> > > > +     if (pcie->msi)
+> > > > +             brcm_msi_set_regs(pcie->msi);
+> > > > +
+> > > > +     return 0;
+> > > > +}
+> > > > +
+> > > >  static void __brcm_pcie_remove(struct brcm_pcie *pcie)
+> > > >  {
+> > > >       brcm_msi_remove(pcie);
+> > > > @@ -1087,12 +1128,18 @@ static int brcm_pcie_probe(struct platform_device *pdev)
+> > > >
+> > > >  MODULE_DEVICE_TABLE(of, brcm_pcie_match);
+> > > >
+> > > > +static const struct dev_pm_ops brcm_pcie_pm_ops = {
+> > > > +     .suspend_noirq = brcm_pcie_suspend,
+> > > > +     .resume_noirq = brcm_pcie_resume,
+> > >
+> > > Why do you need interrupts disabled? There's 39 cases of .suspend_noirq
+> > > and 1352 of .suspend in the tree.
+> >
+> > I will test switching this to  suspend_late/resume_early.
 >
+> Why not just the 'regular' flavor suspend/resume?
 >
-> On 9/10/2020 12:05 PM, Jim Quinlan wrote:
-> > On Thu, Sep 10, 2020 at 2:50 PM Rob Herring <robh@kernel.org> wrote:
-> >>
-> >> On Thu, Sep 10, 2020 at 10:42 AM Jim Quinlan <james.quinlan@broadcom.com> wrote:
-> >>>
-> >>> On Thu, Sep 10, 2020 at 11:56 AM Rob Herring <robh@kernel.org> wrote:
-> >>>>
-> >>>> On Mon, Aug 24, 2020 at 03:30:17PM -0400, Jim Quinlan wrote:
-> >>>>> From: Jim Quinlan <jquinlan@broadcom.com>
-> >>>>>
-> >>>>> Broadcom Set-top (BrcmSTB) boards typically support S2, S3, and S5 suspend
-> >>>>> and resume.  Now the PCIe driver may do so as well.
-> >>>>>
-> >>>>> Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
-> >>>>> Acked-by: Florian Fainelli <f.fainelli@gmail.com>
-> >>>>> ---
-> >>>>>   drivers/pci/controller/pcie-brcmstb.c | 47 +++++++++++++++++++++++++++
-> >>>>>   1 file changed, 47 insertions(+)
-> >>>>>
-> >>>>> diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
-> >>>>> index c2b3d2946a36..3d588ab7a6dd 100644
-> >>>>> --- a/drivers/pci/controller/pcie-brcmstb.c
-> >>>>> +++ b/drivers/pci/controller/pcie-brcmstb.c
-> >>>>> @@ -978,6 +978,47 @@ static void brcm_pcie_turn_off(struct brcm_pcie *pcie)
-> >>>>>        brcm_pcie_bridge_sw_init_set(pcie, 1);
-> >>>>>   }
-> >>>>>
-> >>>>> +static int brcm_pcie_suspend(struct device *dev)
-> >>>>> +{
-> >>>>> +     struct brcm_pcie *pcie = dev_get_drvdata(dev);
-> >>>>> +
-> >>>>> +     brcm_pcie_turn_off(pcie);
-> >>>>> +     clk_disable_unprepare(pcie->clk);
-> >>>>> +
-> >>>>> +     return 0;
-> >>>>> +}
-> >>>>> +
-> >>>>> +static int brcm_pcie_resume(struct device *dev)
-> >>>>> +{
-> >>>>> +     struct brcm_pcie *pcie = dev_get_drvdata(dev);
-> >>>>> +     void __iomem *base;
-> >>>>> +     u32 tmp;
-> >>>>> +     int ret;
-> >>>>> +
-> >>>>> +     base = pcie->base;
-> >>>>> +     clk_prepare_enable(pcie->clk);
-> >>>>> +
-> >>>>> +     /* Take bridge out of reset so we can access the SERDES reg */
-> >>>>> +     brcm_pcie_bridge_sw_init_set(pcie, 0);
-> >>>>> +
-> >>>>> +     /* SERDES_IDDQ = 0 */
-> >>>>> +     tmp = readl(base + PCIE_MISC_HARD_PCIE_HARD_DEBUG);
-> >>>>> +     u32p_replace_bits(&tmp, 0, PCIE_MISC_HARD_PCIE_HARD_DEBUG_SERDES_IDDQ_MASK);
-> >>>>> +     writel(tmp, base + PCIE_MISC_HARD_PCIE_HARD_DEBUG);
-> >>>>> +
-> >>>>> +     /* wait for serdes to be stable */
-> >>>>> +     udelay(100);
-> >>>>
-> >>>> Really needs to be a spinloop?
-> >>>>
-> >>>>> +
-> >>>>> +     ret = brcm_pcie_setup(pcie);
-> >>>>> +     if (ret)
-> >>>>> +             return ret;
-> >>>>> +
-> >>>>> +     if (pcie->msi)
-> >>>>> +             brcm_msi_set_regs(pcie->msi);
-> >>>>> +
-> >>>>> +     return 0;
-> >>>>> +}
-> >>>>> +
-> >>>>>   static void __brcm_pcie_remove(struct brcm_pcie *pcie)
-> >>>>>   {
-> >>>>>        brcm_msi_remove(pcie);
-> >>>>> @@ -1087,12 +1128,18 @@ static int brcm_pcie_probe(struct platform_device *pdev)
-> >>>>>
-> >>>>>   MODULE_DEVICE_TABLE(of, brcm_pcie_match);
-> >>>>>
-> >>>>> +static const struct dev_pm_ops brcm_pcie_pm_ops = {
-> >>>>> +     .suspend_noirq = brcm_pcie_suspend,
-> >>>>> +     .resume_noirq = brcm_pcie_resume,
-> >>>>
-> >>>> Why do you need interrupts disabled? There's 39 cases of .suspend_noirq
-> >>>> and 1352 of .suspend in the tree.
-> >>>
-> >>> I will test switching this to  suspend_late/resume_early.
-> >>
-> >> Why not just the 'regular' flavor suspend/resume?
-> >>
-> >> Rob
-> > We must have our PCIe driver suspend last and resume first because our
-> > current driver turns off/on the power for the EPs.  Note that this
-> > code isn't in the driver as we are still figuring out a way to make it
-> > upstreamable.
->
-> The suspend/resume ordering should be guaranteed by the Linux device
-> driver model though if not, this is a bug that ought to be fixed. The
-> PCI bridge sits at the top of the pci_device list and all EPs should be
-> child devices, so the suspend order should be from EPs down to the
-> bridge, and the resume the converse.
-I remembered that after I hit send.
-Jim
-> --
-> Florian
+> Rob
+We must have our PCIe driver suspend last and resume first because our
+current driver turns off/on the power for the EPs.  Note that this
+code isn't in the driver as we are still figuring out a way to make it
+upstreamable.
 
---000000000000b0dafe05aefa4ede
+Jim
+
+--0000000000005e9a9605aefa4116
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -266,14 +251,14 @@ V6GuAMmRknrzeTlxPy40UhUcRKk6Nm8mxl3Jh4KB68z7NFVpIx8G5w5I7S5ar1mLGNRjtFZ0RE4O
 lcCwKVGUXRaZMgQGrIhxGVelVgrcBh2vjpndlv733VI2VKE/TvV5MxMGU18RnogYSm66AEFA/Zb+
 5ztz1AtIMYICbzCCAmsCAQEwbTBdMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBu
 di1zYTEzMDEGA1UEAxMqR2xvYmFsU2lnbiBQZXJzb25hbFNpZ24gMiBDQSAtIFNIQTI1NiAtIEcz
-AgwTv2xmtR4KOmK4QvMwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEILyhJTSbKToI
-B49kCKI8tKPwNhRgU0WrGWS92/9KIkYaMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZI
-hvcNAQkFMQ8XDTIwMDkxMDE5MDkyOFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJ
+AgwTv2xmtR4KOmK4QvMwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIH/jrDjRLmdN
+HxnNO4Qi19S0/eLulickePCcVAYtHj3MMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZI
+hvcNAQkFMQ8XDTIwMDkxMDE5MDU0NVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJ
 YIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcN
-AQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBXEkIdgAnn7D+y09wrfOml2qZMNKAd
-gyOqKNTyLf1OSZes7fHqiCkX2YPtJUQKlCXFxUTxQGnXM5H3waK1gGNTLkfzENE/Prxkm7ebgJMa
-6ynRDAlVkIwAZl5FfQ/62OHES2TIeUE+HEKxkTrC0Guc7urC99vD5KRGBZdpt87bptA7Ngau1Fkv
-8oOMiupKPHb/S/igzJvXwkySjb10wqcOEN7RiKXYqXMeqsqBc1SYBWn4ciaW/pTbz/6p0kL4ahdC
-JlYwBNNbk+7jsarkIagIJ4ejfD+CQzz8R1RljebKqeNEoImrq4BJOeO4p2APRjxNpOcTVAbqOyLO
-yt0pc1Sd
---000000000000b0dafe05aefa4ede--
+AQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCB/luJ0vpygCgikA/uVk5idXyig5D0
+eZpj7FXLEFq8puvjgz/3hojmCF4C347zxz+dfPV5HGEqrkUNXFpZcoKUqiHgWO+hDSdiXZmE+T3C
+LmqH9PKyG/OYC1VqLF3R6r7rTD31TC5VT3LxMy2PNruWkKK1/Skwvw+gVF1YtikMno2APpBhu8l6
+IevujpLLR+Kl9EVhCvOnihTsSaBUWW4WLxnWUJXJ9EUKfGxdpFI/Rl8HDc95kTD8j146sB9qOVlA
+pUepQijNc/5maj57wJCKfoW2N/3WaBIB+7Yql/ESqwi6N8gLNof0Z33QKFzh6p94oj3JRg3kh+14
+GLcjBmuS
+--0000000000005e9a9605aefa4116--
