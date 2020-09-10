@@ -6,75 +6,89 @@ X-Spam-Status: No, score=-14.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 487FBC433E2
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 18:53:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05037C433E2
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 18:55:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 00916214F1
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 18:53:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B548B20731
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 18:55:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JPZzWyhS"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gyUqp0qm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726710AbgIJSxm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 10 Sep 2020 14:53:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40526 "EHLO
+        id S1727801AbgIJSz1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 10 Sep 2020 14:55:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41140 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726480AbgIJSuL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2020 14:50:11 -0400
-Received: from mail-pf1-x443.google.com (mail-pf1-x443.google.com [IPv6:2607:f8b0:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F8B2C061573;
-        Thu, 10 Sep 2020 11:50:10 -0700 (PDT)
-Received: by mail-pf1-x443.google.com with SMTP id c196so5322554pfc.0;
-        Thu, 10 Sep 2020 11:50:10 -0700 (PDT)
+        with ESMTP id S1726805AbgIJSyN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2020 14:54:13 -0400
+Received: from mail-pj1-x1043.google.com (mail-pj1-x1043.google.com [IPv6:2607:f8b0:4864:20::1043])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39748C061573;
+        Thu, 10 Sep 2020 11:54:13 -0700 (PDT)
+Received: by mail-pj1-x1043.google.com with SMTP id gf14so465246pjb.5;
+        Thu, 10 Sep 2020 11:54:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=subject:to:cc:references:from:message-id:date:user-agent
          :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=aYjJfcYyIA8Xv1f/xwx7IbaGd+zm7NTIJSkG9721wPA=;
-        b=JPZzWyhSb2c1eLwB3oxY/HV7INbOfJZ0uTRy5P1lBCRUyHB/Hfyybjo7hEZswy1iS0
-         awYvyjTox1dA6pYcpe8vznyhrPtDY9+XCgqRfLsyHnfOJXrBNQ1ie2pma/QZJGBnVKFg
-         zVqBW3AbAjl4/9US0Hvfc1VON4eobYnBvxxx2sjafJinQvdVN2uqxBgwMcF523e/vAmH
-         86k16kpiiwYTK2DWMe/wKfznuz2KUiH9RV4JfvMxg8v5kjQaJ8cyrAredtW6dmqVcLRM
-         tkHHCU660eBPvJ+KEDAjJUVx3tHLklBINRy7InXylmS6HwdGf15F3NfykCR9LcjIYinz
-         JGwA==
+        bh=2Xa8adrS68p10V9uAlCA1zNdv/U/GcBjRclFrOXiS48=;
+        b=gyUqp0qm8ln6pVCngaN7s20aFFvyFckMVpNQYk128QI9pagHu2mKSdbTs2JYRvLeTK
+         QZcDep/Q1nfAj+q4hDlRXJi6rPbvXBDSBsJmKscnozvrOE4ZXFin9qMBfsNR/Kd5uRWQ
+         AJU7KZXE3Qk2dx3F5SvDaOIsRk33Msb1vjmUs76kSEwzhV1MVUhBShgA48EsUp6R4UZM
+         iheF35RSl5eFN2WlsfiPmK5FP4jfrO5Juu+2kLVkqxd/kC3Ks5us3yM2XfsONuWghrjU
+         s6D23HcupvG31AT9riVU0ZCWFpOMbzasmrRbM020VO4nHlycpm3HPj5odRw83zXlr/nx
+         SMnQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=aYjJfcYyIA8Xv1f/xwx7IbaGd+zm7NTIJSkG9721wPA=;
-        b=O9FBfyAwgL+gj2XRk+liWiDNFZ1csGrFaBYGP7iQqdvd+7RqlUrK0kIvh2mmsk/gYU
-         3CqXQUXy17MjjWiRSM3GMQkX+JaXCgjH1AJEqYnG05xtqt86EJR8daL1VyXLN1p6qwqg
-         6k8ULGg6lbLFLcZCmwG+nzRSTm0L4DMiRW4Qd5AGDqBcVqm2UUGN7My/Mkp5zWI9WBAx
-         wq3koY7rg/IzMyEcSyAsyBlBMP6ZTB1F7BJWU7Tr5ndH8Q5VetHbe+0rEvTHEuYxGHuZ
-         Jv3PK2sHzaVrb7i6modVMwYsZjR6E/Xs+niLXmbbKlZzapLKwW1ciRrTDpFf/DTqQ2j0
-         YrXw==
-X-Gm-Message-State: AOAM533MgQtAWzIr19Ysq9NcCcVqn4+XmP9F1y7QhHi4i1mH+2lXs3xq
-        SUVBrv/m/a3LEiUzzmK5CDfgk0zPHOo=
-X-Google-Smtp-Source: ABdhPJxeeYQs18O8YvaouZsBUCc33xkxtb909We38aM7ZCEaoYMy0JTvu+bVOUzUuGB6112/rN5Ktg==
-X-Received: by 2002:a63:471b:: with SMTP id u27mr5681257pga.139.1599763809889;
-        Thu, 10 Sep 2020 11:50:09 -0700 (PDT)
+        bh=2Xa8adrS68p10V9uAlCA1zNdv/U/GcBjRclFrOXiS48=;
+        b=cEcs7EZ7h9H3qTLAyrkudkdLquqaygZOZ5NMc80TZIc9eiu5VfqhJwVQTHkqkRi+NO
+         6E0zGoBJAHBWuAKE+M57XtV5Wk6WdjL4+XAxsw/EiCugjZdtxAsPRUaZ7j26eN1BklsS
+         QpArm8xfWLFHo44D1mt/LP/hrUbL8MoG4N/+MmShieGLxlhK1jwLreBtYPCko4sHVZCQ
+         1UOzVR44TwvJUALmfRBUeFh8tLvgiVzux663kjGgB338wXxR0HD9+JvH7lhhXenrNymI
+         ulMphmgO/aF61idz44MOfXT3J5UIyxbYjvMXb9/RjyUGyq/UIaxFKm1jPLT33SpMOKd5
+         AKyA==
+X-Gm-Message-State: AOAM5337CsCqtKfE517wMSvwffMSv/hSgi49QZ1AbMyTm3WalAALrT52
+        hqZzYR6SSZTp6FsVSqi9o4yx2/v6TOs=
+X-Google-Smtp-Source: ABdhPJyQypWjMN7zIVrB/qW+UZo9cXIHTKKUrEfZmWYJCb4LBOJuMS5AQaKJfMkXxnrwyDS3ChDf7g==
+X-Received: by 2002:a17:90a:13c7:: with SMTP id s7mr1309300pjf.124.1599764052289;
+        Thu, 10 Sep 2020 11:54:12 -0700 (PDT)
 Received: from [10.230.30.107] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id i17sm6723289pfa.29.2020.09.10.11.50.08
+        by smtp.gmail.com with ESMTPSA id v205sm6620706pfc.110.2020.09.10.11.54.10
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 10 Sep 2020 11:50:09 -0700 (PDT)
-Subject: Re: [PATCH] PCI: Don't use Printk in raw_spinlocks
-To:     Bjorn Helgaas <helgaas@kernel.org>, Rob Herring <robh@kernel.org>
-Cc:     Xingxing Su <suxingxing@loongson.cn>,
+        Thu, 10 Sep 2020 11:54:11 -0700 (PDT)
+Subject: Re: [PATCH v11 04/11] PCI: brcmstb: Add suspend and resume pm_ops
+To:     Rob Herring <robh@kernel.org>,
+        Jim Quinlan <james.quinlan@broadcom.com>
+Cc:     "open list:PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS" 
+        <linux-pci@vger.kernel.org>,
+        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
+        Christoph Hellwig <hch@lst.de>,
+        Robin Murphy <robin.murphy@arm.com>,
+        "maintainer:BROADCOM BCM7XXX ARM ARCHITECTURE" 
+        <bcm-kernel-feedback-list@broadcom.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        PCI <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Mark Tomlinson <mark.tomlinson@alliedtelesis.co.nz>,
-        Scott Branden <scott.branden@broadcom.com>
-References: <20200910184627.GA804924@bjorn-Precision-5520>
+        Florian Fainelli <f.fainelli@gmail.com>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-rpi-kernel@lists.infradead.org>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>,
+        open list <linux-kernel@vger.kernel.org>
+References: <20200824193036.6033-1-james.quinlan@broadcom.com>
+ <20200824193036.6033-5-james.quinlan@broadcom.com>
+ <20200910155637.GA423872@bogus>
+ <CA+-6iNy9g8fhJvd7SOKtc-SZcL8_gLLN1HEs-W8fe-=q6n430A@mail.gmail.com>
+ <CAL_JsqJR4wALnsFKKPQ8h2y-o-933rzxHbV29zGXiptgYuuHTg@mail.gmail.com>
 From:   Florian Fainelli <f.fainelli@gmail.com>
-Message-ID: <fb964c3b-9619-2df3-8661-da90d58a297d@gmail.com>
-Date:   Thu, 10 Sep 2020 11:50:07 -0700
+Message-ID: <027ee22c-0981-f49f-52be-0c8aa3a3699b@gmail.com>
+Date:   Thu, 10 Sep 2020 11:54:10 -0700
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
  Firefox/78.0 Thunderbird/78.2.1
 MIME-Version: 1.0
-In-Reply-To: <20200910184627.GA804924@bjorn-Precision-5520>
+In-Reply-To: <CAL_JsqJR4wALnsFKKPQ8h2y-o-933rzxHbV29zGXiptgYuuHTg@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -85,115 +99,101 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 
 
-On 9/10/2020 11:46 AM, Bjorn Helgaas wrote:
-> On Thu, Sep 10, 2020 at 08:21:06AM -0600, Rob Herring wrote:
->> On Wed, Sep 9, 2020 at 8:07 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+On 9/10/2020 11:50 AM, Rob Herring wrote:
+> On Thu, Sep 10, 2020 at 10:42 AM Jim Quinlan <james.quinlan@broadcom.com> wrote:
+>>
+>> On Thu, Sep 10, 2020 at 11:56 AM Rob Herring <robh@kernel.org> wrote:
 >>>
->>> [+cc Mark, Florian, Rob, Scott]
->>>
->>> On Sat, Aug 01, 2020 at 09:25:49AM +0800, Xingxing Su wrote:
->>>> Do not use printk in raw_spinlocks,
->>>> it will cause BUG: Invalid wait context.
+>>> On Mon, Aug 24, 2020 at 03:30:17PM -0400, Jim Quinlan wrote:
+>>>> From: Jim Quinlan <jquinlan@broadcom.com>
 >>>>
->>>> The trace reported by lockdep follows.
+>>>> Broadcom Set-top (BrcmSTB) boards typically support S2, S3, and S5 suspend
+>>>> and resume.  Now the PCIe driver may do so as well.
 >>>>
->>>> [    2.986113] =============================
->>>> [    2.986115] [ BUG: Invalid wait context ]
->>>> [    2.986116] 5.8.0-rc1+ #11 Not tainted
->>>> [    2.986118] -----------------------------
->>>> [    2.986120] swapper/0/1 is trying to lock:
->>>> [    2.986122] ffffffff80f5ddd8 (console_owner){....}-{3:3}, at: console_unlock+0x284/0x820
->>>> [    2.986130] other info that might help us debug this:
->>>> [    2.986132] context-{5:5}
->>>> [    2.986134] 3 locks held by swapper/0/1:
->>>> [    2.986135]  #0: 98000007fa03c990 (&dev->mutex){....}-{0:0}, at: device_driver_attach+0x28/0x90
->>>> [    2.986144]  #1: ffffffff80fb83a8 (pci_lock){....}-{2:2}, at: pci_bus_write_config_word+0x60/0xb8
->>>> [    2.986152]  #2: ffffffff80f5ded0 (console_lock){+.+.}-{0:0}, at: vprintk_emit+0x1b0/0x3b8
->>>> [    2.986161] stack backtrace:
->>>> [    2.986163] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 5.8.0-rc1+ #11
->>>> [    2.986164] Stack : 0000000000001d67 98000000030be9b0 0000000000000001 7b2aba74f6c4785b
->>>> [    2.986172]         7b2aba74f6c4785b 0000000000000000 98000007f89cb438 ffffffff80e7dc80
->>>> [    2.986181]         0000000000000001 000000000000000a 0000000000000001 0000000000000001
->>>> [    2.986189]         ffffffff80f4e156 fffffffffffffffd ffffffff80cc2d98 fffffffff8000000
->>>> [    2.986197]         0000000024000000 ffffffff80f40000 0000000000000000 0000000000000000
->>>> [    2.986205]         ffffffff9500cce0 0000000000000000 ffffffff80f50000 ffffffff81546318
->>>> [    2.986213]         ffffffff81c4c3c0 0000000000000018 ffffffffbc000000 0000000000000000
->>>> [    2.986221]         ffffffff81340000 98000007f89c8000 98000007f89cb430 98000007f8a00000
->>>> [    2.986229]         ffffffff806be568 0000000000000000 0000000000000000 0000000000000000
->>>> [    2.986237]         0000000000000000 0000000000000000 ffffffff80211c1c 7b2aba74f6c4785b
->>>> [    2.986245]         ...
->>>> [    2.986250] Call Trace:
->>>> [    2.986251] [<ffffffff80211c1c>] show_stack+0x9c/0x130
->>>> [    2.986253] [<ffffffff806be568>] dump_stack+0xe8/0x150
->>>> [    2.986255] [<ffffffff802ad408>] __lock_acquire+0x570/0x3250
->>>> [    2.986257] [<ffffffff802abed0>] lock_acquire+0x118/0x558
->>>> [    2.986259] [<ffffffff802be764>] console_unlock+0x2e4/0x820
->>>> [    2.986261] [<ffffffff802c0a68>] vprintk_emit+0x1c0/0x3b8
->>>> [    2.986263] [<ffffffff807f45a8>] dev_vprintk_emit+0x1c8/0x210
->>>> [    2.986265] [<ffffffff807f462c>] dev_printk_emit+0x3c/0x60
->>>> [    2.986267] [<ffffffff807f499c>] _dev_warn+0x5c/0x80
->>>> [    2.986269] [<ffffffff806eea9c>] pci_generic_config_write32+0x154/0x160
->>>> [    2.986271] [<ffffffff806edca4>] pci_bus_write_config_word+0x84/0xb8
->>>> [    2.986273] [<ffffffff806f1664>] pci_setup_device+0x22c/0x768
->>>> [    2.986275] [<ffffffff806f26a0>] pci_scan_single_device+0xc8/0x100
->>>> [    2.986277] [<ffffffff806f2788>] pci_scan_slot+0xb0/0x178
->>>> [    2.986279] [<ffffffff806f3ae4>] pci_scan_child_bus_extend+0x5c/0x370
->>>> [    2.986281] [<ffffffff806f407c>] pci_scan_root_bus_bridge+0x6c/0xf0
->>>> [    2.986283] [<ffffffff806f411c>] pci_host_probe+0x1c/0xd8
->>>> [    2.986285] [<ffffffff807fa03c>] platform_drv_probe+0x54/0xb8
->>>> [    2.986287] [<ffffffff807f71f8>] really_probe+0x130/0x388
->>>> [    2.986289] [<ffffffff807f7594>] driver_probe_device+0x64/0xd8
->>>> [    2.986291] [<ffffffff807f7844>] device_driver_attach+0x84/0x90
->>>> [    2.986293] [<ffffffff807f7918>] __driver_attach+0xc8/0x128
->>>> [    2.986295] [<ffffffff807f4cac>] bus_for_each_dev+0x74/0xd8
->>>> [    2.986297] [<ffffffff807f6408>] bus_add_driver+0x170/0x250
->>>> [    2.986299] [<ffffffff807f899c>] driver_register+0x84/0x150
->>>> [    2.986301] [<ffffffff80200b08>] do_one_initcall+0x98/0x458
->>>> [    2.986303] [<ffffffff810212dc>] kernel_init_freeable+0x2c0/0x36c
->>>> [    2.986305] [<ffffffff80be7540>] kernel_init+0x10/0x128
->>>> [    2.986307] [<ffffffff80209d44>] ret_from_kernel_thread+0x14/0x1c
->>>>
->>>> Signed-off-by: Xingxing Su <suxingxing@loongson.cn>
+>>>> Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
+>>>> Acked-by: Florian Fainelli <f.fainelli@gmail.com>
 >>>> ---
->>>>   drivers/pci/access.c | 3 ---
->>>>   1 file changed, 3 deletions(-)
+>>>>   drivers/pci/controller/pcie-brcmstb.c | 47 +++++++++++++++++++++++++++
+>>>>   1 file changed, 47 insertions(+)
 >>>>
->>>> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
->>>> index 79c4a2e..b3fc164 100644
->>>> --- a/drivers/pci/access.c
->>>> +++ b/drivers/pci/access.c
->>>> @@ -160,9 +160,6 @@ int pci_generic_config_write32(struct pci_bus *bus, unsigned int devfn,
->>>>         * write happen to have any RW1C (write-one-to-clear) bits set, we
->>>>         * just inadvertently cleared something we shouldn't have.
->>>>         */
->>>> -     dev_warn_ratelimited(&bus->dev, "%d-byte config write to %04x:%02x:%02x.%d offset %#x may corrupt adjacent RW1C bits\n",
->>>> -                          size, pci_domain_nr(bus), bus->number,
->>>> -                          PCI_SLOT(devfn), PCI_FUNC(devfn), where);
+>>>> diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
+>>>> index c2b3d2946a36..3d588ab7a6dd 100644
+>>>> --- a/drivers/pci/controller/pcie-brcmstb.c
+>>>> +++ b/drivers/pci/controller/pcie-brcmstb.c
+>>>> @@ -978,6 +978,47 @@ static void brcm_pcie_turn_off(struct brcm_pcie *pcie)
+>>>>        brcm_pcie_bridge_sw_init_set(pcie, 1);
+>>>>   }
+>>>>
+>>>> +static int brcm_pcie_suspend(struct device *dev)
+>>>> +{
+>>>> +     struct brcm_pcie *pcie = dev_get_drvdata(dev);
+>>>> +
+>>>> +     brcm_pcie_turn_off(pcie);
+>>>> +     clk_disable_unprepare(pcie->clk);
+>>>> +
+>>>> +     return 0;
+>>>> +}
+>>>> +
+>>>> +static int brcm_pcie_resume(struct device *dev)
+>>>> +{
+>>>> +     struct brcm_pcie *pcie = dev_get_drvdata(dev);
+>>>> +     void __iomem *base;
+>>>> +     u32 tmp;
+>>>> +     int ret;
+>>>> +
+>>>> +     base = pcie->base;
+>>>> +     clk_prepare_enable(pcie->clk);
+>>>> +
+>>>> +     /* Take bridge out of reset so we can access the SERDES reg */
+>>>> +     brcm_pcie_bridge_sw_init_set(pcie, 0);
+>>>> +
+>>>> +     /* SERDES_IDDQ = 0 */
+>>>> +     tmp = readl(base + PCIE_MISC_HARD_PCIE_HARD_DEBUG);
+>>>> +     u32p_replace_bits(&tmp, 0, PCIE_MISC_HARD_PCIE_HARD_DEBUG_SERDES_IDDQ_MASK);
+>>>> +     writel(tmp, base + PCIE_MISC_HARD_PCIE_HARD_DEBUG);
+>>>> +
+>>>> +     /* wait for serdes to be stable */
+>>>> +     udelay(100);
 >>>
->>> We just changed this printk (see [1]), but I think we still have this
->>> lockdep problem even after Mark's change.  So I guess we need another
->>> think about this.
+>>> Really needs to be a spinloop?
 >>>
->>> Maybe we can print something when registering pci_ops that use
->>> pci_generic_config_write32()?
+>>>> +
+>>>> +     ret = brcm_pcie_setup(pcie);
+>>>> +     if (ret)
+>>>> +             return ret;
+>>>> +
+>>>> +     if (pcie->msi)
+>>>> +             brcm_msi_set_regs(pcie->msi);
+>>>> +
+>>>> +     return 0;
+>>>> +}
+>>>> +
+>>>>   static void __brcm_pcie_remove(struct brcm_pcie *pcie)
+>>>>   {
+>>>>        brcm_msi_remove(pcie);
+>>>> @@ -1087,12 +1128,18 @@ static int brcm_pcie_probe(struct platform_device *pdev)
+>>>>
+>>>>   MODULE_DEVICE_TABLE(of, brcm_pcie_match);
+>>>>
+>>>> +static const struct dev_pm_ops brcm_pcie_pm_ops = {
+>>>> +     .suspend_noirq = brcm_pcie_suspend,
+>>>> +     .resume_noirq = brcm_pcie_resume,
+>>>
+>>> Why do you need interrupts disabled? There's 39 cases of .suspend_noirq
+>>> and 1352 of .suspend in the tree.
 >>
->> That was my suggestion, but as Mark pointed out that doesn't work if
->> pci_generic_config_write32 is wrapped (which is 4 out of 8 cases).
->>
->> Also, 3 of the cases are only for the root bus (bridge). Are 32-bit
->> writes to a bridge going to cause problems? For xgene, interestingly,
->> with DT _write32 is needed, but for ACPI it is not (only _read32). I
->> think xgene is practically dead though a few people still have
->> systems, but likely xgene with DT is really dead. The ECAM case was
->> for QCom server which is also pretty much dead. SA1100 nano-engine is
->> really old and something only a few people have at most (Russell
->> King). So ignoring all those, we're left with just loongson and iproc.
->> Maybe just remove the warning?
+>> I will test switching this to  suspend_late/resume_early.
 > 
-> Sigh, removing it sounds like the best option.
+> Why not just the 'regular' flavor suspend/resume?
 
-Given that we have to go by a list of drivers, how about we add another 
-pci_bus_flags_t flag to indicate 32-bit configuration space accessors 
-are used and key off that bit to issue the warning?
+We must have inherited this from when the driver was not a 
+platform_device back in our 3.14 downstream kernel and we used 
+syscore_ops to do the system suspend/resume.
+
+Later on, we sort of mechanically made those _noirq() to preserve the 
+semantics of syscore_ops, but in hindsight it should not be necessary, 
+the regular suspsend/resume should work and the device driver model 
+ordering between parent/child should take care of the bridge being 
+suspended last within the PCI bus type that is.
 -- 
 Florian
