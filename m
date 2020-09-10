@@ -2,188 +2,165 @@ Return-Path: <SRS0=01Vy=CT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51CFBC433E2
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 18:47:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72E48C433E2
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 18:51:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 000EF21941
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 18:47:25 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YIgCxUrQ"
+	by mail.kernel.org (Postfix) with ESMTP id 2CC4321582
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Sep 2020 18:51:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1599763869;
+	bh=8/FN2pGrV2e6oHJ4XPt99FQ76GAY46jbQGsYN15injo=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=YqW/G77xbbKl5KzoLRa7M61u699QUIWgCWZjSF1cIqC49K9Fa3g0wyZuZpom+/k39
+	 aGSti9FXAxd/fUzSmwGqJ63SVMuEmmrV4VU89R2RuDhs0vudMPPm6SOLr5GCdgOpiV
+	 9RU/bi+tikIPGi8sWybKGBSI44mq7Q4xp9EWg6Gk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727842AbgIJSrT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 10 Sep 2020 14:47:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40060 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727821AbgIJSrG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2020 14:47:06 -0400
-Received: from mail-pg1-x544.google.com (mail-pg1-x544.google.com [IPv6:2607:f8b0:4864:20::544])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43675C061573;
-        Thu, 10 Sep 2020 11:47:06 -0700 (PDT)
-Received: by mail-pg1-x544.google.com with SMTP id u13so4746643pgh.1;
-        Thu, 10 Sep 2020 11:47:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=to:cc:references:from:subject:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=424l1MWPbS/ON1GRg0DetsLYxUXYchwHArTK6auJOEk=;
-        b=YIgCxUrQkyCOpWEZvBl36B/2BtAyPgmv8YOBishJRRckJddXUNWTdKa2SjJroCGC6c
-         mb7iklS28ksdFo8mjJiaxOQIw9wJb1Bnm3swGVBtDZOYa3P9CxsWOpPuHqXkSt5nDDYT
-         k4SNl9vZFwyBdSTC/XUUxuIHsIAjms8SmJA1mnfgTCpsk2vykBWFd//Zwtu1xYG0t+4D
-         tDas9zB0Jq9DUvUgxYc2e56WMnZMyUU4yf+zshuTMw8+T7zjYDkubH4+9hy2Tdnr0Dyp
-         Izjd/kB8FL5Tp8Vn7VUbwn7cBNuVMIspKxplnnmE/1gxLY6wAFcs7q3ObibCdMuPMK3J
-         ZNdA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:to:cc:references:from:subject:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=424l1MWPbS/ON1GRg0DetsLYxUXYchwHArTK6auJOEk=;
-        b=YEi17Fl7IrLYwPMZth+wc7ESRCPzJElPEy75d/FNKI7CL4ySYg0Uy33c+SkcGS81kg
-         bOSAKSaMaCB6rMd61iQMT1CZ4i0nMInA/mM6E0iNGyGtLB+JP1YhXUc9+wnrLieuw09p
-         mUtg5aLid4TgUoe+BDhkqqaGU223PX3NftKeoCl5NwlQTChl3ZI2YfSwI06XykGuO/cA
-         y22x1ihz6lRb5X0TgkQGkrw4lJt3SyNr+A17vsIAyuDLdyRJ8rC2K70xRbLgKc2wdD2S
-         kzU9KPFJtgn3imqWlLTjgBqGGxR+XQey4ADyRgCpmgQfXJ/LKZY1HmVuJYr1k+6Tl/MD
-         nksQ==
-X-Gm-Message-State: AOAM531jGUL7QKy1JKNzsql/BLYWtOSKEjOzTeyvYkxuRtvmwjPN5k/F
-        NBr9LqiLvGwv3KNaEvKAsv5l9DHLXf8=
-X-Google-Smtp-Source: ABdhPJwmxeE6OZg5TekYzKbCaPzO9u6oZpsgdf2gwxq5xNrvkL1KFBdPRlzijgJTftcw/V/JHfwphw==
-X-Received: by 2002:a62:1a95:0:b029:13c:1611:6539 with SMTP id a143-20020a621a950000b029013c16116539mr6480616pfa.11.1599763625562;
-        Thu, 10 Sep 2020 11:47:05 -0700 (PDT)
-Received: from [10.230.30.107] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id x4sm6610411pfm.86.2020.09.10.11.47.04
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 10 Sep 2020 11:47:05 -0700 (PDT)
-To:     Rob Herring <robh@kernel.org>,
-        Jim Quinlan <james.quinlan@broadcom.com>
-Cc:     linux-pci@vger.kernel.org,
+        id S1727119AbgIJSvF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 10 Sep 2020 14:51:05 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57964 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726728AbgIJSuq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 10 Sep 2020 14:50:46 -0400
+Received: from mail-ot1-f47.google.com (mail-ot1-f47.google.com [209.85.210.47])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id F369720855;
+        Thu, 10 Sep 2020 18:50:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1599763846;
+        bh=8/FN2pGrV2e6oHJ4XPt99FQ76GAY46jbQGsYN15injo=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=c9rA0ACnX9KBuHVDn0E0CuwtvCHjuD9ZzW5VyN6mV1QkoX34R0JctiRzqAAVZ+Gmc
+         PvNdTEoxeGC5w/b5qmGhDSqKkj/hyJfmjOVuj9vjhq34djOA7cjH7W7fMtkwNPV7u7
+         Tg0wt9KtvgYZ7ZN2QKZJ8pniNAg+rRoEVTuOUXvI=
+Received: by mail-ot1-f47.google.com with SMTP id g10so6234718otq.9;
+        Thu, 10 Sep 2020 11:50:45 -0700 (PDT)
+X-Gm-Message-State: AOAM533UAVMdWhEgkaezVmC2zdlvVkVEi8b0SZvQrd74hXURTg+EWtEE
+        UIr0tYxOwmnd4gQeaM+esJLZqMbctQdarqHa0g==
+X-Google-Smtp-Source: ABdhPJxId/3nNZbBGqZxSbJuxtyRdyh2ZW5+MJHU0lYZCDw8GvbX0pkcX7nJAy2HYsIcmimVL93DTH8UyT5yVJErc2E=
+X-Received: by 2002:a9d:411:: with SMTP id 17mr4977165otc.192.1599763845337;
+ Thu, 10 Sep 2020 11:50:45 -0700 (PDT)
+MIME-Version: 1.0
+References: <20200824193036.6033-1-james.quinlan@broadcom.com>
+ <20200824193036.6033-5-james.quinlan@broadcom.com> <20200910155637.GA423872@bogus>
+ <CA+-6iNy9g8fhJvd7SOKtc-SZcL8_gLLN1HEs-W8fe-=q6n430A@mail.gmail.com>
+In-Reply-To: <CA+-6iNy9g8fhJvd7SOKtc-SZcL8_gLLN1HEs-W8fe-=q6n430A@mail.gmail.com>
+From:   Rob Herring <robh@kernel.org>
+Date:   Thu, 10 Sep 2020 12:50:34 -0600
+X-Gmail-Original-Message-ID: <CAL_JsqJR4wALnsFKKPQ8h2y-o-933rzxHbV29zGXiptgYuuHTg@mail.gmail.com>
+Message-ID: <CAL_JsqJR4wALnsFKKPQ8h2y-o-933rzxHbV29zGXiptgYuuHTg@mail.gmail.com>
+Subject: Re: [PATCH v11 04/11] PCI: brcmstb: Add suspend and resume pm_ops
+To:     Jim Quinlan <james.quinlan@broadcom.com>
+Cc:     "open list:PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS" 
+        <linux-pci@vger.kernel.org>,
         Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
         Christoph Hellwig <hch@lst.de>,
         Robin Murphy <robin.murphy@arm.com>,
-        bcm-kernel-feedback-list@broadcom.com,
+        "maintainer:BROADCOM BCM7XXX ARM ARCHITECTURE" 
+        <bcm-kernel-feedback-list@broadcom.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
         "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
         <linux-rpi-kernel@lists.infradead.org>,
         "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
         <linux-arm-kernel@lists.infradead.org>,
         open list <linux-kernel@vger.kernel.org>
-References: <20200824193036.6033-1-james.quinlan@broadcom.com>
- <20200824193036.6033-5-james.quinlan@broadcom.com>
- <20200910155637.GA423872@bogus>
-From:   Florian Fainelli <f.fainelli@gmail.com>
-Subject: Re: [PATCH v11 04/11] PCI: brcmstb: Add suspend and resume pm_ops
-Message-ID: <4ae713d2-14d3-8ef8-e589-fdc55f5b1731@gmail.com>
-Date:   Thu, 10 Sep 2020 11:47:03 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Firefox/78.0 Thunderbird/78.2.1
-MIME-Version: 1.0
-In-Reply-To: <20200910155637.GA423872@bogus>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+On Thu, Sep 10, 2020 at 10:42 AM Jim Quinlan <james.quinlan@broadcom.com> wrote:
+>
+> On Thu, Sep 10, 2020 at 11:56 AM Rob Herring <robh@kernel.org> wrote:
+> >
+> > On Mon, Aug 24, 2020 at 03:30:17PM -0400, Jim Quinlan wrote:
+> > > From: Jim Quinlan <jquinlan@broadcom.com>
+> > >
+> > > Broadcom Set-top (BrcmSTB) boards typically support S2, S3, and S5 suspend
+> > > and resume.  Now the PCIe driver may do so as well.
+> > >
+> > > Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
+> > > Acked-by: Florian Fainelli <f.fainelli@gmail.com>
+> > > ---
+> > >  drivers/pci/controller/pcie-brcmstb.c | 47 +++++++++++++++++++++++++++
+> > >  1 file changed, 47 insertions(+)
+> > >
+> > > diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
+> > > index c2b3d2946a36..3d588ab7a6dd 100644
+> > > --- a/drivers/pci/controller/pcie-brcmstb.c
+> > > +++ b/drivers/pci/controller/pcie-brcmstb.c
+> > > @@ -978,6 +978,47 @@ static void brcm_pcie_turn_off(struct brcm_pcie *pcie)
+> > >       brcm_pcie_bridge_sw_init_set(pcie, 1);
+> > >  }
+> > >
+> > > +static int brcm_pcie_suspend(struct device *dev)
+> > > +{
+> > > +     struct brcm_pcie *pcie = dev_get_drvdata(dev);
+> > > +
+> > > +     brcm_pcie_turn_off(pcie);
+> > > +     clk_disable_unprepare(pcie->clk);
+> > > +
+> > > +     return 0;
+> > > +}
+> > > +
+> > > +static int brcm_pcie_resume(struct device *dev)
+> > > +{
+> > > +     struct brcm_pcie *pcie = dev_get_drvdata(dev);
+> > > +     void __iomem *base;
+> > > +     u32 tmp;
+> > > +     int ret;
+> > > +
+> > > +     base = pcie->base;
+> > > +     clk_prepare_enable(pcie->clk);
+> > > +
+> > > +     /* Take bridge out of reset so we can access the SERDES reg */
+> > > +     brcm_pcie_bridge_sw_init_set(pcie, 0);
+> > > +
+> > > +     /* SERDES_IDDQ = 0 */
+> > > +     tmp = readl(base + PCIE_MISC_HARD_PCIE_HARD_DEBUG);
+> > > +     u32p_replace_bits(&tmp, 0, PCIE_MISC_HARD_PCIE_HARD_DEBUG_SERDES_IDDQ_MASK);
+> > > +     writel(tmp, base + PCIE_MISC_HARD_PCIE_HARD_DEBUG);
+> > > +
+> > > +     /* wait for serdes to be stable */
+> > > +     udelay(100);
+> >
+> > Really needs to be a spinloop?
+> >
+> > > +
+> > > +     ret = brcm_pcie_setup(pcie);
+> > > +     if (ret)
+> > > +             return ret;
+> > > +
+> > > +     if (pcie->msi)
+> > > +             brcm_msi_set_regs(pcie->msi);
+> > > +
+> > > +     return 0;
+> > > +}
+> > > +
+> > >  static void __brcm_pcie_remove(struct brcm_pcie *pcie)
+> > >  {
+> > >       brcm_msi_remove(pcie);
+> > > @@ -1087,12 +1128,18 @@ static int brcm_pcie_probe(struct platform_device *pdev)
+> > >
+> > >  MODULE_DEVICE_TABLE(of, brcm_pcie_match);
+> > >
+> > > +static const struct dev_pm_ops brcm_pcie_pm_ops = {
+> > > +     .suspend_noirq = brcm_pcie_suspend,
+> > > +     .resume_noirq = brcm_pcie_resume,
+> >
+> > Why do you need interrupts disabled? There's 39 cases of .suspend_noirq
+> > and 1352 of .suspend in the tree.
+>
+> I will test switching this to  suspend_late/resume_early.
 
+Why not just the 'regular' flavor suspend/resume?
 
-On 9/10/2020 8:56 AM, Rob Herring wrote:
-> On Mon, Aug 24, 2020 at 03:30:17PM -0400, Jim Quinlan wrote:
->> From: Jim Quinlan <jquinlan@broadcom.com>
->>
->> Broadcom Set-top (BrcmSTB) boards typically support S2, S3, and S5 suspend
->> and resume.  Now the PCIe driver may do so as well.
->>
->> Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
->> Acked-by: Florian Fainelli <f.fainelli@gmail.com>
->> ---
->>   drivers/pci/controller/pcie-brcmstb.c | 47 +++++++++++++++++++++++++++
->>   1 file changed, 47 insertions(+)
->>
->> diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
->> index c2b3d2946a36..3d588ab7a6dd 100644
->> --- a/drivers/pci/controller/pcie-brcmstb.c
->> +++ b/drivers/pci/controller/pcie-brcmstb.c
->> @@ -978,6 +978,47 @@ static void brcm_pcie_turn_off(struct brcm_pcie *pcie)
->>   	brcm_pcie_bridge_sw_init_set(pcie, 1);
->>   }
->>   
->> +static int brcm_pcie_suspend(struct device *dev)
->> +{
->> +	struct brcm_pcie *pcie = dev_get_drvdata(dev);
->> +
->> +	brcm_pcie_turn_off(pcie);
->> +	clk_disable_unprepare(pcie->clk);
->> +
->> +	return 0;
->> +}
->> +
->> +static int brcm_pcie_resume(struct device *dev)
->> +{
->> +	struct brcm_pcie *pcie = dev_get_drvdata(dev);
->> +	void __iomem *base;
->> +	u32 tmp;
->> +	int ret;
->> +
->> +	base = pcie->base;
->> +	clk_prepare_enable(pcie->clk);
->> +
->> +	/* Take bridge out of reset so we can access the SERDES reg */
->> +	brcm_pcie_bridge_sw_init_set(pcie, 0);
->> +
->> +	/* SERDES_IDDQ = 0 */
->> +	tmp = readl(base + PCIE_MISC_HARD_PCIE_HARD_DEBUG);
->> +	u32p_replace_bits(&tmp, 0, PCIE_MISC_HARD_PCIE_HARD_DEBUG_SERDES_IDDQ_MASK);
->> +	writel(tmp, base + PCIE_MISC_HARD_PCIE_HARD_DEBUG);
->> +
->> +	/* wait for serdes to be stable */
->> +	udelay(100);
-> 
-> Really needs to be a spinloop?
-> 
->> +
->> +	ret = brcm_pcie_setup(pcie);
->> +	if (ret)
->> +		return ret;
->> +
->> +	if (pcie->msi)
->> +		brcm_msi_set_regs(pcie->msi);
->> +
->> +	return 0;
->> +}
->> +
->>   static void __brcm_pcie_remove(struct brcm_pcie *pcie)
->>   {
->>   	brcm_msi_remove(pcie);
->> @@ -1087,12 +1128,18 @@ static int brcm_pcie_probe(struct platform_device *pdev)
->>   
->>   MODULE_DEVICE_TABLE(of, brcm_pcie_match);
->>   
->> +static const struct dev_pm_ops brcm_pcie_pm_ops = {
->> +	.suspend_noirq = brcm_pcie_suspend,
->> +	.resume_noirq = brcm_pcie_resume,
-> 
-> Why do you need interrupts disabled? There's 39 cases of .suspend_noirq
-> and 1352 of .suspend in the tree.
-> 
-> Is doing a clk unprepare even safe in .suspend_noirq? IIRC,
-> prepare/unprepare can sleep.
-
-Yes, it is safe, provided that your clock provider (clk-scmi.c in our 
-case) supports it, too. In our case the underlying mailbox driver has 
-its interrupts flagged with IRQF_NOSUSPEND such that they can still be 
-processed at _noirq time.
-
-I think the rationale was to ensure that this would be done much later 
-after other subsystem have been made quiescent, but given the Linux 
-device driver model, the PCI bridge should be suspended after all 
-pci_device child device, so it should be safe not to use _noirq.
--- 
-Florian
+Rob
