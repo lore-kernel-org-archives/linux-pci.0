@@ -8,54 +8,54 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D2DCC43461
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Sep 2020 17:53:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A8C4C433E2
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Sep 2020 17:53:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 18D86221EB
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Sep 2020 17:53:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E7002221EB
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Sep 2020 17:53:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="U8tSBFm2"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="CK7khOSf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725965AbgIKRxE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 11 Sep 2020 13:53:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56882 "EHLO
+        id S1725970AbgIKRxI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 11 Sep 2020 13:53:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56866 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725846AbgIKRwo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Sep 2020 13:52:44 -0400
+        with ESMTP id S1725882AbgIKRwl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Sep 2020 13:52:41 -0400
 Received: from mail-pf1-x443.google.com (mail-pf1-x443.google.com [IPv6:2607:f8b0:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1E1AC061796
-        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2020 10:52:43 -0700 (PDT)
-Received: by mail-pf1-x443.google.com with SMTP id b124so7907134pfg.13
-        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2020 10:52:43 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2021C061757
+        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2020 10:52:40 -0700 (PDT)
+Received: by mail-pf1-x443.google.com with SMTP id o20so7918168pfp.11
+        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2020 10:52:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=RZ0oesOhaXNGuUGnzXSzl1qL/dNR7cU9lv1I2oFhwrE=;
-        b=U8tSBFm2anRHE7CfhkWH6A8rfWNv4MQD5p2KTS+h8O7UrX+gbiBGE7hNDKtaNUegQc
-         V18zb+ck4/LC5vC7TFGldfALgoi+aq8o/yZ8msF9PKKVqPj0dpGBKthKleG3kYXjSOlv
-         iTM42Wq+gARY+Wwrw5JoEztvTJsC6h17NRNd8=
+        bh=ONfIvNf898veW9CPlb9ah+nBL0jhXWeDB170PTgkm1Y=;
+        b=CK7khOSfJB+4Valmtd+7pXYOpK/V2gdihhwVJDPLvHPqYy+zISlPzorpESplteBf6D
+         syhKBavLOVYCSWp4aoE940pIcK9o73vgcEV0EuCvr2qpLLQjK2NB6/pt/uytj3Z7SU79
+         3vX1bBTxSEnOVYDYiW6St2lWGFVEYMEXc0s54=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=RZ0oesOhaXNGuUGnzXSzl1qL/dNR7cU9lv1I2oFhwrE=;
-        b=QVe3bYAb4kjNfgGl9qJTOnQGGhRMKNJNgk/W/o0XPwv4jxDv+wLZAu5zLNMihAymWO
-         wmvgXTnwZCCf54EPYGGqZsjIN+/Xadw7qwRSv30MSiHga11Uf6KAQuIFp1BcbwZ6sBal
-         MtprkQph8ocLZCbGyp9z9YsdaM720ri/cMCO1/gPZunM9IjZ6wRVlsI3gZORVtz9Lyyn
-         bRJ5Y91ytRYmmBz+iEmKbCwixsdNYPmqnHnQNoeu2tqQmlgCKxNnsbJfboioKhLQE3GW
-         FCbORWZXCWtIONFm9LrFlx9bLaHdd8g3Vcc+YLInnDpZYzzeHRLjDLm0pk25A7rUw5AF
-         ifTA==
-X-Gm-Message-State: AOAM531uxlNJmkN26KmfJdiCf3OW7akTW0LF7Gqn3E/vHEEV1r1k2iBX
-        /zEhhpaV00UbW1moKQLnTKAWfgN66VK5Gtb7REvr0OIK8wy/ZSf15opzGDqkbTQ5kim8qpTllwk
-        rPMsW1YLxn0cLn3R4K65WKjUdoSvlBvTOrKGKW4W8tO298nq1rFMtpQM3Vmas8yDLbgrcvE6jOR
-        dmD+kI
-X-Google-Smtp-Source: ABdhPJxL2iLzrIDE7DMZFFgFuBFlCuzDnF1E1RbQcRpkhInUOTDND8LzRX/901IPCTrlS8/NSOSW5Q==
-X-Received: by 2002:a63:7f59:: with SMTP id p25mr2438918pgn.146.1599846762600;
-        Fri, 11 Sep 2020 10:52:42 -0700 (PDT)
+        bh=ONfIvNf898veW9CPlb9ah+nBL0jhXWeDB170PTgkm1Y=;
+        b=G2vDET5eVlrRkwVUJB6o79rYNK4qM29uen3jgL4DI73l5dV/XV94a6HSRB12BqBHvw
+         ythE2SCCGlxsmJ80sNFGqiXO4Odq9auHae7elbJ8EQEVLq2wUF/m7WMHI5qqRNYwQQwf
+         hHbg7emjNTn9ZZdOAeP09MZ4zn18bLtP5dTzMHHfaU8IpJmytUD26+N0AVYo+33EzQKI
+         PPazUJWDqLxHIQIe2dr7xlY8NDaQziBYdiqcBMGsqWMVn5EfuWgI0wMoI8PFrSXXNlJ9
+         GqJiaDb3WSUkiuIpDZ2k1mXZgYMzfJa6WJDAsjqMpf5yPReX5zozyD5eS9G0SfMlfjnL
+         qDeg==
+X-Gm-Message-State: AOAM533BBxJAkPDrrgxGR0CbDNoQ66jqZfzxm5BxvFZ7t7UR4eXigqPD
+        MjXDY/PggA05Lmwq3BmevRFCwuYW7WhrNuUMATzDLeR7n+88vlMCg1o0KFJA+OswI92WypwIjMc
+        ZmuNU/Bpm+3ObHSToXzHvQAVqnXEAwLt9PjEBFubLzi0X4kOUmAU2nL/SClB5JjoJxSzcRj/O1L
+        Jil/F9
+X-Google-Smtp-Source: ABdhPJyUfjIQe4y7mHd5rBbZs44l2MzwXMJeJu2fN6NNaDczVDgHg1xfIsJIarGB/e3GvQcmonkeVg==
+X-Received: by 2002:a63:1a66:: with SMTP id a38mr2384643pgm.253.1599846759746;
+        Fri, 11 Sep 2020 10:52:39 -0700 (PDT)
 Received: from stbsrv-and-01.and.broadcom.net ([192.19.231.250])
-        by smtp.gmail.com with ESMTPSA id d77sm2871963pfd.121.2020.09.11.10.52.40
+        by smtp.gmail.com with ESMTPSA id d77sm2871963pfd.121.2020.09.11.10.52.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 11 Sep 2020 10:52:41 -0700 (PDT)
+        Fri, 11 Sep 2020 10:52:39 -0700 (PDT)
 From:   Jim Quinlan <james.quinlan@broadcom.com>
 To:     linux-pci@vger.kernel.org,
         Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
@@ -63,152 +63,58 @@ To:     linux-pci@vger.kernel.org,
         Robin Murphy <robin.murphy@arm.com>,
         bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com
 Cc:     Jim Quinlan <jquinlan@broadcom.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM BCM7XXX
-        ARM ARCHITECTURE),
-        linux-rpi-kernel@lists.infradead.org (moderated list:BROADCOM
-        BCM2711/BCM2835 ARM ARCHITECTURE),
-        devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED
-        DEVICE TREE BINDINGS), linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v12 02/10] dt-bindings: PCI: Add bindings for more Brcmstb chips
-Date:   Fri, 11 Sep 2020 13:52:22 -0400
-Message-Id: <20200911175232.19016-3-james.quinlan@broadcom.com>
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v12 01/10] PCI: brcmstb: PCIE_BRCMSTB depends on ARCH_BRCMSTB
+Date:   Fri, 11 Sep 2020 13:52:21 -0400
+Message-Id: <20200911175232.19016-2-james.quinlan@broadcom.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200911175232.19016-1-james.quinlan@broadcom.com>
 References: <20200911175232.19016-1-james.quinlan@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000006417905af0d5ae6"
+        boundary="000000000000d7742805af0d597b"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
---00000000000006417905af0d5ae6
+--000000000000d7742805af0d597b
 
 From: Jim Quinlan <jquinlan@broadcom.com>
 
-- Add compatible strings for three more Broadcom STB chips: 7278, 7216,
-  7211 (STB version of RPi4).
-- Add new property 'brcm,scb-sizes'.
-- Add new property 'resets'.
-- Add new property 'reset-names' for 7216 only.
-- Allow 'ranges' and 'dma-ranges' to have more than one item and update
-  the example to show this.
+Have PCIE_BRCMSTB depend on ARCH_BRCMSTB.  Also set the default value to
+ARCH_BRCMSTB.
 
 Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
+Acked-by: Florian Fainelli <f.fainelli@gmail.com>
 Reviewed-by: Rob Herring <robh@kernel.org>
 ---
- .../bindings/pci/brcm,stb-pcie.yaml           | 56 ++++++++++++++++---
- 1 file changed, 49 insertions(+), 7 deletions(-)
+ drivers/pci/controller/Kconfig | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml b/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
-index 8680a0f86c5a..807694b4f41f 100644
---- a/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
-@@ -9,12 +9,15 @@ title: Brcmstb PCIe Host Controller Device Tree Bindings
- maintainers:
-   - Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
+diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+index f18c3725ef80..624ab986ecb2 100644
+--- a/drivers/pci/controller/Kconfig
++++ b/drivers/pci/controller/Kconfig
+@@ -270,9 +270,10 @@ config VMD
  
--allOf:
--  - $ref: /schemas/pci/pci-bus.yaml#
--
- properties:
-   compatible:
--    const: brcm,bcm2711-pcie # The Raspberry Pi 4
-+    items:
-+      - enum:
-+          - brcm,bcm2711-pcie # The Raspberry Pi 4
-+          - brcm,bcm7211-pcie # Broadcom STB version of RPi4
-+          - brcm,bcm7278-pcie # Broadcom 7278 Arm
-+          - brcm,bcm7216-pcie # Broadcom 7216 Arm
-+          - brcm,bcm7445-pcie # Broadcom 7445 Arm
- 
-   reg:
-     maxItems: 1
-@@ -34,10 +37,12 @@ properties:
-       - const: msi
- 
-   ranges:
--    maxItems: 1
-+    minItems: 1
-+    maxItems: 4
- 
-   dma-ranges:
--    maxItems: 1
-+    minItems: 1
-+    maxItems: 6
- 
-   clocks:
-     maxItems: 1
-@@ -58,8 +63,31 @@ properties:
- 
-   aspm-no-l0s: true
- 
-+  resets:
-+    description: for "brcm,bcm7216-pcie", must be a valid reset
-+      phandle pointing to the RESCAL reset controller provider node.
-+    $ref: "/schemas/types.yaml#/definitions/phandle"
-+
-+  reset-names:
-+    items:
-+      - const: rescal
-+
-+  brcm,scb-sizes:
-+    description: u64 giving the 64bit PCIe memory
-+      viewport size of a memory controller.  There may be up to
-+      three controllers, and each size must be a power of two
-+      with a size greater or equal to the amount of memory the
-+      controller supports.  Note that each memory controller
-+      may have two component regions -- base and extended -- so
-+      this information cannot be deduced from the dma-ranges.
-+    $ref: /schemas/types.yaml#/definitions/uint64-array
-+    items:
-+      minItems: 1
-+      maxItems: 3
-+
- required:
-   - reg
-+  - ranges
-   - dma-ranges
-   - "#interrupt-cells"
-   - interrupts
-@@ -68,6 +96,18 @@ required:
-   - interrupt-map
-   - msi-controller
- 
-+allOf:
-+  - $ref: /schemas/pci/pci-bus.yaml#
-+  - if:
-+      properties:
-+        compatible:
-+          contains:
-+            const: brcm,bcm7216-pcie
-+    then:
-+      required:
-+        - resets
-+        - reset-names
-+
- unevaluatedProperties: false
- 
- examples:
-@@ -93,7 +133,9 @@ examples:
-                     msi-parent = <&pcie0>;
-                     msi-controller;
-                     ranges = <0x02000000 0x0 0xf8000000 0x6 0x00000000 0x0 0x04000000>;
--                    dma-ranges = <0x02000000 0x0 0x00000000 0x0 0x00000000 0x0 0x80000000>;
-+                    dma-ranges = <0x42000000 0x1 0x00000000 0x0 0x40000000 0x0 0x80000000>,
-+                                 <0x42000000 0x1 0x80000000 0x3 0x00000000 0x0 0x80000000>;
-                     brcm,enable-ssc;
-+                    brcm,scb-sizes =  <0x0000000080000000 0x0000000080000000>;
-             };
-     };
+ config PCIE_BRCMSTB
+ 	tristate "Broadcom Brcmstb PCIe host controller"
+-	depends on ARCH_BCM2835 || COMPILE_TEST
++	depends on ARCH_BRCMSTB || ARCH_BCM2835 || COMPILE_TEST
+ 	depends on OF
+ 	depends on PCI_MSI_IRQ_DOMAIN
++	default ARCH_BRCMSTB
+ 	help
+ 	  Say Y here to enable PCIe host controller support for
+ 	  Broadcom STB based SoCs, like the Raspberry Pi 4.
 -- 
 2.17.1
 
 
---00000000000006417905af0d5ae6
+--000000000000d7742805af0d597b
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -278,14 +184,14 @@ V6GuAMmRknrzeTlxPy40UhUcRKk6Nm8mxl3Jh4KB68z7NFVpIx8G5w5I7S5ar1mLGNRjtFZ0RE4O
 lcCwKVGUXRaZMgQGrIhxGVelVgrcBh2vjpndlv733VI2VKE/TvV5MxMGU18RnogYSm66AEFA/Zb+
 5ztz1AtIMYICbzCCAmsCAQEwbTBdMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBu
 di1zYTEzMDEGA1UEAxMqR2xvYmFsU2lnbiBQZXJzb25hbFNpZ24gMiBDQSAtIFNIQTI1NiAtIEcz
-AgwTv2xmtR4KOmK4QvMwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEILE5YhZNwPVv
-6Hl3155Gm76eLAo3Zzvia/hzE2tpRKemMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZI
-hvcNAQkFMQ8XDTIwMDkxMTE3NTI0M1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJ
+AgwTv2xmtR4KOmK4QvMwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIKerOB5vVJ32
+Jtp7ZbDCHwLLU3bCUIPpuQEPv4DTGdhGMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZI
+hvcNAQkFMQ8XDTIwMDkxMTE3NTI0MFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJ
 YIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcN
-AQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBlHmt+6uMXiwPHTc2sVK+1nKNVw9fp
-CYn/FTBgVbBYqwTrpSJOa36rRGFnaUVIMyWzid1DpzmRoraLMr2LsUmKzI95iMrhfQKxWiWniHbl
-UM+d/8MBF93bZf1T0NRJnsX9FyFbm0w5uxS7U42xkBMRRz1GCrpvg6NNxal6oIawvDcsZFCY2CKx
-bDsHqZMJimzL3+HegSpybwBlJRd7MWxdTjE0s4PSXFshQnhWWI/eKVnyJrqhmzHujfZpo1RWZ9LU
-F9VQ9owYAvgdZ6ulrTdY7uGKShztojMKXRR/lOBJ5RnPO2VYp45FiZYf5hT48nRNfo236Hz4jhPB
-eDi860nE
---00000000000006417905af0d5ae6--
+AQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQA5/o+2BGqaNd3CbklRGNbW+urZpUm3
+xtBzg8jFGQ3XdixPUPogTFys8dMjtHSWiS5ciOov2nr30/Z3yc3I9wD2lvslkYJgi9zoFIDpySD6
+BGb0TmXxV1MajLkkPj1MAupJkmaD/FJIPB0tCalWlC23fdNuNM6HapfEbV1NQJN8Shnn+ysZq/uE
+JmHmJxezQ1gmYpmzT9MC/j0VXT0pE1rbNI4Gk9ooLzW/twFoSn5Rz73gxVI7HMuOV+wRSHQjLq6K
++tf7SVv4jYlXIdFZGhU0hOGrf0ZzlbuS5aYUjmJ7jgwZVm5WipRYA0IPFIgseymCz6HxV7hxdBKQ
+ddHscwMB
+--000000000000d7742805af0d597b--
