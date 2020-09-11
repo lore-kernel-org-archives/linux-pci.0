@@ -2,67 +2,68 @@ Return-Path: <SRS0=v1Y9=CU=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MIME_HEADER_CTYPE_ONLY,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,UNWANTED_LANGUAGE_BODY,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB842C43461
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Sep 2020 17:54:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32CEDC43461
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Sep 2020 17:54:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 79964221ED
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Sep 2020 17:54:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E209A221ED
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Sep 2020 17:54:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="gkcXIyle"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="YGpCueX6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725972AbgIKRyI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 11 Sep 2020 13:54:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56966 "EHLO
+        id S1725945AbgIKRyQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 11 Sep 2020 13:54:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56946 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725969AbgIKRxI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Sep 2020 13:53:08 -0400
-Received: from mail-pf1-x444.google.com (mail-pf1-x444.google.com [IPv6:2607:f8b0:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0DA22C0617A3
-        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2020 10:53:07 -0700 (PDT)
-Received: by mail-pf1-x444.google.com with SMTP id o20so7919079pfp.11
-        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2020 10:53:07 -0700 (PDT)
+        with ESMTP id S1725955AbgIKRxE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Sep 2020 13:53:04 -0400
+Received: from mail-pg1-x544.google.com (mail-pg1-x544.google.com [IPv6:2607:f8b0:4864:20::544])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91331C06179F
+        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2020 10:53:01 -0700 (PDT)
+Received: by mail-pg1-x544.google.com with SMTP id m5so7154131pgj.9
+        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2020 10:53:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=c7AfFgVlvtUMWw6Nq5Asqbzn8QQZmc6RhbteJT3A+uE=;
-        b=gkcXIylejU0Uv7Cwbj7uLNWYOa+DwnndRJUWMtemo8CfEBUYCj/tyjQSpebl/5Cp98
-         oJ/cbKzOZWTn2H0IcuLRw5acUIorv1coKnuknD67ra9tYJVSWoOKweM05XwHQstyVBaH
-         RswGOd5cyjTwMaSZ4+d4Z4CcQswHHLxB+JVXI=
+        bh=s171ISrLCqrZg+lz/LKmx38rbaVG/MrDiA63Yj6bUaQ=;
+        b=YGpCueX6zEpzOcmpaucltpEtXBgOTFxUAx6PzG3r1Oma7IjpX0KXtJN7bjotXlmgCM
+         MlPScxKgrTFqXDXUh8mMks5XNwQKPn2T6og687dL9YPY22r+RvBZma7iT2eQ64dpbfnd
+         rkvaTwF2R4j02LK3E24V3htTSVBQn/9V3kUKs=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=c7AfFgVlvtUMWw6Nq5Asqbzn8QQZmc6RhbteJT3A+uE=;
-        b=mbaQLfAp94UNqO9VWI7uyreODdYx/c4B4FxfL9crIWcpRcCKTD6Eda2uGyH5P3OdIB
-         5kTm6oWMZYGF/qIOQTN85OHx2AJ8ZGIdldG3TDJz4N/vlxrbHE6xgZlInodaLJqdq+wL
-         mglEyeWszcf+17dwnEAsdg6/hmGTJNrY5JFi9C+LhhT0aRPYNPvY8KG3y/LNdXOLJolm
-         /VhRDA+0Vh7c4iyJQQnd7+9xpAErfbJOaJ3PrMzrSjc6w/iUeWYt3Hnk3eFK1PidSljj
-         uLKxt5BPTKGMrl7sfRw9NTjHuMBk5+j+as6qNQjmczRqlbj86QyXgeVd52MeokNoznvF
-         ReIg==
-X-Gm-Message-State: AOAM5324g9ZvAZYx/5U/HleJ46LMv/ugRz63yEX5MSprJTfXHFHqGNIC
-        icECIcUukAe7PtsQHwLDVQIaVvVWESA75VX/SFYYDX+x7CJoWcuzgXEAhH2dJDknujxtby0sGjA
-        lZh9EfGA741mvPOXm0jKiQHa3JrgJX9AKYr3Va451G1RoM4XQ9FBn5zF97m++YGReVT65afCuY3
-        /3hWnC
-X-Google-Smtp-Source: ABdhPJzWB3+DrKWxqtT0GBzaHAA154wcCn4PBbX1QPW05Dv9IKwcvT5ilbnmBjyelw2Ul6dsTw4CNg==
-X-Received: by 2002:a17:902:525:b029:d1:920c:c200 with SMTP id 34-20020a1709020525b02900d1920cc200mr3478270plf.25.1599846785874;
-        Fri, 11 Sep 2020 10:53:05 -0700 (PDT)
+        bh=s171ISrLCqrZg+lz/LKmx38rbaVG/MrDiA63Yj6bUaQ=;
+        b=TjD24QQFANLSeqexM0miWhUU0byqE+PeiFdXJhKxbBjV1syAAgpmtSlZDUD9KggO2v
+         /FeCoKUCh3PRe+1ico0SA47BwvOS9m9OHOBNIVKW34NTXvWAm4SksZwJccfMEKAb0Uxq
+         /JiqV9FWc8znL/hBiCiHpXiUl9iUISqtVNIACm0AyHGajPdkB+xlHgrtauSrNPwcbjYw
+         YIuVCyjIESlhGNzn20hTWY0lNhKJwUn70y6YzzKhNlOhhcAs8zZEE8I8Mx+lGTdNko4P
+         OOqCPB9eF1r9IguL9n1gw88JtSGhce803nADGkBNGFehIU7dnoqMl0MoHcPFp52bwY8G
+         dCIQ==
+X-Gm-Message-State: AOAM533SVpmLUFnm1tBfV+enw7kgA3jegr/Z9H0IyzzCbUW1190IMIn3
+        sot5eEl9VJb5tu7+/eK9+2IyUs+jwxubufXUvPlTtAhPcNTIdF1ASOyGwnkhcJRlYkvAv45ii6f
+        EAe8IcYbyuBHKq0dk2YxnMEUr+JduzEDpiiffGrssKG8KR59TFZMz78rL64fiyKrpX1JjRXDhCR
+        sS1Ryq
+X-Google-Smtp-Source: ABdhPJxltOzL/Ye4exWYkU6ZupMaj7q8ZuP7qwcR7fNEQtFp+LuBDu7yqJT0S/hOgAXo+3t4EUfAoA==
+X-Received: by 2002:a63:36cc:: with SMTP id d195mr2525990pga.426.1599846780295;
+        Fri, 11 Sep 2020 10:53:00 -0700 (PDT)
 Received: from stbsrv-and-01.and.broadcom.net ([192.19.231.250])
-        by smtp.gmail.com with ESMTPSA id d77sm2871963pfd.121.2020.09.11.10.53.03
+        by smtp.gmail.com with ESMTPSA id d77sm2871963pfd.121.2020.09.11.10.52.57
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 11 Sep 2020 10:53:05 -0700 (PDT)
+        Fri, 11 Sep 2020 10:52:59 -0700 (PDT)
 From:   Jim Quinlan <james.quinlan@broadcom.com>
 To:     linux-pci@vger.kernel.org,
         Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
         Christoph Hellwig <hch@lst.de>,
         Robin Murphy <robin.murphy@arm.com>,
         bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+Cc:     Jim Quinlan <jquinlan@broadcom.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Rob Herring <robh@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Florian Fainelli <f.fainelli@gmail.com>,
@@ -71,51 +72,221 @@ Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM
         BCM2711/BCM2835 ARM ARCHITECTURE),
         linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v12 10/10] PCI: brcmstb: Add bcm7211, bcm7216, bcm7445, bcm7278 to match list
-Date:   Fri, 11 Sep 2020 13:52:30 -0400
-Message-Id: <20200911175232.19016-11-james.quinlan@broadcom.com>
+Subject: [PATCH v12 08/10] PCI: brcmstb: Accommodate MSI for older chips
+Date:   Fri, 11 Sep 2020 13:52:28 -0400
+Message-Id: <20200911175232.19016-9-james.quinlan@broadcom.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200911175232.19016-1-james.quinlan@broadcom.com>
 References: <20200911175232.19016-1-james.quinlan@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000067068305af0d5bdb"
+        boundary="0000000000001325f005af0d5b08"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
---00000000000067068305af0d5bdb
+--0000000000001325f005af0d5b08
 
-Now that the support is in place with previous commits, we add several
-chips that use the BrcmSTB driver.
+From: Jim Quinlan <jquinlan@broadcom.com>
 
-Signed-off-by: Jim Quinlan <james.quinlan@broadcom.com>
+Older BrcmSTB chips do not have a separate register for MSI interrupts; the
+MSIs are in a register that also contains unrelated interrupts.  In
+addition, the interrupts lie in bits [31..24] for these legacy chips.  This
+commit provides common code for both legacy and non-legacy MSI interrupt
+registers.
+
+Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
 Acked-by: Florian Fainelli <f.fainelli@gmail.com>
-Acked-by: Rob Herring <robh@kernel.org>
+Reviewed-by: Rob Herring <robh@kernel.org>
 ---
- drivers/pci/controller/pcie-brcmstb.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/pci/controller/pcie-brcmstb.c | 70 +++++++++++++++++++--------
+ 1 file changed, 49 insertions(+), 21 deletions(-)
 
 diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
-index b78e73f92857..6e7aa82a54a3 100644
+index 330f68c5b579..10449384380f 100644
 --- a/drivers/pci/controller/pcie-brcmstb.c
 +++ b/drivers/pci/controller/pcie-brcmstb.c
-@@ -1202,6 +1202,10 @@ static int brcm_pcie_remove(struct platform_device *pdev)
+@@ -83,7 +83,8 @@
+ #define PCIE_MISC_MSI_BAR_CONFIG_HI			0x4048
  
- static const struct of_device_id brcm_pcie_match[] = {
- 	{ .compatible = "brcm,bcm2711-pcie", .data = &bcm2711_cfg },
-+	{ .compatible = "brcm,bcm7211-pcie", .data = &generic_cfg },
-+	{ .compatible = "brcm,bcm7278-pcie", .data = &bcm7278_cfg },
-+	{ .compatible = "brcm,bcm7216-pcie", .data = &bcm7278_cfg },
-+	{ .compatible = "brcm,bcm7445-pcie", .data = &generic_cfg },
- 	{},
+ #define PCIE_MISC_MSI_DATA_CONFIG			0x404c
+-#define  PCIE_MISC_MSI_DATA_CONFIG_VAL			0xffe06540
++#define  PCIE_MISC_MSI_DATA_CONFIG_VAL_32		0xffe06540
++#define  PCIE_MISC_MSI_DATA_CONFIG_VAL_8		0xfff86540
+ 
+ #define PCIE_MISC_PCIE_CTRL				0x4064
+ #define  PCIE_MISC_PCIE_CTRL_PCIE_L23_REQUEST_MASK	0x1
+@@ -95,6 +96,9 @@
+ #define  PCIE_MISC_PCIE_STATUS_PCIE_PHYLINKUP_MASK	0x10
+ #define  PCIE_MISC_PCIE_STATUS_PCIE_LINK_IN_L23_MASK	0x40
+ 
++#define PCIE_MISC_REVISION				0x406c
++#define  BRCM_PCIE_HW_REV_33				0x0303
++
+ #define PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT		0x4070
+ #define  PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT_LIMIT_MASK	0xfff00000
+ #define  PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT_BASE_MASK	0xfff0
+@@ -115,10 +119,14 @@
+ #define  PCIE_MISC_HARD_PCIE_HARD_DEBUG_CLKREQ_DEBUG_ENABLE_MASK	0x2
+ #define  PCIE_MISC_HARD_PCIE_HARD_DEBUG_SERDES_IDDQ_MASK		0x08000000
+ 
+-#define PCIE_MSI_INTR2_STATUS				0x4500
+-#define PCIE_MSI_INTR2_CLR				0x4508
+-#define PCIE_MSI_INTR2_MASK_SET				0x4510
+-#define PCIE_MSI_INTR2_MASK_CLR				0x4514
++
++#define PCIE_INTR2_CPU_BASE		0x4300
++#define PCIE_MSI_INTR2_BASE		0x4500
++/* Offsets from PCIE_INTR2_CPU_BASE and PCIE_MSI_INTR2_BASE */
++#define  MSI_INT_STATUS			0x0
++#define  MSI_INT_CLR			0x8
++#define  MSI_INT_MASK_SET		0x10
++#define  MSI_INT_MASK_CLR		0x14
+ 
+ #define PCIE_EXT_CFG_DATA				0x8000
+ 
+@@ -138,6 +146,8 @@
+ /* PCIe parameters */
+ #define BRCM_NUM_PCIE_OUT_WINS		0x4
+ #define BRCM_INT_PCI_MSI_NR		32
++#define BRCM_INT_PCI_MSI_LEGACY_NR	8
++#define BRCM_INT_PCI_MSI_SHIFT		0
+ 
+ /* MSI target adresses */
+ #define BRCM_MSI_TARGET_ADDR_LT_4GB	0x0fffffffcULL
+@@ -253,6 +263,12 @@ struct brcm_msi {
+ 	int			irq;
+ 	/* used indicates which MSI interrupts have been alloc'd */
+ 	unsigned long		used;
++	bool			legacy;
++	/* Some chips have MSIs in bits [31..24] of a shared register. */
++	int			legacy_shift;
++	int			nr; /* No. of MSI available, depends on chip */
++	/* This is the base pointer for interrupt status/set/clr regs */
++	void __iomem		*intr_base;
  };
  
+ /* Internal PCIe Host Controller Information.*/
+@@ -463,8 +479,10 @@ static void brcm_pcie_msi_isr(struct irq_desc *desc)
+ 	msi = irq_desc_get_handler_data(desc);
+ 	dev = msi->dev;
+ 
+-	status = readl(msi->base + PCIE_MSI_INTR2_STATUS);
+-	for_each_set_bit(bit, &status, BRCM_INT_PCI_MSI_NR) {
++	status = readl(msi->intr_base + MSI_INT_STATUS);
++	status >>= msi->legacy_shift;
++
++	for_each_set_bit(bit, &status, msi->nr) {
+ 		virq = irq_find_mapping(msi->inner_domain, bit);
+ 		if (virq)
+ 			generic_handle_irq(virq);
+@@ -481,7 +499,7 @@ static void brcm_msi_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+ 
+ 	msg->address_lo = lower_32_bits(msi->target_addr);
+ 	msg->address_hi = upper_32_bits(msi->target_addr);
+-	msg->data = (0xffff & PCIE_MISC_MSI_DATA_CONFIG_VAL) | data->hwirq;
++	msg->data = (0xffff & PCIE_MISC_MSI_DATA_CONFIG_VAL_32) | data->hwirq;
+ }
+ 
+ static int brcm_msi_set_affinity(struct irq_data *irq_data,
+@@ -493,8 +511,9 @@ static int brcm_msi_set_affinity(struct irq_data *irq_data,
+ static void brcm_msi_ack_irq(struct irq_data *data)
+ {
+ 	struct brcm_msi *msi = irq_data_get_irq_chip_data(data);
++	const int shift_amt = data->hwirq + msi->legacy_shift;
+ 
+-	writel(1 << data->hwirq, msi->base + PCIE_MSI_INTR2_CLR);
++	writel(1 << shift_amt, msi->intr_base + MSI_INT_CLR);
+ }
+ 
+ 
+@@ -510,7 +529,7 @@ static int brcm_msi_alloc(struct brcm_msi *msi)
+ 	int hwirq;
+ 
+ 	mutex_lock(&msi->lock);
+-	hwirq = bitmap_find_free_region(&msi->used, BRCM_INT_PCI_MSI_NR, 0);
++	hwirq = bitmap_find_free_region(&msi->used, msi->nr, 0);
+ 	mutex_unlock(&msi->lock);
+ 
+ 	return hwirq;
+@@ -559,8 +578,7 @@ static int brcm_allocate_domains(struct brcm_msi *msi)
+ 	struct fwnode_handle *fwnode = of_node_to_fwnode(msi->np);
+ 	struct device *dev = msi->dev;
+ 
+-	msi->inner_domain = irq_domain_add_linear(NULL, BRCM_INT_PCI_MSI_NR,
+-						  &msi_domain_ops, msi);
++	msi->inner_domain = irq_domain_add_linear(NULL, msi->nr, &msi_domain_ops, msi);
+ 	if (!msi->inner_domain) {
+ 		dev_err(dev, "failed to create IRQ domain\n");
+ 		return -ENOMEM;
+@@ -597,7 +615,10 @@ static void brcm_msi_remove(struct brcm_pcie *pcie)
+ 
+ static void brcm_msi_set_regs(struct brcm_msi *msi)
+ {
+-	writel(0xffffffff, msi->base + PCIE_MSI_INTR2_MASK_CLR);
++	u32 val = __GENMASK(31, msi->legacy_shift);
++
++	writel(val, msi->intr_base + MSI_INT_MASK_CLR);
++	writel(val, msi->intr_base + MSI_INT_CLR);
+ 
+ 	/*
+ 	 * The 0 bit of PCIE_MISC_MSI_BAR_CONFIG_LO is repurposed to MSI
+@@ -608,8 +629,8 @@ static void brcm_msi_set_regs(struct brcm_msi *msi)
+ 	writel(upper_32_bits(msi->target_addr),
+ 	       msi->base + PCIE_MISC_MSI_BAR_CONFIG_HI);
+ 
+-	writel(PCIE_MISC_MSI_DATA_CONFIG_VAL,
+-	       msi->base + PCIE_MISC_MSI_DATA_CONFIG);
++	val = msi->legacy ? PCIE_MISC_MSI_DATA_CONFIG_VAL_8 : PCIE_MISC_MSI_DATA_CONFIG_VAL_32;
++	writel(val, msi->base + PCIE_MISC_MSI_DATA_CONFIG);
+ }
+ 
+ static int brcm_pcie_enable_msi(struct brcm_pcie *pcie)
+@@ -634,6 +655,17 @@ static int brcm_pcie_enable_msi(struct brcm_pcie *pcie)
+ 	msi->np = pcie->np;
+ 	msi->target_addr = pcie->msi_target_addr;
+ 	msi->irq = irq;
++	msi->legacy = pcie->hw_rev < BRCM_PCIE_HW_REV_33;
++
++	if (msi->legacy) {
++		msi->intr_base = msi->base + PCIE_INTR2_CPU_BASE;
++		msi->nr = BRCM_INT_PCI_MSI_LEGACY_NR;
++		msi->legacy_shift = 24;
++	} else {
++		msi->intr_base = msi->base + PCIE_MSI_INTR2_BASE;
++		msi->nr = BRCM_INT_PCI_MSI_NR;
++		msi->legacy_shift = 0;
++	}
+ 
+ 	ret = brcm_allocate_domains(msi);
+ 	if (ret)
+@@ -904,12 +936,6 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
+ 	tmp &= ~PCIE_MISC_RC_BAR3_CONFIG_LO_SIZE_MASK;
+ 	writel(tmp, base + PCIE_MISC_RC_BAR3_CONFIG_LO);
+ 
+-	/* Mask all interrupts since we are not handling any yet */
+-	writel(0xffffffff, pcie->base + PCIE_MSI_INTR2_MASK_SET);
+-
+-	/* clear any interrupts we find on boot */
+-	writel(0xffffffff, pcie->base + PCIE_MSI_INTR2_CLR);
+-
+ 	if (pcie->gen)
+ 		brcm_pcie_set_gen(pcie, pcie->gen);
+ 
+@@ -1245,6 +1271,8 @@ static int brcm_pcie_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		goto fail;
+ 
++	pcie->hw_rev = readl(pcie->base + PCIE_MISC_REVISION);
++
+ 	msi_np = of_parse_phandle(pcie->np, "msi-parent", 0);
+ 	if (pci_msi_enabled() && msi_np == pcie->np) {
+ 		ret = brcm_pcie_enable_msi(pcie);
 -- 
 2.17.1
 
 
---00000000000067068305af0d5bdb
+--0000000000001325f005af0d5b08
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -185,14 +356,14 @@ V6GuAMmRknrzeTlxPy40UhUcRKk6Nm8mxl3Jh4KB68z7NFVpIx8G5w5I7S5ar1mLGNRjtFZ0RE4O
 lcCwKVGUXRaZMgQGrIhxGVelVgrcBh2vjpndlv733VI2VKE/TvV5MxMGU18RnogYSm66AEFA/Zb+
 5ztz1AtIMYICbzCCAmsCAQEwbTBdMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBu
 di1zYTEzMDEGA1UEAxMqR2xvYmFsU2lnbiBQZXJzb25hbFNpZ24gMiBDQSAtIFNIQTI1NiAtIEcz
-AgwTv2xmtR4KOmK4QvMwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIPT9i8CnPc7+
-gveDBKgnuts/pbETy/dXNFYBUGEoRHHNMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZI
-hvcNAQkFMQ8XDTIwMDkxMTE3NTMwNlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJ
+AgwTv2xmtR4KOmK4QvMwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIPU5YP/t2hmF
+HjlkIYbb80xw6eNyGQKDvGz+vGqt6E0qMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZI
+hvcNAQkFMQ8XDTIwMDkxMTE3NTMwMFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJ
 YIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcN
-AQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCUVFn0+Ouvg+tnPELhXkrDC6FozO6b
-GeedbseuuoGXPwywHWrIAN+dtzZRKmbHYqEunFUP2l8Bf6yQ4GNmD3DXmKIHxcWxyYNRvgSE/qnJ
-+PB6A1SzIN58rAGvH2I3YS4L+SlvSoDKx3CyBK9vZmKx4SEn4FeslPKtra6YdOfEkPZs50NbAbCy
-PK48YbIIT8WkGBAnpEMp1fED1C47iP7ofLKW3qc/GyH1P9qvU+cObMflYdOhFowVVdGz62pOLxB5
-rnJaEXZkLpFS8FcdwKctGCNpk/98PBHYD9NmDaUX4sOM5x2N2JpFBK9OV34Fr4h24SEhUBUJj3N7
-YD6e44qu
---00000000000067068305af0d5bdb--
+AQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBeQDFYVyMhYf4BohgfRAZ4OvLZILwS
+2DOU1QRuuHCqMxIJlMMnugzHQ6ibftHSsXh/dJXurNy+K1zMZbzxteClebT7GcbjE1Dp6ut/Y9ef
+Xr4RAfNIK8f4fzvnG5UEWCtw5lRffOoVI0hzfasCAnyPBfuVTjQcW6oQJN+o2s2ls5vhve4wHLu7
++mgmv5ZyTef28PR+8SLYpRtPwxHvj5PwE8Rfr6vokQYSYrVMvho5kyLzkGwL7nrvHVIyUiTzzekC
+ZueelavVM+PPBBTpnik96EiI3xpDrKN0y6O6y+Un0zp62d42PhdCdw82WSJ/Sam4o+aTjoA9QfqK
+jEwt5wIF
+--0000000000001325f005af0d5b08--
