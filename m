@@ -2,60 +2,60 @@ Return-Path: <SRS0=v1Y9=CU=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MIME_HEADER_CTYPE_ONLY,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,UNWANTED_LANGUAGE_BODY,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69194C433E2
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Sep 2020 17:55:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BBEA5C43461
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Sep 2020 17:55:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 10996221EB
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Sep 2020 17:55:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6073322207
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Sep 2020 17:55:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Amvuijuf"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Qz4p0T+6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726054AbgIKRy7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1726084AbgIKRy7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Fri, 11 Sep 2020 13:54:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56924 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56892 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725943AbgIKRw4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Sep 2020 13:52:56 -0400
-Received: from mail-pg1-x542.google.com (mail-pg1-x542.google.com [IPv6:2607:f8b0:4864:20::542])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3856BC0613ED
-        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2020 10:52:56 -0700 (PDT)
-Received: by mail-pg1-x542.google.com with SMTP id 5so7172307pgl.4
-        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2020 10:52:56 -0700 (PDT)
+        with ESMTP id S1725886AbgIKRwr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Sep 2020 13:52:47 -0400
+Received: from mail-pg1-x543.google.com (mail-pg1-x543.google.com [IPv6:2607:f8b0:4864:20::543])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C2E2C061798
+        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2020 10:52:46 -0700 (PDT)
+Received: by mail-pg1-x543.google.com with SMTP id 67so7147673pgd.12
+        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2020 10:52:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=LDtAFZIWu+LWLGd1UlX1eNmOayfKdu9GSH05V8tUwmI=;
-        b=AmvuijufITU3bo1C5BpFJ1nDDHPphQK8/9KYcrp9QtQgclFdWpP+MOgaL9dmoqHvMA
-         oBzjjWrXUZK7m/Lp1SxQteuVbAxRja7jsCrh8b2qaCAy6gYhMNETFcDnuDRHchSO1bPp
-         6opA8VSpix7Yd0khRr1avgEi2hSw+GZEI0+jE=
+        bh=1rR0TY3pylt9E6C6nU00AAllouB+AtHxtT7l4Gq/eUQ=;
+        b=Qz4p0T+6jYYrv8r0dONcxeeLtvQT0crgKUA1+vVu7ItG/HCen0nWY0pbdNCpUPp/c3
+         WrHCTqNe8LEfSoFpq/d0u5PHDZTkCr+nKon36DfCo0PWW5qV5Ntv+KolfuG9gJlRTsNq
+         /WhiZmhwIIScEuY2gp7YkpUL7RpL6q99MD1/E=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=LDtAFZIWu+LWLGd1UlX1eNmOayfKdu9GSH05V8tUwmI=;
-        b=B0Uq0HOZ0c9D8jm8kKBqepHaEgunKcqIrLS+RrWF8wQqYKADyalO5R/U/kUOtbRliL
-         6FvHI0z1ukvBgDxlPLCb93ZAKhjjhuCiWYsygePwlKoKXIrSv/Kyw/axHuh4W8bOvXic
-         wj5xmvMWBcmb4Hqqmu9pFdGl5wfU9HLRk8HjiDhwjxc+3Hnzylo8m69JZ4Obt6PILmxi
-         aP9uWoUCYm17ZfIHyWU9WI/dd52sPcsNJ6bH/epC9yI7NDQaA3sgVuHxKQgOxNlpbXiK
-         2wyJanyKgOGCmWllVmpAiu1KepJ26nhAYpPsm7QsXOe4oFmq/NSABbBhwKiGFnnUjNN1
-         UQJw==
-X-Gm-Message-State: AOAM533s7Qsh5Ah/RmSx7oY9n6tn8wnydsBQoaA9G+QP4XFrqS7DfY95
-        KVgPgU9p61gYxFzjrNkrFdJItuWRzgvKth1RSPGp9/DUpYCLi8GSRX3Z61ldhmYed/U6KrvnYvT
-        3P6aDVu9B3EMJzvW6fem1kNkgXDHFfnsAEdJgB4cDRfYISlLS/FD69mVyOclEf1hdlgvxOHyKVM
-        ptHFI4
-X-Google-Smtp-Source: ABdhPJyhHECOF37B8cPeYszTu5V+UPeSgvuEGA8zmfHmlsioKPQtn0u3iL4UjDI7gz/BLeJyuRNeyA==
-X-Received: by 2002:a63:f752:: with SMTP id f18mr2345011pgk.94.1599846774810;
-        Fri, 11 Sep 2020 10:52:54 -0700 (PDT)
+        bh=1rR0TY3pylt9E6C6nU00AAllouB+AtHxtT7l4Gq/eUQ=;
+        b=HGLeRLaGj9xKyEGa0NrPJXAQGF4Hj/KyOEGxzIv9Jgd4f52w9eYzrTAIB681Y/x6Od
+         HewoE1S0/IVAyfCkeY0Z25lLJiCniEW2qBenm12lzvg5rpQkz5A4NxWWAnf6GMALVqz0
+         pBcBNkbu6bl3M/fC6HBAvPwP2x/5gXboLec1KAE/nKpU9s0/cpeHTrQwvdEn2GnooyQ3
+         4pvzTw4aSJhv60Xp/W4zv+ddGOEC7Dadjyd6P4zPj/5DzMIcbxaPOrLiJiLjK0H10aUH
+         335/W1JdAeWlpIMZGe0s4vDQZz+6NysOxyxKUirVaIwCi0kVrjrIp9w9MLzBi+uqHqUb
+         JA1Q==
+X-Gm-Message-State: AOAM531/D73cBa88he9bOnqsHAyObGBcg3/wbtiPESyiNKL2XcOPMo5p
+        HbSWd3HJJ4W0AzIr5Rn9x49YouuATA/dY5in0+tOy9GwQm6Xmclc+7K7TPYEwAQXueQuMTFTTwI
+        CTmEX+TEiuNTNiAS5kDqR2/QbP9vuZOdaiS696ORrAnfdoBK4B7wXFDyJKxuGo6ic/eoDBkJQqp
+        KHPBDU
+X-Google-Smtp-Source: ABdhPJyaWEHsZb6i9SNd1/wfkIihgOZBSC8hoPo3WzRlMi7E2cdQVs7wtkBNVx/ei0n8dYsOyjuVeQ==
+X-Received: by 2002:a62:19c1:0:b029:13c:1611:6529 with SMTP id 184-20020a6219c10000b029013c16116529mr3127501pfz.9.1599846765315;
+        Fri, 11 Sep 2020 10:52:45 -0700 (PDT)
 Received: from stbsrv-and-01.and.broadcom.net ([192.19.231.250])
-        by smtp.gmail.com with ESMTPSA id d77sm2871963pfd.121.2020.09.11.10.52.52
+        by smtp.gmail.com with ESMTPSA id d77sm2871963pfd.121.2020.09.11.10.52.43
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 11 Sep 2020 10:52:53 -0700 (PDT)
+        Fri, 11 Sep 2020 10:52:44 -0700 (PDT)
 From:   Jim Quinlan <james.quinlan@broadcom.com>
 To:     linux-pci@vger.kernel.org,
         Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
@@ -67,165 +67,227 @@ Cc:     Jim Quinlan <jquinlan@broadcom.com>,
         Rob Herring <robh@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Florian Fainelli <f.fainelli@gmail.com>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
         linux-rpi-kernel@lists.infradead.org (moderated list:BROADCOM
         BCM2711/BCM2835 ARM ARCHITECTURE),
         linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM
         BCM2711/BCM2835 ARM ARCHITECTURE),
         linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v12 06/10] PCI: brcmstb: Add control of rescal reset
-Date:   Fri, 11 Sep 2020 13:52:26 -0400
-Message-Id: <20200911175232.19016-7-james.quinlan@broadcom.com>
+Subject: [PATCH v12 03/10] PCI: brcmstb: Add bcm7278 register info
+Date:   Fri, 11 Sep 2020 13:52:23 -0400
+Message-Id: <20200911175232.19016-4-james.quinlan@broadcom.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200911175232.19016-1-james.quinlan@broadcom.com>
 References: <20200911175232.19016-1-james.quinlan@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000beed0505af0d5a19"
+        boundary="0000000000002db30905af0d5aa4"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
---000000000000beed0505af0d5a19
+--0000000000002db30905af0d5aa4
 
 From: Jim Quinlan <jquinlan@broadcom.com>
 
-Some STB chips have a special purpose reset controller named RESCAL (reset
-calibration).  The PCIe HW can now control RESCAL to start and stop its
-operation.  On probe(), the RESCAL is deasserted and the driver goes
-through the sequence of setting registers and reading status in order to
-start the internal PHY that is required for the PCIe.
+Add in compatibility strings and code for three Broadcom STB chips.  Some
+of the register locations, shifts, and masks are different for certain
+chips, requiring the use of different constants based on of_id.
+
+We would like to add the following at this time to the match list but we
+need to wait until the end of this patchset so that everything works.
+
+    { .compatible = "brcm,bcm7211-pcie", .data = &generic_cfg },
+    { .compatible = "brcm,bcm7278-pcie", .data = &bcm7278_cfg },
+    { .compatible = "brcm,bcm7216-pcie", .data = &bcm7278_cfg },
+    { .compatible = "brcm,bcm7445-pcie", .data = &generic_cfg },
 
 Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
 Acked-by: Florian Fainelli <f.fainelli@gmail.com>
+Acked-by: Rob Herring <robh@kernel.org>
 ---
- drivers/pci/controller/pcie-brcmstb.c | 69 ++++++++++++++++++++++++++-
- 1 file changed, 68 insertions(+), 1 deletion(-)
+ drivers/pci/controller/pcie-brcmstb.c | 105 +++++++++++++++++++++++---
+ 1 file changed, 93 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
-index 947cf3115eb0..8a84811972bd 100644
+index 85fa7d54f11f..c2b3d2946a36 100644
 --- a/drivers/pci/controller/pcie-brcmstb.c
 +++ b/drivers/pci/controller/pcie-brcmstb.c
-@@ -23,6 +23,7 @@
- #include <linux/of_platform.h>
- #include <linux/pci.h>
- #include <linux/printk.h>
-+#include <linux/reset.h>
- #include <linux/sizes.h>
- #include <linux/slab.h>
- #include <linux/string.h>
-@@ -994,6 +995,52 @@ static void brcm_pcie_enter_l23(struct brcm_pcie *pcie)
- 		dev_err(pcie->dev, "failed to enter low-power link state\n");
+@@ -122,9 +122,8 @@
+ #define  PCIE_EXT_SLOT_SHIFT				15
+ #define  PCIE_EXT_FUNC_SHIFT				12
+ 
+-#define PCIE_RGR1_SW_INIT_1				0x9210
+ #define  PCIE_RGR1_SW_INIT_1_PERST_MASK			0x1
+-#define  PCIE_RGR1_SW_INIT_1_INIT_MASK			0x2
++#define  PCIE_RGR1_SW_INIT_1_PERST_SHIFT		0x0
+ 
+ /* PCIe parameters */
+ #define BRCM_NUM_PCIE_OUT_WINS		0x4
+@@ -154,6 +153,73 @@
+ #define SSC_STATUS_SSC_MASK		0x400
+ #define SSC_STATUS_PLL_LOCK_MASK	0x800
+ 
++#define IDX_ADDR(pcie)			(pcie->reg_offsets[EXT_CFG_INDEX])
++#define DATA_ADDR(pcie)			(pcie->reg_offsets[EXT_CFG_DATA])
++#define PCIE_RGR1_SW_INIT_1(pcie)	(pcie->reg_offsets[RGR1_SW_INIT_1])
++
++enum {
++	RGR1_SW_INIT_1,
++	EXT_CFG_INDEX,
++	EXT_CFG_DATA,
++};
++
++enum {
++	RGR1_SW_INIT_1_INIT_MASK,
++	RGR1_SW_INIT_1_INIT_SHIFT,
++};
++
++enum pcie_type {
++	GENERIC,
++	BCM7278,
++	BCM2711,
++};
++
++struct pcie_cfg_data {
++	const int *reg_field_info;
++	const int *offsets;
++	const enum pcie_type type;
++};
++
++static const int pcie_reg_field_info[] = {
++	[RGR1_SW_INIT_1_INIT_MASK] = 0x2,
++	[RGR1_SW_INIT_1_INIT_SHIFT] = 0x1,
++};
++
++static const int pcie_reg_field_info_bcm7278[] = {
++	[RGR1_SW_INIT_1_INIT_MASK] = 0x1,
++	[RGR1_SW_INIT_1_INIT_SHIFT] = 0x0,
++};
++
++static const int pcie_offsets[] = {
++	[RGR1_SW_INIT_1] = 0x9210,
++	[EXT_CFG_INDEX]  = 0x9000,
++	[EXT_CFG_DATA]   = 0x9004,
++};
++
++static const struct pcie_cfg_data generic_cfg = {
++	.reg_field_info	= pcie_reg_field_info,
++	.offsets	= pcie_offsets,
++	.type		= GENERIC,
++};
++
++static const int pcie_offset_bcm7278[] = {
++	[RGR1_SW_INIT_1] = 0xc010,
++	[EXT_CFG_INDEX] = 0x9000,
++	[EXT_CFG_DATA] = 0x9004,
++};
++
++static const struct pcie_cfg_data bcm7278_cfg = {
++	.reg_field_info = pcie_reg_field_info_bcm7278,
++	.offsets	= pcie_offset_bcm7278,
++	.type		= BCM7278,
++};
++
++static const struct pcie_cfg_data bcm2711_cfg = {
++	.reg_field_info	= pcie_reg_field_info,
++	.offsets	= pcie_offsets,
++	.type		= BCM2711,
++};
++
+ struct brcm_msi {
+ 	struct device		*dev;
+ 	void __iomem		*base;
+@@ -177,6 +243,9 @@ struct brcm_pcie {
+ 	int			gen;
+ 	u64			msi_target_addr;
+ 	struct brcm_msi		*msi;
++	const int		*reg_offsets;
++	const int		*reg_field_info;
++	enum pcie_type		type;
+ };
+ 
+ /*
+@@ -603,20 +672,21 @@ static struct pci_ops brcm_pcie_ops = {
+ 
+ static inline void brcm_pcie_bridge_sw_init_set(struct brcm_pcie *pcie, u32 val)
+ {
+-	u32 tmp;
++	u32 tmp, mask =  pcie->reg_field_info[RGR1_SW_INIT_1_INIT_MASK];
++	u32 shift = pcie->reg_field_info[RGR1_SW_INIT_1_INIT_SHIFT];
+ 
+-	tmp = readl(pcie->base + PCIE_RGR1_SW_INIT_1);
+-	u32p_replace_bits(&tmp, val, PCIE_RGR1_SW_INIT_1_INIT_MASK);
+-	writel(tmp, pcie->base + PCIE_RGR1_SW_INIT_1);
++	tmp = readl(pcie->base + PCIE_RGR1_SW_INIT_1(pcie));
++	tmp = (tmp & ~mask) | ((val << shift) & mask);
++	writel(tmp, pcie->base + PCIE_RGR1_SW_INIT_1(pcie));
  }
  
-+static int brcm_phy_cntl(struct brcm_pcie *pcie, const int start)
-+{
-+	static const u32 shifts[PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_NFLDS] = {
-+		PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_PWRDN_SHIFT,
-+		PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_RESET_SHIFT,
-+		PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_DIG_RESET_SHIFT,};
-+	static const u32 masks[PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_NFLDS] = {
-+		PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_PWRDN_MASK,
-+		PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_RESET_MASK,
-+		PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_DIG_RESET_MASK,};
-+	const int beg = start ? 0 : PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_NFLDS - 1;
-+	const int end = start ? PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_NFLDS : -1;
-+	u32 tmp, combined_mask = 0;
-+	u32 val;
-+	void __iomem *base = pcie->base;
-+	int i, ret;
+ static inline void brcm_pcie_perst_set(struct brcm_pcie *pcie, u32 val)
+ {
+ 	u32 tmp;
+ 
+-	tmp = readl(pcie->base + PCIE_RGR1_SW_INIT_1);
++	tmp = readl(pcie->base + PCIE_RGR1_SW_INIT_1(pcie));
+ 	u32p_replace_bits(&tmp, val, PCIE_RGR1_SW_INIT_1_PERST_MASK);
+-	writel(tmp, pcie->base + PCIE_RGR1_SW_INIT_1);
++	writel(tmp, pcie->base + PCIE_RGR1_SW_INIT_1(pcie));
+ }
+ 
+ static inline int brcm_pcie_get_rc_bar2_size_and_offset(struct brcm_pcie *pcie,
+@@ -927,11 +997,17 @@ static int brcm_pcie_remove(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
++static const struct of_device_id brcm_pcie_match[] = {
++	{ .compatible = "brcm,bcm2711-pcie", .data = &bcm2711_cfg },
++	{},
++};
 +
-+	for (i = beg; i != end; start ? i++ : i--) {
-+		val = start ? BIT_MASK(shifts[i]) : 0;
-+		tmp = readl(base + PCIE_DVT_PMU_PCIE_PHY_CTRL);
-+		tmp = (tmp & ~masks[i]) | (val & masks[i]);
-+		writel(tmp, base + PCIE_DVT_PMU_PCIE_PHY_CTRL);
-+		usleep_range(50, 200);
-+		combined_mask |= masks[i];
+ static int brcm_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct device_node *np = pdev->dev.of_node, *msi_np;
+ 	struct pci_host_bridge *bridge;
+ 	struct device_node *fw_np;
++	const struct pcie_cfg_data *data;
+ 	struct brcm_pcie *pcie;
+ 	int ret;
+ 
+@@ -953,9 +1029,18 @@ static int brcm_pcie_probe(struct platform_device *pdev)
+ 	if (!bridge)
+ 		return -ENOMEM;
+ 
++	data = of_device_get_match_data(&pdev->dev);
++	if (!data) {
++		pr_err("failed to look up compatible string\n");
++		return -EINVAL;
 +	}
 +
-+	tmp = readl(base + PCIE_DVT_PMU_PCIE_PHY_CTRL);
-+	val = start ? combined_mask : 0;
-+
-+	ret = (tmp & combined_mask) == val ? 0 : -EIO;
-+	if (ret)
-+		dev_err(pcie->dev, "failed to %s phy\n", (start ? "start" : "stop"));
-+
-+	return ret;
-+}
-+
-+static inline int brcm_phy_start(struct brcm_pcie *pcie)
-+{
-+	return pcie->rescal ? brcm_phy_cntl(pcie, 1) : 0;
-+}
-+
-+static inline int brcm_phy_stop(struct brcm_pcie *pcie)
-+{
-+	return pcie->rescal ? brcm_phy_cntl(pcie, 0) : 0;
-+}
-+
- static void brcm_pcie_turn_off(struct brcm_pcie *pcie)
- {
- 	void __iomem *base = pcie->base;
-@@ -1021,11 +1068,13 @@ static void brcm_pcie_turn_off(struct brcm_pcie *pcie)
- static int brcm_pcie_suspend(struct device *dev)
- {
- 	struct brcm_pcie *pcie = dev_get_drvdata(dev);
-+	int ret;
+ 	pcie = pci_host_bridge_priv(bridge);
+ 	pcie->dev = &pdev->dev;
+ 	pcie->np = np;
++	pcie->reg_offsets = data->offsets;
++	pcie->reg_field_info = data->reg_field_info;
++	pcie->type = data->type;
  
- 	brcm_pcie_turn_off(pcie);
-+	ret = brcm_phy_stop(pcie);
- 	clk_disable_unprepare(pcie->clk);
- 
--	return 0;
-+	return ret;
+ 	pcie->base = devm_platform_ioremap_resource(pdev, 0);
+ 	if (IS_ERR(pcie->base))
+@@ -1000,10 +1085,6 @@ static int brcm_pcie_probe(struct platform_device *pdev)
+ 	return ret;
  }
  
- static int brcm_pcie_resume(struct device *dev)
-@@ -1038,6 +1087,9 @@ static int brcm_pcie_resume(struct device *dev)
- 	base = pcie->base;
- 	clk_prepare_enable(pcie->clk);
+-static const struct of_device_id brcm_pcie_match[] = {
+-	{ .compatible = "brcm,bcm2711-pcie" },
+-	{},
+-};
+ MODULE_DEVICE_TABLE(of, brcm_pcie_match);
  
-+	ret = brcm_phy_start(pcie);
-+		return ret;
-+
- 	/* Take bridge out of reset so we can access the SERDES reg */
- 	pcie->bridge_sw_init_set(pcie, 0);
- 
-@@ -1063,6 +1115,8 @@ static void __brcm_pcie_remove(struct brcm_pcie *pcie)
- {
- 	brcm_msi_remove(pcie);
- 	brcm_pcie_turn_off(pcie);
-+	brcm_phy_stop(pcie);
-+	reset_control_assert(pcie->rescal);
- 	clk_disable_unprepare(pcie->clk);
- }
- 
-@@ -1142,6 +1196,19 @@ static int brcm_pcie_probe(struct platform_device *pdev)
- 		dev_err(&pdev->dev, "could not enable clock\n");
- 		return ret;
- 	}
-+	pcie->rescal = devm_reset_control_get_optional_shared(&pdev->dev, "rescal");
-+	if (IS_ERR(pcie->rescal))
-+		return PTR_ERR(pcie->rescal);
-+
-+	ret = reset_control_deassert(pcie->rescal);
-+	if (ret)
-+		dev_err(&pdev->dev, "failed to deassert 'rescal'\n");
-+
-+	ret = brcm_phy_start(pcie);
-+	if (ret) {
-+		reset_control_assert(pcie->rescal);
-+		return ret;
-+	}
- 
- 	ret = brcm_pcie_setup(pcie);
- 	if (ret)
+ static struct platform_driver brcm_pcie_driver = {
 -- 
 2.17.1
 
 
---000000000000beed0505af0d5a19
+--0000000000002db30905af0d5aa4
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -295,14 +357,14 @@ V6GuAMmRknrzeTlxPy40UhUcRKk6Nm8mxl3Jh4KB68z7NFVpIx8G5w5I7S5ar1mLGNRjtFZ0RE4O
 lcCwKVGUXRaZMgQGrIhxGVelVgrcBh2vjpndlv733VI2VKE/TvV5MxMGU18RnogYSm66AEFA/Zb+
 5ztz1AtIMYICbzCCAmsCAQEwbTBdMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBu
 di1zYTEzMDEGA1UEAxMqR2xvYmFsU2lnbiBQZXJzb25hbFNpZ24gMiBDQSAtIFNIQTI1NiAtIEcz
-AgwTv2xmtR4KOmK4QvMwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIAeDnNUTHltq
-s6BF/3DG58hQtBS1WhxZ0XsutopjwxLkMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZI
-hvcNAQkFMQ8XDTIwMDkxMTE3NTI1NVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJ
+AgwTv2xmtR4KOmK4QvMwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIGSZC7W09XzM
+1+4tTfo7n7Ed2R6+7UVgIJez/q2ke3aMMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZI
+hvcNAQkFMQ8XDTIwMDkxMTE3NTI0NVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJ
 YIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcN
-AQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQDeWt1jDm8yFRkot2+eO+QxW3Lv4ih+
-LR4687ai/Yf8mKmOzi7c7ip20J7F0QyAOfZFnHrIjba5RIP6Msjv1yY9T6imPutNCT0a9X+fZ4YC
-2eQHJKTLJDh7+YfDCajGwdFlhlgA+RdALiabxsdM9z6R2NkCzh6yki/XkyCFkWMoT406V9pTVaKp
-P7TsPLNcmk5qKROOSJDfLxakwc/N7nAm2soHsLA1VkRxdLKCDX+TFo3xLgTxH4H0kIt2/zM2cVnQ
-lJ3tm4S5gi3zpLKnqFNcCcADtYAlrKFeKR6AUNbsrweWcSecyF/mE6ycgnx+YAuhtm42ZLhFLjU2
-FhJt3hy1
---000000000000beed0505af0d5a19--
+AQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCHP/2nFqaDmpp4wnX/e/fT3fXONvQ0
+aasoGe3eU+FhbJq9RKRQsS1DQRxihYwtdXzUZGiPjxnf+o1PprF9AiHTmTAzZLaiGaeVf57elONN
+mczMI5SHxPwT0ji11nXG8FYVnWMDZ4mpbJ8cLetPxHuJsza40lpXo49dJJfijHFmVoF+0T0GzwEu
+j7DrRSFmjWBmtlSpw+1hbA4pDolmHXrqu9QP+PteiRPrXQpCjY9fzO1+wFsv7dV1bkzBQxQw6e07
+fxz527cpQ+DeRIob/6azWIVHRBbTYYyedxaZMv601IrgCBCVCPOWQzB/z7mFw1ejKkzJ4AYLvKuw
+1lvU2kAt
+--0000000000002db30905af0d5aa4--
