@@ -8,54 +8,54 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A8C4C433E2
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Sep 2020 17:53:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CB5AC43461
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Sep 2020 17:53:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E7002221EB
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Sep 2020 17:53:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A6D8A21D79
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Sep 2020 17:53:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="CK7khOSf"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="cQoJy6ZG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725970AbgIKRxI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 11 Sep 2020 13:53:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56866 "EHLO
+        id S1725975AbgIKRxW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 11 Sep 2020 13:53:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56904 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725882AbgIKRwl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Sep 2020 13:52:41 -0400
-Received: from mail-pf1-x443.google.com (mail-pf1-x443.google.com [IPv6:2607:f8b0:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2021C061757
-        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2020 10:52:40 -0700 (PDT)
-Received: by mail-pf1-x443.google.com with SMTP id o20so7918168pfp.11
-        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2020 10:52:40 -0700 (PDT)
+        with ESMTP id S1725917AbgIKRwu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Sep 2020 13:52:50 -0400
+Received: from mail-pj1-x1044.google.com (mail-pj1-x1044.google.com [IPv6:2607:f8b0:4864:20::1044])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8013C061799
+        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2020 10:52:49 -0700 (PDT)
+Received: by mail-pj1-x1044.google.com with SMTP id o16so2073143pjr.2
+        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2020 10:52:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=ONfIvNf898veW9CPlb9ah+nBL0jhXWeDB170PTgkm1Y=;
-        b=CK7khOSfJB+4Valmtd+7pXYOpK/V2gdihhwVJDPLvHPqYy+zISlPzorpESplteBf6D
-         syhKBavLOVYCSWp4aoE940pIcK9o73vgcEV0EuCvr2qpLLQjK2NB6/pt/uytj3Z7SU79
-         3vX1bBTxSEnOVYDYiW6St2lWGFVEYMEXc0s54=
+        bh=tccwUk0c8S/eGdiybDJQ/lFDd+tFDqz4DUtu7cTFDxk=;
+        b=cQoJy6ZGN4y2O/IUFq35e9mudl6OjuGRVIL5U789VTkaZ9kvkya60A59cW9xAzvs4D
+         gk9pRMYqcH3XkiHTKJxKH8Ot16DFSiaab0m/aTlRkG+IKJrbtdHGWs49K5osfjQxZHpu
+         Oie7fvs3slJ6UTd5G1eD47hnXJAbC64TWY8a0=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=ONfIvNf898veW9CPlb9ah+nBL0jhXWeDB170PTgkm1Y=;
-        b=G2vDET5eVlrRkwVUJB6o79rYNK4qM29uen3jgL4DI73l5dV/XV94a6HSRB12BqBHvw
-         ythE2SCCGlxsmJ80sNFGqiXO4Odq9auHae7elbJ8EQEVLq2wUF/m7WMHI5qqRNYwQQwf
-         hHbg7emjNTn9ZZdOAeP09MZ4zn18bLtP5dTzMHHfaU8IpJmytUD26+N0AVYo+33EzQKI
-         PPazUJWDqLxHIQIe2dr7xlY8NDaQziBYdiqcBMGsqWMVn5EfuWgI0wMoI8PFrSXXNlJ9
-         GqJiaDb3WSUkiuIpDZ2k1mXZgYMzfJa6WJDAsjqMpf5yPReX5zozyD5eS9G0SfMlfjnL
-         qDeg==
-X-Gm-Message-State: AOAM533BBxJAkPDrrgxGR0CbDNoQ66jqZfzxm5BxvFZ7t7UR4eXigqPD
-        MjXDY/PggA05Lmwq3BmevRFCwuYW7WhrNuUMATzDLeR7n+88vlMCg1o0KFJA+OswI92WypwIjMc
-        ZmuNU/Bpm+3ObHSToXzHvQAVqnXEAwLt9PjEBFubLzi0X4kOUmAU2nL/SClB5JjoJxSzcRj/O1L
-        Jil/F9
-X-Google-Smtp-Source: ABdhPJyUfjIQe4y7mHd5rBbZs44l2MzwXMJeJu2fN6NNaDczVDgHg1xfIsJIarGB/e3GvQcmonkeVg==
-X-Received: by 2002:a63:1a66:: with SMTP id a38mr2384643pgm.253.1599846759746;
-        Fri, 11 Sep 2020 10:52:39 -0700 (PDT)
+        bh=tccwUk0c8S/eGdiybDJQ/lFDd+tFDqz4DUtu7cTFDxk=;
+        b=rPGKQCHrCnmLu9mfkXlFYVTwtsFNWI2MaMHrlKrwRUDq5gO0poccy1n7Bt5pWJnzg4
+         uSOLkFyB2o+pYiXSjWzzTBBp/wqogJoTJXW1xxDBayuGheQoFETe1utW2HVKpNokzlOd
+         Faz5O6lLg0bmBf+puDIpw4wR74hnW5RBlMzz2tlTeZMKHJKYkjsiqTRIqrO6lMB0T4Zj
+         bEp4DB6YwHUygzw/J+0z1pxxOGJtPGUu43BlNoBsH+QYAq6RQa1ZFfVETg7+SmP5/tsH
+         OfR7XlwuFvvPpCavfa6vGl/3gg25J8b8h78Nz8wSsMA7mDhVEi88cRGVy08FpNOdZ/OY
+         Bxqw==
+X-Gm-Message-State: AOAM5323oIxR4T+ampykEhNGGfqF6FQy7CAV6oaaRus432WtwOTBzQZr
+        AF09QFWapDyq0ik3Rpd8BEtyxmmrhn3qcqpNrb67KZ7YmnHRoSXs2Ti1xyXi3lGJUrlbBIWEsqC
+        5lZAui5pGWbu+VZXaicxrG+b3HqP3EkcZO74Ir1ZqlHJ7vfDDT6HEbYlOFe/LiJXo/QNUxRDEoL
+        M8W7u3
+X-Google-Smtp-Source: ABdhPJw82htO8oAYh3wSIgprOT3thB1qmlLbiL4cY1f57KelJ1mrrGWwEaLBdbzIqxE5KO0UDjsiBQ==
+X-Received: by 2002:a17:90b:1741:: with SMTP id jf1mr3148924pjb.164.1599846768668;
+        Fri, 11 Sep 2020 10:52:48 -0700 (PDT)
 Received: from stbsrv-and-01.and.broadcom.net ([192.19.231.250])
-        by smtp.gmail.com with ESMTPSA id d77sm2871963pfd.121.2020.09.11.10.52.37
+        by smtp.gmail.com with ESMTPSA id d77sm2871963pfd.121.2020.09.11.10.52.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 11 Sep 2020 10:52:39 -0700 (PDT)
+        Fri, 11 Sep 2020 10:52:47 -0700 (PDT)
 From:   Jim Quinlan <james.quinlan@broadcom.com>
 To:     linux-pci@vger.kernel.org,
         Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
@@ -66,55 +66,114 @@ Cc:     Jim Quinlan <jquinlan@broadcom.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Rob Herring <robh@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        linux-rpi-kernel@lists.infradead.org (moderated list:BROADCOM
+        BCM2711/BCM2835 ARM ARCHITECTURE),
+        linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM
+        BCM2711/BCM2835 ARM ARCHITECTURE),
         linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v12 01/10] PCI: brcmstb: PCIE_BRCMSTB depends on ARCH_BRCMSTB
-Date:   Fri, 11 Sep 2020 13:52:21 -0400
-Message-Id: <20200911175232.19016-2-james.quinlan@broadcom.com>
+Subject: [PATCH v12 04/10] PCI: brcmstb: Add suspend and resume pm_ops
+Date:   Fri, 11 Sep 2020 13:52:24 -0400
+Message-Id: <20200911175232.19016-5-james.quinlan@broadcom.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200911175232.19016-1-james.quinlan@broadcom.com>
 References: <20200911175232.19016-1-james.quinlan@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000d7742805af0d597b"
+        boundary="0000000000006073ea05af0d5a1b"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
---000000000000d7742805af0d597b
+--0000000000006073ea05af0d5a1b
 
 From: Jim Quinlan <jquinlan@broadcom.com>
 
-Have PCIE_BRCMSTB depend on ARCH_BRCMSTB.  Also set the default value to
-ARCH_BRCMSTB.
+Broadcom Set-top (BrcmSTB) boards typically support S2, S3, and S5 suspend
+and resume.  Now the PCIe driver may do so as well.
 
 Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
 Acked-by: Florian Fainelli <f.fainelli@gmail.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
 ---
- drivers/pci/controller/Kconfig | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/pci/controller/pcie-brcmstb.c | 47 +++++++++++++++++++++++++++
+ 1 file changed, 47 insertions(+)
 
-diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
-index f18c3725ef80..624ab986ecb2 100644
---- a/drivers/pci/controller/Kconfig
-+++ b/drivers/pci/controller/Kconfig
-@@ -270,9 +270,10 @@ config VMD
+diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
+index c2b3d2946a36..7f5e7848df47 100644
+--- a/drivers/pci/controller/pcie-brcmstb.c
++++ b/drivers/pci/controller/pcie-brcmstb.c
+@@ -978,6 +978,47 @@ static void brcm_pcie_turn_off(struct brcm_pcie *pcie)
+ 	brcm_pcie_bridge_sw_init_set(pcie, 1);
+ }
  
- config PCIE_BRCMSTB
- 	tristate "Broadcom Brcmstb PCIe host controller"
--	depends on ARCH_BCM2835 || COMPILE_TEST
-+	depends on ARCH_BRCMSTB || ARCH_BCM2835 || COMPILE_TEST
- 	depends on OF
- 	depends on PCI_MSI_IRQ_DOMAIN
-+	default ARCH_BRCMSTB
- 	help
- 	  Say Y here to enable PCIe host controller support for
- 	  Broadcom STB based SoCs, like the Raspberry Pi 4.
++static int brcm_pcie_suspend(struct device *dev)
++{
++	struct brcm_pcie *pcie = dev_get_drvdata(dev);
++
++	brcm_pcie_turn_off(pcie);
++	clk_disable_unprepare(pcie->clk);
++
++	return 0;
++}
++
++static int brcm_pcie_resume(struct device *dev)
++{
++	struct brcm_pcie *pcie = dev_get_drvdata(dev);
++	void __iomem *base;
++	u32 tmp;
++	int ret;
++
++	base = pcie->base;
++	clk_prepare_enable(pcie->clk);
++
++	/* Take bridge out of reset so we can access the SERDES reg */
++	brcm_pcie_bridge_sw_init_set(pcie, 0);
++
++	/* SERDES_IDDQ = 0 */
++	tmp = readl(base + PCIE_MISC_HARD_PCIE_HARD_DEBUG);
++	u32p_replace_bits(&tmp, 0, PCIE_MISC_HARD_PCIE_HARD_DEBUG_SERDES_IDDQ_MASK);
++	writel(tmp, base + PCIE_MISC_HARD_PCIE_HARD_DEBUG);
++
++	/* wait for serdes to be stable */
++	udelay(100);
++
++	ret = brcm_pcie_setup(pcie);
++	if (ret)
++		return ret;
++
++	if (pcie->msi)
++		brcm_msi_set_regs(pcie->msi);
++
++	return 0;
++}
++
+ static void __brcm_pcie_remove(struct brcm_pcie *pcie)
+ {
+ 	brcm_msi_remove(pcie);
+@@ -1087,12 +1128,18 @@ static int brcm_pcie_probe(struct platform_device *pdev)
+ 
+ MODULE_DEVICE_TABLE(of, brcm_pcie_match);
+ 
++static const struct dev_pm_ops brcm_pcie_pm_ops = {
++	.suspend = brcm_pcie_suspend,
++	.resume = brcm_pcie_resume,
++};
++
+ static struct platform_driver brcm_pcie_driver = {
+ 	.probe = brcm_pcie_probe,
+ 	.remove = brcm_pcie_remove,
+ 	.driver = {
+ 		.name = "brcm-pcie",
+ 		.of_match_table = brcm_pcie_match,
++		.pm = &brcm_pcie_pm_ops,
+ 	},
+ };
+ module_platform_driver(brcm_pcie_driver);
 -- 
 2.17.1
 
 
---000000000000d7742805af0d597b
+--0000000000006073ea05af0d5a1b
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -184,14 +243,14 @@ V6GuAMmRknrzeTlxPy40UhUcRKk6Nm8mxl3Jh4KB68z7NFVpIx8G5w5I7S5ar1mLGNRjtFZ0RE4O
 lcCwKVGUXRaZMgQGrIhxGVelVgrcBh2vjpndlv733VI2VKE/TvV5MxMGU18RnogYSm66AEFA/Zb+
 5ztz1AtIMYICbzCCAmsCAQEwbTBdMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBu
 di1zYTEzMDEGA1UEAxMqR2xvYmFsU2lnbiBQZXJzb25hbFNpZ24gMiBDQSAtIFNIQTI1NiAtIEcz
-AgwTv2xmtR4KOmK4QvMwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIKerOB5vVJ32
-Jtp7ZbDCHwLLU3bCUIPpuQEPv4DTGdhGMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZI
-hvcNAQkFMQ8XDTIwMDkxMTE3NTI0MFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJ
+AgwTv2xmtR4KOmK4QvMwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIO1R/6v/1w7/
+qhPKvrp26j/PtTpdeXxSNJJUHIbTEKscMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZI
+hvcNAQkFMQ8XDTIwMDkxMTE3NTI0OVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJ
 YIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcN
-AQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQA5/o+2BGqaNd3CbklRGNbW+urZpUm3
-xtBzg8jFGQ3XdixPUPogTFys8dMjtHSWiS5ciOov2nr30/Z3yc3I9wD2lvslkYJgi9zoFIDpySD6
-BGb0TmXxV1MajLkkPj1MAupJkmaD/FJIPB0tCalWlC23fdNuNM6HapfEbV1NQJN8Shnn+ysZq/uE
-JmHmJxezQ1gmYpmzT9MC/j0VXT0pE1rbNI4Gk9ooLzW/twFoSn5Rz73gxVI7HMuOV+wRSHQjLq6K
-+tf7SVv4jYlXIdFZGhU0hOGrf0ZzlbuS5aYUjmJ7jgwZVm5WipRYA0IPFIgseymCz6HxV7hxdBKQ
-ddHscwMB
---000000000000d7742805af0d597b--
+AQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQB/mIQfnqS2DRyPOYE2jgK/J6nEjFc3
+g6WXNstkjzZ2/79gM0R33ErnXCkiGadTE8dfermOp5jqKihjISCRWFCpDTS7eWS4uj+wdFXP/dvd
+VcQ/Z0IZYGIGrpv3zlU2+w9idRt7uI6YkmP/F0hEK+aJ0/DyxtyJIAU7cjelKewbPhBEKWER4tDI
+msOMXcskI0ir4uxlqQO3rVSDt3vyh+mEyRRDZe8XZvYxJJBHeyV8G0FqAgwDEcTwt2lz9rRLW+Od
+tJh9a/CJajKzxwHtZP1Cavkyvscb7h8riD/D5d6USx0X6J2VOImT2Pb2FC8XmtpnnvnzOnrjfYEB
+rotkECgw
+--0000000000006073ea05af0d5a1b--
