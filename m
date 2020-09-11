@@ -2,117 +2,109 @@ Return-Path: <SRS0=v1Y9=CU=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C42A2C433E2
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Sep 2020 16:25:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C22BC2BC11
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Sep 2020 16:37:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9041E20855
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Sep 2020 16:25:34 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ObAjKEpB"
+	by mail.kernel.org (Postfix) with ESMTP id 0606622204
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Sep 2020 16:37:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726594AbgIKQZd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 11 Sep 2020 12:25:33 -0400
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:25114 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726449AbgIKPYU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Sep 2020 11:24:20 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1599837858;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=iJ/U/CoQkEukOmnim/wnnLlXQJbF+mCf7O0yvaasEUI=;
-        b=ObAjKEpBaQ0fqFXhu20vqRKWdY5yS3XD8ts9la+8U3+JmzkXVlZnqDmeiq6dz1SaY6voMn
-        QSJU84dhiM8QtzmKzeKFj8ixOUHr3CHXvtvcNxESHaheNC5foumzzMtn8CLgMYbcLHf083
-        dnN9BxWrdBnu8cT76qEXBHTHOIcnbsA=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-488-GWhH9Sb-Pf2rVZMqBlDXxA-1; Fri, 11 Sep 2020 11:24:17 -0400
-X-MC-Unique: GWhH9Sb-Pf2rVZMqBlDXxA-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id BA8E9107B270;
-        Fri, 11 Sep 2020 15:24:14 +0000 (UTC)
-Received: from fuller.cnet (ovpn-112-3.gru2.redhat.com [10.97.112.3])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 44A057ED65;
-        Fri, 11 Sep 2020 15:24:11 +0000 (UTC)
-Received: by fuller.cnet (Postfix, from userid 1000)
-        id EFACE41853FD; Fri, 11 Sep 2020 12:23:44 -0300 (-03)
-Date:   Fri, 11 Sep 2020 12:23:44 -0300
-From:   Marcelo Tosatti <mtosatti@redhat.com>
-To:     Nitesh Narayan Lal <nitesh@redhat.com>
-Cc:     linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-pci@vger.kernel.org, frederic@kernel.org,
-        sassmann@redhat.com, jeffrey.t.kirsher@intel.com,
-        jacob.e.keller@intel.com, jlelli@redhat.com, hch@infradead.org,
-        bhelgaas@google.com, mike.marciniszyn@intel.com,
-        dennis.dalessandro@intel.com, thomas.lendacky@amd.com,
-        jerinj@marvell.com, mathias.nyman@intel.com, jiri@nvidia.com
-Subject: Re: [RFC][Patch v1 2/3] i40e: limit msix vectors based on
- housekeeping CPUs
-Message-ID: <20200911152344.GA21157@fuller.cnet>
-References: <20200909150818.313699-1-nitesh@redhat.com>
- <20200909150818.313699-3-nitesh@redhat.com>
+        id S1726410AbgIKQhR convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 11 Sep 2020 12:37:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59732 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726432AbgIKPM6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Sep 2020 11:12:58 -0400
+Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E71FC061372
+        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2020 07:33:34 -0700 (PDT)
+Received: from lupine.hi.pengutronix.de ([2001:67c:670:100:3ad5:47ff:feaf:1a17] helo=lupine)
+        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <p.zabel@pengutronix.de>)
+        id 1kGk7E-0004h8-OX; Fri, 11 Sep 2020 16:33:28 +0200
+Received: from pza by lupine with local (Exim 4.92)
+        (envelope-from <p.zabel@pengutronix.de>)
+        id 1kGk77-0003hr-RU; Fri, 11 Sep 2020 16:33:21 +0200
+Message-ID: <1ac4ba40a031169b968e3084c132579db921033c.camel@pengutronix.de>
+Subject: Re: [v2,2/3] PCI: mediatek: Add new generation controller support
+From:   Philipp Zabel <p.zabel@pengutronix.de>
+To:     Jianjun Wang <jianjun.wang@mediatek.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Ryder Lee <ryder.lee@mediatek.com>
+Cc:     Matthias Brugger <matthias.bgg@gmail.com>,
+        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        davem@davemloft.net, linux-pci@vger.kernel.org,
+        linux-mediatek@lists.infradead.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        Sj Huang <sj.huang@mediatek.com>
+Date:   Fri, 11 Sep 2020 16:33:21 +0200
+In-Reply-To: <20200910034536.30860-3-jianjun.wang@mediatek.com>
+References: <20200910034536.30860-1-jianjun.wang@mediatek.com>
+         <20200910034536.30860-3-jianjun.wang@mediatek.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+User-Agent: Evolution 3.30.5-1.1 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200909150818.313699-3-nitesh@redhat.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+X-SA-Exim-Connect-IP: 2001:67c:670:100:3ad5:47ff:feaf:1a17
+X-SA-Exim-Mail-From: p.zabel@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-pci@vger.kernel.org
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Sep 09, 2020 at 11:08:17AM -0400, Nitesh Narayan Lal wrote:
-> In a realtime environment, it is essential to isolate unwanted IRQs from
-> isolated CPUs to prevent latency overheads. Creating MSIX vectors only
-> based on the online CPUs could lead to a potential issue on an RT setup
-> that has several isolated CPUs but a very few housekeeping CPUs. This is
-> because in these kinds of setups an attempt to move the IRQs to the
-> limited housekeeping CPUs from isolated CPUs might fail due to the per
-> CPU vector limit. This could eventually result in latency spikes because
-> of the IRQ threads that we fail to move from isolated CPUs.
+Hi Jianjun,
+
+On Thu, 2020-09-10 at 11:45 +0800, Jianjun Wang wrote:
+> MediaTek's PCIe host controller has three generation HWs, the new
+> generation HW is an individual bridge, it supoorts Gen3 speed and
+> up to 256 MSI interrupt numbers for multi-function devices.
 > 
-> This patch prevents i40e to add vectors only based on available
-> housekeeping CPUs by using num_housekeeping_cpus().
+> Add support for new Gen3 controller which can be found on MT8192.
 > 
-> Signed-off-by: Nitesh Narayan Lal <nitesh@redhat.com>
+> Signed-off-by: Jianjun Wang <jianjun.wang@mediatek.com>
+> Acked-by: Ryder Lee <ryder.lee@mediatek.com>
 > ---
->  drivers/net/ethernet/intel/i40e/i40e_main.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
+>  drivers/pci/controller/Kconfig              |   14 +
+>  drivers/pci/controller/Makefile             |    1 +
+>  drivers/pci/controller/pcie-mediatek-gen3.c | 1076 +++++++++++++++++++
+>  3 files changed, 1091 insertions(+)
+>  create mode 100644 drivers/pci/controller/pcie-mediatek-gen3.c
 > 
-> diff --git a/drivers/net/ethernet/intel/i40e/i40e_main.c b/drivers/net/ethernet/intel/i40e/i40e_main.c
-> index 2e433fdbf2c3..3b4cd4b3de85 100644
-> --- a/drivers/net/ethernet/intel/i40e/i40e_main.c
-> +++ b/drivers/net/ethernet/intel/i40e/i40e_main.c
-> @@ -5,6 +5,7 @@
->  #include <linux/of_net.h>
->  #include <linux/pci.h>
->  #include <linux/bpf.h>
-> +#include <linux/sched/isolation.h>
->  #include <generated/utsrelease.h>
->  
->  /* Local includes */
-> @@ -11002,7 +11003,7 @@ static int i40e_init_msix(struct i40e_pf *pf)
->  	 * will use any remaining vectors to reach as close as we can to the
->  	 * number of online CPUs.
->  	 */
-> -	cpus = num_online_cpus();
-> +	cpus = num_housekeeping_cpus();
->  	pf->num_lan_msix = min_t(int, cpus, vectors_left / 2);
->  	vectors_left -= pf->num_lan_msix;
->  
-> -- 
-> 2.27.0
+[...]
+> diff --git a/drivers/pci/controller/pcie-mediatek-gen3.c b/drivers/pci/controller/pcie-mediatek-gen3.c
+> new file mode 100644
+> index 000000000000..f8c8bdf88d33
+> --- /dev/null
+> +++ b/drivers/pci/controller/pcie-mediatek-gen3.c
+[...]
+> +static int mtk_pcie_power_up(struct mtk_pcie_port *port)
+> +{
+> +	struct device *dev = port->dev;
+> +	int err;
+> +
+> +	port->phy_reset = devm_reset_control_get_optional(dev, "phy-rst");
 
-For patches 1 and 2:
+Please use devm_reset_control_get_optional_exclusive() instead.
 
-Reviewed-by: Marcelo Tosatti <mtosatti@redhat.com>
+> +	if (PTR_ERR(port->phy_reset) == -EPROBE_DEFER)
+> +		return PTR_ERR(port->phy_reset);
 
+This should be
+
+	if (IS_ERR(port->phy_reset))
+		return PTR_ERR(port->phy_reset);
+
+there is no reason to continue if this throws -ENOMEM, for example.
+
+regards
+Philipp
