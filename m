@@ -8,54 +8,54 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,UNWANTED_LANGUAGE_BODY,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32CEDC43461
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Sep 2020 17:54:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69194C433E2
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Sep 2020 17:55:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E209A221ED
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Sep 2020 17:54:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 10996221EB
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Sep 2020 17:55:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="YGpCueX6"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Amvuijuf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725945AbgIKRyQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 11 Sep 2020 13:54:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56946 "EHLO
+        id S1726054AbgIKRy7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 11 Sep 2020 13:54:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56924 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725955AbgIKRxE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Sep 2020 13:53:04 -0400
-Received: from mail-pg1-x544.google.com (mail-pg1-x544.google.com [IPv6:2607:f8b0:4864:20::544])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91331C06179F
-        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2020 10:53:01 -0700 (PDT)
-Received: by mail-pg1-x544.google.com with SMTP id m5so7154131pgj.9
-        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2020 10:53:01 -0700 (PDT)
+        with ESMTP id S1725943AbgIKRw4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Sep 2020 13:52:56 -0400
+Received: from mail-pg1-x542.google.com (mail-pg1-x542.google.com [IPv6:2607:f8b0:4864:20::542])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3856BC0613ED
+        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2020 10:52:56 -0700 (PDT)
+Received: by mail-pg1-x542.google.com with SMTP id 5so7172307pgl.4
+        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2020 10:52:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=s171ISrLCqrZg+lz/LKmx38rbaVG/MrDiA63Yj6bUaQ=;
-        b=YGpCueX6zEpzOcmpaucltpEtXBgOTFxUAx6PzG3r1Oma7IjpX0KXtJN7bjotXlmgCM
-         MlPScxKgrTFqXDXUh8mMks5XNwQKPn2T6og687dL9YPY22r+RvBZma7iT2eQ64dpbfnd
-         rkvaTwF2R4j02LK3E24V3htTSVBQn/9V3kUKs=
+        bh=LDtAFZIWu+LWLGd1UlX1eNmOayfKdu9GSH05V8tUwmI=;
+        b=AmvuijufITU3bo1C5BpFJ1nDDHPphQK8/9KYcrp9QtQgclFdWpP+MOgaL9dmoqHvMA
+         oBzjjWrXUZK7m/Lp1SxQteuVbAxRja7jsCrh8b2qaCAy6gYhMNETFcDnuDRHchSO1bPp
+         6opA8VSpix7Yd0khRr1avgEi2hSw+GZEI0+jE=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=s171ISrLCqrZg+lz/LKmx38rbaVG/MrDiA63Yj6bUaQ=;
-        b=TjD24QQFANLSeqexM0miWhUU0byqE+PeiFdXJhKxbBjV1syAAgpmtSlZDUD9KggO2v
-         /FeCoKUCh3PRe+1ico0SA47BwvOS9m9OHOBNIVKW34NTXvWAm4SksZwJccfMEKAb0Uxq
-         /JiqV9FWc8znL/hBiCiHpXiUl9iUISqtVNIACm0AyHGajPdkB+xlHgrtauSrNPwcbjYw
-         YIuVCyjIESlhGNzn20hTWY0lNhKJwUn70y6YzzKhNlOhhcAs8zZEE8I8Mx+lGTdNko4P
-         OOqCPB9eF1r9IguL9n1gw88JtSGhce803nADGkBNGFehIU7dnoqMl0MoHcPFp52bwY8G
-         dCIQ==
-X-Gm-Message-State: AOAM533SVpmLUFnm1tBfV+enw7kgA3jegr/Z9H0IyzzCbUW1190IMIn3
-        sot5eEl9VJb5tu7+/eK9+2IyUs+jwxubufXUvPlTtAhPcNTIdF1ASOyGwnkhcJRlYkvAv45ii6f
-        EAe8IcYbyuBHKq0dk2YxnMEUr+JduzEDpiiffGrssKG8KR59TFZMz78rL64fiyKrpX1JjRXDhCR
-        sS1Ryq
-X-Google-Smtp-Source: ABdhPJxltOzL/Ye4exWYkU6ZupMaj7q8ZuP7qwcR7fNEQtFp+LuBDu7yqJT0S/hOgAXo+3t4EUfAoA==
-X-Received: by 2002:a63:36cc:: with SMTP id d195mr2525990pga.426.1599846780295;
-        Fri, 11 Sep 2020 10:53:00 -0700 (PDT)
+        bh=LDtAFZIWu+LWLGd1UlX1eNmOayfKdu9GSH05V8tUwmI=;
+        b=B0Uq0HOZ0c9D8jm8kKBqepHaEgunKcqIrLS+RrWF8wQqYKADyalO5R/U/kUOtbRliL
+         6FvHI0z1ukvBgDxlPLCb93ZAKhjjhuCiWYsygePwlKoKXIrSv/Kyw/axHuh4W8bOvXic
+         wj5xmvMWBcmb4Hqqmu9pFdGl5wfU9HLRk8HjiDhwjxc+3Hnzylo8m69JZ4Obt6PILmxi
+         aP9uWoUCYm17ZfIHyWU9WI/dd52sPcsNJ6bH/epC9yI7NDQaA3sgVuHxKQgOxNlpbXiK
+         2wyJanyKgOGCmWllVmpAiu1KepJ26nhAYpPsm7QsXOe4oFmq/NSABbBhwKiGFnnUjNN1
+         UQJw==
+X-Gm-Message-State: AOAM533s7Qsh5Ah/RmSx7oY9n6tn8wnydsBQoaA9G+QP4XFrqS7DfY95
+        KVgPgU9p61gYxFzjrNkrFdJItuWRzgvKth1RSPGp9/DUpYCLi8GSRX3Z61ldhmYed/U6KrvnYvT
+        3P6aDVu9B3EMJzvW6fem1kNkgXDHFfnsAEdJgB4cDRfYISlLS/FD69mVyOclEf1hdlgvxOHyKVM
+        ptHFI4
+X-Google-Smtp-Source: ABdhPJyhHECOF37B8cPeYszTu5V+UPeSgvuEGA8zmfHmlsioKPQtn0u3iL4UjDI7gz/BLeJyuRNeyA==
+X-Received: by 2002:a63:f752:: with SMTP id f18mr2345011pgk.94.1599846774810;
+        Fri, 11 Sep 2020 10:52:54 -0700 (PDT)
 Received: from stbsrv-and-01.and.broadcom.net ([192.19.231.250])
-        by smtp.gmail.com with ESMTPSA id d77sm2871963pfd.121.2020.09.11.10.52.57
+        by smtp.gmail.com with ESMTPSA id d77sm2871963pfd.121.2020.09.11.10.52.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 11 Sep 2020 10:52:59 -0700 (PDT)
+        Fri, 11 Sep 2020 10:52:53 -0700 (PDT)
 From:   Jim Quinlan <james.quinlan@broadcom.com>
 To:     linux-pci@vger.kernel.org,
         Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
@@ -67,226 +67,165 @@ Cc:     Jim Quinlan <jquinlan@broadcom.com>,
         Rob Herring <robh@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Florian Fainelli <f.fainelli@gmail.com>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
         linux-rpi-kernel@lists.infradead.org (moderated list:BROADCOM
         BCM2711/BCM2835 ARM ARCHITECTURE),
         linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM
         BCM2711/BCM2835 ARM ARCHITECTURE),
         linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v12 08/10] PCI: brcmstb: Accommodate MSI for older chips
-Date:   Fri, 11 Sep 2020 13:52:28 -0400
-Message-Id: <20200911175232.19016-9-james.quinlan@broadcom.com>
+Subject: [PATCH v12 06/10] PCI: brcmstb: Add control of rescal reset
+Date:   Fri, 11 Sep 2020 13:52:26 -0400
+Message-Id: <20200911175232.19016-7-james.quinlan@broadcom.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200911175232.19016-1-james.quinlan@broadcom.com>
 References: <20200911175232.19016-1-james.quinlan@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000001325f005af0d5b08"
+        boundary="000000000000beed0505af0d5a19"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
---0000000000001325f005af0d5b08
+--000000000000beed0505af0d5a19
 
 From: Jim Quinlan <jquinlan@broadcom.com>
 
-Older BrcmSTB chips do not have a separate register for MSI interrupts; the
-MSIs are in a register that also contains unrelated interrupts.  In
-addition, the interrupts lie in bits [31..24] for these legacy chips.  This
-commit provides common code for both legacy and non-legacy MSI interrupt
-registers.
+Some STB chips have a special purpose reset controller named RESCAL (reset
+calibration).  The PCIe HW can now control RESCAL to start and stop its
+operation.  On probe(), the RESCAL is deasserted and the driver goes
+through the sequence of setting registers and reading status in order to
+start the internal PHY that is required for the PCIe.
 
 Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
 Acked-by: Florian Fainelli <f.fainelli@gmail.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
 ---
- drivers/pci/controller/pcie-brcmstb.c | 70 +++++++++++++++++++--------
- 1 file changed, 49 insertions(+), 21 deletions(-)
+ drivers/pci/controller/pcie-brcmstb.c | 69 ++++++++++++++++++++++++++-
+ 1 file changed, 68 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
-index 330f68c5b579..10449384380f 100644
+index 947cf3115eb0..8a84811972bd 100644
 --- a/drivers/pci/controller/pcie-brcmstb.c
 +++ b/drivers/pci/controller/pcie-brcmstb.c
-@@ -83,7 +83,8 @@
- #define PCIE_MISC_MSI_BAR_CONFIG_HI			0x4048
- 
- #define PCIE_MISC_MSI_DATA_CONFIG			0x404c
--#define  PCIE_MISC_MSI_DATA_CONFIG_VAL			0xffe06540
-+#define  PCIE_MISC_MSI_DATA_CONFIG_VAL_32		0xffe06540
-+#define  PCIE_MISC_MSI_DATA_CONFIG_VAL_8		0xfff86540
- 
- #define PCIE_MISC_PCIE_CTRL				0x4064
- #define  PCIE_MISC_PCIE_CTRL_PCIE_L23_REQUEST_MASK	0x1
-@@ -95,6 +96,9 @@
- #define  PCIE_MISC_PCIE_STATUS_PCIE_PHYLINKUP_MASK	0x10
- #define  PCIE_MISC_PCIE_STATUS_PCIE_LINK_IN_L23_MASK	0x40
- 
-+#define PCIE_MISC_REVISION				0x406c
-+#define  BRCM_PCIE_HW_REV_33				0x0303
-+
- #define PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT		0x4070
- #define  PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT_LIMIT_MASK	0xfff00000
- #define  PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT_BASE_MASK	0xfff0
-@@ -115,10 +119,14 @@
- #define  PCIE_MISC_HARD_PCIE_HARD_DEBUG_CLKREQ_DEBUG_ENABLE_MASK	0x2
- #define  PCIE_MISC_HARD_PCIE_HARD_DEBUG_SERDES_IDDQ_MASK		0x08000000
- 
--#define PCIE_MSI_INTR2_STATUS				0x4500
--#define PCIE_MSI_INTR2_CLR				0x4508
--#define PCIE_MSI_INTR2_MASK_SET				0x4510
--#define PCIE_MSI_INTR2_MASK_CLR				0x4514
-+
-+#define PCIE_INTR2_CPU_BASE		0x4300
-+#define PCIE_MSI_INTR2_BASE		0x4500
-+/* Offsets from PCIE_INTR2_CPU_BASE and PCIE_MSI_INTR2_BASE */
-+#define  MSI_INT_STATUS			0x0
-+#define  MSI_INT_CLR			0x8
-+#define  MSI_INT_MASK_SET		0x10
-+#define  MSI_INT_MASK_CLR		0x14
- 
- #define PCIE_EXT_CFG_DATA				0x8000
- 
-@@ -138,6 +146,8 @@
- /* PCIe parameters */
- #define BRCM_NUM_PCIE_OUT_WINS		0x4
- #define BRCM_INT_PCI_MSI_NR		32
-+#define BRCM_INT_PCI_MSI_LEGACY_NR	8
-+#define BRCM_INT_PCI_MSI_SHIFT		0
- 
- /* MSI target adresses */
- #define BRCM_MSI_TARGET_ADDR_LT_4GB	0x0fffffffcULL
-@@ -253,6 +263,12 @@ struct brcm_msi {
- 	int			irq;
- 	/* used indicates which MSI interrupts have been alloc'd */
- 	unsigned long		used;
-+	bool			legacy;
-+	/* Some chips have MSIs in bits [31..24] of a shared register. */
-+	int			legacy_shift;
-+	int			nr; /* No. of MSI available, depends on chip */
-+	/* This is the base pointer for interrupt status/set/clr regs */
-+	void __iomem		*intr_base;
- };
- 
- /* Internal PCIe Host Controller Information.*/
-@@ -463,8 +479,10 @@ static void brcm_pcie_msi_isr(struct irq_desc *desc)
- 	msi = irq_desc_get_handler_data(desc);
- 	dev = msi->dev;
- 
--	status = readl(msi->base + PCIE_MSI_INTR2_STATUS);
--	for_each_set_bit(bit, &status, BRCM_INT_PCI_MSI_NR) {
-+	status = readl(msi->intr_base + MSI_INT_STATUS);
-+	status >>= msi->legacy_shift;
-+
-+	for_each_set_bit(bit, &status, msi->nr) {
- 		virq = irq_find_mapping(msi->inner_domain, bit);
- 		if (virq)
- 			generic_handle_irq(virq);
-@@ -481,7 +499,7 @@ static void brcm_msi_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
- 
- 	msg->address_lo = lower_32_bits(msi->target_addr);
- 	msg->address_hi = upper_32_bits(msi->target_addr);
--	msg->data = (0xffff & PCIE_MISC_MSI_DATA_CONFIG_VAL) | data->hwirq;
-+	msg->data = (0xffff & PCIE_MISC_MSI_DATA_CONFIG_VAL_32) | data->hwirq;
+@@ -23,6 +23,7 @@
+ #include <linux/of_platform.h>
+ #include <linux/pci.h>
+ #include <linux/printk.h>
++#include <linux/reset.h>
+ #include <linux/sizes.h>
+ #include <linux/slab.h>
+ #include <linux/string.h>
+@@ -994,6 +995,52 @@ static void brcm_pcie_enter_l23(struct brcm_pcie *pcie)
+ 		dev_err(pcie->dev, "failed to enter low-power link state\n");
  }
  
- static int brcm_msi_set_affinity(struct irq_data *irq_data,
-@@ -493,8 +511,9 @@ static int brcm_msi_set_affinity(struct irq_data *irq_data,
- static void brcm_msi_ack_irq(struct irq_data *data)
++static int brcm_phy_cntl(struct brcm_pcie *pcie, const int start)
++{
++	static const u32 shifts[PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_NFLDS] = {
++		PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_PWRDN_SHIFT,
++		PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_RESET_SHIFT,
++		PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_DIG_RESET_SHIFT,};
++	static const u32 masks[PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_NFLDS] = {
++		PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_PWRDN_MASK,
++		PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_RESET_MASK,
++		PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_DIG_RESET_MASK,};
++	const int beg = start ? 0 : PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_NFLDS - 1;
++	const int end = start ? PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_NFLDS : -1;
++	u32 tmp, combined_mask = 0;
++	u32 val;
++	void __iomem *base = pcie->base;
++	int i, ret;
++
++	for (i = beg; i != end; start ? i++ : i--) {
++		val = start ? BIT_MASK(shifts[i]) : 0;
++		tmp = readl(base + PCIE_DVT_PMU_PCIE_PHY_CTRL);
++		tmp = (tmp & ~masks[i]) | (val & masks[i]);
++		writel(tmp, base + PCIE_DVT_PMU_PCIE_PHY_CTRL);
++		usleep_range(50, 200);
++		combined_mask |= masks[i];
++	}
++
++	tmp = readl(base + PCIE_DVT_PMU_PCIE_PHY_CTRL);
++	val = start ? combined_mask : 0;
++
++	ret = (tmp & combined_mask) == val ? 0 : -EIO;
++	if (ret)
++		dev_err(pcie->dev, "failed to %s phy\n", (start ? "start" : "stop"));
++
++	return ret;
++}
++
++static inline int brcm_phy_start(struct brcm_pcie *pcie)
++{
++	return pcie->rescal ? brcm_phy_cntl(pcie, 1) : 0;
++}
++
++static inline int brcm_phy_stop(struct brcm_pcie *pcie)
++{
++	return pcie->rescal ? brcm_phy_cntl(pcie, 0) : 0;
++}
++
+ static void brcm_pcie_turn_off(struct brcm_pcie *pcie)
  {
- 	struct brcm_msi *msi = irq_data_get_irq_chip_data(data);
-+	const int shift_amt = data->hwirq + msi->legacy_shift;
- 
--	writel(1 << data->hwirq, msi->base + PCIE_MSI_INTR2_CLR);
-+	writel(1 << shift_amt, msi->intr_base + MSI_INT_CLR);
- }
- 
- 
-@@ -510,7 +529,7 @@ static int brcm_msi_alloc(struct brcm_msi *msi)
- 	int hwirq;
- 
- 	mutex_lock(&msi->lock);
--	hwirq = bitmap_find_free_region(&msi->used, BRCM_INT_PCI_MSI_NR, 0);
-+	hwirq = bitmap_find_free_region(&msi->used, msi->nr, 0);
- 	mutex_unlock(&msi->lock);
- 
- 	return hwirq;
-@@ -559,8 +578,7 @@ static int brcm_allocate_domains(struct brcm_msi *msi)
- 	struct fwnode_handle *fwnode = of_node_to_fwnode(msi->np);
- 	struct device *dev = msi->dev;
- 
--	msi->inner_domain = irq_domain_add_linear(NULL, BRCM_INT_PCI_MSI_NR,
--						  &msi_domain_ops, msi);
-+	msi->inner_domain = irq_domain_add_linear(NULL, msi->nr, &msi_domain_ops, msi);
- 	if (!msi->inner_domain) {
- 		dev_err(dev, "failed to create IRQ domain\n");
- 		return -ENOMEM;
-@@ -597,7 +615,10 @@ static void brcm_msi_remove(struct brcm_pcie *pcie)
- 
- static void brcm_msi_set_regs(struct brcm_msi *msi)
+ 	void __iomem *base = pcie->base;
+@@ -1021,11 +1068,13 @@ static void brcm_pcie_turn_off(struct brcm_pcie *pcie)
+ static int brcm_pcie_suspend(struct device *dev)
  {
--	writel(0xffffffff, msi->base + PCIE_MSI_INTR2_MASK_CLR);
-+	u32 val = __GENMASK(31, msi->legacy_shift);
-+
-+	writel(val, msi->intr_base + MSI_INT_MASK_CLR);
-+	writel(val, msi->intr_base + MSI_INT_CLR);
+ 	struct brcm_pcie *pcie = dev_get_drvdata(dev);
++	int ret;
  
- 	/*
- 	 * The 0 bit of PCIE_MISC_MSI_BAR_CONFIG_LO is repurposed to MSI
-@@ -608,8 +629,8 @@ static void brcm_msi_set_regs(struct brcm_msi *msi)
- 	writel(upper_32_bits(msi->target_addr),
- 	       msi->base + PCIE_MISC_MSI_BAR_CONFIG_HI);
+ 	brcm_pcie_turn_off(pcie);
++	ret = brcm_phy_stop(pcie);
+ 	clk_disable_unprepare(pcie->clk);
  
--	writel(PCIE_MISC_MSI_DATA_CONFIG_VAL,
--	       msi->base + PCIE_MISC_MSI_DATA_CONFIG);
-+	val = msi->legacy ? PCIE_MISC_MSI_DATA_CONFIG_VAL_8 : PCIE_MISC_MSI_DATA_CONFIG_VAL_32;
-+	writel(val, msi->base + PCIE_MISC_MSI_DATA_CONFIG);
+-	return 0;
++	return ret;
  }
  
- static int brcm_pcie_enable_msi(struct brcm_pcie *pcie)
-@@ -634,6 +655,17 @@ static int brcm_pcie_enable_msi(struct brcm_pcie *pcie)
- 	msi->np = pcie->np;
- 	msi->target_addr = pcie->msi_target_addr;
- 	msi->irq = irq;
-+	msi->legacy = pcie->hw_rev < BRCM_PCIE_HW_REV_33;
+ static int brcm_pcie_resume(struct device *dev)
+@@ -1038,6 +1087,9 @@ static int brcm_pcie_resume(struct device *dev)
+ 	base = pcie->base;
+ 	clk_prepare_enable(pcie->clk);
+ 
++	ret = brcm_phy_start(pcie);
++		return ret;
 +
-+	if (msi->legacy) {
-+		msi->intr_base = msi->base + PCIE_INTR2_CPU_BASE;
-+		msi->nr = BRCM_INT_PCI_MSI_LEGACY_NR;
-+		msi->legacy_shift = 24;
-+	} else {
-+		msi->intr_base = msi->base + PCIE_MSI_INTR2_BASE;
-+		msi->nr = BRCM_INT_PCI_MSI_NR;
-+		msi->legacy_shift = 0;
+ 	/* Take bridge out of reset so we can access the SERDES reg */
+ 	pcie->bridge_sw_init_set(pcie, 0);
+ 
+@@ -1063,6 +1115,8 @@ static void __brcm_pcie_remove(struct brcm_pcie *pcie)
+ {
+ 	brcm_msi_remove(pcie);
+ 	brcm_pcie_turn_off(pcie);
++	brcm_phy_stop(pcie);
++	reset_control_assert(pcie->rescal);
+ 	clk_disable_unprepare(pcie->clk);
+ }
+ 
+@@ -1142,6 +1196,19 @@ static int brcm_pcie_probe(struct platform_device *pdev)
+ 		dev_err(&pdev->dev, "could not enable clock\n");
+ 		return ret;
+ 	}
++	pcie->rescal = devm_reset_control_get_optional_shared(&pdev->dev, "rescal");
++	if (IS_ERR(pcie->rescal))
++		return PTR_ERR(pcie->rescal);
++
++	ret = reset_control_deassert(pcie->rescal);
++	if (ret)
++		dev_err(&pdev->dev, "failed to deassert 'rescal'\n");
++
++	ret = brcm_phy_start(pcie);
++	if (ret) {
++		reset_control_assert(pcie->rescal);
++		return ret;
 +	}
  
- 	ret = brcm_allocate_domains(msi);
+ 	ret = brcm_pcie_setup(pcie);
  	if (ret)
-@@ -904,12 +936,6 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
- 	tmp &= ~PCIE_MISC_RC_BAR3_CONFIG_LO_SIZE_MASK;
- 	writel(tmp, base + PCIE_MISC_RC_BAR3_CONFIG_LO);
- 
--	/* Mask all interrupts since we are not handling any yet */
--	writel(0xffffffff, pcie->base + PCIE_MSI_INTR2_MASK_SET);
--
--	/* clear any interrupts we find on boot */
--	writel(0xffffffff, pcie->base + PCIE_MSI_INTR2_CLR);
--
- 	if (pcie->gen)
- 		brcm_pcie_set_gen(pcie, pcie->gen);
- 
-@@ -1245,6 +1271,8 @@ static int brcm_pcie_probe(struct platform_device *pdev)
- 	if (ret)
- 		goto fail;
- 
-+	pcie->hw_rev = readl(pcie->base + PCIE_MISC_REVISION);
-+
- 	msi_np = of_parse_phandle(pcie->np, "msi-parent", 0);
- 	if (pci_msi_enabled() && msi_np == pcie->np) {
- 		ret = brcm_pcie_enable_msi(pcie);
 -- 
 2.17.1
 
 
---0000000000001325f005af0d5b08
+--000000000000beed0505af0d5a19
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -356,14 +295,14 @@ V6GuAMmRknrzeTlxPy40UhUcRKk6Nm8mxl3Jh4KB68z7NFVpIx8G5w5I7S5ar1mLGNRjtFZ0RE4O
 lcCwKVGUXRaZMgQGrIhxGVelVgrcBh2vjpndlv733VI2VKE/TvV5MxMGU18RnogYSm66AEFA/Zb+
 5ztz1AtIMYICbzCCAmsCAQEwbTBdMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBu
 di1zYTEzMDEGA1UEAxMqR2xvYmFsU2lnbiBQZXJzb25hbFNpZ24gMiBDQSAtIFNIQTI1NiAtIEcz
-AgwTv2xmtR4KOmK4QvMwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIPU5YP/t2hmF
-HjlkIYbb80xw6eNyGQKDvGz+vGqt6E0qMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZI
-hvcNAQkFMQ8XDTIwMDkxMTE3NTMwMFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJ
+AgwTv2xmtR4KOmK4QvMwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIAeDnNUTHltq
+s6BF/3DG58hQtBS1WhxZ0XsutopjwxLkMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZI
+hvcNAQkFMQ8XDTIwMDkxMTE3NTI1NVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJ
 YIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcN
-AQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBeQDFYVyMhYf4BohgfRAZ4OvLZILwS
-2DOU1QRuuHCqMxIJlMMnugzHQ6ibftHSsXh/dJXurNy+K1zMZbzxteClebT7GcbjE1Dp6ut/Y9ef
-Xr4RAfNIK8f4fzvnG5UEWCtw5lRffOoVI0hzfasCAnyPBfuVTjQcW6oQJN+o2s2ls5vhve4wHLu7
-+mgmv5ZyTef28PR+8SLYpRtPwxHvj5PwE8Rfr6vokQYSYrVMvho5kyLzkGwL7nrvHVIyUiTzzekC
-ZueelavVM+PPBBTpnik96EiI3xpDrKN0y6O6y+Un0zp62d42PhdCdw82WSJ/Sam4o+aTjoA9QfqK
-jEwt5wIF
---0000000000001325f005af0d5b08--
+AQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQDeWt1jDm8yFRkot2+eO+QxW3Lv4ih+
+LR4687ai/Yf8mKmOzi7c7ip20J7F0QyAOfZFnHrIjba5RIP6Msjv1yY9T6imPutNCT0a9X+fZ4YC
+2eQHJKTLJDh7+YfDCajGwdFlhlgA+RdALiabxsdM9z6R2NkCzh6yki/XkyCFkWMoT406V9pTVaKp
+P7TsPLNcmk5qKROOSJDfLxakwc/N7nAm2soHsLA1VkRxdLKCDX+TFo3xLgTxH4H0kIt2/zM2cVnQ
+lJ3tm4S5gi3zpLKnqFNcCcADtYAlrKFeKR6AUNbsrweWcSecyF/mE6ycgnx+YAuhtm42ZLhFLjU2
+FhJt3hy1
+--000000000000beed0505af0d5a19--
