@@ -2,189 +2,436 @@ Return-Path: <SRS0=ryE9=CX=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+X-Spam-Status: No, score=-11.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DADFC43461
-	for <linux-pci@archiver.kernel.org>; Mon, 14 Sep 2020 14:32:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FC92C433E2
+	for <linux-pci@archiver.kernel.org>; Mon, 14 Sep 2020 14:34:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 14197206C9
-	for <linux-pci@archiver.kernel.org>; Mon, 14 Sep 2020 14:32:09 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="tXRNMFg/";
-	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="BIfAu2OU"
+	by mail.kernel.org (Postfix) with ESMTP id 0DC36216C4
+	for <linux-pci@archiver.kernel.org>; Mon, 14 Sep 2020 14:34:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1600094070;
+	bh=YofIJT7hGk9ue3KB7CrdnFSD9Las8gAsZInxMUkrQk0=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=1XXF2ClsLCRAjN6xOkNou25mGyThVnWRMi6+8FBpoBZoNe99ePW80Y9T42yRhdX4M
+	 mkvZabeFt/B/lhTInxy7Di/nHz3jc0QnGzJbW4R2umhqTQkauhnjeeamDLq+xOWx2m
+	 RI9+F+645pSDkm81HA/gaX0QhxaNTQt8Qqmgl+VQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726622AbgINObl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 14 Sep 2020 10:31:41 -0400
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:56989 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726570AbgINOav (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Sep 2020 10:30:51 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1600093850; x=1631629850;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-id:content-transfer-encoding:
-   mime-version;
-  bh=mOPO3mRWsy0zFJx4/mseJkajmcGc2uB7FSp1ZZyMLEg=;
-  b=tXRNMFg/6xaQN7j4AjUGEGyw4mBvucW2ZVnkG6mNpn3x0NRnQZ5MSmRH
-   oUvTgAjr0YUjWy7xM7+Yn3UpxsDQQZTeViPp7OKshkVZkq/fjMFsngzlR
-   w1fi9VCLlg3IaUXLKfvARTVsEG5w8qi9RKzFPm9zIPEJV4RtwAf3nw84o
-   3ZdbQrnqrsv4RkVVc/A4fnmFeptvyEsr93a+Tx/iLjaAMeHU9SPh/SusH
-   POhW6iLwBemqUE8AwepH8Buvm+QXAHnSr2jbDlQFWuxOVlSCLgmaoHAD7
-   YMNFJAtTH4VcpiK9YhcXCEB/JOK8hItg9FpU1JqnZ1gEd/r3hvPDq1FZn
-   w==;
-IronPort-SDR: kxo2PQGKfrC5E+E5gNsCso9U1ceYF/H3UOad5oWXZL9i3va9Sp0lSRpgz+UbT+Fz7NlPY7ry5i
- /N4KBAAmibzkL8KnZmzQssoCrmUJnsg/aSCb7B0A3vNxLqvQ0FO0ggNQmtzkpVgJ1Lm5BTjVRT
- 9GtFl9ckyVEr9gb5VNCMi21h/ozPNYoEC7/fNuIYb9s/4RQER2OWXdTh+SBgDY4rHHHrKbVvVA
- 9VFApMs0VId2DeK+xaGnxCNNrSIc+wqjMLkLbmIaecaiPsQYc3hGCCcKwvn2LOd1vU+ZGLzQck
- A+4=
-X-IronPort-AV: E=Sophos;i="5.76,426,1592895600"; 
-   d="scan'208";a="88995237"
-Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa2.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 14 Sep 2020 07:30:40 -0700
-Received: from chn-vm-ex02.mchp-main.com (10.10.85.144) by
- chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Mon, 14 Sep 2020 07:30:37 -0700
-Received: from NAM10-BN7-obe.outbound.protection.outlook.com (10.10.215.89) by
- email.microchip.com (10.10.87.72) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1979.3 via Frontend
- Transport; Mon, 14 Sep 2020 07:30:37 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=LkrvZNBfEFuZ3DgPEbLpzGkvnLvd79+tZs0N451AguVFirx6JwS4nZop8RA2xhcuW9ux8XtYGMzx5KySXNUjRZ+Dnt3UK/99786g3TpWhyOJZYRmEDMDe7sJTH5lrkFU2xf+XvKESGpxii8xeECAYr/dpP8wx6aebp3bAi1b+WwDx1L1oxqFSMyzwPXgpyXRLYU22PKcZ+GiALcrB7hW0393Wui5InXYUsvEaw9odEaI1Jo/40YUir3yMiSQ6yMrXgXa4FJ7ChvmODVCoFjeq6gYJCKNU0y8i3GcGq9G3De1L6fv6SoFHl1mtgcWXKb1oieyyhvqd/oBx9jhQEJ3IA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=mOPO3mRWsy0zFJx4/mseJkajmcGc2uB7FSp1ZZyMLEg=;
- b=Kk8vB7USqNgDjiUwH+icvWLodZWckWU5pMuaIyV2iCXLJugo58VkKCPzSauMdMi6PHABtWdOJ4qkDi4fuO2EC0tZqSMY7D/YXD4+tdDfmCMsrERyhOCACStkNptlmG9uEI3xIUAmn2vgGspUV9m5LRmuRtAxOmKaCT1GBEhXC311ivQC89a2zNTQYRK53KItNlu15oyS6doFx2MHpB5DgyuIW050L54tmCKmNFG+8ut7nAhV8KvrZaFZW+MEbh0ldp3kVDcMepKhNn8xA6Bs+hM7F7BIR4RT3pD6l0nEvQ/vacxmje4+rRht4+XwBDGj8d+ja+qo9bTjRb4Dmd96Zw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microchip.com; dmarc=pass action=none
- header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=microchiptechnology.onmicrosoft.com;
- s=selector2-microchiptechnology-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=mOPO3mRWsy0zFJx4/mseJkajmcGc2uB7FSp1ZZyMLEg=;
- b=BIfAu2OUrAyXqcdUgTTc19J+hHDna/UxvhCRCJ6pXmm36lc+PhvOlZ/CRHGSBbTO1VfIo4U2c1VgX0JGb8SSH/UQnawo7NSTAYZLjBzV6JvdrjSe4XovAi61PD5QyGQlaf3sOxxrDcsdBXKfv9pEPpn01KZC/ZSKNQH4dDhtvUU=
-Received: from MN2PR11MB4269.namprd11.prod.outlook.com (2603:10b6:208:190::32)
- by BL0PR11MB3459.namprd11.prod.outlook.com (2603:10b6:208:69::15) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3370.16; Mon, 14 Sep
- 2020 14:30:38 +0000
-Received: from MN2PR11MB4269.namprd11.prod.outlook.com
- ([fe80::38d4:de41:43a4:4642]) by MN2PR11MB4269.namprd11.prod.outlook.com
- ([fe80::38d4:de41:43a4:4642%7]) with mapi id 15.20.3370.019; Mon, 14 Sep 2020
- 14:30:38 +0000
-From:   <Daire.McNamara@microchip.com>
-To:     <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
-        <linux-pci@vger.kernel.org>, <robh@kernel.org>,
-        <robh+dt@kernel.org>, <devicetree@vger.kernel.org>
-CC:     <david.abdurachmanov@gmail.com>
-Subject: Re: [PATCH v16 2/3] dt-bindings: PCI: microchip: Add Microchip
- PolarFire host binding
-Thread-Topic: [PATCH v16 2/3] dt-bindings: PCI: microchip: Add Microchip
- PolarFire host binding
-Thread-Index: AQHWiqOdSWWbCdLV9U24fK+YHFIgrg==
-Date:   Mon, 14 Sep 2020 14:30:38 +0000
-Message-ID: <2c2f0aa7-3ee4-1874-87e4-d224b192c6ed@microchip.com>
-References: <6bd2bce1-1241-e2e1-cab7-c48813584248@microchip.com>
-In-Reply-To: <6bd2bce1-1241-e2e1-cab7-c48813584248@microchip.com>
-Accept-Language: en-IE, en-US
-Content-Language: en-IE
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: arm.com; dkim=none (message not signed)
- header.d=none;arm.com; dmarc=none action=none header.from=microchip.com;
-x-originating-ip: [88.87.191.50]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: e2f31e21-9c8a-4a91-fa00-08d858bac05c
-x-ms-traffictypediagnostic: BL0PR11MB3459:
-x-microsoft-antispam-prvs: <BL0PR11MB345925020539E1F9B63D210696230@BL0PR11MB3459.namprd11.prod.outlook.com>
-x-bypassexternaltag: True
-x-ms-oob-tlc-oobclassifiers: OLM:3968;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: LBlei9Av7oSLlI3mrTE9D1SjD516/2ey6RAzNx88A+sGl9dP/QxRC7d6x20+5ojTQDS10T7rn/5+V+R8vcEhkIzCN6vu30gljMRwmBfDkOCiUVmvvgJb3q5G2xqNOddFs0mcNBwYDIvoIl5SqZdyRAn5/YWMurajN1aHyTmuu/jdoHzKudG3E64o6Bk8Aw/d5DwcpYP7yVb3tcqVluLXKK85HlfLN+7mZc4Le82M+PdH6y76ZhIf4Sua6FSmGXkadM4novtmyjhcE4yW2wf0lS+omOWLCQA4XuTxU3tSwCwct0/Jt7wEw6gfueDPcYJck73TZnItc6ocu2qqYdsQjHpnsdFqCl/t6PhESfk1osiUVGMvylw9LIt6PRL5NhMfgnOgV0xG0rxhmRrxEzQyGQ==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR11MB4269.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(396003)(136003)(39860400002)(376002)(346002)(366004)(66446008)(36756003)(2906002)(86362001)(8936002)(966005)(110136005)(316002)(6486002)(4326008)(66946007)(2616005)(31686004)(64756008)(478600001)(66476007)(66556008)(6512007)(91956017)(31696002)(71200400001)(186003)(76116006)(8676002)(26005)(6506007)(5660300002);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata: bJpzJSg+C8yW/8zyF99UgLnnGby/NkqFfl+iPlJzVWYyQXUAPLe1L6grcg4+CSx/r9PdzjgwUjuG+WflcPXAsGjWxWbk1d/fK3DCkfWAqE2mR6NcreO6B6rHHdY3XhV7PSl/aKII56puLUV+ECEpO/nyjqwtwY++PEGjoFJW3FU5N30QiH6Qvi49sp1d0e2nLta5nnU8Nf5ByeaVyfMnkgkn2yW8czy02TLr2SVk2eI4GaS4VXN0nw69qq5ZjI69pTXp9Im8aWdvtkztgyNw44tfAfLCoydrulV5QDw0w8HV2L+fsYTZH9bvnrEj8awwGPe/gWSt5Nj/q9qx9oMAHLjrVenK1dS1++DWS+1G2Gn5GE6zE53QmrpGD3MOj8+E4Z9dQb3hURVz+Jk/MacfQS8iLvhaR5Uwmyr9H4E0YrJ8lzcywQOSbAgcxtkexrfiygSiYy1LWtqeBjOYudxOOL5AnI+YjWI9gjKMT+WoSpRfJDWxlyD1s4ISau7kmSpTTOSgwxXjkzlZ8V/b4DtXFPaE/Qsy7Vn/n6Ls8mjapS35JON3vCfzRRbYfS6rkolbk+z9atQ0O4TNyg0heG565eBsRGv+SQ9NDCWEh4zCVMQdKBbeI2G8Yfr9yprmzICSTekYyXAcTkgWTkVRndt2Yw==
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <A763D62CB3CC1148B7AB95B2EA1CF8BA@namprd11.prod.outlook.com>
-Content-Transfer-Encoding: base64
+        id S1726653AbgINOeZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 14 Sep 2020 10:34:25 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46236 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726752AbgINOcb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 14 Sep 2020 10:32:31 -0400
+Received: from mail-oi1-f182.google.com (mail-oi1-f182.google.com [209.85.167.182])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9DFDE207EA;
+        Mon, 14 Sep 2020 14:32:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1600093949;
+        bh=YofIJT7hGk9ue3KB7CrdnFSD9Las8gAsZInxMUkrQk0=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=FwEeRWDtibtWFRoWEuKLy9J20D9HtBVsMhdQsxWx3fFQO3QKYQJ0Vofk2sENchqVG
+         RR2MG6/gA0PyibAp0Xmjjl+3XRamQEAsgJXKN0UDJDxVk+7T3wk6QFN5QzEr6kgOAl
+         iI6Ve1SPgfeIfsMQhiQf2Ox4m435UjK6hkjpHZfw=
+Received: by mail-oi1-f182.google.com with SMTP id x19so105030oix.3;
+        Mon, 14 Sep 2020 07:32:29 -0700 (PDT)
+X-Gm-Message-State: AOAM5330s8Mmp0IGLQC8u9BmpcqrUCt6FW2hD0h3siy/+Su8D9JqLpRx
+        dgAEBaqG6V2avYDh4Af/6issAxXb37geqysxYQ==
+X-Google-Smtp-Source: ABdhPJzS/DWXs28Wldey5jZtJV5LeOyL6S0f46cXQ+TaUcwK089s3k9DwBs3X8QmwGVKk0CYqSeDKHkiAijt5sj7jCI=
+X-Received: by 2002:aca:4cc7:: with SMTP id z190mr9193353oia.147.1600093948903;
+ Mon, 14 Sep 2020 07:32:28 -0700 (PDT)
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: MN2PR11MB4269.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e2f31e21-9c8a-4a91-fa00-08d858bac05c
-X-MS-Exchange-CrossTenant-originalarrivaltime: 14 Sep 2020 14:30:38.5146
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: YaJvWKVTB2fR5fe4rk2xhLjsChy1TdPFsOTiox8wcmWnVHNKqDbPSOP/GOKp6OqF85R5qx/XDVKO+WSygf7OzZNJ0IN0tlTQfReorPETxyM=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL0PR11MB3459
+References: <20200910034536.30860-1-jianjun.wang@mediatek.com>
+ <20200910034536.30860-3-jianjun.wang@mediatek.com> <20200911224434.GA2905744@bogus>
+ <1600081533.2521.49.camel@mhfsdcap03>
+In-Reply-To: <1600081533.2521.49.camel@mhfsdcap03>
+From:   Rob Herring <robh@kernel.org>
+Date:   Mon, 14 Sep 2020 08:32:17 -0600
+X-Gmail-Original-Message-ID: <CAL_JsqJ0sBK0pSDec3KBwNNq9metxn2x1-O9ANzPOktboRxc1A@mail.gmail.com>
+Message-ID: <CAL_JsqJ0sBK0pSDec3KBwNNq9metxn2x1-O9ANzPOktboRxc1A@mail.gmail.com>
+Subject: Re: [v2,2/3] PCI: mediatek: Add new generation controller support
+To:     Jianjun Wang <jianjun.wang@mediatek.com>
+Cc:     devicetree@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        PCI <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Sj Huang <sj.huang@mediatek.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-mediatek@lists.infradead.org>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        David Miller <davem@davemloft.net>,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-DQpBZGQgZGV2aWNlIHRyZWUgYmluZGluZ3MgZm9yIHRoZSBNaWNyb2NoaXAgUG9sYXJGaXJlIFBD
-SWUgY29udHJvbGxlcg0Kd2hlbiBjb25maWd1cmVkIGluIGhvc3QgKFJvb3QgQ29tcGxleCkgbW9k
-ZS4NCg0KU2lnbmVkLW9mZi1ieTogRGFpcmUgTWNOYW1hcmEgPGRhaXJlLm1jbmFtYXJhQG1pY3Jv
-Y2hpcC5jb20+DQotLS0NCiAuLi4vYmluZGluZ3MvcGNpL21pY3JvY2hpcCxwY2llLWhvc3QueWFt
-bCAgICAgfCA5MyArKysrKysrKysrKysrKysrKysrDQogMSBmaWxlIGNoYW5nZWQsIDkzIGluc2Vy
-dGlvbnMoKykNCiBjcmVhdGUgbW9kZSAxMDA2NDQgRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2Jp
-bmRpbmdzL3BjaS9taWNyb2NoaXAscGNpZS1ob3N0LnlhbWwNCg0KZGlmZiAtLWdpdCBhL0RvY3Vt
-ZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kvbWljcm9jaGlwLHBjaWUtaG9zdC55YW1s
-IGIvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9taWNyb2NoaXAscGNpZS1o
-b3N0LnlhbWwNCm5ldyBmaWxlIG1vZGUgMTAwNjQ0DQppbmRleCAwMDAwMDAwMDAwMDAuLmI1NTk0
-MTgyNmI0NA0KLS0tIC9kZXYvbnVsbA0KKysrIGIvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2Jp
-bmRpbmdzL3BjaS9taWNyb2NoaXAscGNpZS1ob3N0LnlhbWwNCkBAIC0wLDAgKzEsOTMgQEANCisj
-IFNQRFgtTGljZW5zZS1JZGVudGlmaWVyOiAoR1BMLTIuMC1vbmx5IE9SIEJTRC0yLUNsYXVzZSkN
-CislWUFNTCAxLjINCistLS0NCiskaWQ6IGh0dHA6Ly9kZXZpY2V0cmVlLm9yZy9zY2hlbWFzL3Bj
-aS9taWNyb2NoaXAscGNpZS1ob3N0LnlhbWwjDQorJHNjaGVtYTogaHR0cDovL2RldmljZXRyZWUu
-b3JnL21ldGEtc2NoZW1hcy9jb3JlLnlhbWwjDQorDQordGl0bGU6IE1pY3JvY2hpcCBQQ0llIFJv
-b3QgUG9ydCBCcmlkZ2UgQ29udHJvbGxlciBEZXZpY2UgVHJlZSBCaW5kaW5ncw0KKw0KK21haW50
-YWluZXJzOg0KKyAgLSBEYWlyZSBNY05hbWFyYSA8ZGFpcmUubWNuYW1hcmFAbWljcm9jaGlwLmNv
-bT4NCisNCithbGxPZjoNCisgIC0gJHJlZjogL3NjaGVtYXMvcGNpL3BjaS1idXMueWFtbCMNCisN
-Citwcm9wZXJ0aWVzOg0KKyAgY29tcGF0aWJsZToNCisgICAgY29uc3Q6IG1pY3JvY2hpcCxwY2ll
-LWhvc3QtMS4wICMgUG9sYXJGaXJlDQorDQorICByZWc6DQorICAgIG1heEl0ZW1zOiAyDQorDQor
-ICByZWctbmFtZXM6DQorICAgIGl0ZW1zOg0KKyAgICAgIC0gY29uc3Q6IGNmZw0KKyAgICAgIC0g
-Y29uc3Q6IGFwYg0KKw0KKyAgaW50ZXJydXB0czoNCisgICAgbWluSXRlbXM6IDENCisgICAgbWF4
-SXRlbXM6IDINCisgICAgaXRlbXM6DQorICAgICAgLSBkZXNjcmlwdGlvbjogUENJZSBob3N0IGNv
-bnRyb2xsZXINCisgICAgICAtIGRlc2NyaXB0aW9uOiBidWlsdGluIE1TSSBjb250cm9sbGVyDQor
-DQorICBpbnRlcnJ1cHQtbmFtZXM6DQorICAgIG1pbkl0ZW1zOiAxDQorICAgIG1heEl0ZW1zOiAy
-DQorICAgIGl0ZW1zOg0KKyAgICAgIC0gY29uc3Q6IHBjaWUNCisgICAgICAtIGNvbnN0OiBtc2kN
-CisNCisgIHJhbmdlczoNCisgICAgbWF4SXRlbXM6IDENCisNCisgIGRtYS1yYW5nZXM6DQorICAg
-IG1heEl0ZW1zOiAxDQorDQorICBtc2ktY29udHJvbGxlcjoNCisgICAgZGVzY3JpcHRpb246IElk
-ZW50aWZpZXMgdGhlIG5vZGUgYXMgYW4gTVNJIGNvbnRyb2xsZXIuDQorDQorICBtc2ktcGFyZW50
-Og0KKyAgICBkZXNjcmlwdGlvbjogTVNJIGNvbnRyb2xsZXIgdGhlIGRldmljZSBpcyBjYXBhYmxl
-IG9mIHVzaW5nLg0KKw0KK3JlcXVpcmVkOg0KKyAgLSByZWcNCisgIC0gcmVnLW5hbWVzDQorICAt
-IGRtYS1yYW5nZXMNCisgIC0gIiNpbnRlcnJ1cHQtY2VsbHMiDQorICAtIGludGVycnVwdHMNCisg
-IC0gaW50ZXJydXB0LW1hcC1tYXNrDQorICAtIGludGVycnVwdC1tYXANCisgIC0gbXNpLWNvbnRy
-b2xsZXINCisNCit1bmV2YWx1YXRlZFByb3BlcnRpZXM6IGZhbHNlDQorDQorZXhhbXBsZXM6DQor
-ICAtIHwNCisgICAgc29jIHsNCisgICAgICAgICAgICAjYWRkcmVzcy1jZWxscyA9IDwyPjsNCisg
-ICAgICAgICAgICAjc2l6ZS1jZWxscyA9IDwyPjsNCisgICAgICAgICAgICBwY2llMDogcGNpZUAy
-MDMwMDAwMDAwIHsNCisgICAgICAgICAgICAgICAgICAgIGNvbXBhdGlibGUgPSAibWljcm9jaGlw
-LHBjaWUtaG9zdC0xLjAiOw0KKyAgICAgICAgICAgICAgICAgICAgcmVnID0gPDB4MjAgMHgzMDAw
-MDAwMCAweDAgMHg0MDAwMDAwPiwNCisgICAgICAgICAgICAgICAgICAgICAgICAgIDwweDIwIDB4
-MCAweDAgMHgxMDAwMDA+Ow0KKyAgICAgICAgICAgICAgICAgICAgcmVnLW5hbWVzID0gImNmZyIs
-ICJhcGIiOw0KKyAgICAgICAgICAgICAgICAgICAgZGV2aWNlX3R5cGUgPSAicGNpIjsNCisgICAg
-ICAgICAgICAgICAgICAgICNhZGRyZXNzLWNlbGxzID0gPDM+Ow0KKyAgICAgICAgICAgICAgICAg
-ICAgI3NpemUtY2VsbHMgPSA8Mj47DQorICAgICAgICAgICAgICAgICAgICAjaW50ZXJydXB0LWNl
-bGxzID0gPDE+Ow0KKyAgICAgICAgICAgICAgICAgICAgaW50ZXJydXB0cyA9IDwzMj47DQorICAg
-ICAgICAgICAgICAgICAgICBpbnRlcnJ1cHQtbWFwLW1hc2sgPSA8MHgwIDB4MCAweDAgMHg3PjsN
-CisgICAgICAgICAgICAgICAgICAgIGludGVycnVwdC1tYXAgPSA8MCAwIDAgMSAmcGNpZTAgMD4s
-DQorICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgPDAgMCAwIDIgJnBjaWUwIDE+
-LA0KKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDwwIDAgMCAzICZwY2llMCAy
-PiwNCisgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA8MCAwIDAgNCAmcGNpZTAg
-Mz47DQorICAgICAgICAgICAgICAgICAgICBpbnRlcnJ1cHQtcGFyZW50ID0gPCZwbGljMD47DQor
-ICAgICAgICAgICAgICAgICAgICBpbnRlcnJ1cHQtY29udHJvbGxlcjsNCisgICAgICAgICAgICAg
-ICAgICAgIG1zaS1wYXJlbnQgPSA8JnBjaWUwPjsNCisgICAgICAgICAgICAgICAgICAgIG1zaS1j
-b250cm9sbGVyOw0KKyAgICAgICAgICAgICAgICAgICAgYnVzLXJhbmdlID0gPDB4MDAgMHg3Zj47
-DQorICAgICAgICAgICAgICAgICAgICByYW5nZXMgPSA8MHgwMzAwMDAwMCAweDAgMHg0MDAwMDAw
-MCAweDAgMHg0MDAwMDAwMCAweDAgMHgyMDAwMDAwMD47DQorICAgICAgICAgICAgICAgICAgICBk
-bWEtcmFuZ2VzID0gPDB4MDIwMDAwMDAgMHgwIDB4MDAwMDAwMDAgMHgwIDB4MDAwMDAwMDAgMHgx
-IDB4MDAwMDAwMDA+Ow0KKyAgICAgICAgICAgIH07DQorICAgIH07DQotLSANCjIuMjUuMQ0KDQo=
+On Mon, Sep 14, 2020 at 5:07 AM Jianjun Wang <jianjun.wang@mediatek.com> wrote:
+>
+> On Fri, 2020-09-11 at 16:44 -0600, Rob Herring wrote:
+> > On Thu, Sep 10, 2020 at 11:45:35AM +0800, Jianjun Wang wrote:
+> > > MediaTek's PCIe host controller has three generation HWs, the new
+> > > generation HW is an individual bridge, it supoorts Gen3 speed and
+> > > up to 256 MSI interrupt numbers for multi-function devices.
+> > >
+> > > Add support for new Gen3 controller which can be found on MT8192.
+> > >
+> > > Signed-off-by: Jianjun Wang <jianjun.wang@mediatek.com>
+> > > Acked-by: Ryder Lee <ryder.lee@mediatek.com>
+> > > ---
+> > >  drivers/pci/controller/Kconfig              |   14 +
+> > >  drivers/pci/controller/Makefile             |    1 +
+> > >  drivers/pci/controller/pcie-mediatek-gen3.c | 1076 +++++++++++++++++++
+> > >  3 files changed, 1091 insertions(+)
+> > >  create mode 100644 drivers/pci/controller/pcie-mediatek-gen3.c
+> > >
+> > > diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+> > > index f18c3725ef80..83daa772595b 100644
+> > > --- a/drivers/pci/controller/Kconfig
+> > > +++ b/drivers/pci/controller/Kconfig
+> > > @@ -239,6 +239,20 @@ config PCIE_MEDIATEK
+> > >       Say Y here if you want to enable PCIe controller support on
+> > >       MediaTek SoCs.
+> > >
+> > > +config PCIE_MEDIATEK_GEN3
+> > > +   tristate "MediaTek GEN3 PCIe controller"
+> > > +   depends on ARCH_MEDIATEK || COMPILE_TEST
+> > > +   depends on OF
+> > > +   depends on PCI_MSI_IRQ_DOMAIN
+> > > +   help
+> > > +     Adds support for PCIe Gen3 MAC controller for MediaTek SoCs.
+> > > +     This PCIe controller provides the capable of Gen3, Gen2 and
+> > > +     Gen1 speed, and support up to 256 MSI interrupt numbers for
+> > > +     multi-function devices.
+> > > +
+> > > +     Say Y here if you want to enable Gen3 PCIe controller support on
+> > > +     MediaTek SoCs.
+> > > +
+> > >  config PCIE_TANGO_SMP8759
+> > >     bool "Tango SMP8759 PCIe controller (DANGEROUS)"
+> > >     depends on ARCH_TANGO && PCI_MSI && OF
+> > > diff --git a/drivers/pci/controller/Makefile b/drivers/pci/controller/Makefile
+> > > index bcdbf49ab1e4..9c1b96777597 100644
+> > > --- a/drivers/pci/controller/Makefile
+> > > +++ b/drivers/pci/controller/Makefile
+> > > @@ -27,6 +27,7 @@ obj-$(CONFIG_PCIE_ROCKCHIP) += pcie-rockchip.o
+> > >  obj-$(CONFIG_PCIE_ROCKCHIP_EP) += pcie-rockchip-ep.o
+> > >  obj-$(CONFIG_PCIE_ROCKCHIP_HOST) += pcie-rockchip-host.o
+> > >  obj-$(CONFIG_PCIE_MEDIATEK) += pcie-mediatek.o
+> > > +obj-$(CONFIG_PCIE_MEDIATEK_GEN3) += pcie-mediatek-gen3.o
+> > >  obj-$(CONFIG_PCIE_TANGO_SMP8759) += pcie-tango.o
+> > >  obj-$(CONFIG_VMD) += vmd.o
+> > >  obj-$(CONFIG_PCIE_BRCMSTB) += pcie-brcmstb.o
+> > > diff --git a/drivers/pci/controller/pcie-mediatek-gen3.c b/drivers/pci/controller/pcie-mediatek-gen3.c
+> > > new file mode 100644
+> > > index 000000000000..f8c8bdf88d33
+> > > --- /dev/null
+> > > +++ b/drivers/pci/controller/pcie-mediatek-gen3.c
+> > > @@ -0,0 +1,1076 @@
+> > > +// SPDX-License-Identifier: GPL-2.0
+> > > +/*
+> > > + * MediaTek PCIe host controller driver.
+> > > + *
+> > > + * Copyright (c) 2020 MediaTek Inc.
+> > > + * Author: Jianjun Wang <jianjun.wang@mediatek.com>
+> > > + */
+> > > +
+> > > +#include <linux/clk.h>
+> > > +#include <linux/delay.h>
+> > > +#include <linux/iopoll.h>
+> > > +#include <linux/irq.h>
+> > > +#include <linux/irqchip/chained_irq.h>
+> > > +#include <linux/irqdomain.h>
+> > > +#include <linux/kernel.h>
+> > > +#include <linux/module.h>
+> > > +#include <linux/msi.h>
+> > > +#include <linux/of_address.h>
+> > > +#include <linux/of_clk.h>
+> > > +#include <linux/of_pci.h>
+> > > +#include <linux/of_platform.h>
+> > > +#include <linux/pci.h>
+> > > +#include <linux/phy/phy.h>
+> > > +#include <linux/platform_device.h>
+> > > +#include <linux/pm_domain.h>
+> > > +#include <linux/pm_runtime.h>
+> > > +#include <linux/reset.h>
+> > > +
+> > > +#include "../pci.h"
+> > > +
+> > > +#define PCIE_SETTING_REG           0x80
+> > > +#define PCIE_PCI_IDS_1                     0x9c
+> > > +#define PCI_CLASS(class)           (class << 8)
+> > > +#define PCIE_RC_MODE                       BIT(0)
+> > > +
+> > > +#define PCIE_CFGNUM_REG                    0x140
+> > > +#define PCIE_CFG_DEVFN(devfn)              ((devfn) & GENMASK(7, 0))
+> > > +#define PCIE_CFG_BUS(bus)          (((bus) << 8) & GENMASK(15, 8))
+> > > +#define PCIE_CFG_BYTE_EN(bytes)            (((bytes) << 16) & GENMASK(19, 16))
+> > > +#define PCIE_CFG_FORCE_BYTE_EN             BIT(20)
+> > > +#define PCIE_CFG_OFFSET_ADDR               0x1000
+> > > +#define PCIE_CFG_HEADER(devfn, bus) \
+> > > +   (PCIE_CFG_DEVFN(devfn) | PCIE_CFG_BUS(bus))
+> > > +
+> > > +#define PCIE_CFG_HEADER_FORCE_BE(devfn, bus, bytes) \
+> > > +   (PCIE_CFG_HEADER(devfn, bus) | PCIE_CFG_BYTE_EN(bytes) \
+> > > +    | PCIE_CFG_FORCE_BYTE_EN)
+> > > +
+> > > +#define PCIE_RST_CTRL_REG          0x148
+> > > +#define PCIE_MAC_RSTB                      BIT(0)
+> > > +#define PCIE_PHY_RSTB                      BIT(1)
+> > > +#define PCIE_BRG_RSTB                      BIT(2)
+> > > +#define PCIE_PE_RSTB                       BIT(3)
+> > > +
+> > > +#define PCIE_MISC_STATUS_REG               0x14C
+> > > +#define PCIE_LTR_MSG_RECEIVED              BIT(0)
+> > > +#define PCIE_PCIE_MSG_RECEIVED             BIT(1)
+> > > +
+> > > +#define PCIE_LTSSM_STATUS_REG              0x150
+> > > +#define PCIE_LTSSM_STATE_MASK              GENMASK(28, 24)
+> > > +#define PCIE_LTSSM_STATE(val)              ((val & PCIE_LTSSM_STATE_MASK) >> 24)
+> > > +#define PCIE_LTSSM_STATE_L0                0x10
+> > > +#define PCIE_LTSSM_STATE_L1_IDLE   0x13
+> > > +#define PCIE_LTSSM_STATE_L2_IDLE   0x14
+> > > +
+> > > +#define PCIE_LINK_STATUS_REG               0x154
+> > > +#define PCIE_PORT_LINKUP           BIT(8)
+> > > +
+> > > +#define PCIE_MSI_SET_NUM           8
+> > > +#define PCIE_MSI_IRQS_PER_SET              32
+> > > +#define PCIE_MSI_IRQS_NUM \
+> > > +   (PCIE_MSI_IRQS_PER_SET * (PCIE_MSI_SET_NUM))
+> > > +
+> > > +#define PCIE_INT_ENABLE_REG                0x180
+> > > +#define PCIE_MSI_MASK                      GENMASK(PCIE_MSI_SET_NUM + 8 - 1, 8)
+> > > +#define PCIE_MSI_SHIFT                     8
+> > > +#define PCIE_INTX_SHIFT                    24
+> > > +#define PCIE_INTX_MASK                     GENMASK(27, 24)
+> > > +#define PCIE_MSG_MASK                      BIT(28)
+> > > +#define PCIE_AER_MASK                      BIT(29)
+> > > +#define PCIE_PM_MASK                       BIT(30)
+> > > +
+> > > +#define PCIE_INT_STATUS_REG                0x184
+> > > +#define PCIE_MSI_SET_ENABLE_REG            0x190
+> > > +
+> > > +#define PCIE_LOW_POWER_CTRL_REG            0x194
+> > > +#define PCIE_DIS_LOWPWR_MASK               GENMASK(3, 0)
+> > > +#define PCIE_DIS_L0S_MASK          BIT(0)
+> > > +#define PCIE_DIS_L1_MASK           BIT(1)
+> > > +#define PCIE_DIS_L11_MASK          BIT(2)
+> > > +#define PCIE_DIS_L12_MASK          BIT(3)
+> > > +#define PCIE_FORCE_DIS_LOWPWR              GENMASK(11, 8)
+> > > +#define PCIE_FORCE_DIS_L0S         BIT(8)
+> > > +#define PCIE_FORCE_DIS_L1          BIT(9)
+> > > +#define PCIE_FORCE_DIS_L11         BIT(10)
+> > > +#define PCIE_FORCE_DIS_L12         BIT(11)
+> > > +
+> > > +#define PCIE_ICMD_PM_REG           0x198
+> > > +#define PCIE_TURN_OFF_LINK         BIT(4)
+> > > +
+> > > +#define PCIE_MSI_ADDR_BASE_REG             0xc00
+> > > +#define PCIE_MSI_SET_OFFSET                0x10
+> > > +#define PCIE_MSI_STATUS_OFFSET             0x04
+> > > +#define PCIE_MSI_ENABLE_OFFSET             0x08
+> > > +
+> > > +#define PCIE_TRANS_TABLE_BASE_REG  0x800
+> > > +#define PCIE_ATR_SRC_ADDR_MSB_OFFSET       0x4
+> > > +#define PCIE_ATR_TRSL_ADDR_LSB_OFFSET      0x8
+> > > +#define PCIE_ATR_TRSL_ADDR_MSB_OFFSET      0xc
+> > > +#define PCIE_ATR_TRSL_PARAM_OFFSET 0x10
+> > > +#define PCIE_ATR_TLB_SET_OFFSET            0x20
+> > > +
+> > > +#define PCIE_MAX_TRANS_TABLES              8
+> > > +#define ATR_EN                             BIT(0)
+> > > +#define ATR_SIZE(size)                     ((((size) - 1) << 1) & GENMASK(6, 1))
+> > > +#define ATR_ID(id)                 (id & GENMASK(3, 0))
+> > > +#define ATR_PARAM(param)           (((param) << 16) & GENMASK(27, 16))
+> > > +
+> > > +/**
+> > > + * struct mtk_pcie_msi - MSI information for each set
+> > > + * @base: IO mapped register base
+> > > + * @hwirq: Hardware interrupt number
+> > > + * @irq: MSI set Interrupt number
+> > > + * @index: MSI set number
+> > > + * @msg_addr: MSI message address
+> > > + * @domain: IRQ domain
+> > > + */
+> > > +struct mtk_pcie_msi {
+> > > +   void __iomem *base;
+> > > +   int hwirq;
+> > > +   int irq;
+> > > +   int index;
+> > > +   phys_addr_t msg_addr;
+> > > +   struct irq_domain *domain;
+> > > +};
+> > > +
+> > > +/**
+> > > + * struct mtk_pcie_port - PCIe port information
+> > > + * @dev: PCIe device
+> > > + * @base: IO mapped register base
+> > > + * @reg_base: Physical register base
+> > > + * @mac_reset: mac reset control
+> > > + * @phy_reset: phy reset control
+> > > + * @phy: PHY controller block
+> > > + * @clks: PCIe clocks
+> > > + * @num_clks: PCIe clocks count for this port
+> > > + * @is_suspended: device suspend state
+> > > + * @irq: PCIe controller interrupt number
+> > > + * @intx_domain: legacy INTx IRQ domain
+> > > + * @msi_domain: MSI IRQ domain
+> > > + * @msi_top_domain: MSI IRQ top domain
+> > > + * @msi_info: MSI sets information
+> > > + * @lock: lock protecting IRQ bit map
+> > > + * @msi_irq_in_use: bit map for assigned MSI IRQ
+> > > + */
+> > > +struct mtk_pcie_port {
+> > > +   struct device *dev;
+> > > +   void __iomem *base;
+> > > +   phys_addr_t reg_base;
+> > > +   struct reset_control *mac_reset;
+> > > +   struct reset_control *phy_reset;
+> > > +   struct phy *phy;
+> > > +   struct clk **clks;
+> > > +   int num_clks;
+> > > +   bool is_suspended;
+> > > +
+> > > +   int irq;
+> > > +   struct irq_domain *intx_domain;
+> > > +   struct irq_domain *msi_domain;
+> > > +   struct irq_domain *msi_top_domain;
+> > > +   struct mtk_pcie_msi **msi_info;
+> > > +   struct mutex lock;
+> > > +   DECLARE_BITMAP(msi_irq_in_use, PCIE_MSI_IRQS_NUM);
+> > > +};
+> > > +
+> > > +static int mtk_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
+> > > +                               int where, int size, u32 *val)
+> > > +{
+> > > +   struct mtk_pcie_port *port = bus->sysdata;
+> > > +   int bytes;
+> > > +
+> > > +   bytes = ((1 << size) - 1) << (where & 0x3);
+> > > +   writel(PCIE_CFG_HEADER_FORCE_BE(devfn, bus->number, bytes),
+> > > +          port->base + PCIE_CFGNUM_REG);
+> > > +
+> > > +   *val = readl(port->base + PCIE_CFG_OFFSET_ADDR + (where & ~0x3));
+> > > +
+> > > +   if (size <= 2)
+> > > +           *val = (*val >> (8 * (where & 0x3))) & ((1 << (size * 8)) - 1);
+> > > +
+> > > +   return PCIBIOS_SUCCESSFUL;
+> > > +}
+> > > +
+> > > +static int mtk_pcie_config_write(struct pci_bus *bus, unsigned int devfn,
+> > > +                                int where, int size, u32 val)
+> > > +{
+> > > +   struct mtk_pcie_port *port = bus->sysdata;
+> > > +   int bytes;
+> > > +
+> > > +   bytes = ((1 << size) - 1) << (where & 0x3);
+> > > +   writel(PCIE_CFG_HEADER_FORCE_BE(devfn, bus->number, bytes),
+> > > +          port->base + PCIE_CFGNUM_REG);
+> > > +
+> > > +   if (size <= 2)
+> > > +           val = (val & ((1 << (size * 8)) - 1)) << ((where & 0x3) * 8);
+> > > +
+> > > +   writel(val, port->base + PCIE_CFG_OFFSET_ADDR + (where & ~0x3));
+> > > +
+> > > +   return PCIBIOS_SUCCESSFUL;
+> > > +}
+> > > +
+> > > +static struct pci_ops mtk_pcie_ops = {
+> > > +   .read  = mtk_pcie_config_read,
+> > > +   .write = mtk_pcie_config_write,
+> > > +};
+> > > +
+> > > +static void mtk_pcie_set_trans_window(void __iomem *reg,
+> > > +                                 resource_size_t cpu_addr,
+> > > +                                 resource_size_t pci_addr, size_t size)
+> > > +{
+> > > +   writel(lower_32_bits(cpu_addr) | ATR_SIZE(fls(size) - 1) | ATR_EN, reg);
+> > > +   writel(upper_32_bits(cpu_addr), reg + PCIE_ATR_SRC_ADDR_MSB_OFFSET);
+> > > +   writel(lower_32_bits(pci_addr), reg + PCIE_ATR_TRSL_ADDR_LSB_OFFSET);
+> > > +   writel(upper_32_bits(pci_addr), reg + PCIE_ATR_TRSL_ADDR_MSB_OFFSET);
+> > > +   writel(ATR_ID(0) | ATR_PARAM(0), reg + PCIE_ATR_TRSL_PARAM_OFFSET);
+> > > +}
+> > > +
+> > > +static int mtk_pcie_set_trans_table(void __iomem *reg,
+> > > +                               resource_size_t cpu_addr,
+> > > +                               resource_size_t pci_addr, size_t size,
+> > > +                               int num)
+> > > +{
+> > > +   void __iomem *table_base;
+> > > +
+> > > +   if (num > PCIE_MAX_TRANS_TABLES)
+> > > +           return -ENODEV;
+> > > +
+> > > +   table_base = reg + num * PCIE_ATR_TLB_SET_OFFSET;
+> > > +   mtk_pcie_set_trans_window(table_base, cpu_addr, pci_addr, size);
+> > > +
+> > > +   return 0;
+> > > +}
+> > > +
+> > > +static int mtk_pcie_startup_port(struct mtk_pcie_port *port)
+> > > +{
+> > > +   struct resource_entry *entry;
+> > > +   struct pci_host_bridge *host = pci_host_bridge_from_priv(port);
+> > > +   u32 val;
+> > > +   int err = 0, table_index = 0;
+> > > +
+> > > +   /* Set as RC mode */
+> > > +   val = readl(port->base + PCIE_SETTING_REG);
+> > > +   val |= PCIE_RC_MODE;
+> > > +   writel(val, port->base + PCIE_SETTING_REG);
+> > > +
+> > > +   /* Set class code */
+> > > +   val = readl(port->base + PCIE_PCI_IDS_1);
+> > > +   val &= ~GENMASK(31, 8);
+> > > +   val |= PCI_CLASS(PCI_CLASS_BRIDGE_PCI << 8);
+> > > +   writel(val, port->base + PCIE_PCI_IDS_1);
+> > > +
+> > > +   /* Assert all reset signals */
+> > > +   val = readl(port->base + PCIE_RST_CTRL_REG);
+> > > +   val |= PCIE_MAC_RSTB | PCIE_PHY_RSTB | PCIE_BRG_RSTB | PCIE_PE_RSTB;
+> > > +   writel(val, port->base + PCIE_RST_CTRL_REG);
+> > > +
+> > > +   /* De-assert reset signals*/
+> > > +   val &= ~(PCIE_MAC_RSTB | PCIE_PHY_RSTB | PCIE_BRG_RSTB);
+> > > +   writel(val, port->base + PCIE_RST_CTRL_REG);
+> > > +
+> > > +   usleep_range(100 * 1000, 120 * 1000);
+> >
+> > Seems like a long delay...
+>
+> Yes, it's truly a long delay, the PCI Express Card Electromechanical
+> Specification suggests that the de-assertion of PERST# should be delayed
+> 100ms to wait the reference clocks become stable.I will discuss with the
+> designers to check if we really need that long time and try to make it
+> shorter.
+
+Just add a comment as to what the delay is for or based on.
+
+[...]
+
+> > > +static int __maybe_unused mtk_pcie_suspend_noirq(struct device *dev)
+> >
+> > Why do you need the noirq variant?
+>
+> I think the suspend of bus controller should be the last callback
+> function which will be called, so I add noirq variant to make sure it's
+> called after the device driver's suspend function.
+
+The Linux driver model will ensure that. Child devices will be
+suspended before the parent. If there's some non parent-child
+dependency, that should get handled with devlinks.
+
+Rob
