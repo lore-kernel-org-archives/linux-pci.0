@@ -2,167 +2,218 @@ Return-Path: <SRS0=ryE9=CX=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FA78C43461
-	for <linux-pci@archiver.kernel.org>; Mon, 14 Sep 2020 12:03:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5D87C43461
+	for <linux-pci@archiver.kernel.org>; Mon, 14 Sep 2020 12:34:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1315A207BB
-	for <linux-pci@archiver.kernel.org>; Mon, 14 Sep 2020 12:03:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600085039;
-	bh=obSjriyhvhgsTesoxIPtp9TJ3vD1c+NGYIc6e+/TvrU=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=inBesAgpuPPilNm/CHhW2Xdku195HviKb8+cZILxkc/UDXYNhQmCFr71JvXZRYwOX
-	 gQHLxXGrYBQBYsaSUpauW3eikObCWfbw/BEBMAVh3ZgZGoSQThzvQfgswZWY+GV+w4
-	 /kzpFY7KmvAHtQAaFNShZJrg7jLnydomIUNM+jRg=
+	by mail.kernel.org (Postfix) with ESMTP id 96352208E4
+	for <linux-pci@archiver.kernel.org>; Mon, 14 Sep 2020 12:34:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726137AbgINMDw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 14 Sep 2020 08:03:52 -0400
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:35439 "EHLO
-        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726123AbgINMDE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Sep 2020 08:03:04 -0400
-Received: by mail-wr1-f67.google.com with SMTP id e16so18430414wrm.2;
-        Mon, 14 Sep 2020 04:59:39 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=lt7oJ0RYkp7GOEh6jTuKHSPMhemyBNu8hytTPWvgNCo=;
-        b=i2gtmeGeY3nrsm3fVGYPnfgA5gSO89w1IYivRt4SSaJQp2G2bLLm3hP0L/U62VSV8N
-         Z38swQyWhPWqjlOWn9/feb1CkbiNTe2PGTkL6aeePSx/Kxd1DtvTtQwH8Zhi4rX0uSVD
-         cl+FM+ovmfgjvSQ59qBD1lTKKF9GnVCFF8ep0vBrwnvapVszGVEU+kQLnfEq/682vS6d
-         pCBEro1WRdcvI+ZsZPGIAXv3PNNk3bWLSt0Nd+udhZ6+CBoeaBWF5yPpUaASDJtduOCg
-         eVx/f4pQFe5xoQps/DEb/u/7QMRqekk5rrWsdCm/q4LLawPwz5f7beAe/9CZPUo/zIlG
-         l4nQ==
-X-Gm-Message-State: AOAM532jc4QvcbixHVI9dxFsUBX6OfrO36Se6T3L6Mw9RkyN1cLzCL8z
-        ydH39n+sQXtMeBn5MZwRubKf1gKSooI=
-X-Google-Smtp-Source: ABdhPJzbvIbAfLdh+pFghaYzDSsWI0Hfx/m0A44A95Dhb1oNGzFvSLAWCzgQL/qblUPvk8qT4FL0Xw==
-X-Received: by 2002:adf:ed12:: with SMTP id a18mr16432588wro.178.1600084778613;
-        Mon, 14 Sep 2020 04:59:38 -0700 (PDT)
-Received: from liuwe-devbox-debian-v2.j3c5onc20sse1dnehy4noqpfcg.zx.internal.cloudapp.net ([51.145.34.42])
-        by smtp.gmail.com with ESMTPSA id c205sm18764809wmd.33.2020.09.14.04.59.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 14 Sep 2020 04:59:38 -0700 (PDT)
-From:   Wei Liu <wei.liu@kernel.org>
-To:     Linux on Hyper-V List <linux-hyperv@vger.kernel.org>
-Cc:     virtualization@lists.linux-foundation.org,
-        Linux Kernel List <linux-kernel@vger.kernel.org>,
-        Michael Kelley <mikelley@microsoft.com>,
-        Vineeth Pillai <viremana@linux.microsoft.com>,
-        Sunil Muthuswamy <sunilmut@microsoft.com>,
-        Nuno Das Neves <nudasnev@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        linux-pci@vger.kernel.org (open list:PCI NATIVE HOST BRIDGE AND
-        ENDPOINT DRIVERS),
-        linux-arch@vger.kernel.org (open list:GENERIC INCLUDE/ASM HEADER FILES)
-Subject: [PATCH RFC v1 12/18] asm-generic/hyperv: update hv_interrupt_entry
-Date:   Mon, 14 Sep 2020 11:59:21 +0000
-Message-Id: <20200914115928.83184-4-wei.liu@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200914112802.80611-1-wei.liu@kernel.org>
-References: <20200914112802.80611-1-wei.liu@kernel.org>
+        id S1726375AbgINMcl convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 14 Sep 2020 08:32:41 -0400
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2816 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726498AbgINMcQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 14 Sep 2020 08:32:16 -0400
+Received: from lhreml713-chm.china.huawei.com (unknown [172.18.7.107])
+        by Forcepoint Email with ESMTP id 71917FA49058FFD59948;
+        Mon, 14 Sep 2020 13:13:45 +0100 (IST)
+Received: from lhreml715-chm.china.huawei.com (10.201.108.66) by
+ lhreml713-chm.china.huawei.com (10.201.108.64) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1913.5; Mon, 14 Sep 2020 13:13:45 +0100
+Received: from lhreml715-chm.china.huawei.com ([10.201.108.66]) by
+ lhreml715-chm.china.huawei.com ([10.201.108.66]) with mapi id 15.01.1913.007;
+ Mon, 14 Sep 2020 13:13:45 +0100
+From:   Shiju Jose <shiju.jose@huawei.com>
+To:     Shiju Jose <shiju.jose@huawei.com>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+        "helgaas@kernel.org" <helgaas@kernel.org>,
+        "bp@alien8.de" <bp@alien8.de>,
+        "james.morse@arm.com" <james.morse@arm.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "robh@kernel.org" <robh@kernel.org>,
+        "lenb@kernel.org" <lenb@kernel.org>,
+        "tony.luck@intel.com" <tony.luck@intel.com>,
+        "dan.carpenter@oracle.com" <dan.carpenter@oracle.com>,
+        "andriy.shevchenko@linux.intel.com" 
+        <andriy.shevchenko@linux.intel.com>
+CC:     Linuxarm <linuxarm@huawei.com>
+Subject: RE: [PATCH v15 0/2] ACPI / APEI: Add support to notify the vendor
+        specific HW errors
+Thread-Topic: [PATCH v15 0/2] ACPI / APEI: Add support to notify the vendor
+        specific HW errors
+Thread-Index: AQHWge9vw3KZA5696kitxl2toth2IaloGvNg
+Date:   Mon, 14 Sep 2020 12:13:45 +0000
+Message-ID: <cb811df3c4cc4f349c4a8da251592904@huawei.com>
+References: <20200903123456.1823-1-shiju.jose@huawei.com>
+In-Reply-To: <20200903123456.1823-1-shiju.jose@huawei.com>
+Accept-Language: en-GB, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [10.47.25.227]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-We will soon use the same structure to handle IO-APIC interrupts as
-well. Introduce an enum to identify the source and a data structure for
-IO-APIC RTE.
+Hello,
 
-While at it, update pci-hyperv.c to use the enum.
+Can you help to merge this series?
 
-No functional change.
+Thanks,
+Shiju
 
-Signed-off-by: Wei Liu <wei.liu@kernel.org>
----
- drivers/pci/controller/pci-hyperv.c |  2 +-
- include/asm-generic/hyperv-tlfs.h   | 36 +++++++++++++++++++++++++++--
- 2 files changed, 35 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
-index bf40ff09c99d..b38faa04234b 100644
---- a/drivers/pci/controller/pci-hyperv.c
-+++ b/drivers/pci/controller/pci-hyperv.c
-@@ -1215,7 +1215,7 @@ static void hv_irq_unmask(struct irq_data *data)
- 	params = &hbus->retarget_msi_interrupt_params;
- 	memset(params, 0, sizeof(*params));
- 	params->partition_id = HV_PARTITION_ID_SELF;
--	params->int_entry.source = 1; /* MSI(-X) */
-+	params->int_entry.source = HV_INTERRUPT_SOURCE_MSI;
- 	hv_set_msi_entry_from_desc(&params->int_entry.msi_entry, msi_desc);
- 	params->device_id = (hbus->hdev->dev_instance.b[5] << 24) |
- 			   (hbus->hdev->dev_instance.b[4] << 16) |
-diff --git a/include/asm-generic/hyperv-tlfs.h b/include/asm-generic/hyperv-tlfs.h
-index e7e80a27777b..83945ada5a50 100644
---- a/include/asm-generic/hyperv-tlfs.h
-+++ b/include/asm-generic/hyperv-tlfs.h
-@@ -469,6 +469,11 @@ struct hv_create_vp {
- 	u64 flags;
- };
- 
-+enum hv_interrupt_source {
-+	HV_INTERRUPT_SOURCE_MSI = 1, /* MSI and MSI-X */
-+	HV_INTERRUPT_SOURCE_IOAPIC,
-+};
-+
- union hv_msi_address_register {
- 	u32 as_uint32;
- 	struct {
-@@ -502,10 +507,37 @@ union hv_msi_entry {
- 	} __packed;
- };
- 
-+union hv_ioapic_rte {
-+	u64 as_uint64;
-+
-+	struct {
-+		u32 vector:8;
-+		u32 delivery_mode:3;
-+		u32 destination_mode:1;
-+		u32 delivery_status:1;
-+		u32 interrupt_polarity:1;
-+		u32 remote_irr:1;
-+		u32 trigger_mode:1;
-+		u32 interrupt_mask:1;
-+		u32 reserved1:15;
-+
-+		u32 reserved2:24;
-+		u32 destination_id:8;
-+	};
-+
-+	struct {
-+		u32 low_uint32;
-+		u32 high_uint32;
-+	};
-+} __packed;
-+
- struct hv_interrupt_entry {
--	u32 source;			/* 1 for MSI(-X) */
-+	u32 source;
- 	u32 reserved1;
--	union hv_msi_entry msi_entry;
-+	union {
-+		union hv_msi_entry msi_entry;
-+		union hv_ioapic_rte ioapic_rte;
-+	};
- } __packed;
- 
- /*
--- 
-2.20.1
-
+>-----Original Message-----
+>From: Linuxarm [mailto:linuxarm-bounces@huawei.com] On Behalf Of Shiju
+>Jose
+>Sent: 03 September 2020 13:35
+>To: linux-acpi@vger.kernel.org; linux-pci@vger.kernel.org; linux-
+>kernel@vger.kernel.org; rjw@rjwysocki.net; helgaas@kernel.org;
+>bp@alien8.de; james.morse@arm.com; lorenzo.pieralisi@arm.com;
+>robh@kernel.org; lenb@kernel.org; tony.luck@intel.com;
+>dan.carpenter@oracle.com; andriy.shevchenko@linux.intel.com
+>Cc: Linuxarm <linuxarm@huawei.com>
+>Subject: [PATCH v15 0/2] ACPI / APEI: Add support to notify the vendor
+>specific HW errors
+>
+>CPER records describing a firmware-first error are identified by GUID.
+>The ghes driver currently logs, but ignores any unknown CPER records.
+>This prevents describing errors that can't be represented by a standard entry,
+>that would otherwise allow a driver to recover from an error.
+>The UEFI spec calls these 'Non-standard Section Body' (N.2.3 of version 2.8).
+>
+>patch set
+>1. add the notifier chain for these non-standard/vendor-records
+>   in the ghes driver.
+>
+>2. add the driver to handle HiSilicon HIP PCIe controller's errors.
+>
+>Changes:
+>
+>V15:
+>1. Change in the HIP PCIe error handling driver
+>   for a comment by Andy Shevchenko.
+>   Removed "depends on ACPI" as it already depends on
+>   it through ACPI_APEI_GHES.
+>
+>V14:
+>1. Add patch[1] posted by James to the series.
+>
+>2. Following changes made for Bjorn's comments,
+>2.1 Deleted stub code from ghes.h
+>2.2 Made CONFIG_PCIE_HISI_ERR depend on CONFIG_ACPI_APEI_GHES.
+>
+>V13:
+>1. Following changes in the HIP PCIe error handling driver.
+>1.1 Add Bjorn's acked-by.
+>1.2. Address the comments and macros order Bjorn mentioned.
+>     Fix the words in the commit.
+>
+>V12:
+>1. Changed the Signed-off-by tag to Co-developed-by tag in the patch
+>   "ACPI / APEI: Add a notifier chain for unknown (vendor) CPER records"
+>
+>V11:
+>1. Following modifications made by James Morse in the APEI patch
+>   for the vendor error record.
+>   - Removed kfifo and ghes_gdata_pool. Expanded commit message.
+>
+>2. Changes in the HIP PCIe error handling driver
+>   for the comments by Andy Shevchenko.
+>
+>V10:
+>1. Changes for Bjorn's comments on HIP PCIe error handler driver
+>   and APEI patch.
+>
+>2. Changes in the HIP PCIe error handler driver
+>   for the feedbacks by Andy Shevchenko.
+>
+>V9:
+>1. Fixed 2 improvements suggested by the kbuild test robot.
+>1.1 Change ghes_gdata_pool_init() as static function.
+>1.2. Removed using buffer to store the error data for
+>     logging in the hisi_pcie_handle_error()
+>
+>V8:
+>1. Removed reporting the standard errors through the interface
+>   because of the conflict with the recent patches in the
+>   memory error handling path.
+>2. Fix comments by Dan Carpenter.
+>
+>V7:
+>1. Add changes in the APEI driver suggested by Borislav Petkov, for
+>   queuing up all the non-fatal HW errors to the work queue and
+>   notify the registered kernel drivers from the bottom half using
+>   blocking notifier, common interface for both standard and
+>   vendor-spcific errors.
+>2. Fix for further feedbacks in v5 HIP PCIe error handler driver
+>   by Bjorn Helgaas.
+>
+>V6:
+>1. Fix few changes in the patch subject line suggested by Bjorn Helgaas.
+>
+>V5:
+>1. Fix comments from James Morse.
+>1.1 Changed the notification method to use the atomic_notifier_chain.
+>1.2 Add the error handled status for the user space.
+>
+>V4:
+>1. Fix for the following smatch warning in the PCIe error driver,
+>   reported by kbuild test robot<lkp@intel.com>:
+>   warn: should '((((1))) << (9 + i))' be a 64 bit type?
+>   if (err->val_bits & BIT(HISI_PCIE_LOCAL_VALID_ERR_MISC + i))
+>	^^^ This should be BIT_ULL() because it goes up to 9 + 32.
+>
+>V3:
+>1. Fix the comments from Bjorn Helgaas.
+>
+>V2:
+>1. Changes in the HiSilicon PCIe controller's error handling driver
+>   for the comments from Bjorn Helgaas.
+>
+>2. Changes in the APEI interface to support reporting the vendor error
+>   for module with multiple devices, but use the same section type.
+>   In the error handler will use socket id/sub module id etc to distinguish
+>   the device.
+>
+>V1:
+>1. Fix comments from James Morse.
+>
+>2. add driver to handle HiSilicon hip08 PCIe controller's errors,
+>   which is an application of the above interface.
+>
+>Shiju Jose (1):
+>  ACPI / APEI: Add a notifier chain for unknown (vendor) CPER records
+>
+>Yicong Yang (1):
+>  PCI: hip: Add handling of HiSilicon HIP PCIe controller errors
+>
+> drivers/acpi/apei/ghes.c                 |  63 +++++
+> drivers/pci/controller/Kconfig           |   7 +
+> drivers/pci/controller/Makefile          |   1 +
+> drivers/pci/controller/pcie-hisi-error.c | 327 +++++++++++++++++++++++
+> include/acpi/ghes.h                      |  18 ++
+> 5 files changed, 416 insertions(+)
+> create mode 100644 drivers/pci/controller/pcie-hisi-error.c
+>
+>--
+>2.17.1
+>
+>
+>_______________________________________________
+>Linuxarm mailing list
+>Linuxarm@huawei.com
+>http://hulk.huawei.com/mailman/listinfo/linuxarm
