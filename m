@@ -2,165 +2,97 @@ Return-Path: <SRS0=UCfD=CY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14433C433E2
-	for <linux-pci@archiver.kernel.org>; Tue, 15 Sep 2020 22:33:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EC92C43461
+	for <linux-pci@archiver.kernel.org>; Tue, 15 Sep 2020 23:01:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BBE5B20770
-	for <linux-pci@archiver.kernel.org>; Tue, 15 Sep 2020 22:33:53 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=juniper.net header.i=@juniper.net header.b="J4bI2csY";
-	dkim=pass (1024-bit key) header.d=juniper.net header.i=@juniper.net header.b="Ivk/8u2x"
+	by mail.kernel.org (Postfix) with ESMTP id 2EECE206DC
+	for <linux-pci@archiver.kernel.org>; Tue, 15 Sep 2020 23:01:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727645AbgIOWdw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 15 Sep 2020 18:33:52 -0400
-Received: from mx0a-00273201.pphosted.com ([208.84.65.16]:10666 "EHLO
-        mx0a-00273201.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727539AbgIOQQi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2020 12:16:38 -0400
-Received: from pps.filterd (m0108159.ppops.net [127.0.0.1])
-        by mx0a-00273201.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 08FF7lhN012243;
-        Tue, 15 Sep 2020 08:11:55 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=juniper.net; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : content-type :
- content-transfer-encoding : mime-version; s=PPS1017;
- bh=LDRzk7HMzzwKyNBvHWFAOlGNLQqg6m8IfDYhepVfGGM=;
- b=J4bI2csYh7Is10auY6YJd+gnOhVTtIAtwenCvqcCou5d9OTElJpDyyEFZcQ5eWv1mQIM
- lIY6vI6oQh1y4YL3rpiWxfEAIkvLQxqB/92F4xrO08sc5bARyAJ/aYGi1sSVRTie70eK
- b0uB8giViRKSqPwpv7JbVd+ojdesQ7brjEarM1kQqvGrMELA7yI+CklhEyEa2BdJU/uU
- sMDPS6/xAmlYzDuvtkwTkZIuoqQ0O+CFzCjJ9xBRK2dYtrpoTVgHuNZFL4KuWNIQVUZu
- 10t+NOe+T9cbLNAzON9j49KbTyCxM9d3aF+MnMZjO/iRSUGB1+tuyqdXaZmKAma0KKzI jA== 
-Received: from nam02-cy1-obe.outbound.protection.outlook.com (mail-cys01nam02lp2056.outbound.protection.outlook.com [104.47.37.56])
-        by mx0a-00273201.pphosted.com with ESMTP id 33gv9wvvkv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 15 Sep 2020 08:11:54 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=nLTXWI/jYKYCVKhH8mO1/Dy6lR1ct194RCjG9aiC1iswKv2FnKHnXxxAZdMfoauJ3uewwp7/2Cx6fJBwXOuCR7rSTZjjv7IC8wMubsd30aC/YvO81ZANAGN0C8MALyEqpp+ZYX7CgqQ74Qichz1wLkZmswODgBtCmYTu4QXx3Aln3Mo0bP6txAxWnHzuHBsoIXuVcEtPb8zY7qBm2LvE3ZoOSeyC8aYCClnBckDH/9A/R/Zrx/2w/HFi0yXtDjpMuC2dQcGotaUBR3j1nr5dCAqZxy3LVF70TjdbgKF2kgT50yUEWRTqFBLaP8PP/H/gJEhk8H9Im9v0Uo+euCCClw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=LDRzk7HMzzwKyNBvHWFAOlGNLQqg6m8IfDYhepVfGGM=;
- b=P3aKzLGgE0WXNFplWKQaF60xe1sK5QtB9LseXrsqHdpPXGIrDxoMPqm0DOqE72XTHUsTwBtpw0a/USN/8Rexo9fvBIIKnuXtjgypYDPH40cr1TZvs+8o6f7VL2EM2vk77/1QUobNveZWpyjxCGFDt9SXpG6x7Gz8l/aeFDdXlnigx57lbuoQ9mBu9tfvTtAeExWS4vjyNMRapGqHjWMYRp6E4SsFfNMc7K8ujc2OuWLdffgzeS7vs4GhABgXc/vSHLhEjAc7jj3YoDxWJFj9D3Tv5hI52vD37W61hIHAbJ/MpXmnyrBaY/BD0Ajy1fvO29dCj4JkeCCKaBP4LrWz2A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=juniper.net; dmarc=pass action=none header.from=juniper.net;
- dkim=pass header.d=juniper.net; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=juniper.net;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=LDRzk7HMzzwKyNBvHWFAOlGNLQqg6m8IfDYhepVfGGM=;
- b=Ivk/8u2xnTaU4r02bxim7K0KKTBvI/tyi1eC9RyX5KX9wkR0PpgxAUS0OW0aXPihubm04NZwjyUWKNDD6efQ3axU4y9kj7WZjLAMjtbktHaASO4zg2qzCcr0jg2qshfegDQIiRnjicjsW24hiGVS3lI86wIKLDZ63kx7QkD3neU=
-Authentication-Results: google.com; dkim=none (message not signed)
- header.d=none;google.com; dmarc=none action=none header.from=juniper.net;
-Received: from BYAPR05MB5592.namprd05.prod.outlook.com (2603:10b6:a03:19::16)
- by BYAPR05MB5589.namprd05.prod.outlook.com (2603:10b6:a03:1e::18) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3391.9; Tue, 15 Sep
- 2020 15:11:51 +0000
-Received: from BYAPR05MB5592.namprd05.prod.outlook.com
- ([fe80::e4a2:9674:56bb:b13f]) by BYAPR05MB5592.namprd05.prod.outlook.com
- ([fe80::e4a2:9674:56bb:b13f%7]) with mapi id 15.20.3391.009; Tue, 15 Sep 2020
- 15:11:51 +0000
-From:   Ming Qiao <mqiao@juniper.net>
-To:     bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     Ming Qiao <mqiao@juniper.net>, Debjit Ghosh <dghosh@juniper.net>,
-        Santhanakrishnan Balraj <sbalraj@juniper.net>,
-        Rajat Jain <rajatja@google.com>
-Subject: [PATCH 2/3] PCI: Add quirks for Juniper ASICs to set class code
-Date:   Tue, 15 Sep 2020 08:11:02 -0700
-Message-Id: <20200915151103.7086-2-mqiao@juniper.net>
-X-Mailer: git-send-email 2.10.0
-In-Reply-To: <20200915151103.7086-1-mqiao@juniper.net>
-References: <20200915151103.7086-1-mqiao@juniper.net>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: BL0PR02CA0086.namprd02.prod.outlook.com
- (2603:10b6:208:51::27) To BYAPR05MB5592.namprd05.prod.outlook.com
- (2603:10b6:a03:19::16)
-MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from qnc-ubm16-mqiao.juniper.net (66.129.224.68) by BL0PR02CA0086.namprd02.prod.outlook.com (2603:10b6:208:51::27) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.20.3370.16 via Frontend Transport; Tue, 15 Sep 2020 15:11:49 +0000
-X-Mailer: git-send-email 2.10.0
-X-Originating-IP: [66.129.224.68]
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-HT: Tenant
-X-MS-Office365-Filtering-Correlation-Id: 3b9ee923-1a3c-462e-2c1d-08d85989ac64
-X-MS-TrafficTypeDiagnostic: BYAPR05MB5589:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <BYAPR05MB558902E12DCD5AA8EFCBFB39AF200@BYAPR05MB5589.namprd05.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:2331;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: tyRvjjqF4XjmuzW8doQ+38A6ByUzFrM0gKbMGZJY+P8aSgJIn+7GMzJjNzC9K75WmiHUEv1X4H/W0Yw2l8L4P8Q+pdUr+vH/GCQgX6n5EV3HXbuEKhrJmWVJWLnqqtcAJRZ1u5pqHhYqSn3QZN/HmD96khGWHRT+CRxiT6UMb2JTSHs92YXWeex7390b+TYsQkkik3zT7CcZ72IFQRLVwdqAaLPFuytR5O0QIrApow4vyM3dK8lpGryzYYdbBPsw2mFLuGDwBnQ44r8XcAXbrmoZqgJXy54BPg779G3c/rG/GAp627zhdOgmvwUKlC232WjX8ffJJD8xn+D0UayqQ0QC5hDtGBJJl+lq4aKCYuhytUo6uGZ2OA5yIE1Uyhx4
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR05MB5592.namprd05.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(136003)(376002)(346002)(366004)(39860400002)(396003)(83380400001)(52116002)(478600001)(7696005)(54906003)(316002)(6486002)(26005)(186003)(4326008)(2616005)(956004)(16526019)(6666004)(1076003)(86362001)(8676002)(2906002)(36756003)(66556008)(66476007)(66946007)(5660300002)(8936002);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData: OiZUO2KwydCT7LH0MjjwN4OnRN/m6K+o+cHLe7EQ0T8lgd3LNnL78KAWxRwUpn2kWefDt/MnzKRXVi5KdMqBi0BwwxqUy6vGE290+c3aVzdvFiXddR7r2Gq8rSc5ohN3RGGryc+eLWeCw86/ZrNLfJvlU119BpAMGmL8N94NTy8pBgxVZSSd4avR8PhuhLLIrImgcIvOxSyANPZJYC4qPlc4LTjZPhtUdp/ThI7Bd6PwsVyiO5zf5qjfQL7WiDFjM7Ekl0MXfDGarip9ne/zHHHjDGYNh9d/wExiLuKMjvQf0k/0mCd2x6pF0fQSjIV7V1tXHq/mu0uniDpvzgfTuJ9GrAZEjGNYg19+Bl+qkY3IMg+6deQCqf8LvimPAyrXO6tVsn3UbT6NeLoYLm5KI07dLzBwwZBXTpEAJH8kv1cr3tol5diYqXlUZ0MCdISxfzbGSh2tvEDGUZkvRBiT3i+Tls1sSpRqEvqu6Vw+oqAlsz7H/DBTBpZM2cNUt1WQzDNI+bExBZXDCWun/3geHlFmbN1Hqou6kDtcZRFlKAqPfP+M0A5ojfO4OybSQOeWkxvD5m6R2pRGrYbvFVDZ6YB6ubfOaKIZK/GHyEPcVmB0PT5VDL7al8i2CBpGUloWGYJ/UXKL1mxP0Rwv8q1NLg==
-X-OriginatorOrg: juniper.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3b9ee923-1a3c-462e-2c1d-08d85989ac64
-X-MS-Exchange-CrossTenant-AuthSource: BYAPR05MB5592.namprd05.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Sep 2020 15:11:51.2991
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: bea78b3c-4cdb-4130-854a-1d193232e5f4
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: e+zKCbFfVvVByBxBHjLL6wzYI8hNcK7wG0FheJHSYpazKLmiYXHji/Q87txMeqDMptvZVhXWJkuGwtt2AbutoA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR05MB5589
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
- definitions=2020-09-15_11:2020-09-15,2020-09-15 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_spam_notspam policy=outbound_spam score=0 mlxscore=0
- bulkscore=0 impostorscore=0 priorityscore=1501 lowpriorityscore=0
- malwarescore=0 suspectscore=0 phishscore=0 clxscore=1015 mlxlogscore=999
- adultscore=0 spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009150127
+        id S1727340AbgIOXA6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 15 Sep 2020 19:00:58 -0400
+Received: from kernel.crashing.org ([76.164.61.194]:38850 "EHLO
+        kernel.crashing.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727081AbgIOXAs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2020 19:00:48 -0400
+Received: from localhost (gate.crashing.org [63.228.1.57])
+        (authenticated bits=0)
+        by kernel.crashing.org (8.14.7/8.14.7) with ESMTP id 08FN0AAr012347
+        (version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
+        Tue, 15 Sep 2020 18:00:14 -0500
+Message-ID: <28c9039eba4bc288abb8ab1b82b51c16023fcb3c.camel@kernel.crashing.org>
+Subject: Re: [PATCH] arm64: Enable PCI write-combine resources under sysfs
+From:   Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     Jason Gunthorpe <jgg@nvidia.com>, Clint Sbisa <csbisa@amazon.com>,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
+        linux-arm-kernel@lists.infradead.org, will@kernel.org,
+        catalin.marinas@arm.com, Leon Romanovsky <leon@kernel.org>
+Date:   Wed, 16 Sep 2020 09:00:09 +1000
+In-Reply-To: <20200915101831.GA2616@e121166-lin.cambridge.arm.com>
+References: <20200910232938.GJ904879@nvidia.com>
+         <3110e00a1f4df7b7359ba4f2b7f86a35aa47405e.camel@kernel.crashing.org>
+         <20200911214225.hml2wbbq2rofn4re@amazon.com>
+         <20200914141726.GA904879@nvidia.com>
+         <20200914142406.k44zrnp2wdsandsp@amazon.com>
+         <20200914143819.GC904879@nvidia.com>
+         <375c478593945a416f3180c3773bcb5240d2e36c.camel@kernel.crashing.org>
+         <1d6f2ceb8d3538c906a1fdb8cd3d4c74ccffa42e.camel@kernel.crashing.org>
+         <20200914225740.GP904879@nvidia.com>
+         <2b539df4c9ec703458e46da2fc879ee3b310b31c.camel@kernel.crashing.org>
+         <20200915101831.GA2616@e121166-lin.cambridge.arm.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Some of the Juniper ASICs do not report correct PCI class ID, which
-would confuse kernel APIs accessing the specific class of devices.
-Change them to PCI_CLASS_NETWORK_OTHER << 8.
-        
-Signed-off-by: Debjit Ghosh <dghosh@juniper.net>
-Signed-off-by: Santhanakrishnan Balraj <sbalraj@juniper.net>
-Signed-off-by: Rajat Jain <rajatja@google.com>
-Signed-off-by: Ming Qiao <mqiao@juniper.net>
----
- drivers/pci/quirks.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+On Tue, 2020-09-15 at 11:18 +0100, Lorenzo Pieralisi wrote:
+> > It's useful for random things, I've used it quite a bit in a previous
+> > life for things like in-lab hw testing etc...  There's tooling out
+> > there, esp. in the more 'embedded' side of thing that uses this, I
+> > don't see a good reason not to provide the same level of functionality.
+> > 
+> > So Lorenzo, imho, we should merge the patch.
+> 
+> To sum it up:
+> 
+> (1) RDMA drivers need a new mapping function/attribute to define their
+>     message push model. Actually the message model is not necessarily related
+>     to write combining a la x86, so we should probably come up with a better
+>     and consistent naming. Enabling this patchset may trigger performance
+>     regressions on mellanox drivers on arm64 - this ought to be addressed.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 61344d2..04dd490 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -5657,3 +5657,22 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_JUNIPER, 0x00A8, quirk_jnx_fpga);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_JUNIPER, 0x00A9, quirk_jnx_fpga);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_JUNIPER, 0x00AA, quirk_jnx_fpga);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_XILINX, 0x0505, quirk_jnx_fpga);
-+
-+/*
-+ * PCI class reported by some Juniper ASICs is not correct.
-+ * Change it to NETWORK.
-+ */
-+static void quirk_jnx_asic(struct pci_dev *dev)
-+{
-+	dev->class = PCI_CLASS_NETWORK_OTHER << 8;
-+}
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_JUNIPER, 0x003C, quirk_jnx_asic);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_JUNIPER, 0x003D, quirk_jnx_asic);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_JUNIPER, 0x003E, quirk_jnx_asic);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_JUNIPER, 0x0055, quirk_jnx_asic);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_JUNIPER, 0x005E, quirk_jnx_asic);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_JUNIPER, 0x005F, quirk_jnx_asic);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_JUNIPER, 0x008E, quirk_jnx_asic);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_JUNIPER, 0x008D, quirk_jnx_asic);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_JUNIPER, 0x0090, quirk_jnx_asic);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_JUNIPER, 0x00B2, quirk_jnx_asic);
--- 
-2.10.0
+I doubt it. Besides Mellanox will probably enable WC already through
+the other code path (the use of this accessor is only one of the path
+that enables the driver to do WC).
+
+I don't think we need to solve the RDMA semantics issue that urgently
+TBH, and it's definitely an orthogonal issue to that at hand.
+
+> (2) User-space/passthrough drivers rely on VFIO for BAR mappings. Since
+>     it looks relevant, WC message model semantics should be introduced
+>     there, somehow.
+
+Yes.
+
+> (3) Given the above, the sysfs interface can be enabled. I still don't
+>     see the advantages (other than saying it is there for other arches, ie
+>     what can you really do with the sysfs mappings - see Jason's VFIO/DMA
+>     query) but we can do it. Still, I am not happy about the possible
+>     mellanox regressions - that should be tested/verified before this
+>     patch is merged IMHO. Do we really need it for v5.10 ?
+
+I don't think there's a significant risk of regression, but then I also
+dont' have a way to test :-)
+
+Cheers,
+Ben.
+
 
