@@ -2,126 +2,105 @@ Return-Path: <SRS0=UCfD=CY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-8.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77C85C2D0E0
-	for <linux-pci@archiver.kernel.org>; Tue, 15 Sep 2020 04:24:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BC46C43461
+	for <linux-pci@archiver.kernel.org>; Tue, 15 Sep 2020 05:41:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 361FC21655
-	for <linux-pci@archiver.kernel.org>; Tue, 15 Sep 2020 04:24:30 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="tPzDAZ7k"
+	by mail.kernel.org (Postfix) with ESMTP id 22E9620829
+	for <linux-pci@archiver.kernel.org>; Tue, 15 Sep 2020 05:41:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726241AbgIOEWc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 15 Sep 2020 00:22:32 -0400
-Received: from lelv0143.ext.ti.com ([198.47.23.248]:36410 "EHLO
-        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726219AbgIOEWa (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2020 00:22:30 -0400
-Received: from fllv0034.itg.ti.com ([10.64.40.246])
-        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id 08F4MAul001484;
-        Mon, 14 Sep 2020 23:22:10 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1600143730;
-        bh=WCJiTCBYarku1p+J3FGwyc0AS5UhsiZgThHHJxu9xzA=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=tPzDAZ7klc9vkOizihxDSHCgfa1Y+0KeXlb4tqDu6v9jq4x7ju4cIa5ks7zXJ8SBz
-         7Q6KWAB3LSp71XW9JPslTn1gis1miHWnwYlfYZ5tk7J0MCbGUXPM2lFx715PxU9tLz
-         4BwKPtUlKJ9y3LgmJhZ8TQSssAvGmjkAezBr35kE=
-Received: from DLEE104.ent.ti.com (dlee104.ent.ti.com [157.170.170.34])
-        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 08F4MAUr058124
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 14 Sep 2020 23:22:10 -0500
-Received: from DLEE109.ent.ti.com (157.170.170.41) by DLEE104.ent.ti.com
- (157.170.170.34) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Mon, 14
- Sep 2020 23:22:09 -0500
-Received: from fllv0040.itg.ti.com (10.64.41.20) by DLEE109.ent.ti.com
- (157.170.170.41) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
- Frontend Transport; Mon, 14 Sep 2020 23:22:09 -0500
-Received: from a0393678-ssd.dal.design.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 08F4LDMl028615;
-        Mon, 14 Sep 2020 23:22:05 -0500
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Jon Mason <jdmason@kudzu.us>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <allenbh@gmail.com>, Rob Herring <robh@kernel.org>
-CC:     Arnd Bergmann <arnd@arndb.de>,
+        id S1726125AbgIOFla (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 15 Sep 2020 01:41:30 -0400
+Received: from verein.lst.de ([213.95.11.211]:46357 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726089AbgIOFl2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 15 Sep 2020 01:41:28 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id BC6A26736F; Tue, 15 Sep 2020 07:41:22 +0200 (CEST)
+Date:   Tue, 15 Sep 2020 07:41:22 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Mathieu Poirier <mathieu.poirier@linaro.org>
+Cc:     Christoph Hellwig <hch@lst.de>, iommu@lists.linux-foundation.org,
+        Russell King <linux@armlinux.org.uk>,
+        Santosh Shilimkar <ssantosh@kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Tom Joseph <tjoseph@cadence.com>, <linux-pci@vger.kernel.org>,
-        <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-ntb@googlegroups.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>
-Subject: [PATCH v4 05/17] PCI: endpoint: Remove unused pci_epf_match_device()
-Date:   Tue, 15 Sep 2020 09:50:58 +0530
-Message-ID: <20200915042110.3015-6-kishon@ti.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200915042110.3015-1-kishon@ti.com>
-References: <20200915042110.3015-1-kishon@ti.com>
+        Jim Quinlan <james.quinlan@broadcom.com>,
+        Nathan Chancellor <natechancellor@gmail.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Ohad Ben-Cohen <ohad@wizery.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        linux-remoteproc@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-sh@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        arnaud.pouliquen@st.com, loic.pallardy.st.com@lst.de
+Subject: Re: [PATCH 6/6] dma-mapping: introduce DMA range map, supplanting
+ dma_pfn_offset
+Message-ID: <20200915054122.GA18079@lst.de>
+References: <20200914073343.1579578-1-hch@lst.de> <20200914073343.1579578-7-hch@lst.de> <20200914230147.GA3251212@xps15>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200914230147.GA3251212@xps15>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Remove unused pci_epf_match_device() function added in pci-epf-core.c
+On Mon, Sep 14, 2020 at 05:01:47PM -0600, Mathieu Poirier wrote:
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/endpoint/pci-epf-core.c | 16 ----------------
- include/linux/pci-epf.h             |  2 --
- 2 files changed, 18 deletions(-)
+[700 lines of the fullquote deleted..]
 
-diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
-index c977cf9dce56..e44a317a2a2a 100644
---- a/drivers/pci/endpoint/pci-epf-core.c
-+++ b/drivers/pci/endpoint/pci-epf-core.c
-@@ -282,22 +282,6 @@ struct pci_epf *pci_epf_create(const char *name)
- }
- EXPORT_SYMBOL_GPL(pci_epf_create);
+> > +	for (r = map; r->size; r++)
+> > +		num_ranges++;
+> > +
+> > +	new_map = kmemdup(map, array_size(num_ranges + 1, sizeof(*map)),
+> > +			  GFP_KERNEL);
+> > +	if (!new_map)
+> > +		return -ENOMEM;
+> > +	to->dma_range_map = new_map;
+> > +	return 0;
+> > +}
+> > +
+> 
+> This patch seemed Ok to me but it broke the stm32 remoteproc implementation.  When
+> I tested things out function dma_coerce_mask_and_cohenrent() returns -5 and the
+> rest of the initialisation fails.  I isolated things to function dma_to_pfn()
+> [2].  In the original implementation __bus_to_pfn() returns 0xfffff and
+> dev->dma_pfn_offset is equal to 0x38000.  As such the function returns 0x137fff
+> and dma_supported() a non-zero value[3].
+> 
+> With this set function dma_to_pfn() received a face lift.  Function
+> __bus_to_pfn() still returns 0xfffff but translate_dma_to_phys() returns 0,
+> which forces dma_supported() to also return 0 and that is where the -5 (-EIO)
+> comes from.
+> 
+> Taking a futher look at translate_dma_to_phy(), @dma_addr never falls within the
+> bus_dma_region ranges and returns 0.
+> 
+> I'm suspecting an initialisation problem and if it occurred here, it will
+> likely show up elsewhere.
+
+Can you try this incremental patch?
+
+diff --git a/include/linux/dma-direct.h b/include/linux/dma-direct.h
+index 088c97181ab146..c6b21acba7a459 100644
+--- a/include/linux/dma-direct.h
++++ b/include/linux/dma-direct.h
+@@ -46,7 +46,7 @@ static inline phys_addr_t translate_dma_to_phys(struct device *dev,
+ 		if (dma_addr >= m->dma_start && dma_addr - m->dma_start < m->size)
+ 			return (phys_addr_t)dma_addr + m->offset;
  
--const struct pci_epf_device_id *
--pci_epf_match_device(const struct pci_epf_device_id *id, struct pci_epf *epf)
--{
--	if (!id || !epf)
--		return NULL;
--
--	while (*id->name) {
--		if (strcmp(epf->name, id->name) == 0)
--			return id;
--		id++;
--	}
--
--	return NULL;
--}
--EXPORT_SYMBOL_GPL(pci_epf_match_device);
--
- static void pci_epf_dev_release(struct device *dev)
- {
- 	struct pci_epf *epf = to_pci_epf(dev);
-diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
-index fa3aca43eb19..f373a134ac04 100644
---- a/include/linux/pci-epf.h
-+++ b/include/linux/pci-epf.h
-@@ -165,8 +165,6 @@ static inline void *epf_get_drvdata(struct pci_epf *epf)
- 	return dev_get_drvdata(&epf->dev);
+-	return 0;
++	return (phys_addr_t)-1;
  }
  
--const struct pci_epf_device_id *
--pci_epf_match_device(const struct pci_epf_device_id *id, struct pci_epf *epf);
- struct pci_epf *pci_epf_create(const char *name);
- void pci_epf_destroy(struct pci_epf *epf);
- int __pci_epf_register_driver(struct pci_epf_driver *driver,
--- 
-2.17.1
-
+ #ifdef CONFIG_ARCH_HAS_PHYS_TO_DMA
