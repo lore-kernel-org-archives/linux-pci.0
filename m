@@ -8,45 +8,45 @@ X-Spam-Status: No, score=-14.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B847CC43461
-	for <linux-pci@archiver.kernel.org>; Tue, 15 Sep 2020 04:24:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77C85C2D0E0
+	for <linux-pci@archiver.kernel.org>; Tue, 15 Sep 2020 04:24:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7B1AA20771
-	for <linux-pci@archiver.kernel.org>; Tue, 15 Sep 2020 04:24:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 361FC21655
+	for <linux-pci@archiver.kernel.org>; Tue, 15 Sep 2020 04:24:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="h4F6QKnq"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="tPzDAZ7k"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726276AbgIOEWk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 15 Sep 2020 00:22:40 -0400
-Received: from lelv0142.ext.ti.com ([198.47.23.249]:43062 "EHLO
-        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726219AbgIOEWg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2020 00:22:36 -0400
-Received: from lelv0265.itg.ti.com ([10.180.67.224])
-        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 08F4MPjT026941;
-        Mon, 14 Sep 2020 23:22:25 -0500
+        id S1726241AbgIOEWc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 15 Sep 2020 00:22:32 -0400
+Received: from lelv0143.ext.ti.com ([198.47.23.248]:36410 "EHLO
+        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726219AbgIOEWa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2020 00:22:30 -0400
+Received: from fllv0034.itg.ti.com ([10.64.40.246])
+        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id 08F4MAul001484;
+        Mon, 14 Sep 2020 23:22:10 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1600143745;
-        bh=27xJ9Q8zqn3uZRTDxUZ4FVw6OjM6K5CJr8HiYB/90+k=;
+        s=ti-com-17Q1; t=1600143730;
+        bh=WCJiTCBYarku1p+J3FGwyc0AS5UhsiZgThHHJxu9xzA=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=h4F6QKnqhjbgiSo3AAzGd31dujlfXG3QNnqIW9jSj7dKfR96XJvvUjFOMCzReOOBA
-         kHWxeGGHhYMnPR7qzNv31lzZx804MosH9nGrTQG52eS+fj1konqMSS4fcwcqd4Ulle
-         ERff69CpybS2keXnwbVc5vy0xVFiMP1h+ASbkP/g=
-Received: from DLEE103.ent.ti.com (dlee103.ent.ti.com [157.170.170.33])
-        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 08F4MPmO044106
+        b=tPzDAZ7klc9vkOizihxDSHCgfa1Y+0KeXlb4tqDu6v9jq4x7ju4cIa5ks7zXJ8SBz
+         7Q6KWAB3LSp71XW9JPslTn1gis1miHWnwYlfYZ5tk7J0MCbGUXPM2lFx715PxU9tLz
+         4BwKPtUlKJ9y3LgmJhZ8TQSssAvGmjkAezBr35kE=
+Received: from DLEE104.ent.ti.com (dlee104.ent.ti.com [157.170.170.34])
+        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 08F4MAUr058124
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 14 Sep 2020 23:22:25 -0500
-Received: from DLEE111.ent.ti.com (157.170.170.22) by DLEE103.ent.ti.com
- (157.170.170.33) with Microsoft SMTP Server (version=TLS1_2,
+        Mon, 14 Sep 2020 23:22:10 -0500
+Received: from DLEE109.ent.ti.com (157.170.170.41) by DLEE104.ent.ti.com
+ (157.170.170.34) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Mon, 14
- Sep 2020 23:22:24 -0500
-Received: from fllv0040.itg.ti.com (10.64.41.20) by DLEE111.ent.ti.com
- (157.170.170.22) with Microsoft SMTP Server (version=TLS1_2,
+ Sep 2020 23:22:09 -0500
+Received: from fllv0040.itg.ti.com (10.64.41.20) by DLEE109.ent.ti.com
+ (157.170.170.41) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
- Frontend Transport; Mon, 14 Sep 2020 23:22:25 -0500
+ Frontend Transport; Mon, 14 Sep 2020 23:22:09 -0500
 Received: from a0393678-ssd.dal.design.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 08F4LDMo028615;
-        Mon, 14 Sep 2020 23:22:20 -0500
+        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 08F4LDMl028615;
+        Mon, 14 Sep 2020 23:22:05 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Jonathan Corbet <corbet@lwn.net>,
@@ -60,9 +60,9 @@ CC:     Arnd Bergmann <arnd@arndb.de>,
         <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <linux-ntb@googlegroups.com>,
         Kishon Vijay Abraham I <kishon@ti.com>
-Subject: [PATCH v4 08/17] PCI: endpoint: Add pci_epc_ops to map MSI irq
-Date:   Tue, 15 Sep 2020 09:51:01 +0530
-Message-ID: <20200915042110.3015-9-kishon@ti.com>
+Subject: [PATCH v4 05/17] PCI: endpoint: Remove unused pci_epf_match_device()
+Date:   Tue, 15 Sep 2020 09:50:58 +0530
+Message-ID: <20200915042110.3015-6-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200915042110.3015-1-kishon@ti.com>
 References: <20200915042110.3015-1-kishon@ti.com>
@@ -74,102 +74,54 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add pci_epc_ops to map physical address to MSI address and return MSI
-data. The physical address is an address in the outbound region. This is
-required to implement doorbell functionality of NTB (non transparent
-bridge) wherein EPC on either side of the interface (primary and
-secondary) can directly write to the physical address (in outbound
-region) of the other interface to ring doorbell using MSI.
+Remove unused pci_epf_match_device() function added in pci-epf-core.c
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/endpoint/pci-epc-core.c | 40 +++++++++++++++++++++++++++++
- include/linux/pci-epc.h             |  7 +++++
- 2 files changed, 47 insertions(+)
+ drivers/pci/endpoint/pci-epf-core.c | 16 ----------------
+ include/linux/pci-epf.h             |  2 --
+ 2 files changed, 18 deletions(-)
 
-diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
-index 0f6e2364ae6f..73f9ff425824 100644
---- a/drivers/pci/endpoint/pci-epc-core.c
-+++ b/drivers/pci/endpoint/pci-epc-core.c
-@@ -230,6 +230,46 @@ int pci_epc_raise_irq(struct pci_epc *epc, u8 func_no,
+diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
+index c977cf9dce56..e44a317a2a2a 100644
+--- a/drivers/pci/endpoint/pci-epf-core.c
++++ b/drivers/pci/endpoint/pci-epf-core.c
+@@ -282,22 +282,6 @@ struct pci_epf *pci_epf_create(const char *name)
  }
- EXPORT_SYMBOL_GPL(pci_epc_raise_irq);
+ EXPORT_SYMBOL_GPL(pci_epf_create);
  
-+/**
-+ * pci_epc_map_msi_irq() - Map physical address to MSI address and return
-+ *                         MSI data
-+ * @epc: the EPC device which has the MSI capability
-+ * @func_no: the physical endpoint function number in the EPC device
-+ * @vfunc_no: the virtual endpoint function number in the physical function
-+ * @phys_addr: the physical address of the outbound region
-+ * @interrupt_num: the MSI interrupt number
-+ * @entry_size: Size of Outbound address region for each interrupt
-+ * @msi_data: the data that should be written in order to raise MSI interrupt
-+ *            with interrupt number as 'interrupt num'
-+ *
-+ * Invoke to map physical address to MSI address and return MSI data. The
-+ * physical address should be an address in the outbound region. This is
-+ * required to implement doorbell functionality of NTB wherein EPC on either
-+ * side of the interface (primary and secondary) can directly write to the
-+ * physical address (in outbound region) of the other interface to ring
-+ * doorbell.
-+ */
-+int pci_epc_map_msi_irq(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
-+			phys_addr_t phys_addr, u8 interrupt_num, u32 entry_size,
-+			u32 *msi_data)
-+{
-+	int ret;
-+
-+	if (IS_ERR_OR_NULL(epc))
-+		return -EINVAL;
-+
-+	if (!epc->ops->map_msi_irq)
-+		return -EINVAL;
-+
-+	mutex_lock(&epc->lock);
-+	ret = epc->ops->map_msi_irq(epc, func_no, vfunc_no, phys_addr,
-+				    interrupt_num, entry_size, msi_data);
-+	mutex_unlock(&epc->lock);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(pci_epc_map_msi_irq);
-+
- /**
-  * pci_epc_get_msi() - get the number of MSI interrupt numbers allocated
-  * @epc: the EPC device to which MSI interrupts was requested
-diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
-index d9cb3944fb87..88284f3a0698 100644
---- a/include/linux/pci-epc.h
-+++ b/include/linux/pci-epc.h
-@@ -55,6 +55,7 @@ pci_epc_interface_string(enum pci_epc_interface_type type)
-  * @get_msix: ops to get the number of MSI-X interrupts allocated by the RC
-  *	     from the MSI-X capability register
-  * @raise_irq: ops to raise a legacy, MSI or MSI-X interrupt
-+ * @map_msi_irq: ops to map physical address to MSI address and return MSI data
-  * @start: ops to start the PCI link
-  * @stop: ops to stop the PCI link
-  * @owner: the module owner containing the ops
-@@ -77,6 +78,9 @@ struct pci_epc_ops {
- 	int	(*get_msix)(struct pci_epc *epc, u8 func_no);
- 	int	(*raise_irq)(struct pci_epc *epc, u8 func_no,
- 			     enum pci_epc_irq_type type, u16 interrupt_num);
-+	int	(*map_msi_irq)(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
-+			       phys_addr_t phys_addr, u8 interrupt_num,
-+			       u32 entry_size, u32 *msi_data);
- 	int	(*start)(struct pci_epc *epc);
- 	void	(*stop)(struct pci_epc *epc);
- 	const struct pci_epc_features* (*get_features)(struct pci_epc *epc,
-@@ -216,6 +220,9 @@ int pci_epc_get_msi(struct pci_epc *epc, u8 func_no);
- int pci_epc_set_msix(struct pci_epc *epc, u8 func_no, u16 interrupts,
- 		     enum pci_barno, u32 offset);
- int pci_epc_get_msix(struct pci_epc *epc, u8 func_no);
-+int pci_epc_map_msi_irq(struct pci_epc *epc, u8 func_no,
-+			phys_addr_t phys_addr, u8 interrupt_num,
-+			u32 entry_size, u32 *msi_data);
- int pci_epc_raise_irq(struct pci_epc *epc, u8 func_no,
- 		      enum pci_epc_irq_type type, u16 interrupt_num);
- int pci_epc_start(struct pci_epc *epc);
+-const struct pci_epf_device_id *
+-pci_epf_match_device(const struct pci_epf_device_id *id, struct pci_epf *epf)
+-{
+-	if (!id || !epf)
+-		return NULL;
+-
+-	while (*id->name) {
+-		if (strcmp(epf->name, id->name) == 0)
+-			return id;
+-		id++;
+-	}
+-
+-	return NULL;
+-}
+-EXPORT_SYMBOL_GPL(pci_epf_match_device);
+-
+ static void pci_epf_dev_release(struct device *dev)
+ {
+ 	struct pci_epf *epf = to_pci_epf(dev);
+diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
+index fa3aca43eb19..f373a134ac04 100644
+--- a/include/linux/pci-epf.h
++++ b/include/linux/pci-epf.h
+@@ -165,8 +165,6 @@ static inline void *epf_get_drvdata(struct pci_epf *epf)
+ 	return dev_get_drvdata(&epf->dev);
+ }
+ 
+-const struct pci_epf_device_id *
+-pci_epf_match_device(const struct pci_epf_device_id *id, struct pci_epf *epf);
+ struct pci_epf *pci_epf_create(const char *name);
+ void pci_epf_destroy(struct pci_epf *epf);
+ int __pci_epf_register_driver(struct pci_epf_driver *driver,
 -- 
 2.17.1
 
