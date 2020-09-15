@@ -7,34 +7,35 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF11FC43461
-	for <linux-pci@archiver.kernel.org>; Tue, 15 Sep 2020 23:30:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1B35C433E2
+	for <linux-pci@archiver.kernel.org>; Tue, 15 Sep 2020 23:30:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7A8352193E
-	for <linux-pci@archiver.kernel.org>; Tue, 15 Sep 2020 23:30:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A7E2B208E4
+	for <linux-pci@archiver.kernel.org>; Tue, 15 Sep 2020 23:30:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727361AbgIOX3b (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 15 Sep 2020 19:29:31 -0400
-Received: from mga05.intel.com ([192.55.52.43]:50403 "EHLO mga05.intel.com"
+        id S1726285AbgIOXaa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 15 Sep 2020 19:30:30 -0400
+Received: from mga18.intel.com ([134.134.136.126]:59908 "EHLO mga18.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727176AbgIOX3A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 15 Sep 2020 19:29:00 -0400
-IronPort-SDR: ecUJIcx9HTEbRlrqx93s64aAN0NJL3hY+7pr+x/SGII57DwC6xQ/LzxiKkFWe3a0JXN2dYH/W9
- WELW5quH+cvQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9745"; a="244200291"
+        id S1727232AbgIOX31 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 15 Sep 2020 19:29:27 -0400
+IronPort-SDR: 6WUEQ+pPJrTJW16WmztSGy3dbfBg2+goEAFsNm+KF2PDuLZGt5kTxXhHkjSu0HJ5UjkqFmNxNd
+ gPBZtE9wVY2A==
+X-IronPort-AV: E=McAfee;i="6000,8403,9745"; a="147120160"
 X-IronPort-AV: E=Sophos;i="5.76,430,1592895600"; 
-   d="scan'208";a="244200291"
+   d="scan'208";a="147120160"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Sep 2020 16:28:59 -0700
-IronPort-SDR: 7SVpz8o6qKHdfPiE4xcigHFUb8nzIGCbbNX8ZkbJLzt3JgPWlAwNg4pH1Go5qsJbbKwbFnyTNL
- aJhnCL4OdqUg==
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Sep 2020 16:29:26 -0700
+IronPort-SDR: EAu9yNq+VH45IieXXe+oaFmwbky6X7Vd9Y6W2Fb1GLbSz/u9fj/tlipxM08N6PvN9cFwKCRf9e
+ 1pKj0B6TfO1A==
 X-IronPort-AV: E=Sophos;i="5.76,430,1592895600"; 
-   d="scan'208";a="507771710"
+   d="scan'208";a="319642576"
 Received: from djiang5-desk3.ch.intel.com ([143.182.136.137])
-  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Sep 2020 16:28:58 -0700
-Subject: [PATCH v3 12/18] dmaengine: idxd: add mdev type as a new wq type
+  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Sep 2020 16:29:24 -0700
+Subject: [PATCH v3 16/18] dmaengine: idxd: add ABI documentation for
+ mediated device support
 From:   Dave Jiang <dave.jiang@intel.com>
 To:     vkoul@kernel.org, megha.dey@intel.com, maz@kernel.org,
         bhelgaas@google.com, tglx@linutronix.de,
@@ -48,8 +49,8 @@ To:     vkoul@kernel.org, megha.dey@intel.com, maz@kernel.org,
         pbonzini@redhat.com, samuel.ortiz@intel.com, mona.hossain@intel.com
 Cc:     dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org,
         x86@kernel.org, linux-pci@vger.kernel.org, kvm@vger.kernel.org
-Date:   Tue, 15 Sep 2020 16:28:58 -0700
-Message-ID: <160021253826.67751.7453808239640664490.stgit@djiang5-desk3.ch.intel.com>
+Date:   Tue, 15 Sep 2020 16:29:24 -0700
+Message-ID: <160021256431.67751.2268297306094926564.stgit@djiang5-desk3.ch.intel.com>
 In-Reply-To: <160021207013.67751.8220471499908137671.stgit@djiang5-desk3.ch.intel.com>
 References: <160021207013.67751.8220471499908137671.stgit@djiang5-desk3.ch.intel.com>
 User-Agent: StGit/unknown-version
@@ -61,78 +62,44 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add "mdev" wq type and support helpers. The mdev wq type marks the wq
-to be utilized as a VFIO mediated device.
+From: Jing Lin <jing.lin@intel.com>
 
+Add the sysfs attribute bits in ABI/stable for mediated device and guest
+support.
+
+Signed-off-by: Jing Lin <jing.lin@intel.com>
 Signed-off-by: Dave Jiang <dave.jiang@intel.com>
 ---
- drivers/dma/idxd/idxd.h  |    2 ++
- drivers/dma/idxd/sysfs.c |   13 +++++++++++--
- 2 files changed, 13 insertions(+), 2 deletions(-)
+ Documentation/ABI/stable/sysfs-driver-dma-idxd |   11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/dma/idxd/idxd.h b/drivers/dma/idxd/idxd.h
-index 23d3ebca1da5..23287f8fd19a 100644
---- a/drivers/dma/idxd/idxd.h
-+++ b/drivers/dma/idxd/idxd.h
-@@ -65,6 +65,7 @@ enum idxd_wq_type {
- 	IDXD_WQT_NONE = 0,
- 	IDXD_WQT_KERNEL,
- 	IDXD_WQT_USER,
-+	IDXD_WQT_MDEV,
- };
+diff --git a/Documentation/ABI/stable/sysfs-driver-dma-idxd b/Documentation/ABI/stable/sysfs-driver-dma-idxd
+index b44183880935..6bb925b55027 100644
+--- a/Documentation/ABI/stable/sysfs-driver-dma-idxd
++++ b/Documentation/ABI/stable/sysfs-driver-dma-idxd
+@@ -77,6 +77,12 @@ Contact:        dmaengine@vger.kernel.org
+ Description:    The operation capability bit mask specify the operation types
+ 		supported by the this device.
  
- struct idxd_cdev {
-@@ -290,6 +291,7 @@ void idxd_cleanup_sysfs(struct idxd_device *idxd);
- int idxd_register_driver(void);
- void idxd_unregister_driver(void);
- struct bus_type *idxd_get_bus_type(struct idxd_device *idxd);
-+bool is_idxd_wq_mdev(struct idxd_wq *wq);
- 
- /* device interrupt control */
- irqreturn_t idxd_irq_handler(int vec, void *data);
-diff --git a/drivers/dma/idxd/sysfs.c b/drivers/dma/idxd/sysfs.c
-index cbb1038f1ed0..6eb67f744c8e 100644
---- a/drivers/dma/idxd/sysfs.c
-+++ b/drivers/dma/idxd/sysfs.c
-@@ -14,6 +14,7 @@ static char *idxd_wq_type_names[] = {
- 	[IDXD_WQT_NONE]		= "none",
- 	[IDXD_WQT_KERNEL]	= "kernel",
- 	[IDXD_WQT_USER]		= "user",
-+	[IDXD_WQT_MDEV]		= "mdev",
- };
- 
- static void idxd_conf_device_release(struct device *dev)
-@@ -69,6 +70,11 @@ static inline bool is_idxd_wq_cdev(struct idxd_wq *wq)
- 	return wq->type == IDXD_WQT_USER;
- }
- 
-+inline bool is_idxd_wq_mdev(struct idxd_wq *wq)
-+{
-+	return wq->type == IDXD_WQT_MDEV ? true : false;
-+}
++What:           /sys/bus/dsa/devices/dsa<m>/ims_size
++Date:           Sep 8, 2020
++KernelVersion:  5.10.0
++Contact:        dmaengine@vger.kernel.org
++Description:	Number of entries in the interrupt message storage table.
 +
- static int idxd_config_bus_match(struct device *dev,
- 				 struct device_driver *drv)
- {
-@@ -987,8 +993,9 @@ static ssize_t wq_type_show(struct device *dev,
- 		return sprintf(buf, "%s\n",
- 			       idxd_wq_type_names[IDXD_WQT_KERNEL]);
- 	case IDXD_WQT_USER:
--		return sprintf(buf, "%s\n",
--			       idxd_wq_type_names[IDXD_WQT_USER]);
-+		return sprintf(buf, "%s\n", idxd_wq_type_names[IDXD_WQT_USER]);
-+	case IDXD_WQT_MDEV:
-+		return sprintf(buf, "%s\n", idxd_wq_type_names[IDXD_WQT_MDEV]);
- 	case IDXD_WQT_NONE:
- 	default:
- 		return sprintf(buf, "%s\n",
-@@ -1015,6 +1022,8 @@ static ssize_t wq_type_store(struct device *dev,
- 		wq->type = IDXD_WQT_KERNEL;
- 	else if (sysfs_streq(buf, idxd_wq_type_names[IDXD_WQT_USER]))
- 		wq->type = IDXD_WQT_USER;
-+	else if (sysfs_streq(buf, idxd_wq_type_names[IDXD_WQT_MDEV]))
-+		wq->type = IDXD_WQT_MDEV;
- 	else
- 		return -EINVAL;
+ What:           /sys/bus/dsa/devices/dsa<m>/state
+ Date:           Oct 25, 2019
+ KernelVersion:  5.6.0
+@@ -139,8 +145,9 @@ Date:           Oct 25, 2019
+ KernelVersion:  5.6.0
+ Contact:        dmaengine@vger.kernel.org
+ Description:    The type of this work queue, it can be "kernel" type for work
+-		queue usages in the kernel space or "user" type for work queue
+-		usages by applications in user space.
++		queue usages in the kernel space, "user" type for work queue
++		usages by applications in user space, or "mdev" type for
++		VFIO mediated devices.
  
+ What:           /sys/bus/dsa/devices/wq<m>.<n>/cdev_minor
+ Date:           Oct 25, 2019
 
