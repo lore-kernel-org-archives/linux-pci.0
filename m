@@ -2,93 +2,110 @@ Return-Path: <SRS0=XVho=CZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5B2BC433E2
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 00:27:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E79FFC433E2
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 02:29:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 72750206DB
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 00:27:16 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="VyzI3l68"
+	by mail.kernel.org (Postfix) with ESMTP id AC06B20809
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 02:29:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726255AbgIPA1N (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 15 Sep 2020 20:27:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59228 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726805AbgIOOH6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2020 10:07:58 -0400
-Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44506C061226
-        for <linux-pci@vger.kernel.org>; Tue, 15 Sep 2020 06:46:15 -0700 (PDT)
-Received: by mail-pl1-x634.google.com with SMTP id bh1so1370818plb.12
-        for <linux-pci@vger.kernel.org>; Tue, 15 Sep 2020 06:46:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id;
-        bh=MeLJEQ5UzKvpRw+f0TuQfsNut0rOub9KBNZ3XbT5R4w=;
-        b=VyzI3l68YaIDGZSJqqVNoBbU0lqcqpmQ6neoGauVB0ydm6bSCbf7jtSUa4s8rToSTJ
-         /z8S4X4jJkwIMTgZfJeey5u122Wby9vkT234yCMTUPuB3aURQZmv02RxTc9VzHahY5rZ
-         lbx0AeZL11QpO4mI9KEvtNJfUg+F33YmToIwo=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=MeLJEQ5UzKvpRw+f0TuQfsNut0rOub9KBNZ3XbT5R4w=;
-        b=pblySAcbOtvjOUSkgBTduTgF4GkE/C4mqDAXkvpTambH9Oj39uRI8V/vipgSiuuhgJ
-         6ttLHhuZ6PecXtALuymnwogzBOUfE7hjaE0E4X/NZLpgHIbo/zL52tDxXVMB4iO3+4tJ
-         EQeOi6alarrgJoJULyux7MQMZZer7Q+n5XX5tndJNUXqNQB2rIa14UcpAGEcqg6wlu8J
-         oOA5ORg490rzzj0Xxg1+GDRBryzLo8q8SSDc8qf140oMf+oHDJJKMm/JzknPbb8DxHSz
-         WcxmLS6EhtnYsNjTixOsq8CPQyCicOIT7Ux3Ox7vpd8roZX1NCPO4C1W/JItG3u975sE
-         PgVw==
-X-Gm-Message-State: AOAM533lBOVpFythsTwrgWtpjjoI0xT/NDVRkGKUOX1wxpHRa1vi0Dq8
-        376cjs4DjxbFYvL4Pis6lEsHwg==
-X-Google-Smtp-Source: ABdhPJxcNnN5vg5uojXyT3K7ps9jzvHo60XPiUNDKPGLzN1OH9DK612rrF6YmNusesVGKbdSWANS/g==
-X-Received: by 2002:a17:90a:c28e:: with SMTP id f14mr4105023pjt.83.1600177572607;
-        Tue, 15 Sep 2020 06:46:12 -0700 (PDT)
-Received: from mannams-OptiPlex-7010.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id jz6sm12471478pjb.22.2020.09.15.06.46.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 15 Sep 2020 06:46:11 -0700 (PDT)
-From:   Srinath Mannam <srinath.mannam@broadcom.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        id S1726509AbgIPC26 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 15 Sep 2020 22:28:58 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:12717 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726402AbgIPC2A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 15 Sep 2020 22:28:00 -0400
+Received: from DGGEMS405-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id 6181BEED522A6A6B5DFE;
+        Wed, 16 Sep 2020 10:27:58 +0800 (CST)
+Received: from huawei.com (10.175.113.32) by DGGEMS405-HUB.china.huawei.com
+ (10.3.19.205) with Microsoft SMTP Server id 14.3.487.0; Wed, 16 Sep 2020
+ 10:27:50 +0800
+From:   Liu Shixin <liushixin2@huawei.com>
+To:     Thierry Reding <thierry.reding@gmail.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Ray Jui <rjui@broadcom.com>
-Cc:     bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Srinath Mannam <srinath.mannam@broadcom.com>
-Subject: [PATCH v2 0/3] PCI: iproc: Add fixes to pcie iproc 
-Date:   Tue, 15 Sep 2020 19:15:38 +0530
-Message-Id: <20200915134541.14711-1-srinath.mannam@broadcom.com>
-X-Mailer: git-send-email 2.17.1
+        Jonathan Hunter <jonathanh@nvidia.com>
+CC:     <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, Liu Shixin <liushixin2@huawei.com>
+Subject: [PATCH -next] PCI: tegra: convert to use DEFINE_SEQ_ATTRIBUTE macro
+Date:   Wed, 16 Sep 2020 10:50:25 +0800
+Message-ID: <20200916025025.3992783-1-liushixin2@huawei.com>
+X-Mailer: git-send-email 2.25.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.113.32]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This patch series contains fixes and improvements to pcie iproc driver.
+Use DEFINE_SEQ_ATTRIBUTE macro to simplify the code.
 
-This patch set is based on Linux-5.9.0-rc2.
+Signed-off-by: Liu Shixin <liushixin2@huawei.com>
+---
+ drivers/pci/controller/pci-tegra.c | 28 +++-------------------------
+ 1 file changed, 3 insertions(+), 25 deletions(-)
 
-Changes from v1:
-  - Addressed Bjorn's review comments
-     - pcie_print_link_status is used to print Link information.
-     - Added IARR1/IMAP1 window map definition.
-
-Bharat Gooty (1):
-  PCI: iproc: fix out of bound array access
-
-Roman Bacik (1):
-  PCI: iproc: fix invalidating PAXB address mapping
-
-Srinath Mannam (1):
-  PCI: iproc: Display PCIe Link information
-
- drivers/pci/controller/pcie-iproc.c | 29 ++++++++++++++++++++++-------
- 1 file changed, 22 insertions(+), 7 deletions(-)
-
+diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
+index c1d34353c29b..556c30a718f0 100644
+--- a/drivers/pci/controller/pci-tegra.c
++++ b/drivers/pci/controller/pci-tegra.c
+@@ -2564,36 +2564,14 @@ static int tegra_pcie_ports_seq_show(struct seq_file *s, void *v)
+ 	return 0;
+ }
+ 
+-static const struct seq_operations tegra_pcie_ports_seq_ops = {
++static const struct seq_operations tegra_pcie_ports_sops = {
+ 	.start = tegra_pcie_ports_seq_start,
+ 	.next = tegra_pcie_ports_seq_next,
+ 	.stop = tegra_pcie_ports_seq_stop,
+ 	.show = tegra_pcie_ports_seq_show,
+ };
+ 
+-static int tegra_pcie_ports_open(struct inode *inode, struct file *file)
+-{
+-	struct tegra_pcie *pcie = inode->i_private;
+-	struct seq_file *s;
+-	int err;
+-
+-	err = seq_open(file, &tegra_pcie_ports_seq_ops);
+-	if (err)
+-		return err;
+-
+-	s = file->private_data;
+-	s->private = pcie;
+-
+-	return 0;
+-}
+-
+-static const struct file_operations tegra_pcie_ports_ops = {
+-	.owner = THIS_MODULE,
+-	.open = tegra_pcie_ports_open,
+-	.read = seq_read,
+-	.llseek = seq_lseek,
+-	.release = seq_release,
+-};
++DEFINE_SEQ_ATTRIBUTE(tegra_pcie_ports);
+ 
+ static void tegra_pcie_debugfs_exit(struct tegra_pcie *pcie)
+ {
+@@ -2610,7 +2588,7 @@ static int tegra_pcie_debugfs_init(struct tegra_pcie *pcie)
+ 		return -ENOMEM;
+ 
+ 	file = debugfs_create_file("ports", S_IFREG | S_IRUGO, pcie->debugfs,
+-				   pcie, &tegra_pcie_ports_ops);
++				   pcie, &tegra_pcie_ports_fops);
+ 	if (!file)
+ 		goto remove;
+ 
 -- 
-2.17.1
+2.25.1
 
