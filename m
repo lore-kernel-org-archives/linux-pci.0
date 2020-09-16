@@ -2,149 +2,101 @@ Return-Path: <SRS0=XVho=CZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C6B2C43461
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 18:26:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48F01C43461
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 18:33:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C93E221D43
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 18:26:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0D1CC20936
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 18:33:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1600281215;
+	bh=4gLbmk/7eaMq8kQdjr9e/cFnlSaDI80VsZ/K37fh5uU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=UyBW32DmR66TPeVfsjsthQpw4sKVEONvaR+N63oehdiXJf3O4vMgEFChqTAc3jR6Y
+	 0RrCqz5FaMkUtuAZlTV8HaK46M9X+wNKJvfq+bRmEPC+NyEC9jgdqnidkBk3Gn/z9S
+	 QPJ8M8cRf2TAG6P26GY84r76BZdhp29sNckzwSXs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727824AbgIPS0c (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 16 Sep 2020 14:26:32 -0400
-Received: from foss.arm.com ([217.140.110.172]:35104 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727996AbgIPSZl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 16 Sep 2020 14:25:41 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id DAC7E1477;
-        Wed, 16 Sep 2020 04:07:14 -0700 (PDT)
-Received: from red-moon.arm.com (unknown [10.57.6.237])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 646A23F68F;
-        Wed, 16 Sep 2020 04:07:12 -0700 (PDT)
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     linux-kernel@vger.kernel.org
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        George Cherian <george.cherian@marvell.com>,
-        Arnd Bergmann <arnd@arndb.de>, Will Deacon <will@kernel.org>,
+        id S1727349AbgIPSdR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 16 Sep 2020 14:33:17 -0400
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:39600 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728020AbgIPSby (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2020 14:31:54 -0400
+Received: by mail-pf1-f196.google.com with SMTP id n14so4484509pff.6;
+        Wed, 16 Sep 2020 11:31:54 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=6G5lOpVUlHWWGXIZ1jolJG0Sb394B1bYevllH8NK7Gc=;
+        b=N7Lc1NaJ8R7N6Y0VeN7vYBYr9KF16GgweSK+M2/iLBAdN0meYXlNTqfLMwvfTg0+Sk
+         Bbm9qkMuZS/SLl2TX0pJfBRIDLjDeQrnFjWPjq7ULPMzEoIQ/Dn0VAd8ZZmjihAVoETE
+         j7dWSEdx6g72B2s+Qc1RryNvVivm7xIB27rK8ZCPXZpvVCQoCwiZd7WoLXb8UwKufNGZ
+         SBJwgLfk+wtPdyhiJfULutPx9Cm4EY9YWmoR2vDRqMySSQoF3BWFTl21+VA1AZ0+t5Ne
+         NIgWTl+fD0V89WQHtgVoEKLFmJOR8VCI3TIYmT2MCym48lNKNfKcZd28iiaFv+yDaYTm
+         1C0g==
+X-Gm-Message-State: AOAM533BvBKBf/BO9+Y89ytUhg1C6pxCbVvFS0qbBxSfUsK/4ue1k4kf
+        dhE/UPSLFtLtBWAY1kTDsyXKWHYF5H75
+X-Google-Smtp-Source: ABdhPJzSoz+rtnLXZQoJdrYYoga5TX85PXPw9tY0/1eRJt6R8LO9wd1xaTDTXuLVykA3Ex3b8PSz4Q==
+X-Received: by 2002:a92:8e42:: with SMTP id k2mr6234382ilh.175.1600269881838;
+        Wed, 16 Sep 2020 08:24:41 -0700 (PDT)
+Received: from xps15 ([64.188.179.253])
+        by smtp.gmail.com with ESMTPSA id o15sm10747097ilc.41.2020.09.16.08.24.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 16 Sep 2020 08:24:40 -0700 (PDT)
+Received: (nullmailer pid 3994603 invoked by uid 1000);
+        Wed, 16 Sep 2020 15:24:38 -0000
+Date:   Wed, 16 Sep 2020 09:24:38 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Jim Quinlan <james.quinlan@broadcom.com>
+Cc:     linux-pci@vger.kernel.org,
+        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
+        Christoph Hellwig <hch@lst.de>,
+        Robin Murphy <robin.murphy@arm.com>,
+        bcm-kernel-feedback-list@broadcom.com,
+        Jim Quinlan <jquinlan@broadcom.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Yang Yingliang <yangyingliang@huawei.com>,
-        linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        "David S. Miller" <davem@davemloft.net>
-Subject: [PATCH v2 3/3] asm-generic/io.h: Fix !CONFIG_GENERIC_IOMAP pci_iounmap() implementation
-Date:   Wed, 16 Sep 2020 12:06:58 +0100
-Message-Id: <a9daf8d8444d0ebd00bc6d64e336ec49dbb50784.1600254147.git.lorenzo.pieralisi@arm.com>
-X-Mailer: git-send-email 2.26.1
-In-Reply-To: <cover.1600254147.git.lorenzo.pieralisi@arm.com>
-References: <20200915093203.16934-1-lorenzo.pieralisi@arm.com> <cover.1600254147.git.lorenzo.pieralisi@arm.com>
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-rpi-kernel@lists.infradead.org>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v12 05/10] PCI: brcmstb: Add bcm7278 PERST# support
+Message-ID: <20200916152438.GA3991893@bogus>
+References: <20200911175232.19016-1-james.quinlan@broadcom.com>
+ <20200911175232.19016-6-james.quinlan@broadcom.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200911175232.19016-6-james.quinlan@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-For arches that do not select CONFIG_GENERIC_IOMAP, the current
-pci_iounmap() function does nothing causing obvious memory leaks
-for mapped regions that are backed by MMIO physical space.
+On Fri, Sep 11, 2020 at 01:52:25PM -0400, Jim Quinlan wrote:
+> From: Jim Quinlan <jquinlan@broadcom.com>
+> 
+> The PERST# bit was moved to a different register in 7278-type STB chips.
+> In addition, the polarity of the bit was also changed; for other chips
+> writing a 1 specified assert; for 7278-type chips, writing a 0 specifies
+> assert.  Of course, PERST# is a PCIe asserted-low signal.
+> 
+> While we are here, also change the bridge_sw_init_set() functions so like
+> the perst_set() functions they are chip specific and we no longer rely on
+> data wrt chip specific field mask and shift values.
+> 
+> Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
+> Acked-by: Florian Fainelli <f.fainelli@gmail.com>
+> ---
+>  drivers/pci/controller/pcie-brcmstb.c | 97 +++++++++++++++++++--------
+>  1 file changed, 69 insertions(+), 28 deletions(-)
 
-In order to detect if a mapped pointer is IO vs MMIO, a check must made
-available to the pci_iounmap() function so that it can actually detect
-whether the pointer has to be unmapped.
-
-In configurations where CONFIG_HAS_IOPORT_MAP && !CONFIG_GENERIC_IOMAP,
-a mapped port is detected using an ioport_map() stub defined in
-asm-generic/io.h.
-
-Use the same logic to implement a stub (ie __pci_ioport_unmap()) that
-detects if the passed in pointer in pci_iounmap() is IO vs MMIO to
-iounmap conditionally and call it in pci_iounmap() fixing the issue.
-
-Leave __pci_ioport_unmap() as a NOP for all other config options.
-
-Reported-by: George Cherian <george.cherian@marvell.com>
-Link: https://lore.kernel.org/lkml/20200905024811.74701-1-yangyingliang@huawei.com
-Link: https://lore.kernel.org/lkml/20200824132046.3114383-1-george.cherian@marvell.com
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: George Cherian <george.cherian@marvell.com>
-Cc: Will Deacon <will@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Catalin Marinas <catalin.marinas@arm.com>
-Cc: Yang Yingliang <yangyingliang@huawei.com>
----
- include/asm-generic/io.h | 39 +++++++++++++++++++++++++++------------
- 1 file changed, 27 insertions(+), 12 deletions(-)
-
-diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
-index dabf8cb7203b..9ea83d80eb6f 100644
---- a/include/asm-generic/io.h
-+++ b/include/asm-generic/io.h
-@@ -911,18 +911,6 @@ static inline void iowrite64_rep(volatile void __iomem *addr,
- #include <linux/vmalloc.h>
- #define __io_virt(x) ((void __force *)(x))
- 
--#ifndef CONFIG_GENERIC_IOMAP
--struct pci_dev;
--extern void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long max);
--
--#ifndef pci_iounmap
--#define pci_iounmap pci_iounmap
--static inline void pci_iounmap(struct pci_dev *dev, void __iomem *p)
--{
--}
--#endif
--#endif /* CONFIG_GENERIC_IOMAP */
--
- /*
-  * Change virtual addresses to physical addresses and vv.
-  * These are pretty trivial
-@@ -1016,6 +1004,16 @@ static inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
- 	port &= IO_SPACE_LIMIT;
- 	return (port > MMIO_UPPER_LIMIT) ? NULL : PCI_IOBASE + port;
- }
-+#define __pci_ioport_unmap __pci_ioport_unmap
-+static inline void __pci_ioport_unmap(void __iomem *p)
-+{
-+	uintptr_t start = (uintptr_t) PCI_IOBASE;
-+	uintptr_t addr = (uintptr_t) p;
-+
-+	if (addr >= start && addr < start + IO_SPACE_LIMIT)
-+		return;
-+	iounmap(p);
-+}
- #endif
- 
- #ifndef ioport_unmap
-@@ -1030,6 +1028,23 @@ extern void ioport_unmap(void __iomem *p);
- #endif /* CONFIG_GENERIC_IOMAP */
- #endif /* CONFIG_HAS_IOPORT_MAP */
- 
-+#ifndef CONFIG_GENERIC_IOMAP
-+struct pci_dev;
-+extern void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long max);
-+
-+#ifndef __pci_ioport_unmap
-+static inline void __pci_ioport_unmap(void __iomem *p) {}
-+#endif
-+
-+#ifndef pci_iounmap
-+#define pci_iounmap pci_iounmap
-+static inline void pci_iounmap(struct pci_dev *dev, void __iomem *p)
-+{
-+	__pci_ioport_unmap(p);
-+}
-+#endif
-+#endif /* CONFIG_GENERIC_IOMAP */
-+
- /*
-  * Convert a virtual cached pointer to an uncached pointer
-  */
--- 
-2.26.1
-
+Reviewed-by: Rob Herring <robh@kernel.org>
