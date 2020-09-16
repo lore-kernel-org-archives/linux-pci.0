@@ -2,93 +2,138 @@ Return-Path: <SRS0=XVho=CZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF011C433E2
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 06:21:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3EFBC2D0A7
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 06:22:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A0521221E5
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 06:21:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7FA9C206A4
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 06:22:14 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="wJwNm1s4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726426AbgIPGVB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 16 Sep 2020 02:21:01 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:44990 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726340AbgIPGU4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 16 Sep 2020 02:20:56 -0400
-Received: from DGGEMS403-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id 9333F9C127C521A72810;
-        Wed, 16 Sep 2020 14:20:54 +0800 (CST)
-Received: from localhost.localdomain.localdomain (10.175.113.25) by
- DGGEMS403-HUB.china.huawei.com (10.3.19.203) with Microsoft SMTP Server id
- 14.3.487.0; Wed, 16 Sep 2020 14:20:46 +0800
-From:   Qinglang Miao <miaoqinglang@huawei.com>
-To:     Michael Ellerman <mpe@ellerman.id.au>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        Tyrel Datwyler <tyreld@linux.ibm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC:     <linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        Qinglang Miao <miaoqinglang@huawei.com>
-Subject: [PATCH -next] PCI: rpadlpar: use for_each_child_of_node() and for_each_node_by_name
-Date:   Wed, 16 Sep 2020 14:21:28 +0800
-Message-ID: <20200916062128.190819-1-miaoqinglang@huawei.com>
-X-Mailer: git-send-email 2.20.1
+        id S1726179AbgIPGVw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 16 Sep 2020 02:21:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41250 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726496AbgIPGVm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2020 02:21:42 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B88FC06174A;
+        Tue, 15 Sep 2020 23:21:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=m2uI/54b6zhcK5JH2Qkk+DNhltSMOgJF9o6JCspd/6M=; b=wJwNm1s4NfDg7Hh8T37dQdMDQj
+        brKzrQj2KU/dtPiZ561mn0r/mCAhu2OsYT45jx4aoyR7wQfRVFGO3gz6UhzFmoXx+Q9765Y806Hlu
+        wgCxmVfoCzK1DYkwXqEC2bwIJjb0Rtl7GD31UngOSRnU7fcRTvu+Txb+eUF0ysrXdWnclhwSRH/n2
+        PiffbrNZTqSz33y69MzqME3aGqWr/+6TEgO/Mx/SZPcYd26EwkTehLs8u26ktT7JJm+FWof5kHaHF
+        jyN4FVUb3G0qo1xXkGaq4lpuqWy8h9qkZWq//9wtpwaxCqp/kksYqX//u4X7GSKDbowpmbT3Ud+tk
+        /5nU+Gzw==;
+Received: from 089144214092.atnat0023.highway.a1.net ([89.144.214.92] helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kIQov-0007AD-GS; Wed, 16 Sep 2020 06:21:33 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     iommu@lists.linux-foundation.org,
+        Russell King <linux@armlinux.org.uk>,
+        Santosh Shilimkar <ssantosh@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     Jim Quinlan <james.quinlan@broadcom.com>,
+        Nathan Chancellor <natechancellor@gmail.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Ohad Ben-Cohen <ohad@wizery.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        linux-remoteproc@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-sh@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org
+Subject: [PATCH 2/6] ARM/dma-mapping: remove dma_to_virt
+Date:   Wed, 16 Sep 2020 08:14:55 +0200
+Message-Id: <20200916061500.1970090-3-hch@lst.de>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200916061500.1970090-1-hch@lst.de>
+References: <20200916061500.1970090-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.113.25]
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Use for_each_child_of_node() and for_each_node_by_name macro
-instead of open coding it.
+dma_to_virt is entirely unused, remove it.
 
-Signed-off-by: Qinglang Miao <miaoqinglang@huawei.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/pci/hotplug/rpadlpar_core.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ arch/arm/include/asm/dma-mapping.h        | 18 +-----------------
+ arch/arm/mach-omap1/include/mach/memory.h |  4 ----
+ 2 files changed, 1 insertion(+), 21 deletions(-)
 
-diff --git a/drivers/pci/hotplug/rpadlpar_core.c b/drivers/pci/hotplug/rpadlpar_core.c
-index f979b7098..0a3c80ba6 100644
---- a/drivers/pci/hotplug/rpadlpar_core.c
-+++ b/drivers/pci/hotplug/rpadlpar_core.c
-@@ -40,13 +40,13 @@ static DEFINE_MUTEX(rpadlpar_mutex);
- static struct device_node *find_vio_slot_node(char *drc_name)
+diff --git a/arch/arm/include/asm/dma-mapping.h b/arch/arm/include/asm/dma-mapping.h
+index 70d95677656044..cf2535fb8891f5 100644
+--- a/arch/arm/include/asm/dma-mapping.h
++++ b/arch/arm/include/asm/dma-mapping.h
+@@ -24,7 +24,7 @@ static inline const struct dma_map_ops *get_arch_dma_ops(struct bus_type *bus)
+ }
+ 
+ /*
+- * dma_to_pfn/pfn_to_dma/dma_to_virt/virt_to_dma are architecture private
++ * dma_to_pfn/pfn_to_dma/virt_to_dma are architecture private
+  * functions used internally by the DMA-mapping API to provide DMA
+  * addresses. They must not be used by drivers.
+  */
+@@ -46,17 +46,6 @@ static inline unsigned long dma_to_pfn(struct device *dev, dma_addr_t addr)
+ 	return pfn;
+ }
+ 
+-static inline void *dma_to_virt(struct device *dev, dma_addr_t addr)
+-{
+-	if (dev) {
+-		unsigned long pfn = dma_to_pfn(dev, addr);
+-
+-		return phys_to_virt(__pfn_to_phys(pfn));
+-	}
+-
+-	return (void *)__bus_to_virt((unsigned long)addr);
+-}
+-
+ static inline dma_addr_t virt_to_dma(struct device *dev, void *addr)
  {
- 	struct device_node *parent = of_find_node_by_name(NULL, "vdevice");
--	struct device_node *dn = NULL;
-+	struct device_node *dn;
- 	int rc;
+ 	if (dev)
+@@ -76,11 +65,6 @@ static inline unsigned long dma_to_pfn(struct device *dev, dma_addr_t addr)
+ 	return __arch_dma_to_pfn(dev, addr);
+ }
  
- 	if (!parent)
- 		return NULL;
- 
--	while ((dn = of_get_next_child(parent, dn))) {
-+	for_each_child_of_node(parent, dn) {
- 		rc = rpaphp_check_drc_props(dn, drc_name, NULL);
- 		if (rc == 0)
- 			break;
-@@ -60,10 +60,10 @@ static struct device_node *find_vio_slot_node(char *drc_name)
- static struct device_node *find_php_slot_pci_node(char *drc_name,
- 						  char *drc_type)
+-static inline void *dma_to_virt(struct device *dev, dma_addr_t addr)
+-{
+-	return __arch_dma_to_virt(dev, addr);
+-}
+-
+ static inline dma_addr_t virt_to_dma(struct device *dev, void *addr)
  {
--	struct device_node *np = NULL;
-+	struct device_node *np;
- 	int rc;
+ 	return __arch_virt_to_dma(dev, addr);
+diff --git a/arch/arm/mach-omap1/include/mach/memory.h b/arch/arm/mach-omap1/include/mach/memory.h
+index 1142560e0078f5..e43697c3297bf2 100644
+--- a/arch/arm/mach-omap1/include/mach/memory.h
++++ b/arch/arm/mach-omap1/include/mach/memory.h
+@@ -41,10 +41,6 @@
+ 	   __phys_to_pfn(__dma);				\
+ 	})
  
--	while ((np = of_find_node_by_name(np, "pci"))) {
-+	for_each_node_by_name(np, "pci") {
- 		rc = rpaphp_check_drc_props(np, drc_name, drc_type);
- 		if (rc == 0)
- 			break;
+-#define __arch_dma_to_virt(dev, addr)	({ (void *) (is_lbus_device(dev) ? \
+-						lbus_to_virt(addr) : \
+-						__phys_to_virt(addr)); })
+-
+ #define __arch_virt_to_dma(dev, addr)	({ unsigned long __addr = (unsigned long)(addr); \
+ 					   (dma_addr_t) (is_lbus_device(dev) ? \
+ 						virt_to_lbus(__addr) : \
 -- 
-2.23.0
+2.28.0
 
