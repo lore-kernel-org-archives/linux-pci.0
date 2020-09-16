@@ -6,26 +6,27 @@ X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8792C43461
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 20:48:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D93DC433E2
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 20:50:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 91F6420770
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 20:48:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 48BD922209
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 20:50:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726701AbgIPUr4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 16 Sep 2020 16:47:56 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55916 "EHLO mail.kernel.org"
+        id S1726638AbgIPUuP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 16 Sep 2020 16:50:15 -0400
+Received: from foss.arm.com ([217.140.110.172]:33976 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726697AbgIPRBR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 16 Sep 2020 13:01:17 -0400
-Received: from gaia (unknown [46.69.195.48])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 2BD39223EA;
-        Wed, 16 Sep 2020 17:01:02 +0000 (UTC)
-Date:   Wed, 16 Sep 2020 18:00:59 +0100
-From:   Catalin Marinas <catalin.marinas@arm.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+        id S1726552AbgIPQ4A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 16 Sep 2020 12:56:00 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 2B8E91509;
+        Wed, 16 Sep 2020 07:15:06 -0700 (PDT)
+Received: from e121166-lin.cambridge.arm.com (e121166-lin.cambridge.arm.com [10.1.196.255])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id E951A3F68F;
+        Wed, 16 Sep 2020 07:15:04 -0700 (PDT)
+Date:   Wed, 16 Sep 2020 15:15:02 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Catalin Marinas <catalin.marinas@arm.com>
 Cc:     Will Deacon <will@kernel.org>, Jason Gunthorpe <jgg@nvidia.com>,
         Benjamin Herrenschmidt <benh@kernel.crashing.org>,
         Clint Sbisa <csbisa@amazon.com>, linux-pci@vger.kernel.org,
@@ -33,8 +34,9 @@ Cc:     Will Deacon <will@kernel.org>, Jason Gunthorpe <jgg@nvidia.com>,
         linux-arm-kernel@lists.infradead.org,
         Leon Romanovsky <leon@kernel.org>
 Subject: Re: [PATCH] arm64: Enable PCI write-combine resources under sysfs
-Message-ID: <20200916170058.GD3122@gaia>
-References: <1d6f2ceb8d3538c906a1fdb8cd3d4c74ccffa42e.camel@kernel.crashing.org>
+Message-ID: <20200916141502.GB20770@e121166-lin.cambridge.arm.com>
+References: <375c478593945a416f3180c3773bcb5240d2e36c.camel@kernel.crashing.org>
+ <1d6f2ceb8d3538c906a1fdb8cd3d4c74ccffa42e.camel@kernel.crashing.org>
  <20200914225740.GP904879@nvidia.com>
  <2b539df4c9ec703458e46da2fc879ee3b310b31c.camel@kernel.crashing.org>
  <20200915101831.GA2616@e121166-lin.cambridge.arm.com>
@@ -43,49 +45,70 @@ References: <1d6f2ceb8d3538c906a1fdb8cd3d4c74ccffa42e.camel@kernel.crashing.org>
  <20200915234006.GI1573713@nvidia.com>
  <20200916083315.GC27496@willie-the-truck>
  <20200916084851.GA3122@gaia>
- <20200916141502.GB20770@e121166-lin.cambridge.arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200916141502.GB20770@e121166-lin.cambridge.arm.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20200916084851.GA3122@gaia>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Sep 16, 2020 at 03:15:02PM +0100, Lorenzo Pieralisi wrote:
-> On Wed, Sep 16, 2020 at 09:48:52AM +0100, Catalin Marinas wrote:
-> > On Wed, Sep 16, 2020 at 09:33:16AM +0100, Will Deacon wrote:
-> > > On Tue, Sep 15, 2020 at 08:40:06PM -0300, Jason Gunthorpe wrote:
-> > > > On Wed, Sep 16, 2020 at 09:17:38AM +1000, Benjamin Herrenschmidt wrote:
-> > > > > With the patch, those device will now use MT_DEVICE_NC.
+On Wed, Sep 16, 2020 at 09:48:52AM +0100, Catalin Marinas wrote:
+> On Wed, Sep 16, 2020 at 09:33:16AM +0100, Will Deacon wrote:
+> > On Tue, Sep 15, 2020 at 08:40:06PM -0300, Jason Gunthorpe wrote:
+> > > On Wed, Sep 16, 2020 at 09:17:38AM +1000, Benjamin Herrenschmidt wrote:
+> > > > On Tue, 2020-09-15 at 08:05 -0300, Jason Gunthorpe wrote:
+> > > > > > To sum it up:
+> > > > > > 
+> > > > > > (1) RDMA drivers need a new mapping function/attribute to define their
+> > > > > >      message push model. Actually the message model is not necessarily related
+> > > > > >      to write combining a la x86, so we should probably come up with a better
+> > > > > >      and consistent naming. Enabling this patchset may trigger performance
+> > > > > >      regressions on mellanox drivers on arm64 - this ought to be
+> > > > > >      addressed.
+> > > > > 
+> > > > > It is pretty clear now that the certain ARM chips that don't do write
+> > > > > combining with pgprot_writecombine will performance regress if they
+> > > > > are running a certain uncommon Mellanox configuration. I suspect these
+> > > > > deployments are all running the out of tree patch for DEVICE_GRE
+> > > > > though.
 > > > > 
-> > > > Which doesn't do WC at all on some ARM implementations.
+> > > > I'm not sure I understand...
+> > > > 
+> > > > Today those ARM chips will not use pgprot_writecombine (at least not
+> > > > using that code path, they might still use it as the result of the
+> > > > other path in the driver that can enable it). 
 > > > 
-> > > Is that just TX2? I remember that thing being weird where GRE performed
-> > > better than NC, but I thought that was a one off (and the thing is dead).
+> > > Not quite, upstream kernel will never use WC on those
+> > > devices. DEVICE_GRE is not supported in upstream,
+> > > arch_can_pci_mmap_wc() is always false and the WC tester will always
+> > > fail.
+> > > 
+> > > > With the patch, those device will now use MT_DEVICE_NC.
+> > > 
+> > > Which doesn't do WC at all on some ARM implementations.
 > > 
-> > I recall something along these lines. Hopefully ARM updated the guidance
-> > to licensees.
-> > 
-> > > NC is more permissive than GRE, so I think that's the right one to use; i.e.
-> > > we go for the fewest number of restrictions on the hardware. If somebody
-> > > screws up the uarch, that's up to them.
-> > 
-> > I agree, Normal NC is better as long as the BAR can tolerate read
-> > side-effects.
+> > Is that just TX2? I remember that thing being weird where GRE performed
+> > better than NC, but I thought that was a one off (and the thing is dead).
 > 
-> That we don't know but if a prefetchable BAR can't tolerate read
-> side effects this would be already a problem on eg x86 - that's
-> the best we can hope for given the current PCI specs.
+> I recall something along these lines. Hopefully ARM updated the guidance
+> to licensees.
 > 
-> +1 on normal NC. The only open point is whether we should make
-> arch_can_pci_mmap_wc() return false on platforms like TX2.
+> > NC is more permissive than GRE, so I think that's the right one to use; i.e.
+> > we go for the fewest number of restrictions on the hardware. If somebody
+> > screws up the uarch, that's up to them.
+> 
+> I agree, Normal NC is better as long as the BAR can tolerate read
+> side-effects.
 
-I lost track in this thread whether it matters. TX2 would need Device
-GRE for optimal performance but the kernel doesn't currently provide it
-anyway. We could expose a new memory type, aligned_wc ;).
+That we don't know but if a prefetchable BAR can't tolerate read
+side effects this would be already a problem on eg x86 - that's
+the best we can hope for given the current PCI specs.
 
--- 
-Catalin
++1 on normal NC. The only open point is whether we should make
+arch_can_pci_mmap_wc() return false on platforms like TX2.
+
+Thanks,
+Lorenzo
