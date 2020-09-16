@@ -2,145 +2,125 @@ Return-Path: <SRS0=XVho=CZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A70CFC433E2
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 05:49:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FD62C433E2
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 06:02:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5F61C2078D
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 05:49:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB8D621D7D
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 06:02:37 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="MnrTjTd6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726128AbgIPFtm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 16 Sep 2020 01:49:42 -0400
-Received: from inva020.nxp.com ([92.121.34.13]:45708 "EHLO inva020.nxp.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726068AbgIPFtl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 16 Sep 2020 01:49:41 -0400
-Received: from inva020.nxp.com (localhost [127.0.0.1])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id BD49C1A037D;
-        Wed, 16 Sep 2020 07:49:38 +0200 (CEST)
-Received: from invc005.ap-rdc01.nxp.com (invc005.ap-rdc01.nxp.com [165.114.16.14])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 7EB481A0A3E;
-        Wed, 16 Sep 2020 07:49:35 +0200 (CEST)
-Received: from localhost.localdomain (mega.ap.freescale.net [10.192.208.232])
-        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id 4FB194029E;
-        Wed, 16 Sep 2020 07:49:31 +0200 (CEST)
-From:   Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Cc:     robh@kernel.org, lorenzo.pieralisi@arm.com, bhelgaas@google.com,
-        gustavo.pimentel@synopsys.com, Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Subject: [PATCH] PCI: dwc: Added link up check in map_bus of dw_child_pcie_ops
-Date:   Wed, 16 Sep 2020 13:41:30 +0800
-Message-Id: <20200916054130.8685-1-Zhiqiang.Hou@nxp.com>
-X-Mailer: git-send-email 2.17.1
-X-Virus-Scanned: ClamAV using ClamSMTP
+        id S1726201AbgIPGCh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 16 Sep 2020 02:02:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38320 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726128AbgIPGCd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2020 02:02:33 -0400
+Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32D3CC061788
+        for <linux-pci@vger.kernel.org>; Tue, 15 Sep 2020 23:02:32 -0700 (PDT)
+Received: by mail-ej1-x643.google.com with SMTP id nw23so8594961ejb.4
+        for <linux-pci@vger.kernel.org>; Tue, 15 Sep 2020 23:02:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cloud.ionos.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=HNkpn8knUQRf75ccabZQOR+WL+blOBg465I1jkNznx4=;
+        b=MnrTjTd684v+kA7TytUzDqVOH0AP94KL/aLIrgUj3A3/KfbidtssnPAsfSSFiKd6aF
+         47QNG4fEM/pIwRDzN408QnMz0ldbVrIko5qCRG+nkjqstl1olW4cDNI+4xkeHhn6dynZ
+         kjSxaRoKpyQ5Aln0Qc5Tn+Mr4ec/lyDFgEt+bhsObGpbZFUYlZsmA8lAsCnxBcbLF3fl
+         sln4d2QoQ1nAZQnVFwKwYnPDaedMIW+3KFz5ChD4emRLNIIBxadiVJv9E+jsgNPhqQhI
+         bASmtew/QwgiXuUoIy4MKJNu9l+DOO7hyDkB67Tef7nV4amtIaY/26cqlwrclT14XsXd
+         Mbww==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=HNkpn8knUQRf75ccabZQOR+WL+blOBg465I1jkNznx4=;
+        b=Jas+2QKDUE4HzSXe+ZK9F7RCXsqN/Sosvi/dB79I18RTnFYOfqqqUyltB6/rU8yo4b
+         Iph7htV/wqr5k642o9rDU1XrqhtkNCLfFIIkA0iRQ1S6Qo9g2JuobbbPpFZN/B9KAOEu
+         PEUGp6VoUm6qtlz2l9UCLRX7ktILxF/mHASoitEHXR6vmcdCJZGfuXXMnuGbrpNnDX9T
+         8xqdSe0Xn+X52a+E1GhSVsOBhg6VXy28DHwU0SxRfXZVqQC1EHfP5Y8kIMPEzkmrjvTn
+         AJ6HJz/nBU0RbEs5oYILy4K+q/heHsqa1RIjBMa2+W08aMSNlms6uQUHK/qeDxRCrlvz
+         mabw==
+X-Gm-Message-State: AOAM533ftMe5RVxZqWSqopyJsIdl9rEAj1TjDWK3Ym26SP6cj30EHMLE
+        uJxQSvui4n+nvWF3Fd/sQWZ8FPl/25UcvSlThJNFJCTHuaUC/XZE
+X-Google-Smtp-Source: ABdhPJw7SwSnrOhnHZOUUAB1XtgCMK4ilwlzw6vSX3Wm/NM7HGgn82Za9OcbTn+kybAvmYREp6CU3P9b4z+IpVpEoPc=
+X-Received: by 2002:a17:906:c154:: with SMTP id dp20mr23280220ejc.115.1600236150808;
+ Tue, 15 Sep 2020 23:02:30 -0700 (PDT)
+MIME-Version: 1.0
+References: <CAMGffEmrP21e_sgE8C49och1QEABTK4Fh8aVgH8qsyT9t8EJ4w@mail.gmail.com>
+ <20200916054820.GA853@wunner.de>
+In-Reply-To: <20200916054820.GA853@wunner.de>
+From:   Jinpu Wang <jinpu.wang@cloud.ionos.com>
+Date:   Wed, 16 Sep 2020 08:02:20 +0200
+Message-ID: <CAMGffE=rCcDxeQUk2GY+MHn+07Sn6S=Q6Gssu+RX_BB084uJsg@mail.gmail.com>
+Subject: Re: [RFC] pcie hotplug doesn't work with kernel 4.19
+To:     Lukas Wunner <lukas@wunner.de>
+Cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Hi Lukas,
 
-On NXP Layerscape platforms, it results in SError in the
-enumeration of the PCIe controller, which is not connecting
-with an Endpoint device. And it doesn't make sense to
-enumerate the Endpoints when the PCIe link is down. So this
-patch added the link up check to avoid to fire configuration
-transactions on link down bus.
-
-[    0.807773] SError Interrupt on CPU2, code 0xbf000002 -- SError
-[    0.807775] CPU: 2 PID: 1 Comm: swapper/0 Not tainted 5.9.0-rc5-next-20200914-00001-gf965d3ec86fa #67
-[    0.807776] Hardware name: LS1046A RDB Board (DT)
-[    0.807777] pstate: 20000085 (nzCv daIf -PAN -UAO BTYPE=--)
-[    0.807778] pc : pci_generic_config_read+0x3c/0xe0
-[    0.807778] lr : pci_generic_config_read+0x24/0xe0
-[    0.807779] sp : ffff80001003b7b0
-[    0.807780] x29: ffff80001003b7b0 x28: ffff80001003ba74
-[    0.807782] x27: ffff000971d96800 x26: ffff00096e77e0a8
-[    0.807784] x25: ffff80001003b874 x24: ffff80001003b924
-[    0.807786] x23: 0000000000000004 x22: 0000000000000000
-[    0.807788] x21: 0000000000000000 x20: ffff80001003b874
-[    0.807790] x19: 0000000000000004 x18: ffffffffffffffff
-[    0.807791] x17: 00000000000000c0 x16: fffffe0025981840
-[    0.807793] x15: ffffb94c75b69948 x14: 62203a383634203a
-[    0.807795] x13: 666e6f635f726568 x12: 202c31203d207265
-[    0.807797] x11: 626d756e3e2d7375 x10: 656877202c307830
-[    0.807799] x9 : 203d206e66766564 x8 : 0000000000000908
-[    0.807801] x7 : 0000000000000908 x6 : ffff800010900000
-[    0.807802] x5 : ffff00096e77e080 x4 : 0000000000000000
-[    0.807804] x3 : 0000000000000003 x2 : 84fa3440ff7e7000
-[    0.807806] x1 : 0000000000000000 x0 : ffff800010034000
-[    0.807808] Kernel panic - not syncing: Asynchronous SError Interrupt
-[    0.807809] CPU: 2 PID: 1 Comm: swapper/0 Not tainted 5.9.0-rc5-next-20200914-00001-gf965d3ec86fa #67
-[    0.807810] Hardware name: LS1046A RDB Board (DT)
-[    0.807811] Call trace:
-[    0.807812]  dump_backtrace+0x0/0x1c0
-[    0.807813]  show_stack+0x18/0x28
-[    0.807814]  dump_stack+0xd8/0x134
-[    0.807814]  panic+0x180/0x398
-[    0.807815]  add_taint+0x0/0xb0
-[    0.807816]  arm64_serror_panic+0x78/0x88
-[    0.807817]  do_serror+0x68/0x180
-[    0.807818]  el1_error+0x84/0x100
-[    0.807818]  pci_generic_config_read+0x3c/0xe0
-[    0.807819]  dw_pcie_rd_other_conf+0x78/0x110
-[    0.807820]  pci_bus_read_config_dword+0x88/0xe8
-[    0.807821]  pci_bus_generic_read_dev_vendor_id+0x30/0x1b0
-[    0.807822]  pci_bus_read_dev_vendor_id+0x4c/0x78
-[    0.807823]  pci_scan_single_device+0x80/0x100
-[    0.807824]  pci_scan_slot+0x38/0x130
-[    0.807825]  pci_scan_child_bus_extend+0x54/0x2a0
-[    0.807826]  pci_scan_child_bus+0x14/0x20
-[    0.807827]  pci_scan_bridge_extend+0x230/0x570
-[    0.807828]  pci_scan_child_bus_extend+0x134/0x2a0
-[    0.807829]  pci_scan_root_bus_bridge+0x64/0xf0
-[    0.807829]  pci_host_probe+0x18/0xc8
-[    0.807830]  dw_pcie_host_init+0x220/0x378
-[    0.807831]  ls_pcie_probe+0x104/0x140
-[    0.807832]  platform_drv_probe+0x54/0xa8
-[    0.807833]  really_probe+0x118/0x3e0
-[    0.807834]  driver_probe_device+0x5c/0xc0
-[    0.807835]  device_driver_attach+0x74/0x80
-[    0.807835]  __driver_attach+0x8c/0xd8
-[    0.807836]  bus_for_each_dev+0x7c/0xd8
-[    0.807837]  driver_attach+0x24/0x30
-[    0.807838]  bus_add_driver+0x154/0x200
-[    0.807839]  driver_register+0x64/0x120
-[    0.807839]  __platform_driver_probe+0x7c/0x148
-[    0.807840]  ls_pcie_driver_init+0x24/0x30
-[    0.807841]  do_one_initcall+0x60/0x1d8
-[    0.807842]  kernel_init_freeable+0x1f4/0x24c
-[    0.807843]  kernel_init+0x14/0x118
-[    0.807843]  ret_from_fork+0x10/0x34
-[    0.807854] SMP: stopping secondary CPUs
-[    0.807855] Kernel Offset: 0x394c64080000 from 0xffff800010000000
-[    0.807856] PHYS_OFFSET: 0xffff8bfd40000000
-[    0.807856] CPU features: 0x0240022,21806000
-[    0.807857] Memory Limit: none
-
-Fixes: c2b0c098fbd1 ("PCI: dwc: Use generic config accessors")
-Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
----
- drivers/pci/controller/dwc/pcie-designware-host.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index c01c9d2fb3f9..e82b518430c5 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -442,6 +442,9 @@ static void __iomem *dw_pcie_other_conf_map_bus(struct pci_bus *bus,
- 	struct pcie_port *pp = bus->sysdata;
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 
-+	if (!dw_pcie_link_up(pci))
-+		return NULL;
-+
- 	busdev = PCIE_ATU_BUS(bus->number) | PCIE_ATU_DEV(PCI_SLOT(devfn)) |
- 		 PCIE_ATU_FUNC(PCI_FUNC(devfn));
- 
--- 
-2.17.1
-
+see reply below
+On Wed, Sep 16, 2020 at 7:48 AM Lukas Wunner <lukas@wunner.de> wrote:
+>
+> On Tue, Sep 15, 2020 at 04:15:15PM +0200, Jinpu Wang wrote:
+> > We are testing PCIe nvme SSD hotplug, it works out of box with kernel 5.4.62,
+> > dmesg during the hotplug:
+> [...]
+> > But with kernel 4.19.133, pcieport core doesn't print anything, is
+> > there known problem with kernel 4.19 support for pcie hotplug, do we
+> > need to backport some fixes from newer kernel to make it work?
+>
+> No known problem.  Please open a bug on bugzilla.kernel.org and attach
+> full dmesg output for 5.4.62 and 4.19.133, as well as lspci -vv output.
+> You may want to add the following to the kernel command line:
+>
+> ignore_loglevel log_bug_len=10M "dyndbg=file drivers/pci/* +p"
+> pciehp.pciehp_debug=1
+https://bugzilla.kernel.org/show_bug.cgi?id=209283
+I added you as cc.
+I will gather other logs as suggested, and upload them to bugzilla.
+>
+>
+> > [  683.218554] pcieport 0000:16:00.0: pciehp: Slot(0-3): Card present
+> > [  683.218555] pcieport 0000:16:00.0: pciehp: Slot(0-3): Link Up
+> > [  683.271702] pcieport 0000:16:00.0: pciehp: Timeout on hotplug
+> > command 0x17e1 (issued 73280 msec ago)
+> > [  686.301874] pcieport 0000:16:00.0: pciehp: Timeout on hotplug
+> > command 0x13e1 (issued 3030 msec ago)
+> > [  686.361894] pcieport 0000:16:00.0: pciehp: Timeout on hotplug
+> > command 0x13e1 (issued 3090 msec ago)
+>
+> Those timeouts look suspicious.  Perhaps the hotplug controller
+> claims to support Command Completed Support, but in reality does not?
+>
+>
+> > CONFIG_HOTPLUG_PCI=y
+> > CONFIG_HOTPLUG_PCI_ACPI=y
+> > CONFIG_HOTPLUG_PCI_ACPI_IBM=m
+> > CONFIG_HOTPLUG_PCI_CPCI=y
+> > CONFIG_HOTPLUG_PCI_CPCI_ZT5550=m
+> > CONFIG_HOTPLUG_PCI_CPCI_GENERIC=m
+> > CONFIG_HOTPLUG_PCI_SHPC=y
+> > CONFIG_HOTPLUG_PCI_PCIE=y
+>
+> You may not need ACPI_IBM, CPCI, SHPC.
+will consider this.
+>
+> Thanks,
+>
+> Lukas
+Thanks!
+Jinpu
