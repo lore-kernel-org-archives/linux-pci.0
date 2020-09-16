@@ -2,117 +2,110 @@ Return-Path: <SRS0=XVho=CZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E4F3C433E2
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 18:52:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12A42C43461
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 18:58:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3D6B021974
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 18:52:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A659720732
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 18:58:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="NqUX4p6K"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="hAS45VSz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728160AbgIPSwn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 16 Sep 2020 14:52:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38994 "EHLO
+        id S1728040AbgIPS6P (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 16 Sep 2020 14:58:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36456 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727745AbgIPSJL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2020 14:09:11 -0400
-Received: from mail-pj1-x1042.google.com (mail-pj1-x1042.google.com [IPv6:2607:f8b0:4864:20::1042])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31936C014B4B
-        for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2020 06:20:36 -0700 (PDT)
-Received: by mail-pj1-x1042.google.com with SMTP id s14so1466772pju.1
-        for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2020 06:20:36 -0700 (PDT)
+        with ESMTP id S1727626AbgIPRxA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2020 13:53:00 -0400
+Received: from mail-ed1-x541.google.com (mail-ed1-x541.google.com [IPv6:2a00:1450:4864:20::541])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 855A2C002181
+        for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2020 07:11:48 -0700 (PDT)
+Received: by mail-ed1-x541.google.com with SMTP id n13so6411744edo.10
+        for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2020 07:11:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=5s2OUZCDflGBpNiiMYF8VZ/rpqqREpl6Irg9+FFR3Vk=;
-        b=NqUX4p6KC31mjYjb6a8ZPzh9HBzezca3cbhSrtPnPidF4/1VgpVRZbRoEMicyqBiLe
-         WwfFpdYzyw7CJ0GQAnw+UtsBuD0hRHu/r0MAumZDaHnN3SsGdf/65DmO3Kx5f4uqHmqB
-         BPOmscD+r9Q+h+7S7soPOA2abpGYq7IrKjvPK7zKORUyeT4U7IzC0xI7C+mBuG6/w4k/
-         OoWEvRft34YvhW0ND3CUlWmbO0bqybDvJfVCaTQnxWgS4uVk0hN1VWD7QFLAoppZ50DW
-         s5yrg60hPTgEZb3dvj3UcgvZHMOf7QY8LNQAAp2PTwQLU3fXMuIdfLYDe86uwQzVpHBF
-         IqEQ==
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=LlUrkn99PMIYQmVGLdB0+eN+QkGnfm38LGdCqXub4Ao=;
+        b=hAS45VSzPObmCMHNxGfkG+NDKM1TzVnv7KNEr8vj9xy4MrtNPbVMnP3E+c0FUzYGVO
+         wPqjGd58SjTgvD4ElwGMVTkJ/vQJgVksPrNujXbUCvaSYAR+nYUFKIv9GmdPmsAeTw1w
+         SLEokVTwh41c06RWTQK8ga+0WnZtxqNFStmhRekL0xLKWTqn8cVn6iVyLbEJCK4D+afx
+         gIcqGW5V3Meio++Xlq1PULg8xgNkm9FJhgcaQPYCFJl1o7cQZmddSIXGNjtX54ocOxnB
+         XkpAgcnLOKialpbNRhtfkofkZ/QjghU36lEKLA39h4h8TVkfr6on/E7w7xYxDBzj+JkY
+         +i2Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=5s2OUZCDflGBpNiiMYF8VZ/rpqqREpl6Irg9+FFR3Vk=;
-        b=IkpPMF2BUgR95ADK2F8UOCrRA0KHi7FS5WVzQo7+wEgvtVrQXyjVuRk99fGetY6KkA
-         WFxTvwgpI8fJDzoSt4HpDK2pXTakk3SCi+GKcWTreGxIZAo/GPZo7KFAurShW/oOTcHO
-         yAw3Lkjk5ODC6GMxxQyhTTG+dEPmbFY8EDu5NdymL4JVcFw09taLe9HKPa5+34JQLW2o
-         ThhKSW4nXEYJbeFUoY2wbhPF2Rq7d8aFtQkJ06eTWsML3CsCncQI6T0pLRWPz6NQjXvN
-         xeygajlcTk9/Vxl0mh1spt/pjx9ntgahJVMP/6/pf4sVKH+SK3wbigujD+QiKSH5JKXz
-         9LeQ==
-X-Gm-Message-State: AOAM532aWpY2qymLQonrk7m4ACMm/Ea+Iw5Z1Vj1YsBqwl8BDx+oVUA0
-        nor57QDgWysLjzcz3uMAMc++
-X-Google-Smtp-Source: ABdhPJy1z8xlfaGfrcZD+FaGvKIz4VnlQLUuanzk8reyCEFaiGaGiagYH1ormqbFWxVH+F83rlwkew==
-X-Received: by 2002:a17:902:b192:b029:d0:cbe1:e7a1 with SMTP id s18-20020a170902b192b02900d0cbe1e7a1mr23946966plr.18.1600262434531;
-        Wed, 16 Sep 2020 06:20:34 -0700 (PDT)
-Received: from localhost.localdomain ([103.59.133.81])
-        by smtp.googlemail.com with ESMTPSA id e123sm17615726pfh.167.2020.09.16.06.20.30
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=LlUrkn99PMIYQmVGLdB0+eN+QkGnfm38LGdCqXub4Ao=;
+        b=A02BpZjjwX7X8jdEhNDJLgALPVUWirNOq5Z/UADroRztVA8yWsbBKcuNSRpVRhKROR
+         yI5WUcGbRJ4oNPql/ZD3+sugxEAmh4tAu+QtohGy2gvTYX2YpPQZZpBLu8gx6NuUPnbj
+         3ZQNUj4T3sRwiZYyJoFf7Ws2FHehyvG6vPZ6jddOPYGGGB6icep52gsgqsskCCMVhNHI
+         /VjWY1+/0dmaRr6AOYSUTPVQ+yLhXik0skNR2XG5+cQpCCBBmSt8IF2RsvLNC9jUsqqV
+         d5/IpIO0rUGzNmnh/hAvMgTUFZ4bKlTm8VYPjCHmR2N104948zisk1MinVampKJeEKOE
+         KQEw==
+X-Gm-Message-State: AOAM533g1cmD/4NH8QkPsb7bYlQ8zXVb9epdK20o7eZUhSLFqddbzQQZ
+        sj0dlGFElX9U1kIYkNKK593a945z9SPCV1am
+X-Google-Smtp-Source: ABdhPJxCXAJVT89OOq1cTZqdGdXIDr/MyyoQoJRJeCQxhnHcd7r64qYaYdWt6ztGRzTK/qlOZ2O25Q==
+X-Received: by 2002:a05:6402:2c7:: with SMTP id b7mr28642771edx.125.1600265507151;
+        Wed, 16 Sep 2020 07:11:47 -0700 (PDT)
+Received: from myrica ([2001:1715:4e26:a7e0:116c:c27a:3e7f:5eaf])
+        by smtp.gmail.com with ESMTPSA id y25sm13933983edv.15.2020.09.16.07.11.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 16 Sep 2020 06:20:34 -0700 (PDT)
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     agross@kernel.org, bjorn.andersson@linaro.org, kishon@ti.com,
-        vkoul@kernel.org, robh@kernel.org
-Cc:     svarbanov@mm-sol.com, bhelgaas@google.com,
-        lorenzo.pieralisi@arm.com, linux-arm-msm@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        mgautam@codeaurora.org, devicetree@vger.kernel.org,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH 3/5] dt-bindings: pci: qcom: Document PCIe bindings for SM8250 SoC
-Date:   Wed, 16 Sep 2020 18:49:58 +0530
-Message-Id: <20200916132000.1850-4-manivannan.sadhasivam@linaro.org>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200916132000.1850-1-manivannan.sadhasivam@linaro.org>
-References: <20200916132000.1850-1-manivannan.sadhasivam@linaro.org>
+        Wed, 16 Sep 2020 07:11:46 -0700 (PDT)
+Date:   Wed, 16 Sep 2020 16:11:28 +0200
+From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
+To:     Zenghui Yu <yuzenghui@huawei.com>
+Cc:     iommu@lists.linux-foundation.org, devicetree@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-mm@kvack.org, fenghua.yu@intel.com, kevin.tian@intel.com,
+        jacob.jun.pan@linux.intel.com, jgg@ziepe.ca,
+        catalin.marinas@arm.com, joro@8bytes.org, robin.murphy@arm.com,
+        hch@infradead.org, zhangfei.gao@linaro.org,
+        Jonathan.Cameron@huawei.com, felix.kuehling@amd.com,
+        xuzaibo@huawei.com, will@kernel.org, christian.koenig@amd.com,
+        baolu.lu@linux.intel.com
+Subject: Re: [PATCH v7 18/24] iommu/arm-smmu-v3: Add support for Hardware
+ Translation Table Update
+Message-ID: <20200916141128.GC5316@myrica>
+References: <20200519175502.2504091-1-jean-philippe@linaro.org>
+ <20200519175502.2504091-19-jean-philippe@linaro.org>
+ <472fdcf6-f306-60bc-5813-4ad421ee03f2@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <472fdcf6-f306-60bc-5813-4ad421ee03f2@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Document the PCIe DT bindings for SM8250 SoC. The PCIe IP is similar to
-the one used on SDM845, hence just add the compatible.
+On Fri, Aug 28, 2020 at 05:28:22PM +0800, Zenghui Yu wrote:
+> On 2020/5/20 1:54, Jean-Philippe Brucker wrote:
+> > @@ -4454,6 +4470,12 @@ static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
+> >   			smmu->features |= ARM_SMMU_FEAT_E2H;
+> >   	}
+> > +	if (reg & (IDR0_HA | IDR0_HD)) {
+> > +		smmu->features |= ARM_SMMU_FEAT_HA;
+> > +		if (reg & IDR0_HD)
+> > +			smmu->features |= ARM_SMMU_FEAT_HD;
+> > +	}
+> > +
+> 
+> nitpick:
+> 
+> As per the IORT spec (DEN0049D, 3.1.1.2 SMMUv3 node, Table 10), the
+> "HTTU Override" flag of the SMMUv3 node can override the value in
+> SMMU_IDR0.HTTU. You may want to check this bit before selecting the
+> {HA,HD} features and shout if there is a mismatch between firmware and
+> the SMMU implementation. Just like how ARM_SMMU_FEAT_COHERENCY is
+> selected.
 
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
----
- Documentation/devicetree/bindings/pci/qcom,pcie.txt | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Thanks for pointing this out, I didn't know about these flags but have
+added them to the patch now.
 
-diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-index 02bc81bb8b2d..7fc328c54c39 100644
---- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-@@ -13,6 +13,7 @@
- 			- "qcom,pcie-ipq8074" for ipq8074
- 			- "qcom,pcie-qcs404" for qcs404
- 			- "qcom,pcie-sdm845" for sdm845
-+			- "qcom,pcie-sm8250" for sm8250
- 
- - reg:
- 	Usage: required
-@@ -131,7 +132,7 @@
- 			- "slave_bus"	AXI Slave clock
- 
- -clock-names:
--	Usage: required for sdm845
-+	Usage: required for sdm845 and sm8250
- 	Value type: <stringlist>
- 	Definition: Should contain the following entries
- 			- "aux"		Auxiliary clock
-@@ -206,7 +207,7 @@
- 			- "ahb"			AHB reset
- 
- - reset-names:
--	Usage: required for sdm845
-+	Usage: required for sdm845 and sm8250
- 	Value type: <stringlist>
- 	Definition: Should contain the following entries
- 			- "pci"			PCIe core reset
--- 
-2.17.1
-
+Thanks,
+Jean
