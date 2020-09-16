@@ -2,72 +2,118 @@ Return-Path: <SRS0=XVho=CZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 570A0C43461
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 21:03:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B789CC43461
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 21:05:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 094C5206D4
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 21:03:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 61B9B206DB
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 21:05:41 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OVd/pTtZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726563AbgIPVCg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 16 Sep 2020 17:02:36 -0400
-Received: from foss.arm.com ([217.140.110.172]:33468 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726467AbgIPQPR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 16 Sep 2020 12:15:17 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 66F0114F6;
-        Wed, 16 Sep 2020 07:09:22 -0700 (PDT)
-Received: from e121166-lin.cambridge.arm.com (e121166-lin.cambridge.arm.com [10.1.196.255])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 30EEB3F68F;
-        Wed, 16 Sep 2020 07:09:21 -0700 (PDT)
-Date:   Wed, 16 Sep 2020 15:09:14 +0100
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Jason Gunthorpe <jgg@nvidia.com>
-Cc:     Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Clint Sbisa <csbisa@amazon.com>, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        linux-arm-kernel@lists.infradead.org, will@kernel.org,
-        catalin.marinas@arm.com, Leon Romanovsky <leon@kernel.org>
-Subject: Re: [PATCH] arm64: Enable PCI write-combine resources under sysfs
-Message-ID: <20200916140914.GA20770@e121166-lin.cambridge.arm.com>
-References: <375c478593945a416f3180c3773bcb5240d2e36c.camel@kernel.crashing.org>
- <1d6f2ceb8d3538c906a1fdb8cd3d4c74ccffa42e.camel@kernel.crashing.org>
- <20200914225740.GP904879@nvidia.com>
- <2b539df4c9ec703458e46da2fc879ee3b310b31c.camel@kernel.crashing.org>
- <20200915101831.GA2616@e121166-lin.cambridge.arm.com>
- <20200915110511.GQ904879@nvidia.com>
- <bcb95faafa72734478b942084a9d24a61ae9887f.camel@kernel.crashing.org>
- <20200915234006.GI1573713@nvidia.com>
- <701012f288231d0d0733bf1c2c8fdbd9caa074fd.camel@kernel.crashing.org>
- <20200916121226.GN1573713@nvidia.com>
+        id S1726291AbgIPVFL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 16 Sep 2020 17:05:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48726 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726156AbgIPQPB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2020 12:15:01 -0400
+Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 671F8C0F26F5;
+        Wed, 16 Sep 2020 08:14:06 -0700 (PDT)
+Received: by mail-ej1-x643.google.com with SMTP id j11so10956961ejk.0;
+        Wed, 16 Sep 2020 08:14:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=MrKdeebPgiqsV3LHCmsYRKtjV10T+fGFhaSCGYDBzH4=;
+        b=OVd/pTtZcQ8W+QR2Fm6UcRsMIH1L2Nf1VSJOoZvyHoL/WGbtkwmG2tBKGyjiJ2Z5TO
+         sbkvWZT7gyWUQYZU0+Ho4n01FeIPlNBhea4t3VsuaoSbBrsZLBpVuI0f3R40xlTaGHdU
+         OiiXAF2ZhFghx5CSCTLuTdLkQd+XdiAp7QDI7daBKeyGPdpawRCejQyJzvtJ3d4Ns6Ze
+         3oQy6x/7eh+wgB+CoTEjeCxUrLR/2rLQbOPUN8DEvvadQiez55lOZFWgcwvpecHbrcvn
+         LToCgjRy9dDOzXmvW8ZGpyryTKWg6YeWwcyHwRdZDk9R6H9MPoGoVakE4KZGBpqZCzUT
+         C+og==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=MrKdeebPgiqsV3LHCmsYRKtjV10T+fGFhaSCGYDBzH4=;
+        b=kZqHFTkjlj5IEu2iEgC5XNQWUNNxEpFIcbJPLbMh/WXMNlNLETOIQnooVCxDADM308
+         BQecBp/8igTu2RJDwqUYA39DRWqwNKHH6/JwGN06CDcZKO/0wpYOXVfqjAK5Deak5sTy
+         zDIRc2+UR45afMxLpNrHdrUCAvZ16noFb5Yyigj35otysLfTRbWrvgSx1prny5oP4gu0
+         zSmqEzA0nxRYO2KvJiDqrXHwyyKcVmIDnSmCHweGY0p6h0/+Cr0BBmDZuIT5eTjPwsAm
+         9p60CDbqouJ+dQImKzpkm/W8pzcO+k4s+zh5e8G0DrEtD2nSAfAu209S72bp4v1ioRkY
+         SkbQ==
+X-Gm-Message-State: AOAM533jGjz/1mK0WIu8csZbCv+ovB8y6oqyCq78ngNEEqR46td7PDjh
+        EDiT60HiumXAQ1jb48a45G3+AkRe48WCwBiW
+X-Google-Smtp-Source: ABdhPJxhpzDSQgu0VmmCEKMIz8cZ5UgClo6Sc6eIE107Gwx6QNzT4NDA7RqbZ1i/BGYr40WbHVZOmg==
+X-Received: by 2002:a17:906:e08f:: with SMTP id gh15mr25419538ejb.443.1600269244996;
+        Wed, 16 Sep 2020 08:14:04 -0700 (PDT)
+Received: from [10.8.0.6] ([5.2.67.190])
+        by smtp.gmail.com with ESMTPSA id q26sm12829167ejr.97.2020.09.16.08.14.03
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 16 Sep 2020 08:14:04 -0700 (PDT)
+Subject: Re: [PATCH 0/2] PCI: aardvark: Fix comphy with old ATF
+To:     =?UTF-8?Q?Pali_Roh=c3=a1r?= <pali@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        =?UTF-8?Q?Marek_Beh=c3=ban?= <marek.behun@nic.cz>
+Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org
+References: <20200902144344.16684-1-pali@kernel.org>
+From:   Tomasz Maciej Nowak <tmn505@gmail.com>
+Message-ID: <3f2b0e5b-87f1-7887-4afc-77f31d56b5a3@gmail.com>
+Date:   Wed, 16 Sep 2020 17:14:02 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200916121226.GN1573713@nvidia.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+In-Reply-To: <20200902144344.16684-1-pali@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Sep 16, 2020 at 09:12:26AM -0300, Jason Gunthorpe wrote:
-
-[...]
-
-> > You mean the driver uses a different path to the HW which ahs that
-> > overhead, not that MMIOs have that overhead right ?
+W dniu 02.09.2020 o 16:43, Pali Rohár pisze:
+> This patch series fixes regression introduced in commit 366697018c9a
+> ("PCI: aardvark: Add PHY support") which caused aardvark driver
+> initialization failure on EspressoBin board with factory version of
+> Arm Trusted Firmware provided by Marvell.
 > 
-> The different path has overhead of doing extra useless MMIOs because
-> they don't combine
+> Second patch depends on the first patch, so please add appropriate
+> Fixes/Cc:stable@ tags to have both patches correctly backported to
+> stable kernels.
+> 
+> I have tested both patches with Marvell ATF firmware ebin-17.10-uart.zip
+> and with upstream ATF+uboot and aardvark was initialized successfully.
+> Without this patch series on ebin-17.10-uart.zip aardvark initialization
+> failed.
+> 
+> Pali Rohár (2):
+>   phy: marvell: comphy: Convert internal SMCC firmware return codes to
+>     errno
+>   PCI: aardvark: Fix initialization with old Marvell's Arm Trusted
+>     Firmware
 
-For my own information, this is IB user space driver code, correct ? It
-tries to mmap buffer as WC and if it succeeds write into it in an
-optimized fashion (that is just pure overhead on platforms where normal
-NC memory - ie WC on arm64 - does not do what the _architecture_ defines
-it should).
+For both patches
 
-Lorenzo
+Tested-by: Tomasz Maciej Nowak <tmn505@gmail.com>
+
+> 
+>  drivers/pci/controller/pci-aardvark.c        |  4 +++-
+>  drivers/phy/marvell/phy-mvebu-a3700-comphy.c | 14 +++++++++++---
+>  drivers/phy/marvell/phy-mvebu-cp110-comphy.c | 14 +++++++++++---
+>  3 files changed, 25 insertions(+), 7 deletions(-)
+> 
+
