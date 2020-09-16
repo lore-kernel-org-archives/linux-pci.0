@@ -2,103 +2,73 @@ Return-Path: <SRS0=XVho=CZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41596C433E2
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 22:10:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C53CC43461
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 22:15:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EB8702220B
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 22:10:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600294235;
-	bh=5Fpi6OQa8IxjUT2FP7sUxhyFcgPeG9M+tTW+C8SdAFk=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=TJHmG8+IUk6dIOY+xaWlhOEKI+knFLgAylqHJD1A2bFdgaRRQpINFeStpJ9FAOaVX
-	 lKdBRMJEQ0wY0J0zuDN1sSEfvSAXP7xRfSHcVke5fYpBUx92zcH43CmiWHhgajZ4mo
-	 71j1K9mxf6pFBmuGZBD+JCx1p+MxLKpImlrwe8qQ=
+	by mail.kernel.org (Postfix) with ESMTP id C9F7F21941
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 22:15:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726130AbgIPWKc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 16 Sep 2020 18:10:32 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36840 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725858AbgIPWKa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 16 Sep 2020 18:10:30 -0400
-Received: from localhost (52.sub-72-107-123.myvzw.com [72.107.123.52])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7E0FF2220A;
-        Wed, 16 Sep 2020 21:55:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600293314;
-        bh=5Fpi6OQa8IxjUT2FP7sUxhyFcgPeG9M+tTW+C8SdAFk=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=1FkSmcTykCL/zqkaPTTTtxzFybHV52zt+7fV2sexve+QjzmljN4s5sh4dV+pzUf9x
-         bvmPikerzuBmKwnWF/aVNQnfnHV1SbcHUZoDhCpydjrkcSC7vDyPsj0D89+RjyeeL0
-         m6l774wtQbVbK+auQSubJ8TeH6i/4GTAHSu8PYRQ=
-Date:   Wed, 16 Sep 2020 16:55:13 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Matthew Rosato <mjrosato@linux.ibm.com>
-Cc:     alex.williamson@redhat.com, bhelgaas@google.com,
-        schnelle@linux.ibm.com, pmorel@linux.ibm.com, mpe@ellerman.id.au,
-        oohall@gmail.com, cohuck@redhat.com, kevin.tian@intel.com,
-        hca@linux.ibm.com, gor@linux.ibm.com, borntraeger@de.ibm.com,
-        linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kvm@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v5 1/3] PCI/IOV: Mark VFs as not implementing
- PCI_COMMAND_MEMORY
-Message-ID: <20200916215513.GA1588138@bjorn-Precision-5520>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1599749997-30489-2-git-send-email-mjrosato@linux.ibm.com>
+        id S1726119AbgIPWP0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 16 Sep 2020 18:15:26 -0400
+Received: from kernel.crashing.org ([76.164.61.194]:40880 "EHLO
+        kernel.crashing.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726084AbgIPWP0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2020 18:15:26 -0400
+Received: from localhost (gate.crashing.org [63.228.1.57])
+        (authenticated bits=0)
+        by kernel.crashing.org (8.14.7/8.14.7) with ESMTP id 08GLTCG0028056
+        (version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
+        Wed, 16 Sep 2020 16:29:15 -0500
+Message-ID: <f0b11a226e084cee1a02f76cfe0975bba72feb00.camel@kernel.crashing.org>
+Subject: Re: [PATCH] arm64: Enable PCI write-combine resources under sysfs
+From:   Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To:     Catalin Marinas <catalin.marinas@arm.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     Will Deacon <will@kernel.org>, Jason Gunthorpe <jgg@nvidia.com>,
+        Clint Sbisa <csbisa@amazon.com>, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        linux-arm-kernel@lists.infradead.org,
+        Leon Romanovsky <leon@kernel.org>
+Date:   Thu, 17 Sep 2020 07:29:11 +1000
+In-Reply-To: <20200916170058.GD3122@gaia>
+References: <1d6f2ceb8d3538c906a1fdb8cd3d4c74ccffa42e.camel@kernel.crashing.org>
+         <20200914225740.GP904879@nvidia.com>
+         <2b539df4c9ec703458e46da2fc879ee3b310b31c.camel@kernel.crashing.org>
+         <20200915101831.GA2616@e121166-lin.cambridge.arm.com>
+         <20200915110511.GQ904879@nvidia.com>
+         <bcb95faafa72734478b942084a9d24a61ae9887f.camel@kernel.crashing.org>
+         <20200915234006.GI1573713@nvidia.com>
+         <20200916083315.GC27496@willie-the-truck> <20200916084851.GA3122@gaia>
+         <20200916141502.GB20770@e121166-lin.cambridge.arm.com>
+         <20200916170058.GD3122@gaia>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Sep 10, 2020 at 10:59:55AM -0400, Matthew Rosato wrote:
-> For VFs, the Memory Space Enable bit in the Command Register is
-> hard-wired to 0.
+On Wed, 2020-09-16 at 18:00 +0100, Catalin Marinas wrote:
+> > That we don't know but if a prefetchable BAR can't tolerate read
+> > side effects this would be already a problem on eg x86 - that's
+> > the best we can hope for given the current PCI specs.
+> > 
+> > +1 on normal NC. The only open point is whether we should make
+> > arch_can_pci_mmap_wc() return false on platforms like TX2.
 > 
-> Add a new bit to signify devices where the Command Register Memory
-> Space Enable bit does not control the device's response to MMIO
-> accesses.
-> 
-> Signed-off-by: Matthew Rosato <mjrosato@linux.ibm.com>
+> I lost track in this thread whether it matters. TX2 would need Device
+> GRE for optimal performance but the kernel doesn't currently provide
+> it anyway. We could expose a new memory type, aligned_wc ;).
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Or ignore TX2 :-) Though Lorenzo has a point about making it return
+false for arch_can_pci_mmap_wc() if we really care enough.
 
-> ---
->  drivers/pci/iov.c   | 1 +
->  include/linux/pci.h | 1 +
->  2 files changed, 2 insertions(+)
-> 
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index b37e08c..4afd4ee 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -180,6 +180,7 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id)
->  	virtfn->device = iov->vf_device;
->  	virtfn->is_virtfn = 1;
->  	virtfn->physfn = pci_dev_get(dev);
-> +	virtfn->no_command_memory = 1;
->  
->  	if (id == 0)
->  		pci_read_vf_config_common(virtfn);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 8355306..3ff72312 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -445,6 +445,7 @@ struct pci_dev {
->  	unsigned int	is_probed:1;		/* Device probing in progress */
->  	unsigned int	link_active_reporting:1;/* Device capable of reporting link active */
->  	unsigned int	no_vf_scan:1;		/* Don't scan for VFs after IOV enablement */
-> +	unsigned int	no_command_memory:1;	/* No PCI_COMMAND_MEMORY */
->  	pci_dev_flags_t dev_flags;
->  	atomic_t	enable_cnt;	/* pci_enable_device has been called */
->  
-> -- 
-> 1.8.3.1
-> 
+Cheers,
+Ben.
+
+
