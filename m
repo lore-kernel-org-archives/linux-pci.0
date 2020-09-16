@@ -2,102 +2,87 @@ Return-Path: <SRS0=XVho=CZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6ADCCC43461
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 21:09:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14072C2BB84
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 22:05:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0F4B9206DB
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 21:09:50 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=ti.com header.i=@ti.com header.b="IfP1zphg"
+	by mail.kernel.org (Postfix) with ESMTP id 9B2A92220B
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 22:05:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1600293911;
+	bh=eUTWzYD9zEfDsAwI4leq47JAEbZSdDfHGOVYQOI3a44=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=p6+fW+YB1TEWDm+sZIWh04U9vDTirDTvqVPpm7S1LWL/WdRYF0tphtGX73GuLPLn6
+	 tPdctW1QQTMXaR9WOnFjhO5JZ2Y8kx9fnFZqsSCU5/WIExhcSfpnW6HXmxBKUlIPIR
+	 8DBsqiYvhHDblRl7ojxVwb7gu4yAJ/7yWC7oTe4Y=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726655AbgIPVJc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 16 Sep 2020 17:09:32 -0400
-Received: from lelv0142.ext.ti.com ([198.47.23.249]:44348 "EHLO
-        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726139AbgIPPzc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2020 11:55:32 -0400
-Received: from lelv0265.itg.ti.com ([10.180.67.224])
-        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 08GBlfvq027172;
-        Wed, 16 Sep 2020 06:47:41 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1600256861;
-        bh=3AGiro3FnSBmxJs2uBGM1pA1oOZ6S/GI8y/Cm28nbw4=;
-        h=Subject:To:CC:References:From:Date:In-Reply-To;
-        b=IfP1zphgUN6Zw2XJNKhMMVG/ylE5qbF4CVR+eQjef20EE7290yM6Ev4B5FFBMsmUF
-         rfNfsVNlbINmL9HkKfqTMRzWqWK2vxDVPch5F2rlPfFI1NZ3OrWXYFNS8daLeRbE2a
-         bTE2BrjGT8jdqaBADcJk3RiseeaORT6KKSxI2z5w=
-Received: from DLEE112.ent.ti.com (dlee112.ent.ti.com [157.170.170.23])
-        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 08GBlfhS000950
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 16 Sep 2020 06:47:41 -0500
-Received: from DLEE114.ent.ti.com (157.170.170.25) by DLEE112.ent.ti.com
- (157.170.170.23) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Wed, 16
- Sep 2020 06:47:40 -0500
-Received: from lelv0326.itg.ti.com (10.180.67.84) by DLEE114.ent.ti.com
- (157.170.170.25) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
- Frontend Transport; Wed, 16 Sep 2020 06:47:41 -0500
-Received: from [10.250.232.147] (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 08GBlXSA024715;
-        Wed, 16 Sep 2020 06:47:34 -0500
-Subject: Re: [RFC PATCH 00/22] Enhance VHOST to enable SoC-to-SoC
- communication
-To:     Jason Wang <jasowang@redhat.com>, Cornelia Huck <cohuck@redhat.com>
-CC:     "Michael S. Tsirkin" <mst@redhat.com>,
-        Ohad Ben-Cohen <ohad@wizery.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Jon Mason <jdmason@kudzu.us>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <allenbh@gmail.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Stefan Hajnoczi <stefanha@redhat.com>,
-        Stefano Garzarella <sgarzare@redhat.com>,
-        <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-remoteproc@vger.kernel.org>, <linux-ntb@googlegroups.com>,
-        <linux-pci@vger.kernel.org>, <kvm@vger.kernel.org>,
-        <virtualization@lists.linux-foundation.org>,
-        <netdev@vger.kernel.org>
-References: <20200702082143.25259-1-kishon@ti.com>
- <20200702055026-mutt-send-email-mst@kernel.org>
- <603970f5-3289-cd53-82a9-aa62b292c552@redhat.com>
- <14c6cad7-9361-7fa4-e1c6-715ccc7e5f6b@ti.com>
- <59fd6a0b-8566-44b7-3dae-bb52b468219b@redhat.com>
- <ce9eb6a5-cd3a-a390-5684-525827b30f64@ti.com>
- <da2b671c-b05d-a57f-7bdf-8b1043a41240@redhat.com>
- <fee8a0fb-f862-03bd-5ede-8f105b6af529@ti.com>
- <b2178e1d-2f5c-e8a3-72fb-70f2f8d6aa45@redhat.com>
- <45a8a97c-2061-13ee-5da8-9877a4a3b8aa@ti.com>
- <c8739d7f-e12e-f6a2-7018-9eeaf6feb054@redhat.com>
- <20200828123409.4cd2a812.cohuck@redhat.com>
- <ac8f7e4f-9f46-919a-f5c2-89b07794f0ab@ti.com>
- <9cd58cd1-0041-3d98-baf7-6e5bc2e7e317@redhat.com>
- <edf25301-93c0-4ba6-aa85-5f04137d0906@ti.com>
- <5733dbfc-76c1-45dc-6dce-ef5449eacc73@redhat.com>
- <181ae83d-edeb-9406-27cc-1195fe29ae95@ti.com>
- <ee0aa81d-064b-d7a7-86bb-79a3f4d3dd11@redhat.com>
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <67924594-c70e-390e-ce2e-dda41a94ada1@ti.com>
-Date:   Wed, 16 Sep 2020 17:17:32 +0530
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S1726434AbgIPWFC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 16 Sep 2020 18:05:02 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35660 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725267AbgIPWFC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 16 Sep 2020 18:05:02 -0400
+Received: from localhost (52.sub-72-107-123.myvzw.com [72.107.123.52])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 86F6321D90;
+        Wed, 16 Sep 2020 22:05:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1600293900;
+        bh=eUTWzYD9zEfDsAwI4leq47JAEbZSdDfHGOVYQOI3a44=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=U1OrSH7L/TTyKLRDeuVL1jE/Z2ssgGadqyOgxlOPq+Zvozwwd7aiIYTt1CgIveFdL
+         fnnuF6Pr9gmp04OpJqhun8jtw1oUzjE7CMppmtcEVdd6s6SgCqFdwoSvb2YLFJk+fu
+         mxmvQVA28D5fx+IASJ5CnH6mZyd7dXIEIg5/bEXk=
+Date:   Wed, 16 Sep 2020 17:04:59 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc:     agross@kernel.org, bjorn.andersson@linaro.org, kishon@ti.com,
+        vkoul@kernel.org, robh@kernel.org, svarbanov@mm-sol.com,
+        bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, mgautam@codeaurora.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH 4/5] pci: controller: dwc: qcom: Add PCIe support for
+ SM8250 SoC
+Message-ID: <20200916220459.GA1588618@bjorn-Precision-5520>
 MIME-Version: 1.0
-In-Reply-To: <ee0aa81d-064b-d7a7-86bb-79a3f4d3dd11@redhat.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200916132000.1850-5-manivannan.sadhasivam@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
-Message-ID: <20200916114732.G72TT8i4mnDggPj-5yw98Mg122eaMTLu2vDbXsCXg6k@z>
 
+On Wed, Sep 16, 2020 at 06:49:59PM +0530, Manivannan Sadhasivam wrote:
+> The PCIe IP on SM8250 SoC is similar to the one used on SDM845. Hence
+> the support is added reusing the 2.7.0 ops. Only difference is the need
+> of ATU base, which will be fetched opionally if provided by DT/ACPI.
+> 
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
+s/opionally/optionally/
+
+  $ git log --oneline drivers/pci/controller/dwc/pcie-qcom.c | head -10
+  824001cb64c0 PCI: qcom: Replace define with standard value
+  51ed2c2b6026 PCI: qcom: Support pci speed set for ipq806x
+  8df093fe2ae1 PCI: qcom: Add ipq8064 rev2 variant
+  de3c4bf64897 PCI: qcom: Add support for tx term offset for rev 2.1.0
+  5149901e9e6d PCI: qcom: Define some PARF params needed for ipq8064 SoC
+  6a114526af46 PCI: qcom: Use bulk clk api and assert on error
+  ee367e2cdd22 PCI: qcom: Add missing reset for ipq806x
+  dd58318c019f PCI: qcom: Change duplicate PCI reset to phy reset
+
+Make yours match, maybe like this:
+
+  PCI: qcom: Add SM8250 SoC support
+
+That way the important information ("SM8250") isn't way at the end
+where it may get chopped off.
+
+If you're ambitious, do this for the non-PCI patches, too.
