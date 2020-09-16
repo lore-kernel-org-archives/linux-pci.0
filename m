@@ -2,84 +2,98 @@ Return-Path: <SRS0=XVho=CZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BF60C43461
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 19:56:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1874FC43461
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 20:21:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F00D820936
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 19:56:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BF7F721941
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 20:21:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600286175;
-	bh=gGkHjWjs9t1Y0tRqxb4uEA1F6lmm4+9IJ9If5CWfkNs=;
+	s=default; t=1600287679;
+	bh=lqm12+A58GD8dcKRa1oMIh8Wei6H/SJ0irpx921wx20=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=sSupbwa5O79uOTkd4Lyd5rhoIQbyy+eOdYM82caipGPMaY3flPkDywaIbEtZdHXyT
-	 +x906QSaqGr9NN3mTYTbcwOwOlOK994A39OddKWEdeWbAIPKgN+HEWVniJ3FM2t7Yk
-	 6+GMOxd82cYr78x+rQ5gPMn+U5WSV9UGTYnGNuQU=
+	b=NxoBohkZiEZ8OZsppgIqA1wZEJCOEMmn0PIQABTJhZSQaL2JSDlMOepl7tLr12DT5
+	 YGdNVdCYjc2J9GwpBrOMQq5ukAnMulVBRl73HJqrbEGb8e2SaXysiX9aUn+A2i81CB
+	 KciOz4q36RoBz54RSx4CexxfwhfOiYok93G9kM+4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727262AbgIPT4K (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 16 Sep 2020 15:56:10 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48192 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727213AbgIPRgT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 16 Sep 2020 13:36:19 -0400
-Received: from localhost (unknown [213.57.247.131])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5E48F20672;
-        Wed, 16 Sep 2020 12:48:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600260490;
-        bh=gGkHjWjs9t1Y0tRqxb4uEA1F6lmm4+9IJ9If5CWfkNs=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=cjP3VKTYnjltiS+BtFUMrZzU3rJT5mSlnTcc2sOHnE2VAYK7PI2/0iOlked/4d8U/
-         b1cVdjh1WgIU3x6ESQE+xqky/retMs+cmdj9AQ8VI0VZPTbL1f3iItlc9Mgh1F4Zaf
-         UImnFttDfsD1rueURa06IQbf4nBnmjszy1MMFOl8=
-Date:   Wed, 16 Sep 2020 15:48:06 +0300
-From:   Leon Romanovsky <leon@kernel.org>
-To:     Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc:     Jason Gunthorpe <jgg@nvidia.com>,
+        id S1727180AbgIPUPr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 16 Sep 2020 16:15:47 -0400
+Received: from mail-io1-f65.google.com ([209.85.166.65]:36201 "EHLO
+        mail-io1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727174AbgIPRb0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2020 13:31:26 -0400
+Received: by mail-io1-f65.google.com with SMTP id d190so9196145iof.3;
+        Wed, 16 Sep 2020 10:31:26 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=hRfR+j/sNQ41ZakQMoWnaCWXgTz86aIdAqvmzFe7k6U=;
+        b=Pl/9emcwe2Gq/XqcPgJBcuiBmmm8IpohY6+crb6MMgl6zkhc3w/NY724CbpStYMAPh
+         xFS1yiifMaP8R3Kzlpn3e9zMCI0CKd9qcKg6mKJMr1MI+sM2K+rBuGkFWn2dcpEP0dbm
+         vzw81fhr2iMDoWDXQVwypJKJqXTUnbVjMVS04scOV6y/wUhV3Q/T9+idmEGHvAZQcYkD
+         j+uUsvFeENCtTZhs6BC/frWOKHmJ7hEa2Q+Xt7n3M/e2bIw4acmuzuegRQaQP3/LJ+8B
+         +30QTARQK8UPj3dUUDjXnKSpUS44KxWxIkP75abqSrfyXHHjrUvb7SvaRfLPGfQx62WY
+         cNOw==
+X-Gm-Message-State: AOAM533ZXZTcLCZPTbXjcciwZbV65+aJnEmZC+1Nk4H154jARGFcMAow
+        FEJr1gMjGivVDRLIEGqhFp3dqlrL4mdk
+X-Google-Smtp-Source: ABdhPJw861X0s+rWKu+n7ODsTpzYArU/ffDgC8RCudwa/a457zJcb/q+UMAaqhqvZkgl16raeuGE0A==
+X-Received: by 2002:a05:6e02:e4e:: with SMTP id l14mr20856786ilk.10.1600269976645;
+        Wed, 16 Sep 2020 08:26:16 -0700 (PDT)
+Received: from xps15 ([64.188.179.253])
+        by smtp.gmail.com with ESMTPSA id z26sm11180566ilf.60.2020.09.16.08.26.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 16 Sep 2020 08:26:15 -0700 (PDT)
+Received: (nullmailer pid 3997242 invoked by uid 1000);
+        Wed, 16 Sep 2020 15:26:14 -0000
+Date:   Wed, 16 Sep 2020 09:26:14 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Jim Quinlan <james.quinlan@broadcom.com>
+Cc:     linux-pci@vger.kernel.org,
+        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
+        Christoph Hellwig <hch@lst.de>,
+        Robin Murphy <robin.murphy@arm.com>,
+        bcm-kernel-feedback-list@broadcom.com,
+        Jim Quinlan <jquinlan@broadcom.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Clint Sbisa <csbisa@amazon.com>, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        linux-arm-kernel@lists.infradead.org, will@kernel.org,
-        catalin.marinas@arm.com
-Subject: Re: [PATCH] arm64: Enable PCI write-combine resources under sysfs
-Message-ID: <20200916124806.GJ486552@unreal>
-References: <20200914143819.GC904879@nvidia.com>
- <375c478593945a416f3180c3773bcb5240d2e36c.camel@kernel.crashing.org>
- <1d6f2ceb8d3538c906a1fdb8cd3d4c74ccffa42e.camel@kernel.crashing.org>
- <20200914225740.GP904879@nvidia.com>
- <2b539df4c9ec703458e46da2fc879ee3b310b31c.camel@kernel.crashing.org>
- <20200915101831.GA2616@e121166-lin.cambridge.arm.com>
- <20200915110511.GQ904879@nvidia.com>
- <bcb95faafa72734478b942084a9d24a61ae9887f.camel@kernel.crashing.org>
- <20200915234006.GI1573713@nvidia.com>
- <701012f288231d0d0733bf1c2c8fdbd9caa074fd.camel@kernel.crashing.org>
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-rpi-kernel@lists.infradead.org>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v12 06/10] PCI: brcmstb: Add control of rescal reset
+Message-ID: <20200916152614.GA3995498@bogus>
+References: <20200911175232.19016-1-james.quinlan@broadcom.com>
+ <20200911175232.19016-7-james.quinlan@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <701012f288231d0d0733bf1c2c8fdbd9caa074fd.camel@kernel.crashing.org>
+In-Reply-To: <20200911175232.19016-7-james.quinlan@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Sep 16, 2020 at 05:59:24PM +1000, Benjamin Herrenschmidt wrote:
-> On Tue, 2020-09-15 at 20:40 -0300, Jason Gunthorpe wrote:
->
-> > Like I said, the case where the driver can't self test probably
-> > doesn't intersect with the ARM implementations that can't do write
-> > combining, and if it did, the users probably run the out of tree
-> > driver that has the hacky stuff to make it use DEVICE_GRE.
->
-> Ok. So you are saying to go for it and ignore that Mellanox case then ?
-> :-)
+On Fri, Sep 11, 2020 at 01:52:26PM -0400, Jim Quinlan wrote:
+> From: Jim Quinlan <jquinlan@broadcom.com>
+> 
+> Some STB chips have a special purpose reset controller named RESCAL (reset
+> calibration).  The PCIe HW can now control RESCAL to start and stop its
+> operation.  On probe(), the RESCAL is deasserted and the driver goes
+> through the sequence of setting registers and reading status in order to
+> start the internal PHY that is required for the PCIe.
+> 
+> Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
+> Acked-by: Florian Fainelli <f.fainelli@gmail.com>
+> ---
+>  drivers/pci/controller/pcie-brcmstb.c | 69 ++++++++++++++++++++++++++-
+>  1 file changed, 68 insertions(+), 1 deletion(-)
 
-Regarding Mellanox, as I wrote it in the beginning of this thread, you
-can ignore mlx5 driver.
-https://lore.kernel.org/linux-pci/20200910105419.GH421756@unreal/
-
-Thanks
+Reviewed-by: Rob Herring <robh@kernel.org>
