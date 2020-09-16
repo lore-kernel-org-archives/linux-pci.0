@@ -2,40 +2,41 @@ Return-Path: <SRS0=XVho=CZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D5C0C43461
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 06:17:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3749C31E49
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 06:20:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 03BFF21D7D
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 06:17:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 642FD2065E
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Sep 2020 06:20:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="guuG3Pt1"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="iv+7DX+S"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726252AbgIPGR3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 16 Sep 2020 02:17:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40594 "EHLO
+        id S1726385AbgIPGTv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 16 Sep 2020 02:19:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40920 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726093AbgIPGR1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2020 02:17:27 -0400
+        with ESMTP id S1726068AbgIPGTe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2020 02:19:34 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06907C06174A;
-        Tue, 15 Sep 2020 23:17:25 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B509C06174A;
+        Tue, 15 Sep 2020 23:19:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-        Content-Description:In-Reply-To:References;
-        bh=s8mnqat7GGupYmev9VBKRE+GEfYSOGcbHcyGgV6dyXw=; b=guuG3Pt1J5nWsCBoJItPym1+vj
-        0aeWJGDaGySTSVHSbdpYTROMBmteFH+Ivy8Zcc9K2kuDL9q/BHZaVU9P+3UB8GuUEB6nb9cpn3vJs
-        wLOdAxW2P1ebiJKFM5z8soepZFlJ+GavE5MtpF9fqeNPBdaX7D4/P1FTuTOe+Sfh6XVA6A7O/CLXU
-        w3qBYTP9KuYLJA+yOvt9dHDHudjL/zx/juLg4iNzT2TzEiEW1C3fGPvt2j2m3aeCKiwFIG0qemx9K
-        jAsFkAcEn75npyjux686+2kMCFRQyW2+unJYAl4riVuilCbhQu8NYGFcpcfFv6dErBpR6Agd4IqhB
-        RsiUOCTg==;
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=OKUyp8qmBFdjgjSYZqN9BFape1Q+ujb81GF9JqUrmy4=; b=iv+7DX+SEc3dNxqeIV8/nkfVbB
+        b8Lum5kjOnVL9p18MOyOEipnedUAVsZV998T08r8nDJ02qfiuI/OgxE6TrNC1S/sLldjIpqNBxhiw
+        MA3WIZB3Y4Zzb/Hk6uowbpUfXK9eR3CMyPDDGitUJIey9L4b8l93eS6J6bspuTpwC4xJ85gf6KbPf
+        bVB8wuuk2DiR3MiZ5+m9zHgRDn6NFKEb9pbvhd9oRnAcmCJDWr66tQ9dczrwhPtFFS2fb/z2L+Etj
+        MH01yErQGFs2r2jEivDe8YxNcCLorZwZ3us0tOZdbOVFAw7gUguBFGXYXX0YwNXWa827pKuo7Uftf
+        hSyixgbw==;
 Received: from 089144214092.atnat0023.highway.a1.net ([89.144.214.92] helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kIQkh-0006mN-CM; Wed, 16 Sep 2020 06:17:11 +0000
+        id 1kIQmo-0006uo-Dj; Wed, 16 Sep 2020 06:19:22 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     iommu@lists.linux-foundation.org,
         Russell King <linux@armlinux.org.uk>,
@@ -53,10 +54,12 @@ Cc:     Jim Quinlan <james.quinlan@broadcom.com>,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
         linux-sh@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-acpi@vger.kernel.org, devicetree@vger.kernel.org
-Subject: support range based offsets in dma-direct v3
-Date:   Wed, 16 Sep 2020 08:14:53 +0200
-Message-Id: <20200916061500.1970090-1-hch@lst.de>
+Subject: [PATCH 1/6] ARM/dma-mapping: remove a __arch_page_to_dma #error
+Date:   Wed, 16 Sep 2020 08:14:54 +0200
+Message-Id: <20200916061500.1970090-2-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200916061500.1970090-1-hch@lst.de>
+References: <20200916061500.1970090-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
@@ -65,23 +68,28 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi all,
+The __arch_page_to_dma hook is long gone.
 
-this series adds range-based offsets to the dma-direct implementation.  The
-guts of the change are a patch from Jim with some modifications from me,
-but to do it nicely we need to ARM patches to prepare for it as well.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ arch/arm/include/asm/dma-mapping.h | 4 ----
+ 1 file changed, 4 deletions(-)
 
-Changes since v2:
- - fix a mismerge
- - return (phys_addr_t)-1 from translate_dma_to_phys when there is no
-   matching range to fix dma_capable checks
+diff --git a/arch/arm/include/asm/dma-mapping.h b/arch/arm/include/asm/dma-mapping.h
+index bdd80ddbca3451..70d95677656044 100644
+--- a/arch/arm/include/asm/dma-mapping.h
++++ b/arch/arm/include/asm/dma-mapping.h
+@@ -23,10 +23,6 @@ static inline const struct dma_map_ops *get_arch_dma_ops(struct bus_type *bus)
+ 	return NULL;
+ }
+ 
+-#ifdef __arch_page_to_dma
+-#error Please update to __arch_pfn_to_dma
+-#endif
+-
+ /*
+  * dma_to_pfn/pfn_to_dma/dma_to_virt/virt_to_dma are architecture private
+  * functions used internally by the DMA-mapping API to provide DMA
+-- 
+2.28.0
 
-Changes since v1:
- - rebased on top of the latests dma-mapping for-next tree
- - add two more trivial ARM cleanups
- - remove the DMA property inheritance hack in usb
- - move the remaining copy of the ranges into the remoteproc driver
-   as it should not be seen as a general API, but as a quirk for
-   remoteproc that we need to fix ASAP
-
-Diffstat:
