@@ -2,109 +2,168 @@ Return-Path: <SRS0=aHqq=C2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B2BFC433E2
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Sep 2020 18:10:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DB8FC43461
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Sep 2020 18:28:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 134C92137B
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Sep 2020 18:10:38 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iZrkTWAd"
+	by mail.kernel.org (Postfix) with ESMTP id 36430221EE
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Sep 2020 18:28:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726440AbgIQSJm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 17 Sep 2020 14:09:42 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:59594 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726216AbgIQRa7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Sep 2020 13:30:59 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1600363828;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=JDy+vxvRfZGmnu6cg8GKuFwx7k+u4v4T4TYyDPV/nUE=;
-        b=iZrkTWAdLM/eXEmqvjOYVyECKd4PxbwPQVzmhA0f1PTN1j3y0yELeAStnSzsXdOCuCa+2Z
-        B9lIeysy5QFoLE5d9LSie12muNYhn0FRIv78aMqbM63KAn4//DzQbT8DxYnG5u1X5Zodht
-        4LDuLUd3bpQCUYL7gwovH5ugZ9fqIS8=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-212-vjKounHvMB-E6fZzxPGr2w-1; Thu, 17 Sep 2020 13:30:26 -0400
-X-MC-Unique: vjKounHvMB-E6fZzxPGr2w-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 92E0C8015C6;
-        Thu, 17 Sep 2020 17:30:22 +0000 (UTC)
-Received: from x1.home (ovpn-112-71.phx2.redhat.com [10.3.112.71])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 5522160BEC;
-        Thu, 17 Sep 2020 17:30:17 +0000 (UTC)
-Date:   Thu, 17 Sep 2020 11:30:16 -0600
-From:   Alex Williamson <alex.williamson@redhat.com>
-To:     Dave Jiang <dave.jiang@intel.com>
-Cc:     Jason Gunthorpe <jgg@nvidia.com>, vkoul@kernel.org,
-        megha.dey@intel.com, maz@kernel.org, bhelgaas@google.com,
-        tglx@linutronix.de, jacob.jun.pan@intel.com, ashok.raj@intel.com,
-        yi.l.liu@intel.com, baolu.lu@intel.com, kevin.tian@intel.com,
-        sanjay.k.kumar@intel.com, tony.luck@intel.com, jing.lin@intel.com,
-        dan.j.williams@intel.com, kwankhede@nvidia.com,
-        eric.auger@redhat.com, parav@mellanox.com, rafael@kernel.org,
-        netanelg@mellanox.com, shahafs@mellanox.com,
-        yan.y.zhao@linux.intel.com, pbonzini@redhat.com,
-        samuel.ortiz@intel.com, mona.hossain@intel.com,
-        dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org,
-        x86@kernel.org, linux-pci@vger.kernel.org, kvm@vger.kernel.org
-Subject: Re: [PATCH v3 00/18] Add VFIO mediated device support and DEV-MSI
- support for the idxd driver
-Message-ID: <20200917113016.425dcde7@x1.home>
-In-Reply-To: <f4a085f1-f6de-2539-12fe-c7308d243a4a@intel.com>
-References: <160021207013.67751.8220471499908137671.stgit@djiang5-desk3.ch.intel.com>
-        <20200917150641.GM3699@nvidia.com>
-        <f4a085f1-f6de-2539-12fe-c7308d243a4a@intel.com>
-Organization: Red Hat
+        id S1726452AbgIQS0A (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 17 Sep 2020 14:26:00 -0400
+Received: from mga06.intel.com ([134.134.136.31]:26062 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726480AbgIQSZs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 17 Sep 2020 14:25:48 -0400
+X-Greylist: delayed 396 seconds by postgrey-1.27 at vger.kernel.org; Thu, 17 Sep 2020 14:25:43 EDT
+IronPort-SDR: OAQrGXnofE2ix3QRRVleUwYmAlE6vjAZIGibBdpXLt/flMsxHVckRqBtyd0juqiepdb1BVwuaO
+ fZEpp5aOdY6w==
+X-IronPort-AV: E=McAfee;i="6000,8403,9747"; a="221321883"
+X-IronPort-AV: E=Sophos;i="5.77,271,1596524400"; 
+   d="scan'208";a="221321883"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Sep 2020 11:18:10 -0700
+IronPort-SDR: kkf8DHurafAM1VSYqAAV2BJk2FzaMJxjF7+wDR/y4P+41vjGqfRSxJQo2xlOcYnKH0JPjLLL3m
+ GnyV5m2HTutw==
+X-IronPort-AV: E=Sophos;i="5.77,271,1596524400"; 
+   d="scan'208";a="483850364"
+Received: from jbrandeb-mobl3.amr.corp.intel.com (HELO localhost) ([10.251.16.238])
+  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Sep 2020 11:18:10 -0700
+Date:   Thu, 17 Sep 2020 11:18:07 -0700
+From:   Jesse Brandeburg <jesse.brandeburg@intel.com>
+To:     Nitesh Narayan Lal <nitesh@redhat.com>
+Cc:     <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <frederic@kernel.org>,
+        <mtosatti@redhat.com>, <sassmann@redhat.com>,
+        <jeffrey.t.kirsher@intel.com>, <jacob.e.keller@intel.com>,
+        <jlelli@redhat.com>, <hch@infradead.org>, <bhelgaas@google.com>,
+        <mike.marciniszyn@intel.com>, <dennis.dalessandro@intel.com>,
+        <thomas.lendacky@amd.com>, <jerinj@marvell.com>,
+        <mathias.nyman@intel.com>, <jiri@nvidia.com>
+Subject: Re: [RFC][Patch v1 1/3] sched/isolation: API to get num of
+ hosekeeping CPUs
+Message-ID: <20200917111807.00002eac@intel.com>
+In-Reply-To: <20200909150818.313699-2-nitesh@redhat.com>
+References: <20200909150818.313699-1-nitesh@redhat.com>
+        <20200909150818.313699-2-nitesh@redhat.com>
+X-Mailer: Claws Mail 3.12.0 (GTK+ 2.24.28; i686-w64-mingw32)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 17 Sep 2020 10:15:24 -0700
-Dave Jiang <dave.jiang@intel.com> wrote:
+Nitesh Narayan Lal wrote:
 
-> On 9/17/2020 8:06 AM, Jason Gunthorpe wrote:
-> > On Tue, Sep 15, 2020 at 04:27:35PM -0700, Dave Jiang wrote:  
-> >>   drivers/dma/idxd/idxd.h                            |   65 +
-> >>   drivers/dma/idxd/init.c                            |  100 ++
-> >>   drivers/dma/idxd/irq.c                             |    6
-> >>   drivers/dma/idxd/mdev.c                            | 1089 ++++++++++++++++++++
-> >>   drivers/dma/idxd/mdev.h                            |  118 ++  
-> > 
-> > It is common that drivers of a subsystem will be under that
-> > subsystem's directory tree. This allows the subsystem community to
-> > manage pages related to their subsystem and it's drivers.
-> > 
-> > Should the mdev parts be moved there?  
+> Introduce a new API num_housekeeping_cpus(), that can be used to retrieve
+> the number of housekeeping CPUs by reading an atomic variable
+> __num_housekeeping_cpus. This variable is set from housekeeping_setup().
 > 
-> I personally don't have a preference. I'll defer to Alex or Kirti to provide 
-> that guidance. It may make certains things like dealing with dma fault regions 
-> and etc easier using vfio calls from vfio_pci_private.h later on for vSVM 
-> support. It also may be the better code review and maintenance domain and 
-> alleviate Vinod having to deal with that portion since it's not dmaengine domain.
+> This API is introduced for the purpose of drivers that were previously
+> relying only on num_online_cpus() to determine the number of MSIX vectors
+> to create. In an RT environment with large isolated but a fewer
+> housekeeping CPUs this was leading to a situation where an attempt to
+> move all of the vectors corresponding to isolated CPUs to housekeeping
+> CPUs was failing due to per CPU vector limit.
+> 
+> If there are no isolated CPUs specified then the API returns the number
+> of all online CPUs.
+> 
+> Signed-off-by: Nitesh Narayan Lal <nitesh@redhat.com>
+> ---
+>  include/linux/sched/isolation.h |  7 +++++++
+>  kernel/sched/isolation.c        | 23 +++++++++++++++++++++++
+>  2 files changed, 30 insertions(+)
 
-TBH, I'd expect an mdev driver to be co-located with the remainder of
-its parent driver.  It's hopefully sharing more code with that driver
-than anything in mdev of vfio (either of which should be exported for
-the vendor driver).  mdev support is largely expected to be a feature of
-a driver, much like it is for i915, not necessarily its sole purpose for
-existing (see the rejected fpga mdev driver).  Also being nearby
-vfio_pci_private shouldn't invite anyone other than vfio_pci to make
-use of that header.  Thanks,
+I'm not a scheduler expert, but a couple comments follow.
 
-Alex
+> 
+> diff --git a/include/linux/sched/isolation.h b/include/linux/sched/isolation.h
+> index cc9f393e2a70..94c25d956d8a 100644
+> --- a/include/linux/sched/isolation.h
+> +++ b/include/linux/sched/isolation.h
+> @@ -25,6 +25,7 @@ extern bool housekeeping_enabled(enum hk_flags flags);
+>  extern void housekeeping_affine(struct task_struct *t, enum hk_flags flags);
+>  extern bool housekeeping_test_cpu(int cpu, enum hk_flags flags);
+>  extern void __init housekeeping_init(void);
+> +extern unsigned int num_housekeeping_cpus(void);
+>  
+>  #else
+>  
+> @@ -46,6 +47,12 @@ static inline bool housekeeping_enabled(enum hk_flags flags)
+>  static inline void housekeeping_affine(struct task_struct *t,
+>  				       enum hk_flags flags) { }
+>  static inline void housekeeping_init(void) { }
+> +
+> +static unsigned int num_housekeeping_cpus(void)
+> +{
+> +	return num_online_cpus();
+> +}
+> +
+>  #endif /* CONFIG_CPU_ISOLATION */
+>  
+>  static inline bool housekeeping_cpu(int cpu, enum hk_flags flags)
+> diff --git a/kernel/sched/isolation.c b/kernel/sched/isolation.c
+> index 5a6ea03f9882..7024298390b7 100644
+> --- a/kernel/sched/isolation.c
+> +++ b/kernel/sched/isolation.c
+> @@ -13,6 +13,7 @@ DEFINE_STATIC_KEY_FALSE(housekeeping_overridden);
+>  EXPORT_SYMBOL_GPL(housekeeping_overridden);
+>  static cpumask_var_t housekeeping_mask;
+>  static unsigned int housekeeping_flags;
+> +static atomic_t __num_housekeeping_cpus __read_mostly;
+>  
+>  bool housekeeping_enabled(enum hk_flags flags)
+>  {
+> @@ -20,6 +21,27 @@ bool housekeeping_enabled(enum hk_flags flags)
+>  }
+>  EXPORT_SYMBOL_GPL(housekeeping_enabled);
+>  
+> +/*
+
+use correct kdoc style, and you get free documentation from your source
+(you're so close!)
+
+should be (note the first line and the function title line change to
+remove parens:
+/**
+ * num_housekeeping_cpus - Read the number of housekeeping CPUs.
+ *
+ * This function returns the number of available housekeeping CPUs
+ * based on __num_housekeeping_cpus which is of type atomic_t
+ * and is initialized at the time of the housekeeping setup.
+ */
+
+> + * num_housekeeping_cpus() - Read the number of housekeeping CPUs.
+> + *
+> + * This function returns the number of available housekeeping CPUs
+> + * based on __num_housekeeping_cpus which is of type atomic_t
+> + * and is initialized at the time of the housekeeping setup.
+> + */
+> +unsigned int num_housekeeping_cpus(void)
+> +{
+> +	unsigned int cpus;
+> +
+> +	if (static_branch_unlikely(&housekeeping_overridden)) {
+> +		cpus = atomic_read(&__num_housekeeping_cpus);
+> +		/* We should always have at least one housekeeping CPU */
+> +		BUG_ON(!cpus);
+
+you need to crash the kernel because of this? maybe a WARN_ON? How did
+the global even get set to the bad value? It's going to blame the poor
+caller for this in the trace, but the caller likely had nothing to do
+with setting the value incorrectly!
+
+> +		return cpus;
+> +	}
+> +	return num_online_cpus();
+> +}
+> +EXPORT_SYMBOL_GPL(num_housekeeping_cpus);
 
