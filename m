@@ -2,99 +2,99 @@ Return-Path: <SRS0=aHqq=C2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29FD5C43463
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Sep 2020 21:26:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0A82C43463
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Sep 2020 21:37:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E436A214D8
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Sep 2020 21:26:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600378006;
-	bh=gF+5IgcT5tyscHTKZfeKEWonoMbz0ayftxl3bZmgBbY=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=bu/SPONX6KZvmlXFmhwYmtdw0t6p8gPMAA+JLkb1HCWY9yKr5ZD42QpLSxGMJBAmH
-	 UXcR1ReIRY6iAsjrBtz+fe/2RKcveCobJFf/rzeS24FS86E38gCTahdAgFH6nej7nR
-	 abwsNWbT29/mvVy/QqRsnU4c0+RespqZKvG7FRrc=
+	by mail.kernel.org (Postfix) with ESMTP id 4EEE520725
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Sep 2020 21:37:18 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="HPum3U/n"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726065AbgIQV0q (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 17 Sep 2020 17:26:46 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49468 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725900AbgIQV0q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 17 Sep 2020 17:26:46 -0400
-Received: from localhost (52.sub-72-107-123.myvzw.com [72.107.123.52])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S1725900AbgIQVhR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 17 Sep 2020 17:37:17 -0400
+Received: from smtprelay-out1.synopsys.com ([149.117.87.133]:59360 "EHLO
+        smtprelay-out1.synopsys.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725844AbgIQVhR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Sep 2020 17:37:17 -0400
+X-Greylist: delayed 548 seconds by postgrey-1.27 at vger.kernel.org; Thu, 17 Sep 2020 17:37:17 EDT
+Received: from mailhost.synopsys.com (mdc-mailhost2.synopsys.com [10.225.0.210])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A7EFB20870;
-        Thu, 17 Sep 2020 21:26:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600378006;
-        bh=gF+5IgcT5tyscHTKZfeKEWonoMbz0ayftxl3bZmgBbY=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=b/pnKilZiL18lo6zys3sWSx17R/M9l4/H73GJicOe589bt5PVVnhi3/tnjEPIHZ0I
-         qN5YCJ/1j47TWc6Ixy0YuO89HyqqnEwW1rKwou7QTpkZOYUEaRnagGOdmalCaF0XeC
-         mq59Z6q2GGdrlGMmmjfWS1LXetCkWBT1aqxxn578=
-Date:   Thu, 17 Sep 2020 16:26:44 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Lukas Wunner <lukas@wunner.de>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Keith Busch <kbusch@kernel.org>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: Simplify pci_dev_reset_slot_function()
-Message-ID: <20200917212644.GA1739569@bjorn-Precision-5520>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c6aab5af096f7b1b3db57f6335cebba8f0fcca89.1595330431.git.lukas@wunner.de>
+        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 97499C03B4;
+        Thu, 17 Sep 2020 21:30:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
+        t=1600378231; bh=DwSOOa3p0zCFi9AGtBpYBd7JOmOEe8SKRvLy85WZCy8=;
+        h=From:To:Cc:Subject:Date:From;
+        b=HPum3U/noFtdp3lTm8foL1P/aC0uVhlQQi3VgsJnDAeV1+gz17mJNB3DWslZtNEs8
+         /nhM+5fIxoI9MnIj4hqEX8xralEgiiZ0YooqB1ZNOkbJ9QPLPBX8uC5ooFpa4vShrS
+         GljN3MCcQk6fGA02SsZknCamf5QyXJdOYeKpH/pTAn3WZCMulc7mwycTiMeVfy0sbP
+         lwF8rBEvW5pAMXIXqIaKJQzuaaM0eWqOTcWshsniweRoj5hKOHAIn2i4F3MYqLMghJ
+         CvLqN2ZpuaI7bnpXj5AoCC171WM4DHhjni8jRYfVgoKzmRXjDW7bXHRMSBHHBucUs8
+         QtyCWbp5uwosw==
+Received: from de02dwia024.internal.synopsys.com (de02dwia024.internal.synopsys.com [10.225.19.81])
+        by mailhost.synopsys.com (Postfix) with ESMTP id E9F02A005D;
+        Thu, 17 Sep 2020 21:30:29 +0000 (UTC)
+X-SNPS-Relay: synopsys.com
+From:   Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
+To:     linux-pci@vger.kernel.org, bhelgaas@google.com
+Cc:     Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH] [-next] PCI: endpoint: Using plain integer as NULL pointer
+Date:   Thu, 17 Sep 2020 23:30:27 +0200
+Message-Id: <80895f7465719edb3aa259e907acc4bc3217945c.1600378209.git.gustavo.pimentel@synopsys.com>
+X-Mailer: git-send-email 2.7.4
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jul 21, 2020 at 01:24:51PM +0200, Lukas Wunner wrote:
-> pci_dev_reset_slot_function() refuses to reset a hotplug slot if it is
-> shared by multiple pci_devs.  That's the case if and only if the slot is
-> occupied by a multifunction device.
-> 
-> Simplify the function to check the device's multifunction flag instead
-> of iterating over the devices on the bus.  (Iterating over the devices
-> requires holding pci_bus_sem, which the function erroneously does not
-> acquire.)
-> 
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> Cc: Alex Williamson <alex.williamson@redhat.com>
+Fixes warning given by executing "make C=2 drivers/pci/"
 
-Applied to pci/misc for v5.10, thanks!
+Sparse output:
+CHECK   drivers/pci/endpoint/pci-epc-core.c
+ drivers/pci/endpoint/pci-epc-core.c: note: in included file:
+ ./include/linux/pci-ep-cfs.h:22:16: warning:
+ Using plain integer as NULL pointer
+CHECK   drivers/pci/endpoint/pci-epf-core.c
+ drivers/pci/endpoint/pci-epf-core.c: note: in included file:
+ ./include/linux/pci-ep-cfs.h:31:16: warning:
+ Using plain integer as NULL pointer
 
-> ---
->  drivers/pci/pci.c | 8 +-------
->  1 file changed, 1 insertion(+), 7 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 455da72..b406611 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4914,16 +4914,10 @@ static int pci_reset_hotplug_slot(struct hotplug_slot *hotplug, int probe)
->  
->  static int pci_dev_reset_slot_function(struct pci_dev *dev, int probe)
->  {
-> -	struct pci_dev *pdev;
-> -
-> -	if (dev->subordinate || !dev->slot ||
-> +	if (dev->multifunction || dev->subordinate || !dev->slot ||
->  	    dev->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET)
->  		return -ENOTTY;
->  
-> -	list_for_each_entry(pdev, &dev->bus->devices, bus_list)
-> -		if (pdev != dev && pdev->slot == dev->slot)
-> -			return -ENOTTY;
-> -
->  	return pci_reset_hotplug_slot(dev->slot->hotplug, probe);
->  }
->  
-> -- 
-> 2.27.0
-> 
+Reported-by: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Joao Pinto <jpinto@synopsys.com>
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+ include/linux/pci-ep-cfs.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/include/linux/pci-ep-cfs.h b/include/linux/pci-ep-cfs.h
+index f42b0fd..6628813 100644
+--- a/include/linux/pci-ep-cfs.h
++++ b/include/linux/pci-ep-cfs.h
+@@ -19,7 +19,7 @@ void pci_ep_cfs_remove_epf_group(struct config_group *group);
+ #else
+ static inline struct config_group *pci_ep_cfs_add_epc_group(const char *name)
+ {
+-	return 0;
++	return NULL;
+ }
+ 
+ static inline void pci_ep_cfs_remove_epc_group(struct config_group *group)
+@@ -28,7 +28,7 @@ static inline void pci_ep_cfs_remove_epc_group(struct config_group *group)
+ 
+ static inline struct config_group *pci_ep_cfs_add_epf_group(const char *name)
+ {
+-	return 0;
++	return NULL;
+ }
+ 
+ static inline void pci_ep_cfs_remove_epf_group(struct config_group *group)
+-- 
+2.7.4
+
