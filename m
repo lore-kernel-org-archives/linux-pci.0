@@ -4,91 +4,89 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CD12C433E2
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Sep 2020 17:01:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B734C433E2
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Sep 2020 17:09:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EAD9A2078D
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Sep 2020 17:01:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D7C61206CA
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Sep 2020 17:09:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600362078;
-	bh=xTesHD8rdcJzcKgn8TNOGI+Q5BfNGqKv4PuZ7vzy6Wk=;
+	s=default; t=1600362597;
+	bh=nciZRCdNYJT5LRSin2ZAx5m8XyoA9EAOhiwakEqj6jQ=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=yub+V35usy1tM8RaK2o4pNPZPwk6R7mj6GdYDLh38m/t0fPYX934Clcph0t5uPwKo
-	 I+4aIViF2ku0340/KyBwewvzTuBjfxlu6qOg0ZNf2STFAiRC+0kKK31IMQoWwz1K1E
-	 LxLPf6yOBpSNnBPurj6dKtkSuVeytJbQe0YFQ31M=
+	b=LnSGqI4CW21mexPEqFUu63r/QrdaxzNKdUGkglIYUo6yqcK6Olyy2XWRSUZMnV9Yx
+	 GOZSeKOvLBmDuMcApa1EbIKAm/d5X3h8+Rv2qxGZaGx6BPaa/wJ0KtfTOjtOWz93yv
+	 TjZDDo8OQwEk+lJJTOxlkoXK27MlixrG4BrXLvVg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728729AbgIQRBN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 17 Sep 2020 13:01:13 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43692 "EHLO mail.kernel.org"
+        id S1727117AbgIQRJs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 17 Sep 2020 13:09:48 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55348 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728849AbgIQRBH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 17 Sep 2020 13:01:07 -0400
+        id S1727037AbgIQRJh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 17 Sep 2020 13:09:37 -0400
 Received: from localhost (52.sub-72-107-123.myvzw.com [72.107.123.52])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B6F8F206A2;
-        Thu, 17 Sep 2020 17:01:06 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 68CB2221EC;
+        Thu, 17 Sep 2020 17:09:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600362067;
-        bh=xTesHD8rdcJzcKgn8TNOGI+Q5BfNGqKv4PuZ7vzy6Wk=;
+        s=default; t=1600362576;
+        bh=nciZRCdNYJT5LRSin2ZAx5m8XyoA9EAOhiwakEqj6jQ=;
         h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=vllloxOlsMFSa6EIckEWJnrf9q/KUPFw/55ooylh4Jz0PORZMpbLB+W0fTjuPtazN
-         ltl6mqSTAIj1EOUz0XFN+F0dHmBkeidFTh19S/V+xNTsYLo1ntqRWoKJ30pjljp/gJ
-         7fsNv7eRT6L/LqgO6kieX93lOyrX1LKcIAUJ1Zt8=
-Date:   Thu, 17 Sep 2020 12:01:05 -0500
+        b=SyiIfpHuIoW9U8P/nV2+0jm0bcVB6Hze+sQfLOfLnkLaijZwE9rxcNcykSSJazMY3
+         DLBGkjGNT7matV4WJxZ/nbNtbVuAXSE7fbQJTPhE50BXB9jJHwE9CbkTUGZnwMr7pj
+         h4y9H/qTr5CLR/UWtwFLkgmTJ1bOCCGpu9WZs8WU=
+Date:   Thu, 17 Sep 2020 12:09:35 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Dongdong Liu <liudongdong3@huawei.com>
-Cc:     linux-pci@vger.kernel.org, linuxarm@huawei.com
-Subject: Re: [PATCH] PCI/LINK: Print IRQ number used by port
-Message-ID: <20200917170105.GA1709114@bjorn-Precision-5520>
+To:     Clint Sbisa <csbisa@amazon.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Jiri Kosina <trivial@kernel.org>,
+        Benjamin Herrenschmidt <benh@amazon.com>,
+        Ali Saidi <alisaidi@amazon.com>,
+        David Woodhouse <dwmw@amazon.co.uk>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Trivial comment fixup for PCI mmap ifdefs
+Message-ID: <20200917170935.GA1710267@bjorn-Precision-5520>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1599737055-73624-1-git-send-email-liudongdong3@huawei.com>
+In-Reply-To: <20200821155121.nzxjeeoze4h5pone@amazon.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Sep 10, 2020 at 07:24:15PM +0800, Dongdong Liu wrote:
-> Print IRQ number used by PCIe Link Bandwidth Notification services port
-> as AER, PME and DPC does. It provides convenience to track PCIe BW notif
-> interrupts counts of certain port from /proc/interrupts.
+On Fri, Aug 21, 2020 at 03:51:21PM +0000, Clint Sbisa wrote:
+> The else/endif comments for pci_{create,remove}_resource_files were
+> not updated in commit f719582435afe9c7985206e42d804ea6aa315d33 ("PCI:
+> Add pci_mmap_resource_range() and use it for ARM64").
 > 
-> The dmesg log is as below.
-> pcieport 0000:00:00.0: bw_notification: enabled with IRQ 1166
-> 
-> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+> Signed-off-by: Clint Sbisa <csbisa@amazon.com>
 
 Applied to pci/misc for v5.10, thanks!
 
 > ---
->  drivers/pci/pcie/bw_notification.c | 3 +++
->  1 file changed, 3 insertions(+)
+>  drivers/pci/pci-sysfs.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/pci/pcie/bw_notification.c b/drivers/pci/pcie/bw_notification.c
-> index 77e6857..565d23c 100644
-> --- a/drivers/pci/pcie/bw_notification.c
-> +++ b/drivers/pci/pcie/bw_notification.c
-> @@ -14,6 +14,8 @@
->   * and warns when links become degraded in operation.
->   */
->  
-> +#define dev_fmt(fmt) "bw_notification: " fmt
-> +
->  #include "../pci.h"
->  #include "portdrv.h"
->  
-> @@ -97,6 +99,7 @@ static int pcie_bandwidth_notification_probe(struct pcie_device *srv)
->  		return ret;
->  
->  	pcie_enable_link_bandwidth_notification(srv->port);
-> +	pci_info(srv->port, "enabled with IRQ %d\n", srv->irq);
->  
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 6d78df981d41..cfc67b208616 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -1196,10 +1196,10 @@ static int pci_create_resource_files(struct pci_dev *pdev)
+>  	}
 >  	return 0;
 >  }
+> -#else /* !HAVE_PCI_MMAP */
+> +#else /* ! (defined(HAVE_PCI_MMAP) || defined(ARCH_GENERIC_PCI_MMAP_RESOURCE)) */
+>  int __weak pci_create_resource_files(struct pci_dev *dev) { return 0; }
+>  void __weak pci_remove_resource_files(struct pci_dev *dev) { return; }
+> -#endif /* HAVE_PCI_MMAP */
+> +#endif /* defined(HAVE_PCI_MMAP) || defined(ARCH_GENERIC_PCI_MMAP_RESOURCE) */
+>  
+>  /**
+>   * pci_write_rom - used to enable access to the PCI ROM display
 > -- 
-> 1.9.1
+> 2.23.3
 > 
