@@ -2,197 +2,53 @@ Return-Path: <SRS0=aHqq=C2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D66F8C433E2
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Sep 2020 18:38:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89CCBC43461
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Sep 2020 18:43:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8997C221E3
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Sep 2020 18:38:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600367914;
-	bh=mEQ2zYGQwN+YFky2JH41RrTh7Hdb3VlvGJsG4dOTm3U=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=1eOw/GwefD326xAdIlL9NdvpgabcxqYs/GYl4yObrPHX5Xq6ZCWV9s4ITz/J477fj
-	 GYA9293hGwqpIavfbU57g5BRdPn4jTEd5JgBIsWyjvG/Oi3an9EkOrqd5kvz+rz4+f
-	 TA6/w+aGh642vWJZiNIq3LZTqQ7Ft0bKF3vayJmQ=
+	by mail.kernel.org (Postfix) with ESMTP id 3EFEC221EE
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Sep 2020 18:43:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726273AbgIQSiT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 17 Sep 2020 14:38:19 -0400
-Received: from mail.kernel.org ([198.145.29.99]:32932 "EHLO mail.kernel.org"
+        id S1726376AbgIQSml (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 17 Sep 2020 14:42:41 -0400
+Received: from verein.lst.de ([213.95.11.211]:57039 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726375AbgIQRU0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 17 Sep 2020 13:20:26 -0400
-Received: from localhost (52.sub-72-107-123.myvzw.com [72.107.123.52])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 8F92F221E7;
-        Thu, 17 Sep 2020 17:20:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600363211;
-        bh=mEQ2zYGQwN+YFky2JH41RrTh7Hdb3VlvGJsG4dOTm3U=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=wkTGE77d5M5NxO963X691r6qrDnGMAshe/FjCD3VjrdWNtOFuRQK4Wawm2TaF9GR0
-         xJbobnfdWHK9bTUkSHWi/TKgaZNugKuhAUmBf9flJdtRUclUR6U1p4MevONmNaAEa2
-         vewm8cpAxMst/jQlk+1NohmsU7mqL9DDnGSUT7oo=
-Date:   Thu, 17 Sep 2020 12:20:10 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     "Derrick, Jonathan" <jonathan.derrick@intel.com>
-Cc:     "wangxiongfeng2@huawei.com" <wangxiongfeng2@huawei.com>,
-        "kw@linux.com" <kw@linux.com>,
-        "hkallweit1@gmail.com" <hkallweit1@gmail.com>,
-        "kai.heng.feng@canonical.com" <kai.heng.feng@canonical.com>,
-        "refactormyself@gmail.com" <refactormyself@gmail.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>,
-        "Mario.Limonciello@dell.com" <Mario.Limonciello@dell.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "Wysocki, Rafael J" <rafael.j.wysocki@intel.com>
-Subject: Re: [PATCH] PCI/ASPM: Enable ASPM for links under VMD domain
-Message-ID: <20200917172010.GA1710481@bjorn-Precision-5520>
+        id S1728715AbgIQQy6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 17 Sep 2020 12:54:58 -0400
+X-Greylist: delayed 557 seconds by postgrey-1.27 at vger.kernel.org; Thu, 17 Sep 2020 12:54:42 EDT
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 1B12468BEB; Thu, 17 Sep 2020 18:45:15 +0200 (CEST)
+Date:   Thu, 17 Sep 2020 18:45:14 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     iommu@lists.linux-foundation.org,
+        Russell King <linux@armlinux.org.uk>,
+        Santosh Shilimkar <ssantosh@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     Ohad Ben-Cohen <ohad@wizery.com>, devicetree@vger.kernel.org,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        linux-sh@vger.kernel.org, Frank Rowand <frowand.list@gmail.com>,
+        linux-usb@vger.kernel.org, linux-remoteproc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+        Rob Herring <robh+dt@kernel.org>,
+        Jim Quinlan <james.quinlan@broadcom.com>,
+        linux-pci@vger.kernel.org,
+        Nathan Chancellor <natechancellor@gmail.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: support range based offsets in dma-direct v3
+Message-ID: <20200917164514.GA5982@lst.de>
+References: <20200916061500.1970090-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <4db0fbba635cd1ff5a3c1529d3c7fa08d0729756.camel@intel.com>
+In-Reply-To: <20200916061500.1970090-1-hch@lst.de>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Sep 10, 2020 at 07:51:05PM +0000, Derrick, Jonathan wrote:
-> On Thu, 2020-09-10 at 14:17 -0500, Bjorn Helgaas wrote:
-> > On Thu, Sep 10, 2020 at 06:52:48PM +0000, Derrick, Jonathan wrote:
-> > > On Thu, 2020-09-10 at 12:38 -0500, Bjorn Helgaas wrote:
-> > > > On Thu, Sep 10, 2020 at 04:33:39PM +0000, Derrick, Jonathan wrote:
-> > > > > On Wed, 2020-09-09 at 20:55 -0500, Bjorn Helgaas wrote:
-> > > > > > On Fri, Aug 21, 2020 at 08:32:20PM +0800, Kai-Heng Feng wrote:
-> > > > > > > New Intel laptops with VMD cannot reach deeper power saving state,
-> > > > > > > renders very short battery time.
-> > > > > > > 
-> > > > > > > As BIOS may not be able to program the config space for devices under
-> > > > > > > VMD domain, ASPM needs to be programmed manually by software. This is
-> > > > > > > also the case under Windows.
-> > > > > > > 
-> > > > > > > The VMD controller itself is a root complex integrated endpoint that
-> > > > > > > doesn't have ASPM capability, so we can't propagate the ASPM settings to
-> > > > > > > devices under it. Hence, simply apply ASPM_STATE_ALL to the links under
-> > > > > > > VMD domain, unsupported states will be cleared out anyway.
-> > > > > > > 
-> > > > > > > Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
-> > > > > > > ---
-> > > > > > >  drivers/pci/pcie/aspm.c |  3 ++-
-> > > > > > >  drivers/pci/quirks.c    | 11 +++++++++++
-> > > > > > >  include/linux/pci.h     |  2 ++
-> > > > > > >  3 files changed, 15 insertions(+), 1 deletion(-)
-> > > > > > > 
-> > > > > > > diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> > > > > > > index 253c30cc1967..dcc002dbca19 100644
-> > > > > > > --- a/drivers/pci/pcie/aspm.c
-> > > > > > > +++ b/drivers/pci/pcie/aspm.c
-> > > > > > > @@ -624,7 +624,8 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
-> > > > > > >  		aspm_calc_l1ss_info(link, &upreg, &dwreg);
-> > > > > > >  
-> > > > > > >  	/* Save default state */
-> > > > > > > -	link->aspm_default = link->aspm_enabled;
-> > > > > > > +	link->aspm_default = parent->dev_flags & PCI_DEV_FLAGS_ENABLE_ASPM ?
-> > > > > > > +			     ASPM_STATE_ALL : link->aspm_enabled;
-> > > > > > 
-> > > > > > This function is ridiculously complicated already, and I really don't
-> > > > > > want to make it worse.
-> > > > > > 
-> > > > > > What exactly is the PCIe topology here?  Apparently the VMD controller
-> > > > > > is a Root Complex Integrated Endpoint, so it's a Type 0 (non-bridge)
-> > > > > > device.  And it has no Link, hence no Link Capabilities or Control and
-> > > > > > hence no ASPM-related bits.  Right?
-> > > > > 
-> > > > > That's correct. VMD is the Type 0 device providing config/mmio
-> > > > > apertures to another segment and MSI/X remapping. No link and no ASPM
-> > > > > related bits.
-> > > > > 
-> > > > > Hierarchy is usually something like:
-> > > > > 
-> > > > > Segment 0           | VMD segment
-> > > > > Root Complex -> VMD | Type 0 (RP/Bridge; physical slot) - Type 1
-> > > > >                     | Type 0 (RP/Bridge; physical slot) - Type 1
-> > > > > 
-> > > > > > And the devices under the VMD controller?  I guess they are regular
-> > > > > > PCIe Endpoints, Switch Ports, etc?  Obviously there's a Link involved
-> > > > > > somewhere.  Does the VMD controller have some magic, non-architected
-> > > > > > Port on the downstream side?
-> > > > > 
-> > > > > Correct: Type 0 and Type 1 devices, and any number of Switch ports as
-> > > > > it's usually pinned out to physical slot.
-> > > > > 
-> > > > > > Does this patch enable ASPM on this magic Link between VMD and the
-> > > > > > next device?  Configuring ASPM correctly requires knowledge and knobs
-> > > > > > from both ends of the Link, and apparently we don't have those for the
-> > > > > > VMD end.
-> > > > > 
-> > > > > VMD itself doesn't have the link to it's domain. It's really just the
-> > > > > config/mmio aperture and MSI/X remapper. The PCIe link is between the
-> > > > > Type 0 and Type 1 devices on the VMD domain. So fortunately the VMD
-> > > > > itself is not the upstream part of the link.
-> > > > > 
-> > > > > > Or is it for Links deeper in the hierarchy?  I assume those should
-> > > > > > just work already, although there might be issues with latency
-> > > > > > computation, etc., because we may not be able to account for the part
-> > > > > > of the path above VMD.
-> > > > > 
-> > > > > That's correct. This is for the links within the domain itself, such as
-> > > > > between a type 0 and NVMe device.
-> > > > 
-> > > > OK, great.  So IIUC, below the VMD, there is a Root Port, and the Root
-> > > > Port has a link to some Endpoint or Switch, e.g., an NVMe device.  And
-> > > > we just want to enable ASPM on that link.
-> > > > 
-> > > > That should not be a special case; we should be able to make this so
-> > > > it Just Works.  Based on this patch, I guess the reason it doesn't
-> > > > work is because link->aspm_enabled for that link isn't set correctly.
-> > > > 
-> > > > So is this just a consequence of us depending on the initial Link
-> > > > Control value from BIOS?  That seems like something we shouldn't
-> > > > really depend on.
-> Seems like a good idea, that it should instead be quirked if ASPM is
-> found unusable on a link. Though I'm not aware of how many platforms
-> would require a quirk..
-> 
-> > > > 
-> > > That's the crux. There's always pcie_aspm=force.
-> > > Something I've wondered is if there is a way we could 'discover' if the
-> > > link is ASPM safe?
-> > 
-> > Sure.  Link Capabilities is supposed to tell us that.  If aspm.c
-> > depends on the BIOS settings, I think that's a design mistake.
-> > 
-> > But what CONFIG_PCIEASPM_* setting are you using?  The default
-> > is CONFIG_PCIEASPM_DEFAULT, which literally means "Use the BIOS
-> > defaults".  If you're using that, and BIOS doesn't enable ASPM below
-> > VMD, I guess aspm.c will leave it disabled, and that seems like it
-> > would be the expected behavior.
-> > 
-> > Does "pcie_aspm=force" really help you?  I don't see any uses of it
-> > that should apply to your situation.
-> > 
-> > Bjorn
-> 
-> No you're right. I don't think we need pcie_aspm=force, just the policy
-> configuration.
-
-I'm not sure where we're at here.
-
-If the kernel is built with CONFIG_PCIEASPM_DEFAULT=y (which means
-"use the BIOS defaults"), and the BIOS doesn't enable ASPM on these
-links below VMD, then Linux will leave things alone.  I think that's
-working as intended.
-
-If desired, we should be able to enable ASPM using sysfs in that case.
-
-We have a pci_disable_link_state() kernel interface that drivers can
-use to *disable* ASPM for their device.  But I don't think there's any
-corresponding interface for drivers to *enable* ASPM.  Maybe that's an
-avenue to explore?
-
-Bjorn
+I've pulled this into the dma-mapping for-next tree.  Thanks Jim and
+everyone helping out!
