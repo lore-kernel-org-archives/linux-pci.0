@@ -2,85 +2,141 @@ Return-Path: <SRS0=aHqq=C2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E0A1C433E2
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Sep 2020 00:30:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21351C43461
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Sep 2020 00:48:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 17658206C9
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Sep 2020 00:30:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D6A21206C9
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Sep 2020 00:48:18 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="XBAadIW9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726011AbgIQAa0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 16 Sep 2020 20:30:26 -0400
-Received: from kernel.crashing.org ([76.164.61.194]:41098 "EHLO
-        kernel.crashing.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725987AbgIQAaZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2020 20:30:25 -0400
-X-Greylist: delayed 901 seconds by postgrey-1.27 at vger.kernel.org; Wed, 16 Sep 2020 20:30:23 EDT
-Received: from localhost (gate.crashing.org [63.228.1.57])
-        (authenticated bits=0)
-        by kernel.crashing.org (8.14.7/8.14.7) with ESMTP id 08GNxT6I030187
-        (version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-        Wed, 16 Sep 2020 18:59:32 -0500
-Message-ID: <28082ccc715a9fba349ae6052d5c917ae02d40fa.camel@kernel.crashing.org>
-Subject: Re: [PATCH] arm64: Enable PCI write-combine resources under sysfs
-From:   Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To:     Jason Gunthorpe <jgg@nvidia.com>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Clint Sbisa <csbisa@amazon.com>, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        linux-arm-kernel@lists.infradead.org, will@kernel.org,
-        catalin.marinas@arm.com, Leon Romanovsky <leon@kernel.org>
-Date:   Thu, 17 Sep 2020 09:59:28 +1000
-In-Reply-To: <20200916121226.GN1573713@nvidia.com>
-References: <20200914143819.GC904879@nvidia.com>
-         <375c478593945a416f3180c3773bcb5240d2e36c.camel@kernel.crashing.org>
-         <1d6f2ceb8d3538c906a1fdb8cd3d4c74ccffa42e.camel@kernel.crashing.org>
-         <20200914225740.GP904879@nvidia.com>
-         <2b539df4c9ec703458e46da2fc879ee3b310b31c.camel@kernel.crashing.org>
-         <20200915101831.GA2616@e121166-lin.cambridge.arm.com>
-         <20200915110511.GQ904879@nvidia.com>
-         <bcb95faafa72734478b942084a9d24a61ae9887f.camel@kernel.crashing.org>
-         <20200915234006.GI1573713@nvidia.com>
-         <701012f288231d0d0733bf1c2c8fdbd9caa074fd.camel@kernel.crashing.org>
-         <20200916121226.GN1573713@nvidia.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        id S1726244AbgIQAsB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 16 Sep 2020 20:48:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44542 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726065AbgIQAsA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2020 20:48:00 -0400
+Received: from mail-ot1-x341.google.com (mail-ot1-x341.google.com [IPv6:2607:f8b0:4864:20::341])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4420AC06178C
+        for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2020 17:39:42 -0700 (PDT)
+Received: by mail-ot1-x341.google.com with SMTP id n61so303352ota.10
+        for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2020 17:39:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=qnQdbtqxCDTIqKqOna77dN+ZLQyEkOzOK58YwCfa3H0=;
+        b=XBAadIW9bVAGcIfHj9raEdIjBWaRKYLD5ma49V74gb5amE/rxRwD89ELv8aJK5GhCF
+         g1V25+4dqH1vN3CXRDMj0Cp2+YXyDxcXTFX3mum5Mws9Tdj6d9KpshqpiQfJoW87E12v
+         iy2hdSvA4fm0U+tImJWAFOwoE04Qt1KzTZXbkGLU4IuttxOh0fp9voDy4ewqGNVrYqIO
+         6Zx26upjeuOiz1MaDt9bS1g/oR3eRrp5DYc24ayXEJI904gH/TBAsy5YsaZLDqKOMkDA
+         ACHMb3MYiUK8xyn5/jcZbEZ5UYahXAWyu5UWRg33iZUp1JgnSiTl1gp90GDwEhUpPnXa
+         gzsw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=qnQdbtqxCDTIqKqOna77dN+ZLQyEkOzOK58YwCfa3H0=;
+        b=j1UWiwyq7BTYPSYey4Yf7QZ+gsrg6yX44nMKsEVkdRIu6MPYWVZqbZN9BC/KPYppWq
+         kDnQ7SZTh1HPDXSGTTdGG+bQTSTl5+VE+F+QJwFjSIYVvPjtwccp829HCSpiAHuXvpIq
+         Kv9mAT17gwsJSq/i56l98OPhRpFw9fk/mc3j4cIjZUckZ7+gzLgX84h3tkPSFp3Oq2O1
+         pKUWt9kA/vEaJH8W/WMgoR97p6HKdJ1+oXCFMye46a+G9GuRXiRm3aqlDcKP/F6DNnCu
+         9Fz03WJA9rR28hxOrKute++zoZmTM3rS1mB/6bsheWJsb4XER/IBGm+avDwKOppXBUAK
+         pLeg==
+X-Gm-Message-State: AOAM533yj6bpsb5LIeN2CQrKzxcBEWwGmcfzgyAhrxOStOHFeaxWGcku
+        KtHKKWyg7ddK4FllEIC8a3ifwA==
+X-Google-Smtp-Source: ABdhPJzYgxc/qCjtDcdsd3TwLr0HUaOJpA8OKmX8Hc2wBd9RfexwmyUmEf463C3CLCZQpPADunp2YQ==
+X-Received: by 2002:a9d:335:: with SMTP id 50mr3923676otv.90.1600303181463;
+        Wed, 16 Sep 2020 17:39:41 -0700 (PDT)
+Received: from yoga ([2605:6000:e5cb:c100:7cad:6eff:fec8:37e4])
+        by smtp.gmail.com with ESMTPSA id u2sm10507631oig.48.2020.09.16.17.39.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 16 Sep 2020 17:39:40 -0700 (PDT)
+Date:   Wed, 16 Sep 2020 19:39:37 -0500
+From:   Bjorn Andersson <bjorn.andersson@linaro.org>
+To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc:     agross@kernel.org, kishon@ti.com, vkoul@kernel.org,
+        robh@kernel.org, svarbanov@mm-sol.com, bhelgaas@google.com,
+        lorenzo.pieralisi@arm.com, linux-arm-msm@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        mgautam@codeaurora.org, devicetree@vger.kernel.org,
+        Jonathan Marek <jonathan@marek.ca>
+Subject: Re: [PATCH 5/5] pci: controller: dwc: qcom: Harcode PCIe config SID
+Message-ID: <20200917003937.GI1893@yoga>
+References: <20200916132000.1850-1-manivannan.sadhasivam@linaro.org>
+ <20200916132000.1850-6-manivannan.sadhasivam@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200916132000.1850-6-manivannan.sadhasivam@linaro.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, 2020-09-16 at 09:12 -0300, Jason Gunthorpe wrote:
-> > Also we could make this a variable rather than a constant and
-> > choose
-> > a more appropriate set of flags at boot time....
+On Wed 16 Sep 08:20 CDT 2020, Manivannan Sadhasivam wrote:
+
+> Hardcode the PCIe config SID table value. This is needed to avoid random
+> MHI failure observed during reboot on SM8250.
 > 
-> It is a function, so it could check the CPU ID for the known broken
-> devices and block them.
-
-Sure, I meant in the abstract way. It's not a hot path so it doesnt
-have to be a static key.
-
-> > > > Why would that be a regression ? 
-> > > 
-> > > Using the WC submission flow when it doesn't work costs something
-> > > like
-> > > 10% performance vs using the non-WC flow.
-> > 
-> > You mean the driver uses a different path to the HW which ahs that
-> > overhead, not that MMIOs have that overhead right ?
+> Signed-off-by: Jonathan Marek <jonathan@marek.ca>
+> [mani: stripped out unnecessary settings and ported for upstream]
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> ---
+>  drivers/pci/controller/dwc/pcie-qcom.c | 4 ++++
+>  1 file changed, 4 insertions(+)
 > 
-> The different path has overhead of doing extra useless MMIOs because
-> they don't combine
+> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+> index ca8ad354e09d..50748016ce96 100644
+> --- a/drivers/pci/controller/dwc/pcie-qcom.c
+> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+> @@ -57,6 +57,7 @@
+>  #define PCIE20_PARF_SID_OFFSET			0x234
+>  #define PCIE20_PARF_BDF_TRANSLATE_CFG		0x24C
+>  #define PCIE20_PARF_DEVICE_TYPE			0x1000
+> +#define PCIE20_PARF_BDF_TO_SID_TABLE_N		0x2000
+>  
+>  #define PCIE20_ELBI_SYS_CTRL			0x04
+>  #define PCIE20_ELBI_SYS_CTRL_LT_ENABLE		BIT(0)
+> @@ -1290,6 +1291,9 @@ static int qcom_pcie_host_init(struct pcie_port *pp)
+>  	if (ret)
+>  		goto err;
+>  
+> +	writel(0x0, pcie->parf + PCIE20_PARF_BDF_TO_SID_TABLE_N);
+> +	writel(0x01000100, pcie->parf + PCIE20_PARF_BDF_TO_SID_TABLE_N + 0x054);
 
-I see. This might have to end up being a TX2 specific hack until the
-end of times...
+This needs to be properly implemented.
 
-Cheers,
-Ben.
+The mechanism at hand is responsible for mapping BDFs by the means of a
+BDF->SID hash table.  Per the downstream kernel the hash is 256 entries
+of 32 bits registers.  The slot is selected by taking the crc8() of the
+BDF (in big endian) and in that slot encode the BDF in the upper 16
+bits, followed by the SID (relative to the first SID of the controller)
+in the next 8 and finally the index of the next entry in cases of
+collisions.
+
+Also like the downstream kernel you can extract this information from
+the iommu-map property. But note that the last cell in the iommu-map is
+"length", not mask as in the typical iommus property - so you would need
+to install "length" entries in the hash table, for each iommu-map.
 
 
+
+Finally, this was first introduced in SM8150, so it can not be done
+unconditionally in qcom_pcie_host_init(). The previous hardware used a
+different mechanism for configuring this information.
+
+Regards,
+Bjorn
+
+> +
+>  	return 0;
+>  err:
+>  	qcom_ep_reset_assert(pcie);
+> -- 
+> 2.17.1
+> 
