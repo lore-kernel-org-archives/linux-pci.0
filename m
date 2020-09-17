@@ -2,77 +2,80 @@ Return-Path: <SRS0=aHqq=C2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9426C433E2
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Sep 2020 14:10:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC975C43461
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Sep 2020 15:07:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 905A9206CA
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Sep 2020 14:10:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F20A20795
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Sep 2020 15:07:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1600355257;
+	bh=8+fGfAsiNIkFfwWzfEoIkpdYXv05xEG/Mk74AEbV3KA=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=GWU8FOscGeO09OgwVdZ6r1SLDqmxKSeLWd5VEBHC946RL1Ex4jUSHWKOlCatTK8k6
+	 6r9R0hSQS7Vn2LxqGfhMEIPYnaxHKmBrNGiUsfUa5NTcVk5J4TqsaYgI/r1gJrAVUy
+	 EczZVndkLZ0op3UNZ+3tWeWn+RhWj+YGoVEMF5uA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727222AbgIQOKx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 17 Sep 2020 10:10:53 -0400
-Received: from foss.arm.com ([217.140.110.172]:47238 "EHLO foss.arm.com"
+        id S1727932AbgIQPHJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 17 Sep 2020 11:07:09 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55400 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726827AbgIQOKr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 17 Sep 2020 10:10:47 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 2851730E;
-        Thu, 17 Sep 2020 07:01:23 -0700 (PDT)
-Received: from e121166-lin.cambridge.arm.com (e121166-lin.cambridge.arm.com [10.1.196.255])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id DFC2C3F718;
-        Thu, 17 Sep 2020 07:01:21 -0700 (PDT)
-Date:   Thu, 17 Sep 2020 15:01:16 +0100
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Jason Gunthorpe <jgg@nvidia.com>
-Cc:     Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Clint Sbisa <csbisa@amazon.com>, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        linux-arm-kernel@lists.infradead.org, will@kernel.org,
-        catalin.marinas@arm.com, Leon Romanovsky <leon@kernel.org>
-Subject: Re: [PATCH] arm64: Enable PCI write-combine resources under sysfs
-Message-ID: <20200917140116.GA4893@e121166-lin.cambridge.arm.com>
-References: <2b539df4c9ec703458e46da2fc879ee3b310b31c.camel@kernel.crashing.org>
- <20200915101831.GA2616@e121166-lin.cambridge.arm.com>
- <20200915110511.GQ904879@nvidia.com>
- <bcb95faafa72734478b942084a9d24a61ae9887f.camel@kernel.crashing.org>
- <20200915234006.GI1573713@nvidia.com>
- <701012f288231d0d0733bf1c2c8fdbd9caa074fd.camel@kernel.crashing.org>
- <20200916121226.GN1573713@nvidia.com>
- <28082ccc715a9fba349ae6052d5c917ae02d40fa.camel@kernel.crashing.org>
- <20200917102819.GA2284@e121166-lin.cambridge.arm.com>
- <20200917113221.GG3699@nvidia.com>
+        id S1727816AbgIQPGW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 17 Sep 2020 11:06:22 -0400
+Received: from mail-ot1-f53.google.com (mail-ot1-f53.google.com [209.85.210.53])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 2CBAD206D4;
+        Thu, 17 Sep 2020 15:06:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1600355163;
+        bh=8+fGfAsiNIkFfwWzfEoIkpdYXv05xEG/Mk74AEbV3KA=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=dtM/sJD3trp/6qxR9BtZvoZPH1lUl3GdSHtZ8Rtb4mrFrgaMB6wZ+Eo5EBcbr/Ago
+         0PBVW/Y0C+IhYk7+r3uuCVqXUM3buZujzwShWOFZ6HmufruRDX7S62BH58i8jDShfI
+         IgGyOCDFE/aKugFcmSdibi0DoMx2mMWr3dYTpG08=
+Received: by mail-ot1-f53.google.com with SMTP id a2so2177822otr.11;
+        Thu, 17 Sep 2020 08:06:03 -0700 (PDT)
+X-Gm-Message-State: AOAM532lualD+QhnmPTN6eMlWvYvfhSXjpJvCcu4EM6xlwd+dzuphlC7
+        gNyM0LGgvO2TEE/k974AEHYbJwYBTxl16cuN+w==
+X-Google-Smtp-Source: ABdhPJzgXW4cPWg9VRoYlcrlEIdDXTPw7/10UjC2KXcBPOjIop+H0uxfDb0v0+9REEInvtLv6LwJTn99swSsEJaYDGE=
+X-Received: by 2002:a05:6830:1008:: with SMTP id a8mr18556801otp.107.1600355162516;
+ Thu, 17 Sep 2020 08:06:02 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200917113221.GG3699@nvidia.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+References: <20200917071758.1915565-1-liushixin2@huawei.com>
+In-Reply-To: <20200917071758.1915565-1-liushixin2@huawei.com>
+From:   Rob Herring <robh@kernel.org>
+Date:   Thu, 17 Sep 2020 09:05:50 -0600
+X-Gmail-Original-Message-ID: <CAL_JsqKa6ptUiTRtQhibJ2sYN1LvdcZgmkN1s3Tx+bLNC7=D+w@mail.gmail.com>
+Message-ID: <CAL_JsqKa6ptUiTRtQhibJ2sYN1LvdcZgmkN1s3Tx+bLNC7=D+w@mail.gmail.com>
+Subject: Re: [PATCH -next] PCI: dwc: Remove set but not used variable
+To:     Liu Shixin <liushixin2@huawei.com>
+Cc:     Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-omap <linux-omap@vger.kernel.org>,
+        PCI <linux-pci@vger.kernel.org>,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Sep 17, 2020 at 08:32:21AM -0300, Jason Gunthorpe wrote:
-> On Thu, Sep 17, 2020 at 11:28:19AM +0100, Lorenzo Pieralisi wrote:
-> > Unfortunately if we merge this patch we _do_ know from this thread
-> > that userspace will suffer from a perf regression on TX2.
-> > 
-> > Either we ignore it or we write some code to prevent it
-> > (ie first step make arch_can_pci_mmap_wc() return 0 on TX2 -
-> > possibly using the arm64 errata detection mechanism).
-> 
-> If anyone complains they can send the change to arch_can_pci_mmap_wc()
-> - I'm pretty sure nobody will complain due to mlx5
+On Thu, Sep 17, 2020 at 12:55 AM Liu Shixin <liushixin2@huawei.com> wrote:
+>
+> Fixes gcc '-Wunused-but-set-variable' warning:
+>
+> drivers/pci/controller/dwc/pci-dra7xx.c: In function 'dra7xx_pcie_establish_link':
+> drivers/pci/controller/dwc/pci-dra7xx.c:142:6: warning: unused variable 'exp_cap_off'
+> [-Wunused-variable]
+>
+> After 3af45d34d30c ("PCI: dwc: Centralize link gen setting"), variable 'exp_cap_off'
+> is never used. Remove it to avoid build warning.
 
-If that's the case we can go ahead and merge this patch with a
-reworded commit log - this thread was very useful nonetheless
-for my own information (and others hopefully) so thank you.
+Already fixed in next.
 
-For VFIO WC + "message push ioremap" - to be continued.
-
-Clint, please reword the commit and resend, not sure we can hit
-v5.10 but we shall try.
-
-Thanks,
-Lorenzo
+Rob
