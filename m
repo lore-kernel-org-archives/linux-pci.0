@@ -2,83 +2,84 @@ Return-Path: <SRS0=aHqq=C2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD891C43464
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Sep 2020 21:37:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 862A4C43463
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Sep 2020 21:37:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8FB1F221EC
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Sep 2020 21:37:18 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="g+4K4oUW"
+	by mail.kernel.org (Postfix) with ESMTP id 3615C2083B
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Sep 2020 21:37:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1600378667;
+	bh=lfE+7NXV2rCh2vNF2xCWV5wyO2bA3VO8Jj9zJUt0k68=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=1hojzN7X6cGXBpQbJQ2nMbWFVmjPQyu6wZ2DNkHmp8ao06B/UBYglX7f6CWYfsvu5
+	 2qsFbCb3HeZk7ipiz0kvmB3eEGD417cJHQnV46ZFEsGQhlMalcqvgfOLK9kVB7uiyc
+	 9c+cpaxACbaLVr8D+Hz6KGXrrMrAL0NH0nSWosqY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725844AbgIQVhS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 17 Sep 2020 17:37:18 -0400
-Received: from smtprelay-out1.synopsys.com ([149.117.87.133]:59362 "EHLO
-        smtprelay-out1.synopsys.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725882AbgIQVhR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Sep 2020 17:37:17 -0400
-Received: from mailhost.synopsys.com (mdc-mailhost1.synopsys.com [10.225.0.209])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
+        id S1726002AbgIQVhq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 17 Sep 2020 17:37:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51378 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725882AbgIQVhq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 17 Sep 2020 17:37:46 -0400
+Received: from localhost (52.sub-72-107-123.myvzw.com [72.107.123.52])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id C60D5C041D;
-        Thu, 17 Sep 2020 21:28:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1600378089; bh=YiOMEnwFAXpSI4nF+diAbzj8ipMfBsm9nW3oHU0KW9w=;
-        h=From:To:Cc:Subject:Date:From;
-        b=g+4K4oUW05HpTLm1Yq1/7lL3Ad/HpyEd+cRasAKEFF1HoU5npe75hFSgm9ndVROrK
-         BVd4yKOJW5OZTgiWcVIFCpI15KoRNuty0voaXdXxFOvcCSjvWFnZtD1kBZ4rvH1ySn
-         5pnHW2KEeJSJ8BWR77BNmZ0EyJsiTx6U0xTVr7p3SvnBzjnD9cotNgc3vzFeQEYJET
-         2tdfFU04v9ztuHRc55bkJaDzEIkC0qT6glPi3LXW0kf3oIGzn/EEp4WvZjxw/CD5Ky
-         Nsp1+8x3ZZwTlP3JY/Tvoe0fPJCZY/0T5pZ27P74YY+Bj3kTg9kcUhRD27iYywNVgc
-         LXBD4ZEn11F7A==
-Received: from de02dwia024.internal.synopsys.com (de02dwia024.internal.synopsys.com [10.225.19.81])
-        by mailhost.synopsys.com (Postfix) with ESMTP id 45F7AA005A;
-        Thu, 17 Sep 2020 21:28:06 +0000 (UTC)
-X-SNPS-Relay: synopsys.com
-From:   Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-To:     linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc:     Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH] [-next] PCI: DWC: Fix cast truncates bits from constant value
-Date:   Thu, 17 Sep 2020 23:28:03 +0200
-Message-Id: <7743c426ae2c34573d59636d4d6cefaccdb00990.1600378070.git.gustavo.pimentel@synopsys.com>
-X-Mailer: git-send-email 2.7.4
+        by mail.kernel.org (Postfix) with ESMTPSA id EF88720725;
+        Thu, 17 Sep 2020 21:37:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1600378666;
+        bh=lfE+7NXV2rCh2vNF2xCWV5wyO2bA3VO8Jj9zJUt0k68=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=DcsHyQ2iNLWu6925JgU9Rdo4Mbyqo/wjn8j3u27LU6fh5zwYdNFB7Mhz7fxx/S9/V
+         R+OX1D/UFkgnazTvvvV0y0yNHrTNDWfsiLhvt/wPDQK0z63XKRVSsFa/NbG8d0ZnuD
+         C/u8TmcXQ92EWaE/lZhe72ILDJIM1/S892+EGVXw=
+Date:   Thu, 17 Sep 2020 16:37:44 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Puranjay Mohan <puranjay12@gmail.com>
+Cc:     Bjorn Helgaas <bjorn@helgaas.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Shuah Khan <skhan@linuxfoundation.org>,
+        linux-kernel-mentees@lists.linuxfoundation.org
+Subject: Re: [PATCH v2] PCI: Add support for LTR
+Message-ID: <20200917213744.GA1739988@bjorn-Precision-5520>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CANk7y0jk0CpAqvBrjr67M4+UMo9oW2+Z1NVUFAFsinLgPZzrEw@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Fixes warning given by executing "make C=2 drivers/pci/"
+On Thu, Sep 17, 2020 at 10:06:43PM +0530, Puranjay Mohan wrote:
+> On Wed, Sep 16, 2020 at 3:31 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Tue, Aug 25, 2020 at 11:31:31PM +0530, Puranjay Mohan wrote:
 
-Sparse output:
-CHECK drivers/pci/controller/dwc/pcie-designware.c
- drivers/pci/controller/dwc/pcie-designware.c:432:52: warning:
- cast truncates bits from constant value (ffffffff7fffffff becomes
- 7fffffff)
+> > > +     dev = pci_upstream_bridge(dev);
+> > > +     while (dev) {
+> > > +             max_snoop_sum += dev->max_snoop_latency;
+> > > +             max_nosnoop_sum += dev->max_nosnoop_latency;
+> >
+> > dev->max_snoop_latency and dev->max_nosnoop_latency are not simple
+> > scalars, are they?  Aren't they 3 bits of scale and 10 bits of value?
+> > I don't think adding these is as easy as "+=" except in the simple
+> > case when the scale is "000", i.e., "use the 10 bits of value as-is".
+> >
+> > I think we have to decode scale * latency for each device in the path,
+> > add all those up, then re-encode using the appropriate scale for the
+> > config write below.
+>
+> I was thinking about it. If we use 2 more variables and store the
+> scale and value separately, then It will become easy.
+> we can add the values directly but, as you said we can't add the
+> scales, I will think about this more.
 
-Reported-by: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Joao Pinto <jpinto@synopsys.com>
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
- drivers/pci/controller/dwc/pcie-designware.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Adding more things to struct pci_dev consumes that space permanently
+even though it's only needed during enumeration.  This LTR init is
+only done once per device, so there's no need to speed it up by adding
+more variables.
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index 3c3a4d1..dcb7108 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -429,7 +429,7 @@ void dw_pcie_disable_atu(struct dw_pcie *pci, int index,
- 	}
- 
- 	dw_pcie_writel_dbi(pci, PCIE_ATU_VIEWPORT, region | index);
--	dw_pcie_writel_dbi(pci, PCIE_ATU_CR2, (u32)~PCIE_ATU_ENABLE);
-+	dw_pcie_writel_dbi(pci, PCIE_ATU_CR2, (u32)~0 & ~PCIE_ATU_ENABLE);
- }
- 
- int dw_pcie_wait_for_link(struct dw_pcie *pci)
--- 
-2.7.4
-
+You'll just have to see how it looks when you code it up.
