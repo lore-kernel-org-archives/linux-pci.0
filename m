@@ -2,68 +2,68 @@ Return-Path: <SRS0=Geob=C3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-25.4 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
+X-Spam-Status: No, score=-20.4 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D239C43465
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 20:14:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1680C43464
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 20:15:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 43DDA2311D
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 20:14:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 767FC2376F
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 20:15:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="VAY1d+BK"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="O4aL90Tv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726327AbgIRUO6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 18 Sep 2020 16:14:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52704 "EHLO
+        id S1726518AbgIRUPL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 18 Sep 2020 16:15:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52848 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726312AbgIRUOm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Sep 2020 16:14:42 -0400
-Received: from mail-yb1-xb4a.google.com (mail-yb1-xb4a.google.com [IPv6:2607:f8b0:4864:20::b4a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9C2EC0613D1
-        for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2020 13:14:41 -0700 (PDT)
-Received: by mail-yb1-xb4a.google.com with SMTP id i199so6606330ybg.22
-        for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2020 13:14:41 -0700 (PDT)
+        with ESMTP id S1726511AbgIRUPL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Sep 2020 16:15:11 -0400
+Received: from mail-pj1-x104a.google.com (mail-pj1-x104a.google.com [IPv6:2607:f8b0:4864:20::104a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3ACDC0613D9
+        for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2020 13:15:09 -0700 (PDT)
+Received: by mail-pj1-x104a.google.com with SMTP id o11so3710456pjj.9
+        for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2020 13:15:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=sender:date:in-reply-to:message-id:mime-version:references:subject
          :from:to:cc;
-        bh=skSGpFbYMPCYyMt3xD2UXrEbXnhCXJcxNWr+Xyy+zNQ=;
-        b=VAY1d+BKJBvFH1+plE6Ne6NojDosoRo9j26NV8dlVGXM//ycIlCDZru6h0GwYf6PGK
-         oVDTueoqNoahOkpRrBlNbroVu/FB1veyRVPAgf/45GgzWqf6Xsq0Y+GXu2hi+twUmF4M
-         UWlrMiOG7qzpx/rugvq9ImdavvJF+euLmvDRVYx6xTfAs6YbiMljlvnEF0AxzVWwqwE0
-         Wlnm4GTIQPvLwoJ7Q6dUKY/MHQfiWIXB6ndcTD3C4Ky4vDcOB9wdWqOfH1nmSHu8+xDC
-         GmhmT101k2ut9EE13MQG/mtNTs23zRSYi6edJX+ofgh4sM6lA1iJVwk3pkcZdBV+lO+m
-         xpbA==
+        bh=K8zImTLReF05TErj4+HOAXGu6YGSM1wWftERjd6zSXY=;
+        b=O4aL90TvE4llVBU6Z0ndgSX9n+HK3JOWxE5fYd3jLf4UdRHgOfxM4GokiDr2rHZQ5Y
+         2S1tWqXy6QXI6V8BRIFCAB8inlLLGlunaNqAEEl+V3RYk+xBOCzHwaLFTJskZ3r5xQeG
+         wRfGL7JUNWS2RBdp3cUVMwbgcfUnmvGH8Yh4sqEmk/tTvERZk06+UvODsTGPhyR2vXe3
+         RA2SqSl1Q0ZSdldYyKcvOMbw7bcksln+yDchPN4jXuGZ6/U+52OB8u5thT98yesgNfnz
+         NVoM2Cu1Sfwc+jcRvFiw4KDwMGrLIyh7i3P37FphlI6sRP8YVrv4+R99WOGRu6gEUYRu
+         0AKA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:sender:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=skSGpFbYMPCYyMt3xD2UXrEbXnhCXJcxNWr+Xyy+zNQ=;
-        b=EbE/mshMKn//zgG5yihuqOq0fW5ZhnFimDaLPB3fbovW6adtNTWxzJlzn3u4zYMEqy
-         o8nyJ0B2Fnv7o7fRiAkQPpu8ykErjS834C135Ha77jvR7HvNOFDuTJGD3NF00OHilgp5
-         xJXeRe852APP8nV6Iy7m/t8omR1CJnxmlfm0tDFHef1a/1jukdoX79HP9bENBXAsRFUf
-         +M3hIaajGUQ4dM/K1Q+sS8jWAcpKOQYZtVAEHB7MqlkVgSQ1kTh2CHDsQ1jQovhyh46P
-         1ALMm7JryrUZp2ZMUE2VIDqNJ71k1z8uPGwRQ9dn7GS2xATqzmvLn0EsSTM+pZ0a83nY
-         5cMQ==
-X-Gm-Message-State: AOAM533fCe3hCK5Ip3OyO/GjYoeYRimebpmpHcLoHjAZ53HGFND2htoc
-        9br38BOGOPl0HoxD4vfxoIHERtC2WCUVTjGCIQw=
-X-Google-Smtp-Source: ABdhPJzcj7wCxo8E12yukgL7sAuybdWWQ1AJ64l97WPGZG7w7s7z827ZYArDZS6m8vlRS9reaOndS152UiN0Two7+9I=
+        bh=K8zImTLReF05TErj4+HOAXGu6YGSM1wWftERjd6zSXY=;
+        b=aUjuMqa7xq+gW/SHkOOoR4XlmNvwYReJtJ26kkOdKGHSoHWY89z7iCo074Y/B+U4H5
+         cyhdXrZmCBoKmPJw/IfpHpQ3ErrEecKb4yd19T0ysKS09fefv9Hoq+OFRH2R3zU5R9KD
+         ta2vwyCtUaULgwrW49dkOaw3CF+m6B4nBV9IwAuVQM/PTCX8yLvhJjZ/aru/bEu4hITg
+         rFmw4bfAkLBmgOYrxV0pF7O2b5+hKt6hTAkWBgVarBjuxqu/3fx770zeOAb93tl3eBQA
+         3gpw/pA5GiQF0d5sqeXZExMQLWpqly4UeY16PLjrJvCe8kmlde4AZ9UW/KkIBu51vLjM
+         i1tg==
+X-Gm-Message-State: AOAM533crgBEpkpvyAPMa63HJVkm7gzIKihcJJE6w36LB+OdMmmI3fSH
+        +dsKEHwIrIa0wuxwp1loQO4wPSVairQavh2VQsc=
+X-Google-Smtp-Source: ABdhPJzlGWM/RB0RyiyE2KM3MIKE1UtXk00h26ZK1WTewpuCN9eJRsYcziyZsYst8dQvQffxBp2wtJk2sL6MXkU8ehs=
 Sender: "samitolvanen via sendgmr" 
         <samitolvanen@samitolvanen1.mtv.corp.google.com>
 X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:f693:9fff:fef4:1b6d])
- (user=samitolvanen job=sendgmr) by 2002:a25:6f89:: with SMTP id
- k131mr40244617ybc.214.1600460081050; Fri, 18 Sep 2020 13:14:41 -0700 (PDT)
-Date:   Fri, 18 Sep 2020 13:14:07 -0700
+ (user=samitolvanen job=sendgmr) by 2002:a17:90a:cb0f:: with SMTP id
+ z15mr13951080pjt.76.1600460109195; Fri, 18 Sep 2020 13:15:09 -0700 (PDT)
+Date:   Fri, 18 Sep 2020 13:14:19 -0700
 In-Reply-To: <20200918201436.2932360-1-samitolvanen@google.com>
-Message-Id: <20200918201436.2932360-2-samitolvanen@google.com>
+Message-Id: <20200918201436.2932360-14-samitolvanen@google.com>
 Mime-Version: 1.0
 References: <20200918201436.2932360-1-samitolvanen@google.com>
 X-Mailer: git-send-email 2.28.0.681.g6f77f65b4e-goog
-Subject: [PATCH v3 01/30] lib/string.c: implement stpcpy
+Subject: [PATCH v3 13/30] kbuild: lto: postpone objtool
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Masahiro Yamada <masahiroy@kernel.org>,
         Will Deacon <will@kernel.org>
@@ -83,118 +83,173 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Nick Desaulniers <ndesaulniers@google.com>
+With LTO, LLVM bitcode won't be compiled into native code until
+modpost_link, or modfinal for modules. This change postpones calls
+to objtool until after these steps, and moves objtool_args to
+Makefile.lib, so the arguments can be reused in Makefile.modfinal.
 
-LLVM implemented a recent "libcall optimization" that lowers calls to
-`sprintf(dest, "%s", str)` where the return value is used to
-`stpcpy(dest, str) - dest`. This generally avoids the machinery involved
-in parsing format strings.  `stpcpy` is just like `strcpy` except it
-returns the pointer to the new tail of `dest`.  This optimization was
-introduced into clang-12.
-
-Implement this so that we don't observe linkage failures due to missing
-symbol definitions for `stpcpy`.
-
-Similar to last year's fire drill with:
-commit 5f074f3e192f ("lib/string.c: implement a basic bcmp")
-
-The kernel is somewhere between a "freestanding" environment (no full libc)
-and "hosted" environment (many symbols from libc exist with the same
-type, function signature, and semantics).
-
-As H. Peter Anvin notes, there's not really a great way to inform the
-compiler that you're targeting a freestanding environment but would like
-to opt-in to some libcall optimizations (see pr/47280 below), rather than
-opt-out.
-
-Arvind notes, -fno-builtin-* behaves slightly differently between GCC
-and Clang, and Clang is missing many __builtin_* definitions, which I
-consider a bug in Clang and am working on fixing.
-
-Masahiro summarizes the subtle distinction between compilers justly:
-  To prevent transformation from foo() into bar(), there are two ways in
-  Clang to do that; -fno-builtin-foo, and -fno-builtin-bar.  There is
-  only one in GCC; -fno-buitin-foo.
-
-(Any difference in that behavior in Clang is likely a bug from a missing
-__builtin_* definition.)
-
-Masahiro also notes:
-  We want to disable optimization from foo() to bar(),
-  but we may still benefit from the optimization from
-  foo() into something else. If GCC implements the same transform, we
-  would run into a problem because it is not -fno-builtin-bar, but
-  -fno-builtin-foo that disables that optimization.
-
-  In this regard, -fno-builtin-foo would be more future-proof than
-  -fno-built-bar, but -fno-builtin-foo is still potentially overkill. We
-  may want to prevent calls from foo() being optimized into calls to
-  bar(), but we still may want other optimization on calls to foo().
-
-It seems that compilers today don't quite provide the fine grain control
-over which libcall optimizations pseudo-freestanding environments would
-prefer.
-
-Finally, Kees notes that this interface is unsafe, so we should not
-encourage its use.  As such, I've removed the declaration from any
-header, but it still needs to be exported to avoid linkage errors in
-modules.
-
-Reported-by: Sami Tolvanen <samitolvanen@google.com>
-Suggested-by: Andy Lavr <andy.lavr@gmail.com>
-Suggested-by: Arvind Sankar <nivedita@alum.mit.edu>
-Suggested-by: Joe Perches <joe@perches.com>
-Suggested-by: Kees Cook <keescook@chromium.org>
-Suggested-by: Masahiro Yamada <masahiroy@kernel.org>
-Suggested-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Signed-off-by: Nick Desaulniers <ndesaulniers@google.com>
-Tested-by: Nathan Chancellor <natechancellor@gmail.com>
-Cc: stable@vger.kernel.org
-Link: https://bugs.llvm.org/show_bug.cgi?id=47162
-Link: https://bugs.llvm.org/show_bug.cgi?id=47280
-Link: https://github.com/ClangBuiltLinux/linux/issues/1126
-Link: https://man7.org/linux/man-pages/man3/stpcpy.3.html
-Link: https://pubs.opengroup.org/onlinepubs/9699919799/functions/stpcpy.html
-Link: https://reviews.llvm.org/D85963
+Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
 ---
- lib/string.c | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+ arch/Kconfig              |  2 +-
+ scripts/Makefile.build    | 22 ++--------------------
+ scripts/Makefile.lib      | 11 +++++++++++
+ scripts/Makefile.modfinal | 19 ++++++++++++++++---
+ scripts/link-vmlinux.sh   | 23 ++++++++++++++++++++++-
+ 5 files changed, 52 insertions(+), 25 deletions(-)
 
-diff --git a/lib/string.c b/lib/string.c
-index 6012c385fb31..4288e0158d47 100644
---- a/lib/string.c
-+++ b/lib/string.c
-@@ -272,6 +272,30 @@ ssize_t strscpy_pad(char *dest, const char *src, size_t count)
- }
- EXPORT_SYMBOL(strscpy_pad);
+diff --git a/arch/Kconfig b/arch/Kconfig
+index 520e900efc75..727be15ba19e 100644
+--- a/arch/Kconfig
++++ b/arch/Kconfig
+@@ -600,7 +600,7 @@ config LTO_CLANG
+ 	depends on $(success,$(NM) --help | head -n 1 | grep -qi llvm)
+ 	depends on $(success,$(AR) --help | head -n 1 | grep -qi llvm)
+ 	depends on ARCH_SUPPORTS_LTO_CLANG
+-	depends on !FTRACE_MCOUNT_RECORD
++	depends on HAVE_OBJTOOL_MCOUNT || !(X86_64 && DYNAMIC_FTRACE)
+ 	depends on !KASAN
+ 	depends on !GCOV_KERNEL
+ 	select LTO
+diff --git a/scripts/Makefile.build b/scripts/Makefile.build
+index 44b6d964bcad..541dbe791743 100644
+--- a/scripts/Makefile.build
++++ b/scripts/Makefile.build
+@@ -218,30 +218,11 @@ cmd_record_mcount = $(if $(findstring $(strip $(CC_FLAGS_FTRACE)),$(_c_flags)),
+ endif # USE_RECORDMCOUNT
  
-+/**
-+ * stpcpy - copy a string from src to dest returning a pointer to the new end
-+ *          of dest, including src's %NUL-terminator. May overrun dest.
-+ * @dest: pointer to end of string being copied into. Must be large enough
-+ *        to receive copy.
-+ * @src: pointer to the beginning of string being copied from. Must not overlap
-+ *       dest.
-+ *
-+ * stpcpy differs from strcpy in a key way: the return value is a pointer
-+ * to the new %NUL-terminating character in @dest. (For strcpy, the return
-+ * value is a pointer to the start of @dest). This interface is considered
-+ * unsafe as it doesn't perform bounds checking of the inputs. As such it's
-+ * not recommended for usage. Instead, its definition is provided in case
-+ * the compiler lowers other libcalls to stpcpy.
-+ */
-+char *stpcpy(char *__restrict__ dest, const char *__restrict__ src);
-+char *stpcpy(char *__restrict__ dest, const char *__restrict__ src)
-+{
-+	while ((*dest++ = *src++) != '\0')
-+		/* nothing */;
-+	return --dest;
-+}
-+EXPORT_SYMBOL(stpcpy);
+ ifdef CONFIG_STACK_VALIDATION
++ifndef CONFIG_LTO_CLANG
+ ifneq ($(SKIP_STACK_VALIDATION),1)
+ 
+ __objtool_obj := $(objtree)/tools/objtool/objtool
+ 
+-objtool_args = $(if $(CONFIG_UNWINDER_ORC),orc generate,check)
+-
+-objtool_args += $(if $(part-of-module), --module,)
+-
+-ifndef CONFIG_FRAME_POINTER
+-objtool_args += --no-fp
+-endif
+-ifdef CONFIG_GCOV_KERNEL
+-objtool_args += --no-unreachable
+-endif
+-ifdef CONFIG_RETPOLINE
+-  objtool_args += --retpoline
+-endif
+-ifdef CONFIG_X86_SMAP
+-  objtool_args += --uaccess
+-endif
+-ifdef USE_OBJTOOL_MCOUNT
+-  objtool_args += --mcount
+-endif
+-
+ # 'OBJECT_FILES_NON_STANDARD := y': skip objtool checking for a directory
+ # 'OBJECT_FILES_NON_STANDARD_foo.o := 'y': skip objtool checking for a file
+ # 'OBJECT_FILES_NON_STANDARD_foo.o := 'n': override directory skip for a file
+@@ -253,6 +234,7 @@ objtool_obj = $(if $(patsubst y%,, \
+ 	$(__objtool_obj))
+ 
+ endif # SKIP_STACK_VALIDATION
++endif # CONFIG_LTO_CLANG
+ endif # CONFIG_STACK_VALIDATION
+ 
+ # Rebuild all objects when objtool changes, or is enabled/disabled.
+diff --git a/scripts/Makefile.lib b/scripts/Makefile.lib
+index 3d599716940c..745d88172bc7 100644
+--- a/scripts/Makefile.lib
++++ b/scripts/Makefile.lib
+@@ -216,6 +216,17 @@ dtc_cpp_flags  = -Wp,-MMD,$(depfile).pre.tmp -nostdinc                    \
+ 		 $(addprefix -I,$(DTC_INCLUDE))                          \
+ 		 -undef -D__DTS__
+ 
++# Objtool arguments are also needed for modfinal with LTO, so we define
++# then here to avoid duplication.
++objtool_args =								\
++	$(if $(CONFIG_UNWINDER_ORC),orc generate,check)			\
++	$(if $(part-of-module), --module,)				\
++	$(if $(CONFIG_FRAME_POINTER), --no-fp,)				\
++	$(if $(CONFIG_GCOV_KERNEL), --no-unreachable,)			\
++	$(if $(CONFIG_RETPOLINE), --retpoline,)				\
++	$(if $(CONFIG_X86_SMAP), --uaccess,)				\
++	$(if $(USE_OBJTOOL_MCOUNT), --mcount,)
 +
- #ifndef __HAVE_ARCH_STRCAT
- /**
-  * strcat - Append one %NUL-terminated string to another
+ # Useful for describing the dependency of composite objects
+ # Usage:
+ #   $(call multi_depend, multi_used_targets, suffix_to_remove, suffix_to_add)
+diff --git a/scripts/Makefile.modfinal b/scripts/Makefile.modfinal
+index 2cb9a1d88434..1bd2953b11c4 100644
+--- a/scripts/Makefile.modfinal
++++ b/scripts/Makefile.modfinal
+@@ -9,7 +9,7 @@ __modfinal:
+ include $(objtree)/include/config/auto.conf
+ include $(srctree)/scripts/Kbuild.include
+ 
+-# for c_flags
++# for c_flags and objtool_args
+ include $(srctree)/scripts/Makefile.lib
+ 
+ # find all modules listed in modules.order
+@@ -34,10 +34,23 @@ ifdef CONFIG_LTO_CLANG
+ # With CONFIG_LTO_CLANG, reuse the object file we compiled for modpost to
+ # avoid a second slow LTO link
+ prelink-ext := .lto
+-endif
++
++# ELF processing was skipped earlier because we didn't have native code,
++# so let's now process the prelinked binary before we link the module.
++
++ifdef CONFIG_STACK_VALIDATION
++ifneq ($(SKIP_STACK_VALIDATION),1)
++cmd_ld_ko_o +=								\
++	$(objtree)/tools/objtool/objtool $(objtool_args)		\
++		$(@:.ko=$(prelink-ext).o);
++
++endif # SKIP_STACK_VALIDATION
++endif # CONFIG_STACK_VALIDATION
++
++endif # CONFIG_LTO_CLANG
+ 
+ quiet_cmd_ld_ko_o = LD [M]  $@
+-      cmd_ld_ko_o =                                                     \
++      cmd_ld_ko_o +=							\
+ 	$(LD) -r $(KBUILD_LDFLAGS)					\
+ 		$(KBUILD_LDFLAGS_MODULE) $(LDFLAGS_MODULE)		\
+ 		-T scripts/module.lds -o $@ $(filter %.o, $^);		\
+diff --git a/scripts/link-vmlinux.sh b/scripts/link-vmlinux.sh
+index 3e99a19b9195..a352a5ad9ef7 100755
+--- a/scripts/link-vmlinux.sh
++++ b/scripts/link-vmlinux.sh
+@@ -93,8 +93,29 @@ objtool_link()
+ {
+ 	local objtoolopt;
+ 
++	if [ "${CONFIG_LTO_CLANG} ${CONFIG_STACK_VALIDATION}" = "y y" ]; then
++		# Don't perform vmlinux validation unless explicitly requested,
++		# but run objtool on vmlinux.o now that we have an object file.
++		if [ -n "${CONFIG_UNWINDER_ORC}" ]; then
++			objtoolopt="orc generate"
++		else
++			objtoolopt="check"
++		fi
++
++		if [ -n ${USE_OBJTOOL_MCOUNT} ]; then
++			objtoolopt="${objtoolopt} --mcount"
++		fi
++	fi
++
+ 	if [ -n "${CONFIG_VMLINUX_VALIDATION}" ]; then
+-		objtoolopt="check --vmlinux"
++		if [ -z "${objtoolopt}" ]; then
++			objtoolopt="check --vmlinux"
++		else
++			objtoolopt="${objtoolopt} --vmlinux"
++		fi
++	fi
++
++	if [ -n "${objtoolopt}" ]; then
+ 		if [ -z "${CONFIG_FRAME_POINTER}" ]; then
+ 			objtoolopt="${objtoolopt} --no-fp"
+ 		fi
 -- 
 2.28.0.681.g6f77f65b4e-goog
 
