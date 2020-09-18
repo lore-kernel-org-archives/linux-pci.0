@@ -8,62 +8,62 @@ X-Spam-Status: No, score=-25.4 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62F57C43469
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 20:14:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D239C43465
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 20:14:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0DEC02311B
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 20:14:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 43DDA2311D
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 20:14:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="kS9nJccC"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="VAY1d+BK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726241AbgIRUOr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 18 Sep 2020 16:14:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52732 "EHLO
+        id S1726327AbgIRUO6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 18 Sep 2020 16:14:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52704 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726354AbgIRUOq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Sep 2020 16:14:46 -0400
+        with ESMTP id S1726312AbgIRUOm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Sep 2020 16:14:42 -0400
 Received: from mail-yb1-xb4a.google.com (mail-yb1-xb4a.google.com [IPv6:2607:f8b0:4864:20::b4a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5FB6C0613D9
-        for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2020 13:14:45 -0700 (PDT)
-Received: by mail-yb1-xb4a.google.com with SMTP id f185so6637881ybf.17
-        for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2020 13:14:45 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9C2EC0613D1
+        for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2020 13:14:41 -0700 (PDT)
+Received: by mail-yb1-xb4a.google.com with SMTP id i199so6606330ybg.22
+        for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2020 13:14:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=sender:date:in-reply-to:message-id:mime-version:references:subject
          :from:to:cc;
-        bh=QG37uO1d4USzrK2i79mol19BZHF3voEs5YXCH0vFDXg=;
-        b=kS9nJccCRITkbrAyCK9Hc7v1LETkgjrZzbCI78fOJk9GspwsE0lD6AsMWWG9e/Ya6w
-         kQ7OAgO+NsJbiNEURN/xqwJc+nMm2JlmzicPoqTkbkTgYLChVmHJmFrbVcTMgiIM1LfM
-         AMIn2fwD4sdTg9b5RFBa3v7hPzAOv72tQhHG2zedzbaGOgS5AllQnoGhiut1jy6gfUPb
-         IHOl5kVpEYZmlx3J300NFEalCTngIq2wdGL7A0LMMidJtwteLyUB84t3JQdj/BGr11/r
-         XP03Hd7VXorIrHoqHnVpAgFdqejQhRQlU/QiTZkkxeCP6z2bKBR11111wx5Cdsjef2hw
-         h1Og==
+        bh=skSGpFbYMPCYyMt3xD2UXrEbXnhCXJcxNWr+Xyy+zNQ=;
+        b=VAY1d+BKJBvFH1+plE6Ne6NojDosoRo9j26NV8dlVGXM//ycIlCDZru6h0GwYf6PGK
+         oVDTueoqNoahOkpRrBlNbroVu/FB1veyRVPAgf/45GgzWqf6Xsq0Y+GXu2hi+twUmF4M
+         UWlrMiOG7qzpx/rugvq9ImdavvJF+euLmvDRVYx6xTfAs6YbiMljlvnEF0AxzVWwqwE0
+         Wlnm4GTIQPvLwoJ7Q6dUKY/MHQfiWIXB6ndcTD3C4Ky4vDcOB9wdWqOfH1nmSHu8+xDC
+         GmhmT101k2ut9EE13MQG/mtNTs23zRSYi6edJX+ofgh4sM6lA1iJVwk3pkcZdBV+lO+m
+         xpbA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:sender:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=QG37uO1d4USzrK2i79mol19BZHF3voEs5YXCH0vFDXg=;
-        b=HcVHmZAxdSeo/Obnvd6/kRnClRwCDdvpMqzh5DmM0WPRq1h1zlhOOvCRHjeU2WYaK3
-         lIdTDm6ytLToFFf2ihnYfdH8V8CmNrZ7m3par+liiDIWQpjUEYeMZN/tewLVcaa0+X5e
-         FxIM4f7bYgg73bs9IRXAwyxdzxFYS/i3fa/Qc14zhcZs67mOvhWQVoKXVteGq82vIo0i
-         w4re6ufQCFWN3sJwfa61dYr97pwdSsK5PBRKxYFjtlOX4leqXrz++ggzTf9yevN/yKsJ
-         Kl5p2ryJFC6CeRwmptetf4NaxqXNR/vbs12qTp5xb6i9AGeo7EV23H3b2QCq9dCcuKXg
-         IO/g==
-X-Gm-Message-State: AOAM532qSSHdJPuuT2XEbWijOePAT27sThGvRaEHO7Gq61f0w5+yIC+a
-        /qxMEx8+neUJuXO5Ptqxwvy0o2EXqbMR1kp9apk=
-X-Google-Smtp-Source: ABdhPJxOIBe5IUGDSTHVDRZfdndNloI1irNa0De5LGLJBg+ujXNg2cTfcMKCeIjDmjymnjpy+o5CvxVSn10XK63j+fc=
+        bh=skSGpFbYMPCYyMt3xD2UXrEbXnhCXJcxNWr+Xyy+zNQ=;
+        b=EbE/mshMKn//zgG5yihuqOq0fW5ZhnFimDaLPB3fbovW6adtNTWxzJlzn3u4zYMEqy
+         o8nyJ0B2Fnv7o7fRiAkQPpu8ykErjS834C135Ha77jvR7HvNOFDuTJGD3NF00OHilgp5
+         xJXeRe852APP8nV6Iy7m/t8omR1CJnxmlfm0tDFHef1a/1jukdoX79HP9bENBXAsRFUf
+         +M3hIaajGUQ4dM/K1Q+sS8jWAcpKOQYZtVAEHB7MqlkVgSQ1kTh2CHDsQ1jQovhyh46P
+         1ALMm7JryrUZp2ZMUE2VIDqNJ71k1z8uPGwRQ9dn7GS2xATqzmvLn0EsSTM+pZ0a83nY
+         5cMQ==
+X-Gm-Message-State: AOAM533fCe3hCK5Ip3OyO/GjYoeYRimebpmpHcLoHjAZ53HGFND2htoc
+        9br38BOGOPl0HoxD4vfxoIHERtC2WCUVTjGCIQw=
+X-Google-Smtp-Source: ABdhPJzcj7wCxo8E12yukgL7sAuybdWWQ1AJ64l97WPGZG7w7s7z827ZYArDZS6m8vlRS9reaOndS152UiN0Two7+9I=
 Sender: "samitolvanen via sendgmr" 
         <samitolvanen@samitolvanen1.mtv.corp.google.com>
 X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:f693:9fff:fef4:1b6d])
- (user=samitolvanen job=sendgmr) by 2002:a25:3744:: with SMTP id
- e65mr19951166yba.275.1600460085079; Fri, 18 Sep 2020 13:14:45 -0700 (PDT)
-Date:   Fri, 18 Sep 2020 13:14:09 -0700
+ (user=samitolvanen job=sendgmr) by 2002:a25:6f89:: with SMTP id
+ k131mr40244617ybc.214.1600460081050; Fri, 18 Sep 2020 13:14:41 -0700 (PDT)
+Date:   Fri, 18 Sep 2020 13:14:07 -0700
 In-Reply-To: <20200918201436.2932360-1-samitolvanen@google.com>
-Message-Id: <20200918201436.2932360-4-samitolvanen@google.com>
+Message-Id: <20200918201436.2932360-2-samitolvanen@google.com>
 Mime-Version: 1.0
 References: <20200918201436.2932360-1-samitolvanen@google.com>
 X-Mailer: git-send-email 2.28.0.681.g6f77f65b4e-goog
-Subject: [PATCH v3 03/30] x86/boot/compressed: Disable relocation relaxation
+Subject: [PATCH v3 01/30] lib/string.c: implement stpcpy
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Masahiro Yamada <masahiroy@kernel.org>,
         Will Deacon <will@kernel.org>
@@ -77,87 +77,124 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         kernel-hardening@lists.openwall.com, linux-arch@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-kbuild@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        x86@kernel.org, Arvind Sankar <nivedita@alum.mit.edu>
+        x86@kernel.org, Sami Tolvanen <samitolvanen@google.com>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Arvind Sankar <nivedita@alum.mit.edu>
+From: Nick Desaulniers <ndesaulniers@google.com>
 
-The x86-64 psABI [0] specifies special relocation types
-(R_X86_64_[REX_]GOTPCRELX) for indirection through the Global Offset
-Table, semantically equivalent to R_X86_64_GOTPCREL, which the linker
-can take advantage of for optimization (relaxation) at link time. This
-is supported by LLD and binutils versions 2.26 onwards.
+LLVM implemented a recent "libcall optimization" that lowers calls to
+`sprintf(dest, "%s", str)` where the return value is used to
+`stpcpy(dest, str) - dest`. This generally avoids the machinery involved
+in parsing format strings.  `stpcpy` is just like `strcpy` except it
+returns the pointer to the new tail of `dest`.  This optimization was
+introduced into clang-12.
 
-The compressed kernel is position-independent code, however, when using
-LLD or binutils versions before 2.27, it must be linked without the -pie
-option. In this case, the linker may optimize certain instructions into
-a non-position-independent form, by converting foo@GOTPCREL(%rip) to $foo.
+Implement this so that we don't observe linkage failures due to missing
+symbol definitions for `stpcpy`.
 
-This potential issue has been present with LLD and binutils-2.26 for a
-long time, but it has never manifested itself before now:
-- LLD and binutils-2.26 only relax
-	movq	foo@GOTPCREL(%rip), %reg
-  to
-	leaq	foo(%rip), %reg
-  which is still position-independent, rather than
-	mov	$foo, %reg
-  which is permitted by the psABI when -pie is not enabled.
-- gcc happens to only generate GOTPCREL relocations on mov instructions.
-- clang does generate GOTPCREL relocations on non-mov instructions, but
-  when building the compressed kernel, it uses its integrated assembler
-  (due to the redefinition of KBUILD_CFLAGS dropping -no-integrated-as),
-  which has so far defaulted to not generating the GOTPCRELX
-  relocations.
+Similar to last year's fire drill with:
+commit 5f074f3e192f ("lib/string.c: implement a basic bcmp")
 
-Nick Desaulniers reports [1,2]:
-  A recent change [3] to a default value of configuration variable
-  (ENABLE_X86_RELAX_RELOCATIONS OFF -> ON) in LLVM now causes Clang's
-  integrated assembler to emit R_X86_64_GOTPCRELX/R_X86_64_REX_GOTPCRELX
-  relocations. LLD will relax instructions with these relocations based
-  on whether the image is being linked as position independent or not.
-  When not, then LLD will relax these instructions to use absolute
-  addressing mode (R_RELAX_GOT_PC_NOPIC). This causes kernels built with
-  Clang and linked with LLD to fail to boot.
+The kernel is somewhere between a "freestanding" environment (no full libc)
+and "hosted" environment (many symbols from libc exist with the same
+type, function signature, and semantics).
 
-Patch series [4] is a solution to allow the compressed kernel to be
-linked with -pie unconditionally, but even if merged is unlikely to be
-backported. As a simple solution that can be applied to stable as well,
-prevent the assembler from generating the relaxed relocation types using
-the -mrelax-relocations=no option. For ease of backporting, do this
-unconditionally.
+As H. Peter Anvin notes, there's not really a great way to inform the
+compiler that you're targeting a freestanding environment but would like
+to opt-in to some libcall optimizations (see pr/47280 below), rather than
+opt-out.
 
-[0] https://gitlab.com/x86-psABIs/x86-64-ABI/-/blob/master/x86-64-ABI/linker-optimization.tex#L65
-[1] https://lore.kernel.org/lkml/20200807194100.3570838-1-ndesaulniers@google.com/
-[2] https://github.com/ClangBuiltLinux/linux/issues/1121
-[3] https://reviews.llvm.org/rGc41a18cf61790fc898dcda1055c3efbf442c14c0
-[4] https://lore.kernel.org/lkml/20200731202738.2577854-1-nivedita@alum.mit.edu/
+Arvind notes, -fno-builtin-* behaves slightly differently between GCC
+and Clang, and Clang is missing many __builtin_* definitions, which I
+consider a bug in Clang and am working on fixing.
 
-Reported-by: Nick Desaulniers <ndesaulniers@google.com>
-Signed-off-by: Arvind Sankar <nivedita@alum.mit.edu>
-Tested-by: Nick Desaulniers <ndesaulniers@google.com>
-Tested-by: Sedat Dilek <sedat.dilek@gmail.com>
-Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
+Masahiro summarizes the subtle distinction between compilers justly:
+  To prevent transformation from foo() into bar(), there are two ways in
+  Clang to do that; -fno-builtin-foo, and -fno-builtin-bar.  There is
+  only one in GCC; -fno-buitin-foo.
+
+(Any difference in that behavior in Clang is likely a bug from a missing
+__builtin_* definition.)
+
+Masahiro also notes:
+  We want to disable optimization from foo() to bar(),
+  but we may still benefit from the optimization from
+  foo() into something else. If GCC implements the same transform, we
+  would run into a problem because it is not -fno-builtin-bar, but
+  -fno-builtin-foo that disables that optimization.
+
+  In this regard, -fno-builtin-foo would be more future-proof than
+  -fno-built-bar, but -fno-builtin-foo is still potentially overkill. We
+  may want to prevent calls from foo() being optimized into calls to
+  bar(), but we still may want other optimization on calls to foo().
+
+It seems that compilers today don't quite provide the fine grain control
+over which libcall optimizations pseudo-freestanding environments would
+prefer.
+
+Finally, Kees notes that this interface is unsafe, so we should not
+encourage its use.  As such, I've removed the declaration from any
+header, but it still needs to be exported to avoid linkage errors in
+modules.
+
+Reported-by: Sami Tolvanen <samitolvanen@google.com>
+Suggested-by: Andy Lavr <andy.lavr@gmail.com>
+Suggested-by: Arvind Sankar <nivedita@alum.mit.edu>
+Suggested-by: Joe Perches <joe@perches.com>
+Suggested-by: Kees Cook <keescook@chromium.org>
+Suggested-by: Masahiro Yamada <masahiroy@kernel.org>
+Suggested-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Signed-off-by: Nick Desaulniers <ndesaulniers@google.com>
+Tested-by: Nathan Chancellor <natechancellor@gmail.com>
 Cc: stable@vger.kernel.org
+Link: https://bugs.llvm.org/show_bug.cgi?id=47162
+Link: https://bugs.llvm.org/show_bug.cgi?id=47280
+Link: https://github.com/ClangBuiltLinux/linux/issues/1126
+Link: https://man7.org/linux/man-pages/man3/stpcpy.3.html
+Link: https://pubs.opengroup.org/onlinepubs/9699919799/functions/stpcpy.html
+Link: https://reviews.llvm.org/D85963
 ---
- arch/x86/boot/compressed/Makefile | 2 ++
- 1 file changed, 2 insertions(+)
+ lib/string.c | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
 
-diff --git a/arch/x86/boot/compressed/Makefile b/arch/x86/boot/compressed/Makefile
-index 3962f592633d..ff7894f39e0e 100644
---- a/arch/x86/boot/compressed/Makefile
-+++ b/arch/x86/boot/compressed/Makefile
-@@ -43,6 +43,8 @@ KBUILD_CFLAGS += -Wno-pointer-sign
- KBUILD_CFLAGS += $(call cc-option,-fmacro-prefix-map=$(srctree)/=)
- KBUILD_CFLAGS += -fno-asynchronous-unwind-tables
- KBUILD_CFLAGS += -D__DISABLE_EXPORTS
-+# Disable relocation relaxation in case the link is not PIE.
-+KBUILD_CFLAGS += $(call as-option,-Wa$(comma)-mrelax-relocations=no)
+diff --git a/lib/string.c b/lib/string.c
+index 6012c385fb31..4288e0158d47 100644
+--- a/lib/string.c
++++ b/lib/string.c
+@@ -272,6 +272,30 @@ ssize_t strscpy_pad(char *dest, const char *src, size_t count)
+ }
+ EXPORT_SYMBOL(strscpy_pad);
  
- KBUILD_AFLAGS  := $(KBUILD_CFLAGS) -D__ASSEMBLY__
- GCOV_PROFILE := n
++/**
++ * stpcpy - copy a string from src to dest returning a pointer to the new end
++ *          of dest, including src's %NUL-terminator. May overrun dest.
++ * @dest: pointer to end of string being copied into. Must be large enough
++ *        to receive copy.
++ * @src: pointer to the beginning of string being copied from. Must not overlap
++ *       dest.
++ *
++ * stpcpy differs from strcpy in a key way: the return value is a pointer
++ * to the new %NUL-terminating character in @dest. (For strcpy, the return
++ * value is a pointer to the start of @dest). This interface is considered
++ * unsafe as it doesn't perform bounds checking of the inputs. As such it's
++ * not recommended for usage. Instead, its definition is provided in case
++ * the compiler lowers other libcalls to stpcpy.
++ */
++char *stpcpy(char *__restrict__ dest, const char *__restrict__ src);
++char *stpcpy(char *__restrict__ dest, const char *__restrict__ src)
++{
++	while ((*dest++ = *src++) != '\0')
++		/* nothing */;
++	return --dest;
++}
++EXPORT_SYMBOL(stpcpy);
++
+ #ifndef __HAVE_ARCH_STRCAT
+ /**
+  * strcat - Append one %NUL-terminated string to another
 -- 
 2.28.0.681.g6f77f65b4e-goog
 
