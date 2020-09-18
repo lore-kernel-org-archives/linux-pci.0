@@ -2,105 +2,248 @@ Return-Path: <SRS0=Geob=C3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A26E7C43464
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 03:15:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5097CC43465
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 03:18:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 59070238A1
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 03:15:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600398923;
-	bh=4dZeExV5m9YmaEEXt9XuEf/XrmsgGX7WgJ9Hprr9dkg=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=mlC5L2nMjn+WFA44c4mYOnPxCKmLiK5uCdWqkjT5DOigpOv3s5+4cMs+yy1X6KBI1
-	 N6geuWil+4YTFMfDFUCBZfI0pd/8Yvdxm+G3D2ypBSrAxwwXiiRTI2XV7o7HOYLud7
-	 BUsCQmW1dRo7jMLbu1pq0Edd8yyoa4TOgltKVjWE=
+	by mail.kernel.org (Postfix) with ESMTP id 03599235FD
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 03:18:35 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QPBnvPFk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730708AbgIRDPW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 17 Sep 2020 23:15:22 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45806 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726375AbgIRCB3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 17 Sep 2020 22:01:29 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C7A682311D;
-        Fri, 18 Sep 2020 02:01:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600394487;
-        bh=4dZeExV5m9YmaEEXt9XuEf/XrmsgGX7WgJ9Hprr9dkg=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=tsQt0YHosRtojE/1ptfYBfXYjAfV4hIzCFduwBUzTFfC5DY05yXPSFe4YTNkKmc23
-         uFscyjlllHsZqcKNaSuc2LFvIoeoY7OUFAB5oUd7GIx+qx16aJ0xBDc7TaCBQloIEF
-         Mp2RqcPd/CwKb7ogqp67gMzVA4zqmYAeLTsql478=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     =?UTF-8?q?Pierre=20Cr=C3=A9gut?= <pierre.cregut@orange.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 013/330] PCI/IOV: Serialize sysfs sriov_numvfs reads vs writes
-Date:   Thu, 17 Sep 2020 21:55:53 -0400
-Message-Id: <20200918020110.2063155-13-sashal@kernel.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200918020110.2063155-1-sashal@kernel.org>
-References: <20200918020110.2063155-1-sashal@kernel.org>
+        id S1726395AbgIRDSd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 17 Sep 2020 23:18:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37010 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726201AbgIRDSd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Sep 2020 23:18:33 -0400
+Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD454C06174A;
+        Thu, 17 Sep 2020 20:18:32 -0700 (PDT)
+Received: by mail-ej1-x643.google.com with SMTP id e23so6130641eja.3;
+        Thu, 17 Sep 2020 20:18:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=M6PnPj4Sw4zuNKtUjGj8+UjzMcuXjg8lWfZXTOiE9Qg=;
+        b=QPBnvPFkQPq5DeZstFRhQhGfZuJXS3IGMDaeKIjYkpYAA1T5g68eZvVcPOQIKJ86kU
+         V0Pe7vIW7L3LOZLh511TZtEOkCEbW7UBlR5BTjTO7FmCC21KinefShrvnE3btUEMediR
+         SS/HdkuTVrOm1LWX5lIWFb71CoAmPZRHI/EhC6wjMArDMDfAY/Y4EhlTZiRg4VRmKoAr
+         /xMXYA2pTMI12dRDTnfvMWdUJcMe2ZjH+oAJdn/Sv/IX26BX1KPqQ130fIC4HmoJkyZU
+         VscLC33+6NIAqCuleuNHIcdTvg3cwAUKl+aUDJEJbPpjD8lzA5aRyOPPRDO5MmQ38iNR
+         IItw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=M6PnPj4Sw4zuNKtUjGj8+UjzMcuXjg8lWfZXTOiE9Qg=;
+        b=EO9WjzLdRssuIy3HEZIQTUJ7akx1dlEthoYEMkvWv/8jYyxA9oC4ooEbBU9s02fqI/
+         alg9nX7ZyyAEgLYcHO44V8vpKRC90m+5D7rWXRkqAJmpxJc1dIzdH+T/AJqx3tpVtyfv
+         /ZQvd0O6eshWSvFdNzaZppKL0ungY1Ok5OX/CSDYsCThF5GBU6ChsktF/6B2eyE9FPeB
+         Jy3OaRjC/XlC7+RXi3+XKGU4qoycN2qEy0JArbeyBRmfb0N0p4hbACFIoimw/pOQYftB
+         13VJBuY26o+EkI2aogE/+TD0P90A1UjNvFFpEfGzlveYli0ZNLGGn/lnD0GNIDvbQFil
+         O1Hg==
+X-Gm-Message-State: AOAM532kHOuYhd9F5h2t75lnx9BDNXzBYZQqNAMSxiS1z1bOA761JkDG
+        K8eqBP3A70x2+ERPvtqiV/B9DLR/LgjnbTBJND8=
+X-Google-Smtp-Source: ABdhPJzn5xjNPEmrRqG86NPTPRnCb7XHzWPcl3KJ4FUWp/Xzi6Xh4bJ/4bULiv7vpRQGPYCRWgxVF2J7NwVsylUypzg=
+X-Received: by 2002:a17:906:1b58:: with SMTP id p24mr35251625ejg.77.1600399111121;
+ Thu, 17 Sep 2020 20:18:31 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+References: <1599644912-29245-1-git-send-email-wuht06@gmail.com>
+ <1599644912-29245-2-git-send-email-wuht06@gmail.com> <20200915172501.GA2146778@bogus>
+In-Reply-To: <20200915172501.GA2146778@bogus>
+From:   Hongtao Wu <wuht06@gmail.com>
+Date:   Fri, 18 Sep 2020 11:18:19 +0800
+Message-ID: <CAG_R4_Xv86KE3NQtYEq-3mJjMucrULLVA0=JUkWAVDJPjucKKA@mail.gmail.com>
+Subject: Re: [PATCH v3 1/2] dt-bindings: PCI: sprd: Document Unisoc PCIe RC
+ host controller
+To:     Rob Herring <robh@kernel.org>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Orson Zhai <orsonzhai@gmail.com>,
+        Baolin Wang <baolin.wang7@gmail.com>,
+        Chunyan Zhang <zhang.lyra@gmail.com>,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Hongtao Wu <billows.wu@unisoc.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Pierre Crégut <pierre.cregut@orange.com>
+On Wed, Sep 16, 2020 at 1:25 AM Rob Herring <robh@kernel.org> wrote:
+>
+> On Wed, Sep 09, 2020 at 05:48:31PM +0800, Hongtao Wu wrote:
+> > From: Hongtao Wu <billows.wu@unisoc.com>
+> >
+> > This series adds PCIe bindings for Unisoc SoCs.
+> > This controller is based on DesignWare PCIe IP.
+> >
+> > Signed-off-by: Hongtao Wu <billows.wu@unisoc.com>
+> > ---
+> >  .../devicetree/bindings/pci/sprd-pcie.yaml         | 101 +++++++++++++++++++++
+> >  1 file changed, 101 insertions(+)
+> >  create mode 100644 Documentation/devicetree/bindings/pci/sprd-pcie.yaml
+> >
+> > diff --git a/Documentation/devicetree/bindings/pci/sprd-pcie.yaml b/Documentation/devicetree/bindings/pci/sprd-pcie.yaml
+> > new file mode 100644
+> > index 0000000..c52edfb
+> > --- /dev/null
+> > +++ b/Documentation/devicetree/bindings/pci/sprd-pcie.yaml
+> > @@ -0,0 +1,101 @@
+> > +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+> > +%YAML 1.2
+> > +---
+> > +$id: http://devicetree.org/schemas/pci/sprd-pcie.yaml#
+> > +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> > +
+> > +title: SoC PCIe Host Controller Device Tree Bindings
+> > +
+> > +maintainers:
+> > +  - Hongtao Wu <billows.wu@unisoc.com>
+> > +
+> > +allOf:
+> > +  - $ref: /schemas/pci/pci-bus.yaml#
+> > +
+> > +properties:
+> > +  compatible:
+> > +    items:
+> > +      - const: sprd,pcie-rc
+> > +
+> > +  reg:
+> > +    minItems: 2
+> > +    items:
+> > +      - description: Controller control and status registers.
+> > +      - description: PCIe configuration registers.
+> > +
+> > +  reg-names:
+> > +    items:
+> > +      - const: dbi
+> > +      - const: config
+> > +
+> > +  ranges:
+> > +    maxItems: 2
+> > +
+> > +  num-lanes:
+> > +    maximum: 1
+> > +    description: Number of lanes to use for this port.
+> > +
+> > +  interrupts:
+> > +    minItems: 1
+> > +    description: Builtin MSI controller and PCIe host controller.
+> > +
+> > +  interrupt-names:
+> > +    items:
+> > +      - const: msi
+> > +
+> > +  sprd-pcie-poweron-syscons:
+>
 
-[ Upstream commit 35ff867b76576e32f34c698ccd11343f7d616204 ]
+I am Sorry!
+I'll fix it.
 
-When sriov_numvfs is being updated, we call the driver->sriov_configure()
-function, which may enable VFs and call probe functions, which may make new
-devices visible.  This all happens before before sriov_numvfs_store()
-updates sriov->num_VFs, so previously, concurrent sysfs reads of
-sriov_numvfs returned stale values.
+> Doesn't match the example.
+>
+> > +    minItems: 1
+> > +    description: Global register.
+> > +      The first value is the phandle to the global registers required to
+> > +      confige PCIe phy, clock and so on.
+> > +      The second value is the global register type which indicates whether it
+> > +      is a set/clear register or not.
+> > +      The third value is the time to delay after the global register is set or
+> > +      cleared.
+> > +      The fourth value is the global register address.
+> > +      The fifth value is the the mask value that the global register must
+> > +      be operate.
+> > +      The sixth value is the value that will be set to the global register.
+> > +      Note that Some Unisoc global registers have not been upstreamed.
+> > +      The global register and its mask can't be found in linux kernel,
+> > +      so we use an offset address and a number to instead them.
+>
+> From the example, it looks like you set/clear 2 bits for power on/off.
+> What's the worst case you expect here? What do the 2 bits do? If they
+> are for clocks, resets, or power domains, then we have bindings for
+> those which should be used. This use of phandles to syscons should be
+> avoided whenever possible.
+>
 
-Serialize the sysfs read vs the write so the read returns the correct
-num_VFs value.
+There are two kinds of global register ( set/clear registers and
+non-set/clear registers )
+about PCIe on Unisoc SoCs.
+Each set of set/clear registers contain two addresses. One can be
+written and the other one
+can be read. Different bits in  the set/clear register indicate
+different functions, so we
+set/clear one bit for power on/off.
+The non-set/clear registers are normal which only have one address.
 
-[bhelgaas: hold device_lock instead of checking mutex_is_locked()]
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=202991
-Link: https://lore.kernel.org/r/20190911072736.32091-1-pierre.cregut@orange.com
-Signed-off-by: Pierre Crégut <pierre.cregut@orange.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/pci/iov.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+The second value in property 'sprd,pcie-poweron-syscons' is a flag
+which indicates whether
+the global register is set/clear or not. If this value is 1, we think
+that it's a set/clear register.
+If this value is 0, we think it's a non-set/clear register.
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index deec9f9e0b616..9c116cbaa95d8 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -253,8 +253,14 @@ static ssize_t sriov_numvfs_show(struct device *dev,
- 				 char *buf)
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
-+	u16 num_vfs;
-+
-+	/* Serialize vs sriov_numvfs_store() so readers see valid num_VFs */
-+	device_lock(&pdev->dev);
-+	num_vfs = pdev->sriov->num_VFs;
-+	device_unlock(&pdev->dev);
- 
--	return sprintf(buf, "%u\n", pdev->sriov->num_VFs);
-+	return sprintf(buf, "%u\n", num_vfs);
- }
- 
- /*
--- 
-2.25.1
+I wanted to parse all of the global registers about power on/off in an
+array (include set/clear
+registers and non-set/clear registers). However, it may not be a good idea.
+I'll split the property 'sprd,pcie-poweron-syscons' info clocks, power
+domains, phy and so on
+in the next version.
 
+> If we wanted a language for specifying sequences of register accesses in
+> DT, we would have defined that a long time ago.
+>
+
+> > +
+> > +required:
+> > +  - compatible
+> > +  - reg
+> > +  - reg-names
+> > +  - num-lanes
+> > +  - ranges
+> > +  - interrupts
+> > +  - interrupt-names
+> > +
+> > +examples:
+> > +  - |
+> > +    #include <dt-bindings/interrupt-controller/arm-gic.h>
+> > +
+> > +    ipa {
+> > +        #address-cells = <2>;
+> > +        #size-cells = <2>;
+> > +
+> > +        pcie0: pcie@2b100000 {
+> > +            compatible = "sprd,pcie-rc";
+> > +            reg = <0x0 0x2b100000 0x0 0x2000>,
+> > +                  <0x2 0x00000000 0x0 0x2000>;
+> > +            reg-names = "dbi", "config";
+> > +            #address-cells = <3>;
+> > +            #size-cells = <2>;
+> > +            device_type = "pci";
+> > +            ranges = <0x01000000 0x0 0x00000000 0x2 0x00002000 0x0 0x00010000>,
+> > +                     <0x03000000 0x0 0x10000000 0x2 0x10000000 0x1 0xefffffff>;
+> > +            num-lanes = <1>;
+> > +            interrupts = <GIC_SPI 153 IRQ_TYPE_LEVEL_HIGH>;
+> > +            interrupt-names = "msi";
+> > +
+> > +            sprd,pcie-poweron-syscons =
+> > +                <&ap_ipa_ahb_regs 0 0 0x0000 0x40 0x40>,
+> > +                <&ap_ipa_ahb_regs 0 0 0x0000 0x20 0x20>;
+> > +            sprd,pcie-poweroff-syscons =
+>
+> Not documented.
+>
+
+Thanks! I'll fix it in the next version.
+
+> > +                <&ap_ipa_ahb_regs 0 0 0x0000 0x20 0x0>,
+> > +                <&ap_ipa_ahb_regs 0 0 0x0000 0x40 0x0>;
+> > +        };
+> > +    };
+> > --
+> > 2.7.4
+> >
