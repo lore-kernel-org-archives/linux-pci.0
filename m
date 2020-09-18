@@ -2,124 +2,115 @@ Return-Path: <SRS0=Geob=C3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BBC68C43464
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 20:50:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 023A4C43463
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 20:51:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 633D721734
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 20:50:17 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="TxBH8Ayv"
+	by mail.kernel.org (Postfix) with ESMTP id AF879206A4
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 20:51:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726406AbgIRUuQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 18 Sep 2020 16:50:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58424 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726371AbgIRUuQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Sep 2020 16:50:16 -0400
-Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1358FC0613D0
-        for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2020 13:50:16 -0700 (PDT)
-Received: by mail-ej1-x643.google.com with SMTP id p9so9823998ejf.6
-        for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2020 13:50:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=f4okZ/7bct4uSKwZ6O3z2m5KyitVLtU4XG9WgtUAxwc=;
-        b=TxBH8AyvU6HWp66ncdZqEtoRFWD/YTji6mddQAC1tx4KXEeHFtGLdS3R9syxDOr/gw
-         EJ35wyT17gb2NJYLGzLi6nzgB21j9JTRzpSNH6ko4dn+slxaKb4IH8Ki7QRFsqI7v9aA
-         S87ydkbPm8kuIhgWoL3lKfaG0SLalSIBz1ahIC+ONuQXK7GoSVTs2pnZksirb/CgEcGJ
-         dda7cH+5KO+boQPBNW5nn7bmDiexjhjP2RtZPQz3JvCcezgV03AKeN1igjv/uW0ePsfq
-         kEgfrqOrvUv6gNdwmh3rNp+rjsPflT1TKKMgiRyTccCH7ogTg/un4wxhA9XtkrhpxfY7
-         o61Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=f4okZ/7bct4uSKwZ6O3z2m5KyitVLtU4XG9WgtUAxwc=;
-        b=m4+bnj6Lid0jqwImmHMWEQVXwbe/CMCJ4b8UhVTDxqABBSPz/eBdwJd/6UxYAs9YWD
-         kZ8BG0Zg0TX7GykFsRHrw2Fulzakmbl9pVqvjknfSPTqFm1L5WdbW3Udof9pyFV8jouu
-         +gcNTwFo7nGRrJ1btNoBQLKjIzd9ZCD/6WWy448XQ3XoFZgrfLiYN3sqBzCIk8fKdLOU
-         xiDWBvmklUZyQrXX9iTI3aqsE1EcLuOKxCtAyAAVaD/xVwpvox+dApr9kk72LaaQtc6N
-         A3kmRSSVwLsOhsDJn3ZyDNCtwHkYo531/gun+dnky77ct5b2rpMl/Yax/C6Y7dS+TXSX
-         4f9w==
-X-Gm-Message-State: AOAM532oXgeFSx+0WPu862Ca8MH/HXP2pIctMl4YYai4+Ys7ymLGyQTN
-        VWbopEiplAki6swBf7dFJcUnH8lJwlq4IWN72Gu11w==
-X-Google-Smtp-Source: ABdhPJxlmp9BJajUv0E4cVIdv3SYp0wheOk/nOpDB3mBZ4a/wfqp4uUfhfc+2gKB4vscqXhsi0M+J+iTaTW/5sPlq3g=
-X-Received: by 2002:a17:906:454e:: with SMTP id s14mr38862035ejq.137.1600462214260;
- Fri, 18 Sep 2020 13:50:14 -0700 (PDT)
+        id S1726405AbgIRUv3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 18 Sep 2020 16:51:29 -0400
+Received: from mga01.intel.com ([192.55.52.88]:61896 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726250AbgIRUv2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 18 Sep 2020 16:51:28 -0400
+IronPort-SDR: V54LbZyadlwHfUPRPumQArHldmbxWTMV31kdkENlQow+I3lcBrQbGafHfSNywhhMFT6Dm2unTE
+ OYXJEvjSacEA==
+X-IronPort-AV: E=McAfee;i="6000,8403,9748"; a="178120876"
+X-IronPort-AV: E=Sophos;i="5.77,274,1596524400"; 
+   d="scan'208";a="178120876"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Sep 2020 13:46:29 -0700
+IronPort-SDR: fR54aEQL44WUOiy5BLLp8IW6mnLvtP7GlBlpngPNgp4W1fYKVqzLM5pbxV8vl6GG9YNDFgFj4G
+ 0idIDVWzD3yA==
+X-IronPort-AV: E=Sophos;i="5.77,274,1596524400"; 
+   d="scan'208";a="484366827"
+Received: from xsunzhou-mobl.amr.corp.intel.com (HELO arch-ashland-svkelley.intel.com) ([10.251.153.106])
+  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Sep 2020 13:46:28 -0700
+From:   Sean V Kelley <sean.v.kelley@intel.com>
+To:     bhelgaas@google.com, Jonathan.Cameron@huawei.com,
+        rafael.j.wysocki@intel.com, ashok.raj@intel.com,
+        tony.luck@intel.com, sathyanarayanan.kuppuswamy@intel.com,
+        qiuxu.zhuo@intel.com
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v5 05/10] PCI/AER: Apply function level reset to RCiEP on fatal error
+Date:   Fri, 18 Sep 2020 13:45:58 -0700
+Message-Id: <20200918204603.62100-6-sean.v.kelley@intel.com>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200918204603.62100-1-sean.v.kelley@intel.com>
+References: <20200918204603.62100-1-sean.v.kelley@intel.com>
 MIME-Version: 1.0
-References: <20200918201436.2932360-1-samitolvanen@google.com> <CA+icZUW1MYSUz8jwOaVpi6ib1dyCv1VmG5priw6TTzXGSh_8Gg@mail.gmail.com>
-In-Reply-To: <CA+icZUW1MYSUz8jwOaVpi6ib1dyCv1VmG5priw6TTzXGSh_8Gg@mail.gmail.com>
-From:   Sami Tolvanen <samitolvanen@google.com>
-Date:   Fri, 18 Sep 2020 13:50:03 -0700
-Message-ID: <CABCJKueyWvNB2MQw_PCLtZb8F1+sA1QOLJi_5qMKwdFCcwSMGg@mail.gmail.com>
-Subject: Re: [PATCH v3 00/30] Add support for Clang LTO
-To:     Sedat Dilek <sedat.dilek@gmail.com>
-Cc:     Masahiro Yamada <masahiroy@kernel.org>,
-        Will Deacon <will@kernel.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Paul E. McKenney" <paulmck@kernel.org>,
-        Kees Cook <keescook@chromium.org>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Clang-Built-Linux ML <clang-built-linux@googlegroups.com>,
-        Kernel Hardening <kernel-hardening@lists.openwall.com>,
-        linux-arch <linux-arch@vger.kernel.org>,
-        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-        linux-kbuild <linux-kbuild@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-        X86 ML <x86@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Sep 18, 2020 at 1:22 PM Sedat Dilek <sedat.dilek@gmail.com> wrote:
->
-> On Fri, Sep 18, 2020 at 10:14 PM 'Sami Tolvanen' via Clang Built Linux
-> <clang-built-linux@googlegroups.com> wrote:
-> >
-> > This patch series adds support for building x86_64 and arm64 kernels
-> > with Clang's Link Time Optimization (LTO).
-> >
-> > In addition to performance, the primary motivation for LTO is
-> > to allow Clang's Control-Flow Integrity (CFI) to be used in the
-> > kernel. Google has shipped millions of Pixel devices running three
-> > major kernel versions with LTO+CFI since 2018.
-> >
-> > Most of the patches are build system changes for handling LLVM
-> > bitcode, which Clang produces with LTO instead of ELF object files,
-> > postponing ELF processing until a later stage, and ensuring initcall
-> > ordering.
-> >
-> > Note that patches 1-5 are not directly related to LTO, but are
-> > needed to compile LTO kernels with ToT Clang, so I'm including them
-> > in the series for your convenience:
-> >
-> >  - Patches 1-3 fix build issues with LLVM and they are already in
-> >    linux-next.
-> >
-> >  - Patch 4 fixes x86 builds with LLVM IAS, but it hasn't yet been
-> >    picked up by maintainers.
-> >
-> >  - Patch 5 is from Masahiro's kbuild tree and makes the LTO linker
-> >    script changes much cleaner.
-> >
->
-> Hi Sami,
->
-> might be good to point to your GitHub tree and corresponding
-> release-tag for easy fetching.
+From: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
 
-Ah, true. You can also pull this series from
+Attempt to do function level reset for an RCiEP associated with an
+RCEC device on fatal error.
 
-  https://github.com/samitolvanen/linux.git lto-v3
+Signed-off-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+---
+ drivers/pci/pcie/err.c | 31 ++++++++++++++++++++++---------
+ 1 file changed, 22 insertions(+), 9 deletions(-)
 
-Sami
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index e575fa6cee63..5380ecc41506 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -169,6 +169,17 @@ static void pci_bridge_walk(struct pci_dev *bridge, int (*cb)(struct pci_dev *,
+ 		cb(bridge, userdata);
+ }
+ 
++static pci_ers_result_t flr_on_rciep(struct pci_dev *dev)
++{
++	if (!pcie_has_flr(dev))
++		return PCI_ERS_RESULT_NONE;
++
++	if (pcie_flr(dev))
++		return PCI_ERS_RESULT_DISCONNECT;
++
++	return PCI_ERS_RESULT_RECOVERED;
++}
++
+ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+ 			pci_channel_state_t state,
+ 			pci_ers_result_t (*reset_subordinate_devices)(struct pci_dev *pdev))
+@@ -195,15 +206,17 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+ 	if (state == pci_channel_io_frozen) {
+ 		pci_bridge_walk(bridge, report_frozen_detected, &status);
+ 		if (type == PCI_EXP_TYPE_RC_END) {
+-			pci_warn(dev, "link reset not possible for RCiEP\n");
+-			status = PCI_ERS_RESULT_NONE;
+-			goto failed;
+-		}
+-
+-		status = reset_subordinate_devices(bridge);
+-		if (status != PCI_ERS_RESULT_RECOVERED) {
+-			pci_warn(dev, "subordinate device reset failed\n");
+-			goto failed;
++			status = flr_on_rciep(dev);
++			if (status != PCI_ERS_RESULT_RECOVERED) {
++				pci_warn(dev, "function level reset failed\n");
++				goto failed;
++			}
++		} else {
++			status = reset_subordinate_devices(bridge);
++			if (status != PCI_ERS_RESULT_RECOVERED) {
++				pci_warn(dev, "subordinate device reset failed\n");
++				goto failed;
++			}
+ 		}
+ 	} else {
+ 		pci_bridge_walk(bridge, report_normal_detected, &status);
+-- 
+2.28.0
+
