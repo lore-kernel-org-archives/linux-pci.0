@@ -5,65 +5,65 @@ X-Spam-Level:
 X-Spam-Status: No, score=-20.4 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable
+	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 538C0C43469
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 20:16:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12215C43467
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 20:16:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F037323447
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 20:16:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A5C5A23447
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 20:16:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="YYDR5W+p"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Qgpy+pbz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726666AbgIRUQL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 18 Sep 2020 16:16:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52972 "EHLO
+        id S1726620AbgIRUQN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 18 Sep 2020 16:16:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52932 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726614AbgIRUPf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Sep 2020 16:15:35 -0400
-Received: from mail-qk1-x749.google.com (mail-qk1-x749.google.com [IPv6:2607:f8b0:4864:20::749])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED3CFC0613D4
-        for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2020 13:15:34 -0700 (PDT)
-Received: by mail-qk1-x749.google.com with SMTP id 6so5569119qko.8
-        for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2020 13:15:34 -0700 (PDT)
+        with ESMTP id S1726601AbgIRUPb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Sep 2020 16:15:31 -0400
+Received: from mail-qk1-x74a.google.com (mail-qk1-x74a.google.com [IPv6:2607:f8b0:4864:20::74a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC97EC0613DC
+        for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2020 13:15:24 -0700 (PDT)
+Received: by mail-qk1-x74a.google.com with SMTP id u23so5554643qku.17
+        for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2020 13:15:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=sender:date:in-reply-to:message-id:mime-version:references:subject
          :from:to:cc;
-        bh=Aq4KaYtXPvsIFu2w9Cb9+vNMYXxmfrCDkI2ZzAJ/U8w=;
-        b=YYDR5W+pWvCCMlsLuxLz2kP7xV+uq2FmsovV4iGNvno67WC358C4PSNmTbdGHW6cZy
-         Xr2bfek6oOyIlLCqqcmz58AwsnwR59RRO+p9vcpDdt33YhN8IrJ/O6OhGAnZkSzVXUBi
-         juaZEaotR1IoDS52HcVfmR1tV9lf6hMZtKDYu+gLSSBc5p2YM9N18q2UMIgXTdzr3uIq
-         Fm8Rp3KBn78V9C/U0MxUKT6AZU9wjegUqE9FD6bezlPI8xyTBnsPinaduX3IiPx/NQx9
-         CiLebwGjfIl4ZFQ0mM3lJvlbPYemZFWx56rfr5kUCzWThPFDwAshAHrFrPtMZk+I/w6c
-         LAyA==
+        bh=iG8c4IVmV6SAigaVNA/2Da1zni30786ipLEHlcLZdp4=;
+        b=Qgpy+pbznAwuGgS1UcHWV2+GgEBqJBW/QXwkjniAUgd0yEt/iVnU3kXXwNdozhgQzz
+         MZzhTSncTCZS90D0o8lSwmN7wmdlvsaE1QWRoTj6Wbe2nae8ffdijksuNQIIVYs/eybZ
+         PhIUX9y2TjqMSdsaiGH0h2KtARkrrLOZf/w8Sm2VeQum5NJG1Sy6tVoqsuv4aAwEG7YK
+         02eRqNOcpZQaCeV7Ckrk7WrJ5FjODwlvlNCDUQkrG9fITgVhDbllmG+pZNctstR4JiRy
+         rA0r42k8E4pddkc8iQa3ov74ZrsmEOgVOhRYMv7EwvJEm2M2DLQUQBG2GyMEcM38Vad0
+         xDlw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:sender:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=Aq4KaYtXPvsIFu2w9Cb9+vNMYXxmfrCDkI2ZzAJ/U8w=;
-        b=RYUqyGZpxnztupqakaH8XCSOD29loCT2EsJFcvs+AqeUyycu9n/sKotteKECkveSO1
-         mRgyiLwS4pTTnI7NKsJV9v4L8+J0NHwK9tSjfyVARs+SFiqcUMHea7EsA/5EKTyBA5lP
-         pVgxasaUa+Yhd2HcZrrFYpv2a+ikG6L+Qu55Awm9E97v0myQM+OB4TgfV3Vc/hZYdYn/
-         P0rNKSswZsFPm78lRLjLFpmEFqbRwAda2ZXS0dobAiA4GhpCBUZUg/Acjb4KO/n11I6c
-         cJqbCN9hdSSdw+2SsZJtVCIqoNKJ4+1AKSHvNs50aHXkj99aw7BlPBnqfWaxz1qr49h3
-         eMkQ==
-X-Gm-Message-State: AOAM5323bZBT6Dj7TQL718c/8BEH7JqBhVyM4Pwi3QFkifz2SAsnhWGg
-        RNwsCl093y5jWgt8JbwNwzXuhApmwyYsNO5Htm0=
-X-Google-Smtp-Source: ABdhPJzXb8qZ74hw7N+WHo8RG9mWCgQryKG+Dq+aV9VBYLvnlICCRjFkSfcNOp4lq06uZySFvKcVSM3OKhDJkRKVbys=
+        bh=iG8c4IVmV6SAigaVNA/2Da1zni30786ipLEHlcLZdp4=;
+        b=k7OraqfVqFuILd82xdZq6Xa6RKQWMk9il8jZUoYs0ZQc2ICSf0EJqC5tZMw/g4J7BB
+         p0B9wtkvckRV3Fi1QNCV4gJlW9Bs6XllHF4wYWjUQw5+3Km6K0K74ldhW054DpL0ul7f
+         8iqIw+4Z0dr6Fw80tCyyD+qSdELOcMJ+95M88XQI/jpEMYDZRpFeyou0AQYKNd7Y8d5y
+         5CXLTFmM4c0B3DrIzrhC0WDmwhbQlBpP2+o2ylHt8MpjojybdLffaDRtavm5L6TLKFUp
+         3FWneO8LkeCt+lZgWqZ6G3iAspWacOv5rNeKxkIXp/l160kx4HlaAlsjkHKrzN96STZf
+         QWBg==
+X-Gm-Message-State: AOAM533Sw2g4uxhQ+ldkwx8jmwKstLJXIe9pcgPRbSCfv/vQTRs4QJzI
+        ywfCFKyfsRA5hISm+Itm4CnIsoSOz1LWnpU7F/Q=
+X-Google-Smtp-Source: ABdhPJyAaI/eiFtDj86m6e83BVMlPsjdMZNZWL0L4WJ70VEUwFhQzIrnfngpXkviQEnEmXABI7Y2dHDcYxV6d7VeWCU=
 Sender: "samitolvanen via sendgmr" 
         <samitolvanen@samitolvanen1.mtv.corp.google.com>
 X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:f693:9fff:fef4:1b6d])
- (user=samitolvanen job=sendgmr) by 2002:ad4:4d87:: with SMTP id
- cv7mr19182556qvb.49.1600460134116; Fri, 18 Sep 2020 13:15:34 -0700 (PDT)
-Date:   Fri, 18 Sep 2020 13:14:29 -0700
+ (user=samitolvanen job=sendgmr) by 2002:ad4:58c7:: with SMTP id
+ dh7mr8337663qvb.20.1600460123968; Fri, 18 Sep 2020 13:15:23 -0700 (PDT)
+Date:   Fri, 18 Sep 2020 13:14:25 -0700
 In-Reply-To: <20200918201436.2932360-1-samitolvanen@google.com>
-Message-Id: <20200918201436.2932360-24-samitolvanen@google.com>
+Message-Id: <20200918201436.2932360-20-samitolvanen@google.com>
 Mime-Version: 1.0
 References: <20200918201436.2932360-1-samitolvanen@google.com>
 X-Mailer: git-send-email 2.28.0.681.g6f77f65b4e-goog
-Subject: [PATCH v3 23/30] drivers/misc/lkdtm: disable LTO for rodata.o
+Subject: [PATCH v3 19/30] PCI: Fix PREL32 relocations for LTO
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Masahiro Yamada <masahiroy@kernel.org>,
         Will Deacon <will@kernel.org>
@@ -83,27 +83,58 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Disable LTO for rodata.o to allow objcopy to be used to
-manipulate sections.
+With Clang's Link Time Optimization (LTO), the compiler can rename
+static functions to avoid global naming collisions. As PCI fixup
+functions are typically static, renaming can break references
+to them in inline assembly. This change adds a global stub to
+DECLARE_PCI_FIXUP_SECTION to fix the issue when PREL32 relocations
+are used.
 
 Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
-Acked-by: Kees Cook <keescook@chromium.org>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/misc/lkdtm/Makefile | 1 +
- 1 file changed, 1 insertion(+)
+ include/linux/pci.h | 19 ++++++++++++++-----
+ 1 file changed, 14 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/misc/lkdtm/Makefile b/drivers/misc/lkdtm/Makefile
-index c70b3822013f..dd4c936d4d73 100644
---- a/drivers/misc/lkdtm/Makefile
-+++ b/drivers/misc/lkdtm/Makefile
-@@ -13,6 +13,7 @@ lkdtm-$(CONFIG_LKDTM)		+= cfi.o
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 835530605c0d..4e64421981c7 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1909,19 +1909,28 @@ enum pci_fixup_pass {
+ };
  
- KASAN_SANITIZE_stackleak.o	:= n
- KCOV_INSTRUMENT_rodata.o	:= n
-+CFLAGS_REMOVE_rodata.o		+= $(CC_FLAGS_LTO)
- 
- OBJCOPYFLAGS :=
- OBJCOPYFLAGS_rodata_objcopy.o	:= \
+ #ifdef CONFIG_HAVE_ARCH_PREL32_RELOCATIONS
+-#define __DECLARE_PCI_FIXUP_SECTION(sec, name, vendor, device, class,	\
+-				    class_shift, hook)			\
+-	__ADDRESSABLE(hook)						\
++#define ___DECLARE_PCI_FIXUP_SECTION(sec, name, vendor, device, class,	\
++				    class_shift, hook, stub)		\
++	void stub(struct pci_dev *dev);					\
++	void stub(struct pci_dev *dev)					\
++	{ 								\
++		hook(dev); 						\
++	}								\
+ 	asm(".section "	#sec ", \"a\"				\n"	\
+ 	    ".balign	16					\n"	\
+ 	    ".short "	#vendor ", " #device "			\n"	\
+ 	    ".long "	#class ", " #class_shift "		\n"	\
+-	    ".long "	#hook " - .				\n"	\
++	    ".long "	#stub " - .				\n"	\
+ 	    ".previous						\n");
++
++#define __DECLARE_PCI_FIXUP_SECTION(sec, name, vendor, device, class,	\
++				  class_shift, hook, stub)		\
++	___DECLARE_PCI_FIXUP_SECTION(sec, name, vendor, device, class,	\
++				  class_shift, hook, stub)
+ #define DECLARE_PCI_FIXUP_SECTION(sec, name, vendor, device, class,	\
+ 				  class_shift, hook)			\
+ 	__DECLARE_PCI_FIXUP_SECTION(sec, name, vendor, device, class,	\
+-				  class_shift, hook)
++				  class_shift, hook, __UNIQUE_ID(hook))
+ #else
+ /* Anonymous variables would be nice... */
+ #define DECLARE_PCI_FIXUP_SECTION(section, name, vendor, device, class,	\
 -- 
 2.28.0.681.g6f77f65b4e-goog
 
