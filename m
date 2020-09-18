@@ -2,164 +2,170 @@ Return-Path: <SRS0=Geob=C3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB12EC43464
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 02:55:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE544C43466
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 03:00:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5BAC923770
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 02:55:14 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="eSzaT7yE"
+	by mail.kernel.org (Postfix) with ESMTP id AA2F823719
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 03:00:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1600398011;
+	bh=HcWzcq35jh/C3lXqHajszrBmo6BU0mltpavpAsqVF70=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=qhmK0dQbvbqB08PsYZQ/WBiXLdW38beXbCiFjy0i14BToTTnd38JiyYfdrGGyDk8G
+	 FtYiYSwpH8WnA2fUTfM44mpWC0mieNENzTcjZu0M6EEfet+4p4sLfnhTq4EJEQ/54/
+	 G0u3T+8ulIoW7hKHYd/fGAOSBUFyDY6ux1+AuGBc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727721AbgIRCzN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 17 Sep 2020 22:55:13 -0400
-Received: from mail-eopbgr80083.outbound.protection.outlook.com ([40.107.8.83]:51892
-        "EHLO EUR04-VI1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726732AbgIRCzM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 17 Sep 2020 22:55:12 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=dBq7HW5aORqTXdn3+PDLwK7bRb+6Dhy7vuhoilnyHAVcVo+Xs1DbvvMI5ufqlFfRgbhXGzFVOrxT/aSYByhho1paV0ex3Uo3C06Op52ikUsm+kIZzGHHrxQxXCrjPMDfkhia3r0QUM5fwcvqF6rgEZhEV1qChgDMm4gF2LcX4R1/t+oB4I5OFLK0JqERNzXZkFJkCwp2XrxfWm3ClPp8FQxaQznji2Q2LLwsJQJvRLF2XFQ/oDOUQ2C0PaDAjkNCSW+sfzn5TRQa1WXfs0kgSgCWniqZYbSLX6eQErnQCKi3vlZUjQMUg5Vg9EKVIS0F9tsCMccn5R3gjXcsvWf3vw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=fJjzJrJhoL192jnGfOpoXgRiEMbK5SjqwX/iuYkag2Q=;
- b=GFhjOtJkegBMkRQjsv3owOys6etQnfmai4cGDF9c5Q756y8lsAksFrIBYRTxRMtqZj2t3qaeYwoWMp5FqqoagiiT74hCUWB9STzKb2H2rH+5ZLY4BPbaHrgeXbyqhWS7LZuB5cXhL2PrFSD3I10NPDHe+hHMDjesbTdpAQM4tuNEK46Appxo+1ZKzaeZQxre9OE82HUjZAz/0d/G18bsQNFtE9udnMdjXSeTXLugNiGAatrCNZFAhUKbvUYRalXaF1BUjbdGtVO9Z9YPyujQzgIgipCYgwkf7Y87oaCAfFtIHWGIMl2EUyime5JlOr5a7IM4lJhcXQdNKdsqeWGwNg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=fJjzJrJhoL192jnGfOpoXgRiEMbK5SjqwX/iuYkag2Q=;
- b=eSzaT7yETZ/UkglRpNgwmP5166v0SL2TLxHIueYaaBXUOAR3Q9m22MiYiD1bNdA4GLYiSnFNjC7TTCIeENe1RFqile8oO9MvEfn3w12jwhbgRhGTzJAjtfacKmR4GTI6osrEdNCJU72XRanypsK+DZyEaRVvIhAdxyb7fufq+cU=
-Received: from HE1PR0402MB3371.eurprd04.prod.outlook.com (2603:10a6:7:85::27)
- by HE1PR0402MB3369.eurprd04.prod.outlook.com (2603:10a6:7:81::30) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3370.16; Fri, 18 Sep
- 2020 02:55:07 +0000
-Received: from HE1PR0402MB3371.eurprd04.prod.outlook.com
- ([fe80::c872:d354:7cf7:deb9]) by HE1PR0402MB3371.eurprd04.prod.outlook.com
- ([fe80::c872:d354:7cf7:deb9%3]) with mapi id 15.20.3370.019; Fri, 18 Sep 2020
- 02:55:07 +0000
-From:   "Z.q. Hou" <zhiqiang.hou@nxp.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "shawnguo@kernel.org" <shawnguo@kernel.org>,
-        Leo Li <leoyang.li@nxp.com>, "kishon@ti.com" <kishon@ti.com>,
-        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
-        Roy Zang <roy.zang@nxp.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "andrew.murray@arm.com" <andrew.murray@arm.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>,
-        "M.h. Lian" <minghuan.lian@nxp.com>
-Subject: RE: [PATCHv7 00/12]PCI: dwc: Add the multiple PF support for DWC and
- Layerscape
-Thread-Topic: [PATCHv7 00/12]PCI: dwc: Add the multiple PF support for DWC and
- Layerscape
-Thread-Index: AQHWb8Z1yUZdrG8wQ0ytslGog8Y0mKltPU+AgACwpPA=
-Date:   Fri, 18 Sep 2020 02:55:06 +0000
-Message-ID: <HE1PR0402MB3371BBECB380694B02EDB35B843F0@HE1PR0402MB3371.eurprd04.prod.outlook.com>
-References: <20200811095441.7636-1-Zhiqiang.Hou@nxp.com>
- <20200917162017.GA6830@e121166-lin.cambridge.arm.com>
-In-Reply-To: <20200917162017.GA6830@e121166-lin.cambridge.arm.com>
-Accept-Language: zh-CN, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: arm.com; dkim=none (message not signed)
- header.d=none;arm.com; dmarc=none action=none header.from=nxp.com;
-x-originating-ip: [119.31.174.73]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 037f5fb6-0b11-44f3-6965-08d85b7e401c
-x-ms-traffictypediagnostic: HE1PR0402MB3369:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <HE1PR0402MB336959E3F4BE1AD119E83E05843F0@HE1PR0402MB3369.eurprd04.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:9508;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: Sm36AyrHDE/AyFE4v87euaYz16II/FWWAv0whF6Z2vL3WtkKFBxOJ8As6rUDUASU8HUbfmK+0b+pOLXhBZ/ShGrPjb6IRZYRV/XTb4DEP6irD9rvmMw3Jk4CsNkOk0A3BUk3pFWZOf6wxj9MciMHhu9uwMzGdo1qA5fZTFIrgSJ0u/gwj4e5ycbp3VxVKjyLE51mHgKsbs5M5PIotyn/wqGyotLPBjwAbfYYt9NdxzShGz+dOE9QZSJzgVJi3jdTNji/l4odngb7Nu+8IS0PyfLV97E83WMjgXQK4P8dBIZblmKwkE8/ID10eEFODqSgkvmBIntF4b0KLL/5uVwc/Q==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:HE1PR0402MB3371.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(396003)(366004)(136003)(376002)(39860400002)(346002)(6506007)(53546011)(26005)(86362001)(7696005)(9686003)(316002)(7416002)(8936002)(2906002)(8676002)(6916009)(55016002)(33656002)(54906003)(4326008)(478600001)(66446008)(66476007)(71200400001)(52536014)(64756008)(66946007)(76116006)(5660300002)(66556008)(83380400001)(186003);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata: 41x2nx+r4mnauO8WVM6VYLqV22zC/XM4NyiQNoG2UGpswWSI6Vv3RtnRGO/E3LtE6PNekyZk6RVqEDBll2KAjD0INe6JHWuEW6kC2e+hGBTKv7jBFw7md560EkEwj2zUQNfE8h7hc8GZs1xSMaapWJvDDX4z5sOxa+8KNZgkz59NEreTljtmPDhwuKJy3z33fzdphr4cK6N4KMHBjpFZb50WaQ22noZ/JfIByNl67ZjgQ9xfc2MdUAbr0K84MykGQuLj76VdWSaFgmTJWZrH1pGCxjgHFL1o/rIuVxBMfV31gFlLlWqETmQUqGYGTo6pC2MUHE8feQYUkLKcg3i4SmK/H6nDCqwbmcIdZGbPK4BSrFJBeKqf4lLfHC2MI8LLeDyx5l4zrz25LmPbZJ0y70hWXfeHMqd80sKqcMjXd1ehV2u52cuM1QDf4Dv2y7KK0SVnUAOQDCU+ZPQJ+/wITl5/c29XuwmgSxSpL8HPHmyFTOsEsKfVWgvGhpoerlRwpORC3Fu63Xu0tNvnUyGL7m9F5UhlSkJL+mk3y7N95Lxtc531lrqFg4qa4Ctoqn4Oh/ZZub/OIZwRiKysfthDtbxulon4KoGrAnOTz9v9zjuEmJ0AkM8QCzwPl38eYO3PUYqb8pDMB21/kqkGsSNKYw==
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
+        id S1727622AbgIRCFo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 17 Sep 2020 22:05:44 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54172 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727531AbgIRCFm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 17 Sep 2020 22:05:42 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 41DB223600;
+        Fri, 18 Sep 2020 02:05:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1600394741;
+        bh=HcWzcq35jh/C3lXqHajszrBmo6BU0mltpavpAsqVF70=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=tScIUIorpI43JZWu2fZIiCob0OfJpWaoi44LyStrzKl+BKkbY/Jd1wV5KTuk8QqqK
+         fe9WrgG+NA7tipGyAgL+aKBgi4WGGk2SRHy86HHQsCpFcue0WUJ3MXazsTzwfYQvro
+         16VDMtsavad5AZGVUn0CtsPsMFIysKyswMMpALoQ=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Stuart Hayes <stuart.w.hayes@gmail.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Joerg Roedel <jroedel@suse.de>,
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 221/330] PCI: pciehp: Fix MSI interrupt race
+Date:   Thu, 17 Sep 2020 21:59:21 -0400
+Message-Id: <20200918020110.2063155-221-sashal@kernel.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200918020110.2063155-1-sashal@kernel.org>
+References: <20200918020110.2063155-1-sashal@kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: HE1PR0402MB3371.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 037f5fb6-0b11-44f3-6965-08d85b7e401c
-X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Sep 2020 02:55:07.0177
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: R4ryCdWGbxvPbc1V+pp4X+seuBxacAHCcYYNSrSyJMX15AP+ZhKIAmihdFErkOWhfruhfZTyJKOpUwz/v8ApYQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: HE1PR0402MB3369
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-SGkgTG9yZW56bywNCg0KVGhhbmtzIGEgbG90IGZvciB5b3VyIGNvbW1lbnRzIQ0KDQo+IC0tLS0t
-T3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IExvcmVuem8gUGllcmFsaXNpIDxsb3Jlbnpv
-LnBpZXJhbGlzaUBhcm0uY29tPg0KPiBTZW50OiAyMDIwxOo51MIxOMjVIDA6MjANCj4gVG86IFou
-cS4gSG91IDx6aGlxaWFuZy5ob3VAbnhwLmNvbT4NCj4gQ2M6IGxpbnV4LXBjaUB2Z2VyLmtlcm5l
-bC5vcmc7IGRldmljZXRyZWVAdmdlci5rZXJuZWwub3JnOw0KPiBsaW51eC1rZXJuZWxAdmdlci5r
-ZXJuZWwub3JnOyBsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmc7DQo+IGxpbnV4
-cHBjLWRldkBsaXN0cy5vemxhYnMub3JnOyByb2JoK2R0QGtlcm5lbC5vcmc7IGJoZWxnYWFzQGdv
-b2dsZS5jb207DQo+IHNoYXduZ3VvQGtlcm5lbC5vcmc7IExlbyBMaSA8bGVveWFuZy5saUBueHAu
-Y29tPjsga2lzaG9uQHRpLmNvbTsNCj4gZ3VzdGF2by5waW1lbnRlbEBzeW5vcHN5cy5jb207IFJv
-eSBaYW5nIDxyb3kuemFuZ0BueHAuY29tPjsNCj4gamluZ29vaGFuMUBnbWFpbC5jb207IGFuZHJl
-dy5tdXJyYXlAYXJtLmNvbTsgTWluZ2thaSBIdQ0KPiA8bWluZ2thaS5odUBueHAuY29tPjsgTS5o
-LiBMaWFuIDxtaW5naHVhbi5saWFuQG54cC5jb20+DQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0h2NyAw
-MC8xMl1QQ0k6IGR3YzogQWRkIHRoZSBtdWx0aXBsZSBQRiBzdXBwb3J0IGZvciBEV0MNCj4gYW5k
-IExheWVyc2NhcGUNCj4gDQo+IE9uIFR1ZSwgQXVnIDExLCAyMDIwIGF0IDA1OjU0OjI5UE0gKzA4
-MDAsIFpoaXFpYW5nIEhvdSB3cm90ZToNCj4gPiBGcm9tOiBIb3UgWmhpcWlhbmcgPFpoaXFpYW5n
-LkhvdUBueHAuY29tPg0KPiA+DQo+ID4gQWRkIHRoZSBQQ0llIEVQIG11bHRpcGxlIFBGIHN1cHBv
-cnQgZm9yIERXQyBhbmQgTGF5ZXJzY2FwZSwgYW5kIHVzZSBhDQo+ID4gbGlzdCB0byBtYW5hZ2Ug
-dGhlIFBGcyBvZiBlYWNoIFBDSWUgY29udHJvbGxlcjsgYWRkIHRoZSBkb29yYmVsbCBNU0lYDQo+
-ID4gZnVuY3Rpb24gZm9yIERXQzsgYW5kIHJlZmFjdG9yIHRoZSBMYXllcnNjYXBlIEVQIGRyaXZl
-ciBkdWUgdG8gc29tZQ0KPiA+IGRpZmZlcmVuY2UgaW4gTGF5ZXJjYXBlIHBsYXRmb3JtcyBQQ0ll
-IGludGVncmF0aW9uLg0KPiA+DQo+ID4gSG91IFpoaXFpYW5nICgxKToNCj4gPiAgIG1pc2M6IHBj
-aV9lbmRwb2ludF90ZXN0OiBBZGQgZHJpdmVyIGRhdGEgZm9yIExheWVyc2NhcGUgUENJZQ0KPiA+
-ICAgICBjb250cm9sbGVycw0KPiA+DQo+ID4gWGlhb3dlaSBCYW8gKDExKToNCj4gPiAgIFBDSTog
-ZGVzaWdud2FyZS1lcDogQWRkIG11bHRpcGxlIFBGcyBzdXBwb3J0IGZvciBEV0MNCj4gPiAgIFBD
-STogZGVzaWdud2FyZS1lcDogQWRkIHRoZSBkb29yYmVsbCBtb2RlIG9mIE1TSS1YIGluIEVQIG1v
-ZGUNCj4gPiAgIFBDSTogZGVzaWdud2FyZS1lcDogTW92ZSB0aGUgZnVuY3Rpb24gb2YgZ2V0dGlu
-ZyBNU0kgY2FwYWJpbGl0eQ0KPiA+ICAgICBmb3J3YXJkDQo+ID4gICBQQ0k6IGRlc2lnbndhcmUt
-ZXA6IE1vZGlmeSBNU0kgYW5kIE1TSVggQ0FQIHdheSBvZiBmaW5kaW5nDQo+ID4gICBkdC1iaW5k
-aW5nczogcGNpOiBsYXllcnNjYXBlLXBjaTogQWRkIGNvbXBhdGlibGUgc3RyaW5ncyBmb3IgbHMx
-MDg4YQ0KPiA+ICAgICBhbmQgbHMyMDg4YQ0KPiA+ICAgUENJOiBsYXllcnNjYXBlOiBGaXggc29t
-ZSBmb3JtYXQgaXNzdWUgb2YgdGhlIGNvZGUNCj4gPiAgIFBDSTogbGF5ZXJzY2FwZTogTW9kaWZ5
-IHRoZSB3YXkgb2YgZ2V0dGluZyBjYXBhYmlsaXR5IHdpdGggZGlmZmVyZW50DQo+ID4gICAgIFBF
-WA0KPiA+ICAgUENJOiBsYXllcnNjYXBlOiBNb2RpZnkgdGhlIE1TSVggdG8gdGhlIGRvb3JiZWxs
-IG1vZGUNCj4gPiAgIFBDSTogbGF5ZXJzY2FwZTogQWRkIEVQIG1vZGUgc3VwcG9ydCBmb3IgbHMx
-MDg4YSBhbmQgbHMyMDg4YQ0KPiA+ICAgYXJtNjQ6IGR0czogbGF5ZXJzY2FwZTogQWRkIFBDSWUg
-RVAgbm9kZSBmb3IgbHMxMDg4YQ0KPiA+ICAgbWlzYzogcGNpX2VuZHBvaW50X3Rlc3Q6IEFkZCBM
-UzEwODhhIGluIHBjaV9kZXZpY2VfaWQgdGFibGUNCj4gPg0KPiA+ICAuLi4vYmluZGluZ3MvcGNp
-L2xheWVyc2NhcGUtcGNpLnR4dCAgICAgICAgICAgfCAgIDIgKw0KPiA+ICAuLi4vYXJtNjQvYm9v
-dC9kdHMvZnJlZXNjYWxlL2ZzbC1sczEwODhhLmR0c2kgfCAgMzEgKysrDQo+ID4gIGRyaXZlcnMv
-bWlzYy9wY2lfZW5kcG9pbnRfdGVzdC5jICAgICAgICAgICAgICB8ICAgOCArLQ0KPiA+ICAuLi4v
-cGNpL2NvbnRyb2xsZXIvZHdjL3BjaS1sYXllcnNjYXBlLWVwLmMgICAgfCAxMDAgKysrKystLQ0K
-PiA+ICAuLi4vcGNpL2NvbnRyb2xsZXIvZHdjL3BjaWUtZGVzaWdud2FyZS1lcC5jICAgfCAyNTgN
-Cj4gKysrKysrKysrKysrKystLS0tDQo+ID4gIGRyaXZlcnMvcGNpL2NvbnRyb2xsZXIvZHdjL3Bj
-aWUtZGVzaWdud2FyZS5jICB8ICA1OSArKy0tDQo+ID4gZHJpdmVycy9wY2kvY29udHJvbGxlci9k
-d2MvcGNpZS1kZXNpZ253YXJlLmggIHwgIDQ4ICsrKy0NCj4gPiAgNyBmaWxlcyBjaGFuZ2VkLCA0
-MTAgaW5zZXJ0aW9ucygrKSwgOTYgZGVsZXRpb25zKC0pDQo+IA0KPiBTaWRlIG5vdGU6IEkgd2ls
-bCBjaGFuZ2UgaXQgZm9yIHlvdSBidXQgcGxlYXNlIGtlZXAgU2lnbmVkLW9mZi1ieToNCj4gdGFn
-cyB0b2dldGhlciBpbiB0aGUgbG9nIGluc3RlYWQgb2YgbWl4aW5nIHRoZW0gd2l0aCBvdGhlciB0
-YWdzIHJhbmRvbWx5Lg0KPiANCj4gQ2FuIHlvdSByZWJhc2UgdGhpcyBzZXJpZXMgYWdhaW5zdCBt
-eSBwY2kvZHdjIGJyYW5jaCBwbGVhc2UgYW5kIHNlbmQgYSB2OCA/DQo+IA0KPiBJIHdpbGwgYXBw
-bHkgaXQgdGhlbi4NCg0KSSdsbCByZWJhc2UgdGhpcyBzZXJpZXMgYW5kIHB1dCB0aGUgU2lnbmVk
-LW9mZi1ieSB0YWdzIHRvZ2V0aGVyIHRvZGF5Lg0KDQpSZWdhcmRzLA0KWmhpcWlhbmcNCg0KPiAN
-Cj4gVGhhbmtzLA0KPiBMb3JlbnpvDQo=
+From: Stuart Hayes <stuart.w.hayes@gmail.com>
+
+[ Upstream commit 8edf5332c39340b9583cf9cba659eb7ec71f75b5 ]
+
+Without this commit, a PCIe hotplug port can stop generating interrupts on
+hotplug events, so device adds and removals will not be seen:
+
+The pciehp interrupt handler pciehp_isr() reads the Slot Status register
+and then writes back to it to clear the bits that caused the interrupt.  If
+a different interrupt event bit gets set between the read and the write,
+pciehp_isr() returns without having cleared all of the interrupt event
+bits.  If this happens when the MSI isn't masked (which by default it isn't
+in handle_edge_irq(), and which it will never be when MSI per-vector
+masking is not supported), we won't get any more hotplug interrupts from
+that device.
+
+That is expected behavior, according to the PCIe Base Spec r5.0, section
+6.7.3.4, "Software Notification of Hot-Plug Events".
+
+Because the Presence Detect Changed and Data Link Layer State Changed event
+bits can both get set at nearly the same time when a device is added or
+removed, this is more likely to happen than it might seem.  The issue was
+found (and can be reproduced rather easily) by connecting and disconnecting
+an NVMe storage device on at least one system model where the NVMe devices
+were being connected to an AMD PCIe port (PCI device 0x1022/0x1483).
+
+Fix the issue by modifying pciehp_isr() to loop back and re-read the Slot
+Status register immediately after writing to it, until it sees that all of
+the event status bits have been cleared.
+
+[lukas: drop loop count limitation, write "events" instead of "status",
+don't loop back in INTx and poll modes, tweak code comment & commit msg]
+Link: https://lore.kernel.org/r/78b4ced5072bfe6e369d20e8b47c279b8c7af12e.1582121613.git.lukas@wunner.de
+Tested-by: Stuart Hayes <stuart.w.hayes@gmail.com>
+Signed-off-by: Stuart Hayes <stuart.w.hayes@gmail.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Joerg Roedel <jroedel@suse.de>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/pci/hotplug/pciehp_hpc.c | 26 ++++++++++++++++++++------
+ 1 file changed, 20 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 356786a3b7f4b..88b996764ff95 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -529,7 +529,7 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
+ 	struct controller *ctrl = (struct controller *)dev_id;
+ 	struct pci_dev *pdev = ctrl_dev(ctrl);
+ 	struct device *parent = pdev->dev.parent;
+-	u16 status, events;
++	u16 status, events = 0;
+ 
+ 	/*
+ 	 * Interrupts only occur in D3hot or shallower and only if enabled
+@@ -554,6 +554,7 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
+ 		}
+ 	}
+ 
++read_status:
+ 	pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &status);
+ 	if (status == (u16) ~0) {
+ 		ctrl_info(ctrl, "%s: no response from device\n", __func__);
+@@ -566,24 +567,37 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
+ 	 * Slot Status contains plain status bits as well as event
+ 	 * notification bits; right now we only want the event bits.
+ 	 */
+-	events = status & (PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
+-			   PCI_EXP_SLTSTA_PDC | PCI_EXP_SLTSTA_CC |
+-			   PCI_EXP_SLTSTA_DLLSC);
++	status &= PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
++		  PCI_EXP_SLTSTA_PDC | PCI_EXP_SLTSTA_CC |
++		  PCI_EXP_SLTSTA_DLLSC;
+ 
+ 	/*
+ 	 * If we've already reported a power fault, don't report it again
+ 	 * until we've done something to handle it.
+ 	 */
+ 	if (ctrl->power_fault_detected)
+-		events &= ~PCI_EXP_SLTSTA_PFD;
++		status &= ~PCI_EXP_SLTSTA_PFD;
+ 
++	events |= status;
+ 	if (!events) {
+ 		if (parent)
+ 			pm_runtime_put(parent);
+ 		return IRQ_NONE;
+ 	}
+ 
+-	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA, events);
++	if (status) {
++		pcie_capability_write_word(pdev, PCI_EXP_SLTSTA, events);
++
++		/*
++		 * In MSI mode, all event bits must be zero before the port
++		 * will send a new interrupt (PCIe Base Spec r5.0 sec 6.7.3.4).
++		 * So re-read the Slot Status register in case a bit was set
++		 * between read and write.
++		 */
++		if (pci_dev_msi_enabled(pdev) && !pciehp_poll_mode)
++			goto read_status;
++	}
++
+ 	ctrl_dbg(ctrl, "pending interrupts %#06x from Slot Status\n", events);
+ 	if (parent)
+ 		pm_runtime_put(parent);
+-- 
+2.25.1
+
