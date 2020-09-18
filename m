@@ -2,148 +2,100 @@ Return-Path: <SRS0=Geob=C3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0080AC43463
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 20:03:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B231C43464
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 20:04:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B08E32311D
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 20:03:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B46E523119
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 20:04:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726280AbgIRUDk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 18 Sep 2020 16:03:40 -0400
-Received: from mga12.intel.com ([192.55.52.136]:55347 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726252AbgIRUDk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 18 Sep 2020 16:03:40 -0400
-IronPort-SDR: U8CELlTZUbcdj6aK2w+ktDgsIdlhDHY0VxOXKOxPtpncwxZJL2swCnmYg7mG/t8AL66vTOQKYI
- Lnt0RwCdGSKQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9748"; a="139519431"
-X-IronPort-AV: E=Sophos;i="5.77,274,1596524400"; 
-   d="scan'208";a="139519431"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Sep 2020 12:58:36 -0700
-IronPort-SDR: zMAmJEPF9pBgpne9WhVEyXHzPjx8HciR/MrajnE8Q6DuOnKEKV9xfbL8WQHvObEkuKaSOmpBgp
- 9PgofbhAZflw==
-X-IronPort-AV: E=Sophos;i="5.77,274,1596524400"; 
-   d="scan'208";a="303453429"
-Received: from pbashab-mobl2.amr.corp.intel.com (HELO skuppusw-mobl5.amr.corp.intel.com) ([10.254.127.73])
-  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Sep 2020 12:58:36 -0700
-From:   sathyanarayanan.kuppuswamy@linux.intel.com
-To:     bhelgaas@google.com
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ashok.raj@intel.com, sathyanarayanan.kuppuswamy@linux.intel.com
-Subject: [PATCH v9 3/5] ACPI/PCI: Ignore _OSC DPC negotiation result if pcie_ports_dpc_native is set.
-Date:   Fri, 18 Sep 2020 12:58:32 -0700
-Message-Id: <be30aae22a3e9604d0fc39c56245d12856b35ff0.1600457297.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <cover.1600457297.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-References: <cover.1600457297.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+        id S1726273AbgIRUEO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 18 Sep 2020 16:04:14 -0400
+Received: from mout.kundenserver.de ([212.227.126.134]:44989 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726154AbgIRUEO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Sep 2020 16:04:14 -0400
+X-Greylist: delayed 304 seconds by postgrey-1.27 at vger.kernel.org; Fri, 18 Sep 2020 16:04:13 EDT
+Received: from mail-qv1-f53.google.com ([209.85.219.53]) by
+ mrelayeu.kundenserver.de (mreue010 [212.227.15.129]) with ESMTPSA (Nemesis)
+ id 1M7aqD-1kOa8H2TiH-0081tZ; Fri, 18 Sep 2020 21:59:08 +0200
+Received: by mail-qv1-f53.google.com with SMTP id j3so3588296qvi.7;
+        Fri, 18 Sep 2020 12:59:08 -0700 (PDT)
+X-Gm-Message-State: AOAM530ZeA+inWt9/NUkL62YrpIHKAwi+jcnZKhF3N9L3B/PbdVnsya/
+        oi0z+HavLMw4yRHXwDKid3mKo/SHozliPNXw794=
+X-Google-Smtp-Source: ABdhPJytBHBh/fQMXo7+68dbrxEABzvlGs5A0AsCoE1YgJGiTA+FdkuyePsZid8ag08tntnusNEq5NJL9EnWegFjyH8=
+X-Received: by 2002:a0c:b902:: with SMTP id u2mr33843869qvf.7.1600459147303;
+ Fri, 18 Sep 2020 12:59:07 -0700 (PDT)
+MIME-Version: 1.0
+References: <20200915093203.16934-1-lorenzo.pieralisi@arm.com>
+ <cover.1600254147.git.lorenzo.pieralisi@arm.com> <20200918114508.GA20110@e121166-lin.cambridge.arm.com>
+In-Reply-To: <20200918114508.GA20110@e121166-lin.cambridge.arm.com>
+From:   Arnd Bergmann <arnd@arndb.de>
+Date:   Fri, 18 Sep 2020 21:58:51 +0200
+X-Gmail-Original-Message-ID: <CAK8P3a1f9Qj+yhMB4QaAu36ZUQ1p6oKHm2MZQ3zU31q6xmymGA@mail.gmail.com>
+Message-ID: <CAK8P3a1f9Qj+yhMB4QaAu36ZUQ1p6oKHm2MZQ3zU31q6xmymGA@mail.gmail.com>
+Subject: Re: [PATCH v2 0/3] Fix pci_iounmap() on !CONFIG_GENERIC_IOMAP
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will@kernel.org>,
+        George Cherian <george.cherian@marvell.com>,
+        Yang Yingliang <yangyingliang@huawei.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        linux-arch <linux-arch@vger.kernel.org>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Provags-ID: V03:K1:VRIHA3kLYuVnqBOmVjZxDHpU5iuxIlHABaeAykjpWRJG87XIlvQ
+ nzm3sJNPdfFThXmkqyLysreEc+3FT/n9/9a3iFPzE1VldoYL3pSVbI7xm1N5t0Ntdj2H3E5
+ 0wns+4uby2aVC8sMbV7XixaW/OoRhu52L49WST1aoWuqFsS75RJmLdKhgUHKZ4FxiCNF5oG
+ IDiSkaNIyG8J5Sglb2QTQ==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:G9F+xbi+MqU=:exGgY1ouoMQEZ4yAwf+uXa
+ 2Q1fJPvb50BxhqrEM+YJHdjUuU18b3c2g+IvfMDQz+Tx0GT4imi5yFjvE8qAIullr/QCm5HlV
+ m1Gz2WT30X+uKoSQJDxbCC3Rp3P9RwnpjKAZMy+IF3HhTwOOMe7cnMeDotJU8graVra85m7nT
+ XDLgF3+tueOTNg57YfW+5BYYECCnb1tWZXhWCQYYzr5VuXq6OzT3izteijmKn+uG4StSntPt9
+ F/FmkHjYcddBMbkn8bW/D2xHAamiRUhEUHsGqxx59GGDWR83CYfwcKzvHrzxATozYs6rOaxTX
+ r+Q3Oa7ViSTWjQWzWn8pFiz6ZjsXrR/EucOC9mKqvIy9IwbpYT/cIs4QDmWUegEoI7u3uk/ZQ
+ X/1bx3wZEGKtqba91G+R7CSw5mzZ3PgFfQ9Qf+SfBg67it76QLpXi/cZTsxCMZztW0jgAiGNx
+ zbHu1Vx8DFRXkZD19VZhZxXLmhSnnF3dcO+MHzLwlO9iwenrVQdrImU9Cw3hfzL2JvZkaGWZD
+ 6wFXMT2NNFMBojWvG5CXk/6nKS7kFyICyWY5zGXj41pQPRc6/6s07M18kbpS961hhbfF4GGuY
+ 0HErbTDJ6cakbwfxxMMMhWbchA59BqdCIglMmBmCedAqDGzLnKybyfdC8jasbfqP/tIa+rsna
+ 8Yh5cg2zbOOT+UjYh0Jnr3V44VXjm8x9YTJUPumRDInvBMFmDEJrgtxIVUuDjaveatLjmK93Z
+ 4VQ4evBjoJdumU5BByvZNeqcjOFcpdEFu4HU8q17Nm7xQnVqql6XmVOWtVw5SsTT1iJ2zaFPy
+ j9GLPI+4D7qo321L9X/60dhAJTLPEkdh/B4cW3HdJ1Djp1J0Xzuq9PO/yDIFq5WIDzfcjAm
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+On Fri, Sep 18, 2020 at 1:45 PM Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> >
+> > Lorenzo Pieralisi (3):
+> >   sparc32: Remove useless io_32.h __KERNEL__ preprocessor guard
+> >   sparc32: Move ioremap/iounmap declaration before asm-generic/io.h
+> >     include
+> >   asm-generic/io.h: Fix !CONFIG_GENERIC_IOMAP pci_iounmap()
+> >     implementation
+> >
+> >  arch/sparc/include/asm/io_32.h | 17 ++++++---------
+> >  include/asm-generic/io.h       | 39 +++++++++++++++++++++++-----------
+> >  2 files changed, 34 insertions(+), 22 deletions(-)
+>
+> Arnd, David, Bjorn,
+>
+> I have got review/test tags, is it OK if we merge this series please ?
+>
+> Can we pull it in the PCI tree or you want it to go via a different
+> route upstream ?
+>
+> Please let me know.
 
-pcie_ports_dpc_native is set only if user requests native handling
-of PCIe DPC capability via pcie_port_setup command line option.
-User input takes precedence over _OSC based control negotiation
-result. So consider the _OSC negotiated result for DPC ownership
-only if pcie_ports_dpc_native is unset.
+Going through the PCI tree sounds good to me, but I can
+take it through the asm-generic tree if Bjorn doesn't want to
+pick it up there.
 
-Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
----
- drivers/acpi/pci_root.c         | 8 ++++++--
- drivers/pci/pcie/dpc.c          | 3 ++-
- drivers/pci/pcie/portdrv.h      | 2 --
- drivers/pci/pcie/portdrv_core.c | 2 +-
- include/linux/pci.h             | 2 ++
- 5 files changed, 11 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 9749b7abdd7e..979d03494476 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -935,8 +935,12 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
- 			    host_bridge->native_ltr);
- 		  OSC_OWNER(ctrl, OSC_PCI_EXPRESS_DPC_CONTROL,
- 			    host_bridge->native_dpc);
--	  }
--
-+		  if (pcie_ports_dpc_native)
-+			  dev_warn(&bus->dev, "OS forcibly taking over DPC\n");
-+		  else
-+			  OSC_OWNER(ctrl, OSC_PCI_EXPRESS_DPC_CONTROL,
-+				    host_bridge->native_dpc);
-+		}
- 	if (!(root->osc_control_set & OSC_PCI_SHPC_NATIVE_HP_CONTROL))
- 		host_bridge->native_shpc_hotplug = 0;
- 
-diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-index daa9a4153776..5b1025a2994d 100644
---- a/drivers/pci/pcie/dpc.c
-+++ b/drivers/pci/pcie/dpc.c
-@@ -280,11 +280,12 @@ void pci_dpc_init(struct pci_dev *pdev)
- static int dpc_probe(struct pcie_device *dev)
- {
- 	struct pci_dev *pdev = dev->port;
-+	struct pci_host_bridge *host = pci_find_host_bridge(pdev->bus);
- 	struct device *device = &dev->device;
- 	int status;
- 	u16 ctl, cap;
- 
--	if (!pcie_aer_is_native(pdev) && !pcie_ports_dpc_native)
-+	if (!pcie_aer_is_native(pdev) && !host->native_dpc)
- 		return -ENOTSUPP;
- 
- 	status = devm_request_threaded_irq(device, dev->irq, dpc_irq,
-diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
-index af7cf237432a..0ac20feef24e 100644
---- a/drivers/pci/pcie/portdrv.h
-+++ b/drivers/pci/pcie/portdrv.h
-@@ -25,8 +25,6 @@
- 
- #define PCIE_PORT_DEVICE_MAXSERVICES   5
- 
--extern bool pcie_ports_dpc_native;
--
- #ifdef CONFIG_PCIEAER
- int pcie_aer_init(void);
- int pcie_aer_is_native(struct pci_dev *dev);
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index ccd5e0ce5605..2c0278f0fdcc 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -253,7 +253,7 @@ static int get_port_device_capability(struct pci_dev *dev)
- 	 */
- 	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC) &&
- 	    pci_aer_available() &&
--	    (pcie_ports_dpc_native || (services & PCIE_PORT_SERVICE_AER)))
-+	    (host->native_dpc || (services & PCIE_PORT_SERVICE_AER)))
- 		services |= PCIE_PORT_SERVICE_DPC;
- 
- 	if (pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM ||
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 835530605c0d..dc03b6c65742 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1556,9 +1556,11 @@ static inline int pci_irqd_intx_xlate(struct irq_domain *d,
- #ifdef CONFIG_PCIEPORTBUS
- extern bool pcie_ports_disabled;
- extern bool pcie_ports_native;
-+extern bool pcie_ports_dpc_native;
- #else
- #define pcie_ports_disabled	true
- #define pcie_ports_native	false
-+#define pcie_ports_dpc_native	false
- #endif
- 
- #define PCIE_LINK_STATE_L0S		BIT(0)
--- 
-2.17.1
-
+       Arnd
