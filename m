@@ -7,27 +7,28 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED6ADC43465
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 08:19:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC57FC43465
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 08:19:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C63EE2176B
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 08:19:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8EC1721D24
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 08:19:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726589AbgIRITS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 18 Sep 2020 04:19:18 -0400
-Received: from inva021.nxp.com ([92.121.34.21]:58566 "EHLO inva021.nxp.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726109AbgIRIS7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1726474AbgIRIS7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Fri, 18 Sep 2020 04:18:59 -0400
-Received: from inva021.nxp.com (localhost [127.0.0.1])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 0531720179B;
-        Fri, 18 Sep 2020 10:08:56 +0200 (CEST)
+Received: from inva020.nxp.com ([92.121.34.13]:56904 "EHLO inva020.nxp.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725874AbgIRISy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 18 Sep 2020 04:18:54 -0400
+X-Greylist: delayed 300 seconds by postgrey-1.27 at vger.kernel.org; Fri, 18 Sep 2020 04:18:52 EDT
+Received: from inva020.nxp.com (localhost [127.0.0.1])
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 4B69B1A0F76;
+        Fri, 18 Sep 2020 10:08:52 +0200 (CEST)
 Received: from invc005.ap-rdc01.nxp.com (invc005.ap-rdc01.nxp.com [165.114.16.14])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id ACC5520112F;
-        Fri, 18 Sep 2020 10:08:48 +0200 (CEST)
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id BED421A02BD;
+        Fri, 18 Sep 2020 10:08:44 +0200 (CEST)
 Received: from localhost.localdomain (mega.ap.freescale.net [10.192.208.232])
-        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id 3928F40318;
-        Fri, 18 Sep 2020 10:08:39 +0200 (CEST)
+        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id B9A2640326;
+        Fri, 18 Sep 2020 10:08:35 +0200 (CEST)
 From:   Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
 To:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
@@ -38,9 +39,9 @@ To:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
 Cc:     minghuan.Lian@nxp.com, mingkai.hu@nxp.com, roy.zang@nxp.com,
         Xiaowei Bao <xiaowei.bao@nxp.com>,
         Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Subject: [PATCHv8 06/12] PCI: layerscape: Fix some format issue of the code
-Date:   Fri, 18 Sep 2020 16:00:18 +0800
-Message-Id: <20200918080024.13639-7-Zhiqiang.Hou@nxp.com>
+Subject: [PATCHv8 04/12] PCI: designware-ep: Modify MSI and MSIX CAP way of finding
+Date:   Fri, 18 Sep 2020 16:00:16 +0800
+Message-Id: <20200918080024.13639-5-Zhiqiang.Hou@nxp.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200918080024.13639-1-Zhiqiang.Hou@nxp.com>
 References: <20200918080024.13639-1-Zhiqiang.Hou@nxp.com>
@@ -51,40 +52,333 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Xiaowei Bao <xiaowei.bao@nxp.com>
 
-Fix some format issue of the code in EP driver.
+Each PF of EP device should have its own MSI or MSIX capabitily
+struct, so create a dw_pcie_ep_func struct and move the msi_cap
+and msix_cap to this struct from dw_pcie_ep, and manage the PFs
+via a list.
 
 Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
 Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Reviewed-by: Andrew Murray <andrew.murray@arm.com>
+
 ---
 V8:
- - No change.
+ - Put the ep_func and ep_func->msi_cap pointer checking in one line.
 
- drivers/pci/controller/dwc/pci-layerscape-ep.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ .../pci/controller/dwc/pcie-designware-ep.c   | 121 +++++++++++++++---
+ drivers/pci/controller/dwc/pcie-designware.h  |  18 ++-
+ 2 files changed, 118 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pci-layerscape-ep.c b/drivers/pci/controller/dwc/pci-layerscape-ep.c
-index 0d151cead1b7..0691d9ad1356 100644
---- a/drivers/pci/controller/dwc/pci-layerscape-ep.c
-+++ b/drivers/pci/controller/dwc/pci-layerscape-ep.c
-@@ -63,7 +63,7 @@ static void ls_pcie_ep_init(struct dw_pcie_ep *ep)
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index 25767a334259..ad7da4ea43a5 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -30,6 +30,19 @@ void dw_pcie_ep_init_notify(struct dw_pcie_ep *ep)
+ }
+ EXPORT_SYMBOL_GPL(dw_pcie_ep_init_notify);
+ 
++struct dw_pcie_ep_func *
++dw_pcie_ep_get_func_from_ep(struct dw_pcie_ep *ep, u8 func_no)
++{
++	struct dw_pcie_ep_func *ep_func;
++
++	list_for_each_entry(ep_func, &ep->func_list, list) {
++		if (ep_func->func_no == func_no)
++			return ep_func;
++	}
++
++	return NULL;
++}
++
+ static unsigned int dw_pcie_ep_func_select(struct dw_pcie_ep *ep, u8 func_no)
+ {
+ 	unsigned int func_offset = 0;
+@@ -70,6 +83,47 @@ void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
+ 		__dw_pcie_ep_reset_bar(pci, func_no, bar, 0);
  }
  
- static int ls_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
--				  enum pci_epc_irq_type type, u16 interrupt_num)
-+				enum pci_epc_irq_type type, u16 interrupt_num)
++static u8 __dw_pcie_ep_find_next_cap(struct dw_pcie_ep *ep, u8 func_no,
++		u8 cap_ptr, u8 cap)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	unsigned int func_offset = 0;
++	u8 cap_id, next_cap_ptr;
++	u16 reg;
++
++	if (!cap_ptr)
++		return 0;
++
++	func_offset = dw_pcie_ep_func_select(ep, func_no);
++
++	reg = dw_pcie_readw_dbi(pci, func_offset + cap_ptr);
++	cap_id = (reg & 0x00ff);
++
++	if (cap_id > PCI_CAP_ID_MAX)
++		return 0;
++
++	if (cap_id == cap)
++		return cap_ptr;
++
++	next_cap_ptr = (reg & 0xff00) >> 8;
++	return __dw_pcie_ep_find_next_cap(ep, func_no, next_cap_ptr, cap);
++}
++
++static u8 dw_pcie_ep_find_capability(struct dw_pcie_ep *ep, u8 func_no, u8 cap)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	unsigned int func_offset = 0;
++	u8 next_cap_ptr;
++	u16 reg;
++
++	func_offset = dw_pcie_ep_func_select(ep, func_no);
++
++	reg = dw_pcie_readw_dbi(pci, func_offset + PCI_CAPABILITY_LIST);
++	next_cap_ptr = (reg & 0x00ff);
++
++	return __dw_pcie_ep_find_next_cap(ep, func_no, next_cap_ptr, cap);
++}
++
+ static int dw_pcie_ep_write_header(struct pci_epc *epc, u8 func_no,
+ 				   struct pci_epf_header *hdr)
+ {
+@@ -259,13 +313,15 @@ static int dw_pcie_ep_get_msi(struct pci_epc *epc, u8 func_no)
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 	u32 val, reg;
+ 	unsigned int func_offset = 0;
++	struct dw_pcie_ep_func *ep_func;
+ 
+-	if (!ep->msi_cap)
++	ep_func = dw_pcie_ep_get_func_from_ep(ep, func_no);
++	if (!ep_func || !ep_func->msi_cap)
+ 		return -EINVAL;
+ 
+ 	func_offset = dw_pcie_ep_func_select(ep, func_no);
+ 
+-	reg = ep->msi_cap + func_offset + PCI_MSI_FLAGS;
++	reg = ep_func->msi_cap + func_offset + PCI_MSI_FLAGS;
+ 	val = dw_pcie_readw_dbi(pci, reg);
+ 	if (!(val & PCI_MSI_FLAGS_ENABLE))
+ 		return -EINVAL;
+@@ -281,13 +337,15 @@ static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts)
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 	u32 val, reg;
+ 	unsigned int func_offset = 0;
++	struct dw_pcie_ep_func *ep_func;
+ 
+-	if (!ep->msi_cap)
++	ep_func = dw_pcie_ep_get_func_from_ep(ep, func_no);
++	if (!ep_func || !ep_func->msi_cap)
+ 		return -EINVAL;
+ 
+ 	func_offset = dw_pcie_ep_func_select(ep, func_no);
+ 
+-	reg = ep->msi_cap + func_offset + PCI_MSI_FLAGS;
++	reg = ep_func->msi_cap + func_offset + PCI_MSI_FLAGS;
+ 	val = dw_pcie_readw_dbi(pci, reg);
+ 	val &= ~PCI_MSI_FLAGS_QMASK;
+ 	val |= (interrupts << 1) & PCI_MSI_FLAGS_QMASK;
+@@ -304,13 +362,15 @@ static int dw_pcie_ep_get_msix(struct pci_epc *epc, u8 func_no)
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 	u32 val, reg;
+ 	unsigned int func_offset = 0;
++	struct dw_pcie_ep_func *ep_func;
+ 
+-	if (!ep->msix_cap)
++	ep_func = dw_pcie_ep_get_func_from_ep(ep, func_no);
++	if (!ep_func || !ep_func->msix_cap)
+ 		return -EINVAL;
+ 
+ 	func_offset = dw_pcie_ep_func_select(ep, func_no);
+ 
+-	reg = ep->msix_cap + func_offset + PCI_MSIX_FLAGS;
++	reg = ep_func->msix_cap + func_offset + PCI_MSIX_FLAGS;
+ 	val = dw_pcie_readw_dbi(pci, reg);
+ 	if (!(val & PCI_MSIX_FLAGS_ENABLE))
+ 		return -EINVAL;
+@@ -327,25 +387,27 @@ static int dw_pcie_ep_set_msix(struct pci_epc *epc, u8 func_no, u16 interrupts,
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 	u32 val, reg;
+ 	unsigned int func_offset = 0;
++	struct dw_pcie_ep_func *ep_func;
+ 
+-	if (!ep->msix_cap)
++	ep_func = dw_pcie_ep_get_func_from_ep(ep, func_no);
++	if (!ep_func || !ep_func->msix_cap)
+ 		return -EINVAL;
+ 
+ 	dw_pcie_dbi_ro_wr_en(pci);
+ 
+ 	func_offset = dw_pcie_ep_func_select(ep, func_no);
+ 
+-	reg = ep->msix_cap + func_offset + PCI_MSIX_FLAGS;
++	reg = ep_func->msix_cap + func_offset + PCI_MSIX_FLAGS;
+ 	val = dw_pcie_readw_dbi(pci, reg);
+ 	val &= ~PCI_MSIX_FLAGS_QSIZE;
+ 	val |= interrupts;
+ 	dw_pcie_writew_dbi(pci, reg, val);
+ 
+-	reg = ep->msix_cap + func_offset + PCI_MSIX_TABLE;
++	reg = ep_func->msix_cap + func_offset + PCI_MSIX_TABLE;
+ 	val = offset | bir;
+ 	dw_pcie_writel_dbi(pci, reg, val);
+ 
+-	reg = ep->msix_cap + func_offset + PCI_MSIX_PBA;
++	reg = ep_func->msix_cap + func_offset + PCI_MSIX_PBA;
+ 	val = (offset + (interrupts * PCI_MSIX_ENTRY_SIZE)) | bir;
+ 	dw_pcie_writel_dbi(pci, reg, val);
+ 
+@@ -428,6 +490,7 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 			     u8 interrupt_num)
  {
  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	struct dw_pcie_ep_func *ep_func;
+ 	struct pci_epc *epc = ep->epc;
+ 	unsigned int aligned_offset;
+ 	unsigned int func_offset = 0;
+@@ -437,25 +500,26 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 	bool has_upper;
+ 	int ret;
  
-@@ -87,7 +87,7 @@ static const struct dw_pcie_ep_ops pcie_ep_ops = {
+-	if (!ep->msi_cap)
++	ep_func = dw_pcie_ep_get_func_from_ep(ep, func_no);
++	if (!ep_func || !ep_func->msi_cap)
+ 		return -EINVAL;
+ 
+ 	func_offset = dw_pcie_ep_func_select(ep, func_no);
+ 
+ 	/* Raise MSI per the PCI Local Bus Specification Revision 3.0, 6.8.1. */
+-	reg = ep->msi_cap + func_offset + PCI_MSI_FLAGS;
++	reg = ep_func->msi_cap + func_offset + PCI_MSI_FLAGS;
+ 	msg_ctrl = dw_pcie_readw_dbi(pci, reg);
+ 	has_upper = !!(msg_ctrl & PCI_MSI_FLAGS_64BIT);
+-	reg = ep->msi_cap + func_offset + PCI_MSI_ADDRESS_LO;
++	reg = ep_func->msi_cap + func_offset + PCI_MSI_ADDRESS_LO;
+ 	msg_addr_lower = dw_pcie_readl_dbi(pci, reg);
+ 	if (has_upper) {
+-		reg = ep->msi_cap + func_offset + PCI_MSI_ADDRESS_HI;
++		reg = ep_func->msi_cap + func_offset + PCI_MSI_ADDRESS_HI;
+ 		msg_addr_upper = dw_pcie_readl_dbi(pci, reg);
+-		reg = ep->msi_cap + func_offset + PCI_MSI_DATA_64;
++		reg = ep_func->msi_cap + func_offset + PCI_MSI_DATA_64;
+ 		msg_data = dw_pcie_readw_dbi(pci, reg);
+ 	} else {
+ 		msg_addr_upper = 0;
+-		reg = ep->msi_cap + func_offset + PCI_MSI_DATA_32;
++		reg = ep_func->msi_cap + func_offset + PCI_MSI_DATA_32;
+ 		msg_data = dw_pcie_readw_dbi(pci, reg);
+ 	}
+ 	aligned_offset = msg_addr_lower & (epc->mem->window.page_size - 1);
+@@ -496,6 +560,7 @@ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 			      u16 interrupt_num)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	struct dw_pcie_ep_func *ep_func;
+ 	struct pci_epf_msix_tbl *msix_tbl;
+ 	struct pci_epc *epc = ep->epc;
+ 	unsigned int func_offset = 0;
+@@ -506,9 +571,13 @@ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 	int ret;
+ 	u8 bir;
+ 
++	ep_func = dw_pcie_ep_get_func_from_ep(ep, func_no);
++	if (!ep_func || !ep_func->msix_cap)
++		return -EINVAL;
++
+ 	func_offset = dw_pcie_ep_func_select(ep, func_no);
+ 
+-	reg = ep->msix_cap + func_offset + PCI_MSIX_TABLE;
++	reg = ep_func->msix_cap + func_offset + PCI_MSIX_TABLE;
+ 	tbl_offset = dw_pcie_readl_dbi(pci, reg);
+ 	bir = (tbl_offset & PCI_MSIX_TABLE_BIR);
+ 	tbl_offset &= PCI_MSIX_TABLE_OFFSET;
+@@ -606,11 +675,15 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ {
+ 	int ret;
+ 	void *addr;
++	u8 func_no;
+ 	struct pci_epc *epc;
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 	struct device *dev = pci->dev;
+ 	struct device_node *np = dev->of_node;
+ 	const struct pci_epc_features *epc_features;
++	struct dw_pcie_ep_func *ep_func;
++
++	INIT_LIST_HEAD(&ep->func_list);
+ 
+ 	if (!pci->dbi_base || !pci->dbi_base2) {
+ 		dev_err(dev, "dbi_base/dbi_base2 is not populated\n");
+@@ -673,9 +746,19 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ 	if (ret < 0)
+ 		epc->max_functions = 1;
+ 
+-	ep->msi_cap = dw_pcie_find_capability(pci, PCI_CAP_ID_MSI);
++	for (func_no = 0; func_no < epc->max_functions; func_no++) {
++		ep_func = devm_kzalloc(dev, sizeof(*ep_func), GFP_KERNEL);
++		if (!ep_func)
++			return -ENOMEM;
++
++		ep_func->func_no = func_no;
++		ep_func->msi_cap = dw_pcie_ep_find_capability(ep, func_no,
++							      PCI_CAP_ID_MSI);
++		ep_func->msix_cap = dw_pcie_ep_find_capability(ep, func_no,
++							       PCI_CAP_ID_MSIX);
+ 
+-	ep->msix_cap = dw_pcie_find_capability(pci, PCI_CAP_ID_MSIX);
++		list_add_tail(&ep_func->list, &ep->func_list);
++	}
+ 
+ 	if (ep->ops->ep_init)
+ 		ep->ops->ep_init(ep);
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 4b75b798de98..97c7063b9e89 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -221,8 +221,16 @@ struct dw_pcie_ep_ops {
+ 	unsigned int (*func_conf_select)(struct dw_pcie_ep *ep, u8 func_no);
  };
  
- static int __init ls_add_pcie_ep(struct ls_pcie_ep *pcie,
--					struct platform_device *pdev)
-+				 struct platform_device *pdev)
++struct dw_pcie_ep_func {
++	struct list_head	list;
++	u8			func_no;
++	u8			msi_cap;	/* MSI capability offset */
++	u8			msix_cap;	/* MSI-X capability offset */
++};
++
+ struct dw_pcie_ep {
+ 	struct pci_epc		*epc;
++	struct list_head	func_list;
+ 	const struct dw_pcie_ep_ops *ops;
+ 	phys_addr_t		phys_base;
+ 	size_t			addr_size;
+@@ -235,8 +243,6 @@ struct dw_pcie_ep {
+ 	u32			num_ob_windows;
+ 	void __iomem		*msi_mem;
+ 	phys_addr_t		msi_mem_phys;
+-	u8			msi_cap;	/* MSI capability offset */
+-	u8			msix_cap;	/* MSI-X capability offset */
+ 	struct pci_epf_bar	*epf_bar[PCI_STD_NUM_BARS];
+ };
+ 
+@@ -420,6 +426,8 @@ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
+ int dw_pcie_ep_raise_msix_irq_doorbell(struct dw_pcie_ep *ep, u8 func_no,
+ 				       u16 interrupt_num);
+ void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar);
++struct dw_pcie_ep_func *
++dw_pcie_ep_get_func_from_ep(struct dw_pcie_ep *ep, u8 func_no);
+ #else
+ static inline void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
  {
- 	struct dw_pcie *pci = pcie->pci;
- 	struct device *dev = pci->dev;
+@@ -470,5 +478,11 @@ static inline int dw_pcie_ep_raise_msix_irq_doorbell(struct dw_pcie_ep *ep,
+ static inline void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
+ {
+ }
++
++static inline struct dw_pcie_ep_func *
++dw_pcie_ep_get_func_from_ep(struct dw_pcie_ep *ep, u8 func_no)
++{
++	return NULL;
++}
+ #endif
+ #endif /* _PCIE_DESIGNWARE_H */
 -- 
 2.17.1
 
