@@ -5,65 +5,65 @@ X-Spam-Level:
 X-Spam-Status: No, score=-20.4 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=ham
+	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1B4CC43463
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 20:16:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52329C43464
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 20:16:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6419B2344C
+	by mail.kernel.org (Postfix) with ESMTP id E65AC23447
 	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 20:16:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="DmFIi1OV"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="UfHLbm8n"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726621AbgIRUPb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 18 Sep 2020 16:15:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52936 "EHLO
+        id S1726645AbgIRUQM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 18 Sep 2020 16:16:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52962 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726590AbgIRUPa (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Sep 2020 16:15:30 -0400
-Received: from mail-yb1-xb4a.google.com (mail-yb1-xb4a.google.com [IPv6:2607:f8b0:4864:20::b4a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32BF8C0613D8
-        for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2020 13:15:22 -0700 (PDT)
-Received: by mail-yb1-xb4a.google.com with SMTP id 140so5475260ybf.2
-        for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2020 13:15:22 -0700 (PDT)
+        with ESMTP id S1726629AbgIRUPc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Sep 2020 16:15:32 -0400
+Received: from mail-qt1-x84a.google.com (mail-qt1-x84a.google.com [IPv6:2607:f8b0:4864:20::84a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C81AC0613D0
+        for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2020 13:15:32 -0700 (PDT)
+Received: by mail-qt1-x84a.google.com with SMTP id y53so6133066qth.2
+        for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2020 13:15:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=sender:date:in-reply-to:message-id:mime-version:references:subject
          :from:to:cc;
-        bh=XxAfB/P/jhgYhoVgUFO0krm50APtT+WWyqbk+4ioXTk=;
-        b=DmFIi1OVxsFoFg92oFWH2VPRTDu4wE9Rmg6s0bvmp2TuRAbHoKv6/fPJl1fuBdrjn7
-         VWzTK0IQDIyNMi23xcASGWrTPyHk0S7e0w5yoc9SZ/pQdToneOnD9OdIiO2v+KW9gj7y
-         9zlTW9p+FprZHdCq5rpUHZD/0n8xUda24onsLXZ66jqtU8LkEkm1FqYFsbOXQY9gVmIy
-         ib61pYrKwyraXm+h5krhXzdEdTlzkFDCT45b4X7mDBl5iBONcOD1ksa0s/BExbykYGIB
-         wn/5Ms/kn3W2LpKihjogJj5qO+B0a2gDh6bG4SxQfn0sDbgdsmBBEBBNuSsdj96B5Er/
-         uLBg==
+        bh=X2rJBbb/dAb+yfnrEjkjEFh1Qlc3T9c6r5OVY+2F28Q=;
+        b=UfHLbm8nbc7nF4Jo2yUgHO34FEnYwaE+D6WpRyYM9fua/f1c+fZ8kF6HsVdGT3ZStz
+         DIioQeeYjH1vQBjYBq6RWn1tj8Ze0d8QdJv/5ZoCfD/OJopHg281EA0NzxBu0bnxaWZh
+         gx+JUnvc4+vXR4wjKioKlFelZxpe0ui4Lh1MT956XxN4Ky84dI7eVbp7usD/4ORebyXi
+         CldVhYDtXNAYA4NGIwtBdJpXhE9cy2RjWHBM1Uc8TjKab8xO1nXAuOuk6CkQAwAWw4AW
+         +5M/W/XGQlX5ApQtgCjOdjNKX53WnhGd309U+vDRlJPdbYtPQkUcz7FocAivoRqNyi4G
+         Nh3w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:sender:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=XxAfB/P/jhgYhoVgUFO0krm50APtT+WWyqbk+4ioXTk=;
-        b=kOIi/UyQmyy12/60Oh76Q7o5zIZSwA0WvgKUCYY9xssAqQWg4vbQh+36vkB9B9qSTI
-         v/DY65q1VxeC7F2ZXQfXXhtTpgtvZMo42JsohnMpbcYx6w6e36EIavq1ScW8oFRVplgu
-         Q5eeKzXDDSX/NV2D9tEKVm5QpeMNxdRcmtrP2Bln6zr9IAJo3QIl9MWTSlsZaA5KXiqz
-         H84vgKLQxsZsTGyW3cvi0MwnwZEm3w5g0aA8knx2u3l9x3N4vERYQMKwFvRFTCzjwZfy
-         t4W5oaYViMshsihPryZpxw7eTfl0sOoChU74fuvnoCHQyRN8+fJe+w7DiRtRPL029sQD
-         Z8uw==
-X-Gm-Message-State: AOAM5322J/VLb1dRhLxorFUI+AH/stzYbLU4AY4mC5WIrZF8pCsrVbJ4
-        quPOsx0/G5izeg1JZsnCkhSYOLS5ojm9+0H4+ro=
-X-Google-Smtp-Source: ABdhPJy2KjHLDlLlwF3FZGYG4YjeDAk7DNS4RO40Qo5O+7UwvN2wgXBj6NsmIvpwMLwrVraEYVu5qDWHVwe1uVR3arc=
+        bh=X2rJBbb/dAb+yfnrEjkjEFh1Qlc3T9c6r5OVY+2F28Q=;
+        b=CpHei0Xbz/U+gxdCTfJhxLFx1fPRhyeVNpfczCECtLJEUQ89ad01ETvaOxsqMU6GkX
+         XXhV/QJh+A4vSfKuzC+kiF8dq66U/cYmbx1LHg7cZQkWJziD9jav7T0v4w3QH0JwDOqS
+         7xWsmYSZegh/EUDhHeZNyFuJfTfy1500uSC8pBw6f8K5eFMtX9znUol9hLLU5WP3SSds
+         fcA/H50IbwXQ7plel1dxou7G3qoiTGuSq1o0Nz4fy4Q2FqX0Kpr5oOoHp1eGK28Vz1ke
+         j/zdBXt6Ffl21okIG1HX0tuwRUEMBM2aH9Z71zgAy8Q3UqSIJnE4hCgfUvOanqg679rx
+         UP1w==
+X-Gm-Message-State: AOAM530QJv9OB+vQ+gPip3h7dFZn7bxu9OBvpi40sByJx01QaGTe/7DS
+        fDVbWxe9tycTADv40MlDj53uWGjrPY0YCt8GFnc=
+X-Google-Smtp-Source: ABdhPJzo4LTM6y/+DCzOvBKNO4aVvzGwT/r1d/eIrsPqlXmeiMn37vjIcaP3n6Xyzc5vYh3xJFK8sACdwTT13Li7Iew=
 Sender: "samitolvanen via sendgmr" 
         <samitolvanen@samitolvanen1.mtv.corp.google.com>
 X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:f693:9fff:fef4:1b6d])
- (user=samitolvanen job=sendgmr) by 2002:a25:e009:: with SMTP id
- x9mr6392448ybg.373.1600460121392; Fri, 18 Sep 2020 13:15:21 -0700 (PDT)
-Date:   Fri, 18 Sep 2020 13:14:24 -0700
+ (user=samitolvanen job=sendgmr) by 2002:ad4:5a0e:: with SMTP id
+ ei14mr20725499qvb.15.1600460131755; Fri, 18 Sep 2020 13:15:31 -0700 (PDT)
+Date:   Fri, 18 Sep 2020 13:14:28 -0700
 In-Reply-To: <20200918201436.2932360-1-samitolvanen@google.com>
-Message-Id: <20200918201436.2932360-19-samitolvanen@google.com>
+Message-Id: <20200918201436.2932360-23-samitolvanen@google.com>
 Mime-Version: 1.0
 References: <20200918201436.2932360-1-samitolvanen@google.com>
 X-Mailer: git-send-email 2.28.0.681.g6f77f65b4e-goog
-Subject: [PATCH v3 18/30] init: lto: fix PREL32 relocations
+Subject: [PATCH v3 22/30] efi/libstub: disable LTO
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Masahiro Yamada <masahiroy@kernel.org>,
         Will Deacon <will@kernel.org>
@@ -83,76 +83,29 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-With LTO, the compiler can rename static functions to avoid global
-naming collisions. As initcall functions are typically static,
-renaming can break references to them in inline assembly. This
-change adds a global stub with a stable name for each initcall to
-fix the issue when PREL32 relocations are used.
+With CONFIG_LTO_CLANG, we produce LLVM bitcode instead of ELF object
+files. Since LTO is not really needed here and the Makefile assumes we
+produce an object file, disable LTO for libstub.
 
 Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
 Reviewed-by: Kees Cook <keescook@chromium.org>
 ---
- include/linux/init.h | 31 +++++++++++++++++++++++++++----
- 1 file changed, 27 insertions(+), 4 deletions(-)
+ drivers/firmware/efi/libstub/Makefile | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/include/linux/init.h b/include/linux/init.h
-index af638cd6dd52..cea63f7e7705 100644
---- a/include/linux/init.h
-+++ b/include/linux/init.h
-@@ -209,26 +209,49 @@ extern bool initcall_debug;
-  */
- #define __initcall_section(__sec, __iid)			\
- 	#__sec ".init.." #__iid
-+
-+/*
-+ * With LTO, the compiler can rename static functions to avoid
-+ * global naming collisions. We use a global stub function for
-+ * initcalls to create a stable symbol name whose address can be
-+ * taken in inline assembly when PREL32 relocations are used.
-+ */
-+#define __initcall_stub(fn, __iid, id)				\
-+	__initcall_name(initstub, __iid, id)
-+
-+#define __define_initcall_stub(__stub, fn)			\
-+	int __init __stub(void);				\
-+	int __init __stub(void)					\
-+	{ 							\
-+		return fn();					\
-+	}							\
-+	__ADDRESSABLE(__stub)
- #else
- #define __initcall_section(__sec, __iid)			\
- 	#__sec ".init"
-+
-+#define __initcall_stub(fn, __iid, id)	fn
-+
-+#define __define_initcall_stub(__stub, fn)			\
-+	__ADDRESSABLE(fn)
- #endif
+diff --git a/drivers/firmware/efi/libstub/Makefile b/drivers/firmware/efi/libstub/Makefile
+index 296b18fbd7a2..0ea5aa52c7fa 100644
+--- a/drivers/firmware/efi/libstub/Makefile
++++ b/drivers/firmware/efi/libstub/Makefile
+@@ -35,6 +35,8 @@ KBUILD_CFLAGS			:= $(cflags-y) -Os -DDISABLE_BRANCH_PROFILING \
  
- #ifdef CONFIG_HAVE_ARCH_PREL32_RELOCATIONS
--#define ____define_initcall(fn, __name, __sec)			\
--	__ADDRESSABLE(fn)					\
-+#define ____define_initcall(fn, __stub, __name, __sec)		\
-+	__define_initcall_stub(__stub, fn)			\
- 	asm(".section	\"" __sec "\", \"a\"		\n"	\
- 	    __stringify(__name) ":			\n"	\
--	    ".long	" #fn " - .			\n"	\
-+	    ".long	" __stringify(__stub) " - .	\n"	\
- 	    ".previous					\n");
- #else
--#define ____define_initcall(fn, __name, __sec)			\
-+#define ____define_initcall(fn, __unused, __name, __sec)	\
- 	static initcall_t __name __used 			\
- 		__attribute__((__section__(__sec))) = fn;
- #endif
+ # remove SCS flags from all objects in this directory
+ KBUILD_CFLAGS := $(filter-out $(CC_FLAGS_SCS), $(KBUILD_CFLAGS))
++# disable LTO
++KBUILD_CFLAGS := $(filter-out $(CC_FLAGS_LTO), $(KBUILD_CFLAGS))
  
- #define __unique_initcall(fn, id, __sec, __iid)			\
- 	____define_initcall(fn,					\
-+		__initcall_stub(fn, __iid, id),			\
- 		__initcall_name(initcall, __iid, id),		\
- 		__initcall_section(__sec, __iid))
- 
+ GCOV_PROFILE			:= n
+ # Sanitizer runtimes are unavailable and cannot be linked here.
 -- 
 2.28.0.681.g6f77f65b4e-goog
 
