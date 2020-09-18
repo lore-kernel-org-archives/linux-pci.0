@@ -2,180 +2,211 @@ Return-Path: <SRS0=Geob=C3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E75EC43465
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 09:25:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D675CC43464
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 09:31:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3FBCF21534
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 09:25:31 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="D2HNf770"
+	by mail.kernel.org (Postfix) with ESMTP id 962FE21973
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 09:31:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726627AbgIRJZa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 18 Sep 2020 05:25:30 -0400
-Received: from lelv0142.ext.ti.com ([198.47.23.249]:41286 "EHLO
-        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726298AbgIRJZa (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Sep 2020 05:25:30 -0400
-Received: from lelv0266.itg.ti.com ([10.180.67.225])
-        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 08I6gaXJ016099;
-        Fri, 18 Sep 2020 01:42:36 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1600411356;
-        bh=lFqkCh1cP+tj9UFVkaUqI+8hDhaypWD8s62IvqB0b5Q=;
-        h=From:To:CC:Subject:Date;
-        b=D2HNf770vWd17LV8fSLziVpQ9wvCyp531qpvtS2LbcMgsrsG372zz5GQHc1HTNap4
-         szz8iGIYca2pFPc51ptCKGWJyb9puOPpAvfN56AYb7cszQn6usg2btGWlKvNUcRU2B
-         MZ9GvWtG+C6q34klX7mfsefJHrGWo0hpY6BxH2jE=
-Received: from DLEE101.ent.ti.com (dlee101.ent.ti.com [157.170.170.31])
-        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 08I6ga6j081896
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 18 Sep 2020 01:42:36 -0500
-Received: from DLEE107.ent.ti.com (157.170.170.37) by DLEE101.ent.ti.com
- (157.170.170.31) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Fri, 18
- Sep 2020 01:42:36 -0500
-Received: from fllv0039.itg.ti.com (10.64.41.19) by DLEE107.ent.ti.com
- (157.170.170.37) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
- Frontend Transport; Fri, 18 Sep 2020 01:42:36 -0500
-Received: from a0393678-ssd.ent.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by fllv0039.itg.ti.com (8.15.2/8.15.2) with ESMTP id 08I6gUCK094595;
-        Fri, 18 Sep 2020 01:42:31 -0500
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>, Jon Mason <jdmason@kudzu.us>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <allenbh@gmail.com>,
-        Tom Joseph <tjoseph@cadence.com>, Rob Herring <robh@kernel.org>
-CC:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-ntb@googlegroups.com>
-Subject: [PATCH v5 00/17] Implement NTB Controller using multiple PCI EP
-Date:   Fri, 18 Sep 2020 12:12:10 +0530
-Message-ID: <20200918064227.1463-1-kishon@ti.com>
-X-Mailer: git-send-email 2.17.1
+        id S1726156AbgIRJbT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 18 Sep 2020 05:31:19 -0400
+Received: from mga05.intel.com ([192.55.52.43]:42934 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726154AbgIRJbT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 18 Sep 2020 05:31:19 -0400
+IronPort-SDR: 7laTdno2xrtLKe1PE8H6cEpuEHomkAA0ClhKC/3QO3ltecwI4EaT+LLX1ZIdez7dy9HG2EW/zb
+ 9MwaOz7Whegg==
+X-IronPort-AV: E=McAfee;i="6000,8403,9747"; a="244734661"
+X-IronPort-AV: E=Sophos;i="5.77,274,1596524400"; 
+   d="scan'208";a="244734661"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Sep 2020 02:31:18 -0700
+IronPort-SDR: V2AK8CM6sprp/eNNSbWfAJTaQyiPmdf8odt81k8FhOxXoD1SWmcNpaZeZh7PsnZ62SQ9ByR22A
+ w5Q+1Ra0ueRw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.77,274,1596524400"; 
+   d="scan'208";a="336746696"
+Received: from lkp-server01.sh.intel.com (HELO a05db971c861) ([10.239.97.150])
+  by orsmga008.jf.intel.com with ESMTP; 18 Sep 2020 02:31:16 -0700
+Received: from kbuild by a05db971c861 with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1kJCja-0000Uh-MK; Fri, 18 Sep 2020 09:31:14 +0000
+Date:   Fri, 18 Sep 2020 17:30:31 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     linux-pci@vger.kernel.org
+Subject: [pci:pci/misc] BUILD SUCCESS
+ 10791141a6cfc96eecf578fb1240f191ac112e02
+Message-ID: <5f647e37.pKBG9FiqIJk6/9gj%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-Content-Type: text/plain
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This series is about implementing SW defined NTB using
-multiple endpoint instances. This series has been tested using
-2 endpoint instances in J7 connected to J7 board on one end and DRA7 board
-on the other end. However there is nothing platform specific for the NTB
-functionality.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git  pci/misc
+branch HEAD: 10791141a6cfc96eecf578fb1240f191ac112e02  PCI: Simplify pci_dev_reset_slot_function()
 
-This was presented in Linux Plumbers Conference. The presentation
-can be found @ [1]
+elapsed time: 722m
 
-RFC patch series can be found @ [2]
-v1 patch series can be found @ [3]
-v2 patch series can be found @ [4]
-v3 patch series can be found @ [5]
-v4 patch series can be found @ [6]
+configs tested: 139
+configs skipped: 2
 
-Changes from v3:
-1) Fixed Documentation edits suggested by Randy Dunlap <rdunlap@infradead.org>
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-Changes from v2:
-1) Add support for the user to create sub-directory of 'EPF Device'
-   directory (for endpoint function specific configuration using
-   configfs).
-2) Add documentation for NTB specific attributes in configfs
-3) Check for PCI_CLASS_MEMORY_RAM (PCIe class) before binding ntb_hw_epf
-   driver
-4) Other documentation fixes
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+arc                      axs103_smp_defconfig
+powerpc               mpc834x_itxgp_defconfig
+xtensa                              defconfig
+powerpc                        cell_defconfig
+mips                           ip22_defconfig
+powerpc                     akebono_defconfig
+powerpc                     rainier_defconfig
+mips                       capcella_defconfig
+powerpc                     kilauea_defconfig
+arc                 nsimosci_hs_smp_defconfig
+nds32                            alldefconfig
+powerpc                 linkstation_defconfig
+parisc                generic-64bit_defconfig
+arm                      pxa255-idp_defconfig
+ia64                         bigsur_defconfig
+powerpc                      makalu_defconfig
+powerpc                  mpc866_ads_defconfig
+sh                          rsk7269_defconfig
+arc                    vdk_hs38_smp_defconfig
+mips                        nlm_xlp_defconfig
+powerpc                      ppc6xx_defconfig
+arc                             nps_defconfig
+arm                           h5000_defconfig
+mips                        bcm47xx_defconfig
+arm                        neponset_defconfig
+arc                        vdk_hs38_defconfig
+arm                        mvebu_v5_defconfig
+m68k                            mac_defconfig
+mips                 decstation_r4k_defconfig
+s390                          debug_defconfig
+arm                      tct_hammer_defconfig
+powerpc                 mpc8313_rdb_defconfig
+powerpc                 mpc832x_mds_defconfig
+arm                       multi_v4t_defconfig
+arc                            hsdk_defconfig
+arm                           spitz_defconfig
+alpha                            allyesconfig
+mips                  cavium_octeon_defconfig
+nios2                         10m50_defconfig
+powerpc                        fsp2_defconfig
+mips                       lemote2f_defconfig
+x86_64                           allyesconfig
+powerpc                       maple_defconfig
+sh                          sdk7780_defconfig
+powerpc                     sbc8548_defconfig
+powerpc                 mpc837x_rdb_defconfig
+arm                           tegra_defconfig
+mips                        nlm_xlr_defconfig
+arm                         s3c2410_defconfig
+riscv                          rv32_defconfig
+sh                        edosk7705_defconfig
+sh                      rts7751r2d1_defconfig
+powerpc                     pq2fads_defconfig
+um                           x86_64_defconfig
+sh                              ul2_defconfig
+ia64                      gensparse_defconfig
+openrisc                         alldefconfig
+sh                   sh7724_generic_defconfig
+sh                               j2_defconfig
+powerpc                       ppc64_defconfig
+arm                          iop32x_defconfig
+m68k                        m5272c3_defconfig
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nios2                               defconfig
+arc                              allyesconfig
+nds32                             allnoconfig
+c6x                              allyesconfig
+nds32                               defconfig
+nios2                            allyesconfig
+csky                                defconfig
+alpha                               defconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+parisc                              defconfig
+s390                             allyesconfig
+parisc                           allyesconfig
+s390                                defconfig
+i386                             allyesconfig
+sparc                            allyesconfig
+sparc                               defconfig
+i386                                defconfig
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+i386                 randconfig-a004-20200917
+i386                 randconfig-a006-20200917
+i386                 randconfig-a003-20200917
+i386                 randconfig-a001-20200917
+i386                 randconfig-a002-20200917
+i386                 randconfig-a005-20200917
+x86_64               randconfig-a014-20200917
+x86_64               randconfig-a011-20200917
+x86_64               randconfig-a016-20200917
+x86_64               randconfig-a012-20200917
+x86_64               randconfig-a015-20200917
+x86_64               randconfig-a013-20200917
+i386                 randconfig-a015-20200917
+i386                 randconfig-a014-20200917
+i386                 randconfig-a011-20200917
+i386                 randconfig-a013-20200917
+i386                 randconfig-a016-20200917
+i386                 randconfig-a012-20200917
+i386                 randconfig-a015-20200918
+i386                 randconfig-a011-20200918
+i386                 randconfig-a014-20200918
+i386                 randconfig-a013-20200918
+i386                 randconfig-a012-20200918
+i386                 randconfig-a016-20200918
+riscv                    nommu_k210_defconfig
+riscv                            allyesconfig
+riscv                    nommu_virt_defconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                            allmodconfig
+x86_64                                   rhel
+x86_64                    rhel-7.6-kselftests
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                                  kexec
 
-Changes from v1:
-1) As per Rob's comment, removed support for creating NTB function
-   device from DT
-2) Add support to create NTB EPF device using configfs (added support in
-   configfs to associate primary and secondary EPC with EPF.
+clang tested configs:
+x86_64               randconfig-a006-20200917
+x86_64               randconfig-a004-20200917
+x86_64               randconfig-a003-20200917
+x86_64               randconfig-a002-20200917
+x86_64               randconfig-a001-20200917
+x86_64               randconfig-a005-20200917
 
-Changes from RFC:
-1) Converted the DT binding patches to YAML schema and merged the
-   DT binding patches together
-2) NTB documentation is converted to .rst
-3) One HOST can now interrupt the other HOST using MSI-X interrupts
-4) Added support for teardown of memory window and doorbell
-   configuration
-5) Add support to provide support 64-bit memory window size from
-   DT
-
-[1] -> https://www.linuxplumbersconf.org/event/4/contributions/395/attachments/284/481/Implementing_NTB_Controller_Using_PCIe_Endpoint_-_final.pdf
-[2] -> http://lore.kernel.org/r/20190926112933.8922-1-kishon@ti.com
-[3] -> http://lore.kernel.org/r/20200514145927.17555-1-kishon@ti.com
-[4] -> http://lore.kernel.org/r/20200611130525.22746-1-kishon@ti.com
-[5] -> http://lore.kernel.org/r/20200904075052.8911-1-kishon@ti.com
-[6] -> http://lore.kernel.org/r/20200915042110.3015-1-kishon@ti.com
-
-Kishon Vijay Abraham I (17):
-  Documentation: PCI: Add specification for the *PCI NTB* function
-    device
-  PCI: endpoint: Make *_get_first_free_bar() take into account 64 bit
-    BAR
-  PCI: endpoint: Add helper API to get the 'next' unreserved BAR
-  PCI: endpoint: Make *_free_bar() to return error codes on failure
-  PCI: endpoint: Remove unused pci_epf_match_device()
-  PCI: endpoint: Add support to associate secondary EPC with EPF
-  PCI: endpoint: Add support in configfs to associate two EPCs with EPF
-  PCI: endpoint: Add pci_epc_ops to map MSI irq
-  PCI: endpoint: Add pci_epf_ops for epf drivers to expose function
-    specific attrs
-  PCI: endpoint: Allow user to create sub-directory of 'EPF Device'
-    directory
-  PCI: cadence: Implement ->msi_map_irq() ops
-  PCI: endpoint: Add EP function driver to provide NTB functionality
-  PCI: Add TI J721E device to pci ids
-  NTB: Add support for EPF PCI-Express Non-Transparent Bridge
-  NTB: tool: Enable the NTB/PCIe link on the local or remote side of
-    bridge
-  Documentation: PCI: Add configfs binding documentation for pci-ntb
-    endpoint function
-  Documentation: PCI: Add userguide for PCI endpoint NTB function
-
- .../PCI/endpoint/function/binding/pci-ntb.rst |   38 +
- Documentation/PCI/endpoint/index.rst          |    3 +
- .../PCI/endpoint/pci-endpoint-cfs.rst         |   10 +
- .../PCI/endpoint/pci-ntb-function.rst         |  351 +++
- Documentation/PCI/endpoint/pci-ntb-howto.rst  |  160 ++
- drivers/misc/pci_endpoint_test.c              |    1 -
- drivers/ntb/hw/Kconfig                        |    1 +
- drivers/ntb/hw/Makefile                       |    1 +
- drivers/ntb/hw/epf/Kconfig                    |    6 +
- drivers/ntb/hw/epf/Makefile                   |    1 +
- drivers/ntb/hw/epf/ntb_hw_epf.c               |  751 ++++++
- drivers/ntb/test/ntb_tool.c                   |    1 +
- .../pci/controller/cadence/pcie-cadence-ep.c  |   50 +
- drivers/pci/endpoint/functions/Kconfig        |   12 +
- drivers/pci/endpoint/functions/Makefile       |    1 +
- drivers/pci/endpoint/functions/pci-epf-ntb.c  | 2106 +++++++++++++++++
- drivers/pci/endpoint/functions/pci-epf-test.c |   13 +-
- drivers/pci/endpoint/pci-ep-cfs.c             |  176 +-
- drivers/pci/endpoint/pci-epc-core.c           |  131 +-
- drivers/pci/endpoint/pci-epf-core.c           |  105 +-
- include/linux/pci-epc.h                       |   38 +-
- include/linux/pci-epf.h                       |   28 +-
- include/linux/pci_ids.h                       |    1 +
- 23 files changed, 3918 insertions(+), 67 deletions(-)
- create mode 100644 Documentation/PCI/endpoint/function/binding/pci-ntb.rst
- create mode 100644 Documentation/PCI/endpoint/pci-ntb-function.rst
- create mode 100644 Documentation/PCI/endpoint/pci-ntb-howto.rst
- create mode 100644 drivers/ntb/hw/epf/Kconfig
- create mode 100644 drivers/ntb/hw/epf/Makefile
- create mode 100644 drivers/ntb/hw/epf/ntb_hw_epf.c
- create mode 100644 drivers/pci/endpoint/functions/pci-epf-ntb.c
-
--- 
-2.17.1
-
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
