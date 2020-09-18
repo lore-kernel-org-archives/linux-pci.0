@@ -7,27 +7,27 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2198EC43466
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F1E1C43467
 	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 08:19:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DE3F12176B
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 08:19:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2833A2176B
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 08:19:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726441AbgIRISy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 18 Sep 2020 04:18:54 -0400
-Received: from inva020.nxp.com ([92.121.34.13]:56944 "EHLO inva020.nxp.com"
+        id S1726344AbgIRISx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 18 Sep 2020 04:18:53 -0400
+Received: from inva020.nxp.com ([92.121.34.13]:56934 "EHLO inva020.nxp.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726308AbgIRISx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1726298AbgIRISx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Fri, 18 Sep 2020 04:18:53 -0400
 Received: from inva020.nxp.com (localhost [127.0.0.1])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 0D08B1A01FB;
-        Fri, 18 Sep 2020 10:08:59 +0200 (CEST)
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 2574E1A02E0;
+        Fri, 18 Sep 2020 10:09:04 +0200 (CEST)
 Received: from invc005.ap-rdc01.nxp.com (invc005.ap-rdc01.nxp.com [165.114.16.14])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 9FF741A0291;
-        Fri, 18 Sep 2020 10:08:51 +0200 (CEST)
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id D0BDD1A0031;
+        Fri, 18 Sep 2020 10:08:56 +0200 (CEST)
 Received: from localhost.localdomain (mega.ap.freescale.net [10.192.208.232])
-        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id AAFA3402E3;
-        Fri, 18 Sep 2020 10:08:42 +0200 (CEST)
+        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id DD5FE402C3;
+        Fri, 18 Sep 2020 10:08:47 +0200 (CEST)
 From:   Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
 To:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
@@ -38,9 +38,9 @@ To:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
 Cc:     minghuan.Lian@nxp.com, mingkai.hu@nxp.com, roy.zang@nxp.com,
         Xiaowei Bao <xiaowei.bao@nxp.com>,
         Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Subject: [PATCHv8 08/12] PCI: layerscape: Modify the MSIX to the doorbell mode
-Date:   Fri, 18 Sep 2020 16:00:20 +0800
-Message-Id: <20200918080024.13639-9-Zhiqiang.Hou@nxp.com>
+Subject: [PATCHv8 11/12] misc: pci_endpoint_test: Add LS1088a in pci_device_id table
+Date:   Fri, 18 Sep 2020 16:00:23 +0800
+Message-Id: <20200918080024.13639-12-Zhiqiang.Hou@nxp.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200918080024.13639-1-Zhiqiang.Hou@nxp.com>
 References: <20200918080024.13639-1-Zhiqiang.Hou@nxp.com>
@@ -51,11 +51,8 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Xiaowei Bao <xiaowei.bao@nxp.com>
 
-dw_pcie_ep_raise_msix_irq was never called in the exisitng driver
-before, because the ls1046a platform don't support the MSIX feature
-and msix_capable was always set to false.
-Now that add the ls1088a platform with MSIX support, use the doorbell
-method to support the MSIX feature.
+Add LS1088a in pci_device_id table so that pci-epf-test can be used
+for testing PCIe EP in LS1088a.
 
 Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
 Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
@@ -64,23 +61,29 @@ Reviewed-by: Andrew Murray <andrew.murray@arm.com>
 V8:
  - No change.
 
- drivers/pci/controller/dwc/pci-layerscape-ep.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/misc/pci_endpoint_test.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/pci-layerscape-ep.c b/drivers/pci/controller/dwc/pci-layerscape-ep.c
-index 9601f9c09cb1..bfab1c694f00 100644
---- a/drivers/pci/controller/dwc/pci-layerscape-ep.c
-+++ b/drivers/pci/controller/dwc/pci-layerscape-ep.c
-@@ -79,7 +79,8 @@ static int ls_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
- 	case PCI_EPC_IRQ_MSI:
- 		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
- 	case PCI_EPC_IRQ_MSIX:
--		return dw_pcie_ep_raise_msix_irq(ep, func_no, interrupt_num);
-+		return dw_pcie_ep_raise_msix_irq_doorbell(ep, func_no,
-+							  interrupt_num);
- 	default:
- 		dev_err(pci->dev, "UNKNOWN IRQ type\n");
- 		return -EINVAL;
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index e060796f9caa..4a17f08de60f 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -70,6 +70,7 @@
+ 
+ #define PCI_DEVICE_ID_TI_J721E			0xb00d
+ #define PCI_DEVICE_ID_TI_AM654			0xb00c
++#define PCI_DEVICE_ID_LS1088A			0x80c0
+ 
+ #define is_am654_pci_dev(pdev)		\
+ 		((pdev)->device == PCI_DEVICE_ID_TI_AM654)
+@@ -946,6 +947,7 @@ static const struct pci_device_id pci_endpoint_test_tbl[] = {
+ 	  .driver_data = (kernel_ulong_t)&default_data,
+ 	},
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_FREESCALE, 0x81c0) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_FREESCALE, PCI_DEVICE_ID_LS1088A) },
+ 	{ PCI_DEVICE_DATA(SYNOPSYS, EDDA, NULL) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_AM654),
+ 	  .driver_data = (kernel_ulong_t)&am654_data
 -- 
 2.17.1
 
