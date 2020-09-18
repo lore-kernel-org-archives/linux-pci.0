@@ -8,62 +8,62 @@ X-Spam-Status: No, score=-20.4 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47B16C4346A
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8741FC43464
 	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 20:17:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E38FD2074B
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 20:17:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 32551235F8
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 20:17:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="vLxQSiTd"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="QatnRemB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726463AbgIRUPD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 18 Sep 2020 16:15:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52798 "EHLO
+        id S1726366AbgIRURC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 18 Sep 2020 16:17:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52786 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726421AbgIRUPD (ORCPT
+        with ESMTP id S1726308AbgIRUPD (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Sep 2020 16:15:03 -0400
-Received: from mail-yb1-xb49.google.com (mail-yb1-xb49.google.com [IPv6:2607:f8b0:4864:20::b49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 268AFC0613DA
-        for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2020 13:14:53 -0700 (PDT)
-Received: by mail-yb1-xb49.google.com with SMTP id v106so6677948ybi.6
-        for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2020 13:14:53 -0700 (PDT)
+Received: from mail-qk1-x749.google.com (mail-qk1-x749.google.com [IPv6:2607:f8b0:4864:20::749])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33FBAC0613CE
+        for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2020 13:15:03 -0700 (PDT)
+Received: by mail-qk1-x749.google.com with SMTP id m186so4834982qkf.12
+        for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2020 13:15:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=sender:date:in-reply-to:message-id:mime-version:references:subject
          :from:to:cc;
-        bh=SmkRBXA7nybVMgRFHrOcpVUvMfefLOj3bIKZYl6feRQ=;
-        b=vLxQSiTdO6kx7x/Kg/wNk4XkNMo14CL+DN6ttIvF2JonRyj1oK9XqFWKvvfgZK4Mmh
-         HN+/aMca8Jx8U+3rMZJB+YDPmWFRPK12zeQKwH+WGQeH/c24C/e6itsBsxAeiS+l+vnI
-         kvttaEcXAfrUxun0RBcRM5rVl4lLPcUMETTEDtPRsb8ebkJAInD9/COrBs8wZvoDPEh2
-         GhGMctwfhnFVytooium0mYCB4O3YSpfb1rIx8elZ0BLfobR4pKcG7h4BhPaZOJp4kRFJ
-         lHn12+OcXav8iIixDR/qz7cHvzsM29SRysxUKhyIItLmT8nW1nDSJozvxnVmac7/8ZaS
-         rmEw==
+        bh=8Z9k7hZvEPmq++QcMDZiZsWcl46Vj1BocbQ0cOU/FNM=;
+        b=QatnRemB8cKq9+uR9uPhgVc2Bc6FwkGBsqtwIjGXf6ksklkrNv4kL3LeGcIpnb3kJD
+         +VwOOFb1L9qdjGWufD737L0mHuhxu80I2Ipso4IMvzIJas82S09muHkdzoE5crcC0K4X
+         jHnkPNr0LNFGuuBIJcIPGhqG0P+7+VZZuQ3chCGeXzDp4qjhYbwW4Yvw5E4Lq+DHRE2x
+         +SvZeCiBoXRrsWh3eS0wWEht2cZnd0r3e6+aOgBH5CI14gyZ1vwHI2sjtDN3qmhUcK4j
+         NDhnu6OrCJmznwP7zF474cCOa4gKRKf9OVdwozqYVkj615Ymd9ke7k8+4OAc2VqFRZta
+         u5VQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:sender:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=SmkRBXA7nybVMgRFHrOcpVUvMfefLOj3bIKZYl6feRQ=;
-        b=h6EXlGZg37M76hqOuXWgmfVXFAKvj1+mC5GYiMUeUDyiVD0W0c8UUGPrqfhMrVO5yw
-         1JRLlhJ7+MxT8mgNyRMr1xHkoxzi4TxwlPIxTESGETSQ0WEcqO0cramj1xXYiQ89PRiz
-         lkSit/6mAkigFbh39SbmbncwJvRcXOcJWSmghjWoRkC0fTYolnsDhWSn6XSmkEVIfFPR
-         aZr8WPSG58jveApDQcEakxCHn+mYTyIguGUs32agANEpocyeQfS418KZ9zNjdiBdfog9
-         NPI6d0hreZsq2GycECG2+oypD/gHTJTb4KiFWFqLseQ71atmZruGRY2zLKVyyEYz3cfO
-         Szlw==
-X-Gm-Message-State: AOAM5312VPpPtiliL7LzHfwTs1tdUdfmX5f3YTPi6yg+7bRrS1mAI32j
-        acWjQCdhfnXHsBcHOAxyw9Ou1vjd3jzGywwOzmY=
-X-Google-Smtp-Source: ABdhPJxfxPARsXBGl9SON0cI+m+7JzZPmj/JlXCHFsIm1Q/huE0VddyqnW5/FMDpRgWVWHnqCpuDeLjffHea689ZMyc=
+        bh=8Z9k7hZvEPmq++QcMDZiZsWcl46Vj1BocbQ0cOU/FNM=;
+        b=b+NqNU3FbzEbSLdSyXsiIaLYgJqVT5PTjSGBqUrobFpuErnIMbV1r0fmXiCv9MXCvu
+         NRdigjnrx6m2BhxV0FAICXW03mbBfHSPeLtek2gB2VF+qJDofAx6s9blEwUlVDhmvnwm
+         VqAv6aGec10m47KP4Xdze+ULI5ZV/ySefAgZp3GBEWjnxmgLpyKbBVKhwhygb8DFZPjN
+         5hpoewMruLdILPAn/zCT5jfqw4uYaR/+yP3re9F9Bt9lLZaH0LNl6dJrOMLGBJ2nZV/R
+         eE51efEDx0445If7xbNMIdlmrM3bFyvX2TXITdLP/mlvbwLasr2M/vbrWPBPUYGBxQL3
+         MqMQ==
+X-Gm-Message-State: AOAM5313tS3E9sRRCPMhkATdh7mf3e5ogHNXFTK/3KKucNwUwKTnSZw1
+        47eNfq6WTkqTU70IpKpVA3z3CLJBd6gh3RNwQwY=
+X-Google-Smtp-Source: ABdhPJz+7Css5KK1OpZUjZgXWLDi39JN/gWO7PRZZDMxz/EqUbcEpWKFi5QyByaFuSTBObLpkxNksopPJp16SrRkt4s=
 Sender: "samitolvanen via sendgmr" 
         <samitolvanen@samitolvanen1.mtv.corp.google.com>
 X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:f693:9fff:fef4:1b6d])
- (user=samitolvanen job=sendgmr) by 2002:a25:bfcf:: with SMTP id
- q15mr21002279ybm.133.1600460092312; Fri, 18 Sep 2020 13:14:52 -0700 (PDT)
-Date:   Fri, 18 Sep 2020 13:14:12 -0700
+ (user=samitolvanen job=sendgmr) by 2002:a0c:e152:: with SMTP id
+ c18mr18505590qvl.41.1600460102349; Fri, 18 Sep 2020 13:15:02 -0700 (PDT)
+Date:   Fri, 18 Sep 2020 13:14:16 -0700
 In-Reply-To: <20200918201436.2932360-1-samitolvanen@google.com>
-Message-Id: <20200918201436.2932360-7-samitolvanen@google.com>
+Message-Id: <20200918201436.2932360-11-samitolvanen@google.com>
 Mime-Version: 1.0
 References: <20200918201436.2932360-1-samitolvanen@google.com>
 X-Mailer: git-send-email 2.28.0.681.g6f77f65b4e-goog
-Subject: [PATCH v3 06/30] objtool: Add a pass for generating __mcount_loc
+Subject: [PATCH v3 10/30] treewide: remove DISABLE_LTO
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Masahiro Yamada <masahiroy@kernel.org>,
         Will Deacon <will@kernel.org>
@@ -83,200 +83,85 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Peter Zijlstra <peterz@infradead.org>
+This change removes all instances of DISABLE_LTO from
+Makefiles, as they are currently unused, and the preferred
+method of disabling LTO is to filter out the flags instead.
 
-Add the --mcount option for generating __mcount_loc sections
-needed for dynamic ftrace. Using this pass requires the kernel to
-be compiled with -mfentry and CC_USING_NOP_MCOUNT to be defined
-in Makefile.
-
-Link: https://lore.kernel.org/lkml/20200625200235.GQ4781@hirez.programming.kicks-ass.net/
-Signed-off-by: Peter Zijlstra <peterz@infradead.org>
-[Sami: rebased to mainline, dropped config changes, fixed to actually use
-       --mcount, and wrote a commit message.]
+Suggested-by: Kees Cook <keescook@chromium.org>
 Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
-Reviewed-by: Kees Cook <keescook@chromium.org>
 ---
- tools/objtool/builtin-check.c |  3 +-
- tools/objtool/builtin.h       |  2 +-
- tools/objtool/check.c         | 83 +++++++++++++++++++++++++++++++++++
- tools/objtool/check.h         |  1 +
- tools/objtool/objtool.h       |  1 +
- 5 files changed, 88 insertions(+), 2 deletions(-)
+ arch/arm64/kernel/vdso/Makefile | 1 -
+ arch/sparc/vdso/Makefile        | 2 --
+ arch/x86/entry/vdso/Makefile    | 2 --
+ kernel/Makefile                 | 3 ---
+ scripts/Makefile.build          | 2 +-
+ 5 files changed, 1 insertion(+), 9 deletions(-)
 
-diff --git a/tools/objtool/builtin-check.c b/tools/objtool/builtin-check.c
-index 7a44174967b5..71595cf4946d 100644
---- a/tools/objtool/builtin-check.c
-+++ b/tools/objtool/builtin-check.c
-@@ -18,7 +18,7 @@
- #include "builtin.h"
- #include "objtool.h"
+diff --git a/arch/arm64/kernel/vdso/Makefile b/arch/arm64/kernel/vdso/Makefile
+index 45d5cfe46429..e836e300440f 100644
+--- a/arch/arm64/kernel/vdso/Makefile
++++ b/arch/arm64/kernel/vdso/Makefile
+@@ -31,7 +31,6 @@ ccflags-y := -fno-common -fno-builtin -fno-stack-protector -ffixed-x18
+ ccflags-y += -DDISABLE_BRANCH_PROFILING
  
--bool no_fp, no_unreachable, retpoline, module, backtrace, uaccess, stats, validate_dup, vmlinux;
-+bool no_fp, no_unreachable, retpoline, module, backtrace, uaccess, stats, validate_dup, vmlinux, mcount;
+ CFLAGS_REMOVE_vgettimeofday.o = $(CC_FLAGS_FTRACE) -Os $(CC_FLAGS_SCS) $(GCC_PLUGINS_CFLAGS)
+-KBUILD_CFLAGS			+= $(DISABLE_LTO)
+ KASAN_SANITIZE			:= n
+ UBSAN_SANITIZE			:= n
+ OBJECT_FILES_NON_STANDARD	:= y
+diff --git a/arch/sparc/vdso/Makefile b/arch/sparc/vdso/Makefile
+index f44355e46f31..476c4b315505 100644
+--- a/arch/sparc/vdso/Makefile
++++ b/arch/sparc/vdso/Makefile
+@@ -3,8 +3,6 @@
+ # Building vDSO images for sparc.
+ #
  
- static const char * const check_usage[] = {
- 	"objtool check [<options>] file.o",
-@@ -35,6 +35,7 @@ const struct option check_options[] = {
- 	OPT_BOOLEAN('s', "stats", &stats, "print statistics"),
- 	OPT_BOOLEAN('d', "duplicate", &validate_dup, "duplicate validation for vmlinux.o"),
- 	OPT_BOOLEAN('l', "vmlinux", &vmlinux, "vmlinux.o validation"),
-+	OPT_BOOLEAN('M', "mcount", &mcount, "generate __mcount_loc"),
- 	OPT_END(),
- };
+-KBUILD_CFLAGS += $(DISABLE_LTO)
+-
+ VDSO64-$(CONFIG_SPARC64)	:= y
+ VDSOCOMPAT-$(CONFIG_COMPAT)	:= y
  
-diff --git a/tools/objtool/builtin.h b/tools/objtool/builtin.h
-index 85c979caa367..94565a72b701 100644
---- a/tools/objtool/builtin.h
-+++ b/tools/objtool/builtin.h
-@@ -8,7 +8,7 @@
- #include <subcmd/parse-options.h>
+diff --git a/arch/x86/entry/vdso/Makefile b/arch/x86/entry/vdso/Makefile
+index 215376d975a2..ecc27018ae13 100644
+--- a/arch/x86/entry/vdso/Makefile
++++ b/arch/x86/entry/vdso/Makefile
+@@ -9,8 +9,6 @@ ARCH_REL_TYPE_ABS := R_X86_64_JUMP_SLOT|R_X86_64_GLOB_DAT|R_X86_64_RELATIVE|
+ ARCH_REL_TYPE_ABS += R_386_GLOB_DAT|R_386_JMP_SLOT|R_386_RELATIVE
+ include $(srctree)/lib/vdso/Makefile
  
- extern const struct option check_options[];
--extern bool no_fp, no_unreachable, retpoline, module, backtrace, uaccess, stats, validate_dup, vmlinux;
-+extern bool no_fp, no_unreachable, retpoline, module, backtrace, uaccess, stats, validate_dup, vmlinux, mcount;
+-KBUILD_CFLAGS += $(DISABLE_LTO)
+-
+ # Sanitizer runtimes are unavailable and cannot be linked here.
+ KASAN_SANITIZE			:= n
+ UBSAN_SANITIZE			:= n
+diff --git a/kernel/Makefile b/kernel/Makefile
+index 9a20016d4900..347254f07dab 100644
+--- a/kernel/Makefile
++++ b/kernel/Makefile
+@@ -38,9 +38,6 @@ KASAN_SANITIZE_kcov.o := n
+ KCSAN_SANITIZE_kcov.o := n
+ CFLAGS_kcov.o := $(call cc-option, -fno-conserve-stack) -fno-stack-protector
  
- extern int cmd_check(int argc, const char **argv);
- extern int cmd_orc(int argc, const char **argv);
-diff --git a/tools/objtool/check.c b/tools/objtool/check.c
-index e034a8f24f46..6e0b478dc065 100644
---- a/tools/objtool/check.c
-+++ b/tools/objtool/check.c
-@@ -433,6 +433,65 @@ static int add_dead_ends(struct objtool_file *file)
- 	return 0;
- }
+-# cond_syscall is currently not LTO compatible
+-CFLAGS_sys_ni.o = $(DISABLE_LTO)
+-
+ obj-y += sched/
+ obj-y += locking/
+ obj-y += power/
+diff --git a/scripts/Makefile.build b/scripts/Makefile.build
+index 6ecf30c70ced..ed2b8ce9d4c2 100644
+--- a/scripts/Makefile.build
++++ b/scripts/Makefile.build
+@@ -111,7 +111,7 @@ endif
+ # ---------------------------------------------------------------------------
  
-+static int create_mcount_loc_sections(struct objtool_file *file)
-+{
-+	struct section *sec, *reloc_sec;
-+	struct reloc *reloc;
-+	unsigned long *loc;
-+	struct instruction *insn;
-+	int idx;
-+
-+	sec = find_section_by_name(file->elf, "__mcount_loc");
-+	if (sec) {
-+		INIT_LIST_HEAD(&file->mcount_loc_list);
-+		WARN("file already has __mcount_loc section, skipping");
-+		return 0;
-+	}
-+
-+	if (list_empty(&file->mcount_loc_list))
-+		return 0;
-+
-+	idx = 0;
-+	list_for_each_entry(insn, &file->mcount_loc_list, mcount_loc_node)
-+		idx++;
-+
-+	sec = elf_create_section(file->elf, "__mcount_loc", sizeof(unsigned long), idx);
-+	if (!sec)
-+		return -1;
-+
-+	reloc_sec = elf_create_reloc_section(file->elf, sec, SHT_RELA);
-+	if (!reloc_sec)
-+		return -1;
-+
-+	idx = 0;
-+	list_for_each_entry(insn, &file->mcount_loc_list, mcount_loc_node) {
-+
-+		loc = (unsigned long *)sec->data->d_buf + idx;
-+		memset(loc, 0, sizeof(unsigned long));
-+
-+		reloc = malloc(sizeof(*reloc));
-+		if (!reloc) {
-+			perror("malloc");
-+			return -1;
-+		}
-+		memset(reloc, 0, sizeof(*reloc));
-+
-+		reloc->sym = insn->sec->sym;
-+		reloc->addend = insn->offset;
-+		reloc->type = R_X86_64_64;
-+		reloc->offset = idx * sizeof(unsigned long);
-+		reloc->sec = reloc_sec;
-+		elf_add_reloc(file->elf, reloc);
-+
-+		idx++;
-+	}
-+
-+	if (elf_rebuild_reloc_section(file->elf, reloc_sec))
-+		return -1;
-+
-+	return 0;
-+}
-+
- /*
-  * Warnings shouldn't be reported for ignored functions.
-  */
-@@ -784,6 +843,22 @@ static int add_call_destinations(struct objtool_file *file)
- 			insn->type = INSN_NOP;
- 		}
+ quiet_cmd_cc_s_c = CC $(quiet_modtag)  $@
+-      cmd_cc_s_c = $(CC) $(filter-out $(DEBUG_CFLAGS), $(c_flags)) $(DISABLE_LTO) -fverbose-asm -S -o $@ $<
++      cmd_cc_s_c = $(CC) $(filter-out $(DEBUG_CFLAGS), $(c_flags)) -fverbose-asm -S -o $@ $<
  
-+		if (mcount && !strcmp(insn->call_dest->name, "__fentry__")) {
-+			if (reloc) {
-+				reloc->type = R_NONE;
-+				elf_write_reloc(file->elf, reloc);
-+			}
-+
-+			elf_write_insn(file->elf, insn->sec,
-+				       insn->offset, insn->len,
-+				       arch_nop_insn(insn->len));
-+
-+			insn->type = INSN_NOP;
-+
-+			list_add_tail(&insn->mcount_loc_node,
-+				      &file->mcount_loc_list);
-+		}
-+
- 		/*
- 		 * Whatever stack impact regular CALLs have, should be undone
- 		 * by the RETURN of the called function.
-@@ -2791,6 +2866,7 @@ int check(const char *_objname, bool orc)
- 
- 	INIT_LIST_HEAD(&file.insn_list);
- 	hash_init(file.insn_hash);
-+	INIT_LIST_HEAD(&file.mcount_loc_list);
- 	file.c_file = !vmlinux && find_section_by_name(file.elf, ".comment");
- 	file.ignore_unreachables = no_unreachable;
- 	file.hints = false;
-@@ -2838,6 +2914,13 @@ int check(const char *_objname, bool orc)
- 		warnings += ret;
- 	}
- 
-+	if (mcount) {
-+		ret = create_mcount_loc_sections(&file);
-+		if (ret < 0)
-+			goto out;
-+		warnings += ret;
-+	}
-+
- 	if (orc) {
- 		ret = create_orc(&file);
- 		if (ret < 0)
-diff --git a/tools/objtool/check.h b/tools/objtool/check.h
-index 061aa96e15d3..b62afd3d970b 100644
---- a/tools/objtool/check.h
-+++ b/tools/objtool/check.h
-@@ -22,6 +22,7 @@ struct insn_state {
- struct instruction {
- 	struct list_head list;
- 	struct hlist_node hash;
-+	struct list_head mcount_loc_node;
- 	struct section *sec;
- 	unsigned long offset;
- 	unsigned int len;
-diff --git a/tools/objtool/objtool.h b/tools/objtool/objtool.h
-index 528028a66816..427806079540 100644
---- a/tools/objtool/objtool.h
-+++ b/tools/objtool/objtool.h
-@@ -16,6 +16,7 @@ struct objtool_file {
- 	struct elf *elf;
- 	struct list_head insn_list;
- 	DECLARE_HASHTABLE(insn_hash, 20);
-+	struct list_head mcount_loc_list;
- 	bool ignore_unreachables, c_file, hints, rodata;
- };
- 
+ $(obj)/%.s: $(src)/%.c FORCE
+ 	$(call if_changed_dep,cc_s_c)
 -- 
 2.28.0.681.g6f77f65b4e-goog
 
