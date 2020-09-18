@@ -2,138 +2,121 @@ Return-Path: <SRS0=Geob=C3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 142ADC43463
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 20:53:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10E4DC43464
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 20:56:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C51802311D
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 20:53:32 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="KW2Q2zo+"
+	by mail.kernel.org (Postfix) with ESMTP id B06DC21741
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Sep 2020 20:56:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726332AbgIRUx3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 18 Sep 2020 16:53:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58932 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726367AbgIRUx3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Sep 2020 16:53:29 -0400
-Received: from mail-pj1-x1044.google.com (mail-pj1-x1044.google.com [IPv6:2607:f8b0:4864:20::1044])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 25631C0613CE
-        for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2020 13:53:29 -0700 (PDT)
-Received: by mail-pj1-x1044.google.com with SMTP id gf14so3618746pjb.5
-        for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2020 13:53:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=Iy3TQ3C1Ek23yK9GZJXs0daNRNetn5CYF4/zAE2h7ik=;
-        b=KW2Q2zo+JFuYkr4TiNUBIe05OcRvez9oPhQD2VPO4rhQx4vr57iS+J6zydE3kkrQLF
-         DI66mG3IeYuMnm30FYVw5h6Oxc9WygSHNlBMmug3nlJy8G1DUZ0juqx+QQnea9m7Gete
-         ZlaTZ+Z/2TdOkps+Zf6K1JMQCJdPxK/x+hQD14J8YYA/+4YQfkWf+gJLTCmIge3scE76
-         p3ygrRlm7Krhqb7M2JzcHo7FC2+dzmjQDXITtDjcCKKvClFY66fCZJuYnZ82RbA6pZTO
-         Ed6GbIdgELybyBiBA7rEsXwGMBM8G5XyQ62y/lS/J/y5NTvmLs19ZGyoccTTuwOoeW73
-         b8Ig==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=Iy3TQ3C1Ek23yK9GZJXs0daNRNetn5CYF4/zAE2h7ik=;
-        b=X3z3vlEaDWtBbOEKHPvlh9GRhbzFoN+p7fUSS+jGpb13gf0Xzbi4r7pwLkgD7cPhdE
-         HMh/pNCA4fmv31J3sIxhHWU83M3ayVtg3oHUWJwcc98slvL8lWgYd98SQHHJT6sjGfiN
-         cDhAk4bASsG9tgnAAXZqDr1fZl4rttR+aj/tRLnbwcNWMeKH1hrQWfq/nq+zAZO22VX+
-         Og56RZ3yNYv1/jqvhOArVF3lcpyOC13aEbryHA1J1wjbUF+v/dlxUCTDyLVAn2LtVT/U
-         e8nvkgw3DiDf/eNZPr+am5bT0WEhfuX1MkWSCUzSpWyK7XkvOQU5tpcs4rOCtA6qOsxT
-         Dk4Q==
-X-Gm-Message-State: AOAM5335LauGJpKcsXCzE5d1MOwJqoK+wgcd1LRgMYGhO336qvWxk1U+
-        /wH48wsCscRIPHWB61DxLQh4DTbbyO3ogMzzPi3w5w==
-X-Google-Smtp-Source: ABdhPJykoyGWTRcD0lR6xnSRRS+gTsSrH7i8r0dJuA7wRYkUeLk2vde81YvSA+MIvTflgkJVw4xrDt+AfE3pnj9QWgw=
-X-Received: by 2002:a17:90b:f18:: with SMTP id br24mr2004360pjb.32.1600462408474;
- Fri, 18 Sep 2020 13:53:28 -0700 (PDT)
+        id S1726159AbgIRU42 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 18 Sep 2020 16:56:28 -0400
+Received: from mga01.intel.com ([192.55.52.88]:62248 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726139AbgIRU41 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 18 Sep 2020 16:56:27 -0400
+IronPort-SDR: ddgolQSSA2Ex4auK9fTXwDNB4KuL7qcsdi2O7APi0Uu1g3sEJ2elehu/SwWFlOwwOiZDcLR1RI
+ NIi6TOgkptig==
+X-IronPort-AV: E=McAfee;i="6000,8403,9748"; a="178120917"
+X-IronPort-AV: E=Sophos;i="5.77,274,1596524400"; 
+   d="scan'208";a="178120917"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Sep 2020 13:46:31 -0700
+IronPort-SDR: /W71CSV7HTPPsufRn/8lv7wvqc/uP+yw0lluNhqkLmM7k6ve0djrZIfCJ4rLH8HTUAkM8BoXlw
+ rMRXunqnX3nA==
+X-IronPort-AV: E=Sophos;i="5.77,274,1596524400"; 
+   d="scan'208";a="484366852"
+Received: from xsunzhou-mobl.amr.corp.intel.com (HELO arch-ashland-svkelley.intel.com) ([10.251.153.106])
+  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Sep 2020 13:46:31 -0700
+From:   Sean V Kelley <sean.v.kelley@intel.com>
+To:     bhelgaas@google.com, Jonathan.Cameron@huawei.com,
+        rafael.j.wysocki@intel.com, ashok.raj@intel.com,
+        tony.luck@intel.com, sathyanarayanan.kuppuswamy@intel.com,
+        qiuxu.zhuo@intel.com
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Sean V Kelley <sean.v.kelley@intel.com>
+Subject: [PATCH v5 09/10] PCI/PME: Add pcie_walk_rcec() to RCEC PME handling
+Date:   Fri, 18 Sep 2020 13:46:02 -0700
+Message-Id: <20200918204603.62100-10-sean.v.kelley@intel.com>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200918204603.62100-1-sean.v.kelley@intel.com>
+References: <20200918204603.62100-1-sean.v.kelley@intel.com>
 MIME-Version: 1.0
-References: <20200918201436.2932360-1-samitolvanen@google.com>
- <CA+icZUW1MYSUz8jwOaVpi6ib1dyCv1VmG5priw6TTzXGSh_8Gg@mail.gmail.com> <CABCJKueyWvNB2MQw_PCLtZb8F1+sA1QOLJi_5qMKwdFCcwSMGg@mail.gmail.com>
-In-Reply-To: <CABCJKueyWvNB2MQw_PCLtZb8F1+sA1QOLJi_5qMKwdFCcwSMGg@mail.gmail.com>
-From:   Nick Desaulniers <ndesaulniers@google.com>
-Date:   Fri, 18 Sep 2020 13:53:17 -0700
-Message-ID: <CAKwvOd=N5XS+c7X+fM+0aHWoo8j-xZ96Qk1a4n6gvYJZAq1mCQ@mail.gmail.com>
-Subject: Re: [PATCH v3 00/30] Add support for Clang LTO
-To:     Sami Tolvanen <samitolvanen@google.com>
-Cc:     Sedat Dilek <sedat.dilek@gmail.com>,
-        Masahiro Yamada <masahiroy@kernel.org>,
-        Will Deacon <will@kernel.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Paul E. McKenney" <paulmck@kernel.org>,
-        Kees Cook <keescook@chromium.org>,
-        Clang-Built-Linux ML <clang-built-linux@googlegroups.com>,
-        Kernel Hardening <kernel-hardening@lists.openwall.com>,
-        linux-arch <linux-arch@vger.kernel.org>,
-        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-        linux-kbuild <linux-kbuild@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-        X86 ML <x86@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Sep 18, 2020 at 1:50 PM Sami Tolvanen <samitolvanen@google.com> wrote:
->
-> On Fri, Sep 18, 2020 at 1:22 PM Sedat Dilek <sedat.dilek@gmail.com> wrote:
-> >
-> > On Fri, Sep 18, 2020 at 10:14 PM 'Sami Tolvanen' via Clang Built Linux
-> > <clang-built-linux@googlegroups.com> wrote:
-> > >
-> > > This patch series adds support for building x86_64 and arm64 kernels
-> > > with Clang's Link Time Optimization (LTO).
-> > >
-> > > In addition to performance, the primary motivation for LTO is
-> > > to allow Clang's Control-Flow Integrity (CFI) to be used in the
-> > > kernel. Google has shipped millions of Pixel devices running three
-> > > major kernel versions with LTO+CFI since 2018.
-> > >
-> > > Most of the patches are build system changes for handling LLVM
-> > > bitcode, which Clang produces with LTO instead of ELF object files,
-> > > postponing ELF processing until a later stage, and ensuring initcall
-> > > ordering.
-> > >
-> > > Note that patches 1-5 are not directly related to LTO, but are
-> > > needed to compile LTO kernels with ToT Clang, so I'm including them
-> > > in the series for your convenience:
-> > >
-> > >  - Patches 1-3 fix build issues with LLVM and they are already in
-> > >    linux-next.
-> > >
-> > >  - Patch 4 fixes x86 builds with LLVM IAS, but it hasn't yet been
-> > >    picked up by maintainers.
-> > >
-> > >  - Patch 5 is from Masahiro's kbuild tree and makes the LTO linker
-> > >    script changes much cleaner.
-> > >
-> >
-> > Hi Sami,
-> >
-> > might be good to point to your GitHub tree and corresponding
-> > release-tag for easy fetching.
->
-> Ah, true. You can also pull this series from
->
->   https://github.com/samitolvanen/linux.git lto-v3
+The Root Complex Event Collectors(RCEC) appear as peers of Root Ports
+and also have the PME capability. As with AER, there is a need to be
+able to walk the RCiEPs associated with their RCEC for purposes of
+acting upon them with callbacks. So add RCEC support through the use
+of pcie_walk_rcec() to the current PME service driver and attach the
+PME service driver to the RCEC device.
 
-Also, I've been using b4 happily for a short while now.
-https://people.kernel.org/monsieuricon/introducing-b4-and-patch-attestation
+Co-developed-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+Signed-off-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+Signed-off-by: Sean V Kelley <sean.v.kelley@intel.com>
+---
+ drivers/pci/pcie/pme.c | 15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
 
-My workflow would be: check lore.kernel.org/lkml/
-for the series in question. In this case:
-https://lore.kernel.org/lkml/CABCJKueyWvNB2MQw_PCLtZb8F1+sA1QOLJi_5qMKwdFCcwSMGg@mail.gmail.com/T/#t
-is the cover letter.  Then in my tree:
-$ b4 am https://lore.kernel.org/lkml/CABCJKueyWvNB2MQw_PCLtZb8F1+sA1QOLJi_5qMKwdFCcwSMGg@mail.gmail.com/T/#t
--o - | git am
+diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
+index 6a32970bb731..87799166c96a 100644
+--- a/drivers/pci/pcie/pme.c
++++ b/drivers/pci/pcie/pme.c
+@@ -310,7 +310,10 @@ static int pcie_pme_can_wakeup(struct pci_dev *dev, void *ign)
+ static void pcie_pme_mark_devices(struct pci_dev *port)
+ {
+ 	pcie_pme_can_wakeup(port, NULL);
+-	if (port->subordinate)
++
++	if (pci_pcie_type(port) == PCI_EXP_TYPE_RC_EC)
++		pcie_walk_rcec(port, pcie_pme_can_wakeup, NULL);
++	else if (port->subordinate)
+ 		pci_walk_bus(port->subordinate, pcie_pme_can_wakeup, NULL);
+ }
+ 
+@@ -320,10 +323,15 @@ static void pcie_pme_mark_devices(struct pci_dev *port)
+  */
+ static int pcie_pme_probe(struct pcie_device *srv)
+ {
+-	struct pci_dev *port;
++	struct pci_dev *port = srv->port;
+ 	struct pcie_pme_service_data *data;
+ 	int ret;
+ 
++	/* Limit to Root Ports or Root Complex Event Collectors */
++	if ((pci_pcie_type(port) != PCI_EXP_TYPE_RC_EC) &&
++	    (pci_pcie_type(port) != PCI_EXP_TYPE_ROOT_PORT))
++		return -ENODEV;
++
+ 	data = kzalloc(sizeof(*data), GFP_KERNEL);
+ 	if (!data)
+ 		return -ENOMEM;
+@@ -333,7 +341,6 @@ static int pcie_pme_probe(struct pcie_device *srv)
+ 	data->srv = srv;
+ 	set_service_data(srv, data);
+ 
+-	port = srv->port;
+ 	pcie_pme_interrupt_enable(port, false);
+ 	pcie_clear_root_pme_status(port);
+ 
+@@ -445,7 +452,7 @@ static void pcie_pme_remove(struct pcie_device *srv)
+ 
+ static struct pcie_port_service_driver pcie_pme_driver = {
+ 	.name		= "pcie_pme",
+-	.port_type	= PCI_EXP_TYPE_ROOT_PORT,
++	.port_type	= PCIE_ANY_PORT,
+ 	.service	= PCIE_PORT_SERVICE_PME,
+ 
+ 	.probe		= pcie_pme_probe,
 -- 
-Thanks,
-~Nick Desaulniers
+2.28.0
+
