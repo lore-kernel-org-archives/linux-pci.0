@@ -2,105 +2,124 @@ Return-Path: <SRS0=DH7G=C6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB9C1C4727C
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Sep 2020 22:58:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38E1AC4727C
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Sep 2020 23:11:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B109523A65
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Sep 2020 22:58:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600729130;
-	bh=2xk7Fmz3JjDQIAEPGMqF5VAoFrIcEHgYldDvUP9ihFA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=e0jO9/2omCegnrC8IP1401/yGpsm2g454nkLPmc58IFwz15Khs4rCU3kzaemVRzMv
-	 TdvaPlX/nNZnTjrp+QjPgs93aGbl0oq8kdVLI/pqXpORVVn/QmOuGxSOPv+K+JJHsH
-	 b7bogu40aV1Xon8LbeYtPIDlIG4UCyHLXgyOlakA=
+	by mail.kernel.org (Postfix) with ESMTP id E592323A61
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Sep 2020 23:11:08 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QKBdO2Hy"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728756AbgIUW6o (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Sep 2020 18:58:44 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37368 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728591AbgIUW6i (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 21 Sep 2020 18:58:38 -0400
-Received: from localhost (lfbn-ncy-1-588-162.w81-51.abo.wanadoo.fr [81.51.203.162])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 721432076E;
-        Mon, 21 Sep 2020 22:58:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600729117;
-        bh=2xk7Fmz3JjDQIAEPGMqF5VAoFrIcEHgYldDvUP9ihFA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Wlgl2Qt6SzVzrUnzox+uuaj2db3MfOfg8BnxPS8w3MUlFffW0wNf9oCF9nJMxLgc5
-         9+yBxfTqZgFDLxXDuSUxsvMo6KCvA0lRMLvCzymt1weUI4lWxtGKe3BQN1lkYKGZD6
-         bH62rL+RtrSyBOGvZvSyCWfiQrIvn8ciNV0EPaYk=
-Date:   Tue, 22 Sep 2020 00:58:35 +0200
-From:   Frederic Weisbecker <frederic@kernel.org>
-To:     Jesse Brandeburg <jesse.brandeburg@intel.com>
-Cc:     Nitesh Narayan Lal <nitesh@redhat.com>,
-        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-pci@vger.kernel.org, mtosatti@redhat.com,
-        sassmann@redhat.com, jeffrey.t.kirsher@intel.com,
-        jacob.e.keller@intel.com, jlelli@redhat.com, hch@infradead.org,
-        bhelgaas@google.com, mike.marciniszyn@intel.com,
-        dennis.dalessandro@intel.com, thomas.lendacky@amd.com,
-        jerinj@marvell.com, mathias.nyman@intel.com, jiri@nvidia.com
-Subject: Re: [RFC][Patch v1 2/3] i40e: limit msix vectors based on
- housekeeping CPUs
-Message-ID: <20200921225834.GA30521@lenoir>
-References: <20200909150818.313699-1-nitesh@redhat.com>
- <20200909150818.313699-3-nitesh@redhat.com>
- <20200917112359.00006e10@intel.com>
+        id S1728662AbgIUXLI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Sep 2020 19:11:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37362 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726457AbgIUXLI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Sep 2020 19:11:08 -0400
+Received: from mail-wr1-x429.google.com (mail-wr1-x429.google.com [IPv6:2a00:1450:4864:20::429])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DECA3C061755
+        for <linux-pci@vger.kernel.org>; Mon, 21 Sep 2020 16:11:07 -0700 (PDT)
+Received: by mail-wr1-x429.google.com with SMTP id x14so14831175wrl.12
+        for <linux-pci@vger.kernel.org>; Mon, 21 Sep 2020 16:11:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:from:date:message-id:subject:to;
+        bh=mHoruSCyZR4aICiJOK7Oyc3GUtCT1YETmG8eqkML2Gg=;
+        b=QKBdO2HyWrFJo0anOE7p59d0SMUl1Koh7vCzMjNiTV/igqaVwQVASeyxy7LbSu4Z0e
+         yUV+lnGb+iHCzrfW8UVJnirCFDBCLgcQUGPRUFNCUIResuZFZRlIfgEIQBFoq3Ae7OXI
+         uyS23b2h4r3XgsyPViV64KPWY6WF6HHakbFBnJv7VcrtkYJavMXN1DAbfA9Ztq9TH00G
+         pX7Wci2C67rRWCX7xZAtKcHMNNgW1PYSVsPFbkBb9CcSMuPQ7g4CrMammYwzQMf3D7a/
+         a6JGc4uOD9tONtBOP3+L/ezkLRegnPyaXTTDgEN4Wpuir3vSOVdE7b7neO/uul00g8Zu
+         EZzA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
+        bh=mHoruSCyZR4aICiJOK7Oyc3GUtCT1YETmG8eqkML2Gg=;
+        b=hCExcjVQjZNBg0c6e2wxveUNx33D07xr/OLvfH5P3VdCeksjr0a06Bkk5wz6RgP7IJ
+         HtXXLq0Rk7eH2req8dcNmHGp95T0SyFcjVmdjzaU/4yoVGH+iJuxF7VTTGeAVl2EpGuf
+         wm41MOvSyiCV87VeLc42Us5zS+ghewtQdVGsStysakxc9yAjx/0Se4IoXqHWiCdPWMv/
+         adIJTvW5Ift/tvroqwneGkrpcRrpY2Ucv1MQ8pUCdbUNaQPRv0q4fDS52b3KGRJ4s/p5
+         sJcHtB1xtvcaS3QLBlQZEYBkkS+cd9nKkA0rjQGZefXBW0+DQrEVIRkMYT/EMpfDdAhX
+         CHwA==
+X-Gm-Message-State: AOAM5316WquCvdfZtYw2RDZMWDaT3cAFYRBiLcunHLWKtNevx0zLe1n8
+        mE+hqqVz3Lsem6rRt/pH0/V1rG5JoZnCYXU/c6IP/eOvO7Q=
+X-Google-Smtp-Source: ABdhPJxtWOG/4ajINBRKKkNt712x8PYq4hQ3wl1GTbaZnR6+3sZrcv6ERqQp8RkkA9frdw0fq9gZd3lOj0sz1bFoeBw=
+X-Received: by 2002:adf:dd82:: with SMTP id x2mr2145851wrl.419.1600729866335;
+ Mon, 21 Sep 2020 16:11:06 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200917112359.00006e10@intel.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+From:   Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon, 21 Sep 2020 19:10:55 -0400
+Message-ID: <CADnq5_PoDdSeOxGgr5TzVwTTJmLb7BapXyG0KDs92P=wXzTNfg@mail.gmail.com>
+Subject: Enabling d3 support on hotplug bridges
+To:     Linux PCI <linux-pci@vger.kernel.org>,
+        Lukas Wunner <lukas@wunner.de>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>
+Content-Type: multipart/mixed; boundary="00000000000010d0a805afdaf71d"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Sep 17, 2020 at 11:23:59AM -0700, Jesse Brandeburg wrote:
-> Nitesh Narayan Lal wrote:
-> 
-> > In a realtime environment, it is essential to isolate unwanted IRQs from
-> > isolated CPUs to prevent latency overheads. Creating MSIX vectors only
-> > based on the online CPUs could lead to a potential issue on an RT setup
-> > that has several isolated CPUs but a very few housekeeping CPUs. This is
-> > because in these kinds of setups an attempt to move the IRQs to the
-> > limited housekeeping CPUs from isolated CPUs might fail due to the per
-> > CPU vector limit. This could eventually result in latency spikes because
-> > of the IRQ threads that we fail to move from isolated CPUs.
-> > 
-> > This patch prevents i40e to add vectors only based on available
-> > housekeeping CPUs by using num_housekeeping_cpus().
-> > 
-> > Signed-off-by: Nitesh Narayan Lal <nitesh@redhat.com>
-> 
-> The driver changes are straightforward, but this isn't the only driver
-> with this issue, right?  I'm sure ixgbe and ice both have this problem
-> too, you should fix them as well, at a minimum, and probably other
-> vendors drivers:
-> 
-> $ rg -c --stats num_online_cpus drivers/net/ethernet
-> ...
-> 50 files contained matches
+--00000000000010d0a805afdaf71d
+Content-Type: text/plain; charset="UTF-8"
 
-Ouch, I was indeed surprised that these MSI vector allocations were done
-at the driver level and not at some $SUBSYSTEM level.
+Hi,
 
-The logic is already there in the driver so I wouldn't oppose to this very patch
-but would a shared infrastructure make sense for this? Something that would
-also handle hotplug operations?
+Recent AMD laptops which have iGPU + dGPU have been non-functional on
+Linux.  The issue is that the laptops rely on ACPI to control the dGPU
+power and that is not happening because the bridges are hotplug
+capable, and the current pci code does not allow runtime pm on hotplug
+capable bridges.  This worked on previous laptops presumably because
+the bridges did not support hotplug or they hit one of the allowed
+cases.  The driver enables runtime power management, but since the
+dGPU does not actually get powered down via the platform ACPI
+controls, no power is saved, and things fall apart on resume leading
+to an unusable GPU or a system hang.  To work around this users can
+currently disable runtime pm in the GPU driver or specify
+pcie_port_pm=force to force d3 on bridges.  I'm not sure what the best
+solution for this is.  I'd rather not have to add device IDs to a
+whitelist every time we release a new platform.  Suggestions?  What
+about something like the attached patch work?
 
-Does it possibly go even beyond networking drivers?
+Alex
 
-Thanks.
+--00000000000010d0a805afdaf71d
+Content-Type: text/x-patch; charset="US-ASCII"; 
+	name="0001-pci-allow-d3-on-hotplug-bridges-after-2018.patch"
+Content-Disposition: attachment; 
+	filename="0001-pci-allow-d3-on-hotplug-bridges-after-2018.patch"
+Content-Transfer-Encoding: base64
+Content-ID: <f_kfd53s5o0>
+X-Attachment-Id: f_kfd53s5o0
 
-> 
-> for this patch i40e
-> Acked-by: Jesse Brandeburg <jesse.brandeburg@intel.com>
+RnJvbSAzYTA4Y2I2YWMzOGM0N2I5MjFiOGI2ZjMxYjAzZmNkOGYxM2M0MDE4IE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBBbGV4IERldWNoZXIgPGFsZXhhbmRlci5kZXVjaGVyQGFtZC5j
+b20+CkRhdGU6IE1vbiwgMjEgU2VwIDIwMjAgMTg6MDc6MjcgLTA0MDAKU3ViamVjdDogW1BBVENI
+XSBwY2k6IGFsbG93IGQzIG9uIGhvdHBsdWcgYnJpZGdlcyBhZnRlciAyMDE4CgpOZXdlciBBTUQg
+bGFwdG9wcyBoYXZlIGhvdHBsdWcgY2FwYWJlIGJyaWRnZXMgd2l0aCBkR1BVcyBiZWhpbmQgdGhl
+bS4KSWYgZDMgaXMgZGlzYWJsZWQgb24gdGhlIGJyaWRnZSwgdGhlIGRHUFUgaXMgbmV2ZXIgcG93
+ZXJlZCBkb3duIGV2ZW4KdGhvdWdoIHRoZSBkR1BVIGRyaXZlciBtYXkgdGhpbmsgaXQgaXMgYmVj
+YXVzZSBwb3dlciBpcyBoYW5kbGVkIGJ5CnRoZSBwY2kgY29yZS4gIFRoaW5ncyBmYWxsIGFwYXJ0
+IHdoZW4gdGhlIGRyaXZlciBhdHRlbXB0cyB0byByZXN1bWUKYSBkR1BVIHRoYXQgd2FzIG5vdCBw
+cm9wZXJseSBwb3dlcmVkIGRvd24gd2hpY2ggbGVhZHMgdG8gaGFuZ3MuCgpCdWc6IGh0dHBzOi8v
+Z2l0bGFiLmZyZWVkZXNrdG9wLm9yZy9kcm0vYW1kLy0vaXNzdWVzLzEyNTIKQnVnOiBodHRwczov
+L2dpdGxhYi5mcmVlZGVza3RvcC5vcmcvZHJtL2FtZC8tL2lzc3Vlcy8xMjIyCkJ1ZzogaHR0cHM6
+Ly9naXRsYWIuZnJlZWRlc2t0b3Aub3JnL2RybS9hbWQvLS9pc3N1ZXMvMTMwNApTaWduZWQtb2Zm
+LWJ5OiBBbGV4IERldWNoZXIgPGFsZXhhbmRlci5kZXVjaGVyQGFtZC5jb20+Ci0tLQogZHJpdmVy
+cy9wY2kvcGNpLmMgfCAyICstCiAxIGZpbGUgY2hhbmdlZCwgMSBpbnNlcnRpb24oKyksIDEgZGVs
+ZXRpb24oLSkKCmRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9wY2kuYyBiL2RyaXZlcnMvcGNpL3Bj
+aS5jCmluZGV4IGE0NThjNDZkN2UzOS4uMTI5MjdkNWRmNGI5IDEwMDY0NAotLS0gYS9kcml2ZXJz
+L3BjaS9wY2kuYworKysgYi9kcml2ZXJzL3BjaS9wY2kuYwpAQCAtMjg1Niw3ICsyODU2LDcgQEAg
+Ym9vbCBwY2lfYnJpZGdlX2QzX3Bvc3NpYmxlKHN0cnVjdCBwY2lfZGV2ICpicmlkZ2UpCiAJCSAq
+IGJ5IHZlbmRvcnMgZm9yIHJ1bnRpbWUgRDMgYXQgbGVhc3QgdW50aWwgMjAxOCBiZWNhdXNlIHRo
+ZXJlCiAJCSAqIHdhcyBubyBPUyBzdXBwb3J0LgogCQkgKi8KLQkJaWYgKGJyaWRnZS0+aXNfaG90
+cGx1Z19icmlkZ2UpCisJCWlmIChicmlkZ2UtPmlzX2hvdHBsdWdfYnJpZGdlICYmIChkbWlfZ2V0
+X2Jpb3NfeWVhcigpIDw9IDIwMTgpKQogCQkJcmV0dXJuIGZhbHNlOwogCiAJCWlmIChkbWlfY2hl
+Y2tfc3lzdGVtKGJyaWRnZV9kM19ibGFja2xpc3QpKQotLSAKMi4yNS40Cgo=
+--00000000000010d0a805afdaf71d--
