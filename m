@@ -2,100 +2,208 @@ Return-Path: <SRS0=DH7G=C6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19F62C43468
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Sep 2020 11:28:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2605C43463
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Sep 2020 11:33:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CA9A6218AC
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Sep 2020 11:28:38 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lJ2PIn2h"
+	by mail.kernel.org (Postfix) with ESMTP id A583420874
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Sep 2020 11:33:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726654AbgIUL2i (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Sep 2020 07:28:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41482 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726648AbgIUL2h (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Sep 2020 07:28:37 -0400
-Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9032C061755;
-        Mon, 21 Sep 2020 04:28:36 -0700 (PDT)
-Received: by mail-wr1-x442.google.com with SMTP id t10so12351244wrv.1;
-        Mon, 21 Sep 2020 04:28:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=vrB+wCY042lJLf7nGNWVAiX4/elJqpuJ2MLbBI8/1x0=;
-        b=lJ2PIn2hyoicpc2UNBXM2gN4WBR9xUocX0CtaRAH1XEa1qqh0K3nyX8RXr586ComqS
-         PXnrJXhtzG+wJmllnrGIUchNGpHYdFb/wX+qKb0BdbQC1EwTIjEUQiCEwt6PFomHiCux
-         ncvCOwye3NFC+/iwCRVNBRzNy96hA4kSK8Hx8mxkFTHhM36udC+fFGFcuTtHk384dxzh
-         X3T41btIzGWFA0tV8kaChIWjovCidbqL1YtOIIocGDPQIiXEFTSLltnzukxKavn5VUjj
-         MHNAVIN4wrxH+ZpdyAV1maFMOLSSAuAqyVGdWLotwE2PRzlv+BpMN//f/gR2153lBivD
-         oXcg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=vrB+wCY042lJLf7nGNWVAiX4/elJqpuJ2MLbBI8/1x0=;
-        b=rJDnF0V6fRNTRMTPS8REUhqGTPLLxc7G15/bZL56RxtFRjs3/GFwCEIOYlLUQnOPgf
-         lUymz8YnHz/Oj1ttb47m1WLplVb1GQaMbSeyPMnaS1qWrZpzdkrIX2nhOdBsnr+WTzRn
-         NaLzHy1D44sGl9xCA8qX2kdfcvSfFy5+TG18Bm4UrCT+yB7tJbxnzZZe3yh6qBfzlj9f
-         bRX9FOYmaP4UL8gDAcoDIqNNrO1gqUsBTSHVOcQtZTpywlTAo0mAH5OYTLZg3wwWyO6w
-         m5weLCZkI3OWe4pb0APok9txXek34lT6VUdVr2CildmkSJU8tqM3W3RjvKUgOHd5Dpd8
-         gzUQ==
-X-Gm-Message-State: AOAM531+HL7FCQ6uZzVT0iMYHTLqkMyr346HB0sGrdDpsau5IzANTUq3
-        nbuiHX7ME/nQ7Ip/nmhnBa2FdD+pWMVyhrAG
-X-Google-Smtp-Source: ABdhPJycm9Y99RJHGX/Hg/HjpMbDZDId4vDXQhBo0nw9OZ9zQ7dzBrgjK0IcrYyHKRZb487w39n/8Q==
-X-Received: by 2002:a5d:61c7:: with SMTP id q7mr52716640wrv.343.1600687715532;
-        Mon, 21 Sep 2020 04:28:35 -0700 (PDT)
-Received: from ubuntu-laptop.micron.com ([165.225.203.62])
-        by smtp.googlemail.com with ESMTPSA id t17sm20628056wrx.82.2020.09.21.04.28.32
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 21 Sep 2020 04:28:35 -0700 (PDT)
-Message-ID: <2f29372be8186f25222e370f5601019b4d95b7b3.camel@gmail.com>
-Subject: Re: [PATCH] PCI: kirin: Return -EPROBE_DEFER in case the gpio isn't
- ready
-From:   Bean Huo <huobean@gmail.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     songxiaowei@hisilicon.com, wangbinghui@hisilicon.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, beanhuo@micron.com
-Date:   Mon, 21 Sep 2020 13:28:31 +0200
-In-Reply-To: <20200921112209.GA2220@e121166-lin.cambridge.arm.com>
-References: <20200918123800.19983-1-huobean@gmail.com>
-         <20200921112209.GA2220@e121166-lin.cambridge.arm.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
-Mime-Version: 1.0
+        id S1726460AbgIULdh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Sep 2020 07:33:37 -0400
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2901 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726326AbgIULdh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 21 Sep 2020 07:33:37 -0400
+Received: from lhreml710-chm.china.huawei.com (unknown [172.18.7.106])
+        by Forcepoint Email with ESMTP id A8E56E69047D0A45E599;
+        Mon, 21 Sep 2020 12:33:35 +0100 (IST)
+Received: from localhost (10.52.121.13) by lhreml710-chm.china.huawei.com
+ (10.201.108.61) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Mon, 21 Sep
+ 2020 12:33:35 +0100
+Date:   Mon, 21 Sep 2020 12:31:56 +0100
+From:   Jonathan Cameron <Jonathan.Cameron@Huawei.com>
+To:     Sean V Kelley <sean.v.kelley@intel.com>
+CC:     <bhelgaas@google.com>, <rafael.j.wysocki@intel.com>,
+        <ashok.raj@intel.com>, <tony.luck@intel.com>,
+        <sathyanarayanan.kuppuswamy@intel.com>, <qiuxu.zhuo@intel.com>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v5 07/10] PCI/RCEC: Add RCiEP's linked RCEC to AER/ERR
+Message-ID: <20200921123156.00000f18@Huawei.com>
+In-Reply-To: <20200918204603.62100-8-sean.v.kelley@intel.com>
+References: <20200918204603.62100-1-sean.v.kelley@intel.com>
+        <20200918204603.62100-8-sean.v.kelley@intel.com>
+Organization: Huawei Technologies Research and Development (UK) Ltd.
+X-Mailer: Claws Mail 3.17.4 (GTK+ 2.24.32; i686-w64-mingw32)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.52.121.13]
+X-ClientProxiedBy: lhreml744-chm.china.huawei.com (10.201.108.194) To
+ lhreml710-chm.china.huawei.com (10.201.108.61)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, 2020-09-21 at 12:22 +0100, Lorenzo Pieralisi wrote:
-> > Fix the above issue by letting kirin_pcie_probe() return
-> > -EPROBE_DEFER in
-> > such a case.
-> > 
-> > Fixes: 6e0832fa432e ("PCI: Collect all native drivers under
-> > drivers/pci/controller")
+On Fri, 18 Sep 2020 13:46:00 -0700
+Sean V Kelley <sean.v.kelley@intel.com> wrote:
+
+> From: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
 > 
-> This is certainly not the commit that triggered the issue so I would
-> remove it. Kirin maintainers are CC'ed, waiting for their ACK.
+> When attempting error recovery for an RCiEP associated with an RCEC device,
+> there needs to be a way to update the Root Error Status, the Uncorrectable
+> Error Status and the Uncorrectable Error Severity of the parent RCEC.
+> In some non-native cases in which there is no OS visible device
+> associated with the RCiEP, there is nothing to act upon as the firmware
+> is acting before the OS. So add handling for the linked 'rcec' in AER/ERR
+> while taking into account non-native cases.
 > 
-> Lorenzo
+> Co-developed-by: Sean V Kelley <sean.v.kelley@intel.com>
+> Signed-off-by: Sean V Kelley <sean.v.kelley@intel.com>
+> Signed-off-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+I'll give this a test run later to check I'm not missing anything, but LGTM.
 
-Hi Lorenzo
+Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 
-Thanks very much for your reply. It is true this is a bug which was
-introduced by the origin commit. It is ok  for me to remove this fix
-tag.
+Thanks,
 
-Thanks, 
-Bean
+> ---
+>  drivers/pci/pcie/aer.c |  9 +++++----
+>  drivers/pci/pcie/err.c | 38 ++++++++++++++++++++++++--------------
+>  2 files changed, 29 insertions(+), 18 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+> index 65dff5f3457a..dccdba60b5d9 100644
+> --- a/drivers/pci/pcie/aer.c
+> +++ b/drivers/pci/pcie/aer.c
+> @@ -1358,17 +1358,18 @@ static int aer_probe(struct pcie_device *dev)
+>  static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
+>  {
+>  	int aer = dev->aer_cap;
+> +	int rc = 0;
+>  	u32 reg32;
+> -	int rc;
+> -
+>  
+>  	/* Disable Root's interrupt in response to error messages */
+>  	pci_read_config_dword(dev, aer + PCI_ERR_ROOT_COMMAND, &reg32);
+>  	reg32 &= ~ROOT_PORT_INTR_ON_MESG_MASK;
+>  	pci_write_config_dword(dev, aer + PCI_ERR_ROOT_COMMAND, reg32);
+>  
+> -	rc = pci_bus_error_reset(dev);
+> -	pci_info(dev, "Root Port link has been reset\n");
+> +	if (pci_pcie_type(dev) != PCI_EXP_TYPE_RC_EC) {
+> +		rc = pci_bus_error_reset(dev);
+> +		pci_info(dev, "Root Port link has been reset\n");
+> +	}
+>  
+>  	/* Clear Root Error Status */
+>  	pci_read_config_dword(dev, aer + PCI_ERR_ROOT_STATUS, &reg32);
+> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+> index 5380ecc41506..a61a2518163a 100644
+> --- a/drivers/pci/pcie/err.c
+> +++ b/drivers/pci/pcie/err.c
+> @@ -149,7 +149,8 @@ static int report_resume(struct pci_dev *dev, void *data)
+>  /**
+>   * pci_bridge_walk - walk bridges potentially AER affected
+>   * @bridge   bridge which may be an RCEC with associated RCiEPs,
+> - *           an RCiEP associated with an RCEC, or a Port.
+> + *           or a Port.
+> + * @dev      an RCiEP lacking an associated RCEC.
+>   * @cb       callback to be called for each device found
+>   * @userdata arbitrary pointer to be passed to callback.
+>   *
+> @@ -160,13 +161,16 @@ static int report_resume(struct pci_dev *dev, void *data)
+>   * If the device provided has no subordinate bus, call the provided
+>   * callback on the device itself.
+>   */
+> -static void pci_bridge_walk(struct pci_dev *bridge, int (*cb)(struct pci_dev *, void *),
+> +static void pci_bridge_walk(struct pci_dev *bridge, struct pci_dev *dev,
+> +			    int (*cb)(struct pci_dev *, void *),
+>  			    void *userdata)
+>  {
+> -	if (bridge->subordinate)
+> +	if (bridge && bridge->subordinate)
+>  		pci_walk_bus(bridge->subordinate, cb, userdata);
+> -	else
+> +	else if (bridge)
+>  		cb(bridge, userdata);
+> +	else
+> +		cb(dev, userdata);
+>  }
+>  
+>  static pci_ers_result_t flr_on_rciep(struct pci_dev *dev)
+> @@ -196,16 +200,24 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+>  	type = pci_pcie_type(dev);
+>  	if (type == PCI_EXP_TYPE_ROOT_PORT ||
+>  	    type == PCI_EXP_TYPE_DOWNSTREAM ||
+> -	    type == PCI_EXP_TYPE_RC_EC ||
+> -	    type == PCI_EXP_TYPE_RC_END)
+> +	    type == PCI_EXP_TYPE_RC_EC)
+>  		bridge = dev;
+> +	else if (type == PCI_EXP_TYPE_RC_END)
+> +		bridge = dev->rcec;
+>  	else
+>  		bridge = pci_upstream_bridge(dev);
+>  
+>  	pci_dbg(dev, "broadcast error_detected message\n");
+>  	if (state == pci_channel_io_frozen) {
+> -		pci_bridge_walk(bridge, report_frozen_detected, &status);
+> +		pci_bridge_walk(bridge, dev, report_frozen_detected, &status);
+>  		if (type == PCI_EXP_TYPE_RC_END) {
+> +			/*
+> +			 * The callback only clears the Root Error Status
+> +			 * of the RCEC (see aer.c).
+> +			 */
+> +			if (bridge)
+> +				reset_subordinate_devices(bridge);
+> +
+>  			status = flr_on_rciep(dev);
+>  			if (status != PCI_ERS_RESULT_RECOVERED) {
+>  				pci_warn(dev, "function level reset failed\n");
+> @@ -219,13 +231,13 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+>  			}
+>  		}
+>  	} else {
+> -		pci_bridge_walk(bridge, report_normal_detected, &status);
+> +		pci_bridge_walk(bridge, dev, report_normal_detected, &status);
+>  	}
+>  
+>  	if (status == PCI_ERS_RESULT_CAN_RECOVER) {
+>  		status = PCI_ERS_RESULT_RECOVERED;
+>  		pci_dbg(dev, "broadcast mmio_enabled message\n");
+> -		pci_bridge_walk(bridge, report_mmio_enabled, &status);
+> +		pci_bridge_walk(bridge, dev, report_mmio_enabled, &status);
+>  	}
+>  
+>  	if (status == PCI_ERS_RESULT_NEED_RESET) {
+> @@ -236,18 +248,16 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+>  		 */
+>  		status = PCI_ERS_RESULT_RECOVERED;
+>  		pci_dbg(dev, "broadcast slot_reset message\n");
+> -		pci_bridge_walk(bridge, report_slot_reset, &status);
+> +		pci_bridge_walk(bridge, dev, report_slot_reset, &status);
+>  	}
+>  
+>  	if (status != PCI_ERS_RESULT_RECOVERED)
+>  		goto failed;
+>  
+>  	pci_dbg(dev, "broadcast resume message\n");
+> -	pci_bridge_walk(bridge, report_resume, &status);
+> +	pci_bridge_walk(bridge, dev, report_resume, &status);
+>  
+> -	if (type == PCI_EXP_TYPE_ROOT_PORT ||
+> -	    type == PCI_EXP_TYPE_DOWNSTREAM ||
+> -	    type == PCI_EXP_TYPE_RC_EC) {
+> +	if (bridge) {
+>  		if (pcie_aer_is_native(bridge))
+>  			pcie_clear_device_status(bridge);
+>  		pci_aer_clear_nonfatal_status(bridge);
+
 
