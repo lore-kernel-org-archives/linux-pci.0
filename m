@@ -2,80 +2,72 @@ Return-Path: <SRS0=DH7G=C6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63C7FC43465
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Sep 2020 13:10:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D01D9C43464
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Sep 2020 13:17:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 30FE72076E
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Sep 2020 13:10:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 88E9E21D43
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Sep 2020 13:17:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1600694222;
+	bh=k7wbqZQpaAKTI8yeTGsEwezOg+Nwq7YoOLM6qiKEKiY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=TtG+WvPLw4S4CBLMl+tckK/yFF6U/vDcDmoom0X85n5o/Z0edpgahFjWoa10yPRP+
+	 g+Ku4kQefBGQRygO5IiPZzuJPP2/o7yv3AfPcBWt6s+xyG7TrnSQ7pmBXMT/dj256P
+	 LBlfz4axWYAXzF1eiAcZyiQqxE6dxwF9+ZN3Gkzo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727439AbgIUNKs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Sep 2020 09:10:48 -0400
-Received: from szxga05-in.huawei.com ([45.249.212.191]:14200 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727428AbgIUNKq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 21 Sep 2020 09:10:46 -0400
-Received: from DGGEMS401-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id 517EF94D4DDE6B6B7A45;
-        Mon, 21 Sep 2020 21:10:40 +0800 (CST)
-Received: from localhost.localdomain.localdomain (10.175.113.25) by
- DGGEMS401-HUB.china.huawei.com (10.3.19.201) with Microsoft SMTP Server id
- 14.3.487.0; Mon, 21 Sep 2020 21:10:30 +0800
-From:   Qinglang Miao <miaoqinglang@huawei.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Qinglang Miao <miaoqinglang@huawei.com>
-Subject: [PATCH -next] PCI: loongson: simplify the return expression of loongson_pci_probe()
-Date:   Mon, 21 Sep 2020 21:10:54 +0800
-Message-ID: <20200921131054.92797-1-miaoqinglang@huawei.com>
-X-Mailer: git-send-email 2.20.1
+        id S1727219AbgIUNQ6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Sep 2020 09:16:58 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44732 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726353AbgIUNQy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 21 Sep 2020 09:16:54 -0400
+Received: from dragon (80.251.214.228.16clouds.com [80.251.214.228])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9461C21789;
+        Mon, 21 Sep 2020 13:16:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1600694213;
+        bh=k7wbqZQpaAKTI8yeTGsEwezOg+Nwq7YoOLM6qiKEKiY=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=PzNgUW5AKZ4oPpuFwLke4kMknfGVDs9ERq4LryF12ceRD1YOw/2C07PLtCMV/i6I5
+         pzG2um10m9aYc5lDqaRRX0vZ3Tm2jt6EP0IJMhIxQBt7kW8p4+kh0gxn3/ajAQZ6sL
+         exDt5+mHtbx+ouSfbvyFtt+58LbiwtsmqnDI5JbM=
+Date:   Mon, 21 Sep 2020 21:16:47 +0800
+From:   Shawn Guo <shawnguo@kernel.org>
+To:     Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
+Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, bhelgaas@google.com,
+        robh+dt@kernel.org, leoyang.li@nxp.com, lorenzo.pieralisi@arm.com,
+        gustavo.pimentel@synopsys.com, minghuan.Lian@nxp.com,
+        mingkai.hu@nxp.com, roy.zang@nxp.com
+Subject: Re: [PATCH 6/7] dts: arm64: ls1043a: Add SCFG phandle for PCIe nodes
+Message-ID: <20200921131646.GC25428@dragon>
+References: <20200907053801.22149-1-Zhiqiang.Hou@nxp.com>
+ <20200907053801.22149-7-Zhiqiang.Hou@nxp.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.113.25]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200907053801.22149-7-Zhiqiang.Hou@nxp.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Simplify the return expression.
+On Mon, Sep 07, 2020 at 01:38:00PM +0800, Zhiqiang Hou wrote:
+> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+> 
+> The LS1043A PCIe controller has some control registers
+> in SCFG block, so add the SCFG phandle for each PCIe
+> controller DT node.
+> 
+> Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-Signed-off-by: Qinglang Miao <miaoqinglang@huawei.com>
----
- drivers/pci/controller/pci-loongson.c | 7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+'arm64: dts: ...' for subject prefix.
 
-diff --git a/drivers/pci/controller/pci-loongson.c b/drivers/pci/controller/pci-loongson.c
-index 719c19fe2..48169b1e3 100644
---- a/drivers/pci/controller/pci-loongson.c
-+++ b/drivers/pci/controller/pci-loongson.c
-@@ -183,7 +183,6 @@ static int loongson_pci_probe(struct platform_device *pdev)
- 	struct device_node *node = dev->of_node;
- 	struct pci_host_bridge *bridge;
- 	struct resource *regs;
--	int err;
- 
- 	if (!node)
- 		return -ENODEV;
-@@ -222,11 +221,7 @@ static int loongson_pci_probe(struct platform_device *pdev)
- 	bridge->ops = &loongson_pci_ops;
- 	bridge->map_irq = loongson_map_irq;
- 
--	err = pci_host_probe(bridge);
--	if (err)
--		return err;
--
--	return 0;
-+	return pci_host_probe(bridge);
- }
- 
- static struct platform_driver loongson_pci_driver = {
--- 
-2.23.0
-
+Shawn
