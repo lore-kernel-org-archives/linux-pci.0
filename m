@@ -2,135 +2,124 @@ Return-Path: <SRS0=DH7G=C6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.4 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95203C43465
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Sep 2020 17:03:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12211C4346E
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Sep 2020 18:58:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5EEDD2073A
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Sep 2020 17:03:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600707824;
-	bh=6dRQRkN/L3mXtliQlUgl3Vb+aLvafqsq0JF9XgTWhZ0=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=uLuw6qqOkHMcv21B9SQWfOtypZXKtxM5O3Zn2Iw/9lVXWN3Ezlzc89V8M6t7Zbzzm
-	 1f+kovyGeHVvy7io6tv7IiQHLk/MgYF9lFqlA0MMHuscoNHI+OZWbx4udmZ8Y8+Uy4
-	 OAh7aM1l0COBBHfWD5O4mu6sy1G9ScIyvepRB7Ds=
+	by mail.kernel.org (Postfix) with ESMTP id C7CEF20C09
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Sep 2020 18:58:35 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="VwM6SxPc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728980AbgIUQg2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Sep 2020 12:36:28 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36238 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728977AbgIUQg1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 21 Sep 2020 12:36:27 -0400
-Received: from localhost (52.sub-72-107-123.myvzw.com [72.107.123.52])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 07819238EE;
-        Mon, 21 Sep 2020 16:36:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600706186;
-        bh=6dRQRkN/L3mXtliQlUgl3Vb+aLvafqsq0JF9XgTWhZ0=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=GbUu5wR2bbF3NanHI4aZVK0X6SM98qKGFHLIU4Id2ugr/rzLmPqCoDmmLn8UPYBfk
-         MLA2vF9JvfrkNJNTOgT5nIOGzIBAVfWjJAlJx66syHA9QDXGCmkCAItFj4qWWOcXPl
-         0j+1IRLbuBsFtfFfVVKwJPRPXK0kLP52s6TFC5h0=
-Date:   Mon, 21 Sep 2020 11:36:24 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: Re: [PATCH] [-next] PCI: DWC: Fix cast truncates bits from constant
- value
-Message-ID: <20200921163624.GA2117267@bjorn-Precision-5520>
+        id S1727363AbgIUS6c (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Sep 2020 14:58:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54882 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726395AbgIUS6c (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Sep 2020 14:58:32 -0400
+Received: from mail-ej1-x641.google.com (mail-ej1-x641.google.com [IPv6:2a00:1450:4864:20::641])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0933C061755
+        for <linux-pci@vger.kernel.org>; Mon, 21 Sep 2020 11:58:31 -0700 (PDT)
+Received: by mail-ej1-x641.google.com with SMTP id gx22so10213710ejb.5
+        for <linux-pci@vger.kernel.org>; Mon, 21 Sep 2020 11:58:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=rrEufNVuY5dCBzinzTyZLnRAK6NDit4k748EnZ9ZGyU=;
+        b=VwM6SxPchzpHYvDq5MuGqptnfOCO+2u8UOZQsUHmvXP+yQTF+Z7wlraeVtjd/s9jlB
+         wV193ZvJeoHSX0mG5NaEp1P+oe7FoNjVRmUSb2Z+JinKsMwFIqn+MpalsijQarctvj4U
+         FH4y6mRhga1p9JKtJgLYS2O01gvN0JoRMzpIJ8sTPjHm+K3XvxLJoxyawOroxTt3ewXo
+         2erVwwtPxW6qCdmd6A02Wa5wSMbzwpQ/xA7DOELk4+u1Yv0Dw6Gb0gPjk1AInJx+Npb8
+         9g541oYiyMOVYQWN0p1s+dSK+qehJVoUb8ZcAzai39YkrQsAMRZIWHvBa3cE/5jkadoT
+         Dtig==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=rrEufNVuY5dCBzinzTyZLnRAK6NDit4k748EnZ9ZGyU=;
+        b=O0kL6OzHiv8/NVi68mkHys6oosDziKXQCm1IfZ1zvEXV9mFXN7XjWVg1S0NNbHITs0
+         VdbIojPYboV0/k1uEJcxq+nWPeLxnPykisQt62k6Efmv/5Mq7eGN2Q3G/0WKxTjt6V/C
+         5k9sUkyxGkbZ+sdM8j2FMwry4ePaWH4RPeyE0FqvMPMV+kD7QjeB0gJE0lGCsbe0uVKU
+         GJWomUz+7A681O7WZs8w30Zvm12mqpAuwpPMe+Z5H5D4qQhaUCWJFSGxkZzsgfifQqwh
+         s6RNcWQJ9bulnxD5c6/j5+LI5ZCr6dn0ONusRvtHTdJ76nF2DX9DSzAyi5KnCWpYDcDB
+         fhHw==
+X-Gm-Message-State: AOAM5302Cwx7dxuMmLvP+HtKG08HCzOwcHl/NRanSboqzFMcngbOvGDi
+        8Ag/rYvIme+Xilih9duFgAQV4TjyIqpTUZ2EdZsVxw==
+X-Google-Smtp-Source: ABdhPJwAs9ksH6re9qMXbI2fsKP5Ghj4mOoCzkBFQS+BQszgLy1pqKFO8fFSdMFWe7XQ/UpW1tcdUlWla4BBqoqymc8=
+X-Received: by 2002:a17:906:ecf1:: with SMTP id qt17mr960026ejb.158.1600714709946;
+ Mon, 21 Sep 2020 11:58:29 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <DM5PR12MB1276E15164E0793E623BACEBDA3A0@DM5PR12MB1276.namprd12.prod.outlook.com>
+References: <20200918201436.2932360-1-samitolvanen@google.com>
+ <20200918201436.2932360-14-samitolvanen@google.com> <202009181427.86DE61B@keescook>
+In-Reply-To: <202009181427.86DE61B@keescook>
+From:   Sami Tolvanen <samitolvanen@google.com>
+Date:   Mon, 21 Sep 2020 11:58:19 -0700
+Message-ID: <CABCJKuf5pKqEDaAKix5CaUmv92M5HOAB-psdNg=awF7BDZ+yvA@mail.gmail.com>
+Subject: Re: [PATCH v3 13/30] kbuild: lto: postpone objtool
+To:     Kees Cook <keescook@chromium.org>
+Cc:     Masahiro Yamada <masahiroy@kernel.org>,
+        Will Deacon <will@kernel.org>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Paul E. McKenney" <paulmck@kernel.org>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        clang-built-linux <clang-built-linux@googlegroups.com>,
+        Kernel Hardening <kernel-hardening@lists.openwall.com>,
+        linux-arch <linux-arch@vger.kernel.org>,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        linux-kbuild <linux-kbuild@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+        X86 ML <x86@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Sep 21, 2020 at 11:30:48AM +0000, Gustavo Pimentel wrote:
-> On Fri, Sep 18, 2020 at 8:15:48, Gustavo Pimentel <gustavo@synopsys.com> 
-> wrote:
-> 
-> > On Thu, Sep 17, 2020 at 22:47:59, Bjorn Helgaas <helgaas@kernel.org> 
-> > wrote:
-> > 
-> > > On Thu, Sep 17, 2020 at 11:28:03PM +0200, Gustavo Pimentel wrote:
-> > > > Fixes warning given by executing "make C=2 drivers/pci/"
-> > > > 
-> > > > Sparse output:
-> > > > CHECK drivers/pci/controller/dwc/pcie-designware.c
-> > > >  drivers/pci/controller/dwc/pcie-designware.c:432:52: warning:
-> > > >  cast truncates bits from constant value (ffffffff7fffffff becomes
-> > > >  7fffffff)
-> > > > 
-> > > > Reported-by: Bjorn Helgaas <bhelgaas@google.com>
-> > > > Cc: Joao Pinto <jpinto@synopsys.com>
-> > > > Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-> > > > ---
-> > > >  drivers/pci/controller/dwc/pcie-designware.c | 2 +-
-> > > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > > 
-> > > > diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-> > > > index 3c3a4d1..dcb7108 100644
-> > > > --- a/drivers/pci/controller/dwc/pcie-designware.c
-> > > > +++ b/drivers/pci/controller/dwc/pcie-designware.c
-> > > > @@ -429,7 +429,7 @@ void dw_pcie_disable_atu(struct dw_pcie *pci, int index,
-> > > >  	}
-> > > >  
-> > > >  	dw_pcie_writel_dbi(pci, PCIE_ATU_VIEWPORT, region | index);
-> > > > -	dw_pcie_writel_dbi(pci, PCIE_ATU_CR2, (u32)~PCIE_ATU_ENABLE);
-> > > > +	dw_pcie_writel_dbi(pci, PCIE_ATU_CR2, (u32)~0 & ~PCIE_ATU_ENABLE);
-> > > 
-> > > But this cure is worse than the disease.  If this is the only way to
-> > > fix the warning, I think I'd rather see the warning ;)  I'm hopeful
-> > > there's a nicer way, but I'm not a language lawyer.
-> > 
-> > I don't like it either, I tried to see if were another way a clean way 
-> > that didn't imply creating a temporary variable, but I didn't found.
-> > The issue here is that PCIE_ATU_ENABLE is defined as BIT(31) on 
-> > pcie-designware.h. The macro BIT changes its size from u32 to u64 
-> > according to the architecture and by inverting the value on the 64 bits 
-> > architecture causes the value to be transformed into 0xffffffff7fffffff.
-> > 
-> > The other possibility implies the creation of a temporary u32 variable to 
-> > overcome this issue. It's a little bit overkill, but please share your 
-> > thoughts about it.
-> > 
-> > void dw_pcie_disable_atu(struct dw_pcie *pci, int index,
-> >                          enum dw_pcie_region_type type)
-> >  {
-> > -       int region;
-> > +       u32 atu = PCIE_ATU_ENABLE;
-> > +       u32 region;
-> > 
-> >         switch (type) {
-> >         case DW_PCIE_REGION_INBOUND:
-> > @@ -429,7 +430,7 @@ void dw_pcie_disable_atu(struct dw_pcie *pci, int 
-> > index,
-> >         }
-> > 
-> >         dw_pcie_writel_dbi(pci, PCIE_ATU_VIEWPORT, region | index);
-> > -       dw_pcie_writel_dbi(pci, PCIE_ATU_CR2, (u32)~PCIE_ATU_ENABLE);
-> > +       dw_pcie_writel_dbi(pci, PCIE_ATU_CR2, ~atu);
-> >  }
-> 
-> Hi Bjorn,
-> 
-> What is your verdict on this?
-> If you prefer this approach I can send the corresponding patch.
+Nick and 0-day bot both let me know that there's a typo in this patch,
+which I'll fix in v4:
 
-Having a u32 temporary with no obvious reason for existence is kind of
-unpleasant, too.  Surely this is a common situation?  Maybe other
-instances just live with the warning, too?
+diff --git a/scripts/Makefile.lib b/scripts/Makefile.lib
+index f7daa59ff14f..00d7baaf7949 100644
+--- a/scripts/Makefile.lib
++++ b/scripts/Makefile.lib
+@@ -223,7 +223,7 @@ dtc_cpp_flags  = -Wp,-MMD,$(depfile).pre.tmp
+-nostdinc                    \
+ objtool_args =                                                         \
+        $(if $(CONFIG_UNWINDER_ORC),orc generate,check)                 \
+        $(if $(part-of-module), --module,)                              \
+-       $(if $(CONFIG_FRAME_POINTER), --no-fp,)                         \
++       $(if $(CONFIG_FRAME_POINTER),, --no-fp)                         \
+        $(if $(CONFIG_GCOV_KERNEL), --no-unreachable,)                  \
+        $(if $(CONFIG_RETPOLINE), --retpoline,)                         \
+        $(if $(CONFIG_X86_SMAP), --uaccess,)                            \
 
-I'd say leave this alone for now.
+Sami
 
-Bjorn
+On Fri, Sep 18, 2020 at 2:27 PM Kees Cook <keescook@chromium.org> wrote:
+>
+> On Fri, Sep 18, 2020 at 01:14:19PM -0700, Sami Tolvanen wrote:
+> > With LTO, LLVM bitcode won't be compiled into native code until
+> > modpost_link, or modfinal for modules. This change postpones calls
+> > to objtool until after these steps, and moves objtool_args to
+> > Makefile.lib, so the arguments can be reused in Makefile.modfinal.
+> >
+> > Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
+>
+> Thanks for reorganizing this!
+>
+> Reviewed-by: Kees Cook <keescook@chromium.org>
+>
+> --
+> Kees Cook
+>
+> --
+> You received this message because you are subscribed to the Google Groups "Clang Built Linux" group.
+> To unsubscribe from this group and stop receiving emails from it, send an email to clang-built-linux+unsubscribe@googlegroups.com.
+> To view this discussion on the web visit https://groups.google.com/d/msgid/clang-built-linux/202009181427.86DE61B%40keescook.
