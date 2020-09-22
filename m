@@ -2,86 +2,69 @@ Return-Path: <SRS0=cLGU=C7=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32028C2D0E2
-	for <linux-pci@archiver.kernel.org>; Tue, 22 Sep 2020 20:54:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BBCFC2D0E2
+	for <linux-pci@archiver.kernel.org>; Tue, 22 Sep 2020 20:56:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E224D23600
-	for <linux-pci@archiver.kernel.org>; Tue, 22 Sep 2020 20:54:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E65082371F
+	for <linux-pci@archiver.kernel.org>; Tue, 22 Sep 2020 20:56:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1600808216;
+	bh=w23Tp8zMDMR+UE8kJvtgaVeVoeMhyM1C6KfhRH9d1OM=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=iCmDlxs47YZVp35rHXAC9zIOo0iSMfP7yDuV/yDRLAWhrId6S6awfME2/Uevg8seC
+	 EGMMPo3WZimVcgQGWkvKp295iipIDQyylNzNI/aNVLV1yeSQqO4Xya1FtTB67hLiHn
+	 wVMrXaDJ7YrkwKazWEIbvERLn9onx/gqE+FgGhoE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726634AbgIVUys (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 22 Sep 2020 16:54:48 -0400
-Received: from mga05.intel.com ([192.55.52.43]:11102 "EHLO mga05.intel.com"
+        id S1726661AbgIVU4z (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 22 Sep 2020 16:56:55 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37472 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726608AbgIVUyq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 22 Sep 2020 16:54:46 -0400
-IronPort-SDR: VMHRDGZuZ/MHx7/5N692IcyEwkMD1fC7YzTPWTrY8vbz8vvPgg260/Km+7nLGaC7UQToQ8wzm/
- J5UzCcOk259w==
-X-IronPort-AV: E=McAfee;i="6000,8403,9752"; a="245542542"
-X-IronPort-AV: E=Sophos;i="5.77,292,1596524400"; 
-   d="scan'208";a="245542542"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Sep 2020 13:54:45 -0700
-IronPort-SDR: RibewKUXrtIVyaX6+3KdOSnam6ywd94ODuD342Mkp3kfWNM1mPuVKOmN7+LyQMY4sE37X+Vk1P
- wBLkdkvvoj7Q==
-X-IronPort-AV: E=Sophos;i="5.77,292,1596524400"; 
-   d="scan'208";a="510718934"
-Received: from fkhoshne-mobl1.amr.corp.intel.com (HELO skuppusw-mobl5.amr.corp.intel.com) ([10.255.230.168])
-  by fmsmga006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Sep 2020 13:54:42 -0700
-From:   sathyanarayanan.kuppuswamy@linux.intel.com
-To:     bhelgaas@google.com
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ashok.raj@intel.com, sathyanarayanan.kuppuswamy@linux.intel.com
-Subject: [PATCH v9 1/5] PCI: Conditionally initialize host bridge native_* members
-Date:   Tue, 22 Sep 2020 13:54:28 -0700
-Message-ID: <a640e9043db50f5adee8e38f5c60ff8423f3f598.1600457297.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <cover.1600457297.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-References: <cover.1600457297.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+        id S1726448AbgIVU4z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 22 Sep 2020 16:56:55 -0400
+Received: from localhost (52.sub-72-107-123.myvzw.com [72.107.123.52])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5FAFF2065D;
+        Tue, 22 Sep 2020 20:56:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1600808214;
+        bh=w23Tp8zMDMR+UE8kJvtgaVeVoeMhyM1C6KfhRH9d1OM=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=WSJZZqyBzGY8B64QWbiho5uOZl1jGpj6c7TDM0VpMK9okur3c8DS1amwkXf9nKVnb
+         EoUu5IZshV7o2YhKg0BNxEgsUp7xHPIfeTbI4yZFWmDnv5Mt56qg0C0ijYvbWXateN
+         fh97/jv6sAtCUO9/dPjZGoE6Aakiqa+7Ki/rXUIE=
+Date:   Tue, 22 Sep 2020 15:56:52 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     "Kuppuswamy, Sathyanarayanan" 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>
+Cc:     bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ashok.raj@intel.com,
+        Sean V Kelley <sean.v.kelley@intel.com>
+Subject: Re: [PATCH v9 1/5] PCI: Conditionally initialize host bridge
+ native_* members
+Message-ID: <20200922205652.GA2229548@bjorn-Precision-5520>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <56d9af56-223a-c141-bc05-9499fbd5ff0a@linux.intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
-Message-ID: <20200922205428.QuRiw2TYYakt7lYurd71D2VmFHMfSeK0ALvS6bawV2s@z>
 
-From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+[+cc Sean]
 
-If CONFIG_PCIEPORTBUS is not enabled in kernel then initialing
-struct pci_host_bridge PCIe specific native_* members to "1" is
-incorrect. So protect the PCIe specific member initialization
-with CONFIG_PCIEPORTBUS.
+On Tue, Sep 22, 2020 at 01:50:21PM -0700, Kuppuswamy, Sathyanarayanan wrote:
+> On 9/22/20 1:39 PM, Bjorn Helgaas wrote:
+> > I got 1/5, 3/5, and 5/5 (and no cover letter).  Is there a 2/5 and a
+> > 4/5?  Not sure if I should wait for more, or review these three as-is?
+> I sent all 5 together with cover letter. Do you want me to send it again ?
 
-Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
----
- drivers/pci/probe.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+I guess so.  I'm starting to suspect something wrong with Intel's
+email path.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 03d37128a24f..0da0fc034413 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -588,12 +588,14 @@ static void pci_init_host_bridge(struct pci_host_bridge *bridge)
- 	 * may implement its own AER handling and use _OSC to prevent the
- 	 * OS from interfering.
- 	 */
-+#ifdef CONFIG_PCIEPORTBUS
- 	bridge->native_aer = 1;
- 	bridge->native_pcie_hotplug = 1;
--	bridge->native_shpc_hotplug = 1;
- 	bridge->native_pme = 1;
--	bridge->native_ltr = 1;
- 	bridge->native_dpc = 1;
-+#endif
-+	bridge->native_ltr = 1;
-+	bridge->native_shpc_hotplug = 1;
- 
- 	device_initialize(&bridge->dev);
- }
--- 
-2.17.1
-
+Sean had a similar problem a few days ago, and he re-sent the series,
+and the resend also has the same problem.
