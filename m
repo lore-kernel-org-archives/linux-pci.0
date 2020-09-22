@@ -2,108 +2,149 @@ Return-Path: <SRS0=cLGU=C7=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE3CAC2D0E2
-	for <linux-pci@archiver.kernel.org>; Tue, 22 Sep 2020 20:58:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A739AC2D0E2
+	for <linux-pci@archiver.kernel.org>; Tue, 22 Sep 2020 20:59:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7FFCD2371F
-	for <linux-pci@archiver.kernel.org>; Tue, 22 Sep 2020 20:58:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600808290;
-	bh=TAvOwxdUSSf8dMLys+bd/PzI7Tqp/e7DVoXkrTOUAiI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=p8wNLEpCD8cyVGbdvEgP+QoQl+BoHdIU4GetjFvFV7EzAOnhhc08cPwTENZg5pPLY
-	 JuQUXSBIj4jvtf94uCXCKYaPKjNlMTpHBVrM3012f8FaG+Hh+Yjvt4OYPOoZWQ5TqC
-	 H+mMO/mRdpAKf6i/ZGb00iTFlf013iaM54Fvg+s8=
+	by mail.kernel.org (Postfix) with ESMTP id 3E19923600
+	for <linux-pci@archiver.kernel.org>; Tue, 22 Sep 2020 20:59:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726661AbgIVU6K (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 22 Sep 2020 16:58:10 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38428 "EHLO mail.kernel.org"
+        id S1726607AbgIVU7n (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 22 Sep 2020 16:59:43 -0400
+Received: from mga01.intel.com ([192.55.52.88]:18524 "EHLO mga01.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726448AbgIVU6J (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 22 Sep 2020 16:58:09 -0400
-Received: from localhost (lfbn-ncy-1-588-162.w81-51.abo.wanadoo.fr [81.51.203.162])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6503623600;
-        Tue, 22 Sep 2020 20:58:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600808288;
-        bh=TAvOwxdUSSf8dMLys+bd/PzI7Tqp/e7DVoXkrTOUAiI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=qj13ocgnkXJAez0TGZR3gQzFaRpUp8hb6SZtLcZ+PxAr+4PzcI5QwU8Jjf5wbgjzl
-         7Tr7hS5Muy52iGsanhGHHpU6A2UWkmI7QeZwOU0nH6M7qHcoOC539vS+i2dZF2eHxi
-         q4bZ5SoYnZ3KPN/P13yJbNL5RRWMHMysML8FKMYc=
-Date:   Tue, 22 Sep 2020 22:58:06 +0200
-From:   Frederic Weisbecker <frederic@kernel.org>
-To:     Nitesh Narayan Lal <nitesh@redhat.com>
-Cc:     linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-pci@vger.kernel.org, mtosatti@redhat.com,
-        sassmann@redhat.com, jeffrey.t.kirsher@intel.com,
-        jacob.e.keller@intel.com, jlelli@redhat.com, hch@infradead.org,
-        bhelgaas@google.com, mike.marciniszyn@intel.com,
-        dennis.dalessandro@intel.com, thomas.lendacky@amd.com,
-        jerinj@marvell.com, mathias.nyman@intel.com, jiri@nvidia.com
-Subject: Re: [RFC][Patch v1 1/3] sched/isolation: API to get num of
- hosekeeping CPUs
-Message-ID: <20200922205805.GD5217@lenoir>
-References: <20200909150818.313699-1-nitesh@redhat.com>
- <20200909150818.313699-2-nitesh@redhat.com>
- <20200921234044.GA31047@lenoir>
- <fd48e554-6a19-f799-b273-e814e5389db9@redhat.com>
- <20200922100817.GB5217@lenoir>
- <b0608566-21c6-8fc9-4615-aa00099f6d04@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <b0608566-21c6-8fc9-4615-aa00099f6d04@redhat.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+        id S1726448AbgIVU7n (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 22 Sep 2020 16:59:43 -0400
+IronPort-SDR: cr8yQxd+pBn6x5fxPeemtFuVR530guGY7bzI+wprnn7IO+Q/25vIVhsj3PVh8q5hv/dfHqXUZY
+ aYA+OW/vCO9g==
+X-IronPort-AV: E=McAfee;i="6000,8403,9752"; a="178786774"
+X-IronPort-AV: E=Sophos;i="5.77,292,1596524400"; 
+   d="scan'208";a="178786774"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Sep 2020 13:54:43 -0700
+IronPort-SDR: Jcq8WXYqUnV8152O1Katda7E05eV9QMVIjkxpaRUykq8Mk7f1joAZYufPuWYMJLwdYPsm9p3Rb
+ ECHjUzjW/9ZQ==
+X-IronPort-AV: E=Sophos;i="5.77,292,1596524400"; 
+   d="scan'208";a="510718944"
+Received: from fkhoshne-mobl1.amr.corp.intel.com (HELO skuppusw-mobl5.amr.corp.intel.com) ([10.255.230.168])
+  by fmsmga006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Sep 2020 13:54:42 -0700
+From:   sathyanarayanan.kuppuswamy@linux.intel.com
+To:     bhelgaas@google.com
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ashok.raj@intel.com, sathyanarayanan.kuppuswamy@linux.intel.com
+Subject: [PATCH v9 3/5] ACPI/PCI: Ignore _OSC DPC negotiation result if pcie_ports_dpc_native is set.
+Date:   Tue, 22 Sep 2020 13:54:30 -0700
+Message-ID: <be30aae22a3e9604d0fc39c56245d12856b35ff0.1600457297.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <cover.1600457297.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+References: <cover.1600457297.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
+Message-ID: <20200922205430.brI7s7wosYTzY3dq0DWtpuR87-B0yg0OZFT6uvVgg08@z>
 
-On Tue, Sep 22, 2020 at 09:50:55AM -0400, Nitesh Narayan Lal wrote:
-> On 9/22/20 6:08 AM, Frederic Weisbecker wrote:
-> TBH I don't have a very strong case here at the moment.
-> But still, IMHO, this will force the user to have both managed irqs and
-> nohz_full in their environments to avoid these kinds of issues. Is that how
-> we would like to proceed?
+From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 
-Yep that sounds good to me. I never know how much we want to split each and any
-of the isolation features but I'd rather stay cautious to separate HK_FLAG_TICK
-from the rest, just in case running in nohz_full mode ever becomes interesting
-alone for performance and not just latency/isolation.
+pcie_ports_dpc_native is set only if user requests native handling
+of PCIe DPC capability via pcie_port_setup command line option.
+User input takes precedence over _OSC based control negotiation
+result. So consider the _OSC negotiated result for DPC ownership
+only if pcie_ports_dpc_native is unset.
 
-But look what you can do as well:
+Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+---
+ drivers/acpi/pci_root.c         | 8 ++++++--
+ drivers/pci/pcie/dpc.c          | 3 ++-
+ drivers/pci/pcie/portdrv.h      | 2 --
+ drivers/pci/pcie/portdrv_core.c | 2 +-
+ include/linux/pci.h             | 2 ++
+ 5 files changed, 11 insertions(+), 6 deletions(-)
 
-diff --git a/kernel/sched/isolation.c b/kernel/sched/isolation.c
-index 5a6ea03f9882..9df9598a9e39 100644
---- a/kernel/sched/isolation.c
-+++ b/kernel/sched/isolation.c
-@@ -141,7 +141,7 @@ static int __init housekeeping_nohz_full_setup(char *str)
- 	unsigned int flags;
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 9749b7abdd7e..979d03494476 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -935,8 +935,12 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+ 			    host_bridge->native_ltr);
+ 		  OSC_OWNER(ctrl, OSC_PCI_EXPRESS_DPC_CONTROL,
+ 			    host_bridge->native_dpc);
+-	  }
+-
++		  if (pcie_ports_dpc_native)
++			  dev_warn(&bus->dev, "OS forcibly taking over DPC\n");
++		  else
++			  OSC_OWNER(ctrl, OSC_PCI_EXPRESS_DPC_CONTROL,
++				    host_bridge->native_dpc);
++		}
+ 	if (!(root->osc_control_set & OSC_PCI_SHPC_NATIVE_HP_CONTROL))
+ 		host_bridge->native_shpc_hotplug = 0;
  
- 	flags = HK_FLAG_TICK | HK_FLAG_WQ | HK_FLAG_TIMER | HK_FLAG_RCU |
--		HK_FLAG_MISC | HK_FLAG_KTHREAD;
-+		HK_FLAG_MISC | HK_FLAG_KTHREAD | HK_FLAG_MANAGED_IRQ;
+diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+index daa9a4153776..5b1025a2994d 100644
+--- a/drivers/pci/pcie/dpc.c
++++ b/drivers/pci/pcie/dpc.c
+@@ -280,11 +280,12 @@ void pci_dpc_init(struct pci_dev *pdev)
+ static int dpc_probe(struct pcie_device *dev)
+ {
+ 	struct pci_dev *pdev = dev->port;
++	struct pci_host_bridge *host = pci_find_host_bridge(pdev->bus);
+ 	struct device *device = &dev->device;
+ 	int status;
+ 	u16 ctl, cap;
  
- 	return housekeeping_setup(str, flags);
- }
+-	if (!pcie_aer_is_native(pdev) && !pcie_ports_dpc_native)
++	if (!pcie_aer_is_native(pdev) && !host->native_dpc)
+ 		return -ENOTSUPP;
+ 
+ 	status = devm_request_threaded_irq(device, dev->irq, dpc_irq,
+diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
+index af7cf237432a..0ac20feef24e 100644
+--- a/drivers/pci/pcie/portdrv.h
++++ b/drivers/pci/pcie/portdrv.h
+@@ -25,8 +25,6 @@
+ 
+ #define PCIE_PORT_DEVICE_MAXSERVICES   5
+ 
+-extern bool pcie_ports_dpc_native;
+-
+ #ifdef CONFIG_PCIEAER
+ int pcie_aer_init(void);
+ int pcie_aer_is_native(struct pci_dev *dev);
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index ccd5e0ce5605..2c0278f0fdcc 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -253,7 +253,7 @@ static int get_port_device_capability(struct pci_dev *dev)
+ 	 */
+ 	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC) &&
+ 	    pci_aer_available() &&
+-	    (pcie_ports_dpc_native || (services & PCIE_PORT_SERVICE_AER)))
++	    (host->native_dpc || (services & PCIE_PORT_SERVICE_AER)))
+ 		services |= PCIE_PORT_SERVICE_DPC;
+ 
+ 	if (pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM ||
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 835530605c0d..dc03b6c65742 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1556,9 +1556,11 @@ static inline int pci_irqd_intx_xlate(struct irq_domain *d,
+ #ifdef CONFIG_PCIEPORTBUS
+ extern bool pcie_ports_disabled;
+ extern bool pcie_ports_native;
++extern bool pcie_ports_dpc_native;
+ #else
+ #define pcie_ports_disabled	true
+ #define pcie_ports_native	false
++#define pcie_ports_dpc_native	false
+ #endif
+ 
+ #define PCIE_LINK_STATE_L0S		BIT(0)
+-- 
+2.17.1
 
-
-"nohz_full=" has historically gathered most wanted isolation features. It can
-as well isolate managed irqs.
-
-
-> > And then can we rename it to housekeeping_num_online()?
-> 
-> It could be just me, but does something like hk_num_online_cpus() makes more
-> sense here?
-
-Sure, that works as well.
-
-Thanks.
