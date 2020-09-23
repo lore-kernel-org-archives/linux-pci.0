@@ -2,113 +2,130 @@ Return-Path: <SRS0=b9DP=DA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.4 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F418C47423
-	for <linux-pci@archiver.kernel.org>; Wed, 23 Sep 2020 15:22:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 078C4C4727D
+	for <linux-pci@archiver.kernel.org>; Wed, 23 Sep 2020 15:57:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DC72C2220D
-	for <linux-pci@archiver.kernel.org>; Wed, 23 Sep 2020 15:22:48 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=reintjes.nrw header.i=@reintjes.nrw header.b="mKq3yxzI"
+	by mail.kernel.org (Postfix) with ESMTP id BE6E221D7D
+	for <linux-pci@archiver.kernel.org>; Wed, 23 Sep 2020 15:57:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1600876626;
+	bh=wK5xYGCPPfUs8+41Dz9ipS8t+iEHvruvK+B7KturTjE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=T08NkN6UB8xiJnltm7k4UmQlcTaYAuaBbIv8KvRe2+zckqzxFbkVbbNb/XqA749dI
+	 /O/79PVlbLIZ3BHMgHppdicv1rXKUoVFTE2ib4wEdGciAhzBCweFa0Zf0xmxrkO0p2
+	 OjsvOL8+4fTrYa9sME/KI1t9fXphfUdZSPVXDCpE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726880AbgIWPWn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 23 Sep 2020 11:22:43 -0400
-Received: from mo4-p01-ob.smtp.rzone.de ([85.215.255.54]:34512 "EHLO
-        mo4-p01-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726687AbgIWPWm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Sep 2020 11:22:42 -0400
-X-Greylist: delayed 713 seconds by postgrey-1.27 at vger.kernel.org; Wed, 23 Sep 2020 11:22:39 EDT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1600874558;
-        s=strato-dkim-0002; d=reintjes.nrw;
-        h=In-Reply-To:Date:Message-ID:From:References:Cc:To:Subject:
-        X-RZG-CLASS-ID:X-RZG-AUTH:From:Subject:Sender;
-        bh=R7hI6d/NmZuNcg1vUXN4expafaD5dS9k1NOlJgVsfQ0=;
-        b=mKq3yxzIBoK6eXKDjSaCRr3BwBIqpDKeJr75f5YQmPBPRRn9qdkRISKeudlw+eJUaN
-        i9j0YoD7Nd07ieGLh8UqSmYZ1Ccml4PGsZ2Mglopdz9Hz5rLCJkN670J1l7AKyk9w16x
-        a5x5cVcgZWQk6FXpa0G8mlW7WSJEKPFpozzrnE9Mqlay09jPyJDrOXyUKIYtt6nlhpnO
-        Iws66XTKRoaWIH3voDt0xHa2loKeKKkr2KuI9gRfjll43rW7LApn0Q1chdN5eLyO3daW
-        Z1KVrRhdU65Y8/6yfAJtnadI1+vhAkdCKhH0qGquacG5znElBXtRT3qPa76R5ygpIUbq
-        FhJQ==
-X-RZG-AUTH: ":IGUXYVP6Ne1lB7nQNv+YSUx4qaxF0YAcTeeZr8criwvl+4OoAsy1YB7b8FzONHo5ckdw3KGGkZZ/Zu8="
-X-RZG-CLASS-ID: mo00
-Received: from [192.168.0.198]
-        by smtp.strato.de (RZmta 46.10.7 DYNA|AUTH)
-        with ESMTPSA id Y04b60w8NFAYy22
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-        (Client did not present a certificate);
-        Wed, 23 Sep 2020 17:10:34 +0200 (CEST)
-Subject: Re: [PATCH 00/14] drop double zeroing
-To:     Mark Brown <broonie@kernel.org>, linux-spi@vger.kernel.org,
-        Julia Lawall <Julia.Lawall@inria.fr>
-Cc:     linux-serial@vger.kernel.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        linux-media@vger.kernel.org, linux-block@vger.kernel.org,
-        Yossi Leybovich <sleybo@amazon.com>,
-        linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org,
-        dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-rdma@vger.kernel.org,
-        Dan Williams <dan.j.williams@intel.com>,
-        rds-devel@oss.oracle.com
-References: <1600601186-7420-1-git-send-email-Julia.Lawall@inria.fr>
- <160070750168.56292.17961674601916397869.b4-ty@kernel.org>
-From:   Rolf Reintjes <lists2.rolf@reintjes.nrw>
-Message-ID: <c3b33526-936d-ffa4-c301-4d0485822be1@reintjes.nrw>
-Date:   Wed, 23 Sep 2020 17:10:33 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.0
+        id S1726532AbgIWP5D (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 23 Sep 2020 11:57:03 -0400
+Received: from mail-il1-f194.google.com ([209.85.166.194]:38254 "EHLO
+        mail-il1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726130AbgIWP5D (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Sep 2020 11:57:03 -0400
+Received: by mail-il1-f194.google.com with SMTP id t18so89912ilp.5;
+        Wed, 23 Sep 2020 08:57:02 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=hprSGRETocdQf78XETYgy258w0hwpUnZV3tfOx1jhyw=;
+        b=svIVldVq9lHc5+x5TRugBYQGLkCd1noQWKci2+n/cuJyGhzw0pq1j1pkesuQVb6Iya
+         UxN6cGHmRGwMmyJc8VxkkqGFDMijlgyG7kJE5M5YOMvN1Z3uhKq+w7JAfmZuH1+NM0Y/
+         //nTmuNm1QbUt2MkOsBW4jEOFycag9PPx+DfOxwFtOJ5SS6MHA/I95pdmgyq4nn6T35s
+         Lh3HLJ9CfKunbpTgsmONs56jZXGTPC+nlyjzFDBte2q0oedlm1AvIfdyAteinZ5kHep/
+         2bTC7MiswTa1eyDQWC/EIKd3hycL72n400KTzgP9i+JQ88GF8GIpYm7501a5OtukjW+f
+         dbkA==
+X-Gm-Message-State: AOAM531DnCzwYpJ15E9dr3nHGHWCkXyNTa1jEmuSj3lIUvI+6AC+v/O6
+        oR9bz8hvbBIptTcm0UvViA==
+X-Google-Smtp-Source: ABdhPJwF7cW7wtVVPFcinJZJ2wi7GujCzMGUvUKlTAUpRG7xH9KI47JiB3sor9fbqqkTDEEEDRoQKQ==
+X-Received: by 2002:a92:d8cb:: with SMTP id l11mr371869ilo.271.1600876622055;
+        Wed, 23 Sep 2020 08:57:02 -0700 (PDT)
+Received: from xps15 ([64.188.179.253])
+        by smtp.gmail.com with ESMTPSA id p5sm18530ilg.32.2020.09.23.08.57.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 23 Sep 2020 08:57:01 -0700 (PDT)
+Received: (nullmailer pid 825904 invoked by uid 1000);
+        Wed, 23 Sep 2020 15:57:00 -0000
+Date:   Wed, 23 Sep 2020 09:57:00 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH 2/3] PCI: dwc: Add common iATU register support
+Message-ID: <20200923155700.GA820801@bogus>
+References: <1599814203-14441-1-git-send-email-hayashi.kunihiko@socionext.com>
+ <1599814203-14441-3-git-send-email-hayashi.kunihiko@socionext.com>
 MIME-Version: 1.0
-In-Reply-To: <160070750168.56292.17961674601916397869.b4-ty@kernel.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1599814203-14441-3-git-send-email-hayashi.kunihiko@socionext.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hello Mark,
+On Fri, Sep 11, 2020 at 05:50:02PM +0900, Kunihiko Hayashi wrote:
+> This gets iATU register area from reg property that has reg-names "atu".
+> In Synopsys DWC version 4.80 or later, since iATU register area is
+> separated from core register area, this area is necessary to get from
+> DT independently.
+> 
+> Cc: Murali Karicheri <m-karicheri2@ti.com>
+> Cc: Jingoo Han <jingoohan1@gmail.com>
+> Cc: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> Suggested-by: Rob Herring <robh@kernel.org>
+> Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+> ---
+>  drivers/pci/controller/dwc/pcie-designware.c | 8 +++++++-
+>  1 file changed, 7 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+> index 4d105ef..4a360bc 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware.c
+> @@ -10,6 +10,7 @@
+>  
+>  #include <linux/delay.h>
+>  #include <linux/of.h>
+> +#include <linux/of_platform.h>
+>  #include <linux/types.h>
+>  
+>  #include "../../pci.h"
+> @@ -526,11 +527,16 @@ void dw_pcie_setup(struct dw_pcie *pci)
+>  	u32 val;
+>  	struct device *dev = pci->dev;
+>  	struct device_node *np = dev->of_node;
+> +	struct platform_device *pdev;
+>  
+>  	if (pci->version >= 0x480A || (!pci->version &&
+>  				       dw_pcie_iatu_unroll_enabled(pci))) {
+>  		pci->iatu_unroll_enabled = true;
+> -		if (!pci->atu_base)
+> +		pdev = of_find_device_by_node(np);
 
-On 21.09.20 18:58, Mark Brown wrote:
-> On Sun, 20 Sep 2020 13:26:12 +0200, Julia Lawall wrote:
->> sg_init_table zeroes its first argument, so the allocation of that argument
->> doesn't have to.
-> 
-> Applied to
-> 
->     https://git.kernel.org/pub/scm/linux/kernel/git/broonie/spi.git for-next
-> 
-> Thanks!
+Use to_platform_device(dev) instead. Put that at the beginning as I'm 
+going to move 'dbi' in here too.
 
-I do not understand which of the 14 patches you applied. Your mail 
-responds to the 00/14 mail.
-
-Rolf
-
+> +		if (!pci->atu_base && pdev)
+> +			pci->atu_base =
+> +			    devm_platform_ioremap_resource_byname(pdev, "atu");
+> +		if (IS_ERR_OR_NULL(pci->atu_base))
+>  			pci->atu_base = pci->dbi_base + DEFAULT_DBI_ATU_OFFSET;
+>  	}
+>  	dev_dbg(pci->dev, "iATU unroll: %s\n", pci->iatu_unroll_enabled ?
+> -- 
+> 2.7.4
 > 
-> [1/1] spi/topcliff-pch: drop double zeroing
->        commit: ca03dba30f2b8ff45a2972c6691e4c96d8c52b3b
 > 
-> All being well this means that it will be integrated into the linux-next
-> tree (usually sometime in the next 24 hours) and sent to Linus during
-> the next merge window (or sooner if it is a bug fix), however if
-> problems are discovered then the patch may be dropped or reverted.
-> 
-> You may get further e-mails resulting from automated or manual testing
-> and review of the tree, please engage with people reporting problems and
-> send followup patches addressing any issues that are reported if needed.
-> 
-> If any updates are required or you are submitting further changes they
-> should be sent as incremental updates against current git, existing
-> patches will not be replaced.
-> 
-> Please add any relevant lists and maintainers to the CCs when replying
-> to this mail.
-> 
-> Thanks,
-> Mark
-> 
-
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
