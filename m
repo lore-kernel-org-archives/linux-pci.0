@@ -2,183 +2,120 @@ Return-Path: <SRS0=b9DP=DA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73951C2D0A8
-	for <linux-pci@archiver.kernel.org>; Wed, 23 Sep 2020 17:23:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DBDCC2D0A8
+	for <linux-pci@archiver.kernel.org>; Wed, 23 Sep 2020 18:17:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 142D621D43
-	for <linux-pci@archiver.kernel.org>; Wed, 23 Sep 2020 17:23:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600881831;
-	bh=730KdbTlfAh6bLWtoHtsz8yH6kRXQvyGVrEQq7gSANU=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=CDv0ZOuZkq+TXeKD0X15dYEeqqMqyhQIkAXhIWTdLpWxdEpi2p/H6bjqe7ITXfehw
-	 44n9XqxkvknnQBmntOfGW/bqyVpe7pMxbod3yQuUQn72ybPWfUzsLl+dRm7UemRgr9
-	 iJ0fisN9PqJbcQl2xu6apCashfS7jkxkBPRWo6PA=
+	by mail.kernel.org (Postfix) with ESMTP id 207A020791
+	for <linux-pci@archiver.kernel.org>; Wed, 23 Sep 2020 18:17:58 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZqtAo6eS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726381AbgIWRXu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 23 Sep 2020 13:23:50 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39954 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726184AbgIWRXu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 23 Sep 2020 13:23:50 -0400
-Received: from mail-ot1-f54.google.com (mail-ot1-f54.google.com [209.85.210.54])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1726413AbgIWSR4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 23 Sep 2020 14:17:56 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:46518 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726691AbgIWSRq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Sep 2020 14:17:46 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1600885064;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:in-reply-to:in-reply-to:references:references;
+        bh=xjpjpRpbrSKVLsfonq//6ufQkFBP9fDdk1nbF16APfU=;
+        b=ZqtAo6eSCpIasiqVWRCWwgZvASiQWAdXEI1c9DhjQ6ciiCQblUcYMQM91G2CpIwosZi7V5
+        /FrSs8dv0N8KAwngGp4WpG8qpSmIL4pVmr0bUMOnI+ijJTMrtl23YO79Wy5ROWhZLqYnhS
+        OV6JBKY3RBdx+Kbmfi6Ntdy3TeKqLBA=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-104-l18lSME8ME6Mv-dEVZsF6Q-1; Wed, 23 Sep 2020 14:17:41 -0400
+X-MC-Unique: l18lSME8ME6Mv-dEVZsF6Q-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 0B33F221F0
-        for <linux-pci@vger.kernel.org>; Wed, 23 Sep 2020 17:23:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600881829;
-        bh=730KdbTlfAh6bLWtoHtsz8yH6kRXQvyGVrEQq7gSANU=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=NYwzNX8cDLPLw28QKKLAMaSEmE4trXAkB+v3qLNlHcmSoMjQorgFg/WGV9b+M/k1A
-         OVZO8rOgYBw1HNxTQHRKi7RO90FVD9vfWfbz63NPR/Cl/31J70UcF30ocGzLzx7RuN
-         KYFT/k4oLeZ8VQvnAw+qq/kVyxY/bL8tNNy4CL8s=
-Received: by mail-ot1-f54.google.com with SMTP id o8so494867otl.4
-        for <linux-pci@vger.kernel.org>; Wed, 23 Sep 2020 10:23:49 -0700 (PDT)
-X-Gm-Message-State: AOAM530jotxRtg6yy603yYpy3qP1Ra8guXBgvJ8Ka9I/TBj5hrzLgbda
-        VLFcr/3CiFshPe5KGGaPxiOYjICNWMGFaLqk7w==
-X-Google-Smtp-Source: ABdhPJxUtzwTOVGogBCfk3/mDj7n+lJEHqswrMVz+ppffanPQR9H7uxwnTsaqk3Xj43eCclj08B5LLHvpJt3+Qf+o1c=
-X-Received: by 2002:a9d:6b0d:: with SMTP id g13mr489792otp.129.1600881828244;
- Wed, 23 Sep 2020 10:23:48 -0700 (PDT)
-MIME-Version: 1.0
-References: <20200905204416.GA83847@rocinante> <20200922232715.GA2238688@bjorn-Precision-5520>
-In-Reply-To: <20200922232715.GA2238688@bjorn-Precision-5520>
-From:   Rob Herring <robh@kernel.org>
-Date:   Wed, 23 Sep 2020 11:23:37 -0600
-X-Gmail-Original-Message-ID: <CAL_JsqKs2m_echD97C+Q_NFS=yJif0LcgLMdDLnywjz35mboKQ@mail.gmail.com>
-Message-ID: <CAL_JsqKs2m_echD97C+Q_NFS=yJif0LcgLMdDLnywjz35mboKQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Unify ECAM constants in native PCI Express drivers
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Heiko Stuebner <heiko@sntech.de>,
-        PCI <linux-pci@vger.kernel.org>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        "open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Robert Richter <rrichter@marvell.com>,
-        Jonathan Chocron <jonnyc@amazon.com>,
-        Will Deacon <will@kernel.org>,
-        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A528B64095;
+        Wed, 23 Sep 2020 18:17:38 +0000 (UTC)
+Received: from virtlab719.virt.lab.eng.bos.redhat.com (virtlab719.virt.lab.eng.bos.redhat.com [10.19.153.15])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id D079F5C1C7;
+        Wed, 23 Sep 2020 18:17:36 +0000 (UTC)
+From:   Nitesh Narayan Lal <nitesh@redhat.com>
+To:     linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
+        frederic@kernel.org, mtosatti@redhat.com, sassmann@redhat.com,
+        jesse.brandeburg@intel.com, lihong.yang@intel.com,
+        helgaas@kernel.org, nitesh@redhat.com, jeffrey.t.kirsher@intel.com,
+        jacob.e.keller@intel.com, jlelli@redhat.com, hch@infradead.org,
+        bhelgaas@google.com, mike.marciniszyn@intel.com,
+        dennis.dalessandro@intel.com, thomas.lendacky@amd.com,
+        jerinj@marvell.com, mathias.nyman@intel.com, jiri@nvidia.com,
+        mingo@redhat.com, peterz@infradead.org, juri.lelli@redhat.com,
+        vincent.guittot@linaro.org
+Subject: [PATCH v2 4/4] PCI: Limit pci_alloc_irq_vectors as per housekeeping CPUs
+Date:   Wed, 23 Sep 2020 14:11:26 -0400
+Message-Id: <20200923181126.223766-5-nitesh@redhat.com>
+In-Reply-To: <20200923181126.223766-1-nitesh@redhat.com>
+References: <20200923181126.223766-1-nitesh@redhat.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Sep 22, 2020 at 5:27 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
->
-> [+cc Rob, who's doing a lot of cleanup in these drivers]
->
-> On Sat, Sep 05, 2020 at 10:44:16PM +0200, Krzysztof Wilczy=C5=84ski wrote=
-:
-> > Hello Jonathan,
-> >
-> > Thank you for the review!  Also, apologies for late reply.
-> >
-> > On 20-08-28 10:08:43, Jonathan Cameron wrote:
-> > [...]
-> > >
-> > > Might potentially be worth tidying up the masks as well?
-> > > Or potentially drop them given I suspect that there are no cases
-> > > in which the mask is actually doing anything...
-> >
-> > Just to confirm - you have the following constants in mind?
-> >
-> > drivers/pci/controller/pcie-rockchip.h:
-> >
-> > #define PCIE_ECAM_BUS(x)      (((x) & 0xff) << 20)
-> > #define PCIE_ECAM_DEV(x)      (((x) & 0x1f) << 15)
-> > #define PCIE_ECAM_FUNC(x)     (((x) & 0x7) << 12)
-> >
-> > drivers/pci/controller/dwc/pcie-al.c:
-> >
-> > #define PCIE_ECAM_DEVFN(x)    (((x) & 0xff) << 12)
-> >
-> > I can move PCIE_ECAM_BUS, PCIE_ECAM_DEV and PCIE_ECAM_FUNC (as
-> > PCIE_ECAM_FUN) to the linux/pci-ecam.h file, as these seem useful, but
-> > without the masks, and then update other files to use these.  We could
-> > then leverage these, for example:
-> >
-> >       pci_base_addr =3D (void __iomem *)((uintptr_t)pp->va_cfg0_base +
-> > -                                      (busnr_ecam << 20) +
-> > -                                      PCIE_ECAM_DEVFN(devfn));
-> > +                                      PCIE_ECAM_BUS(busnr_ecam) +
-> > +                                      PCIE_ECAM_FUN(devfn));
-> >
-> > What do you think?  Bjorn, would that be acceptable?
->
-> It would be nice to use the same style and same macros for all of
-> the following, which are all really doing the same thing:
->
->   al_pcie_conf_addr_map()
->     pci_base_addr =3D (void __iomem *)((uintptr_t)pp->va_cfg0_base +
->                                      (busnr_ecam << 20) +
->                                      PCIE_ECAM_DEVFN(devfn));
->
->   rockchip_pcie_rd_other_conf()
->     busdev =3D PCIE_ECAM_ADDR(bus->number, PCI_SLOT(devfn),
->                             PCI_FUNC(devfn), where);
->
->   nwl_pcie_map_bus()
->     relbus =3D (bus->number << ECAM_BUS_LOC_SHIFT) |
->                     (devfn << ECAM_DEV_LOC_SHIFT);
->
->     return pcie->ecam_base + relbus + where;
->
->   xilinx_pcie_map_bus()
->     relbus =3D (bus->number << ECAM_BUS_NUM_SHIFT) |
->              (devfn << ECAM_DEV_NUM_SHIFT);
->
->     return port->reg_base + relbus + where;
->
-> Maybe that's something like using PCIE_ECAM_ADDR() everywhere?  I'm
-> not sure there's value in having the caller do the PCI_SLOT() and
-> PCI_FUNC() decomposition, though, i.e., maybe it's something like
-> this?
->
->   #define PCIE_ECAM_REG(x)  ((x) & 0xfff)
->
->   #define PCI_ECAM_OFFSET(bus, devfn, where) \
->     PCIE_ECAM_BUS(bus->number) | \
->     PCIE_ECAM_DEVFN(devfn) | \
->     PCIE_ECAM_REG(where)
+This patch limits the pci_alloc_irq_vectors, max_vecs argument that is
+passed on by the caller based on the housekeeping online CPUs (that are
+meant to perform managed IRQ jobs).
 
-LGTM. This was on my radar, but not something I've looked at.
+A minimum of the max_vecs passed and housekeeping online CPUs is derived
+to ensure that we don't create excess vectors as that can be problematic
+specifically in an RT environment. In cases where the min_vecs exceeds the
+housekeeping online CPUs, max vecs is restricted based on the min_vecs
+instead. The proposed change is required because for an RT environment
+unwanted IRQs are moved to the housekeeping CPUs from isolated CPUs to
+keep the latency overhead to a minimum. If the number of housekeeping CPUs
+is significantly lower than that of the isolated CPUs we can run into
+failures while moving these IRQs to housekeeping CPUs due to per CPU
+vector limit.
 
-There's also aardvark which isn't ECAM, but does the same calculation.
-Call it indirect ECAM:
+Signed-off-by: Nitesh Narayan Lal <nitesh@redhat.com>
+---
+ include/linux/pci.h | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-drivers/pci/controller/pci-aardvark.c:#define PCIE_CONF_BUS(bus)
-                 (((bus) & 0xff) << 20)
-drivers/pci/controller/pci-aardvark.c-#define PCIE_CONF_DEV(dev)
-                 (((dev) & 0x1f) << 15)
-drivers/pci/controller/pci-aardvark.c-#define PCIE_CONF_FUNC(fun)
-                 (((fun) & 0x7)  << 12)
-drivers/pci/controller/pci-aardvark.c-#define PCIE_CONF_REG(reg)
-                 ((reg) & 0xffc)
-drivers/pci/controller/pci-aardvark.c-#define PCIE_CONF_ADDR(bus,
-devfn, where) \
-drivers/pci/controller/pci-aardvark.c-  (PCIE_CONF_BUS(bus) |
-PCIE_CONF_DEV(PCI_SLOT(devfn))    | \
-drivers/pci/controller/pci-aardvark.c-
-PCIE_CONF_FUNC(PCI_FUNC(devfn)) | PCIE_CONF_REG(where))
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 835530605c0d..cf9ca9410213 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -38,6 +38,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/io.h>
+ #include <linux/resource_ext.h>
++#include <linux/sched/isolation.h>
+ #include <uapi/linux/pci.h>
+ 
+ #include <linux/pci_ids.h>
+@@ -1797,6 +1798,20 @@ static inline int
+ pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
+ 		      unsigned int max_vecs, unsigned int flags)
+ {
++	unsigned int hk_cpus = hk_num_online_cpus();
++
++	/*
++	 * For a real-time environment, try to be conservative and at max only
++	 * ask for the same number of vectors as there are housekeeping online
++	 * CPUs. In case, the min_vecs requested exceeds the housekeeping
++	 * online CPUs, restrict the max_vecs based on the min_vecs instead.
++	 */
++	if (hk_cpus != num_online_cpus()) {
++		if (min_vecs > hk_cpus)
++			max_vecs = min_vecs;
++		else
++			max_vecs = min_t(int, max_vecs, hk_cpus);
++	}
+ 	return pci_alloc_irq_vectors_affinity(dev, min_vecs, max_vecs, flags,
+ 					      NULL);
+ }
+-- 
+2.18.2
 
-And VMD:
-drivers/pci/controller/vmd.c-   char __iomem *addr =3D vmd->cfgbar +
-drivers/pci/controller/vmd.c:                        ((bus->number -
-vmd->busn_start) << 20) +
-drivers/pci/controller/vmd.c-                        (devfn << 12) + reg;
-drivers/pci/controller/vmd.c-
-
-
-And brcm_pcie_cfg_index().
-
-Rob
