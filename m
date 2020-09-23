@@ -8,62 +8,62 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4558EC2D0A8
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Sep 2020 00:14:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3452C4727F
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Sep 2020 00:14:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0382420936
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Sep 2020 00:14:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ACE23208B8
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Sep 2020 00:14:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XhX2ZhKO"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qwMu1d9c"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726638AbgIXAOv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 23 Sep 2020 20:14:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39058 "EHLO
+        id S1726650AbgIXAOy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 23 Sep 2020 20:14:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39070 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726419AbgIXAOv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Sep 2020 20:14:51 -0400
-Received: from mail-ed1-x544.google.com (mail-ed1-x544.google.com [IPv6:2a00:1450:4864:20::544])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B615C0613CE
-        for <linux-pci@vger.kernel.org>; Wed, 23 Sep 2020 17:14:51 -0700 (PDT)
-Received: by mail-ed1-x544.google.com with SMTP id k14so1605294edo.1
-        for <linux-pci@vger.kernel.org>; Wed, 23 Sep 2020 17:14:50 -0700 (PDT)
+        with ESMTP id S1726419AbgIXAOy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Sep 2020 20:14:54 -0400
+Received: from mail-ed1-x542.google.com (mail-ed1-x542.google.com [IPv6:2a00:1450:4864:20::542])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB6DCC0613CE
+        for <linux-pci@vger.kernel.org>; Wed, 23 Sep 2020 17:14:53 -0700 (PDT)
+Received: by mail-ed1-x542.google.com with SMTP id k14so1605374edo.1
+        for <linux-pci@vger.kernel.org>; Wed, 23 Sep 2020 17:14:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=7kHwfcAazeBg+h2uEVovJwlfIIrEWzUTpgb6sW8h8RI=;
-        b=XhX2ZhKOexKs7QyhyEZso/Cywth1bItGzMPp0erbG0jVgRgR/Z7byFWwRy5QIusmUt
-         w4IAkdAqOJgAvap6BA3IxCpeBhBaQK75Thxl7jTBwq75dsyEoWh13Hnn1T/QzMFPexDA
-         nW2P8Vy3svJiYA5FYG26tk4SImu7Ev3i+pT+pDaBHYlIpgrm9xeSY/FtzIPu4lcdAyUI
-         EkeNyS3qTmfT62uMLluF9HK6fiOAKOUDnD1Pzuxvw1307C70cAq41oD61VBcJv3HtfeR
-         KXyfDi0OEV4Qlclz5VmQjiOHbmAF1jS56EslnJSYpUNETzuXq3QmstUc6TFT7saejmaf
-         hZxw==
+        bh=gqOo9sRKsu8OklEdZbxfDsKXZHiV2LQufDSEO7PGLPM=;
+        b=qwMu1d9cN2u3F4Vq1BCz/BrY+tG0KkT+iBJwkq5tkHnOjeFVSQ4YiYTHdQ295mgFBw
+         l66p8OOPjrDA+YWosty+8eGZjlVCfAE2PiL8ZO7HoGZ5ejgQ6b6kOZAZwP7Xm1YebOy5
+         e8WYDVoXPweMqskM3s0XwNjL7Pq+MZyKn38iOL93Y/1knUX2AiJ8m0dM9oB4CBgSYXF5
+         n4L3fDCis6UGKkh6k1g59LaMSRqSftCmHlYNHVR5pzRdus5cdhs7ZIos+N+3lKhsKsaq
+         uTr2vJd3PoShty0naEFEKV3Tj9RZR7fv5GF9ikIPcbkWUCyZr8uhNMNqQv4jLSUy0BKa
+         LpNQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=7kHwfcAazeBg+h2uEVovJwlfIIrEWzUTpgb6sW8h8RI=;
-        b=AVo5d0TsC1yysfxWYEEMIsnbUDRSdNmxK8gPwldyf/rCok/6JMSl+x06sanhUjhqFU
-         M5fOTeEIvbkKHjYzAlrggqj3HqYiH3E333dp7JvFiSLlMJ0VZXYYP1V10hPeUuu8lnTZ
-         VBOAxtrRJey2+wuI+w42o++CWz3gRwyCUZDxXjhgrkEALlF//MEVvBPcJVN7hQlBAUrI
-         XFyinApQSqn2cyO3vR4sRYVMJ69h4fnVXrwLfdIZC6m15mDdk0xZuHLO7iPkIVJSuS4P
-         oP/pGrq4SWrHgKpl73XRApNST5YMsjR8uMpnxgjTL+tugOwpjcnzjJLpgdxzRJS4N2kj
-         xp5w==
-X-Gm-Message-State: AOAM533KQoD8BYYlZbH7ueH5RS/dhjekUw30ei6or42TTBIhtENXaFkM
-        nmX/ib8iFeIM3XcFBmrxuVxCWVOmt4KnbQ==
-X-Google-Smtp-Source: ABdhPJyFgW+fCsejGi9f0ZVVLvoMyaE4iTmgFDgjiXEXexRQVuKO8wLgEbCqRtjKwV1uyLzkeMoUEQ==
-X-Received: by 2002:a05:6402:cb4:: with SMTP id cn20mr1884326edb.369.1600906489644;
-        Wed, 23 Sep 2020 17:14:49 -0700 (PDT)
+        bh=gqOo9sRKsu8OklEdZbxfDsKXZHiV2LQufDSEO7PGLPM=;
+        b=RPjCfYsxgnXSW/W1SXj/4IEQF52AfT46dL48QYoOaCEL+8Vavouvktf3CTYCDOvrYn
+         zceoGqFAjKBdt7viogyVD8n/Wc8RY8u+KUuvfIRlIvo18mclWihqkfPDRxEZWFfb66vP
+         pjkW/vmLTKB/VM6D0t3hwULpa2ddRghuSviHIccoV2dSnaj0nrqdk/wG0bIB2breEGcF
+         yir9As3MzSpKNvTuNJeENR3uu/+w4myFsKiaK4XJ7njnA5tsPHCgnDw7FEPlSnjN34kq
+         l3s6SLJd8m3pIusatxfjo8sA4bkK4Q1ItxnM7tBUifRQNFnnUi9JU438SJ3LLwkG1ed5
+         wAfQ==
+X-Gm-Message-State: AOAM532IXLIqLYz6wy/MDm3JQxhB0SJnMNjzPMMgnqEA188k7GrahWs6
+        jKK0q295uQu1io4CcLJDhTw=
+X-Google-Smtp-Source: ABdhPJzrtfxhKIlDd4w8QsFQYW1taNVNZGl6pcPKDb+S5nGtYmd3ea3tJRhOXc4SluOrIRNUC0za7w==
+X-Received: by 2002:aa7:db02:: with SMTP id t2mr1866598eds.95.1600906492342;
+        Wed, 23 Sep 2020 17:14:52 -0700 (PDT)
 Received: from net.saheed (5402C65D.dsl.pool.telekom.hu. [84.2.198.93])
-        by smtp.gmail.com with ESMTPSA id r9sm1026559ejc.102.2020.09.23.17.14.48
+        by smtp.gmail.com with ESMTPSA id r9sm1026559ejc.102.2020.09.23.17.14.51
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 23 Sep 2020 17:14:49 -0700 (PDT)
+        Wed, 23 Sep 2020 17:14:51 -0700 (PDT)
 From:   "Saheed O. Bolarinwa" <refactormyself@gmail.com>
 To:     helgaas@kernel.org
 Cc:     "Saheed O. Bolarinwa" <refactormyself@gmail.com>,
         linux-pci@vger.kernel.org
-Subject: [PATCH 1/8] PCI/ASPM: Cache device's ASPM link capability in struct pci_dev
-Date:   Thu, 24 Sep 2020 01:15:10 +0200
-Message-Id: <20200923231517.221310-2-refactormyself@gmail.com>
+Subject: [PATCH 3/8] PCI/ASPM: Compute the value of aspm_register_info.support directly
+Date:   Thu, 24 Sep 2020 01:15:12 +0200
+Message-Id: <20200923231517.221310-4-refactormyself@gmail.com>
 X-Mailer: git-send-email 2.18.4
 In-Reply-To: <20200923231517.221310-1-refactormyself@gmail.com>
 References: <20200923231517.221310-1-refactormyself@gmail.com>
@@ -71,81 +71,87 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-pcie_get_aspm_reg() reads LNKCAP to learn whether the device supports
-ASPM L0s and/or L1 and L1 substates.
-
-If we cache the entire LNKCAP word early enough, we may be able to
-use it in other places that read LNKCAP, e.g. pcie_get_speed_cap(),
-pcie_get_width_cap(), pcie_init(), etc.
-
- - Add struct pci_dev.lnkcap (u32)
- - Read PCI_EXP_LNKCAP in set_pcie_port_type() and save it
-   in pci_dev.lnkcap
- - Use pdev->lnkcap instead of reading PCI_EXP_LNKCAP
+ - Calculate aspm_register_info.support inside aspm_support()
+ - Replace references to aspm_register_info.support with aspm_support().
+ - In pcie_get_aspm_reg() remove assignment to aspm_register_info.support
+ - Remove aspm_register_info.support
 
 Signed-off-by: Saheed O. Bolarinwa <refactormyself@gmail.com>
 ---
- drivers/pci/pcie/aspm.c | 7 ++-----
- drivers/pci/probe.c     | 1 +
- include/linux/pci.h     | 1 +
- 3 files changed, 4 insertions(+), 5 deletions(-)
+ drivers/pci/pcie/aspm.c | 22 +++++++++++++---------
+ 1 file changed, 13 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 253c30cc1967..d7e69b3595a0 100644
+index 5f7cf47b6a40..321b328347c1 100644
 --- a/drivers/pci/pcie/aspm.c
 +++ b/drivers/pci/pcie/aspm.c
-@@ -177,15 +177,13 @@ static void pcie_set_clkpm(struct pcie_link_state *link, int enable)
- static void pcie_clkpm_cap_init(struct pcie_link_state *link, int blacklist)
- {
- 	int capable = 1, enabled = 1;
--	u32 reg32;
- 	u16 reg16;
- 	struct pci_dev *child;
- 	struct pci_bus *linkbus = link->pdev->subordinate;
+@@ -383,7 +383,6 @@ static void encode_l12_threshold(u32 threshold_us, u32 *scale, u32 *value)
+ }
  
- 	/* All functions should have the same cap and state, take the worst */
- 	list_for_each_entry(child, &linkbus->devices, bus_list) {
--		pcie_capability_read_dword(child, PCI_EXP_LNKCAP, &reg32);
--		if (!(reg32 & PCI_EXP_LNKCAP_CLKPM)) {
-+		if (!(child->lnkcap & PCI_EXP_LNKCAP_CLKPM)) {
- 			capable = 0;
- 			enabled = 0;
- 			break;
-@@ -397,9 +395,8 @@ static void pcie_get_aspm_reg(struct pci_dev *pdev,
+ struct aspm_register_info {
+-	u32 support:2;
+ 	u32 enabled:2;
+ 
+ 	/* L1 substates */
+@@ -396,12 +395,10 @@ struct aspm_register_info {
+ static void pcie_get_aspm_reg(struct pci_dev *pdev,
  			      struct aspm_register_info *info)
  {
- 	u16 reg16;
--	u32 reg32;
-+	u32 reg32 = pdev->lnkcap;
+-	u16 reg16;
+-	u32 reg32 = pdev->lnkcap;
++	u16 ctl;
  
--	pcie_capability_read_dword(pdev, PCI_EXP_LNKCAP, &reg32);
- 	info->support = (reg32 & PCI_EXP_LNKCAP_ASPMS) >> 10;
- 	info->latency_encoding_l0s = (reg32 & PCI_EXP_LNKCAP_L0SEL) >> 12;
- 	info->latency_encoding_l1  = (reg32 & PCI_EXP_LNKCAP_L1EL) >> 15;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 03d37128a24f..2d5898f05f89 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1486,6 +1486,7 @@ void set_pcie_port_type(struct pci_dev *pdev)
- 	pdev->pcie_flags_reg = reg16;
- 	pci_read_config_word(pdev, pos + PCI_EXP_DEVCAP, &reg16);
- 	pdev->pcie_mpss = reg16 & PCI_EXP_DEVCAP_PAYLOAD;
-+	pcie_capability_read_dword(pdev, PCI_EXP_LNKCAP, &pdev->lnkcap);
+-	info->support = (reg32 & PCI_EXP_LNKCAP_ASPMS) >> 10;
+-	pcie_capability_read_word(pdev, PCI_EXP_LNKCTL, &reg16);
+-	info->enabled = reg16 & PCI_EXP_LNKCTL_ASPMC;
++	pcie_capability_read_word(pdev, PCI_EXP_LNKCTL, &ctl);
++	info->enabled = ctl & PCI_EXP_LNKCTL_ASPMC;
  
- 	parent = pci_upstream_bridge(pdev);
- 	if (!parent)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 835530605c0d..5b305cfeb1dc 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -375,6 +375,7 @@ struct pci_dev {
- 						   bit manually */
- 	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
- 	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
-+	u32		lnkcap;		/* Link Capabilities */
+ 	/* Read L1 PM substate capabilities */
+ 	info->l1ss_cap = info->l1ss_ctl1 = info->l1ss_ctl2 = 0;
+@@ -540,6 +537,11 @@ static void aspm_calc_l1ss_info(struct pcie_link_state *link,
+ 	link->l1ss.ctl1 |= t_common_mode << 8 | scale << 29 | value << 16;
+ }
  
- #ifdef CONFIG_PCIEASPM
- 	struct pcie_link_state	*link_state;	/* ASPM link state */
++static void aspm_support(struct pci_dev *pdev)
++{
++	return (pdev->lnkcap & PCI_EXP_LNKCAP_ASPMS) >> 10;
++}
++
+ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
+ {
+ 	struct pci_dev *child = link->downstream, *parent = link->pdev;
+@@ -561,7 +563,7 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
+ 	 * If ASPM not supported, don't mess with the clocks and link,
+ 	 * bail out now.
+ 	 */
+-	if (!(upreg.support & dwreg.support))
++	if (!(aspm_support(parent) & aspm_support(child)))
+ 		return;
+ 
+ 	/* Configure common clock before checking latencies */
+@@ -581,8 +583,9 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
+ 	 * given link unless components on both sides of the link each
+ 	 * support L0s.
+ 	 */
+-	if (dwreg.support & upreg.support & PCIE_LINK_STATE_L0S)
++	if (aspm_support(parent) & aspm_support(child) & PCIE_LINK_STATE_L0S)
+ 		link->aspm_support |= ASPM_STATE_L0S;
++
+ 	if (dwreg.enabled & PCIE_LINK_STATE_L0S)
+ 		link->aspm_enabled |= ASPM_STATE_L0S_UP;
+ 	if (upreg.enabled & PCIE_LINK_STATE_L0S)
+@@ -591,8 +594,9 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
+ 	link->latency_dw.l0s = calc_l0s_latency(child);
+ 
+ 	/* Setup L1 state */
+-	if (upreg.support & dwreg.support & PCIE_LINK_STATE_L1)
++	if (aspm_support(parent) & aspm_support(child) & PCIE_LINK_STATE_L1)
+ 		link->aspm_support |= ASPM_STATE_L1;
++
+ 	if (upreg.enabled & dwreg.enabled & PCIE_LINK_STATE_L1)
+ 		link->aspm_enabled |= ASPM_STATE_L1;
+ 	link->latency_up.l1 = calc_l1_latency(parent);
 -- 
 2.18.4
 
