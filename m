@@ -5,42 +5,42 @@ X-Spam-Level:
 X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DBDCC2D0A8
-	for <linux-pci@archiver.kernel.org>; Wed, 23 Sep 2020 18:17:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 419A9C2D0A8
+	for <linux-pci@archiver.kernel.org>; Wed, 23 Sep 2020 18:18:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 207A020791
-	for <linux-pci@archiver.kernel.org>; Wed, 23 Sep 2020 18:17:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E15762220D
+	for <linux-pci@archiver.kernel.org>; Wed, 23 Sep 2020 18:18:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZqtAo6eS"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="I8QYLP66"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726413AbgIWSR4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 23 Sep 2020 14:17:56 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:46518 "EHLO
+        id S1726684AbgIWSRp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 23 Sep 2020 14:17:45 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:59892 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726691AbgIWSRq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Sep 2020 14:17:46 -0400
+        by vger.kernel.org with ESMTP id S1726662AbgIWSRl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Sep 2020 14:17:41 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1600885064;
+        s=mimecast20190719; t=1600885059;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:in-reply-to:in-reply-to:references:references;
-        bh=xjpjpRpbrSKVLsfonq//6ufQkFBP9fDdk1nbF16APfU=;
-        b=ZqtAo6eSCpIasiqVWRCWwgZvASiQWAdXEI1c9DhjQ6ciiCQblUcYMQM91G2CpIwosZi7V5
-        /FrSs8dv0N8KAwngGp4WpG8qpSmIL4pVmr0bUMOnI+ijJTMrtl23YO79Wy5ROWhZLqYnhS
-        OV6JBKY3RBdx+Kbmfi6Ntdy3TeKqLBA=
+        bh=7UUuowF4weSLiWMwKfPo+YyNGAQzoPK/8GZlRbYkNkk=;
+        b=I8QYLP66k8iaRsXuhrPg/C1NqcWhF4LUcp2rmdEDrgzT87ObeVzpQgDozx3wNF534pL5N/
+        gDvs11ADuZiqAAwS2aWjcg9eYf0TovVjM9pgFv20JztwE1tY2sjWwMYkfTXT7jMh4K4cJC
+        4nWSkqmqWSGP+EHx/C91RtgHviQw6CI=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-104-l18lSME8ME6Mv-dEVZsF6Q-1; Wed, 23 Sep 2020 14:17:41 -0400
-X-MC-Unique: l18lSME8ME6Mv-dEVZsF6Q-1
+ us-mta-265-MU8ey5c0MkewCvWXYfJEOw-1; Wed, 23 Sep 2020 14:17:35 -0400
+X-MC-Unique: MU8ey5c0MkewCvWXYfJEOw-1
 Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A528B64095;
-        Wed, 23 Sep 2020 18:17:38 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D3350802B70;
+        Wed, 23 Sep 2020 18:17:32 +0000 (UTC)
 Received: from virtlab719.virt.lab.eng.bos.redhat.com (virtlab719.virt.lab.eng.bos.redhat.com [10.19.153.15])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id D079F5C1C7;
-        Wed, 23 Sep 2020 18:17:36 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id EDE755C1C7;
+        Wed, 23 Sep 2020 18:17:30 +0000 (UTC)
 From:   Nitesh Narayan Lal <nitesh@redhat.com>
 To:     linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
         linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
@@ -53,9 +53,9 @@ To:     linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
         jerinj@marvell.com, mathias.nyman@intel.com, jiri@nvidia.com,
         mingo@redhat.com, peterz@infradead.org, juri.lelli@redhat.com,
         vincent.guittot@linaro.org
-Subject: [PATCH v2 4/4] PCI: Limit pci_alloc_irq_vectors as per housekeeping CPUs
-Date:   Wed, 23 Sep 2020 14:11:26 -0400
-Message-Id: <20200923181126.223766-5-nitesh@redhat.com>
+Subject: [PATCH v2 1/4] sched/isolation: API to get housekeeping online CPUs
+Date:   Wed, 23 Sep 2020 14:11:23 -0400
+Message-Id: <20200923181126.223766-2-nitesh@redhat.com>
 In-Reply-To: <20200923181126.223766-1-nitesh@redhat.com>
 References: <20200923181126.223766-1-nitesh@redhat.com>
 X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
@@ -63,59 +63,44 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This patch limits the pci_alloc_irq_vectors, max_vecs argument that is
-passed on by the caller based on the housekeeping online CPUs (that are
-meant to perform managed IRQ jobs).
+Introduce a new API hk_num_online_cpus(), that can be used to
+retrieve the number of online housekeeping CPUs that are meant to handle
+managed IRQ jobs.
 
-A minimum of the max_vecs passed and housekeeping online CPUs is derived
-to ensure that we don't create excess vectors as that can be problematic
-specifically in an RT environment. In cases where the min_vecs exceeds the
-housekeeping online CPUs, max vecs is restricted based on the min_vecs
-instead. The proposed change is required because for an RT environment
-unwanted IRQs are moved to the housekeeping CPUs from isolated CPUs to
-keep the latency overhead to a minimum. If the number of housekeeping CPUs
-is significantly lower than that of the isolated CPUs we can run into
-failures while moving these IRQs to housekeeping CPUs due to per CPU
-vector limit.
+This API is introduced for the drivers that were previously relying only
+on num_online_cpus() to determine the number of MSIX vectors to create.
+In an RT environment with large isolated but fewer housekeeping CPUs this
+was leading to a situation where an attempt to move all of the vectors
+corresponding to isolated CPUs to housekeeping CPUs were failing due to
+per CPU vector limit.
 
 Signed-off-by: Nitesh Narayan Lal <nitesh@redhat.com>
 ---
- include/linux/pci.h | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ include/linux/sched/isolation.h | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 835530605c0d..cf9ca9410213 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -38,6 +38,7 @@
- #include <linux/interrupt.h>
- #include <linux/io.h>
- #include <linux/resource_ext.h>
-+#include <linux/sched/isolation.h>
- #include <uapi/linux/pci.h>
- 
- #include <linux/pci_ids.h>
-@@ -1797,6 +1798,20 @@ static inline int
- pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
- 		      unsigned int max_vecs, unsigned int flags)
- {
-+	unsigned int hk_cpus = hk_num_online_cpus();
-+
-+	/*
-+	 * For a real-time environment, try to be conservative and at max only
-+	 * ask for the same number of vectors as there are housekeeping online
-+	 * CPUs. In case, the min_vecs requested exceeds the housekeeping
-+	 * online CPUs, restrict the max_vecs based on the min_vecs instead.
-+	 */
-+	if (hk_cpus != num_online_cpus()) {
-+		if (min_vecs > hk_cpus)
-+			max_vecs = min_vecs;
-+		else
-+			max_vecs = min_t(int, max_vecs, hk_cpus);
-+	}
- 	return pci_alloc_irq_vectors_affinity(dev, min_vecs, max_vecs, flags,
- 					      NULL);
+diff --git a/include/linux/sched/isolation.h b/include/linux/sched/isolation.h
+index cc9f393e2a70..2e96b626e02e 100644
+--- a/include/linux/sched/isolation.h
++++ b/include/linux/sched/isolation.h
+@@ -57,4 +57,17 @@ static inline bool housekeeping_cpu(int cpu, enum hk_flags flags)
+ 	return true;
  }
+ 
++static inline unsigned int hk_num_online_cpus(void)
++{
++#ifdef CONFIG_CPU_ISOLATION
++	const struct cpumask *hk_mask;
++
++	if (static_branch_unlikely(&housekeeping_overridden)) {
++		hk_mask = housekeeping_cpumask(HK_FLAG_MANAGED_IRQ);
++		return cpumask_weight(hk_mask);
++	}
++#endif
++	return cpumask_weight(cpu_online_mask);
++}
++
+ #endif /* _LINUX_SCHED_ISOLATION_H */
 -- 
 2.18.2
 
