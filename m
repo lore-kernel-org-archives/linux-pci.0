@@ -2,205 +2,439 @@ Return-Path: <SRS0=O37L=DB=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_2 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C801C4727E
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Sep 2020 11:03:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F8F6C47420
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Sep 2020 11:09:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0EE80239E5
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Sep 2020 11:03:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600945431;
-	bh=5PKuBxuNqKyruttQBGLnaa3NlkdUn3W71nscpvf1BDk=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=LSzW0EHMOmpdQyqe58zcVjk9enFJxIYANuCOvyXyocmnaHUG0jo2sLk+0eLSNWeTP
-	 lM1yostCI1kWPyub6R/VgaMrmiJaqVgjKjbhOB4MymUAm1eF9YsEPlmH4p/CaO5JXi
-	 v3+mV8U++5bY7t2u2s/pjI7oVV0XQt0rJo/7+n5Y=
+	by mail.kernel.org (Postfix) with ESMTP id BBEFA239D2
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Sep 2020 11:09:05 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=Synaptics.onmicrosoft.com header.i=@Synaptics.onmicrosoft.com header.b="W8ex16ZN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726587AbgIXLDu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 24 Sep 2020 07:03:50 -0400
-Received: from mail-oi1-f196.google.com ([209.85.167.196]:37266 "EHLO
-        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726303AbgIXLDt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Sep 2020 07:03:49 -0400
-Received: by mail-oi1-f196.google.com with SMTP id a3so3234671oib.4;
-        Thu, 24 Sep 2020 04:03:48 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=pn+i27Dx8fEtrGXxMazmn/X4tGbmkIv7rNYd8W3GRss=;
-        b=ZQksqPbsOH5r5tthy8DtuUBuyGjBlwdntxObW9ZoDTW5IyrOf1lLyF65tMQOCiwo++
-         dE8CJeRrH2e3RfXn9kMAi6v4s/cKBGaSj0mh01+LsWY9zwxtxmJwr+34LbTVJQtWw5pj
-         2Lx0ht1UsRnSUw1cfUh6dXk4DOm4TyTtW7PtSXXT3wBlMAulMU48NaVocr6MYSyi2c76
-         nx0J7UzFPk96FmxvZ336w0jZA0Kw89C1wGT5R2h6+9ufy4HwF3jFsNpuGO7GATRU4Bty
-         8bTLRctseXcDj2XdHP8wC93TWb7/+QZqnD1YJYQBCZt6XcH7xdhswuBQsC0g4+J99qB4
-         57+Q==
-X-Gm-Message-State: AOAM533jbZW/VelROv/obcar38pD3AoIbOK/5KBwNylZfQ0kZPsDaDq/
-        9m6H1638WVUUfl2CW356Ys5sIvqokDeHEBZN2hI=
-X-Google-Smtp-Source: ABdhPJzDlpEJUA+Oq7l4adHVs9utovmT1K6AS39uuXbGtk7ZnfPxF0dnzHWkg5WoiVh0kzqj9RfrHNDZVceiVU+YuOc=
-X-Received: by 2002:aca:df84:: with SMTP id w126mr2207061oig.103.1600945428210;
- Thu, 24 Sep 2020 04:03:48 -0700 (PDT)
-MIME-Version: 1.0
-References: <20200818142430.1156547-1-Jonathan.Cameron@huawei.com>
- <20200903133318.000017f5@Huawei.com> <20200918131427.0000080f@Huawei.com>
-In-Reply-To: <20200918131427.0000080f@Huawei.com>
-From:   "Rafael J. Wysocki" <rafael@kernel.org>
-Date:   Thu, 24 Sep 2020 13:03:37 +0200
-Message-ID: <CAJZ5v0h_X-zhTJ-9d9cTLTe6yaneqLV7FsLv90NA5UL8eg1ovw@mail.gmail.com>
-Subject: Re: [PATCH v3 0/6] ACPI: Only create NUMA nodes from entries in SRAT
- or SRAT emulation.
-To:     Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Cc:     Linux Memory Management List <linux-mm@kvack.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        "the arch/x86 maintainers" <x86@kernel.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Fenghua Yu <fenghua.yu@intel.com>,
+        id S1727276AbgIXLJB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 24 Sep 2020 07:09:01 -0400
+Received: from mail-bn8nam08on2061.outbound.protection.outlook.com ([40.107.100.61]:62176
+        "EHLO NAM04-BN8-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726444AbgIXLJB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 24 Sep 2020 07:09:01 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=ZE7r/R0rBVRwUHL1VeGAVaLhZKGdysgboTfmhIkefRYkjAK8+DMDbI7KfEj9fNdEgO3vPxsHZLMl5vxlkJhgD+wZ5LBO0Fc4aTq8Vb/X/3mODWXloFxQXqRt1iauQff0WEDoaoti/06tgXQO4t289YemLAIuhMlUc54MAAcVrWXQ5BpcUHMY0Tx7JhBWjwbSp5Gg0MbVU9lJHo0kejdM9q0eEtMuSKLmRtWICwl+FPEDL+LAnAcCn1AgUXSYZgEIE3LobFeizv13gbRklCOnRjCMHQtP4iRNBuRTmNeiVJ7wW5fNnPbyv5E+G86YL5GnWV+8K5P3ypGdFwG73W4ReQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=egHxvw+w9N0tvNHpaDO8CSDWOi3GV6GGHWZAPQoRtuc=;
+ b=YnY4C0wpZ6ZeLtXZcQy2lB1LS/tj4+lV0VkqGqjw6WawRTo92kvuL4+thjkFANOHXVqYXDxu7IeRmNaontOvq34YI5QhaIXGjTMAQSizeYSPBhKkX7JVk1/O7b+pg4KMHEy2/UMA9hx54b6mAt3ehWCjeLYsrqTeCKd9Zi7HY6P9Bix07ktU67A61ZsYqAh/E0m9UEPKuxwjR56D98f8N8PmLAR1rMnaks12pGaoLtOZJHP7PbfYt+fzT0fQiXJgktOJTkNWve0u9bo/saEskDC9//VGrviJjCo+KxJZtp/CGJhoFpSfo+JcBwCyLAgw6BCmSSCHyS1/5E7hQqT1XQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=synaptics.com; dmarc=pass action=none
+ header.from=synaptics.com; dkim=pass header.d=synaptics.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=Synaptics.onmicrosoft.com; s=selector2-Synaptics-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=egHxvw+w9N0tvNHpaDO8CSDWOi3GV6GGHWZAPQoRtuc=;
+ b=W8ex16ZN48IvWrNgg/3qQVUwbpCePl0Fl4RP4HmmDdxQnkA+/+VgC7CHSV71F3gelXYwuVVp8eNJ7jjt7MtFM/5KqID7r0YJwUc8WK4AAQaFyQsYGQMbhVt9XZprbTujrAKmloX5rUPmQmsJ7+QRuMHjEp58iOUNDsm5D6gY7Bc=
+Authentication-Results: ti.com; dkim=none (message not signed)
+ header.d=none;ti.com; dmarc=none action=none header.from=synaptics.com;
+Received: from DM6PR03MB4555.namprd03.prod.outlook.com (2603:10b6:5:102::17)
+ by DM6PR03MB4698.namprd03.prod.outlook.com (2603:10b6:5:180::28) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3412.20; Thu, 24 Sep
+ 2020 11:08:55 +0000
+Received: from DM6PR03MB4555.namprd03.prod.outlook.com
+ ([fe80::e494:740f:155:4a38]) by DM6PR03MB4555.namprd03.prod.outlook.com
+ ([fe80::e494:740f:155:4a38%7]) with mapi id 15.20.3391.027; Thu, 24 Sep 2020
+ 11:08:55 +0000
+Date:   Thu, 24 Sep 2020 19:07:42 +0800
+From:   Jisheng Zhang <Jisheng.Zhang@synaptics.com>
+To:     Kishon Vijay Abraham I <kishon@ti.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-ia64@vger.kernel.org, Tony Luck <tony.luck@intel.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linuxarm <linuxarm@huawei.com>, Ingo Molnar <mingo@redhat.com>,
-        martin@geanix.com, Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Dan Williams <dan.j.williams@intel.com>
-Content-Type: text/plain; charset="UTF-8"
+        Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Kukjin Kim <kgene@kernel.org>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Shawn Guo <shawnguo@kernel.org>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Pengutronix Kernel Team <kernel@pengutronix.de>,
+        Fabio Estevam <festevam@gmail.com>,
+        NXP Linux Team <linux-imx@nxp.com>,
+        Yue Wang <yue.wang@Amlogic.com>,
+        Kevin Hilman <khilman@baylibre.com>,
+        Neil Armstrong <narmstrong@baylibre.com>,
+        Jerome Brunet <jbrunet@baylibre.com>,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        Binghui Wang <wangbinghui@hisilicon.com>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
+        Masahiro Yamada <yamada.masahiro@socionext.com>
+Cc:     linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-samsung-soc@vger.kernel.org,
+        linux-amlogic@lists.infradead.org, linux-arm-kernel@axis.com,
+        linux-arm-msm@vger.kernel.org, linux-tegra@vger.kernel.org
+Subject: [PATCH v2 5/5] PCI: dwc: Move dw_pcie_msi_init() from each users to
+ designware host
+Message-ID: <20200924190742.76939458@xhacker.debian>
+In-Reply-To: <20200924190421.549cb8fc@xhacker.debian>
+References: <20200924190421.549cb8fc@xhacker.debian>
+X-Mailer: Claws Mail 3.17.6 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: TYAPR01CA0072.jpnprd01.prod.outlook.com
+ (2603:1096:404:2b::36) To DM6PR03MB4555.namprd03.prod.outlook.com
+ (2603:10b6:5:102::17)
+MIME-Version: 1.0
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from xhacker.debian (124.74.246.114) by TYAPR01CA0072.jpnprd01.prod.outlook.com (2603:1096:404:2b::36) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3412.20 via Frontend Transport; Thu, 24 Sep 2020 11:08:43 +0000
+X-Mailer: Claws Mail 3.17.6 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
+X-Originating-IP: [124.74.246.114]
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 950f8817-b4a3-49a6-84ba-08d8607a3a43
+X-MS-TrafficTypeDiagnostic: DM6PR03MB4698:
+X-Microsoft-Antispam-PRVS: <DM6PR03MB469846A98C5A031AD91368ADED390@DM6PR03MB4698.namprd03.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: uOBA/EWW6Sn2tsmw18k8nJIRW08dSetQAc8YWMA9aQ8fVxlVQ4+g41omqmKjEhTiy+W1qnrSRvEwrNSff9Ase8AHPSKLZtwqx49Gyv68PLfKL7O73qEM+amypm34hFyhB0AEySuo5dSMkLRAJt7rDCBPEydN+JGAGede3C4JmDWVwpDObiO1jUC4vLR3b2WbuuSQm8tCADjwFjNq77MapoikCbxIvCTMfEEZ2Ag2XP3R16I3A2Tp10QvPcauZQbS7wSjZqAsWWJL9g8CVeTercalZfYqIqBcimi8fbdux6J+/df3cqHhltDy+BYtKGklGPrz1wucSIOOkQ1mlvz1EFzh9tOKTn6eLFoaaYF1/OETJmiiZ38/G4LGwtE41MuI
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR03MB4555.namprd03.prod.outlook.com;PTR:;CAT:NONE;SFS:(346002)(396003)(366004)(39860400002)(376002)(136003)(2906002)(30864003)(86362001)(6506007)(52116002)(7696005)(83380400001)(478600001)(5660300002)(186003)(66556008)(16526019)(956004)(1076003)(26005)(316002)(66476007)(7406005)(66946007)(9686003)(55016002)(8676002)(8936002)(110136005)(4326008)(7416002)(921003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: RMlcwVeKDKiEtrsFAaYSr1uIYx+ljMIdpOqJ4n8kZbE+1xKsSZlRCVUMA+ev/EgO7x4dO0n1ZueApqf9AHB5TAo6a23nDadZat/RuidMWanoSEhtiZZhiFP/0pNB2QJlSCpmdVbS6shGP7dax+pDgitP3klrMwVl/ncLOUNMQYF4p9otoYQJ3d2MMjsyaAqkCF5C7+cEZMN4nZPM6MDIl6C5AW6edB0jRPTiFrxrQHmCQkcpWVD0CpH4FkMzAG2vNX2VM2j7ppUdys54spK4vdagYdL6lZuFwOJ3BkVdco7s5amBsOPtwwsaDv5gVanevqYZld8r7mg78KwP08YpDk4xHNzitfR9fXtu1rE0FOQ7s9v8WPJnwdztU/7WXH4mgHagmCQWR3xnh/k275grRmnvwYkFbi2SFe8dCbBiBm9IgxZcStF1vSmfo2KCJk9y9XmnZb3UED2nqN7aj1f16WYF7vHZYoATNIHvEMsGi5MkkwhjMYI60NtMQAea1GmNz5ao0ZhwgEw5Cut7yKfCET0zIT3TCTwEf8TuGt9xoV9+p1MjV28eQMj1Zkb7OyEs9yyn2bHJIL8ITRmRO19a9PEX9yiVjxlTJSxG+fuinKlX1vnUMsTHZ5FviMOvlNA325S/KazSCMLmrMwFx6OIUw==
+X-OriginatorOrg: synaptics.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 950f8817-b4a3-49a6-84ba-08d8607a3a43
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR03MB4555.namprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Sep 2020 11:08:55.6822
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 335d1fbc-2124-4173-9863-17e7051a2a0e
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: XPTytS6VDF0pwFMYxJZGwIxIqb7SWCwf77ORKRYIyr9oDX4MVobpNC8gHkda+kK5sH03dQjTvSBW6i5NDgqitw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR03MB4698
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Sep 18, 2020 at 2:16 PM Jonathan Cameron
-<Jonathan.Cameron@huawei.com> wrote:
->
-> On Thu, 3 Sep 2020 13:33:18 +0100
-> Jonathan Cameron <Jonathan.Cameron@Huawei.com> wrote:
->
-> > On Tue, 18 Aug 2020 22:24:24 +0800
-> > Jonathan Cameron <Jonathan.Cameron@huawei.com> wrote:
-> >
-> > > This is a trivial rebase and resend of V2 now the merge window has closed.
-> > >
-> > > Here, I will use the term Proximity Domains for the ACPI description and
-> > > NUMA Nodes for the in kernel representation.
-> > >
-> > > ACPI 6.3 included a clarification that only Static Resource Allocation
-> > > Structures in SRAT may define the existence of proximity domains
-> > > (sec 5.2.16). This clarification closed a possible interpretation that
-> > > other parts of ACPI (e.g. DSDT _PXM, NFIT etc) could define new proximity
-> > > domains that were not also mentioned in SRAT structures.
-> > >
-> > > In practice the kernel has never allowed this alternative interpretation as
-> > > such nodes are only partially initialized. This is architecture specific
-> > > but to take an example, on x86 alloc_node_data has not been called.
-> > > Any use of them for node specific allocation, will result in a crash as the
-> > > infrastructure to fallback to a node with memory is not setup.
-> > >
-> > > We ran into a problem when enabling _PXM handling for PCI devices and found
-> > > there were boards out there advertising devices in proximity domains that
-> > > didn't exist [2].
-> > >
-> > > The fix suggested in this series is to replace instances that should not
-> > > 'create' new nodes with pxm_to_node.  This function needs a some additional
-> > > hardening against invalid inputs to make sure it is safe for use in these
-> > > new callers.
-> > >
-> > > Patch 1 Hardens pxm_to_node() against numa_off, and pxm entry being too large.
-> > >
-> > > Patch 2-4 change the various callers not related to SRAT entries so that they
-> > > set this parameter to false, so do not attempt to initialize a new NUMA node
-> > > if the relevant one does not already exist.
-> > >
-> > > Patch 5 is a function rename to reflect change in functionality of
-> > > acpi_map_pxm_to_online_node() as it no longer creates a new map, but just does a
-> > > lookup of existing maps.
-> > >
-> > > Patch 6 covers the one place we do not allow the full flexibility defined
-> > > in the ACPI spec.  For SRAT GIC Interrupt Translation Service (ITS) Affinity
-> > > Structures, on ARM64, the driver currently makes an additional pass of SRAT
-> > > later in the boot than the one used to identify NUMA domains.
-> > > Note, this currently means that an ITS placed in a proximity domain that is
-> > > not defined by another SRAT structure will result in the a crash.
-> > >
-> > > To avoid this crash with minimal changes we do not create new NUMA nodes based
-> > > on this particular entry type.  Any current platform trying to do this will not
-> > > boot, so this is an improvement, if perhaps not a perfect solution.
-> > >
-> > > [1] Note in ACPI Specification 6.3 5.2.16 System Resource Affinity Table (SRAT)
-> > > [2] https://patchwork.kernel.org/patch/10597777/
-> >
-> > Looking for input from ARM (Lorenzo?), X86(not sure) and ACPI(Rafael?) people
-> > on this set. As it also touches NFIT handling perhaps someone who focuses on
-> > that as well. Please feel free to CC additional people who might be interested.
-> >
-> > I'm fairly confident that it should be uncontroversial (famous last words)
-> > and it closes down a problem that lead to issues with seemingly obvious
-> > changes in the past. (The whole PCI _PXM issue on some threadripper platforms).
-> >
-> > Thanks to Bjorn, Hanjun and Barry for feedback on earlier revisions.
-> >
->
-> Hi All,
->
-> Still after reviews on this set. If anyone one would like me to resend please
-> let me know.  Also any corrections to my suggested set of people to review would
-> be welcome.
->
-> +CC Rafael who I've managed to drop from this version which won't have helped.
+Currently, dw_pcie_msi_init() allocates and maps page for msi, then
+program the PCIE_MSI_ADDR_LO and PCIE_MSI_ADDR_HI. The Root Complex
+may lose power during suspend-to-RAM, so when we resume, we want to
+redo the latter but not the former. If designware based driver (for
+example, pcie-tegra194.c) calls dw_pcie_msi_init() in resume path, the
+previous msi page will be leaked. From another side, except
+pci-dra7xx.c we can move the dw_pcie_msi_init() from each users to
+designware host, I.E move the msi page allocation and mapping to
+dw_pcie_host_init() and move the PCIE_MSI_ADDR_* programming to
+dw_pcie_setup_rc(). After this moving, we solve the msi page leakage
+as well.
 
-Thanks!
+Signed-off-by: Jisheng Zhang <Jisheng.Zhang@synaptics.com>
+---
+ drivers/pci/controller/dwc/pci-dra7xx.c       |  1 +
+ drivers/pci/controller/dwc/pci-exynos.c       |  2 --
+ drivers/pci/controller/dwc/pci-imx6.c         |  3 ---
+ drivers/pci/controller/dwc/pci-meson.c        |  8 -------
+ drivers/pci/controller/dwc/pcie-artpec6.c     | 10 --------
+ .../pci/controller/dwc/pcie-designware-host.c | 24 ++++++++++++-------
+ .../pci/controller/dwc/pcie-designware-plat.c |  3 ---
+ drivers/pci/controller/dwc/pcie-designware.h  |  5 ++++
+ drivers/pci/controller/dwc/pcie-histb.c       |  3 ---
+ drivers/pci/controller/dwc/pcie-kirin.c       |  3 ---
+ drivers/pci/controller/dwc/pcie-qcom.c        |  3 ---
+ drivers/pci/controller/dwc/pcie-spear13xx.c   |  1 -
+ drivers/pci/controller/dwc/pcie-tegra194.c    |  2 --
+ drivers/pci/controller/dwc/pcie-uniphier.c    |  9 +------
+ 14 files changed, 22 insertions(+), 55 deletions(-)
 
-I've just applied the series for 5.10 (with some minor edits in patch
-changelogs and subjects), so if anyone has any reservations regarding
-it, please let me know ASAP.
+diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
+index dc387724cf08..d8b74389e353 100644
+--- a/drivers/pci/controller/dwc/pci-dra7xx.c
++++ b/drivers/pci/controller/dwc/pci-dra7xx.c
+@@ -210,6 +210,7 @@ static int dra7xx_pcie_host_init(struct pcie_port *pp)
+ 	dra7xx_pcie_establish_link(pci);
+ 	dw_pcie_wait_for_link(pci);
+ 	dw_pcie_msi_init(pp);
++	dw_pcie_msi_config(pp);
+ 	dra7xx_pcie_enable_interrupts(dra7xx);
+ 
+ 	return 0;
+diff --git a/drivers/pci/controller/dwc/pci-exynos.c b/drivers/pci/controller/dwc/pci-exynos.c
+index 8d82c43ae299..9cca0ce79777 100644
+--- a/drivers/pci/controller/dwc/pci-exynos.c
++++ b/drivers/pci/controller/dwc/pci-exynos.c
+@@ -298,8 +298,6 @@ static void exynos_pcie_msi_init(struct exynos_pcie *ep)
+ 	struct pcie_port *pp = &pci->pp;
+ 	u32 val;
+ 
+-	dw_pcie_msi_init(pp);
+-
+ 	/* enable MSI interrupt */
+ 	val = exynos_pcie_readl(ep->mem_res->elbi_base, PCIE_IRQ_EN_LEVEL);
+ 	val |= IRQ_MSI_ENABLE;
+diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+index 5fef2613b223..dba6e351e3df 100644
+--- a/drivers/pci/controller/dwc/pci-imx6.c
++++ b/drivers/pci/controller/dwc/pci-imx6.c
+@@ -848,9 +848,6 @@ static int imx6_pcie_host_init(struct pcie_port *pp)
+ 	dw_pcie_setup_rc(pp);
+ 	imx6_pcie_establish_link(imx6_pcie);
+ 
+-	if (IS_ENABLED(CONFIG_PCI_MSI))
+-		dw_pcie_msi_init(pp);
+-
+ 	return 0;
+ }
+ 
+diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/controller/dwc/pci-meson.c
+index 4f183b96afbb..cd0d9dd8dd61 100644
+--- a/drivers/pci/controller/dwc/pci-meson.c
++++ b/drivers/pci/controller/dwc/pci-meson.c
+@@ -377,12 +377,6 @@ static int meson_pcie_establish_link(struct meson_pcie *mp)
+ 	return dw_pcie_wait_for_link(pci);
+ }
+ 
+-static void meson_pcie_enable_interrupts(struct meson_pcie *mp)
+-{
+-	if (IS_ENABLED(CONFIG_PCI_MSI))
+-		dw_pcie_msi_init(&mp->pci.pp);
+-}
+-
+ static int meson_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+ 				  u32 *val)
+ {
+@@ -467,8 +461,6 @@ static int meson_pcie_host_init(struct pcie_port *pp)
+ 	if (ret)
+ 		return ret;
+ 
+-	meson_pcie_enable_interrupts(mp);
+-
+ 	return 0;
+ }
+ 
+diff --git a/drivers/pci/controller/dwc/pcie-artpec6.c b/drivers/pci/controller/dwc/pcie-artpec6.c
+index 97d50bb50f06..af1e6bb28e7a 100644
+--- a/drivers/pci/controller/dwc/pcie-artpec6.c
++++ b/drivers/pci/controller/dwc/pcie-artpec6.c
+@@ -346,15 +346,6 @@ static void artpec6_pcie_deassert_core_reset(struct artpec6_pcie *artpec6_pcie)
+ 	usleep_range(100, 200);
+ }
+ 
+-static void artpec6_pcie_enable_interrupts(struct artpec6_pcie *artpec6_pcie)
+-{
+-	struct dw_pcie *pci = artpec6_pcie->pci;
+-	struct pcie_port *pp = &pci->pp;
+-
+-	if (IS_ENABLED(CONFIG_PCI_MSI))
+-		dw_pcie_msi_init(pp);
+-}
+-
+ static int artpec6_pcie_host_init(struct pcie_port *pp)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+@@ -368,7 +359,6 @@ static int artpec6_pcie_host_init(struct pcie_port *pp)
+ 	dw_pcie_setup_rc(pp);
+ 	artpec6_pcie_establish_link(pci);
+ 	dw_pcie_wait_for_link(pci);
+-	artpec6_pcie_enable_interrupts(artpec6_pcie);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index 7a8adf597803..6603d7c36f2e 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -296,11 +296,23 @@ void dw_pcie_msi_deinit(struct pcie_port *pp)
+ 	}
+ }
+ 
++void dw_pcie_msi_config(struct pcie_port *pp)
++{
++	if (pp->msi_page) {
++		u64 msi_target = (u64)pp->msi_data;
++
++		/* Program the msi_data */
++		dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
++				    lower_32_bits(msi_target));
++		dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4,
++				    upper_32_bits(msi_target));
++	}
++}
++
+ void dw_pcie_msi_init(struct pcie_port *pp)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	struct device *dev = pci->dev;
+-	u64 msi_target;
+ 
+ 	pp->msi_page = alloc_page(GFP_KERNEL);
+ 	if (!pp->msi_page) {
+@@ -314,15 +326,7 @@ void dw_pcie_msi_init(struct pcie_port *pp)
+ 		dev_err(dev, "Failed to map MSI data\n");
+ 		__free_page(pp->msi_page);
+ 		pp->msi_page = NULL;
+-		return;
+ 	}
+-	msi_target = (u64)pp->msi_data;
+-
+-	/* Program the msi_data */
+-	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
+-			    lower_32_bits(msi_target));
+-	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4,
+-			    upper_32_bits(msi_target));
+ }
+ EXPORT_SYMBOL_GPL(dw_pcie_msi_init);
+ 
+@@ -449,6 +453,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 				irq_set_chained_handler_and_data(pp->msi_irq,
+ 							    dw_chained_msi_isr,
+ 							    pp);
++			dw_pcie_msi_init(pp);
+ 		} else {
+ 			ret = pp->ops->msi_host_init(pp);
+ 			if (ret < 0)
+@@ -654,6 +659,7 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 					    (ctrl * MSI_REG_CTRL_BLOCK_SIZE),
+ 					    4, ~0);
+ 		}
++		dw_pcie_msi_config(pp);
+ 	}
+ 
+ 	/* Setup RC BARs */
+diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
+index 712456f6ce36..9ccf69a3dcf4 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-plat.c
++++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
+@@ -40,9 +40,6 @@ static int dw_plat_pcie_host_init(struct pcie_port *pp)
+ 	dw_pcie_setup_rc(pp);
+ 	dw_pcie_wait_for_link(pci);
+ 
+-	if (IS_ENABLED(CONFIG_PCI_MSI))
+-		dw_pcie_msi_init(pp);
+-
+ 	return 0;
+ }
+ 
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 43b8061e1bec..40d22fe33afe 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -372,6 +372,7 @@ static inline void dw_pcie_dbi_ro_wr_dis(struct dw_pcie *pci)
+ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
+ void dw_pcie_msi_init(struct pcie_port *pp);
+ void dw_pcie_msi_deinit(struct pcie_port *pp);
++void dw_pcie_msi_config(struct pcie_port *pp);
+ void dw_pcie_setup_rc(struct pcie_port *pp);
+ int dw_pcie_host_init(struct pcie_port *pp);
+ void dw_pcie_host_deinit(struct pcie_port *pp);
+@@ -390,6 +391,10 @@ static inline void dw_pcie_msi_deinit(struct pcie_port *pp)
+ {
+ }
+ 
++static inline void dw_pcie_msi_config(struct pcie_port *pp)
++{
++}
++
+ static inline void dw_pcie_setup_rc(struct pcie_port *pp)
+ {
+ }
+diff --git a/drivers/pci/controller/dwc/pcie-histb.c b/drivers/pci/controller/dwc/pcie-histb.c
+index 2a2835746077..fbf53e897ca7 100644
+--- a/drivers/pci/controller/dwc/pcie-histb.c
++++ b/drivers/pci/controller/dwc/pcie-histb.c
+@@ -196,9 +196,6 @@ static int histb_pcie_host_init(struct pcie_port *pp)
+ {
+ 	histb_pcie_establish_link(pp);
+ 
+-	if (IS_ENABLED(CONFIG_PCI_MSI))
+-		dw_pcie_msi_init(pp);
+-
+ 	return 0;
+ }
+ 
+diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
+index e496f51e0152..d7246995daf0 100644
+--- a/drivers/pci/controller/dwc/pcie-kirin.c
++++ b/drivers/pci/controller/dwc/pcie-kirin.c
+@@ -425,9 +425,6 @@ static int kirin_pcie_host_init(struct pcie_port *pp)
+ {
+ 	kirin_pcie_establish_link(pp);
+ 
+-	if (IS_ENABLED(CONFIG_PCI_MSI))
+-		dw_pcie_msi_init(pp);
+-
+ 	return 0;
+ }
+ 
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index 3aac77a295ba..2abbb850fb56 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -1281,9 +1281,6 @@ static int qcom_pcie_host_init(struct pcie_port *pp)
+ 
+ 	dw_pcie_setup_rc(pp);
+ 
+-	if (IS_ENABLED(CONFIG_PCI_MSI))
+-		dw_pcie_msi_init(pp);
+-
+ 	qcom_ep_reset_deassert(pcie);
+ 
+ 	ret = qcom_pcie_establish_link(pcie);
+diff --git a/drivers/pci/controller/dwc/pcie-spear13xx.c b/drivers/pci/controller/dwc/pcie-spear13xx.c
+index 62846562da0b..760e27de0082 100644
+--- a/drivers/pci/controller/dwc/pcie-spear13xx.c
++++ b/drivers/pci/controller/dwc/pcie-spear13xx.c
+@@ -157,7 +157,6 @@ static void spear13xx_pcie_enable_interrupts(struct spear13xx_pcie *spear13xx_pc
+ 
+ 	/* Enable MSI interrupt */
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+-		dw_pcie_msi_init(pp);
+ 		writel(readl(&app_reg->int_mask) |
+ 				MSI_CTRL_INT, &app_reg->int_mask);
+ 	}
+diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+index 70498689d0c0..b51fe136d345 100644
+--- a/drivers/pci/controller/dwc/pcie-tegra194.c
++++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+@@ -783,8 +783,6 @@ static void tegra_pcie_enable_msi_interrupts(struct pcie_port *pp)
+ 	struct tegra_pcie_dw *pcie = to_tegra_pcie(pci);
+ 	u32 val;
+ 
+-	dw_pcie_msi_init(pp);
+-
+ 	/* Enable MSI interrupt generation */
+ 	val = appl_readl(pcie, APPL_INTR_EN_L0_0);
+ 	val |= APPL_INTR_EN_L0_0_SYS_MSI_INTR_EN;
+diff --git a/drivers/pci/controller/dwc/pcie-uniphier.c b/drivers/pci/controller/dwc/pcie-uniphier.c
+index 3a7f403b57b8..d7b465b669f4 100644
+--- a/drivers/pci/controller/dwc/pcie-uniphier.c
++++ b/drivers/pci/controller/dwc/pcie-uniphier.c
+@@ -318,14 +318,7 @@ static int uniphier_pcie_host_init(struct pcie_port *pp)
+ 	uniphier_pcie_irq_enable(priv);
+ 
+ 	dw_pcie_setup_rc(pp);
+-	ret = uniphier_pcie_establish_link(pci);
+-	if (ret)
+-		return ret;
+-
+-	if (IS_ENABLED(CONFIG_PCI_MSI))
+-		dw_pcie_msi_init(pp);
+-
+-	return 0;
++	return uniphier_pcie_establish_link(pci);
+ }
+ 
+ static const struct dw_pcie_host_ops uniphier_pcie_host_ops = {
+-- 
+2.28.0
 
-In particular, I took the Hanjun's R-by on the last patch to be
-sufficient from the ARM64 perspective.
-
-Cheers!
-
-
-> > > Thanks to Bjorn Helgaas for review of v1 and Barry Song for internal reviews that
-> > > lead to a slightly different approach for this v2.
-> > >
-> > > Changes since v2.
-> > > * Trivial rebase to v5.9-rc1
-> > > * Collect up tags.
-> > >
-> > > Changes since v1.
-> > > * Use pxm_to_node for what was previously the path using acpi_map_pxm_to_node
-> > >   with create==false. (Barry)
-> > > * Broke patch up into an initial noop stage followed by patches (Bjorn)
-> > >   to update each type of case in which partial creation of NUMA nodes is prevented.
-> > > * Added patch 5 to rename function to reflect change of functionality.
-> > > * Updated descriptions (now mostly in individual patches) inline with Bjorn's comments.
-> > >
-> > > Jonathan Cameron (6):
-> > >   ACPI: Add out of bounds and numa_off protections to pxm_to_node
-> > >   ACPI: Do not create new NUMA domains from ACPI static tables that are
-> > >     not SRAT
-> > >   ACPI: Remove side effect of partly creating a node in
-> > >     acpi_map_pxm_to_online_node
-> > >   ACPI: Rename acpi_map_pxm_to_online_node to pxm_to_online_node
-> > >   ACPI: Remove side effect of partly creating a node in acpi_get_node
-> > >   irq-chip/gic-v3-its: Fix crash if ITS is in a proximity domain without
-> > >     processor or memory
-> > >
-> > >  drivers/acpi/arm64/iort.c        |  2 +-
-> > >  drivers/acpi/nfit/core.c         |  6 ++----
-> > >  drivers/acpi/numa/hmat.c         |  4 ++--
-> > >  drivers/acpi/numa/srat.c         |  4 ++--
-> > >  drivers/iommu/intel/dmar.c       |  2 +-
-> > >  drivers/irqchip/irq-gic-v3-its.c |  7 ++++++-
-> > >  include/linux/acpi.h             | 15 +++++++--------
-> > >  7 files changed, 21 insertions(+), 19 deletions(-)
-> > >
-> >
-> >
-> > _______________________________________________
-> > Linuxarm mailing list
-> > Linuxarm@huawei.com
-> > http://hulk.huawei.com/mailman/listinfo/linuxarm
->
->
