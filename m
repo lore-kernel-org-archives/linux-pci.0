@@ -2,96 +2,159 @@ Return-Path: <SRS0=O37L=DB=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3365AC4727D
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Sep 2020 20:03:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF094C4363D
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Sep 2020 20:45:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D395E2344C
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Sep 2020 20:03:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 926BD23A1B
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Sep 2020 20:45:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1600980338;
+	bh=CSiygoRkkeEiJ5Dg4g8lESgmoDARtWg5wsRqboDJATg=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=s1g+rarKMa7FW5yl9Ewze61TYpP/zruwqHIeRhW7IFMzRrhthEJjvqYzA959/bEWQ
+	 L9CxgV3pI7X1JlGad3jykfnfmSJsYxF9dJZibNou3oEzsjTw59VMgUxowM+8k786TV
+	 bksGf5JI1GALdYWp7C74D5gUL9VE1NT82hi/rAhg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726267AbgIXUDq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 24 Sep 2020 16:03:46 -0400
-Received: from mga06.intel.com ([134.134.136.31]:36015 "EHLO mga06.intel.com"
+        id S1726281AbgIXUpi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 24 Sep 2020 16:45:38 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44084 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726037AbgIXUDp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 24 Sep 2020 16:03:45 -0400
-IronPort-SDR: IYli325ji+G4uJN/1ubvmQ8ogzuOh+c4D1Rr4sMvS1CWrEndxryWZMBISOC7US1n5w+ZzqYNlV
- /NHt26KYavnw==
-X-IronPort-AV: E=McAfee;i="6000,8403,9754"; a="222927111"
-X-IronPort-AV: E=Sophos;i="5.77,299,1596524400"; 
-   d="scan'208";a="222927111"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Sep 2020 13:03:36 -0700
-IronPort-SDR: rE7k9Y2C1CZ+onZsdxfwq3rMXOIxI0PfazBZOvmV8AIsKeex9TwCiMByFH1VnIxlAbirefXbiN
- BXma1uP5kcPQ==
-X-IronPort-AV: E=Sophos;i="5.77,299,1596524400"; 
-   d="scan'208";a="336143599"
-Received: from otc-nc-03.jf.intel.com (HELO otc-nc-03) ([10.54.39.36])
-  by fmsmga004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Sep 2020 13:03:35 -0700
-Date:   Thu, 24 Sep 2020 13:03:34 -0700
-From:   "Raj, Ashok" <ashok.raj@intel.com>
-To:     Rajat Jain <rajatja@google.com>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joerg Roedel <jroedel@suse.de>,
-        Lalithambika Krishnakumar <lalithambika.krishnakumar@intel.com>,
-        Lu Baolu <baolu.lu@linux.intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@fb.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        linux-nvme@lists.infradead.org,
-        "open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
-        Ashok Raj <ashok.raj@intel.com>
-Subject: Re: [bugzilla-daemon@bugzilla.kernel.org: [Bug 209149] New:
- "iommu/vt-d: Enable PCI ACS for platform opt in hint" makes NVMe config
- space not accessible after S3]
-Message-ID: <20200924200334.GC86064@otc-nc-03>
-References: <20200923160327.GA2267374@bjorn-Precision-5520>
- <20200923161944.GA17764@otc-nc-03>
- <CACK8Z6HkPBXeRnzeK9TdBSkJOPx=Q775065RRqeaa3XWajuZQw@mail.gmail.com>
+        id S1725208AbgIXUph (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 24 Sep 2020 16:45:37 -0400
+Received: from localhost (52.sub-72-107-123.myvzw.com [72.107.123.52])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id A2B72239CF;
+        Thu, 24 Sep 2020 20:45:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1600980337;
+        bh=CSiygoRkkeEiJ5Dg4g8lESgmoDARtWg5wsRqboDJATg=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=lbvEvN+hi7Xe6uDbbh0duG3bBFI4mlVC2eLJrkDrq0bm+QX7ibnnVWghVPjb8tcG0
+         YuJ+SGj7QBP8e0C3IlVs85IP5aYMRgjvFPdd5lkXT1H90pXt715BN77X7Al+8maXGt
+         XDHdgpcD74XDD+iMJSb18S06YsjZkz/XA9eYamuE=
+Date:   Thu, 24 Sep 2020 15:45:35 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Nitesh Narayan Lal <nitesh@redhat.com>
+Cc:     linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
+        frederic@kernel.org, mtosatti@redhat.com, sassmann@redhat.com,
+        jesse.brandeburg@intel.com, lihong.yang@intel.com,
+        jeffrey.t.kirsher@intel.com, jacob.e.keller@intel.com,
+        jlelli@redhat.com, hch@infradead.org, bhelgaas@google.com,
+        mike.marciniszyn@intel.com, dennis.dalessandro@intel.com,
+        thomas.lendacky@amd.com, jerinj@marvell.com,
+        mathias.nyman@intel.com, jiri@nvidia.com, mingo@redhat.com,
+        peterz@infradead.org, juri.lelli@redhat.com,
+        vincent.guittot@linaro.org
+Subject: Re: [PATCH v2 4/4] PCI: Limit pci_alloc_irq_vectors as per
+ housekeeping CPUs
+Message-ID: <20200924204535.GA2337207@bjorn-Precision-5520>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CACK8Z6HkPBXeRnzeK9TdBSkJOPx=Q775065RRqeaa3XWajuZQw@mail.gmail.com>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+In-Reply-To: <20200923181126.223766-5-nitesh@redhat.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Sep 23, 2020 at 12:45:11PM -0700, Rajat Jain wrote:
-> On Wed, Sep 23, 2020 at 9:19 AM Raj, Ashok <ashok.raj@intel.com> wrote:
-> >
-> > Hi Bjorn
-> >
-> >
-> > On Wed, Sep 23, 2020 at 11:03:27AM -0500, Bjorn Helgaas wrote:
-> > > [+cc IOMMU and NVMe folks]
-> > >
-> > > Sorry, I forgot to forward this to linux-pci when it was first
-> > > reported.
-> > >
-> > > Apparently this happens with v5.9-rc3, and may be related to
-> > > 50310600ebda ("iommu/vt-d: Enable PCI ACS for platform opt in hint"),
-> > > which appeared in v5.8-rc3.
-> > >
-> > > There are several dmesg logs and proposed patches in the bugzilla, but
-> > > no analysis yet of what the problem is.  From the first dmesg
-> > > attachment (https://bugzilla.kernel.org/attachment.cgi?id=292327):
-> >
-> > We have been investigating this internally as well. It appears maybe the
-> > specupdate for Cometlake is missing the errata documention. The offsets
-> > were wrong in some of them, and if its the same issue its likely cause.
+Possible subject:
+
+  PCI: Limit pci_alloc_irq_vectors() to housekeeping CPUs
+
+On Wed, Sep 23, 2020 at 02:11:26PM -0400, Nitesh Narayan Lal wrote:
+> This patch limits the pci_alloc_irq_vectors, max_vecs argument that is
+> passed on by the caller based on the housekeeping online CPUs (that are
+> meant to perform managed IRQ jobs).
+>
+> A minimum of the max_vecs passed and housekeeping online CPUs is derived
+> to ensure that we don't create excess vectors as that can be problematic
+> specifically in an RT environment. In cases where the min_vecs exceeds the
+> housekeeping online CPUs, max vecs is restricted based on the min_vecs
+> instead. The proposed change is required because for an RT environment
+> unwanted IRQs are moved to the housekeeping CPUs from isolated CPUs to
+> keep the latency overhead to a minimum. If the number of housekeeping CPUs
+> is significantly lower than that of the isolated CPUs we can run into
+> failures while moving these IRQs to housekeeping CPUs due to per CPU
+> vector limit.
+
+Does this capture enough of the log?
+
+  If we have isolated CPUs dedicated for use by real-time tasks, we
+  try to move IRQs to housekeeping CPUs to reduce overhead on the
+  isolated CPUs.
+
+  If we allocate too many IRQ vectors, moving them all to housekeeping
+  CPUs may exceed per-CPU vector limits.
+
+  When we have isolated CPUs, limit the number of vectors allocated by
+  pci_alloc_irq_vectors() to the minimum number required by the
+  driver, or to one per housekeeping CPU if that is larger.
+
+> Signed-off-by: Nitesh Narayan Lal <nitesh@redhat.com>
+> ---
+>  include/linux/pci.h | 15 +++++++++++++++
+>  1 file changed, 15 insertions(+)
 > 
-> Can you please also confirm if errata applies to Tigerlake ?
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 835530605c0d..cf9ca9410213 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -38,6 +38,7 @@
+>  #include <linux/interrupt.h>
+>  #include <linux/io.h>
+>  #include <linux/resource_ext.h>
+> +#include <linux/sched/isolation.h>
+>  #include <uapi/linux/pci.h>
+>  
+>  #include <linux/pci_ids.h>
+> @@ -1797,6 +1798,20 @@ static inline int
+>  pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
+>  		      unsigned int max_vecs, unsigned int flags)
+>  {
+> +	unsigned int hk_cpus = hk_num_online_cpus();
+> +
+> +	/*
+> +	 * For a real-time environment, try to be conservative and at max only
+> +	 * ask for the same number of vectors as there are housekeeping online
+> +	 * CPUs. In case, the min_vecs requested exceeds the housekeeping
+> +	 * online CPUs, restrict the max_vecs based on the min_vecs instead.
+> +	 */
+> +	if (hk_cpus != num_online_cpus()) {
+> +		if (min_vecs > hk_cpus)
+> +			max_vecs = min_vecs;
+> +		else
+> +			max_vecs = min_t(int, max_vecs, hk_cpus);
+> +	}
+
+Is the below basically the same?
+
+	/*
+	 * If we have isolated CPUs for use by real-time tasks,
+	 * minimize overhead on those CPUs by moving IRQs to the
+	 * remaining "housekeeping" CPUs.  Limit vector usage to keep
+	 * housekeeping CPUs from running out of IRQ vectors.
+	 */
+	if (housekeeping_cpus < num_online_cpus()) {
+		if (housekeeping_cpus < min_vecs)
+			max_vecs = min_vecs;
+		else if (housekeeping_cpus < max_vecs)
+			max_vecs = housekeeping_cpus;
+	}
+
+My comment isn't quite right because this patch only limits the number
+of vectors; it doesn't actually *move* IRQs to the housekeeping CPUs.
+I don't know where the move happens (or maybe you just avoid assigning
+IRQs to isolated CPUs, and I don't know how that happens either).
+
+>  	return pci_alloc_irq_vectors_affinity(dev, min_vecs, max_vecs, flags,
+>  					      NULL);
+>  }
+> -- 
+> 2.18.2
 > 
-
-We confirmed ICL/TGL isn't affected.
-
-
