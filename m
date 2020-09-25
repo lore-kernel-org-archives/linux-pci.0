@@ -2,115 +2,101 @@ Return-Path: <SRS0=DXvE=DC=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A32B6C4363D
-	for <linux-pci@archiver.kernel.org>; Fri, 25 Sep 2020 18:17:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E000EC4727E
+	for <linux-pci@archiver.kernel.org>; Fri, 25 Sep 2020 18:27:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 73AAB235F9
-	for <linux-pci@archiver.kernel.org>; Fri, 25 Sep 2020 18:17:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 75E42208B6
+	for <linux-pci@archiver.kernel.org>; Fri, 25 Sep 2020 18:27:11 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gJ31wfGv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729620AbgIYSRD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 25 Sep 2020 14:17:03 -0400
-Received: from mga05.intel.com ([192.55.52.43]:30408 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728353AbgIYSRC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 25 Sep 2020 14:17:02 -0400
-IronPort-SDR: D1LUz2e5iEgtd9MY1eYb289kmfTTgVgfWosmIZ3jWTRHvIE4KvLA/ULg88EybpWsqMA8NlfwKJ
- bc4S2q3/3vgA==
-X-IronPort-AV: E=McAfee;i="6000,8403,9755"; a="246385757"
-X-IronPort-AV: E=Sophos;i="5.77,302,1596524400"; 
-   d="scan'208";a="246385757"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Sep 2020 11:17:01 -0700
-IronPort-SDR: iPxBmzfK6F2DyPoIigBaHYym+cq9qAstU4U4Ztm+Hg0lx4gQzgo25OcEIbiNGvvSxI/W+93Dgb
- 4XolPQcd0Awg==
-X-IronPort-AV: E=Sophos;i="5.77,302,1596524400"; 
-   d="scan'208";a="455947520"
-Received: from kritigup-mobl.amr.corp.intel.com (HELO [10.255.231.88]) ([10.255.231.88])
-  by orsmga004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Sep 2020 11:16:59 -0700
-Subject: Re: [PATCH v3 1/1] PCI/ERR: Fix reset logic in pcie_do_recovery()
- call
-To:     Sinan Kaya <okaya@kernel.org>, Bjorn Helgaas <helgaas@kernel.org>
-Cc:     bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, ashok.raj@intel.com,
-        Jay Vosburgh <jay.vosburgh@canonical.com>
-References: <20200922233333.GA2239404@bjorn-Precision-5520>
- <704c39bf-6f0c-bba3-70b8-91de6a445e43@linux.intel.com>
- <3d27d0a4-2115-fa72-8990-a84910e4215f@kernel.org>
- <d5aa53dc-0c94-e57a-689a-1c1f89787af1@linux.intel.com>
- <526dc846-b12b-3523-4995-966eb972ceb7@kernel.org>
- <1fdcc4a6-53b7-2b5f-8496-f0f09405f561@linux.intel.com>
- <aef0b9aa-59f5-9ec3-adac-5bc366b362e0@kernel.org>
- <a647f485-8db4-db45-f404-940b55117b53@linux.intel.com>
- <aefd8842-90c4-836a-b43a-f21c5428d2ba@kernel.org>
- <95e23cb5-f6e1-b121-0de8-a2066d507d9c@linux.intel.com>
- <65238d0b-0a39-400a-3a18-4f68eb554538@kernel.org>
- <4ae86061-2182-bcf1-ebd7-485acf2d47b9@linux.intel.com>
- <f360165e-5f73-057c-efd1-557b5e5027eb@kernel.org>
-From:   "Kuppuswamy, Sathyanarayanan" 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>
-Message-ID: <8beca800-ffb5-c535-6d43-7e750cbf06d0@linux.intel.com>
-Date:   Fri, 25 Sep 2020 11:16:56 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
-MIME-Version: 1.0
-In-Reply-To: <f360165e-5f73-057c-efd1-557b5e5027eb@kernel.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        id S1729354AbgIYS1K (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 25 Sep 2020 14:27:10 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:34698 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727733AbgIYS1K (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Sep 2020 14:27:10 -0400
+Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1601058429;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:in-reply-to:in-reply-to:references:references;
+        bh=iL0bUDw4mzTbRn0mPQir1H2iMDlMMQuuu3RzcEtjrtI=;
+        b=gJ31wfGvNBebhtcn8xdcpRU/pa1hSv6zu3kbi37s8ISnNiRrAPMwEBMnuhiVuztliE+2zq
+        4Vkow0xZ3XWzVQAi1D2kONg7BLN9iccI9NH4BR+vN16P28Vp6Kc8K22XgPerzJ25DckJsq
+        Ou0SeVaOxnR+Y/5ND6XqVJX7IVRA0Dg=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-102-wptPqlM6OdSLHFgjXOJGwA-1; Fri, 25 Sep 2020 14:27:07 -0400
+X-MC-Unique: wptPqlM6OdSLHFgjXOJGwA-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 6B23E1084C97;
+        Fri, 25 Sep 2020 18:27:05 +0000 (UTC)
+Received: from virtlab719.virt.lab.eng.bos.redhat.com (virtlab719.virt.lab.eng.bos.redhat.com [10.19.153.15])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id BA0A578831;
+        Fri, 25 Sep 2020 18:27:03 +0000 (UTC)
+From:   Nitesh Narayan Lal <nitesh@redhat.com>
+To:     linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
+        frederic@kernel.org, mtosatti@redhat.com, sassmann@redhat.com,
+        jesse.brandeburg@intel.com, lihong.yang@intel.com,
+        helgaas@kernel.org, nitesh@redhat.com, jeffrey.t.kirsher@intel.com,
+        jacob.e.keller@intel.com, jlelli@redhat.com, hch@infradead.org,
+        bhelgaas@google.com, mike.marciniszyn@intel.com,
+        dennis.dalessandro@intel.com, thomas.lendacky@amd.com,
+        jiri@nvidia.com, mingo@redhat.com, peterz@infradead.org,
+        juri.lelli@redhat.com, vincent.guittot@linaro.org,
+        lgoncalv@redhat.com
+Subject: [PATCH v3 1/4] sched/isolation: API to get number of housekeeping CPUs
+Date:   Fri, 25 Sep 2020 14:26:51 -0400
+Message-Id: <20200925182654.224004-2-nitesh@redhat.com>
+In-Reply-To: <20200925182654.224004-1-nitesh@redhat.com>
+References: <20200925182654.224004-1-nitesh@redhat.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Introduce a new API housekeeping_num_online_cpus(), that can be used to
+retrieve the number of online housekeeping CPUs based on the housekeeping
+flag passed by the caller.
 
+Some of the consumers for this API are the device drivers that were
+previously relying only on num_online_cpus() to determine the number of
+MSIX vectors to create. In real-time environments to minimize interruptions
+to isolated CPUs, all device-specific IRQ vectors are often moved to the
+housekeeping CPUs, having excess vectors could cause housekeeping CPU to
+run out of IRQ vectors.
 
-On 9/25/20 10:47 AM, Sinan Kaya wrote:
-> On 9/25/2020 1:11 PM, Kuppuswamy, Sathyanarayanan wrote:
->>> Why? Isn't DPC slot reset enough?
->> It will do the reset at hardware level. But driver state is not
->> cleaned up. So doing bus reset will restore both driver and
->> hardware states.
-> 
-> I really don't like this. If hotplug driver is restoring the state
-> and DPC driver is not; let's fix the DPC driver rather than causing
-> two resets and hope for the best.
-> 
-> One approach is to share the restore code between hotplug driver and
-> DPC driver.
-> 
-> If this is a too involved change, DPC driver should restore state
-> when hotplug is not supported.
-Yes. we can add a condition for hotplug capability check.
-> 
-> DPC driver should be self-sufficient by itself.
-> 
->> Also for non-fatal errors, if reset is requested then we still need
->> some kind of bus reset call here
-> 
-> DPC should handle both fatal and non-fatal cases
-Currently DPC is only triggered for FATAL errors.
-  and cause a bus reset
-> in hardware already before triggering an interrupt.
-Error recovery is not triggered only DPC driver. AER also uses the
-same error recovery code. If DPC is not supported, then we still need
-reset logic.
-> 
-> I disagree that you need an additional reset on top of DPC reset.
-> Isn't one reset enough?
-> 
-> What will the second reset provide that first reset won't provide?
-> 
-> I see that you are trying to do the second reset only because second
-> reset restores state.
-> 
-> That looks like a short-term fix only to explode on the next iteration.
-> 
+Signed-off-by: Nitesh Narayan Lal <nitesh@redhat.com>
+---
+ include/linux/sched/isolation.h | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
+diff --git a/include/linux/sched/isolation.h b/include/linux/sched/isolation.h
+index cc9f393e2a70..e021b1846c1d 100644
+--- a/include/linux/sched/isolation.h
++++ b/include/linux/sched/isolation.h
+@@ -57,4 +57,13 @@ static inline bool housekeeping_cpu(int cpu, enum hk_flags flags)
+ 	return true;
+ }
+ 
++static inline unsigned int housekeeping_num_online_cpus(enum hk_flags flags)
++{
++#ifdef CONFIG_CPU_ISOLATION
++	if (static_branch_unlikely(&housekeeping_overridden))
++		return cpumask_weight(housekeeping_cpumask(flags));
++#endif
++	return num_online_cpus();
++}
++
+ #endif /* _LINUX_SCHED_ISOLATION_H */
 -- 
-Sathyanarayanan Kuppuswamy
-Linux Kernel Developer
+2.18.2
+
