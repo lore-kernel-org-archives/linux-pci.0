@@ -4,137 +4,140 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14E5AC4741F
-	for <linux-pci@archiver.kernel.org>; Fri, 25 Sep 2020 20:35:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DE2AC4727F
+	for <linux-pci@archiver.kernel.org>; Fri, 25 Sep 2020 21:13:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BC179206FC
-	for <linux-pci@archiver.kernel.org>; Fri, 25 Sep 2020 20:35:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4371021D7F
+	for <linux-pci@archiver.kernel.org>; Fri, 25 Sep 2020 21:13:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1601066126;
-	bh=+CwG8PMkVFhMLUU31Blay8HXYnthfew4j3ndlVqdqV4=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=nQe/qS0TG661AzKDUesOAv57k6VGV9YxoxWzxiAx8Q6zxyffQduZJhz/OsjkRXl/Y
-	 198eKeURmmjP9zaOoObmrgYKHNQqBzOeRStEUXfCZc3TWpoR05uN72AFsWMf+1vLLh
-	 CP9rkA2Lq8MHkzj11Q8Ge91zLQS//c6Wntdo5/kI=
+	s=default; t=1601068418;
+	bh=/tR+/EYaaAhbPg6pn9KIjDV7/rzzxImpGpXxTo/0g9c=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=FtDIP3+KWub6DulGXAnl8d7FyYLta/kplCXgMXw9qQy4eZAILa/fgaQtFk9EWOpOn
+	 qIFNW0YRccPg3vRnvX45Frv9cDgAC1bKSASLDRs/LLHPZb/2u0n5Yz+L+dupkDxKsg
+	 2u2RM7kbcoT/uLzYpUpVrrpLo850/FGVRavaR9zY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728875AbgIYUdS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 25 Sep 2020 16:33:18 -0400
-Received: from mail.kernel.org ([198.145.29.99]:44258 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726210AbgIYUZb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 25 Sep 2020 16:25:31 -0400
-Received: from localhost (52.sub-72-107-123.myvzw.com [72.107.123.52])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4AD3623A05;
-        Fri, 25 Sep 2020 19:59:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1601063956;
-        bh=+CwG8PMkVFhMLUU31Blay8HXYnthfew4j3ndlVqdqV4=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=OWhggZDhSYl0qMYW0YAQIddY39OAOqqLqFyDjAQ/ZX9r5LIP4fixN2DVMJ7QOyqxo
-         BbiWoEJ+dbsG7/ajKgMTnQ+fievEx2WK/XQIsAfvzgiyKkMH+0vUFn/ToNY+k1ImkW
-         ksSTroXu6gpfpxq8RExqFYGVpFMen7YdW8qgv6Ww=
-Date:   Fri, 25 Sep 2020 14:59:13 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Sean V Kelley <seanvk.dev@oregontracks.org>
-Cc:     bhelgaas@google.com, Jonathan.Cameron@huawei.com,
-        rafael.j.wysocki@intel.com, ashok.raj@intel.com,
-        tony.luck@intel.com, sathyanarayanan.kuppuswamy@intel.com,
-        qiuxu.zhuo@intel.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Sean V Kelley <sean.v.kelley@intel.com>
-Subject: Re: [PATCH v6 02/10] PCI/RCEC: Bind RCEC devices to the Root Port
- driver
-Message-ID: <20200925195913.GA2455203@bjorn-Precision-5520>
+        id S1728150AbgIYVNh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 25 Sep 2020 17:13:37 -0400
+Received: from mail-io1-f67.google.com ([209.85.166.67]:38858 "EHLO
+        mail-io1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728171AbgIYVNh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Sep 2020 17:13:37 -0400
+Received: by mail-io1-f67.google.com with SMTP id q4so4513799iop.5;
+        Fri, 25 Sep 2020 14:13:36 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=8kwDPxGWO4Zarxs+976VhrgRShKS6L8rrmLcdeo03XU=;
+        b=bH/1qrFFXBB+RdHaYuesSn2ZJcCnGGEyTyLGosZ/9cVR1NiXHaLXberYDX69X1uKLN
+         zIgF7TTeuuoBevGkEQ8r2CyYWhHHTN8xgBLs97grXMuTfD+ZT7gNkY4LyA1DeJBY4zT0
+         5N1klZwobGIOUtZhpVSlaSQX2lDJaLn8ob9rZRyIgRCrQ8e7FOfqnuBWk8akltqiOvde
+         I1XTm0ZYdEBHpQoY+7dvk8eDSuSPaNJerLilpz+/61bPUW3f9EJdlE1KTDAFWpXRjBin
+         hlMwwarAeD+x1K5KrpBrsJ3u4V1qqL4oPpN+j/zHs4WwKaJdl7ykLD8HwEHTDqMSBEYL
+         Zg+Q==
+X-Gm-Message-State: AOAM530BesOfRlxhKsESc1x0g3xIqut4R18wfkpd5ekObIPoluxgoh62
+        L/zcOsbd5HSsh933SDx7Pe1hoYa8C3EH
+X-Google-Smtp-Source: ABdhPJzcS6KJxgxXK5xNBZe2qTu3yKbC+yVLPJn/UV/Er3LVgOvC7c2afoKP/sKN6F+XgON+lf0dUQ==
+X-Received: by 2002:a5d:97cd:: with SMTP id k13mr367521ios.164.1601068416055;
+        Fri, 25 Sep 2020 14:13:36 -0700 (PDT)
+Received: from xps15 ([64.188.179.253])
+        by smtp.gmail.com with ESMTPSA id o13sm2302386ilk.40.2020.09.25.14.13.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 25 Sep 2020 14:13:35 -0700 (PDT)
+Received: (nullmailer pid 980712 invoked by uid 1000);
+        Fri, 25 Sep 2020 21:13:34 -0000
+Date:   Fri, 25 Sep 2020 15:13:34 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Kevin Hilman <khilman@baylibre.com>
+Cc:     linux-pci@vger.kernel.org, linux-amlogic@lists.infradead.org,
+        Yue Wang <yue.wang@amlogic.com>, linux-kernel@vger.kernel.org,
+        Neil Armstrong <narmstrong@baylibre.com>
+Subject: Re: [PATCH] pci: meson: build as module by default
+Message-ID: <20200925211334.GA972187@bogus>
+References: <20200918181251.32423-1-khilman@baylibre.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200922213859.108826-3-seanvk.dev@oregontracks.org>
+In-Reply-To: <20200918181251.32423-1-khilman@baylibre.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Sep 22, 2020 at 02:38:51PM -0700, Sean V Kelley wrote:
-> From: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+On Fri, Sep 18, 2020 at 11:12:51AM -0700, Kevin Hilman wrote:
+> Enable pci-meson to build as a module whenever ARCH_MESON is enabled.
 > 
-> If a Root Complex Integrated Endpoint (RCiEP) is implemented, errors may
-> optionally be sent to a corresponding Root Complex Event Collector (RCEC).
-> Each RCiEP must be associated with no more than one RCEC. Interface errors
-> are reported to the OS by RCECs.
-> 
-> For an RCEC (technically not a Bridge), error messages "received" from
-> associated RCiEPs must be enabled for "transmission" in order to cause a
-> System Error via the Root Control register or (when the Advanced Error
-> Reporting Capability is present) reporting via the Root Error Command
-> register and logging in the Root Error Status register and Error Source
-> Identification register.
-> 
-> Given the commonality with Root Ports and the need to also support AER
-> and PME services for RCECs, extend the Root Port driver to support RCEC
-> devices through the addition of the RCEC Class ID to the driver
-> structure.
-> 
-> Co-developed-by: Sean V Kelley <sean.v.kelley@intel.com>
-> Signed-off-by: Sean V Kelley <sean.v.kelley@intel.com>
-> Signed-off-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
-> Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+> Cc: Yue Wang <yue.wang@amlogic.com>
+> Signed-off-by: Kevin Hilman <khilman@baylibre.com>
 > ---
->  drivers/pci/pcie/portdrv_core.c | 8 ++++----
->  drivers/pci/pcie/portdrv_pci.c  | 5 ++++-
->  2 files changed, 8 insertions(+), 5 deletions(-)
+> Tested on Khadas VIM3 and Khadas VIM3 using NVMe SSD devices.
 > 
-> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-> index 50a9522ab07d..99769c636775 100644
-> --- a/drivers/pci/pcie/portdrv_core.c
-> +++ b/drivers/pci/pcie/portdrv_core.c
-> @@ -234,11 +234,11 @@ static int get_port_device_capability(struct pci_dev *dev)
->  #endif
+>  drivers/pci/controller/dwc/Kconfig     | 3 ++-
+>  drivers/pci/controller/dwc/pci-meson.c | 8 +++++++-
+>  2 files changed, 9 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
+> index 044a3761c44f..bc049865f8e0 100644
+> --- a/drivers/pci/controller/dwc/Kconfig
+> +++ b/drivers/pci/controller/dwc/Kconfig
+> @@ -237,8 +237,9 @@ config PCIE_HISI_STB
+>  	  Say Y here if you want PCIe controller support on HiSilicon STB SoCs
 >  
->  	/*
-> -	 * Root ports are capable of generating PME too.  Root Complex
-> -	 * Event Collectors can also generate PMEs, but we don't handle
-> -	 * those yet.
-> +	 * Root ports and Root Complex Event Collectors are capable
-> +	 * of generating PME.
->  	 */
-> -	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT &&
-> +	if ((pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
-> +	     pci_pcie_type(dev) == PCI_EXP_TYPE_RC_EC) &&
+>  config PCI_MESON
+> -	bool "MESON PCIe controller"
+> +	tristate "MESON PCIe controller"
+>  	depends on PCI_MSI_IRQ_DOMAIN
+> +	default m if ARCH_MESON
+>  	select PCIE_DW_HOST
+>  	help
+>  	  Say Y here if you want to enable PCI controller support on Amlogic
+> diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/controller/dwc/pci-meson.c
+> index 4f183b96afbb..7a1fb55ee44a 100644
+> --- a/drivers/pci/controller/dwc/pci-meson.c
+> +++ b/drivers/pci/controller/dwc/pci-meson.c
+> @@ -17,6 +17,7 @@
+>  #include <linux/resource.h>
+>  #include <linux/types.h>
+>  #include <linux/phy/phy.h>
+> +#include <linux/module.h>
+>  
+>  #include "pcie-designware.h"
+>  
+> @@ -589,6 +590,7 @@ static const struct of_device_id meson_pcie_of_match[] = {
+>  	},
+>  	{},
+>  };
+> +MODULE_DEVICE_TABLE(of, meson_pcie_of_match);
+>  
+>  static struct platform_driver meson_pcie_driver = {
+>  	.probe = meson_pcie_probe,
 
-It seems like this change belongs in patch 09/10, where we change
-pme.c so it claims both Root Ports and RCECs.  Does this hunk
-accomplish anything before 09/10?
+You need a remove hook to tear down the PCI bus at least. 
 
->  	    (pcie_ports_native || host->native_pme)) {
->  		services |= PCIE_PORT_SERVICE_PME;
->  
-> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-> index 3a3ce40ae1ab..4d880679b9b1 100644
-> --- a/drivers/pci/pcie/portdrv_pci.c
-> +++ b/drivers/pci/pcie/portdrv_pci.c
-> @@ -106,7 +106,8 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
->  	if (!pci_is_pcie(dev) ||
->  	    ((pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT) &&
->  	     (pci_pcie_type(dev) != PCI_EXP_TYPE_UPSTREAM) &&
-> -	     (pci_pcie_type(dev) != PCI_EXP_TYPE_DOWNSTREAM)))
-> +	     (pci_pcie_type(dev) != PCI_EXP_TYPE_DOWNSTREAM) &&
-> +	     (pci_pcie_type(dev) != PCI_EXP_TYPE_RC_EC)))
->  		return -ENODEV;
->  
->  	status = pcie_port_device_register(dev);
-> @@ -195,6 +196,8 @@ static const struct pci_device_id port_pci_ids[] = {
->  	{ PCI_DEVICE_CLASS(((PCI_CLASS_BRIDGE_PCI << 8) | 0x00), ~0) },
->  	/* subtractive decode PCI-to-PCI bridge, class type is 060401h */
->  	{ PCI_DEVICE_CLASS(((PCI_CLASS_BRIDGE_PCI << 8) | 0x01), ~0) },
-> +	/* handle any Root Complex Event Collector */
-> +	{ PCI_DEVICE_CLASS(((PCI_CLASS_SYSTEM_RCEC << 8) | 0x00), ~0) },
->  	{ },
+Really I'd like to add a devres hook in pci_host_probe to do that for 
+all the drivers.
+
+> @@ -598,4 +600,8 @@ static struct platform_driver meson_pcie_driver = {
+>  	},
 >  };
 >  
+> -builtin_platform_driver(meson_pcie_driver);
+> +module_platform_driver(meson_pcie_driver);
+> +
+> +MODULE_AUTHOR("Yue Wang <yue.wang@amlogic.com>");
+> +MODULE_DESCRIPTION("Amlogic PCIe Controller driver");
+> +MODULE_LICENSE("Dual BSD/GPL");
+
+First line is: SPDX-License-Identifier: GPL-2.0
+
 > -- 
 > 2.28.0
 > 
+> 
+> _______________________________________________
+> linux-amlogic mailing list
+> linux-amlogic@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-amlogic
