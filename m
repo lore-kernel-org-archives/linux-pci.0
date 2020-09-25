@@ -2,95 +2,96 @@ Return-Path: <SRS0=DXvE=DC=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C517BC4727E
-	for <linux-pci@archiver.kernel.org>; Fri, 25 Sep 2020 23:29:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11820C4727C
+	for <linux-pci@archiver.kernel.org>; Fri, 25 Sep 2020 23:48:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8A3A821775
-	for <linux-pci@archiver.kernel.org>; Fri, 25 Sep 2020 23:29:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DA27521775
+	for <linux-pci@archiver.kernel.org>; Fri, 25 Sep 2020 23:48:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726559AbgIYX31 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 25 Sep 2020 19:29:27 -0400
-Received: from mga18.intel.com ([134.134.136.126]:29551 "EHLO mga18.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729374AbgIYX3V (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 25 Sep 2020 19:29:21 -0400
-IronPort-SDR: cBTUvAgyNrH62XqEpvzXSNpQf8tcUMaw0ePe2ykiyk5V28cYd2T0GbYKOPlTn9g00C7WxqufTo
- c+49bP7xTt9g==
-X-IronPort-AV: E=McAfee;i="6000,8403,9755"; a="149433238"
-X-IronPort-AV: E=Sophos;i="5.77,303,1596524400"; 
-   d="scan'208";a="149433238"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Sep 2020 16:29:19 -0700
-IronPort-SDR: jJ/NDNiHHHcVPeOAku2Bzx5ELAK98P6o2haesSwEk2mePU/i3grj4VErFEwP+6WEedbY8cYQkU
- i3Q883OEFmKA==
-X-IronPort-AV: E=Sophos;i="5.77,303,1596524400"; 
-   d="scan'208";a="337051730"
-Received: from msbergin-mobl.amr.corp.intel.com (HELO localhost.localdomain) ([10.212.110.90])
-  by fmsmga004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Sep 2020 16:29:15 -0700
-From:   Vinicius Costa Gomes <vinicius.gomes@intel.com>
-To:     intel-wired-lan@lists.osuosl.org
-Cc:     Vinicius Costa Gomes <vinicius.gomes@intel.com>,
-        sasha.neftin@intel.com, andre.guedes@intel.com,
-        anthony.l.nguyen@intel.com, linux-pci@vger.kernel.org,
-        bhelgaas@google.com, netdev@vger.kernel.org
-Subject: [PATCH next-queue v1 0/3] igc: Add support for PCIe PTM
-Date:   Fri, 25 Sep 2020 16:28:31 -0700
-Message-Id: <20200925232834.2704711-1-vinicius.gomes@intel.com>
+        id S1729724AbgIYXsJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 25 Sep 2020 19:48:09 -0400
+Received: from mail-lf1-f65.google.com ([209.85.167.65]:41800 "EHLO
+        mail-lf1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729549AbgIYXr5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Sep 2020 19:47:57 -0400
+Received: by mail-lf1-f65.google.com with SMTP id y17so4599099lfa.8;
+        Fri, 25 Sep 2020 16:47:56 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=66bypUmih1JiEGjHtw9M23S4MfR794g05kwseF1xQyY=;
+        b=B2DFMiCSECF7MHk46ssboGP5N/WrApJhs3ioXV3EMy3nKXTwSTbVPZ5/cmyBbUSKZc
+         TNnqoKWdaG2gDZRu3z0u4ZXLW6GQUf5/GPnkxb49dWsLPa84ry/XUrah9h4Eu67CWCYj
+         0K98kIK92+gCGqu9brX3qJeeV0UG/qlxGV4Q5eYHjEWrTCEo4e0uT91WgrkTL5/h8iz3
+         kEfL+ytofopQhFEpB1rFR+i72qC26LB9j6npyv66LQdakdYvrmuEV8b0vkOSTh84jbeB
+         XfTmGvlNIHzbwzJmZEadFsmJqsBVJcK2g+ef32r/kSZ4Nn1P/mlioscYYbqadVT18Qq9
+         KCgQ==
+X-Gm-Message-State: AOAM533EpFJEvcZvzgGJVR52uJ5LcK0vklWnMRSQiukGW925EYEOduU0
+        NZ3q1Ukytp0GY9vUXIzVIWQ=
+X-Google-Smtp-Source: ABdhPJyWeqBa3lvDurrhgEYjjcDV2F1CFpmMBZ1kf2SE3EX9twMQP9mphmB36AfqmNWqEI//JBWNNQ==
+X-Received: by 2002:a19:614b:: with SMTP id m11mr433037lfk.6.1601077675489;
+        Fri, 25 Sep 2020 16:47:55 -0700 (PDT)
+Received: from workstation.lan ([95.155.85.46])
+        by smtp.gmail.com with ESMTPSA id l188sm420751lfd.127.2020.09.25.16.47.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 25 Sep 2020 16:47:54 -0700 (PDT)
+From:   =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
+To:     "K. Y. Srinivasan" <kys@microsoft.com>
+Cc:     Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Wei Liu <wei.liu@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH] PCI: hv: Document missing hv_pci_protocol_negotiation() parameter
+Date:   Fri, 25 Sep 2020 23:47:53 +0000
+Message-Id: <20200925234753.1767227-1-kw@linux.com>
 X-Mailer: git-send-email 2.28.0
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
+Add missing documentation for the parameter "version" and "num_version"
+of the hv_pci_protocol_negotiation() function and resolve build time
+kernel-doc warnings:
 
-This adds support for PCIe PTM (Precision Time Measurement) to the igc
-driver. PCIe PTM allows the NIC and Host clocks to be compared more
-precisely, improving the clock synchronization accuracy.
+  drivers/pci/controller/pci-hyperv.c:2535: warning: Function parameter
+  or member 'version' not described in 'hv_pci_protocol_negotiation'
 
-Patch 1/3 reverts a commit that made pci_enable_ptm() private to the
-PCI subsystem, reverting makes it possible for it to be called from
-the drivers.
+  drivers/pci/controller/pci-hyperv.c:2535: warning: Function parameter
+  or member 'num_version' not described in 'hv_pci_protocol_negotiation'
 
-Patch 2/3 calls pci_enable_ptm() from the igc driver.
+No change to functionality intended.
 
-Patch 3/3 implements the PCIe PTM support. It adds a workqueue that
-reads the PTM registers periodically and collects the information so a
-subsequent call to getcrosststamp() has all the timestamps needed.
+Signed-off-by: Krzysztof Wilczyński <kw@linux.com>
+---
+ drivers/pci/controller/pci-hyperv.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-Some questions are raised (also pointed out in the commit message):
-
-1. Using convert_art_ns_to_tsc() is too x86 specific, there should be
-   a common way to create a 'system_counterval_t' from a timestamp.
-    
-2. convert_art_ns_to_tsc() says that it should only be used when
-   X86_FEATURE_TSC_KNOWN_FREQ is true, but during tests it works even
-   when it returns false. Should that check be done?
-
-Cheers,
-
-
-Vinicius Costa Gomes (3):
-  Revert "PCI: Make pci_enable_ptm() private"
-  igc: Enable PCIe PTM
-  igc: Add support for PTP getcrosststamp()
-
- drivers/net/ethernet/intel/igc/igc.h         |   7 +
- drivers/net/ethernet/intel/igc/igc_defines.h |  22 +++
- drivers/net/ethernet/intel/igc/igc_main.c    |   7 +
- drivers/net/ethernet/intel/igc/igc_ptp.c     | 166 +++++++++++++++++++
- drivers/net/ethernet/intel/igc/igc_regs.h    |  23 +++
- drivers/pci/pci.h                            |   3 -
- include/linux/pci.h                          |   7 +
- 7 files changed, 232 insertions(+), 3 deletions(-)
-
+diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+index fc4c3a15e570..6102330e27e1 100644
+--- a/drivers/pci/controller/pci-hyperv.c
++++ b/drivers/pci/controller/pci-hyperv.c
+@@ -2515,7 +2515,10 @@ static void hv_pci_onchannelcallback(void *context)
+ 
+ /**
+  * hv_pci_protocol_negotiation() - Set up protocol
+- * @hdev:	VMBus's tracking struct for this root PCI bus
++ * @hdev:		VMBus's tracking struct for this root PCI bus.
++ * @version:		Array of supported channel protocol versions in
++ *			the order of probing - highest go first.
++ * @num_version:	Number of elements in the version array.
+  *
+  * This driver is intended to support running on Windows 10
+  * (server) and later versions. It will not run on earlier
 -- 
 2.28.0
 
