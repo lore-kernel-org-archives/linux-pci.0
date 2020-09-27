@@ -2,91 +2,119 @@ Return-Path: <SRS0=D2E3=DE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4613AC4346E
-	for <linux-pci@archiver.kernel.org>; Sun, 27 Sep 2020 08:29:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65C63C4727E
+	for <linux-pci@archiver.kernel.org>; Sun, 27 Sep 2020 08:46:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1A95923977
-	for <linux-pci@archiver.kernel.org>; Sun, 27 Sep 2020 08:29:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1B43223977
+	for <linux-pci@archiver.kernel.org>; Sun, 27 Sep 2020 08:46:49 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="vtWT6FXN";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="2lHZQSLV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730608AbgI0I3i (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 27 Sep 2020 04:29:38 -0400
-Received: from mga03.intel.com ([134.134.136.65]:31488 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730585AbgI0I3e (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 27 Sep 2020 04:29:34 -0400
-IronPort-SDR: aGacv/YwZE/Wi8/iVAOjDn78s9ds72acb2CKU/qDFzAo+Ejj3lqhIA9BgJRksyI0FDUm+AXbce
- j2lOjmDHl1ow==
-X-IronPort-AV: E=McAfee;i="6000,8403,9756"; a="161912226"
-X-IronPort-AV: E=Sophos;i="5.77,309,1596524400"; 
-   d="scan'208";a="161912226"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Sep 2020 01:29:34 -0700
-IronPort-SDR: 40aHObQAnplGBnYqAfIAN3SuQU5CaBFREZ3wHS83PY0KCkuXEjpQpS4wrnGDOrMkuUmwO3uFOe
- fXFa5J8+3/Iw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.77,309,1596524400"; 
-   d="scan'208";a="456437758"
-Received: from shskylake.sh.intel.com ([10.239.48.137])
-  by orsmga004.jf.intel.com with ESMTP; 27 Sep 2020 01:29:30 -0700
-From:   Ethan Zhao <haifeng.zhao@intel.com>
-To:     bhelgaas@google.com, oohall@gmail.com, ruscur@russell.cc,
-        lukas@wunner.de, andriy.shevchenko@linux.intel.com,
-        stuart.w.hayes@gmail.com, mr.nuke.me@gmail.com,
-        mika.westerberg@linux.intel.com
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        pei.p.jia@intel.com, ashok.raj@linux.intel.com,
-        sathyanarayanan.kuppuswamy@intel.com, hch@infradead.org,
-        joe@perches.com, Ethan Zhao <haifeng.zhao@intel.com>
-Subject: [PATCH 5/5 V4] PCI/ERR: don't mix io state not changed and no driver together
-Date:   Sun, 27 Sep 2020 04:27:36 -0400
-Message-Id: <20200927082736.14633-6-haifeng.zhao@intel.com>
-X-Mailer: git-send-email 2.18.4
-In-Reply-To: <20200927082736.14633-1-haifeng.zhao@intel.com>
-References: <20200927082736.14633-1-haifeng.zhao@intel.com>
+        id S1728339AbgI0Iqs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 27 Sep 2020 04:46:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48410 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727369AbgI0Iqs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 27 Sep 2020 04:46:48 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AB24C0613CE;
+        Sun, 27 Sep 2020 01:46:48 -0700 (PDT)
+From:   Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1601196405;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to; bh=3LGtm2OI8qF06h9KMGGQRJ7d4e/B09d0iYRNLqK19DE=;
+        b=vtWT6FXNpv1rJGdbEJJKxhxZ2hkowdjPcJEaDMAro5/mwYgF7f2qjEeiKFQSSH9PtTbtjQ
+        HsUFQz/Trt8kMSfUg/AQa+Dd6H6TLmp85HgtKhILMKJEBPAXZTlBVlCuBVrTlZ3SWkXObd
+        A3uYhH4wFHZJacmbgX2O+NsHMqa/9G2Pkuz65AAv9jSfW+iCB+ZS9fYcuTgvLwKZwmDf/O
+        zZgGz9fCusPWYJqd2bYwAHlyXGdEd/MWFvhUhNXr7HHWvB0uTZIwM6dBXR4V6SnJO+mQK+
+        WSRcbCQJ++zz1iV8DGtZCO9vHOjRIHe69AAw88TEiMXTyc69NYyY/moKXh9SBg==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1601196405;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to; bh=3LGtm2OI8qF06h9KMGGQRJ7d4e/B09d0iYRNLqK19DE=;
+        b=2lHZQSLVc5ukVdtzXcK6JAqYUmFwK6ZXXzxyFLvvd4IZf5x37NfcDYaGYy6WSVTOsGs4s7
+        44wL1Jbt8wkVdCAA==
+To:     Peter Zijlstra <peterz@infradead.org>, Qian Cai <cai@redhat.com>
+Cc:     LKML <linux-kernel@vger.kernel.org>,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        linux-next@vger.kernel.org, x86@kernel.org,
+        Joerg Roedel <joro@8bytes.org>,
+        iommu@lists.linux-foundation.org, linux-hyperv@vger.kernel.org,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Jon Derrick <jonathan.derrick@intel.com>,
+        Lu Baolu <baolu.lu@linux.intel.com>,
+        Wei Liu <wei.liu@kernel.org>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Steve Wahl <steve.wahl@hpe.com>,
+        Dimitri Sivanich <sivanich@hpe.com>,
+        Russ Anderson <rja@hpe.com>, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        xen-devel@lists.xenproject.org, Juergen Gross <jgross@suse.com>,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Marc Zyngier <maz@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Megha Dey <megha.dey@intel.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Jacob Pan <jacob.jun.pan@intel.com>,
+        Baolu Lu <baolu.lu@intel.com>,
+        Kevin Tian <kevin.tian@intel.com>,
+        Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH] x86/apic/msi: Unbreak DMAR and HPET MSI
+In-Reply-To: <87tuvltpo5.fsf@nanos.tec.linutronix.de>
+Date:   Sun, 27 Sep 2020 10:46:44 +0200
+Message-ID: <87wo0fli8b.fsf@nanos.tec.linutronix.de>
+MIME-Version: 1.0
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-When we see 'can't recover (no error_detected callback)' on console,
-Maybe the reason is io state is not changed by calling
-pci_dev_set_io_state(), that is confused. fix it.
+Switching the DMAR and HPET MSI code to use the generic MSI domain ops
+missed to add the flag which tells the core code to update the domain
+operations with the defaults. As a consequence the core code crashes
+when an interrupt in one of those domains is allocated.
 
-Signed-off-by: Ethan Zhao <haifeng.zhao@intel.com>
-Tested-by: Wen Jin <wen.jin@intel.com>
-Tested-by: Shanshan Zhang <ShanshanX.Zhang@intel.com>
+Add the missing flags.
+
+Fixes: 9006c133a422 ("x86/msi: Use generic MSI domain ops")
+Reported-by: Qian Cai <cai@redhat.com> 
+Reported-by: Peter Zijlstra <peterz@infradead.org>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
-Chagnes:
- V2: no change.
- V3: no change.
- V4: no change.
+ arch/x86/kernel/apic/msi.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
- drivers/pci/pcie/err.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index e35c4480c86b..d85f27c90c26 100644
---- a/drivers/pci/pcie/err.c
-+++ b/drivers/pci/pcie/err.c
-@@ -55,8 +55,10 @@ static int report_error_detected(struct pci_dev *dev,
- 	if (!pci_dev_get(dev))
- 		return 0;
- 	device_lock(&dev->dev);
--	if (!pci_dev_set_io_state(dev, state) ||
--		!dev->driver ||
-+	if (!pci_dev_set_io_state(dev, state)) {
-+		pci_dbg(dev, "Device might already being in error handling ...\n");
-+		vote = PCI_ERS_RESULT_NONE;
-+	} else if (!dev->driver ||
- 		!dev->driver->err_handler ||
- 		!dev->driver->err_handler->error_detected) {
- 		/*
--- 
-2.18.4
-
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -309,6 +309,7 @@ static struct msi_domain_ops dmar_msi_do
+ static struct msi_domain_info dmar_msi_domain_info = {
+ 	.ops		= &dmar_msi_domain_ops,
+ 	.chip		= &dmar_msi_controller,
++	.flags		= MSI_FLAG_USE_DEF_DOM_OPS,
+ };
+ 
+ static struct irq_domain *dmar_get_irq_domain(void)
+@@ -408,6 +409,7 @@ static struct msi_domain_ops hpet_msi_do
+ static struct msi_domain_info hpet_msi_domain_info = {
+ 	.ops		= &hpet_msi_domain_ops,
+ 	.chip		= &hpet_msi_controller,
++	.flags		= MSI_FLAG_USE_DEF_DOM_OPS,
+ };
+ 
+ struct irq_domain *hpet_create_irq_domain(int hpet_id)
