@@ -2,40 +2,41 @@ Return-Path: <SRS0=D2E3=DE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MIME_BASE64_TEXT,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74D9BC4727E
-	for <linux-pci@archiver.kernel.org>; Sun, 27 Sep 2020 07:48:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A28DC4346E
+	for <linux-pci@archiver.kernel.org>; Sun, 27 Sep 2020 07:48:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2E36023977
-	for <linux-pci@archiver.kernel.org>; Sun, 27 Sep 2020 07:48:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E4FB23977
+	for <linux-pci@archiver.kernel.org>; Sun, 27 Sep 2020 07:48:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="o4qFlUBL"
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="tcEoSiCA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727263AbgI0Hsg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 27 Sep 2020 03:48:36 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:57794 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726382AbgI0Hsf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 27 Sep 2020 03:48:35 -0400
-X-UUID: 41f7c2f5dcb64a769089f932eb3d2dcc-20200927
+        id S1730440AbgI0Hsl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 27 Sep 2020 03:48:41 -0400
+Received: from mailgw01.mediatek.com ([210.61.82.183]:38721 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1730351AbgI0Hsl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 27 Sep 2020 03:48:41 -0400
+X-UUID: a79534706c5344d1954d9f9c8989ff9b-20200927
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=d9lyIqtPvPXiR0F6KUQePPMfpcjXX/jEbkNNHhsMUyo=;
-        b=o4qFlUBL8p6PM/BoSI4Fh75nQ9SKQjn9e07CFDjyzLqE+i40/+JT5ZppBXM9OcnX9nEwgZ0e+/U8ZW+ygxl6GtjXfj80Lz7wXaEDrN9YLZsDFU9+QZltD2MWM6U/CTIL1bE0jud3Iwp5W6ixq2Gf+ZCUjxRLYxZgzetCcMWxQu4=;
-X-UUID: 41f7c2f5dcb64a769089f932eb3d2dcc-20200927
-Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw02.mediatek.com
+        h=Content-Transfer-Encoding:Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=CyTAOKrr53K3SDY9K0q/wmMsGmkcwUYZ/U05kXCMXwE=;
+        b=tcEoSiCAHtdCv2jYK1MUuosunaZj6NSGGMP1xvs/vwR/gX1Q2cCCjgwSWC7bTSaiiogdB4iyArBU2B8nM5MwB0Mp7f+PPGknVboJw7MLGO/95yq7G1OwBJ0GtgeHLIOiD2ZGKsR8rsUcz1WqAk89+zIRFOWQrUmEKpejRY/e6YY=;
+X-UUID: a79534706c5344d1954d9f9c8989ff9b-20200927
+Received: from mtkcas08.mediatek.inc [(172.21.101.126)] by mailgw01.mediatek.com
         (envelope-from <jianjun.wang@mediatek.com>)
         (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 219952987; Sun, 27 Sep 2020 15:48:29 +0800
+        with ESMTP id 298846190; Sun, 27 Sep 2020 15:48:32 +0800
 Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
- mtkmbs08n2.mediatek.inc (172.21.101.56) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Sun, 27 Sep 2020 15:48:26 +0800
+ mtkmbs08n1.mediatek.inc (172.21.101.55) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Sun, 27 Sep 2020 15:48:29 +0800
 Received: from localhost.localdomain (10.17.3.153) by MTKCAS06.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Sun, 27 Sep 2020 15:48:25 +0800
+ Transport; Sun, 27 Sep 2020 15:48:28 +0800
 From:   Jianjun Wang <jianjun.wang@mediatek.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Rob Herring <robh+dt@kernel.org>,
@@ -52,37 +53,29 @@ CC:     Philipp Zabel <p.zabel@pengutronix.de>,
         Jianjun Wang <jianjun.wang@mediatek.com>,
         <youlin.pei@mediatek.com>, <chuanjia.liu@mediatek.com>,
         <qizhong.cheng@mediatek.com>, <sin_jieyang@mediatek.com>
-Subject: [v3,0/3] PCI: mediatek: Add new generation controller support
-Date:   Sun, 27 Sep 2020 15:45:52 +0800
-Message-ID: <20200927074555.4155-1-jianjun.wang@mediatek.com>
+Subject: [v3,3/3] MAINTAINERS: update entry for MediaTek PCIe controller
+Date:   Sun, 27 Sep 2020 15:45:55 +0800
+Message-ID: <20200927074555.4155-4-jianjun.wang@mediatek.com>
 X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20200927074555.4155-1-jianjun.wang@mediatek.com>
+References: <20200927074555.4155-1-jianjun.wang@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-TM-SNTS-SMTP: FEC9D6A66C7B483EF0EF7CCF5000DE10A76B54A9207FFC0B54437214FC778F142000:8
 X-MTK:  N
 Content-Transfer-Encoding: base64
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-VGhlc2Ugc2VyaWVzIHBhdGNoZXMgYWRkIHBjaWUtbWVkaWF0ZWstZ2VuMy5jIGFuZCBkdC1iaW5k
-aW5ncyBmaWxlIHRvDQpzdXBwb3J0IG5ldyBnZW5lcmF0aW9uIFBDSWUgY29udHJvbGxlci4NCg0K
-Q2hhbmdlcyBpbiB2MzoNCjEuIFJlbW92ZSBzdGFuZGFyZCBwcm9wZXJ0eSBpbiBiaW5kaW5nIGRv
-Y3VtZW50DQoyLiBSZXR1cm4gZXJyb3IgbnVtYmVyIHdoZW4gZ2V0X29wdGlvbmFsKiBBUEkgdGhy
-b3dzIGFuIGVycm9yDQozLiBVc2UgdGhlIGJ1bGsgY2xrIEFQSXMNCg0KQ2hhbmdlcyBpbiB2MjoN
-CjEuIEZpeCB0aGUgdHlwbyBvZiBkdC1iaW5kaW5ncyBwYXRjaA0KMi4gUmVtb3ZlIHRoZSB1bm5l
-Y2Vzc2FyeSBwcm9wZXJ0aWVzIGluIGJpbmRpbmcgZG9jdW1lbnQNCjMuIGRpc3BvcyB0aGUgaXJx
-IG1hcHBpbmdzIG9mIG1zaSB0b3AgZG9tYWluIHdoZW4gaXJxIHRlYXJkb3duDQoNCkppYW5qdW4g
-V2FuZyAoMyk6DQogIGR0LWJpbmRpbmdzOiBQQ0k6IG1lZGlhdGVrOiBBZGQgWUFNTCBzY2hlbWEN
-CiAgUENJOiBtZWRpYXRlazogQWRkIG5ldyBnZW5lcmF0aW9uIGNvbnRyb2xsZXIgc3VwcG9ydA0K
-ICBNQUlOVEFJTkVSUzogdXBkYXRlIGVudHJ5IGZvciBNZWRpYVRlayBQQ0llIGNvbnRyb2xsZXIN
-Cg0KIC4uLi9iaW5kaW5ncy9wY2kvbWVkaWF0ZWstcGNpZS1nZW4zLnlhbWwgICAgICB8ICAxMjYg
-KysNCiBNQUlOVEFJTkVSUyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgICAx
-ICsNCiBkcml2ZXJzL3BjaS9jb250cm9sbGVyL0tjb25maWcgICAgICAgICAgICAgICAgfCAgIDE0
-ICsNCiBkcml2ZXJzL3BjaS9jb250cm9sbGVyL01ha2VmaWxlICAgICAgICAgICAgICAgfCAgICAx
-ICsNCiBkcml2ZXJzL3BjaS9jb250cm9sbGVyL3BjaWUtbWVkaWF0ZWstZ2VuMy5jICAgfCAxMDI0
-ICsrKysrKysrKysrKysrKysrDQogNSBmaWxlcyBjaGFuZ2VkLCAxMTY2IGluc2VydGlvbnMoKykN
-CiBjcmVhdGUgbW9kZSAxMDA2NDQgRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3Bj
-aS9tZWRpYXRlay1wY2llLWdlbjMueWFtbA0KIGNyZWF0ZSBtb2RlIDEwMDY0NCBkcml2ZXJzL3Bj
-aS9jb250cm9sbGVyL3BjaWUtbWVkaWF0ZWstZ2VuMy5jDQoNCi0tIA0KMi4yNS4xDQo=
+QWRkIG1haW50YWluZXIgZm9yIE1lZGlhVGVrIFBDSWUgY29udHJvbGxlciBkcml2ZXIuDQoNClNp
+Z25lZC1vZmYtYnk6IEppYW5qdW4gV2FuZyA8amlhbmp1bi53YW5nQG1lZGlhdGVrLmNvbT4NCkFj
+a2VkLWJ5OiBSeWRlciBMZWUgPHJ5ZGVyLmxlZUBtZWRpYXRlay5jb20+DQotLS0NCiBNQUlOVEFJ
+TkVSUyB8IDEgKw0KIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKQ0KDQpkaWZmIC0tZ2l0
+IGEvTUFJTlRBSU5FUlMgYi9NQUlOVEFJTkVSUw0KaW5kZXggZGVhYWZiNjE3MzYxLi41YzYxMTA0
+Njg1MjYgMTAwNjQ0DQotLS0gYS9NQUlOVEFJTkVSUw0KKysrIGIvTUFJTlRBSU5FUlMNCkBAIC0x
+MzQ1OSw2ICsxMzQ1OSw3IEBAIEY6CWRyaXZlcnMvcGNpL2NvbnRyb2xsZXIvZHdjL3BjaWUtaGlz
+dGIuYw0KIA0KIFBDSUUgRFJJVkVSIEZPUiBNRURJQVRFSw0KIE06CVJ5ZGVyIExlZSA8cnlkZXIu
+bGVlQG1lZGlhdGVrLmNvbT4NCitNOglKaWFuanVuIFdhbmcgPGppYW5qdW4ud2FuZ0BtZWRpYXRl
+ay5jb20+DQogTDoJbGludXgtcGNpQHZnZXIua2VybmVsLm9yZw0KIEw6CWxpbnV4LW1lZGlhdGVr
+QGxpc3RzLmluZnJhZGVhZC5vcmcNCiBTOglTdXBwb3J0ZWQNCi0tIA0KMi4yNS4xDQo=
 
