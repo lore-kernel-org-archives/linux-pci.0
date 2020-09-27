@@ -1,242 +1,146 @@
-Return-Path: <SRS0=/pen=DD=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=D2E3=DE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68F89C47420
-	for <linux-pci@archiver.kernel.org>; Sat, 26 Sep 2020 16:09:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 727EBC4741F
+	for <linux-pci@archiver.kernel.org>; Sun, 27 Sep 2020 00:17:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 26A9421D82
-	for <linux-pci@archiver.kernel.org>; Sat, 26 Sep 2020 16:09:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2D78B238E2
+	for <linux-pci@archiver.kernel.org>; Sun, 27 Sep 2020 00:17:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mJz3H0Pc"
+	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="PeArmjJa"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729740AbgIZQJq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 26 Sep 2020 12:09:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37612 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729448AbgIZQJq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 26 Sep 2020 12:09:46 -0400
-Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 101E7C0613CE;
-        Sat, 26 Sep 2020 09:09:46 -0700 (PDT)
-Received: by mail-ej1-x642.google.com with SMTP id e23so2704349eja.3;
-        Sat, 26 Sep 2020 09:09:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=S9aQwc+PCXsFhcBP9B3buLgLm5i11ItqWdopFn2Q6u8=;
-        b=mJz3H0Pc++vE/5/LLlbAUiaNAFhfEM4af+bwy7gxpM3JPo0j7Bidn6BRAvFjj/BWkH
-         74MwBEvv9DS0XYGM1wnGhQ/gAbf9pIDa9F0RerBbFf7xCkW9gwcSj36qSQ/mKSiFQu03
-         ewrqsec9BBaz6lk7aFs+7iXPx3L9SrxMffg8M2DW6ZxFU2sz0BbEOFOBK+O3aT0lVxa+
-         3OedArQPmmmqxngK1vhOuF6LVBCFgbQo0xueUisSqXSaGbtgvSHpUICaFx4/Ai47Dp3o
-         p/BRQZMjNKamCJjTWb8ZYzEFsZSSVR4wbjQXwzD71AFuMbCIVbFerkStSM4zY14yu0oZ
-         Kvww==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=S9aQwc+PCXsFhcBP9B3buLgLm5i11ItqWdopFn2Q6u8=;
-        b=bxHhSikkHJ8tSFsYxusLWmwULQVQymGgfd4kfQZ2R1/mXDjzuAcijV1ApCFclNZr7Y
-         YI9hHOzGYBxi1xtAWGnsWI9jopXj1zwFMpr0wsUlC6/xUsUB63uYmp4Hi+XRNheeP6Q+
-         u57o/hKmsxeRBux9DsyrgP1u0Gf2Al9JhP38Lc9ConGHx3vdY/FzSkgvjn5/wSEmS+EW
-         y6teMGet6V2eW8dn3WMOAlsrBF7nqlBggaxTc3sc8GWDqgwu0tQp+ZySBLvZbCpDsH4n
-         Hsl14PUI08yV0kDo8Jt9YFC7Ly4idlXKlatOs+XUMV2EH9lgwN9j1MjBpEDoxIoDkWDa
-         Xz6Q==
-X-Gm-Message-State: AOAM532g/phqmtVPVROX6m5a+EoiqgAjoYopdwBQ7iOIlrGN9d3RzEdI
-        xcnS1ccqwb2BjoWF0lAspGNlkWioxF40ww==
-X-Google-Smtp-Source: ABdhPJyVC2laUx2EzaRwyPizJ9IaoVs9J2Z56SkJZthNfHAcZHd0butvaxYPmy6iPYrNM0VWVAMtEg==
-X-Received: by 2002:a17:906:7f0b:: with SMTP id d11mr8208853ejr.439.1601136584421;
-        Sat, 26 Sep 2020 09:09:44 -0700 (PDT)
-Received: from desktop.lan (ip-89-176-112-137.net.upcbroadband.cz. [89.176.112.137])
-        by smtp.gmail.com with ESMTPSA id c11sm4608899edu.44.2020.09.26.09.09.43
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 26 Sep 2020 09:09:43 -0700 (PDT)
-From:   marek.vasut@gmail.com
-To:     linux-pci@vger.kernel.org
-Cc:     Marek Vasut <marek.vasut+renesas@gmail.com>,
+        id S1727364AbgI0ARA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 26 Sep 2020 20:17:00 -0400
+Received: from mail-eopbgr750117.outbound.protection.outlook.com ([40.107.75.117]:32736
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726840AbgI0ARA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 26 Sep 2020 20:17:00 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Ih/pzMy62gRnpJo7EUBsojeL01U4sGSpYvYars61KRAXXFkzIjIFaB6aOmLMNRIWy0nMjkaOj58lo/Cb8caJ2x4/B2qDaQB27ur8o1v+WlfHa9OyQUpHeZrqlv+2pkFoRX5cMHVUl1n19rsMhVqp/rOG5uLAOZABlyMnw7ITIe8zjyVeWJvY16RVT0ON/N1WNqad5x6bvXHO/hp6k8QJWwUwiXt6pmesdMQlh9aPOiqqqipEXEyZnyWtM/Chp9M5srRX+y8W3Bkz830hkx9hd+18qtX4BWXC7dyYPyB8T46rZRQqfZsXq+mPx3ghw4WuQ2BVsLguxlisOGADKEMnxw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=k+n17WvREN0wOs9mLeYjQTH7xRpm04TV4/BDd/I/1t0=;
+ b=LCCOkFTHF7/IRYhJyqWhX0jmuDIylzQBVwRa+UA027jqBj3zPIlJwLwAKAVingra8WkDroVygHWWEVbqjz7rjUZNg+JM3ugfFepSbscirYBNQJLqLILT/402+wvXX6Com9LORbmjKGDIfWO4uK8IWSgfboLpkkii96CA+nr6lFyyGTltsv1HIHO0YxryN194sSvDQXIkOS114VBs/oilBnRWKcyPryvtdz9toLFi9M98mMxz6xDpjshLnvVuTBcSGRDLbWZo/0V6yq5Bumsic4l+0BsJsPzHNxSwZ+5AixUbCZxUlVS5zFbnnuziMEKjDcgQqj1cg8hW16VX5jS26A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=microsoft.com; dmarc=pass action=none
+ header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=k+n17WvREN0wOs9mLeYjQTH7xRpm04TV4/BDd/I/1t0=;
+ b=PeArmjJaFiOsPtaaoJwcyZO+Me5Py37H5OaoGTY5XmbPMM7kOuNxkkyzuvSILnx6pnF3CfHtXsHHFQEd/PJnkGQOEBuqRaSi9yOSZfxNXdBb4fms66wo8Ov6I7An1DjV6qBUg5tefrHFqV+x7B886VfEBcxNVE7ro3tLjAridwk=
+Received: from MW2PR2101MB1052.namprd21.prod.outlook.com (2603:10b6:302:a::16)
+ by MWHPR2101MB0731.namprd21.prod.outlook.com (2603:10b6:301:81::37) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3433.18; Sun, 27 Sep
+ 2020 00:16:57 +0000
+Received: from MW2PR2101MB1052.namprd21.prod.outlook.com
+ ([fe80::d00b:3909:23b:83f1]) by MW2PR2101MB1052.namprd21.prod.outlook.com
+ ([fe80::d00b:3909:23b:83f1%4]) with mapi id 15.20.3412.028; Sun, 27 Sep 2020
+ 00:16:57 +0000
+From:   Michael Kelley <mikelley@microsoft.com>
+To:     =?utf-8?B?S3J6eXN6dG9mIFdpbGN6ecWEc2tp?= <kw@linux.com>,
+        KY Srinivasan <kys@microsoft.com>
+CC:     Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Wei Liu <wei.liu@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        linux-renesas-soc@vger.kernel.org
-Subject: [PATCH V2] PCI: rcar: Add L1 link state fix into data abort hook
-Date:   Sat, 26 Sep 2020 18:09:34 +0200
-Message-Id: <20200926160934.136182-1-marek.vasut@gmail.com>
-X-Mailer: git-send-email 2.28.0
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH] PCI: hv: Document missing hv_pci_protocol_negotiation()
+ parameter
+Thread-Topic: [PATCH] PCI: hv: Document missing hv_pci_protocol_negotiation()
+ parameter
+Thread-Index: AQHWk5ZXeAPUQFnW5EqRVDrKDYzLkql7nz2Q
+Date:   Sun, 27 Sep 2020 00:16:57 +0000
+Message-ID: <MW2PR2101MB1052F5A4F74B560D8B6911F2D7340@MW2PR2101MB1052.namprd21.prod.outlook.com>
+References: <20200925234753.1767227-1-kw@linux.com>
+In-Reply-To: <20200925234753.1767227-1-kw@linux.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2020-09-27T00:16:55Z;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=cbbb124e-ee06-4f99-9572-8e70a4aebcff;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0
+authentication-results: linux.com; dkim=none (message not signed)
+ header.d=none;linux.com; dmarc=none action=none header.from=microsoft.com;
+x-originating-ip: [24.22.167.197]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 931a588f-545c-4d07-520d-08d8627aa56b
+x-ms-traffictypediagnostic: MWHPR2101MB0731:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <MWHPR2101MB0731640DC9AA8E3E5600EEF4D7340@MWHPR2101MB0731.namprd21.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:6430;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: acBqmK/VZnjKrxeAzOy9NwcIZe2/Boej3cSwqcmVv1nA4MzrJIT6heTWz+Qt2H2HHsfDPjRkh05SMD5FUERT5sdyvpjMg6t8obPrF2MM4RT2QM5Xk77UEqWDDl5SEkelC2BGAlAnBr2iVUvkCpy8QdeTBLm0czBnX+ivmkaUkP1xrGKQiVVOC58HIErp2z+rdatdoc6+e/WYGpNNVxhJYP9t0HJy7HO+mCmwjjbb/bjZ6rJ1OBdQ+T+z6VudjkuP+MicPHcd4oKir6ctF9B1LllhQrfHsAbCSnfG6U3/jojxb//4wwTRkM+SfmuNwJhl0E2AHYtKM09gfQfkzcujtQ==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW2PR2101MB1052.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(136003)(366004)(39860400002)(346002)(396003)(376002)(316002)(186003)(8990500004)(33656002)(66946007)(76116006)(110136005)(6506007)(54906003)(7696005)(71200400001)(66574015)(53546011)(82960400001)(82950400001)(83380400001)(8936002)(66446008)(2906002)(9686003)(478600001)(10290500003)(86362001)(6636002)(55016002)(5660300002)(26005)(52536014)(64756008)(66556008)(66476007)(8676002)(4326008);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: 3SNunysRn4Vwf1LeChvhhng7guYbOKByNtr+6mBMDA/KSr1uzRozdY+Bo2UYj0jsjA20Iu/WH+XuE3gBcwhJqVr1RpfHJTQSB8FXSxkXeZoTKtUTBWxc1GNcXgPrAYhINozzsAi2lxFrMWgxxg6HFKmfWBSSQ1YgUl+Nz/J5Tu8CO/ZYQxrc7a+G3oFSyCqkPQ64HcGtYgpY/HNyf2NvpOJdN7ahKdgJBeWpWMn8I0VzaxzsbYLOx+nER7P4osJfCXxQJd+iN5dZsqmHfEHP1t6YMUGla7D/5Ply/Hq4lgXYsqCWz+/CMUfhPTpIerDe3XzI63Zb0oPyfD3VwMKN720HtGIbyTw0oiVPEVOkH3uxB0++BqllCUPxqmU0uOWFGJRPwDYZZoiLca67Cv8HkP88sjmzNyxkTj5eJMeRdIW3s5SRIhZCCyUQG7UEmS2HqhG5Dv4IedZOTxp5D5+XziAbqOniW8BRX5tcwy7mtl7AMx4OM36xO0rAyR3Jmj7dI727LaFm4h4hcFMuK93B/POo+qhFopOvtu1EHmizDYLD1iMbYwgaXj55ZXKQj+9iUv/4nugERnRIVy7h1bYWd3ywgdqKEgi0LCGClWZKRCwDYTO8Cx79g3swlPdHVvQkdfwNULmY+3IwbsCyWRm3hQ==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: microsoft.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: MW2PR2101MB1052.namprd21.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 931a588f-545c-4d07-520d-08d8627aa56b
+X-MS-Exchange-CrossTenant-originalarrivaltime: 27 Sep 2020 00:16:57.2582
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: zBZikdSME9gtgs6/Y6RZ68EG4QLMfFkAoK2qNwUM+7eq6HCOtdoFKD5PMsSTFkO1Dus16QByhGhwCXnxi605KBJSx4deCcu04I2SsBAxDHA=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR2101MB0731
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Marek Vasut <marek.vasut+renesas@gmail.com>
-
-The R-Car PCIe controller is capable of handling L0s/L1 link states.
-While the controller can enter and exit L0s link state, and exit L1
-link state, without any additional action from the driver, to enter
-L1 link state, the driver must complete the link state transition by
-issuing additional commands to the controller.
-
-The problem is, this transition is not atomic. The controller sets
-PMEL1RX bit in PMSR register upon reception of PM_ENTER_L1 DLLP from
-the PCIe card, but then the controller enters some sort of inbetween
-state. The driver must detect this condition and complete the link
-state transition, by setting L1IATN bit in PMCTLR and waiting for
-the link state transition to complete.
-
-If a PCIe access happens inside of this window, where the controller
-is inbetween L0 and L1 link states, the access generates a fault and
-the ARM 'imprecise external abort' handler is invoked.
-
-Just like other PCI controller drivers, here we hook the fault handler,
-perform the fixup to help the controller enter L1 link state, and then
-restart the instruction which triggered the fault. Since the controller
-is in L1 link state now, the link can exit from L1 link state to L0 and
-successfully complete the access.
-
-Note that this fixup is applicable only to Aarch32 R-Car controllers,
-the Aarch64 R-Car perform the same fixup in TFA, see TFA commit [1]
-0969397f2 ("rcar_gen3: plat: Prevent PCIe hang during L1X config access")
-[1] https://github.com/ARM-software/arm-trusted-firmware/commit/0969397f295621aa26b3d14b76dd397d22be58bf
-
-Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Wolfram Sang <wsa@the-dreams.de>
-Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Cc: linux-renesas-soc@vger.kernel.org
----
-V2: - Update commit message, add link to TFA repository commit
-    - Handle the LPAE case as in ARM fault.c and fsr-{2,3}level.c
-    - Cache clock and check whether they are enabled before register
-      access
----
- drivers/pci/controller/pcie-rcar-host.c | 65 +++++++++++++++++++++++++
- drivers/pci/controller/pcie-rcar.h      |  7 +++
- 2 files changed, 72 insertions(+)
-
-diff --git a/drivers/pci/controller/pcie-rcar-host.c b/drivers/pci/controller/pcie-rcar-host.c
-index cdc0963f154e..f8ff8c55716a 100644
---- a/drivers/pci/controller/pcie-rcar-host.c
-+++ b/drivers/pci/controller/pcie-rcar-host.c
-@@ -13,6 +13,7 @@
- 
- #include <linux/bitops.h>
- #include <linux/clk.h>
-+#include <linux/clk-provider.h>
- #include <linux/delay.h>
- #include <linux/interrupt.h>
- #include <linux/irq.h>
-@@ -42,6 +43,21 @@ struct rcar_msi {
- 	int irq2;
- };
- 
-+#ifdef CONFIG_ARM
-+/*
-+ * Here we keep a static copy of the remapped PCIe controller address.
-+ * This is only used on aarch32 systems, all of which have one single
-+ * PCIe controller, to provide quick access to the PCIe controller in
-+ * the L1 link state fixup function, called from ARM fault handler.
-+ */
-+static void __iomem *pcie_base;
-+/*
-+ * Static copy of bus clock pointer, so we can check whether the clock
-+ * are enabled or not.
-+ */
-+static struct clk *pcie_bus_clk;
-+#endif
-+
- static inline struct rcar_msi *to_rcar_msi(struct msi_controller *chip)
- {
- 	return container_of(chip, struct rcar_msi, chip);
-@@ -804,6 +820,12 @@ static int rcar_pcie_get_resources(struct rcar_pcie_host *host)
- 	}
- 	host->msi.irq2 = i;
- 
-+#ifdef CONFIG_ARM
-+	/* Cache static copy for L1 link state fixup hook on aarch32 */
-+	pcie_base = pcie->base;
-+	pcie_bus_clk = host->bus_clk;
-+#endif
-+
- 	return 0;
- 
- err_irq2:
-@@ -1050,4 +1072,47 @@ static struct platform_driver rcar_pcie_driver = {
- 	},
- 	.probe = rcar_pcie_probe,
- };
-+
-+#ifdef CONFIG_ARM
-+static int rcar_pcie_aarch32_abort_handler(unsigned long addr,
-+		unsigned int fsr, struct pt_regs *regs)
-+{
-+	u32 pmsr;
-+
-+	if (!pcie_base || !pcie_bus_clk || !__clk_is_enabled(pcie_bus_clk))
-+		return 1;
-+
-+	pmsr = readl(pcie_base + PMSR);
-+
-+	/*
-+	 * Test if the PCIe controller received PM_ENTER_L1 DLLP and
-+	 * the PCIe controller is not in L1 link state. If true, apply
-+	 * fix, which will put the controller into L1 link state, from
-+	 * which it can return to L0s/L0 on its own.
-+	 */
-+	if ((pmsr & PMEL1RX) && ((pmsr & PMSTATE) != PMSTATE_L1)) {
-+		writel(L1IATN, pcie_base + PMCTLR);
-+		while (!(readl(pcie_base + PMSR) & L1FAEG))
-+			;
-+		writel(L1FAEG | PMEL1RX, pcie_base + PMSR);
-+		return 0;
-+	}
-+
-+	return 1;
-+}
-+
-+static int __init rcar_pcie_init(void)
-+{
-+#ifdef CONFIG_ARM_LPAE
-+	hook_fault_code(17, rcar_pcie_aarch32_abort_handler, SIGBUS, 0,
-+			"asynchronous external abort");
-+#else
-+	hook_fault_code(22, rcar_pcie_aarch32_abort_handler, SIGBUS, 0,
-+			"imprecise external abort");
-+#endif
-+	return platform_driver_register(&rcar_pcie_driver);
-+}
-+device_initcall(rcar_pcie_init);
-+#else
- builtin_platform_driver(rcar_pcie_driver);
-+#endif
-diff --git a/drivers/pci/controller/pcie-rcar.h b/drivers/pci/controller/pcie-rcar.h
-index d4c698b5f821..9bb125db85c6 100644
---- a/drivers/pci/controller/pcie-rcar.h
-+++ b/drivers/pci/controller/pcie-rcar.h
-@@ -85,6 +85,13 @@
- #define  LTSMDIS		BIT(31)
- #define  MACCTLR_INIT_VAL	(LTSMDIS | MACCTLR_NFTS_MASK)
- #define PMSR			0x01105c
-+#define  L1FAEG			BIT(31)
-+#define  PMEL1RX		BIT(23)
-+#define  PMSTATE		GENMASK(18, 16)
-+#define  PMSTATE_L1		(3 << 16)
-+#define PMCTLR			0x011060
-+#define  L1IATN			BIT(31)
-+
- #define MACS2R			0x011078
- #define MACCGSPSETR		0x011084
- #define  SPCNGRSN		BIT(31)
--- 
-2.28.0
-
+RnJvbTogS3J6eXN6dG9mIFdpbGN6ecWEc2tpIDxrd0BsaW51eC5jb20+IFNlbnQ6IEZyaWRheSwg
+U2VwdGVtYmVyIDI1LCAyMDIwIDQ6NDggUE0NCj4gVG86IEtZIFNyaW5pdmFzYW4gPGt5c0BtaWNy
+b3NvZnQuY29tPg0KPiBDYzogSGFpeWFuZyBaaGFuZyA8aGFpeWFuZ3pAbWljcm9zb2Z0LmNvbT47
+IFN0ZXBoZW4gSGVtbWluZ2VyDQo+IDxzdGhlbW1pbkBtaWNyb3NvZnQuY29tPjsgV2VpIExpdSA8
+d2VpLmxpdUBrZXJuZWwub3JnPjsgQmpvcm4gSGVsZ2Fhcw0KPiA8YmhlbGdhYXNAZ29vZ2xlLmNv
+bT47IGxpbnV4LWh5cGVydkB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5v
+cmcNCj4gU3ViamVjdDogW1BBVENIXSBQQ0k6IGh2OiBEb2N1bWVudCBtaXNzaW5nIGh2X3BjaV9w
+cm90b2NvbF9uZWdvdGlhdGlvbigpIHBhcmFtZXRlcg0KPiANCj4gQWRkIG1pc3NpbmcgZG9jdW1l
+bnRhdGlvbiBmb3IgdGhlIHBhcmFtZXRlciAidmVyc2lvbiIgYW5kICJudW1fdmVyc2lvbiINCj4g
+b2YgdGhlIGh2X3BjaV9wcm90b2NvbF9uZWdvdGlhdGlvbigpIGZ1bmN0aW9uIGFuZCByZXNvbHZl
+IGJ1aWxkIHRpbWUNCj4ga2VybmVsLWRvYyB3YXJuaW5nczoNCj4gDQo+ICAgZHJpdmVycy9wY2kv
+Y29udHJvbGxlci9wY2ktaHlwZXJ2LmM6MjUzNTogd2FybmluZzogRnVuY3Rpb24gcGFyYW1ldGVy
+DQo+ICAgb3IgbWVtYmVyICd2ZXJzaW9uJyBub3QgZGVzY3JpYmVkIGluICdodl9wY2lfcHJvdG9j
+b2xfbmVnb3RpYXRpb24nDQo+IA0KPiAgIGRyaXZlcnMvcGNpL2NvbnRyb2xsZXIvcGNpLWh5cGVy
+di5jOjI1MzU6IHdhcm5pbmc6IEZ1bmN0aW9uIHBhcmFtZXRlcg0KPiAgIG9yIG1lbWJlciAnbnVt
+X3ZlcnNpb24nIG5vdCBkZXNjcmliZWQgaW4gJ2h2X3BjaV9wcm90b2NvbF9uZWdvdGlhdGlvbicN
+Cj4gDQo+IE5vIGNoYW5nZSB0byBmdW5jdGlvbmFsaXR5IGludGVuZGVkLg0KPiANCj4gU2lnbmVk
+LW9mZi1ieTogS3J6eXN6dG9mIFdpbGN6ecWEc2tpIDxrd0BsaW51eC5jb20+DQo+IC0tLQ0KPiAg
+ZHJpdmVycy9wY2kvY29udHJvbGxlci9wY2ktaHlwZXJ2LmMgfCA1ICsrKystDQo+ICAxIGZpbGUg
+Y2hhbmdlZCwgNCBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0pDQo+IA0KPiBkaWZmIC0tZ2l0
+IGEvZHJpdmVycy9wY2kvY29udHJvbGxlci9wY2ktaHlwZXJ2LmMgYi9kcml2ZXJzL3BjaS9jb250
+cm9sbGVyL3BjaS1oeXBlcnYuYw0KPiBpbmRleCBmYzRjM2ExNWU1NzAuLjYxMDIzMzBlMjdlMSAx
+MDA2NDQNCj4gLS0tIGEvZHJpdmVycy9wY2kvY29udHJvbGxlci9wY2ktaHlwZXJ2LmMNCj4gKysr
+IGIvZHJpdmVycy9wY2kvY29udHJvbGxlci9wY2ktaHlwZXJ2LmMNCj4gQEAgLTI1MTUsNyArMjUx
+NSwxMCBAQCBzdGF0aWMgdm9pZCBodl9wY2lfb25jaGFubmVsY2FsbGJhY2sodm9pZCAqY29udGV4
+dCkNCj4gDQo+ICAvKioNCj4gICAqIGh2X3BjaV9wcm90b2NvbF9uZWdvdGlhdGlvbigpIC0gU2V0
+IHVwIHByb3RvY29sDQo+IC0gKiBAaGRldjoJVk1CdXMncyB0cmFja2luZyBzdHJ1Y3QgZm9yIHRo
+aXMgcm9vdCBQQ0kgYnVzDQo+ICsgKiBAaGRldjoJCVZNQnVzJ3MgdHJhY2tpbmcgc3RydWN0IGZv
+ciB0aGlzIHJvb3QgUENJIGJ1cy4NCj4gKyAqIEB2ZXJzaW9uOgkJQXJyYXkgb2Ygc3VwcG9ydGVk
+IGNoYW5uZWwgcHJvdG9jb2wgdmVyc2lvbnMgaW4NCj4gKyAqCQkJdGhlIG9yZGVyIG9mIHByb2Jp
+bmcgLSBoaWdoZXN0IGdvIGZpcnN0Lg0KPiArICogQG51bV92ZXJzaW9uOglOdW1iZXIgb2YgZWxl
+bWVudHMgaW4gdGhlIHZlcnNpb24gYXJyYXkuDQo+ICAgKg0KPiAgICogVGhpcyBkcml2ZXIgaXMg
+aW50ZW5kZWQgdG8gc3VwcG9ydCBydW5uaW5nIG9uIFdpbmRvd3MgMTANCj4gICAqIChzZXJ2ZXIp
+IGFuZCBsYXRlciB2ZXJzaW9ucy4gSXQgd2lsbCBub3QgcnVuIG9uIGVhcmxpZXINCj4gLS0NCj4g
+Mi4yOC4wDQoNClJldmlld2VkLWJ5OiAgTWljaGFlbCBLZWxsZXkgPG1pa2VsbGV5QG1pY3Jvc29m
+dC5jb20+DQo=
