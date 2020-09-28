@@ -2,107 +2,124 @@ Return-Path: <SRS0=RmUR=DF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67AF7C47420
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Sep 2020 01:06:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11E32C4346E
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Sep 2020 01:11:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3CDB523A33
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Sep 2020 01:06:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AFADA23A34
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Sep 2020 01:11:45 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ip7HYjaF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726547AbgI1BF5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 27 Sep 2020 21:05:57 -0400
-Received: from mx.socionext.com ([202.248.49.38]:27549 "EHLO mx.socionext.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726559AbgI1BFt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 27 Sep 2020 21:05:49 -0400
-Received: from unknown (HELO kinkan-ex.css.socionext.com) ([172.31.9.52])
-  by mx.socionext.com with ESMTP; 28 Sep 2020 10:05:45 +0900
-Received: from mail.mfilter.local (m-filter-2 [10.213.24.62])
-        by kinkan-ex.css.socionext.com (Postfix) with ESMTP id B0BED180BE1;
-        Mon, 28 Sep 2020 10:05:45 +0900 (JST)
-Received: from 172.31.9.51 (172.31.9.51) by m-FILTER with ESMTP; Mon, 28 Sep 2020 10:05:45 +0900
-Received: from plum.e01.socionext.com (unknown [10.213.132.32])
-        by kinkan.css.socionext.com (Postfix) with ESMTP id 6F0251A0507;
-        Mon, 28 Sep 2020 10:05:45 +0900 (JST)
-From:   Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-To:     Rob Herring <robh+dt@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Murali Karicheri <m-karicheri2@ti.com>
-Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Masami Hiramatsu <masami.hiramatsu@linaro.org>,
-        Jassi Brar <jaswinder.singh@linaro.org>,
-        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-Subject: [PATCH v2 4/4] PCI: keystone: Remove iATU register mapping
-Date:   Mon, 28 Sep 2020 10:05:33 +0900
-Message-Id: <1601255133-17715-5-git-send-email-hayashi.kunihiko@socionext.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1601255133-17715-1-git-send-email-hayashi.kunihiko@socionext.com>
-References: <1601255133-17715-1-git-send-email-hayashi.kunihiko@socionext.com>
+        id S1726406AbgI1BLo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 27 Sep 2020 21:11:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58334 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726396AbgI1BLo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 27 Sep 2020 21:11:44 -0400
+Received: from mail-pg1-x542.google.com (mail-pg1-x542.google.com [IPv6:2607:f8b0:4864:20::542])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6626BC0613CE;
+        Sun, 27 Sep 2020 18:11:44 -0700 (PDT)
+Received: by mail-pg1-x542.google.com with SMTP id t14so6841137pgl.10;
+        Sun, 27 Sep 2020 18:11:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=brvnhRHveKpcyA289fKWkqddwqDpTeKxSpM0NIBNgNI=;
+        b=Ip7HYjaFcNh8iBube4A0vFBHWqdpBW2GLeGxz8cmRVlZ7LLKoXUyrChLzenGuv+7d+
+         Gelka4dnulxH5OtNGJy6f/qLZ6BYBcgBbwB724etiMUmajB6wDgl8PKKjCFg6folDwAp
+         tFuHWKPTPoxusgpvz7G2ab9RYnAHZWH5bdV1t7EurDA3jHh9ThKkMUhq11KBdfkd/Rue
+         HnN3C7U5MfKsi8+70iPdW9t5gflIveiAKQLwlJKZIOpn8IvWEAQregFmuylPGfsXnw17
+         BANbDZajhoKUkpXe/O7JSFHx3uhRGvCdpJ6Ivg/mz5mrA54IztqCyhUlIIQlturrSrqP
+         fjVA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=brvnhRHveKpcyA289fKWkqddwqDpTeKxSpM0NIBNgNI=;
+        b=Bz9RRkTvRBsP7lfD1BG/7B47lKxK6PgJiykaAbUN7l7nYXcBDlSIIGi5OH2O53B2V9
+         dVYBAiA2CMPnKecSLRO7fLwCaAxdAqOZI3okz6JzqB1qxEC836AUUJj3WlH49gKlwAEd
+         r9NVyZ+CU0roFoHHCQodAntreaRzl2GLJjs4hGsn6S50g2hvkQer8rK9Ja5siUAu/4g7
+         C2emfWLKI9VwgkvU0tXNY83hUvPcOunPVSd+OLVIxZpgpDxPqKmndLgjn0j4EQ+kT5bv
+         DZ959MjkcfmWmVdAW3QIrR3CVE0mcTpugW9DAfPMPq9M6c83V6OJEEv30S5eJ31GiXfu
+         33VQ==
+X-Gm-Message-State: AOAM532sLwiM3qtgj2WHPc6kmsAaRjEQyMYrqCH3jupmhO0oKV/NVd1h
+        QPkX5JU57QXkoIEHAZ8bkJA=
+X-Google-Smtp-Source: ABdhPJwXs2WQgMY/3KIGHrSBplUPoLhS47mHpcCvyOvOnfvhOYpy3gs2bT9z4JNoF0LKZT0PFljIEA==
+X-Received: by 2002:a63:c00d:: with SMTP id h13mr7294429pgg.358.1601255503840;
+        Sun, 27 Sep 2020 18:11:43 -0700 (PDT)
+Received: from skuppusw-mobl5.amr.corp.intel.com (jfdmzpr04-ext.jf.intel.com. [134.134.137.73])
+        by smtp.gmail.com with ESMTPSA id 137sm9368048pfb.183.2020.09.27.18.11.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 27 Sep 2020 18:11:43 -0700 (PDT)
+From:   Kuppuswamy Sathyanarayanan <sathyanarayanan.nkuppuswamy@gmail.com>
+X-Google-Original-From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+To:     bhelgaas@google.com
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ashok.raj@intel.com, sathyanarayanan.kuppuswamy@linux.intel.com
+Subject: [PATCH v9 0/5] Simplify PCIe native ownership detection logic
+Date:   Sun, 27 Sep 2020 18:11:31 -0700
+Message-ID: <cover.1600457297.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
+Message-ID: <20200928011131.MI-pJpJNRQw6c35j_O6019flLWHe08C4WvKPmKEbnik@z>
 
-After applying "PCI: dwc: Add common iATU register support",
-there is no need to set own iATU in the Keystone driver itself.
+Currently, PCIe capabilities ownership status is detected by
+verifying the status of pcie_ports_native, pcie_ports_dpc_native
+and _OSC negotiated results (cached in  struct pci_host_bridge
+->native_* members). But this logic can be simplified, and we can
+use only struct pci_host_bridge ->native_* members to detect it. 
 
-Cc: Murali Karicheri <m-karicheri2@ti.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>
-Cc: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Suggested-by: Rob Herring <robh@kernel.org>
-Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
----
- drivers/pci/controller/dwc/pci-keystone.c | 20 ++++----------------
- 1 file changed, 4 insertions(+), 16 deletions(-)
+This patchset removes the distributed checks for pcie_ports_native,
+pcie_ports_dpc_native parameters.
 
-diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
-index b554812..a222728 100644
---- a/drivers/pci/controller/dwc/pci-keystone.c
-+++ b/drivers/pci/controller/dwc/pci-keystone.c
-@@ -1154,7 +1154,6 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
- 	struct keystone_pcie *ks_pcie;
- 	struct device_link **link;
- 	struct gpio_desc *gpiod;
--	void __iomem *atu_base;
- 	struct resource *res;
- 	unsigned int version;
- 	void __iomem *base;
-@@ -1275,23 +1274,12 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
- 		goto err_get_sync;
- 	}
+Changes since v8:
+ * Simplified setting _OSC ownwership logic
+ * Moved bridge->native_ltr out of #ifdef CONFIG_PCIEPORTBUS.
+
+Changes since v7:
+ * Fixed "fix array_size.cocci warnings".
+
+Changes since v6:
+ * Created new patch for CONFIG_PCIEPORTBUS check in
+   pci_init_host_bridge().
+ * Added warning message for a case when pcie_ports_native
+   overrides _OSC negotiation result.
+
+Changes since v5:
+ * Rebased on top of v5.8-rc1
+
+Changes since v4:
+ * Changed the patch set title (Original link: https://lkml.org/lkml/2020/5/26/1710)
+ * Added AER/DPC dependency logic cleanup fixes.
  
--	if (pci->version >= 0x480A) {
--		atu_base = devm_platform_ioremap_resource_byname(pdev, "atu");
--		if (IS_ERR(atu_base)) {
--			ret = PTR_ERR(atu_base);
--			goto err_get_sync;
--		}
--
--		pci->atu_base = atu_base;
--
-+	if (pci->version >= 0x480A)
- 		ret = ks_pcie_am654_set_mode(dev, mode);
--		if (ret < 0)
--			goto err_get_sync;
--	} else {
-+	else
- 		ret = ks_pcie_set_mode(dev);
--		if (ret < 0)
--			goto err_get_sync;
--	}
-+	if (ret < 0)
-+		goto err_get_sync;
- 
- 	switch (mode) {
- 	case DW_PCIE_RC_TYPE:
+
+Kuppuswamy Sathyanarayanan (5):
+  PCI: Conditionally initialize host bridge native_* members
+  ACPI/PCI: Ignore _OSC negotiation result if pcie_ports_native is set.
+  ACPI/PCI: Ignore _OSC DPC negotiation result if pcie_ports_dpc_native
+    is set.
+  PCI/portdrv: Remove redundant pci_aer_available() check in DPC enable
+    logic
+  PCI/DPC: Move AER/DPC dependency checks out of DPC driver
+
+ drivers/acpi/pci_root.c           | 37 ++++++++++++++++++++++---------
+ drivers/pci/hotplug/pciehp_core.c |  2 +-
+ drivers/pci/pci-acpi.c            |  3 ---
+ drivers/pci/pcie/aer.c            |  2 +-
+ drivers/pci/pcie/dpc.c            |  3 ---
+ drivers/pci/pcie/portdrv.h        |  2 --
+ drivers/pci/pcie/portdrv_core.c   | 13 +++++------
+ drivers/pci/probe.c               |  6 +++--
+ include/linux/acpi.h              |  2 ++
+ include/linux/pci.h               |  2 ++
+ 10 files changed, 42 insertions(+), 30 deletions(-)
+
 -- 
-2.7.4
+2.17.1
 
