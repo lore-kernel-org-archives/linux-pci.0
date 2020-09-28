@@ -5,42 +5,42 @@ X-Spam-Level:
 X-Spam-Status: No, score=-10.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 365A9C4727E
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Sep 2020 18:36:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56DE4C4741F
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Sep 2020 18:36:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D50D0207E8
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Sep 2020 18:36:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 03EDC207D8
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Sep 2020 18:36:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ygcw0dGR"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LJ/k+gLI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726840AbgI1Sg1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 28 Sep 2020 14:36:27 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:58501 "EHLO
+        id S1726789AbgI1Sgd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 28 Sep 2020 14:36:33 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:44588 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726822AbgI1SgW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Sep 2020 14:36:22 -0400
+        by vger.kernel.org with ESMTP id S1726548AbgI1SgV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Sep 2020 14:36:21 -0400
 Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1601318181;
+        s=mimecast20190719; t=1601318179;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:in-reply-to:in-reply-to:references:references;
-        bh=9oz+ynoTvhiufuVyMQ1xRlRqNWLd2L6kBLmgTWRX5ss=;
-        b=Ygcw0dGRLe/e3XgOOe7GEKbOi33+SmaqafwCUcO1dA69FEVi4WDYJv6GaB8TM3UCP34hBz
-        9pqAEQf4jHS35m8znmXpPvOXUEhrpWrj7L0SSeSd6impO8FlzNh69wycCKCfriBjA4vW8i
-        fXy/oBzoTgmDSJqjBgXXaYDP5cCQQaA=
+        bh=yrgq/KDevcEQJ6jt8mLwCRUIhO0cbeAMHgxfCLcgTj0=;
+        b=LJ/k+gLIQkxxRU8EYwVvnzSnPrRGASBh2/Sg+q9sVnMhWAmkz3O3gy5wRSbB/C/efveoPH
+        Bkr7QMcUXq4EDLMx5pQ1UnfOqTgl3+2x5buvxcl6tDDqwbrAhTSCILIjN3L3VfeYV54895
+        79M9Ww1GsIY0ztXTqPqcfxMm2Md3dpQ=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-498-vfI2srfRPH2G4PSp-PI-ng-1; Mon, 28 Sep 2020 14:36:16 -0400
-X-MC-Unique: vfI2srfRPH2G4PSp-PI-ng-1
+ us-mta-147-Le-nDnaFMm6JTDFm49LZ4Q-1; Mon, 28 Sep 2020 14:36:15 -0400
+X-MC-Unique: Le-nDnaFMm6JTDFm49LZ4Q-1
 Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C434585C732;
-        Mon, 28 Sep 2020 18:36:13 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 0CCF810BBED3;
+        Mon, 28 Sep 2020 18:36:10 +0000 (UTC)
 Received: from virtlab719.virt.lab.eng.bos.redhat.com (virtlab719.virt.lab.eng.bos.redhat.com [10.19.153.15])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 084E860C11;
-        Mon, 28 Sep 2020 18:36:11 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 43A4B60C11;
+        Mon, 28 Sep 2020 18:36:08 +0000 (UTC)
 From:   Nitesh Narayan Lal <nitesh@redhat.com>
 To:     linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
         linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
@@ -53,9 +53,9 @@ To:     linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
         jiri@nvidia.com, mingo@redhat.com, peterz@infradead.org,
         juri.lelli@redhat.com, vincent.guittot@linaro.org,
         lgoncalv@redhat.com
-Subject: [PATCH v4 4/4] PCI: Limit pci_alloc_irq_vectors() to housekeeping CPUs
-Date:   Mon, 28 Sep 2020 14:35:29 -0400
-Message-Id: <20200928183529.471328-5-nitesh@redhat.com>
+Subject: [PATCH v4 2/4] sched/isolation: Extend nohz_full to isolate managed IRQs
+Date:   Mon, 28 Sep 2020 14:35:27 -0400
+Message-Id: <20200928183529.471328-3-nitesh@redhat.com>
 In-Reply-To: <20200928183529.471328-1-nitesh@redhat.com>
 References: <20200928183529.471328-1-nitesh@redhat.com>
 X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
@@ -63,60 +63,29 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-If we have isolated CPUs dedicated for use by real-time tasks, we try to
-move IRQs to housekeeping CPUs from the userspace to reduce latency
-overhead on the isolated CPUs.
+Extend nohz_full feature set to include isolation from managed IRQS. This
+is required specifically for setups that only uses nohz_full and still
+requires isolation for maintaining lower latency for the listed CPUs.
 
-If we allocate too many IRQ vectors, moving them all to housekeeping CPUs
-may exceed per-CPU vector limits.
-
-When we have isolated CPUs, limit the number of vectors allocated by
-pci_alloc_irq_vectors() to the minimum number required by the driver, or
-to one per housekeeping CPU if that is larger.
-
+Suggested-by: Frederic Weisbecker <frederic@kernel.org>
 Signed-off-by: Nitesh Narayan Lal <nitesh@redhat.com>
 ---
- drivers/pci/msi.c | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+ kernel/sched/isolation.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 30ae4ffda5c1..8c156867803c 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -23,6 +23,7 @@
- #include <linux/slab.h>
- #include <linux/irqdomain.h>
- #include <linux/of_irq.h>
-+#include <linux/sched/isolation.h>
+diff --git a/kernel/sched/isolation.c b/kernel/sched/isolation.c
+index 5a6ea03f9882..9df9598a9e39 100644
+--- a/kernel/sched/isolation.c
++++ b/kernel/sched/isolation.c
+@@ -141,7 +141,7 @@ static int __init housekeeping_nohz_full_setup(char *str)
+ 	unsigned int flags;
  
- #include "pci.h"
+ 	flags = HK_FLAG_TICK | HK_FLAG_WQ | HK_FLAG_TIMER | HK_FLAG_RCU |
+-		HK_FLAG_MISC | HK_FLAG_KTHREAD;
++		HK_FLAG_MISC | HK_FLAG_KTHREAD | HK_FLAG_MANAGED_IRQ;
  
-@@ -1191,8 +1192,25 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
- 				   struct irq_affinity *affd)
- {
- 	struct irq_affinity msi_default_affd = {0};
-+	unsigned int hk_cpus;
- 	int nvecs = -ENOSPC;
- 
-+	hk_cpus = housekeeping_num_online_cpus(HK_FLAG_MANAGED_IRQ);
-+
-+	/*
-+	 * If we have isolated CPUs for use by real-time tasks, to keep the
-+	 * latency overhead to a minimum, device-specific IRQ vectors are moved
-+	 * to the housekeeping CPUs from the userspace by changing their
-+	 * affinity mask. Limit the vector usage to keep housekeeping CPUs from
-+	 * running out of IRQ vectors.
-+	 */
-+	if (hk_cpus < num_online_cpus()) {
-+		if (hk_cpus < min_vecs)
-+			max_vecs = min_vecs;
-+		else if (hk_cpus < max_vecs)
-+			max_vecs = hk_cpus;
-+	}
-+
- 	if (flags & PCI_IRQ_AFFINITY) {
- 		if (!affd)
- 			affd = &msi_default_affd;
+ 	return housekeeping_setup(str, flags);
+ }
 -- 
 2.18.2
 
