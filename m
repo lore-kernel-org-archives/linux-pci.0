@@ -5,42 +5,42 @@ X-Spam-Level:
 X-Spam-Status: No, score=-10.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 267B0C2D0A8
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Sep 2020 18:36:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 365A9C4727E
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Sep 2020 18:36:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C44A0207C4
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Sep 2020 18:36:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D50D0207E8
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Sep 2020 18:36:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cajg8/6U"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ygcw0dGR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726751AbgI1SgT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 28 Sep 2020 14:36:19 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:58547 "EHLO
+        id S1726840AbgI1Sg1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 28 Sep 2020 14:36:27 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:58501 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726500AbgI1SgS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Sep 2020 14:36:18 -0400
+        by vger.kernel.org with ESMTP id S1726822AbgI1SgW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Sep 2020 14:36:22 -0400
 Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1601318176;
+        s=mimecast20190719; t=1601318181;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:in-reply-to:in-reply-to:references:references;
-        bh=iL0bUDw4mzTbRn0mPQir1H2iMDlMMQuuu3RzcEtjrtI=;
-        b=cajg8/6U5c3aJCedYXkZBkE8ecsZ6nR6lI24rg8ExZyStm1e0qFUcHR4jihv1Aj8J1tGKq
-        rm0qHa2pk/Ux9gqxzlt5ptph1qG8+/RL83yHuBiocE8vZJ8H+tS7kCCzLIz6HA22U0+o1y
-        2/dMzExE3sJBoBokho9paehMuev7TYg=
+        bh=9oz+ynoTvhiufuVyMQ1xRlRqNWLd2L6kBLmgTWRX5ss=;
+        b=Ygcw0dGRLe/e3XgOOe7GEKbOi33+SmaqafwCUcO1dA69FEVi4WDYJv6GaB8TM3UCP34hBz
+        9pqAEQf4jHS35m8znmXpPvOXUEhrpWrj7L0SSeSd6impO8FlzNh69wycCKCfriBjA4vW8i
+        fXy/oBzoTgmDSJqjBgXXaYDP5cCQQaA=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-205-QOoB4A-NNji0hBs9kJXzaw-1; Mon, 28 Sep 2020 14:36:14 -0400
-X-MC-Unique: QOoB4A-NNji0hBs9kJXzaw-1
+ us-mta-498-vfI2srfRPH2G4PSp-PI-ng-1; Mon, 28 Sep 2020 14:36:16 -0400
+X-MC-Unique: vfI2srfRPH2G4PSp-PI-ng-1
 Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 28462ADC25;
-        Mon, 28 Sep 2020 18:36:08 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C434585C732;
+        Mon, 28 Sep 2020 18:36:13 +0000 (UTC)
 Received: from virtlab719.virt.lab.eng.bos.redhat.com (virtlab719.virt.lab.eng.bos.redhat.com [10.19.153.15])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 4E07860C13;
-        Mon, 28 Sep 2020 18:36:06 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 084E860C11;
+        Mon, 28 Sep 2020 18:36:11 +0000 (UTC)
 From:   Nitesh Narayan Lal <nitesh@redhat.com>
 To:     linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
         linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
@@ -53,9 +53,9 @@ To:     linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
         jiri@nvidia.com, mingo@redhat.com, peterz@infradead.org,
         juri.lelli@redhat.com, vincent.guittot@linaro.org,
         lgoncalv@redhat.com
-Subject: [PATCH v4 1/4] sched/isolation: API to get number of housekeeping CPUs
-Date:   Mon, 28 Sep 2020 14:35:26 -0400
-Message-Id: <20200928183529.471328-2-nitesh@redhat.com>
+Subject: [PATCH v4 4/4] PCI: Limit pci_alloc_irq_vectors() to housekeeping CPUs
+Date:   Mon, 28 Sep 2020 14:35:29 -0400
+Message-Id: <20200928183529.471328-5-nitesh@redhat.com>
 In-Reply-To: <20200928183529.471328-1-nitesh@redhat.com>
 References: <20200928183529.471328-1-nitesh@redhat.com>
 X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
@@ -63,40 +63,60 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Introduce a new API housekeeping_num_online_cpus(), that can be used to
-retrieve the number of online housekeeping CPUs based on the housekeeping
-flag passed by the caller.
+If we have isolated CPUs dedicated for use by real-time tasks, we try to
+move IRQs to housekeeping CPUs from the userspace to reduce latency
+overhead on the isolated CPUs.
 
-Some of the consumers for this API are the device drivers that were
-previously relying only on num_online_cpus() to determine the number of
-MSIX vectors to create. In real-time environments to minimize interruptions
-to isolated CPUs, all device-specific IRQ vectors are often moved to the
-housekeeping CPUs, having excess vectors could cause housekeeping CPU to
-run out of IRQ vectors.
+If we allocate too many IRQ vectors, moving them all to housekeeping CPUs
+may exceed per-CPU vector limits.
+
+When we have isolated CPUs, limit the number of vectors allocated by
+pci_alloc_irq_vectors() to the minimum number required by the driver, or
+to one per housekeeping CPU if that is larger.
 
 Signed-off-by: Nitesh Narayan Lal <nitesh@redhat.com>
 ---
- include/linux/sched/isolation.h | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/pci/msi.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-diff --git a/include/linux/sched/isolation.h b/include/linux/sched/isolation.h
-index cc9f393e2a70..e021b1846c1d 100644
---- a/include/linux/sched/isolation.h
-+++ b/include/linux/sched/isolation.h
-@@ -57,4 +57,13 @@ static inline bool housekeeping_cpu(int cpu, enum hk_flags flags)
- 	return true;
- }
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 30ae4ffda5c1..8c156867803c 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -23,6 +23,7 @@
+ #include <linux/slab.h>
+ #include <linux/irqdomain.h>
+ #include <linux/of_irq.h>
++#include <linux/sched/isolation.h>
  
-+static inline unsigned int housekeeping_num_online_cpus(enum hk_flags flags)
-+{
-+#ifdef CONFIG_CPU_ISOLATION
-+	if (static_branch_unlikely(&housekeeping_overridden))
-+		return cpumask_weight(housekeeping_cpumask(flags));
-+#endif
-+	return num_online_cpus();
-+}
+ #include "pci.h"
+ 
+@@ -1191,8 +1192,25 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
+ 				   struct irq_affinity *affd)
+ {
+ 	struct irq_affinity msi_default_affd = {0};
++	unsigned int hk_cpus;
+ 	int nvecs = -ENOSPC;
+ 
++	hk_cpus = housekeeping_num_online_cpus(HK_FLAG_MANAGED_IRQ);
 +
- #endif /* _LINUX_SCHED_ISOLATION_H */
++	/*
++	 * If we have isolated CPUs for use by real-time tasks, to keep the
++	 * latency overhead to a minimum, device-specific IRQ vectors are moved
++	 * to the housekeeping CPUs from the userspace by changing their
++	 * affinity mask. Limit the vector usage to keep housekeeping CPUs from
++	 * running out of IRQ vectors.
++	 */
++	if (hk_cpus < num_online_cpus()) {
++		if (hk_cpus < min_vecs)
++			max_vecs = min_vecs;
++		else if (hk_cpus < max_vecs)
++			max_vecs = hk_cpus;
++	}
++
+ 	if (flags & PCI_IRQ_AFFINITY) {
+ 		if (!affd)
+ 			affd = &msi_default_affd;
 -- 
 2.18.2
 
