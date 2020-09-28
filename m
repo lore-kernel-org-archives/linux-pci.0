@@ -2,128 +2,87 @@ Return-Path: <SRS0=RmUR=DF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A113AC2D0A8
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Sep 2020 21:44:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6EBCC2D0A8
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Sep 2020 23:15:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5C0952083B
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Sep 2020 21:44:03 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="R8qdGiDH"
+	by mail.kernel.org (Postfix) with ESMTP id 84D4920774
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Sep 2020 23:15:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1601334932;
+	bh=kcdtApje+MBHdfUB2c2kJF6E7KxaJcvAdCzfKChA118=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=jQtEqkGuqze8wUmCE0CYuCKh0T9esKQUCcc0Y25afPZfs2zJVNSyrJJhDxoVl8ky2
+	 ar0yVPZE/2G5yGTBM5/B5pBuD2kyWhTkBIthN6+BZaMQfRBey0wEYue32kd9y233Vf
+	 56X4NvNlYrvAy3BOFlBQpbasISh+LGWUvGTWhn+U=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726901AbgI1VoC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 28 Sep 2020 17:44:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50718 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726891AbgI1VoC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Sep 2020 17:44:02 -0400
-Received: from mail-qv1-xf43.google.com (mail-qv1-xf43.google.com [IPv6:2607:f8b0:4864:20::f43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B071C061755
-        for <linux-pci@vger.kernel.org>; Mon, 28 Sep 2020 14:44:02 -0700 (PDT)
-Received: by mail-qv1-xf43.google.com with SMTP id q10so1291889qvs.1
-        for <linux-pci@vger.kernel.org>; Mon, 28 Sep 2020 14:44:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=8fuD6KDogaQaBb3zkEarSXU9oLyjtCvWLZWd0pJwqO8=;
-        b=R8qdGiDHnLhn3SVFCqt/XsTB/oOk7ZvxuTm7suVEPQ0b9ceYYxiJzTO7bHkic7vlHY
-         52tCeaI24nxxvW8rWCyoE5IcHgvGKEZkTFbEVls9R1xWIgxYg7mJvLAmxuN4Wp5FS7ga
-         AdrvAUWyl2tv03srDvT3KayJoM97PsjsKcCtSqY/BWL98c2YODhBbYUD0Tu2QYs7z+Ro
-         2rloz2+HDF0ZpuHuwtW5Fo+rwXqtvN+CDW/gs2UUKSDCOuF9c+nwwl3eoG4HCEBcb4Hr
-         0ROpCxfWxMFPEFOnnCU35C7WdkJxEwvYoDQi3gNOV69+SjLyvpOI4+hED/IbndEmGjGA
-         oClw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=8fuD6KDogaQaBb3zkEarSXU9oLyjtCvWLZWd0pJwqO8=;
-        b=PgumdILjIxxMQ6nrQC7mX7YFX6MTqDFtZCJK1f95DZydHxemUW6PFQpILZbSf6pZSL
-         nO8LTfJUa/YNxeqXxZDMb1nUL4JvCkEbGTSCeFvZ4oqntt9asgDaJBbG2BTzzYxYWWJ5
-         vM8fxGExhVU83Lfqw8Ekx81Bpa28T0+VRMAXovy36DZBHK00RNMBdyrAd698Tj1apci1
-         JjcxxYZ0D1VOGxblPSTvlJvpn5hw9Z7WvIRuFg8wcdRD4wUnUedIoQgNY5OjtCfRwFEf
-         zFZr2zKiFuJr5nJJhGIeuk24vxM7xULD9Kdm7YfM9IG0Kqsa+PJzRvUIC/cAHd96FrJ3
-         UjJw==
-X-Gm-Message-State: AOAM532l+DFKJAIFNpwTmYkMYVqpiVLLNk91ujFAFD91TvaGnVkoPguP
-        Lsnw6lHRd5T9FBfRVIYhJrjHmTpwYzL60fAFrPU=
-X-Google-Smtp-Source: ABdhPJzyWUga8l68FDJvWpG2r9K97axDL58K1sVm1cYnf6IUs2wXOfmN36FlD3iuYTzRRWn+n60jJm2DOiQfLGc4o5s=
-X-Received: by 2002:a05:6214:292:: with SMTP id l18mr1666233qvv.3.1601329441534;
- Mon, 28 Sep 2020 14:44:01 -0700 (PDT)
+        id S1727342AbgI1XPb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 28 Sep 2020 19:15:31 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60218 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727160AbgI1XPb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 28 Sep 2020 19:15:31 -0400
+Received: from localhost (52.sub-72-107-123.myvzw.com [72.107.123.52])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7978B23A40;
+        Mon, 28 Sep 2020 22:39:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1601332763;
+        bh=kcdtApje+MBHdfUB2c2kJF6E7KxaJcvAdCzfKChA118=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=AZfVaZqOhQrLRTWFaK+3oe/rJbTCK9wNNBBhz2CH0NbvtONNqYw9OzJx54t+PFWoy
+         0bM3QR6hcc+ZKBGNusjuEQiO4mjK94byDszMcY4mEox17to9V+IREFI9tug/q/Uzcm
+         TbLFoRYzjg9WiRWwCbkLwifP9Dt4+Uesfg8fvNvk=
+Date:   Mon, 28 Sep 2020 17:39:22 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Li Heng <liheng40@huawei.com>
+Cc:     konrad.wilk@oracle.com, bhelgaas@google.com, tglx@linutronix.de,
+        mingo@redhat.com, bp@alien8.de, x86@kernel.org, hpa@zytor.com,
+        xen-devel@lists.xenproject.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH -next] xen: Fix a previous prototype warning in xen.c
+Message-ID: <20200928223922.GA2503371@bjorn-Precision-5520>
 MIME-Version: 1.0
-References: <CAA85sZuexf2pqfHBCKKGRos8psg_6ZZFeXiFm3ncPz-6JtqEdQ@mail.gmail.com>
- <20200928170921.GA2485236@bjorn-Precision-5520> <CAA85sZuDVA1d_c7OQ3xyZiOVDneL6oN6bM-Sn2QfhfGAAoHhYg@mail.gmail.com>
- <CAKgT0UcQN77zrtRK8yKgNRR0pifGUceoRHXWW+cYukzmsQPNyQ@mail.gmail.com>
-In-Reply-To: <CAKgT0UcQN77zrtRK8yKgNRR0pifGUceoRHXWW+cYukzmsQPNyQ@mail.gmail.com>
-From:   Ian Kumlien <ian.kumlien@gmail.com>
-Date:   Mon, 28 Sep 2020 23:43:50 +0200
-Message-ID: <CAA85sZvEpUH_admrVOX0fX3Ug9erJqEwNRrBg1c72dPzTtFY5g@mail.gmail.com>
-Subject: Re: [PATCH] Use maximum latency when determining L1/L0s ASPM v2
-To:     Alexander Duyck <alexander.duyck@gmail.com>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        "Saheed O. Bolarinwa" <refactormyself@gmail.com>,
-        Puranjay Mohan <puranjay12@gmail.com>,
-        Alexander Duyck <alexander.h.duyck@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <1600958176-23406-1-git-send-email-liheng40@huawei.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Sep 28, 2020 at 9:53 PM Alexander Duyck
-<alexander.duyck@gmail.com> wrote:
->
-> On Mon, Sep 28, 2020 at 10:42 AM Ian Kumlien <ian.kumlien@gmail.com> wrot=
-e:
+On Thu, Sep 24, 2020 at 10:36:16PM +0800, Li Heng wrote:
+> Fix the warning:
+> arch/x86/pci/xen.c:423:13: warning:
+> no previous prototype for ‘xen_msi_init’ [-Wmissing-prototypes]
+> 
+> Reported-by: Hulk Robot <hulkci@huawei.com>
+> Signed-off-by: Li Heng <liheng40@huawei.com>
 
-> Just do a google search for "pcie gen 2 specification" you should find
-> a few results that way.
+Applied to pci/misc for v5.10, thanks!
 
-Actually found a draft pcie gen 4 spec...
-
-and according to 5.4.1.2.2 exit from the L1 State
-"A Switch is required to initiate an L1 exit transition on its
-Upstream Port Link after no more than 1
-=CE=BCs from the beginning of an L1 exit transition on any of its
-Downstream Port Links. Refer to
-Section 4.2 for details of the Physical Layer signaling during L1 exit.
-
-Consider the example in Figure 5-8. The numbers attached to each Port
-represent the
-corresponding Port=E2=80=99s reported Transmit Lanes L1 exit latency in uni=
-ts
-of microseconds.
-
-Links 1, 2, and 3 are all in the L1 state, and Endpoint C initiates a
-transition to the L0 state at time
-T. Since Switch B takes 32 =CE=BCs to exit L1 on its Ports, Link 3 will
-transition to the L0 state at T+32
-(longest time considering T+8 for the Endpoint C, and T+32 for Switch B).
-
-Switch B is required to initiate a transition from the L1 state on its
-Upstream Port Link (Link 2)
-after no more than 1 =CE=BCs from the beginning of the transition from the
-L1 state on Link 3.
-Therefore, transition to the L0 state will begin on Link 2 at T+1.
-Similarly, Link 1 will start its
-transition to the L0 state at time T+2.
-
-Following along as above, Link 2 will complete its transition to the
-L0 state at time T+33 (since
-Switch B takes longer to transition and it started at time T+1). Link
-1 will complete its transition to
-the L0 state at time T+34 (since the Root Complex takes 32 =CE=BCs to
-transition and it started at time
-T+2).
-
-Therefore, among Links 1, 2, and 3, the Link to complete the
-transition to the L0 state last is Link 1
-with a 34 =CE=BCs delay. This is the delay experienced by the packet that
-initiated the transition in
-Endpoint C."
-
-So basically, my change to L1 is validated by this, ;)
+> ---
+>  arch/x86/pci/xen.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
+> index 89395a5..f663a5f 100644
+> --- a/arch/x86/pci/xen.c
+> +++ b/arch/x86/pci/xen.c
+> @@ -420,7 +420,7 @@ int __init pci_xen_init(void)
+>  }
+> 
+>  #ifdef CONFIG_PCI_MSI
+> -void __init xen_msi_init(void)
+> +static void __init xen_msi_init(void)
+>  {
+>  	if (!disable_apic) {
+>  		/*
+> --
+> 2.7.4
+> 
