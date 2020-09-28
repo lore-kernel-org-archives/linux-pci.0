@@ -4,97 +4,124 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E388FC2D0A8
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Sep 2020 23:45:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C127C2D0A8
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Sep 2020 23:55:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9FBF6207D8
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Sep 2020 23:45:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB81720825
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Sep 2020 23:55:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1601336732;
-	bh=S4ZZpLxDLTrA5UZupqdxXb9DG8i/pEmX4qZWLYkRWqw=;
+	s=default; t=1601337340;
+	bh=0n1xJcdLngQdEbL6h/atc0mGb4YVbGMJlbNqrb3rWc0=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=2RTZfx8He55RYIiNy4MB50bHNt2WIC01eo51Fe7KtsqL/YQrrFWrNLQS1bvQeMSyG
-	 Izu7vimf5yz8GTQ8zzZiwkl9gdKKa5eGXdxtkw9+AM/vlmld1I2FVufPfDzRdTkmtX
-	 AUtpR6wJz962NrWYl2sNcy5C6BFbn8jE7qCj9zLA=
+	b=FrXhNmuOeuxmhswiwhGqZTyACm5WHBdDTirnSmtoPAr3GQgs0hTn/tRZ5M4IMnvQH
+	 WmwZEw8EcJ2saBNRyOviXa672HiYF8ZKWiXWT5H/b3ft++2EWtntxTCamn7xYCwIEq
+	 o+JsAePooD9Zq9YW0fmewvs5f/+IDcVS/0Us2noA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727056AbgI1Xpb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 28 Sep 2020 19:45:31 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42602 "EHLO mail.kernel.org"
+        id S1727132AbgI1Xzc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 28 Sep 2020 19:55:32 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51780 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726477AbgI1Xpb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 28 Sep 2020 19:45:31 -0400
+        id S1726522AbgI1Xzc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 28 Sep 2020 19:55:32 -0400
 Received: from localhost (52.sub-72-107-123.myvzw.com [72.107.123.52])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9C21723A01;
-        Mon, 28 Sep 2020 22:28:04 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id BFCA52083B;
+        Mon, 28 Sep 2020 21:59:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1601332084;
-        bh=S4ZZpLxDLTrA5UZupqdxXb9DG8i/pEmX4qZWLYkRWqw=;
+        s=default; t=1601330373;
+        bh=0n1xJcdLngQdEbL6h/atc0mGb4YVbGMJlbNqrb3rWc0=;
         h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=SB4BB2mHCAapqsvbg/J7bspl5EcJQiNPoxQKinVP3NsRZ7/Oc7KILiQJJitQNwBgL
-         JzlA/nGYacTQPMpYrH1ZwYxO+wy52aBWRV5oMtLMl1/wbdOO4Mef4wGk1mCiRsGNk6
-         MvMbsJBqJ901IXw67oz5XIRp/Gx4Xd2apK0YHcsc=
-Date:   Mon, 28 Sep 2020 17:28:03 -0500
+        b=TPpxBphvz+2D9Uwv5VqfQh0wF+3Q/7TSzzgny4d7237sTORHdrdkk58bs1BWlGT6v
+         zx70R2QzsjjCdGSPdGWmHX1ifdjxKDGigQo4yWcs4p9sTTOTpGuvhuao0t38NmeFAX
+         O1xWNs/AwwHQU1IqkaFmk4+tPRE2S87hvWuuckTY=
+Date:   Mon, 28 Sep 2020 16:59:31 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: shpchp: Remove unused assignment to variable rc
-Message-ID: <20200928222803.GA2502380@bjorn-Precision-5520>
+To:     Nitesh Narayan Lal <nitesh@redhat.com>, hch@infradead.org
+Cc:     linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
+        frederic@kernel.org, mtosatti@redhat.com, sassmann@redhat.com,
+        jesse.brandeburg@intel.com, lihong.yang@intel.com,
+        jeffrey.t.kirsher@intel.com, jacob.e.keller@intel.com,
+        jlelli@redhat.com, bhelgaas@google.com, mike.marciniszyn@intel.com,
+        dennis.dalessandro@intel.com, thomas.lendacky@amd.com,
+        jiri@nvidia.com, mingo@redhat.com, peterz@infradead.org,
+        juri.lelli@redhat.com, vincent.guittot@linaro.org,
+        lgoncalv@redhat.com
+Subject: Re: [PATCH v4 4/4] PCI: Limit pci_alloc_irq_vectors() to
+ housekeeping CPUs
+Message-ID: <20200928215931.GA2499944@bjorn-Precision-5520>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20200923025225.471459-1-kw@linux.com>
+In-Reply-To: <20200928183529.471328-5-nitesh@redhat.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Sep 23, 2020 at 02:52:25AM +0000, Krzysztof Wilczyński wrote:
-> The value of the constant POWER_FAILURE assigned to the variable rc
-> after the power fault check is never used for anything within the body
-> of the board_added() function and it is also overridden later following
-> jump to the err_exit label with the return value from the slot_disable()
-> callback.
-> 
-> Since the value of rc is never used in any meaningful way the assignment
-> can be removed.
-> 
-> I believe the assignment of constant POWER_FAILURE to the rc variable
-> was initially taken from the file drivers/pci/hotplug/cpqphp_ctrl.c and
-> then used in the file pci/hotplug/shpchp_ctrl.c (the code base is very
-> similar) around the time of the Kernel version 2.6.4-rc1 when the
-> support for the Standard Hot Plug was first added, sadly the Git history
-> only goes as far as to commit 1da177e4c3f4 ("Linux-2.6.12-rc2").
-> 
-> Related:
->   https://elixir.bootlin.com/linux/v2.6.4-rc1/source/drivers/pci/hotplug/shpchp_ctrl.c
->   https://elixir.bootlin.com/linux/v2.6.4-rc1/source/drivers/pci/hotplug/cpqphp_ctrl.c
-> 
-> Addresses-Coverity-ID: 1226899 ("Unused value")
-> Signed-off-by: Krzysztof Wilczyński <kw@linux.com>
+[to: Christoph in case he has comments, since I think he wrote this code]
 
-Applied to pci/hotplug for v5.10, thanks!
+On Mon, Sep 28, 2020 at 02:35:29PM -0400, Nitesh Narayan Lal wrote:
+> If we have isolated CPUs dedicated for use by real-time tasks, we try to
+> move IRQs to housekeeping CPUs from the userspace to reduce latency
+> overhead on the isolated CPUs.
+> 
+> If we allocate too many IRQ vectors, moving them all to housekeeping CPUs
+> may exceed per-CPU vector limits.
+> 
+> When we have isolated CPUs, limit the number of vectors allocated by
+> pci_alloc_irq_vectors() to the minimum number required by the driver, or
+> to one per housekeeping CPU if that is larger.
+> 
+> Signed-off-by: Nitesh Narayan Lal <nitesh@redhat.com>
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
 > ---
->  drivers/pci/hotplug/shpchp_ctrl.c | 1 -
->  1 file changed, 1 deletion(-)
+>  drivers/pci/msi.c | 18 ++++++++++++++++++
+>  1 file changed, 18 insertions(+)
 > 
-> diff --git a/drivers/pci/hotplug/shpchp_ctrl.c b/drivers/pci/hotplug/shpchp_ctrl.c
-> index 65502e3f7b4f..6a6705e0cf17 100644
-> --- a/drivers/pci/hotplug/shpchp_ctrl.c
-> +++ b/drivers/pci/hotplug/shpchp_ctrl.c
-> @@ -299,7 +299,6 @@ static int board_added(struct slot *p_slot)
->  	if (p_slot->status == 0xFF) {
->  		/* power fault occurred, but it was benign */
->  		ctrl_dbg(ctrl, "%s: Power fault\n", __func__);
-> -		rc = POWER_FAILURE;
->  		p_slot->status = 0;
->  		goto err_exit;
->  	}
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index 30ae4ffda5c1..8c156867803c 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -23,6 +23,7 @@
+>  #include <linux/slab.h>
+>  #include <linux/irqdomain.h>
+>  #include <linux/of_irq.h>
+> +#include <linux/sched/isolation.h>
+>  
+>  #include "pci.h"
+>  
+> @@ -1191,8 +1192,25 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
+>  				   struct irq_affinity *affd)
+>  {
+>  	struct irq_affinity msi_default_affd = {0};
+> +	unsigned int hk_cpus;
+>  	int nvecs = -ENOSPC;
+>  
+> +	hk_cpus = housekeeping_num_online_cpus(HK_FLAG_MANAGED_IRQ);
+> +
+> +	/*
+> +	 * If we have isolated CPUs for use by real-time tasks, to keep the
+> +	 * latency overhead to a minimum, device-specific IRQ vectors are moved
+> +	 * to the housekeeping CPUs from the userspace by changing their
+> +	 * affinity mask. Limit the vector usage to keep housekeeping CPUs from
+> +	 * running out of IRQ vectors.
+> +	 */
+> +	if (hk_cpus < num_online_cpus()) {
+> +		if (hk_cpus < min_vecs)
+> +			max_vecs = min_vecs;
+> +		else if (hk_cpus < max_vecs)
+> +			max_vecs = hk_cpus;
+> +	}
+> +
+>  	if (flags & PCI_IRQ_AFFINITY) {
+>  		if (!affd)
+>  			affd = &msi_default_affd;
 > -- 
-> 2.28.0
+> 2.18.2
 > 
