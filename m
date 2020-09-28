@@ -2,125 +2,65 @@ Return-Path: <SRS0=RmUR=DF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D00FDC4346E
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Sep 2020 01:12:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A27D8C4346E
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Sep 2020 01:26:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9788823A34
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Sep 2020 01:12:04 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nHs4v/ps"
+	by mail.kernel.org (Postfix) with ESMTP id 6570123A53
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Sep 2020 01:26:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726564AbgI1BLy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 27 Sep 2020 21:11:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58354 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726540AbgI1BLs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 27 Sep 2020 21:11:48 -0400
-Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5EE48C0613D3;
-        Sun, 27 Sep 2020 18:11:48 -0700 (PDT)
-Received: by mail-pf1-x430.google.com with SMTP id d6so7816349pfn.9;
-        Sun, 27 Sep 2020 18:11:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :in-reply-to:references;
-        bh=RbUPOCBGx+/qJrr8Ez4S2C0kNlWb8mn3aBv1N3ThozA=;
-        b=nHs4v/psceHvzps3ZT99hLuEQ8WjgLpnAExURL2mvFuUFcCPQPc3uoNAW4I9Qlkbe0
-         oJgP4cmyax8rXOIoA6my6s9p2ttuZL6MxggpLXsvdw6pWHea/DuYlSv4JOn5shKePQTR
-         d1mHTNUp+G6cNrPy9CDjgCR2J8tWGEZyhcrljQrKfQSwPAAiAc6GdXHcArxH/hLN8Htq
-         FxT0y5LMWKKRyOpZ9RcZw4TsUs2yfZDNn09gEv3YGP+Qp492WUH99Usy0Z16vYXXBv8U
-         PFyPtwmeQTDou3Juv7N08BZCT3xYYXoAAOtLPEq2H/ZOd5xlEA8cHixo+FUUDG7IMBkH
-         JEsw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:in-reply-to:references;
-        bh=RbUPOCBGx+/qJrr8Ez4S2C0kNlWb8mn3aBv1N3ThozA=;
-        b=s4FOyvLj3AQM6euacwkTQx6j+sLYvacn5EMZofSuPZVQ7lxVrOQEz//wVR0U83ULdj
-         oVSq5Q4QtBurHhtZVDieUdu1sBiY5Zm/Iibav+R+6QuEJGInGa4P2KP/YED+qDgAWsZR
-         XsJbWFhNr3HaPCnJkzYwyZl9TjnDNynoVs8oot449P3VB52Jy5i3ytJGO5Vn8Wz8+Qsq
-         +nTnOdehPddRyR5UNPndyhaAmIJJXKvMmoFxbdZ7x+6xDWIG25Xu+rjk3zKjYpWV/eqi
-         ugbs3B2O70ZqaVDBeUsuxNLhALjVheWyhGWzDqB7Ih4PHVpyI9hXwSl62ktvwnZ8BDUo
-         y3QA==
-X-Gm-Message-State: AOAM5336bR9cPBxqwvvq+91l2EXGtOq98wqX5yQlOG9NbxqPEbg+/BGw
-        mYkJhtDNF9418SgScys0aMk=
-X-Google-Smtp-Source: ABdhPJzR6mNaHD4aBGMs33RtBN05y5uhj/c3/4/5pGOMJI/j41YGeCvXWhJjAQGxaY27lCVYaZ7oZg==
-X-Received: by 2002:a63:c112:: with SMTP id w18mr7035284pgf.31.1601255507887;
-        Sun, 27 Sep 2020 18:11:47 -0700 (PDT)
-Received: from skuppusw-mobl5.amr.corp.intel.com (jfdmzpr04-ext.jf.intel.com. [134.134.137.73])
-        by smtp.gmail.com with ESMTPSA id 137sm9368048pfb.183.2020.09.27.18.11.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 27 Sep 2020 18:11:47 -0700 (PDT)
-From:   Kuppuswamy Sathyanarayanan <sathyanarayanan.nkuppuswamy@gmail.com>
-X-Google-Original-From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-To:     bhelgaas@google.com
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ashok.raj@intel.com, sathyanarayanan.kuppuswamy@linux.intel.com
-Subject: [PATCH v9 5/5] PCI/DPC: Move AER/DPC dependency checks out of DPC driver
-Date:   Sun, 27 Sep 2020 18:11:36 -0700
-Message-ID: <2c112fb150348099af5db2f399b21968ab6577e3.1600457297.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <cover.1600457297.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-References: <cover.1600457297.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-In-Reply-To: <cover.1600457297.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-References: <cover.1600457297.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+        id S1726396AbgI1BZ4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 27 Sep 2020 21:25:56 -0400
+Received: from mga14.intel.com ([192.55.52.115]:32171 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726387AbgI1BZ4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 27 Sep 2020 21:25:56 -0400
+IronPort-SDR: x3QNEWncSG7cW7dEgr5bLyFrwLVD+wO6qcQVWc60vwp6MyMuIi0seUfP8T2PGy5ze4cvQKiv0r
+ XeP/PV5yFKJQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9757"; a="161157201"
+X-IronPort-AV: E=Sophos;i="5.77,312,1596524400"; 
+   d="scan'208";a="161157201"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Sep 2020 18:26:11 -0700
+IronPort-SDR: yfkXTY7GCrcz+RWiqPv7XGs76ZwST/szo0jHRFZ3mlLKONoUkk0+xLDzcrpFzgha4Q2GkFDzu1
+ ZBA4Ordx/eHQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.77,312,1596524400"; 
+   d="scan'208";a="488360770"
+Received: from unknown (HELO localhost.lm.intel.com) ([10.232.116.36])
+  by orsmga005.jf.intel.com with ESMTP; 27 Sep 2020 18:26:10 -0700
+From:   Jon Derrick <jonathan.derrick@intel.com>
+To:     <linux-pci@vger.kernel.org>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Andrzej Jakowski <andrzej.jakowski@linux.intel.com>,
+        Dave Fugate <david.fugate@intel.com>,
+        Jon Derrick <jonathan.derrick@intel.com>
+Subject: [PATCH 0/2] VMD subdevice secondary bus resets
+Date:   Sun, 27 Sep 2020 21:05:55 -0400
+Message-Id: <20200928010557.5324-1-jonathan.derrick@intel.com>
+X-Mailer: git-send-email 2.18.1
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
-Message-ID: <20200928011136.gKBSNuHL1Oh1uLRDu_18qx1zveNGa7TQlT7q4S0rhwg@z>
 
-Currently, AER and DPC Capabilities dependency checks is
-distributed between DPC and portdrv service drivers. So move
-them out of DPC driver.
+This set adds some resets for VMD. It's very common code but doesn't
+seem to fit well anywhere that can also be exported if VMD is built as a
+module.
 
-Also, since services & PCIE_PORT_SERVICE_AER check already
-ensures AER native ownership, no need to add additional
-pcie_aer_is_native() check.
+Jon Derrick (2):
+  PCI: vmd: Reset the VMD subdevice domain on probe
+  PCI: Add a reset quirk for VMD
 
-Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
----
- drivers/pci/pcie/dpc.c          | 4 ----
- drivers/pci/pcie/portdrv_core.c | 1 +
- 2 files changed, 1 insertion(+), 4 deletions(-)
+ drivers/pci/controller/vmd.c | 32 ++++++++++++++++++++++++
+ drivers/pci/quirks.c         | 48 ++++++++++++++++++++++++++++++++++++
+ 2 files changed, 80 insertions(+)
 
-diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-index 5b1025a2994d..6261b0382f65 100644
---- a/drivers/pci/pcie/dpc.c
-+++ b/drivers/pci/pcie/dpc.c
-@@ -280,14 +280,10 @@ void pci_dpc_init(struct pci_dev *pdev)
- static int dpc_probe(struct pcie_device *dev)
- {
- 	struct pci_dev *pdev = dev->port;
--	struct pci_host_bridge *host = pci_find_host_bridge(pdev->bus);
- 	struct device *device = &dev->device;
- 	int status;
- 	u16 ctl, cap;
- 
--	if (!pcie_aer_is_native(pdev) && !host->native_dpc)
--		return -ENOTSUPP;
--
- 	status = devm_request_threaded_irq(device, dev->irq, dpc_irq,
- 					   dpc_handler, IRQF_SHARED,
- 					   "pcie-dpc", pdev);
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index e257a2ca3595..ffa1d9fc458e 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -252,6 +252,7 @@ static int get_port_device_capability(struct pci_dev *dev)
- 	 * permission to use AER.
- 	 */
- 	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC) &&
-+	    host->native_dpc &&
- 	    (host->native_dpc || (services & PCIE_PORT_SERVICE_AER)))
- 		services |= PCIE_PORT_SERVICE_DPC;
- 
 -- 
-2.17.1
+2.18.1
 
