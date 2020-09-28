@@ -2,124 +2,246 @@ Return-Path: <SRS0=RmUR=DF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11E32C4346E
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Sep 2020 01:11:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8E92C4346E
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Sep 2020 01:11:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AFADA23A34
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Sep 2020 01:11:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8902423A40
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Sep 2020 01:11:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ip7HYjaF"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jj/0c5aI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726406AbgI1BLo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 27 Sep 2020 21:11:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58334 "EHLO
+        id S1726500AbgI1BLq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 27 Sep 2020 21:11:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58342 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726396AbgI1BLo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 27 Sep 2020 21:11:44 -0400
-Received: from mail-pg1-x542.google.com (mail-pg1-x542.google.com [IPv6:2607:f8b0:4864:20::542])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6626BC0613CE;
-        Sun, 27 Sep 2020 18:11:44 -0700 (PDT)
-Received: by mail-pg1-x542.google.com with SMTP id t14so6841137pgl.10;
-        Sun, 27 Sep 2020 18:11:44 -0700 (PDT)
+        with ESMTP id S1726469AbgI1BLp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 27 Sep 2020 21:11:45 -0400
+Received: from mail-pf1-x441.google.com (mail-pf1-x441.google.com [IPv6:2607:f8b0:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8860C0613CE;
+        Sun, 27 Sep 2020 18:11:45 -0700 (PDT)
+Received: by mail-pf1-x441.google.com with SMTP id x22so7813568pfo.12;
+        Sun, 27 Sep 2020 18:11:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=brvnhRHveKpcyA289fKWkqddwqDpTeKxSpM0NIBNgNI=;
-        b=Ip7HYjaFcNh8iBube4A0vFBHWqdpBW2GLeGxz8cmRVlZ7LLKoXUyrChLzenGuv+7d+
-         Gelka4dnulxH5OtNGJy6f/qLZ6BYBcgBbwB724etiMUmajB6wDgl8PKKjCFg6folDwAp
-         tFuHWKPTPoxusgpvz7G2ab9RYnAHZWH5bdV1t7EurDA3jHh9ThKkMUhq11KBdfkd/Rue
-         HnN3C7U5MfKsi8+70iPdW9t5gflIveiAKQLwlJKZIOpn8IvWEAQregFmuylPGfsXnw17
-         BANbDZajhoKUkpXe/O7JSFHx3uhRGvCdpJ6Ivg/mz5mrA54IztqCyhUlIIQlturrSrqP
-         fjVA==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :in-reply-to:references;
+        bh=3FpCdq40qaHHJ+6I8hJ9zZ5vU56SPuY+MNGmHqX84vs=;
+        b=jj/0c5aIarQn9ZmrVgy86bahreWeeiXRw5kzfH2ZKEnfi3Lshwk8xrpet72eOViYBr
+         WayHnRGnuBqcdJ63tttF82PYBcMRTpY/WiF1HwsGF3BBPTCh0WStHykEjjIuUkoqLEWQ
+         JgosQX6MdG/BAp8MEy6LP634wciP48Q2g+iNZGCrL7D3rIfxoU/0KNlcyXEs6UboB86c
+         sRqyM7C/seN/9VuXBH/FSf2WaXI0sYvxsD0Z0zbicSpB/L4kTfwXYQSFxm5ps9LnIDdR
+         T5m2o4YPK8GLFeFfCAuEPvfYguf9XHHo9DMFJv6xTDyGWDYDfIDeYN3Uawu4159PMIUT
+         FxBg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=brvnhRHveKpcyA289fKWkqddwqDpTeKxSpM0NIBNgNI=;
-        b=Bz9RRkTvRBsP7lfD1BG/7B47lKxK6PgJiykaAbUN7l7nYXcBDlSIIGi5OH2O53B2V9
-         dVYBAiA2CMPnKecSLRO7fLwCaAxdAqOZI3okz6JzqB1qxEC836AUUJj3WlH49gKlwAEd
-         r9NVyZ+CU0roFoHHCQodAntreaRzl2GLJjs4hGsn6S50g2hvkQer8rK9Ja5siUAu/4g7
-         C2emfWLKI9VwgkvU0tXNY83hUvPcOunPVSd+OLVIxZpgpDxPqKmndLgjn0j4EQ+kT5bv
-         DZ959MjkcfmWmVdAW3QIrR3CVE0mcTpugW9DAfPMPq9M6c83V6OJEEv30S5eJ31GiXfu
-         33VQ==
-X-Gm-Message-State: AOAM532sLwiM3qtgj2WHPc6kmsAaRjEQyMYrqCH3jupmhO0oKV/NVd1h
-        QPkX5JU57QXkoIEHAZ8bkJA=
-X-Google-Smtp-Source: ABdhPJwXs2WQgMY/3KIGHrSBplUPoLhS47mHpcCvyOvOnfvhOYpy3gs2bT9z4JNoF0LKZT0PFljIEA==
-X-Received: by 2002:a63:c00d:: with SMTP id h13mr7294429pgg.358.1601255503840;
-        Sun, 27 Sep 2020 18:11:43 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:in-reply-to:references;
+        bh=3FpCdq40qaHHJ+6I8hJ9zZ5vU56SPuY+MNGmHqX84vs=;
+        b=ObhScCoCYL20XchDoawphZkglZQtsV9WwZdrVWG+ZRPsUsK90IiJafciTgFYxurjQ0
+         PO9stoM8+2lXtvtcmIgBJAEzfsvZxix5AZH79SxL7zUxJqbMb+064hU+KBJ7Vpx1fhRY
+         oHSjgye7m6gujVwOaABMGISporM2oQV51hSoeSX+ax6N7NIsOxtBSsHtxzRGAysiVmcD
+         hEcoPjhO4SskgAD0nWTNOBqnOKY91SJhfA/tTElpeoG63QH+IenwfKLWxmVxWWY+5K7w
+         y1Gy1xPKk6ZbgflkFe9xkZr7OKtWBShHofPRlrg2PZ/IOejcBjvyAp1Db4jtoirVxsZJ
+         7ZVA==
+X-Gm-Message-State: AOAM531rt54DIbJ77kf0zKF1Yas9lYjEnc+zbxsGjIYA/j7dsDLCmMkU
+        aK2Yo6aEErQ/VjIY7lYqFmk=
+X-Google-Smtp-Source: ABdhPJz75H/TcvCRpimFPuwLVxjQ/C6tOKz9HZS2hNGfsTqbSjS035NxxIBF9U2pQdokGDk4za4L2Q==
+X-Received: by 2002:a63:e444:: with SMTP id i4mr7151702pgk.304.1601255505382;
+        Sun, 27 Sep 2020 18:11:45 -0700 (PDT)
 Received: from skuppusw-mobl5.amr.corp.intel.com (jfdmzpr04-ext.jf.intel.com. [134.134.137.73])
-        by smtp.gmail.com with ESMTPSA id 137sm9368048pfb.183.2020.09.27.18.11.43
+        by smtp.gmail.com with ESMTPSA id 137sm9368048pfb.183.2020.09.27.18.11.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 27 Sep 2020 18:11:43 -0700 (PDT)
+        Sun, 27 Sep 2020 18:11:45 -0700 (PDT)
 From:   Kuppuswamy Sathyanarayanan <sathyanarayanan.nkuppuswamy@gmail.com>
 X-Google-Original-From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 To:     bhelgaas@google.com
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         ashok.raj@intel.com, sathyanarayanan.kuppuswamy@linux.intel.com
-Subject: [PATCH v9 0/5] Simplify PCIe native ownership detection logic
-Date:   Sun, 27 Sep 2020 18:11:31 -0700
-Message-ID: <cover.1600457297.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+Subject: [PATCH v9 2/5] ACPI/PCI: Ignore _OSC negotiation result if pcie_ports_native is set.
+Date:   Sun, 27 Sep 2020 18:11:33 -0700
+Message-Id: <6b39e90a03b8c2b999a0307ea307cc1d413382c6.1600457297.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <cover.1600457297.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+References: <cover.1600457297.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+In-Reply-To: <cover.1600457297.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+References: <cover.1600457297.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
-Message-ID: <20200928011131.MI-pJpJNRQw6c35j_O6019flLWHe08C4WvKPmKEbnik@z>
 
-Currently, PCIe capabilities ownership status is detected by
-verifying the status of pcie_ports_native, pcie_ports_dpc_native
-and _OSC negotiated results (cached in  struct pci_host_bridge
-->native_* members). But this logic can be simplified, and we can
-use only struct pci_host_bridge ->native_* members to detect it. 
+pcie_ports_native is set only if user requests native handling
+of PCIe capabilities via pcie_port_setup command line option.
+User input takes precedence over _OSC based control negotiation
+result. So consider the _OSC negotiated result only if
+pcie_ports_native is unset.
 
-This patchset removes the distributed checks for pcie_ports_native,
-pcie_ports_dpc_native parameters.
+Also, since struct pci_host_bridge ->native_* members caches the
+ownership status of various PCIe capabilities, use them instead
+of distributed checks for pcie_ports_native.
 
-Changes since v8:
- * Simplified setting _OSC ownwership logic
- * Moved bridge->native_ltr out of #ifdef CONFIG_PCIEPORTBUS.
-
-Changes since v7:
- * Fixed "fix array_size.cocci warnings".
-
-Changes since v6:
- * Created new patch for CONFIG_PCIEPORTBUS check in
-   pci_init_host_bridge().
- * Added warning message for a case when pcie_ports_native
-   overrides _OSC negotiation result.
-
-Changes since v5:
- * Rebased on top of v5.8-rc1
-
-Changes since v4:
- * Changed the patch set title (Original link: https://lkml.org/lkml/2020/5/26/1710)
- * Added AER/DPC dependency logic cleanup fixes.
- 
-
-Kuppuswamy Sathyanarayanan (5):
-  PCI: Conditionally initialize host bridge native_* members
-  ACPI/PCI: Ignore _OSC negotiation result if pcie_ports_native is set.
-  ACPI/PCI: Ignore _OSC DPC negotiation result if pcie_ports_dpc_native
-    is set.
-  PCI/portdrv: Remove redundant pci_aer_available() check in DPC enable
-    logic
-  PCI/DPC: Move AER/DPC dependency checks out of DPC driver
-
- drivers/acpi/pci_root.c           | 37 ++++++++++++++++++++++---------
+Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+---
+ drivers/acpi/pci_root.c           | 33 +++++++++++++++++++++----------
  drivers/pci/hotplug/pciehp_core.c |  2 +-
  drivers/pci/pci-acpi.c            |  3 ---
  drivers/pci/pcie/aer.c            |  2 +-
- drivers/pci/pcie/dpc.c            |  3 ---
- drivers/pci/pcie/portdrv.h        |  2 --
- drivers/pci/pcie/portdrv_core.c   | 13 +++++------
- drivers/pci/probe.c               |  6 +++--
+ drivers/pci/pcie/portdrv_core.c   |  9 +++------
  include/linux/acpi.h              |  2 ++
- include/linux/pci.h               |  2 ++
- 10 files changed, 42 insertions(+), 30 deletions(-)
+ 6 files changed, 30 insertions(+), 21 deletions(-)
 
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index f90e841c59f5..9749b7abdd7e 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -43,6 +43,10 @@ static int acpi_pci_root_scan_dependent(struct acpi_device *adev)
+ 				| OSC_PCI_CLOCK_PM_SUPPORT \
+ 				| OSC_PCI_MSI_SUPPORT)
+ 
++#define OSC_OWNER(ctrl, bit, flag) \
++	if (!(ctrl & bit)) \
++		flag = 0;
++
+ static const struct acpi_device_id root_device_ids[] = {
+ 	{"PNP0A03", 0},
+ 	{"", 0},
+@@ -889,6 +893,7 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+ 	struct pci_bus *bus;
+ 	struct pci_host_bridge *host_bridge;
+ 	union acpi_object *obj;
++	u32 ctrl;
+ 
+ 	info->root = root;
+ 	info->bridge = device;
+@@ -914,18 +919,26 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+ 		goto out_release_info;
+ 
+ 	host_bridge = to_pci_host_bridge(bus->bridge);
+-	if (!(root->osc_control_set & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
+-		host_bridge->native_pcie_hotplug = 0;
++
++	  if (pcie_ports_native) {
++		  decode_osc_control(root, "OS forcibly taking over",
++				     OSC_PCI_EXPRESS_CONTROL_MASKS);
++	  } else {
++		  ctrl = root->osc_control_set;
++		  OSC_OWNER(ctrl, OSC_PCI_EXPRESS_NATIVE_HP_CONTROL,
++			    host_bridge->native_pcie_hotplug);
++		  OSC_OWNER(ctrl, OSC_PCI_EXPRESS_AER_CONTROL,
++			    host_bridge->native_aer);
++		  OSC_OWNER(ctrl, OSC_PCI_EXPRESS_PME_CONTROL,
++			    host_bridge->native_pme);
++		  OSC_OWNER(ctrl, OSC_PCI_EXPRESS_LTR_CONTROL,
++			    host_bridge->native_ltr);
++		  OSC_OWNER(ctrl, OSC_PCI_EXPRESS_DPC_CONTROL,
++			    host_bridge->native_dpc);
++	  }
++
+ 	if (!(root->osc_control_set & OSC_PCI_SHPC_NATIVE_HP_CONTROL))
+ 		host_bridge->native_shpc_hotplug = 0;
+-	if (!(root->osc_control_set & OSC_PCI_EXPRESS_AER_CONTROL))
+-		host_bridge->native_aer = 0;
+-	if (!(root->osc_control_set & OSC_PCI_EXPRESS_PME_CONTROL))
+-		host_bridge->native_pme = 0;
+-	if (!(root->osc_control_set & OSC_PCI_EXPRESS_LTR_CONTROL))
+-		host_bridge->native_ltr = 0;
+-	if (!(root->osc_control_set & OSC_PCI_EXPRESS_DPC_CONTROL))
+-		host_bridge->native_dpc = 0;
+ 
+ 	/*
+ 	 * Evaluate the "PCI Boot Configuration" _DSM Function.  If it
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index ad3393930ecb..d1831e6bf60a 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -256,7 +256,7 @@ static bool pme_is_native(struct pcie_device *dev)
+ 	const struct pci_host_bridge *host;
+ 
+ 	host = pci_find_host_bridge(dev->port->bus);
+-	return pcie_ports_native || host->native_pme;
++	return host->native_pme;
+ }
+ 
+ static void pciehp_disable_interrupt(struct pcie_device *dev)
+diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+index d5869a03f748..2e53d8bf1fe5 100644
+--- a/drivers/pci/pci-acpi.c
++++ b/drivers/pci/pci-acpi.c
+@@ -800,9 +800,6 @@ bool pciehp_is_native(struct pci_dev *bridge)
+ 	if (!(slot_cap & PCI_EXP_SLTCAP_HPC))
+ 		return false;
+ 
+-	if (pcie_ports_native)
+-		return true;
+-
+ 	host = pci_find_host_bridge(bridge->bus);
+ 	return host->native_pcie_hotplug;
+ }
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index 65dff5f3457a..79bb441139c2 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -219,7 +219,7 @@ int pcie_aer_is_native(struct pci_dev *dev)
+ 	if (!dev->aer_cap)
+ 		return 0;
+ 
+-	return pcie_ports_native || host->native_aer;
++	return host->native_aer;
+ }
+ 
+ int pci_enable_pcie_error_reporting(struct pci_dev *dev)
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index 50a9522ab07d..ccd5e0ce5605 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -208,8 +208,7 @@ static int get_port_device_capability(struct pci_dev *dev)
+ 	struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
+ 	int services = 0;
+ 
+-	if (dev->is_hotplug_bridge &&
+-	    (pcie_ports_native || host->native_pcie_hotplug)) {
++	if (dev->is_hotplug_bridge && host->native_pcie_hotplug) {
+ 		services |= PCIE_PORT_SERVICE_HP;
+ 
+ 		/*
+@@ -221,8 +220,7 @@ static int get_port_device_capability(struct pci_dev *dev)
+ 	}
+ 
+ #ifdef CONFIG_PCIEAER
+-	if (dev->aer_cap && pci_aer_available() &&
+-	    (pcie_ports_native || host->native_aer)) {
++	if (dev->aer_cap && pci_aer_available() && host->native_aer) {
+ 		services |= PCIE_PORT_SERVICE_AER;
+ 
+ 		/*
+@@ -238,8 +236,7 @@ static int get_port_device_capability(struct pci_dev *dev)
+ 	 * Event Collectors can also generate PMEs, but we don't handle
+ 	 * those yet.
+ 	 */
+-	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT &&
+-	    (pcie_ports_native || host->native_pme)) {
++	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT && host->native_pme) {
+ 		services |= PCIE_PORT_SERVICE_PME;
+ 
+ 		/*
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 1e4cdc6c7ae2..a1b2b16f34ce 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -569,6 +569,8 @@ extern bool osc_pc_lpi_support_confirmed;
+ #define OSC_PCI_EXPRESS_LTR_CONTROL		0x00000020
+ #define OSC_PCI_EXPRESS_DPC_CONTROL		0x00000080
+ #define OSC_PCI_CONTROL_MASKS			0x000000bf
++/* Masks specific to PCIe Capabilities */
++#define OSC_PCI_EXPRESS_CONTROL_MASKS		0x000000bd
+ 
+ #define ACPI_GSB_ACCESS_ATTRIB_QUICK		0x00000002
+ #define ACPI_GSB_ACCESS_ATTRIB_SEND_RCV         0x00000004
 -- 
 2.17.1
 
