@@ -2,110 +2,158 @@ Return-Path: <SRS0=Yaiz=DG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-20.9 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A30F6C47420
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 21:48:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BE43C4727D
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 22:05:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 45C562193E
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 21:48:58 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="jeIjKmg7"
+	by mail.kernel.org (Postfix) with ESMTP id B001421D41
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 22:05:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1601417101;
+	bh=gr+yVYr0Sl4GMl1N4skHLcJyeSqKKKYU6g2ajzLcwlM=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=JtUTjAW65k9BCyOT8eLSt4fmeTlft9jh5h3FOVlmLDJxGII9HvLlSEBpGBJlAFpTg
+	 YwymmmkV/8yod3PmrPKoseZ7m9k1K+cVcSN9wi1ZQ0UfxCgKcSvb2txUyzQd7+YqNx
+	 4F/0WXp6yH0SELMowYllAB3vd5jf8tIM+lfLn2ik=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728068AbgI2Vs5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Sep 2020 17:48:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48408 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728469AbgI2Vrp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Sep 2020 17:47:45 -0400
-Received: from mail-qt1-x84a.google.com (mail-qt1-x84a.google.com [IPv6:2607:f8b0:4864:20::84a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 349A8C0613E1
-        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2020 14:47:29 -0700 (PDT)
-Received: by mail-qt1-x84a.google.com with SMTP id b54so4060331qtk.17
-        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2020 14:47:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=sender:date:in-reply-to:message-id:mime-version:references:subject
-         :from:to:cc;
-        bh=DIPWfuOfjnS0FLqqhnzrIZ4jlncEeE+o+vZP3RuRCL0=;
-        b=jeIjKmg7IRS+l/ui8Q+LF8nOaIvlsjsr5dJcnvSqyimVjw+fgPn/vAjJUtO4XmZBa6
-         Xd0TPg2PXsxw8JWRlXMof9WtQxCvHX0ajUKKZHY+h9ZrQj/vHt4kd3uCJRU76eVTlT3l
-         qvq/mdBiAQCfz0NkdrERe4By8JjkFVxXJhBvXJYakKcsE9Q3uXpA4c2ihpOBil6Arsgm
-         /XRIkE6YivpM0yPirN/ctrfV5AzOopT2G8KpjaFwIzwdIty+tJ9NNd0YLGlPN6mpQHOt
-         PZmo5ltSZAvrWwfyVtCxNb3oLaXN5GzVBEfApucjE1oqsSv0iOxejixTaxe7xLdJuwWh
-         mCjw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:date:in-reply-to:message-id:mime-version
-         :references:subject:from:to:cc;
-        bh=DIPWfuOfjnS0FLqqhnzrIZ4jlncEeE+o+vZP3RuRCL0=;
-        b=mwehH0T+tqpg5IbDRl3ERRU9q5fPqtv1jQih1xwa6Z98lpSkS3IsCqjNkZGZ4ypVD+
-         9uJJngQ0VIfkkd7qeiI/n6b1/d6OKLinIG/TRHxLqio/TGARD1QoJqCNn+ZhH7shIdEq
-         ZO5zaUdHIry/4H+tfH2L0S6a8cObcEB9P0bMB2SbgmNbcHzNPmzK3QQQ4bwcjtMiivqr
-         Eq9YzcWwoCTPiOaU7UMkPvZXnmwwkuYgd2/LBC0k1HmpHa5fL0usieyyDY4Tlzy2MsQn
-         RAJzXpAuz2fhNE9GR8plSaBCXdcTZhi4XNzizBvF/o8ZBtJmEo+8kjneNXYAAHzOR4Ti
-         f9bg==
-X-Gm-Message-State: AOAM530nJi9DWUWJAxt5YljUJ7KcQut8Fi+ah4zl/KnE/zUS95rMpS9m
-        x9/QW9fV3MVzab0/RMu1ibP0v8yia106XTdgUxc=
-X-Google-Smtp-Source: ABdhPJxh9cX/NQWJyeaf5NLdRHxlNrjwWH6kgp9BcYdpdAAl3zdkTlK7VGeQKrVU7UdbXnmP9NjmecTJ1e08yzk/vjU=
-Sender: "samitolvanen via sendgmr" 
-        <samitolvanen@samitolvanen1.mtv.corp.google.com>
-X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:f693:9fff:fef4:1b6d])
- (user=samitolvanen job=sendgmr) by 2002:a0c:b308:: with SMTP id
- s8mr6728794qve.16.1601416048309; Tue, 29 Sep 2020 14:47:28 -0700 (PDT)
-Date:   Tue, 29 Sep 2020 14:46:26 -0700
-In-Reply-To: <20200929214631.3516445-1-samitolvanen@google.com>
-Message-Id: <20200929214631.3516445-25-samitolvanen@google.com>
-Mime-Version: 1.0
-References: <20200929214631.3516445-1-samitolvanen@google.com>
-X-Mailer: git-send-email 2.28.0.709.gb0816b6eb0-goog
-Subject: [PATCH v4 24/29] arm64: vdso: disable LTO
-From:   Sami Tolvanen <samitolvanen@google.com>
-To:     Masahiro Yamada <masahiroy@kernel.org>,
+        id S1728257AbgI2WFB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 29 Sep 2020 18:05:01 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37664 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728169AbgI2WFB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 29 Sep 2020 18:05:01 -0400
+Received: from mail-oi1-f181.google.com (mail-oi1-f181.google.com [209.85.167.181])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 3B3EF21707
+        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2020 22:05:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1601417100;
+        bh=gr+yVYr0Sl4GMl1N4skHLcJyeSqKKKYU6g2ajzLcwlM=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=ExW/TGW1leHeiEWE/h7OHYoUyi3ABqGJWAtY0Tx+HyURl5xQzk846uyuw2gwbMAPI
+         F9V41a3PorEJ8szaXYNcZadLPzDohanMK9RArhP1ol7QrWAAWL69UyN8cvvIMzA/kD
+         jQl2JlMnxdPHLe98Kce+UE92qjvJwjbDh0e3dblE=
+Received: by mail-oi1-f181.google.com with SMTP id c13so7240814oiy.6
+        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2020 15:05:00 -0700 (PDT)
+X-Gm-Message-State: AOAM531ok8WdQLJdmQq9NOGSHKXveBBbN8Dvpb87d8QJiCoSoCGSyr+U
+        1GCpC2Ri/+lzRoPBC68lIyXpSkVBE2acGf1tJw==
+X-Google-Smtp-Source: ABdhPJy7HFSkLbBUm1iGn3/cO4830XaBZgr25Eags1ho3JFqEZMBiYnBZWJoUq2nzONzsiymyBLAEHfF5AsS3XocfSU=
+X-Received: by 2002:aca:7543:: with SMTP id q64mr4024058oic.147.1601417099365;
+ Tue, 29 Sep 2020 15:04:59 -0700 (PDT)
+MIME-Version: 1.0
+References: <20200925211513.1701254-1-kw@linux.com> <20200929202331.GA2567309@bjorn-Precision-5520>
+In-Reply-To: <20200929202331.GA2567309@bjorn-Precision-5520>
+From:   Rob Herring <robh@kernel.org>
+Date:   Tue, 29 Sep 2020 17:04:47 -0500
+X-Gmail-Original-Message-ID: <CAL_Jsq+7QHzMcZ1aJW36fX99-dveJAxML9_DQtaavAGjxun9Lw@mail.gmail.com>
+Message-ID: <CAL_Jsq+7QHzMcZ1aJW36fX99-dveJAxML9_DQtaavAGjxun9Lw@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: Unify ECAM constants in native PCI Express drivers
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        Jonathan Chocron <jonnyc@amazon.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Will Deacon <will@kernel.org>,
-        Steven Rostedt <rostedt@goodmis.org>
-Cc:     Peter Zijlstra <peterz@infradead.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Paul E. McKenney" <paulmck@kernel.org>,
-        Kees Cook <keescook@chromium.org>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        clang-built-linux@googlegroups.com,
-        kernel-hardening@lists.openwall.com, linux-arch@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kbuild@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        x86@kernel.org, Sami Tolvanen <samitolvanen@google.com>
+        Robert Richter <rrichter@marvell.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Toan Le <toan@os.amperecomputing.com>,
+        PCI <linux-pci@vger.kernel.org>,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        "open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Disable LTO for the vDSO by filtering out CC_FLAGS_LTO, as there's no
-point in using link-time optimization for the small about of C code.
+On Tue, Sep 29, 2020 at 3:23 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+> On Fri, Sep 25, 2020 at 09:15:13PM +0000, Krzysztof Wilczy=C5=84ski wrote=
+:
+> > Unify ECAM-related constants into a single set of standard constants
+> > defining memory address shift values for the byte-level address that ca=
+n
+> > be used when accessing the PCI Express Configuration Space, and then
+> > move native PCI Express controller drivers to use newly introduced
+> > definitions retiring any driver-specific ones.
+> >
+> > The ECAM ("Enhanced Configuration Access Mechanism") is defined by the
+> > PCI Express specification (see PCI Base Specification, Revision 5.0,
+> > Version 1.0, Section 7.2.2, p. 676), thus most hardware should implemen=
+t
+> > it the same way.  Most of the native PCI Express controller drivers
+> > define their ECAM-related constants, many of these could be shared, or
+> > use open-coded values when setting the .bus_shift field of the struct
+> > pci_ecam_ops.
+> >
+> > All of the newly added constants should remove ambiguity and reduce the
+> > number of open-coded values, and also correlate more strongly with the
+> > descriptions in the aforementioned specification (see Table 7-1
+> > "Enhanced Configuration Address Mapping", p. 677).
+> >
+> > There is no change to functionality.
+>
+> I like this a lot.  A few minor comments below.
+>
+> > --- a/drivers/pci/controller/dwc/pcie-al.c
+> > +++ b/drivers/pci/controller/dwc/pcie-al.c
+> > @@ -76,7 +76,7 @@ static int al_pcie_init(struct pci_config_window *cfg=
+)
+> >  }
+> >
+> >  const struct pci_ecam_ops al_pcie_ops =3D {
+> > -     .bus_shift    =3D 20,
+> > +     .bus_shift    =3D PCIE_ECAM_BUS_SHIFT,
+> >       .init         =3D  al_pcie_init,
+> >       .pci_ops      =3D {
+> >               .map_bus    =3D al_pcie_map_bus,
+> > @@ -138,8 +138,6 @@ struct al_pcie {
+> >       struct al_pcie_target_bus_cfg target_bus_cfg;
+> >  };
+> >
+> > -#define PCIE_ECAM_DEVFN(x)           (((x) & 0xff) << 12)
+> > -
+> >  #define to_al_pcie(x)                dev_get_drvdata((x)->dev)
+> >
+> >  static inline u32 al_pcie_controller_readl(struct al_pcie *pcie, u32 o=
+ffset)
+> > @@ -228,7 +226,7 @@ static void __iomem *al_pcie_conf_addr_map(struct a=
+l_pcie *pcie,
+> >       void __iomem *pci_base_addr;
+> >
+> >       pci_base_addr =3D (void __iomem *)((uintptr_t)pp->va_cfg0_base +
+> > -                                      (busnr_ecam << 20) +
+> > +                                      PCIE_ECAM_BUS(busnr_ecam) +
+> >                                        PCIE_ECAM_DEVFN(devfn));
+>
+> Apparently this driver lets you limit the number of buses, since it
+> does:
+>
+>   unsigned int busnr_ecam =3D busnr & target_bus_cfg->ecam_mask;
+>
+> I'm not entirely sure I believe that, but OK.  It's a shame because
+> it would be really nice to be able to use PCIE_ECAM_OFFSET() here
+> (with a little rework of the al_pcie_conf_addr_map() interface).
 
-Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
-Reviewed-by: Kees Cook <keescook@chromium.org>
----
- arch/arm64/kernel/vdso/Makefile | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+It's a bit different than that. It allows for a config window less
+than 256MB and will reconfigure the window when the bus number is
+outside the window. There's no dts upstream so who knows what the
+normal case is. For all I know, Amazon could be using generic ECAM
+driver now or only ACPI (note that another oddity is the root bridge
+accesses go thru the DBI interface where as other DWC implementations
+using generic ECAM use the ECAM space). Maybe Jonathan Chocron can
+comment.
 
-diff --git a/arch/arm64/kernel/vdso/Makefile b/arch/arm64/kernel/vdso/Makefile
-index e836e300440f..aa47070a3ccf 100644
---- a/arch/arm64/kernel/vdso/Makefile
-+++ b/arch/arm64/kernel/vdso/Makefile
-@@ -30,7 +30,8 @@ ldflags-y := -shared -nostdlib -soname=linux-vdso.so.1 --hash-style=sysv	\
- ccflags-y := -fno-common -fno-builtin -fno-stack-protector -ffixed-x18
- ccflags-y += -DDISABLE_BRANCH_PROFILING
- 
--CFLAGS_REMOVE_vgettimeofday.o = $(CC_FLAGS_FTRACE) -Os $(CC_FLAGS_SCS) $(GCC_PLUGINS_CFLAGS)
-+CFLAGS_REMOVE_vgettimeofday.o = $(CC_FLAGS_FTRACE) -Os $(CC_FLAGS_SCS) $(GCC_PLUGINS_CFLAGS) \
-+				$(CC_FLAGS_LTO)
- KASAN_SANITIZE			:= n
- UBSAN_SANITIZE			:= n
- OBJECT_FILES_NON_STANDARD	:= y
--- 
-2.28.0.709.gb0816b6eb0-goog
+I think limiting the bus numbers based on the size of the config
+window would have been better and that's aligned with what the generic
+ECAM driver does.
 
+Rob
