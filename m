@@ -5,65 +5,65 @@ X-Spam-Level:
 X-Spam-Status: No, score=-20.9 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 078DAC4727C
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 21:48:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE88CC47426
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 21:48:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AB34620774
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 21:48:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 64FF520774
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 21:48:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="dgV6SDo9"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="IBbDoPst"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728576AbgI2VsH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Sep 2020 17:48:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48238 "EHLO
+        id S1728475AbgI2Vqt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 29 Sep 2020 17:46:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48198 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728525AbgI2Vqu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Sep 2020 17:46:50 -0400
-Received: from mail-pg1-x549.google.com (mail-pg1-x549.google.com [IPv6:2607:f8b0:4864:20::549])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4772C0613E0
-        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2020 14:46:47 -0700 (PDT)
-Received: by mail-pg1-x549.google.com with SMTP id k9so4090683pgq.19
-        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2020 14:46:47 -0700 (PDT)
+        with ESMTP id S1728469AbgI2Vqs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Sep 2020 17:46:48 -0400
+Received: from mail-qk1-x749.google.com (mail-qk1-x749.google.com [IPv6:2607:f8b0:4864:20::749])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9CC12C0613DB
+        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2020 14:46:43 -0700 (PDT)
+Received: by mail-qk1-x749.google.com with SMTP id y17so3679044qkf.15
+        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2020 14:46:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=sender:date:in-reply-to:message-id:mime-version:references:subject
          :from:to:cc;
-        bh=19SL9ILYFnZ21fbCFqMg6UAhhhxZhQrjD+s35+X1B+w=;
-        b=dgV6SDo9/nGgyVMUAcMHx0gvXIYyOXF6ty1/3uITkICbHspZeHQbvHxGwlJqzzv9XW
-         4V5LMwCn5zT2oQ8f4LzGfojh5OquEucov8kBAZlsAbKj8gS7+rq5Zf2MIFybCbJwmh+A
-         b2F8LeTYsJjCidyUsKW6BDyg8O8Sinw+WaY1c0mDlAt5XShrnPVlrIVqksLlFRGU1Dp8
-         A8Bl7ulvb9diUaImQKfi6sNHBwVH8SiGCv69MXqgXzBQsCNHc9rP0hmPStj/ZcNkXD/B
-         KaKtBNLUeB6r12MkOyu4JMGxpeLWC59hDNbjZmRjkjPVuauMgp1y6CR+/HcBDH41STN0
-         Kwbw==
+        bh=l2+v7INMYKuznv8xFN02uATUaYPeLt4QVP2a2KYnEdY=;
+        b=IBbDoPstUx6PvkrgRiZ41KzIphJCRrEzSeZx7R3BsJc/c2FU1xsagudvCmxJS0b8z2
+         SjjbJNbVgzgrgsE4IMeYQoBOkgyNAJsokXmK8DUkwveVuIMwv2vc9kL6j11caQYcNzUq
+         0vjsIxHqB8pCA2/K+LOJlqU0rm+b0gi9ZppmGex0Nq6vg3lFfAKr6863jjw2KdNrpjQl
+         OE30bcUDioAlTaHnVtbs0RImv7YEk6Zl2qjv9SZgAykRMeNQidEDWQq/427XH29WRmMR
+         YCgaWWx4UZCNDu0gcLoZMQgMMVDTjQx98O5L72qcpTB4n7pw1Wyy4oYvBIPd3DNE23kA
+         MbzA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:sender:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=19SL9ILYFnZ21fbCFqMg6UAhhhxZhQrjD+s35+X1B+w=;
-        b=sdwcKBNyiP5jLlEQVFLQo5Eh4TqDE6gBe2bjjnkf67q5aJm7EP7YccGvIpO1mhGhoR
-         3bTLU9hogBLZDEZKjkYEcc5XbS/tTbE48aRZi06rQlp1+K2ZhmlGlVxPkpdxfjmkKfgT
-         vqx1t895chNZkALwTnOeo6vNBV7Yct5LRKCgh1bjOUYIeCUoHpbetAkpP2AwcIHOgy6F
-         3M6Ftk3Q/LcSKzFNmxTBwgHeZ9wrMh53KacaFbP7HvkYrbMRm51vK88bnFx5PkSbtykM
-         DaDUIlJD3KcjnJbez6Jjmbv5h0ANbikHq5M1lG+tdSuZyidSVtOoBgbo/fjLCwtiSdMj
-         QeZw==
-X-Gm-Message-State: AOAM533ZWK4n9smyuMr3my/w7jxKoIjbSBsIIuEjRUGcPYOQaEGtvb+5
-        nsLbbR5FG9MVnNWwGJTb/ONjNoQ98g9rOQpBo/4=
-X-Google-Smtp-Source: ABdhPJx1IWNK7mnxuP/Nk+1pT7lWQ22j29Zw+7lY5TtajrC4ZWI/DVx3Sv0QEYCQpGeJUBhPmBSAfh824OrxIAP+HiE=
+        bh=l2+v7INMYKuznv8xFN02uATUaYPeLt4QVP2a2KYnEdY=;
+        b=dXCbrY8JES8gVWO4F1ut0gvq7kXuMOsX3zvPfdTC9CohABOEbFfTdf/0MwWO3dPiDL
+         /oADRjnbbVQW4vLYQB3HLA8MEBcGlarSHTuD+/3s/RlpSrLhvh+d5jDI4rS1GVwJ0pGX
+         2RzBw9XFyznjMoL9vtreP55mzAEcxr6z4y9A7cMMrCCS9Kw9PzuNne5uQAcGfqbwcDgy
+         oOuXAHshRLQ4296dBAcVDtN0LkaUmrmSozzoJnXgH4grD0G56jaqLSBHht4A+3TCGmai
+         WXlmjSa+1Q3ixn56hIAdfr4zK7WdP5HCB5fBLi2hP/L3HaVQSn4Jd0UbESWr7fiVdAGY
+         mydQ==
+X-Gm-Message-State: AOAM533UMTFMgUkbbfL2q7DlbrgojtGKI2RJ+0H77+QCqQiFdIEuRF9r
+        qR8jk+yLOkTVcncNJ21KDlhavPpo2/iwSimyHts=
+X-Google-Smtp-Source: ABdhPJy+h62MhF4FERE0IvCpSLKvcavDzP6aQkays6EhouTsZ6bz+Ey8zRCePHhbZ++PNw0vWZnJFjS/bZTiM4aTEAM=
 Sender: "samitolvanen via sendgmr" 
         <samitolvanen@samitolvanen1.mtv.corp.google.com>
 X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:f693:9fff:fef4:1b6d])
- (user=samitolvanen job=sendgmr) by 2002:a17:90a:c907:: with SMTP id
- v7mr5593265pjt.204.1601416007270; Tue, 29 Sep 2020 14:46:47 -0700 (PDT)
-Date:   Tue, 29 Sep 2020 14:46:09 -0700
+ (user=samitolvanen job=sendgmr) by 2002:a05:6214:1767:: with SMTP id
+ et7mr6378060qvb.43.1601416002753; Tue, 29 Sep 2020 14:46:42 -0700 (PDT)
+Date:   Tue, 29 Sep 2020 14:46:07 -0700
 In-Reply-To: <20200929214631.3516445-1-samitolvanen@google.com>
-Message-Id: <20200929214631.3516445-8-samitolvanen@google.com>
+Message-Id: <20200929214631.3516445-6-samitolvanen@google.com>
 Mime-Version: 1.0
 References: <20200929214631.3516445-1-samitolvanen@google.com>
 X-Mailer: git-send-email 2.28.0.709.gb0816b6eb0-goog
-Subject: [PATCH v4 07/29] tracing: add support for objtool mcount
+Subject: [PATCH v4 05/29] objtool: Don't autodetect vmlinux.o
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Masahiro Yamada <masahiroy@kernel.org>,
         Will Deacon <will@kernel.org>,
@@ -83,83 +83,55 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This change adds build support for using objtool to generate
-__mcount_loc sections.
+With LTO, we run objtool on vmlinux.o, but don't want noinstr
+validation. This change requires --vmlinux to be passed to objtool
+explicitly.
 
+Suggested-by: Peter Zijlstra <peterz@infradead.org>
 Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
+Reviewed-by: Kees Cook <keescook@chromium.org>
 ---
- Makefile             | 12 ++++++++++--
- kernel/trace/Kconfig | 13 +++++++++++++
- 2 files changed, 23 insertions(+), 2 deletions(-)
+ scripts/link-vmlinux.sh       |  2 +-
+ tools/objtool/builtin-check.c | 10 +---------
+ 2 files changed, 2 insertions(+), 10 deletions(-)
 
-diff --git a/Makefile b/Makefile
-index 77e4f0a9495e..9717005e41c4 100644
---- a/Makefile
-+++ b/Makefile
-@@ -850,6 +850,9 @@ ifdef CONFIG_FTRACE_MCOUNT_USE_CC
-     endif
-   endif
- endif
-+ifdef CONFIG_FTRACE_MCOUNT_USE_OBJTOOL
-+  CC_FLAGS_USING	+= -DCC_USING_NOP_MCOUNT
-+endif
- ifdef CONFIG_FTRACE_MCOUNT_USE_RECORDMCOUNT
-   ifdef CONFIG_HAVE_C_RECORDMCOUNT
-     BUILD_C_RECORDMCOUNT := y
-@@ -1209,11 +1212,16 @@ uapi-asm-generic:
- PHONY += prepare-objtool prepare-resolve_btfids
- prepare-objtool: $(objtool_target)
- ifeq ($(SKIP_STACK_VALIDATION),1)
-+objtool-lib-prompt := "please install libelf-dev, libelf-devel or elfutils-libelf-devel"
-+ifdef CONFIG_FTRACE_MCOUNT_USE_OBJTOOL
-+	@echo "error: Cannot generate __mcount_loc for CONFIG_DYNAMIC_FTRACE=y, $(objtool-lib-prompt)" >&2
-+	@false
-+endif
- ifdef CONFIG_UNWINDER_ORC
--	@echo "error: Cannot generate ORC metadata for CONFIG_UNWINDER_ORC=y, please install libelf-dev, libelf-devel or elfutils-libelf-devel" >&2
-+	@echo "error: Cannot generate ORC metadata for CONFIG_UNWINDER_ORC=y, $(objtool-lib-prompt)" >&2
- 	@false
- else
--	@echo "warning: Cannot use CONFIG_STACK_VALIDATION=y, please install libelf-dev, libelf-devel or elfutils-libelf-devel" >&2
-+	@echo "warning: Cannot use CONFIG_STACK_VALIDATION=y, $(objtool-lib-prompt)" >&2
- endif
- endif
+diff --git a/scripts/link-vmlinux.sh b/scripts/link-vmlinux.sh
+index e6e2d9e5ff48..372c3719f94c 100755
+--- a/scripts/link-vmlinux.sh
++++ b/scripts/link-vmlinux.sh
+@@ -64,7 +64,7 @@ objtool_link()
+ 	local objtoolopt;
  
-diff --git a/kernel/trace/Kconfig b/kernel/trace/Kconfig
-index 927ad004888a..89263210ab26 100644
---- a/kernel/trace/Kconfig
-+++ b/kernel/trace/Kconfig
-@@ -51,6 +51,11 @@ config HAVE_NOP_MCOUNT
- 	help
- 	  Arch supports the gcc options -pg with -mrecord-mcount and -nop-mcount
+ 	if [ -n "${CONFIG_VMLINUX_VALIDATION}" ]; then
+-		objtoolopt="check"
++		objtoolopt="check --vmlinux"
+ 		if [ -z "${CONFIG_FRAME_POINTER}" ]; then
+ 			objtoolopt="${objtoolopt} --no-fp"
+ 		fi
+diff --git a/tools/objtool/builtin-check.c b/tools/objtool/builtin-check.c
+index 71595cf4946d..eaa06eb18690 100644
+--- a/tools/objtool/builtin-check.c
++++ b/tools/objtool/builtin-check.c
+@@ -41,18 +41,10 @@ const struct option check_options[] = {
  
-+config HAVE_OBJTOOL_MCOUNT
-+	bool
-+	help
-+	  Arch supports objtool --mcount
-+
- config HAVE_C_RECORDMCOUNT
- 	bool
- 	help
-@@ -605,10 +610,18 @@ config FTRACE_MCOUNT_USE_CC
- 	depends on !FTRACE_MCOUNT_USE_PATCHABLE_FUNCTION_ENTRY
- 	depends on FTRACE_MCOUNT_RECORD
+ int cmd_check(int argc, const char **argv)
+ {
+-	const char *objname, *s;
+-
+ 	argc = parse_options(argc, argv, check_options, check_usage, 0);
  
-+config FTRACE_MCOUNT_USE_OBJTOOL
-+	def_bool y
-+	depends on HAVE_OBJTOOL_MCOUNT
-+	depends on !FTRACE_MCOUNT_USE_PATCHABLE_FUNCTION_ENTRY
-+	depends on !FTRACE_MCOUNT_USE_CC
-+	depends on FTRACE_MCOUNT_RECORD
-+
- config FTRACE_MCOUNT_USE_RECORDMCOUNT
- 	def_bool y
- 	depends on !FTRACE_MCOUNT_USE_PATCHABLE_FUNCTION_ENTRY
- 	depends on !FTRACE_MCOUNT_USE_CC
-+	depends on !FTRACE_MCOUNT_USE_OBJTOOL
- 	depends on FTRACE_MCOUNT_RECORD
+ 	if (argc != 1)
+ 		usage_with_options(check_usage, check_options);
  
- config TRACING_MAP
+-	objname = argv[0];
+-
+-	s = strstr(objname, "vmlinux.o");
+-	if (s && !s[9])
+-		vmlinux = true;
+-
+-	return check(objname, false);
++	return check(argv[0], false);
+ }
 -- 
 2.28.0.709.gb0816b6eb0-goog
 
