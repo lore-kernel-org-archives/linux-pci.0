@@ -8,62 +8,62 @@ X-Spam-Status: No, score=-20.9 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82701C4742A
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 21:48:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B14DC47420
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 21:48:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 258E4208B8
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 21:48:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2901C2145D
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 21:48:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="VQOoXlSc"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Imh3zKnl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728876AbgI2Vsh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Sep 2020 17:48:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48490 "EHLO
+        id S1729159AbgI2Vsu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 29 Sep 2020 17:48:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48494 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729225AbgI2Vrp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Sep 2020 17:47:45 -0400
-Received: from mail-qt1-x84a.google.com (mail-qt1-x84a.google.com [IPv6:2607:f8b0:4864:20::84a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAEE3C0613DC
-        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2020 14:47:26 -0700 (PDT)
-Received: by mail-qt1-x84a.google.com with SMTP id b54so4060263qtk.17
-        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2020 14:47:26 -0700 (PDT)
+        with ESMTP id S1729268AbgI2Vrq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Sep 2020 17:47:46 -0400
+Received: from mail-qk1-x74a.google.com (mail-qk1-x74a.google.com [IPv6:2607:f8b0:4864:20::74a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D218C0613A7
+        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2020 14:47:36 -0700 (PDT)
+Received: by mail-qk1-x74a.google.com with SMTP id o28so3653324qkm.23
+        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2020 14:47:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=sender:date:in-reply-to:message-id:mime-version:references:subject
          :from:to:cc;
-        bh=dEqcNX1Djl0IV1+V4O1jZ3zX0CSjG7hkO+H8f2GKot0=;
-        b=VQOoXlScak0WysBr/W0lMAFEgBmf32Hfw3oXYJ6KFr0fKBu3y13ZA46qQn/qdgZK8G
-         i7ux8V3oo0qTphW/9JBrWhu78R0GtF1wBcMFmXjLpLEc7GSsvPNid7x6lav1uJEis2a7
-         9W/iGpPEQWtZ88Ylf6C8QNA3xu3tblmY6b/lZ2G2WdHJgfBPHmhOTR1ICCMpX+ICACEs
-         gkyzgzySrJUDgSqaEtM3K6Q4WXigD1N/jiQrFgmXGoYkLUA/xKM7BuINs/wO+fWF4DHc
-         JWaw9z1iMdO3i+MVSCqHWvgzTM8qRNCbnWvbhhOBb0dwF6b5pI+bPyepJLJRhfWXJMhQ
-         QkeA==
+        bh=19TlqdLHcWDTmI9u6TYfXzttwjA+Dmg1Ug41aa4j6uk=;
+        b=Imh3zKnlf2nNedw1LEfjqkhMgHeK71AVCBTejoYYCUi6PprkQk88VjzniR9FHbE1XH
+         A/II2EqGYTLeEsZmDBTUvx/jf+f+d3tAzBZHwlmB+xrtw4+Z2cxN48VSSgTsz6Lj1ySD
+         au/YMsmvn17ksVH6myXy9K4BV+sk2zN+Jafs8YeXGbiW03h8j+LFgn5hDUVmYV3j8Dwy
+         l5E/DW5nnZBvg1KomyJxVSBEJYPTHNIcVL8vsj7kyNFLz2DfWMaRIUqUjSw2EGwIoKgP
+         4DyUsfcM0sMb+V2Mle0bHYnakGr+xwU5kaLeprG/fr2kotBwhV+W2FpWkSGvxSxGnZ4G
+         GCHA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:sender:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=dEqcNX1Djl0IV1+V4O1jZ3zX0CSjG7hkO+H8f2GKot0=;
-        b=DrL01PYwXdQd8zUpa9UMLrhqwAJfylwGPVesJfoFRafR/DfyNBPVAFROm62Z/IYdGp
-         /KUjn4d3M9TJF+DMpn82FPTR2xmaQ1Oh1d5KaDHCaDvQGO2uWfn2G2ib/yXyVRT95e2N
-         1UnWpDN/B+hzLZTCqi6UkI8VzePbGOe74a1R6jhGDW9DbmVA1ikJwTmXGv1ttgwOyhRo
-         7XejbYmQ7sTiviY7KJZPAO2OImC5YWPvQOrNTLf8tvDfnaX0S2/USpiVXHo0IWetNYPU
-         +hukw9feQ3EmeehZBT6GN7jH74YsYJQ7Bb2gLWH3b5lkpr5ZSvS8BrZpRwEqZNediPMA
-         BNGQ==
-X-Gm-Message-State: AOAM532NRdj0duJhTHhrCmmQz7HSSdnBzXZUL2qn9DSANyNXna7M2GSi
-        EOlzhWeA04a1cxFUpwWxZjuuRSzNY20RbtdjVNs=
-X-Google-Smtp-Source: ABdhPJx3IHLlEpEE6lKzgLbRoH8pUHS5aZ5bMzeasJnHs8u5b0ZHEbgeZKYJBmfQeDJ5khZeV7Cye7dg816GPppPI2c=
+        bh=19TlqdLHcWDTmI9u6TYfXzttwjA+Dmg1Ug41aa4j6uk=;
+        b=ClVGXFk+Fo+k8v2eoxnsqyjo1ml9OgNn9aFJZNDn/UMPEEgVpkKtQX8INYkHp3WOwa
+         +2Vy4EjesAwE6NcoY6GXIXNDCu8zdJUGhORJCPTETMewMav9ccZoUyIf7XMVUAOVhbCI
+         StqtIopMdax+Hcv8YtyNCxbwce+9a8Lotx/VeZlHvt4mbKideDMSjrNxoCXBAaJZObpC
+         aUL+MSY7ZC0DI1L+Ta4/p+gaNTlqsxuWAolcOi/iQtfxUfCIp/yKcfc7XIUBJp7BJubu
+         QWb6PDtbFJULQ9Joyy+pqTy66+FRfvcHH/7tm5BIDKqgqYswQdxCYy52mvbtfWgy7B4m
+         Py8Q==
+X-Gm-Message-State: AOAM531ijaljc75XW0upL3sNMVzvmfDkFQXs03OfwyqKyZiYJXyDfdJ8
+        FlN4+vn0WFsY2v7lDNaTfv41guZDhpogBk5w8jo=
+X-Google-Smtp-Source: ABdhPJwlpWalcJXzE9B3fP2Zu3YiL4EE4FmSmcZUIR72EOxrhafPHlFtIMBSkfJpTgmFk8E2fcAes0b129xUXc5bjus=
 Sender: "samitolvanen via sendgmr" 
         <samitolvanen@samitolvanen1.mtv.corp.google.com>
 X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:f693:9fff:fef4:1b6d])
- (user=samitolvanen job=sendgmr) by 2002:a0c:abc7:: with SMTP id
- k7mr6181365qvb.45.1601416045978; Tue, 29 Sep 2020 14:47:25 -0700 (PDT)
-Date:   Tue, 29 Sep 2020 14:46:25 -0700
+ (user=samitolvanen job=sendgmr) by 2002:ad4:4594:: with SMTP id
+ x20mr6549973qvu.4.1601416055400; Tue, 29 Sep 2020 14:47:35 -0700 (PDT)
+Date:   Tue, 29 Sep 2020 14:46:29 -0700
 In-Reply-To: <20200929214631.3516445-1-samitolvanen@google.com>
-Message-Id: <20200929214631.3516445-24-samitolvanen@google.com>
+Message-Id: <20200929214631.3516445-28-samitolvanen@google.com>
 Mime-Version: 1.0
 References: <20200929214631.3516445-1-samitolvanen@google.com>
 X-Mailer: git-send-email 2.28.0.709.gb0816b6eb0-goog
-Subject: [PATCH v4 23/29] drivers/misc/lkdtm: disable LTO for rodata.o
+Subject: [PATCH v4 27/29] x86, vdso: disable LTO only for vDSO
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Masahiro Yamada <masahiroy@kernel.org>,
         Will Deacon <will@kernel.org>,
@@ -83,27 +83,37 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Disable LTO for rodata.o to allow objcopy to be used to
-manipulate sections.
+Disable LTO for the vDSO. Note that while we could use Clang's LTO
+for the 64-bit vDSO, it won't add noticeable benefit for the small
+amount of C code.
 
 Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
-Acked-by: Kees Cook <keescook@chromium.org>
+Reviewed-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/misc/lkdtm/Makefile | 1 +
- 1 file changed, 1 insertion(+)
+ arch/x86/entry/vdso/Makefile | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/misc/lkdtm/Makefile b/drivers/misc/lkdtm/Makefile
-index c70b3822013f..dd4c936d4d73 100644
---- a/drivers/misc/lkdtm/Makefile
-+++ b/drivers/misc/lkdtm/Makefile
-@@ -13,6 +13,7 @@ lkdtm-$(CONFIG_LKDTM)		+= cfi.o
+diff --git a/arch/x86/entry/vdso/Makefile b/arch/x86/entry/vdso/Makefile
+index ecc27018ae13..9b742f21d2db 100644
+--- a/arch/x86/entry/vdso/Makefile
++++ b/arch/x86/entry/vdso/Makefile
+@@ -90,7 +90,7 @@ ifneq ($(RETPOLINE_VDSO_CFLAGS),)
+ endif
+ endif
  
- KASAN_SANITIZE_stackleak.o	:= n
- KCOV_INSTRUMENT_rodata.o	:= n
-+CFLAGS_REMOVE_rodata.o		+= $(CC_FLAGS_LTO)
+-$(vobjs): KBUILD_CFLAGS := $(filter-out $(GCC_PLUGINS_CFLAGS) $(RETPOLINE_CFLAGS),$(KBUILD_CFLAGS)) $(CFL)
++$(vobjs): KBUILD_CFLAGS := $(filter-out $(CC_FLAGS_LTO) $(GCC_PLUGINS_CFLAGS) $(RETPOLINE_CFLAGS),$(KBUILD_CFLAGS)) $(CFL)
  
- OBJCOPYFLAGS :=
- OBJCOPYFLAGS_rodata_objcopy.o	:= \
+ #
+ # vDSO code runs in userspace and -pg doesn't help with profiling anyway.
+@@ -148,6 +148,7 @@ KBUILD_CFLAGS_32 := $(filter-out -fno-pic,$(KBUILD_CFLAGS_32))
+ KBUILD_CFLAGS_32 := $(filter-out -mfentry,$(KBUILD_CFLAGS_32))
+ KBUILD_CFLAGS_32 := $(filter-out $(GCC_PLUGINS_CFLAGS),$(KBUILD_CFLAGS_32))
+ KBUILD_CFLAGS_32 := $(filter-out $(RETPOLINE_CFLAGS),$(KBUILD_CFLAGS_32))
++KBUILD_CFLAGS_32 := $(filter-out $(CC_FLAGS_LTO),$(KBUILD_CFLAGS_32))
+ KBUILD_CFLAGS_32 += -m32 -msoft-float -mregparm=0 -fpic
+ KBUILD_CFLAGS_32 += -fno-stack-protector
+ KBUILD_CFLAGS_32 += $(call cc-option, -foptimize-sibling-calls)
 -- 
 2.28.0.709.gb0816b6eb0-goog
 
