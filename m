@@ -5,65 +5,65 @@ X-Spam-Level:
 X-Spam-Status: No, score=-20.9 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable
+	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6825C47425
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 21:47:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69158C47428
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 21:47:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 68BE82083B
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 21:47:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1550C21734
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 21:47:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="J0iZkzh/"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="kToejlLl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728926AbgI2VrM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Sep 2020 17:47:12 -0400
+        id S1728656AbgI2VrJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 29 Sep 2020 17:47:09 -0400
 Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48328 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728681AbgI2VrL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Sep 2020 17:47:11 -0400
-Received: from mail-qt1-x84a.google.com (mail-qt1-x84a.google.com [IPv6:2607:f8b0:4864:20::84a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D73D6C0613D3
-        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2020 14:47:09 -0700 (PDT)
-Received: by mail-qt1-x84a.google.com with SMTP id c5so4056417qtd.12
-        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2020 14:47:09 -0700 (PDT)
+        with ESMTP id S1728799AbgI2VrG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Sep 2020 17:47:06 -0400
+Received: from mail-qv1-xf49.google.com (mail-qv1-xf49.google.com [IPv6:2607:f8b0:4864:20::f49])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0B3EC0613D5
+        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2020 14:47:02 -0700 (PDT)
+Received: by mail-qv1-xf49.google.com with SMTP id w32so3345428qvw.8
+        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2020 14:47:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=sender:date:in-reply-to:message-id:mime-version:references:subject
          :from:to:cc;
-        bh=SD1yF5YD1LCllhQ+wHxnWDGScJRWPVuGZBuH/1UV7E0=;
-        b=J0iZkzh/GjzAvSvvMSQSffvTtscp77TuS/rOOUU4WJ9pgFewxPSYIc3SuYF5TYZa3f
-         nnJs5NE+Z7HnfV7im6jer/93vPDjH2tAsMsDCCOkNJH1RmXE5K6MIkNKUWtTL0TsRGwX
-         qAdqdJq3CyXfTerbts+lbY6m8AMjwxizFh09pkc2952byTSLnpnpLEsH+VeTxDQPhQlK
-         KJc/bEwAWARFDxCjnLIpypY36iZV6YBpeoMe0S3Fhkxk2EnpJ3bKxAnnRVKOCtJywZ8S
-         cn4idbWnDoWjvaMpJXjclpVdG1XxH/TZB3j/SaC5oSMROSGKYvddyUIYzmMFA/b7OTLC
-         QNvA==
+        bh=2okmmeDec87SvOMXd3N63vsJjy9YUD5GxywHhacqWBg=;
+        b=kToejlLlqGptIwLXcDPvbKglu754ifNvO9iTeVa3u+EV8TEpqjS73nHax81YvUaVZL
+         T/0Q4fMfb9ggHmSmjSG3Kd4uZzzKmJCji6bWnEQpxwhEGsUdMQNLnFyGhSpogmfNeWLj
+         mXiDsL/9X5jotDfGR/8RKZht7W+XvGDuVR6x/Fgsxtqr3gR4lg5vO8VC1Qb3rVK5GVR8
+         CFKlK+vkMpQ8uPiNASCXWJVwMeX/K6ZJmQOsRyUlWa/8mQc5+1cBgztLEKwG//cD62xV
+         NEuSlow7/hT8h7VvR9z9FrS/gRBZHlfsnQa+3PlMS29knEVZwoj+6EA6BsYR+gy46MtA
+         nM3g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:sender:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=SD1yF5YD1LCllhQ+wHxnWDGScJRWPVuGZBuH/1UV7E0=;
-        b=WRYFq3l82sFjl/W7+NQoxcDcmCL2uL3p/mR2eK/+su8Y8M1cIHNoa0cD3N12UyvjWN
-         udZfFEXoJpQVVB7Q9XnYNXlzFn0uc5R6dNAVk2ASuzILAGGz0xmK3JqunbjfyYNscd66
-         xucMjNo479jKNJuTtpnu79itn1lf4Pe2O0JSz6+DacY/xuiQBXXlArcVLPjnD7lU4mVx
-         s4VwVqUE73frNg4ta/317ZObppLAUBEoRgtLGXXGshKRlnp1ftwIwPPqn20gs/27tFdD
-         8xra7OoImbvzTEOmOaMnuxnIAHh0cTqbm+59Ycu4F/v6hKCRIkavjOp86HZft7C4mm3T
-         2ZdA==
-X-Gm-Message-State: AOAM532YcTqqgGQDSX7+onPzlWcUVFmS1VWjg6kxjb/zME8FEHgd1XVJ
-        4o2BzY0mUl+WF0zAacd1NxLCoAipQptyF/8/VfQ=
-X-Google-Smtp-Source: ABdhPJy7ECnfWEGwUFe6hxmbM3YxQNxU/8qssaAcXSiWxNNwaQyUUyZL5rJnjOfK3ZrxDFzMzY/3wIlsYUo/Me039B4=
+        bh=2okmmeDec87SvOMXd3N63vsJjy9YUD5GxywHhacqWBg=;
+        b=azLWdyechzrF2yb8YIKz0ZHttJ5hWoJqMM8oQ/R8e78Gu2hekY/V16n9QF1csvg4ry
+         Ux6bjqJWid63+owewF9d98c19Kh6Z6JSzStvuDy6xj2s2vfF/RlVX1RHEEv0vR6FwPM+
+         p8R5cF7uQeIEApsf96okM5NPFTjUAoZoUOuH6AsXkyKz8xCHIt86hYPS9WuMKgQMTi6G
+         qPb/6ea4HhWE861I3oQP4EicPyb574AVVtCdDDcXhCCvfPi9F/et9PQgMTE6L7xSHMPu
+         JT1pn8PXngrT0aj2qhenXuWRf/zzycoKqqeg468J+qSWMuoKi1W3fDfn4n4/mmyxLg5o
+         Ca9Q==
+X-Gm-Message-State: AOAM532R9cTkBSkVuVOr/0rPNxAKEBW03YGVN0a+zq6BMeK9XQQA9nHq
+        1s1rSZ3P+1m7mc8gsySeMfRoqdwAgpX5F4dMEf0=
+X-Google-Smtp-Source: ABdhPJynVs+sQdYs4vVxH7oG6PpXYs1z1lMMwLQnFwrGBcjgx1UBe9Pq7jcAJ1Hv1pz6pl+horyenbJ3EpwvFhmYqfI=
 Sender: "samitolvanen via sendgmr" 
         <samitolvanen@samitolvanen1.mtv.corp.google.com>
 X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:f693:9fff:fef4:1b6d])
- (user=samitolvanen job=sendgmr) by 2002:ad4:55ce:: with SMTP id
- bt14mr6729584qvb.2.1601416029039; Tue, 29 Sep 2020 14:47:09 -0700 (PDT)
-Date:   Tue, 29 Sep 2020 14:46:18 -0700
+ (user=samitolvanen job=sendgmr) by 2002:a0c:a899:: with SMTP id
+ x25mr6108251qva.46.1601416021752; Tue, 29 Sep 2020 14:47:01 -0700 (PDT)
+Date:   Tue, 29 Sep 2020 14:46:15 -0700
 In-Reply-To: <20200929214631.3516445-1-samitolvanen@google.com>
-Message-Id: <20200929214631.3516445-17-samitolvanen@google.com>
+Message-Id: <20200929214631.3516445-14-samitolvanen@google.com>
 Mime-Version: 1.0
 References: <20200929214631.3516445-1-samitolvanen@google.com>
 X-Mailer: git-send-email 2.28.0.709.gb0816b6eb0-goog
-Subject: [PATCH v4 16/29] kbuild: lto: remove duplicate dependencies from .mod files
+Subject: [PATCH v4 13/29] kbuild: lto: postpone objtool
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Masahiro Yamada <masahiroy@kernel.org>,
         Will Deacon <will@kernel.org>,
@@ -83,36 +83,171 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-With LTO, llvm-nm prints out symbols for each archive member
-separately, which results in a lot of duplicate dependencies in the
-.mod file when CONFIG_TRIM_UNUSED_SYMS is enabled. When a module
-consists of several compilation units, the output can exceed the
-default xargs command size limit and split the dependency list to
-multiple lines, which results in used symbols getting trimmed.
-
-This change removes duplicate dependencies, which will reduce the
-probability of this happening and makes .mod files smaller and
-easier to read.
+With LTO, LLVM bitcode won't be compiled into native code until
+modpost_link, or modfinal for modules. This change postpones calls
+to objtool until after these steps, and moves objtool_args to
+Makefile.lib, so the arguments can be reused in Makefile.modfinal.
 
 Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
 Reviewed-by: Kees Cook <keescook@chromium.org>
 ---
- scripts/Makefile.build | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ arch/Kconfig              |  2 +-
+ scripts/Makefile.build    | 19 ++-----------------
+ scripts/Makefile.lib      | 11 +++++++++++
+ scripts/Makefile.modfinal | 19 ++++++++++++++++---
+ scripts/link-vmlinux.sh   | 23 ++++++++++++++++++++++-
+ 5 files changed, 52 insertions(+), 22 deletions(-)
 
+diff --git a/arch/Kconfig b/arch/Kconfig
+index 520e900efc75..db57ea19649b 100644
+--- a/arch/Kconfig
++++ b/arch/Kconfig
+@@ -600,7 +600,7 @@ config LTO_CLANG
+ 	depends on $(success,$(NM) --help | head -n 1 | grep -qi llvm)
+ 	depends on $(success,$(AR) --help | head -n 1 | grep -qi llvm)
+ 	depends on ARCH_SUPPORTS_LTO_CLANG
+-	depends on !FTRACE_MCOUNT_RECORD
++	depends on !FTRACE_MCOUNT_USE_RECORDMCOUNT
+ 	depends on !KASAN
+ 	depends on !GCOV_KERNEL
+ 	select LTO
 diff --git a/scripts/Makefile.build b/scripts/Makefile.build
-index ab0ddf4884fd..96d6c9e18901 100644
+index eae2f5386a03..ab0ddf4884fd 100644
 --- a/scripts/Makefile.build
 +++ b/scripts/Makefile.build
-@@ -266,7 +266,7 @@ endef
+@@ -218,27 +218,11 @@ cmd_record_mcount = $(if $(findstring $(strip $(CC_FLAGS_FTRACE)),$(_c_flags)),
+ endif # CONFIG_FTRACE_MCOUNT_USE_RECORDMCOUNT
  
- # List module undefined symbols (or empty line if not enabled)
- ifdef CONFIG_TRIM_UNUSED_KSYMS
--cmd_undef_syms = $(NM) $< | sed -n 's/^  *U //p' | xargs echo
-+cmd_undef_syms = $(NM) $< | sed -n 's/^  *U //p' | sort -u | xargs echo
- else
- cmd_undef_syms = echo
- endif
+ ifdef CONFIG_STACK_VALIDATION
++ifndef CONFIG_LTO_CLANG
+ ifneq ($(SKIP_STACK_VALIDATION),1)
+ 
+ __objtool_obj := $(objtree)/tools/objtool/objtool
+ 
+-objtool_args = $(if $(CONFIG_UNWINDER_ORC),orc generate,check)
+-
+-objtool_args += $(if $(part-of-module), --module,)
+-
+-ifndef CONFIG_FRAME_POINTER
+-objtool_args += --no-fp
+-endif
+-ifdef CONFIG_GCOV_KERNEL
+-objtool_args += --no-unreachable
+-endif
+-ifdef CONFIG_RETPOLINE
+-  objtool_args += --retpoline
+-endif
+-ifdef CONFIG_X86_SMAP
+-  objtool_args += --uaccess
+-endif
+-
+ # 'OBJECT_FILES_NON_STANDARD := y': skip objtool checking for a directory
+ # 'OBJECT_FILES_NON_STANDARD_foo.o := 'y': skip objtool checking for a file
+ # 'OBJECT_FILES_NON_STANDARD_foo.o := 'n': override directory skip for a file
+@@ -250,6 +234,7 @@ objtool_obj = $(if $(patsubst y%,, \
+ 	$(__objtool_obj))
+ 
+ endif # SKIP_STACK_VALIDATION
++endif # CONFIG_LTO_CLANG
+ endif # CONFIG_STACK_VALIDATION
+ 
+ # Rebuild all objects when objtool changes, or is enabled/disabled.
+diff --git a/scripts/Makefile.lib b/scripts/Makefile.lib
+index 3d599716940c..ecb97c9f5feb 100644
+--- a/scripts/Makefile.lib
++++ b/scripts/Makefile.lib
+@@ -216,6 +216,17 @@ dtc_cpp_flags  = -Wp,-MMD,$(depfile).pre.tmp -nostdinc                    \
+ 		 $(addprefix -I,$(DTC_INCLUDE))                          \
+ 		 -undef -D__DTS__
+ 
++# Objtool arguments are also needed for modfinal with LTO, so we define
++# then here to avoid duplication.
++objtool_args =								\
++	$(if $(CONFIG_UNWINDER_ORC),orc generate,check)			\
++	$(if $(part-of-module), --module,)				\
++	$(if $(CONFIG_FRAME_POINTER),, --no-fp)				\
++	$(if $(CONFIG_GCOV_KERNEL), --no-unreachable,)			\
++	$(if $(CONFIG_RETPOLINE), --retpoline,)				\
++	$(if $(CONFIG_X86_SMAP), --uaccess,)				\
++	$(if $(CONFIG_FTRACE_MCOUNT_USE_OBJTOOL), --mcount,)
++
+ # Useful for describing the dependency of composite objects
+ # Usage:
+ #   $(call multi_depend, multi_used_targets, suffix_to_remove, suffix_to_add)
+diff --git a/scripts/Makefile.modfinal b/scripts/Makefile.modfinal
+index 2cb9a1d88434..1bd2953b11c4 100644
+--- a/scripts/Makefile.modfinal
++++ b/scripts/Makefile.modfinal
+@@ -9,7 +9,7 @@ __modfinal:
+ include $(objtree)/include/config/auto.conf
+ include $(srctree)/scripts/Kbuild.include
+ 
+-# for c_flags
++# for c_flags and objtool_args
+ include $(srctree)/scripts/Makefile.lib
+ 
+ # find all modules listed in modules.order
+@@ -34,10 +34,23 @@ ifdef CONFIG_LTO_CLANG
+ # With CONFIG_LTO_CLANG, reuse the object file we compiled for modpost to
+ # avoid a second slow LTO link
+ prelink-ext := .lto
+-endif
++
++# ELF processing was skipped earlier because we didn't have native code,
++# so let's now process the prelinked binary before we link the module.
++
++ifdef CONFIG_STACK_VALIDATION
++ifneq ($(SKIP_STACK_VALIDATION),1)
++cmd_ld_ko_o +=								\
++	$(objtree)/tools/objtool/objtool $(objtool_args)		\
++		$(@:.ko=$(prelink-ext).o);
++
++endif # SKIP_STACK_VALIDATION
++endif # CONFIG_STACK_VALIDATION
++
++endif # CONFIG_LTO_CLANG
+ 
+ quiet_cmd_ld_ko_o = LD [M]  $@
+-      cmd_ld_ko_o =                                                     \
++      cmd_ld_ko_o +=							\
+ 	$(LD) -r $(KBUILD_LDFLAGS)					\
+ 		$(KBUILD_LDFLAGS_MODULE) $(LDFLAGS_MODULE)		\
+ 		-T scripts/module.lds -o $@ $(filter %.o, $^);		\
+diff --git a/scripts/link-vmlinux.sh b/scripts/link-vmlinux.sh
+index 3e99a19b9195..96cf5a5d19df 100755
+--- a/scripts/link-vmlinux.sh
++++ b/scripts/link-vmlinux.sh
+@@ -93,8 +93,29 @@ objtool_link()
+ {
+ 	local objtoolopt;
+ 
++	if [ "${CONFIG_LTO_CLANG} ${CONFIG_STACK_VALIDATION}" = "y y" ]; then
++		# Don't perform vmlinux validation unless explicitly requested,
++		# but run objtool on vmlinux.o now that we have an object file.
++		if [ -n "${CONFIG_UNWINDER_ORC}" ]; then
++			objtoolopt="orc generate"
++		else
++			objtoolopt="check"
++		fi
++
++		if [ -n ${CONFIG_FTRACE_MCOUNT_USE_OBJTOOL} ]; then
++			objtoolopt="${objtoolopt} --mcount"
++		fi
++	fi
++
+ 	if [ -n "${CONFIG_VMLINUX_VALIDATION}" ]; then
+-		objtoolopt="check --vmlinux"
++		if [ -z "${objtoolopt}" ]; then
++			objtoolopt="check --vmlinux"
++		else
++			objtoolopt="${objtoolopt} --vmlinux"
++		fi
++	fi
++
++	if [ -n "${objtoolopt}" ]; then
+ 		if [ -z "${CONFIG_FRAME_POINTER}" ]; then
+ 			objtoolopt="${objtoolopt} --no-fp"
+ 		fi
 -- 
 2.28.0.709.gb0816b6eb0-goog
 
