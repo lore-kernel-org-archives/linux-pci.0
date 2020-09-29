@@ -2,191 +2,87 @@ Return-Path: <SRS0=Yaiz=DG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 296F9C4727C
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 17:29:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F675C4727C
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 17:47:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C31452075E
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 17:28:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C3D99207F7
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 17:47:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OdeMN/HF"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="NjIGhaXr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728299AbgI2R26 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Sep 2020 13:28:58 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:47292 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727328AbgI2R26 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Sep 2020 13:28:58 -0400
-Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1601400536;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=8BuFCHV4DyyyceiFSJkI3cyJ1EYQRloVeaKvvp0HdMc=;
-        b=OdeMN/HF0OEjO7iJNBzBx3qalDHvHuKPMM7v85KT3GbDkMCkuYLUJ6LhraC6n2hRHlnmsO
-        Oc07xuoOBOJ02BWbmDhCibS4y4A7ooCuXMc9TTe70FZLAx8S4CfCdASKiFZ8CNTYKGCNmb
-        okBSbDr+ZCI/NvZLgTRt6A/L6whJP1c=
-Received: from mail-ot1-f72.google.com (mail-ot1-f72.google.com
- [209.85.210.72]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-250-KwrF9QM9OIurGHED7PZ-nw-1; Tue, 29 Sep 2020 13:28:52 -0400
-X-MC-Unique: KwrF9QM9OIurGHED7PZ-nw-1
-Received: by mail-ot1-f72.google.com with SMTP id m6so3475666otn.13
-        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2020 10:28:51 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=8BuFCHV4DyyyceiFSJkI3cyJ1EYQRloVeaKvvp0HdMc=;
-        b=oXnB7mqbO5CJjFnf3CwUcDfxe2KPaxWsTMwzFOErnHfBx8BrbkuBl1om0daJqGLBoa
-         Twk241St3m2bEFHdczTgjuflXw9i0OlR9EL27XuAbtbMp4Eq+ZZuTP20CFrtuFr1tXtp
-         ZRMrGjnYETCGNNTdEkvMxixl1nGgm3rzTVUDcCZbg3K5Z9SV7U9qUiAG9+1lwzy+dBLz
-         Tk601LXb0iSYmM7xekHP052Yz/i7QW48Y+CJjfdnDtnPoKaqvaWRi1eRvXZlkpXeK86Z
-         tCFkWQrag4qKYffY8WVS6yD0/7u2MzNKCGajjpuEJAwWEjpE7EAZ4YGU6Mf7eky9NmMl
-         +knw==
-X-Gm-Message-State: AOAM530davNkIoaUpKsmIPj4g0FR4BYc9B7NpfZ/Q5al4bpqB6NspfWo
-        VEERSawQc5UooI0oXpQvTvf2ZgngTmPa5MYN+MPS0SPEfHpBIMzdrcdN2FSY7Dlg8aGWADtou7r
-        Qc8orwcR+ljRBTjXqXNvN
-X-Received: by 2002:aca:1312:: with SMTP id e18mr3259412oii.19.1601400531248;
-        Tue, 29 Sep 2020 10:28:51 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwuBdTi+WL2ru4njoi33T1kboK4M7/85ghf3zubjSkL4Y6DUjJ7A5Y4VxcyHt+ZGTU5MThUsw==
-X-Received: by 2002:aca:1312:: with SMTP id e18mr3259396oii.19.1601400530952;
-        Tue, 29 Sep 2020 10:28:50 -0700 (PDT)
-Received: from localhost (c-67-165-232-89.hsd1.co.comcast.net. [67.165.232.89])
-        by smtp.gmail.com with ESMTPSA id p16sm1137448otl.17.2020.09.29.10.28.49
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 29 Sep 2020 10:28:50 -0700 (PDT)
-Date:   Tue, 29 Sep 2020 11:28:48 -0600
-From:   Al Stone <ahs3@redhat.com>
-To:     Auger Eric <eric.auger@redhat.com>
-Cc:     "Michael S. Tsirkin" <mst@redhat.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Jean-Philippe Brucker <jean-philippe@linaro.org>,
-        iommu@lists.linux-foundation.org,
-        virtualization@lists.linux-foundation.org,
-        virtio-dev@lists.oasis-open.org, linux-pci@vger.kernel.org,
-        bhelgaas@google.com, jasowang@redhat.com, kevin.tian@intel.com,
-        sebastien.boeuf@intel.com, lorenzo.pieralisi@arm.com
-Subject: Re: [PATCH v3 0/6] Add virtio-iommu built-in topology
-Message-ID: <20200929172848.GZ138842@redhat.com>
-References: <20200821131540.2801801-1-jean-philippe@linaro.org>
- <ab2a1668-e40c-c8f0-b77b-abadeceb4b82@redhat.com>
- <20200924045958-mutt-send-email-mst@kernel.org>
- <20200924092129.GH27174@8bytes.org>
- <20200924053159-mutt-send-email-mst@kernel.org>
- <d54b674e-2626-fc73-d663-136573c32b8a@redhat.com>
+        id S1728553AbgI2RrE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 29 Sep 2020 13:47:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39268 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728386AbgI2RrE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Sep 2020 13:47:04 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3BE38C061755;
+        Tue, 29 Sep 2020 10:47:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=oCfvHV+eKDJ81YLxCB6N47LJuI+3zUrT7MS+gF7gNr4=; b=NjIGhaXrWwlKfAho6RX83T5VBG
+        9kU191xaHfQf9xMkmFbUhsM8unnI6/Cu/ZcxCQa07jLGVfllxEv6zJQNU/QSetYE/OyO4R5J1nfJe
+        tyQEzzf82Vu/tTa++E0RflrJePy3HLzmjShO5JUtUXPNOhAuwTkJScF1wDER73o3ROFT/gajTsenI
+        4XtDhwfOso7PtCEtkDtRszmeTq4W+xoyXI5+uhPwIQnUNCGNTfxG+kWAAPHV54h4cJDDstUqGHuct
+        noGbPWU/Gu1kVxKq4X2UWJffCQAqVupBC4HQRqYLChEr/xqJzsRedUoGgfK4sRbhoX9/Ln5Cpce+T
+        Ww2Yp2mA==;
+Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kNJiI-0000Hg-5T; Tue, 29 Sep 2020 17:46:54 +0000
+Date:   Tue, 29 Sep 2020 18:46:54 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Nitesh Narayan Lal <nitesh@redhat.com>, hch@infradead.org,
+        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
+        frederic@kernel.org, mtosatti@redhat.com, sassmann@redhat.com,
+        jesse.brandeburg@intel.com, lihong.yang@intel.com,
+        jeffrey.t.kirsher@intel.com, jacob.e.keller@intel.com,
+        jlelli@redhat.com, bhelgaas@google.com, mike.marciniszyn@intel.com,
+        dennis.dalessandro@intel.com, thomas.lendacky@amd.com,
+        jiri@nvidia.com, mingo@redhat.com, peterz@infradead.org,
+        juri.lelli@redhat.com, vincent.guittot@linaro.org,
+        lgoncalv@redhat.com
+Subject: Re: [PATCH v4 4/4] PCI: Limit pci_alloc_irq_vectors() to
+ housekeeping CPUs
+Message-ID: <20200929174654.GA773@infradead.org>
+References: <20200928183529.471328-5-nitesh@redhat.com>
+ <20200928215931.GA2499944@bjorn-Precision-5520>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <d54b674e-2626-fc73-d663-136573c32b8a@redhat.com>
-User-Agent: Mutt/1.14.6 (2020-07-11)
+In-Reply-To: <20200928215931.GA2499944@bjorn-Precision-5520>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 24 Sep 2020 11:54, Auger Eric wrote:
-> Hi,
-> 
-> Adding Al in the loop
-> 
-> On 9/24/20 11:38 AM, Michael S. Tsirkin wrote:
-> > On Thu, Sep 24, 2020 at 11:21:29AM +0200, Joerg Roedel wrote:
-> >> On Thu, Sep 24, 2020 at 05:00:35AM -0400, Michael S. Tsirkin wrote:
-> >>> OK so this looks good. Can you pls repost with the minor tweak
-> >>> suggested and all acks included, and I will queue this?
-> >>
-> >> My NACK still stands, as long as a few questions are open:
-> >>
-> >> 	1) The format used here will be the same as in the ACPI table? I
-> >> 	   think the answer to this questions must be Yes, so this leads
-> >> 	   to the real question:
-> > 
-> > I am not sure it's a must.
-> > We can always tweak the parser if there are slight differences
-> > between ACPI and virtio formats.
-> > 
-> > But we do want the virtio format used here to be approved by the virtio
-> > TC, so it won't change.
+On Mon, Sep 28, 2020 at 04:59:31PM -0500, Bjorn Helgaas wrote:
+> [to: Christoph in case he has comments, since I think he wrote this code]
 
-As long as we can convey the same content to the UEFI ASWG, we're
-fine.  Format/syntax of the submittal is not absolutely critical
-though it does need translating to what the ASWG expects (see
-https://github.com/tianocore/tianocore.github.io/wiki/EDK-II-Code-First-Process
-for details -- basically a bugzilla with markdown text.
+I think I actually suggested this a few iterations back.
 
-> > Eric, Jean-Philippe, does one of you intend to create a github issue
-> > and request a ballot for the TC? It's been posted end of August with no
-> > changes ...
-> Jean-Philippe, would you?
-> > 
-> >> 	2) Has the ACPI table format stabalized already? If and only if
-> >> 	   the answer is Yes I will Ack these patches. We don't need to
-> >> 	   wait until the ACPI table format is published in a
-> >> 	   specification update, but at least some certainty that it
-> >> 	   will not change in incompatible ways anymore is needed.
-> >>
-> 
-> Al, do you have any news about the the VIOT definition submission to
-> the UEFI ASWG?
-> 
-> Thank you in advance
-> 
-> Best Regards
-> 
-> Eric
-> 
-> 
-> > 
-> > Not that I know, but I don't see why it's a must.
-> > 
-> >> So what progress has been made with the ACPI table specification, is it
-> >> just a matter of time to get it approved or are there concerns?
-> >>
-> >> Regards,
-> >>
-> >> 	Joerg
+> > +	hk_cpus = housekeeping_num_online_cpus(HK_FLAG_MANAGED_IRQ);
+> > +
+> > +	/*
+> > +	 * If we have isolated CPUs for use by real-time tasks, to keep the
+> > +	 * latency overhead to a minimum, device-specific IRQ vectors are moved
+> > +	 * to the housekeeping CPUs from the userspace by changing their
+> > +	 * affinity mask. Limit the vector usage to keep housekeeping CPUs from
+> > +	 * running out of IRQ vectors.
+> > +	 */
+> > +	if (hk_cpus < num_online_cpus()) {
 
-My apologies for the delay.  No excuses, just not enough hours in the
-day.
+I woukd have moved the assignment to hk_cpus below the comment and
+just above the if, but that is really just a minor style preference.
 
-I will make the proper submission to the ASWG later today to have it
-considered later this week -- I had quite a bit of confusion around
-how the process is supposed to work but I think we've got that cleared
-up (see the link noted above).
+Otherwise this looks good:
 
-The content of the table appears to be in really good shape.  Will it
-change?  Possibly, but my expectation is that it will be minor details,
-nothing wholesale; having the table in use in code tends to act as a
-pretty fierce restraint on making changes (there's a lot of precedent
-for that in ASWG).
-
-The biggest question is: are there any objections to having this
-table description licensed under Creative Commons Attribution
-International 4.0 (see https://spdx.org/licenses/CC-BY-4.0.html)?
-This is just for the table description, not the code.  If there
-are, that needs to be cleared up first.  If not, then the submittal
-this week should happen.
-
-Once submitted to ASWG, there is a very slim chance it will end up
-in ACPI 6.4 which is mostly done now -- very, very slim, but stranger
-things have happened.  Most likely, once approved it would be in
-ACPI 6.5, sometime in 2021.  I'll post the link to the submittal
-as soon as I can.
-
-Again, my apologies for the delays; approval in the spec can proceed
-pretty much independent of the implementation, and vice versa.  That's
-really the whole point of this new process with the UEFI Forum.
-
--- 
-ciao,
-al
------------------------------------
-Al Stone
-Software Engineer
-Red Hat, Inc.
-ahs3@redhat.com
------------------------------------
-
+Acked-by: Christoph Hellwig <hch@lst.de>
