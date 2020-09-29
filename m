@@ -5,65 +5,65 @@ X-Spam-Level:
 X-Spam-Status: No, score=-20.9 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=ham
-	autolearn_force=no version=3.4.0
+	USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 514D2C47426
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 21:47:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AECFC47420
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 21:48:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E9B0F20774
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 21:47:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C5E1821941
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 21:48:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="gdAEDDvL"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="HdK7XgY2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728195AbgI2Vru (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Sep 2020 17:47:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48412 "EHLO
+        id S1729367AbgI2VsA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 29 Sep 2020 17:48:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48264 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728814AbgI2VrX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Sep 2020 17:47:23 -0400
-Received: from mail-qk1-x749.google.com (mail-qk1-x749.google.com [IPv6:2607:f8b0:4864:20::749])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2FC77C0613D1
-        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2020 14:47:22 -0700 (PDT)
-Received: by mail-qk1-x749.google.com with SMTP id q131so3660214qke.22
-        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2020 14:47:22 -0700 (PDT)
+        with ESMTP id S1728646AbgI2Vqy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Sep 2020 17:46:54 -0400
+Received: from mail-qv1-xf4a.google.com (mail-qv1-xf4a.google.com [IPv6:2607:f8b0:4864:20::f4a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E05EFC0613D6
+        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2020 14:46:52 -0700 (PDT)
+Received: by mail-qv1-xf4a.google.com with SMTP id y2so3365040qvs.14
+        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2020 14:46:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=sender:date:in-reply-to:message-id:mime-version:references:subject
          :from:to:cc;
-        bh=M/tCJ87SKQnbyhBQptnFDCNgoy9D1scy1+3ph9ahS3g=;
-        b=gdAEDDvLlL0msAdcbIE0elhCADhQmKL9S16dzNU1NewfqdOooSY9iFqACy8+PZ7gHu
-         RjJqXHtJjRJu9BoQC0Z+qcoslnaCbYOM5YVwAUiEbJv8oMPbNKei4NbKX8/eYf1TjsBX
-         LuD//MCUmK3U7ZJ2uod6D1w8OHvoyhKJylEziLAmUyzobSpYb93PY4CL1x+jJuLiN+Df
-         TJvELp9Gtnh21l2Y6CWFhRqKGqHS7xc78jprEFcrRoojdnbVtKont9eEkY55sgaj+pEf
-         r+rlpDV8ZtQQ3iUVmb9timiu1KOz8XTe/0fr94WEPlFW4uof3ENuM7MDtO9p1BgJUAsl
-         mKLg==
+        bh=Xjrukg6K3IydY/lqqi+bCZNdR5RjdEmABiI8yk+fZMI=;
+        b=HdK7XgY20csMFcb+NLyDCXa0Y0BGLZ848JpvtrKXuN4kP13qc7mB9gIo/tOvGsTK0n
+         Ji2dtRPOFfuxFcA+duNxDZiijoE33HNw7tWDF5E8m1wqENg9cj6ei3CjwJ0N3MORXBa0
+         OiIDsCN2lwWZN36P+HMA0/i6r+hGq8LSRXCmTEW0ezq9gHlvKKSRObpHJBOae/EdWdAU
+         32Gd6c/t2yV+iQQ9uWMBg3zEyEcOs6POlcO4VSL93GZziqn82PoJ2cs2fwnaH1D9AfNM
+         SAML6VP9UfLTVbfCFJsAI8Lgk3AeE4OjZhWgBqaEtQTo1lOZgisnM8dMNB6pz6Qg5Lay
+         cqDQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:sender:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=M/tCJ87SKQnbyhBQptnFDCNgoy9D1scy1+3ph9ahS3g=;
-        b=EJosqvD/qKyuq0Q7KcQPPl+KaNuqAouT13MdjpaUJ48gIT2w3K3vAT5DYWysKeB1Od
-         +0G11J36ODmNQRYyGjih/N/LzbCqukVT/RVT80YOhe+l26Ry9ymP62cCt9Kw8eK2CIy5
-         Dn8Pf9eBpg/DGmmtmIM7/7FEOZIMPIBxQwE34wKrKawjf0UjsA1pWgNmqa/GdZAcbm1j
-         WCsc+ahaGn11lJby3jxXFnTDmmbutB/WZDz8K8ocpxcDlrPPLGvgA9tVRM2oVO8DTrxF
-         puxUtgc/6HOzEO4WVVkbF6deNQWI2ncJOfd3TOtIK/fEiwC7Y50QYJF9w0IzQZwzT656
-         04DQ==
-X-Gm-Message-State: AOAM533SJPzgJmONmNe54WkbfxxHAq29ROBLNjlYY22J3ux/qIeANWzX
-        xsFwrnEovFY5efNX7gEMWBIVDDpDyD7psEAT2ho=
-X-Google-Smtp-Source: ABdhPJwIclf1YZILYpRHL9aLGjIyClVObMTVmWZ7pfwr9sU8b01qvKeenw3eQ8lUfzBJlACcTh5VbLCas1CqVTaKm1c=
+        bh=Xjrukg6K3IydY/lqqi+bCZNdR5RjdEmABiI8yk+fZMI=;
+        b=MADzObD0227rRJWb75az53TbsNCakcDwc5Zl8Q3eVP53VmI0t22FW+wcVt4+kKP7AW
+         D/9AXTuXhkAahLwlrMHEfQoVfrVhQZIub6jf6ASZ9sPX5Yo70H5GNsZhSj4tkuLLVIQW
+         64MsEDX45b0RyLsKksHJKCtb6g/1BWILzPW3f5iC1ZW56dBdqwSSM3coD5Ny4LodW/By
+         g7cO7GZ8pq4F26Zt8Scd2PIKvrmwRElmQrvfWDcubb6yXan9Dw5MCJGrBX0YhD7A/Aa8
+         wdzw4w/b5ONJhav5FnjPVXxOqj8v+eCJPH/zh+d0AsBoNHyskds0ATA5e5hxeFaBArHR
+         N2fA==
+X-Gm-Message-State: AOAM532Y//IpMhESYQuNbApZAwCPSlmQj39zHnW119sYmOp7ApVbvuuh
+        l6nk1MWl7+vi1OzsgYaYNG9jubvXr6Qr89lK3/Q=
+X-Google-Smtp-Source: ABdhPJy7cJ63oyWVE3guhSQ8dpAugUL8BOvZOYiTdX/ZOOHGsEKlj0fM6UJAmLz8cRUfCBdDvDQP4efk1c6ZbLA+m7Q=
 Sender: "samitolvanen via sendgmr" 
         <samitolvanen@samitolvanen1.mtv.corp.google.com>
 X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:f693:9fff:fef4:1b6d])
- (user=samitolvanen job=sendgmr) by 2002:ad4:58c7:: with SMTP id
- dh7mr6716936qvb.20.1601416041280; Tue, 29 Sep 2020 14:47:21 -0700 (PDT)
-Date:   Tue, 29 Sep 2020 14:46:23 -0700
+ (user=samitolvanen job=sendgmr) by 2002:ad4:42b3:: with SMTP id
+ e19mr6361028qvr.6.1601416011975; Tue, 29 Sep 2020 14:46:51 -0700 (PDT)
+Date:   Tue, 29 Sep 2020 14:46:11 -0700
 In-Reply-To: <20200929214631.3516445-1-samitolvanen@google.com>
-Message-Id: <20200929214631.3516445-22-samitolvanen@google.com>
+Message-Id: <20200929214631.3516445-10-samitolvanen@google.com>
 Mime-Version: 1.0
 References: <20200929214631.3516445-1-samitolvanen@google.com>
 X-Mailer: git-send-email 2.28.0.709.gb0816b6eb0-goog
-Subject: [PATCH v4 21/29] scripts/mod: disable LTO for empty.c
+Subject: [PATCH v4 09/29] arm64: disable recordmcount with DYNAMIC_FTRACE_WITH_REGS
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Masahiro Yamada <masahiroy@kernel.org>,
         Will Deacon <will@kernel.org>,
@@ -83,27 +83,27 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-With CONFIG_LTO_CLANG, clang generates LLVM IR instead of ELF object
-files. As empty.o is used for probing target properties, disable LTO
-for it to produce an object file instead.
+Select FTRACE_MCOUNT_USE_PATCHABLE_FUNCTION_ENTRY to disable
+recordmcount when DYNAMIC_FTRACE_WITH_REGS is selected.
 
 Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
-Reviewed-by: Kees Cook <keescook@chromium.org>
 ---
- scripts/mod/Makefile | 1 +
- 1 file changed, 1 insertion(+)
+ arch/arm64/Kconfig | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/scripts/mod/Makefile b/scripts/mod/Makefile
-index 78071681d924..c9e38ad937fd 100644
---- a/scripts/mod/Makefile
-+++ b/scripts/mod/Makefile
-@@ -1,5 +1,6 @@
- # SPDX-License-Identifier: GPL-2.0
- OBJECT_FILES_NON_STANDARD := y
-+CFLAGS_REMOVE_empty.o += $(CC_FLAGS_LTO)
- 
- hostprogs-always-y	+= modpost mk_elfconfig
- always-y		+= empty.o
+diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+index 6d232837cbee..ad522b021f35 100644
+--- a/arch/arm64/Kconfig
++++ b/arch/arm64/Kconfig
+@@ -155,6 +155,8 @@ config ARM64
+ 	select HAVE_DYNAMIC_FTRACE
+ 	select HAVE_DYNAMIC_FTRACE_WITH_REGS \
+ 		if $(cc-option,-fpatchable-function-entry=2)
++	select FTRACE_MCOUNT_USE_PATCHABLE_FUNCTION_ENTRY \
++		if DYNAMIC_FTRACE_WITH_REGS
+ 	select HAVE_EFFICIENT_UNALIGNED_ACCESS
+ 	select HAVE_FAST_GUP
+ 	select HAVE_FTRACE_MCOUNT_RECORD
 -- 
 2.28.0.709.gb0816b6eb0-goog
 
