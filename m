@@ -8,62 +8,62 @@ X-Spam-Status: No, score=-20.9 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B14DC47420
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 21:48:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E35A4C4727D
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 21:48:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2901C2145D
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 21:48:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9802C20789
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 21:48:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Imh3zKnl"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="dHnRNjTA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729159AbgI2Vsu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Sep 2020 17:48:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48494 "EHLO
+        id S1729237AbgI2Vs4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 29 Sep 2020 17:48:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48400 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729268AbgI2Vrq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Sep 2020 17:47:46 -0400
-Received: from mail-qk1-x74a.google.com (mail-qk1-x74a.google.com [IPv6:2607:f8b0:4864:20::74a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D218C0613A7
-        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2020 14:47:36 -0700 (PDT)
-Received: by mail-qk1-x74a.google.com with SMTP id o28so3653324qkm.23
-        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2020 14:47:36 -0700 (PDT)
+        with ESMTP id S1728068AbgI2Vrp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Sep 2020 17:47:45 -0400
+Received: from mail-qt1-x849.google.com (mail-qt1-x849.google.com [IPv6:2607:f8b0:4864:20::849])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93E6CC0613E6
+        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2020 14:47:31 -0700 (PDT)
+Received: by mail-qt1-x849.google.com with SMTP id h31so4090022qtd.14
+        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2020 14:47:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=sender:date:in-reply-to:message-id:mime-version:references:subject
          :from:to:cc;
-        bh=19TlqdLHcWDTmI9u6TYfXzttwjA+Dmg1Ug41aa4j6uk=;
-        b=Imh3zKnlf2nNedw1LEfjqkhMgHeK71AVCBTejoYYCUi6PprkQk88VjzniR9FHbE1XH
-         A/II2EqGYTLeEsZmDBTUvx/jf+f+d3tAzBZHwlmB+xrtw4+Z2cxN48VSSgTsz6Lj1ySD
-         au/YMsmvn17ksVH6myXy9K4BV+sk2zN+Jafs8YeXGbiW03h8j+LFgn5hDUVmYV3j8Dwy
-         l5E/DW5nnZBvg1KomyJxVSBEJYPTHNIcVL8vsj7kyNFLz2DfWMaRIUqUjSw2EGwIoKgP
-         4DyUsfcM0sMb+V2Mle0bHYnakGr+xwU5kaLeprG/fr2kotBwhV+W2FpWkSGvxSxGnZ4G
-         GCHA==
+        bh=bLX+1fjl9Bbya2A+atnzXnNoTgL1KkV514BpMbJv1Zc=;
+        b=dHnRNjTAqW8lTXo9nEiIoFV8O295lbJjdVXsY2+bhFdy7wpFakrnWQIyA2hWQKJ3M4
+         qosF/0hGR2ZjIUgh4/EdiLJbYrVxeS67XkRnjNPlnLbVTy+d8F6wxkmug8s6v+ICxYB0
+         8cZhAa2wGYywn4ncJiN1o05hfIQQIu29UE1DPhT3T+xB0nlx2bsXOREKfZjpz9tsStXA
+         TKUHPsS2S0/SL0tZVBJnBcm+28ZXPLK91wFqvg5Vq41bts7sxLDRqP6y8jHc7nr8ZF8Z
+         YHZxAEAYGJfpUEU+55I610Jp2K5acEaPPIByvwA2/pL5hkU4Zb9dg+0o8WGjFm54hqYH
+         HEGA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:sender:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=19TlqdLHcWDTmI9u6TYfXzttwjA+Dmg1Ug41aa4j6uk=;
-        b=ClVGXFk+Fo+k8v2eoxnsqyjo1ml9OgNn9aFJZNDn/UMPEEgVpkKtQX8INYkHp3WOwa
-         +2Vy4EjesAwE6NcoY6GXIXNDCu8zdJUGhORJCPTETMewMav9ccZoUyIf7XMVUAOVhbCI
-         StqtIopMdax+Hcv8YtyNCxbwce+9a8Lotx/VeZlHvt4mbKideDMSjrNxoCXBAaJZObpC
-         aUL+MSY7ZC0DI1L+Ta4/p+gaNTlqsxuWAolcOi/iQtfxUfCIp/yKcfc7XIUBJp7BJubu
-         QWb6PDtbFJULQ9Joyy+pqTy66+FRfvcHH/7tm5BIDKqgqYswQdxCYy52mvbtfWgy7B4m
-         Py8Q==
-X-Gm-Message-State: AOAM531ijaljc75XW0upL3sNMVzvmfDkFQXs03OfwyqKyZiYJXyDfdJ8
-        FlN4+vn0WFsY2v7lDNaTfv41guZDhpogBk5w8jo=
-X-Google-Smtp-Source: ABdhPJwlpWalcJXzE9B3fP2Zu3YiL4EE4FmSmcZUIR72EOxrhafPHlFtIMBSkfJpTgmFk8E2fcAes0b129xUXc5bjus=
+        bh=bLX+1fjl9Bbya2A+atnzXnNoTgL1KkV514BpMbJv1Zc=;
+        b=rAZ2+s7B/5fKIg1NIQW6by4EhQ8o3Ok4HBi93z1gszQE7+dkq6hw3B4N4M1rCwqd+r
+         ttD7AHO3/CkEdufnW7KImpcFEpt+XZIrYZK0LCfqrHoZjIRH8e8DO8wUvvd/pw1JD0fI
+         UUGK7/G1vlsvS66q/oNKKPVv+COWaJ8s7Kx8e3OMF0zW/JQi0zVUsePjf/Vgx+hTfM0s
+         KVivkgAc+dlzDvYgTK913hP7/nen0s5FxCw58Of9B7jXV8RNll7DiYqJQEhOhPteZpW7
+         R/rX2ljNAlwsEqg0lj25rIoths2Bvp1/ZmF6Fke0ajCNxNfL/VwLi11pmj3do6D71VOV
+         ynGw==
+X-Gm-Message-State: AOAM530S4SN3YPz2cUs3/c/NJrRxznITcYF4IJyyDf9ddK/HRk1m89Kv
+        DdhYSP+GciEryIw3uriTUuOrLY3qqjwEFnSorxw=
+X-Google-Smtp-Source: ABdhPJzqDAQNJ4yOOPQKWE0kEqpwkERe1XdkG9z06KHZ8iQel5gcZqcSfblI2RjnM+ksRD+B562jIJhEv9qWCoeYvkk=
 Sender: "samitolvanen via sendgmr" 
         <samitolvanen@samitolvanen1.mtv.corp.google.com>
 X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:f693:9fff:fef4:1b6d])
- (user=samitolvanen job=sendgmr) by 2002:ad4:4594:: with SMTP id
- x20mr6549973qvu.4.1601416055400; Tue, 29 Sep 2020 14:47:35 -0700 (PDT)
-Date:   Tue, 29 Sep 2020 14:46:29 -0700
+ (user=samitolvanen job=sendgmr) by 2002:a0c:e5cf:: with SMTP id
+ u15mr6643416qvm.14.1601416050747; Tue, 29 Sep 2020 14:47:30 -0700 (PDT)
+Date:   Tue, 29 Sep 2020 14:46:27 -0700
 In-Reply-To: <20200929214631.3516445-1-samitolvanen@google.com>
-Message-Id: <20200929214631.3516445-28-samitolvanen@google.com>
+Message-Id: <20200929214631.3516445-26-samitolvanen@google.com>
 Mime-Version: 1.0
 References: <20200929214631.3516445-1-samitolvanen@google.com>
 X-Mailer: git-send-email 2.28.0.709.gb0816b6eb0-goog
-Subject: [PATCH v4 27/29] x86, vdso: disable LTO only for vDSO
+Subject: [PATCH v4 25/29] KVM: arm64: disable LTO for the nVHE directory
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Masahiro Yamada <masahiroy@kernel.org>,
         Will Deacon <will@kernel.org>,
@@ -83,37 +83,32 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Disable LTO for the vDSO. Note that while we could use Clang's LTO
-for the 64-bit vDSO, it won't add noticeable benefit for the small
-amount of C code.
+We use objcopy to manipulate ELF binaries for the nVHE code,
+which fails with LTO as the compiler produces LLVM bitcode
+instead. Disable LTO for this code to allow objcopy to be used.
 
 Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
 Reviewed-by: Kees Cook <keescook@chromium.org>
 ---
- arch/x86/entry/vdso/Makefile | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ arch/arm64/kvm/hyp/nvhe/Makefile | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/arch/x86/entry/vdso/Makefile b/arch/x86/entry/vdso/Makefile
-index ecc27018ae13..9b742f21d2db 100644
---- a/arch/x86/entry/vdso/Makefile
-+++ b/arch/x86/entry/vdso/Makefile
-@@ -90,7 +90,7 @@ ifneq ($(RETPOLINE_VDSO_CFLAGS),)
- endif
- endif
+diff --git a/arch/arm64/kvm/hyp/nvhe/Makefile b/arch/arm64/kvm/hyp/nvhe/Makefile
+index aef76487edc2..c903c8f31280 100644
+--- a/arch/arm64/kvm/hyp/nvhe/Makefile
++++ b/arch/arm64/kvm/hyp/nvhe/Makefile
+@@ -45,9 +45,9 @@ quiet_cmd_hypcopy = HYPCOPY $@
+ 		   --rename-section=.text=.hyp.text			\
+ 		   $< $@
  
--$(vobjs): KBUILD_CFLAGS := $(filter-out $(GCC_PLUGINS_CFLAGS) $(RETPOLINE_CFLAGS),$(KBUILD_CFLAGS)) $(CFL)
-+$(vobjs): KBUILD_CFLAGS := $(filter-out $(CC_FLAGS_LTO) $(GCC_PLUGINS_CFLAGS) $(RETPOLINE_CFLAGS),$(KBUILD_CFLAGS)) $(CFL)
+-# Remove ftrace and Shadow Call Stack CFLAGS.
++# Remove ftrace, LTO, and Shadow Call Stack CFLAGS.
+ # This is equivalent to the 'notrace' and '__noscs' annotations.
+-KBUILD_CFLAGS := $(filter-out $(CC_FLAGS_FTRACE) $(CC_FLAGS_SCS), $(KBUILD_CFLAGS))
++KBUILD_CFLAGS := $(filter-out $(CC_FLAGS_FTRACE) $(CC_FLAGS_LTO) $(CC_FLAGS_SCS), $(KBUILD_CFLAGS))
  
- #
- # vDSO code runs in userspace and -pg doesn't help with profiling anyway.
-@@ -148,6 +148,7 @@ KBUILD_CFLAGS_32 := $(filter-out -fno-pic,$(KBUILD_CFLAGS_32))
- KBUILD_CFLAGS_32 := $(filter-out -mfentry,$(KBUILD_CFLAGS_32))
- KBUILD_CFLAGS_32 := $(filter-out $(GCC_PLUGINS_CFLAGS),$(KBUILD_CFLAGS_32))
- KBUILD_CFLAGS_32 := $(filter-out $(RETPOLINE_CFLAGS),$(KBUILD_CFLAGS_32))
-+KBUILD_CFLAGS_32 := $(filter-out $(CC_FLAGS_LTO),$(KBUILD_CFLAGS_32))
- KBUILD_CFLAGS_32 += -m32 -msoft-float -mregparm=0 -fpic
- KBUILD_CFLAGS_32 += -fno-stack-protector
- KBUILD_CFLAGS_32 += $(call cc-option, -foptimize-sibling-calls)
+ # KVM nVHE code is run at a different exception code with a different map, so
+ # compiler instrumentation that inserts callbacks or checks into the code may
 -- 
 2.28.0.709.gb0816b6eb0-goog
 
