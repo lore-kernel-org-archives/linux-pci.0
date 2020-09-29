@@ -5,65 +5,66 @@ X-Spam-Level:
 X-Spam-Status: No, score=-20.9 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable
+	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06FD3C47420
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 21:46:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B31EC4727C
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 21:46:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ABA20208B8
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 21:46:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D92D520774
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 21:46:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="A+2S/PVg"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="hJ2k1cYf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728357AbgI2Vqj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Sep 2020 17:46:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48172 "EHLO
+        id S1728494AbgI2Vqt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 29 Sep 2020 17:46:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48234 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728305AbgI2Vqg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Sep 2020 17:46:36 -0400
-Received: from mail-yb1-xb49.google.com (mail-yb1-xb49.google.com [IPv6:2607:f8b0:4864:20::b49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E6665C0613D3
-        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2020 14:46:35 -0700 (PDT)
-Received: by mail-yb1-xb49.google.com with SMTP id n13so6324122ybk.9
-        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2020 14:46:35 -0700 (PDT)
+        with ESMTP id S1728471AbgI2Vqs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Sep 2020 17:46:48 -0400
+Received: from mail-pg1-x549.google.com (mail-pg1-x549.google.com [IPv6:2607:f8b0:4864:20::549])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55135C0613DE
+        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2020 14:46:45 -0700 (PDT)
+Received: by mail-pg1-x549.google.com with SMTP id e13so4104114pgk.6
+        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2020 14:46:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=sender:date:in-reply-to:message-id:mime-version:references:subject
          :from:to:cc;
-        bh=ldzGNGDZyBtUZ+HZEhFsle3HftCI7jj5VijuIes3XjE=;
-        b=A+2S/PVgCIFIgqA1Y+x6xPf02q9T8t5ybB0PjXezPYyVniPZlLdcnNuT2gDH8pQxqt
-         4DLm3YscI15WD0HXcWi6zP7QdgI6QCeIg3Wwy7DNEd8iL5lAZ8voCtgTv/8Ph33fQX5R
-         cCWSLAJg2dq3VlRuefEs9TYNxSH4LM7WAVyGPxSW12MYXC5swunyjdO/MTHwRwXmOpj6
-         zrw6Qc/V5h8ue6BziUtDKZMjN6MdmLK0e7IVaBoAq4UiLgXu2BjcDgz4VCICGb5V+2pt
-         D7KNuJtao0SSq+uSZ5vw6TziaUeYi9eaMBYeiVf3XjvW5Jnms1loYQA94qhYeykro9EM
-         +7kg==
+        bh=8Ng/zcoyfJ13YZKcoMDN8gZ1Jwe/pnq5fe0Ym5zenVI=;
+        b=hJ2k1cYf7zI4meIHY8Uy4V6i8Jnw5zJ6gXSyG4ZS4WtWOLM04fL9+GCHaotwi3O1kD
+         kTLYoVlgy7SsG3U4K1msUNtcb16oxXKr4/TQFI7s6Q8/WGPkSRsFDD2GxMPhFHntnEX1
+         UqTAPnS+KdKGfOUHgSFQg4QyFtojd9IFM7aswALGg98Bion2yPHSsVlFOMvPOBbcGHRk
+         x3eWkDC4MtkEKlr4m7hj4fkr/DRZ/f28+ZAVK6+8KyG71dVLNRRAWvoDBDJaCjYjg2Ib
+         8nETBKgc3yK1LXOEVRu7drktVSLFory2Vrh/6aBQG6OWMUgiL14xdAH2/sO39VNUdeVj
+         iuMw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:sender:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=ldzGNGDZyBtUZ+HZEhFsle3HftCI7jj5VijuIes3XjE=;
-        b=hhEyDnk/gl5VpgbTDuyQ5jIgIq5F60G1Mkt8HY4cWMMJ3L0YWTwPtrrczTybiNog4K
-         emGVZKii9ehwfbhZrKgoLfhYdF+zy28Yk/RTvAF7LyIZOclhD4MKSJXpM26ISkxr9dvj
-         gGmwvGgevpSUsVCrLreLXehr6ippOkoOd3G9J3Xge0eVM+tT5x1wsb9u3SkxUqTaJdbX
-         9sSd94Ps409ZENskw1nWwD+ZinAfspLhoAx8pqN/TYLqlnRf7Gzo6tNi+UBpKQZiZkwX
-         2yyF1OSQVIFtcBV5qIHUYEaIdHvhzkTE4vLlmDkoyFC7L+5G6YTQPIaq5Vzs64hH24WN
-         oooQ==
-X-Gm-Message-State: AOAM531IhHefSdJ6pgRJLyZntolreiPGJ6ordAOXsFSMawq38Il6nue5
-        kG3BmZMODgtVJHK8B56FTx3057UrcSs3cR2/KQ4=
-X-Google-Smtp-Source: ABdhPJwwEUCuweR6zj+0aeaCy64VBGtyJJkwMN8XaaF4F/cSzy8beYdpFYYtw+WqPq9+tyjoVdIS0xOGdLfzbpSZCEs=
+        bh=8Ng/zcoyfJ13YZKcoMDN8gZ1Jwe/pnq5fe0Ym5zenVI=;
+        b=BkU7vWRXxNC8Uzy4aFEXsOTDWV7ipW1c7XU0DCX7QoyMbLAur4YCU8CQ5kS5SgkMbo
+         R+iAmj14JVW+pakttk/rgWgunFNVwov9eriDd7c+MbFlMwlk+bvASFPDAYG1VUgVOGyW
+         9kFoK9gfojLOLIgEFQQE5NqcA+KnZoKEMnCDW9QlzhERFjUVeH7ZcIsYniVYvLrdbYoq
+         alNNR6mO6N4IXdzidp0/IUesoVJeKFVRaIN970hcAEy/r2N97sOYQQ/GTA1ECa0zHbBY
+         P8fLj8OC6ygG3XgU4tiVOcZisv2aTvts2M7Nt2maudYYwIVWpKKx+yxqOU9wd0dMDi6H
+         qv/Q==
+X-Gm-Message-State: AOAM531ZPnktbY+oAfpp1IK51d1/jWMHpOEm/ud/kFgLnhPVLi7XacQP
+        mhcEr7HazqYVBwrh/Br7kmhMx/p/LgFQw/KpMnU=
+X-Google-Smtp-Source: ABdhPJxzUBWB0iwbH+cTGbJh9C57bW3bzJzflC/e22W7CVuaBq659lObOSZcWl0sKiYtAxO7YlDpc2NeS2tp52Yay5g=
 Sender: "samitolvanen via sendgmr" 
         <samitolvanen@samitolvanen1.mtv.corp.google.com>
 X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:f693:9fff:fef4:1b6d])
- (user=samitolvanen job=sendgmr) by 2002:a25:ad43:: with SMTP id
- l3mr8526653ybe.157.1601415995012; Tue, 29 Sep 2020 14:46:35 -0700 (PDT)
-Date:   Tue, 29 Sep 2020 14:46:03 -0700
+ (user=samitolvanen job=sendgmr) by 2002:a62:8607:0:b029:13f:b379:480a with
+ SMTP id x7-20020a6286070000b029013fb379480amr5736037pfd.5.1601416004713; Tue,
+ 29 Sep 2020 14:46:44 -0700 (PDT)
+Date:   Tue, 29 Sep 2020 14:46:08 -0700
 In-Reply-To: <20200929214631.3516445-1-samitolvanen@google.com>
-Message-Id: <20200929214631.3516445-2-samitolvanen@google.com>
+Message-Id: <20200929214631.3516445-7-samitolvanen@google.com>
 Mime-Version: 1.0
 References: <20200929214631.3516445-1-samitolvanen@google.com>
 X-Mailer: git-send-email 2.28.0.709.gb0816b6eb0-goog
-Subject: [PATCH v4 01/29] RAS/CEC: Fix cec_init() prototype
+Subject: [PATCH v4 06/29] tracing: move function tracer options to Kconfig
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Masahiro Yamada <masahiroy@kernel.org>,
         Will Deacon <will@kernel.org>,
@@ -77,67 +78,119 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         kernel-hardening@lists.openwall.com, linux-arch@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-kbuild@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        x86@kernel.org, Luca Stefani <luca.stefani.ge1@gmail.com>,
-        Sami Tolvanen <samitolvanen@google.com>
+        x86@kernel.org, Sami Tolvanen <samitolvanen@google.com>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Luca Stefani <luca.stefani.ge1@gmail.com>
+Move function tracer options to Kconfig to make it easier to add
+new methods for generating __mcount_loc, and to make the options
+available also when building kernel modules.
 
-late_initcall() expects a function that returns an integer. Update the
-function signature to match.
-
- [ bp: Massage commit message into proper sentences. ]
-
-Fixes: 9554bfe403nd ("x86/mce: Convert the CEC to use the MCE notifier")
-Signed-off-by: Luca Stefani <luca.stefani.ge1@gmail.com>
-Signed-off-by: Borislav Petkov <bp@suse.de>
-Reviewed-by: Sami Tolvanen <samitolvanen@google.com>
-Tested-by: Sami Tolvanen <samitolvanen@google.com>
-Link: https://lkml.kernel.org/r/20200805095708.83939-1-luca.stefani.ge1@gmail.com
+Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
 ---
- drivers/ras/cec.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ Makefile               | 20 ++++++++------------
+ kernel/trace/Kconfig   | 16 ++++++++++++++++
+ scripts/Makefile.build |  6 ++----
+ 3 files changed, 26 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/ras/cec.c b/drivers/ras/cec.c
-index 569d9ad2c594..6939aa5b3dc7 100644
---- a/drivers/ras/cec.c
-+++ b/drivers/ras/cec.c
-@@ -553,20 +553,20 @@ static struct notifier_block cec_nb = {
- 	.priority	= MCE_PRIO_CEC,
- };
+diff --git a/Makefile b/Makefile
+index 476f19ccac17..77e4f0a9495e 100644
+--- a/Makefile
++++ b/Makefile
+@@ -841,12 +841,8 @@ KBUILD_CFLAGS += $(DEBUG_CFLAGS)
+ export DEBUG_CFLAGS
  
--static void __init cec_init(void)
-+static int __init cec_init(void)
- {
- 	if (ce_arr.disabled)
--		return;
-+		return -ENODEV;
+ ifdef CONFIG_FUNCTION_TRACER
+-ifdef CONFIG_FTRACE_MCOUNT_RECORD
+-  # gcc 5 supports generating the mcount tables directly
+-  ifeq ($(call cc-option-yn,-mrecord-mcount),y)
+-    CC_FLAGS_FTRACE	+= -mrecord-mcount
+-    export CC_USING_RECORD_MCOUNT := 1
+-  endif
++ifdef CONFIG_FTRACE_MCOUNT_USE_CC
++  CC_FLAGS_FTRACE	+= -mrecord-mcount
+   ifdef CONFIG_HAVE_NOP_MCOUNT
+     ifeq ($(call cc-option-yn, -mnop-mcount),y)
+       CC_FLAGS_FTRACE	+= -mnop-mcount
+@@ -854,6 +850,12 @@ ifdef CONFIG_FTRACE_MCOUNT_RECORD
+     endif
+   endif
+ endif
++ifdef CONFIG_FTRACE_MCOUNT_USE_RECORDMCOUNT
++  ifdef CONFIG_HAVE_C_RECORDMCOUNT
++    BUILD_C_RECORDMCOUNT := y
++    export BUILD_C_RECORDMCOUNT
++  endif
++endif
+ ifdef CONFIG_HAVE_FENTRY
+   ifeq ($(call cc-option-yn, -mfentry),y)
+     CC_FLAGS_FTRACE	+= -mfentry
+@@ -863,12 +865,6 @@ endif
+ export CC_FLAGS_FTRACE
+ KBUILD_CFLAGS	+= $(CC_FLAGS_FTRACE) $(CC_FLAGS_USING)
+ KBUILD_AFLAGS	+= $(CC_FLAGS_USING)
+-ifdef CONFIG_DYNAMIC_FTRACE
+-	ifdef CONFIG_HAVE_C_RECORDMCOUNT
+-		BUILD_C_RECORDMCOUNT := y
+-		export BUILD_C_RECORDMCOUNT
+-	endif
+-endif
+ endif
  
- 	ce_arr.array = (void *)get_zeroed_page(GFP_KERNEL);
- 	if (!ce_arr.array) {
- 		pr_err("Error allocating CE array page!\n");
--		return;
-+		return -ENOMEM;
- 	}
+ # We trigger additional mismatches with less inlining
+diff --git a/kernel/trace/Kconfig b/kernel/trace/Kconfig
+index a4020c0b4508..927ad004888a 100644
+--- a/kernel/trace/Kconfig
++++ b/kernel/trace/Kconfig
+@@ -595,6 +595,22 @@ config FTRACE_MCOUNT_RECORD
+ 	depends on DYNAMIC_FTRACE
+ 	depends on HAVE_FTRACE_MCOUNT_RECORD
  
- 	if (create_debugfs_nodes()) {
- 		free_page((unsigned long)ce_arr.array);
--		return;
-+		return -ENOMEM;
- 	}
++config FTRACE_MCOUNT_USE_PATCHABLE_FUNCTION_ENTRY
++	bool
++	depends on FTRACE_MCOUNT_RECORD
++
++config FTRACE_MCOUNT_USE_CC
++	def_bool y
++	depends on $(cc-option,-mrecord-mcount)
++	depends on !FTRACE_MCOUNT_USE_PATCHABLE_FUNCTION_ENTRY
++	depends on FTRACE_MCOUNT_RECORD
++
++config FTRACE_MCOUNT_USE_RECORDMCOUNT
++	def_bool y
++	depends on !FTRACE_MCOUNT_USE_PATCHABLE_FUNCTION_ENTRY
++	depends on !FTRACE_MCOUNT_USE_CC
++	depends on FTRACE_MCOUNT_RECORD
++
+ config TRACING_MAP
+ 	bool
+ 	depends on ARCH_HAVE_NMI_SAFE_CMPXCHG
+diff --git a/scripts/Makefile.build b/scripts/Makefile.build
+index a467b9323442..a4634aae1506 100644
+--- a/scripts/Makefile.build
++++ b/scripts/Makefile.build
+@@ -178,8 +178,7 @@ cmd_modversions_c =								\
+ 	fi
+ endif
  
- 	INIT_DELAYED_WORK(&cec_work, cec_work_fn);
-@@ -575,6 +575,7 @@ static void __init cec_init(void)
- 	mce_register_decode_chain(&cec_nb);
+-ifdef CONFIG_FTRACE_MCOUNT_RECORD
+-ifndef CC_USING_RECORD_MCOUNT
++ifdef CONFIG_FTRACE_MCOUNT_USE_RECORDMCOUNT
+ # compiler will not generate __mcount_loc use recordmcount or recordmcount.pl
+ ifdef BUILD_C_RECORDMCOUNT
+ ifeq ("$(origin RECORDMCOUNT_WARN)", "command line")
+@@ -206,8 +205,7 @@ recordmcount_source := $(srctree)/scripts/recordmcount.pl
+ endif # BUILD_C_RECORDMCOUNT
+ cmd_record_mcount = $(if $(findstring $(strip $(CC_FLAGS_FTRACE)),$(_c_flags)),	\
+ 	$(sub_cmd_record_mcount))
+-endif # CC_USING_RECORD_MCOUNT
+-endif # CONFIG_FTRACE_MCOUNT_RECORD
++endif # CONFIG_FTRACE_MCOUNT_USE_RECORDMCOUNT
  
- 	pr_info("Correctable Errors collector initialized.\n");
-+	return 0;
- }
- late_initcall(cec_init);
- 
+ ifdef CONFIG_STACK_VALIDATION
+ ifneq ($(SKIP_STACK_VALIDATION),1)
 -- 
 2.28.0.709.gb0816b6eb0-goog
 
