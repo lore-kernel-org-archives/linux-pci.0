@@ -5,65 +5,65 @@ X-Spam-Level:
 X-Spam-Status: No, score=-20.9 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable
+	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3990BC47426
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 21:48:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1F65C47420
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 21:48:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E417120848
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 21:48:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B34A20848
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 21:48:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="VoPplgtC"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="jWS8iUHI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728722AbgI2VsU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Sep 2020 17:48:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48206 "EHLO
+        id S1728784AbgI2Vsi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 29 Sep 2020 17:48:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48432 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728437AbgI2Vqm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Sep 2020 17:46:42 -0400
-Received: from mail-qk1-x74a.google.com (mail-qk1-x74a.google.com [IPv6:2607:f8b0:4864:20::74a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B75ABC0613D3
-        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2020 14:46:41 -0700 (PDT)
-Received: by mail-qk1-x74a.google.com with SMTP id r128so3690625qkc.9
-        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2020 14:46:41 -0700 (PDT)
+        with ESMTP id S1728206AbgI2Vsh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Sep 2020 17:48:37 -0400
+Received: from mail-yb1-xb49.google.com (mail-yb1-xb49.google.com [IPv6:2607:f8b0:4864:20::b49])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A38C1C0613AD
+        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2020 14:47:38 -0700 (PDT)
+Received: by mail-yb1-xb49.google.com with SMTP id k3so6457871ybp.1
+        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2020 14:47:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=sender:date:in-reply-to:message-id:mime-version:references:subject
          :from:to:cc;
-        bh=f9tPOSX60pD/GFSFuHzH48biha6xq7SwYXZZiJq/qTc=;
-        b=VoPplgtCoQhLKg4Hv+UL5DkpCV7dIhDDTXJz6otqkCqrFT0b8FmwuKkFto610xbQPo
-         rftysPDKAPMr4Osfgz6JD7YuQTbrgPRE/ddFqPDkIoxOkoAsCt/UwJEpky8uigKXSgMu
-         bst11EBwROsEVwVXq3VQ2A6PyB0CqMMwsVSH/yarfQiYjX/fuuICChWgxMINca/EIm6R
-         myXGNLvOhusXqK1lmt1+yZB3X74frzquoG3naDrhpHYz/WraBVTnNlPnzntWn4iySZSP
-         HOo76e8uMBA/1+V2h85v8RaqRkahY+//67GRtHVqoPgzbN0CU5O02YoDisLw2nqEzYQX
-         YtTw==
+        bh=YnFARiKS6UDkwdk7WP0wlvbxlnuyKDZd5kTTgvwZzNo=;
+        b=jWS8iUHI1yEZwlx3KeKvcgfGPXNdJ4L5onYlC3CBBL8D7obZFD5GHWOijlDtJb8Ij7
+         nRmkWkJefVtEgGfyFLejApsO2VFmeAT9vQpKzbQWErmeV2XzN2V7GUaE7Pe9GHYQRqUr
+         Xv61qqqbIr/UD4HQGH+NeCWqUBIaeXjzSEj5haCz3bHxBeyeFilgtE7h3SBO5qI9TeFI
+         VNBOjzf+qN4PzKeK/ip+sm+V/3xF7iAcrvnH3Y+OXfQISp+lvRlaGKxv9Vs2X9cKIOs1
+         +Egn3AASlwiipmUBXQC2SS1FvIyAuimNGXi91NcEG22l5xpotuSePeSMxIwf0qHe6n0r
+         39pg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:sender:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=f9tPOSX60pD/GFSFuHzH48biha6xq7SwYXZZiJq/qTc=;
-        b=senV3M/smeqxaFV3HHXCPB9WPO6pU/sUncufIrF0to8gL1XD2K5JSbKFnekaglywzA
-         CyM/1y6EZpM/uJ/MFtV3f1GeGNAQL4NDCmfYi8JAJuFhbacXZJIpM1SDPTGFl+dcVCr1
-         rMgq8BMWhIgshlsw/jAnrLOmmUOhunhmORlGv8Q/dFUJUFo0WfNIoHpYnZIt9eLp2PCL
-         EPmdgG3tRXc9rQW3CFTw0AHsPGsMDT0r3+6hU+8ii9f5BbSVk3+HanXeUZ864tDpRYz+
-         rS9j9iXwYbkXfBS8Gg+hXRTSN7Pp915i4Ecq3yuReJF8VvDtgUwyvhAOgBuhQ2O9T6zi
-         mLnw==
-X-Gm-Message-State: AOAM532l9pJEhg0tPosKj24aAL3snMYYkvfizAgoKsEPxv4LsiFeiduy
-        nVH8F310pjQbaXtCWOYhd0lOzJojfQxkfM2AJSY=
-X-Google-Smtp-Source: ABdhPJxnaxIbmrQU4yE9XSHQwA4GmE2JeBy9FBC47cg/anZ18nsfcsYGDdnFomHOtaZSKb1hGg8/qbE88961fRI3Sb0=
+        bh=YnFARiKS6UDkwdk7WP0wlvbxlnuyKDZd5kTTgvwZzNo=;
+        b=XTl6o+TmMYGnTsvLal60EpPv5uSYgCODg+t3/LXh/rogLLu2LKe3c0Ptd5DjfDT7ae
+         6Egy9PtSNq3DhylXkOeLRqSKcFY7lNPBldeRio/t1XBb7Mj5xb/Tru8SPRch3ihG2CZw
+         Q0mmTohCzPSGG+7Z47ufJmA2j19MWQdSMBTxqNgu9qIkxG+P5ltVM6kOw53rpFM6d6XH
+         oi4SKBxdcYEJwIgzajcTcenoHBvQOzEuG+3VIBJ4t7QrJqsYB4ZVokKWK4byOlm7Mj07
+         Q22+b7VuAyIoBmtvmJGNUYcyM69yKt9XmuHIDtSsRexSk0SqDyf0BtwRNla9wv9w1bQD
+         4eIA==
+X-Gm-Message-State: AOAM531ggAOf9QUkFt+biPOEQQ0D2BSO8nFWbKFnsywT6fdqpWpTLjp5
+        ITjo1r1l/mdNxwREHL51le8KKr5SLYj7CVTTCVQ=
+X-Google-Smtp-Source: ABdhPJxYhSRNOkwgDRc/l2C7Jl258wmN5ml/1qkiBHZtQEnR2mVC77q0+39UpprEXaMpqtbM+otlfoYoA23IDmqOt+I=
 Sender: "samitolvanen via sendgmr" 
         <samitolvanen@samitolvanen1.mtv.corp.google.com>
 X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:f693:9fff:fef4:1b6d])
- (user=samitolvanen job=sendgmr) by 2002:a0c:f48e:: with SMTP id
- i14mr6568031qvm.9.1601416000842; Tue, 29 Sep 2020 14:46:40 -0700 (PDT)
-Date:   Tue, 29 Sep 2020 14:46:06 -0700
+ (user=samitolvanen job=sendgmr) by 2002:a25:ae9f:: with SMTP id
+ b31mr8477359ybj.437.1601416057863; Tue, 29 Sep 2020 14:47:37 -0700 (PDT)
+Date:   Tue, 29 Sep 2020 14:46:30 -0700
 In-Reply-To: <20200929214631.3516445-1-samitolvanen@google.com>
-Message-Id: <20200929214631.3516445-5-samitolvanen@google.com>
+Message-Id: <20200929214631.3516445-29-samitolvanen@google.com>
 Mime-Version: 1.0
 References: <20200929214631.3516445-1-samitolvanen@google.com>
 X-Mailer: git-send-email 2.28.0.709.gb0816b6eb0-goog
-Subject: [PATCH v4 04/29] objtool: Add a pass for generating __mcount_loc
+Subject: [PATCH v4 28/29] x86, cpu: disable LTO for cpu.c
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Masahiro Yamada <masahiroy@kernel.org>,
         Will Deacon <will@kernel.org>,
@@ -83,200 +83,32 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Peter Zijlstra <peterz@infradead.org>
+Clang incorrectly inlines functions with differing stack protector
+attributes, which breaks __restore_processor_state() that relies on
+stack protector being disabled. This change disables LTO for cpu.c
+to work aroung the bug.
 
-Add the --mcount option for generating __mcount_loc sections
-needed for dynamic ftrace. Using this pass requires the kernel to
-be compiled with -mfentry and CC_USING_NOP_MCOUNT to be defined
-in Makefile.
-
-Link: https://lore.kernel.org/lkml/20200625200235.GQ4781@hirez.programming.kicks-ass.net/
-Signed-off-by: Peter Zijlstra <peterz@infradead.org>
-[Sami: rebased to mainline, dropped config changes, fixed to actually use
-       --mcount, and wrote a commit message.]
+Link: https://bugs.llvm.org/show_bug.cgi?id=47479
+Suggested-by: Nick Desaulniers <ndesaulniers@google.com>
 Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
-Reviewed-by: Kees Cook <keescook@chromium.org>
 ---
- tools/objtool/builtin-check.c |  3 +-
- tools/objtool/builtin.h       |  2 +-
- tools/objtool/check.c         | 83 +++++++++++++++++++++++++++++++++++
- tools/objtool/check.h         |  1 +
- tools/objtool/objtool.h       |  1 +
- 5 files changed, 88 insertions(+), 2 deletions(-)
+ arch/x86/power/Makefile | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/tools/objtool/builtin-check.c b/tools/objtool/builtin-check.c
-index 7a44174967b5..71595cf4946d 100644
---- a/tools/objtool/builtin-check.c
-+++ b/tools/objtool/builtin-check.c
-@@ -18,7 +18,7 @@
- #include "builtin.h"
- #include "objtool.h"
+diff --git a/arch/x86/power/Makefile b/arch/x86/power/Makefile
+index 6907b523e856..5f711a441623 100644
+--- a/arch/x86/power/Makefile
++++ b/arch/x86/power/Makefile
+@@ -5,5 +5,9 @@ OBJECT_FILES_NON_STANDARD_hibernate_asm_$(BITS).o := y
+ # itself be stack-protected
+ CFLAGS_cpu.o	:= -fno-stack-protector
  
--bool no_fp, no_unreachable, retpoline, module, backtrace, uaccess, stats, validate_dup, vmlinux;
-+bool no_fp, no_unreachable, retpoline, module, backtrace, uaccess, stats, validate_dup, vmlinux, mcount;
- 
- static const char * const check_usage[] = {
- 	"objtool check [<options>] file.o",
-@@ -35,6 +35,7 @@ const struct option check_options[] = {
- 	OPT_BOOLEAN('s', "stats", &stats, "print statistics"),
- 	OPT_BOOLEAN('d', "duplicate", &validate_dup, "duplicate validation for vmlinux.o"),
- 	OPT_BOOLEAN('l', "vmlinux", &vmlinux, "vmlinux.o validation"),
-+	OPT_BOOLEAN('M', "mcount", &mcount, "generate __mcount_loc"),
- 	OPT_END(),
- };
- 
-diff --git a/tools/objtool/builtin.h b/tools/objtool/builtin.h
-index 85c979caa367..94565a72b701 100644
---- a/tools/objtool/builtin.h
-+++ b/tools/objtool/builtin.h
-@@ -8,7 +8,7 @@
- #include <subcmd/parse-options.h>
- 
- extern const struct option check_options[];
--extern bool no_fp, no_unreachable, retpoline, module, backtrace, uaccess, stats, validate_dup, vmlinux;
-+extern bool no_fp, no_unreachable, retpoline, module, backtrace, uaccess, stats, validate_dup, vmlinux, mcount;
- 
- extern int cmd_check(int argc, const char **argv);
- extern int cmd_orc(int argc, const char **argv);
-diff --git a/tools/objtool/check.c b/tools/objtool/check.c
-index 90a66891441a..ff0cd4d27d40 100644
---- a/tools/objtool/check.c
-+++ b/tools/objtool/check.c
-@@ -433,6 +433,65 @@ static int add_dead_ends(struct objtool_file *file)
- 	return 0;
- }
- 
-+static int create_mcount_loc_sections(struct objtool_file *file)
-+{
-+	struct section *sec, *reloc_sec;
-+	struct reloc *reloc;
-+	unsigned long *loc;
-+	struct instruction *insn;
-+	int idx;
++# Clang may incorrectly inline functions with stack protector enabled into
++# __restore_processor_state(): https://bugs.llvm.org/show_bug.cgi?id=47479
++CFLAGS_REMOVE_cpu.o := $(CC_FLAGS_LTO)
 +
-+	sec = find_section_by_name(file->elf, "__mcount_loc");
-+	if (sec) {
-+		INIT_LIST_HEAD(&file->mcount_loc_list);
-+		WARN("file already has __mcount_loc section, skipping");
-+		return 0;
-+	}
-+
-+	if (list_empty(&file->mcount_loc_list))
-+		return 0;
-+
-+	idx = 0;
-+	list_for_each_entry(insn, &file->mcount_loc_list, mcount_loc_node)
-+		idx++;
-+
-+	sec = elf_create_section(file->elf, "__mcount_loc", sizeof(unsigned long), idx);
-+	if (!sec)
-+		return -1;
-+
-+	reloc_sec = elf_create_reloc_section(file->elf, sec, SHT_RELA);
-+	if (!reloc_sec)
-+		return -1;
-+
-+	idx = 0;
-+	list_for_each_entry(insn, &file->mcount_loc_list, mcount_loc_node) {
-+
-+		loc = (unsigned long *)sec->data->d_buf + idx;
-+		memset(loc, 0, sizeof(unsigned long));
-+
-+		reloc = malloc(sizeof(*reloc));
-+		if (!reloc) {
-+			perror("malloc");
-+			return -1;
-+		}
-+		memset(reloc, 0, sizeof(*reloc));
-+
-+		reloc->sym = insn->sec->sym;
-+		reloc->addend = insn->offset;
-+		reloc->type = R_X86_64_64;
-+		reloc->offset = idx * sizeof(unsigned long);
-+		reloc->sec = reloc_sec;
-+		elf_add_reloc(file->elf, reloc);
-+
-+		idx++;
-+	}
-+
-+	if (elf_rebuild_reloc_section(file->elf, reloc_sec))
-+		return -1;
-+
-+	return 0;
-+}
-+
- /*
-  * Warnings shouldn't be reported for ignored functions.
-  */
-@@ -784,6 +843,22 @@ static int add_call_destinations(struct objtool_file *file)
- 			insn->type = INSN_NOP;
- 		}
- 
-+		if (mcount && !strcmp(insn->call_dest->name, "__fentry__")) {
-+			if (reloc) {
-+				reloc->type = R_NONE;
-+				elf_write_reloc(file->elf, reloc);
-+			}
-+
-+			elf_write_insn(file->elf, insn->sec,
-+				       insn->offset, insn->len,
-+				       arch_nop_insn(insn->len));
-+
-+			insn->type = INSN_NOP;
-+
-+			list_add_tail(&insn->mcount_loc_node,
-+				      &file->mcount_loc_list);
-+		}
-+
- 		/*
- 		 * Whatever stack impact regular CALLs have, should be undone
- 		 * by the RETURN of the called function.
-@@ -2791,6 +2866,7 @@ int check(const char *_objname, bool orc)
- 
- 	INIT_LIST_HEAD(&file.insn_list);
- 	hash_init(file.insn_hash);
-+	INIT_LIST_HEAD(&file.mcount_loc_list);
- 	file.c_file = !vmlinux && find_section_by_name(file.elf, ".comment");
- 	file.ignore_unreachables = no_unreachable;
- 	file.hints = false;
-@@ -2838,6 +2914,13 @@ int check(const char *_objname, bool orc)
- 		warnings += ret;
- 	}
- 
-+	if (mcount) {
-+		ret = create_mcount_loc_sections(&file);
-+		if (ret < 0)
-+			goto out;
-+		warnings += ret;
-+	}
-+
- 	if (orc) {
- 		ret = create_orc(&file);
- 		if (ret < 0)
-diff --git a/tools/objtool/check.h b/tools/objtool/check.h
-index 061aa96e15d3..b62afd3d970b 100644
---- a/tools/objtool/check.h
-+++ b/tools/objtool/check.h
-@@ -22,6 +22,7 @@ struct insn_state {
- struct instruction {
- 	struct list_head list;
- 	struct hlist_node hash;
-+	struct list_head mcount_loc_node;
- 	struct section *sec;
- 	unsigned long offset;
- 	unsigned int len;
-diff --git a/tools/objtool/objtool.h b/tools/objtool/objtool.h
-index 528028a66816..427806079540 100644
---- a/tools/objtool/objtool.h
-+++ b/tools/objtool/objtool.h
-@@ -16,6 +16,7 @@ struct objtool_file {
- 	struct elf *elf;
- 	struct list_head insn_list;
- 	DECLARE_HASHTABLE(insn_hash, 20);
-+	struct list_head mcount_loc_list;
- 	bool ignore_unreachables, c_file, hints, rodata;
- };
- 
+ obj-$(CONFIG_PM_SLEEP)		+= cpu.o
+ obj-$(CONFIG_HIBERNATION)	+= hibernate_$(BITS).o hibernate_asm_$(BITS).o hibernate.o
 -- 
 2.28.0.709.gb0816b6eb0-goog
 
