@@ -4,54 +4,53 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5B86C47426
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 19:48:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27077C47420
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 19:48:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7BBA8208B8
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 19:48:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD42C207F7
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 19:48:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1601408890;
-	bh=GICoHa9khuYYRMn6zdxlSfQZX6PczQtkdPZXWahn1ZI=;
+	s=default; t=1601408895;
+	bh=02SCmbrZzEz/BYdC6v14UYCu4DbhDrAGSML6aC8bEDE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=xB/e49EbZDqEHO2wXN6qOr1PZh3rYpUjmn+kLrhM7Y5hxyvJy188rgsiWkn8MskSi
-	 kHLxYLPI1sTBYwlhtgA+186rxWGP/7ZmIM33b3izTxBMPKfBv6O6iMlWs9o4Kc8dmd
-	 wHpjwHrUf8R6BSm6tYIz7Wv1HmhH4xbWOlze446I=
+	b=tnLuLBXePtM0p1exQd+1GhBuZ/YhGiZvCoqp6Io1lZDiQAkKxmrTMypiOm32s1on1
+	 Um5GzVM8fTAuUqgwIb8ulHLGmFB3c9b4evY8fgRv22s1Jt/8RL7MWnSpoFyakvt+YW
+	 eirT/FOh84TPgAIYuhrYGj3iioLezNuz1gNjtJ78=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728698AbgI2TsJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1728860AbgI2TsJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Tue, 29 Sep 2020 15:48:09 -0400
-Received: from mail.kernel.org ([198.145.29.99]:44850 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:44780 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728723AbgI2TsJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 29 Sep 2020 15:48:09 -0400
+        id S1727700AbgI2TsH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 29 Sep 2020 15:48:07 -0400
 Received: from localhost (52.sub-72-107-123.myvzw.com [72.107.123.52])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4CA0820774;
-        Tue, 29 Sep 2020 19:48:08 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 34190207F7;
+        Tue, 29 Sep 2020 19:48:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1601408888;
-        bh=GICoHa9khuYYRMn6zdxlSfQZX6PczQtkdPZXWahn1ZI=;
+        s=default; t=1601408886;
+        bh=02SCmbrZzEz/BYdC6v14UYCu4DbhDrAGSML6aC8bEDE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=PN7We8oSHI5WLB7fkbkuKP/tmWdaVqIuKvjSv6Pt6HtBKA6VdIWEjEXg0e1SpBkNe
-         slM04vCHkQA+CniuSdHyTehcPhg5rR3gq68zgKKg1YMO+LIQAhTNc+QVDKh+mPTbKm
-         Zmbo30yTUoS8do7ePU4z12x++yZT+a9OPZpy+XBM=
+        b=aBuBq5z8RkdpPZJBHS9gHBtLY98T/VjBGRedpDeXR3Ts8J9KYsLBXLytZKg8fJ8z3
+         TrOCuI0PwY10RUFfebyNys2l9ZwsctxbU3IZowY/jojbOsE8I/sc9btErfI4Hwr2Q4
+         BZkVq8fwwgIquMRw+K0Z6OY+rGWDLddcRxgCOcHE=
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     linux-pci@vger.kernel.org
 Cc:     linux-kernel@vger.kernel.org,
         "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 2/2] PCI/PM: Revert "PCI/PM: Apply D2 delay as milliseconds, not microseconds"
-Date:   Tue, 29 Sep 2020 14:47:48 -0500
-Message-Id: <20200929194748.2566828-3-helgaas@kernel.org>
+Subject: [PATCH 1/2] PCI/PM: Remove unused PCI_PM_BUS_WAIT
+Date:   Tue, 29 Sep 2020 14:47:47 -0500
+Message-Id: <20200929194748.2566828-2-helgaas@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200929194748.2566828-1-helgaas@kernel.org>
 References: <20200929194748.2566828-1-helgaas@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
@@ -59,49 +58,23 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Bjorn Helgaas <bhelgaas@google.com>
 
-This reverts commit 7e24bc347e57992d532bc2ed700209b0fc0a4bf5.
+476e7faefc43 ("PCI PM: Do not wait for buses in B2 or B3 during resume")
+removed the last use of PCI_PM_BUS_WAIT.  Remove the definition as well.
 
-7e24bc347e57 was based on PCIe r5.0, sec 5.9, which claims we need a 200 ms
-delay when transitioning to or from D2.  However, sec 5.3.1.3 states the
-delay as 200 μs (microseconds), as does the table in PCIe r4.0, sec 5.9.1.
-
-This looks like a typo in the r5.0 spec, so revert back to a 200 μs delay
-instead of a 200 ms delay.
-
-Fixes: 7e24bc347e57 ("PCI/PM: Apply D2 delay as milliseconds, not microseconds")
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/pci.c | 2 +-
- drivers/pci/pci.h | 6 +++---
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/pci/pci.h | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index c4a26532a447..d69578ad44a0 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1065,7 +1065,7 @@ static int pci_raw_set_power_state(struct pci_dev *dev, pci_power_t state)
- 	if (state == PCI_D3hot || dev->current_state == PCI_D3hot)
- 		pci_dev_d3_sleep(dev);
- 	else if (state == PCI_D2 || dev->current_state == PCI_D2)
--		msleep(PCI_PM_D2_DELAY);
-+		udelay(PCI_PM_D2_DELAY);
- 
- 	pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
- 	dev->current_state = (pmcsr & PCI_PM_CTRL_STATE_MASK);
 diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index f0a9cbe01bc7..f86cae9aa1f4 100644
+index 8d492669ecfd..f0a9cbe01bc7 100644
 --- a/drivers/pci/pci.h
 +++ b/drivers/pci/pci.h
-@@ -43,9 +43,9 @@ int pci_probe_reset_function(struct pci_dev *dev);
- int pci_bridge_secondary_bus_reset(struct pci_dev *dev);
- int pci_bus_error_reset(struct pci_dev *dev);
- 
--#define PCI_PM_D2_DELAY         200
--#define PCI_PM_D3HOT_WAIT       10
--#define PCI_PM_D3COLD_WAIT      100
-+#define PCI_PM_D2_DELAY         200	/* usec; see PCIe r4.0, sec 5.9.1 */
-+#define PCI_PM_D3HOT_WAIT       10	/* msec */
-+#define PCI_PM_D3COLD_WAIT      100	/* msec */
+@@ -46,7 +46,6 @@ int pci_bus_error_reset(struct pci_dev *dev);
+ #define PCI_PM_D2_DELAY         200
+ #define PCI_PM_D3HOT_WAIT       10
+ #define PCI_PM_D3COLD_WAIT      100
+-#define PCI_PM_BUS_WAIT         50
  
  /**
   * struct pci_platform_pm_ops - Firmware PM callbacks
