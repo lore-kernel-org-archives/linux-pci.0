@@ -2,95 +2,113 @@ Return-Path: <SRS0=Yaiz=DG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-9.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36A4CC47425
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 00:53:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74FBCC2D0A8
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 00:55:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 09B3D208FE
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 00:53:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 108C120773
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Sep 2020 00:55:24 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fqfX70p6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727217AbgI2Axc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 28 Sep 2020 20:53:32 -0400
-Received: from mga12.intel.com ([192.55.52.136]:33682 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726419AbgI2Ax3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 28 Sep 2020 20:53:29 -0400
-IronPort-SDR: LpGccOWwAUcN6lma2U6FgSUlmJwUKUDaVdKEovlUggZfk75G+wDDRus+g2S2q/68qMwILGffw4
- hDSDKqLmGyZA==
-X-IronPort-AV: E=McAfee;i="6000,8403,9758"; a="141490955"
-X-IronPort-AV: E=Sophos;i="5.77,316,1596524400"; 
-   d="scan'208";a="141490955"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Sep 2020 17:53:28 -0700
-IronPort-SDR: lRYzHIje/dWR5cEmcodhASPg9/5tYxt3aHLn+WWeot7JSxaShv5fWWdfWXFmg8iuRVCp+n7nCQ
- h+xb+EvFZiHQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.77,316,1596524400"; 
-   d="scan'208";a="384617536"
-Received: from linux.intel.com ([10.54.29.200])
-  by orsmga001.jf.intel.com with ESMTP; 28 Sep 2020 17:53:28 -0700
-Received: from debox1-desk2.jf.intel.com (debox1-desk2.jf.intel.com [10.54.75.16])
-        by linux.intel.com (Postfix) with ESMTP id 5289F580266;
-        Mon, 28 Sep 2020 17:53:28 -0700 (PDT)
-From:   "David E. Box" <david.e.box@linux.intel.com>
-To:     lee.jones@linaro.org, david.e.box@linux.intel.com,
-        dvhart@infradead.org, andy@infradead.org, bhelgaas@google.com,
-        alexander.h.duyck@linux.intel.com, hdegoede@redhat.com,
-        alexey.budankov@linux.intel.com
-Cc:     linux-kernel@vger.kernel.org, platform-driver-x86@vger.kernel.org,
-        linux-pci@vger.kernel.org,
-        Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: [PATCH V6 1/5] PCI: Add defines for Designated Vendor-Specific Extended Capability
-Date:   Mon, 28 Sep 2020 17:53:16 -0700
-Message-Id: <20200929005320.14739-2-david.e.box@linux.intel.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200929005320.14739-1-david.e.box@linux.intel.com>
-References: <20200929005320.14739-1-david.e.box@linux.intel.com>
+        id S1727077AbgI2AzX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 28 Sep 2020 20:55:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52174 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727007AbgI2AzX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Sep 2020 20:55:23 -0400
+Received: from mail-io1-xd44.google.com (mail-io1-xd44.google.com [IPv6:2607:f8b0:4864:20::d44])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 18D32C061755;
+        Mon, 28 Sep 2020 17:55:23 -0700 (PDT)
+Received: by mail-io1-xd44.google.com with SMTP id z25so3095314iol.10;
+        Mon, 28 Sep 2020 17:55:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=QGTY5JlYWG9z0D7/RuLNr1T5K1KEPAuumqJ9jOnxLyw=;
+        b=fqfX70p6n23/qMu34NxN9mlOSgogomSvdKf6fhh0zrS/y3WgqeKSOW7/unUCQhgsRK
+         5vUjqKJeV/P70GeLH0wEXCqLyJH4PhJAT9kL83lGffQsKp/+EsSi1OMcAfmKByUKyVAb
+         DTZ9ClinCQeMew1q726Fo7S8MIqdGXCiL9mtVqy/w05ENkImu6DgaOrYDNpXCHtWixFK
+         NeU8xTwygywPahfeHfFiwRTWeWQmPUBi/FBEPtYruIjq3kXd7dXmvbNp+y2juxqp85K9
+         KjxdaZIEfJW2g6fAg3Byrr2TdLFTxjD08vKI7rKPFSKeKDPKr/fH3edzBaEbrRdi4Jx2
+         Eybw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=QGTY5JlYWG9z0D7/RuLNr1T5K1KEPAuumqJ9jOnxLyw=;
+        b=DqN3jzzfDK7o2SS5W4c/yjT/O8TOyA+pF3SskO0cAmSJmyHCCytWwyx9AZHEChB7ZZ
+         CMQuYrzJUhUoY2Zd6m7FarOp5AJe/R0+KC+Dd5SOCIBVSHUKIpqQOfMsJyS6u4fMzDqv
+         VVGKWJkKa2moPx6Cs9DbT9pLLy4xmX1FM7kZ04w7LF3U6Ufy0V6Y6KUgcVUIvDXAIuX7
+         fxCElokw7VuFjp2mJ/sxkffH0Wb8bkN/QGzbclQ3PIQCY1FdQfbh7yRqfCwgay7ayC3p
+         7jzoDoprNc3DQ9VwoZvRypnJOVueBirLcasrGD2X9QpnOI9EQ3ZZqR8+HyCOSLcvaTW/
+         wfLg==
+X-Gm-Message-State: AOAM5329x7NsE/BymVIkTBz7DA2Bf6VaxtKZ21I4lW1CSCcb+DqSuFPW
+        2d0QH9qqv6gTp07lj6JNaV8xCdtEKnWhU3kGIQ4=
+X-Google-Smtp-Source: ABdhPJzksqe6Wln9YBjx1ZvlFsWD4eV85ZoBEjjk7OOVTIcOb7Mo4sErIAc3CG+izUMAzwtHugSF7aZoX1oy2aKg89E=
+X-Received: by 2002:a02:6623:: with SMTP id k35mr1004403jac.105.1601340922396;
+ Mon, 28 Sep 2020 17:55:22 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20200924051343.16052.9571.stgit@localhost.localdomain>
+ <CAOSf1CEv3v940FR_we70qCBME0qFXPizPT8EFbf3XyK2-fPDrw@mail.gmail.com> <ff6a8c97-4a6a-c82b-bd35-e09fa44f8e20@linux.ibm.com>
+In-Reply-To: <ff6a8c97-4a6a-c82b-bd35-e09fa44f8e20@linux.ibm.com>
+From:   "Oliver O'Halloran" <oohall@gmail.com>
+Date:   Tue, 29 Sep 2020 10:55:11 +1000
+Message-ID: <CAOSf1CHdOk1guuST8T5t1A9O=xkbeFiJ9uZXgHeBBjeLKZ5O4g@mail.gmail.com>
+Subject: Re: [PATCH] rpadlpar_io:Add MODULE_DESCRIPTION entries to kernel modules
+To:     Tyrel Datwyler <tyreld@linux.ibm.com>
+Cc:     Mamatha Inamdar <mamatha4@linux.vnet.ibm.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add PCIe Designated Vendor-Specific Extended Capability (DVSEC) and defines
-for the header offsets. Defined in PCIe r5.0, sec 7.9.6.
+On Tue, Sep 29, 2020 at 6:50 AM Tyrel Datwyler <tyreld@linux.ibm.com> wrote:
+>
+> On 9/23/20 11:41 PM, Oliver O'Halloran wrote:
+> > On Thu, Sep 24, 2020 at 3:15 PM Mamatha Inamdar
+> > <mamatha4@linux.vnet.ibm.com> wrote:
+> >>
+> >> This patch adds a brief MODULE_DESCRIPTION to rpadlpar_io kernel modules
+> >> (descriptions taken from Kconfig file)
+> >>
+> >> Signed-off-by: Mamatha Inamdar <mamatha4@linux.vnet.ibm.com>
+> >> ---
+> >>  drivers/pci/hotplug/rpadlpar_core.c |    1 +
+> >>  1 file changed, 1 insertion(+)
+> >>
+> >> diff --git a/drivers/pci/hotplug/rpadlpar_core.c b/drivers/pci/hotplug/rpadlpar_core.c
+> >> index f979b70..bac65ed 100644
+> >> --- a/drivers/pci/hotplug/rpadlpar_core.c
+> >> +++ b/drivers/pci/hotplug/rpadlpar_core.c
+> >> @@ -478,3 +478,4 @@ static void __exit rpadlpar_io_exit(void)
+> >>  module_init(rpadlpar_io_init);
+> >>  module_exit(rpadlpar_io_exit);
+> >>  MODULE_LICENSE("GPL");
+> >> +MODULE_DESCRIPTION("RPA Dynamic Logical Partitioning driver for I/O slots");
+> >
+> > RPA as a spec was superseded by PAPR in the early 2000s. Can we rename
+> > this already?
+>
+> I seem to recall Michael and I discussed the naming briefly when I added the
+> maintainer entries for the drivers and that the PAPR acronym is almost as
+> meaningless to most as the original RPA. While, IBM no longer uses the term
+> pseries for Power hardware marketing it is the defacto platform identifier in
+> the Linux kernel tree for what we would call PAPR compliant. All in all I have
+> no problem with renaming, but maybe we should consider pseries_dlpar or even
+> simpler ibmdlpar.
 
-Signed-off-by: David E. Box <david.e.box@linux.intel.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
----
- include/uapi/linux/pci_regs.h | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index f9701410d3b5..beafeee39e44 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -720,6 +720,7 @@
- #define PCI_EXT_CAP_ID_DPC	0x1D	/* Downstream Port Containment */
- #define PCI_EXT_CAP_ID_L1SS	0x1E	/* L1 PM Substates */
- #define PCI_EXT_CAP_ID_PTM	0x1F	/* Precision Time Measurement */
-+#define PCI_EXT_CAP_ID_DVSEC	0x23	/* Designated Vendor-Specific */
- #define PCI_EXT_CAP_ID_DLF	0x25	/* Data Link Feature */
- #define PCI_EXT_CAP_ID_PL_16GT	0x26	/* Physical Layer 16.0 GT/s */
- #define PCI_EXT_CAP_ID_MAX	PCI_EXT_CAP_ID_PL_16GT
-@@ -1062,6 +1063,10 @@
- #define  PCI_L1SS_CTL1_LTR_L12_TH_SCALE	0xe0000000  /* LTR_L1.2_THRESHOLD_Scale */
- #define PCI_L1SS_CTL2		0x0c	/* Control 2 Register */
- 
-+/* Designated Vendor-Specific (DVSEC, PCI_EXT_CAP_ID_DVSEC) */
-+#define PCI_DVSEC_HEADER1		0x4 /* Designated Vendor-Specific Header1 */
-+#define PCI_DVSEC_HEADER2		0x8 /* Designated Vendor-Specific Header2 */
-+
- /* Data Link Feature */
- #define PCI_DLF_CAP		0x04	/* Capabilities Register */
- #define  PCI_DLF_EXCHANGE_ENABLE	0x80000000  /* Data Link Feature Exchange Enable */
--- 
-2.20.1
-
+I'm not too bothered by what we call it so long as it's consistent
+with *something* else in the tree. Using pseries rather than ibm as a
+prefix would probably be better since the legacy ibmphp driver is in
+the same directory.
