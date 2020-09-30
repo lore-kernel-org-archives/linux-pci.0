@@ -5,49 +5,49 @@ X-Spam-Level:
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75A24C4363D
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0932C4741F
 	for <linux-pci@archiver.kernel.org>; Wed, 30 Sep 2020 21:59:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 056302064E
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Sep 2020 21:59:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5506B20888
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Sep 2020 21:59:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731402AbgI3V6p (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 30 Sep 2020 17:58:45 -0400
-Received: from wout1-smtp.messagingengine.com ([64.147.123.24]:35865 "EHLO
+        id S1731523AbgI3V7C (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 30 Sep 2020 17:59:02 -0400
+Received: from wout1-smtp.messagingengine.com ([64.147.123.24]:41823 "EHLO
         wout1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1731424AbgI3V6m (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Sep 2020 17:58:42 -0400
+        by vger.kernel.org with ESMTP id S1731437AbgI3V6p (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Sep 2020 17:58:45 -0400
 Received: from compute7.internal (compute7.nyi.internal [10.202.2.47])
-        by mailout.west.internal (Postfix) with ESMTP id 57BA9CC3;
-        Wed, 30 Sep 2020 17:58:41 -0400 (EDT)
+        by mailout.west.internal (Postfix) with ESMTP id 111F5F96;
+        Wed, 30 Sep 2020 17:58:44 -0400 (EDT)
 Received: from mailfrontend1 ([10.202.2.162])
-  by compute7.internal (MEProxy); Wed, 30 Sep 2020 17:58:42 -0400
+  by compute7.internal (MEProxy); Wed, 30 Sep 2020 17:58:44 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         oregontracks.org; h=from:to:cc:subject:date:message-id
         :in-reply-to:references:mime-version:content-transfer-encoding;
-         s=fm1; bh=/OyZqHr+MnAPos+2/WvGGh8oUgCI+xxPNRWldepzBz8=; b=kgCtu
-        dxocq1EM0U57GV1OBSymHN6qrrxkluH+GeJ0feUioxCTynXWLyvbgGwpKdG/cmXq
-        csDUv748fKSGwqoSFo8FxOQw6XD7MCwR3J1SBsgA0dr91hgTGcj70rU14g5PYVPg
-        zCRtcXnD/nfUTZ4XSIJzH+fXShKSkdU+0GajrFuNgNbQAAeanOPAtM9YqfDoj4Ma
-        9tN3t+0acz0k3xjyzcoxTHg1mMuNKdQ5J7MlLyZrYz24ltydrLbduRIcvOOxJyfi
-        rpowcW5PhVbmGeyITyD8p8wVh/ErGzIZzHNHBnt0Sti3tuWHzdt6iaIQ1p645Rs3
-        LMpAyxZar+1Xv0/aA==
+         s=fm1; bh=X3bR5tiDpkOMpVFs96Yj2G3znNEwbv7TvDxEB3BfxjA=; b=NLR1j
+        JN5aRtc+8s8d+Lt4miX0YSzlJY1cp9ZUP+EQVx7fWmvzsjsGOYYL2UpUSrHYGtpr
+        bPm37DZQj3yY7izpeD4MwidWXvg9SHyDZ4EIjlQ2fTMkYoPQnyQZwhoBSDfLZ6R2
+        yIlfECLKBMix9jv2e3fqo3YbLSomcpIB0O2gNg7RqGdlKTNu31cyr1CVfYMbfqab
+        j08+E7uKbNTu7ahgEFlDu++61LZAPof9KAw4zk+QtZEaKqiDSLWno13Tc9ZaKYSk
+        O9IloPSIxglIwzYpiZj/e/8WDc1FZ9Cw+qAl07WlQMOKcqk2WRJrg45O0oVhWCrr
+        fuSSb92du4MCGZ54w==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         messagingengine.com; h=cc:content-transfer-encoding:date:from
         :in-reply-to:message-id:mime-version:references:subject:to
         :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
-        fm3; bh=/OyZqHr+MnAPos+2/WvGGh8oUgCI+xxPNRWldepzBz8=; b=a5qiMbFV
-        B4yJQoM8tsVyVwfzw/gkUb79kqHE5+aOaxcjzBeMAjgGQ6Fd/cPDrOOKh3hF7bID
-        PAUBYauZ1lKTbaAQda/Wl8FZta4PfaoYod7OI+NAD8KBYbfZCg6r3Rn/pazLknZD
-        4ecMhNYIQkB5R9Owr0MXH9iAviMqEoM/B0XTHZ93KE+5Mp2pZ+47dVX+yVicNkdN
-        5UtphtcbKjEIBWfp/3K8SvBtZl847wrn/WGQM8NXEwm/IjqxSGkqYMoW3Gxc78tZ
-        +dxXy8XLbPUhcZR0FoZxhh24XyhmGeJNJvg+xG2U4UnWC4kDMS/9H5vH8yCYXYJM
-        zP3KlGFbHdV0gg==
-X-ME-Sender: <xms:kP90X-rKc0JBRc08yNXiHJSrhDFi5wq-mTCsZXWDoPIexrNP3J0taQ>
-    <xme:kP90X8q9SZc9GalnMH6FS6a3i1d2z37uBjNlPlqfGP393JyvG3VRJpdog0bb8HNuM
-    Y1heXobThCKWFMk>
+        fm3; bh=X3bR5tiDpkOMpVFs96Yj2G3znNEwbv7TvDxEB3BfxjA=; b=YjIFo4ZF
+        nmMBHBTRnxIRIpzzX8Hi7UpcAor287S77sIYt5/euJFo+dDv+B84VWE03GbKIj3l
+        DS0XuCU8479pr4yPTFdPH4CHQ7phRMPHxhIT7Sxyjxwl2GuJXqnjLwJKro8W2khz
+        bUqa2yJyDpoxtfErNs34/FGUB3RDbHSfSuA1iAtjORW3ukaK5lxw0mrhrnu9Q4GJ
+        f8CSh4OWg4xdOYHr+WbtYVrWHGSTlc88SMT1EprB1iLGFwho3p06/b+uLKe7wr31
+        cR3sLOFAMWIMgdgrsIzwbCYApJnKLAAetXeFFcj/1nowRRkChvcOG/O+To5T412F
+        TAWELzKBe7Lzig==
+X-ME-Sender: <xms:k_90X-A_yL-Yd8vT54EXVo4MGQiWf3UAeM1BzZQInLHob_ATDZoQqw>
+    <xme:k_90X4iOHPy_K5Q3ar_h6bgvP8g8H1_mJdwzruuZNrDJ-ekSosjL8jwoqLxAMilEp
+    NSmLcbMk8R8xQtq>
 X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedujedrfeefgddthecutefuodetggdotefrodftvf
     curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
     uegrihhlohhuthemuceftddtnecunecujfgurhephffvufffkffojghfggfgsedtkeertd
@@ -56,13 +56,13 @@ X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedujedrfeefgddthecutefuodetggdote
     duieffleekleevffdtlefhiedtieegffelueefvdfggedvfeevtdetnecukfhppedvgedr
     vddtrddugeekrdegleenucevlhhushhtvghrufhiiigvpeeinecurfgrrhgrmhepmhgrih
     hlfhhrohhmpehsvggrnhhvkhdruggvvhesohhrvghgohhnthhrrggtkhhsrdhorhhg
-X-ME-Proxy: <xmx:kP90XzOjgcQfjEHYAandcgCZFKUJeOzWbhNIvXyw0H7v6Z1U34alWQ>
-    <xmx:kP90X966uRWMMtdWMkwcEk4Top2mao8m8mA5lKSSvHjmOcHUTeVnyg>
-    <xmx:kP90X97I4yKVLkx_tqRf0-onGvehzadTa8nKqEda-QKEnrt6I9kmMw>
-    <xmx:kP90X4ZOJq_QsP7L3Z8aXI9qli57PX-AStbI93kawG8cK3Hh6iLTfQ>
+X-ME-Proxy: <xmx:k_90Xxk490x19o40kDySi7mDfnjFFvV-UCOPQzKlJPx2KRm4emKlbA>
+    <xmx:k_90X8zEmIs5rIAwF8iYJU057WA11qUQNjvyIb5WfuvMHFlkmKuvbg>
+    <xmx:k_90XzTXLkGxyqtJX3wDjLlZbPZdJiJPrVTwjA8DRUYdLVZaNIo9Gg>
+    <xmx:k_90X8TKZsQO5PeCzXfQeOjG4iNg2BCWEQHW3sMWk6Gfmo7QUEBmFQ>
 Received: from arch-ashland-svkelley.hsd1.or.comcast.net (c-24-20-148-49.hsd1.or.comcast.net [24.20.148.49])
-        by mail.messagingengine.com (Postfix) with ESMTPA id 93F6D3280063;
-        Wed, 30 Sep 2020 17:58:39 -0400 (EDT)
+        by mail.messagingengine.com (Postfix) with ESMTPA id 38ED93280060;
+        Wed, 30 Sep 2020 17:58:42 -0400 (EDT)
 From:   Sean V Kelley <seanvk.dev@oregontracks.org>
 To:     bhelgaas@google.com, Jonathan.Cameron@huawei.com,
         rafael.j.wysocki@intel.com, ashok.raj@intel.com,
@@ -70,9 +70,9 @@ To:     bhelgaas@google.com, Jonathan.Cameron@huawei.com,
         qiuxu.zhuo@intel.com
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         Sean V Kelley <sean.v.kelley@intel.com>
-Subject: [PATCH v7 07/13] PCI/AER: Extend AER error handling to RCECs
-Date:   Wed, 30 Sep 2020 14:58:14 -0700
-Message-Id: <20200930215820.1113353-8-seanvk.dev@oregontracks.org>
+Subject: [PATCH v7 09/13] PCI/RCEC: Add pcie_link_rcec() to associate RCiEPs
+Date:   Wed, 30 Sep 2020 14:58:16 -0700
+Message-Id: <20200930215820.1113353-10-seanvk.dev@oregontracks.org>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200930215820.1113353-1-seanvk.dev@oregontracks.org>
 References: <20200930215820.1113353-1-seanvk.dev@oregontracks.org>
@@ -82,166 +82,170 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+From: Sean V Kelley <sean.v.kelley@intel.com>
 
-Currently the kernel does not handle AER errors for Root Complex
-integrated End Points (RCiEPs)[0]. These devices sit on a root bus within
-the Root Complex (RC). AER handling is performed by a Root Complex Event
-Collector (RCEC) [1] which is a effectively a type of RCiEP on the same
-root bus.
+A Root Complex Event Collector provides support for
+terminating error and PME messages from associated RCiEPs.
 
-For an RCEC (technically not a Bridge), error messages "received" from
-associated RCiEPs must be enabled for "transmission" in order to cause a
-System Error via the Root Control register or (when the Advanced Error
-Reporting Capability is present) reporting via the Root Error Command
-register and logging in the Root Error Status register and Error Source
-Identification register.
+Make use of the RCEC Endpoint Association Extended Capability
+to identify associated RCiEPs. Link the associated RCiEPs as
+the RCECs are enumerated.
 
-In addition to the defined OS level handling of the reset flow for the
-associated RCiEPs of an RCEC, it is possible to also have non-native
-handling. In that case there is no need to take any actions on the RCEC
-because the firmware is responsible for them. This is true where APEI [2]
-is used to report the AER errors via a GHES[v2] HEST entry [3] and
-relevant AER CPER record [4] and non-native handling is in use.
-
-We effectively end up with two different types of discovery for
-purposes of handling AER errors:
-
-1) Normal bus walk - we pass the downstream port above a bus to which
-the device is attached and it walks everything below that point.
-
-2) An RCiEP with no visible association with an RCEC as there is no need
-to walk devices. In that case, the flow is to just call the callbacks for
-the actual device, which in turn references its associated RCEC.
-
-A new walk function pci_walk_bridge(), similar to pci_walk_bus(),
-is provided that takes a pci_dev instead of a bus. If that bridge
-corresponds to a downstream port it will walk the subordinate bus of
-that bridge. If the device does not then it will call the function on
-that device alone.
-
-[0] ACPI PCI Express Base Specification 5.0-1 1.3.2.3 Root Complex
-Integrated Endpoint Rules.
-[1] ACPI PCI Express Base Specification 5.0-1 6.2 Error Signalling and
-Logging
-[2] ACPI Specification 6.3 Chapter 18 ACPI Platform Error Interface (APEI)
-[3] ACPI Specification 6.3 18.2.3.7 Generic Hardware Error Source
-[4] UEFI Specification 2.8, N.2.7 PCI Express Error Section
-
-Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Co-developed-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+Signed-off-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
 Signed-off-by: Sean V Kelley <sean.v.kelley@intel.com>
+Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 ---
- drivers/pci/pcie/err.c | 52 +++++++++++++++++++++++++++++++++---------
- 1 file changed, 41 insertions(+), 11 deletions(-)
+ drivers/pci/pci.h              |  2 +
+ drivers/pci/pcie/portdrv_pci.c |  3 ++
+ drivers/pci/pcie/rcec.c        | 91 ++++++++++++++++++++++++++++++++++
+ include/linux/pci.h            |  1 +
+ 4 files changed, 97 insertions(+)
 
-diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index 9e552330155b..c4ceca42a3bf 100644
---- a/drivers/pci/pcie/err.c
-+++ b/drivers/pci/pcie/err.c
-@@ -146,44 +146,73 @@ static int report_resume(struct pci_dev *dev, void *data)
- 	return 0;
- }
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index efea170805fa..ef60a78a1861 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -473,9 +473,11 @@ static inline void pci_dpc_init(struct pci_dev *pdev) {}
+ #ifdef CONFIG_PCIEPORTBUS
+ int pci_rcec_init(struct pci_dev *dev);
+ void pci_rcec_exit(struct pci_dev *dev);
++void pcie_link_rcec(struct pci_dev *rcec);
+ #else
+ static inline int pci_rcec_init(struct pci_dev *dev) {return 0;}
+ static inline void pci_rcec_exit(struct pci_dev *dev) {}
++static inline void pcie_link_rcec(struct pci_dev *rcec) {}
+ #endif
  
-+/**
-+ * pci_walk_bridge - walk bridges potentially AER affected
-+ * @bridge   bridge which may be an RCEC with associated RCiEPs,
-+ *           an RCiEP associated with an RCEC, or a Port.
-+ * @cb       callback to be called for each device found
-+ * @userdata arbitrary pointer to be passed to callback.
-+ *
-+ * If the device provided is a bridge, walk the subordinate bus,
-+ * including any bridged devices on buses under this bus.
-+ * Call the provided callback on each device found.
-+ *
-+ * If the device provided has no subordinate bus, call the provided
-+ * callback on the device itself.
-+ */
-+static void pci_walk_bridge(struct pci_dev *bridge, int (*cb)(struct pci_dev *, void *),
-+			    void *userdata)
+ #ifdef CONFIG_PCI_ATS
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index 4d880679b9b1..dbeb0155c2c3 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -110,6 +110,9 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+ 	     (pci_pcie_type(dev) != PCI_EXP_TYPE_RC_EC)))
+ 		return -ENODEV;
+ 
++	if (pci_pcie_type(dev) == PCI_EXP_TYPE_RC_EC)
++		pcie_link_rcec(dev);
++
+ 	status = pcie_port_device_register(dev);
+ 	if (status)
+ 		return status;
+diff --git a/drivers/pci/pcie/rcec.c b/drivers/pci/pcie/rcec.c
+index da02b0af442d..9ba74d8064e9 100644
+--- a/drivers/pci/pcie/rcec.c
++++ b/drivers/pci/pcie/rcec.c
+@@ -15,6 +15,97 @@
+ 
+ #include "../pci.h"
+ 
++struct walk_rcec_data {
++	struct pci_dev *rcec;
++	int (*user_callback)(struct pci_dev *dev, void *data);
++	void *user_data;
++};
++
++static bool rcec_assoc_rciep(struct pci_dev *rcec, struct pci_dev *rciep)
 +{
-+	if (bridge->subordinate)
-+		pci_walk_bus(bridge->subordinate, cb, userdata);
-+	else
-+		cb(bridge, userdata);
++	unsigned long bitmap = rcec->rcec_ea->bitmap;
++	unsigned int devn;
++
++	/* An RCiEP found on a different bus in range */
++	if (rcec->bus->number != rciep->bus->number)
++		return true;
++
++	/* Same bus, so check bitmap */
++	for_each_set_bit(devn, &bitmap, 32)
++		if (devn == rciep->devfn)
++			return true;
++
++	return false;
 +}
 +
- pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
- 			pci_channel_state_t state,
- 			pci_ers_result_t (*reset_subordinate_devices)(struct pci_dev *pdev))
- {
- 	pci_ers_result_t status = PCI_ERS_RESULT_CAN_RECOVER;
--	struct pci_bus *bus;
- 	struct pci_dev *bridge;
- 	int type;
- 
- 	/*
- 	 * Error recovery runs on all subordinates of the first downstream
- 	 * bridge. If the downstream bridge detected the error, it is
--	 * cleared at the end.
-+	 * cleared at the end. For RCiEPs we should reset just the RCiEP itself.
- 	 */
- 	type = pci_pcie_type(dev);
- 	if (type == PCI_EXP_TYPE_ROOT_PORT ||
--	    type == PCI_EXP_TYPE_DOWNSTREAM)
-+	    type == PCI_EXP_TYPE_DOWNSTREAM ||
-+	    type == PCI_EXP_TYPE_RC_EC ||
-+	    type == PCI_EXP_TYPE_RC_END)
- 		bridge = dev;
- 	else
- 		bridge = pci_upstream_bridge(dev);
- 
--	bus = bridge->subordinate;
- 	pci_dbg(dev, "broadcast error_detected message\n");
- 	if (state == pci_channel_io_frozen) {
--		pci_walk_bus(bus, report_frozen_detected, &status);
--		status = reset_subordinate_device(dev);
-+		pci_walk_bridge(bridge, report_frozen_detected, &status);
-+		if (type == PCI_EXP_TYPE_RC_END) {
-+			pci_warn(dev, "subordinate device reset not possible for RCiEP\n");
-+			status = PCI_ERS_RESULT_NONE;
-+			goto failed;
-+		}
++static int link_rcec_helper(struct pci_dev *dev, void *data)
++{
++	struct walk_rcec_data *rcec_data = data;
++	struct pci_dev *rcec = rcec_data->rcec;
 +
-+		status = reset_subordinate_devices(bridge);
- 		if (status != PCI_ERS_RESULT_RECOVERED) {
- 			pci_warn(dev, "subordinate device reset failed\n");
- 			goto failed;
- 		}
- 	} else {
--		pci_walk_bus(bus, report_normal_detected, &status);
-+		pci_walk_bridge(bridge, report_normal_detected, &status);
- 	}
- 
- 	if (status == PCI_ERS_RESULT_CAN_RECOVER) {
- 		status = PCI_ERS_RESULT_RECOVERED;
- 		pci_dbg(dev, "broadcast mmio_enabled message\n");
--		pci_walk_bus(bus, report_mmio_enabled, &status);
-+		pci_walk_bridge(bridge, report_mmio_enabled, &status);
- 	}
- 
- 	if (status == PCI_ERS_RESULT_NEED_RESET) {
-@@ -194,17 +223,18 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
- 		 */
- 		status = PCI_ERS_RESULT_RECOVERED;
- 		pci_dbg(dev, "broadcast slot_reset message\n");
--		pci_walk_bus(bus, report_slot_reset, &status);
-+		pci_walk_bridge(bridge, report_slot_reset, &status);
- 	}
- 
- 	if (status != PCI_ERS_RESULT_RECOVERED)
- 		goto failed;
- 
- 	pci_dbg(dev, "broadcast resume message\n");
--	pci_walk_bus(bus, report_resume, &status);
-+	pci_walk_bridge(bridge, report_resume, &status);
- 
- 	if (type == PCI_EXP_TYPE_ROOT_PORT ||
--	    type == PCI_EXP_TYPE_DOWNSTREAM) {
-+	    type == PCI_EXP_TYPE_DOWNSTREAM ||
-+	    type == PCI_EXP_TYPE_RC_EC) {
- 		if (pcie_aer_is_native(bridge))
- 			pcie_clear_device_status(bridge);
- 		pci_aer_clear_nonfatal_status(bridge);
++	if ((pci_pcie_type(dev) == PCI_EXP_TYPE_RC_END) && rcec_assoc_rciep(rcec, dev)) {
++		dev->rcec = rcec;
++		pci_dbg(dev, "PME & error events reported via %s\n", pci_name(rcec));
++	}
++
++	return 0;
++}
++
++static void walk_rcec(int (*cb)(struct pci_dev *dev, void *data), void *userdata)
++{
++	struct walk_rcec_data *rcec_data = userdata;
++	struct pci_dev *rcec = rcec_data->rcec;
++	u8 nextbusn, lastbusn;
++	struct pci_bus *bus;
++	unsigned int bnr;
++
++	if (!rcec->rcec_ea)
++		return;
++
++	/* Walk own bus for bitmap based association */
++	pci_walk_bus(rcec->bus, cb, rcec_data);
++
++	nextbusn = rcec->rcec_ea->nextbusn;
++	lastbusn = rcec->rcec_ea->lastbusn;
++
++	/* All RCiEP devices are on the same bus as the RCEC */
++	if (nextbusn == 0xff && lastbusn == 0x00)
++		return;
++
++	for (bnr = nextbusn; bnr <= lastbusn; bnr++) {
++		/* No association indicated (PCIe 5.0-1, 7.9.10.3) */
++		if (bnr == rcec->bus->number)
++			continue;
++
++		bus = pci_find_bus(pci_domain_nr(rcec->bus), bnr);
++		if (!bus)
++			continue;
++
++		/* Find RCiEP devices on the given bus ranges */
++		pci_walk_bus(bus, cb, rcec_data);
++	}
++}
++
++/**
++ * pcie_link_rcec - Link RCiEP devices associating with RCEC.
++ * @rcec     RCEC whose RCiEP devices should be linked.
++ *
++ * Link the given RCEC to each RCiEP device found.
++ */
++void pcie_link_rcec(struct pci_dev *rcec)
++{
++	struct walk_rcec_data rcec_data;
++
++	if (!rcec->rcec_ea)
++		return;
++
++	rcec_data.rcec = rcec;
++	rcec_data.user_callback = NULL;
++	rcec_data.user_data = NULL;
++
++	walk_rcec(link_rcec_helper, &rcec_data);
++}
++
+ int pci_rcec_init(struct pci_dev *dev)
+ {
+ 	struct rcec_ea *rcec_ea;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 2290439e8bc0..e546b16b13c1 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -330,6 +330,7 @@ struct pci_dev {
+ #endif
+ #ifdef CONFIG_PCIEPORTBUS
+ 	struct rcec_ea	*rcec_ea;	/* RCEC cached endpoint association */
++	struct pci_dev  *rcec;          /* Associated RCEC device */
+ #endif
+ 	u8		pcie_cap;	/* PCIe capability offset */
+ 	u8		msi_cap;	/* MSI capability offset */
 -- 
 2.28.0
 
