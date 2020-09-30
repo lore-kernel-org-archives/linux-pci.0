@@ -7,71 +7,72 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4A3BC4363D
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Sep 2020 21:58:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2D73C4363D
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Sep 2020 21:58:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 97E7F20B1F
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Sep 2020 21:58:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B7C572064E
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Sep 2020 21:58:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731428AbgI3V6o (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 30 Sep 2020 17:58:44 -0400
-Received: from wout1-smtp.messagingengine.com ([64.147.123.24]:34151 "EHLO
+        id S1731444AbgI3V6p (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 30 Sep 2020 17:58:45 -0400
+Received: from wout1-smtp.messagingengine.com ([64.147.123.24]:56721 "EHLO
         wout1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1731388AbgI3V6n (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Sep 2020 17:58:43 -0400
+        by vger.kernel.org with ESMTP id S1731239AbgI3V6l (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Sep 2020 17:58:41 -0400
 Received: from compute7.internal (compute7.nyi.internal [10.202.2.47])
-        by mailout.west.internal (Postfix) with ESMTP id A8391F8F;
-        Wed, 30 Sep 2020 17:58:42 -0400 (EDT)
+        by mailout.west.internal (Postfix) with ESMTP id 19054C6B;
+        Wed, 30 Sep 2020 17:58:39 -0400 (EDT)
 Received: from mailfrontend1 ([10.202.2.162])
-  by compute7.internal (MEProxy); Wed, 30 Sep 2020 17:58:43 -0400
+  by compute7.internal (MEProxy); Wed, 30 Sep 2020 17:58:40 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         oregontracks.org; h=from:to:cc:subject:date:message-id
         :in-reply-to:references:mime-version:content-transfer-encoding;
-         s=fm1; bh=VzqaRORlnEuUozDef6epiKpVS9HjyrVB/kcqBdBNMb4=; b=DWOTJ
-        9Oy6+E3TbsAPIuh7Vf8KotrLue32f9oiuY1+8namXfqbxl/3dLv4JCUgu8Rc1Zxv
-        IXwUwRibzP2IhOEsYzVRjjUUE16azQblFzXggGSNT01t1rXR8WED6cQeS113MmpK
-        bwP7nW1wC+ih1eq402VCdOumsccgEbr5btkxssJ6bgFYktBLzesT7+x78da8QYB0
-        pn2WzWPGMc715u6XPGA2bqFwTZbQ0I/cujAGA1YcAmtEQBrwNkChDscyrZkHQ+v4
-        2jIOOSHvQ4CsULTG9lpHP1AghBppM4f6r1P/ylNbi70zIXqMcP+6FU+KMNGHiZex
-        SKx0uwtP8WR4N5v2A==
+         s=fm1; bh=ssHeaqMnPt5Gs846wLr7DIjg7Vyu5Ulfjnxp9FjFInU=; b=H7SPI
+        Srtcxj9BaKzoFy8w4aoCx/ItdTTgYUoZyU4+CFcl+09Te7veQXuZoSL3puiN/Q94
+        tcXhR6u3zWjZ7I8i4DXyBx5MwhcXZdEIr2iu/nIvQ/CklUX8QhUFkgJwIEw5HipI
+        RS+vJzCweiQ+/jrcGG97tFLJcmZMmH90XKdNTag8A1hl57SLnIToKABkb4Bkeorj
+        ItKCEC4FK3KSORCsqjiDayTqNhQZI28S+MNXA4xO2VqGke5JW0u513j9UfHb11J+
+        z3oiYyZIikhZjVmfZSCF+ypu3daO2jRfG4R0Xb8aeDL34dH/MmMPvYluWguCXkPu
+        /dtKLAXyYnkMpLV5g==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         messagingengine.com; h=cc:content-transfer-encoding:date:from
         :in-reply-to:message-id:mime-version:references:subject:to
         :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
-        fm3; bh=VzqaRORlnEuUozDef6epiKpVS9HjyrVB/kcqBdBNMb4=; b=kNYhkw4E
-        C44RqUVDec3riOk1TNANqEpYqWOVPogz2eeqUxlLCRspiAQcOQEWEJepnU8Gp47d
-        MRac/0fwCqC1htakvtYgx8ZC8++CH28FuxkU5H9Cqqmh1j9EVk9sx4bq3wM2GzFy
-        7GwBxULvmoHQHeSiGqMOSFuC3zLK/0cK4IoDJ2iOQSk1wXwaoZwlW2aPS3FS7EtL
-        NRF1KxivETKPLT7rPPd8MBGh72g+R+4XpbL0DuUaEkETYEGEvk9gWK+spykdxDcP
-        CIwUgVqy2nwjYN8vlWsI/mUoBfy3jFtrI+mnDjVWATpBxU/IEpTTrqrM1Hi+AoOz
-        vRYUNCnApt9m4Q==
-X-ME-Sender: <xms:kv90X_eRLgN0aTQ9yRFVSPitWiYDODwf0jIQ-b4GCfPm_-h_HYHchA>
-    <xme:kv90X1MsojvxaCvWv-yJSe8I0t0xoV5FG5vrpse0G3VMhwJUOcIu8-BRK9X1XlMDQ
-    Whs3l4JuB5wCIfD>
+        fm3; bh=ssHeaqMnPt5Gs846wLr7DIjg7Vyu5Ulfjnxp9FjFInU=; b=MNbTCeEb
+        5XAmgdTx5ohcQr2UxlOJsGaooYE/3UOgUJKm9x8q1vyMRUX5QSpE/exTgmr18aCt
+        KI6Yex3n9nTBc0jvZU8l1xhfrg3GMTN1/81W6GHjwV8zQCz/S93eYsv3kPZVudHd
+        s8vGospo093o3cUoEgXfJXQur0PDOn+LetF5ycqN1SrHTnyCmpuvyFR/OrIcEaS4
+        88jKzL4nGrqtPzLXioc5phtiOoH7YjvnUCdRJPODVv/UzYzTKcFN/RFDZ98FJYxh
+        JPG6HcoCi5QcPKepaKNpIHDd2kLm6alJLDYT8+bsf0yDIAWHy8ows+WRLFxprAJv
+        PkolQ5gyaXvw+A==
+X-ME-Sender: <xms:j_90X4QpsridiFILHjoo6YXNPfu6ayKajVT14AIRYwUbY7UnZebGmA>
+    <xme:j_90X1xhzrpcaB4I2b2DMDvAoNgVXbEwERIIUeRLeqbYVVd-bEZrCvMQviR5_EBHR
+    whDhWUhX0aX21l1>
 X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedujedrfeefgddthecutefuodetggdotefrodftvf
     curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
     uegrihhlohhuthemuceftddtnecunecujfgurhephffvufffkffojghfggfgsedtkeertd
     ertddtnecuhfhrohhmpefuvggrnhcuggcumfgvlhhlvgihuceoshgvrghnvhhkrdguvghv
     sehorhgvghhonhhtrhgrtghkshdrohhrgheqnecuggftrfgrthhtvghrnhepheekffetie
     duieffleekleevffdtlefhiedtieegffelueefvdfggedvfeevtdetnecukfhppedvgedr
-    vddtrddugeekrdegleenucevlhhushhtvghrufhiiigvpeeinecurfgrrhgrmhepmhgrih
+    vddtrddugeekrdegleenucevlhhushhtvghrufhiiigvpedunecurfgrrhgrmhepmhgrih
     hlfhhrohhmpehsvggrnhhvkhdruggvvhesohhrvghgohhnthhrrggtkhhsrdhorhhg
-X-ME-Proxy: <xmx:kv90X4jJw-VSRnPMsHnNn4cviDzLWiqNTcyHqGLLeCl7GT4o4v5dOg>
-    <xmx:kv90Xw9rsLmCxBhDgZbbIpR_OMelSlhgFhAYJHQhuJs7pm60RNeG2g>
-    <xmx:kv90X7vTZICmwpO8szr4G_554Bq9XPnBa8rlXSpMK5M1OaXqgTRU0A>
-    <xmx:kv90X_hiUJsp2wW1-g1XyRq6Pi5TRLG4adnzP3gNA29a8aDZnDokKw>
+X-ME-Proxy: <xmx:j_90X110iHWyxYdHOgyGz2NhfAkEltt5-q2VbGjTYhdFIuWgJJ2aTg>
+    <xmx:j_90X8CFRNSVfJD4l3m5sWtaCFawTNiAVsD28IiNp_c-FI9sC0XmhQ>
+    <xmx:j_90Xxg3m_rDoraYt15j1Yh6Fm3301hxAw_jFmqPsVPvzgABI6O2-Q>
+    <xmx:j_90X5j6QpuBMyThFwSizXKgU1mCYaIDZFAcEZXeoRTWnrKqJIrELw>
 Received: from arch-ashland-svkelley.hsd1.or.comcast.net (c-24-20-148-49.hsd1.or.comcast.net [24.20.148.49])
-        by mail.messagingengine.com (Postfix) with ESMTPA id EA9E73280059;
-        Wed, 30 Sep 2020 17:58:40 -0400 (EDT)
+        by mail.messagingengine.com (Postfix) with ESMTPA id 40E083280064;
+        Wed, 30 Sep 2020 17:58:38 -0400 (EDT)
 From:   Sean V Kelley <seanvk.dev@oregontracks.org>
 To:     bhelgaas@google.com, Jonathan.Cameron@huawei.com,
         rafael.j.wysocki@intel.com, ashok.raj@intel.com,
         tony.luck@intel.com, sathyanarayanan.kuppuswamy@intel.com,
         qiuxu.zhuo@intel.com
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v7 08/13] PCI/AER: Apply function level reset to RCiEP on fatal error
-Date:   Wed, 30 Sep 2020 14:58:15 -0700
-Message-Id: <20200930215820.1113353-9-seanvk.dev@oregontracks.org>
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Sean V Kelley <sean.v.kelley@intel.com>
+Subject: [PATCH v7 06/13] PCI/ERR: Limit AER resets in pcie_do_recovery()
+Date:   Wed, 30 Sep 2020 14:58:13 -0700
+Message-Id: <20200930215820.1113353-7-seanvk.dev@oregontracks.org>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200930215820.1113353-1-seanvk.dev@oregontracks.org>
 References: <20200930215820.1113353-1-seanvk.dev@oregontracks.org>
@@ -81,65 +82,41 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+From: Sean V Kelley <sean.v.kelley@intel.com>
 
-Attempt to do a function level reset for an RCiEP on fatal error.
+In some cases a bridge may not exist as the hardware
+controlling may be handled only by firmware and so is
+not visible to the OS. This scenario is also possible
+in future use cases involving non-native use of RCECs
+by firmware. So explicitly apply conditional logic
+around these resets by limiting them to root ports and
+downstream ports.
 
-Signed-off-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Signed-off-by: Sean V Kelley <sean.v.kelley@intel.com>
 ---
- drivers/pci/pcie/err.c | 31 ++++++++++++++++++++++---------
- 1 file changed, 22 insertions(+), 9 deletions(-)
+ drivers/pci/pcie/err.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index c4ceca42a3bf..38abd7984996 100644
+index c6922c099c76..9e552330155b 100644
 --- a/drivers/pci/pcie/err.c
 +++ b/drivers/pci/pcie/err.c
-@@ -169,6 +169,17 @@ static void pci_walk_bridge(struct pci_dev *bridge, int (*cb)(struct pci_dev *,
- 		cb(bridge, userdata);
- }
+@@ -203,9 +203,12 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+ 	pci_dbg(dev, "broadcast resume message\n");
+ 	pci_walk_bus(bus, report_resume, &status);
  
-+static pci_ers_result_t flr_on_rciep(struct pci_dev *dev)
-+{
-+	if (!pcie_has_flr(dev))
-+		return PCI_ERS_RESULT_DISCONNECT;
-+
-+	if (pcie_flr(dev))
-+		return PCI_ERS_RESULT_DISCONNECT;
-+
-+	return PCI_ERS_RESULT_RECOVERED;
-+}
-+
- pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
- 			pci_channel_state_t state,
- 			pci_ers_result_t (*reset_subordinate_devices)(struct pci_dev *pdev))
-@@ -195,15 +206,17 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
- 	if (state == pci_channel_io_frozen) {
- 		pci_walk_bridge(bridge, report_frozen_detected, &status);
- 		if (type == PCI_EXP_TYPE_RC_END) {
--			pci_warn(dev, "subordinate device reset not possible for RCiEP\n");
--			status = PCI_ERS_RESULT_NONE;
--			goto failed;
--		}
--
--		status = reset_subordinate_devices(bridge);
--		if (status != PCI_ERS_RESULT_RECOVERED) {
--			pci_warn(dev, "subordinate device reset failed\n");
--			goto failed;
-+			status = flr_on_rciep(dev);
-+			if (status != PCI_ERS_RESULT_RECOVERED) {
-+				pci_warn(dev, "function level reset failed\n");
-+				goto failed;
-+			}
-+		} else {
-+			status = reset_subordinate_devices(bridge);
-+			if (status != PCI_ERS_RESULT_RECOVERED) {
-+				pci_warn(dev, "subordinate device reset failed\n");
-+				goto failed;
-+			}
- 		}
- 	} else {
- 		pci_walk_bridge(bridge, report_normal_detected, &status);
+-	if (pcie_aer_is_native(dev))
+-		pcie_clear_device_status(dev);
+-	pci_aer_clear_nonfatal_status(dev);
++	if (type == PCI_EXP_TYPE_ROOT_PORT ||
++	    type == PCI_EXP_TYPE_DOWNSTREAM) {
++		if (pcie_aer_is_native(bridge))
++			pcie_clear_device_status(bridge);
++		pci_aer_clear_nonfatal_status(bridge);
++	}
+ 	pci_info(dev, "device recovery successful\n");
+ 	return status;
+ 
 -- 
 2.28.0
 
