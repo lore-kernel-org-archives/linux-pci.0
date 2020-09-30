@@ -5,47 +5,47 @@ X-Spam-Level:
 X-Spam-Status: No, score=-13.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B318C4727F
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Sep 2020 15:35:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 078B3C4727F
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Sep 2020 15:36:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9AEE4207C3
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Sep 2020 15:35:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F52520759
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Sep 2020 15:36:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="ZCuj7fZf"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="LHuUsW/F"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730835AbgI3Pfy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 30 Sep 2020 11:35:54 -0400
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:56902 "EHLO
+        id S1725823AbgI3PgH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 30 Sep 2020 11:36:07 -0400
+Received: from fllv0015.ext.ti.com ([198.47.19.141]:56958 "EHLO
         fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728916AbgI3Pfx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Sep 2020 11:35:53 -0400
-Received: from lelv0265.itg.ti.com ([10.180.67.224])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 08UFZfVU043487;
-        Wed, 30 Sep 2020 10:35:41 -0500
+        with ESMTP id S1728724AbgI3PgG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Sep 2020 11:36:06 -0400
+Received: from fllv0035.itg.ti.com ([10.64.41.0])
+        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 08UFZq97043540;
+        Wed, 30 Sep 2020 10:35:52 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1601480141;
-        bh=re6MIOXxybv+Yv493YnPwG3dJx5wl6L6fPllpFd+bzs=;
+        s=ti-com-17Q1; t=1601480152;
+        bh=3vpCkC7uFlZ+YibeWVFAIXOSzm64dBgudr4jQOKgpzg=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=ZCuj7fZfc1DtFne2mwUSOxw+7yNkfbHFSjRh+K8DgIvfIv86T8tNPgnqWmEiWPJB7
-         u+g6TPkZ3hYBd3x5CJZxgF+SySnGa2KU+5Yz0X8oHJqGl9lezWr/5svPDV6fLv5ehE
-         EIYxoKreBPXXISOjrRPyuNBpE7NkC0PN43m4JFFw=
-Received: from DFLE100.ent.ti.com (dfle100.ent.ti.com [10.64.6.21])
-        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 08UFZfuN041084
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 30 Sep 2020 10:35:41 -0500
-Received: from DFLE102.ent.ti.com (10.64.6.23) by DFLE100.ent.ti.com
- (10.64.6.21) with Microsoft SMTP Server (version=TLS1_2,
+        b=LHuUsW/Fp5G6JjW7EndSTkmINOtXjfmSXx5s6pf2m7RNnbXlfbCc2WabEi73mXioZ
+         GtJVzwPLu7UjCvpsruD4g9Q4ht+KQBZkGtTCeLLoXGNdVPUsVWv8vCqZC3dZ3oebeS
+         7A0BvOUZIJw2xAah5PoWNLc8awJgHIMBwVWcpqpo=
+Received: from DLEE107.ent.ti.com (dlee107.ent.ti.com [157.170.170.37])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id 08UFZqfx029910;
+        Wed, 30 Sep 2020 10:35:52 -0500
+Received: from DLEE106.ent.ti.com (157.170.170.36) by DLEE107.ent.ti.com
+ (157.170.170.37) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Wed, 30
- Sep 2020 10:35:41 -0500
-Received: from lelv0326.itg.ti.com (10.180.67.84) by DFLE102.ent.ti.com
- (10.64.6.23) with Microsoft SMTP Server (version=TLS1_2,
+ Sep 2020 10:35:52 -0500
+Received: from lelv0326.itg.ti.com (10.180.67.84) by DLEE106.ent.ti.com
+ (157.170.170.36) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
- Frontend Transport; Wed, 30 Sep 2020 10:35:41 -0500
+ Frontend Transport; Wed, 30 Sep 2020 10:35:52 -0500
 Received: from a0393678-ssd.dal.design.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 08UFZLZR033254;
-        Wed, 30 Sep 2020 10:35:34 -0500
+        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 08UFZLZT033254;
+        Wed, 30 Sep 2020 10:35:47 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Jonathan Corbet <corbet@lwn.net>,
@@ -58,9 +58,9 @@ To:     Bjorn Helgaas <bhelgaas@google.com>,
 CC:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-ntb@googlegroups.com>
-Subject: [PATCH v7 02/18] PCI: endpoint: Make *_get_first_free_bar() take into account 64 bit BAR
-Date:   Wed, 30 Sep 2020 21:05:03 +0530
-Message-ID: <20200930153519.7282-3-kishon@ti.com>
+Subject: [PATCH v7 04/18] PCI: endpoint: Make *_free_bar() to return error codes on failure
+Date:   Wed, 30 Sep 2020 21:05:05 +0530
+Message-ID: <20200930153519.7282-5-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200930153519.7282-1-kishon@ti.com>
 References: <20200930153519.7282-1-kishon@ti.com>
@@ -71,46 +71,102 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-pci_epc_get_first_free_bar() uses only "reserved_bar" member in
-epc_features to get the first unreserved BAR. However if the
-reserved BAR is also a 64-bit BAR, then the next BAR shouldn't be
-returned (since 64-bit BAR uses two BARs).
-
-Make pci_epc_get_first_free_bar() take into account 64 bit BAR while
-returning the first free unreserved BAR.
+Modify pci_epc_get_next_free_bar() and pci_epc_get_first_free_bar() to
+return error values if there are no free BARs available.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/endpoint/pci-epc-core.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+ drivers/pci/endpoint/functions/pci-epf-test.c |  2 ++
+ drivers/pci/endpoint/pci-epc-core.c           | 12 ++++++------
+ include/linux/pci-epc.h                       |  8 ++++----
+ include/linux/pci-epf.h                       |  1 +
+ 4 files changed, 13 insertions(+), 10 deletions(-)
 
+diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+index e4e51d884553..7a1f3abfde48 100644
+--- a/drivers/pci/endpoint/functions/pci-epf-test.c
++++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+@@ -834,6 +834,8 @@ static int pci_epf_test_bind(struct pci_epf *epf)
+ 		linkup_notifier = epc_features->linkup_notifier;
+ 		core_init_notifier = epc_features->core_init_notifier;
+ 		test_reg_bar = pci_epc_get_first_free_bar(epc_features);
++		if (test_reg_bar < 0)
++			return -EINVAL;
+ 		pci_epf_configure_bar(epf, epc_features);
+ 	}
+ 
 diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
-index cadd3db0cbb0..25e57672e1a1 100644
+index 1afe5d9afb0d..ea7e7465ce7a 100644
 --- a/drivers/pci/endpoint/pci-epc-core.c
 +++ b/drivers/pci/endpoint/pci-epc-core.c
-@@ -93,12 +93,20 @@ EXPORT_SYMBOL_GPL(pci_epc_get);
- unsigned int pci_epc_get_first_free_bar(const struct pci_epc_features
- 					*epc_features)
+@@ -90,8 +90,8 @@ EXPORT_SYMBOL_GPL(pci_epc_get);
+  * Invoke to get the first unreserved BAR that can be used by the endpoint
+  * function. For any incorrect value in reserved_bar return '0'.
+  */
+-unsigned int pci_epc_get_first_free_bar(const struct pci_epc_features
+-					*epc_features)
++enum pci_barno
++pci_epc_get_first_free_bar(const struct pci_epc_features *epc_features)
  {
--	int free_bar;
-+	unsigned long free_bar;
+ 	return pci_epc_get_next_free_bar(epc_features, BAR_0);
+ }
+@@ -105,13 +105,13 @@ EXPORT_SYMBOL_GPL(pci_epc_get_first_free_bar);
+  * Invoke to get the next unreserved BAR starting from @bar that can be used
+  * for endpoint function. For any incorrect value in reserved_bar return '0'.
+  */
+-unsigned int pci_epc_get_next_free_bar(const struct pci_epc_features
+-				       *epc_features, enum pci_barno bar)
++enum pci_barno pci_epc_get_next_free_bar(const struct pci_epc_features
++					 *epc_features, enum pci_barno bar)
+ {
+ 	unsigned long free_bar;
  
  	if (!epc_features)
- 		return 0;
+-		return 0;
++		return BAR_0;
  
--	free_bar = ffz(epc_features->reserved_bar);
-+	/* Find if the reserved BAR is also a 64-bit BAR */
-+	free_bar = epc_features->reserved_bar & epc_features->bar_fixed_64bit;
-+
-+	/* Set the adjacent bit if the reserved BAR is also a 64-bit BAR */
-+	free_bar <<= 1;
-+	free_bar |= epc_features->reserved_bar;
-+
-+	/* Now find the free BAR */
-+	free_bar = ffz(free_bar);
+ 	/* If 'bar - 1' is a 64-bit BAR, move to the next BAR */
+ 	if ((epc_features->bar_fixed_64bit << 1) & 1 << bar)
+@@ -126,7 +126,7 @@ unsigned int pci_epc_get_next_free_bar(const struct pci_epc_features
+ 
+ 	free_bar = find_next_zero_bit(&free_bar, 6, bar);
  	if (free_bar > 5)
- 		return 0;
+-		return 0;
++		return NO_BAR;
  
+ 	return free_bar;
+ }
+diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
+index cfe9b427e6b7..88d311bad984 100644
+--- a/include/linux/pci-epc.h
++++ b/include/linux/pci-epc.h
+@@ -201,10 +201,10 @@ int pci_epc_start(struct pci_epc *epc);
+ void pci_epc_stop(struct pci_epc *epc);
+ const struct pci_epc_features *pci_epc_get_features(struct pci_epc *epc,
+ 						    u8 func_no);
+-unsigned int pci_epc_get_first_free_bar(const struct pci_epc_features
+-					*epc_features);
+-unsigned int pci_epc_get_next_free_bar(const struct pci_epc_features
+-				       *epc_features, enum pci_barno bar);
++enum pci_barno
++pci_epc_get_first_free_bar(const struct pci_epc_features *epc_features);
++enum pci_barno pci_epc_get_next_free_bar(const struct pci_epc_features
++					 *epc_features, enum pci_barno bar);
+ struct pci_epc *pci_epc_get(const char *epc_name);
+ void pci_epc_put(struct pci_epc *epc);
+ 
+diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
+index 6644ff3b0702..fa3aca43eb19 100644
+--- a/include/linux/pci-epf.h
++++ b/include/linux/pci-epf.h
+@@ -21,6 +21,7 @@ enum pci_notify_event {
+ };
+ 
+ enum pci_barno {
++	NO_BAR = -1,
+ 	BAR_0,
+ 	BAR_1,
+ 	BAR_2,
 -- 
 2.17.1
 
