@@ -2,277 +2,99 @@ Return-Path: <SRS0=IOiO=DI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 908EDC4363D
-	for <linux-pci@archiver.kernel.org>; Thu,  1 Oct 2020 01:43:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EDABC4727C
+	for <linux-pci@archiver.kernel.org>; Thu,  1 Oct 2020 05:16:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4FCB921D46
-	for <linux-pci@archiver.kernel.org>; Thu,  1 Oct 2020 01:43:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1533A2184D
+	for <linux-pci@archiver.kernel.org>; Thu,  1 Oct 2020 05:16:41 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=jonmasters-org.20150623.gappssmtp.com header.i=@jonmasters-org.20150623.gappssmtp.com header.b="AVGBn0+Y"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730560AbgJABnW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 30 Sep 2020 21:43:22 -0400
-Received: from mga02.intel.com ([134.134.136.20]:15208 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725800AbgJABnC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 30 Sep 2020 21:43:02 -0400
-IronPort-SDR: Tt/wzeJxNAxzxmUlYSL8/1j14UIF1pQ2GorBxLdsAUSSygqUxU7y9uTdqyCU4lXmBYGe7ujRp6
- QHkODPm51leQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9760"; a="150240503"
-X-IronPort-AV: E=Sophos;i="5.77,322,1596524400"; 
-   d="scan'208";a="150240503"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2020 18:42:57 -0700
-IronPort-SDR: +eFHIk/S5DcbAUy0DEK1hDe6khQfZXe3IzkhdtFU/bK2UnvxyOMt8wOxWl0RDSz9NVJk9d5/rZ
- h7eDXVflY/rw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.77,322,1596524400"; 
-   d="scan'208";a="341412154"
-Received: from linux.intel.com ([10.54.29.200])
-  by orsmga008.jf.intel.com with ESMTP; 30 Sep 2020 18:42:57 -0700
-Received: from debox1-desk2.jf.intel.com (debox1-desk2.jf.intel.com [10.54.75.16])
-        by linux.intel.com (Postfix) with ESMTP id 08C0E58033E;
-        Wed, 30 Sep 2020 18:42:57 -0700 (PDT)
-From:   "David E. Box" <david.e.box@linux.intel.com>
-To:     lee.jones@linaro.org, david.e.box@linux.intel.com,
-        dvhart@infradead.org, andy@infradead.org, bhelgaas@google.com,
-        alexander.h.duyck@linux.intel.com, hdegoede@redhat.com,
-        alexey.budankov@linux.intel.com
-Cc:     linux-kernel@vger.kernel.org, platform-driver-x86@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH V7 4/5] platform/x86: Intel PMT Telemetry capability driver
-Date:   Wed, 30 Sep 2020 18:42:49 -0700
-Message-Id: <20201001014250.26987-5-david.e.box@linux.intel.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20201001014250.26987-1-david.e.box@linux.intel.com>
-References: <20201001014250.26987-1-david.e.box@linux.intel.com>
+        id S1725883AbgJAFQk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 1 Oct 2020 01:16:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57386 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725878AbgJAFQk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Oct 2020 01:16:40 -0400
+Received: from mail-qt1-x841.google.com (mail-qt1-x841.google.com [IPv6:2607:f8b0:4864:20::841])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D27EC061755
+        for <linux-pci@vger.kernel.org>; Wed, 30 Sep 2020 22:16:40 -0700 (PDT)
+Received: by mail-qt1-x841.google.com with SMTP id k25so3392255qtu.4
+        for <linux-pci@vger.kernel.org>; Wed, 30 Sep 2020 22:16:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=jonmasters-org.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:organization:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=aMyvN3gVuzQBj94keSmCrKk4OuJZbSTTfVDU0BztZ4o=;
+        b=AVGBn0+Y6owZXBJwfgazLUzFbjbqhVCnIW+1imTfPSnAc4qi7Pe58QXALxxfEHH7NW
+         Vmy+eT2KQGF2AIMXrNIMHPa8N03xNcPDw1BysPzyTAUnBrmDwNyfA8Z7LXmyUYQd1/o8
+         RydFp/NoH40fXqP4HLKbi4+nTGK9g3eJjstINt2w+IXfYYh/n6Gm9O/c2LARTFTxC59L
+         GmDP40ZpueoCjSn8apq2cXt07EwlpZAZGW7F+u1qOCjoBxwIEqelJpxSQL9IZ5Yl2Uzc
+         PyR3L4tECMB7sGhVLpgOoE5R8eq3RouzGk215efLgIqDOVkjiJNv2shFlT1s4Vagg/xo
+         8xMg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:organization
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=aMyvN3gVuzQBj94keSmCrKk4OuJZbSTTfVDU0BztZ4o=;
+        b=Bi2/ZUu/X+IT779j7Q7ZW41yKsWHgb++Uth1ExMLKlpo6bo8TrVC/OPQTW2r3aSUuX
+         zTLwRJabuVBWjIHS9+ZFVLZDemdKOkm8pYvoNyG+1V9NnR7Ei6LCVmd9xK8aTxiOHfKK
+         S+OUl+LsJtP/tgHZJHADuil0Mv/8Z2Zqb6PBSbZrwyLwnxywEfP95vQc78jPc6c4Z7CA
+         15tJjeCkxz21zMtkZNbeLWb4WTHZ6n7WlaXscXATilr4ePDFCeqWQM8io2v4gvu8Ob6X
+         ewmrfyUDSFGzCcjuAXE8RptpucOQd1yYvJiXmBBzUtpVBvYzLc5+rLAypu7Nz++ep3oa
+         cdAg==
+X-Gm-Message-State: AOAM531odLvjkr9HZj5nuorugVU90tvVA5lrM0xBC0lnA1sTplJeSvWK
+        C0nI17BrDT8HEJCVkU+P5iZJhg==
+X-Google-Smtp-Source: ABdhPJycizkFTjy7tefZlHhV/5gxSPPlo5/jlzPCRbOXkxTOJNHO7ZWBwNjJw8GrRDEREZvf+fBRfw==
+X-Received: by 2002:ac8:4442:: with SMTP id m2mr5933638qtn.73.1601529399269;
+        Wed, 30 Sep 2020 22:16:39 -0700 (PDT)
+Received: from independence.bos.jonmasters.org (Boston.jonmasters.org. [50.195.43.97])
+        by smtp.gmail.com with ESMTPSA id 16sm4944270qks.102.2020.09.30.22.16.38
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 30 Sep 2020 22:16:38 -0700 (PDT)
+Subject: Re: dma-coherent property for PCIe Root
+To:     Valmiki <valmikibow@gmail.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     lorenzo.pieralisi@arm.com, bhelgaas@google.com, robh@kernel.org
+References: <1512d7b5-54c6-3b87-0090-5e370955223e@gmail.com>
+From:   Jon Masters <jcm@jonmasters.org>
+Organization: World Organi{s,z}ation of Broken Dreams
+Message-ID: <269995f2-d57b-d218-8730-fe729cc9dec2@jonmasters.org>
+Date:   Thu, 1 Oct 2020 01:16:10 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.2
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <1512d7b5-54c6-3b87-0090-5e370955223e@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Alexander Duyck <alexander.h.duyck@linux.intel.com>
+On 9/14/20 1:23 AM, Valmiki wrote:
+> Hi All,
+> 
+> How does "dma-coherent" property will work for PCIe as RC on an
+> ARM SOC ?
+> Because the end point device drivers are the one which will request dma 
+> buffers and Root port driver doesn't involve in data path of end point
+> except for handling interrupts.
+> 
+> How does EP DMA buffers will be hardware coherent if RC driver exposes
+> dma-coherent property ?
 
-PMT Telemetry is a capability of the Intel Platform Monitoring Technology.
-The Telemetry capability provides access to device telemetry metrics that
-provide hardware performance data to users from read-only register spaces.
+This simply means that the RC supports maintaining coherency, it doesn't 
+mean that the RC driver does anything. It's a property of the hardware.
 
-With this driver present the intel_pmt directory can be populated with
-telem<x> devices. These devices will contain the standard intel_pmt sysfs
-data and a "telem" binary sysfs attribute which can be used to access the
-telemetry data.
+Jon.
 
-Co-developed-by: David E. Box <david.e.box@linux.intel.com>
-Signed-off-by: David E. Box <david.e.box@linux.intel.com>
-Signed-off-by: Alexander Duyck <alexander.h.duyck@linux.intel.com>
----
- drivers/platform/x86/Kconfig               |   8 ++
- drivers/platform/x86/Makefile              |   1 +
- drivers/platform/x86/intel_pmt_telemetry.c | 158 +++++++++++++++++++++
- 3 files changed, 167 insertions(+)
- create mode 100644 drivers/platform/x86/intel_pmt_telemetry.c
-
-diff --git a/drivers/platform/x86/Kconfig b/drivers/platform/x86/Kconfig
-index 82465d0e8fd3..8eae17a57a5b 100644
---- a/drivers/platform/x86/Kconfig
-+++ b/drivers/platform/x86/Kconfig
-@@ -1369,6 +1369,14 @@ config INTEL_PMT_CLASS
- 	  For more information, see:
- 	  <file:Documentation/ABI/testing/sysfs-class-intel_pmt>
- 
-+config INTEL_PMT_TELEMETRY
-+	tristate "Intel Platform Monitoring Technology (PMT) Telemetry driver"
-+	select INTEL_PMT_CLASS
-+	help
-+	  The Intel Platform Monitory Technology (PMT) Telemetry driver provides
-+	  access to hardware telemetry metrics on devices that support the
-+	  feature.
-+
- config INTEL_PUNIT_IPC
- 	tristate "Intel P-Unit IPC Driver"
- 	help
-diff --git a/drivers/platform/x86/Makefile b/drivers/platform/x86/Makefile
-index f4b1f87f2401..6a7b61f59ea8 100644
---- a/drivers/platform/x86/Makefile
-+++ b/drivers/platform/x86/Makefile
-@@ -141,6 +141,7 @@ obj-$(CONFIG_INTEL_MID_POWER_BUTTON)	+= intel_mid_powerbtn.o
- obj-$(CONFIG_INTEL_MRFLD_PWRBTN)	+= intel_mrfld_pwrbtn.o
- obj-$(CONFIG_INTEL_PMC_CORE)		+= intel_pmc_core.o intel_pmc_core_pltdrv.o
- obj-$(CONFIG_INTEL_PMT_CLASS)		+= intel_pmt_class.o
-+obj-$(CONFIG_INTEL_PMT_TELEMETRY)	+= intel_pmt_telemetry.o
- obj-$(CONFIG_INTEL_PUNIT_IPC)		+= intel_punit_ipc.o
- obj-$(CONFIG_INTEL_SCU_IPC)		+= intel_scu_ipc.o
- obj-$(CONFIG_INTEL_SCU_PCI)		+= intel_scu_pcidrv.o
-diff --git a/drivers/platform/x86/intel_pmt_telemetry.c b/drivers/platform/x86/intel_pmt_telemetry.c
-new file mode 100644
-index 000000000000..d4819aefdd65
---- /dev/null
-+++ b/drivers/platform/x86/intel_pmt_telemetry.c
-@@ -0,0 +1,158 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Intel Platform Monitory Technology Telemetry driver
-+ *
-+ * Copyright (c) 2020, Intel Corporation.
-+ * All Rights Reserved.
-+ *
-+ * Author: "David E. Box" <david.e.box@linux.intel.com>
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/pci.h>
-+#include <linux/slab.h>
-+#include <linux/uaccess.h>
-+
-+#include "intel_pmt_class.h"
-+
-+#define TELEM_DEV_NAME		"pmt_telemetry"
-+
-+#define TELEM_SIZE_OFFSET	0x0
-+#define TELEM_GUID_OFFSET	0x4
-+#define TELEM_BASE_OFFSET	0x8
-+#define TELEM_ACCESS(v)		((v) & GENMASK(3, 0))
-+/* size is in bytes */
-+#define TELEM_SIZE(v)		(((v) & GENMASK(27, 12)) >> 10)
-+
-+/* Used by client hardware to identify a fixed telemetry entry*/
-+#define TELEM_CLIENT_FIXED_BLOCK_GUID	0x10000000
-+
-+struct pmt_telem_priv {
-+	int				num_entries;
-+	struct intel_pmt_entry		entry[];
-+};
-+
-+static DEFINE_XARRAY_ALLOC(telem_array);
-+static struct intel_pmt_namespace pmt_telem_ns = {
-+	.name = "telem",
-+	.xa = &telem_array
-+};
-+
-+/*
-+ * driver initialization
-+ */
-+static int pmt_telem_add_entry(struct intel_pmt_entry *entry,
-+			       struct device *parent,
-+			       struct resource *disc_res)
-+{
-+	void __iomem *disc_table = entry->disc_table;
-+	struct intel_pmt_header header;
-+	int ret;
-+
-+	header.access_type = TELEM_ACCESS(readl(disc_table));
-+	header.guid = readl(disc_table + TELEM_GUID_OFFSET);
-+	header.base_offset = readl(disc_table + TELEM_BASE_OFFSET);
-+
-+	/* Size is measured in DWORDS, but accessor returns bytes */
-+	header.size = TELEM_SIZE(readl(disc_table));
-+
-+	ret = intel_pmt_populate_entry(entry, &header, parent, disc_res);
-+	if (ret)
-+		return ret;
-+
-+	return intel_pmt_dev_create(entry, &pmt_telem_ns, parent);
-+}
-+
-+static bool pmt_telem_region_overlaps(struct intel_pmt_entry *entry)
-+{
-+	u32 guid;
-+
-+	guid = readl(entry->disc_table + TELEM_GUID_OFFSET);
-+
-+	return guid == TELEM_CLIENT_FIXED_BLOCK_GUID;
-+}
-+
-+static int pmt_telem_remove(struct platform_device *pdev)
-+{
-+	struct pmt_telem_priv *priv = platform_get_drvdata(pdev);
-+	int i;
-+
-+	for (i = 0; i < priv->num_entries; i++)
-+		intel_pmt_dev_destroy(&priv->entry[i], &pmt_telem_ns);
-+
-+	return 0;
-+}
-+
-+static int pmt_telem_probe(struct platform_device *pdev)
-+{
-+	struct pmt_telem_priv *priv;
-+	bool early_hw;
-+	size_t size;
-+	int i, ret;
-+
-+	size = offsetof(struct pmt_telem_priv, entry[pdev->num_resources]);
-+	priv = devm_kzalloc(&pdev->dev, size, GFP_KERNEL);
-+	if (!priv)
-+		return -ENOMEM;
-+
-+	platform_set_drvdata(pdev, priv);
-+
-+	if (intel_pmt_is_early_client_hw(&pdev->dev))
-+		early_hw = true;
-+
-+	for (i = 0; i < pdev->num_resources; i++) {
-+		struct intel_pmt_entry *entry = &priv->entry[i];
-+		struct resource *disc_res;
-+
-+		ret = -ENODEV;
-+
-+		disc_res = platform_get_resource(pdev, IORESOURCE_MEM, i);
-+		if (!disc_res)
-+			goto abort_probe;
-+
-+		ret = intel_pmt_ioremap_discovery_table(entry, pdev, i);
-+		if (ret)
-+			goto abort_probe;
-+
-+		if (pmt_telem_region_overlaps(entry) && early_hw)
-+			continue;
-+
-+		ret = pmt_telem_add_entry(entry, &pdev->dev, disc_res);
-+		if (ret)
-+			goto abort_probe;
-+
-+		priv->num_entries++;
-+	}
-+
-+	return 0;
-+abort_probe:
-+	pmt_telem_remove(pdev);
-+	return ret;
-+}
-+
-+static struct platform_driver pmt_telem_driver = {
-+	.driver = {
-+		.name   = TELEM_DEV_NAME,
-+	},
-+	.remove = pmt_telem_remove,
-+	.probe  = pmt_telem_probe,
-+};
-+
-+static int __init pmt_telem_init(void)
-+{
-+	return platform_driver_register(&pmt_telem_driver);
-+}
-+module_init(pmt_telem_init);
-+
-+static void __exit pmt_telem_exit(void)
-+{
-+	platform_driver_unregister(&pmt_telem_driver);
-+	xa_destroy(&telem_array);
-+}
-+module_exit(pmt_telem_exit);
-+
-+MODULE_AUTHOR("David E. Box <david.e.box@linux.intel.com>");
-+MODULE_DESCRIPTION("Intel PMT Telemetry driver");
-+MODULE_ALIAS("platform:" TELEM_DEV_NAME);
-+MODULE_LICENSE("GPL v2");
 -- 
-2.20.1
-
+Computer Architect
