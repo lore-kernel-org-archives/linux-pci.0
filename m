@@ -2,74 +2,86 @@ Return-Path: <SRS0=IOiO=DI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C309C4727E
-	for <linux-pci@archiver.kernel.org>; Thu,  1 Oct 2020 07:44:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D4E7C47420
+	for <linux-pci@archiver.kernel.org>; Thu,  1 Oct 2020 08:22:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DFADC21531
-	for <linux-pci@archiver.kernel.org>; Thu,  1 Oct 2020 07:44:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 341D22087E
+	for <linux-pci@archiver.kernel.org>; Thu,  1 Oct 2020 08:22:38 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="NgazHTI+";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="IOZyUThn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730902AbgJAHoL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 1 Oct 2020 03:44:11 -0400
-Received: from mslow2.mail.gandi.net ([217.70.178.242]:35424 "EHLO
-        mslow2.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725883AbgJAHoK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Oct 2020 03:44:10 -0400
-Received: from relay10.mail.gandi.net (unknown [217.70.178.230])
-        by mslow2.mail.gandi.net (Postfix) with ESMTP id 543CE3A8E0A;
-        Thu,  1 Oct 2020 07:43:11 +0000 (UTC)
-Received: from localhost (lfbn-tou-1-420-199.w86-206.abo.wanadoo.fr [86.206.245.199])
-        (Authenticated sender: thomas.petazzoni@bootlin.com)
-        by relay10.mail.gandi.net (Postfix) with ESMTPSA id BBC7624000A;
-        Thu,  1 Oct 2020 07:42:48 +0000 (UTC)
-From:   Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Bjorn Helgaas <helgaas@kernel.org>
-Subject: [PATCH 1/2] PCI: dwc: armada-8k driver needs OF support
-Date:   Thu,  1 Oct 2020 09:42:43 +0200
-Message-Id: <20201001074244.349443-1-thomas.petazzoni@bootlin.com>
-X-Mailer: git-send-email 2.26.2
+        id S1726992AbgJAIWh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 1 Oct 2020 04:22:37 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:34254 "EHLO
+        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725878AbgJAIWh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Oct 2020 04:22:37 -0400
+From:   Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1601540555;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=ONHqAv4qT+OTc2BgimstCJPvlJyn9PqWstJJf6uzEpc=;
+        b=NgazHTI+SJGDs8egXRGtdo+QGi3xh0JlmycrGchBYrODbgZTjUWPuqO6ut+FnIDPq/gdSJ
+        vByj+411k82ifrt2BEVuNPgqX27Y3wm+6Dmn4KcscKE05+QXauqWGac/+IkXdSlflKGPVQ
+        gqO3sNFZEbbRG+38SCAe6Uy+7ikGtCs4oqeZOia8yJeiTw1hywgKpiq12HtknxenkgKzRe
+        OJrPufOitZDre5pRXFtSqz9yo9w/AoYjWbk8swkUhUsvsq/Dr/oz8+/DUOp6P8ZPNkir9G
+        eIp6uHls/G0PP4zrn3niGbMtU2e4Jej+7XYXpi+l/7lKt0TktRFbV900KLGnEw==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1601540555;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=ONHqAv4qT+OTc2BgimstCJPvlJyn9PqWstJJf6uzEpc=;
+        b=IOZyUThnP0eFdoTtp5uGay28riwQzj9H86PK6wCN00tcNvQN7l480emm6WUDFykV9hpp72
+        zqYBI/TNYKqiSDAg==
+To:     Zi Yan <ziy@nvidia.com>
+Cc:     Wei Liu <wei.liu@kernel.org>, Joerg Roedel <jroedel@suse.de>,
+        x86@kernel.org, iommu@lists.linux-foundation.org,
+        linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
+        xen-devel@lists.xenproject.org
+Subject: Re: Boot crash due to "x86/msi: Consolidate MSI allocation"
+In-Reply-To: <A838FF2B-11FC-42B9-87D7-A76CF46E0575@nvidia.com>
+References: <A838FF2B-11FC-42B9-87D7-A76CF46E0575@nvidia.com>
+Date:   Thu, 01 Oct 2020 10:22:35 +0200
+Message-ID: <874knegxtg.fsf@nanos.tec.linutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Fixes the following build warning when CONFIG_OF is disabled:
+Yan,
 
-drivers/pci/controller/dwc/pcie-armada8k.c:344:34: warning: ‘armada8k_pcie_of_match’ defined but not used [-Wunused-const-variable=]
-  344 | static const struct of_device_id armada8k_pcie_of_match[] = {
-      |                                  ^~~~~~~~~~~~~~~~~~~~~~
+On Wed, Sep 30 2020 at 21:29, Zi Yan wrote:
+> I am running linux-next on my Dell R630 and the system crashed at boot
+> time. I bisected linux-next and got to your commit:
+>
+>     x86/msi: Consolidate MSI allocation
+>
+> The crash log is below and my .config is attached.
+>
+> [   11.840905]  intel_get_irq_domain+0x24/0xb0
+> [   11.840905]  native_setup_msi_irqs+0x3b/0x90
 
-Reported-by: Bjorn Helgaas <helgaas@kernel.org>
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
----
- drivers/pci/controller/dwc/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This is not really helpful because that's in the middle of the queue and
+that code is gone at the very end. Yes, it's unfortunate that this
+breaks bisection.
 
-diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-index 044a3761c44f..96994b715f26 100644
---- a/drivers/pci/controller/dwc/Kconfig
-+++ b/drivers/pci/controller/dwc/Kconfig
-@@ -176,7 +176,7 @@ config PCIE_QCOM
- 
- config PCIE_ARMADA_8K
- 	bool "Marvell Armada-8K PCIe controller"
--	depends on ARCH_MVEBU || COMPILE_TEST
-+	depends on OF && (ARCH_MVEBU || COMPILE_TEST)
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIE_DW_HOST
- 	help
--- 
-2.26.2
+Can you please test:
+
+   git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git x86/irq
+
+which contains fixes and if it still crashes provide the dmesg of it.
+
+Thanks,
+
+        tglx
 
