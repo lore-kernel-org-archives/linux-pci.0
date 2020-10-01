@@ -4,29 +4,29 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E285AC4727F
-	for <linux-pci@archiver.kernel.org>; Thu,  1 Oct 2020 09:08:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41A42C4727C
+	for <linux-pci@archiver.kernel.org>; Thu,  1 Oct 2020 10:02:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B4EFB20BED
-	for <linux-pci@archiver.kernel.org>; Thu,  1 Oct 2020 09:08:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F3C4C2137B
+	for <linux-pci@archiver.kernel.org>; Thu,  1 Oct 2020 10:02:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731067AbgJAJIl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 1 Oct 2020 05:08:41 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2937 "EHLO huawei.com"
+        id S1725975AbgJAKCh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 1 Oct 2020 06:02:37 -0400
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2938 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725921AbgJAJIl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Oct 2020 05:08:41 -0400
-Received: from lhreml710-chm.china.huawei.com (unknown [172.18.7.106])
-        by Forcepoint Email with ESMTP id DCB6EF852BA1783EFB83;
-        Thu,  1 Oct 2020 10:08:39 +0100 (IST)
+        id S1725938AbgJAKCh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Oct 2020 06:02:37 -0400
+Received: from lhreml710-chm.china.huawei.com (unknown [172.18.7.108])
+        by Forcepoint Email with ESMTP id A04EBA1DF8756758B9D4;
+        Thu,  1 Oct 2020 11:02:35 +0100 (IST)
 Received: from localhost (10.52.127.250) by lhreml710-chm.china.huawei.com
  (10.201.108.61) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Thu, 1 Oct 2020
- 10:08:39 +0100
-Date:   Thu, 1 Oct 2020 10:06:57 +0100
+ 11:02:35 +0100
+Date:   Thu, 1 Oct 2020 11:00:52 +0100
 From:   Jonathan Cameron <Jonathan.Cameron@Huawei.com>
 To:     Sean V Kelley <seanvk.dev@oregontracks.org>
 CC:     <bhelgaas@google.com>, <rafael.j.wysocki@intel.com>,
@@ -34,12 +34,12 @@ CC:     <bhelgaas@google.com>, <rafael.j.wysocki@intel.com>,
         <sathyanarayanan.kuppuswamy@intel.com>, <qiuxu.zhuo@intel.com>,
         <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         Sean V Kelley <sean.v.kelley@intel.com>
-Subject: Re: [PATCH v7 05/13] PCI/ERR: Use "bridge" for clarity in
+Subject: Re: [PATCH v7 06/13] PCI/ERR: Limit AER resets in
  pcie_do_recovery()
-Message-ID: <20201001090657.00003fe4@Huawei.com>
-In-Reply-To: <20200930215820.1113353-6-seanvk.dev@oregontracks.org>
+Message-ID: <20201001100052.00004f86@Huawei.com>
+In-Reply-To: <20200930215820.1113353-7-seanvk.dev@oregontracks.org>
 References: <20200930215820.1113353-1-seanvk.dev@oregontracks.org>
-        <20200930215820.1113353-6-seanvk.dev@oregontracks.org>
+        <20200930215820.1113353-7-seanvk.dev@oregontracks.org>
 Organization: Huawei Technologies Research and Development (UK) Ltd.
 X-Mailer: Claws Mail 3.17.4 (GTK+ 2.24.32; i686-w64-mingw32)
 MIME-Version: 1.0
@@ -53,67 +53,46 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, 30 Sep 2020 14:58:12 -0700
+On Wed, 30 Sep 2020 14:58:13 -0700
 Sean V Kelley <seanvk.dev@oregontracks.org> wrote:
 
 > From: Sean V Kelley <sean.v.kelley@intel.com>
 > 
-> The term "dev" is being applied to root ports, switch
-> upstream ports, switch downstream ports, and the upstream
-> ports on endpoints. While endpoint upstream ports don't have
-> subordinate buses, a generic term such as "bridge" may be used
-
-This sentence is a bit confusing.  The bit before the comma
-seems only slightly connected. Perhaps 2 sentences?
-
-> for something with a subordinate bus. The current conditional
-> logic in pcie_do_recovery() would also benefit from some
-> simplification with use of pci_upstream_bridge() in place of
-> dev->bus->self. Reverse the pcie_do_recovery() conditional logic
-> and replace use of "dev" with "bridge" for greater clarity.
+> In some cases a bridge may not exist as the hardware
+> controlling may be handled only by firmware and so is
+> not visible to the OS. This scenario is also possible
+> in future use cases involving non-native use of RCECs
+> by firmware. So explicitly apply conditional logic
+> around these resets by limiting them to root ports and
+> downstream ports.
 > 
-> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
 > Signed-off-by: Sean V Kelley <sean.v.kelley@intel.com>
 
 Acked-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 
 > ---
->  drivers/pci/pcie/err.c | 20 +++++++++++++-------
->  1 file changed, 13 insertions(+), 7 deletions(-)
+>  drivers/pci/pcie/err.c | 9 ++++++---
+>  1 file changed, 6 insertions(+), 3 deletions(-)
 > 
 > diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-> index 950612342f1c..c6922c099c76 100644
+> index c6922c099c76..9e552330155b 100644
 > --- a/drivers/pci/pcie/err.c
 > +++ b/drivers/pci/pcie/err.c
-> @@ -152,16 +152,22 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
->  {
->  	pci_ers_result_t status = PCI_ERS_RESULT_CAN_RECOVER;
->  	struct pci_bus *bus;
-> +	struct pci_dev *bridge;
-> +	int type;
+> @@ -203,9 +203,12 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+>  	pci_dbg(dev, "broadcast resume message\n");
+>  	pci_walk_bus(bus, report_resume, &status);
 >  
->  	/*
-> -	 * Error recovery runs on all subordinates of the first downstream port.
-> -	 * If the downstream port detected the error, it is cleared at the end.
-> +	 * Error recovery runs on all subordinates of the first downstream
-> +	 * bridge. If the downstream bridge detected the error, it is
-> +	 * cleared at the end.
->  	 */
-> -	if (!(pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
-> -	      pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM))
-> -		dev = dev->bus->self;
-> -	bus = dev->subordinate;
-> -
-> +	type = pci_pcie_type(dev);
+> -	if (pcie_aer_is_native(dev))
+> -		pcie_clear_device_status(dev);
+> -	pci_aer_clear_nonfatal_status(dev);
 > +	if (type == PCI_EXP_TYPE_ROOT_PORT ||
-> +	    type == PCI_EXP_TYPE_DOWNSTREAM)
-> +		bridge = dev;
-> +	else
-> +		bridge = pci_upstream_bridge(dev);
-> +
-> +	bus = bridge->subordinate;
->  	pci_dbg(dev, "broadcast error_detected message\n");
->  	if (state == pci_channel_io_frozen) {
->  		pci_walk_bus(bus, report_frozen_detected, &status);
+> +	    type == PCI_EXP_TYPE_DOWNSTREAM) {
+> +		if (pcie_aer_is_native(bridge))
+> +			pcie_clear_device_status(bridge);
+> +		pci_aer_clear_nonfatal_status(bridge);
+> +	}
+>  	pci_info(dev, "device recovery successful\n");
+>  	return status;
+>  
 
 
