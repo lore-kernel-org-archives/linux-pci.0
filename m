@@ -2,111 +2,144 @@ Return-Path: <SRS0=wtdp=DJ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49670C4363D
-	for <linux-pci@archiver.kernel.org>; Fri,  2 Oct 2020 18:53:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D370C4363D
+	for <linux-pci@archiver.kernel.org>; Fri,  2 Oct 2020 18:56:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0DA732137B
-	for <linux-pci@archiver.kernel.org>; Fri,  2 Oct 2020 18:53:29 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=baylibre-com.20150623.gappssmtp.com header.i=@baylibre-com.20150623.gappssmtp.com header.b="TbmjMQuB"
+	by mail.kernel.org (Postfix) with ESMTP id ECA6920795
+	for <linux-pci@archiver.kernel.org>; Fri,  2 Oct 2020 18:56:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387602AbgJBSx3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 2 Oct 2020 14:53:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39174 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726224AbgJBSx3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Oct 2020 14:53:29 -0400
-Received: from mail-pg1-x543.google.com (mail-pg1-x543.google.com [IPv6:2607:f8b0:4864:20::543])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0970EC0613D0
-        for <linux-pci@vger.kernel.org>; Fri,  2 Oct 2020 11:53:29 -0700 (PDT)
-Received: by mail-pg1-x543.google.com with SMTP id 34so1356706pgo.13
-        for <linux-pci@vger.kernel.org>; Fri, 02 Oct 2020 11:53:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baylibre-com.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:in-reply-to:references:date:message-id
-         :mime-version;
-        bh=iPAQMAMc1hYTdFsccictID911P3trsdKp6hSOQvOeKM=;
-        b=TbmjMQuBlCveAwmWwmy0rJQ/hA6alnl0KmM8J0ZZ58RmP01IE5DTu2H3o8e5bX6+6i
-         0YwyoLs9btHGeslavZk5eR6mazSh0Vp56XipFnfOSms2ZLhxONKw1FBfgQUmT7N0OHeO
-         0Qmsf5V6Dfx/L64zKA4I+egZpuHu0tIpULzjvF6KJIgs3+UEe7vhvxb50hmLE30oCTJJ
-         z0sqXQx19yAtu78ZbE66rGH8j2v7WPhXkHGfJcFSJCCNuY8eATn0k0r71+mxZn0DJiiu
-         GANK0TBCTARGx7mLBm3ERcQkqwVWH6HUggvBkiEa0pztkARv5aN3GdSHv+3Iaf1YwO1Y
-         sXfw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
-         :message-id:mime-version;
-        bh=iPAQMAMc1hYTdFsccictID911P3trsdKp6hSOQvOeKM=;
-        b=apaDspx15gefFTJDRscU9EYUiO2+DnHaGBIgdSEgWqZ6V7eNyUCUPYWJ1k9axpmb2e
-         YJt3pW0IGTxLfWWVQBn7X7SkDLpu+/eFgTmA1XSPn/bK4RQMMZwty1AJWWmW5S8eYBFv
-         FHdQRKtFgOofbxI+r+CQkVBsoPHtnlVC9Ud5YMobMpvwn9PZohbXAMXxhU8lrH1nd12h
-         Uu6Bh4IfqTIAZsj/QsvsSek7czTbmjw+kTDXaDlh2NnN1omrPxIkUYvoab/q7mC9Tv8S
-         qLqdDoq4hB8xtpl2C1qM/EJuMsUGmGoYCw+dCCrMhL459eDfSiyiavCUbdBHPODfFPqF
-         qlFg==
-X-Gm-Message-State: AOAM531qLJznCPFL9hfUYuq+InXNLLaF+YKFmRqnL+pMBH3YXiqFlp5d
-        Yghj6aCQkP6Cw6X136FyAdnk9w==
-X-Google-Smtp-Source: ABdhPJzg9saFTkFjFL/6YScANuADv4CnZG6bZfHBk7SDK2lhxGXr30RQbFBKLPsfKq04zJHatQgCWQ==
-X-Received: by 2002:a63:fd0a:: with SMTP id d10mr3374536pgh.273.1601664808545;
-        Fri, 02 Oct 2020 11:53:28 -0700 (PDT)
-Received: from localhost (c-71-197-186-152.hsd1.wa.comcast.net. [71.197.186.152])
-        by smtp.gmail.com with ESMTPSA id b3sm2798336pfd.66.2020.10.02.11.53.27
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 02 Oct 2020 11:53:27 -0700 (PDT)
-From:   Kevin Hilman <khilman@baylibre.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     linux-pci@vger.kernel.org,
-        Neil Armstrong <narmstrong@baylibre.com>,
-        linux-amlogic@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Yue Wang <yue.wang@amlogic.com>
-Subject: Re: [PATCH] pci: meson: build as module by default
-In-Reply-To: <20200928163440.GA16986@e121166-lin.cambridge.arm.com>
-References: <20200918181251.32423-1-khilman@baylibre.com> <20200928163440.GA16986@e121166-lin.cambridge.arm.com>
-Date:   Fri, 02 Oct 2020 11:53:27 -0700
-Message-ID: <7h362wmpco.fsf@baylibre.com>
+        id S1733260AbgJBS4g (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 2 Oct 2020 14:56:36 -0400
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:57357 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2387688AbgJBS4g (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Oct 2020 14:56:36 -0400
+Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
+        by mailout.nyi.internal (Postfix) with ESMTP id B64C35C014F;
+        Fri,  2 Oct 2020 14:48:10 -0400 (EDT)
+Received: from mailfrontend2 ([10.202.2.163])
+  by compute4.internal (MEProxy); Fri, 02 Oct 2020 14:48:10 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        oregontracks.org; h=from:to:cc:subject:date:message-id
+        :in-reply-to:references:mime-version:content-transfer-encoding;
+         s=fm1; bh=VzqaRORlnEuUozDef6epiKpVS9HjyrVB/kcqBdBNMb4=; b=aXSPD
+        jheA7ApwpWlTw1ywXB2zCGx6yJU7ozRRih2Zju3IfBNENeldFYkhQBXN+AMDQrer
+        XhJMIkdtzMMa2amIPhiRJI+ctmsWpK6pnn99eYZ4ik+aqRad2058RxKRNPR4KwSZ
+        L978rN8H5KAWjfEXpMkfpFMm62QrFilSkjCwZcDwvEpBwFLdYzWvCnAOPNvu6y/R
+        CmSiZSP5yohTJ48LZtvRh4PrSvrFmGYukX1hRQ6Uo/fpgxm1s+OcsifkVXCGg3sW
+        dCmQDPiOdHsbkVC65fsr14Wr8ZzWNH2gZ4uHYzbaKk3VUQzb2CJ0aI8jea7uLuiM
+        r1RkteZicvuu718aw==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:content-transfer-encoding:date:from
+        :in-reply-to:message-id:mime-version:references:subject:to
+        :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
+        fm3; bh=VzqaRORlnEuUozDef6epiKpVS9HjyrVB/kcqBdBNMb4=; b=e+kAEgdJ
+        6lw38/wURiwpEBbrIodIIDFNpe3WmsWr4N1nrKk5Cii0qpAnnPmyI8VKW4JFBbwB
+        oP2ZFhq5jVQ4lGLxviTYEd+PdzqQjVBodoM4XJN+SpG/yeCmDOd5huWA1vnyPy5s
+        b1cil9pUrVWnH+iGrxS6RbenKUbdBUHu1mLosrDfFuE6lk7TPj6fCkHnDf0BZx9G
+        +0ktmnixJNuE4wzQW4rw1v/U9erBclDsHc2SRro8Lky+Y1M2+GS4Qc67sp9d0zmd
+        AmoZSemIVGyhZ3U6F0jhp3L/mrpYfrsvzn4G1OzzfecvkfeDtDWPGWRmjSqBXknd
+        GRWsxHPsrZSHlA==
+X-ME-Sender: <xms:6nV3X1dUhedJ_WVTiUAphfBZmj6rl9q9_Co16al4Keg8k4IcgCLHFg>
+    <xme:6nV3XzMvtdc-pbEHl7FK0wqKo43OrwMqxw10IuhDkv2zQ8x-1KriwsLRjaeHNCJW0
+    Y7xWj5CRbvk4JD0>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedujedrfeeigdduvdekucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucenucfjughrpefhvffufffkofgjfhgggfestdekre
+    dtredttdenucfhrhhomhepufgvrghnucggucfmvghllhgvhicuoehsvggrnhhvkhdruggv
+    vhesohhrvghgohhnthhrrggtkhhsrdhorhhgqeenucggtffrrghtthgvrhhnpeehkeffte
+    eiudeiffelkeelvefftdelhfeitdeigeffleeufedvgfegvdefvedtteenucfkphepvdeg
+    rddvtddrudegkedrgeelnecuvehluhhsthgvrhfuihiivgepkeenucfrrghrrghmpehmrg
+    hilhhfrhhomhepshgvrghnvhhkrdguvghvsehorhgvghhonhhtrhgrtghkshdrohhrgh
+X-ME-Proxy: <xmx:6nV3X-hC8VQ7RwwJhiuYn0yXMHOphMc_3PIaylzGRj1Qasks36Q-1A>
+    <xmx:6nV3X-9YmQ-kZNM6g8Ve_l5ZOBcIOvv8AdGm24oexHXfh0HKaa9MQA>
+    <xmx:6nV3XxtcyeTfqdeR5bc03_Wq0ZnvwaxvgFeShp9tyOVJ6toq1CFzpg>
+    <xmx:6nV3X1h9XFa9E1a9p4SQgqA5OJ-jtsIlaVEJoK4-Fq59U3H5Ag-owQ>
+Received: from arch-ashland-svkelley.hsd1.or.comcast.net (c-24-20-148-49.hsd1.or.comcast.net [24.20.148.49])
+        by mail.messagingengine.com (Postfix) with ESMTPA id 56736306468B;
+        Fri,  2 Oct 2020 14:48:08 -0400 (EDT)
+From:   Sean V Kelley <seanvk.dev@oregontracks.org>
+To:     bhelgaas@google.com, Jonathan.Cameron@huawei.com,
+        rafael.j.wysocki@intel.com, ashok.raj@intel.com,
+        tony.luck@intel.com, sathyanarayanan.kuppuswamy@intel.com,
+        qiuxu.zhuo@intel.com
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v8 09/14] PCI/AER: Apply function level reset to RCiEP on fatal error
+Date:   Fri,  2 Oct 2020 11:47:30 -0700
+Message-Id: <20201002184735.1229220-10-seanvk.dev@oregontracks.org>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20201002184735.1229220-1-seanvk.dev@oregontracks.org>
+References: <20201002184735.1229220-1-seanvk.dev@oregontracks.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Lorenzo,
+From: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
 
-Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> writes:
+Attempt to do a function level reset for an RCiEP on fatal error.
 
-> On Fri, Sep 18, 2020 at 11:12:51AM -0700, Kevin Hilman wrote:
->> Enable pci-meson to build as a module whenever ARCH_MESON is enabled.
->> 
->> Cc: Yue Wang <yue.wang@amlogic.com>
->> Signed-off-by: Kevin Hilman <khilman@baylibre.com>
->> ---
->> Tested on Khadas VIM3 and Khadas VIM3 using NVMe SSD devices.
->> 
->>  drivers/pci/controller/dwc/Kconfig     | 3 ++-
->>  drivers/pci/controller/dwc/pci-meson.c | 8 +++++++-
->>  2 files changed, 9 insertions(+), 2 deletions(-)
->
-> Applied to pci/meson, thanks.
+Signed-off-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+---
+ drivers/pci/pcie/err.c | 31 ++++++++++++++++++++++---------
+ 1 file changed, 22 insertions(+), 9 deletions(-)
 
-Rob pointed out that the MODULE_LICENCE wasn't the same as the SPDX
-header.  Could you squash the update below before submitting?
-
-Thanks,
-
-Kevin
-
-
-diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/controller/dwc/pci-meson.c
-index 7a1fb55ee44a..35b167e907aa 100644
---- a/drivers/pci/controller/dwc/pci-meson.c
-+++ b/drivers/pci/controller/dwc/pci-meson.c
-@@ -604,4 +604,4 @@ module_platform_driver(meson_pcie_driver);
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index c4ceca42a3bf..38abd7984996 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -169,6 +169,17 @@ static void pci_walk_bridge(struct pci_dev *bridge, int (*cb)(struct pci_dev *,
+ 		cb(bridge, userdata);
+ }
  
- MODULE_AUTHOR("Yue Wang <yue.wang@amlogic.com>");
- MODULE_DESCRIPTION("Amlogic PCIe Controller driver");
--MODULE_LICENSE("Dual BSD/GPL");
-+MODULE_LICENSE("GPL v2");
++static pci_ers_result_t flr_on_rciep(struct pci_dev *dev)
++{
++	if (!pcie_has_flr(dev))
++		return PCI_ERS_RESULT_DISCONNECT;
++
++	if (pcie_flr(dev))
++		return PCI_ERS_RESULT_DISCONNECT;
++
++	return PCI_ERS_RESULT_RECOVERED;
++}
++
+ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+ 			pci_channel_state_t state,
+ 			pci_ers_result_t (*reset_subordinate_devices)(struct pci_dev *pdev))
+@@ -195,15 +206,17 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+ 	if (state == pci_channel_io_frozen) {
+ 		pci_walk_bridge(bridge, report_frozen_detected, &status);
+ 		if (type == PCI_EXP_TYPE_RC_END) {
+-			pci_warn(dev, "subordinate device reset not possible for RCiEP\n");
+-			status = PCI_ERS_RESULT_NONE;
+-			goto failed;
+-		}
+-
+-		status = reset_subordinate_devices(bridge);
+-		if (status != PCI_ERS_RESULT_RECOVERED) {
+-			pci_warn(dev, "subordinate device reset failed\n");
+-			goto failed;
++			status = flr_on_rciep(dev);
++			if (status != PCI_ERS_RESULT_RECOVERED) {
++				pci_warn(dev, "function level reset failed\n");
++				goto failed;
++			}
++		} else {
++			status = reset_subordinate_devices(bridge);
++			if (status != PCI_ERS_RESULT_RECOVERED) {
++				pci_warn(dev, "subordinate device reset failed\n");
++				goto failed;
++			}
+ 		}
+ 	} else {
+ 		pci_walk_bridge(bridge, report_normal_detected, &status);
+-- 
+2.28.0
+
