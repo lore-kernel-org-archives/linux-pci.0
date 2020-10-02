@@ -7,62 +7,62 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A523FC4363D
-	for <linux-pci@archiver.kernel.org>; Fri,  2 Oct 2020 18:56:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE1ECC4363D
+	for <linux-pci@archiver.kernel.org>; Fri,  2 Oct 2020 18:56:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3FE0E208C7
-	for <linux-pci@archiver.kernel.org>; Fri,  2 Oct 2020 18:56:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 83CF020795
+	for <linux-pci@archiver.kernel.org>; Fri,  2 Oct 2020 18:56:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388237AbgJBS4g (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S2387712AbgJBS4g (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Fri, 2 Oct 2020 14:56:36 -0400
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:51825 "EHLO
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:53025 "EHLO
         out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2387712AbgJBS4g (ORCPT
+        by vger.kernel.org with ESMTP id S2387806AbgJBS4g (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Oct 2020 14:56:36 -0400
 Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
-        by mailout.nyi.internal (Postfix) with ESMTP id 9CD945C014B;
-        Fri,  2 Oct 2020 14:48:03 -0400 (EDT)
+        by mailout.nyi.internal (Postfix) with ESMTP id B4A445C0163;
+        Fri,  2 Oct 2020 14:48:18 -0400 (EDT)
 Received: from mailfrontend2 ([10.202.2.163])
-  by compute4.internal (MEProxy); Fri, 02 Oct 2020 14:48:03 -0400
+  by compute4.internal (MEProxy); Fri, 02 Oct 2020 14:48:18 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         oregontracks.org; h=from:to:cc:subject:date:message-id
         :in-reply-to:references:mime-version:content-transfer-encoding;
-         s=fm1; bh=RvNXChfCO49Huc+IA9ctJyJl6CuCZgjiaLEu9TFj2D0=; b=DtYce
-        j5gZ6xAbWl0T4dVpUPRolfUr/bCN5YI8jWBealz/czdj4JBTEF+ehOHDQGDz8rSq
-        HUQHa6/aESpQaI54lLmGhpjdJrRSNiAvwpnf328J3iPnXYm0zXA6pMdL46nL8XWT
-        W9+Xm06z9wE6OwXAByCgrDMpunJ9S4PLFPXc7TmCU+eA9oxYSPHFyouHFSkNaryW
-        gfWoWKjqQgNjw0JOCkjve7mo1Xq04c2AQqfQLjJBk7iS4EgAJWyJ2RoM3PP7tNf7
-        AwZa5aa5CaU2anbB6kXwPHbflAIwgdh6ALIR9gh34aJKBj0/gaIkNSj+7ZnUizJ+
-        dV1HWMcJumMXa+W2w==
+         s=fm1; bh=9mBueR5mjc2elX0S5GvL5L98HPD3F2dJX6eYncjCuDA=; b=HgMJr
+        0sU+KdVq83ivh2Z1ZjpUHSIUBKpQdTU2ekmYMt8xXu5xzVnogtWKah1TbiSyoJVq
+        dKEOot0VmQAqkVBRGzTfgxUHFABvsj1Qt0+wt3r+7tOF1bvk7EwFVPQYWvOvHBbN
+        2skxhktMoU7skpAZ1ZI2VBxZ5rX7kLs4PFFVcUM2hyG/9hVX6Q5suc72LuEqfbIh
+        vAaBxzvqUkwJkRWTwWRJxUjeathpwQY7LW6AKqcK7o1xCk+z4oIMWCigMn5bbvgc
+        ufzzdyNbU04mEY/VE6uQo5OmgV6Y6bopfLG1cEt4yFoEKTyiEZbxATTA2yjJj2G7
+        AnN87bCypNaw87P/g==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         messagingengine.com; h=cc:content-transfer-encoding:date:from
         :in-reply-to:message-id:mime-version:references:subject:to
         :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
-        fm3; bh=RvNXChfCO49Huc+IA9ctJyJl6CuCZgjiaLEu9TFj2D0=; b=L2/9Es/x
-        PXdwHqmXjmtoUyO/d7mHsxLdMrG28E6eB0DxkdCrQRe1jHPMY9JHktkaN0wxaEZb
-        BG1NOWbXQ64E18HUJaePNpvHe5C+aOV3CKAihFIARrcPbAuyfJgl8Kjg0/4Lj4vL
-        q8NebfP4ZQT8UgU5LxLXkQ75G8TIPaHkeSwOactUUjZ9X11zCwzKxVo0vHMIe/Yh
-        khtlozjHmbnUPVFuQUnDhtBw65zJVaQrGnPDncrduL6X91Emzv9tIlkjtCTUyh92
-        sc3cXn2rh7cBSGvLtMnhZdt2EHvEH+Yqj2PdVg8YAMc6523SVlejHjhyAHZ2dF6e
-        Jh3oMTo+nZZYPg==
-X-ME-Sender: <xms:43V3X5AhCiOw0wCcpqfN1cjxhRVvfplwZNSYg1a68zTNo2MCESjDOg>
-    <xme:43V3X3jGLR4GMaXc9QG16qa7rhCh36ZqYTNflEq2gi6g-1C4EhVEusYK9nNknYC59
-    cTeYQ6fxFDpgiVx>
+        fm3; bh=9mBueR5mjc2elX0S5GvL5L98HPD3F2dJX6eYncjCuDA=; b=k5oMsFXW
+        N35ccTiopYB97PRjC59zmov+ryKeAXtUcVs0oF0ewwbto8VtIuhFeY2GWsqtj5NL
+        yYm/iCI7Iok/Pb5IpQhMJKdpTuPXfva1iE8nu+D9uTp5z+CH33fX5mvss1xoCLs7
+        rnChu9ZAkyeMTF2DuetSgLg30KwXEG2v8WoCP2cqvrp7TeScyNui+wKXPNCcF4a9
+        esM13dpGgbrFglA/yqH8wS0NQ7BsHW+2xlHDOXewa2lGGgXhMw1OfjNR9cmrMzF7
+        0MUTaS5r/AL+U+yzmOfad+qvlp6QGle1uFz5Qquw4IGcrFeFgVL2qrOpKUAx53tU
+        K9/+zmPxmBci6Q==
+X-ME-Sender: <xms:8nV3X7jYPzdQ0_U0hDcfEY8yfokLhhE7aRrN1f26YUI7ut7yG-yWew>
+    <xme:8nV3X4CyeoRHHHNxNVtWos36WEIqT_sOTF70EAoZiyMQGWhCklImpjD4YtBKvXxek
+    maU1V5NFtOsgtSk>
 X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedujedrfeeigdduvdekucetufdoteggodetrfdotf
     fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
     uceurghilhhouhhtmecufedttdenucenucfjughrpefhvffufffkofgjfhgggfestdekre
     dtredttdenucfhrhhomhepufgvrghnucggucfmvghllhgvhicuoehsvggrnhhvkhdruggv
     vhesohhrvghgohhnthhrrggtkhhsrdhorhhgqeenucggtffrrghtthgvrhhnpeehkeffte
     eiudeiffelkeelvefftdelhfeitdeigeffleeufedvgfegvdefvedtteenucfkphepvdeg
-    rddvtddrudegkedrgeelnecuvehluhhsthgvrhfuihiivgepvdenucfrrghrrghmpehmrg
-    hilhhfrhhomhepshgvrghnvhhkrdguvghvsehorhgvghhonhhtrhgrtghkshdrohhrgh
-X-ME-Proxy: <xmx:43V3X0mpzfc2olpAi7nnP23FaFzguP4ndQRYCMJG5rcTuh4tV1VxHA>
-    <xmx:43V3XzwW2OqduQBDkFPFaIwnmuIV2SQfmzIA76H342C8FYap9UPYeg>
-    <xmx:43V3X-Qjj-V-tSjM5VdZ3oG0e5upNEttXxKvgUi-sxQolfMtyY3BJw>
-    <xmx:43V3X7Te9eVgT1oDbV0Ry2mmFF-D8Z_ekFrexSLlcJdr36MF0GoYTA>
+    rddvtddrudegkedrgeelnecuvehluhhsthgvrhfuihiivgepuddunecurfgrrhgrmhepmh
+    grihhlfhhrohhmpehsvggrnhhvkhdruggvvhesohhrvghgohhnthhrrggtkhhsrdhorhhg
+X-ME-Proxy: <xmx:8nV3X7FY_Sn0fPinltUd4k9_nrqQ-zg7_q1uXOOPP1ImIeu31uiuyA>
+    <xmx:8nV3X4Q1nQRhVO3I9mcMvWUBjPXgCqHgSLDCIp31wlkCiw8OyNnG3A>
+    <xmx:8nV3X4wl-D47sNzU_GtwBFUtbkr4FuJY34p-zcAV5jOugDZK6jIEXw>
+    <xmx:8nV3X7zc9WxPVv0xA8L4K2WtQtvQrU28NorN0sMLIDvU4imMMuoq-w>
 Received: from arch-ashland-svkelley.hsd1.or.comcast.net (c-24-20-148-49.hsd1.or.comcast.net [24.20.148.49])
-        by mail.messagingengine.com (Postfix) with ESMTPA id 6915F3064680;
-        Fri,  2 Oct 2020 14:48:01 -0400 (EDT)
+        by mail.messagingengine.com (Postfix) with ESMTPA id 033ED306468A;
+        Fri,  2 Oct 2020 14:48:16 -0400 (EDT)
 From:   Sean V Kelley <seanvk.dev@oregontracks.org>
 To:     bhelgaas@google.com, Jonathan.Cameron@huawei.com,
         rafael.j.wysocki@intel.com, ashok.raj@intel.com,
@@ -70,9 +70,9 @@ To:     bhelgaas@google.com, Jonathan.Cameron@huawei.com,
         qiuxu.zhuo@intel.com
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         Sean V Kelley <sean.v.kelley@intel.com>
-Subject: [PATCH v8 06/14] PCI/ERR: Add pci_walk_bridge() to pcie_do_recovery()
-Date:   Fri,  2 Oct 2020 11:47:27 -0700
-Message-Id: <20201002184735.1229220-7-seanvk.dev@oregontracks.org>
+Subject: [PATCH v8 13/14] PCI/PME: Add pcie_walk_rcec() to RCEC PME handling
+Date:   Fri,  2 Oct 2020 11:47:34 -0700
+Message-Id: <20201002184735.1229220-14-seanvk.dev@oregontracks.org>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20201002184735.1229220-1-seanvk.dev@oregontracks.org>
 References: <20201002184735.1229220-1-seanvk.dev@oregontracks.org>
@@ -84,94 +84,91 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Sean V Kelley <sean.v.kelley@intel.com>
 
-Consolidate subordinate bus checks with pci_walk_bus()
-into pci_walk_bridge() for walking below potentially
-AER affected bridges.
+Root Complex Event Collectors (RCEC) appear as peers of Root Ports
+and also have the PME capability. As with AER, there is a need to be
+able to walk the RCiEPs associated with their RCEC for purposes of
+acting upon them with callbacks. So add RCEC support through the use
+of pcie_walk_rcec() to the current PME service driver and attach the
+PME service driver to the RCEC device.
 
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Co-developed-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+Signed-off-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
 Signed-off-by: Sean V Kelley <sean.v.kelley@intel.com>
 ---
- drivers/pci/pcie/err.c | 29 ++++++++++++++++++++++-------
- 1 file changed, 22 insertions(+), 7 deletions(-)
+ drivers/pci/pcie/pme.c          | 15 +++++++++++----
+ drivers/pci/pcie/portdrv_core.c |  8 ++++----
+ 2 files changed, 15 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index e68ea5243ff2..9b2130725ab6 100644
---- a/drivers/pci/pcie/err.c
-+++ b/drivers/pci/pcie/err.c
-@@ -146,12 +146,28 @@ static int report_resume(struct pci_dev *dev, void *data)
- 	return 0;
+diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
+index 6a32970bb731..87799166c96a 100644
+--- a/drivers/pci/pcie/pme.c
++++ b/drivers/pci/pcie/pme.c
+@@ -310,7 +310,10 @@ static int pcie_pme_can_wakeup(struct pci_dev *dev, void *ign)
+ static void pcie_pme_mark_devices(struct pci_dev *port)
+ {
+ 	pcie_pme_can_wakeup(port, NULL);
+-	if (port->subordinate)
++
++	if (pci_pcie_type(port) == PCI_EXP_TYPE_RC_EC)
++		pcie_walk_rcec(port, pcie_pme_can_wakeup, NULL);
++	else if (port->subordinate)
+ 		pci_walk_bus(port->subordinate, pcie_pme_can_wakeup, NULL);
  }
  
-+/**
-+ * pci_walk_bridge - walk bridges potentially AER affected
-+ * @bridge   bridge which may be a Port.
-+ * @cb       callback to be called for each device found
-+ * @userdata arbitrary pointer to be passed to callback.
-+ *
-+ * If the device provided is a bridge, walk the subordinate bus,
-+ * including any bridged devices on buses under this bus.
-+ * Call the provided callback on each device found.
-+ */
-+static void pci_walk_bridge(struct pci_dev *bridge, int (*cb)(struct pci_dev *, void *),
-+			    void *userdata)
-+{
-+	if (bridge->subordinate)
-+		pci_walk_bus(bridge->subordinate, cb, userdata);
-+}
-+
- pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
- 			pci_channel_state_t state,
- 			pci_ers_result_t (*reset_subordinate_devices)(struct pci_dev *pdev))
+@@ -320,10 +323,15 @@ static void pcie_pme_mark_devices(struct pci_dev *port)
+  */
+ static int pcie_pme_probe(struct pcie_device *srv)
  {
- 	pci_ers_result_t status = PCI_ERS_RESULT_CAN_RECOVER;
--	struct pci_bus *bus;
- 	struct pci_dev *bridge;
- 	int type;
+-	struct pci_dev *port;
++	struct pci_dev *port = srv->port;
+ 	struct pcie_pme_service_data *data;
+ 	int ret;
  
-@@ -167,23 +183,22 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
- 	else
- 		bridge = pci_upstream_bridge(dev);
++	/* Limit to Root Ports or Root Complex Event Collectors */
++	if ((pci_pcie_type(port) != PCI_EXP_TYPE_RC_EC) &&
++	    (pci_pcie_type(port) != PCI_EXP_TYPE_ROOT_PORT))
++		return -ENODEV;
++
+ 	data = kzalloc(sizeof(*data), GFP_KERNEL);
+ 	if (!data)
+ 		return -ENOMEM;
+@@ -333,7 +341,6 @@ static int pcie_pme_probe(struct pcie_device *srv)
+ 	data->srv = srv;
+ 	set_service_data(srv, data);
  
--	bus = bridge->subordinate;
- 	pci_dbg(dev, "broadcast error_detected message\n");
- 	if (state == pci_channel_io_frozen) {
--		pci_walk_bus(bus, report_frozen_detected, &status);
-+		pci_walk_bridge(bridge, report_frozen_detected, &status);
- 		status = reset_subordinate_device(bridge);
- 		if (status != PCI_ERS_RESULT_RECOVERED) {
- 			pci_warn(dev, "subordinate device reset failed\n");
- 			goto failed;
- 		}
- 	} else {
--		pci_walk_bus(bus, report_normal_detected, &status);
-+		pci_walk_bridge(bridge, report_normal_detected, &status);
- 	}
+-	port = srv->port;
+ 	pcie_pme_interrupt_enable(port, false);
+ 	pcie_clear_root_pme_status(port);
  
- 	if (status == PCI_ERS_RESULT_CAN_RECOVER) {
- 		status = PCI_ERS_RESULT_RECOVERED;
- 		pci_dbg(dev, "broadcast mmio_enabled message\n");
--		pci_walk_bus(bus, report_mmio_enabled, &status);
-+		pci_walk_bridge(bridge, report_mmio_enabled, &status);
- 	}
+@@ -445,7 +452,7 @@ static void pcie_pme_remove(struct pcie_device *srv)
  
- 	if (status == PCI_ERS_RESULT_NEED_RESET) {
-@@ -194,14 +209,14 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
- 		 */
- 		status = PCI_ERS_RESULT_RECOVERED;
- 		pci_dbg(dev, "broadcast slot_reset message\n");
--		pci_walk_bus(bus, report_slot_reset, &status);
-+		pci_walk_bridge(bridge, report_slot_reset, &status);
- 	}
+ static struct pcie_port_service_driver pcie_pme_driver = {
+ 	.name		= "pcie_pme",
+-	.port_type	= PCI_EXP_TYPE_ROOT_PORT,
++	.port_type	= PCIE_ANY_PORT,
+ 	.service	= PCIE_PORT_SERVICE_PME,
  
- 	if (status != PCI_ERS_RESULT_RECOVERED)
- 		goto failed;
+ 	.probe		= pcie_pme_probe,
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index 50a9522ab07d..99769c636775 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -234,11 +234,11 @@ static int get_port_device_capability(struct pci_dev *dev)
+ #endif
  
- 	pci_dbg(dev, "broadcast resume message\n");
--	pci_walk_bus(bus, report_resume, &status);
-+	pci_walk_bridge(bridge, report_resume, &status);
+ 	/*
+-	 * Root ports are capable of generating PME too.  Root Complex
+-	 * Event Collectors can also generate PMEs, but we don't handle
+-	 * those yet.
++	 * Root ports and Root Complex Event Collectors are capable
++	 * of generating PME.
+ 	 */
+-	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT &&
++	if ((pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
++	     pci_pcie_type(dev) == PCI_EXP_TYPE_RC_EC) &&
+ 	    (pcie_ports_native || host->native_pme)) {
+ 		services |= PCIE_PORT_SERVICE_PME;
  
- 	if (pcie_aer_is_native(bridge))
- 		pcie_clear_device_status(bridge);
 -- 
 2.28.0
 
