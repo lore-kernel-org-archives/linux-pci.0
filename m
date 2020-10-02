@@ -2,67 +2,67 @@ Return-Path: <SRS0=wtdp=DJ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FAE9C4363D
-	for <linux-pci@archiver.kernel.org>; Fri,  2 Oct 2020 18:57:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 517B1C35257
+	for <linux-pci@archiver.kernel.org>; Fri,  2 Oct 2020 18:57:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EAD1620795
-	for <linux-pci@archiver.kernel.org>; Fri,  2 Oct 2020 18:56:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1EC7B208A9
+	for <linux-pci@archiver.kernel.org>; Fri,  2 Oct 2020 18:57:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387768AbgJBS4h (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 2 Oct 2020 14:56:37 -0400
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:57941 "EHLO
+        id S2388291AbgJBS4i (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 2 Oct 2020 14:56:38 -0400
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:41493 "EHLO
         out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2388291AbgJBS4h (ORCPT
+        by vger.kernel.org with ESMTP id S2387935AbgJBS4h (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Oct 2020 14:56:37 -0400
 Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
-        by mailout.nyi.internal (Postfix) with ESMTP id E434E5C0049;
-        Fri,  2 Oct 2020 14:47:51 -0400 (EDT)
+        by mailout.nyi.internal (Postfix) with ESMTP id 648065C0140;
+        Fri,  2 Oct 2020 14:48:01 -0400 (EDT)
 Received: from mailfrontend2 ([10.202.2.163])
-  by compute4.internal (MEProxy); Fri, 02 Oct 2020 14:47:51 -0400
+  by compute4.internal (MEProxy); Fri, 02 Oct 2020 14:48:01 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         oregontracks.org; h=from:to:cc:subject:date:message-id
-        :mime-version:content-transfer-encoding; s=fm1; bh=RB2m5O3FLxKM8
-        kvAcVlLnQhGPdkPQ8GN15FhYZkptp8=; b=Yb3ClpvdCbRN3ZB030FpNIbtHzgKF
-        sr74Jo2WuNCv+yYqF49JvGm7Pyb7URcDfbaNEi5Ra/d/uC7Y5ioBK9a8X9jNUAzN
-        62Md06gdVpC+CYoG5Ag9wV8EtbjVLsnm1oaGCRB24LhwJ+KoWlHg9fwg0m4EBNk2
-        mYeCYkduw2KsCaEa765kzugnYw62Qf4PMmtPNqI9IpBgniyGIvQtVWGUwYFcLKV7
-        PMfOR+JpCrJFniC2kQndCb4OrxeVg50A+mg2K4AUUJW2tj7rjFlV7RIpvF6ljiTU
-        DETMudkZ5GfvNNSW5sbqLdGHSYYpYY1zFWCr81a8u0AeEliu2jhquqgZA==
+        :in-reply-to:references:mime-version:content-transfer-encoding;
+         s=fm1; bh=iOxe6nk3a+qZ/VViUWD1V7pp14CzJsfaUhKJXMIDY9k=; b=gbV/8
+        SiA5dPFk866rra6hFcW4UP135XkQgbx5zbDRvraYEqtkFlHICGU6Jux4IOcP16Da
+        IiTOqJnkHhMEu2S6fhtSRhcuHzPxtvLcbxV8GpgIyt31DyWD/J5qWkv8p+BPc5sB
+        5vAaPqlq0i56eY0Md19eo3Xo/Yo2KZjzumOiPCCP2/f2meeComknCXj8JM8XMdAi
+        1GbTkp1O7ymOBsoU5nVlfR//xNX01kRviLuRKUOc7WHScncPPw9XDMWOzCxHHMHy
+        91SkoXkkPlY5wRdIadlHXjBIueCTVQEpFabcHO5Kn6tRI4c5uuqSSmwQBLaoIRnS
+        6Rm9KL/4X7TaXwCkA==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         messagingengine.com; h=cc:content-transfer-encoding:date:from
-        :message-id:mime-version:subject:to:x-me-proxy:x-me-proxy
-        :x-me-sender:x-me-sender:x-sasl-enc; s=fm3; bh=RB2m5O3FLxKM8kvAc
-        VlLnQhGPdkPQ8GN15FhYZkptp8=; b=SsFnX3br8Aaivm8U1jbYgXXBQgSrxbYI6
-        hJSH70PR+AYHBjBCM+Gk/V04GvCMAtLbsrU0UdmFbCogz1cmwT0hsmKre1KEKTTe
-        R4RND15yb+4hOYAzuf4+9EmuGLczpigDa6xwbGiBDuE7panVJWNARUF5qQuraeeH
-        XRXuKEuXcQe5LZALJMsTdKuRftnKqBT17RCf/p2+oRHdLT6d2XMX1lT7Ap1/JAoq
-        +FV0PzB8H+7CKb9YcuCCdMOetU8wlfVTyxYBc1aeg/DDRBVi8npSJPBRlG8RQyzW
-        /srZYh+pQ++qZ1qC2bQDkqJsqAPCbqQqrCC2Hf0mqEX42HiPs4sFA==
-X-ME-Sender: <xms:13V3X2WMgtdkjj1YzAPhYBDFRA4uzVoe3qCUzh3XLiq4_7Mm2spPrg>
-    <xme:13V3Xymhylc2IbTCXCFtOP38xFpdkgwhgrkPxoIH0xndmcorXd3R9RAoDiZIzuKu9
-    xdKWSmFJEWZGwWs>
+        :in-reply-to:message-id:mime-version:references:subject:to
+        :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
+        fm3; bh=iOxe6nk3a+qZ/VViUWD1V7pp14CzJsfaUhKJXMIDY9k=; b=Xj8STda4
+        C+BOICJaIS9XxU5bJ6+QkhRADHcp1sobzgCRnmBVmxJk/+jeT7sTxiLKpEGpWATH
+        SV14KLxiFvrCd28d0zS7wkrn6kR/yjPeUomcbo3Pw+bGflEl9v4/bIlJ/NOonGe9
+        qwv8lOeUWh1mZkUzXTFeKv0DgBWyJg8UpJ0hM3FPhpIeFXD91PxGzvdpXh92Fjwm
+        rNaYTYvlmLtN2C9oz6mWAPW6pCsxDyGHanJ3IglIXZpVIqLHBixM37/6pxFdCsQg
+        86K4fMbTb6BZAwjyMeWhSy+J334m1tbnnKMcz6gFFX5fghTRnDtF4htqpU4TmQ8B
+        TLNKxEJ6UcNl3Q==
+X-ME-Sender: <xms:4XV3X4oAlKy57KJX-X3fMfXhrRTCAjHLbZAMkV5bjF07AiAwh2a8lw>
+    <xme:4XV3X-pSruZtRCWY9J5IpdZkca_zVgRmgHGVgKFlVJIEluJsD8mysniH-aDOpknkx
+    5KJftucMEffcUKk>
 X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedujedrfeeigdduvdekucetufdoteggodetrfdotf
     fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucenucfjughrpefhvffufffkofgggfestdekredtre
-    dttdenucfhrhhomhepufgvrghnucggucfmvghllhgvhicuoehsvggrnhhvkhdruggvvhes
-    ohhrvghgohhnthhrrggtkhhsrdhorhhgqeenucggtffrrghtthgvrhhnpeduleelieette
-    dtudetfeetjefgkefgvdeiieevjedtffetudehieehgfeuhfffieenucffohhmrghinhep
-    khgvrhhnvghlrdhorhhgpdgtohhmphhuthgvvgigphhrvghsshhlihhnkhdrohhrghenuc
-    fkphepvdegrddvtddrudegkedrgeelnecuvehluhhsthgvrhfuihiivgeptdenucfrrghr
-    rghmpehmrghilhhfrhhomhepshgvrghnvhhkrdguvghvsehorhgvghhonhhtrhgrtghksh
-    drohhrgh
-X-ME-Proxy: <xmx:13V3X6bMPYX2p2KygAE0buOO3rwrPOEffK8ZzYrCQqeAD4IeUy_U0Q>
-    <xmx:13V3X9WyGCOEFSm2R0oTR-X9XGJRrHpfc_ghvY1L9FhfFIvgPR3iNw>
-    <xmx:13V3XwlHz_Ah7i60O0V8SEKkW17O_TLFZ-6EjQ1VeWNxA9amZOnPTg>
-    <xmx:13V3X6XHsji_usgt4sNlmvXRz3_E-_hZhLQOeiwtRJ4RRJyqScfy6g>
+    uceurghilhhouhhtmecufedttdenucenucfjughrpefhvffufffkofgjfhgggfestdekre
+    dtredttdenucfhrhhomhepufgvrghnucggucfmvghllhgvhicuoehsvggrnhhvkhdruggv
+    vhesohhrvghgohhnthhrrggtkhhsrdhorhhgqeenucggtffrrghtthgvrhhnpeehkeffte
+    eiudeiffelkeelvefftdelhfeitdeigeffleeufedvgfegvdefvedtteenucfkphepvdeg
+    rddvtddrudegkedrgeelnecuvehluhhsthgvrhfuihiivgepvdenucfrrghrrghmpehmrg
+    hilhhfrhhomhepshgvrghnvhhkrdguvghvsehorhgvghhonhhtrhgrtghkshdrohhrgh
+X-ME-Proxy: <xmx:4XV3X9PhzykeAOHL2ikLABEz-cx_DbC5n9w3NcGkaBQy0u1kOdFD_g>
+    <xmx:4XV3X_4kzv8bpn2JUXscvdEWcz8qW5Z1rw_9RnvtM2EPoJHBhLe6bg>
+    <xmx:4XV3X364bboPRxj579jCMjucPzThjALA5YAE3qwPgDmoj5ojotDn8A>
+    <xmx:4XV3X6ZrWjNbZMYUSM4zqRh5OMbUfsoaFPtKhwy3A3kQCyi4BaykBQ>
 Received: from arch-ashland-svkelley.hsd1.or.comcast.net (c-24-20-148-49.hsd1.or.comcast.net [24.20.148.49])
-        by mail.messagingengine.com (Postfix) with ESMTPA id 17CED3064684;
-        Fri,  2 Oct 2020 14:47:48 -0400 (EDT)
+        by mail.messagingengine.com (Postfix) with ESMTPA id E1F083064686;
+        Fri,  2 Oct 2020 14:47:59 -0400 (EDT)
 From:   Sean V Kelley <seanvk.dev@oregontracks.org>
 To:     bhelgaas@google.com, Jonathan.Cameron@huawei.com,
         rafael.j.wysocki@intel.com, ashok.raj@intel.com,
@@ -70,10 +70,12 @@ To:     bhelgaas@google.com, Jonathan.Cameron@huawei.com,
         qiuxu.zhuo@intel.com
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         Sean V Kelley <sean.v.kelley@intel.com>
-Subject: [PATCH v8 00/14] Add RCEC handling to PCI/AER
-Date:   Fri,  2 Oct 2020 11:47:21 -0700
-Message-Id: <20201002184735.1229220-1-seanvk.dev@oregontracks.org>
+Subject: [PATCH v8 05/14] PCI/ERR: Use "bridge" for clarity in pcie_do_recovery()
+Date:   Fri,  2 Oct 2020 11:47:26 -0700
+Message-Id: <20201002184735.1229220-6-seanvk.dev@oregontracks.org>
 X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20201002184735.1229220-1-seanvk.dev@oregontracks.org>
+References: <20201002184735.1229220-1-seanvk.dev@oregontracks.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -82,90 +84,72 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Sean V Kelley <sean.v.kelley@intel.com>
 
-Changes since v7 [1]:
+A generic term such as "bridge" may be used for something with
+a subordinate bus. The mix of ports would benefit from a use of
+the term. Further clarity can be had in pcie_do_recovery()
+with use of pci_upstream_bridge() in place of dev->bus->self.
+Reverse the pcie_do_recovery() conditional logic and replace
+use of "dev" with "bridge".
 
-- No functional changes.
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Sean V Kelley <sean.v.kelley@intel.com>
+Acked-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+---
+ drivers/pci/pcie/err.c | 28 +++++++++++++++++-----------
+ 1 file changed, 17 insertions(+), 11 deletions(-)
 
-- Reword bridge patch.
-- Noted testing below for #non-native/no RCEC case
-(Jonathan Cameron)
-
-- Separate out pci_walk_bus() into pci_walk_bridge() change.
-- Put remaining dev to bridge name changes in the separate patch from v7.
-(Bjorn Helgaas)
-
-[1] https://lore.kernel.org/lkml/20200930215820.1113353-1-seanvk.dev@oregontracks.org/
-
-Root Complex Event Collectors (RCEC) provide support for terminating error
-and PME messages from Root Complex Integrated Endpoints (RCiEPs).  An RCEC
-resides on a Bus in the Root Complex. Multiple RCECs can in fact reside on
-a single bus. An RCEC will explicitly declare supported RCiEPs through the
-Root Complex Endpoint Association Extended Capability.
-
-(See PCIe 5.0-1, sections 1.3.2.3 (RCiEP), and 7.9.10 (RCEC Ext. Cap.))
-
-The kernel lacks handling for these RCECs and the error messages received
-from their respective associated RCiEPs. More recently, a new CPU
-interconnect, Compute eXpress Link (CXL) depends on RCEC capabilities for
-purposes of error messaging from CXL 1.1 supported RCiEP devices.
-
-DocLink: https://www.computeexpresslink.org/
-
-This use case is not limited to CXL. Existing hardware today includes
-support for RCECs, such as the Denverton microserver product
-family. Future hardware will be forthcoming.
-
-(See Intel Document, Order number: 33061-003US)
-
-So services such as AER or PME could be associated with an RCEC driver.
-In the case of CXL, if an RCiEP (i.e., CXL 1.1 device) is associated with a
-platform's RCEC it shall signal PME and AER error conditions through that
-RCEC.
-
-Towards the above use cases, add the missing RCEC class and extend the
-PCIe Root Port and service drivers to allow association of RCiEPs to their
-respective parent RCEC and facilitate handling of terminating error and PME
-messages.
-
-Tested-by: Jonathan Cameron <Jonathan.Cameron@huawei.com> #non-native/no RCEC
-
-
-Jonathan Cameron (1):
-  PCI/AER: Extend AER error handling to RCECs
-
-Qiuxu Zhuo (5):
-  PCI/RCEC: Add RCEC class code and extended capability
-  PCI/RCEC: Bind RCEC devices to the Root Port driver
-  PCI/AER: Apply function level reset to RCiEP on fatal error
-  PCI/RCEC: Add RCiEP's linked RCEC to AER/ERR
-  PCI/AER: Add RCEC AER error injection support
-
-Sean V Kelley (8):
-  PCI/RCEC: Cache RCEC capabilities in pci_init_capabilities()
-  PCI/ERR: Rename reset_link() to reset_subordinate_device()
-  PCI/ERR: Use "bridge" for clarity in pcie_do_recovery()
-  PCI/ERR: Add pci_walk_bridge() to pcie_do_recovery()
-  PCI/ERR: Limit AER resets in pcie_do_recovery()
-  PCI/RCEC: Add pcie_link_rcec() to associate RCiEPs
-  PCI/AER: Add pcie_walk_rcec() to RCEC AER handling
-  PCI/PME: Add pcie_walk_rcec() to RCEC PME handling
-
- drivers/pci/pci.h               |  25 ++++-
- drivers/pci/pcie/Makefile       |   2 +-
- drivers/pci/pcie/aer.c          |  36 ++++--
- drivers/pci/pcie/aer_inject.c   |   5 +-
- drivers/pci/pcie/err.c          | 109 +++++++++++++++----
- drivers/pci/pcie/pme.c          |  15 ++-
- drivers/pci/pcie/portdrv_core.c |   8 +-
- drivers/pci/pcie/portdrv_pci.c  |   8 +-
- drivers/pci/pcie/rcec.c         | 187 ++++++++++++++++++++++++++++++++
- drivers/pci/probe.c             |   2 +
- include/linux/pci.h             |   5 +
- include/linux/pci_ids.h         |   1 +
- include/uapi/linux/pci_regs.h   |   7 ++
- 13 files changed, 367 insertions(+), 43 deletions(-)
- create mode 100644 drivers/pci/pcie/rcec.c
-
---
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index 950612342f1c..e68ea5243ff2 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -152,20 +152,26 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+ {
+ 	pci_ers_result_t status = PCI_ERS_RESULT_CAN_RECOVER;
+ 	struct pci_bus *bus;
++	struct pci_dev *bridge;
++	int type;
+ 
+ 	/*
+-	 * Error recovery runs on all subordinates of the first downstream port.
+-	 * If the downstream port detected the error, it is cleared at the end.
++	 * Error recovery runs on all subordinates of the first downstream
++	 * bridge. If the downstream bridge detected the error, it is
++	 * cleared at the end.
+ 	 */
+-	if (!(pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
+-	      pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM))
+-		dev = dev->bus->self;
+-	bus = dev->subordinate;
+-
++	type = pci_pcie_type(dev);
++	if (type == PCI_EXP_TYPE_ROOT_PORT ||
++	    type == PCI_EXP_TYPE_DOWNSTREAM)
++		bridge = dev;
++	else
++		bridge = pci_upstream_bridge(dev);
++
++	bus = bridge->subordinate;
+ 	pci_dbg(dev, "broadcast error_detected message\n");
+ 	if (state == pci_channel_io_frozen) {
+ 		pci_walk_bus(bus, report_frozen_detected, &status);
+-		status = reset_subordinate_device(dev);
++		status = reset_subordinate_device(bridge);
+ 		if (status != PCI_ERS_RESULT_RECOVERED) {
+ 			pci_warn(dev, "subordinate device reset failed\n");
+ 			goto failed;
+@@ -197,9 +203,9 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+ 	pci_dbg(dev, "broadcast resume message\n");
+ 	pci_walk_bus(bus, report_resume, &status);
+ 
+-	if (pcie_aer_is_native(dev))
+-		pcie_clear_device_status(dev);
+-	pci_aer_clear_nonfatal_status(dev);
++	if (pcie_aer_is_native(bridge))
++		pcie_clear_device_status(bridge);
++	pci_aer_clear_nonfatal_status(bridge);
+ 	pci_info(dev, "device recovery successful\n");
+ 	return status;
+ 
+-- 
 2.28.0
 
