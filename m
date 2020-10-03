@@ -4,37 +4,37 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51FB1C4363D
-	for <linux-pci@archiver.kernel.org>; Sat,  3 Oct 2020 07:56:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAA26C4727D
+	for <linux-pci@archiver.kernel.org>; Sat,  3 Oct 2020 07:56:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1B9A020738
-	for <linux-pci@archiver.kernel.org>; Sat,  3 Oct 2020 07:56:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 95409206CD
+	for <linux-pci@archiver.kernel.org>; Sat,  3 Oct 2020 07:56:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725793AbgJCH4q (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 3 Oct 2020 03:56:46 -0400
-Received: from mga07.intel.com ([134.134.136.100]:28593 "EHLO mga07.intel.com"
+        id S1725792AbgJCH4z (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 3 Oct 2020 03:56:55 -0400
+Received: from mga07.intel.com ([134.134.136.100]:28600 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725730AbgJCH4p (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 3 Oct 2020 03:56:45 -0400
-IronPort-SDR: +mAeAFgv4hGexbSDLP3shWia2ZCpSYcqOVhP4ccc3BZUfKXi+Klr7Vt9iDJnrhrmPyR5mQMtF0
- QojsuV6HyyVw==
-X-IronPort-AV: E=McAfee;i="6000,8403,9762"; a="227305304"
+        id S1725730AbgJCH4v (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 3 Oct 2020 03:56:51 -0400
+IronPort-SDR: TLMDUX6lqN3qHE/TVerFs/wQ0YNR3ZYLzMSB3HrctcykKgLBjhSmDZZAU3Cz7ebChxV/IpTP4q
+ mFz4i/+ZXNfw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9762"; a="227305316"
 X-IronPort-AV: E=Sophos;i="5.77,330,1596524400"; 
-   d="scan'208";a="227305304"
+   d="scan'208";a="227305316"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Oct 2020 00:56:43 -0700
-IronPort-SDR: W8nPjfhA+EwK0JGXyC8BQN17g3FERX3/GrBFReZyUEA1LIUa3CniSsZIZsGc42sgLRLxMo9xmE
- Zs7dOSLuDA6g==
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Oct 2020 00:56:50 -0700
+IronPort-SDR: lFB/BfHnpjyJlbSdyhIsn0QVHMO7ArBZXrS//dP8Fgrq7tBli83IrKBSr9TgOyToaB3pnmgB/H
+ 5U0VZnehabnQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.77,330,1596524400"; 
-   d="scan'208";a="513062326"
+   d="scan'208";a="513062784"
 Received: from shskylake.sh.intel.com ([10.239.48.137])
-  by orsmga005.jf.intel.com with ESMTP; 03 Oct 2020 00:56:40 -0700
+  by orsmga005.jf.intel.com with ESMTP; 03 Oct 2020 00:56:47 -0700
 From:   Ethan Zhao <haifeng.zhao@intel.com>
 To:     bhelgaas@google.com, oohall@gmail.com, ruscur@russell.cc,
         lukas@wunner.de, andriy.shevchenko@linux.intel.com,
@@ -43,9 +43,9 @@ To:     bhelgaas@google.com, oohall@gmail.com, ruscur@russell.cc,
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         ashok.raj@linux.intel.com, sathyanarayanan.kuppuswamy@intel.com,
         xerces.zhao@gmail.com, Ethan Zhao <haifeng.zhao@intel.com>
-Subject: [PATCH v7 1/5] PCI/ERR: get device before call device driver to avoid NULL pointer dereference
-Date:   Sat,  3 Oct 2020 03:55:10 -0400
-Message-Id: <20201003075514.32935-2-haifeng.zhao@intel.com>
+Subject: [PATCH v7 3/5] PCI: pciehp: check and wait port status out of DPC before handling DLLSC and PDC
+Date:   Sat,  3 Oct 2020 03:55:12 -0400
+Message-Id: <20201003075514.32935-4-haifeng.zhao@intel.com>
 X-Mailer: git-send-email 2.18.4
 In-Reply-To: <20201003075514.32935-1-haifeng.zhao@intel.com>
 References: <20201003075514.32935-1-haifeng.zhao@intel.com>
@@ -53,60 +53,72 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-During DPC error injection test we found there is race condition between
-pciehp and DPC driver, NULL pointer dereference caused panic as following
+When root port has DPC capability and it is enabled, then triggered by
+errors, DPC DLLSC and PDC etc interrupts will be sent to DPC driver, pciehp
+drivers almost at the same time.
+That will cause following messed and confused errors handling/recovery/removal
+/plugin procedure.
 
- # setpci -s 64:02.0 0x196.w=000a
-  // 64:02.0 is rootport has DPC capability
- # setpci -s 65:00.0 0x04.w=0544
-  // 65:00.0 is NVMe SSD populated in above port
- # mount /dev/nvme0n1p1 nvme
+1. Port and device are in error recovery reseting initiated by DPC hardware,
+   pciehp driver treats them as device is doing hot-remove or hot-plugin the
+   same time.
 
- (tested on stable 5.8 & ICS(Ice Lake SP platform, see
- https://en.wikichip.org/wiki/intel/microarchitectures/ice_lake_(server))
+2. While DPC handler calling device driver->err_handler callback(
+   error_detected/resume etc), but the slot may be powered off by
 
- BUG: kernel NULL pointer dereference, address: 0000000000000050
- ...
- CPU: 12 PID: 513 Comm: irq/124-pcie-dp Not tainted 5.8.0-0.0.7.el8.x86_64+ #1
- RIP: 0010:report_error_detected.cold.4+0x7d/0xe6
- Code: b6 d0 e8 e8 fe 11 00 e8 16 c5 fb ff be 06 00 00 00 48 89 df e8 d3 65 ff
- ff b8 06 00 00 00 e9 75 fc ff ff 48 8b 43 68 45 31 c9 <48> 8b 50 50 48 83 3a 00
- 41 0f 94 c1 45 31 c0 48 85 d2 41 0f 94 c0
- RSP: 0018:ff8e06cf8762fda8 EFLAGS: 00010246
- RAX: 0000000000000000 RBX: ff4e3eaacf42a000 RCX: ff4e3eb31f223c01
- RDX: ff4e3eaacf42a140 RSI: ff4e3eb31f223c00 RDI: ff4e3eaacf42a138
- RBP: ff8e06cf8762fdd0 R08: 00000000000000bf R09: 0000000000000000
- R10: 000000eb8ebeab53 R11: ffffffff93453258 R12: 0000000000000002
- R13: ff4e3eaacf42a130 R14: ff8e06cf8762fe2c R15: ff4e3eab44733828
- FS:  0000000000000000(0000) GS:ff4e3eab1fd00000(0000) knlGS:0000000000000000
- CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
- CR2: 0000000000000050 CR3: 0000000f8f80a004 CR4: 0000000000761ee0
- DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
- DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
- PKRU: 55555554
- Call Trace:
- ? report_normal_detected+0x20/0x20
- report_frozen_detected+0x16/0x20
- pci_walk_bus+0x75/0x90
- ? dpc_irq+0x90/0x90
- pcie_do_recovery+0x157/0x201
- ? irq_finalize_oneshot.part.47+0xe0/0xe0
- dpc_handler+0x29/0x40
- irq_thread_fn+0x24/0x60
- ...
+   pciehp
+   -> remove_board()
+      -> pciehp_power_off_slot().
 
-Debug shows when port DPC feature was enabled and triggered by errors,
-DLLSC/PDC/DPC interrupts will be sent to pciehp and DPC driver almost
-at the same time, and no delay between them is required by specification.
-so DPC driver and pciehp drivers may handle these interrupts cocurrently.
+3. While DPC handler -> pci_do_recovery is doing different action to detect
+   error and recover based on device->error_state, pciehp driver could change
+   it on the fly by:
 
-While DPC driver is doing pci_walk_bus() and calling device driver's callback
-without pci_dev_get() to increase device reference count, the device and its
-driver instance are likely being freed by pci_stop_and_removed_bus_device()
--> pci_dev_put().
+   pciehp_unconfigure_device()
+   ->pci_walk_bus()
+     -> pci_dev_set_disconnected()
 
-So does pci_dev_get() before using the device instance to avoid NULL pointer
-dereference.
+4. While DPC handler is calling device driver err_handler callback to detect
+   error and recover, pciehp driver could is doing device unbind and release
+   its driver.
+
+   ...
+
+While NON-FATAL/FATAL errors happen while hotplug is(is not)doing, result
+is not determinate.
+
+So we need some kind of synchronization between pciehp DLLSC/PDC handling
+and DPC driver error recover handling.  we need a determinate result
+of DPC error containment, link is recovered, link isn't recovered, device
+is still there, device is removed, then do pciehp hot-remove and hot-plugin
+procudure, don't mix them together.
+
+Per our test on ICS platform, DPC error containment and software handler will
+take 10ms up to 50ms till clean the DPC triggered status. it is quick enough
+for pciehp compared with its 1000ms waiting to ignore DLLSC/PDC after doing
+power off.
+
+With this patch, the handling flow of DPC containment and hotplug is
+partly ordered and serialized, let hardware DPC do the controller reset
+etc recovery action first, then DPC driver handling the call-back from
+device drivers, clear the DPC status, at the end, pciehp handle the DLLSC
+and PDC etc.
+
+After tens of PCIe Gen4 NVMe SSD brute force hot-remove and hot-plugin with
+any time internval between the two actions, also stressed with the DPC
+injection test. system recovered to normal working state from NON-FATAL/FATAL
+errors as expected. hotplug works well without any random undeterminate errors
+or malfunction.
+
+Brute DPC error injection script:
+
+for i in {0..100}
+do
+        setpci -s 64:02.0 0x196.w=000a
+        setpci -s 65:00.0 0x04.w=0544
+        mount /dev/nvme0n1p1 /root/nvme
+        sleep 1
+done
 
 Signed-off-by: Ethan Zhao <haifeng.zhao@intel.com>
 Tested-by: Wen Jin <wen.jin@intel.com>
@@ -117,85 +129,28 @@ Changes:
  v3: no change.
  v4: no change.
  v5: no change.
- v6: moved to [1/5] from [3/5] and revised comment according to Lukas'
-     suggestion.
+ v6: moved to [3/5] from [2/5] and re-wrote description.
  v7: no change.
 
- drivers/pci/pcie/err.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ drivers/pci/hotplug/pciehp_hpc.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index c543f419d8f9..e35c4480c86b 100644
---- a/drivers/pci/pcie/err.c
-+++ b/drivers/pci/pcie/err.c
-@@ -52,6 +52,8 @@ static int report_error_detected(struct pci_dev *dev,
- 	pci_ers_result_t vote;
- 	const struct pci_error_handlers *err_handler;
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 53433b37e181..6f271160f18d 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -710,8 +710,10 @@ static irqreturn_t pciehp_ist(int irq, void *dev_id)
+ 	down_read(&ctrl->reset_lock);
+ 	if (events & DISABLE_SLOT)
+ 		pciehp_handle_disable_request(ctrl);
+-	else if (events & (PCI_EXP_SLTSTA_PDC | PCI_EXP_SLTSTA_DLLSC))
++	else if (events & (PCI_EXP_SLTSTA_PDC | PCI_EXP_SLTSTA_DLLSC)) {
++		pci_wait_port_outdpc(pdev);
+ 		pciehp_handle_presence_or_link_change(ctrl, events);
++	}
+ 	up_read(&ctrl->reset_lock);
  
-+	if (!pci_dev_get(dev))
-+		return 0;
- 	device_lock(&dev->dev);
- 	if (!pci_dev_set_io_state(dev, state) ||
- 		!dev->driver ||
-@@ -76,6 +78,7 @@ static int report_error_detected(struct pci_dev *dev,
- 	pci_uevent_ers(dev, vote);
- 	*result = merge_result(*result, vote);
- 	device_unlock(&dev->dev);
-+	pci_dev_put(dev);
- 	return 0;
- }
- 
-@@ -94,6 +97,8 @@ static int report_mmio_enabled(struct pci_dev *dev, void *data)
- 	pci_ers_result_t vote, *result = data;
- 	const struct pci_error_handlers *err_handler;
- 
-+	if (!pci_dev_get(dev))
-+		return 0;
- 	device_lock(&dev->dev);
- 	if (!dev->driver ||
- 		!dev->driver->err_handler ||
-@@ -105,6 +110,7 @@ static int report_mmio_enabled(struct pci_dev *dev, void *data)
- 	*result = merge_result(*result, vote);
- out:
- 	device_unlock(&dev->dev);
-+	pci_dev_put(dev);
- 	return 0;
- }
- 
-@@ -113,6 +119,8 @@ static int report_slot_reset(struct pci_dev *dev, void *data)
- 	pci_ers_result_t vote, *result = data;
- 	const struct pci_error_handlers *err_handler;
- 
-+	if (!pci_dev_get(dev))
-+		return 0;
- 	device_lock(&dev->dev);
- 	if (!dev->driver ||
- 		!dev->driver->err_handler ||
-@@ -124,6 +132,7 @@ static int report_slot_reset(struct pci_dev *dev, void *data)
- 	*result = merge_result(*result, vote);
- out:
- 	device_unlock(&dev->dev);
-+	pci_dev_put(dev);
- 	return 0;
- }
- 
-@@ -131,6 +140,8 @@ static int report_resume(struct pci_dev *dev, void *data)
- {
- 	const struct pci_error_handlers *err_handler;
- 
-+	if (!pci_dev_get(dev))
-+		return 0;
- 	device_lock(&dev->dev);
- 	if (!pci_dev_set_io_state(dev, pci_channel_io_normal) ||
- 		!dev->driver ||
-@@ -143,6 +154,7 @@ static int report_resume(struct pci_dev *dev, void *data)
- out:
- 	pci_uevent_ers(dev, PCI_ERS_RESULT_RECOVERED);
- 	device_unlock(&dev->dev);
-+	pci_dev_put(dev);
- 	return 0;
- }
- 
+ 	ret = IRQ_HANDLED;
 -- 
 2.18.4
 
