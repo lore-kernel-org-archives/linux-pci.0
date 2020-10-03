@@ -7,34 +7,34 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB3E4C4363D
-	for <linux-pci@archiver.kernel.org>; Sat,  3 Oct 2020 07:57:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 230D4C4727D
+	for <linux-pci@archiver.kernel.org>; Sat,  3 Oct 2020 07:57:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B321E206CA
-	for <linux-pci@archiver.kernel.org>; Sat,  3 Oct 2020 07:57:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EB8DE206CD
+	for <linux-pci@archiver.kernel.org>; Sat,  3 Oct 2020 07:57:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725818AbgJCH4z (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1725813AbgJCH4z (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Sat, 3 Oct 2020 03:56:55 -0400
-Received: from mga07.intel.com ([134.134.136.100]:28593 "EHLO mga07.intel.com"
+Received: from mga07.intel.com ([134.134.136.100]:28621 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725797AbgJCH4r (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 3 Oct 2020 03:56:47 -0400
-IronPort-SDR: GgG7yxUZbHeFkXpOTeB90+rAvhZD+9aTc1P/BU246WpWP0+j1Wu9hhsFkvUlExTdARES/0hQGT
- l5BL6Q5fdajQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9762"; a="227305308"
+        id S1725772AbgJCH4y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 3 Oct 2020 03:56:54 -0400
+IronPort-SDR: ubbV0E2aCLjO5UBwksVZK+NIlA6KMWgohZr4/7yI4mL9Nz6wyLS9TtDhF95pBBEvJrDLyE80X+
+ 6tgWP3Yt9X8A==
+X-IronPort-AV: E=McAfee;i="6000,8403,9762"; a="227305326"
 X-IronPort-AV: E=Sophos;i="5.77,330,1596524400"; 
-   d="scan'208";a="227305308"
+   d="scan'208";a="227305326"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Oct 2020 00:56:47 -0700
-IronPort-SDR: jMNyxMaDeX7Xb2246JFAqAeksYjFjQLapWp6beTJIdmUVpZYklX7k6EvcdOBh1HYLNFn+EOSGt
- J9WlRHp14nkw==
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Oct 2020 00:56:53 -0700
+IronPort-SDR: 7AhYS9jzniPme7rRFE0L8MMCVkp2O6klngze1t7IrAvpgeaCvux9tUNiLdxrIK1PeVua5NTQ5w
+ NLgpaInYcCcw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.77,330,1596524400"; 
-   d="scan'208";a="513062548"
+   d="scan'208";a="513063006"
 Received: from shskylake.sh.intel.com ([10.239.48.137])
-  by orsmga005.jf.intel.com with ESMTP; 03 Oct 2020 00:56:43 -0700
+  by orsmga005.jf.intel.com with ESMTP; 03 Oct 2020 00:56:50 -0700
 From:   Ethan Zhao <haifeng.zhao@intel.com>
 To:     bhelgaas@google.com, oohall@gmail.com, ruscur@russell.cc,
         lukas@wunner.de, andriy.shevchenko@linux.intel.com,
@@ -43,104 +43,117 @@ To:     bhelgaas@google.com, oohall@gmail.com, ruscur@russell.cc,
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         ashok.raj@linux.intel.com, sathyanarayanan.kuppuswamy@intel.com,
         xerces.zhao@gmail.com, Ethan Zhao <haifeng.zhao@intel.com>
-Subject: [PATCH v7 2/5] PCI/DPC: define a function to check and wait till port finish DPC handling
-Date:   Sat,  3 Oct 2020 03:55:11 -0400
-Message-Id: <20201003075514.32935-3-haifeng.zhao@intel.com>
+Subject: [PATCH v7 4/5] PCI: only return true when dev io state is really changed
+Date:   Sat,  3 Oct 2020 03:55:13 -0400
+Message-Id: <20201003075514.32935-5-haifeng.zhao@intel.com>
 X-Mailer: git-send-email 2.18.4
 In-Reply-To: <20201003075514.32935-1-haifeng.zhao@intel.com>
 References: <20201003075514.32935-1-haifeng.zhao@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Once root port DPC capability is enabled and triggered, at the beginning
-of DPC is triggered, the DPC status bits are set by hardware and then
-sends DPC/DLLSC/PDC interrupts to OS DPC and pciehp drivers, it will
-take the port and software DPC interrupt handler 10ms to 50ms (test data
-on ICS(Ice Lake SP platform, see
-https://en.wikichip.org/wiki/intel/microarchitectures/ice_lake_(server)
-& stable 5.9-rc6) to complete the DPC containment procedure
-till the DPC status is cleared at the end of the DPC interrupt handler.
+When uncorrectable error happens, AER driver and DPC driver interrupt
+handlers likely call
 
-We use this function to check if the root port is in DPC handling status
-and wait till the hardware and software completed the procedure.
+   pcie_do_recovery()
+   ->pci_walk_bus()
+     ->report_frozen_detected()
+
+with pci_channel_io_frozen the same time.
+   If pci_dev_set_io_state() return true even if the original state is
+pci_channel_io_frozen, that will cause AER or DPC handler re-enter
+the error detecting and recovery procedure one after another.
+   The result is the recovery flow mixed between AER and DPC.
+So simplify the pci_dev_set_io_state() function to only return true
+when dev->error_state is really changed.
 
 Signed-off-by: Ethan Zhao <haifeng.zhao@intel.com>
 Tested-by: Wen Jin <wen.jin@intel.com>
 Tested-by: Shanshan Zhang <ShanshanX.Zhang@intel.com>
+Reviewed-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
 ---
-changes:
- v2：align ICS code name to public doc.
- v3: no change.
- v4: response to Christoph's (Christoph Hellwig <hch@infradead.org>)
-     tip, move pci_wait_port_outdpc() to DPC driver and its declaration
-     to pci.h.
- v5: fix building issue reported by lkp@intel.com with some config.
- v6: move from [1/5] to [2/5].
- v7: no change.
+Changnes:
+ v2: revise description and code according to suggestion from Andy.
+ v3: change code to simpler.
+ v4: no change.
+ v5: no change.
+ v6: no change.
+ v7: changed based on Bjorn's code and truth table.
 
- drivers/pci/pci.h      |  2 ++
- drivers/pci/pcie/dpc.c | 27 +++++++++++++++++++++++++++
- 2 files changed, 29 insertions(+)
+ drivers/pci/pci.h | 53 ++++++++++++++++++-----------------------------
+ 1 file changed, 20 insertions(+), 33 deletions(-)
 
 diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index fa12f7cbc1a0..455b32187abd 100644
+index 455b32187abd..47af1ff2a286 100644
 --- a/drivers/pci/pci.h
 +++ b/drivers/pci/pci.h
-@@ -455,10 +455,12 @@ void pci_restore_dpc_state(struct pci_dev *dev);
- void pci_dpc_init(struct pci_dev *pdev);
- void dpc_process_error(struct pci_dev *pdev);
- pci_ers_result_t dpc_reset_link(struct pci_dev *pdev);
-+bool pci_wait_port_outdpc(struct pci_dev *pdev);
- #else
- static inline void pci_save_dpc_state(struct pci_dev *dev) {}
- static inline void pci_restore_dpc_state(struct pci_dev *dev) {}
- static inline void pci_dpc_init(struct pci_dev *pdev) {}
-+static inline bool pci_wait_port_outdpc(struct pci_dev *pdev) { return false; }
- #endif
- 
- #ifdef CONFIG_PCI_ATS
-diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-index daa9a4153776..2e0e091ce923 100644
---- a/drivers/pci/pcie/dpc.c
-+++ b/drivers/pci/pcie/dpc.c
-@@ -71,6 +71,33 @@ void pci_restore_dpc_state(struct pci_dev *dev)
- 	pci_write_config_word(dev, dev->dpc_cap + PCI_EXP_DPC_CTL, *cap);
+@@ -354,44 +354,31 @@ struct pci_sriov {
+  *
+  * Must be called with device_lock held.
+  *
+- * Returns true if state has been changed to the requested state.
++ * Returns true if state has been really changed to the requested state.
+  */
+ static inline bool pci_dev_set_io_state(struct pci_dev *dev,
+ 					pci_channel_state_t new)
+ {
+-	bool changed = false;
+-
+ 	device_lock_assert(&dev->dev);
+-	switch (new) {
+-	case pci_channel_io_perm_failure:
+-		switch (dev->error_state) {
+-		case pci_channel_io_frozen:
+-		case pci_channel_io_normal:
+-		case pci_channel_io_perm_failure:
+-			changed = true;
+-			break;
+-		}
+-		break;
+-	case pci_channel_io_frozen:
+-		switch (dev->error_state) {
+-		case pci_channel_io_frozen:
+-		case pci_channel_io_normal:
+-			changed = true;
+-			break;
+-		}
+-		break;
+-	case pci_channel_io_normal:
+-		switch (dev->error_state) {
+-		case pci_channel_io_frozen:
+-		case pci_channel_io_normal:
+-			changed = true;
+-			break;
+-		}
+-		break;
+-	}
+-	if (changed)
+-		dev->error_state = new;
+-	return changed;
++
++/*
++ *			Truth table:
++ *			requested new state
++ *     current          ------------------------------------------
++ *     state            normal         frozen         perm_failure
++ *     ------------  +  -------------  -------------  ------------
++ *     normal        |  normal         frozen         perm_failure
++ *     frozen        |  normal         frozen         perm_failure
++ *     perm_failure  |  perm_failure*  perm_failure*  perm_failure
++ */
++
++	if (dev->error_state == pci_channel_io_perm_failure)
++		return false;
++	else if (dev->error_state == new)
++		return false;
++
++	dev->error_state = new;
++	return true;
  }
  
-+bool pci_wait_port_outdpc(struct pci_dev *pdev)
-+{
-+	u16 cap = pdev->dpc_cap, status;
-+	u16 loop = 0;
-+
-+	if (!cap) {
-+		pci_WARN_ONCE(pdev, !cap, "No DPC capability initiated\n");
-+		return false;
-+	}
-+	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
-+	pci_dbg(pdev, "DPC status %x, cap %x\n", status, cap);
-+
-+	while (status & PCI_EXP_DPC_STATUS_TRIGGER && loop < 100) {
-+		msleep(10);
-+		loop++;
-+		pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
-+	}
-+
-+	if (!(status & PCI_EXP_DPC_STATUS_TRIGGER)) {
-+		pci_dbg(pdev, "Out of DPC %x, cost %d ms\n", status, loop*10);
-+		return true;
-+	}
-+
-+	pci_dbg(pdev, "Timeout to wait port out of DPC status\n");
-+	return false;
-+}
-+
- static int dpc_wait_rp_inactive(struct pci_dev *pdev)
- {
- 	unsigned long timeout = jiffies + HZ;
+ static inline int pci_dev_set_disconnected(struct pci_dev *dev, void *unused)
 -- 
 2.18.4
 
