@@ -2,303 +2,121 @@ Return-Path: <SRS0=jvhy=DM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22E40C4363A
-	for <linux-pci@archiver.kernel.org>; Mon,  5 Oct 2020 09:13:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C90FC4363A
+	for <linux-pci@archiver.kernel.org>; Mon,  5 Oct 2020 09:16:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D505620781
-	for <linux-pci@archiver.kernel.org>; Mon,  5 Oct 2020 09:13:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C6764206A1
+	for <linux-pci@archiver.kernel.org>; Mon,  5 Oct 2020 09:16:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Bocwz5Rl"
+	dkim=pass (1024-bit key) header.d=Synaptics.onmicrosoft.com header.i=@Synaptics.onmicrosoft.com header.b="M7ghYFMB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726320AbgJEJN3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 5 Oct 2020 05:13:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46924 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725935AbgJEJNY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Oct 2020 05:13:24 -0400
-Received: from mail-pj1-x1042.google.com (mail-pj1-x1042.google.com [IPv6:2607:f8b0:4864:20::1042])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C942AC0613CE
-        for <linux-pci@vger.kernel.org>; Mon,  5 Oct 2020 02:13:24 -0700 (PDT)
-Received: by mail-pj1-x1042.google.com with SMTP id u3so5189335pjr.3
-        for <linux-pci@vger.kernel.org>; Mon, 05 Oct 2020 02:13:24 -0700 (PDT)
+        id S1725981AbgJEJQ0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 5 Oct 2020 05:16:26 -0400
+Received: from mail-eopbgr680054.outbound.protection.outlook.com ([40.107.68.54]:63998
+        "EHLO NAM04-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725891AbgJEJQ0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 5 Oct 2020 05:16:26 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=ErR+hzTbhVfsPwPC5l7xcK0WhpfCf+AjwDuZIp0ridc0NM37Ok/hnjrl18jk7NnWvV22kpioy+jr/GxhUtA5bZbXYRfBjMhsosKz+d3WkYqvrJP2jN/YDvL9fp9QjLWHobOkYmtun+Kp+eUbMUy2XynR2z58VwFE22CxgI5S8Nz40zGDshlq+NHHxxY2nlRn16v1YNS4YtJDYDS8R9zvZSx5z1LGNW5iq/Zo7SafOVDYnsRHd3YTTaf9X3iRp7kzCaPKBSboXTO7qEMU9BjgHt8lzqkQjGhyXYpZSmV2eKBVKYjkPA4qMbHpv4IkHyAImagrIU7XRdZm/1Sc0tDwsg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=XEPfIZpaoOPBJOy+x6w9JF5nh5k0AGs+Z4AhvgdBQLc=;
+ b=nUz6xn5sTaKHQpC0RRckBIvkF9QKFRE3ogyTV82zjgA/GK5yvVpwR17H4EYrB2O3FALdG2EUMV5prPQFMfobtwHYRmRLYZOK3An/+GXRfe++mfebhzc+85rURub9COJMK90XJe62Qb6XioSTzqt9DJdbkF+GaE2rnC1/R6+9qmgf4LhWb7y5Gg5GpFnpSxsqiyNUDowO+lw9rUhPKJ14v0unEY0qXPLWlD67WYj9dkNybP0tErvLnYp9P944QSK+F0X1LUkoCWuEyIJf/OtO4XtJHvRYUmiRYm1kavyIsV4mv9+G67sHsB1NFODolV6FBike1ALW9/sz7N+P3CzKfA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=synaptics.com; dmarc=pass action=none
+ header.from=synaptics.com; dkim=pass header.d=synaptics.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=EKDeQ+IosCKCy2VJYLI4jBwAgZsjG0uDvbjuAjcvB74=;
-        b=Bocwz5RlQH0Q8FKgI6mWJNOx1FCV3yZgu1JaL9+Ek8whhO7O/zi+Dkc8krnhyt9ni6
-         crrakXjJqrisIKNJOB9isOrgHv4EXQiWU1UveZxuoM2SdGkrZZVArBzq7DL7UlQuDCgF
-         eUP1W8iDu4n9e7OIfxmsVxu9Lc8vlxYwc2Z7yQkTo0+0p/iXPD0AO23auVsMO8hKYdux
-         4ytSeS3TfKQOnYb/N/SbwN/8hLrKzG9WFveuni8wp7d2NrOhPM0j+PfcO776N5HTnxOa
-         0riqbTX0yGz6rYRakqGfSc1hcx71qdMVQw0rgJiCDqFfm/J3VwWB8CkH2w5rtSfHwvsr
-         Eqog==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=EKDeQ+IosCKCy2VJYLI4jBwAgZsjG0uDvbjuAjcvB74=;
-        b=GhGzXr0fNPu5Wk6bNhESkqn41Qjc6nP6HVxchBcIhRewfaLksj2MqILZA9SSfb63XI
-         2iYgJ/CVaNOU0TfqqXd3U/Obim9aWYR/NUfar8xBa4uH9WeYPCoaY9gN4Ak9i3+K3o6e
-         EHwhsYYKZGSrQissIT15wuDfiElcBQqTN25iqFQqiKq4ypxOJEbEw8XZEjDBShoDlNEz
-         87Mn+z2BSuWVvvuWRDNfe2TjNseyWZ+qiOROd40J69Fvfpi8Le7mw9yCyKY53cq4bh0p
-         lpdd7Vwmh9MDmo+21vusRCnKwMRewSHeN14u4jrfDiroEuBXI2Q0yjxKRR3lXBSQ0ISN
-         Yu1A==
-X-Gm-Message-State: AOAM532eoL3QGgiVmnS4AlIUarprdoc9p8HV4O5mO+7GsyPDFvVAdzbM
-        EJ7wSxn61hpRMv1qhrWdFCUe
-X-Google-Smtp-Source: ABdhPJw3WxzYU2Kjj5vnXdqTlXnm3MLJiHX0HnK0BTNLINtxDyiNdJbfdb/FyV4/DMI67m/xG9LqeQ==
-X-Received: by 2002:a17:90a:520b:: with SMTP id v11mr16444620pjh.54.1601889204223;
-        Mon, 05 Oct 2020 02:13:24 -0700 (PDT)
-Received: from localhost.localdomain ([103.59.133.81])
-        by smtp.googlemail.com with ESMTPSA id c7sm11255028pfj.84.2020.10.05.02.13.20
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 05 Oct 2020 02:13:23 -0700 (PDT)
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     agross@kernel.org, bjorn.andersson@linaro.org, kishon@ti.com,
-        vkoul@kernel.org, robh@kernel.org
-Cc:     svarbanov@mm-sol.com, bhelgaas@google.com,
-        lorenzo.pieralisi@arm.com, linux-arm-msm@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        mgautam@codeaurora.org, devicetree@vger.kernel.org,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH v3 5/5] PCI: qcom: Add support for configuring BDF to SID mapping for SM8250
-Date:   Mon,  5 Oct 2020 14:42:36 +0530
-Message-Id: <20201005091236.31770-6-manivannan.sadhasivam@linaro.org>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20201005091236.31770-1-manivannan.sadhasivam@linaro.org>
-References: <20201005091236.31770-1-manivannan.sadhasivam@linaro.org>
+ d=Synaptics.onmicrosoft.com; s=selector2-Synaptics-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=XEPfIZpaoOPBJOy+x6w9JF5nh5k0AGs+Z4AhvgdBQLc=;
+ b=M7ghYFMBD40ZR4eisO08iwov5R1ae+OGzd1ypikgm+U48vvTsGY5BKJXxeWdr725Kyd/9kb1CIUvcrWJn57J8CqCorLJWR7ypUFIi6mWzBR0Y+6fQ/Eh3oURkVyZwyT49vQctFKhVdbcjZfSURu1FzLHcvHB9zsNKfO3IxNsNi0=
+Authentication-Results: nxp.com; dkim=none (message not signed)
+ header.d=none;nxp.com; dmarc=none action=none header.from=synaptics.com;
+Received: from DM6PR03MB4555.namprd03.prod.outlook.com (2603:10b6:5:102::17)
+ by DS7PR03MB5560.namprd03.prod.outlook.com (2603:10b6:5:2d0::17) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3433.32; Mon, 5 Oct
+ 2020 09:16:22 +0000
+Received: from DM6PR03MB4555.namprd03.prod.outlook.com
+ ([fe80::e494:740f:155:4a38]) by DM6PR03MB4555.namprd03.prod.outlook.com
+ ([fe80::e494:740f:155:4a38%7]) with mapi id 15.20.3433.044; Mon, 5 Oct 2020
+ 09:16:22 +0000
+Date:   Mon, 5 Oct 2020 16:56:57 +0800
+From:   Jisheng Zhang <Jisheng.Zhang@synaptics.com>
+To:     Richard Zhu <hongxing.zhu@nxp.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Shawn Guo <shawnguo@kernel.org>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Pengutronix Kernel Team <kernel@pengutronix.de>,
+        Fabio Estevam <festevam@gmail.com>,
+        Jonathan Chocron <jonnyc@amazon.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Cc:     NXP Linux Team <linux-imx@nxp.com>, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: [PATCH dwc-next 0/3] PCI: dwc: remove useless dw_pcie_ops
+Message-ID: <20201005165657.0fd31b10@xhacker.debian>
+X-Mailer: Claws Mail 3.17.6 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [124.74.246.114]
+X-ClientProxiedBy: TYAPR01CA0070.jpnprd01.prod.outlook.com
+ (2603:1096:404:2b::34) To DM6PR03MB4555.namprd03.prod.outlook.com
+ (2603:10b6:5:102::17)
+MIME-Version: 1.0
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from xhacker.debian (124.74.246.114) by TYAPR01CA0070.jpnprd01.prod.outlook.com (2603:1096:404:2b::34) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3433.34 via Frontend Transport; Mon, 5 Oct 2020 09:16:18 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: d9296379-d199-428d-fc04-08d8690f53be
+X-MS-TrafficTypeDiagnostic: DS7PR03MB5560:
+X-Microsoft-Antispam-PRVS: <DS7PR03MB5560063A8CFDFE4EEBD036CCED0C0@DS7PR03MB5560.namprd03.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:644;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: Nx+x/nJdE2mzKa4MeNTcU4PyHmz9N0m1NQvaJzP5gcEaMurQOcfwMjL1HIfucU0iMxO7bqzeKfnl7jbL5+P7ziyePpjUx5gk+txHBHA0ioQKTHoa2sCw4ZKG8MExFP3maEGmgj1JMXtgV6OSZeVc+GGMBRRRH8jIrZWcPjvpZGFDGp6ce6OR9+sDJzTGH8DMFQO5ELy+3SrDB1/Pk/uhBRrTCCnjZAo/UGSmW+UidgWHn4CpWCsGzhG3SH4n5pyAnEfaGzNEPzRD0ft28ymk4mKTbezsnbiYi+68Zby06QXGDIgYTx93Ho7WM24Eu2ZdTl/z4AwMn9cpb9aGPtIOJXhPNhN1oLqJPW3Dhhq/mf3aF0EPvvyZG8yjbKM3glZ7
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR03MB4555.namprd03.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(39850400004)(396003)(346002)(376002)(136003)(2906002)(8936002)(9686003)(16526019)(66946007)(66556008)(66476007)(186003)(26005)(8676002)(7416002)(55016002)(83380400001)(4744005)(1076003)(5660300002)(6666004)(478600001)(52116002)(7696005)(316002)(110136005)(6506007)(4326008)(956004)(86362001)(921003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: Zrqi1vu5HPXYVA0DkLno1ivWmcOvIGmhKsDyk2fGVi8YulKRzhVNtA03MIUu7SwptajGiFpEVMJr7H6WTOO0wjsdZDAkO9HCLaxqiw/kaKjPnhim8B8GUtZ5nxy/+GCpnINyPMpjffwA2rUR+crxNdbd9S06j5FECaeT5OTj4vR2VcpSklzhMaRadtb/qtLnK2+qKUdA0HmsdA7evNXgEOv1IuGovZtbrNY3FRtJtLq1zfnrW6ViPN60HhD0KALD8eSwg6rEgoETxWAWD9QhFi4F9OruoB+YIzPuSScbHs3POij6/sVMwrDVqhKVRVZzHg9WL/vO2DYHuP+/UA3HppUrALxk5hsPF8A2rXVdO3zGBwIOJP5kNgEom2Z5NiS+px7c9suS7hnERAvLeXmg4FU30CNwTAmpNE1spHWDyJYmPjU05tX/UqLH9pdbYxo+SU5eFWeIetxLUM8hscsX6e22pGomthVK8BlXCz/iZL5f8FxPSodESHDomctLNDG7yb0Gh/y41Tj7GJDDxOxl3ahQOMFMXWbOyEwFvaEmTi2ycAU/le/7pT8rbbs/NStaZeQmVbnVq+jvGvp7op8jXOomQPz5JkSAIv1tL77TIgw4+UHUeLVYdXKfiVOpeZ0V8/Axk9EVcoSwWhO95l610g==
+X-OriginatorOrg: synaptics.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: d9296379-d199-428d-fc04-08d8690f53be
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR03MB4555.namprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Oct 2020 09:16:22.5485
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 335d1fbc-2124-4173-9863-17e7051a2a0e
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: NkNXXQfV4dWz4cc7KQFSbPpSMcwZuPzLVHhtXaBfLKOAYz8p4JBYWTTRHZ1/qWT5pOm9D1J5lyK3GH12WEN1nw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR03MB5560
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-For SM8250, we need to write the BDF to SID mapping in PCIe controller
-register space for proper working. This is accomplished by extracting
-the BDF and SID values from "iommu-map" property in DT and writing those
-in the register address calculated from the hash value of BDF. In case
-of collisions, the index of the next entry will also be written.
+Some designware based device driver especially host only driver may
+work well with the default read_dbi/write_dbi/link_up implementation
+in pcie-designware.c, thus remove the assumption to simplify those
+drivers.
 
-For the sake of it, let's introduce a "config_sid" callback and do it
-conditionally for SM8250.
+Jisheng Zhang (3):
+  PCI: dwc: Don't assume the ops in dw_pcie always exists
+  PCI: dwc: al: Remove useless dw_pcie_ops
+  PCI: dwc: imx6: Remove useless dw_pcie_ops
 
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
----
- drivers/pci/controller/dwc/Kconfig     |   1 +
- drivers/pci/controller/dwc/pcie-qcom.c | 138 +++++++++++++++++++++++++
- 2 files changed, 139 insertions(+)
+ drivers/pci/controller/dwc/pci-imx6.c           |  5 -----
+ drivers/pci/controller/dwc/pcie-al.c            |  4 ----
+ drivers/pci/controller/dwc/pcie-designware-ep.c |  8 +++-----
+ drivers/pci/controller/dwc/pcie-designware.c    | 14 +++++++-------
+ 4 files changed, 10 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-index 044a3761c44f..3e9ccdc45ee1 100644
---- a/drivers/pci/controller/dwc/Kconfig
-+++ b/drivers/pci/controller/dwc/Kconfig
-@@ -169,6 +169,7 @@ config PCIE_QCOM
- 	depends on OF && (ARCH_QCOM || COMPILE_TEST)
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIE_DW_HOST
-+	select CRC8
- 	help
- 	  Say Y here to enable PCIe controller support on Qualcomm SoCs. The
- 	  PCIe controller uses the DesignWare core plus Qualcomm-specific
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 3167ad66413d..5e1b88ffc23c 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -9,6 +9,7 @@
-  */
- 
- #include <linux/clk.h>
-+#include <linux/crc8.h>
- #include <linux/delay.h>
- #include <linux/gpio/consumer.h>
- #include <linux/interrupt.h>
-@@ -57,6 +58,7 @@
- #define PCIE20_PARF_SID_OFFSET			0x234
- #define PCIE20_PARF_BDF_TRANSLATE_CFG		0x24C
- #define PCIE20_PARF_DEVICE_TYPE			0x1000
-+#define PCIE20_PARF_BDF_TO_SID_TABLE_N		0x2000
- 
- #define PCIE20_ELBI_SYS_CTRL			0x04
- #define PCIE20_ELBI_SYS_CTRL_LT_ENABLE		BIT(0)
-@@ -101,6 +103,9 @@
- 
- #define QCOM_PCIE_2_1_0_MAX_SUPPLY	3
- #define QCOM_PCIE_2_1_0_MAX_CLOCKS	5
-+
-+#define QCOM_PCIE_CRC8_POLYNOMIAL (BIT(2) | BIT(1) | BIT(0))
-+
- struct qcom_pcie_resources_2_1_0 {
- 	struct clk_bulk_data clks[QCOM_PCIE_2_1_0_MAX_CLOCKS];
- 	struct reset_control *pci_reset;
-@@ -183,6 +188,16 @@ struct qcom_pcie_ops {
- 	void (*deinit)(struct qcom_pcie *pcie);
- 	void (*post_deinit)(struct qcom_pcie *pcie);
- 	void (*ltssm_enable)(struct qcom_pcie *pcie);
-+	int (*config_sid)(struct qcom_pcie *pcie);
-+};
-+
-+/* sid info structure */
-+struct qcom_pcie_sid_info_t {
-+	u16 bdf;
-+	u8 pcie_sid;
-+	u8 hash;
-+	u32 smmu_sid;
-+	u32 value;
- };
- 
- struct qcom_pcie {
-@@ -193,6 +208,8 @@ struct qcom_pcie {
- 	struct phy *phy;
- 	struct gpio_desc *reset;
- 	const struct qcom_pcie_ops *ops;
-+	struct qcom_pcie_sid_info_t *sid_info;
-+	u32 sid_info_len;
- 	int gen;
- };
- 
-@@ -1257,6 +1274,120 @@ static int qcom_pcie_link_up(struct dw_pcie *pci)
- 	return !!(val & PCI_EXP_LNKSTA_DLLLA);
- }
- 
-+static int qcom_pcie_get_iommu_map(struct qcom_pcie *pcie)
-+{
-+	/* iommu map structure */
-+	struct {
-+		u32 bdf;
-+		u32 phandle;
-+		u32 smmu_sid;
-+		u32 smmu_sid_len;
-+	} *map;
-+	struct device *dev = pcie->pci->dev;
-+	int i, size = 0;
-+	u32 smmu_sid_base;
-+
-+	of_get_property(dev->of_node, "iommu-map", &size);
-+	if (!size)
-+		return 0;
-+
-+	map = kzalloc(size, GFP_KERNEL);
-+	if (!map)
-+		return -ENOMEM;
-+
-+	of_property_read_u32_array(dev->of_node,
-+		"iommu-map", (u32 *)map, size / sizeof(u32));
-+
-+	pcie->sid_info_len = size / (sizeof(*map));
-+	pcie->sid_info = devm_kcalloc(dev, pcie->sid_info_len,
-+				sizeof(*pcie->sid_info), GFP_KERNEL);
-+	if (!pcie->sid_info) {
-+		kfree(map);
-+		return -ENOMEM;
-+	}
-+
-+	/* Extract the SMMU SID base from the first entry of iommu-map */
-+	smmu_sid_base = map[0].smmu_sid;
-+	for (i = 0; i < pcie->sid_info_len; i++) {
-+		pcie->sid_info[i].bdf = map[i].bdf;
-+		pcie->sid_info[i].smmu_sid = map[i].smmu_sid;
-+		pcie->sid_info[i].pcie_sid =
-+				pcie->sid_info[i].smmu_sid - smmu_sid_base;
-+	}
-+
-+	kfree(map);
-+
-+	return 0;
-+}
-+
-+static int qcom_pcie_config_sid_sm8250(struct qcom_pcie *pcie)
-+{
-+	void __iomem *bdf_to_sid_base = pcie->parf +
-+		PCIE20_PARF_BDF_TO_SID_TABLE_N;
-+	u8 qcom_pcie_crc8_table[CRC8_TABLE_SIZE];
-+	int ret, i;
-+
-+	ret = qcom_pcie_get_iommu_map(pcie);
-+	if (ret)
-+		return ret;
-+
-+	if (!pcie->sid_info)
-+		return 0;
-+
-+	crc8_populate_msb(qcom_pcie_crc8_table, QCOM_PCIE_CRC8_POLYNOMIAL);
-+
-+	/* Registers need to be zero out first */
-+	memset_io(bdf_to_sid_base, 0, CRC8_TABLE_SIZE * sizeof(u32));
-+
-+	/* Initial setup for boot */
-+	for (i = 0; i < pcie->sid_info_len; i++) {
-+		struct qcom_pcie_sid_info_t *sid_info = &pcie->sid_info[i];
-+		u16 bdf_be = cpu_to_be16(sid_info->bdf);
-+		u32 val;
-+		u8 hash;
-+
-+		hash = crc8(qcom_pcie_crc8_table, (u8 *)&bdf_be, sizeof(bdf_be),
-+			0);
-+
-+		val = readl(bdf_to_sid_base + hash * sizeof(u32));
-+
-+		/* If there is a collision, look for next available entry */
-+		while (val) {
-+			u8 current_hash = hash++;
-+			u8 next_mask = 0xff;
-+
-+			/* If NEXT field is NULL then update it with next hash */
-+			if (!(val & next_mask)) {
-+				int j;
-+
-+				val |= (u32)hash;
-+				writel(val, bdf_to_sid_base +
-+					current_hash * sizeof(u32));
-+
-+				/* Look for sid_info of current hash and update it */
-+				for (j = 0; j < pcie->sid_info_len; j++) {
-+					if (pcie->sid_info[j].hash !=
-+						current_hash)
-+						continue;
-+
-+					pcie->sid_info[j].value = val;
-+					break;
-+				}
-+			}
-+
-+			val = readl(bdf_to_sid_base + hash * sizeof(u32));
-+		}
-+
-+		val = sid_info->bdf << 16 | sid_info->pcie_sid << 8 | 0;
-+		writel(val, bdf_to_sid_base + hash * sizeof(u32));
-+
-+		sid_info->hash = hash;
-+		sid_info->value = val;
-+	}
-+
-+	return 0;
-+}
-+
- static int qcom_pcie_host_init(struct pcie_port *pp)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-@@ -1290,6 +1421,12 @@ static int qcom_pcie_host_init(struct pcie_port *pp)
- 	if (ret)
- 		goto err;
- 
-+	if (pcie->ops->config_sid) {
-+		ret = pcie->ops->config_sid(pcie);
-+		if (ret)
-+			goto err;
-+	}
-+
- 	return 0;
- err:
- 	qcom_ep_reset_assert(pcie);
-@@ -1367,6 +1504,7 @@ static const struct qcom_pcie_ops ops_1_9_0 = {
- 	.ltssm_enable = qcom_pcie_2_3_2_ltssm_enable,
- 	.post_init = qcom_pcie_post_init_2_7_0,
- 	.post_deinit = qcom_pcie_post_deinit_2_7_0,
-+	.config_sid = qcom_pcie_config_sid_sm8250,
- };
- 
- static const struct dw_pcie_ops dw_pcie_ops = {
 -- 
-2.17.1
+2.28.0
 
