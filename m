@@ -2,54 +2,45 @@ Return-Path: <SRS0=jvhy=DM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 893E9C47426
-	for <linux-pci@archiver.kernel.org>; Mon,  5 Oct 2020 20:36:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 386B6C4727E
+	for <linux-pci@archiver.kernel.org>; Mon,  5 Oct 2020 20:55:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4B1C521548
-	for <linux-pci@archiver.kernel.org>; Mon,  5 Oct 2020 20:36:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 06D2F21534
+	for <linux-pci@archiver.kernel.org>; Mon,  5 Oct 2020 20:55:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1601930161;
-	bh=iemv3mWZs+XwGcPcpQaq0B4WUczRQ4kTBhdGQPY6UAs=;
+	s=default; t=1601931357;
+	bh=RauhoP+lY6PB4M6PjyFmPFjt0my1MIgv0r1A7kpjI2k=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=VVwF8RF0jqCvH0GXkB/20H1ZcUnt/hRgZK9MNRXIKYX+zSZcuJkesuwJPc+UOimB+
-	 ZtQQ2Qkb7ug2DBfVeMvjB3komHupfmnfbXXREPsZqJjYSydMOHzTKEFxaRKi6ztind
-	 WzcIImL94jMw1HNQoinbuLye61GXj9Towy+D5x8s=
+	b=WOkpljskN7ODdRmkJ/8idzKa1MjsIw2Kk+M/IERAMfo3gll5WFtgwGtbSb1wLKvP0
+	 Jcb+6aiDzJK5brF3vkt6AeYjxEZ0O56ZciSxpuC3aJyiuO4xWy/jhFc/p4FeuroRhU
+	 nBPzD08eQDS4bnsWURGvSE7DkRbTtcws2fO70kVw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729809AbgJEUf6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 5 Oct 2020 16:35:58 -0400
-Received: from mail-wm1-f68.google.com ([209.85.128.68]:38967 "EHLO
-        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725864AbgJEUf4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Oct 2020 16:35:56 -0400
-Received: by mail-wm1-f68.google.com with SMTP id d3so840440wma.4;
-        Mon, 05 Oct 2020 13:35:51 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=Q5iceblLTPLNAqCbEFyOg5x/SMGcxOoUyYeFBZajQxA=;
-        b=foDi3ukWfhIXBNcp5QQtGEV3cKtFKMW8Y6/7/sAVChxavwzYQE+/8au8hxHm31C0Wp
-         IMJaglp2LFmFZHeHSJ3p6JbYVMsQ1k8eoyyHjo3Ypd3ntATlB5udFYtjJOFadp+CIb8z
-         hkQiCLEpHjQYqsP59nsqGMa49WWOvSpklE89ap7ksjEJpUl3u177OGylMZ5mGs4a+LSP
-         Bhfyt5v9IFBbfxNZnHxMLICSQuz/qoN1+qACij3jFGIgDGQmBAl2QCfhOwwnk2ofVKRD
-         F8CNq5/Ji41fLjBfvY5uaiij1Xwb17Dn8PqPNK0cCj0kPVGUK/iVAo4BbSLtPD8+70zo
-         TZbA==
-X-Gm-Message-State: AOAM530cU4ZqYIFpZe9WbA5WEtjq97IESAwGzVqtJ5ClhXDYFTN0pyKb
-        /BnMfxs3eXrdtKTjsL/gEH8=
-X-Google-Smtp-Source: ABdhPJybS6GmuQGaGKAgw2oZTDndQ8lnfNHzVvN45dT21OuWH7lzG5fHAPseKBE0Hl5nmJW71d+taQ==
-X-Received: by 2002:a1c:2d94:: with SMTP id t142mr1128839wmt.74.1601930150569;
-        Mon, 05 Oct 2020 13:35:50 -0700 (PDT)
-Received: from kozik-lap ([194.230.155.194])
-        by smtp.googlemail.com with ESMTPSA id j134sm985707wmj.7.2020.10.05.13.35.46
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 05 Oct 2020 13:35:49 -0700 (PDT)
-Date:   Mon, 5 Oct 2020 22:35:44 +0200
-From:   Krzysztof Kozlowski <krzk@kernel.org>
+        id S1728205AbgJEUz4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 5 Oct 2020 16:55:56 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46660 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725997AbgJEUzt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 5 Oct 2020 16:55:49 -0400
+Received: from earth.universe (dyndsl-095-033-158-146.ewe-ip-backbone.de [95.33.158.146])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id B8DB5207EA;
+        Mon,  5 Oct 2020 20:55:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1601931347;
+        bh=RauhoP+lY6PB4M6PjyFmPFjt0my1MIgv0r1A7kpjI2k=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=HkOPmEqswDfagOwa/8h6eYeJ28nUpx4kzUzMEiO5C2WpZ/JyxwPsMpOCvfalXuv/N
+         SHdwGJl0wavO+zZoAFWHwvQtMiirhu1+TeuQnuYzBjE+S+5qOuOKtkPXd2EjrwLySS
+         ddJlXztUaG/j988mXtEhLvSqV8GY7zi9RJGnOy4s=
+Received: by earth.universe (Postfix, from userid 1000)
+        id B9D193C0C87; Mon,  5 Oct 2020 22:55:45 +0200 (CEST)
+Date:   Mon, 5 Oct 2020 22:55:45 +0200
+From:   Sebastian Reichel <sre@kernel.org>
 To:     Rob Herring <robh@kernel.org>
 Cc:     devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         Albert Ou <aou@eecs.berkeley.edu>,
@@ -67,6 +58,7 @@ Cc:     devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         Jason Cooper <jason@lakedaemon.net>,
         Jens Axboe <axboe@kernel.dk>,
         Jonathan Cameron <jic23@kernel.org>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
         Lars-Peter Clausen <lars@metafoo.de>,
         Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
         Lee Jones <lee.jones@linaro.org>,
@@ -84,7 +76,6 @@ Cc:     devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         Peter Meerwald-Stadler <pmeerw@pmeerw.net>,
         Richard Weinberger <richard@nod.at>,
         Sam Ravnborg <sam@ravnborg.org>,
-        Sebastian Reichel <sre@kernel.org>,
         Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
         Stephen Boyd <sboyd@kernel.org>,
         Thierry Reding <thierry.reding@gmail.com>,
@@ -112,27 +103,60 @@ Cc:     devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-watchdog@vger.kernel.org
 Subject: Re: [PATCH 4/4] dt-bindings: Explicitly allow additional properties
  in common schemas
-Message-ID: <20201005203544.GD23742@kozik-lap>
+Message-ID: <20201005205545.sqvohrh7jpt7w63w@earth.universe>
 References: <20201005183830.486085-1-robh@kernel.org>
  <20201005183830.486085-5-robh@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="7db5qni5yh4rtlce"
 Content-Disposition: inline
 In-Reply-To: <20201005183830.486085-5-robh@kernel.org>
-User-Agent: Mutt/1.9.4 (2018-02-28)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
+
+
+--7db5qni5yh4rtlce
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hi,
 
 On Mon, Oct 05, 2020 at 01:38:30PM -0500, Rob Herring wrote:
 > In order to add meta-schema checks for additional/unevaluatedProperties
 > being present, all schema need to make this explicit. As common/shared
 > schema are included by other schemas, they should always allow for
 > additionalProperties.
-> 
+>=20
 > Signed-off-by: Rob Herring <robh@kernel.org>
+> ---
+>  [...]
+>  .../devicetree/bindings/power/supply/power-supply.yaml       | 2 ++
+>  [...]
 
-Acked-by: Krzysztof Kozlowski <krzk@kernel.org>
+Acked-by: Sebastian Reichel <sre@kernel.org>
 
-Best regards,
-Krzysztof
+-- Sebastian
+
+--7db5qni5yh4rtlce
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEE72YNB0Y/i3JqeVQT2O7X88g7+poFAl97iEsACgkQ2O7X88g7
++pr9vg//fpVYpKsaZc4pw203Kmzwve+W4z3OPaQS7g1Y93QHWykKxFYpCgOrbmA7
+Ikwy3xwBLfMhPIUs8KZDsiaLVkKTi9XJifhEKiG4Uz772vFOZqAPgskcT6Sx4+iN
+4lqd7WmgV3hGelDss8qw6dQ1FY0/MHuMXvoDeNHTvqi0ZhttRrQmOEO6spkWL1io
+39Au/Pxbh2dK06Y7Y0qoKlqCKxnL4fWlUjFqJkJI+d4LjK/XYvukOTPmAhEYfP2H
+tZ38WZd/3SxwQD+Nh6ZJCfKC54D00G54g+fkxhaiypSSgI1IPWfIsrqPfPnVMowq
+wI2fo/C10LMZ1kqUi/LCW+OET8aePRkYjUMWZ2GBNRY9MJCJH/WkOPy7PaKHrOfU
+EdJx9OH7guvFWaEJGhClazwYS6QkM8CEKy7Nd5nJTeQOBEg/p2Lb2etNPNq34nju
+o9euArIjrnqbHK5X9Ijyvhaqw3bxsVPmPkOGUayDMB44UtwHNFqIosmboJnkJ6bt
+BGS1zVnJs2sdLMqMZcCwfHGoX00rThZgvCACDas7fVEdsZgtaEnCW8aySbWCKPdY
+1gtR+xdosJheKba+kMxfhmR0nm62rAmJvS9XOZaBY+cveye5NtC3kvk+Al5ixucd
+jYmH3Iudn+0hC44ZPGUl49YUa5cwsX8NZlyh8ItyWm/x+WiVyb8=
+=9y9P
+-----END PGP SIGNATURE-----
+
+--7db5qni5yh4rtlce--
