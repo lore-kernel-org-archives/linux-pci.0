@@ -2,166 +2,120 @@ Return-Path: <SRS0=jvhy=DM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2B3FC4741F
-	for <linux-pci@archiver.kernel.org>; Mon,  5 Oct 2020 08:26:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BAC27C4727D
+	for <linux-pci@archiver.kernel.org>; Mon,  5 Oct 2020 09:13:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7AADE2078D
-	for <linux-pci@archiver.kernel.org>; Mon,  5 Oct 2020 08:26:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 81E7720795
+	for <linux-pci@archiver.kernel.org>; Mon,  5 Oct 2020 09:13:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="AXAmvxEc"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="pXBuoTsP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726248AbgJEI0k (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 5 Oct 2020 04:26:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39668 "EHLO
+        id S1725887AbgJEJND (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 5 Oct 2020 05:13:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46832 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726214AbgJEI0j (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Oct 2020 04:26:39 -0400
-Received: from mail-vs1-xe44.google.com (mail-vs1-xe44.google.com [IPv6:2607:f8b0:4864:20::e44])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 785C6C0613B2
-        for <linux-pci@vger.kernel.org>; Mon,  5 Oct 2020 01:26:38 -0700 (PDT)
-Received: by mail-vs1-xe44.google.com with SMTP id r24so3766128vsp.8
-        for <linux-pci@vger.kernel.org>; Mon, 05 Oct 2020 01:26:38 -0700 (PDT)
+        with ESMTP id S1726005AbgJEJND (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Oct 2020 05:13:03 -0400
+Received: from mail-pf1-x441.google.com (mail-pf1-x441.google.com [IPv6:2607:f8b0:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91675C0613A7
+        for <linux-pci@vger.kernel.org>; Mon,  5 Oct 2020 02:13:03 -0700 (PDT)
+Received: by mail-pf1-x441.google.com with SMTP id q123so6452706pfb.0
+        for <linux-pci@vger.kernel.org>; Mon, 05 Oct 2020 02:13:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=41Y6sjMmjcMlV2JauZyN/TxOh6umZ/keewCU2mb8LIc=;
-        b=AXAmvxEcZgWulidtPjWzcdr2Qm2OYOtZA0wDa8FmovT91MPeLRIwIVCT8lx9v5UNlG
-         SctQfxm1GmrUHlaNPX+RFUQtBHXdidJ0/CU1C9clQS0l30cTxEkteaWVnvPQuLuFSdee
-         4MV2Fpon9L5TsVQGS1K3gSKttvhofJOiwA9P0bVAeb/tNn5WAcwRk5Be/IAOdU2QkdYn
-         VFrey16k5OCZxA1L7Q1xqspPxsd/+WYGgx9scKUGZYuyhxSBuKF1PhH1KfSOoQx2J5OY
-         401UuKSNx0/BKxG4Vky36hMzFvsFJwDUWIuAQewHgLK5qqZWGGWEkqztdK9+VC+FKpcj
-         S9OA==
+        h=from:to:cc:subject:date:message-id;
+        bh=ogtuZFvmTG1HNJ4mpeUW7o3oDnuWDjMGFWxAfAyP1zo=;
+        b=pXBuoTsPuRad3vIUhnovelwcdfQU07Dv8Z+Qy++jDhwhdR0Emie8AuwmaT7EjATyD5
+         LWJXWDJX4zrMY4bLBJicioD/na0mCDYuq2dpjz78gJTkkhbAnc0A/SVV0NzAk4fqDYcQ
+         IYDhyezYAoB09Vfd5DndUUTKk+Oq4RxVgefyh+Xt3yYV5l8DzssfHTFxlg/8Ads2xP0d
+         PmUwHzb9HLUSGWdfcXu3hEhFqWRPHxTcgvkj69O9mERUIjTKu/ntyJjo5YyncEcHfMa8
+         T+t+XDrm5I3Rr72jXjfdcF/VGNw6ZH4eVTCOWu/sy14AoLNStskyKOGtqeqaT7HJc2eS
+         O31w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=41Y6sjMmjcMlV2JauZyN/TxOh6umZ/keewCU2mb8LIc=;
-        b=EbgmyIJc1Zi8Kv37oAqFtmJvKhE93jnE9mITHtSePg0wUJWDMZu4CAAAl0F1xD+5UC
-         lu/ZfphkinuqVo6LS6sg9M1d1G6C2b5oKKxjw8P2wBbXe6El0iuLbheK2Jsnhok3Bnym
-         TLdP9KVvsyoil4U5pEGhnaFRTCXnXFleqSGaxG966XT0095gVOIhuW9gavESTtxRBmbV
-         4kSEb43mLnehTrqvbjmAI4iqlZsHWxyxcEkvSPtij1G23TAtja5M74T9epo+1acqKTTj
-         CVWdtemZBdCdEVqegBuX7cSAxuR0TzMPlY4KlpqEk2NX+gqHLaGLZaHPGkf3k7YmQwg1
-         WO2Q==
-X-Gm-Message-State: AOAM532iAGP5UTl6F6BLyM2rlTyLyNd5sAq6l0AlxYxkimJqhLJSwd4V
-        zndUImshMMFha5ajTNaUt829c8Hmj6xL6D3n5deJ9w==
-X-Google-Smtp-Source: ABdhPJxlPMGygHVTcnGIf5MQvmk2y9YM/OMFZ7y/LPtKUwwQZxTgA80YvlEMQPDfoWIYZailBQzIdWarus99WB2IvNI=
-X-Received: by 2002:a67:ec9a:: with SMTP id h26mr6751269vsp.34.1601886397228;
- Mon, 05 Oct 2020 01:26:37 -0700 (PDT)
-MIME-Version: 1.0
-References: <20201002234143.3570746-1-robh@kernel.org>
-In-Reply-To: <20201002234143.3570746-1-robh@kernel.org>
-From:   Ulf Hansson <ulf.hansson@linaro.org>
-Date:   Mon, 5 Oct 2020 10:26:01 +0200
-Message-ID: <CAPDyKFq=ZUiYhm0-K5ZVYS1FH2O5e-+Gt6Dftf=LmL9ABa7CaA@mail.gmail.com>
-Subject: Re: [PATCH] dt-bindings: Another round of adding missing 'additionalProperties'
-To:     Rob Herring <robh@kernel.org>
-Cc:     DTML <devicetree@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Shawn Guo <shawnguo@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Baolin Wang <baolin.wang7@gmail.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Jonathan Cameron <jic23@kernel.org>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>,
-        Lee Jones <lee.jones@linaro.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Vinod Koul <vkoul@kernel.org>,
-        Liam Girdwood <lgirdwood@gmail.com>,
-        Mark Brown <broonie@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Daniel Lezcano <daniel.lezcano@linaro.org>,
-        linux-clk <linux-clk@vger.kernel.org>,
-        dri-devel <dri-devel@lists.freedesktop.org>,
-        linux-spi@vger.kernel.org,
-        "open list:GPIO SUBSYSTEM" <linux-gpio@vger.kernel.org>,
-        linux-hwmon@vger.kernel.org, linux-iio@vger.kernel.org,
-        openipmi-developer@lists.sourceforge.net,
-        linux-leds@vger.kernel.org,
-        Linux Media Mailing List <linux-media@vger.kernel.org>,
-        "open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
-        linux-stm32@st-md-mailman.stormreply.com,
-        linux-mips@vger.kernel.org,
-        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        linux-remoteproc@vger.kernel.org, linux-serial@vger.kernel.org,
-        alsa-devel@alsa-project.org,
-        Linux USB List <linux-usb@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=ogtuZFvmTG1HNJ4mpeUW7o3oDnuWDjMGFWxAfAyP1zo=;
+        b=VANTfgTmi0lsJMxlEpF2iz2t/C6Lx3b7zYCigEtefC/kBs7TuxHDUS+7AqqXq9AOPU
+         SRjawv8RlfX/psqw3NRfA5Mw6WE83N27qzmuuus1LZfX+lBNe/81K9OmkM4v6jZldPt9
+         aCkgZPiqcvsnr/vqq1Mqpb6GZBPNwceiE+FPx6o2Kpd4cc2ynvhJBQhZQRo1Y9yvXqXE
+         0QNUNr2GN2Sndr6VreTtnOqhwI3wNWOD4vBSzYpKn2LONBdK7+k6K5PvGkY4uWJVsVNv
+         hXrxvFdFSFu6ZnnDeLsypCVRL3TEZHW+9MGJYS0OsDvo0eWEumeXhzQiHotFC6OmIjlo
+         5Dxg==
+X-Gm-Message-State: AOAM532Ts5Uhul1l28d6RcQI51Q2lkPOIiQoQVBSi5ta+3CW6foZ8mN+
+        0ww8tJFuSHU0DWb4sewHFon1
+X-Google-Smtp-Source: ABdhPJxgjUAEMEy8du3ikSCR/tZO6938wCs3TDv/a9TCwUvzczACrPF5VLwM6m/cCdU0KV26Uh//bA==
+X-Received: by 2002:a63:c40a:: with SMTP id h10mr9314528pgd.210.1601889182847;
+        Mon, 05 Oct 2020 02:13:02 -0700 (PDT)
+Received: from localhost.localdomain ([103.59.133.81])
+        by smtp.googlemail.com with ESMTPSA id c7sm11255028pfj.84.2020.10.05.02.12.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 05 Oct 2020 02:13:02 -0700 (PDT)
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     agross@kernel.org, bjorn.andersson@linaro.org, kishon@ti.com,
+        vkoul@kernel.org, robh@kernel.org
+Cc:     svarbanov@mm-sol.com, bhelgaas@google.com,
+        lorenzo.pieralisi@arm.com, linux-arm-msm@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        mgautam@codeaurora.org, devicetree@vger.kernel.org,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Subject: [PATCH v3 0/5] Add PCIe support for SM8250 SoC
+Date:   Mon,  5 Oct 2020 14:42:31 +0530
+Message-Id: <20201005091236.31770-1-manivannan.sadhasivam@linaro.org>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sat, 3 Oct 2020 at 01:41, Rob Herring <robh@kernel.org> wrote:
->
-> Another round of wack-a-mole. The json-schema default is additional
-> unknown properties are allowed, but for DT all properties should be
-> defined.
->
-> Cc: Thierry Reding <thierry.reding@gmail.com>
-> Cc: Linus Walleij <linus.walleij@linaro.org>
-> Cc: Stephen Boyd <sboyd@kernel.org>
-> Cc: Shawn Guo <shawnguo@kernel.org>
-> Cc: Bjorn Andersson <bjorn.andersson@linaro.org>
-> Cc: Baolin Wang <baolin.wang7@gmail.com>
-> Cc: Guenter Roeck <linux@roeck-us.net>
-> Cc: Jonathan Cameron <jic23@kernel.org>
-> Cc: Mauro Carvalho Chehab <mchehab@kernel.org>
-> Cc: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
-> Cc: Lee Jones <lee.jones@linaro.org>
-> Cc: Ulf Hansson <ulf.hansson@linaro.org>
-> Cc: "David S. Miller" <davem@davemloft.net>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Vinod Koul <vkoul@kernel.org>
-> Cc: Liam Girdwood <lgirdwood@gmail.com>
-> Cc: Mark Brown <broonie@kernel.org>
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Cc: Daniel Lezcano <daniel.lezcano@linaro.org>
-> Cc: linux-clk@vger.kernel.org
-> Cc: dri-devel@lists.freedesktop.org
-> Cc: linux-spi@vger.kernel.org
-> Cc: linux-gpio@vger.kernel.org
-> Cc: linux-hwmon@vger.kernel.org
-> Cc: linux-iio@vger.kernel.org
-> Cc: openipmi-developer@lists.sourceforge.net
-> Cc: linux-leds@vger.kernel.org
-> Cc: linux-media@vger.kernel.org
-> Cc: linux-rockchip@lists.infradead.org
-> Cc: linux-stm32@st-md-mailman.stormreply.com
-> Cc: linux-mips@vger.kernel.org
-> Cc: linux-mmc@vger.kernel.org
-> Cc: netdev@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-pm@vger.kernel.org
-> Cc: linux-remoteproc@vger.kernel.org
-> Cc: linux-serial@vger.kernel.org
-> Cc: alsa-devel@alsa-project.org
-> Cc: linux-usb@vger.kernel.org
-> Signed-off-by: Rob Herring <robh@kernel.org>
-> ---
->
-> I'll take this thru the DT tree.
->
+Hello,
 
-[...]
+This series adds PCIe support for Qualcomm SM8250 SoC with relevant PHYs.
+There are 3 PCIe instances on this SoC each with different PHYs. The PCIe
+controller and PHYs are mostly comaptible with the ones found on SDM845
+SoC, hence the old drivers are modified to add the support.
 
->  .../bindings/mmc/mmc-pwrseq-emmc.yaml         |  2 ++
->  .../bindings/mmc/mmc-pwrseq-sd8787.yaml       |  2 ++
->  .../bindings/mmc/mmc-pwrseq-simple.yaml       |  2 ++
+This series has been tested on RB5 board with QCA6390 chipset connected
+onboard.
 
-Acked-by: Ulf Hansson <ulf.hansson@linaro.org>
+NOTE: This series functionally depends on the following patch:
+https://lore.kernel.org/linux-arm-kernel/1599814203-14441-3-git-send-email-hayashi.kunihiko@socionext.com/
 
-Kind regards
-Uffe
+I've dropped a similar patch in v2.
+
+Thanks,
+Mani
+
+Changes in v3:
+
+* Rebased on top of phy/next
+* Renamed ops_sm8250 to ops_1_9_0 to maintain uniformity
+
+Changes in v2:
+
+* Fixed the PHY and PCIe bindings
+* Introduced secondary table in PHY driver to abstract out the common configs.
+* Used a more generic way of configuring BDF to SID mapping
+* Dropped ATU change in favor of a patch spotted by Rob
+
+Manivannan Sadhasivam (5):
+  dt-bindings: phy: qcom,qmp: Add SM8250 PCIe PHY bindings
+  phy: qcom-qmp: Add SM8250 PCIe QMP PHYs
+  dt-bindings: pci: qcom: Document PCIe bindings for SM8250 SoC
+  PCI: qcom: Add SM8250 SoC support
+  PCI: qcom: Add support for configuring BDF to SID mapping for SM8250
+
+ .../devicetree/bindings/pci/qcom,pcie.txt     |   6 +-
+ .../devicetree/bindings/phy/qcom,qmp-phy.yaml |   6 +
+ drivers/pci/controller/dwc/Kconfig            |   1 +
+ drivers/pci/controller/dwc/pcie-qcom.c        | 149 ++++++++++
+ drivers/phy/qualcomm/phy-qcom-qmp.c           | 281 +++++++++++++++++-
+ drivers/phy/qualcomm/phy-qcom-qmp.h           |  18 ++
+ 6 files changed, 455 insertions(+), 6 deletions(-)
+
+-- 
+2.17.1
+
