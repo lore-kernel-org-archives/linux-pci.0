@@ -7,34 +7,34 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A346BC4363C
-	for <linux-pci@archiver.kernel.org>; Wed,  7 Oct 2020 11:33:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 912E5C4363D
+	for <linux-pci@archiver.kernel.org>; Wed,  7 Oct 2020 11:33:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5DADA20870
-	for <linux-pci@archiver.kernel.org>; Wed,  7 Oct 2020 11:33:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4B7AA20870
+	for <linux-pci@archiver.kernel.org>; Wed,  7 Oct 2020 11:33:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727781AbgJGLds (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 7 Oct 2020 07:33:48 -0400
-Received: from mga06.intel.com ([134.134.136.31]:24776 "EHLO mga06.intel.com"
+        id S1727811AbgJGLdt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 7 Oct 2020 07:33:49 -0400
+Received: from mga06.intel.com ([134.134.136.31]:24771 "EHLO mga06.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727685AbgJGLdl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 7 Oct 2020 07:33:41 -0400
-IronPort-SDR: w42G7JnZ60gPiPdeGI9ErV478925WWeYin5Uf5Mqm2+Ylp3RLiCMmH84c+5+O4NP/GeaD+61IO
- IEveoZIMaJuw==
-X-IronPort-AV: E=McAfee;i="6000,8403,9766"; a="226492559"
+        id S1727749AbgJGLdq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 7 Oct 2020 07:33:46 -0400
+IronPort-SDR: yCOKQ8ro5M+EZX8zg+EP09mS8H5meJSt7IZ1d4fGtM6ZsUkuQCqhrJ+g0IEMmv3/a3W9gWRXID
+ XuLHIwR5M3gg==
+X-IronPort-AV: E=McAfee;i="6000,8403,9766"; a="226492580"
 X-IronPort-AV: E=Sophos;i="5.77,346,1596524400"; 
-   d="scan'208";a="226492559"
+   d="scan'208";a="226492580"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Oct 2020 04:33:39 -0700
-IronPort-SDR: 1l9hLxFHvL5HSJ91Da/oLjiwuhzqZWLSnaJTGuT4DoTbPk27mE5z90x7JkODIojV4iMC7MEV0V
- Ad+wMwKC7MCA==
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Oct 2020 04:33:45 -0700
+IronPort-SDR: 0CY/lCH6vbXlSRKag9hm8sKGaehpA7EatV+ihkbaQF+EoaFo7BAJ2AZLecVnVlfG3KHvAmKOdo
+ HSNifr3zNrPA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.77,346,1596524400"; 
-   d="scan'208";a="354862151"
+   d="scan'208";a="354862186"
 Received: from shskylake.sh.intel.com ([10.239.48.137])
-  by orsmga007.jf.intel.com with ESMTP; 07 Oct 2020 04:33:35 -0700
+  by orsmga007.jf.intel.com with ESMTP; 07 Oct 2020 04:33:42 -0700
 From:   Ethan Zhao <haifeng.zhao@intel.com>
 To:     bhelgaas@google.com, oohall@gmail.com, ruscur@russell.cc,
         lukas@wunner.de, andriy.shevchenko@linux.intel.com,
@@ -43,9 +43,9 @@ To:     bhelgaas@google.com, oohall@gmail.com, ruscur@russell.cc,
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         ashok.raj@linux.intel.com, sathyanarayanan.kuppuswamy@intel.com,
         xerces.zhao@gmail.com, Ethan Zhao <haifeng.zhao@intel.com>
-Subject: [PATCH v8 3/6] PCI: pciehp: check and wait port status out of DPC before handling DLLSC and PDC
-Date:   Wed,  7 Oct 2020 07:31:55 -0400
-Message-Id: <20201007113158.48933-4-haifeng.zhao@intel.com>
+Subject: [PATCH v8 5/6] PCI/ERR: only return true when dev io state is really changed
+Date:   Wed,  7 Oct 2020 07:31:57 -0400
+Message-Id: <20201007113158.48933-6-haifeng.zhao@intel.com>
 X-Mailer: git-send-email 2.18.4
 In-Reply-To: <20201007113158.48933-1-haifeng.zhao@intel.com>
 References: <20201007113158.48933-1-haifeng.zhao@intel.com>
@@ -53,105 +53,63 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-When root port has DPC capability and it is enabled, then triggered by
-errors, DPC DLLSC and PDC etc interrupts will be sent to DPC driver, 
-pciehp drivers almost at the same time.
-Thus will cause following messed and confused errors handling/recovery/
-removal/plugin procedure.
+When uncorrectable error happens, AER driver and DPC driver interrupt
+handlers likely call
 
-1. Port and device are in error recovery resetting initiated by DPC
-   hardware, pciehp driver treats them as device is doing hot-remove or 
-   hot-plugin the same time.
-
-2. While DPC handler calling device driver->err_handler callback(
-   error_detected/resume etc), but the slot may be powered off by
-
-   pciehp
-   -> remove_board()
-      -> pciehp_power_off_slot().
-
-3. While DPC handler -> pci_do_recovery is doing different action to
-   detect error and recover based on device->error_state, pciehp driver
-   could change it on the fly by:
-
-   pciehp_unconfigure_device()
+   pcie_do_recovery()
    ->pci_walk_bus()
-     -> pci_dev_set_disconnected()
+     ->report_frozen_detected()
 
-4. While DPC handler is calling device driver err_handler callback to 
-   detect error and recover, pciehp driver could is doing device unbind
-   and release its driver.
-
-   ...
-
-While NON-FATAL/FATAL errors happen while hotplug is(is not)doing, result
-is not determinate.
-
-So we need some kind of synchronization between pciehp DLLSC/PDC handling
-and DPC driver error recover handling.  we need a determinate result
-of DPC error containment, link is recovered, link isn't recovered, device
-is still there, device is removed, then do pciehp hot-remove and
-hot-plugin procudure, don't mix them together.
-
-Per our test on ICS platform, DPC error containment and software handler
-will take 10ms up to 50ms till clean the DPC triggered status. it is quick
-enough for pciehp compared with its 1000ms waiting to ignore DLLSC/PDC
-after doing power off.
-
-With this patch, the handling flow of DPC containment and hotplug is
-partly ordered and serialized, let hardware DPC do the controller reset
-etc recovery action first, then DPC driver handling the call-back from
-device drivers, clear the DPC status, at the end, pciehp handle the DLLSC
-and PDC etc.
-
-After tens of PCIe Gen4 NVMe SSD brute force hot-remove and hot-plugin with
-any time internval between the two actions, also stressed with the DPC
-injection test. system recovered to normal working state from
-NON-FATAL/FATAL errors as expected. hotplug works well without any random
-undeterminate errors or malfunction.
-
-Brute DPC error injection script:
-
-for i in {0..100}
-do
-        setpci -s 64:02.0 0x196.w=000a
-        setpci -s 65:00.0 0x04.w=0544
-        mount /dev/nvme0n1p1 /root/nvme
-        sleep 1
-done
+with pci_channel_io_frozen the same time.
+   If pci_dev_set_io_state() return true even if the original state is
+pci_channel_io_frozen, that will cause AER or DPC handler re-enter
+the error detecting and recovery procedure one after another.
+   The result is the recovery flow mixed between AER and DPC.
+So change the pci_dev_set_io_state() function to only return true
+when dev->error_state is really changed.
 
 Signed-off-by: Ethan Zhao <haifeng.zhao@intel.com>
-Tested-by: Wen Jin <wen.jin@intel.com>
-Tested-by: Shanshan Zhang <ShanshanX.Zhang@intel.com>
 ---
-Changes:
- v2: revise doc according to Andy's suggestion.
- v3: no change.
+Changnes:
+ v2: revise description and code according to suggestion from Andy.
+ v3: change code to simpler.
  v4: no change.
  v5: no change.
- v6: moved to [3/5] from [2/5] and re-wrote description.
- v7: no change.
- v8: no change.
+ v6: no change.
+ v7: changed based on Bjorn's code and truth table.
+ v8: according to Bjorn's suggestion, rebase on another simplification
+     patch.   
 
- drivers/pci/hotplug/pciehp_hpc.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/pci/pci.h | 13 +++++--------
+ 1 file changed, 5 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 53433b37e181..6f271160f18d 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -710,8 +710,10 @@ static irqreturn_t pciehp_ist(int irq, void *dev_id)
- 	down_read(&ctrl->reset_lock);
- 	if (events & DISABLE_SLOT)
- 		pciehp_handle_disable_request(ctrl);
--	else if (events & (PCI_EXP_SLTSTA_PDC | PCI_EXP_SLTSTA_DLLSC))
-+	else if (events & (PCI_EXP_SLTSTA_PDC | PCI_EXP_SLTSTA_DLLSC)) {
-+		pci_wait_port_outdpc(pdev);
- 		pciehp_handle_presence_or_link_change(ctrl, events);
-+	}
- 	up_read(&ctrl->reset_lock);
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index bceb3f108744..a11e0f9d9bdf 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -371,17 +371,14 @@ static inline bool pci_dev_set_io_state(struct pci_dev *dev,
+  *     perm_failure  |  perm_failure*  perm_failure*  perm_failure
+  */
  
- 	ret = IRQ_HANDLED;
+-	/* Can always put a device in perm_failure state */
+-	if (new == pci_channel_io_perm_failure) {
+-		dev->error_state = pci_channel_io_perm_failure;
+-		return true;
+-	}
+-
+-	/* If already in perm_failure, can't set to normal or frozen */
++	/* If already in perm_failure, can't change it's state */
+ 	if (dev->error_state == pci_channel_io_perm_failure)
+ 		return false;
++	/* not change at all */
++	else if (dev->error_state == new)
++		return false;
+ 
+-	 /* Can always change normal to frozen or vice versa */
++	 /* Can always change from normal/frozen to other different state */
+ 	dev->error_state = new;
+ 	return true;
+ }
 -- 
 2.18.4
 
