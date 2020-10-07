@@ -2,163 +2,139 @@ Return-Path: <SRS0=DAdr=DO=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C704C41604
-	for <linux-pci@archiver.kernel.org>; Wed,  7 Oct 2020 17:10:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4F42C41604
+	for <linux-pci@archiver.kernel.org>; Wed,  7 Oct 2020 17:24:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DB37F21775
-	for <linux-pci@archiver.kernel.org>; Wed,  7 Oct 2020 17:10:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1602090630;
-	bh=dws2CpzEWU0JT8f0BWVwWDLwOmd1rKbKq0cKE+yRI+A=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=aLWA2ZHWtvxCKc08Kk6hJa6l7iQm/IpOWgw4M9hfkEvMC9svPwT6IMy+aN0sTLZAV
-	 aOZ5x+5LNaiRX8kJWkSIx+e2oE18c3t0WyvKGr/0eVELYYtNjPkPW6s/h2osbbCwM3
-	 ODIklcbIdXKZyTw/yeA4zxmH2B2zL0j9RwKHM2xU=
+	by mail.kernel.org (Postfix) with ESMTP id 66951206F7
+	for <linux-pci@archiver.kernel.org>; Wed,  7 Oct 2020 17:24:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728020AbgJGRK1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 7 Oct 2020 13:10:27 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54302 "EHLO mail.kernel.org"
+        id S1728229AbgJGRX7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 7 Oct 2020 13:23:59 -0400
+Received: from mga03.intel.com ([134.134.136.65]:1354 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726948AbgJGRK1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 7 Oct 2020 13:10:27 -0400
-Received: from localhost (170.sub-72-107-125.myvzw.com [72.107.125.170])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id CADE321707;
-        Wed,  7 Oct 2020 17:10:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1602090626;
-        bh=dws2CpzEWU0JT8f0BWVwWDLwOmd1rKbKq0cKE+yRI+A=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=PxaVnUlf9ix7pnsdYskq35CddMgFV5OeK/e12Xlifv00IgAI81Hxzg65V/nJ7tLpa
-         k9Muw+CcNoe/uiGpRR99VVFpSpXpRNVYQBLNRQN4Cy8386l81mD7MAsKx2PrXRCYtd
-         n68DUWpTZ/fnEm5oHdgY12bgKFlapV047nnW892I=
-Date:   Wed, 7 Oct 2020 12:10:24 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     "Rafael J. Wysocki" <rafael@kernel.org>
+        id S1727969AbgJGRX7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 7 Oct 2020 13:23:59 -0400
+IronPort-SDR: XejR/9Mbmw6bTXi00mTdvFcXXvW7H7Iu2Lb/jKLy7d/EEPiEaBUwyU5fT62lkUjjIarNomLzrB
+ NetAGuBRXJEg==
+X-IronPort-AV: E=McAfee;i="6000,8403,9767"; a="165087285"
+X-IronPort-AV: E=Sophos;i="5.77,347,1596524400"; 
+   d="scan'208";a="165087285"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Oct 2020 09:48:57 -0700
+IronPort-SDR: JS5WF/ZWWJ6drdqE9KPrrDpGO1nBnyE4kYAX0TQWWs/O+DP5LvoNAnanbch5hAQcdmV4FDKhDy
+ /8xYVEACsEgA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.77,347,1596524400"; 
+   d="scan'208";a="311818207"
+Received: from linux.intel.com ([10.54.29.200])
+  by orsmga003.jf.intel.com with ESMTP; 07 Oct 2020 09:48:56 -0700
+Received: from debox1-desk2.jf.intel.com (debox1-desk2.jf.intel.com [10.54.75.16])
+        by linux.intel.com (Postfix) with ESMTP id 01586580867;
+        Wed,  7 Oct 2020 09:48:56 -0700 (PDT)
+From:   "David E. Box" <david.e.box@linux.intel.com>
+To:     bhelgaas@google.com, len.brown@intel.com, rafael@kernel.org
 Cc:     "David E. Box" <david.e.box@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Len Brown <len.brown@intel.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI: Disable PTM during suspend on Intel PCI bridges
-Message-ID: <20201007171024.GA3252529@bjorn-Precision-5520>
+        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] PCI: Disable PTM during suspend on Intel PCI bridges
+Date:   Wed,  7 Oct 2020 09:48:51 -0700
+Message-Id: <20201007164851.1218-1-david.e.box@linux.intel.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAJZ5v0gRph3UMffWqUVqTnDE149Ai-SbzmhjzZU1x=QOzAZeZA@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Oct 07, 2020 at 06:53:16PM +0200, Rafael J. Wysocki wrote:
-> On Wed, Oct 7, 2020 at 6:49 PM David E. Box <david.e.box@linux.intel.com> wrote:
-> >
-> > On Intel Platform Controller Hubs (PCH) since Cannon Lake, the Precision
-> > Time Measurement (PTM) capability can prevent PCIe root ports from power
-> > gating during suspend-to-idle, causing increased power consumption on
-> > systems that suspend using Low Power S0 Idle [1]. The issue is yet to be
-> > root caused but believed to be coming from a race condition in the suspend
-> > flow as the incidence rate varies for different platforms on Linux but the
-> > issue does not occur at all in other operating systems. For now, disable
-> > the feature on suspend on all Intel root ports and enable again on resume.
-> 
-> IMV it should also be noted that there is no particular reason why PTM
-> would need to be enabled while the whole system is suspended.  At
-> least it doesn't seem to be particularly useful in that state.
+On Intel Platform Controller Hubs (PCH) since Cannon Lake, the Precision
+Time Measurement (PTM) capability can prevent PCIe root ports from power
+gating during suspend-to-idle, causing increased power consumption on
+systems that suspend using Low Power S0 Idle [1]. The issue is yet to be
+root caused but believed to be coming from a race condition in the suspend
+flow as the incidence rate varies for different platforms on Linux but the
+issue does not occur at all in other operating systems. For now, disable
+the feature on suspend on all Intel root ports and enable again on resume.
 
-Is this a hardware erratum?  If not, and this is working as designed,
-it sounds like we'd need to apply this quirk to every device that
-supports PTM.  That's not really practical.
+Link: https://www.uefi.org/sites/default/files/resources/Intel_ACPI_Low_Power_S0_Idle.pdf
+Bug: https://bugzilla.kernel.org/show_bug.cgi?id=209361
+Tested-by: Len Brown <len.brown@intel.com>
+Signed-off-by: David E. Box <david.e.box@linux.intel.com>
+---
+ drivers/pci/quirks.c | 57 ++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 57 insertions(+)
 
-The bugzilla says "there is no erratum as this does not affect
-Windows," but that doesn't answer the question.  What I want to know
-is whether this is a *hardware* defect and whether it will be fixed in
-future hardware.
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index bdf9b52567e0..e82b1f60c7a1 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -5632,3 +5632,60 @@ static void apex_pci_fixup_class(struct pci_dev *pdev)
+ }
+ DECLARE_PCI_FIXUP_CLASS_HEADER(0x1ac1, 0x089a,
+ 			       PCI_CLASS_NOT_DEFINED, 8, apex_pci_fixup_class);
++
++#ifdef CONFIG_PCIE_PTM
++/*
++ * On Intel Platform Controller Hubs (PCH) since Cannon Lake, the Precision
++ * Time Measurement (PTM) capability can prevent the PCIe root port from
++ * power gating during suspend-to-idle, causing increased power consumption.
++ * So disable the feature on suspend on all Intel root ports and enable
++ * again on resume.
++ */
++static void quirk_intel_ptm_disable_suspend(struct pci_dev *dev)
++{
++	int pos;
++	u32 ctrl;
++
++	if (!(dev->ptm_enabled && dev->ptm_root))
++		return;
++
++	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_PTM);
++	if (!pos)
++		return;
++
++	pci_dbg(dev, "quirk: disabling PTM\n");
++
++	dev->ptm_enabled = 0;
++	dev->ptm_root = 0;
++
++	pci_read_config_dword(dev, pos + PCI_PTM_CTRL, &ctrl);
++	ctrl &= ~(PCI_PTM_CTRL_ENABLE | PCI_PTM_CTRL_ROOT);
++	pci_write_config_dword(dev, pos + PCI_PTM_CTRL, ctrl);
++}
++
++static void quirk_intel_ptm_enable_resume(struct pci_dev *dev)
++{
++	int pos;
++	u32 ctrl;
++
++	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_PTM);
++	if (!pos)
++		return;
++
++	pci_dbg(dev, "quirk: re-enabling PTM\n");
++
++	pci_read_config_dword(dev, pos + PCI_PTM_CTRL, &ctrl);
++	ctrl |= PCI_PTM_CTRL_ENABLE | PCI_PTM_CTRL_ROOT;
++	pci_write_config_dword(dev, pos + PCI_PTM_CTRL, ctrl);
++
++	dev->ptm_enabled = 1;
++	dev->ptm_root = 1;
++}
++
++DECLARE_PCI_FIXUP_CLASS_SUSPEND(PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
++				PCI_CLASS_BRIDGE_PCI, 8,
++				quirk_intel_ptm_disable_suspend)
++DECLARE_PCI_FIXUP_CLASS_RESUME(PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
++			       PCI_CLASS_BRIDGE_PCI, 8,
++			       quirk_intel_ptm_enable_resume)
++#endif
+-- 
+2.20.1
 
-If it's a "wont-fix" hardware issue, we can just disable PTM
-completely on Intel hardware and we won't have to worry about it
-during suspend.
-
-> > Link: https://www.uefi.org/sites/default/files/resources/Intel_ACPI_Low_Power_S0_Idle.pdf
-> > Bug: https://bugzilla.kernel.org/show_bug.cgi?id=209361
-> > Tested-by: Len Brown <len.brown@intel.com>
-> > Signed-off-by: David E. Box <david.e.box@linux.intel.com>
-> > ---
-> >  drivers/pci/quirks.c | 57 ++++++++++++++++++++++++++++++++++++++++++++
-> >  1 file changed, 57 insertions(+)
-> >
-> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > index bdf9b52567e0..e82b1f60c7a1 100644
-> > --- a/drivers/pci/quirks.c
-> > +++ b/drivers/pci/quirks.c
-> > @@ -5632,3 +5632,60 @@ static void apex_pci_fixup_class(struct pci_dev *pdev)
-> >  }
-> >  DECLARE_PCI_FIXUP_CLASS_HEADER(0x1ac1, 0x089a,
-> >                                PCI_CLASS_NOT_DEFINED, 8, apex_pci_fixup_class);
-> > +
-> > +#ifdef CONFIG_PCIE_PTM
-> > +/*
-> > + * On Intel Platform Controller Hubs (PCH) since Cannon Lake, the Precision
-> > + * Time Measurement (PTM) capability can prevent the PCIe root port from
-> > + * power gating during suspend-to-idle, causing increased power consumption.
-> > + * So disable the feature on suspend on all Intel root ports and enable
-> > + * again on resume.
-> > + */
-> > +static void quirk_intel_ptm_disable_suspend(struct pci_dev *dev)
-> > +{
-> > +       int pos;
-> > +       u32 ctrl;
-> > +
-> > +       if (!(dev->ptm_enabled && dev->ptm_root))
-> > +               return;
-> > +
-> > +       pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_PTM);
-> > +       if (!pos)
-> > +               return;
-> > +
-> > +       pci_dbg(dev, "quirk: disabling PTM\n");
-> > +
-> > +       dev->ptm_enabled = 0;
-> > +       dev->ptm_root = 0;
-> > +
-> > +       pci_read_config_dword(dev, pos + PCI_PTM_CTRL, &ctrl);
-> > +       ctrl &= ~(PCI_PTM_CTRL_ENABLE | PCI_PTM_CTRL_ROOT);
-> > +       pci_write_config_dword(dev, pos + PCI_PTM_CTRL, ctrl);
-> > +}
-> > +
-> > +static void quirk_intel_ptm_enable_resume(struct pci_dev *dev)
-> > +{
-> > +       int pos;
-> > +       u32 ctrl;
-> > +
-> > +       pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_PTM);
-> > +       if (!pos)
-> > +               return;
-> > +
-> > +       pci_dbg(dev, "quirk: re-enabling PTM\n");
-> > +
-> > +       pci_read_config_dword(dev, pos + PCI_PTM_CTRL, &ctrl);
-> > +       ctrl |= PCI_PTM_CTRL_ENABLE | PCI_PTM_CTRL_ROOT;
-> > +       pci_write_config_dword(dev, pos + PCI_PTM_CTRL, ctrl);
-> > +
-> > +       dev->ptm_enabled = 1;
-> > +       dev->ptm_root = 1;
-> > +}
-> > +
-> > +DECLARE_PCI_FIXUP_CLASS_SUSPEND(PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
-> > +                               PCI_CLASS_BRIDGE_PCI, 8,
-> > +                               quirk_intel_ptm_disable_suspend)
-> > +DECLARE_PCI_FIXUP_CLASS_RESUME(PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
-> > +                              PCI_CLASS_BRIDGE_PCI, 8,
-> > +                              quirk_intel_ptm_enable_resume)
-> > +#endif
-> > --
-> > 2.20.1
-> >
