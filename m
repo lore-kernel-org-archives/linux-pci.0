@@ -2,66 +2,155 @@ Return-Path: <SRS0=DAdr=DO=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 923EFC4741F
-	for <linux-pci@archiver.kernel.org>; Wed,  7 Oct 2020 16:46:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17AB2C4727E
+	for <linux-pci@archiver.kernel.org>; Wed,  7 Oct 2020 16:53:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5094721582
-	for <linux-pci@archiver.kernel.org>; Wed,  7 Oct 2020 16:46:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B6408216C4
+	for <linux-pci@archiver.kernel.org>; Wed,  7 Oct 2020 16:53:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1602089172;
-	bh=qYpMzqtsjrMMyezfget5SScdy07//sseqBRdxccpfOw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=AWNdPZ1veSemJ+cbgA1UhNJsMCKBJuAN2o+q5TByKmwg2ABPoawecs9tHbH5rjxly
-	 alHgDC/QV0wVBzJh4WYjIqR7ZWmdQZzvUXvaRjk/4oW1SAW5R6P56KZtwbdTxyzgOs
-	 MOcT2WFUryplqirs29YLcqn5TMfU98TypfBE7muA=
+	s=default; t=1602089609;
+	bh=KLuzWeyeB7kbwnQqa3XYRXIueC3iQZLNSl5m92xkAcM=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=uTtKcf8ZnY/YiwKqKfXxDNcwRG4xXr94K+63FzGLGtgnAwbo5uwL+XDi2VXjfGHS6
+	 lwjjbdX8+5+BHNmEOAXV0aIdElCGCyPJTGXXgntpoy3FdXQzQjO9J/RLJ13HkjsDhy
+	 wqOypfMEenCURaQq5kGMaacInm+DpxmE8B+7TAtY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727862AbgJGQqK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 7 Oct 2020 12:46:10 -0400
-Received: from mail.kernel.org ([198.145.29.99]:44896 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727981AbgJGQqK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 7 Oct 2020 12:46:10 -0400
-Received: from dhcp-10-100-145-180.wdl.wdc.com (unknown [199.255.45.60])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 349AC206FC;
-        Wed,  7 Oct 2020 16:46:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1602089169;
-        bh=qYpMzqtsjrMMyezfget5SScdy07//sseqBRdxccpfOw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=nujV02s3Ysb0QSClSvUD2TcWeztSBkfBGzPQeZ6TqFzFc7xXFVMSyy/tWquSTXT23
-         YR96KWfVKcaAn1TwfPb4N+ogjlSakBAGGFesUFpon79l4H0RtRAtiBBYLzRyPnMiY8
-         7Ge1jg8/9+BBkOqYQmVIbx1knEK0f2B3DKeBti7I=
-Date:   Wed, 7 Oct 2020 09:46:07 -0700
-From:   Keith Busch <kbusch@kernel.org>
-To:     "Jason A. Donenfeld" <Jason@zx2c4.com>
-Cc:     linux-pci@vger.kernel.org
-Subject: Re: spammy dmesg about fluctuating pcie bandwidth on 5.9
-Message-ID: <20201007164607.GB961537@dhcp-10-100-145-180.wdl.wdc.com>
-References: <CAHmME9r_cNx04yuUN+TPPY=xDHuDxRrLb8KqR7C69YtXMajAJg@mail.gmail.com>
+        id S1728062AbgJGQx3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 7 Oct 2020 12:53:29 -0400
+Received: from mail-ot1-f66.google.com ([209.85.210.66]:41754 "EHLO
+        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728046AbgJGQx3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Oct 2020 12:53:29 -0400
+Received: by mail-ot1-f66.google.com with SMTP id q21so2852483ota.8;
+        Wed, 07 Oct 2020 09:53:28 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=0A+i/MnG7ofk1/uow7Ro700CbvukkHEpDKrbjreJTRc=;
+        b=QHWWg0b8jTnc9x1ukbEWEcd0ak2+6OsQiKET89hEQni5yX3hKHdkuCd1H1+3ioUcN0
+         Gz9l9V20p+SUR5wmncysfoYoQf+hk97iyCkrIWNKF5AAROVfnfONOetp2fOXi7wk9/79
+         4hdHY44nh1zMyYjRxmAML99por+CTqQBmrEXoxVC5Nic1rrDoHwTqgQ3iuEjQ8FqPAl7
+         Y2oheFDKDkxso5hHHIAl1mgpbwl9kolslEF+hOEe8VZv0RjS9Kfp8SShALFMsCdvuqEO
+         eaeOywcnKwNJxzSabcISDKifqQUImggOYDQZCaTEwa8UcsiIjPhHA8UkNfVQ8A7fDuof
+         4uxQ==
+X-Gm-Message-State: AOAM530ppGilp+870PRVH/jZOrNkl6g1zQXnxhJPldqgAB3Nevdm2hYn
+        A+B4XTGbdbS0t92MU2JWFLEOXeT2GZXupXKcTKKxuLW/
+X-Google-Smtp-Source: ABdhPJw4S694LNMITp3AqYQCdCiM9gQ1FgdvqLSxqsYd0Y4fue2dbiG3/bedis6HuatQ8Q8D2nJgp+iE5QSoLHuT9C8=
+X-Received: by 2002:a9d:3626:: with SMTP id w35mr2533946otb.206.1602089607809;
+ Wed, 07 Oct 2020 09:53:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAHmME9r_cNx04yuUN+TPPY=xDHuDxRrLb8KqR7C69YtXMajAJg@mail.gmail.com>
+References: <20201007164851.1218-1-david.e.box@linux.intel.com>
+In-Reply-To: <20201007164851.1218-1-david.e.box@linux.intel.com>
+From:   "Rafael J. Wysocki" <rafael@kernel.org>
+Date:   Wed, 7 Oct 2020 18:53:16 +0200
+Message-ID: <CAJZ5v0gRph3UMffWqUVqTnDE149Ai-SbzmhjzZU1x=QOzAZeZA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Disable PTM during suspend on Intel PCI bridges
+To:     "David E. Box" <david.e.box@linux.intel.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Len Brown <len.brown@intel.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Oct 07, 2020 at 06:09:06PM +0200, Jason A. Donenfeld wrote:
-> Since 5.9 I've been seeing lots of the below in my logs. I'm wondering
-> if this is a case of "ASPM finally working properly," or if I'm
-> actually running into aberrant behavior that I should look into
-> further. I run with `pcie_aspm=force pcie_aspm.policy=powersave` on my
-> command line. But I wasn't seeing these messages in 5.8.
- 
-> [79960.801929] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
+On Wed, Oct 7, 2020 at 6:49 PM David E. Box <david.e.box@linux.intel.com> wrote:
+>
+> On Intel Platform Controller Hubs (PCH) since Cannon Lake, the Precision
+> Time Measurement (PTM) capability can prevent PCIe root ports from power
+> gating during suspend-to-idle, causing increased power consumption on
+> systems that suspend using Low Power S0 Idle [1]. The issue is yet to be
+> root caused but believed to be coming from a race condition in the suspend
+> flow as the incidence rate varies for different platforms on Linux but the
+> issue does not occur at all in other operating systems. For now, disable
+> the feature on suspend on all Intel root ports and enable again on resume.
 
-A x63 gen5 capable link?! No such encoding exists, so something is
-definitely wrong. Looks like all 1's was returned when reading the link
-capabilities register, as that equals the mask's 0x3f value. The code
-ought to skip reporting a device returning all 1's.
+IMV it should also be noted that there is no particular reason why PTM
+would need to be enabled while the whole system is suspended.  At
+least it doesn't seem to be particularly useful in that state.
+
+> Link: https://www.uefi.org/sites/default/files/resources/Intel_ACPI_Low_Power_S0_Idle.pdf
+> Bug: https://bugzilla.kernel.org/show_bug.cgi?id=209361
+> Tested-by: Len Brown <len.brown@intel.com>
+> Signed-off-by: David E. Box <david.e.box@linux.intel.com>
+> ---
+>  drivers/pci/quirks.c | 57 ++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 57 insertions(+)
+>
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index bdf9b52567e0..e82b1f60c7a1 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -5632,3 +5632,60 @@ static void apex_pci_fixup_class(struct pci_dev *pdev)
+>  }
+>  DECLARE_PCI_FIXUP_CLASS_HEADER(0x1ac1, 0x089a,
+>                                PCI_CLASS_NOT_DEFINED, 8, apex_pci_fixup_class);
+> +
+> +#ifdef CONFIG_PCIE_PTM
+> +/*
+> + * On Intel Platform Controller Hubs (PCH) since Cannon Lake, the Precision
+> + * Time Measurement (PTM) capability can prevent the PCIe root port from
+> + * power gating during suspend-to-idle, causing increased power consumption.
+> + * So disable the feature on suspend on all Intel root ports and enable
+> + * again on resume.
+> + */
+> +static void quirk_intel_ptm_disable_suspend(struct pci_dev *dev)
+> +{
+> +       int pos;
+> +       u32 ctrl;
+> +
+> +       if (!(dev->ptm_enabled && dev->ptm_root))
+> +               return;
+> +
+> +       pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_PTM);
+> +       if (!pos)
+> +               return;
+> +
+> +       pci_dbg(dev, "quirk: disabling PTM\n");
+> +
+> +       dev->ptm_enabled = 0;
+> +       dev->ptm_root = 0;
+> +
+> +       pci_read_config_dword(dev, pos + PCI_PTM_CTRL, &ctrl);
+> +       ctrl &= ~(PCI_PTM_CTRL_ENABLE | PCI_PTM_CTRL_ROOT);
+> +       pci_write_config_dword(dev, pos + PCI_PTM_CTRL, ctrl);
+> +}
+> +
+> +static void quirk_intel_ptm_enable_resume(struct pci_dev *dev)
+> +{
+> +       int pos;
+> +       u32 ctrl;
+> +
+> +       pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_PTM);
+> +       if (!pos)
+> +               return;
+> +
+> +       pci_dbg(dev, "quirk: re-enabling PTM\n");
+> +
+> +       pci_read_config_dword(dev, pos + PCI_PTM_CTRL, &ctrl);
+> +       ctrl |= PCI_PTM_CTRL_ENABLE | PCI_PTM_CTRL_ROOT;
+> +       pci_write_config_dword(dev, pos + PCI_PTM_CTRL, ctrl);
+> +
+> +       dev->ptm_enabled = 1;
+> +       dev->ptm_root = 1;
+> +}
+> +
+> +DECLARE_PCI_FIXUP_CLASS_SUSPEND(PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
+> +                               PCI_CLASS_BRIDGE_PCI, 8,
+> +                               quirk_intel_ptm_disable_suspend)
+> +DECLARE_PCI_FIXUP_CLASS_RESUME(PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
+> +                              PCI_CLASS_BRIDGE_PCI, 8,
+> +                              quirk_intel_ptm_enable_resume)
+> +#endif
+> --
+> 2.20.1
+>
