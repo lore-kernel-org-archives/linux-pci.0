@@ -2,283 +2,295 @@ Return-Path: <SRS0=DAdr=DO=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87036C4363C
-	for <linux-pci@archiver.kernel.org>; Wed,  7 Oct 2020 09:56:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A282C4363C
+	for <linux-pci@archiver.kernel.org>; Wed,  7 Oct 2020 11:32:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1A68E2076C
-	for <linux-pci@archiver.kernel.org>; Wed,  7 Oct 2020 09:56:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EECB720789
+	for <linux-pci@archiver.kernel.org>; Wed,  7 Oct 2020 11:32:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OZ/sjR1i"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="uk28Dojx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727376AbgJGJ4p (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 7 Oct 2020 05:56:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45912 "EHLO
+        id S1727242AbgJGLcC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 7 Oct 2020 07:32:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60602 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727068AbgJGJ4p (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Oct 2020 05:56:45 -0400
-Received: from mail-yb1-xb31.google.com (mail-yb1-xb31.google.com [IPv6:2607:f8b0:4864:20::b31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EAEF1C061755
-        for <linux-pci@vger.kernel.org>; Wed,  7 Oct 2020 02:56:44 -0700 (PDT)
-Received: by mail-yb1-xb31.google.com with SMTP id x20so1374573ybs.8
-        for <linux-pci@vger.kernel.org>; Wed, 07 Oct 2020 02:56:44 -0700 (PDT)
+        with ESMTP id S1726129AbgJGLcC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Oct 2020 07:32:02 -0400
+Received: from mail-qk1-x744.google.com (mail-qk1-x744.google.com [IPv6:2607:f8b0:4864:20::744])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F33DC061755
+        for <linux-pci@vger.kernel.org>; Wed,  7 Oct 2020 04:32:00 -0700 (PDT)
+Received: by mail-qk1-x744.google.com with SMTP id b69so2215181qkg.8
+        for <linux-pci@vger.kernel.org>; Wed, 07 Oct 2020 04:32:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=mime-version:from:date:message-id:subject:to;
-        bh=59U5YHRhYoK3QiwxwbVozJdpsBtw0yLMXKBGhphwwaY=;
-        b=OZ/sjR1iCEl5q0iUoXcvfXEKQfuNj2qXQsseHAIxikYfNefqhZR2sjZjtJEZo0a9my
-         Xt9uP85cVOlRIImn+wV2Thr8ehOFz4FQmUFkKRcoL5ncta4tRGgPrJTw/mynNU+Wbgma
-         dGWV9npmoN2dTI28E2+mlcG16wWLOvVOhWmk7IKPbjWMpeCYIRdW0SF6rICe2GaYjFHM
-         WWvxliex92LCnBTW7J/rCHum8BFI5a8jLWR4Aik+pal7Mv+bplFVJyYl3gU4B4CU3p/t
-         lioCcXuRfD1jOVrbxgdS4hngaArknmScq3vmnESUY19CG0SaT1jdausXuJCEhbYWny70
-         ulhQ==
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=QSgck3ZalpxbIXLe8PZBRX2LxRHI/7Q6jyECDGDJ8fg=;
+        b=uk28Dojx30Ds2XWik0QdNHVm7XHaPtZM9eceTI0t9lJLtlTMHPzYZ35YKLbZfmg6vW
+         sErRdKWg/FQTu2I13hjjXqFvEp87hxvsJwz8ZPFnoh2XgBrfUuhI477AimGT2MjFpyiD
+         qI3KMjRUdFhrcA+nKkLPcDJHHMj/J+dI1vIyvgGs1BREv9v0xzmJ8PyUtXL2aJsvJlTw
+         4GLOwX7QnAZLncWkJKDaNce00fO3B0UoHHJJt0JMOh4kCyUAobs4+KeHaa3qV4O4Un5v
+         na9Pgb9EOanvPwvnqzR2uubg0Ch9nCyh1larNgE3Ka84AhdGE7uEzzFYb1YFFQPe2hVI
+         rtOg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
-        bh=59U5YHRhYoK3QiwxwbVozJdpsBtw0yLMXKBGhphwwaY=;
-        b=LKLU1lpM4C2Q4EMlWmozDYIfEY0+9gv7At8Z0f60+TyftK9YPqSw6fEFYnn9aNy9sW
-         2LfrLGZ/dZn17nkzJAyf9Ea5ZuVYhf1KcHlhM7V0cf5yykUBWhFdkeoSwetM/SEgfgnc
-         32GspwdxjvBUjlkkdFNSlRbhJ+nnlEbz+Q+yBV0Ntaojspgv+lR9HpHqWWjBiefwvtR3
-         S2dHt7EcpYKFJwUulIlBI5lXWmsqZu3PfvJz6ASzpJAt23sb9E9q+YKWEo45+/0jqw6F
-         HE5TWO6QcdcIqkXKiLrq9b7xNZHuaQBkrdiWevOSylWXr1dG6tuFJysFrfMuwpuOoPxZ
-         bz3Q==
-X-Gm-Message-State: AOAM530ByTJNEkxUc4JhqR4eY7OSIm7uU+vTSKsMjle2Jj7w9ddtP6Sk
-        L5LOn1NbZLGbqNTSqrzPIrMpMyG1QYEc+BwWZ5dQYKZexH1Q73Zn
-X-Google-Smtp-Source: ABdhPJyhD80ag5l1ruhWN8m472kLlem+t8D1rZ/gBKG4jTVFr/LBo/Guh42C7itiUuSbOn9K/5m6I/U6YUNEarkYZao=
-X-Received: by 2002:a25:8505:: with SMTP id w5mr2842089ybk.486.1602064603858;
- Wed, 07 Oct 2020 02:56:43 -0700 (PDT)
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=QSgck3ZalpxbIXLe8PZBRX2LxRHI/7Q6jyECDGDJ8fg=;
+        b=J6HO8YDIs4M+I/yX7fkZy54s0yR8bQxXTdKWZx/qkt0Da/ycUJIIjCqYxrS+/tdX1e
+         TTn6LKgol/H74hBmP2vzds4hPLR4kZQuVGcUWOO+Swi7RJqHtzz8L+Weg2g/t3329yjr
+         tO1dAgKCOzXqxRtaPT2azHnLwpqn+oI+aum2KWyMI0ipHpLja0vdz8timSXQeoCRHjHh
+         jDrf/bESNB94WEwhmgN7fxhsiaOprgar5O70qn9iU3ZmhBPmUuUZLjMpJ8XlcVIBWQqn
+         gRrPNDdR3/VosXfM3UczY59J46/Gw4oRrNo1EknrtIU501zYRnYJNfiyLWgMCZLVLxcM
+         ZSlQ==
+X-Gm-Message-State: AOAM533ld2UZPSAq/O/8wIabPWkENYHkJy99wzG9fGINsCFAIjBdjV27
+        YxrbPPnfuKfLNbZc1kF/urQ8AgI5NISojgieBWuRpHVEvSjjhg==
+X-Google-Smtp-Source: ABdhPJwtHN+/cvgAJEPd2NSMKeS7+vqrh8PIcXlwE90xRbrwzoxoj/ExcLHbxmhQMVpq2Le/J3sazn8ofiZ9Qb/ggag=
+X-Received: by 2002:a37:a3d8:: with SMTP id m207mr2173305qke.175.1602070319425;
+ Wed, 07 Oct 2020 04:31:59 -0700 (PDT)
 MIME-Version: 1.0
-From:   Billy Araujo <billyaraujo@gmail.com>
-Date:   Wed, 7 Oct 2020 10:56:33 +0100
-Message-ID: <CAEt4U6V22Abudp1TRJ2SGkYH=2o+RFWa8nrGbKDoLFXcZJV7qA@mail.gmail.com>
-Subject: PCI IRQ assignment broken from 4.9 onwards (swizzle?)
-To:     linux-pci@vger.kernel.org
+References: <CAA85sZuQgQ=+pVsgdZQCX2HSoRw1-4UHEsyid32=0JSPr01n2g@mail.gmail.com>
+ <20201005190954.GA3031459@bjorn-Precision-5520>
+In-Reply-To: <20201005190954.GA3031459@bjorn-Precision-5520>
+From:   Ian Kumlien <ian.kumlien@gmail.com>
+Date:   Wed, 7 Oct 2020 13:31:48 +0200
+Message-ID: <CAA85sZsVKCbcHfxjNA83==YFDP_va=qp8JQEcbMFYJXNJP=1NQ@mail.gmail.com>
+Subject: Re: [PATCH] Use maximum latency when determining L1/L0s ASPM v2
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     linux-pci <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
+On Mon, Oct 5, 2020 at 9:09 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+> On Mon, Oct 05, 2020 at 08:38:55PM +0200, Ian Kumlien wrote:
+> > On Mon, Oct 5, 2020 at 8:31 PM Bjorn Helgaas <helgaas@kernel.org> wrote=
+:
+> > >
+> > > On Mon, Aug 03, 2020 at 04:58:32PM +0200, Ian Kumlien wrote:
+> > > > Changes:
+> > > > * Handle L0s correclty as well, making it per direction
+> > > > * Moved the switch cost in to the if statement since a non L1 switc=
+h has
+> > > >   no additional cost.
+> > > >
+> > > > For L0s:
+> > > > We sumarize the entire latency per direction to see if it's accepta=
+ble
+> > > > for the PCIe endpoint.
+> > > >
+> > > > If it's not, we clear the link for the path that had too large late=
+ncy.
+> > > >
+> > > > For L1:
+> > > > Currently we check the maximum latency of upstream and downstream
+> > > > per link, not the maximum for the path
+> > > >
+> > > > This would work if all links have the same latency, but:
+> > > > endpoint -> c -> b -> a -> root  (in the order we walk the path)
+> > > >
+> > > > If c or b has the higest latency, it will not register
+> > > >
+> > > > Fix this by maintaining the maximum latency value for the path
+> > > >
+> > > > This change fixes a regression introduced (but not caused) by:
+> > > > 66ff14e59e8a (PCI/ASPM: Allow ASPM on links to PCIe-to-PCI/PCI-X Br=
+idges)
+> > > >
+> > > > Signed-off-by: Ian Kumlien <ian.kumlien@gmail.com>
+> > >
+> > > I'm not sure where we're at with this.  If we can come up with:
+> > >
+> > >   - "lspci -vv" for the entire affected hierarchy before the fix
+> > >
+> > >   - specific identification of incorrect configuration per spec
+> > >
+> > >   - patch that fixes that specific misconfiguration
+> > >
+> > >   - "lspci -vv" for the entire affected hierarchy after the fix
+> > >
+> > > then we have something to work with.  It doesn't have to (and should
+> > > not) fix all the problems at once.
+> >
+> > So detail the changes on my specific machine and then mention
+> > 5.4.1.2.2 of the pci spec
+> > detailing the exit from PCIe ASPM L1?
+>
+> Like I said, I need to see the current ASPM configuration, a note
+> about what is wrong with it (this probably involves a comparison with
+> what the spec says it *should* be), and the configuration after the
+> patch showing that it's now fixed.
+>
+> > Basically writing a better changelog for the first patch?
+> >
+> > Any comments on the L0s patch?
+>
+> Not yet.  When it's packaged up in mergeable form I'll review it.  I
+> just don't have time to extract everything myself.
 
-I have been testing a TI AM57xx board and a NXP iMX8 board with a GPIB
-PCIe card.
+So, did it like this, since I don't think the output from my system
+actually is important.
+(I added some descriptive text that is loosely based on the spec)
+----
+Use maximum latency when determining L1 ASPM
 
-TI board (Phytec): https://www.phytec.com/product/phycore-am57x/
-NXP board (Variscite):
-https://www.variscite.com/product/system-on-module-som/cortex-a53-krait/var-som-mx8m-mini-nxp-i-mx8m-mini/
+Make pcie_aspm_check_latency comply with the PCIe spec, specifically:
+"5.4.1.2.2. Exit from the L1 State"
 
-The GPIB PCIe card has a Texas Instruments XIO2000(A)/XIO2200A PCI
-Express-to-PCI Bridge.
+Which makes it clear that each switch is required to initiate a
+transition within 1=CE=BCs from receiving it, accumulating this latency and
+then we have to wait for the slowest link along the path before
+entering L0 state from L1.
 
-Issue:
-I have noticed is that on Linux kernel 4.9, the Linux PCI driver
-assigns correctly an IRQ number:
+The current code doesn't take the maximum latency into account.
 
-Linux am5728-phycore-rdk 4.9.41-ga962b18-BSP-Yocto-TISDK-AM57xx-PD18.1.0
-02:00.0 Communication controller: National Instruments PCIe-GPIB (rev 02)
-        Subsystem: National Instruments PCIe-GPIB
-        Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop-
-ParErr+ Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium
->TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Interrupt: pin A routed to IRQ 470
+From the example:
+   +----------------+
+   |                |
+   |  Root complex  |
+   |                |
+   |    +-----+     |
+   |    |32 =CE=BCs|     |
+   +----------------+
+           |
+           |  Link 1
+           |
+   +----------------+
+   |     |8 =CE=BCs|     |
+   |     +----+     |
+   |    Switch A    |
+   |     +----+     |
+   |     |8 =CE=BCs|     |
+   +----------------+
+           |
+           |  Link 2
+           |
+   +----------------+
+   |    |32 =CE=BCs|     |
+   |    +-----+     |
+   |    Switch B    |
+   |    +-----+     |
+   |    |32 =CE=BCs|     |
+   +----------------+
+           |
+           |  Link 3
+           |
+   +----------------+
+   |     |8=CE=BCs|      |
+   |     +---+      |
+   |   Endpoint C   |
+   |                |
+   |                |
+   +----------------+
 
-On a newer kernel (this case 4.19), PCI driver doesn't assign an IRQ number.
+Links 1, 2 and 3 are all in L1 state - endpoint C initiates the
+transition to L0 at time T. Since switch B takes 32 =CE=BCs to exit L1 on
+it's ports, Link 3 will transition to L0 at T+32 (longest time
+considering T+8 for endpoint C and T+32 for switch B).
 
-Linux am57xx-phycore-kit 4.19.79-g35d36cd54d #1 SMP PREEMPT Wed Sep 30
-14:04:18 UTC 2020 armv7l GNU/Linux
-02:00.0 Communication controller: National Instruments PCIe-GPIB (rev 02)
-        Subsystem: National Instruments PCIe-GPIB
-        Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop-
-ParErr+ Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium
->TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Interrupt: pin A routed to IRQ 0
+Switch B is required to initiate a transition from the L1 state on it's
+upstream port after no more than 1 =CE=BCs from the beginning of the
+transition from L1 state on the downstream port. Therefore, transition from
+L1 to L0 will begin on link 2 at T+1, this will cascade up the path.
 
-Same issue happened on the NXP board, so it seems Linux related. I
-have tested kernels 4.14, 4.19 and 5.4.3.
+The path will exit L1 at T+34.
 
-The IRQ is important to get the legacy interrupts working.
+Signed-off-by: Ian Kumlien <ian.kumlien@gmail.com>
+----
 
-Looking at the code there has been some refactoring of how PCI assigns
-IRQ number when there is a chain of bridges. I am not too familiar
-with how the code works but I wonder if this has affected how the PCI
-assignment works.
-
-Looking in setup-irq.c:
-
-/* If this device is not on the primary bus, we need to figure out
-   which interrupt pin it will come in on.   We know which slot it
-   will come in on 'cos that slot is where the bridge is.   Each
-   time the interrupt line passes through a PCI-PCI bridge we must
-   apply the swizzle function.  */
-
-Line 44: if (hbrg->swizzle_irq)
-
-From my understanding, this "if" didn't exist in Linux kernel 4.9. If
-swizzle function isn't assigned in the newer kernels it just stays as
-0.
-
-This might be completely unrelated as I said I have no understanding
-how this code is supposed to work.
-
-What I ask is if anyone has experienced any issues similar to this in
-these more recent kernel versions.
-
-Regards,
-
-Billy.
-
-Debug output with the issue:
-
-root@am57xx-phycore-kit:~# uname -a
-Linux am57xx-phycore-kit 4.19.79-g35d36cd54d #1 SMP PREEMPT Wed Sep 30
-14:04:18 UTC 2020 armv7l GNU/Linux
-
-root@am57xx-phycore-kit:~# lspci -vv
-00:00.0 PCI bridge: Texas Instruments Multicore DSP+ARM KeyStone II
-SOC (rev 01) (prog-if 00 [Normal decode])
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
-ParErr+ Stepping- SERR+ FastB2B- DisINTx+
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0, Cache Line Size: 64 bytes
-        Interrupt: pin A routed to IRQ 180
-        Region 0: Memory at 20100000 (64-bit, non-prefetchable) [size=1M]
-        Bus: primary=00, secondary=01, subordinate=ff, sec-latency=0
-        I/O behind bridge: None
-        Memory behind bridge: 20200000-202fffff [size=1M]
-        Prefetchable memory behind bridge: None
-        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort-
-<TAbort- <MAbort+ <SERR- <PERR-
-        BridgeCtl: Parity+ SERR- NoISA- VGA- VGA16- MAbort- >Reset- FastB2B-
-                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-        Capabilities: [40] Power Management version 3
-                Flags: PMEClk- DSI- D1+ D2- AuxCurrent=0mA
-PME(D0+,D1+,D2-,D3hot+,D3cold-)
-                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [50] MSI: Enable+ Count=1/1 Maskable- 64bit+
-                Address: 00000000ae15b000  Data: 0000
-        Capabilities: [70] Express (v2) Root Port (Slot-), MSI 00
-                DevCap: MaxPayload 256 bytes, PhantFunc 0
-                        ExtTag- RBE+
-                DevCtl: CorrErr+ NonFatalErr+ FatalErr+ UnsupReq+
-                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-                        MaxPayload 128 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr- NonFatalErr- FatalErr- UnsupReq-
-AuxPwr- TransPend-
-                LnkCap: Port #0, Speed 5GT/s, Width x2, ASPM L0s L1,
-Exit Latency L0s <512ns, L1 <64us
-                        ClockPM- Surprise- LLActRep+ BwNot+ ASPMOptComp+
-                LnkCtl: ASPM Disabled; RCB 128 bytes Disabled- CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s (downgraded), Width x1 (downgraded)
-                        TrErr- Train- SlotClk+ DLActive+ BWMgmt- ABWMgmt-
-                RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal-
-PMEIntEna+ CRSVisible-
-                RootCap: CRSVisible-
-                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
-                DevCap2: Completion Timeout: Range ABCD, TimeoutDis+,
-LTR-, OBFF Not Supported ARIFwd-
-                         AtomicOpsCap: Routing- 32bit- 64bit- 128bitCAS-
-                DevCtl2: Completion Timeout: 50us to 50ms,
-TimeoutDis-, LTR-, OBFF Disabled ARIFwd-
-                         AtomicOpsCtl: ReqEn- EgressBlck-
-                LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-
-                         Transmit Margin: Normal Operating Range,
-EnterModifiedCompliance- ComplianceSOS-
-                         Compliance De-emphasis: -6dB
-                LnkSta2: Current De-emphasis Level: -3.5dB,
-EqualizationComplete-, EqualizationPhase1-
-                         EqualizationPhase2-, EqualizationPhase3-,
-LinkEqualizationRequest-
-        Capabilities: [100 v2] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
-UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
-UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt-
-UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-
-AdvNonFatalErr-
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-
-AdvNonFatalErr+
-                AERCap: First Error Pointer: 00, ECRCGenCap+
-ECRCGenEn- ECRCChkCap+ ECRCChkEn-
-                        MultHdrRecCap- MultHdrRecEn- TLPPfxPres- HdrLogCap-
-                HeaderLog: 00000000 00000000 00000000 00000000
-                RootCmd: CERptEn+ NFERptEn+ FERptEn+
-                RootSta: CERcvd- MultCERcvd- UERcvd- MultUERcvd-
-                         FirstFatal- NonFatalMsg- FatalMsg- IntMsg 0
-                ErrorSrc: ERR_COR: 0000 ERR_FATAL/NONFATAL: 0000
-        Kernel driver in use: pcieport
-
-01:00.0 PCI bridge: Texas Instruments XIO2000(A)/XIO2200A PCI
-Express-to-PCI Bridge (rev 03) (prog-if 00 [Normal decode])
-        Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop-
-ParErr+ Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-        Bus: primary=01, secondary=02, subordinate=02, sec-latency=0
-        I/O behind bridge: None
-        Memory behind bridge: 20200000-202fffff [size=1M]
-        Prefetchable memory behind bridge: None
-        Secondary status: 66MHz- FastB2B+ ParErr- DEVSEL=medium
->TAbort- <TAbort- <MAbort+ <SERR- <PERR-
-        BridgeCtl: Parity+ SERR- NoISA- VGA- VGA16- MAbort+ >Reset- FastB2B+
-                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-        Capabilities: [50] Power Management version 2
-                Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA
-PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-                Bridge: PM- B3+
-        Capabilities: [60] MSI: Enable- Count=1/16 Maskable- 64bit+
-                Address: 0000000000000000  Data: 0000
-        Capabilities: [80] Subsystem: Device 0000:0000
-        Capabilities: [90] Express (v1) PCI-Express to PCI/PCI-X Bridge, MSI 00
-                DevCap: MaxPayload 512 bytes, PhantFunc 0
-                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE-
-SlotPowerLimit 0.000W
-                DevCtl: CorrErr- NonFatalErr- FatalErr- UnsupReq-
-                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop+ BrConfRtry-
-                        MaxPayload 128 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr- NonFatalErr+ FatalErr- UnsupReq-
-AuxPwr- TransPend-
-                LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1,
-Exit Latency L0s <1us, L1 <16us
-                        ClockPM- Surprise- LLActRep- BwNot- ASPMOptComp-
-                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s (ok), Width x1 (ok)
-                        TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-        Capabilities: [100 v1] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
-UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
-UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt-
-UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-
-AdvNonFatalErr-
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-
-AdvNonFatalErr-
-                AERCap: First Error Pointer: 00, ECRCGenCap+
-ECRCGenEn- ECRCChkCap+ ECRCChkEn-
-                        MultHdrRecCap- MultHdrRecEn- TLPPfxPres- HdrLogCap-
-                HeaderLog: 00000000 00000000 00000000 00000000
-
-02:00.0 Communication controller: National Instruments PCIe-GPIB (rev 02)
-        Subsystem: National Instruments PCIe-GPIB
-        Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop-
-ParErr+ Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium
->TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Interrupt: pin A routed to IRQ 0
-        Region 0: Memory at 20204000 (32-bit, non-prefetchable)
-[disabled] [size=2K]
-        Region 1: Memory at 20200000 (32-bit, non-prefetchable)
-[disabled] [size=16K]
+> > > > ---
+> > > >  drivers/pci/pcie/aspm.c | 41 ++++++++++++++++++++++++++-----------=
+----
+> > > >  1 file changed, 26 insertions(+), 15 deletions(-)
+> > > >
+> > > > diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> > > > index b17e5ffd31b1..bc512e217258 100644
+> > > > --- a/drivers/pci/pcie/aspm.c
+> > > > +++ b/drivers/pci/pcie/aspm.c
+> > > > @@ -434,7 +434,8 @@ static void pcie_get_aspm_reg(struct pci_dev *p=
+dev,
+> > > >
+> > > >  static void pcie_aspm_check_latency(struct pci_dev *endpoint)
+> > > >  {
+> > > > -     u32 latency, l1_switch_latency =3D 0;
+> > > > +     u32 latency, l1_max_latency =3D 0, l1_switch_latency =3D 0,
+> > > > +             l0s_latency_up =3D 0, l0s_latency_dw =3D 0;
+> > > >       struct aspm_latency *acceptable;
+> > > >       struct pcie_link_state *link;
+> > > >
+> > > > @@ -447,15 +448,22 @@ static void pcie_aspm_check_latency(struct pc=
+i_dev *endpoint)
+> > > >       acceptable =3D &link->acceptable[PCI_FUNC(endpoint->devfn)];
+> > > >
+> > > >       while (link) {
+> > > > -             /* Check upstream direction L0s latency */
+> > > > -             if ((link->aspm_capable & ASPM_STATE_L0S_UP) &&
+> > > > -                 (link->latency_up.l0s > acceptable->l0s))
+> > > > -                     link->aspm_capable &=3D ~ASPM_STATE_L0S_UP;
+> > > > -
+> > > > -             /* Check downstream direction L0s latency */
+> > > > -             if ((link->aspm_capable & ASPM_STATE_L0S_DW) &&
+> > > > -                 (link->latency_dw.l0s > acceptable->l0s))
+> > > > -                     link->aspm_capable &=3D ~ASPM_STATE_L0S_DW;
+> > > > +             if (link->aspm_capable & ASPM_STATE_L0S) {
+> > > > +                     /* Check upstream direction L0s latency */
+> > > > +                     if (link->aspm_capable & ASPM_STATE_L0S_UP) {
+> > > > +                             l0s_latency_up +=3D link->latency_up.=
+l0s;
+> > > > +                             if (l0s_latency_up > acceptable->l0s)
+> > > > +                                     link->aspm_capable &=3D ~ASPM=
+_STATE_L0S_UP;
+> > > > +                     }
+> > > > +
+> > > > +                     /* Check downstream direction L0s latency */
+> > > > +                     if (link->aspm_capable & ASPM_STATE_L0S_DW) {
+> > > > +                             l0s_latency_dw +=3D link->latency_dw.=
+l0s;
+> > > > +                             if (l0s_latency_dw > acceptable->l0s)
+> > > > +                                     link->aspm_capable &=3D ~ASPM=
+_STATE_L0S_DW;
+> > > > +                     }
+> > > > +             }
+> > > > +
+> > > >               /*
+> > > >                * Check L1 latency.
+> > > >                * Every switch on the path to root complex need 1
+> > > > @@ -469,11 +477,14 @@ static void pcie_aspm_check_latency(struct pc=
+i_dev *endpoint)
+> > > >                * L1 exit latencies advertised by a device include L=
+1
+> > > >                * substate latencies (and hence do not do any check)=
+.
+> > > >                */
+> > > > -             latency =3D max_t(u32, link->latency_up.l1, link->lat=
+ency_dw.l1);
+> > > > -             if ((link->aspm_capable & ASPM_STATE_L1) &&
+> > > > -                 (latency + l1_switch_latency > acceptable->l1))
+> > > > -                     link->aspm_capable &=3D ~ASPM_STATE_L1;
+> > > > -             l1_switch_latency +=3D 1000;
+> > > > +             if (link->aspm_capable & ASPM_STATE_L1) {
+> > > > +                     latency =3D max_t(u32, link->latency_up.l1, l=
+ink->latency_dw.l1);
+> > > > +                     l1_max_latency =3D max_t(u32, latency, l1_max=
+_latency);
+> > > > +                     if (l1_max_latency + l1_switch_latency > acce=
+ptable->l1)
+> > > > +                             link->aspm_capable &=3D ~ASPM_STATE_L=
+1;
+> > > > +
+> > > > +                     l1_switch_latency +=3D 1000;
+> > > > +             }
+> > > >
+> > > >               link =3D link->parent;
+> > > >       }
+> > > > --
+> > > > 2.28.0
+> > > >
