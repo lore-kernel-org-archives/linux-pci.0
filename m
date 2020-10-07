@@ -2,131 +2,100 @@ Return-Path: <SRS0=DAdr=DO=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 777C1C47426
-	for <linux-pci@archiver.kernel.org>; Wed,  7 Oct 2020 16:45:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0EB3C47426
+	for <linux-pci@archiver.kernel.org>; Wed,  7 Oct 2020 16:46:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 20AC621707
-	for <linux-pci@archiver.kernel.org>; Wed,  7 Oct 2020 16:45:47 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ffwll.ch header.i=@ffwll.ch header.b="jOfg2aPb"
+	by mail.kernel.org (Postfix) with ESMTP id 62917216C4
+	for <linux-pci@archiver.kernel.org>; Wed,  7 Oct 2020 16:46:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1602089160;
+	bh=aC48hGgVsA9EoqimIkaJ3f35jgeQ1/5CBBHUREBgGDk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=zyRRT6Bm/BaArPzQ+5aPUvkcmV0yJJbvGL2CJ86hBQGFFEN4ONk/Hv3qiE2/+/Rf7
+	 IE1Qw3MxfRysPYZL6fI6g0CkcfIi+8n3B/WUk17iNyDA++NAbMELKRXtslUZqp+KjV
+	 0bKO87UxsHnl9ZPosouf8YazbOZiQN5wfaTqQF+s=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728768AbgJGQpq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 7 Oct 2020 12:45:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52720 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728410AbgJGQor (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Oct 2020 12:44:47 -0400
-Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6453DC0613D6
-        for <linux-pci@vger.kernel.org>; Wed,  7 Oct 2020 09:44:47 -0700 (PDT)
-Received: by mail-wr1-x444.google.com with SMTP id t10so3007216wrv.1
-        for <linux-pci@vger.kernel.org>; Wed, 07 Oct 2020 09:44:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ffwll.ch; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=P02GBIE7m0UGj1Ja16VfRtl1rny8rrQDbz10f0cDTbo=;
-        b=jOfg2aPb+p2PctbbcpGPk2VTV8x+SKSCmFeHr5kNnGpMzP9+KndzTdMPcmKSmVIBOL
-         Sn8AtpmXpRju+60FUKJKw5WoTBtH4QSJvymhz/0+3ZeCxQuRUo3jPklVq4Ib9EuOwEj2
-         sPoeQoG2BgasR1J/L7Iui7jQ8XopY468hCzwc=
+        id S1728762AbgJGQp7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 7 Oct 2020 12:45:59 -0400
+Received: from mail-ot1-f68.google.com ([209.85.210.68]:44282 "EHLO
+        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728781AbgJGQp5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Oct 2020 12:45:57 -0400
+Received: by mail-ot1-f68.google.com with SMTP id e20so2394504otj.11;
+        Wed, 07 Oct 2020 09:45:57 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=P02GBIE7m0UGj1Ja16VfRtl1rny8rrQDbz10f0cDTbo=;
-        b=FTp4Oh48U0NZeVQ62NP0cuJVEOSR7UEPXrn408the1yPGhUSpWoGYeptvR+k2rf04m
-         KiOHPSCjyqvTRDKPNzsDsZyRBrDHtrhWDD/GnE1xQUHqlu26WrEmn7LMl4774R0fGu/q
-         0LsYk+FzgqGGzctuJmoltl/CKb7LvTh+8bT4uPISi4O310PMSqNGd8txrU89PhEsaJBu
-         yzNGl5l1kbymNbF93NxNBF8Ju+gkXnRFu+DBw4Rjn6n/Fue8KqqoEL+6DSKMQUKhLN66
-         K9U0zlcYgKVldTfAB+tMeD9wgoWN4LdxAXg4pauJFaNeZ0sRjOOjYhAp0/azBc3Wk3M0
-         8UXw==
-X-Gm-Message-State: AOAM531D3K1XZQMvzas+4Tdlv5vHSGxw9lHuLzUVbUBQuAnD029t0f/d
-        HrNxQSxNS4eby9+T5mYqBcSTHQ==
-X-Google-Smtp-Source: ABdhPJzCDfyCaOqONShrGzC8VJoQgNBmutXD42q/UwtrqERpH1arTrrensBhgkJDw5zkDOp6xBcjVA==
-X-Received: by 2002:adf:ba4f:: with SMTP id t15mr4383017wrg.335.1602089086053;
-        Wed, 07 Oct 2020 09:44:46 -0700 (PDT)
-Received: from phenom.ffwll.local ([2a02:168:57f4:0:efd0:b9e5:5ae6:c2fa])
-        by smtp.gmail.com with ESMTPSA id z191sm3332280wme.40.2020.10.07.09.44.44
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=WnM1HniI+irqMb3dL1ZWNe6hwPnKvmLnla78RIiBA8M=;
+        b=X9UHGgkrPVqE6KzJgpQRRE7JDF/S7KLWp/D8t6YWxAhgAvAx08klcpA+8Ca11PGaKL
+         WEcpJg4x2ZGMD8fNXH5zKFHiDoDnUkLNeX9A1lrLoiml5ueyKR1KFiuXZbYbwnHVVSDY
+         GbZp5njG4ceFZ8jBfnMKK0T8SwCQEuD1SDC5TCB3GqLI28qmnbNzSvfWRMMIS4kKyWfK
+         tQClYX5rm0DwIN6J6tI051lANOpFZMAXx4oNJSsMEXkh2pG91PAnvgsxNK6s/Kzjo4Bp
+         XnSmDLgf0O8O7sSsoNBa0b9Elix6ImcXNhlipDxUZ9BjXW30OpuFRvF7oqiij3sFNSSR
+         fLoA==
+X-Gm-Message-State: AOAM533Qq1+9/miDNS7I29tA/cwA9yuAzUW3I18whDDT4R7EUIWY6nNJ
+        u1JyxlBLghMRPBZ1r940ag==
+X-Google-Smtp-Source: ABdhPJwWdqTIyji6u3rGbBmzEdV7sRf9Y12L76pNZty+mjhrPlNN9ExtnBOuM4E38ARk8hcq/w/+DQ==
+X-Received: by 2002:a05:6830:196:: with SMTP id q22mr2270160ota.221.1602089157027;
+        Wed, 07 Oct 2020 09:45:57 -0700 (PDT)
+Received: from xps15 (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
+        by smtp.gmail.com with ESMTPSA id j75sm2290342oih.10.2020.10.07.09.45.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 07 Oct 2020 09:44:45 -0700 (PDT)
-From:   Daniel Vetter <daniel.vetter@ffwll.ch>
-To:     DRI Development <dri-devel@lists.freedesktop.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Cc:     kvm@vger.kernel.org, linux-mm@kvack.org,
+        Wed, 07 Oct 2020 09:45:56 -0700 (PDT)
+Received: (nullmailer pid 359382 invoked by uid 1000);
+        Wed, 07 Oct 2020 16:45:55 -0000
+Date:   Wed, 7 Oct 2020 11:45:55 -0500
+From:   Rob Herring <robh@kernel.org>
+To:     Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+Cc:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Jassi Brar <jaswinder.singh@linaro.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
         linux-arm-kernel@lists.infradead.org,
-        linux-samsung-soc@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-s390@vger.kernel.org, Daniel Vetter <daniel.vetter@ffwll.ch>,
-        Daniel Vetter <daniel.vetter@intel.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Kees Cook <keescook@chromium.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        John Hubbard <jhubbard@nvidia.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Jan Kara <jack@suse.cz>, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org
-Subject: [PATCH 09/13] PCI: obey iomem restrictions for procfs mmap
-Date:   Wed,  7 Oct 2020 18:44:22 +0200
-Message-Id: <20201007164426.1812530-10-daniel.vetter@ffwll.ch>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20201007164426.1812530-1-daniel.vetter@ffwll.ch>
-References: <20201007164426.1812530-1-daniel.vetter@ffwll.ch>
+        Marc Zyngier <maz@kernel.org>, linux-pci@vger.kernel.org,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Masami Hiramatsu <masami.hiramatsu@linaro.org>
+Subject: Re: [PATCH v7 3/3] PCI: uniphier: Add misc interrupt handler to
+ invoke PME and AER
+Message-ID: <20201007164555.GA359326@bogus>
+References: <1599816814-16515-1-git-send-email-hayashi.kunihiko@socionext.com>
+ <1599816814-16515-4-git-send-email-hayashi.kunihiko@socionext.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1599816814-16515-4-git-send-email-hayashi.kunihiko@socionext.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-There's three ways to access pci bars from userspace: /dev/mem, sysfs
-files, and the old proc interface. Two check against
-iomem_is_exclusive, proc never did. And with CONFIG_IO_STRICT_DEVMEM,
-this starts to matter, since we don't want random userspace having
-access to pci bars while a driver is loaded and using it.
+On Fri, 11 Sep 2020 18:33:34 +0900, Kunihiko Hayashi wrote:
+> This patch adds misc interrupt handler to detect and invoke PME/AER event.
+> 
+> In UniPhier PCIe controller, PME/AER signals are assigned to the same
+> signal as MSI by the internal logic. These signals should be detected by
+> the internal register, however, DWC MSI handler can't handle these signals.
+> 
+> DWC MSI handler calls .msi_host_isr() callback function, that detects
+> PME/AER signals with the internal register and invokes the interrupt
+> with PME/AER vIRQ numbers.
+> 
+> These vIRQ numbers is obtained from portdrv in uniphier_add_pcie_port()
+> function.
+> 
+> Cc: Marc Zyngier <maz@kernel.org>
+> Cc: Jingoo Han <jingoohan1@gmail.com>
+> Cc: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+> ---
+>  drivers/pci/controller/dwc/pcie-uniphier.c | 77 +++++++++++++++++++++++++-----
+>  1 file changed, 66 insertions(+), 11 deletions(-)
+> 
 
-Fix this.
-
-References: 90a545e98126 ("restrict /dev/mem to idle io memory ranges")
-Signed-off-by: Daniel Vetter <daniel.vetter@intel.com>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>
-Cc: Kees Cook <keescook@chromium.org>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: John Hubbard <jhubbard@nvidia.com>
-Cc: Jérôme Glisse <jglisse@redhat.com>
-Cc: Jan Kara <jack@suse.cz>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-mm@kvack.org
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-samsung-soc@vger.kernel.org
-Cc: linux-media@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
----
- drivers/pci/proc.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
-index d35186b01d98..3a2f90beb4cb 100644
---- a/drivers/pci/proc.c
-+++ b/drivers/pci/proc.c
-@@ -274,6 +274,11 @@ static int proc_bus_pci_mmap(struct file *file, struct vm_area_struct *vma)
- 		else
- 			return -EINVAL;
- 	}
-+
-+	if (dev->resource[i].flags & IORESOURCE_MEM &&
-+	    iomem_is_exclusive(dev->resource[i].start))
-+		return -EINVAL;
-+
- 	ret = pci_mmap_page_range(dev, i, vma,
- 				  fpriv->mmap_state, write_combine);
- 	if (ret < 0)
--- 
-2.28.0
-
+Reviewed-by: Rob Herring <robh@kernel.org>
