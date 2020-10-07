@@ -2,651 +2,278 @@ Return-Path: <SRS0=DAdr=DO=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0BD0C41604
-	for <linux-pci@archiver.kernel.org>; Wed,  7 Oct 2020 16:16:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E41DBC4727E
+	for <linux-pci@archiver.kernel.org>; Wed,  7 Oct 2020 16:41:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1F4AB2176B
-	for <linux-pci@archiver.kernel.org>; Wed,  7 Oct 2020 16:16:02 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=zx2c4.com header.i=@zx2c4.com header.b="Sebu+QIA"
+	by mail.kernel.org (Postfix) with ESMTP id 883B921582
+	for <linux-pci@archiver.kernel.org>; Wed,  7 Oct 2020 16:41:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1602088906;
+	bh=mGOh0Ko1iSI1S+bsIrPb6oqaVTbZDdqPtdLVpGicrDk=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=TkZfgfmxtkOFQUprIYOXypK1yo86JLQFnMlSgTj64Df7fYej22rqRxBt3e0VCdJuN
+	 Y1jJyopa+HfEGNy7E/Y5/dg32hECAyd0sl72Hrxag2SCj5Fa8tjghkn9MPCggjb+Tq
+	 M0OKjMX8sHaN1i15thNvdX0/5pSHL5zheMQZt9tU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729143AbgJGQQB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 7 Oct 2020 12:16:01 -0400
-Received: from mail.zx2c4.com ([192.95.5.64]:37139 "EHLO mail.zx2c4.com"
+        id S1727033AbgJGQlp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 7 Oct 2020 12:41:45 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39116 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729141AbgJGQQB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 7 Oct 2020 12:16:01 -0400
-X-Greylist: delayed 400 seconds by postgrey-1.27 at vger.kernel.org; Wed, 07 Oct 2020 12:15:59 EDT
-Received: by mail.zx2c4.com (ZX2C4 Mail Server) with ESMTP id 2449ff35
-        for <linux-pci@vger.kernel.org>;
-        Wed, 7 Oct 2020 15:36:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha1; c=relaxed; d=zx2c4.com; h=mime-version
-        :from:date:message-id:subject:to:content-type; s=mail; bh=LXuXuA
-        m/IiEgwQrCyPZFQhX9Yds=; b=Sebu+QIAHCpbGkVtXQcRQhKVPyyachKPO054Qq
-        rVxhrxZYWiDBo2O2EXpT3/ZoYUMLaa+TFeD8zxRb1x87RBpUJTAz11JxB1EMBitO
-        6PjcCPde8JwpK9cxFRxwnJTCQ3RkWbFPSx34Eit6rPx4Qs6dkSZFLV9XDYKsoMZO
-        J7ij4svnJd4SGyvDSMSVLcHr0IZs49l+ftBrCXACSpvbK8vyS4m7VyDxDi9zwfVs
-        XFjqw26q5m7MzaX9Mgwujbd1uxCCMU2bOxOWN8LSMuhZ+p/OILQMtVi0VvGXcFVA
-        95D/dpLB5DyszVlgpakLkyq0QIgOBVxVfZsvlh1LWLSSp40w==
-Received: by mail.zx2c4.com (ZX2C4 Mail Server) with ESMTPSA id d1087369 (TLSv1.3:TLS_AES_256_GCM_SHA384:256:NO)
-        for <linux-pci@vger.kernel.org>;
-        Wed, 7 Oct 2020 15:36:40 +0000 (UTC)
-Received: by mail-il1-f174.google.com with SMTP id o9so2813820ilo.0
-        for <linux-pci@vger.kernel.org>; Wed, 07 Oct 2020 09:09:18 -0700 (PDT)
-X-Gm-Message-State: AOAM5335BQvxaXESQ1nzRs4KShPCIrMMApkR3afTjlLe6wUxZzFzT0As
-        u9S4vT4RKc+2AS3yHOYqWIK5BYwfDLbk10S0cpg=
-X-Google-Smtp-Source: ABdhPJykrrzVclLTHfa1jfmHXQW3cLM0M1QI8SlZAb4TYbc0Jplq27DLv7FG1CFucShvIGzirvhTFWBb21oxFfkWKUg=
-X-Received: by 2002:a05:6e02:4af:: with SMTP id e15mr3222465ils.64.1602086956905;
- Wed, 07 Oct 2020 09:09:16 -0700 (PDT)
+        id S1726138AbgJGQlp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 7 Oct 2020 12:41:45 -0400
+Received: from localhost (170.sub-72-107-125.myvzw.com [72.107.125.170])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id E04222064E;
+        Wed,  7 Oct 2020 16:41:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1602088903;
+        bh=mGOh0Ko1iSI1S+bsIrPb6oqaVTbZDdqPtdLVpGicrDk=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=UIboQ+SLHDHnADiHZ9r8xEGDb5MTsrX5VJvgI1lEhVNRSiHMgbT/YyjJ8rR8n2vpc
+         6Rpi662wDqtu/zjMVir0lExqkUURABiYtAPexgKfKOjbiyjxErRBojnW0CFTkUmdQc
+         yp8ey6ZWeAtQcxzH9FataRYW3HzGuWyKDFWwzZg4=
+Date:   Wed, 7 Oct 2020 11:41:41 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Billy Araujo <billyaraujo@gmail.com>
+Cc:     linux-pci@vger.kernel.org, Kishon Vijay Abraham I <kishon@ti.com>,
+        linux-omap@vger.kernel.org
+Subject: Re: PCI IRQ assignment broken from 4.9 onwards (swizzle?)
+Message-ID: <20201007164141.GA3249809@bjorn-Precision-5520>
 MIME-Version: 1.0
-From:   "Jason A. Donenfeld" <Jason@zx2c4.com>
-Date:   Wed, 7 Oct 2020 18:09:06 +0200
-X-Gmail-Original-Message-ID: <CAHmME9r_cNx04yuUN+TPPY=xDHuDxRrLb8KqR7C69YtXMajAJg@mail.gmail.com>
-Message-ID: <CAHmME9r_cNx04yuUN+TPPY=xDHuDxRrLb8KqR7C69YtXMajAJg@mail.gmail.com>
-Subject: spammy dmesg about fluctuating pcie bandwidth on 5.9
-To:     linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAEt4U6V22Abudp1TRJ2SGkYH=2o+RFWa8nrGbKDoLFXcZJV7qA@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
+[+cc Kishon, linux-omap (maybe this is dra7xx-related?)]
 
-Since 5.9 I've been seeing lots of the below in my logs. I'm wondering
-if this is a case of "ASPM finally working properly," or if I'm
-actually running into aberrant behavior that I should look into
-further. I run with `pcie_aspm=force pcie_aspm.policy=powersave` on my
-command line. But I wasn't seeing these messages in 5.8.
+On Wed, Oct 07, 2020 at 10:56:33AM +0100, Billy Araujo wrote:
+> Hi,
+> 
+> I have been testing a TI AM57xx board and a NXP iMX8 board with a GPIB
+> PCIe card.
+> 
+> TI board (Phytec): https://www.phytec.com/product/phycore-am57x/
+> NXP board (Variscite):
+> https://www.variscite.com/product/system-on-module-som/cortex-a53-krait/var-som-mx8m-mini-nxp-i-mx8m-mini/
+> 
+> The GPIB PCIe card has a Texas Instruments XIO2000(A)/XIO2200A PCI
+> Express-to-PCI Bridge.
+> 
+> Issue:
+> I have noticed is that on Linux kernel 4.9, the Linux PCI driver
+> assigns correctly an IRQ number:
+> 
+> Linux am5728-phycore-rdk 4.9.41-ga962b18-BSP-Yocto-TISDK-AM57xx-PD18.1.0
+> 02:00.0 Communication controller: National Instruments PCIe-GPIB (rev 02)
+>         Subsystem: National Instruments PCIe-GPIB
+>         Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop-
+> ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+>         Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium
+> >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Interrupt: pin A routed to IRQ 470
+> 
+> On a newer kernel (this case 4.19), PCI driver doesn't assign an IRQ number.
+> 
+> Linux am57xx-phycore-kit 4.19.79-g35d36cd54d #1 SMP PREEMPT Wed Sep 30
+> 14:04:18 UTC 2020 armv7l GNU/Linux
+> 02:00.0 Communication controller: National Instruments PCIe-GPIB (rev 02)
+>         Subsystem: National Instruments PCIe-GPIB
+>         Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop-
+> ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+>         Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium
+> >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Interrupt: pin A routed to IRQ 0
+> 
+> Same issue happened on the NXP board, so it seems Linux related. I
+> have tested kernels 4.14, 4.19 and 5.4.3.
+> 
+> The IRQ is important to get the legacy interrupts working.
+> 
+> Looking at the code there has been some refactoring of how PCI assigns
+> IRQ number when there is a chain of bridges. I am not too familiar
+> with how the code works but I wonder if this has affected how the PCI
+> assignment works.
+> 
+> Looking in setup-irq.c:
+> 
+> /* If this device is not on the primary bus, we need to figure out
+>    which interrupt pin it will come in on.   We know which slot it
+>    will come in on 'cos that slot is where the bridge is.   Each
+>    time the interrupt line passes through a PCI-PCI bridge we must
+>    apply the swizzle function.  */
+> 
+> Line 44: if (hbrg->swizzle_irq)
+> 
+> From my understanding, this "if" didn't exist in Linux kernel 4.9. If
+> swizzle function isn't assigned in the newer kernels it just stays as
+> 0.
+> 
+> This might be completely unrelated as I said I have no understanding
+> how this code is supposed to work.
+> 
+> What I ask is if anyone has experienced any issues similar to this in
+> these more recent kernel versions.
 
-Jason
+Sorry for the issue, and thanks very much for the report.  Is it
+possible to test a current kernel, e.g., v5.8 or v5.9-rc8?
 
-~+~+~+~+~+~+~+~+~
+My guess is this is related to the PCI controller driver; would that
+be pci-dra7xx.c?
 
-[79960.801929] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[79981.679813] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80002.001267] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80023.842169] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80045.763841] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80068.083577] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80090.351526] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80112.750350] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80134.749255] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80155.763411] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80178.457760] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80200.804896] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80223.311729] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80245.791343] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80267.870825] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80289.713123] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80311.978655] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80334.701124] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80355.658151] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80377.844362] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80400.538230] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80422.575182] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80445.282519] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80467.714932] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80490.148981] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80509.719262] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80531.764821] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80553.767613] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80574.943252] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80597.579091] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80619.711966] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80641.901453] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80664.592372] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80686.622715] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80709.291964] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80731.844729] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80754.541540] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80777.075171] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80799.794398] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80822.489116] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80844.934930] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80865.739007] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80888.219031] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80910.753669] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80932.989664] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80954.833210] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80977.477922] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[80998.699385] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81020.726597] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81042.750936] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81065.257417] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81087.767519] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81110.493829] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81132.617088] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81154.700420] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81177.363880] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81199.946937] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81221.794056] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81243.043378] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81265.709152] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81287.630090] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81309.763332] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81318.920797] EXT4-fs (dm-2): mounted filesystem with ordered data
-mode. Opts: (null)
-[81332.457364] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81354.404894] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81376.669492] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81398.964385] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81421.657484] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81444.243407] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81466.243845] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81486.750420] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81508.936351] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81531.285200] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81553.791276] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81575.793924] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81597.844229] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81620.550927] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81643.227381] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81665.900018] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81688.617113] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81710.952986] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81730.963752] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81753.669690] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81776.056524] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81798.212865] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81820.906623] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81842.002407] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81864.319510] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81887.016001] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81909.719258] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81931.279258] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81953.922625] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81974.239845] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[81996.957939] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82019.066339] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82041.651293] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82064.344822] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82085.977719] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82108.451266] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82131.141927] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82153.867813] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82175.818802] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82197.678494] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82219.947803] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82241.784890] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82264.480971] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82287.199484] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82309.863960] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82331.783480] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82354.189336] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82376.876548] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82398.800816] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82420.979857] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82443.678685] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82466.211265] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82486.823160] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82509.539779] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82531.808332] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82553.836533] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82576.049885] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82597.995713] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82620.691143] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82642.050409] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82663.891937] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82686.238435] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82708.929312] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82731.008511] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82753.730734] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82775.711219] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82798.370968] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82820.741946] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82842.931577] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82865.620923] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82888.350976] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82911.034043] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82933.743876] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82956.247764] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[82978.767434] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83000.796754] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83022.660145] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83045.353526] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83068.163036] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83090.793322] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83113.489363] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83135.812852] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83158.399350] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83181.118694] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83203.805756] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83225.945483] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83248.525805] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83271.217918] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83293.938688] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83316.177679] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83337.141733] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83359.831741] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83381.940645] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83404.657248] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83426.927612] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83449.646961] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83472.336930] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83493.830913] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83514.470154] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83536.790704] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83559.247431] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83581.943573] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83604.555801] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83626.769373] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83649.489632] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83672.182965] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83694.872527] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83717.082388] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83739.808368] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83762.122494] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83784.758621] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83807.488464] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83830.201485] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83852.894547] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83875.491085] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83898.078276] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83920.793717] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83942.740521] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83964.587599] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[83987.170436] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[84009.893456] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[84032.606254] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[84055.329572] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[84077.823293] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[84100.519811] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[84123.296376] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[84145.935520] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[84168.659294] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[84190.605264] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[84213.215194] pcieport 0000:04:00.0: 8.000 Gb/s available PCIe
-bandwidth, limited by 2.5 GT/s PCIe x4 link at 0000:00:1b
-.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[84235.938442] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-[84258.658162] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
+> Debug output with the issue:
+> 
+> root@am57xx-phycore-kit:~# uname -a
+> Linux am57xx-phycore-kit 4.19.79-g35d36cd54d #1 SMP PREEMPT Wed Sep 30
+> 14:04:18 UTC 2020 armv7l GNU/Linux
+> 
+> root@am57xx-phycore-kit:~# lspci -vv
+> 00:00.0 PCI bridge: Texas Instruments Multicore DSP+ARM KeyStone II
+> SOC (rev 01) (prog-if 00 [Normal decode])
+>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+> ParErr+ Stepping- SERR+ FastB2B- DisINTx+
+>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+> <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Latency: 0, Cache Line Size: 64 bytes
+>         Interrupt: pin A routed to IRQ 180
+>         Region 0: Memory at 20100000 (64-bit, non-prefetchable) [size=1M]
+>         Bus: primary=00, secondary=01, subordinate=ff, sec-latency=0
+>         I/O behind bridge: None
+>         Memory behind bridge: 20200000-202fffff [size=1M]
+>         Prefetchable memory behind bridge: None
+>         Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort-
+> <TAbort- <MAbort+ <SERR- <PERR-
+>         BridgeCtl: Parity+ SERR- NoISA- VGA- VGA16- MAbort- >Reset- FastB2B-
+>                 PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+>         Capabilities: [40] Power Management version 3
+>                 Flags: PMEClk- DSI- D1+ D2- AuxCurrent=0mA
+> PME(D0+,D1+,D2-,D3hot+,D3cold-)
+>                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+>         Capabilities: [50] MSI: Enable+ Count=1/1 Maskable- 64bit+
+>                 Address: 00000000ae15b000  Data: 0000
+>         Capabilities: [70] Express (v2) Root Port (Slot-), MSI 00
+>                 DevCap: MaxPayload 256 bytes, PhantFunc 0
+>                         ExtTag- RBE+
+>                 DevCtl: CorrErr+ NonFatalErr+ FatalErr+ UnsupReq+
+>                         RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
+>                         MaxPayload 128 bytes, MaxReadReq 512 bytes
+>                 DevSta: CorrErr- NonFatalErr- FatalErr- UnsupReq-
+> AuxPwr- TransPend-
+>                 LnkCap: Port #0, Speed 5GT/s, Width x2, ASPM L0s L1,
+> Exit Latency L0s <512ns, L1 <64us
+>                         ClockPM- Surprise- LLActRep+ BwNot+ ASPMOptComp+
+>                 LnkCtl: ASPM Disabled; RCB 128 bytes Disabled- CommClk-
+>                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+>                 LnkSta: Speed 2.5GT/s (downgraded), Width x1 (downgraded)
+>                         TrErr- Train- SlotClk+ DLActive+ BWMgmt- ABWMgmt-
+>                 RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal-
+> PMEIntEna+ CRSVisible-
+>                 RootCap: CRSVisible-
+>                 RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+>                 DevCap2: Completion Timeout: Range ABCD, TimeoutDis+,
+> LTR-, OBFF Not Supported ARIFwd-
+>                          AtomicOpsCap: Routing- 32bit- 64bit- 128bitCAS-
+>                 DevCtl2: Completion Timeout: 50us to 50ms,
+> TimeoutDis-, LTR-, OBFF Disabled ARIFwd-
+>                          AtomicOpsCtl: ReqEn- EgressBlck-
+>                 LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-
+>                          Transmit Margin: Normal Operating Range,
+> EnterModifiedCompliance- ComplianceSOS-
+>                          Compliance De-emphasis: -6dB
+>                 LnkSta2: Current De-emphasis Level: -3.5dB,
+> EqualizationComplete-, EqualizationPhase1-
+>                          EqualizationPhase2-, EqualizationPhase3-,
+> LinkEqualizationRequest-
+>         Capabilities: [100 v2] Advanced Error Reporting
+>                 UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
+> UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+>                 UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
+> UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+>                 UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt-
+> UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+>                 CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-
+> AdvNonFatalErr-
+>                 CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-
+> AdvNonFatalErr+
+>                 AERCap: First Error Pointer: 00, ECRCGenCap+
+> ECRCGenEn- ECRCChkCap+ ECRCChkEn-
+>                         MultHdrRecCap- MultHdrRecEn- TLPPfxPres- HdrLogCap-
+>                 HeaderLog: 00000000 00000000 00000000 00000000
+>                 RootCmd: CERptEn+ NFERptEn+ FERptEn+
+>                 RootSta: CERcvd- MultCERcvd- UERcvd- MultUERcvd-
+>                          FirstFatal- NonFatalMsg- FatalMsg- IntMsg 0
+>                 ErrorSrc: ERR_COR: 0000 ERR_FATAL/NONFATAL: 0000
+>         Kernel driver in use: pcieport
+> 
+> 01:00.0 PCI bridge: Texas Instruments XIO2000(A)/XIO2200A PCI
+> Express-to-PCI Bridge (rev 03) (prog-if 00 [Normal decode])
+>         Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop-
+> ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+> <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Bus: primary=01, secondary=02, subordinate=02, sec-latency=0
+>         I/O behind bridge: None
+>         Memory behind bridge: 20200000-202fffff [size=1M]
+>         Prefetchable memory behind bridge: None
+>         Secondary status: 66MHz- FastB2B+ ParErr- DEVSEL=medium
+> >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
+>         BridgeCtl: Parity+ SERR- NoISA- VGA- VGA16- MAbort+ >Reset- FastB2B+
+>                 PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+>         Capabilities: [50] Power Management version 2
+>                 Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA
+> PME(D0-,D1-,D2-,D3hot-,D3cold-)
+>                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+>                 Bridge: PM- B3+
+>         Capabilities: [60] MSI: Enable- Count=1/16 Maskable- 64bit+
+>                 Address: 0000000000000000  Data: 0000
+>         Capabilities: [80] Subsystem: Device 0000:0000
+>         Capabilities: [90] Express (v1) PCI-Express to PCI/PCI-X Bridge, MSI 00
+>                 DevCap: MaxPayload 512 bytes, PhantFunc 0
+>                         ExtTag- AttnBtn- AttnInd- PwrInd- RBE-
+> SlotPowerLimit 0.000W
+>                 DevCtl: CorrErr- NonFatalErr- FatalErr- UnsupReq-
+>                         RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop+ BrConfRtry-
+>                         MaxPayload 128 bytes, MaxReadReq 512 bytes
+>                 DevSta: CorrErr- NonFatalErr+ FatalErr- UnsupReq-
+> AuxPwr- TransPend-
+>                 LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1,
+> Exit Latency L0s <1us, L1 <16us
+>                         ClockPM- Surprise- LLActRep- BwNot- ASPMOptComp-
+>                 LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- CommClk-
+>                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+>                 LnkSta: Speed 2.5GT/s (ok), Width x1 (ok)
+>                         TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+>         Capabilities: [100 v1] Advanced Error Reporting
+>                 UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
+> UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+>                 UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
+> UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+>                 UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt-
+> UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+>                 CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-
+> AdvNonFatalErr-
+>                 CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-
+> AdvNonFatalErr-
+>                 AERCap: First Error Pointer: 00, ECRCGenCap+
+> ECRCGenEn- ECRCChkCap+ ECRCChkEn-
+>                         MultHdrRecCap- MultHdrRecEn- TLPPfxPres- HdrLogCap-
+>                 HeaderLog: 00000000 00000000 00000000 00000000
+> 
+> 02:00.0 Communication controller: National Instruments PCIe-GPIB (rev 02)
+>         Subsystem: National Instruments PCIe-GPIB
+>         Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop-
+> ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+>         Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium
+> >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Interrupt: pin A routed to IRQ 0
+>         Region 0: Memory at 20204000 (32-bit, non-prefetchable)
+> [disabled] [size=2K]
+>         Region 1: Memory at 20200000 (32-bit, non-prefetchable)
+> [disabled] [size=16K]
