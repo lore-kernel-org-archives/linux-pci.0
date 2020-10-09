@@ -2,150 +2,217 @@ Return-Path: <SRS0=I3i3=DQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 385A3C433DF
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 01:22:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A41CCC433E7
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 03:16:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EA342207CD
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 01:22:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4C0EC2222F
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 03:16:38 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jNjl33WD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725997AbgJIBWf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 8 Oct 2020 21:22:35 -0400
-Received: from mga03.intel.com ([134.134.136.65]:3588 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725857AbgJIBWe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 8 Oct 2020 21:22:34 -0400
-IronPort-SDR: i4TZgkCgPEDAkCGz/9iXtjzmAQf4iBx56Z8Aauws9YSChvo/pq01nW7WAinKIINjMk9I0naFPY
- Y9DKly3iKwWQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9768"; a="165490296"
-X-IronPort-AV: E=Sophos;i="5.77,353,1596524400"; 
-   d="scan'208";a="165490296"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Oct 2020 18:22:33 -0700
-IronPort-SDR: JAvf5QKWpmPeCKr0CEBrwqKK1z9BzRyDlH438xxOFtxLoKKkNaohlGpuIFHCrHyfGrfPTV4bS9
- qzdr8AnV/pRA==
-X-IronPort-AV: E=Sophos;i="5.77,353,1596524400"; 
-   d="scan'208";a="343630539"
-Received: from otc-nc-03.jf.intel.com (HELO otc-nc-03) ([10.54.39.36])
-  by fmsmga004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Oct 2020 18:22:32 -0700
-Date:   Thu, 8 Oct 2020 18:22:31 -0700
-From:   "Raj, Ashok" <ashok.raj@intel.com>
-To:     Jason Gunthorpe <jgg@nvidia.com>
-Cc:     Thomas Gleixner <tglx@linutronix.de>,
-        Dave Jiang <dave.jiang@intel.com>, vkoul@kernel.org,
-        megha.dey@intel.com, maz@kernel.org, bhelgaas@google.com,
-        alex.williamson@redhat.com, jacob.jun.pan@intel.com,
-        yi.l.liu@intel.com, baolu.lu@intel.com, kevin.tian@intel.com,
-        sanjay.k.kumar@intel.com, tony.luck@intel.com, jing.lin@intel.com,
-        dan.j.williams@intel.com, kwankhede@nvidia.com,
-        eric.auger@redhat.com, parav@mellanox.com, rafael@kernel.org,
-        netanelg@mellanox.com, shahafs@mellanox.com,
-        yan.y.zhao@linux.intel.com, pbonzini@redhat.com,
-        samuel.ortiz@intel.com, mona.hossain@intel.com,
-        dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org,
-        x86@kernel.org, linux-pci@vger.kernel.org, kvm@vger.kernel.org,
-        Ashok Raj <ashok.raj@intel.com>
-Subject: Re: [PATCH v3 11/18] dmaengine: idxd: ims setup for the vdcm
-Message-ID: <20201009012231.GA60263@otc-nc-03>
-References: <160021207013.67751.8220471499908137671.stgit@djiang5-desk3.ch.intel.com>
- <160021253189.67751.12686144284999931703.stgit@djiang5-desk3.ch.intel.com>
- <87mu17ghr1.fsf@nanos.tec.linutronix.de>
- <0f9bdae0-73d7-1b4e-b478-3cbd05c095f4@intel.com>
- <87r1q92mkx.fsf@nanos.tec.linutronix.de>
- <44e19c5d-a0d2-0ade-442c-61727701f4d8@intel.com>
- <87y2kgux2l.fsf@nanos.tec.linutronix.de>
- <20201008233210.GH4734@nvidia.com>
+        id S1731441AbgJIDQh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 8 Oct 2020 23:16:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34130 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728854AbgJIDQh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2020 23:16:37 -0400
+Received: from mail-ed1-x543.google.com (mail-ed1-x543.google.com [IPv6:2a00:1450:4864:20::543])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA6B4C0613D2;
+        Thu,  8 Oct 2020 20:16:36 -0700 (PDT)
+Received: by mail-ed1-x543.google.com with SMTP id i5so7895197edr.5;
+        Thu, 08 Oct 2020 20:16:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=S4gstCC/FekJI8QJ+2SOlsD1pKXfkis98By+iBN9Ti4=;
+        b=jNjl33WDmlv7VtnPM5xttIFdg89OTGfAVQ5ZVUaMCPLxhEgXRjfbPCX8BD/hIR2RKs
+         yWYwltFNyc/4s1vHMyfEvLO8IRllVCMyDp0ttjeoFqU3MuKSfiJ4zl7zf6/bm9EHcOqG
+         KSw0wCvZ21TDXq/57ZLsjdtVXgaNE6N29X7tPsClpmTaCWUq5j37w6wOqkqDFkw0AwI9
+         by0x9Y2Ps+UFAhwDoIHAKoZy5JrVqVUGyyDtfNXbNH6IcYcQcYDi5GJ7Y4IAPYJkrAfc
+         EokiF+ejLKBYrxeq9MXoJiuO7RHgMAGe9K4VISFdYBGt9IKngGCh3zZdN/eoQ4kn+o/P
+         t/NQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=S4gstCC/FekJI8QJ+2SOlsD1pKXfkis98By+iBN9Ti4=;
+        b=brs/bohK5/3Qcn9z7UUyWdXOIeo3wkimqof7urPuG9tShs1BcCwsusHHNDsreii2R2
+         g93n2qtgK0hDYaJ7lXR/MwmZ0xGHEz8ZXbAARu1+dtV2Ht3oRA7kPuk5RCkmtwNFNhWa
+         vcwG/vZukgQ11dHelSdkAc3PJVdERHAwVqVtvvbIz3uyfIEIAZ8LsXvUtow4Cx+pa64W
+         ZAkLvwvlhNsi/5xHKWRFZgR9u1gB++Fy1fQeY3mTq5YpzFWrogM0p5W4bJLP9/vyF6oW
+         Zx0CuaRMY9hd9UdXcPzLR6n3iMvyDQ8X+NmIvEZ9ihhdbAfrLjuOTUkwyPu/a2KxtIok
+         QDvA==
+X-Gm-Message-State: AOAM5331igb6UmXVRs3gfMx3rHaCjCHt4cRu0DcfhXisG9gkenMvU9kN
+        B+OLI97MDz9eB1RfNe8dV61s/70N1CRl6/L/oXKpMwYoadDhNg==
+X-Google-Smtp-Source: ABdhPJzyTKYR17OrIp2pbuAikyU62aKMT80JVOwYk4I58TqifFjCJAUTIKpgM+wlbBCpUUyKe2MKZdN9xcACzAsvUms=
+X-Received: by 2002:a05:6402:1779:: with SMTP id da25mr12157144edb.60.1602213395450;
+ Thu, 08 Oct 2020 20:16:35 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201008233210.GH4734@nvidia.com>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+References: <20201007113158.48933-1-haifeng.zhao@intel.com>
+ <20201007113158.48933-3-haifeng.zhao@intel.com> <4bedeb35-942e-5ad3-9721-62495af1f09a@intel.com>
+In-Reply-To: <4bedeb35-942e-5ad3-9721-62495af1f09a@intel.com>
+From:   Ethan Zhao <xerces.zhao@gmail.com>
+Date:   Fri, 9 Oct 2020 11:16:23 +0800
+Message-ID: <CAKF3qh2BPt1Vgh+P_dJ=bHKMAhGjJmA2TY3WpBEmz=x0MOahNw@mail.gmail.com>
+Subject: Re: [PATCH v8 2/6] PCI/DPC: define a function to check and wait till
+ port finish DPC handling
+To:     "Kuppuswamy, Sathyanarayanan" <sathyanarayanan.kuppuswamy@intel.com>
+Cc:     Ethan Zhao <haifeng.zhao@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, Oliver <oohall@gmail.com>,
+        ruscur@russell.cc, Lukas Wunner <lukas@wunner.de>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Stuart Hayes <stuart.w.hayes@gmail.com>,
+        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        "Raj, Ashok" <ashok.raj@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Jason
+On Thu, Oct 8, 2020 at 2:16 AM Kuppuswamy, Sathyanarayanan
+<sathyanarayanan.kuppuswamy@intel.com> wrote:
+>
+>
+> On 10/7/20 4:31 AM, Ethan Zhao wrote:
+> > Once root port DPC capability is enabled and triggered, at the beginnin=
+g
+> > of DPC is triggered, the DPC status bits are set by hardware and then
+> > sends DPC/DLLSC/PDC interrupts to OS DPC and pciehp drivers, it will
+> > take the port and software DPC interrupt handler 10ms to 50ms (test dat=
+a
+> > on ICS(Ice Lake SP platform, see
+> > https://en.wikichip.org/wiki/intel/microarchitectures/ice_lake_(server)
+> > & stable 5.9-rc6) to complete the DPC containment procedure
+> This data is based on one particular architecture. So using this
+> to create a timed loop in pci_wait_port_outdpc() looks incorrect.
 
-On Thu, Oct 08, 2020 at 08:32:10PM -0300, Jason Gunthorpe wrote:
-> On Fri, Oct 09, 2020 at 01:17:38AM +0200, Thomas Gleixner wrote:
-> > Dave,
-> > 
-> > On Thu, Oct 08 2020 at 09:51, Dave Jiang wrote:
-> > > On 10/8/2020 12:39 AM, Thomas Gleixner wrote:
-> > >> On Wed, Oct 07 2020 at 14:54, Dave Jiang wrote:
-> > >>> On 9/30/2020 12:57 PM, Thomas Gleixner wrote:
-> > >>>> Aside of that this is fiddling in the IMS storage array behind the irq
-> > >>>> chips back without any comment here and a big fat comment about the
-> > >>>> shared usage of ims_slot::ctrl in the irq chip driver.
-> > >>>>
-> > >>> This is to program the pasid fields in the IMS table entry. Was
-> > >>> thinking the pasid fields may be considered device specific so didn't
-> > >>> attempt to add the support to the core code.
-> > >> 
-> > >> Well, the problem is that this is not really irq chip functionality.
-> > >> 
-> > >> But the PASID programming needs to touch the IMS storage which is also
-> > >> touched by the irq chip.
-> > >> 
-> > >> This might be correct as is, but without a big fat comment explaining
-> > >> WHY it is safe to do so without any form of serialization this is just
-> > >> voodoo and unreviewable.
-> > >> 
-> > >> Can you please explain when the PASID is programmed and what the state
-> > >> of the interrupt is at that point? Is this a one off setup operation or
-> > >> does this happen dynamically at random points during runtime?
-> > >
-> > > I will put in comments for the function to explain why and when we modify the 
-> > > pasid field for the IMS entry. Programming of the pasid is done right before we 
-> > > request irq. And the clearing is done after we free the irq. We will not be 
-> > > touching the IMS field at runtime. So the touching of the entry should be safe.
-> > 
-> > Thanks for clarifying that.
-> > 
-> > Thinking more about it, that very same thing will be needed for any
-> > other IMS device and of course this is not going to end well because
-> > some driver will fiddle with the PASID at the wrong time.
-> 
-> Why? This looks like some quirk of the IDXD HW where it just randomly
-> put PASID along with the IRQ mask register. Probably because PASID is
-> not the full 32 bits.
+To clarify there, it is not random to wait for specific 1000ms for
+specific architecture.
+Though there is no specification to say how many ms totally cost by
+hardware DPC containment,
+plus its interrupt handling.  but you could read the whole PCIe
+specification to know how
+many ms cost at most by power state transition, link training etc, you
+may know the max single delay
+in hardware state transition is 200ms. Other small delay in hardware
+state transition is 100ms,
+48ms, 32ms etc.
 
-Not randomly put there Jason :-).. There is a good reason for it. I'm sure
-Dave must have responded already. ENQCMD for DSA has the interrupt handle
-on which the notification should be sent. Since the data from from user
-space HW will verify if the PASID for IMS entry matches what is there in
-the descriptor. 
+If the DPC containment hardware procedure is pure resetting (or cold
+power on) without
+software access configuration as the worst case. we wait its handling
+process from 10ms
+(actually 20ms is the minimum delay we could do with msleep() )  till
+1000ms timeout is a
+reasonable value.
 
-Check description in section 9.2.2.1 of the DSA specification, when PASID
-enable is 1, this field is checked against the PASID field of the
-descriptor. Also check Section 5.4 and Interrupt Virtualization 7.3.3 for
-more info.
+Thanks,
+Ethan
 
-> 
-> AFAIK the PASID is not tagged on the MemWr TLP triggering the
-> interrupt, so it really is unrelated to the irq.
 
-Correct, the purpose is not to send PASID prefix for interrupt tranactions.
 
-> 
-> I think the ioread to get the PASID is rather ugly, it should pluck
 
-Where do you see the ioread? I suppose idxd driver will fill in from the
-aux_domain default PASID. Not reading from the device IMS entry.
-
-> the PASID out of some driver specific data structure with proper
-> locking, and thus use the sleepable version of the irqchip?
-> 
-> This is really not that different from what I was describing for queue
-> contexts - the queue context needs to be assigned to the irq # before
-> it can be used in the irq chip other wise there is no idea where to
-> write the msg to. Just like pasid here.
-
-Sorry, I don't follow you on this.. you mean context in hardware or user
-context that holds interrupt addr/data values?
-
+>
+> I still recommend looking for some locking model to fix this
+> issue (may be atomic state flag or lock).
+> > till the DPC status is cleared at the end of the DPC interrupt handler.
+> >
+> > We use this function to check if the root port is in DPC handling statu=
+s
+> > and wait till the hardware and software completed the procedure.
+> >
+> > Signed-off-by: Ethan Zhao <haifeng.zhao@intel.com>
+> > Tested-by: Wen Jin <wen.jin@intel.com>
+> > Tested-by: Shanshan Zhang <ShanshanX.Zhang@intel.com>
+> > ---
+> > changes:
+> >   v2=EF=BC=9Aalign ICS code name to public doc.
+> >   v3: no change.
+> >   v4: response to Christoph's (Christoph Hellwig <hch@infradead.org>)
+> >       tip, move pci_wait_port_outdpc() to DPC driver and its declaratio=
+n
+> >       to pci.h.
+> >   v5: fix building issue reported by lkp@intel.com with some config.
+> >   v6: move from [1/5] to [2/5].
+> >   v7: no change.
+> >   v8: no change.
+> >
+> >   drivers/pci/pci.h      |  2 ++
+> >   drivers/pci/pcie/dpc.c | 27 +++++++++++++++++++++++++++
+> >   2 files changed, 29 insertions(+)
+> >
+> > diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> > index fa12f7cbc1a0..455b32187abd 100644
+> > --- a/drivers/pci/pci.h
+> > +++ b/drivers/pci/pci.h
+> > @@ -455,10 +455,12 @@ void pci_restore_dpc_state(struct pci_dev *dev);
+> >   void pci_dpc_init(struct pci_dev *pdev);
+> >   void dpc_process_error(struct pci_dev *pdev);
+> >   pci_ers_result_t dpc_reset_link(struct pci_dev *pdev);
+> > +bool pci_wait_port_outdpc(struct pci_dev *pdev);
+> >   #else
+> >   static inline void pci_save_dpc_state(struct pci_dev *dev) {}
+> >   static inline void pci_restore_dpc_state(struct pci_dev *dev) {}
+> >   static inline void pci_dpc_init(struct pci_dev *pdev) {}
+> > +static inline bool pci_wait_port_outdpc(struct pci_dev *pdev) { return=
+ false; }
+> >   #endif
+> >
+> >   #ifdef CONFIG_PCI_ATS
+> > diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+> > index daa9a4153776..2e0e091ce923 100644
+> > --- a/drivers/pci/pcie/dpc.c
+> > +++ b/drivers/pci/pcie/dpc.c
+> > @@ -71,6 +71,33 @@ void pci_restore_dpc_state(struct pci_dev *dev)
+> >       pci_write_config_word(dev, dev->dpc_cap + PCI_EXP_DPC_CTL, *cap);
+> >   }
+> >
+> > +bool pci_wait_port_outdpc(struct pci_dev *pdev)
+> > +{
+> > +     u16 cap =3D pdev->dpc_cap, status;
+> > +     u16 loop =3D 0;
+> > +
+> > +     if (!cap) {
+> > +             pci_WARN_ONCE(pdev, !cap, "No DPC capability initiated\n"=
+);
+> > +             return false;
+> > +     }
+> > +     pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
+> > +     pci_dbg(pdev, "DPC status %x, cap %x\n", status, cap);
+> > +
+> > +     while (status & PCI_EXP_DPC_STATUS_TRIGGER && loop < 100) {
+> > +             msleep(10);
+> > +             loop++;
+> > +             pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &sta=
+tus);
+> > +     }
+> > +
+> > +     if (!(status & PCI_EXP_DPC_STATUS_TRIGGER)) {
+> > +             pci_dbg(pdev, "Out of DPC %x, cost %d ms\n", status, loop=
+*10);
+> > +             return true;
+> > +     }
+> > +
+> > +     pci_dbg(pdev, "Timeout to wait port out of DPC status\n");
+> > +     return false;
+> > +}
+> > +
+> >   static int dpc_wait_rp_inactive(struct pci_dev *pdev)
+> >   {
+> >       unsigned long timeout =3D jiffies + HZ;
+>
+> --
+> Sathyanarayanan Kuppuswamy
+> Linux Kernel Developer
+>
