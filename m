@@ -2,131 +2,105 @@ Return-Path: <SRS0=I3i3=DQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.1 required=3.0 tests=BAYES_40,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,SUBJ_ALL_CAPS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 513CFC433DF
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 15:05:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E52F6C433E7
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 15:51:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0E30C22276
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 15:05:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1602255920;
-	bh=YCHli0iAeW9XyP16UomXBcSMi7tx92QZKZ9pJIjsQ2U=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=WsglBculiaMDdCn+eCrpkVm4osHrFY4Fy+VtixtIOn3AdZysFOJCBx3fVwrQfJk9p
-	 RWILxwXjdoUF0yYaWBlcXBnHniTg8VOFOVe4FX/DOeCo7kwDaUxQ7UoXTcsBejqHMV
-	 +1ZCM+uHyUajdqGnUVAxJN9V7UmE+lIISlMRabC8=
+	by mail.kernel.org (Postfix) with ESMTP id 89DBB22284
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 15:51:11 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=yjaraviagens.com header.i=@yjaraviagens.com header.b="ZscHoZRN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388911AbgJIPFT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 9 Oct 2020 11:05:19 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37800 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388819AbgJIPFT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 9 Oct 2020 11:05:19 -0400
-Received: from localhost (170.sub-72-107-125.myvzw.com [72.107.125.170])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 763AC22260;
-        Fri,  9 Oct 2020 15:05:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1602255918;
-        bh=YCHli0iAeW9XyP16UomXBcSMi7tx92QZKZ9pJIjsQ2U=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=jOG4FT8ITIYMphuuCq4TWtqD2SxpRNVpYUJkqUmfT1FGAVAAOJBuAq19PAIuYmjhC
-         P2GVHBUUwTh6Bx/HpffZ5NvyPH2PRTn8fXbcztJsdc2/qDXs/dH1+NpwDMsLzZ/fN3
-         Dd3QRfS40zXC8LMe7BjRRYrMnqL9w7nWErlOpzgw=
-Date:   Fri, 9 Oct 2020 10:05:17 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     "Alex G." <mr.nuke.me@gmail.com>
-Cc:     "Jason A. Donenfeld" <Jason@zx2c4.com>, linux-pci@vger.kernel.org,
-        "Bolen, Austin" <austin_bolen@dell.com>,
-        Keith Busch <kbusch@kernel.org>
-Subject: Re: spammy dmesg about fluctuating pcie bandwidth on 5.9
-Message-ID: <20201009150517.GA3475242@bjorn-Precision-5520>
+        id S2389235AbgJIPvK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 9 Oct 2020 11:51:10 -0400
+Received: from vps-3871858.yjara.com ([162.241.101.217]:58244 "EHLO
+        vps-3871858.yjara.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S2388745AbgJIPvK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2020 11:51:10 -0400
+X-Greylist: delayed 6383 seconds by postgrey-1.27 at vger.kernel.org; Fri, 09 Oct 2020 11:51:10 EDT
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=yjaraviagens.com; s=default; h=Content-Transfer-Encoding:Content-Type:
+        MIME-Version:Message-ID:Date:Subject:To:From:Reply-To:Sender:Cc:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=/CmoeFF19FPVa8MZlM5WialtMzZ26w0dl4CdBRr1ZD8=; b=ZscHoZRNg4ko2IvirDQ11jpY6M
+        UkAE4kGvRJcXGkJHjHsLTFj0mot+7lJnySHpA9ys2puT9g13dmNc3B0J8/7qcG2eQHfD33jMQK8tT
+        nPykyHdLtYKZoU35NJL5WHSve9aeesQWuSCgqPR3MP/lmpzSZG1WPQAlI8uTMw/rcad/KYzoH33Hv
+        gwhwsaTwTYJMdvris4LrHZNH2feC6jkLj9XSlOOUPNXfbMRMPXlJTKUWzijdvHwdovcUmAQ7yupcr
+        wXk1/JQ+d74xM3DsSNAKtnxcPffHuorVJTuBwHiHSfJxiy+DkTori7TQOEf/CCj8dgJU+/0i6eR0h
+        BNq0Qg/Q==;
+Received: from [84.38.134.106] (port=50448 helo=progresssoft-clearinghouse.com)
+        by vps-3871858.yjaraviagens.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.93)
+        (envelope-from <raydouglas@progresssoft-clearinghouse.com>)
+        id 1kQt0o-0000Ce-2C
+        for linux-pci@vger.kernel.org; Fri, 09 Oct 2020 11:04:46 -0300
+Reply-To: loan@progresssoft-clearinghouse.com
+From:   "PSCH" <raydouglas@progresssoft-clearinghouse.com>
+To:     linux-pci@vger.kernel.org
+Subject: INVESTMENT LOAN
+Date:   9 Oct 2020 17:04:45 +0300
+Message-ID: <20201009170445.0224CCCAA5EC72B3@progresssoft-clearinghouse.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e0b40eed-72a4-dde0-3622-2a9a28db1e62@gmail.com>
+Content-Type: text/plain;
+        charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - vps-3871858.yjaraviagens.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - progresssoft-clearinghouse.com
+X-Get-Message-Sender-Via: vps-3871858.yjaraviagens.com: authenticated_id: naoresponda@yjaraviagens.com
+X-Authenticated-Sender: vps-3871858.yjaraviagens.com: naoresponda@yjaraviagens.com
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc Keith]
 
-On Fri, Oct 09, 2020 at 09:32:32AM -0500, Alex G. wrote:
-> [+cc Austin]
-> 
-> Hi Bjorn,
-> 
-> That log looks like the PCIe registers spitting wrong values, but all I can
-> do is speculate. Have we verified we don't have a race condition between
-> ASPM and pcie_report_downtraining()?
-> 
-> I wouldn't be surprised if the cause of the messages is the device (or
-> downstream port) faking all f's responses. I don't see how else we'd get
-> links reported as x63 32GT/s.
+Progresssoft- Clearinghouse
+Aldgate House, 33 Aldgate
+High street, London
+EC3N 1EA
+Tel: + 44 745 127 9845
+Fax: + 44 150 653 7129
 
-Right, I think you and Keith nailed it: likely we read ~0 from
-PCI_EXP_LNKSTA because of some error.  I don't know what the
-connection with ASPM would be, although we do have some known problems
-with ASPM configuration, especially in "powersave" mode; see [1]
+Progresssoft-Clearinghouse Express Business Loan!!!
 
-Jason, could you capture the "sudo lspci -vvxxx" output and dmesg log
-after the messages start?  You could instrument bw_notification.c so
-it shuts up after a few messages if necessary.  The lspci should show
-us if a port leading to the device is in DPC or other error condition.
 
-DPC takes down the link (as would an AER event).  It doesn't seem like
-these should cause Link Bandwidth Management interrupts, but maybe?
+Attention: Sir / Madam,
+Good day my names are Mrs. Kate Rolington
+One of the Asian, Middle East and North Agent coordinator for=20
+Progresssoft-Clearinghouse inviting you For Express Business=20
+International Loans
+Business Loan reforms for business expansion.
+Business categories
+1.  Textiles=20
+2.  Investment
+3.  Farmers
+4.  Trading companies
+5.  Contractors
+6.  Mechanic
+7.  for transportation expansion
+8.  Movie producer
+9. Building construction
+10. Real estate
+11. Large scales business project
+12 School industries
+13. Gas & Oil
+Kindly share the International Business Expansion programs to=20
+your family and friends, Apply for your Express business=20
+International loan today.
+Best Regards,
 
-[1] https://lore.kernel.org/r/20201007132808.647589-1-ian.kumlien@gmail.com
-
-> On 10/7/20 12:02 PM, Bjorn Helgaas wrote:
-> > [+cc Alex]
-> > 
-> > On Wed, Oct 07, 2020 at 06:09:06PM +0200, Jason A. Donenfeld wrote:
-> > > Hi,
-> > > 
-> > > Since 5.9 I've been seeing lots of the below in my logs. I'm wondering
-> > > if this is a case of "ASPM finally working properly," or if I'm
-> > > actually running into aberrant behavior that I should look into
-> > > further. I run with `pcie_aspm=force pcie_aspm.policy=powersave` on my
-> > > command line. But I wasn't seeing these messages in 5.8.
-> > 
-> > I'm sorry that you need to use "pcie_aspm=force
-> > pcie_aspm.policy=powersave".  Someday maybe we'll get enough of ASPM
-> > fixed so we won't need junk like that.  I don't think we're there yet.
-> > Do you build with CONFIG_PCIEASPM_POWERSAVE=y?  Do you need
-> > "pcie_aspm=force" because the firmware tells us not to use ASPM?
-> > 
-> > Re: the messages below, they come from Link Bandwidth Management
-> > interrupts.  These *should* only happen because of a
-> > software-initiated link retrain or because hardware changed the link
-> > speed or width because the link was unreliable.  ASPM shouldn't cause
-> > these.
-> > 
-> > So it's possible you have an unreliable slot, but I doubt it because
-> > you said v5.8 works fine, and also the Link Bandwidth interrupts
-> > should only happen if something *changed*, but all the messages below
-> > look the same to me.
-> > 
-> > Something is also wrong with them -- there's no such thing as a "x63"
-> > link.  But maybe these are copy/paste errors?  I don't know where the
-> > "b.4" comes from either.  Oh, that probably belongs with
-> > "0000:00:1b.4" but got separated by copy/paste.
-> > 
-> > Obviously you can stop the messages by unsetting CONFIG_PCIE_BW.
-> > 
-> > The code (drivers/pci/pcie/bw_notification.c) is pretty
-> > straightforward and I don't see an obvious problem, but maybe Alex
-> > will.
-> > 
-> > > [79960.801929] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-> > > bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-> > > b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-> > > [79981.679813] pcieport 0000:04:00.0: 31.504 Gb/s available PCIe
-> > > bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:1
-> > > b.4 (capable of 1984.941 Gb/s with 32.0 GT/s PCIe x63 link)
-> > > ...
+Mr. Ray Douglas
+Transfer Department Dept
+Ext: 021
+Mon =E2=80=93 Fri: 8 am-9 pm ET
+Sat: 8 am-8 pm ET
