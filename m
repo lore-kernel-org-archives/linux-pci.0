@@ -2,105 +2,169 @@ Return-Path: <SRS0=I3i3=DQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.1 required=3.0 tests=BAYES_40,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,SUBJ_ALL_CAPS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E52F6C433E7
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 15:51:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8D83C433E7
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 15:53:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 89DBB22284
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 15:51:11 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=yjaraviagens.com header.i=@yjaraviagens.com header.b="ZscHoZRN"
+	by mail.kernel.org (Postfix) with ESMTP id 90CC2222BA
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 15:53:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1602258794;
+	bh=c0Oco5+Y93BuKExeQgRVmoPcdBSWarHJTrDoTYOek08=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=LWVnDSaNU/UN0o15a8l64/4wuaWijPD9rg1sTcxa258yLQXK5WTkm+1jfF5sVsW32
+	 JA2Cndb41LvLdEHwnjI8+oZ87eVsKhDyhbVH5cCHawowWRtlK12KsxpFpAUNcL+Ht/
+	 LNM39+k1osSW+BNVIsTcuCvidUOHwPTpb0wM04o4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389235AbgJIPvK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 9 Oct 2020 11:51:10 -0400
-Received: from vps-3871858.yjara.com ([162.241.101.217]:58244 "EHLO
-        vps-3871858.yjara.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S2388745AbgJIPvK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2020 11:51:10 -0400
-X-Greylist: delayed 6383 seconds by postgrey-1.27 at vger.kernel.org; Fri, 09 Oct 2020 11:51:10 EDT
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=yjaraviagens.com; s=default; h=Content-Transfer-Encoding:Content-Type:
-        MIME-Version:Message-ID:Date:Subject:To:From:Reply-To:Sender:Cc:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=/CmoeFF19FPVa8MZlM5WialtMzZ26w0dl4CdBRr1ZD8=; b=ZscHoZRNg4ko2IvirDQ11jpY6M
-        UkAE4kGvRJcXGkJHjHsLTFj0mot+7lJnySHpA9ys2puT9g13dmNc3B0J8/7qcG2eQHfD33jMQK8tT
-        nPykyHdLtYKZoU35NJL5WHSve9aeesQWuSCgqPR3MP/lmpzSZG1WPQAlI8uTMw/rcad/KYzoH33Hv
-        gwhwsaTwTYJMdvris4LrHZNH2feC6jkLj9XSlOOUPNXfbMRMPXlJTKUWzijdvHwdovcUmAQ7yupcr
-        wXk1/JQ+d74xM3DsSNAKtnxcPffHuorVJTuBwHiHSfJxiy+DkTori7TQOEf/CCj8dgJU+/0i6eR0h
-        BNq0Qg/Q==;
-Received: from [84.38.134.106] (port=50448 helo=progresssoft-clearinghouse.com)
-        by vps-3871858.yjaraviagens.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.93)
-        (envelope-from <raydouglas@progresssoft-clearinghouse.com>)
-        id 1kQt0o-0000Ce-2C
-        for linux-pci@vger.kernel.org; Fri, 09 Oct 2020 11:04:46 -0300
-Reply-To: loan@progresssoft-clearinghouse.com
-From:   "PSCH" <raydouglas@progresssoft-clearinghouse.com>
-To:     linux-pci@vger.kernel.org
-Subject: INVESTMENT LOAN
-Date:   9 Oct 2020 17:04:45 +0300
-Message-ID: <20201009170445.0224CCCAA5EC72B3@progresssoft-clearinghouse.com>
+        id S2389231AbgJIPxN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 9 Oct 2020 11:53:13 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50122 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388745AbgJIPxM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 9 Oct 2020 11:53:12 -0400
+Received: from localhost (170.sub-72-107-125.myvzw.com [72.107.125.170])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 78CD72225D;
+        Fri,  9 Oct 2020 15:53:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1602258791;
+        bh=c0Oco5+Y93BuKExeQgRVmoPcdBSWarHJTrDoTYOek08=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=rZiOE8gb5C44MTvAkf4Sx2DrcDm34ccnDEzGv+Wac8wQqBn8lCZTe0SJPkEjxSRQm
+         NEKTobyHHPUUQg94/Y5MnMDhpqNqJul00KBsBORURG6vYFIU40j7MJ5JnTOGnc9KGK
+         1FTyMOoUk5M8VjVp4Z0DPx68NieX8md2/TBCyeFI=
+Date:   Fri, 9 Oct 2020 10:53:10 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Sean V Kelley <seanvk.dev@oregontracks.org>
+Cc:     bhelgaas@google.com, Jonathan.Cameron@huawei.com,
+        rafael.j.wysocki@intel.com, ashok.raj@intel.com,
+        tony.luck@intel.com, sathyanarayanan.kuppuswamy@intel.com,
+        qiuxu.zhuo@intel.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Sean V Kelley <sean.v.kelley@intel.com>
+Subject: Re: [PATCH v8 00/14] Add RCEC handling to PCI/AER
+Message-ID: <20201009155310.GA3477892@bjorn-Precision-5520>
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - vps-3871858.yjaraviagens.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - progresssoft-clearinghouse.com
-X-Get-Message-Sender-Via: vps-3871858.yjaraviagens.com: authenticated_id: naoresponda@yjaraviagens.com
-X-Authenticated-Sender: vps-3871858.yjaraviagens.com: naoresponda@yjaraviagens.com
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201002184735.1229220-1-seanvk.dev@oregontracks.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+On Fri, Oct 02, 2020 at 11:47:21AM -0700, Sean V Kelley wrote:
+> From: Sean V Kelley <sean.v.kelley@intel.com>
+> 
+> Changes since v7 [1]:
+> 
+> - No functional changes.
+> 
+> - Reword bridge patch.
+> - Noted testing below for #non-native/no RCEC case
+> (Jonathan Cameron)
+> 
+> - Separate out pci_walk_bus() into pci_walk_bridge() change.
+> - Put remaining dev to bridge name changes in the separate patch from v7.
+> (Bjorn Helgaas)
+> 
+> [1] https://lore.kernel.org/lkml/20200930215820.1113353-1-seanvk.dev@oregontracks.org/
+> 
+> Root Complex Event Collectors (RCEC) provide support for terminating error
+> and PME messages from Root Complex Integrated Endpoints (RCiEPs).  An RCEC
+> resides on a Bus in the Root Complex. Multiple RCECs can in fact reside on
+> a single bus. An RCEC will explicitly declare supported RCiEPs through the
+> Root Complex Endpoint Association Extended Capability.
+> 
+> (See PCIe 5.0-1, sections 1.3.2.3 (RCiEP), and 7.9.10 (RCEC Ext. Cap.))
+> 
+> The kernel lacks handling for these RCECs and the error messages received
+> from their respective associated RCiEPs. More recently, a new CPU
+> interconnect, Compute eXpress Link (CXL) depends on RCEC capabilities for
+> purposes of error messaging from CXL 1.1 supported RCiEP devices.
+> 
+> DocLink: https://www.computeexpresslink.org/
+> 
+> This use case is not limited to CXL. Existing hardware today includes
+> support for RCECs, such as the Denverton microserver product
+> family. Future hardware will be forthcoming.
+> 
+> (See Intel Document, Order number: 33061-003US)
+> 
+> So services such as AER or PME could be associated with an RCEC driver.
+> In the case of CXL, if an RCiEP (i.e., CXL 1.1 device) is associated with a
+> platform's RCEC it shall signal PME and AER error conditions through that
+> RCEC.
+> 
+> Towards the above use cases, add the missing RCEC class and extend the
+> PCIe Root Port and service drivers to allow association of RCiEPs to their
+> respective parent RCEC and facilitate handling of terminating error and PME
+> messages.
+> 
+> Tested-by: Jonathan Cameron <Jonathan.Cameron@huawei.com> #non-native/no RCEC
+> 
+> 
+> Jonathan Cameron (1):
+>   PCI/AER: Extend AER error handling to RCECs
+> 
+> Qiuxu Zhuo (5):
+>   PCI/RCEC: Add RCEC class code and extended capability
+>   PCI/RCEC: Bind RCEC devices to the Root Port driver
+>   PCI/AER: Apply function level reset to RCiEP on fatal error
+>   PCI/RCEC: Add RCiEP's linked RCEC to AER/ERR
+>   PCI/AER: Add RCEC AER error injection support
+> 
+> Sean V Kelley (8):
+>   PCI/RCEC: Cache RCEC capabilities in pci_init_capabilities()
+>   PCI/ERR: Rename reset_link() to reset_subordinate_device()
+>   PCI/ERR: Use "bridge" for clarity in pcie_do_recovery()
+>   PCI/ERR: Add pci_walk_bridge() to pcie_do_recovery()
+>   PCI/ERR: Limit AER resets in pcie_do_recovery()
+>   PCI/RCEC: Add pcie_link_rcec() to associate RCiEPs
+>   PCI/AER: Add pcie_walk_rcec() to RCEC AER handling
+>   PCI/PME: Add pcie_walk_rcec() to RCEC PME handling
+> 
+>  drivers/pci/pci.h               |  25 ++++-
+>  drivers/pci/pcie/Makefile       |   2 +-
+>  drivers/pci/pcie/aer.c          |  36 ++++--
+>  drivers/pci/pcie/aer_inject.c   |   5 +-
+>  drivers/pci/pcie/err.c          | 109 +++++++++++++++----
+>  drivers/pci/pcie/pme.c          |  15 ++-
+>  drivers/pci/pcie/portdrv_core.c |   8 +-
+>  drivers/pci/pcie/portdrv_pci.c  |   8 +-
+>  drivers/pci/pcie/rcec.c         | 187 ++++++++++++++++++++++++++++++++
+>  drivers/pci/probe.c             |   2 +
+>  include/linux/pci.h             |   5 +
+>  include/linux/pci_ids.h         |   1 +
+>  include/uapi/linux/pci_regs.h   |   7 ++
+>  13 files changed, 367 insertions(+), 43 deletions(-)
+>  create mode 100644 drivers/pci/pcie/rcec.c
 
-Progresssoft- Clearinghouse
-Aldgate House, 33 Aldgate
-High street, London
-EC3N 1EA
-Tel: + 44 745 127 9845
-Fax: + 44 150 653 7129
+Thank you very much for your work and patience with this series!
 
-Progresssoft-Clearinghouse Express Business Loan!!!
+Applied to pci/err for v5.10 with the following changes:
 
+  - Make pci_rcec_init() void since return value was unused.
 
-Attention: Sir / Madam,
-Good day my names are Mrs. Kate Rolington
-One of the Asian, Middle East and North Agent coordinator for=20
-Progresssoft-Clearinghouse inviting you For Express Business=20
-International Loans
-Business Loan reforms for business expansion.
-Business categories
-1.  Textiles=20
-2.  Investment
-3.  Farmers
-4.  Trading companies
-5.  Contractors
-6.  Mechanic
-7.  for transportation expansion
-8.  Movie producer
-9. Building construction
-10. Real estate
-11. Large scales business project
-12 School industries
-13. Gas & Oil
-Kindly share the International Business Expansion programs to=20
-your family and friends, Apply for your Express business=20
-International loan today.
-Best Regards,
+  - Reorder pci_rcec_init() so rcec_ea is filled in before publishing
+    in dev->rcec_ea.
 
-Mr. Ray Douglas
-Transfer Department Dept
-Ext: 021
-Mon =E2=80=93 Fri: 8 am-9 pm ET
-Sat: 8 am-8 pm ET
+  - Split pcie_do_recovery() patches up a little more.  My hope was to
+    make the "Use 'bridge' for clarity" patch more of a pure rename
+    patch and easier to review.  Not sure I accomplished that.
+
+  - Log messages and uevents with "bridge", not "dev", in
+    pcie_do_recovery() to preserve previous behavior.
+
+  - Rename reset_subordinate_devices() to reset_subordinates() for
+    brevity.
+
+  - Fix kerneldoc issues (reported with "make W=1").
+
+  - Fix whitespace (lines didn't use the full width or > 80 columns,
+    etc).
+
+Please let me know if I botched anything.
