@@ -8,62 +8,62 @@ X-Spam-Status: No, score=-20.4 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0A21C433DF
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 16:16:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66E75C04EBE
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 16:16:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7BC0B22282
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 16:16:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 21E122227E
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 16:16:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="vT+mTaGZ"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Cs8QGabJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389683AbgJIQP6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 9 Oct 2020 12:15:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41552 "EHLO
+        id S2389672AbgJIQQD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 9 Oct 2020 12:16:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41488 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389692AbgJIQOG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2020 12:14:06 -0400
-Received: from mail-yb1-xb4a.google.com (mail-yb1-xb4a.google.com [IPv6:2607:f8b0:4864:20::b4a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 194C8C0613AF
-        for <linux-pci@vger.kernel.org>; Fri,  9 Oct 2020 09:14:02 -0700 (PDT)
-Received: by mail-yb1-xb4a.google.com with SMTP id s14so9386590ybl.10
-        for <linux-pci@vger.kernel.org>; Fri, 09 Oct 2020 09:14:02 -0700 (PDT)
+        with ESMTP id S2389664AbgJIQNu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2020 12:13:50 -0400
+Received: from mail-qk1-x74a.google.com (mail-qk1-x74a.google.com [IPv6:2607:f8b0:4864:20::74a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC1F6C0613DE
+        for <linux-pci@vger.kernel.org>; Fri,  9 Oct 2020 09:13:47 -0700 (PDT)
+Received: by mail-qk1-x74a.google.com with SMTP id p24so211382qkp.0
+        for <linux-pci@vger.kernel.org>; Fri, 09 Oct 2020 09:13:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=sender:date:in-reply-to:message-id:mime-version:references:subject
          :from:to:cc;
-        bh=ztcBj6t8pjAS3LbObumIb/+V5CA4S8dHRhfv01gqym4=;
-        b=vT+mTaGZGDPhdzxTH6aWsWKYJ8GfvtcJ/2HmWU2LhgIWMy82u5Z6QUfhXUvwaPyTBj
-         ES73XLSVdGK6yJ76Epy3GjQIuu9WyLmzmgisaAP3Br/g2bNFftKa67tkwVYJdFpgnTLf
-         EbT2nqt10KbkCMX7GRODg17OseusSN0f7gvEjsLTRNZfEWxeWxVzSkIwO6sm5pXc51Jw
-         hz9L988TU7gGwKEkJt8Od5T3abYFFfEPGiICNjg7HfdoFxOA6Qw889AWsZNyq+/ACi2x
-         YRZ5xH0ksgTHHKwZarwPaQTpLf1iqNz7gepaEBsaJnbJqVzO+jDFi+LPsnIKf9PJdYql
-         U+LQ==
+        bh=U9AWLI1l8Wt7A0cF28qGkPASeONcRk66Flk+7SBLZDk=;
+        b=Cs8QGabJC78gMfxCfdvLPfCPnCBG8mqCKPXEuMCN2NC6cv08XQMiyI4smlwEiGiNII
+         K5gTrYd24O0LiqamFF0wMr7ffmfDahQ9HIbIV6xVeWfcY4n4loXTL7qB4SwSDhaTv22i
+         JczK/qDFNcSAT/rGSksO53/MTogKRMrT4041PX2tsxI6Ol1/yOYMbOF5s0gzKJQaLOor
+         yww9sOX437QtKLvGDUEhwKcWSCy/hihhvRz4D2dTrLX4XDXEq0a/ORKzM2aJL7PziE+Q
+         dfJ53ml7GAYdcnN7kTVctFYRDH3JwtUPDTivWPnwTUWriMtoL1NC1u8waNqdhrkRHmX2
+         5NJw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:sender:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=ztcBj6t8pjAS3LbObumIb/+V5CA4S8dHRhfv01gqym4=;
-        b=M5tPr3oNsmfHly0LgHOgx1b9cQRTuKiSmdQ/yz+pu5Kk3p/WhjX7kOYhVJgrlb+gCw
-         44MW20rLuxjAPJHddIKKxruIeLriAsJeGULNXlDuIUBMrkQxmrEl0QKRmE5jR8IAnR6u
-         omHW0HZLFlchQfqL0XqAnsMeppGQy6+qoZ5AuK8o/ClwOQuJ7e5LZBDroRD5h3KMKBen
-         par6/hWE+tLUg5LqUOsJVF1cUjufjHBEnLZfmQPpPEukC8EC0uj7vUvYHNUdwG9KOJPs
-         aPmvlL1DLuprHkjzAcHozsox49XCVbZPtIDSqNa1BFrIn/nEn47yQzDwQu12cM4FxrEn
-         /I3w==
-X-Gm-Message-State: AOAM531j9toXeM1BkIePaQ2fJfcn7U83DOZRGIB2PQRkwBDdqdiLHAyG
-        AB0rRmoWmpcQLsXWLGMsjmNRdGZ38sarzTQa1RA=
-X-Google-Smtp-Source: ABdhPJzWAYkCs8T5xws7qBavU2jEj9A1PqFK42w3Sy5EPVcUdSFBJQ+8vSfZo190tW1V6fLsej3xJUbGxSYiDIoBYjs=
+        bh=U9AWLI1l8Wt7A0cF28qGkPASeONcRk66Flk+7SBLZDk=;
+        b=MIXIBNozF+jwKHlk2qU1TLbV70xzGqctOeEmmNq9MqHxMT0moqy8Ctfwn32YACayvU
+         5sfgp0XR7tJBduur+kgEcnZyKnnyqtGk5sjwvb+g0aYBCVVDxv1W/JPTU7PbcFjmyjQT
+         iK9y4C6U5WBJIS7DX7AOYb0eg7tK5xS75DQUtG20XYKUS80TenLxM/gVERTUqNGPK/Ds
+         BrXoi2QPCiADyciimcwoFTKU2oU9a5XVuYj6JBaBYKwL9aKctHq37HO8fKGjh+ToWT9J
+         P+wjEYCTQhQIrvgwbvS0YK7/r1xv0Iw7b0WoV2fMr6sT2QcXCqKwnw5sEL420AFtRzpw
+         6Bzg==
+X-Gm-Message-State: AOAM533ZMVPpoX0lBh9RN/4d8JUM6FmqEgRvLSUQpqnkWzeTOqdgRu3M
+        B5Re5gUQucr0prb7qCL7bUFAwedWtNbeqEPtk/M=
+X-Google-Smtp-Source: ABdhPJw4RMWV15gzdZdV2Vo6jQV+j2a4t3/6R15rRlHdwc/PJqRQfP3Xi6A8PE05kNsUfa7/hoQh3uRP5EnfqZb7Aso=
 Sender: "samitolvanen via sendgmr" 
         <samitolvanen@samitolvanen1.mtv.corp.google.com>
 X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:f693:9fff:fef4:1b6d])
- (user=samitolvanen job=sendgmr) by 2002:a5b:cce:: with SMTP id
- e14mr18878394ybr.37.1602260041271; Fri, 09 Oct 2020 09:14:01 -0700 (PDT)
-Date:   Fri,  9 Oct 2020 09:13:19 -0700
+ (user=samitolvanen job=sendgmr) by 2002:ad4:4454:: with SMTP id
+ l20mr13954751qvt.49.1602260026976; Fri, 09 Oct 2020 09:13:46 -0700 (PDT)
+Date:   Fri,  9 Oct 2020 09:13:12 -0700
 In-Reply-To: <20201009161338.657380-1-samitolvanen@google.com>
-Message-Id: <20201009161338.657380-11-samitolvanen@google.com>
+Message-Id: <20201009161338.657380-4-samitolvanen@google.com>
 Mime-Version: 1.0
 References: <20201009161338.657380-1-samitolvanen@google.com>
 X-Mailer: git-send-email 2.28.0.1011.ga647a8990f-goog
-Subject: [PATCH v5 10/29] objtool: Split noinstr validation from --vmlinux
+Subject: [PATCH v5 03/29] objtool: Don't autodetect vmlinux.o
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Masahiro Yamada <masahiroy@kernel.org>,
         Will Deacon <will@kernel.org>,
@@ -83,79 +83,55 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This change adds a --noinstr flag to objtool to allow us to specify
-that we're processing vmlinux.o without also enabling noinstr
-validation. This is needed to avoid false positives with LTO when we
-run objtool on vmlinux.o without CONFIG_DEBUG_ENTRY.
+With LTO, we run objtool on vmlinux.o, but don't want noinstr
+validation. This change requires --vmlinux to be passed to objtool
+explicitly.
 
+Suggested-by: Peter Zijlstra <peterz@infradead.org>
 Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
+Reviewed-by: Kees Cook <keescook@chromium.org>
 ---
- scripts/link-vmlinux.sh                 | 2 +-
- tools/objtool/builtin-check.c           | 3 ++-
- tools/objtool/check.c                   | 2 +-
- tools/objtool/include/objtool/builtin.h | 2 +-
- 4 files changed, 5 insertions(+), 4 deletions(-)
+ scripts/link-vmlinux.sh       | 2 +-
+ tools/objtool/builtin-check.c | 6 +-----
+ 2 files changed, 2 insertions(+), 6 deletions(-)
 
 diff --git a/scripts/link-vmlinux.sh b/scripts/link-vmlinux.sh
-index 1a48ef525f46..5ace1dc43993 100755
+index e6e2d9e5ff48..372c3719f94c 100755
 --- a/scripts/link-vmlinux.sh
 +++ b/scripts/link-vmlinux.sh
-@@ -92,7 +92,7 @@ objtool_link()
+@@ -64,7 +64,7 @@ objtool_link()
  	local objtoolopt;
  
  	if [ -n "${CONFIG_VMLINUX_VALIDATION}" ]; then
--		objtoolopt="check --vmlinux"
-+		objtoolopt="check --vmlinux --noinstr"
+-		objtoolopt="check"
++		objtoolopt="check --vmlinux"
  		if [ -z "${CONFIG_FRAME_POINTER}" ]; then
  			objtoolopt="${objtoolopt} --no-fp"
  		fi
 diff --git a/tools/objtool/builtin-check.c b/tools/objtool/builtin-check.c
-index ff4d7f5c0e80..c3a85d8f6c5c 100644
+index 6518c1a6ad1e..ff4d7f5c0e80 100644
 --- a/tools/objtool/builtin-check.c
 +++ b/tools/objtool/builtin-check.c
-@@ -18,7 +18,7 @@
- #include <objtool/builtin.h>
- #include <objtool/objtool.h>
+@@ -41,7 +41,7 @@ const struct option check_options[] = {
  
--bool no_fp, no_unreachable, retpoline, module, backtrace, uaccess, stats, validate_dup, vmlinux, mcount;
-+bool no_fp, no_unreachable, retpoline, module, backtrace, uaccess, stats, validate_dup, vmlinux, mcount, noinstr;
+ int cmd_check(int argc, const char **argv)
+ {
+-	const char *objname, *s;
++	const char *objname;
+ 	struct objtool_file *file;
+ 	int ret;
  
- static const char * const check_usage[] = {
- 	"objtool check [<options>] file.o",
-@@ -34,6 +34,7 @@ const struct option check_options[] = {
- 	OPT_BOOLEAN('a', "uaccess", &uaccess, "enable uaccess checking"),
- 	OPT_BOOLEAN('s', "stats", &stats, "print statistics"),
- 	OPT_BOOLEAN('d', "duplicate", &validate_dup, "duplicate validation for vmlinux.o"),
-+	OPT_BOOLEAN('n', "noinstr", &noinstr, "noinstr validation for vmlinux.o"),
- 	OPT_BOOLEAN('l', "vmlinux", &vmlinux, "vmlinux.o validation"),
- 	OPT_BOOLEAN('M', "mcount", &mcount, "generate __mcount_loc"),
- 	OPT_END(),
-diff --git a/tools/objtool/check.c b/tools/objtool/check.c
-index 61dcd80feec5..0c05d58608b0 100644
---- a/tools/objtool/check.c
-+++ b/tools/objtool/check.c
-@@ -245,7 +245,7 @@ static void init_insn_state(struct insn_state *state, struct section *sec)
- 	 * not correctly determine insn->call_dest->sec (external symbols do
- 	 * not have a section).
- 	 */
--	if (vmlinux && sec)
-+	if (vmlinux && noinstr && sec)
- 		state->noinstr = sec->noinstr;
- }
+@@ -52,10 +52,6 @@ int cmd_check(int argc, const char **argv)
  
-diff --git a/tools/objtool/include/objtool/builtin.h b/tools/objtool/include/objtool/builtin.h
-index 94565a72b701..2502bb27de17 100644
---- a/tools/objtool/include/objtool/builtin.h
-+++ b/tools/objtool/include/objtool/builtin.h
-@@ -8,7 +8,7 @@
- #include <subcmd/parse-options.h>
+ 	objname = argv[0];
  
- extern const struct option check_options[];
--extern bool no_fp, no_unreachable, retpoline, module, backtrace, uaccess, stats, validate_dup, vmlinux, mcount;
-+extern bool no_fp, no_unreachable, retpoline, module, backtrace, uaccess, stats, validate_dup, vmlinux, mcount, noinstr;
- 
- extern int cmd_check(int argc, const char **argv);
- extern int cmd_orc(int argc, const char **argv);
+-	s = strstr(objname, "vmlinux.o");
+-	if (s && !s[9])
+-		vmlinux = true;
+-
+ 	file = objtool_open_read(objname);
+ 	if (!file)
+ 		return 1;
 -- 
 2.28.0.1011.ga647a8990f-goog
 
