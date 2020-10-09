@@ -2,286 +2,331 @@ Return-Path: <SRS0=I3i3=DQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-20.4 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF02BC4363A
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 16:16:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D226C43457
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 16:30:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A77EF22261
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 16:16:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DD71122280
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 16:30:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="AItaKTzL"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hEJDk5aB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389652AbgJIQQG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 9 Oct 2020 12:16:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41486 "EHLO
+        id S2389715AbgJIQai (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 9 Oct 2020 12:30:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44152 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389662AbgJIQNu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2020 12:13:50 -0400
-Received: from mail-pg1-x54a.google.com (mail-pg1-x54a.google.com [IPv6:2607:f8b0:4864:20::54a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8BD54C0613D9
-        for <linux-pci@vger.kernel.org>; Fri,  9 Oct 2020 09:13:45 -0700 (PDT)
-Received: by mail-pg1-x54a.google.com with SMTP id g5so7043823pgn.1
-        for <linux-pci@vger.kernel.org>; Fri, 09 Oct 2020 09:13:45 -0700 (PDT)
+        with ESMTP id S2389471AbgJIQai (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2020 12:30:38 -0400
+Received: from mail-il1-x141.google.com (mail-il1-x141.google.com [IPv6:2607:f8b0:4864:20::141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29409C0613D2;
+        Fri,  9 Oct 2020 09:30:38 -0700 (PDT)
+Received: by mail-il1-x141.google.com with SMTP id c5so9666724ilr.9;
+        Fri, 09 Oct 2020 09:30:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=sender:date:in-reply-to:message-id:mime-version:references:subject
-         :from:to:cc;
-        bh=U8f6ydCzrFA1+gsHZeI/xdFghtBOR6cuTFbAmTrQoXE=;
-        b=AItaKTzLek+Kl7jK3RNLvZRYo7H+x3YRAWKjf/ABpeXnBLdWaZUH0Hlh1KpIONMTwq
-         jiYyf8+3C7oQRhMwU8bIBlq0UHWYZXhJhwT583e1of4hboHqIxwmj7UteX5nb9U3z34d
-         Duq/s5v91hPc3mZ1sWLt2I+oh6/4bTz4zMiBXguAmWySuKoU/4KEli88R9buTO6Znlhl
-         oUrVM67QZgCiMINt0i6ppWsu6a1Z81LQn7HTvCzQaP6BOwhbxQmEuwmkiUxs9nchgwOf
-         wP2l2UXnMkIlmqlSyzAESBkf2xSWjcChp3Bq4f/Xu0hGHvdc0s1tC7YeBUZbuCyoMYrz
-         /BRA==
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:reply-to:from:date:message-id
+         :subject:to:cc;
+        bh=2Gc2VbZdU1IXiw57R85Qt4LavpkHTDXOYsNp+15DYcg=;
+        b=hEJDk5aBM0OyqBiz/S2cVXzsuVix3FYn+kcS8O/nMkNrXwfPu3otjRaoP9O72rYi1n
+         VjYgucLsJp3Z0hR/a2uaU9ns3nc7w4a7XUDetwg855x7SSC1DCcnd4EuUhQ8JwrBIpux
+         s5MK022NgE0jxmvV9srK5hu5hnQSALf/i/ahx+83zw85cza0K01ntWXWSsjiEWgsaL+F
+         LCVUVda2u45vCa63xSh7XUKzTMLwA/RY9xZ7HLgC18IHAvuO7h7GmXOuV1rPbw01inLF
+         75zwGqlQi0C/qZRRfmtw3sj/uucK+NkR6M9+b6Grz2pok1SOVBvXn5qCWkT6jYv5rCc3
+         qTSw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:date:in-reply-to:message-id:mime-version
-         :references:subject:from:to:cc;
-        bh=U8f6ydCzrFA1+gsHZeI/xdFghtBOR6cuTFbAmTrQoXE=;
-        b=KZCpmYqWHXAPeA0SZT8Wxe/iNpcqBgJCySQkwy6phbkeCaiYzbWQUzqVnnz1QY5KQk
-         pVwmYmjmEY0ZrlShnRZT+TIn1kj1TLAeoB9KNSEtzOhf5mRqKtPePWHmVJU72WEcnYr3
-         QPwPZUtFExelFpSnQCdAwvll9eDFg8uRV/0mop0YXPe1pTrYCU8HU6qbWqxta2Taly4l
-         /0yDWkoHNxxmXatIHKtQhIootwgdRUUrppURAAdW6iDq4tidh/W3ybumqwDZvlXk++UD
-         RJ0GjU1NEOI2ivIVAsfN8iVdJkbxSQyl6pQA4LFclMgVFiZgLGzlZ6V/12pVketjzglK
-         jVvQ==
-X-Gm-Message-State: AOAM533hRrLyOqCecHLTRQv0LFVwARzfn1sou+UASyhwAD3448kN6DPN
-        PUlxaMJSSAQP4Hg27FkfXuJuTJfmWGrA4INrItw=
-X-Google-Smtp-Source: ABdhPJwI3rPMzgx92txY8T8cv2wnkKpDmMqEAMKh3J40sl8wPiOy4wivyYi5erW3mMoN7CkZzYGTL+4hic37o6P26LY=
-Sender: "samitolvanen via sendgmr" 
-        <samitolvanen@samitolvanen1.mtv.corp.google.com>
-X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:f693:9fff:fef4:1b6d])
- (user=samitolvanen job=sendgmr) by 2002:a63:370f:: with SMTP id
- e15mr2644515pga.124.1602260024950; Fri, 09 Oct 2020 09:13:44 -0700 (PDT)
-Date:   Fri,  9 Oct 2020 09:13:11 -0700
-In-Reply-To: <20201009161338.657380-1-samitolvanen@google.com>
-Message-Id: <20201009161338.657380-3-samitolvanen@google.com>
-Mime-Version: 1.0
+        h=x-gm-message-state:mime-version:references:in-reply-to:reply-to
+         :from:date:message-id:subject:to:cc;
+        bh=2Gc2VbZdU1IXiw57R85Qt4LavpkHTDXOYsNp+15DYcg=;
+        b=dFKvrWJvyx9I4jKPP7IjpK+OpdpnG8IZGJLPDorwy9/Q3Y6yr/wYQeX5PLjtmHRVrv
+         epdIOkbERUV3XadSS8RPTyrfSk5O2ciukPUbmhU0HMZBhesFuYjBj0IYAKx6zbqU3zSP
+         urOXorrXIdZhqVKkK0qL3YOg89/67TOXVo6mwWGhugJt+PcvAkifmP8iDMiDcCdtoKfF
+         GMxNBMQ8vImtPMExQEehQYga0Gx3TbqhSWZ0T+Cp1eNCh+6pQH5on1QbSnwGhKWcGMlP
+         2pokPcyLb3EGIl4kpWeszG/fvoLNSiGefnZCizH+nKZI4TTtrg1G7cgvCcU9wyWfrimx
+         xw/Q==
+X-Gm-Message-State: AOAM530HwV5fDglmnqQssyKG+N1WC8+iAMLc3CJQ7P7VA1YI+FsPmxlF
+        Ldhfkw48VC7LpQntHpNrA+4ybSW9raTb3D0Mli4=
+X-Google-Smtp-Source: ABdhPJwBFeZdsljqopYTCCei86vRF8PIXqbXb7fERVj0i5Cq3wzs1MXDtB1itEnSoiXD6rCUYCsGvFHBayZUFIR0ZXw=
+X-Received: by 2002:a92:7f05:: with SMTP id a5mr11486123ild.112.1602261037165;
+ Fri, 09 Oct 2020 09:30:37 -0700 (PDT)
+MIME-Version: 1.0
 References: <20201009161338.657380-1-samitolvanen@google.com>
-X-Mailer: git-send-email 2.28.0.1011.ga647a8990f-goog
-Subject: [PATCH v5 02/29] objtool: Add a pass for generating __mcount_loc
-From:   Sami Tolvanen <samitolvanen@google.com>
-To:     Masahiro Yamada <masahiroy@kernel.org>,
+In-Reply-To: <20201009161338.657380-1-samitolvanen@google.com>
+Reply-To: sedat.dilek@gmail.com
+From:   Sedat Dilek <sedat.dilek@gmail.com>
+Date:   Fri, 9 Oct 2020 18:30:24 +0200
+Message-ID: <CA+icZUVWdRWfhPhPy79Hpjmqbfw+n8xsgMKv_RU+hoh1bphXdg@mail.gmail.com>
+Subject: Re: [PATCH v5 00/29] Add support for Clang LTO
+To:     Sami Tolvanen <samitolvanen@google.com>
+Cc:     Masahiro Yamada <masahiroy@kernel.org>,
         Will Deacon <will@kernel.org>,
-        Steven Rostedt <rostedt@goodmis.org>
-Cc:     Peter Zijlstra <peterz@infradead.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Peter Zijlstra <peterz@infradead.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         "Paul E. McKenney" <paulmck@kernel.org>,
         Kees Cook <keescook@chromium.org>,
         Nick Desaulniers <ndesaulniers@google.com>,
-        clang-built-linux@googlegroups.com,
+        Clang-Built-Linux ML <clang-built-linux@googlegroups.com>,
         kernel-hardening@lists.openwall.com, linux-arch@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-kbuild@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        x86@kernel.org, Sami Tolvanen <samitolvanen@google.com>
+        x86@kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Peter Zijlstra <peterz@infradead.org>
+On Fri, Oct 9, 2020 at 6:13 PM 'Sami Tolvanen' via Clang Built Linux
+<clang-built-linux@googlegroups.com> wrote:
+>
+> This patch series adds support for building x86_64 and arm64 kernels
+> with Clang's Link Time Optimization (LTO).
+>
+> In addition to performance, the primary motivation for LTO is
+> to allow Clang's Control-Flow Integrity (CFI) to be used in the
+> kernel. Google has shipped millions of Pixel devices running three
+> major kernel versions with LTO+CFI since 2018.
+>
+> Most of the patches are build system changes for handling LLVM
+> bitcode, which Clang produces with LTO instead of ELF object files,
+> postponing ELF processing until a later stage, and ensuring initcall
+> ordering.
+>
+> Note that this version is based on tip/master to reduce the number
+> of prerequisite patches, and to make it easier to manage changes to
+> objtool. Patch 1 is from Masahiro's kbuild tree, and while it's not
+> directly related to LTO, it makes the module linker script changes
+> cleaner.
+>
+> Furthermore, patches 2-6 include Peter's patch for generating
+> __mcount_loc with objtool, and build system changes to enable it on
+> x86. With these patches, we no longer need to annotate functions
+> that have non-call references to __fentry__ with LTO, which greatly
+> simplifies supporting dynamic ftrace.
+>
+> You can also pull this series from
+>
+>   https://github.com/samitolvanen/linux.git lto-v5
+>
+> ---
+> Changes in v5:
+>
+>   - Rebased on top of tip/master.
+>
 
-Add the --mcount option for generating __mcount_loc sections
-needed for dynamic ftrace. Using this pass requires the kernel to
-be compiled with -mfentry and CC_USING_NOP_MCOUNT to be defined
-in Makefile.
+What are the plans to get this into mainline?
+Linux v5.10 :-) too early - needs more review/testing?
 
-Link: https://lore.kernel.org/lkml/20200625200235.GQ4781@hirez.programming.kicks-ass.net/
-Signed-off-by: Peter Zijlstra <peterz@infradead.org>
-[Sami: rebased, dropped config changes, fixed to actually use --mcount,
-       and wrote a commit message.]
-Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
-Reviewed-by: Kees Cook <keescook@chromium.org>
----
- tools/objtool/builtin-check.c           |  3 +-
- tools/objtool/check.c                   | 82 +++++++++++++++++++++++++
- tools/objtool/include/objtool/builtin.h |  2 +-
- tools/objtool/include/objtool/check.h   |  1 +
- tools/objtool/include/objtool/objtool.h |  1 +
- tools/objtool/objtool.c                 |  1 +
- 6 files changed, 88 insertions(+), 2 deletions(-)
+Will clang-cfi be based on this, too?
 
-diff --git a/tools/objtool/builtin-check.c b/tools/objtool/builtin-check.c
-index f47951e19c9d..6518c1a6ad1e 100644
---- a/tools/objtool/builtin-check.c
-+++ b/tools/objtool/builtin-check.c
-@@ -18,7 +18,7 @@
- #include <objtool/builtin.h>
- #include <objtool/objtool.h>
- 
--bool no_fp, no_unreachable, retpoline, module, backtrace, uaccess, stats, validate_dup, vmlinux;
-+bool no_fp, no_unreachable, retpoline, module, backtrace, uaccess, stats, validate_dup, vmlinux, mcount;
- 
- static const char * const check_usage[] = {
- 	"objtool check [<options>] file.o",
-@@ -35,6 +35,7 @@ const struct option check_options[] = {
- 	OPT_BOOLEAN('s', "stats", &stats, "print statistics"),
- 	OPT_BOOLEAN('d', "duplicate", &validate_dup, "duplicate validation for vmlinux.o"),
- 	OPT_BOOLEAN('l', "vmlinux", &vmlinux, "vmlinux.o validation"),
-+	OPT_BOOLEAN('M', "mcount", &mcount, "generate __mcount_loc"),
- 	OPT_END(),
- };
- 
-diff --git a/tools/objtool/check.c b/tools/objtool/check.c
-index 32e6a0db6768..61dcd80feec5 100644
---- a/tools/objtool/check.c
-+++ b/tools/objtool/check.c
-@@ -524,6 +524,65 @@ static int create_static_call_sections(struct objtool_file *file)
- 	return 0;
- }
- 
-+static int create_mcount_loc_sections(struct objtool_file *file)
-+{
-+	struct section *sec, *reloc_sec;
-+	struct reloc *reloc;
-+	unsigned long *loc;
-+	struct instruction *insn;
-+	int idx;
-+
-+	sec = find_section_by_name(file->elf, "__mcount_loc");
-+	if (sec) {
-+		INIT_LIST_HEAD(&file->mcount_loc_list);
-+		WARN("file already has __mcount_loc section, skipping");
-+		return 0;
-+	}
-+
-+	if (list_empty(&file->mcount_loc_list))
-+		return 0;
-+
-+	idx = 0;
-+	list_for_each_entry(insn, &file->mcount_loc_list, mcount_loc_node)
-+		idx++;
-+
-+	sec = elf_create_section(file->elf, "__mcount_loc", 0, sizeof(unsigned long), idx);
-+	if (!sec)
-+		return -1;
-+
-+	reloc_sec = elf_create_reloc_section(file->elf, sec, SHT_RELA);
-+	if (!reloc_sec)
-+		return -1;
-+
-+	idx = 0;
-+	list_for_each_entry(insn, &file->mcount_loc_list, mcount_loc_node) {
-+
-+		loc = (unsigned long *)sec->data->d_buf + idx;
-+		memset(loc, 0, sizeof(unsigned long));
-+
-+		reloc = malloc(sizeof(*reloc));
-+		if (!reloc) {
-+			perror("malloc");
-+			return -1;
-+		}
-+		memset(reloc, 0, sizeof(*reloc));
-+
-+		reloc->sym = insn->sec->sym;
-+		reloc->addend = insn->offset;
-+		reloc->type = R_X86_64_64;
-+		reloc->offset = idx * sizeof(unsigned long);
-+		reloc->sec = reloc_sec;
-+		elf_add_reloc(file->elf, reloc);
-+
-+		idx++;
-+	}
-+
-+	if (elf_rebuild_reloc_section(file->elf, reloc_sec))
-+		return -1;
-+
-+	return 0;
-+}
-+
- /*
-  * Warnings shouldn't be reported for ignored functions.
-  */
-@@ -950,6 +1009,22 @@ static int add_call_destinations(struct objtool_file *file)
- 			insn->type = INSN_NOP;
- 		}
- 
-+		if (mcount && !strcmp(insn->call_dest->name, "__fentry__")) {
-+			if (reloc) {
-+				reloc->type = R_NONE;
-+				elf_write_reloc(file->elf, reloc);
-+			}
-+
-+			elf_write_insn(file->elf, insn->sec,
-+				       insn->offset, insn->len,
-+				       arch_nop_insn(insn->len));
-+
-+			insn->type = INSN_NOP;
-+
-+			list_add_tail(&insn->mcount_loc_node,
-+				      &file->mcount_loc_list);
-+		}
-+
- 		/*
- 		 * Whatever stack impact regular CALLs have, should be undone
- 		 * by the RETURN of the called function.
-@@ -2921,6 +2996,13 @@ int check(struct objtool_file *file)
- 		goto out;
- 	warnings += ret;
- 
-+	if (mcount) {
-+		ret = create_mcount_loc_sections(file);
-+		if (ret < 0)
-+			goto out;
-+		warnings += ret;
-+	}
-+
- out:
- 	if (ret < 0) {
- 		/*
-diff --git a/tools/objtool/include/objtool/builtin.h b/tools/objtool/include/objtool/builtin.h
-index 85c979caa367..94565a72b701 100644
---- a/tools/objtool/include/objtool/builtin.h
-+++ b/tools/objtool/include/objtool/builtin.h
-@@ -8,7 +8,7 @@
- #include <subcmd/parse-options.h>
- 
- extern const struct option check_options[];
--extern bool no_fp, no_unreachable, retpoline, module, backtrace, uaccess, stats, validate_dup, vmlinux;
-+extern bool no_fp, no_unreachable, retpoline, module, backtrace, uaccess, stats, validate_dup, vmlinux, mcount;
- 
- extern int cmd_check(int argc, const char **argv);
- extern int cmd_orc(int argc, const char **argv);
-diff --git a/tools/objtool/include/objtool/check.h b/tools/objtool/include/objtool/check.h
-index bba10968eac0..f04415852c29 100644
---- a/tools/objtool/include/objtool/check.h
-+++ b/tools/objtool/include/objtool/check.h
-@@ -23,6 +23,7 @@ struct instruction {
- 	struct list_head list;
- 	struct hlist_node hash;
- 	struct list_head static_call_node;
-+	struct list_head mcount_loc_node;
- 	struct section *sec;
- 	unsigned long offset;
- 	unsigned int len;
-diff --git a/tools/objtool/include/objtool/objtool.h b/tools/objtool/include/objtool/objtool.h
-index 32f4cd1da9fa..3c899e0ab861 100644
---- a/tools/objtool/include/objtool/objtool.h
-+++ b/tools/objtool/include/objtool/objtool.h
-@@ -19,6 +19,7 @@ struct objtool_file {
- 	struct list_head insn_list;
- 	DECLARE_HASHTABLE(insn_hash, 20);
- 	struct list_head static_call_list;
-+	struct list_head mcount_loc_list;
- 	bool ignore_unreachables, c_file, hints, rodata;
- };
- 
-diff --git a/tools/objtool/objtool.c b/tools/objtool/objtool.c
-index e848feb0a5fc..7b97ce499405 100644
---- a/tools/objtool/objtool.c
-+++ b/tools/objtool/objtool.c
-@@ -62,6 +62,7 @@ struct objtool_file *objtool_open_read(const char *_objname)
- 	INIT_LIST_HEAD(&file.insn_list);
- 	hash_init(file.insn_hash);
- 	INIT_LIST_HEAD(&file.static_call_list);
-+	INIT_LIST_HEAD(&file.mcount_loc_list);
- 	file.c_file = !vmlinux && find_section_by_name(file.elf, ".comment");
- 	file.ignore_unreachables = no_unreachable;
- 	file.hints = false;
--- 
-2.28.0.1011.ga647a8990f-goog
+>   - Changed the command line for objtool to use --vmlinux --duplicate
+>     to disable warnings about retpoline thunks and to fix .orc_unwind
+>     generation for vmlinux.o.
+>
+>   - Added --noinstr flag to objtool, so we can use --vmlinux without
+>     also enabling noinstr validation.
+>
+>   - Disabled objtool's unreachable instruction warnings with LTO to
+>     disable false positives for the int3 padding in vmlinux.o.
+>
+>   - Added ANNOTATE_RETPOLINE_SAFE annotations to the indirect jumps
+>     in x86 assembly code to fix objtool warnings with retpoline.
+>
+>   - Fixed modpost warnings about missing version information with
+>     CONFIG_MODVERSIONS.
+>
+>   - Included Makefile.lib into Makefile.modpost for ld_flags. Thanks
+>     to Sedat for pointing this out.
+>
 
+That was a long way to detect this as I had very big Debian Linux
+debug packages generated with CONFIG_DEBUG_INFO_COMPRESSED=y.
+
+Thanks for v5 of clang-lto.
+
+- Sedat -
+
+[1] https://github.com/ClangBuiltLinux/linux/issues/1086#issuecomment-705754002
+
+>   - Updated the help text for ThinLTO to better explain the trade-offs.
+>
+>   - Updated commit messages with better explanations.
+>
+> Changes in v4:
+>
+>   - Fixed a typo in Makefile.lib to correctly pass --no-fp to objtool.
+>
+>   - Moved ftrace configs related to generating __mcount_loc to Kconfig,
+>     so they are available also in Makefile.modfinal.
+>
+>   - Dropped two prerequisite patches that were merged to Linus' tree.
+>
+> Changes in v3:
+>
+>   - Added a separate patch to remove the unused DISABLE_LTO treewide,
+>     as filtering out CC_FLAGS_LTO instead is preferred.
+>
+>   - Updated the Kconfig help to explain why LTO is behind a choice
+>     and disabled by default.
+>
+>   - Dropped CC_FLAGS_LTO_CLANG, compiler-specific LTO flags are now
+>     appended directly to CC_FLAGS_LTO.
+>
+>   - Updated $(AR) flags as KBUILD_ARFLAGS was removed earlier.
+>
+>   - Fixed ThinLTO cache handling for external module builds.
+>
+>   - Rebased on top of Masahiro's patch for preprocessing modules.lds,
+>     and moved the contents of module-lto.lds to modules.lds.S.
+>
+>   - Moved objtool_args to Makefile.lib to avoid duplication of the
+>     command line parameters in Makefile.modfinal.
+>
+>   - Clarified in the commit message for the initcall ordering patch
+>     that the initcall order remains the same as without LTO.
+>
+>   - Changed link-vmlinux.sh to use jobserver-exec to control the
+>     number of jobs started by generate_initcall_ordering.pl.
+>
+>   - Dropped the x86/relocs patch to whitelist L4_PAGE_OFFSET as it's
+>     no longer needed with ToT kernel.
+>
+>   - Disabled LTO for arch/x86/power/cpu.c to work around a Clang bug
+>     with stack protector attributes.
+>
+> Changes in v2:
+>
+>   - Fixed -Wmissing-prototypes warnings with W=1.
+>
+>   - Dropped cc-option from -fsplit-lto-unit and added .thinlto-cache
+>     scrubbing to make distclean.
+>
+>   - Added a comment about Clang >=11 being required.
+>
+>   - Added a patch to disable LTO for the arm64 KVM nVHE code.
+>
+>   - Disabled objtool's noinstr validation with LTO unless enabled.
+>
+>   - Included Peter's proposed objtool mcount patch in the series
+>     and replaced recordmcount with the objtool pass to avoid
+>     whitelisting relocations that are not calls.
+>
+>   - Updated several commit messages with better explanations.
+>
+>
+> Masahiro Yamada (1):
+>   kbuild: preprocess module linker script
+>
+> Peter Zijlstra (1):
+>   objtool: Add a pass for generating __mcount_loc
+>
+> Sami Tolvanen (27):
+>   objtool: Don't autodetect vmlinux.o
+>   tracing: move function tracer options to Kconfig
+>   tracing: add support for objtool mcount
+>   x86, build: use objtool mcount
+>   treewide: remove DISABLE_LTO
+>   kbuild: add support for Clang LTO
+>   kbuild: lto: fix module versioning
+>   objtool: Split noinstr validation from --vmlinux
+>   kbuild: lto: postpone objtool
+>   kbuild: lto: limit inlining
+>   kbuild: lto: merge module sections
+>   kbuild: lto: remove duplicate dependencies from .mod files
+>   init: lto: ensure initcall ordering
+>   init: lto: fix PREL32 relocations
+>   PCI: Fix PREL32 relocations for LTO
+>   modpost: lto: strip .lto from module names
+>   scripts/mod: disable LTO for empty.c
+>   efi/libstub: disable LTO
+>   drivers/misc/lkdtm: disable LTO for rodata.o
+>   arm64: vdso: disable LTO
+>   KVM: arm64: disable LTO for the nVHE directory
+>   arm64: disable recordmcount with DYNAMIC_FTRACE_WITH_REGS
+>   arm64: allow LTO_CLANG and THINLTO to be selected
+>   x86/asm: annotate indirect jumps
+>   x86, vdso: disable LTO only for vDSO
+>   x86, cpu: disable LTO for cpu.c
+>   x86, build: allow LTO_CLANG and THINLTO to be selected
+>
+>  .gitignore                                    |   1 +
+>  Makefile                                      |  68 +++--
+>  arch/Kconfig                                  |  74 +++++
+>  arch/arm/Makefile                             |   4 -
+>  .../module.lds => include/asm/module.lds.h}   |   2 +
+>  arch/arm64/Kconfig                            |   4 +
+>  arch/arm64/Makefile                           |   4 -
+>  .../module.lds => include/asm/module.lds.h}   |   2 +
+>  arch/arm64/kernel/vdso/Makefile               |   4 +-
+>  arch/arm64/kvm/hyp/nvhe/Makefile              |   4 +-
+>  arch/ia64/Makefile                            |   1 -
+>  .../{module.lds => include/asm/module.lds.h}  |   0
+>  arch/m68k/Makefile                            |   1 -
+>  .../module.lds => include/asm/module.lds.h}   |   0
+>  arch/powerpc/Makefile                         |   1 -
+>  .../module.lds => include/asm/module.lds.h}   |   0
+>  arch/riscv/Makefile                           |   3 -
+>  .../module.lds => include/asm/module.lds.h}   |   3 +-
+>  arch/sparc/vdso/Makefile                      |   2 -
+>  arch/um/include/asm/Kbuild                    |   1 +
+>  arch/x86/Kconfig                              |   3 +
+>  arch/x86/Makefile                             |   5 +
+>  arch/x86/entry/vdso/Makefile                  |   5 +-
+>  arch/x86/kernel/acpi/wakeup_64.S              |   2 +
+>  arch/x86/platform/pvh/head.S                  |   2 +
+>  arch/x86/power/Makefile                       |   4 +
+>  arch/x86/power/hibernate_asm_64.S             |   3 +
+>  drivers/firmware/efi/libstub/Makefile         |   2 +
+>  drivers/misc/lkdtm/Makefile                   |   1 +
+>  include/asm-generic/Kbuild                    |   1 +
+>  include/asm-generic/module.lds.h              |  10 +
+>  include/asm-generic/vmlinux.lds.h             |  11 +-
+>  include/linux/init.h                          |  79 ++++-
+>  include/linux/pci.h                           |  19 +-
+>  kernel/Makefile                               |   3 -
+>  kernel/trace/Kconfig                          |  29 ++
+>  scripts/.gitignore                            |   1 +
+>  scripts/Makefile                              |   3 +
+>  scripts/Makefile.build                        |  69 +++--
+>  scripts/Makefile.lib                          |  17 +-
+>  scripts/Makefile.modfinal                     |  29 +-
+>  scripts/Makefile.modpost                      |  25 +-
+>  scripts/generate_initcall_order.pl            | 270 ++++++++++++++++++
+>  scripts/link-vmlinux.sh                       |  98 ++++++-
+>  scripts/mod/Makefile                          |   1 +
+>  scripts/mod/modpost.c                         |  16 +-
+>  scripts/mod/modpost.h                         |   9 +
+>  scripts/mod/sumversion.c                      |   6 +-
+>  scripts/{module-common.lds => module.lds.S}   |  31 ++
+>  scripts/package/builddeb                      |   2 +-
+>  tools/objtool/builtin-check.c                 |  10 +-
+>  tools/objtool/check.c                         |  84 +++++-
+>  tools/objtool/include/objtool/builtin.h       |   2 +-
+>  tools/objtool/include/objtool/check.h         |   1 +
+>  tools/objtool/include/objtool/objtool.h       |   1 +
+>  tools/objtool/objtool.c                       |   1 +
+>  56 files changed, 903 insertions(+), 131 deletions(-)
+>  rename arch/arm/{kernel/module.lds => include/asm/module.lds.h} (72%)
+>  rename arch/arm64/{kernel/module.lds => include/asm/module.lds.h} (76%)
+>  rename arch/ia64/{module.lds => include/asm/module.lds.h} (100%)
+>  rename arch/m68k/{kernel/module.lds => include/asm/module.lds.h} (100%)
+>  rename arch/powerpc/{kernel/module.lds => include/asm/module.lds.h} (100%)
+>  rename arch/riscv/{kernel/module.lds => include/asm/module.lds.h} (84%)
+>  create mode 100644 include/asm-generic/module.lds.h
+>  create mode 100755 scripts/generate_initcall_order.pl
+>  rename scripts/{module-common.lds => module.lds.S} (59%)
+>
+>
+> base-commit: 80396d76da65fc8b82581c0260c25a6aa0a495a3
+> --
+> 2.28.0.1011.ga647a8990f-goog
+>
+> --
+> You received this message because you are subscribed to the Google Groups "Clang Built Linux" group.
+> To unsubscribe from this group and stop receiving emails from it, send an email to clang-built-linux+unsubscribe@googlegroups.com.
+> To view this discussion on the web visit https://groups.google.com/d/msgid/clang-built-linux/20201009161338.657380-1-samitolvanen%40google.com.
