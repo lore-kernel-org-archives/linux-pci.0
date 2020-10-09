@@ -8,62 +8,62 @@ X-Spam-Status: No, score=-20.4 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E5F2C433DF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF02BC4363A
 	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 16:16:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CF9F522280
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 16:16:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A77EF22261
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 16:16:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="DN2nbIA+"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="AItaKTzL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389675AbgJIQQC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 9 Oct 2020 12:16:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41478 "EHLO
+        id S2389652AbgJIQQG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 9 Oct 2020 12:16:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41486 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389671AbgJIQNv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2020 12:13:51 -0400
-Received: from mail-pf1-x44a.google.com (mail-pf1-x44a.google.com [IPv6:2607:f8b0:4864:20::44a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2715DC0613D5
-        for <linux-pci@vger.kernel.org>; Fri,  9 Oct 2020 09:13:50 -0700 (PDT)
-Received: by mail-pf1-x44a.google.com with SMTP id k4so7110429pff.4
-        for <linux-pci@vger.kernel.org>; Fri, 09 Oct 2020 09:13:50 -0700 (PDT)
+        with ESMTP id S2389662AbgJIQNu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2020 12:13:50 -0400
+Received: from mail-pg1-x54a.google.com (mail-pg1-x54a.google.com [IPv6:2607:f8b0:4864:20::54a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8BD54C0613D9
+        for <linux-pci@vger.kernel.org>; Fri,  9 Oct 2020 09:13:45 -0700 (PDT)
+Received: by mail-pg1-x54a.google.com with SMTP id g5so7043823pgn.1
+        for <linux-pci@vger.kernel.org>; Fri, 09 Oct 2020 09:13:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=sender:date:in-reply-to:message-id:mime-version:references:subject
          :from:to:cc;
-        bh=7nDmrXZCx73dwVoWaBJWws0sco61U1uoy5jdWelG6WI=;
-        b=DN2nbIA+Ea8OlLc+3AKBonqGM3GmMfTUWyTWEDPwWZmqVLbuyDQg2tEgeCIbhY5vT+
-         sqSiOaSNRm3/Cu5BzKeCFhq+5iMo6w/ptNEV+j1q/1MfrtYqQGZWUnE/fLQqMyAZlX3W
-         PSUcsiKiIapwRVSIMFV/W2U2CeTcSUwN70Oev3fkE69QWb8hpcDfymgWJ8F4ZFdyTyz6
-         MAvOq723ZTZBn4zC0IwEfsfwhe+oKD9lgxZEFm4MPduNm99CSDhTm5ACDGPS5kU7Rvbr
-         qsSkgu/3HHoW/4RWIbDFlaHtadE7SdMv1F9oo5Cgh3cRfFkpZKYD0Pm/52Tpfpv6wcto
-         ZPHA==
+        bh=U8f6ydCzrFA1+gsHZeI/xdFghtBOR6cuTFbAmTrQoXE=;
+        b=AItaKTzLek+Kl7jK3RNLvZRYo7H+x3YRAWKjf/ABpeXnBLdWaZUH0Hlh1KpIONMTwq
+         jiYyf8+3C7oQRhMwU8bIBlq0UHWYZXhJhwT583e1of4hboHqIxwmj7UteX5nb9U3z34d
+         Duq/s5v91hPc3mZ1sWLt2I+oh6/4bTz4zMiBXguAmWySuKoU/4KEli88R9buTO6Znlhl
+         oUrVM67QZgCiMINt0i6ppWsu6a1Z81LQn7HTvCzQaP6BOwhbxQmEuwmkiUxs9nchgwOf
+         wP2l2UXnMkIlmqlSyzAESBkf2xSWjcChp3Bq4f/Xu0hGHvdc0s1tC7YeBUZbuCyoMYrz
+         /BRA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:sender:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=7nDmrXZCx73dwVoWaBJWws0sco61U1uoy5jdWelG6WI=;
-        b=hMsO+M0vyLAuPIxDduJZ1YP2SMhoccNvhMN6xm1kubrzxkXLu102xvp5YDc3WMJ+Ub
-         gfjYxpjxdGZ/t/KTUvkjf3nx2dXOsjzfLssAkSsgs1xbp+MJfjjJNyfxcyxS8/B38pbT
-         nb3m8DPifSQ6zzcBtLkQ7UYGCLQS6xKOXlMwp0RFMu0bt77qyMBG0OtkIidRPLEXHfgo
-         ZL2IqC6OVUZxUguC98zMlAVcpzUIQX+vcfJ4inCuwZ4/gJV9tKRVuixnWErlSM4G1TdY
-         X6xjstzbp0x0DObiykvn9Hlf0MnjAwwNwV5FPP6Qv2enAx+v/eECTPl0AvcBKiNArpzo
-         LiwQ==
-X-Gm-Message-State: AOAM532imWHBgLZjMTKjF52pkFfq3JIvVwn3AqeLdkPT+XCZ1gd8tkOm
-        X6F3VnGyM7EHWa4Ut3istXgoZs2cJx6eu/GrKfk=
-X-Google-Smtp-Source: ABdhPJwW7/o9ouK/TWL+PhtJ8niBTly20ssnNSGwHpOCGkYkG2ug1tHo8HcISNULAZuU3cPOjrarbQEzNyUkjBWQ9rU=
+        bh=U8f6ydCzrFA1+gsHZeI/xdFghtBOR6cuTFbAmTrQoXE=;
+        b=KZCpmYqWHXAPeA0SZT8Wxe/iNpcqBgJCySQkwy6phbkeCaiYzbWQUzqVnnz1QY5KQk
+         pVwmYmjmEY0ZrlShnRZT+TIn1kj1TLAeoB9KNSEtzOhf5mRqKtPePWHmVJU72WEcnYr3
+         QPwPZUtFExelFpSnQCdAwvll9eDFg8uRV/0mop0YXPe1pTrYCU8HU6qbWqxta2Taly4l
+         /0yDWkoHNxxmXatIHKtQhIootwgdRUUrppURAAdW6iDq4tidh/W3ybumqwDZvlXk++UD
+         RJ0GjU1NEOI2ivIVAsfN8iVdJkbxSQyl6pQA4LFclMgVFiZgLGzlZ6V/12pVketjzglK
+         jVvQ==
+X-Gm-Message-State: AOAM533hRrLyOqCecHLTRQv0LFVwARzfn1sou+UASyhwAD3448kN6DPN
+        PUlxaMJSSAQP4Hg27FkfXuJuTJfmWGrA4INrItw=
+X-Google-Smtp-Source: ABdhPJwI3rPMzgx92txY8T8cv2wnkKpDmMqEAMKh3J40sl8wPiOy4wivyYi5erW3mMoN7CkZzYGTL+4hic37o6P26LY=
 Sender: "samitolvanen via sendgmr" 
         <samitolvanen@samitolvanen1.mtv.corp.google.com>
 X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:f693:9fff:fef4:1b6d])
- (user=samitolvanen job=sendgmr) by 2002:a17:90a:e00f:: with SMTP id
- u15mr5630295pjy.87.1602260029576; Fri, 09 Oct 2020 09:13:49 -0700 (PDT)
-Date:   Fri,  9 Oct 2020 09:13:13 -0700
+ (user=samitolvanen job=sendgmr) by 2002:a63:370f:: with SMTP id
+ e15mr2644515pga.124.1602260024950; Fri, 09 Oct 2020 09:13:44 -0700 (PDT)
+Date:   Fri,  9 Oct 2020 09:13:11 -0700
 In-Reply-To: <20201009161338.657380-1-samitolvanen@google.com>
-Message-Id: <20201009161338.657380-5-samitolvanen@google.com>
+Message-Id: <20201009161338.657380-3-samitolvanen@google.com>
 Mime-Version: 1.0
 References: <20201009161338.657380-1-samitolvanen@google.com>
 X-Mailer: git-send-email 2.28.0.1011.ga647a8990f-goog
-Subject: [PATCH v5 04/29] tracing: move function tracer options to Kconfig
+Subject: [PATCH v5 02/29] objtool: Add a pass for generating __mcount_loc
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Masahiro Yamada <masahiroy@kernel.org>,
         Will Deacon <will@kernel.org>,
@@ -83,117 +83,205 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Move function tracer options to Kconfig to make it easier to add
-new methods for generating __mcount_loc, and to make the options
-available also when building kernel modules.
+From: Peter Zijlstra <peterz@infradead.org>
 
-Note that FTRACE_MCOUNT_USE_* options are updated on rebuild and
-therefore, work even if the .config was generated in a different
-environment.
+Add the --mcount option for generating __mcount_loc sections
+needed for dynamic ftrace. Using this pass requires the kernel to
+be compiled with -mfentry and CC_USING_NOP_MCOUNT to be defined
+in Makefile.
 
+Link: https://lore.kernel.org/lkml/20200625200235.GQ4781@hirez.programming.kicks-ass.net/
+Signed-off-by: Peter Zijlstra <peterz@infradead.org>
+[Sami: rebased, dropped config changes, fixed to actually use --mcount,
+       and wrote a commit message.]
 Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
+Reviewed-by: Kees Cook <keescook@chromium.org>
 ---
- Makefile               | 20 ++++++++------------
- kernel/trace/Kconfig   | 16 ++++++++++++++++
- scripts/Makefile.build |  6 ++----
- 3 files changed, 26 insertions(+), 16 deletions(-)
+ tools/objtool/builtin-check.c           |  3 +-
+ tools/objtool/check.c                   | 82 +++++++++++++++++++++++++
+ tools/objtool/include/objtool/builtin.h |  2 +-
+ tools/objtool/include/objtool/check.h   |  1 +
+ tools/objtool/include/objtool/objtool.h |  1 +
+ tools/objtool/objtool.c                 |  1 +
+ 6 files changed, 88 insertions(+), 2 deletions(-)
 
-diff --git a/Makefile b/Makefile
-index a913a6829754..434da9fcbf3c 100644
---- a/Makefile
-+++ b/Makefile
-@@ -841,12 +841,8 @@ KBUILD_CFLAGS += $(DEBUG_CFLAGS)
- export DEBUG_CFLAGS
+diff --git a/tools/objtool/builtin-check.c b/tools/objtool/builtin-check.c
+index f47951e19c9d..6518c1a6ad1e 100644
+--- a/tools/objtool/builtin-check.c
++++ b/tools/objtool/builtin-check.c
+@@ -18,7 +18,7 @@
+ #include <objtool/builtin.h>
+ #include <objtool/objtool.h>
  
- ifdef CONFIG_FUNCTION_TRACER
--ifdef CONFIG_FTRACE_MCOUNT_RECORD
--  # gcc 5 supports generating the mcount tables directly
--  ifeq ($(call cc-option-yn,-mrecord-mcount),y)
--    CC_FLAGS_FTRACE	+= -mrecord-mcount
--    export CC_USING_RECORD_MCOUNT := 1
--  endif
-+ifdef CONFIG_FTRACE_MCOUNT_USE_CC
-+  CC_FLAGS_FTRACE	+= -mrecord-mcount
-   ifdef CONFIG_HAVE_NOP_MCOUNT
-     ifeq ($(call cc-option-yn, -mnop-mcount),y)
-       CC_FLAGS_FTRACE	+= -mnop-mcount
-@@ -854,6 +850,12 @@ ifdef CONFIG_FTRACE_MCOUNT_RECORD
-     endif
-   endif
- endif
-+ifdef CONFIG_FTRACE_MCOUNT_USE_RECORDMCOUNT
-+  ifdef CONFIG_HAVE_C_RECORDMCOUNT
-+    BUILD_C_RECORDMCOUNT := y
-+    export BUILD_C_RECORDMCOUNT
-+  endif
-+endif
- ifdef CONFIG_HAVE_FENTRY
-   ifeq ($(call cc-option-yn, -mfentry),y)
-     CC_FLAGS_FTRACE	+= -mfentry
-@@ -863,12 +865,6 @@ endif
- export CC_FLAGS_FTRACE
- KBUILD_CFLAGS	+= $(CC_FLAGS_FTRACE) $(CC_FLAGS_USING)
- KBUILD_AFLAGS	+= $(CC_FLAGS_USING)
--ifdef CONFIG_DYNAMIC_FTRACE
--	ifdef CONFIG_HAVE_C_RECORDMCOUNT
--		BUILD_C_RECORDMCOUNT := y
--		export BUILD_C_RECORDMCOUNT
--	endif
--endif
- endif
+-bool no_fp, no_unreachable, retpoline, module, backtrace, uaccess, stats, validate_dup, vmlinux;
++bool no_fp, no_unreachable, retpoline, module, backtrace, uaccess, stats, validate_dup, vmlinux, mcount;
  
- # We trigger additional mismatches with less inlining
-diff --git a/kernel/trace/Kconfig b/kernel/trace/Kconfig
-index a4020c0b4508..927ad004888a 100644
---- a/kernel/trace/Kconfig
-+++ b/kernel/trace/Kconfig
-@@ -595,6 +595,22 @@ config FTRACE_MCOUNT_RECORD
- 	depends on DYNAMIC_FTRACE
- 	depends on HAVE_FTRACE_MCOUNT_RECORD
+ static const char * const check_usage[] = {
+ 	"objtool check [<options>] file.o",
+@@ -35,6 +35,7 @@ const struct option check_options[] = {
+ 	OPT_BOOLEAN('s', "stats", &stats, "print statistics"),
+ 	OPT_BOOLEAN('d', "duplicate", &validate_dup, "duplicate validation for vmlinux.o"),
+ 	OPT_BOOLEAN('l', "vmlinux", &vmlinux, "vmlinux.o validation"),
++	OPT_BOOLEAN('M', "mcount", &mcount, "generate __mcount_loc"),
+ 	OPT_END(),
+ };
  
-+config FTRACE_MCOUNT_USE_PATCHABLE_FUNCTION_ENTRY
-+	bool
-+	depends on FTRACE_MCOUNT_RECORD
+diff --git a/tools/objtool/check.c b/tools/objtool/check.c
+index 32e6a0db6768..61dcd80feec5 100644
+--- a/tools/objtool/check.c
++++ b/tools/objtool/check.c
+@@ -524,6 +524,65 @@ static int create_static_call_sections(struct objtool_file *file)
+ 	return 0;
+ }
+ 
++static int create_mcount_loc_sections(struct objtool_file *file)
++{
++	struct section *sec, *reloc_sec;
++	struct reloc *reloc;
++	unsigned long *loc;
++	struct instruction *insn;
++	int idx;
 +
-+config FTRACE_MCOUNT_USE_CC
-+	def_bool y
-+	depends on $(cc-option,-mrecord-mcount)
-+	depends on !FTRACE_MCOUNT_USE_PATCHABLE_FUNCTION_ENTRY
-+	depends on FTRACE_MCOUNT_RECORD
++	sec = find_section_by_name(file->elf, "__mcount_loc");
++	if (sec) {
++		INIT_LIST_HEAD(&file->mcount_loc_list);
++		WARN("file already has __mcount_loc section, skipping");
++		return 0;
++	}
 +
-+config FTRACE_MCOUNT_USE_RECORDMCOUNT
-+	def_bool y
-+	depends on !FTRACE_MCOUNT_USE_PATCHABLE_FUNCTION_ENTRY
-+	depends on !FTRACE_MCOUNT_USE_CC
-+	depends on FTRACE_MCOUNT_RECORD
++	if (list_empty(&file->mcount_loc_list))
++		return 0;
 +
- config TRACING_MAP
- 	bool
- 	depends on ARCH_HAVE_NMI_SAFE_CMPXCHG
-diff --git a/scripts/Makefile.build b/scripts/Makefile.build
-index a467b9323442..a4634aae1506 100644
---- a/scripts/Makefile.build
-+++ b/scripts/Makefile.build
-@@ -178,8 +178,7 @@ cmd_modversions_c =								\
- 	fi
- endif
++	idx = 0;
++	list_for_each_entry(insn, &file->mcount_loc_list, mcount_loc_node)
++		idx++;
++
++	sec = elf_create_section(file->elf, "__mcount_loc", 0, sizeof(unsigned long), idx);
++	if (!sec)
++		return -1;
++
++	reloc_sec = elf_create_reloc_section(file->elf, sec, SHT_RELA);
++	if (!reloc_sec)
++		return -1;
++
++	idx = 0;
++	list_for_each_entry(insn, &file->mcount_loc_list, mcount_loc_node) {
++
++		loc = (unsigned long *)sec->data->d_buf + idx;
++		memset(loc, 0, sizeof(unsigned long));
++
++		reloc = malloc(sizeof(*reloc));
++		if (!reloc) {
++			perror("malloc");
++			return -1;
++		}
++		memset(reloc, 0, sizeof(*reloc));
++
++		reloc->sym = insn->sec->sym;
++		reloc->addend = insn->offset;
++		reloc->type = R_X86_64_64;
++		reloc->offset = idx * sizeof(unsigned long);
++		reloc->sec = reloc_sec;
++		elf_add_reloc(file->elf, reloc);
++
++		idx++;
++	}
++
++	if (elf_rebuild_reloc_section(file->elf, reloc_sec))
++		return -1;
++
++	return 0;
++}
++
+ /*
+  * Warnings shouldn't be reported for ignored functions.
+  */
+@@ -950,6 +1009,22 @@ static int add_call_destinations(struct objtool_file *file)
+ 			insn->type = INSN_NOP;
+ 		}
  
--ifdef CONFIG_FTRACE_MCOUNT_RECORD
--ifndef CC_USING_RECORD_MCOUNT
-+ifdef CONFIG_FTRACE_MCOUNT_USE_RECORDMCOUNT
- # compiler will not generate __mcount_loc use recordmcount or recordmcount.pl
- ifdef BUILD_C_RECORDMCOUNT
- ifeq ("$(origin RECORDMCOUNT_WARN)", "command line")
-@@ -206,8 +205,7 @@ recordmcount_source := $(srctree)/scripts/recordmcount.pl
- endif # BUILD_C_RECORDMCOUNT
- cmd_record_mcount = $(if $(findstring $(strip $(CC_FLAGS_FTRACE)),$(_c_flags)),	\
- 	$(sub_cmd_record_mcount))
--endif # CC_USING_RECORD_MCOUNT
--endif # CONFIG_FTRACE_MCOUNT_RECORD
-+endif # CONFIG_FTRACE_MCOUNT_USE_RECORDMCOUNT
++		if (mcount && !strcmp(insn->call_dest->name, "__fentry__")) {
++			if (reloc) {
++				reloc->type = R_NONE;
++				elf_write_reloc(file->elf, reloc);
++			}
++
++			elf_write_insn(file->elf, insn->sec,
++				       insn->offset, insn->len,
++				       arch_nop_insn(insn->len));
++
++			insn->type = INSN_NOP;
++
++			list_add_tail(&insn->mcount_loc_node,
++				      &file->mcount_loc_list);
++		}
++
+ 		/*
+ 		 * Whatever stack impact regular CALLs have, should be undone
+ 		 * by the RETURN of the called function.
+@@ -2921,6 +2996,13 @@ int check(struct objtool_file *file)
+ 		goto out;
+ 	warnings += ret;
  
- ifdef CONFIG_STACK_VALIDATION
- ifneq ($(SKIP_STACK_VALIDATION),1)
++	if (mcount) {
++		ret = create_mcount_loc_sections(file);
++		if (ret < 0)
++			goto out;
++		warnings += ret;
++	}
++
+ out:
+ 	if (ret < 0) {
+ 		/*
+diff --git a/tools/objtool/include/objtool/builtin.h b/tools/objtool/include/objtool/builtin.h
+index 85c979caa367..94565a72b701 100644
+--- a/tools/objtool/include/objtool/builtin.h
++++ b/tools/objtool/include/objtool/builtin.h
+@@ -8,7 +8,7 @@
+ #include <subcmd/parse-options.h>
+ 
+ extern const struct option check_options[];
+-extern bool no_fp, no_unreachable, retpoline, module, backtrace, uaccess, stats, validate_dup, vmlinux;
++extern bool no_fp, no_unreachable, retpoline, module, backtrace, uaccess, stats, validate_dup, vmlinux, mcount;
+ 
+ extern int cmd_check(int argc, const char **argv);
+ extern int cmd_orc(int argc, const char **argv);
+diff --git a/tools/objtool/include/objtool/check.h b/tools/objtool/include/objtool/check.h
+index bba10968eac0..f04415852c29 100644
+--- a/tools/objtool/include/objtool/check.h
++++ b/tools/objtool/include/objtool/check.h
+@@ -23,6 +23,7 @@ struct instruction {
+ 	struct list_head list;
+ 	struct hlist_node hash;
+ 	struct list_head static_call_node;
++	struct list_head mcount_loc_node;
+ 	struct section *sec;
+ 	unsigned long offset;
+ 	unsigned int len;
+diff --git a/tools/objtool/include/objtool/objtool.h b/tools/objtool/include/objtool/objtool.h
+index 32f4cd1da9fa..3c899e0ab861 100644
+--- a/tools/objtool/include/objtool/objtool.h
++++ b/tools/objtool/include/objtool/objtool.h
+@@ -19,6 +19,7 @@ struct objtool_file {
+ 	struct list_head insn_list;
+ 	DECLARE_HASHTABLE(insn_hash, 20);
+ 	struct list_head static_call_list;
++	struct list_head mcount_loc_list;
+ 	bool ignore_unreachables, c_file, hints, rodata;
+ };
+ 
+diff --git a/tools/objtool/objtool.c b/tools/objtool/objtool.c
+index e848feb0a5fc..7b97ce499405 100644
+--- a/tools/objtool/objtool.c
++++ b/tools/objtool/objtool.c
+@@ -62,6 +62,7 @@ struct objtool_file *objtool_open_read(const char *_objname)
+ 	INIT_LIST_HEAD(&file.insn_list);
+ 	hash_init(file.insn_hash);
+ 	INIT_LIST_HEAD(&file.static_call_list);
++	INIT_LIST_HEAD(&file.mcount_loc_list);
+ 	file.c_file = !vmlinux && find_section_by_name(file.elf, ".comment");
+ 	file.ignore_unreachables = no_unreachable;
+ 	file.hints = false;
 -- 
 2.28.0.1011.ga647a8990f-goog
 
