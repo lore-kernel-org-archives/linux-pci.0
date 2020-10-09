@@ -7,53 +7,53 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D49FEC388D2
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 08:00:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C13EC4363A
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 08:00:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 89DF122277
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 08:00:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 387C522275
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 08:00:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ffwll.ch header.i=@ffwll.ch header.b="AmZWcTmT"
+	dkim=pass (1024-bit key) header.d=ffwll.ch header.i=@ffwll.ch header.b="DVC+VHNw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732785AbgJIIAh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 9 Oct 2020 04:00:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49586 "EHLO
+        id S1732822AbgJIIAo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 9 Oct 2020 04:00:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49564 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732786AbgJIIAS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2020 04:00:18 -0400
-Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 400D6C0613D8
-        for <linux-pci@vger.kernel.org>; Fri,  9 Oct 2020 01:00:18 -0700 (PDT)
-Received: by mail-wr1-x444.google.com with SMTP id y12so3870871wrp.6
-        for <linux-pci@vger.kernel.org>; Fri, 09 Oct 2020 01:00:18 -0700 (PDT)
+        with ESMTP id S1732766AbgJIIAQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2020 04:00:16 -0400
+Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 21F2AC0613D8
+        for <linux-pci@vger.kernel.org>; Fri,  9 Oct 2020 01:00:15 -0700 (PDT)
+Received: by mail-wr1-x441.google.com with SMTP id g12so9221292wrp.10
+        for <linux-pci@vger.kernel.org>; Fri, 09 Oct 2020 01:00:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=ffwll.ch; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=VnPfmIw9ZEJAdxqVy4AIvj5gzcDwS/bnZ7Vl10D80aI=;
-        b=AmZWcTmTMY3aRt6Gxo6D+cFSlAKtbo7rzcAhKQblXce5J0bM+0jidwIuX1SJM78PW3
-         a4CzgO4OyPIunTZ40M8qjiQpRIe+CXuCN2QeQz0Nq3eitwpnmxf1tCSrmdU7BFARQUrJ
-         TsYEd08BMm8jvttMOB5N0WbB01Om3gekKiY/Q=
+        bh=DPr3++TkgD7opBHxWri6P050gTocJAeikYQ/tt45kKI=;
+        b=DVC+VHNwYKVtqSii5lIVeaydDB6BLYuTeAJ5rwW+S55nTxLLBIyrPBVsS/L9PHMkF1
+         q3uw+XyygTSKEzljnhrtd+uqW+UWrHLzIjTm4/9nOxCepU5EL5HwS+mIoRk0TD6zsvng
+         eZRy5dYaQjR4QunmQxA3SCZhsE7Sk5d3j+0PQ=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=VnPfmIw9ZEJAdxqVy4AIvj5gzcDwS/bnZ7Vl10D80aI=;
-        b=nw3XP/dVY3WvlJrKtFmhhEJKFeXZThZQP/oVutFLAQk9kaJW3rA8Ep+8A5Pv8gZP3I
-         FjrlEjo0d8SXPYXw2zCG69Kvb9YnxryvBDjb/QxncLYa1//kYVVd5CAOziCZJjZWBqHP
-         TR2iMrT/1boxi+JjcAhnBQqe66ca9fdxfiLcA45q2tVDUmYHWE/ROhuw0bx+ymqQuB9g
-         I7MyV9HiIYqqnAAiXDzYJAISIrKVLxi/Wx2QAlhYkdALToyD4M295HjGseCCACFfG1z8
-         sZx8WaLbzXeEyaEOyYyqW0lXa5eesuJfRFbE+/OkVjXQAbim+WnO8LIqNCUAQwtO8DYy
-         LpcA==
-X-Gm-Message-State: AOAM531VeDExbPO/hAar4iJYrtK0FuvzmrYaAv5jmAhtt4T9O6PIlaPG
-        HObqD/7hjCP3kbENoclRmBA/3g==
-X-Google-Smtp-Source: ABdhPJyIgZ0DKgvAk38zXma7Xw6CtJtdY0QGkVhgcnr9L1zZ08hj8no1NH+SgdXtl2+3a6urGujNzQ==
-X-Received: by 2002:adf:fa02:: with SMTP id m2mr13160452wrr.273.1602230416967;
-        Fri, 09 Oct 2020 01:00:16 -0700 (PDT)
+        bh=DPr3++TkgD7opBHxWri6P050gTocJAeikYQ/tt45kKI=;
+        b=ZcTnw/2nkYsRSwlz3QEOkgIxnmPxwkU2s+3LKrVF3bJo5xddrk3N/i3BbzMrfHEds3
+         JBDLqaMuapLT3qJUvkPci7+eKKdR7mpIavL6Na3Z3My0eH5GjkcQUzMO909oQU7QrFfN
+         GIB3XXVWNyNLJ2padeDKjdC3rwugWDf+kvRNrBCgSgu+Dd0fR8VqxkeH2s6or/5Qd+aC
+         WuLWrAjV00TJsTHSDEawtqGVx0+0UwSKeuRCDPc+E/28Dllpo96xBabsbW4SVJzwAAlM
+         9UYoQ7EZfVtiZxouzmEyekxq3KPGe+OBVtOCjrEHc8pA0l60v5Pf/xMEzh7F/KIqxgky
+         bFDA==
+X-Gm-Message-State: AOAM530aUfOJZQL5368k78Grk2Q3uQgEnZpNyw3/KeVvhRDvBeePdHDY
+        C762AljGv9ZNis0DfVxjUF45IA==
+X-Google-Smtp-Source: ABdhPJxjabNt7y3Fk149R7K1e+u9DjBsacewwbIgtRCFyrwVNWJDFlQJblhvJ+EjdKe0cN5lfI2azA==
+X-Received: by 2002:adf:f50e:: with SMTP id q14mr6435975wro.56.1602230413759;
+        Fri, 09 Oct 2020 01:00:13 -0700 (PDT)
 Received: from phenom.ffwll.local ([2a02:168:57f4:0:efd0:b9e5:5ae6:c2fa])
-        by smtp.gmail.com with ESMTPSA id u17sm11634118wri.45.2020.10.09.01.00.15
+        by smtp.gmail.com with ESMTPSA id u17sm11634118wri.45.2020.10.09.01.00.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 09 Oct 2020 01:00:16 -0700 (PDT)
+        Fri, 09 Oct 2020 01:00:13 -0700 (PDT)
 From:   Daniel Vetter <daniel.vetter@ffwll.ch>
 To:     DRI Development <dri-devel@lists.freedesktop.org>,
         LKML <linux-kernel@vger.kernel.org>
@@ -69,10 +69,18 @@ Cc:     kvm@vger.kernel.org, linux-mm@kvack.org,
         John Hubbard <jhubbard@nvidia.com>,
         =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
         Jan Kara <jack@suse.cz>, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org
-Subject: [PATCH v2 17/17] drm/i915: Properly request PCI BARs
-Date:   Fri,  9 Oct 2020 09:59:34 +0200
-Message-Id: <20201009075934.3509076-18-daniel.vetter@ffwll.ch>
+        linux-pci@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Christian Brauner <christian.brauner@ubuntu.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Sourabh Jain <sourabhjain@linux.ibm.com>,
+        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        Nayna Jain <nayna@linux.ibm.com>
+Subject: [PATCH v2 15/17] sysfs: Support zapping of binary attr mmaps
+Date:   Fri,  9 Oct 2020 09:59:32 +0200
+Message-Id: <20201009075934.3509076-16-daniel.vetter@ffwll.ch>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20201009075934.3509076-1-daniel.vetter@ffwll.ch>
 References: <20201009075934.3509076-1-daniel.vetter@ffwll.ch>
@@ -83,19 +91,19 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-When trying to test my CONFIG_IO_STRICT_DEVMEM changes I realized they
-do nothing for i915. Because i915 doesn't request any regions, like
-pretty much all drm pci drivers. I guess this is some very old
-remnants from the userspace modesetting days, when we wanted to
-co-exist with the fbdev driver. Which usually requested these
-resources.
+We want to be able to revoke pci mmaps so that the same access rules
+applies as for /dev/kmem. Revoke support for devmem was added in
+3234ac664a87 ("/dev/mem: Revoke mappings when a driver claims the
+region").
 
-But makes me wonder why the pci subsystem doesn't just request
-resource automatically when we map a bar and a pci driver is bound?
+The simplest way to achieve this is by having the same filp->f_mapping
+for all mappings, so that unmap_mapping_range can find them all, no
+matter through which file they've been created. Since this must be set
+at open time we need sysfs support for this.
 
-Knowledge about which pci bars we need kludged together from
-intel_uncore.c and intel_gtt.c from i915 and intel-gtt.c over in the
-fake agp driver.
+Add an optional mapping parameter bin_attr, which is only consulted
+when there's also an mmap callback, since without mmap support
+allowing to adjust the ->f_mapping makes no sense.
 
 Signed-off-by: Daniel Vetter <daniel.vetter@intel.com>
 Cc: Jason Gunthorpe <jgg@ziepe.ca>
@@ -112,74 +120,67 @@ Cc: linux-samsung-soc@vger.kernel.org
 Cc: linux-media@vger.kernel.org
 Cc: Bjorn Helgaas <bhelgaas@google.com>
 Cc: linux-pci@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Christian Brauner <christian.brauner@ubuntu.com>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Michael Ellerman <mpe@ellerman.id.au>
+Cc: Sourabh Jain <sourabhjain@linux.ibm.com>
+Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
+Cc: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+Cc: Nayna Jain <nayna@linux.ibm.com>
 ---
- drivers/gpu/drm/i915/intel_uncore.c | 25 +++++++++++++++++++++++--
- 1 file changed, 23 insertions(+), 2 deletions(-)
+ fs/sysfs/file.c       | 11 +++++++++++
+ include/linux/sysfs.h |  2 ++
+ 2 files changed, 13 insertions(+)
 
-diff --git a/drivers/gpu/drm/i915/intel_uncore.c b/drivers/gpu/drm/i915/intel_uncore.c
-index 54e201fdeba4..ce39049d8919 100644
---- a/drivers/gpu/drm/i915/intel_uncore.c
-+++ b/drivers/gpu/drm/i915/intel_uncore.c
-@@ -1692,10 +1692,13 @@ static int uncore_mmio_setup(struct intel_uncore *uncore)
- 	struct pci_dev *pdev = i915->drm.pdev;
- 	int mmio_bar;
- 	int mmio_size;
-+	int bar_selection;
-+	int ret;
- 
- 	mmio_bar = IS_GEN(i915, 2) ? 1 : 0;
-+	bar_selection = BIT (2) | BIT(mmio_bar);
- 	/*
--	 * Before gen4, the registers and the GTT are behind different BARs.
-+	 * On gen3 the registers and the GTT are behind different BARs.
- 	 * However, from gen4 onwards, the registers and the GTT are shared
- 	 * in the same BAR, so we want to restrict this ioremap from
- 	 * clobbering the GTT which we want ioremap_wc instead. Fortunately,
-@@ -1703,6 +1706,8 @@ static int uncore_mmio_setup(struct intel_uncore *uncore)
- 	 * generations up to Ironlake.
- 	 * For dgfx chips register range is expanded to 4MB.
- 	 */
-+	if (INTEL_GEN(i915) == 3)
-+		bar_selection |= BIT(3);
- 	if (INTEL_GEN(i915) < 5)
- 		mmio_size = 512 * 1024;
- 	else if (IS_DGFX(i915))
-@@ -1710,8 +1715,15 @@ static int uncore_mmio_setup(struct intel_uncore *uncore)
- 	else
- 		mmio_size = 2 * 1024 * 1024;
- 
-+	ret = pci_request_selected_regions(pdev, bar_selection, "i915");
-+	if (ret < 0) {
-+		drm_err(&i915->drm, "failed to request pci bars\n");
-+		return ret;
-+	}
-+
- 	uncore->regs = pci_iomap(pdev, mmio_bar, mmio_size);
- 	if (uncore->regs == NULL) {
-+		pci_release_selected_regions(pdev, bar_selection);
- 		drm_err(&i915->drm, "failed to map registers\n");
- 		return -EIO;
- 	}
-@@ -1721,9 +1733,18 @@ static int uncore_mmio_setup(struct intel_uncore *uncore)
- 
- static void uncore_mmio_cleanup(struct intel_uncore *uncore)
- {
--	struct pci_dev *pdev = uncore->i915->drm.pdev;
-+	struct drm_i915_private *i915 = uncore->i915;
-+	struct pci_dev *pdev = i915->drm.pdev;
-+	int mmio_bar;
-+	int bar_selection;
-+
-+	mmio_bar = IS_GEN(i915, 2) ? 1 : 0;
-+	bar_selection = BIT (2) | BIT(mmio_bar);
-+	if (INTEL_GEN(i915) == 3)
-+		bar_selection |= BIT(3);
- 
- 	pci_iounmap(pdev, uncore->regs);
-+	pci_release_selected_regions(pdev, bar_selection);
+diff --git a/fs/sysfs/file.c b/fs/sysfs/file.c
+index eb6897ab78e7..9d8ccdb000e3 100644
+--- a/fs/sysfs/file.c
++++ b/fs/sysfs/file.c
+@@ -169,6 +169,16 @@ static int sysfs_kf_bin_mmap(struct kernfs_open_file *of,
+ 	return battr->mmap(of->file, kobj, battr, vma);
  }
  
- void intel_uncore_init_early(struct intel_uncore *uncore,
++static int sysfs_kf_bin_open(struct kernfs_open_file *of)
++{
++	struct bin_attribute *battr = of->kn->priv;
++
++	if (battr->mapping)
++		of->file->f_mapping = battr->mapping;
++
++	return 0;
++}
++
+ void sysfs_notify(struct kobject *kobj, const char *dir, const char *attr)
+ {
+ 	struct kernfs_node *kn = kobj->sd, *tmp;
+@@ -240,6 +250,7 @@ static const struct kernfs_ops sysfs_bin_kfops_mmap = {
+ 	.read		= sysfs_kf_bin_read,
+ 	.write		= sysfs_kf_bin_write,
+ 	.mmap		= sysfs_kf_bin_mmap,
++	.open		= sysfs_kf_bin_open,
+ };
+ 
+ int sysfs_add_file_mode_ns(struct kernfs_node *parent,
+diff --git a/include/linux/sysfs.h b/include/linux/sysfs.h
+index 34e84122f635..a17a474d1601 100644
+--- a/include/linux/sysfs.h
++++ b/include/linux/sysfs.h
+@@ -164,11 +164,13 @@ __ATTRIBUTE_GROUPS(_name)
+ 
+ struct file;
+ struct vm_area_struct;
++struct address_space;
+ 
+ struct bin_attribute {
+ 	struct attribute	attr;
+ 	size_t			size;
+ 	void			*private;
++	struct address_space	*mapping;
+ 	ssize_t (*read)(struct file *, struct kobject *, struct bin_attribute *,
+ 			char *, loff_t, size_t);
+ 	ssize_t (*write)(struct file *, struct kobject *, struct bin_attribute *,
 -- 
 2.28.0
 
