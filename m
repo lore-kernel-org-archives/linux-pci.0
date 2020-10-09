@@ -2,124 +2,190 @@ Return-Path: <SRS0=I3i3=DQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_2 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E807C433DF
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 07:57:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6118C388CE
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 08:00:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A2CBA22226
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 07:57:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8834522365
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 08:00:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=Synaptics.onmicrosoft.com header.i=@Synaptics.onmicrosoft.com header.b="WEW1XpMr"
+	dkim=pass (1024-bit key) header.d=ffwll.ch header.i=@ffwll.ch header.b="U+vzUSar"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732392AbgJIH5t (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 9 Oct 2020 03:57:49 -0400
-Received: from mail-bn8nam11on2046.outbound.protection.outlook.com ([40.107.236.46]:61874
-        "EHLO NAM11-BN8-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1732086AbgJIH5t (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 9 Oct 2020 03:57:49 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=HeAg3YXhmG1OWPcc4gl3CsBuJGG0+0YCK9bCG+r2DSgJ1RReSrChkG++AcTv/PVmfWQ+vlG7pNwNFkorwCXysUTqyAVMzcN45acTnn0aJs1IZ0PzQtqZEDlZtIlvZToWXJGCrhAut5ZvfAgIB/9ylrkc7vCD7Ycf+NyNuXdYfX5vJMTpOZhBBQYTe5BMrVrfJLHJC6Lvga5QYkeNA1wJyZmx3Pb9OyUlxbGXkKiFg4jFDRcqYwXrGELgXw3fwU/EL6gdA5uYb21IRACl/gqBAi+QpUC/AIvSHtCVBaDkwwzzk6Fq8JUSeixFcevuvzqdaMnL+dzoGv8e9lG6TCKJkg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=RMv2KCGB5LuSyCYNjvXkxUsl/D6L8sSQYG6wyWbXloI=;
- b=jWTwYILdfDMBCy5z1sl55Pd4OXbbpt3orVSOZ2k5WEVltfRThFjruxfu2BkL+fSivtSnaQHYdPWSyL9NOf3Fp0VG7zA+JAiTu4O4Kex59Ik2d3nDqsy+t06ltTw4P1HEpHfAhCDnLVNRtVLz0SuUk+DKk7iQmrfD7KHeoiPwcw4sMqF7ip8J31ItbhgzAN2q6uCYk+WawGmGztjLyT5/0jXGRN/z6M6ISHZLQKEbC9cTV58LUCSjOtfkkTM2F64KCH28KXLMZUW2YAytcAwYTQAorz8MTuB1i3KjUk3q59wc0w+4B9DQvrprVeXHOXAv16soQKN9nkKV/tbjQkM4Jg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=synaptics.com; dmarc=pass action=none
- header.from=synaptics.com; dkim=pass header.d=synaptics.com; arc=none
+        id S1732825AbgJIIAb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 9 Oct 2020 04:00:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49564 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732774AbgJIIAR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2020 04:00:17 -0400
+Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB58DC0613D8
+        for <linux-pci@vger.kernel.org>; Fri,  9 Oct 2020 01:00:16 -0700 (PDT)
+Received: by mail-wr1-x442.google.com with SMTP id j2so9240729wrx.7
+        for <linux-pci@vger.kernel.org>; Fri, 09 Oct 2020 01:00:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=Synaptics.onmicrosoft.com; s=selector2-Synaptics-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=RMv2KCGB5LuSyCYNjvXkxUsl/D6L8sSQYG6wyWbXloI=;
- b=WEW1XpMrunXNHzfqtT6Wno000KtSkq0uBuWBwonTTHZiAP6kfBG+gGoXyOyIQsMENHFcxh+BjV7HkomDFZ7aIUFpUX0O/YKKpiuBdowKdojeIf+bZnLzTWOzhTNw6UfLA8NODX7dGqXYD6oH+2Fl/cYboTDFVxLPMKM+fLoCxz4=
-Authentication-Results: ti.com; dkim=none (message not signed)
- header.d=none;ti.com; dmarc=none action=none header.from=synaptics.com;
-Received: from DM6PR03MB4555.namprd03.prod.outlook.com (2603:10b6:5:102::17)
- by DM5PR03MB2683.namprd03.prod.outlook.com (2603:10b6:3:47::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3455.23; Fri, 9 Oct
- 2020 07:57:46 +0000
-Received: from DM6PR03MB4555.namprd03.prod.outlook.com
- ([fe80::e494:740f:155:4a38]) by DM6PR03MB4555.namprd03.prod.outlook.com
- ([fe80::e494:740f:155:4a38%7]) with mapi id 15.20.3433.046; Fri, 9 Oct 2020
- 07:57:46 +0000
-Date:   Fri, 9 Oct 2020 15:54:36 +0800
-From:   Jisheng Zhang <Jisheng.Zhang@synaptics.com>
-To:     Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Cc:     linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v7 1/2] PCI: dwc: Skip PCIE_MSI_INTR0* programming if MSI is
- disabled
-Message-ID: <20201009155436.27e67238@xhacker.debian>
-In-Reply-To: <20201009155311.22d3caa5@xhacker.debian>
-References: <20201009155311.22d3caa5@xhacker.debian>
-X-Mailer: Claws Mail 3.17.6 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [124.74.246.114]
-X-ClientProxiedBy: TY1PR01CA0164.jpnprd01.prod.outlook.com (2603:1096:402::16)
- To DM6PR03MB4555.namprd03.prod.outlook.com (2603:10b6:5:102::17)
+        d=ffwll.ch; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=Mr0eqEhtLJlk9zvkUiO6msooid1XUy8va7iTFBhYa6o=;
+        b=U+vzUSar2wtID/EuVPMnsGQ3mvxbnZE/AtjkzSl4866cTqT0Bce/+YpSi3OFfqGOCz
+         +roCRyHkxz8LXBZQriCZTWPGyhTPs9bMUMnyXHelio94a0wfjayW85FaKxi67idHb1yM
+         MDFwdizaRRBaDwf6exvt8kTlK5W9sazGrwsv0=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=Mr0eqEhtLJlk9zvkUiO6msooid1XUy8va7iTFBhYa6o=;
+        b=s1DHDcjbsJQYShk60IPboZxNLuVgD/vE209LgN+0L2PGa5J64ygDhBO5VLWnAR2DwY
+         V2U6+D/QXJDXVM97Byxln447V0WdANBuOCxQ+fInUuoo2sReQOhAf4QKU85oyIKh5Cqu
+         iWOzqh3f+nOmItypNCb6puE3Jt5/guwKn75/8tTZjyNOpqbp1k1lLoxqihM43dmEXPDF
+         oMryfscvjWBt5epr3cnWzVLbIRPqe0NcNho7/K8cBNbpZLRqo1FLKtfaCUhOyYh4ioGV
+         OvTclb1l5Rwd1E3/0cwhcEG6o0E4uQTx44FN/AVyCkH08wWLuJfcmC1v1qaNgK9CgCSz
+         PSZw==
+X-Gm-Message-State: AOAM532/cBQV5Y4RXQJFqAaC5mIeWjkUFuakG6odRm2DRD3YHbt3GwQy
+        bOSXAtCr+QLJsUUmMDOhSTHOvw==
+X-Google-Smtp-Source: ABdhPJyK6/zluwLchCVAu9wRdS90YK84DJ/TkLG0WrIGfx3gvXgwIQ2OcDSDDLV+etpfvi26XwXkuA==
+X-Received: by 2002:a5d:668b:: with SMTP id l11mr13032272wru.89.1602230415344;
+        Fri, 09 Oct 2020 01:00:15 -0700 (PDT)
+Received: from phenom.ffwll.local ([2a02:168:57f4:0:efd0:b9e5:5ae6:c2fa])
+        by smtp.gmail.com with ESMTPSA id u17sm11634118wri.45.2020.10.09.01.00.13
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 09 Oct 2020 01:00:14 -0700 (PDT)
+From:   Daniel Vetter <daniel.vetter@ffwll.ch>
+To:     DRI Development <dri-devel@lists.freedesktop.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Cc:     kvm@vger.kernel.org, linux-mm@kvack.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-samsung-soc@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-s390@vger.kernel.org, Daniel Vetter <daniel.vetter@ffwll.ch>,
+        Daniel Vetter <daniel.vetter@intel.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Kees Cook <keescook@chromium.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        John Hubbard <jhubbard@nvidia.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Jan Kara <jack@suse.cz>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: [PATCH v2 16/17] PCI: Revoke mappings like devmem
+Date:   Fri,  9 Oct 2020 09:59:33 +0200
+Message-Id: <20201009075934.3509076-17-daniel.vetter@ffwll.ch>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20201009075934.3509076-1-daniel.vetter@ffwll.ch>
+References: <20201009075934.3509076-1-daniel.vetter@ffwll.ch>
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from xhacker.debian (124.74.246.114) by TY1PR01CA0164.jpnprd01.prod.outlook.com (2603:1096:402::16) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3455.22 via Frontend Transport; Fri, 9 Oct 2020 07:57:43 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 467779a3-5b45-4920-ccac-08d86c290221
-X-MS-TrafficTypeDiagnostic: DM5PR03MB2683:
-X-Microsoft-Antispam-PRVS: <DM5PR03MB268316E7B77C19741516C8DDED080@DM5PR03MB2683.namprd03.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:431;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: Fs+fYZPXjxBDidMU9xY3tQIRkO5ghj62mxW1KpbdrfMEwKcwDhrxjz9evRx7p4/wW0FzzinMaC+MZQZ8TJqdxI0v6UvjKIIRP3hWO0bSEQhJhbTVqGImN5KaVBj+0YWOWkbevm7me7wIqwIMKCkITEJw8q2ROd2a6N0Wc3GGow7p/hfNe6SGYcLTv8QkOdvuP1rK2JJXe7FaXao4K5Ki0EnALzHJ9FJ1oABtUVHGcRoUk42kDXKu5XpZlEPQyUYXv5z8GVvQXLMomz5KsZxwS7rb0siL6ren9aNJaxbeDkigNzLY4rCFFeKhitfjg/B9PlmEbxtQyNGrtEikQKez0w==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR03MB4555.namprd03.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(376002)(396003)(366004)(346002)(136003)(39850400004)(5660300002)(6666004)(956004)(8676002)(66946007)(7416002)(86362001)(83380400001)(4326008)(55016002)(8936002)(110136005)(2906002)(16526019)(316002)(4744005)(186003)(6506007)(66556008)(478600001)(1076003)(52116002)(9686003)(66476007)(26005)(7696005);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: bRQHwFHJUGhttaeB4rfEczk5H18okEpBE6gSHZ/8Xhg/t8Lyr4/oYZAL1AV30y46WkAKhChJYolwk9JTsKwHM6WEGzbUT2BIRkg/XKTRIK05Ju+ip4ejEV/FKTpkaywG6gRDpt8gzGOXNNmoFqK6awPbBpeS/DZUFX4hwqUnSUETrur4H+Pmp/3M8EA3xwawXTFEqt9TbN48ORjr5ikaNEwAdWLaZx1lKWpz6vO1U4sh4cvnPNvBnEQEAEUp5N+gDkTt/ScEDKTi0JkO85HFgROTxc3rY59IrVXeVoeilwMFSYUVeEQhnni6W1Ddq1orzWwUvG0tIcHjINM34QoT0FCikgeAFu7lASmiRcV+8wrRV1TIXgUgxN+4+zcoDCh+sdiWu4lZcVSZyEW48rGi4w1K/xeXq+kUBZ38bj9Qc5yQQtlK7zvMLpqG8ML8vGaWq0dWy1KX/LdEOjRnZvl17+uoyqgr6OyyWvAq3SGhlDQrqqGsw570wRoC6wpqopxSYO+L3Hk87j4kjhZ16uIp9/CqVXklvHV8bNS9mSt0eM57dLI8AjULykSpsiUWKd8+YJdFHq+Tslp79zwGstpLMYJ216upXkrrQ1WZrbaBYdhE8S01GAX9r5Kai6/vXGAofx+p2p9CFCvj+3+93x7ROw==
-X-OriginatorOrg: synaptics.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 467779a3-5b45-4920-ccac-08d86c290221
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR03MB4555.namprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Oct 2020 07:57:46.5169
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 335d1fbc-2124-4173-9863-17e7051a2a0e
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: nsW3jdtPzXFq40JiWNcgK1DxIOcGleTwFnyUlzwytYeo9Q03rhTrZmwnqz5C9JNryJ6RyrpKYsZLz2PpKRA/3w==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR03MB2683
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-If MSI is disabled, there's no need to program PCIE_MSI_INTR0_MASK
-and PCIE_MSI_INTR0_ENABLE registers.
+Since 3234ac664a87 ("/dev/mem: Revoke mappings when a driver claims
+the region") /dev/kmem zaps ptes when the kernel requests exclusive
+acccess to an iomem region. And with CONFIG_IO_STRICT_DEVMEM, this is
+the default for all driver uses.
 
-Signed-off-by: Jisheng Zhang <Jisheng.Zhang@synaptics.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
-Acked-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Except there's two more ways to access PCI BARs: sysfs and proc mmap
+support. Let's plug that hole.
+
+For revoke_devmem() to work we need to link our vma into the same
+address_space, with consistent vma->vm_pgoff. ->pgoff is already
+adjusted, because that's how (io_)remap_pfn_range works, but for the
+mapping we need to adjust vma->vm_file->f_mapping. The cleanest way is
+to adjust this at at ->open time:
+
+- for sysfs this is easy, now that binary attributes support this. We
+  just set bin_attr->mapping when mmap is supported
+- for procfs it's a bit more tricky, since procfs pci access has only
+  one file per device, and access to a specific resources first needs
+  to be set up with some ioctl calls. But mmap is only supported for
+  the same resources as sysfs exposes with mmap support, and otherwise
+  rejected, so we can set the mapping unconditionally at open time
+  without harm.
+
+A special consideration is for arch_can_pci_mmap_io() - we need to
+make sure that the ->f_mapping doesn't alias between ioport and iomem
+space. There's only 2 ways in-tree to support mmap of ioports: generic
+pci mmap (ARCH_GENERIC_PCI_MMAP_RESOURCE), and sparc as the single
+architecture hand-rolling. Both approach support ioport mmap through a
+special pfn range and not through magic pte attributes. Aliasing is
+therefore not a problem.
+
+The only difference in access checks left is that sysfs PCI mmap does
+not check for CAP_RAWIO. I'm not really sure whether that should be
+added or not.
+
+Signed-off-by: Daniel Vetter <daniel.vetter@intel.com>
+Cc: Jason Gunthorpe <jgg@ziepe.ca>
+Cc: Kees Cook <keescook@chromium.org>
+Cc: Dan Williams <dan.j.williams@intel.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: John Hubbard <jhubbard@nvidia.com>
+Cc: Jérôme Glisse <jglisse@redhat.com>
+Cc: Jan Kara <jack@suse.cz>
+Cc: Dan Williams <dan.j.williams@intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-mm@kvack.org
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-samsung-soc@vger.kernel.org
+Cc: linux-media@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+--
+v2:
+- Totally new approach: Adjust filp->f_mapping at open time. Note that
+  this now works on all architectures, not just those support
+  ARCH_GENERIC_PCI_MMAP_RESOURCE
 ---
- drivers/pci/controller/dwc/pcie-designware-host.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/pci-sysfs.c | 4 ++++
+ drivers/pci/proc.c      | 1 +
+ 2 files changed, 5 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index 317ff512f8df..d3e9ea11ce9e 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -528,7 +528,7 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 6d78df981d41..cee38fcb4a86 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -928,6 +928,7 @@ void pci_create_legacy_files(struct pci_bus *b)
+ 	b->legacy_io->read = pci_read_legacy_io;
+ 	b->legacy_io->write = pci_write_legacy_io;
+ 	b->legacy_io->mmap = pci_mmap_legacy_io;
++	b->legacy_io->mapping = iomem_get_mapping();
+ 	pci_adjust_legacy_attr(b, pci_mmap_io);
+ 	error = device_create_bin_file(&b->dev, b->legacy_io);
+ 	if (error)
+@@ -940,6 +941,7 @@ void pci_create_legacy_files(struct pci_bus *b)
+ 	b->legacy_mem->size = 1024*1024;
+ 	b->legacy_mem->attr.mode = 0600;
+ 	b->legacy_mem->mmap = pci_mmap_legacy_mem;
++	b->legacy_io->mapping = iomem_get_mapping();
+ 	pci_adjust_legacy_attr(b, pci_mmap_mem);
+ 	error = device_create_bin_file(&b->dev, b->legacy_mem);
+ 	if (error)
+@@ -1155,6 +1157,8 @@ static int pci_create_attr(struct pci_dev *pdev, int num, int write_combine)
+ 			res_attr->mmap = pci_mmap_resource_uc;
+ 		}
+ 	}
++	if (res_attr->mmap)
++		res_attr->mapping = iomem_get_mapping();
+ 	res_attr->attr.name = res_attr_name;
+ 	res_attr->attr.mode = 0600;
+ 	res_attr->size = pci_resource_len(pdev, num);
+diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
+index 3a2f90beb4cb..9bab07302bbf 100644
+--- a/drivers/pci/proc.c
++++ b/drivers/pci/proc.c
+@@ -298,6 +298,7 @@ static int proc_bus_pci_open(struct inode *inode, struct file *file)
+ 	fpriv->write_combine = 0;
  
- 	dw_pcie_setup(pci);
+ 	file->private_data = fpriv;
++	file->f_mapping = iomem_get_mapping();
  
--	if (!pp->ops->msi_host_init) {
-+	if (pci_msi_enabled() && !pp->ops->msi_host_init) {
- 		num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
- 
- 		/* Initialize IRQ Status array */
+ 	return 0;
+ }
 -- 
 2.28.0
 
