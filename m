@@ -8,63 +8,62 @@ X-Spam-Status: No, score=-20.4 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2DD7C433E7
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 16:13:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ACCABC433DF
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 16:14:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 56A2622281
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 16:13:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 670CE222C3
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 16:14:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="jYoeZ1R4"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="MSqEBLKM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389653AbgJIQNt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 9 Oct 2020 12:13:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41458 "EHLO
+        id S2389710AbgJIQOH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 9 Oct 2020 12:14:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41552 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389492AbgJIQNp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2020 12:13:45 -0400
+        with ESMTP id S2389698AbgJIQOH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2020 12:14:07 -0400
 Received: from mail-pf1-x44a.google.com (mail-pf1-x44a.google.com [IPv6:2607:f8b0:4864:20::44a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79865C0613D7
-        for <linux-pci@vger.kernel.org>; Fri,  9 Oct 2020 09:13:43 -0700 (PDT)
-Received: by mail-pf1-x44a.google.com with SMTP id k12so1111225pfc.19
-        for <linux-pci@vger.kernel.org>; Fri, 09 Oct 2020 09:13:43 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4467C0613B6
+        for <linux-pci@vger.kernel.org>; Fri,  9 Oct 2020 09:14:03 -0700 (PDT)
+Received: by mail-pf1-x44a.google.com with SMTP id 135so7118779pfu.9
+        for <linux-pci@vger.kernel.org>; Fri, 09 Oct 2020 09:14:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=sender:date:in-reply-to:message-id:mime-version:references:subject
          :from:to:cc;
-        bh=JFoopYLfUd7DZpgoj0P8Vd02vmm/x7DpogJtJ7VqXLA=;
-        b=jYoeZ1R4XYCDM+x5Ze8EC8pTRq12pEgdm3hUKWQHrjlgbQjJf6qDDw34l3Vjiutng0
-         N+aO1vlxhx6rtGPAL+AJx2CS5nJ1xnF+xqiEFcT8OQoE3d/rIZ9zlcGUPqpdrjHik2JZ
-         o4HQ7Rqy3yClrKvUO9f/TrNrmjTsxsZ+lEr7WbI5PtZr7DkaT/GNNiCB9k0I9B4o8oKy
-         9eBz6A7AKvW8WGOOMIw6lmchgq5QsRoyseaVqoHEwIBKNnx7rYMtffkXwgEmDJBIdoX8
-         qgta9q/TezX+nK+zm+KyrI/dSkA6gE8G/Tu3f7fRXcGotC3gMeikNkOLgNIKgRKovqHv
-         dZDg==
+        bh=xnUso1aX/PbHivFqRBQYlx5NFQiCnga6+/KbuoETb6w=;
+        b=MSqEBLKMdPi79OQ4IpYM9tZpSmQq9rCR2zCScxB9Jg+Rjn5TE2hQe3jeVcKWPZRRzU
+         X+hyGEZdpMH+H5SvjVVr8N2lVagNWFmRbRs5whUh8iYtdhOP3dybs0DPuNXwRAKG/9kV
+         r2eZ+/3Fn0+5lI5RUWCsXI9p/4R2iyNaPuz+J0AnU3Pnh/cx8nWk1Fqjhrgyk6GPWovW
+         pvoYY3rWNtKxOxntgtWPwuAVk+uDdzUzZrtLbmbGCJxz8XWhNZI/9m3btgYnbB6aHyTx
+         XEhII0cZjQMctUm6RTYwIRXmQ36CIspOzDVhiIvAQxi11QKehL7Ti/qalBFjyZYVR6Tg
+         dUhg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:sender:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=JFoopYLfUd7DZpgoj0P8Vd02vmm/x7DpogJtJ7VqXLA=;
-        b=deBlGaIAAqlBk3DzUH/zyrU3AeCGtFSM2LX4RcyZNAaqv+SkxodveJHwdgFrs6gSxm
-         9IVr8TFiGlDf39qp2ZEbZkijnLYNtMApNX4BpfY2A9Ut4yAxP3ZHDC6s9P8oGzsl1fWo
-         wqY6niU8nS1T8yO9+ikZba0Ufn7r57OE0lbl5UXspeJB8KdDs4vBBdW7RQjbupToP7KG
-         lZXiI8wNVYpqdD9Vap4JGISwaGEYq9qa3cbtBHvHbNlFBtBbFpvixJbGmh3A9bZISIVT
-         +iui5OFX8Sengf9Bg3HU7ah+bo3UO6Lfu3AjihdVJ2z3KOY4RVP2FpzF3sQ9gbF311ep
-         WpVw==
-X-Gm-Message-State: AOAM533a1tqig1WYmekvEoHhoo11MZp7ybK1G1cdspyfFNMke5hdFUqu
-        R2gNLN+YpdgdFTI7hvjTkKoSuon2WqVfAC6ZgVQ=
-X-Google-Smtp-Source: ABdhPJwghucp1hIPfQjxvsG81ppdDI/NsH0lt4JvEUZpcPK/ShBfOgu867SeiWAe/8H/gWFusjX78f9V+ysqtIPmj1Y=
+        bh=xnUso1aX/PbHivFqRBQYlx5NFQiCnga6+/KbuoETb6w=;
+        b=EeBsXUktQRhgoitDZNjnusxLdP7ekayMxhPT0wAZQLjYr31hkWJx63l0ewMBTYtBMt
+         W9NG8c8m33jTh3NCVdZ6Fcckl38+nfWCLzX+VFl+7mSBkiJG1NtUCgbHCNeOhS+Vmzeg
+         3ZLIvjdTjvnJoXPTSQxcSKvvegATo4hbkoQ7z89kz4RavEa+VbxwwGkZWNG006UzYBA2
+         SiiMsqhotO2XHT9jzNi+vd686xVPbo33LsaasCLCc6mLUxZ+JlANmlbjCFBDE6Uruy8Q
+         5H1H3xRrstG7hWprR+OX09nK3QHYdSoPwGprFFeEBD5mRSpw+0AraNqoKGJqOVD+KU6r
+         ppOw==
+X-Gm-Message-State: AOAM533Y4vlJSqOUW5JketNdnn7WEbk3n5GN5rpNqG65m2UewpR3eUpX
+        4s+EDRtU6i0Eje5zECpmEb8noATLgsK+mydXQEc=
+X-Google-Smtp-Source: ABdhPJxoUvjPd0KirKqVgXTGqcuP6VOxl5n3zsB3Oqj62mI3JXDh0hff+O/0T6aW7bn8lhU/kRKH8PR/V7M+1aePunM=
 Sender: "samitolvanen via sendgmr" 
         <samitolvanen@samitolvanen1.mtv.corp.google.com>
 X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:f693:9fff:fef4:1b6d])
- (user=samitolvanen job=sendgmr) by 2002:a62:3882:0:b029:152:127a:e852 with
- SMTP id f124-20020a6238820000b0290152127ae852mr12995077pfa.21.1602260022801;
- Fri, 09 Oct 2020 09:13:42 -0700 (PDT)
-Date:   Fri,  9 Oct 2020 09:13:10 -0700
+ (user=samitolvanen job=sendgmr) by 2002:a63:8f5d:: with SMTP id
+ r29mr3885294pgn.18.1602260043266; Fri, 09 Oct 2020 09:14:03 -0700 (PDT)
+Date:   Fri,  9 Oct 2020 09:13:20 -0700
 In-Reply-To: <20201009161338.657380-1-samitolvanen@google.com>
-Message-Id: <20201009161338.657380-2-samitolvanen@google.com>
+Message-Id: <20201009161338.657380-12-samitolvanen@google.com>
 Mime-Version: 1.0
 References: <20201009161338.657380-1-samitolvanen@google.com>
 X-Mailer: git-send-email 2.28.0.1011.ga647a8990f-goog
-Subject: [PATCH v5 01/29] kbuild: preprocess module linker script
+Subject: [PATCH v5 11/29] kbuild: lto: postpone objtool
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Masahiro Yamada <masahiroy@kernel.org>,
         Will Deacon <will@kernel.org>,
@@ -78,367 +77,198 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         kernel-hardening@lists.openwall.com, linux-arch@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-kbuild@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        x86@kernel.org
+        x86@kernel.org, Sami Tolvanen <samitolvanen@google.com>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Masahiro Yamada <masahiroy@kernel.org>
+With LTO, LLVM bitcode won't be compiled into native code until
+modpost_link, or modfinal for modules. This change postpones calls
+to objtool until after these steps, and moves objtool_args to
+Makefile.lib, so the arguments can be reused in Makefile.modfinal.
 
-There was a request to preprocess the module linker script like we
-do for the vmlinux one. (https://lkml.org/lkml/2020/8/21/512)
+As we didn't have objects to process earlier, we use --duplicate
+when processing vmlinux.o. This change also disables unreachable
+instruction warnings with LTO to avoid warnings about the int3
+padding between functions.
 
-The difference between vmlinux.lds and module.lds is that the latter
-is needed for external module builds, thus must be cleaned up by
-'make mrproper' instead of 'make clean'. Also, it must be created
-by 'make modules_prepare'.
-
-You cannot put it in arch/$(SRCARCH)/kernel/, which is cleaned up by
-'make clean'. I moved arch/$(SRCARCH)/kernel/module.lds to
-arch/$(SRCARCH)/include/asm/module.lds.h, which is included from
-scripts/module.lds.S.
-
-scripts/module.lds is fine because 'make clean' keeps all the
-build artifacts under scripts/.
-
-You can add arch-specific sections in <asm/module.lds.h>.
-
-Signed-off-by: Masahiro Yamada <masahiroy@kernel.org>
-Tested-by: Jessica Yu <jeyu@kernel.org>
-Acked-by: Will Deacon <will@kernel.org>
-Acked-by: Geert Uytterhoeven <geert@linux-m68k.org>
-Acked-by: Palmer Dabbelt <palmerdabbelt@google.com>
+Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
 Reviewed-by: Kees Cook <keescook@chromium.org>
-Acked-by: Jessica Yu <jeyu@kernel.org>
 ---
- Makefile                                               | 10 ++++++----
- arch/arm/Makefile                                      |  4 ----
- .../{kernel/module.lds => include/asm/module.lds.h}    |  2 ++
- arch/arm64/Makefile                                    |  4 ----
- .../{kernel/module.lds => include/asm/module.lds.h}    |  2 ++
- arch/ia64/Makefile                                     |  1 -
- arch/ia64/{module.lds => include/asm/module.lds.h}     |  0
- arch/m68k/Makefile                                     |  1 -
- .../{kernel/module.lds => include/asm/module.lds.h}    |  0
- arch/powerpc/Makefile                                  |  1 -
- .../{kernel/module.lds => include/asm/module.lds.h}    |  0
- arch/riscv/Makefile                                    |  3 ---
- .../{kernel/module.lds => include/asm/module.lds.h}    |  3 ++-
- arch/um/include/asm/Kbuild                             |  1 +
- include/asm-generic/Kbuild                             |  1 +
- include/asm-generic/module.lds.h                       | 10 ++++++++++
- scripts/.gitignore                                     |  1 +
- scripts/Makefile                                       |  3 +++
- scripts/Makefile.modfinal                              |  5 ++---
- scripts/{module-common.lds => module.lds.S}            |  3 +++
- scripts/package/builddeb                               |  2 +-
- 21 files changed, 34 insertions(+), 23 deletions(-)
- rename arch/arm/{kernel/module.lds => include/asm/module.lds.h} (72%)
- rename arch/arm64/{kernel/module.lds => include/asm/module.lds.h} (76%)
- rename arch/ia64/{module.lds => include/asm/module.lds.h} (100%)
- rename arch/m68k/{kernel/module.lds => include/asm/module.lds.h} (100%)
- rename arch/powerpc/{kernel/module.lds => include/asm/module.lds.h} (100%)
- rename arch/riscv/{kernel/module.lds => include/asm/module.lds.h} (84%)
- create mode 100644 include/asm-generic/module.lds.h
- rename scripts/{module-common.lds => module.lds.S} (93%)
+ arch/Kconfig              |  2 +-
+ scripts/Makefile.build    | 19 ++-----------------
+ scripts/Makefile.lib      | 11 +++++++++++
+ scripts/Makefile.modfinal | 19 ++++++++++++++++---
+ scripts/link-vmlinux.sh   | 28 +++++++++++++++++++++++++---
+ 5 files changed, 55 insertions(+), 24 deletions(-)
 
-diff --git a/Makefile b/Makefile
-index f84d7e4ca0be..a913a6829754 100644
---- a/Makefile
-+++ b/Makefile
-@@ -505,7 +505,6 @@ KBUILD_CFLAGS_KERNEL :=
- KBUILD_AFLAGS_MODULE  := -DMODULE
- KBUILD_CFLAGS_MODULE  := -DMODULE
- KBUILD_LDFLAGS_MODULE :=
--export KBUILD_LDS_MODULE := $(srctree)/scripts/module-common.lds
- KBUILD_LDFLAGS :=
- CLANG_FLAGS :=
+diff --git a/arch/Kconfig b/arch/Kconfig
+index caeb6feb517e..74cbd6e3b116 100644
+--- a/arch/Kconfig
++++ b/arch/Kconfig
+@@ -612,7 +612,7 @@ config LTO_CLANG
+ 	depends on $(success,$(NM) --help | head -n 1 | grep -qi llvm)
+ 	depends on $(success,$(AR) --help | head -n 1 | grep -qi llvm)
+ 	depends on ARCH_SUPPORTS_LTO_CLANG
+-	depends on !FTRACE_MCOUNT_RECORD
++	depends on !FTRACE_MCOUNT_USE_RECORDMCOUNT
+ 	depends on !KASAN
+ 	depends on !GCOV_KERNEL
+ 	select LTO
+diff --git a/scripts/Makefile.build b/scripts/Makefile.build
+index eae2f5386a03..ab0ddf4884fd 100644
+--- a/scripts/Makefile.build
++++ b/scripts/Makefile.build
+@@ -218,27 +218,11 @@ cmd_record_mcount = $(if $(findstring $(strip $(CC_FLAGS_FTRACE)),$(_c_flags)),
+ endif # CONFIG_FTRACE_MCOUNT_USE_RECORDMCOUNT
  
-@@ -1384,7 +1383,7 @@ endif
- # using awk while concatenating to the final file.
+ ifdef CONFIG_STACK_VALIDATION
++ifndef CONFIG_LTO_CLANG
+ ifneq ($(SKIP_STACK_VALIDATION),1)
  
- PHONY += modules
--modules: $(if $(KBUILD_BUILTIN),vmlinux) modules_check
-+modules: $(if $(KBUILD_BUILTIN),vmlinux) modules_check modules_prepare
- 	$(Q)$(MAKE) -f $(srctree)/scripts/Makefile.modpost
+ __objtool_obj := $(objtree)/tools/objtool/objtool
  
- PHONY += modules_check
-@@ -1401,6 +1400,7 @@ targets += modules.order
- # Target to prepare building external modules
- PHONY += modules_prepare
- modules_prepare: prepare
-+	$(Q)$(MAKE) $(build)=scripts scripts/module.lds
- 
- # Target to install modules
- PHONY += modules_install
-@@ -1722,7 +1722,9 @@ help:
- 	@echo  '  clean           - remove generated files in module directory only'
- 	@echo  ''
- 
--PHONY += prepare
-+# no-op for external module builds
-+PHONY += prepare modules_prepare
-+
- endif # KBUILD_EXTMOD
- 
- # Single targets
-@@ -1755,7 +1757,7 @@ MODORDER := .modules.tmp
- endif
- 
- PHONY += single_modpost
--single_modpost: $(single-no-ko)
-+single_modpost: $(single-no-ko) modules_prepare
- 	$(Q){ $(foreach m, $(single-ko), echo $(extmod-prefix)$m;) } > $(MODORDER)
- 	$(Q)$(MAKE) -f $(srctree)/scripts/Makefile.modpost
- 
-diff --git a/arch/arm/Makefile b/arch/arm/Makefile
-index e589da3c8949..9c4d19ae7d61 100644
---- a/arch/arm/Makefile
-+++ b/arch/arm/Makefile
-@@ -20,10 +20,6 @@ endif
- # linker. All sections should be explicitly named in the linker script.
- LDFLAGS_vmlinux += $(call ld-option, --orphan-handling=warn)
- 
--ifeq ($(CONFIG_ARM_MODULE_PLTS),y)
--KBUILD_LDS_MODULE	+= $(srctree)/arch/arm/kernel/module.lds
+-objtool_args = $(if $(CONFIG_UNWINDER_ORC),orc generate,check)
+-
+-objtool_args += $(if $(part-of-module), --module,)
+-
+-ifndef CONFIG_FRAME_POINTER
+-objtool_args += --no-fp
+-endif
+-ifdef CONFIG_GCOV_KERNEL
+-objtool_args += --no-unreachable
+-endif
+-ifdef CONFIG_RETPOLINE
+-  objtool_args += --retpoline
+-endif
+-ifdef CONFIG_X86_SMAP
+-  objtool_args += --uaccess
 -endif
 -
- GZFLAGS		:=-9
- #KBUILD_CFLAGS	+=-pipe
+ # 'OBJECT_FILES_NON_STANDARD := y': skip objtool checking for a directory
+ # 'OBJECT_FILES_NON_STANDARD_foo.o := 'y': skip objtool checking for a file
+ # 'OBJECT_FILES_NON_STANDARD_foo.o := 'n': override directory skip for a file
+@@ -250,6 +234,7 @@ objtool_obj = $(if $(patsubst y%,, \
+ 	$(__objtool_obj))
  
-diff --git a/arch/arm/kernel/module.lds b/arch/arm/include/asm/module.lds.h
-similarity index 72%
-rename from arch/arm/kernel/module.lds
-rename to arch/arm/include/asm/module.lds.h
-index 79cb6af565e5..0e7cb4e314b4 100644
---- a/arch/arm/kernel/module.lds
-+++ b/arch/arm/include/asm/module.lds.h
-@@ -1,5 +1,7 @@
- /* SPDX-License-Identifier: GPL-2.0 */
-+#ifdef CONFIG_ARM_MODULE_PLTS
- SECTIONS {
- 	.plt : { BYTE(0) }
- 	.init.plt : { BYTE(0) }
- }
-+#endif
-diff --git a/arch/arm64/Makefile b/arch/arm64/Makefile
-index aff994473eb2..32d7e07b0acf 100644
---- a/arch/arm64/Makefile
-+++ b/arch/arm64/Makefile
-@@ -127,10 +127,6 @@ endif
+ endif # SKIP_STACK_VALIDATION
++endif # CONFIG_LTO_CLANG
+ endif # CONFIG_STACK_VALIDATION
  
- CHECKFLAGS	+= -D__aarch64__
+ # Rebuild all objects when objtool changes, or is enabled/disabled.
+diff --git a/scripts/Makefile.lib b/scripts/Makefile.lib
+index 3d599716940c..ecb97c9f5feb 100644
+--- a/scripts/Makefile.lib
++++ b/scripts/Makefile.lib
+@@ -216,6 +216,17 @@ dtc_cpp_flags  = -Wp,-MMD,$(depfile).pre.tmp -nostdinc                    \
+ 		 $(addprefix -I,$(DTC_INCLUDE))                          \
+ 		 -undef -D__DTS__
  
--ifeq ($(CONFIG_ARM64_MODULE_PLTS),y)
--KBUILD_LDS_MODULE	+= $(srctree)/arch/arm64/kernel/module.lds
--endif
--
- ifeq ($(CONFIG_DYNAMIC_FTRACE_WITH_REGS),y)
-   KBUILD_CPPFLAGS += -DCC_USING_PATCHABLE_FUNCTION_ENTRY
-   CC_FLAGS_FTRACE := -fpatchable-function-entry=2
-diff --git a/arch/arm64/kernel/module.lds b/arch/arm64/include/asm/module.lds.h
-similarity index 76%
-rename from arch/arm64/kernel/module.lds
-rename to arch/arm64/include/asm/module.lds.h
-index 22e36a21c113..691f15af788e 100644
---- a/arch/arm64/kernel/module.lds
-+++ b/arch/arm64/include/asm/module.lds.h
-@@ -1,5 +1,7 @@
-+#ifdef CONFIG_ARM64_MODULE_PLTS
- SECTIONS {
- 	.plt (NOLOAD) : { BYTE(0) }
- 	.init.plt (NOLOAD) : { BYTE(0) }
- 	.text.ftrace_trampoline (NOLOAD) : { BYTE(0) }
- }
-+#endif
-diff --git a/arch/ia64/Makefile b/arch/ia64/Makefile
-index 2876a7df1b0a..703b1c4f6d12 100644
---- a/arch/ia64/Makefile
-+++ b/arch/ia64/Makefile
-@@ -20,7 +20,6 @@ CHECKFLAGS	+= -D__ia64=1 -D__ia64__=1 -D_LP64 -D__LP64__
- 
- OBJCOPYFLAGS	:= --strip-all
- LDFLAGS_vmlinux	:= -static
--KBUILD_LDS_MODULE += $(srctree)/arch/ia64/module.lds
- KBUILD_AFLAGS_KERNEL := -mconstant-gp
- EXTRA		:=
- 
-diff --git a/arch/ia64/module.lds b/arch/ia64/include/asm/module.lds.h
-similarity index 100%
-rename from arch/ia64/module.lds
-rename to arch/ia64/include/asm/module.lds.h
-diff --git a/arch/m68k/Makefile b/arch/m68k/Makefile
-index 4438ffb4bbe1..ea14f2046fb4 100644
---- a/arch/m68k/Makefile
-+++ b/arch/m68k/Makefile
-@@ -75,7 +75,6 @@ KBUILD_CPPFLAGS += -D__uClinux__
- endif
- 
- KBUILD_LDFLAGS := -m m68kelf
--KBUILD_LDS_MODULE += $(srctree)/arch/m68k/kernel/module.lds
- 
- ifdef CONFIG_SUN3
- LDFLAGS_vmlinux = -N
-diff --git a/arch/m68k/kernel/module.lds b/arch/m68k/include/asm/module.lds.h
-similarity index 100%
-rename from arch/m68k/kernel/module.lds
-rename to arch/m68k/include/asm/module.lds.h
-diff --git a/arch/powerpc/Makefile b/arch/powerpc/Makefile
-index 3e8da9cf2eb9..8935658fcd06 100644
---- a/arch/powerpc/Makefile
-+++ b/arch/powerpc/Makefile
-@@ -65,7 +65,6 @@ UTS_MACHINE := $(subst $(space),,$(machine-y))
- ifdef CONFIG_PPC32
- KBUILD_LDFLAGS_MODULE += arch/powerpc/lib/crtsavres.o
- else
--KBUILD_LDS_MODULE += $(srctree)/arch/powerpc/kernel/module.lds
- ifeq ($(call ld-ifversion, -ge, 225000000, y),y)
- # Have the linker provide sfpr if possible.
- # There is a corresponding test in arch/powerpc/lib/Makefile
-diff --git a/arch/powerpc/kernel/module.lds b/arch/powerpc/include/asm/module.lds.h
-similarity index 100%
-rename from arch/powerpc/kernel/module.lds
-rename to arch/powerpc/include/asm/module.lds.h
-diff --git a/arch/riscv/Makefile b/arch/riscv/Makefile
-index fb6e37db836d..8edaa8bd86d6 100644
---- a/arch/riscv/Makefile
-+++ b/arch/riscv/Makefile
-@@ -53,9 +53,6 @@ endif
- ifeq ($(CONFIG_CMODEL_MEDANY),y)
- 	KBUILD_CFLAGS += -mcmodel=medany
- endif
--ifeq ($(CONFIG_MODULE_SECTIONS),y)
--	KBUILD_LDS_MODULE += $(srctree)/arch/riscv/kernel/module.lds
--endif
- ifeq ($(CONFIG_PERF_EVENTS),y)
-         KBUILD_CFLAGS += -fno-omit-frame-pointer
- endif
-diff --git a/arch/riscv/kernel/module.lds b/arch/riscv/include/asm/module.lds.h
-similarity index 84%
-rename from arch/riscv/kernel/module.lds
-rename to arch/riscv/include/asm/module.lds.h
-index 295ecfb341a2..4254ff2ff049 100644
---- a/arch/riscv/kernel/module.lds
-+++ b/arch/riscv/include/asm/module.lds.h
-@@ -1,8 +1,9 @@
- /* SPDX-License-Identifier: GPL-2.0 */
- /* Copyright (C) 2017 Andes Technology Corporation */
--
-+#ifdef CONFIG_MODULE_SECTIONS
- SECTIONS {
- 	.plt (NOLOAD) : { BYTE(0) }
- 	.got (NOLOAD) : { BYTE(0) }
- 	.got.plt (NOLOAD) : { BYTE(0) }
- }
-+#endif
-diff --git a/arch/um/include/asm/Kbuild b/arch/um/include/asm/Kbuild
-index 8d435f8a6dec..1c63b260ecc4 100644
---- a/arch/um/include/asm/Kbuild
-+++ b/arch/um/include/asm/Kbuild
-@@ -16,6 +16,7 @@ generic-y += kdebug.h
- generic-y += mcs_spinlock.h
- generic-y += mm-arch-hooks.h
- generic-y += mmiowb.h
-+generic-y += module.lds.h
- generic-y += param.h
- generic-y += pci.h
- generic-y += percpu.h
-diff --git a/include/asm-generic/Kbuild b/include/asm-generic/Kbuild
-index 74b0612601dd..7cd4e627e00e 100644
---- a/include/asm-generic/Kbuild
-+++ b/include/asm-generic/Kbuild
-@@ -40,6 +40,7 @@ mandatory-y += mmiowb.h
- mandatory-y += mmu.h
- mandatory-y += mmu_context.h
- mandatory-y += module.h
-+mandatory-y += module.lds.h
- mandatory-y += msi.h
- mandatory-y += pci.h
- mandatory-y += percpu.h
-diff --git a/include/asm-generic/module.lds.h b/include/asm-generic/module.lds.h
-new file mode 100644
-index 000000000000..f210d5c1b78b
---- /dev/null
-+++ b/include/asm-generic/module.lds.h
-@@ -0,0 +1,10 @@
-+/* SPDX-License-Identifier: GPL-2.0-only */
-+#ifndef __ASM_GENERIC_MODULE_LDS_H
-+#define __ASM_GENERIC_MODULE_LDS_H
++# Objtool arguments are also needed for modfinal with LTO, so we define
++# then here to avoid duplication.
++objtool_args =								\
++	$(if $(CONFIG_UNWINDER_ORC),orc generate,check)			\
++	$(if $(part-of-module), --module,)				\
++	$(if $(CONFIG_FRAME_POINTER),, --no-fp)				\
++	$(if $(CONFIG_GCOV_KERNEL), --no-unreachable,)			\
++	$(if $(CONFIG_RETPOLINE), --retpoline,)				\
++	$(if $(CONFIG_X86_SMAP), --uaccess,)				\
++	$(if $(CONFIG_FTRACE_MCOUNT_USE_OBJTOOL), --mcount,)
 +
-+/*
-+ * <asm/module.lds.h> can specify arch-specific sections for linking modules.
-+ * Empty for the asm-generic header.
-+ */
-+
-+#endif /* __ASM_GENERIC_MODULE_LDS_H */
-diff --git a/scripts/.gitignore b/scripts/.gitignore
-index 0d1c8e217cd7..a6c11316c969 100644
---- a/scripts/.gitignore
-+++ b/scripts/.gitignore
-@@ -8,3 +8,4 @@ asn1_compiler
- extract-cert
- sign-file
- insert-sys-cert
-+/module.lds
-diff --git a/scripts/Makefile b/scripts/Makefile
-index bc018e4b733e..b5418ec587fb 100644
---- a/scripts/Makefile
-+++ b/scripts/Makefile
-@@ -29,6 +29,9 @@ endif
- # The following programs are only built on demand
- hostprogs += unifdef
- 
-+# The module linker script is preprocessed on demand
-+targets += module.lds
-+
- subdir-$(CONFIG_GCC_PLUGINS) += gcc-plugins
- subdir-$(CONFIG_MODVERSIONS) += genksyms
- subdir-$(CONFIG_SECURITY_SELINUX) += selinux
+ # Useful for describing the dependency of composite objects
+ # Usage:
+ #   $(call multi_depend, multi_used_targets, suffix_to_remove, suffix_to_add)
 diff --git a/scripts/Makefile.modfinal b/scripts/Makefile.modfinal
-index 411c1e600e7d..ae01baf96f4e 100644
+index 2cb9a1d88434..1bd2953b11c4 100644
 --- a/scripts/Makefile.modfinal
 +++ b/scripts/Makefile.modfinal
-@@ -33,11 +33,10 @@ quiet_cmd_ld_ko_o = LD [M]  $@
-       cmd_ld_ko_o =                                                     \
+@@ -9,7 +9,7 @@ __modfinal:
+ include $(objtree)/include/config/auto.conf
+ include $(srctree)/scripts/Kbuild.include
+ 
+-# for c_flags
++# for c_flags and objtool_args
+ include $(srctree)/scripts/Makefile.lib
+ 
+ # find all modules listed in modules.order
+@@ -34,10 +34,23 @@ ifdef CONFIG_LTO_CLANG
+ # With CONFIG_LTO_CLANG, reuse the object file we compiled for modpost to
+ # avoid a second slow LTO link
+ prelink-ext := .lto
+-endif
++
++# ELF processing was skipped earlier because we didn't have native code,
++# so let's now process the prelinked binary before we link the module.
++
++ifdef CONFIG_STACK_VALIDATION
++ifneq ($(SKIP_STACK_VALIDATION),1)
++cmd_ld_ko_o +=								\
++	$(objtree)/tools/objtool/objtool $(objtool_args)		\
++		$(@:.ko=$(prelink-ext).o);
++
++endif # SKIP_STACK_VALIDATION
++endif # CONFIG_STACK_VALIDATION
++
++endif # CONFIG_LTO_CLANG
+ 
+ quiet_cmd_ld_ko_o = LD [M]  $@
+-      cmd_ld_ko_o =                                                     \
++      cmd_ld_ko_o +=							\
  	$(LD) -r $(KBUILD_LDFLAGS)					\
  		$(KBUILD_LDFLAGS_MODULE) $(LDFLAGS_MODULE)		\
--		$(addprefix -T , $(KBUILD_LDS_MODULE))			\
--		-o $@ $(filter %.o, $^);				\
-+		-T scripts/module.lds -o $@ $(filter %.o, $^);		\
- 	$(if $(ARCH_POSTLINK), $(MAKE) -f $(ARCH_POSTLINK) $@, true)
+ 		-T scripts/module.lds -o $@ $(filter %.o, $^);		\
+diff --git a/scripts/link-vmlinux.sh b/scripts/link-vmlinux.sh
+index 5ace1dc43993..7f4d19271180 100755
+--- a/scripts/link-vmlinux.sh
++++ b/scripts/link-vmlinux.sh
+@@ -89,14 +89,36 @@ modpost_link()
  
--$(modules): %.ko: %.o %.mod.o $(KBUILD_LDS_MODULE) FORCE
-+$(modules): %.ko: %.o %.mod.o scripts/module.lds FORCE
- 	+$(call if_changed,ld_ko_o)
+ objtool_link()
+ {
++	local objtoolcmd;
+ 	local objtoolopt;
  
- targets += $(modules) $(modules:.ko=.mod.o)
-diff --git a/scripts/module-common.lds b/scripts/module.lds.S
-similarity index 93%
-rename from scripts/module-common.lds
-rename to scripts/module.lds.S
-index d61b9e8678e8..69b9b71a6a47 100644
---- a/scripts/module-common.lds
-+++ b/scripts/module.lds.S
-@@ -24,3 +24,6 @@ SECTIONS {
- 
- 	__jump_table		0 : ALIGN(8) { KEEP(*(__jump_table)) }
- }
++	if [ "${CONFIG_LTO_CLANG} ${CONFIG_STACK_VALIDATION}" = "y y" ]; then
++		# Don't perform vmlinux validation unless explicitly requested,
++		# but run objtool on vmlinux.o now that we have an object file.
++		if [ -n "${CONFIG_UNWINDER_ORC}" ]; then
++			objtoolcmd="orc generate"
++		fi
 +
-+/* bring in arch-specific sections */
-+#include <asm/module.lds.h>
-diff --git a/scripts/package/builddeb b/scripts/package/builddeb
-index 6df3c9f8b2da..44f212e37935 100755
---- a/scripts/package/builddeb
-+++ b/scripts/package/builddeb
-@@ -55,7 +55,7 @@ deploy_kernel_headers () {
- 		cd $srctree
- 		find . arch/$SRCARCH -maxdepth 1 -name Makefile\*
- 		find include scripts -type f -o -type l
--		find arch/$SRCARCH -name module.lds -o -name Kbuild.platforms -o -name Platform
-+		find arch/$SRCARCH -name Kbuild.platforms -o -name Platform
- 		find $(find arch/$SRCARCH -name include -o -name scripts -type d) -type f
- 	) > debian/hdrsrcfiles
++		objtoolopt="${objtoolopt} --duplicate"
++
++		if [ -n "${CONFIG_FTRACE_MCOUNT_USE_OBJTOOL}" ]; then
++			objtoolopt="${objtoolopt} --mcount"
++		fi
++	fi
++
+ 	if [ -n "${CONFIG_VMLINUX_VALIDATION}" ]; then
+-		objtoolopt="check --vmlinux --noinstr"
++		objtoolopt="${objtoolopt} --noinstr"
++	fi
++
++	if [ -n "${objtoolopt}" ]; then
++		if [ -z "${objtoolcmd}" ]; then
++			objtoolcmd="check"
++		fi
++		objtoolopt="${objtoolopt} --vmlinux"
+ 		if [ -z "${CONFIG_FRAME_POINTER}" ]; then
+ 			objtoolopt="${objtoolopt} --no-fp"
+ 		fi
+-		if [ -n "${CONFIG_GCOV_KERNEL}" ]; then
++		if [ -n "${CONFIG_GCOV_KERNEL}" ] || [ -n "${CONFIG_LTO_CLANG}" ]; then
+ 			objtoolopt="${objtoolopt} --no-unreachable"
+ 		fi
+ 		if [ -n "${CONFIG_RETPOLINE}" ]; then
+@@ -106,7 +128,7 @@ objtool_link()
+ 			objtoolopt="${objtoolopt} --uaccess"
+ 		fi
+ 		info OBJTOOL ${1}
+-		tools/objtool/objtool ${objtoolopt} ${1}
++		tools/objtool/objtool ${objtoolcmd} ${objtoolopt} ${1}
+ 	fi
+ }
  
 -- 
 2.28.0.1011.ga647a8990f-goog
