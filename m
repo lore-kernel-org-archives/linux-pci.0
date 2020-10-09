@@ -2,134 +2,148 @@ Return-Path: <SRS0=I3i3=DQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8963CC35266
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 08:01:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5465DC433DF
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 08:08:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3017822277
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 08:01:33 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ffwll.ch header.i=@ffwll.ch header.b="GGX55N30"
+	by mail.kernel.org (Postfix) with ESMTP id 04B1422227
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 08:08:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1602230939;
+	bh=KIWMTbdcl+R/AR1R/W9XGA1i5VIAs+lUecjjfIWMiNU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=GjZ2P90yRZRxQkjoLiG+iaRspifwIiwSVK1KZE5WheuW/DWE/3BIZmJPScjVzFi2V
+	 PsZCPSW8FFpHWmqOX09VTYRrWcz2rNWuHmAGxkgN3GcMy4/o94b6OjPNCnMkmRkzfX
+	 m4TpyhcQAmyTNzVTga9HD5ycfvDwHt6t612cZhT0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732747AbgJIIB2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 9 Oct 2020 04:01:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49476 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732727AbgJIIAN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2020 04:00:13 -0400
-Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5592C05BD43
-        for <linux-pci@vger.kernel.org>; Fri,  9 Oct 2020 01:00:10 -0700 (PDT)
-Received: by mail-wr1-x444.google.com with SMTP id w5so9234829wrp.8
-        for <linux-pci@vger.kernel.org>; Fri, 09 Oct 2020 01:00:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ffwll.ch; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=mkr+QLHrHRyzDeEuLV6zjmHQ3ublwStz21KQT1DOayM=;
-        b=GGX55N304bFNQXT7vE1ggs1hCrNO4kTCwZL12SxHZag0+p+9wIk4MXiU4skay+LXim
-         49xSp0FO/9WgeR/sK6Fi90U35plzqw+Vb29HBAZuQNOnvJt3IwmsbNCeAFjlMohevOl4
-         MeSmpBQPKt0omjgQbvLdsGQUrxbNL/9LDoUKc=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=mkr+QLHrHRyzDeEuLV6zjmHQ3ublwStz21KQT1DOayM=;
-        b=kzUk/7mUvG+8LLmgzNn9/28AESw1JoOeBFKNROexllRX6tYcG5/MxSrwL6vHPoUR+t
-         77wMl+e/DhlXkYv9+Drs4nYUd/Bjk3GVr5gIEChwpkTBXBluYnAfdP1YaQwGW5MFC96O
-         QDZv828CuRLcQdsoeNHnlzfav6SqjSHYqqCHqZuBseT5j0Az7zi4s8R6zPIK2a0ALTIk
-         19BEUmk9D0XtypycNJbCIe/TpGQed2TanSJ2GedO/3CI4BsDgMXkgKbclqLdO6oTmtJ7
-         RsYdoM95+3n5of2cIKkPwP/eabWaKfn4gxVrOeQOaiwrqcFg0NzxaIlxAkjcC1dTcPh6
-         +bbQ==
-X-Gm-Message-State: AOAM532Hfrpd0q6/EU6p2jGfasYcEBzwtehxyy0/907o3gu2GP+EAlKI
-        v94q/yecQXPCyts/dhLHr5B/Pw==
-X-Google-Smtp-Source: ABdhPJyDv2qPX/s1a3mWcZq1GdiuGUlSH1qbeC8CG58tJ0NKdoFcESH1X88ElvgtpyqLXEEr3X8XWQ==
-X-Received: by 2002:adf:d841:: with SMTP id k1mr13481898wrl.227.1602230409528;
-        Fri, 09 Oct 2020 01:00:09 -0700 (PDT)
-Received: from phenom.ffwll.local ([2a02:168:57f4:0:efd0:b9e5:5ae6:c2fa])
-        by smtp.gmail.com with ESMTPSA id u17sm11634118wri.45.2020.10.09.01.00.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 09 Oct 2020 01:00:08 -0700 (PDT)
-From:   Daniel Vetter <daniel.vetter@ffwll.ch>
-To:     DRI Development <dri-devel@lists.freedesktop.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Cc:     kvm@vger.kernel.org, linux-mm@kvack.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-samsung-soc@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-s390@vger.kernel.org, Daniel Vetter <daniel.vetter@ffwll.ch>,
-        Daniel Vetter <daniel.vetter@intel.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Kees Cook <keescook@chromium.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        John Hubbard <jhubbard@nvidia.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Jan Kara <jack@suse.cz>, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org
-Subject: [PATCH v2 12/17] PCI: Obey iomem restrictions for procfs mmap
-Date:   Fri,  9 Oct 2020 09:59:29 +0200
-Message-Id: <20201009075934.3509076-13-daniel.vetter@ffwll.ch>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20201009075934.3509076-1-daniel.vetter@ffwll.ch>
-References: <20201009075934.3509076-1-daniel.vetter@ffwll.ch>
+        id S1732483AbgJIII6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 9 Oct 2020 04:08:58 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38360 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732445AbgJIII5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 9 Oct 2020 04:08:57 -0400
+Received: from pali.im (pali.im [31.31.79.79])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 61CB9221FC;
+        Fri,  9 Oct 2020 08:08:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1602230936;
+        bh=KIWMTbdcl+R/AR1R/W9XGA1i5VIAs+lUecjjfIWMiNU=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=FbxaZ2piy1y28IDSENRyIKs8MY2HQMPSmVh8EFMPHKhChPa9Sa/ufQHv3oJclKNGB
+         CYg6o+9zaC23JXfCjTED687aM99ef6aS5aMUtyJTx/lg6yyO2f50l7naIxkjefKpQY
+         s3//eCdUlkY5G0m80tpCJZrGNuRvam78vqd04Uq0=
+Received: by pali.im (Postfix)
+        id C5CE1515; Fri,  9 Oct 2020 10:08:53 +0200 (CEST)
+Date:   Fri, 9 Oct 2020 10:08:53 +0200
+From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Oliver O'Halloran <oohall@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        Yinghai Lu <yinghai@kernel.org>
+Subject: Re: PCI: Race condition in pci_create_sysfs_dev_files
+Message-ID: <20201009080853.bxzyirmaja6detk4@pali>
+References: <20201007161434.GA3247067@bjorn-Precision-5520>
+ <20201008195907.GA3359851@bjorn-Precision-5520>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20201008195907.GA3359851@bjorn-Precision-5520>
+User-Agent: NeoMutt/20180716
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-There's three ways to access PCI BARs from userspace: /dev/mem, sysfs
-files, and the old proc interface. Two check against
-iomem_is_exclusive, proc never did. And with CONFIG_IO_STRICT_DEVMEM,
-this starts to matter, since we don't want random userspace having
-access to PCI BARs while a driver is loaded and using it.
+On Thursday 08 October 2020 14:59:07 Bjorn Helgaas wrote:
+> On Wed, Oct 07, 2020 at 11:14:34AM -0500, Bjorn Helgaas wrote:
+> > On Wed, Oct 07, 2020 at 10:14:00AM +0200, Pali Rohár wrote:
+> > > On Wednesday 07 October 2020 12:47:40 Oliver O'Halloran wrote:
+> > > > On Wed, Oct 7, 2020 at 10:26 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > > > >
+> > > > > I'm not really a fan of this because pci_sysfs_init() is a bit of a
+> > > > > hack to begin with, and this makes it even more complicated.
+> > > > >
+> > > > > It's not obvious from the code why we need pci_sysfs_init(), but
+> > > > > Yinghai hinted [1] that we need to create sysfs after assigning
+> > > > > resources.  I experimented by removing pci_sysfs_init() and skipping
+> > > > > the ROM BAR sizing.  In that case, we create sysfs files in
+> > > > > pci_bus_add_device() and later assign space for the ROM BAR, so we
+> > > > > fail to create the "rom" sysfs file.
+> > > > >
+> > > > > The current solution to that is to delay the sysfs files until
+> > > > > pci_sysfs_init(), a late_initcall(), which runs after resource
+> > > > > assignments.  But I think it would be better if we could create the
+> > > > > sysfs file when we assign the BAR.  Then we could get rid of the
+> > > > > late_initcall() and that implicit ordering requirement.
+> > > > 
+> > > > You could probably fix that by using an attribute_group to control
+> > > > whether the attribute shows up in sysfs or not. The .is_visible() for
+> > > > the group can look at the current state of the device and hide the rom
+> > > > attribute if the BAR isn't assigned or doesn't exist. That way we
+> > > > don't need to care when the actual assignment occurs.
+> > > 
+> > > And cannot we just return e.g. -ENODATA (or other error code) for those
+> > > problematic sysfs nodes until late_initcall() is called?
+> > 
+> > I really like Oliver's idea and I think we should push on that to see
+> > if it can be made to work.  If so, we can remove the late_initcall()
+> > completely.
+> > 
+> > > > > But I haven't tried to code it up, so it's probably more complicated
+> > > > > than this.  I guess ideally we would assign all the resources before
+> > > > > pci_bus_add_device().  If we could do that, we could just remove
+> > > > > pci_sysfs_init() and everything would just work, but I think that's a
+> > > > > HUGE can of worms.
+> > > > 
+> > > > I was under the impression the whole point of pci_bus_add_device() was
+> > > > to handle any initialisation that needed to be done after resources
+> > > > were assigned. Is the ROM BAR being potentially unassigned an x86ism
+> > > > or is there some bigger point I'm missing?
+> > 
+> > We can't assign resources for each device as we enumerate it because
+> > we don't know what's in use by other devices yet to be enumerated.
+> > That part is generic, not x86-specific.
+> > 
+> > The part that is x86-specific (or at least specific to systems using
+> > ACPI) is that the ACPI core doesn't reserve resources used by ACPI
+> > devices.  Sometimes those resources are included in the PCI host
+> > bridge windows, and we don't want to assign them to PCI devices.
+> > 
+> > I didn't trace this all the way, but the pcibios_assign_resources()
+> > and pnp_system_init() comments look relevant.  It's a little concerning
+> > that they're both fs_initcalls() and the ordering looks important, but
+> > it would only be by accident of link ordering that pnp_system_init()
+> > happens first.
+> 
+> Pali, what's your thought on this?  Do you plan to work on this
+> yourself?  If not and if you can live with your workaround a while
+> longer, I think Krzysztof might be interested in taking a crack at it.
+> I would just hate to see you guys duplicate each others' work :)
 
-Fix this by adding the same iomem_is_exclusive() check we already have
-on the sysfs side in pci_mmap_resource().
+Hello Bjorn!
 
-References: 90a545e98126 ("restrict /dev/mem to idle io memory ranges")
-Signed-off-by: Daniel Vetter <daniel.vetter@intel.com>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>
-Cc: Kees Cook <keescook@chromium.org>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: John Hubbard <jhubbard@nvidia.com>
-Cc: Jérôme Glisse <jglisse@redhat.com>
-Cc: Jan Kara <jack@suse.cz>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-mm@kvack.org
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-samsung-soc@vger.kernel.org
-Cc: linux-media@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
---
-v2: Improve commit message (Bjorn)
----
- drivers/pci/proc.c | 5 +++++
- 1 file changed, 5 insertions(+)
+If Krzysztof wants and would be working on this issue I can let it as is
+for now.
 
-diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
-index d35186b01d98..3a2f90beb4cb 100644
---- a/drivers/pci/proc.c
-+++ b/drivers/pci/proc.c
-@@ -274,6 +274,11 @@ static int proc_bus_pci_mmap(struct file *file, struct vm_area_struct *vma)
- 		else
- 			return -EINVAL;
- 	}
-+
-+	if (dev->resource[i].flags & IORESOURCE_MEM &&
-+	    iomem_is_exclusive(dev->resource[i].start))
-+		return -EINVAL;
-+
- 	ret = pci_mmap_page_range(dev, i, vma,
- 				  fpriv->mmap_state, write_combine);
- 	if (ret < 0)
--- 
-2.28.0
+But we should think how to deliver fix for this issue also into stable
+kernels where this race condition is happening.
 
+I think that my workaround avoid those two race conditions and if proper
+fix (= removal of pci_sysfs_init function) would take a long, what about
+trying to workaround that race condition for now?
+
+My "fix" is relatively small and simple, so it should not be much hard
+to review it.
+
+Krzysztof, what do you think?
