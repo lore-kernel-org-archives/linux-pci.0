@@ -5,65 +5,65 @@ X-Spam-Level:
 X-Spam-Status: No, score=-20.4 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable
+	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CD7CC43457
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 16:15:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D12EC433E7
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 16:15:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3937D2227E
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 16:15:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5043C2227E
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Oct 2020 16:15:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="rDHTl2DO"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Plxh6rO8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389704AbgJIQPG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 9 Oct 2020 12:15:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41480 "EHLO
+        id S2389861AbgJIQPI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 9 Oct 2020 12:15:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41578 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389766AbgJIQOU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2020 12:14:20 -0400
+        with ESMTP id S2389828AbgJIQOw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2020 12:14:52 -0400
 Received: from mail-yb1-xb49.google.com (mail-yb1-xb49.google.com [IPv6:2607:f8b0:4864:20::b49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BAA28C0613A9
-        for <linux-pci@vger.kernel.org>; Fri,  9 Oct 2020 09:14:13 -0700 (PDT)
-Received: by mail-yb1-xb49.google.com with SMTP id n13so9316923ybk.9
-        for <linux-pci@vger.kernel.org>; Fri, 09 Oct 2020 09:14:13 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA764C0613BB
+        for <linux-pci@vger.kernel.org>; Fri,  9 Oct 2020 09:14:32 -0700 (PDT)
+Received: by mail-yb1-xb49.google.com with SMTP id z3so3504299yba.21
+        for <linux-pci@vger.kernel.org>; Fri, 09 Oct 2020 09:14:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=sender:date:in-reply-to:message-id:mime-version:references:subject
          :from:to:cc;
-        bh=ljsItlz/aE0P1FDke8OIPGTsfsgvR6SCQ5aAaAr+FuY=;
-        b=rDHTl2DOvEF5lAI8/1xgnH7ewQP7v+fy6WFg1GImMEetNzxgNOGQtQTgFVZA7nJz4m
-         E/V9TlOXQo2zsXvADw6ZjNHpbyo0GyLXq/UcXFopFQ5iYAVttrLb5kwsOMZlNj6d3mq2
-         v2Z69HCANswfC9sVB06+DLebakWFduI4MBn43M/w9uUpWzAIbBGEejEK5mHvIYhz912n
-         egyvp5xLTL8ReK004BgDAz4wuj45irBJ5zvwJmj0uVsXV1gk7BqZvJNpws7d45/nZF1s
-         sv/UzaMr8Prok4UlE5mODVRqtzkXlZAlSECInu3Rk5zSafDWjBxTBOhp32r/igI3DisM
-         FvIA==
+        bh=eOx9MhffeJ9wDXWdE5ocpTXQ8u7ymKHm7bpeM0Lggio=;
+        b=Plxh6rO8fZsaoEQYUiFTv8Gctd0ORGzpZ7B+rZvfUdc7hYRYEfwwGuB/jOOB4N8mRZ
+         iAAD+kQylOB8+xnUsPp1FuxiMJFvWDb9+nHFjKZSUxLvWnE/9FbEqxjRwOpDx5ONEslI
+         8qXKafYcstPuDgNqimTWoairPVZO2J3rswrWaBPN8Qj/9SVTW+SDOPJ/1LdMPf3bODQ3
+         tIT8O2Z6HcQ4IP/C1bLPAj4juZIAgQDUFSX0gtccixqyP1Lwa6S3qb2MSbgtHQfAoxEv
+         QRJywRQXLDBTL6z66phNxnXE5ujjd1RTPx5601HvsGfueNCH/Cf7DS82U8ob3oCEPZMJ
+         O6DA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:sender:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=ljsItlz/aE0P1FDke8OIPGTsfsgvR6SCQ5aAaAr+FuY=;
-        b=rqs/qpLSL8c3XqtI+LMYxgvkYUoYtU/Xk1yjf36kEBWRSR/BqDrQMgVjEtlYZc1BWR
-         d8HxAPiPcpjX3CbHyAQTcWP6HQgfOBz9SQFiJ0apYpEtEaFLvpAs0i0T1iHL8mcYhjbn
-         3FbSa2AAFKxPapSGh/Vz9UMYxpyJ4aZU22uLw7Vuh7tBHN5xZ90USmKvifH86osSMD+y
-         tPg4LuaNBYS3vM5Uhm3KjPlhSHLr/30TyFMaMSLo1QUvKBXjGK+YmQlHaSAknw2I01NZ
-         K1VuJ2nTt0NOM73P641e27o1N3O7VpJJFXO4uMO+S8YMi+V7iHRQ8gr8G0z2389pQCgH
-         i8Ww==
-X-Gm-Message-State: AOAM533P1ur0w16j3bhCg6Gx/UdOzmAP4N6YZHR1uUMINzLcSV2Hmzcj
-        SrGbxyJQOGEYwe9zFYyz1Gu+S7RmOJQM8eU1swE=
-X-Google-Smtp-Source: ABdhPJy32BlRlXtKX3ZecjjCx8sYUdqfwZnP6p3172X1KprlyJNmmCaj7qPqSsBQi7a3XNa21VFXuJCMRei9tPIgOic=
+        bh=eOx9MhffeJ9wDXWdE5ocpTXQ8u7ymKHm7bpeM0Lggio=;
+        b=qX6RiFh4xWV8SIbRsmHbgRRLRlESG4Tas4kN2/G/e7J9vZsMKt4bfXdN5x3d4uy85S
+         r18MQylQAwsnp7fX9BgS3iQw7ZlP6EJeLot38qvUpGXqJa2YbNvK/GBtIH+vw8Qx5xKh
+         2mBeOgPhU8OcUG8Q3T5ClJAr+70GWX37gsXVHI2nJr5FBeniuRDpOipNzFeKZIjYGfi2
+         OprcbGlZYBAAtzv0AKvSemoqeBkyBKOO4UhFoTTKcPR9wzmsun/MQZXKCQHYDj7R/C25
+         ocNTZaQqQQHKhryLqgSt6Pp+OB0fPcFUqrjJi9KR8tBK6wi+Lzokw42O1g+O5SZAw4R4
+         su/g==
+X-Gm-Message-State: AOAM531kW0PWxM6s+Vr1RPEciQZYzq626uE6ZaXLVt+PTvS7qyGOpCEh
+        I8xqWxW9IOyNM39TapilidJ0j7wKlXVLxMncJlA=
+X-Google-Smtp-Source: ABdhPJxyS0XHBxv62ZqOUe+ZCIUsnixCIBFhk+Syvlgu7UF8/267koanykdI+IOKX/T5PRLdfssp5bIj1Kz2wguq10U=
 Sender: "samitolvanen via sendgmr" 
         <samitolvanen@samitolvanen1.mtv.corp.google.com>
 X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:f693:9fff:fef4:1b6d])
- (user=samitolvanen job=sendgmr) by 2002:a25:aaae:: with SMTP id
- t43mr18851419ybi.404.1602260052989; Fri, 09 Oct 2020 09:14:12 -0700 (PDT)
-Date:   Fri,  9 Oct 2020 09:13:25 -0700
+ (user=samitolvanen job=sendgmr) by 2002:a25:8209:: with SMTP id
+ q9mr19033461ybk.353.1602260072154; Fri, 09 Oct 2020 09:14:32 -0700 (PDT)
+Date:   Fri,  9 Oct 2020 09:13:35 -0700
 In-Reply-To: <20201009161338.657380-1-samitolvanen@google.com>
-Message-Id: <20201009161338.657380-17-samitolvanen@google.com>
+Message-Id: <20201009161338.657380-27-samitolvanen@google.com>
 Mime-Version: 1.0
 References: <20201009161338.657380-1-samitolvanen@google.com>
 X-Mailer: git-send-email 2.28.0.1011.ga647a8990f-goog
-Subject: [PATCH v5 16/29] init: lto: fix PREL32 relocations
+Subject: [PATCH v5 26/29] x86/asm: annotate indirect jumps
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Masahiro Yamada <masahiroy@kernel.org>,
         Will Deacon <will@kernel.org>,
@@ -83,75 +83,90 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-With LTO, the compiler can rename static functions to avoid global
-naming collisions. As initcall functions are typically static,
-renaming can break references to them in inline assembly. This
-change adds a global stub with a stable name for each initcall to
-fix the issue when PREL32 relocations are used.
+Running objtool --vmlinux --duplicate on vmlinux.o produces a few
+warnings about indirect jumps with retpoline:
+
+  vmlinux.o: warning: objtool: wakeup_long64()+0x61: indirect jump
+  found in RETPOLINE build
+  ...
+
+This change adds ANNOTATE_RETPOLINE_SAFE annotations to the jumps
+in assembly code to stop the warnings.
 
 Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
-Reviewed-by: Kees Cook <keescook@chromium.org>
 ---
- include/linux/init.h | 31 +++++++++++++++++++++++++++----
- 1 file changed, 27 insertions(+), 4 deletions(-)
+ arch/x86/kernel/acpi/wakeup_64.S  | 2 ++
+ arch/x86/platform/pvh/head.S      | 2 ++
+ arch/x86/power/hibernate_asm_64.S | 3 +++
+ 3 files changed, 7 insertions(+)
 
-diff --git a/include/linux/init.h b/include/linux/init.h
-index af638cd6dd52..cea63f7e7705 100644
---- a/include/linux/init.h
-+++ b/include/linux/init.h
-@@ -209,26 +209,49 @@ extern bool initcall_debug;
-  */
- #define __initcall_section(__sec, __iid)			\
- 	#__sec ".init.." #__iid
-+
-+/*
-+ * With LTO, the compiler can rename static functions to avoid
-+ * global naming collisions. We use a global stub function for
-+ * initcalls to create a stable symbol name whose address can be
-+ * taken in inline assembly when PREL32 relocations are used.
-+ */
-+#define __initcall_stub(fn, __iid, id)				\
-+	__initcall_name(initstub, __iid, id)
-+
-+#define __define_initcall_stub(__stub, fn)			\
-+	int __init __stub(void);				\
-+	int __init __stub(void)					\
-+	{ 							\
-+		return fn();					\
-+	}							\
-+	__ADDRESSABLE(__stub)
- #else
- #define __initcall_section(__sec, __iid)			\
- 	#__sec ".init"
-+
-+#define __initcall_stub(fn, __iid, id)	fn
-+
-+#define __define_initcall_stub(__stub, fn)			\
-+	__ADDRESSABLE(fn)
- #endif
+diff --git a/arch/x86/kernel/acpi/wakeup_64.S b/arch/x86/kernel/acpi/wakeup_64.S
+index c8daa92f38dc..041e79c4e195 100644
+--- a/arch/x86/kernel/acpi/wakeup_64.S
++++ b/arch/x86/kernel/acpi/wakeup_64.S
+@@ -7,6 +7,7 @@
+ #include <asm/msr.h>
+ #include <asm/asm-offsets.h>
+ #include <asm/frame.h>
++#include <asm/nospec-branch.h>
  
- #ifdef CONFIG_HAVE_ARCH_PREL32_RELOCATIONS
--#define ____define_initcall(fn, __name, __sec)			\
--	__ADDRESSABLE(fn)					\
-+#define ____define_initcall(fn, __stub, __name, __sec)		\
-+	__define_initcall_stub(__stub, fn)			\
- 	asm(".section	\"" __sec "\", \"a\"		\n"	\
- 	    __stringify(__name) ":			\n"	\
--	    ".long	" #fn " - .			\n"	\
-+	    ".long	" __stringify(__stub) " - .	\n"	\
- 	    ".previous					\n");
- #else
--#define ____define_initcall(fn, __name, __sec)			\
-+#define ____define_initcall(fn, __unused, __name, __sec)	\
- 	static initcall_t __name __used 			\
- 		__attribute__((__section__(__sec))) = fn;
- #endif
+ # Copyright 2003 Pavel Machek <pavel@suse.cz
  
- #define __unique_initcall(fn, id, __sec, __iid)			\
- 	____define_initcall(fn,					\
-+		__initcall_stub(fn, __iid, id),			\
- 		__initcall_name(initcall, __iid, id),		\
- 		__initcall_section(__sec, __iid))
+@@ -39,6 +40,7 @@ SYM_FUNC_START(wakeup_long64)
+ 	movq	saved_rbp, %rbp
+ 
+ 	movq	saved_rip, %rax
++	ANNOTATE_RETPOLINE_SAFE
+ 	jmp	*%rax
+ SYM_FUNC_END(wakeup_long64)
+ 
+diff --git a/arch/x86/platform/pvh/head.S b/arch/x86/platform/pvh/head.S
+index 43b4d864817e..640b79cc64b8 100644
+--- a/arch/x86/platform/pvh/head.S
++++ b/arch/x86/platform/pvh/head.S
+@@ -15,6 +15,7 @@
+ #include <asm/asm.h>
+ #include <asm/boot.h>
+ #include <asm/processor-flags.h>
++#include <asm/nospec-branch.h>
+ #include <asm/msr.h>
+ #include <xen/interface/elfnote.h>
+ 
+@@ -105,6 +106,7 @@ SYM_CODE_START_LOCAL(pvh_start_xen)
+ 	/* startup_64 expects boot_params in %rsi. */
+ 	mov $_pa(pvh_bootparams), %rsi
+ 	mov $_pa(startup_64), %rax
++	ANNOTATE_RETPOLINE_SAFE
+ 	jmp *%rax
+ 
+ #else /* CONFIG_X86_64 */
+diff --git a/arch/x86/power/hibernate_asm_64.S b/arch/x86/power/hibernate_asm_64.S
+index 7918b8415f13..715509d94fa3 100644
+--- a/arch/x86/power/hibernate_asm_64.S
++++ b/arch/x86/power/hibernate_asm_64.S
+@@ -21,6 +21,7 @@
+ #include <asm/asm-offsets.h>
+ #include <asm/processor-flags.h>
+ #include <asm/frame.h>
++#include <asm/nospec-branch.h>
+ 
+ SYM_FUNC_START(swsusp_arch_suspend)
+ 	movq	$saved_context, %rax
+@@ -66,6 +67,7 @@ SYM_CODE_START(restore_image)
+ 
+ 	/* jump to relocated restore code */
+ 	movq	relocated_restore_code(%rip), %rcx
++	ANNOTATE_RETPOLINE_SAFE
+ 	jmpq	*%rcx
+ SYM_CODE_END(restore_image)
+ 
+@@ -97,6 +99,7 @@ SYM_CODE_START(core_restore_code)
+ 
+ .Ldone:
+ 	/* jump to the restore_registers address from the image header */
++	ANNOTATE_RETPOLINE_SAFE
+ 	jmpq	*%r8
+ SYM_CODE_END(core_restore_code)
  
 -- 
 2.28.0.1011.ga647a8990f-goog
