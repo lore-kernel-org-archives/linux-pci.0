@@ -2,110 +2,131 @@ Return-Path: <SRS0=132S=DR=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56CADC433E7
-	for <linux-pci@archiver.kernel.org>; Sat, 10 Oct 2020 09:15:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58454C561F8
+	for <linux-pci@archiver.kernel.org>; Sat, 10 Oct 2020 22:52:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0B993207CD
-	for <linux-pci@archiver.kernel.org>; Sat, 10 Oct 2020 09:15:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 15F4B208C7
+	for <linux-pci@archiver.kernel.org>; Sat, 10 Oct 2020 22:52:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UrufEpvA"
+	dkim=pass (2048-bit key) header.d=hpe.com header.i=@hpe.com header.b="NCoBl+Kc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729004AbgJJJOm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 10 Oct 2020 05:14:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55656 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728491AbgJJJEn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 10 Oct 2020 05:04:43 -0400
-Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 341A0C0613D0;
-        Sat, 10 Oct 2020 02:04:36 -0700 (PDT)
-Received: by mail-wm1-x343.google.com with SMTP id q5so12002760wmq.0;
-        Sat, 10 Oct 2020 02:04:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=obzmRsA49+kN9nLLhhuvco3Uy76XSh6EQ8QxAczkyH4=;
-        b=UrufEpvAYBZDtrrcoVOX9u4Pa8c9JgWK9jAKhwQTprgcMonbFk7+1RbceT8lkr9kIP
-         fuYTOjjvCMYDqJAhfkfTRmeC7Zc24xCU0nUPruSBeKcsfxCOEtGvyxfXjxy5jmR5lwkc
-         4IHuLX5zzEcBwqiI9DYmt7Pnvio6PlgU1NAglSmkpujqdrFo/ydqKh+ij/ZepBzukj84
-         hEjvDSIdfZEXIbNilmASTz0RkWI01lmk4of//xPRrWpPaQkU/TMtBkX2spLA4s/Um91P
-         2ocQRU5XcfHhddSN2aL7H10MrzrCho9B6bdiky5yTbOlyEYG0NheJgihs109l6jO1/yV
-         gJlw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=obzmRsA49+kN9nLLhhuvco3Uy76XSh6EQ8QxAczkyH4=;
-        b=YjaiUOs1/OWZ3WY9TC7xIpMt8gcA+XyC1k8P+0o76GMLBDmqme222zi/MRZyaRHKLV
-         vsJHQjM8uI4fpRX98KhYx5eu/cPcnOGkeHItG4o2vk6OEVPjgJ6HDoueQRAxuYqMQUYx
-         sZbuR8oD7WHoMm5aV3oh2HsQrGpg8FGnJmQmr5bNzMpbfxPwGSgYNYLSCroXWY972vi3
-         ODK3JavlK2GhaWDLZa6uN8jrVPkITmTLOufY6Q3sGnf2VQZhV97paA1RDwKqkxook65A
-         zC0GUzs0lgiMnM3ugc2oiSvyxezOwUoM9f2gnZQL2e6H1A3F1oiOGTKsnMPq7qCdt6ta
-         Fkyg==
-X-Gm-Message-State: AOAM5305Hwy2X5j7APvYoaUdg4s2lMGFrDal5eiJEwe5UMs27UZXYEeX
-        uKthH9xfGb/ttRynDfIT884=
-X-Google-Smtp-Source: ABdhPJyOWCYq8HTIrJ10s9a6rJjjy3r0hgPGOb9G/M5AN/JBrJ/WFJZVlbpWRluU+DZIwA/MsjWUNQ==
-X-Received: by 2002:a1c:2c0a:: with SMTP id s10mr1920266wms.103.1602320673727;
-        Sat, 10 Oct 2020 02:04:33 -0700 (PDT)
-Received: from [192.168.0.66] (cpc83661-brig20-2-0-cust443.3-3.cable.virginm.net. [82.28.105.188])
-        by smtp.gmail.com with ESMTPSA id j17sm15700595wrw.68.2020.10.10.02.04.32
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 10 Oct 2020 02:04:33 -0700 (PDT)
-Subject: Re: [PATCH v2] PCI: keystone: Enable compile-testing on !ARM
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Murali Karicheri <m-karicheri2@ti.com>
-Cc:     Rob Herring <robh@kernel.org>,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        Dilip Kota <eswara.kota@linux.intel.com>,
-        linux-pci@vger.kernel.org, Krzysztof Kozlowski <krzk@kernel.org>,
-        Thierry Reding <treding@nvidia.com>,
-        Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
-        Jonathan Chocron <jonnyc@amazon.com>,
-        linux-riscv@lists.infradead.org,
-        Palmer Dabbelt <palmer@dabbelt.com>,
+        id S1730496AbgJJWvg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 10 Oct 2020 18:51:36 -0400
+Received: from mx0b-002e3701.pphosted.com ([148.163.143.35]:61168 "EHLO
+        mx0b-002e3701.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1731456AbgJJTXQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 10 Oct 2020 15:23:16 -0400
+Received: from pps.filterd (m0148664.ppops.net [127.0.0.1])
+        by mx0b-002e3701.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 09AFGhlb023141;
+        Sat, 10 Oct 2020 15:17:25 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hpe.com; h=from : to : cc : subject
+ : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=pps0720;
+ bh=wSRn6DStJQfrwSTDj+DfXKvQUD8C1Q/aQBRYMzWuv7I=;
+ b=NCoBl+Kc3r3M1kI5Tf+OiPMK2jerC073U7v7rK6SsaWfT36y1gNZJqjvMlGl+cdXdKnN
+ 5ZKDV8NlN8h+Pp2qccw4fqURlBTC9M86I0E2D6b+kgpMEfgCwmZNoyxpv+u2oyphPvHN
+ DOOqhkN9tiUmXvt0WEkIjC5FJcr+4wHjw4q7pPqQl3FGWj7lkzDSIaTDZA3P8wkQ5WdJ
+ HNSAZisK6UzL/6eqyhUu0PV8c0Dyfihy3LNXqTZM5EvSBSEhv4BWatFkwZb6hglQNagF
+ knTtOpwt0zRpDRKoPRSbvweK7AVqOsNg8UJ3Ox/KOnamzuPo4pPtXnn57iCEgZgHQF8A Pg== 
+Received: from g4t3426.houston.hpe.com (g4t3426.houston.hpe.com [15.241.140.75])
+        by mx0b-002e3701.pphosted.com with ESMTP id 34342ujnvs-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Sat, 10 Oct 2020 15:17:25 +0000
+Received: from g4t3433.houston.hpecorp.net (g4t3433.houston.hpecorp.net [16.208.49.245])
+        by g4t3426.houston.hpe.com (Postfix) with ESMTP id 175FF61;
+        Sat, 10 Oct 2020 15:17:25 +0000 (UTC)
+Received: from sarge.linuxathome.me (unknown [16.29.167.198])
+        by g4t3433.houston.hpecorp.net (Postfix) with ESMTP id 4A78D45;
+        Sat, 10 Oct 2020 15:17:23 +0000 (UTC)
+From:   Hedi Berriche <hedi.berriche@hpe.com>
+To:     sathyanarayanan.kuppuswamy@linux.intel.com
+Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        Hedi Berriche <hedi.berriche@hpe.com>,
+        Russ Anderson <rja@hpe.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Vidya Sagar <vidyas@nvidia.com>, linux-kernel@vger.kernel.org,
-        Albert Ou <aou@eecs.berkeley.edu>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-References: <20200906194850.63glbnehjcuw356k@lenovo-laptop>
- <20200906195128.279342-1-alex.dewar90@gmail.com>
- <20200930182138.GA3176461@bogus>
-From:   Alex Dewar <alex.dewar90@gmail.com>
-Message-ID: <91c7c7b5-fc97-325c-7cba-520d99eede9a@gmail.com>
-Date:   Sat, 10 Oct 2020 10:04:12 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.0
+        Ashok Raj <ashok.raj@intel.com>,
+        Joerg Roedel <jroedel@suse.com>, stable@kernel.org
+Subject: [PATCH v3 1/1] PCI/ERR: don't clobber status after reset_link()
+Date:   Sat, 10 Oct 2020 16:16:54 +0100
+Message-Id: <20201010151654.2707914-2-hedi.berriche@hpe.com>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20201010151654.2707914-1-hedi.berriche@hpe.com>
+References: <20201010151654.2707914-1-hedi.berriche@hpe.com>
 MIME-Version: 1.0
-In-Reply-To: <20200930182138.GA3176461@bogus>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-HPE-SCL: -1
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
+ definitions=2020-10-10_07:2020-10-09,2020-10-10 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 mlxlogscore=999
+ clxscore=1015 mlxscore=0 lowpriorityscore=0 adultscore=0 malwarescore=0
+ suspectscore=1 spamscore=0 bulkscore=0 priorityscore=1501 impostorscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2010100143
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 30/09/2020 19:21, Rob Herring wrote:
-> On Sun, 06 Sep 2020 20:51:27 +0100, Alex Dewar wrote:
->> Currently the Keystone driver can only be compile-tested on ARM, but
->> this restriction seems unnecessary. Get rid of it to increase test
->> coverage.
->>
->> Build-tested with allyesconfig on x86, ppc, mips and riscv.
->>
->> Signed-off-by: Alex Dewar <alex.dewar90@gmail.com>
->> ---
->>   drivers/pci/controller/dwc/Kconfig | 4 ++--
->>   1 file changed, 2 insertions(+), 2 deletions(-)
->>
-> Acked-by: Rob Herring <robh@kernel.org>
+Commit 6d2c89441571 ("PCI/ERR: Update error status after reset_link()")
+broke pcie_do_recovery(): updating status after reset_link() has the ill
+side effect of causing recovery to fail if the error status is
+PCI_ERS_RESULT_CAN_RECOVER or PCI_ERS_RESULT_NEED_RESET as the following
+code will *never* run in the case of a successful reset_link()
 
-Ping ping? :-)
+   177         if (status == PCI_ERS_RESULT_CAN_RECOVER) {
+   ...
+   181         }
+
+   183         if (status == PCI_ERS_RESULT_NEED_RESET) {
+   ...
+   192         }
+
+For instance in the case of PCI_ERS_RESULT_NEED_RESET we end up not
+calling ->slot_reset() (because we skip report_slot_reset()) thus
+breaking driver (re)initialisation.
+
+Don't clobber status with the return value of reset_link(); set status
+to PCI_ERS_RESULT_RECOVERED, in case of successful link reset, if and
+only if the initial value of error status is PCI_ERS_RESULT_DISCONNECT
+or PCI_ERS_RESULT_NO_AER_DRIVER.
+
+Fixes: 6d2c89441571 ("PCI/ERR: Update error status after reset_link()")
+Signed-off-by: Hedi Berriche <hedi.berriche@hpe.com>
+Cc: Russ Anderson <rja@hpe.com>
+Cc: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Ashok Raj <ashok.raj@intel.com>
+Cc: Joerg Roedel <jroedel@suse.com>
+
+Cc: stable@kernel.org # v5.7+
+---
+ drivers/pci/pcie/err.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index c543f419d8f9..2730826cfd8a 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -165,10 +165,13 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+ 	pci_dbg(dev, "broadcast error_detected message\n");
+ 	if (state == pci_channel_io_frozen) {
+ 		pci_walk_bus(bus, report_frozen_detected, &status);
+-		status = reset_link(dev);
+-		if (status != PCI_ERS_RESULT_RECOVERED) {
++		if (reset_link(dev) != PCI_ERS_RESULT_RECOVERED) {
+ 			pci_warn(dev, "link reset failed\n");
+ 			goto failed;
++		} else {
++			if (status == PCI_ERS_RESULT_DISCONNECT ||
++			    status == PCI_ERS_RESULT_NO_AER_DRIVER)
++				status = PCI_ERS_RESULT_RECOVERED;
+ 		}
+ 	} else {
+ 		pci_walk_bus(bus, report_normal_detected, &status);
+-- 
+2.28.0
+
