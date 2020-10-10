@@ -7,42 +7,41 @@ X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58454C561F8
-	for <linux-pci@archiver.kernel.org>; Sat, 10 Oct 2020 22:52:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6346C35268
+	for <linux-pci@archiver.kernel.org>; Sat, 10 Oct 2020 22:52:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 15F4B208C7
-	for <linux-pci@archiver.kernel.org>; Sat, 10 Oct 2020 22:52:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 739FD2087D
+	for <linux-pci@archiver.kernel.org>; Sat, 10 Oct 2020 22:52:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=hpe.com header.i=@hpe.com header.b="NCoBl+Kc"
+	dkim=pass (2048-bit key) header.d=hpe.com header.i=@hpe.com header.b="ZC0j+TY6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730496AbgJJWvg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 10 Oct 2020 18:51:36 -0400
-Received: from mx0b-002e3701.pphosted.com ([148.163.143.35]:61168 "EHLO
+        id S1730667AbgJJWvi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 10 Oct 2020 18:51:38 -0400
+Received: from mx0b-002e3701.pphosted.com ([148.163.143.35]:3182 "EHLO
         mx0b-002e3701.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1731456AbgJJTXQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 10 Oct 2020 15:23:16 -0400
+        by vger.kernel.org with ESMTP id S1730327AbgJJWvQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 10 Oct 2020 18:51:16 -0400
 Received: from pps.filterd (m0148664.ppops.net [127.0.0.1])
-        by mx0b-002e3701.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 09AFGhlb023141;
-        Sat, 10 Oct 2020 15:17:25 GMT
+        by mx0b-002e3701.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 09AMGas7000639;
+        Sat, 10 Oct 2020 22:17:08 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hpe.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=pps0720;
  bh=wSRn6DStJQfrwSTDj+DfXKvQUD8C1Q/aQBRYMzWuv7I=;
- b=NCoBl+Kc3r3M1kI5Tf+OiPMK2jerC073U7v7rK6SsaWfT36y1gNZJqjvMlGl+cdXdKnN
- 5ZKDV8NlN8h+Pp2qccw4fqURlBTC9M86I0E2D6b+kgpMEfgCwmZNoyxpv+u2oyphPvHN
- DOOqhkN9tiUmXvt0WEkIjC5FJcr+4wHjw4q7pPqQl3FGWj7lkzDSIaTDZA3P8wkQ5WdJ
- HNSAZisK6UzL/6eqyhUu0PV8c0Dyfihy3LNXqTZM5EvSBSEhv4BWatFkwZb6hglQNagF
- knTtOpwt0zRpDRKoPRSbvweK7AVqOsNg8UJ3Ox/KOnamzuPo4pPtXnn57iCEgZgHQF8A Pg== 
-Received: from g4t3426.houston.hpe.com (g4t3426.houston.hpe.com [15.241.140.75])
-        by mx0b-002e3701.pphosted.com with ESMTP id 34342ujnvs-1
+ b=ZC0j+TY6SR3d9IWNkIYCeIwiq3JGaGNyfOYPLiCK29kLsC4llj6tnYK8tsFQF4e+4RmV
+ 6SDLM1kEKvyRDUjVF5iILf7QBH+J59DaAyFrdDtUV1iILeqfGtLEAVWgNdbfeGvAg8OP
+ S1zhjTHuFTw+IbLOfseC1fH8UagAwTh+jgGHg58uWpMWFr6V7rIV8DzVRJzmodJ+gZn5
+ Yu+CbMeHPM73Hf2OwSru7GZtOIAJFRLTYCAQAv7X+XAm2a7rJVPbJQSQ0rPd1eH5ylYv
+ otjcCWsx4ssLydxq59+37kmmTBrxuKbic8vy1LgbvfWaQN1WFsXRts1fHYyEBnGQh/xa HQ== 
+Received: from g9t5008.houston.hpe.com (g9t5008.houston.hpe.com [15.241.48.72])
+        by mx0b-002e3701.pphosted.com with ESMTP id 34342ukybj-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Sat, 10 Oct 2020 15:17:25 +0000
-Received: from g4t3433.houston.hpecorp.net (g4t3433.houston.hpecorp.net [16.208.49.245])
-        by g4t3426.houston.hpe.com (Postfix) with ESMTP id 175FF61;
-        Sat, 10 Oct 2020 15:17:25 +0000 (UTC)
+        Sat, 10 Oct 2020 22:17:08 +0000
 Received: from sarge.linuxathome.me (unknown [16.29.167.198])
-        by g4t3433.houston.hpecorp.net (Postfix) with ESMTP id 4A78D45;
-        Sat, 10 Oct 2020 15:17:23 +0000 (UTC)
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by g9t5008.houston.hpe.com (Postfix) with ESMTPS id 173FD4F;
+        Sat, 10 Oct 2020 22:17:05 +0000 (UTC)
 From:   Hedi Berriche <hedi.berriche@hpe.com>
 To:     sathyanarayanan.kuppuswamy@linux.intel.com
 Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
@@ -51,12 +50,12 @@ Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
         Bjorn Helgaas <bhelgaas@google.com>,
         Ashok Raj <ashok.raj@intel.com>,
         Joerg Roedel <jroedel@suse.com>, stable@kernel.org
-Subject: [PATCH v3 1/1] PCI/ERR: don't clobber status after reset_link()
-Date:   Sat, 10 Oct 2020 16:16:54 +0100
-Message-Id: <20201010151654.2707914-2-hedi.berriche@hpe.com>
+Subject: [RESEND PATCH v3 1/1] PCI/ERR: don't clobber status after reset_link()
+Date:   Sat, 10 Oct 2020 23:16:53 +0100
+Message-Id: <20201010221653.2782993-2-hedi.berriche@hpe.com>
 X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20201010151654.2707914-1-hedi.berriche@hpe.com>
-References: <20201010151654.2707914-1-hedi.berriche@hpe.com>
+In-Reply-To: <20201010221653.2782993-1-hedi.berriche@hpe.com>
+References: <20201010221653.2782993-1-hedi.berriche@hpe.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-HPE-SCL: -1
@@ -66,7 +65,7 @@ X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishsc
  clxscore=1015 mlxscore=0 lowpriorityscore=0 adultscore=0 malwarescore=0
  suspectscore=1 spamscore=0 bulkscore=0 priorityscore=1501 impostorscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2010100143
+ definitions=main-2010100210
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
