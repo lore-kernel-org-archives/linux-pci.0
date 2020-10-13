@@ -8,62 +8,62 @@ X-Spam-Status: No, score=-20.4 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71DF2C561F8
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E064C5517A
 	for <linux-pci@archiver.kernel.org>; Tue, 13 Oct 2020 02:42:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3C64E221FC
-	for <linux-pci@archiver.kernel.org>; Tue, 13 Oct 2020 02:42:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CABFB221EB
+	for <linux-pci@archiver.kernel.org>; Tue, 13 Oct 2020 02:42:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="CRqhP/uY"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="kWr9Y/fq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727726AbgJMAer (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 12 Oct 2020 20:34:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47830 "EHLO
+        id S1727729AbgJMAej (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 12 Oct 2020 20:34:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47904 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727635AbgJMAdM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Oct 2020 20:33:12 -0400
-Received: from mail-qt1-x84a.google.com (mail-qt1-x84a.google.com [IPv6:2607:f8b0:4864:20::84a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FE3AC0613A7
-        for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2020 17:32:46 -0700 (PDT)
-Received: by mail-qt1-x84a.google.com with SMTP id z12so10337081qto.4
-        for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2020 17:32:46 -0700 (PDT)
+        with ESMTP id S1726564AbgJMAdj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Oct 2020 20:33:39 -0400
+Received: from mail-qv1-xf4a.google.com (mail-qv1-xf4a.google.com [IPv6:2607:f8b0:4864:20::f4a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C578C0613AF
+        for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2020 17:32:51 -0700 (PDT)
+Received: by mail-qv1-xf4a.google.com with SMTP id s8so11703482qvv.18
+        for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2020 17:32:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=sender:date:in-reply-to:message-id:mime-version:references:subject
          :from:to:cc;
-        bh=q9NeEgeJtjuDXz46HWaR2aTcr7U+m+G2Xtw7ZYj0i80=;
-        b=CRqhP/uYxJIvrJ7JFPmz8eieDBpzOaZtoHbS8QXp5nwuPeyuXjSGwF+OiqCNfxI5CI
-         f9yeAi6kntV3Hcb0QAvynqG7PhefhCKc+wf5MgUqjtr36fAj0pAt2fao57QEfV3dPubY
-         qGJERG8RZRx1XLbLQX6q3jLoJmOhxxfuFiNcV2xSqDCoRghQrfZVNu4ZAhFk5CS6GT3/
-         8Pt5+A54/c+NAPCc64rs9VaZY7zwtEz0DPx7y815vR14O2JTyeWKP0oBmk5RkEWaLa7A
-         4TZQZriVb4hxzadVvazocXnBKpQ+glS0GUjQz9+czCuxdUNkAumiLnp2/6AngY9hOLxO
-         KvXg==
+        bh=IWlwO4V8zfIKj2VoQVJSOpIzEd6XIOwNzizfhzYsm+I=;
+        b=kWr9Y/fqtR1gjXlZbCdcFUO5y9KCbBO6doGSE6eV/R4SdmCC/fG0VIYwLLj+OKBwVo
+         t88hxunzWeAhsqD6nX4pMH3NXEN3LQTEHYiul8l16k+sa2iBaYnnGR+mH9hNA4iikAmL
+         fqVb25yRhuLsNSg7v5YJjN/fVyXPqCbeWKnvoXYnl9WCtRWuKoabyI01wNyG9w6/b7UM
+         4pHEaQubfMyOEQT05Qht8Nh3XzDQC3RyvotMkxtCaBQJVlkntTJDfU68nv0YNejU3LJ8
+         DLC87sAOS1Egq4SGIijIlfkUP3DDU2E/gTaUdoloBdFbRBoomS8YvmW0JUlEF9bGUTbb
+         DK5w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:sender:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=q9NeEgeJtjuDXz46HWaR2aTcr7U+m+G2Xtw7ZYj0i80=;
-        b=YQhRnhDieeokYN/pCdPPPlO8JlMPsWI6gqbDfg/dMMzb3C11xOu+QNLj5Tc+OoGyU8
-         N4FdXDxHJXLofAyXwXKa99TMAJpOD7v5qZodFe93R7PUlltwY4JxGM+6DiF4whideGLN
-         1ur/R8q4W1tg2s8bM9zkc0hUXRggENe0Dr2ZKH6Q8k2e+AvCE53aC+R2UmzOm/bbVLoy
-         WZHdPaG+LzJTAr4I7VkoaCnx5AL/an6IpEOdZjXAEBxTLKE/M2YO8FH1oNUK+91/X/5w
-         V+m4Nm/aSbt3WDCiMT+VpxkwUwUbeZIoET81rbPkrdiwwkDOME1PzDWheaBiF27zRuSI
-         i/RA==
-X-Gm-Message-State: AOAM533aOak2ld4lMJxzpYleJiI901EM6FyvoXswJMExgOBdp8Qu1k0f
-        vnN/Mm3zfdtIgAUwxQd9y8KNhineU7G/B4Ud2mw=
-X-Google-Smtp-Source: ABdhPJwNLiDeOTBP4r3W42txfMRPPrerXEwzhxthxcVcHLs0FVIRyeH0/TIJTUqrtTv7hlK+NeLjhdidQu3kmodb/0Q=
+        bh=IWlwO4V8zfIKj2VoQVJSOpIzEd6XIOwNzizfhzYsm+I=;
+        b=VDzLkwtoivSg3P1x3z3Siv6Or/GEBKOw94MSCg04a/Ve2rP2qVt3XzMh8v2yoTH/F6
+         KQuFwVzef5MZhDS4Yk2mVY/HH73GKb0txvN/Cn2ll0rvnHumr0fNmQe92vmCy4b0uSyC
+         aORX5O4d6WrwtNCR/2wx5C5oRB9lMJXSIm2k/4wDvtcqYhFbrVlvaS7/fOdewc8a9KeH
+         8kSsFDXbNMiJlkpxyhoNC10FgjshgEjHHhiykOgQBnHNEtd/qkGlButKqyaAhmRNXOVd
+         EJiHa1sOAvWuSP00EHY1VXfIK9ppF8xB8mRyRnGhwD+AuDOFyZlvsWrOKHqM7I7Xo6AJ
+         q2qg==
+X-Gm-Message-State: AOAM530F2SPYg6n7CLieJfpifOu3/hjR0ikh0f0mNYa89czdfVvDTLjB
+        xlvVsE9WN9YhtIOIZbT6P+q1VNsRf9FUL4MUGtI=
+X-Google-Smtp-Source: ABdhPJxmlU/A1sroaipRnUbPqUCXYyj5EeYMFDk9TnoZTSUFb4GItjuig8hO655sUorVd0VW8HG+pUfRKD2TGlP3Uv4=
 Sender: "samitolvanen via sendgmr" 
         <samitolvanen@samitolvanen1.mtv.corp.google.com>
 X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:f693:9fff:fef4:1b6d])
- (user=samitolvanen job=sendgmr) by 2002:a0c:c548:: with SMTP id
- y8mr20871526qvi.41.1602549165345; Mon, 12 Oct 2020 17:32:45 -0700 (PDT)
-Date:   Mon, 12 Oct 2020 17:31:56 -0700
+ (user=samitolvanen job=sendgmr) by 2002:ad4:4f46:: with SMTP id
+ eu6mr28230471qvb.9.1602549170292; Mon, 12 Oct 2020 17:32:50 -0700 (PDT)
+Date:   Mon, 12 Oct 2020 17:31:58 -0700
 In-Reply-To: <20201013003203.4168817-1-samitolvanen@google.com>
-Message-Id: <20201013003203.4168817-19-samitolvanen@google.com>
+Message-Id: <20201013003203.4168817-21-samitolvanen@google.com>
 Mime-Version: 1.0
 References: <20201013003203.4168817-1-samitolvanen@google.com>
 X-Mailer: git-send-email 2.28.0.1011.ga647a8990f-goog
-Subject: [PATCH v6 18/25] modpost: lto: strip .lto from module names
+Subject: [PATCH v6 20/25] efi/libstub: disable LTO
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Masahiro Yamada <masahiroy@kernel.org>,
         Steven Rostedt <rostedt@goodmis.org>
@@ -83,115 +83,29 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-With LTO, everything is compiled into LLVM bitcode, so we have to link
-each module into native code before modpost. Kbuild uses the .lto.o
-suffix for these files, which also ends up in module information. This
-change strips the unnecessary .lto suffix from the module name.
+With CONFIG_LTO_CLANG, we produce LLVM bitcode instead of ELF object
+files. Since LTO is not really needed here and the Makefile assumes we
+produce an object file, disable LTO for libstub.
 
-Suggested-by: Bill Wendling <morbo@google.com>
 Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
 Reviewed-by: Kees Cook <keescook@chromium.org>
 ---
- scripts/mod/modpost.c    | 16 +++++++---------
- scripts/mod/modpost.h    |  9 +++++++++
- scripts/mod/sumversion.c |  6 +++++-
- 3 files changed, 21 insertions(+), 10 deletions(-)
+ drivers/firmware/efi/libstub/Makefile | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/scripts/mod/modpost.c b/scripts/mod/modpost.c
-index 69341b36f271..5a329df55cc3 100644
---- a/scripts/mod/modpost.c
-+++ b/scripts/mod/modpost.c
-@@ -17,7 +17,6 @@
- #include <ctype.h>
- #include <string.h>
- #include <limits.h>
--#include <stdbool.h>
- #include <errno.h>
- #include "modpost.h"
- #include "../../include/linux/license.h"
-@@ -80,14 +79,6 @@ modpost_log(enum loglevel loglevel, const char *fmt, ...)
- 		exit(1);
- }
+diff --git a/drivers/firmware/efi/libstub/Makefile b/drivers/firmware/efi/libstub/Makefile
+index 0c911e391d75..e927876f3a05 100644
+--- a/drivers/firmware/efi/libstub/Makefile
++++ b/drivers/firmware/efi/libstub/Makefile
+@@ -36,6 +36,8 @@ KBUILD_CFLAGS			:= $(cflags-y) -Os -DDISABLE_BRANCH_PROFILING \
  
--static inline bool strends(const char *str, const char *postfix)
--{
--	if (strlen(str) < strlen(postfix))
--		return false;
--
--	return strcmp(str + strlen(str) - strlen(postfix), postfix) == 0;
--}
--
- void *do_nofail(void *ptr, const char *expr)
- {
- 	if (!ptr)
-@@ -1984,6 +1975,10 @@ static char *remove_dot(char *s)
- 		size_t m = strspn(s + n + 1, "0123456789");
- 		if (m && (s[n + m] == '.' || s[n + m] == 0))
- 			s[n] = 0;
-+
-+		/* strip trailing .lto */
-+		if (strends(s, ".lto"))
-+			s[strlen(s) - 4] = '\0';
- 	}
- 	return s;
- }
-@@ -2007,6 +2002,9 @@ static void read_symbols(const char *modname)
- 		/* strip trailing .o */
- 		tmp = NOFAIL(strdup(modname));
- 		tmp[strlen(tmp) - 2] = '\0';
-+		/* strip trailing .lto */
-+		if (strends(tmp, ".lto"))
-+			tmp[strlen(tmp) - 4] = '\0';
- 		mod = new_module(tmp);
- 		free(tmp);
- 	}
-diff --git a/scripts/mod/modpost.h b/scripts/mod/modpost.h
-index 3aa052722233..fab30d201f9e 100644
---- a/scripts/mod/modpost.h
-+++ b/scripts/mod/modpost.h
-@@ -2,6 +2,7 @@
- #include <stdio.h>
- #include <stdlib.h>
- #include <stdarg.h>
-+#include <stdbool.h>
- #include <string.h>
- #include <sys/types.h>
- #include <sys/stat.h>
-@@ -180,6 +181,14 @@ static inline unsigned int get_secindex(const struct elf_info *info,
- 	return info->symtab_shndx_start[sym - info->symtab_start];
- }
+ # remove SCS flags from all objects in this directory
+ KBUILD_CFLAGS := $(filter-out $(CC_FLAGS_SCS), $(KBUILD_CFLAGS))
++# disable LTO
++KBUILD_CFLAGS := $(filter-out $(CC_FLAGS_LTO), $(KBUILD_CFLAGS))
  
-+static inline bool strends(const char *str, const char *postfix)
-+{
-+	if (strlen(str) < strlen(postfix))
-+		return false;
-+
-+	return strcmp(str + strlen(str) - strlen(postfix), postfix) == 0;
-+}
-+
- /* file2alias.c */
- extern unsigned int cross_build;
- void handle_moddevtable(struct module *mod, struct elf_info *info,
-diff --git a/scripts/mod/sumversion.c b/scripts/mod/sumversion.c
-index d587f40f1117..760e6baa7eda 100644
---- a/scripts/mod/sumversion.c
-+++ b/scripts/mod/sumversion.c
-@@ -391,10 +391,14 @@ void get_src_version(const char *modname, char sum[], unsigned sumlen)
- 	struct md4_ctx md;
- 	char *fname;
- 	char filelist[PATH_MAX + 1];
-+	int postfix_len = 1;
-+
-+	if (strends(modname, ".lto.o"))
-+		postfix_len = 5;
- 
- 	/* objects for a module are listed in the first line of *.mod file. */
- 	snprintf(filelist, sizeof(filelist), "%.*smod",
--		 (int)strlen(modname) - 1, modname);
-+		 (int)strlen(modname) - postfix_len, modname);
- 
- 	buf = read_text_file(filelist);
- 
+ GCOV_PROFILE			:= n
+ # Sanitizer runtimes are unavailable and cannot be linked here.
 -- 
 2.28.0.1011.ga647a8990f-goog
 
