@@ -8,63 +8,62 @@ X-Spam-Status: No, score=-20.4 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39926C388EC
-	for <linux-pci@archiver.kernel.org>; Tue, 13 Oct 2020 02:41:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB048C5517B
+	for <linux-pci@archiver.kernel.org>; Tue, 13 Oct 2020 02:41:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DFE5F21D81
-	for <linux-pci@archiver.kernel.org>; Tue, 13 Oct 2020 02:41:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A282221D7F
+	for <linux-pci@archiver.kernel.org>; Tue, 13 Oct 2020 02:41:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="IdXB04m+"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="UJ5mCWL1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727297AbgJMAcX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 12 Oct 2020 20:32:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47724 "EHLO
+        id S1727438AbgJMAcc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 12 Oct 2020 20:32:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47782 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727250AbgJMAcT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Oct 2020 20:32:19 -0400
-Received: from mail-pf1-x44a.google.com (mail-pf1-x44a.google.com [IPv6:2607:f8b0:4864:20::44a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8EB7C0613D5
-        for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2020 17:32:17 -0700 (PDT)
-Received: by mail-pf1-x44a.google.com with SMTP id x24so13743394pfi.18
-        for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2020 17:32:17 -0700 (PDT)
+        with ESMTP id S1727378AbgJMAc0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Oct 2020 20:32:26 -0400
+Received: from mail-yb1-xb49.google.com (mail-yb1-xb49.google.com [IPv6:2607:f8b0:4864:20::b49])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75A7CC0613D9
+        for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2020 17:32:26 -0700 (PDT)
+Received: by mail-yb1-xb49.google.com with SMTP id r75so19188618ybc.20
+        for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2020 17:32:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=sender:date:in-reply-to:message-id:mime-version:references:subject
          :from:to:cc;
-        bh=xL7tn5bk8rd7QhzERnW5XDCxrWNQLuaGbP7lLdALs6Y=;
-        b=IdXB04m+VIhq9Ywfk+Q6SdQxAtxltKDIhWNIfo+jhdLwgrlbdcpJkCD1dg60k4KicG
-         1IgqLYFzJP4YEVrqWrx9pldSCsrIUIQZ+WBgBNy02BbQgKQE7dyYmjEiSSvKFbyI2xXj
-         TV/V2tWK25kaN3vgAN5S+M0sENDBoc3aH1FQDGeTof6qqw+rbjH3bLU8q4fusukkB6D6
-         mAux60p4YIG3jSjYIx2pWv96v7XCJ9hy4Ka8a16xDIx9CMpYSDwuHtmOn9Zpz0sBYoxo
-         n76+DpbDHdACleamKfcxERH+Pqgb3G4b5AAOxxW5ydqXddcuIHi5FDSPpeBjiqI6FIaq
-         F5XQ==
+        bh=8bp3PQ/7kK50N/SyZEDvRd1Vp9NoLqhW+sLCA5D6N8E=;
+        b=UJ5mCWL1fFmQ+PxULb9p87s0nqFxM+BepZ4cTj/3K/9Rl3+R69U63Qoo7kbjpQJmLF
+         fe6htCxpHb5pvdMiMW7w4jfVTIc0MjpjYYrgO7qtJrxEcZluiiuQ4CilOc6suei2x16J
+         ZyAV+xCVkwBYu4Ypv3PNkoRqnUEeD3oVuV25mZ/ZMBu+EeLJ8WEFNae5g2/awFDSCZgp
+         hbWfhNOdCEgE4Orq6FyUsLEX8fGkRh/PRZNh5ngDsRLmToIgltIDpU1+UVeeaBKUU/SH
+         2G0ccI3U01Zj6y5PdlF4BC4DIc7g6ih08EXhvn4pV3U8TiwtHluquziLm/T5nfcBgQ/A
+         E3Bg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:sender:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=xL7tn5bk8rd7QhzERnW5XDCxrWNQLuaGbP7lLdALs6Y=;
-        b=h67As2cpB7ymH4jgEcF7LD7WsTK8MKGN3XbTWfRkZ9sHlUQcJLtuYUdfetIjpoJ1Fm
-         Z01vKmLv2NMFzKjj6af27D6UPcndKVDcCMfpWLh9NaBzwUmsPxR+cZXh3R4JkOUj90gJ
-         lg52/ylKcp/QfK8+EK2Iq//3/0fOP4DZwWTgKbMy9otLIKGuVZouw3SZD8GBMbaKB1+J
-         K6w9BZYy/L8cyhFJXTrC+pq/LtN5jip3AUNvMOBMsLWN/w1aTPkCiUUGwN4hbA/LtRog
-         FMGEeBXkyeVRWYPy2H3a6DRhndNqdjtmQGsQQ9lE2Rob861Mp40qri42f5OOFovmH2xb
-         ZQXw==
-X-Gm-Message-State: AOAM531HGJUf+6bnTMzltNJo9RGBrhze5V0KwahrmF8z0dUuRNbvUfzt
-        P45k+JZbAEMuVNsL6CXZsXfOCla9oi+yOPoVn5o=
-X-Google-Smtp-Source: ABdhPJzmHD4XCersd5eY8ZPVkbKw3ea3PfM0fSiP3AGN8FM08tkamilxzFI74ZhTfsYbcW37PW4YYLWgNBpJiUusVu4=
+        bh=8bp3PQ/7kK50N/SyZEDvRd1Vp9NoLqhW+sLCA5D6N8E=;
+        b=P+Ye285PtAPyuENX18+TmL3BYLYFfOLZ9zEXyQLaLh9X6bzDBf/05JFS3jA/X8fMgM
+         lYgqwBqW5xhdRxoKTwDJ+a70zDrWwGHenfsvpUeSvI/hIu6qEml0tkEalbYnIQXByiId
+         ZRN9wP3T32jMJjMEi+fAMpAhQ9iFvYN46aJNjwppl7rW1Ow4Ax4N9kOM63Us79Wl6f5p
+         P5OWwaOII34nb3sX/Whb6URiSRAzByZr4ELCK41dNa5eg7Y/WHHFG00JC8ufmjitd4U1
+         4gSv7Oc6cVmmNIHqb/R1RQXiKeGO42Gz6D/hnKKUInH0u3xJi4zJVjMAQTGJnbzd28+B
+         1Nnw==
+X-Gm-Message-State: AOAM533k5ga6yN0EFXi1kTZzGF7s40ifxenl89UMSfMDUPFPzGvEdC87
+        34b6QViN8L0mbPDJSN7yZBEHZGyP2ysdjO9q5DM=
+X-Google-Smtp-Source: ABdhPJyaKJlnl73Nam7qP2rlTKBQqyq7hNelqtAXX2QbINkl92Xg8gdjjbAPMWIDS85cwQxWAerS5XsHH4+zdwdv4nw=
 Sender: "samitolvanen via sendgmr" 
         <samitolvanen@samitolvanen1.mtv.corp.google.com>
 X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:f693:9fff:fef4:1b6d])
- (user=samitolvanen job=sendgmr) by 2002:aa7:9a87:0:b029:156:5806:b478 with
- SMTP id w7-20020aa79a870000b02901565806b478mr3079925pfi.8.1602549137181; Mon,
- 12 Oct 2020 17:32:17 -0700 (PDT)
-Date:   Mon, 12 Oct 2020 17:31:44 -0700
+ (user=samitolvanen job=sendgmr) by 2002:a25:5f4f:: with SMTP id
+ h15mr34686955ybm.407.1602549145672; Mon, 12 Oct 2020 17:32:25 -0700 (PDT)
+Date:   Mon, 12 Oct 2020 17:31:48 -0700
 In-Reply-To: <20201013003203.4168817-1-samitolvanen@google.com>
-Message-Id: <20201013003203.4168817-7-samitolvanen@google.com>
+Message-Id: <20201013003203.4168817-11-samitolvanen@google.com>
 Mime-Version: 1.0
 References: <20201013003203.4168817-1-samitolvanen@google.com>
 X-Mailer: git-send-email 2.28.0.1011.ga647a8990f-goog
-Subject: [PATCH v6 06/25] x86, build: use objtool mcount
+Subject: [PATCH v6 10/25] objtool: Split noinstr validation from --vmlinux
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Masahiro Yamada <masahiroy@kernel.org>,
         Steven Rostedt <rostedt@goodmis.org>
@@ -84,28 +83,79 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Select HAVE_OBJTOOL_MCOUNT if STACK_VALIDATION is selected to use
-objtool to generate __mcount_loc sections for dynamic ftrace with
-Clang and gcc <5 (later versions of gcc use -mrecord-mcount).
+This change adds a --noinstr flag to objtool to allow us to specify
+that we're processing vmlinux.o without also enabling noinstr
+validation. This is needed to avoid false positives with LTO when we
+run objtool on vmlinux.o without CONFIG_DEBUG_ENTRY.
 
 Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
-Reviewed-by: Kees Cook <keescook@chromium.org>
 ---
- arch/x86/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
+ scripts/link-vmlinux.sh       | 2 +-
+ tools/objtool/builtin-check.c | 3 ++-
+ tools/objtool/builtin.h       | 2 +-
+ tools/objtool/check.c         | 2 +-
+ 4 files changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 5e832fd520b5..6d67646153bc 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -163,6 +163,7 @@ config X86
- 	select HAVE_CMPXCHG_LOCAL
- 	select HAVE_CONTEXT_TRACKING		if X86_64
- 	select HAVE_C_RECORDMCOUNT
-+	select HAVE_OBJTOOL_MCOUNT		if STACK_VALIDATION
- 	select HAVE_DEBUG_KMEMLEAK
- 	select HAVE_DMA_CONTIGUOUS
- 	select HAVE_DYNAMIC_FTRACE
+diff --git a/scripts/link-vmlinux.sh b/scripts/link-vmlinux.sh
+index 1a48ef525f46..5ace1dc43993 100755
+--- a/scripts/link-vmlinux.sh
++++ b/scripts/link-vmlinux.sh
+@@ -92,7 +92,7 @@ objtool_link()
+ 	local objtoolopt;
+ 
+ 	if [ -n "${CONFIG_VMLINUX_VALIDATION}" ]; then
+-		objtoolopt="check --vmlinux"
++		objtoolopt="check --vmlinux --noinstr"
+ 		if [ -z "${CONFIG_FRAME_POINTER}" ]; then
+ 			objtoolopt="${objtoolopt} --no-fp"
+ 		fi
+diff --git a/tools/objtool/builtin-check.c b/tools/objtool/builtin-check.c
+index facfc10bc5dc..b84cdc72b51f 100644
+--- a/tools/objtool/builtin-check.c
++++ b/tools/objtool/builtin-check.c
+@@ -18,7 +18,7 @@
+ #include "builtin.h"
+ #include "objtool.h"
+ 
+-bool no_fp, no_unreachable, retpoline, module, backtrace, uaccess, stats, validate_dup, vmlinux, mcount;
++bool no_fp, no_unreachable, retpoline, module, backtrace, uaccess, stats, validate_dup, vmlinux, mcount, noinstr;
+ 
+ static const char * const check_usage[] = {
+ 	"objtool check [<options>] file.o",
+@@ -34,6 +34,7 @@ const struct option check_options[] = {
+ 	OPT_BOOLEAN('a', "uaccess", &uaccess, "enable uaccess checking"),
+ 	OPT_BOOLEAN('s', "stats", &stats, "print statistics"),
+ 	OPT_BOOLEAN('d', "duplicate", &validate_dup, "duplicate validation for vmlinux.o"),
++	OPT_BOOLEAN('n', "noinstr", &noinstr, "noinstr validation for vmlinux.o"),
+ 	OPT_BOOLEAN('l', "vmlinux", &vmlinux, "vmlinux.o validation"),
+ 	OPT_BOOLEAN('M', "mcount", &mcount, "generate __mcount_loc"),
+ 	OPT_END(),
+diff --git a/tools/objtool/builtin.h b/tools/objtool/builtin.h
+index 94565a72b701..2502bb27de17 100644
+--- a/tools/objtool/builtin.h
++++ b/tools/objtool/builtin.h
+@@ -8,7 +8,7 @@
+ #include <subcmd/parse-options.h>
+ 
+ extern const struct option check_options[];
+-extern bool no_fp, no_unreachable, retpoline, module, backtrace, uaccess, stats, validate_dup, vmlinux, mcount;
++extern bool no_fp, no_unreachable, retpoline, module, backtrace, uaccess, stats, validate_dup, vmlinux, mcount, noinstr;
+ 
+ extern int cmd_check(int argc, const char **argv);
+ extern int cmd_orc(int argc, const char **argv);
+diff --git a/tools/objtool/check.c b/tools/objtool/check.c
+index c39c4d2b432a..c216dd4d662c 100644
+--- a/tools/objtool/check.c
++++ b/tools/objtool/check.c
+@@ -244,7 +244,7 @@ static void init_insn_state(struct insn_state *state, struct section *sec)
+ 	 * not correctly determine insn->call_dest->sec (external symbols do
+ 	 * not have a section).
+ 	 */
+-	if (vmlinux && sec)
++	if (vmlinux && noinstr && sec)
+ 		state->noinstr = sec->noinstr;
+ }
+ 
 -- 
 2.28.0.1011.ga647a8990f-goog
 
