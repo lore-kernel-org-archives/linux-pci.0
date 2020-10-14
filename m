@@ -1,82 +1,166 @@
-Return-Path: <SRS0=fShW=DV=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=n3kO=DW=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79A6AC43457
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Oct 2020 18:21:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCBB5C433E7
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Oct 2020 01:19:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 142D222248
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Oct 2020 18:21:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 99B3322258
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Oct 2020 01:19:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="icPeuHkh"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="QpUrFNEH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729318AbgJNSVs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 14 Oct 2020 14:21:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39222 "EHLO
+        id S2388335AbgJOBTk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 14 Oct 2020 21:19:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47406 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726830AbgJNSVs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Oct 2020 14:21:48 -0400
-Received: from merlin.infradead.org (merlin.infradead.org [IPv6:2001:8b0:10b:1231::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC9E4C061755;
-        Wed, 14 Oct 2020 11:21:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=merlin.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=4D+6T/0Jyivj7fxKw3DZP3bEv4Hi+6DaIRYNjOGogQc=; b=icPeuHkhwm/7g2D5K7SjNoPM5s
-        al/it2gTFcFnA3j1b1bbGIvp9LTWyagOXzUN5jvmI0GDPi6ml4eD0d52R2OwRtyKSvCS+k4demdSu
-        VT5KGDheTz5gEsE3WBJE9K02m+nLco4ZktkKbpuxeQdHPW3/i9FtrGhn6R3XCDKJQd/onhJsK73W4
-        LKhukfnTNYT9ZUzSX6bJ/yNVJYi9sFnQkAK2Ap4gEoxUpX3920FOVTde0jJ7FAsLgwsBb9awOT8wF
-        J2wNgf1SGp7lO6tY4adBbux1qDforNMyg6G3iWIsLIfBozBc0lW3wPEQ/gxl/dF/llRv6F8wwIxxm
-        oZgiXiXg==;
-Received: from j217100.upc-j.chello.nl ([24.132.217.100] helo=noisy.programming.kicks-ass.net)
-        by merlin.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kSlOq-0004TS-Kg; Wed, 14 Oct 2020 18:21:20 +0000
-Received: from hirez.programming.kicks-ass.net (hirez.programming.kicks-ass.net [192.168.1.225])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client did not present a certificate)
-        by noisy.programming.kicks-ass.net (Postfix) with ESMTPS id 402B0300DAE;
-        Wed, 14 Oct 2020 20:21:15 +0200 (CEST)
-Received: by hirez.programming.kicks-ass.net (Postfix, from userid 1000)
-        id 23F3520696FD8; Wed, 14 Oct 2020 20:21:15 +0200 (CEST)
-Date:   Wed, 14 Oct 2020 20:21:15 +0200
-From:   Peter Zijlstra <peterz@infradead.org>
-To:     Ingo Molnar <mingo@kernel.org>
+        with ESMTP id S2388267AbgJOBTj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Oct 2020 21:19:39 -0400
+Received: from mail-pj1-x1041.google.com (mail-pj1-x1041.google.com [IPv6:2607:f8b0:4864:20::1041])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 718A8C05110A
+        for <linux-pci@vger.kernel.org>; Wed, 14 Oct 2020 15:54:01 -0700 (PDT)
+Received: by mail-pj1-x1041.google.com with SMTP id p21so594841pju.0
+        for <linux-pci@vger.kernel.org>; Wed, 14 Oct 2020 15:54:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=Q8SxKFJ37keEA3fcjeZ0MUjIlmAhyy2Ds4RMjo12YH0=;
+        b=QpUrFNEHB+eD+KCRl2HFxnlSp1vyTwWjRHJ5V7CaCjVOqpSlZIknEXyWQPVpbQ+cM1
+         3i42ZiG9dAhIxqD8odiXtSLMX3J6wsygKL5cMccgJlHcYjee0k8wg7sSqGzv5GnU6ZI3
+         skUQeZ1p5r7C9RZcDY+bIpWwe/Uz2In5VWAfQ=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=Q8SxKFJ37keEA3fcjeZ0MUjIlmAhyy2Ds4RMjo12YH0=;
+        b=BWQ2b/N8enh4cbxZZE2+esTfMRxvVvZg9xJT7PN54QomrC7Fri+uvS51CP6FrUd+30
+         4AiX2Ef3NR1DHsJsTIynadxJYvZHmIxGVYdTd/zFGhqevgs5wGiLqcWqMA2j9KKFSPIo
+         rCiVjxLxkITh93O2Vz6NRN99PdDgEy0bJda0seHx597OQSkF/vGrVhK00QBX0gwxvSoO
+         p49OJbFDYnHYeYtZ2Popnk3va52kfnffFxxdEUEfn3nfAWlU02Gobf2DlCuBFP+YTClu
+         /TNljbsU/CTG7TosrT1dL7DFtioPt7gPl97CpDBVqFZiyW34Q9y/Enc9sKRXKJePL4FC
+         EDow==
+X-Gm-Message-State: AOAM53081FwqI7NG+06kXKDDFZxlJXOBtzjYnsm7lHCdBqer9jsAW45d
+        NggGHDjLkA5PO5rQv/PPCrQgNg==
+X-Google-Smtp-Source: ABdhPJwJ4ghnrKefm3Ds7OP+vaaqBOqNCgcbWcY/kWoZDzqVnqAP2a2SLXiCE9xOBsgOh/pHszIHUg==
+X-Received: by 2002:a17:90a:cb91:: with SMTP id a17mr1300337pju.220.1602716041061;
+        Wed, 14 Oct 2020 15:54:01 -0700 (PDT)
+Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
+        by smtp.gmail.com with ESMTPSA id k11sm643943pjs.18.2020.10.14.15.53.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 14 Oct 2020 15:54:00 -0700 (PDT)
+Date:   Wed, 14 Oct 2020 15:53:59 -0700
+From:   Kees Cook <keescook@chromium.org>
+To:     Masahiro Yamada <masahiroy@kernel.org>
 Cc:     Sami Tolvanen <samitolvanen@google.com>,
-        Masahiro Yamada <masahiroy@kernel.org>,
         Steven Rostedt <rostedt@goodmis.org>,
         Will Deacon <will@kernel.org>,
+        Peter Zijlstra <peterz@infradead.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         "Paul E. McKenney" <paulmck@kernel.org>,
-        Kees Cook <keescook@chromium.org>,
         Nick Desaulniers <ndesaulniers@google.com>,
         clang-built-linux@googlegroups.com,
         kernel-hardening@lists.openwall.com, linux-arch@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-kbuild@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        x86@kernel.org, Josh Poimboeuf <jpoimboe@redhat.com>
-Subject: Re: [PATCH v6 02/25] objtool: Add a pass for generating __mcount_loc
-Message-ID: <20201014182115.GF2594@hirez.programming.kicks-ass.net>
+        x86@kernel.org
+Subject: Re: [PATCH v6 16/25] init: lto: fix PREL32 relocations
+Message-ID: <202010141552.9172003F6A@keescook>
 References: <20201013003203.4168817-1-samitolvanen@google.com>
- <20201013003203.4168817-3-samitolvanen@google.com>
- <20201014165004.GA3593121@gmail.com>
+ <20201013003203.4168817-17-samitolvanen@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201014165004.GA3593121@gmail.com>
+In-Reply-To: <20201013003203.4168817-17-samitolvanen@google.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Oct 14, 2020 at 06:50:04PM +0200, Ingo Molnar wrote:
-> Meh, adding --mcount as an option to 'objtool check' was a valid hack for a 
-> prototype patchset, but please turn this into a proper subcommand, just 
-> like 'objtool orc' is.
+On Mon, Oct 12, 2020 at 05:31:54PM -0700, Sami Tolvanen wrote:
+> With LTO, the compiler can rename static functions to avoid global
+> naming collisions. As initcall functions are typically static,
+> renaming can break references to them in inline assembly. This
+> change adds a global stub with a stable name for each initcall to
+> fix the issue when PREL32 relocations are used.
 > 
-> 'objtool check' should ... keep checking. :-)
+> Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
+> Reviewed-by: Kees Cook <keescook@chromium.org>
 
-No, no subcommands. orc being a subcommand was a mistake.
+This is another independent improvement... this could land before the
+other portions of the series.
+
+-Kees
+
+> ---
+>  include/linux/init.h | 31 +++++++++++++++++++++++++++----
+>  1 file changed, 27 insertions(+), 4 deletions(-)
+> 
+> diff --git a/include/linux/init.h b/include/linux/init.h
+> index af638cd6dd52..cea63f7e7705 100644
+> --- a/include/linux/init.h
+> +++ b/include/linux/init.h
+> @@ -209,26 +209,49 @@ extern bool initcall_debug;
+>   */
+>  #define __initcall_section(__sec, __iid)			\
+>  	#__sec ".init.." #__iid
+> +
+> +/*
+> + * With LTO, the compiler can rename static functions to avoid
+> + * global naming collisions. We use a global stub function for
+> + * initcalls to create a stable symbol name whose address can be
+> + * taken in inline assembly when PREL32 relocations are used.
+> + */
+> +#define __initcall_stub(fn, __iid, id)				\
+> +	__initcall_name(initstub, __iid, id)
+> +
+> +#define __define_initcall_stub(__stub, fn)			\
+> +	int __init __stub(void);				\
+> +	int __init __stub(void)					\
+> +	{ 							\
+> +		return fn();					\
+> +	}							\
+> +	__ADDRESSABLE(__stub)
+>  #else
+>  #define __initcall_section(__sec, __iid)			\
+>  	#__sec ".init"
+> +
+> +#define __initcall_stub(fn, __iid, id)	fn
+> +
+> +#define __define_initcall_stub(__stub, fn)			\
+> +	__ADDRESSABLE(fn)
+>  #endif
+>  
+>  #ifdef CONFIG_HAVE_ARCH_PREL32_RELOCATIONS
+> -#define ____define_initcall(fn, __name, __sec)			\
+> -	__ADDRESSABLE(fn)					\
+> +#define ____define_initcall(fn, __stub, __name, __sec)		\
+> +	__define_initcall_stub(__stub, fn)			\
+>  	asm(".section	\"" __sec "\", \"a\"		\n"	\
+>  	    __stringify(__name) ":			\n"	\
+> -	    ".long	" #fn " - .			\n"	\
+> +	    ".long	" __stringify(__stub) " - .	\n"	\
+>  	    ".previous					\n");
+>  #else
+> -#define ____define_initcall(fn, __name, __sec)			\
+> +#define ____define_initcall(fn, __unused, __name, __sec)	\
+>  	static initcall_t __name __used 			\
+>  		__attribute__((__section__(__sec))) = fn;
+>  #endif
+>  
+>  #define __unique_initcall(fn, id, __sec, __iid)			\
+>  	____define_initcall(fn,					\
+> +		__initcall_stub(fn, __iid, id),			\
+>  		__initcall_name(initcall, __iid, id),		\
+>  		__initcall_section(__sec, __iid))
+>  
+> -- 
+> 2.28.0.1011.ga647a8990f-goog
+> 
+
+-- 
+Kees Cook
