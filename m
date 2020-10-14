@@ -2,74 +2,75 @@ Return-Path: <SRS0=fShW=DV=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD7EBC433DF
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Oct 2020 00:03:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5278EC433E7
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Oct 2020 05:51:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A0C4320776
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Oct 2020 00:03:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 07E6B2222A
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Oct 2020 05:51:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728604AbgJNAD3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 13 Oct 2020 20:03:29 -0400
-Received: from mga07.intel.com ([134.134.136.100]:4327 "EHLO mga07.intel.com"
+        id S1727849AbgJNFv5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 14 Oct 2020 01:51:57 -0400
+Received: from mga09.intel.com ([134.134.136.24]:12505 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727818AbgJNAD3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Oct 2020 20:03:29 -0400
-IronPort-SDR: B19hEfRlx4DWILPVtWpIxa0a+mBOibJxULlkCVVl8hUhHd0rzs7aaS78ei3SdoRdzvphBH9AdM
- 1PS8eQSmSkzA==
-X-IronPort-AV: E=McAfee;i="6000,8403,9773"; a="230182649"
-X-IronPort-AV: E=Sophos;i="5.77,372,1596524400"; 
-   d="scan'208";a="230182649"
+        id S1725983AbgJNFv5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 14 Oct 2020 01:51:57 -0400
+IronPort-SDR: XN6jSVruBduUaZ12g5ErPYESO8tYCco70IgSqPq99DhW63Nh04FDXdUs85IQoiPdWaGoUcJUn7
+ FBua66Z963rQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9773"; a="166159740"
+X-IronPort-AV: E=Sophos;i="5.77,373,1596524400"; 
+   d="scan'208";a="166159740"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Oct 2020 17:03:29 -0700
-IronPort-SDR: QQYsMQkp6aGb7Gxor4Si6Ivc0eI7iuHZyFDcA3HB7qdu3AwfAWhGMhUnMD3Fv2GBOGvZIb1hfD
- VDAvvkTe1jnw==
-X-IronPort-AV: E=Sophos;i="5.77,372,1596524400"; 
-   d="scan'208";a="313990880"
-Received: from otc-nc-03.jf.intel.com (HELO otc-nc-03) ([10.54.39.36])
-  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Oct 2020 17:03:29 -0700
-Date:   Tue, 13 Oct 2020 17:03:28 -0700
-From:   "Raj, Ashok" <ashok.raj@intel.com>
-To:     Kuppuswamy Sathyanarayanan <sathyanarayanan.nkuppuswamy@gmail.com>
-Cc:     bhelgaas@google.com, okaya@kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        sathyanarayanan.kuppuswamy@linux.intel.com,
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Oct 2020 22:51:56 -0700
+IronPort-SDR: sVsJXTI7dB54zNeQbmq28Lv8bYlyPQ7lkw+lxcLlGNWwN/HzJc1Sg//7kXCIUc40CxIkzgNlUj
+ o8qQDyLD09iQ==
+X-IronPort-AV: E=Sophos;i="5.77,373,1596524400"; 
+   d="scan'208";a="314054422"
+Received: from isgomez-mobl.amr.corp.intel.com (HELO [10.252.133.97]) ([10.252.133.97])
+  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Oct 2020 22:51:56 -0700
+Subject: Re: [PATCH v4 2/2] PCI/ERR: Split the fatal and non-fatal error
+ recovery handling
+To:     Ethan Zhao <xerces.zhao@gmail.com>,
+        sathyanarayanan.nkuppuswamy@gmail.com
+Cc:     Bjorn Helgaas <bhelgaas@google.com>, Sinan Kaya <okaya@kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         Ashok Raj <ashok.raj@intel.com>
-Subject: Re: [PATCH v5 1/2] PCI/ERR: Call pci_bus_reset() before calling
- ->slot_reset() callback
-Message-ID: <20201014000327.GA94232@otc-nc-03>
-References: <162495c76c391de6e021919e2b69c5cd2dbbc22a.1602632140.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+References: <5c5bca0bdb958e456176fe6ede10ba8f838fbafc.1602263264.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+ <c6e3f1168d5d88b207b59c434792a10a7331bb89.1602263264.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+ <CAKF3qh1Y1eADo_Cuf_MqgNanYuwhjWWe23DvPVByt6gmaf5AGQ@mail.gmail.com>
+From:   "Kuppuswamy, Sathyanarayanan" 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>
+Message-ID: <37c7b066-efff-de0c-f4d2-c497792b3150@linux.intel.com>
+Date:   Tue, 13 Oct 2020 22:51:53 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <162495c76c391de6e021919e2b69c5cd2dbbc22a.1602632140.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+In-Reply-To: <CAKF3qh1Y1eADo_Cuf_MqgNanYuwhjWWe23DvPVByt6gmaf5AGQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Oct 13, 2020 at 04:45:01PM -0700, Kuppuswamy Sathyanarayanan wrote:
-> Currently if report_error_detected() or report_mmio_enabled()
-> functions requests PCI_ERS_RESULT_NEED_RESET, current
-> pcie_do_recovery() implementation does not do the requested
-> explicit device reset, but instead just calls the
-> report_slot_reset() on all affected devices. Notifying about the
-> reset via report_slot_reset() without doing the actual device
-> reset is incorrect. So call pci_bus_reset() before triggering
-> ->slot_reset() callback.
-> 
-> Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-> Reviewed-by: Sinan Kaya <okaya@kernel.org>
-> ---
->  Changes since v4:
->   * Added check for pci_reset_bus() return value.
 
-Looks good!
 
-Reviewed-by: Ashok Raj <ashok.raj@intel.com>
+On 10/13/20 10:44 PM, Ethan Zhao wrote:
+> This patch only reverts the commit bdb5ac85777d ?
+> or you'd better separate the revert and code you added.
+
+We cannot revert the commit as it is. pcie_do_recovery()
+function and Documentation/* folder changed a lot since
+fatal and non-fatal error recovery paths were merged. So I
+modified the revert so that it can be applied to the latest
+kernel version.
+
+-- 
+Sathyanarayanan Kuppuswamy
+Linux Kernel Developer
