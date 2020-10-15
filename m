@@ -2,129 +2,209 @@ Return-Path: <SRS0=n3kO=DW=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_IN_DEF_DKIM_WL autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE41AC433E7
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Oct 2020 01:49:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B02BC433DF
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Oct 2020 01:59:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7161622259
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Oct 2020 01:49:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB47822255
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Oct 2020 01:59:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="WE7IFwP9"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ShVHc4Aw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729790AbgJOBth (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 14 Oct 2020 21:49:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52296 "EHLO
+        id S1732449AbgJOB7K (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 14 Oct 2020 21:59:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53826 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732368AbgJOBth (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Oct 2020 21:49:37 -0400
-Received: from mail-lj1-x242.google.com (mail-lj1-x242.google.com [IPv6:2a00:1450:4864:20::242])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CCF1DC08E88F
-        for <linux-pci@vger.kernel.org>; Wed, 14 Oct 2020 16:24:09 -0700 (PDT)
-Received: by mail-lj1-x242.google.com with SMTP id p15so1180722ljj.8
-        for <linux-pci@vger.kernel.org>; Wed, 14 Oct 2020 16:24:09 -0700 (PDT)
+        with ESMTP id S1732382AbgJOB7K (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Oct 2020 21:59:10 -0400
+Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AAB02C061755;
+        Wed, 14 Oct 2020 18:59:09 -0700 (PDT)
+Received: by mail-ej1-x643.google.com with SMTP id ce10so1288970ejc.5;
+        Wed, 14 Oct 2020 18:59:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
+        d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=G1p4V+7SeMLHnh08qcMlfbDl3wtxivqtmtup/MyvFDY=;
-        b=WE7IFwP9IhL8DE1zZKJle/ZGrNF6+L4elBdskKUHhzr6aRc+x7wWJi20JSldqtkJ7Z
-         j/7BB6dyuTbU5p9PSE8H3XtV1HRU//Yqj6FJa8U+jMWDY41ES81W1cB++Kto9YrI/Q9M
-         lg7UOj5OnYiqZbnuwDy16M4Ygj4NgVILO1Me3MLBRFSsQxX9nkWQCeKpS7ipOCfd1Eqg
-         M0MC2h3UVNaHCnV0m7sBQfkfVwxLkCsUo4Uff8EHxKLN05AZsmdIMReoJfBYKlL6Kg3q
-         +7i9vZUIztJLnoCIPO/bJoqUuwmFkJ1IK4411mBF4oyBnjITBziC24r05hMyonx/2eTu
-         eLyw==
+        bh=sHnR2XfJq/JDBqhwl8GNoJlKoubVCNL1H1SylztTjPw=;
+        b=ShVHc4AwsRGiPeMu67vv5weHKu3y/0tppIJlNm0AOv0DgzzHlKUXIGpVqE878pG3ns
+         ZzqVvdMOgn3nkntRoKS9kG+HsuRIxHJ52Odakz9dXNvQOnGN7rQcrDcMoL41a2CimkU4
+         kJF2LOuy8HJovBD1K1gQa81kWYeJveTxgbpxwcjABt7tAIOQxLxI+Doq5jLKq0NZ85PX
+         HDPNbNKr0RjT95tdPAfV5yD1+g3S3tLbEMn2kRrGclKwrsjrtFB3VqeGY5LawtoDl3Bt
+         vSclr5Jt5PPqVlZtMEloy14KWpTvZapc5cRbDwOY5elFseqrjYQ8jou4gt7/ggdoTxLP
+         /IMA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=G1p4V+7SeMLHnh08qcMlfbDl3wtxivqtmtup/MyvFDY=;
-        b=FUVHTo4BSPtoHnqPf0kUdTNHyTmtUtLvPqv27ELsDGay8OshxOQe+X6U/RlZo3niYm
-         hhadnBZCK0DEczKVihWDbVap9QQm0Pqq7tRgOe7EuDyEW8vhbxScZoyNADLSYDxTiUpB
-         /alCWK0DdY1igKRMTcCu0ini7ahDeL1NEgIIpgfbEL5wFcaqBURV89wUSzGjuZHj+ko6
-         0vE6mQdPJBiTEMFEOSEHwkuPj2IJkOJLDPQtFjJdTRcf+OHzK+Gc2FKn3/qt0SL0FPOo
-         YsWhNo6EkRzfsUDvjwBAT5vywNjWVkFUr13dP+5Irx0V8LFkGSIkxUDL3GWUAXWRM4LM
-         /2+w==
-X-Gm-Message-State: AOAM533/DnwkGIeLSKBKXEpH0bNThqt/c3jkMrONf7gK/FLG43C3UPyw
-        cO7kzpCHOc4CXcwAEVRPpMy99OaeJke1X0Ufynt4zQ==
-X-Google-Smtp-Source: ABdhPJydMCD+XHL2TSxEVaZRxaszslycs2dTV+hsdRxTeju9rh0yCfYdZANr/pfddpUzM3d5IpL0YBG2d5o1ouutlCY=
-X-Received: by 2002:a2e:e1a:: with SMTP id 26mr156295ljo.377.1602717848016;
- Wed, 14 Oct 2020 16:24:08 -0700 (PDT)
+        bh=sHnR2XfJq/JDBqhwl8GNoJlKoubVCNL1H1SylztTjPw=;
+        b=PVus1TeQEyJVU8xgqVYtdTa7NC94qh24toEYwXY4V1uPqiLsKAzPxQqieS8biNLOPT
+         veXguiT4SIHuOhyGjjLvhWyp4URncNBMw3jpwDPEgyrM+Se3q20xHlQT26updHXVh9rW
+         VV6bwAhhedEXvycPIFPCs9rP70lPB2peyk61LosknQloPc7hJm6W5+i/tnEv7TZd4/vB
+         KoVT/VJq1R78EXZ86jt9qaH1RJrbQdFaWEUYaCe8jCgfGPHsQ4yVPKihbfyh2lKzUSkL
+         TTSH8K3QtgeS7RqHNn5AeJK5u5lekxVPjodmSS7khP3D2l69RzRKPGG0k/2J4ENDvL6x
+         KkpQ==
+X-Gm-Message-State: AOAM5335XqZ1cGtrDactBp0d39qLTbmxzAzG2J517peGddd8OrrNx0Kd
+        Kk8nUZgbkjIBHcZyVc4bKWGCJ+pKIw3kQ58BTtg=
+X-Google-Smtp-Source: ABdhPJzMp6uWxPGZrCA4WnvSGL7juT8lkuub+71iSInGAwSJs0sFGvMBWIA63HE8lAip74i+paqY/NcE/jyv8LodZdg=
+X-Received: by 2002:a17:906:6dc6:: with SMTP id j6mr2135978ejt.354.1602727148383;
+ Wed, 14 Oct 2020 18:59:08 -0700 (PDT)
 MIME-Version: 1.0
-References: <20201013003203.4168817-1-samitolvanen@google.com> <20201013003203.4168817-23-samitolvanen@google.com>
-In-Reply-To: <20201013003203.4168817-23-samitolvanen@google.com>
-From:   Jann Horn <jannh@google.com>
-Date:   Thu, 15 Oct 2020 01:23:41 +0200
-Message-ID: <CAG48ez2baAvKDA0wfYLKy-KnM_1CdOwjU873VJGDM=CErjsv_A@mail.gmail.com>
-Subject: Re: [PATCH v6 22/25] x86/asm: annotate indirect jumps
-To:     Sami Tolvanen <samitolvanen@google.com>,
-        Josh Poimboeuf <jpoimboe@redhat.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        "the arch/x86 maintainers" <x86@kernel.org>
-Cc:     Masahiro Yamada <masahiroy@kernel.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Will Deacon <will@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Paul E. McKenney" <paulmck@kernel.org>,
-        Kees Cook <keescook@chromium.org>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        clang-built-linux <clang-built-linux@googlegroups.com>,
-        Kernel Hardening <kernel-hardening@lists.openwall.com>,
-        linux-arch <linux-arch@vger.kernel.org>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        linux-kbuild@vger.kernel.org,
-        kernel list <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org
+References: <546d346644654915877365b19ea534378db0894d.1602663397.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+ <d97541df3b44822e0d085ffa058e9e7c0ba05214.1602663397.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+ <CAKF3qh3nnLaKUAbBdhdXwzknasTWmLFTjB7gz65vjzpHP4Y46Q@mail.gmail.com> <17e142b8-b19a-0ec7-833b-7a4ac2e76d0d@linux.intel.com>
+In-Reply-To: <17e142b8-b19a-0ec7-833b-7a4ac2e76d0d@linux.intel.com>
+From:   Ethan Zhao <xerces.zhao@gmail.com>
+Date:   Thu, 15 Oct 2020 09:58:56 +0800
+Message-ID: <CAKF3qh1fiqqRGvUB2Jxm8tM6Q06GntquGxzmcKe1vapONSPREA@mail.gmail.com>
+Subject: Re: [PATCH v6 2/2] PCI/ERR: Split the fatal and non-fatal error
+ recovery handling
+To:     "Kuppuswamy, Sathyanarayanan" 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>
+Cc:     Kuppuswamy Sathyanarayanan 
+        <sathyanarayanan.nkuppuswamy@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Sinan Kaya <okaya@kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Ashok Raj <ashok.raj@intel.com>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-+objtool folks
-
-On Tue, Oct 13, 2020 at 2:35 AM Sami Tolvanen <samitolvanen@google.com> wrote:
-> Running objtool --vmlinux --duplicate on vmlinux.o produces a few
-> warnings about indirect jumps with retpoline:
+On Thu, Oct 15, 2020 at 1:06 AM Kuppuswamy, Sathyanarayanan
+<sathyanarayanan.kuppuswamy@linux.intel.com> wrote:
 >
->   vmlinux.o: warning: objtool: wakeup_long64()+0x61: indirect jump
->   found in RETPOLINE build
->   ...
 >
-> This change adds ANNOTATE_RETPOLINE_SAFE annotations to the jumps
-> in assembly code to stop the warnings.
+>
+> On 10/14/20 8:07 AM, Ethan Zhao wrote:
+> > On Wed, Oct 14, 2020 at 5:00 PM Kuppuswamy Sathyanarayanan
+> > <sathyanarayanan.nkuppuswamy@gmail.com> wrote:
+> >>
+> >> Commit bdb5ac85777d ("PCI/ERR: Handle fatal error recovery")
+> >> merged fatal and non-fatal error recovery paths, and also made
+> >> recovery code depend on hotplug handler for "remove affected
+> >> device + rescan" support. But this change also complicated the
+> >> error recovery path and which in turn led to the following
+> >> issues.
+> >>
+> >> 1. We depend on hotplug handler for removing the affected
+> >> devices/drivers on DLLSC LINK down event (on DPC event
+> >> trigger) and DPC handler for handling the error recovery. Since
+> >> both handlers operate on same set of affected devices, it leads
+> >> to race condition, which in turn leads to  NULL pointer
+> >> exceptions or error recovery failures.You can find more details
+> >> about this issue in following link.
+> >>
+> >> https://lore.kernel.org/linux-pci/20201007113158.48933-1-haifeng.zhao@intel.com/T/#t
+> >>
+> >> 2. For non-hotplug capable devices fatal (DPC) error recovery
+> >> is currently broken. Current fatal error recovery implementation
+> >> relies on PCIe hotplug (pciehp) handler for detaching and
+> >> re-enumerating the affected devices/drivers. So when dealing with
+> >> non-hotplug capable devices, recovery code does not restore the state
+> >> of the affected devices correctly. You can find more details about
+> >> this issue in the following links.
+> >>
+> >> https://lore.kernel.org/linux-pci/20200527083130.4137-1-Zhiqiang.Hou@nxp.com/
+> >> https://lore.kernel.org/linux-pci/12115.1588207324@famine/
+> >> https://lore.kernel.org/linux-pci/0e6f89cd6b9e4a72293cc90fafe93487d7c2d295.1585000084.git.sathyanarayanan.kuppuswamy@linux.intel.com/
+> >>
+> >> In order to fix the above two issues, we should stop relying on hotplug
+> >    Yes, it doesn't rely on hotplug handler to remove and rescan the device,
+> > but it couldn't prevent hotplug drivers from doing another replicated
+> > removal/rescanning.
+> > it doesn't make sense to leave another useless removal/rescanning there.
+> > Maybe that's why these two paths were merged to one and made it rely on
+> > hotplug.
+> No, as per PCIe spec, hotplug and DPC has no functional dependency. Hence
+> depending on it to handle some of its recovery function is in-correct and
+> would lead to issues in non-hotplug capable platforms (which is true
+> currently).
+> >
+>
+> >> +       else
+> >> +               udev = dev->bus->self;
+> >> +
+> >> +       parent = udev->subordinate;
+> >> +       pci_walk_bus(parent, pci_dev_set_disconnected, NULL);
+> >> +
+> >> +        pci_lock_rescan_remove();
+> >     Though here you have lock, but hotplug will do another
+> > 'pci_stop_and_remove_bus_device()'
+> >     without merging it with the hotplug driver, you have no way to
+> > remove the replicated actions in
+> >    hotplug handler.
+> No, the core operation (remove/add device) is syncronzied and done in
+> only one thread. Please check the following flow. Even in hotplug
+ pci_lock_rescan_remove() is global lock for PCIe, the mal-functional
+ device's port holds this lock, it prevents the whole system from doing
+ hot-plug operation.
+ Though pciehp is not so hot/scalable and performance critical, but there
+ is per cpu thread to handle hot-plug operation. synchronize all threads
+ make them walk backwards for scalability.
 
-In other words, this patch deals with the fact that
-OBJECT_FILES_NON_STANDARD stops being effective for object files that
-are linked into the main kernel when LTO is on, right?
-All the files you're touching here are supposed to be excluded from
-objtool warnings at the moment:
+> handler, before removing the device, it attempts to hold pci_lock_rescan_remove()
+> lock. So holding the same lock in DPC handler will syncronize the DPC/hotplug
+> handlers. Also if one of the thread (DPC or hotplug) removes/adds the affected devices,
+> other thread will not repeat the same action (since the device is already removed/added).
+>
+> ->pciehp_ist()
+>    ->pciehp_handle_presence_or_link_change()
+>      ->pciehp_disable_slot()
+>        ->__pciehp_disable_slot()
+>          ->remove_board()
+>            ->pciehp_unconfigure_device()
+>              ->pci_lock_rescan_remove()
+> >
+> >
+> >    Thanks,
+> >    Ethan
+> >> +        pci_dev_get(dev);
+> >> +        list_for_each_entry_safe_reverse(pdev, temp, &parent->devices,
+> >> +                                        bus_list) {
+> >> +               pci_stop_and_remove_bus_device(pdev);
+> >> +       }
+> >> +
+> >> +       result = reset_link(udev);
+> >> +
+> >> +       if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+> >> +               /*
+> >> +                * If the error is reported by a bridge, we think this error
+> >> +                * is related to the downstream link of the bridge, so we
+> >> +                * do error recovery on all subordinates of the bridge instead
+> >> +                * of the bridge and clear the error status of the bridge.
+> >> +                */
+> >> +               pci_aer_clear_fatal_status(dev);
+> >> +               if (pcie_aer_is_native(dev))
+> >> +                       pcie_clear_device_status(dev);
+> >> +       }
+> >> +
+> >> +       if (result == PCI_ERS_RESULT_RECOVERED) {
+> >> +               if (pcie_wait_for_link(udev, true))
+> >     And another  pci_rescan_bus() like in the hotplug handler.
+> As I have mentioned before, holding the same lock should make them synchronized
+> and not repeat the underlying functionality of pci_rescan_bus() in both threads
+> at the same time.
+   Yes, it blocked them all.
 
-$ grep OBJECT_FILES_NON_STANDARD arch/x86/kernel/acpi/Makefile
-OBJECT_FILES_NON_STANDARD_wakeup_$(BITS).o := y
-$ grep OBJECT_FILES_NON_STANDARD arch/x86/platform/pvh/Makefile
-OBJECT_FILES_NON_STANDARD_head.o := y
-$ grep OBJECT_FILES_NON_STANDARD arch/x86/power/Makefile
-OBJECT_FILES_NON_STANDARD_hibernate_asm_$(BITS).o := y
-
-It would probably be good to keep LTO and non-LTO builds in sync about
-which files are subjected to objtool checks. So either you should be
-removing the OBJECT_FILES_NON_STANDARD annotations for anything that
-is linked into the main kernel (which would be a nice cleanup, if that
-is possible), or alternatively ensure that code from these files is
-excluded from objtool checks even with LTO (that'd probably be messy
-and a bad idea?).
-
-Grepping for other files marked as OBJECT_FILES_NON_STANDARD that
-might be included in the main kernel on x86, I also see stuff like:
-
-    5 arch/x86/crypto/Makefile                            5
-OBJECT_FILES_NON_STANDARD := y
-   10 arch/x86/kernel/Makefile                           39
-OBJECT_FILES_NON_STANDARD_ftrace_$(BITS).o          := y
-   12 arch/x86/kvm/Makefile                               7
-OBJECT_FILES_NON_STANDARD_vmenter.o := y
-
-for which I think the same thing applies.
+Thanks,
+Ethan
+> >> +                       pci_rescan_bus(udev->bus);
+> >> +               pci_info(dev, "Device recovery from fatal error successful\n");
+> >> +        } else {
+> >> +               pci_uevent_ers(dev, PCI_ERS_RESULT_DISCONNECT);
+> >> +               pci_info(dev, "Device recovery from fatal error failed\n");
+>
+> >> --
+> >> 2.17.1
+> >>
+>
+> --
+> Sathyanarayanan Kuppuswamy
+> Linux Kernel Developer
