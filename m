@@ -2,145 +2,131 @@ Return-Path: <SRS0=n3kO=DW=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2EE8C433DF
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Oct 2020 18:22:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D792EC433DF
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Oct 2020 18:47:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4700F221EB
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Oct 2020 18:22:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5B2202222B
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Oct 2020 18:47:32 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=windriversystems.onmicrosoft.com header.i=@windriversystems.onmicrosoft.com header.b="aT3j/vBw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726285AbgJOSWO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 15 Oct 2020 14:22:14 -0400
-Received: from mga12.intel.com ([192.55.52.136]:57535 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725955AbgJOSWO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 15 Oct 2020 14:22:14 -0400
-IronPort-SDR: JWuBrvANZ+Xe30Wj+g4hD0MPMfLxfiCV0jP0m5cM/XQKrv/h//0u/JKMTU4HpJs0QaQzubhdL4
- tYyff4OS8/4Q==
-X-IronPort-AV: E=McAfee;i="6000,8403,9775"; a="145731700"
-X-IronPort-AV: E=Sophos;i="5.77,379,1596524400"; 
-   d="scan'208";a="145731700"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Oct 2020 11:22:13 -0700
-IronPort-SDR: ttF7ZwHPrxPuTc6JfEHnZrBd7RNp2hy47u3std+EIzNHXG//TdQcJesemkY2F0ldWMI6WSCjVV
- JSI/CEeCn87Q==
-X-IronPort-AV: E=Sophos;i="5.77,379,1596524400"; 
-   d="scan'208";a="521941595"
-Received: from otc-nc-03.jf.intel.com (HELO otc-nc-03) ([10.54.39.36])
-  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Oct 2020 11:22:12 -0700
-Date:   Thu, 15 Oct 2020 11:22:11 -0700
-From:   "Raj, Ashok" <ashok.raj@intel.com>
-To:     Jean-Philippe Brucker <jean-philippe@linaro.org>
-Cc:     dwmw2@infradead.org, baolu.lu@linux.intel.com, joro@8bytes.org,
-        zhangfei.gao@linaro.org, wangzhou1@hisilicon.com, arnd@arndb.de,
-        gregkh@linuxfoundation.org, iommu@lists.linux-foundation.org,
-        linux-kernel@vger.kernel.org, linux-accelerators@lists.ozlabs.org,
-        kevin.tian@intel.com, jacob.jun.pan@linux.intel.com,
-        linux-pci@vger.kernel.org, Ashok Raj <ashok.raj@intel.com>,
-        "Lu, Baolu" <baolu.lu@intel.com>,
-        Jacon Jun Pan <jacob.jun.pan@intel.com>
-Subject: Re: [RFC PATCH 0/2] iommu: Avoid unnecessary PRI queue flushes
-Message-ID: <20201015182211.GA54780@otc-nc-03>
-References: <20201015090028.1278108-1-jean-philippe@linaro.org>
+        id S1731154AbgJOSrb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 15 Oct 2020 14:47:31 -0400
+Received: from mail-dm6nam11on2079.outbound.protection.outlook.com ([40.107.223.79]:7137
+        "EHLO NAM11-DM6-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728729AbgJOSrb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 15 Oct 2020 14:47:31 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=ksXbbaTwpWZa2EBbmgX0ndnLyYEiHUgHu68MZeceST6edg62XNYIt5JU+qaeHmXjpAmadkPR2Z+qxk2udYcFgSITDGx5yopV2lCP6fPeO+ka4C1e7muTKvJowVfjZPjTb0UNH8cwP9JMGSw7rW7TwZ9gbFF4nbvxvm0YvTVdjbUpwULItZKAoR6z3n4RAPit3wvLQ2Z1YosHiP2BPxRH7Tt20R4Qch7EFNeG3qR1XR2l8J+yVv/Ld/GnjDsHiIEPuS4m1nDAE8oFRNNXcVPfElcv469dtO/PyXGWCUTCf6m0Ec5zBtqq+T4TN47o/cX5L43g6SXYF6YkuyWqd9bDQA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=+fHuiCQRS5UoBd54X6UeRBASz0k141okFm92cyxhQbA=;
+ b=FSfKzKy3VtnefDBrT2IH1xbNGT4ff8Z47iee67cErEePw4T54+2sN9GPT8tDvAWJ4RAJqxkQ73wvKZ2NdHYygcCn0AEMAFZV7MTO18FiqTZbyDnuGQPJETFkkgOhxSXO29YzOZ7vRLnm8px5a89CrPOBT2tqJ/8L/BbfESjfguO1tfZZhCEwYa71VY87YAbmnF/NMF2+WfsDhr61TDkkz6QKlqVf40680CDRL2HiEp2bDzMkQZUNE4g7rOCnZuOuki6OcWWKg00BK+ZkW3HPFhNydbZyUXmdb+N0hDvGM9t+zUmmtMoKCj1U4b+YDn/dE8ggc5yrD1RaAJIZeR4XZQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=windriver.com; dmarc=pass action=none
+ header.from=windriver.com; dkim=pass header.d=windriver.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=windriversystems.onmicrosoft.com;
+ s=selector2-windriversystems-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=+fHuiCQRS5UoBd54X6UeRBASz0k141okFm92cyxhQbA=;
+ b=aT3j/vBwHofMgQH2w3CAqNG5DgmCevBizHk8jfGnjZeg1TRrlxMnD6/rIOYozEbfnvFmgbA6p5+j2xAjYK0AgPnMQuUdGD3roSl2xAu1/eEBYP7fBSHfOf/ZIlB3O+GT+TuPvCHMGDNFjc7N0yPtwUhoyJeJdTmEWSjsAwG2wsQ=
+Authentication-Results: redhat.com; dkim=none (message not signed)
+ header.d=none;redhat.com; dmarc=none action=none header.from=windriver.com;
+Received: from SJ0PR11MB5120.namprd11.prod.outlook.com (2603:10b6:a03:2d1::13)
+ by BYAPR11MB3157.namprd11.prod.outlook.com (2603:10b6:a03:75::30) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3455.28; Thu, 15 Oct
+ 2020 18:47:28 +0000
+Received: from SJ0PR11MB5120.namprd11.prod.outlook.com
+ ([fe80::c048:b134:f828:e40]) by SJ0PR11MB5120.namprd11.prod.outlook.com
+ ([fe80::c048:b134:f828:e40%6]) with mapi id 15.20.3477.020; Thu, 15 Oct 2020
+ 18:47:28 +0000
+Subject: Re: PCI, isolcpus, and irq affinity
+To:     Keith Busch <kbusch@kernel.org>
+Cc:     Thomas Gleixner <tglx@linutronix.de>,
+        Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>,
+        Nitesh Narayan Lal <nitesh@redhat.com>
+References: <20201012165839.GA3732859@bjorn-Precision-5520>
+ <87a6wrqqpf.fsf@nanos.tec.linutronix.de>
+ <df1be4be-88b5-b848-97bf-4c38824e840a@windriver.com>
+ <20201012190726.GB1032142@dhcp-10-100-145-180.wdl.wdc.com>
+From:   Chris Friesen <chris.friesen@windriver.com>
+Message-ID: <c1747780-cfac-abe1-eb58-5de532c28fba@windriver.com>
+Date:   Thu, 15 Oct 2020 12:47:23 -0600
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.1
+In-Reply-To: <20201012190726.GB1032142@dhcp-10-100-145-180.wdl.wdc.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [70.64.73.216]
+X-ClientProxiedBy: BYAPR01CA0012.prod.exchangelabs.com (2603:10b6:a02:80::25)
+ To SJ0PR11MB5120.namprd11.prod.outlook.com (2603:10b6:a03:2d1::13)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201015090028.1278108-1-jean-philippe@linaro.org>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from [192.168.2.12] (70.64.73.216) by BYAPR01CA0012.prod.exchangelabs.com (2603:10b6:a02:80::25) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3477.20 via Frontend Transport; Thu, 15 Oct 2020 18:47:27 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 25e57f62-beac-466c-0d96-08d8713ac3dc
+X-MS-TrafficTypeDiagnostic: BYAPR11MB3157:
+X-Microsoft-Antispam-PRVS: <BYAPR11MB31579F655CDFA36D7034ACC0F6020@BYAPR11MB3157.namprd11.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:8273;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: QXvCJP0huvihwj066cE5a2fTUf//B1StK4ZhOLQQe1Mv43ywx5dQ900Qa1HX1edrSR6ohLbbiN2h0ZQZsm13kTF53wAA7/rFwz2H2P0PkbHTR+VSspVkBONXkMtd5v+ZyteRbxVDQLcZ1NjzXq8YVr/LpkWxC3FEsuiVxl/iMcmz3S3pzc4y134gBnU+AmAm1i3gf53Unnkkj+PZK6ZI5l1tG/CafE1JWHA7AILsB9riuZZCpFLUcT1MFJTyVSo6FaswbcNfWObcZ5Vsx6i4EW9vDtXSOpdnxq7PinhTuhmNlrG/VjUnu+voL5/itV1PPZfnYXqiv2eoHQPqNw2QFh6AwNVEHl4Ay2IPCeU52Xa/FeQbtV34K8JWFG7PBzuWrzRRjefrzrAE/Xb/xVHLqS7zEbPaWDcHLJtv0bMaPsU=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ0PR11MB5120.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(396003)(376002)(346002)(136003)(366004)(39850400004)(86362001)(2616005)(6486002)(6916009)(44832011)(66476007)(66556008)(6666004)(34490700002)(52116002)(66946007)(8676002)(5660300002)(31686004)(54906003)(316002)(16526019)(8936002)(956004)(2906002)(31696002)(186003)(83380400001)(36756003)(478600001)(4326008)(53546011)(26005)(16576012)(43740500002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: khZQhXEciZWOlcgFfl8m5r0IUe9cei/RWLvYaeazgvM9HslWVY1XPzkP6XcwpboDv1L1XGRNTywN+m8NXKWRX0n3OPighU/KQvsr44k9+zVxmoozz+iEVpSBDNCx45feVI048tJf0+y1HGFbSu/0z5rwCfLi1qaEP4lTlw0qH1bsPnu+CoNFagOCz2CPP4GRIFmrFPVvpdP6dULW8sL8B9P0DBNpfTN6Cb9z73Pl74jxaI0AFGgPePLO8kHOE55H3smBVtMnuXGQByzucPdOItiis5CCjOSojGvmH40jhV9aiHtmIwmbR4kSeSAJ14caEXB8a1TDv+L3yYR0a6Tov9rXyRwZDnlqaT+lT/DKvdxI2Y4nyE0nJ/6w9ROOVyGR/TbqWnwfm0zCDy/UfCoMgy4VvMGqxGolpvj2rTci60Hlv2d0Q7Yssv6gJ3Rc3rShvR5styfdGG6CCeMtL62RmVJuG6dYyUDcpTBPkDjFEgAAI39hbKTC4zv8gaGyg6h7nhNade6RehQ8iS/Drrxc7R9Lbbn55GFLWnH77wHeUulFATzWVK3LBYFqXoxLl8Swf//Kc9ukYzJZ4chh/7IXBqDXrjR0X1ULvPm9yjj3w1RVmhug3WCTA3uyZLizDtvgHdT+V9lblvtMRMvg+VqLAg==
+X-OriginatorOrg: windriver.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 25e57f62-beac-466c-0d96-08d8713ac3dc
+X-MS-Exchange-CrossTenant-AuthSource: SJ0PR11MB5120.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Oct 2020 18:47:28.2996
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 8ddb2873-a1ad-4a18-ae4e-4644631433be
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: FtaVRQ0fylm1fb8S/Bml/uffkN59236HNpjp5v37kecfk1D+ma4+qmJ7lGoS1Dds3xXhaPJYNDf/bhWCNy5rTYdETYX02LICP76E8qy1s44=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR11MB3157
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Jean
-
-+ Baolu who is looking into this.
-
-
-On Thu, Oct 15, 2020 at 11:00:27AM +0200, Jean-Philippe Brucker wrote:
-> Add a parameter to iommu_sva_unbind_device() that tells the IOMMU driver
-> whether the PRI queue needs flushing. When looking at the PCIe spec
-> again I noticed that most of the time the SMMUv3 driver doesn't actually
-> need to flush the PRI queue. Does this make sense for Intel VT-d as well
-> or did I overlook something?
+On 10/12/2020 1:07 PM, Keith Busch wrote:
+> On Mon, Oct 12, 2020 at 12:58:41PM -0600, Chris Friesen wrote:
+>> On 10/12/2020 11:50 AM, Thomas Gleixner wrote:
+>>> On Mon, Oct 12 2020 at 11:58, Bjorn Helgaas wrote:
+>>>> On Mon, Oct 12, 2020 at 09:49:37AM -0600, Chris Friesen wrote:
+>>>>> I've got a linux system running the RT kernel with threaded irqs.  On
+>>>>> startup we affine the various irq threads to the housekeeping CPUs, but I
+>>>>> recently hit a scenario where after some days of uptime we ended up with a
+>>>>> number of NVME irq threads affined to application cores instead (not good
+>>>>> when we're trying to run low-latency applications).
+>>>
+>>> These threads and the associated interupt vectors are completely
+>>> harmless and fully idle as long as there is nothing on those isolated
+>>> CPUs which does disk I/O.
+>>
+>> Some of the irq threads are affined (by the kernel presumably) to multiple
+>> CPUs (nvme1q2 and nvme0q2 were both affined 0x38000038, a couple of other
+>> queues were affined 0x1c00001c0).
 > 
-> Before calling iommu_sva_unbind_device(), device drivers must stop the
-> device from using the PASID. For PCIe devices, that consists of
-> completing any pending DMA, and completing any pending page request
-> unless the device uses Stop Markers. So unless the device uses Stop
-> Markers, we don't need to flush the PRI queue. For SMMUv3, stopping DMA
-> means completing all stall events, so we never need to flush the event
-> queue.
+> That means you have more CPUs than your controller has queues. When that
+> happens, some sharing of the queue resources among CPUs is required.
 
-I don't think this is true. Baolu is working on an enhancement to this,
-I'll quickly summarize this below:
+Is it required that every CPU is part of the mask for at least one queue?
 
-Stop markers are weird, I'm not certain there is any device today that
-sends STOP markers. Even if they did, markers don't have a required
-response, they are fire and forget from the device pov.
+If we can preferentially route interrupts to the housekeeping CPUs (for 
+queues with multiple CPUs in the mask), how is that different than just 
+affining all the queues to the housekeeping CPUs and leaving the 
+isolated CPUs out of the mask entirely?
 
-I'm not sure about other IOMMU's how they behave, When there is no space in
-the PRQ, IOMMU auto-responds to the device. This puts the device in a
-while (1) loop. The fake successful response will let the device do a ATS
-lookup, and that would fail forcing the device to do another PRQ. The idea
-is somewhere there the OS has repeated the others and this will find a way
-in the PRQ. The point is this is less reliable and can't be the only
-indication. PRQ draining has a specific sequence. 
-
-The detailed steps are outlined in 
-"Chapter 7.10 "Software Steps to Drain Page Requests & Responses"
-
-- Submit invalidation wait with fence flag to ensure all prior
-  invalidations are processed.
-- submit iotlb followed by devtlb invalidation
-- Submit invalidation wait with page-drain to make sure any page-requests
-  issued by the device are flushed when this invalidation wait completes.
-- If during the above process there was a queue overflow SW can assume no
-  outstanding page-requests are there. If we had a queue full condition,
-  then sw must repeat step 2,3 above.
-
-
-To that extent the proposal is as follows: names are suggestive :-) I'm
-making this up as I go!
-
-- iommu_stop_page_req() - Kernel needs to make sure we respond to all
-  outstanding requests (since we can't drop responses) 
-  - Ensure we respond immediatly for anything that comes before the drain
-    sequence completes
-- iommu_drain_page_req() - Which does the above invalidation with
-  Page_drain set.
-
-Once the driver has performed a reset and before issuing any new request,
-it does iommu_resume_page_req() this will ensure we start processing
-incoming page-req after this point.
-
-
-> 
-> First patch adds flags to unbind(), and the second one lets device
-> drivers tell whether the PRI queue needs to be flushed.
-> 
-> Other remarks:
-> 
-> * The PCIe spec (see quote on patch 2), says that the device signals
->   whether it has sent a Stop Marker or not during Stop PASID. In reality
->   it's unlikely that a given device will sometimes use one stop method
->   and sometimes the other, so it could be a device-wide flag rather than
->   passing it at each unbind(). I don't want to speculate too much about
->   future implementation so I prefer having the flag in unbind().
-> 
-> * In patch 1, uacce passes 0 to unbind(). To pass the right flag I'm
->   thinking that uacce->ops->stop_queue(), which tells the device driver
->   to stop DMA, should return whether faults are pending. This can be
->   added later once uacce has an actual PCIe user, but we need to
->   remember to do it.
-
-I think intel iommmu driver does this today for SVA when pasid is being
-freed. Its still important to go through the drain before that PASID can be
-re-purposed.
-
-Cheers,
-Ashok
+Thanks,
+Chris
