@@ -2,94 +2,94 @@ Return-Path: <SRS0=n3kO=DW=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5865AC433DF
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Oct 2020 06:49:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E09AC433E7
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Oct 2020 06:52:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 023B72224E
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Oct 2020 06:49:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A1C382224A
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Oct 2020 06:52:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Y04z49oM"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="u0D5TbT8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729216AbgJOGtj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 15 Oct 2020 02:49:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42354 "EHLO
+        id S1726772AbgJOGw0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 15 Oct 2020 02:52:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42782 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728264AbgJOGtj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Oct 2020 02:49:39 -0400
-Received: from mail-yb1-xb41.google.com (mail-yb1-xb41.google.com [IPv6:2607:f8b0:4864:20::b41])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0A70C061755;
-        Wed, 14 Oct 2020 23:49:38 -0700 (PDT)
-Received: by mail-yb1-xb41.google.com with SMTP id 67so1380045ybt.6;
-        Wed, 14 Oct 2020 23:49:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=Mon8oii3zGIW2Gmixo1N9gE4BLHeCJtX3lO1sZeHShM=;
-        b=Y04z49oMsViBHDeg9tl7gbxAqIKih4a/ICwylrucy+5oH1WhvaYmY5Iryh/VwH5DJU
-         uyYowMpAlegTdDFyEhJANP+1OAEVqZTD90NwgdBHRZ7qn8T7cihqXQEv7y6YEHKYLZNy
-         TZcxktyqKdKum0G8AraJYT5tOBVp+thCgmBJf3Nf5TpuTmGyiuA4ZiH6RZv3rFvVyNzp
-         zjWAAUrpa0rVNzZ4xAyII+quG7jDqzGC7UenmlCAvAWXsJBTKit9gW5OfoC+zAyMI/1X
-         0c10YPj232fb+8WUJnHJn7vceR+lYBvuVEDDI0WwiHrx3OPR7yN8JpPqz5km/udp5mbf
-         qgEg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=Mon8oii3zGIW2Gmixo1N9gE4BLHeCJtX3lO1sZeHShM=;
-        b=eFrIOo8gxiZPeuHP7IjHmcH4U67a8fQTFGzgBt4oXpzE7Y87WEpTRC9GEzOi4OTtbV
-         eeVd9Ox9NObBjeluTSoCMoEYAYVkr1faAD/ri4An7pVfA6r0MrWTpXT5gmTN3Bwd7LxJ
-         h0CNMwU9VRsInl+KpVIf5yuplnQ6ls6PoNcUwCHqxDtD3XNs7wuauZ5+FzZTmrGQOXgA
-         TY+MAZCA1gm7rcBgvQVsAqsb1dIAg5EzUtUR9anvMaC7wUAnZOvovRdpnEhbOF4kfCjA
-         q0E+CAl/rfYUpZC4wZVU2EvV45qqUWbegaO81QLBLMdNGxCVgZN5c2Ay3YJ1qufit/L8
-         tWlw==
-X-Gm-Message-State: AOAM5324QIZ7QzCCQL9/r0AaZEXGGnNjryPvH9sEGhB3b/WDwo83/TE6
-        AYY7dGUZ5bg7ajGrlpX+whhcr5NB7Y096nAEgr0=
-X-Google-Smtp-Source: ABdhPJymzt2IVpf+mOYKPkVDw+L9qfhrR9lFCZ9CgPzx+c8HMyWPCVLTaKG5TpRLT1ExJUW/Ud/Jj0uDNVx8wpzA10M=
-X-Received: by 2002:a25:6755:: with SMTP id b82mr3319215ybc.485.1602744578322;
- Wed, 14 Oct 2020 23:49:38 -0700 (PDT)
-MIME-Version: 1.0
-References: <5c5bca0bdb958e456176fe6ede10ba8f838fbafc.1602263264.git.sathyanarayanan.kuppuswamy@linux.intel.com>
- <c6e3f1168d5d88b207b59c434792a10a7331bb89.1602263264.git.sathyanarayanan.kuppuswamy@linux.intel.com>
- <20201013115600.GA11976@infradead.org> <2fa2e5ed-dbfb-f335-5429-8bbb13f004e2@linux.intel.com>
- <20201015064329.GA12987@infradead.org>
-In-Reply-To: <20201015064329.GA12987@infradead.org>
-From:   Sathyanarayanan Kuppuswamy Natarajan 
-        <sathyanarayanan.nkuppuswamy@gmail.com>
-Date:   Wed, 14 Oct 2020 23:49:27 -0700
-Message-ID: <CAC41dw9EUjJ7S2jo-m5kF+hYK31ApA7WK_PmXo13mwPOr_=goA@mail.gmail.com>
-Subject: Re: [PATCH v4 2/2] PCI/ERR: Split the fatal and non-fatal error
+        with ESMTP id S1725208AbgJOGw0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Oct 2020 02:52:26 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C731CC061755;
+        Wed, 14 Oct 2020 23:52:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=j6yfA8UT8xWaEF0uYRUzRwVGZR9uDhBP+4UPoxN1m44=; b=u0D5TbT8MHtyTx6if7jno7uKHO
+        AQrmZQC1nsy4Nx8oqwqZrjPBdHbNJxcCJRgP8TqLRZ10J+r0sKphzFPNw37W+QsOXQ4uXyKKpk0Oy
+        5j1PYKs+/URTsmM7a8MrvhiM+0WaMc+iHZPORfcIPUOrBY6yhSYZJuNEBWAt7jw1zWfP50/0GumDU
+        6JEjzXXvwHSKOX49f+sweDCRjrdtqte9UD3fY99x2PU+C9ms2kJeUDLz11HrESovPI43AIiYwGylC
+        RG47sYHQjF5MHhMBNqqyZsbkRtIpwFtXtiqdLeXWsVjD6U/tSSWk/VCFaE2L9gT93H7oi32Ds4MrM
+        ad/N8GYA==;
+Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kSx7e-0003y7-RK; Thu, 15 Oct 2020 06:52:22 +0000
+Date:   Thu, 15 Oct 2020 07:52:22 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Kuppuswamy Sathyanarayanan <sathyanarayanan.nkuppuswamy@gmail.com>
+Cc:     bhelgaas@google.com, okaya@kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ashok.raj@intel.com,
+        sathyanarayanan.kuppuswamy@linux.intel.com
+Subject: Re: [PATCH v6 2/2] PCI/ERR: Split the fatal and non-fatal error
  recovery handling
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     "Kuppuswamy, Sathyanarayanan" 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, okaya@kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Ashok <ashok.raj@intel.com>, Keith Busch <kbusch@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Message-ID: <20201015065222.GB12987@infradead.org>
+References: <546d346644654915877365b19ea534378db0894d.1602663397.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+ <d97541df3b44822e0d085ffa058e9e7c0ba05214.1602663397.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <d97541df3b44822e0d085ffa058e9e7c0ba05214.1602663397.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Oct 14, 2020 at 11:43 PM Christoph Hellwig <hch@infradead.org> wrote:
->
-> On Tue, Oct 13, 2020 at 08:17:39AM -0700, Kuppuswamy, Sathyanarayanan wrote:
-> >
-> >
-> > On 10/13/20 4:56 AM, Christoph Hellwig wrote:
-> > > You might want to split out pcie_do_fatal_recovery and get rid of the
-> > > state argument:
-> > This is how it was before Keith merged fatal and non-fatal error recovery
-> > paths. When the comparison is between additional-parameter vs new-interface
-> > , I choose the former. But I can merge your change in next version.
->
-> But now you split the implementation.  Keith merged made complete sense
-> when the code was mostly identical.  But now that the code is separate
-> again it doesn't make sense to hide it under a common interface that
-> uses a flags value to call different functions.
-Agreed. Already included this change in v6.
+>  /* PCI error reporting and recovery */
+> -pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+> -			pci_channel_state_t state,
+> +pci_ers_result_t pcie_do_nonfatal_recovery(struct pci_dev *dev);
+> +
+> +pci_ers_result_t pcie_do_fatal_recovery(struct pci_dev *dev,
+>  			pci_ers_result_t (*reset_link)(struct pci_dev *pdev));
+
+Now that both functions have descriptive names (thanks for that!),
+the "_do" component of the names can be dropped.
+
+> +pci_ers_result_t pcie_do_fatal_recovery(struct pci_dev *dev,
+>  			pci_ers_result_t (*reset_link)(struct pci_dev *pdev))
+> +{
+> +	struct pci_dev *udev;
+> +	struct pci_bus *parent;
+> +	struct pci_dev *pdev, *temp;
+> +	pci_ers_result_t result;
+> +
+> +	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
+> +		udev = dev;
+> +	else
+> +		udev = dev->bus->self;
+> +
+> +	parent = udev->subordinate;
+> +	pci_walk_bus(parent, pci_dev_set_disconnected, NULL);
+> +
+> +        pci_lock_rescan_remove();
+> +        pci_dev_get(dev);
+> +        list_for_each_entry_safe_reverse(pdev, temp, &parent->devices,
+> +					 bus_list) {
+> +		pci_stop_and_remove_bus_device(pdev);
+> +	}
+> +
+> +	result = reset_link(udev);
+
+Some of the indentation seems strange here, please use tab based
+indents everywhere.
