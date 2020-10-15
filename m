@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E50AC43457
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Oct 2020 19:31:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70829C4363D
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Oct 2020 19:31:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 165C22074D
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Oct 2020 19:31:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1D13E206ED
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Oct 2020 19:31:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1602790277;
-	bh=fzYC92L7X4Hn79/HZ6Iz7ZTmwjYRvUEuCXRY/FDqu2w=;
+	s=default; t=1602790278;
+	bh=Ts9Ogq/knq60d2xJ/wIIS286CrO21aBQp0RqyebmSj0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=WvQaTc0sM+NRv7MoLOV9/ylACI62nXRBsrjvDqNZAdMYH+ijKfHnwboTCdIao6N8k
-	 mYV8ylBOg8Ct3o4Cs2D1ornkrHNKsFBPN3yOBllQgBxUF0blApKAOZYrprFXGnUqjP
-	 6t+B+QIVNURQCe/YJZDhKqbQsq1Gq05C8J74mARk=
+	b=epiZXp44mCieCBc1qBsVWpfF6kjgRx/uyX11Y1scXfajzoInM3nkF99kzS1PaKImw
+	 z2mMQdFGjOWF63UfsQvJFzOMtJcOZnlh5vjP0sK/8iJfIb2LgqJ1jGk8lW4e4nPKSp
+	 IYoSAYHM15e/vwVAdvBxxM6xKfRN8ME+5wXoEk5g=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391663AbgJOTbQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 15 Oct 2020 15:31:16 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59338 "EHLO mail.kernel.org"
+        id S2391669AbgJOTbR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 15 Oct 2020 15:31:17 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59232 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2391637AbgJOTbI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 15 Oct 2020 15:31:08 -0400
+        id S2391652AbgJOTbD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 15 Oct 2020 15:31:03 -0400
 Received: from localhost (170.sub-72-107-125.myvzw.com [72.107.125.170])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 244E8206E5;
-        Thu, 15 Oct 2020 19:31:07 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id EECC3206DC;
+        Thu, 15 Oct 2020 19:31:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1602790267;
-        bh=fzYC92L7X4Hn79/HZ6Iz7ZTmwjYRvUEuCXRY/FDqu2w=;
+        s=default; t=1602790263;
+        bh=Ts9Ogq/knq60d2xJ/wIIS286CrO21aBQp0RqyebmSj0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=JsL/0LmeXSXmTGebejjynw2LN2Oeo1dZQ5X2SVGAh/ufTBdgiBJl54wNHMce11Enj
-         OgGc6UuBnEC3+14lFzeJ7q+IUwkxvk3TPtKXfCTLu9RV3ygTZVZNUPZvgha93cvEwt
-         gQK4/YMv2847CZBFj47Elb9WPQa9yaqTbvfZP7rg=
+        b=BazraFT1uzNK04UCUubGrBQYAlwMBEfJgYU5FqpfKBEP0d0V+dwkQTfK8tKrtUnQa
+         qjremlj/mxR95JLaYF4UYhiXCfISKW1wQfjUw1pyHdGm2LOYH4rcLKVBaRU0i6+6Ow
+         xKYlgbPcXRB3j0exOaUcopHZwhmv+ox6mZTfA9wA=
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     "Saheed O . Bolarinwa" <refactormyself@gmail.com>
 Cc:     Puranjay Mohan <puranjay12@gmail.com>,
@@ -46,9 +46,9 @@ Cc:     Puranjay Mohan <puranjay12@gmail.com>,
         Yicong Yang <yangyicong@hisilicon.com>,
         Heiner Kallweit <hkallweit1@gmail.com>,
         linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v3 10/12] PCI/ASPM: Pass L1SS Capabilities value, not struct aspm_register_info
-Date:   Thu, 15 Oct 2020 14:30:37 -0500
-Message-Id: <20201015193039.12585-11-helgaas@kernel.org>
+Subject: [PATCH v3 08/12] PCI/ASPM: Remove struct aspm_register_info.l1ss_ctl2 (unused)
+Date:   Thu, 15 Oct 2020 14:30:35 -0500
+Message-Id: <20201015193039.12585-9-helgaas@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201015193039.12585-1-helgaas@kernel.org>
 References: <20201015193039.12585-1-helgaas@kernel.org>
@@ -60,60 +60,43 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Bjorn Helgaas <bhelgaas@google.com>
 
-aspm_calc_l1ss_info() needs only the L1SS Capabilities.  It doesn't need
-anything else from struct aspm_register_info, so pass only the Capabilities
-value.  No functional change intended.
+We never use the aspm_register_info.l1ss_ctl2 value, so remove it.  No
+functional change intended.
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/pcie/aspm.c | 17 ++++++++---------
- 1 file changed, 8 insertions(+), 9 deletions(-)
+ drivers/pci/pcie/aspm.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
 diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 896f6c0b08c6..8c6b976d8b50 100644
+index 77316262f982..3afa6c418f54 100644
 --- a/drivers/pci/pcie/aspm.c
 +++ b/drivers/pci/pcie/aspm.c
-@@ -476,8 +476,7 @@ static void pci_clear_and_set_dword(struct pci_dev *pdev, int pos,
+@@ -386,14 +386,13 @@ struct aspm_register_info {
+ 	/* L1 substates */
+ 	u32 l1ss_cap;
+ 	u32 l1ss_ctl1;
+-	u32 l1ss_ctl2;
+ };
  
- /* Calculate L1.2 PM substate timing parameters */
- static void aspm_calc_l1ss_info(struct pcie_link_state *link,
--				struct aspm_register_info *upreg,
--				struct aspm_register_info *dwreg)
-+				u32 parent_l1ss_cap, u32 child_l1ss_cap)
+ static void pcie_get_aspm_reg(struct pci_dev *pdev,
+ 			      struct aspm_register_info *info)
  {
- 	struct pci_dev *child = link->downstream, *parent = link->pdev;
- 	u32 val1, val2, scale1, scale2;
-@@ -489,15 +488,15 @@ static void aspm_calc_l1ss_info(struct pcie_link_state *link,
+ 	/* Read L1 PM substate capabilities */
+-	info->l1ss_cap = info->l1ss_ctl1 = info->l1ss_ctl2 = 0;
++	info->l1ss_cap = info->l1ss_ctl1 = 0;
+ 
+ 	if (!pdev->l1ss)
  		return;
+@@ -407,8 +406,6 @@ static void pcie_get_aspm_reg(struct pci_dev *pdev,
  
- 	/* Choose the greater of the two Port Common_Mode_Restore_Times */
--	val1 = (upreg->l1ss_cap & PCI_L1SS_CAP_CM_RESTORE_TIME) >> 8;
--	val2 = (dwreg->l1ss_cap & PCI_L1SS_CAP_CM_RESTORE_TIME) >> 8;
-+	val1 = (parent_l1ss_cap & PCI_L1SS_CAP_CM_RESTORE_TIME) >> 8;
-+	val2 = (child_l1ss_cap & PCI_L1SS_CAP_CM_RESTORE_TIME) >> 8;
- 	t_common_mode = max(val1, val2);
+ 	pci_read_config_dword(pdev, pdev->l1ss + PCI_L1SS_CTL1,
+ 			      &info->l1ss_ctl1);
+-	pci_read_config_dword(pdev, pdev->l1ss + PCI_L1SS_CTL2,
+-			      &info->l1ss_ctl2);
+ }
  
- 	/* Choose the greater of the two Port T_POWER_ON times */
--	val1   = (upreg->l1ss_cap & PCI_L1SS_CAP_P_PWR_ON_VALUE) >> 19;
--	scale1 = (upreg->l1ss_cap & PCI_L1SS_CAP_P_PWR_ON_SCALE) >> 16;
--	val2   = (dwreg->l1ss_cap & PCI_L1SS_CAP_P_PWR_ON_VALUE) >> 19;
--	scale2 = (dwreg->l1ss_cap & PCI_L1SS_CAP_P_PWR_ON_SCALE) >> 16;
-+	val1   = (parent_l1ss_cap & PCI_L1SS_CAP_P_PWR_ON_VALUE) >> 19;
-+	scale1 = (parent_l1ss_cap & PCI_L1SS_CAP_P_PWR_ON_SCALE) >> 16;
-+	val2   = (child_l1ss_cap & PCI_L1SS_CAP_P_PWR_ON_VALUE) >> 19;
-+	scale2 = (child_l1ss_cap & PCI_L1SS_CAP_P_PWR_ON_SCALE) >> 16;
- 
- 	if (calc_l1ss_pwron(parent, scale1, val1) >
- 	    calc_l1ss_pwron(child, scale2, val2)) {
-@@ -624,7 +623,7 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
- 		link->aspm_enabled |= ASPM_STATE_L1_2_PCIPM;
- 
- 	if (link->aspm_support & ASPM_STATE_L1SS)
--		aspm_calc_l1ss_info(link, &upreg, &dwreg);
-+		aspm_calc_l1ss_info(link, upreg.l1ss_cap, dwreg.l1ss_cap);
- 
- 	/* Save default state */
- 	link->aspm_default = link->aspm_enabled;
+ static void pcie_aspm_check_latency(struct pci_dev *endpoint)
 -- 
 2.25.1
 
