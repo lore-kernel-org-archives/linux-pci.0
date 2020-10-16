@@ -1,176 +1,136 @@
-Return-Path: <SRS0=n3kO=DW=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=3hcL=DX=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A6AAC433E7
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Oct 2020 22:47:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F297C433E7
+	for <linux-pci@archiver.kernel.org>; Fri, 16 Oct 2020 00:12:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B897520789
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Oct 2020 22:47:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1602802061;
-	bh=FQC4/961KMXtP22m/MvNik1P6aTFyjCnetQFsH8dNvc=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=EgvZzDjWZBN2PXjYTzqes1YMP3HNAy2+4CG2FKq2uq/WVJkhED/Tyqc39RDAY67Av
-	 1Febb8Y4qNS+4g4aBLBUIYEiXddmLnQEuJ/FVSU2oIGj8w60Ps3oixPAZPyi7NzBnP
-	 4Mif+uete9gogHzzmfBInHpP7GPtmLqAc5HezeQ0=
+	by mail.kernel.org (Postfix) with ESMTP id 2328B207F7
+	for <linux-pci@archiver.kernel.org>; Fri, 16 Oct 2020 00:12:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732254AbgJOWrl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 15 Oct 2020 18:47:41 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59938 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732248AbgJOWrl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 15 Oct 2020 18:47:41 -0400
-Received: from localhost (170.sub-72-107-125.myvzw.com [72.107.125.170])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D926520678;
-        Thu, 15 Oct 2020 22:47:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1602802060;
-        bh=FQC4/961KMXtP22m/MvNik1P6aTFyjCnetQFsH8dNvc=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=UWk0BseHLS7r4KWh22uvjxdASarIPecY3SbBTQkaTIpvrq733pbPPa7Fr6FC1iGtj
-         sh7THGNsITVmIqRbRIFWOfd43QjJ2tubNHRoiljTi/JEubq/wiNxTRIGa9IQO1FZtk
-         4wPV+VWr0MDh5MBo/0Mgh19aiMs2F+CImz22TTWk=
-Date:   Thu, 15 Oct 2020 17:47:38 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        robh@kernel.org, lorenzo.pieralisi@arm.com, bhelgaas@google.com,
-        gustavo.pimentel@synopsys.com
-Subject: Re: [PATCH] PCI: dwc: Added link up check in map_bus of
- dw_child_pcie_ops
-Message-ID: <20201015224738.GA24466@bjorn-Precision-5520>
+        id S1733101AbgJPAMR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 15 Oct 2020 20:12:17 -0400
+Received: from wout4-smtp.messagingengine.com ([64.147.123.20]:50519 "EHLO
+        wout4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1733099AbgJPAMQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Oct 2020 20:12:16 -0400
+Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
+        by mailout.west.internal (Postfix) with ESMTP id D3118AD8;
+        Thu, 15 Oct 2020 20:12:15 -0400 (EDT)
+Received: from mailfrontend2 ([10.202.2.163])
+  by compute4.internal (MEProxy); Thu, 15 Oct 2020 20:12:16 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        oregontracks.org; h=from:to:cc:subject:date:message-id
+        :in-reply-to:references:mime-version:content-transfer-encoding;
+         s=fm1; bh=bkw/lS8wGdIJjtilswIrasmXGD0yLnEJKxOlj/ljwcM=; b=FQN0/
+        VZbETyf9jSrFJ11nilBUVPh4/vZXtqGaw9f1ugy1pznSU9EaqkxY3uAs4UfGtHQ5
+        euAjh+J015aomvlmbAfJY1LtRYYysFEijsIUbxweR/1oxwufx22mJ55mawzS0cLs
+        RwNBxx8SoOO+hSDcUgRKyFWtS73ER2ggdb/+VKnfF5L4BNhbDccOcOY1o32q5FHX
+        5qzKlMHOd9nRNBYWmSwnSJZRDoyn5vCLNXiauJdlZYNJP40YA3oBuPZU/qcDfmvI
+        ULmOUbk77HMSLdGGoUiEwu89mcVGlUSquNw92X4kV5+CLetsaix3MREqSAxHRaio
+        /GsPq40WMqWOOjhPg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:content-transfer-encoding:date:from
+        :in-reply-to:message-id:mime-version:references:subject:to
+        :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
+        fm1; bh=bkw/lS8wGdIJjtilswIrasmXGD0yLnEJKxOlj/ljwcM=; b=EyMhReCq
+        rX3kHFsVQWxI/kS9P45q8p7BstwGOoKgSE2Ta2iZfDIVksz5pTqRZ5kutTHhvtYg
+        1/wtgO4mL/a5JpmcmHF+ldomAG19NPD/qhbN2nW0ESe+L7L7/iA99bVdPdIuZI9U
+        vNkikiSN1VjYr389L5qO+yTMPH+0IlutSBQkrd6xnsTw5COnRbPHU5yx11rZ0kQg
+        REkKxaU3uV5ThziRtaZC6WKq+XNne0gB2rS2vq2jdd+LRQpQn8Aq4y5A4DGWngIc
+        DXmKhF1le/TRwHnIvOgYT+HgWDaajdxpSth8rCjw34uu/NSlBtiJpF0cAUp7eXNv
+        xcZVELdRcNKdPA==
+X-ME-Sender: <xms:X-WIX3Bz12Bfo833VSLTIV4kX_Cz0lIMzq34R8GV141hjfagHHhJyQ>
+    <xme:X-WIX9jiqKDIHUXTZEXl-Uh89up9iu1IbaAhrqUEmr-MoXajwmlu-yG0fzg3sVLDI
+    q5ycqaQcnSgcitp>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedujedrieeggdeffecutefuodetggdotefrodftvf
+    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
+    uegrihhlohhuthemuceftddtnecunecujfgurhephffvufffkffojghfggfgsedtkeertd
+    ertddtnecuhfhrohhmpefuvggrnhcuggcumfgvlhhlvgihuceoshgvrghnvhhkrdguvghv
+    sehorhgvghhonhhtrhgrtghkshdrohhrgheqnecuggftrfgrthhtvghrnhepkefggeektd
+    dttdeuffffjeeihfetfffghfdugefhvdeuheeuudelheegleevheefnecuffhomhgrihhn
+    pehkvghrnhgvlhdrohhrghenucfkphepvdegrddvtddrudegkedrgeelnecuvehluhhsth
+    gvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepshgvrghnvhhkrdguvghv
+    sehorhgvghhonhhtrhgrtghkshdrohhrgh
+X-ME-Proxy: <xmx:X-WIXyn-NorAew1XFe9mu1k-Tx1Y4H5yY6yLsJ2JMs4kZnMcKpS_1w>
+    <xmx:X-WIX5x5cmLCe9nKVJ1frNN2fc8KJo8S8hGlMtu_TYhM_6RlSK6TDw>
+    <xmx:X-WIX8SzE2QbUk7WR1W7IHsIyyz_eZlPlF1QA639ivz9SbJdEt1aXQ>
+    <xmx:X-WIX7GUyD83tPoogRWsajmTqYj5wT1ftR_ImI0v943HW2mtzJAwMQ>
+Received: from arch-ashland-svkelley.hsd1.or.comcast.net (c-24-20-148-49.hsd1.or.comcast.net [24.20.148.49])
+        by mail.messagingengine.com (Postfix) with ESMTPA id EFC8C3064683;
+        Thu, 15 Oct 2020 20:12:13 -0400 (EDT)
+From:   Sean V Kelley <seanvk.dev@oregontracks.org>
+To:     bhelgaas@google.com, Jonathan.Cameron@huawei.com,
+        rafael.j.wysocki@intel.com, ashok.raj@intel.com,
+        tony.luck@intel.com, sathyanarayanan.kuppuswamy@intel.com,
+        qiuxu.zhuo@intel.com
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v9 01/15] PCI/RCEC: Add RCEC class code and extended capability
+Date:   Thu, 15 Oct 2020 17:10:59 -0700
+Message-Id: <20201016001113.2301761-2-seanvk.dev@oregontracks.org>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20201016001113.2301761-1-seanvk.dev@oregontracks.org>
+References: <20201016001113.2301761-1-seanvk.dev@oregontracks.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200916054130.8685-1-Zhiqiang.Hou@nxp.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Sep 16, 2020 at 01:41:30PM +0800, Zhiqiang Hou wrote:
-> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-> 
-> On NXP Layerscape platforms, it results in SError in the
-> enumeration of the PCIe controller, which is not connecting
-> with an Endpoint device. And it doesn't make sense to
-> enumerate the Endpoints when the PCIe link is down. So this
-> patch added the link up check to avoid to fire configuration
-> transactions on link down bus.
+From: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
 
-Lorenzo already applied this, but a couple questions:
+A PCIe Root Complex Event Collector (RCEC) has base class 0x08, sub-class
+0x07, and programming interface 0x00.  Add the class code 0x0807 to
+identify RCEC devices and add #defines for the RCEC Endpoint Association
+Extended Capability.
 
-You call out NXP Layerscape specifically, but doesn't this affect
-other DWC-based platforms, too?  You later mentioned imx6, Kishon
-mentioned dra7xx, Michael mentioned ls1028a, Naresh mentioned ls2088
-(probably both the same as your "NXP Layerscape").
+See PCIe r5.0, sec 1.3.4 ("Root Complex Event Collector") and sec 7.9.10
+("Root Complex Event Collector Endpoint Association Extended Capability").
 
-The backtrace below contains a bunch of irrelevant info.  The
-timestamps are pointless.  The backtrace past
-pci_scan_single_device+0x80/0x100 or so really doesn't add anything
-either.
+Link: https://lore.kernel.org/r/20201002184735.1229220-2-seanvk.dev@oregontracks.org
+Signed-off-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+---
+ include/linux/pci_ids.h       | 1 +
+ include/uapi/linux/pci_regs.h | 7 +++++++
+ 2 files changed, 8 insertions(+)
 
-It'd be nice to have a comment in the code because the code *looks*
-wrong and racy.  Without a hint, everybody who sees it will have to
-dig through the history to see why we tolerate the race.
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 1ab1e24bcbce..d8156a5dbee8 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -81,6 +81,7 @@
+ #define PCI_CLASS_SYSTEM_RTC		0x0803
+ #define PCI_CLASS_SYSTEM_PCI_HOTPLUG	0x0804
+ #define PCI_CLASS_SYSTEM_SDHCI		0x0805
++#define PCI_CLASS_SYSTEM_RCEC		0x0807
+ #define PCI_CLASS_SYSTEM_OTHER		0x0880
+ 
+ #define PCI_BASE_CLASS_INPUT		0x09
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index f9701410d3b5..f6475a9e63d8 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -828,6 +828,13 @@
+ #define  PCI_PWR_CAP_BUDGET(x)	((x) & 1)	/* Included in system budget */
+ #define PCI_EXT_CAP_PWR_SIZEOF	16
+ 
++/* Root Complex Event Collector Endpoint Association  */
++#define PCI_RCEC_RCIEP_BITMAP	4	/* Associated Bitmap for RCiEPs */
++#define PCI_RCEC_BUSN		8	/* RCEC Associated Bus Numbers */
++#define  PCI_RCEC_BUSN_REG_VER	0x02	/* Least version with BUSN present */
++#define  PCI_RCEC_BUSN_NEXT(x)	(((x) >> 8) & 0xff)
++#define  PCI_RCEC_BUSN_LAST(x)	(((x) >> 16) & 0xff)
++
+ /* Vendor-Specific (VSEC, PCI_EXT_CAP_ID_VNDR) */
+ #define PCI_VNDR_HEADER		4	/* Vendor-Specific Header */
+ #define  PCI_VNDR_HEADER_ID(x)	((x) & 0xffff)
+-- 
+2.28.0
 
-> [    0.807773] SError Interrupt on CPU2, code 0xbf000002 -- SError
-> [    0.807775] CPU: 2 PID: 1 Comm: swapper/0 Not tainted 5.9.0-rc5-next-20200914-00001-gf965d3ec86fa #67
-> [    0.807776] Hardware name: LS1046A RDB Board (DT)
-> [    0.807777] pstate: 20000085 (nzCv daIf -PAN -UAO BTYPE=--)
-> [    0.807778] pc : pci_generic_config_read+0x3c/0xe0
-> [    0.807778] lr : pci_generic_config_read+0x24/0xe0
-> [    0.807779] sp : ffff80001003b7b0
-> [    0.807780] x29: ffff80001003b7b0 x28: ffff80001003ba74
-> [    0.807782] x27: ffff000971d96800 x26: ffff00096e77e0a8
-> [    0.807784] x25: ffff80001003b874 x24: ffff80001003b924
-> [    0.807786] x23: 0000000000000004 x22: 0000000000000000
-> [    0.807788] x21: 0000000000000000 x20: ffff80001003b874
-> [    0.807790] x19: 0000000000000004 x18: ffffffffffffffff
-> [    0.807791] x17: 00000000000000c0 x16: fffffe0025981840
-> [    0.807793] x15: ffffb94c75b69948 x14: 62203a383634203a
-> [    0.807795] x13: 666e6f635f726568 x12: 202c31203d207265
-> [    0.807797] x11: 626d756e3e2d7375 x10: 656877202c307830
-> [    0.807799] x9 : 203d206e66766564 x8 : 0000000000000908
-> [    0.807801] x7 : 0000000000000908 x6 : ffff800010900000
-> [    0.807802] x5 : ffff00096e77e080 x4 : 0000000000000000
-> [    0.807804] x3 : 0000000000000003 x2 : 84fa3440ff7e7000
-> [    0.807806] x1 : 0000000000000000 x0 : ffff800010034000
-> [    0.807808] Kernel panic - not syncing: Asynchronous SError Interrupt
-> [    0.807809] CPU: 2 PID: 1 Comm: swapper/0 Not tainted 5.9.0-rc5-next-20200914-00001-gf965d3ec86fa #67
-> [    0.807810] Hardware name: LS1046A RDB Board (DT)
-> [    0.807811] Call trace:
-> [    0.807812]  dump_backtrace+0x0/0x1c0
-> [    0.807813]  show_stack+0x18/0x28
-> [    0.807814]  dump_stack+0xd8/0x134
-> [    0.807814]  panic+0x180/0x398
-> [    0.807815]  add_taint+0x0/0xb0
-> [    0.807816]  arm64_serror_panic+0x78/0x88
-> [    0.807817]  do_serror+0x68/0x180
-> [    0.807818]  el1_error+0x84/0x100
-> [    0.807818]  pci_generic_config_read+0x3c/0xe0
-> [    0.807819]  dw_pcie_rd_other_conf+0x78/0x110
-> [    0.807820]  pci_bus_read_config_dword+0x88/0xe8
-> [    0.807821]  pci_bus_generic_read_dev_vendor_id+0x30/0x1b0
-> [    0.807822]  pci_bus_read_dev_vendor_id+0x4c/0x78
-> [    0.807823]  pci_scan_single_device+0x80/0x100
-> [    0.807824]  pci_scan_slot+0x38/0x130
-> [    0.807825]  pci_scan_child_bus_extend+0x54/0x2a0
-> [    0.807826]  pci_scan_child_bus+0x14/0x20
-> [    0.807827]  pci_scan_bridge_extend+0x230/0x570
-> [    0.807828]  pci_scan_child_bus_extend+0x134/0x2a0
-> [    0.807829]  pci_scan_root_bus_bridge+0x64/0xf0
-> [    0.807829]  pci_host_probe+0x18/0xc8
-> [    0.807830]  dw_pcie_host_init+0x220/0x378
-> [    0.807831]  ls_pcie_probe+0x104/0x140
-> [    0.807832]  platform_drv_probe+0x54/0xa8
-> [    0.807833]  really_probe+0x118/0x3e0
-> [    0.807834]  driver_probe_device+0x5c/0xc0
-> [    0.807835]  device_driver_attach+0x74/0x80
-> [    0.807835]  __driver_attach+0x8c/0xd8
-> [    0.807836]  bus_for_each_dev+0x7c/0xd8
-> [    0.807837]  driver_attach+0x24/0x30
-> [    0.807838]  bus_add_driver+0x154/0x200
-> [    0.807839]  driver_register+0x64/0x120
-> [    0.807839]  __platform_driver_probe+0x7c/0x148
-> [    0.807840]  ls_pcie_driver_init+0x24/0x30
-> [    0.807841]  do_one_initcall+0x60/0x1d8
-> [    0.807842]  kernel_init_freeable+0x1f4/0x24c
-> [    0.807843]  kernel_init+0x14/0x118
-> [    0.807843]  ret_from_fork+0x10/0x34
-> [    0.807854] SMP: stopping secondary CPUs
-> [    0.807855] Kernel Offset: 0x394c64080000 from 0xffff800010000000
-> [    0.807856] PHYS_OFFSET: 0xffff8bfd40000000
-> [    0.807856] CPU features: 0x0240022,21806000
-> [    0.807857] Memory Limit: none
-> 
-> Fixes: c2b0c098fbd1 ("PCI: dwc: Use generic config accessors")
-> Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-> ---
->  drivers/pci/controller/dwc/pcie-designware-host.c | 6 ++++++
->  1 file changed, 6 insertions(+)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-> index c01c9d2fb3f9..e82b518430c5 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-> @@ -442,6 +442,9 @@ static void __iomem *dw_pcie_other_conf_map_bus(struct pci_bus *bus,
->  	struct pcie_port *pp = bus->sysdata;
->  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
->  
-> +	if (!dw_pcie_link_up(pci))
-> +		return NULL;
-> +
->  	busdev = PCIE_ATU_BUS(bus->number) | PCIE_ATU_DEV(PCI_SLOT(devfn)) |
->  		 PCIE_ATU_FUNC(PCI_FUNC(devfn));
->  
-> -- 
-> 2.17.1
-> 
