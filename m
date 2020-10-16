@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6918AC433DF
-	for <linux-pci@archiver.kernel.org>; Fri, 16 Oct 2020 00:13:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CECD5C433E7
+	for <linux-pci@archiver.kernel.org>; Fri, 16 Oct 2020 00:13:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 20159207F7
-	for <linux-pci@archiver.kernel.org>; Fri, 16 Oct 2020 00:13:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 85091207F7
+	for <linux-pci@archiver.kernel.org>; Fri, 16 Oct 2020 00:13:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389200AbgJPAM0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 15 Oct 2020 20:12:26 -0400
-Received: from wout4-smtp.messagingengine.com ([64.147.123.20]:55105 "EHLO
+        id S1733173AbgJPAN1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 15 Oct 2020 20:13:27 -0400
+Received: from wout4-smtp.messagingengine.com ([64.147.123.20]:34715 "EHLO
         wout4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1733120AbgJPAMV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Oct 2020 20:12:21 -0400
+        by vger.kernel.org with ESMTP id S2389715AbgJPAM2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Oct 2020 20:12:28 -0400
 Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
-        by mailout.west.internal (Postfix) with ESMTP id DC662AEE;
-        Thu, 15 Oct 2020 20:12:19 -0400 (EDT)
+        by mailout.west.internal (Postfix) with ESMTP id ED04DAEF;
+        Thu, 15 Oct 2020 20:12:26 -0400 (EDT)
 Received: from mailfrontend2 ([10.202.2.163])
-  by compute4.internal (MEProxy); Thu, 15 Oct 2020 20:12:20 -0400
+  by compute4.internal (MEProxy); Thu, 15 Oct 2020 20:12:27 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         oregontracks.org; h=from:to:cc:subject:date:message-id
         :in-reply-to:references:mime-version:content-transfer-encoding;
-         s=fm1; bh=ay3Rr4jBa6G05VEXyC69g8OPO+9GMOwVLqt93DkjY4Q=; b=QV3yN
-        UQqxbMzDrIohmKHbOy8MqGFBOVdSUABeoTNnazRJoAATx1FRrYfK6TnzHoorOH9K
-        pzmZZtnFVYsgjpJQHnofU3sS0xOG6zISxqsexUy/YOrR1mYU76SOOplSnlgLJ//3
-        FNzcYju8n5/IjSNGSfGqQ5OcpWufJDxmZbj5R32R8wwl3pxWv9WcVDwUJKyI6W1M
-        YN9TOhwLT7kigjJKmfNe3w2qQy0WEPteftU3ptSX44a4+QfHbJ7TECQoP6X+DxtP
-        tTRIjDbFa/FlaL7kwYf2ChfMqsVTFU4DFeaxaUzaX21O4g8HS67yh9a8iugxEpMV
-        zZ+eFUh6rmQ3w3WjQ==
+         s=fm1; bh=PHyu6MB+XozbsB2RUwUB3vXsDG5zNx4Z0tOfnB5deko=; b=NIOuO
+        3xfAoRxLaHDl7JTmKQDkEgC7LCYyT+ePglNajQgRhc6CFzOQPJs2vGY2K0Kg0GVS
+        +hIyRtgMq/Qr5mfs9bwN8Vlw8gBRSCtePmsJN7HhPScsmw0+sR6YxvX5DajIqFCl
+        b1K/IhDQ6+HD1Zp9fg/S1vbJy1cWdZeHSbVBTqmW6d1GUIzG0lUGiBlEfqtisTJw
+        6MaIefmhtFjmwKWVMOAKuZTN9kjH+ZLq2nbnDf9ezZ5gfFjrvrNcT9HTDFp3hwpW
+        wtDdD2DLvbQK/5PbU6UkdxWELh4vsJBeGQGQ//Rk0Kca0f8EcbX20eS7QIOwvSg/
+        emmgHdweSLyW5lJVA==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         messagingengine.com; h=cc:content-transfer-encoding:date:from
         :in-reply-to:message-id:mime-version:references:subject:to
         :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
-        fm1; bh=ay3Rr4jBa6G05VEXyC69g8OPO+9GMOwVLqt93DkjY4Q=; b=lvdfzlJ5
-        cMkT6of+STXyrCKxF49DyGq8aXLLPWbFLevJ1t3Y62zAPKqIRpcYXAcyRpSYmIt1
-        zOuONHqDD2uAiVbdp+DMAugt28oATx9GNttqP7T2zD9vyF/Lna1Wr0zjW4TPc9NR
-        QqnGwrarDjUqobaVVFI37uw6KjvjAnwQb9PVkL+gv1x6uJ5wH4kRZnURPBlp0try
-        33VkgHc+hnwM4kDsfo2hu1tcjkOh4j3K7H1S0Ru5UUGQGNbH1nhWDn+dJZdPtl8O
-        o3racDHTu5BIpXytCIsqGNmXwe2qcgSjMWi5TcRxZFl0aAoRKTtjEi7dVn/Gyglx
-        hsPHB7iJhouXJQ==
-X-ME-Sender: <xms:Y-WIX3GD-8rhobaWDOZPkkTrSKY9Oz_ODu94HfKl1PydDzfDW0FOAw>
-    <xme:Y-WIX0WZUNfrbFDePozd-bwi6VlgtJ1WcwnAoGVvCie1VJSrPGfNizL91GIuKE4p8
-    5chy8rXpHzelWs8>
+        fm1; bh=PHyu6MB+XozbsB2RUwUB3vXsDG5zNx4Z0tOfnB5deko=; b=E4kZyhQc
+        zRKiVT6oSLNKFS/Hwq0lFbdGehzByh5t9gQjYvjaLGQKfOYvqGr0yL1taKhSH3nW
+        SWnErQcMMKou0Urac4iVWUXjT/4o5iNtx5oYXlkvjQ3RkHG2vGud95R3YnYN4YvV
+        YKQPC0qPWQ0O3IDld7mzV4sT9CUMT/CNN3ptvGxtuju/smO+2fpFsnWaEtjo8Yhj
+        XSp/EzrLfO+yel/CraMSg1lB5SUwGAnqy55rCXLLv/DO9G9pdTJmRxGNR/rC1w30
+        2WTRAnj550Re/Ko4cpAj/qR7lw30KR/jWeA3FAIwV77T9GnjtqWuTGSskCdDANbs
+        EnL7AnpJgbuHlw==
+X-ME-Sender: <xms:auWIX73KEd5CMFt8BROVbz7uW9lRA-VToRH64l2HZiwnf78Qzv46fA>
+    <xme:auWIX6E86523i50casHQ3qWlWsLUOmUBUEIWcmmDT-RCffdPK_CY3Y_RVrMZbM47M
+    SZO0ZKfghmJA0X_>
 X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedujedrieeggdeffecutefuodetggdotefrodftvf
     curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
     uegrihhlohhuthemuceftddtnecunecujfgurhephffvufffkffojghfggfgsedtkeertd
@@ -55,15 +55,15 @@ X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedujedrieeggdeffecutefuodetggdote
     sehorhgvghhonhhtrhgrtghkshdrohhrgheqnecuggftrfgrthhtvghrnhepkefggeektd
     dttdeuffffjeeihfetfffghfdugefhvdeuheeuudelheegleevheefnecuffhomhgrihhn
     pehkvghrnhgvlhdrohhrghenucfkphepvdegrddvtddrudegkedrgeelnecuvehluhhsth
-    gvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepshgvrghnvhhkrdguvghv
+    gvrhfuihiivgepieenucfrrghrrghmpehmrghilhhfrhhomhepshgvrghnvhhkrdguvghv
     sehorhgvghhonhhtrhgrtghkshdrohhrgh
-X-ME-Proxy: <xmx:Y-WIX5KYATCwvo0ibldyGdVvzMB97af0G9UcRlpRQewKHU_vCR2Cmg>
-    <xmx:Y-WIX1GOPGe46RMMjkaXW6eq0klgVoiw81G_U4RhRJDsKAUzjXmFLA>
-    <xmx:Y-WIX9UilQmXzyVvEQQsZpQpc3jMrCSemn-8Grc2hPuVh4qdtUqYmg>
-    <xmx:Y-WIX8H-VpIIz_qNfciY-xt_23JUrC7_ipBdvZduWX4RojlsZhMrIA>
+X-ME-Proxy: <xmx:auWIX77ObQ_SG1vmTW6zBlWJeefCstqZA2JYnLjSNhFQToSSxkkDFA>
+    <xmx:auWIXw0ni9kWKFEp5lKL9dkvX0SLOT1x3MFDj6xohKqVMOuR8tixOg>
+    <xmx:auWIX-ESlScGIsI_ACnlN4vPWuGPtC-yezC4q4k3aoVtZb4nBqoVbA>
+    <xmx:auWIXx0xkbpiAWfihCtFIh-QzQQpAyR2ymdGmtLlPPMQqY5iBQjvSw>
 Received: from arch-ashland-svkelley.hsd1.or.comcast.net (c-24-20-148-49.hsd1.or.comcast.net [24.20.148.49])
-        by mail.messagingengine.com (Postfix) with ESMTPA id 2E5703064684;
-        Thu, 15 Oct 2020 20:12:17 -0400 (EDT)
+        by mail.messagingengine.com (Postfix) with ESMTPA id 570F73064680;
+        Thu, 15 Oct 2020 20:12:25 -0400 (EDT)
 From:   Sean V Kelley <seanvk.dev@oregontracks.org>
 To:     bhelgaas@google.com, Jonathan.Cameron@huawei.com,
         rafael.j.wysocki@intel.com, ashok.raj@intel.com,
@@ -71,9 +71,9 @@ To:     bhelgaas@google.com, Jonathan.Cameron@huawei.com,
         qiuxu.zhuo@intel.com
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         Sean V Kelley <sean.v.kelley@intel.com>
-Subject: [PATCH v9 03/15] PCI/RCEC: Cache RCEC capabilities in pci_init_capabilities()
-Date:   Thu, 15 Oct 2020 17:11:01 -0700
-Message-Id: <20201016001113.2301761-4-seanvk.dev@oregontracks.org>
+Subject: [PATCH v9 07/15] PCI/ERR: Use "bridge" for clarity in pcie_do_recovery()
+Date:   Thu, 15 Oct 2020 17:11:05 -0700
+Message-Id: <20201016001113.2301761-8-seanvk.dev@oregontracks.org>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20201016001113.2301761-1-seanvk.dev@oregontracks.org>
 References: <20201016001113.2301761-1-seanvk.dev@oregontracks.org>
@@ -85,183 +85,110 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Sean V Kelley <sean.v.kelley@intel.com>
 
-Extend support for Root Complex Event Collectors by decoding and caching
-the RCEC Endpoint Association Extended Capabilities when enumerating. Use
-that cached information for later error source reporting. See PCIe r5.0,
-sec 7.9.10.
+pcie_do_recovery() may be called with "dev" being either a bridge (Root
+Port or Switch Downstream Port) or an Endpoint.  The bulk of the function
+deals with the bridge, so if we start with an Endpoint, we reset "dev" to
+be the bridge leading to it.
 
-[bhelgaas: make pci_rcec_init() void, set dev->rcec_ea after filling it]
+For clarity, replace "dev" in the body of the function with "bridge".  No
+functional change intended.
+
+[bhelgaas: commit log, split pieces out so this is pure rename, also
+replace "dev" with "bridge" in messages and pci_uevent_ers()]
 Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Co-developed-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
-Link: https://lore.kernel.org/r/20201002184735.1229220-4-seanvk.dev@oregontracks.org
-Signed-off-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+Link: https://lore.kernel.org/r/20201002184735.1229220-6-seanvk.dev@oregontracks.org
 Signed-off-by: Sean V Kelley <sean.v.kelley@intel.com>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Acked-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 ---
- drivers/pci/pci.h         | 17 +++++++++++
- drivers/pci/pcie/Makefile |  2 +-
- drivers/pci/pcie/rcec.c   | 59 +++++++++++++++++++++++++++++++++++++++
- drivers/pci/probe.c       |  2 ++
- include/linux/pci.h       |  4 +++
- 5 files changed, 83 insertions(+), 1 deletion(-)
- create mode 100644 drivers/pci/pcie/rcec.c
+ drivers/pci/pcie/err.c | 37 ++++++++++++++++++++-----------------
+ 1 file changed, 20 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index fa12f7cbc1a0..af98b7d2134b 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -449,6 +449,15 @@ int aer_get_device_error_info(struct pci_dev *dev, struct aer_err_info *info);
- void aer_print_error(struct pci_dev *dev, struct aer_err_info *info);
- #endif	/* CONFIG_PCIEAER */
- 
-+#ifdef CONFIG_PCIEPORTBUS
-+/* Cached RCEC Endpoint Association */
-+struct rcec_ea {
-+	u8		nextbusn;
-+	u8		lastbusn;
-+	u32		bitmap;
-+};
-+#endif
-+
- #ifdef CONFIG_PCIE_DPC
- void pci_save_dpc_state(struct pci_dev *dev);
- void pci_restore_dpc_state(struct pci_dev *dev);
-@@ -461,6 +470,14 @@ static inline void pci_restore_dpc_state(struct pci_dev *dev) {}
- static inline void pci_dpc_init(struct pci_dev *pdev) {}
- #endif
- 
-+#ifdef CONFIG_PCIEPORTBUS
-+void pci_rcec_init(struct pci_dev *dev);
-+void pci_rcec_exit(struct pci_dev *dev);
-+#else
-+static inline void pci_rcec_init(struct pci_dev *dev) {}
-+static inline void pci_rcec_exit(struct pci_dev *dev) {}
-+#endif
-+
- #ifdef CONFIG_PCI_ATS
- /* Address Translation Service */
- void pci_ats_init(struct pci_dev *dev);
-diff --git a/drivers/pci/pcie/Makefile b/drivers/pci/pcie/Makefile
-index 68da9280ff11..d9697892fa3e 100644
---- a/drivers/pci/pcie/Makefile
-+++ b/drivers/pci/pcie/Makefile
-@@ -2,7 +2,7 @@
- #
- # Makefile for PCI Express features and port driver
- 
--pcieportdrv-y			:= portdrv_core.o portdrv_pci.o err.o
-+pcieportdrv-y			:= portdrv_core.o portdrv_pci.o err.o rcec.o
- 
- obj-$(CONFIG_PCIEPORTBUS)	+= pcieportdrv.o
- 
-diff --git a/drivers/pci/pcie/rcec.c b/drivers/pci/pcie/rcec.c
-new file mode 100644
-index 000000000000..038e9d706d5f
---- /dev/null
-+++ b/drivers/pci/pcie/rcec.c
-@@ -0,0 +1,59 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Root Complex Event Collector Support
-+ *
-+ * Authors:
-+ *  Sean V Kelley <sean.v.kelley@intel.com>
-+ *  Qiuxu Zhuo <qiuxu.zhuo@intel.com>
-+ *
-+ * Copyright (C) 2020 Intel Corp.
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/pci.h>
-+#include <linux/pci_regs.h>
-+
-+#include "../pci.h"
-+
-+void pci_rcec_init(struct pci_dev *dev)
-+{
-+	struct rcec_ea *rcec_ea;
-+	u32 rcec, hdr, busn;
-+	u8 ver;
-+
-+	/* Only for Root Complex Event Collectors */
-+	if (pci_pcie_type(dev) != PCI_EXP_TYPE_RC_EC)
-+		return;
-+
-+	rcec = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_RCEC);
-+	if (!rcec)
-+		return;
-+
-+	rcec_ea = kzalloc(sizeof(*rcec_ea), GFP_KERNEL);
-+	if (!rcec_ea)
-+		return;
-+
-+	pci_read_config_dword(dev, rcec + PCI_RCEC_RCIEP_BITMAP,
-+			      &rcec_ea->bitmap);
-+
-+	/* Check whether RCEC BUSN register is present */
-+	pci_read_config_dword(dev, rcec, &hdr);
-+	ver = PCI_EXT_CAP_VER(hdr);
-+	if (ver >= PCI_RCEC_BUSN_REG_VER) {
-+		pci_read_config_dword(dev, rcec + PCI_RCEC_BUSN, &busn);
-+		rcec_ea->nextbusn = PCI_RCEC_BUSN_NEXT(busn);
-+		rcec_ea->lastbusn = PCI_RCEC_BUSN_LAST(busn);
-+	} else {
-+		/* Avoid later ver check by setting nextbusn */
-+		rcec_ea->nextbusn = 0xff;
-+		rcec_ea->lastbusn = 0x00;
-+	}
-+
-+	dev->rcec_ea = rcec_ea;
-+}
-+
-+void pci_rcec_exit(struct pci_dev *dev)
-+{
-+	kfree(dev->rcec_ea);
-+	dev->rcec_ea = NULL;
-+}
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 03d37128a24f..25f01f841f2d 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2201,6 +2201,7 @@ static void pci_configure_device(struct pci_dev *dev)
- static void pci_release_capabilities(struct pci_dev *dev)
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index 7a5af873d8bc..46a5b84f8842 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -151,24 +151,27 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+ 		pci_ers_result_t (*reset_subordinates)(struct pci_dev *pdev))
  {
- 	pci_aer_exit(dev);
-+	pci_rcec_exit(dev);
- 	pci_vpd_release(dev);
- 	pci_iov_release(dev);
- 	pci_free_cap_save_buffers(dev);
-@@ -2400,6 +2401,7 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 	pci_ptm_init(dev);		/* Precision Time Measurement */
- 	pci_aer_init(dev);		/* Advanced Error Reporting */
- 	pci_dpc_init(dev);		/* Downstream Port Containment */
-+	pci_rcec_init(dev);		/* Root Complex Event Collector */
+ 	int type = pci_pcie_type(dev);
+-	pci_ers_result_t status = PCI_ERS_RESULT_CAN_RECOVER;
++	struct pci_dev *bridge;
+ 	struct pci_bus *bus;
++	pci_ers_result_t status = PCI_ERS_RESULT_CAN_RECOVER;
  
- 	pcie_report_downtraining(dev);
+ 	/*
+-	 * Error recovery runs on all subordinates of the first downstream port.
+-	 * If the downstream port detected the error, it is cleared at the end.
++	 * Error recovery runs on all subordinates of the bridge.  If the
++	 * bridge detected the error, it is cleared at the end.
+ 	 */
+ 	if (!(type == PCI_EXP_TYPE_ROOT_PORT ||
+ 	      type == PCI_EXP_TYPE_DOWNSTREAM))
+-		dev = pci_upstream_bridge(dev);
+-	bus = dev->subordinate;
++		bridge = pci_upstream_bridge(dev);
++	else
++		bridge = dev;
  
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 835530605c0d..2290439e8bc0 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -304,6 +304,7 @@ struct pcie_link_state;
- struct pci_vpd;
- struct pci_sriov;
- struct pci_p2pdma;
-+struct rcec_ea;
+-	pci_dbg(dev, "broadcast error_detected message\n");
++	bus = bridge->subordinate;
++	pci_dbg(bridge, "broadcast error_detected message\n");
+ 	if (state == pci_channel_io_frozen) {
+ 		pci_walk_bus(bus, report_frozen_detected, &status);
+-		status = reset_subordinates(dev);
++		status = reset_subordinates(bridge);
+ 		if (status != PCI_ERS_RESULT_RECOVERED) {
+-			pci_warn(dev, "subordinate device reset failed\n");
++			pci_warn(bridge, "subordinate device reset failed\n");
+ 			goto failed;
+ 		}
+ 	} else {
+@@ -177,7 +180,7 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
  
- /* The pci_dev structure describes PCI devices */
- struct pci_dev {
-@@ -326,6 +327,9 @@ struct pci_dev {
- #ifdef CONFIG_PCIEAER
- 	u16		aer_cap;	/* AER capability offset */
- 	struct aer_stats *aer_stats;	/* AER stats for this device */
-+#endif
-+#ifdef CONFIG_PCIEPORTBUS
-+	struct rcec_ea	*rcec_ea;	/* RCEC cached endpoint association */
- #endif
- 	u8		pcie_cap;	/* PCIe capability offset */
- 	u8		msi_cap;	/* MSI capability offset */
+ 	if (status == PCI_ERS_RESULT_CAN_RECOVER) {
+ 		status = PCI_ERS_RESULT_RECOVERED;
+-		pci_dbg(dev, "broadcast mmio_enabled message\n");
++		pci_dbg(bridge, "broadcast mmio_enabled message\n");
+ 		pci_walk_bus(bus, report_mmio_enabled, &status);
+ 	}
+ 
+@@ -188,27 +191,27 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+ 		 * drivers' slot_reset callbacks?
+ 		 */
+ 		status = PCI_ERS_RESULT_RECOVERED;
+-		pci_dbg(dev, "broadcast slot_reset message\n");
++		pci_dbg(bridge, "broadcast slot_reset message\n");
+ 		pci_walk_bus(bus, report_slot_reset, &status);
+ 	}
+ 
+ 	if (status != PCI_ERS_RESULT_RECOVERED)
+ 		goto failed;
+ 
+-	pci_dbg(dev, "broadcast resume message\n");
++	pci_dbg(bridge, "broadcast resume message\n");
+ 	pci_walk_bus(bus, report_resume, &status);
+ 
+-	if (pcie_aer_is_native(dev))
+-		pcie_clear_device_status(dev);
+-	pci_aer_clear_nonfatal_status(dev);
+-	pci_info(dev, "device recovery successful\n");
++	if (pcie_aer_is_native(bridge))
++		pcie_clear_device_status(bridge);
++	pci_aer_clear_nonfatal_status(bridge);
++	pci_info(bridge, "device recovery successful\n");
+ 	return status;
+ 
+ failed:
+-	pci_uevent_ers(dev, PCI_ERS_RESULT_DISCONNECT);
++	pci_uevent_ers(bridge, PCI_ERS_RESULT_DISCONNECT);
+ 
+ 	/* TODO: Should kernel panic here? */
+-	pci_info(dev, "device recovery failed\n");
++	pci_info(bridge, "device recovery failed\n");
+ 
+ 	return status;
+ }
 -- 
 2.28.0
 
