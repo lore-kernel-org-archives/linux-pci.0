@@ -2,90 +2,98 @@ Return-Path: <SRS0=4e9O=D2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA036C43467
-	for <linux-pci@archiver.kernel.org>; Mon, 19 Oct 2020 06:15:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4369C433E7
+	for <linux-pci@archiver.kernel.org>; Mon, 19 Oct 2020 09:41:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 581F720708
-	for <linux-pci@archiver.kernel.org>; Mon, 19 Oct 2020 06:15:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 299CD22283
+	for <linux-pci@archiver.kernel.org>; Mon, 19 Oct 2020 09:41:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Wu9P2lzp"
+	dkim=pass (2048-bit key) header.d=endlessos-org.20150623.gappssmtp.com header.i=@endlessos-org.20150623.gappssmtp.com header.b="AgTQMJYJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726606AbgJSGPB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 19 Oct 2020 02:15:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48072 "EHLO
+        id S1728011AbgJSJlT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 19 Oct 2020 05:41:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53064 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726600AbgJSGPB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Oct 2020 02:15:01 -0400
-Received: from merlin.infradead.org (merlin.infradead.org [IPv6:2001:8b0:10b:1231::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7794C061755;
-        Sun, 18 Oct 2020 23:15:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=merlin.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-        Content-Description:In-Reply-To:References;
-        bh=byNuAlZMqUBDf/Ni087inEqcMCUxOCKj6p7sxgD8Ioc=; b=Wu9P2lzpc8m/LaFoouYosaRITH
-        PJLe/3a8le5x0OU8RwnMmg6SacAIbOEGUxhUGC3QKeDZSEMdIoRVFhmGU1EQQkMyPBAqBMF2zG2BW
-        xSCGLNbWDBd7cBktLx5xsgkF6VB/O1JhuhAC9MbiH7AlbI7lnWSDahdhdDCYXdC5nJneNjg/djlNw
-        dLWfPqKEOf5JyzhgIVmMogQr+kyp7cVAR7SJJd/UWyff3TMFvgjxi+FIQdyktL3nSfNAmgeF8vV6s
-        NoVJvG1IZQSwUC2jT9Zvr9pFiejq1jmmp+hh9adiknxyua54sPJ118yH+kQzKQlV3uneteYyhPuxi
-        elXNyN4w==;
-Received: from [2601:1c0:6280:3f0::507c] (helo=smtpauth.infradead.org)
-        by merlin.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kUORe-0001BX-9t; Mon, 19 Oct 2020 06:14:58 +0000
-From:   Randy Dunlap <rdunlap@infradead.org>
-To:     linux-kernel@vger.kernel.org
-Cc:     Randy Dunlap <rdunlap@infradead.org>,
-        kernel test robot <lkp@intel.com>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        Paul Burton <paulburton@kernel.org>,
-        linux-mips@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org
-Subject: [PATCH] PCI: export pci_find_host_bridge() to fix MFD build error
-Date:   Sun, 18 Oct 2020 23:14:53 -0700
-Message-Id: <20201019061453.32295-1-rdunlap@infradead.org>
-X-Mailer: git-send-email 2.26.2
+        with ESMTP id S1727556AbgJSJlT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Oct 2020 05:41:19 -0400
+Received: from mail-pl1-x641.google.com (mail-pl1-x641.google.com [IPv6:2607:f8b0:4864:20::641])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC240C0613CE
+        for <linux-pci@vger.kernel.org>; Mon, 19 Oct 2020 02:41:18 -0700 (PDT)
+Received: by mail-pl1-x641.google.com with SMTP id t4so2077925plq.13
+        for <linux-pci@vger.kernel.org>; Mon, 19 Oct 2020 02:41:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=endlessos-org.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=KhO5QcYpf/T7mrG56Eevh6Ri2KFYtB0nK9sFJd8u9zY=;
+        b=AgTQMJYJlH3kf3k1YpTj67FxysthUNAuduv/TaCvLEC/Wf+c6M1pXh7WTiVkrrmtfT
+         ohrh4uEsK4cgw1f7WB2egQyVmGFquSFR1cKcCdgmUBsJyt30tXUiqEOzI1hMvMuDELnT
+         T2/pzvJFCfMb8aFBrVOZodeDDYyx9H3nnelPtu2Yqa2kYAeIYPwkbIOqRS/85YfstoC3
+         8Uob7JzfwVJXMwD6BI0T179/+EzZ94TG/i2XMrt4osEYHhKpxLg5GRtQ2EzL3+QsC6VH
+         Id58yfYnx+/rspT6LW19e4dKDkSe2hpdt0yQbI38lMlPDWpErKx6+eHDSz9BA5Gy6JWF
+         Z3ew==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=KhO5QcYpf/T7mrG56Eevh6Ri2KFYtB0nK9sFJd8u9zY=;
+        b=QPaPWh7ow3CdfdBVwmakpqGgVPboARiz3yHjD2cIrY4TUa4AazifP/oahOOpiqN8hq
+         TYpIb7+eFF4IF5rzpAjvbzjdwrhsqEaG5BySUZpfb4W987UVBGLl7OTF7pobzbSKfS76
+         Rl0R32Bhv9yMd0Pz5j0YY8l83y7bt/PL9IyUu/0mERspscvyNozyF8zBFwZRvEfsaW+B
+         yhkceF/qXqdvWKYXtRtyhRVsNyOV+Hm5Far3dOr9ecc5Q1MQbdg6aBXga5tNSeQB6eII
+         5o8ot8p0lZTEtP7U5aW6gTqro8BQ6J1i5pIb//q8pgF34OQwtEhxXyFMBc0gMu2caIEn
+         5cyA==
+X-Gm-Message-State: AOAM533oRhvy2tmWH1Cdl0juiJOhuRj116bAuWdfVHRX0hB+apiNUUh1
+        u5eomCMxdguVHh113z/z2qW37Q==
+X-Google-Smtp-Source: ABdhPJx94ex/WUriPHvU/TfgFAvh71TrzsvPFKogNma6pbeKUv/epKwKm67z+QkngUHHO4T9ih6/+w==
+X-Received: by 2002:a17:902:6545:b029:d3:d1fc:ff28 with SMTP id d5-20020a1709026545b02900d3d1fcff28mr16486772pln.34.1603100478227;
+        Mon, 19 Oct 2020 02:41:18 -0700 (PDT)
+Received: from starnight.localdomain (123-204-46-122.static.seed.net.tw. [123.204.46.122])
+        by smtp.googlemail.com with ESMTPSA id u2sm7253215pgf.63.2020.10.19.02.41.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 19 Oct 2020 02:41:17 -0700 (PDT)
+From:   Jian-Hong Pan <jhp@endlessos.org>
+To:     Jon Derrick <jonathan.derrick@intel.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <helgaas@kernel.org>
+Cc:     linux-pci@vger.kernel.org,
+        You-Sheng Yang <vicamo.yang@canonical.com>,
+        Keith Busch <kbusch@kernel.org>, linux@endlessm.com,
+        Jian-Hong Pan <jhp@endlessos.org>
+Subject: Re: [PATCH] PCI: vmd: Add AHCI to fast interrupt list
+Date:   Mon, 19 Oct 2020 17:37:35 +0800
+Message-Id: <20201019093734.4091-1-jhp@endlessos.org>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200904171325.64959-1-jonathan.derrick@intel.com>
+References: <20200904171325.64959-1-jonathan.derrick@intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Fix a build error in drivers/mfd/ioc.o by exporting
-pci_find_host_bridge().
+>On 2020-09-05 01:13, Jon Derrick wrote:
+>> Some platforms have an AHCI controller behind VMD. These platforms are
+>> working correctly except for a case when the AHCI MSI is programmed with
+>> VMD IRQ vector 0 (0xfee00000). When programmed with any other interrupt
+>> (0xfeeNN000), the MSI is routed correctly and is handled by VMD. Placing
+>> the AHCI MSI(s) in the fast-interrupt allow list solves the issue.
+>> 
+>> This also requires that VMD allocate more than one MSI/X vector and
+>> changes the minimum MSI/X vectors allocated to two.
+>> 
+>> Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+>
+> Verified two platforms with such configuration. Thank you.
+>
+> You-Sheng Yang
 
-ERROR: modpost: "pci_find_host_bridge" [drivers/mfd/ioc3.ko] undefined!
+We have some laptops equipped with Tiger Lake chips and such configuration that
+hit the same issue, too.  They all could be fixed by this patch.  Thank you
 
-Reported-by: kernel test robot <lkp@intel.com>
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-Cc: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
-Cc: Paul Burton <paulburton@kernel.org>
-Cc: linux-mips@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
----
- drivers/pci/host-bridge.c |    2 ++
- 1 file changed, 2 insertions(+)
-
---- linux-next-20201016.orig/drivers/pci/host-bridge.c
-+++ linux-next-20201016/drivers/pci/host-bridge.c
-@@ -4,6 +4,7 @@
-  */
- 
- #include <linux/kernel.h>
-+#include <linux/export.h>
- #include <linux/pci.h>
- #include <linux/module.h>
- 
-@@ -23,6 +24,7 @@ struct pci_host_bridge *pci_find_host_br
- 
- 	return to_pci_host_bridge(root_bus->bridge);
- }
-+EXPORT_SYMBOL(pci_find_host_bridge);
- 
- struct device *pci_get_host_bridge_device(struct pci_dev *dev)
- {
+Tested-by: Jian-Hong Pan <jhp@endlessos.org>
