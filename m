@@ -2,116 +2,135 @@ Return-Path: <SRS0=b5K0=D3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 116AEC4363A
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Oct 2020 18:07:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3228AC55ABD
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Oct 2020 18:43:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 840402098B
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Oct 2020 18:07:26 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="qDHag5jU";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="1iCD6Fdk"
+	by mail.kernel.org (Postfix) with ESMTP id E090F2222C
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Oct 2020 18:43:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387791AbgJTSHZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 20 Oct 2020 14:07:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45912 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387755AbgJTSHZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Oct 2020 14:07:25 -0400
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48E4CC0613CE;
-        Tue, 20 Oct 2020 11:07:25 -0700 (PDT)
-From:   Thomas Gleixner <tglx@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1603217243;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=LeMXYg7iCMItsZtXLmmRK9fkfNd0wXBuje5zWxjuqWQ=;
-        b=qDHag5jUtcYY1ospfAJ+zlutOQbY3+C0bC9EPi1EZMpn+II8KgaYDpV1LAVI8GtoyzAz6J
-        0Ds6sLaCTexJ078RLsCQxHKLok/8wlwLzz4KqDEVDWN37BqpL8cHOin3Vc2lrbvKhnk9fU
-        gTtCZ9OIDpyIrU0KF0Ri4iTj3PX6nCApRbwgEoELwTGCqc2e7AGW9/iyDB1qKEi+56dCCz
-        pCGsFGG8IS/h6Jc+Kh+h9BZUwe79z9lfowsxuyYixjtt4jcsb8SAUm1cXvAIUnIXt6g0CW
-        GokjEdpt/RccHcAqCUC59MCkh0mKevqzmZTL7RGJRdmm6fEF5rqg9H7QDIC5Gw==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1603217243;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=LeMXYg7iCMItsZtXLmmRK9fkfNd0wXBuje5zWxjuqWQ=;
-        b=1iCD6Fdka9UkLf2kiE9clDl7+fPycl4tRaJS8aQELf+C9KC9wIeAZui9dMdNqM+0kS1mxw
-        uyB16tsCz17uoMBQ==
-To:     Nitesh Narayan Lal <nitesh@redhat.com>,
-        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
-        frederic@kernel.org, mtosatti@redhat.com, sassmann@redhat.com,
-        jesse.brandeburg@intel.com, lihong.yang@intel.com,
-        helgaas@kernel.org, jeffrey.t.kirsher@intel.com,
-        jacob.e.keller@intel.com, jlelli@redhat.com, hch@infradead.org,
-        bhelgaas@google.com, mike.marciniszyn@intel.com,
-        dennis.dalessandro@intel.com, thomas.lendacky@amd.com,
-        jiri@nvidia.com, mingo@redhat.com, peterz@infradead.org,
-        juri.lelli@redhat.com, vincent.guittot@linaro.org,
-        lgoncalv@redhat.com
-Subject: Re: [PATCH v4 4/4] PCI: Limit pci_alloc_irq_vectors() to housekeeping CPUs
-In-Reply-To: <3bca9eb1-a318-1fc6-9eee-aacc0293a193@redhat.com>
-References: <20200928183529.471328-1-nitesh@redhat.com> <20200928183529.471328-5-nitesh@redhat.com> <87v9f57zjf.fsf@nanos.tec.linutronix.de> <3bca9eb1-a318-1fc6-9eee-aacc0293a193@redhat.com>
-Date:   Tue, 20 Oct 2020 20:07:23 +0200
-Message-ID: <87lfg093fo.fsf@nanos.tec.linutronix.de>
+        id S2437581AbgJTSm4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 20 Oct 2020 14:42:56 -0400
+Received: from smtprelay0130.hostedemail.com ([216.40.44.130]:38858 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S2437566AbgJTSmy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Oct 2020 14:42:54 -0400
+Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
+        by smtprelay02.hostedemail.com (Postfix) with ESMTP id 43FA51260;
+        Tue, 20 Oct 2020 18:42:51 +0000 (UTC)
+X-Session-Marker: 6A6F6540706572636865732E636F6D
+X-HE-Tag: humor84_3a06a8527241
+X-Filterd-Recvd-Size: 4943
+Received: from XPS-9350.home (unknown [47.151.133.149])
+        (Authenticated sender: joe@perches.com)
+        by omf17.hostedemail.com (Postfix) with ESMTPA;
+        Tue, 20 Oct 2020 18:42:43 +0000 (UTC)
+Message-ID: <3bc5c2e3b3edc22a4d167ec807ecdaaf8dcda76d.camel@perches.com>
+Subject: Re: [RFC] treewide: cleanup unreachable breaks
+From:   Joe Perches <joe@perches.com>
+To:     Nick Desaulniers <ndesaulniers@google.com>,
+        Tom Rix <trix@redhat.com>
+Cc:     LKML <linux-kernel@vger.kernel.org>, linux-edac@vger.kernel.org,
+        linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org,
+        xen-devel@lists.xenproject.org, linux-block@vger.kernel.org,
+        openipmi-developer@lists.sourceforge.net,
+        "open list:HARDWARE RANDOM NUMBER GENERATOR CORE" 
+        <linux-crypto@vger.kernel.org>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        linux-power@fi.rohmeurope.com, linux-gpio@vger.kernel.org,
+        amd-gfx list <amd-gfx@lists.freedesktop.org>,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        nouveau@lists.freedesktop.org,
+        virtualization@lists.linux-foundation.org,
+        spice-devel@lists.freedesktop.org, linux-iio@vger.kernel.org,
+        linux-amlogic@lists.infradead.org,
+        industrypack-devel@lists.sourceforge.net,
+        linux-media@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com,
+        linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org,
+        linux-can@vger.kernel.org,
+        Network Development <netdev@vger.kernel.org>,
+        intel-wired-lan@lists.osuosl.org, ath10k@lists.infradead.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        linux-stm32@st-md-mailman.stormreply.com, linux-nfc@lists.01.org,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+        platform-driver-x86@vger.kernel.org, patches@opensource.cirrus.com,
+        storagedev@microchip.com, devel@driverdev.osuosl.org,
+        linux-serial@vger.kernel.org, linux-usb@vger.kernel.org,
+        usb-storage@lists.one-eyed-alien.net,
+        linux-watchdog@vger.kernel.org, ocfs2-devel@oss.oracle.com,
+        bpf <bpf@vger.kernel.org>, linux-integrity@vger.kernel.org,
+        linux-security-module@vger.kernel.org, keyrings@vger.kernel.org,
+        alsa-devel@alsa-project.org,
+        clang-built-linux <clang-built-linux@googlegroups.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        George Burgess <gbiv@google.com>
+Date:   Tue, 20 Oct 2020 11:42:42 -0700
+In-Reply-To: <CAKwvOdkR_Ttfo7_JKUiZFVqr=Uh=4b05KCPCSuzwk=zaWtA2_Q@mail.gmail.com>
+References: <20201017160928.12698-1-trix@redhat.com>
+         <20201018054332.GB593954@kroah.com>
+         <CAKwvOdkR_Ttfo7_JKUiZFVqr=Uh=4b05KCPCSuzwk=zaWtA2_Q@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+User-Agent: Evolution 3.36.4-0ubuntu1 
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Oct 20 2020 at 12:18, Nitesh Narayan Lal wrote:
-> On 10/20/20 10:16 AM, Thomas Gleixner wrote:
->> With the above change this will result
->>
->>    1  general interrupt which is free movable by user space
->>    1  managed interrupts (possible affinity to all 16 CPUs, but routed
->>       to housekeeping CPU as long as there is one online)
->>
->> So the device is now limited to a single queue which also affects the
->> housekeeping CPUs because now they have to share a single queue.
->>
->> With larger machines this gets even worse.
->
-> Yes, the change can impact the performance, however, if we don't do that we
-> may have a latency impact instead. Specifically, on larger systems where
-> most of the CPUs are isolated as we will definitely fail in moving all of the
-> IRQs away from the isolated CPUs to the housekeeping.
+On Mon, 2020-10-19 at 12:42 -0700, Nick Desaulniers wrote:
+> On Sat, Oct 17, 2020 at 10:43 PM Greg KH <gregkh@linuxfoundation.org> wrote:
+> > On Sat, Oct 17, 2020 at 09:09:28AM -0700, trix@redhat.com wrote:
+> > > From: Tom Rix <trix@redhat.com>
+> > > 
+> > > This is a upcoming change to clean up a new warning treewide.
+> > > I am wondering if the change could be one mega patch (see below) or
+> > > normal patch per file about 100 patches or somewhere half way by collecting
+> > > early acks.
+> > 
+> > Please break it up into one-patch-per-subsystem, like normal, and get it
+> > merged that way.
+> > 
+> > Sending us a patch, without even a diffstat to review, isn't going to
+> > get you very far...
+> 
+> Tom,
+> If you're able to automate this cleanup, I suggest checking in a
+> script that can be run on a directory.  Then for each subsystem you
+> can say in your commit "I ran scripts/fix_whatever.py on this subdir."
+>  Then others can help you drive the tree wide cleanup.  Then we can
+> enable -Wunreachable-code-break either by default, or W=2 right now
+> might be a good idea.
+> 
+> Ah, George (gbiv@, cc'ed), did an analysis recently of
+> `-Wunreachable-code-loop-increment`, `-Wunreachable-code-break`, and
+> `-Wunreachable-code-return` for Android userspace.  From the review:
+> ```
+> Spoilers: of these, it seems useful to turn on
+> -Wunreachable-code-loop-increment and -Wunreachable-code-return by
+> default for Android
+> ...
+> While these conventions about always having break arguably became
+> obsolete when we enabled -Wfallthrough, my sample turned up zero
+> potential bugs caught by this warning, and we'd need to put a lot of
+> effort into getting a clean tree. So this warning doesn't seem to be
+> worth it.
+> ```
+> Looks like there's an order of magnitude of `-Wunreachable-code-break`
+> than the other two.
+> 
+> We probably should add all 3 to W=2 builds (wrapped in cc-option).
+> I've filed https://github.com/ClangBuiltLinux/linux/issues/1180 to
+> follow up on.
 
-For non managed interrupts I agree.
+I suggest using W=1 as people that are doing cleanups
+generally use that and not W=123 or any other style.
 
->> So no. This needs way more thought for managed interrupts and you cannot
->> do that at the PCI layer.
->
-> Maybe we should not be doing anything in the case of managed IRQs as they
-> are anyways pinned to the housekeeping CPUs as long as we have the
-> 'managed_irq' option included in the kernel cmdline.
+Every other use of W= is still quite noisy and these
+code warnings are relatively trivially to fix up.
 
-Exactly. For the PCI side this vector limiting has to be restricted to
-the non managed case.
 
->>  Only the affinity spreading mechanism can do
->> the right thing here.
->
-> I can definitely explore this further.
->
-> However, IMHO we would still need a logic to prevent the devices from
-> creating excess vectors.
-
-Managed interrupts are preventing exactly that by pinning the interrupts
-and queues to one or a set of CPUs, which prevents vector exhaustion on
-CPU hotplug.
-
-Non-managed, yes that is and always was a problem. One of the reasons
-why managed interrupts exist.
-
-Thanks,
-
-        tglx
