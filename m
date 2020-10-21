@@ -2,135 +2,117 @@ Return-Path: <SRS0=eKEb=D4=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04E8AC6379D
-	for <linux-pci@archiver.kernel.org>; Wed, 21 Oct 2020 08:58:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60A43C561F8
+	for <linux-pci@archiver.kernel.org>; Wed, 21 Oct 2020 09:08:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AE289223FB
-	for <linux-pci@archiver.kernel.org>; Wed, 21 Oct 2020 08:58:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 08F0122250
+	for <linux-pci@archiver.kernel.org>; Wed, 21 Oct 2020 09:08:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ffwll.ch header.i=@ffwll.ch header.b="GUK8bAu/"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="rtIa9spk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2502442AbgJUI6K (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 21 Oct 2020 04:58:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41468 "EHLO
+        id S2437207AbgJUJIs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 21 Oct 2020 05:08:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43348 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2502367AbgJUI5W (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Oct 2020 04:57:22 -0400
-Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4573CC0613D9
-        for <linux-pci@vger.kernel.org>; Wed, 21 Oct 2020 01:57:21 -0700 (PDT)
-Received: by mail-wr1-x442.google.com with SMTP id t9so2039483wrq.11
-        for <linux-pci@vger.kernel.org>; Wed, 21 Oct 2020 01:57:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ffwll.ch; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=7XJE+hSH/S5sf+J2AcmYCFMIcTxnQzpOZqEdbmMuzFE=;
-        b=GUK8bAu/rOwhstjfCCL4jyz79EWKlxKCEPzbQk67yqQgL5JdMMK9qYFAwYpDisTw7I
-         i418204vlPkRGtUhsDK0/5TGt4bPzoR91GVgS9OWMA2nj4HmDeVE9XWPk7FPp7l7XoFa
-         ZYmkpZjMTP6Ea3nY9tfKU2e09YncWgauHxbSA=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=7XJE+hSH/S5sf+J2AcmYCFMIcTxnQzpOZqEdbmMuzFE=;
-        b=pUM8QzXebx5Guuxq04h46If4ba+gQQzz36HD826GoG/X3+2qKcBRzeuQX921KgF+JM
-         EC4+mcxjgFT38ixeMkZNMAKCCTmeCmKGfFEVFErDiSdf8dvmBspEDNaecV9FFyIGCE07
-         orcTU09PUqtl/I6jzH9h27USKubL8dv1zjy9cjCwIihWedbRnBXy1WUKksuDb/2bU8Aj
-         7oE87ciD92swEQnFVcI8kHGi6QFuplyQJ+XAJNSUvN3ItnEDM+PPYoLesD8xdUHkM6d+
-         0Lr6lzS/qvfci/H2VXZXx8DIGitc73QHIuOqDtebzCdN1pl5apoj/mt+5uBx8F48l5ug
-         yUZg==
-X-Gm-Message-State: AOAM532zU6V0EdZFK1BbHbdqg05z5JrBwTVVpMkscgXnAjxhSQlhubXj
-        qEvy0KIK9JNk1iVFaokPD0BXjA==
-X-Google-Smtp-Source: ABdhPJx37Cjmlb4fgq/grqKCCp37y8t5Mz28eOZMNIB2vWtdgu/4b448hmjy5S8hmkcygKAt/hypYw==
-X-Received: by 2002:a5d:5009:: with SMTP id e9mr3539688wrt.104.1603270640046;
-        Wed, 21 Oct 2020 01:57:20 -0700 (PDT)
-Received: from phenom.ffwll.local ([2a02:168:57f4:0:efd0:b9e5:5ae6:c2fa])
-        by smtp.gmail.com with ESMTPSA id q8sm2675939wro.32.2020.10.21.01.57.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Oct 2020 01:57:19 -0700 (PDT)
-From:   Daniel Vetter <daniel.vetter@ffwll.ch>
-To:     DRI Development <dri-devel@lists.freedesktop.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Cc:     kvm@vger.kernel.org, linux-mm@kvack.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-samsung-soc@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-s390@vger.kernel.org, Daniel Vetter <daniel.vetter@ffwll.ch>,
-        Daniel Vetter <daniel.vetter@intel.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
+        with ESMTP id S2437186AbgJUJIr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Oct 2020 05:08:47 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85279C0613CE;
+        Wed, 21 Oct 2020 02:08:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=eb1OL+P4JmUK1jhG+vTVWpbKbq0qkyHl8thry52FTQA=; b=rtIa9spk+eGaALa7gNwT0CJsKK
+        NjlQ0TaZClui6FNLaSH6sH410ckUEAUgWngz6KlxlBPFXfRsleXkZnz6ehdTlmAjGEDZ54LCQKjzW
+        mVkO6Qrz9t1ONh71M5vaOQ5etGEYUyqKkVWOoiOoxp1OWMTTQymeYA9Bq+58R1K92TY9eQDNJBhMo
+        j3j5B91C/arUdOUsfw/WJeofsIebuUbqnXHmWhjxv5BqEQh/x/dq8CROgLXRvJ7hEs8U3WUEjTr3U
+        sxRZjkXGtDIhLFLuspHPnxp/ilX5Zbg6Dkuh7PJ6uq/ocHYjHiAPX19862wtZObxjvIsngNw8WzZa
+        ycCtxeZA==;
+Received: from j217100.upc-j.chello.nl ([24.132.217.100] helo=noisy.programming.kicks-ass.net)
+        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kVA6W-00026P-MZ; Wed, 21 Oct 2020 09:08:21 +0000
+Received: from hirez.programming.kicks-ass.net (hirez.programming.kicks-ass.net [192.168.1.225])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (Client did not present a certificate)
+        by noisy.programming.kicks-ass.net (Postfix) with ESMTPS id 7B5E2304BAE;
+        Wed, 21 Oct 2020 11:08:17 +0200 (CEST)
+Received: by hirez.programming.kicks-ass.net (Postfix, from userid 1000)
+        id 6997B2BB99C35; Wed, 21 Oct 2020 11:08:17 +0200 (CEST)
+Date:   Wed, 21 Oct 2020 11:08:17 +0200
+From:   Peter Zijlstra <peterz@infradead.org>
+To:     Sami Tolvanen <samitolvanen@google.com>
+Cc:     Josh Poimboeuf <jpoimboe@redhat.com>, Jann Horn <jannh@google.com>,
+        the arch/x86 maintainers <x86@kernel.org>,
+        Masahiro Yamada <masahiroy@kernel.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Will Deacon <will@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Paul E. McKenney" <paulmck@kernel.org>,
         Kees Cook <keescook@chromium.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        John Hubbard <jhubbard@nvidia.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Jan Kara <jack@suse.cz>, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org, Daniel Vetter <daniel.vetter@ffwll.com>
-Subject: [PATCH v3 12/16] PCI: Obey iomem restrictions for procfs mmap
-Date:   Wed, 21 Oct 2020 10:56:51 +0200
-Message-Id: <20201021085655.1192025-13-daniel.vetter@ffwll.ch>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20201021085655.1192025-1-daniel.vetter@ffwll.ch>
-References: <20201021085655.1192025-1-daniel.vetter@ffwll.ch>
+        Nick Desaulniers <ndesaulniers@google.com>,
+        clang-built-linux <clang-built-linux@googlegroups.com>,
+        Kernel Hardening <kernel-hardening@lists.openwall.com>,
+        linux-arch <linux-arch@vger.kernel.org>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        linux-kbuild <linux-kbuild@vger.kernel.org>,
+        kernel list <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH v6 22/25] x86/asm: annotate indirect jumps
+Message-ID: <20201021090817.GU2651@hirez.programming.kicks-ass.net>
+References: <20201013003203.4168817-1-samitolvanen@google.com>
+ <20201013003203.4168817-23-samitolvanen@google.com>
+ <CAG48ez2baAvKDA0wfYLKy-KnM_1CdOwjU873VJGDM=CErjsv_A@mail.gmail.com>
+ <20201015102216.GB2611@hirez.programming.kicks-ass.net>
+ <20201015203942.f3kwcohcwwa6lagd@treble>
+ <CABCJKufDLmBCwmgGnfLcBw_B_4U8VY-R-dSNNp86TFfuMobPMw@mail.gmail.com>
+ <20201020185217.ilg6w5l7ujau2246@treble>
+ <CABCJKucVjFtrOsw58kn4OnW5kdkUh8G7Zs4s6QU9s6O7soRiAA@mail.gmail.com>
+ <20201021085606.GZ2628@hirez.programming.kicks-ass.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201021085606.GZ2628@hirez.programming.kicks-ass.net>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-There's three ways to access PCI BARs from userspace: /dev/mem, sysfs
-files, and the old proc interface. Two check against
-iomem_is_exclusive, proc never did. And with CONFIG_IO_STRICT_DEVMEM,
-this starts to matter, since we don't want random userspace having
-access to PCI BARs while a driver is loaded and using it.
+On Wed, Oct 21, 2020 at 10:56:06AM +0200, Peter Zijlstra wrote:
 
-Fix this by adding the same iomem_is_exclusive() check we already have
-on the sysfs side in pci_mmap_resource().
+> The "falls through to next function" seems to be limited to things like:
+> 
+>   warning: objtool: setup_vq() falls through to next function setup_vq.cold()
+>   warning: objtool: e1000_xmit_frame() falls through to next function e1000_xmit_frame.cold()
+> 
+> So something's weird with the .cold thing on vmlinux.o runs.
 
-References: 90a545e98126 ("restrict /dev/mem to idle io memory ranges")
-Signed-off-by: Daniel Vetter <daniel.vetter@intel.com>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>
-Cc: Kees Cook <keescook@chromium.org>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: John Hubbard <jhubbard@nvidia.com>
-Cc: Jérôme Glisse <jglisse@redhat.com>
-Cc: Jan Kara <jack@suse.cz>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-mm@kvack.org
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-samsung-soc@vger.kernel.org
-Cc: linux-media@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Daniel Vetter <daniel.vetter@ffwll.com>
---
-v2: Improve commit message (Bjorn)
----
- drivers/pci/proc.c | 5 +++++
- 1 file changed, 5 insertions(+)
+Shiny, check this:
 
-diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
-index d35186b01d98..3a2f90beb4cb 100644
---- a/drivers/pci/proc.c
-+++ b/drivers/pci/proc.c
-@@ -274,6 +274,11 @@ static int proc_bus_pci_mmap(struct file *file, struct vm_area_struct *vma)
- 		else
- 			return -EINVAL;
- 	}
-+
-+	if (dev->resource[i].flags & IORESOURCE_MEM &&
-+	    iomem_is_exclusive(dev->resource[i].start))
-+		return -EINVAL;
-+
- 	ret = pci_mmap_page_range(dev, i, vma,
- 				  fpriv->mmap_state, write_combine);
- 	if (ret < 0)
--- 
-2.28.0
+$ nm defconfig-build/vmlinux.o | grep setup_vq
+00000000004d33a0 t setup_vq
+00000000004d4c20 t setup_vq
+000000000001edcc t setup_vq.cold
+000000000001ee31 t setup_vq.cold
+00000000004d3dc0 t vp_setup_vq
 
+$ nm defconfig-build/vmlinux.o | grep e1000_xmit_frame
+0000000000741490 t e1000_xmit_frame
+0000000000763620 t e1000_xmit_frame
+000000000002f579 t e1000_xmit_frame.cold
+0000000000032b6e t e1000_xmit_frame.cold
+
+$ nm defconfig-build/vmlinux.o | grep e1000_diag_test
+000000000074c220 t e1000_diag_test
+000000000075eb70 t e1000_diag_test
+000000000002fc2a t e1000_diag_test.cold
+0000000000030880 t e1000_diag_test.cold
+
+I guess objtool goes sideways when there's multiple symbols with the
+same name in a single object file. This obvously never happens on single
+TU .o files.
+
+Not sure what to do about that.
