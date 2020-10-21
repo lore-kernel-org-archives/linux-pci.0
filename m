@@ -2,48 +2,49 @@ Return-Path: <SRS0=eKEb=D4=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60A43C561F8
-	for <linux-pci@archiver.kernel.org>; Wed, 21 Oct 2020 09:08:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 886D2C4363A
+	for <linux-pci@archiver.kernel.org>; Wed, 21 Oct 2020 09:32:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 08F0122250
-	for <linux-pci@archiver.kernel.org>; Wed, 21 Oct 2020 09:08:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2D20A22249
+	for <linux-pci@archiver.kernel.org>; Wed, 21 Oct 2020 09:32:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="rtIa9spk"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Lre+lL+7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2437207AbgJUJIs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 21 Oct 2020 05:08:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43348 "EHLO
+        id S2437951AbgJUJcn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 21 Oct 2020 05:32:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47634 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2437186AbgJUJIr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Oct 2020 05:08:47 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85279C0613CE;
-        Wed, 21 Oct 2020 02:08:47 -0700 (PDT)
+        with ESMTP id S2437910AbgJUJcm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Oct 2020 05:32:42 -0400
+Received: from merlin.infradead.org (merlin.infradead.org [IPv6:2001:8b0:10b:1231::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77060C0613CE;
+        Wed, 21 Oct 2020 02:32:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        d=infradead.org; s=merlin.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=eb1OL+P4JmUK1jhG+vTVWpbKbq0qkyHl8thry52FTQA=; b=rtIa9spk+eGaALa7gNwT0CJsKK
-        NjlQ0TaZClui6FNLaSH6sH410ckUEAUgWngz6KlxlBPFXfRsleXkZnz6ehdTlmAjGEDZ54LCQKjzW
-        mVkO6Qrz9t1ONh71M5vaOQ5etGEYUyqKkVWOoiOoxp1OWMTTQymeYA9Bq+58R1K92TY9eQDNJBhMo
-        j3j5B91C/arUdOUsfw/WJeofsIebuUbqnXHmWhjxv5BqEQh/x/dq8CROgLXRvJ7hEs8U3WUEjTr3U
-        sxRZjkXGtDIhLFLuspHPnxp/ilX5Zbg6Dkuh7PJ6uq/ocHYjHiAPX19862wtZObxjvIsngNw8WzZa
-        ycCtxeZA==;
+        bh=uqvkvvjoE5FAn6/BMAIUZQ+MmjJn2kzB19jYobhFRX8=; b=Lre+lL+7R9qcHEKT2oKPmuoix0
+        8+LXkYHtQYHrO2Pz7aEHI7sV1vgZDrWHN+UyPxRTwXoL2QHKC6LZhqZ0NLRXOEfVpKRikeCq40Q5C
+        atnuKL+sNqu+svyLk2dv9s9MF8hscvTiRHtwomK8MzcM1rFH6ZJKBnDE+ZSgAqeuI+PMs2YMEPsV9
+        F+nrQvS9EGm7Co6vldjFlpa2BGab+OdtnGdrjyA8CbXLVbHMYEE+FY6dei4gPfLLcwu8JSKoRahxO
+        uWnNBiAUOcWVy7viO9vcOo04lqSFPTD5SV3h441hcw1wOfJEretWPf/kkS656dTUVyPvbeRhsUUun
+        wZ1xFJ3Q==;
 Received: from j217100.upc-j.chello.nl ([24.132.217.100] helo=noisy.programming.kicks-ass.net)
-        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kVA6W-00026P-MZ; Wed, 21 Oct 2020 09:08:21 +0000
+        by merlin.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kVATf-00084o-G7; Wed, 21 Oct 2020 09:32:15 +0000
 Received: from hirez.programming.kicks-ass.net (hirez.programming.kicks-ass.net [192.168.1.225])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (Client did not present a certificate)
-        by noisy.programming.kicks-ass.net (Postfix) with ESMTPS id 7B5E2304BAE;
-        Wed, 21 Oct 2020 11:08:17 +0200 (CEST)
+        by noisy.programming.kicks-ass.net (Postfix) with ESMTPS id DD6EF3035D4;
+        Wed, 21 Oct 2020 11:32:13 +0200 (CEST)
 Received: by hirez.programming.kicks-ass.net (Postfix, from userid 1000)
-        id 6997B2BB99C35; Wed, 21 Oct 2020 11:08:17 +0200 (CEST)
-Date:   Wed, 21 Oct 2020 11:08:17 +0200
+        id C5308214ECD61; Wed, 21 Oct 2020 11:32:13 +0200 (CEST)
+Date:   Wed, 21 Oct 2020 11:32:13 +0200
 From:   Peter Zijlstra <peterz@infradead.org>
 To:     Sami Tolvanen <samitolvanen@google.com>
 Cc:     Josh Poimboeuf <jpoimboe@redhat.com>, Jann Horn <jannh@google.com>,
@@ -63,7 +64,7 @@ Cc:     Josh Poimboeuf <jpoimboe@redhat.com>, Jann Horn <jannh@google.com>,
         kernel list <linux-kernel@vger.kernel.org>,
         linux-pci@vger.kernel.org
 Subject: Re: [PATCH v6 22/25] x86/asm: annotate indirect jumps
-Message-ID: <20201021090817.GU2651@hirez.programming.kicks-ass.net>
+Message-ID: <20201021093213.GV2651@hirez.programming.kicks-ass.net>
 References: <20201013003203.4168817-1-samitolvanen@google.com>
  <20201013003203.4168817-23-samitolvanen@google.com>
  <CAG48ez2baAvKDA0wfYLKy-KnM_1CdOwjU873VJGDM=CErjsv_A@mail.gmail.com>
@@ -83,36 +84,51 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 On Wed, Oct 21, 2020 at 10:56:06AM +0200, Peter Zijlstra wrote:
 
-> The "falls through to next function" seems to be limited to things like:
+> I do not see these in particular, although I do see a lot of:
 > 
->   warning: objtool: setup_vq() falls through to next function setup_vq.cold()
->   warning: objtool: e1000_xmit_frame() falls through to next function e1000_xmit_frame.cold()
-> 
-> So something's weird with the .cold thing on vmlinux.o runs.
+>   "sibling call from callable instruction with modified stack frame"
 
-Shiny, check this:
+defconfig-build/vmlinux.o: warning: objtool: msr_write()+0x10a: sibling call from callable instruction with modified stack frame
+defconfig-build/vmlinux.o: warning: objtool:   msr_write()+0x99: (branch)
+defconfig-build/vmlinux.o: warning: objtool:   msr_write()+0x3e: (branch)
+defconfig-build/vmlinux.o: warning: objtool:   msr_write()+0x0: <=== (sym)
 
-$ nm defconfig-build/vmlinux.o | grep setup_vq
-00000000004d33a0 t setup_vq
-00000000004d4c20 t setup_vq
-000000000001edcc t setup_vq.cold
-000000000001ee31 t setup_vq.cold
-00000000004d3dc0 t vp_setup_vq
+$ nm defconfig-build/vmlinux.o | grep msr_write
+0000000000043250 t msr_write
+00000000004289c0 T msr_write
+0000000000003056 t msr_write.cold
 
-$ nm defconfig-build/vmlinux.o | grep e1000_xmit_frame
-0000000000741490 t e1000_xmit_frame
-0000000000763620 t e1000_xmit_frame
-000000000002f579 t e1000_xmit_frame.cold
-0000000000032b6e t e1000_xmit_frame.cold
+Below 'fixes' it. So this is also caused by duplicate symbols.
 
-$ nm defconfig-build/vmlinux.o | grep e1000_diag_test
-000000000074c220 t e1000_diag_test
-000000000075eb70 t e1000_diag_test
-000000000002fc2a t e1000_diag_test.cold
-0000000000030880 t e1000_diag_test.cold
-
-I guess objtool goes sideways when there's multiple symbols with the
-same name in a single object file. This obvously never happens on single
-TU .o files.
-
-Not sure what to do about that.
+---
+diff --git a/arch/x86/lib/msr.c b/arch/x86/lib/msr.c
+index 3bd905e10ee2..e36331f8f217 100644
+--- a/arch/x86/lib/msr.c
++++ b/arch/x86/lib/msr.c
+@@ -48,17 +48,6 @@ int msr_read(u32 msr, struct msr *m)
+ 	return err;
+ }
+ 
+-/**
+- * Write an MSR with error handling
+- *
+- * @msr: MSR to write
+- * @m: value to write
+- */
+-int msr_write(u32 msr, struct msr *m)
+-{
+-	return wrmsrl_safe(msr, m->q);
+-}
+-
+ static inline int __flip_bit(u32 msr, u8 bit, bool set)
+ {
+ 	struct msr m, m1;
+@@ -80,7 +69,7 @@ static inline int __flip_bit(u32 msr, u8 bit, bool set)
+ 	if (m1.q == m.q)
+ 		return 0;
+ 
+-	err = msr_write(msr, &m1);
++	err = wrmsr_safe(msr, m1.q);
+ 	if (err)
+ 		return err;
+ 
