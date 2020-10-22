@@ -7,43 +7,44 @@ X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64B46C388F7
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 715C7C55179
 	for <linux-pci@archiver.kernel.org>; Thu, 22 Oct 2020 03:44:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F317C21D6C
-	for <linux-pci@archiver.kernel.org>; Thu, 22 Oct 2020 03:44:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2DCAB2225D
+	for <linux-pci@archiver.kernel.org>; Thu, 22 Oct 2020 03:44:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2895527AbgJVDoE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 21 Oct 2020 23:44:04 -0400
-Received: from mga03.intel.com ([134.134.136.65]:13235 "EHLO mga03.intel.com"
+        id S2443118AbgJVDoF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 21 Oct 2020 23:44:05 -0400
+Received: from mga09.intel.com ([134.134.136.24]:34898 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2443118AbgJVDoE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S2443485AbgJVDoE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Wed, 21 Oct 2020 23:44:04 -0400
-IronPort-SDR: PX6bfcDKWGTQEMWdkh5LtdYne9eSIP7HI/5iG6jcS7PTWLGUhJd/5dcOZheXCQinC9KFPmeZOY
- ttxvHo1rhhLA==
-X-IronPort-AV: E=McAfee;i="6000,8403,9781"; a="167564736"
+IronPort-SDR: 1bXBQTWxhq+vAASvovDFw26zsI5r40e3eacuQsuG8TTfQhBK2VRHBeHLBSKiNmy0nufYjEObCC
+ E6cODZLYCjrg==
+X-IronPort-AV: E=McAfee;i="6000,8403,9781"; a="167588428"
 X-IronPort-AV: E=Sophos;i="5.77,403,1596524400"; 
-   d="scan'208";a="167564736"
+   d="scan'208";a="167588428"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Oct 2020 20:44:02 -0700
-IronPort-SDR: HaTR/+0d8yUfRTjmK8K9IpYZYO3zuHvz+5vCz4FfyLokNwgUI3wwDj9zT95NTNYt+o0CNs6T/Y
- NTcZZbT9DzJw==
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Oct 2020 20:44:03 -0700
+IronPort-SDR: 27AMViVmKfDi1kLKP9MpXq3JwBAbIa1498Q4yGHagdVdoWjpcuOnc87eQUaqFnqtYdRRFEg/lw
+ V89sHsGbPLhg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.77,403,1596524400"; 
-   d="scan'208";a="321233812"
+   d="scan'208";a="359107021"
 Received: from lkp-server02.sh.intel.com (HELO 911c2f167757) ([10.239.97.151])
-  by orsmga006.jf.intel.com with ESMTP; 21 Oct 2020 20:44:01 -0700
+  by FMSMGA003.fm.intel.com with ESMTP; 21 Oct 2020 20:44:01 -0700
 Received: from kbuild by 911c2f167757 with local (Exim 4.92)
         (envelope-from <lkp@intel.com>)
-        id 1kVRWD-0000G1-2j; Thu, 22 Oct 2020 03:44:01 +0000
-Date:   Thu, 22 Oct 2020 11:43:12 +0800
+        id 1kVRWD-0000G4-34; Thu, 22 Oct 2020 03:44:01 +0000
+Date:   Thu, 22 Oct 2020 11:43:08 +0800
 From:   kernel test robot <lkp@intel.com>
 To:     Bjorn Helgaas <helgaas@kernel.org>
 Cc:     linux-pci@vger.kernel.org
-Subject: [pci:next] BUILD SUCCESS 28e34e751f6c50098d9bcecb30c97634b6126730
-Message-ID: <5f90ffd0.ceb90yTpmtvmkYoa%lkp@intel.com>
+Subject: [pci:pci/vmd] BUILD SUCCESS
+ 852ba91dfaf4b2af7a760c5d083e17f8851ba157
+Message-ID: <5f90ffcc.dlE8hfuidWDFE3i6%lkp@intel.com>
 User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -52,8 +53,8 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git  next
-branch HEAD: 28e34e751f6c50098d9bcecb30c97634b6126730  Merge branch 'remotes/lorenzo/pci/xilinx'
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git  pci/vmd
+branch HEAD: 852ba91dfaf4b2af7a760c5d083e17f8851ba157  PCI: vmd: Update VMD PM to correctly use generic PCI PM
 
 elapsed time: 724m
 
