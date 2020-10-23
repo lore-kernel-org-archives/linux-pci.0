@@ -2,335 +2,193 @@ Return-Path: <SRS0=mfjy=D6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4159FC388F9
-	for <linux-pci@archiver.kernel.org>; Fri, 23 Oct 2020 07:38:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FEBEC55179
+	for <linux-pci@archiver.kernel.org>; Fri, 23 Oct 2020 07:58:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C070421D47
-	for <linux-pci@archiver.kernel.org>; Fri, 23 Oct 2020 07:38:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7766221D47
+	for <linux-pci@archiver.kernel.org>; Fri, 23 Oct 2020 07:58:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="BOoSFNHr"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="BlUScG0r"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S374431AbgJWHiw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 23 Oct 2020 03:38:52 -0400
-Received: from hqnvemgate25.nvidia.com ([216.228.121.64]:14040 "EHLO
-        hqnvemgate25.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S374428AbgJWHiw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Oct 2020 03:38:52 -0400
-Received: from hqmail.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate25.nvidia.com (using TLS: TLSv1.2, AES256-SHA)
-        id <B5f92885b0000>; Fri, 23 Oct 2020 00:38:03 -0700
-Received: from [10.40.202.195] (10.124.1.5) by HQMAIL107.nvidia.com
- (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Fri, 23 Oct
- 2020 07:38:41 +0000
-Subject: Re: [PATCH V2] PCI: dwc: Add support to handle prefetchable memory
- mapping
-To:     Rob Herring <robh@kernel.org>
-CC:     Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        id S375288AbgJWH6N (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 23 Oct 2020 03:58:13 -0400
+Received: from mailout2.w1.samsung.com ([210.118.77.12]:46354 "EHLO
+        mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S374947AbgJWH6N (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Oct 2020 03:58:13 -0400
+Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
+        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20201023075755euoutp02b726d3f0c2317029fbd73c49b1ad81ff~AkBJDwm4T1643316433euoutp02l
+        for <linux-pci@vger.kernel.org>; Fri, 23 Oct 2020 07:57:55 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20201023075755euoutp02b726d3f0c2317029fbd73c49b1ad81ff~AkBJDwm4T1643316433euoutp02l
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1603439875;
+        bh=Q9mtaEriLpO8ZfFYC6o2WC/Wtw/EDrFIhbVLQAASD/E=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=BlUScG0rVVgbH15XK1PrEpzuBixWuixkEH2o65TGtzCKC++YHBkBVTvCU/lxuHz+x
+         t0OOG6slBm/czpuHKwdNZg2vgDMbRrlrhCP+2gQhZj63/pLY82orpl/2W/na++zRvC
+         6HUGh30AaTlCuQ23E0X9gXJprt6TtDjda9HKzHYY=
+Received: from eusmges1new.samsung.com (unknown [203.254.199.242]) by
+        eucas1p1.samsung.com (KnoxPortal) with ESMTP id
+        20201023075755eucas1p1eb1cc8e7151296bc693acca47a1fb161~AkBIplAM_2403524035eucas1p1D;
+        Fri, 23 Oct 2020 07:57:55 +0000 (GMT)
+Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
+        eusmges1new.samsung.com (EUCPMTA) with SMTP id CA.A8.06456.20D829F5; Fri, 23
+        Oct 2020 08:57:54 +0100 (BST)
+Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
+        eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
+        20201023075754eucas1p2a4c9c5467f25a575bec34984fe6bb43b~AkBIV1PpN1771117711eucas1p2C;
+        Fri, 23 Oct 2020 07:57:54 +0000 (GMT)
+Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
+        eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20201023075754eusmtrp2e37f6760398f596b04e1323993a48338~AkBIVJsDS2108721087eusmtrp2d;
+        Fri, 23 Oct 2020 07:57:54 +0000 (GMT)
+X-AuditID: cbfec7f2-7efff70000001938-04-5f928d02506c
+Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
+        eusmgms2.samsung.com (EUCPMTA) with SMTP id B1.27.06017.20D829F5; Fri, 23
+        Oct 2020 08:57:54 +0100 (BST)
+Received: from AMDC2765.digital.local (unknown [106.120.51.73]) by
+        eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20201023075754eusmtip1c629c6ad053a54636302e97f4b075f86~AkBHukSg22319023190eusmtip1b;
+        Fri, 23 Oct 2020 07:57:54 +0000 (GMT)
+From:   Marek Szyprowski <m.szyprowski@samsung.com>
+To:     linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org
+Cc:     devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jaehoon Chung <jh80.chung@samsung.com>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        "Andrew Murray" <amurray@thegoodpenguin.co.uk>,
-        Thierry Reding <treding@nvidia.com>,
-        Jon Hunter <jonathanh@nvidia.com>,
-        PCI <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        <kthota@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        <sagar.tv@gmail.com>
-References: <20201005121351.32516-1-vidyas@nvidia.com>
- <20201020195931.12470-1-vidyas@nvidia.com>
- <CAL_Jsq+7caR1t=_v9Q_n43zEu9CNuiJmk0nPnvL8+S27rYhm9g@mail.gmail.com>
-From:   Vidya Sagar <vidyas@nvidia.com>
-Message-ID: <baa80ff4-5510-5c7b-303c-454adbf88a19@nvidia.com>
-Date:   Fri, 23 Oct 2020 13:08:36 +0530
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.3.2
-MIME-Version: 1.0
-In-Reply-To: <CAL_Jsq+7caR1t=_v9Q_n43zEu9CNuiJmk0nPnvL8+S27rYhm9g@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.124.1.5]
-X-ClientProxiedBy: HQMAIL101.nvidia.com (172.20.187.10) To
- HQMAIL107.nvidia.com (172.20.187.13)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1603438683; bh=mmJkkDvyMQ7l3wbCnd/qCpAOQYmHLOG2drpV+/yBgDA=;
-        h=Subject:To:CC:References:From:Message-ID:Date:User-Agent:
-         MIME-Version:In-Reply-To:Content-Type:Content-Language:
-         Content-Transfer-Encoding:X-Originating-IP:X-ClientProxiedBy;
-        b=BOoSFNHru6k6NIBkTHh3Y3nmyVsWhRAASMiH2ycbb9h2Qy6U9ne7SisYDfKagB8x7
-         F5v68WQjXlb8imVor/8NAsxe4m72JvBKAYFoAv3PJLsm60705GU4FxScHqm+azqhIn
-         4VQZ4XRKtnvVGekrhgy3kEFrF9gxwdWEDiVz45C42mnphZxA+oB9DYyT/jIIIu2GjL
-         UjjKmZ47Sfbla5ODmdWuUoiiPQaLS4xcAQjsKj/2jOfSeRMHJ5fZJt/sXrvmtLEpZd
-         o2Qy1aT0VsQfv9F5BkA/4qgailJ0B/7PQXece+mGjXyjq6q6yruySMP23VPJaKmhNv
-         3vPjHzMO0TZPA==
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Rob Herring <robh+dt@kernel.org>
+Subject: [PATCH v2 1/6] dt-bindings: pci: drop samsung,exynos5440-pcie
+ binding
+Date:   Fri, 23 Oct 2020 09:57:39 +0200
+Message-Id: <20201023075744.26200-2-m.szyprowski@samsung.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20201023075744.26200-1-m.szyprowski@samsung.com>
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrEKsWRmVeSWpSXmKPExsWy7djP87pMvZPiDR6strBY0pRhMf/IOVaL
+        G7/aWC1WfJnJbnHhaQ+bxfnzG9gtLu+aw2Zxdt5xNosZ5/cxWbz5/YLdYu2Ru+wWrXuPsFvs
+        vHOC2YHXY828NYweO2fdZfdYsKnUY9OqTjaPvi2rGD2O39jO5PF5k1wAexSXTUpqTmZZapG+
+        XQJXxpxDu5kKPopUzFjRwtzAuFawi5GTQ0LARKKjcw9zFyMXh5DACkaJJW8vQTlfGCX2bfnN
+        CuF8ZpR4+vItG0xL46dzbBCJ5YwSv67tZ4Nr2fZwJyNIFZuAoUTX2y6gBAeHiICDxI+vFiA1
+        zAKLmCUa+o+A1QgLBEjsv74bzGYRUJX4tXcfmM0rYCvRtHICO8Q2eYnVGw4wg9icAnYS7xru
+        MYIMkhBYxS4xZe4nZpAFEgIuEtPOmEDUC0u8Or4FqldG4v/O+UwQ9c2MEg/PrWWHcHoYJS43
+        zWCEqLKWuHPuF9ilzAKaEut36UOEHSVuzVwKNZ9P4sZbcIAxA5mTtk2HCvNKdLQJQVSrScw6
+        vg5u7cELl5ghbA+JWYdesUDCZyKjxJfrX5kmMMrPQli2gJFxFaN4amlxbnpqsWFearlecWJu
+        cWleul5yfu4mRmDKOf3v+KcdjF8vJR1iFOBgVOLhTZgwMV6INbGsuDL3EKMEB7OSCK/T2dNx
+        QrwpiZVVqUX58UWlOanFhxilOViUxHmNF72MFRJITyxJzU5NLUgtgskycXBKNTD2pReLLrd4
+        0LXrv1Vz7N7fXc6rWapXfVRfpHe7cL3YtllbJ76c/+ZjtPVumxS20AeyVvWK32dtm3VdTW72
+        W98azrC3VRu6wrJWf4702XXLlk+6U1bj3nSdrprsgJ0PuKZV/TZMTVx6heFe+hlDrfdLdC9d
+        MZkRYn1mc4wp04od34NWsXzrErFUYinOSDTUYi4qTgQAQHI+SjUDAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmphkeLIzCtJLcpLzFFi42I5/e/4XV2m3knxBu87VCyWNGVYzD9yjtXi
+        xq82VosVX2ayW1x42sNmcf78BnaLy7vmsFmcnXeczWLG+X1MFm9+v2C3WHvkLrtF694j7BY7
+        75xgduD1WDNvDaPHzll32T0WbCr12LSqk82jb8sqRo/jN7YzeXzeJBfAHqVnU5RfWpKqkJFf
+        XGKrFG1oYaRnaGmhZ2RiqWdobB5rZWSqpG9nk5Kak1mWWqRvl6CXMefQbqaCjyIVM1a0MDcw
+        rhXsYuTkkBAwkWj8dI6ti5GLQ0hgKaPEra4dLBAJGYmT0xpYIWxhiT/XuqCKPjFKLPx2gR0k
+        wSZgKNH1FiTBySEi4CTxfvJFZpAiZoE1zBKNbd1MIAlhAT+JC6s+gTWwCKhK/Nq7jxHE5hWw
+        lWhaOYEdYoO8xOoNB5hBbE4BO4l3DffAaoSAag4fuso8gZFvASPDKkaR1NLi3PTcYiO94sTc
+        4tK8dL3k/NxNjMAY2Hbs55YdjF3vgg8xCnAwKvHwJkyYGC/EmlhWXJl7iFGCg1lJhNfp7Ok4
+        Id6UxMqq1KL8+KLSnNTiQ4ymQEdNZJYSTc4HxmdeSbyhqaG5haWhubG5sZmFkjhvh8DBGCGB
+        9MSS1OzU1ILUIpg+Jg5OqQbGI5Pupp53cTxwcsfnX/nJYfVGPjG591bWOOasZdt41FvcVv7q
+        2anFcy+nL7gb0KCn1/LZVWlq//qfsh35yh+vSzM8LZj9K9m4+vV/rkspLByHLjhvKN7cpyd7
+        +1LY7SWdGuf0nRa7H3XWErh8QrD3XXSiJUvOyjKDF9lzGBM/rxbJttge3b1diaU4I9FQi7mo
+        OBEAoJb67ZcCAAA=
+X-CMS-MailID: 20201023075754eucas1p2a4c9c5467f25a575bec34984fe6bb43b
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-RootMTR: 20201023075754eucas1p2a4c9c5467f25a575bec34984fe6bb43b
+X-EPHeader: CA
+CMS-TYPE: 201P
+X-CMS-RootMailID: 20201023075754eucas1p2a4c9c5467f25a575bec34984fe6bb43b
+References: <20201023075744.26200-1-m.szyprowski@samsung.com>
+        <CGME20201023075754eucas1p2a4c9c5467f25a575bec34984fe6bb43b@eucas1p2.samsung.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Exynos5440 SoC support has been dropped since commit 8c83315da1cf ("ARM:
+dts: exynos: Remove Exynos5440"). Drop the obsolete bindings for
+exynos5440-pcie.
 
+Signed-off-by: Marek Szyprowski <m.szyprowski@samsung.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
+Reviewed-by: Krzysztof Kozlowski <krzk@kernel.org>
+---
+ .../bindings/pci/samsung,exynos5440-pcie.txt  | 58 -------------------
+ 1 file changed, 58 deletions(-)
+ delete mode 100644 Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
 
-On 10/23/2020 12:38 AM, Rob Herring wrote:
-> External email: Use caution opening links or attachments
-> 
-> 
-> On Tue, Oct 20, 2020 at 2:59 PM Vidya Sagar <vidyas@nvidia.com> wrote:
->>
->> DWC sub-system currently doesn't differentiate between prefetchable and
->> non-prefetchable memory aperture entries in the 'ranges' property and
->> provides ATU mapping only for the first memory aperture entry out of all
->> the entries present. This was introduced by the
->> commit 0f71c60ffd26 ("PCI: dwc: Remove storing of PCI resources").
->> Mapping for a memory apreture is required if its CPU address and the bus
->> address are different and the current mechanism works only if the memory
->> aperture which needs mapping happens to be the first entry. It doesn't
->> work either if the memory aperture that needs mapping is not the first
->> entry or if both prefetchable and non-prefetchable apertures need mapping.
-> 
-> Well that's subtle...
-> 
->> This patch fixes this issue by differentiating between prefetchable and
->> non-prefetchable apertures in the 'ranges' property there by removing the
->> dependency on the order in which they are specified and adds support for
->> mapping prefetchable aperture using ATU region-3 if required.
-> 
-> Now you don't do any iATU entry for a 1:1 memory range which is a
-> change for pretty much every other platform. That means we leave the
-> PCI transaction config to the whims of how h/w designers hooked up the
-> sideband signals. I guess this is how Uniphier works as it only has 1
-> viewport...
-> 
-> I think the assignment should be in this order:
-> - config space
-> - non-prefetchable (IIRC, it's required)
-> - prefetchable
-> - i/o
-> 
-> Stopping assignment and warning if you run out of viewports. Looking
-> at the platforms, I think that would always work. There's only
-> uniphier and ls1012a where we run out. Those would still behave the
-> same.
-As I see from the code this is how the current mapping is done
+diff --git a/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt b/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
+deleted file mode 100644
+index 651d957d1051..000000000000
+--- a/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
++++ /dev/null
+@@ -1,58 +0,0 @@
+-* Samsung Exynos 5440 PCIe interface
+-
+-This PCIe host controller is based on the Synopsys DesignWare PCIe IP
+-and thus inherits all the common properties defined in designware-pcie.txt.
+-
+-Required properties:
+-- compatible: "samsung,exynos5440-pcie"
+-- reg: base addresses and lengths of the PCIe controller,
+-- reg-names : First name should be set to "elbi".
+-	And use the "config" instead of getting the configuration address space
+-	from "ranges".
+-	NOTE: When using the "config" property, reg-names must be set.
+-- interrupts: A list of interrupt outputs for level interrupt,
+-	pulse interrupt, special interrupt.
+-- phys: From PHY binding. Phandle for the generic PHY.
+-	Refer to Documentation/devicetree/bindings/phy/samsung-phy.txt
+-
+-For other common properties, refer to
+-	Documentation/devicetree/bindings/pci/designware-pcie.txt
+-
+-Example:
+-
+-SoC-specific DT Entry (with using PHY framework):
+-
+-	pcie_phy0: pcie-phy@270000 {
+-		...
+-		reg = <0x270000 0x1000>, <0x271000 0x40>;
+-		reg-names = "phy", "block";
+-		...
+-	};
+-
+-	pcie@290000 {
+-		compatible = "samsung,exynos5440-pcie", "snps,dw-pcie";
+-		reg = <0x290000 0x1000>, <0x40000000 0x1000>;
+-		reg-names = "elbi", "config";
+-		clocks = <&clock 28>, <&clock 27>;
+-		clock-names = "pcie", "pcie_bus";
+-		#address-cells = <3>;
+-		#size-cells = <2>;
+-		device_type = "pci";
+-		phys = <&pcie_phy0>;
+-		ranges = <0x81000000 0 0	  0x60001000 0 0x00010000
+-			  0x82000000 0 0x60011000 0x60011000 0 0x1ffef000>;
+-		#interrupt-cells = <1>;
+-		interrupt-map-mask = <0 0 0 0>;
+-		interrupt-map = <0 0 0 0 &gic GIC_SPI 21 IRQ_TYPE_LEVEL_HIGH>;
+-		num-lanes = <4>;
+-	};
+-
+-Board-specific DT Entry:
+-
+-	pcie@290000 {
+-		reset-gpio = <&pin_ctrl 5 0>;
+-	};
+-
+-	pcie@2a0000 {
+-		reset-gpio = <&pin_ctrl 22 0>;
+-	};
+-- 
+2.17.1
 
-Region-0: [Fixed] Non-Prefetchable memory mapping
-
-Region-1: [Shared] if the num of view ports <= 2
-         Used for I/O by default but whenever config space is accessed, 
-it is programmed to generate config space, and once done, will program 
-it back for I/O generation. I'm not sure how they are synchonized when 
-two different entities are trying to access the config space as well as 
-the I/O at the same time.  I don't see any locking mechanism (or am I 
-missing something here??)
-           [Fixed] if the num of view ports > 2
-         Used to generate configuration space accesses
-
-Region-2: [Fixed] I/O accesses
-
-Region-3: [Fixed] Prefetchable memory mapping (This patch is adding it)
-
-I honestly think that an attempt to re-assing what region is used for 
-what purpose should go into a different patch.
-
-I agree that I'm removing configuring an iATU region if it is for 1:1 
-memory mapping. What I heard from our HW designers is that it is the 
-default behavior of the Synopsys IP that if the CPU access falls in the 
-aperture owned by Synopsys IP and there is no iATU region mapped to 
-capture and generate any specific transaction for that address, then, by 
-default it generates a memory transaction over the PCIe bus.
-It is also possible that some implementors might have chosen to alter 
-this behavior. In any case, I can continue to have the iATU programming 
-done irrespective of whether it is for 1:1 mapping or not.
-
-> 
-> 
->>
->> Fixes: 0f71c60ffd26 ("PCI: dwc: Remove storing of PCI resources")
->> Link: http://patchwork.ozlabs.org/project/linux-pci/patch/20200513190855.23318-1-vidyas@nvidia.com/
->>
->> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
->> ---
->> V2:
->> * Rewrote commit subject and description
->> * Addressed review comments from Lorenzo
->>
->>   .../pci/controller/dwc/pcie-designware-host.c | 42 ++++++++++++++++---
->>   drivers/pci/controller/dwc/pcie-designware.c  | 12 +++---
->>   drivers/pci/controller/dwc/pcie-designware.h  |  4 +-
->>   3 files changed, 46 insertions(+), 12 deletions(-)
->>
->> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
->> index db547ee6ff3a..dae6da39bb90 100644
->> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
->> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
->> @@ -521,9 +521,42 @@ static struct pci_ops dw_pcie_ops = {
->>          .write = pci_generic_config_write,
->>   };
->>
->> +static void dw_pcie_setup_mem_atu(struct pcie_port *pp,
->> +                                 struct resource_entry *win)
->> +{
->> +       struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
->> +
->> +       /* Check for prefetchable memory aperture */
->> +       if (win->res->flags & IORESOURCE_PREFETCH && win->offset) {
->> +               /* Number of view ports must at least be 4 to enable mapping */
->> +               if (pci->num_viewport < 4) {
->> +                       dev_warn(pci->dev,
->> +                                "Insufficient ATU regions to map Prefetchable memory\n");
->> +               } else {
->> +                       dw_pcie_prog_outbound_atu(pci,
->> +                                                 PCIE_ATU_REGION_INDEX3,
->> +                                                 PCIE_ATU_TYPE_MEM,
->> +                                                 win->res->start,
->> +                                                 win->res->start - win->offset,
->> +                                                 resource_size(win->res));
->> +               }
->> +       } else if (win->offset) { /* Non-prefetchable memory aperture */
->> +               if (upper_32_bits(resource_size(win->res)))
->> +                       dev_warn(pci->dev,
->> +                                "Memory resource size exceeds max for 32 bits\n");
-> 
-> This is not designware specific. Either core code should check this or
-> write a DT schema to check it.
-Ok. I'll move it to pci_parse_request_of_pci_ranges() API. A change like 
-below would do right?
-
-diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-index ac24cd5439a9..6d872458196c 100644
---- a/drivers/pci/of.c
-+++ b/drivers/pci/of.c
-@@ -556,6 +556,11 @@ static int pci_parse_request_of_pci_ranges(struct 
-device *dev,
-                         break;
-                 case IORESOURCE_MEM:
-                         res_valid |= !(res->flags & IORESOURCE_PREFETCH);
-+
-+                       if (!(res->flags & IORESOURCE_PREFETCH))
-+                               if (upper_32_bits(resource_size(res)))
-+                                       dev_warn(dev,
-+                                                "Memory resource size 
-exceeds max for 32 bits\n");
-                         break;
-                 }
-         }
-
-I hope that is the right place for it.
-
-> 
->> +               dw_pcie_prog_outbound_atu(pci,
->> +                                         PCIE_ATU_REGION_INDEX0,
->> +                                         PCIE_ATU_TYPE_MEM,
->> +                                         win->res->start,
->> +                                         win->res->start - win->offset,
->> +                                         resource_size(win->res));
->> +       }
->> +}
->> +
->>   void dw_pcie_setup_rc(struct pcie_port *pp)
->>   {
->>          u32 val, ctrl, num_ctrls;
->> +       struct resource_entry *win;
->>          struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
->>
->>          /*
->> @@ -578,13 +611,10 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->>           * ATU, so we should not program the ATU here.
->>           */
->>          if (pp->bridge->child_ops == &dw_child_pcie_ops) {
->> -               struct resource_entry *entry =
->> -                       resource_list_first_type(&pp->bridge->windows, IORESOURCE_MEM);
->> +               resource_list_for_each_entry(win, &pp->bridge->windows)
->> +                       if (resource_type(win->res) == IORESOURCE_MEM)
->> +                               dw_pcie_setup_mem_atu(pp, win);
->>
->> -               dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX0,
->> -                                         PCIE_ATU_TYPE_MEM, entry->res->start,
->> -                                         entry->res->start - entry->offset,
->> -                                         resource_size(entry->res));
->>                  if (pci->num_viewport > 2)
->>                          dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX2,
->>                                                    PCIE_ATU_TYPE_IO, pp->io_base,
->> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
->> index c2dea8fc97c8..b5e438b70cd5 100644
->> --- a/drivers/pci/controller/dwc/pcie-designware.c
->> +++ b/drivers/pci/controller/dwc/pcie-designware.c
->> @@ -228,7 +228,7 @@ static void dw_pcie_writel_ob_unroll(struct dw_pcie *pci, u32 index, u32 reg,
->>   static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, u8 func_no,
->>                                               int index, int type,
->>                                               u64 cpu_addr, u64 pci_addr,
->> -                                            u32 size)
->> +                                            u64 size)
-> 
-> How was this working for you before? Looks like a different change
-> from what I broke.
-Tegra194 has a 1:1 mapping for prefetchable memory as of today. But, 
-when it is changed to a non 1:1 mapping, we need this support.
-
-> 
->>   {
->>          u32 retries, val;
->>          u64 limit_addr = cpu_addr + size - 1;
->> @@ -245,8 +245,10 @@ static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, u8 func_no,
->>                                   lower_32_bits(pci_addr));
->>          dw_pcie_writel_ob_unroll(pci, index, PCIE_ATU_UNR_UPPER_TARGET,
->>                                   upper_32_bits(pci_addr));
->> -       dw_pcie_writel_ob_unroll(pci, index, PCIE_ATU_UNR_REGION_CTRL1,
->> -                                type | PCIE_ATU_FUNC_NUM(func_no));
->> +       val = type | PCIE_ATU_FUNC_NUM(func_no);
->> +       val = upper_32_bits(size - 1) ?
->> +               val | PCIE_ATU_INCREASE_REGION_SIZE : val;
->> +       dw_pcie_writel_ob_unroll(pci, index, PCIE_ATU_UNR_REGION_CTRL1, val);
->>          dw_pcie_writel_ob_unroll(pci, index, PCIE_ATU_UNR_REGION_CTRL2,
->>                                   PCIE_ATU_ENABLE);
->>
->> @@ -267,7 +269,7 @@ static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, u8 func_no,
->>
->>   static void __dw_pcie_prog_outbound_atu(struct dw_pcie *pci, u8 func_no,
->>                                          int index, int type, u64 cpu_addr,
->> -                                       u64 pci_addr, u32 size)
->> +                                       u64 pci_addr, u64 size)
->>   {
->>          u32 retries, val;
->>
->> @@ -311,7 +313,7 @@ static void __dw_pcie_prog_outbound_atu(struct dw_pcie *pci, u8 func_no,
->>   }
->>
->>   void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
->> -                              u64 cpu_addr, u64 pci_addr, u32 size)
->> +                              u64 cpu_addr, u64 pci_addr, u64 size)
->>   {
->>          __dw_pcie_prog_outbound_atu(pci, 0, index, type,
->>                                      cpu_addr, pci_addr, size);
->> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
->> index 9d2f511f13fa..21dd06831b50 100644
->> --- a/drivers/pci/controller/dwc/pcie-designware.h
->> +++ b/drivers/pci/controller/dwc/pcie-designware.h
->> @@ -80,10 +80,12 @@
->>   #define PCIE_ATU_VIEWPORT              0x900
->>   #define PCIE_ATU_REGION_INBOUND                BIT(31)
->>   #define PCIE_ATU_REGION_OUTBOUND       0
->> +#define PCIE_ATU_REGION_INDEX3         0x3
->>   #define PCIE_ATU_REGION_INDEX2         0x2
->>   #define PCIE_ATU_REGION_INDEX1         0x1
->>   #define PCIE_ATU_REGION_INDEX0         0x0
->>   #define PCIE_ATU_CR1                   0x904
->> +#define PCIE_ATU_INCREASE_REGION_SIZE  BIT(13)
->>   #define PCIE_ATU_TYPE_MEM              0x0
->>   #define PCIE_ATU_TYPE_IO               0x2
->>   #define PCIE_ATU_TYPE_CFG0             0x4
->> @@ -295,7 +297,7 @@ void dw_pcie_upconfig_setup(struct dw_pcie *pci);
->>   int dw_pcie_wait_for_link(struct dw_pcie *pci);
->>   void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index,
->>                                 int type, u64 cpu_addr, u64 pci_addr,
->> -                              u32 size);
->> +                              u64 size);
->>   void dw_pcie_prog_ep_outbound_atu(struct dw_pcie *pci, u8 func_no, int index,
->>                                    int type, u64 cpu_addr, u64 pci_addr,
->>                                    u32 size);
->> --
->> 2.17.1
->>
