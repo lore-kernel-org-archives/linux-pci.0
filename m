@@ -2,94 +2,73 @@ Return-Path: <SRS0=XRPK=EB=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-13.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07A84C4363A
-	for <linux-pci@archiver.kernel.org>; Mon, 26 Oct 2020 16:22:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4ECFC4363A
+	for <linux-pci@archiver.kernel.org>; Mon, 26 Oct 2020 16:50:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A6B7022284
-	for <linux-pci@archiver.kernel.org>; Mon, 26 Oct 2020 16:22:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7E2C22224A
+	for <linux-pci@archiver.kernel.org>; Mon, 26 Oct 2020 16:50:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="i4sOXquF"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="OWzDAcJR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1775606AbgJZQWb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 26 Oct 2020 12:22:31 -0400
-Received: from mail-pj1-f66.google.com ([209.85.216.66]:40927 "EHLO
-        mail-pj1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1773147AbgJZQWa (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Oct 2020 12:22:30 -0400
-Received: by mail-pj1-f66.google.com with SMTP id l2so3335276pjt.5
-        for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2020 09:22:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:thread-topic:thread-index:date:message-id
-         :references:in-reply-to:accept-language:content-language
-         :content-transfer-encoding:mime-version;
-        bh=VldKDaJrZxVwG4A16mywFY5rzmy8QYlD+uVPC/uSv3I=;
-        b=i4sOXquFjNzRHwiII1a8xHlL+6a3I0Q0o5OCjidQVmXQpzIG7QnmfTtom/tyNu6tLC
-         firuLgwROT6a//ybnZod8FyPV59otxZNFvkcMrVWJ3tAuoDqkVA5yEoIA7qN4nadxUkI
-         HFuct7011G1EXsCd/JLiPWuSlAPkhhvtrqN1YKyIVpdyuooh/0PL04pvp7SU07V5ev7c
-         e+jeMvsnQCKylVsJiCoIaMEihHA9vFlsb52wXMFyvV2+AmJAdKM48aomGJyykSEQMDNe
-         fnEaWc+mxOPjkcUjAhiZvTrasoLjmD+mLRQXnv1Ms+ePmlJgv+NRxgvNdhe2kM00ReA6
-         BYEg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:thread-topic:thread-index
-         :date:message-id:references:in-reply-to:accept-language
-         :content-language:content-transfer-encoding:mime-version;
-        bh=VldKDaJrZxVwG4A16mywFY5rzmy8QYlD+uVPC/uSv3I=;
-        b=Z+dRUSq2hA6VvAK1yo6jHUxMu+3SQz53HQbp5Vw03/lu0vwFGw96iy2iH4OYOy/N0p
-         DcXp3+L5ViRn84K7PDZf7ys0ydOS1mcMIcJziVULV4ijXq4F25Pk1mfWxsNqsaQQYn9Y
-         RrVqCcw43LBI9gAtSjewhquQzZAD2dRuQRAFkBKK8Xpq+cZf1bMAVuDwmeaRbv73oE3k
-         ZvQ9USuApDuqY8lMjjdFMdp9qIUU5+Fh53o/NMTQTOsFjq9+Nz6y4KucIlWosqQ6ee6a
-         x4Bn8PnanzSCSeeeF6cesbTCIaLZR1GURRkNjfSTkU/CgjXkfQTDiLMhUf4J8WBYz6kJ
-         XYjg==
-X-Gm-Message-State: AOAM531g08iOFldHVbajNy5rmmoN+aULTsEeyjeQUk0ESxMGIeRMio6k
-        4PKaag2fLdVcKrQ1cvcVYo0=
-X-Google-Smtp-Source: ABdhPJyvx7AwATmMcyZ7PW+9R/u+tlyQ89rGXTetquftgcAmH7AXpcWpQL9tkqHY0mXWkcu75jID1Q==
-X-Received: by 2002:a17:90a:fe8:: with SMTP id 95mr16746198pjz.73.1603729350190;
-        Mon, 26 Oct 2020 09:22:30 -0700 (PDT)
-Received: from SLXP216MB0477.KORP216.PROD.OUTLOOK.COM ([2603:1046:100:9::5])
-        by smtp.gmail.com with ESMTPSA id b16sm12384911pfp.195.2020.10.26.09.22.27
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 26 Oct 2020 09:22:29 -0700 (PDT)
-From:   Jingoo Han <jingoohan1@gmail.com>
-To:     Rob Herring <robh@kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC:     Vidya Sagar <vidyas@nvidia.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Han Jingoo <jingoohan1@gmail.com>
+        id S1781082AbgJZQuT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 26 Oct 2020 12:50:19 -0400
+Received: from hqnvemgate26.nvidia.com ([216.228.121.65]:19934 "EHLO
+        hqnvemgate26.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1786410AbgJZQtr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Oct 2020 12:49:47 -0400
+Received: from hqmail.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate26.nvidia.com (using TLS: TLSv1.2, AES256-SHA)
+        id <B5f96fe160000>; Mon, 26 Oct 2020 09:49:26 -0700
+Received: from [10.40.203.191] (10.124.1.5) by HQMAIL107.nvidia.com
+ (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Mon, 26 Oct
+ 2020 16:49:41 +0000
 Subject: Re: [PATCH] PCI: dwc: Restore ATU memory resource setup to use last
  entry
-Thread-Topic: [PATCH] PCI: dwc: Restore ATU memory resource setup to use last
- entry
-Thread-Index: AWgxMTU2XEXh5hQMo5zSj8VhjgsGadz1BfST
-X-MS-Exchange-MessageSentRepresentingType: 1
-Date:   Mon, 26 Oct 2020 16:22:25 +0000
-Message-ID: <SLXP216MB0477EED7E80B8738CCD233E7AA190@SLXP216MB0477.KORP216.PROD.OUTLOOK.COM>
+To:     Rob Herring <robh@kernel.org>, <linux-pci@vger.kernel.org>
+CC:     Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
 References: <20201026154852.221483-1-robh@kernel.org>
-In-Reply-To: <20201026154852.221483-1-robh@kernel.org>
-Accept-Language: ko-KR, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-Exchange-Organization-SCL: -1
-X-MS-TNEF-Correlator: 
-X-MS-Exchange-Organization-RecordReviewCfmType: 0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+From:   Vidya Sagar <vidyas@nvidia.com>
+Message-ID: <b68c285e-3991-2577-30d5-a5b0bef80752@nvidia.com>
+Date:   Mon, 26 Oct 2020 22:19:36 +0530
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.3.2
 MIME-Version: 1.0
+In-Reply-To: <20201026154852.221483-1-robh@kernel.org>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.124.1.5]
+X-ClientProxiedBy: HQMAIL105.nvidia.com (172.20.187.12) To
+ HQMAIL107.nvidia.com (172.20.187.13)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1603730966; bh=uDBlNzPO/ZuD1IM+acD5nCND1MNOtD9WEIdG6TpyGPE=;
+        h=Subject:To:CC:References:From:Message-ID:Date:User-Agent:
+         MIME-Version:In-Reply-To:Content-Type:Content-Language:
+         Content-Transfer-Encoding:X-Originating-IP:X-ClientProxiedBy;
+        b=OWzDAcJRzgdK9n3PUQgHV7D3N69YsNtaawhFGFuDV+z2HeJP4WfNWRcdVmSNHoGc9
+         RxJuaUmSLL5/fcIOylBfvA2uR1zU7qdvcv4BPj0tg/kUBsulNZ7BB2ndMocnR3sHau
+         WApx3lgbG0rn7cCME7WIn4+uclMgI1XJpYIBhXEDh2tNPRYMoMkKn3bx46TZWiQvKg
+         QfFK/+43AIFsJdsjTg9EWxicb3l3v70XO/B8nuvKY1aw34HyFpwnVA0iqL5niCF4Ag
+         7uPu73n/0+HlEZo/DkSrEh0eppKvxuKodsNMOX9H/eFgJbKkQT+1ONvwEHSz9x3WkD
+         1LXjeVMAQXHRg==
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 10/26/20, 11:48 AM, Rob Herring wrote:
->=20
+
+
+On 10/26/2020 9:18 PM, Rob Herring wrote:
+> External email: Use caution opening links or attachments
+> 
+> 
 > Prior to commit 0f71c60ffd26 ("PCI: dwc: Remove storing of PCI
 > resources"), the DWC driver was setting up the last memory resource
 > rather than the first memory resource. This doesn't matter for most
@@ -97,44 +76,47 @@ On 10/26/20, 11:48 AM, Rob Herring wrote:
 > has a 2nd (prefetchable) memory region which requires an ATU entry. The
 > first region on Tegra194 relies on the default 1:1 pass-thru of outbound
 > transactions which doesn't need an ATU entry.
->
+> 
 > Fixes: 0f71c60ffd26 ("PCI: dwc: Remove storing of PCI resources")
 > Reported-by: Vidya Sagar <vidyas@nvidia.com>
 > Cc: Jingoo Han <jingoohan1@gmail.com>
-
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
-
-Best regards,
-Jingoo Han
-
 > Cc: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 > Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 > Cc: Bjorn Helgaas <bhelgaas@google.com>
 > Signed-off-by: Rob Herring <robh@kernel.org>
 > ---
->  drivers/pci/controller/dwc/pcie-designware-host.c | 8 ++++++--
->  1 file changed, 6 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/=
-pci/controller/dwc/pcie-designware-host.c
+>   drivers/pci/controller/dwc/pcie-designware-host.c | 8 ++++++--
+>   1 file changed, 6 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
 > index 674f32db85ca..44c2a6572199 100644
 > --- a/drivers/pci/controller/dwc/pcie-designware-host.c
 > +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
 > @@ -586,8 +586,12 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->  	 * ATU, so we should not program the ATU here.
->  	 */
->  	if (pp->bridge->child_ops =3D=3D &dw_child_pcie_ops) {
-> -		struct resource_entry *entry =3D
-> -			resource_list_first_type(&pp->bridge->windows, IORESOURCE_MEM);
-> +		struct resource_entry *tmp, *entry =3D NULL;
+>           * ATU, so we should not program the ATU here.
+>           */
+>          if (pp->bridge->child_ops == &dw_child_pcie_ops) {
+> -               struct resource_entry *entry =
+> -                       resource_list_first_type(&pp->bridge->windows, IORESOURCE_MEM);
+> +               struct resource_entry *tmp, *entry = NULL;
 > +
-> +		/* Get last memory resource entry */
-> +		resource_list_for_each_entry(tmp, &pp->bridge->windows)
-> +			if (resource_type(tmp->res) =3D=3D IORESOURCE_MEM)
-> +				entry =3D tmp;
->
->  		dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX0,
->  					  PCIE_ATU_TYPE_MEM, entry->res->start,
-> --=20
-> 2.25.1
+> +               /* Get last memory resource entry */
+> +               resource_list_for_each_entry(tmp, &pp->bridge->windows)
+> +                       if (resource_type(tmp->res) == IORESOURCE_MEM)
+> +                               entry = tmp;
+This patch works for Tegra194 with its 'ranges' property in its current 
+shape. But, this still doesn't work if ATU mapping needs to be set for 
+both prefetchable and non-prefetchable regions. The series I pushed at 
+http://patchwork.ozlabs.org/project/linux-pci/list/?series=209764 works 
+for this condition as well.
+When it comes to configuring the ATU to handle multiple memory apertures 
+(which is the ultimate goal), I think we need to understand the side 
+effects of removing I/O mapping in platforms where the number of view 
+ports available are not enough to have I/O mapping.
 
+> 
+>                  dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX0,
+>                                            PCIE_ATU_TYPE_MEM, entry->res->start,
+> --
+> 2.25.1
+> 
