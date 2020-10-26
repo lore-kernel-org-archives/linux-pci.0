@@ -2,108 +2,189 @@ Return-Path: <SRS0=XRPK=EB=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 788E7C4363A
-	for <linux-pci@archiver.kernel.org>; Mon, 26 Oct 2020 15:35:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3B76C2D0A3
+	for <linux-pci@archiver.kernel.org>; Mon, 26 Oct 2020 15:41:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4259722409
-	for <linux-pci@archiver.kernel.org>; Mon, 26 Oct 2020 15:35:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 881A322404
+	for <linux-pci@archiver.kernel.org>; Mon, 26 Oct 2020 15:41:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1603726862;
+	bh=On1puDX3q0PmU4wb7lNbIX0t14xreWLTAZs/PTcSHbw=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=EYJvNi1uEHtwWLWqi6PKFs7n57BfHlJbiHRQbcnshJMonkkrW6a93aLvPOeqttS8Z
+	 Y6kOeRGAc19a8rsuhZ8Q87RvM+iYgAI56prIBHvUmi4xQed5r9bU9Mm4pHPOHA23QH
+	 bx/Kom3/hC1NqWHSp/2Zi2HrdriEJNASvwEOqgWI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1783974AbgJZPfX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 26 Oct 2020 11:35:23 -0400
-Received: from newton.telenet-ops.be ([195.130.132.45]:35982 "EHLO
-        newton.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1783987AbgJZPfW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Oct 2020 11:35:22 -0400
-X-Greylist: delayed 441 seconds by postgrey-1.27 at vger.kernel.org; Mon, 26 Oct 2020 11:35:22 EDT
-Received: from andre.telenet-ops.be (andre.telenet-ops.be [IPv6:2a02:1800:120:4::f00:15])
-        by newton.telenet-ops.be (Postfix) with ESMTPS id 4CKdy607xVzMs9s5
-        for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2020 16:27:58 +0100 (CET)
-Received: from ramsan.of.borg ([84.195.186.194])
-        by andre.telenet-ops.be with bizsmtp
-        id kfTx2300b4C55Sk01fTxgR; Mon, 26 Oct 2020 16:27:57 +0100
-Received: from rox.of.borg ([192.168.97.57])
-        by ramsan.of.borg with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.93)
-        (envelope-from <geert@linux-m68k.org>)
-        id 1kX4Pd-000MHX-6d; Mon, 26 Oct 2020 16:27:57 +0100
-Received: from geert by rox.of.borg with local (Exim 4.93)
-        (envelope-from <geert@linux-m68k.org>)
-        id 1kX4Pc-00FgVo-P7; Mon, 26 Oct 2020 16:27:56 +0100
-From:   Geert Uytterhoeven <geert+renesas@glider.be>
-To:     Jim Quinlan <james.quinlan@broadcom.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Rob Herring <robh+dt@kernel.org>,
-        Frank Rowand <frowand.list@gmail.com>
-Cc:     devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Geert Uytterhoeven <geert+renesas@glider.be>
-Subject: [PATCH] dma-mapping: Fix 32-bit overflow with CONFIG_ARM_LPAE=n
-Date:   Mon, 26 Oct 2020 16:27:55 +0100
-Message-Id: <20201026152755.3738293-1-geert+renesas@glider.be>
-X-Mailer: git-send-email 2.25.1
+        id S1784284AbgJZPlC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 26 Oct 2020 11:41:02 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35464 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1784274AbgJZPlB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 26 Oct 2020 11:41:01 -0400
+Received: from mail-oi1-f172.google.com (mail-oi1-f172.google.com [209.85.167.172])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id D92BE2242A;
+        Mon, 26 Oct 2020 15:41:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1603726861;
+        bh=On1puDX3q0PmU4wb7lNbIX0t14xreWLTAZs/PTcSHbw=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=rwhuTTFr7RmihUwkHv3J3UfV5Y76DuFXIbAsZVyaCVuTBaJZuB0nwcREVNoG5gwQv
+         PveS10nE0JcE2GWcSYIQdp6tkYqy0HwBWbJ4cdeyAaHGR35AkbuVjAMb9x7DimBzAQ
+         PZFy5YiUduO6/Y4M+/QHIE6K3/iTgnUquyRdTHvs=
+Received: by mail-oi1-f172.google.com with SMTP id u127so10889884oib.6;
+        Mon, 26 Oct 2020 08:41:00 -0700 (PDT)
+X-Gm-Message-State: AOAM530x6pmuQ3yXcRSnRC71nfT9gPP798Lg2qpkuXJbtRLzZjblcSvr
+        7CUvJsHUnJIK8CzNO/BLnSZ377ovSQ5cL2ZIZw==
+X-Google-Smtp-Source: ABdhPJwG7r6OCD247gug+6UcyA11VYpVkShlq/R+HXcH3OsuhZLtTc9S2gv/h9HFnYWYGRrg967JZshcNWAw073n5DE=
+X-Received: by 2002:aca:5dc2:: with SMTP id r185mr13272586oib.106.1603726860182;
+ Mon, 26 Oct 2020 08:41:00 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20201023195655.11242-1-vidyas@nvidia.com> <20201023195655.11242-4-vidyas@nvidia.com>
+In-Reply-To: <20201023195655.11242-4-vidyas@nvidia.com>
+From:   Rob Herring <robh@kernel.org>
+Date:   Mon, 26 Oct 2020 10:40:48 -0500
+X-Gmail-Original-Message-ID: <CAL_JsqJ2yO-es3AnE3tGcEx0c4ANxyAeZWjsbsrMA6LVzNa1tA@mail.gmail.com>
+Message-ID: <CAL_JsqJ2yO-es3AnE3tGcEx0c4ANxyAeZWjsbsrMA6LVzNa1tA@mail.gmail.com>
+Subject: Re: [PATCH 3/3] PCI: dwc: Add support to handle prefetchable memory mapping
+To:     Vidya Sagar <vidyas@nvidia.com>
+Cc:     Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Andrew Murray <amurray@thegoodpenguin.co.uk>,
+        Thierry Reding <treding@nvidia.com>,
+        Jon Hunter <jonathanh@nvidia.com>,
+        PCI <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        kthota@nvidia.com, Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        sagar.tv@gmail.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On r8a7791/koelsch and shmobile_defconfig, PCIe probing fails with:
+On Fri, Oct 23, 2020 at 2:57 PM Vidya Sagar <vidyas@nvidia.com> wrote:
+>
+> DWC sub-system currently doesn't differentiate between prefetchable and
+> non-prefetchable memory aperture entries in the 'ranges' property and
+> provides ATU mapping only for the first memory aperture entry out of all
+> the entries present. This was introduced by the
+> commit 0f71c60ffd26 ("PCI: dwc: Remove storing of PCI resources").
+> Mapping for a memory apreture is required if its CPU address and the bus
+> address are different and the current mechanism works only if the memory
+> aperture which needs mapping happens to be the first entry. It doesn't
+> work either if the memory aperture that needs mapping is not the first
+> entry or if both prefetchable and non-prefetchable apertures need mapping.
+>
+> This patch fixes this issue by differentiating between prefetchable and
+> non-prefetchable apertures in the 'ranges' property there by removing the
+> dependency on the order in which they are specified and adds support for
+> mapping prefetchable aperture using ATU region-3 if required.
+>
+> Fixes: 0f71c60ffd26 ("PCI: dwc: Remove storing of PCI resources")
 
-    rcar-pcie fe000000.pcie: Adjusted size 0x0 invalid
-    rcar-pcie: probe of fe000000.pcie failed with error -22
+Fixes should come first, then new features.
 
-of_dma_get_range() returns the following map:
+> Link: http://patchwork.ozlabs.org/project/linux-pci/patch/20200513190855.23318-1-vidyas@nvidia.com/
 
-    cpu_start 0x40000000 dma_start 0x40000000 size 0x080000000 offset 0
-    cpu_start 0x00000000 dma_start 0x00000000 size 0x100000000 offset 0
+'Link' is the link for this message and should be a lore.kernel.org
+link. Maintainers will add it.
 
-If CONFIG_ARM_LPAE=n, dma_addr_t is 32-bit.  Hence when assigning
-r->dma_start + r->size to dma_end, this value will be truncated to
-32-bit, yielding zero when processing the second table entry.
-Consequently, both dma_start and dma_end will be zero, leading to a zero
-size.
+>
+> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+> ---
+> Changes from previous versions:
+> * Addressed Rob's comments and as part of that split the patch into three sub-patches
+> * Rewrote commit subject and description
+> * Addressed review comments from Lorenzo
+>
+>  .../pci/controller/dwc/pcie-designware-host.c | 39 ++++++++++++++++---
+>  drivers/pci/controller/dwc/pcie-designware.h  |  1 +
+>  2 files changed, 34 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+> index 674f32db85ca..a1f319ccd816 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+> @@ -529,9 +529,39 @@ static struct pci_ops dw_pcie_ops = {
+>         .write = pci_generic_config_write,
+>  };
+>
+> +static void dw_pcie_setup_mem_atu(struct pcie_port *pp,
+> +                                 struct resource_entry *win)
+> +{
+> +       struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> +
+> +       /* Check for prefetchable memory aperture */
+> +       if (win->res->flags & IORESOURCE_PREFETCH) {
+> +               /* Number of view ports must at least be 4 to enable mapping */
+> +               if (pci->num_viewport < 4) {
+> +                       dev_warn(pci->dev,
+> +                                "Insufficient ATU regions to map Prefetchable memory\n");
+> +               } else {
+> +                       dw_pcie_prog_outbound_atu(pci,
+> +                                                 PCIE_ATU_REGION_INDEX3,
+> +                                                 PCIE_ATU_TYPE_MEM,
+> +                                                 win->res->start,
+> +                                                 win->res->start - win->offset,
+> +                                                 resource_size(win->res));
+> +               }
+> +       } else { /* Non-prefetchable memory aperture */
+> +               dw_pcie_prog_outbound_atu(pci,
+> +                                         PCIE_ATU_REGION_INDEX0,
+> +                                         PCIE_ATU_TYPE_MEM,
+> +                                         win->res->start,
+> +                                         win->res->start - win->offset,
+> +                                         resource_size(win->res));
+> +       }
+> +}
+> +
 
-Fix this by changing the dma_start and dma_end variables from dma_addr_t
-to u64.
+This is in no way a minimal fix. I'll send my proposed fix.
 
-Fixes: e0d072782c734d27 ("dma-mapping: introduce DMA range map, supplanting dma_pfn_offset")
-Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
----
- drivers/of/device.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/of/device.c b/drivers/of/device.c
-index 655dee422563f05f..3a469c79e6b05de4 100644
---- a/drivers/of/device.c
-+++ b/drivers/of/device.c
-@@ -93,7 +93,7 @@ int of_dma_configure_id(struct device *dev, struct device_node *np,
- {
- 	const struct iommu_ops *iommu;
- 	const struct bus_dma_region *map = NULL;
--	dma_addr_t dma_start = 0;
-+	u64 dma_start = 0;
- 	u64 mask, end, size = 0;
- 	bool coherent;
- 	int ret;
-@@ -109,10 +109,10 @@ int of_dma_configure_id(struct device *dev, struct device_node *np,
- 			return ret == -ENODEV ? 0 : ret;
- 	} else {
- 		const struct bus_dma_region *r = map;
--		dma_addr_t dma_end = 0;
-+		u64 dma_end = 0;
- 
- 		/* Determine the overall bounds of all DMA regions */
--		for (dma_start = ~(dma_addr_t)0; r->size; r++) {
-+		for (dma_start = ~0ULL; r->size; r++) {
- 			/* Take lower and upper limits */
- 			if (r->dma_start < dma_start)
- 				dma_start = r->dma_start;
--- 
-2.25.1
-
+>  void dw_pcie_setup_rc(struct pcie_port *pp)
+>  {
+>         u32 val, ctrl, num_ctrls;
+> +       struct resource_entry *win;
+>         struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+>
+>         /*
+> @@ -586,13 +616,10 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+>          * ATU, so we should not program the ATU here.
+>          */
+>         if (pp->bridge->child_ops == &dw_child_pcie_ops) {
+> -               struct resource_entry *entry =
+> -                       resource_list_first_type(&pp->bridge->windows, IORESOURCE_MEM);
+> +               resource_list_for_each_entry(win, &pp->bridge->windows)
+> +                       if (resource_type(win->res) == IORESOURCE_MEM)
+> +                               dw_pcie_setup_mem_atu(pp, win);
+>
+> -               dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX0,
+> -                                         PCIE_ATU_TYPE_MEM, entry->res->start,
+> -                                         entry->res->start - entry->offset,
+> -                                         resource_size(entry->res));
+>                 if (pci->num_viewport > 2)
+>                         dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX2,
+>                                                   PCIE_ATU_TYPE_IO, pp->io_base,
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+> index e7f441441db2..21dd06831b50 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.h
+> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+> @@ -80,6 +80,7 @@
+>  #define PCIE_ATU_VIEWPORT              0x900
+>  #define PCIE_ATU_REGION_INBOUND                BIT(31)
+>  #define PCIE_ATU_REGION_OUTBOUND       0
+> +#define PCIE_ATU_REGION_INDEX3         0x3
+>  #define PCIE_ATU_REGION_INDEX2         0x2
+>  #define PCIE_ATU_REGION_INDEX1         0x1
+>  #define PCIE_ATU_REGION_INDEX0         0x0
+> --
+> 2.17.1
+>
