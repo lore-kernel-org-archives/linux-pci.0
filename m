@@ -2,120 +2,182 @@ Return-Path: <SRS0=XRPK=EB=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 354ACC2D0A3
-	for <linux-pci@archiver.kernel.org>; Mon, 26 Oct 2020 13:57:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D592EC56202
+	for <linux-pci@archiver.kernel.org>; Mon, 26 Oct 2020 15:33:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F12DE22400
-	for <linux-pci@archiver.kernel.org>; Mon, 26 Oct 2020 13:57:53 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="sXwkSST6";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="YTD8pQVs"
+	by mail.kernel.org (Postfix) with ESMTP id AD73B22250
+	for <linux-pci@archiver.kernel.org>; Mon, 26 Oct 2020 15:33:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1780825AbgJZN5x (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 26 Oct 2020 09:57:53 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:40180 "EHLO
-        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1780822AbgJZN5x (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Oct 2020 09:57:53 -0400
-From:   Thomas Gleixner <tglx@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1603720670;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=h/OHUc3ZTxOnSdMTpC8YgapP1SujhOMZOgiAI8wwc4U=;
-        b=sXwkSST6XFQnFqHxHusBURIJifh54p6cswdp4kZT9Au+dIQKZwf+Cl6lOu99Ku1z4waAbv
-        S7Yba9KIEFyjoX1tdM2UUKI0YDPkMmXDWoJ0UzB/LlxfvMfoqtbvpHRM346XPxG4M4Q0h4
-        CMxYrvM/JwMDEV7BAzVgqefIjEclU/HcY4SsBT+26NUXk/txXB+Agqw6C5N7ekHZ4wVm6P
-        ozkzEVZ3FUkJ+iTf9A1TAFqiDPxYvcbOe14glk14VzbgFwTShw9/nL/UadaoxV+SRhvfDH
-        zYz4ZeM4HBkWUP5LO/4y3uq1bVf/wl1eqXDSoD1a2T197SIOCUzjA6toKVn1Hg==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1603720670;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=h/OHUc3ZTxOnSdMTpC8YgapP1SujhOMZOgiAI8wwc4U=;
-        b=YTD8pQVsZ/dvyFc0Ulx/a2JJ55MggdrwnYcIhkaJljDxKZJg9ScYPatGMDvfkoFxN1XCdn
-        MU+dolBlFXph34DA==
-To:     Nitesh Narayan Lal <nitesh@redhat.com>,
-        Peter Zijlstra <peterz@infradead.org>
-Cc:     Marcelo Tosatti <mtosatti@redhat.com>, helgaas@kernel.org,
-        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
-        frederic@kernel.org, sassmann@redhat.com,
-        jesse.brandeburg@intel.com, lihong.yang@intel.com,
-        jeffrey.t.kirsher@intel.com, jacob.e.keller@intel.com,
-        jlelli@redhat.com, hch@infradead.org, bhelgaas@google.com,
-        mike.marciniszyn@intel.com, dennis.dalessandro@intel.com,
-        thomas.lendacky@amd.com, jiri@nvidia.com, mingo@redhat.com,
-        juri.lelli@redhat.com, vincent.guittot@linaro.org,
-        lgoncalv@redhat.com
-Subject: Re: [PATCH v4 4/4] PCI: Limit pci_alloc_irq_vectors() to housekeeping CPUs
-In-Reply-To: <9529ddd0-28f7-fa74-e56f-39de84321a22@redhat.com>
-References: <20200928183529.471328-5-nitesh@redhat.com> <20201016122046.GP2611@hirez.programming.kicks-ass.net> <79f382a7-883d-ff42-394d-ec4ce81fed6a@redhat.com> <20201019111137.GL2628@hirez.programming.kicks-ass.net> <20201019140005.GB17287@fuller.cnet> <20201020073055.GY2611@hirez.programming.kicks-ass.net> <078e659e-d151-5bc2-a7dd-fe0070267cb3@redhat.com> <20201020134128.GT2628@hirez.programming.kicks-ass.net> <6736e643-d4ae-9919-9ae1-a73d5f31463e@redhat.com> <260f4191-5b9f-6dc1-9f11-085533ac4f55@redhat.com> <20201023085826.GP2611@hirez.programming.kicks-ass.net> <9ee77056-ef02-8696-5b96-46007e35ab00@redhat.com> <87ft6464jf.fsf@nanos.tec.linutronix.de> <9529ddd0-28f7-fa74-e56f-39de84321a22@redhat.com>
-Date:   Mon, 26 Oct 2020 14:57:50 +0100
-Message-ID: <878sbt3x9d.fsf@nanos.tec.linutronix.de>
+        id S1783932AbgJZPds (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 26 Oct 2020 11:33:48 -0400
+Received: from mail-oi1-f195.google.com ([209.85.167.195]:40057 "EHLO
+        mail-oi1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1769833AbgJZPds (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Oct 2020 11:33:48 -0400
+Received: by mail-oi1-f195.google.com with SMTP id m128so10869797oig.7;
+        Mon, 26 Oct 2020 08:33:46 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=Npr8JFXnNVuOd5JBeJSU1d/jU6NcSqcvSBeX3MQnMCw=;
+        b=sH8yJaENEr9zRQqaDTeQATgawIviJucH7DkUXXsgh8DUOOgsVqXmevMa7ZuxmlFGmy
+         1ohrWmb9/tj16yPG2s5pYTUROLtqGX/V10vi7a47Jgx1G2P18lLhl/NRZoc2dtnuTq9V
+         iVyOzl5cucanZmyyOk6EuYGtLfig1zg1LplGrstjAUprL4QMyZxP9eeOtIL4T9KcASBy
+         dPAqu+c9EVn3dbX04FohmSHSW+og8a7/byFE3+GVynRI9ZrKm5Ptkr7U8K3dpMPA10ky
+         4e7T0lFGmuvfJdjGN0eTaDtE7O6PF/pANZLirGwbTY+4ntfDrCUB2bj+Nk2Z+8MEGODV
+         J7Aw==
+X-Gm-Message-State: AOAM530FuyZkAkAPmr4PIiuMp5gaI7duxLyjIIOJe72FXaJ7sHD2h1pZ
+        tIVjAA9nkCzA72riuBn4rTS73gPBeriHdAJbV4Q=
+X-Google-Smtp-Source: ABdhPJwLqZF2nUpKrvhcxyI34nr4X7bBy8icWsJGObwdQ8i/5k3Ztdf2PJq2vrTAVMJP3VVhuKLd7HTBbICac/wUeIE=
+X-Received: by 2002:aca:c490:: with SMTP id u138mr13399294oif.54.1603726426441;
+ Mon, 26 Oct 2020 08:33:46 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+References: <20200916061500.1970090-1-hch@lst.de> <20200916061500.1970090-7-hch@lst.de>
+In-Reply-To: <20200916061500.1970090-7-hch@lst.de>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Mon, 26 Oct 2020 16:33:34 +0100
+Message-ID: <CAMuHMdX9c0va_EqBw1wfD_JiVPpjiBPLzE88EmLGVLfVhECugw@mail.gmail.com>
+Subject: Re: [PATCH 6/6] dma-mapping: introduce DMA range map, supplanting dma_pfn_offset
+To:     Christoph Hellwig <hch@lst.de>,
+        Jim Quinlan <james.quinlan@broadcom.com>
+Cc:     Linux IOMMU <iommu@lists.linux-foundation.org>,
+        Russell King <linux@armlinux.org.uk>,
+        Santosh Shilimkar <ssantosh@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Nathan Chancellor <natechancellor@gmail.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Ohad Ben-Cohen <ohad@wizery.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        "open list:REMOTE PROCESSOR (REMOTEPROC) SUBSYSTEM" 
+        <linux-remoteproc@vger.kernel.org>,
+        USB list <linux-usb@vger.kernel.org>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux-sh list <linux-sh@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Oct 26 2020 at 09:35, Nitesh Narayan Lal wrote:
-> On 10/23/20 5:00 PM, Thomas Gleixner wrote:
->> An isolated setup, which I'm familiar with, has two housekeeping
->> CPUs. So far I restricted the number of network queues with a module
->> argument to two, which allocates two management interrupts for the
->> device and two interrupts (RX/TX) per queue, i.e. a total of six.
+Hi Christoph, Jim,
+
+On Wed, Sep 16, 2020 at 8:30 AM Christoph Hellwig <hch@lst.de> wrote:
+> From: Jim Quinlan <james.quinlan@broadcom.com>
 >
-> Does it somehow take num_online_cpus() into consideration while deciding
-> the number of interrupts to create?
-
-No, I just tell it to create two queues :)
-
->> So without information from the driver which tells what the best number
->> of interrupts is with a reduced number of CPUs, this cutoff will cause
->> more problems than it solves. Regressions guaranteed.
+> The new field 'dma_range_map' in struct device is used to facilitate the
+> use of single or multiple offsets between mapping regions of cpu addrs and
+> dma addrs.  It subsumes the role of "dev->dma_pfn_offset" which was only
+> capable of holding a single uniform offset and had no region bounds
+> checking.
 >
-> Indeed.
-> I think one commonality among the drivers at the moment is the usage of
-> num_online_cpus() to determine the vectors to create.
+> The function of_dma_get_range() has been modified so that it takes a single
+> argument -- the device node -- and returns a map, NULL, or an error code.
+> The map is an array that holds the information regarding the DMA regions.
+> Each range entry contains the address offset, the cpu_start address, the
+> dma_start address, and the size of the region.
 >
-> So, maybe instead of doing this kind of restrictions in a generic level
-> API, it will make more sense to do this on a per-device basis by replacing
-> the number of online CPUs with the housekeeping CPUs?
+> of_dma_configure() is the typical manner to set range offsets but there are
+> a number of ad hoc assignments to "dev->dma_pfn_offset" in the kernel
+> driver code.  These cases now invoke the function
+> dma_direct_set_offset(dev, cpu_addr, dma_addr, size).
 >
-> This is what I have done in the i40e patch.
-> But that still sounds hackish and will impact the performance.
+> Signed-off-by: Jim Quinlan <james.quinlan@broadcom.com>
+> [hch: various interface cleanups]
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Tested-by: Nathan Chancellor <natechancellor@gmail.com>
 
-You want an interface which allows the driver to say:
+Thanks for your patch, which is now commit e0d072782c734d27
+("dma-mapping: introduce DMA range map, supplanting dma_pfn_offset") in
+v5.10-rc1, and to which I have bisected a PCIe failure on R-Car M2-W
+(r8a7791/koelsch).
 
-  I need N interrupts for general management and ideally M interrupts
-  per queue.
+The first PCI host bridge, containing USB, probes fine:
 
-This is similar to the way drivers tell the core code about their
-requirements for managed interrupts for the spreading calculation.
+ pci-rcar-gen2 ee090000.pci: host bridge /soc/pci@ee090000 ranges:
+ pci-rcar-gen2 ee090000.pci:      MEM 0x00ee080000..0x00ee08ffff -> 0x00ee080000
+ pci-rcar-gen2 ee090000.pci: PCI: revision 11
+ pci-rcar-gen2 ee090000.pci: PCI host bridge to bus 0000:00
+ pci_bus 0000:00: root bus resource [bus 00]
+ pci_bus 0000:00: root bus resource [mem 0xee080000-0xee08ffff]
+ pci 0000:00:00.0: [1033:0000] type 00 class 0x060000
+ pci 0000:00:00.0: reg 0x10: [mem 0xee090800-0xee090bff]
+ pci 0000:00:00.0: reg 0x14: [mem 0x40000000-0x7fffffff pref]
+ pci 0000:00:01.0: [1033:0035] type 00 class 0x0c0310
+ pci 0000:00:01.0: reg 0x10: [mem 0x00000000-0x00000fff]
+ pci 0000:00:01.0: supports D1 D2
+ pci 0000:00:01.0: PME# supported from D0 D1 D2 D3hot
+ pci 0000:00:02.0: [1033:00e0] type 00 class 0x0c0320
+ pci 0000:00:02.0: reg 0x10: [mem 0x00000000-0x000000ff]
+ pci 0000:00:02.0: supports D1 D2
+ pci 0000:00:02.0: PME# supported from D0 D1 D2 D3hot
+ PCI: bus0: Fast back to back transfers disabled
+ pci 0000:00:01.0: BAR 0: assigned [mem 0xee080000-0xee080fff]
+ pci 0000:00:02.0: BAR 0: assigned [mem 0xee081000-0xee0810ff]
+ pci 0000:00:01.0: enabling device (0140 -> 0142)
+ pci 0000:00:02.0: enabling device (0140 -> 0142)
 
->> Managed interrupts base their interrupt allocation and spreading on
->> information which is handed in by the individual driver and not on crude
->> assumptions. They are not imposing restrictions on the use case.
->
-> Right, FWIU it is irq_do_set_affinity that prevents the spreading of
-> managed interrupts to isolated CPUs if HK_FLAG_MANAGED_IRQ is enabled,
-> isn't?
+The second PCI host bridge, connected to an (empty) PCIe slot, fails:
 
-No. Spreading takes possible CPUs into account. HK_FLAG_MANAGED_IRQ does
-not influence spreading at all.
+ pci-rcar-gen2 ee0d0000.pci: host bridge /soc/pci@ee0d0000 ranges:
+ pci-rcar-gen2 ee0d0000.pci:      MEM 0x00ee0c0000..0x00ee0cffff -> 0x00ee0c0000
+ pci-rcar-gen2 ee0d0000.pci: PCI: revision 11
+ pci-rcar-gen2 ee0d0000.pci: PCI host bridge to bus 0001:01
+ pci_bus 0001:01: root bus resource [bus 01]
+ pci_bus 0001:01: root bus resource [mem 0xee0c0000-0xee0cffff]
+ pci 0001:01:00.0: [1033:0000] type 00 class 0x060000
+ pci 0001:01:00.0: reg 0x10: [mem 0xee0d0800-0xee0d0bff]
+ pci 0001:01:00.0: reg 0x14: [mem 0x40000000-0x7fffffff pref]
+ pci 0001:01:01.0: [1033:0035] type 00 class 0x0c0310
+ pci 0001:01:01.0: reg 0x10: [mem 0x00000000-0x00000fff]
+ pci 0001:01:01.0: supports D1 D2
+ pci 0001:01:01.0: PME# supported from D0 D1 D2 D3hot
+ pci 0001:01:02.0: [1033:00e0] type 00 class 0x0c0320
+ pci 0001:01:02.0: reg 0x10: [mem 0x00000000-0x000000ff]
+ pci 0001:01:02.0: supports D1 D2
+ pci 0001:01:02.0: PME# supported from D0 D1 D2 D3hot
+ PCI: bus1: Fast back to back transfers disabled
+ pci 0001:01:01.0: BAR 0: assigned [mem 0xee0c0000-0xee0c0fff]
+ pci 0001:01:02.0: BAR 0: assigned [mem 0xee0c1000-0xee0c10ff]
+ pci 0001:01:01.0: enabling device (0140 -> 0142)
+ pci 0001:01:02.0: enabling device (0140 -> 0142)
+-rcar-pcie fe000000.pcie: host bridge /soc/pcie@fe000000 ranges:
+-rcar-pcie fe000000.pcie:       IO 0x00fe100000..0x00fe1fffff -> 0x0000000000
+-rcar-pcie fe000000.pcie:      MEM 0x00fe200000..0x00fe3fffff -> 0x00fe200000
+-rcar-pcie fe000000.pcie:      MEM 0x0030000000..0x0037ffffff -> 0x0030000000
+-rcar-pcie fe000000.pcie:      MEM 0x0038000000..0x003fffffff -> 0x0038000000
+-rcar-pcie fe000000.pcie:   IB MEM 0x0040000000..0x00bfffffff -> 0x0040000000
+-rcar-pcie fe000000.pcie:   IB MEM 0x0200000000..0x02ffffffff -> 0x0200000000
+-rcar-pcie fe000000.pcie: PCIe link down
++rcar-pcie fe000000.pcie: Adjusted size 0x0 invalid
++rcar-pcie: probe of fe000000.pcie failed with error -22
 
-It only handles the case that an interrupt is affine to more than one
-CPUs and the resulting affinity mask spawns both housekeeping and
-isolated CPUs. It then steers the interrupt to the housekeeping CPUs (as
-long as there is one online).
+I've posted a patch "[PATCH] dma-mapping: Fix 32-bit overflow with
+CONFIG_ARM_LPAE=n"
+(https://lore.kernel.org/linux-arm-kernel/20201026152755.3738293-1-geert+renesas@glider.be/).
 
-Thanks,
+Gr{oetje,eeting}s,
 
-        tglx
+                        Geert
+
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
