@@ -2,115 +2,132 @@ Return-Path: <SRS0=uFxo=EC=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.3 required=3.0 tests=BAYES_00,DATE_IN_PAST_12_24,
+	DKIMWL_WL_HIGH,DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50561C4363A
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Oct 2020 08:04:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8CD4C56201
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Oct 2020 09:56:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0207422265
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Oct 2020 08:04:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 829AE22281
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Oct 2020 09:56:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="Y/DJ1YQp"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bB+jRXhL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2508712AbgJ0IET (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 27 Oct 2020 04:04:19 -0400
-Received: from hqnvemgate24.nvidia.com ([216.228.121.143]:4390 "EHLO
-        hqnvemgate24.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2508692AbgJ0IDw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2020 04:03:52 -0400
-Received: from hqmail.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate24.nvidia.com (using TLS: TLSv1.2, AES256-SHA)
-        id <B5f97d46d0001>; Tue, 27 Oct 2020 01:03:57 -0700
-Received: from HQMAIL109.nvidia.com (172.20.187.15) by HQMAIL107.nvidia.com
- (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 27 Oct
- 2020 08:03:45 +0000
-Received: from vidyas-desktop.nvidia.com (172.20.13.39) by mail.nvidia.com
- (172.20.187.15) with Microsoft SMTP Server id 15.0.1473.3 via Frontend
- Transport; Tue, 27 Oct 2020 08:03:42 +0000
-From:   Vidya Sagar <vidyas@nvidia.com>
-To:     <jingoohan1@gmail.com>, <gustavo.pimentel@synopsys.com>,
-        <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
-        <amurray@thegoodpenguin.co.uk>, <robh@kernel.org>,
-        <treding@nvidia.com>, <jonathanh@nvidia.com>
-CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>,
-        <sagar.tv@gmail.com>
-Subject: [PATCH V2 1/2] PCI/AER: Add pcie_is_ecrc_enabled() API
-Date:   Tue, 27 Oct 2020 13:33:29 +0530
-Message-ID: <20201027080330.8877-2-vidyas@nvidia.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20201027080330.8877-1-vidyas@nvidia.com>
-References: <20201027080330.8877-1-vidyas@nvidia.com>
-X-NVConfidentiality: public
+        id S2896523AbgJ0J43 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 27 Oct 2020 05:56:29 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:27725 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2896507AbgJ0J43 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2020 05:56:29 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1603792587;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=JVIROt4xscPTv2bl+9dBZkGi/KmAAnHZ43ndwfcAS4s=;
+        b=bB+jRXhLlnKQCuJbpeOwsBh7oh+8kwGSocAoOAouv7s/xncBsWSuDeg7MNl8euVHHqFMRh
+        fUeHc8Jc2hNRpxJp6LIdOPdzTe20C8wxhRg4DFd7qt7qNoqNvqXiHIDWwBBfTfiREdxWae
+        4Owm2sYh7m97ZKtNum85/toKt2lax90=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-410-HcgxRTMQP4aCMXK2g1pL6A-1; Tue, 27 Oct 2020 05:56:23 -0400
+X-MC-Unique: HcgxRTMQP4aCMXK2g1pL6A-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 883E2100CCFD;
+        Tue, 27 Oct 2020 09:56:20 +0000 (UTC)
+Received: from fuller.cnet (ovpn-112-2.gru2.redhat.com [10.97.112.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 5B3EC7367E;
+        Tue, 27 Oct 2020 09:55:56 +0000 (UTC)
+Received: by fuller.cnet (Postfix, from userid 1000)
+        id 00636417F242; Mon, 26 Oct 2020 16:11:07 -0300 (-03)
+Date:   Mon, 26 Oct 2020 16:11:07 -0300
+From:   Marcelo Tosatti <mtosatti@redhat.com>
+To:     Thomas Gleixner <tglx@linutronix.de>
+Cc:     Nitesh Narayan Lal <nitesh@redhat.com>,
+        Peter Zijlstra <peterz@infradead.org>, helgaas@kernel.org,
+        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
+        frederic@kernel.org, sassmann@redhat.com,
+        jesse.brandeburg@intel.com, lihong.yang@intel.com,
+        jeffrey.t.kirsher@intel.com, jacob.e.keller@intel.com,
+        jlelli@redhat.com, hch@infradead.org, bhelgaas@google.com,
+        mike.marciniszyn@intel.com, dennis.dalessandro@intel.com,
+        thomas.lendacky@amd.com, jiri@nvidia.com, mingo@redhat.com,
+        juri.lelli@redhat.com, vincent.guittot@linaro.org,
+        lgoncalv@redhat.com
+Subject: Re: [PATCH v4 4/4] PCI: Limit pci_alloc_irq_vectors() to
+ housekeeping CPUs
+Message-ID: <20201026191107.GA407524@fuller.cnet>
+References: <20201020073055.GY2611@hirez.programming.kicks-ass.net>
+ <078e659e-d151-5bc2-a7dd-fe0070267cb3@redhat.com>
+ <20201020134128.GT2628@hirez.programming.kicks-ass.net>
+ <6736e643-d4ae-9919-9ae1-a73d5f31463e@redhat.com>
+ <260f4191-5b9f-6dc1-9f11-085533ac4f55@redhat.com>
+ <20201023085826.GP2611@hirez.programming.kicks-ass.net>
+ <9ee77056-ef02-8696-5b96-46007e35ab00@redhat.com>
+ <87ft6464jf.fsf@nanos.tec.linutronix.de>
+ <20201026173012.GA377978@fuller.cnet>
+ <875z6w4xt4.fsf@nanos.tec.linutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1603785837; bh=r0xwNq09SLVf9IAKX1jCbxlzGbnHbhH3r1mmzOeOSi8=;
-        h=From:To:CC:Subject:Date:Message-ID:X-Mailer:In-Reply-To:
-         References:X-NVConfidentiality:MIME-Version:Content-Type;
-        b=Y/DJ1YQpJ9dWzdrAHRHxF7Ro99qwC02tqL8cdVONz8dE6v3rg/g1VGm6c7h+Q9emn
-         pKW6K9Lo7Y9hLyZ7iJcHfdIf9ES0XMzH5ahEUmM5CdkOLX0MNznRqXZzA0QX84z2QC
-         AKI3ZTs3cmr+b9CL1DPW5xKWJzdy8h1zozb3Oi03TAIX3MSHs5bouAJSqS3hk5PD5m
-         CxOIJbNRZaDktMv++lgDIOglCfeqfgUJuurorhY74kmHChl+oZHx+IEKINGNHJSnos
-         YShwDu/cUo9lRD1tM9vq4Co5iG4YyXcKHOd8xvnfHze0BvUq+C4oUzVuSpnEItl80A
-         1k764zZ4F0IAA==
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <875z6w4xt4.fsf@nanos.tec.linutronix.de>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Adds pcie_is_ecrc_enabled() API to let other sub-systems (like DesignWare)
-to query if ECRC policy is enabled and perform any configuration
-required in those respective sub-systems.
+On Mon, Oct 26, 2020 at 08:00:39PM +0100, Thomas Gleixner wrote:
+> On Mon, Oct 26 2020 at 14:30, Marcelo Tosatti wrote:
+> > On Fri, Oct 23, 2020 at 11:00:52PM +0200, Thomas Gleixner wrote:
+> >> So without information from the driver which tells what the best number
+> >> of interrupts is with a reduced number of CPUs, this cutoff will cause
+> >> more problems than it solves. Regressions guaranteed.
+> >
+> > One might want to move from one interrupt per isolated app core
+> > to zero, or vice versa. It seems that "best number of interrupts 
+> > is with reduced number of CPUs" information, is therefore in userspace, 
+> > not in driver...
+> 
+> How does userspace know about the driver internals? Number of management
+> interrupts, optimal number of interrupts per queue?
+> 
+> >> Managed interrupts base their interrupt allocation and spreading on
+> >> information which is handed in by the individual driver and not on crude
+> >> assumptions. They are not imposing restrictions on the use case.
+> >> 
+> >> It's perfectly fine for isolated work to save a data set to disk after
+> >> computation has finished and that just works with the per-cpu I/O queue
+> >> which is otherwise completely silent. 
+> >
+> > Userspace could only change the mask of interrupts which are not 
+> > triggered by requests from the local CPU (admin, error, mgmt, etc),
+> > to avoid the vector exhaustion problem.
+> >
+> > However, there is no explicit way for userspace to know that, as far as
+> > i know.
+> >
+> >  130:      34845          0          0          0          0          0          0          0  IR-PCI-MSI 33554433-edge      nvme0q1
+> >  131:          0      27062          0          0          0          0          0          0  IR-PCI-MSI 33554434-edge      nvme0q2
+> >  132:          0          0      24393          0          0          0          0          0  IR-PCI-MSI 33554435-edge      nvme0q3
+> >  133:          0          0          0      24313          0          0          0          0  IR-PCI-MSI 33554436-edge      nvme0q4
+> >  134:          0          0          0          0      20608          0          0          0  IR-PCI-MSI 33554437-edge      nvme0q5
+> >  135:          0          0          0          0          0      22163          0          0  IR-PCI-MSI 33554438-edge      nvme0q6
+> >  136:          0          0          0          0          0          0      23020          0  IR-PCI-MSI 33554439-edge      nvme0q7
+> >  137:          0          0          0          0          0          0          0      24285  IR-PCI-MSI 33554440-edge      nvme0q8
+> >
+> > Can that be retrieved from PCI-MSI information, or drivers
+> > have to inform this?
+> 
+> The driver should use a different name for the admin queues.
 
-Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
----
-V2:
-* None from V1
+Works for me.
 
- drivers/pci/pci.h      |  2 ++
- drivers/pci/pcie/aer.c | 11 +++++++++++
- 2 files changed, 13 insertions(+)
-
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index fa12f7cbc1a0..325fdbf91dde 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -575,9 +575,11 @@ static inline void pcie_aspm_powersave_config_link(struct pci_dev *pdev) { }
- #ifdef CONFIG_PCIE_ECRC
- void pcie_set_ecrc_checking(struct pci_dev *dev);
- void pcie_ecrc_get_policy(char *str);
-+bool pcie_is_ecrc_enabled(void);
- #else
- static inline void pcie_set_ecrc_checking(struct pci_dev *dev) { }
- static inline void pcie_ecrc_get_policy(char *str) { }
-+static inline bool pcie_is_ecrc_enabled(void) { return false; }
- #endif
- 
- #ifdef CONFIG_PCIE_PTM
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index 65dff5f3457a..24363c895aba 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -207,6 +207,17 @@ void pcie_ecrc_get_policy(char *str)
- 
- 	ecrc_policy = i;
- }
-+
-+/**
-+ * pcie_is_ecrc_enabled - returns if ECRC is enabled in the system or not
-+ *
-+ * Returns 1 if ECRC policy is enabled and 0 otherwise
-+ */
-+bool pcie_is_ecrc_enabled(void)
-+{
-+	return ecrc_policy == ECRC_POLICY_ON;
-+}
-+EXPORT_SYMBOL(pcie_is_ecrc_enabled);
- #endif	/* CONFIG_PCIE_ECRC */
- 
- #define	PCI_EXP_AER_FLAGS	(PCI_EXP_DEVCTL_CERE | PCI_EXP_DEVCTL_NFERE | \
--- 
-2.17.1
+Sounds more like a heuristic which can break, so documenting this 
+as an "interface" seems appropriate.
 
