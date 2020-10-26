@@ -2,96 +2,190 @@ Return-Path: <SRS0=XRPK=EB=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MIME_QP_LONG_LINE,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92DA5C4363A
-	for <linux-pci@archiver.kernel.org>; Mon, 26 Oct 2020 16:52:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82107C2D0A3
+	for <linux-pci@archiver.kernel.org>; Mon, 26 Oct 2020 17:31:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 43A672222C
-	for <linux-pci@archiver.kernel.org>; Mon, 26 Oct 2020 16:52:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 34DC822281
+	for <linux-pci@archiver.kernel.org>; Mon, 26 Oct 2020 17:31:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=cesnet.cz header.i=@cesnet.cz header.b="GFQ1wS+u"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="FJbkr3xd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1786540AbgJZQwR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 26 Oct 2020 12:52:17 -0400
-Received: from office2.cesnet.cz ([195.113.144.244]:33868 "EHLO
-        office2.cesnet.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1786537AbgJZQvz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Oct 2020 12:51:55 -0400
-X-Greylist: delayed 572 seconds by postgrey-1.27 at vger.kernel.org; Mon, 26 Oct 2020 12:51:54 EDT
-Received: from localhost (ip-94-112-194-201.net.upcbroadband.cz [94.112.194.201])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        id S1774135AbgJZRbW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 26 Oct 2020 13:31:22 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:53587 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1734796AbgJZRbW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Oct 2020 13:31:22 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1603733481;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=fS08d8MBtu1ip55QD9RREObehqTj3BnkBGdOU4nJc8o=;
+        b=FJbkr3xdxKEHef3TDTn2R64jR0MZ5oZaWyiKpXQs/VaolmQOzy+ViqKGws54OmphUvVK3T
+        JL0uS35I9gQWJ/YAMxyYXiZrpJUtkAJHv1mKGkjYJgP+yvqSpgze936/UXlg1FXvOkpYdZ
+        GOClXPK46IvwAjrEqYkIz3Ja/4YdKAk=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-106-6NgAv3PkPCycQ-VxP7BvvA-1; Mon, 26 Oct 2020 13:31:17 -0400
+X-MC-Unique: 6NgAv3PkPCycQ-VxP7BvvA-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by office2.cesnet.cz (Postfix) with ESMTPSA id 8DE83400064;
-        Mon, 26 Oct 2020 17:42:20 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cesnet.cz;
-        s=office2-2020; t=1603730541;
-        bh=Cyny4Y4Fl6S61Y9NmpnBF2i5HrbyvnoX6jqO7XGt42c=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References;
-        b=GFQ1wS+uqfgzj4abuJM8J+D5u2+8/ien4GPexCEBf/1fYWmhBkCtKmTi+5KATtliA
-         vAP7KW/Jvuauhr+K3pCp3HgsqX47JDrmq562SojNlbjUqfYSBeFtXWKQ7J8AF42X2s
-         XuKsDWuJKYpRcveplnxFcmo3ZLwanEu+qc32oKtQkHtDZ5wAkAGOozIicwF46sNb7j
-         JWszB66F1ozKH0ip/OTWNBbQioNq9SiedQytZNNKGw5iJFPjUiM9HyJ1rYiSFyF1ml
-         tiyQELO5G9ioHuby8kE9pE+a0KsQDT63mAHLFtyPwhkMYAQ9IaSucD/neG0Oyss0DN
-         2avJ97rAbjEVA==
-From:   =?iso-8859-1?Q?Jan_Kundr=E1t?= <jan.kundrat@cesnet.cz>
-To:     Rob Herring <robh@kernel.org>
-Cc:     <vtolkm@googlemail.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Jason Cooper <jason@lakedaemon.net>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Russell King <linux@armlinux.org.uk>,
-        <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v2] PCI: mvebu: Fix duplicate resource requests
-Date:   Mon, 26 Oct 2020 17:42:20 +0100
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id AEEE0809DC0;
+        Mon, 26 Oct 2020 17:31:10 +0000 (UTC)
+Received: from fuller.cnet (ovpn-112-4.gru2.redhat.com [10.97.112.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 230DA19D6C;
+        Mon, 26 Oct 2020 17:31:03 +0000 (UTC)
+Received: by fuller.cnet (Postfix, from userid 1000)
+        id 2B9B0417F242; Mon, 26 Oct 2020 14:30:12 -0300 (-03)
+Date:   Mon, 26 Oct 2020 14:30:12 -0300
+From:   Marcelo Tosatti <mtosatti@redhat.com>
+To:     Thomas Gleixner <tglx@linutronix.de>
+Cc:     Nitesh Narayan Lal <nitesh@redhat.com>,
+        Peter Zijlstra <peterz@infradead.org>, helgaas@kernel.org,
+        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
+        frederic@kernel.org, sassmann@redhat.com,
+        jesse.brandeburg@intel.com, lihong.yang@intel.com,
+        jeffrey.t.kirsher@intel.com, jacob.e.keller@intel.com,
+        jlelli@redhat.com, hch@infradead.org, bhelgaas@google.com,
+        mike.marciniszyn@intel.com, dennis.dalessandro@intel.com,
+        thomas.lendacky@amd.com, jiri@nvidia.com, mingo@redhat.com,
+        juri.lelli@redhat.com, vincent.guittot@linaro.org,
+        lgoncalv@redhat.com
+Subject: Re: [PATCH v4 4/4] PCI: Limit pci_alloc_irq_vectors() to
+ housekeeping CPUs
+Message-ID: <20201026173012.GA377978@fuller.cnet>
+References: <20201019111137.GL2628@hirez.programming.kicks-ass.net>
+ <20201019140005.GB17287@fuller.cnet>
+ <20201020073055.GY2611@hirez.programming.kicks-ass.net>
+ <078e659e-d151-5bc2-a7dd-fe0070267cb3@redhat.com>
+ <20201020134128.GT2628@hirez.programming.kicks-ass.net>
+ <6736e643-d4ae-9919-9ae1-a73d5f31463e@redhat.com>
+ <260f4191-5b9f-6dc1-9f11-085533ac4f55@redhat.com>
+ <20201023085826.GP2611@hirez.programming.kicks-ass.net>
+ <9ee77056-ef02-8696-5b96-46007e35ab00@redhat.com>
+ <87ft6464jf.fsf@nanos.tec.linutronix.de>
 MIME-Version: 1.0
-Message-ID: <99b7f3bf-2017-4ad5-b9be-99f356b076c5@cesnet.cz>
-In-Reply-To: <20201023145252.2691779-1-robh@kernel.org>
-References: <20201023145252.2691779-1-robh@kernel.org>
-Organization: CESNET
-User-Agent: Trojita/unstable-2020-07-06; Qt/5.14.2; xcb; Linux; 
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <87ft6464jf.fsf@nanos.tec.linutronix.de>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On p=C3=A1tek 23. =C5=99=C3=ADjna 2020 16:52:52 CEST, Rob Herring wrote:
-> With commit 669cbc708122 ("PCI: Move DT resource setup into
-> devm_pci_alloc_host_bridge()"), the DT 'ranges' is parsed and populated
-> into resources when the host bridge is allocated. The resources are
-> requested as well, but that happens a 2nd time for the mvebu driver in
-> mvebu_pcie_parse_request_resources(). We should only be requesting the
-> additional resources added in mvebu_pcie_parse_request_resources().
-> These are not added by default because the use custom properties rather
-> than standard DT address translation.
->
-> Also, the bus ranges was also populated by default, so we can remove
-> it from mvebu_pci_host_probe().
->
-> Fixes: 669cbc708122 ("PCI: Move DT resource setup into=20
-> devm_pci_alloc_host_bridge()")
-> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=3D209729
-> Reported-by: vtolkm@googlemail.com
-> Cc: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-> Cc: Jason Cooper <jason@lakedaemon.net>
-> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Russell King <linux@armlinux.org.uk>
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-arm-kernel@lists.infradead.org
-> Signed-off-by: Rob Herring <robh@kernel.org>
+On Fri, Oct 23, 2020 at 11:00:52PM +0200, Thomas Gleixner wrote:
+> On Fri, Oct 23 2020 at 09:10, Nitesh Narayan Lal wrote:
+> > On 10/23/20 4:58 AM, Peter Zijlstra wrote:
+> >> On Thu, Oct 22, 2020 at 01:47:14PM -0400, Nitesh Narayan Lal wrote:
+> >> So shouldn't we then fix the drivers / interface first, to get rid of
+> >> this inconsistency?
+> >>
+> > Considering we agree that excess vector is a problem that needs to be
+> > solved across all the drivers and that you are comfortable with the other
+> > three patches in the set. If I may suggest the following:
+> >
+> > - We can pick those three patches for now, as that will atleast fix a
+> >   driver that is currently impacting RT workloads. Is that a fair
+> >   expectation?
+> 
+> No. Blindly reducing the maximum vectors to the number of housekeeping
+> CPUs is patently wrong. The PCI core _cannot_ just nilly willy decide
+> what the right number of interrupts for this situation is.
+> 
+> Many of these drivers need more than queue interrupts, admin, error
+> interrupt and some operate best with seperate RX/TX interrupts per
+> queue. They all can "work" with a single PCI interrupt of course, but
+> the price you pay is performance.
+> 
+> An isolated setup, which I'm familiar with, has two housekeeping
+> CPUs. So far I restricted the number of network queues with a module
+> argument to two, which allocates two management interrupts for the
+> device and two interrupts (RX/TX) per queue, i.e. a total of six.
+> 
+> Now I reduced the number of available interrupts to two according to
+> your hack, which makes it use one queue RX/TX combined and one
+> management interrupt. Guess what happens? Network performance tanks to
+> the points that it breaks a carefully crafted setup.
+> 
+> The same applies to a device which is application specific and wants one
+> channel including an interrupt per isolated application core. Today I
+> can isolate 8 out of 12 CPUs and let the device create 8 channels and
+> set one interrupt and channel affine to each isolated CPU. With your
+> hack, I get only 4 interrupts and channels. Fail!
 
-Without this patch, 5.9.1 won't find the eMMC card on Clearfog Base for me,=20=
+Good point.
 
-so:
+> You cannot declare that all this is perfectly fine, just because it does
+> not matter for your particular use case.
+> 
+> So without information from the driver which tells what the best number
+> of interrupts is with a reduced number of CPUs, this cutoff will cause
+> more problems than it solves. Regressions guaranteed.
 
-Tested-by: Jan Kundr=C3=A1t <jan.kundrat@cesnet.cz>
+One might want to move from one interrupt per isolated app core
+to zero, or vice versa. It seems that "best number of interrupts 
+is with reduced number of CPUs" information, is therefore in userspace, 
+not in driver...
 
-Thanks for the fix,
-Jan
+No?
+
+> Managed interrupts base their interrupt allocation and spreading on
+> information which is handed in by the individual driver and not on crude
+> assumptions. They are not imposing restrictions on the use case.
+> 
+> It's perfectly fine for isolated work to save a data set to disk after
+> computation has finished and that just works with the per-cpu I/O queue
+> which is otherwise completely silent. 
+
+Userspace could only change the mask of interrupts which are not 
+triggered by requests from the local CPU (admin, error, mgmt, etc),
+to avoid the vector exhaustion problem.
+
+However, there is no explicit way for userspace to know that, as far as
+i know.
+
+ 130:      34845          0          0          0          0          0          0          0  IR-PCI-MSI 33554433-edge      nvme0q1
+ 131:          0      27062          0          0          0          0          0          0  IR-PCI-MSI 33554434-edge      nvme0q2
+ 132:          0          0      24393          0          0          0          0          0  IR-PCI-MSI 33554435-edge      nvme0q3
+ 133:          0          0          0      24313          0          0          0          0  IR-PCI-MSI 33554436-edge      nvme0q4
+ 134:          0          0          0          0      20608          0          0          0  IR-PCI-MSI 33554437-edge      nvme0q5
+ 135:          0          0          0          0          0      22163          0          0  IR-PCI-MSI 33554438-edge      nvme0q6
+ 136:          0          0          0          0          0          0      23020          0  IR-PCI-MSI 33554439-edge      nvme0q7
+ 137:          0          0          0          0          0          0          0      24285  IR-PCI-MSI 33554440-edge      nvme0q8
+
+
+Can that be retrieved from PCI-MSI information, or drivers
+have to inform this? 
+
+> All isolated workers can do the
+> same in parallel without trampling on each other toes by competing for a
+> reduced number of queues which are affine to the housekeeper CPUs.
+> 
+> Unfortunately network multi-queue is substantially different from block
+> multi-queue (as I learned in this conversation), so the concept cannot
+> be applied one-to-one to networking as is. But there are certainly part
+> of it which can be reused.
+> 
+> This needs a lot more thought than just these crude hacks.
+> 
+> Especially under the aspect that there are talks about making isolation
+> runtime switchable. Are you going to rmmod/insmod the i40e network
+> driver to do so? That's going to work fine if you do that
+> reconfiguration over network...
+> 
+> Thanks,
+> 
+>         tglx
+
+
