@@ -2,132 +2,145 @@ Return-Path: <SRS0=XRPK=EB=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A48ACC64E7B
-	for <linux-pci@archiver.kernel.org>; Mon, 26 Oct 2020 10:59:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DD72C4363A
+	for <linux-pci@archiver.kernel.org>; Mon, 26 Oct 2020 12:33:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7896622282
-	for <linux-pci@archiver.kernel.org>; Mon, 26 Oct 2020 10:59:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2537D22400
+	for <linux-pci@archiver.kernel.org>; Mon, 26 Oct 2020 12:33:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ffwll.ch header.i=@ffwll.ch header.b="KLr497mr"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="ELTAHRjX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1772910AbgJZK7U (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 26 Oct 2020 06:59:20 -0400
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:46433 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1772825AbgJZK6n (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Oct 2020 06:58:43 -0400
-Received: by mail-wr1-f65.google.com with SMTP id n6so11856650wrm.13
-        for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2020 03:58:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ffwll.ch; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=5W4UqFTJMoDRzu7XpmV7m/mIx7tbXZK4TFNNVek8jNg=;
-        b=KLr497mrTXuUWmZaofaXk1hyxgArLSK5Z8LFA7VwpBwSz2E3+nE1glgvLx0JiQdQzn
-         dm5kaVp9H5reVf+JjmNdCZ0s9dozztPh2nQ4nrraI1YOy9mqE/zZOpL+5xkTYVff+uRk
-         JdfMqSudDhC/KCWc2IX1OVFNm25KGK/VrwkWA=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=5W4UqFTJMoDRzu7XpmV7m/mIx7tbXZK4TFNNVek8jNg=;
-        b=VPGVTYdnxJtpwirjwng0TGYZo/8jGwxKvPLH62MEPA7JEjRM0YdnlfCzWknT0KDnLW
-         0vdRuekhp/1KgaISIj6iBqP/nPZKG9tCQxueM3x+mXMB06v/BT38g4YKQd4TnT/Gs8k/
-         w+zNjUaFdOoWcGLy3CCVladdqKh8TcPJV9B6oTl/eDCBtjnsCX4jel4vUJ9CYqmdKzTM
-         HSA9kL0Z8MdVzN1aVt9k5iAhmZOFOV07PTLm/tKnKb/FjAUSpZle+6Hi4gbNIS9MdZVr
-         X5qccoOqrAdIuqrJnvMOiBL/M20dX5oivqO/taBt5CiVM30Cn+2sefT5P5atimDI5wJh
-         4zig==
-X-Gm-Message-State: AOAM532+WeQAnKrfJih8RQye46AqyETZBy8FAqXoglbcUROJbk1//yeI
-        wYzuOWK/n8df5mVKHQKz5D8kQw==
-X-Google-Smtp-Source: ABdhPJz2su0SrOVqm3DeypSb7RJN8qc1fEsNaBh1v2aKMDuErJYYfZ5yJi5C/1uI817lBc+Ai9qYTQ==
-X-Received: by 2002:adf:f3cb:: with SMTP id g11mr18177850wrp.210.1603709921142;
-        Mon, 26 Oct 2020 03:58:41 -0700 (PDT)
-Received: from phenom.ffwll.local ([2a02:168:57f4:0:efd0:b9e5:5ae6:c2fa])
-        by smtp.gmail.com with ESMTPSA id w83sm21165156wmg.48.2020.10.26.03.58.39
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Oct 2020 03:58:40 -0700 (PDT)
-From:   Daniel Vetter <daniel.vetter@ffwll.ch>
-To:     DRI Development <dri-devel@lists.freedesktop.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Cc:     kvm@vger.kernel.org, linux-mm@kvack.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-samsung-soc@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-s390@vger.kernel.org, Daniel Vetter <daniel.vetter@ffwll.ch>,
-        Daniel Vetter <daniel.vetter@intel.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Kees Cook <keescook@chromium.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        John Hubbard <jhubbard@nvidia.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Jan Kara <jack@suse.cz>, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org
-Subject: [PATCH v4 11/15] PCI: Obey iomem restrictions for procfs mmap
-Date:   Mon, 26 Oct 2020 11:58:14 +0100
-Message-Id: <20201026105818.2585306-12-daniel.vetter@ffwll.ch>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20201026105818.2585306-1-daniel.vetter@ffwll.ch>
-References: <20201026105818.2585306-1-daniel.vetter@ffwll.ch>
+        id S1775171AbgJZMdB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 26 Oct 2020 08:33:01 -0400
+Received: from hqnvemgate26.nvidia.com ([216.228.121.65]:12651 "EHLO
+        hqnvemgate26.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1775169AbgJZMdB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Oct 2020 08:33:01 -0400
+Received: from hqmail.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate26.nvidia.com (using TLS: TLSv1.2, AES256-SHA)
+        id <B5f96c1e80000>; Mon, 26 Oct 2020 05:32:40 -0700
+Received: from localhost (10.124.1.5) by HQMAIL107.nvidia.com (172.20.187.13)
+ with Microsoft SMTP Server (TLS) id 15.0.1473.3; Mon, 26 Oct 2020 12:32:59
+ +0000
+Date:   Mon, 26 Oct 2020 13:32:57 +0100
+From:   Thierry Reding <treding@nvidia.com>
+To:     Jingoo Han <jingoohan1@gmail.com>
+CC:     Vidya Sagar <vidyas@nvidia.com>,
+        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "amurray@thegoodpenguin.co.uk" <amurray@thegoodpenguin.co.uk>,
+        "robh@kernel.org" <robh@kernel.org>,
+        "jonathanh@nvidia.com" <jonathanh@nvidia.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "kthota@nvidia.com" <kthota@nvidia.com>,
+        "mmaddireddy@nvidia.com" <mmaddireddy@nvidia.com>,
+        "sagar.tv@gmail.com" <sagar.tv@gmail.com>
+Subject: Re: [PATCH 0/3] Add support to handle prefetchable memory
+Message-ID: <20201026123012.GA356750@ulmo>
+References: <20201023195655.11242-1-vidyas@nvidia.com>
+ <SLXP216MB04777D651A59246A60D036A8AA1B0@SLXP216MB0477.KORP216.PROD.OUTLOOK.COM>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="uAKRQypu60I7Lcqm"
+Content-Disposition: inline
+In-Reply-To: <SLXP216MB04777D651A59246A60D036A8AA1B0@SLXP216MB0477.KORP216.PROD.OUTLOOK.COM>
+X-NVConfidentiality: public
+User-Agent: Mutt/1.14.7 (2020-08-29)
+X-Originating-IP: [10.124.1.5]
+X-ClientProxiedBy: HQMAIL101.nvidia.com (172.20.187.10) To
+ HQMAIL107.nvidia.com (172.20.187.13)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1603715560; bh=sqQVLIGYKI42d425ac+GAGW1AQu2By70V9nvM0kyskI=;
+        h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+         Content-Type:Content-Disposition:In-Reply-To:X-NVConfidentiality:
+         User-Agent:X-Originating-IP:X-ClientProxiedBy;
+        b=ELTAHRjXw6NZhL3cmV/vOeItQwvz16wHR+EgQHN7Cn3RCK2FLjI6K1lO8yEmE5ft8
+         xFFdKWLbdOk3fsWXLP/uS1MrvPrz4xRVVpKlRJCUxYhkVhHKzBK9NkxFOIopEBwTRX
+         RadntGYS0L5jHi8yyx+6C3DoSvg7y/xnDPAHr7LcVvbz1xxhY5CcXOsouRB3kUXaWq
+         60zAB2Q8twaRqYqqxxwBRDL0KC5M7Rh/JPZJVWZF2K8PrBrQzHGWQ5lVNVsWP6l7V/
+         Wok+UGT5u0CVFvxb4Lw6gkVvR1imCvdCgiAwl6eTtjDt33WOz/e/mFjmgYs5GhK5Ur
+         YPgDBo2aE574Q==
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-There's three ways to access PCI BARs from userspace: /dev/mem, sysfs
-files, and the old proc interface. Two check against
-iomem_is_exclusive, proc never did. And with CONFIG_IO_STRICT_DEVMEM,
-this starts to matter, since we don't want random userspace having
-access to PCI BARs while a driver is loaded and using it.
+--uAKRQypu60I7Lcqm
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Fix this by adding the same iomem_is_exclusive() check we already have
-on the sysfs side in pci_mmap_resource().
+On Sat, Oct 24, 2020 at 04:03:41AM +0000, Jingoo Han wrote:
+> On 10/23/20, 3:57 PM, Vidya Sagar wrote:
+> >=20
+> > This patch series adds support for configuring the DesignWare IP's ATU
+> > region for prefetchable memory translations.
+> > It first starts by flagging a warning if the size of non-prefetchable
+> > aperture goes beyond 32-bit as PCIe spec doesn't allow it.
+> > And then adds required support for programming the ATU to handle higher
+> > (i.e. >4GB) sizes and then finally adds support for differentiating
+> > between prefetchable and non-prefetchable regions and configuring one of
+> > the ATU regions for prefetchable memory translations purpose.
+> >
+> > Vidya Sagar (3):
+> >   PCI: of: Warn if non-prefetchable memory aperture size is > 32-bit
+> >   PCI: dwc: Add support to program ATU for >4GB memory aperture sizes
+> >   PCI: dwc: Add support to handle prefetchable memory mapping
+>=20
+> For 2nd & 3rd,
+> Acked-by: Jingoo <jingoohan1@gmail.com>
+> But, I still want someone to ack 1st patch, not me.
+>=20
+> To Vidya,
+> If possible, can you ask your coworker to give 'Tested-by'? It will be ve=
+ry helpful.
+> Thank you.
 
-References: 90a545e98126 ("restrict /dev/mem to idle io memory ranges")
-Signed-off-by: Daniel Vetter <daniel.vetter@intel.com>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>
-Cc: Kees Cook <keescook@chromium.org>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: John Hubbard <jhubbard@nvidia.com>
-Cc: Jérôme Glisse <jglisse@redhat.com>
-Cc: Jan Kara <jack@suse.cz>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-mm@kvack.org
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-samsung-soc@vger.kernel.org
-Cc: linux-media@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Daniel Vetter <daniel.vetter@ffwll.ch>
---
-v2: Improve commit message (Bjorn)
----
- drivers/pci/proc.c | 5 +++++
- 1 file changed, 5 insertions(+)
+On next-20201026 (but also going back quite a while) I'm seeing this
+during boot on Jetson AGX Xavier (Tegra194):
 
-diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
-index d35186b01d98..3a2f90beb4cb 100644
---- a/drivers/pci/proc.c
-+++ b/drivers/pci/proc.c
-@@ -274,6 +274,11 @@ static int proc_bus_pci_mmap(struct file *file, struct vm_area_struct *vma)
- 		else
- 			return -EINVAL;
- 	}
-+
-+	if (dev->resource[i].flags & IORESOURCE_MEM &&
-+	    iomem_is_exclusive(dev->resource[i].start))
-+		return -EINVAL;
-+
- 	ret = pci_mmap_page_range(dev, i, vma,
- 				  fpriv->mmap_state, write_combine);
- 	if (ret < 0)
--- 
-2.28.0
+[    3.493382] ahci 0001:01:00.0: version 3.0
+[    3.493889] ahci 0001:01:00.0: SSS flag set, parallel bus scan disabled
+[    4.497706] ahci 0001:01:00.0: controller reset failed (0xffffffff)
+[    4.498114] ahci: probe of 0001:01:00.0 failed with error -5
 
+After applying this series, AHCI over PCI is back to normal:
+
+[    3.543230] ahci 0001:01:00.0: AHCI 0001.0000 32 slots 1 ports 6 Gbps 0x=
+1 impl SATA mode
+[    3.550841] ahci 0001:01:00.0: flags: 64bit ncq sntf led only pmp fbs pi=
+o slum part sxs
+[    3.559747] scsi host0: ahci
+[    3.561998] ata1: SATA max UDMA/133 abar m512@0x1230010000 port 0x123001=
+0100 irq 63
+
+So for the series:
+
+Tested-by: Thierry Reding <treding@nvidia.com>
+
+--uAKRQypu60I7Lcqm
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAl+WwfkACgkQ3SOs138+
+s6GSZw//dofmlmsswCqSTbKwBiInkH2EyVwdddtYg43ZSc8uCDAIKtUTPr9o1O4P
+ae67pQ0Zwgr79ULbANWRr6KsgoAT+Pbd7qQoHT/X252IrvxmOG0mkgPCGvJcsZZa
+vgZvoQRSPNXPehVlcJBH/JX33NKJm+T01B9MAG4OdHG4PLQqdc6LLj7rskibQeom
+fIGkJsXQRvzMDyDxqYrqOop2V9ejV9EwAqbOrQpSTzNrfv1yy0HJVmL8S5qqWSRM
+tgvtZ+wLAuCq0jwDgKYiTXHnpltO4C3QyCc6FteZB6ykeJlOm4eTIy58oGjv1AQU
+XpHqOTRJs9SGxSIudrshjcvxyU09Ci9dGU/n/x/vznIl3z58FuK6Xp9eWgyVR4qg
+NrDViohHrj5c1VHqWwERUCDnbQINYF+l+g51xDzMRdYP2C46sHrnOQ/e73CicGny
+Ovs26S2H7UyYFwBNsYmDzA1f3SmkZLX490D8qM3vo65UENZ2cOsIFamBvGuiqn7C
+Z4zunXfySLRE7QTAWJuX76pFclfzM4NeUwlehpogSR+32C/sn3sJQgfr/zZd4RRd
+G456gCEA4Lg0W8TKkhqKDfbzS0EQ+6zvP/jvwU68IfH+Pmo94z0BsXu9+Ng7eXWZ
+CtceVfJDFqw/kmT+lH8OgIfLxrzFjJbPNiCY3t3GFGrqpvpwCXc=
+=JZ1w
+-----END PGP SIGNATURE-----
+
+--uAKRQypu60I7Lcqm--
