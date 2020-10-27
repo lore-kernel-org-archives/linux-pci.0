@@ -2,122 +2,88 @@ Return-Path: <SRS0=uFxo=EC=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5A53C4363A
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Oct 2020 17:01:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00EA0C64EBC
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Oct 2020 17:16:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6F3D422202
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Oct 2020 17:01:31 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="v7jJxiAm"
+	by mail.kernel.org (Postfix) with ESMTP id B4EE320809
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Oct 2020 17:16:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1603819001;
+	bh=sXVHnKGNfJmka3AKJsAEnCIAg9yWEv5oSthTVHBwoAo=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=Zq/qzG6y4Zrz8IfEwB2HO22b9IEjxu2W/spDgxtGY/FrMbJVNVSuqe81ohAUEs4Fy
+	 z1bEe+27CSO0AlYQzcyOmKrtHx+MLqdm/VAcfFFqGTidIMEw6TI1FasjHcIeGIQTYS
+	 HEul6xeEsJR+CwX/+POnQodY0s4iZfHs5z5fZkuQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1815034AbgJ0RB3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 27 Oct 2020 13:01:29 -0400
-Received: from mail-pj1-f66.google.com ([209.85.216.66]:55220 "EHLO
-        mail-pj1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1814947AbgJ0RAr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2020 13:00:47 -0400
-Received: by mail-pj1-f66.google.com with SMTP id az3so1098084pjb.4
-        for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2020 10:00:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id;
-        bh=uRYHj8fOzKIbgTatVNACe2Z7jBPsaQjBEafGCSz/uso=;
-        b=v7jJxiAmFpQGPPE8QQ0mrCsoWYr7bSM/5I3m+sxKynoFaTaRvcpyHQGZCPGDrN5Nhy
-         Sg1qqv2CfjIuTLDR7DamQT1BYojxLuqIgKS41hewgRY7hfB7hCKxfUOaf0GfpR/tlrhG
-         CySBrlXznr3ESkkK3Aigi11FU2wJVG6fqOv/WbAc+uE8+Dv2N758mrVH0bBCX1uUkBgJ
-         hw0YcCS561pUgUdNC7vHyq+ZP0JPoAHOn/Wvs9wgYZSp2PBIQQDPJE8cBcNG1/RSfKtY
-         Vr3+JXrBVtdzNlo5lZUvjA1Y145E9glZYXc4s4iw6SaDmIVbbdUBaBKXfQdlWG+5t134
-         9mnw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=uRYHj8fOzKIbgTatVNACe2Z7jBPsaQjBEafGCSz/uso=;
-        b=QWSzmz3UanMB/brx8j5sbjfes+jejHu4nmqg2a9a7pZj3VkjQXV09qkI9afZdYWjBd
-         1Jnzrmasvt4oIWn7A/1KFUQmszkERIxjDMyartxsTn3IioJK2V65Nxx4Jn+Bi2ugCj+C
-         0omYoQROyMIEnzCJVqGh+Swir97DFdk6rMkrwx2L/OD+cj4KS4wg914Yr9/UUEreiFK2
-         0e8ktiwVXeiSEoRNJHnRRZ3izJocQcJEM0fhWZaQtpkVGH+ns+s14dp8jQVzM5fO4SSe
-         Ox9lVxIkGaxTmYpod4CSDOoq/+GQS6u26lbbWhubeOBIXdmkAglXjBP4C8ciHxSxnPwF
-         uKzg==
-X-Gm-Message-State: AOAM532BN1r/odjSctsU2vpNdP/gczUgeTr8b/64hqimMRDuz1Cr32Tq
-        OfoihZJdKRczxf/DTUmKJVAZ
-X-Google-Smtp-Source: ABdhPJxwJxY0LrEFo/qNK6kR4+9FBQYel3/cegKB/Dhvb96lXQaJkrXXz9/VECIAyZNQKkvnTsdoXQ==
-X-Received: by 2002:a17:90b:950:: with SMTP id dw16mr2736081pjb.200.1603818046747;
-        Tue, 27 Oct 2020 10:00:46 -0700 (PDT)
-Received: from localhost.localdomain ([103.59.133.81])
-        by smtp.googlemail.com with ESMTPSA id x26sm2845206pfn.178.2020.10.27.10.00.42
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Oct 2020 10:00:45 -0700 (PDT)
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     agross@kernel.org, bjorn.andersson@linaro.org, kishon@ti.com,
-        vkoul@kernel.org, robh@kernel.org
-Cc:     svarbanov@mm-sol.com, bhelgaas@google.com,
-        lorenzo.pieralisi@arm.com, linux-arm-msm@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        mgautam@codeaurora.org, devicetree@vger.kernel.org,
-        truong@codeaurora.org,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH v5 0/5] Add PCIe support for SM8250 SoC
-Date:   Tue, 27 Oct 2020 22:30:28 +0530
-Message-Id: <20201027170033.8475-1-manivannan.sadhasivam@linaro.org>
-X-Mailer: git-send-email 2.17.1
+        id S1817974AbgJ0RQe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 27 Oct 2020 13:16:34 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43196 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1817219AbgJ0ROr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Oct 2020 13:14:47 -0400
+Received: from localhost (170.sub-72-107-125.myvzw.com [72.107.125.170])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9EAD920657;
+        Tue, 27 Oct 2020 17:14:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1603818887;
+        bh=sXVHnKGNfJmka3AKJsAEnCIAg9yWEv5oSthTVHBwoAo=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=GVjme1F+GqdaD1MbKtfFamLZZYO4rNNhDD9YRBoLgHkh6ERoJ9CKUMg1lAs4Y/Vwr
+         wjOdBhoRSdpxkuWofIOHBNfdyHwY1wv03UUCA/YPr5+4MFfZIhmj1ZpEogMOojcs1D
+         M3HxZiIweRd+cwcbSc2d4DjQkK+SGH8Htw43hStU=
+Date:   Tue, 27 Oct 2020 12:14:45 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Krzysztof Kozlowski <krzk@kernel.org>
+Cc:     Jingoo Han <jingoohan1@gmail.com>, linux-pci@vger.kernel.org,
+        linux-samsung-soc@vger.kernel.org, Kukjin Kim <kgene@kernel.org>,
+        Marek Szyprowski <m.szyprowski@samsung.com>
+Subject: Re: pci-exynos.c coverity issue #1437287
+Message-ID: <20201027171445.GA186716@bjorn-Precision-5520>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201027164042.GA123158@kozik-lap>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hello,
+On Tue, Oct 27, 2020 at 05:40:42PM +0100, Krzysztof Kozlowski wrote:
+> On Tue, Oct 27, 2020 at 11:34:46AM -0500, Bjorn Helgaas wrote:
+> > Hi Jingoo,
+> > 
+> > Please take a look at this issue reported by Coverity:
+> > 
+> > 222 static void exynos_pcie_assert_reset(struct exynos_pcie *ep)
+> > 223 {
+> > 224        struct dw_pcie *pci = ep->pci;
+> > 225        struct device *dev = pci->dev;
+> > 226
+> >    	1. Condition ep->reset_gpio >= 0, taking true branch.
+> > 227        if (ep->reset_gpio >= 0)
+> > 
+> > CID 1437287 (#1 of 1): Unchecked return value (CHECKED_RETURN) 2.
+> > check_return: Calling devm_gpio_request_one without checking return
+> > value (as is done elsewhere 112 out of 113 times).
+> > 
+> > 228                devm_gpio_request_one(dev, ep->reset_gpio,
+> > 229                                GPIOF_OUT_INIT_HIGH, "RESET");
+> > 
+> > 
+> > Maybe you can guarantee that it's safe to ignore the return value by
+> > doing a lot of code analysis, but I think it would be better to check
+> > like all the other callers do.
+> 
+> +Cc Marek,
+> 
+> Hi Bjorn,
+> 
+> I think this is being removed by Marek's patchset:
+> https://lore.kernel.org/linux-samsung-soc/20201023075744.26200-1-m.szyprowski@samsung.com/
 
-This series adds PCIe support for Qualcomm SM8250 SoC with relevant PHYs.
-There are 3 PCIe instances on this SoC each with different PHYs. The PCIe
-controller and PHYs are mostly comaptible with the ones found on SDM845
-SoC, hence the old drivers are modified to add the support.
-
-This series has been tested on RB5 board with QCA6391 chipset connected
-onboard.
-
-Thanks,
-Mani
-
-Changes in v5:
-
-* Added Review tags from Rob
-* Cleaned up the bdf to sid patch after discussing with Tony
-
-Changes in v4:
-
-* Fixed an issue with tx_tbl_sec in PHY driver
-
-Changes in v3:
-
-* Rebased on top of phy/next
-* Renamed ops_sm8250 to ops_1_9_0 to maintain uniformity
-
-Changes in v2:
-
-* Fixed the PHY and PCIe bindings
-* Introduced secondary table in PHY driver to abstract out the common configs.
-* Used a more generic way of configuring BDF to SID mapping
-* Dropped ATU change in favor of a patch spotted by Rob
-
-Manivannan Sadhasivam (5):
-  dt-bindings: phy: qcom,qmp: Add SM8250 PCIe PHY bindings
-  phy: qcom-qmp: Add SM8250 PCIe QMP PHYs
-  dt-bindings: pci: qcom: Document PCIe bindings for SM8250 SoC
-  PCI: qcom: Add SM8250 SoC support
-  PCI: qcom: Add support for configuring BDF to SID mapping for SM8250
-
- .../devicetree/bindings/pci/qcom,pcie.txt     |   6 +-
- .../devicetree/bindings/phy/qcom,qmp-phy.yaml |   6 +
- drivers/pci/controller/dwc/Kconfig            |   1 +
- drivers/pci/controller/dwc/pcie-qcom.c        |  92 ++++++
- drivers/phy/qualcomm/phy-qcom-qmp.c           | 281 +++++++++++++++++-
- drivers/phy/qualcomm/phy-qcom-qmp.h           |  18 ++
- 6 files changed, 398 insertions(+), 6 deletions(-)
-
--- 
-2.17.1
-
+Perfect, thanks!
