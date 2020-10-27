@@ -2,73 +2,124 @@ Return-Path: <SRS0=uFxo=EC=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0106CC388F9
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Oct 2020 16:52:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D48D2C55178
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Oct 2020 17:01:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8A14D22202
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Oct 2020 16:52:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6C2C8218AC
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Oct 2020 17:01:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="MfAM/CSQ"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="PB5k0bv6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1813570AbgJ0QwB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 27 Oct 2020 12:52:01 -0400
-Received: from mailgw01.mediatek.com ([210.61.82.183]:38302 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1813584AbgJ0QwA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2020 12:52:00 -0400
-X-UUID: 303739ed48c74eee8c36ddd921644957-20201028
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=U7XynagizbrPxo62KttFyy3xZCzKkCXP4tL+OC/Qsws=;
-        b=MfAM/CSQ6SiWwRphiqmGCn7qL8XVuK7B11Djfb8lb+cv5qCDCI3Purc8b9KqgufEWZDLJ0jqM36v8CxoIKHb3BqxQzF24Wu9UyYjV8PaY58u1YJ+TZLJQgeVWnNi6Qfd2a/eWAGn9ytyJhn7MsmBs3OCYbwzSEA2Fe/6jM3Oqq8=;
-X-UUID: 303739ed48c74eee8c36ddd921644957-20201028
-Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw01.mediatek.com
-        (envelope-from <ryder.lee@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1890579906; Wed, 28 Oct 2020 00:51:52 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs08n2.mediatek.inc (172.21.101.56) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Wed, 28 Oct 2020 00:51:49 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas07.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Wed, 28 Oct 2020 00:51:49 +0800
-From:   Ryder Lee <ryder.lee@mediatek.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>
-CC:     <linux-pci@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
-        Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH] pci: mediatek: fix wrong operator used
-Date:   Wed, 28 Oct 2020 00:51:48 +0800
-Message-ID: <2418edb8c8c81bc646ce9c508939dc27e848dcd7.1603817008.git.ryder.lee@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-SNTS-SMTP: BA7EE0B2AC46DCA966E61E9FE1D7ED14540C86DBFE74E0B1D2CF6F77BF31C2952000:8
-X-MTK:  N
-Content-Transfer-Encoding: base64
+        id S1814982AbgJ0RBD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 27 Oct 2020 13:01:03 -0400
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:43789 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1814977AbgJ0RBB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2020 13:01:01 -0400
+Received: by mail-pg1-f193.google.com with SMTP id r10so1129474pgb.10
+        for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2020 10:01:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=Bnf/sDW9eWFD4ivwYAY59qhXKkgEzsER/rycx34AMMs=;
+        b=PB5k0bv6HN4dhEqOCMk7AFo/AuT3HEdF8kikIhIr29seCDl/P4o1nHZm0I/J2EuhAw
+         l5/iluB9lxX5ZDiC7fmQc5Hy6UYLsybhMfa31l2FUg7PJaO7/ZuJbmbGgG+tw8sqorfE
+         oKjTA/cCXAuBp3SVtBXe+rHPCXizkn4AzjjprUOpQf89TNNxsEn2+GGzyEEBz2qYdRvb
+         qn1BFD1SZIZGmTx2OTQLfT9r6A2x0AoymUrwxHIGgEKA82vO8IdZjdJxtIlxMkOddkHi
+         CthMZ2CzY6XHclgwzbtK0k1+0f6u8zO/6LrarDAY3GqT6DL0uBzZsWLduDSNLoqvhioz
+         hhNQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=Bnf/sDW9eWFD4ivwYAY59qhXKkgEzsER/rycx34AMMs=;
+        b=tkFL1jIN3ZrpdwfrnbIiUuRkzJZqAN+ZrWKNwtVEgz2oI7bARSD69MC82Kgl1sSklI
+         o6KEYIhGhCK8Ta9uUD3bcxhw4Hn2WZ5QYdjvIJhHdffSF6UlPnviLPXaGGaXgipK6Tns
+         gwYi5bIm2fIpKUIFFKhgZG/qNwMqH7tFEb6exi9nwlj+dr0gC9d42D5RAkDfVxKtpu88
+         9eGSkoVErN9VAJjiEWpLnlJOpEXtSMEhsov2Kvwusb/fVIVC1Sd4w2Wj4OjsSSdTI7Za
+         qacLmwzG2zcMxQ3T4fxDmRt8nymtz0vhIF/N8txl8kuXZLuWYB/wUY5ofXJPE6an4s+A
+         4Phg==
+X-Gm-Message-State: AOAM531DVH0Rv915PIsVfUNU2C7mTjEr9dt+8EBiaFtH2j+gayXgTHCp
+        2sFvMJTBIDPA65G0L6j7Y6hJ
+X-Google-Smtp-Source: ABdhPJx3cOfqk/XdTQmKMt+/AzGsm/mm2ybtBTZnTvdnybUrYVJbipJqvc270cFoNlNOqCDXj5178g==
+X-Received: by 2002:aa7:9424:0:b029:15d:5340:83b0 with SMTP id y4-20020aa794240000b029015d534083b0mr2529299pfo.73.1603818059906;
+        Tue, 27 Oct 2020 10:00:59 -0700 (PDT)
+Received: from localhost.localdomain ([103.59.133.81])
+        by smtp.googlemail.com with ESMTPSA id x26sm2845206pfn.178.2020.10.27.10.00.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 27 Oct 2020 10:00:59 -0700 (PDT)
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     agross@kernel.org, bjorn.andersson@linaro.org, kishon@ti.com,
+        vkoul@kernel.org, robh@kernel.org
+Cc:     svarbanov@mm-sol.com, bhelgaas@google.com,
+        lorenzo.pieralisi@arm.com, linux-arm-msm@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        mgautam@codeaurora.org, devicetree@vger.kernel.org,
+        truong@codeaurora.org,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Subject: [PATCH v5 3/5] dt-bindings: pci: qcom: Document PCIe bindings for SM8250 SoC
+Date:   Tue, 27 Oct 2020 22:30:31 +0530
+Message-Id: <20201027170033.8475-4-manivannan.sadhasivam@linaro.org>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20201027170033.8475-1-manivannan.sadhasivam@linaro.org>
+References: <20201027170033.8475-1-manivannan.sadhasivam@linaro.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Rml4IHRoZSBpc3N1ZSByZXBvcnRlZCBieSBDb3Zlcml0eToNCldyb25nIG9wZXJhdG9yIHVzZWQg
-KENPTlNUQU5UX0VYUFJFU1NJT05fUkVTVUxUKSBvcGVyYXRvcl9jb25mdXNpb246DQoocG9ydC0+
-c2xvdCA8PCAzKSAmIDcgaXMgYWx3YXlzIDAgcmVnYXJkbGVzcyBvZiB0aGUgdmFsdWVzIG9mIGl0
-cyBvcGVyYW5kcy4NClRoaXMgb2NjdXJzIGFzIGFuIGluaXRpYWxpemVyLg0KDQpTaWduZWQtb2Zm
-LWJ5OiBSeWRlciBMZWUgPHJ5ZGVyLmxlZUBtZWRpYXRlay5jb20+DQotLS0NCiBkcml2ZXJzL3Bj
-aS9jb250cm9sbGVyL3BjaWUtbWVkaWF0ZWsuYyB8IDIgKy0NCiAxIGZpbGUgY2hhbmdlZCwgMSBp
-bnNlcnRpb24oKyksIDEgZGVsZXRpb24oLSkNCg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2Nv
-bnRyb2xsZXIvcGNpZS1tZWRpYXRlay5jIGIvZHJpdmVycy9wY2kvY29udHJvbGxlci9wY2llLW1l
-ZGlhdGVrLmMNCmluZGV4IGNmNGMxOGYwYzI1YS4uMTk4MGIwMWNlZTM1IDEwMDY0NA0KLS0tIGEv
-ZHJpdmVycy9wY2kvY29udHJvbGxlci9wY2llLW1lZGlhdGVrLmMNCisrKyBiL2RyaXZlcnMvcGNp
-L2NvbnRyb2xsZXIvcGNpZS1tZWRpYXRlay5jDQpAQCAtNzYwLDcgKzc2MCw3IEBAIHN0YXRpYyBz
-dHJ1Y3QgcGNpX29wcyBtdGtfcGNpZV9vcHMgPSB7DQogc3RhdGljIGludCBtdGtfcGNpZV9zdGFy
-dHVwX3BvcnQoc3RydWN0IG10a19wY2llX3BvcnQgKnBvcnQpDQogew0KIAlzdHJ1Y3QgbXRrX3Bj
-aWUgKnBjaWUgPSBwb3J0LT5wY2llOw0KLQl1MzIgZnVuYyA9IFBDSV9GVU5DKHBvcnQtPnNsb3Qg
-PDwgMyk7DQorCXUzMiBmdW5jID0gUENJX0ZVTkMocG9ydC0+c2xvdCk7DQogCXUzMiBzbG90ID0g
-UENJX1NMT1QocG9ydC0+c2xvdCA8PCAzKTsNCiAJdTMyIHZhbDsNCiAJaW50IGVycjsNCi0tIA0K
-Mi4xOC4wDQo=
+Document the PCIe DT bindings for SM8250 SoC. The PCIe IP is similar to
+the one used on SDM845, hence just add the compatible along with the
+optional "atu" register region.
+
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Acked-by: Rob Herring <robh@kernel.org>
+---
+ Documentation/devicetree/bindings/pci/qcom,pcie.txt | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+index 02bc81bb8b2d..3b55310390a0 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+@@ -13,6 +13,7 @@
+ 			- "qcom,pcie-ipq8074" for ipq8074
+ 			- "qcom,pcie-qcs404" for qcs404
+ 			- "qcom,pcie-sdm845" for sdm845
++			- "qcom,pcie-sm8250" for sm8250
+ 
+ - reg:
+ 	Usage: required
+@@ -27,6 +28,7 @@
+ 			- "dbi"	   DesignWare PCIe registers
+ 			- "elbi"   External local bus interface registers
+ 			- "config" PCIe configuration space
++			- "atu"    ATU address space (optional)
+ 
+ - device_type:
+ 	Usage: required
+@@ -131,7 +133,7 @@
+ 			- "slave_bus"	AXI Slave clock
+ 
+ -clock-names:
+-	Usage: required for sdm845
++	Usage: required for sdm845 and sm8250
+ 	Value type: <stringlist>
+ 	Definition: Should contain the following entries
+ 			- "aux"		Auxiliary clock
+@@ -206,7 +208,7 @@
+ 			- "ahb"			AHB reset
+ 
+ - reset-names:
+-	Usage: required for sdm845
++	Usage: required for sdm845 and sm8250
+ 	Value type: <stringlist>
+ 	Definition: Should contain the following entries
+ 			- "pci"			PCIe core reset
+-- 
+2.17.1
 
