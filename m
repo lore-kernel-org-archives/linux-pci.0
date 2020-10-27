@@ -2,85 +2,76 @@ Return-Path: <SRS0=uFxo=EC=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C1EEC55179
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Oct 2020 14:26:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1796CC388F9
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Oct 2020 14:29:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5979322258
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Oct 2020 14:26:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D5C2522258
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Oct 2020 14:29:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ipox/R9x"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NNEfyoJX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1758966AbgJ0O0o (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 27 Oct 2020 10:26:44 -0400
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:34172 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758961AbgJ0O0n (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2020 10:26:43 -0400
-Received: by mail-pg1-f194.google.com with SMTP id t14so895287pgg.1;
-        Tue, 27 Oct 2020 07:26:42 -0700 (PDT)
+        id S1759373AbgJ0O3i (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 27 Oct 2020 10:29:38 -0400
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:39282 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759344AbgJ0O3h (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2020 10:29:37 -0400
+Received: by mail-pf1-f193.google.com with SMTP id e15so1010388pfh.6
+        for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2020 07:29:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:thread-topic:thread-index:date:message-id
          :references:in-reply-to:accept-language:content-language
          :content-transfer-encoding:mime-version;
-        bh=8dCERS1aOAn6Gww2KNm/tRPPwwG94ccIHNu7AdYm6pQ=;
-        b=Ipox/R9xpSBugv9+eDyrnAgmke6LXw722AZzlyx5i3iMQ856K4TVTCrsE+pSotIx3o
-         bCWGGTUS43iQ48UbZplUlQtyPRKNZzIG+AgOScJqZlzCynubdc/oX+Aj4wGzkgOdO6sL
-         SHj02JPzRvE/5V1PQ7NhgH8o2RGJU53CebLxEPuZHDP3VGMOX7N90PVW2KoD9j8i9u+S
-         LTmK/0XHhRKZnTsgHXCyzg6a3oMYQXxejhSNI/txQOvEOMvvdQPJV52hlSpdJJ20UM4G
-         oAEiMeMMjXM8wfOR0Nto3so5z3Npp1sOhBfJZM2Z1TE59ko3gawgdF8XNzBd334eMF+p
-         n0jA==
+        bh=NEHb3IRzceYWmIJb3EUhbJwoIvwSXkYOALZu5psCZDc=;
+        b=NNEfyoJXWhYru1f6876EtwCmW1CLhAY3Ex8MmM36kBeFFEbB6PFODOtFZzxIoT4u15
+         qnQEZRIHGOOTNh8RM3O3r4cwAE7BDvvKsq7smp7n56k1tFvNENEDjJa74L33+zPu55Ug
+         wVgUTOT9D3beUq9REJ6r3PhJ4hOfoWH/WaeZAysoM/XxTDs8ALunBjQqUVUyNwE5gnYL
+         mAFALAvF8UGVjy/KJ7Zu7mn8z+8xjhwJFKriVY036KRWA0ghHaDY2c96Xj7zlrJfKOLB
+         HGvGNB8Mf5sLouJVRpb+m7mE08pYQtQNHBVJU4sptYZDmXw93qyZw2zHzJCljHS+v7C4
+         PsBQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:thread-topic:thread-index
          :date:message-id:references:in-reply-to:accept-language
          :content-language:content-transfer-encoding:mime-version;
-        bh=8dCERS1aOAn6Gww2KNm/tRPPwwG94ccIHNu7AdYm6pQ=;
-        b=O8IIFIHbnvaJDJZyxyochNGSyaavqAL9Q9GhWj4OCzOmtKg2ebwmMLg74sxXMgA/TE
-         SL+PoTskyLZHkzHMO4qbMhxcbO58zc/1HB+WC3of8fk40NreQyU2r/2mCZ+puCueSpxk
-         5BfW62Dis21tFkptYPa8X9Nxxid9KH98gcHY7MebbpJ69DTiFRNAhKNW1z9p03/sQkS2
-         Fgn5mkOaliVQWvFyajyKdFSPcllU1F0xOmArVnRmfB1GOufuoh3vsh/Ht6/wVms3eqES
-         tJNysdESUZanSiDz/XZ6Avj5WR5GlNaM2lxwJpGHjtyYbYONwO0kWyUU6PuQtreo5l+c
-         X8JA==
-X-Gm-Message-State: AOAM532fLFjWUSTZW85mFBsAO7yCKHXWQqON/chGMsKju+LgDIvJVEEl
-        srXRFf9W/NlVVbnZNXt1pgs=
-X-Google-Smtp-Source: ABdhPJyrd2Awsck+RaZx+POJO8GSMbSMhCE5F1KOR5IvuLj04c+DhjwBhFjv0LelEa/uuTIpGWsgIw==
-X-Received: by 2002:a63:474c:: with SMTP id w12mr2194940pgk.11.1603808802402;
-        Tue, 27 Oct 2020 07:26:42 -0700 (PDT)
+        bh=NEHb3IRzceYWmIJb3EUhbJwoIvwSXkYOALZu5psCZDc=;
+        b=jkXhVgkvUJLr7x01nBBRsYGDrb2WKdVU2oq71/veMwv+pksknMjOeIMsOwyL3EU8S6
+         M3bsigiprr/Pmb+dXFu6MXgJF02cF25xZTROQLrUwmRp5b7AZTZD686gMmv2FuSnoXeB
+         lTe4bCWRMWKPGTkT6yEXAdZE6xa99dicYCWECOT0KfS1bFRaDldRixdQuvnGSljYVB9p
+         AaHVp20yX6sk623gV04nHJqT2YXppF7cXhjC8TaUQ6S0jkeDGgMcBKiThKDGTnl4fm2N
+         AH6hzud7QUFi65VsNjl+8JklsKiS1GPHFnPDoNy3HX+O+CG8hhEr+9ygA+/Q5NWBlg8S
+         VAAA==
+X-Gm-Message-State: AOAM5331oEeBf5iZP2GR8t58BQjIr507X2q7+iTQV8scSa6VFht0csJK
+        oeZyTcP3fJ8k2zbb71MTOlg=
+X-Google-Smtp-Source: ABdhPJz88wx2ICJV8A9R+tvpyIGYRCUnZbycg9vENs2t/VZNXLRlqTaK6BKutaCqCVMOAbx7FRzupg==
+X-Received: by 2002:a63:5d61:: with SMTP id o33mr2096083pgm.295.1603808976662;
+        Tue, 27 Oct 2020 07:29:36 -0700 (PDT)
 Received: from SLXP216MB0477.KORP216.PROD.OUTLOOK.COM ([2603:1046:100:9::5])
-        by smtp.gmail.com with ESMTPSA id o4sm2208827pjj.38.2020.10.27.07.26.38
+        by smtp.gmail.com with ESMTPSA id ei4sm2275986pjb.4.2020.10.27.07.29.34
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 27 Oct 2020 07:26:41 -0700 (PDT)
+        Tue, 27 Oct 2020 07:29:35 -0700 (PDT)
 From:   Jingoo Han <jingoohan1@gmail.com>
-To:     Vidya Sagar <vidyas@nvidia.com>,
-        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "amurray@thegoodpenguin.co.uk" <amurray@thegoodpenguin.co.uk>,
-        "robh@kernel.org" <robh@kernel.org>,
-        "treding@nvidia.com" <treding@nvidia.com>,
-        "jonathanh@nvidia.com" <jonathanh@nvidia.com>
-CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "kthota@nvidia.com" <kthota@nvidia.com>,
-        "mmaddireddy@nvidia.com" <mmaddireddy@nvidia.com>,
-        "sagar.tv@gmail.com" <sagar.tv@gmail.com>,
+To:     Rob Herring <robh@kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC:     Vidya Sagar <vidyas@nvidia.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
         Han Jingoo <jingoohan1@gmail.com>
-Subject: Re: [PATCH V2 1/2] PCI/AER: Add pcie_is_ecrc_enabled() API
-Thread-Topic: [PATCH V2 1/2] PCI/AER: Add pcie_is_ecrc_enabled() API
-Thread-Index: AQHWrDe6hxYyrNSnZ0y4OKcgFRibWKmrgeiU
+Subject: Re: [PATCH] PCI: dwc: Support multiple ATU memory regions
+Thread-Topic: [PATCH] PCI: dwc: Support multiple ATU memory regions
+Thread-Index: AWgxODU28nZmEZFs54opsFnCSARtqdz2ar3X
 X-MS-Exchange-MessageSentRepresentingType: 1
-Date:   Tue, 27 Oct 2020 14:26:36 +0000
-Message-ID: <SLXP216MB0477E54B0D90CB18AA25C3AEAA160@SLXP216MB0477.KORP216.PROD.OUTLOOK.COM>
-References: <20201027080330.8877-1-vidyas@nvidia.com>
- <20201027080330.8877-2-vidyas@nvidia.com>
-In-Reply-To: <20201027080330.8877-2-vidyas@nvidia.com>
+Date:   Tue, 27 Oct 2020 14:29:30 +0000
+Message-ID: <SLXP216MB04773B7B0AE4A8B480FD1C0AAA160@SLXP216MB0477.KORP216.PROD.OUTLOOK.COM>
+References: <20201026181652.418729-1-robh@kernel.org>
+In-Reply-To: <20201026181652.418729-1-robh@kernel.org>
 Accept-Language: ko-KR, en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
@@ -94,69 +85,40 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 10/27/20, 4:03 AM, Vidya Sagar wrote:
+On 10/26/20, 2:16 PM, Rob Herring wrote:
 >=20
-> Adds pcie_is_ecrc_enabled() API to let other sub-systems (like DesignWare=
-)
-> to query if ECRC policy is enabled and perform any configuration
-> required in those respective sub-systems.
+> The current ATU setup only supports a single memory resource which
+> isn't sufficient if there are also prefetchable memory regions. In order
+> to support multiple memory regions, we need to move away from fixed ATU
+> slots and rework the assignment. As there's always an ATU entry for
+> config space, let's assign index 0 to config space. Then we assign
+> memory resources to index 1 and up. Finally, if we have an I/O region
+> and slots remaining, we assign the I/O region last. If there aren't
+> remaining slots, we keep the same config and I/O space sharing.
 >
-> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+> Cc: Vidya Sagar <vidyas@nvidia.com>
+> Cc: Jingoo Han <jingoohan1@gmail.com>
 
-Reviewed-by: Jingoo Han <jingoohan1@gmail.com>
+Acked-by: Jingoo Han <jingoohan1@gmail.com>
 
 Best regards,
 Jingoo Han
 
+> Cc: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Signed-off-by: Rob Herring <robh@kernel.org>
 > ---
-> V2:
-> * None from V1
+> For 5.11. This is based on the regression fix for 5.10 I sent[1].
 >
->  drivers/pci/pci.h      |  2 ++
->  drivers/pci/pcie/aer.c | 11 +++++++++++
->  2 files changed, 13 insertions(+)
+> Rob
 >
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index fa12f7cbc1a0..325fdbf91dde 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -575,9 +575,11 @@ static inline void pcie_aspm_powersave_config_link(s=
-truct pci_dev *pdev) { }
->  #ifdef CONFIG_PCIE_ECRC
->  void pcie_set_ecrc_checking(struct pci_dev *dev);
->  void pcie_ecrc_get_policy(char *str);
-> +bool pcie_is_ecrc_enabled(void);
->  #else
->  static inline void pcie_set_ecrc_checking(struct pci_dev *dev) { }
->  static inline void pcie_ecrc_get_policy(char *str) { }
-> +static inline bool pcie_is_ecrc_enabled(void) { return false; }
->  #endif
+> [1] https://lore.kernel.org/linux-pci/20201026154852.221483-1-robh@kernel=
+.org/
 >
->  #ifdef CONFIG_PCIE_PTM
-> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> index 65dff5f3457a..24363c895aba 100644
-> --- a/drivers/pci/pcie/aer.c
-> +++ b/drivers/pci/pcie/aer.c
-> @@ -207,6 +207,17 @@ void pcie_ecrc_get_policy(char *str)
+> .../pci/controller/dwc/pcie-designware-host.c | 54 +++++++++++--------
+>  drivers/pci/controller/dwc/pcie-designware.h  |  6 +--
+>  2 files changed, 34 insertions(+), 26 deletions(-)
 >
->  	ecrc_policy =3D i;
->  }
-> +
-> +/**
-> + * pcie_is_ecrc_enabled - returns if ECRC is enabled in the system or no=
-t
-> + *
-> + * Returns 1 if ECRC policy is enabled and 0 otherwise
-> + */
-> +bool pcie_is_ecrc_enabled(void)
-> +{
-> +	return ecrc_policy =3D=3D ECRC_POLICY_ON;
-> +}
-> +EXPORT_SYMBOL(pcie_is_ecrc_enabled);
->  #endif	/* CONFIG_PCIE_ECRC */
->
->  #define	PCI_EXP_AER_FLAGS	(PCI_EXP_DEVCTL_CERE | PCI_EXP_DEVCTL_NFERE | =
-\
-> --=20
-> 2.17.1
 
+[...]
