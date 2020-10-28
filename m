@@ -2,172 +2,152 @@ Return-Path: <SRS0=cGNF=ED=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DCAEC5DF9E
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Oct 2020 21:54:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 851CDC5DF9D
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Oct 2020 21:54:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5149C24724
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Oct 2020 21:54:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3877B2473C
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Oct 2020 21:54:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603922090;
-	bh=Ng0aaOYvvOnvpMzlDKmn4n7HlYQExwjFLCCoQek4EYk=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=aBVLyPLJ/SglB5Ft/YPM7WfO4PiXz4Nkq13+cbVmz/jE/MQvIaK7Pl4eAQccr2D6y
-	 MZrtLIDQJwdIr0OomyGo272MLAGvQD5tPoCQYzE2FD8oUOe69Qwzl3DYbBnxIgUMCS
-	 7lI5oUlqlYKawk74a40RD0z+rNYWqa8CBpiMA27s=
+	s=default; t=1603922091;
+	bh=HbgKjEA/PYFjQPE2NMiuSnpd7j5N0Pl+TmmK5aOx498=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=VGD8KT3DX9slwt7MVsYwdWnTrXaCExPei5oaJ1r/Yx33wHuonxE1J9yExL6TmnSXy
+	 t6527Sfq8QsvWf4sqwhaAnbxnU+hF/7wcqjFocV6cxBQrb0pp6Fmktwzd1npPMyyS/
+	 fe10Avgw+9Rw7aAqrDfQh00sZ7mqnbbmv2pVOvuQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728368AbgJ1Vyr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Oct 2020 17:54:47 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45292 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728513AbgJ1Vwt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Oct 2020 17:52:49 -0400
-Received: from localhost (230.sub-72-107-127.myvzw.com [72.107.127.230])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 163A620723;
-        Wed, 28 Oct 2020 21:52:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603921968;
-        bh=Ng0aaOYvvOnvpMzlDKmn4n7HlYQExwjFLCCoQek4EYk=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=OkGwjg3EZQEnuiEnjpA2b5DgmFELJtqumDRNi916bl+Wet4+BdEbdQus4ZVElFIRM
-         mk5WMEkiZbqbiq3OJ7rGRcXVj30eVMWd/j2OtniRTXWdwvFdpAJE9grjebDWkljH7K
-         Mu/fuvevz6HptQ+RvnXWw91szc5mSuW+W+krUMRg=
-Date:   Wed, 28 Oct 2020 16:52:46 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     "Boris V." <borisvk@bstnet.org>
-Cc:     linux-pci@vger.kernel.org, Rajat Jain <rajatja@google.com>,
-        linux-kernel@vger.kernel.org
-Subject: Re: Kernel 5.9 IOMMU groups regression/change
-Message-ID: <20201028215246.GA351595@bjorn-Precision-5520>
+        id S1728815AbgJ1Vys (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Oct 2020 17:54:48 -0400
+Received: from mail-ua1-f68.google.com ([209.85.222.68]:42979 "EHLO
+        mail-ua1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728500AbgJ1Vwt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Oct 2020 17:52:49 -0400
+Received: by mail-ua1-f68.google.com with SMTP id f15so140852uaq.9;
+        Wed, 28 Oct 2020 14:52:48 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=fkYpsqioT7Tb7YApRr6kOuIOqhvTBzDRVXioLFVYRRs=;
+        b=k2jYjlcMKpMD2XLjyWigYvkY87yVovtG4wl8FuzmK1dE1jE5i1BrpDypzG1v6Q0mst
+         cQbM+EW8kQbhvEfDQXqd7hc4PiVZJdoSWqHGyS9Fkgk0tfocLRRBgEcjXpUIwXRmpY0S
+         zy0ePDgsJyJL34Zz0JP4BBcX9LbXdkOIas1QciWmqnMqA4NcO+3Z2ybeUsU1FPCSCfwm
+         KZLJmmA+ZPu3+wRvWhJxy4eh6mBDEeK/dtcI2SFRoVoAkQ+odXzcuv2jf7OrMUjbBzOU
+         4KuxNmskXgIPYIN/hh/0Rin/wzGry06MM2MQKtUVtR7wSBVeh9qS80WMtf4LwJIb+w0D
+         ap2w==
+X-Gm-Message-State: AOAM533tu8csPmSwVwbN6+ajQuF8Fb7ZkuCUfnQipkHLzaoRNi//d9yy
+        igsRWRqrNaPLufw3srQNLLmbcQ/2Pw==
+X-Google-Smtp-Source: ABdhPJzUHZm4YYIM4XMiwc5sacukMJ5Sdrdk/i+veAcVoB9ovA+Vih+j4WmB8WVNzg3/epAFFNC3mg==
+X-Received: by 2002:a05:6830:1694:: with SMTP id k20mr912314otr.100.1603918009773;
+        Wed, 28 Oct 2020 13:46:49 -0700 (PDT)
+Received: from xps15.herring.priv (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
+        by smtp.googlemail.com with ESMTPSA id t17sm116123oor.3.2020.10.28.13.46.47
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 28 Oct 2020 13:46:49 -0700 (PDT)
+From:   Rob Herring <robh@kernel.org>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     linux-pci@vger.kernel.org, Andy Gross <agross@kernel.org>,
+        Binghui Wang <wangbinghui@hisilicon.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Fabio Estevam <festevam@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Jerome Brunet <jbrunet@baylibre.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Jonathan Chocron <jonnyc@amazon.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        Kevin Hilman <khilman@baylibre.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Kukjin Kim <kgene@kernel.org>,
+        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
+        linux-amlogic@lists.infradead.org, linux-arm-kernel@axis.com,
+        linux-arm-msm@vger.kernel.org, linux-omap@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-samsung-soc@vger.kernel.org,
+        linux-tegra@vger.kernel.org, Lucas Stach <l.stach@pengutronix.de>,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Masahiro Yamada <yamada.masahiro@socionext.com>,
+        Minghuan Lian <minghuan.Lian@nxp.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Neil Armstrong <narmstrong@baylibre.com>,
+        NXP Linux Team <linux-imx@nxp.com>,
+        Pengutronix Kernel Team <kernel@pengutronix.de>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Roy Zang <roy.zang@nxp.com>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Shawn Guo <shawnguo@kernel.org>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        Yue Wang <yue.wang@Amlogic.com>
+Subject: [PATCH 00/13] PCI: dwc: Another round of clean-ups
+Date:   Wed, 28 Oct 2020 15:46:33 -0500
+Message-Id: <20201028204646.356535-1-robh@kernel.org>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <d76b70c1-17f6-60d7-b027-5ecda491101c@bstnet.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc Rajat, LKML]
+Here's another batch of DWC PCI host refactoring. This series primarily
+moves more of the MSI, link up, and resource handling to the core
+code.
 
-On Tue, Oct 27, 2020 at 08:31:09PM +0100, Boris V. wrote:
-> On 25/10/2020 20:45, Boris V. wrote:
-> > With upgrade to kernel 5.9 my VMs stopped working, because some devices
-> > can't be passed through.
-> > This is caused by different IOMMU groups and devices being in the same
-> > group.
-> > 
-> > For ex. with kernel 5.8 this are IOMMU groups:
-> > IOMMU Group 40:
-> >         08:01.0 PCI bridge [0604]: ASMedia Technology Inc. Device
-> > [1b21:118f]
-> >         09:00.0 Ethernet controller [0200]: Intel Corporation I211
-> > Gigabit Network Connection [8086:1539] (rev 03)
-> > IOMMU Group 43:
-> >         0c:00.0 SATA controller [0106]: ASMedia Technology Inc. ASM1062
-> > Serial ATA Controller [1b21:0612] (rev 02)
-> > IOMMU Group 44:
-> >         0d:00.0 USB controller [0c03]: ASMedia Technology Inc. ASM1042A
-> > USB 3.0 Host Controller [1b21:1142]
-> > 
-> > Ethernet, SATA and USB controller in its own group.
-> > 
-> > And with 5.9, everything is in one group:
-> > IOMMU Group 29:
-> >         00:1c.0 PCI bridge [0604]: Intel Corporation C610/X99 series
-> > chipset PCI Express Root Port #1 [8086:8d10] (rev d5)
-> >         00:1c.3 PCI bridge [0604]: Intel Corporation C610/X99 series
-> > chipset PCI Express Root Port #4 [8086:8d16] (rev d5)
-> >         00:1c.4 PCI bridge [0604]: Intel Corporation C610/X99 series
-> > chipset PCI Express Root Port #5 [8086:8d18] (rev d5)
-> >         00:1c.6 PCI bridge [0604]: Intel Corporation C610/X99 series
-> > chipset PCI Express Root Port #7 [8086:8d1c] (rev d5)
-> >         07:00.0 PCI bridge [0604]: ASMedia Technology Inc. Device
-> > [1b21:118f]
-> >         08:01.0 PCI bridge [0604]: ASMedia Technology Inc. Device
-> > [1b21:118f]
-> >         08:03.0 PCI bridge [0604]: ASMedia Technology Inc. Device
-> > [1b21:118f]
-> >         08:04.0 PCI bridge [0604]: ASMedia Technology Inc. Device
-> > [1b21:118f]
-> >         09:00.0 Ethernet controller [0200]: Intel Corporation I211
-> > Gigabit Network Connection [8086:1539] (rev 03)
-> >         0c:00.0 SATA controller [0106]: ASMedia Technology Inc. ASM1062
-> > Serial ATA Controller [1b21:0612] (rev 02)
-> >         0d:00.0 USB controller [0c03]: ASMedia Technology Inc. ASM1042A
-> > USB 3.0 Host Controller [1b21:1142]
-> > 
-> > 
-> > This seems to be caused by commit
-> > 52fbf5bdeeef415b28b8e6cdade1e48927927f60.
-> > commit 52fbf5bdeeef415b28b8e6cdade1e48927927f60
-> > Author: Rajat Jain <rajatja@google.com>
-> > Date:   Tue Jul 7 15:46:02 2020 -0700
-> > 
-> >     PCI: Cache ACS capability offset in device
-> > 
-> >     Currently the ACS capability is being looked up at a number of
-> > places. Read
-> >     and store it once at enumeration so that it can be used by all
-> > later.  No
-> >     functional change intended.
-> > 
-> >     Link:
-> > https://lore.kernel.org/r/20200707224604.3737893-2-rajatja@google.com
-> >     Signed-off-by: Rajat Jain <rajatja@google.com>
-> >     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > 
-> >  drivers/pci/p2pdma.c |  2 +-
-> >  drivers/pci/pci.c    | 20 ++++++++++++++++----
-> >  drivers/pci/pci.h    |  2 +-
-> >  drivers/pci/probe.c  |  2 +-
-> >  drivers/pci/quirks.c |  8 ++++----
-> >  include/linux/pci.h  |  1 +
-> >  6 files changed, 24 insertions(+), 11 deletions(-)
-> > 
-> > 
-> > If I revert this commit, I get back old groups.
-> > 
-> > In commit log there is message 'No functional change intended'. But
-> > there is functional change.
-> > 
-> > This is Intel Core i7-5930K CPU and X99 chipset. But I see the same
-> > thing on other Intel systems (didn't test on AMD).
-> 
-> Some more info.
-> Problem seems to be that pci_dev_specific_enable_acs() is not called
-> anymore.
-> Before, pci_enable_acs() was called from pci_init_capabilities() and in
-> pci_enable_acs(), pci_dev_specific_enable_acs() was called.
-> I don't know anything about PCI and this stuff, but I'm guessing that this
-> function enable ACS for some Intel devices.
-> But after this commit, pci_acs_init() is called from pci_init_capabilities()
-> and if pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS) returns 0,
-> pci_enable_acs() and pci_dev_specific_enable_acs() is not called anymore.
-> If I apply for ex. this patch bellow, groups are right again and everything
-> works as before.
+No doubt I've probably broken something. Please test. A git branch is
+here[1].
 
-Thanks very much for the report and the debugging.  Maybe we can get
-this sorted and fixed for v5.10-rc2 or -rc3.
+Rob
 
-> diff -ur linux-5.9.1.orig/drivers/pci/pci.c linux-5.9.1/drivers/pci/pci.c
-> --- linux-5.9.1.orig/drivers/pci/pci.c  2020-10-17 08:31:22.000000000 +0200
-> +++ linux-5.9.1/drivers/pci/pci.c       2020-10-27 19:01:32.650010803 +0100
-> @@ -3502,9 +3502,7 @@
->  void pci_acs_init(struct pci_dev *dev)
->  {
->         dev->acs_cap = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
-> -
-> -       if (dev->acs_cap)
-> -               pci_enable_acs(dev);
-> +       pci_enable_acs(dev);
->  }
-> 
->  /**
-> 
-> 
+[1] git://git.kernel.org/pub/scm/linux/kernel/git/robh/linux.git pci-more-dwc-cleanup
+
+Rob Herring (13):
+  PCI: dwc/imx6: Drop setting PCI_MSI_FLAGS_ENABLE
+  PCI: dwc/intel-gw: Move ATU offset out of driver match data
+  PCI: dwc: Move "dbi", "dbi2", and "addr_space" resource setup into
+    common code
+  PCI: dwc/intel-gw: Remove some unneeded function wrappers
+  PCI: dwc: Ensure all outbound ATU windows are reset
+  PCI: dwc/dra7xx: Use the common MSI irq_chip
+  PCI: dwc: Drop the .set_num_vectors() host op
+  PCI: dwc: Move MSI interrupt setup into DWC common code
+  PCI: dwc: Rework MSI initialization
+  PCI: dwc: Move link handling into common code
+  PCI: dwc: Move dw_pcie_msi_init() into core
+  PCI: dwc: Move dw_pcie_setup_rc() to DWC common code
+  PCI: dwc: Remove unnecessary wrappers around dw_pcie_host_init()
+
+ drivers/pci/controller/dwc/pci-dra7xx.c       | 141 +-----------------
+ drivers/pci/controller/dwc/pci-exynos.c       |  50 ++-----
+ drivers/pci/controller/dwc/pci-imx6.c         |  51 +------
+ drivers/pci/controller/dwc/pci-keystone.c     |  68 +--------
+ .../pci/controller/dwc/pci-layerscape-ep.c    |  37 +----
+ drivers/pci/controller/dwc/pci-layerscape.c   |  67 +--------
+ drivers/pci/controller/dwc/pci-meson.c        |  53 ++-----
+ drivers/pci/controller/dwc/pcie-al.c          |  29 +---
+ drivers/pci/controller/dwc/pcie-armada8k.c    |  37 ++---
+ drivers/pci/controller/dwc/pcie-artpec6.c     |  76 +---------
+ .../pci/controller/dwc/pcie-designware-ep.c   |  29 +++-
+ .../pci/controller/dwc/pcie-designware-host.c |  80 ++++++----
+ .../pci/controller/dwc/pcie-designware-plat.c |  70 +--------
+ drivers/pci/controller/dwc/pcie-designware.h  |  12 +-
+ drivers/pci/controller/dwc/pcie-histb.c       |  37 ++---
+ drivers/pci/controller/dwc/pcie-intel-gw.c    |  59 ++------
+ drivers/pci/controller/dwc/pcie-kirin.c       |  62 +-------
+ drivers/pci/controller/dwc/pcie-qcom.c        |  38 +----
+ drivers/pci/controller/dwc/pcie-spear13xx.c   |  62 +++-----
+ drivers/pci/controller/dwc/pcie-tegra194.c    |  40 +----
+ drivers/pci/controller/dwc/pcie-uniphier-ep.c |  38 +----
+ drivers/pci/controller/dwc/pcie-uniphier.c    |  51 +------
+ 22 files changed, 217 insertions(+), 970 deletions(-)
+
+--
+2.25.1
