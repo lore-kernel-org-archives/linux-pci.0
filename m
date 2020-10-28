@@ -2,178 +2,193 @@ Return-Path: <SRS0=7A2k=EE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F69AC388F7
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 01:54:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 502D1C55179
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 02:02:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AB360206D5
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 01:54:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603936463;
-	bh=Kc1Pt3IpXFP5feW6kwUIgpZs+zlVPuknonalVvf5lyo=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=UO7pmqLu2eRqCaGSz2R7cGHSbO1+fBigpIidoTOzewECcY5fINer/Gsrgwrpc55xv
-	 7q8APh0/JeJl31FuP+C+ihZBg86RXp3qpQzPZDNtPrjg9HEBi0lff4Nvu8WGQmznli
-	 TAJPmR0oeES2gE/gkpsVEaxFJTqHWjMD1H3louXw=
+	by mail.kernel.org (Postfix) with ESMTP id F19A520791
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 02:02:17 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="Pl7zo0gd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728898AbgJ2ByI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Oct 2020 21:54:08 -0400
-Received: from mail-oi1-f193.google.com ([209.85.167.193]:36621 "EHLO
-        mail-oi1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727527AbgJ1V5M (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Oct 2020 17:57:12 -0400
-Received: by mail-oi1-f193.google.com with SMTP id y186so1173243oia.3;
-        Wed, 28 Oct 2020 14:57:11 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=VL29XNIWkQpzNWyeVNn88/4OaIX3OCW0yaXdyYkNuo0=;
-        b=r7JCFs0kyEJoyA2q9VA96bO2BOjWhy/BzrrEb+WIw0HYSdfSYi4G8HuvEwRO31vyiG
-         h+aCRtbLoB/1N19eeeYXbJNMswuEYOhQsxZha9PkBYNG3BTmeFvtBDR1PEkFTzQ4eBSf
-         bZZXrxyHCXWZ1VLXmQIye2iD8f2sTVKpEIFcwqt1RCcEV9YmHLiQn3H3wE7sNEw+1h0U
-         3GXDNqPGci92ck0I7fcAdGgP7m0eZFrWHQz+uXcgtpHSOVroHButq0BfnbeTKC40N8Q4
-         flMTzxh1rKfSU8asfg+3BEFkv+kiW6jXc8rZiNeRyPOzwjdEgPfOnt+/ywd5RX2NphCA
-         Tx+Q==
-X-Gm-Message-State: AOAM530Pk+0b22PAJxeNnRv6eBLtH54n/GGQ8yREZH/lLadWMDCYPc/F
-        UBYe3S4XJHhS9ZtCVh41+ndqRfp72w==
-X-Google-Smtp-Source: ABdhPJzWQKewEzrujtGvqB3VBlyo68Oonm1AIwSq3hCnepRvY1VGBxkJqbAEBgM3kZQckSIDnyed7g==
-X-Received: by 2002:aca:f0c:: with SMTP id 12mr636990oip.9.1603918022402;
-        Wed, 28 Oct 2020 13:47:02 -0700 (PDT)
-Received: from xps15.herring.priv (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.googlemail.com with ESMTPSA id t17sm116123oor.3.2020.10.28.13.47.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Oct 2020 13:47:01 -0700 (PDT)
-From:   Rob Herring <robh@kernel.org>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     linux-pci@vger.kernel.org, Andy Gross <agross@kernel.org>,
-        Binghui Wang <wangbinghui@hisilicon.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Fabio Estevam <festevam@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Jerome Brunet <jbrunet@baylibre.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Jonathan Chocron <jonnyc@amazon.com>,
-        Jonathan Hunter <jonathanh@nvidia.com>,
-        Kevin Hilman <khilman@baylibre.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        Kukjin Kim <kgene@kernel.org>,
-        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
-        linux-amlogic@lists.infradead.org, linux-arm-kernel@axis.com,
-        linux-arm-msm@vger.kernel.org, linux-omap@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-samsung-soc@vger.kernel.org,
-        linux-tegra@vger.kernel.org, Lucas Stach <l.stach@pengutronix.de>,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        Masahiro Yamada <yamada.masahiro@socionext.com>,
-        Minghuan Lian <minghuan.Lian@nxp.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Neil Armstrong <narmstrong@baylibre.com>,
-        NXP Linux Team <linux-imx@nxp.com>,
-        Pengutronix Kernel Team <kernel@pengutronix.de>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Roy Zang <roy.zang@nxp.com>,
-        Sascha Hauer <s.hauer@pengutronix.de>,
-        Shawn Guo <shawnguo@kernel.org>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        Yue Wang <yue.wang@Amlogic.com>
-Subject: [PATCH 05/13] PCI: dwc: Ensure all outbound ATU windows are reset
-Date:   Wed, 28 Oct 2020 15:46:38 -0500
-Message-Id: <20201028204646.356535-6-robh@kernel.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20201028204646.356535-1-robh@kernel.org>
-References: <20201028204646.356535-1-robh@kernel.org>
+        id S1727454AbgJ1VtI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Oct 2020 17:49:08 -0400
+Received: from mail-am6eur05on2081.outbound.protection.outlook.com ([40.107.22.81]:21761
+        "EHLO EUR05-AM6-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727430AbgJ1VtH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Oct 2020 17:49:07 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=SrTJuUa99tyKXxOiiBTiFWTNeM/+8Py4MZoRzmENdTDiLGcYjnhTfQHxzsPuVcGMvlwMGlUsUF6/jQlxIPodS91PGxl9mdZE+t10wKrLGMscSGSeZiuS6lDbW6asexoq3rIxX/kZv695JZVZ+p4m0AaQwuJwnbpS+ij1fCaaODNdJl7uRENBhE8pJGcQWksw+PhL+aUWn6Jbo3nvhE8H+FSORG0EJvyokvD7DnJzTly/bhUORgHZN/XP2xOq3AHyQu1r4sF2KzsN+zxBNbgmmbjmOc9/H4bnz/Y4mCdLLEVQJKbFEIpzfKB83llXpMLow3TZk7eh82cq/Kcc7FqzVw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=DldRBvyxsoE8DJnm1oHGrGgZs2G90UsDATlscallSnQ=;
+ b=beAPvx26u9U6GLUtBD2NXAuAXqoparv+O810qNlIMJ4wLbd0phCiDFz9+YIliQn8j013hfyX1yPXCnsVM1h2UJX0Lt8d/RSb6kUyE30OjDMweItJUIHtI/y9TAAVExP3uhGVNazK/kMI280G0A/eAWNOOU0JS+pylOsNqT/vixl15YJot/NE2v8M8QKpj6WVBtPbsMA5U2S3CQqXNBQASFpCs8S86bi+pbpzPXYJ75P57Lbm5dqdpOsvrPSVb1XUOoH/z8Hcn/TkLaQKiCVN2O32JZ7i8vfpSoaHjmLlOa/Oxs+HuuOOhb5MDfJ89LYeXlk3qh1dbk7gfsx+Vl/Jrg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=DldRBvyxsoE8DJnm1oHGrGgZs2G90UsDATlscallSnQ=;
+ b=Pl7zo0gdsD3DV0HCZBSZipRX+AG4IeDH5xGdNtsaBMx1XKoX+OAN5Yd/G33tLUCTAaqW85kwCy31ZLFnzecVSghUWH9ppr4rGof7MQAXn9DL5FbCMDdR6SCXxsBBd6gfkdA8LAtrLriu2ufPNp+cRaze5J3R2Eq+OKRw6KHx57U=
+Received: from AM8PR04MB7315.eurprd04.prod.outlook.com (2603:10a6:20b:1d4::7)
+ by AM8PR04MB7331.eurprd04.prod.outlook.com (2603:10a6:20b:1c7::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3499.19; Wed, 28 Oct
+ 2020 10:17:39 +0000
+Received: from AM8PR04MB7315.eurprd04.prod.outlook.com
+ ([fe80::11e6:d413:2d3d:d271]) by AM8PR04MB7315.eurprd04.prod.outlook.com
+ ([fe80::11e6:d413:2d3d:d271%6]) with mapi id 15.20.3477.028; Wed, 28 Oct 2020
+ 10:17:39 +0000
+From:   Andy Duan <fugang.duan@nxp.com>
+To:     Greg KH <gregkh@linuxfoundation.org>,
+        Sherry Sun <sherry.sun@nxp.com>
+CC:     "hch@infradead.org" <hch@infradead.org>,
+        "vincent.whitchurch@axis.com" <vincent.whitchurch@axis.com>,
+        "sudeep.dutt@intel.com" <sudeep.dutt@intel.com>,
+        "ashutosh.dixit@intel.com" <ashutosh.dixit@intel.com>,
+        "arnd@arndb.de" <arnd@arndb.de>, "kishon@ti.com" <kishon@ti.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        dl-linux-imx <linux-imx@nxp.com>
+Subject: RE: [EXT] Re: [PATCH V5 0/2] Change vring space from nomal memory to
+ dma coherent memory
+Thread-Topic: [EXT] Re: [PATCH V5 0/2] Change vring space from nomal memory to
+ dma coherent memory
+Thread-Index: AQHWrPBWlkaK3Q/in0Cw78FI6wskoqmsmAkAgAAzuWA=
+Date:   Wed, 28 Oct 2020 10:17:39 +0000
+Message-ID: <AM8PR04MB7315D583A9490E642ED13071FF170@AM8PR04MB7315.eurprd04.prod.outlook.com>
+References: <20201028020305.10593-1-sherry.sun@nxp.com>
+ <20201028055836.GA244690@kroah.com>
+ <AM0PR04MB4947032368486CC9874C812692170@AM0PR04MB4947.eurprd04.prod.outlook.com>
+ <20201028070712.GA1649838@kroah.com>
+In-Reply-To: <20201028070712.GA1649838@kroah.com>
+Accept-Language: zh-CN, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: linuxfoundation.org; dkim=none (message not signed)
+ header.d=none;linuxfoundation.org; dmarc=none action=none
+ header.from=nxp.com;
+x-originating-ip: [119.31.174.67]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: b58ec37d-33b7-4339-e1b7-08d87b2ab2e3
+x-ms-traffictypediagnostic: AM8PR04MB7331:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <AM8PR04MB733190F469EFA4F5D9D3B584FF170@AM8PR04MB7331.eurprd04.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:8882;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: +ooHSj+abD4TYMeuiBnLbCbPyA9/I7AHg4AoudanYs6IX/2wJLeiITxmTPPZ7vwQnExRpyJY0+bvOYg0WEHHC5K0phXLgrrYmwV2gAxQrHOhjGu3eSa5xqO6q3Ztlkb0f9TA39avi7hkGSd/7uXtSUM3Gj2qHr6/LIKDRbY43akqM++wzzsjeB4dTOtbVkmReqRQeSPx5JsP5cJnKv1WrBUkbwcaeNozIjKStAHsC8OTAOqpAA5igtAjgTnaWcqWqcO8Vv/J/9xC5Ycg0tYAoB53yc1CphxSjZhLHggrjiou0KE5x4SPGzQYG35KBsCti2L2UKxfQBLdFF93sjeW9U3SH93Y4t/qbCjI5QWgx+MVIp+m0FkX7XLUd1eocTYJUmfXaQoWXlRjTJI7TtEzBg==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM8PR04MB7315.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(346002)(39860400002)(376002)(136003)(366004)(396003)(83380400001)(52536014)(5660300002)(86362001)(110136005)(54906003)(316002)(71200400001)(19627235002)(33656002)(76116006)(66446008)(64756008)(66556008)(66476007)(66946007)(966005)(7696005)(45080400002)(6636002)(6506007)(478600001)(186003)(26005)(9686003)(55016002)(8676002)(2906002)(8936002)(4326008)(7416002);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata: H8jkmq+TUrFiXb6jKdgS3dc1pxfHpJeaWvP2HWWdbT1frtchugUadS7FqiIqK22XVdtgO0MLLx5TwlQ7wTOlinKm/jsIR1Zgb0MpBA5qmjZn3+cvQYNhcO9ULbmoG8H6ZYtH5oNwfCIXUJpquhnxk3OlKFOH0Ge1PcWtD7HMzLj0jh8ak5xBTggBmGer2IoAKXZLvnNy5DKGnWj8ANw73zKsrHJwpg9+upoVq+6Wx2qcuFvSK4gwLZ+xSt1igE/nk4Vlj3bxTfPO58Dajb9tdh9PEoDVgUGh9vuZznUwjZ0ydi3BnEYQ8unvchRkjkecXiK+qRAFgaXjWxbvRLfk2YPajZMPqh+8JklY/muNFJlYY5bWOytLrc85aP6VM6vr8EmBl4D8c5L0N/xu/sbk83d+q53DC8oMSLlBtZiSDqTm0jylOBIqyEtIOp3EJVOaiHCLY0qFj35O4rIzAONWlqTXzke7VKmEDA/AZU1SX3QQpWGVX/RM/4hxNJM1q5IjNygGr8OUgqmPwoJE6IJrdDQaolLiLX4W6jNAcvD4RWTi0HpeD1xVDj2gd2Gfek55Cma6Kx8/IEmu/sI2F0yqZPRWNaycll+QF1TWsPC7dDxb9nKg//LbF9UUcsC4KeIDjz5P0KlyZ5daDsv79c76HQ==
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: AM8PR04MB7315.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: b58ec37d-33b7-4339-e1b7-08d87b2ab2e3
+X-MS-Exchange-CrossTenant-originalarrivaltime: 28 Oct 2020 10:17:39.2718
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: NYwpUAm3DF1uJGSKZJFjEEgViDXpNGfIJhB6xgRKp8Vo+sQGZ2owBW91I08o9B1RzcpVgP9LdJ2jDl+8Aa0KrQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM8PR04MB7331
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The Layerscape driver clears the ATU registers which may have been
-configured by the bootloader. Any driver could have the same issue
-and doing it for all drivers doesn't hurt, so let's move it into the
-common DWC code.
+From: Greg KH <gregkh@linuxfoundation.org> Sent: Wednesday, October 28, 202=
+0 3:07 PM
+> On Wed, Oct 28, 2020 at 06:05:28AM +0000, Sherry Sun wrote:
+> > Hi Greg,
+> >
+> > > Subject: Re: [PATCH V5 0/2] Change vring space from nomal memory to
+> > > dma coherent memory
+> > >
+> > > On Wed, Oct 28, 2020 at 10:03:03AM +0800, Sherry Sun wrote:
+> > > > Changes in V5:
+> > > > 1. Reorganize the vop_mmap function code in patch 1, which is done
+> > > > by
+> > > Christoph.
+> > > > 2. Completely remove the unnecessary code related to reassign the
+> > > > used ring for card in patch 2.
+> > > >
+> > > > The original vop driver only supports dma coherent device, as it
+> > > > allocates and maps vring by _get_free_pages and dma_map_single,
+> > > > but not use dma_sync_single_for_cpu/device to sync the updates of
+> > > > device_page/vring between EP and RC, which will cause memory
+> > > > synchronization problem for device don't support hardware dma coher=
+ent.
+> > > >
+> > > > And allocate vrings use dma_alloc_coherent is a common way in
+> > > > kernel, as the memory interacted between two systems should use
+> > > > consistent memory to avoid caching effects. So here add
+> > > > noncoherent platform
+> > > support for vop driver.
+> > > > Also add some related dma changes to make sure noncoherent
+> > > > platform works well.
+> > > >
+> > > > Sherry Sun (2):
+> > > >   misc: vop: change the way of allocating vrings and device page
+> > > >   misc: vop: do not allocate and reassign the used ring
+> > > >
+> > > >  drivers/misc/mic/bus/vop_bus.h     |   2 +
+> > > >  drivers/misc/mic/host/mic_boot.c   |   9 ++
+> > > >  drivers/misc/mic/host/mic_main.c   |  43 ++------
+> > > >  drivers/misc/mic/vop/vop_debugfs.c |   4 -
+> > > >  drivers/misc/mic/vop/vop_main.c    |  70 +-----------
+> > > >  drivers/misc/mic/vop/vop_vringh.c  | 166 ++++++++++---------------=
+----
+> > > >  include/uapi/linux/mic_common.h    |   9 +-
+> > > >  7 files changed, 85 insertions(+), 218 deletions(-)
+> > >
+> > > Have you all seen:
+> > >
+> > > https://eur01.safelinks.protection.outlook.com/?url=3Dhttps%3A%2F%25
+> > >
+> 2Flore.kernel.org%2Fr%2F8c1443136563de34699d2c084df478181c205db4.16
+> > >
+> 03854416.git.sudeep.dutt%40intel.com&amp;data=3D04%7C01%7Csherry.sun%
+> > >
+> 40nxp.com%7Cc19c987667434969847e08d87b0685e8%7C686ea1d3bc2b4c6f
+> > >
+> a92cd99c5c301635%7C0%7C0%7C637394615238940323%7CUnknown%7CTW
+> > >
+> FpbGZsb3d8eyJWIjoiMC4wLjAwMDAiLCJQIjoiV2luMzIiLCJBTiI6Ik1haWwiLCJX
+> > >
+> VCI6Mn0%3D%7C1000&amp;sdata=3DZq%2FtHWTq%2BuIVBYXFGoeBmq0JJzYd
+> > > 9zDyv4NVN4TpC%2FU%3D&amp;reserved=3D0
+> > >
+> > > Looks like this code is asking to just be deleted, is that ok with yo=
+u?
+> >
+> > Yes, I saw that patch. I'm ok with it.
+>=20
+> Great, can you please provide a "Reviewed-by:" or "Acked-by:" for it?
+>=20
+> thanks,
+>=20
+> greg k-h
 
-Cc: Minghuan Lian <minghuan.Lian@nxp.com>
-Cc: Mingkai Hu <mingkai.hu@nxp.com>
-Cc: Roy Zang <roy.zang@nxp.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>
-Cc: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Cc: linuxppc-dev@lists.ozlabs.org
-Signed-off-by: Rob Herring <robh@kernel.org>
----
- drivers/pci/controller/dwc/pci-layerscape.c       | 14 --------------
- drivers/pci/controller/dwc/pcie-designware-host.c |  5 +++++
- 2 files changed, 5 insertions(+), 14 deletions(-)
+Sherry took much effort on the features support on i.MX series like i.MX8QM=
+/i.MX8QXP/i.MX8MM.
 
-diff --git a/drivers/pci/controller/dwc/pci-layerscape.c b/drivers/pci/controller/dwc/pci-layerscape.c
-index f24f79a70d9a..53e56d54c482 100644
---- a/drivers/pci/controller/dwc/pci-layerscape.c
-+++ b/drivers/pci/controller/dwc/pci-layerscape.c
-@@ -83,14 +83,6 @@ static void ls_pcie_drop_msg_tlp(struct ls_pcie *pcie)
- 	iowrite32(val, pci->dbi_base + PCIE_STRFMR1);
- }
- 
--static void ls_pcie_disable_outbound_atus(struct ls_pcie *pcie)
--{
--	int i;
--
--	for (i = 0; i < PCIE_IATU_NUM; i++)
--		dw_pcie_disable_atu(pcie->pci, i, DW_PCIE_REGION_OUTBOUND);
--}
--
- static int ls1021_pcie_link_up(struct dw_pcie *pci)
- {
- 	u32 state;
-@@ -136,12 +128,6 @@ static int ls_pcie_host_init(struct pcie_port *pp)
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 	struct ls_pcie *pcie = to_ls_pcie(pci);
- 
--	/*
--	 * Disable outbound windows configured by the bootloader to avoid
--	 * one transaction hitting multiple outbound windows.
--	 * dw_pcie_setup_rc() will reconfigure the outbound windows.
--	 */
--	ls_pcie_disable_outbound_atus(pcie);
- 	ls_pcie_fix_error_response(pcie);
- 
- 	dw_pcie_dbi_ro_wr_en(pci);
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index cde45b2076ee..265a48f1a0ae 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -534,6 +534,7 @@ static struct pci_ops dw_pcie_ops = {
- 
- void dw_pcie_setup_rc(struct pcie_port *pp)
- {
-+	int i;
- 	u32 val, ctrl, num_ctrls;
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 
-@@ -583,6 +584,10 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 		PCI_COMMAND_MASTER | PCI_COMMAND_SERR;
- 	dw_pcie_writel_dbi(pci, PCI_COMMAND, val);
- 
-+	/* Ensure all outbound windows are disabled so there are multiple matches */
-+	for (i = 0; i < pci->num_viewport; i++)
-+		dw_pcie_disable_atu(pci, i, DW_PCIE_REGION_OUTBOUND);
-+
- 	/*
- 	 * If the platform provides its own child bus config accesses, it means
- 	 * the platform uses its own address translation component rather than
--- 
-2.25.1
+Now it is a pity to delete the vop code.
 
+One question,=20
+can we resubmit vop code by clean up, now only for i.MX series as Dutt's su=
+ggestion ?
+Or we have to drop the design and switch to select other solutions ?
+
+Thanks,
+Andy
