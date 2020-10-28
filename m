@@ -2,324 +2,73 @@ Return-Path: <SRS0=cGNF=ED=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,PDS_TONAME_EQ_TOLOCAL_SHORT,PDS_TONAME_EQ_TOLOCAL_VSHORT,
+	SPF_HELO_NONE,SPF_PASS,USER_IN_DEF_DKIM_WL autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 114F6C55179
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Oct 2020 23:18:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 007C8C55179
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Oct 2020 23:21:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AEF5620790
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Oct 2020 23:18:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603927129;
-	bh=o8PnFB5SaoSn27z9OnC6WUVhKSaxZpCvn019SVbxc6s=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=Fw+YuOcDxv2/FFpNkQzLFreNNc31GWt+G0zLb/m2A8it5qY+wFghwZRGM1jMBThly
-	 cKBnxTOJ9en0cnPTPeYQnqvBkrbw2z3v6twqG+xa1nk/z66anphgXLXSSELOS9cKpF
-	 fSVMoe+2ahUjDFyPsnxu5DsaARUFj+KlZvZQ8RdA=
+	by mail.kernel.org (Postfix) with ESMTP id 8C06120791
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Oct 2020 23:21:20 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="CHOjYBk8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387602AbgJ1XSo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Oct 2020 19:18:44 -0400
-Received: from mail-ua1-f66.google.com ([209.85.222.66]:34364 "EHLO
-        mail-ua1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728362AbgJ1XSn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Oct 2020 19:18:43 -0400
-Received: by mail-ua1-f66.google.com with SMTP id x11so216531uav.1;
-        Wed, 28 Oct 2020 16:18:42 -0700 (PDT)
+        id S1728256AbgJ1XVT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Oct 2020 19:21:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35808 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728692AbgJ1XTz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Oct 2020 19:19:55 -0400
+Received: from mail-lj1-x236.google.com (mail-lj1-x236.google.com [IPv6:2a00:1450:4864:20::236])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60215C0613D1
+        for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2020 16:19:55 -0700 (PDT)
+Received: by mail-lj1-x236.google.com with SMTP id 2so1023880ljj.13
+        for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2020 16:19:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=bddUYsH0Q4taj7eCHyEIuGJKg/yr7YiUZPcQWZ6v1LE=;
+        b=CHOjYBk8HiC/jeqJz46qiJ+eYkb+cO4QM0ST57G8Nj2qaYtoA0bq4KHBXJtXjg+qn+
+         qekfDBVppaQE4Yyke5X5qlxyMuhkAbtoBNmRWxYK34Vrwe3eM4wSayOsyRBkjvzCNUUv
+         HMCWEwEVOMezfYxCSLc7scukjloUxce/3BAD2DjJ/WYsKofME5qrQK+vJqTQ1TsAtLFw
+         lNAnvVGC40++z0+IzngjlpSCAVdy2FYHPPrLqZbaVs2MH3WVU416Yz/AiNmPgRrQ6RjX
+         MSX4iUdP+tds4JwsZst/RWETtsd+DLjwE26Rp3d3tbLnZ5YsEy1G3RHY9AyfoPwGky8q
+         9ATA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=E8aK3zfWur9jk28M6chy5APBvWt4imEJ55/EsVWjxPg=;
-        b=qXLBLRbi344foPy2ySiSVyudmAR5GYlp0LR4KmbVJRGzUTBOie2hpH/JAnUdvg3WDl
-         kuxmbTNRbnv4LiPE7cU1mJFMFzMZMfSutuV0z+Ps9mnkaz9OOdMuSsSMZr7zq5F/RI1J
-         APSGXwDlD+8gNdOSgHM7In1TQ05R4gvOkoBayHKBD+CUbwk7E/AJtPjyyMhvTWNM1e2L
-         DGU41ski70ODCFNTYqEHueHDVuxLFBAjGojlJlL8aEAZviMCba0W+yAtFvBd/DCdUMfw
-         RJuNx4wILWSMIXIQu7hnhjBr8wvsCcIv8XLlZHXO+UgepXvGPYQ1lygP60Dcn0C+SR59
-         LcoA==
-X-Gm-Message-State: AOAM533m3oFIS0IlBI7bYdmnybElDchd8hjtj9dqT8ROuDnyGjHyB432
-        2b4aF92EqL2jZ8i7Bert5qmKh7eJJw==
-X-Google-Smtp-Source: ABdhPJwJgBDeYYeiE9Q91o3SzmsnBqNzVegZCI2fuha9DmO2xtCh9eQS2ICWSykd5H4yZ1UWmxziHg==
-X-Received: by 2002:a9d:2c29:: with SMTP id f38mr3357464otb.245.1603896140778;
-        Wed, 28 Oct 2020 07:42:20 -0700 (PDT)
-Received: from xps15 (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.gmail.com with ESMTPSA id n18sm2061385otk.33.2020.10.28.07.42.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Oct 2020 07:42:20 -0700 (PDT)
-Received: (nullmailer pid 3991748 invoked by uid 1000);
-        Wed, 28 Oct 2020 14:42:19 -0000
-Date:   Wed, 28 Oct 2020 09:42:19 -0500
-From:   Rob Herring <robh@kernel.org>
-To:     Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
-Cc:     bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        andriy.shevchenko@linux.intel.com, mgross@linux.intel.com,
-        lakshmi.bai.raja.subramanian@intel.com
-Subject: Re: [PATCH 1/2] dt-bindings: PCI: Add Intel Keem Bay PCIe controller
-Message-ID: <20201028144219.GA3966314@bogus>
-References: <20201027060011.25893-1-wan.ahmad.zainie.wan.mohamad@intel.com>
- <20201027060011.25893-2-wan.ahmad.zainie.wan.mohamad@intel.com>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=bddUYsH0Q4taj7eCHyEIuGJKg/yr7YiUZPcQWZ6v1LE=;
+        b=TLzyljF8fuB+RGr1oOSzCM0GcwVuJYbR1jmmZObPGzqcxtd03F3kPKleCUKBifNDjC
+         7l1+C858DbsclqO9IfIYKwQgpq6+5WbAPMeEq3rQW/OQYc1k0e44A1psdFBDn74fTOMT
+         JwJUbsrNIlkvXRbams90fCh7RTSvwlhtjKy9UBIYmgeUoHfNkc8lUtDEa2EQvDGzjwxW
+         n44KKYccZcIcB5WjZSRKV287PFL06tKlUgEqun0C5JSbaygBYOcxB9P659L5yvDHZFbs
+         mnjVfGOanrdoJpiWa1N2meaW/M6YILKeG2IpuDVC1YjaCbV60kNcF4vw98tH2ecvuaP5
+         N63Q==
+X-Gm-Message-State: AOAM533wdGu/Xdq5lrth7pDMOziiVBg7I/m83L1SjsGKukw1BENwTic9
+        bzOEjJuOJJZiGknl8oZ9gdHtVIH1tT4/glQBQCMjp78Fwh4=
+X-Google-Smtp-Source: ABdhPJzCs+C7nGVmskqV5HWtwP2HsoDUyoZPtmjPyl0kVxXWNVUEZaqXQZSqJhoXzMmq2aFQ+100yvJkxcOjHt+nb5g=
+X-Received: by 2002:a2e:8845:: with SMTP id z5mr648833ljj.216.1603927193515;
+ Wed, 28 Oct 2020 16:19:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201027060011.25893-2-wan.ahmad.zainie.wan.mohamad@intel.com>
+References: <20201028231545.4116866-1-rajatja@google.com>
+In-Reply-To: <20201028231545.4116866-1-rajatja@google.com>
+From:   Rajat Jain <rajatja@google.com>
+Date:   Wed, 28 Oct 2020 16:19:17 -0700
+Message-ID: <CACK8Z6HHP7O96zAHW4MM6ZtH-6h1WcJ=VtAVCXbGnRL3400SLA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Always call pci_enable_acs() regardless of pdev->acs_cap
+To:     linux-pci <linux-pci@vger.kernel.org>,
+        "Boris V." <borisvk@bstnet.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Rajat Jain <rajatxjain@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Oct 27, 2020 at 02:00:10PM +0800, Wan Ahmad Zainie wrote:
-> Document DT bindings for PCIe controller found on Intel Keem Bay SoC.
-> 
-> Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
-> ---
->  .../bindings/pci/intel,keembay-pcie-ep.yaml   |  86 +++++++++++++
->  .../bindings/pci/intel,keembay-pcie.yaml      | 120 ++++++++++++++++++
->  2 files changed, 206 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/intel,keembay-pcie-ep.yaml
->  create mode 100644 Documentation/devicetree/bindings/pci/intel,keembay-pcie.yaml
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/intel,keembay-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/intel,keembay-pcie-ep.yaml
-> new file mode 100644
-> index 000000000000..11962c205744
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/intel,keembay-pcie-ep.yaml
-> @@ -0,0 +1,86 @@
-> +# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
-> +%YAML 1.2
-> +---
-> +$id: "http://devicetree.org/schemas/pci/intel,keembay-pcie-ep.yaml#"
-> +$schema: "http://devicetree.org/meta-schemas/core.yaml#"
-> +
-> +title: Intel Keem Bay PCIe EP controller
-> +
-> +maintainers:
-> +  - Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
-> +
-> +properties:
-> +  compatible:
-> +      const: intel,keembay-pcie-ep
-> +
-> +  reg:
-> +    items:
-> +      - description: DesignWare PCIe registers
-> +      - description: PCIe configuration space
-> +      - description: Keem Bay specific registers
-> +
-> +  reg-names:
-> +    items:
-> +      - const: dbi
-> +      - const: addr_space
-> +      - const: apb
-> +
-> +  interrupts:
-> +    items:
-> +      - description: PCIe interrupt
-> +      - description: PCIe event interrupt
-> +      - description: PCIe error interrupt
-> +      - description: PCIe memory access interrupt
-> +
-> +  interrupt-names:
-> +    items:
-> +      - const: intr
-> +      - const: ev_intr
-> +      - const: err_intr
-> +      - const: mem_access_intr
-
-'_intr' is redundant. Drop it. You'll need a better name for the first 
-one though.
-
-> +
-> +  num-ib-windows:
-> +    description: Number of inbound address translation windows
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +
-> +  num-ob-windows:
-> +    description: Number of outbound address translation windows
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +
-> +  num-lanes:
-> +    description: Number of lanes to use.
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    enum: [ 1, 2, 4, 8 ]
-> +
-> +required:
-> +  - compatible
-> +  - reg
-> +  - reg-names
-> +  - interrupts
-> +  - interrupt-names
-> +  - num-ib-windows
-> +  - num-ob-windows
-> +
-> +additionalProperties: false
-> +
-> +examples:
-> +  - |
-> +    #include <dt-bindings/interrupt-controller/arm-gic.h>
-> +    #include <dt-bindings/interrupt-controller/irq.h>
-> +  - |
-> +    pcie-ep@37000000 {
-> +          compatible = "intel,keembay-pcie-ep";
-> +          reg = <0x37000000 0x00800000>,
-> +                <0x36000000 0x01000000>,
-> +                <0x37800000 0x00000200>;
-> +          reg-names = "dbi", "addr_space", "apb";
-> +          interrupts = <GIC_SPI 107 IRQ_TYPE_LEVEL_HIGH>,
-> +                       <GIC_SPI 108 IRQ_TYPE_EDGE_RISING>,
-> +                       <GIC_SPI 109 IRQ_TYPE_LEVEL_HIGH>,
-> +                       <GIC_SPI 110 IRQ_TYPE_LEVEL_HIGH>;
-> +          interrupt-names = "intr", "ev_intr", "err_intr",
-> +                       "mem_access_intr";
-> +          num-ib-windows = <4>;
-> +          num-ob-windows = <4>;
-> +          num-lanes = <2>;
-> +    };
-> diff --git a/Documentation/devicetree/bindings/pci/intel,keembay-pcie.yaml b/Documentation/devicetree/bindings/pci/intel,keembay-pcie.yaml
-> new file mode 100644
-> index 000000000000..49e5d3d35bd4
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/intel,keembay-pcie.yaml
-> @@ -0,0 +1,120 @@
-> +# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
-> +%YAML 1.2
-> +---
-> +$id: "http://devicetree.org/schemas/pci/intel,keembay-pcie.yaml#"
-> +$schema: "http://devicetree.org/meta-schemas/core.yaml#"
-> +
-> +title: Intel Keem Bay PCIe RC controller
-> +
-> +maintainers:
-> +  - Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
-> +
-> +allOf:
-> +  - $ref: /schemas/pci/pci-bus.yaml#
-> +
-> +properties:
-> +  compatible:
-> +      const: intel,keembay-pcie
-
-> +
-> +  device_type:
-> +    const: pci
-> +
-> +  "#address-cells":
-> +    const: 3
-> +
-> +  "#size-cells":
-> +    const: 2
-
-Can drop these 3 as pci-bus.yaml defines them.
-
-> +
-> +  ranges:
-> +    maxItems: 1
-> +
-> +  reset-gpios:
-> +    maxItems: 1
-> +
-> +  reg:
-> +    items:
-> +      - description: DesignWare PCIe registers
-> +      - description: PCIe configuration space
-> +      - description: Keem Bay specific registers
-> +
-> +  reg-names:
-> +    items:
-> +      - const: dbi
-> +      - const: config
-> +      - const: apb
-> +
-> +  clocks:
-> +    items:
-> +      - description: bus clock
-> +      - description: auxiliary clock
-
-The EP doesn't have clocks? You should have roughly the same resources 
-for RC and EP modes.
-
-> +
-> +  clock-names:
-> +    items:
-> +      - const: master
-> +      - const: aux
-> +
-> +  interrupts:
-> +    items:
-> +      - description: PCIe interrupt
-> +      - description: PCIe event interrupt
-> +      - description: PCIe error interrupt
-> +
-> +  interrupt-names:
-> +    items:
-> +      - const: intr
-> +      - const: ev_intr
-> +      - const: err_intr
-> +
-> +  num-lanes:
-> +    description: Number of lanes to use.
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    enum: [ 1, 2, 4, 8 ]
-> +
-> +  num-viewport:
-> +    description: Number of view ports configured in hardware.
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    default: 2
-
-Pretty sure it's not 2 if num-ib-windows and num-ob-windows are 4.
-
-> +
-> +required:
-> +  - compatible
-
-> +  - device_type
-> +  - "#address-cells"
-> +  - "#size-cells"
-
-Can drop these too.
-
-> +  - reg
-> +  - reg-names
-> +  - ranges
-> +  - clocks
-> +  - interrupts
-> +  - interrupt-names
-> +  - reset-gpios
-> +
-> +additionalProperties: false
-
-Use 'unevaluatedProperties: false' instead.
-
-> +
-> +examples:
-> +  - |
-> +    #include <dt-bindings/interrupt-controller/arm-gic.h>
-> +    #include <dt-bindings/interrupt-controller/irq.h>
-> +    #include <dt-bindings/gpio/gpio.h>
-> +    #define KEEM_BAY_A53_PCIE
-> +    #define KEEM_BAY_A53_AUX_PCIE
-> +    pcie@37000000 {
-> +          compatible = "intel,keembay-pcie";
-> +          reg = <0x37000000 0x00800000>,
-> +                <0x36e00000 0x00200000>,
-> +                <0x37800000 0x00000200>;
-> +          reg-names = "dbi", "config", "apb";
-> +          #address-cells = <3>;
-> +          #size-cells = <2>;
-> +          device_type = "pci";
-> +          ranges = <0x02000000 0 0x36000000 0x36000000 0 0x00e00000>;
-> +          interrupts = <GIC_SPI 107 IRQ_TYPE_LEVEL_HIGH>,
-> +                       <GIC_SPI 108 IRQ_TYPE_LEVEL_HIGH>,
-> +                       <GIC_SPI 109 IRQ_TYPE_LEVEL_HIGH>;
-> +          interrupt-names = "intr", "ev_intr", "err_intr";
-> +          clocks = <&scmi_clk KEEM_BAY_A53_PCIE>,
-> +                   <&scmi_clk KEEM_BAY_A53_AUX_PCIE>;
-> +          clock-names = "master", "aux";
-> +          reset-gpios = <&pca2 9 GPIO_ACTIVE_LOW>;
-> +          num-viewport = <4>;
-> +          num-lanes = <2>;
-> +    };
-> -- 
-> 2.17.1
-> 
+-random email address (typo)
