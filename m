@@ -4,107 +4,170 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24240C56202
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Oct 2020 21:54:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DCAEC5DF9E
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Oct 2020 21:54:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CD8CC246CD
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Oct 2020 21:54:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5149C24724
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Oct 2020 21:54:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603922085;
-	bh=NmuMkX3jIaTN7lQIN3KvoqabTDKn16tIELqhxOaWm5c=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=Dgi6DBZLS/lKHjwU21mLyJBknk1x8qE6r0ySAD6MhBuwMSxmLF2GNH84s6uYb4LSM
-	 sX/V6eyjVDgCdzLZLN2VjtEh3F77V5XenuR2km+g3jptZoAon+m4pA+1L9ouWERF6b
-	 cOWAQqdrGSDXsh0sAf5HVw6m16PQ9YiKcbBnXdRs=
+	s=default; t=1603922090;
+	bh=Ng0aaOYvvOnvpMzlDKmn4n7HlYQExwjFLCCoQek4EYk=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=aBVLyPLJ/SglB5Ft/YPM7WfO4PiXz4Nkq13+cbVmz/jE/MQvIaK7Pl4eAQccr2D6y
+	 MZrtLIDQJwdIr0OomyGo272MLAGvQD5tPoCQYzE2FD8oUOe69Qwzl3DYbBnxIgUMCS
+	 7lI5oUlqlYKawk74a40RD0z+rNYWqa8CBpiMA27s=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728797AbgJ1Vyl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Oct 2020 17:54:41 -0400
-Received: from mail-oi1-f195.google.com ([209.85.167.195]:36250 "EHLO
-        mail-oi1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728764AbgJ1Vyi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Oct 2020 17:54:38 -0400
-Received: by mail-oi1-f195.google.com with SMTP id y186so1166822oia.3;
-        Wed, 28 Oct 2020 14:54:37 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=Uc78x8CmwZLzrKJ78c98Bv6j8H6O42mQH8+34OvgxWs=;
-        b=CfLad6XA+URAMmONLs7b5YFk1mHUAf4qjcUe8DI/9oDAlz54boCzbDAKkTmf/CCWsl
-         gHEVo6hlLzXiKHvmhPx6HluQBtx1UON4ioMgTG6jkfmfK+qG8sMzT2xPizgejuQxgO5y
-         1FAxWzIrn2YxMYnkg/a7NSQHEEiaG/5CuxPkkl7upE8iTB3p0uNuG4HfhMFsiiW/l1ln
-         K4C5yrvAhMrf0bH7AF0TNuoYpk8vMVyAKy2rXR7SEOfjs7N2zJhDEPiBKl88T5lbBgLb
-         RA1nAgNC6E9BgEMX0Eu/ySQXhY09yq5dHrjyQlr+jognx+uhdUNuuK9C8oyXaI5QJsZy
-         v5MA==
-X-Gm-Message-State: AOAM533I7KlG0uCOBss75cPbYyMhld80JTisozrAP/XNAb+NSAhfMhju
-        TSuXCssD3XRn5t+xXW6ehNVlPxBZmQ==
-X-Google-Smtp-Source: ABdhPJzBeWZH6SAY7afIgY1/3BfjtQmztEeFkp69qvQ5J2PDJhbpSiCR8mcjBJXcwrLL2OvDMKpx/g==
-X-Received: by 2002:aca:4ac6:: with SMTP id x189mr4914954oia.58.1603896288433;
-        Wed, 28 Oct 2020 07:44:48 -0700 (PDT)
-Received: from xps15 (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.gmail.com with ESMTPSA id v123sm2710068oif.29.2020.10.28.07.44.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Oct 2020 07:44:47 -0700 (PDT)
-Received: (nullmailer pid 3995233 invoked by uid 1000);
-        Wed, 28 Oct 2020 14:44:47 -0000
-Date:   Wed, 28 Oct 2020 09:44:47 -0500
-From:   Rob Herring <robh@kernel.org>
-To:     Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Cc:     prabhakar.mahadev-lad.rj@bp.renesas.com,
-        marek.vasut+renesas@gmail.com, linux-renesas-soc@vger.kernel.org,
-        linux-pci@vger.kernel.org, bhelgaas@google.com, robh+dt@kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH 1/3] dt-bindings: pci: rcar-pci-host: convert bindings to
- json-schema
-Message-ID: <20201028144447.GA3994930@bogus>
-References: <1603850751-32762-1-git-send-email-yoshihiro.shimoda.uh@renesas.com>
- <1603850751-32762-2-git-send-email-yoshihiro.shimoda.uh@renesas.com>
+        id S1728368AbgJ1Vyr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Oct 2020 17:54:47 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45292 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728513AbgJ1Vwt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Oct 2020 17:52:49 -0400
+Received: from localhost (230.sub-72-107-127.myvzw.com [72.107.127.230])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 163A620723;
+        Wed, 28 Oct 2020 21:52:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1603921968;
+        bh=Ng0aaOYvvOnvpMzlDKmn4n7HlYQExwjFLCCoQek4EYk=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=OkGwjg3EZQEnuiEnjpA2b5DgmFELJtqumDRNi916bl+Wet4+BdEbdQus4ZVElFIRM
+         mk5WMEkiZbqbiq3OJ7rGRcXVj30eVMWd/j2OtniRTXWdwvFdpAJE9grjebDWkljH7K
+         Mu/fuvevz6HptQ+RvnXWw91szc5mSuW+W+krUMRg=
+Date:   Wed, 28 Oct 2020 16:52:46 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     "Boris V." <borisvk@bstnet.org>
+Cc:     linux-pci@vger.kernel.org, Rajat Jain <rajatja@google.com>,
+        linux-kernel@vger.kernel.org
+Subject: Re: Kernel 5.9 IOMMU groups regression/change
+Message-ID: <20201028215246.GA351595@bjorn-Precision-5520>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <1603850751-32762-2-git-send-email-yoshihiro.shimoda.uh@renesas.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <d76b70c1-17f6-60d7-b027-5ecda491101c@bstnet.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, 28 Oct 2020 11:05:49 +0900, Yoshihiro Shimoda wrote:
-> Convert Renesas PCIe Host controller bindings documentation to
-> json-schema. Note that some compatible doesn't contain on
-> the original documantation so that incremental patches are required
-> for it.
+[+cc Rajat, LKML]
+
+On Tue, Oct 27, 2020 at 08:31:09PM +0100, Boris V. wrote:
+> On 25/10/2020 20:45, Boris V. wrote:
+> > With upgrade to kernel 5.9 my VMs stopped working, because some devices
+> > can't be passed through.
+> > This is caused by different IOMMU groups and devices being in the same
+> > group.
+> > 
+> > For ex. with kernel 5.8 this are IOMMU groups:
+> > IOMMU Group 40:
+> >         08:01.0 PCI bridge [0604]: ASMedia Technology Inc. Device
+> > [1b21:118f]
+> >         09:00.0 Ethernet controller [0200]: Intel Corporation I211
+> > Gigabit Network Connection [8086:1539] (rev 03)
+> > IOMMU Group 43:
+> >         0c:00.0 SATA controller [0106]: ASMedia Technology Inc. ASM1062
+> > Serial ATA Controller [1b21:0612] (rev 02)
+> > IOMMU Group 44:
+> >         0d:00.0 USB controller [0c03]: ASMedia Technology Inc. ASM1042A
+> > USB 3.0 Host Controller [1b21:1142]
+> > 
+> > Ethernet, SATA and USB controller in its own group.
+> > 
+> > And with 5.9, everything is in one group:
+> > IOMMU Group 29:
+> >         00:1c.0 PCI bridge [0604]: Intel Corporation C610/X99 series
+> > chipset PCI Express Root Port #1 [8086:8d10] (rev d5)
+> >         00:1c.3 PCI bridge [0604]: Intel Corporation C610/X99 series
+> > chipset PCI Express Root Port #4 [8086:8d16] (rev d5)
+> >         00:1c.4 PCI bridge [0604]: Intel Corporation C610/X99 series
+> > chipset PCI Express Root Port #5 [8086:8d18] (rev d5)
+> >         00:1c.6 PCI bridge [0604]: Intel Corporation C610/X99 series
+> > chipset PCI Express Root Port #7 [8086:8d1c] (rev d5)
+> >         07:00.0 PCI bridge [0604]: ASMedia Technology Inc. Device
+> > [1b21:118f]
+> >         08:01.0 PCI bridge [0604]: ASMedia Technology Inc. Device
+> > [1b21:118f]
+> >         08:03.0 PCI bridge [0604]: ASMedia Technology Inc. Device
+> > [1b21:118f]
+> >         08:04.0 PCI bridge [0604]: ASMedia Technology Inc. Device
+> > [1b21:118f]
+> >         09:00.0 Ethernet controller [0200]: Intel Corporation I211
+> > Gigabit Network Connection [8086:1539] (rev 03)
+> >         0c:00.0 SATA controller [0106]: ASMedia Technology Inc. ASM1062
+> > Serial ATA Controller [1b21:0612] (rev 02)
+> >         0d:00.0 USB controller [0c03]: ASMedia Technology Inc. ASM1042A
+> > USB 3.0 Host Controller [1b21:1142]
+> > 
+> > 
+> > This seems to be caused by commit
+> > 52fbf5bdeeef415b28b8e6cdade1e48927927f60.
+> > commit 52fbf5bdeeef415b28b8e6cdade1e48927927f60
+> > Author: Rajat Jain <rajatja@google.com>
+> > Date:   Tue Jul 7 15:46:02 2020 -0700
+> > 
+> >     PCI: Cache ACS capability offset in device
+> > 
+> >     Currently the ACS capability is being looked up at a number of
+> > places. Read
+> >     and store it once at enumeration so that it can be used by all
+> > later.  No
+> >     functional change intended.
+> > 
+> >     Link:
+> > https://lore.kernel.org/r/20200707224604.3737893-2-rajatja@google.com
+> >     Signed-off-by: Rajat Jain <rajatja@google.com>
+> >     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> > 
+> >  drivers/pci/p2pdma.c |  2 +-
+> >  drivers/pci/pci.c    | 20 ++++++++++++++++----
+> >  drivers/pci/pci.h    |  2 +-
+> >  drivers/pci/probe.c  |  2 +-
+> >  drivers/pci/quirks.c |  8 ++++----
+> >  include/linux/pci.h  |  1 +
+> >  6 files changed, 24 insertions(+), 11 deletions(-)
+> > 
+> > 
+> > If I revert this commit, I get back old groups.
+> > 
+> > In commit log there is message 'No functional change intended'. But
+> > there is functional change.
+> > 
+> > This is Intel Core i7-5930K CPU and X99 chipset. But I see the same
+> > thing on other Intel systems (didn't test on AMD).
 > 
-> Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-> ---
->  .../devicetree/bindings/pci/rcar-pci-host.yaml     | 146 +++++++++++++++++++++
->  Documentation/devicetree/bindings/pci/rcar-pci.txt |  72 ----------
->  2 files changed, 146 insertions(+), 72 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/pci/rcar-pci-host.yaml
->  delete mode 100644 Documentation/devicetree/bindings/pci/rcar-pci.txt
+> Some more info.
+> Problem seems to be that pci_dev_specific_enable_acs() is not called
+> anymore.
+> Before, pci_enable_acs() was called from pci_init_capabilities() and in
+> pci_enable_acs(), pci_dev_specific_enable_acs() was called.
+> I don't know anything about PCI and this stuff, but I'm guessing that this
+> function enable ACS for some Intel devices.
+> But after this commit, pci_acs_init() is called from pci_init_capabilities()
+> and if pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS) returns 0,
+> pci_enable_acs() and pci_dev_specific_enable_acs() is not called anymore.
+> If I apply for ex. this patch bellow, groups are right again and everything
+> works as before.
+
+Thanks very much for the report and the debugging.  Maybe we can get
+this sorted and fixed for v5.10-rc2 or -rc3.
+
+> diff -ur linux-5.9.1.orig/drivers/pci/pci.c linux-5.9.1/drivers/pci/pci.c
+> --- linux-5.9.1.orig/drivers/pci/pci.c  2020-10-17 08:31:22.000000000 +0200
+> +++ linux-5.9.1/drivers/pci/pci.c       2020-10-27 19:01:32.650010803 +0100
+> @@ -3502,9 +3502,7 @@
+>  void pci_acs_init(struct pci_dev *dev)
+>  {
+>         dev->acs_cap = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
+> -
+> -       if (dev->acs_cap)
+> -               pci_enable_acs(dev);
+> +       pci_enable_acs(dev);
+>  }
 > 
-
-
-My bot found errors running 'make dt_binding_check' on your patch:
-
-yamllint warnings/errors:
-./Documentation/devicetree/bindings/pci/rcar-pci-host.yaml:18:9: [warning] wrong indentation: expected 10 but found 8 (indentation)
-./Documentation/devicetree/bindings/pci/rcar-pci-host.yaml:27:9: [warning] wrong indentation: expected 10 but found 8 (indentation)
-
-dtschema/dtc warnings/errors:
-
-
-See https://patchwork.ozlabs.org/patch/1389094
-
-The base for the patch is generally the last rc1. Any dependencies
-should be noted.
-
-If you already ran 'make dt_binding_check' and didn't see the above
-error(s), then make sure 'yamllint' is installed and dt-schema is up to
-date:
-
-pip3 install dtschema --upgrade
-
-Please check and re-submit.
-
+>  /**
+> 
+> 
