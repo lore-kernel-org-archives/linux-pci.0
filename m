@@ -2,383 +2,199 @@ Return-Path: <SRS0=cGNF=ED=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.4 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_IN_DEF_DKIM_WL
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB9EEC388F7
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Oct 2020 22:00:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD836C55179
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Oct 2020 22:08:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6EE512473C
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Oct 2020 22:00:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 56AB224724
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Oct 2020 22:08:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="V0w+8LHF"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="ntz4C1F9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728230AbgJ1WAp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Oct 2020 18:00:45 -0400
-Received: from mail-eopbgr20071.outbound.protection.outlook.com ([40.107.2.71]:39397
-        "EHLO EUR02-VE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727137AbgJ1WAo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Oct 2020 18:00:44 -0400
-Received: from VI1PR04MB3229.eurprd04.prod.outlook.com (2603:10a6:802:e::30)
- by VI1PR04MB6928.eurprd04.prod.outlook.com (2603:10a6:803:12e::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3455.23; Wed, 28 Oct
- 2020 17:27:03 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=AmVQrju8V2PpUYmDXrxNCq3frMxWE3VvVitbjc+88h/SKvh9NeZr86TkqBAiZ5URJwEjXKUJqcr9gErw+WxrewvScQgc/tJfgy8sPsRuXzXjkfjGNinVspeR+m6pF9MAuqx0XOjKBFRRDCtlAYDsgkoVkRimWGGZcRDEnNH+qyNOKUGWNMiREhi5+7kXt8nR8qKzxMIcpASRjH2dCQhwUUWvFVhZEUFYSqH1AiRXFn5M896RMMnejyZcm4cLDY+vXI+MRN0hwD+qw2ziI+a6xma85DQ9v8in7IcxYgHYVfn1NEGEZx2QaOjrijhm10HHmN0by11mS9+IFHk2hZwa0g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=HtP/+gOg4BoVV64Fqe4UwdSS4ZvCSt5UiODLbLZPf7E=;
- b=Mx+SAF6sOUBTW9qXku8Lm4iApXWRNhwNLIcxJJ/rxe9qRTAKvEC5+tHQUzHNajXffP4EG91vdLXzmI34dE0O1Qyue2AUrPCj+TnGxP2HexC5NZtzxAypd75hdGj22bhEb5q9OEfK0BB3bFBMpGbgTsHsb4FPmuIvZtN3qSbo2SUwYytetnUVNMFzi4T0zV1+/7woNgN+Tfc1ITODGcezt3cygrutxPCBQ4s4eWVAcLgB1ZpdrwhIBv5ny/ueyFP+dudLB9rSbczMWzLFELO2fNyD/f4Pp9G2JipeVO1HEDRVWQGUICFSC8wMndRN8FV8c9iT/n8ObbQ1ON6hyg14aA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=HtP/+gOg4BoVV64Fqe4UwdSS4ZvCSt5UiODLbLZPf7E=;
- b=V0w+8LHF2Fxt9aZbtxk+UGSaiiOFAkF/7BNkgpYZ6TTaKeZOjeK+K5NUKMLfrDyzHGRFmm9tIGL4ue8pE8JEmgLsl4wbumI54u+/VihQCbftLP2zMgyTnGTsMCiCrpEZ+FVxPcglXJQjf7XVeCFZScrFjt+8ru6AlSaaZVCfkYM=
-Authentication-Results: infradead.org; dkim=none (message not signed)
- header.d=none;infradead.org; dmarc=none action=none header.from=nxp.com;
-Received: from VI1PR04MB4960.eurprd04.prod.outlook.com (2603:10a6:803:57::21)
- by VI1PR04MB3229.eurprd04.prod.outlook.com (2603:10a6:802:e::30) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3455.28; Wed, 28 Oct
- 2020 02:04:24 +0000
-Received: from VI1PR04MB4960.eurprd04.prod.outlook.com
- ([fe80::b178:a37b:1f9e:3a6]) by VI1PR04MB4960.eurprd04.prod.outlook.com
- ([fe80::b178:a37b:1f9e:3a6%3]) with mapi id 15.20.3477.028; Wed, 28 Oct 2020
- 02:04:24 +0000
-From:   Sherry Sun <sherry.sun@nxp.com>
-To:     hch@infradead.org, gregkh@linuxfoundation.org,
-        vincent.whitchurch@axis.com, sudeep.dutt@intel.com,
-        ashutosh.dixit@intel.com, arnd@arndb.de, kishon@ti.com,
-        lorenzo.pieralisi@arm.com
-Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-imx@nxp.com, fugang.duan@nxp.com
-Subject: [PATCH V5 2/2] misc: vop: do not allocate and reassign the used ring
-Date:   Wed, 28 Oct 2020 10:03:05 +0800
-Message-Id: <20201028020305.10593-3-sherry.sun@nxp.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20201028020305.10593-1-sherry.sun@nxp.com>
-References: <20201028020305.10593-1-sherry.sun@nxp.com>
-Content-Type: text/plain
-X-Originating-IP: [119.31.174.71]
-X-ClientProxiedBy: AM0PR03CA0088.eurprd03.prod.outlook.com
- (2603:10a6:208:69::29) To VI1PR04MB4960.eurprd04.prod.outlook.com
- (2603:10a6:803:57::21)
+        id S1730358AbgJ1WIi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Oct 2020 18:08:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51912 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730356AbgJ1WI3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Oct 2020 18:08:29 -0400
+Received: from mail-lj1-x243.google.com (mail-lj1-x243.google.com [IPv6:2a00:1450:4864:20::243])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B4C6C0613D1
+        for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2020 15:08:29 -0700 (PDT)
+Received: by mail-lj1-x243.google.com with SMTP id k25so898240lji.9
+        for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2020 15:08:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=v/UQj19JKtDpSfgvXQNknUjoiBrB2/VS8uj570M8Ll4=;
+        b=ntz4C1F9/qbnPT91Mb1tcX8fbmyjK1YLSwwGi/QAdHbUk0y1Li1hGcVrxpVr0W6K+o
+         k+XxpcdL3FoX7V6CqQhQ3DrzGZQSAZr1te8tRWZqQwH9TbuJ/8dmUBuSvsR7pp/CiHQq
+         GWp6YWtZ9V3xGi/Dn850cWfMQADMBEzSUKbujnYrBXbZgSKCV44Dsu9rt7uFsCjixMI9
+         sMFkCwOG7BYwvx31n6stFPw0/omZUNqBinHsFTUYC4H0+PuxUzyei4IDpMDeT05Wh03D
+         3QdABPxpa8n200pNv8+Lo7ofJ9annbx1ele+5wamVvClxkzZTNxPJmRgULUwMdUGrI2N
+         Ymug==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=v/UQj19JKtDpSfgvXQNknUjoiBrB2/VS8uj570M8Ll4=;
+        b=afGQ0ZROcsGbgROevn/OoPv1Ajlfgtd8O3GIGaeYVsyFE3lQ7xspMi6wEodOMlU9j+
+         xJfo4NcWDvs3QTK44CSftzGKmstrtDCpeaIlZSZjrXwYnem0uZBTER1KWIb/DU7anqrK
+         05InS5wXo52AGGg1wWOCEYKOJaPdgplPuPeGU8Lx6EGUwFZSUejCl4ce+tRf96k+zM4B
+         MPAosSUSC3Qp4+CiGh6Lsgzqk9wCG7rwbkN1sqw4jWlstfN+U0UMwjOF7qsfLPfYaJMd
+         +tGdksmLdKx/uzGX7OrAwPmPHe29yMvEpiSQ52H0VFFTBdFNXzQFBNqfuHMbB9ZSxMdt
+         EXUQ==
+X-Gm-Message-State: AOAM533VKXn7w8i/imxnAf2pSLFQu8z2BBdOjUgexnRsyQDRVkqKRaMe
+        uo0tt1/8s2e0Bn8UHSFy9zha5pQV52v2w7OT/H9JNw==
+X-Google-Smtp-Source: ABdhPJxBt01sDJcp4h/oFPiPreDew3wQhJVQA4p5TXmmXlblXmJ34ts9wMngCW1tMya7Qfpx4DgHf0ODFD6UUPG0GuY=
+X-Received: by 2002:a2e:8845:: with SMTP id z5mr553669ljj.216.1603922907250;
+ Wed, 28 Oct 2020 15:08:27 -0700 (PDT)
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from nxp.ap.freescale.net (119.31.174.71) by AM0PR03CA0088.eurprd03.prod.outlook.com (2603:10a6:208:69::29) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3499.18 via Frontend Transport; Wed, 28 Oct 2020 02:04:20 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-HT: Tenant
-X-MS-Office365-Filtering-Correlation-Id: 0bf4c3c7-7a2b-487a-1633-08d87ae5caea
-X-MS-TrafficTypeDiagnostic: VI1PR04MB3229:|VI1PR04MB6928:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <VI1PR04MB32293B99866281D0B70A2EB692170@VI1PR04MB3229.eurprd04.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:1443;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: XYOowfKjkIhskpTidSiqrwqmwxt1wjZxxsxR6tBo4XdbUI2ZHSNsZfE1FJcch++ju3iXsjMV4JsPoMZVLsJlGe4fvyj9YObCZ6rMMVfmdAp+ZMP1M8bED4r3Kfkj6C07+R4DznpSbZa5yTGP5i+QBkw367029ZR2G+IGJxcsRIhYYTKf1qjHdW9YYwoIxElv4U7fVUfHvFWqOtcdvWyi786q7+gLwLDYv00O4AWekqvCqqQdfNTlYyY0zph8RbFhvy9B0qcjYXypgGkMNZnyp3WJS6CaFxlJ/x2W1RQU8LQsfg+naHvyupI0AfRnJZ6dTrm/OI5/R6dN7EB/0nFL1w==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VI1PR04MB4960.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(39860400002)(396003)(376002)(136003)(346002)(36756003)(2616005)(1076003)(44832011)(52116002)(2906002)(26005)(6506007)(478600001)(956004)(8936002)(83380400001)(16526019)(86362001)(8676002)(4326008)(316002)(5660300002)(186003)(7416002)(6512007)(66476007)(6666004)(66556008)(6486002)(66946007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: i4LBYoPWfeMWjxnJulYW40D523L0UNyWGODZ+jINwAwwI5HzvYYIACemZZ2nskOse/fjIfuLVxdfaskeeXICpIfjy/ogV2emYohhkt3PNgMzH+Hjw8ZuQ/oWy0W6tIaMwhqh64ELDGa9RHTwWeaL37+oC/tU1Y6A5cGHrJyk+nLQrCDaAsy/9tAE8vuWf0djtuMXrXRrONenaVvwjQby3NugeSHfWGy/dAuGmE277xq8iA2H98HOso0fIjBTCkpkm+N9oBjruVMoCl36IN8W0FGRoBOkvGb2YzmX398dDNLju+cWVWxwo4kQCY4/E0BcCj6RrrzeBaoUpDJ9FRXWKLRIoK0WwTz0akDlwh9kyhz++yPKmzfN2+epxOTLGcxSBcOASaRTBLmLpPsRIsQ+eJaWs6uQYu1OgAdyikdY/2AGK3IYpKHtowDCh6k+M22XwTR9JrfIF7I2T//WIVHWRWZ9axfFycvh1/L7AiV8NWC35K6nnoOhYalwDXsVwYxTHzsAMHHCINxHTCH9Xxd0Sv6otrmlmbIwY1cNI8YbnQ6eE2qne9wocYO0xpf4Ktum6tEQgDJUbHRAkFeV7O+FgY2tNVvXQzXrHhhQUjFtgAfut3ZiyIVGJ6Le4jU4IPG1Rc8+aFJzC+jWoSPU//3Ndg==
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0bf4c3c7-7a2b-487a-1633-08d87ae5caea
-X-MS-Exchange-CrossTenant-AuthSource: VI1PR04MB4960.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Oct 2020 02:04:24.6751
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: JpUwfqMBtRXPEiRgP97qxYlbiDK0xdXECj+H1IgCuutKOLEvnNIEWeqJR9ESBzwwUuJVhDktzol4DZh2iyk3QQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI1PR04MB3229
-X-OriginatorOrg: nxp.com
+References: <d76b70c1-17f6-60d7-b027-5ecda491101c@bstnet.org> <20201028215246.GA351595@bjorn-Precision-5520>
+In-Reply-To: <20201028215246.GA351595@bjorn-Precision-5520>
+From:   Rajat Jain <rajatja@google.com>
+Date:   Wed, 28 Oct 2020 15:07:51 -0700
+Message-ID: <CACK8Z6HLPyc_o9kvy09gjm+OQ7DLyvV2wB0boXCthEesra0t-g@mail.gmail.com>
+Subject: Re: Kernel 5.9 IOMMU groups regression/change
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     "Boris V." <borisvk@bstnet.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-We don't need to allocate and reassign the used ring here and remove the
-used_address_updated flag. Since RC has allocated the entire vring,
-including the used ring. Simply add the corresponding offset can get the
-used ring address.
+On Wed, Oct 28, 2020 at 2:52 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+> [+cc Rajat, LKML]
+>
 
-If following the orginal way to reassign the used ring, will encounter a
-problem. When host finished with descriptor, it will update the used
-ring with putused_kern api, if reassign used ring at EP side, used
-ring will be io device memory for RC, use memcpy in putused_kern will
-cause kernel panic.
+Thanks for copying me. (I don't look at mailing lists actively - so
+missed this). Taking a look at this now.
 
-Signed-off-by: Sherry Sun <sherry.sun@nxp.com>
-Signed-off-by: Joakim Zhang <qiangqing.zhang@nxp.com>
----
- drivers/misc/mic/vop/vop_debugfs.c |  4 --
- drivers/misc/mic/vop/vop_main.c    | 70 ++----------------------------
- drivers/misc/mic/vop/vop_vringh.c  | 31 -------------
- include/uapi/linux/mic_common.h    |  9 ++--
- 4 files changed, 8 insertions(+), 106 deletions(-)
+Thanks,
 
-diff --git a/drivers/misc/mic/vop/vop_debugfs.c b/drivers/misc/mic/vop/vop_debugfs.c
-index 9d4f175f4dd1..27373b6dcea2 100644
---- a/drivers/misc/mic/vop/vop_debugfs.c
-+++ b/drivers/misc/mic/vop/vop_debugfs.c
-@@ -62,8 +62,6 @@ static int vop_dp_show(struct seq_file *s, void *pos)
- 			seq_printf(s, "address 0x%llx ",
- 				   vqconfig->address);
- 			seq_printf(s, "num %d ", vqconfig->num);
--			seq_printf(s, "used address 0x%llx\n",
--				   vqconfig->used_address);
- 		}
- 
- 		features = (__u32 *)mic_vq_features(d);
-@@ -79,8 +77,6 @@ static int vop_dp_show(struct seq_file *s, void *pos)
- 		seq_printf(s, "Vdev reset %d\n", dc->vdev_reset);
- 		seq_printf(s, "Guest Ack %d ", dc->guest_ack);
- 		seq_printf(s, "Host ack %d\n", dc->host_ack);
--		seq_printf(s, "Used address updated %d ",
--			   dc->used_address_updated);
- 		seq_printf(s, "Vdev 0x%llx\n", dc->vdev);
- 		seq_printf(s, "c2h doorbell %d ", dc->c2h_vdev_db);
- 		seq_printf(s, "h2c doorbell %d\n", dc->h2c_vdev_db);
-diff --git a/drivers/misc/mic/vop/vop_main.c b/drivers/misc/mic/vop/vop_main.c
-index 714b94f42d38..226f462ab6a9 100644
---- a/drivers/misc/mic/vop/vop_main.c
-+++ b/drivers/misc/mic/vop/vop_main.c
-@@ -32,9 +32,6 @@
-  * @dc: Virtio device control
-  * @vpdev: VOP device which is the parent for this virtio device
-  * @vr: Buffer for accessing the VRING
-- * @used_virt: Virtual address of used ring
-- * @used: DMA address of used ring
-- * @used_size: Size of the used buffer
-  * @reset_done: Track whether VOP reset is complete
-  * @virtio_cookie: Cookie returned upon requesting a interrupt
-  * @c2h_vdev_db: The doorbell used by the guest to interrupt the host
-@@ -47,9 +44,6 @@ struct _vop_vdev {
- 	struct mic_device_ctrl __iomem *dc;
- 	struct vop_device *vpdev;
- 	void __iomem *vr[VOP_MAX_VRINGS];
--	void *used_virt[VOP_MAX_VRINGS];
--	dma_addr_t used[VOP_MAX_VRINGS];
--	int used_size[VOP_MAX_VRINGS];
- 	struct completion reset_done;
- 	struct mic_irq *virtio_cookie;
- 	int c2h_vdev_db;
-@@ -250,10 +244,6 @@ static void vop_del_vq(struct virtqueue *vq, int n)
- 	struct _vop_vdev *vdev = to_vopvdev(vq->vdev);
- 	struct vop_device *vpdev = vdev->vpdev;
- 
--	dma_unmap_single(&vpdev->dev, vdev->used[n],
--			 vdev->used_size[n], DMA_BIDIRECTIONAL);
--	free_pages((unsigned long)vdev->used_virt[n],
--		   get_order(vdev->used_size[n]));
- 	vring_del_virtqueue(vq);
- 	vpdev->hw_ops->unmap(vpdev, vdev->vr[n]);
- 	vdev->vr[n] = NULL;
-@@ -278,14 +268,12 @@ static struct virtqueue *vop_new_virtqueue(unsigned int index,
- 				      void *pages,
- 				      bool (*notify)(struct virtqueue *vq),
- 				      void (*callback)(struct virtqueue *vq),
--				      const char *name,
--				      void *used)
-+				      const char *name)
- {
- 	bool weak_barriers = false;
- 	struct vring vring;
- 
- 	vring_init(&vring, num, pages, MIC_VIRTIO_RING_ALIGN);
--	vring.used = used;
- 
- 	return __vring_new_virtqueue(index, vring, vdev, weak_barriers, context,
- 				     notify, callback, name);
-@@ -308,7 +296,6 @@ static struct virtqueue *vop_find_vq(struct virtio_device *dev,
- 	struct virtqueue *vq;
- 	void __iomem *va;
- 	struct _mic_vring_info __iomem *info;
--	void *used;
- 	int vr_size, _vr_size, err, magic;
- 	u8 type = ioread8(&vdev->desc->type);
- 
-@@ -337,45 +324,16 @@ static struct virtqueue *vop_find_vq(struct virtio_device *dev,
- 		goto unmap;
- 	}
- 
--	vdev->used_size[index] = PAGE_ALIGN(sizeof(__u16) * 3 +
--					     sizeof(struct vring_used_elem) *
--					     le16_to_cpu(config.num));
--	used = (void *)__get_free_pages(GFP_KERNEL | __GFP_ZERO,
--					get_order(vdev->used_size[index]));
--	vdev->used_virt[index] = used;
--	if (!used) {
--		err = -ENOMEM;
--		dev_err(_vop_dev(vdev), "%s %d err %d\n",
--			__func__, __LINE__, err);
--		goto unmap;
--	}
--
- 	vq = vop_new_virtqueue(index, le16_to_cpu(config.num), dev, ctx,
- 			       (void __force *)va, vop_notify, callback,
--			       name, used);
-+			       name);
- 	if (!vq) {
- 		err = -ENOMEM;
--		goto free_used;
--	}
--
--	vdev->used[index] = dma_map_single(&vpdev->dev, used,
--					    vdev->used_size[index],
--					    DMA_BIDIRECTIONAL);
--	if (dma_mapping_error(&vpdev->dev, vdev->used[index])) {
--		err = -ENOMEM;
--		dev_err(_vop_dev(vdev), "%s %d err %d\n",
--			__func__, __LINE__, err);
--		goto del_vq;
-+		goto unmap;
- 	}
--	writeq(vdev->used[index], &vqconfig->used_address);
- 
- 	vq->priv = vdev;
- 	return vq;
--del_vq:
--	vring_del_virtqueue(vq);
--free_used:
--	free_pages((unsigned long)used,
--		   get_order(vdev->used_size[index]));
- unmap:
- 	vpdev->hw_ops->unmap(vpdev, vdev->vr[index]);
- 	return ERR_PTR(err);
-@@ -388,9 +346,7 @@ static int vop_find_vqs(struct virtio_device *dev, unsigned nvqs,
- 			struct irq_affinity *desc)
- {
- 	struct _vop_vdev *vdev = to_vopvdev(dev);
--	struct vop_device *vpdev = vdev->vpdev;
--	struct mic_device_ctrl __iomem *dc = vdev->dc;
--	int i, err, retry, queue_idx = 0;
-+	int i, err, queue_idx = 0;
- 
- 	/* We must have this many virtqueues. */
- 	if (nvqs > ioread8(&vdev->desc->num_vq))
-@@ -412,24 +368,6 @@ static int vop_find_vqs(struct virtio_device *dev, unsigned nvqs,
- 		}
- 	}
- 
--	iowrite8(1, &dc->used_address_updated);
--	/*
--	 * Send an interrupt to the host to inform it that used
--	 * rings have been re-assigned.
--	 */
--	vpdev->hw_ops->send_intr(vpdev, vdev->c2h_vdev_db);
--	for (retry = 100; --retry;) {
--		if (!ioread8(&dc->used_address_updated))
--			break;
--		msleep(100);
--	}
--
--	dev_dbg(_vop_dev(vdev), "%s: retry: %d\n", __func__, retry);
--	if (!retry) {
--		err = -ENODEV;
--		goto error;
--	}
--
- 	return 0;
- error:
- 	vop_del_vqs(dev);
-diff --git a/drivers/misc/mic/vop/vop_vringh.c b/drivers/misc/mic/vop/vop_vringh.c
-index 39d34b164ede..fac46f3ca5fe 100644
---- a/drivers/misc/mic/vop/vop_vringh.c
-+++ b/drivers/misc/mic/vop/vop_vringh.c
-@@ -53,33 +53,6 @@ static void _vop_notify(struct vringh *vrh)
- 		vpdev->hw_ops->send_intr(vpdev, db);
- }
- 
--static void vop_virtio_init_post(struct vop_vdev *vdev)
--{
--	struct mic_vqconfig *vqconfig = mic_vq_config(vdev->dd);
--	struct vop_device *vpdev = vdev->vpdev;
--	int i, used_size;
--
--	for (i = 0; i < vdev->dd->num_vq; i++) {
--		used_size = PAGE_ALIGN(sizeof(u16) * 3 +
--				sizeof(struct vring_used_elem) *
--				le16_to_cpu(vqconfig->num));
--		if (!le64_to_cpu(vqconfig[i].used_address)) {
--			dev_warn(vop_dev(vdev), "used_address zero??\n");
--			continue;
--		}
--		vdev->vvr[i].vrh.vring.used =
--			(void __force *)vpdev->hw_ops->remap(
--			vpdev,
--			le64_to_cpu(vqconfig[i].used_address),
--			used_size);
--	}
--
--	vdev->dc->used_address_updated = 0;
--
--	dev_info(vop_dev(vdev), "%s: device type %d LINKUP\n",
--		 __func__, vdev->virtio_id);
--}
--
- static inline void vop_virtio_device_reset(struct vop_vdev *vdev)
- {
- 	int i;
-@@ -130,9 +103,6 @@ static void vop_bh_handler(struct work_struct *work)
- 	struct vop_vdev *vdev = container_of(work, struct vop_vdev,
- 			virtio_bh_work);
- 
--	if (vdev->dc->used_address_updated)
--		vop_virtio_init_post(vdev);
--
- 	if (vdev->dc->vdev_reset)
- 		vop_virtio_device_reset(vdev);
- 
-@@ -250,7 +220,6 @@ static void vop_init_device_ctrl(struct vop_vdev *vdev,
- 	dc->guest_ack = 0;
- 	dc->vdev_reset = 0;
- 	dc->host_ack = 0;
--	dc->used_address_updated = 0;
- 	dc->c2h_vdev_db = -1;
- 	dc->h2c_vdev_db = -1;
- 	vdev->dc = dc;
-diff --git a/include/uapi/linux/mic_common.h b/include/uapi/linux/mic_common.h
-index 504e523f702c..9560fb033a7f 100644
---- a/include/uapi/linux/mic_common.h
-+++ b/include/uapi/linux/mic_common.h
-@@ -56,8 +56,7 @@ struct mic_device_desc {
-  * @vdev_reset: Set to 1 by guest to indicate virtio device has been reset.
-  * @guest_ack: Set to 1 by guest to ack a command.
-  * @host_ack: Set to 1 by host to ack a command.
-- * @used_address_updated: Set to 1 by guest when the used address should be
-- * updated.
-+ * @must_be_zero: Reserved because this bit is no longer needed.
-  * @c2h_vdev_db: The doorbell number to be used by guest. Set by host.
-  * @h2c_vdev_db: The doorbell number to be used by host. Set by guest.
-  */
-@@ -67,7 +66,7 @@ struct mic_device_ctrl {
- 	__u8 vdev_reset;
- 	__u8 guest_ack;
- 	__u8 host_ack;
--	__u8 used_address_updated;
-+	__u8 must_be_zero;
- 	__s8 c2h_vdev_db;
- 	__s8 h2c_vdev_db;
- } __attribute__ ((aligned(8)));
-@@ -110,12 +109,12 @@ struct mic_device_page {
-  *
-  * @address: Guest/MIC physical address of the virtio ring
-  * (avail and desc rings)
-- * @used_address: Guest/MIC physical address of the used ring
-+ * @must_be_zero: Reserved because this bit is no longer needed.
-  * @num: The number of entries in the virtio_ring
-  */
- struct mic_vqconfig {
- 	__le64 address;
--	__le64 used_address;
-+	__le64 must_be_zero;
- 	__le16 num;
- } __attribute__ ((aligned(8)));
- 
--- 
-2.17.1
+Rajat
 
+
+> On Tue, Oct 27, 2020 at 08:31:09PM +0100, Boris V. wrote:
+> > On 25/10/2020 20:45, Boris V. wrote:
+> > > With upgrade to kernel 5.9 my VMs stopped working, because some devices
+> > > can't be passed through.
+> > > This is caused by different IOMMU groups and devices being in the same
+> > > group.
+> > >
+> > > For ex. with kernel 5.8 this are IOMMU groups:
+> > > IOMMU Group 40:
+> > >         08:01.0 PCI bridge [0604]: ASMedia Technology Inc. Device
+> > > [1b21:118f]
+> > >         09:00.0 Ethernet controller [0200]: Intel Corporation I211
+> > > Gigabit Network Connection [8086:1539] (rev 03)
+> > > IOMMU Group 43:
+> > >         0c:00.0 SATA controller [0106]: ASMedia Technology Inc. ASM1062
+> > > Serial ATA Controller [1b21:0612] (rev 02)
+> > > IOMMU Group 44:
+> > >         0d:00.0 USB controller [0c03]: ASMedia Technology Inc. ASM1042A
+> > > USB 3.0 Host Controller [1b21:1142]
+> > >
+> > > Ethernet, SATA and USB controller in its own group.
+> > >
+> > > And with 5.9, everything is in one group:
+> > > IOMMU Group 29:
+> > >         00:1c.0 PCI bridge [0604]: Intel Corporation C610/X99 series
+> > > chipset PCI Express Root Port #1 [8086:8d10] (rev d5)
+> > >         00:1c.3 PCI bridge [0604]: Intel Corporation C610/X99 series
+> > > chipset PCI Express Root Port #4 [8086:8d16] (rev d5)
+> > >         00:1c.4 PCI bridge [0604]: Intel Corporation C610/X99 series
+> > > chipset PCI Express Root Port #5 [8086:8d18] (rev d5)
+> > >         00:1c.6 PCI bridge [0604]: Intel Corporation C610/X99 series
+> > > chipset PCI Express Root Port #7 [8086:8d1c] (rev d5)
+> > >         07:00.0 PCI bridge [0604]: ASMedia Technology Inc. Device
+> > > [1b21:118f]
+> > >         08:01.0 PCI bridge [0604]: ASMedia Technology Inc. Device
+> > > [1b21:118f]
+> > >         08:03.0 PCI bridge [0604]: ASMedia Technology Inc. Device
+> > > [1b21:118f]
+> > >         08:04.0 PCI bridge [0604]: ASMedia Technology Inc. Device
+> > > [1b21:118f]
+> > >         09:00.0 Ethernet controller [0200]: Intel Corporation I211
+> > > Gigabit Network Connection [8086:1539] (rev 03)
+> > >         0c:00.0 SATA controller [0106]: ASMedia Technology Inc. ASM1062
+> > > Serial ATA Controller [1b21:0612] (rev 02)
+> > >         0d:00.0 USB controller [0c03]: ASMedia Technology Inc. ASM1042A
+> > > USB 3.0 Host Controller [1b21:1142]
+> > >
+> > >
+> > > This seems to be caused by commit
+> > > 52fbf5bdeeef415b28b8e6cdade1e48927927f60.
+> > > commit 52fbf5bdeeef415b28b8e6cdade1e48927927f60
+> > > Author: Rajat Jain <rajatja@google.com>
+> > > Date:   Tue Jul 7 15:46:02 2020 -0700
+> > >
+> > >     PCI: Cache ACS capability offset in device
+> > >
+> > >     Currently the ACS capability is being looked up at a number of
+> > > places. Read
+> > >     and store it once at enumeration so that it can be used by all
+> > > later.  No
+> > >     functional change intended.
+> > >
+> > >     Link:
+> > > https://lore.kernel.org/r/20200707224604.3737893-2-rajatja@google.com
+> > >     Signed-off-by: Rajat Jain <rajatja@google.com>
+> > >     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> > >
+> > >  drivers/pci/p2pdma.c |  2 +-
+> > >  drivers/pci/pci.c    | 20 ++++++++++++++++----
+> > >  drivers/pci/pci.h    |  2 +-
+> > >  drivers/pci/probe.c  |  2 +-
+> > >  drivers/pci/quirks.c |  8 ++++----
+> > >  include/linux/pci.h  |  1 +
+> > >  6 files changed, 24 insertions(+), 11 deletions(-)
+> > >
+> > >
+> > > If I revert this commit, I get back old groups.
+> > >
+> > > In commit log there is message 'No functional change intended'. But
+> > > there is functional change.
+> > >
+> > > This is Intel Core i7-5930K CPU and X99 chipset. But I see the same
+> > > thing on other Intel systems (didn't test on AMD).
+> >
+> > Some more info.
+> > Problem seems to be that pci_dev_specific_enable_acs() is not called
+> > anymore.
+> > Before, pci_enable_acs() was called from pci_init_capabilities() and in
+> > pci_enable_acs(), pci_dev_specific_enable_acs() was called.
+> > I don't know anything about PCI and this stuff, but I'm guessing that this
+> > function enable ACS for some Intel devices.
+> > But after this commit, pci_acs_init() is called from pci_init_capabilities()
+> > and if pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS) returns 0,
+> > pci_enable_acs() and pci_dev_specific_enable_acs() is not called anymore.
+> > If I apply for ex. this patch bellow, groups are right again and everything
+> > works as before.
+>
+> Thanks very much for the report and the debugging.  Maybe we can get
+> this sorted and fixed for v5.10-rc2 or -rc3.
+>
+> > diff -ur linux-5.9.1.orig/drivers/pci/pci.c linux-5.9.1/drivers/pci/pci.c
+> > --- linux-5.9.1.orig/drivers/pci/pci.c  2020-10-17 08:31:22.000000000 +0200
+> > +++ linux-5.9.1/drivers/pci/pci.c       2020-10-27 19:01:32.650010803 +0100
+> > @@ -3502,9 +3502,7 @@
+> >  void pci_acs_init(struct pci_dev *dev)
+> >  {
+> >         dev->acs_cap = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
+> > -
+> > -       if (dev->acs_cap)
+> > -               pci_enable_acs(dev);
+> > +       pci_enable_acs(dev);
+> >  }
+> >
+> >  /**
+> >
+> >
