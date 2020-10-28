@@ -2,97 +2,154 @@ Return-Path: <SRS0=7A2k=EE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B9EFC388F7
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 01:00:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51C5FC55179
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 01:00:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C347E20791
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 01:00:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EB87220791
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 01:00:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603933230;
-	bh=S+T1g/75keSFr0V0daEFLuZRzriMpG3CH6cVm0SyMPM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=iGv3kSviSoiyNdbPQkPvGdRu1DEXlfoJWFUiiIL2/yVy+yqRFRN4QqK1sXYs/8aKP
-	 28H1+toRARUVE/x4tvDpQnu1D9YqDDoKqLterEEo/e7uNNSRjWfetbUqyWcYHvvhNH
-	 DZOZ9xVrLWhCTVnVWFZ+7txwl00zCLpBf32JaPkE=
+	s=default; t=1603933259;
+	bh=88+t9yPMavqyxiSvxf19GshamHH2dqzO8poEj1X9XPM=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=CN0AbE/AeP7sKos+yJGvkBlN/n3jCyt+aIHkiQQqq5ENWeKMaRTjdIH/NxJ6LOHCJ
+	 0Qy6Fr0ZHDtHp/HXzn6feibydnaMfoNl3dOS9uwr4Xsr+Sa30ngjAmlsyDJRLnP88y
+	 JDn97CdTYP/+s909nL5jzu3GsCbHfgz/kzge9jPM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731548AbgJ2BAK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Oct 2020 21:00:10 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60520 "EHLO mail.kernel.org"
+        id S1730249AbgJ2BAq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Oct 2020 21:00:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60522 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731552AbgJ1WR2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1731538AbgJ1WR2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Wed, 28 Oct 2020 18:17:28 -0400
-Received: from localhost (83-86-74-64.cable.dynamic.v4.ziggo.nl [83.86.74.64])
+Received: from localhost (230.sub-72-107-127.myvzw.com [72.107.127.230])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 2CEBF223AB;
-        Wed, 28 Oct 2020 05:58:39 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 269762479E;
+        Wed, 28 Oct 2020 14:42:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603864720;
-        bh=S+T1g/75keSFr0V0daEFLuZRzriMpG3CH6cVm0SyMPM=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=d+4DS8AfQdxNoQ74BGZqaEhQm/i/vh4zTprBfBIZwGt+kA5PhuG39OXoWomGLeFwH
-         XVOpyskothizvsyIdbtG/vZ1g7+FbNr47QqFzJ1iTNW8j7aDhzTD9Ob18K7z/CeQ9Y
-         lzKGU2R5K9580h9R5dwjhT0SEL1yGqqJFqGTBJ5k=
-Date:   Wed, 28 Oct 2020 06:58:36 +0100
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Sherry Sun <sherry.sun@nxp.com>
-Cc:     hch@infradead.org, vincent.whitchurch@axis.com,
-        sudeep.dutt@intel.com, ashutosh.dixit@intel.com, arnd@arndb.de,
-        kishon@ti.com, lorenzo.pieralisi@arm.com,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-imx@nxp.com, fugang.duan@nxp.com
-Subject: Re: [PATCH V5 0/2] Change vring space from nomal memory to dma
- coherent memory
-Message-ID: <20201028055836.GA244690@kroah.com>
-References: <20201028020305.10593-1-sherry.sun@nxp.com>
+        s=default; t=1603896131;
+        bh=88+t9yPMavqyxiSvxf19GshamHH2dqzO8poEj1X9XPM=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=aT30wqPKA4OSxY1Bj8lj189K3MYdwdNNUFFgTd2C9gsNTETdHl3x9ojJ3iT7Qaorf
+         5FZhIKobgcpGFSX39s8JZFW6Uj7/29CkIC5/NN70iNn0+KjesjRYvj+9v8/+8QxLCA
+         LuePCNK8FZxu60CcGsVA6wzhM6heDGnNLgTwHeUI=
+Date:   Wed, 28 Oct 2020 09:42:09 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Toke =?iso-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@redhat.com>
+Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        Rob Herring <robh@kernel.org>,
+        Ilias Apalodimas <ilias.apalodimas@linaro.org>,
+        vtolkm@googlemail.com
+Subject: Re: PCI trouble on mvebu (Turris Omnia)
+Message-ID: <20201028144209.GA315566@bjorn-Precision-5520>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20201028020305.10593-1-sherry.sun@nxp.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <87y2jqmq0i.fsf@toke.dk>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Oct 28, 2020 at 10:03:03AM +0800, Sherry Sun wrote:
-> Changes in V5:
-> 1. Reorganize the vop_mmap function code in patch 1, which is done by Christoph. 
-> 2. Completely remove the unnecessary code related to reassign the used ring for
-> card in patch 2.
+On Wed, Oct 28, 2020 at 02:36:13PM +0100, Toke Høiland-Jørgensen wrote:
+> Toke Høiland-Jørgensen <toke@redhat.com> writes:
 > 
-> The original vop driver only supports dma coherent device, as it allocates and
-> maps vring by _get_free_pages and dma_map_single, but not use 
-> dma_sync_single_for_cpu/device to sync the updates of device_page/vring between
-> EP and RC, which will cause memory synchronization problem for device don't
-> support hardware dma coherent.
+> > Bjorn Helgaas <helgaas@kernel.org> writes:
+> >
+> >> [+cc vtolkm]
+> >>
+> >> On Tue, Oct 27, 2020 at 04:43:20PM +0100, Toke Høiland-Jørgensen wrote:
+> >>> Hi everyone
+> >>> 
+> >>> I'm trying to get a mainline kernel to run on my Turris Omnia, and am
+> >>> having some trouble getting the PCI bus to work correctly. Specifically,
+> >>> I'm running a 5.10-rc1 kernel (torvalds/master as of this moment), with
+> >>> the resource request fix[0] applied on top.
+> >>> 
+> >>> The kernel boots fine, and the patch in [0] makes the PCI devices show
+> >>> up. But I'm still getting initialisation errors like these:
+> >>> 
+> >>> [    1.632709] pci 0000:01:00.0: BAR 0: error updating (0xe0000004 != 0xffffffff)
+> >>> [    1.632714] pci 0000:01:00.0: BAR 0: error updating (high 0x000000 != 0xffffffff)
+> >>> [    1.632745] pci 0000:02:00.0: BAR 0: error updating (0xe0200004 != 0xffffffff)
+> >>> [    1.632750] pci 0000:02:00.0: BAR 0: error updating (high 0x000000 != 0xffffffff)
+> >>> 
+> >>> and the WiFi drivers fail to initialise with what appears to me to be
+> >>> errors related to the bus rather than to the drivers themselves:
+> >>> 
+> >>> [    3.509878] ath: phy0: Mac Chip Rev 0xfffc0.f is not supported by this driver
+> >>> [    3.517049] ath: phy0: Unable to initialize hardware; initialization status: -95
+> >>> [    3.524473] ath9k 0000:01:00.0: Failed to initialize device
+> >>> [    3.530081] ath9k: probe of 0000:01:00.0 failed with error -95
+> >>> [    3.536012] ath10k_pci 0000:02:00.0: of_irq_parse_pci: failed with rc=134
+> >>> [    3.543049] pci 0000:00:02.0: enabling device (0140 -> 0142)
+> >>> [    3.548735] ath10k_pci 0000:02:00.0: can't change power state from D3hot to D0 (config space inaccessible)
+> >>> [    3.588592] ath10k_pci 0000:02:00.0: failed to wake up device : -110
+> >>> [    3.595098] ath10k_pci: probe of 0000:02:00.0 failed with error -110
+> >>> 
+> >>> lspci looks OK, though:
+> >>> 
+> >>> # lspci
+> >>> 00:01.0 PCI bridge: Marvell Technology Group Ltd. Device 6820 (rev 04)
+> >>> 00:02.0 PCI bridge: Marvell Technology Group Ltd. Device 6820 (rev 04)
+> >>> 00:03.0 PCI bridge: Marvell Technology Group Ltd. Device 6820 (rev 04)
+> >>> 01:00.0 Network controller: Qualcomm Atheros AR9287 Wireless Network Adapter (PCI-Express) (rev 01)
+> >>> 02:00.0 Network controller: Qualcomm Atheros QCA986x/988x 802.11ac Wireless Network Adapter (rev ff)
+> >>> 
+> >>> Does anyone have any clue what could be going on here? Is this a bug, or
+> >>> did I miss something in my config or other initialisation? I've tried
+> >>> with both the stock u-boot distributed with the board, and with an
+> >>> upstream u-boot from latest master; doesn't seem to make any different.
+> >>
+> >> Can you try turning off CONFIG_PCIEASPM?  We had a similar recent
+> >> report at https://bugzilla.kernel.org/show_bug.cgi?id=209833 but I
+> >> don't think we have a fix yet.
+> >
+> > Yes! Turning that off does indeed help! Thanks a bunch :)
+> >
+> > You mention that bisecting this would be helpful - I can try that
+> > tomorrow; any idea when this was last working?
 > 
-> And allocate vrings use dma_alloc_coherent is a common way in kernel, as the
-> memory interacted between two systems should use consistent memory to avoid
-> caching effects. So here add noncoherent platform support for vop driver.
-> Also add some related dma changes to make sure noncoherent platform works
-> well.
-> 
-> Sherry Sun (2):
->   misc: vop: change the way of allocating vrings and device page
->   misc: vop: do not allocate and reassign the used ring
-> 
->  drivers/misc/mic/bus/vop_bus.h     |   2 +
->  drivers/misc/mic/host/mic_boot.c   |   9 ++
->  drivers/misc/mic/host/mic_main.c   |  43 ++------
->  drivers/misc/mic/vop/vop_debugfs.c |   4 -
->  drivers/misc/mic/vop/vop_main.c    |  70 +-----------
->  drivers/misc/mic/vop/vop_vringh.c  | 166 ++++++++++-------------------
->  include/uapi/linux/mic_common.h    |   9 +-
->  7 files changed, 85 insertions(+), 218 deletions(-)
+> OK, so I tried to bisect this, but, erm, I couldn't find a working
+> revision to start from? I went all the way back to 4.10 (which is the
+> first version to include the device tree file for the Omnia), and even
+> on that, the wireless cards were failing to initialise with ASPM
+> enabled...
 
-Have you all seen:
-	https://lore.kernel.org/r/8c1443136563de34699d2c084df478181c205db4.1603854416.git.sudeep.dutt@intel.com
+I have no personal experience with this device; all I know is that the
+bugzilla suggests that it worked in v5.4, which isn't much help.
 
-Looks like this code is asking to just be deleted, is that ok with you?
+Possibly the apparent regression was really a .config change, i.e.,
+CONFIG_PCIEASPM was disabled in the v5.4 kernel vtolkm@ tested and it
+"worked" but got enabled later and it started failing?
 
-thanks,
+Maybe the debug patch below would be worth trying to see if it makes
+any difference?  If it *does* help, try omitting the first hunk to see
+if we just need to apply the quirk_enable_clear_retrain_link() quirk.
 
-greg k-h
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index ac0557a305af..afe7fa1d54d6 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -103,7 +103,7 @@ static const char *policy_str[] = {
+ 	[POLICY_POWER_SUPERSAVE] = "powersupersave"
+ };
+ 
+-#define LINK_RETRAIN_TIMEOUT HZ
++#define LINK_RETRAIN_TIMEOUT (10*HZ)
+ 
+ static int policy_to_aspm_state(struct pcie_link_state *link)
+ {
+@@ -201,7 +201,7 @@ static bool pcie_retrain_link(struct pcie_link_state *link)
+ 	pcie_capability_read_word(parent, PCI_EXP_LNKCTL, &reg16);
+ 	reg16 |= PCI_EXP_LNKCTL_RL;
+ 	pcie_capability_write_word(parent, PCI_EXP_LNKCTL, reg16);
+-	if (parent->clear_retrain_link) {
++	if (1 || parent->clear_retrain_link) {
+ 		/*
+ 		 * Due to an erratum in some devices the Retrain Link bit
+ 		 * needs to be cleared again manually to allow the link
