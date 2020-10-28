@@ -2,131 +2,105 @@ Return-Path: <SRS0=cGNF=ED=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,DATE_IN_PAST_12_24,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59887C56201
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Oct 2020 22:14:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD72EC56201
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Oct 2020 22:35:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F3E8324754
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Oct 2020 22:14:36 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WAu8G8or"
+	by mail.kernel.org (Postfix) with ESMTP id 67EE12070E
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Oct 2020 22:35:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1603924559;
+	bh=jKTvjz8FDicz3ih9fb9XYGvLk4N6xiTPMc8Zg6IrBCI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=Ox2MJJeoRLDL9crOh0XbG1S6IU/Fc5y2ELNxIrPJamssyyf/vO3YvU5HqSBvRmowC
+	 5aVHADQw0LI/hCccgog90ZR2h+lxSA1dVaHpDBqo+DFYbnxwmB/oQD8z49dMTqfNqM
+	 4IEBPUp3qUANawk9lY2Fr9o5E6wMwI2/OrBpFuws=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731226AbgJ1WOg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Oct 2020 18:14:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52988 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731221AbgJ1WOf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Oct 2020 18:14:35 -0400
-Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00D74C0613CF;
-        Wed, 28 Oct 2020 15:14:35 -0700 (PDT)
-Received: by mail-wr1-x443.google.com with SMTP id w14so681907wrs.9;
-        Wed, 28 Oct 2020 15:14:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=Fi8q6ESdpC7mVsibaiRpL1bxWlgrgEmpFL9r1sjf6UY=;
-        b=WAu8G8orwmCYoTCx32SD0nlUGeCSwaRuBotGjPZZ8b7IgWSntsmVgNHi9oPvplimUD
-         LwUDzzYni8SR7FIt0xVcsW8jbuOKTEejyAAEJN3ttp6ss5MRnzeCsD0m/JHnKACp3agD
-         pi7IMfoga8YaKJfjCTmqmO3/TBQY9pWwcd6wN1euID3y2S6dxDpK+2olJYu8AcrWB2bt
-         F/HLLBRRg3WSVTJBZ3bO4vbyTmYzxpXFzKWaOoI1bJJcPLVtLGHDVRKx/BcAQgteTsUw
-         lPHyQzfM1VD+qXedgfjF/kdZaRaA5dMeIoa1lmKfmvGMU9s0wVfMBKyhmtlmZkyCwsys
-         bVwA==
+        id S2388276AbgJ1Wf5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Oct 2020 18:35:57 -0400
+Received: from mail-oi1-f194.google.com ([209.85.167.194]:39403 "EHLO
+        mail-oi1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387867AbgJ1WeU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Oct 2020 18:34:20 -0400
+Received: by mail-oi1-f194.google.com with SMTP id u127so1247633oib.6;
+        Wed, 28 Oct 2020 15:34:19 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=Fi8q6ESdpC7mVsibaiRpL1bxWlgrgEmpFL9r1sjf6UY=;
-        b=ZGWqTcG/OVq84i/IyvgHppKpwJnOHMaJx2QbNwOWFpUiiTACKtdfoO4T9pkOvIE1CC
-         RLpXeI2s3mkq7JAa7PA/+mxebW+1/34nKEPQCh94voWNfyal35IMGLoAPLpqq6W5f/n6
-         erNvMDT3rBivgUd/74OLdP/ZrKmCyK0x2tFpfBL4Qnm/q72zOMUsWvt1y10n2ZHG8Hz0
-         3sijBI+fw7ugtWKX1Vx46hayCUdC0rdm0GLDUUN/zCp5Y2WDe0cLkbEHHkbWXuKeqxSC
-         vR6ign22CPOHitCthl4xuvG5wLJMTRmMDWLCmvHRz6aDWWNZjbHkhKW9SgBxQBzBl1Dy
-         tZjg==
-X-Gm-Message-State: AOAM530J3MZy0DaVtPzTrxbgbs+CKP6M6KbTBwSq21l781qLtUvvoID5
-        xOgntlcEkFrZrKUeTFZm4oQ05ZuU5B2rNUQ+PYxKvoWSjC0=
-X-Google-Smtp-Source: ABdhPJxgNeQYyUP3wsaYIP1EcdBr4YCdS5q1Lr29sZZpUjWqHjAgz2QBJgcfwbn4NAYJn6kFqYgiihfTSMeV1jB+8OQ=
-X-Received: by 2002:a50:fc85:: with SMTP id f5mr5636774edq.187.1603853287026;
- Tue, 27 Oct 2020 19:48:07 -0700 (PDT)
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=KK4JHKpclhDqWo+zj70zoLFW0u9q4vhE3OiG/X4mqyw=;
+        b=FA1hUj/a6P7xQ1g0T60Dw+BDaIw5Ogrrl1ywmQCoSTYHVapFqPIT4mOfysx+/KqXII
+         5aIImtaub6CHceES64QgRT11XedmY4Wynr3Eh9uIyfo32085ceI4FMUkWPopReClzHpV
+         fUm37XEcfKQkmTIt+Dx1CRoSyZB8dgz1Dvwlwp6yTKFECPeMVuzc0IoRtEYXjtcp3FPA
+         54wngS5pCcqGDOBbV4CFS4PbzkmKVW6QLxZSYjYb+GLbkvW7K/a8SX3CQufg19gDXmf/
+         dfu3Vs/EnhB775F2ZIoflzO3R1Mpu2N0XF3kP5KyLu5DD97YQikzzQOomes6tZh3C6MP
+         oVqA==
+X-Gm-Message-State: AOAM530dbrksL1FJS6MLb3csYzwHZ8vqZAW/ov/vrobRMdeViI5C59K/
+        HAlWyICs9BKxPB07l+OwHgfwtJr5jA==
+X-Google-Smtp-Source: ABdhPJz3w1G6jnu8D3fmDgi9f1FaYU2/JqUmSa9HRXvIFMUox0/a7KLQiyto+W4ckcjbTmjHzRDwAA==
+X-Received: by 2002:aca:ec92:: with SMTP id k140mr5466546oih.173.1603893443946;
+        Wed, 28 Oct 2020 06:57:23 -0700 (PDT)
+Received: from xps15 (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
+        by smtp.gmail.com with ESMTPSA id d11sm2174179oti.69.2020.10.28.06.57.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 28 Oct 2020 06:57:23 -0700 (PDT)
+Received: (nullmailer pid 3932870 invoked by uid 1000);
+        Wed, 28 Oct 2020 13:57:22 -0000
+Date:   Wed, 28 Oct 2020 08:57:22 -0500
+From:   Rob Herring <robh@kernel.org>
+To:     Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
+Cc:     robh+dt@kernel.org, bhelgaas@google.com,
+        devicetree@vger.kernel.org, andriy.shevchenko@linux.intel.com,
+        mgross@linux.intel.com, lakshmi.bai.raja.subramanian@intel.com,
+        lorenzo.pieralisi@arm.com, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/2] dt-bindings: PCI: Add Intel Keem Bay PCIe controller
+Message-ID: <20201028135722.GB3932108@bogus>
+References: <20201027060011.25893-1-wan.ahmad.zainie.wan.mohamad@intel.com>
+ <20201027060011.25893-2-wan.ahmad.zainie.wan.mohamad@intel.com>
 MIME-Version: 1.0
-References: <20201027080330.8877-1-vidyas@nvidia.com> <20201027080330.8877-2-vidyas@nvidia.com>
-In-Reply-To: <20201027080330.8877-2-vidyas@nvidia.com>
-From:   Ethan Zhao <xerces.zhao@gmail.com>
-Date:   Wed, 28 Oct 2020 10:47:55 +0800
-Message-ID: <CAKF3qh2Rh7pc59j2THpNi=rsj1OYG7Ac5yg+yTcqoP8J9X6DxQ@mail.gmail.com>
-Subject: Re: [PATCH V2 1/2] PCI/AER: Add pcie_is_ecrc_enabled() API
-To:     Vidya Sagar <vidyas@nvidia.com>
-Cc:     jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
-        lorenzo.pieralisi@arm.com, Bjorn Helgaas <bhelgaas@google.com>,
-        amurray@thegoodpenguin.co.uk, robh@kernel.org, treding@nvidia.com,
-        jonathanh@nvidia.com, linux-pci <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        kthota@nvidia.com, mmaddireddy@nvidia.com, sagar.tv@gmail.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201027060011.25893-2-wan.ahmad.zainie.wan.mohamad@intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Oct 28, 2020 at 9:48 AM Vidya Sagar <vidyas@nvidia.com> wrote:
->
-> Adds pcie_is_ecrc_enabled() API to let other sub-systems (like DesignWare)
-> to query if ECRC policy is enabled and perform any configuration
-> required in those respective sub-systems.
->
-> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+On Tue, 27 Oct 2020 14:00:10 +0800, Wan Ahmad Zainie wrote:
+> Document DT bindings for PCIe controller found on Intel Keem Bay SoC.
+> 
+> Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
 > ---
-> V2:
-> * None from V1
->
->  drivers/pci/pci.h      |  2 ++
->  drivers/pci/pcie/aer.c | 11 +++++++++++
->  2 files changed, 13 insertions(+)
->
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index fa12f7cbc1a0..325fdbf91dde 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -575,9 +575,11 @@ static inline void pcie_aspm_powersave_config_link(struct pci_dev *pdev) { }
->  #ifdef CONFIG_PCIE_ECRC
->  void pcie_set_ecrc_checking(struct pci_dev *dev);
->  void pcie_ecrc_get_policy(char *str);
-> +bool pcie_is_ecrc_enabled(void);
->  #else
->  static inline void pcie_set_ecrc_checking(struct pci_dev *dev) { }
->  static inline void pcie_ecrc_get_policy(char *str) { }
-> +static inline bool pcie_is_ecrc_enabled(void) { return false; }
->  #endif
->
->  #ifdef CONFIG_PCIE_PTM
-> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> index 65dff5f3457a..24363c895aba 100644
-> --- a/drivers/pci/pcie/aer.c
-> +++ b/drivers/pci/pcie/aer.c
-> @@ -207,6 +207,17 @@ void pcie_ecrc_get_policy(char *str)
->
->         ecrc_policy = i;
->  }
-> +
-> +/**
-> + * pcie_is_ecrc_enabled - returns if ECRC is enabled in the system or not
-> + *
-> + * Returns 1 if ECRC policy is enabled and 0 otherwise
- How about 'Returns true if ECRC policy is enabled and false otherwise'  ?
-> + */
-> +bool pcie_is_ecrc_enabled(void)
-> +{
-> +       return ecrc_policy == ECRC_POLICY_ON;
-> +}
-> +EXPORT_SYMBOL(pcie_is_ecrc_enabled);
->  #endif /* CONFIG_PCIE_ECRC */
->
->  #define        PCI_EXP_AER_FLAGS       (PCI_EXP_DEVCTL_CERE | PCI_EXP_DEVCTL_NFERE | \
-> --
-> 2.17.1
->
+>  .../bindings/pci/intel,keembay-pcie-ep.yaml   |  86 +++++++++++++
+>  .../bindings/pci/intel,keembay-pcie.yaml      | 120 ++++++++++++++++++
+>  2 files changed, 206 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/intel,keembay-pcie-ep.yaml
+>  create mode 100644 Documentation/devicetree/bindings/pci/intel,keembay-pcie.yaml
+> 
+
+
+My bot found errors running 'make dt_binding_check' on your patch:
+
+yamllint warnings/errors:
+./Documentation/devicetree/bindings/pci/intel,keembay-pcie-ep.yaml:14:7: [warning] wrong indentation: expected 4 but found 6 (indentation)
+./Documentation/devicetree/bindings/pci/intel,keembay-pcie.yaml:17:7: [warning] wrong indentation: expected 4 but found 6 (indentation)
+
+dtschema/dtc warnings/errors:
+
+
+See https://patchwork.ozlabs.org/patch/1388284
+
+The base for the patch is generally the last rc1. Any dependencies
+should be noted.
+
+If you already ran 'make dt_binding_check' and didn't see the above
+error(s), then make sure 'yamllint' is installed and dt-schema is up to
+date:
+
+pip3 install dtschema --upgrade
+
+Please check and re-submit.
+
