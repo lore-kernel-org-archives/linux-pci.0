@@ -2,255 +2,163 @@ Return-Path: <SRS0=7A2k=EE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2951C5517A
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 02:04:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71AB7C5517A
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 02:04:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 80135216C4
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 02:04:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603937044;
-	bh=jH8W/oePKPi43bL6yAG5GFbWSEhAunP0eFCIQBIhYhs=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=pdDS/w4sFmgqxfU55vX+m8B228zUWqrBSy7a/pAm1uxY/BCdeXzUepnO/CvJ4Jcr7
-	 KzdCh9N37TzlwM1RYP9YPeLJDHcKkJKftyL/oiuqVp92SZTBtl4Mjx0UXhUrdobiEV
-	 rAzpt/7a/aLyrDyNwp1SzdEhEtrGtZ8ExQVVYTSg=
+	by mail.kernel.org (Postfix) with ESMTP id 165FB21775
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 02:04:44 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="g+Hu04zp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725830AbgJ1VnA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Oct 2020 17:43:00 -0400
-Received: from mail-oi1-f196.google.com ([209.85.167.196]:34756 "EHLO
-        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725300AbgJ1Vml (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Oct 2020 17:42:41 -0400
-Received: by mail-oi1-f196.google.com with SMTP id z23so1149207oic.1;
-        Wed, 28 Oct 2020 14:42:40 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=h0T8M9HFPja/Qcz5+OFxDy+3Ox865wq64TJqX0lZtiY=;
-        b=br26vZuT3zyqgPHw3wuWzevdniunBK+Fyf/fTksS+GCXareUxSdItYAJA231VK6wLd
-         UsyZ3KGU7Dv//xnFmRtPEzDtHJPh0h1qf2s15PoM/dG1354LCbmr4Q7OlkH+WDKtGlvK
-         8wdKGZ03PgY4W0lUbjxispdRgUoiWMXSSolSx5zhxQaQoyNMsUCQC/Nzca7G0TXRcyt7
-         fZ7Xl1sKm+YXL3QVN5uKGKYwpXolyBDrWpdXAP1ab5ub5AIxWgWfgOeq1hnT4/uBuA4y
-         vcML6h0UdBGw1KprHsWh5JxuWV7SMwn2wJ5pjV/WnM/TvHN7ckBkM/HVHkFZA4BpFN9D
-         Nz3g==
-X-Gm-Message-State: AOAM531EaeGPdmeRH1N/udanHU+LFl8s1uDDmD7CVeo5rK/S/jYxK7VF
-        JUVO9rJW6kw4NfLGSupUEvwVty59Hw==
-X-Google-Smtp-Source: ABdhPJzzLIwVb0GnrgftuCJ9zcN8udQxeppgVsd6r2Be66BDmlGrxb8/wZxghvtZTyC09OZtmCreNQ==
-X-Received: by 2002:aca:47cc:: with SMTP id u195mr630676oia.83.1603918024915;
-        Wed, 28 Oct 2020 13:47:04 -0700 (PDT)
-Received: from xps15.herring.priv (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.googlemail.com with ESMTPSA id t17sm116123oor.3.2020.10.28.13.47.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Oct 2020 13:47:04 -0700 (PDT)
-From:   Rob Herring <robh@kernel.org>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     linux-pci@vger.kernel.org, Andy Gross <agross@kernel.org>,
-        Binghui Wang <wangbinghui@hisilicon.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Fabio Estevam <festevam@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Jerome Brunet <jbrunet@baylibre.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Jonathan Chocron <jonnyc@amazon.com>,
-        Jonathan Hunter <jonathanh@nvidia.com>,
-        Kevin Hilman <khilman@baylibre.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        Kukjin Kim <kgene@kernel.org>,
-        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
-        linux-amlogic@lists.infradead.org, linux-arm-kernel@axis.com,
-        linux-arm-msm@vger.kernel.org, linux-omap@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-samsung-soc@vger.kernel.org,
-        linux-tegra@vger.kernel.org, Lucas Stach <l.stach@pengutronix.de>,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        Masahiro Yamada <yamada.masahiro@socionext.com>,
-        Minghuan Lian <minghuan.Lian@nxp.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Neil Armstrong <narmstrong@baylibre.com>,
-        NXP Linux Team <linux-imx@nxp.com>,
-        Pengutronix Kernel Team <kernel@pengutronix.de>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Roy Zang <roy.zang@nxp.com>,
-        Sascha Hauer <s.hauer@pengutronix.de>,
-        Shawn Guo <shawnguo@kernel.org>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        Yue Wang <yue.wang@Amlogic.com>
-Subject: [PATCH 06/13] PCI: dwc/dra7xx: Use the common MSI irq_chip
-Date:   Wed, 28 Oct 2020 15:46:39 -0500
-Message-Id: <20201028204646.356535-7-robh@kernel.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20201028204646.356535-1-robh@kernel.org>
-References: <20201028204646.356535-1-robh@kernel.org>
+        id S1729582AbgJ2CEn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Oct 2020 22:04:43 -0400
+Received: from mail-eopbgr70047.outbound.protection.outlook.com ([40.107.7.47]:53806
+        "EHLO EUR04-HE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727122AbgJ1VjU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Oct 2020 17:39:20 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=MAdrpXFDrigqo834Y5AOs2DS5Tg+kYn+jYI2FanJAgKoNovzt9Akdx8O0EWQ0uXWbI7FEie6NsQYmlqEN91LN4kdF7UcGKx9XpQ0GPO+0wNlyIspaA4lp5KhGmcgWjtXoI/CetM/BHI61MBtX3MyIpdxEuPUzw+Kj1t+Q1IWug3wZJwuY/gErTzkkpEqv225itI3f3i7urX7VomUYrwJInDSefUPc7bSEQU7wqrqZxU/oHTpM1osy8+SxLeeFhAmq390wWOtXQ+gRuAssZjd8CoEquKiZC1Ilg2KtYAhyCnh14tW1hGdeFb6vhzAja9b80siVHlMrRGexlanUgQEBw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=AM28SGWvT0R7/4p29UhuNgrX3RybQcI24etQ5jSDfV4=;
+ b=Mxbxqh8XVQoV29AFtCKtGZiwJEnKdxeiCBM4SJjEIWkd0saBQaZq5dUZRhtK9rKF58/6egZFDm9wKdaMgAIIAOHpicr3vNLrej0g6ISu/aIrPMDwWHYOIIfQitN3ahZlUlmTad1qxXuXgumrAV3IibaorjYPV9armHOYj0UmG7ViptK4jJpY+ig3LG1zvWZCefmyaGVXoutIil7NSDMD395lIVWcZR33mQKT36Zztabx/hXF+nbbrSJqD6feDhQoNnUrZTJA2KnP55j0GITptFnPhO4a7C2rKEeGyiMHjAoMkoKcLu8y2UEUjFCSBVWowm1xvGGJljwSapyScT3V2g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=AM28SGWvT0R7/4p29UhuNgrX3RybQcI24etQ5jSDfV4=;
+ b=g+Hu04zpjhOuNLBCQVk9E5EAslswMJI6gyws20mAfDtldJb9j9da+XCKGgEzO/BcTCuoyhH9Gg09aogXv82XKNP3VGj9gTc8Q69cSbwclkb2N38P7Lcgax0uuPBCJvIFmRzyf4HgM5120xqQl2wXujDqRs7KDZ9hWkh8eLclHAA=
+Received: from AM0PR04MB4947.eurprd04.prod.outlook.com (2603:10a6:208:c8::16)
+ by AM0PR04MB5907.eurprd04.prod.outlook.com (2603:10a6:208:12f::32) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3477.25; Wed, 28 Oct
+ 2020 06:05:28 +0000
+Received: from AM0PR04MB4947.eurprd04.prod.outlook.com
+ ([fe80::2a:11b5:6807:7518]) by AM0PR04MB4947.eurprd04.prod.outlook.com
+ ([fe80::2a:11b5:6807:7518%5]) with mapi id 15.20.3477.028; Wed, 28 Oct 2020
+ 06:05:28 +0000
+From:   Sherry Sun <sherry.sun@nxp.com>
+To:     Greg KH <gregkh@linuxfoundation.org>
+CC:     "hch@infradead.org" <hch@infradead.org>,
+        "vincent.whitchurch@axis.com" <vincent.whitchurch@axis.com>,
+        "sudeep.dutt@intel.com" <sudeep.dutt@intel.com>,
+        "ashutosh.dixit@intel.com" <ashutosh.dixit@intel.com>,
+        "arnd@arndb.de" <arnd@arndb.de>, "kishon@ti.com" <kishon@ti.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        dl-linux-imx <linux-imx@nxp.com>, Andy Duan <fugang.duan@nxp.com>
+Subject: RE: [PATCH V5 0/2] Change vring space from nomal memory to dma
+ coherent memory
+Thread-Topic: [PATCH V5 0/2] Change vring space from nomal memory to dma
+ coherent memory
+Thread-Index: AQHWrM6hrUxx3H5v+0a5i9aKIfcorqmshSIAgAABZvA=
+Date:   Wed, 28 Oct 2020 06:05:28 +0000
+Message-ID: <AM0PR04MB4947032368486CC9874C812692170@AM0PR04MB4947.eurprd04.prod.outlook.com>
+References: <20201028020305.10593-1-sherry.sun@nxp.com>
+ <20201028055836.GA244690@kroah.com>
+In-Reply-To: <20201028055836.GA244690@kroah.com>
+Accept-Language: zh-CN, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: linuxfoundation.org; dkim=none (message not signed)
+ header.d=none;linuxfoundation.org; dmarc=none action=none
+ header.from=nxp.com;
+x-originating-ip: [119.31.174.71]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 4f74875b-f687-4b86-5c13-08d87b07780d
+x-ms-traffictypediagnostic: AM0PR04MB5907:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <AM0PR04MB5907C1A30587F1926E91373A92170@AM0PR04MB5907.eurprd04.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:7219;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: deW9XBB+yUJimmJMe4HYIB943FoLrgpCsp1WR7Q3MQYVv3Qh29Hbc10lA49WX3Dfld6Ff9JWDH9zM9HO8ZhCeZ54I7qwBuC3SNUl+Ax1CCafVzRoS4IJkZ8gbvEskuCavqvnwLZovZxgxxRskDS9z4Y9Q9hzY0onv0QHhE0aXd6EsdUqZxEaD0+9wa+hk3X3KwXznrIaH/6ryOXt1d/25zyZjIott+4pslvhAgdGUS9R85GqzuBsFXuBEVqQFN4I4aMraNArRmcam0eLzBHa61hga1vLFxjmP6ZZAGOmVw6344m4FKYN7d1VoghfBqb6UPISXlrqpoT5SvpovR6H2Qud8lG0jWU7Yx9gO4p5vUfkyckzByn/cgdvMrQT+q6agNatjEmVsZCoGw5ysGiFUQ==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM0PR04MB4947.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(396003)(366004)(376002)(136003)(346002)(39860400002)(8676002)(6506007)(7416002)(186003)(83380400001)(6916009)(76116006)(66476007)(5660300002)(64756008)(66556008)(66446008)(52536014)(71200400001)(4326008)(86362001)(316002)(7696005)(2906002)(66946007)(33656002)(966005)(8936002)(54906003)(55016002)(9686003)(26005)(478600001)(44832011)(45080400002);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata: ZrLf33yo3vRTVWnpUt3KZZ7m4DN3LKglOuXVzhfkcyh49N3ti2WkYLuGQ6AIRgyPPw3LrKZYMfqAU+CGYuWNmfvnEnJ3F51JNEheaUKQ9WZLmWu0mpuGmkNMX6yetk2pQw4BH+nredhgvhfDZvXnORVsN5L3klGXbSMlDvyNOOtXpUsel/AxWKEN2sYepEnLyRGnQQyEPhPJKTtK5+I23/T2R/WAxwy9Aom2hDYrBbn9ShcGOvvapv9DKCc6UYmp3k6gvfSDFInF5nLhZzoTSyRcZ4Sjh8C1Z/8Yzb2PMmWlcTiyjgQzS3MwTi215M/QzchoBTCAe8Ys1/yVFgbxr99XbhTUH7ql8K/RAWA3sOyQNIVY3ATtJKETDlNIdfG9/8Dje1WSMUndORkmczXuubD+mBOVEseTQgndLRPJTJRDZ9oXv8NxvLUO6ps1Pp7PLid07cUD8hvacbCtD5WFcQQAN4qGirv+35CtCOXbE2NahmwvoOC6k7f1w1Zty2yW5SoHZoNOiO27C/fZoinTKsIQhXoh4l+LyMu1W23nDMGuAj/vR+Wc+GIZgs9bs1AyBzaY0IeQo6S87Mg1JWsNE4qA2hKYh7SoacTR2VdDxxlhib3+cVPfPK091iiXwQonP3cR0UjBNPwWCROhJizK1w==
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: AM0PR04MB4947.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4f74875b-f687-4b86-5c13-08d87b07780d
+X-MS-Exchange-CrossTenant-originalarrivaltime: 28 Oct 2020 06:05:28.1204
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 1Jgt98CL0m3DvIcMk+TwSz3ckvWu3Wk2jE0zE+00/OAZdcGBr6t9rHlk5JNX3AVcbhJweYqUHqY5VXbWWuIeQw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0PR04MB5907
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The dra7xx MSI irq_chip implementation is identical to the default DWC one.
-The only difference is the interrupt handler as the MSI interrupt is muxed
-with other interrupts, but that doesn't affect the irq_chip part of it.
+Hi Greg,
 
-Cc: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-omap@vger.kernel.org
-Signed-off-by: Rob Herring <robh@kernel.org>
----
- drivers/pci/controller/dwc/pci-dra7xx.c | 125 ------------------------
- 1 file changed, 125 deletions(-)
+> Subject: Re: [PATCH V5 0/2] Change vring space from nomal memory to dma
+> coherent memory
+>=20
+> On Wed, Oct 28, 2020 at 10:03:03AM +0800, Sherry Sun wrote:
+> > Changes in V5:
+> > 1. Reorganize the vop_mmap function code in patch 1, which is done by
+> Christoph.
+> > 2. Completely remove the unnecessary code related to reassign the used
+> > ring for card in patch 2.
+> >
+> > The original vop driver only supports dma coherent device, as it
+> > allocates and maps vring by _get_free_pages and dma_map_single, but
+> > not use dma_sync_single_for_cpu/device to sync the updates of
+> > device_page/vring between EP and RC, which will cause memory
+> > synchronization problem for device don't support hardware dma coherent.
+> >
+> > And allocate vrings use dma_alloc_coherent is a common way in kernel,
+> > as the memory interacted between two systems should use consistent
+> > memory to avoid caching effects. So here add noncoherent platform
+> support for vop driver.
+> > Also add some related dma changes to make sure noncoherent platform
+> > works well.
+> >
+> > Sherry Sun (2):
+> >   misc: vop: change the way of allocating vrings and device page
+> >   misc: vop: do not allocate and reassign the used ring
+> >
+> >  drivers/misc/mic/bus/vop_bus.h     |   2 +
+> >  drivers/misc/mic/host/mic_boot.c   |   9 ++
+> >  drivers/misc/mic/host/mic_main.c   |  43 ++------
+> >  drivers/misc/mic/vop/vop_debugfs.c |   4 -
+> >  drivers/misc/mic/vop/vop_main.c    |  70 +-----------
+> >  drivers/misc/mic/vop/vop_vringh.c  | 166 ++++++++++-------------------
+> >  include/uapi/linux/mic_common.h    |   9 +-
+> >  7 files changed, 85 insertions(+), 218 deletions(-)
+>=20
+> Have you all seen:
+> 	https://eur01.safelinks.protection.outlook.com/?url=3Dhttps%3A%2F%
+> 2Flore.kernel.org%2Fr%2F8c1443136563de34699d2c084df478181c205db4.16
+> 03854416.git.sudeep.dutt%40intel.com&amp;data=3D04%7C01%7Csherry.sun%
+> 40nxp.com%7Cc19c987667434969847e08d87b0685e8%7C686ea1d3bc2b4c6f
+> a92cd99c5c301635%7C0%7C0%7C637394615238940323%7CUnknown%7CTW
+> FpbGZsb3d8eyJWIjoiMC4wLjAwMDAiLCJQIjoiV2luMzIiLCJBTiI6Ik1haWwiLCJX
+> VCI6Mn0%3D%7C1000&amp;sdata=3DZq%2FtHWTq%2BuIVBYXFGoeBmq0JJzYd
+> 9zDyv4NVN4TpC%2FU%3D&amp;reserved=3D0
+>=20
+> Looks like this code is asking to just be deleted, is that ok with you?
 
-diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
-index a4aabc85dbb1..4d0c35a4aa59 100644
---- a/drivers/pci/controller/dwc/pci-dra7xx.c
-+++ b/drivers/pci/controller/dwc/pci-dra7xx.c
-@@ -377,133 +377,8 @@ static int dra7xx_pcie_init_irq_domain(struct pcie_port *pp)
- 	return 0;
- }
- 
--static void dra7xx_pcie_setup_msi_msg(struct irq_data *d, struct msi_msg *msg)
--{
--	struct pcie_port *pp = irq_data_get_irq_chip_data(d);
--	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
--	u64 msi_target;
--
--	msi_target = (u64)pp->msi_data;
--
--	msg->address_lo = lower_32_bits(msi_target);
--	msg->address_hi = upper_32_bits(msi_target);
--
--	msg->data = d->hwirq;
--
--	dev_dbg(pci->dev, "msi#%d address_hi %#x address_lo %#x\n",
--		(int)d->hwirq, msg->address_hi, msg->address_lo);
--}
--
--static int dra7xx_pcie_msi_set_affinity(struct irq_data *d,
--					const struct cpumask *mask,
--					bool force)
--{
--	return -EINVAL;
--}
--
--static void dra7xx_pcie_bottom_mask(struct irq_data *d)
--{
--	struct pcie_port *pp = irq_data_get_irq_chip_data(d);
--	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
--	unsigned int res, bit, ctrl;
--	unsigned long flags;
--
--	raw_spin_lock_irqsave(&pp->lock, flags);
--
--	ctrl = d->hwirq / MAX_MSI_IRQS_PER_CTRL;
--	res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
--	bit = d->hwirq % MAX_MSI_IRQS_PER_CTRL;
--
--	pp->irq_mask[ctrl] |= BIT(bit);
--	dw_pcie_writel_dbi(pci, PCIE_MSI_INTR0_MASK + res,
--			   pp->irq_mask[ctrl]);
--
--	raw_spin_unlock_irqrestore(&pp->lock, flags);
--}
--
--static void dra7xx_pcie_bottom_unmask(struct irq_data *d)
--{
--	struct pcie_port *pp = irq_data_get_irq_chip_data(d);
--	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
--	unsigned int res, bit, ctrl;
--	unsigned long flags;
--
--	raw_spin_lock_irqsave(&pp->lock, flags);
--
--	ctrl = d->hwirq / MAX_MSI_IRQS_PER_CTRL;
--	res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
--	bit = d->hwirq % MAX_MSI_IRQS_PER_CTRL;
--
--	pp->irq_mask[ctrl] &= ~BIT(bit);
--	dw_pcie_writel_dbi(pci, PCIE_MSI_INTR0_MASK + res,
--			   pp->irq_mask[ctrl]);
--
--	raw_spin_unlock_irqrestore(&pp->lock, flags);
--}
--
--static void dra7xx_pcie_bottom_ack(struct irq_data *d)
--{
--	struct pcie_port *pp  = irq_data_get_irq_chip_data(d);
--	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
--	unsigned int res, bit, ctrl;
--
--	ctrl = d->hwirq / MAX_MSI_IRQS_PER_CTRL;
--	res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
--	bit = d->hwirq % MAX_MSI_IRQS_PER_CTRL;
--
--	dw_pcie_writel_dbi(pci, PCIE_MSI_INTR0_STATUS + res, BIT(bit));
--}
--
--static struct irq_chip dra7xx_pci_msi_bottom_irq_chip = {
--	.name = "DRA7XX-PCI-MSI",
--	.irq_ack = dra7xx_pcie_bottom_ack,
--	.irq_compose_msi_msg = dra7xx_pcie_setup_msi_msg,
--	.irq_set_affinity = dra7xx_pcie_msi_set_affinity,
--	.irq_mask = dra7xx_pcie_bottom_mask,
--	.irq_unmask = dra7xx_pcie_bottom_unmask,
--};
--
--static int dra7xx_pcie_msi_host_init(struct pcie_port *pp)
--{
--	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
--	struct device *dev = pci->dev;
--	u32 ctrl, num_ctrls;
--	int ret;
--
--	pp->msi_irq_chip = &dra7xx_pci_msi_bottom_irq_chip;
--
--	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
--	/* Initialize IRQ Status array */
--	for (ctrl = 0; ctrl < num_ctrls; ctrl++) {
--		pp->irq_mask[ctrl] = ~0;
--		dw_pcie_writel_dbi(pci, PCIE_MSI_INTR0_MASK +
--				    (ctrl * MSI_REG_CTRL_BLOCK_SIZE),
--				    pp->irq_mask[ctrl]);
--		dw_pcie_writel_dbi(pci, PCIE_MSI_INTR0_ENABLE +
--				    (ctrl * MSI_REG_CTRL_BLOCK_SIZE),
--				    ~0);
--	}
--
--	ret = dw_pcie_allocate_domains(pp);
--	if (ret)
--		return ret;
--
--	pp->msi_data = dma_map_single_attrs(dev, &pp->msi_msg,
--					   sizeof(pp->msi_msg),
--					   DMA_FROM_DEVICE,
--					   DMA_ATTR_SKIP_CPU_SYNC);
--	ret = dma_mapping_error(dev, pp->msi_data);
--	if (ret) {
--		dev_err(dev, "Failed to map MSI data\n");
--		pp->msi_data = 0;
--		dw_pcie_free_msi(pp);
--	}
--	return ret;
--}
--
- static const struct dw_pcie_host_ops dra7xx_pcie_host_ops = {
- 	.host_init = dra7xx_pcie_host_init,
--	.msi_host_init = dra7xx_pcie_msi_host_init,
- };
- 
- static void dra7xx_pcie_ep_init(struct dw_pcie_ep *ep)
--- 
-2.25.1
+Yes, I saw that patch. I'm ok with it.
 
+Best regards
+Sherry
+
+>=20
+> thanks,
+>=20
+> greg k-h
