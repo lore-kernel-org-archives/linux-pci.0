@@ -2,838 +2,793 @@ Return-Path: <SRS0=cGNF=ED=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3587C55179
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Oct 2020 21:50:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DA19C56202
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Oct 2020 21:53:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7F0A72245A
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Oct 2020 21:50:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0BDD4246CD
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Oct 2020 21:53:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603921836;
-	bh=vXrQy08eRVFThy5+OF1POuiDdok2XURlBtAOotXyZ9E=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=K53kgaM/j7lpqa2f+MN0n6FWCI4PZ3F6sFA232AL0DvaOkhFcpi25MecySKLy1Yzc
-	 VQwz2p7K01ljU/cNsfS8dFYxF+k2aHCMgo6KtLe9VeaCspWQk4KHmWdLYWkIyFZvzo
-	 xANx3uCG/mpFZ+MMQ/d+nQyUnkVj7CRFEDzPOn8g=
+	s=default; t=1603922020;
+	bh=sHxdTzKed1AiSY9ELa6mJH9cdy174ZXazGPIxuT2kSE=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=R1mkfmQBU8No1kq7YcX9PHZtp1xq8nIze+U7JQxhZKVzeAVyJv7NrZwPkUeunrD+P
+	 qXeObDE0QIt78l2p/xFyFTQ1mhFfkMam7E7S46bhPlncCMO9Qn4NBCWz3olgIhQw9+
+	 2lvDL7wcmV3ELSEYmFbXsvAdI4UezH04e64cmYxc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725774AbgJ1Vue (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Oct 2020 17:50:34 -0400
-Received: from mail-ua1-f68.google.com ([209.85.222.68]:37349 "EHLO
-        mail-ua1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728034AbgJ1Vud (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Oct 2020 17:50:33 -0400
-Received: by mail-ua1-f68.google.com with SMTP id 52so151185uaj.4;
-        Wed, 28 Oct 2020 14:50:30 -0700 (PDT)
+        id S1728441AbgJ1Vx1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Oct 2020 17:53:27 -0400
+Received: from mail-ua1-f67.google.com ([209.85.222.67]:41763 "EHLO
+        mail-ua1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727798AbgJ1VxY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Oct 2020 17:53:24 -0400
+Received: by mail-ua1-f67.google.com with SMTP id b34so146786uab.8;
+        Wed, 28 Oct 2020 14:53:23 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=6kfhAXeRM0Jikai5GstV9PAgYeEnbdouicPG26MBxYA=;
-        b=dhP22TI7gtO1VMSkPGZE4FvNisIfBJTBA1PYF0bg+8qi26tUv3vyDx3NYG6PbfBp3Q
-         xW+Qv/Gnd0ixh1y7Wry3zTpADQcKaOjJN9EF1nGN9I/Tk4k26zdyMzGywyQ4V4ezq+LI
-         lBQzNfZyx/HBNgk5PtR2rS5reiAt8EHoVlgPULY5l9F9hSDIc7uKJxcb5nCV/FGoxQjo
-         mcisjmNQJUVErAVqLXNzEkobM9mzB+N4+vC6ul0Qz+QGiKUB/SxQRg45H6LZUuSSQHQU
-         D0EDgTkvEhiZ2QY8YXC/Q6UMlYtfI/GtizcnDhA0CApwdNnXmFDth8kW2WgnfkLartbr
-         7Eww==
-X-Gm-Message-State: AOAM531fE6T24h1iu5hgQsbnKDVpLaReG52D9nYzvsrLQizBk26t5llr
-        VNns4zfUELgCV0kIC5YV1XgvsPOS1Q==
-X-Google-Smtp-Source: ABdhPJyIf9Hgo69hK3lZf7EB4340kTQkxPSOl4nf4wmzy2Ow1cyv7dxU1y9V+fThn11/yvI04HRduQ==
-X-Received: by 2002:a9d:2268:: with SMTP id o95mr5187295ota.10.1603894969195;
-        Wed, 28 Oct 2020 07:22:49 -0700 (PDT)
-Received: from xps15 (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.gmail.com with ESMTPSA id w128sm2518386oie.47.2020.10.28.07.22.47
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=6UBH+mW2psqa9WVWV3bEwiNXWfoOpsOf3r+vdHAcirU=;
+        b=anrisWRKEvrExh2bxlTu6SCFDVvDFApr2kogIAcjVSRRkKNq2vuce5k7Ymry6hlz+k
+         3IYwo2XYa85a5AJEUU64lCL4MU8EgHTWijZUP2uiznth6M3eTgW4M+jnPS7iNSQtQqPb
+         ndidByErHr8Q3V3QvfdZgggynHKiEbKikpFD5cktk+zvqEod2dsHoSRgiD55M2spjKHD
+         V0kzD5RlX6d+M9gWfMX29lKfmZVoi7wxNzzNYVN4LLS22ZuqV/5Pxq0OpXhtYvHLpUtz
+         MzwsQIU9inAjjVCEWrafbQKGI229yJ+qn8dJ/KRkHpO3N/vhp+7mgpgTRAzMC4ckR3cd
+         NC+g==
+X-Gm-Message-State: AOAM533kyPxW/1owvAVxf0j4i5czX6TJU2mxU+mvOFotn/VjblWGgijP
+        H3a7208IznSPvIY09u9CJFcyR3oybQ==
+X-Google-Smtp-Source: ABdhPJyeX3EkU8l1LUEBKBOX3QzZzanNJw0JaUVftNsRDWHlQpYdLh6zperSTre537nAKFty/86HYQ==
+X-Received: by 2002:a9d:12ab:: with SMTP id g40mr831065otg.369.1603918017374;
+        Wed, 28 Oct 2020 13:46:57 -0700 (PDT)
+Received: from xps15.herring.priv (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
+        by smtp.googlemail.com with ESMTPSA id t17sm116123oor.3.2020.10.28.13.46.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Oct 2020 07:22:48 -0700 (PDT)
-Received: (nullmailer pid 3966047 invoked by uid 1000);
-        Wed, 28 Oct 2020 14:22:47 -0000
-Date:   Wed, 28 Oct 2020 09:22:47 -0500
+        Wed, 28 Oct 2020 13:46:56 -0700 (PDT)
 From:   Rob Herring <robh@kernel.org>
-To:     Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
-Cc:     bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        andriy.shevchenko@linux.intel.com, mgross@linux.intel.com,
-        lakshmi.bai.raja.subramanian@intel.com
-Subject: Re: [PATCH 2/2] PCI: keembay: Add support for Intel Keem Bay
-Message-ID: <20201028142247.GC3932108@bogus>
-References: <20201027060011.25893-1-wan.ahmad.zainie.wan.mohamad@intel.com>
- <20201027060011.25893-3-wan.ahmad.zainie.wan.mohamad@intel.com>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     linux-pci@vger.kernel.org, Andy Gross <agross@kernel.org>,
+        Binghui Wang <wangbinghui@hisilicon.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Fabio Estevam <festevam@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Jerome Brunet <jbrunet@baylibre.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Jonathan Chocron <jonnyc@amazon.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        Kevin Hilman <khilman@baylibre.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Kukjin Kim <kgene@kernel.org>,
+        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
+        linux-amlogic@lists.infradead.org, linux-arm-kernel@axis.com,
+        linux-arm-msm@vger.kernel.org, linux-omap@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-samsung-soc@vger.kernel.org,
+        linux-tegra@vger.kernel.org, Lucas Stach <l.stach@pengutronix.de>,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Masahiro Yamada <yamada.masahiro@socionext.com>,
+        Minghuan Lian <minghuan.Lian@nxp.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Neil Armstrong <narmstrong@baylibre.com>,
+        NXP Linux Team <linux-imx@nxp.com>,
+        Pengutronix Kernel Team <kernel@pengutronix.de>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Roy Zang <roy.zang@nxp.com>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Shawn Guo <shawnguo@kernel.org>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        Yue Wang <yue.wang@Amlogic.com>
+Subject: [PATCH 03/13] PCI: dwc: Move "dbi", "dbi2", and "addr_space" resource setup into common code
+Date:   Wed, 28 Oct 2020 15:46:36 -0500
+Message-Id: <20201028204646.356535-4-robh@kernel.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20201028204646.356535-1-robh@kernel.org>
+References: <20201028204646.356535-1-robh@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201027060011.25893-3-wan.ahmad.zainie.wan.mohamad@intel.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Oct 27, 2020 at 02:00:11PM +0800, Wan Ahmad Zainie wrote:
-> Add driver for Intel Keem Bay SoC PCIe controller. This controller
-> is based on DesignWare PCIe core.
-> 
-> In root complex mode, only internal reference clock is possible for
-> Keem Bay A0. For Keem Bay B0, external reference clock can be used
-> and will be the default configuration. Currently, keembay_pcie_of_data
-> structure has one member. It will be expanded later to handle this
-> difference.
-> 
-> Endpoint mode link initialization is handled by the boot firmware.
-> 
-> Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
-> Acked-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> ---
->  drivers/pci/controller/dwc/Kconfig        |  24 +
->  drivers/pci/controller/dwc/Makefile       |   1 +
->  drivers/pci/controller/dwc/pcie-keembay.c | 658 ++++++++++++++++++++++
->  3 files changed, 683 insertions(+)
->  create mode 100644 drivers/pci/controller/dwc/pcie-keembay.c
-> 
-> diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-> index bc049865f8e0..694a1fcacb73 100644
-> --- a/drivers/pci/controller/dwc/Kconfig
-> +++ b/drivers/pci/controller/dwc/Kconfig
-> @@ -219,6 +219,30 @@ config PCIE_INTEL_GW
->  	  The PCIe controller uses the DesignWare core plus Intel-specific
->  	  hardware wrappers.
->  
-> +config PCIE_KEEMBAY
-> +	bool
-> +
-> +config PCIE_KEEMBAY_HOST
-> +	bool "Intel Keem Bay PCIe controller - Host mode"
-> +	depends on ARCH_KEEMBAY || (ARM64 && COMPILE_TEST)
+Most DWC drivers use the common register resource names "dbi", "dbi2", and
+"addr_space", so let's move their setup into the DWC common code.
 
-Why only ARM64 for compile test?
+This means 'dbi_base' in particular is setup later, but it looks like no
+drivers touch DBI registers before dw_pcie_host_init or dw_pcie_ep_init.
 
-> +	depends on PCI && PCI_MSI_IRQ_DOMAIN
-> +	select PCIE_DW_HOST
-> +	select PCIE_KEEMBAY
-> +	help
-> +	  Say Y here to enable support for the PCIe controller in Keem Bay
-> +	  to work in host mode. This uses the DesignWare core.
-> +
-> +config PCIE_KEEMBAY_EP
-> +	bool "Intel Keem Bay PCIe controller - Endpoint mode"
-> +	depends on ARCH_KEEMBAY || (ARM64 && COMPILE_TEST)
-> +	depends on PCI && PCI_MSI_IRQ_DOMAIN
-> +	depends on PCI_ENDPOINT
-> +	select PCIE_DW_EP
-> +	select PCIE_KEEMBAY
-> +	help
-> +	  Say Y here to enable support for the PCIe controller in Keem Bay
-> +	  to work in endpoint mode. This uses the DesignWare core.
-> +
->  config PCIE_KIRIN
->  	depends on OF && (ARM64 || COMPILE_TEST)
->  	bool "HiSilicon Kirin series SoCs PCIe controllers"
-> diff --git a/drivers/pci/controller/dwc/Makefile b/drivers/pci/controller/dwc/Makefile
-> index a751553fa0db..95da2c62c426 100644
-> --- a/drivers/pci/controller/dwc/Makefile
-> +++ b/drivers/pci/controller/dwc/Makefile
-> @@ -14,6 +14,7 @@ obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
->  obj-$(CONFIG_PCIE_ARMADA_8K) += pcie-armada8k.o
->  obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
->  obj-$(CONFIG_PCIE_INTEL_GW) += pcie-intel-gw.o
-> +obj-$(CONFIG_PCIE_KEEMBAY) += pcie-keembay.o
->  obj-$(CONFIG_PCIE_KIRIN) += pcie-kirin.o
->  obj-$(CONFIG_PCIE_HISI_STB) += pcie-histb.o
->  obj-$(CONFIG_PCI_MESON) += pci-meson.o
-> diff --git a/drivers/pci/controller/dwc/pcie-keembay.c b/drivers/pci/controller/dwc/pcie-keembay.c
-> new file mode 100644
-> index 000000000000..30401ef223ca
-> --- /dev/null
-> +++ b/drivers/pci/controller/dwc/pcie-keembay.c
-> @@ -0,0 +1,658 @@
-> +// SPDX-License-Identifier: GPL-2.0-only
-> +/*
-> + * PCIe controller driver for Intel Keem Bay
-> + * Copyright (C) 2020 Intel Corporation
-> + */
-> +
-> +#include <linux/bitfield.h>
-> +#include <linux/bits.h>
-> +#include <linux/clk.h>
-> +#include <linux/delay.h>
-> +#include <linux/err.h>
-> +#include <linux/gpio/consumer.h>
-> +#include <linux/init.h>
-> +#include <linux/iopoll.h>
-> +#include <linux/kernel.h>
-> +#include <linux/mod_devicetable.h>
-> +#include <linux/pci.h>
-> +#include <linux/platform_device.h>
-> +#include <linux/property.h>
-> +
-> +#include "pcie-designware.h"
-> +
-> +/* PCIE_REGS_APB_SLV Registers */
-> +#define PCIE_REGS_PCIE_CFG		0x0004
-> +#define  PCIE_DEVICE_TYPE		BIT(8)
-> +#define  PCIE_RSTN			BIT(0)
-> +#define PCIE_REGS_PCIE_APP_CNTRL	0x0008
-> +#define  APP_LTSSM_ENABLE		BIT(0)
-> +
-> +#define PCIE_REGS_PCIE_INTR_ENABLE	0x0018
-> +#define  LBC_CII_EVENT_EN		BIT(18)
-> +#define PCIE_REGS_PCIE_INTR_FLAGS	0x001c
-> +#define PCIE_REGS_PCIE_ERR_INTR_ENABLE	0x0020
-> +#define  LINK_REQ_RST_EN		BIT(15)
-> +#define PCIE_REGS_PCIE_ERR_INTR_FLAGS	0x0024
-> +#define PCIE_REGS_INTERRUPT_ENABLE	0x0028
-> +#define  MSI_CTRL_INT_EN		BIT(8)
-> +#define  EDMA_INT_EN			GENMASK(7, 0)
-> +#define PCIE_REGS_INTERRUPT_STATUS	0x002c
-> +#define  MSI_CTRL_INT			BIT(8)
-> +
-> +#define PCIE_REGS_PCIE_SII_PM_STATE	0x00b0
-> +#define  SMLH_LINK_UP			BIT(19)
-> +#define  RDLH_LINK_UP			BIT(8)
-> +#define PCIE_REGS_PCIE_PHY_CNTL		0x0164
-> +#define  PHY0_SRAM_BYPASS		BIT(8)
-> +#define PCIE_REGS_PCIE_PHY_STAT		0x0168
-> +#define  PHY0_MPLLA_STATE		BIT(1)
-> +#define PCIE_REGS_LJPLL_STA		0x016c
-> +#define  LJPLL_LOCK			BIT(0)
-> +#define PCIE_REGS_LJPLL_CNTRL_0		0x0170
-> +#define  LJPLL_EN			BIT(29)
-> +#define  LJPLL_FOUT_EN			GENMASK(24, 21)
-> +#define PCIE_REGS_LJPLL_CNTRL_2		0x0178
-> +#define  LJPLL_REF_DIV			GENMASK(17, 12)
-> +#define  LJPLL_FB_DIV			GENMASK(11, 0)
-> +#define PCIE_REGS_LJPLL_CNTRL_3		0x017c
-> +#define  LJPLL_POST_DIV3A		GENMASK(24, 22)
-> +#define  LJPLL_POST_DIV2A		GENMASK(18, 16)
-> +
-> +#define PCIE_REGS_MEM_ACCESS_IRQ_ENABLE	0x0184
-> +#define  MEM_ACCESS_IRQ_ENABLE		GENMASK(31, 0)
-> +
-> +#define PCIE_DBI2_MASK		BIT(20)
-> +#define PERST_DELAY_US		1000
-> +#define AUX_CLK_RATE_HZ		24000000
-> +
-> +struct keembay_pcie {
-> +	struct dw_pcie		*pci;
+Cc: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Murali Karicheri <m-karicheri2@ti.com>
+Cc: Minghuan Lian <minghuan.Lian@nxp.com>
+Cc: Mingkai Hu <mingkai.hu@nxp.com>
+Cc: Roy Zang <roy.zang@nxp.com>
+Cc: Jonathan Chocron <jonnyc@amazon.com>
+Cc: Jesper Nilsson <jesper.nilsson@axis.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>
+Cc: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Cc: Xiaowei Song <songxiaowei@hisilicon.com>
+Cc: Binghui Wang <wangbinghui@hisilicon.com>
+Cc: Andy Gross <agross@kernel.org>
+Cc: Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc: Stanimir Varbanov <svarbanov@mm-sol.com>
+Cc: Pratyush Anand <pratyush.anand@gmail.com>
+Cc: Thierry Reding <thierry.reding@gmail.com>
+Cc: Jonathan Hunter <jonathanh@nvidia.com>
+Cc: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+Cc: Masahiro Yamada <yamada.masahiro@socionext.com>
+Cc: linux-omap@vger.kernel.org
+Cc: linuxppc-dev@lists.ozlabs.org
+Cc: linux-arm-kernel@axis.com
+Cc: linux-arm-msm@vger.kernel.org
+Cc: linux-tegra@vger.kernel.org
+Signed-off-by: Rob Herring <robh@kernel.org>
+---
+ drivers/pci/controller/dwc/pci-dra7xx.c       |  8 ----
+ drivers/pci/controller/dwc/pci-keystone.c     | 29 +-----------
+ .../pci/controller/dwc/pci-layerscape-ep.c    | 37 +--------------
+ drivers/pci/controller/dwc/pcie-al.c          |  9 +---
+ drivers/pci/controller/dwc/pcie-artpec6.c     | 43 ++----------------
+ .../pci/controller/dwc/pcie-designware-ep.c   | 29 ++++++++++--
+ .../pci/controller/dwc/pcie-designware-host.c |  7 +++
+ .../pci/controller/dwc/pcie-designware-plat.c | 45 +------------------
+ drivers/pci/controller/dwc/pcie-intel-gw.c    |  4 --
+ drivers/pci/controller/dwc/pcie-kirin.c       |  5 ---
+ drivers/pci/controller/dwc/pcie-qcom.c        |  8 ----
+ drivers/pci/controller/dwc/pcie-spear13xx.c   | 11 +----
+ drivers/pci/controller/dwc/pcie-tegra194.c    | 22 ---------
+ drivers/pci/controller/dwc/pcie-uniphier-ep.c | 38 +---------------
+ drivers/pci/controller/dwc/pcie-uniphier.c    |  6 ---
+ 15 files changed, 47 insertions(+), 254 deletions(-)
 
-Make this a struct, not a pointer. Then one less alloc.
+diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
+index 6d012d2b1e90..a4aabc85dbb1 100644
+--- a/drivers/pci/controller/dwc/pci-dra7xx.c
++++ b/drivers/pci/controller/dwc/pci-dra7xx.c
+@@ -578,7 +578,6 @@ static int __init dra7xx_add_pcie_ep(struct dra7xx_pcie *dra7xx,
+ {
+ 	int ret;
+ 	struct dw_pcie_ep *ep;
+-	struct resource *res;
+ 	struct device *dev = &pdev->dev;
+ 	struct dw_pcie *pci = dra7xx->pci;
+ 
+@@ -594,13 +593,6 @@ static int __init dra7xx_add_pcie_ep(struct dra7xx_pcie *dra7xx,
+ 	if (IS_ERR(pci->dbi_base2))
+ 		return PTR_ERR(pci->dbi_base2);
+ 
+-	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
+-	if (!res)
+-		return -EINVAL;
+-
+-	ep->phys_base = res->start;
+-	ep->addr_size = resource_size(res);
+-
+ 	ret = dw_pcie_ep_init(ep);
+ 	if (ret) {
+ 		dev_err(dev, "failed to initialize endpoint\n");
+diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
+index a222728238ca..9cf14f13798b 100644
+--- a/drivers/pci/controller/dwc/pci-keystone.c
++++ b/drivers/pci/controller/dwc/pci-keystone.c
+@@ -977,33 +977,6 @@ static const struct dw_pcie_ep_ops ks_pcie_am654_ep_ops = {
+ 	.get_features = &ks_pcie_am654_get_features,
+ };
+ 
+-static int __init ks_pcie_add_pcie_ep(struct keystone_pcie *ks_pcie,
+-				      struct platform_device *pdev)
+-{
+-	int ret;
+-	struct dw_pcie_ep *ep;
+-	struct resource *res;
+-	struct device *dev = &pdev->dev;
+-	struct dw_pcie *pci = ks_pcie->pci;
+-
+-	ep = &pci->ep;
+-
+-	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
+-	if (!res)
+-		return -EINVAL;
+-
+-	ep->phys_base = res->start;
+-	ep->addr_size = resource_size(res);
+-
+-	ret = dw_pcie_ep_init(ep);
+-	if (ret) {
+-		dev_err(dev, "failed to initialize endpoint\n");
+-		return ret;
+-	}
+-
+-	return 0;
+-}
+-
+ static void ks_pcie_disable_phy(struct keystone_pcie *ks_pcie)
+ {
+ 	int num_lanes = ks_pcie->num_lanes;
+@@ -1313,7 +1286,7 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+ 		}
+ 
+ 		pci->ep.ops = ep_ops;
+-		ret = ks_pcie_add_pcie_ep(ks_pcie, pdev);
++		ret = dw_pcie_ep_init(&pci->ep);
+ 		if (ret < 0)
+ 			goto err_get_sync;
+ 		break;
+diff --git a/drivers/pci/controller/dwc/pci-layerscape-ep.c b/drivers/pci/controller/dwc/pci-layerscape-ep.c
+index 84206f265e54..4af031b3f0a0 100644
+--- a/drivers/pci/controller/dwc/pci-layerscape-ep.c
++++ b/drivers/pci/controller/dwc/pci-layerscape-ep.c
+@@ -18,8 +18,6 @@
+ 
+ #include "pcie-designware.h"
+ 
+-#define PCIE_DBI2_OFFSET		0x1000	/* DBI2 base address*/
+-
+ #define to_ls_pcie_ep(x)	dev_get_drvdata((x)->dev)
+ 
+ struct ls_pcie_ep_drvdata {
+@@ -124,34 +122,6 @@ static const struct of_device_id ls_pcie_ep_of_match[] = {
+ 	{ },
+ };
+ 
+-static int __init ls_add_pcie_ep(struct ls_pcie_ep *pcie,
+-				 struct platform_device *pdev)
+-{
+-	struct dw_pcie *pci = pcie->pci;
+-	struct device *dev = pci->dev;
+-	struct dw_pcie_ep *ep;
+-	struct resource *res;
+-	int ret;
+-
+-	ep = &pci->ep;
+-	ep->ops = pcie->drvdata->ops;
+-
+-	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
+-	if (!res)
+-		return -EINVAL;
+-
+-	ep->phys_base = res->start;
+-	ep->addr_size = resource_size(res);
+-
+-	ret = dw_pcie_ep_init(ep);
+-	if (ret) {
+-		dev_err(dev, "failed to initialize endpoint\n");
+-		return ret;
+-	}
+-
+-	return 0;
+-}
+-
+ static int __init ls_pcie_ep_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+@@ -159,7 +129,6 @@ static int __init ls_pcie_ep_probe(struct platform_device *pdev)
+ 	struct ls_pcie_ep *pcie;
+ 	struct pci_epc_features *ls_epc;
+ 	struct resource *dbi_base;
+-	int ret;
+ 
+ 	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
+ 	if (!pcie)
+@@ -188,13 +157,11 @@ static int __init ls_pcie_ep_probe(struct platform_device *pdev)
+ 	if (IS_ERR(pci->dbi_base))
+ 		return PTR_ERR(pci->dbi_base);
+ 
+-	pci->dbi_base2 = pci->dbi_base + PCIE_DBI2_OFFSET;
++	pci->ep.ops = &pcie_ep_ops;
+ 
+ 	platform_set_drvdata(pdev, pcie);
+ 
+-	ret = ls_add_pcie_ep(pcie, pdev);
+-
+-	return ret;
++	return dw_pcie_ep_init(&pci->ep);
+ }
+ 
+ static struct platform_driver ls_pcie_ep_driver = {
+diff --git a/drivers/pci/controller/dwc/pcie-al.c b/drivers/pci/controller/dwc/pcie-al.c
+index f973fbca90cf..d06866921187 100644
+--- a/drivers/pci/controller/dwc/pcie-al.c
++++ b/drivers/pci/controller/dwc/pcie-al.c
+@@ -347,7 +347,6 @@ static int al_pcie_probe(struct platform_device *pdev)
+ 	struct device *dev = &pdev->dev;
+ 	struct resource *controller_res;
+ 	struct resource *ecam_res;
+-	struct resource *dbi_res;
+ 	struct al_pcie *al_pcie;
+ 	struct dw_pcie *pci;
+ 
+@@ -365,11 +364,6 @@ static int al_pcie_probe(struct platform_device *pdev)
+ 	al_pcie->pci = pci;
+ 	al_pcie->dev = dev;
+ 
+-	dbi_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
+-	pci->dbi_base = devm_pci_remap_cfg_resource(dev, dbi_res);
+-	if (IS_ERR(pci->dbi_base))
+-		return PTR_ERR(pci->dbi_base);
+-
+ 	ecam_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
+ 	if (!ecam_res) {
+ 		dev_err(dev, "couldn't find 'config' reg in DT\n");
+@@ -386,8 +380,7 @@ static int al_pcie_probe(struct platform_device *pdev)
+ 		return PTR_ERR(al_pcie->controller_base);
+ 	}
+ 
+-	dev_dbg(dev, "From DT: dbi_base: %pR, controller_base: %pR\n",
+-		dbi_res, controller_res);
++	dev_dbg(dev, "From DT: controller_base: %pR\n", controller_res);
+ 
+ 	platform_set_drvdata(pdev, al_pcie);
+ 
+diff --git a/drivers/pci/controller/dwc/pcie-artpec6.c b/drivers/pci/controller/dwc/pcie-artpec6.c
+index 929448e9e0bc..52ad7909cd0c 100644
+--- a/drivers/pci/controller/dwc/pcie-artpec6.c
++++ b/drivers/pci/controller/dwc/pcie-artpec6.c
+@@ -403,38 +403,6 @@ static const struct dw_pcie_ep_ops pcie_ep_ops = {
+ 	.raise_irq = artpec6_pcie_raise_irq,
+ };
+ 
+-static int artpec6_add_pcie_ep(struct artpec6_pcie *artpec6_pcie,
+-			       struct platform_device *pdev)
+-{
+-	int ret;
+-	struct dw_pcie_ep *ep;
+-	struct resource *res;
+-	struct device *dev = &pdev->dev;
+-	struct dw_pcie *pci = artpec6_pcie->pci;
+-
+-	ep = &pci->ep;
+-	ep->ops = &pcie_ep_ops;
+-
+-	pci->dbi_base2 = devm_platform_ioremap_resource_byname(pdev, "dbi2");
+-	if (IS_ERR(pci->dbi_base2))
+-		return PTR_ERR(pci->dbi_base2);
+-
+-	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
+-	if (!res)
+-		return -EINVAL;
+-
+-	ep->phys_base = res->start;
+-	ep->addr_size = resource_size(res);
+-
+-	ret = dw_pcie_ep_init(ep);
+-	if (ret) {
+-		dev_err(dev, "failed to initialize endpoint\n");
+-		return ret;
+-	}
+-
+-	return 0;
+-}
+-
+ static int artpec6_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+@@ -469,10 +437,6 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
+ 	artpec6_pcie->variant = variant;
+ 	artpec6_pcie->mode = mode;
+ 
+-	pci->dbi_base = devm_platform_ioremap_resource_byname(pdev, "dbi");
+-	if (IS_ERR(pci->dbi_base))
+-		return PTR_ERR(pci->dbi_base);
+-
+ 	artpec6_pcie->phy_base =
+ 		devm_platform_ioremap_resource_byname(pdev, "phy");
+ 	if (IS_ERR(artpec6_pcie->phy_base))
+@@ -504,9 +468,10 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
+ 		val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
+ 		val &= ~PCIECFG_DEVICE_TYPE_MASK;
+ 		artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
+-		ret = artpec6_add_pcie_ep(artpec6_pcie, pdev);
+-		if (ret < 0)
+-			return ret;
++
++		pci->ep.ops = &pcie_ep_ops;
++
++		return dw_pcie_ep_init(&pci->ep);
+ 		break;
+ 	}
+ 	default:
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index ad7da4ea43a5..6fe176e1bdd2 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -7,6 +7,7 @@
+  */
+ 
+ #include <linux/of.h>
++#include <linux/platform_device.h>
+ 
+ #include "pcie-designware.h"
+ #include <linux/pci-epc.h>
+@@ -676,20 +677,42 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ 	int ret;
+ 	void *addr;
+ 	u8 func_no;
++	struct resource *res;
+ 	struct pci_epc *epc;
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 	struct device *dev = pci->dev;
++	struct platform_device *pdev = to_platform_device(dev);
+ 	struct device_node *np = dev->of_node;
+ 	const struct pci_epc_features *epc_features;
+ 	struct dw_pcie_ep_func *ep_func;
+ 
+ 	INIT_LIST_HEAD(&ep->func_list);
+ 
+-	if (!pci->dbi_base || !pci->dbi_base2) {
+-		dev_err(dev, "dbi_base/dbi_base2 is not populated\n");
+-		return -EINVAL;
++	if (!pci->dbi_base) {
++		res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
++		pci->dbi_base = devm_pci_remap_cfg_resource(dev, res);
++		if (IS_ERR(pci->dbi_base))
++			return PTR_ERR(pci->dbi_base);
++	}
++
++	if (!pci->dbi_base2) {
++		res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi2");
++		if (!res)
++			pci->dbi_base2 = pci->dbi_base + SZ_4K;
++		else {
++			pci->dbi_base2 = devm_pci_remap_cfg_resource(dev, res);
++			if (IS_ERR(pci->dbi_base2))
++				return PTR_ERR(pci->dbi_base2);
++		}
+ 	}
+ 
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
++	if (!res)
++		return -EINVAL;
++
++	ep->phys_base = res->start;
++	ep->addr_size = resource_size(res);
++
+ 	ret = of_property_read_u32(np, "num-ib-windows", &ep->num_ib_windows);
+ 	if (ret < 0) {
+ 		dev_err(dev, "Unable to read *num-ib-windows* property\n");
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index a6ffab9b537e..cde45b2076ee 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -310,6 +310,13 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 		dev_err(dev, "Missing *config* reg space\n");
+ 	}
+ 
++	if (!pci->dbi_base) {
++		struct resource *dbi_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
++		pci->dbi_base = devm_pci_remap_cfg_resource(dev, dbi_res);
++		if (IS_ERR(pci->dbi_base))
++			return PTR_ERR(pci->dbi_base);
++	}
++
+ 	bridge = devm_pci_alloc_host_bridge(dev, 0);
+ 	if (!bridge)
+ 		return -ENOMEM;
+diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
+index e3e300669ed5..562a05e07b1d 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-plat.c
++++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
+@@ -139,43 +139,11 @@ static int dw_plat_add_pcie_port(struct dw_plat_pcie *dw_plat_pcie,
+ 	return 0;
+ }
+ 
+-static int dw_plat_add_pcie_ep(struct dw_plat_pcie *dw_plat_pcie,
+-			       struct platform_device *pdev)
+-{
+-	int ret;
+-	struct dw_pcie_ep *ep;
+-	struct resource *res;
+-	struct device *dev = &pdev->dev;
+-	struct dw_pcie *pci = dw_plat_pcie->pci;
+-
+-	ep = &pci->ep;
+-	ep->ops = &pcie_ep_ops;
+-
+-	pci->dbi_base2 = devm_platform_ioremap_resource_byname(pdev, "dbi2");
+-	if (IS_ERR(pci->dbi_base2))
+-		return PTR_ERR(pci->dbi_base2);
+-
+-	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
+-	if (!res)
+-		return -EINVAL;
+-
+-	ep->phys_base = res->start;
+-	ep->addr_size = resource_size(res);
+-
+-	ret = dw_pcie_ep_init(ep);
+-	if (ret) {
+-		dev_err(dev, "Failed to initialize endpoint\n");
+-		return ret;
+-	}
+-	return 0;
+-}
+-
+ static int dw_plat_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct dw_plat_pcie *dw_plat_pcie;
+ 	struct dw_pcie *pci;
+-	struct resource *res;  /* Resource from DT */
+ 	int ret;
+ 	const struct of_device_id *match;
+ 	const struct dw_plat_pcie_of_data *data;
+@@ -202,14 +170,6 @@ static int dw_plat_pcie_probe(struct platform_device *pdev)
+ 	dw_plat_pcie->pci = pci;
+ 	dw_plat_pcie->mode = mode;
+ 
+-	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
+-	if (!res)
+-		res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+-
+-	pci->dbi_base = devm_ioremap_resource(dev, res);
+-	if (IS_ERR(pci->dbi_base))
+-		return PTR_ERR(pci->dbi_base);
+-
+ 	platform_set_drvdata(pdev, dw_plat_pcie);
+ 
+ 	switch (dw_plat_pcie->mode) {
+@@ -225,9 +185,8 @@ static int dw_plat_pcie_probe(struct platform_device *pdev)
+ 		if (!IS_ENABLED(CONFIG_PCIE_DW_PLAT_EP))
+ 			return -ENODEV;
+ 
+-		ret = dw_plat_add_pcie_ep(dw_plat_pcie, pdev);
+-		if (ret < 0)
+-			return ret;
++		pci->ep.ops = &pcie_ep_ops;
++		return dw_pcie_ep_init(&pci->ep);
+ 		break;
+ 	default:
+ 		dev_err(dev, "INVALID device type %d\n", dw_plat_pcie->mode);
+diff --git a/drivers/pci/controller/dwc/pcie-intel-gw.c b/drivers/pci/controller/dwc/pcie-intel-gw.c
+index 77ef88333115..88782653ed21 100644
+--- a/drivers/pci/controller/dwc/pcie-intel-gw.c
++++ b/drivers/pci/controller/dwc/pcie-intel-gw.c
+@@ -237,10 +237,6 @@ static int intel_pcie_get_resources(struct platform_device *pdev)
+ 	struct device *dev = pci->dev;
+ 	int ret;
+ 
+-	pci->dbi_base = devm_platform_ioremap_resource_byname(pdev, "dbi");
+-	if (IS_ERR(pci->dbi_base))
+-		return PTR_ERR(pci->dbi_base);
+-
+ 	lpp->core_clk = devm_clk_get(dev, NULL);
+ 	if (IS_ERR(lpp->core_clk)) {
+ 		ret = PTR_ERR(lpp->core_clk);
+diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
+index d0a6a2dee6f5..3042a23cf09a 100644
+--- a/drivers/pci/controller/dwc/pcie-kirin.c
++++ b/drivers/pci/controller/dwc/pcie-kirin.c
+@@ -157,11 +157,6 @@ static long kirin_pcie_get_resource(struct kirin_pcie *kirin_pcie,
+ 	if (IS_ERR(kirin_pcie->phy_base))
+ 		return PTR_ERR(kirin_pcie->phy_base);
+ 
+-	kirin_pcie->pci->dbi_base =
+-		devm_platform_ioremap_resource_byname(pdev, "dbi");
+-	if (IS_ERR(kirin_pcie->pci->dbi_base))
+-		return PTR_ERR(kirin_pcie->pci->dbi_base);
+-
+ 	kirin_pcie->crgctrl =
+ 		syscon_regmap_lookup_by_compatible("hisilicon,hi3660-crgctrl");
+ 	if (IS_ERR(kirin_pcie->crgctrl))
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index b4761640ffd9..3b4f70b9f3f0 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -1368,7 +1368,6 @@ static const struct dw_pcie_ops dw_pcie_ops = {
+ static int qcom_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+-	struct resource *res;
+ 	struct pcie_port *pp;
+ 	struct dw_pcie *pci;
+ 	struct qcom_pcie *pcie;
+@@ -1407,13 +1406,6 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ 		goto err_pm_runtime_put;
+ 	}
+ 
+-	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
+-	pci->dbi_base = devm_pci_remap_cfg_resource(dev, res);
+-	if (IS_ERR(pci->dbi_base)) {
+-		ret = PTR_ERR(pci->dbi_base);
+-		goto err_pm_runtime_put;
+-	}
+-
+ 	pcie->elbi = devm_platform_ioremap_resource_byname(pdev, "elbi");
+ 	if (IS_ERR(pcie->elbi)) {
+ 		ret = PTR_ERR(pcie->elbi);
+diff --git a/drivers/pci/controller/dwc/pcie-spear13xx.c b/drivers/pci/controller/dwc/pcie-spear13xx.c
+index e348225f651f..1ed7e3501ff1 100644
+--- a/drivers/pci/controller/dwc/pcie-spear13xx.c
++++ b/drivers/pci/controller/dwc/pcie-spear13xx.c
+@@ -152,6 +152,8 @@ static int spear13xx_pcie_host_init(struct pcie_port *pp)
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	struct spear13xx_pcie *spear13xx_pcie = to_spear13xx_pcie(pci);
+ 
++	spear13xx_pcie->app_base = pci->dbi_base + 0x2000;
++
+ 	spear13xx_pcie_establish_link(spear13xx_pcie);
+ 	spear13xx_pcie_enable_interrupts(spear13xx_pcie);
+ 
+@@ -203,7 +205,6 @@ static int spear13xx_pcie_probe(struct platform_device *pdev)
+ 	struct dw_pcie *pci;
+ 	struct spear13xx_pcie *spear13xx_pcie;
+ 	struct device_node *np = dev->of_node;
+-	struct resource *dbi_base;
+ 	int ret;
+ 
+ 	spear13xx_pcie = devm_kzalloc(dev, sizeof(*spear13xx_pcie), GFP_KERNEL);
+@@ -242,14 +243,6 @@ static int spear13xx_pcie_probe(struct platform_device *pdev)
+ 		return ret;
+ 	}
+ 
+-	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
+-	pci->dbi_base = devm_pci_remap_cfg_resource(dev, dbi_base);
+-	if (IS_ERR(pci->dbi_base)) {
+-		ret = PTR_ERR(pci->dbi_base);
+-		goto fail_clk;
+-	}
+-	spear13xx_pcie->app_base = pci->dbi_base + 0x2000;
+-
+ 	if (of_property_read_bool(np, "st,pcie-is-gen1"))
+ 		pci->link_gen = 1;
+ 
+diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+index f920e7efe118..f8fca6794282 100644
+--- a/drivers/pci/controller/dwc/pcie-tegra194.c
++++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+@@ -1907,19 +1907,12 @@ static int tegra_pcie_config_ep(struct tegra_pcie_dw *pcie,
+ 	struct dw_pcie *pci = &pcie->pci;
+ 	struct device *dev = pcie->dev;
+ 	struct dw_pcie_ep *ep;
+-	struct resource *res;
+ 	char *name;
+ 	int ret;
+ 
+ 	ep = &pci->ep;
+ 	ep->ops = &pcie_ep_ops;
+ 
+-	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
+-	if (!res)
+-		return -EINVAL;
+-
+-	ep->phys_base = res->start;
+-	ep->addr_size = resource_size(res);
+ 	ep->page_size = SZ_64K;
+ 
+ 	ret = gpiod_set_debounce(pcie->pex_rst_gpiod, PERST_DEBOUNCE_TIME);
+@@ -1982,7 +1975,6 @@ static int tegra_pcie_dw_probe(struct platform_device *pdev)
+ 	struct device *dev = &pdev->dev;
+ 	struct resource *atu_dma_res;
+ 	struct tegra_pcie_dw *pcie;
+-	struct resource *dbi_res;
+ 	struct pcie_port *pp;
+ 	struct dw_pcie *pci;
+ 	struct phy **phys;
+@@ -2091,20 +2083,6 @@ static int tegra_pcie_dw_probe(struct platform_device *pdev)
+ 
+ 	pcie->phys = phys;
+ 
+-	dbi_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
+-	if (!dbi_res) {
+-		dev_err(dev, "Failed to find \"dbi\" region\n");
+-		return -ENODEV;
+-	}
+-	pcie->dbi_res = dbi_res;
+-
+-	pci->dbi_base = devm_ioremap_resource(dev, dbi_res);
+-	if (IS_ERR(pci->dbi_base))
+-		return PTR_ERR(pci->dbi_base);
+-
+-	/* Tegra HW locates DBI2 at a fixed offset from DBI */
+-	pci->dbi_base2 = pci->dbi_base + 0x1000;
+-
+ 	atu_dma_res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
+ 						   "atu_dma");
+ 	if (!atu_dma_res) {
+diff --git a/drivers/pci/controller/dwc/pcie-uniphier-ep.c b/drivers/pci/controller/dwc/pcie-uniphier-ep.c
+index 148355960061..69810c6b0d58 100644
+--- a/drivers/pci/controller/dwc/pcie-uniphier-ep.c
++++ b/drivers/pci/controller/dwc/pcie-uniphier-ep.c
+@@ -218,35 +218,6 @@ static const struct dw_pcie_ep_ops uniphier_pcie_ep_ops = {
+ 	.get_features = uniphier_pcie_get_features,
+ };
+ 
+-static int uniphier_add_pcie_ep(struct uniphier_pcie_ep_priv *priv,
+-				struct platform_device *pdev)
+-{
+-	struct dw_pcie *pci = &priv->pci;
+-	struct dw_pcie_ep *ep = &pci->ep;
+-	struct device *dev = &pdev->dev;
+-	struct resource *res;
+-	int ret;
+-
+-	ep->ops = &uniphier_pcie_ep_ops;
+-
+-	pci->dbi_base2 = devm_platform_ioremap_resource_byname(pdev, "dbi2");
+-	if (IS_ERR(pci->dbi_base2))
+-		return PTR_ERR(pci->dbi_base2);
+-
+-	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
+-	if (!res)
+-		return -EINVAL;
+-
+-	ep->phys_base = res->start;
+-	ep->addr_size = resource_size(res);
+-
+-	ret = dw_pcie_ep_init(ep);
+-	if (ret)
+-		dev_err(dev, "Failed to initialize endpoint (%d)\n", ret);
+-
+-	return ret;
+-}
+-
+ static int uniphier_pcie_ep_enable(struct uniphier_pcie_ep_priv *priv)
+ {
+ 	int ret;
+@@ -300,7 +271,6 @@ static int uniphier_pcie_ep_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct uniphier_pcie_ep_priv *priv;
+-	struct resource *res;
+ 	int ret;
+ 
+ 	priv = devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
+@@ -314,11 +284,6 @@ static int uniphier_pcie_ep_probe(struct platform_device *pdev)
+ 	priv->pci.dev = dev;
+ 	priv->pci.ops = &dw_pcie_ops;
+ 
+-	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
+-	priv->pci.dbi_base = devm_pci_remap_cfg_resource(dev, res);
+-	if (IS_ERR(priv->pci.dbi_base))
+-		return PTR_ERR(priv->pci.dbi_base);
+-
+ 	priv->base = devm_platform_ioremap_resource_byname(pdev, "link");
+ 	if (IS_ERR(priv->base))
+ 		return PTR_ERR(priv->base);
+@@ -352,7 +317,8 @@ static int uniphier_pcie_ep_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		return ret;
+ 
+-	return uniphier_add_pcie_ep(priv, pdev);
++	priv->pci.ep.ops = &uniphier_pcie_ep_ops;
++	return dw_pcie_ep_init(&priv->pci.ep);
+ }
+ 
+ static const struct pci_epc_features uniphier_pro5_data = {
+diff --git a/drivers/pci/controller/dwc/pcie-uniphier.c b/drivers/pci/controller/dwc/pcie-uniphier.c
+index 48176265c867..33130fb4af90 100644
+--- a/drivers/pci/controller/dwc/pcie-uniphier.c
++++ b/drivers/pci/controller/dwc/pcie-uniphier.c
+@@ -400,7 +400,6 @@ static int uniphier_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct uniphier_pcie_priv *priv;
+-	struct resource *res;
+ 	int ret;
+ 
+ 	priv = devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
+@@ -410,11 +409,6 @@ static int uniphier_pcie_probe(struct platform_device *pdev)
+ 	priv->pci.dev = dev;
+ 	priv->pci.ops = &dw_pcie_ops;
+ 
+-	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
+-	priv->pci.dbi_base = devm_pci_remap_cfg_resource(dev, res);
+-	if (IS_ERR(priv->pci.dbi_base))
+-		return PTR_ERR(priv->pci.dbi_base);
+-
+ 	priv->base = devm_platform_ioremap_resource_byname(pdev, "link");
+ 	if (IS_ERR(priv->base))
+ 		return PTR_ERR(priv->base);
+-- 
+2.25.1
 
-> +	void __iomem		*apb_base;
-> +	enum dw_pcie_device_mode mode;
-> +
-> +	int			irq;
-> +	int			ev_irq;
-> +	int			err_irq;
-> +	int			mem_access_irq;
-
-There's no need to store the irq numbers forever.
-
-> +
-> +	struct clk		*clk_master;
-> +	struct clk		*clk_aux;
-> +	struct gpio_desc	*reset;
-> +};
-> +
-> +struct keembay_pcie_of_data {
-> +	enum dw_pcie_device_mode mode;
-> +};
-> +
-> +static inline u32 keembay_pcie_readl(struct keembay_pcie *pcie, u32 offset)
-> +{
-> +	return readl(pcie->apb_base + offset);
-> +}
-> +
-> +static inline void keembay_pcie_writel(struct keembay_pcie *pcie, u32 offset,
-> +				       u32 value)
-> +{
-> +	writel(value, pcie->apb_base + offset);
-> +}
-> +
-> +static void keembay_ep_reset_assert(struct keembay_pcie *pcie)
-> +{
-> +	gpiod_set_value_cansleep(pcie->reset, 1);
-> +	usleep_range(PERST_DELAY_US, PERST_DELAY_US + 500);
-> +}
-> +
-> +static void keembay_ep_reset_deassert(struct keembay_pcie *pcie)
-> +{
-> +	/* Ensure that PERST has been asserted for at least 100ms */
-> +	msleep(100);
-> +
-> +	gpiod_set_value_cansleep(pcie->reset, 0);
-> +	usleep_range(PERST_DELAY_US, PERST_DELAY_US + 500);
-> +}
-> +
-> +static void keembay_pcie_ltssm_enable(struct keembay_pcie *pcie, bool enable)
-> +{
-> +	u32 val;
-> +
-> +	val = keembay_pcie_readl(pcie, PCIE_REGS_PCIE_APP_CNTRL);
-> +	if (enable)
-> +		val |= APP_LTSSM_ENABLE;
-> +	else
-> +		val &= ~APP_LTSSM_ENABLE;
-> +	keembay_pcie_writel(pcie, PCIE_REGS_PCIE_APP_CNTRL, val);
-> +}
-> +
-> +static int keembay_pcie_link_up(struct dw_pcie *pci)
-> +{
-> +	struct keembay_pcie *pcie = dev_get_drvdata(pci->dev);
-> +	u32 val, mask;
-> +
-> +	val = keembay_pcie_readl(pcie, PCIE_REGS_PCIE_SII_PM_STATE);
-> +	mask = SMLH_LINK_UP | RDLH_LINK_UP;
-> +
-> +	return !!((val & mask) == mask);
-> +}
-> +
-> +static int keembay_pcie_establish_link(struct dw_pcie *pci)
-
-_start_link() to align with the ops name.
-
-> +{
-> +	return 0;
-
-Shouldn't this call keembay_pcie_ltssm_enable?
-
-> +}
-> +
-> +static void keembay_pcie_stop_link(struct dw_pcie *pci)
-> +{
-> +	struct keembay_pcie *pcie = dev_get_drvdata(pci->dev);
-> +
-> +	keembay_pcie_ltssm_enable(pcie, false);
-> +}
-> +
-> +static const struct dw_pcie_ops keembay_pcie_ops = {
-> +	.link_up	= keembay_pcie_link_up,
-> +	.start_link	= keembay_pcie_establish_link,
-> +	.stop_link	= keembay_pcie_stop_link,
-> +};
-> +
-> +/*
-> + * Initialize the internal PCIe PLL in Host mode.
-> + * See the following sections in Keem Bay data book,
-> + * (1) 6.4.6.1 PCIe Subsystem Example Initialization,
-> + * (2) 6.8 PCIe Low Jitter PLL for Ref Clk Generation.
-> + */
-> +static int keembay_pcie_pll_init(struct keembay_pcie *pcie)
-> +{
-> +	struct dw_pcie *pci = pcie->pci;
-> +	u32 val;
-> +	int ret;
-> +
-> +	val = FIELD_PREP(LJPLL_REF_DIV, 0) | FIELD_PREP(LJPLL_FB_DIV, 0x32);
-> +	keembay_pcie_writel(pcie, PCIE_REGS_LJPLL_CNTRL_2, val);
-> +
-> +	val = FIELD_PREP(LJPLL_POST_DIV3A, 0x2) |
-> +		FIELD_PREP(LJPLL_POST_DIV2A, 0x2);
-> +	keembay_pcie_writel(pcie, PCIE_REGS_LJPLL_CNTRL_3, val);
-> +
-> +	val = FIELD_PREP(LJPLL_EN, 0x1) | FIELD_PREP(LJPLL_FOUT_EN, 0xc);
-> +	keembay_pcie_writel(pcie, PCIE_REGS_LJPLL_CNTRL_0, val);
-> +
-> +	ret = readl_poll_timeout(pcie->apb_base + PCIE_REGS_LJPLL_STA,
-> +				 val, val & LJPLL_LOCK, 20,
-> +				 500 * USEC_PER_MSEC);
-> +	if (ret)
-> +		dev_err(pci->dev, "Low jitter PLL is not locked\n");
-> +
-> +	return ret;
-> +}
-> +
-> +static irqreturn_t keembay_pcie_irq_handler(int irq, void *arg)
-> +{
-> +	struct keembay_pcie *pcie = arg;
-> +	struct dw_pcie *pci = pcie->pci;
-> +	struct pcie_port *pp = &pci->pp;
-> +	u32 val, mask, status;
-> +
-> +	val = keembay_pcie_readl(pcie, PCIE_REGS_INTERRUPT_STATUS);
-> +	mask = keembay_pcie_readl(pcie, PCIE_REGS_INTERRUPT_ENABLE);
-> +
-> +	status = val & mask;
-> +	if (!status)
-> +		return IRQ_NONE;
-> +
-> +	if (status & MSI_CTRL_INT)
-> +		dw_handle_msi_irq(pp);
-> +
-> +	keembay_pcie_writel(pcie, PCIE_REGS_INTERRUPT_STATUS, status);
-> +
-> +	return IRQ_HANDLED;
-> +}
-> +
-> +static irqreturn_t keembay_pcie_ev_irq_handler(int irq, void *arg)
-> +{
-> +	struct keembay_pcie *pcie = arg;
-> +	u32 val, mask, status;
-> +
-> +	val = keembay_pcie_readl(pcie, PCIE_REGS_PCIE_INTR_FLAGS);
-> +	mask = keembay_pcie_readl(pcie, PCIE_REGS_PCIE_INTR_ENABLE);
-> +
-> +	status = val & mask;
-> +	if (!status)
-> +		return IRQ_NONE;
-> +
-> +	keembay_pcie_writel(pcie, PCIE_REGS_PCIE_INTR_FLAGS, status);
-
-Why an interrupt handler that doesn't do anything?
-
-> +
-> +	return IRQ_HANDLED;
-> +}
-> +
-> +static irqreturn_t keembay_pcie_err_irq_handler(int irq, void *arg)
-> +{
-> +	struct keembay_pcie *pcie = arg;
-> +	u32 val, mask, status;
-> +
-> +	val = keembay_pcie_readl(pcie, PCIE_REGS_PCIE_ERR_INTR_FLAGS);
-> +	mask = keembay_pcie_readl(pcie, PCIE_REGS_PCIE_ERR_INTR_ENABLE);
-> +
-> +	status = val & mask;
-> +	if (!status)
-> +		return IRQ_NONE;
-> +
-> +	keembay_pcie_writel(pcie, PCIE_REGS_PCIE_ERR_INTR_FLAGS, status);
-> +
-> +	return IRQ_HANDLED;
-> +}
-> +
-> +static int keembay_pcie_setup_irq(struct keembay_pcie *pcie)
-> +{
-> +
-> +	struct dw_pcie *pci = pcie->pci;
-> +	struct device *dev = pci->dev;
-> +	struct platform_device *pdev = to_platform_device(dev);
-> +	int ret;
-> +
-> +	pcie->irq = platform_get_irq_byname(pdev, "intr");
-> +	if (pcie->irq < 0)
-> +		return pcie->irq;
-> +
-> +	pcie->ev_irq = platform_get_irq_byname(pdev, "ev_intr");
-> +	if (pcie->ev_irq < 0)
-> +		return pcie->ev_irq;
-> +
-> +	pcie->err_irq = platform_get_irq_byname(pdev, "err_intr");
-> +	if (pcie->err_irq < 0)
-> +		return pcie->err_irq;
-> +
-> +	if (pcie->mode == DW_PCIE_EP_TYPE) {
-> +		int irq;
-> +
-> +		irq = platform_get_irq_byname(pdev, "mem_access_intr");
-> +		if (irq < 0)
-> +			return irq;
-> +
-> +		pcie->mem_access_irq = irq;
-> +		return 0;
-> +	}
-> +
-> +	ret = devm_request_irq(dev, pcie->irq, keembay_pcie_irq_handler,
-> +			       IRQF_SHARED | IRQF_NO_THREAD, "pcie-intr", pcie);
-> +	if (ret) {
-> +		dev_err(dev, "Failed to request IRQ: %d\n", ret);
-> +		return ret;
-> +	}
-> +
-> +	ret = devm_request_irq(dev, pcie->ev_irq, keembay_pcie_ev_irq_handler,
-> +			       0, "pcie-ev-intr", pcie);
-> +	if (ret) {
-> +		dev_err(dev, "Failed to request event IRQ: %d\n", ret);
-> +		return ret;
-> +	}
-> +
-> +	ret = devm_request_irq(dev, pcie->err_irq, keembay_pcie_err_irq_handler,
-> +			       0, "pcie-err-intr", pcie);
-> +	if (ret)
-> +		dev_err(dev, "Failed to request error IRQ: %d\n", ret);
-> +
-> +	return ret;
-> +}
-> +
-> +static int keembay_pcie_rc_establish_link(struct dw_pcie *pci)
-> +{
-> +	struct keembay_pcie *pcie = dev_get_drvdata(pci->dev);
-> +	u32 val;
-> +	int ret;
-> +
-> +	if (dw_pcie_link_up(pci))
-> +		return 0;
-> +
-> +	keembay_pcie_ltssm_enable(pcie, false);
-> +
-> +	ret = readl_poll_timeout(pcie->apb_base + PCIE_REGS_PCIE_PHY_STAT,
-> +				 val, val & PHY0_MPLLA_STATE, 20,
-> +				 500 * USEC_PER_MSEC);
-> +	if (ret) {
-> +		dev_err(pci->dev, "MPLLA is not locked\n");
-> +		return ret;
-> +	}
-> +
-> +	keembay_pcie_ltssm_enable(pcie, true);
-> +
-> +	return dw_pcie_wait_for_link(pci);
-> +}
-> +
-> +static void keembay_pcie_enable_interrupts(struct keembay_pcie *pcie)
-> +{
-> +	u32 val;
-> +
-> +	/* Enable interrupt */
-> +	val = keembay_pcie_readl(pcie, PCIE_REGS_INTERRUPT_ENABLE);
-> +
-> +	if (IS_ENABLED(CONFIG_PCI_MSI))
-> +		val |= MSI_CTRL_INT_EN;
-> +
-> +	keembay_pcie_writel(pcie, PCIE_REGS_INTERRUPT_ENABLE, val);
-> +
-> +	/* Enable event interrupt */
-> +	val = keembay_pcie_readl(pcie, PCIE_REGS_PCIE_INTR_ENABLE);
-> +	keembay_pcie_writel(pcie, PCIE_REGS_PCIE_INTR_ENABLE, val);
-> +
-> +	/* Enable error interrupt */
-> +	val = keembay_pcie_readl(pcie, PCIE_REGS_PCIE_ERR_INTR_ENABLE);
-> +	keembay_pcie_writel(pcie, PCIE_REGS_PCIE_ERR_INTR_ENABLE, val);
-> +}
-> +
-> +static int __init keembay_pcie_host_init(struct pcie_port *pp)
-> +{
-> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> +	struct keembay_pcie *pcie = dev_get_drvdata(pci->dev);
-> +	int ret;
-> +
-> +	dw_pcie_setup_rc(pp);
-> +	ret = keembay_pcie_rc_establish_link(pci);
-> +	if (ret)
-> +		return ret;
-> +
-> +	if (IS_ENABLED(CONFIG_PCI_MSI))
-> +		dw_pcie_msi_init(pp);
-> +
-> +	keembay_pcie_enable_interrupts(pcie);
-> +
-> +	/* Disable BARs */
-
-Why? I don't see other DWC drivers doing this.
-
-> +	dw_pcie_dbi_ro_wr_en(pci);
-> +	dw_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_0 | PCIE_DBI2_MASK, 0);
-> +	dw_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_1 | PCIE_DBI2_MASK, 0);
-> +	dw_pcie_dbi_ro_wr_dis(pci);
-> +
-> +	return 0;
-> +}
-> +
-> +static const struct dw_pcie_host_ops keembay_pcie_host_ops = {
-> +	.host_init	= keembay_pcie_host_init,
-> +};
-> +
-> +static void keembay_pcie_ep_init(struct dw_pcie_ep *ep)
-> +{
-> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-> +	struct keembay_pcie *pcie = dev_get_drvdata(pci->dev);
-> +	u32 val;
-> +
-> +	/* Enable DMA completion/error interrupts */
-> +	val = keembay_pcie_readl(pcie, PCIE_REGS_INTERRUPT_ENABLE);
-> +	keembay_pcie_writel(pcie, PCIE_REGS_INTERRUPT_ENABLE,
-> +			    val | EDMA_INT_EN);
-> +
-> +	/* Enable CII event interrupt */
-> +	val = keembay_pcie_readl(pcie, PCIE_REGS_PCIE_INTR_ENABLE);
-> +	keembay_pcie_writel(pcie, PCIE_REGS_PCIE_INTR_ENABLE,
-> +			    val | LBC_CII_EVENT_EN);
-> +
-> +	/* Enable link request reset */
-> +	val = keembay_pcie_readl(pcie, PCIE_REGS_PCIE_ERR_INTR_ENABLE);
-> +	keembay_pcie_writel(pcie, PCIE_REGS_PCIE_ERR_INTR_ENABLE,
-> +			    val | LINK_REQ_RST_EN);
-> +
-> +	/* Enable host memory access interrupt */
-> +	keembay_pcie_writel(pcie, PCIE_REGS_MEM_ACCESS_IRQ_ENABLE,
-> +			    MEM_ACCESS_IRQ_ENABLE);
-> +}
-> +
-> +static int keembay_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
-> +				     enum pci_epc_irq_type type,
-> +				     u16 interrupt_num)
-> +{
-> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-> +
-> +	switch (type) {
-> +	case PCI_EPC_IRQ_LEGACY:
-> +		/* Legacy interrupts are not supported in Keem Bay */
-> +		dev_err(pci->dev, "Unsupported IRQ type\n");
-> +		return -EINVAL;
-> +	case PCI_EPC_IRQ_MSI:
-> +		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
-> +	case PCI_EPC_IRQ_MSIX:
-> +		return dw_pcie_ep_raise_msix_irq(ep, func_no, interrupt_num);
-> +	default:
-> +		dev_err(pci->dev, "Unknown IRQ type\n");
-> +		return -EINVAL;
-> +	}
-> +}
-> +
-> +static const struct pci_epc_features keembay_pcie_epc_features = {
-> +	.linkup_notifier	= false,
-> +	.msi_capable		= true,
-> +	.msix_capable		= true,
-> +	.reserved_bar		= BIT(BAR_1) | BIT(BAR_3) | BIT(BAR_5),
-> +	.bar_fixed_64bit	= BIT(BAR_0) | BIT(BAR_2) | BIT(BAR_4),
-> +	.align			= SZ_16K,
-> +};
-> +
-> +static const struct pci_epc_features *
-> +keembay_pcie_get_features(struct dw_pcie_ep *ep)
-> +{
-> +	return &keembay_pcie_epc_features;
-> +}
-> +
-> +static const struct dw_pcie_ep_ops keembay_pcie_ep_ops = {
-> +	.ep_init	= keembay_pcie_ep_init,
-> +	.raise_irq	= keembay_pcie_ep_raise_irq,
-> +	.get_features	= keembay_pcie_get_features,
-> +};
-> +
-> +static inline struct clk *keembay_pcie_probe_clock(struct device *dev,
-> +						   const char *id, u64 rate)
-> +{
-> +	struct clk *clk;
-> +	int ret;
-> +
-> +	clk = devm_clk_get(dev, id);
-> +	if (IS_ERR(clk))
-> +		return clk;
-> +
-> +	if (rate) {
-> +		ret = clk_set_rate(clk, rate);
-> +		if (ret)
-> +			return ERR_PTR(ret);
-> +	}
-> +
-> +	ret = clk_prepare_enable(clk);
-> +	if (ret)
-> +		return ERR_PTR(ret);
-> +
-> +	ret = devm_add_action_or_reset(dev,
-> +				       (void(*)(void *))clk_disable_unprepare,
-> +				       clk);
-> +	if (ret)
-> +		return ERR_PTR(ret);
-> +
-> +	return clk;
-> +}
-> +
-> +static int keembay_pcie_probe_clocks(struct keembay_pcie *pcie)
-> +{
-> +	struct dw_pcie *pci = pcie->pci;
-> +	struct device *dev = pci->dev;
-> +
-> +	pcie->clk_master = keembay_pcie_probe_clock(dev, "master", 0);
-> +	if (IS_ERR(pcie->clk_master))
-> +		return dev_err_probe(dev, PTR_ERR(pcie->clk_master),
-> +				     "Failed to enable master clock");
-> +
-> +	pcie->clk_aux = keembay_pcie_probe_clock(dev, "aux", AUX_CLK_RATE_HZ);
-> +	if (IS_ERR(pcie->clk_aux))
-> +		return dev_err_probe(dev, PTR_ERR(pcie->clk_aux),
-> +				     "Failed to enable auxiliary clock");
-> +
-> +	return 0;
-> +}
-> +
-> +static int keembay_pcie_add_pcie_port(struct keembay_pcie *pcie,
-> +				      struct platform_device *pdev)
-> +{
-> +	struct dw_pcie *pci = pcie->pci;
-> +	struct pcie_port *pp = &pci->pp;
-> +	struct device *dev = &pdev->dev;
-> +	u32 val;
-> +	int ret;
-> +
-> +	pcie->reset = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
-> +	if (IS_ERR(pcie->reset))
-> +		return PTR_ERR(pcie->reset);
-> +
-> +	ret = keembay_pcie_probe_clocks(pcie);
-> +	if (ret)
-> +		return ret;
-> +
-> +	/* Set SRAM bypass mode. */
-> +	val = keembay_pcie_readl(pcie, PCIE_REGS_PCIE_PHY_CNTL);
-> +	val |= PHY0_SRAM_BYPASS;
-> +	keembay_pcie_writel(pcie, PCIE_REGS_PCIE_PHY_CNTL, val);
-> +
-> +	/* Set the PCIe controller to be a Root Complex. */
-> +	keembay_pcie_writel(pcie, PCIE_REGS_PCIE_CFG, PCIE_DEVICE_TYPE);
-> +
-> +	ret = keembay_pcie_pll_init(pcie);
-> +	if (ret)
-> +		return ret;
-> +
-> +	/* Deassert PCIe subsystem power-on-reset. */
-> +	val = keembay_pcie_readl(pcie, PCIE_REGS_PCIE_CFG);
-> +	keembay_pcie_writel(pcie, PCIE_REGS_PCIE_CFG, val | PCIE_RSTN);
-
-Doesn't EP mode need to do all this setup too?
-
-> +
-> +	keembay_ep_reset_deassert(pcie);
-> +
-> +	ret = keembay_pcie_setup_irq(pcie);
-> +	if (ret)
-> +		return ret;
-> +
-> +	pp->ops = &keembay_pcie_host_ops;
-> +
-> +	ret = dw_pcie_host_init(pp);
-> +	if (ret) {
-> +		keembay_ep_reset_assert(pcie);
-> +		dev_err(dev, "Failed to initialize host: %d\n", ret);
-> +	}
-> +
-> +	return ret;
-> +}
-> +
-> +static int keembay_pcie_add_pcie_ep(struct keembay_pcie *pcie,
-> +				    struct platform_device *pdev)
-> +{
-> +	struct device *dev = &pdev->dev;
-> +	struct dw_pcie *pci = pcie->pci;
-> +	struct dw_pcie_ep *ep;
-> +	struct resource *res;
-> +	int ret;
-> +
-> +	ep = &pci->ep;
-> +	ep->ops = &keembay_pcie_ep_ops;
-> +
-> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
-> +	if (!res)
-> +		return -EINVAL;
-> +
-> +	ep->phys_base = res->start;
-> +	ep->addr_size = resource_size(res);
-> +
-> +	ret = keembay_pcie_setup_irq(pcie);
-
-Both RC and EP mode call this. Should be done from a common spot 
-(probe?).
-
-> +	if (ret)
-> +		return ret;
-> +
-> +	ret = dw_pcie_ep_init(ep);
-> +	if (ret)
-> +		dev_err(dev, "Failed to initialize endpoint: %d\n", ret);
-> +
-> +	return ret;
-> +}
-> +
-> +static int keembay_pcie_probe(struct platform_device *pdev)
-> +{
-> +	const struct keembay_pcie_of_data *data;
-> +	struct device *dev = &pdev->dev;
-> +	struct keembay_pcie *pcie;
-> +	struct dw_pcie *pci;
-> +	enum dw_pcie_device_mode mode;
-> +	int ret;
-> +
-> +	data = device_get_match_data(dev);
-> +	if (!data)
-> +		return -ENODEV;
-> +
-> +	mode = (enum dw_pcie_device_mode)data->mode;
-> +
-> +	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
-> +	if (!pcie)
-> +		return -ENOMEM;
-> +
-> +	pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
-> +	if (!pci)
-> +		return -ENOMEM;
-> +
-> +	pci->dev = dev;
-> +	pci->ops = &keembay_pcie_ops;
-> +
-> +	pcie->pci = pci;
-> +	pcie->mode = mode;
-> +
-> +	pcie->apb_base = devm_platform_ioremap_resource_byname(pdev, "apb");
-> +	if (IS_ERR(pcie->apb_base))
-> +		return PTR_ERR(pcie->apb_base);
-> +
-> +	pci->dbi_base = devm_platform_ioremap_resource_byname(pdev, "dbi");
-> +	if (IS_ERR(pci->dbi_base))
-> +		return PTR_ERR(pci->dbi_base);
-> +
-> +	/* DBI2 shadow register */
-> +	pci->dbi_base2 = pci->dbi_base + PCIE_DBI2_MASK;
-
-This should be a 'dbi2' reg entry in DT.
-
-FYI, I'm working on moving that and 'dbi' setup into the core code.
-
-> +
-> +	platform_set_drvdata(pdev, pcie);
-> +
-> +	switch (pcie->mode) {
-> +	case DW_PCIE_RC_TYPE:
-> +		if (!IS_ENABLED(CONFIG_PCIE_KEEMBAY_HOST))
-> +			return -ENODEV;
-> +
-> +		ret = keembay_pcie_add_pcie_port(pcie, pdev);
-> +		if (ret < 0)
-> +			return ret;
-> +		break;
-> +	case DW_PCIE_EP_TYPE:
-> +		if (!IS_ENABLED(CONFIG_PCIE_KEEMBAY_EP))
-> +			return -ENODEV;
-> +
-> +		ret = keembay_pcie_add_pcie_ep(pcie, pdev);
-> +		if (ret < 0)
-> +			return ret;
-> +		break;
-> +	default:
-> +		dev_err(dev, "Invalid device type %d\n", pcie->mode);
-> +		return -ENODEV;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static const struct keembay_pcie_of_data keembay_pcie_rc_of_data = {
-> +	.mode = DW_PCIE_RC_TYPE,
-> +};
-> +
-> +static const struct keembay_pcie_of_data keembay_pcie_ep_of_data = {
-> +	.mode = DW_PCIE_EP_TYPE,
-> +};
-> +
-> +static const struct of_device_id keembay_pcie_of_match[] = {
-> +	{
-> +		.compatible = "intel,keembay-pcie",
-> +		.data = &keembay_pcie_rc_of_data,
-> +	},
-> +	{
-> +		.compatible = "intel,keembay-pcie-ep",
-> +		.data = &keembay_pcie_ep_of_data,
-> +	},
-> +	{}
-> +};
-> +
-> +static struct platform_driver keembay_pcie_driver = {
-> +	.driver = {
-> +		.name = "keembay-pcie",
-> +		.of_match_table = keembay_pcie_of_match,
-> +		.suppress_bind_attrs = true,
-> +	},
-> +	.probe  = keembay_pcie_probe,
-> +};
-> +builtin_platform_driver(keembay_pcie_driver);
-> -- 
-> 2.17.1
-> 
