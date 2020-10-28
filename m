@@ -8,60 +8,60 @@ X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,DATE_IN_PAST_12_24,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 231BDC4363A
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Oct 2020 23:02:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F8F1C55179
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Oct 2020 23:10:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C246020757
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Oct 2020 23:02:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E964207DE
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Oct 2020 23:10:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jZLfqaHI"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oRtUjZ5C"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389975AbgJ1XCO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Oct 2020 19:02:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32876 "EHLO
+        id S1726329AbgJ1XKd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Oct 2020 19:10:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34114 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389973AbgJ1XCN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Oct 2020 19:02:13 -0400
-Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8518BC0613CF;
-        Wed, 28 Oct 2020 16:02:12 -0700 (PDT)
-Received: by mail-wr1-x441.google.com with SMTP id n18so792135wrs.5;
-        Wed, 28 Oct 2020 16:02:12 -0700 (PDT)
+        with ESMTP id S1732861AbgJ1XJr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Oct 2020 19:09:47 -0400
+Received: from mail-ed1-x541.google.com (mail-ed1-x541.google.com [IPv6:2a00:1450:4864:20::541])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB91BC0613CF;
+        Wed, 28 Oct 2020 16:09:46 -0700 (PDT)
+Received: by mail-ed1-x541.google.com with SMTP id w25so1256509edx.2;
+        Wed, 28 Oct 2020 16:09:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=U5GSIAp/KF0yhINCIVb4W15ZsipvOkrRvQ9Lx8wRI08=;
-        b=jZLfqaHISKoEcgTfUc+mK9YZzM14Hhti6pzljX1gp/x9TlfL6+ZVLjaGik9W8gAlTS
-         vSRQ7IJ1AcA1aQvX+YlggAPTSKOZWwsS0enHFEpmxe0h7IUBGrm8jlAICkF98AJ170gF
-         TVxQJijAMDJ2gU56gMvBR/BgQOY9mrpVNOKt2HyeYilv4NZLabRN7QV/ptMWZl6mlTFP
-         AqjtIjfKFH//nLy5WEHEOwRwDgbErVB6Lc+QB8bgpr1Fbcfale1vg3unCGt3svqAxSmg
-         JuEsMPWaV3ct33m9xD7h9DIaQpwYRhQtLLfEEsbUpli0DgZAFMtGKIEi4pZRE77gnSXY
-         GrqQ==
+         :cc;
+        bh=7YoJO1zoQ5E1C2GRnvBh7fUEKY8vwjJF0oG7GALEVY0=;
+        b=oRtUjZ5CnjY/48rMe/NEbC0601bsZl2A3wiNu2a5e7ToPMOCvBJ6ZgV5Nnj7FjF9ca
+         o91eqOwvIAhK62mVawC1oOOoQ4WHz+UhbGDXqoxTP3dKTGZagY1UmjHfbadg7kneq9fV
+         HL2B/sCLF5RILV/VLiEmSBX5KpXtdacWuJTmacD+IBENgjwhr7D5LuwxrLLvRuxX9I5k
+         UxuI7nDGj2nYhNk3Kf5zWcefDTPC7WfKYbJQfJmbHk5PAuz2TyLMJVz97870kZPH/Ku4
+         TMthHDKuEIBysoI6ERyDlabriQPvblnUKUZ8gGPC+WuwBZDD9eXlRuLzyUZT9HsD5siV
+         qTYQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=U5GSIAp/KF0yhINCIVb4W15ZsipvOkrRvQ9Lx8wRI08=;
-        b=JsAqXsTRSML7fmhlvqiml5B5BiLLRtdHfX4OMgytWHJd0xsF5D04r033FgLELFuiwO
-         KfhW0DWrQDmht0Ymgl1RHSvQNkwTTLT8g63rSX8IizybD6OHWRCsWtFSy0WcTJqCTNtR
-         3WFyD9BIopwtUuOrySDGutGcwY5Mf+TF9Gxm1phHOn6qB5aV57mKgIKOz5nBw77LFz5B
-         RxOI2pvBCFUFHuZCqf9ZAeJxMq+ppm7inuaBWCtcOkBG9sPtrZyqWiZlulROhxQHHnsW
-         yXZqmXkQEuqy23elvdtT3vcduOt9GJ8mUTOdOtxlFvsrGzmBRV2xH3ldNRetgSPQUAJR
-         0jNg==
-X-Gm-Message-State: AOAM532SlhcNU5ne1nhbhbTXyZKOPklMlE4gT1G2jC7egNn8u5uSraix
-        DFQQ3i1izYF+yQQ1ygsWBK4IKP39Li8feqzzBhTDOvnblxs=
-X-Google-Smtp-Source: ABdhPJyQzkAAbFIB0JGWi9pzmeojf1A+N5Mp14xzNvdV3ntVJka40VMMTCotKKAg0eDoHzteHoAxQQs7/Xp8YbPXd+g=
-X-Received: by 2002:a17:906:6dc6:: with SMTP id j6mr6277733ejt.354.1603864833350;
- Tue, 27 Oct 2020 23:00:33 -0700 (PDT)
+         :message-id:subject:to:cc;
+        bh=7YoJO1zoQ5E1C2GRnvBh7fUEKY8vwjJF0oG7GALEVY0=;
+        b=O2AaW5kBHtM/3FzY+CUq89YG6QNsiuRHNayoZDTQAPieCBo+TxV/Q0/WnoMwS6b5W7
+         YxEtNNqQ77nGi6nQRvNDsP8i/mRiSyEe4ZNi13WziCKtXGHsRUXIQEnYvZ3YbmsGJvFY
+         owOjbLrFszyl8oCpeLsEJUppc8NKyQeKxnv9t/umiogNZY/5HIIoyAEsAMPaIym7NFjA
+         mMkG2FV0vXNC9iOjRicUqxgkZILoy8H8S9VDb9VDpFUiXGMUIivczwueC0pfwQYh6gV9
+         ia8cwkj+I35GxcH5TkzpzI0P6xQUjk1YvcliGq1TyIoDrZWP+acCySzT/KP55Ju+rTkA
+         gX+w==
+X-Gm-Message-State: AOAM532FVUGLBQ4UPQBTWoh4jJbMHYxciM8qVfIOw9WkbSCZbHDeg59z
+        zRZ/bFSsdN9Vb5qnIc/gC7t53gOlKMHvVOZkm/UEyKbB
+X-Google-Smtp-Source: ABdhPJz/XdXPZQG2al+e93iYeU7FlDTVMkVZqwrN8THHCzKQKJGNYLdlNSwY15TF9tKU+QJldfXC1xAqf9a/oTiS6Q4=
+X-Received: by 2002:aa7:cd42:: with SMTP id v2mr5902125edw.151.1603863789273;
+ Tue, 27 Oct 2020 22:43:09 -0700 (PDT)
 MIME-Version: 1.0
-References: <cover.1603766889.git.sathyanarayanan.kuppuswamy@linux.intel.com> <2faef6f884aae9ae92e57e7c6a88a6195553c684.1603766889.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-In-Reply-To: <2faef6f884aae9ae92e57e7c6a88a6195553c684.1603766889.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+References: <cover.1603738449.git.sathyanarayanan.kuppuswamy@linux.intel.com> <3cb6923f879b64a80df3670facdee327bcc39a4c.1603738449.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+In-Reply-To: <3cb6923f879b64a80df3670facdee327bcc39a4c.1603738449.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 From:   Ethan Zhao <xerces.zhao@gmail.com>
-Date:   Wed, 28 Oct 2020 14:00:21 +0800
-Message-ID: <CAKF3qh1J=_nxFTztyEjMBJav_W+JY60gzf27dvantMeKU+Aatg@mail.gmail.com>
-Subject: Re: [PATCH v11 4/5] PCI/portdrv: Remove redundant pci_aer_available()
- check in DPC enable logic
+Date:   Wed, 28 Oct 2020 13:42:57 +0800
+Message-ID: <CAKF3qh0WccKyNa9hGK7g+F9eZ_jE9UK-WqUb1EOrz+_Hz2ceAg@mail.gmail.com>
+Subject: Re: [PATCH v10 5/5] PCI/DPC: Move AER/DPC dependency checks out of
+ DPC driver
 To:     Kuppuswamy Sathyanarayanan 
         <sathyanarayanan.kuppuswamy@linux.intel.com>
 Cc:     Bjorn Helgaas <bhelgaas@google.com>,
@@ -69,44 +69,58 @@ Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         Ashok Raj <ashok.raj@intel.com>, knsathya@kernel.org
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Oct 27, 2020 at 10:00 PM Kuppuswamy Sathyanarayanan
+On Tue, Oct 27, 2020 at 11:12 AM Kuppuswamy Sathyanarayanan
 <sathyanarayanan.kuppuswamy@linux.intel.com> wrote:
 >
-> In DPC service enable logic, check for
-> services & PCIE_PORT_SERVICE_AER implies pci_aer_available()
-How about PCIE_PORT_SERVICE_AER is not configured, but
-pcie_aer_disable =3D=3D 0 =EF=BC=9F
-> is true. So there is no need to explicitly check it again.
+> Currently, AER and DPC Capabilities dependency checks is
+> distributed between DPC and portdrv service drivers. So move
+> them out of DPC driver.
 >
-> Also, passing pcie_ports=3Ddpc-native in kernel command line
-> implies DPC needs to be enabled in native mode irrespective
-> of AER ownership status. So checking for pci_aer_available()
-> without checking for pcie_ports status is incorrect.
+> Also, since services & PCIE_PORT_SERVICE_AER check already
+> ensures AER native ownership, no need to add additional
+> pcie_aer_is_native() check.
 >
-> Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@lin=
-ux.intel.com>
+> Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 > ---
->  drivers/pci/pcie/portdrv_core.c | 1 -
->  1 file changed, 1 deletion(-)
+>  drivers/pci/pcie/dpc.c          | 4 ----
+>  drivers/pci/pcie/portdrv_core.c | 1 +
+>  2 files changed, 1 insertion(+), 4 deletions(-)
 >
-> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_c=
-ore.c
-> index 2c0278f0fdcc..e257a2ca3595 100644
+> diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+> index 21f77420632b..a8b922044447 100644
+> --- a/drivers/pci/pcie/dpc.c
+> +++ b/drivers/pci/pcie/dpc.c
+> @@ -283,14 +283,10 @@ void pci_dpc_init(struct pci_dev *pdev)
+>  static int dpc_probe(struct pcie_device *dev)
+>  {
+>         struct pci_dev *pdev = dev->port;
+> -       struct pci_host_bridge *host = pci_find_host_bridge(pdev->bus);
+>         struct device *device = &dev->device;
+>         int status;
+>         u16 ctl, cap;
+>
+> -       if (!pcie_aer_is_native(pdev) && !host->native_dpc)
+> -               return -ENOTSUPP;
+> -
+>         status = devm_request_threaded_irq(device, dev->irq, dpc_irq,
+>                                            dpc_handler, IRQF_SHARED,
+>                                            "pcie-dpc", pdev);
+> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+> index e257a2ca3595..ffa1d9fc458e 100644
 > --- a/drivers/pci/pcie/portdrv_core.c
 > +++ b/drivers/pci/pcie/portdrv_core.c
-> @@ -252,7 +252,6 @@ static int get_port_device_capability(struct pci_dev =
-*dev)
+> @@ -252,6 +252,7 @@ static int get_port_device_capability(struct pci_dev *dev)
 >          * permission to use AER.
 >          */
 >         if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC) &&
-> -           pci_aer_available() &&
+> +           host->native_dpc &&
+What hell the logic is here ?
 >             (host->native_dpc || (services & PCIE_PORT_SERVICE_AER)))
->                 services |=3D PCIE_PORT_SERVICE_DPC;
+>                 services |= PCIE_PORT_SERVICE_DPC;
 >
 > --
 > 2.17.1
