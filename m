@@ -2,154 +2,103 @@ Return-Path: <SRS0=7A2k=EE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51C5FC55179
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 01:00:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 515DEC4363A
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 01:02:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EB87220791
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 01:00:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603933259;
-	bh=88+t9yPMavqyxiSvxf19GshamHH2dqzO8poEj1X9XPM=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=CN0AbE/AeP7sKos+yJGvkBlN/n3jCyt+aIHkiQQqq5ENWeKMaRTjdIH/NxJ6LOHCJ
-	 0Qy6Fr0ZHDtHp/HXzn6feibydnaMfoNl3dOS9uwr4Xsr+Sa30ngjAmlsyDJRLnP88y
-	 JDn97CdTYP/+s909nL5jzu3GsCbHfgz/kzge9jPM=
+	by mail.kernel.org (Postfix) with ESMTP id 09274207BC
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 01:02:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730249AbgJ2BAq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Oct 2020 21:00:46 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60522 "EHLO mail.kernel.org"
+        id S1731461AbgJ1WRN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Oct 2020 18:17:13 -0400
+Received: from mga12.intel.com ([192.55.52.136]:58445 "EHLO mga12.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731538AbgJ1WR2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Oct 2020 18:17:28 -0400
-Received: from localhost (230.sub-72-107-127.myvzw.com [72.107.127.230])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 269762479E;
-        Wed, 28 Oct 2020 14:42:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603896131;
-        bh=88+t9yPMavqyxiSvxf19GshamHH2dqzO8poEj1X9XPM=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=aT30wqPKA4OSxY1Bj8lj189K3MYdwdNNUFFgTd2C9gsNTETdHl3x9ojJ3iT7Qaorf
-         5FZhIKobgcpGFSX39s8JZFW6Uj7/29CkIC5/NN70iNn0+KjesjRYvj+9v8/+8QxLCA
-         LuePCNK8FZxu60CcGsVA6wzhM6heDGnNLgTwHeUI=
-Date:   Wed, 28 Oct 2020 09:42:09 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Toke =?iso-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@redhat.com>
-Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Rob Herring <robh@kernel.org>,
-        Ilias Apalodimas <ilias.apalodimas@linaro.org>,
-        vtolkm@googlemail.com
-Subject: Re: PCI trouble on mvebu (Turris Omnia)
-Message-ID: <20201028144209.GA315566@bjorn-Precision-5520>
+        id S1731459AbgJ1WRH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Oct 2020 18:17:07 -0400
+IronPort-SDR: tTBMoPS/hCNOyFsZL3XBzSXqn956hNj6ObC4YkZVzzVjW45p3LYwVwzz14ahwVf3Tq3CdQxKwJ
+ 1s9f9dMckjqQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9788"; a="147581619"
+X-IronPort-AV: E=Sophos;i="5.77,427,1596524400"; 
+   d="scan'208";a="147581619"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Oct 2020 10:13:51 -0700
+IronPort-SDR: rdROUzDEGk2wo3Npe3je3eTrc3dLnV4UgVqN9FX4UpdDVebiBYWc2eO8G/wZ8eHuduCXAY4LF1
+ 92hA9IyS0fVQ==
+X-IronPort-AV: E=Sophos;i="5.77,427,1596524400"; 
+   d="scan'208";a="536311333"
+Received: from rramir3-mobl.amr.corp.intel.com (HELO [10.254.71.48]) ([10.254.71.48])
+  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Oct 2020 10:13:50 -0700
+Subject: Re: [PATCH v11 4/5] PCI/portdrv: Remove redundant pci_aer_available()
+ check in DPC enable logic
+To:     Ethan Zhao <xerces.zhao@gmail.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Ashok Raj <ashok.raj@intel.com>, knsathya@kernel.org
+References: <cover.1603766889.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+ <2faef6f884aae9ae92e57e7c6a88a6195553c684.1603766889.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+ <CAKF3qh1J=_nxFTztyEjMBJav_W+JY60gzf27dvantMeKU+Aatg@mail.gmail.com>
+From:   "Kuppuswamy, Sathyanarayanan" 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>
+Message-ID: <ee679e38-dd8a-7d43-8715-a4e454664f89@linux.intel.com>
+Date:   Wed, 28 Oct 2020 10:13:48 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
+In-Reply-To: <CAKF3qh1J=_nxFTztyEjMBJav_W+JY60gzf27dvantMeKU+Aatg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <87y2jqmq0i.fsf@toke.dk>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Oct 28, 2020 at 02:36:13PM +0100, Toke Høiland-Jørgensen wrote:
-> Toke Høiland-Jørgensen <toke@redhat.com> writes:
-> 
-> > Bjorn Helgaas <helgaas@kernel.org> writes:
-> >
-> >> [+cc vtolkm]
-> >>
-> >> On Tue, Oct 27, 2020 at 04:43:20PM +0100, Toke Høiland-Jørgensen wrote:
-> >>> Hi everyone
-> >>> 
-> >>> I'm trying to get a mainline kernel to run on my Turris Omnia, and am
-> >>> having some trouble getting the PCI bus to work correctly. Specifically,
-> >>> I'm running a 5.10-rc1 kernel (torvalds/master as of this moment), with
-> >>> the resource request fix[0] applied on top.
-> >>> 
-> >>> The kernel boots fine, and the patch in [0] makes the PCI devices show
-> >>> up. But I'm still getting initialisation errors like these:
-> >>> 
-> >>> [    1.632709] pci 0000:01:00.0: BAR 0: error updating (0xe0000004 != 0xffffffff)
-> >>> [    1.632714] pci 0000:01:00.0: BAR 0: error updating (high 0x000000 != 0xffffffff)
-> >>> [    1.632745] pci 0000:02:00.0: BAR 0: error updating (0xe0200004 != 0xffffffff)
-> >>> [    1.632750] pci 0000:02:00.0: BAR 0: error updating (high 0x000000 != 0xffffffff)
-> >>> 
-> >>> and the WiFi drivers fail to initialise with what appears to me to be
-> >>> errors related to the bus rather than to the drivers themselves:
-> >>> 
-> >>> [    3.509878] ath: phy0: Mac Chip Rev 0xfffc0.f is not supported by this driver
-> >>> [    3.517049] ath: phy0: Unable to initialize hardware; initialization status: -95
-> >>> [    3.524473] ath9k 0000:01:00.0: Failed to initialize device
-> >>> [    3.530081] ath9k: probe of 0000:01:00.0 failed with error -95
-> >>> [    3.536012] ath10k_pci 0000:02:00.0: of_irq_parse_pci: failed with rc=134
-> >>> [    3.543049] pci 0000:00:02.0: enabling device (0140 -> 0142)
-> >>> [    3.548735] ath10k_pci 0000:02:00.0: can't change power state from D3hot to D0 (config space inaccessible)
-> >>> [    3.588592] ath10k_pci 0000:02:00.0: failed to wake up device : -110
-> >>> [    3.595098] ath10k_pci: probe of 0000:02:00.0 failed with error -110
-> >>> 
-> >>> lspci looks OK, though:
-> >>> 
-> >>> # lspci
-> >>> 00:01.0 PCI bridge: Marvell Technology Group Ltd. Device 6820 (rev 04)
-> >>> 00:02.0 PCI bridge: Marvell Technology Group Ltd. Device 6820 (rev 04)
-> >>> 00:03.0 PCI bridge: Marvell Technology Group Ltd. Device 6820 (rev 04)
-> >>> 01:00.0 Network controller: Qualcomm Atheros AR9287 Wireless Network Adapter (PCI-Express) (rev 01)
-> >>> 02:00.0 Network controller: Qualcomm Atheros QCA986x/988x 802.11ac Wireless Network Adapter (rev ff)
-> >>> 
-> >>> Does anyone have any clue what could be going on here? Is this a bug, or
-> >>> did I miss something in my config or other initialisation? I've tried
-> >>> with both the stock u-boot distributed with the board, and with an
-> >>> upstream u-boot from latest master; doesn't seem to make any different.
-> >>
-> >> Can you try turning off CONFIG_PCIEASPM?  We had a similar recent
-> >> report at https://bugzilla.kernel.org/show_bug.cgi?id=209833 but I
-> >> don't think we have a fix yet.
-> >
-> > Yes! Turning that off does indeed help! Thanks a bunch :)
-> >
-> > You mention that bisecting this would be helpful - I can try that
-> > tomorrow; any idea when this was last working?
-> 
-> OK, so I tried to bisect this, but, erm, I couldn't find a working
-> revision to start from? I went all the way back to 4.10 (which is the
-> first version to include the device tree file for the Omnia), and even
-> on that, the wireless cards were failing to initialise with ASPM
-> enabled...
 
-I have no personal experience with this device; all I know is that the
-bugzilla suggests that it worked in v5.4, which isn't much help.
 
-Possibly the apparent regression was really a .config change, i.e.,
-CONFIG_PCIEASPM was disabled in the v5.4 kernel vtolkm@ tested and it
-"worked" but got enabled later and it started failing?
+On 10/27/20 11:00 PM, Ethan Zhao wrote:
+> On Tue, Oct 27, 2020 at 10:00 PM Kuppuswamy Sathyanarayanan
+> <sathyanarayanan.kuppuswamy@linux.intel.com> wrote:
+>>
+>> In DPC service enable logic, check for
+>> services & PCIE_PORT_SERVICE_AER implies pci_aer_available()
+> How about PCIE_PORT_SERVICE_AER is not configured, but
+> pcie_aer_disable == 0 ï¼Ÿ
+Its not possible in current code flow. DPC service is configured
+following AER service configuration.
+>> is true. So there is no need to explicitly check it again.
+>>
+>> Also, passing pcie_ports=dpc-native in kernel command line
+>> implies DPC needs to be enabled in native mode irrespective
+>> of AER ownership status. So checking for pci_aer_available()
+>> without checking for pcie_ports status is incorrect.
+>>
+>> Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+>> ---
+>>   drivers/pci/pcie/portdrv_core.c | 1 -
+>>   1 file changed, 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+>> index 2c0278f0fdcc..e257a2ca3595 100644
+>> --- a/drivers/pci/pcie/portdrv_core.c
+>> +++ b/drivers/pci/pcie/portdrv_core.c
+>> @@ -252,7 +252,6 @@ static int get_port_device_capability(struct pci_dev *dev)
+>>           * permission to use AER.
+>>           */
+>>          if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC) &&
+>> -           pci_aer_available() &&
+>>              (host->native_dpc || (services & PCIE_PORT_SERVICE_AER)))
+>>                  services |= PCIE_PORT_SERVICE_DPC;
+>>
+>> --
+>> 2.17.1
+>>
 
-Maybe the debug patch below would be worth trying to see if it makes
-any difference?  If it *does* help, try omitting the first hunk to see
-if we just need to apply the quirk_enable_clear_retrain_link() quirk.
-
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index ac0557a305af..afe7fa1d54d6 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -103,7 +103,7 @@ static const char *policy_str[] = {
- 	[POLICY_POWER_SUPERSAVE] = "powersupersave"
- };
- 
--#define LINK_RETRAIN_TIMEOUT HZ
-+#define LINK_RETRAIN_TIMEOUT (10*HZ)
- 
- static int policy_to_aspm_state(struct pcie_link_state *link)
- {
-@@ -201,7 +201,7 @@ static bool pcie_retrain_link(struct pcie_link_state *link)
- 	pcie_capability_read_word(parent, PCI_EXP_LNKCTL, &reg16);
- 	reg16 |= PCI_EXP_LNKCTL_RL;
- 	pcie_capability_write_word(parent, PCI_EXP_LNKCTL, reg16);
--	if (parent->clear_retrain_link) {
-+	if (1 || parent->clear_retrain_link) {
- 		/*
- 		 * Due to an erratum in some devices the Retrain Link bit
- 		 * needs to be cleared again manually to allow the link
+-- 
+Sathyanarayanan Kuppuswamy
+Linux Kernel Developer
