@@ -2,289 +2,163 @@ Return-Path: <SRS0=cGNF=ED=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE113C5DF9D
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Oct 2020 02:06:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9078FC388F7
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Oct 2020 21:37:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7C6FA22281
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Oct 2020 02:06:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3AA082417B
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Oct 2020 21:37:24 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="GSYYGONG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725730AbgJ1CGC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 27 Oct 2020 22:06:02 -0400
-Received: from relmlor1.renesas.com ([210.160.252.171]:21183 "EHLO
-        relmlie5.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725770AbgJ1CGC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2020 22:06:02 -0400
-X-IronPort-AV: E=Sophos;i="5.77,425,1596466800"; 
-   d="scan'208";a="60995342"
-Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie5.idc.renesas.com with ESMTP; 28 Oct 2020 11:06:00 +0900
-Received: from localhost.localdomain (unknown [10.166.252.89])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 6C4714178AB9;
-        Wed, 28 Oct 2020 11:06:00 +0900 (JST)
-From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-To:     bhelgaas@google.com, marek.vasut+renesas@gmail.com,
-        robh+dt@kernel.org
-Cc:     prabhakar.mahadev-lad.rj@bp.renesas.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH 1/3] dt-bindings: pci: rcar-pci-host: convert bindings to json-schema
-Date:   Wed, 28 Oct 2020 11:05:49 +0900
-Message-Id: <1603850751-32762-2-git-send-email-yoshihiro.shimoda.uh@renesas.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1603850751-32762-1-git-send-email-yoshihiro.shimoda.uh@renesas.com>
-References: <1603850751-32762-1-git-send-email-yoshihiro.shimoda.uh@renesas.com>
+        id S1726929AbgJ1VhW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Oct 2020 17:37:22 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:26130 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726886AbgJ1VhU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Oct 2020 17:37:20 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1603921039;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=2ieKfFfqFnN+m7eiFTYtg/05VZ570w2kYMSRpQ5oFNQ=;
+        b=GSYYGONGOoXlPTpLlh+Q2piGxzkI6whM7DjUf4Nn+DDNWWx80bxPeCKbHKhhFy/rcaLZw8
+        b0T0oAcdXdQ8VsZ1z06aa0g1CPUe+ea0ivkEekT43vcGpwjGshjZS20C/NRBJ439pGaE1b
+        w4AWa92gxyIVpJQgBzYKyoUJruavHZc=
+Received: from mail-io1-f69.google.com (mail-io1-f69.google.com
+ [209.85.166.69]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-142-eU_4mMnoOKmNkxCMEu8u8g-1; Wed, 28 Oct 2020 09:36:17 -0400
+X-MC-Unique: eU_4mMnoOKmNkxCMEu8u8g-1
+Received: by mail-io1-f69.google.com with SMTP id a2so3317602iod.13
+        for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2020 06:36:17 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
+         :message-id:mime-version:content-transfer-encoding;
+        bh=2ieKfFfqFnN+m7eiFTYtg/05VZ570w2kYMSRpQ5oFNQ=;
+        b=T4oUAGSacUkUoj7I5EtN7IcpEAs1OIKEvSmo5x281QvqEQSVLF3UTo4C3LEY6ZMonl
+         /ffwPLgLuoyOUMdFyYykBx+Ej0XERJeDMVy+OSsoun4kQxSnOQPP5gCneFkX5925tTg0
+         UtnuZQIcCsWKNRvuSXhG5jeM2KjRwtIavW5yg8p0EHXY30d+EzXDwZKs67014BiAXAIg
+         weJyQhALy5yUTGMP2BD10F3/lph3zK6J5VOuoOWJHElBLzeRpEup0XkCt1PLKQDF10+t
+         P/LwCzKtVvL3UMc5IgydQJo017qsaLTlwYX1X7jCecAUfaOcTCgWXxFcxh6zi/PLKTNS
+         KTpw==
+X-Gm-Message-State: AOAM532OnltRZNh7IB8Xr2dZqyDWf0kkrFqv+/F13wBxfed7RQlqn1Qz
+        A1rfE+Kb9sVp7dn7M1OtWTHhD4SOzks3VxCnJgC5s6pnngQfEJaLBYU4vzX3ao4cOGaUoQJhnJ7
+        ZhpEyFzXw5K8Wr34rRnE2
+X-Received: by 2002:a92:d104:: with SMTP id a4mr6163024ilb.231.1603892176655;
+        Wed, 28 Oct 2020 06:36:16 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzmRo3zYrjdZWgoMbi/XfF4AaqZxe95A22njWBaMCMRSP3zTeMMowpni0WPCRMLWI3eslRMrw==
+X-Received: by 2002:a92:d104:: with SMTP id a4mr6163006ilb.231.1603892176391;
+        Wed, 28 Oct 2020 06:36:16 -0700 (PDT)
+Received: from alrua-x1.borgediget.toke.dk ([45.145.92.2])
+        by smtp.gmail.com with ESMTPSA id l17sm2363709iol.30.2020.10.28.06.36.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 28 Oct 2020 06:36:15 -0700 (PDT)
+Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
+        id C9F40181CED; Wed, 28 Oct 2020 14:36:13 +0100 (CET)
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        Rob Herring <robh@kernel.org>,
+        Ilias Apalodimas <ilias.apalodimas@linaro.org>,
+        vtolkm@googlemail.com
+Subject: Re: PCI trouble on mvebu (Turris Omnia)
+In-Reply-To: <87ft5zwl8u.fsf@toke.dk>
+References: <20201027172006.GA186901@bjorn-Precision-5520>
+ <87ft5zwl8u.fsf@toke.dk>
+X-Clacks-Overhead: GNU Terry Pratchett
+Date:   Wed, 28 Oct 2020 14:36:13 +0100
+Message-ID: <87y2jqmq0i.fsf@toke.dk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Convert Renesas PCIe Host controller bindings documentation to
-json-schema. Note that some compatible doesn't contain on
-the original documantation so that incremental patches are required
-for it.
+Toke H=C3=B8iland-J=C3=B8rgensen <toke@redhat.com> writes:
 
-Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
----
- .../devicetree/bindings/pci/rcar-pci-host.yaml     | 146 +++++++++++++++++++++
- Documentation/devicetree/bindings/pci/rcar-pci.txt |  72 ----------
- 2 files changed, 146 insertions(+), 72 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/rcar-pci-host.yaml
- delete mode 100644 Documentation/devicetree/bindings/pci/rcar-pci.txt
+> Bjorn Helgaas <helgaas@kernel.org> writes:
+>
+>> [+cc vtolkm]
+>>
+>> On Tue, Oct 27, 2020 at 04:43:20PM +0100, Toke H=C3=B8iland-J=C3=B8rgens=
+en wrote:
+>>> Hi everyone
+>>>=20
+>>> I'm trying to get a mainline kernel to run on my Turris Omnia, and am
+>>> having some trouble getting the PCI bus to work correctly. Specifically,
+>>> I'm running a 5.10-rc1 kernel (torvalds/master as of this moment), with
+>>> the resource request fix[0] applied on top.
+>>>=20
+>>> The kernel boots fine, and the patch in [0] makes the PCI devices show
+>>> up. But I'm still getting initialisation errors like these:
+>>>=20
+>>> [    1.632709] pci 0000:01:00.0: BAR 0: error updating (0xe0000004 !=3D=
+ 0xffffffff)
+>>> [    1.632714] pci 0000:01:00.0: BAR 0: error updating (high 0x000000 !=
+=3D 0xffffffff)
+>>> [    1.632745] pci 0000:02:00.0: BAR 0: error updating (0xe0200004 !=3D=
+ 0xffffffff)
+>>> [    1.632750] pci 0000:02:00.0: BAR 0: error updating (high 0x000000 !=
+=3D 0xffffffff)
+>>>=20
+>>> and the WiFi drivers fail to initialise with what appears to me to be
+>>> errors related to the bus rather than to the drivers themselves:
+>>>=20
+>>> [    3.509878] ath: phy0: Mac Chip Rev 0xfffc0.f is not supported by th=
+is driver
+>>> [    3.517049] ath: phy0: Unable to initialize hardware; initialization=
+ status: -95
+>>> [    3.524473] ath9k 0000:01:00.0: Failed to initialize device
+>>> [    3.530081] ath9k: probe of 0000:01:00.0 failed with error -95
+>>> [    3.536012] ath10k_pci 0000:02:00.0: of_irq_parse_pci: failed with r=
+c=3D134
+>>> [    3.543049] pci 0000:00:02.0: enabling device (0140 -> 0142)
+>>> [    3.548735] ath10k_pci 0000:02:00.0: can't change power state from D=
+3hot to D0 (config space inaccessible)
+>>> [    3.588592] ath10k_pci 0000:02:00.0: failed to wake up device : -110
+>>> [    3.595098] ath10k_pci: probe of 0000:02:00.0 failed with error -110
+>>>=20
+>>> lspci looks OK, though:
+>>>=20
+>>> # lspci
+>>> 00:01.0 PCI bridge: Marvell Technology Group Ltd. Device 6820 (rev 04)
+>>> 00:02.0 PCI bridge: Marvell Technology Group Ltd. Device 6820 (rev 04)
+>>> 00:03.0 PCI bridge: Marvell Technology Group Ltd. Device 6820 (rev 04)
+>>> 01:00.0 Network controller: Qualcomm Atheros AR9287 Wireless Network Ad=
+apter (PCI-Express) (rev 01)
+>>> 02:00.0 Network controller: Qualcomm Atheros QCA986x/988x 802.11ac Wire=
+less Network Adapter (rev ff)
+>>>=20
+>>> Does anyone have any clue what could be going on here? Is this a bug, or
+>>> did I miss something in my config or other initialisation? I've tried
+>>> with both the stock u-boot distributed with the board, and with an
+>>> upstream u-boot from latest master; doesn't seem to make any different.
+>>
+>> Can you try turning off CONFIG_PCIEASPM?  We had a similar recent
+>> report at https://bugzilla.kernel.org/show_bug.cgi?id=3D209833 but I
+>> don't think we have a fix yet.
+>
+> Yes! Turning that off does indeed help! Thanks a bunch :)
+>
+> You mention that bisecting this would be helpful - I can try that
+> tomorrow; any idea when this was last working?
 
-diff --git a/Documentation/devicetree/bindings/pci/rcar-pci-host.yaml b/Documentation/devicetree/bindings/pci/rcar-pci-host.yaml
-new file mode 100644
-index 0000000..d286454
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/rcar-pci-host.yaml
-@@ -0,0 +1,146 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+# Copyright (C) 2020 Renesas Electronics Corp.
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/pci/rcar-pci-host.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: Renesas R-Car PCIe Host
-+
-+maintainers:
-+  - Marek Vasut <marek.vasut+renesas@gmail.com>
-+  - Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-+
-+properties:
-+  compatible:
-+    oneOf:
-+      - items:
-+        - enum:
-+            - renesas,pcie-r8a7742      # RZ/G1H
-+            - renesas,pcie-r8a7743      # RZ/G1M
-+            - renesas,pcie-r8a7744      # RZ/G1N
-+            - renesas,pcie-r8a7790      # R-Car H2
-+            - renesas,pcie-r8a7791      # R-Car M2-W
-+            - renesas,pcie-r8a7793      # R-Car M2-N
-+        - const: renesas,pcie-rcar-gen2 # R-Car Gen2 and RZ/G1
-+      - items:
-+        - enum:
-+            - renesas,pcie-r8a774a1     # RZ/G2M
-+            - renesas,pcie-r8a774b1     # RZ/G2N
-+            - renesas,pcie-r8a774c0     # RZ/G2E
-+            - renesas,pcie-r8a7795      # R-Car H3
-+            - renesas,pcie-r8a7796      # R-Car M3-W
-+            - renesas,pcie-r8a77961     # R-Car M3-W+
-+            - renesas,pcie-r8a77980     # R-Car V3H
-+            - renesas,pcie-r8a77990     # R-Car E3
-+        - const: renesas,pcie-rcar-gen3 # R-Car Gen3 and RZ/G2
-+
-+  reg:
-+    maxItems: 1
-+
-+  '#address-cells':
-+    const: 3
-+
-+  '#size-cells':
-+    const: 2
-+
-+  bus-range: true
-+
-+  device_type:
-+    const: pci
-+
-+  ranges:
-+    minItems: 4
-+    maxItems: 4
-+
-+  dma-ranges:
-+    minItems: 1
-+    maxItems: 2
-+
-+  interrupts:
-+    minItems: 3
-+    maxItems: 3
-+
-+  '#interrupt-cells':
-+    const: 1
-+
-+  interrupt-map-mask: true
-+
-+  interrupt-map: true
-+
-+  clocks:
-+    maxItems: 2
-+
-+  clock-names:
-+    items:
-+      - const: pcie
-+      - const: pcie_bus
-+
-+  power-domains:
-+    maxItems: 1
-+
-+  resets:
-+    maxItems: 1
-+
-+  phys:
-+    maxItems: 1
-+
-+  phy-names:
-+    const: pcie
-+
-+required:
-+  - compatible
-+  - reg
-+  - '#address-cells'
-+  - '#size-cells'
-+  - bus-range
-+  - device_type
-+  - ranges
-+  - dma-ranges
-+  - interrupts
-+  - '#interrupt-cells'
-+  - interrupt-map-mask
-+  - interrupt-map
-+  - clocks
-+  - clock-names
-+  - power-domains
-+  - resets
-+
-+additionalProperties: false
-+
-+examples:
-+  - |
-+    #include <dt-bindings/clock/r8a7791-cpg-mssr.h>
-+    #include <dt-bindings/interrupt-controller/arm-gic.h>
-+    #include <dt-bindings/power/r8a7791-sysc.h>
-+
-+    soc {
-+        #address-cells = <2>;
-+        #size-cells = <2>;
-+
-+        pcie: pcie@fe000000 {
-+            compatible = "renesas,pcie-r8a7791", "renesas,pcie-rcar-gen2";
-+            reg = <0 0xfe000000 0 0x80000>;
-+             #address-cells = <3>;
-+             #size-cells = <2>;
-+             bus-range = <0x00 0xff>;
-+             device_type = "pci";
-+             ranges = <0x01000000 0 0x00000000 0 0xfe100000 0 0x00100000>,
-+                      <0x02000000 0 0xfe200000 0 0xfe200000 0 0x00200000>,
-+                      <0x02000000 0 0x30000000 0 0x30000000 0 0x08000000>,
-+                      <0x42000000 0 0x38000000 0 0x38000000 0 0x08000000>;
-+             dma-ranges = <0x42000000 0 0x40000000 0 0x40000000 0 0x40000000>,
-+                          <0x42000000 2 0x00000000 2 0x00000000 0 0x40000000>;
-+             interrupts = <GIC_SPI 116 IRQ_TYPE_LEVEL_HIGH>,
-+                          <GIC_SPI 117 IRQ_TYPE_LEVEL_HIGH>,
-+                          <GIC_SPI 118 IRQ_TYPE_LEVEL_HIGH>;
-+             #interrupt-cells = <1>;
-+             interrupt-map-mask = <0 0 0 0>;
-+             interrupt-map = <0 0 0 0 &gic GIC_SPI 116 IRQ_TYPE_LEVEL_HIGH>;
-+             clocks = <&cpg CPG_MOD 319>, <&pcie_bus_clk>;
-+             clock-names = "pcie", "pcie_bus";
-+             power-domains = <&sysc R8A7791_PD_ALWAYS_ON>;
-+             resets = <&cpg 319>;
-+             status = "disabled";
-+         };
-+    };
-diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-deleted file mode 100644
-index 14d307d..0000000
---- a/Documentation/devicetree/bindings/pci/rcar-pci.txt
-+++ /dev/null
-@@ -1,72 +0,0 @@
--* Renesas R-Car PCIe interface
--
--Required properties:
--compatible: "renesas,pcie-r8a7742" for the R8A7742 SoC;
--	    "renesas,pcie-r8a7743" for the R8A7743 SoC;
--	    "renesas,pcie-r8a7744" for the R8A7744 SoC;
--	    "renesas,pcie-r8a774a1" for the R8A774A1 SoC;
--	    "renesas,pcie-r8a774b1" for the R8A774B1 SoC;
--	    "renesas,pcie-r8a774c0" for the R8A774C0 SoC;
--	    "renesas,pcie-r8a7779" for the R8A7779 SoC;
--	    "renesas,pcie-r8a7790" for the R8A7790 SoC;
--	    "renesas,pcie-r8a7791" for the R8A7791 SoC;
--	    "renesas,pcie-r8a7793" for the R8A7793 SoC;
--	    "renesas,pcie-r8a7795" for the R8A7795 SoC;
--	    "renesas,pcie-r8a7796" for the R8A77960 SoC;
--	    "renesas,pcie-r8a77961" for the R8A77961 SoC;
--	    "renesas,pcie-r8a77980" for the R8A77980 SoC;
--	    "renesas,pcie-r8a77990" for the R8A77990 SoC;
--	    "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 or
--				     RZ/G1 compatible device.
--	    "renesas,pcie-rcar-gen3" for a generic R-Car Gen3 or
--				     RZ/G2 compatible device.
--
--	    When compatible with the generic version, nodes must list the
--	    SoC-specific version corresponding to the platform first
--	    followed by the generic version.
--
--- reg: base address and length of the PCIe controller registers.
--- #address-cells: set to <3>
--- #size-cells: set to <2>
--- bus-range: PCI bus numbers covered
--- device_type: set to "pci"
--- ranges: ranges for the PCI memory and I/O regions.
--- dma-ranges: ranges for the inbound memory regions.
--- interrupts: two interrupt sources for MSI interrupts, followed by interrupt
--	source for hardware related interrupts (e.g. link speed change).
--- #interrupt-cells: set to <1>
--- interrupt-map-mask and interrupt-map: standard PCI properties
--	to define the mapping of the PCIe interface to interrupt numbers.
--- clocks: from common clock binding: clock specifiers for the PCIe controller
--	and PCIe bus clocks.
--- clock-names: from common clock binding: should be "pcie" and "pcie_bus".
--
--Optional properties:
--- phys: from common PHY binding: PHY phandle and specifier (only make sense
--	for R-Car gen3 SoCs where the PCIe PHYs have their own register blocks).
--- phy-names: from common PHY binding: should be "pcie".
--
--Example:
--
--SoC-specific DT Entry:
--
--	pcie: pcie@fe000000 {
--		compatible = "renesas,pcie-r8a7791", "renesas,pcie-rcar-gen2";
--		reg = <0 0xfe000000 0 0x80000>;
--		#address-cells = <3>;
--		#size-cells = <2>;
--		bus-range = <0x00 0xff>;
--		device_type = "pci";
--		ranges = <0x01000000 0 0x00000000 0 0xfe100000 0 0x00100000
--			  0x02000000 0 0xfe200000 0 0xfe200000 0 0x00200000
--			  0x02000000 0 0x30000000 0 0x30000000 0 0x08000000
--			  0x42000000 0 0x38000000 0 0x38000000 0 0x08000000>;
--		dma-ranges = <0x42000000 0 0x40000000 0 0x40000000 0 0x40000000
--			      0x42000000 2 0x00000000 2 0x00000000 0 0x40000000>;
--		interrupts = <0 116 4>, <0 117 4>, <0 118 4>;
--		#interrupt-cells = <1>;
--		interrupt-map-mask = <0 0 0 0>;
--		interrupt-map = <0 0 0 0 &gic 0 116 4>;
--		clocks = <&mstp3_clks R8A7791_CLK_PCIE>, <&pcie_bus_clk>;
--		clock-names = "pcie", "pcie_bus";
--	};
--- 
-2.7.4
+OK, so I tried to bisect this, but, erm, I couldn't find a working
+revision to start from? I went all the way back to 4.10 (which is the
+first version to include the device tree file for the Omnia), and even
+on that, the wireless cards were failing to initialise with ASPM
+enabled...
+
+Happy to run other tests, but I think I'm going to need some pointers -
+the PCI subsystem is not my home turf :)
+
+-Toke
 
