@@ -2,206 +2,255 @@ Return-Path: <SRS0=7A2k=EE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 428E1C55179
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 02:03:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2951C5517A
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 02:04:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F3326208C3
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 02:03:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 80135216C4
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 02:04:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1603937044;
+	bh=jH8W/oePKPi43bL6yAG5GFbWSEhAunP0eFCIQBIhYhs=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=pdDS/w4sFmgqxfU55vX+m8B228zUWqrBSy7a/pAm1uxY/BCdeXzUepnO/CvJ4Jcr7
+	 KzdCh9N37TzlwM1RYP9YPeLJDHcKkJKftyL/oiuqVp92SZTBtl4Mjx0UXhUrdobiEV
+	 rAzpt/7a/aLyrDyNwp1SzdEhEtrGtZ8ExQVVYTSg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728964AbgJ2CDT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Oct 2020 22:03:19 -0400
-Received: from mga01.intel.com ([192.55.52.88]:16308 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2391222AbgJ2CDE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Oct 2020 22:03:04 -0400
-IronPort-SDR: 7hJw3C5G9Z9yys1RJ1YggkjmpGrgUA4mgMBPYySa1FLDZUE5otoBgNAxwWXlruY/I2xVO5zx8C
- /IRYnUcqhUbA==
-X-IronPort-AV: E=McAfee;i="6000,8403,9788"; a="186141793"
-X-IronPort-AV: E=Sophos;i="5.77,428,1596524400"; 
-   d="scan'208";a="186141793"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Oct 2020 19:03:02 -0700
-IronPort-SDR: tqrpv8I3IEA1nn7wWKgBLFVtp41QjLbgH06ev3ohSNiunUxB01fDyrJ7EELJslqQF3WOQQoqRK
- 3EbTTyQ1h5yw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.77,428,1596524400"; 
-   d="scan'208";a="356118179"
-Received: from orsmsx601.amr.corp.intel.com ([10.22.229.14])
-  by fmsmga002.fm.intel.com with ESMTP; 28 Oct 2020 19:03:01 -0700
-Received: from orsmsx612.amr.corp.intel.com (10.22.229.25) by
- ORSMSX601.amr.corp.intel.com (10.22.229.14) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1713.5; Wed, 28 Oct 2020 19:03:01 -0700
-Received: from orsmsx611.amr.corp.intel.com (10.22.229.24) by
- ORSMSX612.amr.corp.intel.com (10.22.229.25) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1713.5; Wed, 28 Oct 2020 19:03:01 -0700
-Received: from orsmsx611.amr.corp.intel.com ([10.22.229.24]) by
- ORSMSX611.amr.corp.intel.com ([10.22.229.24]) with mapi id 15.01.1713.004;
- Wed, 28 Oct 2020 19:03:01 -0700
-From:   "Dutt, Sudeep" <sudeep.dutt@intel.com>
-To:     "sherry.sun@nxp.com" <sherry.sun@nxp.com>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        "fugang.duan@nxp.com" <fugang.duan@nxp.com>
-CC:     "linux-imx@nxp.com" <linux-imx@nxp.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "hch@infradead.org" <hch@infradead.org>,
-        "kishon@ti.com" <kishon@ti.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "Dutt, Sudeep" <sudeep.dutt@intel.com>,
-        "Dixit, Ashutosh" <ashutosh.dixit@intel.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "vincent.whitchurch@axis.com" <vincent.whitchurch@axis.com>
-Subject: Re: [EXT] Re: [PATCH V5 0/2] Change vring space from nomal memory to
- dma coherent memory
-Thread-Topic: [EXT] Re: [PATCH V5 0/2] Change vring space from nomal memory to
- dma coherent memory
-Thread-Index: AQHWrM6mI/n9i6M9302TMCnx4YlfCams+nsAgAAB6wCAABE/AIAANTaAgAAPtICAAEJUgIAACJgAgACqYgCAAAFZgA==
-Date:   Thu, 29 Oct 2020 02:03:00 +0000
-Message-ID: <8e6da51572b8e64cf89a1e76f06089e8fa181bc9.camel@intel.com>
-References: <20201028020305.10593-1-sherry.sun@nxp.com>
-         <20201028055836.GA244690@kroah.com>
-         <AM0PR04MB4947032368486CC9874C812692170@AM0PR04MB4947.eurprd04.prod.outlook.com>
-         <20201028070712.GA1649838@kroah.com>
-         <AM8PR04MB7315D583A9490E642ED13071FF170@AM8PR04MB7315.eurprd04.prod.outlook.com>
-         <20201028111351.GA1964851@kroah.com>
-         <AM8PR04MB731570801A528203647FAD0AFF170@AM8PR04MB7315.eurprd04.prod.outlook.com>
-         <20201028154200.GB2780014@kroah.com>
-         <VI1PR04MB49608E4DE25847CC3019A40092140@VI1PR04MB4960.eurprd04.prod.outlook.com>
-In-Reply-To: <VI1PR04MB49608E4DE25847CC3019A40092140@VI1PR04MB4960.eurprd04.prod.outlook.com>
-Reply-To: "Dutt, Sudeep" <sudeep.dutt@intel.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
-x-originating-ip: [10.22.254.132]
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <649B453F68255A4FBAC1BCE02270DDE3@intel.com>
-Content-Transfer-Encoding: base64
+        id S1725830AbgJ1VnA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Oct 2020 17:43:00 -0400
+Received: from mail-oi1-f196.google.com ([209.85.167.196]:34756 "EHLO
+        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725300AbgJ1Vml (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Oct 2020 17:42:41 -0400
+Received: by mail-oi1-f196.google.com with SMTP id z23so1149207oic.1;
+        Wed, 28 Oct 2020 14:42:40 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=h0T8M9HFPja/Qcz5+OFxDy+3Ox865wq64TJqX0lZtiY=;
+        b=br26vZuT3zyqgPHw3wuWzevdniunBK+Fyf/fTksS+GCXareUxSdItYAJA231VK6wLd
+         UsyZ3KGU7Dv//xnFmRtPEzDtHJPh0h1qf2s15PoM/dG1354LCbmr4Q7OlkH+WDKtGlvK
+         8wdKGZ03PgY4W0lUbjxispdRgUoiWMXSSolSx5zhxQaQoyNMsUCQC/Nzca7G0TXRcyt7
+         fZ7Xl1sKm+YXL3QVN5uKGKYwpXolyBDrWpdXAP1ab5ub5AIxWgWfgOeq1hnT4/uBuA4y
+         vcML6h0UdBGw1KprHsWh5JxuWV7SMwn2wJ5pjV/WnM/TvHN7ckBkM/HVHkFZA4BpFN9D
+         Nz3g==
+X-Gm-Message-State: AOAM531EaeGPdmeRH1N/udanHU+LFl8s1uDDmD7CVeo5rK/S/jYxK7VF
+        JUVO9rJW6kw4NfLGSupUEvwVty59Hw==
+X-Google-Smtp-Source: ABdhPJzzLIwVb0GnrgftuCJ9zcN8udQxeppgVsd6r2Be66BDmlGrxb8/wZxghvtZTyC09OZtmCreNQ==
+X-Received: by 2002:aca:47cc:: with SMTP id u195mr630676oia.83.1603918024915;
+        Wed, 28 Oct 2020 13:47:04 -0700 (PDT)
+Received: from xps15.herring.priv (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
+        by smtp.googlemail.com with ESMTPSA id t17sm116123oor.3.2020.10.28.13.47.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 28 Oct 2020 13:47:04 -0700 (PDT)
+From:   Rob Herring <robh@kernel.org>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     linux-pci@vger.kernel.org, Andy Gross <agross@kernel.org>,
+        Binghui Wang <wangbinghui@hisilicon.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Fabio Estevam <festevam@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Jerome Brunet <jbrunet@baylibre.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Jonathan Chocron <jonnyc@amazon.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        Kevin Hilman <khilman@baylibre.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Kukjin Kim <kgene@kernel.org>,
+        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
+        linux-amlogic@lists.infradead.org, linux-arm-kernel@axis.com,
+        linux-arm-msm@vger.kernel.org, linux-omap@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-samsung-soc@vger.kernel.org,
+        linux-tegra@vger.kernel.org, Lucas Stach <l.stach@pengutronix.de>,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Masahiro Yamada <yamada.masahiro@socionext.com>,
+        Minghuan Lian <minghuan.Lian@nxp.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Neil Armstrong <narmstrong@baylibre.com>,
+        NXP Linux Team <linux-imx@nxp.com>,
+        Pengutronix Kernel Team <kernel@pengutronix.de>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Roy Zang <roy.zang@nxp.com>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Shawn Guo <shawnguo@kernel.org>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        Yue Wang <yue.wang@Amlogic.com>
+Subject: [PATCH 06/13] PCI: dwc/dra7xx: Use the common MSI irq_chip
+Date:   Wed, 28 Oct 2020 15:46:39 -0500
+Message-Id: <20201028204646.356535-7-robh@kernel.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20201028204646.356535-1-robh@kernel.org>
+References: <20201028204646.356535-1-robh@kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-T24gVGh1LCAyMDIwLTEwLTI5IGF0IDAxOjUxICswMDAwLCBTaGVycnkgU3VuIHdyb3RlOg0KPiBI
-aSBHcmVnLA0KPiANCj4gPiBTdWJqZWN0OiBSZTogW0VYVF0gUmU6IFtQQVRDSCBWNSAwLzJdIENo
-YW5nZSB2cmluZyBzcGFjZSBmcm9tIG5vbWFsDQo+ID4gbWVtb3J5IHRvIGRtYSBjb2hlcmVudCBt
-ZW1vcnkNCj4gPiANCj4gPiBPbiBXZWQsIE9jdCAyOCwgMjAyMCBhdCAwMzoxMToxNVBNICswMDAw
-LCBBbmR5IER1YW4gd3JvdGU6DQo+ID4gPiBGcm9tOiBHcmVnIEtIIDxncmVna2hAbGludXhmb3Vu
-ZGF0aW9uLm9yZz4gU2VudDogV2VkbmVzZGF5LA0KPiA+ID4gT2N0b2Jlcg0KPiA+ID4gMjgsIDIw
-MjAgNzoxNCBQTQ0KPiA+ID4gPiBPbiBXZWQsIE9jdCAyOCwgMjAyMCBhdCAxMDoxNzozOUFNICsw
-MDAwLCBBbmR5IER1YW4gd3JvdGU6DQo+ID4gPiA+ID4gRnJvbTogR3JlZyBLSCA8Z3JlZ2toQGxp
-bnV4Zm91bmRhdGlvbi5vcmc+IFNlbnQ6IFdlZG5lc2RheSwNCj4gPiA+ID4gPiBPY3RvYmVyIDI4
-LCAyMDIwIDM6MDcgUE0NCj4gPiA+ID4gPiA+IE9uIFdlZCwgT2N0IDI4LCAyMDIwIGF0IDA2OjA1
-OjI4QU0gKzAwMDAsIFNoZXJyeSBTdW4gd3JvdGU6DQo+ID4gPiA+ID4gPiA+IEhpIEdyZWcsDQo+
-ID4gPiA+ID4gPiA+IA0KPiA+ID4gPiA+ID4gPiA+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggVjUgMC8y
-XSBDaGFuZ2UgdnJpbmcgc3BhY2UgZnJvbQ0KPiA+ID4gPiA+ID4gPiA+IG5vbWFsDQo+ID4gPiA+
-ID4gPiA+ID4gbWVtb3J5IHRvIGRtYSBjb2hlcmVudCBtZW1vcnkNCj4gPiA+ID4gPiA+ID4gPiAN
-Cj4gPiA+ID4gPiA+ID4gPiBPbiBXZWQsIE9jdCAyOCwgMjAyMCBhdCAxMDowMzowM0FNICswODAw
-LCBTaGVycnkgU3VuDQo+ID4gPiA+ID4gPiA+ID4gd3JvdGU6DQo+ID4gPiA+ID4gPiA+ID4gPiBD
-aGFuZ2VzIGluIFY1Og0KPiA+ID4gPiA+ID4gPiA+ID4gMS4gUmVvcmdhbml6ZSB0aGUgdm9wX21t
-YXAgZnVuY3Rpb24gY29kZSBpbiBwYXRjaCAxLA0KPiA+ID4gPiA+ID4gPiA+ID4gd2hpY2gNCj4g
-PiA+ID4gPiA+ID4gPiA+IGlzIGRvbmUgYnkNCj4gPiA+ID4gPiA+ID4gPiANCj4gPiA+ID4gPiA+
-ID4gPiBDaHJpc3RvcGguDQo+ID4gPiA+ID4gPiA+ID4gPiAyLiBDb21wbGV0ZWx5IHJlbW92ZSB0
-aGUgdW5uZWNlc3NhcnkgY29kZSByZWxhdGVkIHRvDQo+ID4gPiA+ID4gPiA+ID4gPiByZWFzc2ln
-biB0aGUgdXNlZCByaW5nIGZvciBjYXJkIGluIHBhdGNoIDIuDQo+ID4gPiA+ID4gPiA+ID4gPiAN
-Cj4gPiA+ID4gPiA+ID4gPiA+IFRoZSBvcmlnaW5hbCB2b3AgZHJpdmVyIG9ubHkgc3VwcG9ydHMg
-ZG1hIGNvaGVyZW50DQo+ID4gPiA+ID4gPiA+ID4gPiBkZXZpY2UsDQo+ID4gPiA+ID4gPiA+ID4g
-PiBhcyBpdCBhbGxvY2F0ZXMgYW5kIG1hcHMgdnJpbmcgYnkgX2dldF9mcmVlX3BhZ2VzIGFuZA0K
-PiA+ID4gPiA+ID4gPiA+ID4gZG1hX21hcF9zaW5nbGUsIGJ1dCBub3QgdXNlDQo+ID4gPiA+ID4g
-PiA+ID4gPiBkbWFfc3luY19zaW5nbGVfZm9yX2NwdS9kZXZpY2UNCj4gPiA+ID4gPiA+ID4gPiA+
-IHRvIHN5bmMgdGhlIHVwZGF0ZXMgb2YgZGV2aWNlX3BhZ2UvdnJpbmcgYmV0d2VlbiBFUA0KPiA+
-ID4gPiA+ID4gPiA+ID4gYW5kDQo+ID4gPiA+ID4gPiA+ID4gPiBSQywgd2hpY2ggd2lsbCBjYXVz
-ZSBtZW1vcnkgc3luY2hyb25pemF0aW9uIHByb2JsZW0NCj4gPiA+ID4gPiA+ID4gPiA+IGZvcg0K
-PiA+ID4gPiA+ID4gPiA+ID4gZGV2aWNlIGRvbid0IHN1cHBvcnQNCj4gPiA+ID4gDQo+ID4gPiA+
-IGhhcmR3YXJlIGRtYSBjb2hlcmVudC4NCj4gPiA+ID4gPiA+ID4gPiA+IA0KPiA+ID4gPiA+ID4g
-PiA+ID4gQW5kIGFsbG9jYXRlIHZyaW5ncyB1c2UgZG1hX2FsbG9jX2NvaGVyZW50IGlzIGENCj4g
-PiA+ID4gPiA+ID4gPiA+IGNvbW1vbiB3YXkNCj4gPiA+ID4gPiA+ID4gPiA+IGluIGtlcm5lbCwg
-YXMgdGhlIG1lbW9yeSBpbnRlcmFjdGVkIGJldHdlZW4gdHdvDQo+ID4gPiA+ID4gPiA+ID4gPiBz
-eXN0ZW1zDQo+ID4gPiA+ID4gPiA+ID4gPiBzaG91bGQgdXNlIGNvbnNpc3RlbnQgbWVtb3J5IHRv
-IGF2b2lkIGNhY2hpbmcNCj4gPiA+ID4gPiA+ID4gPiA+IGVmZmVjdHMuIFNvDQo+ID4gPiA+ID4g
-PiA+ID4gPiBoZXJlIGFkZCBub25jb2hlcmVudCBwbGF0Zm9ybQ0KPiA+ID4gPiA+ID4gPiA+IA0K
-PiA+ID4gPiA+ID4gPiA+IHN1cHBvcnQgZm9yIHZvcCBkcml2ZXIuDQo+ID4gPiA+ID4gPiA+ID4g
-PiBBbHNvIGFkZCBzb21lIHJlbGF0ZWQgZG1hIGNoYW5nZXMgdG8gbWFrZSBzdXJlDQo+ID4gPiA+
-ID4gPiA+ID4gPiBub25jb2hlcmVudA0KPiA+ID4gPiA+ID4gPiA+ID4gcGxhdGZvcm0gd29ya3Mg
-d2VsbC4NCj4gPiA+ID4gPiA+ID4gPiA+IA0KPiA+ID4gPiA+ID4gPiA+ID4gU2hlcnJ5IFN1biAo
-Mik6DQo+ID4gPiA+ID4gPiA+ID4gPiAgIG1pc2M6IHZvcDogY2hhbmdlIHRoZSB3YXkgb2YgYWxs
-b2NhdGluZyB2cmluZ3MgYW5kDQo+ID4gPiA+ID4gPiA+ID4gPiBkZXZpY2UgcGFnZQ0KPiA+ID4g
-PiA+ID4gPiA+ID4gICBtaXNjOiB2b3A6IGRvIG5vdCBhbGxvY2F0ZSBhbmQgcmVhc3NpZ24gdGhl
-IHVzZWQNCj4gPiA+ID4gPiA+ID4gPiA+IHJpbmcNCj4gPiA+ID4gPiA+ID4gPiA+IA0KPiA+ID4g
-PiA+ID4gPiA+ID4gIGRyaXZlcnMvbWlzYy9taWMvYnVzL3ZvcF9idXMuaCAgICAgfCAgIDIgKw0K
-PiA+ID4gPiA+ID4gPiA+ID4gIGRyaXZlcnMvbWlzYy9taWMvaG9zdC9taWNfYm9vdC5jICAgfCAg
-IDkgKysNCj4gPiA+ID4gPiA+ID4gPiA+ICBkcml2ZXJzL21pc2MvbWljL2hvc3QvbWljX21haW4u
-YyAgIHwgIDQzICsrLS0tLS0tDQo+ID4gPiA+ID4gPiA+ID4gPiAgZHJpdmVycy9taXNjL21pYy92
-b3Avdm9wX2RlYnVnZnMuYyB8ICAgNCAtDQo+ID4gPiA+ID4gPiA+ID4gPiAgZHJpdmVycy9taXNj
-L21pYy92b3Avdm9wX21haW4uYyAgICB8ICA3MCArLS0tLS0tLS0NCj4gPiA+ID4gPiA+ID4gPiA+
-IC0tLQ0KPiA+ID4gPiA+ID4gPiA+ID4gIGRyaXZlcnMvbWlzYy9taWMvdm9wL3ZvcF92cmluZ2gu
-YyAgfCAxNjYgKysrKysrKysrKy0NCj4gPiA+ID4gPiA+ID4gPiA+IC0tLS0tLS0tLS0tLQ0KPiA+
-IA0KPiA+IC0tLS0tLQ0KPiA+ID4gPiA+ID4gPiA+ID4gIGluY2x1ZGUvdWFwaS9saW51eC9taWNf
-Y29tbW9uLmggICAgfCAgIDkgKy0NCj4gPiA+ID4gPiA+ID4gPiA+ICA3IGZpbGVzIGNoYW5nZWQs
-IDg1IGluc2VydGlvbnMoKyksIDIxOCBkZWxldGlvbnMoLSkNCj4gPiA+ID4gPiA+ID4gPiANCj4g
-PiA+ID4gPiA+ID4gPiBIYXZlIHlvdSBhbGwgc2VlbjoNCj4gPiA+ID4gPiA+ID4gPiANCj4gPiA+
-ID4gPiA+ID4gPiANCmh0dHBzOi8vZXVyMDEuc2FmZWxpbmtzLnByb3RlY3Rpb24ub3V0bG9vay5j
-b20vP3VybD1odHRwcyUzQQ0KPiA+ID4gPiA+ID4gPiA+ICUyRiUyNQ0KPiA+ID4gPiA+ID4gPiA+
-IDI1DQo+ID4gPiA+ID4gPiA+ID4gDQo+ID4gDQo+ID4gMkZsb3JlLmtlcm5lbC5vcmclMkZyJTJG
-OGMxNDQzMTM2NTYzZGUzNDY5OWQyYzA4NGRmNDc4MTgxYzIwNWRiNC4xNg0KPiA+ID4gPiA+ID4g
-PiA+IA0KPiA+IA0KPiA+IDAzODU0NDE2LmdpdC5zdWRlZXAuZHV0dCU0MGludGVsLmNvbSZhbXA7
-ZGF0YT0wNCU3QzAxJTdDc2hlcnJ5LnN1biUNCj4gPiA+ID4gPiA+ID4gPiANCj4gPiANCj4gPiA0
-MG54cC5jb20lN0NjMTljOTg3NjY3NDM0OTY5ODQ3ZTA4ZDg3YjA2ODVlOCU3QzY4NmVhMWQzYmMy
-YjRjNmYNCj4gPiA+ID4gPiA+ID4gPiANCj4gPiANCj4gPiBhOTJjZDk5YzVjMzAxNjM1JTdDMCU3
-QzAlN0M2MzczOTQ2MTUyMzg5NDAzMjMlN0NVbmtub3duJTdDVFcNCj4gPiA+ID4gPiA+ID4gPiAN
-Cj4gPiANCj4gPiBGcGJHWnNiM2Q4ZXlKV0lqb2lNQzR3TGpBd01EQWlMQ0pRSWpvaVYybHVNeklp
-TENKQlRpSTZJazFoYVd3aUxDSlgNCj4gPiA+ID4gPiA+ID4gPiANCj4gPiANCj4gPiBWQ0k2TW4w
-JTNEJTdDMTAwMCZhbXA7c2RhdGE9WnElMkZ0SFdUcSUyQnVJVkJZWEZHb2VCbXEwSkp6WWQNCj4g
-PiA+ID4gPiA+ID4gPiA5ekR5djROVk40VHBDJTJGVSUzRCZhbXA7cmVzZXJ2ZWQ9MA0KPiA+ID4g
-PiA+ID4gPiA+IA0KPiA+ID4gPiA+ID4gPiA+IExvb2tzIGxpa2UgdGhpcyBjb2RlIGlzIGFza2lu
-ZyB0byBqdXN0IGJlIGRlbGV0ZWQsIGlzDQo+ID4gPiA+ID4gPiA+ID4gdGhhdCBvayB3aXRoIHlv
-dT8NCj4gPiA+ID4gPiA+ID4gDQo+ID4gPiA+ID4gPiA+IFllcywgSSBzYXcgdGhhdCBwYXRjaC4g
-SSdtIG9rIHdpdGggaXQuDQo+ID4gPiA+ID4gPiANCj4gPiA+ID4gPiA+IEdyZWF0LCBjYW4geW91
-IHBsZWFzZSBwcm92aWRlIGEgIlJldmlld2VkLWJ5OiIgb3IgIkFja2VkLQ0KPiA+ID4gPiA+ID4g
-Ynk6IiBmb3IgaXQ/DQo+ID4gPiA+ID4gPiANCj4gPiA+ID4gPiA+IHRoYW5rcywNCj4gPiA+ID4g
-PiA+IA0KPiA+ID4gPiA+ID4gZ3JlZyBrLWgNCj4gPiA+ID4gPiANCj4gPiA+ID4gPiBTaGVycnkg
-dG9vayBtdWNoIGVmZm9ydCBvbiB0aGUgZmVhdHVyZXMgc3VwcG9ydCBvbiBpLk1YDQo+ID4gPiA+
-ID4gc2VyaWVzDQo+ID4gPiA+ID4gbGlrZQ0KPiA+ID4gPiANCj4gPiA+ID4gaS5NWDhRTS9pLk1Y
-OFFYUC9pLk1YOE1NLg0KPiA+ID4gPiA+IA0KPiA+ID4gPiA+IE5vdyBpdCBpcyBhIHBpdHkgdG8g
-ZGVsZXRlIHRoZSB2b3AgY29kZS4NCj4gPiA+ID4gPiANCj4gPiA+ID4gPiBPbmUgcXVlc3Rpb24s
-DQo+ID4gPiA+ID4gY2FuIHdlIHJlc3VibWl0IHZvcCBjb2RlIGJ5IGNsZWFuIHVwLCBub3cgb25s
-eSBmb3IgaS5NWA0KPiA+ID4gPiA+IHNlcmllcyBhcw0KPiA+ID4gPiA+IER1dHQncw0KPiA+ID4g
-PiANCj4gPiA+ID4gc3VnZ2VzdGlvbiA/DQoNClJlc3VibWl0dGluZyB0aGUgVk9QIGNvZGUgd2l0
-aCBjbGVhbnVwcyB0YWlsb3JlZCBmb3IgaS5NWCBtYWtlcyBzZW5zZQ0KdG8gbWUuDQoNCj4gPiA+
-ID4gPiBPciB3ZSBoYXZlIHRvIGRyb3AgdGhlIGRlc2lnbiBhbmQgc3dpdGNoIHRvIHNlbGVjdCBv
-dGhlcg0KPiA+ID4gPiA+IHNvbHV0aW9ucyA/DQo+ID4gPiANCj4gPiA+IE9rYXksIHdlIHBsYW4g
-dG8gc3dpdGNoIHRvIE5UQiBzb2x1dGlvbi4NCj4gPiANCj4gPiBXaGF0IGlzIGEgIk5UQiBzb2x1
-dGlvbiIgZXhhY3RseT8NCj4gDQo+IFRoZSBkcml2ZXIgbG9jYXRlZCBhdCBkcml2ZXJzL250Yi8s
-IGl0IGFsc28gY2FuIHNldHVwIGEgcG9pbnQtdG8tDQo+IHBvaW50IFBDSS1FIGJ1cyBjb25uZWN0
-aW5nIGJldHdlZW4gdHdvIHN5c3RlbXMuDQo+IEJ1dCB3ZSBoYXZlbid0IGdvdCBhIGRlZXAgbG9v
-ayBvZiB0aGlzIGRyaXZlciB5ZXQsIHNvIHdlIGFyZSBub3Qgc3VyZQ0KPiB3aGV0aGVyIGl0IGNh
-biByZXBsYWNlIHRoZSB2b3AgZnJhbWV3b3JrLg0KPiANCj4gPiANCj4gPiA+IA0KPiA+ID4gPiBJ
-ZiB0aGlzIHdob2xlIHN1YnN5c3RlbSBpcyBiZWluZyBkZWxldGVkIGJlY2F1c2UgaXQgaXMgbm90
-IHVzZWQNCj4gPiA+ID4gYW5kDQo+ID4gPiA+IG5ldmVyIHNoaXBwZWQsIHllcywgcGxlYXNlIHVz
-ZSBhIGRpZmZlcmVudCBzb2x1dGlvbi4NCj4gPiA+ID4gDQo+ID4gPiA+IEkgZG9uJ3QgdW5kZXJz
-dGFuZCB3aHkgeW91IHdlcmUgdHJ5aW5nIHRvIHBpZ2d5LWJhY2sgb24gdGhpcw0KPiA+ID4gPiBj
-b2RlYmFzZSBpZiB0aGUgaGFyZHdhcmUgd2FzIHRvdGFsbHkgZGlmZmVyZW50LCBmb3Igc29tZSBy
-ZWFzb24NCj4gPiA+ID4gSQ0KPiA+ID4gPiB0aG91Z2h0IHRoaXMgd2FzIHRoZSBzYW1lIGhhcmR3
-YXJlLiAgV2hhdCBleGFjdGx5IGlzIHRoaXM/DQo+ID4gPiANCj4gPiA+IE5vdCB0aGUgd2hvbGUg
-Y29kZWJhc2UsIGp1c3QgdGhlIHZvcCBmcmFtZXdvcmsuDQo+ID4gDQo+ID4gVGhhdCBkaWRuJ3Qg
-YW5zd2VyIHRoZSBxdWVzdGlvbiBhdCBhbGwsIHdoYXQgYXJlIHlvdSBhbGwgdHJ5aW5nIHRvDQo+
-ID4gZG8gaGVyZSwgd2l0aA0KPiA+IHdoYXQgaGFyZHdhcmUsIHRoYXQgdGhlIFZPUCBjb2RlIHNl
-ZW1lZCBsaWtlIGEgZ29vZCBmaXQ/DQo+IA0KPiBWb3AgaXMgYSBjb21tb24gZnJhbWV3b3JrIHdo
-aWNoIGlzIGluZGVwZW5kZW50IG9mIHRoZSBJbnRlbCBNSUMNCj4gaGFyZHdhcmUuDQo+IFdlIHBs
-YW5lZCB0byByZXVzZSB2b3AgZnJhbWV3b3JrIG9uIHR3byBhcm02NCBhcmNoaXRlY3R1cmUgZGV2
-aWNlcywNCj4gdG8gc2V0dXAgdGhlIGNvbm5lY3Rpb24gYmV0d2VlbiB0d28gc3lzdGVtcyBiYXNl
-ZCBvbiB2aXJ0aW8gb3Zlcg0KPiBQQ0lFLg0KDQpZZXMsIHdlIHdhbnRlZCBWaXJ0aW8gT3ZlciBQ
-Q0llIChWT1ApIHRvIGJlIGluZGVwZW5kZW50IG9mIHRoZSBoYXJkd2FyZQ0KYXMgbXVjaCBhcyBw
-b3NzaWJsZS4gSXQgZGlkIGVuZCB1cCB1bmRlciB0aGUgbWljLyBkcml2ZXIgc3Vic3lzdGVtDQp0
-aG91Z2ggc28gaXQgd291bGQgYmUgZ29vZCB0byBhdHRlbXB0IHBsYWNpbmcgaXQgaW4gYSBnZW5l
-cmljIGZvbGRlcg0Kd2hpY2ggaXMgbm90IHRpZWQgdG8gYSBzcGVjaWZpYyBoYXJkd2FyZSBsYXll
-ciB0aGlzIHRpbWUgYXJvdW5kLg0KDQpSZWdhcmRzLA0KU3VkZWVwIER1dHQNCg==
+The dra7xx MSI irq_chip implementation is identical to the default DWC one.
+The only difference is the interrupt handler as the MSI interrupt is muxed
+with other interrupts, but that doesn't affect the irq_chip part of it.
+
+Cc: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-omap@vger.kernel.org
+Signed-off-by: Rob Herring <robh@kernel.org>
+---
+ drivers/pci/controller/dwc/pci-dra7xx.c | 125 ------------------------
+ 1 file changed, 125 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
+index a4aabc85dbb1..4d0c35a4aa59 100644
+--- a/drivers/pci/controller/dwc/pci-dra7xx.c
++++ b/drivers/pci/controller/dwc/pci-dra7xx.c
+@@ -377,133 +377,8 @@ static int dra7xx_pcie_init_irq_domain(struct pcie_port *pp)
+ 	return 0;
+ }
+ 
+-static void dra7xx_pcie_setup_msi_msg(struct irq_data *d, struct msi_msg *msg)
+-{
+-	struct pcie_port *pp = irq_data_get_irq_chip_data(d);
+-	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+-	u64 msi_target;
+-
+-	msi_target = (u64)pp->msi_data;
+-
+-	msg->address_lo = lower_32_bits(msi_target);
+-	msg->address_hi = upper_32_bits(msi_target);
+-
+-	msg->data = d->hwirq;
+-
+-	dev_dbg(pci->dev, "msi#%d address_hi %#x address_lo %#x\n",
+-		(int)d->hwirq, msg->address_hi, msg->address_lo);
+-}
+-
+-static int dra7xx_pcie_msi_set_affinity(struct irq_data *d,
+-					const struct cpumask *mask,
+-					bool force)
+-{
+-	return -EINVAL;
+-}
+-
+-static void dra7xx_pcie_bottom_mask(struct irq_data *d)
+-{
+-	struct pcie_port *pp = irq_data_get_irq_chip_data(d);
+-	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+-	unsigned int res, bit, ctrl;
+-	unsigned long flags;
+-
+-	raw_spin_lock_irqsave(&pp->lock, flags);
+-
+-	ctrl = d->hwirq / MAX_MSI_IRQS_PER_CTRL;
+-	res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
+-	bit = d->hwirq % MAX_MSI_IRQS_PER_CTRL;
+-
+-	pp->irq_mask[ctrl] |= BIT(bit);
+-	dw_pcie_writel_dbi(pci, PCIE_MSI_INTR0_MASK + res,
+-			   pp->irq_mask[ctrl]);
+-
+-	raw_spin_unlock_irqrestore(&pp->lock, flags);
+-}
+-
+-static void dra7xx_pcie_bottom_unmask(struct irq_data *d)
+-{
+-	struct pcie_port *pp = irq_data_get_irq_chip_data(d);
+-	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+-	unsigned int res, bit, ctrl;
+-	unsigned long flags;
+-
+-	raw_spin_lock_irqsave(&pp->lock, flags);
+-
+-	ctrl = d->hwirq / MAX_MSI_IRQS_PER_CTRL;
+-	res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
+-	bit = d->hwirq % MAX_MSI_IRQS_PER_CTRL;
+-
+-	pp->irq_mask[ctrl] &= ~BIT(bit);
+-	dw_pcie_writel_dbi(pci, PCIE_MSI_INTR0_MASK + res,
+-			   pp->irq_mask[ctrl]);
+-
+-	raw_spin_unlock_irqrestore(&pp->lock, flags);
+-}
+-
+-static void dra7xx_pcie_bottom_ack(struct irq_data *d)
+-{
+-	struct pcie_port *pp  = irq_data_get_irq_chip_data(d);
+-	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+-	unsigned int res, bit, ctrl;
+-
+-	ctrl = d->hwirq / MAX_MSI_IRQS_PER_CTRL;
+-	res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
+-	bit = d->hwirq % MAX_MSI_IRQS_PER_CTRL;
+-
+-	dw_pcie_writel_dbi(pci, PCIE_MSI_INTR0_STATUS + res, BIT(bit));
+-}
+-
+-static struct irq_chip dra7xx_pci_msi_bottom_irq_chip = {
+-	.name = "DRA7XX-PCI-MSI",
+-	.irq_ack = dra7xx_pcie_bottom_ack,
+-	.irq_compose_msi_msg = dra7xx_pcie_setup_msi_msg,
+-	.irq_set_affinity = dra7xx_pcie_msi_set_affinity,
+-	.irq_mask = dra7xx_pcie_bottom_mask,
+-	.irq_unmask = dra7xx_pcie_bottom_unmask,
+-};
+-
+-static int dra7xx_pcie_msi_host_init(struct pcie_port *pp)
+-{
+-	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+-	struct device *dev = pci->dev;
+-	u32 ctrl, num_ctrls;
+-	int ret;
+-
+-	pp->msi_irq_chip = &dra7xx_pci_msi_bottom_irq_chip;
+-
+-	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
+-	/* Initialize IRQ Status array */
+-	for (ctrl = 0; ctrl < num_ctrls; ctrl++) {
+-		pp->irq_mask[ctrl] = ~0;
+-		dw_pcie_writel_dbi(pci, PCIE_MSI_INTR0_MASK +
+-				    (ctrl * MSI_REG_CTRL_BLOCK_SIZE),
+-				    pp->irq_mask[ctrl]);
+-		dw_pcie_writel_dbi(pci, PCIE_MSI_INTR0_ENABLE +
+-				    (ctrl * MSI_REG_CTRL_BLOCK_SIZE),
+-				    ~0);
+-	}
+-
+-	ret = dw_pcie_allocate_domains(pp);
+-	if (ret)
+-		return ret;
+-
+-	pp->msi_data = dma_map_single_attrs(dev, &pp->msi_msg,
+-					   sizeof(pp->msi_msg),
+-					   DMA_FROM_DEVICE,
+-					   DMA_ATTR_SKIP_CPU_SYNC);
+-	ret = dma_mapping_error(dev, pp->msi_data);
+-	if (ret) {
+-		dev_err(dev, "Failed to map MSI data\n");
+-		pp->msi_data = 0;
+-		dw_pcie_free_msi(pp);
+-	}
+-	return ret;
+-}
+-
+ static const struct dw_pcie_host_ops dra7xx_pcie_host_ops = {
+ 	.host_init = dra7xx_pcie_host_init,
+-	.msi_host_init = dra7xx_pcie_msi_host_init,
+ };
+ 
+ static void dra7xx_pcie_ep_init(struct dw_pcie_ep *ep)
+-- 
+2.25.1
+
