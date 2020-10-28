@@ -2,153 +2,79 @@ Return-Path: <SRS0=7A2k=EE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.3 required=3.0 tests=BAYES_00,DATE_IN_PAST_12_24,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A3A6C56201
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 00:21:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97E97C388F7
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 00:34:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 150FD20780
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 00:21:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1744C20791
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 00:34:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ellerman.id.au header.i=@ellerman.id.au header.b="fBZNMVGf"
+	dkim=pass (2048-bit key) header.d=axis.com header.i=@axis.com header.b="Rm7dqi0a"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390790AbgJ2AV3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Oct 2020 20:21:29 -0400
-Received: from bilbo.ozlabs.org ([203.11.71.1]:44765 "EHLO ozlabs.org"
+        id S1732214AbgJ1WUe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Oct 2020 18:20:34 -0400
+Received: from smtp1.axis.com ([195.60.68.17]:65154 "EHLO smtp1.axis.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727315AbgJ2AV1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Oct 2020 20:21:27 -0400
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mail.ozlabs.org (Postfix) with ESMTPSA id 4CM5hY1c5jz9sTf;
-        Thu, 29 Oct 2020 11:21:17 +1100 (AEDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=ellerman.id.au;
-        s=201909; t=1603930883;
-        bh=1H+0lWYSxaRNRPccmOFzTYzYgErk8Jx3rJ+1kAphuRA=;
-        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=fBZNMVGf2DpDigzvlO5EFKrSfhcHEKaclKWRSpd0rMT3nijHNgh+K7YZaMcJgG+I1
-         Sqp0aSWWEEdsZy58/OpXsqjKdLh1Go0930GvCaNP/rPdkcm6jj8VLu+RtZAYju7Lwv
-         1OyJzCDTJEPo7fb3YVK+7vVSD947EigxRUEp47FaWl3boTdjoiwTlcbdL3lqCGS/Ir
-         HjS3q0q57c4NP98/lAG95E/PIIhVcbnSgznNbTvydd0ukv+wu90vIX/fgrejZmKL/x
-         fFgnf7BJJuzQ19szmCiiqO1GyzQ9nRbhKLLimDSXto/YVs3qcf351XsGaZm3WEkFCR
-         8YPZdn5UhcwWA==
-From:   Michael Ellerman <mpe@ellerman.id.au>
-To:     Rob Herring <robh@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
-        Neil Armstrong <narmstrong@baylibre.com>,
-        linux-pci@vger.kernel.org,
-        Binghui Wang <wangbinghui@hisilicon.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        linux-tegra@vger.kernel.org,
-        Thierry Reding <thierry.reding@gmail.com>,
-        linux-arm-kernel@axis.com,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Jonathan Chocron <jonnyc@amazon.com>,
-        Shawn Guo <shawnguo@kernel.org>,
-        Jonathan Hunter <jonathanh@nvidia.com>,
-        Fabio Estevam <festevam@gmail.com>,
-        Jerome Brunet <jbrunet@baylibre.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        linux-samsung-soc@vger.kernel.org,
-        Minghuan Lian <minghuan.Lian@nxp.com>,
-        Kevin Hilman <khilman@baylibre.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Kukjin Kim <kgene@kernel.org>,
-        NXP Linux Team <linux-imx@nxp.com>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        linux-arm-msm@vger.kernel.org,
-        Sascha Hauer <s.hauer@pengutronix.de>,
-        Yue Wang <yue.wang@Amlogic.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-amlogic@lists.infradead.org, linux-omap@vger.kernel.org,
-        Mingkai Hu <mingkai.hu@nxp.com>, Roy Zang <roy.zang@nxp.com>,
-        Masahiro Yamada <yamada.masahiro@socionext.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Andy Gross <agross@kernel.org>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Pengutronix Kernel Team <kernel@pengutronix.de>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        linuxppc-dev@lists.ozlabs.org, Lucas Stach <l.stach@pengutronix.de>
-Subject: Re: [PATCH 01/13] PCI: dwc/imx6: Drop setting PCI_MSI_FLAGS_ENABLE
-In-Reply-To: <20201028204646.356535-2-robh@kernel.org>
-References: <20201028204646.356535-1-robh@kernel.org> <20201028204646.356535-2-robh@kernel.org>
-Date:   Thu, 29 Oct 2020 11:21:16 +1100
-Message-ID: <87h7qdx4oz.fsf@mpe.ellerman.id.au>
+        id S1732202AbgJ1WUc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Oct 2020 18:20:32 -0400
+X-Greylist: delayed 2240 seconds by postgrey-1.27 at vger.kernel.org; Wed, 28 Oct 2020 18:20:32 EDT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=axis.com; l=411; q=dns/txt; s=axis-central1;
+  t=1603923632; x=1635459632;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=f6nefk6qLvt2N+SlLRUmIvEhqqqWIvL3vPC/cV/yIqI=;
+  b=Rm7dqi0a+1dTvT6nF7qy+i4ELRnE6CsIVo6xIWrP+/HBY6OyvFxXOYyM
+   uHbqkkmpg7Wf1qTPsxKECvOgelORfJavN24xRHKb/nCOHlGTCkiU2sZKP
+   TdOMi96uSIde9xzznXlsuwSDdnUadfDAxhdAQaBCeejsXvZaDhNV0iBpB
+   ZPAh8pqhVljS8iYUIpM3Us0NTyfLkrqQGrgh4NM/tX+L8c/f4AL7PTb6o
+   Wn+BaaFY+zhnt4AwTqqvwdXHm+Wlt4M7Vc4yh43oVI493siNolA9UEugc
+   6OaZNHGyNZ+gaKxF4mQBdMuK0NIQ9tUp48zbjr6aOY0DNv1aF/eOZcIrs
+   g==;
+IronPort-SDR: 3D9ztP36IlKFWadXfPM2MkLYOmGgK6qkHF7krwn55t2zdK/xtPPl6hkHJkP3JGlYrpKB+xHsE1
+ K7Kck1EhEA4kXyPvY+VPbVVn3GuywioinswjVdu1WAJ/0zrFOBrEtfE7LoLJjKSi/1GqlhnOI/
+ xcW444Vdi0+CBtbTRa8xQUqYDagFcN9y1n6JtkjADQH9xgchGaFEsvhAJ1x31Al8qruyquFM3o
+ hRh9JX8FG6yOd7W4Q9sOhWnDqQEbPU68yB2w758jd4b78+z5Vag9bnbdRYoMkFB0GtY/dCeGLX
+ 5eY=
+X-IronPort-AV: E=Sophos;i="5.77,425,1596492000"; 
+   d="scan'208";a="14495663"
+Date:   Wed, 28 Oct 2020 10:09:20 +0100
+From:   Vincent Whitchurch <vincent.whitchurch@axis.com>
+To:     Greg KH <gregkh@linuxfoundation.org>, <sudeep.dutt@intel.com>
+CC:     Sherry Sun <sherry.sun@nxp.com>,
+        "hch@infradead.org" <hch@infradead.org>,
+        "ashutosh.dixit@intel.com" <ashutosh.dixit@intel.com>,
+        "arnd@arndb.de" <arnd@arndb.de>, "kishon@ti.com" <kishon@ti.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-imx@nxp.com" <linux-imx@nxp.com>,
+        "fugang.duan@nxp.com" <fugang.duan@nxp.com>
+Subject: Re: [PATCH V5 0/2] Change vring space from nomal memory to dma
+ coherent memory
+Message-ID: <20201028090920.xaryai7bnknxphqf@axis.com>
+References: <20201028020305.10593-1-sherry.sun@nxp.com>
+ <20201028055836.GA244690@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20201028055836.GA244690@kroah.com>
+User-Agent: NeoMutt/20170113 (1.7.2)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Rob Herring <robh@kernel.org> writes:
-> No other host driver sets the PCI_MSI_FLAGS_ENABLE bit, so it must not
-> be necessary. If it is, a comment is needed.
+On Wed, Oct 28, 2020 at 06:58:36AM +0100, Greg KH wrote:
+> Have you all seen:
+> 	https://lore.kernel.org/r/8c1443136563de34699d2c084df478181c205db4.1603854416.git.sudeep.dutt@intel.com
 
-Yeah, but git blame directly points to:
+No, that link doesn't work and I can't find that email from Sudeep in
+any of the archives:
 
-  75cb8d20c112 ("PCI: imx: Enable MSI from downstream components")
+ https://lore.kernel.org/lkml/?q=f%3Asudeep.dutt%40intel.com
 
-Which has a pretty long explanation. The relevant bit probably being:
-
-  ... on i.MX6, the MSI Enable bit controls delivery of MSI interrupts
-  from components below the Root Port.
-
-
-So it seems a little rash to just remove the code.
-
-cheers
-
-
-> Cc: Richard Zhu <hongxing.zhu@nxp.com>
-> Cc: Lucas Stach <l.stach@pengutronix.de>
-> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Shawn Guo <shawnguo@kernel.org>
-> Cc: Sascha Hauer <s.hauer@pengutronix.de>
-> Cc: Pengutronix Kernel Team <kernel@pengutronix.de>
-> Cc: Fabio Estevam <festevam@gmail.com>
-> Cc: NXP Linux Team <linux-imx@nxp.com>
-> Signed-off-by: Rob Herring <robh@kernel.org>
-> ---
->  drivers/pci/controller/dwc/pci-imx6.c | 8 --------
->  1 file changed, 8 deletions(-)
->
-> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-> index 5cf1ef12fb9b..7dd137d62dca 100644
-> --- a/drivers/pci/controller/dwc/pci-imx6.c
-> +++ b/drivers/pci/controller/dwc/pci-imx6.c
-> @@ -1002,7 +1002,6 @@ static int imx6_pcie_probe(struct platform_device *pdev)
->  	struct resource *dbi_base;
->  	struct device_node *node = dev->of_node;
->  	int ret;
-> -	u16 val;
->  
->  	imx6_pcie = devm_kzalloc(dev, sizeof(*imx6_pcie), GFP_KERNEL);
->  	if (!imx6_pcie)
-> @@ -1167,13 +1166,6 @@ static int imx6_pcie_probe(struct platform_device *pdev)
->  	if (ret < 0)
->  		return ret;
->  
-> -	if (pci_msi_enabled()) {
-> -		u8 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_MSI);
-> -		val = dw_pcie_readw_dbi(pci, offset + PCI_MSI_FLAGS);
-> -		val |= PCI_MSI_FLAGS_ENABLE;
-> -		dw_pcie_writew_dbi(pci, offset + PCI_MSI_FLAGS, val);
-> -	}
-> -
->  	return 0;
->  }
->  
-> -- 
-> 2.25.1
+Sudeep, perhaps you could try to resend the patch?  Thank you.
