@@ -2,90 +2,98 @@ Return-Path: <SRS0=7A2k=EE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C4CDC388F7
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 01:45:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EDF5C4363A
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 01:45:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2EFCE20782
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 01:45:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 31F6D20780
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 01:45:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729883AbgJ2BpS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Oct 2020 21:45:18 -0400
-Received: from imap2.colo.codethink.co.uk ([78.40.148.184]:46716 "EHLO
-        imap2.colo.codethink.co.uk" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729212AbgJ2BpR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Oct 2020 21:45:17 -0400
-X-Greylist: delayed 12601 seconds by postgrey-1.27 at vger.kernel.org; Wed, 28 Oct 2020 21:45:16 EDT
-Received: from cpc98990-stkp12-2-0-cust216.10-2.cable.virginm.net ([86.26.12.217] helo=[192.168.0.10])
-        by imap2.colo.codethink.co.uk with esmtpsa  (Exim 4.92 #3 (Debian))
-        id 1kXp8e-0000Cf-3h; Wed, 28 Oct 2020 17:21:32 +0000
-In-Reply-To: <20201022132223.17789-4-daire.mcnamara@microchip.com>
-To:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Daire McNamara <daire.mcnamara@microchip.com>
-From:   Ben Dooks <ben.dooks@codethink.co.uk>
-Subject: Re: [PATCH v17 3/3] PCI: microchip: Add host driver for Microchip
- PCIe controller
-Organization: Codethink Limited.
-Message-ID: <587df2af-c59e-371a-230c-9c7a614824bd@codethink.co.uk>
-Date:   Wed, 28 Oct 2020 17:21:31 +0000
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.0
+        id S1729131AbgJ2BpN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Oct 2020 21:45:13 -0400
+Received: from mga12.intel.com ([192.55.52.136]:8360 "EHLO mga12.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729123AbgJ2Bo0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Oct 2020 21:44:26 -0400
+IronPort-SDR: XzSyplV6kRbKGHgllaD0fWN5BzHnLUrCUNuS3sR4lkWrc0G0JOgSyr68DM/sEcYvN/M0vXnvfg
+ o8856aKlGfdg==
+X-IronPort-AV: E=McAfee;i="6000,8403,9788"; a="147646386"
+X-IronPort-AV: E=Sophos;i="5.77,428,1596524400"; 
+   d="scan'208";a="147646386"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Oct 2020 18:44:26 -0700
+IronPort-SDR: PIakEaBSVpZbZRy6CrFqIHsiXJIctGSOyPZR8kMkUSq4yEA+8Js7xYGRpehOSyH/xelWnBUA5q
+ KfXiIPhUKUzA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.77,428,1596524400"; 
+   d="scan'208";a="424907062"
+Received: from linux.intel.com ([10.54.29.200])
+  by fmsmga001.fm.intel.com with ESMTP; 28 Oct 2020 18:44:26 -0700
+Received: from debox1-desk2.jf.intel.com (debox1-desk2.jf.intel.com [10.54.75.16])
+        by linux.intel.com (Postfix) with ESMTP id 4548D580898;
+        Wed, 28 Oct 2020 18:44:26 -0700 (PDT)
+From:   "David E. Box" <david.e.box@linux.intel.com>
+To:     lee.jones@linaro.org, david.e.box@linux.intel.com,
+        hdegoede@redhat.com, mgross@linux.intel.com, bhelgaas@google.com,
+        alexey.budankov@linux.intel.com
+Cc:     linux-kernel@vger.kernel.org, platform-driver-x86@vger.kernel.org,
+        linux-pci@vger.kernel.org,
+        Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: [PATCH V9 1/5] PCI: Add defines for Designated Vendor-Specific Extended Capability
+Date:   Wed, 28 Oct 2020 18:44:45 -0700
+Message-Id: <20201029014449.14955-2-david.e.box@linux.intel.com>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20201029014449.14955-1-david.e.box@linux.intel.com>
+References: <20201029014449.14955-1-david.e.box@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-GB
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi, I have tried applying these patches to the v5.6.16 yocto kernel
-supplied for the Icicle board. I've assumed this is a v5.9 patch set
-as they don't apply cleanly to v5.6.16 so rebased up to v5.9
+Add PCIe Designated Vendor-Specific Extended Capability (DVSEC) and defines
+for the header offsets. Defined in PCIe r5.0, sec 7.9.6.
 
-The PCie is failing to initialise on the icicle board. Is there
-anything else needing to be done to get it working on this board?
+Signed-off-by: David E. Box <david.e.box@linux.intel.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+---
 
-Log excerpt from board boot:
+Changes from V8:
+	- None
 
-> [    2.435747] microchip-pcie e0000000.pci: host bridge /pci@E0000000 ranges:
-> [    2.442580] microchip-pcie e0000000.pci: Parsing ranges property...
-> [    2.442611] microchip-pcie e0000000.pci:      MEM 0x00e8000000..0x00efffffff -> 0x00e8000000
-> [    2.451177] microchip-pcie e0000000.pci: non-prefetchable memory resource required
-> [    2.460943] microchip-pcie e0000000.pci: ECAM at [mem 0xe0000000-0xe7ffffff] : ESC[Bfor [bus 00-7f]
-> [    2.469607] microchip-pcie e0000000.pci: PCI host bridge to bus 0000:00
-> [    2.476287] pci_bus 0000:00: root bus resource [bus 00-7f]
-> [    2.481724] pci_bus 0000:00: root bus resource [mem 0xe8000000-0xefffffff pre: ESC[Bf]
-> [    2.489186] pci_bus 0000:00: scanning bus
-> [    2.489283] pci 0000:00:00.0: [11aa:1556] type 01 class 0x040000
-> [    2.495328] pci 0000:00:00.0: reg 0x10: [mem 0x00000000-0x7fffffff 64bit pref: ESC[B]
-> [    2.502610] pci 0000:00:00.0: supports D1 D2
-> [    2.506942] pci 0000:00:00.0: PME# supported from D0 D1 D2 D3hot D3cold
-> [    2.513544] pci 0000:00:00.0: PME# disabled
-> [    2.514859] pci_bus 0000:00: fixups for bus
-> [    2.514882] pci 0000:00:00.0: scanning [bus 00-00] behind bridge, pass 0
-> [    2.514900] pci 0000:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-> [    2.522847] pci 0000:00:00.0: scanning [bus 00-00] behind bridge, pass 1
-> [    2.522972] pci_bus 0000:01: scanning bus
-> [    2.573878] pci_bus 0000:01: fixups for bus
-> [    2.573897] pci_bus 0000:01: bus scan returning with max=01
-> [    2.573918] pci_bus 0000:01: busn_res: [bus 01-7f] end is updated to 01
-> [    2.580477] pci_bus 0000:00: bus scan returning with max=01
-> [    2.580530] pci 0000:00:00.0: BAR 0: no space for [mem size 0x80000000 64bit pref]
-> [    2.588195] pci 0000:00:00.0: BAR 0: failed to assign [mem size 0x80000000 64bit pref]
-> [    2.596168] pci 0000:00:00.0: BAR 8: no space for [mem size 0x00200000]
-> [    2.602782] pci 0000:00:00.0: BAR 8: failed to assign [mem size 0x00200000]
-> [    2.609887] pci 0000:00:00.0: BAR 9: assigned [mem 0xe8000000-0xe81fffff 64bit pref]
-> [    2.617692] pci 0000:00:00.0: BAR 7: no space for [io  size 0x1000]
-> [    2.624028] pci 0000:00:00.0: BAR 7: failed to assign [io  size 0x1000]
-> [    2.630646] pci 0000:00:00.0: PCI bridge to [bus 01]
->     2.635780] pci 0000:00:00.0:   bridge window [mem 0xe8000000-0xe81fffff 64bi: ESC[Bt pref]
+ include/uapi/linux/pci_regs.h | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index a95d55f9f257..8f8bd2318c6c 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -723,6 +723,7 @@
+ #define PCI_EXT_CAP_ID_DPC	0x1D	/* Downstream Port Containment */
+ #define PCI_EXT_CAP_ID_L1SS	0x1E	/* L1 PM Substates */
+ #define PCI_EXT_CAP_ID_PTM	0x1F	/* Precision Time Measurement */
++#define PCI_EXT_CAP_ID_DVSEC	0x23	/* Designated Vendor-Specific */
+ #define PCI_EXT_CAP_ID_DLF	0x25	/* Data Link Feature */
+ #define PCI_EXT_CAP_ID_PL_16GT	0x26	/* Physical Layer 16.0 GT/s */
+ #define PCI_EXT_CAP_ID_MAX	PCI_EXT_CAP_ID_PL_16GT
+@@ -1066,6 +1067,10 @@
+ #define  PCI_L1SS_CTL1_LTR_L12_TH_SCALE	0xe0000000  /* LTR_L1.2_THRESHOLD_Scale */
+ #define PCI_L1SS_CTL2		0x0c	/* Control 2 Register */
+ 
++/* Designated Vendor-Specific (DVSEC, PCI_EXT_CAP_ID_DVSEC) */
++#define PCI_DVSEC_HEADER1		0x4 /* Designated Vendor-Specific Header1 */
++#define PCI_DVSEC_HEADER2		0x8 /* Designated Vendor-Specific Header2 */
++
+ /* Data Link Feature */
+ #define PCI_DLF_CAP		0x04	/* Capabilities Register */
+ #define  PCI_DLF_EXCHANGE_ENABLE	0x80000000  /* Data Link Feature Exchange Enable */
 -- 
-Ben Dooks				http://www.codethink.co.uk/
-Senior Engineer				Codethink - Providing Genius
+2.20.1
 
-https://www.codethink.co.uk/privacy.html
