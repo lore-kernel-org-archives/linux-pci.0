@@ -1,114 +1,154 @@
-Return-Path: <SRS0=cGNF=ED=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=7A2k=EE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,DATE_IN_PAST_12_24,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76569C388F7
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Oct 2020 23:43:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A3A6C56201
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 00:21:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 24A88207BC
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Oct 2020 23:43:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 150FD20780
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 00:21:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ub5PcH6b"
+	dkim=pass (2048-bit key) header.d=ellerman.id.au header.i=@ellerman.id.au header.b="fBZNMVGf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387762AbgJ1Xnw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Oct 2020 19:43:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59302 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389612AbgJ1WvW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Oct 2020 18:51:22 -0400
-Received: from mail-ed1-x543.google.com (mail-ed1-x543.google.com [IPv6:2a00:1450:4864:20::543])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87CD3C0613CF;
-        Wed, 28 Oct 2020 15:51:21 -0700 (PDT)
-Received: by mail-ed1-x543.google.com with SMTP id w25so1219723edx.2;
-        Wed, 28 Oct 2020 15:51:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=9nvUcWbLCYzP8icVZr09w080lWJ1d3JwvhqvzFXlS88=;
-        b=Ub5PcH6bmuPUiToAtOG8mBCdmg6ZwtsCWGz3IaGkjVR4sH9NEqa6PkWeR5A0CQNBSh
-         3d0bT4egjdhlkvJWexgeTQvgx+TBaYydBnQDNjZne7ZCSyO1J51X+iLeCK6gv5esOWmJ
-         JUETbOcUMKtz7ebHTxiek/PvZAXvSBKTYfPK3RltbqUcrfsqsBdc7BX4ESvph9Zoy2NW
-         oATYYx6k9FPJbqvYMMXe5Uq11KpM1CHuSYiUqcPuCh6+VVFKASXnguYRIWFgdfJAKPU/
-         A0YQEpB7sRwLNUYKO9xviPdWAzXm8IDsSV7ekiVif/RMjMOvmxideHvaM6f9a1bGvzNN
-         iv+Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=9nvUcWbLCYzP8icVZr09w080lWJ1d3JwvhqvzFXlS88=;
-        b=sxY3lkAq0R8tY5FiqdPg3sdW9el0IYlDcO1jhFJRgfTaK5vGniz03wvIfWVkyG2YNH
-         tv0wPsMOwUtQ6brd1NMrXr9PPQHzH2Dvkc5X2PEvB2iKTzIfdjjH2AtbL+gSDC+TYWiV
-         OmG4D8jJFoOUMcOkmxouLaBO1MMiZRQRICByjPOhKHeL7KtufIzqjKBEhXtoTUFAlufP
-         GCBU5782tP1AxbR4aqa61tDr2+DMo8dESEAzQnIalUmdfzySMJq8WkvNy4KJrZpKAvVN
-         6DmQ472TqFWlj0P8tG281ciV7PgWWw2mnOrlLAQ3p17npBSDNjhlrYVZzqgIn9y0DGrf
-         6DJw==
-X-Gm-Message-State: AOAM531WJyIm1dBp9fT36dx0qrAbvZg72ZwK8jgAU3aES0eRMLi7xcTW
-        GMh0gDMSsoCryXVO0caqe/+828W8sfEPYYXYKpRR8+Xw+NA=
-X-Google-Smtp-Source: ABdhPJxNPdgGc7ZcQuVCgQ7/NFrXUSX/CSfqPrZC++S8LAM7joaA2Yh9jyR/HPJlGeTlq01aDye8wBjf4JK46CCrq28=
-X-Received: by 2002:aa7:cb92:: with SMTP id r18mr6339211edt.13.1603865370008;
- Tue, 27 Oct 2020 23:09:30 -0700 (PDT)
+        id S2390790AbgJ2AV3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Oct 2020 20:21:29 -0400
+Received: from bilbo.ozlabs.org ([203.11.71.1]:44765 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727315AbgJ2AV1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Oct 2020 20:21:27 -0400
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mail.ozlabs.org (Postfix) with ESMTPSA id 4CM5hY1c5jz9sTf;
+        Thu, 29 Oct 2020 11:21:17 +1100 (AEDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=ellerman.id.au;
+        s=201909; t=1603930883;
+        bh=1H+0lWYSxaRNRPccmOFzTYzYgErk8Jx3rJ+1kAphuRA=;
+        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+        b=fBZNMVGf2DpDigzvlO5EFKrSfhcHEKaclKWRSpd0rMT3nijHNgh+K7YZaMcJgG+I1
+         Sqp0aSWWEEdsZy58/OpXsqjKdLh1Go0930GvCaNP/rPdkcm6jj8VLu+RtZAYju7Lwv
+         1OyJzCDTJEPo7fb3YVK+7vVSD947EigxRUEp47FaWl3boTdjoiwTlcbdL3lqCGS/Ir
+         HjS3q0q57c4NP98/lAG95E/PIIhVcbnSgznNbTvydd0ukv+wu90vIX/fgrejZmKL/x
+         fFgnf7BJJuzQ19szmCiiqO1GyzQ9nRbhKLLimDSXto/YVs3qcf351XsGaZm3WEkFCR
+         8YPZdn5UhcwWA==
+From:   Michael Ellerman <mpe@ellerman.id.au>
+To:     Rob Herring <robh@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
+        Neil Armstrong <narmstrong@baylibre.com>,
+        linux-pci@vger.kernel.org,
+        Binghui Wang <wangbinghui@hisilicon.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        linux-tegra@vger.kernel.org,
+        Thierry Reding <thierry.reding@gmail.com>,
+        linux-arm-kernel@axis.com,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Jonathan Chocron <jonnyc@amazon.com>,
+        Shawn Guo <shawnguo@kernel.org>,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        Fabio Estevam <festevam@gmail.com>,
+        Jerome Brunet <jbrunet@baylibre.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        linux-samsung-soc@vger.kernel.org,
+        Minghuan Lian <minghuan.Lian@nxp.com>,
+        Kevin Hilman <khilman@baylibre.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Kukjin Kim <kgene@kernel.org>,
+        NXP Linux Team <linux-imx@nxp.com>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        linux-arm-msm@vger.kernel.org,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Yue Wang <yue.wang@Amlogic.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-amlogic@lists.infradead.org, linux-omap@vger.kernel.org,
+        Mingkai Hu <mingkai.hu@nxp.com>, Roy Zang <roy.zang@nxp.com>,
+        Masahiro Yamada <yamada.masahiro@socionext.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Andy Gross <agross@kernel.org>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Pengutronix Kernel Team <kernel@pengutronix.de>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        linuxppc-dev@lists.ozlabs.org, Lucas Stach <l.stach@pengutronix.de>
+Subject: Re: [PATCH 01/13] PCI: dwc/imx6: Drop setting PCI_MSI_FLAGS_ENABLE
+In-Reply-To: <20201028204646.356535-2-robh@kernel.org>
+References: <20201028204646.356535-1-robh@kernel.org> <20201028204646.356535-2-robh@kernel.org>
+Date:   Thu, 29 Oct 2020 11:21:16 +1100
+Message-ID: <87h7qdx4oz.fsf@mpe.ellerman.id.au>
 MIME-Version: 1.0
-References: <cover.1603766889.git.sathyanarayanan.kuppuswamy@linux.intel.com> <fcbe8a624166a1101a755edfef44a185d32ff493.1603766889.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-In-Reply-To: <fcbe8a624166a1101a755edfef44a185d32ff493.1603766889.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-From:   Ethan Zhao <xerces.zhao@gmail.com>
-Date:   Wed, 28 Oct 2020 14:09:18 +0800
-Message-ID: <CAKF3qh1j1GAOxK8QAwAgPpn3wxtvZgp8QJQ2zjcv5B=jEVG_eg@mail.gmail.com>
-Subject: Re: [PATCH v11 1/5] PCI: Conditionally initialize host bridge
- native_* members
-To:     Kuppuswamy Sathyanarayanan 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Ashok Raj <ashok.raj@intel.com>, knsathya@kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Oct 27, 2020 at 10:00 PM Kuppuswamy Sathyanarayanan
-<sathyanarayanan.kuppuswamy@linux.intel.com> wrote:
->
-> If CONFIG_PCIEPORTBUS is not enabled in kernel then initialing
-> struct pci_host_bridge PCIe specific native_* members to "1" is
-> incorrect. So protect the PCIe specific member initialization
-> with CONFIG_PCIEPORTBUS.
->
-> Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-> ---
->  drivers/pci/probe.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 4289030b0fff..756fa60ca708 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -588,12 +588,14 @@ static void pci_init_host_bridge(struct pci_host_bridge *bridge)
->          * may implement its own AER handling and use _OSC to prevent the
->          * OS from interfering.
->          */
-> +#ifdef CONFIG_PCIEPORTBUS
->         bridge->native_aer = 1;
->         bridge->native_pcie_hotplug = 1;
-> -       bridge->native_shpc_hotplug = 1;
->         bridge->native_pme = 1;
-> -       bridge->native_ltr = 1;
->         bridge->native_dpc = 1;
-> +#endif
-  If CONFIG_PCIEPORTBUS wasn't defined, leave them to "unknown" value ?
+Rob Herring <robh@kernel.org> writes:
+> No other host driver sets the PCI_MSI_FLAGS_ENABLE bit, so it must not
+> be necessary. If it is, a comment is needed.
 
-> +       bridge->native_ltr = 1;
-> +       bridge->native_shpc_hotplug = 1;
+Yeah, but git blame directly points to:
+
+  75cb8d20c112 ("PCI: imx: Enable MSI from downstream components")
+
+Which has a pretty long explanation. The relevant bit probably being:
+
+  ... on i.MX6, the MSI Enable bit controls delivery of MSI interrupts
+  from components below the Root Port.
+
+
+So it seems a little rash to just remove the code.
+
+cheers
+
+
+> Cc: Richard Zhu <hongxing.zhu@nxp.com>
+> Cc: Lucas Stach <l.stach@pengutronix.de>
+> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Shawn Guo <shawnguo@kernel.org>
+> Cc: Sascha Hauer <s.hauer@pengutronix.de>
+> Cc: Pengutronix Kernel Team <kernel@pengutronix.de>
+> Cc: Fabio Estevam <festevam@gmail.com>
+> Cc: NXP Linux Team <linux-imx@nxp.com>
+> Signed-off-by: Rob Herring <robh@kernel.org>
+> ---
+>  drivers/pci/controller/dwc/pci-imx6.c | 8 --------
+>  1 file changed, 8 deletions(-)
 >
->         device_initialize(&bridge->dev);
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+> index 5cf1ef12fb9b..7dd137d62dca 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> @@ -1002,7 +1002,6 @@ static int imx6_pcie_probe(struct platform_device *pdev)
+>  	struct resource *dbi_base;
+>  	struct device_node *node = dev->of_node;
+>  	int ret;
+> -	u16 val;
+>  
+>  	imx6_pcie = devm_kzalloc(dev, sizeof(*imx6_pcie), GFP_KERNEL);
+>  	if (!imx6_pcie)
+> @@ -1167,13 +1166,6 @@ static int imx6_pcie_probe(struct platform_device *pdev)
+>  	if (ret < 0)
+>  		return ret;
+>  
+> -	if (pci_msi_enabled()) {
+> -		u8 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_MSI);
+> -		val = dw_pcie_readw_dbi(pci, offset + PCI_MSI_FLAGS);
+> -		val |= PCI_MSI_FLAGS_ENABLE;
+> -		dw_pcie_writew_dbi(pci, offset + PCI_MSI_FLAGS, val);
+> -	}
+> -
+>  	return 0;
 >  }
-> --
-> 2.17.1
->
+>  
+> -- 
+> 2.25.1
