@@ -5,119 +5,86 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01385C55178
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 08:39:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93691C2D0A3
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 08:39:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9A05D20780
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 08:39:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 36F1420780
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 08:39:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="k/GTzF7b"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="O3HQqD1i"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728635AbgJ2IjM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 29 Oct 2020 04:39:12 -0400
-Received: from hqnvemgate26.nvidia.com ([216.228.121.65]:11552 "EHLO
+        id S1729319AbgJ2IjL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 29 Oct 2020 04:39:11 -0400
+Received: from hqnvemgate26.nvidia.com ([216.228.121.65]:11553 "EHLO
         hqnvemgate26.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727747AbgJ2IjH (ORCPT
+        with ESMTP id S1727864AbgJ2IjH (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Oct 2020 04:39:07 -0400
 Received: from hqmail.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate26.nvidia.com (using TLS: TLSv1.2, AES256-SHA)
-        id <B5f9a55af0000>; Wed, 28 Oct 2020 22:39:59 -0700
-Received: from HQMAIL109.nvidia.com (172.20.187.15) by HQMAIL105.nvidia.com
- (172.20.187.12) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Thu, 29 Oct
- 2020 05:40:16 +0000
+        id <B5f9a50b70000>; Wed, 28 Oct 2020 22:18:47 -0700
+Received: from HQMAIL109.nvidia.com (172.20.187.15) by HQMAIL107.nvidia.com
+ (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Thu, 29 Oct
+ 2020 05:19:03 +0000
 Received: from vidyas-desktop.nvidia.com (172.20.13.39) by mail.nvidia.com
  (172.20.187.15) with Microsoft SMTP Server id 15.0.1473.3 via Frontend
- Transport; Thu, 29 Oct 2020 05:40:12 +0000
+ Transport; Thu, 29 Oct 2020 05:18:59 +0000
 From:   Vidya Sagar <vidyas@nvidia.com>
-To:     <jingoohan1@gmail.com>, <gustavo.pimentel@synopsys.com>,
-        <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
-        <amurray@thegoodpenguin.co.uk>, <robh@kernel.org>,
-        <treding@nvidia.com>, <jonathanh@nvidia.com>
-CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>,
-        <sagar.tv@gmail.com>
-Subject: [PATCH V3 2/2] PCI: dwc: Add support to configure for ECRC
-Date:   Thu, 29 Oct 2020 11:09:59 +0530
-Message-ID: <20201029053959.31361-3-vidyas@nvidia.com>
+To:     <lorenzo.pieralisi@arm.com>, <robh+dt@kernel.org>,
+        <bhelgaas@google.com>, <thierry.reding@gmail.com>,
+        <jonathanh@nvidia.com>, <amanharitsh123@gmail.com>,
+        <dinghao.liu@zju.edu.cn>, <kw@linux.com>
+CC:     <linux-pci@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <kthota@nvidia.com>,
+        <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>, <sagar.tv@gmail.com>
+Subject: [PATCH V2 3/4] PCI: tegra: Set DesignWare IP version
+Date:   Thu, 29 Oct 2020 10:48:38 +0530
+Message-ID: <20201029051839.11245-4-vidyas@nvidia.com>
 X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20201029053959.31361-1-vidyas@nvidia.com>
-References: <20201029053959.31361-1-vidyas@nvidia.com>
+In-Reply-To: <20201029051839.11245-1-vidyas@nvidia.com>
+References: <20201029051839.11245-1-vidyas@nvidia.com>
 X-NVConfidentiality: public
 MIME-Version: 1.0
 Content-Type: text/plain
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1603949999; bh=OzLT6vpwwjR959ff9oUCGEtnW0TMQ/fO6AW9AajK7ew=;
+        t=1603948727; bh=RQv9cuiDlLNVXnXwNCGYWdbrEe4rjTqds+uRa1jgKgg=;
         h=From:To:CC:Subject:Date:Message-ID:X-Mailer:In-Reply-To:
          References:X-NVConfidentiality:MIME-Version:Content-Type;
-        b=k/GTzF7bCXSeSArYLqgI7gzP4JB/MwmBxL1s31un3sJMwKd7xigDBbyswS4x8lH67
-         Q/BOBmA7yABnimvlSQREqoXGHNB7Bl9vCw9lOYmPPZ51y2v/BxBjVgrfF2+Tli07sh
-         lioFD93X0CYd3dnn261E4VDPs1XnQMWsdMWf+39v8ZqdIAFfLhm4cXj2OUlYiQ/UHZ
-         GcZcpR/29CB7jZQYKvsIrwJs8Er+vl/gYwQOHsIt9N8jvEGz4OFazYTNQyfSOADeUl
-         XapNj/zx9EIQL4GViGTpzr/D8rn11mbljBsfpIJUzSc9YrnZiuwb9y+mbLRF/OSzqQ
-         p3+6/JOsxTBGw==
+        b=O3HQqD1iMaGGMTt3tIm84JhDLm4CCQA3HXwDo2unCR/6Flkri2O49co50Cat0RKr5
+         0khhyMy6liHj/4K4HhmkU+Hf271lrCFEoFvxw7k+2eSJr5tcXbKNPLQwH24wJty7ct
+         DBNJhZ2gE5OzEx2apAWelnpZxrgf//wsbEBmHhC/mnqGXU0YegtQyA56Tjxv3zuTsq
+         ofvs0Zn3B1uovnd/MemYY3tSV3GePcZStVuGjGStHLHUBrvholio7SXt6/qPH+gV+U
+         Ifih2/VmhxYoNq1xJQvMCzMaI/Obo8f56KJozYKYXRtcQ4QrMxNL89KoeRdU430X6f
+         JPGnsB0UAcpfA==
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-DesignWare core has a TLP digest (TD) override bit in one of the control
-registers of ATU. This bit also needs to be programmed for proper ECRC
-functionality. This is currently identified as an issue with DesignWare
-IP version 4.90a. This patch does the required programming in ATU upon
-querying the system policy for ECRC.
+Set the DesignWare IP version for Tegra194 to 0x490A. This would be used
+by the DesigWare sub-system to do any version specific configuration
+(Ex:- TD bit programming for ECRC).
 
 Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
-Reviewed-by: Jingoo Han <jingoohan1@gmail.com>
 ---
-V3:
-* Added 'Reviewed-by: Jingoo Han <jingoohan1@gmail.com>'
-
 V2:
-* Addressed Jingoo's review comment
-* Removed saving 'td' bit information in 'dw_pcie' structure
+* None
 
- drivers/pci/controller/dwc/pcie-designware.c | 8 ++++++--
- drivers/pci/controller/dwc/pcie-designware.h | 1 +
- 2 files changed, 7 insertions(+), 2 deletions(-)
+ drivers/pci/controller/dwc/pcie-tegra194.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index b5e438b70cd5..cbd651b219d2 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -246,6 +246,8 @@ static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, u8 func_no,
- 	dw_pcie_writel_ob_unroll(pci, index, PCIE_ATU_UNR_UPPER_TARGET,
- 				 upper_32_bits(pci_addr));
- 	val = type | PCIE_ATU_FUNC_NUM(func_no);
-+	if (pci->version == 0x490A)
-+		val = val | pcie_is_ecrc_enabled() << PCIE_ATU_TD_SHIFT;
- 	val = upper_32_bits(size - 1) ?
- 		val | PCIE_ATU_INCREASE_REGION_SIZE : val;
- 	dw_pcie_writel_ob_unroll(pci, index, PCIE_ATU_UNR_REGION_CTRL1, val);
-@@ -294,8 +296,10 @@ static void __dw_pcie_prog_outbound_atu(struct dw_pcie *pci, u8 func_no,
- 			   lower_32_bits(pci_addr));
- 	dw_pcie_writel_dbi(pci, PCIE_ATU_UPPER_TARGET,
- 			   upper_32_bits(pci_addr));
--	dw_pcie_writel_dbi(pci, PCIE_ATU_CR1, type |
--			   PCIE_ATU_FUNC_NUM(func_no));
-+	val = type | PCIE_ATU_FUNC_NUM(func_no);
-+	if (pci->version == 0x490A)
-+		val = val | pcie_is_ecrc_enabled() << PCIE_ATU_TD_SHIFT;
-+	dw_pcie_writel_dbi(pci, PCIE_ATU_CR1, val);
- 	dw_pcie_writel_dbi(pci, PCIE_ATU_CR2, PCIE_ATU_ENABLE);
+diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+index 7a0c64436861..253d91033bc3 100644
+--- a/drivers/pci/controller/dwc/pcie-tegra194.c
++++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+@@ -2011,6 +2011,7 @@ static int tegra_pcie_dw_probe(struct platform_device *pdev)
+ 	pci->ops = &tegra_dw_pcie_ops;
+ 	pci->n_fts[0] = N_FTS_VAL;
+ 	pci->n_fts[1] = FTS_VAL;
++	pci->version = 0x490A;
  
- 	/*
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index e7f441441db2..b01ef407fd52 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -89,6 +89,7 @@
- #define PCIE_ATU_TYPE_IO		0x2
- #define PCIE_ATU_TYPE_CFG0		0x4
- #define PCIE_ATU_TYPE_CFG1		0x5
-+#define PCIE_ATU_TD_SHIFT		8
- #define PCIE_ATU_FUNC_NUM(pf)           ((pf) << 20)
- #define PCIE_ATU_CR2			0x908
- #define PCIE_ATU_ENABLE			BIT(31)
+ 	pp = &pci->pp;
+ 	pcie->dev = &pdev->dev;
 -- 
 2.17.1
 
