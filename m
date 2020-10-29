@@ -7,85 +7,82 @@ X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
 	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92376C2D0A3
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 21:59:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74B5DC4741F
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 22:03:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 31F792087E
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 21:59:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 05BF22087D
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 22:03:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fgD3ZDmB"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FbjwJ+Qb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725785AbgJ2V71 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 29 Oct 2020 17:59:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50876 "EHLO
+        id S1725562AbgJ2WDu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 29 Oct 2020 18:03:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51556 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725775AbgJ2V70 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Oct 2020 17:59:26 -0400
-Received: from mail-pf1-x441.google.com (mail-pf1-x441.google.com [IPv6:2607:f8b0:4864:20::441])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC213C0613CF;
-        Thu, 29 Oct 2020 14:59:26 -0700 (PDT)
-Received: by mail-pf1-x441.google.com with SMTP id w21so3513349pfc.7;
-        Thu, 29 Oct 2020 14:59:26 -0700 (PDT)
+        with ESMTP id S1725372AbgJ2WDu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Oct 2020 18:03:50 -0400
+Received: from mail-pg1-x541.google.com (mail-pg1-x541.google.com [IPv6:2607:f8b0:4864:20::541])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B650EC0613CF;
+        Thu, 29 Oct 2020 15:03:48 -0700 (PDT)
+Received: by mail-pg1-x541.google.com with SMTP id r186so3501461pgr.0;
+        Thu, 29 Oct 2020 15:03:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:thread-topic:thread-index:date:message-id
          :references:in-reply-to:accept-language:content-language
          :content-transfer-encoding:mime-version;
-        bh=Gm4CoEGBACnXJjBKLc6ZVWL0buEtcov92fo48y4odfE=;
-        b=fgD3ZDmBkgNBYsVsGN9pPc+smybBbSZgzCfoXLEYgy/bN5JAt8q9ZjqVeUkcNjvBYO
-         ursSyKea9Zsddma8ORYAVAMmEO/mZtRfMvz/P64Y4xPcyHXa1naWsRrWf5VSY3lHR7Q2
-         nJdYCF/CkhrXw7BlSfBGmPRnyG9ZMYj6dmUfFh4zPt5UqKb1faFojZMnHzbUrvfroo1i
-         FTR8RVse+Bn5M3raRkGndubq0Txa9bdsfIolE9hOzOWkNf53MydSP8bmS5nF4FaaRjK+
-         lgNRFrCPXaSjjiANSfYY9HedUqCN4gEKHd3UXS/V+I63uhC8I6xLcdVqVQCzBj+2fYWm
-         Jiaw==
+        bh=ZdeDbEelXkHD28pDjWnxpVNwRGKME/CRICSzzS+Jp78=;
+        b=FbjwJ+QbV5iiBNQ7QP2ZQgev2Am0A9rWNQyv5vrXiO6dBHcuDw0SZDQf5GFS9y2mST
+         wos6gxJ9R8X/L04KIt7uIS9O1EcqTV0A25yeCyknkPuC7tZtH0hinTNVgosQHDR1gwZX
+         UNKbPLkzIKoxfbb0r3fsrMNau2MWYakRQ7OQ8YW+Uf4t0WvrUiSfo8GtoxIhtmaZgoiT
+         0L4iYCqXzuTUn+E2BQRoUp6G6O75WAdK0p0JlfaLlYAREIYiT1zdjKuCMj1te1nb7/UB
+         az5pVECaQgOWIhM+fpDD+5XuagjjLZ6kD4Jfv1e768KJzYt/N7zXCvaI7gv5meZYx8WK
+         +HLQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:thread-topic:thread-index
          :date:message-id:references:in-reply-to:accept-language
          :content-language:content-transfer-encoding:mime-version;
-        bh=Gm4CoEGBACnXJjBKLc6ZVWL0buEtcov92fo48y4odfE=;
-        b=uSvIRrmLdRIwL5qM+Cv35vAHGYsi7XyJ8/kM4fc+YB+Wbs0XoebdUzll1OrRIqAgBc
-         R9yNPcr7kVKIJE3zCcxRAokPKGnSHTwOzlpcnhs3aMhOmUYIgWUpH/aHfnsYQhVsfVGZ
-         ej7m1hJo6hiWMzOR7osxB/qYsb9515I6tzUmROmZYcUT4o9yM+zN7R82oKg8cc8IZGWH
-         Y7DZu22Kc0eK8uUFgYMizmTtRKGXKvcxKTuN1mvXee1MZBFhjnDU2nyt6F1DT7N2CCiK
-         JfllAVvxoGmV4joiDsGLERkD0ujIkQfFy5f8vuqa1FDqOe+PFaSiYtGcn8vGktwOabBZ
-         +4TQ==
-X-Gm-Message-State: AOAM531XiNGjzoljRHLuKo2emq9et8e02TkAxrEfPpSA+YAqd8hdn8aT
-        R1Ecca+0QvNS7Rx6iOtkino=
-X-Google-Smtp-Source: ABdhPJyzki19tAZX94ARNI6m7exJYU1/M2cPiFdM0s54RuoXolGl13N9aY+6Lun21JjbpLAeoDN4KA==
-X-Received: by 2002:a17:90b:8c8:: with SMTP id ds8mr1280411pjb.40.1604008766472;
-        Thu, 29 Oct 2020 14:59:26 -0700 (PDT)
-Received: from SLXP216MB0477.KORP216.PROD.OUTLOOK.COM ([2603:1046:100:9::5])
-        by smtp.gmail.com with ESMTPSA id 17sm3909133pfj.49.2020.10.29.14.59.22
+        bh=ZdeDbEelXkHD28pDjWnxpVNwRGKME/CRICSzzS+Jp78=;
+        b=o3eMWEesLazHWC6C2MpxiVFe1Z1o6tJxmg996rMZsAiYIeImbC00MroWpugp/o4sIr
+         oneko9NOIpe5Zn801q8UJs891ztSd2p6LblISVIDfGLI1hiyINov64UQsqHoEykVASa4
+         zx2O6w62WPRFXds2E4VBYVHlZ91m/gzDCK+cc7+l0Cc9ghjeCw8FPB0sXR6Xwm0/8ySJ
+         sMS88jAmLOA9GVtW2noO33w9cNKSxXkaP+b/UP4re571zOi4jlU7iX4qhcjQHduSC0mM
+         KrnTUh+rG5oSSAT4PXEivVHyOdtKr2yydRw4toy7BUOzfgmfD1SMGD8JVYj8vglx1Ni+
+         V4IQ==
+X-Gm-Message-State: AOAM533wbu9r2uh+l0mFqqdJpswgFofDd9+LNrj7vg8EEFNgiqeguDF2
+        df6hh0nK0NHlsUMhdoQjXlU=
+X-Google-Smtp-Source: ABdhPJy8PGWf7UR7rEkqPe7tAZ+6CAEca+KAriOcAJ0hoYyJgj5Xh0Lnh8k747xMrRF1zFuhfJ6WpA==
+X-Received: by 2002:a17:90a:1690:: with SMTP id o16mr1325029pja.148.1604009028349;
+        Thu, 29 Oct 2020 15:03:48 -0700 (PDT)
+Received: from SL2P216MB0475.KORP216.PROD.OUTLOOK.COM ([2603:1046:100:19::5])
+        by smtp.gmail.com with ESMTPSA id gm14sm846740pjb.2.2020.10.29.15.03.44
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 29 Oct 2020 14:59:25 -0700 (PDT)
+        Thu, 29 Oct 2020 15:03:47 -0700 (PDT)
 From:   Jingoo Han <jingoohan1@gmail.com>
-To:     Marek Szyprowski <m.szyprowski@samsung.com>,
-        "linux-samsung-soc@vger.kernel.org" 
-        <linux-samsung-soc@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC:     "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+To:     Vidya Sagar <vidyas@nvidia.com>,
+        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "amurray@thegoodpenguin.co.uk" <amurray@thegoodpenguin.co.uk>,
+        "robh@kernel.org" <robh@kernel.org>,
+        "treding@nvidia.com" <treding@nvidia.com>,
+        "jonathanh@nvidia.com" <jonathanh@nvidia.com>
+CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Jaehoon Chung <jh80.chung@samsung.com>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Vinod Koul <vkoul@kernel.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Rob Herring <robh@kernel.org>,
+        "kthota@nvidia.com" <kthota@nvidia.com>,
+        "mmaddireddy@nvidia.com" <mmaddireddy@nvidia.com>,
+        "sagar.tv@gmail.com" <sagar.tv@gmail.com>,
         Han Jingoo <jingoohan1@gmail.com>
-Subject: Re: [PATCH v3 5/6] pci: dwc: pci-exynos: rework the driver to support
- Exynos5433 variant
-Thread-Topic: [PATCH v3 5/6] pci: dwc: pci-exynos: rework the driver to
- support Exynos5433 variant
-Thread-Index: AQHWrfkuGTQpOoO6c0q3AFlQqDuUEqmvIY0p
+Subject: Re: [PATCH V3 2/2] PCI: dwc: Add support to configure for ECRC
+Thread-Topic: [PATCH V3 2/2] PCI: dwc: Add support to configure for ECRC
+Thread-Index: AQHWrbYA7JmObBkfy0Gh1N3xXvCmtKmvI0h3
 X-MS-Exchange-MessageSentRepresentingType: 1
-Date:   Thu, 29 Oct 2020 21:59:21 +0000
-Message-ID: <SLXP216MB04771FD4C3D22272FF7F4465AA140@SLXP216MB0477.KORP216.PROD.OUTLOOK.COM>
-References: <20201029134017.27400-1-m.szyprowski@samsung.com>
- <CGME20201029134040eucas1p1d9ab30c75ac9243346b4786e7048d6be@eucas1p1.samsung.com>
- <20201029134017.27400-6-m.szyprowski@samsung.com>
-In-Reply-To: <20201029134017.27400-6-m.szyprowski@samsung.com>
+Date:   Thu, 29 Oct 2020 22:03:41 +0000
+Message-ID: <SL2P216MB04759A928ACAA6F411718E01AA140@SL2P216MB0475.KORP216.PROD.OUTLOOK.COM>
+References: <20201029053959.31361-1-vidyas@nvidia.com>
+ <20201029053959.31361-3-vidyas@nvidia.com>
+In-Reply-To: <20201029053959.31361-3-vidyas@nvidia.com>
 Accept-Language: ko-KR, en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
@@ -99,35 +96,35 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 10/29/20, 9:41 AM, Marek Szyprowski wrote:
+On 10/29/20, 1:40 AM, Vidya Sagar wrote:
 >=20
-> From: Jaehoon Chung <jh80.chung@samsung.com>
+> DesignWare core has a TLP digest (TD) override bit in one of the control
+> registers of ATU. This bit also needs to be programmed for proper ECRC
+> functionality. This is currently identified as an issue with DesignWare
+> IP version 4.90a. This patch does the required programming in ATU upon
+> querying the system policy for ECRC.
 >
-> Exynos5440 SoC support has been dropped since commit 8c83315da1cf ("ARM:
-> dts: exynos: Remove Exynos5440"). Rework this driver to support DWC PCIe
-> variant found in the Exynos5433 SoCs.
->
-> The main difference in Exynos5433 variant is lack of the MSI support
-> (the MSI interrupt is not even routed to the CPU).
->
-> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
-> [mszyprow: reworked the driver to support only Exynos5433 variant,
->	   simplified code, rebased onto current kernel code, added
->	   regulator support, converted to the regular platform driver,
->	   removed MSI related code, rewrote commit message, added help]
-> Signed-off-by: Marek Szyprowski <m.szyprowski@samsung.com>
-> Acked-by: Krzysztof Kozlowski <krzk@kernel.org>
+> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+> Reviewed-by: Jingoo Han <jingoohan1@gmail.com>
+
+No, it should be Acked-by. I gave you Acked-by, not Reviewed-by.
 
 Acked-by: Jingoo Han <jingoohan1@gmail.com>
+
 
 Best regards,
 Jingoo Han
 
 > ---
->  drivers/pci/controller/dwc/Kconfig      |  10 +-
->  drivers/pci/controller/dwc/pci-exynos.c | 353 ++++++++++--------------
->  drivers/pci/quirks.c                    |   1 +
->  3 files changed, 147 insertions(+), 217 deletions(-)
+> V3:
+> * Added 'Reviewed-by: Jingoo Han <jingoohan1@gmail.com>'
+>
+> V2:
+> * Addressed Jingoo's review comment
+> * Removed saving 'td' bit information in 'dw_pcie' structure
+>
+>  drivers/pci/controller/dwc/pcie-designware.c | 8 ++++++--
+>  drivers/pci/controller/dwc/pcie-designware.h | 1 +
+>  2 files changed, 7 insertions(+), 2 deletions(-)
 
 [...]
-
