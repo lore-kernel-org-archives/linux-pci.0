@@ -2,129 +2,84 @@ Return-Path: <SRS0=7A2k=EE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74B5DC4741F
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 22:03:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37B57C2D0A3
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 22:06:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 05BF22087D
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 22:03:50 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FbjwJ+Qb"
+	by mail.kernel.org (Postfix) with ESMTP id D175A20838
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 22:06:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725562AbgJ2WDu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 29 Oct 2020 18:03:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51556 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725372AbgJ2WDu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Oct 2020 18:03:50 -0400
-Received: from mail-pg1-x541.google.com (mail-pg1-x541.google.com [IPv6:2607:f8b0:4864:20::541])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B650EC0613CF;
-        Thu, 29 Oct 2020 15:03:48 -0700 (PDT)
-Received: by mail-pg1-x541.google.com with SMTP id r186so3501461pgr.0;
-        Thu, 29 Oct 2020 15:03:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:thread-topic:thread-index:date:message-id
-         :references:in-reply-to:accept-language:content-language
-         :content-transfer-encoding:mime-version;
-        bh=ZdeDbEelXkHD28pDjWnxpVNwRGKME/CRICSzzS+Jp78=;
-        b=FbjwJ+QbV5iiBNQ7QP2ZQgev2Am0A9rWNQyv5vrXiO6dBHcuDw0SZDQf5GFS9y2mST
-         wos6gxJ9R8X/L04KIt7uIS9O1EcqTV0A25yeCyknkPuC7tZtH0hinTNVgosQHDR1gwZX
-         UNKbPLkzIKoxfbb0r3fsrMNau2MWYakRQ7OQ8YW+Uf4t0WvrUiSfo8GtoxIhtmaZgoiT
-         0L4iYCqXzuTUn+E2BQRoUp6G6O75WAdK0p0JlfaLlYAREIYiT1zdjKuCMj1te1nb7/UB
-         az5pVECaQgOWIhM+fpDD+5XuagjjLZ6kD4Jfv1e768KJzYt/N7zXCvaI7gv5meZYx8WK
-         +HLQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:thread-topic:thread-index
-         :date:message-id:references:in-reply-to:accept-language
-         :content-language:content-transfer-encoding:mime-version;
-        bh=ZdeDbEelXkHD28pDjWnxpVNwRGKME/CRICSzzS+Jp78=;
-        b=o3eMWEesLazHWC6C2MpxiVFe1Z1o6tJxmg996rMZsAiYIeImbC00MroWpugp/o4sIr
-         oneko9NOIpe5Zn801q8UJs891ztSd2p6LblISVIDfGLI1hiyINov64UQsqHoEykVASa4
-         zx2O6w62WPRFXds2E4VBYVHlZ91m/gzDCK+cc7+l0Cc9ghjeCw8FPB0sXR6Xwm0/8ySJ
-         sMS88jAmLOA9GVtW2noO33w9cNKSxXkaP+b/UP4re571zOi4jlU7iX4qhcjQHduSC0mM
-         KrnTUh+rG5oSSAT4PXEivVHyOdtKr2yydRw4toy7BUOzfgmfD1SMGD8JVYj8vglx1Ni+
-         V4IQ==
-X-Gm-Message-State: AOAM533wbu9r2uh+l0mFqqdJpswgFofDd9+LNrj7vg8EEFNgiqeguDF2
-        df6hh0nK0NHlsUMhdoQjXlU=
-X-Google-Smtp-Source: ABdhPJy8PGWf7UR7rEkqPe7tAZ+6CAEca+KAriOcAJ0hoYyJgj5Xh0Lnh8k747xMrRF1zFuhfJ6WpA==
-X-Received: by 2002:a17:90a:1690:: with SMTP id o16mr1325029pja.148.1604009028349;
-        Thu, 29 Oct 2020 15:03:48 -0700 (PDT)
-Received: from SL2P216MB0475.KORP216.PROD.OUTLOOK.COM ([2603:1046:100:19::5])
-        by smtp.gmail.com with ESMTPSA id gm14sm846740pjb.2.2020.10.29.15.03.44
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 29 Oct 2020 15:03:47 -0700 (PDT)
-From:   Jingoo Han <jingoohan1@gmail.com>
-To:     Vidya Sagar <vidyas@nvidia.com>,
-        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "amurray@thegoodpenguin.co.uk" <amurray@thegoodpenguin.co.uk>,
-        "robh@kernel.org" <robh@kernel.org>,
-        "treding@nvidia.com" <treding@nvidia.com>,
-        "jonathanh@nvidia.com" <jonathanh@nvidia.com>
-CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "kthota@nvidia.com" <kthota@nvidia.com>,
-        "mmaddireddy@nvidia.com" <mmaddireddy@nvidia.com>,
-        "sagar.tv@gmail.com" <sagar.tv@gmail.com>,
-        Han Jingoo <jingoohan1@gmail.com>
-Subject: Re: [PATCH V3 2/2] PCI: dwc: Add support to configure for ECRC
-Thread-Topic: [PATCH V3 2/2] PCI: dwc: Add support to configure for ECRC
-Thread-Index: AQHWrbYA7JmObBkfy0Gh1N3xXvCmtKmvI0h3
-X-MS-Exchange-MessageSentRepresentingType: 1
-Date:   Thu, 29 Oct 2020 22:03:41 +0000
-Message-ID: <SL2P216MB04759A928ACAA6F411718E01AA140@SL2P216MB0475.KORP216.PROD.OUTLOOK.COM>
-References: <20201029053959.31361-1-vidyas@nvidia.com>
- <20201029053959.31361-3-vidyas@nvidia.com>
-In-Reply-To: <20201029053959.31361-3-vidyas@nvidia.com>
-Accept-Language: ko-KR, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-Exchange-Organization-SCL: -1
-X-MS-TNEF-Correlator: 
-X-MS-Exchange-Organization-RecordReviewCfmType: 0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1725562AbgJ2WGs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 29 Oct 2020 18:06:48 -0400
+Received: from mslow2.mail.gandi.net ([217.70.178.242]:51922 "EHLO
+        mslow2.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725372AbgJ2WGs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Oct 2020 18:06:48 -0400
+Received: from relay1-d.mail.gandi.net (unknown [217.70.183.193])
+        by mslow2.mail.gandi.net (Postfix) with ESMTP id 6A62F3A1C1D
+        for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2020 21:54:33 +0000 (UTC)
+X-Originating-IP: 83.193.246.53
+Received: from windsurf.home (lfbn-bay-1-165-53.w83-193.abo.wanadoo.fr [83.193.246.53])
+        (Authenticated sender: thomas.petazzoni@bootlin.com)
+        by relay1-d.mail.gandi.net (Postfix) with ESMTPSA id C5E2A240009;
+        Thu, 29 Oct 2020 21:54:10 +0000 (UTC)
+Date:   Thu, 29 Oct 2020 22:54:09 +0100
+From:   Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Toke =?UTF-8?B?SMO4aWxhbmQtSsO4cmdlbnNlbg==?= <toke@redhat.com>,
+        Pali =?UTF-8?B?Um9ow6Fy?= <pali@kernel.org>, vtolkm@gmail.com,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        Rob Herring <robh@kernel.org>,
+        Ilias Apalodimas <ilias.apalodimas@linaro.org>,
+        Marek =?UTF-8?B?QmVow7pu?= <marek.behun@nic.cz>,
+        Jason Cooper <jason@lakedaemon.net>
+Subject: Re: PCI trouble on mvebu (Turris Omnia)
+Message-ID: <20201029225409.2accead3@windsurf.home>
+In-Reply-To: <20201029193022.GA476048@bjorn-Precision-5520>
+References: <871rhhmgkq.fsf@toke.dk>
+        <20201029193022.GA476048@bjorn-Precision-5520>
+Organization: Bootlin
+X-Mailer: Claws Mail 3.17.7 (GTK+ 2.24.32; x86_64-redhat-linux-gnu)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 10/29/20, 1:40 AM, Vidya Sagar wrote:
->=20
-> DesignWare core has a TLP digest (TD) override bit in one of the control
-> registers of ATU. This bit also needs to be programmed for proper ECRC
-> functionality. This is currently identified as an issue with DesignWare
-> IP version 4.90a. This patch does the required programming in ATU upon
-> querying the system policy for ECRC.
->
-> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
-> Reviewed-by: Jingoo Han <jingoohan1@gmail.com>
+Hello,
 
-No, it should be Acked-by. I gave you Acked-by, not Reviewed-by.
+On Thu, 29 Oct 2020 14:30:22 -0500
+Bjorn Helgaas <helgaas@kernel.org> wrote:
 
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
+> We could quirk these NICs to avoid the retrain, but since aardvark and
+> mvebu have no obvious connection and WLE200/WLE900 and MT76 have no
+> obvious connection, I doubt there's a simple hardware defect that
+> explains all these.  
 
+aardvark and mvebu have one very strong connection: they are the only
+two drivers making use of the PCI Bridge emulation logic in
+drivers/pci/pci-bridge-emul.c:
+
+drivers/pci$ git grep pci-bridge-emul
+akefile:obj-$(CONFIG_PCI_BRIDGE_EMUL)  += pci-bridge-emul.o
+controller/pci-aardvark.c:#include "../pci-bridge-emul.h"
+controller/pci-mvebu.c:#include "../pci-bridge-emul.h"
+pci-bridge-emul.c:#include "pci-bridge-emul.h"
+
+I haven't read the whole thread, but it is important to keep in mind
+that on those two platforms, the PCI Bridge seen by Linux is *not* a
+real HW bridge. It is faked by the the pci-bridge-emul code. So if this
+code has defects/bugs in how it emulates a PCI Bridge behavior, you
+might see weird things.
 
 Best regards,
-Jingoo Han
 
-> ---
-> V3:
-> * Added 'Reviewed-by: Jingoo Han <jingoohan1@gmail.com>'
->
-> V2:
-> * Addressed Jingoo's review comment
-> * Removed saving 'td' bit information in 'dw_pcie' structure
->
->  drivers/pci/controller/dwc/pcie-designware.c | 8 ++++++--
->  drivers/pci/controller/dwc/pcie-designware.h | 1 +
->  2 files changed, 7 insertions(+), 2 deletions(-)
-
-[...]
+Thomas
+-- 
+Thomas Petazzoni, CTO, Bootlin
+Embedded Linux and Kernel engineering
+https://bootlin.com
