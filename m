@@ -2,190 +2,64 @@ Return-Path: <SRS0=7A2k=EE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48CCFC4363A
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 01:03:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05502C55179
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 01:21:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E772720791
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 01:03:17 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="i/1fNDcO"
+	by mail.kernel.org (Postfix) with ESMTP id B765F20796
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Oct 2020 01:21:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730494AbgJ1WKT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Oct 2020 18:10:19 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:49466 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730483AbgJ1WKS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Oct 2020 18:10:18 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1603923017;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=e8xnFOFFJaHLUOxxzEQxUXczDp2GypBZ0BZHMFTtshA=;
-        b=i/1fNDcO8+ewywBxofrJ3uiGa5p923W/iHwe+q8u0SRAx5bxnRB1pQO7wMYgMK+IBvbjbB
-        yVRESqwpM3Gsi7TcaU/VpKqB6bQGASvsWtEN5JWGtICcff7r0SyIO6UXLpygWA8goI3jvh
-        R0tnFMgld2owk4Pfx6QHGpCaMjJuQqc=
-Received: from mail-il1-f197.google.com (mail-il1-f197.google.com
- [209.85.166.197]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-387-vYH8u1E_NFesVvpwVomZiA-1; Wed, 28 Oct 2020 11:08:40 -0400
-X-MC-Unique: vYH8u1E_NFesVvpwVomZiA-1
-Received: by mail-il1-f197.google.com with SMTP id b6so3732288ilm.6
-        for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2020 08:08:40 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
-         :message-id:mime-version:content-transfer-encoding;
-        bh=e8xnFOFFJaHLUOxxzEQxUXczDp2GypBZ0BZHMFTtshA=;
-        b=axuYTWbZan99wve6xJHJhTkMdyLWjXfZjNFwWMjPGAaBYMA956J5YKRy21eqfzjPZi
-         Ref5iCx5Z2CxmXtvy0bq+7k7VcAYHSFlXcNPP2P+BzRlcCts0mTEVpu+ZySabEOEjkvK
-         cpz7DrIWldIpwvW042ERaJxWEMgUrxO93OqaC5jjJLckbZCWgaDeKTAjIdJl6k/NKqXc
-         XGymxCSbZp9p7HYGcuaDnJRTqIdLX1E9r+7qMkFIr30CnapyXFUfcNpGMXgZTeBR586p
-         0IMGlsAhuRVEHH+FWuIFkj2tc/qseWq9sFHKQhJ/RFYbgfZGleDoXz/Nbz27bRRyrO1g
-         iGDA==
-X-Gm-Message-State: AOAM530s5NgKk+EdEbtteKPl6lQ9F5UTsZM0fz+c5bPGS+7adiIGimey
-        lGfHwL8t03X4IQGzJy+rki5ncvftxQmAgLQtLZHqmT/9/l1pL2eZAKnQDSbOhfbOtd3rIFP6bdr
-        4gjP9JgHg7+cuwrMlFh/J
-X-Received: by 2002:a92:d3ce:: with SMTP id c14mr5787343ilh.157.1603897718796;
-        Wed, 28 Oct 2020 08:08:38 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwXIihC/u1Na4cd/nHaASyURWk00ICQX3yJr1URYfAKlTho/LF8HkvGID2SJkby1NRzicM7FA==
-X-Received: by 2002:a92:d3ce:: with SMTP id c14mr5787312ilh.157.1603897718181;
-        Wed, 28 Oct 2020 08:08:38 -0700 (PDT)
-Received: from alrua-x1.borgediget.toke.dk ([2a0c:4d80:42:443::2])
-        by smtp.gmail.com with ESMTPSA id l78sm2985291ild.30.2020.10.28.08.08.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Oct 2020 08:08:37 -0700 (PDT)
-Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
-        id A23CC181CED; Wed, 28 Oct 2020 16:08:35 +0100 (CET)
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        id S2391053AbgJ2BVX convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Oct 2020 21:21:23 -0400
+Received: from mail.nic.cz ([217.31.204.67]:56656 "EHLO mail.nic.cz"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2391052AbgJ2BVX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Oct 2020 21:21:23 -0400
+Received: from localhost (unknown [IPv6:2a0e:b107:ae1:0:3e97:eff:fe61:c680])
+        by mail.nic.cz (Postfix) with ESMTPSA id 327281409C8;
+        Thu, 29 Oct 2020 02:21:18 +0100 (CET)
+Date:   Thu, 29 Oct 2020 02:21:11 +0100
+From:   Marek Behun <marek.behun@nic.cz>
+To:     "=?UTF-8?B?4oSi1p/imLvSh8ytING8INKJIMKu?=" <vtolkm@googlemail.com>
+Cc:     vtolkm@gmail.com,
+        Toke =?UTF-8?B?SMO4aWxhbmQtSsO4cmdlbnNlbg==?= <toke@redhat.com>,
+        Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
         Rob Herring <robh@kernel.org>,
-        Ilias Apalodimas <ilias.apalodimas@linaro.org>,
-        vtolkm@googlemail.com
+        Ilias Apalodimas <ilias.apalodimas@linaro.org>
 Subject: Re: PCI trouble on mvebu (Turris Omnia)
-In-Reply-To: <20201028144209.GA315566@bjorn-Precision-5520>
+Message-ID: <20201029022111.50079f0d@nic.cz>
+In-Reply-To: <2fb69e2a-4423-2b04-cd0f-ca819092bc5f@gmail.com>
 References: <20201028144209.GA315566@bjorn-Precision-5520>
-X-Clacks-Overhead: GNU Terry Pratchett
-Date:   Wed, 28 Oct 2020 16:08:35 +0100
-Message-ID: <87pn52mlqk.fsf@toke.dk>
+        <87pn52mlqk.fsf@toke.dk>
+        <2fb69e2a-4423-2b04-cd0f-ca819092bc5f@gmail.com>
+X-Mailer: Claws Mail 3.17.6 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
+X-Virus-Scanned: clamav-milter 0.102.2 at mail
+X-Virus-Status: Clean
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Bjorn Helgaas <helgaas@kernel.org> writes:
+On Wed, 28 Oct 2020 16:40:00 +0000
+"™֟☻̭҇ Ѽ ҉ ®" <vtolkm@googlemail.com> wrote:
 
-> On Wed, Oct 28, 2020 at 02:36:13PM +0100, Toke H=C3=B8iland-J=C3=B8rgense=
-n wrote:
->> Toke H=C3=B8iland-J=C3=B8rgensen <toke@redhat.com> writes:
->>=20
->> > Bjorn Helgaas <helgaas@kernel.org> writes:
->> >
->> >> [+cc vtolkm]
->> >>
->> >> On Tue, Oct 27, 2020 at 04:43:20PM +0100, Toke H=C3=B8iland-J=C3=B8rg=
-ensen wrote:
->> >>> Hi everyone
->> >>>=20
->> >>> I'm trying to get a mainline kernel to run on my Turris Omnia, and am
->> >>> having some trouble getting the PCI bus to work correctly. Specifica=
-lly,
->> >>> I'm running a 5.10-rc1 kernel (torvalds/master as of this moment), w=
-ith
->> >>> the resource request fix[0] applied on top.
->> >>>=20
->> >>> The kernel boots fine, and the patch in [0] makes the PCI devices sh=
-ow
->> >>> up. But I'm still getting initialisation errors like these:
->> >>>=20
->> >>> [    1.632709] pci 0000:01:00.0: BAR 0: error updating (0xe0000004 !=
-=3D 0xffffffff)
->> >>> [    1.632714] pci 0000:01:00.0: BAR 0: error updating (high 0x00000=
-0 !=3D 0xffffffff)
->> >>> [    1.632745] pci 0000:02:00.0: BAR 0: error updating (0xe0200004 !=
-=3D 0xffffffff)
->> >>> [    1.632750] pci 0000:02:00.0: BAR 0: error updating (high 0x00000=
-0 !=3D 0xffffffff)
->> >>>=20
->> >>> and the WiFi drivers fail to initialise with what appears to me to be
->> >>> errors related to the bus rather than to the drivers themselves:
->> >>>=20
->> >>> [    3.509878] ath: phy0: Mac Chip Rev 0xfffc0.f is not supported by=
- this driver
->> >>> [    3.517049] ath: phy0: Unable to initialize hardware; initializat=
-ion status: -95
->> >>> [    3.524473] ath9k 0000:01:00.0: Failed to initialize device
->> >>> [    3.530081] ath9k: probe of 0000:01:00.0 failed with error -95
->> >>> [    3.536012] ath10k_pci 0000:02:00.0: of_irq_parse_pci: failed wit=
-h rc=3D134
->> >>> [    3.543049] pci 0000:00:02.0: enabling device (0140 -> 0142)
->> >>> [    3.548735] ath10k_pci 0000:02:00.0: can't change power state fro=
-m D3hot to D0 (config space inaccessible)
->> >>> [    3.588592] ath10k_pci 0000:02:00.0: failed to wake up device : -=
-110
->> >>> [    3.595098] ath10k_pci: probe of 0000:02:00.0 failed with error -=
-110
->> >>>=20
->> >>> lspci looks OK, though:
->> >>>=20
->> >>> # lspci
->> >>> 00:01.0 PCI bridge: Marvell Technology Group Ltd. Device 6820 (rev 0=
-4)
->> >>> 00:02.0 PCI bridge: Marvell Technology Group Ltd. Device 6820 (rev 0=
-4)
->> >>> 00:03.0 PCI bridge: Marvell Technology Group Ltd. Device 6820 (rev 0=
-4)
->> >>> 01:00.0 Network controller: Qualcomm Atheros AR9287 Wireless Network=
- Adapter (PCI-Express) (rev 01)
->> >>> 02:00.0 Network controller: Qualcomm Atheros QCA986x/988x 802.11ac W=
-ireless Network Adapter (rev ff)
->> >>>=20
->> >>> Does anyone have any clue what could be going on here? Is this a bug=
-, or
->> >>> did I miss something in my config or other initialisation? I've tried
->> >>> with both the stock u-boot distributed with the board, and with an
->> >>> upstream u-boot from latest master; doesn't seem to make any differe=
-nt.
->> >>
->> >> Can you try turning off CONFIG_PCIEASPM?  We had a similar recent
->> >> report at https://bugzilla.kernel.org/show_bug.cgi?id=3D209833 but I
->> >> don't think we have a fix yet.
->> >
->> > Yes! Turning that off does indeed help! Thanks a bunch :)
->> >
->> > You mention that bisecting this would be helpful - I can try that
->> > tomorrow; any idea when this was last working?
->>=20
->> OK, so I tried to bisect this, but, erm, I couldn't find a working
->> revision to start from? I went all the way back to 4.10 (which is the
->> first version to include the device tree file for the Omnia), and even
->> on that, the wireless cards were failing to initialise with ASPM
->> enabled...
->
-> I have no personal experience with this device; all I know is that the
-> bugzilla suggests that it worked in v5.4, which isn't much help.
->
-> Possibly the apparent regression was really a .config change, i.e.,
-> CONFIG_PCIEASPM was disabled in the v5.4 kernel vtolkm@ tested and it
-> "worked" but got enabled later and it started failing?
+> Found this patch
+> 
+> https://github.com/openwrt/openwrt/blob/7c0496f29bed87326f1bf591ca25ace82373cfc7/target/linux/mvebu/patches-5.4/405-PCI-aardvark-Improve-link-training.patch 
+> 
+> 
+> that mentions the Compex WLE900VX card, which reading the lspci verbose 
+> output from the bugtracker seems to the device being troubled.
 
-Yeah, I suspect so. The OpenWrt config disables CONFIG_PCIEASPM by
-default and only turns it on for specific targets. So I guess that it's
-most likely that this has never worked...
+It seems mvebu driver in combination with compex card is similarily
+broken as aardvark was... :) Hopefully Pali will want to look into this.
 
-> Maybe the debug patch below would be worth trying to see if it makes
-> any difference?  If it *does* help, try omitting the first hunk to see
-> if we just need to apply the quirk_enable_clear_retrain_link() quirk.
-
-Tried, doesn't help...
-
--Toke
-
+Marek
