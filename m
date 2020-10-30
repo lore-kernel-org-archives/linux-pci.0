@@ -2,135 +2,113 @@ Return-Path: <SRS0=OHpB=EF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 659FCC5517A
-	for <linux-pci@archiver.kernel.org>; Fri, 30 Oct 2020 19:24:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F15FDC00A89
+	for <linux-pci@archiver.kernel.org>; Fri, 30 Oct 2020 19:26:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 05E0820739
-	for <linux-pci@archiver.kernel.org>; Fri, 30 Oct 2020 19:24:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 945E3221FA
+	for <linux-pci@archiver.kernel.org>; Fri, 30 Oct 2020 19:26:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel-com.20150623.gappssmtp.com header.i=@intel-com.20150623.gappssmtp.com header.b="lEC/i/Ha"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="btV53mrH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727709AbgJ3TYq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 30 Oct 2020 15:24:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52688 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727705AbgJ3TXK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 30 Oct 2020 15:23:10 -0400
-Received: from mail-ej1-x641.google.com (mail-ej1-x641.google.com [IPv6:2a00:1450:4864:20::641])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B3D8C0613CF
-        for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2020 12:23:10 -0700 (PDT)
-Received: by mail-ej1-x641.google.com with SMTP id p5so10131909ejj.2
-        for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2020 12:23:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=cL9WOPO2zHT1vQiE1Idu/YzBY6AJ1/e6GyUyFPMSPBE=;
-        b=lEC/i/HaCAbfQosRN4vmMobfCxVR+WZvnS6eUCNPlKWH+DM9vHMj7SqJcRXOIjY3gR
-         X7fqNKkZHnLb3MSxwodUICF97jfOsHKnuDyEcvSjhdLdPJDHWyuIEcOT1bdngZUgm+fB
-         LnvKGjcJua2dQA5V5B17tvYJrJ6z/kJG7BObCa8rMFSzoI2LQncz5V1J1hPiz0LBLrhB
-         ehP68u5wwlkkRu5765qgLOCoQ/hOKUaoLOB0RlxdEAi5wNF8262oDo5KcRXIkHzdad7I
-         P2+qsjLodK5zSNdL+ykfiARoWE6cSX7jXnihb6GRYo+FQOn/ZAgy9c4PIkYJzVJruoKu
-         pI/A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=cL9WOPO2zHT1vQiE1Idu/YzBY6AJ1/e6GyUyFPMSPBE=;
-        b=CkasazTVTDHcqp67ige7/bsDF1BAPbDJRVnLtIo0wtMkZi3jkuh4WLeo03rqljREyc
-         p+IABHaWafCXbzLid1iw/5VikLvMZnnyptXYJ30/DMj78qj8WcMhNtGQNdpclqPZPvEK
-         PEsNjaJrjE0c44xpcZ0XLjWmrD9QChsSuTAsptBwE8SxTRh4z3ChFzBJeEoZ3pyxJQNs
-         maXgPKSkHZl0QI9rs9uhyWFhUK88c7xpmwD8GMuZX/0I7nTXkhPfEyltsoIlMjWf3roX
-         NYHGLY6tfU5QkYxjdvRMc89ihVZzabzjQwJw/NGOpWNtE+INXUf8qIesb/faAL7zjIU8
-         7mlA==
-X-Gm-Message-State: AOAM5306HeTYCrK9O9CTtaPGxph+fHRYLBBTdeuiDFUWUTzTYnY+lMFx
-        wQJFnc8dHcH3VegtFbqsXwHMrcbuMMvy8i5JoV2lQQ==
-X-Google-Smtp-Source: ABdhPJzvRDFG7BoOZiy9coBum22wqezGCSC0O+U29RY5lD3y+GuATCwmUn+7GqLGOYRtTucrFFIslPSSuBYGYUaG5e4=
-X-Received: by 2002:a17:906:70cf:: with SMTP id g15mr3935941ejk.323.1604085788862;
- Fri, 30 Oct 2020 12:23:08 -0700 (PDT)
+        id S1727433AbgJ3T0d (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 30 Oct 2020 15:26:33 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:60582 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727335AbgJ3TZj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 30 Oct 2020 15:25:39 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1604085937;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=5K8ioMNJi7ug8Tna6/Sd7VRFlYsPBbnw3ukoeZdkzas=;
+        b=btV53mrHvetmnQw0TNEYa1JcJtAoURzouU6DBULBrp9U6AT/eX7mATeOzMwWoB4iSQjJaD
+        3HRRNOr4pDdWv/OWyDgF9U97liYI7jFzYYgD2ePXwcYFdcgtSA9fTU0DJPPT/g0mNqtgKz
+        wk6SqY1OT1ZVK1l+cksQeEswpEUIm5o=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-483-tESazvaGOmiGsPe2VM6yCg-1; Fri, 30 Oct 2020 15:25:33 -0400
+X-MC-Unique: tESazvaGOmiGsPe2VM6yCg-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 616612FD06;
+        Fri, 30 Oct 2020 19:25:31 +0000 (UTC)
+Received: from w520.home (ovpn-112-213.phx2.redhat.com [10.3.112.213])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id CBA425DA2A;
+        Fri, 30 Oct 2020 19:25:30 +0000 (UTC)
+Date:   Fri, 30 Oct 2020 13:25:30 -0600
+From:   Alex Williamson <alex.williamson@redhat.com>
+To:     Rajat Jain <rajatja@google.com>
+Cc:     linux-pci@vger.kernel.org, "Boris V." <borisvk@bstnet.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <helgaas@kernel.org>, rajatxjain@gmail.com
+Subject: Re: [PATCH] PCI: Always call pci_enable_acs() regardless of
+ pdev->acs_cap
+Message-ID: <20201030132530.59bd8b9a@w520.home>
+In-Reply-To: <20201028231545.4116866-1-rajatja@google.com>
+References: <20201028231545.4116866-1-rajatja@google.com>
 MIME-Version: 1.0
-References: <20201030100815.2269-1-daniel.vetter@ffwll.ch> <20201030100815.2269-16-daniel.vetter@ffwll.ch>
-In-Reply-To: <20201030100815.2269-16-daniel.vetter@ffwll.ch>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Fri, 30 Oct 2020 12:22:54 -0700
-Message-ID: <CAPcyv4gg=x=M-WEv62=K+MUFsYm-yZ_ndgaTULv7LyHYKHWrzA@mail.gmail.com>
-Subject: Re: [PATCH v5 15/15] PCI: Revoke mappings like devmem
-To:     Daniel Vetter <daniel.vetter@ffwll.ch>
-Cc:     DRI Development <dri-devel@lists.freedesktop.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        KVM list <kvm@vger.kernel.org>, Linux MM <linux-mm@kvack.org>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        linux-samsung-soc <linux-samsung-soc@vger.kernel.org>,
-        "Linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-        Daniel Vetter <daniel.vetter@intel.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Kees Cook <keescook@chromium.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        John Hubbard <jhubbard@nvidia.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Jan Kara <jack@suse.cz>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux PCI <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Oct 30, 2020 at 3:09 AM Daniel Vetter <daniel.vetter@ffwll.ch> wrot=
-e:
->
-> Since 3234ac664a87 ("/dev/mem: Revoke mappings when a driver claims
-> the region") /dev/kmem zaps ptes when the kernel requests exclusive
-> acccess to an iomem region. And with CONFIG_IO_STRICT_DEVMEM, this is
-> the default for all driver uses.
->
-> Except there's two more ways to access PCI BARs: sysfs and proc mmap
-> support. Let's plug that hole.
->
-> For revoke_devmem() to work we need to link our vma into the same
-> address_space, with consistent vma->vm_pgoff. ->pgoff is already
-> adjusted, because that's how (io_)remap_pfn_range works, but for the
-> mapping we need to adjust vma->vm_file->f_mapping. The cleanest way is
-> to adjust this at at ->open time:
->
-> - for sysfs this is easy, now that binary attributes support this. We
->   just set bin_attr->mapping when mmap is supported
-> - for procfs it's a bit more tricky, since procfs pci access has only
->   one file per device, and access to a specific resources first needs
->   to be set up with some ioctl calls. But mmap is only supported for
->   the same resources as sysfs exposes with mmap support, and otherwise
->   rejected, so we can set the mapping unconditionally at open time
->   without harm.
->
-> A special consideration is for arch_can_pci_mmap_io() - we need to
-> make sure that the ->f_mapping doesn't alias between ioport and iomem
-> space. There's only 2 ways in-tree to support mmap of ioports: generic
-> pci mmap (ARCH_GENERIC_PCI_MMAP_RESOURCE), and sparc as the single
-> architecture hand-rolling. Both approach support ioport mmap through a
-> special pfn range and not through magic pte attributes. Aliasing is
-> therefore not a problem.
->
-> The only difference in access checks left is that sysfs PCI mmap does
-> not check for CAP_RAWIO. I'm not really sure whether that should be
-> added or not.
->
-> Signed-off-by: Daniel Vetter <daniel.vetter@intel.com>
-> Cc: Jason Gunthorpe <jgg@ziepe.ca>
-> Cc: Kees Cook <keescook@chromium.org>
-> Cc: Dan Williams <dan.j.williams@intel.com>
-> Cc: Andrew Morton <akpm@linux-foundation.org>
-> Cc: John Hubbard <jhubbard@nvidia.com>
-> Cc: J=C3=A9r=C3=B4me Glisse <jglisse@redhat.com>
-> Cc: Jan Kara <jack@suse.cz>
-> Cc: Dan Williams <dan.j.williams@intel.com>
+On Wed, 28 Oct 2020 16:15:45 -0700
+Rajat Jain <rajatja@google.com> wrote:
 
-Looks good to me:
+> Some devices may have have anomalies with the ACS cpability structure,
+> and they may be using quirks to support ACS functionality via other
+> registers. For such devices, it is important we always call
+> pci_enable_acs() to give the quirks a chance to enable ACS in other ways.
+> 
+> For Eg:
+> There seems a class of Intel devices quirked with *_intel_pch_acs_*
+> functions, that do not expose the standard ACS capability structure. But
+> these quirks help support ACS on these devices using other registers:
+> pci_quirk_enable_intel_pch_acs() -> doesn't use acs_cap to enable ACS
+> 
+> This has already been taken care of in the quirks, in the other direction
+> i.e. when checking if the ACS is enabled or not. So no need to do
+> anything there.
+> 
+> Reported-by: Boris V <borisvk@bstnet.org>
+> Fixes: 52fbf5bdeeef ("PCI: Cache ACS capability offset in device")
+> Signed-off-by: Rajat Jain <rajatja@google.com>
+> ---
+>  drivers/pci/pci.c | 9 +++++++--
+>  1 file changed, 7 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 6d4d5a2f923d..ab398226c55e 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3516,8 +3516,13 @@ void pci_acs_init(struct pci_dev *dev)
+>  {
+>  	dev->acs_cap = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
+>  
+> -	if (dev->acs_cap)
+> -		pci_enable_acs(dev);
+> +	/*
+> +	 * Attempt to enable ACS regardless of capability because some rootports
+> +	 * (e.g. the ones quirked with *_intel_pch_acs_*) may not expose
+> +	 * standard rootport capability structure, but still may support ACS via
+> +	 * those quirks.
+> +	 */
+> +	pci_enable_acs(dev);
+>  }
+>  
+>  /**
 
-Reviewed-by: Dan Williams <dan.j.williams@intel.com>
+Much needed regression fix for v5.9:
+
+Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
+
