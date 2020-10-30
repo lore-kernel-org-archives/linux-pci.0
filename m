@@ -2,215 +2,191 @@ Return-Path: <SRS0=OHpB=EF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C45A0C00A89
-	for <linux-pci@archiver.kernel.org>; Fri, 30 Oct 2020 10:08:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F082BC56201
+	for <linux-pci@archiver.kernel.org>; Fri, 30 Oct 2020 10:09:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 63CED221FA
-	for <linux-pci@archiver.kernel.org>; Fri, 30 Oct 2020 10:08:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1604052493;
-	bh=G752tbtJqV8awnxoaKN7bqlWiohbrlW06ydWXTsgFyk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=WWq2TD/H73rfztyGMa4NkYkdxlBe3o6OSZAiGx/uiry9lpYCA8YTnjkrqfTkW6sZ3
-	 +GjbNCVIlaewaVIlKtBTptQqLoHuwLCRV+lpAF3R+WqB9E5aRF4q4M2aUqC0KsnjH9
-	 jEr7vgPWQPU+2whbivSG/liiko/tyoR+KjntO4SY=
+	by mail.kernel.org (Postfix) with ESMTP id 98EE522281
+	for <linux-pci@archiver.kernel.org>; Fri, 30 Oct 2020 10:09:12 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=ffwll.ch header.i=@ffwll.ch header.b="ZmeqJABf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726055AbgJ3KIM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 30 Oct 2020 06:08:12 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46366 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725888AbgJ3KIM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 30 Oct 2020 06:08:12 -0400
-Received: from pali.im (pali.im [31.31.79.79])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 956032087E;
-        Fri, 30 Oct 2020 10:08:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1604052490;
-        bh=G752tbtJqV8awnxoaKN7bqlWiohbrlW06ydWXTsgFyk=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=QowPS5uTn2sZv1IQF00LbAq1ZnoLJmCVbaeEds5IdcGgrCvRiUImg5NuBiMsMbE6h
-         GNuZq4O6iQyTKjmwffX6+lg6kUzJbFkvemxyD9lc6tVh4zmdnznSyXtKBq70eccPpD
-         2rIreRuPGrVdxIHKPonOV7OEGNdwKZsydVLLg/SM=
-Received: by pali.im (Postfix)
-        id 0D49086D; Fri, 30 Oct 2020 11:08:07 +0100 (CET)
-Date:   Fri, 30 Oct 2020 11:08:07 +0100
-From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
-To:     Marek Behun <marek.behun@nic.cz>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>,
-        Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>,
-        vtolkm@gmail.com, linux-pci@vger.kernel.org,
+        id S1726461AbgJ3KJL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 30 Oct 2020 06:09:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50442 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726519AbgJ3KJC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 30 Oct 2020 06:09:02 -0400
+Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45188C0613D5
+        for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2020 03:09:01 -0700 (PDT)
+Received: by mail-wr1-x442.google.com with SMTP id m13so5795217wrj.7
+        for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2020 03:09:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ffwll.ch; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=uyz54q5dHhyERRD5YHe2pc1kjOtZTM8dS6wbdOtR09U=;
+        b=ZmeqJABf5IZy8178YdO3vLrv7Dev0oZlicQtRQJAFyuKorSjRs1ohgpdokuxCePQP6
+         AT9c2k/9qgd7FJGrvFkPmF2kMNAeIzqUTlcHa8Ui3wx+pyZXo2f2gYQ4p0iG0np3YRGb
+         DBDTmpFDif+PZ1J5huaMsN92sw96Ft3EEblkM=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=uyz54q5dHhyERRD5YHe2pc1kjOtZTM8dS6wbdOtR09U=;
+        b=GfHZww2Dycc/uvRXf/mIXGECN83cbmWVmJyCnMXbkb5B3o7nDP4KVrPBplsZuHFN7J
+         G7rURs+dT6+FF3TJqqh7tWDmn6ENGAJov902nPqmZofZFWxrgeRM3mKdzArOzL+IC1pH
+         XeCwPTcSWGA+ESUUefMeZVY/e5RQ6mPxR46upoOmQGuTmxIFdoGz7jGll3KA2IpntnpD
+         uyMUxg5yVDfaIR41/EKdRj7FR5RxU8yPNbtKrx9uX5+oRKhlanYk6R8LCNWeLMRgTDyY
+         coRZjPjyzM8CqY0K0ow4vef6QUUgPZvukW7klBphbgWyFw3n8qSVhHxbRly10UT67NlS
+         FdNw==
+X-Gm-Message-State: AOAM530aYakwbU8rOz2M1uX6SEF5mWe4QeCzhqQWtX2bUJ/65Za4UdQW
+        O6W00kl7/mQX3igk9iUWCnA8Ig==
+X-Google-Smtp-Source: ABdhPJxxiq57gNvMtaTh3ZESySC4gGe0ysNC/70ulYRhZee43lOQKGAF6EOP+2m6lhkPckGzWLncBg==
+X-Received: by 2002:a5d:6287:: with SMTP id k7mr2062794wru.402.1604052540040;
+        Fri, 30 Oct 2020 03:09:00 -0700 (PDT)
+Received: from phenom.ffwll.local ([2a02:168:57f4:0:efd0:b9e5:5ae6:c2fa])
+        by smtp.gmail.com with ESMTPSA id v189sm4430947wmg.14.2020.10.30.03.08.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 30 Oct 2020 03:08:58 -0700 (PDT)
+From:   Daniel Vetter <daniel.vetter@ffwll.ch>
+To:     DRI Development <dri-devel@lists.freedesktop.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Cc:     kvm@vger.kernel.org, linux-mm@kvack.org,
         linux-arm-kernel@lists.infradead.org,
-        Rob Herring <robh@kernel.org>,
-        Ilias Apalodimas <ilias.apalodimas@linaro.org>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Jason Cooper <jason@lakedaemon.net>
-Subject: Re: PCI trouble on mvebu (Turris Omnia)
-Message-ID: <20201030100807.74r3vp4kyw44kcwp@pali>
-References: <871rhhmgkq.fsf@toke.dk>
- <20201029193022.GA476048@bjorn-Precision-5520>
- <20201029215853.6ccce4e0@nic.cz>
+        linux-samsung-soc@vger.kernel.org, linux-media@vger.kernel.org,
+        Daniel Vetter <daniel.vetter@ffwll.ch>,
+        Daniel Vetter <daniel.vetter@intel.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Kees Cook <keescook@chromium.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        John Hubbard <jhubbard@nvidia.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Jan Kara <jack@suse.cz>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: [PATCH v5 15/15] PCI: Revoke mappings like devmem
+Date:   Fri, 30 Oct 2020 11:08:15 +0100
+Message-Id: <20201030100815.2269-16-daniel.vetter@ffwll.ch>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20201030100815.2269-1-daniel.vetter@ffwll.ch>
+References: <20201030100815.2269-1-daniel.vetter@ffwll.ch>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20201029215853.6ccce4e0@nic.cz>
-User-Agent: NeoMutt/20180716
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hello!
+Since 3234ac664a87 ("/dev/mem: Revoke mappings when a driver claims
+the region") /dev/kmem zaps ptes when the kernel requests exclusive
+acccess to an iomem region. And with CONFIG_IO_STRICT_DEVMEM, this is
+the default for all driver uses.
 
-On Thursday 29 October 2020 21:58:53 Marek Behun wrote:
-> On Thu, 29 Oct 2020 14:30:22 -0500
-> Bjorn Helgaas <helgaas@kernel.org> wrote:
-> 
-> > On Thu, Oct 29, 2020 at 12:12:21PM +0100, Toke Høiland-Jørgensen wrote:
-> > > Pali Rohár <pali@kernel.org> writes:  
-> > 
-> > > > I have been testing mainline kernel on Turris Omnia with two PCIe
-> > > > default cards (WLE200 and WLE900) and it worked fine. But I do not know
-> > > > if I had ASPM enabled or not.
-> > > >
-> > > > So it is working fine for you when CONFIG_PCIEASPM is disabled and whole
-> > > > issue is only when CONFIG_PCIEASPM is enabled?  
-> > > 
-> > > Yup, exactly. And I'm also currently testing with the default WLE200/900
-> > > cards... I just tried sticking an MT76-based WiFi card into the third
-> > > PCI slot, and that doesn't come up either when I enable PCIEASPM.  
-> > 
-> > Huh.  So IIUC, the following cases all try to retrain the link and it
-> > fails to come up again:
-> > 
-> >   - aardvark + WLE900VX (see commit 43fc679ced18)
+Except there's two more ways to access PCI BARs: sysfs and proc mmap
+support. Let's plug that hole.
 
-Just to note: aardvark + WLE200 worked fine whatever I did. No
-workaround and no patch was needed.
+For revoke_devmem() to work we need to link our vma into the same
+address_space, with consistent vma->vm_pgoff. ->pgoff is already
+adjusted, because that's how (io_)remap_pfn_range works, but for the
+mapping we need to adjust vma->vm_file->f_mapping. The cleanest way is
+to adjust this at at ->open time:
 
-> >   - mvebu + WLE200
-> >   - mvebu + WLE900
-> >   - mvebu + MT76
-> 
-> Bjorn, IIRC Pali's patches fix the WLE900VX card for Aardvark (both in
-> kernel and in U-Boot).
-> IMO mvebu has similar issues. Both these drivers handle the PCIe reset
-> signal incorrectly (or at least Aardvark did before Pali's work).
-> 
-> mvebu is used on Turris Omnia, and our HW guys first solved the WLE900VX
-> not working issue by using different capacitors for the SerDeses (this
-> was 5 years ago). But after Pali's work on Aardvark I think this could
-> also be solved for mvebu driver in software.
+- for sysfs this is easy, now that binary attributes support this. We
+  just set bin_attr->mapping when mmap is supported
+- for procfs it's a bit more tricky, since procfs pci access has only
+  one file per device, and access to a specific resources first needs
+  to be set up with some ioctl calls. But mmap is only supported for
+  the same resources as sysfs exposes with mmap support, and otherwise
+  rejected, so we can set the mapping unconditionally at open time
+  without harm.
 
-Apparently not :-( See below, we cannot control PERST# pin from software
-on Turris Omnia.
+A special consideration is for arch_can_pci_mmap_io() - we need to
+make sure that the ->f_mapping doesn't alias between ioport and iomem
+space. There's only 2 ways in-tree to support mmap of ioports: generic
+pci mmap (ARCH_GENERIC_PCI_MMAP_RESOURCE), and sparc as the single
+architecture hand-rolling. Both approach support ioport mmap through a
+special pfn range and not through magic pte attributes. Aliasing is
+therefore not a problem.
 
-> BTW the WLE900VX card has problems on many systems, it won't work for
-> example on Thinkpad X230. There is a bug on kernel bugzilla reported
-> for this.
+The only difference in access checks left is that sysfs PCI mmap does
+not check for CAP_RAWIO. I'm not really sure whether that should be
+added or not.
 
-WLE900VX is really buggy card. During its initialization/reset
-W_DISABLE# (pin 20) must be in correct state, otherwise system would
-never see this card. This is reason why it does not work in laptops,
-sometimes could help double reboot and playing with rfkill state prior
-reboot. See reported issue:
+Signed-off-by: Daniel Vetter <daniel.vetter@intel.com>
+Cc: Jason Gunthorpe <jgg@ziepe.ca>
+Cc: Kees Cook <keescook@chromium.org>
+Cc: Dan Williams <dan.j.williams@intel.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: John Hubbard <jhubbard@nvidia.com>
+Cc: Jérôme Glisse <jglisse@redhat.com>
+Cc: Jan Kara <jack@suse.cz>
+Cc: Dan Williams <dan.j.williams@intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-mm@kvack.org
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-samsung-soc@vger.kernel.org
+Cc: linux-media@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Daniel Vetter <daniel.vetter@ffwll.ch>
+--
+v2:
+- Totally new approach: Adjust filp->f_mapping at open time. Note that
+  this now works on all architectures, not just those support
+  ARCH_GENERIC_PCI_MMAP_RESOURCE
+---
+ drivers/pci/pci-sysfs.c | 4 ++++
+ drivers/pci/proc.c      | 1 +
+ 2 files changed, 5 insertions(+)
 
-https://bugzilla.kernel.org/show_bug.cgi?id=84821#c53
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index d15c881e2e7e..3f1c31bc0b7c 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -929,6 +929,7 @@ void pci_create_legacy_files(struct pci_bus *b)
+ 	b->legacy_io->read = pci_read_legacy_io;
+ 	b->legacy_io->write = pci_write_legacy_io;
+ 	b->legacy_io->mmap = pci_mmap_legacy_io;
++	b->legacy_io->mapping = iomem_get_mapping();
+ 	pci_adjust_legacy_attr(b, pci_mmap_io);
+ 	error = device_create_bin_file(&b->dev, b->legacy_io);
+ 	if (error)
+@@ -941,6 +942,7 @@ void pci_create_legacy_files(struct pci_bus *b)
+ 	b->legacy_mem->size = 1024*1024;
+ 	b->legacy_mem->attr.mode = 0600;
+ 	b->legacy_mem->mmap = pci_mmap_legacy_mem;
++	b->legacy_io->mapping = iomem_get_mapping();
+ 	pci_adjust_legacy_attr(b, pci_mmap_mem);
+ 	error = device_create_bin_file(&b->dev, b->legacy_mem);
+ 	if (error)
+@@ -1156,6 +1158,8 @@ static int pci_create_attr(struct pci_dev *pdev, int num, int write_combine)
+ 			res_attr->mmap = pci_mmap_resource_uc;
+ 		}
+ 	}
++	if (res_attr->mmap)
++		res_attr->mapping = iomem_get_mapping();
+ 	res_attr->attr.name = res_attr_name;
+ 	res_attr->attr.mode = 0600;
+ 	res_attr->size = pci_resource_len(pdev, num);
+diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
+index 3a2f90beb4cb..9bab07302bbf 100644
+--- a/drivers/pci/proc.c
++++ b/drivers/pci/proc.c
+@@ -298,6 +298,7 @@ static int proc_bus_pci_open(struct inode *inode, struct file *file)
+ 	fpriv->write_combine = 0;
+ 
+ 	file->private_data = fpriv;
++	file->f_mapping = iomem_get_mapping();
+ 
+ 	return 0;
+ }
+-- 
+2.28.0
 
-> My opinion is that many drivers do not respect the PCIe specification
-> for reset and link training totally correctly (Pali was talking about
-> this when he was looking at Aardvark) and that WLE900VX has a bug that
-> in combination with those drivers causes the fail. If you look at the
-> drivers, they are incompatible in how they handle the reset signal and
-> link training.
-
-Seems that aardvark or WLE900VX card (not only this one, but basically
-every ath10k tested card, also non-Compex) have problems that when
-booting Linux kernel they are in some totally strange state and whatever
-I did I was not able to detect them and make link training success. The
-only thing which helped was to issue card reset via out of band PERST#
-signal.
-
-And here is the main issue with PERST# signal on linux kernel. Basically
-every driver issue card reset via PERST# signal for different amount of
-time. Something which must be driver and card independent, probably
-already documented in PCIe specification. See my email:
-
-https://lore.kernel.org/linux-pci/20200424092546.25p3hdtkehohe3xw@pali/
-
-I was trying to find that minimal reset timeout in specifications, but I
-was not able to understand all those details and timeouts defined in
-different diagrams. I'm not HW guy. See what was I able to find out:
-
-https://lore.kernel.org/linux-pci/20200507212002.GA32182@bogus/
-
-And my conclusion is here:
-
-https://lore.kernel.org/linux-pci/20200513115940.fiemtnxfqcyqo6ik@pali/
-
-So to finally fix issues with card reset we need somebody who understand
-hardware documents and PCIe specifications and can figure out what is
-the correct minimal value of delay needed for proper card reset via
-PERST# signal. And then fix all PCI controller drivers to use this
-value.
-
-In aardvark we have timeout which was enough for my tested cards on
-Espressobin and Turris MOX.
-
-
-And second issue is with link training. What helped me to finally fix
-link training for PCIe cards on A3720 with aardvark driver in both
-U-Boot and Linux kernel was comment in following commit:
-
-https://git.kernel.org/linus/f4c7d053d7f7
-
-    As required by PCI Express spec a delay for at least 100ms after
-    such a reset [fundamental reset by asserted PERST# signal] before
-    link training is needed.
-
-In aardvark control register I forcibly disabled link training bit prior
-issuing reset via PERST# signal and then I re-enabled it 100ms after
-reset was completed.
-
-I have sent aardvark patch which update comment for above requirement:
-https://lore.kernel.org/linux-pci/20200924084618.12442-1-pali@kernel.org/
-
-> I am curious what Pali will tell us, he said that he will look into the
-> mvebu driver.
-
-If same problem with WLE900 cards is also on A38x SOC (with pci-mvebu
-driver) then it would be hard to fix it on Turris Omnia.
-
-On Turris MOX (with aardvark) PERST# pin from card is connected to some
-MPP pin on A3720 SOC, which we can control via GPIO. In DTS we have
-configured it as "reset-gpios" and therefore aardvark driver can
-assert/deassert PERST# for card when needed.
-
-On Turris Omnia (with pci-mvebu) PERST# pin from wifi card is connected
-to MCU and it asserts/deasserts this pin only after board reset. Also it
-is shared line across all mPCIe slots and also with other peripherals.
-
-So we cannot issue reset via PERST# signal on Turris Omnia. But there
-are other ways how to issue fundamental reset, via in band signaling.
-
-But IIRC issuing fundamental reset via in band PCIe bus is done via PCIe
-bridge to which is card connected. So second problem, we do not have
-PCIe bridge on mvebu platforms, it is just emulated via kernel. Unless
-there is some "special" register for issuing fundamental reset we would
-not be able to emulate this reset.
-
-Aardvark does not have PCIe bridge too, but in its internal registers
-are bits for different types of reset. And when I was trying to use them
-nothing happened, nothing helped. Only external reset via PERST# signal
-was able to initialize card.
-
-I will look into A38x PCI registers if there is not something which
-could help us. But without access to PERST# pin I'm sceptical if we can
-do something... Only just hoping that in PCIe ASPM retraining code is a
-bug which can be fixed...
