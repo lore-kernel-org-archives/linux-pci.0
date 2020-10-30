@@ -2,39 +2,40 @@ Return-Path: <SRS0=OHpB=EF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-9.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82573C55178
-	for <linux-pci@archiver.kernel.org>; Fri, 30 Oct 2020 18:53:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CDCDC56201
+	for <linux-pci@archiver.kernel.org>; Fri, 30 Oct 2020 18:53:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 26667221FA
-	for <linux-pci@archiver.kernel.org>; Fri, 30 Oct 2020 18:53:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3631F20797
+	for <linux-pci@archiver.kernel.org>; Fri, 30 Oct 2020 18:53:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727522AbgJ3SxC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 30 Oct 2020 14:53:02 -0400
-Received: from mga06.intel.com ([134.134.136.31]:65477 "EHLO mga06.intel.com"
+        id S1727535AbgJ3Sxa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 30 Oct 2020 14:53:30 -0400
+Received: from mga09.intel.com ([134.134.136.24]:10513 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727553AbgJ3SxA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 30 Oct 2020 14:53:00 -0400
-IronPort-SDR: AXD8hg3gcAa468sDxByC0AX/0b3l+NaLWHHz6rZiXFYunomrDE8r7rs/EAY0nrz6HhYwoe/jL5
- p0rLDGDdDrbQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9790"; a="230287761"
+        id S1727658AbgJ3Sx3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 30 Oct 2020 14:53:29 -0400
+IronPort-SDR: vI1QbNRJO5rQgSoT8f6KP/TgwiIMuNcJee3ktnzA1MyMiGn/deCO5WX/IUE4O8smXNFsGbOfTP
+ 877VywADkjLQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9790"; a="168781964"
 X-IronPort-AV: E=Sophos;i="5.77,434,1596524400"; 
-   d="scan'208";a="230287761"
+   d="scan'208";a="168781964"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Oct 2020 11:50:56 -0700
-IronPort-SDR: P/EszHGZMS3LYCtTJeIVgFGLl03yO2IZ+VGXlypcKQUAJNJmboelDzpeQyf2D7wTrVKdPF3TOC
- YCDdP23muVzw==
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Oct 2020 11:51:27 -0700
+IronPort-SDR: NhlgJn489O9QulgVEROoMY+MoNSpZbLLUFSYR9kZ6vZDeNQ1uhzXbtPEqLref3lVwBHUMaZRAr
+ lIe7bo3rHS/A==
 X-IronPort-AV: E=Sophos;i="5.77,434,1596524400"; 
-   d="scan'208";a="527209865"
+   d="scan'208";a="319408331"
 Received: from djiang5-desk3.ch.intel.com ([143.182.136.137])
-  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Oct 2020 11:50:55 -0700
-Subject: [PATCH v4 01/17] irqchip: Add IMS (Interrupt Message Store) driver
+  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Oct 2020 11:51:25 -0700
+Subject: [PATCH v4 05/17] dmaengine: idxd: add interrupt handle request
+ support
 From:   Dave Jiang <dave.jiang@intel.com>
 To:     vkoul@kernel.org, megha.dey@intel.com, maz@kernel.org,
         bhelgaas@google.com, tglx@linutronix.de,
@@ -48,8 +49,8 @@ To:     vkoul@kernel.org, megha.dey@intel.com, maz@kernel.org,
         pbonzini@redhat.com, samuel.ortiz@intel.com, mona.hossain@intel.com
 Cc:     dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-pci@vger.kernel.org, kvm@vger.kernel.org
-Date:   Fri, 30 Oct 2020 11:50:54 -0700
-Message-ID: <160408385476.912050.16205225207591080075.stgit@djiang5-desk3.ch.intel.com>
+Date:   Fri, 30 Oct 2020 11:51:25 -0700
+Message-ID: <160408388556.912050.3620822104414694832.stgit@djiang5-desk3.ch.intel.com>
 In-Reply-To: <160408357912.912050.17005584526266191420.stgit@djiang5-desk3.ch.intel.com>
 References: <160408357912.912050.17005584526266191420.stgit@djiang5-desk3.ch.intel.com>
 User-Agent: StGit/0.23-29-ga622f1
@@ -60,434 +61,341 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Thomas Gleixner <tglx@linutronix.de>
+Add support for requesting interrupt handle from the device. The interrupt
+handle is put in the interrupt handle field of a descriptor for the device
+to determine which interrupt vector to use be it MSI-X or IMS. On the host
+device, the interrupt handle is indexed to the MSI-X table. This allows a
+descriptor to program the interrupt handle 1:1 with the MSI-X index without
+getting it from the request interrupt handle device command. For a guest
+device, the index can be any index that the host assigned for the IMS
+table, and therefore it must be requested from the virtual device during
+MSI-X setup by the driver running on the guest.
 
-Generic IMS(Interrupt Message Store) irq chips and irq domain
-implementations for IMS based devices which store the interrupt
-messages in an array in device memory.
+On the actual hardware the MSIX vector 0 is misc interrupt and handles
+events such as administrative command completion, error reporting,
+performance monitor overflow, and etc. The MSIX vectors 1...N
+are used for descriptor completion interrupts. On the guest kernel,
+the MSIX interrupts are backed by the mediated device through emulation
+or IMS vectors. Vector 0 is handled through emulation by the host vdcm.
+It only requires the host driver to send the signal to qemu. The vector 1
+(and more may be supported later) is backed by IMS.
 
-Allocation and freeing of interrupts happens via the generic
-msi_domain_alloc/free_irqs() interface. No special purpose IMS magic
-required as long as the interrupt domain is stored in the underlying
-device struct.
-
-Provide storage and a setter for an Address Space Identifier. The
-identifier is stored in the top level irq_data and it only can be
-modified when the interrupt is not active. Add the necessary storage
-and helper functions and validate that interrupts which require an
-ASID have one assigned.
-
-[Megha : Fixed compile time errors
-         Added necessary dependencies to IMS_MSI_ARRAY config
-         Fixed polarity of IMS_VECTOR_CTRL
-         Added reads after writes to flush writes to device
-         Tested the IMS infrastructure with the IDXD driver]
-
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Megha Dey <megha.dey@intel.com>
 Signed-off-by: Dave Jiang <dave.jiang@intel.com>
 ---
- drivers/irqchip/Kconfig             |   14 ++
- drivers/irqchip/Makefile            |    1 
- drivers/irqchip/irq-ims-msi.c       |  204 +++++++++++++++++++++++++++++++++++
- include/linux/interrupt.h           |    2 
- include/linux/irq.h                 |    4 +
- include/linux/irqchip/irq-ims-msi.h |   68 ++++++++++++
- kernel/irq/manage.c                 |   32 +++++
- 7 files changed, 325 insertions(+)
- create mode 100644 drivers/irqchip/irq-ims-msi.c
- create mode 100644 include/linux/irqchip/irq-ims-msi.h
+ drivers/dma/idxd/device.c    |   58 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/dma/idxd/idxd.h      |   13 +++++++++
+ drivers/dma/idxd/init.c      |   48 +++++++++++++++++++++++++++++++++++
+ drivers/dma/idxd/registers.h |    9 ++++++-
+ drivers/dma/idxd/submit.c    |   29 ++++++++++++++++-----
+ 5 files changed, 149 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/irqchip/Kconfig b/drivers/irqchip/Kconfig
-index c6098eee0c7c..862ea81a69a0 100644
---- a/drivers/irqchip/Kconfig
-+++ b/drivers/irqchip/Kconfig
-@@ -597,4 +597,18 @@ config MST_IRQ
- 	help
- 	  Support MStar Interrupt Controller.
- 
-+config IMS_MSI
-+	depends on PCI
-+	select DEVICE_MSI
-+	bool
-+
-+config IMS_MSI_ARRAY
-+	bool "IMS Interrupt Message Store MSI controller for device memory storage arrays"
-+	depends on PCI
-+	select IMS_MSI
-+	select GENERIC_MSI_IRQ_DOMAIN
-+	help
-+	  Support for IMS Interrupt Message Store MSI controller
-+	  with IMS slot storage in a slot array in device memory
-+
- endmenu
-diff --git a/drivers/irqchip/Makefile b/drivers/irqchip/Makefile
-index 94c2885882ee..a7d54605060a 100644
---- a/drivers/irqchip/Makefile
-+++ b/drivers/irqchip/Makefile
-@@ -114,3 +114,4 @@ obj-$(CONFIG_LOONGSON_PCH_PIC)		+= irq-loongson-pch-pic.o
- obj-$(CONFIG_LOONGSON_PCH_MSI)		+= irq-loongson-pch-msi.o
- obj-$(CONFIG_MST_IRQ)			+= irq-mst-intc.o
- obj-$(CONFIG_SL28CPLD_INTC)		+= irq-sl28cpld.o
-+obj-$(CONFIG_IMS_MSI)			+= irq-ims-msi.o
-diff --git a/drivers/irqchip/irq-ims-msi.c b/drivers/irqchip/irq-ims-msi.c
-new file mode 100644
-index 000000000000..d54a54f5fdcc
---- /dev/null
-+++ b/drivers/irqchip/irq-ims-msi.c
-@@ -0,0 +1,204 @@
-+// SPDX-License-Identifier: GPL-2.0
-+// (C) Copyright 2020 Thomas Gleixner <tglx@linutronix.de>
-+/*
-+ * Shared interrupt chips and irq domains for IMS devices
-+ */
-+#include <linux/device.h>
-+#include <linux/slab.h>
-+#include <linux/msi.h>
-+#include <linux/irq.h>
-+#include <linux/irqdomain.h>
-+
-+#include <linux/irqchip/irq-ims-msi.h>
-+
-+#ifdef CONFIG_IMS_MSI_ARRAY
-+
-+struct ims_array_data {
-+	struct ims_array_info	info;
-+	unsigned long		map[0];
-+};
-+
-+static inline void iowrite32_and_flush(u32 value, void __iomem *addr)
-+{
-+	iowrite32(value, addr);
-+	ioread32(addr);
-+}
-+
-+static void ims_array_mask_irq(struct irq_data *data)
-+{
-+	struct msi_desc *desc = irq_data_get_msi_desc(data);
-+	struct ims_slot __iomem *slot = desc->device_msi.priv_iomem;
-+	u32 __iomem *ctrl = &slot->ctrl;
-+
-+	iowrite32_and_flush(ioread32(ctrl) | IMS_CTRL_VECTOR_MASKBIT, ctrl);
-+}
-+
-+static void ims_array_unmask_irq(struct irq_data *data)
-+{
-+	struct msi_desc *desc = irq_data_get_msi_desc(data);
-+	struct ims_slot __iomem *slot = desc->device_msi.priv_iomem;
-+	u32 __iomem *ctrl = &slot->ctrl;
-+
-+	iowrite32_and_flush(ioread32(ctrl) & ~IMS_CTRL_VECTOR_MASKBIT, ctrl);
-+}
-+
-+static void ims_array_write_msi_msg(struct irq_data *data, struct msi_msg *msg)
-+{
-+	struct msi_desc *desc = irq_data_get_msi_desc(data);
-+	struct ims_slot __iomem *slot = desc->device_msi.priv_iomem;
-+
-+	iowrite32(msg->address_lo, &slot->address_lo);
-+	iowrite32(msg->address_hi, &slot->address_hi);
-+	iowrite32_and_flush(msg->data, &slot->data);
-+}
-+
-+static int ims_array_set_auxdata(struct irq_data *data, unsigned int which,
-+				 u64 auxval)
-+{
-+	struct msi_desc *desc = irq_data_get_msi_desc(data);
-+	struct ims_slot __iomem *slot = desc->device_msi.priv_iomem;
-+	u32 val, __iomem *ctrl = &slot->ctrl;
-+
-+	if (which != IMS_AUXDATA_CONTROL_WORD)
-+		return -EINVAL;
-+	if (auxval & ~(u64)IMS_CONTROL_WORD_AUXMASK)
-+		return -EINVAL;
-+
-+	val = ioread32(ctrl) & IMS_CONTROL_WORD_IRQMASK;
-+	iowrite32_and_flush(val | (u32) auxval, ctrl);
-+	return 0;
-+}
-+
-+static const struct irq_chip ims_array_msi_controller = {
-+	.name			= "IMS",
-+	.irq_mask		= ims_array_mask_irq,
-+	.irq_unmask		= ims_array_unmask_irq,
-+	.irq_write_msi_msg	= ims_array_write_msi_msg,
-+	.irq_set_auxdata	= ims_array_set_auxdata,
-+	.irq_retrigger		= irq_chip_retrigger_hierarchy,
-+	.flags			= IRQCHIP_SKIP_SET_WAKE,
-+};
-+
-+static void ims_array_reset_slot(struct ims_slot __iomem *slot)
-+{
-+	iowrite32(0, &slot->address_lo);
-+	iowrite32(0, &slot->address_hi);
-+	iowrite32(0, &slot->data);
-+	iowrite32_and_flush(IMS_CTRL_VECTOR_MASKBIT, &slot->ctrl);
-+}
-+
-+static void ims_array_free_msi_store(struct irq_domain *domain,
-+				     struct device *dev)
-+{
-+	struct msi_domain_info *info = domain->host_data;
-+	struct ims_array_data *ims = info->data;
-+	struct msi_desc *entry;
-+
-+	for_each_msi_entry(entry, dev) {
-+		if (entry->device_msi.priv_iomem) {
-+			clear_bit(entry->device_msi.hwirq, ims->map);
-+			ims_array_reset_slot(entry->device_msi.priv_iomem);
-+			entry->device_msi.priv_iomem = NULL;
-+			entry->device_msi.hwirq = 0;
-+		}
-+	}
-+}
-+
-+static int ims_array_alloc_msi_store(struct irq_domain *domain,
-+				     struct device *dev, int nvec)
-+{
-+	struct msi_domain_info *info = domain->host_data;
-+	struct ims_array_data *ims = info->data;
-+	struct msi_desc *entry;
-+
-+	for_each_msi_entry(entry, dev) {
-+		unsigned int idx;
-+
-+		idx = find_first_zero_bit(ims->map, ims->info.max_slots);
-+		if (idx >= ims->info.max_slots)
-+			goto fail;
-+		set_bit(idx, ims->map);
-+		entry->device_msi.priv_iomem = &ims->info.slots[idx];
-+		ims_array_reset_slot(entry->device_msi.priv_iomem);
-+		entry->device_msi.hwirq = idx;
-+	}
-+	return 0;
-+
-+fail:
-+	ims_array_free_msi_store(domain, dev);
-+	return -ENOSPC;
-+}
-+
-+struct ims_array_domain_template {
-+	struct msi_domain_ops	ops;
-+	struct msi_domain_info	info;
-+};
-+
-+static const struct ims_array_domain_template ims_array_domain_template = {
-+	.ops = {
-+		.msi_alloc_store	= ims_array_alloc_msi_store,
-+		.msi_free_store		= ims_array_free_msi_store,
-+	},
-+	.info = {
-+		.flags		= MSI_FLAG_USE_DEF_DOM_OPS |
-+				  MSI_FLAG_USE_DEF_CHIP_OPS,
-+		.handler	= handle_edge_irq,
-+		.handler_name	= "edge",
-+	},
-+};
-+
-+struct irq_domain *
-+pci_ims_array_create_msi_irq_domain(struct pci_dev *pdev,
-+				    struct ims_array_info *ims_info)
-+{
-+	struct ims_array_domain_template *info;
-+	struct ims_array_data *data;
-+	struct irq_domain *domain;
-+	struct irq_chip *chip;
-+	unsigned int size;
-+
-+	/* Allocate new domain storage */
-+	info = kmemdup(&ims_array_domain_template,
-+		       sizeof(ims_array_domain_template), GFP_KERNEL);
-+	if (!info)
-+		return NULL;
-+	/* Link the ops */
-+	info->info.ops = &info->ops;
-+
-+	/* Allocate ims_info along with the bitmap */
-+	size = sizeof(*data);
-+	size += BITS_TO_LONGS(ims_info->max_slots) * sizeof(unsigned long);
-+	data = kzalloc(size, GFP_KERNEL);
-+	if (!data)
-+		goto err_info;
-+
-+	data->info = *ims_info;
-+	info->info.data = data;
-+
-+	/*
-+	 * Allocate an interrupt chip because the core needs to be able to
-+	 * update it with default callbacks.
-+	 */
-+	chip = kmemdup(&ims_array_msi_controller,
-+		       sizeof(ims_array_msi_controller), GFP_KERNEL);
-+	if (!chip)
-+		goto err_data;
-+	info->info.chip = chip;
-+
-+	domain = pci_subdevice_msi_create_irq_domain(pdev, &info->info);
-+	if (!domain)
-+		goto err_chip;
-+
-+	return domain;
-+
-+err_chip:
-+	kfree(chip);
-+err_data:
-+	kfree(data);
-+err_info:
-+	kfree(info);
-+	return NULL;
-+}
-+EXPORT_SYMBOL_GPL(pci_ims_array_create_msi_irq_domain);
-+
-+#endif /* CONFIG_IMS_MSI_ARRAY */
-diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
-index ee8299eb1f52..43a8d1e9647e 100644
---- a/include/linux/interrupt.h
-+++ b/include/linux/interrupt.h
-@@ -487,6 +487,8 @@ extern int irq_get_irqchip_state(unsigned int irq, enum irqchip_irq_state which,
- extern int irq_set_irqchip_state(unsigned int irq, enum irqchip_irq_state which,
- 				 bool state);
- 
-+int irq_set_auxdata(unsigned int irq, unsigned int which, u64 val);
-+
- #ifdef CONFIG_IRQ_FORCED_THREADING
- # ifdef CONFIG_PREEMPT_RT
- #  define force_irqthreads	(true)
-diff --git a/include/linux/irq.h b/include/linux/irq.h
-index c54365309e97..fd162aea0c3f 100644
---- a/include/linux/irq.h
-+++ b/include/linux/irq.h
-@@ -491,6 +491,8 @@ static inline irq_hw_number_t irqd_to_hwirq(struct irq_data *d)
-  *				irq_request_resources
-  * @irq_compose_msi_msg:	optional to compose message content for MSI
-  * @irq_write_msi_msg:	optional to write message content for MSI
-+ * @irq_set_auxdata:	Optional function to update auxiliary data e.g. in
-+ *			shared registers
-  * @irq_get_irqchip_state:	return the internal state of an interrupt
-  * @irq_set_irqchip_state:	set the internal state of a interrupt
-  * @irq_set_vcpu_affinity:	optional to target a vCPU in a virtual machine
-@@ -538,6 +540,8 @@ struct irq_chip {
- 	void		(*irq_compose_msi_msg)(struct irq_data *data, struct msi_msg *msg);
- 	void		(*irq_write_msi_msg)(struct irq_data *data, struct msi_msg *msg);
- 
-+	int		(*irq_set_auxdata)(struct irq_data *data, unsigned int which, u64 auxval);
-+
- 	int		(*irq_get_irqchip_state)(struct irq_data *data, enum irqchip_irq_state which, bool *state);
- 	int		(*irq_set_irqchip_state)(struct irq_data *data, enum irqchip_irq_state which, bool state);
- 
-diff --git a/include/linux/irqchip/irq-ims-msi.h b/include/linux/irqchip/irq-ims-msi.h
-new file mode 100644
-index 000000000000..a9e43e1f7890
---- /dev/null
-+++ b/include/linux/irqchip/irq-ims-msi.h
-@@ -0,0 +1,68 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/* (C) Copyright 2020 Thomas Gleixner <tglx@linutronix.de> */
-+
-+#ifndef _LINUX_IRQCHIP_IRQ_IMS_MSI_H
-+#define _LINUX_IRQCHIP_IRQ_IMS_MSI_H
-+
-+#include <linux/types.h>
-+#include <linux/bits.h>
-+
-+/**
-+ * ims_hw_slot - The hardware layout of an IMS based MSI message
-+ * @address_lo:	Lower 32bit address
-+ * @address_hi:	Upper 32bit address
-+ * @data:	Message data
-+ * @ctrl:	Control word
-+ *
-+ * This structure is used by both the device memory array and the queue
-+ * memory variants of IMS.
-+ */
-+struct ims_slot {
-+	u32	address_lo;
-+	u32	address_hi;
-+	u32	data;
-+	u32	ctrl;
-+} __packed;
-+
-+/*
-+ * The IMS control word utilizes bit 0-2 for interrupt control. The remaining
-+ * bits can contain auxiliary data.
-+ */
-+#define IMS_CONTROL_WORD_IRQMASK	GENMASK(2, 0)
-+#define IMS_CONTROL_WORD_AUXMASK	GENMASK(31, 3)
-+
-+/* Bit to mask the interrupt in ims_hw_slot::ctrl */
-+#define IMS_CTRL_VECTOR_MASKBIT		BIT(0)
-+
-+/* Auxiliary control word data related defines */
-+enum {
-+	IMS_AUXDATA_CONTROL_WORD,
-+};
-+
-+#define IMS_CTRL_PASID_ENABLE		BIT(3)
-+#define IMS_CTRL_PASID_SHIFT		12
-+
-+static inline u32 ims_ctrl_pasid_aux(unsigned int pasid, bool enable)
-+{
-+	u32 auxval = pasid << IMS_CTRL_PASID_SHIFT;
-+
-+	return enable ? auxval | IMS_CTRL_PASID_ENABLE : auxval;
-+}
-+
-+/**
-+ * struct ims_array_info - Information to create an IMS array domain
-+ * @slots:	Pointer to the start of the array
-+ * @max_slots:	Maximum number of slots in the array
-+ */
-+struct ims_array_info {
-+	struct ims_slot		__iomem *slots;
-+	unsigned int		max_slots;
-+};
-+
-+struct pci_dev;
-+struct irq_domain;
-+
-+struct irq_domain *pci_ims_array_create_msi_irq_domain(struct pci_dev *pdev,
-+						       struct ims_array_info *ims_info);
-+
-+#endif
-diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
-index dc65d90108db..d7bf2ae67170 100644
---- a/kernel/irq/manage.c
-+++ b/kernel/irq/manage.c
-@@ -2752,3 +2752,35 @@ int irq_set_irqchip_state(unsigned int irq, enum irqchip_irq_state which,
- 	return err;
+diff --git a/drivers/dma/idxd/device.c b/drivers/dma/idxd/device.c
+index 7003884cd8ad..a9ae970db0a4 100644
+--- a/drivers/dma/idxd/device.c
++++ b/drivers/dma/idxd/device.c
+@@ -532,6 +532,64 @@ void idxd_device_drain_pasid(struct idxd_device *idxd, int pasid)
+ 	dev_dbg(dev, "pasid %d drained\n", pasid);
  }
- EXPORT_SYMBOL_GPL(irq_set_irqchip_state);
-+
-+/**
-+ * irq_set_auxdata - Set auxiliary data
-+ * @irq:	Interrupt to update
-+ * @which:	Selector which data to update
-+ * @auxval:	Auxiliary data value
-+ *
-+ * Function to update auxiliary data for an interrupt, e.g. to update data
-+ * which is stored in a shared register or data storage (e.g. IMS).
-+ */
-+int irq_set_auxdata(unsigned int irq, unsigned int which, u64 val)
+ 
++int idxd_device_request_int_handle(struct idxd_device *idxd, int idx, int *handle,
++				   enum idxd_interrupt_type irq_type)
 +{
-+	struct irq_desc *desc;
-+	struct irq_data *data;
-+	unsigned long flags;
-+	int res = -ENODEV;
++	struct device *dev = &idxd->pdev->dev;
++	u32 operand, status;
 +
-+	desc = irq_get_desc_buslock(irq, &flags, 0);
-+	if (!desc)
-+		return -EINVAL;
++	if (!(idxd->hw.cmd_cap & BIT(IDXD_CMD_REQUEST_INT_HANDLE)))
++		return -EOPNOTSUPP;
 +
-+	for (data = &desc->irq_data; data; data = irqd_get_parent_data(data)) {
-+		if (data->chip->irq_set_auxdata) {
-+			res = data->chip->irq_set_auxdata(data, which, val);
-+			break;
-+		}
++	dev_dbg(dev, "get int handle, idx %d\n", idx);
++
++	operand = idx & GENMASK(15, 0);
++	if (irq_type == IDXD_IRQ_IMS)
++		operand |= CMD_INT_HANDLE_IMS;
++
++	dev_dbg(dev, "cmd: %u operand: %#x\n", IDXD_CMD_REQUEST_INT_HANDLE, operand);
++
++	idxd_cmd_exec(idxd, IDXD_CMD_REQUEST_INT_HANDLE, operand, &status);
++
++	if ((status & IDXD_CMDSTS_ERR_MASK) != IDXD_CMDSTS_SUCCESS) {
++		dev_dbg(dev, "request int handle failed: %#x\n", status);
++		return -ENXIO;
 +	}
 +
-+	irq_put_desc_busunlock(desc, flags);
-+	return res;
++	*handle = (status >> IDXD_CMDSTS_RES_SHIFT) & GENMASK(15, 0);
++
++	dev_dbg(dev, "int handle acquired: %u\n", *handle);
++	return 0;
 +}
-+EXPORT_SYMBOL_GPL(irq_set_auxdata);
++
++int idxd_device_release_int_handle(struct idxd_device *idxd, int handle,
++				   enum idxd_interrupt_type irq_type)
++{
++	struct device *dev = &idxd->pdev->dev;
++	u32 operand, status;
++
++	if (!(idxd->hw.cmd_cap & BIT(IDXD_CMD_RELEASE_INT_HANDLE)))
++		return -EOPNOTSUPP;
++
++	dev_dbg(dev, "release int handle, handle %d\n", handle);
++
++	operand = handle & GENMASK(15, 0);
++	if (irq_type == IDXD_IRQ_IMS)
++		operand |= CMD_INT_HANDLE_IMS;
++
++	dev_dbg(dev, "cmd: %u operand: %#x\n", IDXD_CMD_RELEASE_INT_HANDLE, operand);
++
++	idxd_cmd_exec(idxd, IDXD_CMD_RELEASE_INT_HANDLE, operand, &status);
++
++	if ((status & IDXD_CMDSTS_ERR_MASK) != IDXD_CMDSTS_SUCCESS) {
++		dev_dbg(dev, "release int handle failed: %#x\n", status);
++		return -ENXIO;
++	}
++
++	dev_dbg(dev, "int handle released.\n");
++	return 0;
++}
++
+ /* Device configuration bits */
+ static void idxd_group_config_write(struct idxd_group *group)
+ {
+diff --git a/drivers/dma/idxd/idxd.h b/drivers/dma/idxd/idxd.h
+index 1afc34be4ed0..a506a16c83ee 100644
+--- a/drivers/dma/idxd/idxd.h
++++ b/drivers/dma/idxd/idxd.h
+@@ -140,6 +140,7 @@ struct idxd_hw {
+ 	union group_cap_reg group_cap;
+ 	union engine_cap_reg engine_cap;
+ 	struct opcap opcap;
++	u32 cmd_cap;
+ };
+ 
+ enum idxd_device_state {
+@@ -205,6 +206,8 @@ struct idxd_device {
+ 	struct dma_device dma_dev;
+ 	struct workqueue_struct *wq;
+ 	struct work_struct work;
++
++	int *int_handles;
+ };
+ 
+ /* IDXD software descriptor */
+@@ -218,6 +221,7 @@ struct idxd_desc {
+ 	struct list_head list;
+ 	int id;
+ 	int cpu;
++	unsigned int vector;
+ 	struct idxd_wq *wq;
+ };
+ 
+@@ -253,6 +257,11 @@ enum idxd_portal_prot {
+ 	IDXD_PORTAL_LIMITED,
+ };
+ 
++enum idxd_interrupt_type {
++	IDXD_IRQ_MSIX = 0,
++	IDXD_IRQ_IMS,
++};
++
+ static inline int idxd_get_wq_portal_offset(enum idxd_portal_prot prot)
+ {
+ 	return prot * 0x1000;
+@@ -318,6 +327,10 @@ int idxd_device_config(struct idxd_device *idxd);
+ void idxd_device_wqs_clear_state(struct idxd_device *idxd);
+ void idxd_device_drain_pasid(struct idxd_device *idxd, int pasid);
+ int idxd_device_load_config(struct idxd_device *idxd);
++int idxd_device_request_int_handle(struct idxd_device *idxd, int idx, int *handle,
++				   enum idxd_interrupt_type irq_type);
++int idxd_device_release_int_handle(struct idxd_device *idxd, int handle,
++				   enum idxd_interrupt_type irq_type);
+ 
+ /* work queue control */
+ int idxd_wq_alloc_resources(struct idxd_wq *wq);
+diff --git a/drivers/dma/idxd/init.c b/drivers/dma/idxd/init.c
+index 98b1091181bb..c136216e19e8 100644
+--- a/drivers/dma/idxd/init.c
++++ b/drivers/dma/idxd/init.c
+@@ -133,6 +133,22 @@ static int idxd_setup_interrupts(struct idxd_device *idxd)
+ 		}
+ 		dev_dbg(dev, "Allocated idxd-msix %d for vector %d\n",
+ 			i, msix->vector);
++
++		if (idxd->hw.cmd_cap & BIT(IDXD_CMD_REQUEST_INT_HANDLE)) {
++			/*
++			 * The MSIX vector enumeration starts at 1 with vector 0 being the
++			 * misc interrupt that handles non I/O completion events. The
++			 * interrupt handles are for IMS enumeration on guest. The misc
++			 * interrupt vector does not require a handle and therefore we start
++			 * the int_handles at index 0. Since 'i' starts at 1, the first
++			 * int_handles index will be 0.
++			 */
++			rc = idxd_device_request_int_handle(idxd, i, &idxd->int_handles[i - 1],
++							    IDXD_IRQ_MSIX);
++			if (rc < 0)
++				goto err_no_irq;
++			dev_dbg(dev, "int handle requested: %u\n", idxd->int_handles[i - 1]);
++		}
+ 	}
+ 
+ 	idxd_unmask_error_interrupts(idxd);
+@@ -160,6 +176,13 @@ static int idxd_setup_internals(struct idxd_device *idxd)
+ 	int i;
+ 
+ 	init_waitqueue_head(&idxd->cmd_waitq);
++
++	if (idxd->hw.cmd_cap & BIT(IDXD_CMD_REQUEST_INT_HANDLE)) {
++		idxd->int_handles = devm_kcalloc(dev, idxd->max_wqs, sizeof(int), GFP_KERNEL);
++		if (!idxd->int_handles)
++			return -ENOMEM;
++	}
++
+ 	idxd->groups = devm_kcalloc(dev, idxd->max_groups,
+ 				    sizeof(struct idxd_group), GFP_KERNEL);
+ 	if (!idxd->groups)
+@@ -233,6 +256,12 @@ static void idxd_read_caps(struct idxd_device *idxd)
+ 	/* reading generic capabilities */
+ 	idxd->hw.gen_cap.bits = ioread64(idxd->reg_base + IDXD_GENCAP_OFFSET);
+ 	dev_dbg(dev, "gen_cap: %#llx\n", idxd->hw.gen_cap.bits);
++
++	if (idxd->hw.gen_cap.cmd_cap) {
++		idxd->hw.cmd_cap = ioread32(idxd->reg_base + IDXD_CMDCAP_OFFSET);
++		dev_dbg(dev, "cmd_cap: %#x\n", idxd->hw.cmd_cap);
++	}
++
+ 	idxd->max_xfer_bytes = 1ULL << idxd->hw.gen_cap.max_xfer_shift;
+ 	dev_dbg(dev, "max xfer size: %llu bytes\n", idxd->max_xfer_bytes);
+ 	idxd->max_batch_size = 1U << idxd->hw.gen_cap.max_batch_shift;
+@@ -471,6 +500,24 @@ static void idxd_flush_work_list(struct idxd_irq_entry *ie)
+ 	}
+ }
+ 
++static void idxd_release_int_handles(struct idxd_device *idxd)
++{
++	struct device *dev = &idxd->pdev->dev;
++	int i, rc;
++
++	for (i = 0; i < idxd->num_wq_irqs; i++) {
++		if (idxd->hw.cmd_cap & BIT(IDXD_CMD_RELEASE_INT_HANDLE)) {
++			rc = idxd_device_release_int_handle(idxd, idxd->int_handles[i],
++							    IDXD_IRQ_MSIX);
++			if (rc < 0)
++				dev_warn(dev, "irq handle %d release failed\n",
++					 idxd->int_handles[i]);
++			else
++				dev_dbg(dev, "int handle requested: %u\n", idxd->int_handles[i]);
++		}
++	}
++}
++
+ static void idxd_shutdown(struct pci_dev *pdev)
+ {
+ 	struct idxd_device *idxd = pci_get_drvdata(pdev);
+@@ -495,6 +542,7 @@ static void idxd_shutdown(struct pci_dev *pdev)
+ 		idxd_flush_work_list(irq_entry);
+ 	}
+ 
++	idxd_release_int_handles(idxd);
+ 	destroy_workqueue(idxd->wq);
+ }
+ 
+diff --git a/drivers/dma/idxd/registers.h b/drivers/dma/idxd/registers.h
+index d29a58ee2651..d02fd59a8e39 100644
+--- a/drivers/dma/idxd/registers.h
++++ b/drivers/dma/idxd/registers.h
+@@ -23,8 +23,8 @@ union gen_cap_reg {
+ 		u64 overlap_copy:1;
+ 		u64 cache_control_mem:1;
+ 		u64 cache_control_cache:1;
++		u64 cmd_cap:1;
+ 		u64 rsvd:3;
+-		u64 int_handle_req:1;
+ 		u64 dest_readback:1;
+ 		u64 drain_readback:1;
+ 		u64 rsvd2:6;
+@@ -179,8 +179,11 @@ enum idxd_cmd {
+ 	IDXD_CMD_DRAIN_PASID,
+ 	IDXD_CMD_ABORT_PASID,
+ 	IDXD_CMD_REQUEST_INT_HANDLE,
++	IDXD_CMD_RELEASE_INT_HANDLE,
+ };
+ 
++#define CMD_INT_HANDLE_IMS		0x10000
++
+ #define IDXD_CMDSTS_OFFSET		0xa8
+ union cmdsts_reg {
+ 	struct {
+@@ -192,6 +195,8 @@ union cmdsts_reg {
+ 	u32 bits;
+ } __packed;
+ #define IDXD_CMDSTS_ACTIVE		0x80000000
++#define IDXD_CMDSTS_ERR_MASK		0xff
++#define IDXD_CMDSTS_RES_SHIFT		8
+ 
+ enum idxd_cmdsts_err {
+ 	IDXD_CMDSTS_SUCCESS = 0,
+@@ -227,6 +232,8 @@ enum idxd_cmdsts_err {
+ 	IDXD_CMDSTS_ERR_NO_HANDLE,
+ };
+ 
++#define IDXD_CMDCAP_OFFSET		0xb0
++
+ #define IDXD_SWERR_OFFSET		0xc0
+ #define IDXD_SWERR_VALID		0x00000001
+ #define IDXD_SWERR_OVERFLOW		0x00000002
+diff --git a/drivers/dma/idxd/submit.c b/drivers/dma/idxd/submit.c
+index efca5d8468a6..cdea5d37ef24 100644
+--- a/drivers/dma/idxd/submit.c
++++ b/drivers/dma/idxd/submit.c
+@@ -22,11 +22,17 @@ static struct idxd_desc *__get_desc(struct idxd_wq *wq, int idx, int cpu)
+ 		desc->hw->pasid = idxd->pasid;
+ 
+ 	/*
+-	 * Descriptor completion vectors are 1-8 for MSIX. We will round
+-	 * robin through the 8 vectors.
++	 * Descriptor completion vectors are 1...N for MSIX. We will round
++	 * robin through the N vectors.
+ 	 */
+ 	wq->vec_ptr = (wq->vec_ptr % idxd->num_wq_irqs) + 1;
+-	desc->hw->int_handle = wq->vec_ptr;
++	if (!idxd->int_handles) {
++		desc->hw->int_handle = wq->vec_ptr;
++	} else {
++		desc->vector = wq->vec_ptr;
++		desc->hw->int_handle = idxd->int_handles[desc->vector];
++	}
++
+ 	return desc;
+ }
+ 
+@@ -79,7 +85,6 @@ void idxd_free_desc(struct idxd_wq *wq, struct idxd_desc *desc)
+ int idxd_submit_desc(struct idxd_wq *wq, struct idxd_desc *desc)
+ {
+ 	struct idxd_device *idxd = wq->idxd;
+-	int vec = desc->hw->int_handle;
+ 	void __iomem *portal;
+ 	int rc;
+ 
+@@ -112,9 +117,19 @@ int idxd_submit_desc(struct idxd_wq *wq, struct idxd_desc *desc)
+ 	 * Pending the descriptor to the lockless list for the irq_entry
+ 	 * that we designated the descriptor to.
+ 	 */
+-	if (desc->hw->flags & IDXD_OP_FLAG_RCI)
+-		llist_add(&desc->llnode,
+-			  &idxd->irq_entries[vec].pending_llist);
++	if (desc->hw->flags & IDXD_OP_FLAG_RCI) {
++		int vec;
++
++		/*
++		 * If the driver is on host kernel, it would be the value
++		 * assigned to interrupt handle, which is index for MSIX
++		 * vector. If it's guest then can't use the int_handle since
++		 * that is the index to IMS for the entire device. The guest
++		 * device local index will be used.
++		 */
++		vec = !idxd->int_handles ? desc->hw->int_handle : desc->vector;
++		llist_add(&desc->llnode, &idxd->irq_entries[vec].pending_llist);
++	}
+ 
+ 	return 0;
+ }
 
 
