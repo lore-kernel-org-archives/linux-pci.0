@@ -2,87 +2,274 @@ Return-Path: <SRS0=OHpB=EF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E17FC4741F
-	for <linux-pci@archiver.kernel.org>; Fri, 30 Oct 2020 18:44:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1322AC5517A
+	for <linux-pci@archiver.kernel.org>; Fri, 30 Oct 2020 18:52:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3351120791
-	for <linux-pci@archiver.kernel.org>; Fri, 30 Oct 2020 18:44:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1604083453;
-	bh=JgUd3uvJTwnpKTRtP8mN8RKvAqS5UIaLgIk89mrveXk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=jAFIEpO67vjY6OBekexN7Bb8SpuhpJQo5c9fbfwQHWBwM+7kfzxMewiKHmWGeP3q9
-	 hHnYZ3PD27EIqk/rNnnoD1q8Nb/sea6T4OQMDaCC5MtN7rxwOecsbzI5dh/T8p9q4m
-	 1eUlgqWIs/k6QHLz6E3SUfjbw/wJF30BFjKPfQg8=
+	by mail.kernel.org (Postfix) with ESMTP id CBEA820756
+	for <linux-pci@archiver.kernel.org>; Fri, 30 Oct 2020 18:52:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727318AbgJ3SoJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 30 Oct 2020 14:44:09 -0400
-Received: from mail-ot1-f67.google.com ([209.85.210.67]:38640 "EHLO
-        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725975AbgJ3SoJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 30 Oct 2020 14:44:09 -0400
-Received: by mail-ot1-f67.google.com with SMTP id b2so6450709ots.5;
-        Fri, 30 Oct 2020 11:44:08 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=gcNHJHCau2pOQDpyrZFfl1xJmZDsePWMpoESjYncX1c=;
-        b=djzc+nyU1mUonI5WezInvuY4FHaTWxjSZR3tQm7nRzG/EhiHq5HlRS5cnpT7Kp2rD3
-         8VZyXTwGnA8TBkyA/HUKqfj5BjcL+iHKquHAq6+1lvS515gR+2I4kdM7S0j7Qr0pP/+x
-         w8ggTGfOFTUCIUGW4fquCI2t5+KsCWrWOiEqBtP8BYE/ICTveVXnxe0OmIIg1lHl+Sc4
-         HnociNBzCir2cws8G5T2I6+blFp5eh9xeJNE75QkwY2Kfy50XAwzD+X6DGLNN+lt0ZFN
-         QiATuXrpvTehRqadUpmztVT/yCGDSgcj+smD41Y37jfY+CSQTrVD9iWc+XI/vfpLiY8W
-         tNpA==
-X-Gm-Message-State: AOAM531pAlRrwB9jSh9g3YJMCedDbnyMqBXB5n19xXdF0Zn63/riyrIo
-        kmJkJOZlHDiHrrZM+u12aw==
-X-Google-Smtp-Source: ABdhPJzvm7F7vBRH4cH6t3hxs9pt9tO7//v63JS74luelUUJOxBLVqB87resXg6syLdyeUlPHUUS0w==
-X-Received: by 2002:a9d:3b4:: with SMTP id f49mr1313853otf.188.1604083448041;
-        Fri, 30 Oct 2020 11:44:08 -0700 (PDT)
-Received: from xps15 (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.gmail.com with ESMTPSA id z8sm1470690otm.45.2020.10.30.11.44.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 30 Oct 2020 11:44:07 -0700 (PDT)
-Received: (nullmailer pid 4127461 invoked by uid 1000);
-        Fri, 30 Oct 2020 18:44:06 -0000
-Date:   Fri, 30 Oct 2020 13:44:06 -0500
-From:   Rob Herring <robh@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jim Quinlan <james.quinlan@broadcom.com>,
-        Frank Rowand <frowand.list@gmail.com>,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] dma-mapping: Fix 32-bit overflow with CONFIG_ARM_LPAE=n
-Message-ID: <20201030184406.GA4125298@bogus>
-References: <20201026152755.3738293-1-geert+renesas@glider.be>
- <20201027075551.GB22487@lst.de>
- <20201029155918.GA23872@lst.de>
+        id S1727337AbgJ3Swb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 30 Oct 2020 14:52:31 -0400
+Received: from mga12.intel.com ([192.55.52.136]:35185 "EHLO mga12.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726297AbgJ3Swa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 30 Oct 2020 14:52:30 -0400
+IronPort-SDR: c8C4y+7gdM2Wn+cFte6Js/0UEpgIcZyKUS0rg6Rp5cJL2QKjhhmhCYMGn7xdXU/MTK3GCcqQo6
+ L1pI79aH1pvQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9790"; a="147936863"
+X-IronPort-AV: E=Sophos;i="5.77,434,1596524400"; 
+   d="scan'208";a="147936863"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Oct 2020 11:51:39 -0700
+IronPort-SDR: CCoamM27cI/mm2k/OA1RJJpAX7t21eMH6nG1FMiRF9gZSd7zTfdtQ858C9hTnAeNnrVT0Ot6qh
+ q4t4dS8FVDSw==
+X-IronPort-AV: E=Sophos;i="5.77,434,1596524400"; 
+   d="scan'208";a="527210084"
+Received: from djiang5-desk3.ch.intel.com ([143.182.136.137])
+  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Oct 2020 11:51:38 -0700
+Subject: [PATCH v4 07/17] dmaengine: idxd: add IMS support in base driver
+From:   Dave Jiang <dave.jiang@intel.com>
+To:     vkoul@kernel.org, megha.dey@intel.com, maz@kernel.org,
+        bhelgaas@google.com, tglx@linutronix.de,
+        alex.williamson@redhat.com, jacob.jun.pan@intel.com,
+        ashok.raj@intel.com, jgg@mellanox.com, yi.l.liu@intel.com,
+        baolu.lu@intel.com, kevin.tian@intel.com, sanjay.k.kumar@intel.com,
+        tony.luck@intel.com, jing.lin@intel.com, dan.j.williams@intel.com,
+        kwankhede@nvidia.com, eric.auger@redhat.com, parav@mellanox.com,
+        jgg@mellanox.com, rafael@kernel.org, netanelg@mellanox.com,
+        shahafs@mellanox.com, yan.y.zhao@linux.intel.com,
+        pbonzini@redhat.com, samuel.ortiz@intel.com, mona.hossain@intel.com
+Cc:     dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, kvm@vger.kernel.org
+Date:   Fri, 30 Oct 2020 11:51:38 -0700
+Message-ID: <160408389855.912050.5169538738792960557.stgit@djiang5-desk3.ch.intel.com>
+In-Reply-To: <160408357912.912050.17005584526266191420.stgit@djiang5-desk3.ch.intel.com>
+References: <160408357912.912050.17005584526266191420.stgit@djiang5-desk3.ch.intel.com>
+User-Agent: StGit/0.23-29-ga622f1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201029155918.GA23872@lst.de>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Oct 29, 2020 at 04:59:18PM +0100, Christoph Hellwig wrote:
-> On Tue, Oct 27, 2020 at 08:55:51AM +0100, Christoph Hellwig wrote:
-> > Looks good:
-> > 
-> > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > 
-> > Rob and Frank: do you want to take this through the OF tree, or should
-> > I queue it up in the dma-mapping tree that caused the problem?
-> 
-> I've picked this up in the dma-mapping tree so that we don't miss
-> rc2.
+In preparation for support of VFIO mediated device for idxd driver, the
+enabling for Interrupt Message Store (IMS) interrupts is added for the idxd
+With IMS support the idxd driver can dynamically allocate interrupts on a
+per mdev basis based on how many IMS vectors that are mapped to the mdev
+device. This commit only provides the support functions in the base driver
+and not the VFIO mdev code utilization.
 
-Thanks.
+The commit has some portal related changes. A "portal" is a special
+location within the MMIO BAR2 of the DSA device where descriptors are
+submitted via the CPU command MOVDIR64B or ENQCMD(S). The offset for the
+portal address determines whether the submitted descriptor is for MSI-X
+or IMS notification.
 
-Rob
+See Intel SIOV spec for more details:
+https://software.intel.com/en-us/download/intel-scalable-io-virtualization-technical-specification
+
+Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+---
+ Documentation/ABI/stable/sysfs-driver-dma-idxd |    6 ++++++
+ drivers/dma/idxd/cdev.c                        |    4 ++--
+ drivers/dma/idxd/idxd.h                        |   13 +++++++++----
+ drivers/dma/idxd/init.c                        |   19 +++++++++++++++++++
+ drivers/dma/idxd/submit.c                      |   10 ++++++++--
+ drivers/dma/idxd/sysfs.c                       |    9 +++++++++
+ 6 files changed, 53 insertions(+), 8 deletions(-)
+
+diff --git a/Documentation/ABI/stable/sysfs-driver-dma-idxd b/Documentation/ABI/stable/sysfs-driver-dma-idxd
+index 5ea81ffd3c1a..ed5aeecf7015 100644
+--- a/Documentation/ABI/stable/sysfs-driver-dma-idxd
++++ b/Documentation/ABI/stable/sysfs-driver-dma-idxd
+@@ -129,6 +129,12 @@ KernelVersion:	5.10.0
+ Contact:	dmaengine@vger.kernel.org
+ Description:	The last executed device administrative command's status/error.
+ 
++What:		/sys/bus/dsa/devices/dsa<m>/ims_size
++Date:		Oct 15, 2020
++KernelVersion:	5.11.0
++Contact:	dmaengine@vger.kernel.org
++Description:	The total number of vectors available for Interrupt Message Store.
++
+ What:		/sys/bus/dsa/devices/wq<m>.<n>/block_on_fault
+ Date:		Oct 27, 2020
+ KernelVersion:	5.11.0
+diff --git a/drivers/dma/idxd/cdev.c b/drivers/dma/idxd/cdev.c
+index 010b820d8f74..b774bf336347 100644
+--- a/drivers/dma/idxd/cdev.c
++++ b/drivers/dma/idxd/cdev.c
+@@ -204,8 +204,8 @@ static int idxd_cdev_mmap(struct file *filp, struct vm_area_struct *vma)
+ 		return rc;
+ 
+ 	vma->vm_flags |= VM_DONTCOPY;
+-	pfn = (base + idxd_get_wq_portal_full_offset(wq->id,
+-				IDXD_PORTAL_LIMITED)) >> PAGE_SHIFT;
++	pfn = (base + idxd_get_wq_portal_full_offset(wq->id, IDXD_PORTAL_LIMITED,
++						     IDXD_IRQ_MSIX)) >> PAGE_SHIFT;
+ 	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
+ 	vma->vm_private_data = ctx;
+ 
+diff --git a/drivers/dma/idxd/idxd.h b/drivers/dma/idxd/idxd.h
+index a506a16c83ee..549426bfb443 100644
+--- a/drivers/dma/idxd/idxd.h
++++ b/drivers/dma/idxd/idxd.h
+@@ -154,6 +154,7 @@ enum idxd_device_flag {
+ 	IDXD_FLAG_CONFIGURABLE = 0,
+ 	IDXD_FLAG_CMD_RUNNING,
+ 	IDXD_FLAG_PASID_ENABLED,
++	IDXD_FLAG_SIOV_SUPPORTED,
+ };
+ 
+ struct idxd_device {
+@@ -181,6 +182,7 @@ struct idxd_device {
+ 
+ 	int num_groups;
+ 
++	u32 ims_offset;
+ 	u32 msix_perm_offset;
+ 	u32 wqcfg_offset;
+ 	u32 grpcfg_offset;
+@@ -188,6 +190,7 @@ struct idxd_device {
+ 
+ 	u64 max_xfer_bytes;
+ 	u32 max_batch_size;
++	int ims_size;
+ 	int max_groups;
+ 	int max_engines;
+ 	int max_tokens;
+@@ -262,15 +265,17 @@ enum idxd_interrupt_type {
+ 	IDXD_IRQ_IMS,
+ };
+ 
+-static inline int idxd_get_wq_portal_offset(enum idxd_portal_prot prot)
++static inline int idxd_get_wq_portal_offset(enum idxd_portal_prot prot,
++					    enum idxd_interrupt_type irq_type)
+ {
+-	return prot * 0x1000;
++	return prot * 0x1000 + irq_type * 0x2000;
+ }
+ 
+ static inline int idxd_get_wq_portal_full_offset(int wq_id,
+-						 enum idxd_portal_prot prot)
++						 enum idxd_portal_prot prot,
++						 enum idxd_interrupt_type irq_type)
+ {
+-	return ((wq_id * 4) << PAGE_SHIFT) + idxd_get_wq_portal_offset(prot);
++	return ((wq_id * 4) << PAGE_SHIFT) + idxd_get_wq_portal_offset(prot, irq_type);
+ }
+ 
+ static inline void idxd_set_type(struct idxd_device *idxd)
+diff --git a/drivers/dma/idxd/init.c b/drivers/dma/idxd/init.c
+index c136216e19e8..4a21c2a17a62 100644
+--- a/drivers/dma/idxd/init.c
++++ b/drivers/dma/idxd/init.c
+@@ -16,6 +16,7 @@
+ #include <linux/idr.h>
+ #include <linux/intel-svm.h>
+ #include <linux/iommu.h>
++#include <linux/pci-siov.h>
+ #include <uapi/linux/idxd.h>
+ #include <linux/dmaengine.h>
+ #include "../dmaengine.h"
+@@ -244,10 +245,27 @@ static void idxd_read_table_offsets(struct idxd_device *idxd)
+ 	dev_dbg(dev, "IDXD Work Queue Config Offset: %#x\n", idxd->wqcfg_offset);
+ 	idxd->msix_perm_offset = offsets.msix_perm * IDXD_TABLE_MULT;
+ 	dev_dbg(dev, "IDXD MSIX Permission Offset: %#x\n", idxd->msix_perm_offset);
++	idxd->ims_offset = offsets.ims * IDXD_TABLE_MULT;
++	dev_dbg(dev, "IDXD IMS Offset: %#x\n", idxd->ims_offset);
+ 	idxd->perfmon_offset = offsets.perfmon * IDXD_TABLE_MULT;
+ 	dev_dbg(dev, "IDXD Perfmon Offset: %#x\n", idxd->perfmon_offset);
+ }
+ 
++static void idxd_check_siov(struct idxd_device *idxd)
++{
++	struct pci_dev *pdev = idxd->pdev;
++
++	if (pci_ims_supported(idxd->pdev) && idxd->hw.gen_cap.max_ims_mult) {
++		idxd->ims_size = idxd->hw.gen_cap.max_ims_mult * 256ULL;
++		dev_dbg(&pdev->dev, "IMS size: %u\n", idxd->ims_size);
++		set_bit(IDXD_FLAG_SIOV_SUPPORTED, &idxd->flags);
++		dev_dbg(&pdev->dev, "IMS supported for device\n");
++		return;
++	}
++
++	dev_dbg(&pdev->dev, "SIOV unsupported for device\n");
++}
++
+ static void idxd_read_caps(struct idxd_device *idxd)
+ {
+ 	struct device *dev = &idxd->pdev->dev;
+@@ -266,6 +284,7 @@ static void idxd_read_caps(struct idxd_device *idxd)
+ 	dev_dbg(dev, "max xfer size: %llu bytes\n", idxd->max_xfer_bytes);
+ 	idxd->max_batch_size = 1U << idxd->hw.gen_cap.max_batch_shift;
+ 	dev_dbg(dev, "max batch size: %u\n", idxd->max_batch_size);
++	idxd_check_siov(idxd);
+ 	if (idxd->hw.gen_cap.config_en)
+ 		set_bit(IDXD_FLAG_CONFIGURABLE, &idxd->flags);
+ 
+diff --git a/drivers/dma/idxd/submit.c b/drivers/dma/idxd/submit.c
+index cdea5d37ef24..f76d154d1dbd 100644
+--- a/drivers/dma/idxd/submit.c
++++ b/drivers/dma/idxd/submit.c
+@@ -30,7 +30,13 @@ static struct idxd_desc *__get_desc(struct idxd_wq *wq, int idx, int cpu)
+ 		desc->hw->int_handle = wq->vec_ptr;
+ 	} else {
+ 		desc->vector = wq->vec_ptr;
+-		desc->hw->int_handle = idxd->int_handles[desc->vector];
++		/*
++		 * int_handles are only for descriptor completion. However for device
++		 * MSIX enumeration, vec 0 is used for misc interrupts. Therefore even
++		 * though we are rotating through 1...N for descriptor interrupts, we
++		 * need to acqurie the int_handles from 0..N-1.
++		 */
++		desc->hw->int_handle = idxd->int_handles[desc->vector - 1];
+ 	}
+ 
+ 	return desc;
+@@ -91,7 +97,7 @@ int idxd_submit_desc(struct idxd_wq *wq, struct idxd_desc *desc)
+ 	if (idxd->state != IDXD_DEV_ENABLED)
+ 		return -EIO;
+ 
+-	portal = wq->portal + idxd_get_wq_portal_offset(IDXD_PORTAL_LIMITED);
++	portal = wq->portal + idxd_get_wq_portal_offset(IDXD_PORTAL_LIMITED, IDXD_IRQ_MSIX);
+ 
+ 	/*
+ 	 * The wmb() flushes writes to coherent DMA data before
+diff --git a/drivers/dma/idxd/sysfs.c b/drivers/dma/idxd/sysfs.c
+index 304eb2cf532e..17f13ebae028 100644
+--- a/drivers/dma/idxd/sysfs.c
++++ b/drivers/dma/idxd/sysfs.c
+@@ -1353,6 +1353,14 @@ static ssize_t numa_node_show(struct device *dev,
+ }
+ static DEVICE_ATTR_RO(numa_node);
+ 
++static ssize_t ims_size_show(struct device *dev, struct device_attribute *attr, char *buf)
++{
++	struct idxd_device *idxd = container_of(dev, struct idxd_device, conf_dev);
++
++	return sprintf(buf, "%u\n", idxd->ims_size);
++}
++static DEVICE_ATTR_RO(ims_size);
++
+ static ssize_t max_batch_size_show(struct device *dev,
+ 				   struct device_attribute *attr, char *buf)
+ {
+@@ -1548,6 +1556,7 @@ static struct attribute *idxd_device_attributes[] = {
+ 	&dev_attr_max_work_queues_size.attr,
+ 	&dev_attr_max_engines.attr,
+ 	&dev_attr_numa_node.attr,
++	&dev_attr_ims_size.attr,
+ 	&dev_attr_max_batch_size.attr,
+ 	&dev_attr_max_transfer_size.attr,
+ 	&dev_attr_op_cap.attr,
+
+
