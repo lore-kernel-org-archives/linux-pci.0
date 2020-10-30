@@ -2,40 +2,39 @@ Return-Path: <SRS0=OHpB=EF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A336C56201
-	for <linux-pci@archiver.kernel.org>; Fri, 30 Oct 2020 18:53:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82573C55178
+	for <linux-pci@archiver.kernel.org>; Fri, 30 Oct 2020 18:53:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BBA46221FA
-	for <linux-pci@archiver.kernel.org>; Fri, 30 Oct 2020 18:53:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 26667221FA
+	for <linux-pci@archiver.kernel.org>; Fri, 30 Oct 2020 18:53:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727628AbgJ3SxY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 30 Oct 2020 14:53:24 -0400
-Received: from mga05.intel.com ([192.55.52.43]:20436 "EHLO mga05.intel.com"
+        id S1727522AbgJ3SxC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 30 Oct 2020 14:53:02 -0400
+Received: from mga06.intel.com ([134.134.136.31]:65477 "EHLO mga06.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727660AbgJ3SxX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 30 Oct 2020 14:53:23 -0400
-IronPort-SDR: uK2Pl6nZCymJBNIz5WnbblBcDVz6RWtqkKH/wYOhgJj8pZdpVnruWjxZh+dL8dfuamS1UFeW/E
- n3IwzspOsH2A==
-X-IronPort-AV: E=McAfee;i="6000,8403,9790"; a="253357844"
+        id S1727553AbgJ3SxA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 30 Oct 2020 14:53:00 -0400
+IronPort-SDR: AXD8hg3gcAa468sDxByC0AX/0b3l+NaLWHHz6rZiXFYunomrDE8r7rs/EAY0nrz6HhYwoe/jL5
+ p0rLDGDdDrbQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9790"; a="230287761"
 X-IronPort-AV: E=Sophos;i="5.77,434,1596524400"; 
-   d="scan'208";a="253357844"
+   d="scan'208";a="230287761"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Oct 2020 11:51:20 -0700
-IronPort-SDR: 2aNGAojTYt3r+B1DPzIvQTYVxJBY0KYxNv3I+SYVqwvnXbKprodQgshAfE1YipyQZK1bRijD6k
- HXP7YP8US8/A==
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Oct 2020 11:50:56 -0700
+IronPort-SDR: P/EszHGZMS3LYCtTJeIVgFGLl03yO2IZ+VGXlypcKQUAJNJmboelDzpeQyf2D7wTrVKdPF3TOC
+ YCDdP23muVzw==
 X-IronPort-AV: E=Sophos;i="5.77,434,1596524400"; 
-   d="scan'208";a="324168078"
+   d="scan'208";a="527209865"
 Received: from djiang5-desk3.ch.intel.com ([143.182.136.137])
-  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Oct 2020 11:51:16 -0700
-Subject: [PATCH v4 04/17] dmaengine: idxd: add support for readonly config
- devices
+  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Oct 2020 11:50:55 -0700
+Subject: [PATCH v4 01/17] irqchip: Add IMS (Interrupt Message Store) driver
 From:   Dave Jiang <dave.jiang@intel.com>
 To:     vkoul@kernel.org, megha.dey@intel.com, maz@kernel.org,
         bhelgaas@google.com, tglx@linutronix.de,
@@ -49,8 +48,8 @@ To:     vkoul@kernel.org, megha.dey@intel.com, maz@kernel.org,
         pbonzini@redhat.com, samuel.ortiz@intel.com, mona.hossain@intel.com
 Cc:     dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-pci@vger.kernel.org, kvm@vger.kernel.org
-Date:   Fri, 30 Oct 2020 11:51:16 -0700
-Message-ID: <160408387598.912050.4521050687104233583.stgit@djiang5-desk3.ch.intel.com>
+Date:   Fri, 30 Oct 2020 11:50:54 -0700
+Message-ID: <160408385476.912050.16205225207591080075.stgit@djiang5-desk3.ch.intel.com>
 In-Reply-To: <160408357912.912050.17005584526266191420.stgit@djiang5-desk3.ch.intel.com>
 References: <160408357912.912050.17005584526266191420.stgit@djiang5-desk3.ch.intel.com>
 User-Agent: StGit/0.23-29-ga622f1
@@ -61,227 +60,434 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The VFIO mediated device for idxd driver will provide a virtual DSA
-device by backing it with a workqueue. The virtual device will be limited
-with the wq configuration registers set to read-only. Add support and
-helper functions for the handling of a DSA device with the configuration
-registers marked as read-only.
+From: Thomas Gleixner <tglx@linutronix.de>
 
+Generic IMS(Interrupt Message Store) irq chips and irq domain
+implementations for IMS based devices which store the interrupt
+messages in an array in device memory.
+
+Allocation and freeing of interrupts happens via the generic
+msi_domain_alloc/free_irqs() interface. No special purpose IMS magic
+required as long as the interrupt domain is stored in the underlying
+device struct.
+
+Provide storage and a setter for an Address Space Identifier. The
+identifier is stored in the top level irq_data and it only can be
+modified when the interrupt is not active. Add the necessary storage
+and helper functions and validate that interrupts which require an
+ASID have one assigned.
+
+[Megha : Fixed compile time errors
+         Added necessary dependencies to IMS_MSI_ARRAY config
+         Fixed polarity of IMS_VECTOR_CTRL
+         Added reads after writes to flush writes to device
+         Tested the IMS infrastructure with the IDXD driver]
+
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Megha Dey <megha.dey@intel.com>
 Signed-off-by: Dave Jiang <dave.jiang@intel.com>
 ---
- drivers/dma/idxd/device.c |  116 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/dma/idxd/idxd.h   |    1 
- drivers/dma/idxd/init.c   |    8 +++
- drivers/dma/idxd/sysfs.c  |   20 +++++---
- 4 files changed, 137 insertions(+), 8 deletions(-)
+ drivers/irqchip/Kconfig             |   14 ++
+ drivers/irqchip/Makefile            |    1 
+ drivers/irqchip/irq-ims-msi.c       |  204 +++++++++++++++++++++++++++++++++++
+ include/linux/interrupt.h           |    2 
+ include/linux/irq.h                 |    4 +
+ include/linux/irqchip/irq-ims-msi.h |   68 ++++++++++++
+ kernel/irq/manage.c                 |   32 +++++
+ 7 files changed, 325 insertions(+)
+ create mode 100644 drivers/irqchip/irq-ims-msi.c
+ create mode 100644 include/linux/irqchip/irq-ims-msi.h
 
-diff --git a/drivers/dma/idxd/device.c b/drivers/dma/idxd/device.c
-index d6f551dcbcb6..7003884cd8ad 100644
---- a/drivers/dma/idxd/device.c
-+++ b/drivers/dma/idxd/device.c
-@@ -778,3 +778,119 @@ int idxd_device_config(struct idxd_device *idxd)
+diff --git a/drivers/irqchip/Kconfig b/drivers/irqchip/Kconfig
+index c6098eee0c7c..862ea81a69a0 100644
+--- a/drivers/irqchip/Kconfig
++++ b/drivers/irqchip/Kconfig
+@@ -597,4 +597,18 @@ config MST_IRQ
+ 	help
+ 	  Support MStar Interrupt Controller.
  
- 	return 0;
- }
++config IMS_MSI
++	depends on PCI
++	select DEVICE_MSI
++	bool
 +
-+static int idxd_wq_load_config(struct idxd_wq *wq)
++config IMS_MSI_ARRAY
++	bool "IMS Interrupt Message Store MSI controller for device memory storage arrays"
++	depends on PCI
++	select IMS_MSI
++	select GENERIC_MSI_IRQ_DOMAIN
++	help
++	  Support for IMS Interrupt Message Store MSI controller
++	  with IMS slot storage in a slot array in device memory
++
+ endmenu
+diff --git a/drivers/irqchip/Makefile b/drivers/irqchip/Makefile
+index 94c2885882ee..a7d54605060a 100644
+--- a/drivers/irqchip/Makefile
++++ b/drivers/irqchip/Makefile
+@@ -114,3 +114,4 @@ obj-$(CONFIG_LOONGSON_PCH_PIC)		+= irq-loongson-pch-pic.o
+ obj-$(CONFIG_LOONGSON_PCH_MSI)		+= irq-loongson-pch-msi.o
+ obj-$(CONFIG_MST_IRQ)			+= irq-mst-intc.o
+ obj-$(CONFIG_SL28CPLD_INTC)		+= irq-sl28cpld.o
++obj-$(CONFIG_IMS_MSI)			+= irq-ims-msi.o
+diff --git a/drivers/irqchip/irq-ims-msi.c b/drivers/irqchip/irq-ims-msi.c
+new file mode 100644
+index 000000000000..d54a54f5fdcc
+--- /dev/null
++++ b/drivers/irqchip/irq-ims-msi.c
+@@ -0,0 +1,204 @@
++// SPDX-License-Identifier: GPL-2.0
++// (C) Copyright 2020 Thomas Gleixner <tglx@linutronix.de>
++/*
++ * Shared interrupt chips and irq domains for IMS devices
++ */
++#include <linux/device.h>
++#include <linux/slab.h>
++#include <linux/msi.h>
++#include <linux/irq.h>
++#include <linux/irqdomain.h>
++
++#include <linux/irqchip/irq-ims-msi.h>
++
++#ifdef CONFIG_IMS_MSI_ARRAY
++
++struct ims_array_data {
++	struct ims_array_info	info;
++	unsigned long		map[0];
++};
++
++static inline void iowrite32_and_flush(u32 value, void __iomem *addr)
 +{
-+	struct idxd_device *idxd = wq->idxd;
-+	struct device *dev = &idxd->pdev->dev;
-+	int wqcfg_offset;
-+	int i;
++	iowrite32(value, addr);
++	ioread32(addr);
++}
 +
-+	wqcfg_offset = WQCFG_OFFSET(idxd, wq->id, 0);
-+	memcpy_fromio(wq->wqcfg, idxd->reg_base + wqcfg_offset, idxd->wqcfg_size);
++static void ims_array_mask_irq(struct irq_data *data)
++{
++	struct msi_desc *desc = irq_data_get_msi_desc(data);
++	struct ims_slot __iomem *slot = desc->device_msi.priv_iomem;
++	u32 __iomem *ctrl = &slot->ctrl;
 +
-+	wq->size = wq->wqcfg->wq_size;
-+	wq->threshold = wq->wqcfg->wq_thresh;
-+	if (wq->wqcfg->priv)
-+		wq->type = IDXD_WQT_KERNEL;
++	iowrite32_and_flush(ioread32(ctrl) | IMS_CTRL_VECTOR_MASKBIT, ctrl);
++}
 +
-+	/* The driver does not support shared WQ mode in read-only config yet */
-+	if (wq->wqcfg->mode == 0 || wq->wqcfg->pasid_en)
-+		return -EOPNOTSUPP;
++static void ims_array_unmask_irq(struct irq_data *data)
++{
++	struct msi_desc *desc = irq_data_get_msi_desc(data);
++	struct ims_slot __iomem *slot = desc->device_msi.priv_iomem;
++	u32 __iomem *ctrl = &slot->ctrl;
 +
-+	set_bit(WQ_FLAG_DEDICATED, &wq->flags);
++	iowrite32_and_flush(ioread32(ctrl) & ~IMS_CTRL_VECTOR_MASKBIT, ctrl);
++}
 +
-+	wq->priority = wq->wqcfg->priority;
++static void ims_array_write_msi_msg(struct irq_data *data, struct msi_msg *msg)
++{
++	struct msi_desc *desc = irq_data_get_msi_desc(data);
++	struct ims_slot __iomem *slot = desc->device_msi.priv_iomem;
 +
-+	for (i = 0; i < WQCFG_STRIDES(idxd); i++) {
-+		wqcfg_offset = WQCFG_OFFSET(idxd, wq->id, i);
-+		dev_dbg(dev, "WQ[%d][%d][%#x]: %#x\n", wq->id, i, wqcfg_offset, wq->wqcfg->bits[i]);
-+	}
++	iowrite32(msg->address_lo, &slot->address_lo);
++	iowrite32(msg->address_hi, &slot->address_hi);
++	iowrite32_and_flush(msg->data, &slot->data);
++}
 +
++static int ims_array_set_auxdata(struct irq_data *data, unsigned int which,
++				 u64 auxval)
++{
++	struct msi_desc *desc = irq_data_get_msi_desc(data);
++	struct ims_slot __iomem *slot = desc->device_msi.priv_iomem;
++	u32 val, __iomem *ctrl = &slot->ctrl;
++
++	if (which != IMS_AUXDATA_CONTROL_WORD)
++		return -EINVAL;
++	if (auxval & ~(u64)IMS_CONTROL_WORD_AUXMASK)
++		return -EINVAL;
++
++	val = ioread32(ctrl) & IMS_CONTROL_WORD_IRQMASK;
++	iowrite32_and_flush(val | (u32) auxval, ctrl);
 +	return 0;
 +}
 +
-+static void idxd_group_load_config(struct idxd_group *group)
++static const struct irq_chip ims_array_msi_controller = {
++	.name			= "IMS",
++	.irq_mask		= ims_array_mask_irq,
++	.irq_unmask		= ims_array_unmask_irq,
++	.irq_write_msi_msg	= ims_array_write_msi_msg,
++	.irq_set_auxdata	= ims_array_set_auxdata,
++	.irq_retrigger		= irq_chip_retrigger_hierarchy,
++	.flags			= IRQCHIP_SKIP_SET_WAKE,
++};
++
++static void ims_array_reset_slot(struct ims_slot __iomem *slot)
 +{
-+	struct idxd_device *idxd = group->idxd;
-+	struct device *dev = &idxd->pdev->dev;
-+	int i, j, grpcfg_offset;
++	iowrite32(0, &slot->address_lo);
++	iowrite32(0, &slot->address_hi);
++	iowrite32(0, &slot->data);
++	iowrite32_and_flush(IMS_CTRL_VECTOR_MASKBIT, &slot->ctrl);
++}
++
++static void ims_array_free_msi_store(struct irq_domain *domain,
++				     struct device *dev)
++{
++	struct msi_domain_info *info = domain->host_data;
++	struct ims_array_data *ims = info->data;
++	struct msi_desc *entry;
++
++	for_each_msi_entry(entry, dev) {
++		if (entry->device_msi.priv_iomem) {
++			clear_bit(entry->device_msi.hwirq, ims->map);
++			ims_array_reset_slot(entry->device_msi.priv_iomem);
++			entry->device_msi.priv_iomem = NULL;
++			entry->device_msi.hwirq = 0;
++		}
++	}
++}
++
++static int ims_array_alloc_msi_store(struct irq_domain *domain,
++				     struct device *dev, int nvec)
++{
++	struct msi_domain_info *info = domain->host_data;
++	struct ims_array_data *ims = info->data;
++	struct msi_desc *entry;
++
++	for_each_msi_entry(entry, dev) {
++		unsigned int idx;
++
++		idx = find_first_zero_bit(ims->map, ims->info.max_slots);
++		if (idx >= ims->info.max_slots)
++			goto fail;
++		set_bit(idx, ims->map);
++		entry->device_msi.priv_iomem = &ims->info.slots[idx];
++		ims_array_reset_slot(entry->device_msi.priv_iomem);
++		entry->device_msi.hwirq = idx;
++	}
++	return 0;
++
++fail:
++	ims_array_free_msi_store(domain, dev);
++	return -ENOSPC;
++}
++
++struct ims_array_domain_template {
++	struct msi_domain_ops	ops;
++	struct msi_domain_info	info;
++};
++
++static const struct ims_array_domain_template ims_array_domain_template = {
++	.ops = {
++		.msi_alloc_store	= ims_array_alloc_msi_store,
++		.msi_free_store		= ims_array_free_msi_store,
++	},
++	.info = {
++		.flags		= MSI_FLAG_USE_DEF_DOM_OPS |
++				  MSI_FLAG_USE_DEF_CHIP_OPS,
++		.handler	= handle_edge_irq,
++		.handler_name	= "edge",
++	},
++};
++
++struct irq_domain *
++pci_ims_array_create_msi_irq_domain(struct pci_dev *pdev,
++				    struct ims_array_info *ims_info)
++{
++	struct ims_array_domain_template *info;
++	struct ims_array_data *data;
++	struct irq_domain *domain;
++	struct irq_chip *chip;
++	unsigned int size;
++
++	/* Allocate new domain storage */
++	info = kmemdup(&ims_array_domain_template,
++		       sizeof(ims_array_domain_template), GFP_KERNEL);
++	if (!info)
++		return NULL;
++	/* Link the ops */
++	info->info.ops = &info->ops;
++
++	/* Allocate ims_info along with the bitmap */
++	size = sizeof(*data);
++	size += BITS_TO_LONGS(ims_info->max_slots) * sizeof(unsigned long);
++	data = kzalloc(size, GFP_KERNEL);
++	if (!data)
++		goto err_info;
++
++	data->info = *ims_info;
++	info->info.data = data;
 +
 +	/*
-+	 * Load WQS bit fields
-+	 * Iterate through all 256 bits 64 bits at a time
++	 * Allocate an interrupt chip because the core needs to be able to
++	 * update it with default callbacks.
 +	 */
-+	for (i = 0; i < GRPWQCFG_STRIDES; i++) {
-+		struct idxd_wq *wq;
++	chip = kmemdup(&ims_array_msi_controller,
++		       sizeof(ims_array_msi_controller), GFP_KERNEL);
++	if (!chip)
++		goto err_data;
++	info->info.chip = chip;
 +
-+		grpcfg_offset = GRPWQCFG_OFFSET(idxd, group->id, i);
-+		group->grpcfg.wqs[i] = ioread64(idxd->reg_base + grpcfg_offset);
-+		dev_dbg(dev, "GRPCFG wq[%d:%d: %#x]: %#llx\n",
-+			group->id, i, grpcfg_offset, group->grpcfg.wqs[i]);
++	domain = pci_subdevice_msi_create_irq_domain(pdev, &info->info);
++	if (!domain)
++		goto err_chip;
 +
-+		if (i * 64 >= idxd->max_wqs)
-+			break;
++	return domain;
 +
-+		/* Iterate through all 64 bits and check for wq set */
-+		for (j = 0; j < 64; j++) {
-+			int id = i * 64 + j;
-+
-+			/* No need to check beyond max wqs */
-+			if (id >= idxd->max_wqs)
-+				break;
-+
-+			/* Set group assignment for wq if wq bit is set */
-+			if (group->grpcfg.wqs[i] & BIT(j)) {
-+				wq = &idxd->wqs[id];
-+				wq->group = group;
-+			}
-+		}
-+	}
-+
-+	grpcfg_offset = GRPENGCFG_OFFSET(idxd, group->id);
-+	group->grpcfg.engines = ioread64(idxd->reg_base + grpcfg_offset);
-+	dev_dbg(dev, "GRPCFG engs[%d: %#x]: %#llx\n", group->id,
-+		grpcfg_offset, group->grpcfg.engines);
-+
-+	/* Iterate through all 64 bits to check engines set */
-+	for (i = 0; i < 64; i++) {
-+		if (i >= idxd->max_engines)
-+			break;
-+
-+		if (group->grpcfg.engines & BIT(i)) {
-+			struct idxd_engine *engine = &idxd->engines[i];
-+
-+			engine->group = group;
-+		}
-+	}
-+
-+	grpcfg_offset = GRPFLGCFG_OFFSET(idxd, group->id);
-+	group->grpcfg.flags.bits = ioread32(idxd->reg_base + grpcfg_offset);
-+	dev_dbg(dev, "GRPFLAGS flags[%d: %#x]: %#x\n",
-+		group->id, grpcfg_offset, group->grpcfg.flags.bits);
++err_chip:
++	kfree(chip);
++err_data:
++	kfree(data);
++err_info:
++	kfree(info);
++	return NULL;
 +}
++EXPORT_SYMBOL_GPL(pci_ims_array_create_msi_irq_domain);
 +
-+int idxd_device_load_config(struct idxd_device *idxd)
++#endif /* CONFIG_IMS_MSI_ARRAY */
+diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
+index ee8299eb1f52..43a8d1e9647e 100644
+--- a/include/linux/interrupt.h
++++ b/include/linux/interrupt.h
+@@ -487,6 +487,8 @@ extern int irq_get_irqchip_state(unsigned int irq, enum irqchip_irq_state which,
+ extern int irq_set_irqchip_state(unsigned int irq, enum irqchip_irq_state which,
+ 				 bool state);
+ 
++int irq_set_auxdata(unsigned int irq, unsigned int which, u64 val);
++
+ #ifdef CONFIG_IRQ_FORCED_THREADING
+ # ifdef CONFIG_PREEMPT_RT
+ #  define force_irqthreads	(true)
+diff --git a/include/linux/irq.h b/include/linux/irq.h
+index c54365309e97..fd162aea0c3f 100644
+--- a/include/linux/irq.h
++++ b/include/linux/irq.h
+@@ -491,6 +491,8 @@ static inline irq_hw_number_t irqd_to_hwirq(struct irq_data *d)
+  *				irq_request_resources
+  * @irq_compose_msi_msg:	optional to compose message content for MSI
+  * @irq_write_msi_msg:	optional to write message content for MSI
++ * @irq_set_auxdata:	Optional function to update auxiliary data e.g. in
++ *			shared registers
+  * @irq_get_irqchip_state:	return the internal state of an interrupt
+  * @irq_set_irqchip_state:	set the internal state of a interrupt
+  * @irq_set_vcpu_affinity:	optional to target a vCPU in a virtual machine
+@@ -538,6 +540,8 @@ struct irq_chip {
+ 	void		(*irq_compose_msi_msg)(struct irq_data *data, struct msi_msg *msg);
+ 	void		(*irq_write_msi_msg)(struct irq_data *data, struct msi_msg *msg);
+ 
++	int		(*irq_set_auxdata)(struct irq_data *data, unsigned int which, u64 auxval);
++
+ 	int		(*irq_get_irqchip_state)(struct irq_data *data, enum irqchip_irq_state which, bool *state);
+ 	int		(*irq_set_irqchip_state)(struct irq_data *data, enum irqchip_irq_state which, bool state);
+ 
+diff --git a/include/linux/irqchip/irq-ims-msi.h b/include/linux/irqchip/irq-ims-msi.h
+new file mode 100644
+index 000000000000..a9e43e1f7890
+--- /dev/null
++++ b/include/linux/irqchip/irq-ims-msi.h
+@@ -0,0 +1,68 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/* (C) Copyright 2020 Thomas Gleixner <tglx@linutronix.de> */
++
++#ifndef _LINUX_IRQCHIP_IRQ_IMS_MSI_H
++#define _LINUX_IRQCHIP_IRQ_IMS_MSI_H
++
++#include <linux/types.h>
++#include <linux/bits.h>
++
++/**
++ * ims_hw_slot - The hardware layout of an IMS based MSI message
++ * @address_lo:	Lower 32bit address
++ * @address_hi:	Upper 32bit address
++ * @data:	Message data
++ * @ctrl:	Control word
++ *
++ * This structure is used by both the device memory array and the queue
++ * memory variants of IMS.
++ */
++struct ims_slot {
++	u32	address_lo;
++	u32	address_hi;
++	u32	data;
++	u32	ctrl;
++} __packed;
++
++/*
++ * The IMS control word utilizes bit 0-2 for interrupt control. The remaining
++ * bits can contain auxiliary data.
++ */
++#define IMS_CONTROL_WORD_IRQMASK	GENMASK(2, 0)
++#define IMS_CONTROL_WORD_AUXMASK	GENMASK(31, 3)
++
++/* Bit to mask the interrupt in ims_hw_slot::ctrl */
++#define IMS_CTRL_VECTOR_MASKBIT		BIT(0)
++
++/* Auxiliary control word data related defines */
++enum {
++	IMS_AUXDATA_CONTROL_WORD,
++};
++
++#define IMS_CTRL_PASID_ENABLE		BIT(3)
++#define IMS_CTRL_PASID_SHIFT		12
++
++static inline u32 ims_ctrl_pasid_aux(unsigned int pasid, bool enable)
 +{
-+	union gencfg_reg reg;
-+	int i, rc;
++	u32 auxval = pasid << IMS_CTRL_PASID_SHIFT;
 +
-+	reg.bits = ioread32(idxd->reg_base + IDXD_GENCFG_OFFSET);
-+	idxd->token_limit = reg.token_limit;
-+
-+	for (i = 0; i < idxd->max_groups; i++) {
-+		struct idxd_group *group = &idxd->groups[i];
-+
-+		idxd_group_load_config(group);
-+	}
-+
-+	for (i = 0; i < idxd->max_wqs; i++) {
-+		struct idxd_wq *wq = &idxd->wqs[i];
-+
-+		rc = idxd_wq_load_config(wq);
-+		if (rc < 0)
-+			return rc;
-+	}
-+
-+	return 0;
++	return enable ? auxval | IMS_CTRL_PASID_ENABLE : auxval;
 +}
-diff --git a/drivers/dma/idxd/idxd.h b/drivers/dma/idxd/idxd.h
-index 7e54209c433a..1afc34be4ed0 100644
---- a/drivers/dma/idxd/idxd.h
-+++ b/drivers/dma/idxd/idxd.h
-@@ -317,6 +317,7 @@ void idxd_device_cleanup(struct idxd_device *idxd);
- int idxd_device_config(struct idxd_device *idxd);
- void idxd_device_wqs_clear_state(struct idxd_device *idxd);
- void idxd_device_drain_pasid(struct idxd_device *idxd, int pasid);
-+int idxd_device_load_config(struct idxd_device *idxd);
- 
- /* work queue control */
- int idxd_wq_alloc_resources(struct idxd_wq *wq);
-diff --git a/drivers/dma/idxd/init.c b/drivers/dma/idxd/init.c
-index 45b0eac640c3..98b1091181bb 100644
---- a/drivers/dma/idxd/init.c
-+++ b/drivers/dma/idxd/init.c
-@@ -349,6 +349,14 @@ static int idxd_probe(struct idxd_device *idxd)
- 	if (rc)
- 		goto err_setup;
- 
-+	/* If the configs are readonly, then load them from device */
-+	if (!test_bit(IDXD_FLAG_CONFIGURABLE, &idxd->flags)) {
-+		dev_dbg(dev, "Loading RO device config\n");
-+		rc = idxd_device_load_config(idxd);
-+		if (rc < 0)
-+			goto err_setup;
++
++/**
++ * struct ims_array_info - Information to create an IMS array domain
++ * @slots:	Pointer to the start of the array
++ * @max_slots:	Maximum number of slots in the array
++ */
++struct ims_array_info {
++	struct ims_slot		__iomem *slots;
++	unsigned int		max_slots;
++};
++
++struct pci_dev;
++struct irq_domain;
++
++struct irq_domain *pci_ims_array_create_msi_irq_domain(struct pci_dev *pdev,
++						       struct ims_array_info *ims_info);
++
++#endif
+diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
+index dc65d90108db..d7bf2ae67170 100644
+--- a/kernel/irq/manage.c
++++ b/kernel/irq/manage.c
+@@ -2752,3 +2752,35 @@ int irq_set_irqchip_state(unsigned int irq, enum irqchip_irq_state which,
+ 	return err;
+ }
+ EXPORT_SYMBOL_GPL(irq_set_irqchip_state);
++
++/**
++ * irq_set_auxdata - Set auxiliary data
++ * @irq:	Interrupt to update
++ * @which:	Selector which data to update
++ * @auxval:	Auxiliary data value
++ *
++ * Function to update auxiliary data for an interrupt, e.g. to update data
++ * which is stored in a shared register or data storage (e.g. IMS).
++ */
++int irq_set_auxdata(unsigned int irq, unsigned int which, u64 val)
++{
++	struct irq_desc *desc;
++	struct irq_data *data;
++	unsigned long flags;
++	int res = -ENODEV;
++
++	desc = irq_get_desc_buslock(irq, &flags, 0);
++	if (!desc)
++		return -EINVAL;
++
++	for (data = &desc->irq_data; data; data = irqd_get_parent_data(data)) {
++		if (data->chip->irq_set_auxdata) {
++			res = data->chip->irq_set_auxdata(data, which, val);
++			break;
++		}
 +	}
 +
- 	rc = idxd_setup_interrupts(idxd);
- 	if (rc)
- 		goto err_setup;
-diff --git a/drivers/dma/idxd/sysfs.c b/drivers/dma/idxd/sysfs.c
-index 6d292eb79bf3..304eb2cf532e 100644
---- a/drivers/dma/idxd/sysfs.c
-+++ b/drivers/dma/idxd/sysfs.c
-@@ -102,7 +102,7 @@ static int idxd_config_bus_match(struct device *dev,
- 
- static int idxd_config_bus_probe(struct device *dev)
- {
--	int rc;
-+	int rc = 0;
- 	unsigned long flags;
- 
- 	dev_dbg(dev, "%s called\n", __func__);
-@@ -120,7 +120,8 @@ static int idxd_config_bus_probe(struct device *dev)
- 
- 		/* Perform IDXD configuration and enabling */
- 		spin_lock_irqsave(&idxd->dev_lock, flags);
--		rc = idxd_device_config(idxd);
-+		if (test_bit(IDXD_FLAG_CONFIGURABLE, &idxd->flags))
-+			rc = idxd_device_config(idxd);
- 		spin_unlock_irqrestore(&idxd->dev_lock, flags);
- 		if (rc < 0) {
- 			module_put(THIS_MODULE);
-@@ -207,7 +208,8 @@ static int idxd_config_bus_probe(struct device *dev)
- 		}
- 
- 		spin_lock_irqsave(&idxd->dev_lock, flags);
--		rc = idxd_device_config(idxd);
-+		if (test_bit(IDXD_FLAG_CONFIGURABLE, &idxd->flags))
-+			rc = idxd_device_config(idxd);
- 		spin_unlock_irqrestore(&idxd->dev_lock, flags);
- 		if (rc < 0) {
- 			mutex_unlock(&wq->wq_lock);
-@@ -328,12 +330,14 @@ static int idxd_config_bus_remove(struct device *dev)
- 
- 		idxd_unregister_dma_device(idxd);
- 		rc = idxd_device_disable(idxd);
--		for (i = 0; i < idxd->max_wqs; i++) {
--			struct idxd_wq *wq = &idxd->wqs[i];
-+		if (test_bit(IDXD_FLAG_CONFIGURABLE, &idxd->flags)) {
-+			for (i = 0; i < idxd->max_wqs; i++) {
-+				struct idxd_wq *wq = &idxd->wqs[i];
- 
--			mutex_lock(&wq->wq_lock);
--			idxd_wq_disable_cleanup(wq);
--			mutex_unlock(&wq->wq_lock);
-+				mutex_lock(&wq->wq_lock);
-+				idxd_wq_disable_cleanup(wq);
-+				mutex_unlock(&wq->wq_lock);
-+			}
- 		}
- 		module_put(THIS_MODULE);
- 		if (rc < 0)
++	irq_put_desc_busunlock(desc, flags);
++	return res;
++}
++EXPORT_SYMBOL_GPL(irq_set_auxdata);
 
 
