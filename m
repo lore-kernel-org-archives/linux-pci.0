@@ -1,134 +1,117 @@
-Return-Path: <SRS0=OHpB=EF=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=fwBN=EG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D1FCC00A89
-	for <linux-pci@archiver.kernel.org>; Fri, 30 Oct 2020 22:54:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6EBDC00A89
+	for <linux-pci@archiver.kernel.org>; Sat, 31 Oct 2020 02:50:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E49572224D
-	for <linux-pci@archiver.kernel.org>; Fri, 30 Oct 2020 22:54:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6C85222228
+	for <linux-pci@archiver.kernel.org>; Sat, 31 Oct 2020 02:50:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="QHZfAZx5"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="BTy3lFhB";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="A819AejM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725839AbgJ3Wyz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 30 Oct 2020 18:54:55 -0400
-Received: from hqnvemgate24.nvidia.com ([216.228.121.143]:10758 "EHLO
-        hqnvemgate24.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725792AbgJ3Wyz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 30 Oct 2020 18:54:55 -0400
-Received: from hqmail.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate24.nvidia.com (using TLS: TLSv1.2, AES256-SHA)
-        id <B5f9c99c30000>; Fri, 30 Oct 2020 15:54:59 -0700
-Received: from HQMAIL109.nvidia.com (172.20.187.15) by HQMAIL101.nvidia.com
- (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Fri, 30 Oct
- 2020 22:54:49 +0000
-Received: from NAM10-MW2-obe.outbound.protection.outlook.com (104.47.55.109)
- by HQMAIL109.nvidia.com (172.20.187.15) with Microsoft SMTP Server (TLS) id
- 15.0.1473.3 via Frontend Transport; Fri, 30 Oct 2020 22:54:49 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=P07rXYSFLv/YilQQPk/sqJHQd6PLcgn1M71/WNIBdcNbj8mCoN0YCCA/FMTxSMM/d9mSq5l93oONrQ8EXYHoHLYKr3o2ZrcTMSb2fGKLbjEPJ9blcxnzBKWfCPzfnTNoRqDsjdNkaF3x31HSjspFIfjdiaGUgyUPjENCr+OICHtp0delS6EozXwq4aikAipPtWtA42D1PKw1nYUGO4iFNRn7zNQECFib9812TAPkZN0k+c1s1P9xh9GccOzgycfyjV6LzoBzIzWIhXrdzPnBQHNx8B3hpQ0iogxASx7721K4MCmeDwESetGHt0HhFkF+2okv8XDho3hl9GQ9pC1DWg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qGZEkwaxogpzjW0ojadFTDq0iq4f0cxfyeJXrCJYIKU=;
- b=aTS6Yxk3wzDtA8ru2npT+yR09lVrqv7ok23EMl6giHesiK3uL8Y54haNv4QsdDnPtnWNOvO1IO7pl8JcP2YAsdR/8kUoDrDVN1U7yspSOVb5c14Wv+xfgd4uWgHCw+vKCWujPTT6IGAJBPawMUqr9g/wAwX2FvMVaPUKfdWd+Xg7aKj8udpd8wJugP9sa1DLH8aX4iWrwYn7Zi9UHmAE01z8h+eXBqkNZXYHRl0dSuTbaI0ASYZq6CLNWmtL3IVyqcrbiMOkGfFQPj5gxT3m3b5x+9J7ms+IU/MJS9DHSFj9IKtSNJepUkmSGOCVSAiidpI+NCEBDsFgI/GiXcqEaw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-Received: from DM6PR12MB3834.namprd12.prod.outlook.com (2603:10b6:5:14a::12)
- by DM5PR12MB2485.namprd12.prod.outlook.com (2603:10b6:4:bb::29) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3499.27; Fri, 30 Oct
- 2020 22:54:48 +0000
-Received: from DM6PR12MB3834.namprd12.prod.outlook.com
- ([fe80::cdbe:f274:ad65:9a78]) by DM6PR12MB3834.namprd12.prod.outlook.com
- ([fe80::cdbe:f274:ad65:9a78%7]) with mapi id 15.20.3499.027; Fri, 30 Oct 2020
- 22:54:48 +0000
-Date:   Fri, 30 Oct 2020 19:54:46 -0300
-From:   Jason Gunthorpe <jgg@nvidia.com>
-To:     "Raj, Ashok" <ashok.raj@intel.com>
-CC:     Dave Jiang <dave.jiang@intel.com>, <vkoul@kernel.org>,
-        <megha.dey@intel.com>, <maz@kernel.org>, <bhelgaas@google.com>,
-        <tglx@linutronix.de>, <alex.williamson@redhat.com>,
-        <jacob.jun.pan@intel.com>, <yi.l.liu@intel.com>,
-        <baolu.lu@intel.com>, <kevin.tian@intel.com>,
-        <sanjay.k.kumar@intel.com>, <tony.luck@intel.com>,
-        <jing.lin@intel.com>, <dan.j.williams@intel.com>,
-        <kwankhede@nvidia.com>, <eric.auger@redhat.com>,
-        <parav@mellanox.com>, <rafael@kernel.org>, <netanelg@mellanox.com>,
-        <shahafs@mellanox.com>, <yan.y.zhao@linux.intel.com>,
-        <pbonzini@redhat.com>, <samuel.ortiz@intel.com>,
-        <mona.hossain@intel.com>, Megha Dey <megha.dey@linux.intel.com>,
-        <dmaengine@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <kvm@vger.kernel.org>
-Subject: Re: [PATCH v4 00/17] Add VFIO mediated device support and DEV-MSI
- support for the idxd driver
-Message-ID: <20201030225446.GO2620339@nvidia.com>
-References: <160408357912.912050.17005584526266191420.stgit@djiang5-desk3.ch.intel.com>
- <20201030185858.GI2620339@nvidia.com>
- <c9303df4-3e57-6959-a89c-5fc98397ac70@intel.com>
- <20201030191706.GK2620339@nvidia.com> <20201030192325.GA105832@otc-nc-03>
- <20201030193045.GM2620339@nvidia.com> <20201030204307.GA683@otc-nc-03>
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
+        id S1726279AbgJaCur (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 30 Oct 2020 22:50:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36998 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725536AbgJaCuq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 30 Oct 2020 22:50:46 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98468C0613D5;
+        Fri, 30 Oct 2020 19:50:46 -0700 (PDT)
+From:   Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1604112643;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=uApMClh8LgUA9+nJd9aotz4iVU4rrDChpNyqFIsKvVA=;
+        b=BTy3lFhBX7sA4VCntMKiVzzwk15jABSRHtryuyJx0+un+EmAEDlvBnsxWJN/WlLwW0AZtf
+        dgIPedgj2GGEjgGyhDuEhVmXnVNwJ6R2nQaqLpM2oQSdZsNeRblLHWV1fRJeXgirvSE5Cz
+        M/U9x6HLsQuAd7grINFE+wXsybNOiFGqeZ4aI6wY5qOnfcZanCDX3DbFOa8b/cHiCtwGnJ
+        QEbUT+UuCjF76GX1Eku7Ndj/2ocNBLRt5PYkolws6PuXIWsQylQzhlESmrDBr3VijobWxB
+        NSMTVPCrpbQzkdGGnAWLN4CHPuD1EQy3J/h0xxtVJ008KaTYvoCn0wcg1FwESA==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1604112643;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=uApMClh8LgUA9+nJd9aotz4iVU4rrDChpNyqFIsKvVA=;
+        b=A819AejM97rPxCwoMXgGJd+KHw/MTmbonbj8ZqfBkpxDATgoUcgnpq0ENP6nnXI3x/A5+P
+        UiUnecA3TerRblAA==
+To:     "Raj\, Ashok" <ashok.raj@intel.com>,
+        Jason Gunthorpe <jgg@nvidia.com>
+Cc:     Dave Jiang <dave.jiang@intel.com>, vkoul@kernel.org,
+        megha.dey@intel.com, maz@kernel.org, bhelgaas@google.com,
+        alex.williamson@redhat.com, jacob.jun.pan@intel.com,
+        yi.l.liu@intel.com, baolu.lu@intel.com, kevin.tian@intel.com,
+        sanjay.k.kumar@intel.com, tony.luck@intel.com, jing.lin@intel.com,
+        dan.j.williams@intel.com, kwankhede@nvidia.com,
+        eric.auger@redhat.com, parav@mellanox.com, rafael@kernel.org,
+        netanelg@mellanox.com, shahafs@mellanox.com,
+        yan.y.zhao@linux.intel.com, pbonzini@redhat.com,
+        samuel.ortiz@intel.com, mona.hossain@intel.com,
+        Megha Dey <megha.dey@linux.intel.com>,
+        dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, kvm@vger.kernel.org,
+        Ashok Raj <ashok.raj@intel.com>
+Subject: Re: [PATCH v4 00/17] Add VFIO mediated device support and DEV-MSI support for the idxd driver
 In-Reply-To: <20201030204307.GA683@otc-nc-03>
-X-ClientProxiedBy: MN2PR20CA0052.namprd20.prod.outlook.com
- (2603:10b6:208:235::21) To DM6PR12MB3834.namprd12.prod.outlook.com
- (2603:10b6:5:14a::12)
+References: <160408357912.912050.17005584526266191420.stgit@djiang5-desk3.ch.intel.com> <20201030185858.GI2620339@nvidia.com> <c9303df4-3e57-6959-a89c-5fc98397ac70@intel.com> <20201030191706.GK2620339@nvidia.com> <20201030192325.GA105832@otc-nc-03> <20201030193045.GM2620339@nvidia.com> <20201030204307.GA683@otc-nc-03>
+Date:   Sat, 31 Oct 2020 03:50:43 +0100
+Message-ID: <87h7qbkt18.fsf@nanos.tec.linutronix.de>
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from mlx.ziepe.ca (156.34.48.30) by MN2PR20CA0052.namprd20.prod.outlook.com (2603:10b6:208:235::21) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3499.18 via Frontend Transport; Fri, 30 Oct 2020 22:54:47 +0000
-Received: from jgg by mlx with local (Exim 4.94)        (envelope-from <jgg@nvidia.com>)        id 1kYdIE-00E4HD-TA; Fri, 30 Oct 2020 19:54:46 -0300
-X-LD-Processed: 43083d15-7273-40c1-b7db-39efd9ccc17a,ExtAddr
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1604098499; bh=qGZEkwaxogpzjW0ojadFTDq0iq4f0cxfyeJXrCJYIKU=;
-        h=ARC-Seal:ARC-Message-Signature:ARC-Authentication-Results:Date:
-         From:To:CC:Subject:Message-ID:References:Content-Type:
-         Content-Disposition:In-Reply-To:X-ClientProxiedBy:MIME-Version:
-         X-MS-Exchange-MessageSentRepresentingType:X-LD-Processed;
-        b=QHZfAZx5fCexDjCAutspu+dlHQgsKPnmGW17P2F+UaUyxDDRRHvgZ3u+Nd6pHcGEc
-         ktPmAL0VjFhqdnbfWMun1jy6rJ2NKL9Mqt85BMmSCSuUS1XF3djQnW+JA1l5EIibnJ
-         j9jdsYzEbH28O/FmD0p/7zvsA96heNmU+WSS5IQ0u1bi+BtUG8+/A5ompAc/PTCrrW
-         wxyk57DNFXDzmkKCjcIUcUbt3unVultNiePZrOAMmrPQrRPuKCd+NDfd71nBG72wnk
-         w7E1GSqYpGh7xRe5JuT9u4+YrwuZDo1zjGwJPxqjLya5FvH1moxv0UZctBBiFz5imm
-         /82XRbUsrCsmw==
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Oct 30, 2020 at 01:43:07PM -0700, Raj, Ashok wrote:
- 
-> So drawing that parallel, do you expect all drivers that call
-> pci_register_driver() to be located in drivers/pci? Aren't they scattered
-> all over the place ata,scsi, platform drivers and such?
+Ashok,
 
-The subsystem is the thing that calls
-device_register. pci_register_driver() doesn't do that.
+On Fri, Oct 30 2020 at 13:43, Ashok Raj wrote:
+> On Fri, Oct 30, 2020 at 04:30:45PM -0300, Jason Gunthorpe wrote:
+>> On Fri, Oct 30, 2020 at 12:23:25PM -0700, Raj, Ashok wrote:
+>> It is a different subsystem, different maintainer, and different
+>> reviewers.
+>> 
+>> It is a development process problem, it doesn't matter what it is
+>> doing.
 
-> As Alex pointed out, i915 and handful of s390 drivers that are mdev users
-> are not in drivers/vfio. Are you sayint those drivers don't get reviewed? 
-
-Past mistakes do not justify continuing to do it wrong.
-
-ARM and PPC went through a huge multi year cleanup moving code out of
-arch and into the proper drivers/ directories. We know this is the
-correct way to work the development process.
-
-> Your argument seems interesting even entertaining :-). But honestly i'm not finding it
-> practical :-). So every caller of mmu_register_notifier() needs to be in
-> mm? 
-
-mmu notifiers are not a subsytem, they are core libary code.
-
-You seem to completely not understand what a subsystem is. :(
+< skip a lot of non-sensical arguments>
 
 > I know you aren't going to give up, but there is little we can do. I want
 > the maintainers to make that call and I'm not add more noise to this.
 
-Well, hopefully Vinod will insist on following kernel norms here.
+Jason is absolutely right.
 
-Jason
+Just because there is historical precendence which does not care about
+the differentiation of subsystems is not an argument at all to make the
+same mistakes which have been made years ago.
+
+IDXD is just infrastructure which provides the base for a variety of
+different functionalities. Very similar to what multi function devices
+provide. In fact IDXD is pretty much a MFD facility.
+
+Sticking all of it into dmaengine is sloppy at best. The dma engine
+related part of IDXD is only a part of the overall functionality.
+
+I'm well aware that it is conveniant to just throw everything into
+drivers/myturf/ but that does neither make it reviewable nor
+maintainable.
+
+What's the problem with restructuring your code in a way which makes it
+fit into existing subsystems?
+
+The whole thing - as I pointed out to Dave earlier - is based on 'works
+for me' wishful thinking with a blissful ignorance of the development
+process and the requirement to split a large problem into the proper
+bits and pieces aka. engineering 101.
+
+Thanks,
+
+        tglx
