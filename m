@@ -2,99 +2,61 @@ Return-Path: <SRS0=EWQp=EI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C71AEC55179
-	for <linux-pci@archiver.kernel.org>; Mon,  2 Nov 2020 10:13:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FD7CC00A89
+	for <linux-pci@archiver.kernel.org>; Mon,  2 Nov 2020 11:15:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 736D22231B
-	for <linux-pci@archiver.kernel.org>; Mon,  2 Nov 2020 10:13:00 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="cmrqTADV"
+	by mail.kernel.org (Postfix) with ESMTP id 39AAA2076E
+	for <linux-pci@archiver.kernel.org>; Mon,  2 Nov 2020 11:15:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728470AbgKBKMf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 2 Nov 2020 05:12:35 -0500
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:38302 "EHLO
-        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728467AbgKBKMf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Nov 2020 05:12:35 -0500
-Received: from lelv0265.itg.ti.com ([10.180.67.224])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 0A2ACSdC003121;
-        Mon, 2 Nov 2020 04:12:28 -0600
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1604311948;
-        bh=4EnqAmwlw82FiJ23Vk3WWXJCCIA3eH6H7JCGMc3LOoc=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=cmrqTADV+sQ+ClRKqSI+VwUNLlYqd0xOHqXb0SRfyKeXKlcEXfkJ3OzYOtycASgkD
-         4M4uRvaboxOtyzth++zkqw5Rt+j+fDmG/vTN52/BE0W8cmx9Y31zFfJMGT2KcuzsWb
-         YO6QyHKR8WVSn1Htz9i0jCLo2SdzAc+tzmg2r1fU=
-Received: from DLEE100.ent.ti.com (dlee100.ent.ti.com [157.170.170.30])
-        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 0A2ACSJ0067927
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 2 Nov 2020 04:12:28 -0600
-Received: from DLEE109.ent.ti.com (157.170.170.41) by DLEE100.ent.ti.com
- (157.170.170.30) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Mon, 2 Nov
- 2020 04:12:12 -0600
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE109.ent.ti.com
- (157.170.170.41) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
- Frontend Transport; Mon, 2 Nov 2020 04:12:12 -0600
-Received: from a0393678-ssd.dal.design.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0A2ABtua059084;
-        Mon, 2 Nov 2020 04:12:09 -0600
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-To:     Lee Jones <lee.jones@linaro.org>, Rob Herring <robh+dt@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Tero Kristo <t-kristo@ti.com>, Nishanth Menon <nm@ti.com>
-CC:     Roger Quadros <rogerq@ti.com>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH 3/8] dt-bindings: PCI: Add EP mode dt-bindings for TI's J7200 SoC
-Date:   Mon, 2 Nov 2020 15:41:49 +0530
-Message-ID: <20201102101154.13598-4-kishon@ti.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20201102101154.13598-1-kishon@ti.com>
-References: <20201102101154.13598-1-kishon@ti.com>
+        id S1728316AbgKBLP1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 2 Nov 2020 06:15:27 -0500
+Received: from imap2.colo.codethink.co.uk ([78.40.148.184]:37150 "EHLO
+        imap2.colo.codethink.co.uk" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728288AbgKBLP1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Nov 2020 06:15:27 -0500
+Received: from cpc79921-stkp12-2-0-cust288.10-2.cable.virginm.net ([86.16.139.33] helo=[192.168.0.10])
+        by imap2.colo.codethink.co.uk with esmtpsa  (Exim 4.92 #3 (Debian))
+        id 1kZXo6-0002Qd-60; Mon, 02 Nov 2020 11:15:26 +0000
+Subject: Re: [PATCH v17 3/3] PCI: microchip: Add host driver for Microchip
+ PCIe controller
+To:     Daire.McNamara@microchip.com, linux-pci@vger.kernel.org
+References: <20201022132223.17789-4-daire.mcnamara@microchip.com>
+ <587df2af-c59e-371a-230c-9c7a614824bd@codethink.co.uk>
+ <MN2PR11MB426909C2B84E95AF301C404B96100@MN2PR11MB4269.namprd11.prod.outlook.com>
+From:   Ben Dooks <ben.dooks@codethink.co.uk>
+Organization: Codethink Limited.
+Message-ID: <2eee84c9-aa24-2587-5ced-1c2fe30a1d50@codethink.co.uk>
+Date:   Mon, 2 Nov 2020 11:15:25 +0000
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+In-Reply-To: <MN2PR11MB426909C2B84E95AF301C404B96100@MN2PR11MB4269.namprd11.prod.outlook.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Language: en-GB
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add PCIe EP mode dt-bindings for TI's J7200 SoC.
+On 02/11/2020 10:39, Daire.McNamara@microchip.com wrote:
+> Hi Ben,
+> 
+> Yes, we've become aware of an issue that's cropped up with latest design file on Icicle with PCIe.  We're working through it and we'll update once we have resolved it.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- .../devicetree/bindings/pci/ti,j721e-pci-ep.yaml       | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+Thanks for looking at this.
 
-diff --git a/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml b/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
-index 3ae3e1a2d4b0..da8c5b892104 100644
---- a/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
-+++ b/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
-@@ -15,8 +15,14 @@ allOf:
- 
- properties:
-   compatible:
--    enum:
--      - ti,j721e-pcie-ep
-+    oneOf:
-+      - description: PCIe EP controller in J7200
-+        items:
-+          - const: ti,j7200-pcie-ep
-+          - const: ti,j721e-pcie-ep
-+      - description: PCIe EP controller in J721E
-+        items:
-+          - const: ti,j721e-pcie-ep
- 
-   reg:
-     maxItems: 4
+We could really do with this working as we need faster storage
+and graphics options for what we want to do with these boards.
+
+I am happy to reinstall or rebuild images, i've got a v5.9 that
+works to an extent on the icicles.
+
 -- 
-2.17.1
+Ben Dooks				http://www.codethink.co.uk/
+Senior Engineer				Codethink - Providing Genius
 
+https://www.codethink.co.uk/privacy.html
