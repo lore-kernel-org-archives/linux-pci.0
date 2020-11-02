@@ -2,118 +2,70 @@ Return-Path: <SRS0=EWQp=EI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06716C00A89
-	for <linux-pci@archiver.kernel.org>; Mon,  2 Nov 2020 14:18:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C90C1C388F2
+	for <linux-pci@archiver.kernel.org>; Mon,  2 Nov 2020 14:20:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BF9942068E
-	for <linux-pci@archiver.kernel.org>; Mon,  2 Nov 2020 14:18:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1604326711;
-	bh=BteA5gzi7Uc4vRznHTY1jzjlxtohwfi7tjYpM1Pa+kg=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=E4uCFeyGSwXXi53+tWV8640rgP8j+KAYLCnjYSJt9wt9sDNe4X9bzmdyn30ol3+1C
-	 7PqLmaTtC5TWcLPGcbvGnL+v0q8wJagKpJQwx+gtao9g4W7wZimETbWC824IimbHHZ
-	 OUUfIHVARI1+XFRlp/9STk5OW86EnNfr8dc/8oTc=
+	by mail.kernel.org (Postfix) with ESMTP id 82D6E2068E
+	for <linux-pci@archiver.kernel.org>; Mon,  2 Nov 2020 14:20:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725882AbgKBOSV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 2 Nov 2020 09:18:21 -0500
-Received: from mail.kernel.org ([198.145.29.99]:36268 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725838AbgKBOQB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 2 Nov 2020 09:16:01 -0500
-Received: from mail-ot1-f51.google.com (mail-ot1-f51.google.com [209.85.210.51])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3E32A2415A;
-        Mon,  2 Nov 2020 14:16:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1604326560;
-        bh=BteA5gzi7Uc4vRznHTY1jzjlxtohwfi7tjYpM1Pa+kg=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=S+Y92WQb7KI1O+cmweJ/DKgowsz6auuN2X+fmPan9lDeUPfatkX9v9tEx3b+IZnqL
-         IrH6z3QtUyIiGuRPR+rDsmJqz1sHHNC+byLWpIwalVHOeGHXVi7M3S7AQusuO/0az+
-         Ib1llJ/RXnc0zV4v4tVINltTdrTfy2VHj3C5AdRg=
-Received: by mail-ot1-f51.google.com with SMTP id j14so2488929ots.1;
-        Mon, 02 Nov 2020 06:16:00 -0800 (PST)
-X-Gm-Message-State: AOAM530MBNK5UfYBjTnB5fLMCMHBQRf6ejgGQMFDYR9vUQTvcyT85V6q
-        dkPfQi9O6yx3F4BJSXffb5JAXNRUCneHGlCATg==
-X-Google-Smtp-Source: ABdhPJxML32jJZ3qQ1A9Es6W1bxqsPN29fgL87NHAnZ1Aq73CytCsBQV2B0zZKDeQKXafYAhwxjHZhVjwXlWjG169gE=
-X-Received: by 2002:a9d:6e0c:: with SMTP id e12mr1325014otr.129.1604326559463;
- Mon, 02 Nov 2020 06:15:59 -0800 (PST)
+        id S1725959AbgKBOUR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 2 Nov 2020 09:20:17 -0500
+Received: from szxga05-in.huawei.com ([45.249.212.191]:7033 "EHLO
+        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726096AbgKBOUJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Nov 2020 09:20:09 -0500
+Received: from DGGEMS410-HUB.china.huawei.com (unknown [172.30.72.59])
+        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4CPw6X5scHzhdVF;
+        Mon,  2 Nov 2020 22:20:04 +0800 (CST)
+Received: from huawei.com (10.90.53.225) by DGGEMS410-HUB.china.huawei.com
+ (10.3.19.210) with Microsoft SMTP Server id 14.3.487.0; Mon, 2 Nov 2020
+ 22:20:00 +0800
+From:   Zhang Qilong <zhangqilong3@huawei.com>
+To:     <lorenzo.pieralisi@arm.com>, <robh@kernel.org>,
+        <bhelgaas@google.com>, <thierry.reding@gmail.com>,
+        <jonathanh@nvidia.com>
+CC:     <linux-pci@vger.kernel.org>, <linux-tegra@vger.kernel.org>
+Subject: [PATCH] PCI: dwc: fix reference leak in pex_ep_event_pex_rst_deassert
+Date:   Mon, 2 Nov 2020 22:30:45 +0800
+Message-ID: <20201102143045.142121-1-zhangqilong3@huawei.com>
+X-Mailer: git-send-email 2.26.0.106.g9fadedd
 MIME-Version: 1.0
-References: <20201029053959.31361-1-vidyas@nvidia.com> <20201029053959.31361-3-vidyas@nvidia.com>
-In-Reply-To: <20201029053959.31361-3-vidyas@nvidia.com>
-From:   Rob Herring <robh@kernel.org>
-Date:   Mon, 2 Nov 2020 08:15:47 -0600
-X-Gmail-Original-Message-ID: <CAL_Jsq+3Ek9SRbsTqEmjiZtszvi7Er=TNgOt8t=0OESva2=sTg@mail.gmail.com>
-Message-ID: <CAL_Jsq+3Ek9SRbsTqEmjiZtszvi7Er=TNgOt8t=0OESva2=sTg@mail.gmail.com>
-Subject: Re: [PATCH V3 2/2] PCI: dwc: Add support to configure for ECRC
-To:     Vidya Sagar <vidyas@nvidia.com>
-Cc:     Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        Thierry Reding <treding@nvidia.com>,
-        Jon Hunter <jonathanh@nvidia.com>,
-        PCI <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        kthota@nvidia.com, Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        sagar.tv@gmail.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.90.53.225]
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Oct 29, 2020 at 12:40 AM Vidya Sagar <vidyas@nvidia.com> wrote:
->
-> DesignWare core has a TLP digest (TD) override bit in one of the control
-> registers of ATU. This bit also needs to be programmed for proper ECRC
-> functionality. This is currently identified as an issue with DesignWare
-> IP version 4.90a. This patch does the required programming in ATU upon
-> querying the system policy for ECRC.
->
-> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
-> Reviewed-by: Jingoo Han <jingoohan1@gmail.com>
-> ---
-> V3:
-> * Added 'Reviewed-by: Jingoo Han <jingoohan1@gmail.com>'
->
-> V2:
-> * Addressed Jingoo's review comment
-> * Removed saving 'td' bit information in 'dw_pcie' structure
->
->  drivers/pci/controller/dwc/pcie-designware.c | 8 ++++++--
->  drivers/pci/controller/dwc/pcie-designware.h | 1 +
->  2 files changed, 7 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-> index b5e438b70cd5..cbd651b219d2 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware.c
-> @@ -246,6 +246,8 @@ static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, u8 func_no,
->         dw_pcie_writel_ob_unroll(pci, index, PCIE_ATU_UNR_UPPER_TARGET,
->                                  upper_32_bits(pci_addr));
->         val = type | PCIE_ATU_FUNC_NUM(func_no);
-> +       if (pci->version == 0x490A)
-> +               val = val | pcie_is_ecrc_enabled() << PCIE_ATU_TD_SHIFT;
->         val = upper_32_bits(size - 1) ?
->                 val | PCIE_ATU_INCREASE_REGION_SIZE : val;
->         dw_pcie_writel_ob_unroll(pci, index, PCIE_ATU_UNR_REGION_CTRL1, val);
-> @@ -294,8 +296,10 @@ static void __dw_pcie_prog_outbound_atu(struct dw_pcie *pci, u8 func_no,
->                            lower_32_bits(pci_addr));
->         dw_pcie_writel_dbi(pci, PCIE_ATU_UPPER_TARGET,
->                            upper_32_bits(pci_addr));
-> -       dw_pcie_writel_dbi(pci, PCIE_ATU_CR1, type |
-> -                          PCIE_ATU_FUNC_NUM(func_no));
-> +       val = type | PCIE_ATU_FUNC_NUM(func_no);
-> +       if (pci->version == 0x490A)
+pm_runtime_get_sync will increment pm usage counter even it
+failed. Forgetting to pm_runtime_put_noidle will result in
+reference leak in pex_ep_event_pex_rst_deassert, so we should
+fix it.
 
-Is this even possible? Are the non-unroll ATU registers available post 4.80?
+Fixes: c57247f940e8e ("PCI: tegra: Add support for PCIe endpoint mode in Tegra194")
+Signed-off-by: Zhang Qilong <zhangqilong3@huawei.com>
+---
+ drivers/pci/controller/dwc/pcie-tegra194.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Rob
+diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+index f920e7efe118..936510b5c649 100644
+--- a/drivers/pci/controller/dwc/pcie-tegra194.c
++++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+@@ -1662,6 +1662,7 @@ static void pex_ep_event_pex_rst_deassert(struct tegra_pcie_dw *pcie)
+ 
+ 	ret = pm_runtime_get_sync(dev);
+ 	if (ret < 0) {
++		pm_runtime_put_noidle(dev);
+ 		dev_err(dev, "Failed to get runtime sync for PCIe dev: %d\n",
+ 			ret);
+ 		return;
+-- 
+2.17.1
+
