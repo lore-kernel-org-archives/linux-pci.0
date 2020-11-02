@@ -2,152 +2,108 @@ Return-Path: <SRS0=EWQp=EI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82BB8C4742C
-	for <linux-pci@archiver.kernel.org>; Mon,  2 Nov 2020 14:27:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5BADC00A89
+	for <linux-pci@archiver.kernel.org>; Mon,  2 Nov 2020 15:10:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3B2532072C
-	for <linux-pci@archiver.kernel.org>; Mon,  2 Nov 2020 14:27:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 72D182084C
+	for <linux-pci@archiver.kernel.org>; Mon,  2 Nov 2020 15:10:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=gmx.net header.i=@gmx.net header.b="TA22Kf8S"
+	dkim=pass (2048-bit key) header.d=hpe.com header.i=@hpe.com header.b="VFiYIZ4C"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726322AbgKBO1y (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 2 Nov 2020 09:27:54 -0500
-Received: from mout.gmx.net ([212.227.17.20]:56981 "EHLO mout.gmx.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726321AbgKBO1y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 2 Nov 2020 09:27:54 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.net;
-        s=badeba3b8450; t=1604327244;
-        bh=AcU6jbrx1riv+Wdlt3eWYyaQWzNIBJIHnijeALTKPwg=;
-        h=X-UI-Sender-Class:From:To:Cc:Subject:Date:In-Reply-To:References;
-        b=TA22Kf8Su+5fPlV+NmRLldPyD0XDaR8d0CkbARd/ntxyoKf+nuM8PhCBWVQccUFL6
-         ytCU01NVMarR30I5FrpzMc0YIxAkFGuL/I9l+QeK45S2vcpaIUx49mFQ1PaStwiUfU
-         bfJOy3XeyFqyiaw64i0/bCI9XhEBt3GMphYRu5Dc=
-X-UI-Sender-Class: 01bb95c1-4bf8-414a-932a-4f6e2808ef9c
-Received: from [185.76.97.212] ([185.76.97.212]) by web-mail.gmx.net
- (3c-app-gmx-bap57.server.lan [172.19.172.127]) (via HTTP); Mon, 2 Nov 2020
- 15:27:23 +0100
+        id S1726043AbgKBPKM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 2 Nov 2020 10:10:12 -0500
+Received: from mx0b-002e3701.pphosted.com ([148.163.143.35]:43094 "EHLO
+        mx0b-002e3701.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725817AbgKBPKM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Nov 2020 10:10:12 -0500
+Received: from pps.filterd (m0150244.ppops.net [127.0.0.1])
+        by mx0b-002e3701.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0A2F3R3W002229;
+        Mon, 2 Nov 2020 15:10:00 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hpe.com; h=from : to : cc : subject
+ : date : message-id : mime-version : content-transfer-encoding; s=pps0720;
+ bh=bMsdKUsDbBtdRjs7iz+41iYksutZLHfpc65lqduc7hc=;
+ b=VFiYIZ4Ckd49NPOz3KIkheC3O+jZismG2wGmy8D6zodpj5Jep/Eae4THHtAReD/mQjj1
+ ZFZLLa0DYm69uaJBvjihX7itDdY3n38bhlUxxH3Bwbb+J6hFoq3dC4WHz1pAoHWT87dR
+ WQeW2cB6Vx05GbIEcGswyuJhLuDndWnuOhr0EKi/SpbVa8tEkCc6JOFnu896w2nPuOpg
+ lhVUlw+DUQalJ1q+1Qn2/S38uzvIN+f3AALHRWQfW52I8hGN2tuspu+uHsoFX1H8Z3kp
+ pZOcb7T52XDQZZE+mZY4VrdkISZl7GgLNJJ5WifufZMch2rIfuRDtbo2eAyFArv80OpQ 9A== 
+Received: from g4t3427.houston.hpe.com (g4t3427.houston.hpe.com [15.241.140.73])
+        by mx0b-002e3701.pphosted.com with ESMTP id 34h0k1yhqp-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 02 Nov 2020 15:10:00 +0000
+Received: from sarge.linuxathome.me (unknown [16.29.176.77])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by g4t3427.houston.hpe.com (Postfix) with ESMTPS id CFC336C;
+        Mon,  2 Nov 2020 15:09:57 +0000 (UTC)
+From:   Hedi Berriche <hedi.berriche@hpe.com>
+To:     Kuppuswamy Sathyanarayanan 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Hedi Berriche <hedi.berriche@hpe.com>,
+        Russ Anderson <rja@hpe.com>, Joerg Roedel <jroedel@suse.com>,
+        Sinan Kaya <okaya@kernel.org>, stable@kernel.org
+Subject: [PATCH v4 0/1] PCI/ERR: fix regression introduced by 6d2c89441571 ("PCI/ERR: Update error status after reset_link()")
+Date:   Mon,  2 Nov 2020 15:09:50 +0000
+Message-Id: <20201102150951.149893-1-hedi.berriche@hpe.com>
+X-Mailer: git-send-email 2.29.1
 MIME-Version: 1.0
-Message-ID: <trinity-769ccf2c-6962-4e27-8a78-619cd16fab25-1604327243865@3c-app-gmx-bap57>
-From:   Frank Wunderlich <frank-w@public-files.de>
-To:     Marc Zyngier <maz@kernel.org>
-Cc:     Thomas Gleixner <tglx@linutronix.de>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        linux-mediatek@lists.infradead.org,
-        Frank Wunderlich <linux@fw-web.de>,
-        linux-kernel@vger.kernel.org,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Aw: Re:  Re:  Re: [PATCH] pci: mediatek: fix warning in msi.h
-Content-Type: text/plain; charset=UTF-8
-Date:   Mon, 2 Nov 2020 15:27:23 +0100
-Importance: normal
-Sensitivity: Normal
-In-Reply-To: <336d6588567949029c52ecfbb87660c1@kernel.org>
-References: <20201031140330.83768-1-linux@fw-web.de>
- <878sbm9icl.fsf@nanos.tec.linutronix.de>
- <EC02022C-64CF-4F4B-A0A2-215A0A49E826@public-files.de>
- <87lfflti8q.wl-maz@kernel.org> <1604253261.22363.0.camel@mtkswgap22>
- <trinity-9eb2a213-f877-4af3-87df-f76a9c093073-1604255233122@3c-app-gmx-bap08>
- <87k0v4u4uq.wl-maz@kernel.org> <87pn4w90hm.fsf@nanos.tec.linutronix.de>
- <df5565a2f1e821041c7c531ad52a3344@kernel.org>
- <trinity-4313623b-1adf-4cc3-8b50-2d0593669995-1604318207058@3c-app-gmx-bap57>
- <336d6588567949029c52ecfbb87660c1@kernel.org>
-X-UI-Message-Type: mail
-X-Priority: 3
-X-Provags-ID: V03:K1:yby5m6QFQy2Reuk7SqSaUU1Eu/PTwr1ZUMBtAMxlDwxvkbPolpmCM+cXzUiu8lzFk6TcY
- VFSSJGXqKyPUGl8Dvr519WpTTtnT+x96enLFcyvMgi1yDXqTcnXnE9e/O8p2NKZA475lS7P/wkGP
- IktsqpRoisIw2h8RIbfCWBceIKpt0QwpHqRiiiA0qld/PxLkY7YnD2Xobm6rhK3BBzCNhpbV9s75
- Y8emVf2EmfxQimQmXLVM7a/v+NH0z4LChYnLtqkSEVfOkbnzCAHlJLtIu8/+JxryRkHG7VUX3VzJ
- q0=
-X-UI-Out-Filterresults: notjunk:1;V03:K0:jzhFKPbKFHY=:BO8Lhdoqk5kdjdCQ+5k5o4
- Pl0A+jnhBAluOiuqmz4W9n0Er09cRvKrCbWqZESIOeZ9YuogllZ4uEfvtwSw5b8GWubmTBSNk
- 9VGsRgIx1uZKcVI3veiiDCjrO+azUfx3gbHZ22lzYeWqVZ6efJoFxhtrJMECSfaYJ4JBg8cR+
- agwFjakbG6pSoYOswIiXuk82rMcvzUWy0f9Z28RFOdn/+Tm3tvccgOG32Lkaf+inGrQer2Tmf
- JQ1dkfnMUADKc1pWIZyj7HooqeHorxG48kZ7VjGrMuEzrdChSyo8eEQZkJywASNJZsxw/No8U
- I8isKlNAi4wiEJzsbyRrvHZMlYnPz6Gr4bxsyqXI9B8BTISQMW1odi3ZitfX6rW0xKVHkLm58
- zjhAkJy9RK35E16eKXHsobRLzextP1MBU07v+nqknHQvSMkvmJls0ya2rrlo5H+ZhH3MIxZGC
- VL/tp7IVd6dXiIPKQge8UIUdiIvLUOj74p2+fvpyKkSAEPDbKg8nGWlr/eEAp8eKDBw35q5sS
- 8wo7AvD0BNarVAMnv0BF/G0jI4ho7BEWcklvK5eT+WEkQVWZ9Y2AgNJy1utLUexaRUOKWBPfZ
- vj8g8anfj3C00=
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-HPE-SCL: -1
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.312,18.0.737
+ definitions=2020-11-02_09:2020-11-02,2020-11-02 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 adultscore=0
+ clxscore=1015 mlxlogscore=999 lowpriorityscore=0 mlxscore=0 spamscore=0
+ malwarescore=0 phishscore=0 priorityscore=1501 bulkscore=0 impostorscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2011020120
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-> Gesendet: Montag, 02. November 2020 um 14:58 Uhr
-> Von: "Marc Zyngier" <maz@kernel.org>
+This is essentially a resend of v3 as it failed to get enough traction;
+no code change, I only added Sinan Kaya's Reviewed-by.
 
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index d15c881e2e7e..5bb1306162c7 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -387,10 +387,20 @@ static ssize_t msi_bus_store(struct device *dev,
-> struct device_attribute *attr,
->   		return count;
->   	}
->
-> -	if (val)
-> +	if (val) {
-> +		/*
-> +		 * If there is no possibility for this bus to deal with
-> +		 * MSIs, then allowing them to be requested would lead to
-> +		 * the kernel complaining loudly. In this situation, don't
-> +		 * let userspace mess things up.
-> +		 */
-> +		if (!pci_bus_is_msi_capable(subordinate))
-> +			return -EINVAL;
-> +
->   		subordinate->bus_flags &=3D ~PCI_BUS_FLAGS_NO_MSI;
-> -	else
-> +	} else {
->   		subordinate->bus_flags |=3D PCI_BUS_FLAGS_NO_MSI;
-> +	}
->
->   	dev_info(&subordinate->dev, "MSI/MSI-X %s for future drivers of
-> devices on this bus\n",
->   		 val ? "allowed" : "disallowed");
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 4289030b0fff..28861cc6435a 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -871,6 +871,8 @@ static void pci_set_bus_msi_domain(struct pci_bus
-> *bus)
->   		d =3D pci_host_bridge_msi_domain(b);
->
->   	dev_set_msi_domain(&bus->dev, d);
-> +	if (!pci_bus_is_msi_capable(bus))
-> +		bus->bus_flags |=3D PCI_BUS_FLAGS_NO_MSI;
->   }
->
->   static int pci_register_host_bridge(struct pci_host_bridge *bridge)
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 22207a79762c..6aadb863dff4 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -2333,6 +2333,12 @@ pci_host_bridge_acpi_msi_domain(struct pci_bus
-> *bus) { return NULL; }
->   static inline bool pci_pr3_present(struct pci_dev *pdev) { return
-> false; }
->   #endif
->
-> +static inline bool pci_bus_is_msi_capable(struct pci_bus *bus)
-> +{
-> +	return (IS_ENABLED(CONFIG_PCI_MSI_ARCH_FALLBACKS) ||
-> +		dev_get_msi_domain(&bus->dev));
-> +}
-> +
->   #ifdef CONFIG_EEH
->   static inline struct eeh_dev *pci_dev_to_eeh_dev(struct pci_dev *pdev)
->   {
+- Changes since v3:
+* added Sinan Kaya <okaya@kernel.org> Reviewed-by
 
-Hi,
+- Changes since v2:
+ * set status to PCI_ERS_RESULT_RECOVERED, in case of successful link
+   reset, if and only if the initial value of error status is
+   PCI_ERS_RESULT_DISCONNECT or PCI_ERS_RESULT_NO_AER_DRIVER.
 
-this Patch seems to work well too...no warning, pcie-card and hdd recogniz=
-ed
+- Changes since v1:
+ * changed the commit message to clarify what broke post commit 6d2c89441571
+ * dropped the misnomer post_reset_status variable in favour of a more natural
+   approach that relies on a boolean to keep track of the outcome of reset_link()
 
-regards Frank
+After commit 6d2c89441571 ("PCI/ERR: Update error status after reset_link()")
+pcie_do_recovery() no longer calls ->slot_reset() in the case of a successful
+reset which breaks error recovery by breaking driver (re)initialisation.
+
+Cc: Russ Anderson <rja@hpe.com>
+Cc: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Ashok Raj <ashok.raj@intel.com>
+Cc: Joerg Roedel <jroedel@suse.com>
+Cc: Sinan Kaya <okaya@kernel.org>
+
+Cc: stable@kernel.org # v5.7+
+
+---
+Hedi Berriche (1):
+  PCI/ERR: don't clobber status after reset_link()
+
+ drivers/pci/pcie/err.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+-- 
+2.28.0
+
