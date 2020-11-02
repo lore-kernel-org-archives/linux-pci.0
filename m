@@ -5,47 +5,48 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2C17C00A89
-	for <linux-pci@archiver.kernel.org>; Mon,  2 Nov 2020 10:12:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91120C388F9
+	for <linux-pci@archiver.kernel.org>; Mon,  2 Nov 2020 10:12:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6177B222E8
-	for <linux-pci@archiver.kernel.org>; Mon,  2 Nov 2020 10:12:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2336B22275
+	for <linux-pci@archiver.kernel.org>; Mon,  2 Nov 2020 10:12:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="fHL7+C0F"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="VbOqdolu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728475AbgKBKMg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 2 Nov 2020 05:12:36 -0500
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:39250 "EHLO
+        id S1728529AbgKBKMn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 2 Nov 2020 05:12:43 -0500
+Received: from fllv0015.ext.ti.com ([198.47.19.141]:39320 "EHLO
         fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728464AbgKBKMf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Nov 2020 05:12:35 -0500
-Received: from lelv0265.itg.ti.com ([10.180.67.224])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 0A2ACSPK012582;
-        Mon, 2 Nov 2020 04:12:28 -0600
+        with ESMTP id S1728005AbgKBKMk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Nov 2020 05:12:40 -0500
+Received: from fllv0035.itg.ti.com ([10.64.41.0])
+        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 0A2ACXbL012681;
+        Mon, 2 Nov 2020 04:12:33 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1604311948;
-        bh=VwsFBA0ieDn50BfS5Y1sE5jJ3zG5NZYGHo75lDjg+oY=;
+        s=ti-com-17Q1; t=1604311953;
+        bh=y3F0mMpTS94GzADfCO1F6dKsbjUP2ytKdFaTXQxi3lU=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=fHL7+C0FFMAL66arLR1VmSlyGPh2D6zDil+jDxn+PjqdJ2hmIveAhK9jvHaYr/yfZ
-         tftypxYkXb14pSzB95G0vNfaH56J2ae+5neGj6Y9xURs4KPAOKBcWFXKirnTyRxQXe
-         MzwjFGp3QToFrWNIOmZ6xQJfUpR3LgqxmqJXPGzo=
-Received: from DLEE104.ent.ti.com (dlee104.ent.ti.com [157.170.170.34])
-        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 0A2ACRx2067878
+        b=VbOqdolufMEpSSScR+//d6t6X+VIx29k2FhYkELFxDLh/Yjr3avq34z3lnFZmJ91L
+         Yxa8NrJK2JZ7TNBMZj02aMOi3YdEtaZY+ImHIxP/RfKg9tziU272itcL9B5HY+8wNj
+         WTSxUF52L73LkAeEzbKfgFJxQ64dP9ShQTC4Xd4k=
+Received: from DFLE104.ent.ti.com (dfle104.ent.ti.com [10.64.6.25])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 0A2ACXTL045818
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 2 Nov 2020 04:12:27 -0600
-Received: from DLEE102.ent.ti.com (157.170.170.32) by DLEE104.ent.ti.com
- (157.170.170.34) with Microsoft SMTP Server (version=TLS1_2,
+        Mon, 2 Nov 2020 04:12:33 -0600
+Received: from DFLE112.ent.ti.com (10.64.6.33) by DFLE104.ent.ti.com
+ (10.64.6.25) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Mon, 2 Nov
- 2020 04:12:04 -0600
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE102.ent.ti.com
- (157.170.170.32) with Microsoft SMTP Server (version=TLS1_2,
+ 2020 04:12:33 -0600
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DFLE112.ent.ti.com
+ (10.64.6.33) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
- Frontend Transport; Mon, 2 Nov 2020 04:12:04 -0600
+ Frontend Transport; Mon, 2 Nov 2020 04:12:33 -0600
 Received: from a0393678-ssd.dal.design.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0A2ABtuY059084;
-        Mon, 2 Nov 2020 04:12:01 -0600
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0A2ABtuf059084;
+        Mon, 2 Nov 2020 04:12:29 -0600
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Lee Jones <lee.jones@linaro.org>, Rob Herring <robh+dt@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -53,9 +54,9 @@ To:     Lee Jones <lee.jones@linaro.org>, Rob Herring <robh+dt@kernel.org>,
 CC:     Roger Quadros <rogerq@ti.com>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH 1/8] dt-bindings: mfd: ti,j721e-system-controller.yaml: Document "pcie-ctrl"
-Date:   Mon, 2 Nov 2020 15:41:47 +0530
-Message-ID: <20201102101154.13598-2-kishon@ti.com>
+Subject: [PATCH 8/8] arm64: dts: ti: k3-j721e-main: Fix PCIe maximum outbound regions
+Date:   Mon, 2 Nov 2020 15:41:54 +0530
+Message-ID: <20201102101154.13598-9-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20201102101154.13598-1-kishon@ti.com>
 References: <20201102101154.13598-1-kishon@ti.com>
@@ -66,31 +67,57 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add binding documentation for "pcie-ctrl" which should be a subnode of
-the system controller.
+PCIe controller in J721E supports a maximum of 32 outbound regions.
+commit 4e5833884f66 ("arm64: dts: ti: k3-j721e-main: Add PCIe device tree
+nodes") incorrectly added maximum number of outbound regions to 16. Fix
+it here.
 
+Fixes: 4e5833884f66 ("arm64: dts: ti: k3-j721e-main: Add PCIe device tree nodes")
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- .../devicetree/bindings/mfd/ti,j721e-system-controller.yaml | 6 ++++++
- 1 file changed, 6 insertions(+)
+ arch/arm64/boot/dts/ti/k3-j721e-main.dtsi | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/mfd/ti,j721e-system-controller.yaml b/Documentation/devicetree/bindings/mfd/ti,j721e-system-controller.yaml
-index 19fcf59fd2fe..fd985794e419 100644
---- a/Documentation/devicetree/bindings/mfd/ti,j721e-system-controller.yaml
-+++ b/Documentation/devicetree/bindings/mfd/ti,j721e-system-controller.yaml
-@@ -50,6 +50,12 @@ patternProperties:
-       specified in
-       Documentation/devicetree/bindings/mux/reg-mux.txt
- 
-+  "^pcie-ctrl@[0-9a-f]+$":
-+    type: object
-+    description: |
-+      This is the PCIe controller configuration required to configre PCIe
-+      mode, lane width and speed.
-+
- required:
-   - compatible
-   - reg
+diff --git a/arch/arm64/boot/dts/ti/k3-j721e-main.dtsi b/arch/arm64/boot/dts/ti/k3-j721e-main.dtsi
+index e2a96b2c423c..61b533130ed1 100644
+--- a/arch/arm64/boot/dts/ti/k3-j721e-main.dtsi
++++ b/arch/arm64/boot/dts/ti/k3-j721e-main.dtsi
+@@ -652,7 +652,7 @@
+ 		power-domains = <&k3_pds 239 TI_SCI_PD_EXCLUSIVE>;
+ 		clocks = <&k3_clks 239 1>;
+ 		clock-names = "fck";
+-		cdns,max-outbound-regions = <16>;
++		cdns,max-outbound-regions = <32>;
+ 		max-functions = /bits/ 8 <6>;
+ 		max-virtual-functions = /bits/ 16 <4 4 4 4 0 0>;
+ 		dma-coherent;
+@@ -701,7 +701,7 @@
+ 		power-domains = <&k3_pds 240 TI_SCI_PD_EXCLUSIVE>;
+ 		clocks = <&k3_clks 240 1>;
+ 		clock-names = "fck";
+-		cdns,max-outbound-regions = <16>;
++		cdns,max-outbound-regions = <32>;
+ 		max-functions = /bits/ 8 <6>;
+ 		max-virtual-functions = /bits/ 16 <4 4 4 4 0 0>;
+ 		dma-coherent;
+@@ -750,7 +750,7 @@
+ 		power-domains = <&k3_pds 241 TI_SCI_PD_EXCLUSIVE>;
+ 		clocks = <&k3_clks 241 1>;
+ 		clock-names = "fck";
+-		cdns,max-outbound-regions = <16>;
++		cdns,max-outbound-regions = <32>;
+ 		max-functions = /bits/ 8 <6>;
+ 		max-virtual-functions = /bits/ 16 <4 4 4 4 0 0>;
+ 		dma-coherent;
+@@ -799,7 +799,7 @@
+ 		power-domains = <&k3_pds 242 TI_SCI_PD_EXCLUSIVE>;
+ 		clocks = <&k3_clks 242 1>;
+ 		clock-names = "fck";
+-		cdns,max-outbound-regions = <16>;
++		cdns,max-outbound-regions = <32>;
+ 		max-functions = /bits/ 8 <6>;
+ 		max-virtual-functions = /bits/ 16 <4 4 4 4 0 0>;
+ 		dma-coherent;
 -- 
 2.17.1
 
