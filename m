@@ -2,115 +2,142 @@ Return-Path: <SRS0=EWQp=EI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE8DDC00A89
-	for <linux-pci@archiver.kernel.org>; Mon,  2 Nov 2020 19:26:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3C09C00A89
+	for <linux-pci@archiver.kernel.org>; Mon,  2 Nov 2020 20:58:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6F4602231B
-	for <linux-pci@archiver.kernel.org>; Mon,  2 Nov 2020 19:26:17 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel-com.20150623.gappssmtp.com header.i=@intel-com.20150623.gappssmtp.com header.b="aMgw8zK7"
+	by mail.kernel.org (Postfix) with ESMTP id 41C55206E5
+	for <linux-pci@archiver.kernel.org>; Mon,  2 Nov 2020 20:58:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1604350684;
+	bh=xbZHn8i0jDfuSVEZ0Oksa2dOCGUBfV80Nzny1ZBkJT8=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=PNKLrti7JrYrZssis6semnq0D7krUh3PbmOiSGfYGN/XQFAo4BzKZu704i3Z/CucQ
+	 LrQyGqOJZnec0faBB7iKup30ntykARzlP78kv0zzQZRV7GzRFnmvqWODZAMAdJ4mo6
+	 rU6NW5crai4WPY6c/y5VYbV/5FoaalbwjIZGbjbY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726645AbgKBT0Q (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 2 Nov 2020 14:26:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39204 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726630AbgKBT0Q (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Nov 2020 14:26:16 -0500
-Received: from mail-ed1-x544.google.com (mail-ed1-x544.google.com [IPv6:2a00:1450:4864:20::544])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B872AC0617A6
-        for <linux-pci@vger.kernel.org>; Mon,  2 Nov 2020 11:26:15 -0800 (PST)
-Received: by mail-ed1-x544.google.com with SMTP id w1so14383717edv.11
-        for <linux-pci@vger.kernel.org>; Mon, 02 Nov 2020 11:26:15 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=dDQNhKPGqjVJkXRCCnTVmPBDzTBDoFvxQkjWFChUq7c=;
-        b=aMgw8zK7rCA1KVq/MU6bOhsU0tEut11yFI1PHpIrmQ1GvsyRa9VonG09yyX73f6HFX
-         HvILR0dwvJqrEQPwXRQSeL3U7QrGrbMngjrUVa87Dl0gNjHxwt63h/kA5UhJa4e9aPmx
-         de83lguI6lttJSqM1C9UXADtdbhALyf3QFFwmqKS9RE4j7QL536YGCM34TLz9gabbXcL
-         27liIuYANcsTRoln+q4tcxnnRxBRpUhaWSv1/MfeMVEgTZTOkJty4FQZm9fXjZO/bwu3
-         H1y+cFvspb6VrYE5RXH/oJC61UtBIo3YJxKJAKjRE6RmwOm2fP/dgV4XRsHhfmh7lzNJ
-         BD4Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=dDQNhKPGqjVJkXRCCnTVmPBDzTBDoFvxQkjWFChUq7c=;
-        b=d0sWIQTGvX9pae536cyUSFDoI28lHNbFZzNl3VJEradzWwyiKTYhZ079ST2BlEfd2b
-         l45GYjp0fUZQSFm4/Hd2jGuiv6wVQrD9LwK3fHUjnuiAiXVpVHSgbgAz5Jx4z7E2wPE1
-         4XsxvvsPKIjlO68KHFvDtIWWp+m2ywsHiFyss993iTq44XL7OvhfftAuyxgBoLw+NP1n
-         j8vLQoz2P9M82ozNSqZ/MQsGg2oC4PQGltsimhbEy4dzv9UK4QKtup30A/ie2RXVbT8s
-         FrX2LklySGeGzO5pF5m3OxI8hEXy/rydHMk1AuB5K9Gt84n6UqQWwlS0WZXaHfQS38x3
-         k8RA==
-X-Gm-Message-State: AOAM5325SKfOmLt9KanVvGrAGAZ3HGUmVxvRsBH/hQQvgQIX6VYkeO4Q
-        kTQNNLjWCDBQsrRmH1/sdAvF5e991ff/fIwoSCKi+Q==
-X-Google-Smtp-Source: ABdhPJw7aq66qJvui6hJLPrXF7b2G+hIyn689UWesfAkpS5Y1kYqfJinaHs863DkeMqRZOD0NON5Ehn/1jAOw7ApiTY=
-X-Received: by 2002:aa7:cc84:: with SMTP id p4mr17722087edt.97.1604345174437;
- Mon, 02 Nov 2020 11:26:14 -0800 (PST)
+        id S1725801AbgKBU6C (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 2 Nov 2020 15:58:02 -0500
+Received: from mail.kernel.org ([198.145.29.99]:47586 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726203AbgKBU5y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 2 Nov 2020 15:57:54 -0500
+Received: from localhost (230.sub-72-107-127.myvzw.com [72.107.127.230])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id CE8AF206E5;
+        Mon,  2 Nov 2020 20:57:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1604350674;
+        bh=xbZHn8i0jDfuSVEZ0Oksa2dOCGUBfV80Nzny1ZBkJT8=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=km9zzTo5pPmsKfzc8Mq1w+gaXmsX3YfR2RHRQP9ho/Sd03XOtOtlu2Zp0gJjJZSy8
+         DHSlU4qPH9za2kgkK4I/718zibShYPbKnXGvLQz9JBsTWQAZydTChUGo0ZxpG1y34V
+         eM1RFAadDdqM56bwCvGGJcehMt19uC85p2bceyJw=
+Date:   Mon, 2 Nov 2020 14:57:52 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Thomas Krause <thomaskrause@posteo.de>, ath11k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, linux-pci@vger.kernel.org,
+        Devin Bayer <dev@doubly.so>,
+        Govind Singh <govinds@codeaurora.org>
+Subject: Re: pci_alloc_irq_vectors fails ENOSPC for XPS 13 9310
+Message-ID: <20201102205752.GA34153@bjorn-Precision-5520>
 MIME-Version: 1.0
-References: <20201030193045.GM2620339@nvidia.com> <20201030204307.GA683@otc-nc-03>
- <87h7qbkt18.fsf@nanos.tec.linutronix.de> <20201031235359.GA23878@araj-mobl1.jf.intel.com>
- <20201102132036.GX2620339@nvidia.com> <20201102162043.GB20783@otc-nc-03>
- <20201102171909.GF2620339@nvidia.com> <20d7c5fc-91b0-d673-d41a-335d91ca2dce@intel.com>
- <20201102182632.GH2620339@nvidia.com> <CAPcyv4h8O+boTo-MpGRSC8RpjrsvU-P3AU7_kwbrfDkEp8bH1w@mail.gmail.com>
- <20201102185130.GB3600342@nvidia.com>
-In-Reply-To: <20201102185130.GB3600342@nvidia.com>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Mon, 2 Nov 2020 11:26:01 -0800
-Message-ID: <CAPcyv4jGrvkwjZG+qiu0VGU9ifj95t0Yi7ripJEtZr+_kVrWog@mail.gmail.com>
-Subject: Re: [PATCH v4 00/17] Add VFIO mediated device support and DEV-MSI
- support for the idxd driver
-To:     Jason Gunthorpe <jgg@nvidia.com>
-Cc:     Dave Jiang <dave.jiang@intel.com>,
-        "Raj, Ashok" <ashok.raj@intel.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Vinod Koul <vkoul@kernel.org>,
-        "Dey, Megha" <megha.dey@intel.com>, maz@kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Jacob jun Pan <jacob.jun.pan@intel.com>,
-        Yi L Liu <yi.l.liu@intel.com>, Baolu Lu <baolu.lu@intel.com>,
-        "Tian, Kevin" <kevin.tian@intel.com>,
-        Sanjay K Kumar <sanjay.k.kumar@intel.com>,
-        "Luck, Tony" <tony.luck@intel.com>, Jing Lin <jing.lin@intel.com>,
-        kwankhede@nvidia.com, eric.auger@redhat.com,
-        Parav Pandit <parav@mellanox.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>, netanelg@mellanox.com,
-        shahafs@mellanox.com, yan.y.zhao@linux.intel.com,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Samuel Ortiz <samuel.ortiz@intel.com>,
-        Mona Hossain <mona.hossain@intel.com>,
-        Megha Dey <megha.dey@linux.intel.com>,
-        dmaengine@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        KVM list <kvm@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <871rhbvbjk.fsf@codeaurora.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Nov 2, 2020 at 10:52 AM Jason Gunthorpe <jgg@nvidia.com> wrote:
->
-> On Mon, Nov 02, 2020 at 10:38:28AM -0800, Dan Williams wrote:
->
-> > > I think you will be the first to use the namespace stuff for this, it
-> > > seems like a good idea and others should probably do so as well.
-> >
-> > I was thinking either EXPORT_SYMBOL_NS, or auxiliary bus, because you
-> > should be able to export an ops structure with all the necessary
-> > callbacks.
->
-> 'or'?
->
-> Auxiliary bus should not be used with huge arrays of function
-> pointers... The module providing the device should export a normal
-> linkable function interface. Putting that in a namespace makes a lot
-> of sense.
+[+cc Govind, author of 5697a564d369 ("ath11k: pci: add MSI config
+initialisation")]
 
-True, probably needs to be a mixture of both.
+On Mon, Nov 02, 2020 at 08:49:51PM +0200, Kalle Valo wrote:
+> + linux-wireless, linux-pci, devin
+> 
+> Thomas Krause <thomaskrause@posteo.de> writes:
+> 
+> >> I had the same problem as well back in the days, for me enabling
+> >> CONFIG_IRQ_REMAP helped. If it helps for you also I wonder if we should
+> >> mention that in the ath11k warning above :)
+> >
+> > CONFIG_IRQ_REMAP did not do the trick. I noticed that the Wi-Fi card
+> > is behind a PCI bridge which is also disabled, could this be a
+> > problem?
+> >
+> > 00:1c.0 PCI bridge: Intel Corporation Device a0b8 (rev 20) (prog-if 00
+> > [Normal decode])
+> > 	Flags: bus master, fast devsel, latency 0, IRQ 123
+> > 	Bus: primary=00, secondary=56, subordinate=56, sec-latency=0
+> > 	I/O behind bridge: [disabled]
+> > 	Memory behind bridge: 8c300000-8c3fffff [size=1M]
+> > 	Prefetchable memory behind bridge: [disabled]
+> > 	Capabilities: [40] Express Root Port (Slot+), MSI 00
+> > 	Capabilities: [80] MSI: Enable+ Count=1/1 Maskable- 64bit-
+> > 	Capabilities: [90] Subsystem: Dell Device 0991
+> > 	Capabilities: [a0] Power Management version 3
+> > 	Capabilities: [100] Advanced Error Reporting
+> > 	Capabilities: [220] Access Control Services
+> > 	Capabilities: [150] Precision Time Measurement
+> > 	Capabilities: [200] L1 PM Substates
+> > 	Capabilities: [a00] Downstream Port Containment
+> > 	Kernel driver in use: pcieport
+> 
+> I don't know enough about PCI to say if the bridge is a problem or not.
+
+I don't think the bridge is an issue here.  AFAICT the bridge's I/O
+and prefetchable memory windows are disabled, but the non-prefetchable
+window *is* enabled and contains the space consumed by the ath11k
+device:
+
+  00:1c.0 PCI bridge: Intel Corporation Device a0b8 (rev 20)
+	Bus: primary=00, secondary=56, subordinate=56, sec-latency=0
+	Memory behind bridge: 8c300000-8c3fffff [size=1M]
+  56:00.0 Network controller: Qualcomm Device 1101 (rev 01)
+     Region 0: Memory at 8c300000 (64-bit, non-prefetchable) [size=1M]
+
+> To summarise: Thomas is reporting[1] a problem with ath11k on QCA6390
+> PCI device where he is not having enough MSI vectors. ath11k needs 32
+> vectors but pci_alloc_irq_vectors() returns -ENOSPC. PCI support is new
+> for ath11k and introduced in v5.10-rc1. The irq allocation code is in
+> drivers/net/wireless/ath/ath11k/pci.c. [2]
+
+This code is needlessly complicated.  If you absolutely need
+msi_config.total_vectors and can't settle for any less, you can do
+this:
+
+  num_vectors = pci_alloc_irq_vectors(ab_pci->pdev,
+                                      msi_config.total_vectors,
+                                      msi_config.total_vectors,
+                                      PCI_IRQ_MSI);
+
+  if (num_vectors < 0) {
+    ath11k_err(ab, "failed to get %d MSI vectors (%d)\n",
+               msi_config.total_vectors, num_vectors);
+    return num_vectors;
+  }
+
+But it seems a little greedy if the device can't operate at all unless
+it gets 32 vectors.  Are you sure that's a hard requirement?  Most
+devices can work with fewer vectors, even if it reduces performance.
+
+> I would first try with a full distro kernel config, just in case there's
+> some another important kernel config missing.
+> 
+> [1] http://lists.infradead.org/pipermail/ath11k/2020-October/000466.html
+
+Tangent: have you considered getting this list archived on
+https://lore.kernel.org/lists.html?
+
+> [2] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/net/wireless/ath/ath11k/pci.c#n633
+> 
+> -- 
+> https://patchwork.kernel.org/project/linux-wireless/list/
+> 
+> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
