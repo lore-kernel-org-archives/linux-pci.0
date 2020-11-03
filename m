@@ -2,104 +2,116 @@ Return-Path: <SRS0=8M4G=EJ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FE38C388F9
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Nov 2020 21:31:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29673C4742C
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Nov 2020 21:53:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5637B2236F
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Nov 2020 21:31:06 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AwacBScA"
+	by mail.kernel.org (Postfix) with ESMTP id D904720780
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Nov 2020 21:53:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1604440389;
+	bh=yoBMHGcgRu6treiQlSwNvpxiAT/18A01oukKu7Eg8Co=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=pka5x41rQCjpZ1YO+ahqWa+48Ivve9otiGTUytje8jsSzXy+njneEyJ5rmwg3ExWx
+	 skArD4Jkdu9kwqdrTbD8JB04bDpSz9Iw6TkZqoIthoo6QAQn2DCUJu70LvhhFY6rrd
+	 B+oU2UFeBhfZKfs6pOX0HoNNuZZSkrT+HaJ+dmvo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732774AbgKCVbC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 3 Nov 2020 16:31:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56782 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732765AbgKCVa6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Nov 2020 16:30:58 -0500
-Received: from mail-ej1-x644.google.com (mail-ej1-x644.google.com [IPv6:2a00:1450:4864:20::644])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD7ABC0613D1;
-        Tue,  3 Nov 2020 13:30:57 -0800 (PST)
-Received: by mail-ej1-x644.google.com with SMTP id i19so15524175ejx.9;
-        Tue, 03 Nov 2020 13:30:57 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=Sw2bhd4jcneB3g3s5IEtSjSEMGNxHMcx8ThO9lFxrJo=;
-        b=AwacBScAQqRQ+W5tRID5qqC4IItvIBe3BDXXYC+0UUKV+v2EDZOosorQjCOG2yESgY
-         07Wzl3oZgWF+gXl7UA2GFmAYxhjyJjCQ0oWv4jkupNPM19bgqjHZBykek+/HbuCc3niv
-         OzOV6BDTftBQHw+Aw4qGgaUEcTk3oWge2d+lnztIOfNjPf2ScjBi56INKEqXAGCDcAqk
-         qqwZ0BhoL1cG/gBBMP+6WcNeKORi26Lnawh03qSMQqKnC8jMKQ7osIEUbZoHTToZbQpG
-         2sy2OCbY7rBGU4it0QmOC3G40Scym8Yc5jAN8nW7U2X59VfOpw/uSK570ToNOwG9Sw4K
-         BBig==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=Sw2bhd4jcneB3g3s5IEtSjSEMGNxHMcx8ThO9lFxrJo=;
-        b=XY9lk+V+SHvSbcJeVL5u1U0SgzdSfRzmkTzUAuQufJtbCnUMhRrrbYVWQPMpSyktM8
-         mPHuYC+ZW+NbJooaAG27o0BIom9fkCjNFXSKMsy72yd8bNZY5HqUF1hrdx2gjk/T/2Ku
-         HJqz69XVp+5RUqsK5mdrp2OBovzjzy7Fcy8n7o4gKDcLlvZ1h1oamXW4z4oUZDUBY/jh
-         r7TuVnxKMIRcpIfN9MdUS6S2E70RWOPpEdJVRtPsEIpdwHo21m/K+aKPqgECkrqR/fza
-         +DVulQLRUToVW5zt/5gEhnbthVeCR3F/Zqw94GDPEHR/2Tz/N5xFGj7nQTQ/qmRcxgtN
-         uVow==
-X-Gm-Message-State: AOAM532kSh17Qile+InZ7OleEdvml6yQMf7iCXJP3ZrV7Fjz3xHWvLdh
-        pWyxW4TG24YsKVQBjibbOLfOItR1htE=
-X-Google-Smtp-Source: ABdhPJyanutoQCesRoYcYVxElfnfQCZtpsToh/E2HUl14qaji0oBopAlwyhm81yB9lsiyAeZcgMCfQ==
-X-Received: by 2002:a17:906:9902:: with SMTP id zl2mr8130507ejb.510.1604439056114;
-        Tue, 03 Nov 2020 13:30:56 -0800 (PST)
-Received: from [192.168.2.202] (pd9e5a4cd.dip0.t-ipconnect.de. [217.229.164.205])
-        by smtp.gmail.com with ESMTPSA id y14sm56185edo.69.2020.11.03.13.30.54
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 03 Nov 2020 13:30:55 -0800 (PST)
-Subject: Re: [PATCH] ACPI: Remove trailing whitespace
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-acpi@vger.kernel.org,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20201103211259.GA265488@bjorn-Precision-5520>
-From:   Maximilian Luz <luzmaximilian@gmail.com>
-Message-ID: <c92703e3-c964-b4a6-e3df-c4c0c28b44c1@gmail.com>
-Date:   Tue, 3 Nov 2020 22:30:53 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.0
+        id S1731209AbgKCVxI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 3 Nov 2020 16:53:08 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39928 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1733285AbgKCVxG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 3 Nov 2020 16:53:06 -0500
+Received: from localhost (230.sub-72-107-127.myvzw.com [72.107.127.230])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1647420780;
+        Tue,  3 Nov 2020 21:53:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1604440385;
+        bh=yoBMHGcgRu6treiQlSwNvpxiAT/18A01oukKu7Eg8Co=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=vHJ3YSUnWQcayJDc4n52S8eMzMfoUSY4xVboDBfH25nai0+liUgeyDVB3BO+u/TFx
+         39fHwXM5ktxZFadWuWTVZzF4PLYNs6ne4tnbGC8oS8GinPMMyBH5F/FDJG4+U+OomR
+         lYriSuuiytYA+rr+KvvkgdR/AGK20v8r2wzGWJDM=
+Date:   Tue, 3 Nov 2020 15:53:03 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Ryder Lee <ryder.lee@mediatek.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-mediatek@lists.infradead.org
+Subject: Re: [PATCH] pci: mediatek: fix wrong operator used
+Message-ID: <20201103215303.GA267664@bjorn-Precision-5520>
 MIME-Version: 1.0
-In-Reply-To: <20201103211259.GA265488@bjorn-Precision-5520>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <2418edb8c8c81bc646ce9c508939dc27e848dcd7.1603817008.git.ryder.lee@mediatek.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 11/3/20 10:12 PM, Bjorn Helgaas wrote:
-> On Mon, Nov 02, 2020 at 02:36:41PM +0100, Maximilian Luz wrote:
->> Remove trailing whitespace and fix some whitespace inconsitencies while
->> at it.
+  $ git log --oneline drivers/pci/controller/pcie-mediatek.c
+  ...
+  0cccd42e6193 ("PCI: mediatek: Add controller support for MT7629")
+  6be22343cc54 ("PCI: mediatek: Get optional clocks with devm_clk_get_optional()")
+  ff7a5a0a8562 ("PCI: mediatek: Fix a leaked reference by adding missing of_node_put()")
+  cbe3a7728c7a ("PCI: mediatek: Enlarge PCIe2AHB window size to support 4GB DRAM")
+
+Make yours match in capitalization and sentence structure, e.g.,
+
+  PCI: mediatek: Fix ...
+
+On Wed, Oct 28, 2020 at 12:51:48AM +0800, Ryder Lee wrote:
+> Fix the issue reported by Coverity:
+> Wrong operator used (CONSTANT_EXPRESSION_RESULT) operator_confusion:
+> (port->slot << 3) & 7 is always 0 regardless of the values of its operands.
+> This occurs as an initializer.
+
+The important thing here is *not* fixing the Coverity warning.  The
+important thing is fixing the *bug*.
+
+The bug is that we computed "func" incorrectly.  The commit log should
+mention what bad things happened because "func" was incorrect.
+
+  #define PCI_FUNC(devfn)         ((devfn) & 0x07)
+
+  func = PCI_FUNC(port->slot << 3);
+
+So "func" was always 0 before, and from the code, it looks like that
+means we only configured FC credits and FTS for function 0, so any
+other functions may not have been configured correctly.
+
+And it looks like this only affects MT2701 and MT7623, since those are
+the only devices that use mtk_pcie_startup_port().
+
+This is all info that should be in the commit log so users can tell
+whether they are affected.
+
+It's nice to still *mention* Coverity since it gave us useful
+information, but all we need is a reference like this:
+
+  Addresses-Coverity-ID: 1437218 ("Wrong operator used")
+
+> Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+> ---
+>  drivers/pci/controller/pcie-mediatek.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> I'm OK with this as long as somebody fixes the
-> s/inconsitencies/inconsistencies/
-
-Sorry about that, I can resubmit if necessary.
-
-> above.  I assume you've scanned all of drivers/acpi/ for similar
-> issues so they can all be fixed at once.
-
-Yes. I scanned drivers/acpi for trailing whitespaces after I noticed a
-couple of them. I did not explicitly scan for other stuff like spaces
-where there should be tabs, mostly because I haven't found a quick and
-reliable solution for that. I only noticed an inconsistent indentation
-when committing, so I fixed that too.
-
-> This is up to Rafael, of course.
-
-Thanks,
-Max
+> diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+> index cf4c18f0c25a..1980b01cee35 100644
+> --- a/drivers/pci/controller/pcie-mediatek.c
+> +++ b/drivers/pci/controller/pcie-mediatek.c
+> @@ -760,7 +760,7 @@ static struct pci_ops mtk_pcie_ops = {
+>  static int mtk_pcie_startup_port(struct mtk_pcie_port *port)
+>  {
+>  	struct mtk_pcie *pcie = port->pcie;
+> -	u32 func = PCI_FUNC(port->slot << 3);
+> +	u32 func = PCI_FUNC(port->slot);
+>  	u32 slot = PCI_SLOT(port->slot << 3);
+>  	u32 val;
+>  	int err;
+> -- 
+> 2.18.0
