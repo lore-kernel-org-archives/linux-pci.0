@@ -2,53 +2,46 @@ Return-Path: <SRS0=8M4G=EJ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B440C2D0A3
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Nov 2020 10:29:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40055C388F7
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Nov 2020 10:31:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9BFAB21D40
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Nov 2020 10:29:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1604399361;
-	bh=rzmUb4sjt+QRA0E2POcf2NroOr71zccUxg8Mx635fNc=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:List-ID:From;
-	b=qbHhNbDPyI3lxe5VtvWgPgrrvzLpbQqmR/xun9xbFV23ktUuBS0yiUb+EsP4kXq/R
-	 AkUk7FlBh1RrVG1RhudF1AAF57UvsNw5eIA8PgNBr9st/Bv2oHuHhdeciqRCr+RWYj
-	 Q1dfijhzlvOGCSd+Hty1J2wBNNUPpPrdTTlzUIFg=
+	by mail.kernel.org (Postfix) with ESMTP id CBFD420756
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Nov 2020 10:31:21 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="cJmsOmPV";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="k7tiSTzp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726058AbgKCK3U (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 3 Nov 2020 05:29:20 -0500
-Received: from mail.kernel.org ([198.145.29.99]:50204 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725988AbgKCK3U (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 3 Nov 2020 05:29:20 -0500
-Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 691D3206C0;
-        Tue,  3 Nov 2020 10:29:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1604399359;
-        bh=rzmUb4sjt+QRA0E2POcf2NroOr71zccUxg8Mx635fNc=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=w/G6r0Uk6mgYqPET7MBBYYzjknHKzmzytBIILxZ8qHVO8wx/BA6NMqQIFQga+tg8l
-         sFev2am4zJyRrrguYfmOkEAKqyIwkywnIPBZ12uFXG4fu/uZHj8FBUXrCOMSgF+h2t
-         Ax2/Fe4SRUJnZxebeEhZe+EifH518tuIqCX8scjM=
-Received: from disco-boy.misterjones.org ([51.254.78.96] helo=www.loen.fr)
-        by disco-boy.misterjones.org with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.94)
-        (envelope-from <maz@kernel.org>)
-        id 1kZtYz-00766J-8n; Tue, 03 Nov 2020 10:29:17 +0000
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Tue, 03 Nov 2020 10:29:17 +0000
-From:   Marc Zyngier <maz@kernel.org>
-To:     Thomas Gleixner <tglx@linutronix.de>
+        id S1727530AbgKCKbU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 3 Nov 2020 05:31:20 -0500
+Received: from Galois.linutronix.de ([193.142.43.55]:37172 "EHLO
+        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727443AbgKCKbT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Nov 2020 05:31:19 -0500
+From:   Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1604399477;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=4YPfyThdfqh+Ek0aAZOjucScX+kZFKAkhTa4zTnlBMU=;
+        b=cJmsOmPV8GxzrObsOJzXJvTYMLL9xzFykDdEjxeqVusW8aVOVPJKjwbe7RH/Qi4KGazgb6
+        EXRzP0xXM42TRoQIjBOjqlb6E6IJNMg5Uj8mAc5cqfbHJfnhvPpar3uOMOKW8ezN121T8a
+        SZhNsRibqapisx5f/5weainDJpjip7on3mdg+F9fcAxJ8oPkKlaYWreRU8WbB5JD6pr4qJ
+        F07XA3El6TMzHtEVCrcFtl5Mfsj+eyD8kEiVd6Zd3AuGeEJN8dVA/THmr8KCllF2pe5+Dw
+        I2o5pQOvke7qTwY4QNIw/OC1C03cMdbGZqpZ5ly8lJw41X8M2mgMCZ2GC3DoNA==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1604399477;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=4YPfyThdfqh+Ek0aAZOjucScX+kZFKAkhTa4zTnlBMU=;
+        b=k7tiSTzpqGHQ8uDde18bylPddN7ucdzaebd1+q9xcVIWj2XjHe6Ebn2vilYBp7//HFtXyS
+        9Q9mwA+dO8xE2cDA==
+To:     Marc Zyngier <maz@kernel.org>
 Cc:     Frank Wunderlich <frank-w@public-files.de>,
         Ryder Lee <ryder.lee@mediatek.com>,
         linux-mediatek@lists.infradead.org,
@@ -57,70 +50,60 @@ Cc:     Frank Wunderlich <frank-w@public-files.de>,
         Matthias Brugger <matthias.bgg@gmail.com>,
         linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
 Subject: Re: Aw: Re: [PATCH] pci: mediatek: fix warning in msi.h
-In-Reply-To: <87o8ke7njb.fsf@nanos.tec.linutronix.de>
-References: <20201031140330.83768-1-linux@fw-web.de>
- <878sbm9icl.fsf@nanos.tec.linutronix.de>
- <EC02022C-64CF-4F4B-A0A2-215A0A49E826@public-files.de>
- <87lfflti8q.wl-maz@kernel.org> <1604253261.22363.0.camel@mtkswgap22>
- <trinity-9eb2a213-f877-4af3-87df-f76a9c093073-1604255233122@3c-app-gmx-bap08>
- <87k0v4u4uq.wl-maz@kernel.org> <87pn4w90hm.fsf@nanos.tec.linutronix.de>
- <df5565a2f1e821041c7c531ad52a3344@kernel.org>
- <87h7q791j8.fsf@nanos.tec.linutronix.de>
- <877dr38kt8.fsf@nanos.tec.linutronix.de>
- <901c5eb8bbaa3fe53ddc8f65917e48ef@kernel.org>
- <87o8ke7njb.fsf@nanos.tec.linutronix.de>
-User-Agent: Roundcube Webmail/1.4.9
-Message-ID: <016e887822baeae42599b910aaa33218@kernel.org>
-X-Sender: maz@kernel.org
-X-SA-Exim-Connect-IP: 51.254.78.96
-X-SA-Exim-Rcpt-To: tglx@linutronix.de, frank-w@public-files.de, ryder.lee@mediatek.com, linux-mediatek@lists.infradead.org, linux@fw-web.de, linux-kernel@vger.kernel.org, matthias.bgg@gmail.com, linux-pci@vger.kernel.org, bhelgaas@google.com
-X-SA-Exim-Mail-From: maz@kernel.org
-X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
+In-Reply-To: <901c5eb8bbaa3fe53ddc8f65917e48ef@kernel.org>
+References: <20201031140330.83768-1-linux@fw-web.de> <878sbm9icl.fsf@nanos.tec.linutronix.de> <EC02022C-64CF-4F4B-A0A2-215A0A49E826@public-files.de> <87lfflti8q.wl-maz@kernel.org> <1604253261.22363.0.camel@mtkswgap22> <trinity-9eb2a213-f877-4af3-87df-f76a9c093073-1604255233122@3c-app-gmx-bap08> <87k0v4u4uq.wl-maz@kernel.org> <87pn4w90hm.fsf@nanos.tec.linutronix.de> <df5565a2f1e821041c7c531ad52a3344@kernel.org> <87h7q791j8.fsf@nanos.tec.linutronix.de> <877dr38kt8.fsf@nanos.tec.linutronix.de> <901c5eb8bbaa3fe53ddc8f65917e48ef@kernel.org>
+Date:   Tue, 03 Nov 2020 11:31:17 +0100
+Message-ID: <87k0v27mve.fsf@nanos.tec.linutronix.de>
+MIME-Version: 1.0
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 2020-11-03 10:16, Thomas Gleixner wrote:
-> On Tue, Nov 03 2020 at 09:54, Marc Zyngier wrote:
->> On 2020-11-02 22:18, Thomas Gleixner wrote:
->>> On Mon, Nov 02 2020 at 17:16, Thomas Gleixner wrote:
->>>> On Mon, Nov 02 2020 at 11:30, Marc Zyngier wrote:
->>>>> --- a/drivers/pci/probe.c
->>>>> +++ b/drivers/pci/probe.c
->>>>> @@ -871,6 +871,8 @@ static void pci_set_bus_msi_domain(struct 
->>>>> pci_bus
->>>>> *bus)
->>>>>   		d = pci_host_bridge_msi_domain(b);
->>>>> 
->>>>>   	dev_set_msi_domain(&bus->dev, d);
->>>>> +	if (!d)
->>>>> +		bus->bus_flags |= PCI_BUS_FLAGS_NO_MSI;
->>>> 
->>>> Hrm, that might break legacy setups (no irqdomain support). I'd 
->>>> rather
->>>> prefer to explicitly tell the pci core at host registration time.
->>> 
->>> s/might break/ breaks /     Just validated :)
->> 
->> For my own edification, can you point me to the failing case?
-> 
-> Any architecture which selects PCI_MSI_ARCH_FALLBACKS and does not have
-> irqdomain support runs into:
-> 
-> 	if (!d)
-> 		bus->bus_flags |= PCI_BUS_FLAGS_NO_MSI;
-> 
-> which in turn makes pci_msi_supported() return 0 and consequently makes
-> pci_enable_msi[x]() fail.
+On Tue, Nov 03 2020 at 09:54, Marc Zyngier wrote:
+> On 2020-11-02 22:18, Thomas Gleixner wrote:
+>> So we really need some other solution and removing the warning is not 
+>> an option. If MSI is enabled then we want to get a warning when a PCI
+>> device has no MSI domain associated. Explicitly expressing the PCIE
+>> brigde misfeature of not supporting MSI is way better than silently
+>> returning an error code which is swallowed anyway.
+>
+> I don't disagree here, though the PCI_MSI_ARCH_FALLBACKS mechanism
+> makes it more difficult to establish.
 
-I pointer that out in [1], together with a potential fix. Not sure if
-anything else breaks though.
+Only for the few leftovers which implement msi_controller, i.e.
+
+drivers/pci/controller/pci-hyperv.c
+drivers/pci/controller/pci-tegra.c
+drivers/pci/controller/pcie-rcar-host.c
+drivers/pci/controller/pcie-xilinx.c
+
+The architectures which select PCI_MSI_ARCH_FALLBACKS are:
+
+arch/ia64/Kconfig:      select PCI_MSI_ARCH_FALLBACKS if PCI_MSI
+arch/mips/Kconfig:      select PCI_MSI_ARCH_FALLBACKS if PCI_MSI
+arch/powerpc/Kconfig:   select PCI_MSI_ARCH_FALLBACKS           if PCI_MSI
+arch/s390/Kconfig:      select PCI_MSI_ARCH_FALLBACKS   if PCI_MSI
+arch/sparc/Kconfig:     select PCI_MSI_ARCH_FALLBACKS if PCI_MSI
+
+implement arch_setup_msi_irq() which makes it magically work :)
+
+>> Whatever the preferred way is via flags at host probe time or flagging
+>> it post probe I don't care much as long as it is consistent.
+>
+> Host probe time is going to require some changes in the core PCI api,
+> as everything that checks for a MSI domain is based on the pci_bus
+> structure, which is only allocated much later.
+
+Yeah, it's nasty. One possible solution is to add flags or a callback to
+pci_ops, but it's not pretty either.
+
+I think we should go with the 'mark it after pci_host_probe()' hack for
+5.10-rc. The real fix will be larger and go into 5.11.
+
+Thoughts?
 
 Thanks,
 
-         M.
+        tglx
 
-[1] 
-https://lore.kernel.org/r/336d6588567949029c52ecfbb87660c1@kernel.org/
--- 
-Jazz is not dead. It just smells funny...
