@@ -7,173 +7,129 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30953C388F9
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Nov 2020 21:19:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDC40C4742C
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Nov 2020 21:28:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E8EA3206B5
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Nov 2020 21:19:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B80F522226
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Nov 2020 21:28:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1604438389;
-	bh=kNkkSf7GPZiZAoqJ4K7JDQg+4mkspW6utqW9bsMXaRU=;
+	s=default; t=1604438931;
+	bh=8ytUCsyZVeF3ujFgYm5L1sW7UkyVhphiOKLK38YXOJo=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=sVwFOt/Jm2mnx+t87ZDdukEPdDEXrbKAixgaX2kNsZog3R8m9ifcic6ITwGy+zgeN
-	 nJdw3ZCUslIvG6HXv33Gri105grpwspNgNQiK9UTHWx+oBto3w9mKqdMYGvtYaHieL
-	 5x7FQp9ivHuklvc8LHqqqkF8/tSILMHRWwdGN2Wg=
+	b=vudzFxmuq3E3s7JPfyE8VJaiSV3XYXZ/oUcUYB7mUEhm2wVDm+oZ6wUp3AShL53yJ
+	 vC7EisWegRlLwNR07ycy1j8EBhz2NB1cLLcJHhnBHS/XVTomuVOzdoAcF7pGl0E4Wm
+	 AMsuX5DRy2JoZqDIz8qqOm3sQY3mZYoteSqyrnPQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388365AbgKCVH5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 3 Nov 2020 16:07:57 -0500
-Received: from mail.kernel.org ([198.145.29.99]:47314 "EHLO mail.kernel.org"
+        id S2387876AbgKCV2n (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 3 Nov 2020 16:28:43 -0500
+Received: from mail.kernel.org ([198.145.29.99]:47284 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387894AbgKCVH4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 3 Nov 2020 16:07:56 -0500
+        id S1731845AbgKCV2m (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 3 Nov 2020 16:28:42 -0500
 Received: from localhost (230.sub-72-107-127.myvzw.com [72.107.127.230])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 164C5205ED;
-        Tue,  3 Nov 2020 21:07:54 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8D35D2074B;
+        Tue,  3 Nov 2020 21:28:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1604437675;
-        bh=kNkkSf7GPZiZAoqJ4K7JDQg+4mkspW6utqW9bsMXaRU=;
+        s=default; t=1604438921;
+        bh=8ytUCsyZVeF3ujFgYm5L1sW7UkyVhphiOKLK38YXOJo=;
         h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=DBZAyCEzm0RNhkKpX+AaNvGVOqS0tWxzITpV2mfMXesSYXmDA3qzmQzZtjy0RoAKs
-         VQMnfwlCsfbxQrO7ISxXza9qO5LEIQJ5AUVtAkJGs/MxcvS3VXYimKr5744Y5WlSES
-         qZY5aZFyJYD09m4QBV9cj1Ua/WwKyvophPASsMnU=
-Date:   Tue, 3 Nov 2020 15:07:53 -0600
+        b=r3rNM/R7N18tFkDui7jKc1s7Rf1w4AGB0oy4QLfqljsFx0cgfbQoVLb4YXPv8FJ21
+         3GOcK6tXRCXbaRCS5TJewrPlPhPnEk4+UMQFmaSlDABV6b/XkOfyrQcMw74G4iOpe0
+         oHBd90d8NCZ7lRYb6RIVYqEyC0t2dJj32/rqukig=
+Date:   Tue, 3 Nov 2020 15:28:40 -0600
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Vidya Sagar <vidyas@nvidia.com>
-Cc:     jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
-        lorenzo.pieralisi@arm.com, bhelgaas@google.com,
-        amurray@thegoodpenguin.co.uk, robh@kernel.org, treding@nvidia.com,
-        jonathanh@nvidia.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, kthota@nvidia.com,
-        mmaddireddy@nvidia.com, sagar.tv@gmail.com
-Subject: Re: [PATCH V3 2/2] PCI: dwc: Add support to configure for ECRC
-Message-ID: <20201103210753.GA264744@bjorn-Precision-5520>
+To:     Daniel Vetter <daniel.vetter@ffwll.ch>
+Cc:     DRI Development <dri-devel@lists.freedesktop.org>,
+        LKML <linux-kernel@vger.kernel.org>, kvm@vger.kernel.org,
+        linux-mm@kvack.org, linux-arm-kernel@lists.infradead.org,
+        linux-samsung-soc@vger.kernel.org, linux-media@vger.kernel.org,
+        Daniel Vetter <daniel.vetter@intel.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Kees Cook <keescook@chromium.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        John Hubbard <jhubbard@nvidia.com>,
+        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+        Jan Kara <jack@suse.cz>, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH v5 11/15] PCI: Obey iomem restrictions for procfs mmap
+Message-ID: <20201103212840.GA266427@bjorn-Precision-5520>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <ad86fd8c-ea49-fa87-b491-348503d0bd52@nvidia.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20201030100815.2269-12-daniel.vetter@ffwll.ch>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Nov 03, 2020 at 08:57:01AM +0530, Vidya Sagar wrote:
-> On 11/3/2020 4:32 AM, Bjorn Helgaas wrote:
-> > On Thu, Oct 29, 2020 at 11:09:59AM +0530, Vidya Sagar wrote:
-> > > DesignWare core has a TLP digest (TD) override bit in one of the control
-> > > registers of ATU. This bit also needs to be programmed for proper ECRC
-> > > functionality. This is currently identified as an issue with DesignWare
-> > > IP version 4.90a. This patch does the required programming in ATU upon
-> > > querying the system policy for ECRC.
-> > 
-> > I guess this is a hardware defect, right?
-> Yes. This is common across all DWC implementations (version 4.90 precisely)
+On Fri, Oct 30, 2020 at 11:08:11AM +0100, Daniel Vetter wrote:
+> There's three ways to access PCI BARs from userspace: /dev/mem, sysfs
+> files, and the old proc interface. Two check against
+> iomem_is_exclusive, proc never did. And with CONFIG_IO_STRICT_DEVMEM,
+> this starts to matter, since we don't want random userspace having
+> access to PCI BARs while a driver is loaded and using it.
 > 
-> > How much of a problem would it be if we instead added a "no_ecrc"
-> > quirk for this hardware so we never enabled ECRC?
-> Well, on Tegra for some of the high fidelity use cases, ECRC is required to
-> be turned on and if it can be done safely with these patches, why shouldn't
-> we not enable ECRC at all?
+> Fix this by adding the same iomem_is_exclusive() check we already have
+> on the sysfs side in pci_mmap_resource().
 > 
-> > IIUC, the current Linux support of ECRC is a single choice at
-> > boot-time: by default ECRC is not enabled, but if you boot with
-> > "pci=ecrc=on", we turn on ECRC for every device.
-> > 
-> > That seems like the minimal support, but I think the spec allows ECRC
-> > to be enabled selectively, on individual devices.  I can imagine a
-> > sysfs knob that would allow us to enable/disable ECRC per-device at
-> > run-time.
-> > 
-> > If we had such a sysfs knob, it would be pretty ugly and maybe
-> > impractical to work around this hardware issue.  So I'm a little bit
-> > hesitant to add functionality that might have to be removed in the
-> > future.
->
-> Agree with this. But since it is a boot-time choice at this point, I think
-> we can still go ahead with this approach to have a working ECRC mechanism
-> right? I don't see any sysfs knob for AER controlling at this point.
+> References: 90a545e98126 ("restrict /dev/mem to idle io memory ranges")
+> Signed-off-by: Daniel Vetter <daniel.vetter@intel.com>
 
-I don't want to do anything that will prevent us from adding
-per-device ECRC control in the future.
+This is OK with me but it looks like IORESOURCE_EXCLUSIVE is currently
+only used in a few places:
 
-My concern is that if we add a run-time sysfs knob in the future, the
-user experience on this hardware will be poor because there's no
-convenient path to twiddle the PCIE_ATU_TD bit when the generic code
-changes the AER Control bit.
+  e1000_probe() calls pci_request_selected_regions_exclusive(),
+  ne_pci_probe() calls pci_request_regions_exclusive(),
+  vmbus_allocate_mmio() calls request_mem_region_exclusive()
 
-What is the failure mode in these scenarios:
+which raises the question of whether it's worth keeping
+IORESOURCE_EXCLUSIVE at all.  I'm totally fine with removing it
+completely.
 
-  - User boots with defaults, ECRC is disabled.
-  - User enables ECRC via sysfs.
-  - What happens here?  ECRC is enabled via AER Control but not via
-    DWC TD bit.  I assume ECRC doesn't work.  Does it cause PCIe
-    errors (malformed TLP, etc)?
+But if you want it,
 
-Or this one:
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-  - User boots with "pci=ecrc=on", ECRC is enabled.
-  - ECRC works fine.
-  - User disables ECRC via sysfs.
-  - What happens here?  ECRC is disabled via AER Control, but DWC TD
-    bit thinks it's still enabled.
-
-If you enabled ECRC unconditionally on DWC and the sysfs knob had no
-effect, I'd be OK with that.  I'm more worried about what happens when
-the AER bit and the DWC TD bit are set so they don't match.  What is
-the failure mode there?
-
-> > > Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
-> > > Reviewed-by: Jingoo Han <jingoohan1@gmail.com>
-> > > ---
-> > > V3:
-> > > * Added 'Reviewed-by: Jingoo Han <jingoohan1@gmail.com>'
-> > > 
-> > > V2:
-> > > * Addressed Jingoo's review comment
-> > > * Removed saving 'td' bit information in 'dw_pcie' structure
-> > > 
-> > >   drivers/pci/controller/dwc/pcie-designware.c | 8 ++++++--
-> > >   drivers/pci/controller/dwc/pcie-designware.h | 1 +
-> > >   2 files changed, 7 insertions(+), 2 deletions(-)
-> > > 
-> > > diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-> > > index b5e438b70cd5..cbd651b219d2 100644
-> > > --- a/drivers/pci/controller/dwc/pcie-designware.c
-> > > +++ b/drivers/pci/controller/dwc/pcie-designware.c
-> > > @@ -246,6 +246,8 @@ static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, u8 func_no,
-> > >        dw_pcie_writel_ob_unroll(pci, index, PCIE_ATU_UNR_UPPER_TARGET,
-> > >                                 upper_32_bits(pci_addr));
-> > >        val = type | PCIE_ATU_FUNC_NUM(func_no);
-> > > +     if (pci->version == 0x490A)
-> > > +             val = val | pcie_is_ecrc_enabled() << PCIE_ATU_TD_SHIFT;
-> > >        val = upper_32_bits(size - 1) ?
-> > >                val | PCIE_ATU_INCREASE_REGION_SIZE : val;
-> > >        dw_pcie_writel_ob_unroll(pci, index, PCIE_ATU_UNR_REGION_CTRL1, val);
-> > > @@ -294,8 +296,10 @@ static void __dw_pcie_prog_outbound_atu(struct dw_pcie *pci, u8 func_no,
-> > >                           lower_32_bits(pci_addr));
-> > >        dw_pcie_writel_dbi(pci, PCIE_ATU_UPPER_TARGET,
-> > >                           upper_32_bits(pci_addr));
-> > > -     dw_pcie_writel_dbi(pci, PCIE_ATU_CR1, type |
-> > > -                        PCIE_ATU_FUNC_NUM(func_no));
-> > > +     val = type | PCIE_ATU_FUNC_NUM(func_no);
-> > > +     if (pci->version == 0x490A)
-> > > +             val = val | pcie_is_ecrc_enabled() << PCIE_ATU_TD_SHIFT;
-> > > +     dw_pcie_writel_dbi(pci, PCIE_ATU_CR1, val);
-> > >        dw_pcie_writel_dbi(pci, PCIE_ATU_CR2, PCIE_ATU_ENABLE);
-> > > 
-> > >        /*
-> > > diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-> > > index e7f441441db2..b01ef407fd52 100644
-> > > --- a/drivers/pci/controller/dwc/pcie-designware.h
-> > > +++ b/drivers/pci/controller/dwc/pcie-designware.h
-> > > @@ -89,6 +89,7 @@
-> > >   #define PCIE_ATU_TYPE_IO             0x2
-> > >   #define PCIE_ATU_TYPE_CFG0           0x4
-> > >   #define PCIE_ATU_TYPE_CFG1           0x5
-> > > +#define PCIE_ATU_TD_SHIFT            8
-> > >   #define PCIE_ATU_FUNC_NUM(pf)           ((pf) << 20)
-> > >   #define PCIE_ATU_CR2                 0x908
-> > >   #define PCIE_ATU_ENABLE                      BIT(31)
-> > > --
-> > > 2.17.1
-> > > 
+> Cc: Jason Gunthorpe <jgg@ziepe.ca>
+> Cc: Kees Cook <keescook@chromium.org>
+> Cc: Dan Williams <dan.j.williams@intel.com>
+> Cc: Andrew Morton <akpm@linux-foundation.org>
+> Cc: John Hubbard <jhubbard@nvidia.com>
+> Cc: Jérôme Glisse <jglisse@redhat.com>
+> Cc: Jan Kara <jack@suse.cz>
+> Cc: Dan Williams <dan.j.williams@intel.com>
+> Cc: linux-mm@kvack.org
+> Cc: linux-arm-kernel@lists.infradead.org
+> Cc: linux-samsung-soc@vger.kernel.org
+> Cc: linux-media@vger.kernel.org
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-pci@vger.kernel.org
+> Signed-off-by: Daniel Vetter <daniel.vetter@ffwll.ch>
+> --
+> v2: Improve commit message (Bjorn)
+> ---
+>  drivers/pci/proc.c | 5 +++++
+>  1 file changed, 5 insertions(+)
+> 
+> diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
+> index d35186b01d98..3a2f90beb4cb 100644
+> --- a/drivers/pci/proc.c
+> +++ b/drivers/pci/proc.c
+> @@ -274,6 +274,11 @@ static int proc_bus_pci_mmap(struct file *file, struct vm_area_struct *vma)
+>  		else
+>  			return -EINVAL;
+>  	}
+> +
+> +	if (dev->resource[i].flags & IORESOURCE_MEM &&
+> +	    iomem_is_exclusive(dev->resource[i].start))
+> +		return -EINVAL;
+> +
+>  	ret = pci_mmap_page_range(dev, i, vma,
+>  				  fpriv->mmap_state, write_combine);
+>  	if (ret < 0)
+> -- 
+> 2.28.0
+> 
