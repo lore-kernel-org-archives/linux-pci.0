@@ -2,102 +2,111 @@ Return-Path: <SRS0=8M4G=EJ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB91EC388F9
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Nov 2020 21:54:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B45D0C388F7
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Nov 2020 22:09:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6957B22403
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Nov 2020 21:54:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6439D21556
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Nov 2020 22:09:50 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel-com.20150623.gappssmtp.com header.i=@intel-com.20150623.gappssmtp.com header.b="T+/A6+J6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730994AbgKCVy4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 3 Nov 2020 16:54:56 -0500
-Received: from mga04.intel.com ([192.55.52.120]:64306 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730976AbgKCUpO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 3 Nov 2020 15:45:14 -0500
-IronPort-SDR: lK9uwlL9GEnHYmKUKjSsHnGNLiBtTiUjvJQjB9eFJl4d0TEDTt5ViHqUPn5rTuTo7WS85iorl/
- HWEaRBjdbqJg==
-X-IronPort-AV: E=McAfee;i="6000,8403,9794"; a="166533693"
-X-IronPort-AV: E=Sophos;i="5.77,448,1596524400"; 
-   d="scan'208";a="166533693"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Nov 2020 12:45:13 -0800
-IronPort-SDR: Kn7pr1SjtLIO7vgNmRTf7Nx2eS+7gOaG6Wq5WPGE/3s2MLVxIWPA9WRQAf+dmRunEBuCRwTgp2
- cBCnBM6rWN6Q==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.77,448,1596524400"; 
-   d="scan'208";a="527317813"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by fmsmga006.fm.intel.com with ESMTP; 03 Nov 2020 12:45:11 -0800
-Received: by black.fi.intel.com (Postfix, from userid 1003)
-        id BB5A512A; Tue,  3 Nov 2020 22:45:10 +0200 (EET)
-From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To:     linux-acpi@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-kernel@vger.kernel.org
-Cc:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kuppuswamy Sathyanarayanan 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: [PATCH v6 0/7] resource: introduce union(), intersection() API
-Date:   Tue,  3 Nov 2020 22:45:03 +0200
-Message-Id: <20201103204510.19154-1-andriy.shevchenko@linux.intel.com>
-X-Mailer: git-send-email 2.28.0
+        id S1730931AbgKCWJt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 3 Nov 2020 17:09:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34750 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730639AbgKCWJs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Nov 2020 17:09:48 -0500
+Received: from mail-ed1-x544.google.com (mail-ed1-x544.google.com [IPv6:2a00:1450:4864:20::544])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8020C061A48
+        for <linux-pci@vger.kernel.org>; Tue,  3 Nov 2020 14:09:47 -0800 (PST)
+Received: by mail-ed1-x544.google.com with SMTP id k9so20202177edo.5
+        for <linux-pci@vger.kernel.org>; Tue, 03 Nov 2020 14:09:47 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=WO1e+L++wPESWfr9nzOE54SCt7afrEsmsB9fEuoYvbI=;
+        b=T+/A6+J62VDvQMKYPtVg2CtBW5xawhHVZqWOERIyixTczN4MfytqxhoJQJOcs2790L
+         sj4ZJgiKijp3n63RZQtMlQ3es9rYo1weSDlwxcJm5Ag+lH4tps5I28z8LxvfwKmYtzJJ
+         /7ODS6RyMh7GrhkYAYzKWrZUgtjo08ShY2d8lFIlqSiQY56zEC4lJ332rH1cpQ0Jikk9
+         7t5YiToX4pGXA3cBIa8hr/lWANYeeU9HgWErCB0IiUFAAt6bSVSfurD3RBJy3BliIelp
+         YL3WFMt/TsTNhYtMeHyiS4JaRXQkTDS7Em1++6Jk3gmVGF0kwFa501K00ou4nDd0zP9v
+         pO8w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=WO1e+L++wPESWfr9nzOE54SCt7afrEsmsB9fEuoYvbI=;
+        b=NxmSWeHzlVeqTwaudBn2Z1wrOe9h38Q9UQLdZ0/iTVhhTjV7PFCycPXm1oR9AZay7x
+         ZqTsKFMiFpp/0SIFvg6cM5bvJcbGn+XpPAaNnPaUBzGWSwPfk8a5SF4xtDa4whYmvOQy
+         aLareIu6rkmZexQKzPWrM4271aiG0MHwcsxKFDUgohHgi868f4Pgd0mArjjSX9RYFbTY
+         KirbyEKzEzCUcInfKTxVqjQsTm9rV1SVvtzni1NYt0k5j8fbxglYRKqJgUfOoSEl9tLn
+         YcZqcM+Bzh9Hvu5BF2ggfaUFyvAIyON92WR9kqfdu863trQ6vYSfQY5DAmKfEnqkPwC6
+         anXg==
+X-Gm-Message-State: AOAM533DxqkWjnQ1FW1vAjbW8PGNfrZLnZCAR14e3hiyocrtvxYDR4Ps
+        7SHLzCyLaFUe/CCzHktUgEHJDnypPeAH3D8JRyoIVw==
+X-Google-Smtp-Source: ABdhPJz1NDE7PM2O7672wRWt1a0mL/+PL68eDdfq2Oj69hckQbQldL+V0lbGY3zFDyAcHIRlbnAQxlg/ZySh5dCl9Ns=
+X-Received: by 2002:aa7:d843:: with SMTP id f3mr24583081eds.354.1604441386651;
+ Tue, 03 Nov 2020 14:09:46 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20201030100815.2269-12-daniel.vetter@ffwll.ch> <20201103212840.GA266427@bjorn-Precision-5520>
+In-Reply-To: <20201103212840.GA266427@bjorn-Precision-5520>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Tue, 3 Nov 2020 14:09:35 -0800
+Message-ID: <CAPcyv4jCGxWG0opLv4VzBRk5iLwu6CRse4DwF-otWkfXoGWe6A@mail.gmail.com>
+Subject: Re: [PATCH v5 11/15] PCI: Obey iomem restrictions for procfs mmap
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Daniel Vetter <daniel.vetter@ffwll.ch>,
+        DRI Development <dri-devel@lists.freedesktop.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        KVM list <kvm@vger.kernel.org>, Linux MM <linux-mm@kvack.org>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        linux-samsung-soc <linux-samsung-soc@vger.kernel.org>,
+        "Linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+        Daniel Vetter <daniel.vetter@intel.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Kees Cook <keescook@chromium.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        John Hubbard <jhubbard@nvidia.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Jan Kara <jack@suse.cz>, Bjorn Helgaas <bhelgaas@google.com>,
+        Linux PCI <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Some users may want to use resource library to manage their own resources,
-besides existing users that open code union() and intersection()
-implementations.
+On Tue, Nov 3, 2020 at 1:28 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+> On Fri, Oct 30, 2020 at 11:08:11AM +0100, Daniel Vetter wrote:
+> > There's three ways to access PCI BARs from userspace: /dev/mem, sysfs
+> > files, and the old proc interface. Two check against
+> > iomem_is_exclusive, proc never did. And with CONFIG_IO_STRICT_DEVMEM,
+> > this starts to matter, since we don't want random userspace having
+> > access to PCI BARs while a driver is loaded and using it.
+> >
+> > Fix this by adding the same iomem_is_exclusive() check we already have
+> > on the sysfs side in pci_mmap_resource().
+> >
+> > References: 90a545e98126 ("restrict /dev/mem to idle io memory ranges")
+> > Signed-off-by: Daniel Vetter <daniel.vetter@intel.com>
+>
+> This is OK with me but it looks like IORESOURCE_EXCLUSIVE is currently
+> only used in a few places:
+>
+>   e1000_probe() calls pci_request_selected_regions_exclusive(),
+>   ne_pci_probe() calls pci_request_regions_exclusive(),
+>   vmbus_allocate_mmio() calls request_mem_region_exclusive()
+>
+> which raises the question of whether it's worth keeping
+> IORESOURCE_EXCLUSIVE at all.  I'm totally fine with removing it
+> completely.
 
-Provide a generic API for wider use.
-
-Changelog v6:
-- added missed tags
-
-Changelog v5:
-- added test cases (Greg)
-
-Changelog v4:
-- added Rb tag (Rafael)
-- Cc'ed to LKML and Greg (Rafael)
-
-Changelog v3:
-- rebased on top of v5.10-rc1
-- dropped upstreamed dependencies
-- added Rb tag to the last patch (Mika)
-
-Cc: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-
-Andy Shevchenko (7):
-  resource: Simplify region_intersects() by reducing conditionals
-  resource: Group resource_overlaps() with other inline helpers
-  resource: Introduce resource_union() for overlapping resources
-  resource: Introduce resource_intersection() for overlapping resources
-  resource: Add test cases for new resource API
-  PCI/ACPI: Replace open coded variant of resource_union()
-  ACPI: watchdog: Replace open coded variant of resource_union()
-
- drivers/acpi/acpi_watchdog.c |   6 +-
- drivers/acpi/pci_root.c      |   4 +-
- include/linux/ioport.h       |  34 ++++++--
- kernel/Makefile              |   1 +
- kernel/resource.c            |  10 +--
- kernel/resource_kunit.c      | 150 +++++++++++++++++++++++++++++++++++
- lib/Kconfig.debug            |  11 +++
- 7 files changed, 196 insertions(+), 20 deletions(-)
- create mode 100644 kernel/resource_kunit.c
-
--- 
-2.28.0
-
+Now that CONFIG_IO_STRICT_DEVMEM upgrades IORESOURCE_BUSY to
+IORESOURCE_EXCLUSIVE semantics the latter has lost its meaning so I'd
+be in favor of removing it as well.
