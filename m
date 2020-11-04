@@ -2,113 +2,117 @@ Return-Path: <SRS0=vddI=EK=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0749C388F9
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Nov 2020 16:53:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0571C2D0A3
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Nov 2020 16:53:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6AAED2072C
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Nov 2020 16:53:26 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=gmx.net header.i=@gmx.net header.b="Gsge5Zyc"
+	by mail.kernel.org (Postfix) with ESMTP id A7DF52074B
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Nov 2020 16:53:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1604508839;
+	bh=2AnCcDgCUl6mvSBgQ/DNDlhMjVmEBjE51au1El1BYuY=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=dHdwbc5J2DyJNp4vMUwn7HacLhDVxiRh8Kd1iPCXw8YMLK678/7OQSjUYoGPRO8xd
+	 24UiaBf5jOOB8ZlmCLXw8+GX4oN6x7YZ3b7ob4P1nnGfoFGQc6OsZ6zEWi2W6b6Qcu
+	 qc3VttfAhdLzHsViwyCqeqD7l2W4Ns9wX/u/jIsY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731548AbgKDQxZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 4 Nov 2020 11:53:25 -0500
-Received: from mout.gmx.net ([212.227.15.18]:43387 "EHLO mout.gmx.net"
+        id S1731639AbgKDQx6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 4 Nov 2020 11:53:58 -0500
+Received: from mail.kernel.org ([198.145.29.99]:50764 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731496AbgKDQtw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 4 Nov 2020 11:49:52 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.net;
-        s=badeba3b8450; t=1604508572;
-        bh=itzpSSQZMzHTOjFQwaEjOIn3NoQnKY3T93SB2E0JxlU=;
-        h=X-UI-Sender-Class:From:To:Cc:Subject:Date:In-Reply-To:References;
-        b=Gsge5Zyc+RmE8Sl9apnpDqbBJ8G8EAQ/AP19g1QVh5rXrd+ZejDwLdDUnxKeIAWr1
-         IOACslAO3KuY9TuywV5nYTeOmXvP2Z5YJNyhDqHKu/q1jSSiviPw6GSaZCV9uakHG9
-         VhZTPhfyNdY0FrgMQ+DAI4UVtZIPc4KzxShuNETw=
-X-UI-Sender-Class: 01bb95c1-4bf8-414a-932a-4f6e2808ef9c
-Received: from [185.75.74.195] ([185.75.74.195]) by web-mail.gmx.net
- (3c-app-gmx-bs02.server.lan [172.19.170.51]) (via HTTP); Wed, 4 Nov 2020
- 17:49:31 +0100
+        id S1731453AbgKDQxz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 4 Nov 2020 11:53:55 -0500
+Received: from localhost (230.sub-72-107-127.myvzw.com [72.107.127.230])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id E4EBE206FA;
+        Wed,  4 Nov 2020 16:53:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1604508835;
+        bh=2AnCcDgCUl6mvSBgQ/DNDlhMjVmEBjE51au1El1BYuY=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=ufgUb7fUuwShufuwOFMMiN+b9KhxmZPRjeacpooFT3rGtbvfpEYeTIDtR+8qbpybZ
+         ViNnVNVez79xeThoXkIgQLPNu1B162vS+R/Iws4UAxxNYredVESg2yvamgQAHpoXqg
+         QCtTCOr9+JeAYws//F1IQSU6/a4lEYyRNDJ8N6Ho=
+Date:   Wed, 4 Nov 2020 10:53:53 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jason Gunthorpe <jgg@ziepe.ca>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
+        iommu@lists.linux-foundation.org
+Subject: Re: [PATCH 3/5] PCI/p2p: remove the DMA_VIRT_OPS hacks
+Message-ID: <20201104165353.GA357989@bjorn-Precision-5520>
 MIME-Version: 1.0
-Message-ID: <trinity-1d7f8900-10db-40c0-a0aa-47bb99ed84cd-1604508571909@3c-app-gmx-bs02>
-From:   Frank Wunderlich <frank-w@public-files.de>
-To:     Thomas Gleixner <tglx@linutronix.de>
-Cc:     Marc Zyngier <maz@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>,
-        linux-mediatek@lists.infradead.org,
-        Frank Wunderlich <linux@fw-web.de>,
-        linux-kernel@vger.kernel.org,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Aw: Re:  Re: [PATCH] pci: mediatek: fix warning in msi.h
-Content-Type: text/plain; charset=UTF-8
-Date:   Wed, 4 Nov 2020 17:49:31 +0100
-Importance: normal
-Sensitivity: Normal
-In-Reply-To: <87o8ke7njb.fsf@nanos.tec.linutronix.de>
-References: <20201031140330.83768-1-linux@fw-web.de>
- <878sbm9icl.fsf@nanos.tec.linutronix.de>
- <EC02022C-64CF-4F4B-A0A2-215A0A49E826@public-files.de>
- <87lfflti8q.wl-maz@kernel.org> <1604253261.22363.0.camel@mtkswgap22>
- <trinity-9eb2a213-f877-4af3-87df-f76a9c093073-1604255233122@3c-app-gmx-bap08>
- <87k0v4u4uq.wl-maz@kernel.org> <87pn4w90hm.fsf@nanos.tec.linutronix.de>
- <df5565a2f1e821041c7c531ad52a3344@kernel.org>
- <87h7q791j8.fsf@nanos.tec.linutronix.de>
- <877dr38kt8.fsf@nanos.tec.linutronix.de>
- <901c5eb8bbaa3fe53ddc8f65917e48ef@kernel.org>
- <87o8ke7njb.fsf@nanos.tec.linutronix.de>
-X-UI-Message-Type: mail
-X-Priority: 3
-X-Provags-ID: V03:K1:ICfh3WtogdrpOnkT/gXuEFWIaM4DIXYnB6COgVA3DMs2B7BYKR0IimJCA1wNt80BnphrN
- b6RXx+FWw4J8CmDkM5SfE7XkSYj865O3iXpD8zOrKFKQQqApmFLgevMu7mlJT4rnIK9z9x2oZa2z
- 9DigQch4XDeQoGUPG2OqhId4i0Jnzsfy6wHJoNc+0Mforeye4AWbl52RfriMaCuKpmXFmI0VoUfd
- f2khjJaTHIqxyagSS2C02FdjMC/t0s1y+KM6EZ2dNDyPMNbs0472YDr+il/FD/BM742DBSYF69XY
- po=
-X-UI-Out-Filterresults: notjunk:1;V03:K0:o7DDce+FsRY=:fDyjahd9aVh+82I0GoJ23v
- JW5+QemSWiUMZJTMvMGE5axjm1sY0mpUNeNy2Ls20p1D41mAOaBH32Kbeb/my7WAj2pSslnKC
- WOaCrq2NBU0ha6lQDJY1cHo4SyOoRYMGeUabvOZSpx9+al3OjhsWw6Mris1ZSZ8lbJuKIIUMK
- KG+0TNWpKWfgLbdcVX3mMWfnQhujuKATPJKp2yAnLAOe/faUjQ0/sueVoNNYWPrapgyrKjS3V
- BjN8/WNf5716FWqhQQoSRvlq/CUNHcGH0GPAhs0dtpPYT5onSAZavK1GUem8V7jFSy02T33d9
- pcZuybC/8DRT5Uerg5CtZzO7nZovo8ywB/p6Qf/CDlogLdijHzmxkwW3RbJITA6hM52QoOd2G
- j8XSBWqQkzONvW3Rwo3zsV0dsj1HyfIqWu/k0B6FjYiI+Qbr88xrQcTmJE41nV61ke10wVeIh
- PY62GVe8ezVCfwXxmGUr7F/J+KPh9dHc7CEuuyW46jGj02eAJsWEMknFkvZkP4uOY3ZpIlDwc
- JuJjpAuNiPBJo+3S0xSWNO8TGdezBXupyMNf3W//PYGIQtcB+jejYmoHpPIz20AQOiylrxCcH
- qTa/iS9HJTi/Q=
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201104095052.1222754-4-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+s|PCI/p2p: remove|PCI/P2PDMA: Remove/
+to match history.
 
-> Gesendet: Dienstag, 03. November 2020 um 11:16 Uhr
-> Von: "Thomas Gleixner" <tglx@linutronix.de>
-> Any architecture which selects PCI_MSI_ARCH_FALLBACKS and does not have
-> irqdomain support runs into:
->
-> 	if (!d)
-> 		bus->bus_flags |=3D PCI_BUS_FLAGS_NO_MSI;
->
-> which in turn makes pci_msi_supported() return 0 and consequently makes
-> pci_enable_msi[x]() fail.
+On Wed, Nov 04, 2020 at 10:50:50AM +0100, Christoph Hellwig wrote:
+> Now that all users of dma_virt_ops are gone we can remove the workaround
+> for it in the PCIe peer to peer code.
 
-i'm not that deep into this, but just my thoughts...you are the experts :)
+s/PCIe/PCI/
+We went to some trouble to make P2PDMA work on conventional PCI as
+well as PCIe.
 
-checking for PCI_MSI_ARCH_FALLBACKS here does not help?
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-something like this:
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-#ifndef PCI_MSI_ARCH_FALLBACKS
-	if (!d)
-		bus->bus_flags |=3D PCI_BUS_FLAGS_NO_MSI;
-#endif
-
-imho pci_enable_msi[x]() does not do anything if there is no msi-support (=
-or does not get called), so maybe check the PCI_BUS_FLAGS_NO_MSI before th=
-e call (if this is inside core) or inside the enable-function (if called f=
-rom outside)....
-
-or is this the issue marc talkes about (called before flag is set)?
-
-regards Frank
-
+> ---
+>  drivers/pci/p2pdma.c | 20 --------------------
+>  1 file changed, 20 deletions(-)
+> 
+> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+> index de1c331dbed43f..b07018af53876c 100644
+> --- a/drivers/pci/p2pdma.c
+> +++ b/drivers/pci/p2pdma.c
+> @@ -556,15 +556,6 @@ int pci_p2pdma_distance_many(struct pci_dev *provider, struct device **clients,
+>  		return -1;
+>  
+>  	for (i = 0; i < num_clients; i++) {
+> -#ifdef CONFIG_DMA_VIRT_OPS
+> -		if (clients[i]->dma_ops == &dma_virt_ops) {
+> -			if (verbose)
+> -				dev_warn(clients[i],
+> -					 "cannot be used for peer-to-peer DMA because the driver makes use of dma_virt_ops\n");
+> -			return -1;
+> -		}
+> -#endif
+> -
+>  		pci_client = find_parent_pci_dev(clients[i]);
+>  		if (!pci_client) {
+>  			if (verbose)
+> @@ -837,17 +828,6 @@ static int __pci_p2pdma_map_sg(struct pci_p2pdma_pagemap *p2p_pgmap,
+>  	phys_addr_t paddr;
+>  	int i;
+>  
+> -	/*
+> -	 * p2pdma mappings are not compatible with devices that use
+> -	 * dma_virt_ops. If the upper layers do the right thing
+> -	 * this should never happen because it will be prevented
+> -	 * by the check in pci_p2pdma_distance_many()
+> -	 */
+> -#ifdef CONFIG_DMA_VIRT_OPS
+> -	if (WARN_ON_ONCE(dev->dma_ops == &dma_virt_ops))
+> -		return 0;
+> -#endif
+> -
+>  	for_each_sg(sg, s, nents, i) {
+>  		paddr = sg_phys(s);
+>  
+> -- 
+> 2.28.0
+> 
