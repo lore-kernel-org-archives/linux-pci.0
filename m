@@ -2,95 +2,120 @@ Return-Path: <SRS0=vddI=EK=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C393AC2D0A3
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Nov 2020 08:52:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BAEFAC55178
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Nov 2020 09:33:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 75CC5216C4
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Nov 2020 08:52:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 633522225B
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Nov 2020 09:33:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="pZrMuYJE"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="EQSmu7gH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728902AbgKDIwq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 4 Nov 2020 03:52:46 -0500
-Received: from hqnvemgate24.nvidia.com ([216.228.121.143]:2695 "EHLO
-        hqnvemgate24.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728886AbgKDIwp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2020 03:52:45 -0500
-Received: from hqmail.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate24.nvidia.com (using TLS: TLSv1.2, AES256-SHA)
-        id <B5fa26bdf0005>; Wed, 04 Nov 2020 00:52:47 -0800
-Received: from HQMAIL105.nvidia.com (172.20.187.12) by HQMAIL105.nvidia.com
- (172.20.187.12) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Wed, 4 Nov
- 2020 08:52:42 +0000
-Received: from vidyas-desktop.nvidia.com (10.124.1.5) by mail.nvidia.com
- (172.20.187.12) with Microsoft SMTP Server id 15.0.1473.3 via Frontend
- Transport; Wed, 4 Nov 2020 08:52:37 +0000
-From:   Vidya Sagar <vidyas@nvidia.com>
-To:     <lorenzo.pieralisi@arm.com>, <robh+dt@kernel.org>,
-        <bhelgaas@google.com>, <thierry.reding@gmail.com>,
-        <jonathanh@nvidia.com>, <amanharitsh123@gmail.com>,
-        <dinghao.liu@zju.edu.cn>, <kw@linux.com>
-CC:     <linux-pci@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <kthota@nvidia.com>,
-        <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>, <sagar.tv@gmail.com>
-Subject: [PATCH V3 5/5] PCI: tegra: Check return value of tegra_pcie_init_controller()
-Date:   Wed, 4 Nov 2020 14:20:18 +0530
-Message-ID: <20201104085018.13021-6-vidyas@nvidia.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20201104085018.13021-1-vidyas@nvidia.com>
-References: <20201104085018.13021-1-vidyas@nvidia.com>
-X-NVConfidentiality: public
+        id S1728623AbgKDJdw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 4 Nov 2020 04:33:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55348 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726691AbgKDJdu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2020 04:33:50 -0500
+Received: from mail-ed1-x52b.google.com (mail-ed1-x52b.google.com [IPv6:2a00:1450:4864:20::52b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7926BC0613D3
+        for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2020 01:33:49 -0800 (PST)
+Received: by mail-ed1-x52b.google.com with SMTP id a10so4517843edt.12
+        for <linux-pci@vger.kernel.org>; Wed, 04 Nov 2020 01:33:49 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=1DyDheOb7hdP2j6+U4rmaA8px4hw4FKnG8K+MWzcbCY=;
+        b=EQSmu7gHVfLkVF8VHKlfv0z9wC3WTiS8thx/WbFlnXuy03FTmdr6eI7gSMK+hKzlOX
+         vzXdLk5eTEGMKBtye7uzKns5a1uXsQk7lWH2DdYAG9+bYlF2w9/MZ2e6ljk/mYqzjheB
+         Olzmy9gyhEiX/6VLDcVwgs0Kuq+TF92bkOXzRshy5jkEtiac+3anQExlCRjj0lcuyk2l
+         bRBKsOEM6ACzPe9fg5WRTAtzBUk1JKwQIdm2COAEQToBI8cSMpnuMkDNNSdThGhdp8wA
+         0RIm6Pt8ng8j6NtVGkN8ALssajF5YOmP3ktUcTM6jdAydebyKA9Mcf7CzAgNYMJX6urQ
+         fvHw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=1DyDheOb7hdP2j6+U4rmaA8px4hw4FKnG8K+MWzcbCY=;
+        b=MiSdWo8g57QjHOYLQMRceOrHXRUmzcz/rdsnrD2/j3ZTWTW8tSqbH6che0AwEs0hqG
+         Rxqt8O4AAMsWvjbGlj5SgK9Y9hVJBMQ6VXqRyYnfV2eItJaoKqdtTMG1jyw9fdESMTbo
+         4uyZziyx/ax6N99dPo2kkl8EYBUmljKfPEfDGIBVlq18DZQdHWCl8D8mhiMatmP1udgn
+         ogIBt0rIA+IzxfppQa5mlgAMHXKodRA7nU0tbJMH4GQzR/9LyrkxTzz06OEAALvlnlzU
+         K9NcBaJTkuANqpG2GKYmf8BsjbGjJQeAmRbmT3fLAzLrTZ61tF8dJP3lhavYP9xbrnuh
+         TAyw==
+X-Gm-Message-State: AOAM533tbyBPr9xqnhq3ua9fkJEePr/QqF1W6mnD85FarVNeipZzjLkD
+        D3JZvKXza4zCtKz04Q6c4XjbKw==
+X-Google-Smtp-Source: ABdhPJxwJwBOkJVz8J2LWuNKj/Ohtfm5+UYk8BmI+7+MjrwC4ykaiVvXA9wdH6bYcYvQ5FP9G4l5OQ==
+X-Received: by 2002:aa7:da44:: with SMTP id w4mr14267958eds.131.1604482428113;
+        Wed, 04 Nov 2020 01:33:48 -0800 (PST)
+Received: from myrica ([2001:1715:4e26:a7e0:116c:c27a:3e7f:5eaf])
+        by smtp.gmail.com with ESMTPSA id b12sm726638edn.86.2020.11.04.01.33.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 04 Nov 2020 01:33:47 -0800 (PST)
+Date:   Wed, 4 Nov 2020 10:33:28 +0100
+From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
+To:     Al Stone <ahs3@redhat.com>
+Cc:     Auger Eric <eric.auger@redhat.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        iommu@lists.linux-foundation.org,
+        virtualization@lists.linux-foundation.org,
+        virtio-dev@lists.oasis-open.org, linux-pci@vger.kernel.org,
+        bhelgaas@google.com, jasowang@redhat.com, kevin.tian@intel.com,
+        sebastien.boeuf@intel.com, lorenzo.pieralisi@arm.com
+Subject: Re: [PATCH v3 0/6] Add virtio-iommu built-in topology
+Message-ID: <20201104093328.GA505400@myrica>
+References: <20200821131540.2801801-1-jean-philippe@linaro.org>
+ <ab2a1668-e40c-c8f0-b77b-abadeceb4b82@redhat.com>
+ <20200924045958-mutt-send-email-mst@kernel.org>
+ <20200924092129.GH27174@8bytes.org>
+ <20200924053159-mutt-send-email-mst@kernel.org>
+ <d54b674e-2626-fc73-d663-136573c32b8a@redhat.com>
+ <20201002182348.GO138842@redhat.com>
+ <e8a37837-30d0-d7cc-496a-df4c12fff1da@redhat.com>
+ <20201103200904.GA1557194@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1604479967; bh=n8XdfeCZduO7ogcyhJVAlYbsvTFqkbs1wknNZ3ixbf4=;
-        h=From:To:CC:Subject:Date:Message-ID:X-Mailer:In-Reply-To:
-         References:X-NVConfidentiality:MIME-Version:Content-Type;
-        b=pZrMuYJElTBvismIA6kjwVHxaFE7FOuOChV1MmIorPgM+RhqDiJy8iiv9KlR5oVNW
-         QylfQbhVrOJU/rAGAJ1+EfK4wzHIz1SnGUDFHuRQOnEd1rgytRVYZv0U5pkTh1fqGO
-         YqSCoHqVq6vEGSApK/hxHN434Qb2o0SCkKN/iN8L7/1lU8ThikxdcfB4mV/J8b+cIM
-         9pYpoI4Ti1QYh6P3JOfOb1IH75RfqD6Q3CdviNkTzHPrXkimf2zwZpynPowkKl0jaS
-         35nqtU/5psp54DQ6LwFO0K/aJSXJg2rylUVTcU0BoRn2Lrb+BbG0di9y1FUBPJhE/t
-         pK41dEitL4G3Q==
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201103200904.GA1557194@redhat.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The return value of tegra_pcie_init_controller() must be checked before
-PCIe link up check and registering debugfs entries subsequently as it
-doesn't make sense to do these when the controller initialization itself
-has failed.
+Hi Al,
 
-Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
----
-V3:
-* New patch in this series
+On Tue, Nov 03, 2020 at 01:09:04PM -0700, Al Stone wrote:
+> So, there are some questions about the VIOT definition and I just
+> don't know enough to be able to answer them.  One of the ASWG members
+> is trying to understand the semantics behind the subtables.
 
- drivers/pci/controller/dwc/pcie-tegra194.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+Thanks for the update. We dropped subtables a few versions ago, though, do
+you have the latest v8?
+https://jpbrucker.net/virtio-iommu/viot/viot-v8.pdf
 
-diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-index 9be10c8953df..8c08998b9ce1 100644
---- a/drivers/pci/controller/dwc/pcie-tegra194.c
-+++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-@@ -1579,7 +1579,11 @@ static int tegra_pcie_config_rp(struct tegra_pcie_dw *pcie)
- 		goto fail_pm_get_sync;
- 	}
- 
--	tegra_pcie_init_controller(pcie);
-+	ret = tegra_pcie_init_controller(pcie);
-+	if (ret < 0) {
-+		dev_err(dev, "Failed to initialize controller: %d\n", ret);
-+		goto fail_pm_get_sync;
-+	}
- 
- 	pcie->link_state = tegra_pcie_dw_link_up(&pcie->pci);
- 	if (!pcie->link_state) {
--- 
-2.17.1
+> Is there a particular set of people, or mailing lists, that I can
+> point to to get the questions answered?  Ideally it would be one
+> of the public lists where it has already been discussed, but an
+> individual would be fine, too.  No changes have been proposed, just
+> some questions asked.
 
+For a public list, I suggest iommu@lists.linux-foundation.org if we should
+pick only one (otherwise add virtualization@lists.linux-foundation.org and
+virtio-dev@lists.oasis-open.org). I'm happy to answer any question, and
+the folks on here are a good set to Cc:
+
+eric.auger@redhat.com
+jean-philippe@linaro.org
+joro@8bytes.org
+kevin.tian@intel.com
+lorenzo.pieralisi@arm.com
+mst@redhat.com
+sebastien.boeuf@intel.com
+
+Thanks,
+Jean
