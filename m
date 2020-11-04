@@ -2,28 +2,29 @@ Return-Path: <SRS0=vddI=EK=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4AA7C55178
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Nov 2020 01:58:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70B0EC55179
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Nov 2020 01:58:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 640442244C
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Nov 2020 01:58:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3C00E2242F
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Nov 2020 01:58:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730295AbgKDB6a (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 3 Nov 2020 20:58:30 -0500
-Received: from relmlor1.renesas.com ([210.160.252.171]:24332 "EHLO
-        relmlie5.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728301AbgKDB6a (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Nov 2020 20:58:30 -0500
+        id S1730511AbgKDB6c (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 3 Nov 2020 20:58:32 -0500
+Received: from relmlor2.renesas.com ([210.160.252.172]:11060 "EHLO
+        relmlie6.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1728301AbgKDB6b (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Nov 2020 20:58:31 -0500
 X-IronPort-AV: E=Sophos;i="5.77,449,1596466800"; 
-   d="scan'208";a="61594042"
+   d="scan'208";a="61377889"
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie5.idc.renesas.com with ESMTP; 04 Nov 2020 10:58:28 +0900
+  by relmlie6.idc.renesas.com with ESMTP; 04 Nov 2020 10:58:28 +0900
 Received: from localhost.localdomain (unknown [10.166.252.89])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 9B90A4151D43;
+        by relmlir6.idc.renesas.com (Postfix) with ESMTP id D9D914151C21;
         Wed,  4 Nov 2020 10:58:28 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     bhelgaas@google.com, marek.vasut+renesas@gmail.com,
@@ -31,48 +32,44 @@ To:     bhelgaas@google.com, marek.vasut+renesas@gmail.com,
 Cc:     prabhakar.mahadev-lad.rj@bp.renesas.com, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH v3 0/3] dt-bindings: PCI: rcar-pci-host: Convert bindings to json-schema
-Date:   Wed,  4 Nov 2020 10:58:13 +0900
-Message-Id: <1604455096-13923-1-git-send-email-yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v3 3/3] dt-bindings: PCI: rcar-pci-host: Document r8a774e1 bindings
+Date:   Wed,  4 Nov 2020 10:58:16 +0900
+Message-Id: <1604455096-13923-4-git-send-email-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1604455096-13923-1-git-send-email-yoshihiro.shimoda.uh@renesas.com>
+References: <1604455096-13923-1-git-send-email-yoshihiro.shimoda.uh@renesas.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Convert bindings of rcar-pci.txt to json-schema. Also, document
-r8a77965 and r8a774e1 to the yaml file.
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
 
-Changes from v2:
- - Fix the subjects of all patches which Bjorn pointed it out:
- https://patchwork.kernel.org/project/linux-renesas-soc/cover/1604035745-22095-1-git-send-email-yoshihiro.shimoda.uh@renesas.com/#23734117
- - Minor fix the description in the patch 3/3.
- https://patchwork.kernel.org/project/linux-renesas-soc/list/?series=373695
+Document the RZ/G2H (a.k.a. R8A774E1) SoC in the R-Car PCIe bingings.
 
-Changes from v1:
- - In patch 1/3
- -- Fix indentation which yamllint detects.
- -- Fix typo which checkpatch.pl detects.
- -- Add ref: pci-bus.yaml
- -- Remove some properties which the pci-bus.yaml defines.
- -- Use unevaluatedProperties instead of additionalProperties.
- - In patch 2/3
- -- Add Reviewed-by from Geert-san.
- https://patchwork.kernel.org/project/linux-renesas-soc/list/?series=371929
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Marian-Cristian Rotariu <marian-cristian.rotariu.rb@bp.renesas.com>
+Acked-by: Rob Herring <robh@kernel.org>
+Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+[shimoda: minor change the subject and description]
+Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+---
+ Documentation/devicetree/bindings/pci/rcar-pci-host.yaml | 1 +
+ 1 file changed, 1 insertion(+)
 
-
-Lad Prabhakar (1):
-  dt-bindings: PCI: rcar-pci-host: Document r8a774e1 bindings
-
-Yoshihiro Shimoda (2):
-  dt-bindings: PCI: rcar-pci-host: Convert bindings to json-schema
-  dt-bindings: PCI: rcar-pci-host: Document r8a77965 bindings
-
- .../devicetree/bindings/pci/rcar-pci-host.yaml     | 115 +++++++++++++++++++++
- Documentation/devicetree/bindings/pci/rcar-pci.txt |  72 -------------
- 2 files changed, 115 insertions(+), 72 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/rcar-pci-host.yaml
- delete mode 100644 Documentation/devicetree/bindings/pci/rcar-pci.txt
-
+diff --git a/Documentation/devicetree/bindings/pci/rcar-pci-host.yaml b/Documentation/devicetree/bindings/pci/rcar-pci-host.yaml
+index c93b0d1..4a2bcc01 100644
+--- a/Documentation/devicetree/bindings/pci/rcar-pci-host.yaml
++++ b/Documentation/devicetree/bindings/pci/rcar-pci-host.yaml
+@@ -31,6 +31,7 @@ properties:
+               - renesas,pcie-r8a774a1     # RZ/G2M
+               - renesas,pcie-r8a774b1     # RZ/G2N
+               - renesas,pcie-r8a774c0     # RZ/G2E
++              - renesas,pcie-r8a774e1     # RZ/G2H
+               - renesas,pcie-r8a7795      # R-Car H3
+               - renesas,pcie-r8a7796      # R-Car M3-W
+               - renesas,pcie-r8a77961     # R-Car M3-W+
 -- 
 2.7.4
 
