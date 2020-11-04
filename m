@@ -2,93 +2,114 @@ Return-Path: <SRS0=vddI=EK=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 770D7C4741F
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Nov 2020 16:54:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91B93C4741F
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Nov 2020 17:13:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1EC5D206FA
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Nov 2020 16:54:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1604508891;
-	bh=ArcQJwinIpORlAmkBGB/AAkFp/7wMyEXpZdR/3J4wBQ=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=x/PkcBCbWOHMkjzaXZlMwdUNjPL2QrL4nnQEIMHhPlQ/9CTDLZ0kAVXJMmU27cZJg
-	 PQDBmGz1RohJdFICJ1R/K039clC5TYiKv+oPrwa9k1Te85wcblF87Gd54jW4R4psbN
-	 ysa6h+lVb9RXXLuQfHguxooDUImFq2kHqxkwEpRU=
+	by mail.kernel.org (Postfix) with ESMTP id 4847F2075E
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Nov 2020 17:13:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731403AbgKDQyu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 4 Nov 2020 11:54:50 -0500
-Received: from mail.kernel.org ([198.145.29.99]:51400 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731255AbgKDQyt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 4 Nov 2020 11:54:49 -0500
-Received: from localhost (230.sub-72-107-127.myvzw.com [72.107.127.230])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id EC7782072C;
-        Wed,  4 Nov 2020 16:54:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1604508889;
-        bh=ArcQJwinIpORlAmkBGB/AAkFp/7wMyEXpZdR/3J4wBQ=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=A2dV6ftbFeL34zkMdFbtruZhBI1rmk5r4E50s63hTH493XEIMYiT1h5F49xpGnXOM
-         aiaZlQv4h/qyRD7jYsfpFqZ6bSRgipAJEIknQ1F5HZGFEREF8+Cyj+VjJ1fj/3OHMd
-         1/J1Z1wCrb4HIDVlpvH4cYELRmp+oQoKUPLF9nXo=
-Date:   Wed, 4 Nov 2020 10:54:47 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jason Gunthorpe <jgg@ziepe.ca>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
-        iommu@lists.linux-foundation.org
-Subject: Re: [PATCH 4/5] PCI/p2p: cleanup up __pci_p2pdma_map_sg a bit
-Message-ID: <20201104165447.GA358343@bjorn-Precision-5520>
+        id S1726793AbgKDRM6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 4 Nov 2020 12:12:58 -0500
+Received: from smtprelay0137.hostedemail.com ([216.40.44.137]:53192 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726746AbgKDRM6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2020 12:12:58 -0500
+Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
+        by smtprelay01.hostedemail.com (Postfix) with ESMTP id 59C52100E7B4A;
+        Wed,  4 Nov 2020 17:12:57 +0000 (UTC)
+X-Session-Marker: 6A6F6540706572636865732E636F6D
+X-HE-Tag: corn41_551230a272c2
+X-Filterd-Recvd-Size: 3173
+Received: from XPS-9350.home (unknown [47.151.133.149])
+        (Authenticated sender: joe@perches.com)
+        by omf16.hostedemail.com (Postfix) with ESMTPA;
+        Wed,  4 Nov 2020 17:12:55 +0000 (UTC)
+Message-ID: <57b77f3a36f56e2ae7ab8fe367865b5412d4e11f.camel@perches.com>
+Subject: Re: [PATCH] ACPI: Remove trailing whitespace
+From:   Joe Perches <joe@perches.com>
+To:     Maximilian Luz <luzmaximilian@gmail.com>,
+        Bjorn Helgaas <helgaas@kernel.org>
+Cc:     linux-acpi@vger.kernel.org,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date:   Wed, 04 Nov 2020 09:12:54 -0800
+In-Reply-To: <6d888eb0-bfc5-28ff-c62f-9e769f77bc1f@gmail.com>
+References: <20201103211259.GA265488@bjorn-Precision-5520>
+         <c92703e3-c964-b4a6-e3df-c4c0c28b44c1@gmail.com>
+         <6e392d099bd8aaba14223aa770361dbdeeab271b.camel@perches.com>
+         <6d888eb0-bfc5-28ff-c62f-9e769f77bc1f@gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+User-Agent: Evolution 3.38.1-1 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201104095052.1222754-5-hch@lst.de>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-s|PCI/p2p: cleanup up __pci_p2pdma_map_sg|PCI/P2PDMA: Cleanup up __pci_p2pdma_map_sg|
-to match history.
-
-On Wed, Nov 04, 2020 at 10:50:51AM +0100, Christoph Hellwig wrote:
-> Remove the pointless paddr variable that was only used once.
+On Wed, 2020-11-04 at 16:48 +0100, Maximilian Luz wrote:
+> On 11/4/20 6:13 AM, Joe Perches wrote:
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-> ---
->  drivers/pci/p2pdma.c | 5 +----
->  1 file changed, 1 insertion(+), 4 deletions(-)
+> [...]
 > 
-> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-> index b07018af53876c..afd792cc272832 100644
-> --- a/drivers/pci/p2pdma.c
-> +++ b/drivers/pci/p2pdma.c
-> @@ -825,13 +825,10 @@ static int __pci_p2pdma_map_sg(struct pci_p2pdma_pagemap *p2p_pgmap,
->  		struct device *dev, struct scatterlist *sg, int nents)
->  {
->  	struct scatterlist *s;
-> -	phys_addr_t paddr;
->  	int i;
->  
->  	for_each_sg(sg, s, nents, i) {
-> -		paddr = sg_phys(s);
-> -
-> -		s->dma_address = paddr - p2p_pgmap->bus_offset;
-> +		s->dma_address = sg_phys(s) - p2p_pgmap->bus_offset;
->  		sg_dma_len(s) = s->length;
->  	}
->  
-> -- 
-> 2.28.0
+> > > Yes. I scanned drivers/acpi for trailing whitespaces after I noticed a
+> > > couple of them. I did not explicitly scan for other stuff like spaces
+> > > where there should be tabs, mostly because I haven't found a quick and
+> > > reliable solution for that. I only noticed an inconsistent indentation
+> > > when committing, so I fixed that too.
+> > 
+> > You could try:
+> > 
+> > $ git ls-files -- 'drivers/acpi/*.[ch]' | \
+> >    xargs ./scripts/checkpatch.pl -f --fix-inplace --types=CODE_INDENT
 > 
+> Thanks, that indeed looks like a decent solution.
+> 
+> > Right now that produces:
+> > ---
+> 
+> [...]
+> 
+> > diff --git a/drivers/acpi/ac.c b/drivers/acpi/ac.c
+[]
+> > @@ -89,7 +89,7 @@ struct acpi_ac {
+> >   #define to_acpi_ac(x) power_supply_get_drvdata(x)
+> >   
+> > 
+> >   /* --------------------------------------------------------------------------
+> > -                               AC Adapter Management
+> > +			       AC Adapter Management
+> >      -------------------------------------------------------------------------- */
+> 
+> I'm not too sure about the comments, but I can find the time to look
+> over the output and adjust that if that's something you'd want me to do.
+
+Up to you.  I hardly looked at the output.
+
+I'd generally prefer to use a single line comment like
+
+/* AC Adapter Management */
+
+but I don't know how often that dashed block is used in ACPI.
+
+grep seems to show the texts are not correctly centered so it seems like
+it was done by hand and not that some automation tool was used to create
+those blocks.
+
+Maybe a separate patch could be done to change those if desired.
+But not by me.
+
+As far as I know, acpi was once autogenerated from a common source tree
+and whitespace changes were once frowned on, but maybe that's changed or
+or perhaps that's only for files in drivers/acpi/acpica/.  I don't know.
+
+https://acpica.org/downloads/linux
+
+cheers, Joe
+
+
