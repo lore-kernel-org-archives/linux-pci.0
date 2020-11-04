@@ -2,92 +2,128 @@ Return-Path: <SRS0=vddI=EK=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D0F8C2D0A3
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Nov 2020 16:46:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D808FC4742C
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Nov 2020 16:51:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A9E28206DB
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Nov 2020 16:46:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 88DEC206E3
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Nov 2020 16:51:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1604508411;
-	bh=8tGL6oAMB7wNHUqKWEHZkOjh160kXJWJi2X2a6dNbEQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=boyOO/ECvME6kaMQx2vAdR5kvhxjMTj2FwUQDeGp4DAXBYH43OWM9sK/u2Um6CRBX
-	 IWmzGb4IlOhcX4r9O5KV1ltblzxLI/iMKLzQJo1EkCVRbpOvt91TrbChi+50dp4Yae
-	 mcTKSHHGwjBYfnwnpUgHttXbu5jKpR/g/ayk1qMY=
+	s=default; t=1604508698;
+	bh=KzXcQsv6oXQiPT6pQbTFR35Ks2A09AmGg4NdOMxDZU4=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=tJWp6hc/SjsqQNaCBGfgzrfSqGgUOOFAg7HbkV/ZNdPMZp+Tf51ocN/NoU4r+Ef0f
+	 iGOj09Ukr3fzn91U8GXi1wG9taAw4gaPO2tcpMJw1IhpsuVnAJnnhmNO06Vw91cu/z
+	 96R4ky5C+r404oejubGCXYvuTjzxbyVXOS3Nhqq8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731377AbgKDQqv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 4 Nov 2020 11:46:51 -0500
-Received: from mail.kernel.org ([198.145.29.99]:44112 "EHLO mail.kernel.org"
+        id S1731836AbgKDQvf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 4 Nov 2020 11:51:35 -0500
+Received: from mail.kernel.org ([198.145.29.99]:47120 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730987AbgKDQqu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 4 Nov 2020 11:46:50 -0500
-Received: from pali.im (pali.im [31.31.79.79])
+        id S1731683AbgKDQuU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 4 Nov 2020 11:50:20 -0500
+Received: from localhost (230.sub-72-107-127.myvzw.com [72.107.127.230])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id CD6A0206CA;
-        Wed,  4 Nov 2020 16:46:49 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 01712206CA;
+        Wed,  4 Nov 2020 16:50:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1604508410;
-        bh=8tGL6oAMB7wNHUqKWEHZkOjh160kXJWJi2X2a6dNbEQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=hOgdTjs+nwzvdCfQagJ17N1ywbLm/ip4XjMB5SKjmGVacXB9WGZRdsYe8FHdQyPdf
-         vHNpC3mtnuUeXiozagw/6T4SaZxwTQRciQO+0b2ZF+53fkl69gGudVpfAJXdAsClWc
-         Tq8xDNYxuU4GSrtmbFC54Frj4gMkh1/H582iOvBw=
-Received: by pali.im (Postfix)
-        id 56D8A53E; Wed,  4 Nov 2020 17:46:47 +0100 (CET)
-Date:   Wed, 4 Nov 2020 17:46:47 +0100
-From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Yinghai Lu <yinghai@kernel.org>
-Subject: Re: PCI: Race condition in pci_create_sysfs_dev_files
-Message-ID: <20201104164647.pctgyk2cbhjcq65z@pali>
-References: <20200909112850.hbtgkvwqy2rlixst@pali>
- <20201006222222.GA3221382@bjorn-Precision-5520>
+        s=default; t=1604508619;
+        bh=KzXcQsv6oXQiPT6pQbTFR35Ks2A09AmGg4NdOMxDZU4=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=C3pX6cmo6q8mwyEj5GO30o1K3DmrMhjsd197OHFiySwAIRZVIm3gcmWDrE+eCPQYz
+         sPh4rcY/+zTADvqe8t10fQKgN6B/uva7r/Rm33jjbBhTlqD9gCI3SGCFFhZSFec0de
+         QvdkQtLCYpZ8r9E77lkRpGYf+6s0+xBDMYsFK0NQ=
+Date:   Wed, 4 Nov 2020 10:50:17 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Daniel Vetter <daniel.vetter@ffwll.ch>
+Cc:     Dan Williams <dan.j.williams@intel.com>,
+        DRI Development <dri-devel@lists.freedesktop.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        KVM list <kvm@vger.kernel.org>, Linux MM <linux-mm@kvack.org>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        linux-samsung-soc <linux-samsung-soc@vger.kernel.org>,
+        "Linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+        Daniel Vetter <daniel.vetter@intel.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Kees Cook <keescook@chromium.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        John Hubbard <jhubbard@nvidia.com>,
+        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+        Jan Kara <jack@suse.cz>, Bjorn Helgaas <bhelgaas@google.com>,
+        Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v5 11/15] PCI: Obey iomem restrictions for procfs mmap
+Message-ID: <20201104165017.GA352206@bjorn-Precision-5520>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201006222222.GA3221382@bjorn-Precision-5520>
-User-Agent: NeoMutt/20180716
+In-Reply-To: <CAKMK7uF0QjesaNs97N-G8cZkXuAmFgcmTfHvoCP94br_WVcV6Q@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tuesday 06 October 2020 17:22:22 Bjorn Helgaas wrote:
-> It's not obvious from the code why we need pci_sysfs_init(), but
-> Yinghai hinted [1] that we need to create sysfs after assigning
-> resources.  I experimented by removing pci_sysfs_init() and skipping
-> the ROM BAR sizing.  In that case, we create sysfs files in
-> pci_bus_add_device() and later assign space for the ROM BAR, so we
-> fail to create the "rom" sysfs file.
+On Wed, Nov 04, 2020 at 09:44:04AM +0100, Daniel Vetter wrote:
+> On Tue, Nov 3, 2020 at 11:09 PM Dan Williams <dan.j.williams@intel.com> wrote:
+> > On Tue, Nov 3, 2020 at 1:28 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > > On Fri, Oct 30, 2020 at 11:08:11AM +0100, Daniel Vetter wrote:
+> > > > There's three ways to access PCI BARs from userspace: /dev/mem, sysfs
+> > > > files, and the old proc interface. Two check against
+> > > > iomem_is_exclusive, proc never did. And with CONFIG_IO_STRICT_DEVMEM,
+> > > > this starts to matter, since we don't want random userspace having
+> > > > access to PCI BARs while a driver is loaded and using it.
+> > > >
+> > > > Fix this by adding the same iomem_is_exclusive() check we already have
+> > > > on the sysfs side in pci_mmap_resource().
+> > > >
+> > > > References: 90a545e98126 ("restrict /dev/mem to idle io memory ranges")
+> > > > Signed-off-by: Daniel Vetter <daniel.vetter@intel.com>
+> > >
+> > > This is OK with me but it looks like IORESOURCE_EXCLUSIVE is currently
+> > > only used in a few places:
+> > >
+> > >   e1000_probe() calls pci_request_selected_regions_exclusive(),
+> > >   ne_pci_probe() calls pci_request_regions_exclusive(),
+> > >   vmbus_allocate_mmio() calls request_mem_region_exclusive()
+> > >
+> > > which raises the question of whether it's worth keeping
+> > > IORESOURCE_EXCLUSIVE at all.  I'm totally fine with removing it
+> > > completely.
+> >
+> > Now that CONFIG_IO_STRICT_DEVMEM upgrades IORESOURCE_BUSY to
+> > IORESOURCE_EXCLUSIVE semantics the latter has lost its meaning so I'd
+> > be in favor of removing it as well.
 > 
-> The current solution to that is to delay the sysfs files until
-> pci_sysfs_init(), a late_initcall(), which runs after resource
-> assignments.  But I think it would be better if we could create the
-> sysfs file when we assign the BAR.  Then we could get rid of the
-> late_initcall() and that implicit ordering requirement.
-> 
-> But I haven't tried to code it up, so it's probably more complicated
-> than this.  I guess ideally we would assign all the resources before
-> pci_bus_add_device().  If we could do that, we could just remove
-> pci_sysfs_init() and everything would just work, but I think that's a
-> HUGE can of worms.
-> 
-> [1] https://lore.kernel.org/linux-pci/CAE9FiQWBXHgz-gWCmpWLaBOfQQJwtRZemV6Ut9GVw_KJ-dTGTA@mail.gmail.com/
+> Still has some value since it enforces exclusive access even if the
+> config isn't enabled, and iirc e1000 had some fun with userspace tools
+> clobbering the firmware and bricking the chip.
 
-I found out that pci_sysfs_init() function was introduced in kernel
-version 2.6.10 by this historic commit:
+There's *some* value; I'm just skeptical since only three drivers use
+it.
 
-https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/commit/?id=f6d553444da20cd1e44f2c4864c2d0c56c934e0a
+IORESOURCE_EXCLUSIVE is from e8de1481fd71 ("resource: allow MMIO
+exclusivity for device drivers"), and the commit message says this is
+only active when CONFIG_STRICT_DEVMEM is set.  I didn't check to see
+whether that's still true.
 
-So it was really due to PCI ROM BAR and accessing it from sysfs.
+That commit adds a bunch of wrappers and "__"-prefixed functions to
+pass the IORESOURCE_EXCLUSIVE flag around.  That's a fair bit of
+uglification for three drivers.
+
+> Another thing I kinda wondered, since pci maintainer is here: At least
+> in drivers/gpu I see very few drivers explicitly requestion regions
+> (this might be a historical artifact due to the shadow attach stuff
+> before we had real modesetting drivers). And pci core doesn't do that
+> either, even when a driver is bound. Is this intentional, or
+> should/could we do better? Since drivers work happily without
+> reserving regions I don't think "the drivers need to remember to do
+> this" will ever really work out well.
+
+You're right, many drivers don't call pci_request_regions().  Maybe we
+could do better, but I haven't looked into that recently.  There is a
+related note in Documentation/PCI/pci.rst that's been there for a long
+time (it refers to "pci_request_resources()", which has never existed
+AFAICT).  I'm certainly open to proposals.
