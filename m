@@ -2,82 +2,73 @@ Return-Path: <SRS0=slvM=EL=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 847C8C55178
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Nov 2020 22:36:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 085BEC388F7
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Nov 2020 23:00:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1CFD120735
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Nov 2020 22:36:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1604615777;
-	bh=G1zpSEvPhccEncX/O/6lbcDyzZakCJ4t31HpzqMdYJg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=Pb/lDj1OwiEuWgTGW3jCjEIJ85o+4V2UnnRjnu9z2Xyw9j6ZxvuJgcQekWznoQBuD
-	 uGzYzfBdGc+S1NsNQ/xAqJ3rQAqBArvlAoNOhkLCutfhPup95yks4kzqjq2umvEc3d
-	 n8AMnW3lZVG32piOWKf/fdXOLndNe2NeTKzYmQ+U=
+	by mail.kernel.org (Postfix) with ESMTP id 805DC20867
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Nov 2020 23:00:45 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="gHeFlHOn";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="TfHby8VV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732293AbgKEWgQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 5 Nov 2020 17:36:16 -0500
-Received: from mail-oi1-f194.google.com ([209.85.167.194]:38822 "EHLO
-        mail-oi1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726801AbgKEWgQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Nov 2020 17:36:16 -0500
-Received: by mail-oi1-f194.google.com with SMTP id 9so3404120oir.5;
-        Thu, 05 Nov 2020 14:36:15 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=9qoWQvVII2L+0j8buDT9IhzkPJRxJUA8gWcHIDv53Q4=;
-        b=jiMoy8JurtyRTKyGnj4U5MRG4ld5eDc2cCS7Li+6ScpfKAbovxW/CSqdJGRp9F4pG2
-         vLRznUwquHEAqGydaSxgRJ2MVA4avy5fMbJkfM3CzcWzLwszfjGPH6hP/XxOvQ+I1mv2
-         QbCrW87UlsPoprZR0CF5Z7Xp3ZJaTjiUSy1uhIXWx2XPJXF2ANTnlTbOoldnirkYeP7H
-         ak2Aq2SwBYUAumbgADKhLzpEm308VDL0IZOBHdu74IGytxGFHmV069Rfcie0UxVXNzqu
-         SaHUan7544YOKSGnnd3L/6MKr5raG+VuM1IL1em80ExK9dvzk1W5ulo3NynQzmbLExE6
-         EEVg==
-X-Gm-Message-State: AOAM532opphA+racaxWb24Euy6X6kHaa9Gr4Gk9b7MFqwN6G5FO5KKCs
-        st/olH5RPsh4vkwQFTqdlw==
-X-Google-Smtp-Source: ABdhPJzlrZICjyxFaWJgee7+PdIsmVskPlx9h0vChEBao3eeFBImqsNDGQnz1rh6/i04KvRS/+6sNQ==
-X-Received: by 2002:aca:ab81:: with SMTP id u123mr1089163oie.26.1604615775295;
-        Thu, 05 Nov 2020 14:36:15 -0800 (PST)
-Received: from xps15 (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.gmail.com with ESMTPSA id m11sm673702oop.6.2020.11.05.14.36.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Nov 2020 14:36:14 -0800 (PST)
-Received: (nullmailer pid 1926238 invoked by uid 1000);
-        Thu, 05 Nov 2020 22:36:14 -0000
-Date:   Thu, 5 Nov 2020 16:36:14 -0600
-From:   Rob Herring <robh@kernel.org>
-To:     Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Cc:     devicetree@vger.kernel.org, robh+dt@kernel.org,
-        linux-renesas-soc@vger.kernel.org, marek.vasut+renesas@gmail.com,
-        linux-pci@vger.kernel.org, bhelgaas@google.com,
-        prabhakar.mahadev-lad.rj@bp.renesas.com
-Subject: Re: [PATCH v3 2/3] dt-bindings: PCI: rcar-pci-host: Document
- r8a77965 bindings
-Message-ID: <20201105223614.GA1926149@bogus>
-References: <1604455096-13923-1-git-send-email-yoshihiro.shimoda.uh@renesas.com>
- <1604455096-13923-3-git-send-email-yoshihiro.shimoda.uh@renesas.com>
+        id S1732446AbgKEXAo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 5 Nov 2020 18:00:44 -0500
+Received: from Galois.linutronix.de ([193.142.43.55]:59654 "EHLO
+        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731860AbgKEXAn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Nov 2020 18:00:43 -0500
+From:   Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1604617241;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=tz7m6BIOMuQlyFY37lHCaVeHt6JeUnmsr+dDR5lFJn8=;
+        b=gHeFlHOna6JrJgqSnxi/s5nT3Ju0xpCJK5lZ3BFoV3zddqdHkEibo1fav4UT1JDXNvUoyC
+        Dca6+/Zp5erjKWLsZluVuHgkmRnBwvRinNTIh75zMlDWAOLFwlD/kcIIgt80g9ka7+1c0Q
+        GdJH1yVXGBBSC8fdUMockqHuwoXJEAMCS9uEOzUoJaK6hJmYT5tmbKuGWvQwu8vglLffTD
+        OQrTGEo+urMvkUqkKQr+fGVPEcuPgw3pP7ZT2wu29emTNyBdzFcDqpT+ottxtAd+4UGFee
+        lNEbNzUAWxq1cH5hDrPD7i/v433TAPCuxZdAUJctj5xxb60aIlR4r+/f03y3Yg==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1604617241;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=tz7m6BIOMuQlyFY37lHCaVeHt6JeUnmsr+dDR5lFJn8=;
+        b=TfHby8VV4W1CChr0voWomcazL5DKNae6yYtIu+oRcJgKYQzAhuxGqoH9/N1QOdYkbu0L+8
+        Yl++Nidf+A30u1Cw==
+To:     Marc Zyngier <maz@kernel.org>
+Cc:     Frank Wunderlich <frank-w@public-files.de>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        linux-mediatek@lists.infradead.org,
+        Frank Wunderlich <linux@fw-web.de>,
+        linux-kernel@vger.kernel.org,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: Aw: Re:  Re: [PATCH] pci: mediatek: fix warning in msi.h
+In-Reply-To: <074d057910c3e834f4bd58821e8583b1@kernel.org>
+References: <20201031140330.83768-1-linux@fw-web.de> <878sbm9icl.fsf@nanos.tec.linutronix.de> <EC02022C-64CF-4F4B-A0A2-215A0A49E826@public-files.de> <87lfflti8q.wl-maz@kernel.org> <1604253261.22363.0.camel@mtkswgap22> <trinity-9eb2a213-f877-4af3-87df-f76a9c093073-1604255233122@3c-app-gmx-bap08> <87k0v4u4uq.wl-maz@kernel.org> <87pn4w90hm.fsf@nanos.tec.linutronix.de> <df5565a2f1e821041c7c531ad52a3344@kernel.org> <87h7q791j8.fsf@nanos.tec.linutronix.de> <877dr38kt8.fsf@nanos.tec.linutronix.de> <901c5eb8bbaa3fe53ddc8f65917e48ef@kernel.org> <87o8ke7njb.fsf@nanos.tec.linutronix.de> <trinity-1d7f8900-10db-40c0-a0aa-47bb99ed84cd-1604508571909@3c-app-gmx-bs02> <87h7q4lnoz.fsf@nanos.tec.linutronix.de> <074d057910c3e834f4bd58821e8583b1@kernel.org>
+Date:   Fri, 06 Nov 2020 00:00:40 +0100
+Message-ID: <87blgbl887.fsf@nanos.tec.linutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1604455096-13923-3-git-send-email-yoshihiro.shimoda.uh@renesas.com>
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, 04 Nov 2020 10:58:15 +0900, Yoshihiro Shimoda wrote:
-> Document the R-Car M3-N (R8A77965) SoC in the R-Car PCIe bindings.
-> 
-> Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-> Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
-> ---
->  Documentation/devicetree/bindings/pci/rcar-pci-host.yaml | 1 +
->  1 file changed, 1 insertion(+)
-> 
+On Thu, Nov 05 2020 at 09:20, Marc Zyngier wrote:
+> On 2020-11-04 23:14, Thomas Gleixner wrote:
+>>  	/* Resource alignment requirements */
+>>  	resource_size_t (*align_resource)(struct pci_dev *dev,
+>
+> If that's the direction of travel, we also need something like this
+> for configuration where the host bridge relies on an external MSI block
+> that uses MSI domains (boot-tested in a GICv3 guest).
 
-Acked-by: Rob Herring <robh@kernel.org>
+Some more context would be helpful. Brain fails to decode the logic
+here.
+
