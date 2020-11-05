@@ -2,165 +2,130 @@ Return-Path: <SRS0=slvM=EL=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1D87C5517A
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Nov 2020 21:12:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 592E2C56202
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Nov 2020 21:12:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6C4F020728
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Nov 2020 21:12:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 04A942073A
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Nov 2020 21:12:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1604610725;
-	bh=VLyrmT1iH4Ei/KWYjhg08uJLNUrwetxL9NZY3GRcBNI=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=Ogrq+fZqVNr/Tq60vaVJRYuAFKyswpV1t2mvKcSxpOIE2NzV3pGvgCUsOzFKNdf5H
-	 WKtDkACRssnKmCLA2PAzbE8BMxQEg6iNQ3K2iY54qIQtJnSeuQQWUI7Ylp+QyLgtLY
-	 ju4NTlly4uvgWagCJWmNsJ7YHyeMN+BJ54CYIFoU=
+	s=default; t=1604610727;
+	bh=vY3miNEVovvOkRzH70eloiXwb1xnqIdTIFpauz5CLvo=;
+	h=From:Cc:Subject:Date:In-Reply-To:References:To:List-ID:From;
+	b=aL1HOu6iP1Z24iJK9E/uK7KgDkciKQhPt/4Ty8bqIcr5SYbqXRGCuo1FFA9AWvxWB
+	 ynUUwTM5HabZQx8LWP4FQHkhqzCTacu+cKGTrDVs+GOZFdMpvnYh2dJPznhTiXPz/v
+	 p/L+ue0BkMolvYP48Qt6wk1VkZTSIRBQeNYLQTlY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730973AbgKEVME (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 5 Nov 2020 16:12:04 -0500
-Received: from mail-ot1-f66.google.com ([209.85.210.66]:37072 "EHLO
-        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726729AbgKEVME (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Nov 2020 16:12:04 -0500
-Received: by mail-ot1-f66.google.com with SMTP id l36so2784555ota.4;
-        Thu, 05 Nov 2020 13:12:03 -0800 (PST)
+        id S1732257AbgKEVMG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 5 Nov 2020 16:12:06 -0500
+Received: from mail-oi1-f196.google.com ([209.85.167.196]:37787 "EHLO
+        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726729AbgKEVMG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Nov 2020 16:12:06 -0500
+Received: by mail-oi1-f196.google.com with SMTP id m17so3188098oie.4
+        for <linux-pci@vger.kernel.org>; Thu, 05 Nov 2020 13:12:05 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=6kX9EfPGIe+vgEipGeuVSOOPuy47rKZgDC38PEky6/I=;
-        b=CrRfm9C5yK84aNS9TNuLdEnYRU0jVjTMmVteuSPDoRqnawZbMBmL2GwfLVFggx2p5f
-         3HV1iTZgxGbna50RyNsTwPQTPaTns0NK6EOQ4Gs12Y9RiduJvGNp72W1omqfnlmlWjdC
-         PBxAU9Mnjangp50Lb6y/XTaNYgQI+GN1na+Ep6sZnSoun0wsUG+sad5y31N9/6o7nrrQ
-         B2YrWxWbe68wbslxqHJibKXOAilgKlD7zHtSAl2egXJv4HfFg6ZcOIirkplgaYlPtda3
-         rV4RKHAf73aLI2pWBFCuETcqCmY3hEPe+k4n3hWqYr1QG+x7qncx5ATNuHLumdy488A8
-         gpZQ==
-X-Gm-Message-State: AOAM533JSSiLT+yYKOUVl1Kfv4Ie0Q5mqoDMNmZR+fo2v6qpMVAlYum2
-        P4ffGjTvK3tSNWticWi7fw==
-X-Google-Smtp-Source: ABdhPJxfRm6a7WlZFra36M/W0cF8B4tklW/+2/U/J4e/fwp/StQ3JtLqn3HUrYnVIqGDvSo8N+eI0w==
-X-Received: by 2002:a05:6830:22c9:: with SMTP id q9mr3230515otc.48.1604610722735;
-        Thu, 05 Nov 2020 13:12:02 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=ZQyia8yFxJFo/T6o8CYQ5VyHneaAbbvX2dVIUGSCMQQ=;
+        b=a40U9rrhDA+P7B96epW8sb4Xf36OEJ89cqzudeqCezRBTfGpzI7luo9Y6ftJkZ+ClK
+         S+Wye4cysk9Ou5nUgPCtSrDOjs3shYPMgjPSdVXfcj+TtLpVHQFFCbLdmhM3rIh5X6Io
+         y+K/tGJntp+xI1pTLpUe6PbT3QSFAjnKmYWCEvw1uAdFNghCBk7suS0QClUNzeqNqM9o
+         qK/H0a2lKy17V/t3Q70nipdpE4H1Ex8BbpZkWnpVoUpcDK+t/K+kwzyGmplNh+6O+tHQ
+         CG9SAiDeSiKaui28UlV+ckd+QAgaZl1U1peSkqg4W3Jw3mcLjsggfs0vN+fqiEBYNTi7
+         2WVw==
+X-Gm-Message-State: AOAM531Q47fM70yTfQWOg7fBKWiKfTcoSE/GuwLNDZrN2IXCjmix4Csg
+        Feg2GQdurb50RsoAyb08a2EE1ZGZUpY4
+X-Google-Smtp-Source: ABdhPJw4E9Q1ELWOUJff4xH2dQ9+7FXQC6EFAPgit0ROAMaO991OoT3yN9MtRny4Lpbt4KvLBiGP1A==
+X-Received: by 2002:aca:4849:: with SMTP id v70mr890526oia.103.1604610725035;
+        Thu, 05 Nov 2020 13:12:05 -0800 (PST)
 Received: from xps15.herring.priv (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.googlemail.com with ESMTPSA id z19sm622549ooi.32.2020.11.05.13.12.00
+        by smtp.googlemail.com with ESMTPSA id z19sm622549ooi.32.2020.11.05.13.12.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Nov 2020 13:12:01 -0800 (PST)
+        Thu, 05 Nov 2020 13:12:04 -0800 (PST)
 From:   Rob Herring <robh@kernel.org>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Andy Gross <agross@kernel.org>,
-        Binghui Wang <wangbinghui@hisilicon.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Fabio Estevam <festevam@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Jerome Brunet <jbrunet@baylibre.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Jonathan Chocron <jonnyc@amazon.com>,
-        Jonathan Hunter <jonathanh@nvidia.com>,
-        Kevin Hilman <khilman@baylibre.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        Kukjin Kim <kgene@kernel.org>,
-        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
-        linux-amlogic@lists.infradead.org, linux-arm-kernel@axis.com,
-        linux-arm-msm@vger.kernel.org, linux-omap@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-samsung-soc@vger.kernel.org,
-        linux-tegra@vger.kernel.org, Lucas Stach <l.stach@pengutronix.de>,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        Masahiro Yamada <yamada.masahiro@socionext.com>,
-        Minghuan Lian <minghuan.Lian@nxp.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Neil Armstrong <narmstrong@baylibre.com>,
-        NXP Linux Team <linux-imx@nxp.com>,
-        Pengutronix Kernel Team <kernel@pengutronix.de>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Roy Zang <roy.zang@nxp.com>,
-        Sascha Hauer <s.hauer@pengutronix.de>,
-        Shawn Guo <shawnguo@kernel.org>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        Yue Wang <yue.wang@Amlogic.com>,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        Vidya Sagar <vidyas@nvidia.com>
-Subject: [PATCH v2 00/16] PCI: dwc: Another round of clean-ups
-Date:   Thu,  5 Nov 2020 15:11:43 -0600
-Message-Id: <20201105211159.1814485-1-robh@kernel.org>
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v2 02/16] PCI: dwc/intel-gw: Move ATU offset out of driver match data
+Date:   Thu,  5 Nov 2020 15:11:45 -0600
+Message-Id: <20201105211159.1814485-3-robh@kernel.org>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20201105211159.1814485-1-robh@kernel.org>
+References: <20201105211159.1814485-1-robh@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+To:     unlisted-recipients:; (no To-header on input)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Here's another batch of DWC PCI host refactoring. This series primarily
-moves more of the MSI, link up, and resource handling to the core
-code. Beyond a couple of minor fixes, new in this version is runtime
-detection of iATU regions instead of using DT properties.
+The ATU offset should be a register range in DT called 'atu', not driver
+match data. Any future platforms with a different ATU offset should add
+it to their DT.
 
-No doubt I've probably broken something. Please test. I've run this thru
-kernelci and checked boards with DWC PCI which currently is just
-Layerscape boards (hint: add boards and/or enable PCI). A git branch is
-here[1].
+This is also in preparation to do DBI resource setup in the core DWC
+code, so let's move setting atu_base later in intel_pcie_rc_setup().
 
-This is dependent on "PCI: dwc: Restore ATU memory resource setup to use
-last entry" which will be in v5.10-rc3.
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Rob Herring <robh@kernel.org>
+---
+ drivers/pci/controller/dwc/pcie-intel-gw.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-Rob
-
-[1] git://git.kernel.org/pub/scm/linux/kernel/git/robh/linux.git pci-more-dwc-cleanup
-
-Rob Herring (16):
-  PCI: dwc: Support multiple ATU memory regions
-  PCI: dwc/intel-gw: Move ATU offset out of driver match data
-  PCI: dwc: Move "dbi", "dbi2", and "addr_space" resource setup into
-    common code
-  PCI: dwc/intel-gw: Remove some unneeded function wrappers
-  PCI: dwc: Ensure all outbound ATU windows are reset
-  PCI: dwc/dra7xx: Use the common MSI irq_chip
-  PCI: dwc: Drop the .set_num_vectors() host op
-  PCI: dwc: Move MSI interrupt setup into DWC common code
-  PCI: dwc: Rework MSI initialization
-  PCI: dwc: Move link handling into common code
-  PCI: dwc: Move dw_pcie_msi_init() into core
-  PCI: dwc: Move dw_pcie_setup_rc() to DWC common code
-  PCI: dwc: Remove unnecessary wrappers around dw_pcie_host_init()
-  Revert "PCI: dwc/keystone: Drop duplicated 'num-viewport'"
-  PCI: dwc: Move inbound and outbound windows to common struct
-  PCI: dwc: Detect number of iATU windows
-
- drivers/pci/controller/dwc/pci-dra7xx.c       | 141 +-----------------
- drivers/pci/controller/dwc/pci-exynos.c       |  50 ++-----
- drivers/pci/controller/dwc/pci-imx6.c         |  39 +----
- drivers/pci/controller/dwc/pci-keystone.c     |  79 ++--------
- .../pci/controller/dwc/pci-layerscape-ep.c    |  37 +----
- drivers/pci/controller/dwc/pci-layerscape.c   |  67 +--------
- drivers/pci/controller/dwc/pci-meson.c        |  53 ++-----
- drivers/pci/controller/dwc/pcie-al.c          |  29 +---
- drivers/pci/controller/dwc/pcie-armada8k.c    |  37 ++---
- drivers/pci/controller/dwc/pcie-artpec6.c     |  76 +---------
- .../pci/controller/dwc/pcie-designware-ep.c   |  58 +++----
- .../pci/controller/dwc/pcie-designware-host.c | 139 ++++++++++-------
- .../pci/controller/dwc/pcie-designware-plat.c |  70 +--------
- drivers/pci/controller/dwc/pcie-designware.c  |  93 +++++++++++-
- drivers/pci/controller/dwc/pcie-designware.h  |  24 +--
- drivers/pci/controller/dwc/pcie-histb.c       |  37 ++---
- drivers/pci/controller/dwc/pcie-intel-gw.c    |  67 ++-------
- drivers/pci/controller/dwc/pcie-kirin.c       |  62 +-------
- drivers/pci/controller/dwc/pcie-qcom.c        |  38 +----
- drivers/pci/controller/dwc/pcie-spear13xx.c   |  62 +++-----
- drivers/pci/controller/dwc/pcie-tegra194.c    |  41 +----
- drivers/pci/controller/dwc/pcie-uniphier-ep.c |  38 +----
- drivers/pci/controller/dwc/pcie-uniphier.c    |  51 +------
- 23 files changed, 356 insertions(+), 1032 deletions(-)
-
---
+diff --git a/drivers/pci/controller/dwc/pcie-intel-gw.c b/drivers/pci/controller/dwc/pcie-intel-gw.c
+index 5650cb78acba..77ef88333115 100644
+--- a/drivers/pci/controller/dwc/pcie-intel-gw.c
++++ b/drivers/pci/controller/dwc/pcie-intel-gw.c
+@@ -58,7 +58,6 @@
+ 
+ struct intel_pcie_soc {
+ 	unsigned int	pcie_ver;
+-	unsigned int	pcie_atu_offset;
+ 	u32		num_viewport;
+ };
+ 
+@@ -155,11 +154,15 @@ static void intel_pcie_init_n_fts(struct dw_pcie *pci)
+ 
+ static void intel_pcie_rc_setup(struct intel_pcie_port *lpp)
+ {
++	struct dw_pcie *pci = &lpp->pci;
++
++	pci->atu_base = pci->dbi_base + 0xC0000;
++
+ 	intel_pcie_ltssm_disable(lpp);
+ 	intel_pcie_link_setup(lpp);
+-	intel_pcie_init_n_fts(&lpp->pci);
+-	dw_pcie_setup_rc(&lpp->pci.pp);
+-	dw_pcie_upconfig_setup(&lpp->pci);
++	intel_pcie_init_n_fts(pci);
++	dw_pcie_setup_rc(&pci->pp);
++	dw_pcie_upconfig_setup(pci);
+ }
+ 
+ static int intel_pcie_ep_rst_init(struct intel_pcie_port *lpp)
+@@ -425,7 +428,6 @@ static const struct dw_pcie_host_ops intel_pcie_dw_ops = {
+ 
+ static const struct intel_pcie_soc pcie_data = {
+ 	.pcie_ver =		0x520A,
+-	.pcie_atu_offset =	0xC0000,
+ 	.num_viewport =		3,
+ };
+ 
+@@ -461,7 +463,6 @@ static int intel_pcie_probe(struct platform_device *pdev)
+ 
+ 	pci->ops = &intel_pcie_ops;
+ 	pci->version = data->pcie_ver;
+-	pci->atu_base = pci->dbi_base + data->pcie_atu_offset;
+ 	pp->ops = &intel_pcie_dw_ops;
+ 
+ 	ret = dw_pcie_host_init(pp);
+-- 
 2.25.1
+
