@@ -4,78 +4,99 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B101FC4741F
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Nov 2020 18:06:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E830C55178
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Nov 2020 18:06:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3F26220936
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Nov 2020 18:06:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 296552151B
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Nov 2020 18:06:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728523AbgKESGs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 5 Nov 2020 13:06:48 -0500
-Received: from mga05.intel.com ([192.55.52.43]:28684 "EHLO mga05.intel.com"
+        id S1730973AbgKESGu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 5 Nov 2020 13:06:50 -0500
+Received: from mga14.intel.com ([192.55.52.115]:30197 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725862AbgKESGs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 5 Nov 2020 13:06:48 -0500
-IronPort-SDR: LqpQtIhIr/Etz69LhYiesmJA3VZ17ATZzhZGUNl/iVlzPNuWa468SRCqWRSC2471r1wGXCut4u
- AnaWSLL2IeGQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9796"; a="254138495"
+        id S1725862AbgKESGu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 5 Nov 2020 13:06:50 -0500
+IronPort-SDR: wbovFjzNNH+WyBZA7LQAAl122rRwzLh6P5ddc7kxRopL/tvc5JufX8ZUF8caZZYP/1ZDcLUF2N
+ gKoVpOVwt3Gw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9796"; a="168651704"
 X-IronPort-AV: E=Sophos;i="5.77,454,1596524400"; 
-   d="scan'208";a="254138495"
+   d="scan'208";a="168651704"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Nov 2020 10:06:47 -0800
-IronPort-SDR: HFbDWWUYKKu2BPtEyB/CyyrNTeHoA6y9eTOMZjFeKolSt2AUmHHpKqem+7T10fxBo4lWCN+JRB
- QhCapuagznsw==
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Nov 2020 10:06:49 -0800
+IronPort-SDR: TxdvLmJb7meR0XeBoC5g+PgJkpn6AENMe8P8XtSkC7QucRO6WSClaj/uTj/87kjzXHkIbLziye
+ sd5cKdhlZr3g==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.77,454,1596524400"; 
-   d="scan'208";a="528058222"
+   d="scan'208";a="326111687"
 Received: from black.fi.intel.com ([10.237.72.28])
-  by fmsmga006.fm.intel.com with ESMTP; 05 Nov 2020 10:06:46 -0800
+  by orsmga006.jf.intel.com with ESMTP; 05 Nov 2020 10:06:47 -0800
 Received: by black.fi.intel.com (Postfix, from userid 1003)
-        id A765A213; Thu,  5 Nov 2020 20:06:45 +0200 (EET)
+        id 9EE0929A; Thu,  5 Nov 2020 20:06:45 +0200 (EET)
 From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
         johan@kernel.org, linux-usb@vger.kernel.org
-Cc:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1 2/2] PCI: Use predefined Pericom vendor ID
-Date:   Thu,  5 Nov 2020 20:06:44 +0200
-Message-Id: <20201105180644.42862-2-andriy.shevchenko@linux.intel.com>
+Cc:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        alberto.vignani@fastwebnet.it
+Subject: [PATCH v1 1/2] PCI: Disable MSI for Pericom PCIe-USB adapter
+Date:   Thu,  5 Nov 2020 20:06:43 +0200
+Message-Id: <20201105180644.42862-1-andriy.shevchenko@linux.intel.com>
 X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20201105180644.42862-1-andriy.shevchenko@linux.intel.com>
-References: <20201105180644.42862-1-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Pericom has predefined vendor ID, use it instead of hard coded value.
+Pericom PCIe-USB adapter ambiguously advertises MSI, but documentation says
+"The MSI Function is not implemented on this device." in the chapters 7.3.27,
+7.3.29-7.3.31.
 
+Fixes: 306c54d0edb6 ("usb: hcd: Try MSI interrupts on PCI devices")
+Datasheet: https://www.diodes.com/assets/Datasheets/PI7C9X440SL.pdf
+Reported-by: alberto.vignani@fastwebnet.it
 Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/pci/quirks.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/pci/quirks.c | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 7df7ae50618c..6fd5ce08d027 100644
+index f70692ac79c5..7df7ae50618c 100644
 --- a/drivers/pci/quirks.c
 +++ b/drivers/pci/quirks.c
-@@ -2356,9 +2356,9 @@ static void quirk_enable_clear_retrain_link(struct pci_dev *dev)
- 	dev->clear_retrain_link = 1;
- 	pci_info(dev, "Enable PCIe Retrain Link quirk\n");
- }
--DECLARE_PCI_FIXUP_HEADER(0x12d8, 0xe110, quirk_enable_clear_retrain_link);
--DECLARE_PCI_FIXUP_HEADER(0x12d8, 0xe111, quirk_enable_clear_retrain_link);
--DECLARE_PCI_FIXUP_HEADER(0x12d8, 0xe130, quirk_enable_clear_retrain_link);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_PERICOM, 0xe110, quirk_enable_clear_retrain_link);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_PERICOM, 0xe111, quirk_enable_clear_retrain_link);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_PERICOM, 0xe130, quirk_enable_clear_retrain_link);
+@@ -5567,17 +5567,25 @@ static void pci_fixup_no_d0_pme(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ASMEDIA, 0x2142, pci_fixup_no_d0_pme);
  
- static void fixup_rev1_53c810(struct pci_dev *dev)
+ /*
+- * Device [12d8:0x400e] and [12d8:0x400f]
++ * Device 12d8:0x400e [OHCI] and 12d8:0x400f [EHCI]
++ *
+  * These devices advertise PME# support in all power states but don't
+  * reliably assert it.
++ *
++ * These devices ambiguously advertise MSI, but documentation (PI7C9X440SL.pdf)
++ * says "The MSI Function is not implemented on this device." in the chapters
++ * 7.3.27, 7.3.29-7.3.31.
+  */
+-static void pci_fixup_no_pme(struct pci_dev *dev)
++static void pci_fixup_no_msi_no_pme(struct pci_dev *dev)
+ {
++	pci_info(dev, "The MSI Function is not implemented on this device, disabling it\n");
++	dev->no_msi = 1;
++
+ 	pci_info(dev, "PME# is unreliable, disabling it\n");
+ 	dev->pme_support = 0;
+ }
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_PERICOM, 0x400e, pci_fixup_no_pme);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_PERICOM, 0x400f, pci_fixup_no_pme);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_PERICOM, 0x400e, pci_fixup_no_msi_no_pme);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_PERICOM, 0x400f, pci_fixup_no_msi_no_pme);
+ 
+ static void apex_pci_fixup_class(struct pci_dev *pdev)
  {
 -- 
 2.28.0
