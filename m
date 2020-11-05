@@ -2,110 +2,81 @@ Return-Path: <SRS0=slvM=EL=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69998C4741F
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Nov 2020 17:58:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B101FC4741F
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Nov 2020 18:06:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 096592074B
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Nov 2020 17:58:18 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="E1HBlRXY"
+	by mail.kernel.org (Postfix) with ESMTP id 3F26220936
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Nov 2020 18:06:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725998AbgKER6S (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 5 Nov 2020 12:58:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49256 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726214AbgKER6S (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Nov 2020 12:58:18 -0500
-Received: from mail-qk1-x744.google.com (mail-qk1-x744.google.com [IPv6:2607:f8b0:4864:20::744])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14539C0613D2
-        for <linux-pci@vger.kernel.org>; Thu,  5 Nov 2020 09:58:18 -0800 (PST)
-Received: by mail-qk1-x744.google.com with SMTP id 140so2015229qko.2
-        for <linux-pci@vger.kernel.org>; Thu, 05 Nov 2020 09:58:18 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=IV2pMAD0GDkCc858XzaHv7E4h3K+d+uW6Iv2k0uw7L8=;
-        b=E1HBlRXYwbDvEdNlW4RmkR7rTF1T1GLQXH1l6KDVxZadZr6pW2rmQlTxGBBVRuROLf
-         yi3XZGVa7/ZfRjpI2YW5sUs3BbknwOQL2gGRoLqZixEj7lh7JDdZTYjcQT0QxDvXCqYv
-         d8sQLyr8J1r5mlty6l39ypIuuYAhvrht+miISyAhXZWienxSWr5xZ6xhY/UwYYExZVk4
-         eUnzv/UqYLRYKEPSxdVPsxZezSeeMmKqUM9YfPkKpT+W2w85lrT0Jo8bmeK2rUn3xAqI
-         QDyxBcvY8IOa+RqgsRlDZnjd8jh+EtbKJWHLeljDmllAoV2ZNTd+c5g8cxbbZp2QWdf1
-         8Spw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=IV2pMAD0GDkCc858XzaHv7E4h3K+d+uW6Iv2k0uw7L8=;
-        b=BJRqmWiI0OthcMDni7Sq0NU6ohbeTeWsXNoCu1u4ZRFr1ZdV/J4J1HrKHTB3sMRWm2
-         yBt1mY5MjRnd0eFjYlbCE2PR6+mbdZnlBZt0oxEFqr6FskylNWDqm7v2sHquP5Ywa2jI
-         IhR5846jxkfDJMx3Iru/AXm9LtVATuhioo7dnZ11yIwIJxNK2AwIO06cixNaKZdvm8bn
-         KTmY6iUZljxlwLGy2Cz4ftFcH7pBR45bJkYlJ8+yQHLsRsxFke6Bq6fLmzJeoRuAt5GQ
-         5gacm8MYoIPu4FhhJoJpSMoEGvICHqLV+WCbXF6Qch89j8o1NdTAq7URiuLKst/kNSdI
-         RUzA==
-X-Gm-Message-State: AOAM533RAcbR9tSvvGyu+EDItucbtgfqZCI6N08Y+cUXscwDzbLMfBO5
-        fj8faiidn75D9ZD7p+6+L1B0mQ==
-X-Google-Smtp-Source: ABdhPJxiXODJ6wdpxteKHXxL3pwnTfgdrXuumCF525zWmopkS6fq/JQpD8tKfMhxXjHU8eEOclMa9A==
-X-Received: by 2002:a05:620a:a09:: with SMTP id i9mr3033099qka.119.1604599097354;
-        Thu, 05 Nov 2020 09:58:17 -0800 (PST)
-Received: from ziepe.ca (hlfxns017vw-156-34-48-30.dhcp-dynamic.fibreop.ns.bellaliant.net. [156.34.48.30])
-        by smtp.gmail.com with ESMTPSA id f1sm1246044qtf.68.2020.11.05.09.58.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Nov 2020 09:58:16 -0800 (PST)
-Received: from jgg by mlx with local (Exim 4.94)
-        (envelope-from <jgg@ziepe.ca>)
-        id 1kajWa-0009LK-68; Thu, 05 Nov 2020 13:58:16 -0400
-Date:   Thu, 5 Nov 2020 13:58:16 -0400
-From:   Jason Gunthorpe <jgg@ziepe.ca>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Bernard Metzler <bmt@zurich.ibm.com>,
-        Zhu Yanjun <yanjunz@nvidia.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
-        Mike Marciniszyn <mike.marciniszyn@cornelisnetworks.com>,
-        linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
-        iommu@lists.linux-foundation.org
-Subject: Re: [PATCH 3/6] RDMA/core: remove use of dma_virt_ops
-Message-ID: <20201105175816.GH36674@ziepe.ca>
-References: <20201105074205.1690638-1-hch@lst.de>
- <20201105074205.1690638-4-hch@lst.de>
- <20201105175253.GA35235@nvidia.com>
+        id S1728523AbgKESGs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 5 Nov 2020 13:06:48 -0500
+Received: from mga05.intel.com ([192.55.52.43]:28684 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725862AbgKESGs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 5 Nov 2020 13:06:48 -0500
+IronPort-SDR: LqpQtIhIr/Etz69LhYiesmJA3VZ17ATZzhZGUNl/iVlzPNuWa468SRCqWRSC2471r1wGXCut4u
+ AnaWSLL2IeGQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9796"; a="254138495"
+X-IronPort-AV: E=Sophos;i="5.77,454,1596524400"; 
+   d="scan'208";a="254138495"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Nov 2020 10:06:47 -0800
+IronPort-SDR: HFbDWWUYKKu2BPtEyB/CyyrNTeHoA6y9eTOMZjFeKolSt2AUmHHpKqem+7T10fxBo4lWCN+JRB
+ QhCapuagznsw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.77,454,1596524400"; 
+   d="scan'208";a="528058222"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by fmsmga006.fm.intel.com with ESMTP; 05 Nov 2020 10:06:46 -0800
+Received: by black.fi.intel.com (Postfix, from userid 1003)
+        id A765A213; Thu,  5 Nov 2020 20:06:45 +0200 (EET)
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        johan@kernel.org, linux-usb@vger.kernel.org
+Cc:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 2/2] PCI: Use predefined Pericom vendor ID
+Date:   Thu,  5 Nov 2020 20:06:44 +0200
+Message-Id: <20201105180644.42862-2-andriy.shevchenko@linux.intel.com>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20201105180644.42862-1-andriy.shevchenko@linux.intel.com>
+References: <20201105180644.42862-1-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201105175253.GA35235@nvidia.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Nov 05, 2020 at 01:52:53PM -0400, Jason Gunthorpe wrote:
-> On Thu, Nov 05, 2020 at 08:42:02AM +0100, Christoph Hellwig wrote:
-> > @@ -1341,7 +1322,14 @@ int ib_register_device(struct ib_device *device, const char *name,
-> >  	if (ret)
-> >  		return ret;
-> >  
-> > -	setup_dma_device(device, dma_device);
-> > +	/*
-> > +	 * If the caller does not provide a DMA capable device then the IB core
-> > +	 * will set up ib_sge and scatterlist structures that stash the kernel
-> > +	 * virtual address into the address field.
-> > +	 */
-> > +	device->dma_device = dma_device;
-> > +	WARN_ON(dma_device && !dma_device->dma_parms);
-> 
-> I noticed there were a couple of places expecting dma_device to be set
-> to !NULL:
-> 
-> drivers/infiniband/core/umem.c:                 dma_get_max_seg_size(device->dma_device), sg, npages,
-> drivers/nvme/host/rdma.c:       ctrl->ctrl.numa_node = dev_to_node(ctrl->device->dev->dma_device);
+Pericom has predefined vendor ID, use it instead of hard coded value.
 
-Don't know much about NUMA, but do you think the ib device setup
-should autocopy the numa node from the dma_device to the ib_device and
-this usage should just refer to the ib_device?
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/pci/quirks.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Jason
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 7df7ae50618c..6fd5ce08d027 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2356,9 +2356,9 @@ static void quirk_enable_clear_retrain_link(struct pci_dev *dev)
+ 	dev->clear_retrain_link = 1;
+ 	pci_info(dev, "Enable PCIe Retrain Link quirk\n");
+ }
+-DECLARE_PCI_FIXUP_HEADER(0x12d8, 0xe110, quirk_enable_clear_retrain_link);
+-DECLARE_PCI_FIXUP_HEADER(0x12d8, 0xe111, quirk_enable_clear_retrain_link);
+-DECLARE_PCI_FIXUP_HEADER(0x12d8, 0xe130, quirk_enable_clear_retrain_link);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_PERICOM, 0xe110, quirk_enable_clear_retrain_link);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_PERICOM, 0xe111, quirk_enable_clear_retrain_link);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_PERICOM, 0xe130, quirk_enable_clear_retrain_link);
+ 
+ static void fixup_rev1_53c810(struct pci_dev *dev)
+ {
+-- 
+2.28.0
+
