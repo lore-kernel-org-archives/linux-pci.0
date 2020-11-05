@@ -7,57 +7,54 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE8D3C56201
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Nov 2020 21:12:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE0B1C388F7
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Nov 2020 21:12:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 92E7320735
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Nov 2020 21:12:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6A69420724
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Nov 2020 21:12:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1604610726;
-	bh=6YlbvCod01z0yNZgexdWekfcXj+uJOukKdi+xzB/9V0=;
+	s=default; t=1604610730;
+	bh=a2hM8+tFwUZVSOlKF7ql3b1/kkdz+CVOp/Ow4Z1HV8I=;
 	h=From:Cc:Subject:Date:In-Reply-To:References:To:List-ID:From;
-	b=kw30GFwDFgQXPDscWyWybjoDTnxMfaCHJSMxr5eFA3+D7/vrDsXRlgaRXZcHB9i15
-	 atD8b1WazjZRkz4KThEVY2v1wgZtPnh5C2Xf7a84YWN2+L9+mdT4PnFhyNURyBs+JH
-	 wqr8Bmjqruin0aihJO4/Pu/wFp7xyrDeGIkF5PSM=
+	b=DIGDleL3qStyJ8+9AsGaW1Nv/+NoNGnm/3BUO3n2+sDrHVr2ngKTyuVcXMzSv68VS
+	 Hbe+PmGp4Zrw0bzIQevTrzgXK+3TOlOR1PGey6l3HvfjKbjd5gMSdAU+nmGUIHdP7+
+	 K+ER6lmtRprC7UPJTSfwBPBjYsgAH6isEZYA2IPs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732233AbgKEVMG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 5 Nov 2020 16:12:06 -0500
-Received: from mail-oi1-f196.google.com ([209.85.167.196]:37784 "EHLO
-        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726801AbgKEVMF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Nov 2020 16:12:05 -0500
-Received: by mail-oi1-f196.google.com with SMTP id m17so3188054oie.4
-        for <linux-pci@vger.kernel.org>; Thu, 05 Nov 2020 13:12:04 -0800 (PST)
+        id S1732265AbgKEVMJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 5 Nov 2020 16:12:09 -0500
+Received: from mail-oi1-f195.google.com ([209.85.167.195]:33672 "EHLO
+        mail-oi1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732264AbgKEVMJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Nov 2020 16:12:09 -0500
+Received: by mail-oi1-f195.google.com with SMTP id k26so3197515oiw.0
+        for <linux-pci@vger.kernel.org>; Thu, 05 Nov 2020 13:12:08 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=u6R4H1g6vXOgAE77RIvtrXBSttU89rZUu0tXug8LN9Q=;
-        b=Z+3S/M70GKQ8GbvF1qYjQkbKdZpV538rBdtQyCo8G2YwT2tD/DwVSzOD3Cl9h8+HMx
-         OPwbz6LqrL1Q074yeTQBRWe8M1BuQvwGCM+bs/t9KHQ/PZp1mEInUxgHc0vLoDZZU4R6
-         6DGOg1sJMxFNMIqL/meTHXqfocFhpGq6SNC5kSQCRocP3V4duMhJ/2l05d7B+HnBjD93
-         cODLlov6I0+J/Abh1tm+c8c/iSa+xT8B9olNo/cKOEMpaWtec5edpl+bHr86VbRRcWnX
-         QJE6YZcXlgCkspqLI77j7pf65IB4D5M4tlnipLM3u4xhU2fMJzsmoHnIRZeLW9cFLOyI
-         Gqyg==
-X-Gm-Message-State: AOAM531HfbEkvMR/4DmR1oSxzDzr4YkEx4oucEh2OoVXXxn/l3CCVxEq
-        fVfTVlZ0E18z2/Es+KYW0VwI6C3/Duay
-X-Google-Smtp-Source: ABdhPJzRRgPYI228nYGhQP0KXdxEp7EmSKvVZtf3/2UUVia+C9yEJNc/ybenYHFl3pwJLWFsefoc3g==
-X-Received: by 2002:a54:4094:: with SMTP id i20mr930382oii.0.1604610723873;
-        Thu, 05 Nov 2020 13:12:03 -0800 (PST)
+        bh=IzJpgC50B1aEr5UEqZkrsDaDZthdlXtSVmgpDKQvfR0=;
+        b=DJ6oZ1MmIIYsSqNNin0ZtFzVn8lBDHbuWlmL6L4lcVgUoM3eaelDzXfI4BwIVY0GLa
+         ccet1oN3JSpwhZjoOI3t9Q84MOZnGRRljv+xJjJnopH0ZyqMmayHtuRM/cVHC/R+jEnT
+         sQmAaJ7JG5znNsNqdlc6jA1nFrO9ctJWl9INeqgszEBQhzuwi1w+Hu7eBp76GndAXuKV
+         pJxxScb+iyl1yCTF+l5/7GC+jQYtK4VORcQlEvoKiyxAY4VMSga0menNDJFo789se3fn
+         UsKt5FyM0tGpGwJbWuFLzpAgW/+jOk1oWp34ddwO1CBjagB0j8aD9w7WaEDKZMpgqunn
+         rowQ==
+X-Gm-Message-State: AOAM531WkmfFBE0qKPnG/ZaF+gQAoWUR6gs7F8Voxv4Eib8hGvPn+T1p
+        DllixK9mCQ0L1OqJ6PfC9EjJW2exZyPf
+X-Google-Smtp-Source: ABdhPJxQDTx5VKxcCHmYR60h+s8CT7slb9CRXBkC6RHPnSV4CDrv8J8PImzVZWY9c4MdH5eXIUG72w==
+X-Received: by 2002:aca:f1c6:: with SMTP id p189mr882003oih.18.1604610728217;
+        Thu, 05 Nov 2020 13:12:08 -0800 (PST)
 Received: from xps15.herring.priv (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.googlemail.com with ESMTPSA id z19sm622549ooi.32.2020.11.05.13.12.02
+        by smtp.googlemail.com with ESMTPSA id z19sm622549ooi.32.2020.11.05.13.12.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Nov 2020 13:12:03 -0800 (PST)
+        Thu, 05 Nov 2020 13:12:07 -0800 (PST)
 From:   Rob Herring <robh@kernel.org>
 Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Vidya Sagar <vidyas@nvidia.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v2 01/16] PCI: dwc: Support multiple ATU memory regions
-Date:   Thu,  5 Nov 2020 15:11:44 -0600
-Message-Id: <20201105211159.1814485-2-robh@kernel.org>
+Subject: [PATCH v2 04/16] PCI: dwc/intel-gw: Remove some unneeded function wrappers
+Date:   Thu,  5 Nov 2020 15:11:47 -0600
+Message-Id: <20201105211159.1814485-5-robh@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201105211159.1814485-1-robh@kernel.org>
 References: <20201105211159.1814485-1-robh@kernel.org>
@@ -68,148 +65,123 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The current ATU setup only supports a single memory resource which
-isn't sufficient if there are also prefetchable memory regions. In order
-to support multiple memory regions, we need to move away from fixed ATU
-slots and rework the assignment. As there's always an ATU entry for
-config space, let's assign index 0 to config space. Then we assign
-memory resources to index 1 and up. Finally, if we have an I/O region
-and slots remaining, we assign the I/O region last. If there aren't
-remaining slots, we keep the same config and I/O space sharing.
+Remove some of the pointless levels of functions that just wrap or group
+a series of other functions.
 
-Cc: Vidya Sagar <vidyas@nvidia.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>
-Cc: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Vidya Sagar <vidyas@nvidia.com>
-Tested-by: Vidya Sagar <vidyas@nvidia.com>
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
 Signed-off-by: Rob Herring <robh@kernel.org>
 ---
- .../pci/controller/dwc/pcie-designware-host.c | 54 +++++++++++--------
- drivers/pci/controller/dwc/pcie-designware.h  |  6 +--
- 2 files changed, 34 insertions(+), 26 deletions(-)
+ drivers/pci/controller/dwc/pcie-intel-gw.c | 47 ++++++++--------------
+ 1 file changed, 16 insertions(+), 31 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index 44c2a6572199..a6ffab9b537e 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -464,9 +464,7 @@ static void __iomem *dw_pcie_other_conf_map_bus(struct pci_bus *bus,
- 		type = PCIE_ATU_TYPE_CFG1;
- 
- 
--	dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX1,
--				  type, pp->cfg0_base,
--				  busdev, pp->cfg0_size);
-+	dw_pcie_prog_outbound_atu(pci, 0, type, pp->cfg0_base, busdev, pp->cfg0_size);
- 
- 	return pp->va_cfg0_base + where;
+diff --git a/drivers/pci/controller/dwc/pcie-intel-gw.c b/drivers/pci/controller/dwc/pcie-intel-gw.c
+index 88782653ed21..c562eb7454b1 100644
+--- a/drivers/pci/controller/dwc/pcie-intel-gw.c
++++ b/drivers/pci/controller/dwc/pcie-intel-gw.c
+@@ -152,19 +152,6 @@ static void intel_pcie_init_n_fts(struct dw_pcie *pci)
+ 	pci->n_fts[0] = PORT_AFR_N_FTS_GEN12_DFT;
  }
-@@ -480,9 +478,8 @@ static int dw_pcie_rd_other_conf(struct pci_bus *bus, unsigned int devfn,
  
- 	ret = pci_generic_config_read(bus, devfn, where, size, val);
- 
--	if (!ret && pci->num_viewport <= 2)
--		dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX1,
--					  PCIE_ATU_TYPE_IO, pp->io_base,
-+	if (!ret && pci->io_cfg_atu_shared)
-+		dw_pcie_prog_outbound_atu(pci, 0, PCIE_ATU_TYPE_IO, pp->io_base,
- 					  pp->io_bus_addr, pp->io_size);
- 
- 	return ret;
-@@ -497,9 +494,8 @@ static int dw_pcie_wr_other_conf(struct pci_bus *bus, unsigned int devfn,
- 
- 	ret = pci_generic_config_write(bus, devfn, where, size, val);
- 
--	if (!ret && pci->num_viewport <= 2)
--		dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX1,
--					  PCIE_ATU_TYPE_IO, pp->io_base,
-+	if (!ret && pci->io_cfg_atu_shared)
-+		dw_pcie_prog_outbound_atu(pci, 0, PCIE_ATU_TYPE_IO, pp->io_base,
- 					  pp->io_bus_addr, pp->io_size);
- 
- 	return ret;
-@@ -586,21 +582,35 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 	 * ATU, so we should not program the ATU here.
- 	 */
- 	if (pp->bridge->child_ops == &dw_child_pcie_ops) {
--		struct resource_entry *tmp, *entry = NULL;
-+		int atu_idx = 0;
-+		struct resource_entry *entry;
- 
- 		/* Get last memory resource entry */
--		resource_list_for_each_entry(tmp, &pp->bridge->windows)
--			if (resource_type(tmp->res) == IORESOURCE_MEM)
--				entry = tmp;
+-static void intel_pcie_rc_setup(struct intel_pcie_port *lpp)
+-{
+-	struct dw_pcie *pci = &lpp->pci;
 -
--		dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX0,
--					  PCIE_ATU_TYPE_MEM, entry->res->start,
--					  entry->res->start - entry->offset,
--					  resource_size(entry->res));
--		if (pci->num_viewport > 2)
--			dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX2,
--						  PCIE_ATU_TYPE_IO, pp->io_base,
--						  pp->io_bus_addr, pp->io_size);
-+		resource_list_for_each_entry(entry, &pp->bridge->windows) {
-+			if (resource_type(entry->res) != IORESOURCE_MEM)
-+				continue;
-+
-+			if (pci->num_viewport <= ++atu_idx)
-+				break;
-+
-+			dw_pcie_prog_outbound_atu(pci, atu_idx,
-+						  PCIE_ATU_TYPE_MEM, entry->res->start,
-+						  entry->res->start - entry->offset,
-+						  resource_size(entry->res));
-+		}
-+
-+		if (pp->io_size) {
-+			if (pci->num_viewport > ++atu_idx)
-+				dw_pcie_prog_outbound_atu(pci, atu_idx,
-+							  PCIE_ATU_TYPE_IO, pp->io_base,
-+							  pp->io_bus_addr, pp->io_size);
-+			else
-+				pci->io_cfg_atu_shared = true;
-+		}
-+
-+		if (pci->num_viewport <= atu_idx)
-+			dev_warn(pci->dev, "Resources exceed number of ATU entries (%d)",
-+				 pci->num_viewport);
+-	pci->atu_base = pci->dbi_base + 0xC0000;
+-
+-	intel_pcie_ltssm_disable(lpp);
+-	intel_pcie_link_setup(lpp);
+-	intel_pcie_init_n_fts(pci);
+-	dw_pcie_setup_rc(&pci->pp);
+-	dw_pcie_upconfig_setup(pci);
+-}
+-
+ static int intel_pcie_ep_rst_init(struct intel_pcie_port *lpp)
+ {
+ 	struct device *dev = lpp->pci.dev;
+@@ -216,14 +203,6 @@ static void intel_pcie_device_rst_deassert(struct intel_pcie_port *lpp)
+ 	gpiod_set_value_cansleep(lpp->reset_gpio, 0);
+ }
+ 
+-static int intel_pcie_app_logic_setup(struct intel_pcie_port *lpp)
+-{
+-	intel_pcie_device_rst_deassert(lpp);
+-	intel_pcie_ltssm_enable(lpp);
+-
+-	return dw_pcie_wait_for_link(&lpp->pci);
+-}
+-
+ static void intel_pcie_core_irq_disable(struct intel_pcie_port *lpp)
+ {
+ 	pcie_app_wr(lpp, PCIE_APP_IRNEN, 0);
+@@ -273,11 +252,6 @@ static int intel_pcie_get_resources(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static void intel_pcie_deinit_phy(struct intel_pcie_port *lpp)
+-{
+-	phy_exit(lpp->phy);
+-}
+-
+ static int intel_pcie_wait_l2(struct intel_pcie_port *lpp)
+ {
+ 	u32 value;
+@@ -314,6 +288,7 @@ static void intel_pcie_turn_off(struct intel_pcie_port *lpp)
+ static int intel_pcie_host_setup(struct intel_pcie_port *lpp)
+ {
+ 	int ret;
++	struct dw_pcie *pci = &lpp->pci;
+ 
+ 	intel_pcie_core_rst_assert(lpp);
+ 	intel_pcie_device_rst_assert(lpp);
+@@ -330,8 +305,18 @@ static int intel_pcie_host_setup(struct intel_pcie_port *lpp)
+ 		goto clk_err;
  	}
  
- 	dw_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_0, 0);
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 9d2f511f13fa..ed19c34dd0fe 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -80,9 +80,6 @@
- #define PCIE_ATU_VIEWPORT		0x900
- #define PCIE_ATU_REGION_INBOUND		BIT(31)
- #define PCIE_ATU_REGION_OUTBOUND	0
--#define PCIE_ATU_REGION_INDEX2		0x2
--#define PCIE_ATU_REGION_INDEX1		0x1
--#define PCIE_ATU_REGION_INDEX0		0x0
- #define PCIE_ATU_CR1			0x904
- #define PCIE_ATU_TYPE_MEM		0x0
- #define PCIE_ATU_TYPE_IO		0x2
-@@ -266,7 +263,6 @@ struct dw_pcie {
- 	/* Used when iatu_unroll_enabled is true */
- 	void __iomem		*atu_base;
- 	u32			num_viewport;
--	u8			iatu_unroll_enabled;
- 	struct pcie_port	pp;
- 	struct dw_pcie_ep	ep;
- 	const struct dw_pcie_ops *ops;
-@@ -274,6 +270,8 @@ struct dw_pcie {
- 	int			num_lanes;
- 	int			link_gen;
- 	u8			n_fts[2];
-+	bool			iatu_unroll_enabled: 1;
-+	bool			io_cfg_atu_shared: 1;
- };
+-	intel_pcie_rc_setup(lpp);
+-	ret = intel_pcie_app_logic_setup(lpp);
++	pci->atu_base = pci->dbi_base + 0xC0000;
++
++	intel_pcie_ltssm_disable(lpp);
++	intel_pcie_link_setup(lpp);
++	intel_pcie_init_n_fts(pci);
++	dw_pcie_setup_rc(&pci->pp);
++	dw_pcie_upconfig_setup(pci);
++
++	intel_pcie_device_rst_deassert(lpp);
++	intel_pcie_ltssm_enable(lpp);
++
++	ret = dw_pcie_wait_for_link(pci);
+ 	if (ret)
+ 		goto app_init_err;
  
- #define to_dw_pcie_from_pp(port) container_of((port), struct dw_pcie, pp)
+@@ -345,7 +330,7 @@ static int intel_pcie_host_setup(struct intel_pcie_port *lpp)
+ 	clk_disable_unprepare(lpp->core_clk);
+ clk_err:
+ 	intel_pcie_core_rst_assert(lpp);
+-	intel_pcie_deinit_phy(lpp);
++	phy_exit(lpp->phy);
+ 
+ 	return ret;
+ }
+@@ -356,7 +341,7 @@ static void __intel_pcie_remove(struct intel_pcie_port *lpp)
+ 	intel_pcie_turn_off(lpp);
+ 	clk_disable_unprepare(lpp->core_clk);
+ 	intel_pcie_core_rst_assert(lpp);
+-	intel_pcie_deinit_phy(lpp);
++	phy_exit(lpp->phy);
+ }
+ 
+ static int intel_pcie_remove(struct platform_device *pdev)
+@@ -380,7 +365,7 @@ static int __maybe_unused intel_pcie_suspend_noirq(struct device *dev)
+ 	if (ret)
+ 		return ret;
+ 
+-	intel_pcie_deinit_phy(lpp);
++	phy_exit(lpp->phy);
+ 	clk_disable_unprepare(lpp->core_clk);
+ 	return ret;
+ }
 -- 
 2.25.1
 
