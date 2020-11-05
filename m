@@ -2,102 +2,73 @@ Return-Path: <SRS0=slvM=EL=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E830C55178
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Nov 2020 18:06:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 113B2C55178
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Nov 2020 18:22:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 296552151B
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Nov 2020 18:06:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A246C2151B
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Nov 2020 18:22:45 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=gmx.net header.i=@gmx.net header.b="BFWGCTu1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730973AbgKESGu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 5 Nov 2020 13:06:50 -0500
-Received: from mga14.intel.com ([192.55.52.115]:30197 "EHLO mga14.intel.com"
+        id S1731350AbgKESWp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 5 Nov 2020 13:22:45 -0500
+Received: from mout.gmx.net ([212.227.15.15]:53071 "EHLO mout.gmx.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725862AbgKESGu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 5 Nov 2020 13:06:50 -0500
-IronPort-SDR: wbovFjzNNH+WyBZA7LQAAl122rRwzLh6P5ddc7kxRopL/tvc5JufX8ZUF8caZZYP/1ZDcLUF2N
- gKoVpOVwt3Gw==
-X-IronPort-AV: E=McAfee;i="6000,8403,9796"; a="168651704"
-X-IronPort-AV: E=Sophos;i="5.77,454,1596524400"; 
-   d="scan'208";a="168651704"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Nov 2020 10:06:49 -0800
-IronPort-SDR: TxdvLmJb7meR0XeBoC5g+PgJkpn6AENMe8P8XtSkC7QucRO6WSClaj/uTj/87kjzXHkIbLziye
- sd5cKdhlZr3g==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.77,454,1596524400"; 
-   d="scan'208";a="326111687"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by orsmga006.jf.intel.com with ESMTP; 05 Nov 2020 10:06:47 -0800
-Received: by black.fi.intel.com (Postfix, from userid 1003)
-        id 9EE0929A; Thu,  5 Nov 2020 20:06:45 +0200 (EET)
-From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        johan@kernel.org, linux-usb@vger.kernel.org
-Cc:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        alberto.vignani@fastwebnet.it
-Subject: [PATCH v1 1/2] PCI: Disable MSI for Pericom PCIe-USB adapter
-Date:   Thu,  5 Nov 2020 20:06:43 +0200
-Message-Id: <20201105180644.42862-1-andriy.shevchenko@linux.intel.com>
-X-Mailer: git-send-email 2.28.0
+        id S1729783AbgKESWo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 5 Nov 2020 13:22:44 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.net;
+        s=badeba3b8450; t=1604600548;
+        bh=Pc5dbaOido24NXVb8HZQjU9gpMX01LN8EOHWxl80a84=;
+        h=X-UI-Sender-Class:Date:In-Reply-To:References:Subject:Reply-to:To:
+         CC:From;
+        b=BFWGCTu195qaD4Xv4Rn8gKgigHnyGgo/1Aqq/TAJFaynGfiIHy9Lw4lUQwZKj6Y6S
+         BIUO8eDrNfhFCc/av2fv+XZujyKclHLdJDDtV54nJk55bBzVCtaceROj1rY8KhxK72
+         SLw07C6KN2NaxSP3INreQTHfKbhqlKwM8uOEF6TM=
+X-UI-Sender-Class: 01bb95c1-4bf8-414a-932a-4f6e2808ef9c
+Received: from frank-s9 ([217.61.147.34]) by mail.gmx.com (mrgmx005
+ [212.227.17.190]) with ESMTPSA (Nemesis) id 1MbzuH-1k3cD53Mkh-00dX4I; Thu, 05
+ Nov 2020 19:22:28 +0100
+Date:   Thu, 05 Nov 2020 19:22:25 +0100
+User-Agent: K-9 Mail for Android
+In-Reply-To: <c529dbfc066f4bda9b87edbdbf771f207e69b84e.1604510053.git.ryder.lee@mediatek.com>
+References: <c529dbfc066f4bda9b87edbdbf771f207e69b84e.1604510053.git.ryder.lee@mediatek.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH v3] PCI: mediatek: Configure FC and FTS for functions other than 0
+Reply-to: frank-w@public-files.de
+To:     linux-mediatek@lists.infradead.org,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC:     linux-pci@vger.kernel.org
+From:   Frank Wunderlich <frank-w@public-files.de>
+Message-ID: <B6B7543F-E57F-469A-A4FB-C4B4E98345C0@public-files.de>
+X-Provags-ID: V03:K1:CcBqTaMual05Jcwtvw5hBu21DlgbPmbjcZcpR7jddnT/v//uArp
+ M8xkGEG+pb/dajrE0rlzGwzpP2IezhLUX5fdzjoLuWLuGeZO+jqWOHvgEdPc5A3LjyOmR6u
+ qzXnTdCNL0yDJaWJIkwHsSqhHFiHkzdGGH9giA181eA9Y2xB32Qemg72m9qTneTCJycKtSz
+ a+hjvSubA9bWs+T4aKgQQ==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:F5MTwzFoSuI=:a9D71ezL6d0ls2dfKDUfi+
+ gEdLyxDg6omv2WsqNd6xYdG0k324fYXKZaOSY0ILES8cHy8OZDFiDt3atMNp2fCiwKllzJvUU
+ pj2Ej45bpEfRZj680ATurbAtgAKiYmi1qtBRnG6Lmdkg0xXr7sNAMoH5jLbXjcwd2U5NkBMB3
+ 9xwk91WAqp2uAM/aW7A/dXD9euexCRP/fkBRyo00CvO6I78rwtZot5muujx6lJPuqE/mHAzwy
+ NNagoeOZIKmq3MNjUSsXsD3QEWkAoJEYupYe2r69ke5Pn/sew9zL8Ev58cOszNbDOYHjEywoP
+ xfRY8cKRBnOYRY8bO5Rp+cxVsp/5DyxWg5vt+iNh7jXrbmty77fMuQDTteyUFct9zPx/TBWSz
+ Ar1wQ0y/V/dx22+DMnBzebZowUEFha5PwFLZjUDzv8PCRwYrANteX+7KtjAtHRkJmYJtwjjq3
+ aiDqZkQdtg6frSpfsQfERhvwmg1bpOFuT6X7/Bx9zuWY579WYFRDb0BptGHSVwKCPSaZJdl3C
+ xLZv6QvEAv05fdegKCz9x7UMr/rEPC5f4TPnjoAZoCz0Xk/VpicpbgISBkuMJO54aKpVM5si/
+ sXuhjmWz2WIWj1RPtaXRFMzU8ONfnnGzVose5rO8DQnyPAs7OJpnur8eTEpuezPYIjOkLU6dB
+ HJDA4BixbhBmeYDdz/5T1TzjapOHVMgKbro0MAjRlKwxTJ+EASzluLVTNW05NlQX+vF9l8edf
+ XVwVLdUfu0qqJbJCOTd6rx9PuVXkm8Qpafj50UULul8YHBSghK7uBOXgNmvmNyYuLtQ8z3WUU
+ 9aOKUBYHEgOstReZ4Gd7ir9OCyiGw8cA1vVyfe27MxurnbyHRG55vaiUaua7y+qgoBanmtWIl
+ j10B75qb1baRL+NVxM/w==
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Pericom PCIe-USB adapter ambiguously advertises MSI, but documentation says
-"The MSI Function is not implemented on this device." in the chapters 7.3.27,
-7.3.29-7.3.31.
-
-Fixes: 306c54d0edb6 ("usb: hcd: Try MSI interrupts on PCI devices")
-Datasheet: https://www.diodes.com/assets/Datasheets/PI7C9X440SL.pdf
-Reported-by: alberto.vignani@fastwebnet.it
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/pci/quirks.c | 16 ++++++++++++----
- 1 file changed, 12 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index f70692ac79c5..7df7ae50618c 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -5567,17 +5567,25 @@ static void pci_fixup_no_d0_pme(struct pci_dev *dev)
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ASMEDIA, 0x2142, pci_fixup_no_d0_pme);
- 
- /*
-- * Device [12d8:0x400e] and [12d8:0x400f]
-+ * Device 12d8:0x400e [OHCI] and 12d8:0x400f [EHCI]
-+ *
-  * These devices advertise PME# support in all power states but don't
-  * reliably assert it.
-+ *
-+ * These devices ambiguously advertise MSI, but documentation (PI7C9X440SL.pdf)
-+ * says "The MSI Function is not implemented on this device." in the chapters
-+ * 7.3.27, 7.3.29-7.3.31.
-  */
--static void pci_fixup_no_pme(struct pci_dev *dev)
-+static void pci_fixup_no_msi_no_pme(struct pci_dev *dev)
- {
-+	pci_info(dev, "The MSI Function is not implemented on this device, disabling it\n");
-+	dev->no_msi = 1;
-+
- 	pci_info(dev, "PME# is unreliable, disabling it\n");
- 	dev->pme_support = 0;
- }
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_PERICOM, 0x400e, pci_fixup_no_pme);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_PERICOM, 0x400f, pci_fixup_no_pme);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_PERICOM, 0x400e, pci_fixup_no_msi_no_pme);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_PERICOM, 0x400f, pci_fixup_no_msi_no_pme);
- 
- static void apex_pci_fixup_class(struct pci_dev *pdev)
- {
--- 
-2.28.0
-
+How can i verify (triggering bug without patch)?
+regards Frank
