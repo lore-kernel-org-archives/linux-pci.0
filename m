@@ -2,38 +2,38 @@ Return-Path: <SRS0=w1cP=EM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80AAFC388F7
-	for <linux-pci@archiver.kernel.org>; Fri,  6 Nov 2020 00:15:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51F7BC388F7
+	for <linux-pci@archiver.kernel.org>; Fri,  6 Nov 2020 00:15:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 255832075A
-	for <linux-pci@archiver.kernel.org>; Fri,  6 Nov 2020 00:15:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 02F6E20782
+	for <linux-pci@archiver.kernel.org>; Fri,  6 Nov 2020 00:15:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731330AbgKFAPI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 5 Nov 2020 19:15:08 -0500
+        id S1732803AbgKFAPL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 5 Nov 2020 19:15:11 -0500
 Received: from mga12.intel.com ([192.55.52.136]:23004 "EHLO mga12.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729162AbgKFAPI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 5 Nov 2020 19:15:08 -0500
-IronPort-SDR: /ouWvUINHyrgcAKr5YsCI9B8+cPhR1rlosvqYpISKKYrXjtiDy1avVrntUEU/EHFosTpY4pnXg
- FglsSxfDmWtw==
-X-IronPort-AV: E=McAfee;i="6000,8403,9796"; a="148759521"
+        id S1732734AbgKFAPL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 5 Nov 2020 19:15:11 -0500
+IronPort-SDR: PyoFBvNm56IAAaQMsdOTDfo16rl17n3knXSLDq8xd1UTU4fg+NAT8Tn7+tiOhpyU1eLzMIzOpf
+ v6WKC4/HWpeQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9796"; a="148759533"
 X-IronPort-AV: E=Sophos;i="5.77,454,1596524400"; 
-   d="scan'208";a="148759521"
+   d="scan'208";a="148759533"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Nov 2020 16:15:05 -0800
-IronPort-SDR: Po4Mv59ZiFm33GRA+bMex8AEd4jBdPh9+KgnQWeZQoPNmD8L1+QinhmCZ014BsHweO5DuZEchw
- uPRsRP/+qGFg==
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Nov 2020 16:15:10 -0800
+IronPort-SDR: Sp09mekLlTBgB30rqPZac59dfb0uVZnLJAEv3FgF4rynxFPOrOObBadJ/U20OqNtj1OMuKxKuB
+ dIacaHjo1iLg==
 X-IronPort-AV: E=Sophos;i="5.77,454,1596524400"; 
-   d="scan'208";a="529621679"
+   d="scan'208";a="529621710"
 Received: from gabriels-mobl1.amr.corp.intel.com (HELO arch-ashland-svkelley.intel.com) ([10.209.37.33])
-  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Nov 2020 16:15:04 -0800
+  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Nov 2020 16:15:10 -0800
 From:   Sean V Kelley <sean.v.kelley@intel.com>
 To:     bhelgaas@google.com, Jonathan.Cameron@huawei.com,
         xerces.zhao@gmail.com, rafael.j.wysocki@intel.com,
@@ -41,102 +41,75 @@ To:     bhelgaas@google.com, Jonathan.Cameron@huawei.com,
         sathyanarayanan.kuppuswamy@intel.com, qiuxu.zhuo@intel.com
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         Sean V Kelley <sean.v.kelley@intel.com>
-Subject: [PATCH v10 00/16] Add RCEC handling to PCI/AER
-Date:   Thu,  5 Nov 2020 16:14:28 -0800
-Message-Id: <20201106001444.667232-1-sean.v.kelley@intel.com>
+Subject: [PATCH v10 05/16] PCI/ERR: Rename reset_link() to reset_subordinates()
+Date:   Thu,  5 Nov 2020 16:14:33 -0800
+Message-Id: <20201106001444.667232-6-sean.v.kelley@intel.com>
 X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20201106001444.667232-1-sean.v.kelley@intel.com>
+References: <20201106001444.667232-1-sean.v.kelley@intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Changes since v9 [1], based on discussion [2], AER patch [3],
-and pci/master tree [4]:
+reset_link() appears to be misnamed.  The point is to reset any devices
+below a given bridge, so rename it to reset_subordinates() to make it clear
+that we are passing a bridge with the intent to reset the devices below it.
 
-- No functional changes. Tested with aer injection.
+[bhelgaas: fix reset_subordinate_device() typo, shorten name]
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Link: https://lore.kernel.org/r/20201002184735.1229220-5-seanvk.dev@oregontracks.org
+Signed-off-by: Sean V Kelley <sean.v.kelley@intel.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+---
+ drivers/pci/pci.h      | 4 ++--
+ drivers/pci/pcie/err.c | 8 ++++----
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-PCI/RCEC: Add RCiEP's linked RCEC to AER/ERR
-- Tighten up aer_root_reset() as a preliminary patch separate from RCEC/RCIEP
-series. So rebase series with the aer_root_reset() patch.
-(Bjorn Helgaas)
-
-[1] https://lore.kernel.org/linux-pci/20201016001113.2301761-1-seanvk.dev@oregontracks.org/
-[2] https://lore.kernel.org/linux-pci/20201020162820.GA370938@bjorn-Precision-5520/
-[3] https://lore.kernel.org/linux-pci/20201104232244.434115-1-sean.v.kelley@intel.com/
-[4] https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/log/
-
-
-Root Complex Event Collectors (RCEC) provide support for terminating error
-and PME messages from Root Complex Integrated Endpoints (RCiEPs).  An RCEC
-resides on a Bus in the Root Complex. Multiple RCECs can in fact reside on
-a single bus. An RCEC will explicitly declare supported RCiEPs through the
-Root Complex Endpoint Association Extended Capability.
-
-(See PCIe 5.0-1, sections 1.3.2.3 (RCiEP), and 7.9.10 (RCEC Ext. Cap.))
-
-The kernel lacks handling for these RCECs and the error messages received
-from their respective associated RCiEPs. More recently, a new CPU
-interconnect, Compute eXpress Link (CXL) depends on RCEC capabilities for
-purposes of error messaging from CXL 1.1 supported RCiEP devices.
-
-DocLink: https://www.computeexpresslink.org/
-
-This use case is not limited to CXL. Existing hardware today includes
-support for RCECs, such as the Denverton microserver product
-family. Future hardware will be forthcoming.
-
-(See Intel Document, Order number: 33061-003US)
-
-So services such as AER or PME could be associated with an RCEC driver.
-In the case of CXL, if an RCiEP (i.e., CXL 1.1 device) is associated with a
-platform's RCEC it shall signal PME and AER error conditions through that
-RCEC.
-
-Towards the above use cases, add the missing RCEC class and extend the
-PCIe Root Port and service drivers to allow association of RCiEPs to their
-respective parent RCEC and facilitate handling of terminating error and PME
-messages.
-
-Tested-by: Jonathan Cameron <Jonathan.Cameron@huawei.com> #non-native/no RCEC
-
-
-Qiuxu Zhuo (4):
-  PCI/RCEC: Add RCEC class code and extended capability
-  PCI/RCEC: Bind RCEC devices to the Root Port driver
-  PCI/RCEC: Add RCiEP's linked RCEC to AER/ERR
-  PCI/AER: Add RCEC AER error injection support
-
-Sean V Kelley (12):
-  AER: aer_root_reset() non-native handling
-  PCI/RCEC: Cache RCEC capabilities in pci_init_capabilities()
-  PCI/ERR: Rename reset_link() to reset_subordinates()
-  PCI/ERR: Simplify by using pci_upstream_bridge()
-  PCI/ERR: Simplify by computing pci_pcie_type() once
-  PCI/ERR: Use "bridge" for clarity in pcie_do_recovery()
-  PCI/ERR: Avoid negated conditional for clarity
-  PCI/ERR: Add pci_walk_bridge() to pcie_do_recovery()
-  PCI/ERR: Limit AER resets in pcie_do_recovery()
-  PCI/RCEC: Add pcie_link_rcec() to associate RCiEPs
-  PCI/AER: Add pcie_walk_rcec() to RCEC AER handling
-  PCI/PME: Add pcie_walk_rcec() to RCEC PME handling
-
- drivers/pci/pci.h               |  29 ++++-
- drivers/pci/pcie/Makefile       |   2 +-
- drivers/pci/pcie/aer.c          |  79 +++++++++----
- drivers/pci/pcie/aer_inject.c   |   5 +-
- drivers/pci/pcie/err.c          |  93 +++++++++++-----
- drivers/pci/pcie/pme.c          |  15 ++-
- drivers/pci/pcie/portdrv_core.c |   9 +-
- drivers/pci/pcie/portdrv_pci.c  |   8 +-
- drivers/pci/pcie/rcec.c         | 190 ++++++++++++++++++++++++++++++++
- drivers/pci/probe.c             |   2 +
- include/linux/pci.h             |   5 +
- include/linux/pci_ids.h         |   1 +
- include/uapi/linux/pci_regs.h   |   7 ++
- 13 files changed, 382 insertions(+), 63 deletions(-)
- create mode 100644 drivers/pci/pcie/rcec.c
-
---
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 12dcad8f3635..3c4570a3058f 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -572,8 +572,8 @@ static inline int pci_dev_specific_disable_acs_redir(struct pci_dev *dev)
+ 
+ /* PCI error reporting and recovery */
+ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+-			pci_channel_state_t state,
+-			pci_ers_result_t (*reset_link)(struct pci_dev *pdev));
++		pci_channel_state_t state,
++		pci_ers_result_t (*reset_subordinates)(struct pci_dev *pdev));
+ 
+ bool pcie_wait_for_link(struct pci_dev *pdev, bool active);
+ #ifdef CONFIG_PCIEASPM
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index c543f419d8f9..db149c6ce4fb 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -147,8 +147,8 @@ static int report_resume(struct pci_dev *dev, void *data)
+ }
+ 
+ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+-			pci_channel_state_t state,
+-			pci_ers_result_t (*reset_link)(struct pci_dev *pdev))
++		pci_channel_state_t state,
++		pci_ers_result_t (*reset_subordinates)(struct pci_dev *pdev))
+ {
+ 	pci_ers_result_t status = PCI_ERS_RESULT_CAN_RECOVER;
+ 	struct pci_bus *bus;
+@@ -165,9 +165,9 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+ 	pci_dbg(dev, "broadcast error_detected message\n");
+ 	if (state == pci_channel_io_frozen) {
+ 		pci_walk_bus(bus, report_frozen_detected, &status);
+-		status = reset_link(dev);
++		status = reset_subordinates(dev);
+ 		if (status != PCI_ERS_RESULT_RECOVERED) {
+-			pci_warn(dev, "link reset failed\n");
++			pci_warn(dev, "subordinate device reset failed\n");
+ 			goto failed;
+ 		}
+ 	} else {
+-- 
 2.29.2
 
