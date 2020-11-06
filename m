@@ -2,156 +2,115 @@ Return-Path: <SRS0=w1cP=EM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 684CEC2D0A3
-	for <linux-pci@archiver.kernel.org>; Fri,  6 Nov 2020 18:09:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3547C2D0A3
+	for <linux-pci@archiver.kernel.org>; Fri,  6 Nov 2020 18:20:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EF49220719
-	for <linux-pci@archiver.kernel.org>; Fri,  6 Nov 2020 18:09:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6C85421D46
+	for <linux-pci@archiver.kernel.org>; Fri,  6 Nov 2020 18:20:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="doAkeCGc"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="oiIbG6Mb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727287AbgKFSJZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 6 Nov 2020 13:09:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50650 "EHLO
+        id S1727873AbgKFSUG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 6 Nov 2020 13:20:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52324 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726034AbgKFSJY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Nov 2020 13:09:24 -0500
-Received: from mail-qt1-x842.google.com (mail-qt1-x842.google.com [IPv6:2607:f8b0:4864:20::842])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B596AC0613CF
-        for <linux-pci@vger.kernel.org>; Fri,  6 Nov 2020 10:09:24 -0800 (PST)
-Received: by mail-qt1-x842.google.com with SMTP id g17so1395004qts.5
-        for <linux-pci@vger.kernel.org>; Fri, 06 Nov 2020 10:09:24 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=CCWfhKT3ktx1Y0knQS9srJLCrgOnb432wETBQgR0zwo=;
-        b=doAkeCGcQXpt2NzsJI+H159GAe+srNA7dZtr0H49NbeeYIJ6GpjmajNyfUIkqGpHMu
-         ai3RLcEwPTV7f+TSNYl8TdB/e+py8oelQrW1t6LEF2AEbuiaX5ntMNXRo7pafHLNk+qa
-         QhEYT0XqNOBcmdvsGARdcKLcZQ4vNiK+T3d409rehkmevDX2QeiKRii6c+D/qZ2Nh+pO
-         0RwVihcCuFTu9WDbPH7A43DVXJyHPo6JqohdwYb1U85pWLDQ4z5qm6uqw+vSAoLvW1sa
-         C6p622tFNp353sQHEku1KoOlamuSPHJwR2D09akhY5jCIZjnxUknFMxm2of3ziLK0Hx4
-         K6RA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=CCWfhKT3ktx1Y0knQS9srJLCrgOnb432wETBQgR0zwo=;
-        b=EbbOwjBgeQw9TCLoz7bk/K0usU+Kh4Vz2KOhXpOzDhzf2J6v8wshH3tPUZELlTTuRG
-         1ZsdnxNcv9vxi8aW1/z1kOJf9Jg70HA9Mr6Xwu5ucgvKQfxZ0sqf+C6Zm+byfxYakK1+
-         tOCoTkfXQgkDkq0lAH0qZfgwJ04e1OtlmZAsbyNxf2TWcrOnIJrD5TEiOKS2HHGk7wZn
-         EpaOhPV8zfLffPKUyKAV1GzEhyxs5q4uu+ueI0gC+h887lFx8B6L8Lv1bEOCr5AfJriY
-         8ZUz5suaSPXrY0cJ3ee64e7D9QlHjoXNt9dd3HD5UDJM1uo7dmWorivGHpJT3dhr7MoG
-         78mg==
-X-Gm-Message-State: AOAM532o23mUkTnq/gW/9b+pbFmO2lMvDfnefhN1hhnILFmMCvsF2TN9
-        gkA7S5uIMV9TGPJ4eVZcmkTZ4Q==
-X-Google-Smtp-Source: ABdhPJyipccSrv690eVVWi+5CEwYt+UFgZ0+2fbz5cV2OhIw8jYbnu+mxTrmBl1wmL06RVvlGefxSA==
-X-Received: by 2002:aed:33c4:: with SMTP id v62mr2703105qtd.19.1604686163988;
-        Fri, 06 Nov 2020 10:09:23 -0800 (PST)
-Received: from ziepe.ca (hlfxns017vw-156-34-48-30.dhcp-dynamic.fibreop.ns.bellaliant.net. [156.34.48.30])
-        by smtp.gmail.com with ESMTPSA id n81sm1082262qke.99.2020.11.06.10.09.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 06 Nov 2020 10:09:23 -0800 (PST)
-Received: from jgg by mlx with local (Exim 4.94)
-        (envelope-from <jgg@ziepe.ca>)
-        id 1kb6As-000ztT-IG; Fri, 06 Nov 2020 14:09:22 -0400
-Date:   Fri, 6 Nov 2020 14:09:22 -0400
-From:   Jason Gunthorpe <jgg@ziepe.ca>
-To:     Logan Gunthorpe <logang@deltatee.com>
-Cc:     linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-mm@kvack.org, iommu@lists.linux-foundation.org,
-        Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
-        Ira Weiny <iweiny@intel.com>,
-        John Hubbard <jhubbard@nvidia.com>,
-        Don Dutile <ddutile@redhat.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Daniel Vetter <daniel.vetter@ffwll.ch>
-Subject: Re: [RFC PATCH 14/15] PCI/P2PDMA: Introduce pci_mmap_p2pmem()
-Message-ID: <20201106180922.GV36674@ziepe.ca>
-References: <20201106170036.18713-1-logang@deltatee.com>
- <20201106170036.18713-15-logang@deltatee.com>
- <20201106172206.GS36674@ziepe.ca>
- <b1e8dfce-d583-bed8-d04d-b7265a54c99f@deltatee.com>
- <20201106174223.GU36674@ziepe.ca>
- <2c2d2815-165e-2ef9-60d6-3ace7ff3aaa5@deltatee.com>
+        with ESMTP id S1727860AbgKFSUG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Nov 2020 13:20:06 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C5E7C0613CF;
+        Fri,  6 Nov 2020 10:20:06 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=VaZQL4432wwI41txwmAvcg9ln4IR3PCVL4Re3U71+J4=; b=oiIbG6MbnwXt4SgUikGk8KT98L
+        J1OORciwVDKq9gmw4bD1H9mTO8kgveIGr1uMAgl58563N27BK71gwjNO328LXWvEvsPjBFjgRtnGe
+        TKy7mkH5PG4AOHrR7RvtBLXGWAh3QrxUmMtK0qt7spGStyPW7e9ilc0k4LAQrgyj5LIkK1uZTf/ws
+        bn8hsIBxBSKvvR8AJurjqoyvAZvZ/01DHO789M19Ml/thAKRcOnbwSUc9qgEwR8sdfoz2/c0haOJf
+        Doe6Utc1Efl6lYAkQ+X8zTrq5mdZvsj7nxR1tsXAk4sAJOjx8g6An+6e1ZAk0DHYmmfFEziBfkCeF
+        WaKTmIYA==;
+Received: from [2001:4bb8:184:9a8d:9e34:f7f4:e59e:ad6f] (helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kb6L0-0005do-1K; Fri, 06 Nov 2020 18:19:51 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jason Gunthorpe <jgg@ziepe.ca>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Bernard Metzler <bmt@zurich.ibm.com>,
+        Zhu Yanjun <yanjunz@nvidia.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
+        Mike Marciniszyn <mike.marciniszyn@cornelisnetworks.com>,
+        Santosh Shilimkar <santosh.shilimkar@oracle.com>,
+        linux-rdma@vger.kernel.org, rds-devel@oss.oracle.com,
+        linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Subject: [PATCH 03/10] RDMA: lift ibdev_to_node from rds to common code
+Date:   Fri,  6 Nov 2020 19:19:34 +0100
+Message-Id: <20201106181941.1878556-4-hch@lst.de>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20201106181941.1878556-1-hch@lst.de>
+References: <20201106181941.1878556-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <2c2d2815-165e-2ef9-60d6-3ace7ff3aaa5@deltatee.com>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Nov 06, 2020 at 10:53:45AM -0700, Logan Gunthorpe wrote:
-> 
-> 
-> On 2020-11-06 10:42 a.m., Jason Gunthorpe wrote:
-> > On Fri, Nov 06, 2020 at 10:28:00AM -0700, Logan Gunthorpe wrote:
-> >>
-> >>
-> >> On 2020-11-06 10:22 a.m., Jason Gunthorpe wrote:
-> >>> On Fri, Nov 06, 2020 at 10:00:35AM -0700, Logan Gunthorpe wrote:
-> >>>> Introduce pci_mmap_p2pmem() which is a helper to allocate and mmap
-> >>>> a hunk of p2pmem into userspace.
-> >>>>
-> >>>> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-> >>>>  drivers/pci/p2pdma.c       | 104 +++++++++++++++++++++++++++++++++++++
-> >>>>  include/linux/pci-p2pdma.h |   6 +++
-> >>>>  2 files changed, 110 insertions(+)
-> >>>>
-> >>>> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-> >>>> index 9961e779f430..8eab53ac59ae 100644
-> >>>> +++ b/drivers/pci/p2pdma.c
-> >>>> @@ -16,6 +16,7 @@
-> >>>>  #include <linux/genalloc.h>
-> >>>>  #include <linux/memremap.h>
-> >>>>  #include <linux/percpu-refcount.h>
-> >>>> +#include <linux/pfn_t.h>
-> >>>>  #include <linux/random.h>
-> >>>>  #include <linux/seq_buf.h>
-> >>>>  #include <linux/xarray.h>
-> >>>> @@ -1055,3 +1056,106 @@ ssize_t pci_p2pdma_enable_show(char *page, struct pci_dev *p2p_dev,
-> >>>>  	return sprintf(page, "%s\n", pci_name(p2p_dev));
-> >>>>  }
-> >>>>  EXPORT_SYMBOL_GPL(pci_p2pdma_enable_show);
-> >>>> +
-> >>>> +struct pci_p2pdma_map {
-> >>>> +	struct kref ref;
-> >>>> +	struct pci_dev *pdev;
-> >>>> +	void *kaddr;
-> >>>> +	size_t len;
-> >>>> +};
-> >>>
-> >>> Why have this at all? Nothing uses it and no vm_operations ops are
-> >>> implemented?
-> >>
-> >> It's necessary to free the allocated p2pmem when the mapping is torn down.
-> > 
-> > That's suspicious.. Once in a VMA the lifetime of the page must be
-> > controlled by the page refcount, it can't be put back into the genpool
-> > just because the vma was destroed.
-> 
-> Ah, hmm, yes. I guess the pages have to be hooked and returned to the
-> genalloc through free_devmap_managed_page(). 
+Lift the ibdev_to_node from rds to common code and document it.
 
-That sounds about right, but in this case it doesn't need the VMA
-operations.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ include/rdma/ib_verbs.h | 13 +++++++++++++
+ net/rds/ib.h            |  7 -------
+ 2 files changed, 13 insertions(+), 7 deletions(-)
 
-> Seems like it might be doable... but it will complicate things for
-> users that don't want to use the genpool (though no such users exist
-> upstream).
+diff --git a/include/rdma/ib_verbs.h b/include/rdma/ib_verbs.h
+index 9bf6c319a670e2..3257cc046e460f 100644
+--- a/include/rdma/ib_verbs.h
++++ b/include/rdma/ib_verbs.h
+@@ -4615,6 +4615,19 @@ static inline struct ib_device *rdma_device_to_ibdev(struct device *device)
+ 	return coredev->owner;
+ }
+ 
++/**
++ * ibdev_to_node - return the NUMA node for a given ib_device
++ * @dev:	device to get the NUMA node for.
++ */
++static inline int ibdev_to_node(struct ib_device *ibdev)
++{
++	struct device *parent = ibdev->dev.parent;
++
++	if (!parent)
++		return NUMA_NO_NODE;
++	return dev_to_node(parent);
++}
++
+ /**
+  * rdma_device_to_drv_device - Helper macro to reach back to driver's
+  *			       ib_device holder structure from device pointer.
+diff --git a/net/rds/ib.h b/net/rds/ib.h
+index 8dfff43cf07f46..c23a11d9ad3628 100644
+--- a/net/rds/ib.h
++++ b/net/rds/ib.h
+@@ -264,13 +264,6 @@ struct rds_ib_device {
+ 	int			*vector_load;
+ };
+ 
+-static inline int ibdev_to_node(struct ib_device *ibdev)
+-{
+-	struct device *parent;
+-
+-	parent = ibdev->dev.parent;
+-	return parent ? dev_to_node(parent) : NUMA_NO_NODE;
+-}
+ #define rdsibdev_to_node(rdsibdev) ibdev_to_node(rdsibdev->dev)
+ 
+ /* bits for i_ack_flags */
+-- 
+2.28.0
 
-I would like to use this stuff in RDMA pretty much immediately and the
-genpool is harmful for those cases, so please don't make decisions
-that are tying thing to genpool
-
-Jason
