@@ -7,33 +7,33 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E058C388F7
-	for <linux-pci@archiver.kernel.org>; Fri,  6 Nov 2020 00:16:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F545C388F7
+	for <linux-pci@archiver.kernel.org>; Fri,  6 Nov 2020 00:16:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 332F82075A
-	for <linux-pci@archiver.kernel.org>; Fri,  6 Nov 2020 00:16:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 621A920782
+	for <linux-pci@archiver.kernel.org>; Fri,  6 Nov 2020 00:16:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732806AbgKFAPM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 5 Nov 2020 19:15:12 -0500
+        id S1732792AbgKFAPK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 5 Nov 2020 19:15:10 -0500
 Received: from mga12.intel.com ([192.55.52.136]:23004 "EHLO mga12.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732804AbgKFAPL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 5 Nov 2020 19:15:11 -0500
-IronPort-SDR: sMSKZ4aXalTgHTyfK0Qh5z47Y83wir0buEIKvL4jN5ad1R6oWObgDfSXsj9nHbxg+z69vWt5L/
- tzRmH1Fh879g==
-X-IronPort-AV: E=McAfee;i="6000,8403,9796"; a="148759535"
+        id S1729784AbgKFAPI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 5 Nov 2020 19:15:08 -0500
+IronPort-SDR: 7HBaDPvr/nTwyGojck/BUhN3aQm7ZnCTjsReg4OokJwAYg8YyE3VAe+ryXWeh62tLr0/pJg7DE
+ WiJVNtGbfe1A==
+X-IronPort-AV: E=McAfee;i="6000,8403,9796"; a="148759524"
 X-IronPort-AV: E=Sophos;i="5.77,454,1596524400"; 
-   d="scan'208";a="148759535"
+   d="scan'208";a="148759524"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Nov 2020 16:15:11 -0800
-IronPort-SDR: I7D9R71uEAylk8Nx6awjPWXH1rTJNIxprgWx+evfv6b7y/bm+Fb519NXafTMeud2BDUeQC3FLk
- NUptICr8nGsg==
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Nov 2020 16:15:07 -0800
+IronPort-SDR: on9xl7CS9bXViwYZBXDfk0avvjIlzhIUTIIMVkEMWPmHIKJGr5cv+e+Ug2qcjZn+XJBTMJz/10
+ DT9kBhgEe/tg==
 X-IronPort-AV: E=Sophos;i="5.77,454,1596524400"; 
-   d="scan'208";a="529621713"
+   d="scan'208";a="529621687"
 Received: from gabriels-mobl1.amr.corp.intel.com (HELO arch-ashland-svkelley.intel.com) ([10.209.37.33])
-  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Nov 2020 16:15:11 -0800
+  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Nov 2020 16:15:06 -0800
 From:   Sean V Kelley <sean.v.kelley@intel.com>
 To:     bhelgaas@google.com, Jonathan.Cameron@huawei.com,
         xerces.zhao@gmail.com, rafael.j.wysocki@intel.com,
@@ -41,9 +41,9 @@ To:     bhelgaas@google.com, Jonathan.Cameron@huawei.com,
         sathyanarayanan.kuppuswamy@intel.com, qiuxu.zhuo@intel.com
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         Sean V Kelley <sean.v.kelley@intel.com>
-Subject: [PATCH v10 06/16] PCI/ERR: Simplify by using pci_upstream_bridge()
-Date:   Thu,  5 Nov 2020 16:14:34 -0800
-Message-Id: <20201106001444.667232-7-sean.v.kelley@intel.com>
+Subject: [PATCH v10 01/16] AER: aer_root_reset() non-native handling
+Date:   Thu,  5 Nov 2020 16:14:29 -0800
+Message-Id: <20201106001444.667232-2-sean.v.kelley@intel.com>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201106001444.667232-1-sean.v.kelley@intel.com>
 References: <20201106001444.667232-1-sean.v.kelley@intel.com>
@@ -53,31 +53,78 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Use pci_upstream_bridge() in place of dev->bus->self.  No functional change
-intended.
+If an OS has not been granted AER control via _OSC, then
+the OS should not make changes to PCI_ERR_ROOT_COMMAND and
+PCI_ERR_ROOT_STATUS related registers. Per section 4.5.1 of
+the System Firmware Intermediary (SFI) _OSC and DPC Updates
+ECN [1], this bit also covers these aspects of the PCI
+Express Advanced Error Reporting. Based on the above and
+earlier discussion [2], make the following changes:
 
-[bhelgaas: split to separate patch]
-Link: https://lore.kernel.org/r/20201002184735.1229220-6-seanvk.dev@oregontracks.org
+Add a check for the native case (i.e., AER control via _OSC)
+
+Note that the current "clear, reset, enable" order suggests that the
+reset might cause errors that we should ignore. Lacking historical
+context, these will be retained.
+
+[1] System Firmware Intermediary (SFI) _OSC and DPC Updates ECN, Feb 24,
+    2020, affecting PCI Firmware Specification, Rev. 3.2
+    https://members.pcisig.com/wg/PCI-SIG/document/14076
+[2] https://lore.kernel.org/linux-pci/20201020162820.GA370938@bjorn-Precision-5520/
+
 Signed-off-by: Sean V Kelley <sean.v.kelley@intel.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 ---
- drivers/pci/pcie/err.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/pcie/aer.c | 31 +++++++++++++++++--------------
+ 1 file changed, 17 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index db149c6ce4fb..05f61da5ed9d 100644
---- a/drivers/pci/pcie/err.c
-+++ b/drivers/pci/pcie/err.c
-@@ -159,7 +159,7 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
- 	 */
- 	if (!(pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
- 	      pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM))
--		dev = dev->bus->self;
-+		dev = pci_upstream_bridge(dev);
- 	bus = dev->subordinate;
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index 65dff5f3457a..4ab379fa1506 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -1358,26 +1358,29 @@ static int aer_probe(struct pcie_device *dev)
+ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
+ {
+ 	int aer = dev->aer_cap;
++	int rc = 0;
+ 	u32 reg32;
+-	int rc;
+-
  
- 	pci_dbg(dev, "broadcast error_detected message\n");
+-	/* Disable Root's interrupt in response to error messages */
+-	pci_read_config_dword(dev, aer + PCI_ERR_ROOT_COMMAND, &reg32);
+-	reg32 &= ~ROOT_PORT_INTR_ON_MESG_MASK;
+-	pci_write_config_dword(dev, aer + PCI_ERR_ROOT_COMMAND, reg32);
++	if (pcie_aer_is_native(dev)) {
++		/* Disable Root's interrupt in response to error messages */
++		pci_read_config_dword(dev, aer + PCI_ERR_ROOT_COMMAND, &reg32);
++		reg32 &= ~ROOT_PORT_INTR_ON_MESG_MASK;
++		pci_write_config_dword(dev, aer + PCI_ERR_ROOT_COMMAND, reg32);
++	}
+ 
+ 	rc = pci_bus_error_reset(dev);
+-	pci_info(dev, "Root Port link has been reset\n");
++	pci_info(dev, "Root Port link has been reset (%d)\n", rc);
+ 
+-	/* Clear Root Error Status */
+-	pci_read_config_dword(dev, aer + PCI_ERR_ROOT_STATUS, &reg32);
+-	pci_write_config_dword(dev, aer + PCI_ERR_ROOT_STATUS, reg32);
++	if (pcie_aer_is_native(dev)) {
++		/* Clear Root Error Status */
++		pci_read_config_dword(dev, aer + PCI_ERR_ROOT_STATUS, &reg32);
++		pci_write_config_dword(dev, aer + PCI_ERR_ROOT_STATUS, reg32);
+ 
+-	/* Enable Root Port's interrupt in response to error messages */
+-	pci_read_config_dword(dev, aer + PCI_ERR_ROOT_COMMAND, &reg32);
+-	reg32 |= ROOT_PORT_INTR_ON_MESG_MASK;
+-	pci_write_config_dword(dev, aer + PCI_ERR_ROOT_COMMAND, reg32);
++		/* Enable Root Port's interrupt in response to error messages */
++		pci_read_config_dword(dev, aer + PCI_ERR_ROOT_COMMAND, &reg32);
++		reg32 |= ROOT_PORT_INTR_ON_MESG_MASK;
++		pci_write_config_dword(dev, aer + PCI_ERR_ROOT_COMMAND, reg32);
++	}
+ 
+ 	return rc ? PCI_ERS_RESULT_DISCONNECT : PCI_ERS_RESULT_RECOVERED;
+ }
 -- 
 2.29.2
 
