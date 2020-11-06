@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-12.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14360C55178
-	for <linux-pci@archiver.kernel.org>; Fri,  6 Nov 2020 17:02:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 134C7C388F2
+	for <linux-pci@archiver.kernel.org>; Fri,  6 Nov 2020 17:02:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B088020720
-	for <linux-pci@archiver.kernel.org>; Fri,  6 Nov 2020 17:02:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B64872151B
+	for <linux-pci@archiver.kernel.org>; Fri,  6 Nov 2020 17:02:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="Riax6Lm6"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="q9ieAOfg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727831AbgKFRBw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 6 Nov 2020 12:01:52 -0500
-Received: from ale.deltatee.com ([204.191.154.188]:57694 "EHLO
+        id S1727270AbgKFRAy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 6 Nov 2020 12:00:54 -0500
+Received: from ale.deltatee.com ([204.191.154.188]:57608 "EHLO
         ale.deltatee.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727771AbgKFRA6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Nov 2020 12:00:58 -0500
+        with ESMTP id S1725868AbgKFRAx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Nov 2020 12:00:53 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=deltatee.com; s=20200525; h=Subject:Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From:
         Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=vIAzFRE+nSs1Od5bUBFlY5DkV6P9QVEcl+CPAdcAk/o=; b=Riax6Lm6nK77suGcEtPdixJhwy
-        ogbah0pJjRO+uUgDRRm0EctKlaLGBbG334qFWcO79vuSi8DoHii0sc7wt302kKLgaigv0cWhnI97t
-        OU7nnol7v3/zBlNUx3qbZHaCUmEpV6KS3edRY82zksvqjILrVN1Oul79VgT6ObquLVsmhd8ZcVjIG
-        GCBI1aMUZGpX6IFNeg6XUdXUWn6Tt2k/bfDcVLRRel0atZPC4U6EpYZMj6muUdZuMaS4W9Sw4C+MO
-        hi3fTyRMlllHav4rwT1z952XjcqfpbKk1CV4kKjjg3CAIR8vkG3b59XdJN4Bt1qUvyC5S0Jn3JcJi
-        ZT21YM0Q==;
+        bh=q5mN94C0GkWo+VfB8UZJYJyJ0FbV13s+5fRAPuv9Vi0=; b=q9ieAOfgH5dn9nd+5h7la82GAr
+        H6p3fUY3rpgzh4OPt3P1l1PuI9h7ecYxc7I5RndJ9a1n+B3tAZOi3clUR6aY36i+UdMJ4QIggspKI
+        6yb0s5rFl52pn/iuYtn20KNAe0dPDeUcJ8r2/dH+kZBokpsnruyp6xIniH+mT6z1cfVu4jfHwFsJC
+        Hya2i2aUU1+GBaL5H5SwAp5e2z/heNFpcz8WmQlpjcq2aUmtRexe2J/4Xs9krhy3OVkBJDAKfiql6
+        45GoV6VNGLaXjtSsULb9F/djCFEJ6Wk3aUs+czOqwLS3/XaChCuurdh1t143XkBIpFwDoxq/zLNqq
+        QaXyaDng==;
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1kb56f-0002PV-5e; Fri, 06 Nov 2020 10:00:58 -0700
+        id 1kb56Z-0002PY-5k; Fri, 06 Nov 2020 10:00:53 -0700
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.92)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1kb56V-0004tN-K4; Fri, 06 Nov 2020 10:00:47 -0700
+        id 1kb56U-0004sw-Eh; Fri, 06 Nov 2020 10:00:46 -0700
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
@@ -56,8 +56,8 @@ Cc:     Stephen Bates <sbates@raithlin.com>,
         Matthew Wilcox <willy@infradead.org>,
         Daniel Vetter <daniel.vetter@ffwll.ch>,
         Logan Gunthorpe <logang@deltatee.com>
-Date:   Fri,  6 Nov 2020 10:00:33 -0700
-Message-Id: <20201106170036.18713-13-logang@deltatee.com>
+Date:   Fri,  6 Nov 2020 10:00:24 -0700
+Message-Id: <20201106170036.18713-4-logang@deltatee.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20201106170036.18713-1-logang@deltatee.com>
 References: <20201106170036.18713-1-logang@deltatee.com>
@@ -66,48 +66,111 @@ Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
 X-SA-Exim-Rcpt-To: linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-pci@vger.kernel.org, linux-mm@kvack.org, iommu@lists.linux-foundation.org, sbates@raithlin.com, hch@lst.de, jgg@ziepe.ca, christian.koenig@amd.com, dan.j.williams@intel.com, iweiny@intel.com, jhubbard@nvidia.com, ddutile@redhat.com, willy@infradead.org, daniel.vetter@ffwll.ch, logang@deltatee.com
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [RFC PATCH 12/15] block: Set FOLL_PCI_P2PDMA in __bio_iov_iter_get_pages()
+Subject: [RFC PATCH 03/15] PCI/P2PDMA: Introduce pci_p2pdma_should_map_bus() and pci_p2pdma_bus_offset()
 X-SA-Exim-Version: 4.2.1 (built Wed, 08 May 2019 21:11:16 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-When a bio's queue supports PCI P2PDMA, set FOLL_PCI_P2PDMA for
-iov_iter_get_pages_flags(). This allows PCI P2PDMA pages to be passed
-from userspace and enables the O_DIRECT path in iomap based filesystems
-and direct to block devices.
+Introduce pci_p2pdma_should_map_bus() which is meant to be called by
+dma map functions to determine how to map a given p2pdma page.
+
+pci_p2pdma_bus_offset() is also added to allow callers to get the bus
+offset if they need to map the bus address.
 
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 ---
- block/bio.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/pci/p2pdma.c       | 46 ++++++++++++++++++++++++++++++++++++++
+ include/linux/pci-p2pdma.h | 11 +++++++++
+ 2 files changed, 57 insertions(+)
 
-diff --git a/block/bio.c b/block/bio.c
-index fa01bef35bb1..6b28256a5575 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -997,6 +997,7 @@ static int __bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
- 	struct bio_vec *bv = bio->bi_io_vec + bio->bi_vcnt;
- 	struct page **pages = (struct page **)bv;
- 	bool same_page = false;
-+	unsigned int flags = 0;
- 	ssize_t size, left;
- 	unsigned len, i;
- 	size_t offset;
-@@ -1009,7 +1010,11 @@ static int __bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
- 	BUILD_BUG_ON(PAGE_PTRS_PER_BVEC < 2);
- 	pages += entries_left * (PAGE_PTRS_PER_BVEC - 1);
+diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+index ea8472278b11..9961e779f430 100644
+--- a/drivers/pci/p2pdma.c
++++ b/drivers/pci/p2pdma.c
+@@ -930,6 +930,52 @@ void pci_p2pdma_unmap_sg_attrs(struct device *dev, struct scatterlist *sg,
+ }
+ EXPORT_SYMBOL_GPL(pci_p2pdma_unmap_sg_attrs);
  
--	size = iov_iter_get_pages(iter, pages, LONG_MAX, nr_pages, &offset);
-+	if (bio->bi_disk && blk_queue_pci_p2pdma(bio->bi_disk->queue))
-+		flags |= FOLL_PCI_P2PDMA;
++/**
++ * pci_p2pdma_bus_offset - returns the bus offset for a given page
++ * @page: page to get the offset for
++ *
++ * Must be passed a pci p2pdma page.
++ */
++u64 pci_p2pdma_bus_offset(struct page *page)
++{
++	struct pci_p2pdma_pagemap *p2p_pgmap = to_p2p_pgmap(page->pgmap);
 +
-+	size = iov_iter_get_pages_flags(iter, pages, LONG_MAX, nr_pages,
-+					&offset, flags);
- 	if (unlikely(size <= 0))
- 		return size ? size : -EFAULT;
- 
++	WARN_ON(!is_pci_p2pdma_page(page));
++
++	return p2p_pgmap->bus_offset;
++}
++EXPORT_SYMBOL_GPL(pci_p2pdma_bus_offset);
++
++/**
++ * pci_p2pdma_should_map_bus - determine if a dma mapping should use the
++ *	bus address
++ * @dev: device doing the DMA request
++ * @pgmap: dev_pagemap structure for the mapping
++ *
++ * Returns 1 if the page should be mapped with a bus address, 0 otherwise
++ * and -1 the device should not be mapping P2PDMA pages.
++ */
++int pci_p2pdma_should_map_bus(struct device *dev, struct dev_pagemap *pgmap)
++{
++	struct pci_p2pdma_pagemap *p2p_pgmap = to_p2p_pgmap(pgmap);
++	struct pci_dev *client;
++
++	if (!dev_is_pci(dev))
++		return -1;
++
++	client = to_pci_dev(dev);
++
++	switch (pci_p2pdma_map_type(p2p_pgmap->provider, client)) {
++	case PCI_P2PDMA_MAP_THRU_HOST_BRIDGE:
++		return 0;
++	case PCI_P2PDMA_MAP_BUS_ADDR:
++		return 1;
++	default:
++		return -1;
++	}
++}
++EXPORT_SYMBOL_GPL(pci_p2pdma_should_map_bus);
++
+ /**
+  * pci_p2pdma_enable_store - parse a configfs/sysfs attribute store
+  *		to enable p2pdma
+diff --git a/include/linux/pci-p2pdma.h b/include/linux/pci-p2pdma.h
+index 8318a97c9c61..fc5de47eeac4 100644
+--- a/include/linux/pci-p2pdma.h
++++ b/include/linux/pci-p2pdma.h
+@@ -34,6 +34,8 @@ int pci_p2pdma_map_sg_attrs(struct device *dev, struct scatterlist *sg,
+ 		int nents, enum dma_data_direction dir, unsigned long attrs);
+ void pci_p2pdma_unmap_sg_attrs(struct device *dev, struct scatterlist *sg,
+ 		int nents, enum dma_data_direction dir, unsigned long attrs);
++u64 pci_p2pdma_bus_offset(struct page *page);
++int pci_p2pdma_should_map_bus(struct device *dev, struct dev_pagemap *pgmap);
+ int pci_p2pdma_enable_store(const char *page, struct pci_dev **p2p_dev,
+ 			    bool *use_p2pdma);
+ ssize_t pci_p2pdma_enable_show(char *page, struct pci_dev *p2p_dev,
+@@ -83,6 +85,15 @@ static inline void pci_p2pmem_free_sgl(struct pci_dev *pdev,
+ static inline void pci_p2pmem_publish(struct pci_dev *pdev, bool publish)
+ {
+ }
++static inline u64 pci_p2pdma_bus_offset(struct page *page)
++{
++	return -1;
++}
++static inline int pci_p2pdma_should_map_bus(struct device *dev,
++					    struct dev_pagemap *pgmap)
++{
++	return -1;
++}
+ static inline int pci_p2pdma_map_sg_attrs(struct device *dev,
+ 		struct scatterlist *sg, int nents, enum dma_data_direction dir,
+ 		unsigned long attrs)
 -- 
 2.20.1
 
