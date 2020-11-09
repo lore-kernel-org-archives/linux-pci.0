@@ -8,45 +8,45 @@ X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5ED6C388F7
-	for <linux-pci@archiver.kernel.org>; Mon,  9 Nov 2020 17:05:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B6CFC5517A
+	for <linux-pci@archiver.kernel.org>; Mon,  9 Nov 2020 17:05:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7CE2F20E65
-	for <linux-pci@archiver.kernel.org>; Mon,  9 Nov 2020 17:05:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4C3EE21D93
+	for <linux-pci@archiver.kernel.org>; Mon,  9 Nov 2020 17:05:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="tfqw9T8T"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="TonV/vJK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731325AbgKIRE7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 9 Nov 2020 12:04:59 -0500
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:45396 "EHLO
+        id S1731289AbgKIRE5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 9 Nov 2020 12:04:57 -0500
+Received: from fllv0015.ext.ti.com ([198.47.19.141]:45386 "EHLO
         fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731319AbgKIRE6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Nov 2020 12:04:58 -0500
+        with ESMTP id S1730841AbgKIRE4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Nov 2020 12:04:56 -0500
 Received: from lelv0266.itg.ti.com ([10.180.67.225])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 0A9H4qct001909;
-        Mon, 9 Nov 2020 11:04:52 -0600
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1604941492;
-        bh=IpwM0VYjFst7O7GZPtDw/QKWR6xLDCT8pa2h5EbOyBs=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=tfqw9T8T151l+pyju4yVSNOUQV7OlEHiqS7soVCoFiO4f3oy9bC93V5+ThABX4i/B
-         7F7zA77+EiTQOuzQCYdI4e7ezRXx45UZy1FTdZubW/NaY3fF02x3vzYS5ocfkM8P6M
-         QPCLIXxk0p7ERpZwDb8i4f+kuTIZmyTkY3BDF6Ws=
-Received: from DFLE112.ent.ti.com (dfle112.ent.ti.com [10.64.6.33])
-        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 0A9H4qE7096660
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 9 Nov 2020 11:04:52 -0600
-Received: from DFLE110.ent.ti.com (10.64.6.31) by DFLE112.ent.ti.com
- (10.64.6.33) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Mon, 9 Nov
- 2020 11:04:52 -0600
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DFLE110.ent.ti.com
- (10.64.6.31) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
- Frontend Transport; Mon, 9 Nov 2020 11:04:52 -0600
-Received: from a0393678-ssd.dal.design.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0A9H4Awa036684;
+        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 0A9H4m8D001885;
         Mon, 9 Nov 2020 11:04:48 -0600
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1604941488;
+        bh=GYtAOEut/0FFiR6xZ9eTzNKBNpdk6Wpn5qkaz83y1S8=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References;
+        b=TonV/vJKGbdqtU1104JfrGIa6SR3uAyBW9ju0O/olnfPtw7yMquhAwIYbfuTqq1/a
+         IInXyLdOJud5lXti08/OtL6Lp9sj+nLaRfpBezr+UQTMK9Qfu+XmDmKUfl+rDuO009
+         SoWVY2y9hmWn3F7VQXKQfE5YXyOd+lwKTVR4avq0=
+Received: from DLEE104.ent.ti.com (dlee104.ent.ti.com [157.170.170.34])
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 0A9H4mnQ096597
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 9 Nov 2020 11:04:48 -0600
+Received: from DLEE111.ent.ti.com (157.170.170.22) by DLEE104.ent.ti.com
+ (157.170.170.34) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Mon, 9 Nov
+ 2020 11:04:47 -0600
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE111.ent.ti.com
+ (157.170.170.22) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
+ Frontend Transport; Mon, 9 Nov 2020 11:04:47 -0600
+Received: from a0393678-ssd.dal.design.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0A9H4AwZ036684;
+        Mon, 9 Nov 2020 11:04:42 -0600
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Tero Kristo <t-kristo@ti.com>, Nishanth Menon <nm@ti.com>,
         Rob Herring <robh+dt@kernel.org>,
@@ -55,9 +55,9 @@ CC:     Kishon Vijay Abraham I <kishon@ti.com>,
         <linux-arm-kernel@lists.infradead.org>,
         <devicetree@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
         <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH v2 7/7] arm64: dts: ti: k3-j7200-common-proc-board: Enable PCIe
-Date:   Mon, 9 Nov 2020 22:34:09 +0530
-Message-ID: <20201109170409.4498-8-kishon@ti.com>
+Subject: [PATCH v2 6/7] arm64: dts: ti: k3-j7200-common-proc-board: Enable SERDES0
+Date:   Mon, 9 Nov 2020 22:34:08 +0530
+Message-ID: <20201109170409.4498-7-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20201109170409.4498-1-kishon@ti.com>
 References: <20201109170409.4498-1-kishon@ti.com>
@@ -68,44 +68,51 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-x2 lane PCIe slot in the common processor board is enabled and connected to
-j7200 SOM. Add PCIe DT node in common processor board to reflect the
-same.
+Add sub-nodes to SERDES0 DT node to represent SERDES0 is connected
+to PCIe and QSGMII (multi-link SERDES).
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- .../boot/dts/ti/k3-j7200-common-proc-board.dts    | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ .../dts/ti/k3-j7200-common-proc-board.dts     | 23 +++++++++++++++++++
+ 1 file changed, 23 insertions(+)
 
 diff --git a/arch/arm64/boot/dts/ti/k3-j7200-common-proc-board.dts b/arch/arm64/boot/dts/ti/k3-j7200-common-proc-board.dts
-index 65a2e5aeb050..174a55a18522 100644
+index ef03e7636b66..65a2e5aeb050 100644
 --- a/arch/arm64/boot/dts/ti/k3-j7200-common-proc-board.dts
 +++ b/arch/arm64/boot/dts/ti/k3-j7200-common-proc-board.dts
-@@ -6,6 +6,7 @@
- /dts-v1/;
- 
+@@ -8,6 +8,7 @@
  #include "k3-j7200-som-p0.dtsi"
-+#include <dt-bindings/gpio/gpio.h>
  #include <dt-bindings/net/ti-dp83867.h>
  #include <dt-bindings/mux/ti-serdes.h>
- #include <dt-bindings/phy/phy.h>
-@@ -236,3 +237,17 @@
- 		resets = <&serdes_wiz0 3>;
- 	};
++#include <dt-bindings/phy/phy.h>
+ 
+ / {
+ 	chosen {
+@@ -213,3 +214,25 @@
+ 	dr_mode = "otg";
+ 	maximum-speed = "high-speed";
  };
 +
-+&pcie1_rc {
-+	reset-gpios = <&exp1 2 GPIO_ACTIVE_HIGH>;
-+	phys = <&serdes0_pcie_link>;
-+	phy-names = "pcie-phy";
-+	num-lanes = <2>;
++&serdes_refclk {
++	clock-frequency = <100000000>;
 +};
 +
-+&pcie1_ep {
-+	phys = <&serdes0_pcie_link>;
-+	phy-names = "pcie-phy";
-+	num-lanes = <2>;
-+	status = "disabled";
++&serdes0 {
++	serdes0_pcie_link: phy@0 {
++		reg = <0>;
++		cdns,num-lanes = <2>;
++		#phy-cells = <0>;
++		cdns,phy-type = <PHY_TYPE_PCIE>;
++		resets = <&serdes_wiz0 1>, <&serdes_wiz0 2>;
++	};
++
++	serdes0_qsgmii_link: phy@1 {
++		reg = <2>;
++		cdns,num-lanes = <1>;
++		#phy-cells = <0>;
++		cdns,phy-type = <PHY_TYPE_QSGMII>;
++		resets = <&serdes_wiz0 3>;
++	};
 +};
 -- 
 2.17.1
