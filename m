@@ -7,52 +7,52 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
 	USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9593BC388F7
-	for <linux-pci@archiver.kernel.org>; Tue, 10 Nov 2020 03:19:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A25D3C5517A
+	for <linux-pci@archiver.kernel.org>; Tue, 10 Nov 2020 04:48:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3F0F32067B
-	for <linux-pci@archiver.kernel.org>; Tue, 10 Nov 2020 03:19:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4DB9220731
+	for <linux-pci@archiver.kernel.org>; Tue, 10 Nov 2020 04:48:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="XsFFeqcH"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="efHLQUtV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730877AbgKJDTH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 9 Nov 2020 22:19:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41430 "EHLO
+        id S1730576AbgKJEsP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 9 Nov 2020 23:48:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55294 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729831AbgKJDTG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Nov 2020 22:19:06 -0500
-Received: from mail-pg1-x529.google.com (mail-pg1-x529.google.com [IPv6:2607:f8b0:4864:20::529])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63722C0613D6
-        for <linux-pci@vger.kernel.org>; Mon,  9 Nov 2020 19:19:06 -0800 (PST)
-Received: by mail-pg1-x529.google.com with SMTP id f18so4449517pgi.8
-        for <linux-pci@vger.kernel.org>; Mon, 09 Nov 2020 19:19:06 -0800 (PST)
+        with ESMTP id S1729661AbgKJEsO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Nov 2020 23:48:14 -0500
+Received: from mail-ua1-x942.google.com (mail-ua1-x942.google.com [IPv6:2607:f8b0:4864:20::942])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42E39C0613D4
+        for <linux-pci@vger.kernel.org>; Mon,  9 Nov 2020 20:48:14 -0800 (PST)
+Received: by mail-ua1-x942.google.com with SMTP id q68so3556053uaq.3
+        for <linux-pci@vger.kernel.org>; Mon, 09 Nov 2020 20:48:14 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=27ykW6WMBpdjPMmYk+TEkpv4ofG2LVLk39veK8STtAM=;
-        b=XsFFeqcHcwErTDab8bcJJxnRZmdrfwAAmAxnX+0//0jp/RkNoXCmKM8hfyW7U5g8YY
-         wehgfKm1eruNJkdwnQxX/6RNlrNe6CP3uC9uMuIcChKg7gmdAwILZVQXBK3QxQME/vGY
-         n9bBZbqKsp3rUj7gjL3n2idnQJIzZFT2jQDMtCEsHtuxaEBlgAGdozKhGraOM+DNtPKU
-         1TYIu8MdisQa5tafuex26ZLInGgdddCQESLcztFd9caJZ9PszasLRkfq4/Txf1N1n6Z0
-         s8KzSi9dTkyd/sKQMAPCsqQUdj936ITZXkP6f+AREgqbuvxOMRr0Qudq4LaTJaYBzxn8
-         l8Rg==
+        bh=1LG6AI05ymINBvkr43QJrWhW6+Oh0OuOMO1LRwJumoQ=;
+        b=efHLQUtVvktbFbKV0dRhcMiDZ6CiF/nI8yogKkQkXNzkMFEKE5odhT1f13Q4gPJXAu
+         wN0hB9BkQq58Ja7rNMPt1NZVdynEexfdbYBnP6P1V9zpSI+DJlZlVHIYRtDLOuDybsKK
+         SBxayzR/8WM3Q2prP7nQi2dCRyo/MR20sOg6N/LmD6SDjillgAvfoYjFLd2lgcKBMzWH
+         STTrkAhehecfpfomXSDFfie9rZLcKj9V2nN+Xx5m1srFv2/b/ayMzlhJB+vG6YJrW6md
+         +YUyQc+RbXeRLi4+1JZo48a5U5H0fYHqd3kOi7vj283pPMdGH774liDFv7DcOCzqsBmW
+         a6ww==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=27ykW6WMBpdjPMmYk+TEkpv4ofG2LVLk39veK8STtAM=;
-        b=SNBhqNdICYMNzG+00FufzZUJErSHhIFerZ3DfNVcmCnTwr7zlqvD1wHgbCsjpu2oZS
-         X5UE2jWowbPHSSqdzm7BXcnoh/9b3YalX/VRmtkrfv1c5enITmEdXuXLQtf8TTFKCjYE
-         mCbEetGrdN6pt0Yd/djuioubqdU+0W6lT8THEWCD/1NiLun2ibh3Ewf+UzLt0CVTD9bS
-         GOtIVCyPb+VU3G3Na3Smi07GWrrjaOTcTmIOK1+ypxGpSvZKR3kfr3gd/SM0bn0wNvf3
-         BZC7QUh7ru5mGs+uNWNyQY86cDQsIRt2aSIsS48iHl0/MsEdWLAb1Mc8o9dH33my24Hr
-         +BEA==
-X-Gm-Message-State: AOAM5318Ju6+ty7MNb0HHspW+NMt+5hZWitGPuOaBMAzJ4D5+BqxoDtT
-        hmg2cxRrFp7vInUUT1w1bKMsds5EEhvJfuCe9L7EoQ==
-X-Google-Smtp-Source: ABdhPJw1gHS3sV2n+GuuNrA63YxT/QiulRGIL8Dn09J7EAZtkgIEcv7I2sFS4tI7OV3X2dr4+8t654iME8/HuHneKZ4=
-X-Received: by 2002:a17:90a:4881:: with SMTP id b1mr2684359pjh.32.1604978345526;
- Mon, 09 Nov 2020 19:19:05 -0800 (PST)
+        bh=1LG6AI05ymINBvkr43QJrWhW6+Oh0OuOMO1LRwJumoQ=;
+        b=DmNWiflIPEssKhmJmltCQfQtUaHnUhnYugXysyXK8Divm90J689QNcqRP39BjkKMod
+         YY0u+B8iKVOPUvFZMe+GAiI9PVYmrxAolWS/UZxfQdLY1uGmd9yZPdVUgToH6p+BioWH
+         5vPoHgs2lbi7KneDvninZbfDyQTUHWMl6uUy6nYN+ywi0+3hP6nMVRrLABdxbeMGV+DD
+         C4sLYRzJfqa+4A1xnv1qCOxjixxcdk8lMMQUf3mn3NF1vnKALsH2tXIYKvzAqd3N8MV4
+         k1eKOTcclIW/KhQn+/emd+2BjiQrB19XTHJOEMyQvrM32rBgBSV1/nU+0LjpGeQA/F45
+         OaLQ==
+X-Gm-Message-State: AOAM533fXmebaUEMmB0K1uJJbOmWyvqhthNaCSgcEqSHWLtD9ZsI3Tc4
+        VvcsEq2x54bMrhps3CdjHM8Nj5DlPn4Pfo4vZ7dFDw==
+X-Google-Smtp-Source: ABdhPJxkDi0IYzwTD9/NuW8drJgZEjV2OxRwIJgfYZxoJw/2It4YGoA7cCSoDZ10V3gQPihhY7p+XtZ3gEYyqR4paw4=
+X-Received: by 2002:ab0:424:: with SMTP id 33mr8354135uav.33.1604983692991;
+ Mon, 09 Nov 2020 20:48:12 -0800 (PST)
 MIME-Version: 1.0
 References: <CAG48ez2baAvKDA0wfYLKy-KnM_1CdOwjU873VJGDM=CErjsv_A@mail.gmail.com>
  <20201015102216.GB2611@hirez.programming.kicks-ass.net> <20201015203942.f3kwcohcwwa6lagd@treble>
@@ -62,13 +62,12 @@ References: <CAG48ez2baAvKDA0wfYLKy-KnM_1CdOwjU873VJGDM=CErjsv_A@mail.gmail.com>
  <20201023173617.GA3021099@google.com> <CABCJKuee7hUQSiksdRMYNNx05bW7pWaDm4fQ__znGQ99z9-dEw@mail.gmail.com>
  <20201110022924.tekltjo25wtrao7z@treble>
 In-Reply-To: <20201110022924.tekltjo25wtrao7z@treble>
-From:   Nick Desaulniers <ndesaulniers@google.com>
-Date:   Mon, 9 Nov 2020 19:18:54 -0800
-Message-ID: <CAKwvOdnO2tZRcB69yJ+FTj+qGpzCasxecCPQ0c5G9Wwn6Wd12w@mail.gmail.com>
+From:   Sami Tolvanen <samitolvanen@google.com>
+Date:   Mon, 9 Nov 2020 20:48:01 -0800
+Message-ID: <CABCJKuc_-Sxj8HLajx4pKuBpU3AUdBtPv4uzQfMWqVHWwHS1iQ@mail.gmail.com>
 Subject: Re: [PATCH v6 22/25] x86/asm: annotate indirect jumps
 To:     Josh Poimboeuf <jpoimboe@redhat.com>
-Cc:     Sami Tolvanen <samitolvanen@google.com>,
-        Peter Zijlstra <peterz@infradead.org>,
+Cc:     Peter Zijlstra <peterz@infradead.org>,
         Jann Horn <jannh@google.com>,
         "the arch/x86 maintainers" <x86@kernel.org>,
         Masahiro Yamada <masahiroy@kernel.org>,
@@ -77,6 +76,7 @@ Cc:     Sami Tolvanen <samitolvanen@google.com>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         "Paul E. McKenney" <paulmck@kernel.org>,
         Kees Cook <keescook@chromium.org>,
+        Nick Desaulniers <ndesaulniers@google.com>,
         clang-built-linux <clang-built-linux@googlegroups.com>,
         Kernel Hardening <kernel-hardening@lists.openwall.com>,
         linux-arch <linux-arch@vger.kernel.org>,
@@ -90,18 +90,23 @@ List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 On Mon, Nov 9, 2020 at 6:29 PM Josh Poimboeuf <jpoimboe@redhat.com> wrote:
->
-> Also, any details on how to build clang would be appreciated, it's been
-> a while since I tried.
+> How would I recreate all these warnings?
 
-$ git clone https://github.com/llvm/llvm-project.git --depth 1
-$ mkdir llvm-project/llvm/build
-$ cd !$
-$ cmake .. -DCMAKE_BUILD_TYPE=Release -G Ninja
--DLLVM_ENABLE_PROJECTS="clang;lld;compiler-rt"
-$ ninja
-$ export PATH=$(pwd)/bin:$PATH
-$ clang --version
--- 
-Thanks,
-~Nick Desaulniers
+You can reproduce all of these using a normal gcc build without any of
+the LTO patches by running objtool check -arfld vmlinux.o. However,
+with gcc you'll see even more warnings due to duplicate symbol names,
+as Peter pointed out elsewhere in the thread, so I looked at only the
+warnings that objtool also prints with LTO.
+
+Note that the LTO series contains a patch to split noinstr validation
+from --vmlinux, as we need to run objtool here even if
+CONFIG_VMLINUX_VALIDATION isn't selected, so I have not looked at the
+noinstr warnings. The latest LTO tree is available here:
+
+https://github.com/samitolvanen/linux/commits/clang-lto
+
+> Here's the patch for hopefully making the warnings more helpful:
+
+Thanks, I'll give it a try.
+
+Sami
