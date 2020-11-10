@@ -2,103 +2,89 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8839FC388F7
-	for <linux-pci@archiver.kernel.org>; Tue, 10 Nov 2020 06:10:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8722C56201
+	for <linux-pci@archiver.kernel.org>; Tue, 10 Nov 2020 06:10:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2D49F20795
-	for <linux-pci@archiver.kernel.org>; Tue, 10 Nov 2020 06:10:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5F5A420795
+	for <linux-pci@archiver.kernel.org>; Tue, 10 Nov 2020 06:10:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731801AbgKJGKb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 10 Nov 2020 01:10:31 -0500
-Received: from mga03.intel.com ([134.134.136.65]:17477 "EHLO mga03.intel.com"
+        id S1732037AbgKJGKc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 10 Nov 2020 01:10:32 -0500
+Received: from mga03.intel.com ([134.134.136.65]:17481 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731738AbgKJGKb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1731819AbgKJGKb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Tue, 10 Nov 2020 01:10:31 -0500
-IronPort-SDR: 8bs48ESgLPZfuAwkPnGI/U00LqrSxzcnYo0V0NmMIRLonUHjxd+T4hGkKwlWoI7jvWuEmE1MB0
- eIF0GaOmtTog==
-X-IronPort-AV: E=McAfee;i="6000,8403,9800"; a="170035025"
+IronPort-SDR: 32nn60UCSg58ohVffRd8ldXp1NCaRFPU3esIg9cPvVhwSzCNJpKpEv+WpUP4yFfE2A1RRZd9L1
+ R8zSfgM6FYoA==
+X-IronPort-AV: E=McAfee;i="6000,8403,9800"; a="170035030"
 X-IronPort-AV: E=Sophos;i="5.77,465,1596524400"; 
-   d="scan'208";a="170035025"
+   d="scan'208";a="170035030"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Nov 2020 22:10:29 -0800
-IronPort-SDR: teItR5/P0xCamLBtQwgKh6GvVvAS7WDiHEp7hq3MQAnhc2J1V+ci8XadyScA795iMiolu99EqE
- 684PKBYzdJTw==
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Nov 2020 22:10:31 -0800
+IronPort-SDR: iUivQAjkrEcf0jQ+f4phyPmr4GKHHhFdBNbhrywSbUkfxAhMjNYMhWzzGbIwSB/28015p2VQSk
+ 6PGfyPFo8E3g==
 X-IronPort-AV: E=Sophos;i="5.77,465,1596524400"; 
-   d="scan'208";a="365752844"
+   d="scan'208";a="365752866"
 Received: from eevans-mobl1.amr.corp.intel.com (HELO localhost.localdomain) ([10.212.97.1])
-  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Nov 2020 22:10:28 -0800
+  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Nov 2020 22:10:30 -0800
 From:   Vinicius Costa Gomes <vinicius.gomes@intel.com>
 To:     intel-wired-lan@lists.osuosl.org
 Cc:     Vinicius Costa Gomes <vinicius.gomes@intel.com>,
         sasha.neftin@intel.com, andre.guedes@intel.com,
         anthony.l.nguyen@intel.com, linux-pci@vger.kernel.org,
         bhelgaas@google.com, netdev@vger.kernel.org
-Subject: [PATCH next-queue v2 0/3] igc: Add support for PCIe PTM
-Date:   Mon,  9 Nov 2020 22:10:16 -0800
-Message-Id: <20201110061019.519589-1-vinicius.gomes@intel.com>
+Subject: [PATCH next-queue v2 2/3] igc: Enable PCIe PTM
+Date:   Mon,  9 Nov 2020 22:10:18 -0800
+Message-Id: <20201110061019.519589-3-vinicius.gomes@intel.com>
 X-Mailer: git-send-email 2.29.0
+In-Reply-To: <20201110061019.519589-1-vinicius.gomes@intel.com>
+References: <20201110061019.519589-1-vinicius.gomes@intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
+In practice, enabling PTM also sets the enabled_ptm flag in the PCI
+device, the flag will be used for detecting if PTM is enabled before
+adding support for the SYSOFFSET_PRECISE ioctl() (which is added by
+implementing the getcrosststamp() PTP function).
 
-Changes from v1:
-  - This now should cross compile better, convert_art_ns_to_tsc() will
-    only be used if CONFIG_X86_TSC is enabled;
-  - PCIe PTM errors reported by the NIC are logged and PTM cycles are
-    restarted in case an error is detected;
+Signed-off-by: Vinicius Costa Gomes <vinicius.gomes@intel.com>
+---
+ drivers/net/ethernet/intel/igc/igc_main.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-Original cover letter:
-
-This adds support for PCIe PTM (Precision Time Measurement) to the igc
-driver. PCIe PTM allows the NIC and Host clocks to be compared more
-precisely, improving the clock synchronization accuracy.
-
-Patch 1/3 reverts a commit that made pci_enable_ptm() private to the
-PCI subsystem, reverting makes it possible for it to be called from
-the drivers.
-
-Patch 2/3 calls pci_enable_ptm() from the igc driver.
-
-Patch 3/3 implements the PCIe PTM support. It adds a workqueue that
-reads the PTM registers periodically and collects the information so a
-subsequent call to getcrosststamp() has all the timestamps needed.
-
-Some questions are raised (also pointed out in the commit message):
-
-1. Using convert_art_ns_to_tsc() is too x86 specific, there should be
-   a common way to create a 'system_counterval_t' from a timestamp.
-
-2. convert_art_ns_to_tsc() says that it should only be used when
-   X86_FEATURE_TSC_KNOWN_FREQ is true, but during tests it works even
-   when it returns false. Should that check be done?
-
-Cheers,
-
-
-Vinicius Costa Gomes (3):
-  Revert "PCI: Make pci_enable_ptm() private"
-  igc: Enable PCIe PTM
-  igc: Add support for PTP getcrosststamp()
-
- drivers/net/ethernet/intel/igc/igc.h         |   7 +
- drivers/net/ethernet/intel/igc/igc_defines.h |  27 +++
- drivers/net/ethernet/intel/igc/igc_main.c    |   7 +
- drivers/net/ethernet/intel/igc/igc_ptp.c     | 209 +++++++++++++++++++
- drivers/net/ethernet/intel/igc/igc_regs.h    |  23 ++
- drivers/pci/pci.h                            |   3 -
- include/linux/pci.h                          |   7 +
- 7 files changed, 280 insertions(+), 3 deletions(-)
-
+diff --git a/drivers/net/ethernet/intel/igc/igc_main.c b/drivers/net/ethernet/intel/igc/igc_main.c
+index 9112dff075cf..cb4ffa90230c 100644
+--- a/drivers/net/ethernet/intel/igc/igc_main.c
++++ b/drivers/net/ethernet/intel/igc/igc_main.c
+@@ -10,6 +10,7 @@
+ #include <linux/ip.h>
+ #include <linux/pm_runtime.h>
+ #include <net/pkt_sched.h>
++#include <linux/pci.h>
+ 
+ #include <net/ipv6.h>
+ 
+@@ -5017,6 +5018,10 @@ static int igc_probe(struct pci_dev *pdev,
+ 
+ 	pci_enable_pcie_error_reporting(pdev);
+ 
++	err = pci_enable_ptm(pdev, NULL);
++	if (err < 0)
++		dev_err(&pdev->dev, "PTM not supported\n");
++
+ 	pci_set_master(pdev);
+ 
+ 	err = -ENOMEM;
 -- 
 2.29.0
 
