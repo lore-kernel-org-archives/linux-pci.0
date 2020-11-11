@@ -2,168 +2,143 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60F34C5517A
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Nov 2020 12:14:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09C01C63697
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Nov 2020 13:58:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F0BF6206C0
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Nov 2020 12:14:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A07A22084C
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Nov 2020 13:58:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="eQcWhd+4"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="PX5YSlcx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725859AbgKKMNd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 11 Nov 2020 07:13:33 -0500
-Received: from hqnvemgate25.nvidia.com ([216.228.121.64]:5805 "EHLO
-        hqnvemgate25.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726134AbgKKMMd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Nov 2020 07:12:33 -0500
-Received: from hqmail.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate25.nvidia.com (using TLS: TLSv1.2, AES256-SHA)
-        id <B5fabd5090000>; Wed, 11 Nov 2020 04:11:53 -0800
-Received: from HQMAIL105.nvidia.com (172.20.187.12) by HQMAIL111.nvidia.com
- (172.20.187.18) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Wed, 11 Nov
- 2020 12:11:53 +0000
-Received: from vidyas-desktop.nvidia.com (10.124.1.5) by mail.nvidia.com
- (172.20.187.12) with Microsoft SMTP Server id 15.0.1473.3 via Frontend
- Transport; Wed, 11 Nov 2020 12:11:49 +0000
-From:   Vidya Sagar <vidyas@nvidia.com>
-To:     <jingoohan1@gmail.com>, <gustavo.pimentel@synopsys.com>,
-        <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
-        <amurray@thegoodpenguin.co.uk>, <robh@kernel.org>,
-        <treding@nvidia.com>, <jonathanh@nvidia.com>
-CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>,
-        <sagar.tv@gmail.com>
-Subject: [PATCH V2] PCI: dwc: Add support to configure for ECRC
-Date:   Wed, 11 Nov 2020 17:41:45 +0530
-Message-ID: <20201111121145.7015-1-vidyas@nvidia.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20201109192611.16104-1-vidyas@nvidia.com>
-References: <20201109192611.16104-1-vidyas@nvidia.com>
-X-NVConfidentiality: public
+        id S1725900AbgKKN6l (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 11 Nov 2020 08:58:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57764 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726655AbgKKN6K (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Nov 2020 08:58:10 -0500
+Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74F24C0613D1
+        for <linux-pci@vger.kernel.org>; Wed, 11 Nov 2020 05:58:10 -0800 (PST)
+Received: by mail-wr1-x441.google.com with SMTP id p8so2627828wrx.5
+        for <linux-pci@vger.kernel.org>; Wed, 11 Nov 2020 05:58:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=Bg58Nuvlkki+FL9k9rnhWH9yWYXQkDaY8dFISymQNf4=;
+        b=PX5YSlcxcGmSZg8r/sp2D0I5JTHOJyKFcuVZxLO1fiouCfjYWFBADilQDWAd0Zg9Sd
+         HIfJ/J4cOjkRzfvjnj1WMh/LKncrPEtfWeva76W8jYJ5GBV9QsvF6eKzhO5TLf58/h3Y
+         9SHRXS3ggYLKFZJgaiWZUr0gnAEq+xCsESwyC2lrlYNo+T1yDCho+DSiFZax7SLWk8Kc
+         qS+/kEN2EY8zDLbcFnyYa3Hzli6iLHqYJh3b8/FneQUgK84gqG6h1k7T94Ji4UfDLetv
+         p3Xs14pIjTNueMnPgMl2lVXzAS9+JjhDnXFy1NouXt6C7VZY0sEXk+8MnG75YWkKX/C+
+         MxRQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=Bg58Nuvlkki+FL9k9rnhWH9yWYXQkDaY8dFISymQNf4=;
+        b=nQ+tA0C/ccbe6JRm4bDodeDm8vfXKwVV8L9WCeAqWBKWhkay5fvxxjiMZGUyUSOyXy
+         MEBhuEgRj9fvswFYclgxf9MSTQGZz8UDPETMWdqrRzhC6sDKaAA4GTr8fdCCwn+n8sdA
+         PymQ1rHUZ2ltYDCSyIw1EhjOJnGgQnJmtg0PRH0ppkMH13UU6TAOtTQ4l1qUcQiezdsr
+         dMB1IHdFP2rgfPhrKdPSKOr4BC/NIpWNki1zZ+MAQELPIpxMxNLn0yed9e6nLJF2dXSF
+         xf/g/O9MqQvEaWc+qATTyh5GDX6i7y4UUqoIUY1kRBePAiFjnwh6hPhyNFAfsWl3SZ4g
+         X4iw==
+X-Gm-Message-State: AOAM533bGt3ZsNtjrE0blT7Hb2+1Mq7e+LuNnNL+7rjV31y6dXdIkc2Z
+        PtAJioVvgfZNMZO8iR8ecMjTew==
+X-Google-Smtp-Source: ABdhPJw6IjBDWuhoEyhqDsHpEgNzVVOxVUrrMBm3b8SRWwCRsVl0IlzCByu/s34c5pnWmTrWJJOQPA==
+X-Received: by 2002:adf:f9cb:: with SMTP id w11mr26381611wrr.1.1605103089202;
+        Wed, 11 Nov 2020 05:58:09 -0800 (PST)
+Received: from myrica ([2001:1715:4e26:a7e0:116c:c27a:3e7f:5eaf])
+        by smtp.gmail.com with ESMTPSA id b8sm2551407wmj.9.2020.11.11.05.58.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 11 Nov 2020 05:58:08 -0800 (PST)
+Date:   Wed, 11 Nov 2020 14:57:50 +0100
+From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
+To:     Xiang Zheng <zhengxiang9@huawei.com>
+Cc:     iommu@lists.linux-foundation.org, devicetree@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-mm@kvack.org, fenghua.yu@intel.com, kevin.tian@intel.com,
+        jacob.jun.pan@linux.intel.com, jgg@ziepe.ca,
+        catalin.marinas@arm.com, joro@8bytes.org, robin.murphy@arm.com,
+        hch@infradead.org, zhangfei.gao@linaro.org,
+        Jonathan.Cameron@huawei.com, felix.kuehling@amd.com,
+        xuzaibo@huawei.com, will@kernel.org, christian.koenig@amd.com,
+        baolu.lu@linux.intel.com, Wang Haibin <wanghaibin.wang@huawei.com>
+Subject: Re: [PATCH v7 04/24] iommu: Add a page fault handler
+Message-ID: <20201111135750.GA2617489@myrica>
+References: <20200519175502.2504091-1-jean-philippe@linaro.org>
+ <20200519175502.2504091-5-jean-philippe@linaro.org>
+ <422e84da-9ccb-5452-8cbf-f472d2ad16b5@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1605096713; bh=3PVEtDLordAcntknKXFr6xJm6HXQLS+d+52npBfKPDM=;
-        h=From:To:CC:Subject:Date:Message-ID:X-Mailer:In-Reply-To:
-         References:X-NVConfidentiality:MIME-Version:Content-Type;
-        b=eQcWhd+4KvPSn576Ax7dBDW9FsdRJtr+UYcZ5sjs/tzuTc04czC4OSg+0ZYPNICnH
-         fQ1Mgcas814zfjbNyXNYNQlREMngDQO5TxpMORx4QhuiHa/wUe/rAgGYmCe9ThCXB/
-         9aPHvkp8ZlHyg+FO9z8yTRZUNMV+RwfIHkdGYL39GOSZrW+b43zmeNG09pTBLHuKro
-         fhnR6E+ZouluqRd5pXl1JXqUNmJmyqqV2XTgOpetWBwulX/KQNhi36IEW7P2tnY1Ru
-         xsLKXT+kCzOTgLQhW5RET7ugixHad+byL3/yxj3deTMeqOXRLOa5ThqaibQgTSCMPu
-         k0WXmAqz8Pvhg==
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <422e84da-9ccb-5452-8cbf-f472d2ad16b5@huawei.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-DesignWare core has a TLP digest (TD) override bit in one of the control
-registers of ATU. This bit also needs to be programmed for proper ECRC
-functionality. This is currently identified as an issue with DesignWare
-IP version 4.90a.
+Hi Xiang,
 
-Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
-V2:
-* Addressed Bjorn's comments
+Thank you for reviewing this. I forgot to send a reply, sorry for the
+delay.
 
- drivers/pci/controller/dwc/pcie-designware.c | 52 ++++++++++++++++++--
- drivers/pci/controller/dwc/pcie-designware.h |  1 +
- 2 files changed, 49 insertions(+), 4 deletions(-)
+On Fri, May 29, 2020 at 05:18:27PM +0800, Xiang Zheng wrote:
+> Hi,
+> 
+> On 2020/5/20 1:54, Jean-Philippe Brucker wrote:
+> > Some systems allow devices to handle I/O Page Faults in the core mm. For
+> > example systems implementing the PCIe PRI extension or Arm SMMU stall
+> > model. Infrastructure for reporting these recoverable page faults was
+> > added to the IOMMU core by commit 0c830e6b3282 ("iommu: Introduce device
+> > fault report API"). Add a page fault handler for host SVA.
+> > 
+> > IOMMU driver can now instantiate several fault workqueues and link them
+> > to IOPF-capable devices. Drivers can choose between a single global
+> > workqueue, one per IOMMU device, one per low-level fault queue, one per
+> > domain, etc.
+> > 
+> > When it receives a fault event, supposedly in an IRQ handler, the IOMMU
+> > driver reports the fault using iommu_report_device_fault(), which calls
+> > the registered handler. The page fault handler then calls the mm fault
+> > handler, and reports either success or failure with iommu_page_response().
+> > When the handler succeeded, the IOMMU retries the access.
+> > 
+> > The iopf_param pointer could be embedded into iommu_fault_param. But
+> > putting iopf_param into the iommu_param structure allows us not to care
+> > about ordering between calls to iopf_queue_add_device() and
+> > iommu_register_device_fault_handler().
+> > 
+> > Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
+[...]
+> > +/**
+> > + * iopf_queue_free - Free IOPF queue
+> > + * @queue: queue to free
+> > + *
+> > + * Counterpart to iopf_queue_alloc(). The driver must not be queuing faults or
+> > + * adding/removing devices on this queue anymore.
+> > + */
+> > +void iopf_queue_free(struct iopf_queue *queue)
+> > +{
+> > +	struct iopf_device_param *iopf_param, *next;
+> > +
+> > +	if (!queue)
+> > +		return;
+> > +
+> > +	list_for_each_entry_safe(iopf_param, next, &queue->devices, queue_list)
+> > +		iopf_queue_remove_device(queue, iopf_param->dev);
+> > +
+> > +	destroy_workqueue(queue->wq);
+> 
+> Do we need to free iopf_group(s) here in case the work queue of the group(s) are not
+> scheduled yet? If that occurs, we might leak memory here.
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index c2dea8fc97c8..ec0d13ab6bad 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -225,6 +225,46 @@ static void dw_pcie_writel_ob_unroll(struct dw_pcie *pci, u32 index, u32 reg,
- 	dw_pcie_writel_atu(pci, offset + reg, val);
- }
- 
-+static inline u32 dw_pcie_enable_ecrc(u32 val)
-+{
-+	/*
-+	 * DesignWare core version 4.90A has this strange design issue
-+	 * where the 'TD' bit in the Control register-1 of the ATU outbound
-+	 * region acts like an override for the ECRC setting i.e. the presence
-+	 * of TLP Digest(ECRC) in the outgoing TLPs is solely determined by
-+	 * this bit. This is contrary to the PCIe spec which says that the
-+	 * enablement of the ECRC is solely determined by the AER registers.
-+	 *
-+	 * Because of this, even when the ECRC is enabled through AER
-+	 * registers, the transactions going through ATU won't have TLP Digest
-+	 * as there is no way the AER sub-system could program the TD bit which
-+	 * is specific to DesignWare core.
-+	 *
-+	 * The best way to handle this scenario is to program the TD bit
-+	 * always. It affects only the traffic from root port to downstream
-+	 * devices.
-+	 *
-+	 * At this point,
-+	 * When ECRC is enabled in AER registers, everything works normally
-+	 * When ECRC is NOT enabled in AER registers, then,
-+	 * on Root Port:- TLP Digest (DWord size) gets appended to each packet
-+	 *                even through it is not required. Since downstream
-+	 *                TLPs are mostly for configuration accesses and BAR
-+	 *                accesses, they are not in critical path and won't
-+	 *                have much negative effect on the performance.
-+	 * on End Point:- TLP Digest is received for some/all the packets coming
-+	 *                from the root port. TLP Digest is ignored because,
-+	 *                as per the PCIe Spec r5.0 v1.0 section 2.2.3
-+	 *                "TLP Digest Rules", when an endpoint receives TLP
-+	 *                Digest when its ECRC check functionality is disabled
-+	 *                in AER registers, received TLP Digest is just ignored.
-+	 * Since there is no issue or error reported either side, best way to
-+	 * handle the scenario is to program TD bit by default.
-+	 */
-+
-+	return val | PCIE_ATU_TD;
-+}
-+
- static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, u8 func_no,
- 					     int index, int type,
- 					     u64 cpu_addr, u64 pci_addr,
-@@ -245,8 +285,10 @@ static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, u8 func_no,
- 				 lower_32_bits(pci_addr));
- 	dw_pcie_writel_ob_unroll(pci, index, PCIE_ATU_UNR_UPPER_TARGET,
- 				 upper_32_bits(pci_addr));
--	dw_pcie_writel_ob_unroll(pci, index, PCIE_ATU_UNR_REGION_CTRL1,
--				 type | PCIE_ATU_FUNC_NUM(func_no));
-+	val = type | PCIE_ATU_FUNC_NUM(func_no);
-+	if (pci->version == 0x490A)
-+		val = dw_pcie_enable_ecrc(val);
-+	dw_pcie_writel_ob_unroll(pci, index, PCIE_ATU_UNR_REGION_CTRL1, val);
- 	dw_pcie_writel_ob_unroll(pci, index, PCIE_ATU_UNR_REGION_CTRL2,
- 				 PCIE_ATU_ENABLE);
- 
-@@ -292,8 +334,10 @@ static void __dw_pcie_prog_outbound_atu(struct dw_pcie *pci, u8 func_no,
- 			   lower_32_bits(pci_addr));
- 	dw_pcie_writel_dbi(pci, PCIE_ATU_UPPER_TARGET,
- 			   upper_32_bits(pci_addr));
--	dw_pcie_writel_dbi(pci, PCIE_ATU_CR1, type |
--			   PCIE_ATU_FUNC_NUM(func_no));
-+	val = type | PCIE_ATU_FUNC_NUM(func_no);
-+	if (pci->version == 0x490A)
-+		val = dw_pcie_enable_ecrc(val);
-+	dw_pcie_writel_dbi(pci, PCIE_ATU_CR1, val);
- 	dw_pcie_writel_dbi(pci, PCIE_ATU_CR2, PCIE_ATU_ENABLE);
- 
- 	/*
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 9d2f511f13fa..285c0ae364ae 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -88,6 +88,7 @@
- #define PCIE_ATU_TYPE_IO		0x2
- #define PCIE_ATU_TYPE_CFG0		0x4
- #define PCIE_ATU_TYPE_CFG1		0x5
-+#define PCIE_ATU_TD			BIT(8)
- #define PCIE_ATU_FUNC_NUM(pf)           ((pf) << 20)
- #define PCIE_ATU_CR2			0x908
- #define PCIE_ATU_ENABLE			BIT(31)
--- 
-2.17.1
+Partial groups are freed by iopf_queue_remove_device(), and all other
+groups are freed when destroy_workqueue() executes the remaining work.
 
+Thanks,
+Jean
