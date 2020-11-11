@@ -2,96 +2,106 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45E82C56201
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Nov 2020 15:38:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EFBDC5517A
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Nov 2020 15:42:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DB2752072C
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Nov 2020 15:38:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 244872074B
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Nov 2020 15:42:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="s/aHCj9o"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="sVzlTzvF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727667AbgKKPiZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 11 Nov 2020 10:38:25 -0500
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:59362 "EHLO
-        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727652AbgKKPiY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Nov 2020 10:38:24 -0500
-Received: from lelv0266.itg.ti.com ([10.180.67.225])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 0ABFcC5g125330;
-        Wed, 11 Nov 2020 09:38:12 -0600
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1605109092;
-        bh=PSR7JL4HaqO9swLj/T2R0uAkZr/feSQH9xlHyklOXq0=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=s/aHCj9oCG6mRzYF3HECJgT5d4OUy5MZN28x+CgwGJGwPMu65diogxYzOeWYs4teI
-         MvOARA1x9Jyl0fGA34aVNzI0WTRTaHNEoy2NINxlbyBfDxGB3nmsSMddA57cpHRSl6
-         yDX95DTgsxywmCL6Fpidlwp/p//6lrJkU5ELswdM=
-Received: from DFLE106.ent.ti.com (dfle106.ent.ti.com [10.64.6.27])
-        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 0ABFcCF4023014
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 11 Nov 2020 09:38:12 -0600
-Received: from DFLE104.ent.ti.com (10.64.6.25) by DFLE106.ent.ti.com
- (10.64.6.27) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Wed, 11
- Nov 2020 09:38:11 -0600
-Received: from lelv0326.itg.ti.com (10.180.67.84) by DFLE104.ent.ti.com
- (10.64.6.25) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
- Frontend Transport; Wed, 11 Nov 2020 09:38:11 -0600
-Received: from a0393678-ssd.dal.design.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0ABFa047042109;
-        Wed, 11 Nov 2020 09:38:06 -0600
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>, Jon Mason <jdmason@kudzu.us>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <allenbh@gmail.com>,
-        Tom Joseph <tjoseph@cadence.com>, Rob Herring <robh@kernel.org>
-CC:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-ntb@googlegroups.com>
-Subject: [PATCH v8 16/18] NTB: tool: Enable the NTB/PCIe link on the local or remote side of bridge
-Date:   Wed, 11 Nov 2020 21:05:57 +0530
-Message-ID: <20201111153559.19050-17-kishon@ti.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20201111153559.19050-1-kishon@ti.com>
-References: <20201111153559.19050-1-kishon@ti.com>
+        id S1727329AbgKKPmU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 11 Nov 2020 10:42:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45742 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727100AbgKKPmT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Nov 2020 10:42:19 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B850C0613D1;
+        Wed, 11 Nov 2020 07:42:19 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=QDIYgmHBIy32D7QMJNlh1Fjiv1S5HS5loWTZCLGENSc=; b=sVzlTzvFGPcaqnv5C/H2WY6QKi
+        /unIroT+1YmBBbvs8x+xexAEOhkNbqZDvS8PxUSO9q/HUDdE0beM8VeroRpSDI8SPMv5NNiQ1NJH/
+        lSI33hhfgTSmjUf2/nh5eXMoQ+zbvNz6k4ffHUvIWZV7xYrKCkfE4LtlQL9THAz5F133sQ986c7et
+        kSA+KEkgmVYDvSSpYkEAzBIT7KjbPwLNXBr3rWkWD7TNe8CNSbODlZddMvphjrYbREixwvj7vQnyS
+        IGKBbLyJhaSLtWGFIBkQholxO3GactuGlBeJt4HU+lA6tgUvbtxJizVX/J2+w/3vVWWTfHulqlRIK
+        DUu2UOhw==;
+Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kcsFz-0006Ri-Kf; Wed, 11 Nov 2020 15:41:59 +0000
+Date:   Wed, 11 Nov 2020 15:41:59 +0000
+From:   Christoph Hellwig <hch@infradead.org>
+To:     David Woodhouse <dwmw2@infradead.org>
+Cc:     Thomas Gleixner <tglx@linutronix.de>,
+        Jason Gunthorpe <jgg@nvidia.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        "Raj, Ashok" <ashok.raj@intel.com>,
+        "Tian, Kevin" <kevin.tian@intel.com>,
+        "Jiang, Dave" <dave.jiang@intel.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        "vkoul@kernel.org" <vkoul@kernel.org>,
+        "Dey, Megha" <megha.dey@intel.com>,
+        "maz@kernel.org" <maz@kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+        "Pan, Jacob jun" <jacob.jun.pan@intel.com>,
+        "Liu, Yi L" <yi.l.liu@intel.com>, "Lu, Baolu" <baolu.lu@intel.com>,
+        "Kumar, Sanjay K" <sanjay.k.kumar@intel.com>,
+        "Luck, Tony" <tony.luck@intel.com>,
+        "jing.lin@intel.com" <jing.lin@intel.com>,
+        "kwankhede@nvidia.com" <kwankhede@nvidia.com>,
+        "eric.auger@redhat.com" <eric.auger@redhat.com>,
+        "parav@mellanox.com" <parav@mellanox.com>,
+        "rafael@kernel.org" <rafael@kernel.org>,
+        "netanelg@mellanox.com" <netanelg@mellanox.com>,
+        "shahafs@mellanox.com" <shahafs@mellanox.com>,
+        "yan.y.zhao@linux.intel.com" <yan.y.zhao@linux.intel.com>,
+        "pbonzini@redhat.com" <pbonzini@redhat.com>,
+        "Ortiz, Samuel" <samuel.ortiz@intel.com>,
+        "Hossain, Mona" <mona.hossain@intel.com>,
+        "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>
+Subject: Re: [PATCH v4 06/17] PCI: add SIOV and IMS capability detection
+Message-ID: <20201111154159.GA24059@infradead.org>
+References: <MWHPR11MB1645862A8F7CF7FB8DD011778CEF0@MWHPR11MB1645.namprd11.prod.outlook.com>
+ <20201104135415.GX2620339@nvidia.com>
+ <MWHPR11MB1645524BDEDF8899914F32AE8CED0@MWHPR11MB1645.namprd11.prod.outlook.com>
+ <20201106131415.GT2620339@nvidia.com>
+ <20201106164850.GA85879@otc-nc-03>
+ <20201106175131.GW2620339@nvidia.com>
+ <CAPcyv4iYHA1acfo=+fTk+U_TrLbSWJjA6v4oeTXgVYDTrnCoGw@mail.gmail.com>
+ <20201107001207.GA2620339@nvidia.com>
+ <87pn4nk7nn.fsf@nanos.tec.linutronix.de>
+ <d69953378bd1fdcdda54a2fbe285f6c0b1484e8a.camel@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <d69953378bd1fdcdda54a2fbe285f6c0b1484e8a.camel@infradead.org>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Invoke ntb_link_enable() to enable the NTB/PCIe link on the local
-or remote side of the bridge.
+On Sun, Nov 08, 2020 at 07:36:34PM +0000, David Woodhouse wrote:
+> So it does look like we're going to need a hypercall interface to
+> compose an MSI message on behalf of the guest, for IMS to use. In fact
+> PCI devices assigned to a guest could use that too, and then we'd only
+> need to trap-and-remap any attempt to write a Compatibility Format MSI
+> to the device's MSI table, while letting Remappable Format messages get
+> written directly.
+> 
+> We'd also need a way for an OS running on bare metal to *know* that
+> it's on bare metal and can just compose MSI messages for itself. Since
+> we do expect bare metal to have an IOMMU, perhaps that is just a
+> feature flag on the IOMMU?
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/ntb/test/ntb_tool.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/ntb/test/ntb_tool.c b/drivers/ntb/test/ntb_tool.c
-index b7bf3f863d79..8230ced503e3 100644
---- a/drivers/ntb/test/ntb_tool.c
-+++ b/drivers/ntb/test/ntb_tool.c
-@@ -1638,6 +1638,7 @@ static int tool_probe(struct ntb_client *self, struct ntb_dev *ntb)
- 
- 	tool_setup_dbgfs(tc);
- 
-+	ntb_link_enable(ntb, NTB_SPEED_AUTO, NTB_WIDTH_AUTO);
- 	return 0;
- 
- err_clear_mws:
--- 
-2.17.1
-
+Have the platform firmware advertise if it needs native or virtualized
+IMS handling.  If it advertises neither don't support IMS?
