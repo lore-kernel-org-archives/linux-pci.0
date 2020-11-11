@@ -5,48 +5,47 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0B7EC55ABD
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Nov 2020 15:37:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EAA5C388F9
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Nov 2020 15:38:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 881122074B
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Nov 2020 15:37:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 35D0B206A1
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Nov 2020 15:38:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="uKSkeQ+t"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="V6EnZkss"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726338AbgKKPhy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 11 Nov 2020 10:37:54 -0500
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:59198 "EHLO
-        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726220AbgKKPhw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Nov 2020 10:37:52 -0500
-Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 0ABFbdGw125202;
-        Wed, 11 Nov 2020 09:37:39 -0600
+        id S1727599AbgKKPiA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 11 Nov 2020 10:38:00 -0500
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:38288 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727582AbgKKPh7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Nov 2020 10:37:59 -0500
+Received: from fllv0034.itg.ti.com ([10.64.40.246])
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 0ABFbnvO097943;
+        Wed, 11 Nov 2020 09:37:49 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1605109059;
-        bh=6+pEZ2sU4Okxi+WU1gPDCbDCdtKwOEBqEUtnhiZE5hw=;
+        s=ti-com-17Q1; t=1605109069;
+        bh=ccIYM3BWSztQJNWt3tuc6dHrpKFHfV4QEGAhdlAGYe0=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=uKSkeQ+tcMz2voE+uDRhcCNtide1wNYyVmDTXC9vWPaMWTS+fsS9PM34DFbBeydR6
-         z+sxvN2RJHdzlVZBSaUXBvXUROxoKC9EC5hAPrnJeSJBS0EeWtQGHcwNM+jKXADt4h
-         5X4fcHIr1K10iOSJN2/8IJW8+uab4bGzg6D0vYHE=
-Received: from DLEE106.ent.ti.com (dlee106.ent.ti.com [157.170.170.36])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 0ABFbdNM124453
+        b=V6EnZkssJLkcuAaaWXrA6bNJvC9/gRhJ10rlwBAYb8GizJrYiE6pm7spekE/gyuNI
+         1+pPsB8jnT8AfUSJ2xF4UfjzunaVRjI5IZT5BCq2KUZ43IN2LG2WsVNIC8OxVkjb67
+         Alt5iYmDxH12Ir8rObdrQ09zqEhnkI0swpYfjsQM=
+Received: from DLEE105.ent.ti.com (dlee105.ent.ti.com [157.170.170.35])
+        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 0ABFbnCq095792
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 11 Nov 2020 09:37:39 -0600
-Received: from DLEE104.ent.ti.com (157.170.170.34) by DLEE106.ent.ti.com
- (157.170.170.36) with Microsoft SMTP Server (version=TLS1_2,
+        Wed, 11 Nov 2020 09:37:49 -0600
+Received: from DLEE105.ent.ti.com (157.170.170.35) by DLEE105.ent.ti.com
+ (157.170.170.35) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Wed, 11
- Nov 2020 09:37:39 -0600
-Received: from lelv0326.itg.ti.com (10.180.67.84) by DLEE104.ent.ti.com
- (157.170.170.34) with Microsoft SMTP Server (version=TLS1_2,
+ Nov 2020 09:37:48 -0600
+Received: from lelv0326.itg.ti.com (10.180.67.84) by DLEE105.ent.ti.com
+ (157.170.170.35) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
- Frontend Transport; Wed, 11 Nov 2020 09:37:38 -0600
+ Frontend Transport; Wed, 11 Nov 2020 09:37:48 -0600
 Received: from a0393678-ssd.dal.design.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0ABFa041042109;
-        Wed, 11 Nov 2020 09:37:17 -0600
+        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0ABFa043042109;
+        Wed, 11 Nov 2020 09:37:44 -0600
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Jonathan Corbet <corbet@lwn.net>,
@@ -59,9 +58,9 @@ To:     Bjorn Helgaas <bhelgaas@google.com>,
 CC:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-ntb@googlegroups.com>
-Subject: [PATCH v8 10/18] PCI: endpoint: Allow user to create sub-directory of 'EPF Device' directory
-Date:   Wed, 11 Nov 2020 21:05:51 +0530
-Message-ID: <20201111153559.19050-11-kishon@ti.com>
+Subject: [PATCH v8 12/18] PCI: cadence: Configure LM_EP_FUNC_CFG based on epc->function_num_map
+Date:   Wed, 11 Nov 2020 21:05:53 +0530
+Message-ID: <20201111153559.19050-13-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20201111153559.19050-1-kishon@ti.com>
 References: <20201111153559.19050-1-kishon@ti.com>
@@ -72,89 +71,45 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Documentation/PCI/endpoint/pci-endpoint-cfs.rst explains how a user
-has to create a directory in-order to create a 'EPF Device' that
-can be configured/probed by 'EPF Driver'.
-
-Allow user to create a sub-directory of 'EPF Device' directory for
-any function specific attributes that has to be exposed to the user.
+The number of functions supported by the endpoint controller is
+configured in LM_EP_FUNC_CFG based on func_no member of struct pci_epf.
+Now that an endpoint function can be associated with two endpoint
+controllers (primary and secondary), just using func_no will
+not suffice as that will take into account only if the endpoint
+controller is associated with the primary interface of endpoint
+function. Instead use epc->function_num_map which will already have the
+configured functions information (irrespective of whether the endpoint
+controller is associated with primary or secondary interface).
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/endpoint/pci-ep-cfs.c | 23 +++++++++++++++++++++++
- include/linux/pci-epf.h           |  3 +++
- 2 files changed, 26 insertions(+)
+ drivers/pci/controller/cadence/pcie-cadence-ep.c | 7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
 
-diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
-index 8f750961d6ab..f3a8b833b479 100644
---- a/drivers/pci/endpoint/pci-ep-cfs.c
-+++ b/drivers/pci/endpoint/pci-ep-cfs.c
-@@ -490,7 +490,29 @@ static struct configfs_item_operations pci_epf_ops = {
- 	.release		= pci_epf_release,
- };
+diff --git a/drivers/pci/controller/cadence/pcie-cadence-ep.c b/drivers/pci/controller/cadence/pcie-cadence-ep.c
+index 1fe6b8baca97..4e4eb30cd1a2 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence-ep.c
++++ b/drivers/pci/controller/cadence/pcie-cadence-ep.c
+@@ -506,18 +506,13 @@ static int cdns_pcie_ep_start(struct pci_epc *epc)
+ 	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
+ 	struct cdns_pcie *pcie = &ep->pcie;
+ 	struct device *dev = pcie->dev;
+-	struct pci_epf *epf;
+-	u32 cfg;
+ 	int ret;
  
-+static struct config_group *pci_epf_type_make(struct config_group *group,
-+					      const char *name)
-+{
-+	struct pci_epf_group *epf_group = to_pci_epf_group(&group->cg_item);
-+	struct config_group *epf_type_group;
-+
-+	epf_type_group = pci_epf_type_add_cfs(epf_group->epf, group);
-+	return epf_type_group;
-+}
-+
-+static void pci_epf_type_drop(struct config_group *group,
-+			      struct config_item *item)
-+{
-+	config_item_put(item);
-+}
-+
-+static struct configfs_group_operations pci_epf_type_group_ops = {
-+	.make_group     = &pci_epf_type_make,
-+	.drop_item      = &pci_epf_type_drop,
-+};
-+
- static const struct config_item_type pci_epf_type = {
-+	.ct_group_ops	= &pci_epf_type_group_ops,
- 	.ct_item_ops	= &pci_epf_ops,
- 	.ct_attrs	= pci_epf_attrs,
- 	.ct_owner	= THIS_MODULE,
-@@ -553,6 +575,7 @@ static struct config_group *pci_epf_make(struct config_group *group,
- 		goto free_name;
- 	}
+ 	/*
+ 	 * BIT(0) is hardwired to 1, hence function 0 is always enabled
+ 	 * and can't be disabled anyway.
+ 	 */
+-	cfg = BIT(0);
+-	list_for_each_entry(epf, &epc->pci_epf, list)
+-		cfg |= BIT(epf->func_no);
+-	cdns_pcie_writel(pcie, CDNS_PCIE_LM_EP_FUNC_CFG, cfg);
++	cdns_pcie_writel(pcie, CDNS_PCIE_LM_EP_FUNC_CFG, epc->function_num_map);
  
-+	epf->group = &epf_group->group;
- 	epf_group->epf = epf;
- 
- 	kfree(epf_name);
-diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
-index b241e7dd171f..6833e2160ef1 100644
---- a/include/linux/pci-epf.h
-+++ b/include/linux/pci-epf.h
-@@ -9,6 +9,7 @@
- #ifndef __LINUX_PCI_EPF_H
- #define __LINUX_PCI_EPF_H
- 
-+#include <linux/configfs.h>
- #include <linux/device.h>
- #include <linux/mod_devicetable.h>
- #include <linux/pci.h>
-@@ -128,6 +129,7 @@ struct pci_epf_bar {
-  *   EPC device
-  * @sec_epc_bar: represents the BAR of EPF device associated with secondary EPC
-  * @sec_epc_func_no: unique (physical) function number within the secondary EPC
-+ * @group: configfs group associated with the EPF device
-  */
- struct pci_epf {
- 	struct device		dev;
-@@ -150,6 +152,7 @@ struct pci_epf {
- 	struct list_head	sec_epc_list;
- 	struct pci_epf_bar	sec_epc_bar[6];
- 	u8			sec_epc_func_no;
-+	struct config_group	*group;
- };
- 
- /**
+ 	ret = cdns_pcie_start_link(pcie);
+ 	if (ret) {
 -- 
 2.17.1
 
