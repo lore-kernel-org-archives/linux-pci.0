@@ -2,123 +2,157 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 438F7C5517A
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Nov 2020 22:40:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76E98C56201
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Nov 2020 22:43:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EF8C42151B
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Nov 2020 22:40:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 14A08221FC
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Nov 2020 22:43:50 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel-com.20150623.gappssmtp.com header.i=@intel-com.20150623.gappssmtp.com header.b="rTT49Ank"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726194AbgKKWkV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 11 Nov 2020 17:40:21 -0500
-Received: from mga02.intel.com ([134.134.136.20]:3574 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726101AbgKKWiV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 11 Nov 2020 17:38:21 -0500
-IronPort-SDR: 1o/TxpjZbXBLfuwiC/moV2dsaPefQsFzxg1v7VyyDjQXDOlJmbI2/TPd5FJCAA57xvpLZQBoPI
- QAev7h5H6jqA==
-X-IronPort-AV: E=McAfee;i="6000,8403,9802"; a="157243143"
-X-IronPort-AV: E=Sophos;i="5.77,470,1596524400"; 
-   d="scan'208";a="157243143"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Nov 2020 14:23:30 -0800
-IronPort-SDR: hGsxbfaYRvdWk35pTBUKpOW8JOJVfq1oGMb5usGf4KNU/tYgcJe7uNyzqYS88ZIKvSDQ6XPS4D
- +gQjyFmkcKKg==
-X-IronPort-AV: E=Sophos;i="5.77,470,1596524400"; 
-   d="scan'208";a="541980922"
-Received: from mcalqui1-mobl.amr.corp.intel.com (HELO ellie) ([10.212.84.222])
-  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Nov 2020 14:23:30 -0800
-From:   Vinicius Costa Gomes <vinicius.gomes@intel.com>
-To:     Miroslav Lichvar <mlichvar@redhat.com>
-Cc:     intel-wired-lan@lists.osuosl.org, andre.guedes@intel.com,
-        linux-pci@vger.kernel.org, netdev@vger.kernel.org,
-        bhelgaas@google.com
-Subject: Re: [Intel-wired-lan] [PATCH next-queue v2 3/3] igc: Add support
- for PTP getcrosststamp()
-In-Reply-To: <20201111093346.GE1559650@localhost>
-References: <20201110061019.519589-1-vinicius.gomes@intel.com>
- <20201110061019.519589-4-vinicius.gomes@intel.com>
- <20201110180719.GA1559650@localhost> <871rh19gm8.fsf@intel.com>
- <20201111093346.GE1559650@localhost>
-Date:   Wed, 11 Nov 2020 14:23:28 -0800
-Message-ID: <87tutv8rdr.fsf@intel.com>
+        id S1726731AbgKKWns (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 11 Nov 2020 17:43:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53992 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726746AbgKKWln (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Nov 2020 17:41:43 -0500
+Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4030BC0401C7
+        for <linux-pci@vger.kernel.org>; Wed, 11 Nov 2020 14:41:04 -0800 (PST)
+Received: by mail-ej1-x642.google.com with SMTP id s25so4956922ejy.6
+        for <linux-pci@vger.kernel.org>; Wed, 11 Nov 2020 14:41:04 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=ALVcAvrDAuBZ3IPCrkjPwHAX8+DNa5pqM0afUjn5X6s=;
+        b=rTT49AnkhNr487K9n5NKwYO9WMUE3MNY/UrxCB1TueO1d+BsQebe1bVAjto6CnRmk/
+         RDpD3FTxsnpbumIEQX0xW8WRxu+N8dbL7+UlwJuliNYW4tOrjIHEsijjBDMt5SiFkT7W
+         qIC8M6dcNADqftbsDDTwdltE4fVgS48XJPqta990E5jyRjX44U9fYqfo3bpsnhM2g0J7
+         eynDKGo1p6EV/6yF+gGpA1ZpwHDZOUAKO9aCvylNPSLobnovjeE+6vOb7pc4GrNqOJdL
+         VpWgI5+VW1m4VWGcBZwG83xjGz4jrrCYOWJBRZrRhJgpclGLGZV4RXEKWrc44rurwU4I
+         eK6A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=ALVcAvrDAuBZ3IPCrkjPwHAX8+DNa5pqM0afUjn5X6s=;
+        b=UKn5Px1162Wty80EdVcIG827VJG3nsoCV4B0ZsISemWzKXwRZc2yErddUk1tplfA4O
+         MVXgl2ms01v2kldxwClQg+VxfGkrYLYf2s/GAgboKJaeNH9ZI18EnulGlCf3EBHzbw1Q
+         IvIpvBNuSKBvpT8soIl1BwwDXH/nhvk/M9mbz59E5FruJj3ahetCSRVNef0wSZ5zw04n
+         wQ0tlfl796yGcTJv6tYOoZgHVtfxX6XMP+OGGnJnhubQdMcA9bgQGhBv+vcc/vQMXy55
+         alh43fB+FnBZaDw06Kyv8k8u1GZYTqBN9tWTUSHgYUpNvehxr0YHwm1sVo/u8pSNW3pN
+         Y79g==
+X-Gm-Message-State: AOAM533nOnvhAfLcvlQ84ttlhml52M1XufymnYO6w6rfFvavBbEyM2Bs
+        4GTejUd3oqMi8TJzIeesaNEuDXmJFy3U5+cx8Tyo8Q==
+X-Google-Smtp-Source: ABdhPJxZkk2CPz2+JgnqesQh/6Q2toSIuomPC2gF0BhYxxkrw/FgNoCUwNXohjnwegJoJqNJZnPv//TQH98s+vGiwVw=
+X-Received: by 2002:a17:906:ad8e:: with SMTP id la14mr25980011ejb.264.1605134462866;
+ Wed, 11 Nov 2020 14:41:02 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+References: <20201111054356.793390-1-ben.widawsky@intel.com>
+ <20201111054356.793390-4-ben.widawsky@intel.com> <20201111071231.GC7829@infradead.org>
+ <CAPcyv4iA_hNc=xdcbR-eb57W9o4br1BognSr5Sj4pAO3uMm69g@mail.gmail.com> <4a8b5a64-7ba0-a275-744f-6642f98e2213@infradead.org>
+In-Reply-To: <4a8b5a64-7ba0-a275-744f-6642f98e2213@infradead.org>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Wed, 11 Nov 2020 14:40:52 -0800
+Message-ID: <CAPcyv4gPwNj+aaRs++hxSxJke8H476hhppcn84t3KUBr0Ff2og@mail.gmail.com>
+Subject: Re: [RFC PATCH 3/9] cxl/mem: Add a driver for the type-3 mailbox
+To:     Randy Dunlap <rdunlap@infradead.org>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Ben Widawsky <ben.widawsky@intel.com>,
+        linux-cxl@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Ira Weiny <ira.weiny@intel.com>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        "Kelley, Sean V" <sean.v.kelley@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Miroslav Lichvar <mlichvar@redhat.com> writes:
-
-> On Tue, Nov 10, 2020 at 11:06:07AM -0800, Vinicius Costa Gomes wrote:
->> Miroslav Lichvar <mlichvar@redhat.com> writes:
->> > I suspect the estimate would be valid only when the NIC is connected
->> > directly to the PTM root (PCI root complex). Is it possible to get the
->> > timestamps or delay from PTM-capable switches on the path between CPU
->> > and NIC? Also, how frequent can be the PTM dialogs? Could they be
->> > performed synchronously in the ioctl?
->> 
->> Reading the PTM specs, it could work over PCIe switches (if they also
->> support PTM).
+On Wed, Nov 11, 2020 at 1:42 PM Randy Dunlap <rdunlap@infradead.org> wrote:
 >
-> I saw some "implementation specific means" mentioned in the spec, so
-> I'm not sure what and how exactly it works with the existing CPUs,
-> NICs and PCIe switches. But even if the reported delay was valid only
-> for directly connected NICs, I think that could still be useful as
-> long as the user/application can figure out whether that is the case.
-
-Right now, the logic I am using is that the PTM cycles (and measurement
-reporting) are started only if PTM could be enabled in the endpoint PCI
-device. If I understand the code right, PTM will only be enabled if it
-could be enabled all along the path to the root port.
-
-In other words, what this series does is: if the CONFIG_PCIE_PTM option
-is enabled, and if PTM is supported along the path to the NIC, the PTM
-cycles will be started during the device initialization, and the
-measurements will be reported when the ioctl() is called.
-
+> On 11/11/20 9:17 AM, Dan Williams wrote:
+> > On Tue, Nov 10, 2020 at 11:12 PM Christoph Hellwig <hch@infradead.org> wrote:
+> >>
+> >> On Tue, Nov 10, 2020 at 09:43:50PM -0800, Ben Widawsky wrote:
+> >>> +config CXL_MEM
+> >>> +        tristate "CXL.mem Device Support"
+> >>> +        depends on PCI && CXL_BUS_PROVIDER != n
+> >>
+> >> depend on PCI && CXL_BUS_PROVIDER
+> >>
+> >>> +        default m if CXL_BUS_PROVIDER
+> >>
+> >> Please don't set weird defaults for new code.  Especially not default
+> >> to module crap like this.
+> >
+> > This goes back to what people like Dave C. asked for LIBNVDIMM / DAX,
+> > a way to blanket turn on a subsystem without needing to go hunt down
+> > individual configs. All of CXL is "default n", but if someone turns on
+> > a piece of it they get all of it by default. The user can then opt-out
+> > on pieces after that first opt-in. If there's a better way to turn on
+> > suggested configs I'm open to switch to that style. As for the
+> > "default m" I was worried that it would be "default y" without the
+> > specificity, but I did not test that... will check. There have been
+> > times when I wished that distros defaulted bleeding edge new enabling
+> > to 'm' and putting that default in the Kconfig maybe saves me from
+> > needing to file individual config changes to distros after the fact.
 >
->> The NIC I have supports PTM cycles from every ~1ms to ~512ms, and from
->> my tests it wants to be kept running "in background" always, i.e. set
->> the cycles to run, and only report the data when necessary. Trying to
->> only enable the cycles "on demand" was unreliable.
+> What we as developers put into mainline kernel Kconfig files has nothing
+> to do with what distros use in their distro config files.
+> Or at least it shouldn't.  Maybe your experience has been different.
+
+I agree with that sentiment, but walk it back through the requirement
+I mentioned above... *if* we want a top-level CXL option (default n)
+that goes and enables many CXL sub-options the default for those
+sub-options is something that needs to be listed in the Kconfig. 'm'
+is more flexible than 'y', so if a user wants CXL at all, and doesn't
+care about how, I'd prefer it's 'm' rather than 'y'.
+
+I have had to go submit distro config fixes when Kconfig defaulted to
+'y' when 'm' was available, and the reasoning for why it was 'y' was
+"oh, that was the Kconfig default when I flipped this other option".
+
+
+> >>> +// Copyright(c) 2020 Intel Corporation. All rights reserved.
+> >>
+> >> Please don't use '//' for anything but the SPDX header.
+> >
+> > Ok, I find // following by /* */ a bit ugly, but I don't care enough to fight.
+> >
 >
-> I see. It does makes sense if the clocks need to be are synchronized.
-> For the case of this ioctl, I think it would be better if it we could
-> just collect the measurements and leave the clocks free running.
-
-Not sure if I understand. This is what this series does, it only adds
-support for starting the PTM cycles and reporting the measurements.
-
+> Hm, it's not in coding-style AFAICT but Linus has OK-ed C99 style comments:
+> http://lkml.iu.edu/hypermail/linux/kernel/1607.1/00627.html
 >
->> (so for the _EXTENDED case, I would need to accumulate multiple values
->> in the driver, and report them later, a bit annoying, but not
->> impossible)
 >
-> I think you could simply repeat the sample in the output up to the
-> requested number.
+> >>> +MODULE_AUTHOR("Intel Corporation");
+> >>
+> >> A module author is not a company.
+> >
+> > At least I don't have a copyright assignment clause, I don't agree
+> > with the vanity of listing multiple people here especially when
+> > MAINTAINERS has the contact info, and I don't want to maintain a list
+> > as people do drive-by contributions and we need to figure out at what
+> > level of contribution mandates a new MODULE_AUTHOR line. Now, that
+> > said I would be ok to duplicate the MAINTAINERS as MODULE_AUTHOR
+> > lines, but I otherwise expect MAINTAINERS is the central source for
+> > module contact info.
 >
-> I suspect a bigger issue, for both the PRECISE and EXTENDED variants,
-> is that it would return old data. I'm not sure if the existing
-> applications are ready to deal with that. With high clock update
-> rates, a delay of 50 milliseconds could cause an instability. You can
-> try phc2sys -R 50 and see if it stays stable.
+> Sure, MAINTAINERS is fine, but the MODULE_AUTHOR() above provides
+> no useful information.
+> Even saying (made up) linux-devel@linux.intel.com would be slightly better,
+> but some kind of contact info would be great. Otherwise just delete that line.
 
-After a couple of hours of testing, with the current 50ms delay,
-'phc2sys -R 50' is stable, but I got the impression that it takes longer
-(~10s) to get to ~10ns offset.
-
-Just for fun, I tried 'phc2sys -R 100' and it doesn't stabilize.
-
-So it seems that applications (phc2sys) are able to tolerate some old
-data.
-
-
-Cheers,
--- 
-Vinicius
+True, if the goal is to allow random end users to email support
+questions about this module I'd rather not put my email there.
+Instead, if it's someone that has kernel development questions then
+they should be able to use MAINTAINERS for that contact.
