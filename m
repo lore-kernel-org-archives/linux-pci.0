@@ -2,174 +2,96 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DEC7C5517A
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Nov 2020 13:59:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4089EC5517A
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Nov 2020 15:34:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3257A2168B
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Nov 2020 13:59:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C2CE4206FB
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Nov 2020 15:34:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="OIo6Gpxu"
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="gxZOxzwE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726412AbgKKN6n (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 11 Nov 2020 08:58:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57732 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726924AbgKKN6B (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Nov 2020 08:58:01 -0500
-Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E01B7C0613D1
-        for <linux-pci@vger.kernel.org>; Wed, 11 Nov 2020 05:58:00 -0800 (PST)
-Received: by mail-wr1-x444.google.com with SMTP id b8so2647146wrn.0
-        for <linux-pci@vger.kernel.org>; Wed, 11 Nov 2020 05:58:00 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=nQxC580B2FGMz7fwoWGS/qV6OQLc0KLPED3qOpuBky8=;
-        b=OIo6GpxukW3iK2MLSyvALt9frkeXd0ZXiyBWhhzmAxpU0yk9P7jOnHruqZKBQccZFO
-         pi2tyWBjPtyBjL5dZIjocD5ciZf7y4jaSEPp7AQg7jVQhBrcZUkooG6dMykqfIKrnwAm
-         cmTpHvTYivjJDMqffwVQNg3EIBx4N6ItwiIASsWC7oJFIABzF84mUeLhNduPpkE/B5fD
-         zU74Wu3AXxpByDpPLbPJvtqj5iCgSkmn2qtMTKJ496VYWlXJFryVRfSUhAyN/CXGuD78
-         QJiksGLXHFV1oaOcVmLLsBMjUdF+nYRlOKoiB/1ocK79gkEdbrKkmG95wo2oynjwhkmg
-         RIqg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=nQxC580B2FGMz7fwoWGS/qV6OQLc0KLPED3qOpuBky8=;
-        b=FcYRuhZ8EeTFC1SEYx8huT2j9FQGDEglpBDXvnsDNaPlGh5Wq5I1tTX4Yo7jwJ5/2D
-         kAsNiutnOKqZsAgEg+DyVWC8dC4p8qOSv/doe40CVBopC6WEc9gfTtdSMwxQXgKjQnzV
-         g8M4Z2LWJ/XM0h4K4F2fXcsaihdlBkRdr5tKG3IREN4FvBbLzHoEr5HXDEjrq/KaMir1
-         FJFRaAT6JPlzp77hLy537EermyBXczSb128KkH3ieVF3OdcqXzECLV3G6QYrZEmIgAH1
-         7gel+kYyZLQjZovIu9xzzr3+o5JPgiNHvKOkBE8hBMW+UXSuIcsSukRpB96arPbjWyhW
-         cLTw==
-X-Gm-Message-State: AOAM53184uMhfYsv9DrtqsIsDy6SbGTG3BKumEPeJ1M7nabzSkRIgbrX
-        MTqvI7tHeRLIAVjPBLKxlwcP9w==
-X-Google-Smtp-Source: ABdhPJz8B46qAy3mH7K7M4xppHiXb//CHwuj/RA8IyjLL/yHeGrjXZ21yZsM7l6s4djLyiLVXJ69Cg==
-X-Received: by 2002:adf:e3cf:: with SMTP id k15mr13899007wrm.259.1605103079627;
-        Wed, 11 Nov 2020 05:57:59 -0800 (PST)
-Received: from myrica ([2001:1715:4e26:a7e0:116c:c27a:3e7f:5eaf])
-        by smtp.gmail.com with ESMTPSA id b14sm2550433wrq.47.2020.11.11.05.57.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 11 Nov 2020 05:57:58 -0800 (PST)
-Date:   Wed, 11 Nov 2020 14:57:40 +0100
-From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
-To:     Lu Baolu <baolu.lu@linux.intel.com>
-Cc:     iommu@lists.linux-foundation.org, devicetree@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-mm@kvack.org, joro@8bytes.org, catalin.marinas@arm.com,
-        will@kernel.org, robin.murphy@arm.com, kevin.tian@intel.com,
-        Jonathan.Cameron@huawei.com, jacob.jun.pan@linux.intel.com,
-        christian.koenig@amd.com, felix.kuehling@amd.com,
-        zhangfei.gao@linaro.org, jgg@ziepe.ca, xuzaibo@huawei.com,
-        fenghua.yu@intel.com, hch@infradead.org
-Subject: Re: [PATCH v7 04/24] iommu: Add a page fault handler
-Message-ID: <20201111135740.GA2622074@myrica>
-References: <20200519175502.2504091-1-jean-philippe@linaro.org>
- <20200519175502.2504091-5-jean-philippe@linaro.org>
- <c840d771-188d-9ee5-d117-e4b91d29b329@linux.intel.com>
+        id S1726817AbgKKPeY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 11 Nov 2020 10:34:24 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39052 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726136AbgKKPeX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 11 Nov 2020 10:34:23 -0500
+Received: from mail-oi1-f181.google.com (mail-oi1-f181.google.com [209.85.167.181])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id E9C4F2074B
+        for <linux-pci@vger.kernel.org>; Wed, 11 Nov 2020 15:34:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1605108863;
+        bh=EEJxUW6yBqL1lIySKM25rp6jvV/z7A66T3aGJ2g29SU=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=gxZOxzwEayji50MiEM0ROnPLxwpLkXHiNiJjN++gg6qRyWnZw3cDIGDLf286p02EU
+         wJ6KXKo6qfFcJ508NsgyXP5l2fSFAFw3Ey1Bh4rHPNzT9tc+wE7MwgWnAl5NFjGVSK
+         CckIWllrMAJoh86qjRABpjXgseYdib9fP75RQHqk=
+Received: by mail-oi1-f181.google.com with SMTP id u127so2592615oib.6
+        for <linux-pci@vger.kernel.org>; Wed, 11 Nov 2020 07:34:22 -0800 (PST)
+X-Gm-Message-State: AOAM533LiL56LLT5miat7zJRWkUoWHUW2+hHFWVcX3VhCgN292FnHRgs
+        r1FpCz9YipnCanxbKMz8QPCU1IgX3aC6+q896w==
+X-Google-Smtp-Source: ABdhPJwHbWkG/EXSCatCXbAkd6vgiZ2vjCqn/ERtEzb1kzv+bNfoZKBCyUdfoCP4XO+7PUhiQ0gOx+1xi0wWRhVDMYc=
+X-Received: by 2002:aca:5dc2:: with SMTP id r185mr2511412oib.106.1605108861919;
+ Wed, 11 Nov 2020 07:34:21 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c840d771-188d-9ee5-d117-e4b91d29b329@linux.intel.com>
+References: <20201110171641.GA679781@bjorn-Precision-5520> <DM5PR12MB183506CDEA67A7A65B0F1F29DAE90@DM5PR12MB1835.namprd12.prod.outlook.com>
+In-Reply-To: <DM5PR12MB183506CDEA67A7A65B0F1F29DAE90@DM5PR12MB1835.namprd12.prod.outlook.com>
+From:   Rob Herring <robh@kernel.org>
+Date:   Wed, 11 Nov 2020 09:34:10 -0600
+X-Gmail-Original-Message-ID: <CAL_JsqJ4qVTyUGr3Stn2GaoaYpTJRhSTMw2KKdjVS1+H=uPVWA@mail.gmail.com>
+Message-ID: <CAL_JsqJ4qVTyUGr3Stn2GaoaYpTJRhSTMw2KKdjVS1+H=uPVWA@mail.gmail.com>
+Subject: Re: New Defects reported by Coverity Scan for Linux
+To:     Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Jingoo Han <jingoohan1@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Baolu,
+On Tue, Nov 10, 2020 at 5:36 PM Gustavo Pimentel
+<Gustavo.Pimentel@synopsys.com> wrote:
+>
+> On Tue, Nov 10, 2020 at 17:16:41, Bjorn Helgaas <helgaas@kernel.org>
+> wrote:
+>
+> > New Coverity complaint about v5.10-rc3, resulting from 9fff3256f93d
+> > ("PCI: dwc: Restore ATU memory resource setup to use last entry").
+> >
+> > I didn't try to figure out if this is real or a false positive, so
+> > just FYI.
+> >
+> > ----- Forwarded message from scan-admin@coverity.com -----
+> >
+> > Date: Mon, 09 Nov 2020 11:13:37 +0000 (UTC)
+> > From: scan-admin@coverity.com
+> > To: bjorn@helgaas.com
+> > Subject: New Defects reported by Coverity Scan for Linux
+> > Message-ID: <5fa924618fb3b_a62932acac7322f5033088@prd-scan-dashboard-0.mail>
+> >
+> >
+> > ** CID 1469110:  Null pointer dereferences  (FORWARD_NULL)
+> > /drivers/pci/controller/dwc/pcie-designware-host.c: 596 in dw_pcie_setup_rc()
+> >
+> >
+> > ________________________________________________________________________________________________________
+> > *** CID 1469110:  Null pointer dereferences  (FORWARD_NULL)
+> > /drivers/pci/controller/dwc/pcie-designware-host.c: 596 in dw_pcie_setup_rc()
+> > 590
+> > 591                   /* Get last memory resource entry */
+> > 592                   resource_list_for_each_entry(tmp, &pp->bridge->windows)
+> > 593                           if (resource_type(tmp->res) == IORESOURCE_MEM)
+>
+> Can the pp->bridge->windows list be empty in a typical use case?
 
-Thanks for the review. I'm only now reworking this and realized I've never
-sent a reply, sorry about that.
+Only if the DT has missing/malformed 'ranges'. 'ranges' is required to
+have any memory or i/o space, so we would error out before this point.
 
-On Wed, May 20, 2020 at 02:42:21PM +0800, Lu Baolu wrote:
-> Hi Jean,
-> 
-> On 2020/5/20 1:54, Jean-Philippe Brucker wrote:
-> > Some systems allow devices to handle I/O Page Faults in the core mm. For
-> > example systems implementing the PCIe PRI extension or Arm SMMU stall
-> > model. Infrastructure for reporting these recoverable page faults was
-> > added to the IOMMU core by commit 0c830e6b3282 ("iommu: Introduce device
-> > fault report API"). Add a page fault handler for host SVA.
-> > 
-> > IOMMU driver can now instantiate several fault workqueues and link them
-> > to IOPF-capable devices. Drivers can choose between a single global
-> > workqueue, one per IOMMU device, one per low-level fault queue, one per
-> > domain, etc.
-> > 
-> > When it receives a fault event, supposedly in an IRQ handler, the IOMMU
-> > driver reports the fault using iommu_report_device_fault(), which calls
-> > the registered handler. The page fault handler then calls the mm fault
-> > handler, and reports either success or failure with iommu_page_response().
-> > When the handler succeeded, the IOMMU retries the access.
-> > 
-> > The iopf_param pointer could be embedded into iommu_fault_param. But
-> > putting iopf_param into the iommu_param structure allows us not to care
-> > about ordering between calls to iopf_queue_add_device() and
-> > iommu_register_device_fault_handler().
-> > 
-> > Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
-[...]
-> > +static enum iommu_page_response_code
-> > +iopf_handle_single(struct iopf_fault *iopf)
-> > +{
-> > +	vm_fault_t ret;
-> > +	struct mm_struct *mm;
-> > +	struct vm_area_struct *vma;
-> > +	unsigned int access_flags = 0;
-> > +	unsigned int fault_flags = FAULT_FLAG_REMOTE;
-> > +	struct iommu_fault_page_request *prm = &iopf->fault.prm;
-> > +	enum iommu_page_response_code status = IOMMU_PAGE_RESP_INVALID;
-> > +
-> > +	if (!(prm->flags & IOMMU_FAULT_PAGE_REQUEST_PASID_VALID))
-> > +		return status;
-> > +
-> > +	mm = iommu_sva_find(prm->pasid);
-> > +	if (IS_ERR_OR_NULL(mm))
-> > +		return status;
-> > +
-> > +	down_read(&mm->mmap_sem);
-> > +
-> > +	vma = find_extend_vma(mm, prm->addr);
-> > +	if (!vma)
-> > +		/* Unmapped area */
-> > +		goto out_put_mm;
-> > +
-> > +	if (prm->perm & IOMMU_FAULT_PERM_READ)
-> > +		access_flags |= VM_READ;
-> > +
-> > +	if (prm->perm & IOMMU_FAULT_PERM_WRITE) {
-> > +		access_flags |= VM_WRITE;
-> > +		fault_flags |= FAULT_FLAG_WRITE;
-> > +	}
-> > +
-> > +	if (prm->perm & IOMMU_FAULT_PERM_EXEC) {
-> > +		access_flags |= VM_EXEC;
-> > +		fault_flags |= FAULT_FLAG_INSTRUCTION;
-> > +	}
-> > +
-> > +	if (!(prm->perm & IOMMU_FAULT_PERM_PRIV))
-> > +		fault_flags |= FAULT_FLAG_USER;
-> > +
-> > +	if (access_flags & ~vma->vm_flags)
-> > +		/* Access fault */
-> > +		goto out_put_mm;
-> > +
-> > +	ret = handle_mm_fault(vma, prm->addr, fault_flags);
-> > +	status = ret & VM_FAULT_ERROR ? IOMMU_PAGE_RESP_INVALID :
-> 
-> Do you mind telling why it's IOMMU_PAGE_RESP_INVALID but not
-> IOMMU_PAGE_RESP_FAILURE?
-
-PAGE_RESP_FAILURE maps to PRI Response code "Response Failure" which
-indicates a catastrophic error and causes the function to disable PRI.
-Instead PAGE_RESP_INVALID maps to PRI Response code "Invalid request",
-which tells the function that the address is invalid and there is no point
-retrying this particular access.
-
-Thanks,
-Jean
+Rob
