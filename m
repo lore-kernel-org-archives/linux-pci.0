@@ -2,132 +2,142 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EBF0C56201
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Nov 2020 22:16:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51433C5517A
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Nov 2020 22:38:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0383A208CA
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Nov 2020 22:16:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E9D93208B8
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Nov 2020 22:38:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="OyYUE+sW"
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="WYbPxyGH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726618AbgKKWQm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 11 Nov 2020 17:16:42 -0500
-Received: from mail.kernel.org ([198.145.29.99]:58452 "EHLO mail.kernel.org"
+        id S1726276AbgKKWiT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 11 Nov 2020 17:38:19 -0500
+Received: from mail.kernel.org ([198.145.29.99]:42690 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725933AbgKKWQl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 11 Nov 2020 17:16:41 -0500
+        id S1726698AbgKKWgS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 11 Nov 2020 17:36:18 -0500
 Received: from localhost (230.sub-72-107-127.myvzw.com [72.107.127.230])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 82FDB2087D;
-        Wed, 11 Nov 2020 22:16:40 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 82A83208FE;
+        Wed, 11 Nov 2020 22:29:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1605133000;
-        bh=FZoIL5kkoczQ08cE+5NFuJQjvnQXcPDad7/rPnvpuM8=;
+        s=default; t=1605133778;
+        bh=nhL3zDC2cu9ECuf/EjEmddbUzNGl6XB+KcxciHyfxIg=;
         h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=OyYUE+sWkg5lC/BrEnbRDr2hQEyTSlpTIWkU8rEkXleT/ddF5+m/OqWTY0QE6KkZU
-         cZNMhDmrmscHakgy9rXjIJ2IJP2iyPNXu8ebZlLfx+gdXvk6ZDLSFeRU5hIbM2nKMj
-         f0R/Fed5vT0l4+pI9H8+OGi9/4xGHbBgyMq88nyY=
-Date:   Wed, 11 Nov 2020 16:16:39 -0600
+        b=WYbPxyGHItIogP9N/qogHFF0VxqqBTuxMmPzwcLW4niXK91oexIp5ZziWynNJ6zTn
+         y8s7LBfGEkQAKW5bImzSB4HYA6vkyGcyQD8VVvZLI7c/B4raCIMB6mscDhKlXKDD9p
+         xIAoQK+8xyxfEmpnyeMks0sLclWImx2BYPtlGf5w=
+Date:   Wed, 11 Nov 2020 16:29:37 -0600
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Martin Kaiser <martin@kaiser.cx>
-Cc:     Ley Foon Tan <ley.foon.tan@intel.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        rfi@lists.rocketboards.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Toan Le <toan@os.amperecomputing.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: [PATCH] PCI: altera-msi: Remove irq handler and data in one go
-Message-ID: <20201111221639.GA973514@bjorn-Precision-5520>
+To:     Vidya Sagar <vidyas@nvidia.com>
+Cc:     Jingoo Han <jingoohan1@gmail.com>,
+        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "amurray@thegoodpenguin.co.uk" <amurray@thegoodpenguin.co.uk>,
+        "robh@kernel.org" <robh@kernel.org>,
+        "treding@nvidia.com" <treding@nvidia.com>,
+        "jonathanh@nvidia.com" <jonathanh@nvidia.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "kthota@nvidia.com" <kthota@nvidia.com>,
+        "mmaddireddy@nvidia.com" <mmaddireddy@nvidia.com>,
+        "sagar.tv@gmail.com" <sagar.tv@gmail.com>
+Subject: Re: [PATCH V2] PCI: dwc: Add support to configure for ECRC
+Message-ID: <20201111222937.GA977451@bjorn-Precision-5520>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201111214355.puinncgf3aksxh73@viti.kaiser.cx>
+In-Reply-To: <5b4a728e-bfa3-42a2-423d-e270e8993901@nvidia.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc Thomas for handler/data order question at end]
+On Wed, Nov 11, 2020 at 10:21:46PM +0530, Vidya Sagar wrote:
+> 
+> 
+> On 11/11/2020 9:57 PM, Jingoo Han wrote:
+> > External email: Use caution opening links or attachments
+> > 
+> > 
+> > On 11/11/20, 7:12 AM, Vidya Sagar wrote:
+> > > 
+> > > DesignWare core has a TLP digest (TD) override bit in one of the control
+> > > registers of ATU. This bit also needs to be programmed for proper ECRC
+> > > functionality. This is currently identified as an issue with DesignWare
+> > > IP version 4.90a.
+> > > 
+> > > Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+> > > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> > > ---
+> > > V2:
+> > > * Addressed Bjorn's comments
+> > > 
+> > >   drivers/pci/controller/dwc/pcie-designware.c | 52 ++++++++++++++++++--
+> > >   drivers/pci/controller/dwc/pcie-designware.h |  1 +
+> > >   2 files changed, 49 insertions(+), 4 deletions(-)
+> > > 
+> > > diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+> > > index c2dea8fc97c8..ec0d13ab6bad 100644
+> > > --- a/drivers/pci/controller/dwc/pcie-designware.c
+> > > +++ b/drivers/pci/controller/dwc/pcie-designware.c
+> > > @@ -225,6 +225,46 @@ static void dw_pcie_writel_ob_unroll(struct dw_pcie *pci, u32 index, u32 reg,
+> > >        dw_pcie_writel_atu(pci, offset + reg, val);
+> > >   }
+> > > 
+> > > +static inline u32 dw_pcie_enable_ecrc(u32 val)
+> > 
+> > What is the reason to use inline here?
+>
+> Actually, I wanted to move the programming part inside the respective APIs
+> but then I wanted to give some details as well in comments so to avoid
+> duplication, I came up with this function. But, I'm making it inline for
+> better code optimization by compiler.
 
-On Wed, Nov 11, 2020 at 10:43:55PM +0100, Martin Kaiser wrote:
-> Thus wrote Bjorn Helgaas (helgaas@kernel.org):
-> > On Tue, Nov 10, 2020 at 03:21:36PM -0600, Bjorn Helgaas wrote:
-> > > On Sun, Nov 08, 2020 at 08:11:40PM +0100, Martin Kaiser wrote:
-> > > > Replace the two separate calls for removing the irq handler and data with a
-> > > > single irq_set_chained_handler_and_data() call.
-> 
-> > > This is similar to these:
-> 
-> > >   36f024ed8fc9 ("PCI/MSI: pci-xgene-msi: Consolidate chained IRQ handler install/remove")
-> > >   5168a73ce32d ("PCI/keystone: Consolidate chained IRQ handler install/remove")
-> > >   2cf5a03cb29d ("PCI/keystone: Fix race in installing chained IRQ handler")
-> 
-> > > and it seems potentially important that this removes the IRQ handler
-> > > and data *atomically*, i.e., both are done while holding
-> > > irq_get_desc_buslock().  
-> 
-> Ok, understood.
-> 
-> > > So I would use this:
-> 
-> > >   PCI: altera-msi: Fix race in installing chained IRQ handler
-> 
-> > >   Fix a race where a pending interrupt could be received and the handler
-> > >   called before the handler's data has been setup by converting to
-> > >   irq_set_chained_handler_and_data().
-> 
-> > >   See also 2cf5a03cb29d ("PCI/keystone: Fix race in installing chained
-> > >   IRQ handler").
-> 
-> > > to make it clear that this is actually a bug fix, not just a cleanup.
-> 
-> Thomas' commit 2cf5a03cb29d fixed a case where the handler was installed.
-> We're removing the handler here so his commit message doesn't really fit.
-> Anyway, I'll rewrite the commit message to clarify that this fixes a
-> race condition.
+I don't really care either way, but I'd be surprised if the compiler
+didn't inline this all by itself even without the explicit "inline".
 
-Oh, right, of course, I wasn't paying attention.  The altera case is
-removing and doing it in the correct order (removing handler, then
-data), so there shouldn't be a race even with the current code.
-
-> > > Looks like this should also be done in dw_pcie_free_msi() and
-> 
-> I'll send a patch for this.
-> 
-> > > xgene_msi_hwirq_alloc() at the same time?
-> 
-> This function uses the error status from irq_set_handler_data().
-> irq_set_chained_handler_and_data() returns no such error status. Is it
-> ok to drop the error handling?
-
-I'm not an IRQ expert, but I'd say it's OK to drop it.  Of the 40 or
-so callers, the only other caller that looks at the error status is
-ingenic_intc_of_init().
-
-Thomas, it looks like irq_domain_set_info() and msi_domain_ops_init()
-set the handler itself before setting the handler data:
-
-  irq_domain_set_info
-    irq_set_chip_and_handler_name(virq, chip, handler, ...)
-    irq_set_handler_data(virq, handler_data)
-
-  msi_domain_ops_init
-    __irq_set_handler(virq, info->handler, ...)
-    if (info->handler_data)
-      irq_set_handler_data(virq, info->handler_data)
-
-That looks at least superficially similar to the race you fixed with
-2cf5a03cb29d ("PCI/keystone: Fix race in installing chained IRQ
-handler").
-
-Should irq_domain_set_info() and msi_domain_ops_init() swap the order,
-too?
+> > > +{
+> > > +     /*
+> > > +      * DesignWare core version 4.90A has this strange design issue
+> > > +      * where the 'TD' bit in the Control register-1 of the ATU outbound
+> > > +      * region acts like an override for the ECRC setting i.e. the presence
+> > > +      * of TLP Digest(ECRC) in the outgoing TLPs is solely determined by
+> > > +      * this bit. This is contrary to the PCIe spec which says that the
+> > > +      * enablement of the ECRC is solely determined by the AER registers.
+> > > +      *
+> > > +      * Because of this, even when the ECRC is enabled through AER
+> > > +      * registers, the transactions going through ATU won't have TLP Digest
+> > > +      * as there is no way the AER sub-system could program the TD bit which
+> > > +      * is specific to DesignWare core.
+> > > +      *
+> > > +      * The best way to handle this scenario is to program the TD bit
+> > > +      * always. It affects only the traffic from root port to downstream
+> > > +      * devices.
+> > > +      *
+> > > +      * At this point,
+> > > +      * When ECRC is enabled in AER registers, everything works normally
+> > > +      * When ECRC is NOT enabled in AER registers, then,
+> > > +      * on Root Port:- TLP Digest (DWord size) gets appended to each packet
+> > > +      *                even through it is not required. Since downstream
+> > > +      *                TLPs are mostly for configuration accesses and BAR
+> > > +      *                accesses, they are not in critical path and won't
+> > > +      *                have much negative effect on the performance.
+> > > +      * on End Point:- TLP Digest is received for some/all the packets coming
+> > > +      *                from the root port. TLP Digest is ignored because,
+> > > +      *                as per the PCIe Spec r5.0 v1.0 section 2.2.3
+> > > +      *                "TLP Digest Rules", when an endpoint receives TLP
+> > > +      *                Digest when its ECRC check functionality is disabled
+> > > +      *                in AER registers, received TLP Digest is just ignored.
+> > > +      * Since there is no issue or error reported either side, best way to
+> > > +      * handle the scenario is to program TD bit by default.
+> > > +      */
+> > > +
+> > > +     return val | PCIE_ATU_TD;
+> > > +}
