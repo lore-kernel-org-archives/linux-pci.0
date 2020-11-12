@@ -2,50 +2,51 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA234C56201
-	for <linux-pci@archiver.kernel.org>; Thu, 12 Nov 2020 17:54:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A755C5519F
+	for <linux-pci@archiver.kernel.org>; Thu, 12 Nov 2020 17:55:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 81A6421D40
-	for <linux-pci@archiver.kernel.org>; Thu, 12 Nov 2020 17:54:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B85E521D91
+	for <linux-pci@archiver.kernel.org>; Thu, 12 Nov 2020 17:55:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="CZB1+EY7"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="WA0OhfL5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726322AbgKLRyj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 12 Nov 2020 12:54:39 -0500
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:58988 "EHLO
-        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726102AbgKLRyh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Nov 2020 12:54:37 -0500
-Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 0ACHs6rF028144;
-        Thu, 12 Nov 2020 11:54:06 -0600
+        id S1726363AbgKLRzD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 12 Nov 2020 12:55:03 -0500
+Received: from fllv0015.ext.ti.com ([198.47.19.141]:52490 "EHLO
+        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726344AbgKLRzD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Nov 2020 12:55:03 -0500
+Received: from fllv0034.itg.ti.com ([10.64.40.246])
+        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 0ACHsiJ4055905;
+        Thu, 12 Nov 2020 11:54:44 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1605203646;
-        bh=HA3K100VAjy/WJiVUwI1rftvyIQDtTVShTwH9A10BPc=;
-        h=From:To:CC:Subject:Date;
-        b=CZB1+EY7ZUKGNPw9RnUOGj366lJN4UWQdUiOGSzukNsV1RI0CH/29cTf4TjOv0ZbM
-         rq65kLuL0i224Lp+ZLC45PvM8iPFWwRPenJxHdsMoqHEmnz7+W/1Vh9g6/9FnTVyBh
-         I4msOU26EjwCo0d21l64VNJ0tp9CvD6UilkpSSAw=
-Received: from DLEE103.ent.ti.com (dlee103.ent.ti.com [157.170.170.33])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 0ACHs6ml027624
+        s=ti-com-17Q1; t=1605203684;
+        bh=hhlQwmt4EPYQN4mQXbOT17AQNk15Oaks2dUNqKaxS9w=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References;
+        b=WA0OhfL5F3FOD7sA6aICsqryltq+sqDHOiU1ziQUEtAqlWCcKipJW/Q8Ny+lvGvGK
+         J8yM68t7VObpq9hLx2N2ysHqXnQuAuEC/h/alzNeihVbLDWjbOHcb2ihxlrco3nf0A
+         y6RXnpxvZ24SMI3fftIsHVGI6x73Jul5ye3rS/4c=
+Received: from DLEE104.ent.ti.com (dlee104.ent.ti.com [157.170.170.34])
+        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 0ACHsi7H119169
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 12 Nov 2020 11:54:06 -0600
-Received: from DLEE106.ent.ti.com (157.170.170.36) by DLEE103.ent.ti.com
- (157.170.170.33) with Microsoft SMTP Server (version=TLS1_2,
+        Thu, 12 Nov 2020 11:54:44 -0600
+Received: from DLEE103.ent.ti.com (157.170.170.33) by DLEE104.ent.ti.com
+ (157.170.170.34) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Thu, 12
- Nov 2020 11:54:06 -0600
-Received: from fllv0039.itg.ti.com (10.64.41.19) by DLEE106.ent.ti.com
- (157.170.170.36) with Microsoft SMTP Server (version=TLS1_2,
+ Nov 2020 11:54:43 -0600
+Received: from fllv0039.itg.ti.com (10.64.41.19) by DLEE103.ent.ti.com
+ (157.170.170.33) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
- Frontend Transport; Thu, 12 Nov 2020 11:54:06 -0600
+ Frontend Transport; Thu, 12 Nov 2020 11:54:43 -0600
 Received: from a0393678-ssd.dal.design.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by fllv0039.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0ACHrx9q094087;
-        Thu, 12 Nov 2020 11:54:00 -0600
+        by fllv0039.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0ACHrx9w094087;
+        Thu, 12 Nov 2020 11:54:38 -0600
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Rob Herring <robh+dt@kernel.org>,
@@ -65,10 +66,12 @@ CC:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         <linux-renesas-soc@vger.kernel.org>,
         <linux-rockchip@lists.infradead.org>,
         <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v2 0/6] Add SR-IOV support in PCIe Endpoint Core
-Date:   Thu, 12 Nov 2020 23:23:52 +0530
-Message-ID: <20201112175358.2653-1-kishon@ti.com>
+Subject: [PATCH v2 6/6] misc: pci_endpoint_test: Populate sriov_configure ops to configure SR-IOV device
+Date:   Thu, 12 Nov 2020 23:23:58 +0530
+Message-ID: <20201112175358.2653-7-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20201112175358.2653-1-kishon@ti.com>
+References: <20201112175358.2653-1-kishon@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
@@ -76,54 +79,26 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Patch series
-*) Adds support to add virtual functions to enable endpoint controller
-   which supports SR-IOV capability
-*) Add support in Cadence endpoint driver to configure virtual functions
-*) Enable pci_endpoint_test driver to create pci_device for virtual
-   functions
+Populate sriov_configure ops with pci_sriov_configure_simple to
+configure SR-IOV device.
 
-Here both physical functions and virtual functions use the same
-pci_endpoint_test driver and existing pcitest utility can be used
-to test virtual functions as well.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/misc/pci_endpoint_test.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Changes from v1:
-*) Re-based and Re-worked to latest kernel 5.10.0-rc2+ (now has generic
-   binding for EP)
-
-Patch series is created on top of NTB series [2]
-
-v1 of the patch series can be found @ [1]
-
-[1] -> http://lore.kernel.org/r/20191231113534.30405-1-kishon@ti.com
-[2] -> http://lore.kernel.org/r/20201111153559.19050-1-kishon@ti.com
-
-Kishon Vijay Abraham I (6):
-  dt-bindings: PCI: pci-ep: Add binding to specify virtual function
-  PCI: endpoint: Add support to add virtual function in endpoint core
-  PCI: endpoint: Add support to link a physical function to a virtual
-    function
-  PCI: endpoint: Add virtual function number in pci_epc ops
-  PCI: cadence: Add support to configure virtual functions
-  misc: pci_endpoint_test: Populate sriov_configure ops to configure
-    SR-IOV device
-
- .../devicetree/bindings/pci/pci-ep.yaml       |   9 +
- drivers/misc/pci_endpoint_test.c              |   1 +
- .../pci/controller/cadence/pcie-cadence-ep.c  | 251 +++++++++++++++---
- drivers/pci/controller/cadence/pcie-cadence.h |   7 +
- .../pci/controller/dwc/pcie-designware-ep.c   |  36 +--
- drivers/pci/controller/pcie-rcar-ep.c         |  19 +-
- drivers/pci/controller/pcie-rockchip-ep.c     |  18 +-
- drivers/pci/endpoint/functions/pci-epf-ntb.c  |  83 +++---
- drivers/pci/endpoint/functions/pci-epf-test.c |  66 +++--
- drivers/pci/endpoint/pci-ep-cfs.c             |  24 ++
- drivers/pci/endpoint/pci-epc-core.c           | 166 +++++++++---
- drivers/pci/endpoint/pci-epf-core.c           | 144 +++++++++-
- include/linux/pci-epc.h                       |  57 ++--
- include/linux/pci-epf.h                       |  16 +-
- 14 files changed, 693 insertions(+), 204 deletions(-)
-
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index d4bdb937383f..29f2bb563e64 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -974,6 +974,7 @@ static struct pci_driver pci_endpoint_test_driver = {
+ 	.id_table	= pci_endpoint_test_tbl,
+ 	.probe		= pci_endpoint_test_probe,
+ 	.remove		= pci_endpoint_test_remove,
++	.sriov_configure = pci_sriov_configure_simple,
+ };
+ module_pci_driver(pci_endpoint_test_driver);
+ 
 -- 
 2.17.1
 
