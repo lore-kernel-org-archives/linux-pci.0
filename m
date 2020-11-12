@@ -5,58 +5,58 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1F36C63699
-	for <linux-pci@archiver.kernel.org>; Thu, 12 Nov 2020 13:03:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1035CC64E7B
+	for <linux-pci@archiver.kernel.org>; Thu, 12 Nov 2020 13:03:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 945CD221E9
-	for <linux-pci@archiver.kernel.org>; Thu, 12 Nov 2020 13:03:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F41422250
+	for <linux-pci@archiver.kernel.org>; Thu, 12 Nov 2020 13:03:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="AJNFqP/Z"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Dn59G2jx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728253AbgKLNDj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 12 Nov 2020 08:03:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45776 "EHLO
+        id S1728275AbgKLNDX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 12 Nov 2020 08:03:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45712 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728320AbgKLNDa (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Nov 2020 08:03:30 -0500
-Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 82B8FC0613D4
-        for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2020 05:03:28 -0800 (PST)
-Received: by mail-wm1-x343.google.com with SMTP id a3so5425906wmb.5
-        for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2020 05:03:28 -0800 (PST)
+        with ESMTP id S1727739AbgKLNDT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Nov 2020 08:03:19 -0500
+Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 756DCC0613D1
+        for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2020 05:03:18 -0800 (PST)
+Received: by mail-wr1-x444.google.com with SMTP id c17so5872481wrc.11
+        for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2020 05:03:18 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=qVbQfn+wW1FJTP9+IaoEjGKkOhoG1CH1YVgrdlNJ6Sw=;
-        b=AJNFqP/ZKhk6objxUUtP+6tvikca2WaZ6jTYQcqn0yvFmq93hZ3lVQHYyK7f33pXgE
-         LMPNyvQtw49zSsYAQyGirgOmAjeKMdajdiJVAvrB0xvcpLKnNUh1Z8ZszvxyGNv+yFWO
-         jRyaMPOhhzNbE3/mz7+lXJ3IhlCs6H3xrg7kN1+ZuHmW+evNoDn1JYTAFeNTCQVfBP6C
-         UDXzfEZDz9yBRbmmCKA8RPN03ITbdvYu314gLJxyyi+H6Vek4EQpQ+DnwUjWmEWZQ4P7
-         ecl6SKlD8ae4yC6bXIaFUH6JgCSMUZFZyPJSzMPNHa1vLYEGIy0ojNDIzjqoS0ABNNt4
-         JmSQ==
+        bh=ct/A3+BqtZ1mh7NbSkQbTndKvraebCJIuStSjYZJj6w=;
+        b=Dn59G2jxCJpXQrWrRlrml739Y0UGynYN7lH9lyw+1yaOF++vjgKKIvvlKYEGsBjX5C
+         7bdJR7rJAuBNA6tM+LlGlnNHHmCoaTyD4NWrpKiOjUIhCkls45V8Se7r6SFaJcMeKREy
+         ODKuG3eMApLS+UrxG7p2Rcg/bO3sqLM8QwGCYaFJO+3NlqESiIm3vY68Cvs5nj2xrMeD
+         dlNhxa1IyOUWrAQ7Uo1BnZ0Tj6HXA5JKm9KJDaeeMJSSnG8yPwAA3+IUcziyR/s3DN3v
+         nlgfSNdjoxc/NeIWDE7/RF1ZTAOZSxAbW5VF+X0d1jOT8pO+zEOA1bjRrngz4uSQbQBP
+         YIhA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=qVbQfn+wW1FJTP9+IaoEjGKkOhoG1CH1YVgrdlNJ6Sw=;
-        b=uJTEbRu/8HUvIfVQWYT1ZQWIVX02kosvJkwgMVN6al9JfYxrEx8183FwYnzRKnhOv4
-         d+qqbYhSgT8zmeSCjd5+GzHqyNVDU1livg8Ohagj1ceWXVU4pHFxxgVrw4AAXtTqxc6r
-         mKC0xOWrgiztamOm5XcY/nyH1ngkS0RidGUpZQD6mn5ZrzWP654IPUEoWPNjbWafCO/8
-         9BA1xBNutP1O0xpy6JtTxckd0HIsUjYRZjZ5AfqF8EEtql4apz+/W5iK6GTXMoJ2pAvS
-         1Y7/nqa9skPUFjdqxy1NucAB4PkfoCVxpH1VIcIrcy1Je+cH6iOX8jIQNpDBVyc/tFIj
-         ldmg==
-X-Gm-Message-State: AOAM530ObLGDfh+BAjtilhKYzxNlRzxgbkMnfCBHzXTWUWmQb+JQeyB1
-        TTQAT7GaAUOPgDra+ZbEG+Kgfg==
-X-Google-Smtp-Source: ABdhPJxsDYTMbvBnnj6uOORdu3x6BbabxcW+EJNp1tzj8KBQp5jtE8PRmp5+1detfGdDqBG6DaNgNA==
-X-Received: by 2002:a7b:c05a:: with SMTP id u26mr10063043wmc.159.1605186207268;
-        Thu, 12 Nov 2020 05:03:27 -0800 (PST)
+        bh=ct/A3+BqtZ1mh7NbSkQbTndKvraebCJIuStSjYZJj6w=;
+        b=eqyrSUbtg5GThadg2PKT702rSC0lhvSg0vn5NPKD9yuC5k+j0AE9is2dB+FSdUHOnY
+         mF52k32UM3l318SApOZvQQ9hj1NKrPDmNBwJT9J3yCrXjSx7SU053r8q6h9SuSXMNMYB
+         NQ628O/9XwNnfCUoeki4Tj4YZT8wNd0EIr0Rl9w2+wQDF4/9JthEIZqxJyeqxzK2u7i5
+         hDmsIWTUAC4zlXw+Xyfx0q89G2aWd/HtSwluQ1eFBAdvxkt5utFbn98gTOY4P7qolBXe
+         07/jMd93rgnKuyWYk+Y1LRQj4VS0IOv/R0dkipuFYtkd/osJ+hYkuP3PUdACYvLJGPUZ
+         mwrg==
+X-Gm-Message-State: AOAM533LXMAFXiR2PXwNd5bsSFa30f+85/8/SC9tpsjEdVgLIqPrJ0YD
+        FgJLgVwOlWLAWa3yz/DO0OAfgA==
+X-Google-Smtp-Source: ABdhPJyxBTftn6g9SekhMYf7fGQS110g7UZOp/jgF7KzIYPddsTdLxbRGQWK9hsJJjBj65Z7/hzkFQ==
+X-Received: by 2002:adf:eb47:: with SMTP id u7mr35100618wrn.163.1605186197169;
+        Thu, 12 Nov 2020 05:03:17 -0800 (PST)
 Received: from localhost.localdomain ([2001:1715:4e26:a7e0:116c:c27a:3e7f:5eaf])
-        by smtp.gmail.com with ESMTPSA id m22sm6877508wrb.97.2020.11.12.05.03.24
+        by smtp.gmail.com with ESMTPSA id m22sm6877508wrb.97.2020.11.12.05.03.15
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 12 Nov 2020 05:03:26 -0800 (PST)
+        Thu, 12 Nov 2020 05:03:16 -0800 (PST)
 From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
 To:     joro@8bytes.org, will@kernel.org, lorenzo.pieralisi@arm.com,
         robh+dt@kernel.org
@@ -68,12 +68,10 @@ Cc:     guohanjun@huawei.com, sudeep.holla@arm.com, rjw@rjwysocki.net,
         linux-pci@vger.kernel.org, baolu.lu@linux.intel.com,
         zhangfei.gao@linaro.org, shameerali.kolothum.thodi@huawei.com,
         vivek.gautam@arm.com,
-        Jean-Philippe Brucker <jean-philippe@linaro.org>,
-        Kuppuswamy Sathyanarayanan 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>
-Subject: [PATCH v8 8/9] PCI/ATS: Export PRI functions
-Date:   Thu, 12 Nov 2020 13:55:20 +0100
-Message-Id: <20201112125519.3987595-9-jean-philippe@linaro.org>
+        Jean-Philippe Brucker <jean-philippe@linaro.org>
+Subject: [PATCH v8 2/9] iommu/arm-smmu-v3: Maintain a SID->device structure
+Date:   Thu, 12 Nov 2020 13:55:14 +0100
+Message-Id: <20201112125519.3987595-3-jean-philippe@linaro.org>
 X-Mailer: git-send-email 2.29.1
 In-Reply-To: <20201112125519.3987595-1-jean-philippe@linaro.org>
 References: <20201112125519.3987595-1-jean-philippe@linaro.org>
@@ -83,53 +81,285 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The SMMUv3 driver uses pci_{enable,disable}_pri() and related
-functions. Export those functions to allow the driver to be built as a
-module.
+When handling faults from the event or PRI queue, we need to find the
+struct device associated to a SID. Add a rb_tree to keep track of SIDs.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
 ---
- drivers/pci/ats.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h |  13 +-
+ drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c | 161 ++++++++++++++++----
+ 2 files changed, 144 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-index 46bc7f31fb4d..e36d601015d9 100644
---- a/drivers/pci/ats.c
-+++ b/drivers/pci/ats.c
-@@ -191,6 +191,7 @@ void pci_pri_init(struct pci_dev *pdev)
- 	if (status & PCI_PRI_STATUS_PASID)
- 		pdev->pasid_required = 1;
- }
-+EXPORT_SYMBOL_GPL(pci_pri_init);
+diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h
+index 58868a5677b6..7bd98fdce5c3 100644
+--- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h
++++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h
+@@ -648,6 +648,15 @@ struct arm_smmu_device {
  
- /**
-  * pci_enable_pri - Enable PRI capability
-@@ -238,6 +239,7 @@ int pci_enable_pri(struct pci_dev *pdev, u32 reqs)
+ 	/* IOMMU core code handle */
+ 	struct iommu_device		iommu;
++
++	struct rb_root			streams;
++	struct mutex			streams_mutex;
++};
++
++struct arm_smmu_stream {
++	u32				id;
++	struct arm_smmu_master		*master;
++	struct rb_node			node;
+ };
  
+ /* SMMU private data for each master */
+@@ -656,8 +665,8 @@ struct arm_smmu_master {
+ 	struct device			*dev;
+ 	struct arm_smmu_domain		*domain;
+ 	struct list_head		domain_head;
+-	u32				*sids;
+-	unsigned int			num_sids;
++	struct arm_smmu_stream		*streams;
++	unsigned int			num_streams;
+ 	bool				ats_enabled;
+ 	bool				sva_enabled;
+ 	struct list_head		bonds;
+diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+index 453478c83933..d87c87136d63 100644
+--- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
++++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+@@ -918,8 +918,8 @@ static void arm_smmu_sync_cd(struct arm_smmu_domain *smmu_domain,
+ 
+ 	spin_lock_irqsave(&smmu_domain->devices_lock, flags);
+ 	list_for_each_entry(master, &smmu_domain->devices, domain_head) {
+-		for (i = 0; i < master->num_sids; i++) {
+-			cmd.cfgi.sid = master->sids[i];
++		for (i = 0; i < master->num_streams; i++) {
++			cmd.cfgi.sid = master->streams[i].id;
+ 			arm_smmu_cmdq_batch_add(smmu, &cmds, &cmd);
+ 		}
+ 	}
+@@ -1371,6 +1371,32 @@ static int arm_smmu_init_l2_strtab(struct arm_smmu_device *smmu, u32 sid)
  	return 0;
  }
-+EXPORT_SYMBOL_GPL(pci_enable_pri);
  
- /**
-  * pci_disable_pri - Disable PRI capability
-@@ -317,6 +319,7 @@ int pci_reset_pri(struct pci_dev *pdev)
++__maybe_unused
++static struct arm_smmu_master *
++arm_smmu_find_master(struct arm_smmu_device *smmu, u32 sid)
++{
++	struct rb_node *node;
++	struct arm_smmu_stream *stream;
++	struct arm_smmu_master *master = NULL;
++
++	mutex_lock(&smmu->streams_mutex);
++	node = smmu->streams.rb_node;
++	while (node) {
++		stream = rb_entry(node, struct arm_smmu_stream, node);
++		if (stream->id < sid) {
++			node = node->rb_right;
++		} else if (stream->id > sid) {
++			node = node->rb_left;
++		} else {
++			master = stream->master;
++			break;
++		}
++	}
++	mutex_unlock(&smmu->streams_mutex);
++
++	return master;
++}
++
+ /* IRQ and event handlers */
+ static irqreturn_t arm_smmu_evtq_thread(int irq, void *dev)
+ {
+@@ -1604,8 +1630,8 @@ static int arm_smmu_atc_inv_master(struct arm_smmu_master *master)
  
- 	return 0;
+ 	arm_smmu_atc_inv_to_cmd(0, 0, 0, &cmd);
+ 
+-	for (i = 0; i < master->num_sids; i++) {
+-		cmd.atc.sid = master->sids[i];
++	for (i = 0; i < master->num_streams; i++) {
++		cmd.atc.sid = master->streams[i].id;
+ 		arm_smmu_cmdq_issue_cmd(master->smmu, &cmd);
+ 	}
+ 
+@@ -1648,8 +1674,8 @@ int arm_smmu_atc_inv_domain(struct arm_smmu_domain *smmu_domain, int ssid,
+ 		if (!master->ats_enabled)
+ 			continue;
+ 
+-		for (i = 0; i < master->num_sids; i++) {
+-			cmd.atc.sid = master->sids[i];
++		for (i = 0; i < master->num_streams; i++) {
++			cmd.atc.sid = master->streams[i].id;
+ 			arm_smmu_cmdq_batch_add(smmu_domain->smmu, &cmds, &cmd);
+ 		}
+ 	}
+@@ -2064,13 +2090,13 @@ static void arm_smmu_install_ste_for_dev(struct arm_smmu_master *master)
+ 	int i, j;
+ 	struct arm_smmu_device *smmu = master->smmu;
+ 
+-	for (i = 0; i < master->num_sids; ++i) {
+-		u32 sid = master->sids[i];
++	for (i = 0; i < master->num_streams; ++i) {
++		u32 sid = master->streams[i].id;
+ 		__le64 *step = arm_smmu_get_step_for_sid(smmu, sid);
+ 
+ 		/* Bridged PCI devices may end up with duplicated IDs */
+ 		for (j = 0; j < i; j++)
+-			if (master->sids[j] == sid)
++			if (master->streams[j].id == sid)
+ 				break;
+ 		if (j < i)
+ 			continue;
+@@ -2339,11 +2365,101 @@ static bool arm_smmu_sid_in_range(struct arm_smmu_device *smmu, u32 sid)
+ 	return sid < limit;
  }
-+EXPORT_SYMBOL_GPL(pci_reset_pri);
  
- /**
-  * pci_prg_resp_pasid_required - Return PRG Response PASID Required bit
-@@ -332,6 +335,7 @@ int pci_prg_resp_pasid_required(struct pci_dev *pdev)
++static int arm_smmu_insert_master(struct arm_smmu_device *smmu,
++				  struct arm_smmu_master *master)
++{
++	int i;
++	int ret = 0;
++	struct arm_smmu_stream *new_stream, *cur_stream;
++	struct rb_node **new_node, *parent_node = NULL;
++	struct iommu_fwspec *fwspec = dev_iommu_fwspec_get(master->dev);
++
++	master->streams = kcalloc(fwspec->num_ids,
++				  sizeof(struct arm_smmu_stream), GFP_KERNEL);
++	if (!master->streams)
++		return -ENOMEM;
++	master->num_streams = fwspec->num_ids;
++
++	mutex_lock(&smmu->streams_mutex);
++	for (i = 0; i < fwspec->num_ids && !ret; i++) {
++		u32 sid = fwspec->ids[i];
++
++		new_stream = &master->streams[i];
++		new_stream->id = sid;
++		new_stream->master = master;
++
++		/*
++		 * Check the SIDs are in range of the SMMU and our stream table
++		 */
++		if (!arm_smmu_sid_in_range(smmu, sid)) {
++			ret = -ERANGE;
++			break;
++		}
++
++		/* Ensure l2 strtab is initialised */
++		if (smmu->features & ARM_SMMU_FEAT_2_LVL_STRTAB) {
++			ret = arm_smmu_init_l2_strtab(smmu, sid);
++			if (ret)
++				break;
++		}
++
++		/* Insert into SID tree */
++		new_node = &(smmu->streams.rb_node);
++		while (*new_node) {
++			cur_stream = rb_entry(*new_node, struct arm_smmu_stream,
++					      node);
++			parent_node = *new_node;
++			if (cur_stream->id > new_stream->id) {
++				new_node = &((*new_node)->rb_left);
++			} else if (cur_stream->id < new_stream->id) {
++				new_node = &((*new_node)->rb_right);
++			} else {
++				dev_warn(master->dev,
++					 "stream %u already in tree\n",
++					 cur_stream->id);
++				ret = -EINVAL;
++				break;
++			}
++		}
++
++		if (!ret) {
++			rb_link_node(&new_stream->node, parent_node, new_node);
++			rb_insert_color(&new_stream->node, &smmu->streams);
++		}
++	}
++
++	if (ret) {
++		for (; i > 0; i--)
++			rb_erase(&master->streams[i].node, &smmu->streams);
++		kfree(master->streams);
++	}
++	mutex_unlock(&smmu->streams_mutex);
++
++	return ret;
++}
++
++static void arm_smmu_remove_master(struct arm_smmu_master *master)
++{
++	int i;
++	struct arm_smmu_device *smmu = master->smmu;
++	struct iommu_fwspec *fwspec = dev_iommu_fwspec_get(master->dev);
++
++	if (!smmu || !master->streams)
++		return;
++
++	mutex_lock(&smmu->streams_mutex);
++	for (i = 0; i < fwspec->num_ids; i++)
++		rb_erase(&master->streams[i].node, &smmu->streams);
++	mutex_unlock(&smmu->streams_mutex);
++
++	kfree(master->streams);
++}
++
+ static struct iommu_ops arm_smmu_ops;
  
- 	return pdev->pasid_required;
+ static struct iommu_device *arm_smmu_probe_device(struct device *dev)
+ {
+-	int i, ret;
++	int ret;
+ 	struct arm_smmu_device *smmu;
+ 	struct arm_smmu_master *master;
+ 	struct iommu_fwspec *fwspec = dev_iommu_fwspec_get(dev);
+@@ -2364,27 +2480,12 @@ static struct iommu_device *arm_smmu_probe_device(struct device *dev)
+ 
+ 	master->dev = dev;
+ 	master->smmu = smmu;
+-	master->sids = fwspec->ids;
+-	master->num_sids = fwspec->num_ids;
+ 	INIT_LIST_HEAD(&master->bonds);
+ 	dev_iommu_priv_set(dev, master);
+ 
+-	/* Check the SIDs are in range of the SMMU and our stream table */
+-	for (i = 0; i < master->num_sids; i++) {
+-		u32 sid = master->sids[i];
+-
+-		if (!arm_smmu_sid_in_range(smmu, sid)) {
+-			ret = -ERANGE;
+-			goto err_free_master;
+-		}
+-
+-		/* Ensure l2 strtab is initialised */
+-		if (smmu->features & ARM_SMMU_FEAT_2_LVL_STRTAB) {
+-			ret = arm_smmu_init_l2_strtab(smmu, sid);
+-			if (ret)
+-				goto err_free_master;
+-		}
+-	}
++	ret = arm_smmu_insert_master(smmu, master);
++	if (ret)
++		goto err_free_master;
+ 
+ 	master->ssid_bits = min(smmu->ssid_bits, fwspec->num_pasid_bits);
+ 
+@@ -2422,6 +2523,7 @@ static void arm_smmu_release_device(struct device *dev)
+ 	WARN_ON(arm_smmu_master_sva_enabled(master));
+ 	arm_smmu_detach_dev(master);
+ 	arm_smmu_disable_pasid(master);
++	arm_smmu_remove_master(master);
+ 	kfree(master);
+ 	iommu_fwspec_free(dev);
  }
-+EXPORT_SYMBOL_GPL(pci_prg_resp_pasid_required);
+@@ -2844,6 +2946,9 @@ static int arm_smmu_init_structures(struct arm_smmu_device *smmu)
+ {
+ 	int ret;
  
- /**
-  * pci_pri_supported - Check if PRI is supported.
++	mutex_init(&smmu->streams_mutex);
++	smmu->streams = RB_ROOT;
++
+ 	ret = arm_smmu_init_queues(smmu);
+ 	if (ret)
+ 		return ret;
 -- 
 2.29.1
 
