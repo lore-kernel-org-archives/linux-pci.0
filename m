@@ -5,58 +5,58 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9B5BC63798
-	for <linux-pci@archiver.kernel.org>; Thu, 12 Nov 2020 13:03:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1F36C63699
+	for <linux-pci@archiver.kernel.org>; Thu, 12 Nov 2020 13:03:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5B61F2224F
-	for <linux-pci@archiver.kernel.org>; Thu, 12 Nov 2020 13:03:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 945CD221E9
+	for <linux-pci@archiver.kernel.org>; Thu, 12 Nov 2020 13:03:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="oJG4X6CI"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="AJNFqP/Z"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728278AbgKLNDe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 12 Nov 2020 08:03:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45732 "EHLO
+        id S1728253AbgKLNDj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 12 Nov 2020 08:03:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45776 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728253AbgKLNDX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Nov 2020 08:03:23 -0500
-Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16990C061A04
-        for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2020 05:03:20 -0800 (PST)
-Received: by mail-wr1-x442.google.com with SMTP id s8so5888560wrw.10
-        for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2020 05:03:20 -0800 (PST)
+        with ESMTP id S1728320AbgKLNDa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Nov 2020 08:03:30 -0500
+Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 82B8FC0613D4
+        for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2020 05:03:28 -0800 (PST)
+Received: by mail-wm1-x343.google.com with SMTP id a3so5425906wmb.5
+        for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2020 05:03:28 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=Tid3zbIJRKyj0Bgjxj2sf+RSwZO5YPfaeHYqLr0g5iY=;
-        b=oJG4X6CI7enblSZUp3EgWunBFmyQv6mCwtptSww+yPpxypkzQpLOkXizEPseu9wI2t
-         2uZpYfOj9eUqkc5Mc5tlt3K7jx+TWvIflBQqX1SEYsvTIjIegzyCiXcmEFzhPjxvoA47
-         6Dq4ROrha3r07LiOgqCfR01hIVv7++Ib5t5K0yXdpav8K1LR8Zat1PWjsoKfQ809OKnH
-         1k5v7fX1Ma0DDtnaTPNqdNu6iefW98IR6j56uIkzclVoD8+TGJgwKYfDHt4NXx+25cGn
-         SRyX77nEr1L/nTzdOO1Yo2Myq9+BofVGSodnPeoKBdMbtEUWw45R7NEYQRJNFh3Men13
-         MQBw==
+        bh=qVbQfn+wW1FJTP9+IaoEjGKkOhoG1CH1YVgrdlNJ6Sw=;
+        b=AJNFqP/ZKhk6objxUUtP+6tvikca2WaZ6jTYQcqn0yvFmq93hZ3lVQHYyK7f33pXgE
+         LMPNyvQtw49zSsYAQyGirgOmAjeKMdajdiJVAvrB0xvcpLKnNUh1Z8ZszvxyGNv+yFWO
+         jRyaMPOhhzNbE3/mz7+lXJ3IhlCs6H3xrg7kN1+ZuHmW+evNoDn1JYTAFeNTCQVfBP6C
+         UDXzfEZDz9yBRbmmCKA8RPN03ITbdvYu314gLJxyyi+H6Vek4EQpQ+DnwUjWmEWZQ4P7
+         ecl6SKlD8ae4yC6bXIaFUH6JgCSMUZFZyPJSzMPNHa1vLYEGIy0ojNDIzjqoS0ABNNt4
+         JmSQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Tid3zbIJRKyj0Bgjxj2sf+RSwZO5YPfaeHYqLr0g5iY=;
-        b=GGbLv8xK9OslpoQZv7b6YvNfziDdOunpHHo+yPyUS2VDxhbIGVX2ca15EpaSCHzlds
-         8ZdZRjChB52jKLmX7xADPXOWEp7dF8i0p608xS7pnvqXHyH1MqvhVlxcIXUs7yAMjNS4
-         iDrSgUGRvz55x0K5trf5+OYsasZYBhn+DCBikep4eDF67KifmWu62jgW5Lo2qg56z8eb
-         p74tr8Yd/RBv2aWJU3L1gXkiWH3ZTt0+RDRaZZeYkTJcTnzKZX4FnDAyli8abjGEMY5y
-         X2czQXmZprPVcKSd4ZpfglFK2X3OhmUNw/0NRIIv8cvQz4skq/KjOKonUCZJBK9jC4Lw
-         jD7A==
-X-Gm-Message-State: AOAM532qVbePFOna7hcnnNBuPYpomZVpBWy7pueb4dyMbA7VJf5DXMbM
-        dyyR8769pNI5iurUNLGHm77vaA==
-X-Google-Smtp-Source: ABdhPJww5aqw0Dh36h3mNuuwHJd8ZSSnPISNulq6oQQhTrIxG8XhHZa3Ym6AO5qFBMZHmbjVR9mCBw==
-X-Received: by 2002:adf:df88:: with SMTP id z8mr35234477wrl.113.1605186198680;
-        Thu, 12 Nov 2020 05:03:18 -0800 (PST)
+        bh=qVbQfn+wW1FJTP9+IaoEjGKkOhoG1CH1YVgrdlNJ6Sw=;
+        b=uJTEbRu/8HUvIfVQWYT1ZQWIVX02kosvJkwgMVN6al9JfYxrEx8183FwYnzRKnhOv4
+         d+qqbYhSgT8zmeSCjd5+GzHqyNVDU1livg8Ohagj1ceWXVU4pHFxxgVrw4AAXtTqxc6r
+         mKC0xOWrgiztamOm5XcY/nyH1ngkS0RidGUpZQD6mn5ZrzWP654IPUEoWPNjbWafCO/8
+         9BA1xBNutP1O0xpy6JtTxckd0HIsUjYRZjZ5AfqF8EEtql4apz+/W5iK6GTXMoJ2pAvS
+         1Y7/nqa9skPUFjdqxy1NucAB4PkfoCVxpH1VIcIrcy1Je+cH6iOX8jIQNpDBVyc/tFIj
+         ldmg==
+X-Gm-Message-State: AOAM530ObLGDfh+BAjtilhKYzxNlRzxgbkMnfCBHzXTWUWmQb+JQeyB1
+        TTQAT7GaAUOPgDra+ZbEG+Kgfg==
+X-Google-Smtp-Source: ABdhPJxsDYTMbvBnnj6uOORdu3x6BbabxcW+EJNp1tzj8KBQp5jtE8PRmp5+1detfGdDqBG6DaNgNA==
+X-Received: by 2002:a7b:c05a:: with SMTP id u26mr10063043wmc.159.1605186207268;
+        Thu, 12 Nov 2020 05:03:27 -0800 (PST)
 Received: from localhost.localdomain ([2001:1715:4e26:a7e0:116c:c27a:3e7f:5eaf])
-        by smtp.gmail.com with ESMTPSA id m22sm6877508wrb.97.2020.11.12.05.03.17
+        by smtp.gmail.com with ESMTPSA id m22sm6877508wrb.97.2020.11.12.05.03.24
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 12 Nov 2020 05:03:17 -0800 (PST)
+        Thu, 12 Nov 2020 05:03:26 -0800 (PST)
 From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
 To:     joro@8bytes.org, will@kernel.org, lorenzo.pieralisi@arm.com,
         robh+dt@kernel.org
@@ -69,10 +69,11 @@ Cc:     guohanjun@huawei.com, sudeep.holla@arm.com, rjw@rjwysocki.net,
         zhangfei.gao@linaro.org, shameerali.kolothum.thodi@huawei.com,
         vivek.gautam@arm.com,
         Jean-Philippe Brucker <jean-philippe@linaro.org>,
-        Rob Herring <robh@kernel.org>
-Subject: [PATCH v8 3/9] dt-bindings: document stall property for IOMMU masters
-Date:   Thu, 12 Nov 2020 13:55:15 +0100
-Message-Id: <20201112125519.3987595-4-jean-philippe@linaro.org>
+        Kuppuswamy Sathyanarayanan 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>
+Subject: [PATCH v8 8/9] PCI/ATS: Export PRI functions
+Date:   Thu, 12 Nov 2020 13:55:20 +0100
+Message-Id: <20201112125519.3987595-9-jean-philippe@linaro.org>
 X-Mailer: git-send-email 2.29.1
 In-Reply-To: <20201112125519.3987595-1-jean-philippe@linaro.org>
 References: <20201112125519.3987595-1-jean-philippe@linaro.org>
@@ -82,45 +83,53 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On ARM systems, some platform devices behind an IOMMU may support stall,
-which is the ability to recover from page faults. Let the firmware tell us
-when a device supports stall.
+The SMMUv3 driver uses pci_{enable,disable}_pri() and related
+functions. Export those functions to allow the driver to be built as a
+module.
 
-Reviewed-by: Rob Herring <robh@kernel.org>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
 ---
- .../devicetree/bindings/iommu/iommu.txt        | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+ drivers/pci/ats.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/iommu/iommu.txt b/Documentation/devicetree/bindings/iommu/iommu.txt
-index 3c36334e4f94..26ba9e530f13 100644
---- a/Documentation/devicetree/bindings/iommu/iommu.txt
-+++ b/Documentation/devicetree/bindings/iommu/iommu.txt
-@@ -92,6 +92,24 @@ Optional properties:
-   tagging DMA transactions with an address space identifier. By default,
-   this is 0, which means that the device only has one address space.
+diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+index 46bc7f31fb4d..e36d601015d9 100644
+--- a/drivers/pci/ats.c
++++ b/drivers/pci/ats.c
+@@ -191,6 +191,7 @@ void pci_pri_init(struct pci_dev *pdev)
+ 	if (status & PCI_PRI_STATUS_PASID)
+ 		pdev->pasid_required = 1;
+ }
++EXPORT_SYMBOL_GPL(pci_pri_init);
  
-+- dma-can-stall: When present, the master can wait for a transaction to
-+  complete for an indefinite amount of time. Upon translation fault some
-+  IOMMUs, instead of aborting the translation immediately, may first
-+  notify the driver and keep the transaction in flight. This allows the OS
-+  to inspect the fault and, for example, make physical pages resident
-+  before updating the mappings and completing the transaction. Such IOMMU
-+  accepts a limited number of simultaneous stalled transactions before
-+  having to either put back-pressure on the master, or abort new faulting
-+  transactions.
-+
-+  Firmware has to opt-in stalling, because most buses and masters don't
-+  support it. In particular it isn't compatible with PCI, where
-+  transactions have to complete before a time limit. More generally it
-+  won't work in systems and masters that haven't been designed for
-+  stalling. For example the OS, in order to handle a stalled transaction,
-+  may attempt to retrieve pages from secondary storage in a stalled
-+  domain, leading to a deadlock.
-+
+ /**
+  * pci_enable_pri - Enable PRI capability
+@@ -238,6 +239,7 @@ int pci_enable_pri(struct pci_dev *pdev, u32 reqs)
  
- Notes:
- ======
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(pci_enable_pri);
+ 
+ /**
+  * pci_disable_pri - Disable PRI capability
+@@ -317,6 +319,7 @@ int pci_reset_pri(struct pci_dev *pdev)
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(pci_reset_pri);
+ 
+ /**
+  * pci_prg_resp_pasid_required - Return PRG Response PASID Required bit
+@@ -332,6 +335,7 @@ int pci_prg_resp_pasid_required(struct pci_dev *pdev)
+ 
+ 	return pdev->pasid_required;
+ }
++EXPORT_SYMBOL_GPL(pci_prg_resp_pasid_required);
+ 
+ /**
+  * pci_pri_supported - Check if PRI is supported.
 -- 
 2.29.1
 
