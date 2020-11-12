@@ -2,166 +2,195 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFB49C61DD8
-	for <linux-pci@archiver.kernel.org>; Thu, 12 Nov 2020 02:05:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95F18C56201
+	for <linux-pci@archiver.kernel.org>; Thu, 12 Nov 2020 05:39:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 774BA216C4
-	for <linux-pci@archiver.kernel.org>; Thu, 12 Nov 2020 02:05:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2EB95208FE
+	for <linux-pci@archiver.kernel.org>; Thu, 12 Nov 2020 05:39:02 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=technolu-st.20150623.gappssmtp.com header.i=@technolu-st.20150623.gappssmtp.com header.b="OFdfsyF5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726369AbgKLBbU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 11 Nov 2020 20:31:20 -0500
-Received: from mga09.intel.com ([134.134.136.24]:5849 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727692AbgKKXDa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 11 Nov 2020 18:03:30 -0500
-IronPort-SDR: dS8j9radFcvvHx9OSXdJkQaTYCizEfZiy+jjRSib2g6lnDSTtKEfVeYUrR91MYSv8Im0vqwote
- W+1bR2N2qjeA==
-X-IronPort-AV: E=McAfee;i="6000,8403,9802"; a="170397424"
-X-IronPort-AV: E=Sophos;i="5.77,470,1596524400"; 
-   d="scan'208";a="170397424"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Nov 2020 15:03:25 -0800
-IronPort-SDR: 9vu89CvyJXkUEk06TLcFmU+GckpICnGsnpD4GxW6EfoVk0xaYkiNp0FqmfcJlBW5QryeyHr12+
- C/SzsWljaXFA==
-X-IronPort-AV: E=Sophos;i="5.77,470,1596524400"; 
-   d="scan'208";a="308638506"
-Received: from otc-nc-03.jf.intel.com (HELO otc-nc-03) ([10.54.39.36])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Nov 2020 15:03:23 -0800
-Date:   Wed, 11 Nov 2020 15:03:21 -0800
-From:   "Raj, Ashok" <ashok.raj@intel.com>
-To:     Thomas Gleixner <tglx@linutronix.de>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Jason Gunthorpe <jgg@nvidia.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        "Tian, Kevin" <kevin.tian@intel.com>,
-        "Jiang, Dave" <dave.jiang@intel.com>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        "vkoul@kernel.org" <vkoul@kernel.org>,
-        "Dey, Megha" <megha.dey@intel.com>,
-        "maz@kernel.org" <maz@kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-        "Pan, Jacob jun" <jacob.jun.pan@intel.com>,
-        "Liu, Yi L" <yi.l.liu@intel.com>, "Lu, Baolu" <baolu.lu@intel.com>,
-        "Kumar, Sanjay K" <sanjay.k.kumar@intel.com>,
-        "Luck, Tony" <tony.luck@intel.com>,
-        "jing.lin@intel.com" <jing.lin@intel.com>,
-        "kwankhede@nvidia.com" <kwankhede@nvidia.com>,
-        "eric.auger@redhat.com" <eric.auger@redhat.com>,
-        "parav@mellanox.com" <parav@mellanox.com>,
-        "rafael@kernel.org" <rafael@kernel.org>,
-        "netanelg@mellanox.com" <netanelg@mellanox.com>,
-        "shahafs@mellanox.com" <shahafs@mellanox.com>,
-        "yan.y.zhao@linux.intel.com" <yan.y.zhao@linux.intel.com>,
-        "pbonzini@redhat.com" <pbonzini@redhat.com>,
-        "Ortiz, Samuel" <samuel.ortiz@intel.com>,
-        "Hossain, Mona" <mona.hossain@intel.com>,
-        "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        Ashok Raj <ashok.raj@intel.com>
-Subject: Re: [PATCH v4 06/17] PCI: add SIOV and IMS capability detection
-Message-ID: <20201111230321.GC83266@otc-nc-03>
-References: <20201106131415.GT2620339@nvidia.com>
- <20201106164850.GA85879@otc-nc-03>
- <20201106175131.GW2620339@nvidia.com>
- <CAPcyv4iYHA1acfo=+fTk+U_TrLbSWJjA6v4oeTXgVYDTrnCoGw@mail.gmail.com>
- <20201107001207.GA2620339@nvidia.com>
- <87pn4nk7nn.fsf@nanos.tec.linutronix.de>
- <d69953378bd1fdcdda54a2fbe285f6c0b1484e8a.camel@infradead.org>
- <20201111154159.GA24059@infradead.org>
- <20201111160922.GA83266@otc-nc-03>
- <87k0uro7fz.fsf@nanos.tec.linutronix.de>
+        id S1728912AbgKLFjB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 12 Nov 2020 00:39:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33102 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727855AbgKLCcM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Nov 2020 21:32:12 -0500
+Received: from mail-ej1-x641.google.com (mail-ej1-x641.google.com [IPv6:2a00:1450:4864:20::641])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8B4DC0613D4
+        for <linux-pci@vger.kernel.org>; Wed, 11 Nov 2020 18:32:10 -0800 (PST)
+Received: by mail-ej1-x641.google.com with SMTP id f23so5584208ejk.2
+        for <linux-pci@vger.kernel.org>; Wed, 11 Nov 2020 18:32:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=technolu-st.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=EUzPg8y73vRxlAHH+zIia8Krjs+sYU9K0sC28KymEQY=;
+        b=OFdfsyF59is2mlKKEZpxTJE38bU0jQpXcEKm0WKQv7bmSSLkS09VKmuD1R/V971ynM
+         S3kh+zrHT/CWrjm0Ok6zUt2BiFhf56JU6hrhTQ9DThImfqMzK6eiDFzLaDgD8+6sDkPs
+         dp64eW4FkOefdJbTYHBpvs2vRDNTyd1nvf5mkoRC5ijYPYziFUC2OemDikc/ZdvLPkSw
+         MMuibtWAT4mKpeYRH4Y4nQNRWs3Rn4HB1RTYO8aeZHMV8IzR0uxD1hM5JoFHIjXqNzeB
+         /licFcwyMdkqPLzMsrIyz5cvfcaMNZ0lebxqAla8KGzlHc545aPNvfysBlVFhPDMKTHP
+         JFFw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=EUzPg8y73vRxlAHH+zIia8Krjs+sYU9K0sC28KymEQY=;
+        b=sMqhePK9JszQG91F5CmUGPCij4IWYdjhef+QysypRsSBKIgTJ/QIuTsqNUrsQn7fa6
+         VDYK6x0IMxKco4wH+VL2th4WCrGDJLgP4fHVVUMBY6re5hgVDV6ofe1F06GBE9MN2NER
+         Txdag3QbbGM5ecOnXm/ol1sSUnJeb1HE4vWBYFLJLdE837D1s1CFBnXX3DIFlm1crZaX
+         dZHGjFX4SJUGqbW7gPTpjwbyPzMCfOd0+1lNtHVxXqAzsDNyrL1tMQ0Mj0LK6wLRf+54
+         RWCfly47oUOhArliWt9k5Szxl7uQRVABWOLmBwteNllPihRTst+TE0LdlPrE7+GPjnXe
+         QCXA==
+X-Gm-Message-State: AOAM530NikBxnqpgDS6/VkawKeopqfVEB4zd3X7iuRfnehpfwRZ/Nj6H
+        C43Zy2ace1pykgHv/vH7YvIDLDt4j24q6muTSXfbwg==
+X-Google-Smtp-Source: ABdhPJwknRlumIb+H14ad0cYTJI1zbP/rZ/TYVSzcwrQHSiyzy4KNPJ/xC5Llo26hk8i+tHzwh7VpyOhT3s2+ovFnvw=
+X-Received: by 2002:a17:906:4c41:: with SMTP id d1mr29697883ejw.485.1605148329262;
+ Wed, 11 Nov 2020 18:32:09 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <87k0uro7fz.fsf@nanos.tec.linutronix.de>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+References: <20201103160838.GA246433@bjorn-Precision-5520> <874km61732.fsf@nanos.tec.linutronix.de>
+ <fa26ac8b-ed48-7ea3-c21b-b133532716b8@posteo.de> <87mtzxkus5.fsf@nanos.tec.linutronix.de>
+ <87wnz0hr9k.fsf@codeaurora.org> <87ft5hehlb.fsf@codeaurora.org>
+ <6b60c8f1-ec37-d601-92c2-97a485b73431@posteo.de> <87v9ec9rk3.fsf@codeaurora.org>
+ <87imab4slq.fsf@codeaurora.org> <b2129a70db2b36c5015b4143a839f47dfc3153af.camel@seibold.net>
+ <CAHUdJJVp5r55NtE+BNz5XGtnaks6mDKQBFodz63DdULBVhD0Lg@mail.gmail.com>
+ <CAHUdJJXRDKs9NRugUAFgNr51DJ=OcssuiV8ST5CaV1CKiNTFfA@mail.gmail.com> <CAHUdJJUkvcShSXw4mkFUDcEh101xNQbOUc0YEv6-TyLdyTs4Og@mail.gmail.com>
+In-Reply-To: <CAHUdJJUkvcShSXw4mkFUDcEh101xNQbOUc0YEv6-TyLdyTs4Og@mail.gmail.com>
+From:   wi nk <wink@technolu.st>
+Date:   Thu, 12 Nov 2020 03:31:57 +0100
+Message-ID: <CAHUdJJWsCo6NJ6qr6kj=SASs+jO+fJFc3HhOO=fyek=OxSQa2Q@mail.gmail.com>
+Subject: Re: pci_alloc_irq_vectors fails ENOSPC for XPS 13 9310
+To:     Stefani Seibold <stefani@seibold.net>
+Cc:     Kalle Valo <kvalo@codeaurora.org>,
+        Thomas Krause <thomaskrause@posteo.de>,
+        Govind Singh <govinds@codeaurora.org>,
+        linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Devin Bayer <dev@doubly.so>, Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        ath11k@lists.infradead.org, David Woodhouse <dwmw@amazon.co.uk>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Nov 11, 2020 at 11:27:28PM +0100, Thomas Gleixner wrote:
-> On Wed, Nov 11 2020 at 08:09, Ashok Raj wrote:
-> >> > We'd also need a way for an OS running on bare metal to *know* that
-> >> > it's on bare metal and can just compose MSI messages for itself. Since
-> >> > we do expect bare metal to have an IOMMU, perhaps that is just a
-> >> > feature flag on the IOMMU?
-> >> 
-> >> Have the platform firmware advertise if it needs native or virtualized
-> >> IMS handling.  If it advertises neither don't support IMS?
+On Thu, Nov 12, 2020 at 2:11 AM wi nk <wink@technolu.st> wrote:
+>
+> On Thu, Nov 12, 2020 at 2:10 AM wi nk <wink@technolu.st> wrote:
 > >
-> > The platform hint can be easily accomplished via DMAR table flags. We could
-> > have an IMS_OPTOUT(similart to x2apic optout flag) flag, when 0 its native 
-> > and IMS is supported.
+> > I've yet to see any instability after 45 minutes of exercising it, I
+> > do see a couple of messages that came out of the driver:
 > >
-> > When vIOMMU is presented to guest, virtual DMAR table will have this flag
-> > set to 1. Indicates to GuestOS, native IMS isn't supported.
-> 
-> These opt-out bits suck by definition. It comes all back to the fact
-> that the whole virt thing didn't have a hardware defined way to tell
-> that the OS runs in a VM and not on bare metal. It wouldn't have been
-> rocket science to do so.
+> > [    8.963389] ath11k_pci 0000:55:00.0: Unknown eventid: 0x16005
+> > [   11.342317] ath11k_pci 0000:55:00.0: Unknown eventid: 0x1d00a
+> >
+> > then when it associates:
+> >
+> > [   16.718895] wlp85s0: send auth to ec:08:6b:27:01:ea (try 1/3)
+> > [   16.722636] wlp85s0: authenticated
+> > [   16.724150] wlp85s0: associate with ec:08:6b:27:01:ea (try 1/3)
+> > [   16.726486] wlp85s0: RX AssocResp from ec:08:6b:27:01:ea
+> > (capab=0x411 status=0 aid=8)
+> > [   16.738443] wlp85s0: associated
+> > [   16.764966] IPv6: ADDRCONF(NETDEV_CHANGE): wlp85s0: link becomes ready
+> >
+> > The adapter is achieving around 500 mbps on my gigabit connection, my
+> > 2018 mbp sees around 650, so it's doing pretty well so far.
+> >
+> > Stefani - when you applied the patch that Kalle shared, which branch
+> > did you apply it to?  I applied it to ath11k-qca6390-bringup and when
+> > I revert 7fef431be9c9 there is a small merge conflict I needed to
+> > resolve.  I wonder if either the starting branch, or your chosen
+> > resolution are related to the instability you see (or I'm just lucky
+> > so far! :)).
+> >
+> > On Thu, Nov 12, 2020 at 1:24 AM wi nk <wink@technolu.st> wrote:
+> > >
+> > > On Wed, Nov 11, 2020 at 11:02 PM Stefani Seibold <stefani@seibold.net> wrote:
+> > > >
+> > > > On Wed, 2020-11-11 at 21:10 +0200, Kalle Valo wrote:
+> > > > >
+> > > > > The proof of concept patch for v5.10-rc2 is here:
+> > > > >
+> > > > > https://patchwork.kernel.org/project/linux-wireless/patch/1605121102-14352-1-git-send-email-kvalo@codeaurora.org/
+> > > > >
+> > > > > Hopefully it makes it possible to boot the firmware now. But this is
+> > > > > a
+> > > > > quick hack and most likely buggy, so keep your expectations low :)
+> > > > >
+> > > > > In case there are these warnings during firmware initialisation:
+> > > > >
+> > > > > ath11k_pci 0000:05:00.0: qmi failed memory request, err = -110
+> > > > > ath11k_pci 0000:05:00.0: qmi failed to respond fw mem req:-110
+> > > > >
+> > > > > Try reverting this commit:
+> > > > >
+> > > > > 7fef431be9c9 mm/page_alloc: place pages to tail in
+> > > > > __free_pages_core()
+> > > > >
+> > > > > That's another issue which is debugged here:
+> > > > >
+> > > > > http://lists.infradead.org/pipermail/ath11k/2020-November/000550.html
+> > > > >
+> > > >
+> > > > Applying the patch and revert patch 7fef431be9c9 worked on the first
+> > > > glance.
+> > > >
+> > > > After a couple of minutes the connection get broken. The kernel log
+> > > > shows the following error:
+> > > >
+> > > > ath11k_pci 0000:55:00.0: wmi command 16387 timeout
+> > > > ath11k_pci 0000:55:00.0: failed to send WMI_PDEV_SET_PARAM cmd
+> > > > ath11k_pc
+> > > > i 0000:55:00.0: failed to enable PMF QOS: (-11
+> > > >
+> > > > It is also not possible to unload the ath11k_pci, rmmod will hang.
+> > > >
+> > > >
+> > >
+> > > I can confirm the same behavior as Stefani so far.  After applying the
+> > > patch, and reverting commit 7fef431be9c9, I am able to connect to a
+> > > network.  It hasn't disconnected yet (I'm sending this email via that
+> > > connection).  I'll report what I find next.
+> > >
+> > > Thanks again for the help!
+>
+> Sigh.... sorry for the top post again.  I'll now get a real email client.
 
-I'm sure everybody dislikes (hate being a strong word :-)). 
-DVSEC capability. Real hardware always sets it to 1 for the IMS capability.
+So the connection remained super stable for a while, so I decided to
+tempt fate and suspend the laptop to see what would happen :).
 
-By default the DVSEC is not presented to guest even when the full PF is
-presented to guest. I believe VFIO only builds and presents known standard
-capabilities and specific extended capabilities. I'm a bit weak but maybe
-@AlexWilliamson can confirm if I'm off track.
+[ 5994.143715] PM: suspend exit
+[ 5997.260351] ath11k_pci 0000:55:00.0: wmi command 16387 timeout
+[ 5997.260353] ath11k_pci 0000:55:00.0: failed to send WMI_PDEV_SET_PARAM cmd
+[ 5997.260356] ath11k_pci 0000:55:00.0: failed to enable dynamic bw: -11
+[ 6000.332299] ath11k_pci 0000:55:00.0: wmi command 16387 timeout
+[ 6000.332303] ath11k_pci 0000:55:00.0: failed to send WMI_PDEV_SET_PARAM cmd
+[ 6000.332308] ath11k_pci 0000:55:00.0: failed to enable PMF QOS: (-11
+[ 6003.404365] ath11k_pci 0000:55:00.0: wmi command 16387 timeout
+[ 6003.404368] ath11k_pci 0000:55:00.0: failed to send WMI_PDEV_SET_PARAM cmd
+[ 6003.404373] ath11k_pci 0000:55:00.0: failed to enable PMF QOS: (-11
+[ 6016.204347] ath11k_pci 0000:55:00.0: wmi command 16387 timeout
+[ 6016.204351] ath11k_pci 0000:55:00.0: failed to send WMI_PDEV_SET_PARAM cmd
+[ 6016.204357] ath11k_pci 0000:55:00.0: failed to enable PMF QOS: (-11
+[ 6019.276319] ath11k_pci 0000:55:00.0: wmi command 16387 timeout
+[ 6019.276323] ath11k_pci 0000:55:00.0: failed to send WMI_PDEV_SET_PARAM cmd
+[ 6019.276329] ath11k_pci 0000:55:00.0: failed to enable PMF QOS: (-11
+[ 6031.052272] ath11k_pci 0000:55:00.0: wmi command 16387 timeout
+[ 6031.052275] ath11k_pci 0000:55:00.0: failed to send WMI_PDEV_SET_PARAM cmd
+[ 6031.052279] ath11k_pci 0000:55:00.0: failed to enable PMF QOS: (-11
+[ 6034.128257] ath11k_pci 0000:55:00.0: wmi command 16387 timeout
+[ 6034.128261] ath11k_pci 0000:55:00.0: failed to send WMI_PDEV_SET_PARAM cmd
+[ 6034.128265] ath11k_pci 0000:55:00.0: failed to enable PMF QOS: (-11
+[ 6039.500241] ath11k_pci 0000:55:00.0: qmi failed set mode request,
+mode: 4, err = -110
+[ 6039.500244] ath11k_pci 0000:55:00.0: qmi failed to send wlan mode off
 
-This tells the driver in guest that IMS is not available and will not
-create those new dev_msi calls. 
-
-Only if the VMM has build support to expose IMS for this device, guest SW
-can even see DVSEC.SIOV.IMS=1. This also means the required plumbing, say
-vIOMMU, or a hypercall has been provisioned, and adminstrator knows the
-guest is compatible for these options. 
-
-There maybe better ways to do this. If this has to be done differently
-we certainly can and will do. 
-
-> 
-> And because that does not exist, we need magic opt-out bits for every
-> other piece of functionality which gets added. Can we please stop this
-> and provide a well defined way to tell the OS whether it runs on bare
-> metal or not?
-> 
-> The point is that you really want opt-in bits so that decisions come
-> down to
-
-How would we opt-in when the feature is not available? You need someway to
-tell the capability is available in the guest?, but then there is no reason
-to opt-in though.. its ready for use isn't it?
-
-> 
->      if (!virt || virt->supports_X)
-
-The only closest thing that comes to mind is the CPUID bits, you had
-mentioned they aren't reliable if the VMM didn't set those in an earlier
-mail. If you want a platform level generic support.
-
-- DMAR table optout's you had mentioned that's ugly
-- We could use caching mode, but its not a platform level thing, and vendor
-  specific. I'm not sure if other vendors have a similar feature. If there
-  is a generic capabilty, we could expose via the iommu api's if we are in
-  virt or real platform.
-> 
-> which is the obvious sane and safe logic. But sure, why am I asking for
-> sane and safe in the context of virtualization?
-
-We can pick how to solve this, and just waiting for you to tell, what
-mechanism you prefer that's less painful and architecturally acceptible for
-virtualization and linux. We are all ears!
-
-Cheers,
-Ashok
+I was able to remove the ath11k module using rmmod -f , and then
+modprobe ath11k + atk11k_pci and the device was able to reassociate
+and bring the connection back up.
