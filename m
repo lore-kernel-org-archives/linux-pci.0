@@ -2,80 +2,100 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23335C56201
-	for <linux-pci@archiver.kernel.org>; Thu, 12 Nov 2020 01:31:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C776FC56201
+	for <linux-pci@archiver.kernel.org>; Thu, 12 Nov 2020 01:31:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BC494206F1
-	for <linux-pci@archiver.kernel.org>; Thu, 12 Nov 2020 01:31:23 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="uz/yGw5r"
+	by mail.kernel.org (Postfix) with ESMTP id 843CB2076E
+	for <linux-pci@archiver.kernel.org>; Thu, 12 Nov 2020 01:31:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726431AbgKLBbV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 11 Nov 2020 20:31:21 -0500
-Received: from mail.kernel.org ([198.145.29.99]:47898 "EHLO mail.kernel.org"
+        id S1726777AbgKLBbZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 11 Nov 2020 20:31:25 -0500
+Received: from mga05.intel.com ([192.55.52.43]:60195 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727702AbgKKXDv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 11 Nov 2020 18:03:51 -0500
-Received: from localhost (230.sub-72-107-127.myvzw.com [72.107.127.230])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3389A208B8;
-        Wed, 11 Nov 2020 23:03:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1605135830;
-        bh=Gj/5UEDBt8CVEIKja1eDcZ0nlYSBbNDAl0pvJ3rUQaU=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=uz/yGw5r6zcJSFWqdQ/nPbjnM+LdVbVX7fddaeUEOKOruCKsR3fihP5jd++PBF4CR
-         Z++JbK1FAvmwbgig45ygXjHe4EdZLSnNzJPL/RkAMqah5+XXFFWNejWZyjvhtrXzVb
-         WK4x4hLX9jkyk/0R+jOhczjsK8wY8vgBGj+PBxq8=
-Date:   Wed, 11 Nov 2020 17:03:48 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Ben Widawsky <ben.widawsky@intel.com>
-Cc:     linux-cxl@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-        Dan Williams <dan.j.williams@intel.com>,
-        Ira Weiny <ira.weiny@intel.com>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        "Kelley, Sean V" <sean.v.kelley@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: [RFC PATCH 1/9] cxl/acpi: Add an acpi_cxl module for the CXL
- interconnect
-Message-ID: <20201111230348.GA978803@bjorn-Precision-5520>
+        id S1728108AbgKLAiZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 11 Nov 2020 19:38:25 -0500
+IronPort-SDR: vImSEVmcTe9YKHK2cb+/gs7wRxf3u/cR3l+uhXCTLUcUkC3rtviYlJIpuzM/cwBOQTpkfpBa3Q
+ N2rX3SPfelaw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9802"; a="254947228"
+X-IronPort-AV: E=Sophos;i="5.77,471,1596524400"; 
+   d="scan'208";a="254947228"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Nov 2020 16:38:20 -0800
+IronPort-SDR: +jynYNDeVo568Z4aC+hqE2ol7auSkKODpbRi6TeOFSWCcCCjnkWVKFbIQ17I7Lk0cNihWWJbkZ
+ TXid8ZgaxYWw==
+X-IronPort-AV: E=Sophos;i="5.77,471,1596524400"; 
+   d="scan'208";a="328306845"
+Received: from fgueva1x-mobl.amr.corp.intel.com (HELO ellie) ([10.212.101.141])
+  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Nov 2020 16:38:18 -0800
+From:   Vinicius Costa Gomes <vinicius.gomes@intel.com>
+To:     Miroslav Lichvar <mlichvar@redhat.com>
+Cc:     intel-wired-lan@lists.osuosl.org, andre.guedes@intel.com,
+        linux-pci@vger.kernel.org, netdev@vger.kernel.org,
+        bhelgaas@google.com
+Subject: Re: [Intel-wired-lan] [PATCH next-queue v2 3/3] igc: Add support
+ for PTP getcrosststamp()
+In-Reply-To: <20201110180719.GA1559650@localhost>
+References: <20201110061019.519589-1-vinicius.gomes@intel.com>
+ <20201110061019.519589-4-vinicius.gomes@intel.com>
+ <20201110180719.GA1559650@localhost>
+Date:   Wed, 11 Nov 2020 16:38:16 -0800
+Message-ID: <87imab8l53.fsf@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201111054356.793390-2-ben.widawsky@intel.com>
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Nov 10, 2020 at 09:43:48PM -0800, Ben Widawsky wrote:
+Hi,
 
-> +static int acpi_cxl_add(struct acpi_device *adev)
-> +{
-> +	struct acpi_cxl_desc *acpi_desc;
-> +	struct device *dev = &adev->dev;
-> +	struct acpi_table_header *tbl;
-> +	acpi_status status = AE_OK;
+Miroslav Lichvar <mlichvar@redhat.com> writes:
 
-Pointless init.
+> On Mon, Nov 09, 2020 at 10:10:19PM -0800, Vinicius Costa Gomes wrote:
+>> i225 has support for PCIe PTM, which allows us to implement support
+>> for the PTP_SYS_OFFSET_PRECISE ioctl(), implemented in the driver via
+>> the getcrosststamp() function.
+>
+> Would it be possible to provide the PTM measurements with the
+> PTP_SYS_OFFSET_EXTENDED ioctl instead of PTP_SYS_OFFSET_PRECISE?
+>
+> As I understand it, PTM is not cross timestamping. It's basically
+> NTP over PCIe, which provides four timestamps with each "dialog". From
+> the other constants added to the header file it looks like they could
+> all be obtained and then they could be converted to the triplets
+> returned by the EXTENDED ioctl.
+>
 
-> +	acpi_size sz;
-> +	int rc = 0;
+There might be a problem, the PTM dialogs start from the device, the
+protocol is more or less this:
 
-Pointless init.
+ 1. NIC sends "Request" message, takes T1 timestamp;
+ 2. Host receives "Request" message, takes T2 timestamp;
+ 3. Host sends "Response" message, takes T3 timestamp;
+ 4. NIC receives "Response" message, takes T4 timestamp;
 
-> +	status = acpi_get_table(ACPI_SIG_CEDT, 0, &tbl);
-> +	if (ACPI_FAILURE(status)) {
-> +		dev_err(dev, "failed to find CEDT at startup\n");
-> +		return 0;
-> +	}
-> +
-> +	rc = devm_add_action_or_reset(dev, acpi_cedt_put_table, tbl);
-> +	if (rc)
-> +		return rc;
+So, T2 and T3 are "host" timestamps and T1 and T4 are NIC timestamps.
+
+That means that the timestamps I have "as is" are a bit different than
+the expectations of the EXTENDED ioctl().
+
+Of course I could use T3 (as the "pre" timestamp), T4 as the device
+timestamp, and calculate the delay[1], apply it to T3 and get something
+T3' as the "post" timestamp (T3' = T3 + delay). But I feel that this
+"massaging" would defeat the purpose of using the EXTENDED variant.
+
+Does it make sense? Am I worrying too much?
+
+[1] 
+	delay = ((T4 - T1) - (T3 - T2)) / 2
+
+
+
+Cheers,
+-- 
+Vinicius
