@@ -2,59 +2,59 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80D38C63697
-	for <linux-pci@archiver.kernel.org>; Fri, 13 Nov 2020 17:02:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDF50C63777
+	for <linux-pci@archiver.kernel.org>; Fri, 13 Nov 2020 17:02:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2FCE822226
-	for <linux-pci@archiver.kernel.org>; Fri, 13 Nov 2020 17:02:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 91AB921D7F
+	for <linux-pci@archiver.kernel.org>; Fri, 13 Nov 2020 17:02:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="vWWOkOfv"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="BQ2bPUgH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726286AbgKMRCO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 13 Nov 2020 12:02:14 -0500
-Received: from mailout2.w1.samsung.com ([210.118.77.12]:36215 "EHLO
+        id S1726277AbgKMRCV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 13 Nov 2020 12:02:21 -0500
+Received: from mailout2.w1.samsung.com ([210.118.77.12]:36246 "EHLO
         mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726113AbgKMRCN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Nov 2020 12:02:13 -0500
-Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
-        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20201113170201euoutp02e581e05cd2311497fe6b9b524b772ced~HH-NDf8CX0529105291euoutp02L
-        for <linux-pci@vger.kernel.org>; Fri, 13 Nov 2020 17:02:01 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20201113170201euoutp02e581e05cd2311497fe6b9b524b772ced~HH-NDf8CX0529105291euoutp02L
+        with ESMTP id S1726322AbgKMRCV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Nov 2020 12:02:21 -0500
+Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
+        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20201113170202euoutp0222c1c076e8e3f778ed65a506fbfe7042~HH-NQ8nV10472304723euoutp02u
+        for <linux-pci@vger.kernel.org>; Fri, 13 Nov 2020 17:02:02 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20201113170202euoutp0222c1c076e8e3f778ed65a506fbfe7042~HH-NQ8nV10472304723euoutp02u
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1605286921;
-        bh=ZUbtyjIrwhOaqSSJ6snJVhMgq4t2jtjQN1lZDh6U7qI=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=vWWOkOfvW11CIoM0li+aa+x82XZC/tF6M64y5OidiXgGBx8oIPvv1eQEZWlN5DgLD
-         +RzFHktXOwp0aC2wAuQ4bN8+ix8gvI9mKiVWLwwUTidXYpnqGiPQjj3w8XbZR9sSpk
-         ghZLbgzXrebhbAkEyNE5vOwbHzEkmOwBTncA8DS0=
-Received: from eusmges2new.samsung.com (unknown [203.254.199.244]) by
+        s=mail20170921; t=1605286922;
+        bh=tJSkvdYtBXglEeNJBvB0Afa8OYWPBVISoDw/r2AmPvg=;
+        h=From:To:Cc:Subject:Date:References:From;
+        b=BQ2bPUgH9ohPlS3PqHkQ/6Vv3lzNgc1ON1GQPqRUXIbjzicGe22pqgBEuHEuk9BzH
+         1pfXQnIpDKz52RkObsiXtfG2qSSGKKGzAIjW2IK6jlEuvgkEt0Kjx9bXeBG4B9d/Gx
+         ko6uHhIvLaoPdCV/6G3l+vFeqOqPPhRtw0s3WNwM=
+Received: from eusmges3new.samsung.com (unknown [203.254.199.245]) by
         eucas1p1.samsung.com (KnoxPortal) with ESMTP id
-        20201113170158eucas1p1c629a7958c25cbd934ef04d0dc431a76~HH-KLIOz70049600496eucas1p1c;
-        Fri, 13 Nov 2020 17:01:58 +0000 (GMT)
-Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
-        eusmges2new.samsung.com (EUCPMTA) with SMTP id 3E.51.44805.60CBEAF5; Fri, 13
-        Nov 2020 17:01:58 +0000 (GMT)
+        20201113170156eucas1p1ef5fc88bbb40f4889f328f569b3a4ef1~HH-IYlR-A2485424854eucas1p1M;
+        Fri, 13 Nov 2020 17:01:56 +0000 (GMT)
+Received: from eucas1p1.samsung.com ( [182.198.249.206]) by
+        eusmges3new.samsung.com (EUCPMTA) with SMTP id EA.9F.45488.40CBEAF5; Fri, 13
+        Nov 2020 17:01:56 +0000 (GMT)
 Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
         eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
-        20201113170158eucas1p1a1fa871bfc1513e3bb62b56c28454e68~HH-JrIdMN2435024350eucas1p1A;
-        Fri, 13 Nov 2020 17:01:58 +0000 (GMT)
-Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
+        20201113170156eucas1p176314e4076c593d1f2e68159be880f86~HH-H_gmLu2493824938eucas1p19;
+        Fri, 13 Nov 2020 17:01:56 +0000 (GMT)
+Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
         eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20201113170158eusmtrp17ca0c69126f606dcf6ee00a90ffad33d~HH-JqU4HJ1302013020eusmtrp1l;
-        Fri, 13 Nov 2020 17:01:58 +0000 (GMT)
-X-AuditID: cbfec7f4-b4fff7000000af05-e7-5faebc0644c8
+        20201113170156eusmtrp10b17ba170efe432b8373f2784fc48248~HH-H9pfx81302013020eusmtrp1i;
+        Fri, 13 Nov 2020 17:01:56 +0000 (GMT)
+X-AuditID: cbfec7f5-c5fff7000000b1b0-d6-5faebc047ad2
 Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
-        eusmgms2.samsung.com (EUCPMTA) with SMTP id 83.50.16282.60CBEAF5; Fri, 13
-        Nov 2020 17:01:58 +0000 (GMT)
+        eusmgms1.samsung.com (EUCPMTA) with SMTP id 7C.71.21957.40CBEAF5; Fri, 13
+        Nov 2020 17:01:56 +0000 (GMT)
 Received: from AMDC2765.digital.local (unknown [106.120.51.73]) by
         eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20201113170157eusmtip22eec70403326bd9a8f934b57623cafaa~HH-JCHet01428914289eusmtip2d;
-        Fri, 13 Nov 2020 17:01:57 +0000 (GMT)
+        20201113170155eusmtip241ef88e172e807823aa4926cf9f31cf0~HH-HSwGx51944119441eusmtip2a;
+        Fri, 13 Nov 2020 17:01:55 +0000 (GMT)
 From:   Marek Szyprowski <m.szyprowski@samsung.com>
 To:     linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org
 Cc:     devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
@@ -68,125 +68,121 @@ Cc:     devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         Kishon Vijay Abraham I <kishon@ti.com>,
         Rob Herring <robh@kernel.org>,
         Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [PATCH v4 3/5] dt-bindings: phy: exynos: add the
- samsung,exynos-pcie-phy binding
-Date:   Fri, 13 Nov 2020 18:01:37 +0100
-Message-Id: <20201113170139.29956-4-m.szyprowski@samsung.com>
+Subject: [PATCH v4 0/5] Add DW PCIe support for Exynos5433 SoCs
+Date:   Fri, 13 Nov 2020 18:01:34 +0100
+Message-Id: <20201113170139.29956-1-m.szyprowski@samsung.com>
 X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20201113170139.29956-1-m.szyprowski@samsung.com>
-X-Brightmail-Tracker: H4sIAAAAAAAAA0WSf1DLYRzH79l33x+L1bdvnZ4rRDGno+R0vi6ynLumcPzRdQoz66t1tcpW
-        EockyXTOj06tutVRSlq1lR+lX6YsN5riCEtxYqica5L83Nrw3/t5f96v5/3c5x4CoYpQTyI+
-        KZWRJYkSfTAn9vW734xLsZZa4bKz5YtpTWEdSpdnSejSzh6U7p/KQekqixKnHw7nYbTRWI/T
-        j5pLMPqBSo/RhcY2Fj3y3YzT6s4BnP7dchOnm0zdCN9ZUKOqAYKmogFcUKZNE2irT2KC043V
-        QKDvv8ESjGvnbsGjnVbHMonx+xhZQMguJ0l+uxpNKXXd/+3SGMgEp5wVgENAcgWcyDKhNk2R
-        VQAqzd4K4GTVFgBzOzWY/TAOoGkgE/lL3GvVo/ZBJYD9b8fRf0h77gjLlsLIQKgYVVhxgnAn
-        +XDyC23LIORTBN6rKJ7OuJExcCQvG7dpNrkQ3nmpAzbNJddA852fuL3NG16t75hu5pAhcKpb
-        idsugqSJgH2jJZg9tB6O/fgC7NoNftA3OuDZ0HA+j20HjgH4qkftoPMAfJRV6CCCoalnavqp
-        CLkY1jUH2O1Q2PA1H7HZkHSG/aOuNhuxynPXCxw2F+bmUPY0Dxbpa//V3n7Y59iWAJ6qHXKs
-        8SyANX1m9hngXfS/rAyAauDBpMmlcYx8eRKT7i8XSeVpSXH+4mSpFli/j+GX3nITVH747K8D
-        LALoACQQH3euL79GSHFjRRkHGFmyUJaWyMh1wItg+3hwdzdaR2ScKJVJYJgURvZ3yiI4npms
-        2GhXSx8VHl28UeX+5MBPczOfiAcFvVWz1nI+HZ7Mv7Lj1+N1qeqJj8mqnN7g2E/HDWORYdS5
-        GcI9HF5DtibsQnrBYGUG9Yxeti2wwqVUuyhy8ODeTFHYUReTl1TDafc78jqIpRm+yArVf2Yb
-        Z4QqurQ7zyfvrWstX/m2dU7C/efzIq4xLusSVp/InugSLwhRhca8X2vYuUbcssrEs8wKyh9u
-        eneVl3MwpQT3VVZuV+pILGp2xfBMdOu+liuHgm9FgQaPRd0aQ8aRxIkz+NEA8ZLLQknY5vpN
-        agrt8pAETQ55ze35zm/mmV68SX/jOV+84VJ9GSVlhOyOtoiYBeG9Pmy5RBToh8jkoj/5PLbq
-        rQMAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrNLMWRmVeSWpSXmKPExsVy+t/xe7pse9bFGzSeY7fYOGM9q8WSpgyL
+X-Brightmail-Tracker: H4sIAAAAAAAAA0VSf0yMcRze996fquN1mb5IEfktxObrR5SRd8NkM1YkR68yXbV7C5nldmg6
+        pylTV3La8uNc16lTUUvO7eZUc12EmJz+SEnOkrNC6Hr9+O95vs/zfJ7njy+NSc4Rk+mDyWmc
+        PFmaFER64TUPh+wL8Xpj3OJ3XQtRpeYWga4qE9EVq51A7d+yCKT7UkghR5eaRC0tFRR6WldM
+        osdaG4k0LQ0i1Pe9h0Ll1g4K/aq/S6Ha14+w8LGsQWsAbG1RB8WWmNJZkz6bZHOq9IC1td8R
+        sQOmgCgqxmt1PJd08DAnX7Rmr1diWc5pKrXH76gz+x6hAIO+KjCGhswyqP91HlcBL1rC6AAs
+        7mgjBfIFQOP3VkogAwBeeZyL/Y10Kt6LBOEGgHZnH/Ev8nY4j/K4SGYJVH1Ujdyi6QlMOBx0
+        I48HY15gsPHaJZHH48ushaWFLuDBOBMMzZ3a0QYxEwaH3Vl/2gJhWYUZ84QhY6bh555uQhDW
+        wyyHTiRgX9hrq6IE7A+bL6hxIXASwE57OSUQNYBPlRoguFbB1/Zvo/MwZi68VbfIAyETASsa
+        AgU4FrZ/HO8xYyMwr6YAE57F8EyWRLgxCxbZjP9aHzie/JnMwjfW1tGVEiYWftB8Is+DgKL/
+        VSUA6IEfl87LEjh+aTJ3JISXyvj05ISQ/SkyExj5Mc0/be67QNfbH2IBIhpYAKSxoAniGeGG
+        OIk4XppxjJOnxMnTkzjeAqbQeJCfuK56RGISpGncIY5L5eR/VRE9ZrJCpNjj7OJ7h2bOamum
+        3ZczXQnz9/JF+UsLM08c8N9hTIks6UNtjmhnRIzTIvPeFsMEG9eF5mfXKpUZqR375CBPf6dp
+        pbcs9l5grP+pVrjRNTgQiv3o3uqyqw8om8J3E71TywxJt5/NL910X705c3fJirDZVy/3p82J
+        kOqIDHJ22ZPGYHOAX2TO8ohd/CrZzdLcqiZ2sXXBuhUXJ73SRpmffSp49FXLdB+XbWAV2w3x
+        3nZ9GznFJ0Czr1Vbv8Vdfda1ySfquXfuDFV+aHnLzuroGPw2Ndz4vMbt0zOtyjrkCAxDX02W
+        hnH4hkjsOjjJTQ/VureKK3wq7Z0T+f6X04NwPlG6ZB4m56W/Af4t9fKgAwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrILMWRmVeSWpSXmKPExsVy+t/xe7ose9bFG1zpErDYOGM9q8WSpgyL
         +UfOsVrc+NXGarHiy0x2iwtPe9gszp/fwG5xedccNouz846zWcw4v4/J4s3vF+wWa4/cZbf4
         v2cHu8XOOyeYHfg81sxbw+ixc9Zddo8Fm0o9Nq3qZPPo27KK0eP4je1MHp83yQWwR+nZFOWX
-        lqQqZOQXl9gqRRtaGOkZWlroGZlY6hkam8daGZkq6dvZpKTmZJalFunbJehlTNm/lrVgvmDF
-        z8XvGBsYu/m6GDk5JARMJE7uPc7axcjFISSwlFGitWcpC0RCRuLktAZWCFtY4s+1LjaIok+M
-        EtNvHGUCSbAJGEp0vQVJcHKICDhJvJ98kRmkiFngIbPEhDkHwbqFBSIlbp6/A1bEIqAqcfje
-        IUYQm1fAVuLF4b/sEBvkJVZvOMAMYnMK2En8OjETKM4BtM1WYvmO0AmMfAsYGVYxiqSWFuem
-        5xYb6RUn5haX5qXrJefnbmIExsK2Yz+37GBc+eqj3iFGJg7GQ4wSHMxKIrzKDmvihXhTEiur
-        Uovy44tKc1KLDzGaAp0xkVlKNDkfGI15JfGGZgamhiZmlgamlmbGSuK8JkeAmgTSE0tSs1NT
-        C1KLYPqYODilGpi83Wa3hyzQar+dYCP5wkklmENj6Z5omd6jGY4Lzn326q9t/Mxm9DGhLY9z
-        t8y/a83b2KrmZF1kFvOx3sBe3le+KFnpsmGdzpucx5P+vnE2eSbO2dMtuvmlvOFfPePYrcl/
-        NW9xZN1Y7rXRyOpcwuwZVgYvlNKjrydPLJtdnSj9//fc9i+9QSnvH5hMimWaKyj/2zh48sug
-        sFiZ0z4VSWzXXh8ymvC6ZeWt7tO/pr2R+qCWfi8xzNFaqTIxqtvxw5LHcduuLnFSsm88knSS
-        5Y6o556+fzOObT9wt8z1YWNWt93Re7Mn8S09Nv/Bcx7J9ZEZny6t0zE90XbVsWBd2oSU526b
-        RcuOb99Rli/eMFuJpTgj0VCLuag4EQANunSUDgMAAA==
-X-CMS-MailID: 20201113170158eucas1p1a1fa871bfc1513e3bb62b56c28454e68
+        lqQqZOQXl9gqRRtaGOkZWlroGZlY6hkam8daGZkq6dvZpKTmZJalFunbJehlrO5rZS94IV5x
+        v3MvawPjD+EuRk4OCQETiYcNL5lAbCGBpYwS0+6wQcRlJE5Oa2CFsIUl/lzrAopzANV8YpSY
+        ogwSZhMwlOh62wVWLiLgJPF+8kXmLkYuDmaBh8wSE+YcBOsVFrCXWDzzHSOIzSKgKnHg4Txm
+        EJtXwFbi79c2Zoj58hKrNxxgnsDIs4CRYRWjSGppcW56brGhXnFibnFpXrpecn7uJkZgWG87
+        9nPzDsZ5rz7qHWJk4mA8xCjBwawkwqvssCZeiDclsbIqtSg/vqg0J7X4EKMp0L6JzFKiyfnA
+        yMoriTc0MzA1NDGzNDC1NDNWEufdOheoSSA9sSQ1OzW1ILUIpo+Jg1OqgWnOXzm23Rd2aZuF
+        rnylZSWi1fFq7V0RlbfdUnt670UvUVq0fHLZpnqfLSaLU2IezirjFw9l8Xr8q5u9vih3SXXA
+        S53PX7lXXo9euNp1h7LCDf7VE1KEToZLnel0Syp8lDWhcVNzS7mrvoNf2yWzC5yqK+vn33in
+        9eiys9/1PQlLlGOu3JxaO+vi9Mjnk1yDpl3WfyFdkFDHcya7xfu04eyOq3ve1c94sfmaYcLz
+        X3xHMu3z3+tcdVC/spIj9Tlf/9WQsESla3pJB70tplRsOO3HMbHD9opX6otdCdvKz/XMaY66
+        Ey617UaTxn+jvh/L1rqFnw5/oOmXnHoh7Hj6Co7XIqdMXnzeVzDD+iyXoosSS3FGoqEWc1Fx
+        IgBGvI3U9AIAAA==
+X-CMS-MailID: 20201113170156eucas1p176314e4076c593d1f2e68159be880f86
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20201113170158eucas1p1a1fa871bfc1513e3bb62b56c28454e68
+X-RootMTR: 20201113170156eucas1p176314e4076c593d1f2e68159be880f86
 X-EPHeader: CA
 CMS-TYPE: 201P
-X-CMS-RootMailID: 20201113170158eucas1p1a1fa871bfc1513e3bb62b56c28454e68
-References: <20201113170139.29956-1-m.szyprowski@samsung.com>
-        <CGME20201113170158eucas1p1a1fa871bfc1513e3bb62b56c28454e68@eucas1p1.samsung.com>
+X-CMS-RootMailID: 20201113170156eucas1p176314e4076c593d1f2e68159be880f86
+References: <CGME20201113170156eucas1p176314e4076c593d1f2e68159be880f86@eucas1p1.samsung.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add dt-bindings for the Samsung Exynos PCIe PHY controller (Exynos5433
-variant). Based on the text dt-binding posted by Jaehoon Chung.
+Dear All,
 
-Signed-off-by: Marek Szyprowski <m.szyprowski@samsung.com>
-Reviewed-by: Krzysztof Kozlowski <krzk@kernel.org>
-Reviewed-by: Rob Herring <robh@kernel.org>
----
- .../bindings/phy/samsung,exynos-pcie-phy.yaml | 51 +++++++++++++++++++
- 1 file changed, 51 insertions(+)
+This patchset is a resurrection of the DW PCIe support for the Exynos5433
+SoCs posted long time ago here: https://lkml.org/lkml/2016/12/26/6 and
+later here: https://lkml.org/lkml/2017/12/21/296 .
+
+In meantime the support for the Exynos5440 SoCs has been completely
+dropped from mainline kernel, as those SoCs never reached the market. The
+PCIe driver for Exynos5440 variant however has not been removed yet. This
+patchset simply reworks it to support the Exynos5433 variant. The lack of
+the need to support both variants significantly simplifies the driver
+code.
+
+This patchset is based on the commit b90c53b06597 ("PCI: dwc: Detect
+number of iATU windows") available on the following branch:
+git://git.kernel.org/pub/scm/linux/kernel/git/robh/linux.git pci-more-dwc-cleanup
+
+Best regards,
+Marek Szyprowski
+
+
+Changelog:
+
+v4:
+- fixed topics to better match the common style of the each subsystem
+- rebased onto "[PATCH v2 00/16] PCI: dwc: Another round of clean-ups"
+- collected tags, dropped merged dts patch
+
+v3: https://lore.kernel.org/linux-samsung-soc/20201029134017.27400-1-m.szyprowski@samsung.com/
+- rebased onto "[00/13] PCI: dwc: Another round of clean-ups" patchset:
+  https://patchwork.kernel.org/project/linux-samsung-soc/cover/20201028204646.356535-1-robh@kernel.org/
+- fixed issues pointed by Rob in the driver logic:
+  * removed DBI_RO_WR_EN register poking
+  * made driver a standard module
+- fixed section mismatch issue
+- added "num-viewport = <3>" property to dts and bindings to fix warning
+
+v2: https://lore.kernel.org/linux-samsung-soc/20201023075744.26200-1-m.szyprowski@samsung.com/
+- fixed issues in dt-bindings pointed by Krzysztof and Rob
+
+v1: https://lore.kernel.org/linux-samsung-soc/20201019094715.15343-1-m.szyprowski@samsung.com/
+- initial version of this resurrected patchset
+
+
+Patch summary:
+
+Jaehoon Chung (2):
+  phy: samsung: phy-exynos-pcie: rework driver to support Exynos5433
+    PCIe PHY
+  PCI: dwc: exynos: Rework the driver to support Exynos5433 variant
+
+Marek Szyprowski (3):
+  dt-bindings: PCI: exynos: drop samsung,exynos5440-pcie binding
+  dt-bindings: PCI: exynos: add the samsung,exynos-pcie binding
+  dt-bindings: phy: exynos: add the samsung,exynos-pcie-phy binding
+
+ .../bindings/pci/samsung,exynos-pcie.yaml     | 119 ++++++
+ .../bindings/pci/samsung,exynos5440-pcie.txt  |  58 ---
+ .../bindings/phy/samsung,exynos-pcie-phy.yaml |  51 +++
+ drivers/pci/controller/dwc/Kconfig            |  10 +-
+ drivers/pci/controller/dwc/pci-exynos.c       | 353 +++++++-----------
+ drivers/pci/quirks.c                          |   1 +
+ drivers/phy/samsung/phy-exynos-pcie.c         | 304 ++++++---------
+ 7 files changed, 429 insertions(+), 467 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/samsung,exynos-pcie.yaml
+ delete mode 100644 Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
  create mode 100644 Documentation/devicetree/bindings/phy/samsung,exynos-pcie-phy.yaml
 
-diff --git a/Documentation/devicetree/bindings/phy/samsung,exynos-pcie-phy.yaml b/Documentation/devicetree/bindings/phy/samsung,exynos-pcie-phy.yaml
-new file mode 100644
-index 000000000000..ac0af40be52d
---- /dev/null
-+++ b/Documentation/devicetree/bindings/phy/samsung,exynos-pcie-phy.yaml
-@@ -0,0 +1,51 @@
-+# SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/phy/samsung,exynos-pcie-phy.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: Samsung SoC series PCIe PHY Device Tree Bindings
-+
-+maintainers:
-+  - Marek Szyprowski <m.szyprowski@samsung.com>
-+  - Jaehoon Chung <jh80.chung@samsung.com>
-+
-+properties:
-+  "#phy-cells":
-+    const: 0
-+
-+  compatible:
-+    const: samsung,exynos5433-pcie-phy
-+
-+  reg:
-+    maxItems: 1
-+
-+  samsung,pmu-syscon:
-+    $ref: '/schemas/types.yaml#/definitions/phandle'
-+    description: phandle for PMU system controller interface, used to
-+                 control PMU registers bits for PCIe PHY
-+
-+  samsung,fsys-sysreg:
-+    $ref: '/schemas/types.yaml#/definitions/phandle'
-+    description: phandle for FSYS sysreg interface, used to control
-+                 sysreg registers bits for PCIe PHY
-+
-+required:
-+  - "#phy-cells"
-+  - compatible
-+  - reg
-+  - samsung,pmu-syscon
-+  - samsung,fsys-sysreg
-+
-+additionalProperties: false
-+
-+examples:
-+  - |
-+    pcie_phy: pcie-phy@15680000 {
-+        compatible = "samsung,exynos5433-pcie-phy";
-+        reg = <0x15680000 0x1000>;
-+        samsung,pmu-syscon = <&pmu_system_controller>;
-+        samsung,fsys-sysreg = <&syscon_fsys>;
-+        #phy-cells = <0>;
-+    };
-+...
 -- 
 2.17.1
 
