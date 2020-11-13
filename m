@@ -2,187 +2,167 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DDF50C63777
-	for <linux-pci@archiver.kernel.org>; Fri, 13 Nov 2020 17:02:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A29CC61DD8
+	for <linux-pci@archiver.kernel.org>; Fri, 13 Nov 2020 17:38:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 91AB921D7F
-	for <linux-pci@archiver.kernel.org>; Fri, 13 Nov 2020 17:02:37 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="BQ2bPUgH"
+	by mail.kernel.org (Postfix) with ESMTP id C1B6222248
+	for <linux-pci@archiver.kernel.org>; Fri, 13 Nov 2020 17:38:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726277AbgKMRCV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 13 Nov 2020 12:02:21 -0500
-Received: from mailout2.w1.samsung.com ([210.118.77.12]:36246 "EHLO
-        mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726322AbgKMRCV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Nov 2020 12:02:21 -0500
-Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
-        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20201113170202euoutp0222c1c076e8e3f778ed65a506fbfe7042~HH-NQ8nV10472304723euoutp02u
-        for <linux-pci@vger.kernel.org>; Fri, 13 Nov 2020 17:02:02 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20201113170202euoutp0222c1c076e8e3f778ed65a506fbfe7042~HH-NQ8nV10472304723euoutp02u
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1605286922;
-        bh=tJSkvdYtBXglEeNJBvB0Afa8OYWPBVISoDw/r2AmPvg=;
-        h=From:To:Cc:Subject:Date:References:From;
-        b=BQ2bPUgH9ohPlS3PqHkQ/6Vv3lzNgc1ON1GQPqRUXIbjzicGe22pqgBEuHEuk9BzH
-         1pfXQnIpDKz52RkObsiXtfG2qSSGKKGzAIjW2IK6jlEuvgkEt0Kjx9bXeBG4B9d/Gx
-         ko6uHhIvLaoPdCV/6G3l+vFeqOqPPhRtw0s3WNwM=
-Received: from eusmges3new.samsung.com (unknown [203.254.199.245]) by
-        eucas1p1.samsung.com (KnoxPortal) with ESMTP id
-        20201113170156eucas1p1ef5fc88bbb40f4889f328f569b3a4ef1~HH-IYlR-A2485424854eucas1p1M;
-        Fri, 13 Nov 2020 17:01:56 +0000 (GMT)
-Received: from eucas1p1.samsung.com ( [182.198.249.206]) by
-        eusmges3new.samsung.com (EUCPMTA) with SMTP id EA.9F.45488.40CBEAF5; Fri, 13
-        Nov 2020 17:01:56 +0000 (GMT)
-Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
-        eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
-        20201113170156eucas1p176314e4076c593d1f2e68159be880f86~HH-H_gmLu2493824938eucas1p19;
-        Fri, 13 Nov 2020 17:01:56 +0000 (GMT)
-Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
-        eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20201113170156eusmtrp10b17ba170efe432b8373f2784fc48248~HH-H9pfx81302013020eusmtrp1i;
-        Fri, 13 Nov 2020 17:01:56 +0000 (GMT)
-X-AuditID: cbfec7f5-c5fff7000000b1b0-d6-5faebc047ad2
-Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
-        eusmgms1.samsung.com (EUCPMTA) with SMTP id 7C.71.21957.40CBEAF5; Fri, 13
-        Nov 2020 17:01:56 +0000 (GMT)
-Received: from AMDC2765.digital.local (unknown [106.120.51.73]) by
-        eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20201113170155eusmtip241ef88e172e807823aa4926cf9f31cf0~HH-HSwGx51944119441eusmtip2a;
-        Fri, 13 Nov 2020 17:01:55 +0000 (GMT)
-From:   Marek Szyprowski <m.szyprowski@samsung.com>
-To:     linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org
-Cc:     devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jaehoon Chung <jh80.chung@samsung.com>,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Vinod Koul <vkoul@kernel.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Rob Herring <robh@kernel.org>,
-        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [PATCH v4 0/5] Add DW PCIe support for Exynos5433 SoCs
-Date:   Fri, 13 Nov 2020 18:01:34 +0100
-Message-Id: <20201113170139.29956-1-m.szyprowski@samsung.com>
-X-Mailer: git-send-email 2.17.1
-X-Brightmail-Tracker: H4sIAAAAAAAAA0VSf0yMcRze996fquN1mb5IEfktxObrR5SRd8NkM1YkR68yXbV7C5nldmg6
-        pylTV3La8uNc16lTUUvO7eZUc12EmJz+SEnOkrNC6Hr9+O95vs/zfJ7njy+NSc4Rk+mDyWmc
-        PFmaFER64TUPh+wL8Xpj3OJ3XQtRpeYWga4qE9EVq51A7d+yCKT7UkghR5eaRC0tFRR6WldM
-        osdaG4k0LQ0i1Pe9h0Ll1g4K/aq/S6Ha14+w8LGsQWsAbG1RB8WWmNJZkz6bZHOq9IC1td8R
-        sQOmgCgqxmt1PJd08DAnX7Rmr1diWc5pKrXH76gz+x6hAIO+KjCGhswyqP91HlcBL1rC6AAs
-        7mgjBfIFQOP3VkogAwBeeZyL/Y10Kt6LBOEGgHZnH/Ev8nY4j/K4SGYJVH1Ujdyi6QlMOBx0
-        I48HY15gsPHaJZHH48ushaWFLuDBOBMMzZ3a0QYxEwaH3Vl/2gJhWYUZ84QhY6bh555uQhDW
-        wyyHTiRgX9hrq6IE7A+bL6hxIXASwE57OSUQNYBPlRoguFbB1/Zvo/MwZi68VbfIAyETASsa
-        AgU4FrZ/HO8xYyMwr6YAE57F8EyWRLgxCxbZjP9aHzie/JnMwjfW1tGVEiYWftB8Is+DgKL/
-        VSUA6IEfl87LEjh+aTJ3JISXyvj05ISQ/SkyExj5Mc0/be67QNfbH2IBIhpYAKSxoAniGeGG
-        OIk4XppxjJOnxMnTkzjeAqbQeJCfuK56RGISpGncIY5L5eR/VRE9ZrJCpNjj7OJ7h2bOamum
-        3ZczXQnz9/JF+UsLM08c8N9hTIks6UNtjmhnRIzTIvPeFsMEG9eF5mfXKpUZqR375CBPf6dp
-        pbcs9l5grP+pVrjRNTgQiv3o3uqyqw8om8J3E71TywxJt5/NL910X705c3fJirDZVy/3p82J
-        kOqIDHJ22ZPGYHOAX2TO8ohd/CrZzdLcqiZ2sXXBuhUXJ73SRpmffSp49FXLdB+XbWAV2w3x
-        3nZ9GznFJ0Czr1Vbv8Vdfda1ySfquXfuDFV+aHnLzuroGPw2Ndz4vMbt0zOtyjrkCAxDX02W
-        hnH4hkjsOjjJTQ/VureKK3wq7Z0T+f6X04NwPlG6ZB4m56W/Af4t9fKgAwAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrILMWRmVeSWpSXmKPExsVy+t/xe7ose9bFG1zpErDYOGM9q8WSpgyL
-        +UfOsVrc+NXGarHiy0x2iwtPe9gszp/fwG5xedccNouz846zWcw4v4/J4s3vF+wWa4/cZbf4
-        v2cHu8XOOyeYHfg81sxbw+ixc9Zddo8Fm0o9Nq3qZPPo27KK0eP4je1MHp83yQWwR+nZFOWX
-        lqQqZOQXl9gqRRtaGOkZWlroGZlY6hkam8daGZkq6dvZpKTmZJalFunbJehlrO5rZS94IV5x
-        v3MvawPjD+EuRk4OCQETiYcNL5lAbCGBpYwS0+6wQcRlJE5Oa2CFsIUl/lzrAopzANV8YpSY
-        ogwSZhMwlOh62wVWLiLgJPF+8kXmLkYuDmaBh8wSE+YcBOsVFrCXWDzzHSOIzSKgKnHg4Txm
-        EJtXwFbi79c2Zoj58hKrNxxgnsDIs4CRYRWjSGppcW56brGhXnFibnFpXrpecn7uJkZgWG87
-        9nPzDsZ5rz7qHWJk4mA8xCjBwawkwqvssCZeiDclsbIqtSg/vqg0J7X4EKMp0L6JzFKiyfnA
-        yMoriTc0MzA1NDGzNDC1NDNWEufdOheoSSA9sSQ1OzW1ILUIpo+Jg1OqgWnOXzm23Rd2aZuF
-        rnylZSWi1fFq7V0RlbfdUnt670UvUVq0fHLZpnqfLSaLU2IezirjFw9l8Xr8q5u9vih3SXXA
-        S53PX7lXXo9euNp1h7LCDf7VE1KEToZLnel0Syp8lDWhcVNzS7mrvoNf2yWzC5yqK+vn33in
-        9eiys9/1PQlLlGOu3JxaO+vi9Mjnk1yDpl3WfyFdkFDHcya7xfu04eyOq3ve1c94sfmaYcLz
-        X3xHMu3z3+tcdVC/spIj9Tlf/9WQsESla3pJB70tplRsOO3HMbHD9opX6otdCdvKz/XMaY66
-        Ey617UaTxn+jvh/L1rqFnw5/oOmXnHoh7Hj6Co7XIqdMXnzeVzDD+iyXoosSS3FGoqEWc1Fx
-        IgBGvI3U9AIAAA==
-X-CMS-MailID: 20201113170156eucas1p176314e4076c593d1f2e68159be880f86
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20201113170156eucas1p176314e4076c593d1f2e68159be880f86
-X-EPHeader: CA
-CMS-TYPE: 201P
-X-CMS-RootMailID: 20201113170156eucas1p176314e4076c593d1f2e68159be880f86
-References: <CGME20201113170156eucas1p176314e4076c593d1f2e68159be880f86@eucas1p1.samsung.com>
+        id S1726233AbgKMRis (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 13 Nov 2020 12:38:48 -0500
+Received: from mga05.intel.com ([192.55.52.43]:3880 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726070AbgKMRir (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 13 Nov 2020 12:38:47 -0500
+IronPort-SDR: Uj9oh9jS+PtkILYfAkOvBcRkoF8QhkfQtqf7BCFMhLW0klZ1FgXLUoAw2/E1aPRXxOyXreCZ85
+ xOMre2FPSftQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9804"; a="255216823"
+X-IronPort-AV: E=Sophos;i="5.77,476,1596524400"; 
+   d="scan'208";a="255216823"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Nov 2020 09:38:47 -0800
+IronPort-SDR: 8YZt70b5Kok964sqPXYAd2YuJ8I69VgCBCLM9LupaRtam992OkvRrHqLdrX5WeFkzZ3qtU7ymG
+ bCYIE6b55efw==
+X-IronPort-AV: E=Sophos;i="5.77,476,1596524400"; 
+   d="scan'208";a="328941426"
+Received: from otc-nc-03.jf.intel.com (HELO otc-nc-03) ([10.54.39.36])
+  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Nov 2020 09:38:46 -0800
+Date:   Fri, 13 Nov 2020 09:38:45 -0800
+From:   "Raj, Ashok" <ashok.raj@intel.com>
+To:     "Luck, Tony" <tony.luck@intel.com>
+Cc:     Thomas Gleixner <tglx@linutronix.de>,
+        "Tian, Kevin" <kevin.tian@intel.com>,
+        "Wilk, Konrad" <konrad.wilk@oracle.com>,
+        Jason Gunthorpe <jgg@nvidia.com>,
+        "Williams, Dan J" <dan.j.williams@intel.com>,
+        "Jiang, Dave" <dave.jiang@intel.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        "vkoul@kernel.org" <vkoul@kernel.org>,
+        "Dey, Megha" <megha.dey@intel.com>,
+        "maz@kernel.org" <maz@kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+        "Pan, Jacob jun" <jacob.jun.pan@intel.com>,
+        "Liu, Yi L" <yi.l.liu@intel.com>, "Lu, Baolu" <baolu.lu@intel.com>,
+        "Kumar, Sanjay K" <sanjay.k.kumar@intel.com>,
+        "kwankhede@nvidia.com" <kwankhede@nvidia.com>,
+        "eric.auger@redhat.com" <eric.auger@redhat.com>,
+        "parav@mellanox.com" <parav@mellanox.com>,
+        "rafael@kernel.org" <rafael@kernel.org>,
+        "netanelg@mellanox.com" <netanelg@mellanox.com>,
+        "shahafs@mellanox.com" <shahafs@mellanox.com>,
+        "yan.y.zhao@linux.intel.com" <yan.y.zhao@linux.intel.com>,
+        "pbonzini@redhat.com" <pbonzini@redhat.com>,
+        "Ortiz, Samuel" <samuel.ortiz@intel.com>,
+        "Hossain, Mona" <mona.hossain@intel.com>,
+        "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        Ashok Raj <ashok.raj@intel.com>, andrew.cooper3@citrix.com
+Subject: Re: [PATCH v4 06/17] PCI: add SIOV and IMS capability detection
+Message-ID: <20201113173845.GA53733@otc-nc-03>
+References: <87pn4mi23u.fsf@nanos.tec.linutronix.de>
+ <20201110051412.GA20147@otc-nc-03>
+ <875z6dik1a.fsf@nanos.tec.linutronix.de>
+ <20201110141323.GB22336@otc-nc-03>
+ <MWHPR11MB16455B594B1B48B6E3C97C108CE80@MWHPR11MB1645.namprd11.prod.outlook.com>
+ <20201112193253.GG19638@char.us.oracle.com>
+ <877dqqmc2h.fsf@nanos.tec.linutronix.de>
+ <MWHPR11MB1645F27808F1F5E79646A3A88CE60@MWHPR11MB1645.namprd11.prod.outlook.com>
+ <874kltmlfr.fsf@nanos.tec.linutronix.de>
+ <30928722afe64104b5abba09de4f74dd@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <30928722afe64104b5abba09de4f74dd@intel.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Dear All,
+On Fri, Nov 13, 2020 at 08:12:39AM -0800, Luck, Tony wrote:
+> > Of course is this not only an x86 problem. Every architecture which
+> > supports virtualization has the same issue. ARM(64) has no way to tell
+> > for sure whether the machine runs bare metal either. No idea about the
+> > other architectures.
+> 
+> Sounds like a hypervisor problem. If the VMM provides perfect emulation
+> of every weird quirk of h/w, then it is OK to let the guest believe that it is
+> running on bare metal.
 
-This patchset is a resurrection of the DW PCIe support for the Exynos5433
-SoCs posted long time ago here: https://lkml.org/lkml/2016/12/26/6 and
-later here: https://lkml.org/lkml/2017/12/21/296 .
+That's true, which is why there isn't an immutable bit in cpuid or
+otherwise telling you are running under a hypervisor. Providing something
+like that would make certain features not virtualizable. Apparently before we
+had faulting cpuid, what you had in guest was the real raw cpuid. 
 
-In meantime the support for the Exynos5440 SoCs has been completely
-dropped from mainline kernel, as those SoCs never reached the market. The
-PCIe driver for Exynos5440 variant however has not been removed yet. This
-patchset simply reworks it to support the Exynos5433 variant. The lack of
-the need to support both variants significantly simplifies the driver
-code.
+Waiver: I'm not saying this is perfect, I'm just replaying the reason
+behind it. Not trying to defend it... flames > /dev/null
+> 
+> If it isn't perfect, then it should make sure the guest knows *for sure*, so that
+> the guest can take appropriate actions to avoid the sharp edges.
+> 
 
-This patchset is based on the commit b90c53b06597 ("PCI: dwc: Detect
-number of iATU windows") available on the following branch:
-git://git.kernel.org/pub/scm/linux/kernel/git/robh/linux.git pci-more-dwc-cleanup
+There are indeed 2 problems to solve.
 
-Best regards,
-Marek Szyprowski
+1. How does device driver know if device is IMS capable.
 
+   IMS is a device attribute. Each vendor can provide its own method to
+   provide that indication. One such mechanism is the DVSEC.SIOV.IMS
+   property. Some might believe this is for use only by Intel. For DVSEC I
+   don't believe there is such a connection as in device vendor id in
+   standard header. TBH, there are other device vendors using the exact
+   same method to indicate SIOV and IMS propeties. What a DVSEC vendor ID
+   states is "As defined by Vendor X". 
 
-Changelog:
+   Why we choose a config vs something in device specific mmio is because
+   today VFIO being that one common mechanism, it only exposes known
+   standard and some extended headers to guest. When we expose a full PF,
+   the guest doens't see the DVSEC, so drivers know this isn't available.
 
-v4:
-- fixed topics to better match the common style of the each subsystem
-- rebased onto "[PATCH v2 00/16] PCI: dwc: Another round of clean-ups"
-- collected tags, dropped merged dts patch
+   This is our mechanism to stop drivers from calling
+   pci_ims_array_create_msi_irq_domain(). It may not be perfect for all
+   devices, it is a device specific mechanism. For devices under
+   consideration following the SIOV spec it meets the sprit of the
+   requirement even without #2 below. When devices have no way to detect
+   this, #2 is required as a second way to block IMS.
 
-v3: https://lore.kernel.org/linux-samsung-soc/20201029134017.27400-1-m.szyprowski@samsung.com/
-- rebased onto "[00/13] PCI: dwc: Another round of clean-ups" patchset:
-  https://patchwork.kernel.org/project/linux-samsung-soc/cover/20201028204646.356535-1-robh@kernel.org/
-- fixed issues pointed by Rob in the driver logic:
-  * removed DBI_RO_WR_EN register poking
-  * made driver a standard module
-- fixed section mismatch issue
-- added "num-viewport = <3>" property to dts and bindings to fix warning
+2. How does platform component (IOMMU) inform if they can support all forms
+   of IMS. (On device, or in memory). 
+   
+   On device would require some form trap/emulate. Legacy MSIx already has
+   that solved, but for device specific store you need some additional
+   work.
 
-v2: https://lore.kernel.org/linux-samsung-soc/20201023075744.26200-1-m.szyprowski@samsung.com/
-- fixed issues in dt-bindings pointed by Krzysztof and Rob
+   When its system memory (say IMS is in GPA space), you need some form of
+   hypercall. There is no way around it since we can't intercept. Yes, you
+   can maybe map those as RO and trap, but its not pretty.
 
-v1: https://lore.kernel.org/linux-samsung-soc/20201019094715.15343-1-m.szyprowski@samsung.com/
-- initial version of this resurrected patchset
+   To solve this rather than a generic platform capability, maybe we should
+   flip this to IOMMU instead, because that's the one that offers this
+   capability today.
 
+   iommu_ims_supported() 
+   	When platform has no IOMMU or no hypervisor calls, it returns
+	false. So device driver can tell, even if it supports IMS
+	capability deduction, does the platform support IMS.
+   
+        On platforms where iommu supports capability.
 
-Patch summary:
+	Either there is a vIOMMU with a Virtual Command Register that can
+	provide a way to get the interrupt handle similar to what you would
+	get from an hypercall for instance. Or there is a real hypercall
+	that supports giving the guest OS the physical IRTE handle. 
 
-Jaehoon Chung (2):
-  phy: samsung: phy-exynos-pcie: rework driver to support Exynos5433
-    PCIe PHY
-  PCI: dwc: exynos: Rework the driver to support Exynos5433 variant
-
-Marek Szyprowski (3):
-  dt-bindings: PCI: exynos: drop samsung,exynos5440-pcie binding
-  dt-bindings: PCI: exynos: add the samsung,exynos-pcie binding
-  dt-bindings: phy: exynos: add the samsung,exynos-pcie-phy binding
-
- .../bindings/pci/samsung,exynos-pcie.yaml     | 119 ++++++
- .../bindings/pci/samsung,exynos5440-pcie.txt  |  58 ---
- .../bindings/phy/samsung,exynos-pcie-phy.yaml |  51 +++
- drivers/pci/controller/dwc/Kconfig            |  10 +-
- drivers/pci/controller/dwc/pci-exynos.c       | 353 +++++++-----------
- drivers/pci/quirks.c                          |   1 +
- drivers/phy/samsung/phy-exynos-pcie.c         | 304 ++++++---------
- 7 files changed, 429 insertions(+), 467 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/samsung,exynos-pcie.yaml
- delete mode 100644 Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
- create mode 100644 Documentation/devicetree/bindings/phy/samsung,exynos-pcie-phy.yaml
 
 -- 
-2.17.1
+Cheers,
+Ashok
 
+[Forgiveness is the attribute of the STRONG - Gandhi]
