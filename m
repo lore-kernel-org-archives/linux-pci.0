@@ -2,163 +2,66 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3370C5519F
-	for <linux-pci@archiver.kernel.org>; Mon, 16 Nov 2020 11:42:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8F47C8B4D1
+	for <linux-pci@archiver.kernel.org>; Mon, 16 Nov 2020 12:38:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 426F022245
-	for <linux-pci@archiver.kernel.org>; Mon, 16 Nov 2020 11:42:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8C8F520853
+	for <linux-pci@archiver.kernel.org>; Mon, 16 Nov 2020 12:38:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="vwO/bi8H"
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="sDV8cAFT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727897AbgKPHzB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 16 Nov 2020 02:55:01 -0500
-Received: from mail.kernel.org ([198.145.29.99]:48802 "EHLO mail.kernel.org"
+        id S1727881AbgKPMhj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 16 Nov 2020 07:37:39 -0500
+Received: from mail.kernel.org ([198.145.29.99]:48364 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727895AbgKPHyv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 16 Nov 2020 02:54:51 -0500
-Received: from wens.tw (mirror2.csie.ntu.edu.tw [140.112.30.76])
+        id S1726097AbgKPMhi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 16 Nov 2020 07:37:38 -0500
+Received: from localhost (230.sub-72-107-127.myvzw.com [72.107.127.230])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9AE6F222B9;
-        Mon, 16 Nov 2020 07:54:50 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id D9A9A2224B;
+        Mon, 16 Nov 2020 12:37:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1605513290;
-        bh=AQ/Sx1u+bYD4zoGriANF0/uI3pWLqX2+CyXLECxBBZo=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=vwO/bi8HxpZmfmGN+1TNtSuJ0TKhs3RpajY7obUPsQc+fyHhgCYQiZiRmakfE/dXl
-         sZLGXowQYfbzG1Df9LaM7jdluA7TKQ2pOLZnB5I1vCKOWztcQPTJ5xbtT5RZGX8rOx
-         IKv+XDU4rAde5JPL7KmlWWrJA/XL+RF+MJGhSseU=
-Received: by wens.tw (Postfix, from userid 1000)
-        id CC6FF5FD01; Mon, 16 Nov 2020 15:54:47 +0800 (CST)
-From:   Chen-Yu Tsai <wens@kernel.org>
-To:     Shawn Lin <shawn.lin@rock-chips.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Heiko Stuebner <heiko@sntech.de>
-Cc:     Chen-Yu Tsai <wens@csie.org>, Robin Murphy <robin.murphy@arm.com>,
-        Johan Jonker <jbx6244@gmail.com>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: [PATCH 4/4] arm64: dts: rockchip: rk3399: Add NanoPi M4B
-Date:   Mon, 16 Nov 2020 15:52:15 +0800
-Message-Id: <20201116075215.15303-5-wens@kernel.org>
-X-Mailer: git-send-email 2.29.1
-In-Reply-To: <20201116075215.15303-1-wens@kernel.org>
-References: <20201116075215.15303-1-wens@kernel.org>
+        s=default; t=1605530258;
+        bh=0kS8Uc7Er7SdxpAiM6lRVec4sOzXxKls7swHKqN78xY=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=sDV8cAFTc0QUtZGFzcifnkB+rLqxVrZt3OAjYgOz6f1u1TD88/JXEYp/6RvwXbmFx
+         rQEdw2UXCJDzkURiQqHeZlC0m+GaiVIkZ7uBEyMElFWAHPSUslnReb4UzE8IlVoQ63
+         ltxFS56FRi+u1X0Dd514BFavIeGdmvn8FBZ/hyK4=
+Date:   Mon, 16 Nov 2020 06:37:35 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        johan@kernel.org, linux-usb@vger.kernel.org,
+        alberto.vignani@fastwebnet.it
+Subject: Re: [PATCH v2 1/2] PCI: Disable MSI for Pericom PCIe-USB adapter
+Message-ID: <20201116123735.GA1273179@bjorn-Precision-5520>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201116094644.GP4077@smile.fi.intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Chen-Yu Tsai <wens@csie.org>
+On Mon, Nov 16, 2020 at 11:46:44AM +0200, Andy Shevchenko wrote:
+> On Fri, Nov 13, 2020 at 05:21:38PM -0600, Bjorn Helgaas wrote:
+> > On Fri, Nov 06, 2020 at 12:05:25PM +0200, Andy Shevchenko wrote:
+> > > Pericom PCIe-USB adapter advertises MSI, but documentation says
+> > > "The MSI Function is not implemented on this device." in the chapters
+> > > 7.3.27, 7.3.29-7.3.31.
+> > > 
+> > > Fixes: 306c54d0edb6 ("usb: hcd: Try MSI interrupts on PCI devices")
+> > > Datasheet: https://www.diodes.com/assets/Datasheets/PI7C9X440SL.pdf
+> > > Reported-by: alberto.vignani@fastwebnet.it
+> > 
+> > Is there a URL to a problem report we can include here?
+> 
+> You mean URL to email archives or something else?
 
-The NanoPi M4B is a minor revision of the original M4.
-
-The differences against the original Nanopi M4 that are common with the
-other M4V2 revision include:
-
-  - microphone header removed
-  - power button added
-  - recovery button added
-
-Additional changes specific to the M4B:
-
-  - USB 3.0 hub removed; board now has 2x USB 3.0 type-A ports and 2x
-    USB 2.0 ports
-  - ADB toggle switch added; this changes the top USB 3.0 host port to
-    a peripheral port
-  - Type-C port no longer supports data or PD
-  - WiFi/Bluetooth combo chip switched to AP6256, which supports BT 5.0
-    but only 1T1R (down from 2T2R) for WiFi
-
-Add a new dts file for the new board revision that shows the difference
-against the original.
-
-Signed-off-by: Chen-Yu Tsai <wens@csie.org>
----
- arch/arm64/boot/dts/rockchip/Makefile         |  1 +
- .../boot/dts/rockchip/rk3399-nanopi-m4b.dts   | 52 +++++++++++++++++++
- 2 files changed, 53 insertions(+)
- create mode 100644 arch/arm64/boot/dts/rockchip/rk3399-nanopi-m4b.dts
-
-diff --git a/arch/arm64/boot/dts/rockchip/Makefile b/arch/arm64/boot/dts/rockchip/Makefile
-index 5a53979b7057..fd47414e40eb 100644
---- a/arch/arm64/boot/dts/rockchip/Makefile
-+++ b/arch/arm64/boot/dts/rockchip/Makefile
-@@ -32,6 +32,7 @@ dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-kobol-helios64.dtb
- dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-leez-p710.dtb
- dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-nanopc-t4.dtb
- dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-nanopi-m4.dtb
-+dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-nanopi-m4b.dtb
- dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-nanopi-neo4.dtb
- dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-orangepi.dtb
- dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-pinebook-pro.dtb
-diff --git a/arch/arm64/boot/dts/rockchip/rk3399-nanopi-m4b.dts b/arch/arm64/boot/dts/rockchip/rk3399-nanopi-m4b.dts
-new file mode 100644
-index 000000000000..72182c58cc46
---- /dev/null
-+++ b/arch/arm64/boot/dts/rockchip/rk3399-nanopi-m4b.dts
-@@ -0,0 +1,52 @@
-+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
-+/*
-+ * FriendlyElec NanoPi M4B board device tree source
-+ *
-+ * Copyright (c) 2020 Chen-Yu Tsai <wens@csie.org>
-+ */
-+
-+/dts-v1/;
-+#include "rk3399-nanopi-m4.dts"
-+
-+/ {
-+	model = "FriendlyElec NanoPi M4B";
-+	compatible = "friendlyarm,nanopi-m4b", "rockchip,rk3399";
-+
-+	adc-keys {
-+		compatible = "adc-keys";
-+		io-channels = <&saradc 1>;
-+		io-channel-names = "buttons";
-+		keyup-threshold-microvolt = <1500000>;
-+		poll-interval = <100>;
-+
-+		recovery {
-+			label = "Recovery";
-+			linux,code = <KEY_VENDOR>;
-+			press-threshold-microvolt = <18000>;
-+		};
-+	};
-+};
-+
-+/* No USB type-C PD power manager */
-+/delete-node/ &fusb0;
-+
-+&i2c4 {
-+	status = "disabled";
-+};
-+
-+&u2phy0_host {
-+	phy-supply = <&vcc5v0_usb2>;
-+};
-+
-+&u2phy0_otg {
-+	phy-supply = <&vbus_typec>;
-+};
-+
-+&u2phy1_otg {
-+	phy-supply = <&vcc5v0_usb1>;
-+};
-+
-+&vbus_typec {
-+	enable-active-high;
-+	gpios = <&gpio4 RK_PD2 GPIO_ACTIVE_HIGH>;
-+};
--- 
-2.29.1
-
+Yes.  URL to lore email archive, bugzilla, or any other report of the
+problem this caused, i.e., how Alberto noticed something wrong.
