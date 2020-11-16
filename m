@@ -2,125 +2,114 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 720A8C55ABD
-	for <linux-pci@archiver.kernel.org>; Mon, 16 Nov 2020 08:01:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0B4BC4742C
+	for <linux-pci@archiver.kernel.org>; Mon, 16 Nov 2020 08:41:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1241F206D5
-	for <linux-pci@archiver.kernel.org>; Mon, 16 Nov 2020 08:01:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1291B20684
+	for <linux-pci@archiver.kernel.org>; Mon, 16 Nov 2020 08:41:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="Qbn9UBRP"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="tIcF381Y"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727916AbgKPHyv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 16 Nov 2020 02:54:51 -0500
-Received: from mail.kernel.org ([198.145.29.99]:48796 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726524AbgKPHyv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 16 Nov 2020 02:54:51 -0500
-Received: from wens.tw (mirror2.csie.ntu.edu.tw [140.112.30.76])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9422C2225E;
-        Mon, 16 Nov 2020 07:54:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1605513290;
-        bh=czyoJqy67io6xDK6xDxmuvRYsZ4+i8k33nA8cdA7Agw=;
-        h=From:To:Cc:Subject:Date:From;
-        b=Qbn9UBRPBKJn5/ziEhFz/IuKSor6U/KqTWJqrzzHzgnWWFZHVytmTflEDNoSrcAHB
-         xkG1fq/ZxlerNDV6Z4APKfT3ZSsZkRk7RRzCrKxmjzWrvLszt2rFCWl2TN1H68GO88
-         jMjNOmeBzYevYbBqshcPGNXSPbbOGE9Fc4t/mZX8=
-Received: by wens.tw (Postfix, from userid 1000)
-        id 7A1ED5FD44; Mon, 16 Nov 2020 15:54:47 +0800 (CST)
-From:   Chen-Yu Tsai <wens@kernel.org>
-To:     Shawn Lin <shawn.lin@rock-chips.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Heiko Stuebner <heiko@sntech.de>
-Cc:     Chen-Yu Tsai <wens@csie.org>, Robin Murphy <robin.murphy@arm.com>,
-        Johan Jonker <jbx6244@gmail.com>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: [PATCH 0/4] arm64: rockchip: Fix PCIe ep-gpios requirement and Add Nanopi M4B
-Date:   Mon, 16 Nov 2020 15:52:11 +0800
-Message-Id: <20201116075215.15303-1-wens@kernel.org>
-X-Mailer: git-send-email 2.29.1
+        id S1726344AbgKPI0d (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 16 Nov 2020 03:26:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44644 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726176AbgKPI0d (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2020 03:26:33 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F1A1C0613CF;
+        Mon, 16 Nov 2020 00:26:33 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=4Df+ryKMLeLM6ZPUIVUI425PW1QFD2JY37ueasWT1tM=; b=tIcF381YzRWlS3vyV5D3+AOOPY
+        UjVFVpU3pJzQGZgL64alCSS5fvb1ZabCxvl14Q67Uqz68kdFo9Dw0DZ7vwV813JqOS2GKzVom4Bdo
+        8aHlR2SryN+v2/PISnP7i7Du4xMO1SS7K2slyKgXyOG+mdfd7rN7TflvQTrzqiX3FQpHW+cSJZp77
+        agRSeSP5NVbfKJGtRiFYMOmIOSNusI5NZ5ktpUmqw2V+NEnk6NKchKVPCiFfB5cFfHQD7PpFHeoIm
+        NAAFkVYo03/y7EckGRrceEBloQ0emPn/iUP2MX5sElP9Vb/nWmzolnZo3bt10tZoIusFIvPM0e7nU
+        nsVERyJg==;
+Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1keZpj-0004Nt-Sb; Mon, 16 Nov 2020 08:25:55 +0000
+Date:   Mon, 16 Nov 2020 08:25:55 +0000
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Raj, Ashok" <ashok.raj@intel.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        "Tian, Kevin" <kevin.tian@intel.com>,
+        Jason Gunthorpe <jgg@nvidia.com>,
+        "Williams, Dan J" <dan.j.williams@intel.com>,
+        "Jiang, Dave" <dave.jiang@intel.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        "vkoul@kernel.org" <vkoul@kernel.org>,
+        "Dey, Megha" <megha.dey@intel.com>,
+        "maz@kernel.org" <maz@kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+        "Pan, Jacob jun" <jacob.jun.pan@intel.com>,
+        "Liu, Yi L" <yi.l.liu@intel.com>, "Lu, Baolu" <baolu.lu@intel.com>,
+        "Kumar, Sanjay K" <sanjay.k.kumar@intel.com>,
+        "Luck, Tony" <tony.luck@intel.com>,
+        "kwankhede@nvidia.com" <kwankhede@nvidia.com>,
+        "eric.auger@redhat.com" <eric.auger@redhat.com>,
+        "parav@mellanox.com" <parav@mellanox.com>,
+        "rafael@kernel.org" <rafael@kernel.org>,
+        "netanelg@mellanox.com" <netanelg@mellanox.com>,
+        "shahafs@mellanox.com" <shahafs@mellanox.com>,
+        "yan.y.zhao@linux.intel.com" <yan.y.zhao@linux.intel.com>,
+        "pbonzini@redhat.com" <pbonzini@redhat.com>,
+        "Ortiz, Samuel" <samuel.ortiz@intel.com>,
+        "Hossain, Mona" <mona.hossain@intel.com>,
+        "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>
+Subject: Re: [PATCH v4 06/17] PCI: add SIOV and IMS capability detection
+Message-ID: <20201116082555.GA16303@infradead.org>
+References: <20201109173034.GG2620339@nvidia.com>
+ <87pn4mi23u.fsf@nanos.tec.linutronix.de>
+ <20201110051412.GA20147@otc-nc-03>
+ <875z6dik1a.fsf@nanos.tec.linutronix.de>
+ <20201110141323.GB22336@otc-nc-03>
+ <MWHPR11MB16455B594B1B48B6E3C97C108CE80@MWHPR11MB1645.namprd11.prod.outlook.com>
+ <20201112193253.GG19638@char.us.oracle.com>
+ <877dqqmc2h.fsf@nanos.tec.linutronix.de>
+ <20201114103430.GA9810@infradead.org>
+ <20201114211837.GB12197@araj-mobl1.jf.intel.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201114211837.GB12197@araj-mobl1.jf.intel.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Chen-Yu Tsai <wens@csie.org>
+On Sat, Nov 14, 2020 at 01:18:37PM -0800, Raj, Ashok wrote:
+> On Sat, Nov 14, 2020 at 10:34:30AM +0000, Christoph Hellwig wrote:
+> > On Thu, Nov 12, 2020 at 11:42:46PM +0100, Thomas Gleixner wrote:
+> > > DMI vendor name is pretty good final check when the bit is 0. The
+> > > strings I'm aware of are:
+> > > 
+> > > QEMU, Bochs, KVM, Xen, VMware, VMW, VMware Inc., innotek GmbH, Oracle
+> > > Corporation, Parallels, BHYVE, Microsoft Corporation
+> > > 
+> > > which is not complete but better than nothing ;)
+> > 
+> > Which is why I really think we need explicit opt-ins for "native"
+> > SIOV handling and for paravirtualized SIOV handling, with the kernel
+> > not offering support at all without either or a manual override on
+> > the command line.
+> 
+> opt-in by device or kernel? The way we are planning to support this is:
 
-Hi everyone,
+opt-in by the platform.  Not sure if an ACPI interface or something else
+would be best.  But basically the kernel needs to be able to query:
 
-This series mainly adds support for the new Nanopi M4B, which is a newer
-variant of the Nanopi M4.
-
-The differences against the original Nanopi M4 that are common with the
-other M4V2 revision include:
-
-  - microphone header removed
-  - power button added
-  - recovery button added
-
-Additional changes specific to the M4B:
-
-  - USB 3.0 hub removed; board now has 2x USB 3.0 type-A ports and 2x
-    USB 2.0 ports
-  - ADB toggle switch added; this changes the top USB 3.0 host port to
-    a peripheral port
-  - Type-C port no longer supports data or PD
-  - WiFi/Bluetooth combo chip switched to AP6256, which supports BT 5.0
-    but only 1T1R (down from 2T2R) for WiFi
-
-While working on this, I found that for the M4 family, the PCIe reset
-pin (from the M.2 expansion board) was not wired to the SoC. Only the
-NanoPC T4 has this wired. This ended up in patches 1 and 3.
-
-Patch 1 makes ep_gpio in the Rockchip PCIe driver optional. This property
-is optional in the DT binding, so this just makes the driver adhere to
-the binding.
-
-Patch 2 adds a new compatible string for the new board.
-
-Patch 3 moves the ep-gpios property of the pcie controller from the
-common nanopi4.dtsi file to the nanopc-t4.dts file.
-
-Patch 4 adds a new device tree file for the new board. It includes the
-original device tree for the M4, and then lists the differences.
-
-Given that patch 3 would make PCIe unusable without patch 1, I suggest
-merging patch 1 through the PCI tree as a fix for 5.10, and the rest
-for 5.11 through the Rockchip tree.
-
-Please have a look. The changes are mostly trivial.
-
-
-Regards
-ChenYu
-
-Chen-Yu Tsai (4):
-  PCI: rockchip: make ep_gpio optional
-  dt-bindings: arm: rockchip: Add FriendlyARM NanoPi M4B
-  arm64: dts: rockchip: nanopi4: Move ep-gpios property to nanopc-t4
-  arm64: dts: rockchip: rk3399: Add NanoPi M4B
-
- .../devicetree/bindings/arm/rockchip.yaml     |  1 +
- arch/arm64/boot/dts/rockchip/Makefile         |  1 +
- .../boot/dts/rockchip/rk3399-nanopc-t4.dts    |  1 +
- .../boot/dts/rockchip/rk3399-nanopi-m4b.dts   | 52 +++++++++++++++++++
- .../boot/dts/rockchip/rk3399-nanopi4.dtsi     |  1 -
- drivers/pci/controller/pcie-rockchip.c        |  2 +-
- 6 files changed, 56 insertions(+), 2 deletions(-)
- create mode 100644 arch/arm64/boot/dts/rockchip/rk3399-nanopi-m4b.dts
-
--- 
-2.29.1
-
+Does this platform claim to support IMS, and if yes how.  If there is no
+answer we need assume the platform doesn't.
