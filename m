@@ -2,54 +2,53 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C17B5C4742C
-	for <linux-pci@archiver.kernel.org>; Mon, 16 Nov 2020 17:32:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91272C64E75
+	for <linux-pci@archiver.kernel.org>; Mon, 16 Nov 2020 17:32:31 +0000 (UTC)
 Received: from vger.kernel.org (unknown [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 74BA22244C
-	for <linux-pci@archiver.kernel.org>; Mon, 16 Nov 2020 17:32:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4E53422453
+	for <linux-pci@archiver.kernel.org>; Mon, 16 Nov 2020 17:32:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="HP2l67pl"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 74BA22244C
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="lOtXQKA3"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4E53422453
 Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=ti.com
 Authentication-Results: mail.kernel.org; spf=pass smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733063AbgKPRcJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 16 Nov 2020 12:32:09 -0500
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:40266 "EHLO
+        id S1733050AbgKPRcH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 16 Nov 2020 12:32:07 -0500
+Received: from fllv0015.ext.ti.com ([198.47.19.141]:40260 "EHLO
         fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1733056AbgKPRcJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2020 12:32:09 -0500
+        with ESMTP id S1733047AbgKPRcH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2020 12:32:07 -0500
 Received: from lelv0266.itg.ti.com ([10.180.67.225])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 0AGHW0In043047;
-        Mon, 16 Nov 2020 11:32:00 -0600
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1605547920;
-        bh=1b057Ybo9I/E/KKizOvqW3tp1N+aVgmJ+djVX4jFDFU=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=HP2l67plA3VeYSBI6SU2GtXqOOgmZDHSVk2kApk5Q1VufVdvWDRe3VKIYfPG5A8h6
-         26EaqU3jjsqk3WTJqct0O2PdmwWRYfKYBTj3Kwtes0cPPYeYxGdpe5KbgA5oAy205S
-         4UHdK5HbmpwNycq2OGeVz/PEUEALHRw9zIE1654U=
-Received: from DLEE105.ent.ti.com (dlee105.ent.ti.com [157.170.170.35])
-        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 0AGHW0Jm076227
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 16 Nov 2020 11:32:00 -0600
-Received: from DLEE103.ent.ti.com (157.170.170.33) by DLEE105.ent.ti.com
- (157.170.170.35) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Mon, 16
- Nov 2020 11:32:00 -0600
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE103.ent.ti.com
- (157.170.170.33) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
- Frontend Transport; Mon, 16 Nov 2020 11:32:00 -0600
-Received: from a0393678-ssd.dal.design.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0AGHVgJG030552;
+        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 0AGHVuu8043031;
         Mon, 16 Nov 2020 11:31:56 -0600
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1605547916;
+        bh=dZGi3ypT0ZFXTzoD+yEupcW6YeD06JU7GidsOmlz2qI=;
+        h=From:To:CC:Subject:Date;
+        b=lOtXQKA3ZazEDBx9IBCgl6euohVmhHOLDqMPIlIhs+miIK44tSaKX/mCXBvkttQsw
+         2PlT+rqw8k1jNIiHA10gQL+kfqUS+/CwUrWuSYVLGn14VCr/+CbcfxR6bklhA850bs
+         T3dr0HNWOmdUtaQD00kCc/xn4alRgQ8eadI36aZI=
+Received: from DFLE105.ent.ti.com (dfle105.ent.ti.com [10.64.6.26])
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 0AGHVuC6076163
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 16 Nov 2020 11:31:56 -0600
+Received: from DFLE109.ent.ti.com (10.64.6.30) by DFLE105.ent.ti.com
+ (10.64.6.26) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Mon, 16
+ Nov 2020 11:31:55 -0600
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DFLE109.ent.ti.com
+ (10.64.6.30) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
+ Frontend Transport; Mon, 16 Nov 2020 11:31:55 -0600
+Received: from a0393678-ssd.dal.design.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0AGHVgJF030552;
+        Mon, 16 Nov 2020 11:31:43 -0600
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Tero Kristo <t-kristo@ti.com>, Nishanth Menon <nm@ti.com>,
         Rob Herring <robh+dt@kernel.org>,
@@ -61,12 +60,10 @@ CC:     <linux-omap@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>,
         <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
-Subject: [PATCH 1/3] dt-bindings: pci: ti,j721e: Fix "ti,syscon-pcie-ctrl" to take argument
-Date:   Mon, 16 Nov 2020 23:01:39 +0530
-Message-ID: <20201116173141.31873-2-kishon@ti.com>
+Subject: [PATCH 0/3] PCI: J721E: Fix Broken DT w.r.t SYSCON DT
+Date:   Mon, 16 Nov 2020 23:01:38 +0530
+Message-ID: <20201116173141.31873-1-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20201116173141.31873-1-kishon@ti.com>
-References: <20201116173141.31873-1-kishon@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
@@ -74,77 +71,29 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Fix binding documentation of "ti,syscon-pcie-ctrl" to take phandle with
-argument. The argument is the register offset within "syscon" used to
-configure PCIe controller.
+Previously a subnode to syscon node was added which has the
+exact memory mapped address of pcie_ctrl but based on review comment
+provided by Rob [1], the offset is now being passed as argument to
+"ti,syscon-pcie-ctrl" phandle.
 
-Link: Link: http://lore.kernel.org/r/CAL_JsqKiUcO76bo1GoepWM1TusJWoty_BRy2hFSgtEVMqtrvvQ@mail.gmail.com
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- .../devicetree/bindings/pci/ti,j721e-pci-ep.yaml     | 12 ++++++++----
- .../devicetree/bindings/pci/ti,j721e-pci-host.yaml   | 12 ++++++++----
- 2 files changed, 16 insertions(+), 8 deletions(-)
+This series has both driver change and DT change and both has to
+get in together in the -rc cycle.
 
-diff --git a/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml b/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
-index 3ae3e1a2d4b0..e9685c0bdc3e 100644
---- a/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
-+++ b/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
-@@ -29,9 +29,13 @@ properties:
-       - const: mem
- 
-   ti,syscon-pcie-ctrl:
--    description: Phandle to the SYSCON entry required for configuring PCIe mode
--                 and link speed.
--    $ref: /schemas/types.yaml#/definitions/phandle
-+    allOf:
-+      - $ref: /schemas/types.yaml#/definitions/phandle-array
-+      - items:
-+          - items:
-+            - description: Phandle to the SYSCON entry
-+            - description: pcie_ctrl register offset within SYSCON
-+    description: Specifier for configuring PCIe mode and link speed.
- 
-   power-domains:
-     maxItems: 1
-@@ -80,7 +84,7 @@ examples:
-                  <0x00 0x0d000000 0x00 0x00800000>,
-                  <0x00 0x10000000 0x00 0x08000000>;
-            reg-names = "intd_cfg", "user_cfg", "reg", "mem";
--           ti,syscon-pcie-ctrl = <&pcie0_ctrl>;
-+           ti,syscon-pcie-ctrl = <&pcie0_ctrl 0x4070>;
-            max-link-speed = <3>;
-            num-lanes = <2>;
-            power-domains = <&k3_pds 239 TI_SCI_PD_EXCLUSIVE>;
-diff --git a/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml b/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
-index ee7a8eade3f6..a3b82992bcfa 100644
---- a/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
-+++ b/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
-@@ -29,9 +29,13 @@ properties:
-       - const: cfg
- 
-   ti,syscon-pcie-ctrl:
--    description: Phandle to the SYSCON entry required for configuring PCIe mode
--      and link speed.
--    $ref: /schemas/types.yaml#/definitions/phandle
-+    allOf:
-+      - $ref: /schemas/types.yaml#/definitions/phandle-array
-+      - items:
-+          - items:
-+            - description: Phandle to the SYSCON entry
-+            - description: pcie_ctrl register offset within SYSCON
-+    description: Specifier for configuring PCIe mode and link speed.
- 
-   power-domains:
-     maxItems: 1
-@@ -90,7 +94,7 @@ examples:
-                   <0x00 0x0d000000 0x00 0x00800000>,
-                   <0x00 0x10000000 0x00 0x00001000>;
-             reg-names = "intd_cfg", "user_cfg", "reg", "cfg";
--            ti,syscon-pcie-ctrl = <&pcie0_ctrl>;
-+            ti,syscon-pcie-ctrl = <&pcie0_ctrl 0x4070>;
-             max-link-speed = <3>;
-             num-lanes = <2>;
-             power-domains = <&k3_pds 239 TI_SCI_PD_EXCLUSIVE>;
+[1] -> Link: http://lore.kernel.org/r/CAL_JsqKiUcO76bo1GoepWM1TusJWoty_BRy2hFSgtEVMqtrvvQ@mail.gmail.com
+
+Kishon Vijay Abraham I (3):
+  dt-bindings: pci: ti,j721e: Fix "ti,syscon-pcie-ctrl" to take argument
+  PCI: j721e: Get offset within "syscon" from "ti,syscon-pcie-ctrl"
+    phandle arg
+  arm64: dts: ti: k3-j721e-main: Remove "syscon" nodes added for
+    pcieX_ctrl
+
+ .../bindings/pci/ti,j721e-pci-ep.yaml         | 12 +++--
+ .../bindings/pci/ti,j721e-pci-host.yaml       | 12 +++--
+ arch/arm64/boot/dts/ti/k3-j721e-main.dtsi     | 48 ++++---------------
+ drivers/pci/controller/cadence/pci-j721e.c    | 28 +++++++----
+ 4 files changed, 43 insertions(+), 57 deletions(-)
+
 -- 
 2.17.1
 
