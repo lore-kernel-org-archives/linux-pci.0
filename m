@@ -2,112 +2,163 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49EF3C4742C
-	for <linux-pci@archiver.kernel.org>; Mon, 16 Nov 2020 10:24:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3370C5519F
+	for <linux-pci@archiver.kernel.org>; Mon, 16 Nov 2020 11:42:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E847821527
-	for <linux-pci@archiver.kernel.org>; Mon, 16 Nov 2020 10:24:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 426F022245
+	for <linux-pci@archiver.kernel.org>; Mon, 16 Nov 2020 11:42:27 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="vwO/bi8H"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728334AbgKPJrg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 16 Nov 2020 04:47:36 -0500
-Received: from mail-oi1-f193.google.com ([209.85.167.193]:45907 "EHLO
-        mail-oi1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726460AbgKPJrf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2020 04:47:35 -0500
-Received: by mail-oi1-f193.google.com with SMTP id k19so9504714oic.12;
-        Mon, 16 Nov 2020 01:47:35 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=z+F5r+A2Ydy3g6regFzy4mPZxcGaSWa5FXZJrRUitmk=;
-        b=kIT5nfB1ZdslkbPXvstIPtol8scy4M/y1cVemcobxGuAW4cj1ZqhDCwRBY0Njfoqvx
-         mNCtJHCLfEyXDH/83ymg5HXlwqC7hx1bTqSs+1ESMhSGLA+xJhsvaEEzNHGUAdXkPcXJ
-         4MMzIK84NsgmA1lqP+8qg4etuRfE243bRyezbwVzKHtvkGwX7AV+wa47GeGNySeH+3uA
-         w4Bv/0Cm5sm01oLHEZYD3jSQwHuqGu+mmvzjk0dums97yWXzN+CF5SEux+qGUtXd+1UL
-         EYBDyxO6pspI0606de4HREsHV1zy7AJit8ygjf9/Z4okL+bXyg3FajEfGncJVZX6RHKi
-         FlEQ==
-X-Gm-Message-State: AOAM533kLXmMpK1Xft8fPBiBncQBSlpblqYaGU0NG0BHrZJT3sg3Y+uD
-        uBXIsWhWUUBL3FmfiSy+kbjoy1vnq1pZrsBpj1E=
-X-Google-Smtp-Source: ABdhPJywjKJgEoVdofvrrxMy7A30vVriKI1tM5Mq/PI9qja7lbnht9Sd63/thbMiAKpLUQgfaV6TpBEM7w2Aq4WrXdM=
-X-Received: by 2002:aca:c3c4:: with SMTP id t187mr8708087oif.148.1605520054848;
- Mon, 16 Nov 2020 01:47:34 -0800 (PST)
-MIME-Version: 1.0
-References: <20200826111628.794979401@linutronix.de> <20201112125531.GA873287@nvidia.com>
- <87mtzmmzk6.fsf@nanos.tec.linutronix.de> <87k0uqmwn4.fsf@nanos.tec.linutronix.de>
- <87d00imlop.fsf@nanos.tec.linutronix.de>
-In-Reply-To: <87d00imlop.fsf@nanos.tec.linutronix.de>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Mon, 16 Nov 2020 10:47:23 +0100
-Message-ID: <CAMuHMdXA7wfJovmfSH2nbAhN0cPyCiFHodTvg4a8Hm9rx5Dj-w@mail.gmail.com>
-Subject: Re: iommu/vt-d: Cure VF irqdomain hickup
-To:     Thomas Gleixner <tglx@linutronix.de>
-Cc:     Jason Gunthorpe <jgg@nvidia.com>,
-        Ziyad Atiyyeh <ziyadat@nvidia.com>,
-        Itay Aveksis <itayav@nvidia.com>,
-        Moshe Shemesh <moshe@nvidia.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        "the arch/x86 maintainers" <x86@kernel.org>,
-        Joerg Roedel <joro@8bytes.org>,
-        Linux IOMMU <iommu@lists.linux-foundation.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
+        id S1727897AbgKPHzB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 16 Nov 2020 02:55:01 -0500
+Received: from mail.kernel.org ([198.145.29.99]:48802 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727895AbgKPHyv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 16 Nov 2020 02:54:51 -0500
+Received: from wens.tw (mirror2.csie.ntu.edu.tw [140.112.30.76])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9AE6F222B9;
+        Mon, 16 Nov 2020 07:54:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1605513290;
+        bh=AQ/Sx1u+bYD4zoGriANF0/uI3pWLqX2+CyXLECxBBZo=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=vwO/bi8HxpZmfmGN+1TNtSuJ0TKhs3RpajY7obUPsQc+fyHhgCYQiZiRmakfE/dXl
+         sZLGXowQYfbzG1Df9LaM7jdluA7TKQ2pOLZnB5I1vCKOWztcQPTJ5xbtT5RZGX8rOx
+         IKv+XDU4rAde5JPL7KmlWWrJA/XL+RF+MJGhSseU=
+Received: by wens.tw (Postfix, from userid 1000)
+        id CC6FF5FD01; Mon, 16 Nov 2020 15:54:47 +0800 (CST)
+From:   Chen-Yu Tsai <wens@kernel.org>
+To:     Shawn Lin <shawn.lin@rock-chips.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Marc Zyngier <maz@kernel.org>,
-        David Woodhouse <dwmw2@infradead.org>
-Content-Type: text/plain; charset="UTF-8"
+        Heiko Stuebner <heiko@sntech.de>
+Cc:     Chen-Yu Tsai <wens@csie.org>, Robin Murphy <robin.murphy@arm.com>,
+        Johan Jonker <jbx6244@gmail.com>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org
+Subject: [PATCH 4/4] arm64: dts: rockchip: rk3399: Add NanoPi M4B
+Date:   Mon, 16 Nov 2020 15:52:15 +0800
+Message-Id: <20201116075215.15303-5-wens@kernel.org>
+X-Mailer: git-send-email 2.29.1
+In-Reply-To: <20201116075215.15303-1-wens@kernel.org>
+References: <20201116075215.15303-1-wens@kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Thomas,
+From: Chen-Yu Tsai <wens@csie.org>
 
-On Thu, Nov 12, 2020 at 8:16 PM Thomas Gleixner <tglx@linutronix.de> wrote:
-> The recent changes to store the MSI irqdomain pointer in struct device
-> missed that Intel DMAR does not register virtual function devices.  Due to
-> that a VF device gets the plain PCI-MSI domain assigned and then issues
-> compat MSI messages which get caught by the interrupt remapping unit.
->
-> Cure that by inheriting the irq domain from the physical function
-> device.
->
-> That's a temporary workaround. The correct fix is to inherit the irq domain
-> from the bus, but that's a larger effort which needs quite some other
-> changes to the way how x86 manages PCI and MSI domains.
->
-> Fixes: 85a8dfc57a0b ("iommm/vt-d: Store irq domain in struct device")
-> Reported-by: Jason Gunthorpe <jgg@nvidia.com>
-> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-> ---
->  drivers/iommu/intel/dmar.c |   19 ++++++++++++++++++-
->  1 file changed, 18 insertions(+), 1 deletion(-)
->
-> --- a/drivers/iommu/intel/dmar.c
-> +++ b/drivers/iommu/intel/dmar.c
-> @@ -333,6 +333,11 @@ static void  dmar_pci_bus_del_dev(struct
->         dmar_iommu_notify_scope_dev(info);
->  }
->
-> +static inline void vf_inherit_msi_domain(struct pci_dev *pdev)
-> +{
-> +       dev_set_msi_domain(&pdev->dev, dev_get_msi_domain(&pdev->physfn->dev));
+The NanoPi M4B is a minor revision of the original M4.
 
-If CONFIG_PCI_ATS is not set:
+The differences against the original Nanopi M4 that are common with the
+other M4V2 revision include:
 
-    error: 'struct pci_dev' has no member named 'physfn'
+  - microphone header removed
+  - power button added
+  - recovery button added
 
-http://kisskb.ellerman.id.au/kisskb/buildresult/14400927/
+Additional changes specific to the M4B:
 
-Gr{oetje,eeting}s,
+  - USB 3.0 hub removed; board now has 2x USB 3.0 type-A ports and 2x
+    USB 2.0 ports
+  - ADB toggle switch added; this changes the top USB 3.0 host port to
+    a peripheral port
+  - Type-C port no longer supports data or PD
+  - WiFi/Bluetooth combo chip switched to AP6256, which supports BT 5.0
+    but only 1T1R (down from 2T2R) for WiFi
 
-                        Geert
+Add a new dts file for the new board revision that shows the difference
+against the original.
 
+Signed-off-by: Chen-Yu Tsai <wens@csie.org>
+---
+ arch/arm64/boot/dts/rockchip/Makefile         |  1 +
+ .../boot/dts/rockchip/rk3399-nanopi-m4b.dts   | 52 +++++++++++++++++++
+ 2 files changed, 53 insertions(+)
+ create mode 100644 arch/arm64/boot/dts/rockchip/rk3399-nanopi-m4b.dts
+
+diff --git a/arch/arm64/boot/dts/rockchip/Makefile b/arch/arm64/boot/dts/rockchip/Makefile
+index 5a53979b7057..fd47414e40eb 100644
+--- a/arch/arm64/boot/dts/rockchip/Makefile
++++ b/arch/arm64/boot/dts/rockchip/Makefile
+@@ -32,6 +32,7 @@ dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-kobol-helios64.dtb
+ dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-leez-p710.dtb
+ dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-nanopc-t4.dtb
+ dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-nanopi-m4.dtb
++dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-nanopi-m4b.dtb
+ dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-nanopi-neo4.dtb
+ dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-orangepi.dtb
+ dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-pinebook-pro.dtb
+diff --git a/arch/arm64/boot/dts/rockchip/rk3399-nanopi-m4b.dts b/arch/arm64/boot/dts/rockchip/rk3399-nanopi-m4b.dts
+new file mode 100644
+index 000000000000..72182c58cc46
+--- /dev/null
++++ b/arch/arm64/boot/dts/rockchip/rk3399-nanopi-m4b.dts
+@@ -0,0 +1,52 @@
++// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
++/*
++ * FriendlyElec NanoPi M4B board device tree source
++ *
++ * Copyright (c) 2020 Chen-Yu Tsai <wens@csie.org>
++ */
++
++/dts-v1/;
++#include "rk3399-nanopi-m4.dts"
++
++/ {
++	model = "FriendlyElec NanoPi M4B";
++	compatible = "friendlyarm,nanopi-m4b", "rockchip,rk3399";
++
++	adc-keys {
++		compatible = "adc-keys";
++		io-channels = <&saradc 1>;
++		io-channel-names = "buttons";
++		keyup-threshold-microvolt = <1500000>;
++		poll-interval = <100>;
++
++		recovery {
++			label = "Recovery";
++			linux,code = <KEY_VENDOR>;
++			press-threshold-microvolt = <18000>;
++		};
++	};
++};
++
++/* No USB type-C PD power manager */
++/delete-node/ &fusb0;
++
++&i2c4 {
++	status = "disabled";
++};
++
++&u2phy0_host {
++	phy-supply = <&vcc5v0_usb2>;
++};
++
++&u2phy0_otg {
++	phy-supply = <&vbus_typec>;
++};
++
++&u2phy1_otg {
++	phy-supply = <&vcc5v0_usb1>;
++};
++
++&vbus_typec {
++	enable-active-high;
++	gpios = <&gpio4 RK_PD2 GPIO_ACTIVE_HIGH>;
++};
 -- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+2.29.1
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
