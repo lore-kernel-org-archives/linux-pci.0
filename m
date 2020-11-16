@@ -2,39 +2,39 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17AFAC4742C
-	for <linux-pci@archiver.kernel.org>; Mon, 16 Nov 2020 08:01:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 720A8C55ABD
+	for <linux-pci@archiver.kernel.org>; Mon, 16 Nov 2020 08:01:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A35722137B
-	for <linux-pci@archiver.kernel.org>; Mon, 16 Nov 2020 08:01:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1241F206D5
+	for <linux-pci@archiver.kernel.org>; Mon, 16 Nov 2020 08:01:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="SV4UAqJ3"
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="Qbn9UBRP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727962AbgKPHyw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 16 Nov 2020 02:54:52 -0500
-Received: from mail.kernel.org ([198.145.29.99]:48798 "EHLO mail.kernel.org"
+        id S1727916AbgKPHyv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 16 Nov 2020 02:54:51 -0500
+Received: from mail.kernel.org ([198.145.29.99]:48796 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727885AbgKPHyv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1726524AbgKPHyv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Mon, 16 Nov 2020 02:54:51 -0500
 Received: from wens.tw (mirror2.csie.ntu.edu.tw [140.112.30.76])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 985612227F;
+        by mail.kernel.org (Postfix) with ESMTPSA id 9422C2225E;
         Mon, 16 Nov 2020 07:54:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=default; t=1605513290;
-        bh=OwKfTuKSKYuNfz4bpxDopuSuiAxbNH8GnCNtt3jnfq4=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=SV4UAqJ3/GvudI4C/bJtccFBLeCbmt5tfhhoqzeIjrhMCFWXJeSa5bncjlXDA50Tn
-         uUglydtauKc3wdHaHZ1Nkgf9OwRKvxJZim3ymWdDDmd5O3tQn8bilD6t4bRyj9CqOc
-         W/SAAPttiWDEE6K6yeFJnDnePqtrALkukAaNWitw=
+        bh=czyoJqy67io6xDK6xDxmuvRYsZ4+i8k33nA8cdA7Agw=;
+        h=From:To:Cc:Subject:Date:From;
+        b=Qbn9UBRPBKJn5/ziEhFz/IuKSor6U/KqTWJqrzzHzgnWWFZHVytmTflEDNoSrcAHB
+         xkG1fq/ZxlerNDV6Z4APKfT3ZSsZkRk7RRzCrKxmjzWrvLszt2rFCWl2TN1H68GO88
+         jMjNOmeBzYevYbBqshcPGNXSPbbOGE9Fc4t/mZX8=
 Received: by wens.tw (Postfix, from userid 1000)
-        id BF4845FD7E; Mon, 16 Nov 2020 15:54:47 +0800 (CST)
+        id 7A1ED5FD44; Mon, 16 Nov 2020 15:54:47 +0800 (CST)
 From:   Chen-Yu Tsai <wens@kernel.org>
 To:     Shawn Lin <shawn.lin@rock-chips.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -46,12 +46,10 @@ Cc:     Chen-Yu Tsai <wens@csie.org>, Robin Murphy <robin.murphy@arm.com>,
         linux-rockchip@lists.infradead.org,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
         devicetree@vger.kernel.org
-Subject: [PATCH 1/4] PCI: rockchip: make ep_gpio optional
-Date:   Mon, 16 Nov 2020 15:52:12 +0800
-Message-Id: <20201116075215.15303-2-wens@kernel.org>
+Subject: [PATCH 0/4] arm64: rockchip: Fix PCIe ep-gpios requirement and Add Nanopi M4B
+Date:   Mon, 16 Nov 2020 15:52:11 +0800
+Message-Id: <20201116075215.15303-1-wens@kernel.org>
 X-Mailer: git-send-email 2.29.1
-In-Reply-To: <20201116075215.15303-1-wens@kernel.org>
-References: <20201116075215.15303-1-wens@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -60,33 +58,69 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Chen-Yu Tsai <wens@csie.org>
 
-The Rockchip PCIe controller DT binding clearly states that ep-gpios is
-an optional property. And indeed there are boards that don't require it.
+Hi everyone,
 
-Make the driver follow the binding by using devm_gpiod_get_optional()
-instead of devm_gpiod_get().
+This series mainly adds support for the new Nanopi M4B, which is a newer
+variant of the Nanopi M4.
 
-Fixes: e77f847df54c ("PCI: rockchip: Add Rockchip PCIe controller support")
-Fixes: 956cd99b35a8 ("PCI: rockchip: Separate common code from RC driver")
-Fixes: 964bac9455be ("PCI: rockchip: Split out rockchip_pcie_parse_dt() to parse DT")
-Signed-off-by: Chen-Yu Tsai <wens@csie.org>
----
- drivers/pci/controller/pcie-rockchip.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+The differences against the original Nanopi M4 that are common with the
+other M4V2 revision include:
 
-diff --git a/drivers/pci/controller/pcie-rockchip.c b/drivers/pci/controller/pcie-rockchip.c
-index 904dec0d3a88..c95950e9004f 100644
---- a/drivers/pci/controller/pcie-rockchip.c
-+++ b/drivers/pci/controller/pcie-rockchip.c
-@@ -118,7 +118,7 @@ int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
- 	}
- 
- 	if (rockchip->is_rc) {
--		rockchip->ep_gpio = devm_gpiod_get(dev, "ep", GPIOD_OUT_HIGH);
-+		rockchip->ep_gpio = devm_gpiod_get_optional(dev, "ep", GPIOD_OUT_HIGH);
- 		if (IS_ERR(rockchip->ep_gpio)) {
- 			dev_err(dev, "missing ep-gpios property in node\n");
- 			return PTR_ERR(rockchip->ep_gpio);
+  - microphone header removed
+  - power button added
+  - recovery button added
+
+Additional changes specific to the M4B:
+
+  - USB 3.0 hub removed; board now has 2x USB 3.0 type-A ports and 2x
+    USB 2.0 ports
+  - ADB toggle switch added; this changes the top USB 3.0 host port to
+    a peripheral port
+  - Type-C port no longer supports data or PD
+  - WiFi/Bluetooth combo chip switched to AP6256, which supports BT 5.0
+    but only 1T1R (down from 2T2R) for WiFi
+
+While working on this, I found that for the M4 family, the PCIe reset
+pin (from the M.2 expansion board) was not wired to the SoC. Only the
+NanoPC T4 has this wired. This ended up in patches 1 and 3.
+
+Patch 1 makes ep_gpio in the Rockchip PCIe driver optional. This property
+is optional in the DT binding, so this just makes the driver adhere to
+the binding.
+
+Patch 2 adds a new compatible string for the new board.
+
+Patch 3 moves the ep-gpios property of the pcie controller from the
+common nanopi4.dtsi file to the nanopc-t4.dts file.
+
+Patch 4 adds a new device tree file for the new board. It includes the
+original device tree for the M4, and then lists the differences.
+
+Given that patch 3 would make PCIe unusable without patch 1, I suggest
+merging patch 1 through the PCI tree as a fix for 5.10, and the rest
+for 5.11 through the Rockchip tree.
+
+Please have a look. The changes are mostly trivial.
+
+
+Regards
+ChenYu
+
+Chen-Yu Tsai (4):
+  PCI: rockchip: make ep_gpio optional
+  dt-bindings: arm: rockchip: Add FriendlyARM NanoPi M4B
+  arm64: dts: rockchip: nanopi4: Move ep-gpios property to nanopc-t4
+  arm64: dts: rockchip: rk3399: Add NanoPi M4B
+
+ .../devicetree/bindings/arm/rockchip.yaml     |  1 +
+ arch/arm64/boot/dts/rockchip/Makefile         |  1 +
+ .../boot/dts/rockchip/rk3399-nanopc-t4.dts    |  1 +
+ .../boot/dts/rockchip/rk3399-nanopi-m4b.dts   | 52 +++++++++++++++++++
+ .../boot/dts/rockchip/rk3399-nanopi4.dtsi     |  1 -
+ drivers/pci/controller/pcie-rockchip.c        |  2 +-
+ 6 files changed, 56 insertions(+), 2 deletions(-)
+ create mode 100644 arch/arm64/boot/dts/rockchip/rk3399-nanopi-m4b.dts
+
 -- 
 2.29.1
 
