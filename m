@@ -2,97 +2,148 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 174BEC2D0E4
-	for <linux-pci@archiver.kernel.org>; Tue, 17 Nov 2020 09:54:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11E81C2D0E4
+	for <linux-pci@archiver.kernel.org>; Tue, 17 Nov 2020 10:53:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A85A22168B
-	for <linux-pci@archiver.kernel.org>; Tue, 17 Nov 2020 09:54:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9EBAA2463F
+	for <linux-pci@archiver.kernel.org>; Tue, 17 Nov 2020 10:53:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="zSRv/+sh";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="nZwJf4bF"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="G03gADzw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727661AbgKQJxw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 17 Nov 2020 04:53:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55660 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727656AbgKQJxv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Nov 2020 04:53:51 -0500
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6765C0613CF;
-        Tue, 17 Nov 2020 01:53:51 -0800 (PST)
-From:   Thomas Gleixner <tglx@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1605606830;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=w88X9FArUN9Ckqzryj/SEcOf2eejeb528XBdbye6pQE=;
-        b=zSRv/+sh88Dr/9rk83MdKS6DgvvEHpDnOQI56HgqewdzAknFs2efNxcR65h4YMsxaGcpK7
-        gH3ikqXPE9y85lFTK/k080y7gE9CGp1EH4LTE/imwJuLN7ZV9I43/iinHvcjMbdI6SaVS1
-        2a+cB3WfHEkM6T3A1lvCqVLgt3mCSVRZUAntkbkq+oGyXzA45k3JOA0uPfBuBSBkFAkV3Z
-        GGxS3A2FKc5sslgWbRqR0tI+AZDV2Ad8D3gBEOZ+glgJyGHYdo0iqwEVMx7qp9zW2RAoQC
-        EIHKhV+/iUGMOdEtZZxR6UJyfI0PW53BpC+LpJXa1I4GLgm3n8qZF1ewD8ix3Q==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1605606830;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=w88X9FArUN9Ckqzryj/SEcOf2eejeb528XBdbye6pQE=;
-        b=nZwJf4bFj/fTcUvLbJX3tMEZeH04pRYlzZCgpjdvmfWziaeYnqbVXpXy88KSEJnqy8Ny0W
-        ugc7/yMp0qHYPzAw==
-To:     "Eric W. Biederman" <ebiederm@xmission.com>,
-        Bjorn Helgaas <helgaas@kernel.org>
-Cc:     "Guilherme G. Piccoli" <gpiccoli@canonical.com>, lukas@wunner.de,
-        linux-pci@vger.kernel.org, kernelfans@gmail.com,
-        andi@firstfloor.org, hpa@zytor.com, bhe@redhat.com, x86@kernel.org,
-        okaya@kernel.org, mingo@redhat.com, jay.vosburgh@canonical.com,
-        dyoung@redhat.com, gavin.guo@canonical.com, bp@alien8.de,
-        bhelgaas@google.com, Guowen Shan <gshan@redhat.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>, kernel@gpiccoli.net,
-        kexec@lists.infradead.org, linux-kernel@vger.kernel.org,
-        ddstreet@canonical.com, vgoyal@redhat.com
-Subject: Re: [PATCH 1/3] x86/quirks: Scan all busses for early PCI quirks
-In-Reply-To: <87h7poeqqn.fsf@x220.int.ebiederm.org>
-References: <20201117001907.GA1342260@bjorn-Precision-5520> <87h7poeqqn.fsf@x220.int.ebiederm.org>
-Date:   Tue, 17 Nov 2020 10:53:49 +0100
-Message-ID: <873618xqaa.fsf@nanos.tec.linutronix.de>
+        id S1727218AbgKQKxJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 17 Nov 2020 05:53:09 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:44644 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726265AbgKQKxI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Nov 2020 05:53:08 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AHAhpBN075294;
+        Tue, 17 Nov 2020 10:52:51 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=IodeTKUioP4hbL7In6IGk5dfNg6p9XSvZPTeUJHk8iQ=;
+ b=G03gADzwfGRenrT8dFA0l2VmOREmlXjdG74vu4Fq3k1Hi0GKB4v+Yo0OCpL0/LREIIRK
+ yW5VuvjYGg5HK85nif3NorlRM21NA/ti+hFEipEivbFulRQ9Wjbr9kqqmvdI/ujVwFFA
+ zqOVSaP1pXfhPWrw8yPRKP2rCFzDjdytH7N+cVQENYZVPyNvdyntzBR6p9AZyq7t8FzR
+ RM3bE6iol5VL3Yk2ZRC9z0j7r3c48Rkl+JS+t4SzPsQ+bAA55UgO483aSr2sA7XbQTJb
+ tya1bTQBJ+dtoPhiJhK5xlvkltjhuJc0jY1HtbZbt2TVFrsAlu0A5keE+JVo1S85uzT/ ig== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 34t7vn1u99-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 17 Nov 2020 10:52:50 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AHAjajW150840;
+        Tue, 17 Nov 2020 10:50:50 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by aserp3030.oracle.com with ESMTP id 34uspt77s7-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 17 Nov 2020 10:50:50 +0000
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 0AHAnRlt160283;
+        Tue, 17 Nov 2020 10:50:49 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3030.oracle.com with ESMTP id 34uspt77r2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 17 Nov 2020 10:50:49 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0AHAoiFu027667;
+        Tue, 17 Nov 2020 10:50:44 GMT
+Received: from [10.159.144.149] (/10.159.144.149)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 17 Nov 2020 02:50:43 -0800
+Subject: Re: remove dma_virt_ops v2
+To:     santosh.shilimkar@oracle.com, Jason Gunthorpe <jgg@ziepe.ca>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Bernard Metzler <bmt@zurich.ibm.com>,
+        Zhu Yanjun <yanjunz@nvidia.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
+        Mike Marciniszyn <mike.marciniszyn@cornelisnetworks.com>,
+        linux-rdma@vger.kernel.org, rds-devel@oss.oracle.com,
+        linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+References: <20201106181941.1878556-1-hch@lst.de>
+ <20201112094030.GA19550@lst.de> <20201112132353.GQ244516@ziepe.ca>
+ <2f644747-4a4f-7e03-d857-c2d7879054dd@oracle.com>
+From:   Ka-Cheong Poon <ka-cheong.poon@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <6da0d3b0-2db7-4c7e-145a-8f76733e9978@oracle.com>
+Date:   Tue, 17 Nov 2020 18:50:33 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.11.0
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <2f644747-4a4f-7e03-d857-c2d7879054dd@oracle.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9807 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 suspectscore=0
+ malwarescore=0 bulkscore=0 impostorscore=0 lowpriorityscore=0 spamscore=0
+ adultscore=0 mlxscore=0 priorityscore=1501 phishscore=0 clxscore=1011
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2011170079
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Nov 16 2020 at 19:06, Eric W. Biederman wrote:
-> Bjorn Helgaas <helgaas@kernel.org> writes:
-> My two top candidates are poking the IOMMUs early to shut things off,
-> and figuring out if we can delay enabling interrupts until we have
-> initialized pci.
+On 11/13/20 1:36 AM, santosh.shilimkar@oracle.com wrote:
+> + Ka-Cheong
+> 
+> On 11/12/20 5:23 AM, Jason Gunthorpe wrote:
+>> On Thu, Nov 12, 2020 at 10:40:30AM +0100, Christoph Hellwig wrote:
+>>> ping?
+>>>
+>>> On Fri, Nov 06, 2020 at 07:19:31PM +0100, Christoph Hellwig wrote:
+>>>> Hi Jason,
+>>>>
+>>>> this series switches the RDMA core to opencode the special case of
+>>>> devices bypassing the DMA mapping in the RDMA ULPs.  The virt ops
+>>>> have caused a bit of trouble due to the P2P code node working with
+>>>> them due to the fact that we'd do two dma mapping iterations for a
+>>>> single I/O, but also are a bit of layering violation and lead to
+>>>> more code than necessary.
+>>>>
+>>>> Tested with nvme-rdma over rxe.
+>>>>
+>>>> Note that the rds changes are untested, as I could not find any
+>>>> simple rds test setup.
+>>>>
+>>>> Changes since v2:
+>>>>   - simplify the INFINIBAND_VIRT_DMA dependencies
+>>>>   - add a ib_uses_virt_dma helper
+>>>>   - use ib_uses_virt_dma in nvmet-rdma to disable p2p for virt_dma devices
+>>>>   - use ib_dma_max_seg_size in umem
+>>>>   - stop using dmapool in rds
+>>>>
+>>>> Changes since v1:
+>>>>   - disable software RDMA drivers for highmem configs
+>>>>   - update the PCI commit logs
+>>
+>> Santosh can you please check the RDA parts??
+>>
+> 
+> Hi Ka-Cheong,
+> 
+> Can you please check Christoph change [1] which clean-up
+> dma-pool API to use ib_dma_* and slab allocator ? This was added
+> as part of your "net/rds: Use DMA memory pool allocation for rds_header"
+> commit.
 
-Keeping interrupts disabled post PCI initialization would be nice, but
-that requires feeding the whole init machinery through a shredder and
-collecting the bits and pieces.
 
-> Poking at IOMMUs early should work for most systems with ``enterprise''
-> hardware.  Systems where people care about kdump the most.
+I applied the patch and ran some basic testing.  And it seems to
+work fine.
 
-The IOMMU IRQ remapping part _is_ initialized early and _before_
-interrupts are enabled.
+Thanks.
 
-But that does not solve the problem either simply because then the IOMMU
-will catch the rogue MSIs and you get an interrupt storm on the IOMMU
-error interrupt.
 
-This one is not going to be turned off because the IOMMU error interrupt
-handler will handle each of them and tell the core code that everything
-is under control.
+-- 
+K. Poon
+ka-cheong.poon@oracle.com
 
-As I explained several times now, the only way to shut this up reliably
-is at the source. Curing the symptom is almost never a good solution.
 
-Thanks,
-
-        tglx
