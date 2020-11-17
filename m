@@ -2,38 +2,38 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A4B6C5519F
-	for <linux-pci@archiver.kernel.org>; Tue, 17 Nov 2020 19:20:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 651B7C64E7B
+	for <linux-pci@archiver.kernel.org>; Tue, 17 Nov 2020 19:20:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1D3A224248
-	for <linux-pci@archiver.kernel.org>; Tue, 17 Nov 2020 19:20:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3A21524654
+	for <linux-pci@archiver.kernel.org>; Tue, 17 Nov 2020 19:20:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726980AbgKQTUh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 17 Nov 2020 14:20:37 -0500
-Received: from mga04.intel.com ([192.55.52.120]:31769 "EHLO mga04.intel.com"
+        id S1729252AbgKQTUo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 17 Nov 2020 14:20:44 -0500
+Received: from mga04.intel.com ([192.55.52.120]:31785 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725771AbgKQTUg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 17 Nov 2020 14:20:36 -0500
-IronPort-SDR: CcSUa+peULv8BX74RGANtd/niPwF2V133bDGALbwu4jlLVZUz+R5TTTV4l4F1WEqQXNGHGsPlq
- 6ftkFLtkHiPw==
-X-IronPort-AV: E=McAfee;i="6000,8403,9808"; a="168417195"
+        id S1729126AbgKQTUo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 17 Nov 2020 14:20:44 -0500
+IronPort-SDR: 9fIbpC3yPWIoSFIoDj2cdsSIXuFWGr1fMBTVcgtRVRhIPO/F8KLS30/0Te4r5LjY+mKV27tZLk
+ I1IHiIw9lXBg==
+X-IronPort-AV: E=McAfee;i="6000,8403,9808"; a="168417225"
 X-IronPort-AV: E=Sophos;i="5.77,486,1596524400"; 
-   d="scan'208";a="168417195"
+   d="scan'208";a="168417225"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Nov 2020 11:20:34 -0800
-IronPort-SDR: u06Rhl411ETR6L9Sn2gs33PHg6bN7q6fD/zxaXMBHSBz31WvQIX4MZcNWLnbY9H3fvTe/p8nEc
- KPkol5p0/KUA==
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Nov 2020 11:20:43 -0800
+IronPort-SDR: ltYwOni9YEYq//KTPbYVW7fAuy3sNtT1577ZHG/raw39ul2ZmQqzTmrjLu7bNxuRC2x3NIHh1m
+ ZBuMGvFn/bNw==
 X-IronPort-AV: E=Sophos;i="5.77,486,1596524400"; 
-   d="scan'208";a="533931666"
+   d="scan'208";a="533931727"
 Received: from rojasmor-mobl1.amr.corp.intel.com (HELO arch-ashland-svkelley.intel.com) ([10.255.231.24])
-  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Nov 2020 11:20:33 -0800
+  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Nov 2020 11:20:43 -0800
 From:   Sean V Kelley <sean.v.kelley@intel.com>
 To:     bhelgaas@google.com, Jonathan.Cameron@huawei.com,
         xerces.zhao@gmail.com, rafael.j.wysocki@intel.com,
@@ -41,105 +41,122 @@ To:     bhelgaas@google.com, Jonathan.Cameron@huawei.com,
         sathyanarayanan.kuppuswamy@intel.com, qiuxu.zhuo@intel.com
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         Sean V Kelley <sean.v.kelley@intel.com>
-Subject: [PATCH v11 00/16] Add RCEC handling to PCI/AER
-Date:   Tue, 17 Nov 2020 11:19:38 -0800
-Message-Id: <20201117191954.1322844-1-sean.v.kelley@intel.com>
+Subject: [PATCH v11 08/16] PCI/ERR: Use "bridge" for clarity in pcie_do_recovery()
+Date:   Tue, 17 Nov 2020 11:19:46 -0800
+Message-Id: <20201117191954.1322844-9-sean.v.kelley@intel.com>
 X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20201117191954.1322844-1-sean.v.kelley@intel.com>
+References: <20201117191954.1322844-1-sean.v.kelley@intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Changes since v10 [1] and pci/master tree [2]:
+pcie_do_recovery() may be called with "dev" being either a bridge (Root
+Port or Switch Downstream Port) or an Endpoint.  The bulk of the function
+deals with the bridge, so if we start with an Endpoint, we reset "dev" to
+be the bridge leading to it.
 
-- No functional changes. Tested with aer injection.
+For clarity, replace "dev" in the body of the function with "bridge".  No
+functional change intended.
 
-AER: aer_root_reset() non-native handling
-- Noted lack of historical context on isolation of both the
-pci_bus_error_reset() and the clearing of Root Error Status. In fact,
-the call to aer_enable_rootport() likewise disables system error generation
-in response to error messages around the clearing of the error status. So
-retained the flow and the wrapping of the  "clear, reset, enable".
+[bhelgaas: commit log, split pieces out so this is pure rename, also
+replace "dev" with "bridge" in messages and pci_uevent_ers()]
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Link: https://lore.kernel.org/r/20201002184735.1229220-6-seanvk.dev@oregontracks.org
+Signed-off-by: Sean V Kelley <sean.v.kelley@intel.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+---
+ drivers/pci/pcie/err.c | 37 ++++++++++++++++++++-----------------
+ 1 file changed, 20 insertions(+), 17 deletions(-)
 
-PCI/RCEC: Add RCiEP's linked RCEC to AER/ERR
-- Added an extra check on existence of dev->rcec via the assignment of
-the variable aer in combination with the existing check on
-pcie_aer_is_native().
-
-[1] https://lore.kernel.org/linux-pci/20201106001444.667232-1-sean.v.kelley@intel.com/
-[2] https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/log/
-
-
-Root Complex Event Collectors (RCEC) provide support for terminating error
-and PME messages from Root Complex Integrated Endpoints (RCiEPs).  An RCEC
-resides on a Bus in the Root Complex. Multiple RCECs can in fact reside on
-a single bus. An RCEC will explicitly declare supported RCiEPs through the
-Root Complex Endpoint Association Extended Capability.
-
-(See PCIe 5.0-1, sections 1.3.2.3 (RCiEP), and 7.9.10 (RCEC Ext. Cap.))
-
-The kernel lacks handling for these RCECs and the error messages received
-from their respective associated RCiEPs. More recently, a new CPU
-interconnect, Compute eXpress Link (CXL) depends on RCEC capabilities for
-purposes of error messaging from CXL 1.1 supported RCiEP devices.
-
-DocLink: https://www.computeexpresslink.org/
-
-This use case is not limited to CXL. Existing hardware today includes
-support for RCECs, such as the Denverton microserver product
-family. Future hardware will be forthcoming.
-
-(See Intel Document, Order number: 33061-003US)
-
-So services such as AER or PME could be associated with an RCEC driver.
-In the case of CXL, if an RCiEP (i.e., CXL 1.1 device) is associated with a
-platform's RCEC it shall signal PME and AER error conditions through that
-RCEC.
-
-Towards the above use cases, add the missing RCEC class and extend the
-PCIe Root Port and service drivers to allow association of RCiEPs to their
-respective parent RCEC and facilitate handling of terminating error and PME
-messages.
-
-Tested-by: Jonathan Cameron <Jonathan.Cameron@huawei.com> #non-native/no RCEC
-
-Qiuxu Zhuo (4):
-  PCI/RCEC: Add RCEC class code and extended capability
-  PCI/RCEC: Bind RCEC devices to the Root Port driver
-  PCI/RCEC: Add RCiEP's linked RCEC to AER/ERR
-  PCI/AER: Add RCEC AER error injection support
-
-Sean V Kelley (12):
-  AER: aer_root_reset() non-native handling
-  PCI/RCEC: Cache RCEC capabilities in pci_init_capabilities()
-  PCI/ERR: Rename reset_link() to reset_subordinates()
-  PCI/ERR: Simplify by using pci_upstream_bridge()
-  PCI/ERR: Simplify by computing pci_pcie_type() once
-  PCI/ERR: Use "bridge" for clarity in pcie_do_recovery()
-  PCI/ERR: Avoid negated conditional for clarity
-  PCI/ERR: Add pci_walk_bridge() to pcie_do_recovery()
-  PCI/ERR: Limit AER resets in pcie_do_recovery()
-  PCI/RCEC: Add pcie_link_rcec() to associate RCiEPs
-  PCI/AER: Add pcie_walk_rcec() to RCEC AER handling
-  PCI/PME: Add pcie_walk_rcec() to RCEC PME handling
-
- drivers/pci/pci.h               |  29 ++++-
- drivers/pci/pcie/Makefile       |   2 +-
- drivers/pci/pcie/aer.c          |  84 ++++++++++----
- drivers/pci/pcie/aer_inject.c   |   5 +-
- drivers/pci/pcie/err.c          |  93 +++++++++++-----
- drivers/pci/pcie/pme.c          |  15 ++-
- drivers/pci/pcie/portdrv_core.c |   9 +-
- drivers/pci/pcie/portdrv_pci.c  |   8 +-
- drivers/pci/pcie/rcec.c         | 190 ++++++++++++++++++++++++++++++++
- drivers/pci/probe.c             |   2 +
- include/linux/pci.h             |   5 +
- include/linux/pci_ids.h         |   1 +
- include/uapi/linux/pci_regs.h   |   7 ++
- 13 files changed, 386 insertions(+), 64 deletions(-)
- create mode 100644 drivers/pci/pcie/rcec.c
-
---
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index 7a5af873d8bc..46a5b84f8842 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -151,24 +151,27 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+ 		pci_ers_result_t (*reset_subordinates)(struct pci_dev *pdev))
+ {
+ 	int type = pci_pcie_type(dev);
+-	pci_ers_result_t status = PCI_ERS_RESULT_CAN_RECOVER;
++	struct pci_dev *bridge;
+ 	struct pci_bus *bus;
++	pci_ers_result_t status = PCI_ERS_RESULT_CAN_RECOVER;
+ 
+ 	/*
+-	 * Error recovery runs on all subordinates of the first downstream port.
+-	 * If the downstream port detected the error, it is cleared at the end.
++	 * Error recovery runs on all subordinates of the bridge.  If the
++	 * bridge detected the error, it is cleared at the end.
+ 	 */
+ 	if (!(type == PCI_EXP_TYPE_ROOT_PORT ||
+ 	      type == PCI_EXP_TYPE_DOWNSTREAM))
+-		dev = pci_upstream_bridge(dev);
+-	bus = dev->subordinate;
++		bridge = pci_upstream_bridge(dev);
++	else
++		bridge = dev;
+ 
+-	pci_dbg(dev, "broadcast error_detected message\n");
++	bus = bridge->subordinate;
++	pci_dbg(bridge, "broadcast error_detected message\n");
+ 	if (state == pci_channel_io_frozen) {
+ 		pci_walk_bus(bus, report_frozen_detected, &status);
+-		status = reset_subordinates(dev);
++		status = reset_subordinates(bridge);
+ 		if (status != PCI_ERS_RESULT_RECOVERED) {
+-			pci_warn(dev, "subordinate device reset failed\n");
++			pci_warn(bridge, "subordinate device reset failed\n");
+ 			goto failed;
+ 		}
+ 	} else {
+@@ -177,7 +180,7 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+ 
+ 	if (status == PCI_ERS_RESULT_CAN_RECOVER) {
+ 		status = PCI_ERS_RESULT_RECOVERED;
+-		pci_dbg(dev, "broadcast mmio_enabled message\n");
++		pci_dbg(bridge, "broadcast mmio_enabled message\n");
+ 		pci_walk_bus(bus, report_mmio_enabled, &status);
+ 	}
+ 
+@@ -188,27 +191,27 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+ 		 * drivers' slot_reset callbacks?
+ 		 */
+ 		status = PCI_ERS_RESULT_RECOVERED;
+-		pci_dbg(dev, "broadcast slot_reset message\n");
++		pci_dbg(bridge, "broadcast slot_reset message\n");
+ 		pci_walk_bus(bus, report_slot_reset, &status);
+ 	}
+ 
+ 	if (status != PCI_ERS_RESULT_RECOVERED)
+ 		goto failed;
+ 
+-	pci_dbg(dev, "broadcast resume message\n");
++	pci_dbg(bridge, "broadcast resume message\n");
+ 	pci_walk_bus(bus, report_resume, &status);
+ 
+-	if (pcie_aer_is_native(dev))
+-		pcie_clear_device_status(dev);
+-	pci_aer_clear_nonfatal_status(dev);
+-	pci_info(dev, "device recovery successful\n");
++	if (pcie_aer_is_native(bridge))
++		pcie_clear_device_status(bridge);
++	pci_aer_clear_nonfatal_status(bridge);
++	pci_info(bridge, "device recovery successful\n");
+ 	return status;
+ 
+ failed:
+-	pci_uevent_ers(dev, PCI_ERS_RESULT_DISCONNECT);
++	pci_uevent_ers(bridge, PCI_ERS_RESULT_DISCONNECT);
+ 
+ 	/* TODO: Should kernel panic here? */
+-	pci_info(dev, "device recovery failed\n");
++	pci_info(bridge, "device recovery failed\n");
+ 
+ 	return status;
+ }
+-- 
 2.29.2
 
