@@ -7,33 +7,33 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A46BC2D0E4
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63E58C63697
 	for <linux-pci@archiver.kernel.org>; Tue, 17 Nov 2020 19:21:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E03FD221FC
-	for <linux-pci@archiver.kernel.org>; Tue, 17 Nov 2020 19:21:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 140F7221FE
+	for <linux-pci@archiver.kernel.org>; Tue, 17 Nov 2020 19:21:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729168AbgKQTUn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 17 Nov 2020 14:20:43 -0500
+        id S1729327AbgKQTUr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 17 Nov 2020 14:20:47 -0500
 Received: from mga04.intel.com ([192.55.52.120]:31785 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729126AbgKQTUn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 17 Nov 2020 14:20:43 -0500
-IronPort-SDR: PPeduYq/YTQwm6ILVahqU1ubeJxUp4CNSQwDcIuw/kRRczFtlRmmig4NcAM1B9xp9D7rmsoKqX
- EOz7myP2Go1A==
-X-IronPort-AV: E=McAfee;i="6000,8403,9808"; a="168417223"
+        id S1729126AbgKQTUp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 17 Nov 2020 14:20:45 -0500
+IronPort-SDR: xYT43CdcWBNEpvcUOHuUdjShCy5C33QIsBL2+jKpJ1/5P/PHfydBO1a3JL386BA6DlijMFdHP4
+ OHLzGzHHbK4A==
+X-IronPort-AV: E=McAfee;i="6000,8403,9808"; a="168417229"
 X-IronPort-AV: E=Sophos;i="5.77,486,1596524400"; 
-   d="scan'208";a="168417223"
+   d="scan'208";a="168417229"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Nov 2020 11:20:42 -0800
-IronPort-SDR: pCqq7hvm1pnj/K5R1nxFGOMNS6Jt8J9KpfVLYLtlylHwO2GiAAwMAcslZICrEEe44KMpCPM3Pq
- 0R0ec49anb1A==
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Nov 2020 11:20:45 -0800
+IronPort-SDR: 4LIM0NyPZiCRmIFfKC5eQiLzn5Ns8IeTMShTtt9W1+SjV2inUNMFVwPuRF7xmnohVizd6/SMDq
+ 0NxhwomkttKQ==
 X-IronPort-AV: E=Sophos;i="5.77,486,1596524400"; 
-   d="scan'208";a="533931721"
+   d="scan'208";a="533931730"
 Received: from rojasmor-mobl1.amr.corp.intel.com (HELO arch-ashland-svkelley.intel.com) ([10.255.231.24])
-  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Nov 2020 11:20:42 -0800
+  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Nov 2020 11:20:44 -0800
 From:   Sean V Kelley <sean.v.kelley@intel.com>
 To:     bhelgaas@google.com, Jonathan.Cameron@huawei.com,
         xerces.zhao@gmail.com, rafael.j.wysocki@intel.com,
@@ -41,9 +41,9 @@ To:     bhelgaas@google.com, Jonathan.Cameron@huawei.com,
         sathyanarayanan.kuppuswamy@intel.com, qiuxu.zhuo@intel.com
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         Sean V Kelley <sean.v.kelley@intel.com>
-Subject: [PATCH v11 07/16] PCI/ERR: Simplify by computing pci_pcie_type() once
-Date:   Tue, 17 Nov 2020 11:19:45 -0800
-Message-Id: <20201117191954.1322844-8-sean.v.kelley@intel.com>
+Subject: [PATCH v11 09/16] PCI/ERR: Avoid negated conditional for clarity
+Date:   Tue, 17 Nov 2020 11:19:47 -0800
+Message-Id: <20201117191954.1322844-10-sean.v.kelley@intel.com>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201117191954.1322844-1-sean.v.kelley@intel.com>
 References: <20201117191954.1322844-1-sean.v.kelley@intel.com>
@@ -53,8 +53,8 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Instead of calling pci_pcie_type(dev) twice, call it once and save the
-result.  No functional change intended.
+Reverse the sense of the Root Port/Downstream Port conditional for clarity.
+No functional change intended.
 
 [bhelgaas: split to separate patch]
 Link: https://lore.kernel.org/r/20201002184735.1229220-6-seanvk.dev@oregontracks.org
@@ -62,32 +62,29 @@ Signed-off-by: Sean V Kelley <sean.v.kelley@intel.com>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 Acked-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 ---
- drivers/pci/pcie/err.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/pci/pcie/err.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index 05f61da5ed9d..7a5af873d8bc 100644
+index 46a5b84f8842..931e75f2549d 100644
 --- a/drivers/pci/pcie/err.c
 +++ b/drivers/pci/pcie/err.c
-@@ -150,6 +150,7 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
- 		pci_channel_state_t state,
- 		pci_ers_result_t (*reset_subordinates)(struct pci_dev *pdev))
- {
-+	int type = pci_pcie_type(dev);
- 	pci_ers_result_t status = PCI_ERS_RESULT_CAN_RECOVER;
- 	struct pci_bus *bus;
- 
-@@ -157,8 +158,8 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
- 	 * Error recovery runs on all subordinates of the first downstream port.
- 	 * If the downstream port detected the error, it is cleared at the end.
+@@ -159,11 +159,11 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+ 	 * Error recovery runs on all subordinates of the bridge.  If the
+ 	 * bridge detected the error, it is cleared at the end.
  	 */
--	if (!(pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
--	      pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM))
-+	if (!(type == PCI_EXP_TYPE_ROOT_PORT ||
-+	      type == PCI_EXP_TYPE_DOWNSTREAM))
- 		dev = pci_upstream_bridge(dev);
- 	bus = dev->subordinate;
+-	if (!(type == PCI_EXP_TYPE_ROOT_PORT ||
+-	      type == PCI_EXP_TYPE_DOWNSTREAM))
+-		bridge = pci_upstream_bridge(dev);
+-	else
++	if (type == PCI_EXP_TYPE_ROOT_PORT ||
++	    type == PCI_EXP_TYPE_DOWNSTREAM)
+ 		bridge = dev;
++	else
++		bridge = pci_upstream_bridge(dev);
  
+ 	bus = bridge->subordinate;
+ 	pci_dbg(bridge, "broadcast error_detected message\n");
 -- 
 2.29.2
 
