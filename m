@@ -2,136 +2,95 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 506CEC5519F
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Nov 2020 10:38:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 713DFC6379D
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Nov 2020 11:15:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DF1D022266
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Nov 2020 10:38:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 350AD24181
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Nov 2020 11:15:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725964AbgKRKiK convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 18 Nov 2020 05:38:10 -0500
-Received: from fralinode-sdnproxy-1.icoremail.net ([172.104.134.221]:61492
-        "HELO fralinode-sdnproxy-1.icoremail.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with SMTP id S1725613AbgKRKiJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Nov 2020 05:38:09 -0500
-Received: from [192.168.1.100] (unknown [218.77.105.7])
-        by c1app9 (Coremail) with SMTP id CQINCgBHW519+bRfB5WGAA--.58353S2;
-        Wed, 18 Nov 2020 18:37:50 +0800 (CST)
-Content-Type: text/plain;
-        charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 13.4 \(3608.120.23.2.4\))
-Subject: Re: [RFC PATCH V2] acpi/irq: Add stacked IRQ domain support to PCI
- interrupt link
-From:   Chen Baozi <chenbaozi@phytium.com.cn>
-In-Reply-To: <20201117185720.GA1397876@bjorn-Precision-5520>
-Date:   Wed, 18 Nov 2020 18:37:49 +0800
-Cc:     Ard Biesheuvel <ardb@kernel.org>, Guohanjun <guohanjun@huawei.com>,
-        Marc Zyngier <maz@kernel.org>,
+        id S1727070AbgKRLPK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 18 Nov 2020 06:15:10 -0500
+Received: from mail-oi1-f193.google.com ([209.85.167.193]:37552 "EHLO
+        mail-oi1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726156AbgKRLPJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Nov 2020 06:15:09 -0500
+Received: by mail-oi1-f193.google.com with SMTP id m17so1791637oie.4;
+        Wed, 18 Nov 2020 03:15:09 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=D8wT37MkPFkyxY6qYH5+6Fkhw2mpanFwYZDumxMMKKk=;
+        b=HyHYGweC6n65p+vjQ8/8miLZYweHigIBz4YeORsAnKGEDjb452OSKvcYNxHXy1irjb
+         hXFSzv1aZ8usyQsRJzDyuhWX9Vb9hA8ttiY0EX89XSYccfCS3TsK+Ub1KJL8mnPeHUaz
+         cSVp8AfSzbq1bKTxx2CRAvNqFMde6JcfVy20IYZO4iWDvsUrL+pOcnppd+4tu3bXDEdo
+         B97MI/Xf2LF1AvSzWL2Kr3XFRcw5cbaiHHy7sYFa5qJXwqGHzqghI+WimeUcyfoBpVQp
+         uHDdE1gAQSXPYC6yc/N0l1RP1v8SCI+0f0gOQ5nwvMyhaHTcNKwhrCyTkG2lz/obF5O5
+         TGVw==
+X-Gm-Message-State: AOAM530BapPIJyxlarGunAZBc1jK9QuAlpvCaP/HKkA84OnSf0ZvHS2d
+        gxEyJBuLRpQdVCgc3n1FW9D9gTUSmkx9a5Y3t8g=
+X-Google-Smtp-Source: ABdhPJzei9Pt9brHCLe1ebo8Ar52GK3xgnsIYzUePmBrlhAXtq1sMyLFWo7UO2GTITvUtXBAJsO4hUqZYtB8eqd5Eeg=
+X-Received: by 2002:aca:c4c9:: with SMTP id u192mr2294643oif.69.1605698108951;
+ Wed, 18 Nov 2020 03:15:08 -0800 (PST)
+MIME-Version: 1.0
+References: <20201111054356.793390-1-ben.widawsky@intel.com>
+ <20201111054356.793390-2-ben.widawsky@intel.com> <CAJZ5v0i7fcoBe5o-J7q5fYW_1nUYJ-QdshWOBV5fFf85rD_sDA@mail.gmail.com>
+ <CAPcyv4i6MCu6RmLCyE+K-j3bbtrYeA+hJXL4+Zy_Tfhmwv2ErA@mail.gmail.com>
+In-Reply-To: <CAPcyv4i6MCu6RmLCyE+K-j3bbtrYeA+hJXL4+Zy_Tfhmwv2ErA@mail.gmail.com>
+From:   "Rafael J. Wysocki" <rafael@kernel.org>
+Date:   Wed, 18 Nov 2020 12:14:56 +0100
+Message-ID: <CAJZ5v0j_ReK3AGDdw7fLvmw_7knECCg2U_huKgJzQeLCy8smug@mail.gmail.com>
+Subject: Re: [RFC PATCH 1/9] cxl/acpi: Add an acpi_cxl module for the CXL interconnect
+To:     Dan Williams <dan.j.williams@intel.com>
+Cc:     "Rafael J. Wysocki" <rafael@kernel.org>,
+        Ben Widawsky <ben.widawsky@intel.com>,
+        linux-cxl@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Ira Weiny <ira.weiny@intel.com>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        "Kelley, Sean V" <sean.v.kelley@intel.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Content-Transfer-Encoding: 8BIT
-Message-Id: <C1B76F68-1692-4E46-90BD-33BE74B445FF@phytium.com.cn>
-References: <20201117185720.GA1397876@bjorn-Precision-5520>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-X-Mailer: Apple Mail (2.3608.120.23.2.4)
-X-CM-TRANSID: CQINCgBHW519+bRfB5WGAA--.58353S2
-X-Coremail-Antispam: 1UD129KBjvJXoWxXF4fGw4kGr48tryUCF1kGrg_yoW5WFWrpF
-        WrK3sxJrykGr4FyFn7Aw1FvFZ3ZwsxtFW5J34kG3y3Za15Xr1IgF1xtFW5X3ZrWrn3KF4S
-        qF13t395Wa98XFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUvqb7Iv0xC_Kw4lb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I2
-        0VC2zVCF04k26cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rw
-        A2F7IY1VAKz4vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_JFI_Gr1l84ACjcxK6xII
-        jxv20xvEc7CjxVAFwI0_Gr0_Cr1l84ACjcxK6I8E87Iv67AKxVWxJr0_GcWl84ACjcxK6I
-        8E87Iv6xkF7I0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI
-        64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVW8JVWxJw
-        Am72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkI
-        wI1lc2xSY4AK67AK6r4DMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI
-        8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AK
-        xVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI
-        8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq3wCI42IY6I8E
-        87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0x
-        ZFpf9x07bOlk3UUUUU=
-X-CM-SenderInfo: hfkh0updr2xqxsk13x1xpou0fpof0/1tbiDALgP17uHv9idwAAsV
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Bjorn,
+On Tue, Nov 17, 2020 at 10:45 PM Dan Williams <dan.j.williams@intel.com> wrote:
+>
+> On Tue, Nov 17, 2020 at 6:33 AM Rafael J. Wysocki <rafael@kernel.org> wrote:
+> [..]
+> > > +static struct acpi_driver acpi_cxl_driver = {
+> >
+> > First of all, no new acpi_driver instances, pretty please!
+> >
+> > acpi_default_enumeration() should create a platform device with the
+> > ACPI0017 ID for you.  Can't you provide a driver for this one?
+> >
+>
+> Ah, yes, I recall we had this discussion around the time the ACPI0012
+> NFIT driver was developed. IIRC the reason ACPI0012 remaining an
+> acpi_driver was due to a need to handle ACPI notifications, is that
+> the deciding factor?
 
-Thanks for reviewing. I’ll try to fix all existing issues and send a new
-version later.
+Sort of.  In fact, a platform device driver can still handle ACPI
+notifications just fine, it just needs to install a notify handler for
+that.
 
-> On Nov 18, 2020, at 2:57 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> 
-> Nit: please don't just make up random styles for the subject.  Run
-> "git log --oneline" on the file and/or the directory and try to follow
-> the existing convention.  Using random styles adds noise to the
-> system.
-> 
-> On Tue, Nov 17, 2020 at 09:42:14PM +0800, Chen Baozi wrote:
->> 
->> Therefore, we introduce an stacked IRQ domain support to PCI interrupt
->> link for ACPI. With this support, we can populate the ResourceSource
->> to refer to a device object that describes an interrupt controller.
->> That would allow us to refer to a dedicated driver which implements
->> the logic needed to manage the interrupt state. With this patch,
->> those PCI interrupt links can be supported by describing the INTx
->> in ACPI table as the following example:
-> 
-> "Stacked IRQ domain" sounds like a detail of how you're implementing
-> support for the Resource Source field for PCI Interrupt Links.
-> 
-> I don't know what the dedicated driver refers to.  This *should* be
-> all generic code the follows the ACPI spec (which is pretty sketchy in
-> this area).  But I assume that there's no special driver needed for
-> devices like \SB.IXIU, and the logic associated with the interrupt
-> controller is in the AML associated with IXIU.  It would probably be
-> useful to mention the relevant methods in the IXIU methods in the
-> example below.
-> 
-> From ACPI v6.3, Table 6-200, it looks like this patch should include
-> changes to acpi_bus_osc_support() to advertise "Interrupt
-> ResourceSource support".
+The cases when an acpi_driver is really needed are basically when
+creating the platform device during the enumeration is not desirable,
+like in the PCI or PNP cases (because they both create device objects
+of a different type to represent the "physical" device).
 
-According to my understanding, does it mean to add something like：
+It doesn't look like it is really needed for ACPI0012, but since it is
+there already, well ...
 
-+       capbuf[OSC_SUPPORT_DWORD] |= OSC_SB_INTR_RS_SUPPORT;
+> ACPI0017 does not have any notifications so it seems like platform driver is the way to go.
 
-and check whether the platform supports usage of ResourceSource after
-acpi_run_osc() returns successfully:
-
-+		osc_sb_intr_rs_support_confirmed =
-+			capbuf_ret[OSC_SUPPORT_DWORD] & OSC_SB_INTR_RS_SUPPORT;
-
-with this bool value, we can then determine if we would ignore the
-ResourceSource field later.
-
-Or we just advertise this capability from the OS side without introducing
-the ‘osc_sb_intr_rs_support_confirmed’?
-
-I am not certain about it because:
-
-1) If we strictly flow the spec, which says “the platform will indicate to
-OS whether ... If not set, the OS may choose to ignore the ResourceSource
-parameter in the extended interrupt descirptor”, this means this capability
-can be used to determine whether we would ignore to parse the field later.
-
-2) On the other hand, Since the ResourceSource has already been used to
-create hierarchical domain for platform device (introduced by 621dc2fdcea1)
-and previous driver does not check this capability, I am not sure whether
-it would break the existing platforms. 
-
-Fix me if I am wrong.
-
-Cheers,
-
-Chen Baozi.
-
-
+Indeed.
