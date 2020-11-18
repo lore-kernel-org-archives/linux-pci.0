@@ -2,130 +2,215 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38C55C6379D
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Nov 2020 07:18:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A3B8C63697
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Nov 2020 08:30:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DB8B52223D
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Nov 2020 07:18:22 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="OGIufOFf"
+	by mail.kernel.org (Postfix) with ESMTP id 045692463F
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Nov 2020 08:30:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726735AbgKRHRg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 18 Nov 2020 02:17:36 -0500
-Received: from mail.kernel.org ([198.145.29.99]:54510 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726695AbgKRHRf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 18 Nov 2020 02:17:35 -0500
-Received: from wens.tw (mirror2.csie.ntu.edu.tw [140.112.30.76])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 2806A2462E;
-        Wed, 18 Nov 2020 07:17:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1605683854;
-        bh=bbEAIhpk175oqHWozTzC68bHohiYOtIa3Zj5+QlIjOM=;
-        h=From:To:Cc:Subject:Date:From;
-        b=OGIufOFfUeppMBAapTb2svWHqDXG9xrWw32kVvKGT+dSxAxplXLA1e9Aeee+h5qu5
-         JxLUbgcQbHV7wCHoqDYGkRLQNzatm35ZVK2iGWEE2oRmMd24Lswxa5Er1YSK7PRiVD
-         vF+ystZfHJcIPvxhgfUUYzMf1EV5/1SC1b21Rn2c=
-Received: by wens.tw (Postfix, from userid 1000)
-        id 741735FD01; Wed, 18 Nov 2020 15:17:31 +0800 (CST)
-From:   Chen-Yu Tsai <wens@kernel.org>
-To:     Shawn Lin <shawn.lin@rock-chips.com>,
+        id S1726924AbgKRI3t (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 18 Nov 2020 03:29:49 -0500
+Received: from mailgw01.mediatek.com ([210.61.82.183]:55667 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726739AbgKRI3s (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Nov 2020 03:29:48 -0500
+X-UUID: d78b50cb186e4bbb96037ec8018b864f-20201118
+X-UUID: d78b50cb186e4bbb96037ec8018b864f-20201118
+Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw01.mediatek.com
+        (envelope-from <jianjun.wang@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 202078089; Wed, 18 Nov 2020 16:29:45 +0800
+Received: from mtkcas10.mediatek.inc (172.21.101.39) by
+ mtkmbs08n1.mediatek.inc (172.21.101.55) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Wed, 18 Nov 2020 16:29:43 +0800
+Received: from localhost.localdomain (10.17.3.153) by mtkcas10.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Wed, 18 Nov 2020 16:29:42 +0800
+From:   Jianjun Wang <jianjun.wang@mediatek.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Heiko Stuebner <heiko@sntech.de>
-Cc:     Chen-Yu Tsai <wens@csie.org>, Robin Murphy <robin.murphy@arm.com>,
-        Johan Jonker <jbx6244@gmail.com>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: [PATCH v2 0/4] arm64: rockchip: Fix PCIe ep-gpios requirement and Add Nanopi M4B
-Date:   Wed, 18 Nov 2020 15:17:20 +0800
-Message-Id: <20201118071724.4866-1-wens@kernel.org>
-X-Mailer: git-send-email 2.29.1
+        Ryder Lee <ryder.lee@mediatek.com>
+CC:     Philipp Zabel <p.zabel@pengutronix.de>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        <davem@davemloft.net>, <linux-pci@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        Sj Huang <sj.huang@mediatek.com>,
+        Jianjun Wang <jianjun.wang@mediatek.com>,
+        <youlin.pei@mediatek.com>, <chuanjia.liu@mediatek.com>,
+        <qizhong.cheng@mediatek.com>, <sin_jieyang@mediatek.com>
+Subject: [v4,1/3] dt-bindings: PCI: mediatek: Add YAML schema
+Date:   Wed, 18 Nov 2020 16:29:33 +0800
+Message-ID: <20201118082935.26828-2-jianjun.wang@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20201118082935.26828-1-jianjun.wang@mediatek.com>
+References: <20201118082935.26828-1-jianjun.wang@mediatek.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Chen-Yu Tsai <wens@csie.org>
+Add YAML schemas documentation for Gen3 PCIe controller on
+MediaTek SoCs.
 
-Hi everyone,
+Signed-off-by: Jianjun Wang <jianjun.wang@mediatek.com>
+Acked-by: Ryder Lee <ryder.lee@mediatek.com>
+---
+ .../bindings/pci/mediatek-pcie-gen3.yaml      | 135 ++++++++++++++++++
+ 1 file changed, 135 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
 
-This is v2 of my Nanopi M4B series. Changes since v1 include:
-
-  - Rewrite subject of patch 1 to match existing convention and reference
-    'ep-gpios' DT property instead of the 'ep_gpio' field
- 
-This series mainly adds support for the new Nanopi M4B, which is a newer
-variant of the Nanopi M4.
-
-The differences against the original Nanopi M4 that are common with the
-other M4V2 revision include:
-
-  - microphone header removed
-  - power button added
-  - recovery button added
-
-Additional changes specific to the M4B:
-
-  - USB 3.0 hub removed; board now has 2x USB 3.0 type-A ports and 2x
-    USB 2.0 ports
-  - ADB toggle switch added; this changes the top USB 3.0 host port to
-    a peripheral port
-  - Type-C port no longer supports data or PD
-  - WiFi/Bluetooth combo chip switched to AP6256, which supports BT 5.0
-    but only 1T1R (down from 2T2R) for WiFi
-
-While working on this, I found that for the M4 family, the PCIe reset
-pin (from the M.2 expansion board) was not wired to the SoC. Only the
-NanoPC T4 has this wired. This ended up in patches 1 and 3.
-
-Patch 1 makes ep_gpio in the Rockchip PCIe driver optional. This property
-is optional in the DT binding, so this just makes the driver adhere to
-the binding.
-
-Patch 2 adds a new compatible string for the new board.
-
-Patch 3 moves the ep-gpios property of the pcie controller from the
-common nanopi4.dtsi file to the nanopc-t4.dts file.
-
-Patch 4 adds a new device tree file for the new board. It includes the
-original device tree for the M4, and then lists the differences.
-
-Given that patch 3 would make PCIe unusable without patch 1, I suggest
-merging patch 1 through the PCI tree as a fix for 5.10, and the rest
-for 5.11 through the Rockchip tree.
-
-Please have a look. The changes are mostly trivial.
-
-
-Regards
-ChenYu
-
-Chen-Yu Tsai (4):
-  PCI: rockchip: Make 'ep-gpios' DT property optional
-  dt-bindings: arm: rockchip: Add FriendlyARM NanoPi M4B
-  arm64: dts: rockchip: nanopi4: Move ep-gpios property to nanopc-t4
-  arm64: dts: rockchip: rk3399: Add NanoPi M4B
-
- .../devicetree/bindings/arm/rockchip.yaml     |  1 +
- arch/arm64/boot/dts/rockchip/Makefile         |  1 +
- .../boot/dts/rockchip/rk3399-nanopc-t4.dts    |  1 +
- .../boot/dts/rockchip/rk3399-nanopi-m4b.dts   | 52 +++++++++++++++++++
- .../boot/dts/rockchip/rk3399-nanopi4.dtsi     |  1 -
- drivers/pci/controller/pcie-rockchip.c        |  2 +-
- 6 files changed, 56 insertions(+), 2 deletions(-)
- create mode 100644 arch/arm64/boot/dts/rockchip/rk3399-nanopi-m4b.dts
-
+diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml b/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
+new file mode 100644
+index 000000000000..e2aecbb56e57
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
+@@ -0,0 +1,135 @@
++# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/pci/mediatek-pcie-gen3.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Gen3 PCIe controller on MediaTek SoCs
++
++maintainers:
++  - Jianjun Wang <jianjun.wang@mediatek.com>
++
++allOf:
++  - $ref: /schemas/pci/pci-bus.yaml#
++
++properties:
++  compatible:
++    const: mediatek,mt8192-pcie
++
++  reg:
++    maxItems: 1
++
++  interrupts:
++    maxItems: 1
++
++  ranges:
++    minItems: 1
++    maxItems: 8
++
++  resets:
++    minItems: 1
++    maxItems: 2
++
++  reset-names:
++    anyOf:
++      - const: mac
++      - const: phy
++
++  clocks:
++    maxItems: 5
++
++  clock-names:
++    items:
++      - const: tl_26m
++      - const: tl_96m
++      - const: tl_32k
++      - const: peri_26m
++      - const: top_133m
++
++  assigned-clocks:
++    maxItems: 1
++
++  assigned-clock-parents:
++    maxItems: 1
++
++  phys:
++    maxItems: 1
++
++  '#interrupt-cells':
++    const: 1
++
++  interrupt-controller:
++    description: Interrupt controller node for handling legacy PCI interrupts.
++    type: object
++    properties:
++      '#address-cells':
++        const: 0
++      '#interrupt-cells':
++        const: 1
++      interrupt-controller: true
++
++    required:
++      - '#address-cells'
++      - '#interrupt-cells'
++      - interrupt-controller
++
++    additionalProperties: false
++
++required:
++  - compatible
++  - reg
++  - interrupts
++  - ranges
++  - clocks
++  - '#interrupt-cells'
++  - interrupt-controller
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
++    #include <dt-bindings/interrupt-controller/irq.h>
++
++    bus {
++        #address-cells = <2>;
++        #size-cells = <2>;
++
++        pcie: pcie@11230000 {
++            compatible = "mediatek,mt8192-pcie";
++            device_type = "pci";
++            #address-cells = <3>;
++            #size-cells = <2>;
++            reg = <0x00 0x11230000 0x00 0x4000>;
++            reg-names = "pcie-mac";
++            interrupts = <GIC_SPI 251 IRQ_TYPE_LEVEL_HIGH 0>;
++            bus-range = <0x00 0xff>;
++            ranges = <0x82000000 0x00 0x12000000 0x00
++                      0x12000000 0x00 0x1000000>;
++            clocks = <&infracfg 40>,
++                     <&infracfg 43>,
++                     <&infracfg 97>,
++                     <&infracfg 99>,
++                     <&infracfg 111>;
++            clock-names = "tl_26m", "tl_96m", "tl_32k", "peri_26m", "top_133m";
++            assigned-clocks = <&topckgen 50>;
++            assigned-clock-parents = <&topckgen 91>;
++
++            phys = <&pciephy>;
++            phy-names = "pcie-phy";
++            resets = <&infracfg_rst 0>;
++            reset-names = "phy";
++
++            #interrupt-cells = <1>;
++            interrupt-map-mask = <0 0 0 0x7>;
++            interrupt-map = <0 0 0 1 &pcie_intc 0>,
++                            <0 0 0 2 &pcie_intc 1>,
++                            <0 0 0 3 &pcie_intc 2>,
++                            <0 0 0 4 &pcie_intc 3>;
++            pcie_intc: interrupt-controller {
++                      #address-cells = <0>;
++                      #interrupt-cells = <1>;
++                      interrupt-controller;
++            };
++        };
++    };
 -- 
-2.29.1
+2.25.1
 
