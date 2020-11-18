@@ -5,65 +5,65 @@ X-Spam-Level:
 X-Spam-Status: No, score=-26.2 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable
+	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB4C5C71155
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Nov 2020 22:07:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D30FCC8300B
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Nov 2020 22:08:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 89947246E0
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Nov 2020 22:07:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 93594246E5
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Nov 2020 22:08:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="JUEhAG5/"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="GNMm1MAV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727316AbgKRWHq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 18 Nov 2020 17:07:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53794 "EHLO
+        id S1727376AbgKRWHv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 18 Nov 2020 17:07:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53834 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727287AbgKRWHo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Nov 2020 17:07:44 -0500
-Received: from mail-qk1-x74a.google.com (mail-qk1-x74a.google.com [IPv6:2607:f8b0:4864:20::74a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 034CEC061A53
-        for <linux-pci@vger.kernel.org>; Wed, 18 Nov 2020 14:07:44 -0800 (PST)
-Received: by mail-qk1-x74a.google.com with SMTP id 143so2803106qkg.20
-        for <linux-pci@vger.kernel.org>; Wed, 18 Nov 2020 14:07:43 -0800 (PST)
+        with ESMTP id S1727370AbgKRWHv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Nov 2020 17:07:51 -0500
+Received: from mail-pl1-x64a.google.com (mail-pl1-x64a.google.com [IPv6:2607:f8b0:4864:20::64a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20286C061A51
+        for <linux-pci@vger.kernel.org>; Wed, 18 Nov 2020 14:07:51 -0800 (PST)
+Received: by mail-pl1-x64a.google.com with SMTP id ba3so1472945plb.9
+        for <linux-pci@vger.kernel.org>; Wed, 18 Nov 2020 14:07:51 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=sender:date:in-reply-to:message-id:mime-version:references:subject
          :from:to:cc;
-        bh=7xcmRRx6qvqOlAhBXvPUxdlcJiFGDszFPn6Uy8LsYGg=;
-        b=JUEhAG5/26jx0k7UneLL1f8TdMXEdBCuTZJVLjQZ+iZWRpM2bbt0EXRlMyK8xh/rhj
-         JL4aCETLnrd/8DvtoDDkLX34DHCsBE1h9hQQTOHP3TNRNJUaUtVu/5oPiKBq0scCRP6Z
-         +kh1Oyf9NPyMM2Lo7bgcXU9P4bjc/YYA21H9WcxDydQqHpZaclET/mWLe+Q6TCvtF3wo
-         mKxhKgjFnSmEhpPgl/7XzG7iiLKXi7xIewYjRRnbWXMkQNf1t/hl5/7hnFoxRkDw2MOb
-         rVfAfcrlGtLV3PMRjEVyZEJWFeaaAKgzOew1LFSh6KyTd7yH/s0nFEbQGjmL0toalfsR
-         lLAQ==
+        bh=JUh1T9Q0UpH1P/k5MG3eyMCJDiIsKr/ZhdG3k4jEA2o=;
+        b=GNMm1MAVTepQmZAF77rlDYxsuCdPaSo7+Ez7SIfF2FWVLeWy9R3mFyHA2wPW466N3j
+         0SWe2Yq8j6EF83sMo6emozMTZ9ptK/gS+fCtk3yKY5a6UO91rxckJhgTq1xK04dt07lp
+         6p26tDJr7oc3rv4oRJ6DOnLzLhSn87edt2CqXiE7YNvlWSgL9o2LDhtNJDbcJBqeQQWd
+         0KEtkxJOmbT6JFsXb04tkZ4RCyVn70wiNpv4WilQN6L1DumoZp7goDqbL/XtjbAL/M99
+         v3kUtHqpOiXPTfFRq+tP2O4TBYERMP+NYokmuOLksHWs2A228Y+lQf9s5GUGTnt79xuC
+         A4GQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:sender:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=7xcmRRx6qvqOlAhBXvPUxdlcJiFGDszFPn6Uy8LsYGg=;
-        b=B7tYtemaDh8+6dnV2H764Ik408UB1hx6qgUaWa7Bfjb1aq4GoVXUQEdX8rvck+LRi1
-         IWCgdDUaHL4Ev4ieH1j7/MWhI/TpP1aipo6WwQQz8t6GL9m90PpK8uHYoLDIC94MDCPa
-         O3n/tMj7pG97PGek/MSRgC3cqjP4wFuxz1nL896/nuHyJxxq8CJwZ7/Wf9/vxwHw7gYv
-         MPl+4u0EKGLwySWxP5wptT2+CY1pMvqb3eukUjoYmsH/1iWrlumaE2pikhVl6pFKvlIz
-         6+wLO14OF3yxrR3nms7OKHXHF/xXnOuhPTWFsUt4b/fkKCW0HdmLsjB22cJF5ms0AqE0
-         gw3g==
-X-Gm-Message-State: AOAM5332Bpsnz10Im1MKviJrFcfWXPhyPasVl0LuChx/lGerEXnyLa3W
-        QW60NlKw2j1iSbTCi1B/VOW1hcLTe5/WtQUu6PM=
-X-Google-Smtp-Source: ABdhPJwZi43l7NEtfrn2Ph6B8PwX83axN27eYs3bBjDKHIbJhot79HMgDc9/Lz03zP5kBQUcskAGDJr3yB94zqzoXoQ=
+        bh=JUh1T9Q0UpH1P/k5MG3eyMCJDiIsKr/ZhdG3k4jEA2o=;
+        b=teZNnd7Gg9YIDMjOvFIU33I/xrs0ZxiLyV2EzlkDQxEfGA9SRjbvmSpUXwgQcRTS1H
+         hlftB02ms7sFZtagfaVhYWuWAu59lts/CNhNk1S/bdiuKtRYq7ktCRif0Sl3/LIzgMwp
+         vCVZfiQsazTYYZxhoXeq0DY2jhl0NEadtPFUISF5Yy6taLXfvCZ1GG2i0BLe08G82AiL
+         eN33xUV0UR/7nQdqv/luHTqrHmKOQ5lGaEU6robznA0zFMaV7M4DUDZVVou9riyR2t1V
+         Qw//lrGKyvqI6JRxYsj3L70bCluv4tFA9uboQUTbD1tBZ3KYjI6W7V5JUh+1qteL7vJw
+         lvYA==
+X-Gm-Message-State: AOAM531YUhr0QOXa0icLOdQ52+nfOHxALKgnlkkE2/z9OWFYQmVoqiOR
+        VDdHoKgTQpQ0crX3YsNbLFMpoWwXFrQGCiz8veU=
+X-Google-Smtp-Source: ABdhPJxE6/lqSbIrIFD1BhHDD+bexarqDwW1+leKzxBz5MqxugP2bAoLKwReJ4geoR/cz0YhdybYAmKOwiK4l65zoYE=
 Sender: "samitolvanen via sendgmr" 
         <samitolvanen@samitolvanen1.mtv.corp.google.com>
 X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:f693:9fff:fef4:1b6d])
- (user=samitolvanen job=sendgmr) by 2002:a0c:8004:: with SMTP id
- 4mr7501644qva.5.1605737263123; Wed, 18 Nov 2020 14:07:43 -0800 (PST)
-Date:   Wed, 18 Nov 2020 14:07:19 -0800
+ (user=samitolvanen job=sendgmr) by 2002:a17:90a:fb54:: with SMTP id
+ iq20mr1047953pjb.111.1605737270583; Wed, 18 Nov 2020 14:07:50 -0800 (PST)
+Date:   Wed, 18 Nov 2020 14:07:22 -0800
 In-Reply-To: <20201118220731.925424-1-samitolvanen@google.com>
-Message-Id: <20201118220731.925424-6-samitolvanen@google.com>
+Message-Id: <20201118220731.925424-9-samitolvanen@google.com>
 Mime-Version: 1.0
 References: <20201118220731.925424-1-samitolvanen@google.com>
 X-Mailer: git-send-email 2.29.2.454.gaff20da3a2-goog
-Subject: [PATCH v7 05/17] kbuild: lto: merge module sections
+Subject: [PATCH v7 08/17] init: lto: fix PREL32 relocations
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Masahiro Yamada <masahiroy@kernel.org>,
         Steven Rostedt <rostedt@goodmis.org>,
@@ -84,52 +84,76 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-LLD always splits sections with LTO, which increases module sizes. This
-change adds linker script rules to merge the split sections in the final
-module.
+With LTO, the compiler can rename static functions to avoid global
+naming collisions. As initcall functions are typically static,
+renaming can break references to them in inline assembly. This
+change adds a global stub with a stable name for each initcall to
+fix the issue when PREL32 relocations are used.
 
-Suggested-by: Nick Desaulniers <ndesaulniers@google.com>
 Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
 Reviewed-by: Kees Cook <keescook@chromium.org>
 ---
- scripts/module.lds.S | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+ include/linux/init.h | 31 +++++++++++++++++++++++++++----
+ 1 file changed, 27 insertions(+), 4 deletions(-)
 
-diff --git a/scripts/module.lds.S b/scripts/module.lds.S
-index 69b9b71a6a47..18d5b8423635 100644
---- a/scripts/module.lds.S
-+++ b/scripts/module.lds.S
-@@ -23,6 +23,30 @@ SECTIONS {
- 	.init_array		0 : ALIGN(8) { *(SORT(.init_array.*)) *(.init_array) }
+diff --git a/include/linux/init.h b/include/linux/init.h
+index d466bea7ecba..27b9478dcdef 100644
+--- a/include/linux/init.h
++++ b/include/linux/init.h
+@@ -209,26 +209,49 @@ extern bool initcall_debug;
+  */
+ #define __initcall_section(__sec, __iid)			\
+ 	#__sec ".init.." #__iid
++
++/*
++ * With LTO, the compiler can rename static functions to avoid
++ * global naming collisions. We use a global stub function for
++ * initcalls to create a stable symbol name whose address can be
++ * taken in inline assembly when PREL32 relocations are used.
++ */
++#define __initcall_stub(fn, __iid, id)				\
++	__initcall_name(initstub, __iid, id)
++
++#define __define_initcall_stub(__stub, fn)			\
++	int __init __stub(void);				\
++	int __init __stub(void)					\
++	{ 							\
++		return fn();					\
++	}							\
++	__ADDRESSABLE(__stub)
+ #else
+ #define __initcall_section(__sec, __iid)			\
+ 	#__sec ".init"
++
++#define __initcall_stub(fn, __iid, id)	fn
++
++#define __define_initcall_stub(__stub, fn)			\
++	__ADDRESSABLE(fn)
+ #endif
  
- 	__jump_table		0 : ALIGN(8) { KEEP(*(__jump_table)) }
-+
-+	__patchable_function_entries : { *(__patchable_function_entries) }
-+
-+	/*
-+	 * With CONFIG_LTO_CLANG, LLD always enables -fdata-sections and
-+	 * -ffunction-sections, which increases the size of the final module.
-+	 * Merge the split sections in the final binary.
-+	 */
-+	.bss : {
-+		*(.bss .bss.[0-9a-zA-Z_]*)
-+		*(.bss..L*)
-+	}
-+
-+	.data : {
-+		*(.data .data.[0-9a-zA-Z_]*)
-+		*(.data..L*)
-+	}
-+
-+	.rodata : {
-+		*(.rodata .rodata.[0-9a-zA-Z_]*)
-+		*(.rodata..L*)
-+	}
-+
-+	.text : { *(.text .text.[0-9a-zA-Z_]*) }
- }
+ #ifdef CONFIG_HAVE_ARCH_PREL32_RELOCATIONS
+-#define ____define_initcall(fn, __name, __sec)			\
+-	__ADDRESSABLE(fn)					\
++#define ____define_initcall(fn, __stub, __name, __sec)		\
++	__define_initcall_stub(__stub, fn)			\
+ 	asm(".section	\"" __sec "\", \"a\"		\n"	\
+ 	    __stringify(__name) ":			\n"	\
+-	    ".long	" #fn " - .			\n"	\
++	    ".long	" __stringify(__stub) " - .	\n"	\
+ 	    ".previous					\n");
+ #else
+-#define ____define_initcall(fn, __name, __sec)			\
++#define ____define_initcall(fn, __unused, __name, __sec)	\
+ 	static initcall_t __name __used 			\
+ 		__attribute__((__section__(__sec))) = fn;
+ #endif
  
- /* bring in arch-specific sections */
+ #define __unique_initcall(fn, id, __sec, __iid)			\
+ 	____define_initcall(fn,					\
++		__initcall_stub(fn, __iid, id),			\
+ 		__initcall_name(initcall, __iid, id),		\
+ 		__initcall_section(__sec, __iid))
+ 
 -- 
 2.29.2.299.gdc1121823c-goog
 
