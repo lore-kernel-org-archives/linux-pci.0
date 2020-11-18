@@ -2,199 +2,84 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-26.2 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 173AEC63697
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Nov 2020 22:08:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9848BC56201
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Nov 2020 22:36:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B5CAC246E1
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Nov 2020 22:08:49 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Oq8r6SCN"
+	by mail.kernel.org (Postfix) with ESMTP id 34799246E8
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Nov 2020 22:36:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726881AbgKRWHh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 18 Nov 2020 17:07:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53732 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727171AbgKRWHf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Nov 2020 17:07:35 -0500
-Received: from mail-yb1-xb49.google.com (mail-yb1-xb49.google.com [IPv6:2607:f8b0:4864:20::b49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BBA4EC061A4D
-        for <linux-pci@vger.kernel.org>; Wed, 18 Nov 2020 14:07:35 -0800 (PST)
-Received: by mail-yb1-xb49.google.com with SMTP id z29so4476701ybi.23
-        for <linux-pci@vger.kernel.org>; Wed, 18 Nov 2020 14:07:35 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=sender:date:in-reply-to:message-id:mime-version:references:subject
-         :from:to:cc;
-        bh=kod53Z9Bn/oLp+88TnQNrWTDZiAkcCd5b++0bm6KqDA=;
-        b=Oq8r6SCNamOHoS7iSUmJRRev5DGFdlnvFFu0GIi+STeDi/2VxvM9bYiQjKuTfjLCAf
-         X7p4TRLUESowZaZNgKuuIfZO5b2odS7+x2ubT/aFKQrV+o/bQpkDUCuuQ+uEb1OdNofk
-         gyWDaXNvo32HCUdIUsKJKgTCnCmshX/5gGSe7kgfDUd1vWxv/fIYYnYCLUe7y1UiwEPL
-         1HPFqlQKwycMl+fWUgllMc17t4YP4tBatTmTzNly75QmRLVXHG+shI6tsS1/2JjB03hV
-         mCttBb9qsBFxYfJBfWt4guKh937AQ44YGt8peZ1CR7fqFHZAN5cE3N1fTS63ad9uCbFi
-         kp1A==
+        id S1726295AbgKRWgs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 18 Nov 2020 17:36:48 -0500
+Received: from youngberry.canonical.com ([91.189.89.112]:45817 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726081AbgKRWgs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Nov 2020 17:36:48 -0500
+Received: from mail-ed1-f71.google.com ([209.85.208.71])
+        by youngberry.canonical.com with esmtps (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.86_2)
+        (envelope-from <guilherme.piccoli@canonical.com>)
+        id 1kfW4D-0002Ex-7e
+        for linux-pci@vger.kernel.org; Wed, 18 Nov 2020 22:36:45 +0000
+Received: by mail-ed1-f71.google.com with SMTP id s7so1500946eds.17
+        for <linux-pci@vger.kernel.org>; Wed, 18 Nov 2020 14:36:45 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:date:in-reply-to:message-id:mime-version
-         :references:subject:from:to:cc;
-        bh=kod53Z9Bn/oLp+88TnQNrWTDZiAkcCd5b++0bm6KqDA=;
-        b=H3eKMGYWm4MwR4YqMJn8vKVS/lpc/Ar2b5FIEtDr9ObCrA3TsiFnbPUX7/PCAUSpuM
-         hooDMvW9OoFcRpokAYYS2JcrY3rK7aHTOiZLckNvAWh5PGpRNlSpm0NzZnB9uDg9XIya
-         9YDz+/Clja57ZVNpwnVSqBIome6OfHeXQ8p1x/ZhJw6H1CK1yAlFjw1ickojIgq9TGxT
-         mlqC+FJ0BXsMvIUNI43tFGpbwjvT2u7M0yYAdIJz4sfvomlCMjbfyB9cSyO2CH0sxPJx
-         gMlEIUSrJq4LMk4EGWQZYh492Vep1iNTCGgvauNn4XZw05ktNMIfy0HlLQfu9aySSvSP
-         Z6Jg==
-X-Gm-Message-State: AOAM530KxWnNA7zL+hanonMzfDSfQPJSKBqAbIp4rzm1wGo9CNDqbhcu
-        RVqDkusFrRUlFHJkwVxh2UmZk37Y+30v7BX5Znw=
-X-Google-Smtp-Source: ABdhPJzJieOsn4JuNK/fNek5dpK0KwEKnqVJ5VjcmWHbrJqO30ArGzOEitVj3onNlAiY/AvgfqfGAcAMvdZ4a69M8d0=
-Sender: "samitolvanen via sendgmr" 
-        <samitolvanen@samitolvanen1.mtv.corp.google.com>
-X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:f693:9fff:fef4:1b6d])
- (user=samitolvanen job=sendgmr) by 2002:a25:830e:: with SMTP id
- s14mr10156827ybk.213.1605737254956; Wed, 18 Nov 2020 14:07:34 -0800 (PST)
-Date:   Wed, 18 Nov 2020 14:07:15 -0800
-In-Reply-To: <20201118220731.925424-1-samitolvanen@google.com>
-Message-Id: <20201118220731.925424-2-samitolvanen@google.com>
-Mime-Version: 1.0
-References: <20201118220731.925424-1-samitolvanen@google.com>
-X-Mailer: git-send-email 2.29.2.454.gaff20da3a2-goog
-Subject: [PATCH v7 01/17] tracing: move function tracer options to Kconfig
-From:   Sami Tolvanen <samitolvanen@google.com>
-To:     Masahiro Yamada <masahiroy@kernel.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Will Deacon <will@kernel.org>
-Cc:     Josh Poimboeuf <jpoimboe@redhat.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Paul E. McKenney" <paulmck@kernel.org>,
-        Kees Cook <keescook@chromium.org>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        clang-built-linux@googlegroups.com,
-        kernel-hardening@lists.openwall.com, linux-arch@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kbuild@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        Sami Tolvanen <samitolvanen@google.com>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=R0i9MNzuHi9QhaiHbOL5epk3QC3RpHWnQN1IEYkXxcM=;
+        b=I/vnl7Y4eERcEosg9vgl3TAizmgTJVTfTpBq3emJbLz6uysQ1iqRQ8xOtHEwNc/gzW
+         bRHBV1pZEQ6PASNe9r6u9brQm/ct+F/B5zpJ8k5EW/cmmp0+MXNhGovAFEPJmrmMTqUi
+         ujX3BB8DaNAwrJ4ha4V22fWu33r22PQtABfM8+XaVJTv+371VhYvJmOgk08Uk27taN0U
+         Qy/LGTDoKmxcg9Qb+p3vjLIXbVGVhfkw4FbamuGhXvVHB8lKwxABMNwg0uR2f949K7aG
+         q8FC9qkFHnYYKoIhqQJx/HGQoco/2SJOIB+P13EUdbErMpDPQ81Hi5OThoprNPG5afLe
+         iFRw==
+X-Gm-Message-State: AOAM532M1em+7He6/f/n0fkZbu/+4zC1jFBgNwBnJq/Ljju29rz0K/JL
+        kBBucjpTKvTeN3Yd+rQMbYaI6Nb+lYE91ZqMkijlv4h2BT1r3J8ejsqIjUcdQR7cMvKT9HJ1mpO
+        cUwlDfhLf++ru/XLY2/QQqcgurnGIoPve5oKPTqv0Ze4Zmjix0/VXzg==
+X-Received: by 2002:a05:6402:114c:: with SMTP id g12mr27958854edw.167.1605739004883;
+        Wed, 18 Nov 2020 14:36:44 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJwZSeP14qhirFaFdR5GfKMqF/BnHjDrZDKcSJaRVXn+FktBZU5qRC4XC/uGhn8kvaBWA69sLuNNcwlZUcIdA74=
+X-Received: by 2002:a05:6402:114c:: with SMTP id g12mr27958833edw.167.1605739004638;
+ Wed, 18 Nov 2020 14:36:44 -0800 (PST)
+MIME-Version: 1.0
+References: <CAHD1Q_zS9Hs8mUsm=q0Ei0kQ+y+wQhkroD+M2eCPKo2xLO6hBw@mail.gmail.com>
+ <20201118210516.GA76543@bjorn-Precision-5520>
+In-Reply-To: <20201118210516.GA76543@bjorn-Precision-5520>
+From:   Guilherme Piccoli <gpiccoli@canonical.com>
+Date:   Wed, 18 Nov 2020 19:36:08 -0300
+Message-ID: <CAHD1Q_yfFYrfAEHTA3mW25hK9DFFYnKQ2_1HCEnL4m=bc=rLfg@mail.gmail.com>
+Subject: Re: [PATCH 1/3] x86/quirks: Scan all busses for early PCI quirks
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     "Eric W. Biederman" <ebiederm@xmission.com>,
+        Thomas Gleixner <tglx@linutronix.de>, lukas@wunner.de,
+        linux-pci@vger.kernel.org, Pingfan Liu <kernelfans@gmail.com>,
+        andi@firstfloor.org, "H. Peter Anvin" <hpa@zytor.com>,
+        Baoquan He <bhe@redhat.com>, x86@kernel.org,
+        Sinan Kaya <okaya@kernel.org>, Ingo Molnar <mingo@redhat.com>,
+        Jay Vosburgh <jay.vosburgh@canonical.com>,
+        Dave Young <dyoung@redhat.com>,
+        Gavin Guo <gavin.guo@canonical.com>,
+        Borislav Petkov <bp@alien8.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Guowen Shan <gshan@redhat.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        "Guilherme G. Piccoli" <kernel@gpiccoli.net>,
+        kexec mailing list <kexec@lists.infradead.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Dan Streetman <ddstreet@canonical.com>,
+        Vivek Goyal <vgoyal@redhat.com>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Move function tracer options to Kconfig to make it easier to add
-new methods for generating __mcount_loc, and to make the options
-available also when building kernel modules.
+Thanks a lot Bjorn! I confess except for PPC64 Server machines, I
+never saw other "domains" or segments. Is it common in x86 to have
+that? The early_quirks() are restricted to the first segment, no
+matter how many host bridges we have in segment 0000?
 
-Note that FTRACE_MCOUNT_USE_* options are updated on rebuild and
-therefore, work even if the .config was generated in a different
-environment.
-
-Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
----
- Makefile               | 20 ++++++++------------
- kernel/trace/Kconfig   | 16 ++++++++++++++++
- scripts/Makefile.build |  6 ++----
- 3 files changed, 26 insertions(+), 16 deletions(-)
-
-diff --git a/Makefile b/Makefile
-index e2c3f65c4721..8c8feb4245a6 100644
---- a/Makefile
-+++ b/Makefile
-@@ -851,12 +851,8 @@ KBUILD_CFLAGS += $(DEBUG_CFLAGS)
- export DEBUG_CFLAGS
- 
- ifdef CONFIG_FUNCTION_TRACER
--ifdef CONFIG_FTRACE_MCOUNT_RECORD
--  # gcc 5 supports generating the mcount tables directly
--  ifeq ($(call cc-option-yn,-mrecord-mcount),y)
--    CC_FLAGS_FTRACE	+= -mrecord-mcount
--    export CC_USING_RECORD_MCOUNT := 1
--  endif
-+ifdef CONFIG_FTRACE_MCOUNT_USE_CC
-+  CC_FLAGS_FTRACE	+= -mrecord-mcount
-   ifdef CONFIG_HAVE_NOP_MCOUNT
-     ifeq ($(call cc-option-yn, -mnop-mcount),y)
-       CC_FLAGS_FTRACE	+= -mnop-mcount
-@@ -864,6 +860,12 @@ ifdef CONFIG_FTRACE_MCOUNT_RECORD
-     endif
-   endif
- endif
-+ifdef CONFIG_FTRACE_MCOUNT_USE_RECORDMCOUNT
-+  ifdef CONFIG_HAVE_C_RECORDMCOUNT
-+    BUILD_C_RECORDMCOUNT := y
-+    export BUILD_C_RECORDMCOUNT
-+  endif
-+endif
- ifdef CONFIG_HAVE_FENTRY
-   ifeq ($(call cc-option-yn, -mfentry),y)
-     CC_FLAGS_FTRACE	+= -mfentry
-@@ -873,12 +875,6 @@ endif
- export CC_FLAGS_FTRACE
- KBUILD_CFLAGS	+= $(CC_FLAGS_FTRACE) $(CC_FLAGS_USING)
- KBUILD_AFLAGS	+= $(CC_FLAGS_USING)
--ifdef CONFIG_DYNAMIC_FTRACE
--	ifdef CONFIG_HAVE_C_RECORDMCOUNT
--		BUILD_C_RECORDMCOUNT := y
--		export BUILD_C_RECORDMCOUNT
--	endif
--endif
- endif
- 
- # We trigger additional mismatches with less inlining
-diff --git a/kernel/trace/Kconfig b/kernel/trace/Kconfig
-index a4020c0b4508..927ad004888a 100644
---- a/kernel/trace/Kconfig
-+++ b/kernel/trace/Kconfig
-@@ -595,6 +595,22 @@ config FTRACE_MCOUNT_RECORD
- 	depends on DYNAMIC_FTRACE
- 	depends on HAVE_FTRACE_MCOUNT_RECORD
- 
-+config FTRACE_MCOUNT_USE_PATCHABLE_FUNCTION_ENTRY
-+	bool
-+	depends on FTRACE_MCOUNT_RECORD
-+
-+config FTRACE_MCOUNT_USE_CC
-+	def_bool y
-+	depends on $(cc-option,-mrecord-mcount)
-+	depends on !FTRACE_MCOUNT_USE_PATCHABLE_FUNCTION_ENTRY
-+	depends on FTRACE_MCOUNT_RECORD
-+
-+config FTRACE_MCOUNT_USE_RECORDMCOUNT
-+	def_bool y
-+	depends on !FTRACE_MCOUNT_USE_PATCHABLE_FUNCTION_ENTRY
-+	depends on !FTRACE_MCOUNT_USE_CC
-+	depends on FTRACE_MCOUNT_RECORD
-+
- config TRACING_MAP
- 	bool
- 	depends on ARCH_HAVE_NMI_SAFE_CMPXCHG
-diff --git a/scripts/Makefile.build b/scripts/Makefile.build
-index ae647379b579..2175ddb1ee0c 100644
---- a/scripts/Makefile.build
-+++ b/scripts/Makefile.build
-@@ -178,8 +178,7 @@ cmd_modversions_c =								\
- 	fi
- endif
- 
--ifdef CONFIG_FTRACE_MCOUNT_RECORD
--ifndef CC_USING_RECORD_MCOUNT
-+ifdef CONFIG_FTRACE_MCOUNT_USE_RECORDMCOUNT
- # compiler will not generate __mcount_loc use recordmcount or recordmcount.pl
- ifdef BUILD_C_RECORDMCOUNT
- ifeq ("$(origin RECORDMCOUNT_WARN)", "command line")
-@@ -206,8 +205,7 @@ recordmcount_source := $(srctree)/scripts/recordmcount.pl
- endif # BUILD_C_RECORDMCOUNT
- cmd_record_mcount = $(if $(findstring $(strip $(CC_FLAGS_FTRACE)),$(_c_flags)),	\
- 	$(sub_cmd_record_mcount))
--endif # CC_USING_RECORD_MCOUNT
--endif # CONFIG_FTRACE_MCOUNT_RECORD
-+endif # CONFIG_FTRACE_MCOUNT_USE_RECORDMCOUNT
- 
- ifdef CONFIG_STACK_VALIDATION
- ifneq ($(SKIP_STACK_VALIDATION),1)
--- 
-2.29.2.299.gdc1121823c-goog
-
+Thanks again!
