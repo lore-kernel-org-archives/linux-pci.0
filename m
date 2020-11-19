@@ -2,145 +2,92 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72469C6379D
-	for <linux-pci@archiver.kernel.org>; Thu, 19 Nov 2020 00:17:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35A84C5519F
+	for <linux-pci@archiver.kernel.org>; Thu, 19 Nov 2020 00:23:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 21800246BB
-	for <linux-pci@archiver.kernel.org>; Thu, 19 Nov 2020 00:17:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CC024246BB
+	for <linux-pci@archiver.kernel.org>; Thu, 19 Nov 2020 00:22:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726739AbgKSARk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 18 Nov 2020 19:17:40 -0500
-Received: from mga03.intel.com ([134.134.136.65]:23260 "EHLO mga03.intel.com"
+        id S1726413AbgKSAWj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 18 Nov 2020 19:22:39 -0500
+Received: from mga17.intel.com ([192.55.52.151]:8363 "EHLO mga17.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725947AbgKSARk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 18 Nov 2020 19:17:40 -0500
-IronPort-SDR: rOM0dF1zMSKYTdaDmRXQxGKVFJR9jrljXRmtan0rIOqDNvJGZ2CtpHzXzRq3uNjdodnbgSLPGm
- UfC7A4T5B/Kg==
-X-IronPort-AV: E=McAfee;i="6000,8403,9809"; a="171305805"
+        id S1726162AbgKSAWi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 18 Nov 2020 19:22:38 -0500
+IronPort-SDR: /gR/RQUI4w6Y5AAkrS1Wb0hVIqXu0++qQHvd3Fuh7Hgkd1C3imv/4g5mtvPIKldJsXWV9HtbW1
+ wrzTLgbfWoRA==
+X-IronPort-AV: E=McAfee;i="6000,8403,9809"; a="151056275"
 X-IronPort-AV: E=Sophos;i="5.77,488,1596524400"; 
-   d="scan'208";a="171305805"
+   d="scan'208";a="151056275"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Nov 2020 16:17:38 -0800
-IronPort-SDR: WkNLjActaftn3S33vHtSNX+0spN//6sH8osv7Nk+VHGbETzOlKxQuwItZMRQlvkKSM56Y2bKU2
- 0UQedZQ8Covg==
-X-ExtLoop1: 1
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Nov 2020 16:22:38 -0800
+IronPort-SDR: WolBowoaeNrGJ0peStyiP01po1wnNwy2OasZK67igl9TNe+Fffxtkf9DoW7u78zFQ8bwu+eUWi
+ +fCfEpL8XUDA==
 X-IronPort-AV: E=Sophos;i="5.77,488,1596524400"; 
-   d="scan'208";a="532952519"
-Received: from linux.intel.com ([10.54.29.200])
-  by fmsmga006.fm.intel.com with ESMTP; 18 Nov 2020 16:17:35 -0800
-Received: from debox1-desk2.jf.intel.com (debox1-desk2.jf.intel.com [10.54.75.16])
-        by linux.intel.com (Postfix) with ESMTP id BDE67580689;
-        Wed, 18 Nov 2020 16:17:35 -0800 (PST)
-From:   "David E. Box" <david.e.box@linux.intel.com>
-To:     bhelgaas@google.com, rafael@kernel.org, len.brown@intel.com
-Cc:     "David E. Box" <david.e.box@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 1/2] PCI: Add save/restore of Precision Time Measurement capability
-Date:   Wed, 18 Nov 2020 16:18:21 -0800
-Message-Id: <20201119001822.31617-1-david.e.box@linux.intel.com>
-X-Mailer: git-send-email 2.20.1
+   d="scan'208";a="532953743"
+Received: from prasadpr-mobl.amr.corp.intel.com (HELO ellie) ([10.212.21.86])
+  by fmsmga006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Nov 2020 16:22:38 -0800
+From:   Vinicius Costa Gomes <vinicius.gomes@intel.com>
+To:     Richard Cochran <richardcochran@gmail.com>
+Cc:     Miroslav Lichvar <mlichvar@redhat.com>,
+        intel-wired-lan@lists.osuosl.org, andre.guedes@intel.com,
+        linux-pci@vger.kernel.org, netdev@vger.kernel.org,
+        bhelgaas@google.com
+Subject: Re: [Intel-wired-lan] [PATCH next-queue v2 3/3] igc: Add support
+ for PTP getcrosststamp()
+In-Reply-To: <20201118125451.GC23320@hoboy.vegasvil.org>
+References: <20201114025704.GA15240@hoboy.vegasvil.org>
+ <874klo7pwp.fsf@intel.com> <20201117014926.GA26272@hoboy.vegasvil.org>
+ <87d00b5uj7.fsf@intel.com> <20201118125451.GC23320@hoboy.vegasvil.org>
+Date:   Wed, 18 Nov 2020 16:22:37 -0800
+Message-ID: <87wnyi2o1e.fsf@intel.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The PCI subsystem does not currently save and restore the configuration
-space for the Precision Time Measurement (PTM) PCIe extended capability
-leading to the feature returning disabled on S3 resume. This has been
-observed on Intel Coffee Lake desktops. Add save/restore of the PTM control
-register. This saves the PTM Enable, Root Select, and Effective Granularity
-bits.
+Hi Richard,
 
-Suggested-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Signed-off-by: David E. Box <david.e.box@linux.intel.com>
----
- drivers/pci/pci.c | 44 ++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 44 insertions(+)
+Richard Cochran <richardcochran@gmail.com> writes:
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index e578d34095e9..6fd4ae910a88 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1539,6 +1539,44 @@ static void pci_restore_ltr_state(struct pci_dev *dev)
- 	pci_write_config_word(dev, ltr + PCI_LTR_MAX_NOSNOOP_LAT, *cap++);
- }
- 
-+static void pci_save_ptm_state(struct pci_dev *dev)
-+{
-+	int ptm;
-+	struct pci_cap_saved_state *save_state;
-+	u16 *cap;
-+
-+	if (!pci_is_pcie(dev))
-+		return;
-+
-+	ptm = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_PTM);
-+	if (!ptm)
-+		return;
-+
-+	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_PTM);
-+	if (!save_state) {
-+		pci_err(dev, "no suspend buffer for PTM\n");
-+		return;
-+	}
-+
-+	cap = (u16 *)&save_state->cap.data[0];
-+	pci_read_config_word(dev, ptm + PCI_PTM_CTRL, cap);
-+}
-+
-+static void pci_restore_ptm_state(struct pci_dev *dev)
-+{
-+	struct pci_cap_saved_state *save_state;
-+	int ptm;
-+	u16 *cap;
-+
-+	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_PTM);
-+	ptm = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_PTM);
-+	if (!save_state || !ptm)
-+		return;
-+
-+	cap = (u16 *)&save_state->cap.data[0];
-+	pci_write_config_word(dev, ptm + PCI_PTM_CTRL, *cap);
-+}
-+
- /**
-  * pci_save_state - save the PCI configuration space of a device before
-  *		    suspending
-@@ -1566,6 +1604,7 @@ int pci_save_state(struct pci_dev *dev)
- 	pci_save_ltr_state(dev);
- 	pci_save_dpc_state(dev);
- 	pci_save_aer_state(dev);
-+	pci_save_ptm_state(dev);
- 	return pci_save_vc_state(dev);
- }
- EXPORT_SYMBOL(pci_save_state);
-@@ -1677,6 +1716,7 @@ void pci_restore_state(struct pci_dev *dev)
- 	pci_restore_vc_state(dev);
- 	pci_restore_rebar_state(dev);
- 	pci_restore_dpc_state(dev);
-+	pci_restore_ptm_state(dev);
- 
- 	pci_aer_clear_status(dev);
- 	pci_restore_aer_state(dev);
-@@ -3332,6 +3372,10 @@ void pci_allocate_cap_save_buffers(struct pci_dev *dev)
- 	if (error)
- 		pci_err(dev, "unable to allocate suspend buffer for LTR\n");
- 
-+	error = pci_add_ext_cap_save_buffer(dev, PCI_EXT_CAP_ID_PTM, sizeof(u16));
-+	if (error)
-+		pci_err(dev, "unable to allocate suspend buffer for PTM\n");
-+
- 	pci_allocate_vc_save_buffers(dev);
- }
- 
+> On Tue, Nov 17, 2020 at 05:21:48PM -0800, Vinicius Costa Gomes wrote:
+>> Agreed that would be easiest/simplest. But what I have in hand seems to
+>> not like it, i.e. I have an earlier series implementing this "one shot" way
+>> and it's not reliable over long periods of time or against having the
+>> system time adjusted.
+>
+> Before we go inventing a new API, I think we should first understand
+> why the one shot thing fails.
+
+Talking with the hardware folks, they recommended using the periodic
+method, the one shot method was implemented as a debug/evaluation aid.
+
+The explanation I have is something along these lines: the hardware
+keeps track of the "delta" between the Master Time and its own clock,
+and uses it to calculate the timestamps exposed in the NIC registers. To
+have a better "delta" it needs more samples. And so it has improved
+stability when PTM dialogs happen more continuously, and that's the
+recommended way.
+
+The PCIe PTM specification doesn't suggest how the timestamps need to be
+exposed/calculated, and how long it needs to run, and it sounded to me
+that other implementations could have similar behavior.
+
+>
+> If there is problem with the system time being adjusted during PTM,
+> then that needs solving in any case!
+
+When PTM is running in the periodic mode, system clock adjustments are
+handled fine.
+
+
+Cheers,
 -- 
-2.20.1
-
+Vinicius
