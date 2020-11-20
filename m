@@ -2,130 +2,127 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_2 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50C8EC56202
-	for <linux-pci@archiver.kernel.org>; Fri, 20 Nov 2020 11:18:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 026CFC5519F
+	for <linux-pci@archiver.kernel.org>; Fri, 20 Nov 2020 14:16:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D48D62222F
-	for <linux-pci@archiver.kernel.org>; Fri, 20 Nov 2020 11:18:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 88EAD2223F
+	for <linux-pci@archiver.kernel.org>; Fri, 20 Nov 2020 14:16:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=Synaptics.onmicrosoft.com header.i=@Synaptics.onmicrosoft.com header.b="c6RBf+FD"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rmu5CylR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728328AbgKTLSR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 20 Nov 2020 06:18:17 -0500
-Received: from mail-dm6nam11on2056.outbound.protection.outlook.com ([40.107.223.56]:28513
-        "EHLO NAM11-DM6-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728412AbgKTLSQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 20 Nov 2020 06:18:16 -0500
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=D4UVhHSUc+t3ZcaSRb9nP7zWSHjXeEH74kVhwsK+M7V62jnoi2VoB6b5ZV/QSWaG8o1Waf3pBU8JsXmojtFpMQpbbvN2KPZTavblzqXaG8/cJYgVE1yPQEpcpNH/Wau1cuwP0feDf2UuiNPy2dYOXQnlUVBkSiCmC84c3WF5jK3Pcw2fQlvJGRK/iSubSV1RBuqIeRIFqILa8okcMNzpIfqf0PQK61pWzqTiWUDAuV/kyWHy0+jWlf5t4KwgwudGC4ocH+qF7Y9u6sMlazg2O4WxyhXZAtpfve8UZ+NMN+Rd1UtU45Sjf/vMpNZLl6lOuuBS1EkOUZae735Gzs1uig==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ir2Nk+yJ2QTEJ607sevnjl87Yc2uD8iEZ5mqcb4v5Ww=;
- b=TQddZIL1iu+8N0n91hIshom2aCipbbIUTraNYj8VaDqHO2pmaaxNF4cXlQJkgZ+oLkZSncJQ1jRwaow4eNJ/dzG/s6et6GHRkZSHXHfXFnDPQ5SKU5P5xVo0oS9EKpfAN6XhUFiXPYHxgxhjgaVIBnxepCmT4k6Y2zyP/sEweeG65Tch0eRx8C2+AMyVWacXzVaTw66CzWO5eQ11ZNP4EYwrsJzmo53hBNpaTMb5Hz0KcofVx9fAiSv2x+R2B5xs6bsZtj6+ve9Jnw5kFk+gGRRJ6IFjT53k2mSlF+8bEGnK8C5MOv0kYnMlCuUinKTzfotvS41VLrQRXBFcLXzm1A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=synaptics.com; dmarc=pass action=none
- header.from=synaptics.com; dkim=pass header.d=synaptics.com; arc=none
+        id S1725942AbgKTOQ0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 20 Nov 2020 09:16:26 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58350 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725805AbgKTOQ0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Nov 2020 09:16:26 -0500
+Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14168C0613CF;
+        Fri, 20 Nov 2020 06:16:25 -0800 (PST)
+Received: by mail-pf1-x436.google.com with SMTP id 10so7980751pfp.5;
+        Fri, 20 Nov 2020 06:16:25 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=Synaptics.onmicrosoft.com; s=selector2-Synaptics-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ir2Nk+yJ2QTEJ607sevnjl87Yc2uD8iEZ5mqcb4v5Ww=;
- b=c6RBf+FDMfEJHa7APaY7C/HowDxvWzdMZ5DHedZb2rknTkwWeOIWPOjQf48rlolWLpzruNj0P9xXsnRwOWndRaf/uHvcGwePVJthC19n6c0WeT8oSEhCH66J/J3IgVgb3kw3gDXvXjU1hpP71vXuBYldIrQ4/a8nj5qHqOsU9nw=
-Authentication-Results: amazon.com; dkim=none (message not signed)
- header.d=none;amazon.com; dmarc=none action=none header.from=synaptics.com;
-Received: from SN2PR03MB2383.namprd03.prod.outlook.com (2603:10b6:804:d::23)
- by SN6PR03MB3808.namprd03.prod.outlook.com (2603:10b6:805:67::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3589.21; Fri, 20 Nov
- 2020 11:18:14 +0000
-Received: from SN2PR03MB2383.namprd03.prod.outlook.com
- ([fe80::412b:8366:f594:a39]) by SN2PR03MB2383.namprd03.prod.outlook.com
- ([fe80::412b:8366:f594:a39%9]) with mapi id 15.20.3589.022; Fri, 20 Nov 2020
- 11:18:14 +0000
-Date:   Fri, 20 Nov 2020 19:17:20 +0800
-From:   Jisheng Zhang <Jisheng.Zhang@synaptics.com>
-To:     Jonathan Chocron <jonnyc@amazon.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH dwc-next v2 2/2] PCI: dwc: al: Remove useless dw_pcie_ops
-Message-ID: <20201120191720.5a2320cf@xhacker.debian>
-In-Reply-To: <20201120191611.7b84a86b@xhacker.debian>
-References: <20201120191611.7b84a86b@xhacker.debian>
-X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [192.147.44.204]
-X-ClientProxiedBy: BYAPR11CA0092.namprd11.prod.outlook.com
- (2603:10b6:a03:f4::33) To SN2PR03MB2383.namprd03.prod.outlook.com
- (2603:10b6:804:d::23)
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=KEjEGhmEzvhfjxAnQoE9R0iga9goTRtUqlUhzJyg2qQ=;
+        b=rmu5CylR6oML6jLJKaGGZylZYDXpFUleODzdx8ODXqkwL5ZbtvJrM7cTSVI8T8uVxE
+         P+Unb1Nhc/bMtsDzbttn263z0bjakrJ8R0D1Xcs16DM2HZUdYI/dUfeiJGJYY0P3hhu1
+         odVny6iLsWsR70vTyW5khgYoMf8rap8qAD7SxwU3kSiCTcthD6k7fQDL2ZDYB1EWjzzx
+         xlxXFTC9DpGqALn7JBUNdJHRlmo/MQtKB7pZ9yCvZSeNG7CAbG/hAFrUfByLlc+md6uw
+         xprRB8DTj6TdDZRK/9q/8dpwUdawbsq6TK8Wj5qwnOt0SCObdL4cj3ciw3/jScClA8H1
+         9F6A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=KEjEGhmEzvhfjxAnQoE9R0iga9goTRtUqlUhzJyg2qQ=;
+        b=GRdcfvtjhRnlZRbBg67VKOTEauJ5ByMMjtoxnw92DCmGXWkn1TQtui40CYHY4ButUz
+         d0oXlj5MpVjjoEeo7n/H6Z3v59iByZrvn+o8aAFhR5+QXPNH/InhLrOabwsjq7dB27zn
+         ZwlvFiameFkwbvmhJHZ+fjY86ITC2/1v2Hu+Rdqo5VlCr+yErPFZCWXOO/Ugis6/DhAg
+         vwmdCVo54uQjMu6Bi/RrvbWsDGXqPcTANdIP/bJxHlAnyJzVJXq4aewkKgVzdia04xAN
+         cY0qa0+1lR4myGuRWBSvMSj3dLv2yUeBJuaf6SW0cv8kfjhriF0FH5Dty1rU8SiYdlq6
+         7yKQ==
+X-Gm-Message-State: AOAM530rBGKlXtuTVF7lNt+p/3lhGIKiH7H77+QE/Q5cHZDMD3XjMSdn
+        49RZ0y4EqyTfkhwkSBsRoU+fyBxQ2jc=
+X-Google-Smtp-Source: ABdhPJwSl/mRXdT+kWI2/PMGP7CwOB4vp2FCA92dJObq/nTTfL/VbZmWq8QnHEv9bdX+qhsZ+aCKxw==
+X-Received: by 2002:a63:ca0a:: with SMTP id n10mr17143580pgi.326.1605881784581;
+        Fri, 20 Nov 2020 06:16:24 -0800 (PST)
+Received: from hoboy.vegasvil.org (c-73-241-114-122.hsd1.ca.comcast.net. [73.241.114.122])
+        by smtp.gmail.com with ESMTPSA id kr2sm3984871pjb.31.2020.11.20.06.16.23
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 20 Nov 2020 06:16:23 -0800 (PST)
+Date:   Fri, 20 Nov 2020 06:16:21 -0800
+From:   Richard Cochran <richardcochran@gmail.com>
+To:     Vinicius Costa Gomes <vinicius.gomes@intel.com>
+Cc:     Miroslav Lichvar <mlichvar@redhat.com>,
+        intel-wired-lan@lists.osuosl.org, andre.guedes@intel.com,
+        linux-pci@vger.kernel.org, netdev@vger.kernel.org,
+        bhelgaas@google.com
+Subject: Re: [Intel-wired-lan] [PATCH next-queue v2 3/3] igc: Add support for
+ PTP getcrosststamp()
+Message-ID: <20201120141621.GC7027@hoboy.vegasvil.org>
+References: <20201114025704.GA15240@hoboy.vegasvil.org>
+ <874klo7pwp.fsf@intel.com>
+ <20201117014926.GA26272@hoboy.vegasvil.org>
+ <87d00b5uj7.fsf@intel.com>
+ <20201118125451.GC23320@hoboy.vegasvil.org>
+ <87wnyi2o1e.fsf@intel.com>
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from xhacker.debian (192.147.44.204) by BYAPR11CA0092.namprd11.prod.outlook.com (2603:10b6:a03:f4::33) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3589.20 via Frontend Transport; Fri, 20 Nov 2020 11:18:11 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 218c0286-cd38-4d45-9db5-08d88d45f8fe
-X-MS-TrafficTypeDiagnostic: SN6PR03MB3808:
-X-Microsoft-Antispam-PRVS: <SN6PR03MB3808109BAD0A24682447B2E6EDFF0@SN6PR03MB3808.namprd03.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:639;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: zFe1Yd0VG+eTv7ZTJa8K1DjTd5ylbyT+5R3uduXAu9CCK9OXa4vPp+13ueaUjp3x6DLvZt7DrJrf+vW7k741803koS8mevEaheGZIrq42GyVg4hyQ4P/7lGxtMTHOo8PwsOqP5ti6kWXc7meytJe4xl+WsDfswUstqubgvMA6JSnG36D7B3VLAopmEp7RrXwVEgJ56v5yd32GsrJLdixPgLD8MnVNq75oN2H/r5UBnzSTxpU2SHj/NtrAxEbUBRTSGRaMyzQYE2X1VpCTog7D1GY+nd0QgLBSOCtoKaM7sf2VFpO+VFKRxDQl0HsYXaB
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN2PR03MB2383.namprd03.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(346002)(136003)(39860400002)(366004)(376002)(396003)(9686003)(66946007)(4744005)(8936002)(316002)(186003)(478600001)(4326008)(26005)(5660300002)(55016002)(16526019)(8676002)(2906002)(6666004)(6506007)(86362001)(83380400001)(66476007)(66556008)(52116002)(956004)(110136005)(7696005)(1076003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: n12azcA5YPBHFUtsamMRjILcJP+4Su1yX6NEzrecK9LSOV0FR4RPvot8MujVUWY7LXyDtkY+KeVnhJaByxUCCDcBtPejZG7NRryGhvLdu3v0svqHJ2P5F7DfcOAJVmglefOP1Q0hx+3FgRJMCyHRNT+TSueiNSEeJc9s0X8jntKpk9EDmfKF9wHl84TGpIOYOIAxhZIO0JWm46BxH+/CKWyZcva35Rbo1mFUbyWuU0DVtNLfAN9g1UPd2X3TZ7e+y/uP/9w85a2O8ubVnyggfUJWUSVriKB+oPWt4i1Slj8J4MgY7Bwghpp0Z982Wh7gMps/fBlKkHY9ear3e3XVBV22RndmxUP4oOamGG4V4cGg3qx12Du3mwglOo73S77LqP7T5fS60RGXB4y1+jITzeb/Wevc0QUNLub9aqWzpr7nMcKQPyKM4v9ukXQZXZAdVzvlVmiwWc3H0KBbgL++cViNlPQ6z+fQx40YX1HtkQuLNGriQkRWwtgTgfZFFNJCEM9FvjhmZ0xl3irwDIDksr2v8+yGxJSK+fgk9amAlxqKQhrMQMONWTrzqXqAsL+/ZkfG7lswPKwWbID8HHfajIQmMYeUZ5Jk312nNdw4AYdhWHzup2oUCPuiFSOmlSB1KuIgaAN90A7MsgVqWHnfJw==
-X-OriginatorOrg: synaptics.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 218c0286-cd38-4d45-9db5-08d88d45f8fe
-X-MS-Exchange-CrossTenant-AuthSource: SN2PR03MB2383.namprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Nov 2020 11:18:14.3930
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 335d1fbc-2124-4173-9863-17e7051a2a0e
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: VoakXZMV/YuDb7/3OrUv24EaFu2sWe6aMUhvfI6pAZitYWdWugpLMIlos46mClRhqfKetHiQyIY7xiwTBjykxw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR03MB3808
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <87wnyi2o1e.fsf@intel.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-We have removed the dw_pcie_ops always exists assumption in dwc
-core driver, we can remove the useless dw_pcie_ops now.
+On Wed, Nov 18, 2020 at 04:22:37PM -0800, Vinicius Costa Gomes wrote:
 
-Signed-off-by: Jisheng Zhang <Jisheng.Zhang@synaptics.com>
----
- drivers/pci/controller/dwc/pcie-al.c | 4 ----
- 1 file changed, 4 deletions(-)
+> Talking with the hardware folks, they recommended using the periodic
+> method, the one shot method was implemented as a debug/evaluation aid.
 
-diff --git a/drivers/pci/controller/dwc/pcie-al.c b/drivers/pci/controller/dwc/pcie-al.c
-index 7ac8a37d9ce0..36977c48a7ae 100644
---- a/drivers/pci/controller/dwc/pcie-al.c
-+++ b/drivers/pci/controller/dwc/pcie-al.c
-@@ -322,9 +322,6 @@ static const struct dw_pcie_host_ops al_pcie_host_ops = {
- 	.host_init = al_pcie_host_init,
- };
- 
--static const struct dw_pcie_ops dw_pcie_ops = {
--};
--
- static int al_pcie_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
-@@ -342,7 +339,6 @@ static int al_pcie_probe(struct platform_device *pdev)
- 		return -ENOMEM;
- 
- 	pci->dev = dev;
--	pci->ops = &dw_pcie_ops;
- 	pci->pp.ops = &al_pcie_host_ops;
- 
- 	al_pcie->pci = pci;
--- 
-2.29.2
+I'm guessing ...
+
+The HW generates pairs of time stamps, right?
+
+And these land in the device driver by means of an interrupt, right?
+
+If that is so, then maybe the best way to expose the pair to user
+space is to have a readable character device, like we have for the
+PTP_EXTTS_REQUEST2.  The ioctl to enable reporting could also set the
+message rate.
+
+Although it will be a bit clunky, it looks like we have reserved room
+enough for a second, eight-byte time stamp.
+
+
+	struct ptp_clock_time {
+		__s64 sec;  /* seconds */
+		__u32 nsec; /* nanoseconds */
+		__u32 reserved;
+// four here
+	};
+
+	struct ptp_extts_event {
+		struct ptp_clock_time t; /* Time event occured. */
+		unsigned int index;      /* Which channel produced the event. */
+		unsigned int flags;      /* Reserved for future use. */
+		unsigned int rsv[2];     /* Reserved for future use. */
+// eight here
+	};
+
+
+You could set 'flags' to mark this as a time stamp pair, and then
+stuff the system time stamp into rsv[2].
+
+Thoughts?
+
+Richard
+
 
