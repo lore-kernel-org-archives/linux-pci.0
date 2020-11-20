@@ -2,133 +2,80 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DDA0C2D0E4
-	for <linux-pci@archiver.kernel.org>; Fri, 20 Nov 2020 22:52:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34D32C6379D
+	for <linux-pci@archiver.kernel.org>; Fri, 20 Nov 2020 22:52:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2BC9A2242A
-	for <linux-pci@archiver.kernel.org>; Fri, 20 Nov 2020 22:52:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C12152237B
+	for <linux-pci@archiver.kernel.org>; Fri, 20 Nov 2020 22:52:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729074AbgKTWvz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 20 Nov 2020 17:51:55 -0500
+        id S1729064AbgKTWvx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 20 Nov 2020 17:51:53 -0500
 Received: from mga04.intel.com ([192.55.52.120]:15001 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728905AbgKTWvz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 20 Nov 2020 17:51:55 -0500
-IronPort-SDR: jPx03cqxmX60jmhcjoX0l35s0DW5rzgas7+3sBkKSUxsThKooXTmuAsZimEAoNVJAM89rbNqAh
- GsEPlr+qrpNw==
-X-IronPort-AV: E=McAfee;i="6000,8403,9811"; a="168985727"
+        id S1728905AbgKTWvw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 20 Nov 2020 17:51:52 -0500
+IronPort-SDR: O4H6Dpsqjc0Ud7oUSb/LsJ2hQi19pGIBmsD21K/Z3yN4SiwHYFXL7l/f+C09dmWuGxD5A9vbEE
+ L/lDFxTR98Lg==
+X-IronPort-AV: E=McAfee;i="6000,8403,9811"; a="168985721"
 X-IronPort-AV: E=Sophos;i="5.78,357,1599548400"; 
-   d="scan'208";a="168985727"
+   d="scan'208";a="168985721"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Nov 2020 14:51:54 -0800
-IronPort-SDR: SoAnqL7h9NPD//Gask9LNY0SxdkDVwHPl4yYMZAlTDs6jta9v57xjICgpGxMqMySShRI9Tc5b2
- a/k4f0nV6DeA==
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Nov 2020 14:51:52 -0800
+IronPort-SDR: 7y8T8eA5IJdQ/X6fdwMO4Qj1W9BmIt6xg8/zadBIFEe77f3kuJ7ycPwBF8spdejYULlLYYrB1s
+ /eUiqiuST1GQ==
 X-IronPort-AV: E=Sophos;i="5.78,357,1599548400"; 
-   d="scan'208";a="357852074"
+   d="scan'208";a="357852053"
 Received: from sabakhle-mobl1.amr.corp.intel.com (HELO jderrick-mobl.amr.corp.intel.com) ([10.213.165.80])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Nov 2020 14:51:53 -0800
+  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Nov 2020 14:51:51 -0800
 From:   Jon Derrick <jonathan.derrick@intel.com>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc:     <linux-pci@vger.kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
         Nirmal Patel <nirmal.patel@intel.com>,
         Sushma Kalakota <sushmax.kalakota@intel.com>,
         Jon Derrick <jonathan.derrick@intel.com>
-Subject: [PATCH 2/5] PCI: Add a reset quirk for VMD
-Date:   Fri, 20 Nov 2020 15:51:41 -0700
-Message-Id: <20201120225144.15138-3-jonathan.derrick@intel.com>
+Subject: [PATCH 0/5] Legacy direct-assign mode
+Date:   Fri, 20 Nov 2020 15:51:39 -0700
+Message-Id: <20201120225144.15138-1-jonathan.derrick@intel.com>
 X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20201120225144.15138-1-jonathan.derrick@intel.com>
-References: <20201120225144.15138-1-jonathan.derrick@intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-VMD domains should be reset in-between special attachment such as VFIO
-users. VMD does not offer a reset, however the subdevice domain itself
-can be reset starting at the Root Bus. Add a Secondary Bus Reset on each
-of the individual root port devices immediately downstream of the VMD
-root bus.
+This set adds a legacy direct-assign mode. Newer enterprise hardware has
+physical addressing hints to assist device passthrough to guests that needs to
+correctly program bridge windows with physical addresses. Some customers are
+using a legacy method that relies on the VMD subdevice domain's root port
+windows to be written with the physical addresses. This method also allows
+other hypervisors besides QEMU/KVM to perform guest passthrough.
 
-Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
----
- drivers/pci/quirks.c | 48 ++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 48 insertions(+)
+This patchset adds a host and guest mode to write the physical address
+information to the root port registers in the host and read them in the guest,
+and restore them in both cases on module unload.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index f70692a..ee58b51 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3744,6 +3744,49 @@ static int reset_ivb_igd(struct pci_dev *dev, int probe)
- 	return 0;
- }
- 
-+/* Issues SBR to VMD domain to clear PCI configuration */
-+static int reset_vmd_sbr(struct pci_dev *dev, int probe)
-+{
-+	char __iomem *cfgbar, *base;
-+	int rp;
-+	u16 ctl;
-+
-+	if (probe)
-+		return 0;
-+
-+	if (dev->dev.driver)
-+		return 0;
-+
-+	cfgbar = pci_iomap(dev, 0, 0);
-+	if (!cfgbar)
-+		return -ENOMEM;
-+
-+	/*
-+	 * Subdevice config space is mapped linearly using 4k config space
-+	 * increments. Use increments of 0x8000 to locate root port devices.
-+	 */
-+	for (rp = 0; rp < 4; rp++) {
-+		base = cfgbar + rp * 0x8000;
-+		if (readl(base + PCI_COMMAND) == 0xFFFFFFFF)
-+			continue;
-+
-+		/* pci_reset_secondary_bus() */
-+		ctl = readw(base + PCI_BRIDGE_CONTROL);
-+		ctl |= PCI_BRIDGE_CTL_BUS_RESET;
-+		writew(ctl, base + PCI_BRIDGE_CONTROL);
-+		readw(base + PCI_BRIDGE_CONTROL);
-+		msleep(2);
-+
-+		ctl &= ~PCI_BRIDGE_CTL_BUS_RESET;
-+		writew(ctl, base + PCI_BRIDGE_CONTROL);
-+		readw(base + PCI_BRIDGE_CONTROL);
-+	}
-+
-+	ssleep(1);
-+	pci_iounmap(dev, cfgbar);
-+	return 0;
-+}
-+
- /* Device-specific reset method for Chelsio T4-based adapters */
- static int reset_chelsio_generic_dev(struct pci_dev *dev, int probe)
- {
-@@ -3919,6 +3962,11 @@ static int delay_250ms_after_flr(struct pci_dev *dev, int probe)
- 		reset_ivb_igd },
- 	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M2_VGA,
- 		reset_ivb_igd },
-+	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_VMD_201D, reset_vmd_sbr },
-+	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_VMD_28C0, reset_vmd_sbr },
-+	{ PCI_VENDOR_ID_INTEL, 0x467f, reset_vmd_sbr },
-+	{ PCI_VENDOR_ID_INTEL, 0x4c3d, reset_vmd_sbr },
-+	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_VMD_9A0B, reset_vmd_sbr },
- 	{ PCI_VENDOR_ID_SAMSUNG, 0xa804, nvme_disable_and_flr },
- 	{ PCI_VENDOR_ID_INTEL, 0x0953, delay_250ms_after_flr },
- 	{ PCI_VENDOR_ID_CHELSIO, PCI_ANY_ID,
+This patchset also folds in the VMD subdevice domain secondary bus reset
+patchset [1] to clear the domain prior to guest passthrough.
+
+[1] https://patchwork.kernel.org/project/linux-pci/cover/20200928010557.5324-1-jonathan.derrick@intel.com/
+
+Jon Derrick (5):
+  PCI: vmd: Reset the VMD subdevice domain on probe
+  PCI: Add a reset quirk for VMD
+  PCI: vmd: Add offset translation helper
+  PCI: vmd: Pass features to vmd_get_phys_offsets()
+  PCI: vmd: Add legacy guest passthrough mode
+
+ drivers/pci/controller/vmd.c | 200 ++++++++++++++++++++++++++++++++++++++-----
+ drivers/pci/quirks.c         |  48 +++++++++++
+ 2 files changed, 227 insertions(+), 21 deletions(-)
+
 -- 
 1.8.3.1
 
