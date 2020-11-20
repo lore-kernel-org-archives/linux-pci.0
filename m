@@ -2,107 +2,114 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6135C2D0E4
-	for <linux-pci@archiver.kernel.org>; Fri, 20 Nov 2020 21:57:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A85F7C56202
+	for <linux-pci@archiver.kernel.org>; Fri, 20 Nov 2020 22:52:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 36B3C2245F
-	for <linux-pci@archiver.kernel.org>; Fri, 20 Nov 2020 21:57:14 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="l8Mty+qA"
+	by mail.kernel.org (Postfix) with ESMTP id 5692122470
+	for <linux-pci@archiver.kernel.org>; Fri, 20 Nov 2020 22:52:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728334AbgKTV5N (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 20 Nov 2020 16:57:13 -0500
-Received: from mail.kernel.org ([198.145.29.99]:54146 "EHLO mail.kernel.org"
+        id S1729080AbgKTWvz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 20 Nov 2020 17:51:55 -0500
+Received: from mga04.intel.com ([192.55.52.120]:15001 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728039AbgKTV5N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 20 Nov 2020 16:57:13 -0500
-Received: from localhost (129.sub-72-107-112.myvzw.com [72.107.112.129])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 972AF22254;
-        Fri, 20 Nov 2020 21:57:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1605909432;
-        bh=EyJHD0We1WD+DYetjzdtwyxC7yClq4qfKpddxgRnFP0=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=l8Mty+qAlU7C9g5t5MxjDLq+M0w2JXOYxy4O6cEBf9T481CGAuFcaBimpgrJeaU8i
-         Frti8zwOeDY3M3nDLCEsoXpCS4wPxiHpL6NeOq9vB/w5tX8FS1TfYMVvqwna2GheM6
-         J+kzZMeud15nfXIoyE887+ZvhUkvldStjaZkB8Kk=
-Date:   Fri, 20 Nov 2020 15:57:11 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Zhenzhong Duan <zhenzhong.duan@gmail.com>
-Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        bhelgaas@google.com, hch@infradead.org, alex.williamson@redhat.com,
-        cohuck@redhat.com
-Subject: Re: [PATCH v3 0/2] avoid inserting duplicate IDs in dynids list
-Message-ID: <20201120215711.GA281372@bjorn-Precision-5520>
+        id S1728905AbgKTWvz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 20 Nov 2020 17:51:55 -0500
+IronPort-SDR: svz5TYfK2lqqQUyJWlhE1aJ6tij6wbFuvwrw51QIAHVJ62uIwaprMGkNKMVwwo9UW/+mJwPF0Z
+ I+bbTf+N/52Q==
+X-IronPort-AV: E=McAfee;i="6000,8403,9811"; a="168985730"
+X-IronPort-AV: E=Sophos;i="5.78,357,1599548400"; 
+   d="scan'208";a="168985730"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Nov 2020 14:51:55 -0800
+IronPort-SDR: W1X+h2sLTf2kjhDDC+E0ecB0wnF/NMZr6QP88Rn//fziVyZnMp8PQLICnYLqGqYnehR8uSBj8A
+ jGFHhfEzTzlw==
+X-IronPort-AV: E=Sophos;i="5.78,357,1599548400"; 
+   d="scan'208";a="357852085"
+Received: from sabakhle-mobl1.amr.corp.intel.com (HELO jderrick-mobl.amr.corp.intel.com) ([10.213.165.80])
+  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Nov 2020 14:51:54 -0800
+From:   Jon Derrick <jonathan.derrick@intel.com>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     <linux-pci@vger.kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
+        Nirmal Patel <nirmal.patel@intel.com>,
+        Sushma Kalakota <sushmax.kalakota@intel.com>,
+        Jon Derrick <jonathan.derrick@intel.com>
+Subject: [PATCH 3/5] PCI: vmd: Add offset translation helper
+Date:   Fri, 20 Nov 2020 15:51:42 -0700
+Message-Id: <20201120225144.15138-4-jonathan.derrick@intel.com>
+X-Mailer: git-send-email 2.26.2
+In-Reply-To: <20201120225144.15138-1-jonathan.derrick@intel.com>
+References: <20201120225144.15138-1-jonathan.derrick@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201117054409.3428-1-zhenzhong.duan@gmail.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Nov 17, 2020 at 01:44:07PM +0800, Zhenzhong Duan wrote:
-> vfio-pci and pci-stub use new_id to bind devices. But one can add same IDs
-> multiple times, for example:
-> 
-> # echo "1af4 1041" > /sys/bus/pci/drivers/vfio-pci/new_id
-> # echo "1af4 1041" > /sys/bus/pci/drivers/vfio-pci/new_id
-> # echo "1af4 1041" > /sys/bus/pci/drivers/vfio-pci/new_id
-> # echo "1af4 1041" > /sys/bus/pci/drivers/vfio-pci/remove_id
-> # echo "1af4 1041" > /sys/bus/pci/drivers/vfio-pci/remove_id
-> # echo "1af4 1041" > /sys/bus/pci/drivers/vfio-pci/remove_id
-> # echo "1af4 1041" > /sys/bus/pci/drivers/vfio-pci/remove_id
-> -bash: echo: write error: No such device
-> 
-> This doesn't cause user-visible broken behavior, but not user friendly.
-> he has to remove same IDs same times to ensure it's completely gone.
-> 
-> Changed to only allow one dynamic entry of the same kind, after fix:
-> 
-> # echo "1af4 1041" > /sys/bus/pci/drivers/vfio-pci/new_id
-> # echo "1af4 1041" > /sys/bus/pci/drivers/vfio-pci/new_id
-> -bash: echo: write error: File exists
-> # echo "1af4 1041" > /sys/bus/pci/drivers/vfio-pci/remove_id
-> # echo "1af4 1041" > /sys/bus/pci/drivers/vfio-pci/remove_id
-> -bash: echo: write error: No such device
-> 
-> 
-> v3: add a separate patch to process dependency issue per Bjorn
->     make commit log more clear per Bjorn
-> v2: revert the export of pci_match_device() per Christoph
->     combind PATCH1 and PATCH2 into one.
-> 
-> v2 link:https://lkml.org/lkml/2020/10/25/347
-> 
-> Zhenzhong Duan (2):
->   PCI: move pci_match_device() ahead of new_id_store()
->   PCI: avoid duplicate IDs in dynamic IDs list
-> 
->  drivers/pci/pci-driver.c | 146 +++++++++++++++++++++++------------------------
->  1 file changed, 73 insertions(+), 73 deletions(-)
-> 
-> -- 
-> 1.8.3.1
-> 
-> 
-> Zhenzhong Duan (2):
->   PCI: move pci_match_device() ahead of new_id_store()
->   PCI: avoid duplicate IDs in dynamic IDs list
-> 
->  drivers/pci/pci-driver.c | 146 +++++++++++++++++++++++------------------------
->  1 file changed, 73 insertions(+), 73 deletions(-)
+Adds a helper for translating physical addresses to bridge window
+offsets. No functional changes.
 
-I corrected the subject lines:
+Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+---
+ drivers/pci/controller/vmd.c | 23 ++++++++++++++---------
+ 1 file changed, 14 insertions(+), 9 deletions(-)
 
-  PCI: Move pci_match_device() ahead of new_id_store()
-  PCI: Avoid duplicate IDs in driver dynamic IDs list
+diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+index c7b5614..b0504ee 100644
+--- a/drivers/pci/controller/vmd.c
++++ b/drivers/pci/controller/vmd.c
+@@ -483,6 +483,16 @@ static int vmd_find_free_domain(void)
+ 	return domain + 1;
+ }
+ 
++static void vmd_phys_to_offset(struct vmd_dev *vmd, u64 phys1, u64 phys2,
++				 resource_size_t *offset1,
++				 resource_size_t *offset2)
++{
++	*offset1 = vmd->dev->resource[VMD_MEMBAR1].start -
++			(phys1 & PCI_BASE_ADDRESS_MEM_MASK);
++	*offset2 = vmd->dev->resource[VMD_MEMBAR2].start -
++			(phys2 & PCI_BASE_ADDRESS_MEM_MASK);
++}
++
+ static int vmd_get_phys_offsets(struct vmd_dev *vmd, bool native_hint,
+ 				resource_size_t *offset1,
+ 				resource_size_t *offset2)
+@@ -507,8 +517,8 @@ static int vmd_get_phys_offsets(struct vmd_dev *vmd, bool native_hint,
+ 			phys1 = readq(membar2 + MB2_SHADOW_OFFSET);
+ 			phys2 = readq(membar2 + MB2_SHADOW_OFFSET + 8);
+ 			pci_iounmap(dev, membar2);
+-		} else
+-			return 0;
++			vmd_phys_to_offset(vmd, phys1, phys2, offset1, offset2);
++		}
+ 	} else {
+ 		/* Hypervisor-Emulated Vendor-Specific Capability */
+ 		int pos = pci_find_capability(dev, PCI_CAP_ID_VNDR);
+@@ -525,15 +535,10 @@ static int vmd_get_phys_offsets(struct vmd_dev *vmd, bool native_hint,
+ 			pci_read_config_dword(dev, pos + 16, &reg);
+ 			pci_read_config_dword(dev, pos + 20, &regu);
+ 			phys2 = (u64) regu << 32 | reg;
+-		} else
+-			return 0;
++			vmd_phys_to_offset(vmd, phys1, phys2, offset1, offset2);
++		}
+ 	}
+ 
+-	*offset1 = dev->resource[VMD_MEMBAR1].start -
+-			(phys1 & PCI_BASE_ADDRESS_MEM_MASK);
+-	*offset2 = dev->resource[VMD_MEMBAR2].start -
+-			(phys2 & PCI_BASE_ADDRESS_MEM_MASK);
+-
+ 	return 0;
+ }
+ 
+-- 
+1.8.3.1
 
-and applied both to pci/enumeration for v5.11, thanks!
