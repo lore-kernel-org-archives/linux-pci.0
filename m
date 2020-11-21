@@ -2,299 +2,234 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE5B4C56202
-	for <linux-pci@archiver.kernel.org>; Fri, 20 Nov 2020 23:59:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2041AC56202
+	for <linux-pci@archiver.kernel.org>; Sat, 21 Nov 2020 00:11:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 70A2523A65
-	for <linux-pci@archiver.kernel.org>; Fri, 20 Nov 2020 23:59:39 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="EnMit/LS"
+	by mail.kernel.org (Postfix) with ESMTP id CABB523A65
+	for <linux-pci@archiver.kernel.org>; Sat, 21 Nov 2020 00:11:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728207AbgKTX7c (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 20 Nov 2020 18:59:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36126 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728470AbgKTX7c (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Nov 2020 18:59:32 -0500
-Received: from mail-pg1-x543.google.com (mail-pg1-x543.google.com [IPv6:2607:f8b0:4864:20::543])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3C19C0613CF
-        for <linux-pci@vger.kernel.org>; Fri, 20 Nov 2020 15:59:31 -0800 (PST)
-Received: by mail-pg1-x543.google.com with SMTP id f17so150491pge.6
-        for <linux-pci@vger.kernel.org>; Fri, 20 Nov 2020 15:59:31 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=jBGijJIY6Z+oa+4qlAfyy6WPNwc/Uit7UWvV3O3C13o=;
-        b=EnMit/LSqllcllZ3eo2MUQHxhmoJn+/noatv+OSr2NnhmqUwBuwZ8MLT0Y0eDx9Qyc
-         +V3TQCz2Q5XQ+93j0mZJpr6cgSGKcAJaf9fed/SV1yOMK2rloi1IxxxprgLP/Frr97qL
-         567ewue2XpdI+/74TjYZ4dRhZ+f0cL1Fkqqpo=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=jBGijJIY6Z+oa+4qlAfyy6WPNwc/Uit7UWvV3O3C13o=;
-        b=Q1l4OaGF30w+B8okUkjgAhR/fpOWl7VkWlMBRf2auyUx2aFXov1H10FZx3/hVO6KWY
-         hZU46eM7A1T8sWpZvAkO2eQ5dybob0EaGO3NcUqvpYhiSmTjDJAXSAJ1io54O9yPaM44
-         30Q0oHTUXnSL/GmbpzFzjCVlQ4arnrXiHUQEdheNB9DRrJQTzb8Hrd8mhremrziK84oY
-         7R7OvlxRxkrt6QDn6l/y4wqC/MiGc1Kp7qHpxUWN6beLgMzpK9XrvU8+rNjfX/4hRqaZ
-         K24IbkOIqBc2Kxnn8t9LpsbXSBdluGdEtG4IRdwznDU1cWvp8mFCokZv96yKfCfRd0Xa
-         bxcA==
-X-Gm-Message-State: AOAM533lM0w5/jqUQqnnICoPcoSjOWfuTDbamNKIEeNg4uR1olo4O3Oz
-        OiNcLWn+c4Ezaxt6DCll1PN9sg==
-X-Google-Smtp-Source: ABdhPJwINZgrcgr/0mqpYj168NJb0A8eAVUPoNMIidZ14BcDQ0ir2/tk9jpwBITAPhghCkl/yMjHaA==
-X-Received: by 2002:aa7:9ddb:0:b029:18b:396b:70a3 with SMTP id g27-20020aa79ddb0000b029018b396b70a3mr16223347pfq.3.1605916771276;
-        Fri, 20 Nov 2020 15:59:31 -0800 (PST)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id m30sm4375091pgn.49.2020.11.20.15.59.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 20 Nov 2020 15:59:30 -0800 (PST)
-Date:   Fri, 20 Nov 2020 15:59:28 -0800
-From:   Kees Cook <keescook@chromium.org>
-To:     Sami Tolvanen <samitolvanen@google.com>
-Cc:     Nathan Chancellor <natechancellor@gmail.com>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Masahiro Yamada <masahiroy@kernel.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Will Deacon <will@kernel.org>,
-        Josh Poimboeuf <jpoimboe@redhat.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Paul E. McKenney" <paulmck@kernel.org>,
-        clang-built-linux <clang-built-linux@googlegroups.com>,
-        Kernel Hardening <kernel-hardening@lists.openwall.com>,
-        linux-arch <linux-arch@vger.kernel.org>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        Linux Kbuild mailing list <linux-kbuild@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v7 02/17] kbuild: add support for Clang LTO
-Message-ID: <202011201556.3B910EF@keescook>
-References: <20201118220731.925424-1-samitolvanen@google.com>
- <20201118220731.925424-3-samitolvanen@google.com>
- <CAKwvOdnYTMzaahnBqdNYPz3KMdnkp=jZ4hxiqkTYzM5+BBdezA@mail.gmail.com>
- <CABCJKucj_jUwoiLc35R7qFe+cNKTWgT+gsCa5pPiY66+1--3Lg@mail.gmail.com>
- <202011201144.3F2BB70C@keescook>
- <20201120202935.GA1220359@ubuntu-m3-large-x86>
- <202011201241.B159562D7@keescook>
- <CABCJKucJ87wa73YJkN_dYUyE7foQT+12gdWJZw1PgZ_decFr4w@mail.gmail.com>
+        id S1728456AbgKUAKl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 20 Nov 2020 19:10:41 -0500
+Received: from mga02.intel.com ([134.134.136.20]:34300 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728408AbgKUAKl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 20 Nov 2020 19:10:41 -0500
+IronPort-SDR: hKdWP58CEfMvv5MOKLWXeuTUWf9D2mJgv53oTjWOFCfHYLvt2TbdqorwxluNXlJxJvHmuX+wJl
+ 1Ng+wh+afaBw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9811"; a="158601559"
+X-IronPort-AV: E=Sophos;i="5.78,357,1599548400"; 
+   d="scan'208";a="158601559"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Nov 2020 16:10:40 -0800
+IronPort-SDR: nfzZt6bOmfQ7ILP+G3RHKZQN5CZqcUu4+lm/gV5v9uJV6VE6qfXxcGa3njqS5Y2nSQNfBS80Z2
+ J4hNlwnh7rzQ==
+X-IronPort-AV: E=Sophos;i="5.78,357,1599548400"; 
+   d="scan'208";a="369387293"
+Received: from unknown (HELO arch-ashland-svkelley.intel.com) ([10.212.171.128])
+  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Nov 2020 16:10:39 -0800
+From:   Sean V Kelley <sean.v.kelley@intel.com>
+To:     bhelgaas@google.com, Jonathan.Cameron@huawei.com,
+        xerces.zhao@gmail.com, rafael.j.wysocki@intel.com,
+        ashok.raj@intel.com, tony.luck@intel.com,
+        sathyanarayanan.kuppuswamy@intel.com, qiuxu.zhuo@intel.com
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Sean V Kelley <sean.v.kelley@intel.com>
+Subject: [PATCH v12 03/15] PCI/RCEC: Cache RCEC capabilities in pci_init_capabilities()
+Date:   Fri, 20 Nov 2020 16:10:24 -0800
+Message-Id: <20201121001036.8560-4-sean.v.kelley@intel.com>
+X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20201121001036.8560-1-sean.v.kelley@intel.com>
+References: <20201121001036.8560-1-sean.v.kelley@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CABCJKucJ87wa73YJkN_dYUyE7foQT+12gdWJZw1PgZ_decFr4w@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Nov 20, 2020 at 12:58:41PM -0800, Sami Tolvanen wrote:
-> On Fri, Nov 20, 2020 at 12:43 PM Kees Cook <keescook@chromium.org> wrote:
-> >
-> > On Fri, Nov 20, 2020 at 01:29:35PM -0700, Nathan Chancellor wrote:
-> > > On Fri, Nov 20, 2020 at 11:47:21AM -0800, Kees Cook wrote:
-> > > > On Fri, Nov 20, 2020 at 08:23:11AM -0800, Sami Tolvanen wrote:
-> > > > > Changing the ThinLTO config to a choice and moving it after the main
-> > > > > LTO config sounds like a good idea to me. I'll see if I can change
-> > > > > this in v8. Thanks!
-> > > >
-> > > > Originally, I thought this might be a bit ugly once GCC LTO is added,
-> > > > but this could be just a choice like we're done for the stack
-> > > > initialization. Something like an "LTO" choice of NONE, CLANG_FULL,
-> > > > CLANG_THIN, and in the future GCC, etc.
-> > >
-> > > Having two separate choices might be a little bit cleaner though? One
-> > > for the compiler (LTO_CLANG versus LTO_GCC) and one for the type
-> > > (THINLTO versus FULLLTO). The type one could just have a "depends on
-> > > CC_IS_CLANG" to ensure it only showed up when needed.
-> >
-> > Right, that's how the stack init choice works. Kconfigs that aren't
-> > supported by the compiler won't be shown. I.e. after Sami's future
-> > patch, the only choice for GCC will be CONFIG_LTO_NONE. But building
-> > under Clang, it would offer CONFIG_LTO_NONE, CONFIG_LTO_CLANG_FULL,
-> > CONFIG_LTO_CLANG_THIN, or something.
-> >
-> > (and I assume  CONFIG_LTO would be def_bool y, depends on !LTO_NONE)
-> 
-> I'm fine with adding ThinLTO as another option to the LTO choice, but
-> it would duplicate the dependencies and a lot of the help text. I
-> suppose we could add another config for the dependencies and have both
-> LTO options depend on that instead.
+Extend support for Root Complex Event Collectors by decoding and caching
+the RCEC Endpoint Association Extended Capabilities when enumerating. Use
+that cached information for later error source reporting. See PCIe r5.0,
+sec 7.9.10.
 
-How about something like this? This separates the arch support, compiler
-support, and user choice into three separate Kconfig areas, which I
-think should work.
+[bhelgaas: make pci_rcec_init() void, set dev->rcec_ea after filling it]
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Co-developed-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+Link: https://lore.kernel.org/r/20201002184735.1229220-4-seanvk.dev@oregontracks.org
+Signed-off-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+Signed-off-by: Sean V Kelley <sean.v.kelley@intel.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+---
+ drivers/pci/pci.h         | 17 +++++++++++
+ drivers/pci/pcie/Makefile |  2 +-
+ drivers/pci/pcie/rcec.c   | 59 +++++++++++++++++++++++++++++++++++++++
+ drivers/pci/probe.c       |  2 ++
+ include/linux/pci.h       |  4 +++
+ 5 files changed, 83 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/pci/pcie/rcec.c
 
-
-diff --git a/Makefile b/Makefile
-index e397c4caec1b..af902718e882 100644
---- a/Makefile
-+++ b/Makefile
-@@ -897,7 +897,7 @@ export CC_FLAGS_SCS
- endif
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index f86cae9aa1f4..12dcad8f3635 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -448,6 +448,15 @@ int aer_get_device_error_info(struct pci_dev *dev, struct aer_err_info *info);
+ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info);
+ #endif	/* CONFIG_PCIEAER */
  
- ifdef CONFIG_LTO_CLANG
--ifdef CONFIG_THINLTO
-+ifdef CONFIG_LTO_CLANG_THIN
- CC_FLAGS_LTO	+= -flto=thin -fsplit-lto-unit
- KBUILD_LDFLAGS	+= --thinlto-cache-dir=$(extmod-prefix).thinlto-cache
- else
-diff --git a/arch/Kconfig b/arch/Kconfig
-index cdd29b5fdb56..5c22e10e4c12 100644
---- a/arch/Kconfig
-+++ b/arch/Kconfig
-@@ -600,6 +600,14 @@ config SHADOW_CALL_STACK
- 
- config LTO
- 	bool
-+	help
-+	  Selected if the kernel will be built using the compiler's LTO feature.
++#ifdef CONFIG_PCIEPORTBUS
++/* Cached RCEC Endpoint Association */
++struct rcec_ea {
++	u8		nextbusn;
++	u8		lastbusn;
++	u32		bitmap;
++};
++#endif
 +
-+config LTO_CLANG
-+	bool
-+	select LTO
-+	help
-+	  Selected if the kernel will be built using Clang's LTO feature.
+ #ifdef CONFIG_PCIE_DPC
+ void pci_save_dpc_state(struct pci_dev *dev);
+ void pci_restore_dpc_state(struct pci_dev *dev);
+@@ -460,6 +469,14 @@ static inline void pci_restore_dpc_state(struct pci_dev *dev) {}
+ static inline void pci_dpc_init(struct pci_dev *pdev) {}
+ #endif
  
- config ARCH_SUPPORTS_LTO_CLANG
- 	bool
-@@ -609,28 +617,25 @@ config ARCH_SUPPORTS_LTO_CLANG
- 	  - compiling inline assembly with Clang's integrated assembler,
- 	  - and linking with LLD.
- 
--config ARCH_SUPPORTS_THINLTO
-+config ARCH_SUPPORTS_LTO_CLANG_THIN
- 	bool
- 	help
--	  An architecture should select this option if it supports Clang's
--	  ThinLTO.
-+	  An architecture should select this option if it can supports Clang's
-+	  ThinLTO mode.
- 
--config THINLTO
--	bool "Clang ThinLTO"
--	depends on LTO_CLANG && ARCH_SUPPORTS_THINLTO
--	default y
-+config HAS_LTO_CLANG
-+	def_bool y
-+	# Clang >= 11: https://github.com/ClangBuiltLinux/linux/issues/510
-+	depends on CC_IS_CLANG && CLANG_VERSION >= 110000 && LD_IS_LLD
-+	depends on $(success,$(NM) --help | head -n 1 | grep -qi llvm)
-+	depends on $(success,$(AR) --help | head -n 1 | grep -qi llvm)
-+	depends on ARCH_SUPPORTS_LTO_CLANG
-+	depends on !FTRACE_MCOUNT_USE_RECORDMCOUNT
-+	depends on !KASAN
-+	depends on !GCOV_KERNEL
- 	help
--	  This option enables Clang's ThinLTO, which allows for parallel
--	  optimization and faster incremental compiles. More information
--	  can be found from Clang's documentation:
--
--	    https://clang.llvm.org/docs/ThinLTO.html
--
--	  If you say N here, the compiler will use full LTO, which may
--	  produce faster code, but building the kernel will be significantly
--	  slower as the linker won't efficiently utilize multiple threads.
--
--	  If unsure, say Y.
-+	  The compiler and Kconfig options support building with Clang's
-+	  LTO.
- 
- choice
- 	prompt "Link Time Optimization (LTO)"
-@@ -644,20 +649,14 @@ choice
- 
- config LTO_NONE
- 	bool "None"
-+	help
-+	  Build the kernel normally, without Link Time Optimization (LTO).
- 
--config LTO_CLANG
--	bool "Clang's Link Time Optimization (EXPERIMENTAL)"
--	# Clang >= 11: https://github.com/ClangBuiltLinux/linux/issues/510
--	depends on CC_IS_CLANG && CLANG_VERSION >= 110000 && LD_IS_LLD
--	depends on $(success,$(NM) --help | head -n 1 | grep -qi llvm)
--	depends on $(success,$(AR) --help | head -n 1 | grep -qi llvm)
--	depends on ARCH_SUPPORTS_LTO_CLANG
--	depends on !FTRACE_MCOUNT_USE_RECORDMCOUNT
--	depends on !KASAN
--	depends on !GCOV_KERNEL
--	select LTO
-+config LTO_CLANG_FULL
-+	bool "Clang Full LTO (EXPERIMENTAL)"
-+	select LTO_CLANG
- 	help
--          This option enables Clang's Link Time Optimization (LTO), which
-+          This option enables Clang's full Link Time Optimization (LTO), which
-           allows the compiler to optimize the kernel globally. If you enable
-           this option, the compiler generates LLVM bitcode instead of ELF
-           object files, and the actual compilation from bitcode happens at
-@@ -667,9 +666,22 @@ config LTO_CLANG
- 
- 	    https://llvm.org/docs/LinkTimeOptimization.html
- 
--	  To select this option, you also need to use LLVM tools to handle
--	  the bitcode by passing LLVM=1 to make.
-+	  During link time, this option can use a large amount of RAM, and
-+	  may take much longer than the ThinLTO option.
- 
-+config LTO_CLANG_THIN
-+	bool "Clang ThinLTO (EXPERIMENTAL)"
-+	depends on ARCH_SUPPORTS_LTO_CLANG_THIN
-+	select LTO_CLANG
-+	help
-+	  This option enables Clang's ThinLTO, which allows for parallel
-+	  optimization and faster incremental compiles compared to the
-+	  CONFIG_LTO_CLANG_FULL option. More information can be found
-+	  from Clang's documentation:
++#ifdef CONFIG_PCIEPORTBUS
++void pci_rcec_init(struct pci_dev *dev);
++void pci_rcec_exit(struct pci_dev *dev);
++#else
++static inline void pci_rcec_init(struct pci_dev *dev) {}
++static inline void pci_rcec_exit(struct pci_dev *dev) {}
++#endif
 +
-+	    https://clang.llvm.org/docs/ThinLTO.html
+ #ifdef CONFIG_PCI_ATS
+ /* Address Translation Service */
+ void pci_ats_init(struct pci_dev *dev);
+diff --git a/drivers/pci/pcie/Makefile b/drivers/pci/pcie/Makefile
+index 68da9280ff11..d9697892fa3e 100644
+--- a/drivers/pci/pcie/Makefile
++++ b/drivers/pci/pcie/Makefile
+@@ -2,7 +2,7 @@
+ #
+ # Makefile for PCI Express features and port driver
+ 
+-pcieportdrv-y			:= portdrv_core.o portdrv_pci.o err.o
++pcieportdrv-y			:= portdrv_core.o portdrv_pci.o err.o rcec.o
+ 
+ obj-$(CONFIG_PCIEPORTBUS)	+= pcieportdrv.o
+ 
+diff --git a/drivers/pci/pcie/rcec.c b/drivers/pci/pcie/rcec.c
+new file mode 100644
+index 000000000000..038e9d706d5f
+--- /dev/null
++++ b/drivers/pci/pcie/rcec.c
+@@ -0,0 +1,59 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Root Complex Event Collector Support
++ *
++ * Authors:
++ *  Sean V Kelley <sean.v.kelley@intel.com>
++ *  Qiuxu Zhuo <qiuxu.zhuo@intel.com>
++ *
++ * Copyright (C) 2020 Intel Corp.
++ */
 +
-+	  If unsure, say Y.
- endchoice
++#include <linux/kernel.h>
++#include <linux/pci.h>
++#include <linux/pci_regs.h>
++
++#include "../pci.h"
++
++void pci_rcec_init(struct pci_dev *dev)
++{
++	struct rcec_ea *rcec_ea;
++	u32 rcec, hdr, busn;
++	u8 ver;
++
++	/* Only for Root Complex Event Collectors */
++	if (pci_pcie_type(dev) != PCI_EXP_TYPE_RC_EC)
++		return;
++
++	rcec = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_RCEC);
++	if (!rcec)
++		return;
++
++	rcec_ea = kzalloc(sizeof(*rcec_ea), GFP_KERNEL);
++	if (!rcec_ea)
++		return;
++
++	pci_read_config_dword(dev, rcec + PCI_RCEC_RCIEP_BITMAP,
++			      &rcec_ea->bitmap);
++
++	/* Check whether RCEC BUSN register is present */
++	pci_read_config_dword(dev, rcec, &hdr);
++	ver = PCI_EXT_CAP_VER(hdr);
++	if (ver >= PCI_RCEC_BUSN_REG_VER) {
++		pci_read_config_dword(dev, rcec + PCI_RCEC_BUSN, &busn);
++		rcec_ea->nextbusn = PCI_RCEC_BUSN_NEXT(busn);
++		rcec_ea->lastbusn = PCI_RCEC_BUSN_LAST(busn);
++	} else {
++		/* Avoid later ver check by setting nextbusn */
++		rcec_ea->nextbusn = 0xff;
++		rcec_ea->lastbusn = 0x00;
++	}
++
++	dev->rcec_ea = rcec_ea;
++}
++
++void pci_rcec_exit(struct pci_dev *dev)
++{
++	kfree(dev->rcec_ea);
++	dev->rcec_ea = NULL;
++}
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 4289030b0fff..f22e1451d65d 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2216,6 +2216,7 @@ static void pci_configure_device(struct pci_dev *dev)
+ static void pci_release_capabilities(struct pci_dev *dev)
+ {
+ 	pci_aer_exit(dev);
++	pci_rcec_exit(dev);
+ 	pci_vpd_release(dev);
+ 	pci_iov_release(dev);
+ 	pci_free_cap_save_buffers(dev);
+@@ -2415,6 +2416,7 @@ static void pci_init_capabilities(struct pci_dev *dev)
+ 	pci_ptm_init(dev);		/* Precision Time Measurement */
+ 	pci_aer_init(dev);		/* Advanced Error Reporting */
+ 	pci_dpc_init(dev);		/* Downstream Port Containment */
++	pci_rcec_init(dev);		/* Root Complex Event Collector */
  
- config CFI_CLANG
-diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-index 8bf763307544..f39df315316e 100644
---- a/arch/arm64/Kconfig
-+++ b/arch/arm64/Kconfig
-@@ -74,7 +74,7 @@ config ARM64
- 	select ARCH_SUPPORTS_MEMORY_FAILURE
- 	select ARCH_SUPPORTS_SHADOW_CALL_STACK if CC_HAVE_SHADOW_CALL_STACK
- 	select ARCH_SUPPORTS_LTO_CLANG
--	select ARCH_SUPPORTS_THINLTO
-+	select ARCH_SUPPORTS_LTO_CLANG_THIN
- 	select ARCH_SUPPORTS_ATOMIC_RMW
- 	select ARCH_SUPPORTS_INT128 if CC_HAS_INT128 && (GCC_VERSION >= 50000 || CC_IS_CLANG)
- 	select ARCH_SUPPORTS_NUMA_BALANCING
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index cb4c77a9b5ab..f99a4d3b55ae 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -93,7 +93,7 @@ config X86
- 	select ARCH_SUPPORTS_ATOMIC_RMW
- 	select ARCH_SUPPORTS_NUMA_BALANCING	if X86_64
- 	select ARCH_SUPPORTS_LTO_CLANG		if X86_64
--	select ARCH_SUPPORTS_THINLTO		if X86_64
-+	select ARCH_SUPPORTS_LTO_CLANG_THIN	if X86_64
- 	select ARCH_USE_BUILTIN_BSWAP
- 	select ARCH_USE_QUEUED_RWLOCKS
- 	select ARCH_USE_QUEUED_SPINLOCKS
-diff --git a/kernel/kallsyms.c b/kernel/kallsyms.c
-index 3106636375c0..96505113b907 100644
---- a/kernel/kallsyms.c
-+++ b/kernel/kallsyms.c
-@@ -161,7 +161,7 @@ static unsigned long kallsyms_sym_address(int idx)
- 	return kallsyms_relative_base - 1 - kallsyms_offsets[idx];
- }
+ 	pcie_report_downtraining(dev);
  
--#if defined(CONFIG_CFI_CLANG) && defined(CONFIG_THINLTO)
-+#if defined(CONFIG_CFI_CLANG) && defined(CONFIG_LTO_CLANG_THIN)
- /*
-  * LLVM appends a hash to static function names when ThinLTO and CFI are
-  * both enabled, which causes confusion and potentially breaks user space
-
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 22207a79762c..f8c927fd0602 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -304,6 +304,7 @@ struct pcie_link_state;
+ struct pci_vpd;
+ struct pci_sriov;
+ struct pci_p2pdma;
++struct rcec_ea;
+ 
+ /* The pci_dev structure describes PCI devices */
+ struct pci_dev {
+@@ -326,6 +327,9 @@ struct pci_dev {
+ #ifdef CONFIG_PCIEAER
+ 	u16		aer_cap;	/* AER capability offset */
+ 	struct aer_stats *aer_stats;	/* AER stats for this device */
++#endif
++#ifdef CONFIG_PCIEPORTBUS
++	struct rcec_ea	*rcec_ea;	/* RCEC cached endpoint association */
+ #endif
+ 	u8		pcie_cap;	/* PCIe capability offset */
+ 	u8		msi_cap;	/* MSI capability offset */
 -- 
-Kees Cook
+2.29.2
+
