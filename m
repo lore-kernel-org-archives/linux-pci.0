@@ -7,45 +7,43 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F108EC64E7A
-	for <linux-pci@archiver.kernel.org>; Sat, 21 Nov 2020 00:11:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A130C64E7D
+	for <linux-pci@archiver.kernel.org>; Sat, 21 Nov 2020 00:11:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AA36922470
+	by mail.kernel.org (Postfix) with ESMTP id 00520241A6
 	for <linux-pci@archiver.kernel.org>; Sat, 21 Nov 2020 00:11:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728765AbgKUAKq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 20 Nov 2020 19:10:46 -0500
-Received: from mga02.intel.com ([134.134.136.20]:34309 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728719AbgKUAKp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1728743AbgKUAKp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Fri, 20 Nov 2020 19:10:45 -0500
-IronPort-SDR: /Awp1QBwpze6qkLZW3L7ySeBPgqfWescSFWOEkxbBc+uleMAL8tvl45XRCgNDUbU8nICFcaDA1
- cWsjkI6MTs2g==
-X-IronPort-AV: E=McAfee;i="6000,8403,9811"; a="158601597"
+Received: from mga02.intel.com ([134.134.136.20]:34304 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728632AbgKUAKo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 20 Nov 2020 19:10:44 -0500
+IronPort-SDR: dBXILlVK6/Iot+xL3KPNA0rs1+n635K7SH3KkBfRgfHMW1xM2zzTJtnU5ufvp+QWKTz2AQDvSy
+ yNXeTh+9H14A==
+X-IronPort-AV: E=McAfee;i="6000,8403,9811"; a="158601585"
 X-IronPort-AV: E=Sophos;i="5.78,357,1599548400"; 
-   d="scan'208";a="158601597"
+   d="scan'208";a="158601585"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Nov 2020 16:10:44 -0800
-IronPort-SDR: ZjNlmnti1lkyM+nfXCx92q105tkNxV3vs80opNdb5IuRzCnHLO7IxbJBQ/WdIavyTFYl/bpUpt
- SzsMtz/jn5Rg==
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Nov 2020 16:10:43 -0800
+IronPort-SDR: INJozCXUXKTwqQe8SO6OzJlpqPpt1v3m9xkfGutCiKr7r1uIaKAWT0DhqSURzzJnkPUI5SZuGO
+ 7mCZIeIDpEiQ==
 X-IronPort-AV: E=Sophos;i="5.78,357,1599548400"; 
-   d="scan'208";a="369387338"
+   d="scan'208";a="369387323"
 Received: from unknown (HELO arch-ashland-svkelley.intel.com) ([10.212.171.128])
-  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Nov 2020 16:10:44 -0800
+  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Nov 2020 16:10:42 -0800
 From:   Sean V Kelley <sean.v.kelley@intel.com>
 To:     bhelgaas@google.com, Jonathan.Cameron@huawei.com,
         xerces.zhao@gmail.com, rafael.j.wysocki@intel.com,
         ashok.raj@intel.com, tony.luck@intel.com,
         sathyanarayanan.kuppuswamy@intel.com, qiuxu.zhuo@intel.com
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Sean V Kelley <sean.v.kelley@intel.com>,
-        Kuppuswamy Sathyanarayanan 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>
-Subject: [PATCH v12 15/15] PCI/AER: Add RCEC AER error injection support
-Date:   Fri, 20 Nov 2020 16:10:36 -0800
-Message-Id: <20201121001036.8560-16-sean.v.kelley@intel.com>
+        Sean V Kelley <sean.v.kelley@intel.com>
+Subject: [PATCH v12 11/15] PCI/RCEC: Add pcie_link_rcec() to associate RCiEPs
+Date:   Fri, 20 Nov 2020 16:10:32 -0800
+Message-Id: <20201121001036.8560-12-sean.v.kelley@intel.com>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201121001036.8560-1-sean.v.kelley@intel.com>
 References: <20201121001036.8560-1-sean.v.kelley@intel.com>
@@ -55,40 +53,172 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+A Root Complex Event Collector terminates error and PME messages from
+associated RCiEPs.
 
-Root Complex Event Collectors (RCEC) appear as peers to Root Ports and may
-also have the AER capability.
+Use the RCEC Endpoint Association Extended Capability to identify
+associated RCiEPs. Link the associated RCiEPs as the RCECs are enumerated.
 
-Add RCEC support to the AER error injection driver.
-
-Co-developed-by: Sean V Kelley <sean.v.kelley@intel.com>
-Link: https://lore.kernel.org/r/20201002184735.1229220-15-seanvk.dev@oregontracks.org
+Co-developed-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+Link: https://lore.kernel.org/r/20201002184735.1229220-11-seanvk.dev@oregontracks.org
 Signed-off-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
 Signed-off-by: Sean V Kelley <sean.v.kelley@intel.com>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 ---
- drivers/pci/pcie/aer_inject.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/pci/pci.h              |  2 +
+ drivers/pci/pcie/portdrv_pci.c |  3 ++
+ drivers/pci/pcie/rcec.c        | 94 ++++++++++++++++++++++++++++++++++
+ include/linux/pci.h            |  1 +
+ 4 files changed, 100 insertions(+)
 
-diff --git a/drivers/pci/pcie/aer_inject.c b/drivers/pci/pcie/aer_inject.c
-index c2cbf425afc5..767f8859b99b 100644
---- a/drivers/pci/pcie/aer_inject.c
-+++ b/drivers/pci/pcie/aer_inject.c
-@@ -333,8 +333,11 @@ static int aer_inject(struct aer_error_inj *einj)
- 	if (!dev)
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 3c4570a3058f..ae2ee4df1cff 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -472,9 +472,11 @@ static inline void pci_dpc_init(struct pci_dev *pdev) {}
+ #ifdef CONFIG_PCIEPORTBUS
+ void pci_rcec_init(struct pci_dev *dev);
+ void pci_rcec_exit(struct pci_dev *dev);
++void pcie_link_rcec(struct pci_dev *rcec);
+ #else
+ static inline void pci_rcec_init(struct pci_dev *dev) {}
+ static inline void pci_rcec_exit(struct pci_dev *dev) {}
++static inline void pcie_link_rcec(struct pci_dev *rcec) {}
+ #endif
+ 
+ #ifdef CONFIG_PCI_ATS
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index ff9517ee92b3..0b250bc5f405 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -111,6 +111,9 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+ 	     (type != PCI_EXP_TYPE_RC_EC)))
  		return -ENODEV;
- 	rpdev = pcie_find_root_port(dev);
-+	/* If Root Port not found, try to find an RCEC */
-+	if (!rpdev)
-+		rpdev = dev->rcec;
- 	if (!rpdev) {
--		pci_err(dev, "Root port not found\n");
-+		pci_err(dev, "Neither Root Port nor RCEC found\n");
- 		ret = -ENODEV;
- 		goto out_put;
- 	}
+ 
++	if (type == PCI_EXP_TYPE_RC_EC)
++		pcie_link_rcec(dev);
++
+ 	status = pcie_port_device_register(dev);
+ 	if (status)
+ 		return status;
+diff --git a/drivers/pci/pcie/rcec.c b/drivers/pci/pcie/rcec.c
+index 038e9d706d5f..cdec277cbd62 100644
+--- a/drivers/pci/pcie/rcec.c
++++ b/drivers/pci/pcie/rcec.c
+@@ -15,6 +15,100 @@
+ 
+ #include "../pci.h"
+ 
++struct walk_rcec_data {
++	struct pci_dev *rcec;
++	int (*user_callback)(struct pci_dev *dev, void *data);
++	void *user_data;
++};
++
++static bool rcec_assoc_rciep(struct pci_dev *rcec, struct pci_dev *rciep)
++{
++	unsigned long bitmap = rcec->rcec_ea->bitmap;
++	unsigned int devn;
++
++	/* An RCiEP found on a different bus in range */
++	if (rcec->bus->number != rciep->bus->number)
++		return true;
++
++	/* Same bus, so check bitmap */
++	for_each_set_bit(devn, &bitmap, 32)
++		if (devn == rciep->devfn)
++			return true;
++
++	return false;
++}
++
++static int link_rcec_helper(struct pci_dev *dev, void *data)
++{
++	struct walk_rcec_data *rcec_data = data;
++	struct pci_dev *rcec = rcec_data->rcec;
++
++	if ((pci_pcie_type(dev) == PCI_EXP_TYPE_RC_END) &&
++	    rcec_assoc_rciep(rcec, dev)) {
++		dev->rcec = rcec;
++		pci_dbg(dev, "PME & error events signaled via %s\n",
++			pci_name(rcec));
++	}
++
++	return 0;
++}
++
++static void walk_rcec(int (*cb)(struct pci_dev *dev, void *data),
++		      void *userdata)
++{
++	struct walk_rcec_data *rcec_data = userdata;
++	struct pci_dev *rcec = rcec_data->rcec;
++	u8 nextbusn, lastbusn;
++	struct pci_bus *bus;
++	unsigned int bnr;
++
++	if (!rcec->rcec_ea)
++		return;
++
++	/* Walk own bus for bitmap based association */
++	pci_walk_bus(rcec->bus, cb, rcec_data);
++
++	nextbusn = rcec->rcec_ea->nextbusn;
++	lastbusn = rcec->rcec_ea->lastbusn;
++
++	/* All RCiEP devices are on the same bus as the RCEC */
++	if (nextbusn == 0xff && lastbusn == 0x00)
++		return;
++
++	for (bnr = nextbusn; bnr <= lastbusn; bnr++) {
++		/* No association indicated (PCIe 5.0-1, 7.9.10.3) */
++		if (bnr == rcec->bus->number)
++			continue;
++
++		bus = pci_find_bus(pci_domain_nr(rcec->bus), bnr);
++		if (!bus)
++			continue;
++
++		/* Find RCiEP devices on the given bus ranges */
++		pci_walk_bus(bus, cb, rcec_data);
++	}
++}
++
++/**
++ * pcie_link_rcec - Link RCiEP devices associated with RCEC.
++ * @rcec: RCEC whose RCiEP devices should be linked.
++ *
++ * Link the given RCEC to each RCiEP device found.
++ */
++void pcie_link_rcec(struct pci_dev *rcec)
++{
++	struct walk_rcec_data rcec_data;
++
++	if (!rcec->rcec_ea)
++		return;
++
++	rcec_data.rcec = rcec;
++	rcec_data.user_callback = NULL;
++	rcec_data.user_data = NULL;
++
++	walk_rcec(link_rcec_helper, &rcec_data);
++}
++
+ void pci_rcec_init(struct pci_dev *dev)
+ {
+ 	struct rcec_ea *rcec_ea;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index f8c927fd0602..7c7d2d23e8a3 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -330,6 +330,7 @@ struct pci_dev {
+ #endif
+ #ifdef CONFIG_PCIEPORTBUS
+ 	struct rcec_ea	*rcec_ea;	/* RCEC cached endpoint association */
++	struct pci_dev  *rcec;          /* Associated RCEC device */
+ #endif
+ 	u8		pcie_cap;	/* PCIe capability offset */
+ 	u8		msi_cap;	/* MSI capability offset */
 -- 
 2.29.2
 
