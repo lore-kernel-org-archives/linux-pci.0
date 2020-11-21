@@ -7,33 +7,33 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91ECDC63798
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9C2CC56202
 	for <linux-pci@archiver.kernel.org>; Sat, 21 Nov 2020 00:11:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 612E622470
+	by mail.kernel.org (Postfix) with ESMTP id 7E4EF23A6B
 	for <linux-pci@archiver.kernel.org>; Sat, 21 Nov 2020 00:11:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728882AbgKUALA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 20 Nov 2020 19:11:00 -0500
-Received: from mga02.intel.com ([134.134.136.20]:34298 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728581AbgKUAKo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1728606AbgKUAKo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Fri, 20 Nov 2020 19:10:44 -0500
-IronPort-SDR: KVMJVmei44GfDS37OM3eUAsfXuTzlBL6Xl6cIXm35PbT5khYVnMgTWUj6WrNK6W+SOau9Yw5qN
- c93gckAX1kHA==
-X-IronPort-AV: E=McAfee;i="6000,8403,9811"; a="158601578"
+Received: from mga02.intel.com ([134.134.136.20]:34304 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728470AbgKUAKm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 20 Nov 2020 19:10:42 -0500
+IronPort-SDR: MG6QpcnTL5jF/kL0Y+yx7goJrJ7xo/ViVElSAZylYAT1h6/9xLNAxPZw+c55YSCXIMGksGtIPG
+ MRq/ba8f7WOw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9811"; a="158601568"
 X-IronPort-AV: E=Sophos;i="5.78,357,1599548400"; 
-   d="scan'208";a="158601578"
+   d="scan'208";a="158601568"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Nov 2020 16:10:42 -0800
-IronPort-SDR: QuTV2cHnMoGhmfI7XoaUAHVUr0Ro3I02e+Ym2wBUkCT8j55jqAn/bv1VsXtswgqh0FOtaPqAmy
- AdVEtyJB3AVw==
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Nov 2020 16:10:41 -0800
+IronPort-SDR: j/L2xqU21MXT2aIQJBuV2OzV28RFz25qrFesKAH52lCaIyre7v+IFjAvoc9OT6zVQFY6I55snN
+ iyyK3SFd4nIw==
 X-IronPort-AV: E=Sophos;i="5.78,357,1599548400"; 
-   d="scan'208";a="369387315"
+   d="scan'208";a="369387305"
 Received: from unknown (HELO arch-ashland-svkelley.intel.com) ([10.212.171.128])
-  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Nov 2020 16:10:42 -0800
+  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Nov 2020 16:10:41 -0800
 From:   Sean V Kelley <sean.v.kelley@intel.com>
 To:     bhelgaas@google.com, Jonathan.Cameron@huawei.com,
         xerces.zhao@gmail.com, rafael.j.wysocki@intel.com,
@@ -41,9 +41,9 @@ To:     bhelgaas@google.com, Jonathan.Cameron@huawei.com,
         sathyanarayanan.kuppuswamy@intel.com, qiuxu.zhuo@intel.com
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         Sean V Kelley <sean.v.kelley@intel.com>
-Subject: [PATCH v12 09/15] PCI/ERR: Add pci_walk_bridge() to pcie_do_recovery()
-Date:   Fri, 20 Nov 2020 16:10:30 -0800
-Message-Id: <20201121001036.8560-10-sean.v.kelley@intel.com>
+Subject: [PATCH v12 06/15] PCI/ERR: Simplify by computing pci_pcie_type() once
+Date:   Fri, 20 Nov 2020 16:10:27 -0800
+Message-Id: <20201121001036.8560-7-sean.v.kelley@intel.com>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201121001036.8560-1-sean.v.kelley@intel.com>
 References: <20201121001036.8560-1-sean.v.kelley@intel.com>
@@ -53,98 +53,89 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Consolidate subordinate bus checks with pci_walk_bus() into
-pci_walk_bridge() for walking below potentially AER affected bridges.
+Instead of calling pci_pcie_type(dev) twice, call it once and save the
+result.  No functional change intended.
 
-[bhelgaas: fix kerneldoc]
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Link: https://lore.kernel.org/r/20201002184735.1229220-7-seanvk.dev@oregontracks.org
+[bhelgaas: split to separate patch]
+Link: https://lore.kernel.org/r/20201002184735.1229220-6-seanvk.dev@oregontracks.org
 Signed-off-by: Sean V Kelley <sean.v.kelley@intel.com>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 ---
- drivers/pci/pcie/err.c | 30 +++++++++++++++++++++++-------
- 1 file changed, 23 insertions(+), 7 deletions(-)
+ drivers/pci/pcie/aer.c         | 5 +++--
+ drivers/pci/pcie/err.c         | 5 +++--
+ drivers/pci/pcie/portdrv_pci.c | 9 +++++----
+ 3 files changed, 11 insertions(+), 8 deletions(-)
 
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index 6fe2d4ef0635..0ba0b47ae751 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -1034,6 +1034,7 @@ EXPORT_SYMBOL_GPL(aer_recover_queue);
+  */
+ int aer_get_device_error_info(struct pci_dev *dev, struct aer_err_info *info)
+ {
++	int type = pci_pcie_type(dev);
+ 	int aer = dev->aer_cap;
+ 	int temp;
+ 
+@@ -1052,8 +1053,8 @@ int aer_get_device_error_info(struct pci_dev *dev, struct aer_err_info *info)
+ 			&info->mask);
+ 		if (!(info->status & ~info->mask))
+ 			return 0;
+-	} else if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
+-	           pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM ||
++	} else if (type == PCI_EXP_TYPE_ROOT_PORT ||
++		   type == PCI_EXP_TYPE_DOWNSTREAM ||
+ 		   info->severity == AER_NONFATAL) {
+ 
+ 		/* Link is still healthy for IO reads */
 diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index 931e75f2549d..8b53aecdb43d 100644
+index 05f61da5ed9d..7a5af873d8bc 100644
 --- a/drivers/pci/pcie/err.c
 +++ b/drivers/pci/pcie/err.c
-@@ -146,13 +146,30 @@ static int report_resume(struct pci_dev *dev, void *data)
- 	return 0;
- }
- 
-+/**
-+ * pci_walk_bridge - walk bridges potentially AER affected
-+ * @bridge:	bridge which may be a Port
-+ * @cb:		callback to be called for each device found
-+ * @userdata:	arbitrary pointer to be passed to callback
-+ *
-+ * If the device provided is a bridge, walk the subordinate bus, including
-+ * any bridged devices on buses under this bus.  Call the provided callback
-+ * on each device found.
-+ */
-+static void pci_walk_bridge(struct pci_dev *bridge,
-+			    int (*cb)(struct pci_dev *, void *),
-+			    void *userdata)
-+{
-+	if (bridge->subordinate)
-+		pci_walk_bus(bridge->subordinate, cb, userdata);
-+}
-+
- pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+@@ -150,6 +150,7 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
  		pci_channel_state_t state,
  		pci_ers_result_t (*reset_subordinates)(struct pci_dev *pdev))
  {
- 	int type = pci_pcie_type(dev);
- 	struct pci_dev *bridge;
--	struct pci_bus *bus;
++	int type = pci_pcie_type(dev);
  	pci_ers_result_t status = PCI_ERS_RESULT_CAN_RECOVER;
+ 	struct pci_bus *bus;
  
- 	/*
-@@ -165,23 +182,22 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
- 	else
- 		bridge = pci_upstream_bridge(dev);
+@@ -157,8 +158,8 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+ 	 * Error recovery runs on all subordinates of the first downstream port.
+ 	 * If the downstream port detected the error, it is cleared at the end.
+ 	 */
+-	if (!(pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
+-	      pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM))
++	if (!(type == PCI_EXP_TYPE_ROOT_PORT ||
++	      type == PCI_EXP_TYPE_DOWNSTREAM))
+ 		dev = pci_upstream_bridge(dev);
+ 	bus = dev->subordinate;
  
--	bus = bridge->subordinate;
- 	pci_dbg(bridge, "broadcast error_detected message\n");
- 	if (state == pci_channel_io_frozen) {
--		pci_walk_bus(bus, report_frozen_detected, &status);
-+		pci_walk_bridge(bridge, report_frozen_detected, &status);
- 		status = reset_subordinates(bridge);
- 		if (status != PCI_ERS_RESULT_RECOVERED) {
- 			pci_warn(bridge, "subordinate device reset failed\n");
- 			goto failed;
- 		}
- 	} else {
--		pci_walk_bus(bus, report_normal_detected, &status);
-+		pci_walk_bridge(bridge, report_normal_detected, &status);
- 	}
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index 4d880679b9b1..ff9517ee92b3 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -101,13 +101,14 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+ static int pcie_portdrv_probe(struct pci_dev *dev,
+ 					const struct pci_device_id *id)
+ {
++	int type = pci_pcie_type(dev);
+ 	int status;
  
- 	if (status == PCI_ERS_RESULT_CAN_RECOVER) {
- 		status = PCI_ERS_RESULT_RECOVERED;
- 		pci_dbg(bridge, "broadcast mmio_enabled message\n");
--		pci_walk_bus(bus, report_mmio_enabled, &status);
-+		pci_walk_bridge(bridge, report_mmio_enabled, &status);
- 	}
+ 	if (!pci_is_pcie(dev) ||
+-	    ((pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT) &&
+-	     (pci_pcie_type(dev) != PCI_EXP_TYPE_UPSTREAM) &&
+-	     (pci_pcie_type(dev) != PCI_EXP_TYPE_DOWNSTREAM) &&
+-	     (pci_pcie_type(dev) != PCI_EXP_TYPE_RC_EC)))
++	    ((type != PCI_EXP_TYPE_ROOT_PORT) &&
++	     (type != PCI_EXP_TYPE_UPSTREAM) &&
++	     (type != PCI_EXP_TYPE_DOWNSTREAM) &&
++	     (type != PCI_EXP_TYPE_RC_EC)))
+ 		return -ENODEV;
  
- 	if (status == PCI_ERS_RESULT_NEED_RESET) {
-@@ -192,14 +208,14 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
- 		 */
- 		status = PCI_ERS_RESULT_RECOVERED;
- 		pci_dbg(bridge, "broadcast slot_reset message\n");
--		pci_walk_bus(bus, report_slot_reset, &status);
-+		pci_walk_bridge(bridge, report_slot_reset, &status);
- 	}
- 
- 	if (status != PCI_ERS_RESULT_RECOVERED)
- 		goto failed;
- 
- 	pci_dbg(bridge, "broadcast resume message\n");
--	pci_walk_bus(bus, report_resume, &status);
-+	pci_walk_bridge(bridge, report_resume, &status);
- 
- 	if (pcie_aer_is_native(bridge))
- 		pcie_clear_device_status(bridge);
+ 	status = pcie_port_device_register(dev);
 -- 
 2.29.2
 
