@@ -2,99 +2,156 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F34D0C6379D
-	for <linux-pci@archiver.kernel.org>; Wed, 25 Nov 2020 19:26:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E6FEC56202
+	for <linux-pci@archiver.kernel.org>; Wed, 25 Nov 2020 19:52:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 900192075A
-	for <linux-pci@archiver.kernel.org>; Wed, 25 Nov 2020 19:26:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DC93C20663
+	for <linux-pci@archiver.kernel.org>; Wed, 25 Nov 2020 19:52:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="hdVkoaKO"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="pmEC6EgD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727939AbgKYT0F (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 25 Nov 2020 14:26:05 -0500
-Received: from hqnvemgate25.nvidia.com ([216.228.121.64]:4389 "EHLO
+        id S1728114AbgKYTwA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 25 Nov 2020 14:52:00 -0500
+Received: from hqnvemgate25.nvidia.com ([216.228.121.64]:6588 "EHLO
         hqnvemgate25.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727886AbgKYT0E (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 25 Nov 2020 14:26:04 -0500
+        with ESMTP id S1729228AbgKYTv7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 25 Nov 2020 14:51:59 -0500
 Received: from hqmail.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate25.nvidia.com (using TLS: TLSv1.2, AES256-SHA)
-        id <B5fbeafcc0003>; Wed, 25 Nov 2020 11:26:04 -0800
-Received: from HQMAIL101.nvidia.com (172.20.187.10) by HQMAIL105.nvidia.com
- (172.20.187.12) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Wed, 25 Nov
- 2020 19:26:02 +0000
-Received: from vidyas-desktop.nvidia.com (10.124.1.5) by mail.nvidia.com
- (172.20.187.10) with Microsoft SMTP Server id 15.0.1473.3 via Frontend
- Transport; Wed, 25 Nov 2020 19:25:58 +0000
+        id <B5fbeb5df0000>; Wed, 25 Nov 2020 11:51:59 -0800
+Received: from [10.40.102.42] (10.124.1.5) by HQMAIL107.nvidia.com
+ (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Wed, 25 Nov
+ 2020 19:51:49 +0000
+Subject: Re: [PATCH V4 0/6] Enhancements to Tegra194 PCIe driver
+To:     Thierry Reding <thierry.reding@gmail.com>
+CC:     "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        "amanharitsh123@gmail.com" <amanharitsh123@gmail.com>,
+        "dinghao.liu@zju.edu.cn" <dinghao.liu@zju.edu.cn>,
+        "kw@linux.com" <kw@linux.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Krishna Thota <kthota@nvidia.com>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        "sagar.tv@gmail.com" <sagar.tv@gmail.com>
+References: <20201109171937.28326-1-vidyas@nvidia.com>
+ <20201125175709.GA1274379@ulmo>
 From:   Vidya Sagar <vidyas@nvidia.com>
-To:     <lorenzo.pieralisi@arm.com>, <robh@kernel.org>,
-        <bhelgaas@google.com>, <thierry.reding@gmail.com>,
-        <jonathanh@nvidia.com>, <jingoohan1@gmail.com>, <kw@linux.com>,
-        <amanharitsh123@gmail.com>, <gregkh@linuxfoundation.org>
-CC:     <linux-pci@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <kthota@nvidia.com>,
-        <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>, <sagar.tv@gmail.com>
-Subject: [PATCH] PCI: tegra: Read "dbi" base address to program in application logic
-Date:   Thu, 26 Nov 2020 00:55:54 +0530
-Message-ID: <20201125192554.5401-1-vidyas@nvidia.com>
-X-Mailer: git-send-email 2.17.1
-X-NVConfidentiality: public
+Message-ID: <9291ac83-0f14-88df-8c1d-81f57b0340ee@nvidia.com>
+Date:   Thu, 26 Nov 2020 01:21:44 +0530
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.4.2
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20201125175709.GA1274379@ulmo>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.124.1.5]
+X-ClientProxiedBy: HQMAIL111.nvidia.com (172.20.187.18) To
+ HQMAIL107.nvidia.com (172.20.187.13)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1606332364; bh=JWEIVMl/77bu7Q+BVjyybEbxe5MdS6MrC/6uj772QPg=;
-        h=From:To:CC:Subject:Date:Message-ID:X-Mailer:X-NVConfidentiality:
-         MIME-Version:Content-Type;
-        b=hdVkoaKOWf2K3iNdsk4GNjg9JAXIX8mjLhwUl9zs/cy3Ikza4uqq6GGvDckE8MqL4
-         YT466FnFMNDfAZL0b4vD/hEX7hTlcgcuU5Cv6na9guprzE7sLjE8tJtlFuLtVopIs2
-         azKxk7e0K3nHjYqtcG/4DaEjjNCtKEBKbVpRV8ltNrDIMmKtwU56l4fjRB6Eo1W287
-         Qhg3gOdyFEOyl3aq8WR/PK+HAvT6moyikB1xoCCNJK2Bpl7zaNbKRGRAGn54tYZQKb
-         qIGyIbZt2LTZQ71wypNaX2s42xyGzSiVBjvvOEWOzfezWakLnQAOGvR67KfgxySl7Y
-         kXEi27jy74+WA==
+        t=1606333919; bh=ixWL4EOpRfrPXrl40i6mo64j5n1lhFO+bCWPBDJNeeU=;
+        h=Subject:To:CC:References:From:Message-ID:Date:User-Agent:
+         MIME-Version:In-Reply-To:Content-Type:Content-Language:
+         Content-Transfer-Encoding:X-Originating-IP:X-ClientProxiedBy;
+        b=pmEC6EgDjCofHhpuGtafbXCwe6Ss2k4V/ttvQToLcL3wk980NxI624heshHU4xMAp
+         5gaptxmoscfZ5zd+IvLdXzDX5vkbTLH7qVqKmw+NayvPSjrpn9Cu67OMHgd7CO7vpc
+         popvRMQQQofZ9MTKrYNJmbuvCUY1syQuH9Dr6aN+CftRgncL3sJ+OXSALk/N2YClCq
+         YtveQ5R5aNpR8aHC8RQvWgGgdSCKP215DDcfGgpJjbS+FnZdOaVY28LRuxGn87/DNf
+         fksCCQtrzI0HAfUrC8/AgqRW2VFoegNNnMSlKy/KzI5JUKUPTxQt1gXaxdlsTVl/9d
+         fXMuM3ZV9LG2A==
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PCIe controller in Tegra194 requires the "dbi" region base address to be
-programmed in one of the application logic registers to enable CPU access
-to the "dbi" region. But, commit a0fd361db8e5 ("PCI: dwc: Move "dbi",
-"dbi2", and "addr_space" resource setup into common code") moved the code
-that reads the whereabouts of "dbi" region to the common code causing the
-existing code in pcie-tegra194.c file to program NULL in the application
-logic registers. This is causing null pointer dereference when the "dbi"
-registers are accessed. This issue is fixed by explicitly reading the
-"dbi" base address from DT node.
 
-Fixes: a0fd361db8e5 ("PCI: dwc: Move "dbi", "dbi2", and "addr_space" resource setup into common code")
-Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
----
- drivers/pci/controller/dwc/pcie-tegra194.c | 7 +++++++
- 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-index fa54d9aaa430..ac2225175087 100644
---- a/drivers/pci/controller/dwc/pcie-tegra194.c
-+++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-@@ -1053,9 +1053,16 @@ static int tegra_pcie_enable_phy(struct tegra_pcie_dw *pcie)
- 
- static int tegra_pcie_dw_parse_dt(struct tegra_pcie_dw *pcie)
- {
-+	struct platform_device *pdev = to_platform_device(pcie->dev);
- 	struct device_node *np = pcie->dev->of_node;
- 	int ret;
- 
-+	pcie->dbi_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
-+	if (!pcie->dbi_res) {
-+		dev_err(pcie->dev, "Failed to find \"dbi\" region\n");
-+		return -ENODEV;
-+	}
-+
- 	ret = of_property_read_u32(np, "nvidia,aspm-cmrt-us", &pcie->aspm_cmrt);
- 	if (ret < 0) {
- 		dev_info(pcie->dev, "Failed to read ASPM T_cmrt: %d\n", ret);
--- 
-2.17.1
+> -----Original Message-----
+> From: Thierry Reding <thierry.reding@gmail.com>
+> Sent: Wednesday, November 25, 2020 11:27 PM
+> To: Vidya Sagar <vidyas@nvidia.com>
+> Cc: lorenzo.pieralisi@arm.com; robh+dt@kernel.org; bhelgaas@google.com;
+> Jonathan Hunter <jonathanh@nvidia.com>; amanharitsh123@gmail.com;
+> dinghao.liu@zju.edu.cn; kw@linux.com; linux-pci@vger.kernel.org; linux-
+> tegra@vger.kernel.org; linux-kernel@vger.kernel.org; Krishna Thota
+> <kthota@nvidia.com>; Manikanta Maddireddy <mmaddireddy@nvidia.com>;
+> sagar.tv@gmail.com
+> Subject: Re: [PATCH V4 0/6] Enhancements to Tegra194 PCIe driver
+> 
+> On Mon, Nov 09, 2020 at 10:49:31PM +0530, Vidya Sagar wrote:
+> > This series of patches do some enhancements and some bug fixes to the
+> > Tegra194 PCIe platform driver like
+> > - Fix Vendor-ID corruption
+> > - Map DBI space correctly
+> > - Update DWC IP version
+> > - Continue with uninitialization sequence even if parts fail
+> > - Check return value of tegra_pcie_init_controller()
+> >
+> > V4:
+> > * Added a new patch to address link-up issues with some of the cards
+> >
+> > V3:
+> > * Addressed Bjorn's review comments
+> > * Split earlier patch-4 into two
+> >   - Continue with the uninitialization sequence even if some parts fail
+> >   - Check return value of tegra_pcie_init_controller() and exit
+> > accordingly
+> >
+> > V2:
+> > * Addressed Rob's comments. Changed 'Strongly Ordered' to 'nGnRnE'
+> >
+> > Vidya Sagar (6):
+> >   PCI: tegra: Fix ASPM-L1SS advertisement disable code
+> >   PCI: tegra: Map configuration space as nGnRnE
+> >   PCI: tegra: Set DesignWare IP version
+> >   PCI: tegra: Continue unconfig sequence even if parts fail
+> >   PCI: tegra: Check return value of tegra_pcie_init_controller()
+> >   PCI: tegra: Disable LTSSM during L2 entry
+> >
+> >  drivers/pci/controller/dwc/pcie-tegra194.c | 78
+> > +++++++++++-----------
+> >  1 file changed, 39 insertions(+), 39 deletions(-)
+> 
+> I was going to test this series, but then I noticed that PCI is causing a crash on
+> linux-next (as of fairly recently).
+I root caused the crash issue to the following commit
+a0fd361db8e5 ("PCI: dwc: Move "dbi", "dbi2", and "addr_space" resource 
+setup into common code")
 
+I also pushed the following two patches to fix this issue for review
+
+http://patchwork.ozlabs.org/project/linux-pci/patch/20201125192234.2270-1-vidyas@nvidia.com/
+http://patchwork.ozlabs.org/project/linux-pci/patch/20201125192554.5401-1-vidyas@nvidia.com/
+
+
+> So I tried applying this on top of v5.10-rc1, but
+> that gives me the following:
+> 
+> 	[    3.595161] ahci 0001:01:00.0: version 3.0
+> 	[    3.595726] ahci 0001:01:00.0: SSS flag set, parallel bus scan disabled
+> 	[    4.609923] ahci 0001:01:00.0: controller reset failed (0xffffffff)
+> 	[    4.610343] ahci: probe of 0001:01:00.0 failed with error -5
+> 
+> So the device enumerates fine, but it's not able to reset the SATA controller.
+> That said, this seems to happen regardless of this patch series, so plain v5.10-rc1
+> also shows the above.
+This was also a known issue and we need the following commit to make 
+things work (FWIW, it is already accepted)
+9fff3256f93d PCI: dwc: Restore ATU memory resource setup to use last entry
+
+Otherwise, v5.10-rc3 can be used which has working state of PCIe on 
+Tegra194.
+
+> 
+> Given the above, I think we should hold off on applying this series until we've
+> fixed PCI on linux-next and made sure that SATA also works properly, otherwise
+> we don't have a known good baseline to test this against.
+> 
+> Thierry
