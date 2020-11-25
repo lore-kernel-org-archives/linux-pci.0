@@ -2,117 +2,82 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E226C5519F
-	for <linux-pci@archiver.kernel.org>; Wed, 25 Nov 2020 12:52:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5440C5519F
+	for <linux-pci@archiver.kernel.org>; Wed, 25 Nov 2020 13:20:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2F8B7206F9
-	for <linux-pci@archiver.kernel.org>; Wed, 25 Nov 2020 12:52:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8279A206E5
+	for <linux-pci@archiver.kernel.org>; Wed, 25 Nov 2020 13:20:42 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="zfCRgVqm";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="RVIMh+DQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729111AbgKYMvv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 25 Nov 2020 07:51:51 -0500
-Received: from smtpout1.mo804.mail-out.ovh.net ([79.137.123.220]:41929 "EHLO
-        smtpout1.mo804.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728902AbgKYMvv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 25 Nov 2020 07:51:51 -0500
-Received: from mxplan5.mail.ovh.net (unknown [10.109.143.90])
-        by mo804.mail-out.ovh.net (Postfix) with ESMTPS id B96687545376;
-        Wed, 25 Nov 2020 13:51:47 +0100 (CET)
-Received: from kaod.org (37.59.142.100) by DAG8EX1.mxp5.local (172.16.2.71)
- with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2044.4; Wed, 25 Nov
- 2020 13:51:46 +0100
-Authentication-Results: garm.ovh; auth=pass (GARM-100R003f5f17775-3d78-4887-bece-db38842b427c,
-                    13817E1CA0648EB9EE095497159C33290D197662) smtp.auth=groug@kaod.org
-Date:   Wed, 25 Nov 2020 13:51:45 +0100
-From:   Greg Kurz <groug@kaod.org>
-To:     Laurent Vivier <lvivier@redhat.com>
-CC:     <linux-kernel@vger.kernel.org>, <linux-block@vger.kernel.org>,
-        "Paul Mackerras" <paulus@samba.org>, <linux-pci@vger.kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Marc Zyngier <maz@kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
+        id S1729293AbgKYNUX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 25 Nov 2020 08:20:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57340 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727700AbgKYNUX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 25 Nov 2020 08:20:23 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5BC96C0613D4;
+        Wed, 25 Nov 2020 05:20:23 -0800 (PST)
+From:   Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1606310421;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Fb1yTCfVx8pU95ckndYGNJP7rgnPUEX5zBWS1/t7lBo=;
+        b=zfCRgVqmQUanbSMxfM/AJBOVwzgLL+DQrzJCrYt0JDvFzGOKPG77UXL46Q+/Y0xr3vQD8c
+        vcRH8CqoiNaIqybeabsAF6TpLsiPmS4Xj+ZfYrP5yjM5hmLL9arfuIJZFRn9fv7y8sQN/p
+        fHmhReSvpEcJTQJKF+c2m4LXh1F5KGF6G+Nb7l5u8wgFx3fNGv99Jo/Ou3xlPK3CNCfGZV
+        4eh6SQuD7NzGO2bFdt9HxPc64Wjtr+ulOR5XtvlplLP0xQw4fsmppWiq23ceve/9jlG0iJ
+        TjUp/wuqXY1iAf9Ge2dpXQlO7/fdsL5h9FWyj/Gn9P2fh9t1pki7H9U36BR85Q==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1606310421;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Fb1yTCfVx8pU95ckndYGNJP7rgnPUEX5zBWS1/t7lBo=;
+        b=RVIMh+DQ2MU+geLoHmWuSvDZ1IFvbZM1Ns3HEQAkmO0PTHfdyXlwZqOtkQjMfbj9D4C0YM
+        bRnfHM/KOZ1pynAw==
+To:     Laurent Vivier <lvivier@redhat.com>, linux-kernel@vger.kernel.org
+Cc:     linux-block@vger.kernel.org, Paul Mackerras <paulus@samba.org>,
+        linux-pci@vger.kernel.org, Marc Zyngier <maz@kernel.org>,
+        linuxppc-dev@lists.ozlabs.org,
         Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        "Michael S . Tsirkin" <mst@redhat.com>,
+        "Michael S . Tsirkin" <mst@redhat.com>, Greg Kurz <groug@kaod.org>,
         Christoph Hellwig <hch@lst.de>,
-        Michael Ellerman <mpe@ellerman.id.au>
-Subject: Re: [PATCH v2 2/2] powerpc/pseries: pass MSI affinity to
- irq_create_mapping()
-Message-ID: <20201125135145.64a51c4e@bahia.lan>
-In-Reply-To: <20201125111657.1141295-3-lvivier@redhat.com>
-References: <20201125111657.1141295-1-lvivier@redhat.com>
-        <20201125111657.1141295-3-lvivier@redhat.com>
-X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.32; x86_64-redhat-linux-gnu)
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Laurent Vivier <lvivier@redhat.com>
+Subject: Re: [PATCH v2 1/2] genirq: add an irq_create_mapping_affinity() function
+In-Reply-To: <20201125111657.1141295-2-lvivier@redhat.com>
+References: <20201125111657.1141295-1-lvivier@redhat.com> <20201125111657.1141295-2-lvivier@redhat.com>
+Date:   Wed, 25 Nov 2020 14:20:21 +0100
+Message-ID: <87sg8xk1yi.fsf@nanos.tec.linutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [37.59.142.100]
-X-ClientProxiedBy: DAG1EX2.mxp5.local (172.16.2.2) To DAG8EX1.mxp5.local
- (172.16.2.71)
-X-Ovh-Tracer-GUID: f9887add-59a7-4ca7-a478-288848d6728e
-X-Ovh-Tracer-Id: 6008646329849649656
-X-VR-SPAMSTATE: OK
-X-VR-SPAMSCORE: -100
-X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedujedrudehtddggeeiucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuqfggjfdpvefjgfevmfevgfenuceurghilhhouhhtmecuhedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhepfffhvffukfgjfhfogggtgfhisehtjeertdertddvnecuhfhrohhmpefirhgvghcumfhurhiiuceoghhrohhugheskhgrohgurdhorhhgqeenucggtffrrghtthgvrhhnpedvfefgtdegleduudejjeelfffghfehtdeigefggfduvdfgkeevgfeftedtjeehveenucffohhmrghinheprhgvughhrghtrdgtohhmnecukfhppedtrddtrddtrddtpdefjedrheelrddugedvrddutddtnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmohguvgepshhmthhpqdhouhhtpdhhvghlohepmhigphhlrghnhedrmhgrihhlrdhovhhhrdhnvghtpdhinhgvtheptddrtddrtddrtddpmhgrihhlfhhrohhmpehgrhhouhhgsehkrghougdrohhrghdprhgtphhtthhopehmphgvsegvlhhlvghrmhgrnhdrihgurdgruh
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, 25 Nov 2020 12:16:57 +0100
-Laurent Vivier <lvivier@redhat.com> wrote:
+Laurent,
 
-> With virtio multiqueue, normally each queue IRQ is mapped to a CPU.
-> 
-> But since commit 0d9f0a52c8b9f ("virtio_scsi: use virtio IRQ affinity")
-> this is broken on pseries.
-> 
-> The affinity is correctly computed in msi_desc but this is not applied
-> to the system IRQs.
-> 
-> It appears the affinity is correctly passed to rtas_setup_msi_irqs() but
-> lost at this point and never passed to irq_domain_alloc_descs()
-> (see commit 06ee6d571f0e ("genirq: Add affinity hint to irq allocation"))
-> because irq_create_mapping() doesn't take an affinity parameter.
-> 
-> As the previous patch has added the affinity parameter to
-> irq_create_mapping() we can forward the affinity from rtas_setup_msi_irqs()
-> to irq_domain_alloc_descs().
-> 
-> With this change, the virtqueues are correctly dispatched between the CPUs
-> on pseries.
-> 
+On Wed, Nov 25 2020 at 12:16, Laurent Vivier wrote:
 
-Since it is public, maybe add:
+The proper subsystem prefix is: 'genirq/irqdomain:' and the first letter
+after the colon wants to be uppercase.
 
-BugId: https://bugzilla.redhat.com/show_bug.cgi?id=1702939
+> This function adds an affinity parameter to irq_create_mapping().
+> This parameter is needed to pass it to irq_domain_alloc_descs().
 
-?
+A changelog has to explain the WHY. 'The parameter is needed' is not
+really useful information.
 
-> Signed-off-by: Laurent Vivier <lvivier@redhat.com>
-> ---
+Thanks,
 
-Anyway,
-
-Reviewed-by: Greg Kurz <groug@kaod.org>
-
->  arch/powerpc/platforms/pseries/msi.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
-> index 133f6adcb39c..b3ac2455faad 100644
-> --- a/arch/powerpc/platforms/pseries/msi.c
-> +++ b/arch/powerpc/platforms/pseries/msi.c
-> @@ -458,7 +458,8 @@ static int rtas_setup_msi_irqs(struct pci_dev *pdev, int nvec_in, int type)
->  			return hwirq;
->  		}
->  
-> -		virq = irq_create_mapping(NULL, hwirq);
-> +		virq = irq_create_mapping_affinity(NULL, hwirq,
-> +						   entry->affinity);
->  
->  		if (!virq) {
->  			pr_debug("rtas_msi: Failed mapping hwirq %d\n", hwirq);
+        tglx
 
