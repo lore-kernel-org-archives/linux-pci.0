@@ -4,44 +4,44 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34C0AC64E7B
-	for <linux-pci@archiver.kernel.org>; Thu, 26 Nov 2020 01:18:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40EE4C64E8A
+	for <linux-pci@archiver.kernel.org>; Thu, 26 Nov 2020 01:18:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DFDD2206C0
-	for <linux-pci@archiver.kernel.org>; Thu, 26 Nov 2020 01:18:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CC02D206C0
+	for <linux-pci@archiver.kernel.org>; Thu, 26 Nov 2020 01:18:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="ohIhRLK3"
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="xaAJkYKY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731247AbgKZBSh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 25 Nov 2020 20:18:37 -0500
-Received: from mail.kernel.org ([198.145.29.99]:39018 "EHLO mail.kernel.org"
+        id S1731403AbgKZBSm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 25 Nov 2020 20:18:42 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39078 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729679AbgKZBSh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 25 Nov 2020 20:18:37 -0500
+        id S1729679AbgKZBSl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 25 Nov 2020 20:18:41 -0500
 Received: from localhost (129.sub-72-107-112.myvzw.com [72.107.112.129])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id EAB0C206C0;
-        Thu, 26 Nov 2020 01:18:36 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id EAEF1206C0;
+        Thu, 26 Nov 2020 01:18:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1606353517;
-        bh=W0IDxtNSZluyY0RNsqAVql+9uNOI0hy5q5KT/u4zp+4=;
+        s=default; t=1606353521;
+        bh=fog10W20ZnIu55AcNV7BiDI5Wh8kOel1mDnmrzT6wIg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ohIhRLK3ABQtGMXyhaD2/6vOUSEfUrmSkPnZ90oLjwJb3E3HD+xuOpWn+SMt2PYaW
-         S/LkDgJjvt+QC5egEcds/oB1gnMknBYpI1JEjF3awgpDee2FKGME5UTWQAtc/13YiN
-         kxHhg4wj6QH+iBbmjOxF9L38DuxYrZVfP5SDnTcU=
+        b=xaAJkYKYC6amA26QUYRADxqBXArBDibtJAKAbIoQ6txu7BH8K38JeLpuW5xo8SLh9
+         9ZbqTSMX9KaCstt58b3jI1R4Lyj1RBuFjk1dJ3qsaTeLFwe9JwHDrsDfgRWnA7ISUq
+         AyhvbKB/54XbkZ2wlKNKfQ9awAq6Kw8JwQVWuREA=
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     Kuppuswamy Sathyanarayanan 
         <sathyanarayanan.kuppuswamy@linux.intel.com>
 Cc:     ashok.raj@intel.com, knsathya@kernel.org,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 3/5] PCI/ACPI: Tidy _OSC control bit checking
-Date:   Wed, 25 Nov 2020 19:18:14 -0600
-Message-Id: <20201126011816.711106-4-helgaas@kernel.org>
+Subject: [PATCH 5/5] PCI/ACPI: Centralize pci_aer_available() checking
+Date:   Wed, 25 Nov 2020 19:18:16 -0600
+Message-Id: <20201126011816.711106-6-helgaas@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201126011816.711106-1-helgaas@kernel.org>
 References: <20201126011816.711106-1-helgaas@kernel.org>
@@ -51,73 +51,45 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-Add OSC_OWNER() helper to prettify checking the _OSC control bits to learn
-whether the platform has granted us control of PCI features.  No functional
-change intended.
+Check pci_aer_available() in acpi_pci_root_create() when we're interpreting
+_OSC results so host_bridge->native_aer becomes the single way to determine
+whether we control AER capabilities.
 
-[bhelgaas: split to separate patch, commit log]
-Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/acpi/pci_root.c | 29 +++++++++++++++++------------
- 1 file changed, 17 insertions(+), 12 deletions(-)
+ drivers/acpi/pci_root.c         | 3 +++
+ drivers/pci/pcie/portdrv_core.c | 2 +-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index c12b5fb3e8fb..6db071038fd5 100644
+index 36142ed7b8f8..f9969b86d3b6 100644
 --- a/drivers/acpi/pci_root.c
 +++ b/drivers/acpi/pci_root.c
-@@ -876,6 +876,12 @@ static void acpi_pci_root_release_info(struct pci_host_bridge *bridge)
- 	__acpi_pci_root_release_info(bridge->release_data);
- }
+@@ -941,6 +941,9 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+ 		host_bridge->native_dpc = 1;
+ 	}
  
-+#define OSC_OWNER(ctrl, bit, flag)	\
-+	do {				\
-+		if (!(ctrl & bit))	\
-+			flag = 0;	\
-+	} while (0)
++	if (!pci_aer_available())
++		host_bridge->native_aer = 0;
 +
- struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
- 				     struct acpi_pci_root_ops *ops,
- 				     struct acpi_pci_root_info *info,
-@@ -887,6 +893,7 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
- 	struct pci_bus *bus;
- 	struct pci_host_bridge *host_bridge;
- 	union acpi_object *obj;
-+	u32 ctrl;
+ 	dev_info(&root->device->dev, "OS native features: SHPCHotplug%c PCIeHotplug%c PME%c AER%c DPC%c LTR%c\n",
+ 		FLAG(host_bridge->native_shpc_hotplug),
+ 		FLAG(host_bridge->native_pcie_hotplug),
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index 2a1190e8db60..48c14c2471ef 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -220,7 +220,7 @@ static int get_port_device_capability(struct pci_dev *dev)
+ 	}
  
- 	info->root = root;
- 	info->bridge = device;
-@@ -912,18 +919,16 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
- 		goto out_release_info;
+ #ifdef CONFIG_PCIEAER
+-	if (host->native_aer && dev->aer_cap && pci_aer_available()) {
++	if (host->native_aer && dev->aer_cap) {
+ 		services |= PCIE_PORT_SERVICE_AER;
  
- 	host_bridge = to_pci_host_bridge(bus->bridge);
--	if (!(root->osc_control_set & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
--		host_bridge->native_pcie_hotplug = 0;
--	if (!(root->osc_control_set & OSC_PCI_SHPC_NATIVE_HP_CONTROL))
--		host_bridge->native_shpc_hotplug = 0;
--	if (!(root->osc_control_set & OSC_PCI_EXPRESS_AER_CONTROL))
--		host_bridge->native_aer = 0;
--	if (!(root->osc_control_set & OSC_PCI_EXPRESS_PME_CONTROL))
--		host_bridge->native_pme = 0;
--	if (!(root->osc_control_set & OSC_PCI_EXPRESS_LTR_CONTROL))
--		host_bridge->native_ltr = 0;
--	if (!(root->osc_control_set & OSC_PCI_EXPRESS_DPC_CONTROL))
--		host_bridge->native_dpc = 0;
-+
-+	ctrl = root->osc_control_set;
-+	OSC_OWNER(ctrl, OSC_PCI_EXPRESS_NATIVE_HP_CONTROL,
-+		  host_bridge->native_pcie_hotplug);
-+	OSC_OWNER(ctrl, OSC_PCI_SHPC_NATIVE_HP_CONTROL,
-+		  host_bridge->native_shpc_hotplug);
-+	OSC_OWNER(ctrl, OSC_PCI_EXPRESS_AER_CONTROL, host_bridge->native_aer);
-+	OSC_OWNER(ctrl, OSC_PCI_EXPRESS_PME_CONTROL, host_bridge->native_pme);
-+	OSC_OWNER(ctrl, OSC_PCI_EXPRESS_LTR_CONTROL, host_bridge->native_ltr);
-+	OSC_OWNER(ctrl, OSC_PCI_EXPRESS_DPC_CONTROL, host_bridge->native_dpc);
- 
- 	/*
- 	 * Evaluate the "PCI Boot Configuration" _DSM Function.  If it
+ 		/*
 -- 
 2.25.1
 
