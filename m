@@ -2,188 +2,129 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 745E6C56201
-	for <linux-pci@archiver.kernel.org>; Thu, 26 Nov 2020 01:18:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48FE7C56201
+	for <linux-pci@archiver.kernel.org>; Thu, 26 Nov 2020 01:24:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1C8CA2075A
-	for <linux-pci@archiver.kernel.org>; Thu, 26 Nov 2020 01:18:46 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="QQ06VSvN"
+	by mail.kernel.org (Postfix) with ESMTP id E2B402075A
+	for <linux-pci@archiver.kernel.org>; Thu, 26 Nov 2020 01:24:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731348AbgKZBSk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 25 Nov 2020 20:18:40 -0500
-Received: from mail.kernel.org ([198.145.29.99]:39048 "EHLO mail.kernel.org"
+        id S1730921AbgKZBYc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 25 Nov 2020 20:24:32 -0500
+Received: from mga04.intel.com ([192.55.52.120]:47619 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729679AbgKZBSk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 25 Nov 2020 20:18:40 -0500
-Received: from localhost (129.sub-72-107-112.myvzw.com [72.107.112.129])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 07A862075A;
-        Thu, 26 Nov 2020 01:18:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1606353519;
-        bh=FIb1CDvMAVtb9xli5yijL5vfoeOH9CPq+2c8Jxi9wQA=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=QQ06VSvN5s5+pO/sZK14XZSsgfwPzxeIhKG3wMZn6bBSs9dvU3reuv6rY7uzdRz8m
-         lhUoB93KLLfBJOzD1Y9YQ0zMOi28qWiyLzt713vmJOC1V0MKir/eRoeZh68oueoxXh
-         7yVf4zvorL2K4GHMvF1ciWybw5hn3ZnsN9z1OxQE=
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Kuppuswamy Sathyanarayanan 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>
-Cc:     ashok.raj@intel.com, knsathya@kernel.org,
+        id S1730861AbgKZBYb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 25 Nov 2020 20:24:31 -0500
+IronPort-SDR: 9im9K55+2J0t7EbxWDfTNyBGYsP5tQHpYWd6ypyjGaGAgFH8Q25jdI8s3LAFHJqxQQ2bU52rjJ
+ KuKDua8FpguA==
+X-IronPort-AV: E=McAfee;i="6000,8403,9816"; a="169662535"
+X-IronPort-AV: E=Sophos;i="5.78,370,1599548400"; 
+   d="scan'208";a="169662535"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Nov 2020 17:24:31 -0800
+IronPort-SDR: gb93F3GoatNOuqc4+u7f5LeLVs3VebqlGN5fEPZ1DnCh2MyIpVaNmZF2QEz5TaC1w7WdPa3S0i
+ ec/I8p4+hxBg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.78,370,1599548400"; 
+   d="scan'208";a="537123847"
+Received: from shbuild999.sh.intel.com (HELO localhost) ([10.239.147.98])
+  by fmsmga005.fm.intel.com with ESMTP; 25 Nov 2020 17:24:21 -0800
+Date:   Thu, 26 Nov 2020 09:24:21 +0800
+From:   Feng Tang <feng.tang@intel.com>
+To:     Thomas Gleixner <tglx@linutronix.de>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>, Ingo Molnar <mingo@redhat.com>,
+        Borislav Petkov <bp@alien8.de>, x86@kernel.org,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 4/5] PCI/ACPI: Centralize pcie_ports_native checking
-Date:   Wed, 25 Nov 2020 19:18:15 -0600
-Message-Id: <20201126011816.711106-5-helgaas@kernel.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20201126011816.711106-1-helgaas@kernel.org>
-References: <20201126011816.711106-1-helgaas@kernel.org>
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        rui.zhang@intel.com, len.brown@intel.com
+Subject: Re: [PATCH] x86/PCI: Convert force_disable_hpet() to standard quirk
+Message-ID: <20201126012421.GA92582@shbuild999.sh.intel.com>
+References: <20201119181904.149129-1-helgaas@kernel.org>
+ <87v9dtk3j4.fsf@nanos.tec.linutronix.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <87v9dtk3j4.fsf@nanos.tec.linutronix.de>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Hi Thomas,
 
-If the user booted with "pcie_ports=native", we take control of the PCIe
-features unconditionally, regardless of what _OSC says.
+On Wed, Nov 25, 2020 at 01:46:23PM +0100, Thomas Gleixner wrote:
+> On Thu, Nov 19 2020 at 12:19, Bjorn Helgaas wrote:
+> > 62187910b0fc ("x86/intel: Add quirk to disable HPET for the Baytrail
+> > platform") implemented force_disable_hpet() as a special early quirk.
+> > These run before the PCI core is initialized and depend on the
+> > x86/pci/early.c accessors that use I/O ports 0xcf8 and 0xcfc.
+> >
+> > But force_disable_hpet() doesn't need to be one of these special early
+> > quirks.  It merely sets "boot_hpet_disable", which is tested by
+> > is_hpet_capable(), which is only used by hpet_enable() and hpet_disable().
+> > hpet_enable() is an fs_initcall(), so it runs after the PCI core is
+> > initialized.
+> 
+> hpet_enable() is not an fs_initcall(). hpet_late_init() is and that
+> invokes hpet_enable() only for the case that ACPI did not advertise it
+> and the force_hpet quirk provided a base address.
+> 
+> But hpet_enable() is also invoked via:
+> 
+>  start_kernel()
+>    late_time_init()
+>      x86_late_time_init()
+>        hpet_time_init()
+> 
+> which is way before the PCI core is available and we really don't want
+> to set it up there if it's known to be broken :)
+> 
+> Now the more interesting question is why this needs to be a PCI quirk in
+> the first place. Can't we just disable the HPET based on family/model
+> quirks?
+> 
+> e0748539e3d5 ("x86/intel: Disable HPET on Intel Ice Lake platforms")
+> f8edbde885bb ("x86/intel: Disable HPET on Intel Coffee Lake H platforms")
+> fc5db58539b4 ("x86/quirks: Disable HPET on Intel Coffe Lake platforms")
 
-Centralize the testing of pcie_ports_native in acpi_pci_root_create(),
-where we interpret the _OSC results, so other places only have to check
-host_bridge->native_X and we don't have to sprinkle tests of
-pcie_ports_native everywhere.
 
-[bhelgaas: commit log, rework OSC_PCI_EXPRESS_CONTROL_MASKS, logging]
-Link: https://lore.kernel.org/r/bc87c9e675118960949043a832bed86bc22becbd.1603766889.git.sathyanarayanan.kuppuswamy@linux.intel.com
-Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/acpi/pci_root.c           | 19 +++++++++++++++++++
- drivers/pci/hotplug/pciehp_core.c |  2 +-
- drivers/pci/pci-acpi.c            |  3 ---
- drivers/pci/pcie/aer.c            |  2 +-
- drivers/pci/pcie/portdrv_core.c   |  9 +++------
- 5 files changed, 24 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 6db071038fd5..36142ed7b8f8 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -882,6 +882,8 @@ static void acpi_pci_root_release_info(struct pci_host_bridge *bridge)
- 			flag = 0;	\
- 	} while (0)
- 
-+#define FLAG(x)		((x) ? '+' : '-')
-+
- struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
- 				     struct acpi_pci_root_ops *ops,
- 				     struct acpi_pci_root_info *info,
-@@ -930,6 +932,23 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
- 	OSC_OWNER(ctrl, OSC_PCI_EXPRESS_LTR_CONTROL, host_bridge->native_ltr);
- 	OSC_OWNER(ctrl, OSC_PCI_EXPRESS_DPC_CONTROL, host_bridge->native_dpc);
- 
-+	if (pcie_ports_native) {
-+		dev_info(&root->device->dev, "Taking control of PCIe-related features because \"pcie_ports=native\" specified; may conflict with firmware\n");
-+		host_bridge->native_pcie_hotplug = 1;
-+		host_bridge->native_aer = 1;
-+		host_bridge->native_pme = 1;
-+		host_bridge->native_ltr = 1;
-+		host_bridge->native_dpc = 1;
-+	}
-+
-+	dev_info(&root->device->dev, "OS native features: SHPCHotplug%c PCIeHotplug%c PME%c AER%c DPC%c LTR%c\n",
-+		FLAG(host_bridge->native_shpc_hotplug),
-+		FLAG(host_bridge->native_pcie_hotplug),
-+		FLAG(host_bridge->native_pme),
-+		FLAG(host_bridge->native_aer),
-+		FLAG(host_bridge->native_dpc),
-+		FLAG(host_bridge->native_ltr));
-+
- 	/*
- 	 * Evaluate the "PCI Boot Configuration" _DSM Function.  If it
- 	 * exists and returns 0, we must preserve any PCI resource
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index ad3393930ecb..d1831e6bf60a 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -256,7 +256,7 @@ static bool pme_is_native(struct pcie_device *dev)
- 	const struct pci_host_bridge *host;
- 
- 	host = pci_find_host_bridge(dev->port->bus);
--	return pcie_ports_native || host->native_pme;
-+	return host->native_pme;
- }
- 
- static void pciehp_disable_interrupt(struct pcie_device *dev)
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index bf03648c2072..a84f75ec6df8 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -800,9 +800,6 @@ bool pciehp_is_native(struct pci_dev *bridge)
- 	if (!(slot_cap & PCI_EXP_SLTCAP_HPC))
- 		return false;
- 
--	if (pcie_ports_native)
--		return true;
--
- 	host = pci_find_host_bridge(bridge->bus);
- 	return host->native_pcie_hotplug;
- }
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index 65dff5f3457a..79bb441139c2 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -219,7 +219,7 @@ int pcie_aer_is_native(struct pci_dev *dev)
- 	if (!dev->aer_cap)
- 		return 0;
- 
--	return pcie_ports_native || host->native_aer;
-+	return host->native_aer;
- }
- 
- int pci_enable_pcie_error_reporting(struct pci_dev *dev)
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 50a9522ab07d..2a1190e8db60 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -208,8 +208,7 @@ static int get_port_device_capability(struct pci_dev *dev)
- 	struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
- 	int services = 0;
- 
--	if (dev->is_hotplug_bridge &&
--	    (pcie_ports_native || host->native_pcie_hotplug)) {
-+	if (host->native_pcie_hotplug && dev->is_hotplug_bridge) {
- 		services |= PCIE_PORT_SERVICE_HP;
- 
- 		/*
-@@ -221,8 +220,7 @@ static int get_port_device_capability(struct pci_dev *dev)
- 	}
- 
- #ifdef CONFIG_PCIEAER
--	if (dev->aer_cap && pci_aer_available() &&
--	    (pcie_ports_native || host->native_aer)) {
-+	if (host->native_aer && dev->aer_cap && pci_aer_available()) {
- 		services |= PCIE_PORT_SERVICE_AER;
- 
- 		/*
-@@ -238,8 +236,7 @@ static int get_port_device_capability(struct pci_dev *dev)
- 	 * Event Collectors can also generate PMEs, but we don't handle
- 	 * those yet.
- 	 */
--	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT &&
--	    (pcie_ports_native || host->native_pme)) {
-+	if (host->native_pme && pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) {
- 		services |= PCIE_PORT_SERVICE_PME;
- 
- 		/*
--- 
-2.25.1
+> 62187910b0fc ("x86/intel: Add quirk to disable HPET for the Baytrail platform")
+I added this commit, and I can explain some for Baytrail. There was
+some discussion about the way to disable it:
+https://lore.kernel.org/lkml/20140328073718.GA12762@feng-snb/t/
 
+It uses PCI ID early quirk in the hope that later Baytrail stepping
+doesn't have the problem. And later on, there was official document
+(section 18.10.1.3 http://www.intel.com/content/dam/www/public/us/en/documents/datasheets/atom-z8000-datasheet-vol-1.pdf)
+stating Baytrail's HPET halts in deep idle. So I think your way of 
+using CPUID to disable Baytrail HPET makes more sense.
+
+
+> I might be missing something here, but in general on anything modern
+> HPET is mostly useless.
+
+IIUC, nowdays HPET's main use is as a clocksource watchdog monitor.
+And in one debug case, we found it still useful. The debug platform has 
+early serial console which prints many messages in early boot phase,
+when the HPET is disabled, the software 'jiffies' clocksource will
+be used as the monitor. Early printk will disable interrupt will
+printing message, and this could be quite long for a slow 115200
+device, and cause the periodic HW timer interrupt get missed, and
+make the 'jiffies' clocksource not accurate, which will in turn
+judge the TSC clocksrouce inaccurate, and disablt it. (Adding Rui,
+Len for more details)
+
+Thanks,
+Feng
+
+
+> Thanks,
+> 
+>         tglx
