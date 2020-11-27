@@ -2,186 +2,140 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B29BC83014
-	for <linux-pci@archiver.kernel.org>; Fri, 27 Nov 2020 16:43:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6C26C3E8C5
+	for <linux-pci@archiver.kernel.org>; Fri, 27 Nov 2020 18:12:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0F85A206DF
-	for <linux-pci@archiver.kernel.org>; Fri, 27 Nov 2020 16:43:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B135221F1
+	for <linux-pci@archiver.kernel.org>; Fri, 27 Nov 2020 18:12:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ffwll.ch header.i=@ffwll.ch header.b="PQkuXj5f"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ggsuuNci"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731852AbgK0QmQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 27 Nov 2020 11:42:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54064 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731856AbgK0QmP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Nov 2020 11:42:15 -0500
-Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7CBEC061A04
-        for <linux-pci@vger.kernel.org>; Fri, 27 Nov 2020 08:42:13 -0800 (PST)
-Received: by mail-wr1-x444.google.com with SMTP id l1so6193567wrb.9
-        for <linux-pci@vger.kernel.org>; Fri, 27 Nov 2020 08:42:13 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ffwll.ch; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=rW60Jo5EYOrfW48enxn4HuDZHwz18Yu4cEXjV+kmxhI=;
-        b=PQkuXj5frTE5y11eiKAgq79LrIZ8tE/zx4eh3eEZQp6giLCWCHkekWBtjZn+b6apiX
-         OettDGs7KeV6c1u5GVEgBTyePxi+k0YgxvAkEqvC0lu/PHO5FoD5SaGsKYrsR8iraWxV
-         gzEOq3melTr0FDtkd450cWQdzdipC9arwKkow=
+        id S1733041AbgK0SMU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 27 Nov 2020 13:12:20 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:47459 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1732755AbgK0SMU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Nov 2020 13:12:20 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1606500738;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=PvVVh2WZkbAnSX5t/B+zX/WRWvJt82nXnXEMvGPZevw=;
+        b=ggsuuNciBXcWl6cOu0VynewOhZ5UZSpOcLeBgAAc/AhwEg2kD40wJMwistswKpQhaGs6gl
+        PfixS6RrCk7I67zaNcPqfGA6r1JKRzeZgkYDST49BwH8UhcszZRCnulQjOSJThVKWxVI0o
+        TdWOWSQ8bjbq5S6vx3VKKNS60F1EPYg=
+Received: from mail-ej1-f70.google.com (mail-ej1-f70.google.com
+ [209.85.218.70]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-562-r8td5SadPcey54Dca-T_pA-1; Fri, 27 Nov 2020 13:12:16 -0500
+X-MC-Unique: r8td5SadPcey54Dca-T_pA-1
+Received: by mail-ej1-f70.google.com with SMTP id pv11so2236709ejb.5
+        for <linux-pci@vger.kernel.org>; Fri, 27 Nov 2020 10:12:16 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=rW60Jo5EYOrfW48enxn4HuDZHwz18Yu4cEXjV+kmxhI=;
-        b=pBvJGCNdrz4trOXj4FHzSXJWtDaF9JeTzjQkz3IYceH/4yzGEOEN+8QdY8cHeVA9l3
-         eTnGnHZQhtacqdvwb9DOKcqdwXLGSqyzjlI6RklgoR0eLbCwjj8n9ogHvG57Pz6bhnnK
-         uBcFSiCOXncHR3ssrWPtkB/zdJLsKAwqa/ECjver+zPf22T9IXjgyFpRpeLkb800zMIa
-         NLx04Vz70B/9PAjBspck/9+bmNY/onv33gfVcHw3njCatF/B5AJxvSJfU8WzeFSdDIDC
-         p9CCn9XUNQU+qv9ZTVkn9wMYZSThGUDmwX+I5j1XjA8nv1+xSZAcdO46G2Et90xHtydE
-         XsSQ==
-X-Gm-Message-State: AOAM532pXcV1yPKUA21EjLQOy7xkRsRV1HUVvRC3mb2LYFMCT9B6aP3G
-        cx6qD3WI3fWzrjgTNGi+I/jWcA==
-X-Google-Smtp-Source: ABdhPJy7N8sWlvrZkrO6DwKDVYKhPGfBm7BDjLJVeT6c/8cd28+5xGF25PU+qwVqK2WiY3xNRptmuw==
-X-Received: by 2002:adf:f3d1:: with SMTP id g17mr11762819wrp.201.1606495332522;
-        Fri, 27 Nov 2020 08:42:12 -0800 (PST)
-Received: from phenom.ffwll.local ([2a02:168:57f4:0:efd0:b9e5:5ae6:c2fa])
-        by smtp.gmail.com with ESMTPSA id q12sm14859078wrx.86.2020.11.27.08.42.11
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 27 Nov 2020 08:42:11 -0800 (PST)
-From:   Daniel Vetter <daniel.vetter@ffwll.ch>
-To:     DRI Development <dri-devel@lists.freedesktop.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Cc:     kvm@vger.kernel.org, linux-mm@kvack.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-samsung-soc@vger.kernel.org, linux-media@vger.kernel.org,
-        Daniel Vetter <daniel.vetter@ffwll.ch>,
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=PvVVh2WZkbAnSX5t/B+zX/WRWvJt82nXnXEMvGPZevw=;
+        b=O1xgGPAnd3fDgDSCZl42CuGW0rr/jWzIVdoVfFT0MlgCkzkLpVSottz/VZImzws+tE
+         omJ6oWNGJAsInp2eA9d6S9yva01idt7yWSX3AY9F/E2oqh4ObuOqq6zq5BYrUTljnkZE
+         vN6aRtIezplOvQqLO/JOM/qf8Nry7or1kBbJVKoG+bL0IixKqSqTTMSKkd6iqgRZmKbn
+         yMuRprZT9fWZju1xEIxkLs5V9VxwpSXZXf82d+gJMxxykDn0a4dUbJK5OkXsY+UyYQmO
+         S2T4/+qi9EdA+GCqHeS6eZGG5Q/nfbBRS9LitjquNqO4mxG50xlRoA6GJe7vUyXs1l4h
+         FxtQ==
+X-Gm-Message-State: AOAM532tifh456tH0Vf6yZ3C7K9bE0WhXhvAps1CWavjacaJr8C7k/sh
+        QQJy4cmScESfssl0yQrWZesc/7PlzhezWEFBf88rpE5No3st6kFuLh2zV1qqm4wQE/kjO+G+5oC
+        h6v0/lacSgEDOcUz/9CPH
+X-Received: by 2002:a17:906:8617:: with SMTP id o23mr4696780ejx.274.1606500735282;
+        Fri, 27 Nov 2020 10:12:15 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJwyZU3HmLRRmc6hevuC7dKusx9uLm+xbnlpO5CjCfhATeXbQ9o9xALNF+99u8lVyGz2dxLcYQ==
+X-Received: by 2002:a17:906:8617:: with SMTP id o23mr4696763ejx.274.1606500735127;
+        Fri, 27 Nov 2020 10:12:15 -0800 (PST)
+Received: from x1.localdomain (2001-1c00-0c0c-fe00-d2ea-f29d-118b-24dc.cable.dynamic.v6.ziggo.nl. [2001:1c00:c0c:fe00:d2ea:f29d:118b:24dc])
+        by smtp.gmail.com with ESMTPSA id lc18sm1454700ejb.77.2020.11.27.10.12.14
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 27 Nov 2020 10:12:14 -0800 (PST)
+Subject: Re: 5.10 regression caused by: "uas: fix sdev->host->dma_dev": many
+ XHCI swiotlb buffer is full / DMAR: Device bounce map failed errors on
+ thunderbolt connected XHCI controller
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Tom Yan <tom.ty89@gmail.com>,
+        Mathias Nyman <mathias.nyman@intel.com>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Daniel Vetter <daniel.vetter@intel.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Kees Cook <keescook@chromium.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        John Hubbard <jhubbard@nvidia.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Jan Kara <jack@suse.cz>, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org, "Rafael J. Wysocki" <rafael@kernel.org>,
-        Christian Brauner <christian.brauner@ubuntu.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Sourabh Jain <sourabhjain@linux.ibm.com>,
-        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
-        Nayna Jain <nayna@linux.ibm.com>
-Subject: [PATCH v7 11/17] sysfs: Support zapping of binary attr mmaps
-Date:   Fri, 27 Nov 2020 17:41:25 +0100
-Message-Id: <20201127164131.2244124-12-daniel.vetter@ffwll.ch>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20201127164131.2244124-1-daniel.vetter@ffwll.ch>
-References: <20201127164131.2244124-1-daniel.vetter@ffwll.ch>
+        linux-usb <linux-usb@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org, Lu Baolu <baolu.lu@linux.intel.com>
+References: <b046dd04-ac4f-3c69-0602-af810fb1b365@redhat.com>
+ <be031d15-201f-0e5c-8b0f-be030077141f@redhat.com>
+ <20201124102715.GA16983@lst.de>
+ <fde7e11f-5dfc-8348-c134-a21cb1116285@redhat.com>
+ <8a52e868-0ca1-55b7-5ad2-ddb0cbb5e45d@redhat.com>
+ <20201127161900.GA10986@lst.de>
+From:   Hans de Goede <hdegoede@redhat.com>
+Message-ID: <fded04e2-f2e9-de92-ab1f-5aa088904e90@redhat.com>
+Date:   Fri, 27 Nov 2020 19:12:13 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.4.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20201127161900.GA10986@lst.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-We want to be able to revoke pci mmaps so that the same access rules
-applies as for /dev/kmem. Revoke support for devmem was added in
-3234ac664a87 ("/dev/mem: Revoke mappings when a driver claims the
-region").
+Hi,
 
-The simplest way to achieve this is by having the same filp->f_mapping
-for all mappings, so that unmap_mapping_range can find them all, no
-matter through which file they've been created. Since this must be set
-at open time we need sysfs support for this.
+On 11/27/20 5:19 PM, Christoph Hellwig wrote:
+> On Fri, Nov 27, 2020 at 01:32:16PM +0100, Hans de Goede wrote:
+>> I ran some more tests, I can confirm that reverting:
+>>
+>> 5df7ef7d32fe "uas: bump hw_max_sectors to 2048 blocks for SS or faster drives"
+>> 558033c2828f "uas: fix sdev->host->dma_dev"
+>>
+>> Makes the problem go away while running a 5.10 kernel. I also tried doubling
+>> the swiotlb size by adding: swiotlb=65536 to the kernel commandline but that
+>> does not help.
+>>
+>> Some more observations:
+>>
+>> 1. The usb-storage driver does not cause this issue, even though it has a
+>> very similar change.
+>>
+>> 2. The problem does not happen until I plug an UAS decvice into the dock.
+>>
+>> 3. The problem continues to happen even after I unplug the UAS device and
+>> rmmod the uas module
+>>
+>> 3. made me take a bit closer look to the troublesome commit, it passes:
+>> udev->bus->sysdev, which I assume is the XHCI controller itself as device
+>> to scsi_add_host_with_dma, which in turn seems to cause permanent changes
+>> to the dma settings for the XHCI controller. I'm not all that familiar with
+>> the DMA APIs but I'm getting the feeling that passing the actual XHCI-controller's
+>> device as dma-device to scsi_add_host_with_dma is simply the wrong thing to
+>> do; and that the intended effects (honor XHCI dma limits, but do not cause
+>> any changes the XHCI dma settings) should be achieved differently.
+>>
+>> Note that if this is indeed wrong, the matching usb-storage change should
+>> likely also be dropped.
+> 
+> One problem in this area is that the clamping of the DMA size through
+> dma_max_mapping_size mentioned in the commit log doesn't work when
+> swiotlb is called from intel-iommu. I think we need to wire up those
+> calls there as well.
 
-Add an optional mapping parameter bin_attr, which is only consulted
-when there's also an mmap callback, since without mmap support
-allowing to adjust the ->f_mapping makes no sense.
+Ok, but that does not sound like a quick last minute fix for 5.10, so maybe
+for 5.10 we should just revert the uas and usb-storage changes which trigger
+this problem and then retry those for 5.11 ?
 
-Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Signed-off-by: Daniel Vetter <daniel.vetter@intel.com>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>
-Cc: Kees Cook <keescook@chromium.org>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: John Hubbard <jhubbard@nvidia.com>
-Cc: Jérôme Glisse <jglisse@redhat.com>
-Cc: Jan Kara <jack@suse.cz>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-mm@kvack.org
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-samsung-soc@vger.kernel.org
-Cc: linux-media@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: Christian Brauner <christian.brauner@ubuntu.com>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Michael Ellerman <mpe@ellerman.id.au>
-Cc: Sourabh Jain <sourabhjain@linux.ibm.com>
-Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
-Cc: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
-Cc: Nayna Jain <nayna@linux.ibm.com>
-Signed-off-by: Daniel Vetter <daniel.vetter@ffwll.ch>
----
- fs/sysfs/file.c       | 11 +++++++++++
- include/linux/sysfs.h |  2 ++
- 2 files changed, 13 insertions(+)
+Regards,
 
-diff --git a/fs/sysfs/file.c b/fs/sysfs/file.c
-index 96d0da65e088..9aefa7779b29 100644
---- a/fs/sysfs/file.c
-+++ b/fs/sysfs/file.c
-@@ -170,6 +170,16 @@ static int sysfs_kf_bin_mmap(struct kernfs_open_file *of,
- 	return battr->mmap(of->file, kobj, battr, vma);
- }
- 
-+static int sysfs_kf_bin_open(struct kernfs_open_file *of)
-+{
-+	struct bin_attribute *battr = of->kn->priv;
-+
-+	if (battr->mapping)
-+		of->file->f_mapping = battr->mapping;
-+
-+	return 0;
-+}
-+
- void sysfs_notify(struct kobject *kobj, const char *dir, const char *attr)
- {
- 	struct kernfs_node *kn = kobj->sd, *tmp;
-@@ -241,6 +251,7 @@ static const struct kernfs_ops sysfs_bin_kfops_mmap = {
- 	.read		= sysfs_kf_bin_read,
- 	.write		= sysfs_kf_bin_write,
- 	.mmap		= sysfs_kf_bin_mmap,
-+	.open		= sysfs_kf_bin_open,
- };
- 
- int sysfs_add_file_mode_ns(struct kernfs_node *parent,
-diff --git a/include/linux/sysfs.h b/include/linux/sysfs.h
-index 2caa34c1ca1a..d76a1ddf83a3 100644
---- a/include/linux/sysfs.h
-+++ b/include/linux/sysfs.h
-@@ -164,11 +164,13 @@ __ATTRIBUTE_GROUPS(_name)
- 
- struct file;
- struct vm_area_struct;
-+struct address_space;
- 
- struct bin_attribute {
- 	struct attribute	attr;
- 	size_t			size;
- 	void			*private;
-+	struct address_space	*mapping;
- 	ssize_t (*read)(struct file *, struct kobject *, struct bin_attribute *,
- 			char *, loff_t, size_t);
- 	ssize_t (*write)(struct file *, struct kobject *, struct bin_attribute *,
--- 
-2.29.2
+Hans 
 
