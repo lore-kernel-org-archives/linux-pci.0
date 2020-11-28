@@ -2,134 +2,134 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A565AC8301E
-	for <linux-pci@archiver.kernel.org>; Sat, 28 Nov 2020 22:07:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86C4EC83028
+	for <linux-pci@archiver.kernel.org>; Sat, 28 Nov 2020 22:07:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6776322253
-	for <linux-pci@archiver.kernel.org>; Sat, 28 Nov 2020 22:07:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4A0A02224F
+	for <linux-pci@archiver.kernel.org>; Sat, 28 Nov 2020 22:07:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="EUKbch1J"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cecqxIdt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389275AbgK1VuQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 28 Nov 2020 16:50:16 -0500
-Received: from mail.kernel.org ([198.145.29.99]:49434 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732231AbgK1S7i (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 28 Nov 2020 13:59:38 -0500
-Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 71C98222EA;
-        Sat, 28 Nov 2020 10:37:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1606559870;
-        bh=ElFuI/yPzYiGjePDtZkN0gYaY20kahcwihMuI8AchqM=;
-        h=From:To:Cc:Subject:Date:From;
-        b=EUKbch1JzQWJVAmirG5SwTwjCYttSzWvcHpW3lEKWXNw9c+yQs/nGbGquMNkNh9S9
-         V1UExUe2hrGYref6vwwC/deRqluLCKbCdW/my5EHP8c80NnxkSfqaetGhoHWoO7hAe
-         yWWaqLdZj7HCt7nAlg5BR/x478YrVuV7vvmGo4/0=
-Received: from 78.163-31-62.static.virginmediabusiness.co.uk ([62.31.163.78] helo=wait-a-minute.lan)
-        by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.94)
-        (envelope-from <maz@kernel.org>)
-        id 1kixbw-00EGNC-BB; Sat, 28 Nov 2020 10:37:48 +0000
-From:   Marc Zyngier <maz@kernel.org>
-To:     linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-pci@vger.kernel.org
-Cc:     kernel-team@android.com, Andrew Lunn <andrew@lunn.ch>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Subject: [PATCH] MAINTAINERS: Move Jason Cooper to CREDITS
-Date:   Sat, 28 Nov 2020 10:37:07 +0000
-Message-Id: <20201128103707.332874-1-maz@kernel.org>
+        id S1727716AbgK1VuO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 28 Nov 2020 16:50:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36558 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1733296AbgK1SRx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 28 Nov 2020 13:17:53 -0500
+Received: from mail-pg1-x544.google.com (mail-pg1-x544.google.com [IPv6:2607:f8b0:4864:20::544])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CFDCC0258DE;
+        Sat, 28 Nov 2020 07:49:04 -0800 (PST)
+Received: by mail-pg1-x544.google.com with SMTP id s63so6698201pgc.8;
+        Sat, 28 Nov 2020 07:49:04 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=dkZK75RDOqVvghIzMCSRWV8KKsXjayA5613tB1J4VCY=;
+        b=cecqxIdtNnXvYHZvKvSn+cJXABfzKkTd/GDrzvYRbiHDb1BP6cgaR7272scbX2PZDc
+         s66qMOjTi5VEweErH+bMB1Pj8cjOqt25SzDMIlrVeGTpanXxTB5mJgNvRvPP694wmVss
+         qg7iiVp+pUApFLXHQwv4ryBbj9qKQwxt/B8Z+e/KKQJxs3lXn3gQEn07+vDXsFiGTPRI
+         sRjHUmIRtEsC4mMUdZka+dgHGh7mVTPLsE/NLNEKybr2y6OnxMm7mTlJssmKQdqfRox5
+         oUdKAHsRIFzpD9vvII/060Sr2DeTQWOkGcNTyRCT8+AluWdxESQb3hETpkyh4XtkWtyE
+         HKrA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=dkZK75RDOqVvghIzMCSRWV8KKsXjayA5613tB1J4VCY=;
+        b=LixzY83ScElPUx+fjFaxjrup9IhUOmaxEe548wMseQA0+zhSbcsM0CzBBokWa2RsOR
+         F9JyflgUFAtIn8z3rjJwd0XQMOpGrxz25VSP+NBdvhp/9M5Iq9av8Y7uFTgK345i675B
+         /9mjqgK+K7tQ8kcA7aeWLhWvSSZtPplLF1AGKftRfCjJhX+YKPs+JsH4qZds+Lsh+5s5
+         X6uambP2skDksGmrQVveKhEGRexFRQ4DrGjkjcFFse7NR/zycdv1TJ4fgSYQKGZrSj19
+         EcWdaQ6zkO6RWhd8bHCwmTC796o5eFIexF2Y8yg95moyP4kgLHNg1ogEVrOpv3EDreIZ
+         VahQ==
+X-Gm-Message-State: AOAM531DlqC2hk5o+ZeY/C1sflW1kjmrVw3V9lSaTosqlC3Q2QSrD7WA
+        YOzBz1m/21SrLgxSH4XGvKQ=
+X-Google-Smtp-Source: ABdhPJxmSOateiAz2GwhjpxS1UWqa0G3kgwj0mii+pRLrVC3xY7iiTOsznBLTadT7na7xjXeVwo86w==
+X-Received: by 2002:a17:90b:19cf:: with SMTP id nm15mr15844023pjb.63.1606578543746;
+        Sat, 28 Nov 2020 07:49:03 -0800 (PST)
+Received: from localhost.localdomain ([161.81.68.216])
+        by smtp.gmail.com with ESMTPSA id r15sm15633028pjp.51.2020.11.28.07.49.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 28 Nov 2020 07:49:03 -0800 (PST)
+From:   Tom Yan <tom.ty89@gmail.com>
+To:     hdegoede@redhat.com, hch@lst.de, gregkh@linuxfoundation.org,
+        linux-usb@vger.kernel.org
+Cc:     mathias.nyman@intel.com, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, baolu.lu@linux.intel.com,
+        Tom Yan <tom.ty89@gmail.com>
+Subject: [PATCH 1/2] uas: revert from scsi_add_host_with_dma() to scsi_add_host()
+Date:   Sat, 28 Nov 2020 23:48:48 +0800
+Message-Id: <20201128154849.3193-1-tom.ty89@gmail.com>
 X-Mailer: git-send-email 2.29.2
+In-Reply-To: <09992cec-65e4-2757-aae6-8fb02a42f961@redhat.com>
+References: <09992cec-65e4-2757-aae6-8fb02a42f961@redhat.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 62.31.163.78
-X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org, kernel-team@android.com, andrew@lunn.ch, sebastian.hesselbarth@gmail.com, gregory.clement@bootlin.com, tglx@linutronix.de, thomas.petazzoni@bootlin.com
-X-SA-Exim-Mail-From: maz@kernel.org
-X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Jason's email address has now been bouncing for weeks, and no
-reply was received when trying to reach out on other addresses.
+Apparently the former (with the chosen dma_dev) may cause problem in certain
+case (e.g. where thunderbolt dock and intel iommu are involved). The error
+observed was:
 
-We really hope he is OK. But until we hear of his whereabouts,
-let's move him to the CREDITS file so that people stop Cc-ing
-him.
+XHCI swiotlb buffer is full / DMAR: Device bounce map failed
 
-Cc: Andrew Lunn <andrew@lunn.ch>
-Cc: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Cc: Gregory Clement <gregory.clement@bootlin.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Signed-off-by: Marc Zyngier <maz@kernel.org>
+For now we retain the clamp for hw_max_sectors against the dma_max_mapping_size.
+Since the device/size for the clamp that is applied when the scsi request queue
+is initialized/allocated is different than the one used here, we invalidate the
+early clamping by making a fallback blk_queue_max_hw_sectors() call.
+
+Signed-off-by: Tom Yan <tom.ty89@gmail.com>
 ---
- CREDITS     | 5 +++++
- MAINTAINERS | 4 ----
- 2 files changed, 5 insertions(+), 4 deletions(-)
+ drivers/usb/storage/uas.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
-diff --git a/CREDITS b/CREDITS
-index 8592e45e3932..cf112d3e9382 100644
---- a/CREDITS
-+++ b/CREDITS
-@@ -740,6 +740,11 @@ S: (ask for current address)
- S: Portland, Oregon
- S: USA
+diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+index c8a577309e8f..5db1325cea20 100644
+--- a/drivers/usb/storage/uas.c
++++ b/drivers/usb/storage/uas.c
+@@ -843,18 +843,21 @@ static int uas_slave_alloc(struct scsi_device *sdev)
+ static int uas_slave_configure(struct scsi_device *sdev)
+ {
+ 	struct uas_dev_info *devinfo = sdev->hostdata;
+-	struct device *dev = sdev->host->dma_dev;
++	struct usb_device *udev = devinfo->udev;
  
-+N: Jason Cooper
-+D: ARM/Marvell SOC co-maintainer
-+D: irqchip co-maintainer
-+D: MVEBU PCI DRIVER co-maintainer
-+
- N: Robin Cornelius
- E: robincornelius@users.sourceforge.net
- D: Ralink rt2x00 WLAN driver
-diff --git a/MAINTAINERS b/MAINTAINERS
-index e451dcce054f..7ba26942a573 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -2012,7 +2012,6 @@ M:	Philipp Zabel <philipp.zabel@gmail.com>
- S:	Maintained
+ 	if (devinfo->flags & US_FL_MAX_SECTORS_64)
+ 		blk_queue_max_hw_sectors(sdev->request_queue, 64);
+ 	else if (devinfo->flags & US_FL_MAX_SECTORS_240)
+ 		blk_queue_max_hw_sectors(sdev->request_queue, 240);
+-	else if (devinfo->udev->speed >= USB_SPEED_SUPER)
++	else if (udev->speed >= USB_SPEED_SUPER)
+ 		blk_queue_max_hw_sectors(sdev->request_queue, 2048);
++	else
++		blk_queue_max_hw_sectors(sdev->request_queue,
++					 SCSI_DEFAULT_MAX_SECTORS);
  
- ARM/Marvell Dove/MV78xx0/Orion SOC support
--M:	Jason Cooper <jason@lakedaemon.net>
- M:	Andrew Lunn <andrew@lunn.ch>
- M:	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
- M:	Gregory Clement <gregory.clement@bootlin.com>
-@@ -2029,7 +2028,6 @@ F:	arch/arm/plat-orion/
- F:	drivers/soc/dove/
+ 	blk_queue_max_hw_sectors(sdev->request_queue,
+ 		min_t(size_t, queue_max_hw_sectors(sdev->request_queue),
+-		      dma_max_mapping_size(dev) >> SECTOR_SHIFT));
++		      dma_max_mapping_size(udev->bus->sysdev) >> SECTOR_SHIFT));
  
- ARM/Marvell Kirkwood and Armada 370, 375, 38x, 39x, XP, 3700, 7K/8K, CN9130 SOC support
--M:	Jason Cooper <jason@lakedaemon.net>
- M:	Andrew Lunn <andrew@lunn.ch>
- M:	Gregory Clement <gregory.clement@bootlin.com>
- M:	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-@@ -9255,7 +9253,6 @@ F:	kernel/irq/
+ 	if (devinfo->flags & US_FL_NO_REPORT_OPCODES)
+ 		sdev->no_report_opcodes = 1;
+@@ -1040,7 +1043,7 @@ static int uas_probe(struct usb_interface *intf, const struct usb_device_id *id)
+ 	shost->can_queue = devinfo->qdepth - 2;
  
- IRQCHIP DRIVERS
- M:	Thomas Gleixner <tglx@linutronix.de>
--M:	Jason Cooper <jason@lakedaemon.net>
- M:	Marc Zyngier <maz@kernel.org>
- L:	linux-kernel@vger.kernel.org
- S:	Maintained
-@@ -13405,7 +13402,6 @@ F:	drivers/pci/controller/mobiveil/pcie-mobiveil*
+ 	usb_set_intfdata(intf, shost);
+-	result = scsi_add_host_with_dma(shost, &intf->dev, udev->bus->sysdev);
++	result = scsi_add_host(shost, &intf->dev);
+ 	if (result)
+ 		goto free_streams;
  
- PCI DRIVER FOR MVEBU (Marvell Armada 370 and Armada XP SOC support)
- M:	Thomas Petazzoni <thomas.petazzoni@bootlin.com>
--M:	Jason Cooper <jason@lakedaemon.net>
- L:	linux-pci@vger.kernel.org
- L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
- S:	Maintained
 -- 
 2.29.2
 
