@@ -2,134 +2,59 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86C4EC83028
-	for <linux-pci@archiver.kernel.org>; Sat, 28 Nov 2020 22:07:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7FFAC83023
+	for <linux-pci@archiver.kernel.org>; Sat, 28 Nov 2020 22:07:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4A0A02224F
-	for <linux-pci@archiver.kernel.org>; Sat, 28 Nov 2020 22:07:25 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cecqxIdt"
+	by mail.kernel.org (Postfix) with ESMTP id 78A8A20706
+	for <linux-pci@archiver.kernel.org>; Sat, 28 Nov 2020 22:07:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727716AbgK1VuO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 28 Nov 2020 16:50:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36558 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1733296AbgK1SRx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 28 Nov 2020 13:17:53 -0500
-Received: from mail-pg1-x544.google.com (mail-pg1-x544.google.com [IPv6:2607:f8b0:4864:20::544])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CFDCC0258DE;
-        Sat, 28 Nov 2020 07:49:04 -0800 (PST)
-Received: by mail-pg1-x544.google.com with SMTP id s63so6698201pgc.8;
-        Sat, 28 Nov 2020 07:49:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=dkZK75RDOqVvghIzMCSRWV8KKsXjayA5613tB1J4VCY=;
-        b=cecqxIdtNnXvYHZvKvSn+cJXABfzKkTd/GDrzvYRbiHDb1BP6cgaR7272scbX2PZDc
-         s66qMOjTi5VEweErH+bMB1Pj8cjOqt25SzDMIlrVeGTpanXxTB5mJgNvRvPP694wmVss
-         qg7iiVp+pUApFLXHQwv4ryBbj9qKQwxt/B8Z+e/KKQJxs3lXn3gQEn07+vDXsFiGTPRI
-         sRjHUmIRtEsC4mMUdZka+dgHGh7mVTPLsE/NLNEKybr2y6OnxMm7mTlJssmKQdqfRox5
-         oUdKAHsRIFzpD9vvII/060Sr2DeTQWOkGcNTyRCT8+AluWdxESQb3hETpkyh4XtkWtyE
-         HKrA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=dkZK75RDOqVvghIzMCSRWV8KKsXjayA5613tB1J4VCY=;
-        b=LixzY83ScElPUx+fjFaxjrup9IhUOmaxEe548wMseQA0+zhSbcsM0CzBBokWa2RsOR
-         F9JyflgUFAtIn8z3rjJwd0XQMOpGrxz25VSP+NBdvhp/9M5Iq9av8Y7uFTgK345i675B
-         /9mjqgK+K7tQ8kcA7aeWLhWvSSZtPplLF1AGKftRfCjJhX+YKPs+JsH4qZds+Lsh+5s5
-         X6uambP2skDksGmrQVveKhEGRexFRQ4DrGjkjcFFse7NR/zycdv1TJ4fgSYQKGZrSj19
-         EcWdaQ6zkO6RWhd8bHCwmTC796o5eFIexF2Y8yg95moyP4kgLHNg1ogEVrOpv3EDreIZ
-         VahQ==
-X-Gm-Message-State: AOAM531DlqC2hk5o+ZeY/C1sflW1kjmrVw3V9lSaTosqlC3Q2QSrD7WA
-        YOzBz1m/21SrLgxSH4XGvKQ=
-X-Google-Smtp-Source: ABdhPJxmSOateiAz2GwhjpxS1UWqa0G3kgwj0mii+pRLrVC3xY7iiTOsznBLTadT7na7xjXeVwo86w==
-X-Received: by 2002:a17:90b:19cf:: with SMTP id nm15mr15844023pjb.63.1606578543746;
-        Sat, 28 Nov 2020 07:49:03 -0800 (PST)
-Received: from localhost.localdomain ([161.81.68.216])
-        by smtp.gmail.com with ESMTPSA id r15sm15633028pjp.51.2020.11.28.07.49.01
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 28 Nov 2020 07:49:03 -0800 (PST)
-From:   Tom Yan <tom.ty89@gmail.com>
-To:     hdegoede@redhat.com, hch@lst.de, gregkh@linuxfoundation.org,
-        linux-usb@vger.kernel.org
-Cc:     mathias.nyman@intel.com, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, baolu.lu@linux.intel.com,
-        Tom Yan <tom.ty89@gmail.com>
-Subject: [PATCH 1/2] uas: revert from scsi_add_host_with_dma() to scsi_add_host()
-Date:   Sat, 28 Nov 2020 23:48:48 +0800
-Message-Id: <20201128154849.3193-1-tom.ty89@gmail.com>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <09992cec-65e4-2757-aae6-8fb02a42f961@redhat.com>
-References: <09992cec-65e4-2757-aae6-8fb02a42f961@redhat.com>
+        id S1727748AbgK1VuP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 28 Nov 2020 16:50:15 -0500
+Received: from verein.lst.de ([213.95.11.211]:40023 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729983AbgK1Sdm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 28 Nov 2020 13:33:42 -0500
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 9163A68AFE; Sat, 28 Nov 2020 18:15:01 +0100 (CET)
+Date:   Sat, 28 Nov 2020 18:15:00 +0100
+From:   Christoph Hellwig <hch@lst.de>
+To:     Hans de Goede <hdegoede@redhat.com>
+Cc:     Christoph Hellwig <hch@lst.de>, Tom Yan <tom.ty89@gmail.com>,
+        Mathias Nyman <mathias.nyman@intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-usb <linux-usb@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org, Lu Baolu <baolu.lu@linux.intel.com>
+Subject: Re: 5.10 regression caused by: "uas: fix sdev->host->dma_dev":
+ many XHCI swiotlb buffer is full / DMAR: Device bounce map failed
+ errors on thunderbolt connected XHCI controller
+Message-ID: <20201128171500.GA3550@lst.de>
+References: <b046dd04-ac4f-3c69-0602-af810fb1b365@redhat.com> <be031d15-201f-0e5c-8b0f-be030077141f@redhat.com> <20201124102715.GA16983@lst.de> <fde7e11f-5dfc-8348-c134-a21cb1116285@redhat.com> <8a52e868-0ca1-55b7-5ad2-ddb0cbb5e45d@redhat.com> <20201127161900.GA10986@lst.de> <fded04e2-f2e9-de92-ab1f-5aa088904e90@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <fded04e2-f2e9-de92-ab1f-5aa088904e90@redhat.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Apparently the former (with the chosen dma_dev) may cause problem in certain
-case (e.g. where thunderbolt dock and intel iommu are involved). The error
-observed was:
+Can you give this one-liner a spin?
 
-XHCI swiotlb buffer is full / DMAR: Device bounce map failed
-
-For now we retain the clamp for hw_max_sectors against the dma_max_mapping_size.
-Since the device/size for the clamp that is applied when the scsi request queue
-is initialized/allocated is different than the one used here, we invalidate the
-early clamping by making a fallback blk_queue_max_hw_sectors() call.
-
-Signed-off-by: Tom Yan <tom.ty89@gmail.com>
----
- drivers/usb/storage/uas.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-index c8a577309e8f..5db1325cea20 100644
---- a/drivers/usb/storage/uas.c
-+++ b/drivers/usb/storage/uas.c
-@@ -843,18 +843,21 @@ static int uas_slave_alloc(struct scsi_device *sdev)
- static int uas_slave_configure(struct scsi_device *sdev)
- {
- 	struct uas_dev_info *devinfo = sdev->hostdata;
--	struct device *dev = sdev->host->dma_dev;
-+	struct usb_device *udev = devinfo->udev;
+diff --git a/drivers/iommu/intel/iommu.c b/drivers/iommu/intel/iommu.c
+index c6622011d4938c..e889111b55c71d 100644
+--- a/drivers/iommu/intel/iommu.c
++++ b/drivers/iommu/intel/iommu.c
+@@ -4007,6 +4007,7 @@ static const struct dma_map_ops bounce_dma_ops = {
+ 	.alloc_pages		= dma_common_alloc_pages,
+ 	.free_pages		= dma_common_free_pages,
+ 	.dma_supported		= dma_direct_supported,
++	.max_mapping_size	= swiotlb_max_mapping_size,
+ };
  
- 	if (devinfo->flags & US_FL_MAX_SECTORS_64)
- 		blk_queue_max_hw_sectors(sdev->request_queue, 64);
- 	else if (devinfo->flags & US_FL_MAX_SECTORS_240)
- 		blk_queue_max_hw_sectors(sdev->request_queue, 240);
--	else if (devinfo->udev->speed >= USB_SPEED_SUPER)
-+	else if (udev->speed >= USB_SPEED_SUPER)
- 		blk_queue_max_hw_sectors(sdev->request_queue, 2048);
-+	else
-+		blk_queue_max_hw_sectors(sdev->request_queue,
-+					 SCSI_DEFAULT_MAX_SECTORS);
- 
- 	blk_queue_max_hw_sectors(sdev->request_queue,
- 		min_t(size_t, queue_max_hw_sectors(sdev->request_queue),
--		      dma_max_mapping_size(dev) >> SECTOR_SHIFT));
-+		      dma_max_mapping_size(udev->bus->sysdev) >> SECTOR_SHIFT));
- 
- 	if (devinfo->flags & US_FL_NO_REPORT_OPCODES)
- 		sdev->no_report_opcodes = 1;
-@@ -1040,7 +1043,7 @@ static int uas_probe(struct usb_interface *intf, const struct usb_device_id *id)
- 	shost->can_queue = devinfo->qdepth - 2;
- 
- 	usb_set_intfdata(intf, shost);
--	result = scsi_add_host_with_dma(shost, &intf->dev, udev->bus->sysdev);
-+	result = scsi_add_host(shost, &intf->dev);
- 	if (result)
- 		goto free_streams;
- 
--- 
-2.29.2
-
+ static inline int iommu_domain_cache_init(void)
