@@ -4,114 +4,141 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBA6CC8411F
-	for <linux-pci@archiver.kernel.org>; Sat, 28 Nov 2020 22:24:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13086C63798
+	for <linux-pci@archiver.kernel.org>; Sat, 28 Nov 2020 23:25:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9FA2D223AB
-	for <linux-pci@archiver.kernel.org>; Sat, 28 Nov 2020 22:24:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B27AF21D7A
+	for <linux-pci@archiver.kernel.org>; Sat, 28 Nov 2020 23:25:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="HGw3AiJd"
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="zQMNEwvz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387845AbgK1WY5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 28 Nov 2020 17:24:57 -0500
-Received: from mail.kernel.org ([198.145.29.99]:59344 "EHLO mail.kernel.org"
+        id S1726021AbgK1XZm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 28 Nov 2020 18:25:42 -0500
+Received: from mail.kernel.org ([198.145.29.99]:34356 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387837AbgK1Vqf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 28 Nov 2020 16:46:35 -0500
+        id S1725844AbgK1XZm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 28 Nov 2020 18:25:42 -0500
 Received: from localhost (129.sub-72-107-112.myvzw.com [72.107.112.129])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A074020857;
-        Sat, 28 Nov 2020 21:45:53 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 500DD21973;
+        Sat, 28 Nov 2020 23:25:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1606599953;
-        bh=5bQO897GCWtzWi0kmP4gvDPngkZBXj4MeZpDPJPZ96w=;
+        s=default; t=1606605901;
+        bh=hmGkZTYvkd/qqQZlybgJa7EXoilAdCnKXjGANKNqzj0=;
         h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=HGw3AiJdbZf9XG2h/WAOQHMhhrWvVn1T8cEJSkOJCmf2RYmGlONA4P/5Udcqx0+7f
-         sz5+uvOE+ZyDR516fq3x/o2NNFpRHZjnKXevCT5BRm4HoAvUX1tuMwguQ0u0Wz9ufx
-         t55Urtcgv4Yac4Pj9IRYBK38hSpNSQvY7XV8+0MU=
-Date:   Sat, 28 Nov 2020 15:45:52 -0600
+        b=zQMNEwvzY5WDM8mFJsegTA8jCeUPE82CbXvZ0yIYHSsTgZMyXKj5SvH8DKUxkTcKx
+         /jLXq6kOevPQKgi9DpOqVCL/bTiQ5z5XwCukSt2iGBlE1Pe6QdKUi/m8JZ0eNTkXm6
+         54HI+cS6nDBgitPoVfHgTgYOX/lHaGFFICTrHwQs=
+Date:   Sat, 28 Nov 2020 17:25:00 -0600
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     "Kuppuswamy, Sathyanarayanan" 
         <sathyanarayanan.kuppuswamy@linux.intel.com>
 Cc:     ashok.raj@intel.com, knsathya@kernel.org,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 4/5] PCI/ACPI: Centralize pcie_ports_native checking
-Message-ID: <20201128214552.GA907628@bjorn-Precision-5520>
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Olof Johansson <olof@lixom.net>
+Subject: Re: [PATCH 1/5] PCI/DPC: Ignore devices with no AER Capability
+Message-ID: <20201128232500.GA929114@bjorn-Precision-5520>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <0c7eb524-ff3a-d3ec-f9e6-7656e75b3437@linux.intel.com>
+In-Reply-To: <5646ac56-3b4a-d060-18ab-28722c337d00@linux.intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Nov 25, 2020 at 07:20:53PM -0800, Kuppuswamy, Sathyanarayanan wrote:
-> On 11/25/20 5:18 PM, Bjorn Helgaas wrote:
-> > From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+On Sat, Nov 28, 2020 at 01:56:23PM -0800, Kuppuswamy, Sathyanarayanan wrote:
+> On 11/28/20 1:53 PM, Bjorn Helgaas wrote:
+> > On Sat, Nov 28, 2020 at 01:49:46PM -0800, Kuppuswamy, Sathyanarayanan wrote:
+> > > On 11/28/20 12:24 PM, Bjorn Helgaas wrote:
+> > > > On Wed, Nov 25, 2020 at 06:01:57PM -0800, Kuppuswamy, Sathyanarayanan wrote:
+> > > > > On 11/25/20 5:18 PM, Bjorn Helgaas wrote:
+> > > > > > From: Bjorn Helgaas <bhelgaas@google.com>
+> > > > > > 
+> > > > > > Downstream Ports may support DPC regardless of whether they support AER
+> > > > > > (see PCIe r5.0, sec 6.2.10.2).  Previously, if the user booted with
+> > > > > > "pcie_ports=dpc-native", it was possible for dpc_probe() to succeed even if
+> > > > > > the device had no AER Capability, but dpc_get_aer_uncorrect_severity()
+> > > > > > depends on the AER Capability.
+> > > > > > 
+> > > > > > dpc_probe() previously failed if:
+> > > > > > 
+> > > > > >      !pcie_aer_is_native(pdev) && !pcie_ports_dpc_native
+> > > > > >      !(pcie_aer_is_native() || pcie_ports_dpc_native)    # by De Morgan's law
+> > > > > > 
+> > > > > > so it succeeded if:
+> > > > > > 
+> > > > > >      pcie_aer_is_native() || pcie_ports_dpc_native
+> > > > > > 
+> > > > > > Fail dpc_probe() if the device has no AER Capability.
+> > > > > > 
+> > > > > > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> > > > > > Cc: Olof Johansson <olof@lixom.net>
+> > > > > > ---
+> > > > > >     drivers/pci/pcie/dpc.c | 3 +++
+> > > > > >     1 file changed, 3 insertions(+)
+> > > > > > 
+> > > > > > diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+> > > > > > index e05aba86a317..ed0dbc43d018 100644
+> > > > > > --- a/drivers/pci/pcie/dpc.c
+> > > > > > +++ b/drivers/pci/pcie/dpc.c
+> > > > > > @@ -287,6 +287,9 @@ static int dpc_probe(struct pcie_device *dev)
+> > > > > >     	int status;
+> > > > > >     	u16 ctl, cap;
+> > > > > > +	if (!pdev->aer_cap)
+> > > > > > +		return -ENOTSUPP;
+> > > > > Don't we check aer_cap support in drivers/pci/pcie/portdrv_core.c ?
+> > > > > 
+> > > > > We don't enable DPC service, if AER service is not enabled. And AER
+> > > > > service is only enabled if AER capability is supported.
+> > > > > 
+> > > > > So dpc_probe() should not happen if AER capability is not supported?
+> > > > 
+> > > > I don't think that's always true.  If I'm reading this right, we have
+> > > > this:
+> > > > 
+> > > >     get_port_device_capability(...)
+> > > >     {
+> > > >     #ifdef CONFIG_PCIEAER
+> > > >       if (dev->aer_cap && ...)
+> > > >         services |= PCIE_PORT_SERVICE_AER;
+> > > >     #endif
+> > > > 
+> > > >       if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC) &&
+> > > >           pci_aer_available() &&
+> > > >           (pcie_ports_dpc_native || (services & PCIE_PORT_SERVICE_AER)))
+> > > >         services |= PCIE_PORT_SERVICE_DPC;
+> > > >     }
+> > > > 
+> > > > and in the case where:
+> > > > 
+> > > >     - CONFIG_PCIEAER=y
+> > > >     - booted with "pcie_ports=dpc-native" (pcie_ports_dpc_native is true)
+> > > >     - "dev" has no AER capability
+> > > >     - "dev" has DPC capability
+> > > > 
+> > > > I think we do enable PCIE_PORT_SERVICE_DPC.
+> > > Got it. But further looking into it, I am wondering whether
+> > > we should keep this dependency? Currently we just use it to
+> > > dump the error information. Do we need to create dependency
+> > > between DPC and AER (which is functionality not dependent) just
+> > > to see more details about the error?
 > > 
-> > If the user booted with "pcie_ports=native", we take control of the PCIe
-> > features unconditionally, regardless of what _OSC says.
-> > 
-> > Centralize the testing of pcie_ports_native in acpi_pci_root_create(),
-> > where we interpret the _OSC results, so other places only have to check
-> > host_bridge->native_X and we don't have to sprinkle tests of
-> > pcie_ports_native everywhere.
-> > 
-> > [bhelgaas: commit log, rework OSC_PCI_EXPRESS_CONTROL_MASKS, logging]
-> > Link: https://lore.kernel.org/r/bc87c9e675118960949043a832bed86bc22becbd.1603766889.git.sathyanarayanan.kuppuswamy@linux.intel.com
-> > Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > ---
-> >   drivers/acpi/pci_root.c           | 19 +++++++++++++++++++
-> >   drivers/pci/hotplug/pciehp_core.c |  2 +-
-> >   drivers/pci/pci-acpi.c            |  3 ---
-> >   drivers/pci/pcie/aer.c            |  2 +-
-> >   drivers/pci/pcie/portdrv_core.c   |  9 +++------
-> >   5 files changed, 24 insertions(+), 11 deletions(-)
-> > 
-> > diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> > index 6db071038fd5..36142ed7b8f8 100644
-> > --- a/drivers/acpi/pci_root.c
-> > +++ b/drivers/acpi/pci_root.c
-> > @@ -882,6 +882,8 @@ static void acpi_pci_root_release_info(struct pci_host_bridge *bridge)
-> >   			flag = 0;	\
-> >   	} while (0)
-> > +#define FLAG(x)		((x) ? '+' : '-')
-> > +
-> >   struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
-> >   				     struct acpi_pci_root_ops *ops,
-> >   				     struct acpi_pci_root_info *info,
-> > @@ -930,6 +932,23 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
-> >   	OSC_OWNER(ctrl, OSC_PCI_EXPRESS_LTR_CONTROL, host_bridge->native_ltr);
-> >   	OSC_OWNER(ctrl, OSC_PCI_EXPRESS_DPC_CONTROL, host_bridge->native_dpc);
-> > +	if (pcie_ports_native) {
-> > +		dev_info(&root->device->dev, "Taking control of PCIe-related features because \"pcie_ports=native\" specified; may conflict with firmware\n");
-> > +		host_bridge->native_pcie_hotplug = 1;
-> > +		host_bridge->native_aer = 1;
-> > +		host_bridge->native_pme = 1;
-> > +		host_bridge->native_ltr = 1;
-> > +		host_bridge->native_dpc = 1;
-> > +	}
-> Won't it be better if its merged with above OSC_OWNER() calls? If
-> pcie_ports_native is set, then above OSC_OWNER() calls for PCIe
-> related features are redundant. Let me know.
+> > That's a good question, but I don't really want to get into the actual
+> > operation of the AER and DPC drivers in this series, so maybe
+> > something we should explore later.
 
-Yes, I think you're right.  I think it would also be nice to know
-exactly which services we're overriding _OSC for, i.e., when we turn
-native_aer from 0 to 1 and so on.  If we merge this back in, we'll
-have a way to keep track of those.
+> In that case, can you move this check to
+> drivers/pci/pcie/portdrv_core.c?  I don't see the point of
+> distributed checks in both get_port_device_capability() and
+> dpc_probe().
 
-> > @@ -208,8 +208,7 @@ static int get_port_device_capability(struct pci_dev *dev)
-> >   	struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
-> >   	int services = 0;
-> > -	if (dev->is_hotplug_bridge &&
-> > -	    (pcie_ports_native || host->native_pcie_hotplug)) {
-> > +	if (host->native_pcie_hotplug && dev->is_hotplug_bridge) {
-> May be this reordering can be split into a different patch ?
-
-Good point, that makes the diff a little easier to read, thanks!
+I totally agree that these distributed checks are terrible, but my
+long-term hope is to get rid of portdrv and handle these "services"
+more like we handle other capabilities.  For example, maybe we can
+squash dpc_probe() into pci_dpc_init(), so I'd actually like to move
+things from get_port_device_capability() into dpc_probe().
