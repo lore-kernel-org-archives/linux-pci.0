@@ -2,145 +2,170 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1526C8302A
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C2F4C83026
 	for <linux-pci@archiver.kernel.org>; Sat, 28 Nov 2020 22:07:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 954EF2224A
-	for <linux-pci@archiver.kernel.org>; Sat, 28 Nov 2020 22:07:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F18C422261
+	for <linux-pci@archiver.kernel.org>; Sat, 28 Nov 2020 22:07:24 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DtROul4b"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726442AbgK1VuO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S2387548AbgK1VuO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Sat, 28 Nov 2020 16:50:14 -0500
-Received: from szxga04-in.huawei.com ([45.249.212.190]:8214 "EHLO
-        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730482AbgK1SEI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 28 Nov 2020 13:04:08 -0500
-Received: from DGGEMS412-HUB.china.huawei.com (unknown [172.30.72.59])
-        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4Cjh6s0k8SzkhJb;
-        Sat, 28 Nov 2020 14:15:01 +0800 (CST)
-Received: from localhost.localdomain (10.175.118.36) by
- DGGEMS412-HUB.china.huawei.com (10.3.19.212) with Microsoft SMTP Server id
- 14.3.487.0; Sat, 28 Nov 2020 14:15:20 +0800
-From:   Chiqijun <chiqijun@huawei.com>
-To:     <bhelgaas@google.com>
-CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <yin.yinshi@huawei.com>, <cloud.wangxiaoyun@huawei.com>,
-        <zengweiliang.zengweiliang@huawei.com>, <chenlizhong@huawei.com>
-Subject: [PATCH] PCI: Add pci reset quirk for Huawei Intelligent NIC virtual function
-Date:   Sat, 28 Nov 2020 14:18:25 +0800
-Message-ID: <20201128061825.2629-1-chiqijun@huawei.com>
-X-Mailer: git-send-email 2.17.1
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36916 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1733298AbgK1SR6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 28 Nov 2020 13:17:58 -0500
+Received: from mail-pf1-x443.google.com (mail-pf1-x443.google.com [IPv6:2607:f8b0:4864:20::443])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E583AC0258E3;
+        Sat, 28 Nov 2020 07:49:07 -0800 (PST)
+Received: by mail-pf1-x443.google.com with SMTP id w6so7091854pfu.1;
+        Sat, 28 Nov 2020 07:49:07 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=NbAVYycY6YOfQw07HUrLEWpQeZLRTY8vh8sqwjHNiYY=;
+        b=DtROul4bAe96EerB/u5UR8/qYs4S5tUL/0CAxmjLJHQNZu7mtMPSnynDuIWhq7jz6M
+         MEpzCCOV5BDoML+9aa4z8ZDgQVrrVZIq6A8S+inZtG2XWw4AF5dHQ+iwbSjZRo2HMtw8
+         kNw52H7bxje5MRPxTo/J1uOUaCGhIN/Xekmn0Eg6XeDKOM5U98+tlsGv7RmwbVoaGc2n
+         OovuXXNsucrO5GEQxA2bGRyfo0SoTyir4sLw9QrJTxcHNsyRsayfhr30k22vxg7NTle6
+         kI3Mmh0bkUc1wrwFaBWvbRfJS/eF2q7EjrDdWk0cojd6jDhcGZVWRqaXrua0iT+AwAah
+         IKCg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=NbAVYycY6YOfQw07HUrLEWpQeZLRTY8vh8sqwjHNiYY=;
+        b=pHmxm4GNnfs8alFm/TurbqONhVx5U7bl6/bLUJlU630HxXHFlgm1sf1LQqPd5uHvsw
+         /2uy1JfE8cfPntEkSWv/pfsCnPOqWxCePnbQQTeX8hdt8gUOqnQGnXica5y4UJWAF4pt
+         7yS0qf53Lq9pcne8CTyrQg2borV91Pmj5ZHqfJcunS0fV58FbnSBjeAfaWesEW10/XkJ
+         ujtFV1/H1KO3xhxgYziIMJ4YURDy7qZtO5D10JQ7tLxNT2FZrfbr6ZPGUIUN3ZHAwCM6
+         P8Kn5auFlf6TwhpqVc8dFN4LYsKOa33SFCo57kameDbzrgFCVt4+mc7e3HeWBsV2VjLf
+         lpew==
+X-Gm-Message-State: AOAM531q0jMeBTZLK5yeNLyI1n+5HlK8gO0tXVvJIO0590Xjc7h1H2dK
+        5giUPlbKjby5UBTMAdI/h30=
+X-Google-Smtp-Source: ABdhPJyqCBQR8A2d6dk1sHRfwPArNMLZS2bh0nKxDeJ2+RQ3RuWqznNT1xQ4Bg05XoqYbGq8pU3+SQ==
+X-Received: by 2002:a17:90a:bc83:: with SMTP id x3mr16905963pjr.90.1606578547558;
+        Sat, 28 Nov 2020 07:49:07 -0800 (PST)
+Received: from localhost.localdomain ([161.81.68.216])
+        by smtp.gmail.com with ESMTPSA id r15sm15633028pjp.51.2020.11.28.07.49.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 28 Nov 2020 07:49:06 -0800 (PST)
+From:   Tom Yan <tom.ty89@gmail.com>
+To:     hdegoede@redhat.com, hch@lst.de, gregkh@linuxfoundation.org,
+        linux-usb@vger.kernel.org
+Cc:     mathias.nyman@intel.com, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, baolu.lu@linux.intel.com,
+        Tom Yan <tom.ty89@gmail.com>
+Subject: [PATCH 2/2] usb-storage: revert from scsi_add_host_with_dma() to scsi_add_host()
+Date:   Sat, 28 Nov 2020 23:48:49 +0800
+Message-Id: <20201128154849.3193-2-tom.ty89@gmail.com>
+X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20201128154849.3193-1-tom.ty89@gmail.com>
+References: <09992cec-65e4-2757-aae6-8fb02a42f961@redhat.com>
+ <20201128154849.3193-1-tom.ty89@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.175.118.36]
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-When multiple VFs do FLR at the same time, the firmware is
-processed serially, resulting in some VF FLRs being delayed more
-than 100ms, when the virtual machine restarts and the device
-driver is loaded, the firmware is doing the corresponding VF
-FLR, causing the driver to fail to load.
+While the change only seemed to have caused issue on uas drives, we
+probably want to avoid it in the usb-storage driver as well, until
+we are sure it is the right thing to do.
 
-To solve this problem, add host and firmware status synchronization
-during FLR.
-
-Signed-off-by: Chiqijun <chiqijun@huawei.com>
+Signed-off-by: Tom Yan <tom.ty89@gmail.com>
 ---
- drivers/pci/quirks.c | 67 ++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 67 insertions(+)
+ drivers/usb/storage/scsiglue.c | 40 +++++++++++++++++-----------------
+ drivers/usb/storage/usb.c      |  3 +--
+ 2 files changed, 21 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index f70692ac79c5..bd6236ea9064 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3912,6 +3912,71 @@ static int delay_250ms_after_flr(struct pci_dev *dev, int probe)
- 	return 0;
- }
+diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
+index 560efd1479ba..6539bae1c188 100644
+--- a/drivers/usb/storage/scsiglue.c
++++ b/drivers/usb/storage/scsiglue.c
+@@ -92,7 +92,7 @@ static int slave_alloc (struct scsi_device *sdev)
+ static int slave_configure(struct scsi_device *sdev)
+ {
+ 	struct us_data *us = host_to_us(sdev->host);
+-	struct device *dev = sdev->host->dma_dev;
++	struct device *dev = us->pusb_dev->bus->sysdev;
  
-+#define PCI_DEVICE_ID_HINIC_VF  0x375E
-+#define HINIC_VF_FLR_TYPE       0x1000
-+#define HINIC_VF_OP             0xE80
-+#define HINIC_OPERATION_TIMEOUT 15000
-+
-+/* Device-specific reset method for Huawei Intelligent NIC virtual functions */
-+static int reset_hinic_vf_dev(struct pci_dev *pdev, int probe)
-+{
-+	unsigned long timeout;
-+	void __iomem *bar;
-+	u16 old_command;
-+	u32 val;
-+
-+	if (probe)
-+		return 0;
-+
-+	bar = pci_iomap(pdev, 0, 0);
-+	if (!bar)
-+		return -ENOTTY;
-+
-+	pci_read_config_word(pdev, PCI_COMMAND, &old_command);
-+
-+	/*
-+	 * FLR cap bit bit30, FLR ACK bit: bit18, to avoid big-endian conversion
-+	 * the big-endian bit6, bit10 is directly operated here
-+	 */
-+	val = readl(bar + HINIC_VF_FLR_TYPE);
-+	if (!(val & (1UL << 6))) {
-+		pci_iounmap(pdev, bar);
-+		return -ENOTTY;
-+	}
-+
-+	val = readl(bar + HINIC_VF_OP);
-+	val = val | (1UL << 10);
-+	writel(val, bar + HINIC_VF_OP);
-+
-+	/* Perform the actual device function reset */
-+	pcie_flr(pdev);
-+
-+	pci_write_config_word(pdev, PCI_COMMAND,
-+			      old_command | PCI_COMMAND_MEMORY);
-+
-+	/* Waiting for device reset complete */
-+	timeout = jiffies + msecs_to_jiffies(HINIC_OPERATION_TIMEOUT);
-+	do {
-+		val = readl(bar + HINIC_VF_OP);
-+		if (!(val & (1UL << 10)))
-+			goto reset_complete;
-+		msleep(20);
-+	} while (time_before(jiffies, timeout));
-+
-+	val = readl(bar + HINIC_VF_OP);
-+	if (!(val & (1UL << 10)))
-+		goto reset_complete;
-+
-+	pci_warn(pdev, "Reset dev timeout, flr ack reg: %x\n",
-+		 be32_to_cpu(val));
-+
-+reset_complete:
-+	pci_write_config_word(pdev, PCI_COMMAND, old_command);
-+	pci_iounmap(pdev, bar);
-+
-+	return 0;
-+}
-+
- static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
- 	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
- 		 reset_intel_82599_sfp_virtfn },
-@@ -3923,6 +3988,8 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
- 	{ PCI_VENDOR_ID_INTEL, 0x0953, delay_250ms_after_flr },
- 	{ PCI_VENDOR_ID_CHELSIO, PCI_ANY_ID,
- 		reset_chelsio_generic_dev },
-+	{ PCI_VENDOR_ID_HUAWEI, PCI_DEVICE_ID_HINIC_VF,
-+		reset_hinic_vf_dev },
- 	{ 0 }
- };
+ 	/*
+ 	 * Many devices have trouble transferring more than 32KB at a time,
+@@ -120,6 +120,25 @@ static int slave_configure(struct scsi_device *sdev)
+ 		 * better throughput on most devices.
+ 		 */
+ 		blk_queue_max_hw_sectors(sdev->request_queue, 2048);
++	} else {
++		/*
++		 * Limit the total size of a transfer to 120 KB.
++		 *
++		 * Some devices are known to choke with anything larger. It seems like
++		 * the problem stems from the fact that original IDE controllers had
++		 * only an 8-bit register to hold the number of sectors in one transfer
++		 * and even those couldn't handle a full 256 sectors.
++		 *
++		 * Because we want to make sure we interoperate with as many devices as
++		 * possible, we will maintain a 240 sector transfer size limit for USB
++		 * Mass Storage devices.
++		 *
++		 * Tests show that other operating have similar limits with Microsoft
++		 * Windows 7 limiting transfers to 128 sectors for both USB2 and USB3
++		 * and Apple Mac OS X 10.11 limiting transfers to 256 sectors for USB2
++		 * and 2048 for USB3 devices.
++		 */
++		blk_queue_max_hw_sectors(sdev->request_queue, 240);
+ 	}
  
+ 	/*
+@@ -627,25 +646,6 @@ static const struct scsi_host_template usb_stor_host_template = {
+ 	.sg_tablesize =			SG_MAX_SEGMENTS,
+ 
+ 
+-	/*
+-	 * Limit the total size of a transfer to 120 KB.
+-	 *
+-	 * Some devices are known to choke with anything larger. It seems like
+-	 * the problem stems from the fact that original IDE controllers had
+-	 * only an 8-bit register to hold the number of sectors in one transfer
+-	 * and even those couldn't handle a full 256 sectors.
+-	 *
+-	 * Because we want to make sure we interoperate with as many devices as
+-	 * possible, we will maintain a 240 sector transfer size limit for USB
+-	 * Mass Storage devices.
+-	 *
+-	 * Tests show that other operating have similar limits with Microsoft
+-	 * Windows 7 limiting transfers to 128 sectors for both USB2 and USB3
+-	 * and Apple Mac OS X 10.11 limiting transfers to 256 sectors for USB2
+-	 * and 2048 for USB3 devices.
+-	 */
+-	.max_sectors =                  240,
+-
+ 	/* emulated HBA */
+ 	.emulated =			1,
+ 
+diff --git a/drivers/usb/storage/usb.c b/drivers/usb/storage/usb.c
+index c2ef367cf257..f177da4ff1bc 100644
+--- a/drivers/usb/storage/usb.c
++++ b/drivers/usb/storage/usb.c
+@@ -1050,8 +1050,7 @@ int usb_stor_probe2(struct us_data *us)
+ 	usb_autopm_get_interface_no_resume(us->pusb_intf);
+ 	snprintf(us->scsi_name, sizeof(us->scsi_name), "usb-storage %s",
+ 					dev_name(dev));
+-	result = scsi_add_host_with_dma(us_to_host(us), dev,
+-					us->pusb_dev->bus->sysdev);
++	result = scsi_add_host(us_to_host(us), dev);
+ 	if (result) {
+ 		dev_warn(dev,
+ 				"Unable to add the scsi host\n");
 -- 
-2.17.1
+2.29.2
 
