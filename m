@@ -2,65 +2,65 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-14.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C5A8C64E7B
-	for <linux-pci@archiver.kernel.org>; Mon, 30 Nov 2020 21:30:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE600C63777
+	for <linux-pci@archiver.kernel.org>; Mon, 30 Nov 2020 21:33:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0679D2222A
-	for <linux-pci@archiver.kernel.org>; Mon, 30 Nov 2020 21:30:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3EF9B2084C
+	for <linux-pci@archiver.kernel.org>; Mon, 30 Nov 2020 21:33:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="S6efCwhA"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fhDgfe13"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388599AbgK3VaY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 30 Nov 2020 16:30:24 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56834 "EHLO
+        id S2387779AbgK3VdL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 30 Nov 2020 16:33:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57274 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388554AbgK3VaW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Nov 2020 16:30:22 -0500
-Received: from mail-pj1-x1043.google.com (mail-pj1-x1043.google.com [IPv6:2607:f8b0:4864:20::1043])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D415CC0613CF;
-        Mon, 30 Nov 2020 13:29:41 -0800 (PST)
-Received: by mail-pj1-x1043.google.com with SMTP id v1so397883pjr.2;
-        Mon, 30 Nov 2020 13:29:41 -0800 (PST)
+        with ESMTP id S2387576AbgK3VdL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Nov 2020 16:33:11 -0500
+Received: from mail-pf1-x443.google.com (mail-pf1-x443.google.com [IPv6:2607:f8b0:4864:20::443])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23E32C0613CF;
+        Mon, 30 Nov 2020 13:32:31 -0800 (PST)
+Received: by mail-pf1-x443.google.com with SMTP id n137so11284287pfd.3;
+        Mon, 30 Nov 2020 13:32:31 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=subject:to:cc:references:from:message-id:date:user-agent
          :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=DWjJunM0Wmbz4s0jLkRrF2o5zQCdYXKHU/3KOiaHX/M=;
-        b=S6efCwhAKHYgtmjmpD8Hzvbp9i8StDx5Lz4NYJ+CYPPhd1Zdg6rHUdBz7jUbMNU6pc
-         941P4fvSONwd1o6AMsUgGYvTHbO7j4sVS79F+79/J/xzbJHw9JBfyKb4BUH7OXiwlsuT
-         SVWeo/63fBGZs4O9zdSnhq4K4rSof2wTCioSBw1rdW87M7bJOVKhjR0aThQohLTNLxcR
-         sMLmqwIdwPZ9azDp5kJsdiZTbQqrZeXL9d6Dd3FlLJX1OCIShw9PpGR6fBjz3406BkSU
-         qOl+hWW4gB3cABxugXx+xI2D9dQs72JNVxS8BWQKU5ZSBboje0eKCKEFjYw4WyQEzr41
-         aZkw==
+        bh=DctpeWixZedWLIe9T1LbBcTwsFUdxzd0r0hcVxTsfr4=;
+        b=fhDgfe13+5vMBwPhR0Nm2sF7yPR7/+YZoRNFjaqMM7xSuS4dxZAZkL8BAxiJPjw7Uz
+         muVv/yv9OoAvarZvE2MaNg7uRQZhilkPFRchY7flcG/cBaJQonzi6nvEYXn7CqYyhmJI
+         5WPQOU73USzJSQGTE7FPg9jZhFYsmHw7dJzYvXElsfHM84oiht/u0v55r0X+o3p1ZwWf
+         OKUk3nR9c41R6ZOrfVOAIjvHuuwXW7SG2vvxjzKoupv9CFkc4mwEFjZEXW0FouVgdoVV
+         x9TNy5PFJt1srUFgIRosrbsEQQInyQYEN028L/Y3WG0UmUnpX4vaMBbeoy5GsdgrN6VY
+         lKbg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=DWjJunM0Wmbz4s0jLkRrF2o5zQCdYXKHU/3KOiaHX/M=;
-        b=k/OTXOQdqmbEpQxFftaQr+3jva5w5rc2YDvb9G00uuKb3tthCYUk1HiJIUXeZq1vvo
-         6/OsSOlEZCpwwNNLDXReGHWTbte+kw6o6pBwB6HI54ZtDO2h8GxlnBq6VD/uY5cWug65
-         Td69Jri7vVwywwUQR3ml3A7OCiokVoREXwvv0vwFwk/lXSQIVF0Wbm3w60wVx8tiUIJu
-         VMOUVRh9T7REg9MPTb8VDRagsjMaPxvzTilJfybWzEzZXnY9O/PFEgv6N5Lbjo/JuXCL
-         RM4GAVmh8UJOMu19VZMWkUS5N6S00SN0GRN9rNHcWQE/os3isw8G6o8nDPwSozqWuNvF
-         XaGw==
-X-Gm-Message-State: AOAM533XceXxsj2PmUqlCOf6xFPaLJRd7/OgLtBhtXxHRIN8HAqTjgzX
-        1QRb856cARs56tN1ivzcyBglGqlg7Fk=
-X-Google-Smtp-Source: ABdhPJx6xEcDW4s+3ILXmaqfiWlW4K6oWLF0llNuwsYlkl0IYU3Vc3Vujp6Hom2s3vThV73o2mcYqw==
-X-Received: by 2002:a17:90a:6b0d:: with SMTP id v13mr897481pjj.206.1606771781097;
-        Mon, 30 Nov 2020 13:29:41 -0800 (PST)
+        bh=DctpeWixZedWLIe9T1LbBcTwsFUdxzd0r0hcVxTsfr4=;
+        b=Zlg3ZnJMLlta7BbC3YHMGDcROqn//TFuPqG9sVf5JFxvcrYIPeBhBDhRb21PDpCWyc
+         M/c53GIEg3qTVPM858HxQiAUleYiMwo7a7j1UQcYqsd09uj0obebvxbsCRiJ1Dfy/y9m
+         zIlU9guDIuIuaVYnM6lt7OQ6Sx2qBDJOxA0exmbIK/kR/pLs9KlXe8ohoxP3vbMdY2MS
+         uPogD5hEvIjbAyj17b4zzN0BetJvAQLS4+FuJ+ZAcAKWFFphELP6h3TJur14CSVvBPbp
+         7yVz+qF0e2Z+ahzd6dXCmWmRpRKMj5w/GYm7Bb8Pd3D44bIni3LhAW1HtGB874L2zDiZ
+         KJUA==
+X-Gm-Message-State: AOAM533IdwJz5DvGwghCAyzlQzm6fIf1xxtU1XXDqOEgSzUtXXf8zt9K
+        XSL21tpknBHv8VdY1LfzY1iAm66mTGE=
+X-Google-Smtp-Source: ABdhPJxfDZPbPmlCJKGaCYMq+K75fM2nT/D47wgF9HTC6Hmxau6KgM2AqO9qnbgPZgA1WpXm9fCSIw==
+X-Received: by 2002:a63:c944:: with SMTP id y4mr19792249pgg.435.1606771950226;
+        Mon, 30 Nov 2020 13:32:30 -0800 (PST)
 Received: from [10.230.28.242] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id g6sm3923074pjd.3.2020.11.30.13.29.39
+        by smtp.gmail.com with ESMTPSA id i13sm17470708pfo.139.2020.11.30.13.32.27
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 30 Nov 2020 13:29:40 -0800 (PST)
-Subject: Re: [PATCH v2 3/6] PCI: brcmstb: Do not turn off regulators if EP can
- wake up
+        Mon, 30 Nov 2020 13:32:29 -0800 (PST)
+Subject: Re: [PATCH v2 2/6] PCI: brcmstb: Add control of EP voltage
+ regulator(s)
 To:     Jim Quinlan <james.quinlan@broadcom.com>,
         linux-pci@vger.kernel.org,
         Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
@@ -75,14 +75,14 @@ Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         <linux-arm-kernel@lists.infradead.org>,
         open list <linux-kernel@vger.kernel.org>
 References: <20201130211145.3012-1-james.quinlan@broadcom.com>
- <20201130211145.3012-4-james.quinlan@broadcom.com>
+ <20201130211145.3012-3-james.quinlan@broadcom.com>
 From:   Florian Fainelli <f.fainelli@gmail.com>
-Message-ID: <611680c5-d889-41c6-a9ff-ac69b47cdb24@gmail.com>
-Date:   Mon, 30 Nov 2020 13:29:37 -0800
+Message-ID: <154a809d-9320-f0a1-45ad-78af0303a9ac@gmail.com>
+Date:   Mon, 30 Nov 2020 13:32:26 -0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
  Firefox/78.0 Thunderbird/78.5.0
 MIME-Version: 1.0
-In-Reply-To: <20201130211145.3012-4-james.quinlan@broadcom.com>
+In-Reply-To: <20201130211145.3012-3-james.quinlan@broadcom.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -93,20 +93,66 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 
 On 11/30/2020 1:11 PM, Jim Quinlan wrote:
-> If any downstream device may wake up during S2/S3 suspend, we do not want
-> to turn off its power when suspending.
+> Control of EP regulators by the RC is needed because of the chicken-and-egg
+> situation: although the regulator is "owned" by the EP and would be best
+> handled on its driver, the EP cannot be discovered and probed unless its
+> regulator is already turned on.
 > 
 > Signed-off-by: Jim Quinlan <james.quinlan@broadcom.com>
+> ---
+>  drivers/pci/controller/pcie-brcmstb.c | 38 ++++++++++++++++++++++++++-
+>  1 file changed, 37 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
+> index bea86899bd5d..9d4ac42b3bee 100644
+> --- a/drivers/pci/controller/pcie-brcmstb.c
+> +++ b/drivers/pci/controller/pcie-brcmstb.c
+> @@ -23,6 +23,7 @@
+>  #include <linux/of_platform.h>
+>  #include <linux/pci.h>
+>  #include <linux/printk.h>
+> +#include <linux/regulator/consumer.h>
+>  #include <linux/reset.h>
+>  #include <linux/sizes.h>
+>  #include <linux/slab.h>
+> @@ -210,6 +211,10 @@ enum pcie_type {
+>  	BCM2711,
+>  };
+>  
+> +static const char * const ep_regulator_names[] = {
+> +	"vpcie12v", "vpcie3v3", "vpcie1v8", "vpcie0v9",
 
-Looks good to me, just one minor typo below:
+Only if you need to re-spin this patch series, I would be keen on
+putting each string on its own line, that way when adding a subsequent
+regulator name, it is just a matter of an one line d
 
-> +enum {
-> +	TURN_OFF,		/* Turn egulators off, unless an EP is wakeup-capable */
+> +};
+> +
+>  struct pcie_cfg_data {
+>  	const int *offsets;
+>  	const enum pcie_type type;
+> @@ -287,8 +292,25 @@ struct brcm_pcie {
+>  	u32			hw_rev;
+>  	void			(*perst_set)(struct brcm_pcie *pcie, u32 val);
+>  	void			(*bridge_sw_init_set)(struct brcm_pcie *pcie, u32 val);
+> +	struct regulator_bulk_data supplies[ARRAY_SIZE(ep_regulator_names)];
+>  };
+>  
+> +static void brcm_set_regulators(struct brcm_pcie *pcie, bool on)
+> +{
+> +	struct device *dev = pcie->dev;
+> +	int ret;
+> +
+> +	if (on)
+> +		ret = regulator_bulk_enable(ARRAY_SIZE(ep_regulator_names),
+> +					    pcie->supplies);
+> +	else
+> +		ret = regulator_bulk_disable(ARRAY_SIZE(ep_regulator_names),
+> +					     pcie->supplies);
+> +	if (ret)
+> +		dev_err(dev, "failed to %s EP regulators\n",
+> +			on ? "enable" : "disable");
 
-s/egulators/regulators/
-
-> +	TURN_OFF_ALWAYS,	/* Turn Regulators off, no exceptions */
-> +	TURN_ON,		/* Turn regulators on, unless pcie->ep_wakeup_capable */
-
+Should not you propagate the return value to the caller here?
 -- 
 Florian
