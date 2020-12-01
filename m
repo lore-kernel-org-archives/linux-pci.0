@@ -8,62 +8,62 @@ X-Spam-Status: No, score=-26.2 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C25E6C64E7B
-	for <linux-pci@archiver.kernel.org>; Tue,  1 Dec 2020 21:39:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B339C8301A
+	for <linux-pci@archiver.kernel.org>; Tue,  1 Dec 2020 21:39:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6162E2086A
-	for <linux-pci@archiver.kernel.org>; Tue,  1 Dec 2020 21:39:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E32882086A
+	for <linux-pci@archiver.kernel.org>; Tue,  1 Dec 2020 21:39:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="cTOyof8D"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="ty5f8H7k"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389518AbgLAVjP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 1 Dec 2020 16:39:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56466 "EHLO
+        id S2389306AbgLAVjp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 1 Dec 2020 16:39:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56482 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388640AbgLAVjM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Dec 2020 16:39:12 -0500
-Received: from mail-qt1-x849.google.com (mail-qt1-x849.google.com [IPv6:2607:f8b0:4864:20::849])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D170C08E862
-        for <linux-pci@vger.kernel.org>; Tue,  1 Dec 2020 13:37:25 -0800 (PST)
-Received: by mail-qt1-x849.google.com with SMTP id z8so2273792qti.17
-        for <linux-pci@vger.kernel.org>; Tue, 01 Dec 2020 13:37:25 -0800 (PST)
+        with ESMTP id S2390156AbgLAVje (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Dec 2020 16:39:34 -0500
+Received: from mail-qv1-xf49.google.com (mail-qv1-xf49.google.com [IPv6:2607:f8b0:4864:20::f49])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98E22C094262
+        for <linux-pci@vger.kernel.org>; Tue,  1 Dec 2020 13:37:45 -0800 (PST)
+Received: by mail-qv1-xf49.google.com with SMTP id i2so2210963qvb.2
+        for <linux-pci@vger.kernel.org>; Tue, 01 Dec 2020 13:37:45 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=sender:date:in-reply-to:message-id:mime-version:references:subject
          :from:to:cc;
-        bh=Ioq5snZDZDriQbZnteUYOvtfB50kdQ3NzmE0Bt/uZj4=;
-        b=cTOyof8D27Eb15ctHFkguMw8fQJTDxevhAv86xzy/JyHIKohwC9kcPozSDGX4ZvhjH
-         hv1rR4G53Z3ln+Cmqb9RjUK77Rma8WI1knxtAcMzXLo7jpqZX03s3IjAuAKcPGe698IA
-         tqCRwqNReUE6+2DHbVXsqGEAH3DKihfcNiemIM2g7zH4vjz4yRgdtjEGOxPucEoKGI7o
-         TP0NKml15Zj0kVGxkNppCMBBYfw5RCgEPqWu/IFdSOVZwRHRqv5Cob9LcnhewWjKXfLJ
-         uxIRAby/D2ArEQUd3zLg1F9Be0crsc+S/9EwAcR/g6vVudxNV4zhBdGhHukse6etLm6r
-         ljAg==
+        bh=D9wH7plBpsyKB7z0MJo6lESfcO9at50jK7OVp+0NdAo=;
+        b=ty5f8H7kzpU+lvDsHXGI++1V0wurJB7DQJHEXEwufmtrCxIRoiPJOPP1X/3lLsz1Jb
+         yjTR/AGDyQQn3kRjvvw2d88GiqDY8VcvMWomB5DuCrtNFFxHuktvMeKvMrFz+Xfk1Q77
+         MRmeM7k7VctuQepKTW4pproEuOE+zIwcrFORj2gPW2IlyOU7IhN8JpWoK+mpfeUx5C/d
+         ojaTkHbYjh10G7mgJCJekN588v9SPU5sVPQSTu4fzbRdcVzLgMGzXyAyI0u1gJhvAtr+
+         L9s0tFmZLbeuu51bgQUHw9Ysitz1s+n7ja3zUrLOpDRRdxizWkaeqCKUaIf410z146BI
+         /CXw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:sender:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=Ioq5snZDZDriQbZnteUYOvtfB50kdQ3NzmE0Bt/uZj4=;
-        b=YL6AaadIaN6T4OwELEdA3e0wy4IryJ+dXJOG6NEJJc9RF/Rperf3xxbpsisDtSfxIJ
-         UGJpgEOxvYA8mTio2izwvO5KUfg8b9j6Z8PZcEHXttTUoJIPVCoX29+7CygVU/FlaVic
-         s7QoMYKC+MHfaGt/6E2Bu6ndS6Uf/RP9ox8gkmya3Nro6sewj0++2Xi8k6OHLTtiEGT0
-         JiLJ/OA4xdiDE8+BonbkDr7MzXtdS2xv93eGvaghEOSt9rFAiFPsI8T/iDqOrUHBm9dZ
-         oHo7Z5K6Q7YJeRTIBzNQj0QLmU4NQxA4JHGctvXk+JHEFtcaWx+2IULt+DIalhXm+7nB
-         PELA==
-X-Gm-Message-State: AOAM533BjErwL/EbBUiUEtb4mAPenA0s89D6eNR3eW9pPGHsBNyUV2YP
-        ky9W+VzxF+RWTnf2vGlkfkjyM78Pcb2yCLjAplo=
-X-Google-Smtp-Source: ABdhPJys1KC5O8D1Yq/SB6UjKKBqwmwFlcdQVBXthpLtwbdm6607CxLE6p9eN4XkDXwUu6B0iPn5A0SVU7zu7mNfSPU=
+        bh=D9wH7plBpsyKB7z0MJo6lESfcO9at50jK7OVp+0NdAo=;
+        b=FVsR3I3nynFmXkIiN6pgK6zHF27pZBpwUwH+fXNgs0op0phuqhJAObiKcUtNclm7Nh
+         Ng3t2LXCp9IZ2zyOBvNe3YwrINoxDJDHQG0PilLDu2PHUF+9D26qnYQYuCmGXDqM9G2k
+         VfCdNW+QVRuYM66H5v7dtlU4/YlJV1BB7Wj5qb1Tc27j0TmOWgBG9yl7iFzuDMqRWSBe
+         rry5SbEnBFRcCDVk8+MekhNn5ntviEC9/tdlMmuOttGJBsuGkT6hjzvijOLfqCLOa4Fv
+         CDu0RZF85xAcflS2YLAh83rW5ltHMTrHDeJ4IQRuUMVSGetoAbWd5vXGjbN4bKXP0HQu
+         OvaA==
+X-Gm-Message-State: AOAM531k1M72IpsAjfocHxKB2y6o8Rl7ONlO+j6aKT5XYei0gW0I8yzT
+        X2Y+gmJBJl1YxmAPlOSfzsh2mw8ugkPskEQEyO0=
+X-Google-Smtp-Source: ABdhPJz0uxxT0ZlEK90fhImd7lL6Fuzds0C69/eAFTomtuQ0mN0EZEi1KhWi4R7wk6mCpdkDbecP4SoP9hzTb5uJL7A=
 Sender: "samitolvanen via sendgmr" 
         <samitolvanen@samitolvanen1.mtv.corp.google.com>
 X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:f693:9fff:fef4:1b6d])
- (user=samitolvanen job=sendgmr) by 2002:ad4:4051:: with SMTP id
- r17mr5301753qvp.39.1606858644813; Tue, 01 Dec 2020 13:37:24 -0800 (PST)
-Date:   Tue,  1 Dec 2020 13:36:57 -0800
+ (user=samitolvanen job=sendgmr) by 2002:ad4:4d84:: with SMTP id
+ cv4mr5421264qvb.14.1606858664762; Tue, 01 Dec 2020 13:37:44 -0800 (PST)
+Date:   Tue,  1 Dec 2020 13:37:05 -0800
 In-Reply-To: <20201201213707.541432-1-samitolvanen@google.com>
-Message-Id: <20201201213707.541432-7-samitolvanen@google.com>
+Message-Id: <20201201213707.541432-15-samitolvanen@google.com>
 Mime-Version: 1.0
 References: <20201201213707.541432-1-samitolvanen@google.com>
 X-Mailer: git-send-email 2.29.2.576.ga3fc446d84-goog
-Subject: [PATCH v8 06/16] kbuild: lto: remove duplicate dependencies from .mod files
+Subject: [PATCH v8 14/16] arm64: vdso: disable LTO
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Masahiro Yamada <masahiroy@kernel.org>,
         Steven Rostedt <rostedt@goodmis.org>,
@@ -84,36 +84,30 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-With LTO, llvm-nm prints out symbols for each archive member
-separately, which results in a lot of duplicate dependencies in the
-.mod file when CONFIG_TRIM_UNUSED_SYMS is enabled. When a module
-consists of several compilation units, the output can exceed the
-default xargs command size limit and split the dependency list to
-multiple lines, which results in used symbols getting trimmed.
-
-This change removes duplicate dependencies, which will reduce the
-probability of this happening and makes .mod files smaller and
-easier to read.
+Disable LTO for the vDSO by filtering out CC_FLAGS_LTO, as there's no
+point in using link-time optimization for the small amount of C code.
 
 Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
 Reviewed-by: Kees Cook <keescook@chromium.org>
+Acked-by: Will Deacon <will@kernel.org>
 ---
- scripts/Makefile.build | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ arch/arm64/kernel/vdso/Makefile | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/scripts/Makefile.build b/scripts/Makefile.build
-index eae2f5386a03..f80ada58271d 100644
---- a/scripts/Makefile.build
-+++ b/scripts/Makefile.build
-@@ -281,7 +281,7 @@ endef
+diff --git a/arch/arm64/kernel/vdso/Makefile b/arch/arm64/kernel/vdso/Makefile
+index d65f52264aba..50fe49fb4d95 100644
+--- a/arch/arm64/kernel/vdso/Makefile
++++ b/arch/arm64/kernel/vdso/Makefile
+@@ -30,7 +30,8 @@ ldflags-y := -shared -nostdlib -soname=linux-vdso.so.1 --hash-style=sysv	\
+ ccflags-y := -fno-common -fno-builtin -fno-stack-protector -ffixed-x18
+ ccflags-y += -DDISABLE_BRANCH_PROFILING
  
- # List module undefined symbols (or empty line if not enabled)
- ifdef CONFIG_TRIM_UNUSED_KSYMS
--cmd_undef_syms = $(NM) $< | sed -n 's/^  *U //p' | xargs echo
-+cmd_undef_syms = $(NM) $< | sed -n 's/^  *U //p' | sort -u | xargs echo
- else
- cmd_undef_syms = echo
- endif
+-CFLAGS_REMOVE_vgettimeofday.o = $(CC_FLAGS_FTRACE) -Os $(CC_FLAGS_SCS) $(GCC_PLUGINS_CFLAGS)
++CFLAGS_REMOVE_vgettimeofday.o = $(CC_FLAGS_FTRACE) -Os $(CC_FLAGS_SCS) $(GCC_PLUGINS_CFLAGS) \
++				$(CC_FLAGS_LTO)
+ KASAN_SANITIZE			:= n
+ UBSAN_SANITIZE			:= n
+ OBJECT_FILES_NON_STANDARD	:= y
 -- 
 2.29.2.576.ga3fc446d84-goog
 
