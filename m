@@ -8,62 +8,62 @@ X-Spam-Status: No, score=-26.2 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C497C83029
-	for <linux-pci@archiver.kernel.org>; Tue,  1 Dec 2020 21:39:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C25E6C64E7B
+	for <linux-pci@archiver.kernel.org>; Tue,  1 Dec 2020 21:39:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1A35E20C56
-	for <linux-pci@archiver.kernel.org>; Tue,  1 Dec 2020 21:39:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6162E2086A
+	for <linux-pci@archiver.kernel.org>; Tue,  1 Dec 2020 21:39:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="vXHUajvU"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="cTOyof8D"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390003AbgLAVjb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 1 Dec 2020 16:39:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56342 "EHLO
+        id S2389518AbgLAVjP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 1 Dec 2020 16:39:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56466 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389969AbgLAVj3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Dec 2020 16:39:29 -0500
-Received: from mail-qv1-xf49.google.com (mail-qv1-xf49.google.com [IPv6:2607:f8b0:4864:20::f49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3846CC09425F
-        for <linux-pci@vger.kernel.org>; Tue,  1 Dec 2020 13:37:43 -0800 (PST)
-Received: by mail-qv1-xf49.google.com with SMTP id d30so2216799qvf.3
-        for <linux-pci@vger.kernel.org>; Tue, 01 Dec 2020 13:37:43 -0800 (PST)
+        with ESMTP id S2388640AbgLAVjM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Dec 2020 16:39:12 -0500
+Received: from mail-qt1-x849.google.com (mail-qt1-x849.google.com [IPv6:2607:f8b0:4864:20::849])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D170C08E862
+        for <linux-pci@vger.kernel.org>; Tue,  1 Dec 2020 13:37:25 -0800 (PST)
+Received: by mail-qt1-x849.google.com with SMTP id z8so2273792qti.17
+        for <linux-pci@vger.kernel.org>; Tue, 01 Dec 2020 13:37:25 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=sender:date:in-reply-to:message-id:mime-version:references:subject
          :from:to:cc;
-        bh=aPTc8wYkBIIZS9XLhaJqPHrVGew/rHRzWtLqs6SwnEk=;
-        b=vXHUajvUgn40LQCYOvZPKvqCWjM82atINdDHUGd5EhIZaxvZWNECR6Puf1wV/Xm1fz
-         RZFUluVJoen54/2OkeSIKDLooJAqo6nO6jmid/KnIY+pQsB0jUK1FLQCjzUfvDCGjqfW
-         5DsweDMH7mPM+webX4KoPPbT06j0wd8ib/BAqCtFcLiXN9fRxFfzVzezsrV61oCpnhyb
-         7uduG6UItD7EnvVpEffELx2wbLPqlD3Oqd6UlZIDNGhgDg+wEFbzFvokQCivtnRsGs7N
-         92Et/EOjPux1Tii1bL3i8/gTtmbaMJpflMTGhVRAPssOG6ib3nwdVtng5zkY0hoNy4H7
-         BGdg==
+        bh=Ioq5snZDZDriQbZnteUYOvtfB50kdQ3NzmE0Bt/uZj4=;
+        b=cTOyof8D27Eb15ctHFkguMw8fQJTDxevhAv86xzy/JyHIKohwC9kcPozSDGX4ZvhjH
+         hv1rR4G53Z3ln+Cmqb9RjUK77Rma8WI1knxtAcMzXLo7jpqZX03s3IjAuAKcPGe698IA
+         tqCRwqNReUE6+2DHbVXsqGEAH3DKihfcNiemIM2g7zH4vjz4yRgdtjEGOxPucEoKGI7o
+         TP0NKml15Zj0kVGxkNppCMBBYfw5RCgEPqWu/IFdSOVZwRHRqv5Cob9LcnhewWjKXfLJ
+         uxIRAby/D2ArEQUd3zLg1F9Be0crsc+S/9EwAcR/g6vVudxNV4zhBdGhHukse6etLm6r
+         ljAg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:sender:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=aPTc8wYkBIIZS9XLhaJqPHrVGew/rHRzWtLqs6SwnEk=;
-        b=UaSj3NOpCHbgEQYQ31ojhhrCfiJE9PsDf3Q3V5OP767GHn9XDTBOu9tHWVMMf199wU
-         TmVxoofDjNJDv8LQt5V2wJBNYhU+wjpbDmqA8yV5GP3QBd/eYaMarzciTBhRmm3CpeK4
-         4C8n9DP78NFHOi/8GphR9W+oCkkWgeQtSYvTAFx2AQrQprHPUye0SYKRCyaMeGMrfs/Z
-         Y109pfDBMj3ZbkmTzhfNjy2fRVVmR8UYU925V2GM5P8tL8EBMmc/Y7HUutWiG/axHC4q
-         o18x/tkE41pAZccp9hWnJxANYgRIHDXqIPG+efOvqL8PVzXu6RVR8Tw/09yl5EVFAgGy
-         IAng==
-X-Gm-Message-State: AOAM530Sb3ilRZ/QWw+mwjgtvRs7tgHdYQBFlqTIvgjA7CTOeDGVCAy1
-        prXMql8JkwKCYE1KHOLfy3HlzbBObA1UVfmwWUU=
-X-Google-Smtp-Source: ABdhPJx2UMQKvzPc9YbjuAcaOdZsXhK7RlcIM2M9pkfdRpnDBi+U9k28DqELenlSlo2tvxUYIND8c9jWK0Acmjv4ppQ=
+        bh=Ioq5snZDZDriQbZnteUYOvtfB50kdQ3NzmE0Bt/uZj4=;
+        b=YL6AaadIaN6T4OwELEdA3e0wy4IryJ+dXJOG6NEJJc9RF/Rperf3xxbpsisDtSfxIJ
+         UGJpgEOxvYA8mTio2izwvO5KUfg8b9j6Z8PZcEHXttTUoJIPVCoX29+7CygVU/FlaVic
+         s7QoMYKC+MHfaGt/6E2Bu6ndS6Uf/RP9ox8gkmya3Nro6sewj0++2Xi8k6OHLTtiEGT0
+         JiLJ/OA4xdiDE8+BonbkDr7MzXtdS2xv93eGvaghEOSt9rFAiFPsI8T/iDqOrUHBm9dZ
+         oHo7Z5K6Q7YJeRTIBzNQj0QLmU4NQxA4JHGctvXk+JHEFtcaWx+2IULt+DIalhXm+7nB
+         PELA==
+X-Gm-Message-State: AOAM533BjErwL/EbBUiUEtb4mAPenA0s89D6eNR3eW9pPGHsBNyUV2YP
+        ky9W+VzxF+RWTnf2vGlkfkjyM78Pcb2yCLjAplo=
+X-Google-Smtp-Source: ABdhPJys1KC5O8D1Yq/SB6UjKKBqwmwFlcdQVBXthpLtwbdm6607CxLE6p9eN4XkDXwUu6B0iPn5A0SVU7zu7mNfSPU=
 Sender: "samitolvanen via sendgmr" 
         <samitolvanen@samitolvanen1.mtv.corp.google.com>
 X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:f693:9fff:fef4:1b6d])
- (user=samitolvanen job=sendgmr) by 2002:ad4:5685:: with SMTP id
- bc5mr5091015qvb.48.1606858662372; Tue, 01 Dec 2020 13:37:42 -0800 (PST)
-Date:   Tue,  1 Dec 2020 13:37:04 -0800
+ (user=samitolvanen job=sendgmr) by 2002:ad4:4051:: with SMTP id
+ r17mr5301753qvp.39.1606858644813; Tue, 01 Dec 2020 13:37:24 -0800 (PST)
+Date:   Tue,  1 Dec 2020 13:36:57 -0800
 In-Reply-To: <20201201213707.541432-1-samitolvanen@google.com>
-Message-Id: <20201201213707.541432-14-samitolvanen@google.com>
+Message-Id: <20201201213707.541432-7-samitolvanen@google.com>
 Mime-Version: 1.0
 References: <20201201213707.541432-1-samitolvanen@google.com>
 X-Mailer: git-send-email 2.29.2.576.ga3fc446d84-goog
-Subject: [PATCH v8 13/16] drivers/misc/lkdtm: disable LTO for rodata.o
+Subject: [PATCH v8 06/16] kbuild: lto: remove duplicate dependencies from .mod files
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Masahiro Yamada <masahiroy@kernel.org>,
         Steven Rostedt <rostedt@goodmis.org>,
@@ -84,27 +84,36 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Disable LTO for rodata.o to allow objcopy to be used to
-manipulate sections.
+With LTO, llvm-nm prints out symbols for each archive member
+separately, which results in a lot of duplicate dependencies in the
+.mod file when CONFIG_TRIM_UNUSED_SYMS is enabled. When a module
+consists of several compilation units, the output can exceed the
+default xargs command size limit and split the dependency list to
+multiple lines, which results in used symbols getting trimmed.
+
+This change removes duplicate dependencies, which will reduce the
+probability of this happening and makes .mod files smaller and
+easier to read.
 
 Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
-Acked-by: Kees Cook <keescook@chromium.org>
+Reviewed-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/misc/lkdtm/Makefile | 1 +
- 1 file changed, 1 insertion(+)
+ scripts/Makefile.build | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/misc/lkdtm/Makefile b/drivers/misc/lkdtm/Makefile
-index c70b3822013f..dd4c936d4d73 100644
---- a/drivers/misc/lkdtm/Makefile
-+++ b/drivers/misc/lkdtm/Makefile
-@@ -13,6 +13,7 @@ lkdtm-$(CONFIG_LKDTM)		+= cfi.o
+diff --git a/scripts/Makefile.build b/scripts/Makefile.build
+index eae2f5386a03..f80ada58271d 100644
+--- a/scripts/Makefile.build
++++ b/scripts/Makefile.build
+@@ -281,7 +281,7 @@ endef
  
- KASAN_SANITIZE_stackleak.o	:= n
- KCOV_INSTRUMENT_rodata.o	:= n
-+CFLAGS_REMOVE_rodata.o		+= $(CC_FLAGS_LTO)
- 
- OBJCOPYFLAGS :=
- OBJCOPYFLAGS_rodata_objcopy.o	:= \
+ # List module undefined symbols (or empty line if not enabled)
+ ifdef CONFIG_TRIM_UNUSED_KSYMS
+-cmd_undef_syms = $(NM) $< | sed -n 's/^  *U //p' | xargs echo
++cmd_undef_syms = $(NM) $< | sed -n 's/^  *U //p' | sort -u | xargs echo
+ else
+ cmd_undef_syms = echo
+ endif
 -- 
 2.29.2.576.ga3fc446d84-goog
 
