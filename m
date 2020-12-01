@@ -2,73 +2,34 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-26.2 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable
+X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81B77C83023
-	for <linux-pci@archiver.kernel.org>; Tue,  1 Dec 2020 21:39:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4B70C64E7A
+	for <linux-pci@archiver.kernel.org>; Tue,  1 Dec 2020 21:47:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 278EA2086A
-	for <linux-pci@archiver.kernel.org>; Tue,  1 Dec 2020 21:39:40 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="uSKl5Hyg"
+	by mail.kernel.org (Postfix) with ESMTP id 77287208DB
+	for <linux-pci@archiver.kernel.org>; Tue,  1 Dec 2020 21:47:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389591AbgLAVjV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 1 Dec 2020 16:39:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56346 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389643AbgLAVjU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Dec 2020 16:39:20 -0500
-Received: from mail-yb1-xb49.google.com (mail-yb1-xb49.google.com [IPv6:2607:f8b0:4864:20::b49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECC44C094253
-        for <linux-pci@vger.kernel.org>; Tue,  1 Dec 2020 13:37:35 -0800 (PST)
-Received: by mail-yb1-xb49.google.com with SMTP id j138so3967512ybg.20
-        for <linux-pci@vger.kernel.org>; Tue, 01 Dec 2020 13:37:35 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=sender:date:in-reply-to:message-id:mime-version:references:subject
-         :from:to:cc;
-        bh=baTa63xSC0ZZvL8LmEJ0rysXSGBclqJkA0eq2XdQYu4=;
-        b=uSKl5HygxSFku3YpTdgH92zmKIE08ozZOIdku0rdE1QVetGDukAW5zNct8DUP027uw
-         URWQdtClz2Lqmykr7qURlRRoi54XeEUu1RNFyDxIDeMUvpG0iHYLlEVkKi2WrwC16Mag
-         xqCGvMXwV9ADAX0kd9iwYYuz8KAJgAR0vAiOyZY3HFSRXyr3ecyoAG3asfhKd5xnA56j
-         C0uauidumM11pi4Ni2mqK2sj3jEgFKCHCeIHT8eOoI3Oj7Se9gobAyg97sPy9VAmfmeW
-         k2WyX9FDP9jnedQUelDpCgdiXGQAEN9BsBj4WsylG4Z2JMb6iSYkZx7yItSsSxiRphQJ
-         57Wg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:date:in-reply-to:message-id:mime-version
-         :references:subject:from:to:cc;
-        bh=baTa63xSC0ZZvL8LmEJ0rysXSGBclqJkA0eq2XdQYu4=;
-        b=kh1hlWNGFAlOxiQmSbJDvy4ygNIAKOmtBp6HTYm3keE8NNHmFjM7pGCkyG1iNPM3mS
-         VXznBlKIOxsjPuDNMMkxK1KB2XySqrVOYZEsZlamnL298WuX5r2O8g3/0JAR0qtQJmUK
-         86uC2eIIeEm/3Nh137x1T5k6djR6ipeJwy4adBXNfvnjDm4Hw2diagKiBf7i3elp2Vx3
-         naeb+iovouVny0Udyc167TmZ9ALdwPVqPkQjBa3MxWxMZDNQxVBCEAZokcwz5XGMeeDO
-         TOae1P1JPtWuBFJgEiR2gKqKdn7j4TdDBXuY5h4nXO0V25kdE+fLtSYqSropr965pgg6
-         eI4w==
-X-Gm-Message-State: AOAM5316ShfxSXm+tWQp8jE7cEOjLEgmLLAnA3k7762+BPfxgqf8Dxtr
-        /VWWQPzG9zCheskgrNNPtCqrKF8r/ZJ/aTCWx7g=
-X-Google-Smtp-Source: ABdhPJx9UrJOBuVJFMgVMAJwkGX1h9O45KDxr7BrRQG9YqDPMiMlGPu3qHVL93NOaWHRQVSxnOLCqPD+XrASLbiYizk=
-Sender: "samitolvanen via sendgmr" 
-        <samitolvanen@samitolvanen1.mtv.corp.google.com>
-X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:f693:9fff:fef4:1b6d])
- (user=samitolvanen job=sendgmr) by 2002:a25:8401:: with SMTP id
- u1mr9324352ybk.96.1606858655207; Tue, 01 Dec 2020 13:37:35 -0800 (PST)
-Date:   Tue,  1 Dec 2020 13:37:01 -0800
-In-Reply-To: <20201201213707.541432-1-samitolvanen@google.com>
-Message-Id: <20201201213707.541432-11-samitolvanen@google.com>
-Mime-Version: 1.0
-References: <20201201213707.541432-1-samitolvanen@google.com>
-X-Mailer: git-send-email 2.29.2.576.ga3fc446d84-goog
-Subject: [PATCH v8 10/16] modpost: lto: strip .lto from module names
-From:   Sami Tolvanen <samitolvanen@google.com>
-To:     Masahiro Yamada <masahiroy@kernel.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Will Deacon <will@kernel.org>
-Cc:     Josh Poimboeuf <jpoimboe@redhat.com>,
+        id S1728714AbgLAVrx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 1 Dec 2020 16:47:53 -0500
+Received: from mail.kernel.org ([198.145.29.99]:55020 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726412AbgLAVrw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 1 Dec 2020 16:47:52 -0500
+Received: from gandalf.local.home (cpe-66-24-58-225.stny.res.rr.com [66.24.58.225])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id A3528208C3;
+        Tue,  1 Dec 2020 21:47:09 +0000 (UTC)
+Date:   Tue, 1 Dec 2020 16:47:08 -0500
+From:   Steven Rostedt <rostedt@goodmis.org>
+To:     Sami Tolvanen <samitolvanen@google.com>
+Cc:     Masahiro Yamada <masahiroy@kernel.org>,
+        Will Deacon <will@kernel.org>,
+        Josh Poimboeuf <jpoimboe@redhat.com>,
         Peter Zijlstra <peterz@infradead.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         "Paul E. McKenney" <paulmck@kernel.org>,
@@ -77,122 +38,37 @@ Cc:     Josh Poimboeuf <jpoimboe@redhat.com>,
         clang-built-linux@googlegroups.com,
         kernel-hardening@lists.openwall.com, linux-arch@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-kbuild@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        Sami Tolvanen <samitolvanen@google.com>
-Content-Type: text/plain; charset="UTF-8"
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v8 01/16] tracing: move function tracer options to
+ Kconfig
+Message-ID: <20201201164708.19066850@gandalf.local.home>
+In-Reply-To: <20201201213707.541432-2-samitolvanen@google.com>
+References: <20201201213707.541432-1-samitolvanen@google.com>
+        <20201201213707.541432-2-samitolvanen@google.com>
+X-Mailer: Claws Mail 3.17.3 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-With LTO, everything is compiled into LLVM bitcode, so we have to link
-each module into native code before modpost. Kbuild uses the .lto.o
-suffix for these files, which also ends up in module information. This
-change strips the unnecessary .lto suffix from the module name.
+On Tue,  1 Dec 2020 13:36:52 -0800
+Sami Tolvanen <samitolvanen@google.com> wrote:
 
-Suggested-by: Bill Wendling <morbo@google.com>
-Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
-Reviewed-by: Kees Cook <keescook@chromium.org>
----
- scripts/mod/modpost.c    | 16 +++++++---------
- scripts/mod/modpost.h    |  9 +++++++++
- scripts/mod/sumversion.c |  6 +++++-
- 3 files changed, 21 insertions(+), 10 deletions(-)
+> Move function tracer options to Kconfig to make it easier to add
+> new methods for generating __mcount_loc, and to make the options
+> available also when building kernel modules.
+> 
+> Note that FTRACE_MCOUNT_USE_* options are updated on rebuild and
+> therefore, work even if the .config was generated in a different
+> environment.
 
-diff --git a/scripts/mod/modpost.c b/scripts/mod/modpost.c
-index f882ce0d9327..ebb15cc3f262 100644
---- a/scripts/mod/modpost.c
-+++ b/scripts/mod/modpost.c
-@@ -17,7 +17,6 @@
- #include <ctype.h>
- #include <string.h>
- #include <limits.h>
--#include <stdbool.h>
- #include <errno.h>
- #include "modpost.h"
- #include "../../include/linux/license.h"
-@@ -80,14 +79,6 @@ modpost_log(enum loglevel loglevel, const char *fmt, ...)
- 		exit(1);
- }
- 
--static inline bool strends(const char *str, const char *postfix)
--{
--	if (strlen(str) < strlen(postfix))
--		return false;
--
--	return strcmp(str + strlen(str) - strlen(postfix), postfix) == 0;
--}
--
- void *do_nofail(void *ptr, const char *expr)
- {
- 	if (!ptr)
-@@ -1984,6 +1975,10 @@ static char *remove_dot(char *s)
- 		size_t m = strspn(s + n + 1, "0123456789");
- 		if (m && (s[n + m] == '.' || s[n + m] == 0))
- 			s[n] = 0;
-+
-+		/* strip trailing .lto */
-+		if (strends(s, ".lto"))
-+			s[strlen(s) - 4] = '\0';
- 	}
- 	return s;
- }
-@@ -2007,6 +2002,9 @@ static void read_symbols(const char *modname)
- 		/* strip trailing .o */
- 		tmp = NOFAIL(strdup(modname));
- 		tmp[strlen(tmp) - 2] = '\0';
-+		/* strip trailing .lto */
-+		if (strends(tmp, ".lto"))
-+			tmp[strlen(tmp) - 4] = '\0';
- 		mod = new_module(tmp);
- 		free(tmp);
- 	}
-diff --git a/scripts/mod/modpost.h b/scripts/mod/modpost.h
-index 3aa052722233..fab30d201f9e 100644
---- a/scripts/mod/modpost.h
-+++ b/scripts/mod/modpost.h
-@@ -2,6 +2,7 @@
- #include <stdio.h>
- #include <stdlib.h>
- #include <stdarg.h>
-+#include <stdbool.h>
- #include <string.h>
- #include <sys/types.h>
- #include <sys/stat.h>
-@@ -180,6 +181,14 @@ static inline unsigned int get_secindex(const struct elf_info *info,
- 	return info->symtab_shndx_start[sym - info->symtab_start];
- }
- 
-+static inline bool strends(const char *str, const char *postfix)
-+{
-+	if (strlen(str) < strlen(postfix))
-+		return false;
-+
-+	return strcmp(str + strlen(str) - strlen(postfix), postfix) == 0;
-+}
-+
- /* file2alias.c */
- extern unsigned int cross_build;
- void handle_moddevtable(struct module *mod, struct elf_info *info,
-diff --git a/scripts/mod/sumversion.c b/scripts/mod/sumversion.c
-index d587f40f1117..760e6baa7eda 100644
---- a/scripts/mod/sumversion.c
-+++ b/scripts/mod/sumversion.c
-@@ -391,10 +391,14 @@ void get_src_version(const char *modname, char sum[], unsigned sumlen)
- 	struct md4_ctx md;
- 	char *fname;
- 	char filelist[PATH_MAX + 1];
-+	int postfix_len = 1;
-+
-+	if (strends(modname, ".lto.o"))
-+		postfix_len = 5;
- 
- 	/* objects for a module are listed in the first line of *.mod file. */
- 	snprintf(filelist, sizeof(filelist), "%.*smod",
--		 (int)strlen(modname) - 1, modname);
-+		 (int)strlen(modname) - postfix_len, modname);
- 
- 	buf = read_text_file(filelist);
- 
--- 
-2.29.2.576.ga3fc446d84-goog
+Acked-by: Steven Rostedt (VMware) <rostedt@goodmis.org>
 
+> 
+> Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
+> ---
+
+
+-- Steve
