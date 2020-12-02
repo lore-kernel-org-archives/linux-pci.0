@@ -2,202 +2,241 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D54CFC64E7C
-	for <linux-pci@archiver.kernel.org>; Wed,  2 Dec 2020 07:29:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DC6AC71155
+	for <linux-pci@archiver.kernel.org>; Wed,  2 Dec 2020 07:34:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6FAAF206D5
-	for <linux-pci@archiver.kernel.org>; Wed,  2 Dec 2020 07:29:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B3E722203
+	for <linux-pci@archiver.kernel.org>; Wed,  2 Dec 2020 07:34:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728037AbgLBH3H (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 2 Dec 2020 02:29:07 -0500
-Received: from mga04.intel.com ([192.55.52.120]:55567 "EHLO mga04.intel.com"
+        id S1728631AbgLBHej (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 2 Dec 2020 02:34:39 -0500
+Received: from mga12.intel.com ([192.55.52.136]:17853 "EHLO mga12.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725912AbgLBH3H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 2 Dec 2020 02:29:07 -0500
-IronPort-SDR: gDseQ8CfVFOtB1bxI5x9RCQ0NUlvsh3e7x6gT5SiF/1Hk0u7vYzIWIxe6HRP+BW/T05G7Z4ITH
- w2GnI1vTsU9A==
-X-IronPort-AV: E=McAfee;i="6000,8403,9822"; a="170401378"
+        id S1727641AbgLBHei (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 2 Dec 2020 02:34:38 -0500
+IronPort-SDR: QWkHhkertpqPzYGzDwb5hEA8Z2enrM0ZC78RVHpY0ir+8bEf4/n2Tbir+dkrF0zC7bdXF0CM9h
+ 2w5Gx/UwzUGA==
+X-IronPort-AV: E=McAfee;i="6000,8403,9822"; a="152224036"
 X-IronPort-AV: E=Sophos;i="5.78,386,1599548400"; 
-   d="scan'208";a="170401378"
+   d="scan'208";a="152224036"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Dec 2020 23:28:24 -0800
-IronPort-SDR: 7mH0seCdsPXuu1tpBvetF0AtVMclhkS9y/i5PE+CsBlmPzxRD6uDZdryccNVE+q4d5pznRMog2
- uxwpGceSrZVg==
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Dec 2020 23:33:55 -0800
+IronPort-SDR: B6Ubyj6I2lsK480z7WL8zKck95p5yUjaq9tYO96wi5IRoc6uUhuj8xxFH53lqRYVP+XCwx5var
+ 8NJb4raUkjow==
+X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.78,386,1599548400"; 
-   d="scan'208";a="549934606"
-Received: from qwu16-mobl1.ccr.corp.intel.com ([10.255.30.201])
-  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Dec 2020 23:28:21 -0800
-Message-ID: <bd5b97f89ab2887543fc262348d1c7cafcaae536.camel@intel.com>
-Subject: Re: [PATCH] x86/PCI: Convert force_disable_hpet() to standard quirk
-From:   Zhang Rui <rui.zhang@intel.com>
-To:     Thomas Gleixner <tglx@linutronix.de>,
-        Feng Tang <feng.tang@intel.com>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>, Ingo Molnar <mingo@redhat.com>,
-        Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        len.brown@intel.com
-Date:   Wed, 02 Dec 2020 15:28:18 +0800
-In-Reply-To: <87eekairc0.fsf@nanos.tec.linutronix.de>
-References: <20201119181904.149129-1-helgaas@kernel.org>
-         <87v9dtk3j4.fsf@nanos.tec.linutronix.de>
-         <20201126012421.GA92582@shbuild999.sh.intel.com>
-         <87eekfk8bd.fsf@nanos.tec.linutronix.de>
-         <20201127061131.GB105524@shbuild999.sh.intel.com>
-         <87eekairc0.fsf@nanos.tec.linutronix.de>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.1 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+   d="scan'208";a="335452097"
+Received: from wwanmoha-ilbpg2.png.intel.com ([10.88.227.42])
+  by orsmga006.jf.intel.com with ESMTP; 01 Dec 2020 23:33:53 -0800
+From:   Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
+To:     bhelgaas@google.com, robh+dt@kernel.org, lorenzo.pieralisi@arm.com
+Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        andriy.shevchenko@linux.intel.com, mgross@linux.intel.com,
+        lakshmi.bai.raja.subramanian@intel.com,
+        wan.ahmad.zainie.wan.mohamad@intel.com
+Subject: [PATCH v3 1/2] dt-bindings: PCI: Add Intel Keem Bay PCIe controller
+Date:   Wed,  2 Dec 2020 15:31:55 +0800
+Message-Id: <20201202073156.5187-2-wan.ahmad.zainie.wan.mohamad@intel.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20201202073156.5187-1-wan.ahmad.zainie.wan.mohamad@intel.com>
+References: <20201202073156.5187-1-wan.ahmad.zainie.wan.mohamad@intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, 2020-11-30 at 20:21 +0100, Thomas Gleixner wrote:
-> Feng,
-> 
-> On Fri, Nov 27 2020 at 14:11, Feng Tang wrote:
-> > On Fri, Nov 27, 2020 at 12:27:34AM +0100, Thomas Gleixner wrote:
-> > > On Thu, Nov 26 2020 at 09:24, Feng Tang wrote:
-> > > Yes, that can happen. But OTOH, we should start to think about
-> > > the
-> > > requirements for using the TSC watchdog.
+Document DT bindings for PCIe controller found on Intel Keem Bay SoC.
 
-My original proposal is to disable jiffies and refined-jiffies as the
-clocksource watchdog, because they are not reliable and it's better to
-use clocksource that has a hardware counter as watchdog, like the patch
-below, which I didn't sent out for upstream.
-
-From cf9ce0ecab8851a3745edcad92e072022af3dbd9 Mon Sep 17 00:00:00 2001
-From: Zhang Rui <rui.zhang@intel.com>
-Date: Fri, 19 Jun 2020 22:03:23 +0800
-Subject: [RFC PATCH] time/clocksource: do not use refined-jiffies as watchdog
-
-On IA platforms, if HPET is disabled, either via x86 early-quirks, or
-via kernel commandline, refined-jiffies will be used as clocksource
-watchdog in early boot phase, before acpi_pm timer registered.
-
-This is not a problem if jiffies are accurate.
-But in some cases, for example, when serial console is enabled, it may
-take several milliseconds to write to the console, with irq disabled,
-frequently. Thus many ticks may become longer than it should be.
-
-Using refined-jiffies as watchdog in this case breaks the system because
-a) duration calculated by refined-jiffies watchdog is always consistent
-   with the watchdog timeout issued using add_timer(), say, around 500ms.
-b) duration calculated by the running clocksource, usually TSC on IA
-   platforms, reflects the real time cost, which may be much larger.
-This results in the running clocksource being disabled erroneously.
-
-This is reproduced on ICL because HPET is disabled in x86 early-quirks,
-and also reproduced on a KBL and a WHL platform when HPET is disabled
-via command line.
-
-BTW, commit fd329f276eca
-("x86/mtrr: Skip cache flushes on CPUs with cache self-snooping") is
-another example that refined-jiffies causes the same problem when ticks
-become slow for some other reason.
-
-IMO, the right solution is to only use hardware clocksource as watchdog.
-Then even if ticks are slow, both the running clocksource and the watchdog
-returns real time cost, and they still match.
-
-Signed-off-by: Zhang Rui <rui.zhang@intel.com>
+Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
 ---
- kernel/time/clocksource.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ .../bindings/pci/intel,keembay-pcie-ep.yaml   | 68 +++++++++++++
+ .../bindings/pci/intel,keembay-pcie.yaml      | 96 +++++++++++++++++++
+ 2 files changed, 164 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/intel,keembay-pcie-ep.yaml
+ create mode 100644 Documentation/devicetree/bindings/pci/intel,keembay-pcie.yaml
 
-diff --git a/kernel/time/clocksource.c b/kernel/time/clocksource.c
-index 02441ead3c3b..e7e703858fa6 100644
---- a/kernel/time/clocksource.c
-+++ b/kernel/time/clocksource.c
-@@ -364,6 +364,10 @@ static void clocksource_select_watchdog(bool fallback)
- 		watchdog = NULL;
- 
- 	list_for_each_entry(cs, &clocksource_list, list) {
-+		/* Do not use refined-jiffies as clocksource watchdog */
-+		if (cs->rating <= 2)
-+			continue;
+diff --git a/Documentation/devicetree/bindings/pci/intel,keembay-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/intel,keembay-pcie-ep.yaml
+new file mode 100644
+index 000000000000..8cf72b80cfb6
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/intel,keembay-pcie-ep.yaml
+@@ -0,0 +1,68 @@
++# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: "http://devicetree.org/schemas/pci/intel,keembay-pcie-ep.yaml#"
++$schema: "http://devicetree.org/meta-schemas/core.yaml#"
 +
- 		/* cs is a clocksource to be watched. */
- 		if (cs->flags & CLOCK_SOURCE_MUST_VERIFY)
- 			continue;
++title: Intel Keem Bay PCIe controller endpoint mode
++
++maintainers:
++  - Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
++
++properties:
++  compatible:
++    const: intel,keembay-pcie-ep
++
++  reg:
++    maxItems: 5
++
++  reg-names:
++    items:
++      - const: dbi
++      - const: dbi2
++      - const: atu
++      - const: addr_space
++      - const: apb
++
++  interrupts:
++    maxItems: 4
++
++  interrupt-names:
++    items:
++      - const: pcie
++      - const: pcie_ev
++      - const: pcie_err
++      - const: pcie_mem_access
++
++  num-lanes:
++    description: Number of lanes to use.
++    enum: [ 1, 2 ]
++
++required:
++  - compatible
++  - reg
++  - reg-names
++  - interrupts
++  - interrupt-names
++
++additionalProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
++    #include <dt-bindings/interrupt-controller/irq.h>
++    pcie-ep@37000000 {
++          compatible = "intel,keembay-pcie-ep";
++          reg = <0x37000000 0x00001000>,
++                <0x37100000 0x00001000>,
++                <0x37300000 0x00001000>,
++                <0x36000000 0x01000000>,
++                <0x37800000 0x00000200>;
++          reg-names = "dbi", "dbi2", "atu", "addr_space", "apb";
++          interrupts = <GIC_SPI 107 IRQ_TYPE_LEVEL_HIGH>,
++                       <GIC_SPI 108 IRQ_TYPE_EDGE_RISING>,
++                       <GIC_SPI 109 IRQ_TYPE_LEVEL_HIGH>,
++                       <GIC_SPI 110 IRQ_TYPE_LEVEL_HIGH>;
++          interrupt-names = "pcie", "pcie_ev", "pcie_err", "pcie_mem_access";
++          num-lanes = <2>;
++    };
+diff --git a/Documentation/devicetree/bindings/pci/intel,keembay-pcie.yaml b/Documentation/devicetree/bindings/pci/intel,keembay-pcie.yaml
+new file mode 100644
+index 000000000000..d9c72783ab05
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/intel,keembay-pcie.yaml
+@@ -0,0 +1,96 @@
++# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: "http://devicetree.org/schemas/pci/intel,keembay-pcie.yaml#"
++$schema: "http://devicetree.org/meta-schemas/core.yaml#"
++
++title: Intel Keem Bay PCIe controller root complex mode
++
++maintainers:
++  - Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
++
++allOf:
++  - $ref: /schemas/pci/pci-bus.yaml#
++
++properties:
++  compatible:
++    const: intel,keembay-pcie
++
++  ranges:
++    maxItems: 1
++
++  reset-gpios:
++    maxItems: 1
++
++  reg:
++    maxItems: 4
++
++  reg-names:
++    items:
++      - const: dbi
++      - const: atu
++      - const: config
++      - const: apb
++
++  clocks:
++    maxItems: 2
++
++  clock-names:
++    items:
++      - const: master
++      - const: aux
++
++  interrupts:
++    maxItems: 3
++
++  interrupt-names:
++    items:
++      - const: pcie
++      - const: pcie_ev
++      - const: pcie_err
++
++  num-lanes:
++    description: Number of lanes to use.
++    enum: [ 1, 2 ]
++
++required:
++  - compatible
++  - reg
++  - reg-names
++  - ranges
++  - clocks
++  - clock-names
++  - interrupts
++  - interrupt-names
++  - reset-gpios
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
++    #include <dt-bindings/interrupt-controller/irq.h>
++    #include <dt-bindings/gpio/gpio.h>
++    #define KEEM_BAY_A53_PCIE
++    #define KEEM_BAY_A53_AUX_PCIE
++    pcie@37000000 {
++          compatible = "intel,keembay-pcie";
++          reg = <0x37000000 0x00001000>,
++                <0x37300000 0x00001000>,
++                <0x36e00000 0x00200000>,
++                <0x37800000 0x00000200>;
++          reg-names = "dbi", "atu", "config", "apb";
++          #address-cells = <3>;
++          #size-cells = <2>;
++          device_type = "pci";
++          ranges = <0x02000000 0 0x36000000 0x36000000 0 0x00e00000>;
++          interrupts = <GIC_SPI 107 IRQ_TYPE_LEVEL_HIGH>,
++                       <GIC_SPI 108 IRQ_TYPE_LEVEL_HIGH>,
++                       <GIC_SPI 109 IRQ_TYPE_LEVEL_HIGH>;
++          interrupt-names = "pcie", "pcie_ev", "pcie_err";
++          clocks = <&scmi_clk KEEM_BAY_A53_PCIE>,
++                   <&scmi_clk KEEM_BAY_A53_AUX_PCIE>;
++          clock-names = "master", "aux";
++          reset-gpios = <&pca2 9 GPIO_ACTIVE_LOW>;
++          num-lanes = <2>;
++    };
 -- 
 2.17.1
-
-> > > 
-> > > I'm inclined to lift that requirement when the CPU has:
-> > > 
-> > >     1) X86_FEATURE_CONSTANT_TSC
-> > >     2) X86_FEATURE_NONSTOP_TSC
-> > >     3) X86_FEATURE_NONSTOP_TSC_S3
-> > 
-> > IIUC, this feature exists for several generations of Atom
-> > platforms,
-> > and it is always coupled with 1) and 2), so it could be skipped for
-> > the checking.
-> 
-> Yes, we can ignore that bit as it's not widely available and not
-> required to solve the problem.
-> 
-> > >     4) X86_FEATURE_TSC_ADJUST
-> > >     
-> > >     5) At max. 4 sockets
-> > > 
-Should we consider some other corner cases like TSC is not used as
-clocksource? refined_jiffies watchdog can break any other hardware
-clocksource when it becomes inaccurate.
-
-> > > The only reason I hate to disable HPET upfront at least during
-> > > boot is
-> > > that HPET is the best mechanism for the refined TSC calibration.
-> > > PMTIMER
-> > > sucks because it's slow and wraps around pretty quick.
-> > > 
-> > > So we could do the following even on platforms where HPET stops
-> > > in some
-> > > magic PC? state:
-> > > 
-> > >   - Register it during early boot as clocksource
-> > > 
-> > >   - Prevent the enablement as clockevent and the chardev hpet
-> > > timer muck
-> > > 
-> > >   - Prevent the magic PC? state up to the point where the refined
-> > >     TSC calibration is finished.
-> > > 
-> > >   - Unregister it once the TSC has taken over as system
-> > > clocksource and
-> > >     enable the magic PC? state in which HPET gets disfunctional.
-> > 
-
-On the other side, for ICL, the HPET problem is observed on early
-samples, and I didn't reproduce the problem on new ones I have.
-But I need to confirm internally if it is safe to re-enable it first.
-
-thanks,
-rui
-> > This looks reasonable to me. 
-> > 
-> > I have thought about lowering the hpet rating to lower than
-> > PMTIMER, so it
-> > still contributes in early boot phase, and fades out after PMTIMER
-> > is
-> > initialised.
-> 
-> Not a good idea. pm_timer is initialized before the refined
-> calibration
-> finishes.
-> 
-> Thanks,
-> 
->         tglx
 
