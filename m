@@ -2,225 +2,218 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CCA0C63777
-	for <linux-pci@archiver.kernel.org>; Thu,  3 Dec 2020 11:32:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DB4BC63777
+	for <linux-pci@archiver.kernel.org>; Thu,  3 Dec 2020 12:11:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E74E222201
-	for <linux-pci@archiver.kernel.org>; Thu,  3 Dec 2020 11:32:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E07E322203
+	for <linux-pci@archiver.kernel.org>; Thu,  3 Dec 2020 12:11:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726070AbgLCLct (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 3 Dec 2020 06:32:49 -0500
-Received: from szxga02-in.huawei.com ([45.249.212.188]:2516 "EHLO
-        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726061AbgLCLct (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 Dec 2020 06:32:49 -0500
-Received: from dggeme706-chm.china.huawei.com (unknown [172.30.72.53])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Cmtvy0P4MzQn5c;
-        Thu,  3 Dec 2020 19:31:42 +0800 (CST)
-Received: from [10.174.60.228] (10.174.60.228) by
- dggeme706-chm.china.huawei.com (10.1.199.102) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.1913.5; Thu, 3 Dec 2020 19:32:05 +0800
-Subject: Re: [PATCH] PCI: Add pci reset quirk for Huawei Intelligent NIC
- virtual function
-To:     Bjorn Helgaas <helgaas@kernel.org>
-CC:     Alex Williamson <alex.williamson@redhat.com>,
+        id S1726360AbgLCMLl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 3 Dec 2020 07:11:41 -0500
+Received: from hqnvemgate25.nvidia.com ([216.228.121.64]:12561 "EHLO
+        hqnvemgate25.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726263AbgLCMLl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 Dec 2020 07:11:41 -0500
+Received: from hqmail.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate25.nvidia.com (using TLS: TLSv1.2, AES256-SHA)
+        id <B5fc8d5d40000>; Thu, 03 Dec 2020 04:11:00 -0800
+Received: from [10.25.75.116] (10.124.1.5) by HQMAIL107.nvidia.com
+ (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Thu, 3 Dec
+ 2020 12:10:55 +0000
+Subject: Re: [PATCH V2] PCI: dwc: Add support to configure for ECRC
+To:     Bjorn Helgaas <helgaas@kernel.org>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>
+CC:     Jingoo Han <jingoohan1@gmail.com>,
+        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
         "bhelgaas@google.com" <bhelgaas@google.com>,
+        "amurray@thegoodpenguin.co.uk" <amurray@thegoodpenguin.co.uk>,
+        "robh@kernel.org" <robh@kernel.org>,
+        "treding@nvidia.com" <treding@nvidia.com>,
+        "jonathanh@nvidia.com" <jonathanh@nvidia.com>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "Yinshi (Stone)" <yin.yinshi@huawei.com>,
-        "Wangxiaoyun (Cloud)" <cloud.wangxiaoyun@huawei.com>,
-        zengweiliang zengweiliang <zengweiliang.zengweiliang@huawei.com>,
-        "Chenlizhong (IT Chip)" <chenlizhong@huawei.com>
-References: <20201202201850.GA1467698@bjorn-Precision-5520>
-From:   Chiqijun <chiqijun@huawei.com>
-Message-ID: <0fca5241-7f01-ded7-93be-4a108e502b97@huawei.com>
-Date:   Thu, 3 Dec 2020 19:32:05 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.1
+        "kthota@nvidia.com" <kthota@nvidia.com>,
+        "mmaddireddy@nvidia.com" <mmaddireddy@nvidia.com>,
+        "sagar.tv@gmail.com" <sagar.tv@gmail.com>
+References: <20201124210228.GA589610@bjorn-Precision-5520>
+From:   Vidya Sagar <vidyas@nvidia.com>
+Message-ID: <42ebcbe2-7d24-558a-3c33-beb7818d5516@nvidia.com>
+Date:   Thu, 3 Dec 2020 17:40:50 +0530
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.4.2
 MIME-Version: 1.0
-In-Reply-To: <20201202201850.GA1467698@bjorn-Precision-5520>
+In-Reply-To: <20201124210228.GA589610@bjorn-Precision-5520>
 Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.60.228]
-X-ClientProxiedBy: dggeme713-chm.china.huawei.com (10.1.199.109) To
- dggeme706-chm.china.huawei.com (10.1.199.102)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: quoted-printable
+X-Originating-IP: [10.124.1.5]
+X-ClientProxiedBy: HQMAIL105.nvidia.com (172.20.187.12) To
+ HQMAIL107.nvidia.com (172.20.187.13)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1606997460; bh=R1dR3vQ5KvZ/4VXGbEQg2PvUIku7NFOP5kXlOWhL1Bw=;
+        h=Subject:To:CC:References:From:Message-ID:Date:User-Agent:
+         MIME-Version:In-Reply-To:Content-Type:Content-Language:
+         Content-Transfer-Encoding:X-Originating-IP:X-ClientProxiedBy;
+        b=PbM0mrz5mA/+QowbQYM1yd23iJ+Mi16qXhKsyrUbdpy1eHJBRsCWnI1Rk8ig93xpQ
+         sODCvdsLYqS4ZEigtKYRQLf0Mr7DQ0QwWKWgApjSAWc9iHngupgxiIMhNwf/J359eA
+         syG53DkzlIqaTVgg1JOBqHAuvK8q+vjZlfpUPc9jEGhwx1Q+aZ6akYAhW9StrtZjQp
+         y8HY8KwNUKTkvS87QFMEzXSuHgCg2hsFo3LdbVvwjKhT9IA/QwmJkRDhJMP8r4qR4f
+         SqfiHQzRJURCSL0+5Q5+mjGkiPdH6tPEAm1WJ78xcpKqNmFpAB76rfZIdVIndL4sTR
+         iP+2gAgiTvCBA==
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 
 
-On 2020/12/3 4:18, Bjorn Helgaas wrote:
-> On Wed, Dec 02, 2020 at 05:18:12PM +0800, Chiqijun wrote:
->> On 2020/11/30 23:46, Alex Williamson wrote:
->>> On Sat, 28 Nov 2020 17:29:19 -0600
->>> Bjorn Helgaas <helgaas@kernel.org> wrote:
->>>> On Sat, Nov 28, 2020 at 02:18:25PM +0800, Chiqijun wrote:
->>>>> When multiple VFs do FLR at the same time, the firmware is
->>>>> processed serially, resulting in some VF FLRs being delayed more
->>>>> than 100ms, when the virtual machine restarts and the device
->>>>> driver is loaded, the firmware is doing the corresponding VF
->>>>> FLR, causing the driver to fail to load.
->>>>>
->>>>> To solve this problem, add host and firmware status synchronization
->>>>> during FLR.
->>>>
->>>> Is this because the Huawei Intelligent NIC isn't following the spec,
->>>> or is it because Linux isn't correctly waiting for the FLR to
->>>> complete?
->>>
->>> Seems like a spec compliance issue, I don't recall anything in the spec
->>> about coordinating FLR between VFs.
->>
->> The spec stipulates that the FLR time of a single VF does not exceed 100ms,
->> but when multiple VMs are reset concurrently in Linux, there will be
->> multiple VF parallel FLRs, VF of Huawei Intelligent NIC
->>   FLR will exceed 100ms in this case.
-> 
-> Can you somehow just serialize Huawei Intelligent NIC FLR and
-> otherwise use the normal FLR path instead of the iomap, PCI_COMMAND
-> fiddling, and huge timeout below?
+On 11/25/2020 2:32 AM, Bjorn Helgaas wrote:
+> External email: Use caution opening links or attachments
+>=20
+>=20
+> On Tue, Nov 24, 2020 at 03:50:01PM +0530, Vidya Sagar wrote:
+>> Hi Bjorn,
+>> Please let me know if this patch needs any further modifications
+>=20
+> I'm fine with it, but of course Lorenzo will take care of it.
+Thanks Bjorn.
 
-FLR triggering is not controlled by Huawei Intelligent NIC. For example, 
-multiple VFs are assigned to different VMs, one VM corresponds to a qemu 
-process, multiple VMs perform life cycle operations (such as reset) at 
-the same time, and FLR triggered by different Qemu processes will be 
-parallel.
-The FLR of a single VF of Huawei Intelligent NIC is within 100ms (for 
-example, 50ms), while the regular FLR process will sleep for 100ms. If 
-the VF FLR is forced to be serialized (for example, adding a lock), the 
-overall FLR time will become longer and the VF FLR between different 
-cards also become serial, the actual effect will be worse than setting 
-huge timeout.
+Hi Lorenzo,
+Please let me know if you have any comments for this patch.
 
-> 
->>>> If this is a Huawei Intelligent NIC defect, is there documentation
->>>> somewhere (errata) that you can reference?  Will it be fixed in future
->>>> designs, so we don't have to add future Device IDs to the quirk?
+Thanks,
+Vidya Sagar
+
+>=20
+>> On 11/12/2020 10:32 PM, Vidya Sagar wrote:
+>>> External email: Use caution opening links or attachments
+>>>
+>>>
+>>> On 11/12/2020 3:59 AM, Bjorn Helgaas wrote:
+>>>> External email: Use caution opening links or attachments
 >>>>
->>>>> Signed-off-by: Chiqijun <chiqijun@huawei.com>
->>>>> ---
->>>>>    drivers/pci/quirks.c | 67 ++++++++++++++++++++++++++++++++++++++++++++
->>>>>    1 file changed, 67 insertions(+)
+>>>>
+>>>> On Wed, Nov 11, 2020 at 10:21:46PM +0530, Vidya Sagar wrote:
 >>>>>
->>>>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->>>>> index f70692ac79c5..bd6236ea9064 100644
->>>>> --- a/drivers/pci/quirks.c
->>>>> +++ b/drivers/pci/quirks.c
->>>>> @@ -3912,6 +3912,71 @@ static int delay_250ms_after_flr(struct pci_dev *dev, int probe)
->>>>>    	return 0;
->>>>>    }
->>>>> +#define PCI_DEVICE_ID_HINIC_VF  0x375E
->>>>> +#define HINIC_VF_FLR_TYPE       0x1000
->>>>> +#define HINIC_VF_OP             0xE80
->>>>> +#define HINIC_OPERATION_TIMEOUT 15000
->>>>> +
->>>>> +/* Device-specific reset method for Huawei Intelligent NIC virtual functions */
->>>>> +static int reset_hinic_vf_dev(struct pci_dev *pdev, int probe)
->>>>> +{
->>>>> +	unsigned long timeout;
->>>>> +	void __iomem *bar;
->>>>> +	u16 old_command;
->>>>> +	u32 val;
->>>>> +
->>>>> +	if (probe)
->>>>> +		return 0;
->>>>> +
->>>>> +	bar = pci_iomap(pdev, 0, 0);
->>>>> +	if (!bar)
->>>>> +		return -ENOTTY;
->>>>> +
->>>>> +	pci_read_config_word(pdev, PCI_COMMAND, &old_command);
->>>>> +
->>>>> +	/*
->>>>> +	 * FLR cap bit bit30, FLR ACK bit: bit18, to avoid big-endian conversion
->>>>> +	 * the big-endian bit6, bit10 is directly operated here
->>>>> +	 */
->>>>> +	val = readl(bar + HINIC_VF_FLR_TYPE);
->>>>> +	if (!(val & (1UL << 6))) {
->>>>> +		pci_iounmap(pdev, bar);
->>>>> +		return -ENOTTY;
->>>>> +	}
->>>
->>>
->>> I don't know exactly what this is testing, but it seems like a
->>> feature/capability test that can fail, why is it not done as part of
->>> the probe?  Can we define bit 6 with a macro?  Same for bit 10 in the
->>> VF op register below.
->>
->> The firmware of Huawei Intelligent NIC does not support this feature in the
->> old version. here is the reading ability to determine whether the firmware
->> supports it.
->> In the next patch, I will add a comment here and replace bit 6 and bit 10
->> with macro definitions.
->>
->>>
->>>>> +
->>>>> +	val = readl(bar + HINIC_VF_OP);
->>>>> +	val = val | (1UL << 10);
->>>>> +	writel(val, bar + HINIC_VF_OP);
->>>>> +
->>>>> +	/* Perform the actual device function reset */
->>>>> +	pcie_flr(pdev);
->>>>> +
->>>>> +	pci_write_config_word(pdev, PCI_COMMAND,
->>>>> +			      old_command | PCI_COMMAND_MEMORY);
->>>>> +
->>>>> +	/* Waiting for device reset complete */
->>>>> +	timeout = jiffies + msecs_to_jiffies(HINIC_OPERATION_TIMEOUT);
->>>
->>> Yikes, 15s timeout!
->>
->> Huawei Intelligent NIC supports a maximum of 496 VFs, so the total timeout
->> period is set to 15s, which will not reach the timeout time under normal
->> circumstances.
->>
->>>
->>>>> +	do {
->>>>> +		val = readl(bar + HINIC_VF_OP);
->>>>> +		if (!(val & (1UL << 10)))
->>>>> +			goto reset_complete;
->>>>> +		msleep(20);
->>>>> +	} while (time_before(jiffies, timeout));
->>>>> +
->>>>> +	val = readl(bar + HINIC_VF_OP);
->>>>> +	if (!(val & (1UL << 10)))
->>>>> +		goto reset_complete;
->>>>> +
->>>>> +	pci_warn(pdev, "Reset dev timeout, flr ack reg: %x\n",
->>>>> +		 be32_to_cpu(val));
->>>>> +
->>>>> +reset_complete:
->>>>> +	pci_write_config_word(pdev, PCI_COMMAND, old_command);
->>>>> +	pci_iounmap(pdev, bar);
->>>>> +
->>>>> +	return 0;
->>>>> +}
->>>>> +
->>>>>    static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
->>>>>    	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
->>>>>    		 reset_intel_82599_sfp_virtfn },
->>>>> @@ -3923,6 +3988,8 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
->>>>>    	{ PCI_VENDOR_ID_INTEL, 0x0953, delay_250ms_after_flr },
->>>>>    	{ PCI_VENDOR_ID_CHELSIO, PCI_ANY_ID,
->>>>>    		reset_chelsio_generic_dev },
->>>>> +	{ PCI_VENDOR_ID_HUAWEI, PCI_DEVICE_ID_HINIC_VF,
->>>>> +		reset_hinic_vf_dev },
->>>>>    	{ 0 }
->>>>>    };
->>>>> -- 
->>>>> 2.17.1
+>>>>>
+>>>>> On 11/11/2020 9:57 PM, Jingoo Han wrote:
+>>>>>> External email: Use caution opening links or attachments
+>>>>>>
+>>>>>>
+>>>>>> On 11/11/20, 7:12 AM, Vidya Sagar wrote:
+>>>>>>>
+>>>>>>> DesignWare core has a TLP digest (TD) override bit in
+>>>>>>> one of the control
+>>>>>>> registers of ATU. This bit also needs to be programmed for proper E=
+CRC
+>>>>>>> functionality. This is currently identified as an issue
+>>>>>>> with DesignWare
+>>>>>>> IP version 4.90a.
+>>>>>>>
+>>>>>>> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+>>>>>>> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>>>>>>> ---
+>>>>>>> V2:
+>>>>>>> * Addressed Bjorn's comments
+>>>>>>>
+>>>>>>>     drivers/pci/controller/dwc/pcie-designware.c | 52
+>>>>>>> ++++++++++++++++++--
+>>>>>>>     drivers/pci/controller/dwc/pcie-designware.h |=C2=A0 1 +
+>>>>>>>     2 files changed, 49 insertions(+), 4 deletions(-)
+>>>>>>>
+>>>>>>> diff --git
+>>>>>>> a/drivers/pci/controller/dwc/pcie-designware.c
+>>>>>>> b/drivers/pci/controller/dwc/pcie-designware.c
+>>>>>>> index c2dea8fc97c8..ec0d13ab6bad 100644
+>>>>>>> --- a/drivers/pci/controller/dwc/pcie-designware.c
+>>>>>>> +++ b/drivers/pci/controller/dwc/pcie-designware.c
+>>>>>>> @@ -225,6 +225,46 @@ static void
+>>>>>>> dw_pcie_writel_ob_unroll(struct dw_pcie *pci, u32 index,
+>>>>>>> u32 reg,
+>>>>>>>          dw_pcie_writel_atu(pci, offset + reg, val);
+>>>>>>>     }
+>>>>>>>
+>>>>>>> +static inline u32 dw_pcie_enable_ecrc(u32 val)
+>>>>>>
+>>>>>> What is the reason to use inline here?
+>>>>>
+>>>>> Actually, I wanted to move the programming part inside the
+>>>>> respective APIs
+>>>>> but then I wanted to give some details as well in comments so to avoi=
+d
+>>>>> duplication, I came up with this function. But, I'm making it inline =
+for
+>>>>> better code optimization by compiler.
 >>>>
+>>>> I don't really care either way, but I'd be surprised if the compiler
+>>>> didn't inline this all by itself even without the explicit "inline".
+>>> I just checked it and you are right that compiler is indeed inlining it
+>>> without explicitly mentioning 'inline'.
+>>> I hope it is ok to leave it that way.
 >>>
->>> .
->>>
-> .
-> 
+>>>>
+>>>>>>> +{
+>>>>>>> +     /*
+>>>>>>> +      * DesignWare core version 4.90A has this strange design issu=
+e
+>>>>>>> +      * where the 'TD' bit in the Control register-1 of
+>>>>>>> the ATU outbound
+>>>>>>> +      * region acts like an override for the ECRC
+>>>>>>> setting i.e. the presence
+>>>>>>> +      * of TLP Digest(ECRC) in the outgoing TLPs is
+>>>>>>> solely determined by
+>>>>>>> +      * this bit. This is contrary to the PCIe spec
+>>>>>>> which says that the
+>>>>>>> +      * enablement of the ECRC is solely determined by
+>>>>>>> the AER registers.
+>>>>>>> +      *
+>>>>>>> +      * Because of this, even when the ECRC is enabled through AER
+>>>>>>> +      * registers, the transactions going through ATU
+>>>>>>> won't have TLP Digest
+>>>>>>> +      * as there is no way the AER sub-system could
+>>>>>>> program the TD bit which
+>>>>>>> +      * is specific to DesignWare core.
+>>>>>>> +      *
+>>>>>>> +      * The best way to handle this scenario is to program the TD =
+bit
+>>>>>>> +      * always. It affects only the traffic from root
+>>>>>>> port to downstream
+>>>>>>> +      * devices.
+>>>>>>> +      *
+>>>>>>> +      * At this point,
+>>>>>>> +      * When ECRC is enabled in AER registers,
+>>>>>>> everything works normally
+>>>>>>> +      * When ECRC is NOT enabled in AER registers, then,
+>>>>>>> +      * on Root Port:- TLP Digest (DWord size) gets
+>>>>>>> appended to each packet
+>>>>>>> +      *                even through it is not required.
+>>>>>>> Since downstream
+>>>>>>> +      *                TLPs are mostly for
+>>>>>>> configuration accesses and BAR
+>>>>>>> +      *                accesses, they are not in
+>>>>>>> critical path and won't
+>>>>>>> +      *                have much negative effect on the performanc=
+e.
+>>>>>>> +      * on End Point:- TLP Digest is received for
+>>>>>>> some/all the packets coming
+>>>>>>> +      *                from the root port. TLP Digest
+>>>>>>> is ignored because,
+>>>>>>> +      *                as per the PCIe Spec r5.0 v1.0 section 2.2.=
+3
+>>>>>>> +      *                "TLP Digest Rules", when an
+>>>>>>> endpoint receives TLP
+>>>>>>> +      *                Digest when its ECRC check
+>>>>>>> functionality is disabled
+>>>>>>> +      *                in AER registers, received TLP
+>>>>>>> Digest is just ignored.
+>>>>>>> +      * Since there is no issue or error reported
+>>>>>>> either side, best way to
+>>>>>>> +      * handle the scenario is to program TD bit by default.
+>>>>>>> +      */
+>>>>>>> +
+>>>>>>> +     return val | PCIE_ATU_TD;
+>>>>>>> +}
