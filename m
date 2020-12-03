@@ -2,127 +2,134 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F816C433FE
-	for <linux-pci@archiver.kernel.org>; Thu,  3 Dec 2020 18:52:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45669C433FE
+	for <linux-pci@archiver.kernel.org>; Thu,  3 Dec 2020 19:04:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D9265207AD
-	for <linux-pci@archiver.kernel.org>; Thu,  3 Dec 2020 18:52:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E007520C56
+	for <linux-pci@archiver.kernel.org>; Thu,  3 Dec 2020 19:04:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731724AbgLCSwG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 3 Dec 2020 13:52:06 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33340 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731649AbgLCSwE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 3 Dec 2020 13:52:04 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-Authentication-Results: mail.kernel.org; dkim=permerror (bad message/signature format)
-To:     Vidya Sagar <vidyas@nvidia.com>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Jonathan Hunter <jonathanh@nvidia.com>,
-        Krishna Kishore <kthota@nvidia.com>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        Vidya Sagar <sagar.tv@gmail.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v3 2/3] PCI/MSI: Move MSI/MSI-X flags updaters to msi.c
-Date:   Thu,  3 Dec 2020 12:51:09 -0600
-Message-Id: <20201203185110.1583077-3-helgaas@kernel.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20201203185110.1583077-1-helgaas@kernel.org>
-References: <20201203185110.1583077-1-helgaas@kernel.org>
+        id S1727918AbgLCTEg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 3 Dec 2020 14:04:36 -0500
+Received: from hqnvemgate26.nvidia.com ([216.228.121.65]:6680 "EHLO
+        hqnvemgate26.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726600AbgLCTEg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 Dec 2020 14:04:36 -0500
+Received: from hqmail.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate26.nvidia.com (using TLS: TLSv1.2, AES256-SHA)
+        id <B5fc9369c0000>; Thu, 03 Dec 2020 11:03:56 -0800
+Received: from [10.25.75.116] (10.124.1.5) by HQMAIL107.nvidia.com
+ (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Thu, 3 Dec
+ 2020 19:03:49 +0000
+Subject: Re: [PATCH V2] PCI/MSI: Set device flag indicating only 32-bit MSI
+ support
+To:     Bjorn Helgaas <helgaas@kernel.org>
+CC:     <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
+        <thierry.reding@gmail.com>, <jonathanh@nvidia.com>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <sagar.tv@gmail.com>
+References: <20201203182423.GA1555592@bjorn-Precision-5520>
+From:   Vidya Sagar <vidyas@nvidia.com>
+Message-ID: <75de8b9d-b4f1-5a68-8510-019017163baa@nvidia.com>
+Date:   Fri, 4 Dec 2020 00:33:45 +0530
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.4.2
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20201203182423.GA1555592@bjorn-Precision-5520>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.124.1.5]
+X-ClientProxiedBy: HQMAIL105.nvidia.com (172.20.187.12) To
+ HQMAIL107.nvidia.com (172.20.187.13)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1607022236; bh=Jq7vSLsV6byVAkVtan9MuuBS66+ooNRMO13M285XTYI=;
+        h=Subject:To:CC:References:From:Message-ID:Date:User-Agent:
+         MIME-Version:In-Reply-To:Content-Type:Content-Language:
+         Content-Transfer-Encoding:X-Originating-IP:X-ClientProxiedBy;
+        b=a2vr3PmJr/WLDQU0AgXbrsMW7RvDqop+L0APY0lfCQCc+zJsR3QlBHHU9BgY6XDeQ
+         PmuXTxals7cIn9U+N4P6FqbecgkKL0iANtEYnrhbdN8WFTQNHqqMfBnwOkX7kZ5h/5
+         /pdmffHR7CvyoF/G/oDeZFYOHS1GZCpizOZS2UQvKLkzAu76wQa6owRrwNtdesjrOk
+         5uxT4S6vvJGn7LzRW8fnpGeYB23Obib3UwVh4syjDMTSNzTTOVsCPTmVttj1h0+ewQ
+         RMAsFo55j98c9IOvHqYsCiaB+EFZmgusXNND6ZDHbRAkGxFqoNOuV1Ob+g9G3QfiZs
+         VYskpei0sC35w==
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Bjorn Helgaas <bhelgaas@google.com>
 
-pci_msi_set_enable() and pci_msix_clear_and_set_ctrl() are only used from
-msi.c, so move them from drivers/pci/pci.h to msi.c.  No functional change
-intended.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/msi.c | 21 +++++++++++++++++++++
- drivers/pci/pci.h | 21 ---------------------
- 2 files changed, 21 insertions(+), 21 deletions(-)
+On 12/3/2020 11:54 PM, Bjorn Helgaas wrote:
+> External email: Use caution opening links or attachments
+> 
+> 
+> On Tue, Nov 24, 2020 at 04:20:35PM +0530, Vidya Sagar wrote:
+>> There are devices (Ex:- Marvell SATA controller) that don't support
+>> 64-bit MSIs and the same is advertised through their MSI capability
+>> register. Set no_64bit_msi flag explicitly for such devices in the
+>> MSI setup code so that the msi_verify_entries() API would catch
+>> if the MSI arch code tries to use 64-bit MSI.
+> 
+> This seems good to me.  I'll post a possible revision to set
+> dev->no_64bit_msi in the device enumeration path instead of in the IRQ
+> allocation path, since it's really a property of the device, not of
+> the msi_desc.
+> 
+> I like the extra checking this gives us.  Was this prompted by
+> tripping over something, or is it something you noticed by code
+> reading?  If the former, a hint about what was wrong and how it's
+> being fixed would be useful.
+I observed functionality issue with Marvell SATA controller (1b4b:9171) 
+when the allocated MSI target address was a 64-bit address. I mentioned 
+the Marvell SATA controller as an example in the commit message.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 555791c0ee1a..3e302ca8a96f 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -412,6 +412,17 @@ static void pci_intx_for_msi(struct pci_dev *dev, int enable)
- 		pci_intx(dev, enable);
- }
- 
-+static void pci_msi_set_enable(struct pci_dev *dev, int enable)
-+{
-+	u16 control;
-+
-+	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
-+	control &= ~PCI_MSI_FLAGS_ENABLE;
-+	if (enable)
-+		control |= PCI_MSI_FLAGS_ENABLE;
-+	pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, control);
-+}
-+
- static void __pci_restore_msi_state(struct pci_dev *dev)
- {
- 	u16 control;
-@@ -434,6 +445,16 @@ static void __pci_restore_msi_state(struct pci_dev *dev)
- 	pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, control);
- }
- 
-+static void pci_msix_clear_and_set_ctrl(struct pci_dev *dev, u16 clear, u16 set)
-+{
-+	u16 ctrl;
-+
-+	pci_read_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, &ctrl);
-+	ctrl &= ~clear;
-+	ctrl |= set;
-+	pci_write_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, ctrl);
-+}
-+
- static void __pci_restore_msix_state(struct pci_dev *dev)
- {
- 	struct msi_desc *entry;
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 3f5f303775c4..5692f11bc146 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -187,27 +187,6 @@ void pci_no_msi(void);
- static inline void pci_no_msi(void) { }
- #endif
- 
--static inline void pci_msi_set_enable(struct pci_dev *dev, int enable)
--{
--	u16 control;
--
--	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
--	control &= ~PCI_MSI_FLAGS_ENABLE;
--	if (enable)
--		control |= PCI_MSI_FLAGS_ENABLE;
--	pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, control);
--}
--
--static inline void pci_msix_clear_and_set_ctrl(struct pci_dev *dev, u16 clear, u16 set)
--{
--	u16 ctrl;
--
--	pci_read_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, &ctrl);
--	ctrl &= ~clear;
--	ctrl |= set;
--	pci_write_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, ctrl);
--}
--
- void pci_realloc_get_opt(char *);
- 
- static inline int pci_no_d1d2(struct pci_dev *dev)
--- 
-2.25.1
+Thanks,
+Vidya Sagar
 
+> 
+>> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+>> ---
+>> V2:
+>> * Addressed Bjorn's comment and changed the error message
+>>
+>>   drivers/pci/msi.c | 11 +++++++----
+>>   1 file changed, 7 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+>> index d52d118979a6..8de5ba6b4a59 100644
+>> --- a/drivers/pci/msi.c
+>> +++ b/drivers/pci/msi.c
+>> @@ -581,10 +581,12 @@ msi_setup_entry(struct pci_dev *dev, int nvec, struct irq_affinity *affd)
+>>        entry->msi_attrib.multi_cap     = (control & PCI_MSI_FLAGS_QMASK) >> 1;
+>>        entry->msi_attrib.multiple      = ilog2(__roundup_pow_of_two(nvec));
+>>
+>> -     if (control & PCI_MSI_FLAGS_64BIT)
+>> +     if (control & PCI_MSI_FLAGS_64BIT) {
+>>                entry->mask_pos = dev->msi_cap + PCI_MSI_MASK_64;
+>> -     else
+>> +     } else {
+>>                entry->mask_pos = dev->msi_cap + PCI_MSI_MASK_32;
+>> +             dev->no_64bit_msi = 1;
+>> +     }
+>>
+>>        /* Save the initial mask status */
+>>        if (entry->msi_attrib.maskbit)
+>> @@ -602,8 +604,9 @@ static int msi_verify_entries(struct pci_dev *dev)
+>>        for_each_pci_msi_entry(entry, dev) {
+>>                if (!dev->no_64bit_msi || !entry->msg.address_hi)
+>>                        continue;
+>> -             pci_err(dev, "Device has broken 64-bit MSI but arch"
+>> -                     " tried to assign one above 4G\n");
+>> +             pci_err(dev, "Device has either broken 64-bit MSI or "
+>> +                     "only 32-bit MSI support but "
+>> +                     "arch tried to assign one above 4G\n");
+>>                return -EIO;
+>>        }
+>>        return 0;
+>> --
+>> 2.17.1
+>>
