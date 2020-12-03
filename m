@@ -2,218 +2,170 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DB4BC63777
-	for <linux-pci@archiver.kernel.org>; Thu,  3 Dec 2020 12:11:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FFC7C71156
+	for <linux-pci@archiver.kernel.org>; Thu,  3 Dec 2020 12:11:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E07E322203
-	for <linux-pci@archiver.kernel.org>; Thu,  3 Dec 2020 12:11:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BD4B322206
+	for <linux-pci@archiver.kernel.org>; Thu,  3 Dec 2020 12:11:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726360AbgLCMLl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 3 Dec 2020 07:11:41 -0500
-Received: from hqnvemgate25.nvidia.com ([216.228.121.64]:12561 "EHLO
-        hqnvemgate25.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726263AbgLCMLl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 Dec 2020 07:11:41 -0500
-Received: from hqmail.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate25.nvidia.com (using TLS: TLSv1.2, AES256-SHA)
-        id <B5fc8d5d40000>; Thu, 03 Dec 2020 04:11:00 -0800
-Received: from [10.25.75.116] (10.124.1.5) by HQMAIL107.nvidia.com
- (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Thu, 3 Dec
- 2020 12:10:55 +0000
-Subject: Re: [PATCH V2] PCI: dwc: Add support to configure for ECRC
-To:     Bjorn Helgaas <helgaas@kernel.org>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>
-CC:     Jingoo Han <jingoohan1@gmail.com>,
-        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "amurray@thegoodpenguin.co.uk" <amurray@thegoodpenguin.co.uk>,
-        "robh@kernel.org" <robh@kernel.org>,
-        "treding@nvidia.com" <treding@nvidia.com>,
-        "jonathanh@nvidia.com" <jonathanh@nvidia.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "kthota@nvidia.com" <kthota@nvidia.com>,
-        "mmaddireddy@nvidia.com" <mmaddireddy@nvidia.com>,
-        "sagar.tv@gmail.com" <sagar.tv@gmail.com>
-References: <20201124210228.GA589610@bjorn-Precision-5520>
-From:   Vidya Sagar <vidyas@nvidia.com>
-Message-ID: <42ebcbe2-7d24-558a-3c33-beb7818d5516@nvidia.com>
-Date:   Thu, 3 Dec 2020 17:40:50 +0530
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.4.2
+        id S1729290AbgLCMLq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 3 Dec 2020 07:11:46 -0500
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:2743 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729247AbgLCMLq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 Dec 2020 07:11:46 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
+  t=1606997506; x=1638533506;
+  h=from:to:cc:subject:date:message-id:mime-version;
+  bh=QLD5ONWunMLZJL3jGQBpiCqmYmq6E0jPrkEC5wisJVM=;
+  b=RTWuOWyEUs+U9bHlvDG05z5wcfp4R5jED+q7Q4Eaj2N0Wl9yp04Cbnwl
+   4QDU4mIiyjtCht7pqrb6LAdwOh/FR2zGgHGUpzZBVunwVkrA8TuZkDmiL
+   a9ePsvGYMMUKO/qSRHj4FUgQ/+P8TpfsWx3sxHLvBLmpwa1BwMM9axp/z
+   1oWXxvkLAg8PCmiFBOVb7dVUw3QTfsd0t+koDf3pixagug4EGQ8Z7iFKv
+   EbXQYk+lRFKDBCJwM+4zTCqFpfchrpOxoms9/YoxLlHIxvyw672xodRd2
+   DaYnu80RFnnKGJBZuEQ/TXShZ3k3cNwygsosRTtbSH81pr1ghUJMGMlKq
+   g==;
+IronPort-SDR: YtRVcY0CYsKYlGpu8xWPzx2rqN0poWspN0aoYKa78ZRBAI7jE1I7qzUxIVHX5jcumiiYkocCPs
+ eM9Py3zflDmm+9Tbk4Eqti6EH1/rizznryWrxGPl+dQgITwBm0I82eLejJYBuvGILg6tejcPFk
+ XICHgLKlkcLfkxrSSDLEhuS7dimS+Y63eNb8GIEJXBBgoczPF60WA6+f25AF4KnzEz9mBAvps5
+ plRqRMXZ4TCn6YJ/1C93vpCFMRiw57NnHeDx6vsl/02n4l1+1cKQIq0jVQcHW1v8+H7MOwJz7M
+ y0A=
+X-IronPort-AV: E=Sophos;i="5.78,389,1599548400"; 
+   d="scan'208";a="101273943"
+Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
+  by esa3.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 03 Dec 2020 05:10:40 -0700
+Received: from chn-vm-ex02.mchp-main.com (10.10.85.144) by
+ chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1979.3; Thu, 3 Dec 2020 05:10:39 -0700
+Received: from ryzen.microchip.com (10.10.115.15) by chn-vm-ex02.mchp-main.com
+ (10.10.85.144) with Microsoft SMTP Server id 15.1.1979.3 via Frontend
+ Transport; Thu, 3 Dec 2020 05:10:37 -0700
+From:   <daire.mcnamara@microchip.com>
+To:     <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
+        <robh@kernel.org>, <linux-pci@vger.kernel.org>,
+        <robh+dt@kernel.org>, <devicetree@vger.kernel.org>
+CC:     <david.abdurachmanov@gmail.com>, <cyril.jean@microchip.com>,
+        <ben.dooks@codethink.co.uk>,
+        Daire McNamara <daire.mcnamara@microchip.com>
+Subject: [PATCH v18 0/4] PCI: microchip: Add host driver for Microchip PCIe controller
+Date:   Thu, 3 Dec 2020 12:10:14 +0000
+Message-ID: <20201203121018.16432-1-daire.mcnamara@microchip.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-In-Reply-To: <20201124210228.GA589610@bjorn-Precision-5520>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
-X-Originating-IP: [10.124.1.5]
-X-ClientProxiedBy: HQMAIL105.nvidia.com (172.20.187.12) To
- HQMAIL107.nvidia.com (172.20.187.13)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1606997460; bh=R1dR3vQ5KvZ/4VXGbEQg2PvUIku7NFOP5kXlOWhL1Bw=;
-        h=Subject:To:CC:References:From:Message-ID:Date:User-Agent:
-         MIME-Version:In-Reply-To:Content-Type:Content-Language:
-         Content-Transfer-Encoding:X-Originating-IP:X-ClientProxiedBy;
-        b=PbM0mrz5mA/+QowbQYM1yd23iJ+Mi16qXhKsyrUbdpy1eHJBRsCWnI1Rk8ig93xpQ
-         sODCvdsLYqS4ZEigtKYRQLf0Mr7DQ0QwWKWgApjSAWc9iHngupgxiIMhNwf/J359eA
-         syG53DkzlIqaTVgg1JOBqHAuvK8q+vjZlfpUPc9jEGhwx1Q+aZ6akYAhW9StrtZjQp
-         y8HY8KwNUKTkvS87QFMEzXSuHgCg2hsFo3LdbVvwjKhT9IA/QwmJkRDhJMP8r4qR4f
-         SqfiHQzRJURCSL0+5Q5+mjGkiPdH6tPEAm1WJ78xcpKqNmFpAB76rfZIdVIndL4sTR
-         iP+2gAgiTvCBA==
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+From: Daire McNamara <daire.mcnamara@microchip.com>
+
+This patchset adds support for the Microchip PCIe PolarFire PCIe
+controller when configured in host (Root Complex) mode.
+
+Updates since v17:
+* Regenerated to apply to v5.10rc1
+* Added self as maintainer
+* Added clock enables and extra interrupt handling
+
+Updates since v16:
+* Patch needs CONFIG_PCI_HOST_COMMON.  Add this to Kconfig stanza
+
+Updates since v15:
+* Call platform_set_drvdata earlier in devm_pci_alloc_host_bridge()
+* Use host_common_probe() and an init function to set up hw windows
+* status is u32 in mc_pcie_isr()
+* Removed mask var in mc_mask_intx_irq(), mc_unmask_intx_irq()
+* irq var is now signed in mc_platform_init()
+
+Updates since v14:
+* Removed cfg_read/cfg_write inline functions
+* Updated to irq_data_get_irq_chip_data()
+* Updated to use devm_platform_ioremap_resource()
+* Replaced of_pci_range parsing to setup windows via bridge pointer.
+
+Updates since v13:
+* Refactored to use pci_host_common_probe()
+
+Updates since v12:
+* Capitalised commit messages.  Use specific subject line for dt-bindings
+
+Updates since v11:
+* Adjusted so yaml file passses make dt_binding_check
+
+Updates since v10:
+* Adjusted driver as per Rob Herring's comments, notably:
+  - use common PCI_MSI_FLAGS defines
+  - reduce storage of unnecessary vars in mc_pcie struct
+  - switched to read/write relaxed variants
+  - extended lock in msi_domain_alloc routine
+  - improved 32bit safety, switched from find_first_bit() to ilog2()
+  - removed unnecessary twiddle of eCAM config space
+
+Updates since v9:
+* Adjusted commit logs
+* make dt_bindings_check passes
+
+Updates since v8:
+* Refactored as per Rob Herring's comments:
+  - bindings in schema format
+  - Adjusted licence to GPLv2.0
+  - Refactored access to config space between driver and common eCAM code
+  - Adopted pci_host_probe()
+  - Miscellanous other improvements
+
+Updates since v7:
+* Build for 64bit RISCV architecture only
+
+Updates since v6:
+* Refactored to use common eCAM driver
+* Updated to CONFIG_PCIE_MICROCHIP_HOST etc
+* Formatting improvements
+* Removed code for selection between bridge 0 and 1
+
+Updates since v5:
+* Fixed Kconfig typo noted by Randy Dunlap
+* Updated with comments from Bjorn Helgaas
+
+Updates since v4:
+* Fix compile issues.
+
+Updates since v3:
+* Update all references to Microsemi to Microchip
+* Separate MSI functionality from legacy PCIe interrupt handling functionality
+
+Updates since v2:
+* Split out DT bindings and Vendor ID updates into their own patch
+  from PCIe driver.
+* Updated Change Log
+
+Updates since v1:
+* Incorporate feedback from Bjorn Helgaas
+
+Daire McNamara (4):
+  PCI: Call platform_set_drvdata earlier in devm_pci_alloc_host_bridge
+  dt-bindings: PCI: microchip: Add Microchip PolarFire host binding
+  PCI: microchip: Add host driver for Microchip PCIe controller
+  Add Daire McNamara as maintainer for the Microchip PCIe driver
+
+ .../bindings/pci/microchip,pcie-host.yaml     |  93 +++
+ MAINTAINERS                                   |   7 +
+ drivers/pci/controller/Kconfig                |  10 +
+ drivers/pci/controller/Makefile               |   1 +
+ drivers/pci/controller/pci-host-common.c      |   4 +-
+ drivers/pci/controller/pcie-microchip-host.c  | 607 ++++++++++++++++++
+ 6 files changed, 720 insertions(+), 2 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/microchip,pcie-host.yaml
+ create mode 100644 drivers/pci/controller/pcie-microchip-host.c
 
 
-On 11/25/2020 2:32 AM, Bjorn Helgaas wrote:
-> External email: Use caution opening links or attachments
->=20
->=20
-> On Tue, Nov 24, 2020 at 03:50:01PM +0530, Vidya Sagar wrote:
->> Hi Bjorn,
->> Please let me know if this patch needs any further modifications
->=20
-> I'm fine with it, but of course Lorenzo will take care of it.
-Thanks Bjorn.
+base-commit: 3650b228f83adda7e5ee532e2b90429c03f7b9ec
+-- 
+2.25.1
 
-Hi Lorenzo,
-Please let me know if you have any comments for this patch.
-
-Thanks,
-Vidya Sagar
-
->=20
->> On 11/12/2020 10:32 PM, Vidya Sagar wrote:
->>> External email: Use caution opening links or attachments
->>>
->>>
->>> On 11/12/2020 3:59 AM, Bjorn Helgaas wrote:
->>>> External email: Use caution opening links or attachments
->>>>
->>>>
->>>> On Wed, Nov 11, 2020 at 10:21:46PM +0530, Vidya Sagar wrote:
->>>>>
->>>>>
->>>>> On 11/11/2020 9:57 PM, Jingoo Han wrote:
->>>>>> External email: Use caution opening links or attachments
->>>>>>
->>>>>>
->>>>>> On 11/11/20, 7:12 AM, Vidya Sagar wrote:
->>>>>>>
->>>>>>> DesignWare core has a TLP digest (TD) override bit in
->>>>>>> one of the control
->>>>>>> registers of ATU. This bit also needs to be programmed for proper E=
-CRC
->>>>>>> functionality. This is currently identified as an issue
->>>>>>> with DesignWare
->>>>>>> IP version 4.90a.
->>>>>>>
->>>>>>> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
->>>>>>> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->>>>>>> ---
->>>>>>> V2:
->>>>>>> * Addressed Bjorn's comments
->>>>>>>
->>>>>>>     drivers/pci/controller/dwc/pcie-designware.c | 52
->>>>>>> ++++++++++++++++++--
->>>>>>>     drivers/pci/controller/dwc/pcie-designware.h |=C2=A0 1 +
->>>>>>>     2 files changed, 49 insertions(+), 4 deletions(-)
->>>>>>>
->>>>>>> diff --git
->>>>>>> a/drivers/pci/controller/dwc/pcie-designware.c
->>>>>>> b/drivers/pci/controller/dwc/pcie-designware.c
->>>>>>> index c2dea8fc97c8..ec0d13ab6bad 100644
->>>>>>> --- a/drivers/pci/controller/dwc/pcie-designware.c
->>>>>>> +++ b/drivers/pci/controller/dwc/pcie-designware.c
->>>>>>> @@ -225,6 +225,46 @@ static void
->>>>>>> dw_pcie_writel_ob_unroll(struct dw_pcie *pci, u32 index,
->>>>>>> u32 reg,
->>>>>>>          dw_pcie_writel_atu(pci, offset + reg, val);
->>>>>>>     }
->>>>>>>
->>>>>>> +static inline u32 dw_pcie_enable_ecrc(u32 val)
->>>>>>
->>>>>> What is the reason to use inline here?
->>>>>
->>>>> Actually, I wanted to move the programming part inside the
->>>>> respective APIs
->>>>> but then I wanted to give some details as well in comments so to avoi=
-d
->>>>> duplication, I came up with this function. But, I'm making it inline =
-for
->>>>> better code optimization by compiler.
->>>>
->>>> I don't really care either way, but I'd be surprised if the compiler
->>>> didn't inline this all by itself even without the explicit "inline".
->>> I just checked it and you are right that compiler is indeed inlining it
->>> without explicitly mentioning 'inline'.
->>> I hope it is ok to leave it that way.
->>>
->>>>
->>>>>>> +{
->>>>>>> +     /*
->>>>>>> +      * DesignWare core version 4.90A has this strange design issu=
-e
->>>>>>> +      * where the 'TD' bit in the Control register-1 of
->>>>>>> the ATU outbound
->>>>>>> +      * region acts like an override for the ECRC
->>>>>>> setting i.e. the presence
->>>>>>> +      * of TLP Digest(ECRC) in the outgoing TLPs is
->>>>>>> solely determined by
->>>>>>> +      * this bit. This is contrary to the PCIe spec
->>>>>>> which says that the
->>>>>>> +      * enablement of the ECRC is solely determined by
->>>>>>> the AER registers.
->>>>>>> +      *
->>>>>>> +      * Because of this, even when the ECRC is enabled through AER
->>>>>>> +      * registers, the transactions going through ATU
->>>>>>> won't have TLP Digest
->>>>>>> +      * as there is no way the AER sub-system could
->>>>>>> program the TD bit which
->>>>>>> +      * is specific to DesignWare core.
->>>>>>> +      *
->>>>>>> +      * The best way to handle this scenario is to program the TD =
-bit
->>>>>>> +      * always. It affects only the traffic from root
->>>>>>> port to downstream
->>>>>>> +      * devices.
->>>>>>> +      *
->>>>>>> +      * At this point,
->>>>>>> +      * When ECRC is enabled in AER registers,
->>>>>>> everything works normally
->>>>>>> +      * When ECRC is NOT enabled in AER registers, then,
->>>>>>> +      * on Root Port:- TLP Digest (DWord size) gets
->>>>>>> appended to each packet
->>>>>>> +      *                even through it is not required.
->>>>>>> Since downstream
->>>>>>> +      *                TLPs are mostly for
->>>>>>> configuration accesses and BAR
->>>>>>> +      *                accesses, they are not in
->>>>>>> critical path and won't
->>>>>>> +      *                have much negative effect on the performanc=
-e.
->>>>>>> +      * on End Point:- TLP Digest is received for
->>>>>>> some/all the packets coming
->>>>>>> +      *                from the root port. TLP Digest
->>>>>>> is ignored because,
->>>>>>> +      *                as per the PCIe Spec r5.0 v1.0 section 2.2.=
-3
->>>>>>> +      *                "TLP Digest Rules", when an
->>>>>>> endpoint receives TLP
->>>>>>> +      *                Digest when its ECRC check
->>>>>>> functionality is disabled
->>>>>>> +      *                in AER registers, received TLP
->>>>>>> Digest is just ignored.
->>>>>>> +      * Since there is no issue or error reported
->>>>>>> either side, best way to
->>>>>>> +      * handle the scenario is to program TD bit by default.
->>>>>>> +      */
->>>>>>> +
->>>>>>> +     return val | PCIE_ATU_TD;
->>>>>>> +}
