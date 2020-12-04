@@ -2,107 +2,144 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-20.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40A2BC4361B
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Dec 2020 07:42:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DBC96C433FE
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Dec 2020 07:53:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DD7EC2255F
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Dec 2020 07:42:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8E6B722581
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Dec 2020 07:53:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727622AbgLDHmC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 4 Dec 2020 02:42:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59108 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725550AbgLDHmC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 4 Dec 2020 02:42:02 -0500
-Received: from mail-ej1-x641.google.com (mail-ej1-x641.google.com [IPv6:2a00:1450:4864:20::641])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8BFF1C061A4F
-        for <linux-pci@vger.kernel.org>; Thu,  3 Dec 2020 23:41:21 -0800 (PST)
-Received: by mail-ej1-x641.google.com with SMTP id a16so7308590ejj.5
-        for <linux-pci@vger.kernel.org>; Thu, 03 Dec 2020 23:41:21 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=vFrjH1pebtHRVLO1ux9EWFCYu/RwreoyJELqX0+IPnc=;
-        b=LARuI+TBPzO3Ga5vWARBohOjAhz9a8rtPxXGdu+uM/SIeQvEVkcmNETd82GJUvt3rP
-         UrtJqgbdW6ofj9JvePmTccqxWbwXhQKehCAFsBRtyd4AmPM23y9oqmCA/52F8duQuhE9
-         ugSYrm/Zt5Lf4gDKJkuNEru5WvX3EZKFZdrLk9Q9otKCm7bUFzMYZMQHekDZ1Sn/h6/H
-         K176ykrgZ8Xv0bBj1DwoXSePkoBIoGAVtP5YtdqRamNk3LtaNfXoTvscrNM+Vtw5e4GX
-         FI0ye2UTvhzyvRyCFU9frlG1XfC2dulBc8lj5YuXVKCkSDsPgtt48/x/5Bsnf46cRHZV
-         wUfw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=vFrjH1pebtHRVLO1ux9EWFCYu/RwreoyJELqX0+IPnc=;
-        b=JBH5p8EsMKPMGteIqBkaxHLPMV+AFYPm7kEB4Zr7k2koso6hZjRtdO1Z2/hqyj9tru
-         IN3JnbZvk92QHZ7OV6fObe1c+uslIdQLN+g6Tu+8cm/J5dh7grtzo1WtFZFywwcr4Dkd
-         AqHOHN///avsEhAcKtxiOqDwDem60a+sO9lj47zhzqWVfa5sRnEhfCVKag9r8cXnP50g
-         zGJXgYb4Qq0UWZcSLh1AimDlKLssTglmxzOSg49g0yRb+yPaOvaVl7uiDWOlqmILAhze
-         WxATzSXQMUTiCZ8VdV/4NWyn50/HDYfTN6XH8lj7Hlwo3Q0wl+KUchwm2bI2VRc/miE/
-         dDTg==
-X-Gm-Message-State: AOAM532QbOMeL4ycFvf75BMDwK7IO+erAlcwViMZFZ/jLAcctdBbUm9T
-        S+EzQlrGC3TWNGwk1rW59zgWNJjsu8Es0cMkOelbYg==
-X-Google-Smtp-Source: ABdhPJzSsebV9eSwHiYkUbp1imTyDqj15HLUPCpdjs4KFLddINcAGKE19CPMZmHmEIqLI6eGZ5b3wsVn8kXTD1lBfD0=
-X-Received: by 2002:a17:906:c20f:: with SMTP id d15mr5897853ejz.341.1607067680341;
- Thu, 03 Dec 2020 23:41:20 -0800 (PST)
+        id S1728640AbgLDHxM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 4 Dec 2020 02:53:12 -0500
+Received: from fllv0015.ext.ti.com ([198.47.19.141]:45244 "EHLO
+        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726669AbgLDHxM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 4 Dec 2020 02:53:12 -0500
+Received: from lelv0266.itg.ti.com ([10.180.67.225])
+        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 0B47qBFU068550;
+        Fri, 4 Dec 2020 01:52:11 -0600
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1607068331;
+        bh=yzdzLYP32qo3w6V1OyjfV6SOJjwyiFbBdJ/Xu1to+A8=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References;
+        b=e/MWBtaaMatWOOg7HEJU31XwJf7BDNOqXMQAygxVOWg/bbu6XnflUlume+5XVfs9O
+         LkyAbN1xdUh+PT2SaeaExFPCFvdmZClRN0Dvl9iwnhIgmJ2nQnlwYv7HQ9ZjaTE22a
+         /nAV1sh+VJkaZHN5icf8sr33pOcrGAuvdFU2u4ZY=
+Received: from DLEE107.ent.ti.com (dlee107.ent.ti.com [157.170.170.37])
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 0B47qBF5090865
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Fri, 4 Dec 2020 01:52:11 -0600
+Received: from DLEE108.ent.ti.com (157.170.170.38) by DLEE107.ent.ti.com
+ (157.170.170.37) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Fri, 4 Dec
+ 2020 01:52:10 -0600
+Received: from fllv0040.itg.ti.com (10.64.41.20) by DLEE108.ent.ti.com
+ (157.170.170.38) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
+ Frontend Transport; Fri, 4 Dec 2020 01:52:10 -0600
+Received: from a0393678-ssd.dal.design.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
+        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0B47pL6t031834;
+        Fri, 4 Dec 2020 01:51:57 -0600
+From:   Kishon Vijay Abraham I <kishon@ti.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Tero Kristo <t-kristo@ti.com>, Nishanth Menon <nm@ti.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Tom Joseph <tjoseph@cadence.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC:     <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-omap@vger.kernel.org>
+Subject: [PATCH v2 1/3] dt-bindings: pci: ti,j721e: Fix "ti,syscon-pcie-ctrl" to take argument
+Date:   Fri, 4 Dec 2020 13:21:15 +0530
+Message-ID: <20201204075117.10430-2-kishon@ti.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20201204075117.10430-1-kishon@ti.com>
+References: <20201204075117.10430-1-kishon@ti.com>
 MIME-Version: 1.0
-References: <20201111054356.793390-1-ben.widawsky@intel.com> <20201111054356.793390-6-ben.widawsky@intel.com>
-In-Reply-To: <20201111054356.793390-6-ben.widawsky@intel.com>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Thu, 3 Dec 2020 23:41:16 -0800
-Message-ID: <CAPcyv4g-hO5yz1bod6X+ZrL_8-6CRBvf==pB3sbuBzZmsT7Kng@mail.gmail.com>
-Subject: Re: [RFC PATCH 5/9] cxl/mem: Find device capabilities
-To:     Ben Widawsky <ben.widawsky@intel.com>
-Cc:     linux-cxl@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Ira Weiny <ira.weiny@intel.com>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        "Kelley, Sean V" <sean.v.kelley@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Nov 10, 2020 at 9:44 PM Ben Widawsky <ben.widawsky@intel.com> wrote:
->
-> CXL devices contain an array of capabilities that describe the
-> interactions software can interact with the device, or firmware running
-> on the device. A CXL compliant device must implement the device status
-> and the mailbox capability. A CXL compliant memory device must implement
-> the memory device capability.
->
-> Each of the capabilities can [will] provide an offset within the MMIO
-> region for interacting with the CXL device.
->
-> Signed-off-by: Ben Widawsky <ben.widawsky@intel.com>
-> ---
->  drivers/cxl/cxl.h | 89 +++++++++++++++++++++++++++++++++++++++++++++++
->  drivers/cxl/mem.c | 58 +++++++++++++++++++++++++++---
->  2 files changed, 143 insertions(+), 4 deletions(-)
->  create mode 100644 drivers/cxl/cxl.h
->
-> diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
-> new file mode 100644
-> index 000000000000..02858ae63d6d
-> --- /dev/null
-> +++ b/drivers/cxl/cxl.h
-[..]
-> +static inline u32 __cxl_raw_read_reg32(struct cxl_mem *cxlm, u32 reg)
+Fix binding documentation of "ti,syscon-pcie-ctrl" to take phandle with
+argument. The argument is the register offset within "syscon" used to
+configure PCIe controller. This change is as discussed in [1]
 
-Going through my reworks and the "raw" jumped out at me. My typical
-interpretation of "raw" in respect to register access macros is the
-difference between readl() and __raw_readl()  which means "don't do
-bus endian swizzling, and don't do a memory clobber barrier". Any
-heartburn to drop the "raw"?
+[1] -> http://lore.kernel.org/r/CAL_JsqKiUcO76bo1GoepWM1TusJWoty_BRy2hFSgtEVMqtrvvQ@mail.gmail.com
 
-...is it only me that reacts that way?
+Fixes: 431b53b81cdc ("dt-bindings: PCI: Add host mode dt-bindings for TI's J721E SoC")
+Fixes: 45b39e928966 ("dt-bindings: PCI: Add EP mode dt-bindings for TI's J721E SoC")
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ .../devicetree/bindings/pci/ti,j721e-pci-ep.yaml      | 11 +++++++----
+ .../devicetree/bindings/pci/ti,j721e-pci-host.yaml    | 11 +++++++----
+ 2 files changed, 14 insertions(+), 8 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml b/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
+index 3ae3e1a2d4b0..3766565cf258 100644
+--- a/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
++++ b/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
+@@ -29,9 +29,12 @@ properties:
+       - const: mem
+ 
+   ti,syscon-pcie-ctrl:
+-    description: Phandle to the SYSCON entry required for configuring PCIe mode
+-                 and link speed.
+-    $ref: /schemas/types.yaml#/definitions/phandle
++    $ref: /schemas/types.yaml#/definitions/phandle-array
++    items:
++      - items:
++          - description: Phandle to the SYSCON entry
++          - description: pcie_ctrl register offset within SYSCON
++    description: Specifier for configuring PCIe mode and link speed.
+ 
+   power-domains:
+     maxItems: 1
+@@ -80,7 +83,7 @@ examples:
+                  <0x00 0x0d000000 0x00 0x00800000>,
+                  <0x00 0x10000000 0x00 0x08000000>;
+            reg-names = "intd_cfg", "user_cfg", "reg", "mem";
+-           ti,syscon-pcie-ctrl = <&pcie0_ctrl>;
++           ti,syscon-pcie-ctrl = <&pcie0_ctrl 0x4070>;
+            max-link-speed = <3>;
+            num-lanes = <2>;
+            power-domains = <&k3_pds 239 TI_SCI_PD_EXCLUSIVE>;
+diff --git a/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml b/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
+index ee7a8eade3f6..2b6a1a5eaf7a 100644
+--- a/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
++++ b/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
+@@ -29,9 +29,12 @@ properties:
+       - const: cfg
+ 
+   ti,syscon-pcie-ctrl:
+-    description: Phandle to the SYSCON entry required for configuring PCIe mode
+-      and link speed.
+-    $ref: /schemas/types.yaml#/definitions/phandle
++    $ref: /schemas/types.yaml#/definitions/phandle-array
++    items:
++      - items:
++          - description: Phandle to the SYSCON entry
++          - description: pcie_ctrl register offset within SYSCON
++    description: Specifier for configuring PCIe mode and link speed.
+ 
+   power-domains:
+     maxItems: 1
+@@ -90,7 +93,7 @@ examples:
+                   <0x00 0x0d000000 0x00 0x00800000>,
+                   <0x00 0x10000000 0x00 0x00001000>;
+             reg-names = "intd_cfg", "user_cfg", "reg", "cfg";
+-            ti,syscon-pcie-ctrl = <&pcie0_ctrl>;
++            ti,syscon-pcie-ctrl = <&pcie0_ctrl 0x4070>;
+             max-link-speed = <3>;
+             num-lanes = <2>;
+             power-domains = <&k3_pds 239 TI_SCI_PD_EXCLUSIVE>;
+-- 
+2.17.1
+
