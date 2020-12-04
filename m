@@ -2,202 +2,79 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+X-Spam-Status: No, score=-12.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9884C433FE
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Dec 2020 18:13:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 707F9C433FE
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Dec 2020 18:22:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 76DD522C7D
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Dec 2020 18:13:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3F3A122B4E
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Dec 2020 18:22:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726928AbgLDSNO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 4 Dec 2020 13:13:14 -0500
-Received: from mga01.intel.com ([192.55.52.88]:59269 "EHLO mga01.intel.com"
+        id S1726602AbgLDSWB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 4 Dec 2020 13:22:01 -0500
+Received: from mail.kernel.org ([198.145.29.99]:45802 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726276AbgLDSNN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 4 Dec 2020 13:13:13 -0500
-IronPort-SDR: bWg1gOunOBMWNGaLO6bPDPsQTb7Sm13z8TOo40k+IryFtlaYw+UpIPOQyqBgAN9xmOqGx3i4Ws
- M4lpEsbyjoCg==
-X-IronPort-AV: E=McAfee;i="6000,8403,9825"; a="191665886"
-X-IronPort-AV: E=Sophos;i="5.78,393,1599548400"; 
-   d="scan'208";a="191665886"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Dec 2020 10:12:20 -0800
-IronPort-SDR: RKwnSxn3tNmuYRuBZxouEbsKpq9G4v733izvJSe/cn3xwC6G/G+KsapswhLHLdvtwwFa1LCsaE
- eoSLzY9JWubg==
-X-IronPort-AV: E=Sophos;i="5.78,393,1599548400"; 
-   d="scan'208";a="336451422"
-Received: from yayatigu-mobl.amr.corp.intel.com (HELO intel.com) ([10.252.135.92])
-  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Dec 2020 10:12:19 -0800
-Date:   Fri, 4 Dec 2020 10:12:17 -0800
-From:   Ben Widawsky <ben.widawsky@intel.com>
-To:     Chris Browy <cbrowy@avery-design.com>
-Cc:     bhelgaas@google.com, dan.j.williams@intel.com, ira.weiny@intel.com,
-        linux-acpi@vger.kernel.org, linux-cxl@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        rafael.j.wysocki@intel.com, sean.v.kelley@intel.com,
-        vishal.l.verma@intel.com
-Subject: Re: [RFC PATCH 0/9] CXL 2.0 Support
-Message-ID: <20201204181217.n3cm7gqujaqlcp2h@intel.com>
-References: <FB00A034-7C6D-40B1-8452-318A3B052216@avery-design.com>
- <F0ACA340-5BDE-4C17-80ED-DB7F5C5B8403@avery-design.com>
+        id S1730011AbgLDSWB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 4 Dec 2020 13:22:01 -0500
+Date:   Fri, 4 Dec 2020 12:21:18 -0600
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1607106080;
+        bh=cZFPzlHJbvuqT1IggsL+1KT9IMXHxDS/MVaBMDyNjeY=;
+        h=From:To:Cc:Subject:In-Reply-To:From;
+        b=YcfViyM93Q9keCM8ix789WAmuzfqqdPuZupGKrCrKWU+qg1wYJX7wT9wWWAk+b4cw
+         wIna5EiyB0BfQIq3yobvz9sR0zymfylurVd3onOCD3uaMCKZ9DNwDl1BbpHXyp5MUJ
+         ctnvBDXqexqy07O+SkSC43U2ijtLXQ5AGCfaFI6qw9GRs2ONGKOLoQtn0T7eX0Lv/Q
+         Ut33VscZOPhuX1hH8GagEoPa9Y6VNQ9JwKtVyGm8Th/LxBgzVVYH2ojPYYbaws+HfT
+         gR7uROORpbH8oBLRi1aj0oLEmsI6gA5QjWvpgt6IfEIxhIONYxqOc4/EL7LkcrpmOn
+         s+zaAE+CSHWMw==
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Vidya Sagar <vidyas@nvidia.com>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        Krishna Kishore <kthota@nvidia.com>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        Vidya Sagar <sagar.tv@gmail.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v3 0/3] PCI/MSI: Cleanup init and improve 32-bit MSI
+ checking
+Message-ID: <20201204182118.GA1929556@bjorn-Precision-5520>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <F0ACA340-5BDE-4C17-80ED-DB7F5C5B8403@avery-design.com>
+In-Reply-To: <20201203185110.1583077-1-helgaas@kernel.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Chris.
+On Thu, Dec 03, 2020 at 12:51:07PM -0600, Bjorn Helgaas wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> MSI/MSI-X init was a little unconventional.  We had pci_msi_setup_pci_dev()
+> to disable MSI and MSI-X, in probe.c instead of msi.c so we could do it
+> even without CONFIG_PCI_MSI.  Move that to msi.c and fix the config issue
+> with an #ifdef.
+> 
+> Then add Vidya's patch on top.  Previous postings at
+> 
+> https://lore.kernel.org/linux-pci/20201117145728.4516-1-vidyas@nvidia.com/
+> https://lore.kernel.org/linux-pci/20201124105035.24573-1-vidyas@nvidia.com/
+> 
+> Bjorn Helgaas (2):
+>   PCI/MSI: Move MSI/MSI-X init to msi.c
+>   PCI/MSI: Move MSI/MSI-X flags updaters to msi.c
+> 
+> Vidya Sagar (1):
+>   PCI/MSI: Set device flag indicating only 32-bit MSI support
+> 
+>  drivers/pci/Makefile |  3 +-
+>  drivers/pci/msi.c    | 70 ++++++++++++++++++++++++++++++++++++++++----
+>  drivers/pci/pci.h    | 23 ++-------------
+>  drivers/pci/probe.c  | 21 ++-----------
+>  4 files changed, 70 insertions(+), 47 deletions(-)
 
-On 20-12-04 12:40:03, Chris Browy wrote:
-> Hi Ben,
-> 
-> Trying to bring up the environment using the latest developments as follows:
-> 
-> 1. Linux kernel baseline version is cloned using
->      git clone git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git
->    Using master branch.  Merged the 9 CXL linux kernel patches manually and built kernel
-> 
-> 2. QEMU baseline version is cloned using
->      git clone https://gitlab.com/bwidawsk/qemu.git
-> 
-> 3. UEFI baseline is cloned using
->      git clone https://github.com/tianocore/edk2.git
->    Using master and built
-> 
-> 4. Now can run qemu as follows:
->      The qcow2 we use is based on Ubuntu 20.10 with updated with kernel from 1) above
-> 
->      QEMU command:
-> 
->      sudo qemu-system-x86_64 -nic \
->      user,hostfwd=tcp::2222-:22,hostfwd=tcp::1234-:1234 -machine \
->      type=pc-q35-4.0,hmat=on,accel=kvm -enable-kvm -cpu host -smp \
->      6,cores=6,threads=1,sockets=1 -m 8G -boot order=d -k 'en-us' -vga virtio \
->      -drive file=/home/chris/Downloads/AQCXL/ubuntu_20.qcow,format=qcow2 -drive \
->      if=pflash,format=raw,readonly,file=/home/chris/OVMF_CODE.fd \
->      -drive if=pflash,format=raw,file=/home/chris/OVMF_VARS.fd \
->      -object memory-backend-file,id=cxl-mem1,share,mem-path=/tmp/cxl-test/cxl,size=512M \
->      -device pxb-cxl,id=cxl.0,bus=pcie.0,bus_nr=52,uid=0,len-window-base=1,\
->      window-base[0]=0x4c0000000,memdev[0]=cxl-mem1 \
->      -device cxl-rp,id=rp0,bus=cxl.0,addr=0.0,chassis=0,slot=0  \
->      -device cxl-type3,bus=rp0,memdev=cxl-mem1,id=cxl-pmem0,size=256M  2>&1 | tee -a \
->      /home/chris/Downloads/AQCXL/log/qemu.log
-> 
->    The qemu options are derived from looking at the tests/qtests/cxl-test.c
->    along with the -hmat=on which seemed to make sense.
-> 
->    The system boots and lspci -vvv shows the CXL device is enumerated.  But
->    no DOE capability register for CDAT access though (see below).  Otherwise the
->    DVSEC registers are present.
-
-DOE is not supported yet in either Linux or QEMU. For us, CDAT isn't a high
-priority yet so it likely won't be done for a while. I'd really like to see DOE
-support added by someone - not me - so that we can wire it up. Not sure what
-that would look like in the QEMU side.
-
-> 
->    acpidump indicates the CXL0 and CXLM devices but no SRAT or HMAT tables are
->    in the dump which is curious.
-
-I don't typically use HMAT, but I do have an SRAT in mine, so that's strange.
-You should also have a CEDT.
-
-> 
-> 
-> 35:00.0 Memory controller [0502]: Intel Corporation Device 0d93 (rev 01) (prog-if 10)
->     Subsystem: Red Hat, Inc. Device 1100
->     Physical Slot: 0
->     Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
->     Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
->     Latency: 0
->     Region 0: Memory at c0a00000 (64-bit, non-prefetchable) [size=64K]
->     Region 2: Memory at c0a10000 (64-bit, non-prefetchable) [size=4K]
->     Capabilities: [80] Express (v2) Endpoint, MSI 00
->         DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
->             ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset- SlotPowerLimit 0.000W
->         DevCtl: CorrErr- NonFatalErr- FatalErr- UnsupReq-
->             RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
->             MaxPayload 128 bytes, MaxReadReq 128 bytes
->         DevSta: CorrErr- NonFatalErr- FatalErr- UnsupReq- AuxPwr- TransPend-
->         LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s, Exit Latency L0s <64ns
->             ClockPM- Surprise- LLActRep- BwNot- ASPMOptComp-
->         LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- CommClk-
->             ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
->         LnkSta: Speed 2.5GT/s (ok), Width x1 (ok)
->             TrErr- Train- SlotClk- DLActive+ BWMgmt- ABWMgmt-
->         DevCap2: Completion Timeout: Not Supported, TimeoutDis-, NROPrPrP-, LTR-
->              10BitTagComp-, 10BitTagReq-, OBFF Not Supported, ExtFmt+, EETLPPrefix+, MaxEETLPPrefixes 4
->                EmergencyPowerReduction Not Supported, EmergencyPowerReductionInit-
->              FRS-, TPHComp-, ExtTPHComp-
->              AtomicOpsCap: 32bit- 64bit- 128bitCAS-
->         DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled
->              AtomicOpsCtl: ReqEn-
->         LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-
->              Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
->              Compliance De-emphasis: -6dB
->         LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-, EqualizationPhase1-
->              EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
->     Capabilities: [100 v1] Designated Vendor-Specific <?>
->     Capabilities: [138 v1] Designated Vendor-Specific <?>
->     Kernel driver in use: cxl_mem
-> 
-> Questions/Comments:
-> -------------------
-> 1. Linux
->   a. Is there a gitlab for the linux kernel patches for CXL?  This would
->      facilitate review and code modifications.
-
-We're hopefully going to send out v2 in the next couple of days. I'll push the
-repo somewhere as well.
-
-> 
-> 2. UEFI (edk2 from tianocore)
->   a. seems to only support CXL 1.1 which means only method #1 (Device
->      option ROM) of Coherent Device Attribute Table_1.02 spec
->      for CDAT handling is possible now.
-> 
->      Does device option ROM need to be added to QEMU CXL setup?
-> 
->      Can we add a CXL 1.1 emulated device?
-
-Patches welcome :-). I know of other people who want this, but I only care about
-2.0+, so I have no intention to implement it.
-
-> 
->   b. lspci doesn’t show the existence of the DOE extended capability register
->      in the CXL CT3D (needed to support method #2).  Are there more patches?
-
-As above, it's not supported. I'm hoping someone else will do that work since I
-don't care about it just yet.
-
-> 
-> 3. Do you have example user programs to share or better yet the CXL 2.0
->    Sec 14.3.6.1 Application Layer/ Transaction layer test for CXL.mem?
-> 
-
-I don't have, mostly because I haven't actually implemented a lot of the real
-CXL support. My primary concern was having the Linux driver be able to enumerate
-devices and communicate with the device via the mailbox interface. v2 will
-contain support for userspace to do this, which I think is a step toward what
-you're asking for.
-
-> 4. What are the userspace system APIs for targeting CXL HDM address domain?
->    Usually you can mmap a SPA if you know how to look it up.
-
-I think Dan answered this in the other thread...
-
-> 
-> 
-> Best Regards,
-> Chris Browy
-> 
-> 
-> 
+I fixed my typo ("#ifdef CONFIG_MSI" when it should have been
+"#ifdef CONFIG_PCI_MSI"), added the reference from Vidya, added
+Thierry's Reviewed-by, and put these on pci/msi for v5.11.
