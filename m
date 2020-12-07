@@ -2,175 +2,88 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 923E9C0018C
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Dec 2020 22:42:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 373D3C1B0E3
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Dec 2020 23:01:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5D800239ED
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Dec 2020 22:42:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 12B15239ED
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Dec 2020 23:01:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727816AbgLGWmJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 7 Dec 2020 17:42:09 -0500
-Received: from mga17.intel.com ([192.55.52.151]:13249 "EHLO mga17.intel.com"
+        id S1726474AbgLGXBQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 7 Dec 2020 18:01:16 -0500
+Received: from mail.kernel.org ([198.145.29.99]:49670 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725917AbgLGWmI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 7 Dec 2020 17:42:08 -0500
-IronPort-SDR: EcBKmFVhC3VDtbmKQpdydzyzDNblFpWAnYaqVR0Vc0aKDbLPc46YpyW8vr1BU1g+z0P7V1qbdM
- Rngwc3fZi85w==
-X-IronPort-AV: E=McAfee;i="6000,8403,9828"; a="153602432"
-X-IronPort-AV: E=Sophos;i="5.78,400,1599548400"; 
-   d="scan'208";a="153602432"
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Dec 2020 14:40:22 -0800
-IronPort-SDR: OBD43kayQ22wHahBPlKpvk/ewoZJu4NUMN4S/xIztFAXm8eE0dmk1qe54iJ+I86MNoCGevXqOb
- IaHkwawSS8IA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.78,400,1599548400"; 
-   d="scan'208";a="318016353"
-Received: from linux.intel.com ([10.54.29.200])
-  by fmsmga007.fm.intel.com with ESMTP; 07 Dec 2020 14:40:22 -0800
-Received: from debox1-desk2.jf.intel.com (debox1-desk2.jf.intel.com [10.54.75.16])
-        by linux.intel.com (Postfix) with ESMTP id 1B56C5805B9;
-        Mon,  7 Dec 2020 14:40:22 -0800 (PST)
-From:   "David E. Box" <david.e.box@linux.intel.com>
-To:     bhelgaas@google.com, rafael@kernel.org, len.brown@intel.com
-Cc:     "David E. Box" <david.e.box@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Subject: [PATCH v2 1/2] Add save/restore of Precision Time Measurement capability
-Date:   Mon,  7 Dec 2020 14:39:50 -0800
-Message-Id: <20201207223951.19667-1-david.e.box@linux.intel.com>
-X-Mailer: git-send-email 2.20.1
+        id S1725969AbgLGXBQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 7 Dec 2020 18:01:16 -0500
+Date:   Mon, 7 Dec 2020 17:00:34 -0600
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1607382035;
+        bh=fyhd+76aHwPWrk0CPR1KnYMh5mRTqJka/mLial7gWeo=;
+        h=From:To:Cc:Subject:In-Reply-To:From;
+        b=B/+Hf8Qey+Ll7oUSZ/eNdnDP7LrALPR0oAwsEilG/2BPImOfqYrgywfv5LgcDXoNI
+         2eFRv2q8O1M2rlYeqwWohOiA6akXdCKg4wIhTv4+KXdPayrmE2H0s1y+/0ccwUNTaO
+         //hSMsUNnDRIz6bfd83nFcyAGLpNNJCDeODL4oIAN9pZn8FCMEfMhxyI9gO7f8qu/X
+         c/J9cLX3pK7EdSWndKf7p5wKf5B94UIsJvoDi+fB8R93vGrmbEBlWCnOxTLHh25TQ1
+         uQWrH/gM1F/rAE04p8VO0PeeDPOwDf4JYlCmDlY73BIkoWKLxg5GYzJbs9kwP9dgbJ
+         5A3yO+NwAdBRg==
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Puranjay Mohan <puranjay12@gmail.com>
+Cc:     siva.kallam@broadcom.com, prashant@broadcom.com,
+        mchan@broadcom.com, kuba@kernel.org, netdev@vger.kernel.org,
+        bjorn@helgaas.com, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] drivers: broadcom: save return value of
+ pci_find_capability() in u8
+Message-ID: <20201207230034.GA2298434@bjorn-Precision-5520>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201206201033.21823-1-puranjay12@gmail.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The PCI subsystem does not currently save and restore the configuration
-space for the Precision Time Measurement (PTM) PCIe extended capability
-leading to the possibility of the feature returning disabled on S3 resume.
-This has been observed on Intel Coffee Lake desktops. Add save/restore of
-the PTM control register. This saves the PTM Enable, Root Select, and
-Effective Granularity bits.
+On Mon, Dec 07, 2020 at 01:40:33AM +0530, Puranjay Mohan wrote:
+> Callers of pci_find_capability() should save the return value in u8.
+> change the type of pcix_cap from int to u8, to match the specification.
+> 
+> Signed-off-by: Puranjay Mohan <puranjay12@gmail.com>
+> ---
+>  drivers/net/ethernet/broadcom/tg3.h | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/ethernet/broadcom/tg3.h b/drivers/net/ethernet/broadcom/tg3.h
+> index 1000c894064f..f1781d2dce0b 100644
+> --- a/drivers/net/ethernet/broadcom/tg3.h
+> +++ b/drivers/net/ethernet/broadcom/tg3.h
+> @@ -3268,7 +3268,7 @@ struct tg3 {
+>  
+>  	int				pci_fn;
+>  	int				msi_cap;
+> -	int				pcix_cap;
+> +	u8				pcix_cap;
 
-Suggested-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Signed-off-by: David E. Box <david.e.box@linux.intel.com>
----
+msi_cap is also a u8.
 
-Changes from V1:
-	- Move save/restore functions to ptm.c
-	- Move pci_add_ext_cap_sve_buffer() to pci_ptm_init in ptm.c
-	
- drivers/pci/pci.c      |  2 ++
- drivers/pci/pci.h      |  8 ++++++++
- drivers/pci/pcie/ptm.c | 43 ++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 53 insertions(+)
+But I don't think it's worth changing either of these unless we take a
+broader look and see whether they're needed at all.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index e578d34095e9..12ba6351c05b 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1566,6 +1566,7 @@ int pci_save_state(struct pci_dev *dev)
- 	pci_save_ltr_state(dev);
- 	pci_save_dpc_state(dev);
- 	pci_save_aer_state(dev);
-+	pci_save_ptm_state(dev);
- 	return pci_save_vc_state(dev);
- }
- EXPORT_SYMBOL(pci_save_state);
-@@ -1677,6 +1678,7 @@ void pci_restore_state(struct pci_dev *dev)
- 	pci_restore_vc_state(dev);
- 	pci_restore_rebar_state(dev);
- 	pci_restore_dpc_state(dev);
-+	pci_restore_ptm_state(dev);
- 
- 	pci_aer_clear_status(dev);
- 	pci_restore_aer_state(dev);
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index f86cae9aa1f4..62cdacba5954 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -516,6 +516,14 @@ static inline int pci_iov_bus_range(struct pci_bus *bus)
- 
- #endif /* CONFIG_PCI_IOV */
- 
-+#ifdef CONFIG_PCIE_PTM
-+void pci_save_ptm_state(struct pci_dev *dev);
-+void pci_restore_ptm_state(struct pci_dev *dev);
-+#else
-+static inline void pci_save_ptm_state(struct pci_dev *dev) {}
-+static inline void pci_restore_ptm_state(struct pci_dev *dev) {}
-+#endif
-+
- unsigned long pci_cardbus_resource_alignment(struct resource *);
- 
- static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
-diff --git a/drivers/pci/pcie/ptm.c b/drivers/pci/pcie/ptm.c
-index 357a454cafa0..6b24a1c9327a 100644
---- a/drivers/pci/pcie/ptm.c
-+++ b/drivers/pci/pcie/ptm.c
-@@ -29,6 +29,47 @@ static void pci_ptm_info(struct pci_dev *dev)
- 		 dev->ptm_root ? " (root)" : "", clock_desc);
- }
- 
-+void pci_save_ptm_state(struct pci_dev *dev)
-+{
-+	int ptm;
-+	struct pci_cap_saved_state *save_state;
-+	u16 *cap;
-+
-+	if (!pci_is_pcie(dev))
-+		return;
-+
-+	ptm = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_PTM);
-+	if (!ptm)
-+		return;
-+
-+	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_PTM);
-+	if (!save_state) {
-+		pci_err(dev, "no suspend buffer for PTM\n");
-+		return;
-+	}
-+
-+	cap = (u16 *)&save_state->cap.data[0];
-+	pci_read_config_word(dev, ptm + PCI_PTM_CTRL, cap);
-+}
-+
-+void pci_restore_ptm_state(struct pci_dev *dev)
-+{
-+	struct pci_cap_saved_state *save_state;
-+	int ptm;
-+	u16 *cap;
-+
-+	if (!pci_is_pcie(dev))
-+		return;
-+
-+	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_PTM);
-+	ptm = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_PTM);
-+	if (!save_state || !ptm)
-+		return;
-+
-+	cap = (u16 *)&save_state->cap.data[0];
-+	pci_write_config_word(dev, ptm + PCI_PTM_CTRL, *cap);
-+}
-+
- void pci_ptm_init(struct pci_dev *dev)
- {
- 	int pos;
-@@ -65,6 +106,8 @@ void pci_ptm_init(struct pci_dev *dev)
- 	if (!pos)
- 		return;
- 
-+	pci_add_ext_cap_save_buffer(dev, PCI_EXT_CAP_ID_PTM, sizeof(u16));
-+
- 	pci_read_config_dword(dev, pos + PCI_PTM_CAP, &cap);
- 	local_clock = (cap & PCI_PTM_GRANULARITY_MASK) >> 8;
- 
--- 
-2.20.1
+msi_cap is used to restore the MSI enable bit after a highly
+device-specific reset.
 
+pcix_cap is used for some PCI-X configuration that really should be
+done via pcix_set_mmrbc() and possibly some sort of quirk for
+PCI_X_CMD_MAX_SPLIT.
+
+But that's all pretty messy and I doubt it's worth doing it at this
+point, since PCI-X is pretty much ancient history.
+
+>  	int				pcie_readrq;
+>  
+>  	struct mii_bus			*mdio_bus;
+> -- 
+> 2.27.0
+> 
