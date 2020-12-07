@@ -2,100 +2,182 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A1CCC4361B
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Dec 2020 21:14:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 447ECC433FE
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Dec 2020 22:42:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E79BA221FA
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Dec 2020 21:14:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E6F022CA0
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Dec 2020 22:42:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726202AbgLGVOV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 7 Dec 2020 16:14:21 -0500
-Received: from mail-oi1-f194.google.com ([209.85.167.194]:36228 "EHLO
-        mail-oi1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725774AbgLGVOV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Dec 2020 16:14:21 -0500
-Received: by mail-oi1-f194.google.com with SMTP id x16so17081877oic.3;
-        Mon, 07 Dec 2020 13:14:05 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=wSSUTQZg6bgD+NFU+dlyoaBo/UNi5gEZyvnAHdAYmoI=;
-        b=RN9JS3E7E9gcR0KUJzJ56alonCOF9zuUJoeFP0W4/pdjrULcIPkwLhTlfTjDnag/0F
-         mbe6F6R7hMJQlDRFjZ5qlGsBglNEOaJikveEKE5SAR+C4faDn/ApwbwKDiW1/OpFp3CR
-         42YTpy8CzGEbwSYzY6tfs3QOyXhjJ5F8UWbZF0F6MBJLT9pgK43eejPZqQw74e9f7Um9
-         i6wgRshxbXVzcM38pNHf9L7fx5Z1UQQg8nx7lxrL11B2+b+VUniktW2V1w/kwre+velW
-         MYPUVhwB6zzqizvMTq8EWPX0y+JgFBMHtlWKe7Z64VRVPmi2RsA8VlZdFXqLhN+mN/ym
-         dbCg==
-X-Gm-Message-State: AOAM530EPfaaICi1YIGSjeY/E/wJqjduIRXhqGcdQeBlOXgO2zcCLDWq
-        q8SdzJ+ZE4t0lHsrwcp5BQ==
-X-Google-Smtp-Source: ABdhPJwxEb2r9vTvghtzHd8K3uHSFXi9O1760V/OHmnDBVyD9HJ35YFbgajx/vD/9xQJIohC18waoQ==
-X-Received: by 2002:aca:3192:: with SMTP id x140mr558323oix.172.1607375620156;
-        Mon, 07 Dec 2020 13:13:40 -0800 (PST)
-Received: from xps15 (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.gmail.com with ESMTPSA id t186sm3224633oif.1.2020.12.07.13.13.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Dec 2020 13:13:38 -0800 (PST)
-Received: (nullmailer pid 835084 invoked by uid 1000);
-        Mon, 07 Dec 2020 21:13:37 -0000
-Date:   Mon, 7 Dec 2020 15:13:37 -0600
-From:   Rob Herring <robh@kernel.org>
-To:     Chen-Yu Tsai <wens@kernel.org>
-Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-rockchip@lists.infradead.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Heiko Stuebner <heiko@sntech.de>, linux-kernel@vger.kernel.org,
-        Johan Jonker <jbx6244@gmail.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Chen-Yu Tsai <wens@csie.org>,
-        Robin Murphy <robin.murphy@arm.com>,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v2 2/4] dt-bindings: arm: rockchip: Add FriendlyARM
- NanoPi M4B
-Message-ID: <20201207211337.GA835025@robh.at.kernel.org>
-References: <20201118071724.4866-1-wens@kernel.org>
- <20201118071724.4866-3-wens@kernel.org>
+        id S1726346AbgLGWmI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 7 Dec 2020 17:42:08 -0500
+Received: from mga02.intel.com ([134.134.136.20]:23634 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726069AbgLGWmI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 7 Dec 2020 17:42:08 -0500
+IronPort-SDR: HS/YNYGFeuejmo8g9Ykz7DIqasDZ84Ri7jjykuglsJVtKa8trEASbBkm24g9Q3Pa2VqAatYZm3
+ RWZtGupvTqUQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9828"; a="160838009"
+X-IronPort-AV: E=Sophos;i="5.78,400,1599548400"; 
+   d="scan'208";a="160838009"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Dec 2020 14:40:22 -0800
+IronPort-SDR: xPTMDMx1SlfzkWP70pupkHEMQKieL+U8m5CFyDgDA1f0vDHbJW1yqHKxoXkISOz4B7evwd2s/Y
+ YEwPHYy3z3ug==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.78,400,1599548400"; 
+   d="scan'208";a="407353583"
+Received: from linux.intel.com ([10.54.29.200])
+  by orsmga001.jf.intel.com with ESMTP; 07 Dec 2020 14:40:22 -0800
+Received: from debox1-desk2.jf.intel.com (debox1-desk2.jf.intel.com [10.54.75.16])
+        by linux.intel.com (Postfix) with ESMTP id 3599E580816;
+        Mon,  7 Dec 2020 14:40:22 -0800 (PST)
+From:   "David E. Box" <david.e.box@linux.intel.com>
+To:     bhelgaas@google.com, rafael@kernel.org, len.brown@intel.com
+Cc:     "David E. Box" <david.e.box@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Subject: [PATCH v2 2/2] PCI: Disable PTM during suspend to save power
+Date:   Mon,  7 Dec 2020 14:39:51 -0800
+Message-Id: <20201207223951.19667-2-david.e.box@linux.intel.com>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20201207223951.19667-1-david.e.box@linux.intel.com>
+References: <20201207223951.19667-1-david.e.box@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201118071724.4866-3-wens@kernel.org>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, 18 Nov 2020 15:17:22 +0800, Chen-Yu Tsai wrote:
-> From: Chen-Yu Tsai <wens@csie.org>
-> 
-> The NanoPi M4B is a minor revision of the original M4.
-> 
-> The differences against the original Nanopi M4 that are common with the
-> other M4V2 revision include:
-> 
->   - microphone header removed
->   - power button added
->   - recovery button added
-> 
-> Additional changes specific to the M4B:
-> 
->   - USB 3.0 hub removed; board now has 2x USB 3.0 type-A ports and 2x
->     USB 2.0 ports
->   - ADB toggle switch added; this changes the top USB 3.0 host port to
->     a peripheral port
->   - Type-C port no longer supports data or PD
->   - WiFi/Bluetooth combo chip switched to AP6256, which supports BT 5.0
->     but only 1T1R (down from 2T2R) for WiFi
-> 
-> Add a compatible string for the new board revision.
-> 
-> Signed-off-by: Chen-Yu Tsai <wens@csie.org>
-> ---
->  Documentation/devicetree/bindings/arm/rockchip.yaml | 1 +
->  1 file changed, 1 insertion(+)
-> 
+There are systems (for example, Intel based mobile platforms since Coffee
+Lake) where the power drawn while suspended can be significantly reduced by
+disabling Precision Time Measurement (PTM) on PCIe root ports as this
+allows the port to enter a lower-power PM state and the SoC to reach a
+lower-power idle state. To save this power, disable the PTM feature on root
+ports during pci_prepare_to_sleep() and pci_finish_runtime_suspend().  The
+feature will be returned to its previous state during restore and error
+recovery.
 
-Acked-by: Rob Herring <robh@kernel.org>
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=209361
+Reported-by: Len Brown <len.brown@intel.com>
+Suggested-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: David E. Box <david.e.box@linux.intel.com>
+---
+Changes from V1:
+
+	- Add pci_disable_ptm() to ptm.c
+	- Move ptm disabling from pci_save_ptm_state() to
+	  pci_prepare_to_sleep() and pci_finish_runtime_suspend() as
+	  suggested by Rafael.
+	- Comment change suggested by Rafael
+
+ drivers/pci/pci.c      | 25 ++++++++++++++++++++++++-
+ drivers/pci/pci.h      |  2 ++
+ drivers/pci/pcie/ptm.c | 17 +++++++++++++++++
+ 3 files changed, 43 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 12ba6351c05b..71dd5d7cbded 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2608,12 +2608,24 @@ int pci_prepare_to_sleep(struct pci_dev *dev)
+ 	if (target_state == PCI_POWER_ERROR)
+ 		return -EIO;
+ 
++	/*
++	 * There are systems (for example, Intel mobile chips since Coffee
++	 * Lake) where the power drawn while suspended can be significantly
++	 * reduced by disabling PTM on PCIe root ports as this allows the
++	 * port to enter a lower-power PM state and the SoC to reach a
++	 * lower-power idle state as a whole.
++	 */
++	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT)
++		pci_disable_ptm(dev);
++
+ 	pci_enable_wake(dev, target_state, wakeup);
+ 
+ 	error = pci_set_power_state(dev, target_state);
+ 
+-	if (error)
++	if (error) {
+ 		pci_enable_wake(dev, target_state, false);
++		pci_restore_ptm_state(dev);
++	}
+ 
+ 	return error;
+ }
+@@ -2651,12 +2663,23 @@ int pci_finish_runtime_suspend(struct pci_dev *dev)
+ 
+ 	dev->runtime_d3cold = target_state == PCI_D3cold;
+ 
++	/*
++	 * There are systems (for example, Intel mobile chips since Coffee
++	 * Lake) where the power drawn while suspended can be significantly
++	 * reduced by disabling PTM on PCIe root ports as this allows the
++	 * port to enter a lower-power PM state and the SoC to reach a
++	 * lower-power idle state as a whole.
++	 */
++	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT)
++		pci_disable_ptm(dev);
++
+ 	__pci_enable_wake(dev, target_state, pci_dev_run_wake(dev));
+ 
+ 	error = pci_set_power_state(dev, target_state);
+ 
+ 	if (error) {
+ 		pci_enable_wake(dev, target_state, false);
++		pci_restore_ptm_state(dev);
+ 		dev->runtime_d3cold = false;
+ 	}
+ 
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 62cdacba5954..4a478ca7e3b5 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -519,9 +519,11 @@ static inline int pci_iov_bus_range(struct pci_bus *bus)
+ #ifdef CONFIG_PCIE_PTM
+ void pci_save_ptm_state(struct pci_dev *dev);
+ void pci_restore_ptm_state(struct pci_dev *dev);
++void pci_disable_ptm(struct pci_dev *dev);
+ #else
+ static inline void pci_save_ptm_state(struct pci_dev *dev) {}
+ static inline void pci_restore_ptm_state(struct pci_dev *dev) {}
++static inline void pci_disable_ptm(struct pci_dev *dev) {}
+ #endif
+ 
+ unsigned long pci_cardbus_resource_alignment(struct resource *);
+diff --git a/drivers/pci/pcie/ptm.c b/drivers/pci/pcie/ptm.c
+index 6b24a1c9327a..95d4eef2c9e8 100644
+--- a/drivers/pci/pcie/ptm.c
++++ b/drivers/pci/pcie/ptm.c
+@@ -29,6 +29,23 @@ static void pci_ptm_info(struct pci_dev *dev)
+ 		 dev->ptm_root ? " (root)" : "", clock_desc);
+ }
+ 
++void pci_disable_ptm(struct pci_dev *dev)
++{
++	int ptm;
++	u16 ctrl;
++
++	if (!pci_is_pcie(dev))
++		return;
++
++	ptm = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_PTM);
++	if (!ptm)
++		return;
++
++	pci_read_config_word(dev, ptm + PCI_PTM_CTRL, &ctrl);
++	ctrl &= ~(PCI_PTM_CTRL_ENABLE | PCI_PTM_CTRL_ROOT);
++	pci_write_config_word(dev, ptm + PCI_PTM_CTRL, ctrl);
++}
++
+ void pci_save_ptm_state(struct pci_dev *dev)
+ {
+ 	int ptm;
+-- 
+2.20.1
+
