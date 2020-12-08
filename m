@@ -2,121 +2,141 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_2 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19ECAC4167B
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Dec 2020 00:47:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86F88C4361B
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Dec 2020 01:28:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CFCE423A1C
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Dec 2020 00:47:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 443DD23A40
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Dec 2020 01:28:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728840AbgLHArr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 7 Dec 2020 19:47:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52068 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728838AbgLHArr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Dec 2020 19:47:47 -0500
-Received: from mail-lj1-x241.google.com (mail-lj1-x241.google.com [IPv6:2a00:1450:4864:20::241])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8EA44C0611CA
-        for <linux-pci@vger.kernel.org>; Mon,  7 Dec 2020 16:46:23 -0800 (PST)
-Received: by mail-lj1-x241.google.com with SMTP id x23so10124985lji.7
-        for <linux-pci@vger.kernel.org>; Mon, 07 Dec 2020 16:46:23 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=NWy8EXHdxkf0XTbmE1PCRNTwXozVSEc9y+L8i0BKYwI=;
-        b=kRfk733PMibuoevBe+zrIfiyJ8guY2Fi01JrvwEF7slv4QqB5WC9oq29RLXEg0x/c8
-         b0kr6Z0lB84v/9LhaY0JXC4y4JajuD2XJGpcGKUCCjk/K+Vws3zZ5cv8Aqf6/8Qh5oD5
-         VAc6vccjEH1mmUsFG2iKi1WtG9dq3WxDcvGdLxiOQQ4pR1Cnm3J9B8H070mzPMtSkzSX
-         VeJAVdyNhVHKNCAmNiN6i54jhcaTzcJIitcCUSexwaIZeE0o3SFm7WXvyx6dipC6x84J
-         /U18SS2qHpnZEOH9CxXL1ZCBVf9VCJg74SyLDE3escp2+3JKr+iB98Q9Q9iW0nS69o2B
-         LhZw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=NWy8EXHdxkf0XTbmE1PCRNTwXozVSEc9y+L8i0BKYwI=;
-        b=cpvN9u9NE+NFVOtGdOSJp16zjolZLiDaGsWlMFsY95FGisEHStnYUAE2EMFLhPXpc7
-         WjCbmkHYjk7pnMWiEzK/Kqg0cRQSsGC6KUMCYMQn16s0DG8+tAadkT8D0zy0H1f5Bgh5
-         0DKqCwvQZqD2unfanZX5qJW5o3K+12WP2NMVkkxwbaoYotlVV34iXl9lhMiBPDW2Ijiw
-         dBOS7vXgDNZWF2jyJhIbTIKdHtsHqj5aLgXi+sbwPXMtohH1xSuIIduuH3yGm2Tz9v6S
-         AuxSoPegehjyPn2pTqCVFYBTW86PMOUuX95MCOiv/celNHYa6pLEDcN4uvr8WWV/82wr
-         DgDw==
-X-Gm-Message-State: AOAM533q6z3ylbhT+spAN/2y9kl8ZDwHKabuvBsHk7zCWNMPbBR9Tda+
-        liKpTbAMt79HM+7qL5vQ1q5kyA==
-X-Google-Smtp-Source: ABdhPJxL9WoAbggz33zRUk9/WOmUW+eM3LO9RBNrExz635O8Tg6HFh9Vdd+kLYv/LgHL5cD92Z1tPw==
-X-Received: by 2002:a2e:5015:: with SMTP id e21mr2020881ljb.433.1607388382105;
-        Mon, 07 Dec 2020 16:46:22 -0800 (PST)
-Received: from eriador.lumag.spb.ru ([94.25.229.141])
-        by smtp.gmail.com with ESMTPSA id d3sm3028229lfj.206.2020.12.07.16.46.20
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Dec 2020 16:46:21 -0800 (PST)
-From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-To:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        id S1727272AbgLHB2Z (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 7 Dec 2020 20:28:25 -0500
+Received: from Mailgw01.mediatek.com ([1.203.163.78]:8458 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725972AbgLHB2Z (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Dec 2020 20:28:25 -0500
+X-UUID: cbde4ff5a2bd49f9aa694092eee3d9d8-20201208
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=waqy4i20W1JDrFc1FePMwNNNYqRij3lkjq7dJ8MpdPc=;
+        b=R0ZbsB59pC+hzCPr5avn/YkLYFt3BcHa107agaAtFR/xZ2QGQk4WwMxZCwgkfOdcifx/ZH0PByHWdF3c36v17TrCKXm69idOYRWeyFLt+bJKjZ7C7l5T5YeYI6XbMLMNT94uszckr7XT2UashZesO5UUPlCuFAOdtHPpZc5gaKk=;
+X-UUID: cbde4ff5a2bd49f9aa694092eee3d9d8-20201208
+Received: from mtkcas34.mediatek.inc [(172.27.4.253)] by mailgw01.mediatek.com
+        (envelope-from <jianjun.wang@mediatek.com>)
+        (mailgw01.mediatek.com ESMTP with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 389684248; Tue, 08 Dec 2020 09:27:39 +0800
+Received: from MTKCAS36.mediatek.inc (172.27.4.186) by MTKMBS31N2.mediatek.inc
+ (172.27.4.87) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 8 Dec
+ 2020 09:27:33 +0800
+Received: from [10.17.3.153] (10.17.3.153) by MTKCAS36.mediatek.inc
+ (172.27.4.170) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Tue, 8 Dec 2020 09:27:32 +0800
+Message-ID: <1607390856.14736.77.camel@mhfsdcap03>
+Subject: Re: [v4,2/3] PCI: mediatek: Add new generation controller support
+From:   Jianjun Wang <jianjun.wang@mediatek.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+CC:     Lukas Wunner <lukas@wunner.de>, Rob Herring <robh+dt@kernel.org>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Cc:     linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH 2/3] PCI: qcom: add support for ddrss_sf_tbu clock
-Date:   Tue,  8 Dec 2020 03:46:12 +0300
-Message-Id: <20201208004613.1472278-3-dmitry.baryshkov@linaro.org>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20201208004613.1472278-1-dmitry.baryshkov@linaro.org>
-References: <20201208004613.1472278-1-dmitry.baryshkov@linaro.org>
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        "Matthias Brugger" <matthias.bgg@gmail.com>,
+        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        "Sj Huang" <sj.huang@mediatek.com>, <youlin.pei@mediatek.com>,
+        <chuanjia.liu@mediatek.com>, <qizhong.cheng@mediatek.com>,
+        <sin_jieyang@mediatek.com>
+Date:   Tue, 8 Dec 2020 09:27:36 +0800
+In-Reply-To: <20201204183052.GA1929838@bjorn-Precision-5520>
+References: <20201204183052.GA1929838@bjorn-Precision-5520>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.10.4-0ubuntu2 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-TM-SNTS-SMTP: E51732604C4D2E44E18A7FAC374C6508F9E0AEBD30C5B828F9E6F2145E867B3A2000:8
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On SM8250 additional clock is required for PCIe devices to access NOC.
-Update PCIe controller driver to control this clock.
-
-Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
----
- drivers/pci/controller/dwc/pcie-qcom.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index e45a43148f56..67712ea48d5f 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -159,8 +159,9 @@ struct qcom_pcie_resources_2_3_3 {
- 	struct reset_control *rst[7];
- };
- 
-+#define QCOM_PCIE_2_7_0_MAX_CLOCKS	6
- struct qcom_pcie_resources_2_7_0 {
--	struct clk_bulk_data clks[6];
-+	struct clk_bulk_data clks[QCOM_PCIE_2_7_0_MAX_CLOCKS + 1]; /* + 1 for sf_tbu */
- 	struct regulator_bulk_data supplies[2];
- 	struct reset_control *pci_reset;
- 	struct clk *pipe_clk;
-@@ -1167,10 +1168,15 @@ static int qcom_pcie_get_resources_2_7_0(struct qcom_pcie *pcie)
- 	res->clks[4].id = "slave_q2a";
- 	res->clks[5].id = "tbu";
- 
--	ret = devm_clk_bulk_get(dev, ARRAY_SIZE(res->clks), res->clks);
-+	ret = devm_clk_bulk_get(dev, QCOM_PCIE_2_7_0_MAX_CLOCKS, res->clks);
- 	if (ret < 0)
- 		return ret;
- 
-+	/* Optional clock for SM8250 */
-+	res->clks[6].clk = devm_clk_get_optional(dev, "ddrss_sf_tbu");
-+	if (IS_ERR(res->clks[6].clk))
-+		return PTR_ERR(res->clks[6].clk);
-+
- 	res->pipe_clk = devm_clk_get(dev, "pipe");
- 	return PTR_ERR_OR_ZERO(res->pipe_clk);
- }
--- 
-2.29.2
+T24gRnJpLCAyMDIwLTEyLTA0IGF0IDEyOjMwIC0wNjAwLCBCam9ybiBIZWxnYWFzIHdyb3RlOg0K
+PiBPbiBGcmksIERlYyAwNCwgMjAyMCBhdCAwODozOTowOUFNICswMTAwLCBMdWthcyBXdW5uZXIg
+d3JvdGU6DQo+ID4gT24gTW9uLCBOb3YgMzAsIDIwMjAgYXQgMTE6MzA6MDVBTSAtMDYwMCwgQmpv
+cm4gSGVsZ2FhcyB3cm90ZToNCj4gPiA+IE9uIE1vbiwgTm92IDIzLCAyMDIwIGF0IDAyOjQ1OjEz
+UE0gKzA4MDAsIEppYW5qdW4gV2FuZyB3cm90ZToNCj4gPiA+ID4gT24gVGh1LCAyMDIwLTExLTE5
+IGF0IDE0OjI4IC0wNjAwLCBCam9ybiBIZWxnYWFzIHdyb3RlOg0KPiA+ID4gPiA+ID4gK3N0YXRp
+YyBpbnQgbXRrX3BjaWVfc2V0dXAoc3RydWN0IG10a19wY2llX3BvcnQgKnBvcnQpDQo+ID4gPiA+
+ID4gPiArew0KPiA+IFsuLi5dDQo+ID4gPiA+ID4gPiArCS8qIFRyeSBsaW5rIHVwICovDQo+ID4g
+PiA+ID4gPiArCWVyciA9IG10a19wY2llX3N0YXJ0dXBfcG9ydChwb3J0KTsNCj4gPiA+ID4gPiA+
+ICsJaWYgKGVycikgew0KPiA+ID4gPiA+ID4gKwkJZGV2X25vdGljZShkZXYsICJQQ0llIGxpbmsg
+ZG93blxuIik7DQo+ID4gPiA+ID4gPiArCQlnb3RvIGVycl9zZXR1cDsNCj4gPiA+ID4gPiANCj4g
+PiA+ID4gPiBHZW5lcmFsbHkgaXQgc2hvdWxkIG5vdCBiZSBhIGZhdGFsIGVycm9yIGlmIHRoZSBs
+aW5rIGlzIG5vdCB1cCBhdA0KPiA+ID4gPiA+IHByb2JlLXRpbWUuICBZb3UgbWF5IGJlIGFibGUg
+dG8gaG90LWFkZCBhIGRldmljZSwgb3IgdGhlIGRldmljZSBtYXkNCj4gPiA+ID4gPiBoYXZlIHNv
+bWUgZXh0ZXJuYWwgcG93ZXIgY29udHJvbCB0aGF0IHdpbGwgcG93ZXIgaXQgdXAgbGF0ZXIuDQo+
+ID4gPiA+IA0KPiA+ID4gPiBUaGlzIGlzIGZvciB0aGUgcG93ZXIgc2F2aW5nIHJlcXVpcmVtZW50
+LiBJZiB0aGVyZSBpcyBubyBkZXZpY2UNCj4gPiA+ID4gY29ubmVjdGVkIHdpdGggdGhlIFBDSWUg
+c2xvdCwgdGhlIFBDSWUgTUFDIGFuZCBQSFkgc2hvdWxkIGJlIHBvd2VyZWQNCj4gPiA+ID4gb2Zm
+Lg0KPiA+ID4gPiANCj4gPiA+ID4gSXMgdGhlcmUgYW55IHN0YW5kYXJkIGZsb3cgdG8gc3VwcG9y
+dCBwb3dlciBkb3duIHRoZSBoYXJkd2FyZSBhdA0KPiA+ID4gPiBwcm9iZS10aW1lIGlmIG5vIGRl
+dmljZSBpcyBjb25uZWN0ZWQgYW5kIHBvd2VyIGl0IHVwIHdoZW4gaG90LWFkZCBhDQo+ID4gPiA+
+IGRldmljZT8NCj4gPiA+IA0KPiA+ID4gVGhhdCdzIGEgZ29vZCBxdWVzdGlvbi4gIEkgYXNzdW1l
+IHRoaXMgbG9va3MgbGlrZSBhIHN0YW5kYXJkIFBDSWUNCj4gPiA+IGhvdC1hZGQgZXZlbnQ/DQo+
+ID4gPiANCj4gPiA+IFdoZW4geW91IGhvdC1hZGQgYSBkZXZpY2UsIGRvZXMgdGhlIFJvb3QgUG9y
+dCBnZW5lcmF0ZSBhIFByZXNlbmNlDQo+ID4gPiBEZXRlY3QgQ2hhbmdlZCBpbnRlcnJ1cHQ/ICBU
+aGUgcGNpZWhwIGRyaXZlciBzaG91bGQgZmllbGQgdGhhdA0KPiA+ID4gaW50ZXJydXB0IGFuZCB0
+dXJuIG9uIHBvd2VyIHRvIHRoZSBzbG90IHZpYSB0aGUgUG93ZXIgQ29udHJvbGxlcg0KPiA+ID4g
+Q29udHJvbCBiaXQgaW4gdGhlIFNsb3QgQ29udHJvbCByZWdpc3Rlci4NCj4gPiA+IA0KPiA+ID4g
+RG9lcyB5b3VyIGhhcmR3YXJlIHJlcXVpcmUgc29tZXRoaW5nIG1vcmUgdGhhbiB0aGF0IHRvIGNv
+bnRyb2wgdGhlIE1BQw0KPiA+ID4gYW5kIFBIWSBwb3dlcj8NCj4gPiANCj4gPiBQb3dlciBzYXZp
+bmcgb2YgdW51c2VkIFBDSWUgcG9ydHMgaXMgZ2VuZXJhbGx5IGFjaGlldmVkIHRocm91Z2ggdGhl
+DQo+ID4gcnVudGltZSBQTSBmcmFtZXdvcmsuICBXaGVuIGEgUENJZSBwb3J0IHJ1bnRpbWUgc3Vz
+cGVuZHMsIHRoZSBQQ0llDQo+ID4gY29yZSB3aWxsIHRyYW5zaXRpb24gaXQgdG8gRDNob3QuICBP
+biB0b3Agb2YgdGhhdCwgdGhlIHBsYXRmb3JtDQo+ID4gbWF5IGJlIGFibGUgdG8gdHJhbnNpdGlv
+biB0aGUgcG9ydCB0byBEM2NvbGQuICBDdXJyZW50bHkgb25seSB0aGUNCj4gPiBBQ1BJIHBsYXRm
+b3JtIHN1cHBvcnRzIHRoYXQuICBDb25jZWl2YWJseSwgZGV2aWNldHJlZS1iYXNlZCBzeXN0ZW1z
+DQo+ID4gbWF5IHdhbnQgdG8gZGlzYWJsZSBjZXJ0YWluIGNsb2NrcyBvciByZWd1bGF0b3JzIHdo
+ZW4gYSBQQ0llIHBvcnQNCj4gPiBydW50aW1lIHN1c3BlbmRzLiAgSSB0aGluayB3ZSBkbyBub3Qg
+c3VwcG9ydCB0aGF0IHlldCBidXQgaXQgY291bGQNCj4gPiBiZSBhZGRlZCB0byBkcml2ZXJzL3Bj
+aS9wY2llL3BvcnRkcnYqLg0KPiA+IA0KPiA+IEEgaG90cGx1ZyBwb3J0IGlzIGV4cGVjdGVkIHRv
+IHNpZ25hbCBQREMgYW5kIERMTFNDIGludGVycnVwdHMgZXZlbg0KPiA+IHdoZW4gaW4gRDNob3Qu
+ICBBdCBsZWFzdCB0aGF0J3Mgb3VyIGV4cGVyaWVuY2Ugd2l0aCBUaHVuZGVyYm9sdC4NCj4gPiBU
+byBzdXBwb3J0IGhvdHBsdWcgaW50ZXJydXB0cyBpbiBEM2NvbGQsIHNvbWUgZXh0ZXJuYWwgbWVj
+aGFuaXNtDQo+ID4gKHN1Y2ggYXMgYSBQTUUpIGlzIG5lY2Vzc2FyeSB0byB3YWtlIHVwIHRoZSBw
+b3J0IG9uIGhvdHBsdWcuDQo+ID4gVGhpcyBpcyBhbHNvIHN1cHBvcnRlZCB3aXRoIHJlY2VudCBU
+aHVuZGVyYm9sdCBzeXN0ZW1zLg0KPiA+IA0KPiA+IEJlY2F1c2Ugd2UndmUgc2VlbiB2YXJpb3Vz
+IGluY29tcGF0aWJpbGl0aWVzIHdoZW4gcnVudGltZSBzdXNwZW5kaW5nDQo+ID4gUENJZSBwb3J0
+cywgY2VydGFpbiBjb25kaXRpb25zIG11c3QgYmUgc2F0aXNmaWVkIGZvciBydW50aW1lIFBNDQo+
+ID4gdG8gYmUgZW5hYmxlZC4gIFRoZXkncmUgZW5jb2RlZCBpbiBwY2lfYnJpZGdlX2QzX3Bvc3Np
+YmxlKCkuDQo+ID4gR2VuZXJhbGx5LCBob3RwbHVnIHBvcnRzIG9ubHkgcnVudGltZSBzdXNwZW5k
+IGlmIHRoZXkgYmVsb25nIHRvDQo+ID4gYSBUaHVuZGVyYm9sdCBjb250cm9sbGVyIG9yIGlmIHRo
+ZSBBQ1BJIHBsYXRmb3JtIGV4cGxpY2l0bHkgYWxsb3dzDQo+ID4gcnVudGltZSBQTSAodGhyb3Vn
+aCBwcmVzZW5jZSBvZiBhIF9QUjMgbWV0aG9kIG9yIGEgZGV2aWNlIHByb3BlcnR5KS4NCj4gPiBO
+b24taG90cGx1ZyBwb3J0cyBydW50aW1lIHN1c3BlbmQgaWYgdGhlIEJJT1MgaXMgbmV3ZXIgdGhh
+biAyMDE1DQo+ID4gKGFzIHNwZWNpZmllZCBieSBETUkpLg0KPiA+IA0KPiA+IE9idmlvdXNseSwg
+dGhpcyBwb2xpY3kgaXMgdmVyeSB4ODYtZm9jdXNzZWQgYmVjYXVzZSBib3RoIFRodW5kZXJib2x0
+DQo+ID4gYW5kIERNSSBhcmUgb25seSByZWFsbHkgYSB0aGluZyBvbiB4ODYuICBUaGF0J3MgYWJv
+dXQgdG8gY2hhbmdlIHRob3VnaA0KPiA+IGJlY2F1c2UgQXBwbGUncyBuZXcgYXJtNjQtYmFzZWQg
+TWFjcyBoYXZlIFRodW5kZXJib2x0IGludGVncmF0ZWQgaW50bw0KPiA+IHRoZSBTb0MgYW5kIGFy
+bTY0IFNvQ3MgYXJlIG1ha2luZyBpbnJvYWRzIGluIHRoZSBkYXRhY2VudGVyLCB3aGljaCBpcw0K
+PiA+IGFuIGltcG9ydGFudCB1c2UgY2FzZSBmb3IgUENJZSBob3RwbHVnIChob3Qtc3dhcHBhYmxl
+IE5WTWUgZHJpdmVzKS4NCj4gPiBTbyB3ZSBtYXkgaGF2ZSB0byBhbWVuZCBwY2lfYnJpZGdlX2Qz
+X3Bvc3NpYmxlKCkgdG8gd2hpdGVsaXN0DQo+ID4gUENJZSBwb3J0cyBmb3IgcnVudGltZSBQTSBv
+biBzcGVjaWZpYyBhcmNoZXMgb3Igc3lzdGVtcy4NCj4gDQo+IFRoYW5rcyBmb3IgYWxsIHRoaXMg
+dmVyeSB1c2VmdWwgaW5mb3JtYXRpb24hDQo+IA0KPiBNeSBpbnRlcnByZXRhdGlvbiBmb3IgdGhl
+IG1lZGlhdGVrIHNpdHVhdGlvbjoNCj4gDQo+ICAgLSBJIGFzc3VtZSB0aGlzIHBhdGNoIGxlYXZl
+cyBvciBwdXRzIHRoZSBSb290IFBvcnQgaW4gRDNjb2xkIGlmIG5vDQo+ICAgICBkb3duc3RyZWFt
+IGRldmljZXMgYXJlIHByZXNlbnQuDQo+IA0KPiAgIC0gSSBkb24ndCBzZWUgYW55IHN1cHBvcnQg
+Zm9yIFBNRSBvciBzaW1pbGFyIG1lY2hhbmlzbXMgdG8gc2lnbmFsIGENCj4gICAgIGhvdC1hZGQg
+d2hpbGUgdGhlIFJQIGlzIGluIEQzY29sZC4NCj4gDQo+ICAgLSBTbyBJIGFzc3VtZSB5b3UgZG9u
+J3Qgc3VwcG9ydCBob3QtYWRkIGlmIHRoZSBzbG90IHdhcyBlbXB0eSBhdA0KPiAgICAgYm9vdCBh
+bmQgdGhhdCdzIGFjY2VwdGFibGUgZm9yIHlvdXIgcGxhdGZvcm0uDQoNClllcywgdGhlIGhhcmR3
+YXJlIG9mIFJvb3QgUG9ydCB3aWxsIGJlIHRvdGFsbHkgcG93ZXJlZCBvZmYgYnkgZ2F0aW5nIGl0
+cw0KTVRDTU9TIGFuZCBjbG9ja3MgaWYgdGhlIHNsb3QgaXMgZW1wdHkgYXQgYm9vdCB0aW1lLiBC
+ZWNhdXNlIHdlIGFyZQ0KZm9jdXMgb24gdGhlIHNjZW5hcmlvIG9mIHBvd2VyIHNhdmluZywgaXQn
+cyBhY2NlcHRhYmxlIGlmIHdlIGRvbid0DQpzdXBwb3J0IGhvdC1hZGQuDQoNClRoYW5rcy4NCg0K
 
