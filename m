@@ -2,79 +2,84 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1455FC433FE
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Dec 2020 23:20:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60DA3C4361B
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Dec 2020 00:47:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CE39223A1E
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Dec 2020 23:20:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2E46923A51
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Dec 2020 00:47:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726016AbgLGXUh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 7 Dec 2020 18:20:37 -0500
-Received: from mail.kernel.org ([198.145.29.99]:55998 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725887AbgLGXUh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 7 Dec 2020 18:20:37 -0500
-Date:   Mon, 7 Dec 2020 17:19:54 -0600
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1607383196;
-        bh=Z9UfPhDcCqOPytbQbnes91S9O1pdSihp8OqIykyElKI=;
-        h=From:To:Cc:Subject:In-Reply-To:From;
-        b=feKrf7cKHxvhybY2y29Mb+73AP11CafAE4e0GMKvicue80oF1o+NhKO3MstK+y8vP
-         aERQDBrZYfzJZC8vH3nXRjpdyzaoKBPH120uF8xjKvOPW/BF1K9zlx/FrUxs4TMInD
-         M4XwsVIR1CcrfKBT5L5jMBoM/q08aB6wpanxlrukmEQrYnKYpLi2alj8K5HMD8re91
-         dL/YFikZZQz6Z0nGTDRrROj981hG2xwlhznY+7zFQCARun7ChZrvIiMhOivM0sy4VR
-         9cikdgOBwU+/Bpultlejc/ugYxPBxiPSWo+iAecJ/XAM4nomREPTtX3G1CgkjiDcaX
-         iW42OZgcl4w5w==
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Puranjay Mohan <puranjay12@gmail.com>
-Cc:     dledford@redhat.com, jgg@ziepe.ca, linux-rdma@vger.kernel.org,
-        bjorn@helgaas.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] drivers: infiniband: save return value of
- pci_find_capability() in u8
-Message-ID: <20201207231954.GA2311330@bjorn-Precision-5520>
+        id S1728626AbgLHArB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 7 Dec 2020 19:47:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51952 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726647AbgLHArB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Dec 2020 19:47:01 -0500
+Received: from mail-lj1-x236.google.com (mail-lj1-x236.google.com [IPv6:2a00:1450:4864:20::236])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7C0EC061793
+        for <linux-pci@vger.kernel.org>; Mon,  7 Dec 2020 16:46:20 -0800 (PST)
+Received: by mail-lj1-x236.google.com with SMTP id j10so17124972lja.5
+        for <linux-pci@vger.kernel.org>; Mon, 07 Dec 2020 16:46:20 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=9/chCCx/QCRIeSZVNkK9P4bsa27cCZYikDD5dkEr/kg=;
+        b=DxfZ/ehhgJU22NgnI701GHxNB5YFKGSdffgP6x03q5tZY2twztLo3+Wj9oheVSVgOY
+         fK9gkgAXC69meL6BwDzLxugPge8XQiNPSEi9o+LVeoyTQlRkLc0Ay1R3xEQYluLEU6Xd
+         +UDChTgzhTTSREQW0T0sy+qvX+FQyGniBhAM4XAaIzahDDpQzbaulUeKn6ZOwTPngKJY
+         vElxMhoY5KovMiCvgMem7+WkYm38imgCj5+H5imCy9EwA6KVOff/MzEi9g+80UQvtAIo
+         BBjLViqmURpRJSifUD2yfVK3Kir9yuSrotdoR9QdIzYBN0VAduuL9ldSYIcpUmFwDiTD
+         e/OA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=9/chCCx/QCRIeSZVNkK9P4bsa27cCZYikDD5dkEr/kg=;
+        b=LdZN1TfY2eJzAENrB0jevzLTru6486riTb8skMRFFrZ1/j8pEACbetHB+zEfhT27Nr
+         qyupflM/ABFturDR8SE1n6JrB4z/QZqLRsLWvasovBeQzJIzRyjExt6ABv9SjhFG2S77
+         /hc9I+atBKagrAGluC/0UTCQm80N3f9FmaJGuUjYLvHfb2xJckp/ZZe7LBuMjbSwZ2Pz
+         /d3rbXL5lf1YalNRkhm2UAbkwhIAHjtamyUfX7EJBdLxHGS1kt7ULgYkjAGNt4XAB6h8
+         f5wBdA1Nbv/Oul7b9EyFjRJIhNE8FOUIPWQqF6KxjyEQEZ4pb7r4OQCrmVf2BejLVgCZ
+         nfGQ==
+X-Gm-Message-State: AOAM5329bFYX3fTIeToTnohVPjbi9as6vwzehS46rBQbj3qjYtSVMXcT
+        os9cj+A997v3vAN6cgKEKErJtg==
+X-Google-Smtp-Source: ABdhPJwr1b67FN+fK2qCEjQko+dR5Zu8b3oT6v4qt+L/qDzdBIKMpGsq4/jzLkAD1Tl435Oj3JiKGg==
+X-Received: by 2002:a2e:9898:: with SMTP id b24mr4887796ljj.248.1607388379225;
+        Mon, 07 Dec 2020 16:46:19 -0800 (PST)
+Received: from eriador.lumag.spb.ru ([94.25.229.141])
+        by smtp.gmail.com with ESMTPSA id d3sm3028229lfj.206.2020.12.07.16.46.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 07 Dec 2020 16:46:18 -0800 (PST)
+From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+To:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc:     linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: [PATCH 0/3] Fixup PCIe support on sm8250
+Date:   Tue,  8 Dec 2020 03:46:10 +0300
+Message-Id: <20201208004613.1472278-1-dmitry.baryshkov@linaro.org>
+X-Mailer: git-send-email 2.29.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201206195120.18413-1-puranjay12@gmail.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Dec 07, 2020 at 01:21:20AM +0530, Puranjay Mohan wrote:
-> Callers of pci_find_capability should save the return value in u8.
-> change type of variables from int to u8 to match the specification.
-> 
-> Signed-off-by: Puranjay Mohan <puranjay12@gmail.com>
-> ---
->  drivers/infiniband/hw/mthca/mthca_reset.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/infiniband/hw/mthca/mthca_reset.c b/drivers/infiniband/hw/mthca/mthca_reset.c
-> index 2a6979e4ae1c..1b6ec870bd47 100644
-> --- a/drivers/infiniband/hw/mthca/mthca_reset.c
-> +++ b/drivers/infiniband/hw/mthca/mthca_reset.c
-> @@ -45,9 +45,9 @@ int mthca_reset(struct mthca_dev *mdev)
->  	u32 *hca_header    = NULL;
->  	u32 *bridge_header = NULL;
->  	struct pci_dev *bridge = NULL;
-> -	int bridge_pcix_cap = 0;
-> +	u8 bridge_pcix_cap = 0;
->  	int hca_pcie_cap = 0;
-> -	int hca_pcix_cap = 0;
-> +	u8 hca_pcix_cap = 0;
+This patch serie goes on top of
+https://lore.kernel.org/linux-arm-msm/20201027170033.8475-1-manivannan.sadhasivam@linaro.org/
 
-I don't think this is really worth changing.  That mthca_reset() path
-is such a mess that this is the least of the worries there.  This
-patch shouldn't have any risk, but I wouldn't want my fingerprints on
-that function in case somebody else looks at it later ;-)
+It fixes SMMU issues observed on the RB5 platform when accessing onboard WiFi module.
+Unfortunately there are no 'Fixes' tags, since original patch series was
+(partially) accepted but did not hit linux-next (yet).
 
->  	u16 devctl;
->  	u16 linkctl;
-> -- 
-> 2.27.0
-> 
+
