@@ -2,94 +2,116 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DDCAC19437
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Dec 2020 16:57:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA316C4361B
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Dec 2020 17:19:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3917623B09
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Dec 2020 16:57:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7EA1023B08
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Dec 2020 17:19:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730236AbgLHQ5M (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Dec 2020 11:57:12 -0500
-Received: from mail.kernel.org ([198.145.29.99]:50816 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728752AbgLHQ5L (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 8 Dec 2020 11:57:11 -0500
-X-Gm-Message-State: AOAM5323WPJTvM6NiM3KhThKK95sHjoVMCgGZdMcCNRYtI/+c087nc5T
-        s9An5cgP2lkMPkJiSDZJmgXGzc22w4nzHNT4j3w=
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1607446591;
-        bh=B1Ufsz/HjvgeN7kz3QDMw7S3GkByLm0NCuUVzAQn1Nk=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=rKCUm2Ck4ZHiGtV3Faw/xe/XwRxizs0Y1E8mPa2BPGo+iAQuGAACvB1lE17EvxzKg
-         sdJSkWu621PR6JmuUkZx6X8EHHlXlnOsdG0rDzeO7AVEOFzr87aOubmE2c7gzWt3aK
-         eNJx8xYeGVKWGGDahCTTMnavuRRk2BKfmjTZ/05LYvPKiXmaLW2bTmwopmaLfdSvc0
-         23Vwwr+wxXb8d34MTPd7sKBTslRqgRAlCPdSJcelZFlAj4eFwgUY33mKDeCsiWNeEd
-         r4UMsDp/eQJwFwFv7h6XQMlireK6JR/Smu8K5arF+Eg7NP6qod4JmTEKKPd5LR/6hD
-         7j/SxXQTXGltQ==
-X-Google-Smtp-Source: ABdhPJxgNl1Gj/l80SMEy+MnjbFlb4NpqPf4LKadCXveKp8gHoY+X2lTRnRws8sedD5yQTo7/pGCxoCJogqbCbMdTLQ=
-X-Received: by 2002:a9d:be1:: with SMTP id 88mr17705895oth.210.1607446590334;
- Tue, 08 Dec 2020 08:56:30 -0800 (PST)
+        id S1730469AbgLHRTT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Dec 2020 12:19:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35740 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730436AbgLHRTT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Dec 2020 12:19:19 -0500
+Received: from mail-ed1-x544.google.com (mail-ed1-x544.google.com [IPv6:2a00:1450:4864:20::544])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A06D7C061793;
+        Tue,  8 Dec 2020 09:18:38 -0800 (PST)
+Received: by mail-ed1-x544.google.com with SMTP id k4so18408529edl.0;
+        Tue, 08 Dec 2020 09:18:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding;
+        bh=YsRTsMesCTliRWq4glF76HNwn9ElWJpIdmHckoW2bvo=;
+        b=C6rysrLLV7sfxL+MVzuGx2dgpynoaKZwkG5aZ+HfF+/4msF1fH8Xam/Rm/CJWSwFmO
+         88pVRExhJ9bYiRSmD5noxb6tqNsZVnaRKHFQhBi46KliVnzSkyXxFp0Utd03rVh9HZr2
+         JbE/0mvw+PnMIl2HuB+rXqehij9oUY1LSyXIBclOeFtvHy+GsW0vFK6BOXHPw/5hgRxU
+         g509UkB/dWzQyXPk+zVIh07+JliwiT2A1g+fFo0Fll5CyKSn4BqVhI/wDf9eWccBEu3g
+         v4O7d6AYBUXLtWUGkZurD1PXupxAwqP0lBivwg+AVU+OKHpI7jrgFWhBRc+VuDFBRrZe
+         S4Mg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding;
+        bh=YsRTsMesCTliRWq4glF76HNwn9ElWJpIdmHckoW2bvo=;
+        b=qgu5YK4SFAeoBEffn9nNcYaCRrF3A248gghwatWkRy7nibI/oPPxNkVfLAlvCzMR4z
+         Xi6eDUyTUJJcdFcH2umsZnbgGFbp/lerTfwtkn6Twut5gxCHq1ByYZzctv45EVCSVkVr
+         C6DT6g41HBfiTxy3vCroe6RJcxwuCy5bgEVAHnUZA9FWBB3Mn/Hu8A9C5RMEl27nPsQl
+         Wc2oRcaj6a5B7UkoPA1z0kLcrpFzqo36Eq8Uk2ZLJ1FzrcLm2eEfNqbRXzd7RhiuAVrH
+         xEkc4j8ycXIJ8XsztxvUTDnNsUJ4eI0Uoey0Rkk5sQNiptsJNsh8csqsVIr01XmR50mB
+         HssA==
+X-Gm-Message-State: AOAM531ANcsjeQcAO8B13+CerG1n13+zqp49An0sSycWsJxFV/sURAfG
+        3FQX8CQMZ32LU7Ura0TtATopK/8Z+dc=
+X-Google-Smtp-Source: ABdhPJxFJFhmprL9FiUn3tPn/fQwnmKhZr5/OMewcYe2zAlrGaCBV56eF5K/klQt3ixGkdieNipNXQ==
+X-Received: by 2002:a05:6402:8cc:: with SMTP id d12mr25266684edz.0.1607447917370;
+        Tue, 08 Dec 2020 09:18:37 -0800 (PST)
+Received: from ?IPv6:2003:ea:8f06:5500:580f:b429:3aa2:f8b1? (p200300ea8f065500580fb4293aa2f8b1.dip0.t-ipconnect.de. [2003:ea:8f06:5500:580f:b429:3aa2:f8b1])
+        by smtp.googlemail.com with ESMTPSA id ef11sm3659979ejb.15.2020.12.08.09.18.36
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 08 Dec 2020 09:18:36 -0800 (PST)
+Subject: Re: [PATCH 2/2] PCI/ASPM: Use capability to override ASPM via sysfs
+To:     Kai-Heng Feng <kai.heng.feng@canonical.com>, bhelgaas@google.com
+Cc:     "Saheed O. Bolarinwa" <refactormyself@gmail.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Yicong Yang <yangyicong@hisilicon.com>,
+        Xiongfeng Wang <wangxiongfeng2@huawei.com>,
+        "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+References: <20201208082534.2460215-1-kai.heng.feng@canonical.com>
+ <20201208082534.2460215-2-kai.heng.feng@canonical.com>
+From:   Heiner Kallweit <hkallweit1@gmail.com>
+Message-ID: <d47544b3-b9a0-609c-fc97-527c9416f9a0@gmail.com>
+Date:   Tue, 8 Dec 2020 18:18:30 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.5.1
 MIME-Version: 1.0
-References: <20201201213707.541432-1-samitolvanen@google.com>
- <CAK8P3a1WEAo2SEgKUEs3SB7n7QeeHa0=cx_nO==rDK0jjDArow@mail.gmail.com>
- <CAK8P3a0AyciKoHzrgtaLxP9boo8WqZCe8YfPBzGPQ14PW_2KgQ@mail.gmail.com> <CABCJKudbCD3s0RcSVzbnn4MV=DadKOxOxar3jfiPWucX4JGxCg@mail.gmail.com>
-In-Reply-To: <CABCJKudbCD3s0RcSVzbnn4MV=DadKOxOxar3jfiPWucX4JGxCg@mail.gmail.com>
-From:   Arnd Bergmann <arnd@kernel.org>
-Date:   Tue, 8 Dec 2020 17:56:13 +0100
-X-Gmail-Original-Message-ID: <CAK8P3a32HwzZYDK3i68fY0JLGCj18RH1iDMq70OZpTrsopyCcw@mail.gmail.com>
-Message-ID: <CAK8P3a32HwzZYDK3i68fY0JLGCj18RH1iDMq70OZpTrsopyCcw@mail.gmail.com>
-Subject: Re: [PATCH v8 00/16] Add support for Clang LTO
-To:     Sami Tolvanen <samitolvanen@google.com>
-Cc:     Masahiro Yamada <masahiroy@kernel.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Will Deacon <will@kernel.org>,
-        Josh Poimboeuf <jpoimboe@redhat.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Paul E. McKenney" <paulmck@kernel.org>,
-        Kees Cook <keescook@chromium.org>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        clang-built-linux <clang-built-linux@googlegroups.com>,
-        Kernel Hardening <kernel-hardening@lists.openwall.com>,
-        linux-arch <linux-arch@vger.kernel.org>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        Linux Kbuild mailing list <linux-kbuild@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20201208082534.2460215-2-kai.heng.feng@canonical.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Dec 8, 2020 at 5:53 PM 'Sami Tolvanen' via Clang Built Linux
-<clang-built-linux@googlegroups.com> wrote:
->
-> > A small update here: I see this behavior with every single module
-> > build, including 'tinyconfig' with one module enabled, and 'defconfig'.
->
-> The .o file here is a thin archive of the bitcode files for the
-> module. We compile .lto.o from that before modpost, because we need an
-> ELF binary to process, and then reuse the .lto.o file when linking the
-> final module.
->
-> At no point should we link the .o file again, especially not with
-> .lto.o, because that would clearly cause every symbol to be
-> duplicated, so I'm not sure what goes wrong here. Here's the relevant
-> part of scripts/Makefile.modfinal:
->
-> ifdef CONFIG_LTO_CLANG
-> # With CONFIG_LTO_CLANG, reuse the object file we compiled for modpost to
-> # avoid a second slow LTO link
-> prelink-ext := .lto
-> ...
-> $(modules): %.ko: %$(prelink-ext).o %.mod.o scripts/module.lds FORCE
->         +$(call if_changed,ld_ko_o)
+Am 08.12.2020 um 09:25 schrieb Kai-Heng Feng:
+> If we are to use sysfs to change ASPM settings, we may want to override
+> the default ASPM policy.
+> 
+> So use ASPM capability, instead of default policy, to be able to use all
+> possible ASPM states.
+> 
+> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+> ---
+>  drivers/pci/pcie/aspm.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index 2ea9fddadfad..326da7bbc84d 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
+> @@ -1239,8 +1239,7 @@ static ssize_t aspm_attr_store_common(struct device *dev,
+>  
+>  		link->aspm_disable |= state;
+>  	}
+> -
+> -	pcie_config_aspm_link(link, policy_to_aspm_state(link));
+> +	pcie_config_aspm_link(link, link->aspm_capable);
+>  
+I like the idea, because the policy can be changed by the user anyway.
+Therefore I don't see it as a hard system limit.
 
-Ah, it's probably a local problem now, as I had a merge conflict against
-linux-next in this Makefile and I must have resolved the conflict incorrectly.
+However I think this change is not sufficient. Each call to
+pcie_config_aspm_link(link, policy_to_aspm_state(link)), e.g. in path
+pcie_aspm_pm_state_change -> pcie_config_aspm_path will reset the
+enabled states to the policy.
 
-        Arnd
+>  	mutex_unlock(&aspm_lock);
+>  	up_read(&pci_bus_sem);
+> 
+
