@@ -2,178 +2,113 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC9BAC1B0D8
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Dec 2020 17:19:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B5F1C4167B
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Dec 2020 17:46:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AFF1C23B06
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Dec 2020 17:19:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5401223B44
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Dec 2020 17:46:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730632AbgLHRTX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Dec 2020 12:19:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35732 "EHLO
+        id S1730766AbgLHRqS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Dec 2020 12:46:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39892 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726810AbgLHRTX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Dec 2020 12:19:23 -0500
-Received: from mail-ej1-x641.google.com (mail-ej1-x641.google.com [IPv6:2a00:1450:4864:20::641])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A0FFC0613D6;
-        Tue,  8 Dec 2020 09:18:37 -0800 (PST)
-Received: by mail-ej1-x641.google.com with SMTP id qw4so25618833ejb.12;
-        Tue, 08 Dec 2020 09:18:37 -0800 (PST)
+        with ESMTP id S1730646AbgLHRqS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Dec 2020 12:46:18 -0500
+Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0870C061749;
+        Tue,  8 Dec 2020 09:45:37 -0800 (PST)
+Received: by mail-ej1-x642.google.com with SMTP id x16so25783687ejj.7;
+        Tue, 08 Dec 2020 09:45:37 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding;
-        bh=R9W7zwZUOBsepqSWi0fNg20NbD95BC6Jpxonv559qJU=;
-        b=U2iEGF08OCwPGXyrw36R2hoMaLk7yIhB9uOa1ZHyRrGfIue2BNE8kQQuATxE8CWX9A
-         KW5Je2I/N6vGHQHD0v0ChaUxME9V3roPgxZZl3z2AD6Bj4qRAaIEc0dFT9keGK0OnEzi
-         IaoqIFGlet2iM+JaIRh5yZPyDlauwxFuadW5jeA4DCSf9VHD1gld6y22UyhT8yt/T5+m
-         eeCZHq9m7S2dVLI8XcWs4ZyxgfSCD/lYeNLqPm+dxjh2baUV8R4Or3nfbGfJA97Un1En
-         gMgaHhltEPU0OeXWW6VFrkzlxu2rYZ1iur+4EKU53bgsQ/dwlv0iONvmCi5GNv7uBUYI
-         X6ZQ==
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=yvzI8/WCuRpDQuxHVx4+pIV6+cQEeFhC2G2HqUdaLy4=;
+        b=GPMdvwivc3GbSV7jQ6gNgrNcjP65ZYTJaqIFKzHv/RVfLUD9mZhcdEV+VEnw9IEgI2
+         OdUUTPyU0xdXyGTZVXn932T3CWYTZjLcC21saMyfI9as9iocRXWKWFWe2RmpNXfK94fu
+         S61x2tsaWGpA1uQBVF8KeQ6hP/T9iL+/INu/eLZmK+NwiApRTkNVXDzuJCX0s+XjJgWC
+         q6d3Gt3miR7yAuLaHNgRz/GEEv5pInh51PWTl+SSxIlmMxw1ImOvKvCZwzyVJf1oLBv9
+         ca86Vob24hk1IjyN5j7mnd0DMJQEePEA9pJXVSCGmtTUg2SFBfZy0pigswYTBaDH2lFG
+         kR9A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding;
-        bh=R9W7zwZUOBsepqSWi0fNg20NbD95BC6Jpxonv559qJU=;
-        b=k3s3l70HU1WydffZg/wTDUc9vxz34ygeKnX88OsUp+RJ665VQPKzkUWnJgiTbbvvwF
-         E93Yvwk3xjAEhh8SJPMos8hYjZnwodJMdvc61CkcX0mXT0HWjmkCqiHAyMRrnqWs1ygR
-         iquNy7Q6fKnoVDBryD+EB0nwsdAFKCxMi0+Eq9+MfCgQ/UrhltSaTs8yyMsrnC0QzxCm
-         3iBISlh6/66ZhnGMVme6ZGBMkgV/KJ2TTQx+dGDVZ3s3SBi33WnCx30rSYLN2IgEIp1k
-         4uzeDekMJ8L/6hEAD8/mn7Nfe07Rh+qXMpkz/WwPeYN6LwftL6nozf5KqnaC1CEm1xO8
-         J0pg==
-X-Gm-Message-State: AOAM532LSp+TLoTA59AFy3RwOoZ9+toduyuK9hFn3lzaDEmO8F8qkAJM
-        SCE+/v5pRsfuLyHmUYtr3+AHfnl6DhU=
-X-Google-Smtp-Source: ABdhPJzxjnRlyGOzIoA5LCzU8dcX9dcdg/CNgFvkVe7gofn/6Fkasiu+VcRkpcdepbdCtjJNcC1SsA==
-X-Received: by 2002:a17:906:f1cc:: with SMTP id gx12mr23206359ejb.164.1607447916023;
-        Tue, 08 Dec 2020 09:18:36 -0800 (PST)
-Received: from ?IPv6:2003:ea:8f06:5500:580f:b429:3aa2:f8b1? (p200300ea8f065500580fb4293aa2f8b1.dip0.t-ipconnect.de. [2003:ea:8f06:5500:580f:b429:3aa2:f8b1])
-        by smtp.googlemail.com with ESMTPSA id b19sm13961766edx.47.2020.12.08.09.18.34
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=yvzI8/WCuRpDQuxHVx4+pIV6+cQEeFhC2G2HqUdaLy4=;
+        b=nw4IYubMhcRQe6B06Xh+8wicOhgoYvx1mMp60clVnakTLA4RyPRVgBajKkdIThfT/z
+         ngGKLd2dM3V0vbfJZht/M3j+4jyAzZPH3uh1mWLs575tCikPfLGvrWdPNImuRHuorSao
+         dDhc9p92Um/LBc7bQ3rJ6CCQIOnP0tSLF4TAtJgor7+AgPQSUhlYdhpEYzSc4FJkJVjc
+         0QcGUEHKwH4SgYxzBxb91iKIrGuSuOVadwe87ctVMGlBXwvfd8iAopDRMhmPoOVUF4ed
+         1QP94EohMqhMGlvN+n8hzqwxppljWXgiVCvyy2qgL/yWxtmi57MssmcYn+UoFgE1C9nU
+         8nLQ==
+X-Gm-Message-State: AOAM533qN4hfWYv00tQ7rRvIP1HjtWA3pdRoMFMhPNbpxc/fb08xoSao
+        KGZ2hVUMOV13JpPFDr7JsPSo8Nxby4gqPg==
+X-Google-Smtp-Source: ABdhPJyCTLVlXyRMGgkSW1b2JaYZGDsPsPyWNurIsaCqKg4YMeEs+L54Cyy0pCr6Hkq82hLwq7CQ2Q==
+X-Received: by 2002:a17:907:447d:: with SMTP id oo21mr24494172ejb.367.1607449536353;
+        Tue, 08 Dec 2020 09:45:36 -0800 (PST)
+Received: from [192.168.1.4] (ip-89-176-112-137.net.upcbroadband.cz. [89.176.112.137])
+        by smtp.gmail.com with ESMTPSA id a12sm17466699edu.89.2020.12.08.09.45.35
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 08 Dec 2020 09:18:35 -0800 (PST)
-Subject: Re: [PATCH 1/2] PCI/ASPM: Store disabled ASPM states
-To:     Kai-Heng Feng <kai.heng.feng@canonical.com>, bhelgaas@google.com
-Cc:     "Saheed O. Bolarinwa" <refactormyself@gmail.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Chris Packham <chris.packham@alliedtelesis.co.nz>,
-        Xiongfeng Wang <wangxiongfeng2@huawei.com>,
-        Yicong Yang <yangyicong@hisilicon.com>,
-        "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-References: <20201208082534.2460215-1-kai.heng.feng@canonical.com>
-From:   Heiner Kallweit <hkallweit1@gmail.com>
-Message-ID: <4212dca6-233b-4d6c-0182-1e7912a05b3f@gmail.com>
-Date:   Tue, 8 Dec 2020 18:11:09 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+        Tue, 08 Dec 2020 09:45:35 -0800 (PST)
+Subject: Re: [PATCH V4] PCI: rcar: Add L1 link state fix into data abort hook
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc:     linux-pci@vger.kernel.org, Wolfram Sang <wsa@the-dreams.de>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        linux-renesas-soc@vger.kernel.org
+References: <20201016120416.7008-1-marek.vasut@gmail.com>
+ <20201119173553.GB23852@e121166-lin.cambridge.arm.com>
+ <57358982-ef8c-ed91-c011-00b8a48c4ebd@gmail.com>
+ <20201208101823.GA30579@e121166-lin.cambridge.arm.com>
+From:   Marek Vasut <marek.vasut@gmail.com>
+Message-ID: <529ff24a-dcb5-6c9e-2825-b2fbd0fbcd70@gmail.com>
+Date:   Tue, 8 Dec 2020 18:45:34 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.5.1
 MIME-Version: 1.0
-In-Reply-To: <20201208082534.2460215-1-kai.heng.feng@canonical.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20201208101823.GA30579@e121166-lin.cambridge.arm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Am 08.12.2020 um 09:25 schrieb Kai-Heng Feng:
-> If we use sysfs to disable L1 ASPM, then enable one L1 ASPM substate
-> again, all other substates will also be enabled too:
+On 12/8/20 11:18 AM, Lorenzo Pieralisi wrote:
+[...]
+>>> I suppose a fault on multiple cores can happen simultaneously, if it
+>>> does this may not work well either - I assume all config/io/mem would
+>>> trigger a fault.
+>>>
+>>> As I mentioned in my reply to v1, is there a chance we can move
+>>> this quirk into config accessors (if the PM_ENTER_L1_DLLP is
+>>> subsequent to a write into PMCSR to programme a D state) ?
+>>
+>> I don't think we can, since the userspace can do such a config space write
+>> with e.g. setpci and then this fixup is still needed.
 > 
-> link# grep . *
-> clkpm:1
-> l0s_aspm:1
-> l1_1_aspm:1
-> l1_1_pcipm:1
-> l1_2_aspm:1
-> l1_2_pcipm:1
-> l1_aspm:1
 > 
-> link# echo 0 > l1_aspm
-> 
-> link# grep . *
-> clkpm:1
-> l0s_aspm:1
-> l1_1_aspm:0
-> l1_1_pcipm:0
-> l1_2_aspm:0
-> l1_2_pcipm:0
-> l1_aspm:0
-> 
-> link# echo 1 > l1_2_aspm
-> 
-> link# grep . *
-> clkpm:1
-> l0s_aspm:1
-> l1_1_aspm:1
-> l1_1_pcipm:1
-> l1_2_aspm:1
-> l1_2_pcipm:1
-> l1_aspm:1
-> 
-> This is because disabled ASPM states weren't saved, so enable any of the
-> substate will also enable others.
-> 
-> So store the disabled ASPM states for consistency.
-> 
-> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
-> ---
->  drivers/pci/pcie/aspm.c | 10 ++++++++--
->  1 file changed, 8 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index ac0557a305af..2ea9fddadfad 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -658,6 +658,8 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
->  	/* Setup initial capable state. Will be updated later */
->  	link->aspm_capable = link->aspm_support;
->  
-> +	link->aspm_disable = link->aspm_capable & ~link->aspm_default;
-> +
+> Userspace goes via the kernel config accessors anyway, right ?
 
-This makes sense only in combination with patch 2. However I think patch 1
-should be independent of patch 2. Especially if we consider patch 1 a fix
-that is applied to stable whilst patch 2 is an improvement for next.
+As far as I can tell, you can just write the register with devmem, so 
+no. You cannot assume everything will go through the accessors. I don't 
+think setpci does either.
 
->  	/* Get and check endpoint acceptable latencies */
->  	list_for_each_entry(child, &linkbus->devices, bus_list) {
->  		u32 reg32, encoding;
-> @@ -1226,11 +1228,15 @@ static ssize_t aspm_attr_store_common(struct device *dev,
->  	mutex_lock(&aspm_lock);
->  
->  	if (state_enable) {
-> -		link->aspm_disable &= ~state;
->  		/* need to enable L1 for substates */
->  		if (state & ASPM_STATE_L1SS)
-> -			link->aspm_disable &= ~ASPM_STATE_L1;
-> +			state |= ASPM_STATE_L1;
-> +
-> +		link->aspm_disable &= ~state;
+> I would like to avoid having arch specific hooks in PCI drivers so
+> if we can work around it somehow it is much better.
 
-I don't see what this part of the patch changes. Can you elaborate on why
-this is needed?
+I think we had this discussion before, which ultimately led to hiding 
+the workaround in ATF on Gen3. On Gen2, there is no ATF, so the work 
+around must be in Linux.
 
->  	} else {
-> +		if (state == ASPM_STATE_L1)
-> +			state |= ASPM_STATE_L1SS;
-> +
+> I can still merge this patch this week but I would like to explore
+> alternatives before committing it.
 
-I think this part should be sufficient to fix the behavior. because what
-I think currently happens:
-
-1. original status: policy powersupersave, nothing disabled -> L1 + L1SS active
-2. disable L1: L1 disabled, pcie_config_aspm_link() disabled L1 and L1SS
-   w/o adding L1SS to link-> aspm_disabled
-3. enable one L1SS state: aspm_attr_store_common() removes L1 from
-   link->aspm_disabled -> link->aspm_disabled is empty, resulting in
-   L1 + L1SS being active
-
->  		link->aspm_disable |= state;
->  	}
->  
-> 
-
+Please merge it as-is.
