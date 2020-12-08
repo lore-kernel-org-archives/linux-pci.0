@@ -2,105 +2,121 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A19B9C4361B
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Dec 2020 00:47:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19ECAC4167B
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Dec 2020 00:47:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6D54223A1C
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Dec 2020 00:47:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CFCE423A1C
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Dec 2020 00:47:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728848AbgLHArr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1728840AbgLHArr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Mon, 7 Dec 2020 19:47:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52090 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52068 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728824AbgLHArr (ORCPT
+        with ESMTP id S1728838AbgLHArr (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Dec 2020 19:47:47 -0500
-Received: from mail-qt1-x842.google.com (mail-qt1-x842.google.com [IPv6:2607:f8b0:4864:20::842])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05D16C061749;
-        Mon,  7 Dec 2020 16:47:03 -0800 (PST)
-Received: by mail-qt1-x842.google.com with SMTP id c14so1308207qtn.0;
-        Mon, 07 Dec 2020 16:47:02 -0800 (PST)
+Received: from mail-lj1-x241.google.com (mail-lj1-x241.google.com [IPv6:2a00:1450:4864:20::241])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8EA44C0611CA
+        for <linux-pci@vger.kernel.org>; Mon,  7 Dec 2020 16:46:23 -0800 (PST)
+Received: by mail-lj1-x241.google.com with SMTP id x23so10124985lji.7
+        for <linux-pci@vger.kernel.org>; Mon, 07 Dec 2020 16:46:23 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=VZHUufd0g6UdJFDVTYdblkgbgMRwbf0Y/fHI7mLRtWU=;
-        b=l8tTsbTg21o1/hkJDil01QyPt1S+hNNQArxmXVMWZl+14KG3cwUPD9yhA9zz5er/OS
-         WYmStLyhnHG81FxqOu7c5y430buEHIvhm1Kow/NQKRBzNLmEZELihteVRg5vdXuLfAHG
-         rCoL22aDgnYFYdg61Z5cuWrNOH2SbjzbnuSM9xLI1c/BWw55NcLnaGoD4ziICgb+XXXK
-         ZeF6QVt5WjFDXfuParnupBwgMVJIt4Nk49/ME1JGFmKbptXtgpSroyIdGE0tbGMqLfhi
-         B0JM0p8wI/gGSE0p8C1IQpscG2TL91p7V58n7vS9habhu8GuNnQ8wlQktv+vR8fmUA6f
-         4RyQ==
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=NWy8EXHdxkf0XTbmE1PCRNTwXozVSEc9y+L8i0BKYwI=;
+        b=kRfk733PMibuoevBe+zrIfiyJ8guY2Fi01JrvwEF7slv4QqB5WC9oq29RLXEg0x/c8
+         b0kr6Z0lB84v/9LhaY0JXC4y4JajuD2XJGpcGKUCCjk/K+Vws3zZ5cv8Aqf6/8Qh5oD5
+         VAc6vccjEH1mmUsFG2iKi1WtG9dq3WxDcvGdLxiOQQ4pR1Cnm3J9B8H070mzPMtSkzSX
+         VeJAVdyNhVHKNCAmNiN6i54jhcaTzcJIitcCUSexwaIZeE0o3SFm7WXvyx6dipC6x84J
+         /U18SS2qHpnZEOH9CxXL1ZCBVf9VCJg74SyLDE3escp2+3JKr+iB98Q9Q9iW0nS69o2B
+         LhZw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=VZHUufd0g6UdJFDVTYdblkgbgMRwbf0Y/fHI7mLRtWU=;
-        b=SRGbrW0SIzqsr+RLBdHk1qe54LmJtlZUTuSdDq32ZhX/qSt382FeH7cHaDOVR2ULIO
-         +9QC52fS5tcfJGXO5NuaRAssTgmN9qGBaL/F1fVw64O0FWphC68EkgkZ2yFW3wGnYyMh
-         5k7o4p/3DTyZ9oOUbPrnr4iEjXbySPqI+v29gBCxAonPmfLKv5AoK/bA8qh8oprUZEBj
-         3jhaYSjR6qdL8euMWpQwY47CDVOURDoOsyt6GcpBBJDIR61c5zMWQNVsTp1e2zG+tFLC
-         RA+q7LewQCZuoOmb1oSgW4HC2NBUP7uev7QO0MNd85qT6c23uzAwUiZs0lDr9fS1SnwA
-         x8Hw==
-X-Gm-Message-State: AOAM532JHV4ENlJKXhyq/SwsONxn00CgplUokizYTLOmhWKGZ5fHQcAO
-        L9/NG0yViZHvZ9yBSoq6LyM=
-X-Google-Smtp-Source: ABdhPJxkqh2BZJT/hzS1hsNzGm89wAIBgMDItnp0jBYXVFcXuYuBQBr+FGcdnMvIwDpLuGTDZMUazw==
-X-Received: by 2002:ac8:51d8:: with SMTP id d24mr14423965qtn.73.1607388422238;
-        Mon, 07 Dec 2020 16:47:02 -0800 (PST)
-Received: from ubuntu-m3-large-x86 ([2604:1380:45f1:1d00::1])
-        by smtp.gmail.com with ESMTPSA id x28sm11544785qtv.8.2020.12.07.16.47.00
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=NWy8EXHdxkf0XTbmE1PCRNTwXozVSEc9y+L8i0BKYwI=;
+        b=cpvN9u9NE+NFVOtGdOSJp16zjolZLiDaGsWlMFsY95FGisEHStnYUAE2EMFLhPXpc7
+         WjCbmkHYjk7pnMWiEzK/Kqg0cRQSsGC6KUMCYMQn16s0DG8+tAadkT8D0zy0H1f5Bgh5
+         0DKqCwvQZqD2unfanZX5qJW5o3K+12WP2NMVkkxwbaoYotlVV34iXl9lhMiBPDW2Ijiw
+         dBOS7vXgDNZWF2jyJhIbTIKdHtsHqj5aLgXi+sbwPXMtohH1xSuIIduuH3yGm2Tz9v6S
+         AuxSoPegehjyPn2pTqCVFYBTW86PMOUuX95MCOiv/celNHYa6pLEDcN4uvr8WWV/82wr
+         DgDw==
+X-Gm-Message-State: AOAM533q6z3ylbhT+spAN/2y9kl8ZDwHKabuvBsHk7zCWNMPbBR9Tda+
+        liKpTbAMt79HM+7qL5vQ1q5kyA==
+X-Google-Smtp-Source: ABdhPJxL9WoAbggz33zRUk9/WOmUW+eM3LO9RBNrExz635O8Tg6HFh9Vdd+kLYv/LgHL5cD92Z1tPw==
+X-Received: by 2002:a2e:5015:: with SMTP id e21mr2020881ljb.433.1607388382105;
+        Mon, 07 Dec 2020 16:46:22 -0800 (PST)
+Received: from eriador.lumag.spb.ru ([94.25.229.141])
+        by smtp.gmail.com with ESMTPSA id d3sm3028229lfj.206.2020.12.07.16.46.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Dec 2020 16:47:01 -0800 (PST)
-Date:   Mon, 7 Dec 2020 17:46:59 -0700
-From:   Nathan Chancellor <natechancellor@gmail.com>
-To:     Sami Tolvanen <samitolvanen@google.com>
-Cc:     Nick Desaulniers <ndesaulniers@google.com>,
-        Will Deacon <will@kernel.org>,
-        Masahiro Yamada <masahiroy@kernel.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Josh Poimboeuf <jpoimboe@redhat.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Paul E. McKenney" <paulmck@kernel.org>,
-        Kees Cook <keescook@chromium.org>,
-        clang-built-linux <clang-built-linux@googlegroups.com>,
-        Kernel Hardening <kernel-hardening@lists.openwall.com>,
-        linux-arch <linux-arch@vger.kernel.org>,
-        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-        linux-kbuild <linux-kbuild@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        PCI <linux-pci@vger.kernel.org>, Jian Cai <jiancai@google.com>,
-        Kristof Beyls <Kristof.Beyls@arm.com>
-Subject: Re: [PATCH v8 00/16] Add support for Clang LTO
-Message-ID: <20201208004659.GA587492@ubuntu-m3-large-x86>
-References: <20201201213707.541432-1-samitolvanen@google.com>
- <20201203112622.GA31188@willie-the-truck>
- <CABCJKueby8pUoN7f5=6RoyLSt4PgWNx8idUej0sNwAi0F3Xqzw@mail.gmail.com>
- <20201203182252.GA32011@willie-the-truck>
- <CAKwvOdnvq=L=gQMv9MHaStmKMOuD5jvffzMedhp3gytYB6R7TQ@mail.gmail.com>
- <CABCJKufgkq+k0DeYaXrzjXniy=T_N4sN1bxoK9=cUxTZN5xSVQ@mail.gmail.com>
- <20201206065028.GA2819096@ubuntu-m3-large-x86>
- <CABCJKue9TJnhge6TVPj9vfZXPGD4RW2JYiN3kNwVKNovTCq8ZA@mail.gmail.com>
+        Mon, 07 Dec 2020 16:46:21 -0800 (PST)
+From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+To:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc:     linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: [PATCH 2/3] PCI: qcom: add support for ddrss_sf_tbu clock
+Date:   Tue,  8 Dec 2020 03:46:12 +0300
+Message-Id: <20201208004613.1472278-3-dmitry.baryshkov@linaro.org>
+X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20201208004613.1472278-1-dmitry.baryshkov@linaro.org>
+References: <20201208004613.1472278-1-dmitry.baryshkov@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CABCJKue9TJnhge6TVPj9vfZXPGD4RW2JYiN3kNwVKNovTCq8ZA@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sun, Dec 06, 2020 at 12:09:31PM -0800, Sami Tolvanen wrote:
-> Sure, looks good to me. However, I think we should also test for
-> LLVM=1 to avoid possible further issues with mismatched toolchains
-> instead of only checking for llvm-nm and llvm-ar.
+On SM8250 additional clock is required for PCIe devices to access NOC.
+Update PCIe controller driver to control this clock.
 
-It might still be worth testing for $(AR) and $(NM) because in theory, a
-user could say 'make AR=ar LLVM=1'. Highly unlikely I suppose but worth
-considering.
+Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+---
+ drivers/pci/controller/dwc/pcie-qcom.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-Cheers,
-Nathan
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index e45a43148f56..67712ea48d5f 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -159,8 +159,9 @@ struct qcom_pcie_resources_2_3_3 {
+ 	struct reset_control *rst[7];
+ };
+ 
++#define QCOM_PCIE_2_7_0_MAX_CLOCKS	6
+ struct qcom_pcie_resources_2_7_0 {
+-	struct clk_bulk_data clks[6];
++	struct clk_bulk_data clks[QCOM_PCIE_2_7_0_MAX_CLOCKS + 1]; /* + 1 for sf_tbu */
+ 	struct regulator_bulk_data supplies[2];
+ 	struct reset_control *pci_reset;
+ 	struct clk *pipe_clk;
+@@ -1167,10 +1168,15 @@ static int qcom_pcie_get_resources_2_7_0(struct qcom_pcie *pcie)
+ 	res->clks[4].id = "slave_q2a";
+ 	res->clks[5].id = "tbu";
+ 
+-	ret = devm_clk_bulk_get(dev, ARRAY_SIZE(res->clks), res->clks);
++	ret = devm_clk_bulk_get(dev, QCOM_PCIE_2_7_0_MAX_CLOCKS, res->clks);
+ 	if (ret < 0)
+ 		return ret;
+ 
++	/* Optional clock for SM8250 */
++	res->clks[6].clk = devm_clk_get_optional(dev, "ddrss_sf_tbu");
++	if (IS_ERR(res->clks[6].clk))
++		return PTR_ERR(res->clks[6].clk);
++
+ 	res->pipe_clk = devm_clk_get(dev, "pipe");
+ 	return PTR_ERR_OR_ZERO(res->pipe_clk);
+ }
+-- 
+2.29.2
+
