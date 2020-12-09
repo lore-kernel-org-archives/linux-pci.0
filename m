@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3A42C19437
-	for <linux-pci@archiver.kernel.org>; Wed,  9 Dec 2020 00:29:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50B94C2BB40
+	for <linux-pci@archiver.kernel.org>; Wed,  9 Dec 2020 00:29:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C303A239E5
-	for <linux-pci@archiver.kernel.org>; Wed,  9 Dec 2020 00:29:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 25A45233A2
+	for <linux-pci@archiver.kernel.org>; Wed,  9 Dec 2020 00:29:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731851AbgLIAZb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Dec 2020 19:25:31 -0500
-Received: from mga09.intel.com ([134.134.136.24]:16959 "EHLO mga09.intel.com"
+        id S1731842AbgLIAZa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Dec 2020 19:25:30 -0500
+Received: from mga09.intel.com ([134.134.136.24]:16961 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731086AbgLIAZT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 8 Dec 2020 19:25:19 -0500
-IronPort-SDR: 61kBDwkas9yDyeW1I1dTASztd/dZUQr4RslHigZ5pr6/fqM9Xihu0BAdOhVLGskRfD71jdQwCw
- ONt5jTOkbR2A==
-X-IronPort-AV: E=McAfee;i="6000,8403,9829"; a="174142071"
+        id S1731834AbgLIAZZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 8 Dec 2020 19:25:25 -0500
+IronPort-SDR: Tegadp7vdsah8iCfdOUvuvGKO56camTa6Ub5J3fn7dL2MhNSrBp8CdyTrrOEa1oihFUoGc9JZY
+ x80AAlw4oyOQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9829"; a="174142077"
 X-IronPort-AV: E=Sophos;i="5.78,404,1599548400"; 
-   d="scan'208";a="174142071"
+   d="scan'208";a="174142077"
 Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Dec 2020 16:24:23 -0800
-IronPort-SDR: hO6EZXLoea7Y4t+TG39XzqMYbFFCOaarqHP3L/24kL4f6kKC4+orcgXD9NiJ7JZltGnPgrmsE6
- 6N9wUUggnYmQ==
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Dec 2020 16:24:24 -0800
+IronPort-SDR: BSjSoKlyJM51MRGT03+jN23Kil7U9esUHdRvd+4XDf8sa1+81QGbiL+pwXiz3+HF/yr5KjPnfv
+ eJiiL71kU1Hg==
 X-IronPort-AV: E=Sophos;i="5.78,404,1599548400"; 
-   d="scan'208";a="407838466"
+   d="scan'208";a="407838478"
 Received: from mlubyani-mobl2.amr.corp.intel.com (HELO bwidawsk-mobl5.local) ([10.252.137.9])
-  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Dec 2020 16:24:22 -0800
+  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Dec 2020 16:24:24 -0800
 From:   Ben Widawsky <ben.widawsky@intel.com>
 To:     linux-cxl@vger.kernel.org
-Cc:     Vishal Verma <vishal.l.verma@intel.com>,
-        Ben Widawsky <ben.widawsky@intel.com>,
+Cc:     Ben Widawsky <ben.widawsky@intel.com>,
         linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-acpi@vger.kernel.org, Ira Weiny <ira.weiny@intel.com>,
         Dan Williams <dan.j.williams@intel.com>,
+        Vishal Verma <vishal.l.verma@intel.com>,
         "Kelley, Sean V" <sean.v.kelley@intel.com>,
         Rafael Wysocki <rafael.j.wysocki@intel.com>,
         Bjorn Helgaas <helgaas@kernel.org>,
@@ -47,9 +47,9 @@ Cc:     Vishal Verma <vishal.l.verma@intel.com>,
         Chris Browy <cbrowy@avery-design.com>,
         Randy Dunlap <rdunlap@infradead.org>,
         Christoph Hellwig <hch@infradead.org>
-Subject: [RFC PATCH v2 03/14] cxl/acpi: add OSC support
-Date:   Tue,  8 Dec 2020 16:24:07 -0800
-Message-Id: <20201209002418.1976362-4-ben.widawsky@intel.com>
+Subject: [RFC PATCH v2 05/14] cxl/mem: Map memory device registers
+Date:   Tue,  8 Dec 2020 16:24:09 -0800
+Message-Id: <20201209002418.1976362-6-ben.widawsky@intel.com>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201209002418.1976362-1-ben.widawsky@intel.com>
 References: <20201209002418.1976362-1-ben.widawsky@intel.com>
@@ -59,362 +59,182 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Vishal Verma <vishal.l.verma@intel.com>
+All the necessary bits are initialized in order to find and map the
+register space for CXL Memory Devices. This is accomplished by using the
+Register Locator DVSEC (CXL 2.0 - 8.1.9.1) to determine which PCI BAR to
+use, and how much of an offset from that BAR should be added.
 
-Add support to advertise OS capabilities, and request OS control for CXL
-features using the ACPI _OSC mechanism. Advertise support for all
-possible CXL features, and attempt to request control for all possible
-features.
+If the memory device registers are found and mapped a new internal data
+structure tracking device state is allocated.
 
-Based on a patch by Sean Kelley.
-
-Signed-off-by: Vishal Verma <vishal.l.verma@intel.com>
 Signed-off-by: Ben Widawsky <ben.widawsky@intel.com>
 ---
- Documentation/cxl/memory-devices.rst |  15 ++
- drivers/cxl/acpi.c                   | 261 ++++++++++++++++++++++++++-
- drivers/cxl/acpi.h                   |  20 ++
- 3 files changed, 293 insertions(+), 3 deletions(-)
+ drivers/cxl/cxl.h | 17 ++++++++++
+ drivers/cxl/mem.c | 83 +++++++++++++++++++++++++++++++++++++++++++++--
+ drivers/cxl/pci.h | 14 ++++++++
+ 3 files changed, 112 insertions(+), 2 deletions(-)
+ create mode 100644 drivers/cxl/cxl.h
 
-diff --git a/Documentation/cxl/memory-devices.rst b/Documentation/cxl/memory-devices.rst
-index aa4262280c67..6ce88f9d5f4f 100644
---- a/Documentation/cxl/memory-devices.rst
-+++ b/Documentation/cxl/memory-devices.rst
-@@ -13,3 +13,18 @@ Driver Infrastructure
- =====================
- 
- This sections covers the driver infrastructure for a CXL memory device.
+diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
+new file mode 100644
+index 000000000000..d81d0ba4617c
+--- /dev/null
++++ b/drivers/cxl/cxl.h
+@@ -0,0 +1,17 @@
++/* SPDX-License-Identifier: GPL-2.0-only */
++/* Copyright(c) 2020 Intel Corporation. */
 +
-+ACPI CXL
-+--------
++#ifndef __CXL_H__
++#define __CXL_H__
 +
-+.. kernel-doc:: drivers/cxl/acpi.c
-+   :doc: cxl acpi
++/**
++ * struct cxl_mem - A CXL memory device
++ * @pdev: The PCI device associated with this CXL device.
++ * @regs: IO mappings to the device's MMIO
++ */
++struct cxl_mem {
++	struct pci_dev *pdev;
++	void __iomem *regs;
++};
 +
-+.. kernel-doc:: drivers/cxl/acpi.c
-+   :internal:
-+
-+External Interfaces
-+===================
-+
-+.. kernel-doc:: drivers/cxl/acpi.c
-+   :export:
-diff --git a/drivers/cxl/acpi.c b/drivers/cxl/acpi.c
-index 0f1ba9b3f1ed..42180c64cbee 100644
---- a/drivers/cxl/acpi.c
-+++ b/drivers/cxl/acpi.c
-@@ -11,7 +11,259 @@
- #include <linux/pci.h>
++#endif
+diff --git a/drivers/cxl/mem.c b/drivers/cxl/mem.c
+index 005404888942..06113d306cd2 100644
+--- a/drivers/cxl/mem.c
++++ b/drivers/cxl/mem.c
+@@ -5,6 +5,58 @@
+ #include <linux/io.h>
  #include "acpi.h"
- 
--/*
+ #include "pci.h"
++#include "cxl.h"
++
 +/**
-+ * DOC: cxl acpi
++ * cxl_mem_create() - Create a new &struct cxl_mem.
++ * @pdev: The pci device associated with the new &struct cxl_mem.
++ * @reg_lo: Lower 32b of the register locator
++ * @reg_hi: Upper 32b of the register locator.
 + *
-+ * ACPI _OSC setup: The exported function cxl_bus_acquire() sets up ACPI
-+ * Operating System Capabilities (_OSC) for the CXL bus. It declares support
-+ * for all CXL capabilities, and attempts to request control for all possible
-+ * capabilities. The resulting support and control sets are saved in global
-+ * variables cxl_osc_support_set and cxl_osc_control_set. The internal
-+ * functions cxl_osc_declare_support(), and cxl_osc_request_control() can be
-+ * used to update the support and control sets in accordance with the ACPI
-+ * rules for _OSC evaluation - most importantly, capabilities already granted
-+ * should not be rescinded by either the OS or firmware.
++ * Return: The new &struct cxl_mem on success, NULL on failure.
++ *
++ * Map the BAR for a CXL memory device. This BAR has the memory devices
++ * registers for the device as specified in CXL specification.
 + */
-+
-+static u32 cxl_osc_support_set;
-+static u32 cxl_osc_control_set;
-+static DEFINE_MUTEX(acpi_desc_lock);
-+
-+struct pci_osc_bit_struct {
-+	u32 bit;
-+	char *desc;
-+};
-+
-+static struct pci_osc_bit_struct cxl_osc_support_bit[] = {
-+	{ CXL_OSC_PORT_REG_ACCESS_SUPPORT, "CXLPortRegAccess" },
-+	{ CXL_OSC_PORT_DEV_REG_ACCESS_SUPPORT, "CXLPortDevRegAccess" },
-+	{ CXL_OSC_PER_SUPPORT, "CXLProtocolErrorReporting" },
-+	{ CXL_OSC_NATIVE_HP_SUPPORT, "CXLNativeHotPlug" },
-+};
-+
-+static struct pci_osc_bit_struct cxl_osc_control_bit[] = {
-+	{ CXL_OSC_MEM_ERROR_CONTROL, "CXLMemErrorReporting" },
-+};
-+
-+static u8 cxl_osc_uuid_str[] = "68F2D50B-C469-4d8A-BD3D-941A103FD3FC";
-+
-+static void decode_osc_bits(struct device *dev, char *msg, u32 word,
-+			    struct pci_osc_bit_struct *table, int size)
++static struct cxl_mem *cxl_mem_create(struct pci_dev *pdev, u32 reg_lo,
++				      u32 reg_hi)
 +{
-+	char buf[80];
-+	int i, len = 0;
-+	struct pci_osc_bit_struct *entry;
-+
-+	buf[0] = '\0';
-+	for (i = 0, entry = table; i < size; i++, entry++)
-+		if (word & entry->bit)
-+			len += scnprintf(buf + len, sizeof(buf) - len, "%s%s",
-+					 len ? " " : "", entry->desc);
-+
-+	dev_info(dev, "_OSC: %s [%s]\n", msg, buf);
-+}
-+
-+static void decode_cxl_osc_support(struct device *dev, char *msg, u32 word)
-+{
-+	decode_osc_bits(dev, msg, word, cxl_osc_support_bit,
-+			ARRAY_SIZE(cxl_osc_support_bit));
-+}
-+
-+static void decode_cxl_osc_control(struct device *dev, char *msg, u32 word)
-+{
-+	decode_osc_bits(dev, msg, word, cxl_osc_control_bit,
-+			ARRAY_SIZE(cxl_osc_control_bit));
-+}
-+
-+static acpi_status acpi_cap_run_osc(acpi_handle handle, const u32 *capbuf,
-+				    u8 *uuid_str, u32 *retval)
-+{
-+	struct acpi_osc_context context = {
-+		.uuid_str = uuid_str,
-+		.rev = 1,
-+		.cap.length = 20,
-+		.cap.pointer = (void *)capbuf,
-+	};
-+	acpi_status status;
-+
-+	status = acpi_run_osc(handle, &context);
-+	if (ACPI_SUCCESS(status)) {
-+		/* pointer + offset to DWORD 5 */
-+		*retval = *((u32 *)(context.ret.pointer + 16));
-+		kfree(context.ret.pointer);
-+	}
-+	return status;
-+}
-+
-+static acpi_status cxl_query_osc(acpi_handle handle, u32 support, u32 *control)
-+{
-+	struct acpi_pci_root *root;
-+	acpi_status status;
-+	u32 result, capbuf[5];
-+
-+	root = acpi_pci_find_root(handle);
-+	if (!root)
-+		return -ENXIO;
-+
-+	support &= CXL_OSC_SUPPORT_VALID_MASK;
-+	support |= cxl_osc_support_set;
-+
-+	capbuf[OSC_QUERY_DWORD] = OSC_QUERY_ENABLE;
-+	capbuf[PCI_OSC_SUPPORT_DWORD] = root->osc_support_set;
-+	capbuf[PCI_OSC_CONTROL_DWORD] = root->osc_control_set;
-+	capbuf[CXL_OSC_SUPPORT_DWORD] = support;
-+	if (control) {
-+		*control &= CXL_OSC_CONTROL_VALID_MASK;
-+		capbuf[CXL_OSC_CONTROL_DWORD] = *control | cxl_osc_control_set;
-+	} else {
-+		/* Run _OSC query only with existing controls. */
-+		capbuf[CXL_OSC_CONTROL_DWORD] = cxl_osc_control_set;
-+	}
-+
-+	status = acpi_cap_run_osc(handle, capbuf, cxl_osc_uuid_str, &result);
-+	if (ACPI_SUCCESS(status)) {
-+		cxl_osc_support_set = support;
-+		if (control)
-+			*control = result;
-+	}
-+	return status;
-+}
-+
-+/**
-+ * cxl_osc_declare_support - Declare support for CXL root _OSC features.
-+ * @handle: ACPI device handle for the PCI root bridge (or PCIe Root Complex).
-+ * @flags: The _OSC bits to declare support for.
-+ *
-+ * The PCI specific DWORDS are obtained from the pci root port device, and
-+ * used as-is. The resulting CXL support set is saved in cxl_osc_support_set.
-+ * Any future calls to this are forced to be strictly incremental from the
-+ * existing cxl_osc_support_set.
-+ */
-+static acpi_status cxl_osc_declare_support(acpi_handle handle, u32 flags)
-+{
-+	acpi_status status;
-+
-+	mutex_lock(&acpi_desc_lock);
-+	status = cxl_query_osc(handle, flags, NULL);
-+	mutex_unlock(&acpi_desc_lock);
-+	return status;
-+}
-+
-+/**
-+ * cxl_osc_request_control - Request control of CXL root _OSC features.
-+ * @adev: ACPI device for the PCI root bridge (or PCIe Root Complex).
-+ * @mask: Mask of _OSC bits to request control of, place to store control mask.
-+ * @req: Mask of _OSC bits the control of is essential to the caller.
-+ *
-+ * The PCI specific DWORDS are obtained from the pci root port device, and
-+ * used as-is. The resulting CXL control set is saved in cxl_osc_control_set.
-+ * Any future calls to this are forced to be strictly incremental from the
-+ * existing cxl_osc_control_set.
-+ */
-+static acpi_status cxl_osc_request_control(struct acpi_device *adev, u32 *mask,
-+					   u32 req)
-+{
-+	acpi_handle handle = adev->handle;
-+	struct device *dev = &adev->dev;
-+	struct acpi_pci_root *root;
-+	acpi_status status = AE_OK;
-+	u32 ctrl, capbuf[5];
-+
-+	if (!mask)
-+		return AE_BAD_PARAMETER;
-+
-+	ctrl = *mask & CXL_OSC_MEM_ERROR_CONTROL;
-+	if ((ctrl & req) != req)
-+		return AE_TYPE;
-+
-+	root = acpi_pci_find_root(handle);
-+	if (!root)
-+		return -ENXIO;
-+
-+	mutex_lock(&acpi_desc_lock);
-+
-+	*mask = ctrl | cxl_osc_control_set;
-+	/* No need to evaluate _OSC if the control was already granted. */
-+	if ((cxl_osc_control_set & ctrl) == ctrl)
-+		goto out;
-+
-+	/* Need to check the available controls bits before requesting them. */
-+	while (*mask) {
-+		status = cxl_query_osc(handle, cxl_osc_support_set, mask);
-+		if (ACPI_FAILURE(status))
-+			goto out;
-+		if (ctrl == *mask)
-+			break;
-+		decode_cxl_osc_control(dev, "platform does not support",
-+				       ctrl & ~(*mask));
-+		ctrl = *mask;
-+	}
-+
-+	if ((ctrl & req) != req) {
-+		decode_cxl_osc_control(
-+			dev,
-+			"not requesting control; platform does not support",
-+			req & ~(ctrl));
-+		status = AE_SUPPORT;
-+		goto out;
-+	}
-+
-+	capbuf[OSC_QUERY_DWORD] = 0;
-+	capbuf[PCI_OSC_SUPPORT_DWORD] = root->osc_support_set;
-+	capbuf[PCI_OSC_CONTROL_DWORD] = root->osc_control_set;
-+	capbuf[CXL_OSC_SUPPORT_DWORD] = cxl_osc_support_set;
-+	capbuf[CXL_OSC_CONTROL_DWORD] = ctrl;
-+	status = acpi_cap_run_osc(handle, capbuf, cxl_osc_uuid_str, mask);
-+	if (ACPI_SUCCESS(status))
-+		cxl_osc_control_set = *mask;
-+out:
-+	mutex_unlock(&acpi_desc_lock);
-+	return status;
-+}
-+
-+static int cxl_negotiate_osc(struct acpi_device *adev)
-+{
-+	u32 cxl_support, cxl_control, requested;
-+	acpi_handle handle = adev->handle;
-+	struct device *dev = &adev->dev;
-+	acpi_status status;
-+
-+	/* Declare support for everything */
-+	cxl_support = CXL_OSC_SUPPORT_VALID_MASK;
-+	decode_cxl_osc_support(dev, "OS supports", cxl_support);
-+	status = cxl_osc_declare_support(handle, cxl_support);
-+	if (ACPI_FAILURE(status)) {
-+		dev_info(dev, "CXL_OSC failed (%s)\n",
-+			 acpi_format_exception(status));
-+		return -ENXIO;
-+	}
-+
-+	/* Request control for everything */
-+	cxl_control = CXL_OSC_CONTROL_VALID_MASK;
-+	requested = cxl_control;
-+	status = cxl_osc_request_control(adev, &cxl_control,
-+					 CXL_OSC_MEM_ERROR_CONTROL);
-+	if (ACPI_SUCCESS(status)) {
-+		decode_cxl_osc_control(dev, "OS now controls", cxl_control);
-+	} else {
-+		decode_cxl_osc_control(dev, "OS requested", requested);
-+		decode_cxl_osc_control(dev, "platform willing to grant",
-+				       cxl_control);
-+		dev_info(dev, "_OSC failed (%s)\n",
-+			 acpi_format_exception(status));
-+	}
-+	return 0;
-+}
-+
-+/**
-+ * cxl_bus_acquire - Perform platform-specific bus operations
-+ * @pdev: pci_dev associated with the CXL device
-+ *
-+ * This performs bus-specific operations such as ACPI _OSC to ensure that
-+ * the bus is 'prepared'. Since the CXL definition of _OSC depends on the
-+ * existing PCI _OSC DWORDS in 'Arg3', pull those in from the pci root port
-+ * device, and merge those into the new CXL-augmented _OSC calls.
-+ *
-  * If/when CXL support is defined by other platform firmware the kernel
-  * will need a mechanism to select between the platform specific version
-  * of this routine, until then, hard-code ACPI assumptions
-@@ -21,6 +273,7 @@ int cxl_bus_acquire(struct pci_dev *pdev)
- 	struct acpi_device *adev;
- 	struct pci_dev *root_port;
- 	struct device *root;
++	struct device *dev = &pdev->dev;
++	struct cxl_mem *cxlm;
++	void __iomem *regs;
++	u64 offset;
++	u8 bar;
 +	int rc;
++
++	offset = ((u64)reg_hi << 32) | (reg_lo & CXL_REGLOC_ADDR_MASK);
++	bar = (reg_lo >> CXL_REGLOC_BIR_SHIFT) & CXL_REGLOC_BIR_MASK;
++
++	/* Basic sanity check that BAR is big enough */
++	if (pci_resource_len(pdev, bar) < offset) {
++		dev_err(dev, "BAR%d: %pr: too small (offset: %#llx)\n", bar,
++			&pdev->resource[bar], (unsigned long long)offset);
++		return NULL;
++	}
++
++	rc = pcim_iomap_regions(pdev, 1 << bar, pci_name(pdev));
++	if (rc != 0) {
++		dev_err(dev, "failed to map registers\n");
++		return NULL;
++	}
++
++	cxlm = devm_kzalloc(&pdev->dev, sizeof(*cxlm), GFP_KERNEL);
++	if (!cxlm) {
++		dev_err(dev, "No memory available\n");
++		return NULL;
++	}
++
++	regs = pcim_iomap_table(pdev)[bar];
++	cxlm->pdev = pdev;
++	cxlm->regs = regs + offset;
++
++	dev_dbg(dev, "Mapped CXL Memory Device resource\n");
++	return cxlm;
++}
  
- 	root_port = pcie_find_root_port(pdev);
- 	if (!root_port)
-@@ -34,9 +287,11 @@ int cxl_bus_acquire(struct pci_dev *pdev)
- 	if (!adev)
- 		return -ENXIO;
+ static int cxl_mem_dvsec(struct pci_dev *pdev, int dvsec)
+ {
+@@ -33,7 +85,8 @@ static int cxl_mem_dvsec(struct pci_dev *pdev, int dvsec)
+ static int cxl_mem_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ {
+ 	struct device *dev = &pdev->dev;
+-	int rc, regloc;
++	struct cxl_mem *cxlm;
++	int rc, regloc, i;
  
--	/* TODO: OSC enabling */
-+	rc = cxl_negotiate_osc(adev);
+ 	rc = cxl_bus_acquire(pdev);
+ 	if (rc != 0) {
+@@ -41,13 +94,39 @@ static int cxl_mem_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		return rc;
+ 	}
+ 
++	rc = pcim_enable_device(pdev);
 +	if (rc)
-+		dev_err(&pdev->dev, "Failed to negotiate OSC\n");
++		return rc;
++
+ 	regloc = cxl_mem_dvsec(pdev, PCI_DVSEC_ID_CXL_REGLOC);
+ 	if (!regloc) {
+ 		dev_err(dev, "register location dvsec not found\n");
+ 		return -ENXIO;
+ 	}
++	regloc += 0xc; /* Skip DVSEC + reserved fields */
  
 -	return 0;
++	rc = -ENXIO;
++	for (i = regloc; i < regloc + 0x24; i += 8) {
++		u32 reg_lo, reg_hi;
++		u8 reg_type;
++
++		/* "register low and high" contain other bits */
++		pci_read_config_dword(pdev, i, &reg_lo);
++		pci_read_config_dword(pdev, i + 4, &reg_hi);
++
++		reg_type =
++			(reg_lo >> CXL_REGLOC_RBI_SHIFT) & CXL_REGLOC_RBI_MASK;
++
++		if (reg_type == CXL_REGLOC_RBI_MEMDEV) {
++			rc = 0;
++			cxlm = cxl_mem_create(pdev, reg_lo, reg_hi);
++			if (!cxlm)
++				rc = -ENODEV;
++			break;
++		}
++	}
++
 +	return rc;
  }
- EXPORT_SYMBOL_GPL(cxl_bus_acquire);
  
-diff --git a/drivers/cxl/acpi.h b/drivers/cxl/acpi.h
-index d638f8886ab7..6ef154021745 100644
---- a/drivers/cxl/acpi.h
-+++ b/drivers/cxl/acpi.h
-@@ -12,4 +12,24 @@ struct cxl_acpi_desc {
+ static const struct pci_device_id cxl_mem_pci_tbl[] = {
+diff --git a/drivers/cxl/pci.h b/drivers/cxl/pci.h
+index a8a9935fa90b..df222edb6ac3 100644
+--- a/drivers/cxl/pci.h
++++ b/drivers/cxl/pci.h
+@@ -17,4 +17,18 @@
  
- int cxl_bus_acquire(struct pci_dev *pci_dev);
+ #define PCI_DVSEC_ID_CXL_REGLOC		0x8
  
-+/* Indexes into _OSC Capabilities Buffer */
-+#define PCI_OSC_SUPPORT_DWORD			1	/* DWORD 2 */
-+#define PCI_OSC_CONTROL_DWORD			2	/* DWORD 3 */
-+#define CXL_OSC_SUPPORT_DWORD			3	/* DWORD 4 */
-+#define CXL_OSC_CONTROL_DWORD			4	/* DWORD 5 */
++/* BAR Indicator Register (BIR) */
++#define CXL_REGLOC_BIR_SHIFT 0
++#define CXL_REGLOC_BIR_MASK 0x7
 +
-+/* CXL Host Bridge _OSC: Capabilities DWORD 4: Support Field */
-+#define CXL_OSC_PORT_REG_ACCESS_SUPPORT		0x00000001
-+#define CXL_OSC_PORT_DEV_REG_ACCESS_SUPPORT	0x00000002
-+#define CXL_OSC_PER_SUPPORT			0x00000004
-+#define CXL_OSC_NATIVE_HP_SUPPORT		0x00000008
-+#define CXL_OSC_SUPPORT_VALID_MASK		(CXL_OSC_PORT_REG_ACCESS_SUPPORT |	\
-+						 CXL_OSC_PORT_DEV_REG_ACCESS_SUPPORT |	\
-+						 CXL_OSC_PER_SUPPORT |			\
-+						 CXL_OSC_NATIVE_HP_SUPPORT)
++/* Register Block Identifier (RBI) */
++#define CXL_REGLOC_RBI_SHIFT 8
++#define CXL_REGLOC_RBI_MASK 0xff
++#define CXL_REGLOC_RBI_EMPTY 0
++#define CXL_REGLOC_RBI_COMPONENT 1
++#define CXL_REGLOC_RBI_VIRT 2
++#define CXL_REGLOC_RBI_MEMDEV 3
 +
-+/* CXL Host Bridge _OSC: Capabilities DWORD 5: Control Field */
-+#define CXL_OSC_MEM_ERROR_CONTROL		0x00000001
-+#define CXL_OSC_CONTROL_VALID_MASK		(CXL_OSC_MEM_ERROR_CONTROL)
++#define CXL_REGLOC_ADDR_MASK 0xffff0000
 +
- #endif	/* __CXL_ACPI_H__ */
+ #endif /* __CXL_PCI_H__ */
 -- 
 2.29.2
 
