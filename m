@@ -2,153 +2,132 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E97BC4167B
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Dec 2020 23:45:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A21F4C433FE
+	for <linux-pci@archiver.kernel.org>; Wed,  9 Dec 2020 00:27:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 004A023A5A
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Dec 2020 23:45:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 75E84239D1
+	for <linux-pci@archiver.kernel.org>; Wed,  9 Dec 2020 00:27:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728899AbgLHXpV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Dec 2020 18:45:21 -0500
-Received: from mail-oo1-f68.google.com ([209.85.161.68]:43277 "EHLO
-        mail-oo1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725906AbgLHXpV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Dec 2020 18:45:21 -0500
-Received: by mail-oo1-f68.google.com with SMTP id h10so27296ooi.10;
-        Tue, 08 Dec 2020 15:45:05 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=2KQe3ieI4VGx3q64G5WEEcvcuIvQWP0JOsj4euuGCD4=;
-        b=OrX9GHZvCfHAknB9P2X54ECdmKgSGpFoTcORlCVnCS23nW4ulRdLJgNSKmKAPCF6Or
-         5v5fZaoWNGKtKQIemtgLsSVm1qZ+ikbWtNIaehq+j9n+06cBg60J2cnBGV/kWZfhEx/L
-         bYzI6R+RU/gxho/Y0ulweO8L7dMYt3+WZB74NqNZjI8+YLhg/7UxEnbcusLXGHoaCsZp
-         hTrWo94vNTBItCLC4B0YqBLKn5aeGE0IgRDzUF56f4piBWWvj7BwyGuU5VQBw2t3Wyuy
-         JsFjOF0xeC2+zFk7yxYZudwq6m2eG1Jb0KghqeQziv/8Zm4CSxr+5BP2j8PUB5E9Kyyh
-         dd+g==
-X-Gm-Message-State: AOAM531zIxo6IxMD6HGYh9d4/MblUTrEWZpmF+H0iI5qkGKravAF+F+r
-        Vikj5mnbeA1UiYmgnI+XQy+OdKqGYw==
-X-Google-Smtp-Source: ABdhPJyAVXhvxZdVU1wfFlHBFF7RuBp3jz769lshkAFJpz5/IO3/3ARnwahnkYM01JE3/w3Me5Gluw==
-X-Received: by 2002:a4a:8606:: with SMTP id v6mr367244ooh.37.1607471080259;
-        Tue, 08 Dec 2020 15:44:40 -0800 (PST)
-Received: from xps15 (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.gmail.com with ESMTPSA id y35sm81148otb.5.2020.12.08.15.44.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Dec 2020 15:44:39 -0800 (PST)
-Received: (nullmailer pid 3339100 invoked by uid 1000);
-        Tue, 08 Dec 2020 23:44:37 -0000
-Date:   Tue, 8 Dec 2020 17:44:37 -0600
-From:   Rob Herring <robh@kernel.org>
-To:     =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        linux-rpi-kernel@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org,
-        bcm-kernel-feedback-list@broadcom.com,
-        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-Subject: Re: [PATCH V2 1/2] dt-bindings: PCI: brcmstb: add BCM4908 binding
-Message-ID: <20201208234437.GA3334335@robh.at.kernel.org>
-References: <20201130083223.32594-1-zajec5@gmail.com>
- <20201130083223.32594-2-zajec5@gmail.com>
+        id S1731975AbgLIA0Z (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Dec 2020 19:26:25 -0500
+Received: from mga09.intel.com ([134.134.136.24]:16961 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731969AbgLIA0V (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 8 Dec 2020 19:26:21 -0500
+IronPort-SDR: gAi/abx/k+gpBaztUF9VINZiQ/ZiePBof4Zbyxj75zj4QQWV4KsYjoZLov12XtTbHMG2G2MJsw
+ JmFSW9DMRfmQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9829"; a="174142101"
+X-IronPort-AV: E=Sophos;i="5.78,404,1599548400"; 
+   d="scan'208";a="174142101"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Dec 2020 16:24:31 -0800
+IronPort-SDR: FutnC4UFEceEPiJyz7rzmsBr40hsiAP7b6MFuEIFDe62pQcwgXZkE7iQCkhdrYRPE9/3aYIkj4
+ 4PHmVC5p31cA==
+X-IronPort-AV: E=Sophos;i="5.78,404,1599548400"; 
+   d="scan'208";a="407838534"
+Received: from mlubyani-mobl2.amr.corp.intel.com (HELO bwidawsk-mobl5.local) ([10.252.137.9])
+  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Dec 2020 16:24:30 -0800
+From:   Ben Widawsky <ben.widawsky@intel.com>
+To:     linux-cxl@vger.kernel.org
+Cc:     Ben Widawsky <ben.widawsky@intel.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, Ira Weiny <ira.weiny@intel.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        "Kelley, Sean V" <sean.v.kelley@intel.com>,
+        Rafael Wysocki <rafael.j.wysocki@intel.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Jonathan Cameron <Jonathan.Cameron@Huawei.com>,
+        Jon Masters <jcm@jonmasters.org>,
+        Chris Browy <cbrowy@avery-design.com>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        Christoph Hellwig <hch@infradead.org>
+Subject: [RFC PATCH 14/14] WIP/cxl/mem: Add get firmware for testing
+Date:   Tue,  8 Dec 2020 16:24:18 -0800
+Message-Id: <20201209002418.1976362-15-ben.widawsky@intel.com>
+X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20201209002418.1976362-1-ben.widawsky@intel.com>
+References: <20201209002418.1976362-1-ben.widawsky@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20201130083223.32594-2-zajec5@gmail.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Nov 30, 2020 at 09:32:22AM +0100, Rafał Miłecki wrote:
-> From: Rafał Miłecki <rafal@milecki.pl>
-> 
-> BCM4908 is a SoC family with PCIe controller sharing design with the one
-> for STB. BCM4908 has different power management and memory controller so
-> few tweaks are required.
-> 
-> PERST# signal on BCM4908 is handled by an external MISC block so it
-> needs specifying a reset phandle.
-> 
-> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
-> Acked-by: Florian Fainelli <f.fainelli@gmail.com>
-> ---
->  .../bindings/pci/brcm,stb-pcie.yaml           | 30 +++++++++++++++++--
->  1 file changed, 28 insertions(+), 2 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml b/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
-> index 807694b4f41f..d3ab9e22f97c 100644
-> --- a/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
-> +++ b/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
-> @@ -14,6 +14,7 @@ properties:
->      items:
->        - enum:
->            - brcm,bcm2711-pcie # The Raspberry Pi 4
-> +          - brcm,bcm4908-pcie
->            - brcm,bcm7211-pcie # Broadcom STB version of RPi4
->            - brcm,bcm7278-pcie # Broadcom 7278 Arm
->            - brcm,bcm7216-pcie # Broadcom 7216 Arm
-> @@ -64,8 +65,6 @@ properties:
->    aspm-no-l0s: true
->  
->    resets:
-> -    description: for "brcm,bcm7216-pcie", must be a valid reset
-> -      phandle pointing to the RESCAL reset controller provider node.
->      $ref: "/schemas/types.yaml#/definitions/phandle"
+This also serves as an example how to add a new command
 
-This should really just be 'maxItems: 1'. 'resets' already has a type.
+Signed-off-by: Ben Widawsky <ben.widawsky@intel.com>
+---
+ drivers/cxl/mem.c            | 22 ++++++++++++++++++++++
+ include/uapi/linux/cxl_mem.h |  3 ++-
+ 2 files changed, 24 insertions(+), 1 deletion(-)
 
->  
->    reset-names:
-> @@ -98,12 +97,39 @@ required:
->  
->  allOf:
->    - $ref: /schemas/pci/pci-bus.yaml#
-> +  - if:
-> +      properties:
-> +        compatible:
-> +          contains:
-> +            const: brcm,bcm4908-pcie
-> +    then:
-> +      properties:
-> +        resets:
-> +          items:
-> +            - description: reset controller handling the PERST# signal
-> +
-> +        reset-names:
-> +          items:
-> +            - const: perst
-> +
-> +      required:
-> +        - resets
-> +        - reset-names
->    - if:
->        properties:
->          compatible:
->            contains:
->              const: brcm,bcm7216-pcie
->      then:
-> +      properties:
-> +        resets:
-> +          items:
-> +            - description: phandle pointing to the RESCAL reset controller
-> +
-> +        reset-names:
-> +          items:
-> +            - const: rescal
-> +
->        required:
->          - resets
->          - reset-names
-> -- 
-> 2.26.2
-> 
+diff --git a/drivers/cxl/mem.c b/drivers/cxl/mem.c
+index 6b2f8d3776b5..76aa1e6e4117 100644
+--- a/drivers/cxl/mem.c
++++ b/drivers/cxl/mem.c
+@@ -116,6 +116,7 @@ struct cxl_mem_command {
+ static struct cxl_mem_command mem_commands[] = {
+ 	CXL_CMD(INVALID, NONE, 0, 0, "Reserved", false, 0),
+ 	CXL_CMD(RAW, TAINT, ~0, ~0, "Raw", true, 0),
++	CXL_CMD(GET_FW_INFO, NONE, 0, 0x50, "Get FW Info", false, 0x0200),
+ };
+ 
+ static int cxl_mem_wait_for_doorbell(struct cxl_mem *cxlm)
+@@ -827,6 +828,23 @@ static int cxl_mem_add_memdev(struct cxl_mem *cxlm)
+ 	return cxl_register(dev);
+ }
+ 
++static int cxl_mem_enable_commands(struct cxl_mem *cxlm)
++{
++	struct cxl_mem_command *c;
++
++	/*
++	 * For now we pretend Get FW info is supported.
++	 *
++	 * FIXME: Invoke GET LOG to get the Command Effect Logs (CEL).
++	 */
++	c = cxl_mem_find_command(0x200);
++	if (!c)
++		return -ENOENT;
++
++	c->enable = true;
++	return 0;
++}
++
+ /**
+  * cxl_mem_identify() - Send the IDENTIFY command to the device.
+  * @cxlm: The device to identify.
+@@ -936,6 +954,10 @@ static int cxl_mem_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	if (rc)
+ 		return rc;
+ 
++	rc = cxl_mem_enable_commands(cxlm);
++	if (rc)
++		return rc;
++
+ 	rc = cxl_mem_identify(cxlm);
+ 	if (rc)
+ 		return rc;
+diff --git a/include/uapi/linux/cxl_mem.h b/include/uapi/linux/cxl_mem.h
+index f2fbb0dcda06..3ac39acf8fa7 100644
+--- a/include/uapi/linux/cxl_mem.h
++++ b/include/uapi/linux/cxl_mem.h
+@@ -50,7 +50,8 @@ struct cxl_command_info {
+ 	__u32 id;
+ #define CXL_MEM_COMMAND_ID_INVALID 0
+ #define CXL_MEM_COMMAND_ID_RAW 1
+-#define CXL_MEM_COMMAND_ID_MAX (CXL_MEM_COMMAND_ID_RAW + 1)
++#define CXL_MEM_COMMAND_ID_GET_FW_INFO 2
++#define CXL_MEM_COMMAND_ID_MAX (CXL_MEM_COMMAND_ID_GET_FW_INFO + 1)
+ 
+ 	__u32 flags;
+ #define CXL_MEM_COMMAND_FLAG_NONE 0
+-- 
+2.29.2
+
