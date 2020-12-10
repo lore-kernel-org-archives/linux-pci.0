@@ -2,47 +2,48 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB6BEC1B0E3
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Dec 2020 20:12:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40784C2BB9A
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Dec 2020 20:12:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8445423A33
+	by mail.kernel.org (Postfix) with ESMTP id 0A7312332A
 	for <linux-pci@archiver.kernel.org>; Thu, 10 Dec 2020 20:12:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2393515AbgLJTnD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 10 Dec 2020 14:43:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53188 "EHLO
+        id S2393697AbgLJULH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 10 Dec 2020 15:11:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53202 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2393473AbgLJTnB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Dec 2020 14:43:01 -0500
+        with ESMTP id S2404272AbgLJTnE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Dec 2020 14:43:04 -0500
 Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44C7EC061793;
-        Thu, 10 Dec 2020 11:42:21 -0800 (PST)
-Message-Id: <20201210194042.967177918@linutronix.de>
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EFC7EC0617A6;
+        Thu, 10 Dec 2020 11:42:23 -0800 (PST)
+Message-Id: <20201210194043.172893840@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1607629339;
+        s=2020; t=1607629342;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=gYsowh6i1mqGXNg6FrEIlf+Px9WkTuZjYPGZA4AoQf4=;
-        b=gQRR2ovC6G1wG0/hHfvHA26mBklNiMZtkvMBYZWjgQshlf7o+cIXoD11qJjLT48W0LHgJA
-        5Zvfg1News0uQs48erbM5kmDtHengxfmuqG2DKGnaIJ04vg1FJ7jnVpZXG8cNwMy19OeFP
-        iPFhPWqfd87RfMeVK3ZgF11+LhI8jQI6rRQAPId6pBGrjdbz5+dRwipziIghpyTp0+nYcu
-        /rMQolvJykCdajiQdhpg5/73/PAnO6jEv3XXq/Rv9w9yxTGzkAvSFeWdlWRlX1S05CmH1R
-        pxA14gUUPV2LrG7qMC56g75TqBVjQeX4kqlFmRI413CglTnFsrbWRi0PstpOew==
+        bh=H6DxzomRopFmkit4/4R6NYU2nMIU3VEhxNUq8xSIzZg=;
+        b=Mmus8yMHzmRoOuv6OrtKQYqVrIXFlyNqamgESIcbo+FOsqNCh4jNhMrhvtgIbG1dHFvJC+
+        BN8Q2AXY7eE0VbmyhcLPklodEgxwCZ8ZVxoetzzzrQMxxhJeOuw6ycJopu9ZM+HbvHrHyd
+        IWP7LrT/B7MAbb8pT190VoO7MTJuA1obD8dhEINtYVE4KCpqtRWqxMcR/CBUrG9TYUjwDi
+        +msxVmLhS+JWVhN88RJHPjmRnkz1vSg1hhvl2W0fsWBOq4djR+BrSPhFkw8uZNfFkc9Wy1
+        kP6KYk7n5zZjtKAaOxpoGToDh/v/xpae6+owBkHebtH5vIi8texeMaL2QUYeaQ==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1607629339;
+        s=2020e; t=1607629342;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=gYsowh6i1mqGXNg6FrEIlf+Px9WkTuZjYPGZA4AoQf4=;
-        b=rxr0RqK5G71Mdyjh0pmNkfya7BLBal4i+pBNw5B4iIspa3uaIBOFXW7QFkpv0Ae/Yof/mz
-        NtSLBAk6jBeGNuDQ==
-Date:   Thu, 10 Dec 2020 20:25:40 +0100
+        bh=H6DxzomRopFmkit4/4R6NYU2nMIU3VEhxNUq8xSIzZg=;
+        b=rqJf3IS+tp6Aq+14lO31OpHLTmQ/963wA224eQ6BXLp/Y3RncaPXYeQ/h9yfO2+idiLTk2
+        qfa93PzKze1vcODg==
+Date:   Thu, 10 Dec 2020 20:25:42 +0100
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
@@ -88,7 +89,7 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Juergen Gross <jgross@suse.com>,
         Stefano Stabellini <sstabellini@kernel.org>,
         xen-devel@lists.xenproject.org
-Subject: [patch 04/30] genirq: Provide irq_get_effective_affinity()
+Subject: [patch 06/30] parisc/irq: Simplify irq count output for /proc/interrupts
 References: <20201210192536.118432146@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -97,28 +98,31 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Provide an accessor to the effective interrupt affinity mask. Going to be
-used to replace open coded fiddling with the irq descriptor.
+The SMP variant works perfectly fine on UP as well.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: Helge Deller <deller@gmx.de>
+Cc: afzal mohammed <afzal.mohd.ma@gmail.com>
+Cc: linux-parisc@vger.kernel.org
 ---
- include/linux/irq.h |    7 +++++++
- 1 file changed, 7 insertions(+)
+ arch/parisc/kernel/irq.c |    5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
---- a/include/linux/irq.h
-+++ b/include/linux/irq.h
-@@ -907,6 +907,13 @@ struct cpumask *irq_data_get_effective_a
- }
- #endif
- 
-+static inline struct cpumask *irq_get_effective_affinity_mask(unsigned int irq)
-+{
-+	struct irq_data *d = irq_get_irq_data(irq);
+--- a/arch/parisc/kernel/irq.c
++++ b/arch/parisc/kernel/irq.c
+@@ -216,12 +216,9 @@ int show_interrupts(struct seq_file *p,
+ 		if (!action)
+ 			goto skip;
+ 		seq_printf(p, "%3d: ", i);
+-#ifdef CONFIG_SMP
 +
-+	return d ? irq_data_get_effective_affinity_mask(d) : NULL;
-+}
-+
- unsigned int arch_dynirq_lower_bound(unsigned int from);
+ 		for_each_online_cpu(j)
+ 			seq_printf(p, "%10u ", kstat_irqs_cpu(i, j));
+-#else
+-		seq_printf(p, "%10u ", kstat_irqs(i));
+-#endif
  
- int __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+ 		seq_printf(p, " %14s", irq_desc_get_chip(desc)->name);
+ #ifndef PARISC_IRQ_CR16_COUNTS
 
