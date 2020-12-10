@@ -2,60 +2,65 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 383A2C2BB9A
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Dec 2020 23:04:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E27FAC2D0E4
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Dec 2020 23:23:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 16C7323BA7
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Dec 2020 23:04:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B39DA23EB2
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Dec 2020 23:23:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387639AbgLJW6O (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 10 Dec 2020 17:58:14 -0500
-Received: from mail.kernel.org ([198.145.29.99]:43430 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387782AbgLJW5t (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 10 Dec 2020 17:57:49 -0500
-X-Gm-Message-State: AOAM5300VO9rbiSmIm4FekveiHzSSL8IjCfyZjJ8pYgSRuW45jWqTCFH
-        bUsDMRhiVpglneUKcnyPHByEGU5qd8+lNiK8Cg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1607641028;
-        bh=CumYBB9xVU4mI+ysFQ9GC3xvipGC4R7OnFI2Gfa5FNQ=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=IENA755C1/rgN0w8w2Z2W86pSCNpqQVdsIn6hGM3SHpMOEjpkwGZtsgL0hRxLES5J
-         GN69vLvpVngVt+noJivc35dT928cbXAlG4h3cswLCydXRYUgIxoqvWvZqpS8aiOmMt
-         05Ld+Z78+akIY5HGQHCAOlr0AaROFROMPYtjN+KD7+S/KXuaWg0xL6AO0iLiPlice4
-         iZANjFb7GSIlf67hQvw0Y9hSU5e2T/JFuteUXmOg3uHY1Ii/HhED2bYqVL2OdaPsEh
-         TPV4vxeX7oyFvjtBzj9WAWsfNEkX/EEF2pxlVmb7f9vuUC3ehG96CfByyDyOuWBqr1
-         447X7kFWCVCJA==
-X-Google-Smtp-Source: ABdhPJyKMB0fAO5ccR1ON7eKp3wop/g844H0Em6KIAw65vcwOioEZudsqFxyo2xMX2ascC0HxcRxz5ivmcQz5wtwB24=
-X-Received: by 2002:a17:906:c20f:: with SMTP id d15mr8477099ejz.341.1607641026526;
- Thu, 10 Dec 2020 14:57:06 -0800 (PST)
-MIME-Version: 1.0
-References: <20201210192536.118432146@linutronix.de> <20201210194044.473308721@linutronix.de>
-In-Reply-To: <20201210194044.473308721@linutronix.de>
-From:   Rob Herring <robh@kernel.org>
-Date:   Thu, 10 Dec 2020 16:56:55 -0600
-X-Gmail-Original-Message-ID: <CAL_JsqK4bVyqyT9ip9A5P7gQQwDt1HMksjkCe6bwHrBCGrZYug@mail.gmail.com>
-Message-ID: <CAL_JsqK4bVyqyT9ip9A5P7gQQwDt1HMksjkCe6bwHrBCGrZYug@mail.gmail.com>
-Subject: Re: [patch 19/30] PCI: mobiveil: Use irq_data_get_irq_chip_data()
-To:     Thomas Gleixner <tglx@linutronix.de>
-Cc:     LKML <linux-kernel@vger.kernel.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Marc Zyngier <maz@kernel.org>,
-        Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>,
-        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        PCI <linux-pci@vger.kernel.org>,
-        "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+        id S2394284AbgLJXXE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 10 Dec 2020 18:23:04 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:33688 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2394246AbgLJXWp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Dec 2020 18:22:45 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BANJcxD076282;
+        Thu, 10 Dec 2020 23:21:08 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=g9HQMgG8/lH1Xl7UdSJNvDAMRQCo3FWW7Bk60ydYMFM=;
+ b=yiiSqUT1ul8LHgAfKjBlIB4yYYSpi+fGANCSKFFlOWkOUouS3Dv2O9HSPvMZHyva2HLa
+ t2URiRpBCtd04nx9Lq/bUlqBSfAvdgny9AZ7r99NqQl+3SLxNcNacBmNDpvbnkmq+RJf
+ tkHuWp0PFf1OqSZUrQZdo1op9pLE6PCegbVRzlACJRrfsJakcoaM7H+sCwUihUEMr2fQ
+ dVrKn7O2B0uCiKt4l0ihiQonSCwdjdrSogLQz8qpbD6/3t1pwKq6cTqj0HVlsjBYL0mf
+ j+yxZxQYgeFZOyVTmAVytFe3f0zAIJgGCpXDL4UlTLva10Xtrln9de8y9hZfow66cFAT Dg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 35825mg2bs-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 10 Dec 2020 23:21:08 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BANKtw7149340;
+        Thu, 10 Dec 2020 23:21:07 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3020.oracle.com with ESMTP id 358m42f5be-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 10 Dec 2020 23:21:07 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0BANKp8g025210;
+        Thu, 10 Dec 2020 23:20:51 GMT
+Received: from [10.39.227.125] (/10.39.227.125)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 10 Dec 2020 15:20:51 -0800
+Subject: Re: [patch 27/30] xen/events: Only force affinity mask for percpu
+ interrupts
+To:     Thomas Gleixner <tglx@linutronix.de>,
+        LKML <linux-kernel@vger.kernel.org>
+Cc:     Peter Zijlstra <peterz@infradead.org>,
+        Marc Zyngier <maz@kernel.org>, Juergen Gross <jgross@suse.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        xen-devel@lists.xenproject.org,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
         Helge Deller <deller@gmx.de>,
         afzal mohammed <afzal.mohd.ma@gmail.com>,
         linux-parisc@vger.kernel.org, Russell King <linux@armlinux.org.uk>,
-        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        linux-arm-kernel@lists.infradead.org,
         Mark Rutland <mark.rutland@arm.com>,
         Catalin Marinas <catalin.marinas@arm.com>,
         Will Deacon <will@kernel.org>,
@@ -69,50 +74,74 @@ Cc:     LKML <linux-kernel@vger.kernel.org>,
         Pankaj Bharadiya <pankaj.laxminarayan.bharadiya@intel.com>,
         Chris Wilson <chris@chris-wilson.co.uk>,
         Wambui Karuga <wambui.karugax@gmail.com>,
-        Intel Graphics <intel-gfx@lists.freedesktop.org>,
-        dri-devel <dri-devel@lists.freedesktop.org>,
+        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
         Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>,
         Linus Walleij <linus.walleij@linaro.org>,
-        "open list:GPIO SUBSYSTEM" <linux-gpio@vger.kernel.org>,
-        Lee Jones <lee.jones@linaro.org>, Jon Mason <jdmason@kudzu.us>,
+        linux-gpio@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
+        Jon Mason <jdmason@kudzu.us>,
         Dave Jiang <dave.jiang@intel.com>,
         Allen Hubbe <allenbh@gmail.com>, linux-ntb@googlegroups.com,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
         Michal Simek <michal.simek@xilinx.com>,
+        linux-pci@vger.kernel.org,
+        Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>,
+        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>,
         Tariq Toukan <tariqt@nvidia.com>,
         "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        netdev <netdev@vger.kernel.org>, linux-rdma@vger.kernel.org,
-        Saeed Mahameed <saeedm@nvidia.com>,
-        Leon Romanovsky <leon@kernel.org>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Juergen Gross <jgross@suse.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        xen-devel@lists.xenproject.org
-Content-Type: text/plain; charset="UTF-8"
+        Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org,
+        linux-rdma@vger.kernel.org, Saeed Mahameed <saeedm@nvidia.com>,
+        Leon Romanovsky <leon@kernel.org>
+References: <20201210192536.118432146@linutronix.de>
+ <20201210194045.250321315@linutronix.de>
+From:   boris.ostrovsky@oracle.com
+Organization: Oracle Corporation
+Message-ID: <7f7af60f-567f-cdef-f8db-8062a44758ce@oracle.com>
+Date:   Thu, 10 Dec 2020 18:20:46 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.5.1
+MIME-Version: 1.0
+In-Reply-To: <20201210194045.250321315@linutronix.de>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9831 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0 adultscore=0
+ bulkscore=0 phishscore=0 suspectscore=0 mlxscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2012100149
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9831 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 adultscore=0 bulkscore=0
+ phishscore=0 mlxlogscore=999 clxscore=1015 priorityscore=1501 mlxscore=0
+ spamscore=0 lowpriorityscore=0 malwarescore=0 impostorscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2012100149
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Dec 10, 2020 at 1:42 PM Thomas Gleixner <tglx@linutronix.de> wrote:
->
-> Going through a full irq descriptor lookup instead of just using the proper
-> helper function which provides direct access is suboptimal.
->
-> In fact it _is_ wrong because the chip callback needs to get the chip data
-> which is relevant for the chip while using the irq descriptor variant
-> returns the irq chip data of the top level chip of a hierarchy. It does not
-> matter in this case because the chip is the top level chip, but that
-> doesn't make it more correct.
->
-> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-> Cc: Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>
-> Cc: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Rob Herring <robh@kernel.org>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-pci@vger.kernel.org
-> ---
->  drivers/pci/controller/mobiveil/pcie-mobiveil-host.c |    8 ++------
->  1 file changed, 2 insertions(+), 6 deletions(-)
 
-Reviewed-by: Rob Herring <robh@kernel.org>
+On 12/10/20 2:26 PM, Thomas Gleixner wrote:
+> All event channel setups bind the interrupt on CPU0 or the target CPU for
+> percpu interrupts and overwrite the affinity mask with the corresponding
+> cpumask. That does not make sense.
+>
+> The XEN implementation of irqchip::irq_set_affinity() already picks a
+> single target CPU out of the affinity mask and the actual target is stored
+> in the effective CPU mask, so destroying the user chosen affinity mask
+> which might contain more than one CPU is wrong.
+>
+> Change the implementation so that the channel is bound to CPU0 at the XEN
+> level and leave the affinity mask alone. At startup of the interrupt
+> affinity will be assigned out of the affinity mask and the XEN binding will
+> be updated. 
+
+
+If that's the case then I wonder whether we need this call at all and instead bind at startup time.
+
+
+-boris
+
+
+> Only keep the enforcement for real percpu interrupts.
