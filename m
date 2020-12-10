@@ -5,45 +5,46 @@ X-Spam-Level:
 X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BCDBC4361B
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 940E3C0018C
 	for <linux-pci@archiver.kernel.org>; Thu, 10 Dec 2020 12:51:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 294D723D25
+	by mail.kernel.org (Postfix) with ESMTP id 5929923D39
 	for <linux-pci@archiver.kernel.org>; Thu, 10 Dec 2020 12:51:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387647AbgLJMvc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S2387699AbgLJMvc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Thu, 10 Dec 2020 07:51:32 -0500
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:36384 "EHLO
+Received: from fllv0015.ext.ti.com ([198.47.19.141]:36416 "EHLO
         fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732831AbgLJMvR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Dec 2020 07:51:17 -0500
-Received: from lelv0265.itg.ti.com ([10.180.67.224])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 0BACnYbx054509;
-        Thu, 10 Dec 2020 06:49:34 -0600
+        with ESMTP id S2387545AbgLJMv0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Dec 2020 07:51:26 -0500
+Received: from lelv0266.itg.ti.com ([10.180.67.225])
+        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 0BACnfnH054539;
+        Thu, 10 Dec 2020 06:49:41 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1607604574;
-        bh=9r3OpoyxWVqS2L6/mR3PuWOon4szAflduHj2tvsI/KY=;
+        s=ti-com-17Q1; t=1607604581;
+        bh=dAYh1u4G3eyAbCk5zFRGbIp8xQDnvfPh2urszVIB35o=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=JhC+MbCkPAYYj5f1fdqMquE7WHiqGjDQqhCXATiuKRoh7++qzytqxBFK+x6jsrD5i
-         1xdKWQ4TJAP5J83/sftrCx3iwXVlMaFsfY8GrhFr43X/lJ67CsmPCamjlmSsq7gYva
-         1Isy69CYAM0z9jEOWQFpqzy8AD2BqpoGkulr0HD8=
-Received: from DFLE102.ent.ti.com (dfle102.ent.ti.com [10.64.6.23])
-        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 0BACnYGs016377
+        b=o7JWsraTaI9sSIJiBSPb1RPltUu0IyLYhoT8LiFpI+dEO1tpyM5FVb3/v4N+mCoTs
+         eeBzGJlv9Jm8XvLVVUd5dlcLBRms7X8RoxsPBGeY1TFKm6Lc7K4FAt6EeBBBmNtzUU
+         nAhFvEn20hruV/+/i0YfIVTwlQj5rsvd8Fv3SuSI=
+Received: from DLEE105.ent.ti.com (dlee105.ent.ti.com [157.170.170.35])
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 0BACnfOj092597
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 10 Dec 2020 06:49:34 -0600
-Received: from DFLE115.ent.ti.com (10.64.6.36) by DFLE102.ent.ti.com
- (10.64.6.23) with Microsoft SMTP Server (version=TLS1_2,
+        Thu, 10 Dec 2020 06:49:41 -0600
+Received: from DLEE103.ent.ti.com (157.170.170.33) by DLEE105.ent.ti.com
+ (157.170.170.35) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Thu, 10
- Dec 2020 06:49:33 -0600
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DFLE115.ent.ti.com
- (10.64.6.36) with Microsoft SMTP Server (version=TLS1_2,
+ Dec 2020 06:49:41 -0600
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE103.ent.ti.com
+ (157.170.170.33) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
- Frontend Transport; Thu, 10 Dec 2020 06:49:33 -0600
+ Frontend Transport; Thu, 10 Dec 2020 06:49:41 -0600
 Received: from a0393678-ssd.dal.design.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0BACnKJN112244;
-        Thu, 10 Dec 2020 06:49:30 -0600
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0BACnKJP112244;
+        Thu, 10 Dec 2020 06:49:38 -0600
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Rob Herring <robh+dt@kernel.org>,
@@ -53,9 +54,9 @@ To:     Bjorn Helgaas <bhelgaas@google.com>,
 CC:     <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>
-Subject: [RESEND PATCH 2/4] dt-bindings: PCI: Add host mode dt-bindings for TI's J7200 SoC
-Date:   Thu, 10 Dec 2020 18:19:15 +0530
-Message-ID: <20201210124917.24185-3-kishon@ti.com>
+Subject: [RESEND PATCH 4/4] PCI: j721e: Get offset within "syscon" from "ti,syscon-pcie-ctrl" phandle arg
+Date:   Thu, 10 Dec 2020 18:19:17 +0530
+Message-ID: <20201210124917.24185-5-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20201210124917.24185-1-kishon@ti.com>
 References: <20201210124917.24185-1-kishon@ti.com>
@@ -66,48 +67,131 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add host mode dt-bindings for TI's J7200 SoC.
+Get "syscon" pcie_ctrl offset from the argument of "ti,syscon-pcie-ctrl"
+phandle. Previously a subnode to "syscon" node was added which has the
+exact memory mapped address of pcie_ctrl but now the offset of pcie_ctrl
+within "syscon" is now being passed as argument to "ti,syscon-pcie-ctrl"
+phandle.
+
+If the offset is not provided in "ti,syscon-pcie-ctrl", the
+full memory mapped address of pcie_ctrl is used in order to maintain old
+DT compatibility.
+
+This change is as discussed in [1]
+
+[1] -> http://lore.kernel.org/r/CAL_JsqKiUcO76bo1GoepWM1TusJWoty_BRy2hFSgtEVMqtrvvQ@mail.gmail.com
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 Reviewed-by: Rob Herring <robh@kernel.org>
 ---
- .../bindings/pci/ti,j721e-pci-host.yaml          | 16 +++++++++++++---
- 1 file changed, 13 insertions(+), 3 deletions(-)
+ drivers/pci/controller/cadence/pci-j721e.c | 28 +++++++++++++++-------
+ 1 file changed, 19 insertions(+), 9 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml b/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
-index 2b6a1a5eaf7a..0880a613ece6 100644
---- a/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
-+++ b/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
-@@ -15,8 +15,14 @@ allOf:
+diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
+index 586b9d69fa5e..dac1ac8a7615 100644
+--- a/drivers/pci/controller/cadence/pci-j721e.c
++++ b/drivers/pci/controller/cadence/pci-j721e.c
+@@ -12,6 +12,7 @@
+ #include <linux/irqchip/chained_irq.h>
+ #include <linux/irqdomain.h>
+ #include <linux/mfd/syscon.h>
++#include <linux/of.h>
+ #include <linux/of_device.h>
+ #include <linux/of_irq.h>
+ #include <linux/pci.h>
+@@ -153,7 +154,8 @@ static const struct cdns_pcie_ops j721e_pcie_ops = {
+ 	.link_up = j721e_pcie_link_up,
+ };
  
- properties:
-   compatible:
--    enum:
--      - ti,j721e-pcie-host
-+    oneOf:
-+      - description: PCIe controller in J7200
-+        items:
-+          - const: ti,j7200-pcie-host
-+          - const: ti,j721e-pcie-host
-+      - description: PCIe controller in J721E
-+        items:
-+          - const: ti,j721e-pcie-host
+-static int j721e_pcie_set_mode(struct j721e_pcie *pcie, struct regmap *syscon)
++static int j721e_pcie_set_mode(struct j721e_pcie *pcie, struct regmap *syscon,
++			       unsigned int offset)
+ {
+ 	struct device *dev = pcie->dev;
+ 	u32 mask = J721E_MODE_RC;
+@@ -164,7 +166,7 @@ static int j721e_pcie_set_mode(struct j721e_pcie *pcie, struct regmap *syscon)
+ 	if (mode == PCI_MODE_RC)
+ 		val = J721E_MODE_RC;
  
-   reg:
-     maxItems: 4
-@@ -51,7 +57,11 @@ properties:
-     const: 0x104c
+-	ret = regmap_update_bits(syscon, 0, mask, val);
++	ret = regmap_update_bits(syscon, offset, mask, val);
+ 	if (ret)
+ 		dev_err(dev, "failed to set pcie mode\n");
  
-   device-id:
--    const: 0xb00d
-+    oneOf:
-+      - items:
-+          - const: 0xb00d
-+      - items:
-+          - const: 0xb00f
+@@ -172,7 +174,7 @@ static int j721e_pcie_set_mode(struct j721e_pcie *pcie, struct regmap *syscon)
+ }
  
-   msi-map: true
+ static int j721e_pcie_set_link_speed(struct j721e_pcie *pcie,
+-				     struct regmap *syscon)
++				     struct regmap *syscon, unsigned int offset)
+ {
+ 	struct device *dev = pcie->dev;
+ 	struct device_node *np = dev->of_node;
+@@ -185,7 +187,7 @@ static int j721e_pcie_set_link_speed(struct j721e_pcie *pcie,
+ 		link_speed = 2;
  
+ 	val = link_speed - 1;
+-	ret = regmap_update_bits(syscon, 0, GENERATION_SEL_MASK, val);
++	ret = regmap_update_bits(syscon, offset, GENERATION_SEL_MASK, val);
+ 	if (ret)
+ 		dev_err(dev, "failed to set link speed\n");
+ 
+@@ -193,7 +195,7 @@ static int j721e_pcie_set_link_speed(struct j721e_pcie *pcie,
+ }
+ 
+ static int j721e_pcie_set_lane_count(struct j721e_pcie *pcie,
+-				     struct regmap *syscon)
++				     struct regmap *syscon, unsigned int offset)
+ {
+ 	struct device *dev = pcie->dev;
+ 	u32 lanes = pcie->num_lanes;
+@@ -201,7 +203,7 @@ static int j721e_pcie_set_lane_count(struct j721e_pcie *pcie,
+ 	int ret;
+ 
+ 	val = LANE_COUNT(lanes - 1);
+-	ret = regmap_update_bits(syscon, 0, LANE_COUNT_MASK, val);
++	ret = regmap_update_bits(syscon, offset, LANE_COUNT_MASK, val);
+ 	if (ret)
+ 		dev_err(dev, "failed to set link count\n");
+ 
+@@ -212,6 +214,8 @@ static int j721e_pcie_ctrl_init(struct j721e_pcie *pcie)
+ {
+ 	struct device *dev = pcie->dev;
+ 	struct device_node *node = dev->of_node;
++	struct of_phandle_args args;
++	unsigned int offset = 0;
+ 	struct regmap *syscon;
+ 	int ret;
+ 
+@@ -221,19 +225,25 @@ static int j721e_pcie_ctrl_init(struct j721e_pcie *pcie)
+ 		return PTR_ERR(syscon);
+ 	}
+ 
+-	ret = j721e_pcie_set_mode(pcie, syscon);
++	/* Do not error out to maintain old DT compatibility */
++	ret = of_parse_phandle_with_fixed_args(node, "ti,syscon-pcie-ctrl", 1,
++					       0, &args);
++	if (!ret)
++		offset = args.args[0];
++
++	ret = j721e_pcie_set_mode(pcie, syscon, offset);
+ 	if (ret < 0) {
+ 		dev_err(dev, "Failed to set pci mode\n");
+ 		return ret;
+ 	}
+ 
+-	ret = j721e_pcie_set_link_speed(pcie, syscon);
++	ret = j721e_pcie_set_link_speed(pcie, syscon, offset);
+ 	if (ret < 0) {
+ 		dev_err(dev, "Failed to set link speed\n");
+ 		return ret;
+ 	}
+ 
+-	ret = j721e_pcie_set_lane_count(pcie, syscon);
++	ret = j721e_pcie_set_lane_count(pcie, syscon, offset);
+ 	if (ret < 0) {
+ 		dev_err(dev, "Failed to set num-lanes\n");
+ 		return ret;
 -- 
 2.17.1
 
