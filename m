@@ -2,172 +2,93 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0374C2BBCD
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Dec 2020 18:05:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 774B8C4167B
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Dec 2020 18:13:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 802FB23EB0
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Dec 2020 18:05:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2F9D923E1D
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Dec 2020 18:13:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392560AbgLJSFa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 10 Dec 2020 13:05:30 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37940 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2392606AbgLJSFV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Dec 2020 13:05:21 -0500
-Received: from mail-lf1-x144.google.com (mail-lf1-x144.google.com [IPv6:2a00:1450:4864:20::144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C412C0613D6;
-        Thu, 10 Dec 2020 10:04:41 -0800 (PST)
-Received: by mail-lf1-x144.google.com with SMTP id a12so9542990lfl.6;
-        Thu, 10 Dec 2020 10:04:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=zHZq5IcsODsBA+xd+pp9DCxwMsfVs5qrOgu8wwXvBvg=;
-        b=ouA21ufznCroJw5M10QYHgbCCH9Q2Bm4UNuYdY1IAYv3enbq3Q4cMbCZ9vxAkYeDNU
-         542M5G5XKU1e+qtcKg2nJgOCkvCQ4gNCPOOYKun8CSVQKmIKF59bmlU0j3STg5qENyWo
-         YzGPxZXnCfj/4+D818gaTwYaX0Bn0eFiDItdDAWp3cNPkE3k7XzH06sjNxwKTtbrCAon
-         9lc7cdC/689tbOmRIY5dbegKtJnehR6kVLRxiZJ+/DhabiOExlbGFxd02r03e0mNaNLM
-         qu9Mi8x7J17hvX1n8xzkCRGmPdsiA54WwdX0mg0UgaFI9WGtB8NxbqtS3ak6hBtdqnZj
-         A7jQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=zHZq5IcsODsBA+xd+pp9DCxwMsfVs5qrOgu8wwXvBvg=;
-        b=m+aS1aDewSE3Xyhf4Nulo6pri6ova2pJlJUAj6ttNTtuKFOHDTezaIOHWMEGHbJ//T
-         xJBd8rDNFVtrmVK0X/JjCKjNAmoKvrjb3WtK5cG8CoKMCkEIDsod0i7ALmGQziVxStbm
-         CUq+ZjBYFbetaZ1BNLHRt2KG0tUhQFJgdhlKLelr578s9Ufjn3V6av74Y5pPoacNd/yg
-         uS3+GNjD34abOPZQ0+xJucyf/VqRRyYoMlLei1Ix0pnBh+c1fWkfxv/WQaZV9yk3lfBr
-         +VLGeskrfSAyFQqyTKcoeHQ8xV5JqUp/gJQpL1gc+++5HXy5RnqTGQfc6wQRk/w+Y576
-         AoYA==
-X-Gm-Message-State: AOAM531mghtpGnNVcMMXGHsJrE0zIrPgOs5qjNcH9eJ/yZmIsiXQtg7J
-        jcYTObzby7sN1SHCH2ymw7986fDPIe4=
-X-Google-Smtp-Source: ABdhPJwGsjmtg3DUvco4+4Cbw+I9+b9OHmtYv69jKIerggLQX3sHF25eD39AKfOrb+JK720caEQd1Q==
-X-Received: by 2002:a19:c001:: with SMTP id q1mr2464524lff.55.1607623479567;
-        Thu, 10 Dec 2020 10:04:39 -0800 (PST)
-Received: from localhost.lan (ip-194-187-74-233.konfederacka.maverick.com.pl. [194.187.74.233])
-        by smtp.gmail.com with ESMTPSA id c136sm601855lfg.306.2020.12.10.10.04.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 10 Dec 2020 10:04:38 -0800 (PST)
-From:   =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh+dt@kernel.org>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        linux-rpi-kernel@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org,
-        bcm-kernel-feedback-list@broadcom.com,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH v3 1/2] dt-bindings: PCI: brcmstb: add BCM4908 binding
-Date:   Thu, 10 Dec 2020 19:04:20 +0100
-Message-Id: <20201210180421.7230-2-zajec5@gmail.com>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20201210180421.7230-1-zajec5@gmail.com>
-References: <20201210180421.7230-1-zajec5@gmail.com>
+        id S2390276AbgLJSNi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 10 Dec 2020 13:13:38 -0500
+Received: from foss.arm.com ([217.140.110.172]:57106 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2390778AbgLJSMb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 10 Dec 2020 13:12:31 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id AC5F130E;
+        Thu, 10 Dec 2020 10:11:40 -0800 (PST)
+Received: from e121166-lin.cambridge.arm.com (e121166-lin.cambridge.arm.com [10.1.196.255])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 90F8C3F718;
+        Thu, 10 Dec 2020 10:11:39 -0800 (PST)
+Date:   Thu, 10 Dec 2020 18:11:33 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     marek.vasut@gmail.com
+Cc:     linux-pci@vger.kernel.org,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH] PCI: rcar: Always allocate MSI addresses in 32bit space
+Message-ID: <20201210181133.GA3766@e121166-lin.cambridge.arm.com>
+References: <20201016120431.7062-1-marek.vasut@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201016120431.7062-1-marek.vasut@gmail.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Rafał Miłecki <rafal@milecki.pl>
+On Fri, Oct 16, 2020 at 02:04:31PM +0200, marek.vasut@gmail.com wrote:
+> From: Marek Vasut <marek.vasut+renesas@gmail.com>
+> 
+> This fixes MSI operation on legacy PCI cards, which cannot issue 64bit MSIs.
+> The R-Car controller only has one MSI trigger address instead of two, one
+> for 64bit and one for 32bit MSI, set the address to 32bit PCIe space so that
+> legacy PCI cards can also trigger MSIs.
+> 
+> Fixes: 290c1fb35860 ("PCI: rcar: Add MSI support for PCIe")
+> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Wolfram Sang <wsa@the-dreams.de>
+> Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+> Cc: linux-renesas-soc@vger.kernel.org
+> ---
+>  drivers/pci/controller/pcie-rcar-host.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/pcie-rcar-host.c b/drivers/pci/controller/pcie-rcar-host.c
+> index 1194d5f3341b..ac5c7d7573a6 100644
+> --- a/drivers/pci/controller/pcie-rcar-host.c
+> +++ b/drivers/pci/controller/pcie-rcar-host.c
+> @@ -753,7 +753,7 @@ static int rcar_pcie_enable_msi(struct rcar_pcie_host *host)
+>  	}
+>  
+>  	/* setup MSI data target */
+> -	msi->pages = __get_free_pages(GFP_KERNEL, 0);
+> +	msi->pages = __get_free_pages(GFP_KERNEL | GFP_DMA32, 0);
 
-BCM4908 is a SoC family with PCIe controller sharing design with the one
-for STB. BCM4908 has different power management and memory controller so
-few tweaks are required.
+This does not do what you want on !CONFIG_ZONE_DMA32 (ie arm LPAE).
 
-PERST# signal on BCM4908 is handled by an external MISC block so it
-needs specifying a reset phandle.
+Can't you just pick up a non-DMA-able address < 4GB (ie outside the host
+controller inbound window range) and use it as doorbell address instead ?
 
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
-Acked-by: Florian Fainelli <f.fainelli@gmail.com>
----
-V3: Drop "reset-names" from the generic "properties" - it's now defined as
-    "compatible" specific property
-    Drop "$ref" from the "resets" - thanks Rob.
----
- .../bindings/pci/brcm,stb-pcie.yaml           | 37 ++++++++++++++-----
- 1 file changed, 28 insertions(+), 9 deletions(-)
+Thanks,
+Lorenzo
 
-diff --git a/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml b/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
-index 807694b4f41f..f90557f6deb8 100644
---- a/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
-@@ -14,6 +14,7 @@ properties:
-     items:
-       - enum:
-           - brcm,bcm2711-pcie # The Raspberry Pi 4
-+          - brcm,bcm4908-pcie
-           - brcm,bcm7211-pcie # Broadcom STB version of RPi4
-           - brcm,bcm7278-pcie # Broadcom 7278 Arm
-           - brcm,bcm7216-pcie # Broadcom 7216 Arm
-@@ -63,15 +64,6 @@ properties:
- 
-   aspm-no-l0s: true
- 
--  resets:
--    description: for "brcm,bcm7216-pcie", must be a valid reset
--      phandle pointing to the RESCAL reset controller provider node.
--    $ref: "/schemas/types.yaml#/definitions/phandle"
--
--  reset-names:
--    items:
--      - const: rescal
--
-   brcm,scb-sizes:
-     description: u64 giving the 64bit PCIe memory
-       viewport size of a memory controller.  There may be up to
-@@ -98,12 +90,39 @@ required:
- 
- allOf:
-   - $ref: /schemas/pci/pci-bus.yaml#
-+  - if:
-+      properties:
-+        compatible:
-+          contains:
-+            const: brcm,bcm4908-pcie
-+    then:
-+      properties:
-+        resets:
-+          items:
-+            - description: reset controller handling the PERST# signal
-+
-+        reset-names:
-+          items:
-+            - const: perst
-+
-+      required:
-+        - resets
-+        - reset-names
-   - if:
-       properties:
-         compatible:
-           contains:
-             const: brcm,bcm7216-pcie
-     then:
-+      properties:
-+        resets:
-+          items:
-+            - description: phandle pointing to the RESCAL reset controller
-+
-+        reset-names:
-+          items:
-+            - const: rescal
-+
-       required:
-         - resets
-         - reset-names
--- 
-2.26.2
-
+>  	rcar_pcie_hw_enable_msi(host);
+>  
+>  	return 0;
+> -- 
+> 2.28.0
+> 
