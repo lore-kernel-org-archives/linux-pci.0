@@ -2,89 +2,143 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52B24C4361B
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Dec 2020 19:59:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5CC3C2BB9A
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Dec 2020 19:59:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 012DD22E00
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Dec 2020 19:59:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5FD8022D5A
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Dec 2020 19:59:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390321AbgLJT7T (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 10 Dec 2020 14:59:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55722 "EHLO
+        id S2404364AbgLJT7e (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 10 Dec 2020 14:59:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53270 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2404336AbgLJT7N (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Dec 2020 14:59:13 -0500
-Received: from ssl.serverraum.org (ssl.serverraum.org [IPv6:2a01:4f8:151:8464::1:2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D462C0613CF
-        for <linux-pci@vger.kernel.org>; Thu, 10 Dec 2020 11:58:33 -0800 (PST)
-Received: from ssl.serverraum.org (web.serverraum.org [172.16.0.2])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ssl.serverraum.org (Postfix) with ESMTPSA id 7E8E223E5D;
-        Thu, 10 Dec 2020 20:58:20 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=walle.cc; s=mail2016061301;
-        t=1607630307;
+        with ESMTP id S2390461AbgLJTnb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Dec 2020 14:43:31 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 479B4C0617B0;
+        Thu, 10 Dec 2020 11:42:26 -0800 (PST)
+Message-Id: <20201210194043.362094758@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1607629344;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=fMhg82S0rwUSrDpQiFh0ST2pjTuKrxogeVcd6fb/BYU=;
-        b=dnygdpHM2m3GMfxdC9krsKYEPRMHmLSimDuAfuHkp9B+WvhENOP1JGuIC1hgvaWYW8vooR
-        cObG9mXNSlEl+RbJyAQXjAEUjMNUxeXXJK+9oWx4GAVScYKHglUMULZJH+oHRC4twGtl11
-        /qZ1HdnbCMHzriG18csTWpg2CJ/KS0c=
+         content-transfer-encoding:content-transfer-encoding:  references:references;
+        bh=xI8ipC8kVjJGltjSHu5Mwub/dbA42XKOSuIg0xDxbuM=;
+        b=D/de10U4HoG38vblr7IeySKjPU1LbUwG6rWRmeGYZrTiPhh//Hh7l/GxJreJ0rFcvzRPJy
+        uoauNylV8dWf/MoltroGmVGhvJ2oJ5Y1i1Hdh3B/UY4mD9pwH+y7Dg4V+Vuar0V4FZXmUS
+        6T9k0+65HYvYSEKNJ4TVXxdcFWWUmHXiCvk5q873lejGHd1ZF8kDnbNFZOuvndA/bZ6hqk
+        upKi4g8D5MCEBYYTgyELzJKcRa+JlxwqpINFEbwiyouRus62LMleSD5uCsPspz8eEzaopF
+        eLafHsQRj846r/5tje8mdg+dCV5YsColFl6docNWF4RiFgqrORcZz2o154ST/Q==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1607629344;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:  references:references;
+        bh=xI8ipC8kVjJGltjSHu5Mwub/dbA42XKOSuIg0xDxbuM=;
+        b=uhk8uY0rFu42URnjai4w+dmeZE7ul5z78imfPTBVOwBrf5zNSXRAMP26aad4ZYcrnfPUQU
+        IQRkkJ1oiqPOXJDw==
+Date:   Thu, 10 Dec 2020 20:25:44 +0100
+From:   Thomas Gleixner <tglx@linutronix.de>
+To:     LKML <linux-kernel@vger.kernel.org>
+Cc:     Peter Zijlstra <peterz@infradead.org>,
+        Marc Zyngier <maz@kernel.org>,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Helge Deller <deller@gmx.de>,
+        afzal mohammed <afzal.mohd.ma@gmail.com>,
+        linux-parisc@vger.kernel.org, Russell King <linux@armlinux.org.uk>,
+        linux-arm-kernel@lists.infradead.org,
+        Mark Rutland <mark.rutland@arm.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will@kernel.org>,
+        Christian Borntraeger <borntraeger@de.ibm.com>,
+        Heiko Carstens <hca@linux.ibm.com>, linux-s390@vger.kernel.org,
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        David Airlie <airlied@linux.ie>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        Pankaj Bharadiya <pankaj.laxminarayan.bharadiya@intel.com>,
+        Chris Wilson <chris@chris-wilson.co.uk>,
+        Wambui Karuga <wambui.karugax@gmail.com>,
+        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        linux-gpio@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
+        Jon Mason <jdmason@kudzu.us>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <allenbh@gmail.com>, linux-ntb@googlegroups.com,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        linux-pci@vger.kernel.org,
+        Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>,
+        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>,
+        Tariq Toukan <tariqt@nvidia.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org,
+        linux-rdma@vger.kernel.org, Saeed Mahameed <saeedm@nvidia.com>,
+        Leon Romanovsky <leon@kernel.org>,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Juergen Gross <jgross@suse.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        xen-devel@lists.xenproject.org
+Subject: [patch 08/30] genirq: Provide kstat_irqdesc_cpu()
+References: <20201210192536.118432146@linutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Thu, 10 Dec 2020 20:58:20 +0100
-From:   Michael Walle <michael@walle.cc>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Vladimir Oltean <olteanv@gmail.com>, lorenzo.pieralisi@arm.com,
-        kw@linux.com, heiko@sntech.de, benh@kernel.crashing.org,
-        shawn.lin@rock-chips.com, paulus@samba.org,
-        thomas.petazzoni@bootlin.com, jonnyc@amazon.com,
-        toan@os.amperecomputing.com, will@kernel.org, robh@kernel.org,
-        f.fainelli@gmail.com, mpe@ellerman.id.au, michal.simek@xilinx.com,
-        linux-rockchip@lists.infradead.org,
-        bcm-kernel-feedback-list@broadcom.com, jonathan.derrick@intel.com,
-        linux-pci@vger.kernel.org, rjui@broadcom.com,
-        linux-rpi-kernel@lists.infradead.org, Jonathan.Cameron@huawei.com,
-        bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
-        sbranden@broadcom.com, wangzhou1@hisilicon.com,
-        rrichter@marvell.com, linuxppc-dev@lists.ozlabs.org,
-        nsaenzjulienne@suse.de,
-        Alexandru Marginean <alexm.osslist@gmail.com>
-Subject: Re: [PATCH v6 0/5] PCI: Unify ECAM constants in native PCI Express
- drivers
-In-Reply-To: <20201210173809.GA37355@bjorn-Precision-5520>
-References: <20201210173809.GA37355@bjorn-Precision-5520>
-User-Agent: Roundcube Webmail/1.4.9
-Message-ID: <194550494fde93c6eb840eabf59bde38@walle.cc>
-X-Sender: michael@walle.cc
+Content-Type: text/plain; charset=UTF-8
+Content-transfer-encoding: 8-bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Am 2020-12-10 18:38, schrieb Bjorn Helgaas:
-> On Wed, Dec 09, 2020 at 10:29:04PM +0200, Vladimir Oltean wrote:
->> On Wed, Dec 09, 2020 at 04:40:52PM +0100, Michael Walle wrote:
->> > Hopefully my mail client won't mess up the output that much.
->> 
->> I can reproduce on my LS1028A as well. The following fixes the bug for
->> me. I did not follow the discussion and see if it is helpful for 
->> others.
->> I don't understand how the bug came to be. There might be more to it
->> than what I'm seeing. If it's just what I'm seeing, then the patch was
->> pretty broken to begin with.
-> 
-> I squashed the fix below into a pci/ecam branch for v5.11, thanks!
+Most users of kstat_irqs_cpu() have the irq descriptor already. No point in
+calling into the core code and looking it up once more.
 
-FWIW
-Tested-by: Michael Walle <michael@walle.cc>
+Use it in per_cpu_count_show() to start with.
 
--michael
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+---
+ include/linux/irqdesc.h |    6 ++++++
+ kernel/irq/irqdesc.c    |    4 ++--
+ 2 files changed, 8 insertions(+), 2 deletions(-)
+
+--- a/include/linux/irqdesc.h
++++ b/include/linux/irqdesc.h
+@@ -113,6 +113,12 @@ static inline void irq_unlock_sparse(voi
+ extern struct irq_desc irq_desc[NR_IRQS];
+ #endif
+ 
++static inline unsigned int irq_desc_kstat_cpu(struct irq_desc *desc,
++					      unsigned int cpu)
++{
++	return desc->kstat_irqs ? *per_cpu_ptr(desc->kstat_irqs, cpu) : 0;
++}
++
+ static inline struct irq_desc *irq_data_to_desc(struct irq_data *data)
+ {
+ 	return container_of(data->common, struct irq_desc, irq_common_data);
+--- a/kernel/irq/irqdesc.c
++++ b/kernel/irq/irqdesc.c
+@@ -147,12 +147,12 @@ static ssize_t per_cpu_count_show(struct
+ 				  struct kobj_attribute *attr, char *buf)
+ {
+ 	struct irq_desc *desc = container_of(kobj, struct irq_desc, kobj);
+-	int cpu, irq = desc->irq_data.irq;
+ 	ssize_t ret = 0;
+ 	char *p = "";
++	int cpu;
+ 
+ 	for_each_possible_cpu(cpu) {
+-		unsigned int c = kstat_irqs_cpu(irq, cpu);
++		unsigned int c = irq_desc_kstat_cpu(desc, cpu);
+ 
+ 		ret += scnprintf(buf + ret, PAGE_SIZE - ret, "%s%u", p, c);
+ 		p = ",";
+
